@@ -75,17 +75,17 @@ All scalar SD parameters are on the log scale, and AR(1) parameters are on
 the logit scale (later transformed by \code{plogis()} in the likelihood).
 }
 \examples{
-\dontrun{
-dat <- make_dat(obs,
-  years = 1983:2024, ages = 2:14,
-  N_settings = list(process = "iid", init_N0 = TRUE),
-  F_settings = list(process = "ar1", mu_form = ~ F_a_block + F_y_block),
-  M_settings = list(process = "off"),
+dat <- make_dat(
+  northern_cod_data,
+  years = 1983:2024,
+  ages  = 2:14,
+  N_settings = list(process = "iid", init_N0 = FALSE),
+  F_settings = list(process = "rw", mu_form = NULL),
+  M_settings = list(process = "off", assumption = ~ I(0.3)),
   obs_settings = list(sd_form = ~ sd_obs_block, q_form = ~ q_block)
 )
 par <- make_par(dat)
 str(par)
-}
 
 }
 \seealso{

@@ -127,22 +127,16 @@ processes whose \code{process == "ar1"}; otherwise they are set to \code{NA} in
 }
 }
 \examples{
-\dontrun{
 dat <- make_dat(
-  obs,
+  northern_cod_data,
   years = 1983:2024,
   ages  = 2:14,
   N_settings = list(process = "iid", init_N0 = FALSE),
-  F_settings = list(process = "ar1", mu_form = ~ F_a_block + F_y_block),
-  M_settings = list(
-    process    = "ar1",
-    mu_form    = ~ 1,
-    assumption = ~ I(log(0.2)),
-    age_breaks = c(3, 6, 9, 14)
-  ),
+  F_settings = list(process = "rw", mu_form = NULL),
+  M_settings = list(process = "off", assumption = ~ I(0.3)),
   obs_settings = list(sd_form = ~ sd_obs_block, q_form = ~ q_block)
 )
-}
+str(dat)
 
 }
 \seealso{

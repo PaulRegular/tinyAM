@@ -47,18 +47,16 @@ A warning is issued if the number of random effects is more than twice the
 number of observed data points (rough identifiability check).
 }
 \examples{
-\dontrun{
-obs <- make_obs(my_inputs)
+
 fit <- fit_tam(
-  obs,
+  northern_cod_data,
   years = 1983:2024, ages = 2:14,
-  N_settings = list(process = "iid", init_N0 = TRUE),
-  F_settings = list(process = "rw",  mu_form = NULL),
-  M_settings = list(process = "off", mu_form = NULL, assumption = ~ I(0.2)),
+  N_settings = list(process = "iid", init_N0 = FALSE),
+  F_settings = list(process = "rw"),
+  M_settings = list(process = "off", assumption = ~I(0.3)),
   obs_settings = list(sd_form = ~ sd_obs_block, q_form = ~ q_block)
 )
-summary(fit$sdrep)
-}
+fit$sdrep
 
 }
 \seealso{

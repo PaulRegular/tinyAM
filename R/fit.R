@@ -127,16 +127,11 @@ fit_tam <- function(inputs, ...) {
 #' refitted objects for each peel (named by terminal year).
 #'
 #' @examples
-#' fit <- fit_tam(
-#'   northern_cod_data,
-#'   years = 1983:2024, ages = 2:14,
-#'   N_settings = list(process = "iid", init_N0 = FALSE),
-#'   F_settings = list(process = "rw"),
-#'   M_settings = list(process = "off", assumption = ~I(0.3)),
-#'   obs_settings = list(sd_form = ~ sd_obs_block, q_form = ~ q_block)
-#' )
+#' \dontrun{
+#' fit <- fit_tam(northern_cod_data, years = 1983:2024, ages = 2:14)
 #' retros <- fit_retro(fit, folds = 5)
 #' lapply(retros$retro, function(x) x$rep$ssb)
+#' }
 #'
 #' @seealso [fit_tam()], [sim_tam()]
 #' @export
@@ -193,12 +188,11 @@ fit_retro <- function(fit, folds = 2) {
 #' the report also reflects simulated random effects.
 #'
 #' @examples
-#' \dontrun{
-#' fit <- fit_tam(obs, years = 1983:2024, ages = 2:14)
+#' fit <- fit_tam(northern_cod_data, years = 1983:2024, ages = 2:14)
 #' rep_sim <- sim_tam(fit, obs_only = FALSE)
 #' str(rep_sim$log_obs)
-#' }
 #'
+#' @export
 sim_tam <- function(fit, obs_only = FALSE) {
 
   obj <- fit$obj

@@ -43,7 +43,7 @@ simulated random effects.
 }
 \examples{
 \dontrun{
-fit <- fit_tam(obs, years = 1983:2024, ages = 2:14)
+fit <- fit_tam(northern_cod_data, years = 1983:2024, ages = 2:14)
 rep_sim <- sim_tam(fit, obs_only = FALSE)
 str(rep_sim$log_obs)
 }

@@ -101,18 +101,25 @@ keep \eqn{\phi} away from \eqn{\pm 1} for numerical stability.
 }
 
 \examples{
-\dontrun{
-# Typical usage through RTMB::MakeADFun
-dat <- make_dat(obs, years = 1983:2024, ages = 2:14)
+
+dat <- make_dat(
+  northern_cod_data,
+  years = 1983:2024,
+  ages  = 2:14,
+  N_settings = list(process = "iid", init_N0 = FALSE),
+  F_settings = list(process = "rw", mu_form = NULL),
+  M_settings = list(process = "off", assumption = ~ I(0.3)),
+  obs_settings = list(sd_form = ~ sd_obs_block, q_form = ~ q_block)
+)
 par <- make_par(dat)
-obj <- RTMB::MakeADFun(nll_fun, par, random = c("log_f","log_r"), silent = TRUE)
+obj <- RTMB::MakeADFun(nll_fun, par, random = c("log_n", "log_f","log_r", "missing"), silent = TRUE)
 opt <- nlminb(obj$par, obj$fn, obj$gr)
 rep <- obj$report()
+sdrep <- sdreport(obj)
 
 # Simulate from fitted parameters
-p_hat <- as.list(sdreport(obj), "Estimate")
+p_hat <- as.list(sdrep, "Estimate")
 sims  <- nll_fun(p_hat, simulate = TRUE)
-}
 
 }
 \seealso{
