@@ -6,8 +6,18 @@ Authors@R:
 Description: TAM (Tiny Assessment Model) is an experimental R package for fitting 
              age–structured stock assessment models using RTMB. It is designed to 
              be flexible, modular, and lightweight, making it easy to experiment 
-             with different model structures and process assumptions.
-License:GPL (>= 3)
+             with different model structures and process assumptions. (Documentation
+             drafted with the assistance of ChatGPT 5 [2025-09-24]).
+Depends:
+    R (>= 4.1.0)
+License: GPL (>= 3)
+URL: 
+    https://github.com/PaulRegular/TAM
+BugReports: 
+    https://github.com/PaulRegular/TAM/issues
+Imports:
+    RTMB
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
+LazyData: true
