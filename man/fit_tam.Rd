@@ -24,22 +24,19 @@ Inferred from \code{obs} data.frames if \code{NULL}.}
 Inferred from \code{obs} data.frames if \code{NULL}.}
     \item{\code{N_settings}}{A list with elements:
 \describe{
-\item{process}{One of \code{"off"}, \code{"iid"}, \code{"rw"}, or \code{"ar1"}.}
+\item{process}{One of \code{"off"}, \code{"iid"}, \code{"approx_rw"}, or \code{"ar1"}.}
 \item{init_N0}{Logical; if \code{TRUE}, estimate an initial level for the
 first-year abundance. If \code{process == "off"} and \code{init_N0 == FALSE},
 this is forced to \code{TRUE}.}
 }}
     \item{\code{F_settings}}{A list with elements:
 \describe{
-\item{process}{One of \code{"iid"}, \code{"rw"}, or \code{"ar1"}. For \code{"rw"}, TAM treats
-the process as non-stationary (no mean structure).}
-\item{mu_form}{An optional formula for mean-\eqn{F}; ignored (with
-warning) when \code{process == "rw"}. Typical usage is a block factor
-(e.g., \code{~ F_a_block + F_y_block}) or \code{~ 1} for an intercept.}
+\item{process}{One of \code{"iid"}, \code{"approx_rw"}, or \code{"ar1"}.}
+\item{mu_form}{An optional formula for mean-\eqn{F}.}
 }}
     \item{\code{M_settings}}{A list with elements:
 \describe{
-\item{process}{One of \code{"off"}, \code{"iid"}, or \code{"ar1"}.}
+\item{process}{One of \code{"off"}, \code{"iid"}, \code{"approx_rw"}, or \code{"ar1"}.}
 \item{mu_form}{Optional formula for mean-\eqn{M} (on the log scale) built
 on \code{obs$weight}. If provided together with \code{assumption}, the intercept
 in \code{mu_form} is dropped (warning) so assumed levels act as fixed
@@ -87,7 +84,7 @@ are chosen automatically from the model settings:
 \item Includes \code{log_n} if \code{N_settings$process != "off"}.
 \item Includes \code{log_m} if \code{M_settings$process != "off"}.
 }
-A warning is issued if the number of random effects exceeds the
+A warning is issued if the number of random effects exceeds 1.5 times the
 number of observed data points (rough identifiability check).
 }
 \examples{
@@ -96,7 +93,7 @@ fit <- fit_tam(
   northern_cod_data,
   years = 1983:2024, ages = 2:14,
   N_settings = list(process = "iid", init_N0 = FALSE),
-  F_settings = list(process = "rw"),
+  F_settings = list(process = "approx_rw"),
   M_settings = list(process = "off", assumption = ~I(0.3)),
   obs_settings = list(sd_form = ~ sd_obs_block, q_form = ~ q_block)
 )

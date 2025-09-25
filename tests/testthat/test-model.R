@@ -1,6 +1,6 @@
 set.seed(1)
 
-ny <- 30; na <- 20; sd <- 0.5
+ny <- 40; na <- 20; sd <- 0.5
 
 test_that("rprocess_2d returns matrix with correct dimensions", {
   X <- rprocess_2d(ny, na, sd = 0.3, phi = c(0.5, 0.7))

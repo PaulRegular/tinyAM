@@ -89,17 +89,6 @@ The function expects a \code{dat} list in its lexical scope (created by
 \code{\link[=dprocess_2d]{dprocess_2d()}} and \code{\link[=rprocess_2d]{rprocess_2d()}} for process penalties and simulation.
 }
 
-\section{Notes on identifiability}{
-
-\itemize{
-\item For \code{F_settings$process = "rw"} the mean surface is typically set to
-\code{mu_form = NULL} (non-stationary field) to avoid confounding with a
-free intercept/trend.
-\item For AR(1) penalties, \verb{logit_phi_*} is transformed with \code{plogis()};
-keep \eqn{\phi} away from \eqn{\pm 1} for numerical stability.
-}
-}
-
 \examples{
 
 dat <- make_dat(
@@ -107,7 +96,7 @@ dat <- make_dat(
   years = 1983:2024,
   ages  = 2:14,
   N_settings = list(process = "iid", init_N0 = FALSE),
-  F_settings = list(process = "rw", mu_form = NULL),
+  F_settings = list(process = "approx_rw", mu_form = NULL),
   M_settings = list(process = "off", assumption = ~ I(0.3)),
   obs_settings = list(sd_form = ~ sd_obs_block, q_form = ~ q_block)
 )

@@ -9,7 +9,7 @@ make_dat(
   years = NULL,
   ages = NULL,
   N_settings = list(process = "iid", init_N0 = FALSE),
-  F_settings = list(process = "rw", mu_form = NULL),
+  F_settings = list(process = "approx_rw", mu_form = NULL),
   M_settings = list(process = "off", mu_form = NULL, assumption = ~I(0.2), age_breaks =
     NULL),
   obs_settings = list(sd_form = ~sd_obs_block, q_form = ~q_block)
@@ -27,7 +27,7 @@ Inferred from \code{obs} data.frames if \code{NULL}.}
 
 \item{N_settings}{A list with elements:
 \describe{
-\item{process}{One of \code{"off"}, \code{"iid"}, \code{"rw"}, or \code{"ar1"}.}
+\item{process}{One of \code{"off"}, \code{"iid"}, \code{"approx_rw"}, or \code{"ar1"}.}
 \item{init_N0}{Logical; if \code{TRUE}, estimate an initial level for the
 first-year abundance. If \code{process == "off"} and \code{init_N0 == FALSE},
 this is forced to \code{TRUE}.}
@@ -35,16 +35,13 @@ this is forced to \code{TRUE}.}
 
 \item{F_settings}{A list with elements:
 \describe{
-\item{process}{One of \code{"iid"}, \code{"rw"}, or \code{"ar1"}. For \code{"rw"}, TAM treats
-the process as non-stationary (no mean structure).}
-\item{mu_form}{An optional formula for mean-\eqn{F}; ignored (with
-warning) when \code{process == "rw"}. Typical usage is a block factor
-(e.g., \code{~ F_a_block + F_y_block}) or \code{~ 1} for an intercept.}
+\item{process}{One of \code{"iid"}, \code{"approx_rw"}, or \code{"ar1"}.}
+\item{mu_form}{An optional formula for mean-\eqn{F}.}
 }}
 
 \item{M_settings}{A list with elements:
 \describe{
-\item{process}{One of \code{"off"}, \code{"iid"}, or \code{"ar1"}.}
+\item{process}{One of \code{"off"}, \code{"iid"}, \code{"approx_rw"}, or \code{"ar1"}.}
 \item{mu_form}{Optional formula for mean-\eqn{M} (on the log scale) built
 on \code{obs$weight}. If provided together with \code{assumption}, the intercept
 in \code{mu_form} is dropped (warning) so assumed levels act as fixed
@@ -102,9 +99,6 @@ treated as \code{NA} (to be handled via random effects).
 \code{sd_obs_modmat}.
 \item \code{obs_settings$q_form} is evaluated on the index table to produce
 \code{q_modmat}.
-\item If \code{F_settings$mu_form} is provided and \code{F_settings$process != "rw"},
-\code{F_modmat <- model.matrix(mu_form, data = obs$catch)}; otherwise an overall
-mean is implied (\code{log_mu_f <- 0}, \code{F_modmat <- 0}).
 \item If \code{M_settings$mu_form} is provided, \code{M_modmat <- model.matrix(mu_form, data = obs$weight)}. If an \code{assumption} is also supplied (i.e., fixed
 offsets), the intercept in \code{mu_form} is dropped and a warning is issued.
 \item If neither \code{M_settings$mu_form} nor \code{M_settings$assumption} is supplied,
@@ -117,15 +111,13 @@ assumption or a mean structure.
 \item If \code{N_settings$process == "off"} and \code{init_N0 == FALSE}, \code{init_N0} is
 forced to \code{TRUE} (with a warning) so the first-year abundance is
 estimable.
-\item If \code{F_settings$process == "rw"} and \code{mu_form} is given, \code{mu_form} is
-ignored (with a warning) because TAM treats the RW as non-stationary
-without drift.
 \item \code{M_settings$age_breaks} (vector of break points on ages \eqn{\ge} min
 modeled age + 1) defines \code{M_settings$age_blocks} via \code{\link[=cut_ages]{cut_ages()}}, used
 to couple \eqn{M} deviations across age.
 \item The AR(1) correlation parameters are only “turned on” (initialized) for
-processes whose \code{process == "ar1"}; otherwise they are set to \code{NA} in
-\code{dat} and ignored by the model.
+processes whose \code{process == "ar1"}. Correlations are assumed to be 0
+when \code{process == "iid"} and 0.99 when \code{process == "approx_rw"} to approximate
+a random walk across ages and years.
 }
 }
 \examples{
@@ -134,7 +126,7 @@ dat <- make_dat(
   years = 1983:2024,
   ages  = 2:14,
   N_settings = list(process = "iid", init_N0 = FALSE),
-  F_settings = list(process = "rw", mu_form = NULL),
+  F_settings = list(process = "approx_rw", mu_form = NULL),
   M_settings = list(process = "off", assumption = ~ I(0.3)),
   obs_settings = list(sd_form = ~ sd_obs_block, q_form = ~ q_block)
 )
