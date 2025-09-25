@@ -47,7 +47,7 @@
 #' @param ny,na Positive integers: numbers of years and ages for
 #'   \code{rprocess_2d()}.
 #' @param phi Length-2 numeric vector \code{c(phi_age, phi_year)} with
-#'   values in \code{(-1, 1)} for AR1; ignored for IID and RW.
+#'   values in \code{(0, 1)} for AR1; ignored for IID and RW.
 #' @param sd Positive scalar \eqn{\sigma}. For IID it is the marginal SD.
 #'   For RW it scales the difference penalties. For AR1 it targets the
 #'   marginal SD after internal variance rescaling.
@@ -59,11 +59,6 @@
 #'   \item \code{rprocess_2d()}: a numeric matrix of dimension \code{ny × na}.
 #' }
 #'
-#' @section Numerical notes:
-#' For AR1 with \code{phi} very close to \code{±1}, the variance factor
-#' \eqn{1 / [(1-\phi_\text{age}^2)(1-\phi_\text{year}^2)]} can explode and
-#' lead to ill-conditioned covariances. Consider bounding \code{phi} away
-#' from \code{±1} during estimation.
 #'
 #' @examples
 #' # Simulate three fields with the same sd
@@ -105,7 +100,7 @@ dprocess_2d <- function(x, phi = NA, sd = 1, type = c("iid", "rw", "ar1")) {
     fa <- function(z) dautoreg(z, phi = phi_age, log = TRUE)
     fy <- function(z) dautoreg(z, phi = phi_year, log = TRUE)
     var <- sd ^ 2 / ((1 - phi_age ^ 2) * (1 - phi_year ^ 2))
-    den <- dseparable(fy, fa)(x, scale = var)
+    den <- dseparable(fy, fa)(x, scale = sqrt(var))
   }
 
   den
