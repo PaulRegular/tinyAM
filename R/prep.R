@@ -133,7 +133,9 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #' @param obs A list of tidy observation data.frames: `catch`, `index`,
 #'   `weight`, and `maturity`. See **Details**.
 #' @param years Integer vector of model years (strictly increasing).
+#'   Inferred from `obs` data.frames if `NULL`.
 #' @param ages Integer vector of model ages (strictly increasing).
+#'   Inferred from `obs` data.frames if `NULL`.
 #' @param N_settings A list with elements:
 #'   \describe{
 #'     \item{process}{One of `"off"`, `"iid"`, `"rw"`, or `"ar1"`.}
@@ -197,13 +199,18 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #' @export
 make_dat <- function(
     obs,
-    years = 1983:2024,
-    ages = 2:14,
+    years = NULL,
+    ages = NULL,
     N_settings = list(process = "iid", init_N0 = FALSE),
     F_settings = list(process = "rw", mu_form = NULL),
     M_settings = list(process = "off", mu_form = NULL, assumption = ~I(0.2), age_breaks = NULL),
     obs_settings = list(sd_form = ~sd_obs_block, q_form = ~q_block)
 ) {
+
+  all_years <- unique(unlist(lapply(obs, function(d) d$year)))
+  all_ages  <- unique(unlist(lapply(obs, function(d) d$age)))
+  years <- if (is.null(years)) seq(min(all_years, na.rm = TRUE), max(all_years, na.rm = TRUE)) else as.integer(years)
+  ages  <- if (is.null(ages)) seq(min(all_ages,  na.rm = TRUE), max(all_ages,  na.rm = TRUE)) else as.integer(ages)
 
   dat <- mget(ls())
 

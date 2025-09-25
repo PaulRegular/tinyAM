@@ -6,8 +6,8 @@
 \usage{
 make_dat(
   obs,
-  years = 1983:2024,
-  ages = 2:14,
+  years = NULL,
+  ages = NULL,
   N_settings = list(process = "iid", init_N0 = FALSE),
   F_settings = list(process = "rw", mu_form = NULL),
   M_settings = list(process = "off", mu_form = NULL, assumption = ~I(0.2), age_breaks =
@@ -19,9 +19,11 @@ make_dat(
 \item{obs}{A list of tidy observation data.frames: \code{catch}, \code{index},
 \code{weight}, and \code{maturity}. See \strong{Details}.}
 
-\item{years}{Integer vector of model years (strictly increasing).}
+\item{years}{Integer vector of model years (strictly increasing).
+Inferred from \code{obs} data.frames if \code{NULL}.}
 
-\item{ages}{Integer vector of model ages (strictly increasing).}
+\item{ages}{Integer vector of model ages (strictly increasing).
+Inferred from \code{obs} data.frames if \code{NULL}.}
 
 \item{N_settings}{A list with elements:
 \describe{

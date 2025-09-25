@@ -17,15 +17,14 @@
 #'   \item Includes \code{log_n} if \code{N_settings$process != "off"}.
 #'   \item Includes \code{log_m} if \code{M_settings$process != "off"}.
 #' }
-#' A warning is issued if the number of random effects is more than twice the
+#' A warning is issued if the number of random effects exceeds 1.5 times the
 #' number of observed data points (rough identifiability check).
 #'
 #' @param inputs A named list of tidy observation tables as expected by
 #'   [make_obs()] / [make_dat()] (e.g., \code{catch}, \code{index},
 #'   \code{weight}, \code{maturity}).
-#' @param ... Arguments forwarded to [make_dat()] (e.g., \code{years},
-#'   \code{ages}, \code{N_settings}, \code{F_settings}, \code{M_settings},
-#'   \code{obs_settings}).
+#' @param silent Disable tracing information?
+#' @inheritDotParams make_dat
 #'
 #' @return
 #' A list with components:
@@ -53,7 +52,7 @@
 #' @seealso [make_dat()], [make_par()], [sim_tam()], [fit_retro()],
 #'   RTMB::MakeADFun(), RTMB::sdreport()
 #' @export
-fit_tam <- function(inputs, ...) {
+fit_tam <- function(inputs, silent = FALSE, ...) {
 
   call <- match.call()
 
@@ -73,15 +72,15 @@ fit_tam <- function(inputs, ...) {
 
   n_ran <- length(unlist(par[ran]))
   n_obs <- sum(!is.na(dat$log_obs))
-  if (n_ran > (n_obs * 2)) {
-    warning(sprintf("Number of random effects (%d) are more than double the number of observations (%d). Try simplifying your model.", n_ran, n_obs))
+  if (n_ran > (n_obs * 1.5)) {
+    warning(sprintf("Number of random effects (%d) exceed 1.5 times the number of observations (%d). Consider simplifying your model.", n_ran, n_obs))
   }
 
   obj <- MakeADFun(
     nll_fun,
     par,
     random = ran,
-    silent = FALSE
+    silent = silent
   )
 
   opt <- nlminb(
@@ -129,8 +128,8 @@ fit_tam <- function(inputs, ...) {
 #' @examples
 #' \dontrun{
 #' fit <- fit_tam(northern_cod_data, years = 1983:2024, ages = 2:14)
-#' retros <- fit_retro(fit, folds = 5)
-#' lapply(retros$retro, function(x) x$rep$ssb)
+#' retro_fit <- fit_retro(fit, folds = 5)
+#' lapply(retro_fit$retro, function(x) x$rep$ssb)
 #' }
 #'
 #' @seealso [fit_tam()], [sim_tam()]

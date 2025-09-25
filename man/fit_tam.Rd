@@ -4,16 +4,60 @@
 \alias{fit_tam}
 \title{Fit TAM}
 \usage{
-fit_tam(inputs, ...)
+fit_tam(inputs, silent = FALSE, ...)
 }
 \arguments{
 \item{inputs}{A named list of tidy observation tables as expected by
 \code{\link[=make_obs]{make_obs()}} / \code{\link[=make_dat]{make_dat()}} (e.g., \code{catch}, \code{index},
 \code{weight}, \code{maturity}).}
 
-\item{...}{Arguments forwarded to \code{\link[=make_dat]{make_dat()}} (e.g., \code{years},
-\code{ages}, \code{N_settings}, \code{F_settings}, \code{M_settings},
-\code{obs_settings}).}
+\item{silent}{Disable tracing information?}
+
+\item{...}{
+  Arguments passed on to \code{\link[=make_dat]{make_dat}}
+  \describe{
+    \item{\code{obs}}{A list of tidy observation data.frames: \code{catch}, \code{index},
+\code{weight}, and \code{maturity}. See \strong{Details}.}
+    \item{\code{years}}{Integer vector of model years (strictly increasing).
+Inferred from \code{obs} data.frames if \code{NULL}.}
+    \item{\code{ages}}{Integer vector of model ages (strictly increasing).
+Inferred from \code{obs} data.frames if \code{NULL}.}
+    \item{\code{N_settings}}{A list with elements:
+\describe{
+\item{process}{One of \code{"off"}, \code{"iid"}, \code{"rw"}, or \code{"ar1"}.}
+\item{init_N0}{Logical; if \code{TRUE}, estimate an initial level for the
+first-year abundance. If \code{process == "off"} and \code{init_N0 == FALSE},
+this is forced to \code{TRUE}.}
+}}
+    \item{\code{F_settings}}{A list with elements:
+\describe{
+\item{process}{One of \code{"iid"}, \code{"rw"}, or \code{"ar1"}. For \code{"rw"}, TAM treats
+the process as non-stationary (no mean structure).}
+\item{mu_form}{An optional formula for mean-\eqn{F}; ignored (with
+warning) when \code{process == "rw"}. Typical usage is a block factor
+(e.g., \code{~ F_a_block + F_y_block}) or \code{~ 1} for an intercept.}
+}}
+    \item{\code{M_settings}}{A list with elements:
+\describe{
+\item{process}{One of \code{"off"}, \code{"iid"}, or \code{"ar1"}.}
+\item{mu_form}{Optional formula for mean-\eqn{M} (on the log scale) built
+on \code{obs$weight}. If provided together with \code{assumption}, the intercept
+in \code{mu_form} is dropped (warning) so assumed levels act as fixed
+offsets.}
+\item{assumption}{Optional one-sided formula giving fixed (non-estimated)
+log-\eqn{M} offsets, e.g. \code{~ I(0.2)} or a column reference such as
+\code{~ log(m_assumption)}.}
+\item{age_breaks}{Optional integer break points used by \code{\link[=cut_ages]{cut_ages()}} to
+define \code{age_blocks} for coupling \eqn{M} deviations across ages.}
+}}
+    \item{\code{obs_settings}}{A list with elements:
+\describe{
+\item{sd_form}{Formula for observation SD blocks, evaluated on the
+combined obs map (e.g., \code{~ sd_obs_block}).}
+\item{q_form}{Formula for catchability blocks, evaluated on the index
+table (e.g., \code{~ q_block}).}
+}}
+  }}
 }
 \value{
 A list with components:
@@ -43,7 +87,7 @@ are chosen automatically from the model settings:
 \item Includes \code{log_n} if \code{N_settings$process != "off"}.
 \item Includes \code{log_m} if \code{M_settings$process != "off"}.
 }
-A warning is issued if the number of random effects is more than twice the
+A warning is issued if the number of random effects exceeds the
 number of observed data points (rough identifiability check).
 }
 \examples{

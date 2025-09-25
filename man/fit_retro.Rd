@@ -30,8 +30,8 @@ supports \code{update()} with a \code{years} argument.
 \examples{
 \dontrun{
 fit <- fit_tam(northern_cod_data, years = 1983:2024, ages = 2:14)
-retros <- fit_retro(fit, folds = 5)
-lapply(retros$retro, function(x) x$rep$ssb)
+retro_fit <- fit_retro(fit, folds = 5)
+lapply(retro_fit$retro, function(x) x$rep$ssb)
 }
 
 }
