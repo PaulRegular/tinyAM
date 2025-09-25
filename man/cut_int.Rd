@@ -13,7 +13,7 @@ cut_ages(ages, breaks)
 cut_years(years, breaks)
 }
 \arguments{
-\item{x}{Integer vector to be grouped.}
+\item{x, ages, years}{Integer vector to be grouped.}
 
 \item{breaks}{Integer vector of group starts (strictly increasing).
 Must start at \code{min(x)} and end at \code{max(x)}.}
@@ -42,7 +42,7 @@ If \verb{b_\{m-1\} = b_m}, the last block is the single \code{{b_m}}.
 
 Input requirements (enforced):
 \itemize{
-\item \code{x} is numeric, integer-valued, and non-\code{NA}.
+\item \verb{x, ages, years} are numeric, integer-valued, and non-\code{NA}.
 \item \code{breaks} is numeric, increasing, and non-\code{NA}.
 \item \code{min(x) == breaks[1]} and \code{max(x) == tail(breaks, 1)}.
 }

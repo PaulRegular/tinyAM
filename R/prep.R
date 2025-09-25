@@ -18,11 +18,11 @@
 #' If `b_{m-1} = b_m`, the last block is the single `{b_m}`.
 #'
 #' Input requirements (enforced):
-#' - `x` is numeric, integer-valued, and non-`NA`.
+#' - `x, ages, years` are numeric, integer-valued, and non-`NA`.
 #' - `breaks` is numeric, increasing, and non-`NA`.
 #' - `min(x) == breaks[1]` and `max(x) == tail(breaks, 1)`.
 #'
-#' @param x Integer vector to be grouped.
+#' @param x,ages,years Integer vector to be grouped.
 #' @param breaks Integer vector of group starts (strictly increasing).
 #'   Must start at `min(x)` and end at `max(x)`.
 #' @param ordered Logical; should the returned factor be ordered?

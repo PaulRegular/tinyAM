@@ -104,7 +104,7 @@ par <- make_par(dat)
 obj <- RTMB::MakeADFun(nll_fun, par, random = c("log_n", "log_f","log_r", "missing"), silent = TRUE)
 opt <- nlminb(obj$par, obj$fn, obj$gr)
 rep <- obj$report()
-sdrep <- sdreport(obj)
+sdrep <- RTMB::sdreport(obj)
 
 # Simulate from fitted parameters
 p_hat <- as.list(sdrep, "Estimate")
