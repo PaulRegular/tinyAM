@@ -207,8 +207,7 @@ nll_fun <- function(par, simulate = FALSE) {
   getAll(par, dat)
 
   log_obs <- OBS(log_obs)
-  is_missing <- is.na(log_obs)
-  log_obs[is_missing] <- missing
+  log_obs[is_na_obs] <- missing
 
   n_obs <- length(log_obs)
   n_years <- length(years)
@@ -326,7 +325,7 @@ nll_fun <- function(par, simulate = FALSE) {
   Z_obs <- Z[iya]
   F_obs <- F[iya]
   sd_obs <- exp(drop(sd_obs_modmat %*% log_sd_obs))
-  log_q_obs <- drop(q_modmat %*% log_q)    # length = number of index rows
+  log_q_obs <- drop(q_modmat %*% log_q)    # length = number of survey index rows
   samp_time <- obs_map$samp_time
 
   idx <- obs_map$type == "catch"

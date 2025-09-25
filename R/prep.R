@@ -235,9 +235,11 @@ make_dat <- function(
   obs_fit <- rbind(catch, index)
   obs_fit$log_obs <- log(obs_fit$obs)
   obs_fit$log_obs[is.infinite(obs_fit$log_obs)] <- NA # treat zeros as NA for simplicity; NAs filled using random effects
+  obs_fit$is_na_obs <- is.na(obs_fit$log_obs)
 
   dat$obs_map <- obs_fit[, setdiff(names(obs_fit), c("obs", "log_obs"))]
   dat$log_obs <- obs_fit$log_obs
+  dat$is_na_obs <- obs_fit$is_na_obs
 
   dat$sd_obs_modmat <- model.matrix(obs_settings$sd_form, data = dat$obs_map)
   dat$q_modmat <- model.matrix(obs_settings$q_form, data = dat$obs$index)
