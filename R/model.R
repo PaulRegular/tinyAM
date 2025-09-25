@@ -359,8 +359,8 @@ nll_fun <- function(par, simulate = FALSE) {
                  log_r = log_r,
                  log_obs = log_obs)
     if (length(missing) > 0) {
-      sims$missing <- log_obs[is_missing]
-      sims$log_obs[is_missing] <- NA
+      sims$missing <- log_obs[is_na_obs]
+      sims$log_obs[is_na_obs] <- NA
     }
     if (N_settings$process != "off") {
       sims$log_n <- log_n

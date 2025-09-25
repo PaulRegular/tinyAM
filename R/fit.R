@@ -36,6 +36,11 @@
 #' - **opt**: `nlminb` optimization result.
 #' - **rep**: list from `obj$report()`.
 #' - **sdrep**: [RTMB::sdreport()] result.
+#' - **obs_pred**: `inputs$catch` and `inputs$index` data augmented with
+#'                  predicted values, parameter estimates, and
+#'                  standardized residuals (see also [tidy_obs_pred()]).
+#' - **pop**: A collection of population summaries in tidy format (see also
+#'            [tidy_pop()]).
 #'
 #' @examples
 #' fit <- fit_tam(
@@ -99,6 +104,9 @@ fit_tam <- function(inputs, silent = FALSE, ...) {
     rep = rep,
     sdrep = sdrep
   )
+
+  out$obs_pred <- tidy_obs_pred(out)
+  out$pop <- tidy_pop(out)
 
   out
 

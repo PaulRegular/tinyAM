@@ -28,7 +28,7 @@ test_that("fit_tam runs on a cod dataset and returns expected structure", {
   expect_type(fit, "list")
   expect_named(
     fit,
-    c("call","dat","obj","opt","rep","sdrep"),
+    c("call", "dat", "obj", "opt", "rep", "sdrep", "obs_pred", "pop"),
     ignore.order = TRUE
   )
 
