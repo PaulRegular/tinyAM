@@ -230,6 +230,7 @@ tidy_pop <- function(fit, interval = 0.95) {
 #' trans_est(d, transform = NULL, scale = 1000)  # no transform, rescale
 #'
 #' @keywords internal
+#' @export
 trans_est <- function(data, transform = exp, scale = 1) {
   if (!is.null(transform)) {
     data[, c("est", "lwr", "upr")] <-  transform(data[, c("est", "lwr", "upr")])
