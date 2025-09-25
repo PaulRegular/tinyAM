@@ -11,44 +11,43 @@ rprocess_2d(ny, na, phi = c(0, 0), sd = 1)
 }
 \arguments{
 \item{x}{A numeric matrix (\eqn{n_y \times n_a}) of process residuals
-for \code{dprocess_2d()}.}
+for \code{\link[=dprocess_2d]{dprocess_2d()}}.}
 
 \item{phi}{Length-2 numeric vector \code{c(phi_age, phi_year)} with
-values in \code{(0, 1)} for AR1.}
+values in \eqn{(0, 1)} for AR(1).}
 
 \item{sd}{Positive scalar \eqn{\sigma}.}
 
 \item{ny, na}{Positive integers: numbers of years and ages for
-\code{rprocess_2d()}.}
+\code{\link[=rprocess_2d]{rprocess_2d()}}.}
 }
 \value{
 \itemize{
-\item \code{dprocess_2d()}: a single numeric log-density value.
-\item \code{rprocess_2d()}: a numeric matrix of dimension \code{ny × na}.
+\item \code{\link[=dprocess_2d]{dprocess_2d()}}: a single numeric log-density value.
+\item \code{\link[=rprocess_2d]{rprocess_2d()}}: a numeric matrix of dimension \eqn{n_y \times n_a}.
 }
 }
 \description{
-Helpers for working with simple age × year process-error fields for a
-separable 2D AR(1) (AR1).
-
+Helpers for working with simple age × year process-error fields, assuming a
+separable 2D AR(1) structure.
 \itemize{
-\item \code{dprocess_2d()} returns the log-density contribution for a
-given matrix \code{x}.
-\item \code{rprocess_2d()} generates a matrix draw with the requested
-dependence structure.
+\item \code{\link[=dprocess_2d]{dprocess_2d()}} returns the log-density contribution for a given matrix \code{x}.
+\item \code{\link[=rprocess_2d]{rprocess_2d()}} generates a matrix draw with the requested dependence structure.
 }
 }
 \details{
 2D Gaussian Process Densities and Simulators (age × year)
 
 Let \eqn{X \in \mathbb{R}^{n_y \times n_a}} denote the process on
-year (\eqn{y}) and age (\eqn{a}) indices follow a stationary separable
-AR(1) in both dimensions with correlations \eqn{\phi_\text{age}} (columns)
-and \eqn{\phi_\text{year}} (rows), satisfying \eqn{|\phi|<1}. The implied
-covariance is
+year (\eqn{y}) and age (\eqn{a}) indices.
+It follows a stationary separable AR(1) in both dimensions with correlations
+\eqn{\phi_\text{age}} (columns) and \eqn{\phi_\text{year}} (rows), satisfying \eqn{|\phi|<1}.
+
+The implied covariance is
 \deqn{\mathrm{Cov}\{\mathrm{vec}(X)\} =
       \frac{\sigma^2}{(1-\phi_\text{age}^2)(1-\phi_\text{year}^2)}
       \; \Sigma_\text{age} \otimes \Sigma_\text{year},}
+
 where \eqn{\Sigma_\cdot} are AR(1) correlation matrices with entries
 \eqn{\phi^{|i-j|}}.
 }
@@ -60,6 +59,5 @@ dprocess_2d(X_ar1, sd = 0.3, phi = c(0.5, 0.9))
 
 }
 \seealso{
-\code{\link[RTMB]{dseparable}}, \code{\link[RTMB]{dautoreg}},
-\code{\link[MASS]{mvrnorm}}
+\code{\link[RTMB:MVgauss]{RTMB::dseparable()}}, \code{\link[RTMB:MVgauss]{RTMB::dautoreg()}}, \code{\link[MASS:mvrnorm]{MASS::mvrnorm()}}
 }

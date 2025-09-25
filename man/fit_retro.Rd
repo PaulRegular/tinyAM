@@ -9,10 +9,10 @@ fit_retro(fit, folds = 2)
 \arguments{
 \item{fit}{A fitted TAM object as returned by \code{\link[=fit_tam]{fit_tam()}}.}
 
-\item{folds}{Integer number of terminal peels (default \code{2}).}
+\item{folds}{Integer; number of terminal peels (default \code{2}).}
 }
 \value{
-The input \code{fit} with an added \code{$retro} list whose elements are the
+The input \code{fit} with an added \verb{$retro} list whose elements are the
 refitted objects for each peel (named by terminal year).
 }
 \description{
@@ -22,9 +22,9 @@ truncated year range, attaching the list of refits to \code{fit$retro}.
 \details{
 Run a retrospective (peel) analysis
 
-Peel years are \code{(max_year - folds) : max_year}. Each refit is attempted
-with \code{try()} so individual failures do not stop the sequence. Refits are
-generated via \code{update(fit, years = ...)}; ensure your \code{fit} object
+Peel years are \code{(max_year - folds) : max_year}.
+Each refit is attempted with \code{try()} so individual failures do not stop the sequence.
+Refits are generated via \code{update(fit, years = ...)}; ensure your \code{fit} object
 supports \code{update()} with a \code{years} argument.
 }
 \examples{

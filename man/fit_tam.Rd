@@ -7,11 +7,10 @@
 fit_tam(inputs, silent = FALSE, ...)
 }
 \arguments{
-\item{inputs}{A named list of tidy observation tables as expected by
-\code{\link[=make_obs]{make_obs()}} / \code{\link[=make_dat]{make_dat()}} (e.g., \code{catch}, \code{index},
-\code{weight}, \code{maturity}).}
+\item{inputs}{A named list of tidy observation tables (e.g., \code{catch}, \code{index},
+\code{weight}, \code{maturity}). See \link{northern_cod_data} for an example.}
 
-\item{silent}{Disable tracing information?}
+\item{silent}{Logical; if \code{TRUE}, disables tracing information.}
 
 \item{...}{
   Arguments passed on to \code{\link[=make_dat]{make_dat}}
@@ -19,52 +18,49 @@ fit_tam(inputs, silent = FALSE, ...)
     \item{\code{obs}}{A list of tidy observation data.frames: \code{catch}, \code{index},
 \code{weight}, and \code{maturity}. See \strong{Details}.}
     \item{\code{years}}{Integer vector of model years (strictly increasing).
-Inferred from \code{obs} data.frames if \code{NULL}.}
+Inferred from \code{obs} if \code{NULL}.}
     \item{\code{ages}}{Integer vector of model ages (strictly increasing).
-Inferred from \code{obs} data.frames if \code{NULL}.}
+Inferred from \code{obs} if \code{NULL}.}
     \item{\code{N_settings}}{A list with elements:
-\describe{
-\item{process}{One of \code{"off"}, \code{"iid"}, \code{"approx_rw"}, or \code{"ar1"}.}
-\item{init_N0}{Logical; if \code{TRUE}, estimate an initial level for the
+\itemize{
+\item \code{process}: one of \code{"off"}, \code{"iid"}, \code{"approx_rw"}, or \code{"ar1"}.
+\item \code{init_N0}: logical; if \code{TRUE}, estimate an initial level for the
 first-year abundance. If \code{process == "off"} and \code{init_N0 == FALSE},
-this is forced to \code{TRUE}.}
+this is forced to \code{TRUE}.
 }}
     \item{\code{F_settings}}{A list with elements:
-\describe{
-\item{process}{One of \code{"iid"}, \code{"approx_rw"}, or \code{"ar1"}.}
-\item{mu_form}{An optional formula for mean-\eqn{F}.}
+\itemize{
+\item \code{process}: one of \code{"iid"}, \code{"approx_rw"}, or \code{"ar1"}.
+\item \code{mu_form}: an optional formula for mean-\eqn{F}.
 }}
     \item{\code{M_settings}}{A list with elements:
-\describe{
-\item{process}{One of \code{"off"}, \code{"iid"}, \code{"approx_rw"}, or \code{"ar1"}.}
-\item{mu_form}{Optional formula for mean-\eqn{M} (on the log scale) built
+\itemize{
+\item \code{process}: one of \code{"off"}, \code{"iid"}, \code{"approx_rw"}, or \code{"ar1"}.
+\item \code{mu_form}: optional formula for mean-\eqn{M} (on the log scale) built
 on \code{obs$weight}. If provided together with \code{assumption}, the intercept
-in \code{mu_form} is dropped (warning) so assumed levels act as fixed
-offsets.}
-\item{assumption}{Optional one-sided formula giving fixed (non-estimated)
+in \code{mu_form} is dropped (warning) so assumed levels act as fixed offsets.
+\item \code{assumption}: optional one-sided formula giving fixed (non-estimated)
 log-\eqn{M} offsets, e.g. \code{~ I(0.2)} or a column reference such as
-\code{~ log(m_assumption)}.}
-\item{age_breaks}{Optional integer break points used by \code{\link[=cut_ages]{cut_ages()}} to
-define \code{age_blocks} for coupling \eqn{M} deviations across ages.}
+\code{~ log(m_assumption)}.
+\item \code{age_breaks}: optional integer break points used by \code{\link[=cut_ages]{cut_ages()}} to
+define \code{age_blocks} for coupling \eqn{M} deviations across ages.
 }}
     \item{\code{obs_settings}}{A list with elements:
-\describe{
-\item{sd_form}{Formula for observation SD blocks, evaluated on the
-combined obs map (e.g., \code{~ sd_obs_block}).}
-\item{q_form}{Formula for catchability blocks, evaluated on the index
-table (e.g., \code{~ q_block}).}
+\itemize{
+\item \code{sd_form}: formula for observation SD blocks, evaluated on the combined obs map (e.g. \code{~ sd_obs_block}).
+\item \code{q_form}: formula for catchability blocks, evaluated on the index table (e.g. \code{~ q_block}).
 }}
   }}
 }
 \value{
 A list with components:
-\describe{
-\item{call}{Matched call.}
-\item{dat}{Data list returned by \code{\link[=make_dat]{make_dat()}}.}
-\item{obj}{RTMB ADFun object.}
-\item{opt}{\code{nlminb} optimization result.}
-\item{rep}{List from \code{obj$report()}.}
-\item{sdrep}{\code{RTMB::sdreport} result.}
+\itemize{
+\item \strong{call}: matched call.
+\item \strong{dat}: data list returned by \code{\link[=make_dat]{make_dat()}}.
+\item \strong{obj}: RTMB \code{ADFun} object.
+\item \strong{opt}: \code{nlminb} optimization result.
+\item \strong{rep}: list from \code{obj$report()}.
+\item \strong{sdrep}: \code{\link[RTMB:TMB-interface]{RTMB::sdreport()}} result.
 }
 }
 \description{
@@ -76,25 +72,26 @@ reports and standard errors.
 Fit a Tiny Assessment Model (TAM)
 
 This function assigns the constructed data list to a global (\code{dat <<- ...})
-to satisfy closures inside the likelihood (\code{nll_fun}). Random-effect blocks
-are chosen automatically from the model settings:
+to satisfy closures inside the likelihood (\code{nll_fun}).
+
+Random-effect blocks are chosen automatically from the model settings:
 \itemize{
 \item Always includes \code{log_f} and \code{log_r}.
 \item Includes \code{missing} if there are missing observations.
 \item Includes \code{log_n} if \code{N_settings$process != "off"}.
 \item Includes \code{log_m} if \code{M_settings$process != "off"}.
 }
+
 A warning is issued if the number of random effects exceeds 1.5 times the
 number of observed data points (rough identifiability check).
 }
 \examples{
-
 fit <- fit_tam(
   northern_cod_data,
   years = 1983:2024, ages = 2:14,
   N_settings = list(process = "iid", init_N0 = FALSE),
   F_settings = list(process = "approx_rw"),
-  M_settings = list(process = "off", assumption = ~I(0.3)),
+  M_settings = list(process = "off", assumption = ~ I(0.3)),
   obs_settings = list(sd_form = ~ sd_obs_block, q_form = ~ q_block)
 )
 fit$sdrep
@@ -102,5 +99,5 @@ fit$sdrep
 }
 \seealso{
 \code{\link[=make_dat]{make_dat()}}, \code{\link[=make_par]{make_par()}}, \code{\link[=sim_tam]{sim_tam()}}, \code{\link[=fit_retro]{fit_retro()}},
-RTMB::MakeADFun(), RTMB::sdreport()
+\code{\link[RTMB:TMB-interface]{RTMB::MakeADFun()}}, \code{\link[RTMB:TMB-interface]{RTMB::sdreport()}}
 }

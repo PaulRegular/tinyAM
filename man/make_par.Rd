@@ -16,12 +16,12 @@ parameters depend on elements in \code{dat} (e.g., \code{F_modmat}, \code{M_modm
 \value{
 A named list of initialized parameters suitable to pass to the TAM objective
 function, with elements as described in \strong{Details}. All numeric entries are
-initialized to 0 (or correct length filled with 0), and matrices have
+initialized to \code{0} (or the correct length filled with \code{0}), and matrices have
 informative \code{dimnames}.
 }
 \description{
 \code{make_par()} builds a named list of initial values and shapes for all
-fixed and random‐effect parameters used by TAM, based on the structure in
+fixed and random-effect parameters used by TAM, based on the structure in
 a previously constructed \code{dat} list (see \code{\link[=make_dat]{make_dat()}}).
 }
 \details{
@@ -29,40 +29,41 @@ The function inspects \code{dat} to decide which parameters are required and wha
 their dimensions should be. For example, if \code{dat$F_settings$process == "ar1"}
 it initializes a 2-vector \code{logit_phi_f}; if \code{dat$F_settings$mu_form} is not
 \code{NULL} it creates a coefficient vector \code{log_mu_f} of length
-\code{ncol(dat$F_modmat)}, and so on. All numeric parameters are initialized at 0,
-and all matrices are created with appropriate \code{dimnames} (year × age or
-year × age_block).
+\code{ncol(dat$F_modmat)}, and so on.
 
-Created elements (when applicable) include:
+All numeric parameters are initialized at \code{0}, and all matrices are created
+with appropriate \code{dimnames} (\verb{year × age} or \verb{year × age_block}).
+
+\strong{Created elements (when applicable) include:}
 \itemize{
-\item \strong{Recruitment & variability}:
+\item \strong{Recruitment & variability}
 \itemize{
 \item \code{log_r0} (only if \code{dat$N_settings$init_N0})
 \item \code{log_r} (length \code{length(dat$years)})
 \item \code{log_sd_r}
 }
-\item \strong{Abundance deviations (N)}:
+\item \strong{Abundance deviations (N)}
 \itemize{
 \item \code{log_sd_n} (if \code{dat$N_settings$process != "off"})
-\item \code{logit_phi_n} length-2 (if \code{process == "ar1"})
+\item \code{logit_phi_n} length 2 (if \code{process == "ar1"})
 \item \code{log_n} matrix (\code{year} × \code{age[-1]}) if \code{process != "off"}
 }
-\item \strong{Fishing mortality (F)}:
+\item \strong{Fishing mortality (F)}
 \itemize{
 \item \code{log_sd_f}
-\item \code{logit_phi_f} length-2 (if \code{process == "ar1"})
+\item \code{logit_phi_f} length 2 (if \code{process == "ar1"})
 \item \code{log_mu_f} coefficients (length \code{ncol(dat$F_modmat)}) if a mean structure was supplied
 \item \code{log_f} matrix (\code{year} × \code{age})
 }
-\item \strong{Natural mortality (M)}:
+\item \strong{Natural mortality (M)}
 \itemize{
 \item \code{log_sd_m} (if \code{dat$M_settings$process != "off"})
-\item \code{logit_phi_m} length-2 (if \code{process == "ar1"})
+\item \code{logit_phi_m} length 2 (if \code{process == "ar1"})
 \item \code{log_mu_m} coefficients (length \code{ncol(dat$M_modmat)}) if a mean structure was supplied
 \item \code{log_m} matrix (\code{year[-1]} × \code{age_block}) if \code{process != "off"}, with
 \code{age_block = levels(dat$M_settings$age_blocks)}
 }
-\item \strong{Observation model}:
+\item \strong{Observation model}
 \itemize{
 \item \code{log_q} (length \code{ncol(dat$q_modmat)})
 \item \code{log_sd_obs} (length \code{ncol(dat$sd_obs_modmat)})

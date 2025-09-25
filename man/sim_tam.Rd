@@ -10,14 +10,13 @@ sim_tam(fit, obs_only = FALSE)
 \item{fit}{A fitted TAM object returned by \code{\link[=fit_tam]{fit_tam()}}.}
 
 \item{obs_only}{Logical; if \code{TRUE}, only new \code{log_obs} values are
-simulated and inserted into the final report; if \code{FALSE} (default),
-simulated random effects are also injected and all REPORTed quantities are
-recomputed.}
+simulated and inserted into the final report.
+If \code{FALSE} (default), simulated random effects are also injected and all REPORTed quantities are recomputed.}
 }
 \value{
 A list of REPORTed objects (same structure as \code{fit$rep}) with
-\code{log_obs} replaced by simulated values. If \code{obs_only = FALSE},
-the report also reflects simulated random effects.
+\code{log_obs} replaced by simulated values.
+If \code{obs_only = FALSE}, the report also reflects simulated random effects.
 }
 \description{
 Simulates random effects and observations from a fitted model by calling the
@@ -46,4 +45,7 @@ fit <- fit_tam(northern_cod_data, years = 1983:2024, ages = 2:14)
 rep_sim <- sim_tam(fit, obs_only = FALSE)
 str(rep_sim$log_obs)
 
+}
+\seealso{
+\code{\link[=fit_tam]{fit_tam()}}, \code{\link[=fit_retro]{fit_retro()}}
 }

@@ -4,42 +4,37 @@
 #' @title Two–dimensional process error: density and simulation
 #'
 #' @description
-#' Helpers for working with simple age × year process-error fields for a
-#' separable 2D AR(1) (AR1).
+#' Helpers for working with simple age × year process-error fields, assuming a
+#' separable 2D AR(1) structure.
 #'
-#' \itemize{
-#'   \item \code{dprocess_2d()} returns the log-density contribution for a
-#'         given matrix \code{x}.
-#'   \item \code{rprocess_2d()} generates a matrix draw with the requested
-#'         dependence structure.
-#' }
+#' - [dprocess_2d()] returns the log-density contribution for a given matrix `x`.
+#' - [rprocess_2d()] generates a matrix draw with the requested dependence structure.
 #'
 #' @details
 #' Let \eqn{X \in \mathbb{R}^{n_y \times n_a}} denote the process on
-#' year (\eqn{y}) and age (\eqn{a}) indices follow a stationary separable
-#' AR(1) in both dimensions with correlations \eqn{\phi_\text{age}} (columns)
-#' and \eqn{\phi_\text{year}} (rows), satisfying \eqn{|\phi|<1}. The implied
-#' covariance is
+#' year (\eqn{y}) and age (\eqn{a}) indices.
+#' It follows a stationary separable AR(1) in both dimensions with correlations
+#' \eqn{\phi_\text{age}} (columns) and \eqn{\phi_\text{year}} (rows), satisfying \eqn{|\phi|<1}.
+#'
+#' The implied covariance is
 #' \deqn{\mathrm{Cov}\{\mathrm{vec}(X)\} =
 #'       \frac{\sigma^2}{(1-\phi_\text{age}^2)(1-\phi_\text{year}^2)}
 #'       \; \Sigma_\text{age} \otimes \Sigma_\text{year},}
+#'
 #' where \eqn{\Sigma_\cdot} are AR(1) correlation matrices with entries
 #' \eqn{\phi^{|i-j|}}.
 #'
 #' @param x A numeric matrix (\eqn{n_y \times n_a}) of process residuals
-#'   for \code{dprocess_2d()}.
+#'   for [dprocess_2d()].
 #' @param ny,na Positive integers: numbers of years and ages for
-#'   \code{rprocess_2d()}.
+#'   [rprocess_2d()].
 #' @param phi Length-2 numeric vector \code{c(phi_age, phi_year)} with
-#'   values in \code{(0, 1)} for AR1.
+#'   values in \eqn{(0, 1)} for AR(1).
 #' @param sd Positive scalar \eqn{\sigma}.
 #'
 #' @return
-#' \itemize{
-#'   \item \code{dprocess_2d()}: a single numeric log-density value.
-#'   \item \code{rprocess_2d()}: a numeric matrix of dimension \code{ny × na}.
-#' }
-#'
+#' - [dprocess_2d()]: a single numeric log-density value.
+#' - [rprocess_2d()]: a numeric matrix of dimension \eqn{n_y \times n_a}.
 #'
 #' @examples
 #' # Simulate then calculate log-density
@@ -48,11 +43,9 @@
 #' dprocess_2d(X_ar1, sd = 0.3, phi = c(0.5, 0.9))
 #'
 #' @seealso
-#' \code{\link[RTMB]{dseparable}}, \code{\link[RTMB]{dautoreg}},
-#' \code{\link[MASS]{mvrnorm}}
+#' [RTMB::dseparable()], [RTMB::dautoreg()], [MASS::mvrnorm()]
 #'
 #' @import RTMB
-#'
 #' @rdname process_2d
 #' @export
 dprocess_2d <- function(x, phi = c(0, 0), sd = 1) {
@@ -89,88 +82,99 @@ rprocess_2d <- function(ny, na, phi = c(0, 0), sd = 1) {
 #' Negative log-likelihood (and simulator) for the Tiny Assessment Model
 #'
 #' @description
-#' Core objective function for TAM. When `simulate = FALSE` (default) it
-#' returns the joint negative log-likelihood (JNLL) of the state–space model
-#' given parameters in `par` and data/flags in the captured `dat` list.
-#' When `simulate = TRUE`, it draws the model’s random effects and observations
-#' from the assumed distributions and returns a list of simulated objects
-#' (see **Value**).
+#' Core objective function for TAM.
+#'
+#' - When `simulate = FALSE` (default) it returns the joint negative log-likelihood (JNLL)
+#'   of the state–space model given parameters in `par` and data/flags in the captured `dat` list.
+#' - When `simulate = TRUE`, it draws the model’s random effects and observations
+#'   from the assumed distributions and returns a list of simulated objects
+#'   (see **Value**).
 #'
 #' @details
 #' The model follows a standard age–structured state–space formulation:
 #'
-#' - **Recruitment:** log-recruits `log_r[y]` evolve as a random walk:
+#' - **Recruitment:** log-recruits \eqn{\log R_y} evolve as a random walk:
 #'   \deqn{\Delta \log R_y \sim \mathcal{N}(0,\sigma_R^2).}
+#'
 #'   If `N_settings$init_N0` is `TRUE`, the initial recruit level
-#'   is constrained by \eqn{\log R_1 \sim \mathcal{N}(\log R_0,\sigma_R^2)}.
+#'   is constrained by:
+#'   \deqn{\log R_1 \sim \mathcal{N}(\log R_0,\sigma_R^2).}
 #'
 #' - **Numbers-at-age:** forward cohort dynamics with plus-group:
 #'   \deqn{\log N_{y,a} = \log N_{y-1,a-1} - Z_{y-1,a-1},}
-#'   with \eqn{Z_{y,a} = F_{y,a} + M_{y,a}} and the plus-group equation applied
-#'   at the terminal age. If `N_settings$process != "off"`, residuals
-#'   \eqn{\eta^N_{y,a} = \log N_{y,a} - \widehat{\log N}_{y,a}}
-#'   are penalized by `dprocess_2d()` according to the chosen process.
 #'
-#' - **Fishing mortality:** \eqn{\log F_{y,a}} is decomposed as
+#'   with \eqn{Z_{y,a} = F_{y,a} + M_{y,a}}. The plus-group equation is applied
+#'   at the terminal age.
+#'   If `N_settings$process != "off"`, residuals
+#'   \eqn{\eta^N_{y,a} = \log N_{y,a} - \widehat{\log N}_{y,a}}
+#'   are penalized by [dprocess_2d()] according to the chosen process.
+#'
+#' - **Fishing mortality:**
 #'   \deqn{\log F_{y,a} = \mu^F_{y,a} + \eta^F_{y,a},}
+#'
 #'   where the optional fixed-effects surface \eqn{\mu^F} comes from
-#'   `F_modmat %*% log_mu_f` (if `F_settings$mu_form` is provided), and the
-#'   process deviations \eqn{\eta^F} are penalized by `dprocess_2d()` using
+#'   \eqn{F_\text{modmat} \cdot \texttt{log\_mu\_f}} (if `F_settings$mu_form` is provided).
+#'   Deviations \eqn{\eta^F} are penalized by [dprocess_2d()] using
 #'   `F_settings$process` and `logit_phi_f` (AR1) or a RW/IID penalty.
 #'
-#' - **Natural mortality:** \eqn{\log M_{y,a}} is
+#' - **Natural mortality:**
 #'   \deqn{\log M_{y,a} = \log \mu^M_{y,a} + \eta^M_{y,a},}
-#'   where \eqn{\log \mu^M = \texttt{log\_mu\_assumed\_m} + M\_modmat \,\texttt{log\_mu\_m}}.
-#'   If `M_settings$process != "off"`, the deviations \eqn{\eta^M} are penalized
-#'   by `dprocess_2d()` and may be grouped by age via `M_settings$age_blocks`.
+#'
+#'   where \eqn{\log \mu^M = \texttt{log\_mu\_assumed\_m} + M_\text{modmat}\,\texttt{log\_mu\_m}}.
+#'   If `M_settings$process != "off"`, deviations \eqn{\eta^M} are penalized
+#'   by [dprocess_2d()] and may be grouped by age via `M_settings$age_blocks`.
 #'
 #' - **Observations:** catch-at-age and index-at-age on the log scale:
-#'   \deqn{\log C_{y,a} \sim \mathcal{N}\!\left(\log\!\left[N_{y,a}
-#'       \frac{F_{y,a}}{Z_{y,a}} \left(1-e^{-Z_{y,a}}\right)\right], \sigma^2_{\text{obs}}\right),}
-#'   \deqn{\log I_{y,a} \sim \mathcal{N}\!\left(\log q_{a} + \log N_{y,a} - Z_{y,a}\, t_{y,a}, \sigma^2_{\text{obs}}\right),}
-#'   where `sd_obs_modmat %*% log_sd_obs` controls observation SD (by block),
+#'   \deqn{\log C_{y,a} \sim \mathcal{N}\!\left(
+#'       \log\!\left[N_{y,a}\,\frac{F_{y,a}}{Z_{y,a}}\,(1-e^{-Z_{y,a}})\right],
+#'       \sigma^2_{\text{obs}}\right),}
+#'
+#'   \deqn{\log I_{y,a} \sim \mathcal{N}\!\left(
+#'       \log q_{a} + \log N_{y,a} - Z_{y,a}\, t_{y,a}, \sigma^2_{\text{obs}}\right).}
+#'
+#'   Here `sd_obs_modmat %*% log_sd_obs` controls observation SD (by block),
 #'   and `q_modmat %*% log_q` controls age- (or block-) specific catchability.
 #'
+#' **Simulation mode:**
 #' When `simulate = TRUE`, the function:
-#'   1) draws `log_r` (RW), optional `log_n` (cohort residual field),
-#'      optional `log_m` (M deviations), and `log_f` (F deviations) from
-#'      their respective process models via `rprocess_2d()`;
-#'   2) regenerates predictions and draws `log_obs` from the observation
-#'      model;
-#'   3) returns the simulated objects.
+#'
+#' 1. Draws `log_r` (RW), optional `log_n` (cohort residual field),
+#'    optional `log_m` (M deviations), and `log_f` (F deviations) from
+#'    their respective process models via [rprocess_2d()].
+#' 2. Regenerates predictions and draws `log_obs` from the observation
+#'    model.
+#' 3. Returns the simulated objects.
+#'
 #' Missing observations are preserved (filled and then reset to `NA`).
 #'
 #' `REPORT()` and `ADREPORT()` calls inside the function make derived
 #' quantities (e.g., `N`, `F`, `M`, `Z`, `ssb`, `log_ssb`) available through
-#' `obj$report()` / `sdreport()` when used via \pkg{RTMB}.
+#' `obj$report()` / `sdreport()` when used via **RTMB**.
 #'
 #' @param par Named list of parameters in the format produced by
 #'   [make_par()]. This includes scalars (e.g., `log_sd_*`), vectors
 #'   (e.g., `log_r`, `log_q`), and matrices (e.g., `log_f`, `log_n`, `log_m`).
-#' @param simulate Logical. If `FALSE`, return the JNLL. If `TRUE`, simulate
-#'   random effects and observations and return them (see **Value**).
+#' @param simulate Logical. If `FALSE`, return the JNLL.
+#'   If `TRUE`, simulate random effects and observations and return them (see **Value**).
 #'
 #' @return
-#' If `simulate = FALSE`: a single numeric JNLL value.
-#' If `simulate = TRUE`: a list with elements
-#' \itemize{
-#'   \item `log_f`, `log_r` — always returned;
-#'   \item `log_n` — if `N_settings$process != "off"`;
-#'   \item `log_m` — if `M_settings$process != "off"`;
-#'   \item `log_obs` — simulated observations (NAs restored where input was missing);
-#'   \item `missing` — the simulated values at missing-observation positions.
-#' }
+#' - If `simulate = FALSE`: a single numeric JNLL value.
+#' - If `simulate = TRUE`: a list with elements:
+#'   - `log_f`, `log_r` — always returned;
+#'   - `log_n` — if `N_settings$process != "off"`;
+#'   - `log_m` — if `M_settings$process != "off"`;
+#'   - `log_obs` — simulated observations (NAs restored where input was missing);
+#'   - `missing` — the simulated values at missing-observation positions.
 #'
 #' @section Dependencies and captured data:
 #' The function expects a `dat` list in its lexical scope (created by
 #' [make_dat()]) containing data matrices/vectors and model matrices
 #' (`SW`, `MO`, `obs_map`, `sd_obs_modmat`, `q_modmat`, `F_modmat`,
-#' `M_modmat`, settings lists, etc.). It also relies on helper functions
-#' [dprocess_2d()] and [rprocess_2d()] for process penalties and simulation.
-#'
+#' `M_modmat`, settings lists, etc.).
+#' It also relies on helper functions [dprocess_2d()] and [rprocess_2d()]
+#' for process penalties and simulation.
 #'
 #' @examples
-#'
 #' dat <- make_dat(
 #'   northern_cod_data,
 #'   years = 1983:2024,
@@ -181,7 +185,9 @@ rprocess_2d <- function(ny, na, phi = c(0, 0), sd = 1) {
 #'   obs_settings = list(sd_form = ~ sd_obs_block, q_form = ~ q_block)
 #' )
 #' par <- make_par(dat)
-#' obj <- RTMB::MakeADFun(nll_fun, par, random = c("log_n", "log_f","log_r", "missing"), silent = TRUE)
+#' obj <- RTMB::MakeADFun(nll_fun, par,
+#'   random = c("log_n", "log_f","log_r", "missing"), silent = TRUE
+#' )
 #' opt <- nlminb(obj$par, obj$fn, obj$gr)
 #' rep <- obj$report()
 #' sdrep <- RTMB::sdreport(obj)
@@ -193,7 +199,6 @@ rprocess_2d <- function(ny, na, phi = c(0, 0), sd = 1) {
 #' @seealso
 #' [make_dat()], [make_par()], [fit_tam()], [sim_tam()],
 #' [dprocess_2d()], [rprocess_2d()]
-#'
 #' @export
 nll_fun <- function(par, simulate = FALSE) {
 

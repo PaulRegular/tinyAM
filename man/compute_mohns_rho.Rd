@@ -8,17 +8,17 @@ compute_mohns_rho(data)
 }
 \arguments{
 \item{data}{A data frame with columns:
-\describe{
-\item{year}{Integer or numeric assessment year of the estimate.}
-\item{retro_year}{Integer or numeric label for the retrospective peel
-(typically the terminal year of the dataset used for that run).}
-\item{est}{Numeric estimate (e.g., SSB, F, recruitment) on which
-Mohn's rho is calculated.}
+\itemize{
+\item \strong{year}: integer or numeric assessment year of the estimate.
+\item \strong{retro_year}: integer or numeric label for the retrospective peel
+(typically the terminal year of the dataset used for that run).
+\item \strong{est}: numeric estimate (e.g., SSB, F, recruitment) on which
+Mohn's rho is calculated.
 }}
 }
 \value{
-A single numeric value: the mean proportional difference
-(Mohn's rho). \code{NA} if no valid pairs are available.
+A single numeric value: the mean proportional difference (Mohn's rho).
+Returns \code{NA} if no valid pairs are available.
 }
 \description{
 Calculates Mohn's rho (the average proportional retrospective bias)
@@ -38,8 +38,9 @@ reference series.
 (\code{year == retro_year}) and merges with the terminal estimate for the
 same year.
 \item Computes proportional difference
-\eqn{(est_{retro} - est_{terminal}) / est_{terminal}} and returns
-the mean across peels.
+\deqn{\rho = \frac{ \text{est}_{\text{retro}} - \text{est}_{\text{terminal}} }
+               { \text{est}_{\text{terminal}} }}
+and returns the mean across peels.
 }
 
 Observations with zero terminal estimates will produce \code{Inf}/\code{NaN}
@@ -50,7 +51,8 @@ input accordingly if this is a concern.
 df <- data.frame(
   year = rep(2010:2015, each = 3),
   retro_year = rep(c(2013, 2014, 2015), times = 6),
-  est = c(100, 105, 110, 90, 95, 100, 85, 92, 98, 80, 90, 95, 78, 88, 93, 76, 86, 91)
+  est = c(100, 105, 110, 90, 95, 100, 85, 92, 98,
+          80, 90, 95, 78, 88, 93, 76, 86, 91)
 )
 compute_mohns_rho(df)
 

@@ -1,24 +1,25 @@
 
-
 #' Cut integer sequences into labeled blocks (ages or years)
 #'
 #' @description
 #' `cut_int()` turns an integer vector into labeled
 #' blocks using an increasing vector of break points.
+#'
 #' Labels are of the form `"start-end"` for multi-year/age blocks and
 #' `"k"` for single blocks. The last label always ends at `max(x)`
 #' (e.g. `"2003-2025"` or `"14"`).
 #'
-#' Convenience wrappers `cut_ages()` and `cut_years()` call `cut_int()`
+#' Convenience wrappers [cut_ages()] and [cut_years()] call `cut_int()`
 #' with argument names that read naturally for common assessment inputs.
 #'
 #' @details
 #' Let `breaks = (b1, b2, ..., bm)`. Blocks are
-#' \eqn{[b1, b2-1], [b2, b3-1], ..., [b_{m-1}, b_m]} on the integer line.
-#' If `b_{m-1} = b_m`, the last block is the single `{b_m}`.
+#' `[b1, b2-1], [b2, b3-1], ..., [b_{m-1}, b_m]` on the integer line.
+#' If `b_{m-1} = b_m`, the last block is the singleton `{b_m}`.
 #'
-#' Input requirements (enforced):
-#' - `x, ages, years` are numeric, integer-valued, and non-`NA`.
+#' **Input requirements (enforced):**
+#'
+#' - `x`, `ages`, `years` are numeric, integer-valued, and non-`NA`.
 #' - `breaks` is numeric, increasing, and non-`NA`.
 #' - `min(x) == breaks[1]` and `max(x) == tail(breaks, 1)`.
 #'
@@ -26,29 +27,30 @@
 #' @param breaks Integer vector of group starts (strictly increasing).
 #'   Must start at `min(x)` and end at `max(x)`.
 #' @param ordered Logical; should the returned factor be ordered?
-#'   Default `FALSE`.
+#'   Default is `FALSE`.
 #'
 #' @return
-#' An factor with the same length as `x`, whose levels enumerate
+#' A factor with the same length as `x`, whose levels enumerate
 #' the blocks in increasing order.
 #'
 #' @examples
-#' ## Ages: single-year blocks
+#' # Ages: single-year blocks
 #' cut_ages(2:14, 2:14)
 #'
-#' ## Ages: a wide block then singletons
+#' # Ages: a wide block then singletons
 #' cut_ages(2:14, c(2, 10, 11:14))
 #'
-#' ## Ages: even-width blocks, last block closes at max age
+#' # Ages: even-width blocks, last block closes at max age
 #' cut_ages(2:14, seq(2, 14, by = 2))
 #'
-#' ## Years: management-era blocks
+#' # Years: management-era blocks
 #' cut_years(1983:2025, c(1983, 1992, 1997, 2003, 2025))
 #'
-#' ## Direct use with ordered = TRUE (if useful for contrasts)
+#' # Direct use with ordered = TRUE (if useful for contrasts)
 #' cut_int(2:10, c(2, 5, 8, 10), ordered = TRUE)
 #'
-#' @seealso [base::findInterval()], [stats::model.matrix()]
+#' @seealso
+#' [base::findInterval()], [stats::model.matrix()]
 #'
 #' @export
 #' @rdname cut_int
@@ -83,99 +85,90 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 
 
 
-
 #' Build a self-contained data list for TAM
 #'
 #' @description
 #' `make_dat()` converts tidy observation inputs and modeling options into the
-#' structured list `dat` expected by TAM’s likelihood/simulation functions. It
-#' expands an age–year grid, merges observations, constructs design matrices for
+#' structured list `dat` expected by TAM’s likelihood and simulation functions.
+#' It expands an age–year grid, merges observations, constructs design matrices for
 #' observation SDs, catchability, and mean-\eqn{F} / mean-\eqn{M} (when used),
 #' and derives helper mappings and settings.
 #'
 #' @details
 #' **Observation handling**
-#' * Inputs are expected as a list with components `catch`, `index`, `weight`,
-#'   and `maturity` (each with at least columns `year`, `age`, and a value
-#'   column named `obs` for `catch`/`index`, or `weight`/`mat` renamed to
-#'   `obs`).
-#' * Observations are merged to the full `expand.grid(year, age)`.
-#' * A combined observation table is created for catch and index; `log(0)` is
+#'
+#' - Inputs are expected as a list with components `catch`, `index`, `weight`,
+#'   and `maturity`. Each must include columns `year`, `age`, and a value column
+#'   named `obs` (for `catch`/`index`) or renamed from `weight`/`mat`.
+#' - Observations are merged to the full `expand.grid(year, age)`.
+#' - A combined observation table is created for catch and index; `log(0)` is
 #'   treated as `NA` (to be handled via random effects).
 #'
 #' **Design matrices**
-#' * `obs_settings$sd_form` is evaluated on the combined obs map to produce
+#'
+#' - `obs_settings$sd_form` is evaluated on the combined obs map to produce
 #'   `sd_obs_modmat`.
-#' * `obs_settings$q_form` is evaluated on the index table to produce
+#' - `obs_settings$q_form` is evaluated on the index table to produce
 #'   `q_modmat`.
-#' * If `M_settings$mu_form` is provided, `M_modmat <- model.matrix(mu_form,
+#' - If `M_settings$mu_form` is provided, `M_modmat <- model.matrix(mu_form,
 #'   data = obs$weight)`. If an `assumption` is also supplied (i.e., fixed
 #'   offsets), the intercept in `mu_form` is dropped and a warning is issued.
-#' * If neither `M_settings$mu_form` nor `M_settings$assumption` is supplied,
+#' - If neither `M_settings$mu_form` nor `M_settings$assumption` is supplied,
 #'   the function stops, because \eqn{M} must be identified by either a fixed
 #'   assumption or a mean structure.
 #'
-#' **Process options & guards**
-#' * If `N_settings$process == "off"` and `init_N0 == FALSE`, `init_N0` is
+#' **Process options and guards**
+#'
+#' - If `N_settings$process == "off"` and `init_N0 == FALSE`, `init_N0` is
 #'   forced to `TRUE` (with a warning) so the first-year abundance is
 #'   estimable.
-#' * `M_settings$age_breaks` (vector of break points on ages \eqn{\ge} min
-#'   modeled age + 1) defines `M_settings$age_blocks` via [`cut_ages()`], used
+#' - `M_settings$age_breaks` (vector of break points on ages \eqn{\ge} min modeled age + 1)
+#'   defines `M_settings$age_blocks` via [cut_ages()], used
 #'   to couple \eqn{M} deviations across age.
-#' * The AR(1) correlation parameters are only “turned on” (initialized) for
+#' - The AR(1) correlation parameters are only initialized for
 #'   processes whose `process == "ar1"`. Correlations are assumed to be 0
-#'   when `process == "iid"` and 0.99 when `process == "approx_rw"` to approximate
+#'   when `process == "iid"`, and 0.99 when `process == "approx_rw"` to approximate
 #'   a random walk across ages and years.
 #'
 #' @param obs A list of tidy observation data.frames: `catch`, `index`,
 #'   `weight`, and `maturity`. See **Details**.
 #' @param years Integer vector of model years (strictly increasing).
-#'   Inferred from `obs` data.frames if `NULL`.
+#'   Inferred from `obs` if `NULL`.
 #' @param ages Integer vector of model ages (strictly increasing).
-#'   Inferred from `obs` data.frames if `NULL`.
+#'   Inferred from `obs` if `NULL`.
 #' @param N_settings A list with elements:
-#'   \describe{
-#'     \item{process}{One of `"off"`, `"iid"`, `"approx_rw"`, or `"ar1"`.}
-#'     \item{init_N0}{Logical; if `TRUE`, estimate an initial level for the
-#'       first-year abundance. If `process == "off"` and `init_N0 == FALSE`,
-#'       this is forced to `TRUE`.}
-#'   }
+#' - `process`: one of `"off"`, `"iid"`, `"approx_rw"`, or `"ar1"`.
+#' - `init_N0`: logical; if `TRUE`, estimate an initial level for the
+#'   first-year abundance. If `process == "off"` and `init_N0 == FALSE`,
+#'   this is forced to `TRUE`.
 #' @param F_settings A list with elements:
-#'   \describe{
-#'     \item{process}{One of `"iid"`, `"approx_rw"`, or `"ar1"`.}
-#'     \item{mu_form}{An optional formula for mean-\eqn{F}.}
-#'   }
+#' - `process`: one of `"iid"`, `"approx_rw"`, or `"ar1"`.
+#' - `mu_form`: an optional formula for mean-\eqn{F}.
 #' @param M_settings A list with elements:
-#'   \describe{
-#'     \item{process}{One of `"off"`, `"iid"`, `"approx_rw"`, or `"ar1"`.}
-#'     \item{mu_form}{Optional formula for mean-\eqn{M} (on the log scale) built
-#'       on `obs$weight`. If provided together with `assumption`, the intercept
-#'       in `mu_form` is dropped (warning) so assumed levels act as fixed
-#'       offsets.}
-#'     \item{assumption}{Optional one-sided formula giving fixed (non-estimated)
-#'       log-\eqn{M} offsets, e.g. `~ I(0.2)` or a column reference such as
-#'       `~ log(m_assumption)`.}
-#'     \item{age_breaks}{Optional integer break points used by [`cut_ages()`] to
-#'       define `age_blocks` for coupling \eqn{M} deviations across ages.}
-#'   }
+#' - `process`: one of `"off"`, `"iid"`, `"approx_rw"`, or `"ar1"`.
+#' - `mu_form`: optional formula for mean-\eqn{M} (on the log scale) built
+#'   on `obs$weight`. If provided together with `assumption`, the intercept
+#'   in `mu_form` is dropped (warning) so assumed levels act as fixed offsets.
+#' - `assumption`: optional one-sided formula giving fixed (non-estimated)
+#'   log-\eqn{M} offsets, e.g. `~ I(0.2)` or a column reference such as
+#'   `~ log(m_assumption)`.
+#' - `age_breaks`: optional integer break points used by [cut_ages()] to
+#'   define `age_blocks` for coupling \eqn{M} deviations across ages.
 #' @param obs_settings A list with elements:
-#'   \describe{
-#'     \item{sd_form}{Formula for observation SD blocks, evaluated on the
-#'       combined obs map (e.g., `~ sd_obs_block`).}
-#'     \item{q_form}{Formula for catchability blocks, evaluated on the index
-#'       table (e.g., `~ q_block`).}
-#'   }
+#' - `sd_form`: formula for observation SD blocks, evaluated on the combined obs map (e.g. `~ sd_obs_block`).
+#' - `q_form`: formula for catchability blocks, evaluated on the index table (e.g. `~ q_block`).
 #'
 #' @return
 #' A named list `dat` containing:
-#' * `years`, `ages`, `obs` (per-type tables merged to full grid),
-#' * `SW`, `MO` weight-at-age and maturity matrices (`year × age`),
-#' * `obs_map`, `log_obs`,
-#' * design matrices: `sd_obs_modmat`, `q_modmat`, and optionally
-#'   `F_modmat`, `M_modmat`,
-#' * mean-level placeholders: `log_mu_f` and/or `log_mu_m` (or `log_mu_assumed_m`),
-#' * process settings: `N_settings`, `F_settings`, `M_settings`,
-#' * AR(1) parameter placeholders `logit_phi_*` set only for `"ar1"` processes.
+#'
+#' - `years`, `ages`, `obs` (per-type tables merged to full grid)
+#' - `SW`, `MO` weight-at-age and maturity matrices (`year × age`)
+#' - `obs_map`, `log_obs`
+#' - design matrices: `sd_obs_modmat`, `q_modmat`, and optionally
+#'   `F_modmat`, `M_modmat`
+#' - mean-level placeholders: `log_mu_f` and/or `log_mu_m` (or `log_mu_assumed_m`)
+#' - process settings: `N_settings`, `F_settings`, `M_settings`
+#' - AR(1) parameter placeholders `logit_phi_*` set only for `"ar1"` processes
 #'
 #' @examples
 #' dat <- make_dat(
@@ -306,7 +299,7 @@ make_dat <- function(
 #'
 #' @description
 #' `make_par()` builds a named list of initial values and shapes for all
-#' fixed and random‐effect parameters used by TAM, based on the structure in
+#' fixed and random-effect parameters used by TAM, based on the structure in
 #' a previously constructed `dat` list (see [make_dat()]).
 #'
 #' @details
@@ -314,32 +307,37 @@ make_dat <- function(
 #' their dimensions should be. For example, if `dat$F_settings$process == "ar1"`
 #' it initializes a 2-vector `logit_phi_f`; if `dat$F_settings$mu_form` is not
 #' `NULL` it creates a coefficient vector `log_mu_f` of length
-#' `ncol(dat$F_modmat)`, and so on. All numeric parameters are initialized at 0,
-#' and all matrices are created with appropriate `dimnames` (year × age or
-#' year × age_block).
+#' `ncol(dat$F_modmat)`, and so on.
 #'
-#' Created elements (when applicable) include:
+#' All numeric parameters are initialized at `0`, and all matrices are created
+#' with appropriate `dimnames` (`year × age` or `year × age_block`).
 #'
-#' - **Recruitment & variability**:
+#' **Created elements (when applicable) include:**
+#'
+#' - **Recruitment & variability**
 #'   - `log_r0` (only if `dat$N_settings$init_N0`)
 #'   - `log_r` (length `length(dat$years)`)
 #'   - `log_sd_r`
-#' - **Abundance deviations (N)**:
+#'
+#' - **Abundance deviations (N)**
 #'   - `log_sd_n` (if `dat$N_settings$process != "off"`)
-#'   - `logit_phi_n` length-2 (if `process == "ar1"`)
+#'   - `logit_phi_n` length 2 (if `process == "ar1"`)
 #'   - `log_n` matrix (`year` × `age[-1]`) if `process != "off"`
-#' - **Fishing mortality (F)**:
+#'
+#' - **Fishing mortality (F)**
 #'   - `log_sd_f`
-#'   - `logit_phi_f` length-2 (if `process == "ar1"`)
+#'   - `logit_phi_f` length 2 (if `process == "ar1"`)
 #'   - `log_mu_f` coefficients (length `ncol(dat$F_modmat)`) if a mean structure was supplied
 #'   - `log_f` matrix (`year` × `age`)
-#' - **Natural mortality (M)**:
+#'
+#' - **Natural mortality (M)**
 #'   - `log_sd_m` (if `dat$M_settings$process != "off"`)
-#'   - `logit_phi_m` length-2 (if `process == "ar1"`)
+#'   - `logit_phi_m` length 2 (if `process == "ar1"`)
 #'   - `log_mu_m` coefficients (length `ncol(dat$M_modmat)`) if a mean structure was supplied
 #'   - `log_m` matrix (`year[-1]` × `age_block`) if `process != "off"`, with
 #'     `age_block = levels(dat$M_settings$age_blocks)`
-#' - **Observation model**:
+#'
+#' - **Observation model**
 #'   - `log_q` (length `ncol(dat$q_modmat)`)
 #'   - `log_sd_obs` (length `ncol(dat$sd_obs_modmat)`)
 #'   - `missing` vector of length `sum(is.na(dat$log_obs))` (placeholders for
@@ -357,7 +355,7 @@ make_dat <- function(
 #' @return
 #' A named list of initialized parameters suitable to pass to the TAM objective
 #' function, with elements as described in **Details**. All numeric entries are
-#' initialized to 0 (or correct length filled with 0), and matrices have
+#' initialized to `0` (or the correct length filled with `0`), and matrices have
 #' informative `dimnames`.
 #'
 #' @examples

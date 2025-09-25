@@ -1,81 +1,67 @@
-
 #' Northern cod example data for TAM
 #'
 #' @description
 #' A compact, tidy-ish list of inputs prepared for the Tiny Assessment Model (TAM),
-#' derived from data used in the assessment of Northern cod, NAFO Divisions 2J3KL. This is
-#' intended for vignettes, examples, and tests.
+#' derived from data used in the assessment of Northern cod, NAFO Divisions 2J3KL.
+#' This is intended for vignettes, examples, and tests.
 #'
 #' @format
 #' A named list of four data frames:
-#' \describe{
-#'   \item{\code{catch}}{
-#'     Data frame with commercial catch-at-age observations and blocking
-#'     variables.
-#'     \describe{
-#'       \item{\code{year}}{Numeric calendar year.}
-#'       \item{\code{age}}{Numeric age (years).}
-#'       \item{\code{obs}}{Numeric observed catch in numbers (may include \code{NA}).}
-#'       \item{\code{sd_obs_block}}{Character; observation-variance block label (\code{"catch"}).}
-#'       \item{\code{F_y_block}}{Factor; year blocks for fishing-mortality mean structure
-#'                                (e.g., \code{"1954-1991"}, \code{"1992-1997"}, …).}
-#'       \item{\code{F_a_block}}{Factor; age blocks for fishing-mortality mean structure
-#'                                (e.g., \code{"0-1"}, \code{"2-3"}, …).}
-#'     }
-#'   }
-#'   \item{\code{index}}{
-#'     Data frame with survey (index) observations and blocking variables.
-#'     \describe{
-#'       \item{\code{year}}{Integer year.}
-#'       \item{\code{age}}{Numeric age (years).}
-#'       \item{\code{obs}}{Numeric survey index-at-age (may include \code{NA}).}
-#'       \item{\code{samp_time}}{Numeric sampling time within the year (fraction of a year; e.g., \code{0.8}).}
-#'       \item{\code{q_block}}{Factor; age blocks for catchability.}
-#'       \item{\code{sd_obs_block}}{Character; observation-variance block label (\code{"index"}).}
-#'     }
-#'   }
-#'   \item{\code{weight}}{
-#'     Data frame with weight-at-age and mortality assumption used for \emph{M} mean structure.
-#'     \describe{
-#'       \item{\code{year}}{Integer year.}
-#'       \item{\code{age}}{Numeric age (years).}
-#'       \item{\code{obs}}{Numeric weight-at-age (same units as source; e.g., kg).}
-#'       \item{\code{M_assumption}}{Numeric assumed natural mortality level by age–year
-#'                                  (used when constructing \code{M} mean via formula).}
-#'     }
-#'   }
-#'   \item{\code{maturity}}{
-#'     Data frame with maturity-at-age (proportion mature).
-#'     \describe{
-#'       \item{\code{year}}{Numeric year.}
-#'       \item{\code{age}}{Numeric age (years).}
-#'       \item{\code{obs}}{Numeric proportion mature (0–1).}
-#'     }
-#'   }
-#' }
+#'
+#' - **catch**: commercial catch-at-age observations and blocking variables.
+#'   Columns:
+#'   - `year`: numeric calendar year.
+#'   - `age`: numeric age (years).
+#'   - `obs`: numeric observed catch in numbers (may include `NA`).
+#'   - `sd_obs_block`: character; observation-variance block label (`"catch"`).
+#'   - `F_y_block`: factor; year blocks for fishing-mortality mean structure
+#'     (e.g., `"1954-1991"`, `"1992-1997"`, …).
+#'   - `F_a_block`: factor; age blocks for fishing-mortality mean structure
+#'     (e.g., `"0-1"`, `"2-3"`, …).
+#'
+#' - **index**: survey (index) observations and blocking variables.
+#'   Columns:
+#'   - `year`: integer year.
+#'   - `age`: numeric age (years).
+#'   - `obs`: numeric survey index-at-age (may include `NA`).
+#'   - `samp_time`: numeric sampling time within the year (fraction of a year; e.g., `0.8`).
+#'   - `q_block`: factor; age blocks for catchability.
+#'   - `sd_obs_block`: character; observation-variance block label (`"index"`).
+#'
+#' - **weight**: weight-at-age and mortality assumption used for \eqn{M} mean structure.
+#'   Columns:
+#'   - `year`: integer year.
+#'   - `age`: numeric age (years).
+#'   - `obs`: numeric weight-at-age (same units as source; e.g., kg).
+#'   - `M_assumption`: numeric assumed natural mortality level by age–year
+#'     (used when constructing `M` mean via formula).
+#'
+#' - **maturity**: maturity-at-age (proportion mature).
+#'   Columns:
+#'   - `year`: numeric year.
+#'   - `age`: numeric age (years).
+#'   - `obs`: numeric proportion mature (0–1).
 #'
 #' @details
 #' The object was assembled by:
-#' \enumerate{
-#'   \item Converting NCAM arrays to tidy data frames.
-#'   \item Creating blocking variables for \code{F} by year (\code{F_y_block}) and age
-#'         (\code{F_a_block}) using \code{\link{cut_years}} and \code{\link{cut_ages}}.
-#'   \item Joining weight-at-age with a natural mortality assumption column
-#'         (\code{M_assumption}) derived from \code{NCAM::inputs$nm}.
-#' }
+#'
+#' 1. Converting NCAM arrays to tidy data frames.
+#' 2. Creating blocking variables for `F` by year (`F_y_block`) and age
+#'    (`F_a_block`) using [cut_years()] and [cut_ages()].
+#' 3. Joining weight-at-age with a natural mortality assumption column
+#'    (`M_assumption`) derived from `NCAM::inputs$nm`.
 #'
 #' Exact dimensions may change if the source data evolve. At the time of inclusion,
 #' the elements contained approximately:
-#' \itemize{
-#'   \item \code{catch}: 1,065 rows × 6 columns
-#'   \item \code{index}: 1,065 rows × 6 columns
-#'   \item \code{weight}: 1,065 rows × 4 columns
-#'   \item \code{maturity}: 1,215 rows × 3 columns
-#' }
+#'
+#' - `catch`: 1,065 rows × 6 columns
+#' - `index`: 1,065 rows × 6 columns
+#' - `weight`: 1,065 rows × 4 columns
+#' - `maturity`: 1,215 rows × 3 columns
 #'
 #' @source
-#' Derived from \pkg{NCAM} example inputs
-#' (\code{NCAM::inputs}). See the NCAM package for provenance and licensing.
+#' Derived from the \pkg{NCAM} example inputs
+#' (`NCAM::inputs`). See the NCAM package for provenance and licensing.
 #'
 #' @examples
 #' data(northern_cod_data)
@@ -91,7 +77,7 @@
 #'   years = 1983:2024,
 #'   ages = 2:14,
 #'   N_settings = list(process = "iid", init_N0 = FALSE),
-#'   F_settings = list(process = "rw", mu_form = NULL),
+#'   F_settings = list(process = "approx_rw", mu_form = NULL),
 #'   M_settings = list(process = "off", mu_form = NULL,
 #'                     assumption = ~ I(0.2), age_breaks = NULL),
 #'   obs_settings = list(sd_form = ~ sd_obs_block, q_form = ~ q_block)

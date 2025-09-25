@@ -20,64 +20,61 @@ make_dat(
 \code{weight}, and \code{maturity}. See \strong{Details}.}
 
 \item{years}{Integer vector of model years (strictly increasing).
-Inferred from \code{obs} data.frames if \code{NULL}.}
+Inferred from \code{obs} if \code{NULL}.}
 
 \item{ages}{Integer vector of model ages (strictly increasing).
-Inferred from \code{obs} data.frames if \code{NULL}.}
+Inferred from \code{obs} if \code{NULL}.}
 
 \item{N_settings}{A list with elements:
-\describe{
-\item{process}{One of \code{"off"}, \code{"iid"}, \code{"approx_rw"}, or \code{"ar1"}.}
-\item{init_N0}{Logical; if \code{TRUE}, estimate an initial level for the
+\itemize{
+\item \code{process}: one of \code{"off"}, \code{"iid"}, \code{"approx_rw"}, or \code{"ar1"}.
+\item \code{init_N0}: logical; if \code{TRUE}, estimate an initial level for the
 first-year abundance. If \code{process == "off"} and \code{init_N0 == FALSE},
-this is forced to \code{TRUE}.}
+this is forced to \code{TRUE}.
 }}
 
 \item{F_settings}{A list with elements:
-\describe{
-\item{process}{One of \code{"iid"}, \code{"approx_rw"}, or \code{"ar1"}.}
-\item{mu_form}{An optional formula for mean-\eqn{F}.}
+\itemize{
+\item \code{process}: one of \code{"iid"}, \code{"approx_rw"}, or \code{"ar1"}.
+\item \code{mu_form}: an optional formula for mean-\eqn{F}.
 }}
 
 \item{M_settings}{A list with elements:
-\describe{
-\item{process}{One of \code{"off"}, \code{"iid"}, \code{"approx_rw"}, or \code{"ar1"}.}
-\item{mu_form}{Optional formula for mean-\eqn{M} (on the log scale) built
+\itemize{
+\item \code{process}: one of \code{"off"}, \code{"iid"}, \code{"approx_rw"}, or \code{"ar1"}.
+\item \code{mu_form}: optional formula for mean-\eqn{M} (on the log scale) built
 on \code{obs$weight}. If provided together with \code{assumption}, the intercept
-in \code{mu_form} is dropped (warning) so assumed levels act as fixed
-offsets.}
-\item{assumption}{Optional one-sided formula giving fixed (non-estimated)
+in \code{mu_form} is dropped (warning) so assumed levels act as fixed offsets.
+\item \code{assumption}: optional one-sided formula giving fixed (non-estimated)
 log-\eqn{M} offsets, e.g. \code{~ I(0.2)} or a column reference such as
-\code{~ log(m_assumption)}.}
-\item{age_breaks}{Optional integer break points used by \code{\link[=cut_ages]{cut_ages()}} to
-define \code{age_blocks} for coupling \eqn{M} deviations across ages.}
+\code{~ log(m_assumption)}.
+\item \code{age_breaks}: optional integer break points used by \code{\link[=cut_ages]{cut_ages()}} to
+define \code{age_blocks} for coupling \eqn{M} deviations across ages.
 }}
 
 \item{obs_settings}{A list with elements:
-\describe{
-\item{sd_form}{Formula for observation SD blocks, evaluated on the
-combined obs map (e.g., \code{~ sd_obs_block}).}
-\item{q_form}{Formula for catchability blocks, evaluated on the index
-table (e.g., \code{~ q_block}).}
+\itemize{
+\item \code{sd_form}: formula for observation SD blocks, evaluated on the combined obs map (e.g. \code{~ sd_obs_block}).
+\item \code{q_form}: formula for catchability blocks, evaluated on the index table (e.g. \code{~ q_block}).
 }}
 }
 \value{
 A named list \code{dat} containing:
 \itemize{
-\item \code{years}, \code{ages}, \code{obs} (per-type tables merged to full grid),
-\item \code{SW}, \code{MO} weight-at-age and maturity matrices (\verb{year × age}),
-\item \code{obs_map}, \code{log_obs},
+\item \code{years}, \code{ages}, \code{obs} (per-type tables merged to full grid)
+\item \code{SW}, \code{MO} weight-at-age and maturity matrices (\verb{year × age})
+\item \code{obs_map}, \code{log_obs}
 \item design matrices: \code{sd_obs_modmat}, \code{q_modmat}, and optionally
-\code{F_modmat}, \code{M_modmat},
-\item mean-level placeholders: \code{log_mu_f} and/or \code{log_mu_m} (or \code{log_mu_assumed_m}),
-\item process settings: \code{N_settings}, \code{F_settings}, \code{M_settings},
-\item AR(1) parameter placeholders \verb{logit_phi_*} set only for \code{"ar1"} processes.
+\code{F_modmat}, \code{M_modmat}
+\item mean-level placeholders: \code{log_mu_f} and/or \code{log_mu_m} (or \code{log_mu_assumed_m})
+\item process settings: \code{N_settings}, \code{F_settings}, \code{M_settings}
+\item AR(1) parameter placeholders \verb{logit_phi_*} set only for \code{"ar1"} processes
 }
 }
 \description{
 \code{make_dat()} converts tidy observation inputs and modeling options into the
-structured list \code{dat} expected by TAM’s likelihood/simulation functions. It
-expands an age–year grid, merges observations, constructs design matrices for
+structured list \code{dat} expected by TAM’s likelihood and simulation functions.
+It expands an age–year grid, merges observations, constructs design matrices for
 observation SDs, catchability, and mean-\eqn{F} / mean-\eqn{M} (when used),
 and derives helper mappings and settings.
 }
@@ -85,9 +82,8 @@ and derives helper mappings and settings.
 \strong{Observation handling}
 \itemize{
 \item Inputs are expected as a list with components \code{catch}, \code{index}, \code{weight},
-and \code{maturity} (each with at least columns \code{year}, \code{age}, and a value
-column named \code{obs} for \code{catch}/\code{index}, or \code{weight}/\code{mat} renamed to
-\code{obs}).
+and \code{maturity}. Each must include columns \code{year}, \code{age}, and a value column
+named \code{obs} (for \code{catch}/\code{index}) or renamed from \code{weight}/\code{mat}.
 \item Observations are merged to the full \code{expand.grid(year, age)}.
 \item A combined observation table is created for catch and index; \code{log(0)} is
 treated as \code{NA} (to be handled via random effects).
@@ -106,17 +102,17 @@ the function stops, because \eqn{M} must be identified by either a fixed
 assumption or a mean structure.
 }
 
-\strong{Process options & guards}
+\strong{Process options and guards}
 \itemize{
 \item If \code{N_settings$process == "off"} and \code{init_N0 == FALSE}, \code{init_N0} is
 forced to \code{TRUE} (with a warning) so the first-year abundance is
 estimable.
-\item \code{M_settings$age_breaks} (vector of break points on ages \eqn{\ge} min
-modeled age + 1) defines \code{M_settings$age_blocks} via \code{\link[=cut_ages]{cut_ages()}}, used
+\item \code{M_settings$age_breaks} (vector of break points on ages \eqn{\ge} min modeled age + 1)
+defines \code{M_settings$age_blocks} via \code{\link[=cut_ages]{cut_ages()}}, used
 to couple \eqn{M} deviations across age.
-\item The AR(1) correlation parameters are only “turned on” (initialized) for
+\item The AR(1) correlation parameters are only initialized for
 processes whose \code{process == "ar1"}. Correlations are assumed to be 0
-when \code{process == "iid"} and 0.99 when \code{process == "approx_rw"} to approximate
+when \code{process == "iid"}, and 0.99 when \code{process == "approx_rw"} to approximate
 a random walk across ages and years.
 }
 }
