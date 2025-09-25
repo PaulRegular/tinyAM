@@ -1,67 +1,131 @@
-
 set.seed(1)
 
-test_that("rprocess_2d returns matrices of requested size", {
-  X1 <- rprocess_2d(7, 5, sd = 0.3, type = "iid")
-  X2 <- rprocess_2d(7, 5, sd = 0.3, type = "rw")
-  X3 <- rprocess_2d(7, 5, sd = 0.3, type = "ar1", phi = c(0.4, 0.7))
-  expect_equal(dim(X1), c(7, 5))
-  expect_equal(dim(X2), c(7, 5))
-  expect_equal(dim(X3), c(7, 5))
-  expect_true(is.numeric(X1) && is.numeric(X2) && is.numeric(X3))
+ny <- 30; na <- 20; sd <- 0.5
+
+test_that("rprocess_2d returns matrix with correct dimensions", {
+  X <- rprocess_2d(ny, na, sd = 0.3, phi = c(0.5, 0.7))
+  expect_true(is.matrix(X))
+  expect_equal(dim(X), c(ny, na))
+  expect_true(all(is.finite(X)))
 })
 
-test_that("dprocess_2d IID matches sum of univariate normals", {
-  ny <- 6; na <- 4; sd <- 0.5
+test_that("IID case: phi = (0,0) gives approx independent entries with Var ~ sd^2", {
+  X  <- rprocess_2d(ny, na, sd = sd, phi = c(0, 0))
+
+  # Empirical variance of all entries
+  v_all <- var(as.numeric(X))
+  expect_equal(v_all, sd^2, tolerance = 0.1)
+
+  # Adjacent lag-1 correlations (rows and cols) should be near zero
+  r_row <- cor(as.numeric(X[, -na]), as.numeric(X[, -1]))
+  r_col <- cor(as.numeric(X[-ny, ]), as.numeric(X[-1, ]))
+  expect_equal(r_row, 0, tolerance = 0.1)
+  expect_equal(r_col, 0, tolerance = 0.1)
+})
+
+test_that("AR1 density reduces to IID density when phi = (0,0)", {
   X  <- matrix(rnorm(ny * na, 0, sd), ny, na)
+
+  lp_iid <- dprocess_2d(X, sd = sd, phi = c(0, 0))
+  # Compare to the literal IID log-density
   lp_ref <- sum(dnorm(X, mean = 0, sd = sd, log = TRUE))
-  lp_fun <- dprocess_2d(X, sd = sd, type = "iid")
-  expect_equal(lp_fun, lp_ref, tolerance = 1e-10)
+
+  expect_equal(lp_iid, lp_ref, tolerance = 1e-10)
 })
 
-test_that("dprocess_2d RW is translation-invariant (intrinsic field)", {
-  ny <- 8; na <- 6; sd <- 0.3
-  X  <- rprocess_2d(ny, na, sd = sd, type = "rw")
-  c0 <- dprocess_2d(X, sd = sd, type = "rw")
-  c1 <- dprocess_2d(X + 5, sd = sd, type = "rw")      # add constant
-  c2 <- dprocess_2d(X + outer(rep(1, ny), 1:na), sd = sd, type = "rw") # add age slope: diff-in-age unchanged
-  expect_equal(c0, c1, tolerance = 1e-10)
-  expect_equal(c0, c2, tolerance = 1e-10)
+test_that("Larger |phi| produces stronger local correlation (empirical check)", {
+  X_weak <- rprocess_2d(ny, na, sd = sd, phi = c(0.3, 0.3))
+  X_strg <- rprocess_2d(ny, na, sd = sd, phi = c(0.9, 0.9))
+
+  # Lag-1 correlations along rows/cols
+  r_row_weak <- cor(as.numeric(X_weak[, -na]), as.numeric(X_weak[, -1]))
+  r_col_weak <- cor(as.numeric(X_weak[-ny, ]), as.numeric(X_weak[-1, ]))
+
+  r_row_strg <- cor(as.numeric(X_strg[, -na]), as.numeric(X_strg[, -1]))
+  r_col_strg <- cor(as.numeric(X_strg[-ny, ]), as.numeric(X_strg[-1, ]))
+
+  expect_gt(r_row_strg, r_row_weak)
+  expect_gt(r_col_strg, r_col_weak)
 })
 
-test_that("dprocess_2d AR1 with phi=0 reduces to IID with same sd", {
-  ny <- 6; na <- 5; sd <- 0.7
-  X  <- matrix(rnorm(ny * na, 0, sd), ny, na)
-  lp_iid <- dprocess_2d(X, sd = sd, type = "iid")
-  lp_ar1 <- dprocess_2d(X, sd = sd, type = "ar1", phi = c(0, 0))
-  expect_equal(lp_ar1, lp_iid, tolerance = 1e-10)
+test_that("Self-consistency: sample from AR1 has higher density under matching phi than IID", {
+  phi <- c(0.8, 0.7)
+
+  X <- rprocess_2d(ny, na, sd = sd, phi = phi)
+  lp_match <- dprocess_2d(X, sd = sd, phi = phi)
+  lp_iid   <- dprocess_2d(X, sd = sd, phi = c(0, 0))
+
+  expect_gt(lp_match, lp_iid)
 })
 
-test_that("dprocess_2d AR1 with phi=1 reduces to a random walk with same sd", {
-  ny <- 6; na <- 5; sd <- 0.7
-  X  <- matrix(rnorm(ny * na, 0, sd), ny, na)
-  lp_rw <- dprocess_2d(X, sd = sd, type = "rw")
-  lp_ar1 <- dprocess_2d(X, sd = sd, type = "ar1", phi = c(0.9999, 0.9999))
-  expect_equal(lp_ar1, lp_rw, tolerance = 1e-10)
+test_that("Approximate RW: phi=(0.99,0.99) yields very strong adjacent correlation", {
+  X <- rprocess_2d(ny, na, sd = sd, phi = c(0.99, 0.99))
+
+  r_row <- cor(as.numeric(X[, -na]), as.numeric(X[, -1]))
+  r_col <- cor(as.numeric(X[-ny, ]), as.numeric(X[-1, ]))
+
+  expect_gt(r_row, 0.9)
+  expect_gt(r_col, 0.9)
+
+  # Density is finite and computable
+  lp <- dprocess_2d(X, sd = sd, phi = c(0.99, 0.99))
+  expect_true(is.finite(lp))
 })
 
-test_that("rprocess_2d RW produces correct diff variances (approximate)", {
-  # Differences along each axis should have variance ~ sd^2
-  ny <- 40; na <- 30; sd <- 0.5
-  X  <- rprocess_2d(ny, na, sd = sd, type = "rw")
-  var_dy <- var(as.numeric(apply(X, 2, diff)))
-  var_da <- var(as.numeric(t(apply(X, 1, diff))))
-  expect_equal(var_dy, sd^2, tolerance = 0.1)  # loose tolerance (finite sample)
-  expect_equal(var_da, sd^2, tolerance = 0.1)
+test_that("Edge cases: ny=1 or na=1 behave like 1D AR(1)", {
+  # Single row (varying age)
+  ny <- 1; na <- 80; sd <- 1.0; phi <- c(0.0, 0.8) # phi_age=0, phi_year=0.8 (ignored since ny=1)
+  X1 <- rprocess_2d(ny, na, sd = sd, phi = phi)
+  expect_equal(dim(X1), c(1, na))
+  # Lag-1 corr across ages should be ~phi_age = 0
+  r_age <- cor(X1[, -na], X1[, -1])
+  expect_equal(as.numeric(r_age), 0, tolerance = 0.15)
+
+  # Single column (varying year)
+  ny <- 80; na <- 1; sd <- 1.0; phi <- c(0.8, 0.4) # now only year AR(1) matters
+  X2 <- rprocess_2d(ny, na, sd = sd, phi = phi)
+  expect_equal(dim(X2), c(ny, 1))
+  # Lag-1 corr down years should be ~phi_year = 0.4
+  r_year <- cor(X2[-ny, 1], X2[-1, 1])
+  expect_equal(as.numeric(r_year), 0.4, tolerance = 0.15)
 })
 
-test_that("rprocess_2d AR1 yields sensible empirical correlations", {
-  ny <- 30; na <- 30; sd <- 0.4; phi <- c(0.6, 0.8)
-  X  <- rprocess_2d(ny, na, sd = sd, type = "ar1", phi = phi)
-  # Estimate lag-1 corr down rows (year) using a middle column:
-  cy <- cor(X[-1, round(na/2)], X[-ny, round(na/2)])
-  # Estimate lag-1 corr across columns (age) using a middle row:
-  ca <- cor(X[round(ny/2), -1], X[round(ny/2), -na])
-  expect_equal(cy, phi[2], tolerance = 0.1)
-  expect_equal(ca, phi[1], tolerance = 0.1)
+
+test_that("nll_fun returns finite JNLL and simulates when requested", {
+  dat <- make_dat(
+    northern_cod_data,
+    years = 1983:2024,
+    ages  = 2:14,
+    N_settings = list(process = "iid", init_N0 = TRUE),
+    F_settings = list(process = "approx_rw",  mu_form = NULL),
+    M_settings = list(process = "off", mu_form = NULL, assumption = ~ I(0.3)),
+    obs_settings = list(sd_form = ~ sd_obs_block, q_form = ~ q_block)
+  )
+  par <- make_par(dat)
+
+  # Likelihood branch
+  jnll <- nll_fun(par, simulate = FALSE)
+  expect_true(is.numeric(jnll))
+  expect_length(jnll, 1L)
+  expect_true(is.finite(jnll))
+
+  # Simulation branch (no RTMB object needed)
+  sims <- nll_fun(par, simulate = TRUE)
+  expect_type(sims, "list")
+  expect_true(all(c("log_f", "log_r", "log_obs") %in% names(sims)))
+  if (dat$N_settings$process != "off") {
+    expect_true("log_n" %in% names(sims))
+  }
+  # Simulated obs restored to NA where missing
+  is_miss <- is.na(dat$log_obs)
+  expect_true(all(is.na(sims$log_obs[is_miss])))
+  expect_true(all(is.finite(sims$log_obs[!is_miss])))
+
+  # Optional: build a quick RTMB obj to ensure REPORT/ADREPORT paths are valid
+  obj <- RTMB::MakeADFun(nll_fun, par, random = c("log_f","log_r","missing"), silent = TRUE)
+  opt <- nlminb(obj$par, obj$fn, obj$gr, control = list(iter.max = 50, eval.max = 50))
+  expect_true(is.finite(opt$objective))
+  rep <- obj$report()
+  expect_true(all(c("N", "F", "M", "Z", "ssb", "log_pred", "log_q_obs") %in% names(rep)))
 })
+

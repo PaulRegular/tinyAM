@@ -49,7 +49,7 @@ test_that("make_dat infers years/ages when NULL and builds expected pieces", {
     years = NULL,
     ages  = NULL,
     N_settings = list(process = "iid", init_N0 = FALSE),
-    F_settings = list(process = "rw",  mu_form = NULL),
+    F_settings = list(process = "approx_rw",  mu_form = NULL),
     M_settings = list(process = "off", mu_form = NULL, assumption = ~I(0.3)),
     obs_settings = list(sd_form = ~ sd_obs_block, q_form = ~ q_block)
   )
@@ -66,15 +66,6 @@ test_that("make_dat infers years/ages when NULL and builds expected pieces", {
   # design matrices exist
   expect_true(is.matrix(dat$sd_obs_modmat))
   expect_true(is.matrix(dat$q_modmat))
-
-  # RW + mu_form gets ignored with warning
-  expect_warning(
-    make_dat(
-      obs = northern_cod_data,
-      F_settings = list(process = "rw", mu_form = ~ 1)
-    ),
-    "treated as a non-stationary.*Ignoring mu_form"
-  )
 })
 
 test_that("make_dat builds M age_blocks and handles M assumptions / mu_form", {

@@ -11,7 +11,7 @@ test_fit <- function(inputs = northern_cod_data,
                      years = YEARS,
                      ages  = AGES,
                      N_settings = list(process = "iid", init_N0 = FALSE),
-                     F_settings = list(process = "rw",  mu_form = NULL),
+                     F_settings = list(process = "approx_rw",  mu_form = NULL),
                      M_settings = list(process = "off", mu_form = NULL, assumption = ~I(0.3)),
                      obs_settings = list(q_form = ~ q_block, sd_form = ~ sd_obs_block),
                      silent = TRUE) {
@@ -34,7 +34,7 @@ test_that("fit_tam runs on a cod dataset and returns expected structure", {
 
   # Optimizer status
   expect_true(is.finite(fit$opt$objective))
-  expect_equal(round(fit$opt$objective, 4), 824.4073)
+  expect_equal(round(fit$opt$objective, 4), 989.6083)
   expect_true(is.list(fit$rep))
   expect_s3_class(fit$sdrep, "sdreport")
 
@@ -43,14 +43,6 @@ test_that("fit_tam runs on a cod dataset and returns expected structure", {
   expect_equal(dim(fit$rep$M), c(length(YEARS), length(AGES)))
   expect_equal(dim(fit$rep$Z), c(length(YEARS), length(AGES)))
   expect_equal(length(fit$rep$ssb), length(YEARS))
-})
-
-test_that("fit_tam warns appropriately when RW + mu_form supplied for F", {
-  expect_warning(
-    test_fit(F_settings = list(process = "rw", mu_form = ~1)),
-    regexp = "The 'rw' option.*treated as a non-stationary.*Ignoring mu_form",
-    fixed  = FALSE
-  )
 })
 
 test_that("fit_tam emits warning if random effects far exceed observations", {
@@ -81,7 +73,7 @@ test_that("sim_tam returns simulated observations and (optionally) re-computed r
 
   # Simulate and also regenerate report using simulated random effects
   rep_full <- sim_tam(default_fit, obs_only = FALSE)
-  expect_true(all(c("F","M","Z","ssb","log_obs") %in% names(rep_full)))
+  expect_true(all(c("F", "M", "Z", "ssb", "log_obs") %in% names(rep_full)))
   expect_equal(length(rep_full$ssb), length(YEARS))
 })
 

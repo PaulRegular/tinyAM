@@ -82,6 +82,8 @@ cut_ages  <- function(ages,  breaks) cut_int(ages,  breaks, ordered = FALSE)
 cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 
 
+
+
 #' Build a self-contained data list for TAM
 #'
 #' @description
@@ -106,9 +108,6 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #'   `sd_obs_modmat`.
 #' * `obs_settings$q_form` is evaluated on the index table to produce
 #'   `q_modmat`.
-#' * If `F_settings$mu_form` is provided and `F_settings$process != "rw"`,
-#'   `F_modmat <- model.matrix(mu_form, data = obs$catch)`; otherwise an overall
-#'   mean is implied (`log_mu_f <- 0`, `F_modmat <- 0`).
 #' * If `M_settings$mu_form` is provided, `M_modmat <- model.matrix(mu_form,
 #'   data = obs$weight)`. If an `assumption` is also supplied (i.e., fixed
 #'   offsets), the intercept in `mu_form` is dropped and a warning is issued.
@@ -120,15 +119,13 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #' * If `N_settings$process == "off"` and `init_N0 == FALSE`, `init_N0` is
 #'   forced to `TRUE` (with a warning) so the first-year abundance is
 #'   estimable.
-#' * If `F_settings$process == "rw"` and `mu_form` is given, `mu_form` is
-#'   ignored (with a warning) because TAM treats the RW as non-stationary
-#'   without drift.
 #' * `M_settings$age_breaks` (vector of break points on ages \eqn{\ge} min
 #'   modeled age + 1) defines `M_settings$age_blocks` via [`cut_ages()`], used
 #'   to couple \eqn{M} deviations across age.
 #' * The AR(1) correlation parameters are only “turned on” (initialized) for
-#'   processes whose `process == "ar1"`; otherwise they are set to `NA` in
-#'   `dat` and ignored by the model.
+#'   processes whose `process == "ar1"`. Correlations are assumed to be 0
+#'   when `process == "iid"` and 0.99 when `process == "approx_rw"` to approximate
+#'   a random walk across ages and years.
 #'
 #' @param obs A list of tidy observation data.frames: `catch`, `index`,
 #'   `weight`, and `maturity`. See **Details**.
@@ -138,22 +135,19 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #'   Inferred from `obs` data.frames if `NULL`.
 #' @param N_settings A list with elements:
 #'   \describe{
-#'     \item{process}{One of `"off"`, `"iid"`, `"rw"`, or `"ar1"`.}
+#'     \item{process}{One of `"off"`, `"iid"`, `"approx_rw"`, or `"ar1"`.}
 #'     \item{init_N0}{Logical; if `TRUE`, estimate an initial level for the
 #'       first-year abundance. If `process == "off"` and `init_N0 == FALSE`,
 #'       this is forced to `TRUE`.}
 #'   }
 #' @param F_settings A list with elements:
 #'   \describe{
-#'     \item{process}{One of `"iid"`, `"rw"`, or `"ar1"`. For `"rw"`, TAM treats
-#'       the process as non-stationary (no mean structure).}
-#'     \item{mu_form}{An optional formula for mean-\eqn{F}; ignored (with
-#'       warning) when `process == "rw"`. Typical usage is a block factor
-#'       (e.g., `~ F_a_block + F_y_block`) or `~ 1` for an intercept.}
+#'     \item{process}{One of `"iid"`, `"approx_rw"`, or `"ar1"`.}
+#'     \item{mu_form}{An optional formula for mean-\eqn{F}.}
 #'   }
 #' @param M_settings A list with elements:
 #'   \describe{
-#'     \item{process}{One of `"off"`, `"iid"`, or `"ar1"`.}
+#'     \item{process}{One of `"off"`, `"iid"`, `"approx_rw"`, or `"ar1"`.}
 #'     \item{mu_form}{Optional formula for mean-\eqn{M} (on the log scale) built
 #'       on `obs$weight`. If provided together with `assumption`, the intercept
 #'       in `mu_form` is dropped (warning) so assumed levels act as fixed
@@ -189,7 +183,7 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #'   years = 1983:2024,
 #'   ages  = 2:14,
 #'   N_settings = list(process = "iid", init_N0 = FALSE),
-#'   F_settings = list(process = "rw", mu_form = NULL),
+#'   F_settings = list(process = "approx_rw", mu_form = NULL),
 #'   M_settings = list(process = "off", assumption = ~ I(0.3)),
 #'   obs_settings = list(sd_form = ~ sd_obs_block, q_form = ~ q_block)
 #' )
@@ -202,7 +196,7 @@ make_dat <- function(
     years = NULL,
     ages = NULL,
     N_settings = list(process = "iid", init_N0 = FALSE),
-    F_settings = list(process = "rw", mu_form = NULL),
+    F_settings = list(process = "approx_rw", mu_form = NULL),
     M_settings = list(process = "off", mu_form = NULL, assumption = ~I(0.2), age_breaks = NULL),
     obs_settings = list(sd_form = ~sd_obs_block, q_form = ~q_block)
 ) {
@@ -217,10 +211,6 @@ make_dat <- function(
   if (N_settings$process == "off" && !N_settings$init_N0) {
     dat$N_settings$init_N0 <- TRUE
     warning("The first year would lack parameters with process set to 'off' and init_N0 set to FALSE in N_settings; forcing init_N0 to TRUE to estimate initial levels.")
-  }
-  if (F_settings$process == "rw" && !is.null(F_settings$mu_form)) {
-    dat$F_settings$mu_form <- NULL
-    warning("The 'rw' option for the F process is treated as a non-stationary process. Ignoring mu_form.")
   }
   M_ages <- ages[-1]
   if (!is.null(M_settings$age_breaks)) {
@@ -284,15 +274,28 @@ make_dat <- function(
     stop("Please supply an assumption or mu_form for M.")
   }
 
-  if (dat$N_settings$process != "ar1") {
-    dat$logit_phi_n <- NA
+  if (dat$N_settings$process == "iid") {
+    dat$logit_phi_n <- c(0, 0)
   }
-  if (dat$F_settings$process != "ar1") {
-    dat$logit_phi_f <- NA
+  if (dat$N_settings$process == "approx_rw") {
+    dat$logit_phi_n <- c(0.99, 0.99)
   }
-  if (dat$M_settings$process != "ar1") {
-    dat$logit_phi_m <- NA
+
+  .set_phi <- function(type = c("off", "iid", "approx_rw", "ar1")) {
+    match.arg(type)
+    if (type == "iid") {
+      return(qlogis(c(0, 0)))
+    }
+    if (type == "approx_rw") {
+      return(qlogis(c(0.99, 0.99)))
+    }
+    if (type == "ar1") {
+      return(NULL)
+    }
   }
+  dat$logit_phi_n <- .set_phi(dat$N_settings$process)
+  dat$logit_phi_f <- .set_phi(dat$F_settings$process)
+  dat$logit_phi_m <- .set_phi(dat$M_settings$process)
 
   dat
 
@@ -363,7 +366,7 @@ make_dat <- function(
 #'   years = 1983:2024,
 #'   ages  = 2:14,
 #'   N_settings = list(process = "iid", init_N0 = FALSE),
-#'   F_settings = list(process = "rw", mu_form = NULL),
+#'   F_settings = list(process = "approx_rw", mu_form = NULL),
 #'   M_settings = list(process = "off", assumption = ~ I(0.3)),
 #'   obs_settings = list(sd_form = ~ sd_obs_block, q_form = ~ q_block)
 #' )

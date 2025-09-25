@@ -4,9 +4,9 @@
 #' @title Two–dimensional process error: density and simulation
 #'
 #' @description
-#' Helpers for working with simple age × year process-error fields:
-#' independent and identically distributed (IID), separable 2D random walk
-#' (RW), and separable 2D AR(1) (AR1).
+#' Helpers for working with simple age × year process-error fields for a
+#' separable 2D AR(1) (AR1).
+#'
 #' \itemize{
 #'   \item \code{dprocess_2d()} returns the log-density contribution for a
 #'         given matrix \code{x}.
@@ -16,42 +16,23 @@
 #'
 #' @details
 #' Let \eqn{X \in \mathbb{R}^{n_y \times n_a}} denote the process on
-#' year (\eqn{y}) and age (\eqn{a}) indices. The three options are:
-#'
-#' \strong{IID}: entries are independent \eqn{N(0, \sigma^2)}.
-#'
-#' \strong{RW}: a separable first–difference penalty in both dimensions.
-#' The density is proportional to
-#' \deqn{\sum_{a} \sum_{y=2}^{n_y} (X_{y,a}-X_{y-1,a})^2 +
-#'       \sum_{y} \sum_{a=2}^{n_a} (X_{y,a}-X_{y,a-1})^2,}
-#' implemented via \code{RTMB::dseparable()} using \code{dnorm(diff(.))}
-#' in each margin. This behaves like a 2D intrinsic Gaussian Markov random
-#' field; a global level is not identified.
-#'
-#' \strong{AR1}: a stationary separable AR(1) in both dimensions with
-#' correlations \eqn{\phi_\text{age}} (columns) and \eqn{\phi_\text{year}} (rows),
-#' satisfying \eqn{|\phi|<1}. The implied covariance is
+#' year (\eqn{y}) and age (\eqn{a}) indices follow a stationary separable
+#' AR(1) in both dimensions with correlations \eqn{\phi_\text{age}} (columns)
+#' and \eqn{\phi_\text{year}} (rows), satisfying \eqn{|\phi|<1}. The implied
+#' covariance is
 #' \deqn{\mathrm{Cov}\{\mathrm{vec}(X)\} =
 #'       \frac{\sigma^2}{(1-\phi_\text{age}^2)(1-\phi_\text{year}^2)}
 #'       \; \Sigma_\text{age} \otimes \Sigma_\text{year},}
 #' where \eqn{\Sigma_\cdot} are AR(1) correlation matrices with entries
-#' \eqn{\phi^{|i-j|}}. We pass the variance scaling to \code{dseparable()} so that
-#' the marginal variance of \eqn{X} is approximately \eqn{\sigma^2}.
-#'
-#' \emph{Identifiability:} For \code{type = "rw"}, the field is non-stationary
-#' (no anchored mean). If you also include fixed-effects for a mean surface,
-#' ensure these do not reintroduce confounding with the RW null space.
+#' \eqn{\phi^{|i-j|}}.
 #'
 #' @param x A numeric matrix (\eqn{n_y \times n_a}) of process residuals
 #'   for \code{dprocess_2d()}.
 #' @param ny,na Positive integers: numbers of years and ages for
 #'   \code{rprocess_2d()}.
 #' @param phi Length-2 numeric vector \code{c(phi_age, phi_year)} with
-#'   values in \code{(0, 1)} for AR1; ignored for IID and RW.
-#' @param sd Positive scalar \eqn{\sigma}. For IID it is the marginal SD.
-#'   For RW it scales the difference penalties. For AR1 it targets the
-#'   marginal SD after internal variance rescaling.
-#' @param type One of \code{"iid"}, \code{"rw"}, or \code{"ar1"}.
+#'   values in \code{(0, 1)} for AR1.
+#' @param sd Positive scalar \eqn{\sigma}.
 #'
 #' @return
 #' \itemize{
@@ -61,16 +42,10 @@
 #'
 #'
 #' @examples
-#' # Simulate three fields with the same sd
+#' # Simulate then calculate log-density
 #' set.seed(1)
-#' X_iid <- rprocess_2d(ny = 10, na = 8, sd = 0.3, type = "iid")
-#' X_rw  <- rprocess_2d(ny = 10, na = 8, sd = 0.3, type = "rw")
-#' X_ar1 <- rprocess_2d(ny = 10, na = 8, sd = 0.3, type = "ar1", phi = c(0.8, 0.9))
-#'
-#' # Log-density of a realized field under each model
-#' dprocess_2d(X_iid, sd = 0.3, type = "iid")
-#' dprocess_2d(X_rw,  sd = 0.3, type = "rw")
-#' dprocess_2d(X_ar1, sd = 0.3, type = "ar1", phi = c(0.8, 0.9))
+#' X_ar1 <- rprocess_2d(ny = 10, na = 8, sd = 0.3, phi = c(0.5, 0.9))
+#' dprocess_2d(X_ar1, sd = 0.3, phi = c(0.5, 0.9))
 #'
 #' @seealso
 #' \code{\link[RTMB]{dseparable}}, \code{\link[RTMB]{dautoreg}},
@@ -80,64 +55,33 @@
 #'
 #' @rdname process_2d
 #' @export
-dprocess_2d <- function(x, phi = NA, sd = 1, type = c("iid", "rw", "ar1")) {
+dprocess_2d <- function(x, phi = c(0, 0), sd = 1) {
 
-  type <- match.arg(type)
-
-  if (type == "iid") {
-    den <- sum(dnorm(x, mean = 0, sd = sd, log = TRUE))
-  }
-
-  if (type == "rw") {
-    fy <- function(y) sum(dnorm(diff(y), mean = 0, log = TRUE))
-    fa <- function(y) sum(dnorm(diff(y), mean = 0, log = TRUE))
-    den <- dseparable(fy, fa)(x, scale = sd)
-  }
-
-  if (type == "ar1") {
-    phi_age  <- phi[1]
-    phi_year <- phi[2]
-    fa <- function(z) dautoreg(z, phi = phi_age, log = TRUE)
-    fy <- function(z) dautoreg(z, phi = phi_year, log = TRUE)
-    var <- sd ^ 2 / ((1 - phi_age ^ 2) * (1 - phi_year ^ 2))
-    den <- dseparable(fy, fa)(x, scale = sqrt(var))
-  }
-
-  den
+  phi_age  <- phi[1]
+  phi_year <- phi[2]
+  fa <- function(z) dautoreg(z, phi = phi_age, log = TRUE)
+  fy <- function(z) dautoreg(z, phi = phi_year, log = TRUE)
+  var <- sd ^ 2 / ((1 - phi_age ^ 2) * (1 - phi_year ^ 2))
+  dseparable(fy, fa)(x, scale = sqrt(var))
 
 }
 
 #' @rdname process_2d
 #' @export
-rprocess_2d <- function(ny, na, phi = NA, sd = 1, type = c("iid","rw","ar1")) {
+rprocess_2d <- function(ny, na, phi = c(0, 0), sd = 1) {
 
-  type <- match.arg(type)
+  phi_age  <- phi[1]
+  phi_year <- phi[2]
 
-  if (type == "iid") {
-    return(matrix(rnorm(ny * na, 0, sd), ny, na))
-  }
+  ar1_cor <- function(n, phi) stats::toeplitz(phi ^ (0:(n - 1L)))
+  C_age  <- ar1_cor(na, phi_age)    # columns
+  C_year <- ar1_cor(ny, phi_year)   # rows
 
-  if (type == "rw") {
-    E <- matrix(rnorm(ny * na, 0, sd), ny, na)
-    X <- apply(E, 2, cumsum)
-    X <- t(apply(X, 1, cumsum))
-    return(X)
-  }
+  var <- sd^2 / ((1 - phi_age^2) * (1 - phi_year^2))
+  Sigma <- var * kronecker(C_age, C_year)
 
-  if (type == "ar1") {
-    phi_age  <- phi[1]
-    phi_year <- phi[2]
-
-    ar1_cor <- function(n, phi) stats::toeplitz(phi ^ (0:(n - 1L)))
-    C_age  <- ar1_cor(na, phi_age)    # columns
-    C_year <- ar1_cor(ny, phi_year)   # rows
-
-    var <- sd^2 / ((1 - phi_age^2) * (1 - phi_year^2))
-    Sigma <- var * kronecker(C_age, C_year)
-
-    z <- MASS::mvrnorm(1L, mu = rep(0, ny * na), Sigma = Sigma)
-    return(matrix(z, ny, na))
-  }
+  z <- MASS::mvrnorm(1L, mu = rep(0, ny * na), Sigma = Sigma)
+  return(matrix(z, ny, na))
 
 }
 
@@ -224,12 +168,6 @@ rprocess_2d <- function(ny, na, phi = NA, sd = 1, type = c("iid","rw","ar1")) {
 #' `M_modmat`, settings lists, etc.). It also relies on helper functions
 #' [dprocess_2d()] and [rprocess_2d()] for process penalties and simulation.
 #'
-#' @section Notes on identifiability:
-#' - For `F_settings$process = "rw"` the mean surface is typically set to
-#'   `mu_form = NULL` (non-stationary field) to avoid confounding with a
-#'   free intercept/trend.
-#' - For AR(1) penalties, `logit_phi_*` is transformed with `plogis()`;
-#'   keep \eqn{\phi} away from \eqn{\pm 1} for numerical stability.
 #'
 #' @examples
 #'
@@ -238,7 +176,7 @@ rprocess_2d <- function(ny, na, phi = NA, sd = 1, type = c("iid","rw","ar1")) {
 #'   years = 1983:2024,
 #'   ages  = 2:14,
 #'   N_settings = list(process = "iid", init_N0 = FALSE),
-#'   F_settings = list(process = "rw", mu_form = NULL),
+#'   F_settings = list(process = "approx_rw", mu_form = NULL),
 #'   M_settings = list(process = "off", assumption = ~ I(0.3)),
 #'   obs_settings = list(sd_form = ~ sd_obs_block, q_form = ~ q_block)
 #' )
@@ -345,9 +283,9 @@ nll_fun <- function(par, simulate = FALSE) {
     eta_log_N <- log_N[-1, -1] - pred_log_N[-1, -1]
     sd_n <- exp(log_sd_n)
     phi <- plogis(logit_phi_n)
-    jnll <- jnll - dprocess_2d(eta_log_N, sd = sd_n, phi = phi, type = N_settings$process)
+    jnll <- jnll - dprocess_2d(eta_log_N, sd = sd_n, phi = phi)
     if (simulate) {
-      eta_log_N <- rprocess_2d(n_years - 1, n_ages - 1, sd = sd_n, phi = phi, type = N_settings$process)
+      eta_log_N <- rprocess_2d(n_years - 1, n_ages - 1, sd = sd_n, phi = phi)
       log_n[-1, ] <- pred_log_N[-1, -1] + eta_log_N
     }
   }
@@ -358,9 +296,9 @@ nll_fun <- function(par, simulate = FALSE) {
     eta_log_m <- log_m - log_mu_m
     sd_m <- exp(log_sd_m)
     phi <- plogis(logit_phi_m)
-    jnll <- jnll - dprocess_2d(eta_log_m, sd = sd_m, phi = phi, type = M_settings$process)
+    jnll <- jnll - dprocess_2d(eta_log_m, sd = sd_m, phi = phi)
     if (simulate) {
-      eta_log_m <- rprocess_2d(nrow(log_m), ncol(log_m), sd = sd_m, phi = phi, type = M_settings$process)
+      eta_log_m <- rprocess_2d(nrow(log_m), ncol(log_m), sd = sd_m, phi = phi)
       log_m <- log_mu_m + eta_log_m
     }
   }
@@ -369,9 +307,9 @@ nll_fun <- function(par, simulate = FALSE) {
 
   eta_log_F <- log_F - log_mu_F
   phi <- plogis(logit_phi_f)
-  jnll <- jnll - dprocess_2d(eta_log_F, sd = sd_f, phi = phi, type = F_settings$process)
+  jnll <- jnll - dprocess_2d(eta_log_F, sd = sd_f, phi = phi)
   if (simulate) {
-    eta_log_F <- rprocess_2d(nrow(log_f), ncol(log_f), sd = sd_f, phi = phi, type = F_settings$process)
+    eta_log_F <- rprocess_2d(nrow(log_f), ncol(log_f), sd = sd_f, phi = phi)
     log_f <- log_mu_F + eta_log_F
   }
 
