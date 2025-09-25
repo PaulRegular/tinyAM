@@ -36,10 +36,11 @@
 #' - **opt**: `nlminb` optimization result.
 #' - **rep**: list from `obj$report()`.
 #' - **sdrep**: [RTMB::sdreport()] result.
+#' - **is_converged**: Did the model converge? (see [check_convergence()])
 #' - **obs_pred**: `inputs$catch` and `inputs$index` data augmented with
 #'                  predicted values, parameter estimates, and
-#'                  standardized residuals (see also [tidy_obs_pred()]).
-#' - **pop**: A collection of population summaries in tidy format (see also
+#'                  standardized residuals (see [tidy_obs_pred()]).
+#' - **pop**: A collection of population summaries in tidy format (see
 #'            [tidy_pop()]).
 #'
 #' @examples
@@ -107,6 +108,7 @@ fit_tam <- function(inputs, silent = FALSE, ...) {
 
   out$obs_pred <- tidy_obs_pred(out)
   out$pop <- tidy_pop(out)
+  out$is_converged <- check_convergence(out, quiet = TRUE)
 
   out
 
@@ -153,7 +155,13 @@ fit_retro <- function(fit, folds = 2) {
   retro <- vector("list", length(retro_years))
   names(retro) <- retro_years
   for (i in seq_along(retro_years)) {
-    retro[[i]] <- try(update(fit, years = min_year:retro_years[i]))
+    r <- try(update(fit, years = min_year:retro_years[i]))
+    if (inherits(r, "try-error") || !r$is_converged) {
+      retro[[i]] <- r
+    } else {
+      retro[[i]] <- NULL
+      warning("Model failed when terminal year was ", retro_years[i])
+    }
   }
 
   fit$retro <- retro
@@ -220,3 +228,53 @@ sim_tam <- function(fit, obs_only = FALSE) {
 
 }
 
+
+#' Quick convergence check for a TAM fit
+#'
+#' @description
+#' Checks three basics and returns `TRUE` only if all pass:
+#' (1) maximum absolute gradient from `sdreport`,
+#' (2) Hessian positive-definite flag, and
+#' (3) optimizer convergence code (`0` for `nlminb()`).
+#'
+#' If all pass, a short success message is printed unless `quiet = TRUE`.
+#' If any check fails, a warning is emitted (not suppressed by `quiet`).
+#'
+#' @param fit A fitted TAM object containing `$sdrep` and `$opt`.
+#' @param grad_tol Numeric tolerance for `max|grad|`. Default `1e-3`.
+#' @param quiet Logical; if `TRUE` (default) suppresses the success message.
+#'
+#' @return Logical: `TRUE` if all checks pass, otherwise `FALSE`.
+#' @export
+check_convergence <- function(fit, grad_tol = 1e-3, quiet = TRUE) {
+  fmt_num <- function(x) if (is.finite(x)) signif(x, 3) else "NA"
+
+  g        <- tryCatch(fit$sdrep$gradient.fixed, error = function(e) NULL)
+  max_grad <- if (length(g)) max(abs(g), na.rm = TRUE) else NA_real_
+  pdHess   <- tryCatch(fit$sdrep$pdHess,        error = function(e) NA)
+  conv     <- tryCatch(fit$opt$convergence,     error = function(e) NA_integer_)
+
+  grad_ok  <- is.finite(max_grad) && max_grad <= grad_tol
+  hess_ok  <- isTRUE(pdHess)
+  optim_ok <- isTRUE(conv == 0)
+  ok       <- grad_ok && hess_ok && optim_ok
+
+  issues <- c(
+    if (!grad_ok) sprintf("max|grad|=%s > tol=%g", fmt_num(max_grad), grad_tol),
+    if (!hess_ok) "Hessian not PD",
+    if (!optim_ok) sprintf("opt code=%s != 0", as.character(conv))
+  )
+  msg <- sprintf(
+    "Convergence %s: max|grad|=%s (tol=%g), pdHess=%s, opt code=%s%s",
+    if (ok) "OK" else "FAIL",
+    fmt_num(max_grad), grad_tol, as.character(pdHess), as.character(conv),
+    if (length(issues) && !ok) paste0(" | issues: ", paste(issues, collapse = "; ")) else ""
+  )
+
+  if (ok) {
+    if (!quiet) message(msg)
+  } else {
+    warning(msg, call. = FALSE)
+  }
+  ok
+}

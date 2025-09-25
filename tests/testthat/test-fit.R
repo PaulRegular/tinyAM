@@ -77,3 +77,79 @@ test_that("sim_tam returns simulated observations and (optionally) re-computed r
   expect_equal(length(rep_full$ssb), length(YEARS))
 })
 
+
+test_that("check_convergence returns TRUE and messages when all checks pass", {
+  fit_ok <- list(
+    sdrep = list(gradient.fixed = c(1e-6, -5e-5), pdHess = TRUE),
+    opt   = list(convergence = 0)
+  )
+
+  val <- NULL
+  expect_message(
+    val <- check_convergence(fit_ok, grad_tol = 1e-3, quiet = FALSE),
+    "Convergence OK"
+  )
+  expect_true(val)
+})
+
+test_that("check_convergence is silent on success when quiet = TRUE", {
+  fit_ok <- list(
+    sdrep = list(gradient.fixed = c(1e-6, -5e-5), pdHess = TRUE),
+    opt   = list(convergence = 0)
+  )
+  expect_silent(check_convergence(fit_ok, grad_tol = 1e-3, quiet = TRUE))
+})
+
+test_that("check_convergence warns and returns FALSE if gradient too large", {
+  fit_bad_grad <- list(
+    sdrep = list(gradient.fixed = c(0.1, -0.2), pdHess = TRUE),
+    opt   = list(convergence = 0)
+  )
+
+  val <- NULL
+  expect_warning(
+    val <- check_convergence(fit_bad_grad, grad_tol = 1e-3, quiet = TRUE),
+    "max\\|grad\\|"
+  )
+  expect_false(val)
+})
+
+test_that("check_convergence warns and returns FALSE if Hessian not PD", {
+  fit_bad_hess <- list(
+    sdrep = list(gradient.fixed = c(1e-6, 2e-6), pdHess = FALSE),
+    opt   = list(convergence = 0)
+  )
+
+  val <- NULL
+  expect_warning(
+    val <- check_convergence(fit_bad_hess, quiet = TRUE),
+    "Hessian not PD"
+  )
+  expect_false(val)
+})
+
+test_that("check_convergence warns and returns FALSE if optimizer code != 0", {
+  fit_bad_opt <- list(
+    sdrep = list(gradient.fixed = c(1e-6, 2e-6), pdHess = TRUE),
+    opt   = list(convergence = 1)  # nonzero indicates non-convergence for nlminb
+  )
+
+  val <- NULL
+  expect_warning(
+    val <- check_convergence(fit_bad_opt, quiet = TRUE),
+    "opt code=1 != 0"
+  )
+  expect_false(val)
+})
+
+test_that("success message includes key metrics", {
+  fit_ok <- list(
+    sdrep = list(gradient.fixed = c(1e-6, -5e-5), pdHess = TRUE),
+    opt   = list(convergence = 0)
+  )
+  expect_message(
+    check_convergence(fit_ok, grad_tol = 1e-3, quiet = FALSE),
+    "^Convergence OK"
+  )
+})
+
