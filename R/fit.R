@@ -138,7 +138,12 @@ fit_tam <- function(inputs, interval = 0.95, silent = FALSE, ...) {
 #'                 [check_convergence()]).
 #'
 #' @return
-#' A list whose elements are the refitted objects for each peel (named by terminal year).
+#' A list whose elements are:
+#'   - `obs_pred` — a named list of stacked data frames (e.g., `catch`, `index`);
+#'   - `pop` — a named list of stacked data frames (e.g., `ssb`, `N`, `M`,
+#'   `mu_M`, `F`, `mu_F`, `Z`, `ssb_mat`); and,
+#'   - `retro_fits` - refitted objects for each peel (named by terminal year).
+#' The `obs_pred` and `pop` objects are created using [tidy_tam()].
 #'
 #' @examples
 #' \dontrun{
@@ -152,7 +157,7 @@ fit_tam <- function(inputs, interval = 0.95, silent = FALSE, ...) {
 #'   obs_settings = list(q_form = ~ q_block, sd_form = ~ sd_obs_block)
 #' )
 #' retros <- fit_retro(fit, folds = 5)
-#' lapply(retros, function(x) x$rep$ssb)
+#' head(retros$pop$ssb)
 #' }
 #'
 #' @seealso
@@ -189,7 +194,9 @@ fit_retro <- function(fit, folds = 2, grad_tol = 1e-3, progress = TRUE) {
     )
   }
 
-  retro[converged]
+  retro_fits <- retro[converged]
+  c(tidy_tam(model_list = retro_fits, label = "retro_year"),
+    list(retro_fits = retro_fits))
 }
 
 

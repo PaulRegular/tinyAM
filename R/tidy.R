@@ -277,7 +277,6 @@ tidy_tam <- function(..., model_list = NULL, interval = 0.95, label = "model") {
   if (using_dots) {
     dots <- list(...)
     if (!length(dots)) stop("No models supplied.", call. = FALSE)
-    # Simple labels from the ... expressions
     names(dots) <- sapply(substitute(list(...))[-1], deparse1)
     model_list <- dots
   } else {

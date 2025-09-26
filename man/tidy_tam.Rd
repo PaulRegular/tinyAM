@@ -58,7 +58,7 @@ component names), ensuring consistent columns for base-R \code{rbind()}.
 # Single model via ...: no label column added
 fit1 <- fit_tam(northern_cod_data, years = 1983:2024, ages = 2:14)
 tabs1 <- tidy_tam(fit1)
-names(tabs1$obs_pred)  # "catch", "index"
+head(tabs1$obs_pred$index)
 
 # Multiple via ...: label uses the object names
 fit2 <- update(fit1, years = 1983:2023)

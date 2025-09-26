@@ -16,7 +16,14 @@ from retro fits that exceed this tolerance are dropped (see
 \code{\link[=check_convergence]{check_convergence()}}).}
 }
 \value{
-A list whose elements are the refitted objects for each peel (named by terminal year).
+A list whose elements are:
+\itemize{
+\item \code{obs_pred} — a named list of stacked data frames (e.g., \code{catch}, \code{index});
+\item \code{pop} — a named list of stacked data frames (e.g., \code{ssb}, \code{N}, \code{M},
+\code{mu_M}, \code{F}, \code{mu_F}, \code{Z}, \code{ssb_mat}); and,
+\item \code{retro_fits} - refitted objects for each peel (named by terminal year).
+The \code{obs_pred} and \code{pop} objects are created using \code{\link[=tidy_tam]{tidy_tam()}}.
+}
 }
 \description{
 Creates a sequence of terminal-year peels and refits the model on each
