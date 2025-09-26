@@ -4,11 +4,14 @@
 \alias{fit_tam}
 \title{Fit TAM}
 \usage{
-fit_tam(inputs, silent = FALSE, ...)
+fit_tam(inputs, interval = 0.95, silent = FALSE, ...)
 }
 \arguments{
 \item{inputs}{A named list of tidy observation tables (e.g., \code{catch}, \code{index},
 \code{weight}, \code{maturity}). See \link{northern_cod_data} for an example.}
+
+\item{interval}{Level in \verb{(0, 1)} to use to generate confidence
+intervals, where applicable; default \verb{0.95 (see [tidy_tam()]).}}
 
 \item{silent}{Logical; if \code{TRUE}, disables tracing information.}
 

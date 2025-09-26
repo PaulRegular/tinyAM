@@ -140,3 +140,46 @@ test_that("tidy_pop concatenates tidy_sdrep and tidy_rep_mats", {
 })
 
 
+test_that("tidy_sam supplied single model via ... adds no label column", {
+  out  <- tidy_tam(fit)  # default label = 'model'
+  expect_false("model" %in% names(out$obs_pred$catch))
+  expect_false("model" %in% names(out$obs_pred$index))
+  expect_false("model" %in% names(out$pop$N))
+  expect_false("model" %in% names(out$pop$ssb))
+})
+
+
+fit_2024 <- fit
+fit_2023 <- update(fit, years = 1983:2023)
+fit_2022 <- update(fit, years = 1983:2022)
+
+test_that("tidy_sam supplied multiple models via ... use object names as labels", {
+  out <- tidy_tam(fit_2023, fit_2024)  # label = 'model'
+  expect_true("model" %in% names(out$obs_pred$catch))
+  expect_equal(unique(out$obs_pred$catch$model), c("fit_2023", "fit_2024"))
+  expect_true("model" %in% names(out$pop$N))
+  expect_equal(unique(out$pop$N$model), c("fit_2023", "fit_2024"))
+})
+
+test_that("tidy_sam supplied a model_list must be named and names are used as labels (even length 1)", {
+  # Unnamed -> error
+  expect_error(tidy_tam(model_list = list(fit)))
+
+  # Named (length 1) -> label present and equals the name
+  out1 <- tidy_tam(model_list = list(`2024` = fit_2024))
+  expect_true("model" %in% names(out1$pop$N))
+  expect_equal(unique(out1$pop$N$model), "2024")
+
+  # Named (length >1) -> labels in order of names
+  out2 <- tidy_tam(model_list = list(`2023` = fit_2023, `2024` = fit_2024))
+  expect_equal(unique(out2$obs_pred$catch$model), c("2023", "2024"))
+})
+
+test_that("tidy_sam supplied custom label name is respected", {
+  out <- tidy_tam(fit_2024, fit_2023, label = "retro_year")
+  expect_true("retro_year" %in% names(out$obs_pred$catch))
+})
+
+
+
+

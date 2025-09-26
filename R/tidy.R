@@ -209,6 +209,111 @@ tidy_pop <- function(fit, interval = 0.95) {
     tidy_rep_mats(fit))
 }
 
+
+#' Stack TAM outputs across models (retro folds, scenarios, etc.)
+#'
+#' @description
+#' Builds tidy, stacked tables from one or more fitted TAM models. For each
+#' model, it collects:
+#'
+#' - observation diagnostics via [tidy_obs_pred()], and
+#' - population summaries via [tidy_pop()] (with confidence intervals),
+#'
+#' then stacks **per component** across models (e.g., all `"catch"` tables
+#' together; all `"N"` tables together).
+#'
+#' @details
+#' **Inputs:** Pass models through `...` or via `model_list =`.
+#'
+#' - If `...` supplies **one** model, **no label** column is added.
+#' - If `...` supplies **more than one** model, a label column is added using
+#'   the object/expression names from `...`.
+#' - If `model_list` is used, it **must be a named list**; its names are always
+#'   used as labels (even when length 1).
+#'
+#' Only components present in **all** models are stacked (intersection of
+#' component names), ensuring consistent columns for base-R `rbind()`.
+#'
+#' @param ... One or more fitted TAM objects (as returned by [fit_tam()]).
+#'   Ignored if `model_list` is provided.
+#' @param model_list A **named list** of fitted TAM objects. Required to be named;
+#'   the names are used as label values (even for length-1 lists).
+#' @param interval Confidence level passed to [tidy_pop()] for interval construction.
+#'   Default `0.95`.
+#' @param label Character scalar giving the label column name to add when stacking
+#'   across multiple/named models. Default `"model"`.
+#'
+#' @return
+#' A named list with two elements:
+#'
+#' - **obs_pred** — a named list of stacked data frames (e.g., `catch`, `index`);
+#' - **pop** — a named list of stacked data frames (e.g., `ssb`, `N`, `M`,
+#'   `mu_M`, `F`, `mu_F`, `Z`, `ssb_mat`).
+#'
+#' Each stacked data frame contains all rows across models, with a label column
+#' added according to the rules above.
+#'
+#' @examples
+#' # Single model via ...: no label column added
+#' fit1 <- fit_tam(northern_cod_data, years = 1983:2024, ages = 2:14)
+#' tabs1 <- tidy_tam(fit1)
+#' head(tabs1$obs_pred$index)
+#'
+#' # Multiple via ...: label uses the object names
+#' fit2 <- update(fit1, years = 1983:2023)
+#' tabs2 <- tidy_tam(fit1, fit2)
+#' head(tabs2$obs_pred$catch)  # contains column "model"
+#'
+#' # Named list: must be named; names always used as label (even length 1)
+#' fits <- list(`2023` = fit2, `2024` = fit1)
+#' tabs3 <- tidy_tam(model_list = fits, label = "retro_year")
+#' head(tabs3$pop$N)  # column "retro_year" has 2023/2024
+#'
+#' @seealso [tidy_obs_pred()], [tidy_pop()], [fit_tam()], [fit_retro()]
+#' @export
+tidy_tam <- function(..., model_list = NULL, interval = 0.95, label = "model") {
+  using_dots <- is.null(model_list)
+
+  if (using_dots) {
+    dots <- list(...)
+    if (!length(dots)) stop("No models supplied.", call. = FALSE)
+    # Simple labels from the ... expressions
+    names(dots) <- sapply(substitute(list(...))[-1], deparse1)
+    model_list <- dots
+  } else {
+    if (!length(model_list)) stop("No models supplied.", call. = FALSE)
+    if (is.null(names(model_list)) || any(!nzchar(names(model_list)))) {
+      stop("`model_list` must be a named list (all names non-empty).", call. = FALSE)
+    }
+  }
+
+  # Add label iff multiple via ... OR any use of model_list (which must be named)
+  add_label <- (using_dots && length(model_list) > 1L) || (!using_dots)
+
+  .common <- function(x) Reduce(intersect, lapply(x, names))
+  .stack  <- function(models, comp) {
+    parts <- lapply(models, `[[`, comp)
+    out <- do.call(rbind, unname(parts))
+    if (add_label) out[[label]] <- rep(names(models), sapply(parts, nrow))
+    rownames(out) <- NULL
+    out
+  }
+
+  obs_list <- lapply(model_list, tidy_obs_pred)
+  pop_list <- lapply(model_list, tidy_pop, interval = interval)
+
+  obs_nms <- .common(obs_list)
+  pop_nms <- .common(pop_list)
+
+  obs_pred <- setNames(lapply(obs_nms, function(nm) .stack(obs_list, nm)), obs_nms)
+  pop      <- setNames(lapply(pop_nms, function(nm) .stack(pop_list, nm)), pop_nms)
+
+  list(obs_pred = obs_pred, pop = pop)
+}
+
+
+
+
 #' Transform and rescale estimate columns
 #'
 #' @description

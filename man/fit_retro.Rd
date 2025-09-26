@@ -16,8 +16,7 @@ from retro fits that exceed this tolerance are dropped (see
 \code{\link[=check_convergence]{check_convergence()}}).}
 }
 \value{
-The input \code{fit} with an added \verb{$retro} list whose elements are the
-refitted objects for each peel (named by terminal year).
+A list whose elements are the refitted objects for each peel (named by terminal year).
 }
 \description{
 Creates a sequence of terminal-year peels and refits the model on each

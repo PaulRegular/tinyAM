@@ -24,6 +24,8 @@
 #'
 #' @param inputs A named list of tidy observation tables (e.g., `catch`, `index`,
 #'   `weight`, `maturity`). See [northern_cod_data] for an example.
+#' @param interval Level in `(0, 1)` to use to generate confidence
+#'                 intervals, where applicable; default `0.95 (see [tidy_tam()]).`
 #' @param silent Logical; if `TRUE`, disables tracing information.
 #' @inheritDotParams make_dat
 #'
@@ -58,7 +60,7 @@
 #' [make_dat()], [make_par()], [sim_tam()], [fit_retro()],
 #' [RTMB::MakeADFun()], [RTMB::sdreport()]
 #' @export
-fit_tam <- function(inputs, silent = FALSE, ...) {
+fit_tam <- function(inputs, interval = 0.95, silent = FALSE, ...) {
 
   call <- match.call()
 
@@ -136,8 +138,7 @@ fit_tam <- function(inputs, silent = FALSE, ...) {
 #'                 [check_convergence()]).
 #'
 #' @return
-#' The input `fit` with an added `$retro` list whose elements are the
-#' refitted objects for each peel (named by terminal year).
+#' A list whose elements are the refitted objects for each peel (named by terminal year).
 #'
 #' @examples
 #' \dontrun{
