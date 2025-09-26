@@ -7,6 +7,6 @@
 # * https://testthat.r-lib.org/articles/special-files.html
 
 library(testthat)
-library(TAM)
+library(tinyAM)
 
-test_check("TAM")
+test_check("tinyAM")
