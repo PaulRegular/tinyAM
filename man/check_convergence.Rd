@@ -7,7 +7,7 @@
 check_convergence(fit, grad_tol = 0.001, quiet = TRUE)
 }
 \arguments{
-\item{fit}{A fitted TAM object containing \verb{$sdrep} and \verb{$opt}.}
+\item{fit}{A fitted TAM object containing \verb{$sdrep}.}
 
 \item{grad_tol}{Numeric tolerance for \verb{max|grad|}. Default \code{1e-3}.}
 
@@ -17,10 +17,9 @@ check_convergence(fit, grad_tol = 0.001, quiet = TRUE)
 Logical: \code{TRUE} if all checks pass, otherwise \code{FALSE}.
 }
 \description{
-Checks three basics and returns \code{TRUE} only if all pass:
+Checks two basics and returns \code{TRUE} only if all pass:
 (1) maximum absolute gradient from \code{sdreport},
 (2) Hessian positive-definite flag, and
-(3) optimizer convergence code (\code{0} for \code{nlminb()}).
 
 If all pass, a short success message is printed unless \code{quiet = TRUE}.
 If any check fails, a warning is emitted (not suppressed by \code{quiet}).

@@ -61,10 +61,11 @@ A list with components:
 \item \strong{opt}: \code{nlminb} optimization result.
 \item \strong{rep}: list from \code{obj$report()}.
 \item \strong{sdrep}: \code{\link[RTMB:TMB-interface]{RTMB::sdreport()}} result.
+\item \strong{is_converged}: Did the model converge? (see \code{\link[=check_convergence]{check_convergence()}})
 \item \strong{obs_pred}: \code{inputs$catch} and \code{inputs$index} data augmented with
 predicted values, parameter estimates, and
-standardized residuals (see also \code{\link[=tidy_obs_pred]{tidy_obs_pred()}}).
-\item \strong{pop}: A collection of population summaries in tidy format (see also
+standardized residuals (see \code{\link[=tidy_obs_pred]{tidy_obs_pred()}}).
+\item \strong{pop}: A collection of population summaries in tidy format (see
 \code{\link[=tidy_pop]{tidy_pop()}}).
 }
 }

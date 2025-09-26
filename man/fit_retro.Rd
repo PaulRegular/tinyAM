@@ -29,7 +29,15 @@ supports \code{update()} with a \code{years} argument.
 }
 \examples{
 \dontrun{
-fit <- fit_tam(northern_cod_data, years = 1983:2024, ages = 2:14)
+fit <- fit_tam(
+  northern_cod_data,
+  years = 1983:2024,
+  ages = 2:14,
+  N_settings = list(process = "iid", init_N0 = FALSE),
+  F_settings = list(process = "approx_rw", mu_form = NULL),
+  M_settings = list(process = "off", assumption = ~M_assumption),
+  obs_settings = list(q_form = ~ q_block, sd_form = ~ sd_obs_block)
+)
 retro_fit <- fit_retro(fit, folds = 5)
 lapply(retro_fit$retro, function(x) x$rep$ssb)
 }
