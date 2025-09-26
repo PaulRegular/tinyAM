@@ -4,12 +4,16 @@
 \alias{fit_retro}
 \title{Retrospective fits for TAM}
 \usage{
-fit_retro(fit, folds = 2)
+fit_retro(fit, folds = 2, grad_tol = 0.001, progress = TRUE)
 }
 \arguments{
 \item{fit}{A fitted TAM object as returned by \code{\link[=fit_tam]{fit_tam()}}.}
 
 \item{folds}{Integer; number of terminal peels (default \code{2}).}
+
+\item{grad_tol}{Numeric tolerance for \verb{max|grad|}. Default \code{1e-3}. Output
+from retro fits that exceed this tolerance are dropped (see
+\code{\link[=check_convergence]{check_convergence()}}).}
 }
 \value{
 The input \code{fit} with an added \verb{$retro} list whose elements are the
@@ -38,8 +42,8 @@ fit <- fit_tam(
   M_settings = list(process = "off", assumption = ~M_assumption),
   obs_settings = list(q_form = ~ q_block, sd_form = ~ sd_obs_block)
 )
-retro_fit <- fit_retro(fit, folds = 5)
-lapply(retro_fit$retro, function(x) x$rep$ssb)
+retros <- fit_retro(fit, folds = 5)
+lapply(retros, function(x) x$rep$ssb)
 }
 
 }

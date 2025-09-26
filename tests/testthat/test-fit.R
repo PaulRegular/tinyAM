@@ -58,10 +58,9 @@ test_that("fit_tam emits warning if random effects far exceed observations", {
 })
 
 test_that("fit_retro produces a list of fits with decreasing end years", {
-  retro_fit <- fit_retro(default_fit, folds = 2)
-  expect_true("retro" %in% names(retro_fit))
-  expect_type(retro_fit$retro, "list")
-  expect_equal(length(retro_fit$retro), 3) # max year, and two peels
+  retros <- fit_retro(default_fit, folds = 2)
+  expect_type(retros, "list")
+  expect_equal(length(retros), 3) # max year, and two peels
 })
 
 test_that("sim_tam returns simulated observations and (optionally) re-computed reports", {

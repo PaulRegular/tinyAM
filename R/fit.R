@@ -131,6 +131,9 @@ fit_tam <- function(inputs, silent = FALSE, ...) {
 #'
 #' @param fit A fitted TAM object as returned by [fit_tam()].
 #' @param folds Integer; number of terminal peels (default `2`).
+#' @param grad_tol Numeric tolerance for `max|grad|`. Default `1e-3`. Output
+#'                 from retro fits that exceed this tolerance are dropped (see
+#'                 [check_convergence()]).
 #'
 #' @return
 #' The input `fit` with an added `$retro` list whose elements are the
@@ -147,35 +150,47 @@ fit_tam <- function(inputs, silent = FALSE, ...) {
 #'   M_settings = list(process = "off", assumption = ~M_assumption),
 #'   obs_settings = list(q_form = ~ q_block, sd_form = ~ sd_obs_block)
 #' )
-#' retro_fit <- fit_retro(fit, folds = 5)
-#' lapply(retro_fit$retro, function(x) x$rep$ssb)
+#' retros <- fit_retro(fit, folds = 5)
+#' lapply(retros, function(x) x$rep$ssb)
 #' }
 #'
 #' @seealso
 #' [fit_tam()], [sim_tam()]
 #' @export
-fit_retro <- function(fit, folds = 2) {
-
+fit_retro <- function(fit, folds = 2, grad_tol = 1e-3, progress = TRUE) {
   min_year <- min(fit$dat$years)
   max_year <- max(fit$dat$years)
-  retro_years <- (max_year - folds):(max_year)
+  retro_years <- seq(max_year - folds, max_year)
+  n <- length(retro_years)
 
-  retro <- vector("list", length(retro_years))
-  names(retro) <- retro_years
-  for (i in seq_along(retro_years)) {
-    r <- try(update(fit, years = min_year:retro_years[i]))
-    if (inherits(r, "try-error") || !r$is_converged) {
-      retro[[i]] <- NULL
-      warning("Model failed when terminal year was ", retro_years[i])
-    } else {
-      retro[[i]] <- r
-    }
+  retro <- vector("list", n)
+  names(retro) <- as.character(retro_years)
+  converged <- rep(FALSE, n)
+
+  pb <- NULL
+  if (progress && n > 0 && interactive()) {
+    pb <- utils::txtProgressBar(min = 0, max = n, style = 3)
+    on.exit(close(pb), add = TRUE)
   }
 
-  fit$retro <- retro
-  fit
+  for (i in seq_len(n)) {
+    r <- suppressWarnings(try(update(fit, years = min_year:retro_years[i], silent = TRUE)))
+    retro[[i]] <- r
+    converged[i] <- !inherits(r, "try-error") && check_convergence(r, grad_tol = grad_tol)
+    if (!is.null(pb)) utils::setTxtProgressBar(pb, i)
+  }
 
+  if (any(!converged)) {
+    warning(
+      "Model may not have converged for the following retro folds: ",
+      paste(retro_years[!converged], collapse = ", "),
+      call. = FALSE
+    )
+  }
+
+  retro[converged]
 }
+
 
 
 #' Simulate from a fitted TAM
@@ -262,7 +277,7 @@ check_convergence <- function(fit, grad_tol = 1e-3, quiet = TRUE) {
 
   msg <- sprintf(
     "%s (maximum gradient < tolerance [%s %s %s], Hessian %s positive definite)",
-    if (ok) "Model converged" else "Model failed to converge",
+    if (ok) "Model converged" else "Model may not have converged",
     signif(max_grad, 2),
     if (grad_ok) "<" else ">",
     grad_tol,
