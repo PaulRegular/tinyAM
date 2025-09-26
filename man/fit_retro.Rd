@@ -14,6 +14,8 @@ fit_retro(fit, folds = 2, grad_tol = 0.001, progress = TRUE)
 \item{grad_tol}{Numeric tolerance for \verb{max|grad|}. Default \code{1e-3}. Output
 from retro fits that exceed this tolerance are dropped (see
 \code{\link[=check_convergence]{check_convergence()}}).}
+
+\item{progress}{Show progress bar?}
 }
 \value{
 A list whose elements are:
@@ -49,7 +51,7 @@ fit <- fit_tam(
   obs_settings = list(q_form = ~ q_block, sd_form = ~ sd_obs_block)
 )
 retros <- fit_retro(fit, folds = 5)
-lapply(retros, function(x) x$rep$ssb)
+head(retros$pop$ssb)
 }
 
 }

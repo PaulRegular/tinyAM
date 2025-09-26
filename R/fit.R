@@ -136,6 +136,7 @@ fit_tam <- function(inputs, interval = 0.95, silent = FALSE, ...) {
 #' @param grad_tol Numeric tolerance for `max|grad|`. Default `1e-3`. Output
 #'                 from retro fits that exceed this tolerance are dropped (see
 #'                 [check_convergence()]).
+#' @param progress Show progress bar?
 #'
 #' @return
 #' A list whose elements are:

@@ -46,18 +46,21 @@ test_that("fit_tam runs on a cod dataset and returns expected structure", {
 })
 
 
-## TODO: function now returning two warnings...figure out how to get this working again
-# test_that("fit_tam emits warning if random effects far exceed observations", {
-#   expect_warning(
-#     test_fit(
-#       N_settings = list(process = "iid", init_N0 = TRUE),
-#       F_settings = list(process = "iid"),
-#       M_settings = list(process = "iid", mu_form = NULL, assumption = ~I(0.3))
-#     ),
-#     regexp = "Number of random effects .* exceed 1.5 times the number of observations",
-#     fixed = FALSE
-#   )
-# })
+test_that("fit_tam emits warning if random effects far exceed observations", {
+  test_fit(
+    N_settings = list(process = "iid", init_N0 = TRUE),
+    F_settings = list(process = "iid"),
+    M_settings = list(process = "iid", mu_form = NULL, assumption = ~I(0.3))
+  ) |>
+    expect_warning(
+      regexp = "Number of random effects .* exceed 1.5 times the number of observations",
+      fixed = FALSE
+    ) |>
+    expect_warning(
+      regexp = "^Model may not have converged",
+      fixed = FALSE
+    )
+})
 
 
 test_that("sim_tam returns simulated observations and (optionally) re-computed reports", {
