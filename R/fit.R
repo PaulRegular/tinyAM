@@ -78,7 +78,7 @@ fit_tam <- function(inputs, interval = 0.95, silent = FALSE, ...) {
   n_ran <- length(unlist(par[ran]))
   n_obs <- sum(!is.na(dat$log_obs))
   if (n_ran > (n_obs * 1.5)) {
-    warning(sprintf("Number of random effects (%d) exceed 1.5 times the number of observations (%d). Consider simplifying your model.", n_ran, n_obs))
+    cli::cli_warn(sprintf("Number of random effects (%d) exceed 1.5 times the number of observations (%d). Consider simplifying your model.", n_ran, n_obs))
   }
 
   make_nll_fun <- function(f, d) function(p) f(p, d) # use closure to avoid global assignment of data
@@ -189,10 +189,9 @@ fit_retro <- function(fit, folds = 2, grad_tol = 1e-3, progress = TRUE, globals 
   converged <- sapply(retro, function(x) !inherits(x, "try-error") && x$is_converged)
 
   if (any(!converged)) {
-    warning(
-      "Model may not have converged for the following retro folds: ",
-      paste(retro_years[!converged], collapse = ", "),
-      call. = FALSE
+    cli::cli_warn(
+      paste0("Model may not have converged for the following retro folds: ",
+             paste(retro_years[!converged], collapse = ", "))
     )
   }
 
@@ -278,29 +277,33 @@ sim_tam <- function(fit, obs_only = FALSE) {
 #' @param quiet Logical; if `TRUE` (default) suppresses the success message.
 #'
 #' @return Logical: `TRUE` if all checks pass, otherwise `FALSE`.
+#' @importFrom cli cli_inform cli_warn format_warning
 #' @export
 check_convergence <- function(fit, grad_tol = 1e-3, quiet = TRUE) {
-
   max_grad <- max(abs(fit$sdrep$gradient.fixed))
   grad_ok  <- is.finite(max_grad) && max_grad <= grad_tol
-  hess_ok  <- fit$sdrep$pdHess
+  hess_ok  <- isTRUE(fit$sdrep$pdHess)
   ok       <- grad_ok && hess_ok
 
-  msg <- sprintf(
-    "%s (maximum gradient [%s] %s tolerance [%s] %s, Hessian %s positive definite %s)",
-    if (ok) "Model converged" else "Model may not have converged",
-    signif(max_grad, 2),
-    if (grad_ok) "<" else ">",
-    grad_tol,
-    if (grad_ok) "✓" else "✗",
-    if (hess_ok) "was" else "was not",
-    if (hess_ok) "✓" else "✗"
-  )
+  main_text <- if (ok) "{.strong Model converged}" else "{.strong Model may not have converged}"
+  grad_text <- sprintf("Maximum gradient [%s] %s tolerance [%s])",
+                       signif(max_grad, 1),
+                       if (grad_ok) "<=" else ">",
+                       grad_tol)
+  hess_text <- sprintf("Hessian %s positive definite",
+                       if (hess_ok) "was" else "was not")
+  grad_bullet <- if (grad_ok) "v" else "x"
+  hess_bullet <- if (hess_ok) "v" else "x"
+  bullets <- c(main_text, grad_text, hess_text)
+  names(bullets) <- c("", grad_bullet, hess_bullet)
 
   if (ok) {
-    if (!quiet) message(msg)
+    if (!quiet) {
+      cli::cli_inform(message = bullets)
+    }
   } else {
-    warning(msg, call. = FALSE)
+    cli::cli_warn(message = bullets)
   }
+
   ok
 }

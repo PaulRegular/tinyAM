@@ -203,7 +203,7 @@ make_dat <- function(
 
   if (N_settings$process == "off" && !N_settings$init_N0) {
     dat$N_settings$init_N0 <- TRUE
-    warning("The first year would lack parameters with process set to 'off' and init_N0 set to FALSE in N_settings; forcing init_N0 to TRUE to estimate initial levels.")
+    cli::cli_warn("The first year would lack parameters with process set to 'off' and init_N0 set to FALSE in N_settings; forcing init_N0 to TRUE to estimate initial levels.")
   }
   M_ages <- ages[-1]
   if (!is.null(M_settings$age_breaks)) {
@@ -254,7 +254,7 @@ make_dat <- function(
     dat$M_modmat <- model.matrix(M_settings$mu_form, data = dat$obs$weight)
     if ("(Intercept)" %in% colnames(dat$M_modmat) %in% !is.null(dat$M_settings$assumption)) {
       dat$M_modmat <- model.matrix(update(M_settings$mu_form, ~ 0 + .), data = dat$obs$weight)
-      warning("Dropping intercept term in M mu_form since assumed levels are supplied. Set assumption to NULL to estimate the intercept.")
+      cli::cli_warn("Dropping intercept term in M mu_form since assumed levels are supplied. Set assumption to NULL to estimate the intercept.")
     }
   } else {
     dat$log_mu_m <- 0

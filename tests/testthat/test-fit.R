@@ -81,10 +81,9 @@ test_that("check_convergence returns TRUE and messages when all checks pass", {
   fit_ok <- list(
     sdrep = list(gradient.fixed = c(1e-6, -5e-5), pdHess = TRUE)
   )
-  val <- NULL
   expect_message(
     val <- check_convergence(fit_ok, grad_tol = 1e-3, quiet = FALSE),
-    "^Model converged"
+    "Model converged"
   )
   expect_true(val)
 })
@@ -100,10 +99,9 @@ test_that("check_convergence warns and returns FALSE if gradient too large", {
   fit_bad_grad <- list(
     sdrep = list(gradient.fixed = c(0.1, -0.2), pdHess = TRUE)
   )
-  val <- NULL
   expect_warning(
     val <- check_convergence(fit_bad_grad, grad_tol = 1e-3, quiet = TRUE),
-    "^Model may not have converged"
+    "Model may not have converged"
   )
   expect_false(val)
 })
@@ -112,7 +110,6 @@ test_that("check_convergence warns and returns FALSE if Hessian not PD", {
   fit_bad_hess <- list(
     sdrep = list(gradient.fixed = c(1e-6, 2e-6), pdHess = FALSE)
   )
-  val <- NULL
   expect_warning(
     val <- check_convergence(fit_bad_hess, quiet = TRUE),
     "^Model may not have converged"
