@@ -127,14 +127,17 @@ fit_tam <- function(inputs, interval = 0.95, silent = FALSE, ...) {
 #' Peel years are `(max_year - folds) : max_year`.
 #' Each refit is attempted with `try()` so individual failures do not stop the sequence.
 #' Refits are generated via `update(fit, years = ...)`; ensure your `fit` object
-#' supports `update()` with a `years` argument.
+#' supports `update()` with a `years` argument. This function uses
+#' [furrr::future_map()] to run the retros in parallel. Remember to plan your session (e.g.,
+#' `future::plan(multisession, workers = 4)`).
 #'
 #' @param fit A fitted TAM object as returned by [fit_tam()].
 #' @param folds Integer; number of terminal peels (default `2`).
 #' @param grad_tol Numeric tolerance for `max|grad|`. Default `1e-3`. Output
 #'                 from retro fits that exceed this tolerance are dropped (see
 #'                 [check_convergence()]).
-#' @param progress Show progress bar?
+#' @param progress Logical; show progress bar using [progressr::with_progress()].
+#' @param globals Character vector naming global objects to supply to the workers.
 #'
 #' @return
 #' A list whose elements are:
@@ -146,6 +149,9 @@ fit_tam <- function(inputs, interval = 0.95, silent = FALSE, ...) {
 #'
 #' @examples
 #' \dontrun{
+#' # Choose your parallel plan (set once per session)
+#' future::plan(future::multisession, workers = 4)
+#'
 #' fit <- fit_tam(
 #'   northern_cod_data,
 #'   years = 1983:2024,
@@ -155,35 +161,32 @@ fit_tam <- function(inputs, interval = 0.95, silent = FALSE, ...) {
 #'   M_settings = list(process = "off", assumption = ~M_assumption),
 #'   obs_settings = list(q_form = ~ q_block, sd_form = ~ sd_obs_block)
 #' )
-#' retros <- fit_retro(fit, folds = 5)
+#' retros <- fit_retro(fit, folds = 5, progress = TRUE)
 #' head(retros$pop$ssb)
 #' }
 #'
 #' @seealso
 #' [fit_tam()], [sim_tam()]
+#' @importFrom furrr future_map furrr_options
+#' @importFrom progressr with_progress progressor
 #' @export
-fit_retro <- function(fit, folds = 2, grad_tol = 1e-3, progress = TRUE) {
+fit_retro <- function(fit, folds = 2, grad_tol = 1e-3, progress = TRUE, globals = NULL) {
   min_year <- min(fit$dat$years)
   max_year <- max(fit$dat$years)
   retro_years <- seq(max_year - folds, max_year)
-  n <- length(retro_years)
 
-  retro <- vector("list", n)
-  names(retro) <- as.character(retro_years)
-  converged <- rep(FALSE, n)
+  progressr::with_progress({
+    update_progress <- progressr::progressor(steps = folds)
+    retro <- furrr::future_map(seq_along(retro_years), function(i) {
+      r <- suppressWarnings(try(update(fit, years = min_year:retro_years[i], silent = TRUE)))
+      r$is_converged <- check_convergence(r, grad_tol = grad_tol)
+      update_progress()
+      return(r)
+    }, .options = furrr::furrr_options(seed = 1, packages = "TAM", globals = globals))
+  }, enable = progress)
+  names(retro) <- retro_years
 
-  pb <- NULL
-  if (progress && n > 0 && interactive()) {
-    pb <- utils::txtProgressBar(min = 0, max = n, style = 3)
-    on.exit(close(pb), add = TRUE)
-  }
-
-  for (i in seq_len(n)) {
-    r <- suppressWarnings(try(update(fit, years = min_year:retro_years[i], silent = TRUE)))
-    retro[[i]] <- r
-    converged[i] <- !inherits(r, "try-error") && check_convergence(r, grad_tol = grad_tol)
-    if (!is.null(pb)) utils::setTxtProgressBar(pb, i)
-  }
+  converged <- sapply(retro, function(x) !inherits(x, "try-error") && x$is_converged)
 
   if (any(!converged)) {
     warning(
@@ -284,12 +287,14 @@ check_convergence <- function(fit, grad_tol = 1e-3, quiet = TRUE) {
   ok       <- grad_ok && hess_ok
 
   msg <- sprintf(
-    "%s (maximum gradient < tolerance [%s %s %s], Hessian %s positive definite)",
+    "%s (maximum gradient [%s] %s tolerance [%s] %s, Hessian %s positive definite %s)",
     if (ok) "Model converged" else "Model may not have converged",
     signif(max_grad, 2),
     if (grad_ok) "<" else ">",
     grad_tol,
-    if (hess_ok) "was" else "was not"
+    if (grad_ok) "✓" else "✗",
+    if (hess_ok) "was" else "was not",
+    if (hess_ok) "✓" else "✗"
   )
 
   if (ok) {

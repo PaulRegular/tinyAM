@@ -103,7 +103,7 @@ test_that("check_convergence warns and returns FALSE if gradient too large", {
   val <- NULL
   expect_warning(
     val <- check_convergence(fit_bad_grad, grad_tol = 1e-3, quiet = TRUE),
-    "maximum gradient < tolerance"
+    "^Model may not have converged"
   )
   expect_false(val)
 })
@@ -115,7 +115,7 @@ test_that("check_convergence warns and returns FALSE if Hessian not PD", {
   val <- NULL
   expect_warning(
     val <- check_convergence(fit_bad_hess, quiet = TRUE),
-    "Hessian was not positive definite"
+    "^Model may not have converged"
   )
   expect_false(val)
 })

@@ -4,7 +4,7 @@
 \alias{fit_retro}
 \title{Retrospective fits for TAM}
 \usage{
-fit_retro(fit, folds = 2, grad_tol = 0.001, progress = TRUE)
+fit_retro(fit, folds = 2, grad_tol = 0.001, progress = TRUE, globals = NULL)
 }
 \arguments{
 \item{fit}{A fitted TAM object as returned by \code{\link[=fit_tam]{fit_tam()}}.}
@@ -15,7 +15,9 @@ fit_retro(fit, folds = 2, grad_tol = 0.001, progress = TRUE)
 from retro fits that exceed this tolerance are dropped (see
 \code{\link[=check_convergence]{check_convergence()}}).}
 
-\item{progress}{Show progress bar?}
+\item{progress}{Logical; show progress bar using \code{\link[progressr:with_progress]{progressr::with_progress()}}.}
+
+\item{globals}{Character vector naming global objects to supply to the workers.}
 }
 \value{
 A list whose elements are:
@@ -37,10 +39,15 @@ Run a retrospective (peel) analysis
 Peel years are \code{(max_year - folds) : max_year}.
 Each refit is attempted with \code{try()} so individual failures do not stop the sequence.
 Refits are generated via \code{update(fit, years = ...)}; ensure your \code{fit} object
-supports \code{update()} with a \code{years} argument.
+supports \code{update()} with a \code{years} argument. This function uses
+\code{\link[furrr:future_map]{furrr::future_map()}} to run the retros in parallel. Remember to plan your session (e.g.,
+\code{future::plan(multisession, workers = 4)}).
 }
 \examples{
 \dontrun{
+# Choose your parallel plan (set once per session)
+future::plan(future::multisession, workers = 4)
+
 fit <- fit_tam(
   northern_cod_data,
   years = 1983:2024,
@@ -50,7 +57,7 @@ fit <- fit_tam(
   M_settings = list(process = "off", assumption = ~M_assumption),
   obs_settings = list(q_form = ~ q_block, sd_form = ~ sd_obs_block)
 )
-retros <- fit_retro(fit, folds = 5)
+retros <- fit_retro(fit, folds = 5, progress = TRUE)
 head(retros$pop$ssb)
 }
 
