@@ -111,8 +111,8 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #' - `obs_settings$q_form` is evaluated on the index table to produce
 #'   `q_modmat`.
 #' - If `M_settings$mu_form` is provided, `M_modmat <- model.matrix(mu_form,
-#'   data = obs$weight)`. If an `assumption` is also supplied (i.e., fixed
-#'   offsets), the intercept in `mu_form` is dropped and a warning is issued.
+#'   data = obs$weight)`. If an `assumption` is also supplied, the intercept
+#'   in `mu_form` is dropped and a warning is issued.
 #' - If neither `M_settings$mu_form` nor `M_settings$assumption` is supplied,
 #'   the function stops, because \eqn{M} must be identified by either a fixed
 #'   assumption or a mean structure.
@@ -151,7 +151,7 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #'   in `mu_form` is dropped (warning) so assumed levels act as fixed offsets.
 #' - `assumption`: optional one-sided formula giving fixed (non-estimated)
 #'   log-\eqn{M} offsets, e.g. `~ I(0.2)` or a column reference such as
-#'   `~ log(m_assumption)`.
+#'   `~ log(M_assumption)` stored in the `obs$weight` data.frame.
 #' - `age_breaks`: optional integer break points used by [cut_ages()] to
 #'   define `age_blocks` for coupling \eqn{M} deviations across ages.
 #' @param obs_settings A list with elements:

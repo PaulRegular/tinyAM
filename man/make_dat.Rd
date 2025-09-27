@@ -47,7 +47,7 @@ on \code{obs$weight}. If provided together with \code{assumption}, the intercept
 in \code{mu_form} is dropped (warning) so assumed levels act as fixed offsets.
 \item \code{assumption}: optional one-sided formula giving fixed (non-estimated)
 log-\eqn{M} offsets, e.g. \code{~ I(0.2)} or a column reference such as
-\code{~ log(m_assumption)}.
+\code{~ log(M_assumption)} stored in the \code{obs$weight} data.frame.
 \item \code{age_breaks}: optional integer break points used by \code{\link[=cut_ages]{cut_ages()}} to
 define \code{age_blocks} for coupling \eqn{M} deviations across ages.
 }}
@@ -95,8 +95,8 @@ treated as \code{NA} (to be handled via random effects).
 \code{sd_obs_modmat}.
 \item \code{obs_settings$q_form} is evaluated on the index table to produce
 \code{q_modmat}.
-\item If \code{M_settings$mu_form} is provided, \code{M_modmat <- model.matrix(mu_form, data = obs$weight)}. If an \code{assumption} is also supplied (i.e., fixed
-offsets), the intercept in \code{mu_form} is dropped and a warning is issued.
+\item If \code{M_settings$mu_form} is provided, \code{M_modmat <- model.matrix(mu_form, data = obs$weight)}. If an \code{assumption} is also supplied, the intercept
+in \code{mu_form} is dropped and a warning is issued.
 \item If neither \code{M_settings$mu_form} nor \code{M_settings$assumption} is supplied,
 the function stops, because \eqn{M} must be identified by either a fixed
 assumption or a mean structure.

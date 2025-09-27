@@ -44,7 +44,7 @@ on \code{obs$weight}. If provided together with \code{assumption}, the intercept
 in \code{mu_form} is dropped (warning) so assumed levels act as fixed offsets.
 \item \code{assumption}: optional one-sided formula giving fixed (non-estimated)
 log-\eqn{M} offsets, e.g. \code{~ I(0.2)} or a column reference such as
-\code{~ log(m_assumption)}.
+\code{~ log(M_assumption)} stored in the \code{obs$weight} data.frame.
 \item \code{age_breaks}: optional integer break points used by \code{\link[=cut_ages]{cut_ages()}} to
 define \code{age_blocks} for coupling \eqn{M} deviations across ages.
 }}
