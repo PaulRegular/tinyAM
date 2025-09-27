@@ -9,9 +9,6 @@
 #' reports and standard errors.
 #'
 #' @details
-#' This function assigns the constructed data list to a global (`dat <<- ...`)
-#' to satisfy closures inside the likelihood (`nll_fun`).
-#'
 #' Random-effect blocks are chosen automatically from the model settings:
 #'
 #' - Always includes `log_f` and `log_r`.
@@ -64,7 +61,7 @@ fit_tam <- function(inputs, interval = 0.95, silent = FALSE, ...) {
 
   call <- match.call()
 
-  dat <<- make_dat(inputs, ...) # dat not found without global assignment
+  dat <- make_dat(inputs, ...)
   par <- make_par(dat)
 
   ran <- c("log_f", "log_r")
@@ -84,8 +81,9 @@ fit_tam <- function(inputs, interval = 0.95, silent = FALSE, ...) {
     warning(sprintf("Number of random effects (%d) exceed 1.5 times the number of observations (%d). Consider simplifying your model.", n_ran, n_obs))
   }
 
+  make_nll_fun <- function(f, d) function(p) f(p, d) # use closure to avoid global assignment of data
   obj <- MakeADFun(
-    nll_fun,
+    make_nll_fun(nll_fun, dat),
     par,
     random = ran,
     silent = silent
@@ -247,12 +245,13 @@ fit_retro <- function(fit, folds = 2, grad_tol = 1e-3, progress = TRUE) {
 sim_tam <- function(fit, obs_only = FALSE) {
 
   obj <- fit$obj
+  dat <- fit$dat
   p <- as.list(fit$sdrep, "Estimate")
-  sims <- nll_fun(p, simulate = TRUE)
+  sims <- nll_fun(p, dat, simulate = TRUE)
   rep <- obj$report()
   if (!obs_only) {
     p[obj$env$.random] <- sims[obj$env$.random]
-    sims <- nll_fun(p, simulate = TRUE)
+    sims <- nll_fun(p, dat, simulate = TRUE)
     rep <- obj$report(unlist(p))
   }
   rep$log_obs <- sims$log_obs

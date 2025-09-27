@@ -80,9 +80,6 @@ reports and standard errors.
 \details{
 Fit a Tiny Assessment Model (TAM)
 
-This function assigns the constructed data list to a global (\code{dat <<- ...})
-to satisfy closures inside the likelihood (\code{nll_fun}).
-
 Random-effect blocks are chosen automatically from the model settings:
 \itemize{
 \item Always includes \code{log_f} and \code{log_r}.

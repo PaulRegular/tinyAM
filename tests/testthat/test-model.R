@@ -92,7 +92,7 @@ test_that("Edge cases: ny=1 or na=1 behave like 1D AR(1)", {
 
 
 test_that("nll_fun returns finite JNLL and simulates when requested", {
-  dat <<- make_dat(
+  dat <- make_dat(
     northern_cod_data,
     years = 1983:2024,
     ages  = 2:14,
@@ -104,13 +104,13 @@ test_that("nll_fun returns finite JNLL and simulates when requested", {
   par <- make_par(dat)
 
   # Likelihood branch
-  jnll <- nll_fun(par, simulate = FALSE)
+  jnll <- nll_fun(par, dat, simulate = FALSE)
   expect_true(is.numeric(jnll))
   expect_length(jnll, 1L)
   expect_true(is.finite(jnll))
 
   # Simulation branch (no RTMB object needed)
-  sims <- nll_fun(par, simulate = TRUE)
+  sims <- nll_fun(par, dat, simulate = TRUE)
   expect_type(sims, "list")
   expect_true(all(c("log_f", "log_r", "log_obs") %in% names(sims)))
   if (dat$N_settings$process != "off") {
@@ -122,7 +122,8 @@ test_that("nll_fun returns finite JNLL and simulates when requested", {
   expect_true(all(is.finite(sims$log_obs[!is_miss])))
 
   # Optional: build a quick RTMB obj to ensure REPORT/ADREPORT paths are valid
-  obj <- RTMB::MakeADFun(nll_fun, par, random = c("log_f","log_r","missing"), silent = TRUE)
+  make_nll_fun <- function(f, d) function(p) f(p, d)
+  obj <- RTMB::MakeADFun(make_nll_fun(nll_fun, dat), par, random = c("log_f","log_r","missing"), silent = TRUE)
   opt <- nlminb(obj$par, obj$fn, obj$gr, control = list(iter.max = 50, eval.max = 50))
   expect_true(is.finite(opt$objective))
   rep <- obj$report()

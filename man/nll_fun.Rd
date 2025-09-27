@@ -4,12 +4,14 @@
 \alias{nll_fun}
 \title{Negative log-likelihood (and simulator) for the Tiny Assessment Model}
 \usage{
-nll_fun(par, simulate = FALSE)
+nll_fun(par, dat, simulate = FALSE)
 }
 \arguments{
 \item{par}{Named list of parameters in the format produced by
 \code{\link[=make_par]{make_par()}}. This includes scalars (e.g., \verb{log_sd_*}), vectors
 (e.g., \code{log_r}, \code{log_q}), and matrices (e.g., \code{log_f}, \code{log_n}, \code{log_m}).}
+
+\item{dat}{Named list of data and setting inputs produced by \code{\link[=make_dat]{make_dat()}}.}
 
 \item{simulate}{Logical. If \code{FALSE}, return the JNLL.
 If \code{TRUE}, simulate random effects and observations and return them (see \strong{Value}).}
@@ -117,7 +119,8 @@ dat <- make_dat(
   obs_settings = list(sd_form = ~ sd_obs_block, q_form = ~ q_block)
 )
 par <- make_par(dat)
-obj <- RTMB::MakeADFun(nll_fun, par,
+make_nll_fun <- function(f, d) function(p) f(p, d)
+obj <- RTMB::MakeADFun(make_nll_fun(nll_fun, dat), par,
   random = c("log_n", "log_f","log_r", "missing"), silent = TRUE
 )
 opt <- nlminb(obj$par, obj$fn, obj$gr)
@@ -126,7 +129,7 @@ sdrep <- RTMB::sdreport(obj)
 
 # Simulate from fitted parameters
 p_hat <- as.list(sdrep, "Estimate")
-sims  <- nll_fun(p_hat, simulate = TRUE)
+sims  <- nll_fun(p_hat, dat, simulate = TRUE)
 
 }
 \seealso{

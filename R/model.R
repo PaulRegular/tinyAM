@@ -154,6 +154,7 @@ rprocess_2d <- function(ny, na, phi = c(0, 0), sd = 1) {
 #' @param par Named list of parameters in the format produced by
 #'   [make_par()]. This includes scalars (e.g., `log_sd_*`), vectors
 #'   (e.g., `log_r`, `log_q`), and matrices (e.g., `log_f`, `log_n`, `log_m`).
+#' @param dat Named list of data and setting inputs produced by [make_dat()].
 #' @param simulate Logical. If `FALSE`, return the JNLL.
 #'   If `TRUE`, simulate random effects and observations and return them (see **Value**).
 #'
@@ -185,7 +186,8 @@ rprocess_2d <- function(ny, na, phi = c(0, 0), sd = 1) {
 #'   obs_settings = list(sd_form = ~ sd_obs_block, q_form = ~ q_block)
 #' )
 #' par <- make_par(dat)
-#' obj <- RTMB::MakeADFun(nll_fun, par,
+#' make_nll_fun <- function(f, d) function(p) f(p, d)
+#' obj <- RTMB::MakeADFun(make_nll_fun(nll_fun, dat), par,
 #'   random = c("log_n", "log_f","log_r", "missing"), silent = TRUE
 #' )
 #' opt <- nlminb(obj$par, obj$fn, obj$gr)
@@ -194,13 +196,13 @@ rprocess_2d <- function(ny, na, phi = c(0, 0), sd = 1) {
 #'
 #' # Simulate from fitted parameters
 #' p_hat <- as.list(sdrep, "Estimate")
-#' sims  <- nll_fun(p_hat, simulate = TRUE)
+#' sims  <- nll_fun(p_hat, dat, simulate = TRUE)
 #'
 #' @seealso
 #' [make_dat()], [make_par()], [fit_tam()], [sim_tam()],
 #' [dprocess_2d()], [rprocess_2d()]
 #' @export
-nll_fun <- function(par, simulate = FALSE) {
+nll_fun <- function(par, dat, simulate = FALSE) {
 
   "[<-" <- ADoverload("[<-")
 
