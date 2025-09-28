@@ -26,12 +26,15 @@ test_that("check_obs checks that each table must have year/age/obs with numeric 
   expect_error(check_obs(v), "`weight\\$year` must be numeric", perl = TRUE)
 })
 
-test_that("check_obs checks that index samp_time is numeric in [0,1] if present", {
+test_that("check_obs checks that index samp_time is present and numeric in [0,1]", {
   v <- valid_obs(); v$index$samp_time <- c(-0.1, 1.2, NA)
   expect_error(check_obs(v), "`index\\$samp_time` must be numeric in \\[0, 1\\]", perl = TRUE)
 
-  v <- valid_obs(); v$index$samp_time <- c(0, 1, NA)  # boundary ok
-  expect_invisible(expect_true(check_obs(v)))
+  v <- valid_obs(); v$index$samp_time <- c(0, 1, NA)
+  expect_error(check_obs(v))
+
+  v <- valid_obs(); v$index$samp_time <- NULL
+  expect_error(check_obs(v))
 })
 
 test_that("check_obs warns if duplicate (year, age) rows are present", {

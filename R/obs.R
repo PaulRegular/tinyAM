@@ -163,16 +163,18 @@ check_obs <- function(obs) {
         "!" = "`{nm}` has duplicate (year, age) rows; downstream joins may be ambiguous."
       ))
     }
-    # index-specific soft check for samp_time
     if (nm == "index" && "samp_time" %in% names(x)) {
-      if (!is.numeric(x$samp_time) || any(x$samp_time < 0 | x$samp_time > 1, na.rm = TRUE)) {
+      if (!is.numeric(x$samp_time) || any(is.na(x$samp_time)) || any(x$samp_time < 0 | x$samp_time > 1, na.rm = TRUE)) {
         cli::cli_abort(c(
           "{.strong Invalid obs index}",
-          "x" = "`index$samp_time` must be numeric in [0, 1] (NA allowed)."
+          "x" = "`index$samp_time` must be numeric in [0, 1], without NA."
         ))
       }
     } else if (nm == "index" && !("samp_time" %in% names(x))) {
-      cli::cli_warn(c("!" = "`index$samp_time` is missing; model will treat it as NA unless supplied."))
+      cli::cli_abort(c(
+        "{.strong `index$samp_time` is missing}",
+        "x" = "Please specify survey timing (fractional year between 0 to 1)."
+        ))
     }
     invisible(TRUE)
   }
