@@ -85,6 +85,81 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 
 
 
+
+#' Append projection rows across TAM obs tables (with validation)
+#'
+#' @description
+#' Appends `n_proj` projection years to each present table among `catch`,
+#' `index`, `weight`, `maturity`.
+#' For each table:
+#' - averages `obs` over the last `n_mean` years by `age`;
+#' - copies all other columns from the terminal year;
+#' - adds `is_proj` column.
+#'
+#' @param obs A named list containing data.frames `catch`, `index`, `weight`,
+#'   and `maturity` with columns `year`, `age`, `obs` (e.g., [northern_cod_data]).
+#' @param n_proj Integer; number of projection years to append (default `3`).
+#' @param n_mean Integer; number of terminal years to average for `obs`
+#'   (default `3`). Mean `obs` values are replicated across `is_proj` years
+#'   for `catch`, `weight`, and `maturity` tables. Values other than `obs`
+#'   are not averaged and `index$obs` values are `NA` across `is_proj`
+#'   years.
+#' @param quiet Logical; if `FALSE` (default) prints brief messages about what is done.
+#'
+#' @return The same list structure as `obs`, with projection rows (and `is_proj`)
+#'   appended to each core table.
+#'
+#' @examples
+#' data(northern_cod_data)
+#' max_year <- max(northern_cod_data$catch$year)
+#' obs2 <- add_proj_rows(northern_cod_data, n_proj = 3, n_mean = 3)
+#' lapply(obs2, subset, year %in% c(max_year, max_year + 1))
+#'
+#' @seealso [check_obs()]
+#' @export
+add_proj_rows <- function(obs, n_proj = 3, n_mean = 3, quiet = FALSE) {
+  check_obs(obs)
+
+  has_proj <- sapply(names(obs), function(nm) "is_proj" %in% names(obs[[nm]]))
+  if (any(has_proj)) {
+    tabs <- paste(names(obs)[has_proj], collapse = ", ")
+    cli::cli_abort(c(
+      "{.strong Projections already present}",
+      "x" = "`is_proj` column already exists in: {tabs}."
+    ))
+  }
+
+  if (!quiet) {
+    cli::cli_inform(c(
+      "i" = "Adding {n_proj} projection year(s) using {n_mean}-year mean of {.field catch$obs}, {.field weight$obs}, and {.field maturity$obs} by age.",
+      "i" = "Non-core columns are copied from the terminal year",
+      "i" = "Projected {.field index$obs} set to NA.",
+      "i" = "For advanced assumptions (e.g., harvest control rules), manually add {.field is_proj} rows."
+    ))
+  }
+
+  .add_one <- function(x) {
+    max_year   <- max(x$year, na.rm = TRUE)
+    proj_years <- seq.int(max_year + 1L, max_year + n_proj)
+    mean_years <- seq.int(max_year - n_mean + 1L, max_year)
+    aux <- x[x$year == max_year, setdiff(names(x), c("year", "obs")), drop = FALSE]
+    mean_obs <- aggregate(obs ~ age, mean, dat = x) |>
+      merge(aux, by = "age")
+    proj_grid <- expand.grid(year = proj_years, age = mean_obs$age)
+    proj_rows <- merge(proj_grid, mean_obs, by = "age")[, names(x)]
+    proj_rows$is_proj <- TRUE
+    x$is_proj <- FALSE
+    rbind(x, proj_rows)
+  }
+  obs_with_proj <- lapply(obs, .add_one)
+  obs_with_proj$index$obs[obs_with_proj$index$is_proj] <- NA
+  obs_with_proj
+}
+
+
+
+
+
 #' Build a self-contained data list for TAM
 #'
 #' @description
