@@ -218,8 +218,12 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   sd_r <- exp(log_sd_r)
   sd_f <- exp(log_sd_f)
 
-  log_mu_F <- pred_log_N <- log_N <- N <- log_F <- log_mu_M <- M <- Z <- matrix(NA, nrow = n_years, ncol = n_ages,
-                                                                                dimnames = list(year = years, age = ages))
+  empty_mat <- matrix(NA_real_, n_years, n_ages,
+                      dimnames = list(year = years, age = ages))
+  log_F <- log_mu_F <- empty_mat
+  N <- log_N <- pred_log_N <- empty_mat
+  M <- log_mu_M  <- empty_mat
+  Z <- empty_mat
 
   ## Vital rates ---
 

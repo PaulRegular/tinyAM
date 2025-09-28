@@ -83,7 +83,8 @@ and derives helper mappings and settings.
 \itemize{
 \item Inputs are expected as a list with components \code{catch}, \code{index}, \code{weight},
 and \code{maturity}. Each must include columns \code{year}, \code{age}, and a value column
-named \code{obs} (for \code{catch}/\code{index}) or renamed from \code{weight}/\code{mat}.
+named \code{obs} (for \code{catch}/\code{index}) or renamed from \code{weight}/\code{mat}. See
+\link{northern_cod_data} object for an example of how data should be structured
 \item Observations are merged to the full \code{expand.grid(year, age)}.
 \item A combined observation table is created for catch and index; \code{log(0)} is
 treated as \code{NA} (to be handled via random effects).
