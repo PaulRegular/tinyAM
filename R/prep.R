@@ -194,6 +194,8 @@ make_dat <- function(
     obs_settings = list(sd_form = ~sd_obs_block, q_form = ~q_block)
 ) {
 
+  check_obs(obs)
+
   all_years <- unique(unlist(lapply(obs, function(d) d$year)))
   all_ages  <- unique(unlist(lapply(obs, function(d) d$age)))
   years <- if (is.null(years)) seq(min(all_years, na.rm = TRUE), max(all_years, na.rm = TRUE)) else as.integer(years)

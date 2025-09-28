@@ -7,7 +7,7 @@ set.seed(1)
 YEARS <- 1983:2024
 AGES  <- 2:14
 
-test_fit <- function(inputs = northern_cod_data,
+test_fit <- function(obs = northern_cod_data,
                      years = YEARS,
                      ages  = AGES,
                      N_settings = list(process = "iid", init_N0 = FALSE),

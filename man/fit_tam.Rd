@@ -4,10 +4,10 @@
 \alias{fit_tam}
 \title{Fit TAM}
 \usage{
-fit_tam(inputs, interval = 0.95, silent = FALSE, ...)
+fit_tam(obs, interval = 0.95, silent = FALSE, ...)
 }
 \arguments{
-\item{inputs}{A named list of tidy observation tables (e.g., \code{catch}, \code{index},
+\item{obs}{A named list of tidy observation tables (e.g., \code{catch}, \code{index},
 \code{weight}, \code{maturity}). See \link{northern_cod_data} for an example.}
 
 \item{interval}{Level in \verb{(0, 1)} to use to generate confidence
@@ -18,8 +18,6 @@ intervals, where applicable; default \verb{0.95 (see [tidy_tam()]).}}
 \item{...}{
   Arguments passed on to \code{\link[=make_dat]{make_dat}}
   \describe{
-    \item{\code{obs}}{A list of tidy observation data.frames: \code{catch}, \code{index},
-\code{weight}, and \code{maturity}. See \strong{Details}.}
     \item{\code{years}}{Integer vector of model years (strictly increasing).
 Inferred from \code{obs} if \code{NULL}.}
     \item{\code{ages}}{Integer vector of model ages (strictly increasing).
@@ -65,7 +63,7 @@ A list with components:
 \item \strong{rep}: list from \code{obj$report()}.
 \item \strong{sdrep}: \code{\link[RTMB:TMB-interface]{RTMB::sdreport()}} result.
 \item \strong{is_converged}: Did the model converge? (see \code{\link[=check_convergence]{check_convergence()}})
-\item \strong{obs_pred}: \code{inputs$catch} and \code{inputs$index} data augmented with
+\item \strong{obs_pred}: \code{obs$catch} and \code{obs$index} data augmented with
 predicted values, parameter estimates, and
 standardized residuals (see \code{\link[=tidy_obs_pred]{tidy_obs_pred()}}).
 \item \strong{pop}: A collection of population summaries in tidy format (see

@@ -19,7 +19,7 @@
 #' A warning is issued if the number of random effects exceeds 1.5 times the
 #' number of observed data points (rough identifiability check).
 #'
-#' @param inputs A named list of tidy observation tables (e.g., `catch`, `index`,
+#' @param obs A named list of tidy observation tables (e.g., `catch`, `index`,
 #'   `weight`, `maturity`). See [northern_cod_data] for an example.
 #' @param interval Level in `(0, 1)` to use to generate confidence
 #'                 intervals, where applicable; default `0.95 (see [tidy_tam()]).`
@@ -36,7 +36,7 @@
 #' - **rep**: list from `obj$report()`.
 #' - **sdrep**: [RTMB::sdreport()] result.
 #' - **is_converged**: Did the model converge? (see [check_convergence()])
-#' - **obs_pred**: `inputs$catch` and `inputs$index` data augmented with
+#' - **obs_pred**: `obs$catch` and `obs$index` data augmented with
 #'                  predicted values, parameter estimates, and
 #'                  standardized residuals (see [tidy_obs_pred()]).
 #' - **pop**: A collection of population summaries in tidy format (see
@@ -57,11 +57,11 @@
 #' [make_dat()], [make_par()], [sim_tam()], [fit_retro()],
 #' [RTMB::MakeADFun()], [RTMB::sdreport()]
 #' @export
-fit_tam <- function(inputs, interval = 0.95, silent = FALSE, ...) {
+fit_tam <- function(obs, interval = 0.95, silent = FALSE, ...) {
 
   call <- match.call()
 
-  dat <- make_dat(inputs, ...)
+  dat <- make_dat(obs, ...)
   par <- make_par(dat)
 
   ran <- c("log_f", "log_r")
