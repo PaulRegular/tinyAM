@@ -19,9 +19,9 @@ intervals, where applicable; default \verb{0.95 (see [tidy_tam()]).}}
   Arguments passed on to \code{\link[=make_dat]{make_dat}}
   \describe{
     \item{\code{years}}{Integer vector of model years (strictly increasing).
-Inferred from \code{obs} if \code{NULL}.}
+Inferred from observed data (non-projection) if \code{NULL}.}
     \item{\code{ages}}{Integer vector of model ages (strictly increasing).
-Inferred from \code{obs} if \code{NULL}.}
+Inferred from observed data (non-projection) if \code{NULL}.}
     \item{\code{N_settings}}{A list with elements:
 \itemize{
 \item \code{process}: one of \code{"off"}, \code{"iid"}, \code{"approx_rw"}, or \code{"ar1"}.
@@ -32,24 +32,31 @@ this is forced to \code{TRUE}.
     \item{\code{F_settings}}{A list with elements:
 \itemize{
 \item \code{process}: one of \code{"iid"}, \code{"approx_rw"}, or \code{"ar1"}.
-\item \code{mu_form}: an optional formula for mean-\eqn{F}.
+\item \code{mu_form}: an optional formula for mean-\\eqn{F}.
 }}
     \item{\code{M_settings}}{A list with elements:
 \itemize{
 \item \code{process}: one of \code{"off"}, \code{"iid"}, \code{"approx_rw"}, or \code{"ar1"}.
-\item \code{mu_form}: optional formula for mean-\eqn{M} (on the log scale) built
+\item \code{mu_form}: optional formula for mean-\\eqn{M} (on the log scale) built
 on \code{obs$weight}. If provided together with \code{assumption}, the intercept
 in \code{mu_form} is dropped (warning) so assumed levels act as fixed offsets.
 \item \code{assumption}: optional one-sided formula giving fixed (non-estimated)
-log-\eqn{M} offsets, e.g. \code{~ I(0.2)} or a column reference such as
+log-\\eqn{M} offsets, e.g. \code{~ I(0.2)} or a column reference such as
 \code{~ log(M_assumption)} stored in the \code{obs$weight} data.frame.
 \item \code{age_breaks}: optional integer break points used by \code{\link[=cut_ages]{cut_ages()}} to
-define \code{age_blocks} for coupling \eqn{M} deviations across ages.
+define \code{age_blocks} for coupling \\eqn{M} deviations across ages.
 }}
     \item{\code{obs_settings}}{A list with elements:
 \itemize{
 \item \code{sd_form}: formula for observation SD blocks, evaluated on the combined obs map (e.g. \code{~ sd_obs_block}).
 \item \code{q_form}: formula for catchability blocks, evaluated on the index table (e.g. \code{~ q_block}).
+}}
+    \item{\code{proj_settings}}{Optional list with elements:
+\itemize{
+\item \code{n_proj}: number of years to project (default \code{NULL} disables projections).
+\item \code{n_mean}: number of terminal years to average when adding projection rows (passed to \code{\link[=add_proj_rows]{add_proj_rows()}}).
+\item \code{tac}: numeric vector of total catch levels for each projection year; if \code{NULL}, a status-quo
+total (terminal observed total catch) is used for all \code{proj_years}.
 }}
   }}
 }

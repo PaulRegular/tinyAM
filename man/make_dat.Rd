@@ -12,7 +12,8 @@ make_dat(
   F_settings = list(process = "approx_rw", mu_form = NULL),
   M_settings = list(process = "off", mu_form = NULL, assumption = ~I(0.2), age_breaks =
     NULL),
-  obs_settings = list(sd_form = ~sd_obs_block, q_form = ~q_block)
+  obs_settings = list(sd_form = ~sd_obs_block, q_form = ~q_block),
+  proj_settings = NULL
 )
 }
 \arguments{
@@ -20,10 +21,10 @@ make_dat(
 \code{weight}, and \code{maturity}. See \strong{Details}.}
 
 \item{years}{Integer vector of model years (strictly increasing).
-Inferred from \code{obs} if \code{NULL}.}
+Inferred from observed data (non-projection) if \code{NULL}.}
 
 \item{ages}{Integer vector of model ages (strictly increasing).
-Inferred from \code{obs} if \code{NULL}.}
+Inferred from observed data (non-projection) if \code{NULL}.}
 
 \item{N_settings}{A list with elements:
 \itemize{
@@ -36,20 +37,20 @@ this is forced to \code{TRUE}.
 \item{F_settings}{A list with elements:
 \itemize{
 \item \code{process}: one of \code{"iid"}, \code{"approx_rw"}, or \code{"ar1"}.
-\item \code{mu_form}: an optional formula for mean-\eqn{F}.
+\item \code{mu_form}: an optional formula for mean-\\eqn{F}.
 }}
 
 \item{M_settings}{A list with elements:
 \itemize{
 \item \code{process}: one of \code{"off"}, \code{"iid"}, \code{"approx_rw"}, or \code{"ar1"}.
-\item \code{mu_form}: optional formula for mean-\eqn{M} (on the log scale) built
+\item \code{mu_form}: optional formula for mean-\\eqn{M} (on the log scale) built
 on \code{obs$weight}. If provided together with \code{assumption}, the intercept
 in \code{mu_form} is dropped (warning) so assumed levels act as fixed offsets.
 \item \code{assumption}: optional one-sided formula giving fixed (non-estimated)
-log-\eqn{M} offsets, e.g. \code{~ I(0.2)} or a column reference such as
+log-\\eqn{M} offsets, e.g. \code{~ I(0.2)} or a column reference such as
 \code{~ log(M_assumption)} stored in the \code{obs$weight} data.frame.
 \item \code{age_breaks}: optional integer break points used by \code{\link[=cut_ages]{cut_ages()}} to
-define \code{age_blocks} for coupling \eqn{M} deviations across ages.
+define \code{age_blocks} for coupling \\eqn{M} deviations across ages.
 }}
 
 \item{obs_settings}{A list with elements:
@@ -57,15 +58,26 @@ define \code{age_blocks} for coupling \eqn{M} deviations across ages.
 \item \code{sd_form}: formula for observation SD blocks, evaluated on the combined obs map (e.g. \code{~ sd_obs_block}).
 \item \code{q_form}: formula for catchability blocks, evaluated on the index table (e.g. \code{~ q_block}).
 }}
+
+\item{proj_settings}{Optional list with elements:
+\itemize{
+\item \code{n_proj}: number of years to project (default \code{NULL} disables projections).
+\item \code{n_mean}: number of terminal years to average when adding projection rows (passed to \code{\link[=add_proj_rows]{add_proj_rows()}}).
+\item \code{tac}: numeric vector of total catch levels for each projection year; if \code{NULL}, a status-quo
+total (terminal observed total catch) is used for all \code{proj_years}.
+}}
 }
 \value{
 A named list \code{dat} containing:
 \itemize{
-\item \code{years}, \code{ages}, \code{obs} (per-type tables merged to full grid)
-\item \code{SW}, \code{MO} weight-at-age and maturity matrices (\verb{year × age})
-\item \code{obs_map}, \code{log_obs}
-\item design matrices: \code{sd_obs_modmat}, \code{q_modmat}, and optionally
-\code{F_modmat}, \code{M_modmat}
+\item \code{years}, \code{ages} — modeled ranges (from \strong{non-projection} rows)
+\item \code{years_plus} — \code{c(years, proj_years)} for convenience (sorted)
+\item \code{proj_years} — integer vector of projection years (may be empty)
+\item \code{tac} — numeric vector of TAC by \code{proj_years} (may be length 0)
+\item \code{obs} — per-type tables restricted to \code{years_plus} x \code{ages}
+\item \code{SW}, \code{MO} — weight-at-age and maturity matrices (\verb{year x age})
+\item \code{obs_map}, \code{log_obs}, \code{is_na_obs}
+\item design matrices: \code{sd_obs_modmat}, \code{q_modmat}, and optionally \code{F_modmat}, \code{M_modmat}
 \item mean-level placeholders: \code{log_mu_f} and/or \code{log_mu_m} (or \code{log_mu_assumed_m})
 \item process settings: \code{N_settings}, \code{F_settings}, \code{M_settings}
 \item AR(1) parameter placeholders \verb{logit_phi_*} set only for \code{"ar1"} processes
@@ -75,7 +87,7 @@ A named list \code{dat} containing:
 \code{make_dat()} converts tidy observation inputs and modeling options into the
 structured list \code{dat} expected by TAM’s likelihood and simulation functions.
 It expands an age–year grid, merges observations, constructs design matrices for
-observation SDs, catchability, and mean-\eqn{F} / mean-\eqn{M} (when used),
+observation SDs, catchability, and mean-\\eqn{F} / mean-\\eqn{M} (when used),
 and derives helper mappings and settings.
 }
 \details{
@@ -84,7 +96,7 @@ and derives helper mappings and settings.
 \item Inputs are expected as a list with components \code{catch}, \code{index}, \code{weight},
 and \code{maturity}. Each must include columns \code{year}, \code{age}, and a value column
 named \code{obs} (for \code{catch}/\code{index}) or renamed from \code{weight}/\code{mat}. See
-\link{cod_obs} object for an example of how data should be structured
+\link{cod_obs} for an example of the required structure.
 \item Observations are merged to the full \code{expand.grid(year, age)}.
 \item A combined observation table is created for catch and index; \code{log(0)} is
 treated as \code{NA} (to be handled via random effects).
@@ -99,7 +111,7 @@ treated as \code{NA} (to be handled via random effects).
 \item If \code{M_settings$mu_form} is provided, \code{M_modmat <- model.matrix(mu_form, data = obs$weight)}. If an \code{assumption} is also supplied, the intercept
 in \code{mu_form} is dropped and a warning is issued.
 \item If neither \code{M_settings$mu_form} nor \code{M_settings$assumption} is supplied,
-the function stops, because \eqn{M} must be identified by either a fixed
+the function stops, because \\eqn{M} must be identified by either a fixed
 assumption or a mean structure.
 }
 
@@ -108,26 +120,48 @@ assumption or a mean structure.
 \item If \code{N_settings$process == "off"} and \code{init_N0 == FALSE}, \code{init_N0} is
 forced to \code{TRUE} (with a warning) so the first-year abundance is
 estimable.
-\item \code{M_settings$age_breaks} (vector of break points on ages \eqn{\ge} min modeled age + 1)
+\item \code{M_settings$age_breaks} (vector of break points on ages \\eqn{\\ge} min modeled age + 1)
 defines \code{M_settings$age_blocks} via \code{\link[=cut_ages]{cut_ages()}}, used
-to couple \eqn{M} deviations across age.
+to couple \\eqn{M} deviations across age.
 \item The AR(1) correlation parameters are only initialized for
 processes whose \code{process == "ar1"}. Correlations are assumed to be 0
 when \code{process == "iid"}, and 0.99 when \code{process == "approx_rw"} to approximate
 a random walk across ages and years.
 }
+
+\strong{Projections (optional)}
+\itemize{
+\item If \code{proj_settings} is supplied, the function adds:
+\itemize{
+\item \code{proj_years}: the set of projection years;
+\item \code{proj_settings$tac}: total catch assumptions for each \code{proj_year} set
+status-quo (terminal observed total) if \code{proj_settings$tac} is \code{NULL},
+otherwise the supplied vector is retained (length must equal \code{length(proj_years)}).
+\item \code{is_proj} rows to \code{catch}, \code{index}, \code{weight}, and \code{maturity} tables.
+Averages are calculated and carried forward for \code{weight$obs} and \code{maturity$obs}
+while \code{catch$obs} and \code{index$obs} are set to \code{NA}.
+}
+}
 }
 \examples{
 dat <- make_dat(
   cod_obs,
-  years = 1983:2024,
-  ages  = 2:14,
   N_settings = list(process = "iid", init_N0 = FALSE),
   F_settings = list(process = "approx_rw", mu_form = NULL),
   M_settings = list(process = "off", assumption = ~ I(0.3)),
   obs_settings = list(sd_form = ~ sd_obs_block, q_form = ~ q_block)
 )
-str(dat)
+
+## With projection settings
+dat <- make_dat(
+  cod_obs,
+  N_settings = list(process = "iid", init_N0 = FALSE),
+  F_settings = list(process = "approx_rw", mu_form = NULL),
+  M_settings = list(process = "off", assumption = ~ I(0.3)),
+  obs_settings = list(sd_form = ~ sd_obs_block, q_form = ~ q_block),
+  proj_settings = list(n_proj = 3, n_mean = 3, tac = NULL) # will assume status-quo catch as TAC
+)
+
 
 }
 \seealso{

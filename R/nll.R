@@ -119,7 +119,7 @@ rprocess_2d <- function(ny, na, phi = c(0, 0), sd = 1) {
 #'
 #' @export
 solve_F_full <- function(C_target, F_init, S, M, N,
-                         n_iter = 7, eps = 1e-12, clamp_nonneg = TRUE) {
+                         n_iter = 7, eps = 1e-12) {
   stopifnot(is.numeric(C_target), length(C_target) == 1L,
             is.numeric(F_init),   length(F_init)   == 1L,
             is.numeric(S), is.numeric(M), is.numeric(N),

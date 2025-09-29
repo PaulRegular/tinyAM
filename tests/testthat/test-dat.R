@@ -106,3 +106,77 @@ test_that("make_dat forces init_N0 to TRUE, with warning, when N process off and
   )
 })
 
+
+test_that("make_dat appends projection years and shapes obs correctly with proj_settings", {
+  # n_proj=2, n_mean=3, status-quo TAC (NULL)
+  dat <- make_dat(
+    obs = cod_obs,
+    proj_settings = list(n_proj = 2, n_mean = 3, tac = NULL)
+  )
+
+  # projected years should follow the terminal observed year
+  maxy <- max(unique(cod_obs$catch$year))
+  expect_true(all((maxy + 1):(maxy + 2) %in% dat$years))
+  expect_equal(dat$proj_years, (maxy + 1):(maxy + 2))
+
+  # is_proj exists and is TRUE on projected years for all core tables
+  for (nm in c("catch", "index", "weight", "maturity")) {
+    d <- dat$obs[[nm]]
+    expect_true("is_proj" %in% names(d))
+    expect_true(all(d$is_proj == (d$year %in% dat$proj_years)))
+  }
+
+  # catch/index obs are NA in projection years
+  expect_true(all(is.na(subset(dat$obs$catch,  is_proj)$obs)))
+  expect_true(all(is.na(subset(dat$obs$index,  is_proj)$obs)))
+
+  # weight/maturity obs in proj years equal the mean of last n_mean years by age
+  n_mean <- 3L
+  w <- dat$obs$weight
+  m <- dat$obs$maturity
+  # compute means from *non-projection* rows in dat (same as using cod_obs terminal years)
+  ref_years <- (maxy - n_mean + 1):maxy
+  for (a in sort(unique(w$age))) {
+    mw <- mean(subset(w, !is_proj & year %in% ref_years & age == a)$obs, na.rm = TRUE)
+    mm <- mean(subset(m, !is_proj & year %in% ref_years & age == a)$obs, na.rm = TRUE)
+    expect_equal(unique(subset(w, is_proj & age == a)$obs), mw, tolerance = 1e-12)
+    expect_equal(unique(subset(m, is_proj & age == a)$obs), mm, tolerance = 1e-12)
+  }
+})
+
+test_that("make_dat sets status-quo TAC when proj_settings$tac is NULL", {
+  dat <- make_dat(
+    obs = cod_obs,
+    proj_settings = list(n_proj = 2, n_mean = 3, tac = NULL)
+  )
+
+  max_year <- max(unique(cod_obs$catch$year))
+  sq_catch <- sum(subset(cod_obs$catch, year == max_year)$obs, na.rm = TRUE)
+
+  expect_true("proj_settings" %in% names(dat))
+  expect_true("tac" %in% names(dat$proj_settings))
+  expect_equal(length(dat$proj_settings$tac), length(dat$proj_years))
+  expect_true(all(abs(dat$proj_settings$tac - sq_catch) < 1e-12))
+  # names should match proj years
+  expect_identical(names(dat$proj_settings$tac), as.character(dat$proj_years))
+})
+
+test_that("make_dat uses supplied TAC when provided and errors on length mismatch", {
+  # correct length
+  dat_ok <- make_dat(
+    obs = cod_obs,
+    proj_settings = list(n_proj = 2, n_mean = 2, tac = c(100, 200))
+  )
+  expect_identical(as.numeric(dat_ok$proj_settings$tac), c(100, 200))
+  expect_identical(names(dat_ok$proj_settings$tac), as.character(dat_ok$proj_years))
+
+  # length mismatch -> error
+  expect_error(
+    make_dat(
+      obs = cod_obs,
+      proj_settings = list(n_proj = 2, n_mean = 2, tac = 123)  # length 1
+    ),
+    "*must equal*"
+  )
+})
+
