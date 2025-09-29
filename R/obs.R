@@ -236,7 +236,8 @@ check_obs <- function(obs) {
 #' Appends `n_proj` projection years to each present table among `catch`,
 #' `index`, `weight`, `maturity`.
 #' For each table:
-#' - averages `obs` over the last `n_mean` years by `age`;
+#' - averages `weight$obs` and `maturity$obs` over the last `n_mean` years by `age`;
+#' - sets `catch$obs` and `index$obs` to `NA` across projection years;
 #' - copies all other columns from the terminal year;
 #' - adds `is_proj` column.
 #'
@@ -245,8 +246,8 @@ check_obs <- function(obs) {
 #' @param n_proj Integer; number of projection years to append (default `3`).
 #' @param n_mean Integer; number of terminal years to average for `obs`
 #'   (default `3`). Mean `obs` values are replicated across `is_proj` years
-#'   for `catch`, `weight`, and `maturity` tables. Values other than `obs`
-#'   are not averaged and `index$obs` values are `NA` across `is_proj`
+#'   for `weight`, and `maturity` tables. Values other than `obs`
+#'   are not averaged and `catch$obs` and `index$obs` values are `NA` across `is_proj`
 #'   years.
 #' @param quiet Logical; if `FALSE` (default) prints brief messages about what is done.
 #'
@@ -275,10 +276,10 @@ add_proj_rows <- function(obs, n_proj = 3, n_mean = 3, quiet = FALSE) {
 
   if (!quiet) {
     cli::cli_inform(c(
-      "i" = "Adding {n_proj} projection year(s) using {n_mean}-year mean of {.field catch$obs}, {.field weight$obs}, and {.field maturity$obs} by age.",
+      "i" = "Adding {n_proj} projection year(s) using {n_mean}-year mean of {.field weight$obs}, and {.field maturity$obs} by age.",
+      "i" = "Projected {.field catch$obs}, and {.field index$obs} set to NA.",
       "i" = "Non-core columns are copied from the terminal year",
-      "i" = "Projected {.field index$obs} set to NA.",
-      "i" = "For advanced assumptions (e.g., harvest control rules), manually add {.field is_proj} rows."
+      "i" = "For advanced assumptions, manually add {.field is_proj} rows."
     ))
   }
 
@@ -296,6 +297,7 @@ add_proj_rows <- function(obs, n_proj = 3, n_mean = 3, quiet = FALSE) {
     rbind(x, proj_rows)
   }
   obs_with_proj <- lapply(obs, .add_one)
+  obs_with_proj$catch$obs[obs_with_proj$catch$is_proj] <- NA
   obs_with_proj$index$obs[obs_with_proj$index$is_proj] <- NA
   obs_with_proj
 }

@@ -79,6 +79,71 @@ rprocess_2d <- function(ny, na, phi = c(0, 0), sd = 1) {
 }
 
 
+#' Solve fully selected fishing mortality from a target catch
+#'
+#' @description
+#' Computes the scalar fully selected fishing mortality `F_full` that achieves a
+#' target catch (numbers scale) under the Baranov catch equation, given
+#' selectivity `S`, natural mortality `M`, and abundance `N`. Uses a fixed number
+#' of Newton updates starting from `F_init`.
+#'
+#' The catch as a function of `F_full` is
+#' \deqn{C(F_{\mathrm{full}}) = F_{\mathrm{full}} \sum_a \left[
+#'   N_a \, \frac{1 - \exp\{-(F_{\mathrm{full}} S_a + M_a)\}}{F_{\mathrm{full}} S_a + M_a} \, S_a
+#' \right].}
+#'
+#' @param C_target Numeric scalar; target catch (same units as `N`).
+#' @param F_init Numeric scalar; initial guess for `F_full`.
+#' @param S Numeric vector; selectivity at age (>= 0).
+#' @param M Numeric vector; natural mortality at age (>= 0).
+#' @param N Numeric vector; abundance at age (>= 0).
+#' @param n_iter Integer; number of Newton updates (default `7`).
+#' @param eps Numeric; small constant to stabilize divisions/derivatives (default `1e-12`).
+#'
+#' @return Numeric scalar `F_full`.
+#'
+#' @details
+#' This inverts the Baranov catch equation for a single fully selected rate
+#' `F_full`, holding `S`, `M`, and `N` fixed. Provide a sensible `F_init`.
+#' When the derivative is extremely small, the update is damped by `eps`.
+#'
+#' @examples
+#' S <- rep(1, 5); M <- rep(0.2, 5); N <- 1000 * exp(-0.2 * (0:4))
+#' F_full_true <- 0.3
+#' catch_of_Ffull <- function(F_full) {
+#'   Z <- F_full * S + M; eZ <- exp(-Z); mort <- 1 - eZ
+#'   F_full * sum(N * mort * S / pmax(Z, 1e-12))
+#' }
+#' C_target <- catch_of_Ffull(F_full_true)
+#' solve_F_full(C_target, F_init = 0.1, S, M, N)
+#'
+#' @export
+solve_F_full <- function(C_target, F_init, S, M, N,
+                         n_iter = 7, eps = 1e-12, clamp_nonneg = TRUE) {
+  stopifnot(is.numeric(C_target), length(C_target) == 1L,
+            is.numeric(F_init),   length(F_init)   == 1L,
+            is.numeric(S), is.numeric(M), is.numeric(N),
+            length(S) == length(M), length(M) == length(N))
+
+  F_full <- F_init
+  for (i in seq_len(n_iter)) {
+    Z    <- F_full * S + M
+    Zs   <- pmax(Z, eps)           # stabilize divisions
+    eZ   <- exp(-Z)
+    mort <- 1 - eZ
+
+    # C(F_full) and dC/dF_full (matches the TMB helper algebra)
+    C_F     <- F_full * sum(N * mort * S / Zs)
+    dC_dF   <- sum(N * S * (mort * M / Zs + eZ * F_full * S) / Zs)
+
+    step    <- (C_target - C_F) / (dC_dF + eps)
+    F_full  <- F_full + step
+  }
+  as.numeric(F_full)
+}
+
+
+
 #' Negative log-likelihood (and simulator) for the Tiny Assessment Model
 #'
 #' @description

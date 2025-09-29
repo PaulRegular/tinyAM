@@ -210,6 +210,10 @@ make_dat <- function(
     d_sub[order(d_sub$age, d_sub$year), ] |>
       droplevels()
   })
+  proj_years <- unique(unlist(lapply(obs, function(d) d$year[d$is_proj])))
+  if (length(proj_years) > 0) {
+    dat$proj_years <- proj_years
+  }
 
   if (N_settings$process == "off" && !N_settings$init_N0) {
     dat$N_settings$init_N0 <- TRUE
@@ -255,7 +259,7 @@ make_dat <- function(
 
   if (!is.null(dat$M_settings$mu_form)) {
     dat$M_modmat <- model.matrix(M_settings$mu_form, data = dat$obs$weight)
-    if ("(Intercept)" %in% colnames(dat$M_modmat) %in% !is.null(dat$M_settings$assumption)) {
+    if ("(Intercept)" %in% colnames(dat$M_modmat) && !is.null(dat$M_settings$assumption)) {
       dat$M_modmat <- model.matrix(update(M_settings$mu_form, ~ 0 + .), data = dat$obs$weight)
       cli::cli_warn("Dropping intercept term in M mu_form since assumed levels are supplied. Set assumption to NULL to estimate the intercept.")
     }
@@ -270,13 +274,6 @@ make_dat <- function(
   }
   if (is.null(dat$M_settings$mu_form) && is.null(dat$M_settings$assumption)) {
     stop("Please supply an assumption or mu_form for M.")
-  }
-
-  if (dat$N_settings$process == "iid") {
-    dat$logit_phi_n <- c(0, 0)
-  }
-  if (dat$N_settings$process == "approx_rw") {
-    dat$logit_phi_n <- c(0.99, 0.99)
   }
 
   .set_phi <- function(type = c("off", "iid", "approx_rw", "ar1")) {

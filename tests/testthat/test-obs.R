@@ -98,10 +98,14 @@ test_that("add_proj_rows appends projection rows and adds is_proj", {
   }
 })
 
-test_that("add_proj_rows sets index$obs to NA for projected rows", {
+test_that("add_proj_rows sets catch$obs and index$obs to NA for projected rows", {
   out <- add_proj_rows(cod_obs, n_proj = 2, n_mean = 3, quiet = TRUE)
-  idx_proj <- subset(out$index, is_proj)
-  expect_true(all(is.na(idx_proj$obs)))
+
+  catch_proj <- subset(out$catch, is_proj)
+  expect_true(all(is.na(catch_proj$obs)))
+
+  index_proj <- subset(out$index, is_proj)
+  expect_true(all(is.na(index_proj$obs)))
 })
 
 test_that("add_proj_rows copies aux columns from terminal year (catch blocks)", {
@@ -124,16 +128,16 @@ test_that("add_proj_rows copies aux columns from terminal year (catch blocks)", 
 test_that("add_proj_rows uses average obs of last n_mean years for projections (catch)", {
   out <- add_proj_rows(cod_obs, n_proj = 1, n_mean = 3, quiet = TRUE)
 
-  max_year   <- max(cod_obs$catch$year, na.rm = TRUE)
+  max_year   <- max(cod_obs$weight$year, na.rm = TRUE)
   mean_years <- (max_year - 3 + 1):max_year
 
-  mean_catch <- aggregate(obs ~ age,
-                          data = subset(cod_obs$catch, year %in% mean_years),
-                          FUN = function(z) mean(z, na.rm = TRUE))
-  added_rows <- subset(out$catch, year == max_year + 1 & is_proj)
+  mean_weight <- aggregate(obs ~ age,
+                           data = subset(cod_obs$weight, year %in% mean_years),
+                           FUN = function(z) mean(z, na.rm = TRUE))
+  added_rows <- subset(out$weight, year == max_year + 1 & is_proj)
 
   # Compare by age after merging to ensure alignment
-  cmp <- merge(mean_catch, added_rows[, c("age","obs")],
+  cmp <- merge(mean_weight, added_rows[, c("age","obs")],
                by = "age", suffixes = c("_mean","_proj"), sort = FALSE)
   expect_equal(cmp$obs_proj, cmp$obs_mean, tolerance = 1e-12)
 })

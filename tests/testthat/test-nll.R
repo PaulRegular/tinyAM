@@ -9,7 +9,7 @@ test_that("rprocess_2d returns matrix with correct dimensions", {
   expect_true(all(is.finite(X)))
 })
 
-test_that("IID case: phi = (0,0) gives approx independent entries with Var ~ sd^2", {
+test_that("rprocess_2d gives approx iid entries with Var ~ sd^2 when phi = (0,0)", {
   X  <- rprocess_2d(ny, na, sd = sd, phi = c(0, 0))
 
   # Empirical variance of all entries
@@ -23,7 +23,7 @@ test_that("IID case: phi = (0,0) gives approx independent entries with Var ~ sd^
   expect_equal(r_col, 0, tolerance = 0.1)
 })
 
-test_that("AR1 density reduces to IID density when phi = (0,0)", {
+test_that("dprocess_2d AR1 density reduces to IID when phi = (0,0)", {
   X  <- matrix(rnorm(ny * na, 0, sd), ny, na)
 
   lp_iid <- dprocess_2d(X, sd = sd, phi = c(0, 0))
@@ -33,7 +33,7 @@ test_that("AR1 density reduces to IID density when phi = (0,0)", {
   expect_equal(lp_iid, lp_ref, tolerance = 1e-10)
 })
 
-test_that("Larger |phi| produces stronger local correlation (empirical check)", {
+test_that("rprocess_2d supplied larger |phi| produces stronger local correlation (empirical check)", {
   X_weak <- rprocess_2d(ny, na, sd = sd, phi = c(0.3, 0.3))
   X_strg <- rprocess_2d(ny, na, sd = sd, phi = c(0.9, 0.9))
 
@@ -48,7 +48,7 @@ test_that("Larger |phi| produces stronger local correlation (empirical check)", 
   expect_gt(r_col_strg, r_col_weak)
 })
 
-test_that("Self-consistency: sample from AR1 has higher density under matching phi than IID", {
+test_that("rprocess_2d self-consistency: sample from AR1 has higher density under matching phi than IID", {
   phi <- c(0.8, 0.7)
 
   X <- rprocess_2d(ny, na, sd = sd, phi = phi)
@@ -58,7 +58,7 @@ test_that("Self-consistency: sample from AR1 has higher density under matching p
   expect_gt(lp_match, lp_iid)
 })
 
-test_that("Approximate RW: phi=(0.99,0.99) yields very strong adjacent correlation", {
+test_that("rprocess_2d approximate RW: phi=(0.99,0.99) yields very strong adjacent correlation", {
   X <- rprocess_2d(ny, na, sd = sd, phi = c(0.99, 0.99))
 
   r_row <- cor(as.numeric(X[, -na]), as.numeric(X[, -1]))
@@ -72,7 +72,7 @@ test_that("Approximate RW: phi=(0.99,0.99) yields very strong adjacent correlati
   expect_true(is.finite(lp))
 })
 
-test_that("Edge cases: ny=1 or na=1 behave like 1D AR(1)", {
+test_that("rprocess_2d edge cases: ny=1 or na=1 behave like 1D AR(1)", {
   # Single row (varying age)
   ny <- 1; na <- 80; sd <- 1.0; phi <- c(0.0, 0.8) # phi_age=0, phi_year=0.8 (ignored since ny=1)
   X1 <- rprocess_2d(ny, na, sd = sd, phi = phi)
@@ -89,6 +89,40 @@ test_that("Edge cases: ny=1 or na=1 behave like 1D AR(1)", {
   r_year <- cor(X2[-ny, 1], X2[-1, 1])
   expect_equal(as.numeric(r_year), 0.4, tolerance = 0.15)
 })
+
+
+
+catch_of_F_full <- function(F_full, S, M, N) {
+  Z <- F_full * S + M; eZ <- exp(-Z); mort <- 1 - eZ
+  F_full * sum(N * mort * S / pmax(Z, 1e-12))
+}
+
+test_that("solve_F_full recovers F_full in simple case", {
+  S <- rep(1, 6)
+  M <- rep(0.2, 6)
+  N <- 1e3 * exp(-0.25 * (0:5))
+  F_full_true <- 0.3
+  C_tgt <- catch_of_F_full(F_full_true, S, M, N)
+  F_hat <- solve_F_full(C_tgt, F_init = 0.05, S, M, N)
+  expect_equal(F_hat, F_full_true, tolerance = 1e-6)
+})
+
+test_that("solve_F_full works with age-varying selectivity", {
+  S <- plogis(seq(-2, 2, length.out = 8))
+  M <- seq(0.15, 0.25, length.out = 8)
+  N <- 5e2 * exp(-0.3 * (0:7))
+  F_full_true <- 0.45
+  C_tgt <- catch_of_F_full(F_full_true, S, M, N)
+  F_hat <- solve_F_full(C_tgt, F_init = 0.2, S, M, N)
+  expect_equal(F_hat, F_full_true, tolerance = 1e-6)
+})
+
+test_that("solve_F_full returns ~0 when target catch is zero", {
+  S <- rep(1, 5); M <- rep(0.2, 5); N <- 1e3 * exp(-0.2 * (0:4))
+  F_hat <- solve_F_full(0, F_init = 0.1, S, M, N)
+  expect_true(abs(F_hat) < 1e-10)
+})
+
 
 
 test_that("nll_fun returns finite JNLL and simulates when requested", {

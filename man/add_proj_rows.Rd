@@ -14,8 +14,8 @@ and \code{maturity} with columns \code{year}, \code{age}, \code{obs} (e.g., \lin
 
 \item{n_mean}{Integer; number of terminal years to average for \code{obs}
 (default \code{3}). Mean \code{obs} values are replicated across \code{is_proj} years
-for \code{catch}, \code{weight}, and \code{maturity} tables. Values other than \code{obs}
-are not averaged and \code{index$obs} values are \code{NA} across \code{is_proj}
+for \code{weight}, and \code{maturity} tables. Values other than \code{obs}
+are not averaged and \code{catch$obs} and \code{index$obs} values are \code{NA} across \code{is_proj}
 years.}
 
 \item{quiet}{Logical; if \code{FALSE} (default) prints brief messages about what is done.}
@@ -29,7 +29,8 @@ Appends \code{n_proj} projection years to each present table among \code{catch},
 \code{index}, \code{weight}, \code{maturity}.
 For each table:
 \itemize{
-\item averages \code{obs} over the last \code{n_mean} years by \code{age};
+\item averages \code{weight$obs} and \code{maturity$obs} over the last \code{n_mean} years by \code{age};
+\item sets \code{catch$obs} and \code{index$obs} to \code{NA} across projection years;
 \item copies all other columns from the terminal year;
 \item adds \code{is_proj} column.
 }
