@@ -64,7 +64,7 @@
 #'
 #' @examples
 #' dat <- make_dat(
-#'   northern_cod_data,
+#'   cod_obs,
 #'   years = 1983:2024,
 #'   ages  = 2:14,
 #'   N_settings = list(process = "iid", init_N0 = FALSE),

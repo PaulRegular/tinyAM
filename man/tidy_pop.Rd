@@ -20,7 +20,7 @@ Convenience wrapper that combines \code{\link[=tidy_sdrep]{tidy_sdrep()}} and \c
 into a single named list for downstream plotting and summaries.
 }
 \examples{
-fit <- fit_tam(northern_cod_data, years = 1983:2024, ages = 2:14)
+fit <- fit_tam(cod_obs, years = 1983:2024, ages = 2:14)
 pop <- tidy_pop(fit)
 names(pop)
 

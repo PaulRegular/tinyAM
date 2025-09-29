@@ -20,7 +20,7 @@
 #' number of observed data points (rough identifiability check).
 #'
 #' @param obs A named list of tidy observation tables (e.g., `catch`, `index`,
-#'   `weight`, `maturity`). See [northern_cod_data] for an example.
+#'   `weight`, `maturity`). See [cod_obs] for an example.
 #' @param interval Level in `(0, 1)` to use to generate confidence
 #'                 intervals, where applicable; default `0.95 (see [tidy_tam()]).`
 #' @param silent Logical; if `TRUE`, disables tracing information.
@@ -44,7 +44,7 @@
 #'
 #' @examples
 #' fit <- fit_tam(
-#'   northern_cod_data,
+#'   cod_obs,
 #'   years = 1983:2024, ages = 2:14,
 #'   N_settings = list(process = "iid", init_N0 = FALSE),
 #'   F_settings = list(process = "approx_rw"),
@@ -153,7 +153,7 @@ fit_tam <- function(obs, interval = 0.95, silent = FALSE, ...) {
 #' future::plan(future::multisession, workers = 4)
 #'
 #' fit <- fit_tam(
-#'   northern_cod_data,
+#'   cod_obs,
 #'   years = 1983:2024,
 #'   ages = 2:14,
 #'   N_settings = list(process = "iid", init_N0 = FALSE),
@@ -236,7 +236,7 @@ fit_retro <- function(fit, folds = 2, grad_tol = 1e-3, progress = TRUE, globals 
 #' If `obs_only = FALSE`, the report also reflects simulated random effects.
 #'
 #' @examples
-#' fit <- fit_tam(northern_cod_data, years = 1983:2024, ages = 2:14)
+#' fit <- fit_tam(cod_obs, years = 1983:2024, ages = 2:14)
 #' rep_sim <- sim_tam(fit, obs_only = FALSE)
 #' str(rep_sim$log_obs)
 #'

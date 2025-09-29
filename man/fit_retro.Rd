@@ -49,7 +49,7 @@ supports \code{update()} with a \code{years} argument. This function uses
 future::plan(future::multisession, workers = 4)
 
 fit <- fit_tam(
-  northern_cod_data,
+  cod_obs,
   years = 1983:2024,
   ages = 2:14,
   N_settings = list(process = "iid", init_N0 = FALSE),

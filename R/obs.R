@@ -65,16 +65,16 @@
 #' (`NCAM::inputs`). See the NCAM package for provenance and licensing.
 #'
 #' @examples
-#' data(northern_cod_data)
-#' names(northern_cod_data)
+#' data(cod_obs)
+#' names(cod_obs)
 #'
 #' # Peek at catch blocks
-#' head(northern_cod_data$catch)
-#' with(northern_cod_data$catch, table(F_y_block, F_a_block))
+#' head(cod_obs$catch)
+#' with(cod_obs$catch, table(F_y_block, F_a_block))
 #'
 #' # Build a minimal TAM dataset
 #' dat <- make_dat(
-#'   obs = northern_cod_data,
+#'   obs = cod_obs,
 #'   years = 1983:2024,
 #'   ages = 2:14,
 #'   N_settings = list(process = "iid", init_N0 = FALSE),
@@ -86,9 +86,9 @@
 #'
 #' @docType data
 #' @keywords datasets
-#' @name northern_cod_data
-#' @usage data(northern_cod_data)
-"northern_cod_data"
+#' @name cod_obs
+#' @usage data(cod_obs)
+"cod_obs"
 
 
 
@@ -110,8 +110,8 @@
 #'
 #' @return `TRUE` (invisibly) if validation passes; otherwise aborts.
 #' @examples
-#' data(northern_cod_data)
-#' check_obs(northern_cod_data)  # returns TRUE (invisibly) if valid
+#' data(cod_obs)
+#' check_obs(cod_obs)  # returns TRUE (invisibly) if valid
 #'
 #' @importFrom cli cli_abort cli_warn
 #' @export
@@ -198,7 +198,7 @@ check_obs <- function(obs) {
 #' - adds `is_proj` column.
 #'
 #' @param obs A named list containing data.frames `catch`, `index`, `weight`,
-#'   and `maturity` with columns `year`, `age`, `obs` (e.g., [northern_cod_data]).
+#'   and `maturity` with columns `year`, `age`, `obs` (e.g., [cod_obs]).
 #' @param n_proj Integer; number of projection years to append (default `3`).
 #' @param n_mean Integer; number of terminal years to average for `obs`
 #'   (default `3`). Mean `obs` values are replicated across `is_proj` years
@@ -211,9 +211,9 @@ check_obs <- function(obs) {
 #'   appended to each core table.
 #'
 #' @examples
-#' data(northern_cod_data)
-#' max_year <- max(northern_cod_data$catch$year)
-#' obs2 <- add_proj_rows(northern_cod_data, n_proj = 3, n_mean = 3)
+#' data(cod_obs)
+#' max_year <- max(cod_obs$catch$year)
+#' obs2 <- add_proj_rows(cod_obs, n_proj = 3, n_mean = 3)
 #' lapply(obs2, subset, year %in% c(max_year, max_year + 1))
 #'
 #' @seealso [check_obs()]

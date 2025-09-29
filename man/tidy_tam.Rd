@@ -56,7 +56,7 @@ component names), ensuring consistent columns for base-R \code{rbind()}.
 }
 \examples{
 # Single model via ...: no label column added
-fit1 <- fit_tam(northern_cod_data, years = 1983:2024, ages = 2:14)
+fit1 <- fit_tam(cod_obs, years = 1983:2024, ages = 2:14)
 tabs1 <- tidy_tam(fit1)
 head(tabs1$obs_pred$index)
 

@@ -1,13 +1,13 @@
 
 testthat::skip_if_not_installed("RTMB")
-testthat::skip_if_not(exists("northern_cod_data"), "northern_cod_data not available")
+testthat::skip_if_not(exists("cod_obs"), "cod_obs not available")
 
 set.seed(1)
 
 YEARS <- 1983:2024
 AGES  <- 2:14
 
-test_fit <- function(obs = northern_cod_data,
+test_fit <- function(obs = cod_obs,
                      years = YEARS,
                      ages  = AGES,
                      N_settings = list(process = "iid", init_N0 = FALSE),

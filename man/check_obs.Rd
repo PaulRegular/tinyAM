@@ -25,7 +25,7 @@ On failure, the function aborts with a \code{cli} error. On success, it returns
 \code{TRUE} (invisibly).
 }
 \examples{
-data(northern_cod_data)
-check_obs(northern_cod_data)  # returns TRUE (invisibly) if valid
+data(cod_obs)
+check_obs(cod_obs)  # returns TRUE (invisibly) if valid
 
 }

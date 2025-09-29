@@ -8,7 +8,7 @@ add_proj_rows(obs, n_proj = 3, n_mean = 3, quiet = FALSE)
 }
 \arguments{
 \item{obs}{A named list containing data.frames \code{catch}, \code{index}, \code{weight},
-and \code{maturity} with columns \code{year}, \code{age}, \code{obs} (e.g., \link{northern_cod_data}).}
+and \code{maturity} with columns \code{year}, \code{age}, \code{obs} (e.g., \link{cod_obs}).}
 
 \item{n_proj}{Integer; number of projection years to append (default \code{3}).}
 
@@ -35,9 +35,9 @@ For each table:
 }
 }
 \examples{
-data(northern_cod_data)
-max_year <- max(northern_cod_data$catch$year)
-obs2 <- add_proj_rows(northern_cod_data, n_proj = 3, n_mean = 3)
+data(cod_obs)
+max_year <- max(cod_obs$catch$year)
+obs2 <- add_proj_rows(cod_obs, n_proj = 3, n_mean = 3)
 lapply(obs2, subset, year \%in\% c(max_year, max_year + 1))
 
 }

@@ -8,7 +8,7 @@ fit_tam(obs, interval = 0.95, silent = FALSE, ...)
 }
 \arguments{
 \item{obs}{A named list of tidy observation tables (e.g., \code{catch}, \code{index},
-\code{weight}, \code{maturity}). See \link{northern_cod_data} for an example.}
+\code{weight}, \code{maturity}). See \link{cod_obs} for an example.}
 
 \item{interval}{Level in \verb{(0, 1)} to use to generate confidence
 intervals, where applicable; default \verb{0.95 (see [tidy_tam()]).}}
@@ -91,7 +91,7 @@ number of observed data points (rough identifiability check).
 }
 \examples{
 fit <- fit_tam(
-  northern_cod_data,
+  cod_obs,
   years = 1983:2024, ages = 2:14,
   N_settings = list(process = "iid", init_N0 = FALSE),
   F_settings = list(process = "approx_rw"),

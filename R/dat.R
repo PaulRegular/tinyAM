@@ -101,7 +101,7 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #' - Inputs are expected as a list with components `catch`, `index`, `weight`,
 #'   and `maturity`. Each must include columns `year`, `age`, and a value column
 #'   named `obs` (for `catch`/`index`) or renamed from `weight`/`mat`. See
-#'   [northern_cod_data] object for an example of how data should be structured
+#'   [cod_obs] object for an example of how data should be structured
 #' - Observations are merged to the full `expand.grid(year, age)`.
 #' - A combined observation table is created for catch and index; `log(0)` is
 #'   treated as `NA` (to be handled via random effects).
@@ -174,7 +174,7 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #'
 #' @examples
 #' dat <- make_dat(
-#'   northern_cod_data,
+#'   cod_obs,
 #'   years = 1983:2024,
 #'   ages  = 2:14,
 #'   N_settings = list(process = "iid", init_N0 = FALSE),

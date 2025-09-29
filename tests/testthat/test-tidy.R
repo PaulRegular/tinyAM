@@ -73,7 +73,7 @@ test_that("trans_est respects transform = NULL", {
   expect_equal(out$upr, 0.2)
 })
 
-fit <- fit_tam(northern_cod_data, years = 1983:2024, ages = 2:14, silent = TRUE)
+fit <- fit_tam(cod_obs, years = 1983:2024, ages = 2:14, silent = TRUE)
 vals <- as.list(fit$sdrep, "Estimate", report = TRUE)
 sds <- as.list(fit$sdrep, "Std. Error", report = TRUE)
 

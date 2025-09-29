@@ -19,7 +19,7 @@ Converts selected matrices in \code{fit$rep} to long (tidy) data frames
 using \code{\link[=tidy_mat]{tidy_mat()}}.
 }
 \examples{
-fit <- fit_tam(northern_cod_data, years = 1983:2024, ages = 2:14)
+fit <- fit_tam(cod_obs, years = 1983:2024, ages = 2:14)
 mats <- tidy_rep_mats(fit)
 names(mats)
 head(mats$N)

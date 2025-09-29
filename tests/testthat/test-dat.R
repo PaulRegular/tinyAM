@@ -40,12 +40,9 @@ test_that("cut_int input validation errors are informative", {
   expect_error(cut_int(2:5, 2:6), "last break must equal max")
 })
 
-
-testthat::skip_if_not(exists("northern_cod_data"), "northern_cod_data not available")
-
 test_that("make_dat infers years/ages when NULL and builds expected pieces", {
   dat <- make_dat(
-    obs = northern_cod_data,
+    obs = cod_obs,
     years = NULL,
     ages  = NULL,
     N_settings = list(process = "iid", init_N0 = FALSE),
@@ -71,7 +68,7 @@ test_that("make_dat infers years/ages when NULL and builds expected pieces", {
 test_that("make_dat builds M age_blocks and handles M assumptions / mu_form", {
   # with age_breaks => grouped age blocks for M deviations
   dat1 <- make_dat(
-    obs = northern_cod_data,
+    obs = cod_obs,
     M_settings = list(process = "iid", mu_form = NULL, assumption = ~I(0.3), age_breaks = seq(2, 14, 2))
   )
   expect_true("age_blocks" %in% names(dat1$M_settings))
@@ -80,7 +77,7 @@ test_that("make_dat builds M age_blocks and handles M assumptions / mu_form", {
   # If mu_form + assumption => intercept dropped (warning) and M_modmat has no intercept
   expect_warning(
     dat2 <- make_dat(
-      obs = northern_cod_data,
+      obs = cod_obs,
       M_settings = list(process = "off", mu_form = ~ age, assumption = ~I(0.2)) # example mu_form with intercept (by default)
     ),
     "Dropping intercept term.*assumed levels"
@@ -92,7 +89,7 @@ test_that("make_dat builds M age_blocks and handles M assumptions / mu_form", {
 test_that("make_dat stops if neither M assumption nor mu_form is provided", {
   expect_error(
     make_dat(
-      obs = northern_cod_data,
+      obs = cod_obs,
       M_settings = list(process = "off", mu_form = NULL, assumption = NULL)
     ),
     "Please supply an assumption or mu_form for M"
@@ -102,7 +99,7 @@ test_that("make_dat stops if neither M assumption nor mu_form is provided", {
 test_that("make_dat forces init_N0 to TRUE, with warning, when N process off and init_N0 FALSE", {
   expect_warning(
     make_dat(
-      obs = northern_cod_data,
+      obs = cod_obs,
       N_settings = list(process = "off", init_N0 = FALSE)
     ),
     "forcing init_N0 to TRUE"

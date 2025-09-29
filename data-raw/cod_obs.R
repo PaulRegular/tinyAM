@@ -33,9 +33,9 @@ nm$age <- as.numeric(nm$age)
 nm$year <- as.numeric(nm$year)
 weight <- merge(weight, nm, by = c("year", "age"))
 
-northern_cod_data <- list(catch = catch,
+cod_obs <- list(catch = catch,
                           index = index,
                           weight = weight,
                           maturity = maturity)
 
-usethis::use_data(northern_cod_data, overwrite = TRUE)
+usethis::use_data(cod_obs, overwrite = TRUE)

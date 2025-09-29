@@ -93,7 +93,7 @@ test_that("Edge cases: ny=1 or na=1 behave like 1D AR(1)", {
 
 test_that("nll_fun returns finite JNLL and simulates when requested", {
   dat <- make_dat(
-    northern_cod_data,
+    cod_obs,
     years = 1983:2024,
     ages  = 2:14,
     N_settings = list(process = "iid", init_N0 = TRUE),

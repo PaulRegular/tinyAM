@@ -80,7 +80,7 @@ tidy_mat <- tidy_array
 #' - **index**: original columns plus `pred`, `sd`, `q`, and `std_res`.
 #'
 #' @examples
-#' fit <- fit_tam(northern_cod_data, years = 1983:2024, ages = 2:14)
+#' fit <- fit_tam(cod_obs, years = 1983:2024, ages = 2:14)
 #' obs_pred <- tidy_obs_pred(fit)
 #' head(obs_pred$catch)
 #' head(obs_pred$index)
@@ -119,7 +119,7 @@ tidy_obs_pred <- function(fit) {
 #' a value column `est`.
 #'
 #' @examples
-#' fit <- fit_tam(northern_cod_data, years = 1983:2024, ages = 2:14)
+#' fit <- fit_tam(cod_obs, years = 1983:2024, ages = 2:14)
 #' mats <- tidy_rep_mats(fit)
 #' names(mats)
 #' head(mats$N)
@@ -161,7 +161,7 @@ tidy_rep_mats <- function(fit) {
 #' - `year`, `est`, `sd`, `lwr`, `upr` — after applying the chosen transform.
 #'
 #' @examples
-#' fit <- fit_tam(northern_cod_data, years = 1983:2024, ages = 2:14)
+#' fit <- fit_tam(cod_obs, years = 1983:2024, ages = 2:14)
 #' trends <- tidy_sdrep(fit, interval = 0.9)
 #' names(trends)
 #' head(trends$ssb)
@@ -198,7 +198,7 @@ tidy_sdrep <- function(fit, interval = 0.95) {
 #' [tidy_rep_mats()] (names preserved).
 #'
 #' @examples
-#' fit <- fit_tam(northern_cod_data, years = 1983:2024, ages = 2:14)
+#' fit <- fit_tam(cod_obs, years = 1983:2024, ages = 2:14)
 #' pop <- tidy_pop(fit)
 #' names(pop)
 #'
@@ -255,7 +255,7 @@ tidy_pop <- function(fit, interval = 0.95) {
 #'
 #' @examples
 #' # Single model via ...: no label column added
-#' fit1 <- fit_tam(northern_cod_data, years = 1983:2024, ages = 2:14)
+#' fit1 <- fit_tam(cod_obs, years = 1983:2024, ages = 2:14)
 #' tabs1 <- tidy_tam(fit1)
 #' head(tabs1$obs_pred$index)
 #'

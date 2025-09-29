@@ -21,7 +21,7 @@ Extracts observations, predictions, and standard errors for \code{catch} and \co
 from a fitted TAM object, and adds standardized residuals on the log scale.
 }
 \examples{
-fit <- fit_tam(northern_cod_data, years = 1983:2024, ages = 2:14)
+fit <- fit_tam(cod_obs, years = 1983:2024, ages = 2:14)
 obs_pred <- tidy_obs_pred(fit)
 head(obs_pred$catch)
 head(obs_pred$index)

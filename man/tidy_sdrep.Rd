@@ -34,7 +34,7 @@ The interval is constructed as \verb{est ± z * sd} with
 \code{z = qnorm(1 - (1 - interval) / 2)}.
 }
 \examples{
-fit <- fit_tam(northern_cod_data, years = 1983:2024, ages = 2:14)
+fit <- fit_tam(cod_obs, years = 1983:2024, ages = 2:14)
 trends <- tidy_sdrep(fit, interval = 0.9)
 names(trends)
 head(trends$ssb)
