@@ -16,9 +16,9 @@
 #'   - `obs`: numeric observed catch in numbers (may include `NA`).
 #'   - `sd_obs_block`: character; observation-variance block label (`"catch"`).
 #'   - `F_y_block`: factor; year blocks for fishing-mortality mean structure
-#'     (e.g., `"1954-1991"`, `"1992-1997"`, …).
+#'     (e.g., `"1954-1991"`, `"1992-1997"`, ...).
 #'   - `F_a_block`: factor; age blocks for fishing-mortality mean structure
-#'     (e.g., `"0-1"`, `"2-3"`, …).
+#'     (e.g., `"0-1"`, `"2-3"`, ...).
 #'
 #' - **index**: survey (index) observations and blocking variables.
 #'   Columns:
@@ -34,14 +34,14 @@
 #'   - `year`: integer year.
 #'   - `age`: numeric age (years).
 #'   - `obs`: numeric weight-at-age (same units as source; e.g., kg).
-#'   - `M_assumption`: numeric assumed natural mortality level by age–year
+#'   - `M_assumption`: numeric assumed natural mortality level by age-year
 #'     (used when constructing `M` mean via formula).
 #'
 #' - **maturity**: maturity-at-age (proportion mature).
 #'   Columns:
 #'   - `year`: numeric year.
 #'   - `age`: numeric age (years).
-#'   - `obs`: numeric proportion mature (0–1).
+#'   - `obs`: numeric proportion mature (0-1).
 #'
 #' @details
 #' The object was assembled by:
@@ -55,10 +55,10 @@
 #' Exact dimensions may change if the source data evolve. At the time of inclusion,
 #' the elements contained approximately:
 #'
-#' - `catch`: 1,065 rows × 6 columns
-#' - `index`: 1,065 rows × 6 columns
-#' - `weight`: 1,065 rows × 4 columns
-#' - `maturity`: 1,215 rows × 3 columns
+#' - `catch`: 1,065 rows x 6 columns
+#' - `index`: 1,065 rows x 6 columns
+#' - `weight`: 1,065 rows x 4 columns
+#' - `maturity`: 1,215 rows x 3 columns
 #'
 #' @source
 #' Derived from the \pkg{NCAM} example inputs
@@ -95,18 +95,24 @@
 #' Check the structure of a TAM obs list
 #'
 #' @description
-#' Validates the minimal structure required by [make_dat()] and [fit_tam()]:
-#' the `obs` object must be a list containing data.frames `catch`, `index`,
-#' `weight`, and `maturity`, each with columns `year`, `age`, and `obs`.
-#' Types must be numeric/integerish for `year` and `age`, and numeric for `obs`.
-#' If present, `index$samp_time` must be numeric, between 0 to 1. Duplicate
-#' `(year, age)` rows are warned.
+#' Validates the minimal structure required by [make_dat()] and [fit_tam()].
+#' The `obs` object must be a list containing data.frames `catch`, `index`,
+#' `weight`, and `maturity`. Each table must include columns `year`, `age`,
+#' and `obs`. Types must be numeric (integerish allowed) for `year` and `age`,
+#' and numeric for `obs`.
 #'
-#' On failure, the function aborts with a `cli` error. On success, it returns
+#' Additional requirements:
+#' - `index$samp_time` is **required**, numeric in **\[0, 1\]**, and **no NA**.
+#' - `weight$obs` and `maturity$obs` must not contain `NA`.
+#' - `catch`, `weight`, and `maturity` must contain a row for **every**
+#'   `(year, age)` combination over the global modeled range
+#'   (from min to max year and age across all tables).
+#'
+#' On failure the function aborts with a `cli` error. On success, it returns
 #' `TRUE` (invisibly).
 #'
-#' @param obs A named list expected to contain `catch`, `index`, `weight`,
-#'   and `maturity` data.frames with the columns described above.
+#' @param obs A named list expected to contain data.frames `catch`, `index`,
+#'   `weight`, and `maturity` with the columns described above.
 #'
 #' @return `TRUE` (invisibly) if validation passes; otherwise aborts.
 #' @examples
@@ -116,9 +122,11 @@
 #' @importFrom cli cli_abort cli_warn
 #' @export
 check_obs <- function(obs) {
-  # high-level shape
   if (!is.list(obs)) {
-    cli::cli_abort(c("x" = "`obs` must be a list."))
+    cli::cli_abort(c(
+      "{.strong Invalid input}",
+      "x" = "`obs` must be a list."
+    ))
   }
 
   required_tabs <- c("catch", "index", "weight", "maturity")
@@ -131,56 +139,91 @@ check_obs <- function(obs) {
     ))
   }
 
+  # helper: integerish (allow numeric with no fractional part)
+  .is_integerish <- function(x) is.numeric(x) && all(is.finite(x)) && all(x == as.integer(x))
+
   # per-table checks
   check_one <- function(x, nm) {
     if (!is.data.frame(x)) {
       cli::cli_abort(c(
-        "{.strong Invalid obs ${nm}}",
+        "{.strong Invalid obs {nm}}",
         "x" = "`{nm}` must be a data.frame (got {class(x)[1]})."
       ))
     }
+
     need <- c("year", "age", "obs")
     miss <- setdiff(need, names(x))
     if (length(miss)) {
       cli::cli_abort(c(
-        "{.strong Invalid obs ${nm}}",
+        "{.strong Invalid obs {nm}}",
         "x" = "`{nm}` is missing required column(s): {paste(miss, collapse = \", \")}"
       ))
     }
-    # type checks (allow integerish for year/age; obs must be numeric)
-    if (!is.numeric(x$year)) {
-      cli::cli_abort(c("{.strong Invalid obs ${nm}}", "x" = "`{nm}$year` must be numeric/integer."))
+
+    # type and NA checks
+    if (!.is_integerish(x$year)) {
+      cli::cli_abort(c("{.strong Invalid obs {nm}}",
+                       "x" = "`{nm}$year` must be numeric/integer with no NA and no fractional values."))
     }
-    if (!is.numeric(x$age)) {
-      cli::cli_abort(c("{.strong Invalid obs ${nm}}", "x" = "`{nm}$age` must be numeric/integer."))
+    if (!.is_integerish(x$age)) {
+      cli::cli_abort(c("{.strong Invalid obs {nm}}",
+                       "x" = "`{nm}$age` must be numeric/integer with no NA and no fractional values."))
     }
     if (!is.numeric(x$obs)) {
-      cli::cli_abort(c("{.strong Invalid obs ${nm}}", "x" = "`{nm}$obs` must be numeric (NA allowed)."))
+      cli::cli_abort(c("{.strong Invalid obs {nm}}",
+                       "x" = "`{nm}$obs` must be numeric (NA allowed in `catch`/`index`, not in `weight`/`maturity`)."))
     }
-    # duplicate (year, age) rows: warn
-    if (any(duplicated(x[c("year", "age")]))) {
-      cli::cli_warn(c(
-        "!" = "`{nm}` has duplicate (year, age) rows; downstream joins may be ambiguous."
+
+    # table-specific NA policy for obs
+    if (nm %in% c("weight", "maturity") && any(is.na(x$obs))) {
+      cli::cli_abort(c(
+        "{.strong Missing values in {nm}$obs}",
+        "x" = "`{nm}$obs` must be available for all years and ages (no NA)."
       ))
     }
-    if (nm == "index" && "samp_time" %in% names(x)) {
-      if (!is.numeric(x$samp_time) || any(is.na(x$samp_time)) || any(x$samp_time < 0 | x$samp_time > 1, na.rm = TRUE)) {
+
+    # index samp_time: required, numeric in [0,1], no NA
+    if (nm == "index") {
+      if (!("samp_time" %in% names(x))) {
         cli::cli_abort(c(
-          "{.strong Invalid obs index}",
-          "x" = "`index$samp_time` must be numeric in [0, 1], without NA."
+          "{.strong Missing `index$samp_time`}",
+          "x" = "Please supply survey timing as a fractional year in [0, 1] (no NA)."
         ))
       }
-    } else if (nm == "index" && !("samp_time" %in% names(x))) {
-      cli::cli_abort(c(
-        "{.strong `index$samp_time` is missing}",
-        "x" = "Please specify survey timing (fractional year between 0 to 1)."
+      ok_num <- is.numeric(x$samp_time)
+      ok_rng <- all(x$samp_time >= 0 & x$samp_time <= 1, na.rm = TRUE)
+      ok_na  <- !any(is.na(x$samp_time))
+      if (!(ok_num && ok_rng && ok_na)) {
+        cli::cli_abort(c(
+          "{.strong Invalid `index$samp_time`}",
+          "x" = "`index$samp_time` must be numeric in [0, 1] with no NA."
         ))
+      }
     }
+
     invisible(TRUE)
   }
 
-  # run checks
   for (nm in required_tabs) check_one(obs[[nm]], nm)
+
+  # global year/age range (min..max), then require full grid in chosen tables
+  obs_years <- unlist(lapply(obs, function(d) d$year))
+  obs_ages  <- unlist(lapply(obs, function(d) d$age))
+  years <- seq.int(min(obs_years, na.rm = TRUE), max(obs_years, na.rm = TRUE))
+  ages  <- seq.int(min(obs_ages,  na.rm = TRUE), max(obs_ages,  na.rm = TRUE))
+  grid_size <- length(years) * length(ages)
+
+  must_be_full <- c("catch", "weight", "maturity")
+  for (nm in must_be_full) {
+    xy <- unique(obs[[nm]][, c("year", "age")])
+    if (nrow(xy) != grid_size) {
+      cli::cli_abort(c(
+        "{.strong `{nm}` coverage is incomplete}",
+        "x" = "`{nm}` must contain a row for every (year, age) in the modeled range: {years[1]}-{years[length(years)]} x {ages[1]}-{ages[length(ages)]}.",
+        "i" = "Current unique (year, age) rows in `{nm}`: {nrow(xy)} (expected {grid_size})."
+      ))
+    }
+  }
 
   invisible(TRUE)
 }

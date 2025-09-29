@@ -7,21 +7,29 @@
 check_obs(obs)
 }
 \arguments{
-\item{obs}{A named list expected to contain \code{catch}, \code{index}, \code{weight},
-and \code{maturity} data.frames with the columns described above.}
+\item{obs}{A named list expected to contain data.frames \code{catch}, \code{index},
+\code{weight}, and \code{maturity} with the columns described above.}
 }
 \value{
 \code{TRUE} (invisibly) if validation passes; otherwise aborts.
 }
 \description{
-Validates the minimal structure required by \code{\link[=make_dat]{make_dat()}} and \code{\link[=fit_tam]{fit_tam()}}:
-the \code{obs} object must be a list containing data.frames \code{catch}, \code{index},
-\code{weight}, and \code{maturity}, each with columns \code{year}, \code{age}, and \code{obs}.
-Types must be numeric/integerish for \code{year} and \code{age}, and numeric for \code{obs}.
-If present, \code{index$samp_time} must be numeric, between 0 to 1. Duplicate
-\verb{(year, age)} rows are warned.
+Validates the minimal structure required by \code{\link[=make_dat]{make_dat()}} and \code{\link[=fit_tam]{fit_tam()}}.
+The \code{obs} object must be a list containing data.frames \code{catch}, \code{index},
+\code{weight}, and \code{maturity}. Each table must include columns \code{year}, \code{age},
+and \code{obs}. Types must be numeric (integerish allowed) for \code{year} and \code{age},
+and numeric for \code{obs}.
 
-On failure, the function aborts with a \code{cli} error. On success, it returns
+Additional requirements:
+\itemize{
+\item \code{index$samp_time} is \strong{required}, numeric in \strong{[0, 1]}, and \strong{no NA}.
+\item \code{weight$obs} and \code{maturity$obs} must not contain \code{NA}.
+\item \code{catch}, \code{weight}, and \code{maturity} must contain a row for \strong{every}
+\verb{(year, age)} combination over the global modeled range
+(from min to max year and age across all tables).
+}
+
+On failure the function aborts with a \code{cli} error. On success, it returns
 \code{TRUE} (invisibly).
 }
 \examples{

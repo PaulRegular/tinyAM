@@ -62,6 +62,17 @@ test_that("fit_tam emits warning if random effects far exceed observations", {
     )
 })
 
+test_that("fit_tam works when an survey does not provide an index for all ages", {
+  obs <- cod_obs
+  sub_ages <- 2:10
+  obs$index <- obs$index[obs$index$age %in% sub_ages, ]
+  fit <- fit_tam(obs,
+                 years = YEARS,
+                 ages  = AGES,
+                 silent = TRUE)
+  expect_equal(range(fit$obs_pred$index$age), range(sub_ages))
+})
+
 
 test_that("sim_tam returns simulated observations and (optionally) re-computed reports", {
   # Simulate obs only (quick)
@@ -116,3 +127,4 @@ test_that("check_convergence warns and returns FALSE if Hessian not PD", {
   )
   expect_false(val)
 })
+

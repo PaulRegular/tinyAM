@@ -1,5 +1,6 @@
 
 # ---- check_obs ----
+# tests/testthat/test-check_obs.R
 
 test_that("check_obs passes on valid input and returns TRUE invisibly", {
   expect_invisible(expect_true(check_obs(cod_obs)))
@@ -23,6 +24,12 @@ test_that("check_obs enforces numeric types for year/age/obs", {
   obs <- cod_obs
   obs$maturity$age <- as.factor(obs$maturity$age)
   expect_error(check_obs(obs), "`maturity\\$age` must be numeric", perl = TRUE)
+})
+
+test_that("check_obs enforces integer-ish years (no fractional years)", {
+  obs <- cod_obs
+  obs$catch$year <- as.numeric(obs$catch$year) + 0.5
+  expect_error(check_obs(obs), "`catch\\$year` must be numeric", ignore.case = TRUE)
 })
 
 test_that("check_obs requires index$samp_time present, numeric in [0,1], and no NAs", {
@@ -49,11 +56,34 @@ test_that("check_obs requires index$samp_time present, numeric in [0,1], and no 
   expect_invisible(expect_true(check_obs(obs)))
 })
 
-test_that("check_obs warns on duplicate (year, age) rows", {
+test_that("weight and maturity must have no NA in obs; catch may have NA", {
   obs <- cod_obs
-  obs$catch <- rbind(obs$catch, obs$catch[1, , drop = FALSE])
-  expect_warning(check_obs(obs), "duplicate \\(year, age\\) rows", perl = TRUE)
+  obs$weight$obs[1] <- NA_real_
+  expect_error(check_obs(obs), "weight\\$obs.*no NA", perl = TRUE)
+
+  obs <- cod_obs
+  obs$maturity$obs[1] <- NA_real_
+  expect_error(check_obs(obs), "maturity\\$obs.*no NA", perl = TRUE)
+
+  # catch may include NA in obs
+  obs <- cod_obs
+  obs$catch$obs[1] <- NA_real_
+  expect_invisible(expect_true(check_obs(obs)))
 })
+
+test_that("catch/weight/maturity must cover full modeled (year, age) grid; index can be partial", {
+  # Drop a few rows from weight -> should fail coverage check
+  obs <- cod_obs
+  drop_n <- min(3L, nrow(obs$weight))
+  obs$weight <- obs$weight[-seq_len(drop_n), , drop = FALSE]
+  expect_error(check_obs(obs), "`weight` coverage is incomplete", fixed = TRUE)
+
+  obs <- cod_obs
+  drop_n <- min(3L, nrow(obs$index))
+  obs$index <- obs$index[-seq_len(drop_n), , drop = FALSE]
+  expect_invisible(expect_true(check_obs(obs)))
+})
+
 
 # ---- add_proj_rows ----
 

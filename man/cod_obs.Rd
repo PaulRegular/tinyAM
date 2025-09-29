@@ -15,9 +15,9 @@ Columns:
 \item \code{obs}: numeric observed catch in numbers (may include \code{NA}).
 \item \code{sd_obs_block}: character; observation-variance block label (\code{"catch"}).
 \item \code{F_y_block}: factor; year blocks for fishing-mortality mean structure
-(e.g., \code{"1954-1991"}, \code{"1992-1997"}, …).
+(e.g., \code{"1954-1991"}, \code{"1992-1997"}, ...).
 \item \code{F_a_block}: factor; age blocks for fishing-mortality mean structure
-(e.g., \code{"0-1"}, \code{"2-3"}, …).
+(e.g., \code{"0-1"}, \code{"2-3"}, ...).
 }
 \item \strong{index}: survey (index) observations and blocking variables.
 Columns:
@@ -35,7 +35,7 @@ Columns:
 \item \code{year}: integer year.
 \item \code{age}: numeric age (years).
 \item \code{obs}: numeric weight-at-age (same units as source; e.g., kg).
-\item \code{M_assumption}: numeric assumed natural mortality level by age–year
+\item \code{M_assumption}: numeric assumed natural mortality level by age-year
 (used when constructing \code{M} mean via formula).
 }
 \item \strong{maturity}: maturity-at-age (proportion mature).
@@ -43,7 +43,7 @@ Columns:
 \itemize{
 \item \code{year}: numeric year.
 \item \code{age}: numeric age (years).
-\item \code{obs}: numeric proportion mature (0–1).
+\item \code{obs}: numeric proportion mature (0-1).
 }
 }
 }
@@ -72,10 +72,10 @@ The object was assembled by:
 Exact dimensions may change if the source data evolve. At the time of inclusion,
 the elements contained approximately:
 \itemize{
-\item \code{catch}: 1,065 rows × 6 columns
-\item \code{index}: 1,065 rows × 6 columns
-\item \code{weight}: 1,065 rows × 4 columns
-\item \code{maturity}: 1,215 rows × 3 columns
+\item \code{catch}: 1,065 rows x 6 columns
+\item \code{index}: 1,065 rows x 6 columns
+\item \code{weight}: 1,065 rows x 4 columns
+\item \code{maturity}: 1,215 rows x 3 columns
 }
 }
 \examples{

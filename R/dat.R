@@ -196,14 +196,20 @@ make_dat <- function(
     obs_settings = list(sd_form = ~sd_obs_block, q_form = ~q_block)
 ) {
 
+  dat <- mget(ls())
+
   check_obs(obs)
 
-  all_years <- unique(unlist(lapply(obs, function(d) d$year)))
-  all_ages  <- unique(unlist(lapply(obs, function(d) d$age)))
-  years <- if (is.null(years)) seq(min(all_years, na.rm = TRUE), max(all_years, na.rm = TRUE)) else as.integer(years)
-  ages  <- if (is.null(ages)) seq(min(all_ages,  na.rm = TRUE), max(all_ages,  na.rm = TRUE)) else as.integer(ages)
+  obs_years <- unique(unlist(lapply(obs, function(d) d$year)))
+  obs_ages  <- unique(unlist(lapply(obs, function(d) d$age)))
+  years <- dat$years <- if (is.null(years)) seq(min(obs_years), max(obs_years)) else as.integer(years)
+  ages <- dat$ages <- if (is.null(ages)) seq(min(obs_ages), max(obs_ages)) else as.integer(ages)
 
-  dat <- mget(ls())
+  dat$obs <- lapply(dat$obs, function(d) {
+    d_sub <- d[d$year %in% years & d$age %in% ages, ]
+    d_sub[order(d_sub$age, d_sub$year), ] |>
+      droplevels()
+  })
 
   if (N_settings$process == "off" && !N_settings$init_N0) {
     dat$N_settings$init_N0 <- TRUE
@@ -217,13 +223,6 @@ make_dat <- function(
   } else {
     dat$M_settings$age_blocks <- cut_ages(M_ages, M_ages)
   }
-
-  grid_ay <- expand.grid(year = years, age = ages)
-  dat$obs <- lapply(dat$obs, function(d) {
-    d_sub <- merge(grid_ay, d, by = c("age", "year"), all.x = TRUE)
-    d_sub[order(d_sub$age, d_sub$year), ] |>
-      droplevels()
-  })
 
   dat$SW <- dat$MO <- matrix(NA, nrow = length(years), ncol = length(ages),
                              dimnames = list(year = years, age = ages))
