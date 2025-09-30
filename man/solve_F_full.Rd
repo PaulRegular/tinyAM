@@ -4,16 +4,7 @@
 \alias{solve_F_full}
 \title{Solve fully selected fishing mortality from a target catch}
 \usage{
-solve_F_full(
-  C_target,
-  F_init,
-  S,
-  M,
-  N,
-  n_iter = 7,
-  eps = 1e-12,
-  clamp_nonneg = TRUE
-)
+solve_F_full(C_target, F_init, S, M, N, n_iter = 7)
 }
 \arguments{
 \item{C_target}{Numeric scalar; target catch (same units as \code{N}).}
@@ -27,8 +18,6 @@ solve_F_full(
 \item{N}{Numeric vector; abundance at age (>= 0).}
 
 \item{n_iter}{Integer; number of Newton updates (default \code{7}).}
-
-\item{eps}{Numeric; small constant to stabilize divisions/derivatives (default \code{1e-12}).}
 }
 \value{
 Numeric scalar \code{F_full}.
@@ -40,14 +29,22 @@ selectivity \code{S}, natural mortality \code{M}, and abundance \code{N}. Uses a
 of Newton updates starting from \code{F_init}.
 
 The catch as a function of \code{F_full} is
-\deqn{C(F_{\mathrm{full}}) = F_{\mathrm{full}} \sum_a \left[
-  N_a \, \frac{1 - \exp\{-(F_{\mathrm{full}} S_a + M_a)\}}{F_{\mathrm{full}} S_a + M_a} \, S_a
-\right].}
+\deqn{
+  C\!\big(F_{\mathrm{full}}\big)
+  \;=\;
+  F_{\mathrm{full}}
+  \sum_a
+  \left[
+    N_a \;
+    \frac{1 - \exp\!\big(-(F_{\mathrm{full}} S_a + M_a)\big)}
+         {F_{\mathrm{full}} S_a + M_a}
+    \; S_a
+  \right].
+}
 }
 \details{
-This inverts the Baranov catch equation for a single fully selected rate
-\code{F_full}, holding \code{S}, \code{M}, and \code{N} fixed. Provide a sensible \code{F_init}.
-When the derivative is extremely small, the update is damped by \code{eps}.
+Inverts the Baranov catch equation for a single fully selected rate \code{F_full},
+holding \code{S}, \code{M}, and \code{N} fixed. Provide a sensible \code{F_init}.
 }
 \examples{
 S <- rep(1, 5); M <- rep(0.2, 5); N <- 1000 * exp(-0.2 * (0:4))

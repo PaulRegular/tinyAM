@@ -179,10 +179,10 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #'   - `proj_years`: the set of projection years;
 #'   - `proj_settings$tac`: total catch assumptions for each `proj_year` set
 #'      status-quo (terminal observed total) if `proj_settings$tac` is `NULL`,
-#'      otherwise the supplied vector is retained (length must equal `length(proj_years)`).
-#'   - `is_proj` rows to `catch`, `index`, `weight`, and `maturity` tables.
-#'     Averages are calculated and carried forward for `weight$obs` and `maturity$obs`
-#'     while `catch$obs` and `index$obs` are set to `NA`.
+#'      otherwise the supplied vector is retained (length must equal `length(proj_years)`);
+#'   - `is_proj`: logical vector identifying the projection years;
+#'   - `obs$...$is_proj` rows to each `obs` table. Averages are calculated and carried forward
+#'      for `weight$obs` and `maturity$obs`while `catch$obs` and `index$obs` are set to `NA`.
 #'
 #' @param obs A list of tidy observation data.frames: `catch`, `index`,
 #'   `weight`, and `maturity`. See **Details**.
@@ -270,22 +270,24 @@ make_dat <- function(
   check_obs(obs)
 
   ## Subset obs
-  obs_years <- sort(unique(unlist(lapply(obs, `[[`, "year"))))
-  obs_ages  <- sort(unique(unlist(lapply(obs, `[[`, "age"))))
-  dat$years <- if (is.null(years)) seq(min(obs_years), max(obs_years)) else as.integer(years)
-  dat$ages <- if (is.null(ages)) seq(min(obs_ages), max(obs_ages)) else as.integer(ages)
+  all_obs_years <- sort(unique(unlist(lapply(obs, `[[`, "year"))))
+  all_obs_ages  <- sort(unique(unlist(lapply(obs, `[[`, "age"))))
+  dat$years <- if (is.null(years)) seq(min(all_obs_years), all_max(obs_years)) else as.integer(years)
+  dat$ages <- if (is.null(ages)) seq(min(all_obs_ages), max(all_obs_ages)) else as.integer(ages)
   dat$obs <- lapply(dat$obs, function(d) {
     d_sub <- d[d$year %in% dat$years & d$age %in% dat$ages, ]
     d_sub[order(d_sub$age, d_sub$year), ] |>
       droplevels()
   })
   max_obs_year <- max(dat$years)
+  dat$is_proj <- rep(FALSE, length(dat$years))
 
   ## Add projection dat
   if (!is.null(proj_settings) && proj_settings$n_proj > 0) {
     dat$obs <- .add_proj_rows(dat$obs, n_proj = proj_settings$n_proj, n_mean = proj_settings$n_mean)
     years_plus <- sort(unique(unlist(lapply(dat$obs, `[[`, "year"))))
     dat$proj_years <- setdiff(years_plus, dat$years)
+    dat$is_proj <- c(dat$is_proj, rep(TRUE, proj_settings$n_proj))
     dat$years <- years_plus # update years vec to include proj_years
     if (is.null(proj_settings$tac)) {
       sq_catch <- sum(dat$obs$catch$obs[dat$obs$catch$year == max_obs_year], na.rm = TRUE)
@@ -296,6 +298,8 @@ make_dat <- function(
       }
     }
     names(dat$proj_settings$tac) <- dat$proj_years
+  } else {
+    dat$proj_settings$n_proj <- 0
   }
 
   if (N_settings$process == "off" && !N_settings$init_N0) {

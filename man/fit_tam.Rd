@@ -54,7 +54,7 @@ define \code{age_blocks} for coupling \\eqn{M} deviations across ages.
     \item{\code{proj_settings}}{Optional list with elements:
 \itemize{
 \item \code{n_proj}: number of years to project (default \code{NULL} disables projections).
-\item \code{n_mean}: number of terminal years to average when adding projection rows (passed to \code{\link[=add_proj_rows]{add_proj_rows()}}).
+\item \code{n_mean}: number of terminal years to average when adding projection rows.
 \item \code{tac}: numeric vector of total catch levels for each projection year; if \code{NULL}, a status-quo
 total (terminal observed total catch) is used for all \code{proj_years}.
 }}
@@ -106,6 +106,11 @@ fit <- fit_tam(
   obs_settings = list(sd_form = ~ sd_obs_block, q_form = ~ q_block)
 )
 fit$sdrep
+
+## Fit with projections (status quo catch assumed when tac == NULL)
+fit2 <- update(fit,
+  proj_settings = list(n_proj = 3, n_mean = 3, tac = NULL)
+)
 
 }
 \seealso{

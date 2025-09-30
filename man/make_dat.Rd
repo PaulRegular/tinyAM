@@ -62,7 +62,7 @@ define \code{age_blocks} for coupling \\eqn{M} deviations across ages.
 \item{proj_settings}{Optional list with elements:
 \itemize{
 \item \code{n_proj}: number of years to project (default \code{NULL} disables projections).
-\item \code{n_mean}: number of terminal years to average when adding projection rows (passed to \code{\link[=add_proj_rows]{add_proj_rows()}}).
+\item \code{n_mean}: number of terminal years to average when adding projection rows.
 \item \code{tac}: numeric vector of total catch levels for each projection year; if \code{NULL}, a status-quo
 total (terminal observed total catch) is used for all \code{proj_years}.
 }}
@@ -136,10 +136,10 @@ a random walk across ages and years.
 \item \code{proj_years}: the set of projection years;
 \item \code{proj_settings$tac}: total catch assumptions for each \code{proj_year} set
 status-quo (terminal observed total) if \code{proj_settings$tac} is \code{NULL},
-otherwise the supplied vector is retained (length must equal \code{length(proj_years)}).
-\item \code{is_proj} rows to \code{catch}, \code{index}, \code{weight}, and \code{maturity} tables.
-Averages are calculated and carried forward for \code{weight$obs} and \code{maturity$obs}
-while \code{catch$obs} and \code{index$obs} are set to \code{NA}.
+otherwise the supplied vector is retained (length must equal \code{length(proj_years)});
+\item \code{is_proj}: logical vector identifying the projection years;
+\item \code{obs$...$is_proj} rows to each \code{obs} table. Averages are calculated and carried forward
+for \code{weight$obs} and \code{maturity$obs}while \code{catch$obs} and \code{index$obs} are set to \code{NA}.
 }
 }
 }

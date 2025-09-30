@@ -53,6 +53,11 @@
 #' )
 #' fit$sdrep
 #'
+#' ## Fit with projections (status quo catch assumed when tac == NULL)
+#' fit2 <- update(fit,
+#'   proj_settings = list(n_proj = 3, n_mean = 3, tac = NULL)
+#' )
+#'
 #' @seealso
 #' [make_dat()], [make_par()], [sim_tam()], [fit_retro()],
 #' [RTMB::MakeADFun()], [RTMB::sdreport()]

@@ -88,9 +88,18 @@ rprocess_2d <- function(ny, na, phi = c(0, 0), sd = 1) {
 #' of Newton updates starting from `F_init`.
 #'
 #' The catch as a function of `F_full` is
-#' \deqn{C(F_{\mathrm{full}}) = F_{\mathrm{full}} \sum_a \left[
-#'   N_a \, \frac{1 - \exp\{-(F_{\mathrm{full}} S_a + M_a)\}}{F_{\mathrm{full}} S_a + M_a} \, S_a
-#' \right].}
+#' \deqn{
+#'   C\!\big(F_{\mathrm{full}}\big)
+#'   \;=\;
+#'   F_{\mathrm{full}}
+#'   \sum_a
+#'   \left[
+#'     N_a \;
+#'     \frac{1 - \exp\!\big(-(F_{\mathrm{full}} S_a + M_a)\big)}
+#'          {F_{\mathrm{full}} S_a + M_a}
+#'     \; S_a
+#'   \right].
+#' }
 #'
 #' @param C_target Numeric scalar; target catch (same units as `N`).
 #' @param F_init Numeric scalar; initial guess for `F_full`.
@@ -98,14 +107,12 @@ rprocess_2d <- function(ny, na, phi = c(0, 0), sd = 1) {
 #' @param M Numeric vector; natural mortality at age (>= 0).
 #' @param N Numeric vector; abundance at age (>= 0).
 #' @param n_iter Integer; number of Newton updates (default `7`).
-#' @param eps Numeric; small constant to stabilize divisions/derivatives (default `1e-12`).
 #'
 #' @return Numeric scalar `F_full`.
 #'
 #' @details
-#' This inverts the Baranov catch equation for a single fully selected rate
-#' `F_full`, holding `S`, `M`, and `N` fixed. Provide a sensible `F_init`.
-#' When the derivative is extremely small, the update is damped by `eps`.
+#' Inverts the Baranov catch equation for a single fully selected rate `F_full`,
+#' holding `S`, `M`, and `N` fixed. Provide a sensible `F_init`.
 #'
 #' @examples
 #' S <- rep(1, 5); M <- rep(0.2, 5); N <- 1000 * exp(-0.2 * (0:4))
@@ -118,8 +125,7 @@ rprocess_2d <- function(ny, na, phi = c(0, 0), sd = 1) {
 #' solve_F_full(C_target, F_init = 0.1, S, M, N)
 #'
 #' @export
-solve_F_full <- function(C_target, F_init, S, M, N,
-                         n_iter = 7, eps = 1e-12) {
+solve_F_full <- function(C_target, F_init, S, M, N, n_iter = 7) {
   stopifnot(is.numeric(C_target), length(C_target) == 1L,
             is.numeric(F_init),   length(F_init)   == 1L,
             is.numeric(S), is.numeric(M), is.numeric(N),
@@ -128,20 +134,15 @@ solve_F_full <- function(C_target, F_init, S, M, N,
   F_full <- F_init
   for (i in seq_len(n_iter)) {
     Z    <- F_full * S + M
-    Zs   <- pmax(Z, eps)           # stabilize divisions
     eZ   <- exp(-Z)
     mort <- 1 - eZ
-
-    # C(F_full) and dC/dF_full (matches the TMB helper algebra)
-    C_F     <- F_full * sum(N * mort * S / Zs)
-    dC_dF   <- sum(N * S * (mort * M / Zs + eZ * F_full * S) / Zs)
-
-    step    <- (C_target - C_F) / (dC_dF + eps)
-    F_full  <- F_full + step
+    C_F   <- F_full * sum(N * mort * S / Z)
+    dC_dF <- sum(N * S * (mort * M / Z + eZ * F_full * S) / Z)
+    step  <- (C_target - C_F) / dC_dF
+    F_full <- F_full + step
   }
   as.numeric(F_full)
 }
-
 
 
 #' Negative log-likelihood (and simulator) for the Tiny Assessment Model
@@ -279,13 +280,14 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   n_obs <- length(log_obs)
   n_years <- length(years)
   n_ages <- length(ages)
+  n_proj <- proj_settings$n_proj
 
   sd_r <- exp(log_sd_r)
   sd_f <- exp(log_sd_f)
 
-  empty_mat <- matrix(NA_real_, n_years, n_ages,
+  empty_mat <- matrix(NA, n_years, n_ages,
                       dimnames = list(year = years, age = ages))
-  log_F <- log_mu_F <- empty_mat
+  log_F <- log_mu_F <- S <- empty_mat
   N <- log_N <- pred_log_N <- empty_mat
   M <- log_mu_M  <- empty_mat
   Z <- empty_mat
@@ -295,10 +297,12 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   log_R <- log_r
   log_N[, 1] <- log_r
 
-  log_F[] <- log_f
+  log_F[!is_proj, ] <- log_f
   log_mu_F[] <- drop(F_modmat %*% log_mu_f)
   mu_F <- exp(log_mu_F)
   F <- exp(log_F)
+  F_full <- apply(F, 1, max)
+  S <- sweep(F, 1, F_full, "/")
 
   log_mu_M[] <- log_mu_assumed_m + drop(M_modmat %*% log_mu_m)
   M <- mu_M <- exp(log_mu_M)
@@ -312,22 +316,64 @@ nll_fun <- function(par, dat, simulate = FALSE) {
 
   ## Cohort equation (assumes max age = plus group) ---
 
-  Y <- 2:n_years
-  A <- 2:n_ages
+  .pred_cohorts <- function(log_N, Z, fill = FALSE) {
+    ny <- nrow(log_N); na <- ncol(log_N)
+    iy  <- 2:ny; ia <- 2:na
+    if (fill) {
+      for (a in ia) log_N[iy, a] <- log_N[iy - 1, a - 1] - Z[iy - 1, a - 1]
+      log_N[iy, na] <- log(exp(log_N[iy, na]) + exp(log_N[iy - 1, na] - Z[iy - 1, na]))
+      return(log_N)
+    } else {
+      pred <- matrix(NA, nrow = ny, ncol = na, dimnames = dimnames(log_N))
+      pred[iy, ia] <- log_N[iy - 1, ia - 1] - Z[iy - 1, ia - 1]
+      pred[iy, na] <- log(exp(pred[iy, na]) + exp(log_N[iy - 1, na] - Z[iy - 1, na]))
+      return(pred)
+    }
+  }
+
   if (N_settings$init_N0) {
-    log_N[1, A] <- log_r0 - cumsum(Z[1, A - 1])
+    log_N[1, 2:n_ages] <- log_r0 - cumsum(Z[1, 2:n_ages - 1])
   }
   if (N_settings$process == "off") {
-    for (a in A) {
-      log_N[Y, a] <- log_N[Y - 1, a - 1] - Z[Y - 1, a - 1]
-    }
-    log_N[Y, n_ages] <- log(exp(log_N[Y, n_ages]) + exp(log_N[Y - 1, n_ages] - Z[Y - 1, n_ages]))
+    log_N[!is_proj, ] <- .pred_cohorts(log_N[!is_proj, ], Z[!is_proj, ], fill = TRUE)
   } else {
     log_N[, -1] <- log_n
-    pred_log_N[Y, A] <- log_N[Y - 1, A - 1] - Z[Y - 1, A - 1]
-    pred_log_N[Y, n_ages] <- log(exp(pred_log_N[Y, n_ages]) + exp(log_N[Y - 1, n_ages] - Z[Y - 1, n_ages]))
+    pred_log_N[!is_proj, ] <- .pred_cohorts(log_N[!is_proj, ], Z[!is_proj, ])
   }
   N <- exp(log_N)
+
+
+  ## Projections ---
+
+  # Replicate terminal selectivity across proj_years
+  iterminal <- which.max(years[!is_proj])
+  if (proj_settings$n_proj > 0) {
+    S_proj <- F[iterminal, ] / F_full[iterminal]
+    S[as.character(proj_years), ] <- rep(S_proj, each = proj_settings$n_proj)
+    for (y in as.character(proj_years)) {
+      prev_y <- as.character(as.numeric(y) - 1)
+      yy <- c(prev_y, y)
+      F_full[y] <- solve_F_full(proj_settings$tac[y],
+                                F_init = 0.1,
+                                S = S[y, ],
+                                M = M[y, ],
+                                N = N[prev_y, ])
+      F[y, ] <- F_full[y] * S[y, ]
+      Z[y, ] <- F[y, ] + M[y, ]
+      log_F[y, ] <- log(F[y, ])
+      log_Z[y, ] <- log(Z[y, ])
+      if (N_settings$process == "off") {
+        log_N[y, ] <- .pred_cohorts(log_N[yy, ], Z[yy, ], fill = TRUE)
+      } else {
+        pred_log_N[y, ] <- .pred_cohorts(log_N[yy, ], Z[yy, ])[y, ]
+      }
+
+    }
+  }
+
+
+
+  ## Calculate SSB ---
 
   ssb_mat <- SW * MO * N * exp(-Z)
   ssb <- rowSums(ssb_mat)
@@ -415,6 +461,8 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   REPORT(mu_M)
   REPORT(F)
   REPORT(mu_F)
+  REPORT(F_full)
+  REPORT(S)
   REPORT(Z)
   REPORT(ssb_mat)
   REPORT(ssb)
