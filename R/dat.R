@@ -110,7 +110,7 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
     proj_years <- seq.int(max_year + 1L, max_year + n_proj)
     mean_years <- seq.int(max_year - n_mean + 1L, max_year)
     aux <- x[x$year == max_year, setdiff(names(x), c("year", "obs")), drop = FALSE]
-    mean_obs <- aggregate(obs ~ age, FUN = mean, dat = x, subset = year %in% mean_years) |>
+    mean_obs <- aggregate(obs ~ age, FUN = mean, data = x, subset = year %in% mean_years) |>
       merge(aux, by = "age")
     proj_grid <- expand.grid(year = proj_years, age = mean_obs$age)
     proj_rows <- merge(proj_grid, mean_obs, by = "age")[, names(x)]
@@ -281,6 +281,11 @@ make_dat <- function(
 
   ## Add projection dat
   if (!is.null(proj_settings) && proj_settings$n_proj > 0) {
+    dat$obs <- .add_proj_rows(dat$obs, n_proj = proj_settings$n_proj, n_mean = proj_settings$n_mean)
+    years_plus <- sort(unique(unlist(lapply(dat$obs, `[[`, "year"))))
+    dat$proj_years <- setdiff(years_plus, dat$years)
+    dat$is_proj <- c(dat$is_proj, rep(TRUE, proj_settings$n_proj))
+    dat$years <- years_plus # update years vec to include proj_years
     if (is.null(proj_settings$F_mult) || any(is.na(proj_settings$F_mult))) {
       cli::cli_abort("{.strong Please specify proj_settings$F_mult (non-NA).}")
     }

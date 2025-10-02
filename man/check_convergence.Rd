@@ -19,7 +19,7 @@ Logical: \code{TRUE} if all checks pass, otherwise \code{FALSE}.
 \description{
 Checks two basics and returns \code{TRUE} only if all pass:
 (1) maximum absolute gradient from \code{sdreport},
-(2) Hessian positive-definite flag, and
+(2) Hessian positive-definite flag.
 
 If all pass, a short success message is printed unless \code{quiet = TRUE}.
 If any check fails, a warning is emitted (not suppressed by \code{quiet}).

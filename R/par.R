@@ -125,7 +125,7 @@ make_par <- function(dat) {
 
   ## Check for consistent mu M values within age blocks and abort if values are not constant within each block
   if (!is.null(dat$M_settings$age_breaks)) {
-    getAll(dat, par)
+    getAll(par, dat)
     log_mu_M <- matrix(NA, length(years), length(ages), dimnames = list(year = years, age = ages))
     dummy_mu_m <- seq(1, 10, length = length(log_mu_m))
     log_mu_M[] <- log_mu_assumed_m + drop(M_modmat %*% dummy_mu_m)

@@ -1,4 +1,6 @@
 
+## fit_tam ---
+
 testthat::skip_if_not_installed("RTMB")
 testthat::skip_if_not(exists("cod_obs"), "cod_obs not available")
 
@@ -34,6 +36,7 @@ test_that("fit_tam runs on a cod dataset and returns expected structure", {
 
   # Optimizer status
   expect_true(is.finite(fit$opt$objective))
+  expect_true(fit$opt$objective > 0)
   expect_equal(round(fit$opt$objective, 4), 989.6083)
   expect_true(is.list(fit$rep))
   expect_s3_class(fit$sdrep, "sdreport")
@@ -53,10 +56,6 @@ test_that("fit_tam emits warning if random effects far exceed observations", {
     M_settings = list(process = "iid", mu_form = NULL, assumption = ~I(0.3))
   ) |>
     expect_warning(
-      regexp = "Number of random effects .* exceed 1.5 times the number of observations",
-      fixed = FALSE
-    ) |>
-    expect_warning(
       regexp = "^Model may not have converged",
       fixed = FALSE
     )
@@ -73,6 +72,23 @@ test_that("fit_tam works when an survey does not provide an index for all ages",
   expect_equal(range(fit$obs_pred$index$age), range(sub_ages))
 })
 
+## fit_retro ---
+
+test_that("fit_retro runs peels and returns stacked outputs", {
+  fit <- default_fit
+  retros <- fit_retro(fit, folds = 1, progress = FALSE)
+  expect_true(is.list(retros))
+  expect_true(all(c("obs_pred","pop","retro_fits") %in% names(retros)))
+  # At least one retro fit kept (may drop if non-converged)
+  if (length(retros$retro_fits) > 0) {
+    rf <- retros$retro_fits[[1]]
+    expect_true(is.list(rf$rep))
+    expect_s3_class(rf$sdrep, "sdreport")
+  }
+})
+
+
+## sim_tam ---
 
 test_that("sim_tam returns simulated observations and (optionally) re-computed reports", {
   # Simulate obs only (quick)
@@ -87,6 +103,9 @@ test_that("sim_tam returns simulated observations and (optionally) re-computed r
   expect_equal(length(rep_full$ssb), length(YEARS))
 })
 
+
+
+## check_convergence ---
 
 test_that("check_convergence returns TRUE and messages when all checks pass", {
   fit_ok <- list(

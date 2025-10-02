@@ -81,7 +81,7 @@ fit_tam <- function(obs, interval = 0.95, silent = FALSE, ...) {
   }
 
   make_nll_fun <- function(f, d) function(p) f(p, d) # use closure to avoid global assignment of data
-  obj <- MakeADFun(
+  obj <- RTMB::MakeADFun(
     make_nll_fun(nll_fun, dat),
     par,
     random = ran,
@@ -93,7 +93,7 @@ fit_tam <- function(obs, interval = 0.95, silent = FALSE, ...) {
     control = list(eval.max = 1000, iter.max = 1000)
   ))
   rep <- obj$report()
-  sdrep <- sdreport(obj)
+  sdrep <- RTMB::sdreport(obj)
 
   out <- list(
     call = call,
@@ -174,17 +174,21 @@ fit_retro <- function(fit, folds = 2, grad_tol = 1e-3, progress = TRUE, globals 
   retro_years <- seq(max_year - folds, max_year)
 
   progressr::with_progress({
-    update_progress <- progressr::progressor(steps = folds)
+    update_progress <- progressr::progressor(steps = length(retro_years))
     retro <- furrr::future_map(seq_along(retro_years), function(i) {
-      r <- suppressWarnings(try(update(fit, years = min_year:retro_years[i], silent = TRUE)))
+      r <- suppressWarnings(try(update(fit, years = min_year:retro_years[i], silent = TRUE), silent = TRUE))
+      if (inherits(r, "try-error")) {
+        update_progress()
+        return(r)
+      }
       r$is_converged <- check_convergence(r, grad_tol = grad_tol)
       update_progress()
-      return(r)
+      r
     }, .options = furrr::furrr_options(seed = 1, packages = "TAM", globals = globals))
   }, enable = progress)
   names(retro) <- retro_years
 
-  converged <- sapply(retro, function(x) !inherits(x, "try-error") && x$is_converged)
+  converged <- sapply(retro, function(x) !inherits(x, "try-error") && isTRUE(x$is_converged))
 
   if (any(!converged)) {
     cli::cli_warn(
@@ -265,7 +269,7 @@ sim_tam <- function(fit, obs_only = FALSE) {
 #' @description
 #' Checks two basics and returns `TRUE` only if all pass:
 #' (1) maximum absolute gradient from `sdreport`,
-#' (2) Hessian positive-definite flag, and
+#' (2) Hessian positive-definite flag.
 #'
 #' If all pass, a short success message is printed unless `quiet = TRUE`.
 #' If any check fails, a warning is emitted (not suppressed by `quiet`).

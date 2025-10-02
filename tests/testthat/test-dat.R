@@ -1,4 +1,6 @@
 
+## cut_* ---
+
 test_that("cut_ages makes singleton labels when breaks are consecutive", {
   x <- 2:14
   f <- cut_ages(x, 2:14)
@@ -40,6 +42,10 @@ test_that("cut_int input validation errors are informative", {
   expect_error(cut_int(2:5, 2:6), "last break must equal max")
 })
 
+
+
+## make_dat ---
+
 test_that("make_dat infers years/ages when NULL and builds expected pieces", {
   dat <- make_dat(
     obs = cod_obs,
@@ -47,7 +53,7 @@ test_that("make_dat infers years/ages when NULL and builds expected pieces", {
     ages  = NULL,
     N_settings = list(process = "iid", init_N0 = FALSE),
     F_settings = list(process = "approx_rw",  mu_form = NULL),
-    M_settings = list(process = "off", mu_form = NULL, assumption = ~I(0.3)),
+    M_settings = list(process = "off", mu_form = NULL, assumption = ~ I(0.3)),
     obs_settings = list(sd_form = ~ sd_obs_block, q_form = ~ q_block)
   )
 
@@ -60,16 +66,18 @@ test_that("make_dat infers years/ages when NULL and builds expected pieces", {
   expect_equal(dim(dat$SW), c(ny, na))
   expect_equal(dim(dat$MO), c(ny, na))
 
-  # design matrices exist
+  # design matrices exist and have columns
   expect_true(is.matrix(dat$sd_obs_modmat))
   expect_true(is.matrix(dat$q_modmat))
+  expect_gt(ncol(dat$sd_obs_modmat), 0)
+  expect_gt(ncol(dat$q_modmat), 0)
 })
 
 test_that("make_dat builds M age_blocks and handles M assumptions / mu_form", {
   # with age_breaks => grouped age blocks for M deviations
   dat1 <- make_dat(
     obs = cod_obs,
-    M_settings = list(process = "iid", mu_form = NULL, assumption = ~I(0.3), age_breaks = seq(2, 14, 2))
+    M_settings = list(process = "iid", mu_form = NULL, assumption = ~ I(0.3), age_breaks = seq(2, 14, 2))
   )
   expect_true("age_blocks" %in% names(dat1$M_settings))
   expect_s3_class(dat1$M_settings$age_blocks, "factor")
@@ -78,7 +86,7 @@ test_that("make_dat builds M age_blocks and handles M assumptions / mu_form", {
   expect_warning(
     dat2 <- make_dat(
       obs = cod_obs,
-      M_settings = list(process = "off", mu_form = ~ age, assumption = ~I(0.2)) # example mu_form with intercept (by default)
+      M_settings = list(process = "off", mu_form = ~ age, assumption = ~ I(0.2)) # default mu_form carries intercept
     ),
     "Dropping intercept term.*assumed levels"
   )
@@ -98,20 +106,20 @@ test_that("make_dat stops if neither M assumption nor mu_form is provided", {
 
 test_that("make_dat forces init_N0 to TRUE, with warning, when N process off and init_N0 FALSE", {
   expect_warning(
-    make_dat(
+    dat <- make_dat(
       obs = cod_obs,
       N_settings = list(process = "off", init_N0 = FALSE)
     ),
     "forcing init_N0 to TRUE"
   )
+  expect_true(dat$N_settings$init_N0)
 })
 
-
-test_that("make_dat appends projection years and shapes obs correctly with proj_settings", {
-  # n_proj=2, n_mean=3, status-quo TAC (NULL)
+test_that("make_dat appends projection years and shapes obs correctly with proj_settings (F_mult API)", {
+  # n_proj = 2, n_mean = 3, status-quo F multiplier = 1
   dat <- make_dat(
     obs = cod_obs,
-    proj_settings = list(n_proj = 2, n_mean = 3, tac = NULL)
+    proj_settings = list(n_proj = 2, n_mean = 3, F_mult = 1)
   )
 
   # projected years should follow the terminal observed year
@@ -119,7 +127,10 @@ test_that("make_dat appends projection years and shapes obs correctly with proj_
   expect_true(all((maxy + 1):(maxy + 2) %in% dat$years))
   expect_equal(dat$proj_years, (maxy + 1):(maxy + 2))
 
-  # is_proj exists and is TRUE on projected years for all core tables
+  # is_proj flags are computed from years (not just concatenated)
+  expect_true(all(dat$is_proj == (dat$years %in% dat$proj_years)))
+
+  # each core table has is_proj and it matches year %in% proj_years
   for (nm in c("catch", "index", "weight", "maturity")) {
     d <- dat$obs[[nm]]
     expect_true("is_proj" %in% names(d))
@@ -134,7 +145,6 @@ test_that("make_dat appends projection years and shapes obs correctly with proj_
   n_mean <- 3L
   w <- dat$obs$weight
   m <- dat$obs$maturity
-  # compute means from *non-projection* rows in dat (same as using cod_obs terminal years)
   ref_years <- (maxy - n_mean + 1):maxy
   for (a in sort(unique(w$age))) {
     mw <- mean(subset(w, !is_proj & year %in% ref_years & age == a)$obs, na.rm = TRUE)
@@ -144,39 +154,43 @@ test_that("make_dat appends projection years and shapes obs correctly with proj_
   }
 })
 
-test_that("make_dat sets status-quo TAC when proj_settings$tac is NULL", {
-  dat <- make_dat(
+test_that("make_dat recycles, validates, names proj_settings$F_mult", {
+  maxy <- max(unique(cod_obs$catch$year))
+
+  # length-1 F_mult recycled to n_proj and named by proj years
+  dat1 <- make_dat(
     obs = cod_obs,
-    proj_settings = list(n_proj = 2, n_mean = 3, tac = NULL)
+    proj_settings = list(n_proj = 2, n_mean = 3, F_mult = 0.9)
   )
+  expect_equal(length(dat1$proj_settings$F_mult), length(dat1$proj_years))
+  expect_identical(names(dat1$proj_settings$F_mult), as.character(dat1$proj_years))
+  expect_true(all(abs(dat1$proj_settings$F_mult - 0.9) < 1e-12))
 
-  max_year <- max(unique(cod_obs$catch$year))
-  sq_catch <- sum(subset(cod_obs$catch, year == max_year)$obs, na.rm = TRUE)
-
-  expect_true("proj_settings" %in% names(dat))
-  expect_true("tac" %in% names(dat$proj_settings))
-  expect_equal(length(dat$proj_settings$tac), length(dat$proj_years))
-  expect_true(all(abs(dat$proj_settings$tac - sq_catch) < 1e-12))
-  # names should match proj years
-  expect_identical(names(dat$proj_settings$tac), as.character(dat$proj_years))
-})
-
-test_that("make_dat uses supplied TAC when provided and errors on length mismatch", {
-  # correct length
-  dat_ok <- make_dat(
+  # exact-length F_mult accepted (and named)
+  dat2 <- make_dat(
     obs = cod_obs,
-    proj_settings = list(n_proj = 2, n_mean = 2, tac = c(100, 200))
+    proj_settings = list(n_proj = 2, n_mean = 3, F_mult = c(1.1, 0.8))
   )
-  expect_identical(as.numeric(dat_ok$proj_settings$tac), c(100, 200))
-  expect_identical(names(dat_ok$proj_settings$tac), as.character(dat_ok$proj_years))
+  expect_identical(as.numeric(dat2$proj_settings$F_mult), c(1.1, 0.8))
+  expect_identical(names(dat2$proj_settings$F_mult), as.character(dat2$proj_years))
 
-  # length mismatch -> error
+  # length mismatch (>1 and != n_proj) -> error
   expect_error(
     make_dat(
       obs = cod_obs,
-      proj_settings = list(n_proj = 2, n_mean = 2, tac = 123)  # length 1
+      proj_settings = list(n_proj = 2, n_mean = 3, F_mult = c(0.8, 0.9, 1.0))
     ),
-    "*must equal*"
+    "length\\(proj_settings\\$F_mult\\) must equal"
   )
-})
 
+  # zero F_mult triggers warning and replacement with 1e-12
+  expect_warning(
+    dat3 <- make_dat(
+      obs = cod_obs,
+      proj_settings = list(n_proj = 2, n_mean = 3, F_mult = c(0, 0.5))
+    ),
+    "Zero F not supported; replacing 0 with 1e-12"
+  )
+  expect_true(any(abs(dat3$proj_settings$F_mult - 1e-12) < 1e-18))
+  expect_true(any(abs(dat3$proj_settings$F_mult - 0.5)   < 1e-18))
+})
