@@ -234,10 +234,7 @@ nll_fun <- function(par, dat, simulate = FALSE) {
 
   log_F[!is_proj, ] <- log_f
   if (n_proj > 0) {
-    if (!is.null(proj_settings$F_mult)) {
-      log_f_mult <- log(proj_settings$F_mult)
-    }
-    proj_log_F <- sweep(log_f[rep(nrow(log_f), n_proj), ], 1, log_f_mult, `+`)
+    proj_log_F <- sweep(log_f[rep(nrow(log_f), n_proj), ], 1, proj_settings$F_mult, `+`)
     log_F[is_proj, ] <- proj_log_F
   }
   log_mu_F[] <- drop(F_modmat %*% log_mu_f)
@@ -278,10 +275,6 @@ nll_fun <- function(par, dat, simulate = FALSE) {
 
   F_full <- apply(F, 1, max)
   S <- sweep(F, 1, F_full, "/")
-  pred_catch <- exp(log(N) - log(Z) + log(1 - exp(-Z)) + log(F))
-  pred_catch_wt <- pred_catch * SW # TODO: add option to use catch weight
-  pred_total_catch <- rowSums(pred_catch)
-  pred_total_catch_wt <- rowSums(pred_catch_wt)
 
   ssb_mat <- SW * MO * N * exp(-Z)
   ssb <- rowSums(ssb_mat)
@@ -343,15 +336,6 @@ nll_fun <- function(par, dat, simulate = FALSE) {
     log_f <- log_mu_F + eta_log_F
   }
 
-  ## Projected TAC ---
-
-  if (n_proj > 0) {
-    if (!is.null(proj_settings$tac)) {
-      jnll <- jnll - sum(dnorm(log(proj_settings$tac),
-                               log(pred_total_catch_wt[is_proj]),
-                               sd = proj_settings$tac_error, log = TRUE))
-    }
-  }
 
   ## Observations ---
 

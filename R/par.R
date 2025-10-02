@@ -123,10 +123,6 @@ make_par <- function(dat) {
   par$log_f <- matrix(0, nrow = sum(!dat$is_proj), ncol = length(dat$ages),
                       dimnames = list(year = dat$years[!dat$is_proj], age = dat$ages))
 
-  if (!is.null(dat$proj_settings$tac)) {
-    par$log_f_mult <- numeric(dat$proj_settings$n_proj)
-  }
-
   par
 
 }

@@ -53,9 +53,9 @@
 #' )
 #' fit$sdrep
 #'
-#' ## Fit with projections (status quo catch assumed when tac == NULL)
+#' ## Fit with projections (status quo F)
 #' fit2 <- update(fit,
-#'   proj_settings = list(n_proj = 3, n_mean = 3, tac = NULL)
+#'   proj_settings = list(n_proj = 3, n_mean = 3, F_mult = 1)
 #' )
 #'
 #' @seealso
@@ -78,9 +78,6 @@ fit_tam <- function(obs, interval = 0.95, silent = FALSE, ...) {
   }
   if (dat$M_settings$process != "off") {
     ran <- c(ran, "log_m")
-  }
-  if (!is.null(dat$proj_settings$tac)) {
-    ran <- c(ran, "log_f_mult")
   }
 
   make_nll_fun <- function(f, d) function(p) f(p, d) # use closure to avoid global assignment of data

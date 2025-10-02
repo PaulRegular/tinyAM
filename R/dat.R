@@ -213,12 +213,7 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #' - `F_mult`: multiplier to apply to terminal F to set a level to carry forward in the projection years
 #'   (default = `1` to assume status quo F through the projection years). Can be a value of length 1 or
 #'   length = `n_proj`. When it is a vector of length one, that multiplier is recycled across all
-#'   projection years. Future F multipliers are estimated as random effects if `F_mult` is set to
-#'   `NULL` and `tac` is specified.
-#' - `tac`: numeric vector of total allowable catch (TAC) levels for each projection year. Ignored
-#'   if `NULL` and `F_mult` values are specified.
-#' - `tac_error`: assumed level of TAC implementation error (default = `0.1`). Ignored if `F_mult`
-#'   values are specified.
+#'   projection years.
 #'
 #' @return
 #' A named list `dat` containing:
@@ -282,7 +277,6 @@ make_dat <- function(
     d_sub[order(d_sub$age, d_sub$year), ] |>
       droplevels()
   })
-  max_obs_year <- max(dat$years)
   dat$is_proj <- rep(FALSE, length(dat$years))
 
   ## Add projection dat
@@ -292,36 +286,22 @@ make_dat <- function(
     dat$proj_years <- setdiff(years_plus, dat$years)
     dat$is_proj <- c(dat$is_proj, rep(TRUE, proj_settings$n_proj))
     dat$years <- years_plus # update years vec to include proj_years
-    if (!is.null(proj_settings$tac) & !is.null(proj_settings$F_mult)) {
-      cli::cli_warn("Both `proj_settings$F_mult` and `proj_settings$tac` cannot be set at the same time. Ignoring supplied tac values.")
-      dat$proj_settings$tac <- NULL
+    if (is.null(proj_settings$F_mult) | is.na(proj_settings$F_mult)) {
+      cli::cli_abort("{.strong Please specify an F multiplier assumption for the projection years (proj_settings$F_mult).}")
     }
-    if (!is.null(proj_settings$F_mult)) {
-      if (length(proj_settings$F_mult) == 1) {
-        dat$proj_settings$F_mult <- rep(dat$proj_settings$F_mult, dat$proj_settings$n_proj)
-      }
-      if (length(dat$proj_settings$F_mult) != dat$proj_settings$n_proj) {
-        cli::cli_abort("{.strong length(proj_settings$F_mult) must equal proj_settings$n_proj}")
-      }
-      if (any(dat$proj_settings$F_mult == 0)) {
-        cli::cli_warn("A true zero F scenario is not currently supported. Setting F_mult to a small value (1e-12).")
-        dat$proj_settings$F_mult[dat$proj_settings$F_mult == 0] <- 1e-12
-      }
-      names(dat$proj_settings$F_mult) <- dat$proj_years
+    if (length(proj_settings$F_mult) == 1) {
+      dat$proj_settings$F_mult <- rep(dat$proj_settings$F_mult, dat$proj_settings$n_proj)
     }
-    if (!is.null(proj_settings$tac)) {
-      if (length(proj_settings$tac) != proj_settings$n_proj) {
-        cli::cli_abort("{.strong length(proj_settings$tac) must equal proj_settings$n_proj}")
-      }
-      if (any(dat$proj_settings$tac == 0)) {
-        cli::cli_warn("A true zero catch scenario is not currently supported. Setting tac to a small value (1e-12).")
-        dat$proj_settings$tac[dat$proj_settings$tac == 0] <- 1e-12
-      }
-      names(dat$proj_settings$tac) <- dat$proj_years
+    if (length(dat$proj_settings$F_mult) != dat$proj_settings$n_proj) {
+      cli::cli_abort("{.strong length(proj_settings$F_mult) must equal proj_settings$n_proj}")
     }
+    if (any(dat$proj_settings$F_mult == 0)) {
+      cli::cli_warn("A true zero F scenario is not currently supported. Setting F_mult to a small value (1e-12).")
+      dat$proj_settings$F_mult[dat$proj_settings$F_mult == 0] <- 1e-12
+    }
+    names(dat$proj_settings$F_mult) <- dat$proj_years
   } else {
     dat$proj_settings <- list(n_proj = 0)
-    lapply(dat$obs, function(x) x$is_proj <- FALSE)
   }
 
   if (N_settings$process == "off" && !N_settings$init_N0) {
