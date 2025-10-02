@@ -79,70 +79,95 @@ rprocess_2d <- function(ny, na, phi = c(0, 0), sd = 1) {
 }
 
 
-#' Solve fully selected fishing mortality from a target catch
+## Simple smooth switch for a ratio that starts at 1 and drops to 0 when r > 1
+.logistic_switch <- function(ratio, slope = 10) {
+  plogis(-slope * (ratio - 1))
+}
+
+
+#' Solve an F multiplier from a target total catch
 #'
 #' @description
-#' Computes the scalar fully selected fishing mortality `F_full` that achieves a
-#' target catch (numbers scale) under the Baranov catch equation, given
-#' selectivity `S`, natural mortality `M`, and abundance `N`. Uses a fixed number
-#' of Newton updates starting from `F_init`.
+#' Finds the scalar multiplier `k` such that scaling a terminal fishing-mortality
+#' vector `F` by `k` matches a target catch `C_target` (numbers) under the
+#' Baranov catch equation with given natural mortality `M` and abundance
+#' `N`. Uses a fixed number of Newton updates starting from `k_init`.
 #'
-#' The catch as a function of `F_full` is
+#' The total catch as a function of `k` is
 #' \deqn{
-#'   C\!\big(F_{\mathrm{full}}\big)
+#'   C(k) \;=\; \sum_a N_a \;
+#'   \Big[1 - \exp\!\big(-Z_a(k)\big)\Big] \;
+#'   \frac{k F_a}{Z_a(k)}, \qquad Z_a(k)=kF_a+M_a.
+#' }
+#'
+#' The Newton update uses the analytic derivative
+#' \deqn{
+#'   \frac{dC}{dk}
 #'   \;=\;
-#'   F_{\mathrm{full}}
-#'   \sum_a
-#'   \left[
-#'     N_a \;
-#'     \frac{1 - \exp\!\big(-(F_{\mathrm{full}} S_a + M_a)\big)}
-#'          {F_{\mathrm{full}} S_a + M_a}
-#'     \; S_a
+#'   \sum_a N_a \left[
+#'     e^{-Z_a(k)} F_a \frac{kF_a}{Z_a(k)}
+#'     \;+\;
+#'     \big(1-e^{-Z_a(k)}\big) \frac{F_a M_a}{Z_a(k)^2}
 #'   \right].
 #' }
 #'
-#' @param C_target Numeric scalar; target catch (same units as `N`).
-#' @param F_init Numeric scalar; initial guess for `F_full`.
-#' @param S Numeric vector; selectivity at age (>= 0).
-#' @param M Numeric vector; natural mortality at age (>= 0).
-#' @param N Numeric vector; abundance at age (>= 0).
+#' @param C_target Numeric scalar; target total catch (same units as `N`).
+#' @param F Numeric vector of terminal fishing mortality at age (\eqn{\ge} 0).
+#' @param M Numeric vector of natural mortality at age (\eqn{\ge} 0).
+#' @param N Numeric vector of abundance at age (\eqn{\ge} 0).
+#' @param k_init Numeric scalar; initial guess for the multiplier (default `1`).
 #' @param n_iter Integer; number of Newton updates (default `7`).
 #'
-#' @return Numeric scalar `F_full`.
+#' @return Numeric scalar multiplier `k`.
 #'
 #' @details
-#' Inverts the Baranov catch equation for a single fully selected rate `F_full`,
-#' holding `S`, `M`, and `N` fixed. Provide a sensible `F_init`.
+#' This solves on the natural scale for `k`. If your target is in biomass,
+#' pass biomass-at-age in `N` (i.e., `N <- numbers * weight_at_age`)
+#' so the identity still holds.
 #'
 #' @examples
-#' S <- rep(1, 5); M <- rep(0.2, 5); N <- 1000 * exp(-0.2 * (0:4))
-#' F_full_true <- 0.3
-#' catch_of_Ffull <- function(F_full) {
-#'   Z <- F_full * S + M; eZ <- exp(-Z); mort <- 1 - eZ
-#'   F_full * sum(N * mort * S / pmax(Z, 1e-12))
+#' F <- rep(0.3, 5); M <- rep(0.2, 5); N <- 1000 * exp(-0.3 * (0:4))
+#' C_of_k <- function(k) {
+#'   Z <- k*F + M; eZ <- exp(-Z)
+#'   sum(N * (1 - eZ) * (k*F / Z))
 #' }
-#' C_target <- catch_of_Ffull(F_full_true)
-#' solve_F_full(C_target, F_init = 0.1, S, M, N)
+#' C_target <- C_of_k(1)   # target matching k = 1
+#' solve_F_mult(C_target, F, M, N, k_init = 1)  # ~ 1
+#'
+#' # Higher target -> k > 1
+#' solve_F_mult(1.5 * C_target, F, M, N, k_init = 1)
 #'
 #' @export
-solve_F_full <- function(C_target, F_init, S, M, N, n_iter = 7) {
+solve_F_mult <- function(C_target, F, M, N,
+                         k_init = 1, n_iter = 7) {
   stopifnot(is.numeric(C_target), length(C_target) == 1L,
-            is.numeric(F_init),   length(F_init)   == 1L,
-            is.numeric(S), is.numeric(M), is.numeric(N),
-            length(S) == length(M), length(M) == length(N))
+            is.numeric(k_init), length(k_init) == 1L,
+            is.numeric(F), is.numeric(M), is.numeric(N),
+            length(F) == length(M),
+            length(M)  == length(N))
 
-  F_full <- F_init
+  # Don't allow more catch than N)
+  N_total <- sum(N)
+  C_ratio <- C_target / N_total
+  C_switch <- .logistic_switch(C_ratio)
+  C_max <- C_switch * C_target
+
+  k <- k_init
   for (i in seq_len(n_iter)) {
-    Z    <- F_full * S + M
-    eZ   <- exp(-Z)
-    mort <- 1 - eZ
-    C_F   <- F_full * sum(N * mort * S / Z)
-    dC_dF <- sum(N * S * (mort * M / Z + eZ * F_full * S) / Z)
-    step  <- (C_target - C_F) / dC_dF
-    F_full <- F_full + step
+    Z   <- k * F + M
+    eZ  <- exp(-Z)
+    Ck  <- sum(N * (1 - eZ) * (k * F / Z))
+    dCk <- sum(N * (eZ * F * (k * F / Z) +
+                             (1 - eZ) * (F * M / (Z * Z))))
+    step <- (C_max - Ck) / dCk
+    k <- k + step
   }
-  as.numeric(F_full)
+
+  k + 0.001
 }
+
+
+
 
 
 #' Negative log-likelihood (and simulator) for the Tiny Assessment Model
@@ -301,8 +326,6 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   log_mu_F[] <- drop(F_modmat %*% log_mu_f)
   mu_F <- exp(log_mu_F)
   F <- exp(log_F)
-  F_full <- apply(F, 1, max)
-  S <- sweep(F, 1, F_full, "/")
 
   log_mu_M[] <- log_mu_assumed_m + drop(M_modmat %*% log_mu_m)
   M <- mu_M <- exp(log_mu_M)
@@ -345,40 +368,42 @@ nll_fun <- function(par, dat, simulate = FALSE) {
 
   ## Projections ---
 
+  browser()
+
   # Replicate terminal selectivity across proj_years
-  iterminal <- which.max(years[!is_proj])
+  F_last <- F[sum(!is_proj), ]
   if (proj_settings$n_proj > 0) {
-    S_proj <- F[iterminal, ] / F_full[iterminal]
-    S[as.character(proj_years), ] <- rep(S_proj, each = proj_settings$n_proj)
     for (y in as.character(proj_years)) {
       prev_y <- as.character(as.numeric(y) - 1)
       yy <- c(prev_y, y)
-      F_full[y] <- solve_F_full(proj_settings$tac[y],
-                                F_init = 0.1,
-                                S = S[y, ],
-                                M = M[y, ],
-                                N = N[prev_y, ])
-      F[y, ] <- F_full[y] * S[y, ]
-      Z[y, ] <- F[y, ] + M[y, ]
-      log_F[y, ] <- log(F[y, ])
-      log_Z[y, ] <- log(Z[y, ])
       if (N_settings$process == "off") {
-        log_N[y, ] <- .pred_cohorts(log_N[yy, ], Z[yy, ], fill = TRUE)
+        log_N[y, ] <- .pred_cohorts(log_N[yy, ], Z[yy, ], fill = TRUE)[y, ]
       } else {
         pred_log_N[y, ] <- .pred_cohorts(log_N[yy, ], Z[yy, ])[y, ]
       }
-
+      k <- solve_F_mult(C_target = proj_settings$tac[y],
+                        F = F_last,
+                        M = M[y, ],
+                        N = N[y, ])
+      F[y, ] <- k * F_last
+      Z[y, ] <- F[y, ] + M[y, ]
+      log_F[y, ] <- log(F[y, ])
+      log_Z[y, ] <- log(Z[y, ])
+      N[y, ] <- exp(log_N[y, ])
     }
   }
 
 
+  ## Transformations etc. ---
 
-  ## Calculate SSB ---
+  F_full <- apply(F, 1, max)
+  S <- sweep(F, 1, F_full, "/")
 
   ssb_mat <- SW * MO * N * exp(-Z)
   ssb <- rowSums(ssb_mat)
   log_ssb_mat <- log(ssb_mat)
   log_ssb <- log(ssb)
+
 
   ## Recruitment deviations (basic random walk) ---
 
@@ -414,19 +439,19 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   ## M deviations ---
 
   if (M_settings$process != "off") {
-    eta_log_m <- log_m - log_mu_m
+    eta_log_m <- log_m - log_mu_M[-1, -1]
     sd_m <- exp(log_sd_m)
     phi <- plogis(logit_phi_m)
     jnll <- jnll - dprocess_2d(eta_log_m, sd = sd_m, phi = phi)
     if (simulate) {
       eta_log_m <- rprocess_2d(nrow(log_m), ncol(log_m), sd = sd_m, phi = phi)
-      log_m <- log_mu_m + eta_log_m
+      log_m <- log_mu_M + eta_log_m
     }
   }
 
   ## F deviations ---
 
-  eta_log_F <- log_F - log_mu_F
+  eta_log_F <- log_F[!is_proj, ] - log_mu_F[!is_proj, ]
   phi <- plogis(logit_phi_f)
   jnll <- jnll - dprocess_2d(eta_log_F, sd = sd_f, phi = phi)
   if (simulate) {

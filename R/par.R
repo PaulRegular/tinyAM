@@ -109,22 +109,19 @@ make_par <- function(dat) {
   par$log_q <- numeric(ncol(dat$q_modmat))
   par$log_sd_obs <- numeric(ncol(dat$sd_obs_modmat))
 
-  par$missing <- numeric(sum(is.na(dat$log_obs)))
+  par$missing <- numeric(sum(dat$is_na_obs))
 
-  par$log_r <- rep(13, length(dat$years)) # numeric(length(dat$years))
+  par$log_r <- numeric(length(dat$years))
   if (dat$N_settings$process != "off") {
-    par$log_n <- matrix(11, nrow = length(dat$years), ncol = length(dat$ages) - 1,
+    par$log_n <- matrix(0, nrow = length(dat$years), ncol = length(dat$ages) - 1,
                         dimnames = list(year = dat$years, age = dat$ages[-1]))
   }
   if (dat$M_settings$process != "off") {
     par$log_m <- matrix(0, nrow = length(dat$years) - 1, ncol = nlevels(dat$M_settings$age_blocks),
                         dimnames = list(year = dat$years[-1], age_block = levels(dat$M_settings$age_blocks)))
   }
-  # par$log_f <- matrix(0, nrow = sum(!dat$is_proj), ncol = length(dat$ages),
-  #                     dimnames = list(year = dat$years[!dat$is_proj], age = dat$ages))
-  par$log_f <- outer(seq_along(dat$years[!dat$is_proj]), dat$ages, function(y, a) {
-    log(pmax(1 - ((a - mean(range(dat$ages))) / (diff(range(dat$ages))/2))^2, 1e-3))
-    })
+  par$log_f <- matrix(0, nrow = sum(!dat$is_proj), ncol = length(dat$ages),
+                      dimnames = list(year = dat$years[!dat$is_proj], age = dat$ages))
 
   par
 

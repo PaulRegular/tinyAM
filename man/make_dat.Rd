@@ -71,16 +71,16 @@ total (terminal observed total catch) is used for all \code{proj_years}.
 A named list \code{dat} containing:
 \itemize{
 \item \code{years}, \code{ages} — modeled ranges (from \strong{non-projection} rows)
-\item \code{years_plus} — \code{c(years, proj_years)} for convenience (sorted)
+\item \code{is_proj} — logical vector identifying whether year is projected
 \item \code{proj_years} — integer vector of projection years (may be empty)
-\item \code{tac} — numeric vector of TAC by \code{proj_years} (may be length 0)
 \item \code{obs} — per-type tables restricted to \code{years_plus} x \code{ages}
 \item \code{SW}, \code{MO} — weight-at-age and maturity matrices (\verb{year x age})
 \item \code{obs_map}, \code{log_obs}, \code{is_na_obs}
 \item design matrices: \code{sd_obs_modmat}, \code{q_modmat}, and optionally \code{F_modmat}, \code{M_modmat}
 \item mean-level placeholders: \code{log_mu_f} and/or \code{log_mu_m} (or \code{log_mu_assumed_m})
 \item process settings: \code{N_settings}, \code{F_settings}, \code{M_settings}
-\item AR(1) parameter placeholders \verb{logit_phi_*} set only for \code{"ar1"} processes
+\item projection settings: \code{proj_settings}
+\item AR(1) parameter placeholders \verb{logit_phi_*}, if applicable
 }
 }
 \description{

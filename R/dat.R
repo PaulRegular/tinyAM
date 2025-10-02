@@ -221,16 +221,16 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #' A named list `dat` containing:
 #'
 #' - `years`, `ages` — modeled ranges (from **non-projection** rows)
-#' - `years_plus` — `c(years, proj_years)` for convenience (sorted)
+#' - `is_proj` — logical vector identifying whether year is projected
 #' - `proj_years` — integer vector of projection years (may be empty)
-#' - `tac` — numeric vector of TAC by `proj_years` (may be length 0)
 #' - `obs` — per-type tables restricted to `years_plus` x `ages`
 #' - `SW`, `MO` — weight-at-age and maturity matrices (`year x age`)
 #' - `obs_map`, `log_obs`, `is_na_obs`
 #' - design matrices: `sd_obs_modmat`, `q_modmat`, and optionally `F_modmat`, `M_modmat`
 #' - mean-level placeholders: `log_mu_f` and/or `log_mu_m` (or `log_mu_assumed_m`)
 #' - process settings: `N_settings`, `F_settings`, `M_settings`
-#' - AR(1) parameter placeholders `logit_phi_*` set only for `"ar1"` processes
+#' - projection settings: `proj_settings`
+#' - AR(1) parameter placeholders `logit_phi_*`, if applicable
 #'
 #' @examples
 #' dat <- make_dat(
@@ -272,7 +272,7 @@ make_dat <- function(
   ## Subset obs
   all_obs_years <- sort(unique(unlist(lapply(obs, `[[`, "year"))))
   all_obs_ages  <- sort(unique(unlist(lapply(obs, `[[`, "age"))))
-  dat$years <- if (is.null(years)) seq(min(all_obs_years), all_max(obs_years)) else as.integer(years)
+  dat$years <- if (is.null(years)) seq(min(all_obs_years), max(all_obs_years)) else as.integer(years)
   dat$ages <- if (is.null(ages)) seq(min(all_obs_ages), max(all_obs_ages)) else as.integer(ages)
   dat$obs <- lapply(dat$obs, function(d) {
     d_sub <- d[d$year %in% dat$years & d$age %in% dat$ages, ]
@@ -299,7 +299,8 @@ make_dat <- function(
     }
     names(dat$proj_settings$tac) <- dat$proj_years
   } else {
-    dat$proj_settings$n_proj <- 0
+    dat$proj_settings <- list(n_proj = 0)
+    lapply(dat$obs, function(x) x$is_proj <- FALSE)
   }
 
   if (N_settings$process == "off" && !N_settings$init_N0) {
@@ -329,7 +330,7 @@ make_dat <- function(
   obs_fit <- rbind(catch, index)
   obs_fit$log_obs <- log(obs_fit$obs)
   obs_fit$log_obs[is.infinite(obs_fit$log_obs)] <- NA # treat zeros as NA for simplicity; NAs filled using random effects
-  obs_fit$is_na_obs <- is.na(obs_fit$log_obs)
+  obs_fit$is_na_obs <- is.na(obs_fit$log_obs) # & !obs_fit$is_proj
 
   dat$obs_map <- obs_fit[, setdiff(names(obs_fit), c("obs", "log_obs"))]
   dat$log_obs <- obs_fit$log_obs

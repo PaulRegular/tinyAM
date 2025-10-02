@@ -94,11 +94,10 @@ fit_tam <- function(obs, interval = 0.95, silent = FALSE, ...) {
     silent = silent
   )
 
-  opt <- nlminb(
+  opt <- try(nlminb(
     obj$par, obj$fn, obj$gr,
     control = list(eval.max = 1000, iter.max = 1000)
-  )
-  opt$objective
+  ))
   rep <- obj$report()
   sdrep <- sdreport(obj)
 

@@ -92,35 +92,23 @@ test_that("rprocess_2d edge cases: ny=1 or na=1 behave like 1D AR(1)", {
 
 
 
-catch_of_F_full <- function(F_full, S, M, N) {
-  Z <- F_full * S + M; eZ <- exp(-Z); mort <- 1 - eZ
-  F_full * sum(N * mort * S / pmax(Z, 1e-12))
-}
-
-test_that("solve_F_full recovers F_full in simple case", {
-  S <- rep(1, 6)
-  M <- rep(0.2, 6)
-  N <- 1e3 * exp(-0.25 * (0:5))
-  F_full_true <- 0.3
-  C_tgt <- catch_of_F_full(F_full_true, S, M, N)
-  F_hat <- solve_F_full(C_tgt, F_init = 0.05, S, M, N)
-  expect_equal(F_hat, F_full_true, tolerance = 1e-6)
+test_that("solve_F_mult returns ~1 when target equals catch at k=1", {
+  F <- rep(0.3, 6); M <- rep(0.2, 6); N <- 1e3 * exp(-0.4 * (0:5))
+  C_of_k <- function(k) sum(N * (1 - exp(-(k*F + M))) * (k*F / (k*F + M)))
+  C1 <- C_of_k(1)
+  khat <- solve_F_mult(C1, F, M, N, k_init = 1)
+  expect_true(is.finite(khat))
+  expect_equal(khat, 1, tolerance = 1e-6)
 })
 
-test_that("solve_F_full works with age-varying selectivity", {
-  S <- plogis(seq(-2, 2, length.out = 8))
-  M <- seq(0.15, 0.25, length.out = 8)
-  N <- 5e2 * exp(-0.3 * (0:7))
-  F_full_true <- 0.45
-  C_tgt <- catch_of_F_full(F_full_true, S, M, N)
-  F_hat <- solve_F_full(C_tgt, F_init = 0.2, S, M, N)
-  expect_equal(F_hat, F_full_true, tolerance = 1e-6)
-})
-
-test_that("solve_F_full returns ~0 when target catch is zero", {
-  S <- rep(1, 5); M <- rep(0.2, 5); N <- 1e3 * exp(-0.2 * (0:4))
-  F_hat <- solve_F_full(0, F_init = 0.1, S, M, N)
-  expect_true(abs(F_hat) < 1e-10)
+test_that("solve_F_mult scales sensibly with target", {
+  F <- seq(0.2, 0.35, length.out = 5); M <- rep(0.25, 5); N <- rep(500, 5)
+  C_of_k <- function(k) sum(N * (1 - exp(-(k*F + M))) * (k*F / (k*F + M)))
+  C1 <- C_of_k(1)
+  C2 <- 1.5 * C1
+  k1 <- solve_F_mult(C1, F, M, N, k_init = 1)
+  k2 <- solve_F_mult(C2, F, M, N, k_init = 1)
+  expect_gt(k2, k1)
 })
 
 
