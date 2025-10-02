@@ -271,14 +271,18 @@ nll_fun <- function(par, dat, simulate = FALSE) {
     pred_log_N[Y, A] <- log_N[Y - 1, A - 1] - Z[Y - 1, A - 1]
     pred_log_N[Y, n_ages] <- log(exp(pred_log_N[Y, n_ages]) + exp(log_N[Y - 1, n_ages] - Z[Y - 1, n_ages]))
   }
+  N <- exp(log_N)
 
 
-  ## Transformations, summations, etc. ---
+  ## Derived quantities ---
 
   F_full <- apply(F, 1, max)
   S <- sweep(F, 1, F_full, "/")
+  pred_catch <- exp(log(N) - log(Z) + log(1 - exp(-Z)) + log(F))
+  pred_catch_wt <- pred_catch * SW # TODO: add option to use catch weight
+  pred_total_catch <- rowSums(pred_catch)
+  pred_total_catch_wt <- rowSums(pred_catch_wt)
 
-  N <- exp(log_N)
   ssb_mat <- SW * MO * N * exp(-Z)
   ssb <- rowSums(ssb_mat)
   log_ssb_mat <- log(ssb_mat)
@@ -337,6 +341,16 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   if (simulate) {
     eta_log_F <- rprocess_2d(nrow(log_f), ncol(log_f), sd = sd_f, phi = phi)
     log_f <- log_mu_F + eta_log_F
+  }
+
+  ## Projected TAC ---
+
+  if (n_proj > 0) {
+    if (!is.null(proj_settings$tac)) {
+      jnll <- jnll - sum(dnorm(log(proj_settings$tac),
+                               log(pred_total_catch_wt[is_proj]),
+                               sd = proj_settings$tac_error, log = TRUE))
+    }
   }
 
   ## Observations ---
