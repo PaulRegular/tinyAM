@@ -123,6 +123,24 @@ make_par <- function(dat) {
   par$log_f <- matrix(0, nrow = sum(!dat$is_proj), ncol = length(dat$ages),
                       dimnames = list(year = dat$years[!dat$is_proj], age = dat$ages))
 
+  ## Check for consistent mu M values within age blocks and abort if values are not constant within each block
+  if (!is.null(dat$M_settings$age_breaks)) {
+    getAll(dat, par)
+    log_mu_M <- matrix(NA, length(years), length(ages), dimnames = list(year = years, age = ages))
+    dummy_mu_m <- seq(1, 10, length = length(log_mu_m))
+    log_mu_M[] <- log_mu_assumed_m + drop(M_modmat %*% dummy_mu_m)
+    for(b in levels(M_settings$age_blocks)) {
+      if (sum(M_settings$age_blocks == b) > 1) {
+        bmu <- log_mu_M[, which(M_settings$age_blocks == b)]
+        dups <- apply(bmu, 1, duplicated)
+        if (any(colSums(!dups) != 1)) {
+          cli::cli_abort(c("M mean structure varies within M age_blocks. ",
+                           "x" = "When using M_settings$age_breaks, mu_form and/or assumption must be constant within each block."))
+        }
+      }
+    }
+  }
+
   par
 
 }

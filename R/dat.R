@@ -218,10 +218,10 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #' @return
 #' A named list `dat` containing:
 #'
-#' - `years`, `ages` — modeled ranges (years includes `proj_years`, if applied)
+#' - `years`, `ages` — modeled ranges (years includes `proj_years`, if used)
 #' - `is_proj` — logical vector identifying whether year is projected
-#' - `proj_years` — integer vector of projection years, if applied
-#' - `obs` — per-type tables restricted to `years_plus` x `ages`
+#' - `proj_years` — integer vector of projection years, if used
+#' - `obs` — per-type tables restricted to `years` x `ages` (including `proj_years`, if used)
 #' - `SW`, `MO` — weight-at-age and maturity matrices (`year x age`)
 #' - `obs_map`, `log_obs`, `is_na_obs`
 #' - design matrices: `sd_obs_modmat`, `q_modmat`, and optionally `F_modmat`, `M_modmat`
@@ -281,22 +281,19 @@ make_dat <- function(
 
   ## Add projection dat
   if (!is.null(proj_settings) && proj_settings$n_proj > 0) {
-    dat$obs <- .add_proj_rows(dat$obs, n_proj = proj_settings$n_proj, n_mean = proj_settings$n_mean)
-    years_plus <- sort(unique(unlist(lapply(dat$obs, `[[`, "year"))))
-    dat$proj_years <- setdiff(years_plus, dat$years)
-    dat$is_proj <- c(dat$is_proj, rep(TRUE, proj_settings$n_proj))
-    dat$years <- years_plus # update years vec to include proj_years
-    if (is.null(proj_settings$F_mult) | is.na(proj_settings$F_mult)) {
-      cli::cli_abort("{.strong Please specify an F multiplier assumption for the projection years (proj_settings$F_mult).}")
+    if (is.null(proj_settings$F_mult) || any(is.na(proj_settings$F_mult))) {
+      cli::cli_abort("{.strong Please specify proj_settings$F_mult (non-NA).}")
     }
-    if (length(proj_settings$F_mult) == 1) {
-      dat$proj_settings$F_mult <- rep(dat$proj_settings$F_mult, dat$proj_settings$n_proj)
+    if (length(proj_settings$F_mult) == 1L) {
+      dat$proj_settings$F_mult <- rep(proj_settings$F_mult, proj_settings$n_proj)
+    } else {
+      dat$proj_settings$F_mult <- proj_settings$F_mult
     }
     if (length(dat$proj_settings$F_mult) != dat$proj_settings$n_proj) {
       cli::cli_abort("{.strong length(proj_settings$F_mult) must equal proj_settings$n_proj}")
     }
     if (any(dat$proj_settings$F_mult == 0)) {
-      cli::cli_warn("A true zero F scenario is not currently supported. Setting F_mult to a small value (1e-12).")
+      cli::cli_warn("Zero F not supported; replacing 0 with 1e-12.")
       dat$proj_settings$F_mult[dat$proj_settings$F_mult == 0] <- 1e-12
     }
     names(dat$proj_settings$F_mult) <- dat$proj_years

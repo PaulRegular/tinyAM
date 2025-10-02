@@ -234,7 +234,9 @@ nll_fun <- function(par, dat, simulate = FALSE) {
 
   log_F[!is_proj, ] <- log_f
   if (n_proj > 0) {
-    proj_log_F <- sweep(log_f[rep(nrow(log_f), n_proj), ], 1, proj_settings$F_mult, `+`)
+    log_k <- log(proj_settings$F_mult)
+    log_f_last <- log_f[rep(nrow(log_f), n_proj), ]
+    proj_log_F <- sweep(log_f_last, 1, log_k, `+`)
     log_F[is_proj, ] <- proj_log_F
   }
   log_mu_F[] <- drop(F_modmat %*% log_mu_f)
@@ -316,13 +318,14 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   ## M deviations ---
 
   if (M_settings$process != "off") {
-    eta_log_m <- log_m - log_mu_M[-1, -1]
+    eta_log_M <- log_m[, M_settings$age_blocks] - log_mu_M[-1, -1]
+    eta_log_m <- eta_log_M[, !duplicated(M_settings$age_blocks)]
     sd_m <- exp(log_sd_m)
     phi <- plogis(logit_phi_m)
     jnll <- jnll - dprocess_2d(eta_log_m, sd = sd_m, phi = phi)
     if (simulate) {
       eta_log_m <- rprocess_2d(nrow(log_m), ncol(log_m), sd = sd_m, phi = phi)
-      log_m <- log_mu_M + eta_log_m
+      log_m <- log_mu_M[, !duplicated(M_settings$age_blocks)] + eta_log_m
     }
   }
 
