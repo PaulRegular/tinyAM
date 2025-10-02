@@ -63,16 +63,23 @@ define \code{age_blocks} for coupling \\eqn{M} deviations across ages.
 \itemize{
 \item \code{n_proj}: number of years to project (default \code{NULL} disables projections).
 \item \code{n_mean}: number of terminal years to average when adding projection rows.
-\item \code{tac}: numeric vector of total catch levels for each projection year; if \code{NULL}, a status-quo
-total (terminal observed total catch) is used for all \code{proj_years}.
+\item \code{F_mult}: multiplier to apply to terminal F to set a level to carry forward in the projection years
+(default = \code{1} to assume status quo F through the projection years). Can be a value of length 1 or
+length = \code{n_proj}. When it is a vector of length one, that multiplier is recycled across all
+projection years. Future F multipliers are estimated as random effects if \code{F_mult} is set to
+\code{NULL} and \code{tac} is specified.
+\item \code{tac}: numeric vector of total allowable catch (TAC) levels for each projection year. Ignored
+if \code{NULL} and \code{F_mult} values are specified.
+\item \code{tac_error}: assumed level of TAC implementation error (default = \code{0.1}). Ignored if \code{F_mult}
+values are specified.
 }}
 }
 \value{
 A named list \code{dat} containing:
 \itemize{
-\item \code{years}, \code{ages} — modeled ranges (from \strong{non-projection} rows)
+\item \code{years}, \code{ages} — modeled ranges (years includes \code{proj_years}, if applied)
 \item \code{is_proj} — logical vector identifying whether year is projected
-\item \code{proj_years} — integer vector of projection years (may be empty)
+\item \code{proj_years} — integer vector of projection years, if applied
 \item \code{obs} — per-type tables restricted to \code{years_plus} x \code{ages}
 \item \code{SW}, \code{MO} — weight-at-age and maturity matrices (\verb{year x age})
 \item \code{obs_map}, \code{log_obs}, \code{is_na_obs}
@@ -80,7 +87,7 @@ A named list \code{dat} containing:
 \item mean-level placeholders: \code{log_mu_f} and/or \code{log_mu_m} (or \code{log_mu_assumed_m})
 \item process settings: \code{N_settings}, \code{F_settings}, \code{M_settings}
 \item projection settings: \code{proj_settings}
-\item AR(1) parameter placeholders \verb{logit_phi_*}, if applicable
+\item AR(1) parameter assumptions, \verb{logit_phi_*}, if applicable
 }
 }
 \description{
@@ -134,12 +141,8 @@ a random walk across ages and years.
 \item If \code{proj_settings} is supplied, the function adds:
 \itemize{
 \item \code{proj_years}: the set of projection years;
-\item \code{proj_settings$tac}: total catch assumptions for each \code{proj_year} set
-status-quo (terminal observed total) if \code{proj_settings$tac} is \code{NULL},
-otherwise the supplied vector is retained (length must equal \code{length(proj_years)});
 \item \code{is_proj}: logical vector identifying the projection years;
-\item \code{obs$...$is_proj} rows to each \code{obs} table. Averages are calculated and carried forward
-for \code{weight$obs} and \code{maturity$obs}while \code{catch$obs} and \code{index$obs} are set to \code{NA}.
+\item \code{obs$...$is_proj} rows to each \code{obs} table identifying the projection years.
 }
 }
 }
@@ -159,7 +162,7 @@ dat <- make_dat(
   F_settings = list(process = "approx_rw", mu_form = NULL),
   M_settings = list(process = "off", assumption = ~ I(0.3)),
   obs_settings = list(sd_form = ~ sd_obs_block, q_form = ~ q_block),
-  proj_settings = list(n_proj = 3, n_mean = 3, tac = NULL) # will assume status-quo catch as TAC
+  proj_settings = list(n_proj = 3, n_mean = 3, F_mult = 1)
 )
 
 

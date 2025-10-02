@@ -177,12 +177,8 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #'
 #' - If `proj_settings` is supplied, the function adds:
 #'   - `proj_years`: the set of projection years;
-#'   - `proj_settings$tac`: total catch assumptions for each `proj_year` set
-#'      status-quo (terminal observed total) if `proj_settings$tac` is `NULL`,
-#'      otherwise the supplied vector is retained (length must equal `length(proj_years)`);
 #'   - `is_proj`: logical vector identifying the projection years;
-#'   - `obs$...$is_proj` rows to each `obs` table. Averages are calculated and carried forward
-#'      for `weight$obs` and `maturity$obs`while `catch$obs` and `index$obs` are set to `NA`.
+#'   - `obs$...$is_proj` rows to each `obs` table identifying the projection years.
 #'
 #' @param obs A list of tidy observation data.frames: `catch`, `index`,
 #'   `weight`, and `maturity`. See **Details**.
@@ -214,15 +210,22 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #' @param proj_settings Optional list with elements:
 #' - `n_proj`: number of years to project (default `NULL` disables projections).
 #' - `n_mean`: number of terminal years to average when adding projection rows.
-#' - `tac`: numeric vector of total catch levels for each projection year; if `NULL`, a status-quo
-#'    total (terminal observed total catch) is used for all `proj_years`.
+#' - `F_mult`: multiplier to apply to terminal F to set a level to carry forward in the projection years
+#'   (default = `1` to assume status quo F through the projection years). Can be a value of length 1 or
+#'   length = `n_proj`. When it is a vector of length one, that multiplier is recycled across all
+#'   projection years. Future F multipliers are estimated as random effects if `F_mult` is set to
+#'   `NULL` and `tac` is specified.
+#' - `tac`: numeric vector of total allowable catch (TAC) levels for each projection year. Ignored
+#'   if `NULL` and `F_mult` values are specified.
+#' - `tac_error`: assumed level of TAC implementation error (default = `0.1`). Ignored if `F_mult`
+#'   values are specified.
 #'
 #' @return
 #' A named list `dat` containing:
 #'
-#' - `years`, `ages` — modeled ranges (from **non-projection** rows)
+#' - `years`, `ages` — modeled ranges (years includes `proj_years`, if applied)
 #' - `is_proj` — logical vector identifying whether year is projected
-#' - `proj_years` — integer vector of projection years (may be empty)
+#' - `proj_years` — integer vector of projection years, if applied
 #' - `obs` — per-type tables restricted to `years_plus` x `ages`
 #' - `SW`, `MO` — weight-at-age and maturity matrices (`year x age`)
 #' - `obs_map`, `log_obs`, `is_na_obs`
@@ -230,7 +233,7 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #' - mean-level placeholders: `log_mu_f` and/or `log_mu_m` (or `log_mu_assumed_m`)
 #' - process settings: `N_settings`, `F_settings`, `M_settings`
 #' - projection settings: `proj_settings`
-#' - AR(1) parameter placeholders `logit_phi_*`, if applicable
+#' - AR(1) parameter assumptions, `logit_phi_*`, if applicable
 #'
 #' @examples
 #' dat <- make_dat(
@@ -248,7 +251,7 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #'   F_settings = list(process = "approx_rw", mu_form = NULL),
 #'   M_settings = list(process = "off", assumption = ~ I(0.3)),
 #'   obs_settings = list(sd_form = ~ sd_obs_block, q_form = ~ q_block),
-#'   proj_settings = list(n_proj = 3, n_mean = 3, tac = NULL) # will assume status-quo catch as TAC
+#'   proj_settings = list(n_proj = 3, n_mean = 3, F_mult = 1)
 #' )
 #'
 #'
@@ -289,15 +292,33 @@ make_dat <- function(
     dat$proj_years <- setdiff(years_plus, dat$years)
     dat$is_proj <- c(dat$is_proj, rep(TRUE, proj_settings$n_proj))
     dat$years <- years_plus # update years vec to include proj_years
-    if (is.null(proj_settings$tac)) {
-      sq_catch <- sum(dat$obs$catch$obs[dat$obs$catch$year == max_obs_year], na.rm = TRUE)
-      dat$proj_settings$tac <- rep(sq_catch, dat$proj_settings$n_proj)
-    } else {
+    if (!is.null(proj_settings$tac) & !is.null(proj_settings$F_mult)) {
+      cli::cli_warn("Both `proj_settings$F_mult` and `proj_settings$tac` cannot be set at the same time. Ignoring supplied tac values.")
+      dat$proj_settings$tac <- NULL
+    }
+    if (!is.null(proj_settings$F_mult)) {
+      if (length(proj_settings$F_mult) == 1) {
+        dat$proj_settings$F_mult <- rep(dat$proj_settings$F_mult, dat$proj_settings$n_proj)
+      }
+      if (length(dat$proj_settings$F_mult) != dat$proj_settings$n_proj) {
+        cli::cli_abort("{.strong length(proj_settings$F_mult) must equal proj_settings$n_proj}")
+      }
+      if (any(dat$proj_settings$F_mult == 0)) {
+        cli::cli_warn("A true zero F scenario is not currently supported. Setting F_mult to a small value (1e-12).")
+        dat$proj_settings$F_mult[dat$proj_settings$F_mult == 0] <- 1e-12
+      }
+      names(dat$proj_settings$F_mult) <- dat$proj_years
+    }
+    if (!is.null(proj_settings$tac)) {
       if (length(proj_settings$tac) != proj_settings$n_proj) {
         cli::cli_abort("{.strong length(proj_settings$tac) must equal proj_settings$n_proj}")
       }
+      if (any(dat$proj_settings$tac == 0)) {
+        cli::cli_warn("A true zero catch scenario is not currently supported. Setting tac to a small value (1e-12).")
+        dat$proj_settings$tac[dat$proj_settings$tac == 0] <- 1e-12
+      }
+      names(dat$proj_settings$tac) <- dat$proj_years
     }
-    names(dat$proj_settings$tac) <- dat$proj_years
   } else {
     dat$proj_settings <- list(n_proj = 0)
     lapply(dat$obs, function(x) x$is_proj <- FALSE)
@@ -330,7 +351,7 @@ make_dat <- function(
   obs_fit <- rbind(catch, index)
   obs_fit$log_obs <- log(obs_fit$obs)
   obs_fit$log_obs[is.infinite(obs_fit$log_obs)] <- NA # treat zeros as NA for simplicity; NAs filled using random effects
-  obs_fit$is_na_obs <- is.na(obs_fit$log_obs) # & !obs_fit$is_proj
+  obs_fit$is_na_obs <- is.na(obs_fit$log_obs)
 
   dat$obs_map <- obs_fit[, setdiff(names(obs_fit), c("obs", "log_obs"))]
   dat$log_obs <- obs_fit$log_obs

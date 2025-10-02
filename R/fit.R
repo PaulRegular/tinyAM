@@ -79,11 +79,8 @@ fit_tam <- function(obs, interval = 0.95, silent = FALSE, ...) {
   if (dat$M_settings$process != "off") {
     ran <- c(ran, "log_m")
   }
-
-  n_ran <- length(unlist(par[ran]))
-  n_obs <- sum(!is.na(dat$log_obs))
-  if (n_ran > (n_obs * 1.5)) {
-    cli::cli_warn(sprintf("Number of random effects (%d) exceed 1.5 times the number of observations (%d). Consider simplifying your model.", n_ran, n_obs))
+  if (!is.null(dat$proj_settings$tac)) {
+    ran <- c(ran, "log_f_mult")
   }
 
   make_nll_fun <- function(f, d) function(p) f(p, d) # use closure to avoid global assignment of data

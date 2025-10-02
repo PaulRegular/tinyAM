@@ -55,8 +55,15 @@ define \code{age_blocks} for coupling \\eqn{M} deviations across ages.
 \itemize{
 \item \code{n_proj}: number of years to project (default \code{NULL} disables projections).
 \item \code{n_mean}: number of terminal years to average when adding projection rows.
-\item \code{tac}: numeric vector of total catch levels for each projection year; if \code{NULL}, a status-quo
-total (terminal observed total catch) is used for all \code{proj_years}.
+\item \code{F_mult}: multiplier to apply to terminal F to set a level to carry forward in the projection years
+(default = \code{1} to assume status quo F through the projection years). Can be a value of length 1 or
+length = \code{n_proj}. When it is a vector of length one, that multiplier is recycled across all
+projection years. Future F multipliers are estimated as random effects if \code{F_mult} is set to
+\code{NULL} and \code{tac} is specified.
+\item \code{tac}: numeric vector of total allowable catch (TAC) levels for each projection year. Ignored
+if \code{NULL} and \code{F_mult} values are specified.
+\item \code{tac_error}: assumed level of TAC implementation error (default = \code{0.1}). Ignored if \code{F_mult}
+values are specified.
 }}
   }}
 }

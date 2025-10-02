@@ -79,96 +79,6 @@ rprocess_2d <- function(ny, na, phi = c(0, 0), sd = 1) {
 }
 
 
-## Simple smooth switch for a ratio that starts at 1 and drops to 0 when r > 1
-.logistic_switch <- function(ratio, slope = 10) {
-  plogis(-slope * (ratio - 1))
-}
-
-
-#' Solve an F multiplier from a target total catch
-#'
-#' @description
-#' Finds the scalar multiplier `k` such that scaling a terminal fishing-mortality
-#' vector `F` by `k` matches a target catch `C_target` (numbers) under the
-#' Baranov catch equation with given natural mortality `M` and abundance
-#' `N`. Uses a fixed number of Newton updates starting from `k_init`.
-#'
-#' The total catch as a function of `k` is
-#' \deqn{
-#'   C(k) \;=\; \sum_a N_a \;
-#'   \Big[1 - \exp\!\big(-Z_a(k)\big)\Big] \;
-#'   \frac{k F_a}{Z_a(k)}, \qquad Z_a(k)=kF_a+M_a.
-#' }
-#'
-#' The Newton update uses the analytic derivative
-#' \deqn{
-#'   \frac{dC}{dk}
-#'   \;=\;
-#'   \sum_a N_a \left[
-#'     e^{-Z_a(k)} F_a \frac{kF_a}{Z_a(k)}
-#'     \;+\;
-#'     \big(1-e^{-Z_a(k)}\big) \frac{F_a M_a}{Z_a(k)^2}
-#'   \right].
-#' }
-#'
-#' @param C_target Numeric scalar; target total catch (same units as `N`).
-#' @param F Numeric vector of terminal fishing mortality at age (\eqn{\ge} 0).
-#' @param M Numeric vector of natural mortality at age (\eqn{\ge} 0).
-#' @param N Numeric vector of abundance at age (\eqn{\ge} 0).
-#' @param k_init Numeric scalar; initial guess for the multiplier (default `1`).
-#' @param n_iter Integer; number of Newton updates (default `7`).
-#'
-#' @return Numeric scalar multiplier `k`.
-#'
-#' @details
-#' This solves on the natural scale for `k`. If your target is in biomass,
-#' pass biomass-at-age in `N` (i.e., `N <- numbers * weight_at_age`)
-#' so the identity still holds.
-#'
-#' @examples
-#' F <- rep(0.3, 5); M <- rep(0.2, 5); N <- 1000 * exp(-0.3 * (0:4))
-#' C_of_k <- function(k) {
-#'   Z <- k*F + M; eZ <- exp(-Z)
-#'   sum(N * (1 - eZ) * (k*F / Z))
-#' }
-#' C_target <- C_of_k(1)   # target matching k = 1
-#' solve_F_mult(C_target, F, M, N, k_init = 1)  # ~ 1
-#'
-#' # Higher target -> k > 1
-#' solve_F_mult(1.5 * C_target, F, M, N, k_init = 1)
-#'
-#' @export
-solve_F_mult <- function(C_target, F, M, N,
-                         k_init = 1, n_iter = 7) {
-  stopifnot(is.numeric(C_target), length(C_target) == 1L,
-            is.numeric(k_init), length(k_init) == 1L,
-            is.numeric(F), is.numeric(M), is.numeric(N),
-            length(F) == length(M),
-            length(M)  == length(N))
-
-  # Don't allow more catch than N)
-  N_total <- sum(N)
-  C_ratio <- C_target / N_total
-  C_switch <- .logistic_switch(C_ratio)
-  C_max <- C_switch * C_target
-
-  k <- k_init
-  for (i in seq_len(n_iter)) {
-    Z   <- k * F + M
-    eZ  <- exp(-Z)
-    Ck  <- sum(N * (1 - eZ) * (k * F / Z))
-    dCk <- sum(N * (eZ * F * (k * F / Z) +
-                             (1 - eZ) * (F * M / (Z * Z))))
-    step <- (C_max - Ck) / dCk
-    k <- k + step
-  }
-
-  k + 0.001
-}
-
-
-
-
 
 #' Negative log-likelihood (and simulator) for the Tiny Assessment Model
 #'
@@ -323,6 +233,13 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   log_N[, 1] <- log_r
 
   log_F[!is_proj, ] <- log_f
+  if (n_proj > 0) {
+    if (!is.null(proj_settings$F_mult)) {
+      log_f_mult <- log(proj_settings$F_mult)
+    }
+    proj_log_F <- sweep(log_f[rep(nrow(log_f), n_proj), ], 1, log_f_mult, `+`)
+    log_F[is_proj, ] <- proj_log_F
+  }
   log_mu_F[] <- drop(F_modmat %*% log_mu_f)
   mu_F <- exp(log_mu_F)
   F <- exp(log_F)
@@ -339,66 +256,29 @@ nll_fun <- function(par, dat, simulate = FALSE) {
 
   ## Cohort equation (assumes max age = plus group) ---
 
-  .pred_cohorts <- function(log_N, Z, fill = FALSE) {
-    ny <- nrow(log_N); na <- ncol(log_N)
-    iy  <- 2:ny; ia <- 2:na
-    if (fill) {
-      for (a in ia) log_N[iy, a] <- log_N[iy - 1, a - 1] - Z[iy - 1, a - 1]
-      log_N[iy, na] <- log(exp(log_N[iy, na]) + exp(log_N[iy - 1, na] - Z[iy - 1, na]))
-      return(log_N)
-    } else {
-      pred <- matrix(NA, nrow = ny, ncol = na, dimnames = dimnames(log_N))
-      pred[iy, ia] <- log_N[iy - 1, ia - 1] - Z[iy - 1, ia - 1]
-      pred[iy, na] <- log(exp(pred[iy, na]) + exp(log_N[iy - 1, na] - Z[iy - 1, na]))
-      return(pred)
-    }
-  }
-
+  Y <- 2:n_years
+  A <- 2:n_ages
   if (N_settings$init_N0) {
-    log_N[1, 2:n_ages] <- log_r0 - cumsum(Z[1, 2:n_ages - 1])
+    log_N[1, A] <- log_r0 - cumsum(Z[1, A - 1])
   }
   if (N_settings$process == "off") {
-    log_N[!is_proj, ] <- .pred_cohorts(log_N[!is_proj, ], Z[!is_proj, ], fill = TRUE)
+    for (a in A) {
+      log_N[Y, a] <- log_N[Y - 1, a - 1] - Z[Y - 1, a - 1]
+    }
+    log_N[Y, n_ages] <- log(exp(log_N[Y, n_ages]) + exp(log_N[Y - 1, n_ages] - Z[Y - 1, n_ages]))
   } else {
     log_N[, -1] <- log_n
-    pred_log_N[!is_proj, ] <- .pred_cohorts(log_N[!is_proj, ], Z[!is_proj, ])
-  }
-  N <- exp(log_N)
-
-
-  ## Projections ---
-
-  browser()
-
-  # Replicate terminal selectivity across proj_years
-  F_last <- F[sum(!is_proj), ]
-  if (proj_settings$n_proj > 0) {
-    for (y in as.character(proj_years)) {
-      prev_y <- as.character(as.numeric(y) - 1)
-      yy <- c(prev_y, y)
-      if (N_settings$process == "off") {
-        log_N[y, ] <- .pred_cohorts(log_N[yy, ], Z[yy, ], fill = TRUE)[y, ]
-      } else {
-        pred_log_N[y, ] <- .pred_cohorts(log_N[yy, ], Z[yy, ])[y, ]
-      }
-      k <- solve_F_mult(C_target = proj_settings$tac[y],
-                        F = F_last,
-                        M = M[y, ],
-                        N = N[y, ])
-      F[y, ] <- k * F_last
-      Z[y, ] <- F[y, ] + M[y, ]
-      log_F[y, ] <- log(F[y, ])
-      log_Z[y, ] <- log(Z[y, ])
-      N[y, ] <- exp(log_N[y, ])
-    }
+    pred_log_N[Y, A] <- log_N[Y - 1, A - 1] - Z[Y - 1, A - 1]
+    pred_log_N[Y, n_ages] <- log(exp(pred_log_N[Y, n_ages]) + exp(log_N[Y - 1, n_ages] - Z[Y - 1, n_ages]))
   }
 
 
-  ## Transformations etc. ---
+  ## Transformations, summations, etc. ---
 
   F_full <- apply(F, 1, max)
   S <- sweep(F, 1, F_full, "/")
 
+  N <- exp(log_N)
   ssb_mat <- SW * MO * N * exp(-Z)
   ssb <- rowSums(ssb_mat)
   log_ssb_mat <- log(ssb_mat)
