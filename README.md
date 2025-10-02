@@ -1,7 +1,7 @@
 
 <!-- badges: start -->
-[![R-CMD-check](https://github.com/PaulRegular/TAM/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/PaulRegular/tinyAM/actions/workflows/R-CMD-check.yaml)
-[![Codecov test coverage](https://codecov.io/gh/PaulRegular/TAM/graph/badge.svg)](https://app.codecov.io/gh/PaulRegular/tinyAM)
+[![R-CMD-check](https://github.com/PaulRegular/tinyAM/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/PaulRegular/tinyAM/actions/workflows/R-CMD-check.yaml)
+[![Codecov test coverage](https://codecov.io/gh/PaulRegular/tinyAM/graph/badge.svg)](https://app.codecov.io/gh/PaulRegular/tinyAM)
 <!-- badges: end -->
 
 # TAM
