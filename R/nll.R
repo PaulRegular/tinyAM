@@ -235,7 +235,7 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   log_F[!is_proj, ] <- log_f
   if (n_proj > 0) {
     log_k <- log(proj_settings$F_mult)
-    log_f_last <- log_f[rep(nrow(log_f), n_proj), ]
+    log_f_last <- log_f[rep(nrow(log_f), n_proj), , drop = FALSE]
     proj_log_F <- sweep(log_f_last, 1, log_k, `+`)
     log_F[is_proj, ] <- proj_log_F
   }

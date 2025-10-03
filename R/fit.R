@@ -119,7 +119,7 @@ fit_tam <- function(obs, interval = 0.95, silent = FALSE, ...) {
 #'
 #' @description
 #' Creates a sequence of terminal-year peels and refits the model on each
-#' truncated year range, attaching the list of refits to `fit$retro`.
+#' truncated year range.
 #'
 #' @details
 #' Peel years are `(max_year - folds) : max_year`.
@@ -142,8 +142,10 @@ fit_tam <- function(obs, interval = 0.95, silent = FALSE, ...) {
 #'   - `obs_pred` — a named list of stacked data frames (e.g., `catch`, `index`);
 #'   - `pop` — a named list of stacked data frames (e.g., `ssb`, `N`, `M`,
 #'   `mu_M`, `F`, `mu_F`, `Z`, `ssb_mat`); and,
-#'   - `retro_fits` - refitted objects for each peel (named by terminal year).
-#' The `obs_pred` and `pop` objects are created using [tidy_tam()].
+#'   - `fits` - refitted objects for each peel (named by terminal year).
+#' The `obs_pred` and `pop` objects are created using [tidy_tam()]. A `fold` column
+#' is added to each data.frame within these objects which specifies the terminal
+#' year.
 #'
 #' @examples
 #' \dontrun{
@@ -176,7 +178,9 @@ fit_retro <- function(fit, folds = 2, grad_tol = 1e-3, progress = TRUE, globals 
   progressr::with_progress({
     update_progress <- progressr::progressor(steps = length(retro_years))
     retro <- furrr::future_map(seq_along(retro_years), function(i) {
-      r <- suppressWarnings(try(update(fit, years = min_year:retro_years[i], silent = TRUE), silent = TRUE))
+      r <- suppressWarnings(
+        try(update(fit, years = min_year:retro_years[i], silent = TRUE), silent = TRUE)
+      )
       if (inherits(r, "try-error")) {
         update_progress()
         return(r)
@@ -184,7 +188,7 @@ fit_retro <- function(fit, folds = 2, grad_tol = 1e-3, progress = TRUE, globals 
       r$is_converged <- check_convergence(r, grad_tol = grad_tol)
       update_progress()
       r
-    }, .options = furrr::furrr_options(seed = 1, packages = "TAM", globals = globals))
+    }, .options = furrr::furrr_options(seed = 1, packages = "tinyAM", globals = globals))
   }, enable = progress)
   names(retro) <- retro_years
 
@@ -197,9 +201,53 @@ fit_retro <- function(fit, folds = 2, grad_tol = 1e-3, progress = TRUE, globals 
     )
   }
 
-  retro_fits <- retro[converged]
-  c(tidy_tam(model_list = retro_fits, label = "retro_year"),
-    list(retro_fits = retro_fits))
+  fits <- retro[converged]
+  c(tidy_tam(model_list = fits, label = "fold"),
+    list(fits = fits))
+}
+
+
+#' Run one-step-ahead hindcasts
+#'
+#' @description
+#' Like [fit_retro], this function creates a sequence of terminal-year peels and
+#' refits the model on each truncated year range, except this function forces
+#' the projection of one year for comparison of one-step-ahead projections relative
+#' to actual observations to be used for hindcast validation.
+#'
+#' @inheritParams fit_retro
+#' @inheritDotParams fit_retro
+#'
+#' @details
+#' This is a convenience wrapper around [fit_retro()] that always performs
+#' a **one-step-ahead projection** with `F_mult = 1` (status-quo F),
+#' `n_proj = 1`, and `n_mean = 1`.
+#'
+#' @inherit fit_retro return
+#'
+#' @seealso [fit_retro()]
+#'
+#' @examples
+#' \dontrun{
+#' # Choose your parallel plan (set once per session)
+#' future::plan(future::multisession, workers = 4)
+#'
+#' fit <- fit_tam(
+#'   cod_obs,
+#'   years = 1983:2024,
+#'   ages = 2:14,
+#'   N_settings = list(process = "iid", init_N0 = FALSE),
+#'   F_settings = list(process = "approx_rw", mu_form = NULL),
+#'   M_settings = list(process = "off", assumption = ~M_assumption),
+#'   obs_settings = list(q_form = ~ q_block, sd_form = ~ sd_obs_block)
+#' )
+#' hindcasts <- fit_hindcast(fit, folds = 5, progress = TRUE)
+#' }
+#'
+#' @export
+fit_hindcast <- function(fit, ...) {
+  fit$call$proj_settings <- list(n_proj = 1, n_mean = 1, F_mult = 1)
+  fit_retro(fit, ...)
 }
 
 

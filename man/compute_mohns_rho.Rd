@@ -10,7 +10,7 @@ compute_mohns_rho(data)
 \item{data}{A data frame with columns:
 \itemize{
 \item \strong{year}: integer or numeric assessment year of the estimate.
-\item \strong{retro_year}: integer or numeric label for the retrospective peel
+\item \strong{fold}: integer or numeric label for the retrospective peel
 (typically the terminal year of the dataset used for that run).
 \item \strong{est}: numeric estimate (e.g., SSB, F, recruitment) on which
 Mohn's rho is calculated.
@@ -28,14 +28,14 @@ across retrospective runs.
 \details{
 The function:
 \enumerate{
-\item Coerces \code{retro_year} to numeric.
-\item If \code{max(year) > max(retro_year)}, adds 1 to \code{retro_year} to handle
+\item Coerces \code{fold} to numeric.
+\item If \code{max(year) > max(fold)}, adds 1 to \code{fold} to handle
 conventions where each peel's estimate is reported for the
 subsequent calendar year (i.e., “stepped forward by one year”).
-\item Identifies terminal estimates (\code{retro_year == max(retro_year)}) as the
+\item Identifies terminal estimates (\code{fold == max(fold)}) as the
 reference series.
 \item For each peel, extracts the estimate at the peel year
-(\code{year == retro_year}) and merges with the terminal estimate for the
+(\code{year == fold}) and merges with the terminal estimate for the
 same year.
 \item Computes proportional difference
 \deqn{\rho = \frac{ \text{est}_{\text{retro}} - \text{est}_{\text{terminal}} }
@@ -50,7 +50,7 @@ input accordingly if this is a concern.
 \examples{
 df <- data.frame(
   year = rep(2010:2015, each = 3),
-  retro_year = rep(c(2013, 2014, 2015), times = 6),
+  fold = rep(c(2013, 2014, 2015), times = 6),
   est = c(100, 105, 110, 90, 95, 100, 85, 92, 98,
           80, 90, 95, 78, 88, 93, 76, 86, 91)
 )

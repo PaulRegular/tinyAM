@@ -78,15 +78,25 @@ test_that("fit_retro runs peels and returns stacked outputs", {
   fit <- default_fit
   retros <- fit_retro(fit, folds = 1, progress = FALSE)
   expect_true(is.list(retros))
-  expect_true(all(c("obs_pred","pop","retro_fits") %in% names(retros)))
+  expect_true(all(c("obs_pred","pop","fits") %in% names(retros)))
   # At least one retro fit kept (may drop if non-converged)
-  if (length(retros$retro_fits) > 0) {
-    rf <- retros$retro_fits[[1]]
+  if (length(retros$fits) > 0) {
+    rf <- retros$fits[[1]]
     expect_true(is.list(rf$rep))
     expect_s3_class(rf$sdrep, "sdreport")
   }
 })
 
+test_that("fit_hindcasts runs peels with a one year projection", {
+  fit <- default_fit
+  hindcasts <- fit_hindcast(fit, folds = 1, progress = FALSE)
+  # At least one hindcast fit kept (may drop if non-converged)
+  if (length(hindcasts$fits) > 0) {
+    hindcast_year <- as.numeric(names(hindcasts$fits[1]))
+    modeled_years <- hindcasts$fits[[1]]$dat$years
+    expect_equal(hindcast_year + 1, max(modeled_years))
+  }
+})
 
 ## sim_tam ---
 
