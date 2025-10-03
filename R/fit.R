@@ -200,7 +200,7 @@ fit_retro <- function(fit, folds = 2, grad_tol = 1e-3, progress = TRUE, globals 
 
   if (any(!converged)) {
     cli::cli_warn(
-      paste0("Model may not have converged for the following retro folds: ",
+      paste0("Model may not have converged for the following folds: ",
              paste(retro_years[!converged], collapse = ", "))
     )
   }

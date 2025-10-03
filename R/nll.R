@@ -333,7 +333,7 @@ nll_fun <- function(par, dat, simulate = FALSE) {
     jnll <- jnll - dprocess_2d(eta_log_m, sd = sd_m, phi = phi)
     if (simulate) {
       eta_log_m <- rprocess_2d(nrow(log_m), ncol(log_m), sd = sd_m, phi = phi)
-      log_m <- log_mu_M[, !duplicated(M_settings$age_blocks)] + eta_log_m
+      log_m <- log_mu_M[-1, -1][, !duplicated(M_settings$age_blocks)] + eta_log_m
     }
   }
 
