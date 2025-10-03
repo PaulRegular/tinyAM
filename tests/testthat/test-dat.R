@@ -1,5 +1,5 @@
 
-## cut_* ---
+## cut_* ----
 
 test_that("cut_ages makes singleton labels when breaks are consecutive", {
   x <- 2:14
@@ -44,7 +44,7 @@ test_that("cut_int input validation errors are informative", {
 
 
 
-## make_dat ---
+## make_dat ----
 
 test_that("make_dat infers years/ages when NULL and builds expected pieces", {
   dat <- make_dat(
@@ -194,3 +194,36 @@ test_that("make_dat recycles, validates, names proj_settings$F_mult", {
   expect_true(any(abs(dat3$proj_settings$F_mult - 1e-12) < 1e-18))
   expect_true(any(abs(dat3$proj_settings$F_mult - 0.5)   < 1e-18))
 })
+
+test_that("make_dat handles mean_ages correctly", {
+  # Defaults to all ages when NULL
+  dat1 <- make_dat(
+    obs = cod_obs,
+    ages = 2:5,
+    F_settings = list(process = "iid", mean_ages = NULL),
+    M_settings = list(process = "iid", mean_ages = NULL, assumption = ~I(0.2))
+  )
+  expect_equal(dat1$F_settings$mean_ages, 2:5)
+  expect_equal(dat1$M_settings$mean_ages, 2:5)
+
+  # Subset of ages is allowed
+  dat2 <- make_dat(
+    obs = cod_obs,
+    ages = 2:5,
+    F_settings = list(process = "iid", mean_ages = c(2, 4)),
+    M_settings = list(process = "iid", mean_ages = c(3, 5), assumption = ~I(0.2))
+  )
+  expect_equal(dat2$F_settings$mean_ages, c(2, 4))
+  expect_equal(dat2$M_settings$mean_ages, c(3, 5))
+
+  # Invalid ages -> error
+  expect_error(
+    make_dat(
+      obs = cod_obs,
+      ages = 2:5,
+      F_settings = list(process = "iid", mean_ages = c(6, 7))
+    ),
+    "F_settings\\$mean_ages"
+  )
+})
+

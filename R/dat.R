@@ -194,6 +194,8 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #' @param F_settings A list with elements:
 #' - `process`: one of `"iid"`, `"approx_rw"`, or `"ar1"`.
 #' - `mu_form`: an optional formula for mean-\\eqn{F}.
+#' - `mean_ages`: optional vector of ages to include in population weighted
+#'   average F (`F_bar`) calculations. All ages used if absent.
 #' @param M_settings A list with elements:
 #' - `process`: one of `"off"`, `"iid"`, `"approx_rw"`, or `"ar1"`.
 #' - `mu_form`: optional formula for mean-\\eqn{M} (on the log scale) built
@@ -204,6 +206,8 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #'   `~ log(M_assumption)` stored in the `obs$weight` data.frame.
 #' - `age_breaks`: optional integer break points used by [cut_ages()] to
 #'   define `age_blocks` for coupling \\eqn{M} deviations across ages.
+#' - `mean_ages`: optional vector of ages to include in population weighted
+#'   average M (`M_bar`) calculations. All ages used if absent.
 #' @param obs_settings A list with elements:
 #' - `sd_form`: formula for observation SD blocks, evaluated on the combined obs map (e.g. `~ sd_obs_block`).
 #' - `q_form`: formula for catchability blocks, evaluated on the index table (e.g. `~ q_block`).
@@ -366,6 +370,16 @@ make_dat <- function(
   if (is.null(dat$M_settings$mu_form) && is.null(dat$M_settings$assumption)) {
     stop("Please supply an assumption or mu_form for M.")
   }
+
+  .check_ages <- function(x, ages, label) {
+    if (is.null(x)) return(ages)
+    if (!all(x %in% ages)) {
+      cli::cli_abort("{.strong {label}} must be a subset of ages: {paste(ages, collapse = ', ')}")
+    }
+    x
+  }
+  dat$F_settings$mean_ages <- .check_ages(dat$F_settings$mean_ages, dat$ages, "F_settings$mean_ages")
+  dat$M_settings$mean_ages <- .check_ages(dat$M_settings$mean_ages, dat$ages, "M_settings$mean_ages")
 
   .set_phi <- function(type = c("off", "iid", "approx_rw", "ar1")) {
     match.arg(type)

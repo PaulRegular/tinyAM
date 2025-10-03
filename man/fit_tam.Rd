@@ -33,6 +33,8 @@ this is forced to \code{TRUE}.
 \itemize{
 \item \code{process}: one of \code{"iid"}, \code{"approx_rw"}, or \code{"ar1"}.
 \item \code{mu_form}: an optional formula for mean-\\eqn{F}.
+\item \code{mean_ages}: optional vector of ages to include in population weighted
+average F (\code{F_bar}) calculations. All ages used if absent.
 }}
     \item{\code{M_settings}}{A list with elements:
 \itemize{
@@ -45,6 +47,8 @@ log-\\eqn{M} offsets, e.g. \code{~ I(0.2)} or a column reference such as
 \code{~ log(M_assumption)} stored in the \code{obs$weight} data.frame.
 \item \code{age_breaks}: optional integer break points used by \code{\link[=cut_ages]{cut_ages()}} to
 define \code{age_blocks} for coupling \\eqn{M} deviations across ages.
+\item \code{mean_ages}: optional vector of ages to include in population weighted
+average M (\code{M_bar}) calculations. All ages used if absent.
 }}
     \item{\code{obs_settings}}{A list with elements:
 \itemize{

@@ -229,7 +229,7 @@ nll_fun <- function(par, dat, simulate = FALSE) {
 
   ## Vital rates ---
 
-  log_R <- log_r
+  log_recruitment <- log_r
   log_N[, 1] <- log_r
 
   log_F[!is_proj, ] <- log_f
@@ -278,6 +278,14 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   F_full <- apply(F, 1, max)
   S <- sweep(F, 1, F_full, "/")
 
+  ia <- as.character(F_settings$mean_ages)
+  F_bar <- rowSums(F[, ia] * N[, ia]) / rowSums(N[, ia])
+  log_F_bar <- log(F_bar)
+  ia <- as.character(M_settings$mean_ages)
+  M_bar <- rowSums(M[, ia] * N[, ia]) / rowSums(N[, ia])
+  log_M_bar <- log(M_bar)
+
+  log_abundance <- log(rowSums(N))
   ssb_mat <- SW * MO * N * exp(-Z)
   ssb <- rowSums(ssb_mat)
   log_ssb_mat <- log(ssb_mat)
@@ -378,6 +386,10 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   REPORT(log_q_obs)
 
   ADREPORT(log_ssb)
+  ADREPORT(log_recruitment)
+  ADREPORT(log_abundance)
+  ADREPORT(log_F_bar)
+  ADREPORT(log_M_bar)
 
   if (simulate) {
     sims <- list(log_f = log_f,

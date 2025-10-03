@@ -24,7 +24,10 @@ A list whose elements are:
 \itemize{
 \item \code{obs_pred} — a named list of stacked data frames (e.g., \code{catch}, \code{index});
 \item \code{pop} — a named list of stacked data frames (e.g., \code{ssb}, \code{N}, \code{M},
-\code{mu_M}, \code{F}, \code{mu_F}, \code{Z}, \code{ssb_mat}); and,
+\code{mu_M}, \code{F}, \code{mu_F}, \code{Z}, \code{ssb_mat});
+\item \code{mohns_rho} - data frame of Mohn's rho (measure of retrospective bias) values
+for each data frame within \code{pop} (calculated using \code{\link[=compute_mohns_rho]{compute_mohns_rho()}}
+function); and,
 \item \code{fits} - refitted objects for each peel (named by terminal year).
 The \code{obs_pred} and \code{pop} objects are created using \code{\link[=tidy_tam]{tidy_tam()}}. A \code{fold} column
 is added to each data.frame within these objects which specifies the terminal
@@ -61,6 +64,7 @@ fit <- fit_tam(
 )
 retros <- fit_retro(fit, folds = 5, progress = TRUE)
 head(retros$pop$ssb)
+head(retros$mohns_rho)
 }
 
 }

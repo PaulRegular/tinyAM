@@ -25,7 +25,10 @@ A list whose elements are:
 \itemize{
 \item \code{obs_pred} — a named list of stacked data frames (e.g., \code{catch}, \code{index});
 \item \code{pop} — a named list of stacked data frames (e.g., \code{ssb}, \code{N}, \code{M},
-\code{mu_M}, \code{F}, \code{mu_F}, \code{Z}, \code{ssb_mat}); and,
+\code{mu_M}, \code{F}, \code{mu_F}, \code{Z}, \code{ssb_mat});
+\item \code{rmse} - root mean squared error for use as an overall measure of the forecast
+skill of the model (calculated from catch and index observations using the
+\code{\link[=compute_hindcast_rmse]{compute_hindcast_rmse()}} function); and,
 \item \code{fits} - refitted objects for each peel (named by terminal year).
 The \code{obs_pred} and \code{pop} objects are created using \code{\link[=tidy_tam]{tidy_tam()}}. A \code{fold} column
 is added to each data.frame within these objects which specifies the terminal
@@ -48,7 +51,7 @@ a \strong{one-step-ahead projection} with \code{F_mult = 1} (status-quo F),
 # Choose your parallel plan (set once per session)
 future::plan(future::multisession, workers = 4)
 
-fit <- fit_tam(
+fit1 <- fit_tam(
   cod_obs,
   years = 1983:2024,
   ages = 2:14,
@@ -57,7 +60,11 @@ fit <- fit_tam(
   M_settings = list(process = "off", assumption = ~M_assumption),
   obs_settings = list(q_form = ~ q_block, sd_form = ~ sd_obs_block)
 )
-hindcasts <- fit_hindcast(fit, folds = 5, progress = TRUE)
+fit2 <- update(fit1, N_settings = list(process = "ar1", init_N0 = FALSE))
+hindcasts1 <- fit_hindcast(fit1, folds = 5, progress = TRUE)
+hindcasts2 <- fit_hindcast(fit2, folds = 5, progress = TRUE)
+hindcasts1$rmse
+hindcasts2$rmse
 }
 
 }

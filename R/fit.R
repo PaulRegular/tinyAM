@@ -141,7 +141,10 @@ fit_tam <- function(obs, interval = 0.95, silent = FALSE, ...) {
 #' A list whose elements are:
 #'   - `obs_pred` — a named list of stacked data frames (e.g., `catch`, `index`);
 #'   - `pop` — a named list of stacked data frames (e.g., `ssb`, `N`, `M`,
-#'   `mu_M`, `F`, `mu_F`, `Z`, `ssb_mat`); and,
+#'   `mu_M`, `F`, `mu_F`, `Z`, `ssb_mat`);
+#'   - `mohns_rho` - data frame of Mohn's rho (measure of retrospective bias) values
+#'     for each data frame within `pop` (calculated using [compute_mohns_rho()]
+#'     function); and,
 #'   - `fits` - refitted objects for each peel (named by terminal year).
 #' The `obs_pred` and `pop` objects are created using [tidy_tam()]. A `fold` column
 #' is added to each data.frame within these objects which specifies the terminal
@@ -163,6 +166,7 @@ fit_tam <- function(obs, interval = 0.95, silent = FALSE, ...) {
 #' )
 #' retros <- fit_retro(fit, folds = 5, progress = TRUE)
 #' head(retros$pop$ssb)
+#' head(retros$mohns_rho)
 #' }
 #'
 #' @seealso
@@ -202,8 +206,25 @@ fit_retro <- function(fit, folds = 2, grad_tol = 1e-3, progress = TRUE, globals 
   }
 
   fits <- retro[converged]
-  c(tidy_tam(model_list = fits, label = "fold"),
+  out <- c(tidy_tam(model_list = fits, label = "fold"),
     list(fits = fits))
+
+  rhos <- lapply(names(out$pop), function(nm) {
+    d <- out$pop[[nm]]
+    if ("age" %in% names(d)) {
+      split_d <- split(d, d$age)
+      rhos <- sapply(split_d, compute_mohns_rho)
+      data.frame(metric = nm, age = as.numeric(names(rhos)), rho = rhos)
+    } else {
+      rho <- compute_mohns_rho(d)
+      data.frame(metric = nm, age = NA, rho = rho)
+    }
+  })
+  rhos <- do.call(rbind, rhos)
+
+  out$mohns_rho <- rhos
+
+  out
 }
 
 
@@ -223,7 +244,18 @@ fit_retro <- function(fit, folds = 2, grad_tol = 1e-3, progress = TRUE, globals 
 #' a **one-step-ahead projection** with `F_mult = 1` (status-quo F),
 #' `n_proj = 1`, and `n_mean = 1`.
 #'
-#' @inherit fit_retro return
+#' @return
+#' A list whose elements are:
+#'   - `obs_pred` — a named list of stacked data frames (e.g., `catch`, `index`);
+#'   - `pop` — a named list of stacked data frames (e.g., `ssb`, `N`, `M`,
+#'   `mu_M`, `F`, `mu_F`, `Z`, `ssb_mat`);
+#'   - `rmse` - root mean squared error for use as an overall measure of the forecast
+#'     skill of the model (calculated from catch and index observations using the
+#'     [compute_hindcast_rmse()] function); and,
+#'   - `fits` - refitted objects for each peel (named by terminal year).
+#' The `obs_pred` and `pop` objects are created using [tidy_tam()]. A `fold` column
+#' is added to each data.frame within these objects which specifies the terminal
+#' year.
 #'
 #' @seealso [fit_retro()]
 #'
@@ -232,7 +264,7 @@ fit_retro <- function(fit, folds = 2, grad_tol = 1e-3, progress = TRUE, globals 
 #' # Choose your parallel plan (set once per session)
 #' future::plan(future::multisession, workers = 4)
 #'
-#' fit <- fit_tam(
+#' fit1 <- fit_tam(
 #'   cod_obs,
 #'   years = 1983:2024,
 #'   ages = 2:14,
@@ -241,13 +273,23 @@ fit_retro <- function(fit, folds = 2, grad_tol = 1e-3, progress = TRUE, globals 
 #'   M_settings = list(process = "off", assumption = ~M_assumption),
 #'   obs_settings = list(q_form = ~ q_block, sd_form = ~ sd_obs_block)
 #' )
-#' hindcasts <- fit_hindcast(fit, folds = 5, progress = TRUE)
+#' fit2 <- update(fit1, N_settings = list(process = "ar1", init_N0 = FALSE))
+#' hindcasts1 <- fit_hindcast(fit1, folds = 5, progress = TRUE)
+#' hindcasts2 <- fit_hindcast(fit2, folds = 5, progress = TRUE)
+#' hindcasts1$rmse
+#' hindcasts2$rmse
 #' }
 #'
 #' @export
 fit_hindcast <- function(fit, ...) {
   fit$call$proj_settings <- list(n_proj = 1, n_mean = 1, F_mult = 1)
-  fit_retro(fit, ...)
+  out <- fit_retro(fit, ...)
+  out$mohns_rho <- NULL
+  cols <- c("year", "age", "obs", "pred", "fold", "is_proj")
+  d <- rbind(out$obs_pred$catch[, cols],
+             out$obs_pred$index[, cols])
+  out$rmse <- compute_hindcast_rmse(d)
+  out
 }
 
 
