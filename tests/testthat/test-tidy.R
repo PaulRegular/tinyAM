@@ -105,7 +105,7 @@ test_that("tidy_rep_mats tidies key report matrices via tidy_mat", {
   mats <- tidy_rep_mats(fit)
 
   expect_true(is.list(mats))
-  expect_setequal(names(mats), c("N","M","mu_M","F","mu_F","Z","ssb_mat"))
+  expect_true(all(c("N","M","mu_M","F","mu_F","Z","ssb_mat") %in% names(mats)))
 
   # Each element is a data frame with dims + "est"
   expect_true(all(vapply(mats, inherits, logical(1), what = "data.frame")))
@@ -117,7 +117,7 @@ test_that("tidy_rep_mats tidies key report matrices via tidy_mat", {
 
 test_that("tidy_sdrep extracts, transforms, and renames series", {
   trends <- tidy_sdrep(fit, interval = 0.95)
-  expect_setequal(names(trends), c("ssb"))
+  expect_true(all(c("ssb","recruitment","abundance") %in% names(trends)))
   expect_true(all(grepl("^log_", names(vals)))) # tidy_sdrep assumes all ADREPORTEd values are in log space
   expect_true(all(sapply(vals, length) == length(fit$dat$years))) # tidy_sdreport assumes all ADREPORTed values have a length = n_years
 
