@@ -16,6 +16,7 @@ test_fit <- function(obs = cod_obs,
                      F_settings = list(process = "approx_rw",  mu_form = NULL),
                      M_settings = list(process = "off", mu_form = NULL, assumption = ~I(0.3)),
                      obs_settings = list(q_form = ~ q_block, sd_form = ~ sd_obs_block),
+                     proj_settings = NULL,
                      silent = TRUE) {
   args <- mget(ls())
   do.call(fit_tam, args)
@@ -71,6 +72,19 @@ test_that("fit_tam works when an survey does not provide an index for all ages",
                  silent = TRUE)
   expect_equal(range(fit$obs_pred$index$age), range(sub_ages))
 })
+
+
+test_that("fit_tam objective is unaffected by projections", {
+  fit <- test_fit(
+    proj_settings = list(n_proj = 10, n_mean = 10, F_mult = 1)
+  )
+  expect_equal(round(fit$opt$objective, 4), 989.6083)
+
+  # "missing" random effects in projections = predictions
+  is_proj <- fit$dat$obs_map$is_proj
+  expect_equal(fit$rep$log_obs[is_proj], fit$rep$log_pred[is_proj])
+})
+
 
 ## fit_retro ---
 

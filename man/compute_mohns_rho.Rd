@@ -7,7 +7,7 @@
 compute_mohns_rho(data)
 }
 \arguments{
-\item{data}{A data frame with columns:
+\item{data}{A data frame with columns (e.g., data frames in \code{pop} output from \code{\link[=fit_retro]{fit_retro()}}):
 \itemize{
 \item \strong{year}: integer or numeric assessment year of the estimate.
 \item \strong{fold}: integer or numeric label for the retrospective peel

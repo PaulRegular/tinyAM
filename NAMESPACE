@@ -2,6 +2,7 @@
 
 export(check_convergence)
 export(check_obs)
+export(compute_hindcast_rmse)
 export(compute_mohns_rho)
 export(cut_ages)
 export(cut_int)

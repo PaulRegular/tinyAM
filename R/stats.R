@@ -1,3 +1,4 @@
+
 #' Compute Mohn's rho for retrospective analyses
 #'
 #' @description
@@ -5,7 +6,7 @@
 #' from a long-format data frame containing terminal and peeled estimates
 #' across retrospective runs.
 #'
-#' @param data A data frame with columns:
+#' @param data A data frame with columns (e.g., data frames in `pop` output from [fit_retro()]):
 #'
 #' - **year**: integer or numeric assessment year of the estimate.
 #' - **fold**: integer or numeric label for the retrospective peel
@@ -69,4 +70,79 @@ compute_mohns_rho <- function(data) {
   mean(cd$pdiff)
 
 }
+
+
+
+
+
+
+#' Compute hindcast RMSE (observed vs projected)
+#'
+#' @description
+#' Calculates the root–mean–squared error (RMSE) between observed values and
+#' one–step–ahead projections from a hindcast run (e.g., a data frame from
+#' `hindcasts$obs_pred$catch` or `hindcasts$obs_pred$index`).
+#'
+#' @param data A long-format data frame with columns (e.g., from `obs_pred` in
+#'   [fit_hindcast()] output):
+#'
+#' - **year**: integer assessment year.
+#' - **age**: integer model age.
+#' - **obs**: numeric observed value for the given `year` × `age`.
+#' - **pred**: numeric projected value for the given `year` × `age`.
+#' - **fold**: integer or numeric label for the hindcast peel
+#'   (typically the terminal year used in that run).
+#' - **is_proj**: logical; `TRUE` for projection rows (the one–step–ahead
+#'   predictions), `FALSE` otherwise.
+#'
+#' @param log Logical; if `TRUE` (default), compute RMSE on the log scale.
+#'   Zeros in `obs`/`pred` are converted to `NA` before logging.
+#'
+#' @details
+#' The function:
+#'
+#' 1. Selects one–step–ahead projections via `is_proj == TRUE` (projected rows).
+#' 2. Extracts observed values at the peel year via `year == fold`
+#'    (observed rows).
+#' 3. Merges observed and projected values by `(year, age)`.
+#' 4. Optionally transforms to log scale (after replacing exact zeros with `NA`).
+#' 5. Computes squared errors \eqn{(\mathrm{obs} - \mathrm{pred})^2} and returns
+#'    \deqn{\mathrm{RMSE} = \sqrt{\mathrm{mean}\big[(\mathrm{obs} - \mathrm{pred})^2\big]}}
+#'    with `na.rm = TRUE`.
+#'
+#' Notes:
+#' - If `log = TRUE`, exact zeros are dropped (set to `NA`) before `log()`.
+#'   Consider adding a small constant beforehand if you prefer to retain zeros.
+#' - Only year–age pairs present in **both** the observed-at-fold and projected
+#'   sets contribute to the RMSE (via the merge).
+#'
+#' @return
+#' A single numeric value: the RMSE between observed and one–step–ahead projected
+#' values for matched `(year, age)` pairs. Returns `NA` if no valid pairs exist.
+#'
+#' @examples
+#' \dontrun{
+#' # Suppose `hindcasts <- fit_hindcast(fit, folds = 3)`
+#' # Overall RMSE for the index series on the log scale
+#' compute_hindcast_rmse(hindcasts$obs_pred$index, log = TRUE)
+#'
+#' # RMSE for catch on the natural scale
+#' compute_hindcast_rmse(hindcasts$obs_pred$catch, log = FALSE)
+#' }
+#'
+#' @export
+compute_hindcast_rmse <- function(data, log = TRUE) {
+  proj_d <- data[data$is_proj, c("year", "age", "pred")]
+  obs_d <- data[data$year == data$fold, c("year", "age", "obs")]
+  d <- merge(obs_d, proj_d, by = c("year", "age"))
+  if (log) {
+    d$obs[d$obs == 0] <- NA
+    d$pred[d$pred == 0] <- NA
+    d$obs <- log(d$obs)
+    d$pred <- log(d$pred)
+  }
+  d$sq_error <- (d$obs - d$pred) ^ 2
+  sqrt(mean(d$sq_error, na.rm = TRUE))
+}
+
 
