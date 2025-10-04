@@ -56,16 +56,7 @@
 #'
 #' @export
 compute_mohns_rho <- function(data) {
-
-
-  ## YOU ARE HERE FIXING UP THIS FUNCTION AND THE HINDCAST_RMSE FUNCTION TO MAKE SURE IT HANDELS IS_PROJ CORRECTLY
-
-
-  d <- data
-  d$fold <- as.numeric(as.character(d$fold))
-  if (max(d$year) > max(d$fold)) {
-    d$fold <- d$fold + 1 # plus one if the estimates are stepped forward by one year
-  }
+  d <- data[!data$is_proj, ]
   td <- d[d$fold == max(d$fold), c("year", "est")]   # terminal data
   rd <- d[d$fold != max(d$fold) &
             d$year == d$fold,
@@ -73,12 +64,7 @@ compute_mohns_rho <- function(data) {
   cd <- merge(rd, td, by = "year", suffixes = c("_r", "_t"))      # combined data (r = retro, t = terminal)
   cd$pdiff <- (cd$est_r - cd$est_t) / cd$est_t
   mean(cd$pdiff)
-
 }
-
-
-
-
 
 
 #' Compute hindcast RMSE (observed vs projected)
