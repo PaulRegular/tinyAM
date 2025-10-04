@@ -90,14 +90,34 @@ pop$ssb |>
 ## Retro ----
 
 future::plan(future::multisession, workers = 6)
-retros <- fit_retro(fit, folds = 20)
-retros$mohns_rho |> subset(is.na(age))
+
+ncam_style_hindcast <- fit_hindcast(ncam_style, folds = 20)
+sam_style_hindcast <- fit_hindcast(sam_style, folds = 20)
+ncam_style_hindcast$rmse
+sam_style_hindcast$rmse
+
+ncam_style_retros <- fit_retro(ncam_style, folds = 20)
+ncam_style_retros$mohns_rho |> subset(is.na(age))
+
+sam_style_retros <- fit_retro(sam_style, folds = 20)
+sam_style_retros$mohns_rho |> subset(is.na(age))
+
+retros <- sam_style_retros
+# retros <- ncam_style_retros
 
 plot_ly(retros$pop$ssb, x = ~year, y = ~est, color = ~fold,
         colors = viridis::viridis(100)) |>
   add_lines()
 
 plot_ly(retros$pop$abundance, x = ~year, y = ~est, color = ~fold,
+        colors = viridis::viridis(100)) |>
+  add_lines()
+
+plot_ly(retros$pop$F_bar, x = ~year, y = ~est, color = ~fold,
+        colors = viridis::viridis(100)) |>
+  add_lines()
+
+plot_ly(retros$pop$M_bar, x = ~year, y = ~est, color = ~fold,
         colors = viridis::viridis(100)) |>
   add_lines()
 
