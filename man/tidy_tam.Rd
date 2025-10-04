@@ -51,6 +51,10 @@ the object/expression names from \code{...}.
 used as labels (even when length 1).
 }
 
+Names, whether from the objects or \code{model_list}, are passed through
+\code{\link[utils:type.convert]{utils::type.convert()}} with \code{as.is = TRUE}, so numeric-like labels (e.g.,
+\code{"2010"}, \code{"2011"}) become numeric.
+
 Only components present in \strong{all} models are stacked (intersection of
 component names), ensuring consistent columns for base-R \code{rbind()}.
 }

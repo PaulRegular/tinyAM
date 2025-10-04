@@ -4,12 +4,24 @@
 \alias{fit_retro}
 \title{Retrospective fits for TAM}
 \usage{
-fit_retro(fit, folds = 2, grad_tol = 0.001, progress = TRUE, globals = NULL)
+fit_retro(
+  fit,
+  folds = 2,
+  hindcast = FALSE,
+  grad_tol = 0.001,
+  progress = TRUE,
+  globals = NULL
+)
 }
 \arguments{
 \item{fit}{A fitted TAM object as returned by \code{\link[=fit_tam]{fit_tam()}}.}
 
 \item{folds}{Integer; number of terminal peels (default \code{2}).}
+
+\item{hindcast}{Logical; fit one-step-ahead projections? If \code{TRUE},
+\code{proj_settings} will be set to
+\code{list(n_proj = 1, n_mean = 1, F_mult = 1)} to generate a one
+year status-quo F projection.}
 
 \item{grad_tol}{Numeric tolerance for \verb{max|grad|}. Default \code{1e-3}. Output
 from retro fits that exceed this tolerance are dropped (see
@@ -27,6 +39,10 @@ A list whose elements are:
 \code{mu_M}, \code{F}, \code{mu_F}, \code{Z}, \code{ssb_mat});
 \item \code{mohns_rho} - data frame of Mohn's rho (measure of retrospective bias) values
 for each data frame within \code{pop} (calculated using \code{\link[=compute_mohns_rho]{compute_mohns_rho()}}
+function);
+\item \code{hindcast_rmse} (when \code{hindcast = TRUE}) - root mean squared error for
+use as an overall measure of the forecast skill of the model (calculated
+from catch and index observations using the \code{\link[=compute_hindcast_rmse]{compute_hindcast_rmse()}}
 function); and,
 \item \code{fits} - refitted objects for each peel (named by terminal year).
 The \code{obs_pred} and \code{pop} objects are created using \code{\link[=tidy_tam]{tidy_tam()}}. A \code{fold} column

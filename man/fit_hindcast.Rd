@@ -2,69 +2,33 @@
 % Please edit documentation in R/fit.R
 \name{fit_hindcast}
 \alias{fit_hindcast}
-\title{Run one-step-ahead hindcasts}
+\title{Run one-step-ahead hindcasts (convenience wrapper)}
 \usage{
 fit_hindcast(fit, ...)
 }
 \arguments{
 \item{fit}{A fitted TAM object as returned by \code{\link[=fit_tam]{fit_tam()}}.}
 
-\item{...}{
-  Arguments passed on to \code{\link[=fit_retro]{fit_retro}}
-  \describe{
-    \item{\code{folds}}{Integer; number of terminal peels (default \code{2}).}
-    \item{\code{grad_tol}}{Numeric tolerance for \verb{max|grad|}. Default \code{1e-3}. Output
-from retro fits that exceed this tolerance are dropped (see
-\code{\link[=check_convergence]{check_convergence()}}).}
-    \item{\code{progress}}{Logical; show progress bar using \code{\link[progressr:with_progress]{progressr::with_progress()}}.}
-    \item{\code{globals}}{Character vector naming global objects to supply to the workers.}
-  }}
+\item{...}{Passed through to \code{\link[=fit_retro]{fit_retro()}} (e.g., \code{folds}, \code{grad_tol},
+\code{progress}, \code{globals}).}
 }
 \value{
-A list whose elements are:
-\itemize{
-\item \code{obs_pred} — a named list of stacked data frames (e.g., \code{catch}, \code{index});
-\item \code{pop} — a named list of stacked data frames (e.g., \code{ssb}, \code{N}, \code{M},
-\code{mu_M}, \code{F}, \code{mu_F}, \code{Z}, \code{ssb_mat});
-\item \code{rmse} - root mean squared error for use as an overall measure of the forecast
-skill of the model (calculated from catch and index observations using the
-\code{\link[=compute_hindcast_rmse]{compute_hindcast_rmse()}} function); and,
-\item \code{fits} - refitted objects for each peel (named by terminal year).
-The \code{obs_pred} and \code{pop} objects are created using \code{\link[=tidy_tam]{tidy_tam()}}. A \code{fold} column
-is added to each data.frame within these objects which specifies the terminal
-year.
-}
+Exactly the return value of \code{\link[=fit_retro]{fit_retro()}} with \code{hindcast = TRUE}—i.e.,
+a list containing \code{obs_pred}, \code{pop}, optional \code{mohns_rho}, \code{hindcast_rmse},
+and \code{fits} (see \code{\link[=fit_retro]{fit_retro()}} for full details).
 }
 \description{
-Like \link{fit_retro}, this function creates a sequence of terminal-year peels and
-refits the model on each truncated year range, except this function forces
-the projection of one year for comparison of one-step-ahead projections relative
-to actual observations to be used for hindcast validation.
-}
-\details{
-This is a convenience wrapper around \code{\link[=fit_retro]{fit_retro()}} that always performs
-a \strong{one-step-ahead projection} with \code{F_mult = 1} (status-quo F),
-\code{n_proj = 1}, and \code{n_mean = 1}.
+Convenience alias for \code{\link[=fit_retro]{fit_retro()}} with \code{hindcast = TRUE}. This performs
+retrospective peels and, for each peel, fits a \strong{one-step-ahead projection}
+(status-quo F: \code{n_proj = 1}, \code{n_mean = 1}, \code{F_mult = 1}), and returns the
+same structure as \code{\link[=fit_retro]{fit_retro()}} including \code{hindcast_rmse}.
 }
 \examples{
 \dontrun{
-# Choose your parallel plan (set once per session)
 future::plan(future::multisession, workers = 4)
-
-fit1 <- fit_tam(
-  cod_obs,
-  years = 1983:2024,
-  ages = 2:14,
-  N_settings = list(process = "iid", init_N0 = FALSE),
-  F_settings = list(process = "approx_rw", mu_form = NULL),
-  M_settings = list(process = "off", assumption = ~M_assumption),
-  obs_settings = list(q_form = ~ q_block, sd_form = ~ sd_obs_block)
-)
-fit2 <- update(fit1, N_settings = list(process = "ar1", init_N0 = FALSE))
-hindcasts1 <- fit_hindcast(fit1, folds = 5, progress = TRUE)
-hindcasts2 <- fit_hindcast(fit2, folds = 5, progress = TRUE)
-hindcasts1$rmse
-hindcasts2$rmse
+fit <- fit_tam(cod_obs, years = 1983:2024, ages = 2:14)
+hc  <- fit_hindcast(fit, folds = 5, progress = TRUE)
+hc$hindcast_rmse
 }
 
 }

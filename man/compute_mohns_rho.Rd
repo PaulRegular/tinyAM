@@ -14,6 +14,7 @@ compute_mohns_rho(data)
 (typically the terminal year of the dataset used for that run).
 \item \strong{est}: numeric estimate (e.g., SSB, F, recruitment) on which
 Mohn's rho is calculated.
+\item \strong{is_proj}: logical; \code{TRUE} for projection rows, \code{FALSE} otherwise.
 }}
 }
 \value{

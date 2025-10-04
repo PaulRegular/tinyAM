@@ -129,7 +129,9 @@ tidy_obs_pred <- function(fit) {
 tidy_rep_mats <- function(fit) {
   mat_nms <- c("N", "M", "mu_M", "F", "mu_F", "Z", "ssb_mat")
   rep_mats <- lapply(mat_nms, function(nm) {
-    tidy_mat(fit$rep[[nm]], value_name = "est")
+    m <- tidy_mat(fit$rep[[nm]], value_name = "est")
+    m$is_proj <- m$year %in% fit$dat$years[fit$dat$is_proj]
+    m
   })
   names(rep_mats) <- mat_nms
   rep_mats
@@ -177,7 +179,8 @@ tidy_sdrep <- function(fit, interval = 0.95) {
                     est = vals[[i]],
                     sd = sds[[i]],
                     lwr = vals[[i]] - qnorm(1 - ((1 - interval) / 2)) * sds[[i]],
-                    upr = vals[[i]] + qnorm(1 - ((1 - interval) / 2)) * sds[[i]]) |>
+                    upr = vals[[i]] + qnorm(1 - ((1 - interval) / 2)) * sds[[i]],
+                    is_proj = fit$dat$is_proj) |>
       trans_est(transform = exp)
   })
   names(df) <- gsub("log_", "", names(vals))
@@ -230,6 +233,10 @@ tidy_pop <- function(fit, interval = 0.95) {
 #'   the object/expression names from `...`.
 #' - If `model_list` is used, it **must be a named list**; its names are always
 #'   used as labels (even when length 1).
+#'
+#' Names, whether from the objects or `model_list`, are passed through
+#' [utils::type.convert()] with `as.is = TRUE`, so numeric-like labels (e.g.,
+#' `"2010"`, `"2011"`) become numeric.
 #'
 #' Only components present in **all** models are stacked (intersection of
 #' component names), ensuring consistent columns for base-R `rbind()`.
@@ -293,7 +300,8 @@ tidy_tam <- function(..., model_list = NULL, interval = 0.95, label = "model") {
   .stack  <- function(models, comp) {
     parts <- lapply(models, `[[`, comp)
     out <- do.call(rbind, unname(parts))
-    if (add_label) out[[label]] <- rep(names(models), sapply(parts, nrow))
+    mod_names <- names(models) |> utils::type.convert(as.is = TRUE)
+    if (add_label) out[[label]] <- rep(mod_names, sapply(parts, nrow))
     rownames(out) <- NULL
     out
   }

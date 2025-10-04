@@ -131,6 +131,10 @@ fit_tam <- function(obs, interval = 0.95, silent = FALSE, ...) {
 #'
 #' @param fit A fitted TAM object as returned by [fit_tam()].
 #' @param folds Integer; number of terminal peels (default `2`).
+#' @param hindcast Logical; fit one-step-ahead projections? If `TRUE`,
+#'                 `proj_settings` will be set to
+#'                 `list(n_proj = 1, n_mean = 1, F_mult = 1)` to generate a one
+#'                 year status-quo F projection.
 #' @param grad_tol Numeric tolerance for `max|grad|`. Default `1e-3`. Output
 #'                 from retro fits that exceed this tolerance are dropped (see
 #'                 [check_convergence()]).
@@ -144,6 +148,10 @@ fit_tam <- function(obs, interval = 0.95, silent = FALSE, ...) {
 #'   `mu_M`, `F`, `mu_F`, `Z`, `ssb_mat`);
 #'   - `mohns_rho` - data frame of Mohn's rho (measure of retrospective bias) values
 #'     for each data frame within `pop` (calculated using [compute_mohns_rho()]
+#'     function);
+#'   - `hindcast_rmse` (when `hindcast = TRUE`) - root mean squared error for
+#'     use as an overall measure of the forecast skill of the model (calculated
+#'     from catch and index observations using the [compute_hindcast_rmse()]
 #'     function); and,
 #'   - `fits` - refitted objects for each peel (named by terminal year).
 #' The `obs_pred` and `pop` objects are created using [tidy_tam()]. A `fold` column
@@ -174,10 +182,21 @@ fit_tam <- function(obs, interval = 0.95, silent = FALSE, ...) {
 #' @importFrom furrr future_map furrr_options
 #' @importFrom progressr with_progress progressor
 #' @export
-fit_retro <- function(fit, folds = 2, grad_tol = 1e-3, progress = TRUE, globals = NULL) {
+fit_retro <- function(
+    fit,
+    folds = 2,
+    hindcast = FALSE,
+    grad_tol = 1e-3,
+    progress = TRUE,
+    globals = NULL
+) {
   min_year <- min(fit$dat$years)
   max_year <- max(fit$dat$years)
   retro_years <- seq(max_year - folds, max_year)
+
+  if (hindcast) {
+    fit$call$proj_settings <- list(n_proj = 1, n_mean = 1, F_mult = 1)
+  }
 
   progressr::with_progress({
     update_progress <- progressr::progressor(steps = length(retro_years))
@@ -207,7 +226,7 @@ fit_retro <- function(fit, folds = 2, grad_tol = 1e-3, progress = TRUE, globals 
 
   fits <- retro[converged]
   out <- c(tidy_tam(model_list = fits, label = "fold"),
-    list(fits = fits))
+           list(fits = fits))
 
   rhos <- lapply(names(out$pop), function(nm) {
     d <- out$pop[[nm]]
@@ -224,72 +243,46 @@ fit_retro <- function(fit, folds = 2, grad_tol = 1e-3, progress = TRUE, globals 
 
   out$mohns_rho <- rhos
 
+  if (hindcast) {
+    cols <- c("year", "age", "obs", "pred", "fold", "is_proj")
+    d <- rbind(out$obs_pred$catch[, cols],
+               out$obs_pred$index[, cols])
+    out$hindcast_rmse <- compute_hindcast_rmse(d)
+  }
+
   out
 }
 
 
-#' Run one-step-ahead hindcasts
+#' Run one-step-ahead hindcasts (convenience wrapper)
 #'
 #' @description
-#' Like [fit_retro], this function creates a sequence of terminal-year peels and
-#' refits the model on each truncated year range, except this function forces
-#' the projection of one year for comparison of one-step-ahead projections relative
-#' to actual observations to be used for hindcast validation.
+#' Convenience alias for [fit_retro()] with `hindcast = TRUE`. This performs
+#' retrospective peels and, for each peel, fits a **one-step-ahead projection**
+#' (status-quo F: `n_proj = 1`, `n_mean = 1`, `F_mult = 1`), and returns the
+#' same structure as [fit_retro()] including `hindcast_rmse`.
 #'
-#' @inheritParams fit_retro
-#' @inheritDotParams fit_retro
-#'
-#' @details
-#' This is a convenience wrapper around [fit_retro()] that always performs
-#' a **one-step-ahead projection** with `F_mult = 1` (status-quo F),
-#' `n_proj = 1`, and `n_mean = 1`.
+#' @param fit A fitted TAM object as returned by [fit_tam()].
+#' @param ... Passed through to [fit_retro()] (e.g., `folds`, `grad_tol`,
+#'   `progress`, `globals`).
 #'
 #' @return
-#' A list whose elements are:
-#'   - `obs_pred` — a named list of stacked data frames (e.g., `catch`, `index`);
-#'   - `pop` — a named list of stacked data frames (e.g., `ssb`, `N`, `M`,
-#'   `mu_M`, `F`, `mu_F`, `Z`, `ssb_mat`);
-#'   - `rmse` - root mean squared error for use as an overall measure of the forecast
-#'     skill of the model (calculated from catch and index observations using the
-#'     [compute_hindcast_rmse()] function); and,
-#'   - `fits` - refitted objects for each peel (named by terminal year).
-#' The `obs_pred` and `pop` objects are created using [tidy_tam()]. A `fold` column
-#' is added to each data.frame within these objects which specifies the terminal
-#' year.
-#'
-#' @seealso [fit_retro()]
+#' Exactly the return value of [fit_retro()] with `hindcast = TRUE`—i.e.,
+#' a list containing `obs_pred`, `pop`, optional `mohns_rho`, `hindcast_rmse`,
+#' and `fits` (see [fit_retro()] for full details).
 #'
 #' @examples
 #' \dontrun{
-#' # Choose your parallel plan (set once per session)
 #' future::plan(future::multisession, workers = 4)
-#'
-#' fit1 <- fit_tam(
-#'   cod_obs,
-#'   years = 1983:2024,
-#'   ages = 2:14,
-#'   N_settings = list(process = "iid", init_N0 = FALSE),
-#'   F_settings = list(process = "approx_rw", mu_form = NULL),
-#'   M_settings = list(process = "off", assumption = ~M_assumption),
-#'   obs_settings = list(q_form = ~ q_block, sd_form = ~ sd_obs_block)
-#' )
-#' fit2 <- update(fit1, N_settings = list(process = "ar1", init_N0 = FALSE))
-#' hindcasts1 <- fit_hindcast(fit1, folds = 5, progress = TRUE)
-#' hindcasts2 <- fit_hindcast(fit2, folds = 5, progress = TRUE)
-#' hindcasts1$rmse
-#' hindcasts2$rmse
+#' fit <- fit_tam(cod_obs, years = 1983:2024, ages = 2:14)
+#' hc  <- fit_hindcast(fit, folds = 5, progress = TRUE)
+#' hc$hindcast_rmse
 #' }
 #'
+#' @seealso [fit_retro()]
 #' @export
 fit_hindcast <- function(fit, ...) {
-  fit$call$proj_settings <- list(n_proj = 1, n_mean = 1, F_mult = 1)
-  out <- fit_retro(fit, ...)
-  out$mohns_rho <- NULL
-  cols <- c("year", "age", "obs", "pred", "fold", "is_proj")
-  d <- rbind(out$obs_pred$catch[, cols],
-             out$obs_pred$index[, cols])
-  out$rmse <- compute_hindcast_rmse(d)
-  out
+  fit_retro(fit, hindcast = TRUE, ...)
 }
 
 

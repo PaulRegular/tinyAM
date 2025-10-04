@@ -13,6 +13,7 @@
 #'   (typically the terminal year of the dataset used for that run).
 #' - **est**: numeric estimate (e.g., SSB, F, recruitment) on which
 #'   Mohn's rho is calculated.
+#' - **is_proj**: logical; `TRUE` for projection rows, `FALSE` otherwise.
 #'
 #' @details
 #' The function:
@@ -55,6 +56,10 @@
 #'
 #' @export
 compute_mohns_rho <- function(data) {
+
+
+  ## YOU ARE HERE FIXING UP THIS FUNCTION AND THE HINDCAST_RMSE FUNCTION TO MAKE SURE IT HANDELS IS_PROJ CORRECTLY
+
 
   d <- data
   d$fold <- as.numeric(as.character(d$fold))

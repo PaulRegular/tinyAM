@@ -308,6 +308,9 @@ make_dat <- function(
     names(dat$proj_settings$F_mult) <- dat$proj_years
   } else {
     dat$proj_settings <- list(n_proj = 0)
+    for (nm in names(dat$obs)) {
+      dat$obs[[nm]]$is_proj <- FALSE
+    }
   }
 
   if (N_settings$process == "off" && !N_settings$init_N0) {
