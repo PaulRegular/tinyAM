@@ -85,7 +85,7 @@ tidy_mat <- tidy_array
 #' head(obs_pred$catch)
 #' head(obs_pred$index)
 #'
-#' @seealso [fit_tam()], [tidy_rep_mats()], [tidy_sdrep()], [tidy_pop()]
+#' @seealso [fit_tam()], [tidy_rep()], [tidy_sdrep()], [tidy_pop()]
 #' @export
 tidy_obs_pred <- function(fit) {
   obs_pred <- fit$dat$obs[c("catch", "index")]
@@ -105,36 +105,41 @@ tidy_obs_pred <- function(fit) {
 }
 
 
-#' Tidy key report matrices
+#' Tidy reported trends
 #'
 #' @description
-#' Converts selected matrices in `fit$rep` to long (tidy) data frames
-#' using [tidy_mat()].
+#' Converts year and age x year objects in `fit$rep` to long (tidy) data frames.
 #'
 #' @param fit A fitted TAM object as returned by [fit_tam()].
 #'
 #' @return
-#' A named list of data frames (elements: `N`, `M`, `mu_M`, `F`, `mu_F`, `Z`, `ssb_mat`),
-#' where each data frame has one column per dimension (e.g., `year`, `age`) and
-#' a value column `est`.
+#' A named list of data frames (e.g., `N`, `abundance`, `ssb`, `F`, `F_bar`),
+#' where each data frame has one column per dimension (e.g., `year`, `age`),
+#' a value column `est`, and an `is_proj` column.
 #'
 #' @examples
 #' fit <- fit_tam(cod_obs, years = 1983:2024, ages = 2:14)
-#' mats <- tidy_rep_mats(fit)
-#' names(mats)
-#' head(mats$N)
+#' trends <- tidy_rep(fit)
+#' names(trends)
+#' head(trends$N)
 #'
 #' @seealso [tidy_obs_pred()], [tidy_sdrep()], [tidy_pop()], [tidy_mat()]
 #' @export
-tidy_rep_mats <- function(fit) {
-  mat_nms <- c("N", "M", "mu_M", "F", "mu_F", "Z", "ssb_mat")
-  rep_mats <- lapply(mat_nms, function(nm) {
-    m <- tidy_mat(fit$rep[[nm]], value_name = "est")
-    m$is_proj <- m$year %in% fit$dat$years[fit$dat$is_proj]
-    m
+tidy_rep <- function(fit) {
+  which_mat <- which(sapply(fit$rep, is.matrix))
+  which_vec <- which(sapply(fit$rep, length) == length(fit$dat$years))
+  nms <- c(names(which_mat), names(which_vec))
+  trends <- lapply(nms, function(nm) {
+    if (is.matrix(fit$rep[[nm]])) {
+      d <- tidy_mat(fit$rep[[nm]], value_name = "est")
+      d$is_proj <- d$year %in% fit$dat$years[fit$dat$is_proj]
+    } else {
+      d <- data.frame(year = fit$dat$years, est = fit$rep[[nm]], is_proj = fit$dat$is_proj)
+    }
+    d
   })
-  names(rep_mats) <- mat_nms
-  rep_mats
+  names(trends) <- nms
+  trends
 }
 
 #' Tidy `sdreport` time series with confidence intervals
@@ -160,7 +165,7 @@ tidy_rep_mats <- function(fit) {
 #' @return
 #' A named list of data frames (one per series), each with columns:
 #'
-#' - `year`, `est`, `sd`, `lwr`, `upr` — after applying the chosen transform.
+#' - `year`, `est`, `sd`, `lwr`, `upr`, `is_proj` — after applying the chosen transform.
 #'
 #' @examples
 #' fit <- fit_tam(cod_obs, years = 1983:2024, ages = 2:14)
@@ -168,7 +173,7 @@ tidy_rep_mats <- function(fit) {
 #' names(trends)
 #' head(trends$ssb)
 #'
-#' @seealso [trans_est()], [tidy_rep_mats()], [tidy_pop()]
+#' @seealso [trans_est()], [tidy_rep()], [tidy_pop()]
 #' @export
 tidy_sdrep <- function(fit, interval = 0.95) {
   ## assumes all ADREPORTED objects are equal length to years and are in log space
@@ -187,10 +192,10 @@ tidy_sdrep <- function(fit, interval = 0.95) {
   df
 }
 
-#' Collect population summaries (sdreport + report matrices)
+#' Collect population summaries (sdreport + report trends)
 #'
 #' @description
-#' Convenience wrapper that combines [tidy_sdrep()] and [tidy_rep_mats()]
+#' Convenience wrapper that combines [tidy_sdrep()] and [tidy_rep()]
 #' into a single named list for downstream plotting and summaries.
 #'
 #' @param fit A fitted TAM object as returned by [fit_tam()].
@@ -198,18 +203,20 @@ tidy_sdrep <- function(fit, interval = 0.95) {
 #'
 #' @return
 #' A named list containing the elements returned by [tidy_sdrep()] and
-#' [tidy_rep_mats()] (names preserved).
+#' [tidy_rep()] (names preserved).
 #'
 #' @examples
 #' fit <- fit_tam(cod_obs, years = 1983:2024, ages = 2:14)
 #' pop <- tidy_pop(fit)
 #' names(pop)
 #'
-#' @seealso [tidy_sdrep()], [tidy_rep_mats()], [tidy_obs_pred()]
+#' @seealso [tidy_sdrep()], [tidy_rep()], [tidy_obs_pred()]
 #' @export
 tidy_pop <- function(fit, interval = 0.95) {
-  c(tidy_sdrep(fit, interval = interval),
-    tidy_rep_mats(fit))
+  sdrep_trends <- tidy_sdrep(fit, interval = interval)
+  rep_trends <- tidy_rep(fit)
+  not_in_sdrep <- setdiff(names(rep_trends), names(sdrep_trends))
+  c(sdrep_trends, rep_trends[not_in_sdrep])
 }
 
 

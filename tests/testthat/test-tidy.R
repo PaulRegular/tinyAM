@@ -1,4 +1,6 @@
 
+## tidy_array ----
+
 test_that("tidy_array errors on non-matrix/array", {
   expect_error(tidy_array(1:3), "`x` must be a matrix or array")
 })
@@ -33,6 +35,9 @@ test_that("tidy_array respects value_name and converts numeric-like dimnames", {
   expect_equal(nrow(out), length(m))
 })
 
+
+## tidy_mat ----
+
 test_that("tidy_mat is an alias of tidy_array", {
   m <- matrix(
     1:6, nrow = 2,
@@ -57,6 +62,9 @@ test_that("tidy_array handles 3D arrays, converting only numeric-like dims", {
   expect_false(is.numeric(out$area))
 })
 
+
+## tidy_est ----
+
 test_that("trans_est applies transform and scale to est/lwr/upr", {
   d <- data.frame(est = log(100), lwr = log(80), upr = log(120))
   out <- trans_est(d, transform = exp, scale = 2)
@@ -72,6 +80,9 @@ test_that("trans_est respects transform = NULL", {
   expect_equal(out$lwr, 0.05)
   expect_equal(out$upr, 0.2)
 })
+
+
+## tidy_obs_pred ----
 
 fit <- fit_tam(cod_obs, years = 1983:2024, ages = 2:14, silent = TRUE)
 vals <- as.list(fit$sdrep, "Estimate", report = TRUE)
@@ -101,19 +112,37 @@ test_that("tidy_obs_pred builds residual diagnostics for catch and index", {
 })
 
 
-test_that("tidy_rep_mats tidies key report matrices via tidy_mat", {
-  mats <- tidy_rep_mats(fit)
+## tidy_rep ----
 
-  expect_true(is.list(mats))
-  expect_true(all(c("N","M","mu_M","F","mu_F","Z","ssb_mat") %in% names(mats)))
+test_that("tidy_rep tidies matrices and vectors, and adds is_proj", {
+  tr <- tidy_rep(fit)
 
-  # Each element is a data frame with dims + "est"
-  expect_true(all(vapply(mats, inherits, logical(1), what = "data.frame")))
-  expect_true(all(vapply(mats, function(df) all(c("year","age","est") %in% names(df)), logical(1))))
-  # Row counts equal length of matrix
-  expect_true(all(vapply(mats, nrow, integer(1)) == length(fit$rep$N)))
+  expect_type(tr, "list")
+  expect_true(length(tr) > 0)
+
+  # Should include known report matrices and at least one vector (e.g., ssb)
+  expect_true(all(c("N","M","mu_M","F","mu_F","Z","ssb_mat") %in% names(tr)))
+  expect_true("ssb" %in% names(tr))
+
+  # Matrices → data frames with (year, age, est, is_proj)
+  expect_s3_class(tr$N, "data.frame")
+  expect_true(all(c("year","age","est","is_proj") %in% names(tr$N)))
+  expect_equal(nrow(tr$N), length(fit$rep$N))  # row count equals matrix length
+
+  # Vectors (length = #years) → data frames with (year, est, is_proj)
+  expect_s3_class(tr$ssb, "data.frame")
+  expect_true(all(c("year","est","is_proj") %in% names(tr$ssb)))
+  expect_false("age" %in% names(tr$ssb))
+  expect_equal(nrow(tr$ssb), length(fit$dat$years))
+
+  # is_proj should match the year-level is_proj from the fit
+  expect_identical(tr$ssb$is_proj, fit$dat$is_proj)
+  expect_true(all(tr$N$is_proj == (tr$N$year %in% fit$dat$years[fit$dat$is_proj])))
 })
 
+
+
+## tidy_sdrep ----
 
 test_that("tidy_sdrep extracts, transforms, and renames series", {
   trends <- tidy_sdrep(fit, interval = 0.95)
@@ -132,13 +161,24 @@ test_that("tidy_sdrep extracts, transforms, and renames series", {
   expect_equal(trends$ssb$upr, d$upr)
 })
 
-test_that("tidy_pop concatenates tidy_sdrep and tidy_rep_mats", {
+
+## tidy_pop ----
+
+test_that("tidy_pop concatenates tidy_sdrep and tidy_rep without duplicates", {
   out <- tidy_pop(fit)
-  # Should include names from tidy_sdrep (log_ prefix removed) and report matrices
+
+  # Should include key names from rep and sdrep outputs
   expect_true(all(c("ssb", "N", "M", "mu_M", "F", "mu_F", "Z", "ssb_mat") %in% names(out)))
   expect_s3_class(out$N, "data.frame")
+  expect_true(all(c("year","age","est") %in% names(out$N)))
+
+  # No duplicate names
+  expect_equal(length(names(out)), length(unique(names(out))))
 })
 
+
+
+## tidy_tam ----
 
 test_that("tidy_tam supplied single model via ... adds no label column", {
   out  <- tidy_tam(fit)  # default label = 'model'

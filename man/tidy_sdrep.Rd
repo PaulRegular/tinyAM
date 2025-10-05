@@ -14,7 +14,7 @@ tidy_sdrep(fit, interval = 0.95)
 \value{
 A named list of data frames (one per series), each with columns:
 \itemize{
-\item \code{year}, \code{est}, \code{sd}, \code{lwr}, \code{upr} — after applying the chosen transform.
+\item \code{year}, \code{est}, \code{sd}, \code{lwr}, \code{upr}, \code{is_proj} — after applying the chosen transform.
 }
 }
 \description{
@@ -41,5 +41,5 @@ head(trends$ssb)
 
 }
 \seealso{
-\code{\link[=trans_est]{trans_est()}}, \code{\link[=tidy_rep_mats]{tidy_rep_mats()}}, \code{\link[=tidy_pop]{tidy_pop()}}
+\code{\link[=trans_est]{trans_est()}}, \code{\link[=tidy_rep]{tidy_rep()}}, \code{\link[=tidy_pop]{tidy_pop()}}
 }

@@ -229,6 +229,7 @@ nll_fun <- function(par, dat, simulate = FALSE) {
 
   ## Vital rates ----
 
+  recruitment <- exp(log_r)
   log_recruitment <- log_r
   log_N[, 1] <- log_r
 
@@ -383,6 +384,7 @@ nll_fun <- function(par, dat, simulate = FALSE) {
 
   ## Output ----
 
+  REPORT(recruitment)
   REPORT(N)
   REPORT(abundance)
   REPORT(M)

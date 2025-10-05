@@ -28,5 +28,5 @@ head(obs_pred$index)
 
 }
 \seealso{
-\code{\link[=fit_tam]{fit_tam()}}, \code{\link[=tidy_rep_mats]{tidy_rep_mats()}}, \code{\link[=tidy_sdrep]{tidy_sdrep()}}, \code{\link[=tidy_pop]{tidy_pop()}}
+\code{\link[=fit_tam]{fit_tam()}}, \code{\link[=tidy_rep]{tidy_rep()}}, \code{\link[=tidy_sdrep]{tidy_sdrep()}}, \code{\link[=tidy_pop]{tidy_pop()}}
 }

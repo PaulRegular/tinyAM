@@ -2,7 +2,7 @@
 % Please edit documentation in R/tidy.R
 \name{tidy_pop}
 \alias{tidy_pop}
-\title{Collect population summaries (sdreport + report matrices)}
+\title{Collect population summaries (sdreport + report trends)}
 \usage{
 tidy_pop(fit, interval = 0.95)
 }
@@ -13,10 +13,10 @@ tidy_pop(fit, interval = 0.95)
 }
 \value{
 A named list containing the elements returned by \code{\link[=tidy_sdrep]{tidy_sdrep()}} and
-\code{\link[=tidy_rep_mats]{tidy_rep_mats()}} (names preserved).
+\code{\link[=tidy_rep]{tidy_rep()}} (names preserved).
 }
 \description{
-Convenience wrapper that combines \code{\link[=tidy_sdrep]{tidy_sdrep()}} and \code{\link[=tidy_rep_mats]{tidy_rep_mats()}}
+Convenience wrapper that combines \code{\link[=tidy_sdrep]{tidy_sdrep()}} and \code{\link[=tidy_rep]{tidy_rep()}}
 into a single named list for downstream plotting and summaries.
 }
 \examples{
@@ -26,5 +26,5 @@ names(pop)
 
 }
 \seealso{
-\code{\link[=tidy_sdrep]{tidy_sdrep()}}, \code{\link[=tidy_rep_mats]{tidy_rep_mats()}}, \code{\link[=tidy_obs_pred]{tidy_obs_pred()}}
+\code{\link[=tidy_sdrep]{tidy_sdrep()}}, \code{\link[=tidy_rep]{tidy_rep()}}, \code{\link[=tidy_obs_pred]{tidy_obs_pred()}}
 }
