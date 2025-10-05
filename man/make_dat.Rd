@@ -80,7 +80,7 @@ A named list \code{dat} containing:
 \item \code{is_proj} — logical vector identifying whether year is projected
 \item \code{proj_years} — integer vector of projection years, if used
 \item \code{obs} — per-type tables restricted to \code{years} x \code{ages} (including \code{proj_years}, if used)
-\item \code{SW}, \code{MO} — weight-at-age and maturity matrices (\verb{year x age})
+\item \code{W}, \code{P} — mean weight-at-age, and proportion mature at age matrices (\verb{year x age})
 \item \code{obs_map}, \code{log_obs}, \code{is_na_obs}
 \item design matrices: \code{sd_obs_modmat}, \code{q_modmat}, and optionally \code{F_modmat}, \code{M_modmat}
 \item mean-level placeholders: \code{log_mu_f} and/or \code{log_mu_m} (or \code{log_mu_assumed_m})

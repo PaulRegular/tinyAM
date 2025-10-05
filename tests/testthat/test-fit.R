@@ -56,10 +56,8 @@ test_that("fit_tam emits warning if random effects far exceed observations", {
     F_settings = list(process = "iid"),
     M_settings = list(process = "iid", mu_form = NULL, assumption = ~I(0.3))
   ) |>
-    expect_warning(
-      regexp = "^Model may not have converged",
-      fixed = FALSE
-    )
+    expect_warning(regexp = "^Model may not have converged", fixed = FALSE) |>
+    expect_warning("NaNs produced", fixed = FALSE)
 })
 
 test_that("fit_tam works when an survey does not provide an index for all ages", {

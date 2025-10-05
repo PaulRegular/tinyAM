@@ -218,3 +218,15 @@ for (i in 1:10) {
   lines(fit$dat$years, sims$ssb, lwd = 0.5, col = "grey")
 }
 
+
+
+## TODO
+## - Apply tidy functions inside sim_tam
+##   - Also want to generate obs_pred object with simulated values for self-testing
+## - Generalize tidy_rep_mats --> tidy_rep
+##   - Check dim within
+##   - Tidy age x year mats and year vecs
+## - Retain sdreported objects in tidy_pop (make rep_only an option for sim_tam?)
+
+
+

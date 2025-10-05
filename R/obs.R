@@ -33,7 +33,7 @@
 #'   Columns:
 #'   - `year`: integer year.
 #'   - `age`: numeric age (years).
-#'   - `obs`: numeric weight-at-age (same units as source; e.g., kg).
+#'   - `obs`: numeric stock weight-at-age (same units as source; e.g., kg).
 #'   - `M_assumption`: numeric assumed natural mortality level by age-year
 #'     (used when constructing `M` mean via formula).
 #'

@@ -58,13 +58,13 @@ test_that("make_dat infers years/ages when NULL and builds expected pieces", {
   )
 
   expect_type(dat, "list")
-  expect_true(all(c("years","ages","obs","SW","MO","obs_map","log_obs",
+  expect_true(all(c("years","ages","obs","W","P","obs_map","log_obs",
                     "sd_obs_modmat","q_modmat","F_settings","M_settings","N_settings") %in% names(dat)))
 
   # dims line up
   ny <- length(dat$years); na <- length(dat$ages)
-  expect_equal(dim(dat$SW), c(ny, na))
-  expect_equal(dim(dat$MO), c(ny, na))
+  expect_equal(dim(dat$W), c(ny, na))
+  expect_equal(dim(dat$P), c(ny, na))
 
   # design matrices exist and have columns
   expect_true(is.matrix(dat$sd_obs_modmat))

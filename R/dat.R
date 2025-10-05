@@ -226,7 +226,7 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #' - `is_proj` — logical vector identifying whether year is projected
 #' - `proj_years` — integer vector of projection years, if used
 #' - `obs` — per-type tables restricted to `years` x `ages` (including `proj_years`, if used)
-#' - `SW`, `MO` — weight-at-age and maturity matrices (`year x age`)
+#' - `W`, `P` — mean weight-at-age, and proportion mature at age matrices (`year x age`)
 #' - `obs_map`, `log_obs`, `is_na_obs`
 #' - design matrices: `sd_obs_modmat`, `q_modmat`, and optionally `F_modmat`, `M_modmat`
 #' - mean-level placeholders: `log_mu_f` and/or `log_mu_m` (or `log_mu_assumed_m`)
@@ -326,10 +326,11 @@ make_dat <- function(
     dat$M_settings$age_blocks <- cut_ages(M_ages, M_ages)
   }
 
-  dat$SW <- dat$MO <- matrix(NA, nrow = length(dat$years), ncol = length(dat$ages),
-                             dimnames = list(year = dat$years, age = dat$ages))
-  dat$SW[] <- dat$obs$weight$obs
-  dat$MO[] <- dat$obs$maturity$obs
+  empty_mat <- matrix(NA, nrow = length(dat$years), ncol = length(dat$ages),
+                      dimnames = list(year = dat$years, age = dat$ages))
+  dat$W <- dat$P <- empty_mat
+  dat$W[] <- dat$obs$weight$obs
+  dat$P[] <- dat$obs$maturity$obs
 
   catch <- dat$obs$catch
   index <- dat$obs$index

@@ -227,7 +227,7 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   M <- log_mu_M  <- empty_mat
   Z <- empty_mat
 
-  ## Vital rates ---
+  ## Vital rates ----
 
   log_recruitment <- log_r
   log_N[, 1] <- log_r
@@ -253,7 +253,7 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   log_Z <- log(Z)
 
 
-  ## Cohort equation (assumes max age = plus group) ---
+  ## Cohort equation (assumes max age = plus group) ----
 
   Y <- 2:n_years
   A <- 2:n_ages
@@ -273,26 +273,7 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   N <- exp(log_N)
 
 
-  ## Derived quantities ---
-
-  F_full <- apply(F, 1, max)
-  S <- sweep(F, 1, F_full, "/")
-
-  ia <- as.character(F_settings$mean_ages)
-  F_bar <- rowSums(F[, ia] * N[, ia]) / rowSums(N[, ia])
-  log_F_bar <- log(F_bar)
-  ia <- as.character(M_settings$mean_ages)
-  M_bar <- rowSums(M[, ia] * N[, ia]) / rowSums(N[, ia])
-  log_M_bar <- log(M_bar)
-
-  log_abundance <- log(rowSums(N))
-  ssb_mat <- SW * MO * N * exp(-Z)
-  ssb <- rowSums(ssb_mat)
-  log_ssb_mat <- log(ssb_mat)
-  log_ssb <- log(ssb)
-
-
-  ## Recruitment deviations (basic random walk) ---
+  ## Recruitment deviations (basic random walk) ----
 
   jnll <- 0
 
@@ -310,7 +291,7 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   }
 
 
-  ## Cohort deviations ---
+  ## Cohort deviations ----
 
   if (N_settings$process != "off") {
     eta_log_N <- log_N[-1, -1] - pred_log_N[-1, -1]
@@ -323,7 +304,7 @@ nll_fun <- function(par, dat, simulate = FALSE) {
     }
   }
 
-  ## M deviations ---
+  ## M deviations ----
 
   if (M_settings$process != "off") {
     eta_log_M <- log_m[, M_settings$age_blocks] - log_mu_M[-1, -1]
@@ -337,7 +318,7 @@ nll_fun <- function(par, dat, simulate = FALSE) {
     }
   }
 
-  ## F deviations ---
+  ## F deviations ----
 
   eta_log_F <- log_F[!is_proj, ] - log_mu_F[!is_proj, ]
   phi <- plogis(logit_phi_f)
@@ -348,7 +329,7 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   }
 
 
-  ## Observations ---
+  ## Observations ----
 
   log_pred <- numeric(n_obs)
   iya <- sapply(obs_map[, c("year", "age")], as.character)
@@ -359,35 +340,79 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   log_q_obs <- drop(q_modmat %*% log_q)    # length = number of survey index rows
   samp_time <- obs_map$samp_time
 
-  idx <- obs_map$type == "catch"
-  log_pred[idx] <- log(N_obs[idx]) - log(Z_obs[idx]) + log(1 - exp(- Z_obs[idx])) + log(F_obs[idx])
+  ic <- obs_map$type == "catch"
+  log_pred[ic] <- log(N_obs[ic]) - log(Z_obs[ic]) + log(1 - exp(- Z_obs[ic])) + log(F_obs[ic])
 
-  idx <- obs_map$type == "index"
-  log_pred[idx] <- log_q_obs + log(N_obs[idx]) - Z_obs[idx] * samp_time[idx]
+  ii <- obs_map$type == "index"
+  log_pred[ii] <- log_q_obs + log(N_obs[ii]) - Z_obs[ii] * samp_time[ii]
 
   jnll <- jnll - sum(dnorm(log_obs, log_pred, sd = sd_obs, log = TRUE))
   if (simulate) {
     log_obs <- rnorm(n_obs, mean = log_pred, sd = sd_obs)
   }
 
+  ## Derived quantities ----
+
+  F_full <- apply(F, 1, max)
+  S <- sweep(F, 1, F_full, "/")
+
+  ia <- as.character(F_settings$mean_ages)
+  F_bar <- rowSums(F[, ia] * N[, ia]) / rowSums(N[, ia])
+  log_F_bar <- log(F_bar)
+  ia <- as.character(M_settings$mean_ages)
+  M_bar <- rowSums(M[, ia] * N[, ia]) / rowSums(N[, ia])
+  log_M_bar <- log(M_bar)
+
+  abundance <- rowSums(N)
+  log_abundance <- log(abundance)
+  biomass_mat <- W * N
+  biomass <- rowSums(biomass_mat)
+  log_biomass <- log(biomass)
+  ssb_mat <- W * P * N
+  ssb <- rowSums(ssb_mat)
+  log_ssb <- log(ssb)
+
+  C_obs <- C_pred <- empty_mat
+  C_obs[] <- exp(log_obs[ic])
+  C_pred[] <- exp(log_pred[ic])
+  total_catch <- rowSums(C_obs)
+  total_catch_pred <- rowSums(C_pred)
+  total_yield <- rowSums(C_obs * W)
+  total_yield_pred <- rowSums(C_pred * W)
+
+
+  ## Output ----
+
   REPORT(N)
+  REPORT(abundance)
   REPORT(M)
   REPORT(mu_M)
+  REPORT(M_bar)
   REPORT(F)
   REPORT(mu_F)
   REPORT(F_full)
+  REPORT(F_bar)
   REPORT(S)
   REPORT(Z)
+  REPORT(biomass_mat)
+  REPORT(biomass)
   REPORT(ssb_mat)
   REPORT(ssb)
+
+  REPORT(total_catch)
+  REPORT(total_catch_pred)
+  REPORT(total_yield)
+  REPORT(total_yield_pred)
+
   REPORT(log_pred)
   REPORT(log_obs)
   REPORT(sd_obs)
   REPORT(log_q_obs)
 
-  ADREPORT(log_ssb)
   ADREPORT(log_recruitment)
   ADREPORT(log_abundance)
+  ADREPORT(log_biomass)
+  ADREPORT(log_ssb)
   ADREPORT(log_F_bar)
   ADREPORT(log_M_bar)
 

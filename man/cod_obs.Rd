@@ -34,7 +34,7 @@ Columns:
 \itemize{
 \item \code{year}: integer year.
 \item \code{age}: numeric age (years).
-\item \code{obs}: numeric weight-at-age (same units as source; e.g., kg).
+\item \code{obs}: numeric stock weight-at-age (same units as source; e.g., kg).
 \item \code{M_assumption}: numeric assumed natural mortality level by age-year
 (used when constructing \code{M} mean via formula).
 }
