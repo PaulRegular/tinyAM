@@ -164,7 +164,6 @@ dat <- make_dat(
   proj_settings = list(n_proj = 3, n_mean = 3, F_mult = 1)
 )
 
-
 }
 \seealso{
 \code{\link[stats:model.matrix]{stats::model.matrix()}}, \code{\link[=cut_ages]{cut_ages()}}

@@ -52,6 +52,8 @@
 #' @seealso
 #' [base::findInterval()], [stats::model.matrix()]
 #'
+#' @importFrom utils tail
+#'
 #' @export
 #' @rdname cut_int
 cut_int <- function(x, breaks, ordered = FALSE) {
@@ -63,7 +65,7 @@ cut_int <- function(x, breaks, ordered = FALSE) {
   if (any(x %% 1 != 0))               stop(sprintf("`%s` must be integer-valued.", nm), call. = FALSE)
   if (anyNA(breaks) || any(diff(breaks) <= 0)) stop("`breaks` must be strictly increasing and non-NA.", call. = FALSE)
   if (min(x) != breaks[1])            stop(sprintf("The first break must equal min(%s).", nm), call. = FALSE)
-  if (max(x) != tail(breaks, 1))      stop(sprintf("The last break must equal max(%s).", nm), call. = FALSE)
+  if (max(x) != utils::tail(breaks, 1))      stop(sprintf("The last break must equal max(%s).", nm), call. = FALSE)
 
   k <- length(breaks)
   open_end <- k >= 2L && (breaks[k] - breaks[k - 1L] > 1L)
@@ -103,6 +105,9 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #' @param n_mean Integer number of terminal years to average for `weight`/`maturity` (>=1).
 #' @return Same `obs` structure with appended projection rows and `is_proj`.
 #' @keywords internal
+#'
+#' @importFrom stats aggregate
+#'
 #' @noRd
 .add_proj_rows <- function(obs, n_proj = 3, n_mean = 3) {
   .add_one <- function(x) {
@@ -110,7 +115,7 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
     proj_years <- seq.int(max_year + 1L, max_year + n_proj)
     mean_years <- seq.int(max_year - n_mean + 1L, max_year)
     aux <- x[x$year == max_year, setdiff(names(x), c("year", "obs")), drop = FALSE]
-    mean_obs <- aggregate(obs ~ age, FUN = mean, data = x, subset = year %in% mean_years) |>
+    mean_obs <- stats::aggregate(obs ~ age, FUN = mean, data = x, subset = year %in% mean_years) |>
       merge(aux, by = "age")
     proj_grid <- expand.grid(year = proj_years, age = mean_obs$age)
     proj_rows <- merge(proj_grid, mean_obs, by = "age")[, names(x)]
@@ -253,6 +258,7 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #'   proj_settings = list(n_proj = 3, n_mean = 3, F_mult = 1)
 #' )
 #'
+#' @importFrom stats model.frame model.matrix
 #'
 #' @seealso [stats::model.matrix()], [cut_ages()]
 #' @export
@@ -347,19 +353,19 @@ make_dat <- function(
   dat$log_obs <- obs_fit$log_obs
   dat$is_na_obs <- obs_fit$is_na_obs
 
-  dat$sd_obs_modmat <- model.matrix(obs_settings$sd_form, data = dat$obs_map)
-  dat$q_modmat <- model.matrix(obs_settings$q_form, data = dat$obs$index)
+  dat$sd_obs_modmat <- stats::model.matrix(obs_settings$sd_form, data = dat$obs_map)
+  dat$q_modmat <- stats::model.matrix(obs_settings$q_form, data = dat$obs$index)
   if (!is.null(dat$F_settings$mu_form)) {
-    dat$F_modmat <- model.matrix(F_settings$mu_form, data = dat$obs$catch)
+    dat$F_modmat <- stats::model.matrix(F_settings$mu_form, data = dat$obs$catch)
   } else {
     dat$log_mu_f <- 0
     dat$F_modmat <- 0
   }
 
   if (!is.null(dat$M_settings$mu_form)) {
-    dat$M_modmat <- model.matrix(M_settings$mu_form, data = dat$obs$weight)
+    dat$M_modmat <- stats::model.matrix(M_settings$mu_form, data = dat$obs$weight)
     if ("(Intercept)" %in% colnames(dat$M_modmat) && !is.null(dat$M_settings$assumption)) {
-      dat$M_modmat <- model.matrix(update(M_settings$mu_form, ~ 0 + .), data = dat$obs$weight)
+      dat$M_modmat <- stats::model.matrix(update(M_settings$mu_form, ~ 0 + .), data = dat$obs$weight)
       cli::cli_warn("Dropping intercept term in M mu_form since assumed levels are supplied. Set assumption to NULL to estimate the intercept.")
     }
   } else {
@@ -367,7 +373,7 @@ make_dat <- function(
     dat$M_modmat <- 0
   }
   if (!is.null(dat$M_settings$assumption)) {
-    dat$log_mu_assumed_m <- log(unlist(model.frame(dat$M_settings$assumption, data = dat$obs$weight)))
+    dat$log_mu_assumed_m <- log(unlist(stats::model.frame(dat$M_settings$assumption, data = dat$obs$weight)))
   } else {
     dat$log_mu_assumed_m <- 0
   }

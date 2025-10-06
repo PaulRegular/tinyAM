@@ -283,6 +283,9 @@ tidy_pop <- function(fit, interval = 0.95) {
 #' tabs3 <- tidy_tam(model_list = fits, label = "retro_year")
 #' head(tabs3$pop$N)  # column "retro_year" has 2023/2024
 #'
+#' @importFrom utils type.convert
+#' @importFrom stats setNames
+#'
 #' @seealso [tidy_obs_pred()], [tidy_pop()], [fit_tam()], [fit_retro()]
 #' @export
 tidy_tam <- function(..., model_list = NULL, interval = 0.95, label = "model") {
@@ -319,8 +322,8 @@ tidy_tam <- function(..., model_list = NULL, interval = 0.95, label = "model") {
   obs_nms <- .common(obs_list)
   pop_nms <- .common(pop_list)
 
-  obs_pred <- setNames(lapply(obs_nms, function(nm) .stack(obs_list, nm)), obs_nms)
-  pop      <- setNames(lapply(pop_nms, function(nm) .stack(pop_list, nm)), pop_nms)
+  obs_pred <- stats::setNames(lapply(obs_nms, function(nm) .stack(obs_list, nm)), obs_nms)
+  pop      <- stats::setNames(lapply(pop_nms, function(nm) .stack(pop_list, nm)), pop_nms)
 
   list(obs_pred = obs_pred, pop = pop)
 }

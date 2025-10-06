@@ -72,7 +72,7 @@ A list with components:
 \item \strong{call}: matched call.
 \item \strong{dat}: data list returned by \code{\link[=make_dat]{make_dat()}}.
 \item \strong{obj}: RTMB \code{ADFun} object.
-\item \strong{opt}: \code{nlminb} optimization result.
+\item \strong{opt}: \verb{[stats::nlminb()]} optimization result.
 \item \strong{rep}: list from \code{obj$report()}.
 \item \strong{sdrep}: \code{\link[RTMB:TMB-interface]{RTMB::sdreport()}} result.
 \item \strong{is_converged}: Did the model converge? (see \code{\link[=check_convergence]{check_convergence()}})

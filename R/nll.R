@@ -199,6 +199,8 @@ rprocess_2d <- function(ny, na, phi = c(0, 0), sd = 1) {
 #' p_hat <- as.list(sdrep, "Estimate")
 #' sims  <- nll_fun(p_hat, dat, simulate = TRUE)
 #'
+#' @importFrom stats rnorm
+#'
 #' @seealso
 #' [make_dat()], [make_par()], [fit_tam()], [sim_tam()],
 #' [dprocess_2d()], [rprocess_2d()]
@@ -279,15 +281,15 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   jnll <- 0
 
   if (N_settings$init_N0) {
-    jnll <- jnll - dnorm(log_N[1, 1], mean = log_r0, sd = sd_r, log = TRUE)
+    jnll <- jnll - RTMB::dnorm(log_N[1, 1], mean = log_r0, sd = sd_r, log = TRUE)
     if (simulate) {
-      log_r[1] <- rnorm(1, mean = log_r0, sd = sd_r)
+      log_r[1] <- stats::rnorm(1, mean = log_r0, sd = sd_r)
     }
   }
   eta_R <- log_N[2:n_years, 1] - log_N[1:(n_years - 1), 1]
-  jnll <- jnll - sum(dnorm(eta_R, 0, sd_r, log = TRUE))
+  jnll <- jnll - sum(RTMB::dnorm(eta_R, 0, sd_r, log = TRUE))
   if (simulate) {
-    eta_R <- rnorm(n_years - 1, 0, sd = sd_r)
+    eta_R <- stats::rnorm(n_years - 1, 0, sd = sd_r)
     log_r[2:n_years] <- log_r[1:(n_years - 1)] + eta_R
   }
 
@@ -347,9 +349,9 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   ii <- obs_map$type == "index"
   log_pred[ii] <- log_q_obs + log(N_obs[ii]) - Z_obs[ii] * samp_time[ii]
 
-  jnll <- jnll - sum(dnorm(log_obs, log_pred, sd = sd_obs, log = TRUE))
+  jnll <- jnll - sum(RTMB::dnorm(log_obs, log_pred, sd = sd_obs, log = TRUE))
   if (simulate) {
-    log_obs <- rnorm(n_obs, mean = log_pred, sd = sd_obs)
+    log_obs <- stats::rnorm(n_obs, mean = log_pred, sd = sd_obs)
   }
 
   ## Derived quantities ----

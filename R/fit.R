@@ -32,7 +32,7 @@
 #' - **call**: matched call.
 #' - **dat**: data list returned by [make_dat()].
 #' - **obj**: RTMB `ADFun` object.
-#' - **opt**: `nlminb` optimization result.
+#' - **opt**: `[stats::nlminb()]` optimization result.
 #' - **rep**: list from `obj$report()`.
 #' - **sdrep**: [RTMB::sdreport()] result.
 #' - **is_converged**: Did the model converge? (see [check_convergence()])
@@ -57,6 +57,8 @@
 #' fit2 <- update(fit,
 #'   proj_settings = list(n_proj = 3, n_mean = 3, F_mult = 1)
 #' )
+#'
+#' @importFrom stats nlminb rnorm
 #'
 #' @seealso
 #' [make_dat()], [make_par()], [sim_tam()], [fit_retro()],
@@ -88,7 +90,7 @@ fit_tam <- function(obs, interval = 0.95, silent = FALSE, ...) {
     silent = silent
   )
 
-  opt <- try(nlminb(
+  opt <- try(stats::nlminb(
     obj$par, obj$fn, obj$gr,
     control = list(eval.max = 1000, iter.max = 1000)
   ))
@@ -179,8 +181,11 @@ fit_tam <- function(obs, interval = 0.95, silent = FALSE, ...) {
 #'
 #' @seealso
 #' [fit_tam()], [sim_tam()]
+#'
 #' @importFrom furrr future_map furrr_options
 #' @importFrom progressr with_progress progressor
+#' @importFrom stats update
+#'
 #' @export
 fit_retro <- function(
     fit,
@@ -202,7 +207,7 @@ fit_retro <- function(
     update_progress <- progressr::progressor(steps = length(retro_years))
     retro <- furrr::future_map(seq_along(retro_years), function(i) {
       r <- suppressWarnings(
-        try(update(fit, years = min_year:retro_years[i], silent = TRUE), silent = TRUE)
+        try(stats::update(fit, years = min_year:retro_years[i], silent = TRUE), silent = TRUE)
       )
       if (inherits(r, "try-error")) {
         update_progress()
