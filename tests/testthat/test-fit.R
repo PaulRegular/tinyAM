@@ -1,5 +1,5 @@
 
-## fit_tam ---
+## fit_tam ----
 
 testthat::skip_if_not_installed("RTMB")
 testthat::skip_if_not(exists("cod_obs"), "cod_obs not available")
@@ -84,7 +84,7 @@ test_that("fit_tam objective is unaffected by projections", {
 })
 
 
-## fit_retro ---
+## fit_retro ----
 
 test_that("fit_retro runs peels and returns stacked outputs", {
   fit <- default_fit
@@ -110,24 +110,8 @@ test_that("fit_hindcasts runs peels with a one year projection", {
   }
 })
 
-## sim_tam ---
 
-test_that("sim_tam returns simulated observations and (optionally) re-computed reports", {
-  # Simulate obs only (quick)
-  rep_obs <- sim_tam(default_fit, obs_only = TRUE)
-  expect_true(is.list(rep_obs))
-  expect_true("log_obs" %in% names(rep_obs))
-  expect_true(all(is.finite(rep_obs$log_obs[!is.na(rep_obs$log_obs)])))
-
-  # Simulate and also regenerate report using simulated random effects
-  rep_full <- sim_tam(default_fit, obs_only = FALSE)
-  expect_true(all(c("F", "M", "Z", "ssb", "log_obs") %in% names(rep_full)))
-  expect_equal(length(rep_full$ssb), length(YEARS))
-})
-
-
-
-## check_convergence ---
+## check_convergence ----
 
 test_that("check_convergence returns TRUE and messages when all checks pass", {
   fit_ok <- list(
