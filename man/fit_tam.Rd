@@ -75,6 +75,9 @@ A list with components:
 \item \strong{opt}: \verb{[stats::nlminb()]} optimization result.
 \item \strong{rep}: list from \code{obj$report()}.
 \item \strong{sdrep}: \code{\link[RTMB:TMB-interface]{RTMB::sdreport()}} result.
+\item \strong{fixed_par}: fixed parameter estimates in a tidy format (see \code{\link[=tidy_par]{tidy_par()}}).
+\item \strong{random_par}: list of random parameter estimates in a tidy format (see
+\code{\link[=tidy_par]{tidy_par()}}).
 \item \strong{is_converged}: Did the model converge? (see \code{\link[=check_convergence]{check_convergence()}})
 \item \strong{obs_pred}: \code{obs$catch} and \code{obs$index} data augmented with
 predicted values, parameter estimates, and

@@ -20,7 +20,7 @@
 #' @param obs A named list of tidy observation tables (e.g., `catch`, `index`,
 #'   `weight`, `maturity`). See [cod_obs] for an example.
 #' @param interval Level in `(0, 1)` to use to generate confidence
-#'                 intervals, where applicable; default `0.95 (see [tidy_tam()]).`
+#'                 intervals, where applicable; default `0.95.`
 #' @param silent Logical; if `TRUE`, disables tracing information.
 #' @inheritDotParams make_dat
 #'
@@ -33,6 +33,9 @@
 #' - **opt**: `[stats::nlminb()]` optimization result.
 #' - **rep**: list from `obj$report()`.
 #' - **sdrep**: [RTMB::sdreport()] result.
+#' - **fixed_par**: fixed parameter estimates in a tidy format (see [tidy_par()]).
+#' - **random_par**: list of random parameter estimates in a tidy format (see
+#'                   [tidy_par()]).
 #' - **is_converged**: Did the model converge? (see [check_convergence()])
 #' - **obs_pred**: `obs$catch` and `obs$index` data augmented with
 #'                  predicted values, parameter estimates, and
@@ -104,7 +107,10 @@ fit_tam <- function(obs, interval = 0.95, silent = FALSE, ...) {
     sdrep = sdrep
   )
 
-  out$obs_pred <- tidy_obs_pred(out)
+  par_tabs <- tidy_par(out, interval = interval)
+  out$fixed_par <- par_tabs$fixed
+  out$random_par <- par_tabs$random
+  out$obs_pred <- tidy_obs_pred(out, interval = interval)
   out$pop <- tidy_pop(out)
   out$is_converged <- check_convergence(out, quiet = TRUE)
 

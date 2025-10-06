@@ -220,6 +220,103 @@ tidy_pop <- function(fit, interval = 0.95) {
 }
 
 
+#' Tidy parameter estimates (fixed & random) with CIs and back-transforms
+#'
+#' @description
+#' Creates a tidy summary of parameter estimates from a fitted TAM object,
+#' combining estimates (`Estimate`) and standard errors (`Std. Error`) from
+#' `fit$sdrep`. Parameters whose names begin with `log_` or `logit_` are
+#' back-transformed to the natural scale:
+#'
+#' - `log_`  → `exp()` (and the `log_` prefix is dropped, e.g. `log_sd_r` → `sd_r`)
+#' - `logit_` → `plogis()` (and the `logit_` prefix is dropped, e.g. `logit_phi_f` → `phi_f`)
+#'
+#' Fixed-effect parameters are returned in a single data frame (`$fixed`);
+#' random-effect parameters are returned as a named list of data frames
+#' (`$random`), one per random block (e.g. `log_f`, `log_r`, `missing`, …).
+#'
+#' Labels are added where applicable:
+#' - For parameters specified using a formula in [make_dat()] (e.g., `log_q`, `log_sd_obs`),
+#;   a `coef` column is added.
+#' - For `log_r` (recruitment path), a `year` column is used.
+#' - For matrices (e.g., `log_f`, `log_n`), `year` and/or `age` columns are added
+#'   via [tidy_mat()].
+#'
+#' @param fit A fitted TAM object (from [fit_tam()]) containing an `sdrep`
+#'   (an [RTMB::sdreport()] object) and `obj$env$.random` (names of random effects).
+#' @param interval Confidence level for Wald intervals; default `0.95`.
+#'
+#' @return
+#' A list with two elements:
+#' - `fixed`: a data frame stacking all fixed-effect parameters with columns
+#'   `par`, `est`, `se`, `lwr`, `upr`, plus any index columns such as
+#'   `coef`, `year`, `age`.
+#' - `random`: a named list of data frames (one per random block) with the same
+#'   columns as `fixed` (indices appropriate to each random effect).
+#'
+#' @examples
+#' fit <- fit_tam(cod_obs, years = 1983:2024, ages = 2:14)
+#' par_tab <- tidy_par(fit)
+#' names(par_tab)
+#' par_tab$fixed
+#' names(par_tab$random)        # e.g., "log_f", "log_r", "missing", ...
+#' head(par_tab$random$log_f)
+#'
+#' @seealso [tidy_mat()], [fit_tam()]
+#' @export
+tidy_par <- function(fit, interval = 0.95) {
+
+  est <- as.list(fit$sdrep, "Estimate")
+  se  <- as.list(fit$sdrep, "Std. Error")
+  nms <- intersect(names(est), names(se))
+
+  ran_nms <- fit$obj$env$.random
+  fix_nms <- setdiff(nms, ran_nms)
+  z       <- stats::qnorm(0.5 + interval / 2)
+
+  .par2df <- function(nm) {
+    e <- est[[nm]]; s <- se[[nm]]
+    if (is.matrix(e)) {
+      df <- tidy_mat(e, value_name = "est")
+      df$se <- as.vector(s)
+    } else {
+      if (is.null(names(e))) {
+        df <- data.frame(coef = NA, est = e, se = s)
+      } else {
+        if (nm == "log_r") {
+          df <- data.frame(year = fit$dat$years, est = e, se = s)
+        } else {
+          df <- data.frame(coef = names(e), est = e, se = s)
+        }
+      }
+    }
+    df <- cbind(data.frame(par = nm), df)
+    df$lwr <- df$est - z * df$se
+    df$upr <- df$est + z * df$se
+
+    if (startsWith(nm, "logit_")) {
+      df <- trans_est(df, transform = plogis, scale = 1)
+      df$par <- sub("^logit_", "", df$par)
+    } else if (startsWith(nm, "log_")) {
+      df <- trans_est(df, transform = exp, scale = 1)
+      df$par <- sub("^log_",   "", df$par)
+    } else {
+      df <- trans_est(df, transform = NULL, scale = 1)
+    }
+    df
+  }
+
+  fixed  <- if (length(fix_nms)) do.call(rbind, lapply(fix_nms, .par2df)) else
+    data.frame(par=character(), est=numeric(), se=numeric(),
+               lwr=numeric(), upr=numeric(), check.names = FALSE)
+  rownames(fixed) <- NULL
+
+  random <- setNames(lapply(ran_nms, .par2df), ran_nms)
+
+  list(fixed = fixed, random = random)
+}
+
+
 #' Stack TAM outputs across models (retro folds, scenarios, etc.)
 #'
 #' @description
@@ -355,7 +452,7 @@ tidy_tam <- function(..., model_list = NULL, interval = 0.95, label = "model") {
 #' @export
 trans_est <- function(data, transform = exp, scale = 1) {
   if (!is.null(transform)) {
-    data[, c("est", "lwr", "upr")] <-  transform(data[, c("est", "lwr", "upr")])
+    data[, c("est", "lwr", "upr")] <-  apply(data[, c("est", "lwr", "upr")], 2, transform)
   }
   data[, c("est", "lwr", "upr")] <- data[, c("est", "lwr", "upr")] / scale
   data

@@ -1,4 +1,9 @@
 
+fit <- fit_tam(cod_obs, years = 1983:2024, ages = 2:14, silent = TRUE)
+vals <- as.list(fit$sdrep, "Estimate", report = TRUE)
+sds <- as.list(fit$sdrep, "Std. Error", report = TRUE)
+
+
 ## tidy_array ----
 
 test_that("tidy_array errors on non-matrix/array", {
@@ -83,10 +88,6 @@ test_that("trans_est respects transform = NULL", {
 
 
 ## tidy_obs_pred ----
-
-fit <- fit_tam(cod_obs, years = 1983:2024, ages = 2:14, silent = TRUE)
-vals <- as.list(fit$sdrep, "Estimate", report = TRUE)
-sds <- as.list(fit$sdrep, "Std. Error", report = TRUE)
 
 test_that("tidy_obs_pred builds residual diagnostics for catch and index", {
 
@@ -176,6 +177,67 @@ test_that("tidy_pop concatenates tidy_sdrep and tidy_rep without duplicates", {
   expect_equal(length(names(out)), length(unique(names(out))))
 })
 
+
+## tidy_par ----
+
+test_that("tidy_par returns nested fixed/random with expected columns", {
+
+  tp <- tidy_par(fit)
+
+  # Top-level structure
+  expect_type(tp, "list")
+  expect_true(all(c("fixed","random") %in% names(tp)))
+
+  # Fixed table has core columns
+  expect_s3_class(tp$fixed, "data.frame")
+  expect_true(all(c("par","est","se","lwr","upr") %in% names(tp$fixed)))
+
+  # Random names match RTMB random blocks
+  expect_setequal(names(tp$random), fit$obj$env$.random)
+  # Each random entry is a data.frame with core columns
+  for (nm in names(tp$random)) {
+    expect_s3_class(tp$random[[nm]], "data.frame")
+    expect_true(all(c("par","est","se","lwr","upr") %in% names(tp$random[[nm]])))
+  }
+})
+
+test_that("tidy_par applies back-transforms for log_ and logit_ prefixes", {
+
+  tp <- tidy_par(fit)
+
+  # sd_* rows should be positive (exp back-transform from log_sd_*)
+  sd_rows <- subset(tp$fixed, grepl("^sd_", par))
+  if (nrow(sd_rows)) {
+    expect_true(all(is.finite(sd_rows$est)))
+    expect_true(all(sd_rows$est > 0))
+  }
+
+  # phi_f (from logit_phi_f) should be within (0,1)
+  phi_rows <- subset(tp$fixed, par == "phi_f")
+  if (nrow(phi_rows)) {
+    expect_true(all(phi_rows$est > 0 & phi_rows$est < 1))
+    expect_true(all(phi_rows$lwr >= 0 & phi_rows$upr <= 1))
+  }
+})
+
+test_that("tidy_par preserves coefficient names for named vectors and dims for matrices", {
+  tp <- tidy_par(fit)
+
+  # Named vectors like q → expect coef column present and not all NA
+  q_rows <- subset(tp$fixed, par == "q")
+  if (nrow(q_rows)) {
+    expect_true("coef" %in% names(q_rows))
+    expect_true(any(!is.na(q_rows$coef)))
+  }
+
+  # Matrix random effect (e.g., log_f) → expect year & age columns present
+  if ("log_f" %in% names(tp$random)) {
+    df <- tp$random$log_f
+    expect_true(all(c("year","age") %in% names(df)))
+    # row count equals number of cells in the reported F matrix
+    expect_equal(nrow(df), length(fit$rep$F))
+  }
+})
 
 
 ## tidy_tam ----

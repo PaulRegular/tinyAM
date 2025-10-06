@@ -87,6 +87,7 @@ make_par <- function(dat) {
   par$log_sd_f <- 0
   if (!is.null(dat$F_settings$mu_form)) {
     par$log_mu_f <- numeric(ncol(dat$F_modmat))
+    names(par$log_mu_f) <- colnames(dat$F_modmat)
   }
   if (dat$N_settings$process != "off") {
     par$log_sd_n <- 0
@@ -96,6 +97,7 @@ make_par <- function(dat) {
   }
   if (!is.null(dat$M_settings$mu_form)) {
     par$log_mu_m <- numeric(ncol(dat$M_modmat))
+    names(par$log_mu_m) <- colnames(dat$M_modmat)
   }
   if (dat$N_settings$process == "ar1") {
     par$logit_phi_n <- c(0, 0)
@@ -107,11 +109,14 @@ make_par <- function(dat) {
     par$logit_phi_m <- c(0, 0)
   }
   par$log_q <- numeric(ncol(dat$q_modmat))
+  names(par$log_q) <- colnames(dat$q_modmat)
   par$log_sd_obs <- numeric(ncol(dat$sd_obs_modmat))
+  names(par$log_sd_obs) <- colnames(dat$sd_obs_modmat)
 
   par$missing <- numeric(sum(dat$is_na_obs))
 
   par$log_r <- numeric(length(dat$years))
+  names(par$log_r) <- as.character(dat$years)
   if (dat$N_settings$process != "off") {
     par$log_n <- matrix(0, nrow = length(dat$years), ncol = length(dat$ages) - 1,
                         dimnames = list(year = dat$years, age = dat$ages[-1]))

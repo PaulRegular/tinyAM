@@ -1,4 +1,39 @@
 
+
+.one_sim <- function(fit, obs_only = FALSE) {
+
+  obj <- fit$obj
+  dat <- fit$dat
+
+  p <- as.list(fit$sdrep, "Estimate")
+
+  obj <- RTMB::MakeADFun(
+    .make_nll_fun(nll_fun, dat),
+    par,
+    random = ran,
+    silent = silent
+  )
+
+
+
+  sims <- nll_fun(p, dat, simulate = TRUE)
+  plot(sims$log_obs)
+  obj$env$obs$log_obs <- dat$log_obs <- sims$log_obs
+  rep <- obj$report()
+  plot(rep$log_obs)
+  if (!obs_only) {
+    p[obj$env$.random] <- sims[obj$env$.random]
+    sims <- nll_fun(p, dat, simulate = TRUE)
+    rep <- obj$report(unlist(p))
+  }
+  rep$log_obs <- sims$log_obs
+
+  pop <- tidy_rep(list(dat = dat, rep = rep))
+  pop$total_catch
+
+}
+
+
 #' Simulate from a fitted TAM
 #'
 #' @title Simulation using a fitted TAM
