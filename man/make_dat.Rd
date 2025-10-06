@@ -37,7 +37,7 @@ this is forced to \code{TRUE}.
 \item{F_settings}{A list with elements:
 \itemize{
 \item \code{process}: one of \code{"iid"}, \code{"approx_rw"}, or \code{"ar1"}.
-\item \code{mu_form}: an optional formula for mean-\\eqn{F}.
+\item \code{mu_form}: an optional formula for mean-\eqn{F}.
 \item \code{mean_ages}: optional vector of ages to include in population weighted
 average F (\code{F_bar}) calculations. All ages used if absent.
 }}
@@ -45,14 +45,14 @@ average F (\code{F_bar}) calculations. All ages used if absent.
 \item{M_settings}{A list with elements:
 \itemize{
 \item \code{process}: one of \code{"off"}, \code{"iid"}, \code{"approx_rw"}, or \code{"ar1"}.
-\item \code{mu_form}: optional formula for mean-\\eqn{M} (on the log scale) built
+\item \code{mu_form}: optional formula for mean-\eqn{M} (on the log scale) built
 on \code{obs$weight}. If provided together with \code{assumption}, the intercept
 in \code{mu_form} is dropped (warning) so assumed levels act as fixed offsets.
 \item \code{assumption}: optional one-sided formula giving fixed (non-estimated)
-log-\\eqn{M} offsets, e.g. \code{~ I(0.2)} or a column reference such as
+log-\eqn{M} offsets, e.g. \code{~ I(0.2)} or a column reference such as
 \code{~ log(M_assumption)} stored in the \code{obs$weight} data.frame.
 \item \code{age_breaks}: optional integer break points used by \code{\link[=cut_ages]{cut_ages()}} to
-define \code{age_blocks} for coupling \\eqn{M} deviations across ages.
+define \code{age_blocks} for coupling \eqn{M} deviations across ages.
 \item \code{mean_ages}: optional vector of ages to include in population weighted
 average M (\code{M_bar}) calculations. All ages used if absent.
 }}
@@ -93,7 +93,7 @@ A named list \code{dat} containing:
 \code{make_dat()} converts tidy observation inputs and modeling options into the
 structured list \code{dat} expected by TAM’s likelihood and simulation functions.
 It expands an age–year grid, merges observations, constructs design matrices for
-observation SDs, catchability, and mean-\\eqn{F} / mean-\\eqn{M} (when used),
+observation SDs, catchability, and mean-\eqn{F} and/or mean-\eqn{M} (when used),
 and derives helper mappings and settings.
 }
 \details{
@@ -117,7 +117,7 @@ treated as \code{NA} (to be handled via random effects).
 \item If \code{M_settings$mu_form} is provided, \code{M_modmat <- model.matrix(mu_form, data = obs$weight)}. If an \code{assumption} is also supplied, the intercept
 in \code{mu_form} is dropped and a warning is issued.
 \item If neither \code{M_settings$mu_form} nor \code{M_settings$assumption} is supplied,
-the function stops, because \\eqn{M} must be identified by either a fixed
+the function stops, because \eqn{M} must be identified by either a fixed
 assumption or a mean structure.
 }
 
@@ -126,9 +126,9 @@ assumption or a mean structure.
 \item If \code{N_settings$process == "off"} and \code{init_N0 == FALSE}, \code{init_N0} is
 forced to \code{TRUE} (with a warning) so the first-year abundance is
 estimable.
-\item \code{M_settings$age_breaks} (vector of break points on ages \\eqn{\\ge} min modeled age + 1)
+\item \code{M_settings$age_breaks} (vector of break points on ages \eqn{\ge} min modeled age + 1)
 defines \code{M_settings$age_blocks} via \code{\link[=cut_ages]{cut_ages()}}, used
-to couple \\eqn{M} deviations across age.
+to couple \eqn{M} deviations across age.
 \item The AR(1) correlation parameters are only initialized for
 processes whose \code{process == "ar1"}. Correlations are assumed to be 0
 when \code{process == "iid"}, and 0.99 when \code{process == "approx_rw"} to approximate

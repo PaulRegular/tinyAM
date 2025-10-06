@@ -141,7 +141,7 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #' `make_dat()` converts tidy observation inputs and modeling options into the
 #' structured list `dat` expected by TAM’s likelihood and simulation functions.
 #' It expands an age–year grid, merges observations, constructs design matrices for
-#' observation SDs, catchability, and mean-\\eqn{F} / mean-\\eqn{M} (when used),
+#' observation SDs, catchability, and mean-\eqn{F} and/or mean-\eqn{M} (when used),
 #' and derives helper mappings and settings.
 #'
 #' @details
@@ -165,7 +165,7 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #'   data = obs$weight)`. If an `assumption` is also supplied, the intercept
 #'   in `mu_form` is dropped and a warning is issued.
 #' - If neither `M_settings$mu_form` nor `M_settings$assumption` is supplied,
-#'   the function stops, because \\eqn{M} must be identified by either a fixed
+#'   the function stops, because \eqn{M} must be identified by either a fixed
 #'   assumption or a mean structure.
 #'
 #' **Process options and guards**
@@ -173,9 +173,9 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #' - If `N_settings$process == "off"` and `init_N0 == FALSE`, `init_N0` is
 #'   forced to `TRUE` (with a warning) so the first-year abundance is
 #'   estimable.
-#' - `M_settings$age_breaks` (vector of break points on ages \\eqn{\\ge} min modeled age + 1)
+#' - `M_settings$age_breaks` (vector of break points on ages \eqn{\ge} min modeled age + 1)
 #'   defines `M_settings$age_blocks` via [cut_ages()], used
-#'   to couple \\eqn{M} deviations across age.
+#'   to couple \eqn{M} deviations across age.
 #' - The AR(1) correlation parameters are only initialized for
 #'   processes whose `process == "ar1"`. Correlations are assumed to be 0
 #'   when `process == "iid"`, and 0.99 when `process == "approx_rw"` to approximate
@@ -201,19 +201,19 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #'   this is forced to `TRUE`.
 #' @param F_settings A list with elements:
 #' - `process`: one of `"iid"`, `"approx_rw"`, or `"ar1"`.
-#' - `mu_form`: an optional formula for mean-\\eqn{F}.
+#' - `mu_form`: an optional formula for mean-\eqn{F}.
 #' - `mean_ages`: optional vector of ages to include in population weighted
 #'   average F (`F_bar`) calculations. All ages used if absent.
 #' @param M_settings A list with elements:
 #' - `process`: one of `"off"`, `"iid"`, `"approx_rw"`, or `"ar1"`.
-#' - `mu_form`: optional formula for mean-\\eqn{M} (on the log scale) built
+#' - `mu_form`: optional formula for mean-\eqn{M} (on the log scale) built
 #'   on `obs$weight`. If provided together with `assumption`, the intercept
 #'   in `mu_form` is dropped (warning) so assumed levels act as fixed offsets.
 #' - `assumption`: optional one-sided formula giving fixed (non-estimated)
-#'   log-\\eqn{M} offsets, e.g. `~ I(0.2)` or a column reference such as
+#'   log-\eqn{M} offsets, e.g. `~ I(0.2)` or a column reference such as
 #'   `~ log(M_assumption)` stored in the `obs$weight` data.frame.
 #' - `age_breaks`: optional integer break points used by [cut_ages()] to
-#'   define `age_blocks` for coupling \\eqn{M} deviations across ages.
+#'   define `age_blocks` for coupling \eqn{M} deviations across ages.
 #' - `mean_ages`: optional vector of ages to include in population weighted
 #'   average M (`M_bar`) calculations. All ages used if absent.
 #' @param obs_settings A list with elements:

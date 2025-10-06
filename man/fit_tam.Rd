@@ -2,7 +2,7 @@
 % Please edit documentation in R/fit.R
 \name{fit_tam}
 \alias{fit_tam}
-\title{Fit TAM}
+\title{Fit a Tiny Assessment Model (TAM)}
 \usage{
 fit_tam(obs, interval = 0.95, silent = FALSE, ...)
 }
@@ -32,21 +32,21 @@ this is forced to \code{TRUE}.
     \item{\code{F_settings}}{A list with elements:
 \itemize{
 \item \code{process}: one of \code{"iid"}, \code{"approx_rw"}, or \code{"ar1"}.
-\item \code{mu_form}: an optional formula for mean-\\eqn{F}.
+\item \code{mu_form}: an optional formula for mean-\eqn{F}.
 \item \code{mean_ages}: optional vector of ages to include in population weighted
 average F (\code{F_bar}) calculations. All ages used if absent.
 }}
     \item{\code{M_settings}}{A list with elements:
 \itemize{
 \item \code{process}: one of \code{"off"}, \code{"iid"}, \code{"approx_rw"}, or \code{"ar1"}.
-\item \code{mu_form}: optional formula for mean-\\eqn{M} (on the log scale) built
+\item \code{mu_form}: optional formula for mean-\eqn{M} (on the log scale) built
 on \code{obs$weight}. If provided together with \code{assumption}, the intercept
 in \code{mu_form} is dropped (warning) so assumed levels act as fixed offsets.
 \item \code{assumption}: optional one-sided formula giving fixed (non-estimated)
-log-\\eqn{M} offsets, e.g. \code{~ I(0.2)} or a column reference such as
+log-\eqn{M} offsets, e.g. \code{~ I(0.2)} or a column reference such as
 \code{~ log(M_assumption)} stored in the \code{obs$weight} data.frame.
 \item \code{age_breaks}: optional integer break points used by \code{\link[=cut_ages]{cut_ages()}} to
-define \code{age_blocks} for coupling \\eqn{M} deviations across ages.
+define \code{age_blocks} for coupling \eqn{M} deviations across ages.
 \item \code{mean_ages}: optional vector of ages to include in population weighted
 average M (\code{M_bar}) calculations. All ages used if absent.
 }}
@@ -89,8 +89,6 @@ constructs the RTMB objective, optimizes it, and returns a fitted object with
 reports and standard errors.
 }
 \details{
-Fit a Tiny Assessment Model (TAM)
-
 Random-effect blocks are chosen automatically from the model settings:
 \itemize{
 \item Always includes \code{log_f} and \code{log_r}.

@@ -1,8 +1,6 @@
 
 #' Fit a Tiny Assessment Model (TAM)
 #'
-#' @title Fit TAM
-#'
 #' @description
 #' Builds data with [make_dat()], initializes parameters with [make_par()],
 #' constructs the RTMB objective, optimizes it, and returns a fitted object with
