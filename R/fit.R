@@ -110,8 +110,8 @@ fit_tam <- function(obs, interval = 0.95, silent = FALSE, ...) {
   par_tabs <- tidy_par(out, interval = interval)
   out$fixed_par <- par_tabs$fixed
   out$random_par <- par_tabs$random
-  out$obs_pred <- tidy_obs_pred(out, interval = interval)
-  out$pop <- tidy_pop(out)
+  out$obs_pred <- tidy_obs_pred(out)
+  out$pop <- tidy_pop(out, interval = interval)
   out$is_converged <- check_convergence(out, quiet = TRUE)
 
   out

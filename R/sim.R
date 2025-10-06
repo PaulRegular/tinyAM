@@ -1,35 +1,36 @@
 
 
-.one_sim <- function(fit, obs_only = FALSE) {
+.one_sim <- function(fit, obs_only = FALSE, sim_number = 1) {
 
+  ## Simulate observations | par
   obj <- fit$obj
-  dat <- fit$dat
+  dat <- sim_dat <- fit$dat
+  par <- sim_par <- as.list(fit$sdrep, "Estimate")
+  sims <- nll_fun(par, dat, simulate = TRUE)
 
-  p <- as.list(fit$sdrep, "Estimate")
-
-  obj <- RTMB::MakeADFun(
-    .make_nll_fun(nll_fun, dat),
-    par,
-    random = ran,
-    silent = silent
-  )
-
-
-
-  sims <- nll_fun(p, dat, simulate = TRUE)
-  plot(sims$log_obs)
-  obj$env$obs$log_obs <- dat$log_obs <- sims$log_obs
-  rep <- obj$report()
-  plot(rep$log_obs)
+  ## Use simulated random effects?
   if (!obs_only) {
-    p[obj$env$.random] <- sims[obj$env$.random]
-    sims <- nll_fun(p, dat, simulate = TRUE)
-    rep <- obj$report(unlist(p))
+    sim_par[obj$env$.random] <- sims[obj$env$.random]
+    sims <- nll_fun(sim_par, dat, simulate = TRUE)
   }
-  rep$log_obs <- sims$log_obs
 
-  pop <- tidy_rep(list(dat = dat, rep = rep))
-  pop$total_catch
+  ## Update report using sim_dat and sim_par
+  sim_dat$log_obs <- sims$log_obs
+  make_nll_fun <- function(f, d) function(p) f(p, d)
+  sim_obj <- RTMB::MakeADFun(make_nll_fun(nll_fun, sim_dat), sim_par)
+  sim_rep <- sim_obj$report()
+
+  ## Tidy, label, and return
+  sim_pop <- tidy_rep(list(dat = sim_dat, rep = sim_rep))
+  for (nm in names(sim_pop)) sim_pop[[nm]]$sim <- sim_number
+  sim_obs <- fit$dat$obs[c("catch", "index")]
+  split_obs <- split(exp(sims$log_obs), fit$dat$obs_map$type)
+  sim_obs$catch$obs <- split_obs$catch
+  sim_obs$catch$sim <- sim_number
+  sim_obs$index$obs <- split_obs$index
+  sim_obs$index$sim <- sim_number
+
+  list(sim_obs = sim_obs, sim_pop = sim_pop)
 
 }
 
@@ -61,6 +62,7 @@
 #' @param obs_only Logical; if `TRUE`, only new `log_obs` values are
 #'   simulated and inserted into the final report.
 #'   If `FALSE` (default), simulated random effects are also injected and all REPORTed quantities are recomputed.
+#' @inheritParams fit_retro
 #'
 #' @return
 #' A list of REPORTed objects (same structure as `fit$rep`) with
@@ -76,20 +78,22 @@
 #' [fit_tam()], [fit_retro()]
 #'
 #' @export
-sim_tam <- function(fit, obs_only = FALSE) {
+sim_tam <- function(fit, n = 10, obs_only = FALSE,
+                    progress = TRUE,
+                    globals = NULL) {
 
-  obj <- fit$obj
-  dat <- fit$dat
-  p <- as.list(fit$sdrep, "Estimate")
-  sims <- nll_fun(p, dat, simulate = TRUE)
-  rep <- obj$report()
-  if (!obs_only) {
-    p[obj$env$.random] <- sims[obj$env$.random]
-    sims <- nll_fun(p, dat, simulate = TRUE)
-    rep <- obj$report(unlist(p))
-  }
-  rep$log_obs <- sims$log_obs
-  rep
+  progressr::with_progress({
+    update_progress <- progressr::progressor(steps = n)
+    sims <- furrr::future_map(seq.int(n), function(i) {
+      sim <- .one_sim(fit, obs_only = obs_only, sim_number = i)
+      update_progress()
+      sim
+    }, .options = furrr::furrr_options(seed = 1, packages = "tinyAM", globals = globals))
+  }, enable = progress)
+  names(sims) <- seq.int(n)
+
+  pop_nms <- names(sims[[1]]$sim_pop)
+  lapply(pop_nms, function(nm) sims)
 
 }
 

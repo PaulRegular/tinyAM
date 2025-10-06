@@ -11,7 +11,7 @@ fit_tam(obs, interval = 0.95, silent = FALSE, ...)
 \code{weight}, \code{maturity}). See \link{cod_obs} for an example.}
 
 \item{interval}{Level in \verb{(0, 1)} to use to generate confidence
-intervals, where applicable; default \verb{0.95 (see [tidy_tam()]).}}
+intervals, where applicable; default \verb{0.95.}}
 
 \item{silent}{Logical; if \code{TRUE}, disables tracing information.}
 

@@ -240,9 +240,48 @@ test_that("tidy_par preserves coefficient names for named vectors and dims for m
 })
 
 
+## stack_nested ----
+
+test_that("stack_nested returns empty list for empty input", {
+  expect_identical(stack_nested(list()), list())
+})
+
+test_that("stack_nested adds id column first and type.converts labels", {
+  x <- list(
+    `2023` = list(ssb = data.frame(year = 1:2, est = 1:2),
+                  N   = data.frame(year = 1:2, age = 2:3, est = 5:6)),
+    `2024` = list(ssb = data.frame(year = 1:2, est = 11:12),
+                  N   = data.frame(year = 1:2, age = 2:3, est = 15:16))
+  )
+  out <- stack_nested(x, id_col = "retro_year")
+
+  # id column exists, is first, and numeric (coerced)
+  expect_true("retro_year" %in% names(out$ssb))
+  expect_identical(names(out$ssb)[1], "retro_year")
+  expect_type(out$ssb$retro_year, "integer")  # type.convert made it numeric
+  expect_equal(sort(unique(out$ssb$retro_year)), c(2023, 2024))
+})
+
+test_that("stack_nested stacks only common subtables across outer list", {
+  x <- list(
+    A = list(ssb = data.frame(year=1:2, est=1:2),
+             N   = data.frame(year=1:2, age=2:3, est=5:6)),
+    B = list(ssb = data.frame(year=1:2, est=11:12)) # 'N' missing here
+  )
+  out <- stack_nested(x, id_col = "model")
+  expect_true("ssb" %in% names(out))
+  expect_false("N" %in% names(out))  # not common -> dropped
+})
+
+
 ## tidy_tam ----
 
-test_that("tidy_tam supplied single model via ... adds no label column", {
+# Convenience variants for tests
+fit_2024 <- fit
+fit_2023 <- update(fit, years = min(fit$dat$years):(max(fit$dat$years) - 1))
+fit_2022 <- update(fit, years = min(fit$dat$years):(max(fit$dat$years) - 2))
+
+test_that("tidy_tam: single model via ... adds no label column", {
   out  <- tidy_tam(fit)  # default label = 'model'
   expect_false("model" %in% names(out$obs_pred$catch))
   expect_false("model" %in% names(out$obs_pred$index))
@@ -250,39 +289,67 @@ test_that("tidy_tam supplied single model via ... adds no label column", {
   expect_false("model" %in% names(out$pop$ssb))
 })
 
-
-fit_2024 <- fit
-fit_2023 <- update(fit, years = 1983:2023)
-fit_2022 <- update(fit, years = 1983:2022)
-
-test_that("tidy_tam supplied multiple models via ... use object names as labels", {
+test_that("tidy_tam: multiple models via ... use object names as labels (and label is first column)", {
   out <- tidy_tam(fit_2023, fit_2024)  # label = 'model'
+  # obs_pred
   expect_true("model" %in% names(out$obs_pred$catch))
-  expect_equal(unique(out$obs_pred$catch$model), c("fit_2023", "fit_2024"))
+  expect_identical(names(out$obs_pred$catch)[1], "model")
+  expect_equal(sort(unique(out$obs_pred$catch$model)), c("fit_2023", "fit_2024"))
+  # pop
   expect_true("model" %in% names(out$pop$N))
-  expect_equal(unique(out$pop$N$model), c("fit_2023", "fit_2024"))
+  expect_identical(names(out$pop$N)[1], "model")
+  expect_equal(sort(unique(out$pop$N$model)), c("fit_2023", "fit_2024"))
 })
 
-test_that("tidy_tam supplied a model_list must be named, names are used as labels (even length 1), and numeric names are converted", {
+test_that("tidy_tam: model_list must be named; names are used as labels (even length 1) and numeric-like names are coerced", {
   # Unnamed -> error
-  expect_error(tidy_tam(model_list = list(fit)))
+  expect_error(tidy_tam(model_list = list(fit_2024)))
 
-  # Named (length 1) -> label present and equals the name
+  # Named (length 1) -> label present and equals the name, first column, numeric conversion
   out1 <- tidy_tam(model_list = list(`2024` = fit_2024))
   expect_true("model" %in% names(out1$pop$N))
-  expect_true(!is.character(unique(out1$pop$N$model)))
+  expect_identical(names(out1$pop$N)[1], "model")
+  expect_type(out1$pop$N$model, "integer")   # type.convert coerced it
   expect_equal(unique(out1$pop$N$model), 2024)
 
   # Named (length >1) -> labels in order of names
   out2 <- tidy_tam(model_list = list(`2023` = fit_2023, `2024` = fit_2024))
-  expect_equal(unique(out2$obs_pred$catch$model), c(2023, 2024))
+  expect_true("model" %in% names(out2$obs_pred$catch))
+  expect_equal(sort(unique(out2$obs_pred$catch$model)), c(2023, 2024))
+  expect_type(out2$obs_pred$catch$model, "integer")
 })
 
-test_that("tidy_tam supplied custom label name is respected", {
+test_that("tidy_tam: custom label name is respected across obs_pred and pop", {
   out <- tidy_tam(fit_2024, fit_2023, label = "fold")
-  expect_true("fold" %in% names(out$obs_pred$catch))
+  expect_true("fold" %in% names(out$obs_pred$index))
+  expect_identical(names(out$obs_pred$index)[1], "fold")
+  expect_true("fold" %in% names(out$pop$ssb))
+  expect_identical(names(out$pop$ssb)[1], "fold")
+  expect_equal(sort(unique(out$pop$ssb$fold)), c("fit_2023", "fit_2024"))
 })
 
+test_that("tidy_tam: outputs are lists of data.frames and preserve is_proj", {
+  out <- tidy_tam(fit_2024)
+  # structure
+  expect_true(is.list(out$obs_pred) && is.list(out$pop))
+  expect_true(all(vapply(out$obs_pred, is.data.frame, logical(1))))
+  expect_true(all(vapply(out$pop,      is.data.frame, logical(1))))
+  # is_proj presence (comes from tidy_* internals)
+  expect_true("is_proj" %in% names(out$obs_pred$catch))
+  expect_true("is_proj" %in% names(out$pop$ssb))
+  expect_type(out$obs_pred$catch$is_proj, "logical")
+  expect_type(out$pop$ssb$is_proj, "logical")
+})
 
+test_that("tidy_tam: interval argument is forwarded to tidy_pop (lwr/upr present)", {
+  out <- tidy_tam(fit_2024, interval = 0.80)
+  # sdreport-derived series like 'ssb' should have lwr/upr
+  expect_true(all(c("est", "lwr", "upr") %in% names(out$pop$ssb)))
+})
 
-
+test_that("tidy_tam: stacking uses intersection of components across models", {
+  # Just a smoke check that all returned subtables are data.frames even if models differ
+  out <- tidy_tam(fit_2022, fit_2023, fit_2024)
+  expect_true(all(vapply(out$obs_pred, is.data.frame, logical(1))))
+  expect_true(all(vapply(out$pop,      is.data.frame, logical(1))))
+})

@@ -4,7 +4,7 @@
 \alias{sim_tam}
 \title{Simulation using a fitted TAM}
 \usage{
-sim_tam(fit, obs_only = FALSE)
+sim_tam(fit, n = 10, obs_only = FALSE, progress = TRUE, globals = NULL)
 }
 \arguments{
 \item{fit}{A fitted TAM object returned by \code{\link[=fit_tam]{fit_tam()}}.}
@@ -12,6 +12,10 @@ sim_tam(fit, obs_only = FALSE)
 \item{obs_only}{Logical; if \code{TRUE}, only new \code{log_obs} values are
 simulated and inserted into the final report.
 If \code{FALSE} (default), simulated random effects are also injected and all REPORTed quantities are recomputed.}
+
+\item{progress}{Logical; show progress bar using \code{\link[progressr:with_progress]{progressr::with_progress()}}.}
+
+\item{globals}{Character vector naming global objects to supply to the workers.}
 }
 \value{
 A list of REPORTed objects (same structure as \code{fit$rep}) with

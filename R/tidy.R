@@ -142,6 +142,39 @@ tidy_rep <- function(fit) {
   trends
 }
 
+
+#' Transform and rescale estimate columns
+#'
+#' @description
+#' Applies a transformation (e.g., `exp`) and optional rescaling to the columns
+#' `est`, `lwr`, and `upr` of a data frame.
+#'
+#' @param data A data frame containing columns `est`, `lwr`, and `upr`.
+#' @param transform A function applied to `est`, `lwr`, and `upr`
+#'   (set to `NULL` to skip). Default `exp`.
+#' @param scale Numeric scale factor by which transformed columns are divided.
+#'   Default `1`.
+#'
+#' @return
+#' The input data frame with `est`, `lwr`, and `upr` transformed and rescaled.
+#'
+#' @examples
+#' d <- data.frame(est = log(100), lwr = log(80), upr = log(120))
+#' trans_est(d)                # exp + no rescale
+#' trans_est(d, transform = NULL, scale = 1000)  # no transform, rescale
+#'
+#' @keywords internal
+#' @export
+trans_est <- function(data, transform = exp, scale = 1) {
+  if (!is.null(transform)) {
+    data[, c("est", "lwr", "upr")] <-  apply(data[, c("est", "lwr", "upr")], 2, transform)
+  }
+  data[, c("est", "lwr", "upr")] <- data[, c("est", "lwr", "upr")] / scale
+  data
+}
+
+
+
 #' Tidy `sdreport` time series with confidence intervals
 #'
 #' @description
@@ -317,33 +350,85 @@ tidy_par <- function(fit, interval = 0.95) {
 }
 
 
+#' Stack identically named subtables from a nested list
+#'
+#' @param x A named list of results (e.g. sims or models), each containing
+#'   a named list of data.frames (e.g. "ssb", "N", "recruitment", ...).
+#'   Shape: list(<id> = list(<subtable> = data.frame, ...), ...)
+#' @param id_col Name of the column to add with the outer id. Default "model".
+#'   Set to NULL to omit the id column.
+#' @return A named list of data.frames. One element per subtable name. Each
+#'   data.frame is the row-bound stack across outer ids, with an added `id_col`
+#'   (if not NULL).
+#' @examples
+#' res <- list(
+#'   sim1 = list(ssb = data.frame(year=1:3, est=1:3),
+#'               N   = data.frame(year=1:2, age=2:3, est=5:6)),
+#'   sim2 = list(ssb = data.frame(year=1:3, est=11:13),
+#'               N   = data.frame(year=1:2, age=2:3, est=15:16))
+#' )
+#' stacked <- stack_nested(res, id_col = "sim")
+#' str(stacked$ssb)  # has column 'sim'
+#'
+#' @export
+stack_nested <- function(x, id_col = "model") {
+  if (!length(x)) return(list())
+
+  outer_ids <- names(x)
+  if (is.null(outer_ids)) outer_ids <- as.character(seq_along(x))
+
+  # Names common to all outer elements
+  sub_names <- Reduce(intersect, lapply(x, names))
+  if (!length(sub_names)) return(list())
+
+  out <- setNames(vector("list", length(sub_names)), sub_names)
+
+  for (nm in sub_names) {
+    pieces <- lapply(seq_along(x), function(i) {
+      df <- x[[i]][[nm]]
+      if (!is.data.frame(df)) df <- as.data.frame(df)
+      if (!is.null(id_col)) df[[id_col]] <- outer_ids[i]
+      df
+    })
+    stk <- do.call(rbind, pieces)
+    rownames(stk) <- NULL
+    if (!is.null(id_col)) {
+      # convert numeric-like labels to numeric (matches tidy_tam docs)
+      stk[[id_col]] <- utils::type.convert(stk[[id_col]], as.is = TRUE)
+      # put id first
+      ord <- c(id_col, setdiff(names(stk), id_col))
+      stk <- stk[, ord, drop = FALSE]
+    }
+    out[[nm]] <- stk
+  }
+  out
+}
+
+
 #' Stack TAM outputs across models (retro folds, scenarios, etc.)
 #'
 #' @description
 #' Builds tidy, stacked tables from one or more fitted TAM models. For each
-#' model, it collects:
-#'
+#' model it collects:
 #' - observation diagnostics via [tidy_obs_pred()], and
 #' - population summaries via [tidy_pop()] (with confidence intervals),
-#'
 #' then stacks **per component** across models (e.g., all `"catch"` tables
 #' together; all `"N"` tables together).
 #'
 #' @details
 #' **Inputs:** Pass models through `...` or via `model_list =`.
-#'
 #' - If `...` supplies **one** model, **no label** column is added.
 #' - If `...` supplies **more than one** model, a label column is added using
 #'   the object/expression names from `...`.
 #' - If `model_list` is used, it **must be a named list**; its names are always
 #'   used as labels (even when length 1).
 #'
-#' Names, whether from the objects or `model_list`, are passed through
-#' [utils::type.convert()] with `as.is = TRUE`, so numeric-like labels (e.g.,
-#' `"2010"`, `"2011"`) become numeric.
+#' Names (from `...` or `model_list`) are passed through
+#' [utils::type.convert()] with `as.is = TRUE`, so numeric-like labels
+#' (e.g. "2010", "2011") become numeric.
 #'
-#' Only components present in **all** models are stacked (intersection of
-#' component names), ensuring consistent columns for base-R `rbind()`.
+#' Only components present in **all** models are stacked (intersection of names),
+#' ensuring consistent columns for base-R `rbind()`.
 #'
 #' @param ... One or more fitted TAM objects (as returned by [fit_tam()]).
 #'   Ignored if `model_list` is provided.
@@ -356,11 +441,9 @@ tidy_par <- function(fit, interval = 0.95) {
 #'
 #' @return
 #' A named list with two elements:
-#'
 #' - **obs_pred** — a named list of stacked data frames (e.g., `catch`, `index`);
 #' - **pop** — a named list of stacked data frames (e.g., `ssb`, `N`, `M`,
 #'   `mu_M`, `F`, `mu_F`, `Z`, `ssb_mat`).
-#'
 #' Each stacked data frame contains all rows across models, with a label column
 #' added according to the rules above.
 #'
@@ -381,8 +464,6 @@ tidy_par <- function(fit, interval = 0.95) {
 #' head(tabs3$pop$N)  # column "retro_year" has 2023/2024
 #'
 #' @importFrom utils type.convert
-#' @importFrom stats setNames
-#'
 #' @seealso [tidy_obs_pred()], [tidy_pop()], [fit_tam()], [fit_retro()]
 #' @export
 tidy_tam <- function(..., model_list = NULL, interval = 0.95, label = "model") {
@@ -391,6 +472,7 @@ tidy_tam <- function(..., model_list = NULL, interval = 0.95, label = "model") {
   if (using_dots) {
     dots <- list(...)
     if (!length(dots)) stop("No models supplied.", call. = FALSE)
+    # name from expressions in ...
     names(dots) <- sapply(substitute(list(...))[-1], deparse1)
     model_list <- dots
   } else {
@@ -400,60 +482,17 @@ tidy_tam <- function(..., model_list = NULL, interval = 0.95, label = "model") {
     }
   }
 
-  # Add label iff multiple via ... OR any use of model_list (which must be named)
+  # add label if: multiple via ... OR any named model_list usage
   add_label <- (using_dots && length(model_list) > 1L) || (!using_dots)
-
-  .common <- function(x) Reduce(intersect, lapply(x, names))
-  .stack  <- function(models, comp) {
-    parts <- lapply(models, `[[`, comp)
-    out <- do.call(rbind, unname(parts))
-    mod_names <- names(models) |> utils::type.convert(as.is = TRUE)
-    if (add_label) out[[label]] <- rep(mod_names, sapply(parts, nrow))
-    rownames(out) <- NULL
-    out
-  }
+  id_col    <- if (add_label) label else NULL
 
   obs_list <- lapply(model_list, tidy_obs_pred)
   pop_list <- lapply(model_list, tidy_pop, interval = interval)
 
-  obs_nms <- .common(obs_list)
-  pop_nms <- .common(pop_list)
-
-  obs_pred <- stats::setNames(lapply(obs_nms, function(nm) .stack(obs_list, nm)), obs_nms)
-  pop      <- stats::setNames(lapply(pop_nms, function(nm) .stack(pop_list, nm)), pop_nms)
+  obs_pred <- stack_nested(obs_list, id_col = id_col)
+  pop      <- stack_nested(pop_list, id_col = id_col)
 
   list(obs_pred = obs_pred, pop = pop)
 }
 
 
-
-
-#' Transform and rescale estimate columns
-#'
-#' @description
-#' Applies a transformation (e.g., `exp`) and optional rescaling to the columns
-#' `est`, `lwr`, and `upr` of a data frame.
-#'
-#' @param data A data frame containing columns `est`, `lwr`, and `upr`.
-#' @param transform A function applied to `est`, `lwr`, and `upr`
-#'   (set to `NULL` to skip). Default `exp`.
-#' @param scale Numeric scale factor by which transformed columns are divided.
-#'   Default `1`.
-#'
-#' @return
-#' The input data frame with `est`, `lwr`, and `upr` transformed and rescaled.
-#'
-#' @examples
-#' d <- data.frame(est = log(100), lwr = log(80), upr = log(120))
-#' trans_est(d)                # exp + no rescale
-#' trans_est(d, transform = NULL, scale = 1000)  # no transform, rescale
-#'
-#' @keywords internal
-#' @export
-trans_est <- function(data, transform = exp, scale = 1) {
-  if (!is.null(transform)) {
-    data[, c("est", "lwr", "upr")] <-  apply(data[, c("est", "lwr", "upr")], 2, transform)
-  }
-  data[, c("est", "lwr", "upr")] <- data[, c("est", "lwr", "upr")] / scale
-  data
-}

@@ -25,21 +25,19 @@ A named list with two elements:
 \item \strong{obs_pred} — a named list of stacked data frames (e.g., \code{catch}, \code{index});
 \item \strong{pop} — a named list of stacked data frames (e.g., \code{ssb}, \code{N}, \code{M},
 \code{mu_M}, \code{F}, \code{mu_F}, \code{Z}, \code{ssb_mat}).
-}
-
 Each stacked data frame contains all rows across models, with a label column
 added according to the rules above.
 }
+}
 \description{
 Builds tidy, stacked tables from one or more fitted TAM models. For each
-model, it collects:
+model it collects:
 \itemize{
 \item observation diagnostics via \code{\link[=tidy_obs_pred]{tidy_obs_pred()}}, and
 \item population summaries via \code{\link[=tidy_pop]{tidy_pop()}} (with confidence intervals),
-}
-
 then stacks \strong{per component} across models (e.g., all \code{"catch"} tables
 together; all \code{"N"} tables together).
+}
 }
 \details{
 \strong{Inputs:} Pass models through \code{...} or via \verb{model_list =}.
@@ -51,12 +49,12 @@ the object/expression names from \code{...}.
 used as labels (even when length 1).
 }
 
-Names, whether from the objects or \code{model_list}, are passed through
-\code{\link[utils:type.convert]{utils::type.convert()}} with \code{as.is = TRUE}, so numeric-like labels (e.g.,
-\code{"2010"}, \code{"2011"}) become numeric.
+Names (from \code{...} or \code{model_list}) are passed through
+\code{\link[utils:type.convert]{utils::type.convert()}} with \code{as.is = TRUE}, so numeric-like labels
+(e.g. "2010", "2011") become numeric.
 
-Only components present in \strong{all} models are stacked (intersection of
-component names), ensuring consistent columns for base-R \code{rbind()}.
+Only components present in \strong{all} models are stacked (intersection of names),
+ensuring consistent columns for base-R \code{rbind()}.
 }
 \examples{
 # Single model via ...: no label column added
