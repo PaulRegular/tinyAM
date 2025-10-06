@@ -115,8 +115,11 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
     proj_years <- seq.int(max_year + 1L, max_year + n_proj)
     mean_years <- seq.int(max_year - n_mean + 1L, max_year)
     aux <- x[x$year == max_year, setdiff(names(x), c("year", "obs")), drop = FALSE]
-    mean_obs <- stats::aggregate(obs ~ age, FUN = mean, data = x, subset = year %in% mean_years) |>
-      merge(aux, by = "age")
+    mean_obs <- stats::aggregate(
+      obs ~ age,
+      data = x[x$year %in% mean_years, ],
+      FUN = mean
+    ) |> merge(aux, by = "age")
     proj_grid <- expand.grid(year = proj_years, age = mean_obs$age)
     proj_rows <- merge(proj_grid, mean_obs, by = "age")[, names(x)]
     proj_rows$is_proj <- TRUE
