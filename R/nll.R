@@ -211,6 +211,7 @@ nll_fun <- function(par, dat, simulate = FALSE) {
 
   getAll(par, dat)
 
+  obs <- exp(log_obs)
   log_obs <- OBS(log_obs)
   if (obs_settings$fill_missing) {
     log_obs[is_missing] <- missing
@@ -381,13 +382,14 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   ssb <- rowSums(ssb_mat)
   log_ssb <- log(ssb)
 
+  pred <- exp(log_pred)
   C_obs <- C_pred <- empty_mat
-  C_obs[] <- exp(log_obs[ic])
-  C_pred[] <- exp(log_pred[ic])
-  total_catch <- rowSums(C_obs)
-  total_catch_pred <- rowSums(C_pred)
-  total_yield <- rowSums(C_obs * W)
-  total_yield_pred <- rowSums(C_pred * W)
+  C_obs[] <- obs[ic]
+  C_pred[] <- pred[ic]
+  total_catch <- rowSums(C_obs, na.rm = TRUE)
+  total_catch_pred <- rowSums(C_pred, na.rm = TRUE)
+  total_yield <- rowSums(C_obs * W, na.rm = TRUE)
+  total_yield_pred <- rowSums(C_pred * W, na.rm = TRUE)
 
 
   ## Output ----
