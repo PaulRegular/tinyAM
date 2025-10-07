@@ -47,3 +47,9 @@ test_that("sim_tam: n controls the number of stacked simulations", {
   expect_equal(sort(unique(sims5$catch$sim)), 1:5)
   expect_equal(sort(unique(sims5$ssb$sim)),   1:5)
 })
+
+test_that("sim_tam works when projecting", {
+  proj_fit <- update(fit, proj_settings = list(n_proj = 5, n_mean = 5, F_mult = 1))
+  proj_sim <- sim_tam(proj_fit, n = 5, obs_only = TRUE, progress = FALSE, seed = 1)
+  expect_false(all(!proj_sim$index$is_proj))
+})

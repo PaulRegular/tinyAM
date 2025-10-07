@@ -328,7 +328,7 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   jnll <- jnll - dprocess_2d(eta_log_F, sd = sd_f, phi = phi)
   if (simulate) {
     eta_log_F <- rprocess_2d(nrow(log_f), ncol(log_f), sd = sd_f, phi = phi)
-    log_f <- log_mu_F + eta_log_F
+    log_f <- log_mu_F[!is_proj, ] + eta_log_F
   }
 
 
