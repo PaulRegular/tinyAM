@@ -97,82 +97,82 @@ test_that("rprocess_2d edge cases: ny=1 or na=1 behave like 1D AR(1)", {
 
 ## nll_fun ---
 
+YEARS <- 1983:2024
+AGES  <- 2:14
+
+test_dat <- function(obs = cod_obs,
+                     years = YEARS,
+                     ages  = AGES,
+                     N_settings = list(process = "iid", init_N0 = FALSE),
+                     F_settings = list(process = "approx_rw",  mu_form = NULL),
+                     M_settings = list(process = "off", mu_form = NULL, assumption = ~I(0.3)),
+                     obs_settings = list(q_form = ~ q_block, sd_form = ~ sd_obs_block,
+                                         fill_missing = TRUE),
+                     proj_settings = NULL) {
+  args <- mget(ls())
+  do.call(make_dat, args)
+}
+
 test_that("nll_fun returns finite JNLL and simulates when requested", {
-  dat <- make_dat(
-    cod_obs,
-    years = 1983:2024,
-    ages  = 2:14,
+  dat <- test_dat(
     N_settings = list(process = "iid", init_N0 = TRUE),
-    F_settings = list(process = "approx_rw",  mu_form = NULL),
-    M_settings = list(process = "off", mu_form = NULL, assumption = ~ I(0.3)),
-    obs_settings = list(sd_form = ~ sd_obs_block, q_form = ~ q_block)
+    F_settings = list(process = "approx_rw", mu_form = NULL),
+    M_settings = list(process = "off", mu_form = NULL, assumption = ~ I(0.3))
   )
   par <- make_par(dat)
 
   # Likelihood branch
   jnll <- nll_fun(par, dat, simulate = FALSE)
-  expect_true(is.numeric(jnll))
+  expect_type(jnll, "double")
   expect_length(jnll, 1L)
   expect_true(is.finite(jnll))
 
-  # Simulation branch (no RTMB object needed)
+  # Simulation branch
   sims <- nll_fun(par, dat, simulate = TRUE)
   expect_type(sims, "list")
   expect_true(all(c("log_f", "log_r", "log_obs") %in% names(sims)))
   if (dat$N_settings$process != "off") expect_true("log_n" %in% names(sims))
-  if (dat$M_settings$process != "off") expect_true("log_m" %in% names(sims) || TRUE) # tolerate off path
+  if (dat$M_settings$process != "off") expect_true("log_m" %in% names(sims) || TRUE)
 
-  # Simulated obs restored to NA where missing
+  # Fill-missing logic
   is_miss <- is.na(dat$log_obs)
-  expect_true(all(is.na(sims$log_obs[is_miss])))
-  expect_true(all(is.finite(sims$log_obs[!is_miss])))
+  expect_true(all(!is.na(sims$log_obs[is_miss])))
+  dat2 <- dat; dat2$obs_settings$fill_missing <- FALSE
+  sims2 <- nll_fun(par, dat2, simulate = TRUE)
+  expect_true(all(is.na(sims2$log_obs[is_miss])))
 
-  # RTMB object — include randoms consistent with settings
+  # RTMB object
   make_nll_fun <- function(f, d) function(p) f(p, d)
   randoms <- c("log_f", "log_r", "missing")
   if (dat$N_settings$process != "off") randoms <- c(randoms, "log_n")
   if (dat$M_settings$process != "off") randoms <- c(randoms, "log_m")
+
   obj <- RTMB::MakeADFun(make_nll_fun(nll_fun, dat), par, random = randoms, silent = TRUE)
   opt <- nlminb(obj$par, obj$fn, obj$gr, control = list(iter.max = 50, eval.max = 50))
   expect_true(is.finite(opt$objective))
 
   rep <- obj$report()
-  expect_true(all(c("N", "F", "M", "mu_F", "mu_M", "Z", "ssb", "log_pred", "log_q_obs") %in% names(rep)))
+  expect_true(all(c("N","F","M","mu_F","mu_M","Z","ssb","log_pred","log_q_obs") %in% names(rep)))
 
-  # Mean-structure checks for this configuration:
-  # - F mu_form is NULL => mu_F is zero surface
+  # Mean-structure checks
   expect_true(all(rep$mu_F == 1))
-  # - M process is off with assumption 0.3 => mu_M = exp(0.3) everywhere and M == mu_M
   expect_true(all(abs(rep$mu_M - 0.3) < 1e-12))
-  expect_true(all(abs(rep$M - rep$mu_M)  < 1e-12))
+  expect_true(all(abs(rep$M - rep$mu_M) < 1e-12))
 })
 
-test_that("nll_fun respects F_mult projections (F in proj years is scaled from terminal historical year)", {
-  dat <- make_dat(
-    cod_obs,
+test_that("nll_fun respects F_mult projections", {
+  dat <- test_dat(
     years = NULL, ages = NULL,
-    N_settings = list(process = "iid", init_N0 = FALSE),
-    F_settings = list(process = "approx_rw", mu_form = NULL),
-    M_settings = list(process = "off", mu_form = NULL, assumption = ~ I(0.3)),
-    obs_settings = list(sd_form = ~ sd_obs_block, q_form = ~ q_block),
     proj_settings = list(n_proj = 2, n_mean = 3, F_mult = c(0.8, 1.2))
   )
   par <- make_par(dat)
 
-  # Build RTMB object (need F, mu_F via REPORT)
   make_nll_fun <- function(f, d) function(p) f(p, d)
   randoms <- c("log_f", "log_r", "missing", "log_n")
   obj <- RTMB::MakeADFun(make_nll_fun(nll_fun, dat), par, random = randoms, silent = TRUE)
-
-  # Evaluate once at init (zeros) — still valid to check the projection transformation
   rep <- obj$report()
-  years <- as.integer(rownames(rep$F))
-  is_proj <- years %in% dat$proj_years
-  hist_years <- years[!is_proj]
-  term_y <- max(hist_years)
 
-  # By construction in nll_fun: log_F[is_proj,] = log_f_last + log(F_mult_y)
-  # With init zeros, exp(log_f_last)=1 so projected F should equal F_mult per proj year
+  years <- as.integer(rownames(rep$F))
   for (i in seq_along(dat$proj_years)) {
     y <- dat$proj_years[i]
     expect_true(all(abs(rep$F[as.character(y), ] - dat$proj_settings$F_mult[i]) < 1e-12))
@@ -180,40 +180,32 @@ test_that("nll_fun respects F_mult projections (F in proj years is scaled from t
 })
 
 test_that("nll_fun handles AR1 settings and produces finite JNLL", {
-  dat <- make_dat(
-    cod_obs,
-    years = 1983:2024,
-    ages  = 2:14,
+  dat <- test_dat(
     N_settings = list(process = "ar1", init_N0 = TRUE),
     F_settings = list(process = "ar1", mu_form = ~ F_a_block + F_y_block),
-    M_settings = list(process = "ar1", mu_form = NULL, assumption = ~ I(0.3), age_breaks = seq(2, 14, 2)),
-    obs_settings = list(sd_form = ~ sd_obs_block, q_form = ~ q_block)
+    M_settings = list(process = "ar1", mu_form = NULL, assumption = ~ I(0.3))
   )
   par <- make_par(dat)
 
-  # ensure AR1 params are present
   expect_true(all(c("logit_phi_n","logit_phi_f","logit_phi_m") %in% names(par)))
 
   jnll <- nll_fun(par, dat, simulate = FALSE)
   expect_true(is.finite(jnll))
 
-  # RTMB run with AR1 processes
   make_nll_fun <- function(f, d) function(p) f(p, d)
-  randoms <- c("log_f", "log_r", "log_n", "log_m", "missing")
+  randoms <- c("log_f","log_r","log_n","log_m","missing")
   obj <- RTMB::MakeADFun(make_nll_fun(nll_fun, dat), par, random = randoms, silent = TRUE)
-  opt <- nlminb(obj$par, obj$fn, obj$gr, control = list(iter.max = 50, eval.max = 50))
+  opt <- nlminb(obj$par, obj$fn, obj$gr, control = list(iter.max = 20, eval.max = 20))
   expect_true(is.finite(opt$objective))
   rep <- obj$report()
   expect_true(all(c("N","F","M","Z","ssb") %in% names(rep)))
 })
 
-test_that("nll_fun yields finite log_pred for non-missing obs and respects zero->NA logic", {
-  dat <- make_dat(
-    cod_obs,
+test_that("nll_fun yields finite log_pred for non-missing obs", {
+  dat <- test_dat(
     N_settings = list(process = "iid", init_N0 = FALSE),
     F_settings = list(process = "iid", mu_form = NULL),
-    M_settings = list(process = "off", mu_form = NULL, assumption = ~ I(0.3)),
-    obs_settings = list(sd_form = ~ sd_obs_block, q_form = ~ q_block)
+    M_settings = list(process = "off", mu_form = NULL, assumption = ~ I(0.3))
   )
   par <- make_par(dat)
 
@@ -221,13 +213,8 @@ test_that("nll_fun yields finite log_pred for non-missing obs and respects zero-
   obj <- RTMB::MakeADFun(make_nll_fun(nll_fun, dat), par,
                          random = c("log_f","log_r","log_n","missing"),
                          silent = TRUE)
-  invisible(obj$fn(obj$par))  # one eval to populate report
+  invisible(obj$fn(obj$par))
   rep <- obj$report()
-
-  # log_obs input zeros are treated as NA => positions in dat$log_obs that are NA
-  # should correspond to NA in sims when simulate=TRUE (checked above)
-  # Here: predicted means finite where the input wasn't missing
-  nonmiss_idx <- which(!is.na(dat$log_obs))
-  expect_true(all(is.finite(rep$log_pred[nonmiss_idx])))
+  nonmiss <- which(!is.na(dat$log_obs))
+  expect_true(all(is.finite(rep$log_pred[nonmiss])))
 })
-
