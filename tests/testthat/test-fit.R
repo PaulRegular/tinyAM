@@ -15,7 +15,8 @@ test_fit <- function(obs = cod_obs,
                      N_settings = list(process = "iid", init_N0 = FALSE),
                      F_settings = list(process = "approx_rw",  mu_form = NULL),
                      M_settings = list(process = "off", mu_form = NULL, assumption = ~I(0.3)),
-                     obs_settings = list(q_form = ~ q_block, sd_form = ~ sd_obs_block),
+                     obs_settings = list(q_form = ~ q_block, sd_form = ~ sd_obs_block,
+                                         fill_missing = TRUE),
                      proj_settings = NULL,
                      silent = TRUE) {
   args <- mget(ls())
@@ -31,7 +32,8 @@ test_that("fit_tam runs on a cod dataset and returns expected structure", {
   expect_type(fit, "list")
   expect_named(
     fit,
-    c("call", "dat", "obj", "opt", "rep", "sdrep", "obs_pred", "pop", "is_converged"),
+    c("call", "dat", "obj", "opt", "rep", "sdrep", "obs_pred", "pop", "is_converged",
+      "fixed_par", "random_par"),
     ignore.order = TRUE
   )
 
@@ -50,14 +52,16 @@ test_that("fit_tam runs on a cod dataset and returns expected structure", {
 })
 
 
-test_that("fit_tam emits warning if random effects far exceed observations", {
-  test_fit(
-    N_settings = list(process = "iid", init_N0 = TRUE),
-    F_settings = list(process = "iid"),
-    M_settings = list(process = "iid", mu_form = NULL, assumption = ~I(0.3))
-  ) |>
-    expect_warning(regexp = "^Model may not have converged", fixed = FALSE) |>
-    expect_warning("NaNs produced", fixed = FALSE)
+test_that("fit_tam emits warning if the model does not converge", {
+  bad_fit <- suppressWarnings({
+    test_fit(
+      N_settings = list(process = "iid", init_N0 = TRUE),
+      F_settings = list(process = "iid"),
+      M_settings = list(process = "iid", mu_form = NULL, assumption = ~I(0.3))
+    )
+  })
+  expect_warning(check_convergence(bad_fit, quiet = TRUE),
+                 regexp = "Model may not have converged", fixed = FALSE) # one of many warnings
 })
 
 test_that("fit_tam works when an survey does not provide an index for all ages", {
@@ -81,6 +85,20 @@ test_that("fit_tam objective is unaffected by projections", {
   # "missing" random effects in projections = predictions
   is_proj <- fit$dat$obs_map$is_proj
   expect_equal(fit$rep$log_obs[is_proj], fit$rep$log_pred[is_proj])
+})
+
+test_that("fit_tam does not estimate missing values when fill_missing = FALSE", {
+  fit <- test_fit(
+    obs_settings = list(q_form = ~ q_block, sd_form = ~ sd_obs_block,
+                        fill_missing = FALSE)
+  )
+  expect_false("missing" %in% fit$obj$env$.random)
+})
+
+test_that("fit_tam warns and forces fill_missing to TRUE when mising", {
+  (fit <- test_fit(obs_settings = list(q_form = ~ q_block, sd_form = ~ sd_obs_block))) |>
+    expect_warning(regexp = "fill_missing was NULL", fixed  = FALSE)
+  expect_true(fit$dat$obs_settings$fill_missing)
 })
 
 

@@ -73,7 +73,7 @@ fit_tam <- function(obs, interval = 0.95, silent = FALSE, ...) {
   par <- make_par(dat)
 
   ran <- c("log_f", "log_r")
-  if (length(par$missing) > 0) {
+  if (dat$obs_settings$fill_missing && length(par$missing) > 0) {
     ran <- c(ran, "missing")
   }
   if (dat$N_settings$process != "off") {

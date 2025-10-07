@@ -241,9 +241,9 @@ sims$ssb |>
 ## TODO
 ## - Make a sim_test_tam function
 ## - Fix checks
-## - Fix dim in sim when projecting
 ## - Add 'fill_missing' argument
 ##   - Add 'add_osa_res' argument
+## - How do I modify sim_tam to include parameter uncertainty?
 
 
 

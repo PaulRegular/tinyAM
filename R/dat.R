@@ -219,6 +219,8 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #' @param obs_settings A list with elements:
 #' - `sd_form`: formula for observation SD blocks, evaluated on the combined obs map (e.g. `~ sd_obs_block`).
 #' - `q_form`: formula for catchability blocks, evaluated on the index table (e.g. `~ q_block`).
+#' - `fill_missing`: logical - fill missing values, and zeros, using random effects? Default = `TRUE`.
+#'                   Note that one-step-ahead residuals are not currently working when `TRUE`.
 #' @param proj_settings Optional list with elements:
 #' - `n_proj`: number of years to project (default `NULL` disables projections).
 #' - `n_mean`: number of terminal years to average when adding projection rows.
@@ -235,7 +237,7 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #' - `proj_years` — integer vector of projection years, if used
 #' - `obs` — per-type tables restricted to `years` x `ages` (including `proj_years`, if used)
 #' - `W`, `P` — mean weight-at-age, and proportion mature at age matrices (`year x age`)
-#' - `obs_map`, `log_obs`, `is_na_obs`
+#' - `obs_map`, `log_obs`, `is_missing`
 #' - design matrices: `sd_obs_modmat`, `q_modmat`, and optionally `F_modmat`, `M_modmat`
 #' - mean-level placeholders: `log_mu_f` and/or `log_mu_m` (or `log_mu_assumed_m`)
 #' - process settings: `N_settings`, `F_settings`, `M_settings`
@@ -272,7 +274,7 @@ make_dat <- function(
     N_settings = list(process = "iid", init_N0 = FALSE),
     F_settings = list(process = "approx_rw", mu_form = NULL),
     M_settings = list(process = "off", mu_form = NULL, assumption = ~I(0.2), age_breaks = NULL),
-    obs_settings = list(sd_form = ~sd_obs_block, q_form = ~q_block),
+    obs_settings = list(sd_form = ~sd_obs_block, q_form = ~q_block, fill_missing = TRUE),
     proj_settings = NULL
 ) {
 
@@ -322,6 +324,10 @@ make_dat <- function(
     }
   }
 
+  if (is.null(obs_settings$fill_missing)) {
+    dat$obs_settings$fill_missing <- TRUE
+    cli::cli_warn("obs_settings$fill_missing was NULL; forcing to TRUE")
+  }
   if (N_settings$process == "off" && !N_settings$init_N0) {
     dat$N_settings$init_N0 <- TRUE
     cli::cli_warn("The first year would lack parameters with process set to 'off' and init_N0 set to FALSE in N_settings; forcing init_N0 to TRUE to estimate initial levels.")
@@ -350,11 +356,11 @@ make_dat <- function(
   obs_fit <- rbind(catch, index)
   obs_fit$log_obs <- log(obs_fit$obs)
   obs_fit$log_obs[is.infinite(obs_fit$log_obs)] <- NA # treat zeros as NA for simplicity; NAs filled using random effects
-  obs_fit$is_na_obs <- is.na(obs_fit$log_obs)
+  obs_fit$is_missing <- is.na(obs_fit$log_obs)
 
   dat$obs_map <- obs_fit[, setdiff(names(obs_fit), c("obs", "log_obs"))]
   dat$log_obs <- obs_fit$log_obs
-  dat$is_na_obs <- obs_fit$is_na_obs
+  dat$is_missing <- obs_fit$is_missing
 
   dat$sd_obs_modmat <- stats::model.matrix(obs_settings$sd_form, data = dat$obs_map)
   dat$q_modmat <- stats::model.matrix(obs_settings$q_form, data = dat$obs$index)

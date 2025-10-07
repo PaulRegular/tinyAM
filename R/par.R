@@ -113,7 +113,9 @@ make_par <- function(dat) {
   par$log_sd_obs <- numeric(ncol(dat$sd_obs_modmat))
   names(par$log_sd_obs) <- colnames(dat$sd_obs_modmat)
 
-  par$missing <- numeric(sum(dat$is_na_obs))
+  if (dat$obs_settings$fill_missing) {
+    par$missing <- numeric(sum(dat$is_missing))
+  }
 
   par$log_r <- numeric(length(dat$years))
   names(par$log_r) <- as.character(dat$years)

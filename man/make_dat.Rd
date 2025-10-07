@@ -12,7 +12,7 @@ make_dat(
   F_settings = list(process = "approx_rw", mu_form = NULL),
   M_settings = list(process = "off", mu_form = NULL, assumption = ~I(0.2), age_breaks =
     NULL),
-  obs_settings = list(sd_form = ~sd_obs_block, q_form = ~q_block),
+  obs_settings = list(sd_form = ~sd_obs_block, q_form = ~q_block, fill_missing = TRUE),
   proj_settings = NULL
 )
 }
@@ -61,6 +61,8 @@ average M (\code{M_bar}) calculations. All ages used if absent.
 \itemize{
 \item \code{sd_form}: formula for observation SD blocks, evaluated on the combined obs map (e.g. \code{~ sd_obs_block}).
 \item \code{q_form}: formula for catchability blocks, evaluated on the index table (e.g. \code{~ q_block}).
+\item \code{fill_missing}: logical - fill missing values, and zeros, using random effects? Default = \code{TRUE}.
+Note that one-step-ahead residuals are not currently working when \code{TRUE}.
 }}
 
 \item{proj_settings}{Optional list with elements:
@@ -81,7 +83,7 @@ A named list \code{dat} containing:
 \item \code{proj_years} — integer vector of projection years, if used
 \item \code{obs} — per-type tables restricted to \code{years} x \code{ages} (including \code{proj_years}, if used)
 \item \code{W}, \code{P} — mean weight-at-age, and proportion mature at age matrices (\verb{year x age})
-\item \code{obs_map}, \code{log_obs}, \code{is_na_obs}
+\item \code{obs_map}, \code{log_obs}, \code{is_missing}
 \item design matrices: \code{sd_obs_modmat}, \code{q_modmat}, and optionally \code{F_modmat}, \code{M_modmat}
 \item mean-level placeholders: \code{log_mu_f} and/or \code{log_mu_m} (or \code{log_mu_assumed_m})
 \item process settings: \code{N_settings}, \code{F_settings}, \code{M_settings}

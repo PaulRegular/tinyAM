@@ -212,7 +212,9 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   getAll(par, dat)
 
   log_obs <- OBS(log_obs)
-  log_obs[is_na_obs] <- missing
+  if (obs_settings$fill_missing) {
+    log_obs[is_missing] <- missing
+  }
 
   n_obs <- length(log_obs)
   n_years <- length(years)
@@ -349,9 +351,13 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   ii <- obs_map$type == "index"
   log_pred[ii] <- log_q_obs + log(N_obs[ii]) - Z_obs[ii] * samp_time[ii]
 
-  jnll <- jnll - sum(RTMB::dnorm(log_obs, log_pred, sd = sd_obs, log = TRUE))
+  keep <- !is_missing
+  if (obs_settings$fill_missing) {
+    keep[is_missing] <- TRUE
+  }
+  jnll <- jnll - sum(RTMB::dnorm(log_obs[keep], log_pred[keep], sd = sd_obs[keep], log = TRUE))
   if (simulate) {
-    log_obs <- stats::rnorm(n_obs, mean = log_pred, sd = sd_obs)
+    log_obs[keep] <- stats::rnorm(n_obs[keep], mean = log_pred[keep], sd = sd_obs)
   }
 
   ## Derived quantities ----
@@ -424,9 +430,8 @@ nll_fun <- function(par, dat, simulate = FALSE) {
     sims <- list(log_f = log_f,
                  log_r = log_r,
                  log_obs = log_obs)
-    if (length(missing) > 0) {
-      sims$missing <- log_obs[is_na_obs]
-      sims$log_obs[is_na_obs] <- NA
+    if (obs_settings$fill_missing && length(missing) > 0) {
+      sims$missing <- log_obs[is_missing]
     }
     if (N_settings$process != "off") {
       sims$log_n <- log_n
