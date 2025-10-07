@@ -50,6 +50,8 @@ m_dev$opt$objective # 819.4535
 # fit <- cohort_dev
 fit <- m_dev
 
+
+
 dat <- fit$dat
 rep <- fit$rep
 obs_pred <- fit$obs_pred
@@ -239,10 +241,8 @@ sims$ssb |>
 
 
 ## TODO
+## - Limit what you supply to OBS() to be non-NA values only, then try osa residuals again
 ## - Make a sim_test_tam function
-## - Fix checks
-## - Add 'fill_missing' argument
-##   - Add 'add_osa_res' argument
 ## - How do I modify sim_tam to include parameter uncertainty?
 
 

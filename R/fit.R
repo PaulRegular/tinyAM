@@ -22,6 +22,9 @@
 #' @param interval Level in `(0, 1)` to use to generate confidence
 #'                 intervals, where applicable; default `0.95.`
 #' @param silent Logical; if `TRUE`, disables tracing information.
+#' @param add_osa_res Logical; add one-step-ahead residuals? Hard wired to
+#'                    apply the `"oneStepGaussianOffMode"` method.
+#'                    See [RTMB::oneStepPredict()] for details.
 #' @inheritDotParams make_dat
 #'
 #' @return
@@ -65,7 +68,13 @@
 #' [make_dat()], [make_par()], [sim_tam()], [fit_retro()],
 #' [RTMB::MakeADFun()], [RTMB::sdreport()]
 #' @export
-fit_tam <- function(obs, interval = 0.95, silent = FALSE, ...) {
+fit_tam <- function(
+    obs,
+    interval = 0.95,
+    add_osa_res = FALSE,
+    silent = FALSE,
+    ...
+) {
 
   call <- match.call()
 
@@ -73,7 +82,7 @@ fit_tam <- function(obs, interval = 0.95, silent = FALSE, ...) {
   par <- make_par(dat)
 
   ran <- c("log_f", "log_r")
-  if (dat$obs_settings$fill_missing && length(par$missing) > 0) {
+  if (dat$obs_settings$fill_missing) {
     ran <- c(ran, "missing")
   }
   if (dat$N_settings$process != "off") {
@@ -110,7 +119,7 @@ fit_tam <- function(obs, interval = 0.95, silent = FALSE, ...) {
   par_tabs <- tidy_par(out, interval = interval)
   out$fixed_par <- par_tabs$fixed
   out$random_par <- par_tabs$random
-  out$obs_pred <- tidy_obs_pred(out)
+  out$obs_pred <- tidy_obs_pred(out, add_osa_res = add_osa_res, trace = silent)
   out$pop <- tidy_pop(out, interval = interval)
   out$is_converged <- check_convergence(out, quiet = TRUE)
 

@@ -4,10 +4,16 @@
 \alias{tidy_obs_pred}
 \title{Tidy observed, predicted, and residual diagnostics}
 \usage{
-tidy_obs_pred(fit)
+tidy_obs_pred(fit, add_osa_res = FALSE, ...)
 }
 \arguments{
 \item{fit}{A fitted TAM object as returned by \code{\link[=fit_tam]{fit_tam()}}.}
+
+\item{add_osa_res}{Logical; add one-step-ahead residuals? Hard wired to
+apply the \code{"oneStepGaussianOffMode"} method.
+See \code{\link[RTMB:OSA-residuals]{RTMB::oneStepPredict()}} for details.}
+
+\item{...}{Arguments to pass to \code{\link[RTMB:OSA-residuals]{RTMB::oneStepPredict()}}.}
 }
 \value{
 A named list with two data frames:

@@ -112,6 +112,13 @@ test_that("tidy_obs_pred builds residual diagnostics for catch and index", {
   expect_equal(out$index$std_res, expected_index_res)
 })
 
+test_that("tidy_obs_pred adds osa residuals", {
+  n_observed <- length(fit$dat$observed)
+  out <- tidy_obs_pred(fit, add_osa_res = TRUE, trace = FALSE, parallel = TRUE, reverse = FALSE)
+  expect_true("osa_res" %in% names(out$catch))
+  expect_true("osa_res" %in% names(out$index))
+})
+
 
 ## tidy_rep ----
 

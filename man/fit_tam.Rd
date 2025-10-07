@@ -4,7 +4,7 @@
 \alias{fit_tam}
 \title{Fit a Tiny Assessment Model (TAM)}
 \usage{
-fit_tam(obs, interval = 0.95, silent = FALSE, ...)
+fit_tam(obs, interval = 0.95, add_osa_res = FALSE, silent = FALSE, ...)
 }
 \arguments{
 \item{obs}{A named list of tidy observation tables (e.g., \code{catch}, \code{index},
@@ -12,6 +12,10 @@ fit_tam(obs, interval = 0.95, silent = FALSE, ...)
 
 \item{interval}{Level in \verb{(0, 1)} to use to generate confidence
 intervals, where applicable; default \verb{0.95.}}
+
+\item{add_osa_res}{Logical; add one-step-ahead residuals? Hard wired to
+apply the \code{"oneStepGaussianOffMode"} method.
+See \code{\link[RTMB:OSA-residuals]{RTMB::oneStepPredict()}} for details.}
 
 \item{silent}{Logical; if \code{TRUE}, disables tracing information.}
 

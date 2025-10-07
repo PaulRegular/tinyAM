@@ -9,5 +9,5 @@ utils::globalVariables(c(
   "logit_phi_n", "logit_phi_f", "logit_phi_m",
   "log_r0", "log_mu_f", "log_mu_m", "log_mu_assumed_m", "log_q",
   "F_modmat", "M_modmat", "q_modmat", "sd_obs_modmat", "obs_map",
-  "is_missing", "W", "P"
+  "is_missing", "is_observed", "W", "P"
 ))

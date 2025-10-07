@@ -212,7 +212,7 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   getAll(par, dat)
 
   obs <- exp(log_obs)
-  log_obs <- OBS(log_obs)
+  observed <- OBS(observed)
   if (obs_settings$fill_missing) {
     log_obs[is_missing] <- missing
   }
@@ -352,13 +352,15 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   ii <- obs_map$type == "index"
   log_pred[ii] <- log_q_obs + log(N_obs[ii]) - Z_obs[ii] * samp_time[ii]
 
-  keep <- !is_missing
+  jnll <- jnll - sum(RTMB::dnorm(observed, log_pred[is_observed], sd = sd_obs[is_observed], log = TRUE))
   if (obs_settings$fill_missing) {
-    keep[is_missing] <- TRUE
+    jnll <- jnll - sum(RTMB::dnorm(missing, log_pred[is_missing], sd = sd_obs[is_missing], log = TRUE))
   }
-  jnll <- jnll - sum(RTMB::dnorm(log_obs[keep], log_pred[keep], sd = sd_obs[keep], log = TRUE))
   if (simulate) {
-    log_obs[keep] <- stats::rnorm(n_obs[keep], mean = log_pred[keep], sd = sd_obs)
+    log_obs[is_observed] <- stats::rnorm(sum(is_observed), mean = log_pred[is_observed], sd = sd_obs)
+    if (obs_settings$fill_missing) {
+      log_obs[is_missing] <- stats::rnorm(sum(is_missing), mean = log_pred[is_missing], sd = sd_obs)
+    }
   }
 
   ## Derived quantities ----
@@ -432,7 +434,7 @@ nll_fun <- function(par, dat, simulate = FALSE) {
     sims <- list(log_f = log_f,
                  log_r = log_r,
                  log_obs = log_obs)
-    if (obs_settings$fill_missing && length(missing) > 0) {
+    if (obs_settings$fill_missing) {
       sims$missing <- log_obs[is_missing]
     }
     if (N_settings$process != "off") {

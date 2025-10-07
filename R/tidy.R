@@ -72,6 +72,10 @@ tidy_mat <- tidy_array
 #' from a fitted TAM object, and adds standardized residuals on the log scale.
 #'
 #' @param fit A fitted TAM object as returned by [fit_tam()].
+#' @param add_osa_res Logical; add one-step-ahead residuals? Hard wired to
+#'                    apply the `"oneStepGaussianOffMode"` method.
+#'                    See [RTMB::oneStepPredict()] for details.
+#' @param ... Arguments to pass to [RTMB::oneStepPredict()].
 #'
 #' @return
 #' A named list with two data frames:
@@ -87,7 +91,7 @@ tidy_mat <- tidy_array
 #'
 #' @seealso [fit_tam()], [tidy_rep()], [tidy_sdrep()], [tidy_pop()]
 #' @export
-tidy_obs_pred <- function(fit) {
+tidy_obs_pred <- function(fit, add_osa_res = FALSE, ...) {
   obs_pred <- fit$dat$obs[c("catch", "index")]
   pred <- split(exp(fit$rep$log_pred), fit$dat$obs_map$type)
   sd <- split(fit$rep$sd_obs, fit$dat$obs_map$type)
@@ -100,6 +104,15 @@ tidy_obs_pred <- function(fit) {
   obs_pred$index$sd <- sd$index
   obs_pred$index$q <- exp(fit$rep$log_q_obs)
   obs_pred$index$std_res <- with(obs_pred$index, ifelse(obs == 0, NA, (log(obs) - log(pred)) / sd))
+
+  if (add_osa_res) {
+    osa_res <- RTMB::oneStepPredict(fit$obj, method = "oneStepGaussianOffMode", ...)
+    split_osa_res <- split(osa_res$residual, fit$dat$obs_map$type[fit$dat$obs_map$is_observed])
+    split_is_observed <- split(fit$dat$obs_map$is_observed, fit$dat$obs_map$type)
+    obs_pred$catch$osa_res <- obs_pred$index$osa_res <- NA
+    obs_pred$catch$osa_res[split_is_observed$catch] <- split_osa_res$catch
+    obs_pred$index$osa_res[split_is_observed$index] <- split_osa_res$index
+  }
 
   obs_pred
 }
@@ -344,7 +357,7 @@ tidy_par <- function(fit, interval = 0.95) {
                lwr=numeric(), upr=numeric(), check.names = FALSE)
   rownames(fixed) <- NULL
 
-  random <- setNames(lapply(ran_nms, .par2df), ran_nms)
+  random <- stats::setNames(lapply(ran_nms, .par2df), ran_nms)
 
   list(fixed = fixed, random = random)
 }
@@ -370,6 +383,8 @@ tidy_par <- function(fit, interval = 0.95) {
 #' stacked <- stack_nested(res, id_col = "sim")
 #' str(stacked$ssb)  # has column 'sim'
 #'
+#' @importFrom stats setNames
+#'
 #' @export
 stack_nested <- function(x, id_col = "model") {
   if (!length(x)) return(list())
@@ -381,7 +396,7 @@ stack_nested <- function(x, id_col = "model") {
   sub_names <- Reduce(intersect, lapply(x, names))
   if (!length(sub_names)) return(list())
 
-  out <- setNames(vector("list", length(sub_names)), sub_names)
+  out <- stats::setNames(vector("list", length(sub_names)), sub_names)
 
   for (nm in sub_names) {
     pieces <- lapply(seq_along(x), function(i) {

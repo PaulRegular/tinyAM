@@ -237,7 +237,9 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #' - `proj_years` — integer vector of projection years, if used
 #' - `obs` — per-type tables restricted to `years` x `ages` (including `proj_years`, if used)
 #' - `W`, `P` — mean weight-at-age, and proportion mature at age matrices (`year x age`)
-#' - `obs_map`, `log_obs`, `is_missing`
+#' - `obs_map` — stack of `obs$catch` and `obs$index` mapping variables
+#' - `log_obs`, `is_missing`, `is_observed`, `observed` - vector of log observations (with NA),
+#'   logical vector indicating missing and observed values, and vector of non-missing values, respectively.
 #' - design matrices: `sd_obs_modmat`, `q_modmat`, and optionally `F_modmat`, `M_modmat`
 #' - mean-level placeholders: `log_mu_f` and/or `log_mu_m` (or `log_mu_assumed_m`)
 #' - process settings: `N_settings`, `F_settings`, `M_settings`
@@ -324,10 +326,6 @@ make_dat <- function(
     }
   }
 
-  if (is.null(obs_settings$fill_missing)) {
-    dat$obs_settings$fill_missing <- TRUE
-    cli::cli_warn("obs_settings$fill_missing was NULL; forcing to TRUE")
-  }
   if (N_settings$process == "off" && !N_settings$init_N0) {
     dat$N_settings$init_N0 <- TRUE
     cli::cli_warn("The first year would lack parameters with process set to 'off' and init_N0 set to FALSE in N_settings; forcing init_N0 to TRUE to estimate initial levels.")
@@ -357,10 +355,21 @@ make_dat <- function(
   obs_fit$log_obs <- log(obs_fit$obs)
   obs_fit$log_obs[is.infinite(obs_fit$log_obs)] <- NA # treat zeros as NA for simplicity; NAs filled using random effects
   obs_fit$is_missing <- is.na(obs_fit$log_obs)
+  obs_fit$is_observed <- !obs_fit$is_missing
+
+  if (is.null(obs_settings$fill_missing)) {
+    dat$obs_settings$fill_missing <- TRUE
+    cli::cli_warn("obs_settings$fill_missing was NULL; forcing to TRUE")
+  }
+  if (sum(obs_fit$is_missing) == 0) {
+    dat$obs_settings$fill_missing <- FALSE # set fill_missing to FALSE if there are no missing values
+  }
 
   dat$obs_map <- obs_fit[, setdiff(names(obs_fit), c("obs", "log_obs"))]
   dat$log_obs <- obs_fit$log_obs
   dat$is_missing <- obs_fit$is_missing
+  dat$is_observed <- obs_fit$is_observed
+  dat$observed <- dat$log_obs[!dat$is_missing]
 
   dat$sd_obs_modmat <- stats::model.matrix(obs_settings$sd_form, data = dat$obs_map)
   dat$q_modmat <- stats::model.matrix(obs_settings$q_form, data = dat$obs$index)
