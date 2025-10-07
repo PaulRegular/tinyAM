@@ -2,54 +2,69 @@
 % Please edit documentation in R/sim.R
 \name{sim_tam}
 \alias{sim_tam}
-\title{Simulation using a fitted TAM}
+\title{Simulate from a fitted TAM}
 \usage{
-sim_tam(fit, n = 10, obs_only = FALSE, progress = TRUE, globals = NULL)
+sim_tam(
+  fit,
+  n = 10,
+  obs_only = TRUE,
+  progress = TRUE,
+  globals = NULL,
+  seed = TRUE
+)
 }
 \arguments{
 \item{fit}{A fitted TAM object returned by \code{\link[=fit_tam]{fit_tam()}}.}
 
-\item{obs_only}{Logical; if \code{TRUE}, only new \code{log_obs} values are
-simulated and inserted into the final report.
-If \code{FALSE} (default), simulated random effects are also injected and all REPORTed quantities are recomputed.}
+\item{n}{Integer; number of simulations (default \code{10}).}
 
-\item{progress}{Logical; show progress bar using \code{\link[progressr:with_progress]{progressr::with_progress()}}.}
+\item{obs_only}{Logical; if \code{TRUE} (default), simulate observations only (random effects fixed at MLEs).
+If \code{FALSE}, also simulate random effects and recompute reported quantities under them.}
 
-\item{globals}{Character vector naming global objects to supply to the workers.}
+\item{progress}{Logical; show a progress bar using \code{\link[progressr:with_progress]{progressr::with_progress()}}. Default \code{TRUE}.}
+
+\item{globals}{Optional character vector of global objects for parallel workers (forwarded to \code{furrr}).}
+
+\item{seed}{Seed for random number generation forwarded to \code{furrr} (see \code{\link[furrr:furrr_options]{furrr::furrr_options()}} for details).}
 }
 \value{
-A list of REPORTed objects (same structure as \code{fit$rep}) with
-\code{log_obs} replaced by simulated values.
-If \code{obs_only = FALSE}, the report also reflects simulated random effects.
+A \strong{named list of data frames} (e.g., \code{catch}, \code{index}, \code{N}, \code{F}, \code{M}, \code{Z}, \code{ssb}, ...),
+where each data frame is \strong{row-bound across simulations} and contains a \code{sim} column (1..n).
 }
 \description{
-Simulates random effects and observations from a fitted model by calling the
-likelihood with \code{simulate = TRUE}, then regenerates the REPORTed
-quantities. Simulation is performed purely in R (not via RTMB \code{simref}).
+Draws simulated observations (and optionally random effects) from a fitted model
+by calling the likelihood with \code{simulate = TRUE}, then recomputes reported quantities
+under those draws. Results are returned as tidy, stacked tables across \code{n}
+simulations (one column \verb{sim = 1..n} is added to each table).
 }
 \details{
-Simulate from a fitted TAM
-
-The function:
+For each simulation:
 \enumerate{
-\item Extracts MLEs as a parameter list: \code{as.list(fit$sdrep, "Estimate")}.
-\item Calls \code{nll_fun(p, simulate = TRUE)} to draw new random effects
-and \code{log_obs}.
-\item If \code{obs_only = FALSE} (default), injects the simulated random
-effects back into \code{p} (\code{p[obj$env$.random]}), calls
-\code{nll_fun} again (to update any derived quantities), and runs
-\code{obj$report(unlist(p))}.
-\item Returns the REPORT list with \code{log_obs} replaced by the simulated
-values; if \code{obs_only = FALSE}, all derived objects reflect the
-simulated random effects.
+\item Extract MLEs: \code{p <- as.list(fit$sdrep, "Estimate")}.
+\item Draw \code{log_obs} (and, if \code{obs_only = FALSE}, random effects) using \code{nll_fun(p, dat, simulate = TRUE)}.
+\item Replace \code{dat$log_obs} with simulated values, rebuild a small RTMB object, and call \code{report()}.
+\item Return:
+\itemize{
+\item observation tables for \code{catch} and \code{index} with simulated \code{obs}, and
+\item population tables from \code{report} via \code{\link[=tidy_rep]{tidy_rep()}}.
 }
+}
+
+All simulation results are then stacked with a \code{sim} column via \code{\link[=stack_nested]{stack_nested()}}.
+
+This function uses \code{\link[furrr:future_map]{furrr::future_map()}} to run the retros in parallel. Remember to plan your
+session (e.g., \code{future::plan(multisession, workers = 4)}).
 }
 \examples{
+\dontrun{
+future::plan(multisession, workers = 4)
 fit <- fit_tam(cod_obs, years = 1983:2024, ages = 2:14)
-rep_sim <- sim_tam(fit, obs_only = FALSE)
-str(rep_sim$log_obs)
+sims <- sim_tam(fit, n = 5, obs_only = TRUE)
+head(sims$ssb)     # has column 'sim'
+head(sims$catch)   # simulated obs for catch with 'sim'
+}
 
 }
 \seealso{
-\code{\link[=fit_tam]{fit_tam()}}, \code{\link[=fit_retro]{fit_retro()}}
+\code{\link[=fit_tam]{fit_tam()}}, \code{\link[=tidy_rep]{tidy_rep()}}, \code{\link[=stack_nested]{stack_nested()}}
 }

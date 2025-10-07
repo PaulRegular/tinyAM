@@ -212,21 +212,32 @@ retros$pop$N |>
 
 ## Simulations ----
 
-plot(fit$dat$years, fit$rep$ssb, xlab = "Year", ylab = "SSB", type = "l")
-for (i in 1:10) {
-  sims <- sim_tam(fit)
-  lines(fit$dat$years, sims$ssb, lwd = 0.5, col = "grey")
-}
+future::plan(multisession, workers = 6)
+sims <- sim_tam(fit, n = 100, obs_only = TRUE)
 
+sims$total_catch |>
+  group_by(sim) |>
+  plot_ly(x = ~year, y = ~est) |>
+  add_lines(line = list(width = 0.5), alpha = 0.1) |>
+  plotly::toWebGL() |>
+  layout(yaxis = list(type = "log"))
+
+sims$index |>
+  group_by(sim, year) |>
+  summarise(obs = sum(obs, na.rm = TRUE)) |>
+  plot_ly(x = ~year, y = ~obs) |>
+  add_lines(line = list(width = 0.5), alpha = 0.1) |>
+  plotly::toWebGL() |>
+  layout(yaxis = list(type = "log"))
+
+sims$ssb |>
+  group_by(sim) |>
+  plot_ly(x = ~year, y = ~est) |>
+  add_lines(line = list(width = 0.5), alpha = 0.1)
 
 
 ## TODO
-## - Apply tidy functions inside sim_tam
-##   - Also want to generate obs_pred object with simulated values for self-testing
-## - Generalize tidy_rep_mats --> tidy_rep
-##   - Check dim within
-##   - Tidy age x year mats and year vecs
-## - Retain sdreported objects in tidy_pop (make rep_only an option for sim_tam?)
+## - Make a sim_test_tam function
 
 
 

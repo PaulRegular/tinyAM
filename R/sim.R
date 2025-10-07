@@ -1,99 +1,108 @@
 
-
-.one_sim <- function(fit, obs_only = FALSE, sim_number = 1) {
-
-  ## Simulate observations | par
+.one_sim <- function(fit, obs_only = FALSE) {
   obj <- fit$obj
   dat <- sim_dat <- fit$dat
   par <- sim_par <- as.list(fit$sdrep, "Estimate")
+
+  # Draw obs | par
   sims <- nll_fun(par, dat, simulate = TRUE)
 
-  ## Use simulated random effects?
+  # Optionally use simulated random effects
   if (!obs_only) {
     sim_par[obj$env$.random] <- sims[obj$env$.random]
     sims <- nll_fun(sim_par, dat, simulate = TRUE)
   }
 
-  ## Update report using sim_dat and sim_par
+  # Rebuild report with simulated obs (+ maybe simulated RE)
   sim_dat$log_obs <- sims$log_obs
   make_nll_fun <- function(f, d) function(p) f(p, d)
   sim_obj <- RTMB::MakeADFun(make_nll_fun(nll_fun, sim_dat), sim_par)
   sim_rep <- sim_obj$report()
 
-  ## Tidy, label, and return
+  # Tidy population tables
   sim_pop <- tidy_rep(list(dat = sim_dat, rep = sim_rep))
-  for (nm in names(sim_pop)) sim_pop[[nm]]$sim <- sim_number
+
+  # Tidy observations (catch/index) using the simulated log_obs split
   sim_obs <- fit$dat$obs[c("catch", "index")]
   split_obs <- split(exp(sims$log_obs), fit$dat$obs_map$type)
-  sim_obs$catch$obs <- split_obs$catch
-  sim_obs$catch$sim <- sim_number
-  sim_obs$index$obs <- split_obs$index
-  sim_obs$index$sim <- sim_number
+  sim_obs$catch$obs  <- split_obs$catch
+  sim_obs$index$obs  <- split_obs$index
 
-  list(sim_obs = sim_obs, sim_pop = sim_pop)
-
+  # Return a flat list of data.frames
+  c(sim_obs, sim_pop)
 }
 
 
 #' Simulate from a fitted TAM
 #'
-#' @title Simulation using a fitted TAM
-#'
 #' @description
-#' Simulates random effects and observations from a fitted model by calling the
-#' likelihood with `simulate = TRUE`, then regenerates the REPORTed
-#' quantities. Simulation is performed purely in R (not via RTMB `simref`).
+#' Draws simulated observations (and optionally random effects) from a fitted model
+#' by calling the likelihood with `simulate = TRUE`, then recomputes reported quantities
+#' under those draws. Results are returned as tidy, stacked tables across `n`
+#' simulations (one column `sim = 1..n` is added to each table).
 #'
 #' @details
-#' The function:
+#' For each simulation:
+#' 1. Extract MLEs: `p <- as.list(fit$sdrep, "Estimate")`.
+#' 2. Draw `log_obs` (and, if `obs_only = FALSE`, random effects) using `nll_fun(p, dat, simulate = TRUE)`.
+#' 3. Replace `dat$log_obs` with simulated values, rebuild a small RTMB object, and call `report()`.
+#' 4. Return:
+#'    - observation tables for `catch` and `index` with simulated `obs`, and
+#'    - population tables from `report` via [tidy_rep()].
 #'
-#' 1. Extracts MLEs as a parameter list: `as.list(fit$sdrep, "Estimate")`.
-#' 2. Calls `nll_fun(p, simulate = TRUE)` to draw new random effects
-#'    and `log_obs`.
-#' 3. If `obs_only = FALSE` (default), injects the simulated random
-#'    effects back into `p` (`p[obj$env$.random]`), calls
-#'    `nll_fun` again (to update any derived quantities), and runs
-#'    `obj$report(unlist(p))`.
-#' 4. Returns the REPORT list with `log_obs` replaced by the simulated
-#'    values; if `obs_only = FALSE`, all derived objects reflect the
-#'    simulated random effects.
+#' All simulation results are then stacked with a `sim` column via [stack_nested()].
+#'
+#' This function uses [furrr::future_map()] to run the retros in parallel. Remember to plan your
+#' session (e.g., `future::plan(multisession, workers = 4)`).
 #'
 #' @param fit A fitted TAM object returned by [fit_tam()].
-#' @param obs_only Logical; if `TRUE`, only new `log_obs` values are
-#'   simulated and inserted into the final report.
-#'   If `FALSE` (default), simulated random effects are also injected and all REPORTed quantities are recomputed.
-#' @inheritParams fit_retro
+#' @param n Integer; number of simulations (default `10`).
+#' @param obs_only Logical; if `TRUE` (default), simulate observations only (random effects fixed at MLEs).
+#'   If `FALSE`, also simulate random effects and recompute reported quantities under them.
+#' @param progress Logical; show a progress bar using [progressr::with_progress()]. Default `TRUE`.
+#' @param globals Optional character vector of global objects for parallel workers (forwarded to `furrr`).
+#' @param seed Seed for random number generation forwarded to `furrr` (see [furrr::furrr_options()] for details).
 #'
 #' @return
-#' A list of REPORTed objects (same structure as `fit$rep`) with
-#' `log_obs` replaced by simulated values.
-#' If `obs_only = FALSE`, the report also reflects simulated random effects.
+#' A **named list of data frames** (e.g., `catch`, `index`, `N`, `F`, `M`, `Z`, `ssb`, ...),
+#' where each data frame is **row-bound across simulations** and contains a `sim` column (1..n).
 #'
 #' @examples
+#' \dontrun{
+#' future::plan(multisession, workers = 4)
 #' fit <- fit_tam(cod_obs, years = 1983:2024, ages = 2:14)
-#' rep_sim <- sim_tam(fit, obs_only = FALSE)
-#' str(rep_sim$log_obs)
+#' sims <- sim_tam(fit, n = 5, obs_only = TRUE)
+#' head(sims$ssb)     # has column 'sim'
+#' head(sims$catch)   # simulated obs for catch with 'sim'
+#' }
 #'
-#' @seealso
-#' [fit_tam()], [fit_retro()]
-#'
+#' @seealso [fit_tam()], [tidy_rep()], [stack_nested()]
 #' @export
-sim_tam <- function(fit, n = 10, obs_only = FALSE,
-                    progress = TRUE,
-                    globals = NULL) {
-
-  progressr::with_progress({
+sim_tam <- function(
+    fit,
+    n = 10,
+    obs_only = TRUE,
+    progress = TRUE,
+    globals = NULL,
+    seed = TRUE
+) {
+  sims <- progressr::with_progress({
     update_progress <- progressr::progressor(steps = n)
-    sims <- furrr::future_map(seq.int(n), function(i) {
-      sim <- .one_sim(fit, obs_only = obs_only, sim_number = i)
-      update_progress()
-      sim
-    }, .options = furrr::furrr_options(seed = 1, packages = "tinyAM", globals = globals))
+    furrr::future_map(
+      seq_len(n),
+      function(i) {
+        res <- .one_sim(fit, obs_only = obs_only)
+        update_progress()
+        res
+      },
+      .options = furrr::furrr_options(
+        seed = seed,
+        packages = "tinyAM",
+        globals = globals
+      )
+    )
   }, enable = progress)
-  names(sims) <- seq.int(n)
 
-  pop_nms <- names(sims[[1]]$sim_pop)
-  lapply(pop_nms, function(nm) sims)
-
+  names(sims) <- as.character(seq_len(n))
+  stack_nested(sims, id_col = "sim")
 }
-
