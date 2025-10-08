@@ -217,7 +217,7 @@ retros$pop$N |>
 fit <- update(fit, proj_settings = list(n_proj = 10, n_mean = 5, F_mult = 1))
 
 future::plan(multisession, workers = 6)
-sims <- sim_tam(fit, n = 100, obs_only = TRUE)
+sims <- sim_tam(fit, n = 100, samp_random = TRUE)
 
 sims$total_catch |>
   group_by(sim) |>
@@ -234,6 +234,11 @@ sims$index |>
   plotly::toWebGL() |>
   layout(yaxis = list(type = "log"))
 
+sims$abundance |>
+  group_by(sim) |>
+  plot_ly(x = ~year, y = ~est) |>
+  add_lines(line = list(width = 0.5), alpha = 0.1)
+
 sims$ssb |>
   group_by(sim) |>
   plot_ly(x = ~year, y = ~est) |>
@@ -241,9 +246,8 @@ sims$ssb |>
 
 
 ## TODO
-## - Limit what you supply to OBS() to be non-NA values only, then try osa residuals again
 ## - Make a sim_test_tam function
-## - How do I modify sim_tam to include parameter uncertainty?
+## - Consider use of fixed x random parameter uncertainty
 
 
 

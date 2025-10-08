@@ -7,7 +7,8 @@
 sim_tam(
   fit,
   n = 10,
-  obs_only = TRUE,
+  samp_fixed = TRUE,
+  samp_random = FALSE,
   progress = TRUE,
   globals = NULL,
   seed = TRUE
@@ -18,50 +19,64 @@ sim_tam(
 
 \item{n}{Integer; number of simulations (default \code{10}).}
 
-\item{obs_only}{Logical; if \code{TRUE} (default), simulate observations only (random effects fixed at MLEs).
-If \code{FALSE}, also simulate random effects and recompute reported quantities under them.}
+\item{samp_fixed}{Logical; if \code{TRUE}, draw fixed-effect parameters from
+MVN(\code{sdrep$par.fixed}, \code{sdrep$cov.fixed}) before each simulation to
+include parameter uncertainty (default \code{TRUE}).}
 
-\item{progress}{Logical; show a progress bar using \code{\link[progressr:with_progress]{progressr::with_progress()}}. Default \code{TRUE}.}
+\item{samp_random}{Logical; if \code{TRUE}, re-simulate random-effect fields from
+their process models on each run (default \code{TRUE}). Set \code{FALSE} to keep the
+fitted random effects and simulate only new observations.}
 
-\item{globals}{Optional character vector of global objects for parallel workers (forwarded to \code{furrr}).}
+\item{progress}{Logical; show a progress bar with
+\code{\link[progressr:with_progress]{progressr::with_progress()}} (default \code{TRUE}).}
 
-\item{seed}{Seed for random number generation forwarded to \code{furrr} (see \code{\link[furrr:furrr_options]{furrr::furrr_options()}} for details).}
+\item{globals}{Optional character vector of global objects for parallel
+workers (forwarded to \code{\link[furrr:furrr_options]{furrr::furrr_options()}}).}
+
+\item{seed}{Seed passed to \code{\link[furrr:furrr_options]{furrr::furrr_options()}} for reproducibility.}
 }
 \value{
-A \strong{named list of data frames} (e.g., \code{catch}, \code{index}, \code{N}, \code{F}, \code{M}, \code{Z}, \code{ssb}, ...),
-where each data frame is \strong{row-bound across simulations} and contains a \code{sim} column (1..n).
+A \strong{named list of data frames} (e.g. \code{catch}, \code{index}, \code{N}, \code{F}, \code{M},
+\code{Z}, \code{ssb}, …), each containing results stacked across \code{n} simulations and
+a \code{sim} column (1..n).
 }
 \description{
-Draws simulated observations (and optionally random effects) from a fitted model
-by calling the likelihood with \code{simulate = TRUE}, then recomputes reported quantities
-under those draws. Results are returned as tidy, stacked tables across \code{n}
-simulations (one column \verb{sim = 1..n} is added to each table).
+Draws simulated observations (and optionally random effects) from a fitted
+model using \code{\link[=nll_fun]{nll_fun()}} in simulation mode. Each simulation regenerates
+observations — and, optionally, fixed and random effects — and recomputes all reported
+quantities. The results are returned as tidy data frames stacked across \code{n}
+simulations, with a column \verb{sim = 1..n}.
 }
 \details{
 For each simulation:
 \enumerate{
-\item Extract MLEs: \code{p <- as.list(fit$sdrep, "Estimate")}.
-\item Draw \code{log_obs} (and, if \code{obs_only = FALSE}, random effects) using \code{nll_fun(p, dat, simulate = TRUE)}.
-\item Replace \code{dat$log_obs} with simulated values, rebuild a small RTMB object, and call \code{report()}.
-\item Return:
-\itemize{
-\item observation tables for \code{catch} and \code{index} with simulated \code{obs}, and
-\item population tables from \code{report} via \code{\link[=tidy_rep]{tidy_rep()}}.
-}
+\item If \code{samp_fixed = TRUE}, draw fixed-effect parameters from the multivariate
+normal distribution defined by \code{sdreport()} (i.e., parameter uncertainty).
+\item Call \code{\link[=nll_fun]{nll_fun()}} with \code{simulate = TRUE} to generate new observations.
+\item If \code{samp_random = TRUE}, also simulate new random-effect fields
+(e.g., F, N, M deviations) from their process models and recompute
+reported quantities under those draws.
+\item Replace \code{dat$log_obs} with the simulated observations, rebuild a minimal
+RTMB object, call \code{report()}, and extract derived quantities via
+\code{\link[=tidy_rep]{tidy_rep()}}.
 }
 
-All simulation results are then stacked with a \code{sim} column via \code{\link[=stack_nested]{stack_nested()}}.
+The resulting observation and population tables are then row-bound with a
+\code{sim} column using \code{\link[=stack_nested]{stack_nested()}}.
 
-This function uses \code{\link[furrr:future_map]{furrr::future_map()}} to run the retros in parallel. Remember to plan your
-session (e.g., \code{future::plan(multisession, workers = 4)}).
+Parallel execution is supported via \code{\link[furrr:future_map]{furrr::future_map()}}. Plan your
+session first, e.g. \code{future::plan(multisession, workers = 4)}.
 }
 \examples{
 \dontrun{
 future::plan(multisession, workers = 4)
 fit <- fit_tam(cod_obs, years = 1983:2024, ages = 2:14)
-sims <- sim_tam(fit, n = 5, obs_only = TRUE)
-head(sims$ssb)     # has column 'sim'
-head(sims$catch)   # simulated obs for catch with 'sim'
+
+# Include parameter uncertainty and new process draws (default)
+sims <- sim_tam(fit, n = 100, samp_fixed = TRUE, samp_random = TRUE)
+
+# Conditional simulations (MLE parameters, fixed REs)
+sims0 <- sim_tam(fit, n = 100, samp_fixed = FALSE, samp_random = FALSE)
 }
 
 }
