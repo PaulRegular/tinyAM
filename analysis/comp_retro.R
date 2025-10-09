@@ -48,7 +48,7 @@ m_dev$opt$objective # 819.4535
 # fit <- sam_style
 # fit <- ncam_style
 # fit <- cohort_dev
-fit <- m_dev
+fit <- sam_style
 
 
 
@@ -109,7 +109,7 @@ pop$ssb |>
 
 ## Retro ----
 
-future::plan(future::multisession, workers = 6)
+future::plan(future::multisession, workers = 2)
 
 ncam_style_retros <- fit_retro(ncam_style, folds = 20, hindcast = TRUE)
 sam_style_retros <- fit_retro(sam_style, folds = 20, hindcast = TRUE)
@@ -175,7 +175,7 @@ m_dev_f_ar1_retros$mohns_rho |> subset(is.na(age))
 
 
 retros <- m_dev_retros
-# retros <- ncam_style_retros
+# retros <- sam_style_retros
 
 retros$pop$ssb |>
   mutate(fold = as.character(fold)) |>
@@ -214,9 +214,11 @@ retros$pop$N |>
 
 ## Simulations ----
 
+fit <- ncam_style
+
 fit <- update(fit, proj_settings = list(n_proj = 10, n_mean = 5, F_mult = 1))
 
-future::plan(multisession, workers = 6)
+future::plan(multisession, workers = 2)
 sims <- sim_tam(fit, n = 100, par_uncertainty = "joint")
 
 sims$total_catch |>
@@ -242,11 +244,13 @@ sims$abundance |>
 sims$ssb |>
   group_by(sim) |>
   plot_ly(x = ~year, y = ~est) |>
-  add_lines(line = list(width = 0.5), alpha = 0.1)
+  add_lines(line = list(width = 0.5), alpha = 0.5)
 
 
 ## TODO
 ## - Make a sim_test_tam function
+## - Check effect of lower and higher obs errors
+## - Check effect of projecting declining pop vs increasing pop
 
 
 

@@ -12,12 +12,13 @@ Depends:
     R (>= 4.1.0)
 License: GPL (>= 3)
 URL: 
-    https://github.com/PaulRegular/TAM
+    https://github.com/PaulRegular/tinyAM
 BugReports: 
-    https://github.com/PaulRegular/TAM/issues
+    https://github.com/PaulRegular/tinyAM/issues
 Imports:
     RTMB,
     MASS,
+    Matrix,
     furrr,
     progressr,
     cli
