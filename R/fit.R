@@ -105,7 +105,7 @@ fit_tam <- function(
     control = list(eval.max = 1000, iter.max = 1000)
   ))
   rep <- obj$report()
-  sdrep <- RTMB::sdreport(obj)
+  sdrep <- RTMB::sdreport(obj, getJointPrecision = TRUE)
 
   out <- list(
     call = call,

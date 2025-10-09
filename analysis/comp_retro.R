@@ -217,7 +217,7 @@ retros$pop$N |>
 fit <- update(fit, proj_settings = list(n_proj = 10, n_mean = 5, F_mult = 1))
 
 future::plan(multisession, workers = 6)
-sims <- sim_tam(fit, n = 100, samp_random = TRUE)
+sims <- sim_tam(fit, n = 100, par_uncertainty = "joint")
 
 sims$total_catch |>
   group_by(sim) |>
@@ -247,7 +247,6 @@ sims$ssb |>
 
 ## TODO
 ## - Make a sim_test_tam function
-## - Consider use of fixed x random parameter uncertainty
 
 
 

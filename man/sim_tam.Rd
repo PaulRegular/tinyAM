@@ -7,8 +7,8 @@
 sim_tam(
   fit,
   n = 10,
-  samp_fixed = TRUE,
-  samp_random = FALSE,
+  par_uncertainty = c("joint", "fixed", "none"),
+  redraw_random = FALSE,
   progress = TRUE,
   globals = NULL,
   seed = TRUE
@@ -19,64 +19,66 @@ sim_tam(
 
 \item{n}{Integer; number of simulations (default \code{10}).}
 
-\item{samp_fixed}{Logical; if \code{TRUE}, draw fixed-effect parameters from
-MVN(\code{sdrep$par.fixed}, \code{sdrep$cov.fixed}) before each simulation to
-include parameter uncertainty (default \code{TRUE}).}
+\item{par_uncertainty}{Character; one of \code{"joint"}, \code{"fixed"}, \code{"none"}.
+Controls how the parameter list is sampled before each simulation (see Details).}
 
-\item{samp_random}{Logical; if \code{TRUE}, re-simulate random-effect fields from
-their process models on each run (default \code{TRUE}). Set \code{FALSE} to keep the
-fitted random effects and simulate only new observations.}
+\item{redraw_random}{Logical; if \code{TRUE}, re-draw random-effect fields from their
+process models on each run (recommended for projections). If \code{FALSE}, keep
+random effects and simulate observations only.}
 
-\item{progress}{Logical; show a progress bar with
-\code{\link[progressr:with_progress]{progressr::with_progress()}} (default \code{TRUE}).}
+\item{progress}{Logical; show a progress bar using \code{\link[progressr:with_progress]{progressr::with_progress()}}
+(default \code{TRUE}).}
 
-\item{globals}{Optional character vector of global objects for parallel
-workers (forwarded to \code{\link[furrr:furrr_options]{furrr::furrr_options()}}).}
+\item{globals}{Optional character vector of global objects for parallel workers
+(forwarded to \code{\link[furrr:furrr_options]{furrr::furrr_options()}}).}
 
 \item{seed}{Seed passed to \code{\link[furrr:furrr_options]{furrr::furrr_options()}} for reproducibility.}
 }
 \value{
-A \strong{named list of data frames} (e.g. \code{catch}, \code{index}, \code{N}, \code{F}, \code{M},
-\code{Z}, \code{ssb}, …), each containing results stacked across \code{n} simulations and
-a \code{sim} column (1..n).
+A \strong{named list of data frames} (e.g., \code{catch}, \code{index}, \code{N}, \code{F}, \code{M}, \code{Z}, \code{ssb}, …),
+each stacked across \code{n} simulations with a \code{sim} column.
 }
 \description{
-Draws simulated observations (and optionally random effects) from a fitted
-model using \code{\link[=nll_fun]{nll_fun()}} in simulation mode. Each simulation regenerates
-observations — and, optionally, fixed and random effects — and recomputes all reported
-quantities. The results are returned as tidy data frames stacked across \code{n}
-simulations, with a column \verb{sim = 1..n}.
+Runs the TAM likelihood in simulation mode to generate synthetic observations,
+and optionally random-effect fields, then recomputes reported quantities under
+those draws. Results are returned as tidy data frames stacked across \code{n}
+simulations with a \verb{sim = 1..n} column.
 }
 \details{
-For each simulation:
-\enumerate{
-\item If \code{samp_fixed = TRUE}, draw fixed-effect parameters from the multivariate
-normal distribution defined by \code{sdreport()} (i.e., parameter uncertainty).
-\item Call \code{\link[=nll_fun]{nll_fun()}} with \code{simulate = TRUE} to generate new observations.
-\item If \code{samp_random = TRUE}, also simulate new random-effect fields
-(e.g., F, N, M deviations) from their process models and recompute
-reported quantities under those draws.
-\item Replace \code{dat$log_obs} with the simulated observations, rebuild a minimal
-RTMB object, call \code{report()}, and extract derived quantities via
-\code{\link[=tidy_rep]{tidy_rep()}}.
+The simulation has two orthogonal controls:
+\itemize{
+\item \strong{Parameter uncertainty} via \code{par_uncertainty}:
+\itemize{
+\item \code{"none"}  — use point estimates \verb{(û, θ̂)}.
+\item \code{"fixed"} — sample \strong{fixed effects} \code{θ ~ MVN(sdrep$par.fixed, sdrep$cov.fixed)}.
+\item \code{"joint"} — sample \strong{(random + fixed)} jointly from the Laplace
+approximate posterior using the \strong{joint precision} (sparse Cholesky).
+}
+\item \strong{Random-effect handling} via \code{redraw_random}:
+\itemize{
+\item \code{FALSE} — keep the sampled/fitted random effects and simulate \strong{observations only}
+(posterior-predictive when \code{par_uncertainty = "joint"}).
+\item \code{TRUE}  — generate \strong{new process fields} for the random effects and re-simulate
+(projection/HCR style prior-predictive runs).
+}
 }
 
-The resulting observation and population tables are then row-bound with a
-\code{sim} column using \code{\link[=stack_nested]{stack_nested()}}.
-
-Parallel execution is supported via \code{\link[furrr:future_map]{furrr::future_map()}}. Plan your
-session first, e.g. \code{future::plan(multisession, workers = 4)}.
+Parallel execution is supported via \code{\link[furrr:future_map]{furrr::future_map()}}. Call
+\code{future::plan()} beforehand if you want parallel workers.
 }
 \examples{
 \dontrun{
 future::plan(multisession, workers = 4)
 fit <- fit_tam(cod_obs, years = 1983:2024, ages = 2:14)
 
-# Include parameter uncertainty and new process draws (default)
-sims <- sim_tam(fit, n = 100, samp_fixed = TRUE, samp_random = TRUE)
+# Draw fixed-effects uncertainty and redraw random process fields
+sims1 <- sim_tam(fit, n = 10, par_uncertainty = "fixed", redraw_random = TRUE)
 
-# Conditional simulations (MLE parameters, fixed REs)
-sims0 <- sim_tam(fit, n = 100, samp_fixed = FALSE, samp_random = FALSE)
+# Joint draw of random and fixed effects, keep random effects, simulate obs only
+sims2 <- sim_tam(fit, n = 10, par_uncertainty = "joint", redraw_random = FALSE)
+
+# Conditional/fast: point estimates, obs only
+sims3 <- sim_tam(fit, n = 10, par_uncertainty = "none", redraw_random = FALSE)
 }
 
 }

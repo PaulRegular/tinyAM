@@ -1,116 +1,163 @@
 
-#' Draw a fixed-parameter vector from sdreport() and map back to par list
+#' Draw MLE parameter list (no uncertainty)
 #'
 #' @keywords internal
-#' @importFrom MASS mvrnorm
 #' @noRd
-.samp_fixed <- function(fit) {
+.draw_none <- function(fit) {
+  as.list(fit$sdrep, "Estimate")
+}
+
+#' Draw fixed effects from MVN(sdreport) and map back to par list
+#'
+#' @details Uses the asymptotic MVN with mean `sdrep$par.fixed` and covariance
+#' `sdrep$cov.fixed` on the estimation scale; inserts the draw into the full
+#' parameter vector via `obj$env$parList()`.
+#'
+#' @return A parameter list suitable for `MakeADFun`/`nll_fun`.
+#' @keywords internal
+#' @noRd
+#' @importFrom MASS mvrnorm
+.draw_fixed <- function(fit) {
   sdr <- fit$sdrep
   mu <- sdr$par.fixed
   V  <- sdr$cov.fixed
-  sim_fixed <- as.numeric(MASS::mvrnorm(1L, mu = mu, Sigma = V))
-  all_par <- fit$obj$env$last.par.best
-  fit$obj$env$parList(x = sim_fixed, par = all_par)
+  fixed <- as.numeric(MASS::mvrnorm(1L, mu = mu, Sigma = V))
+  par <- fit$obj$env$last.par.best
+  fit$obj$env$parList(x = fixed, par = par)
 }
 
-#' Simulate observations (optionally sample fixed and random effects)
+#' Create a fast joint (random + fixed) drawer using the Laplace joint precision
 #'
+#' @details Pre-computes a sparse Cholesky of the joint precision. The returned function
+#' draws `par_full ~ N(last.par.best, Q^{-1})` via two sparse triangular solves
+#' and applies the permutation from the factorization. Much of this code is based on
+#' the `sparseMVN::rmvn-sparse()` function.
+#'
+#' @return A function `function(fit) -> par_list` that generates a joint draw.
 #' @keywords internal
 #' @noRd
-.sim_obs <- function(fit, samp_fixed = TRUE, samp_random = FALSE) {
-  obj <- fit$obj
-  sdat <- fit$dat
-  if (samp_fixed) {
-    spar <- .samp_fixed(fit)
-  } else {
-    spar <- as.list(fit$sdrep, "Estimate")
+#' @importFrom Matrix Cholesky expand solve
+.make_draw_joint <- function(fit) {
+  sdr <- fit$sdrep
+  if (is.null(sdr$jointPrecision)) {
+    sdr <- RTMB::sdreport(fit$obj, getJointPrecision = TRUE)
   }
+  Q  <- sdr$jointPrecision
+  mu <- fit$obj$env$last.par.best
+
+  CH <- Matrix::Cholesky(Q, LDL = FALSE)
+  A  <- Matrix::expand(CH)  # contains $L and permutation matrix $P
+
+  function(fit) {
+    z <- rnorm(nrow(Q))
+    y <- Matrix::solve(Matrix::t(A$L), z)                # L' y = z
+    y <- as(Matrix::crossprod(A$P, y), "matrix")         # P' y
+    par_full <- as.numeric(mu + y)                       # N(mu, Q^{-1})
+    fit$obj$env$parList(par = par_full)
+  }
+}
+
+#' Simulate observations (and optionally re-draw random effects) given a par-drawer
+#'
+#' @param fit Fitted TAM object.
+#' @param par_fun Function taking `fit` and returning a parameter list
+#'   (e.g., `.draw_none`, `.draw_fixed`, or the result of `.make_draw_joint(fit)`).
+#' @param redraw_random Logical; if `TRUE`, replace the parameter list's random
+#'   effects with newly simulated fields from the process before recomputing.
+#'
+#' @return Flat list of data frames (obs + population summaries).
+#' @keywords internal
+#' @noRd
+.sim_obs <- function(fit, par_fun = NULL, redraw_random = FALSE) {
+  obj <- fit$obj
+  dat <- fit$dat
+  par <- par_fun(fit)
 
   # Draw obs | par
-  sims <- nll_fun(spar, sdat, simulate = TRUE)
+  sims <- nll_fun(par, dat, simulate = TRUE)
 
   # Optionally use simulated random effects
-  if (samp_random) {
-    spar[obj$env$.random] <- sims[obj$env$.random]
-    sims <- nll_fun(spar, sdat, simulate = TRUE)
+  if (redraw_random) {
+    par[obj$env$.random] <- sims[obj$env$.random]
+    sims <- nll_fun(par, dat, simulate = TRUE)
   }
 
   # Rebuild report with simulated obs (+ maybe simulated RE)
-  sdat$log_obs <- sims$log_obs
+  dat$log_obs <- sims$log_obs
   make_nll_fun <- function(f, d) function(p) f(p, d)
-  sobj <- RTMB::MakeADFun(make_nll_fun(nll_fun, sdat), spar)
-  srep <- sobj$report()
+  obj <- RTMB::MakeADFun(make_nll_fun(nll_fun, dat), par)
+  rep <- obj$report()
 
   # Tidy population tables
-  spop <- tidy_rep(list(dat = sdat, rep = srep))
+  pop <- tidy_rep(list(dat = dat, rep = rep))
 
   # Tidy observations (catch/index) using the simulated log_obs split
-  sobs <- fit$dat$obs[c("catch", "index")]
+  obs <- fit$dat$obs[c("catch", "index")]
   split_obs <- split(exp(sims$log_obs), fit$dat$obs_map$type)
-  sobs$catch$obs  <- split_obs$catch
-  sobs$index$obs  <- split_obs$index
+  obs$catch$obs  <- split_obs$catch
+  obs$index$obs  <- split_obs$index
 
   # Return a flat list of data.frames
-  c(sobs, spop)
+  c(obs, pop)
 }
 
 
 #' Simulate from a fitted TAM
 #'
 #' @description
-#' Draws simulated observations (and optionally random effects) from a fitted
-#' model using [nll_fun()] in simulation mode. Each simulation regenerates
-#' observations — and, optionally, fixed and random effects — and recomputes all reported
-#' quantities. The results are returned as tidy data frames stacked across `n`
-#' simulations, with a column `sim = 1..n`.
+#' Runs the TAM likelihood in simulation mode to generate synthetic observations,
+#' and optionally random-effect fields, then recomputes reported quantities under
+#' those draws. Results are returned as tidy data frames stacked across `n`
+#' simulations with a `sim = 1..n` column.
 #'
 #' @details
-#' For each simulation:
-#' 1. If `samp_fixed = TRUE`, draw fixed-effect parameters from the multivariate
-#'    normal distribution defined by `sdreport()` (i.e., parameter uncertainty).
-#' 2. Call [nll_fun()] with `simulate = TRUE` to generate new observations.
-#' 3. If `samp_random = TRUE`, also simulate new random-effect fields
-#'    (e.g., F, N, M deviations) from their process models and recompute
-#'    reported quantities under those draws.
-#' 4. Replace `dat$log_obs` with the simulated observations, rebuild a minimal
-#'    RTMB object, call `report()`, and extract derived quantities via
-#'    [tidy_rep()].
+#' The simulation has two orthogonal controls:
 #'
-#' The resulting observation and population tables are then row-bound with a
-#' `sim` column using [stack_nested()].
+#' - **Parameter uncertainty** via `par_uncertainty`:
+#'   - `"none"`  — use point estimates `(û, θ̂)`.
+#'   - `"fixed"` — sample **fixed effects** `θ ~ MVN(sdrep$par.fixed, sdrep$cov.fixed)`.
+#'   - `"joint"` — sample **(random + fixed)** jointly from the Laplace
+#'     approximate posterior using the **joint precision** (sparse Cholesky).
 #'
-#' Parallel execution is supported via [furrr::future_map()]. Plan your
-#' session first, e.g. `future::plan(multisession, workers = 4)`.
+#' - **Random-effect handling** via `redraw_random`:
+#'   - `FALSE` — keep the sampled/fitted random effects and simulate **observations only**
+#'     (posterior-predictive when `par_uncertainty = "joint"`).
+#'   - `TRUE`  — generate **new process fields** for the random effects and re-simulate
+#'     (projection/HCR style prior-predictive runs).
+#'
+#' Parallel execution is supported via [furrr::future_map()]. Call
+#' `future::plan()` beforehand if you want parallel workers.
 #'
 #' @param fit A fitted TAM object returned by [fit_tam()].
 #' @param n Integer; number of simulations (default `10`).
-#' @param samp_fixed Logical; if `TRUE`, draw fixed-effect parameters from
-#'   MVN(`sdrep$par.fixed`, `sdrep$cov.fixed`) before each simulation to
-#'   include parameter uncertainty (default `TRUE`).
-#' @param samp_random Logical; if `TRUE`, re-simulate random-effect fields from
-#'   their process models on each run (default `TRUE`). Set `FALSE` to keep the
-#'   fitted random effects and simulate only new observations.
-#' @param progress Logical; show a progress bar with
-#'   [progressr::with_progress()] (default `TRUE`).
-#' @param globals Optional character vector of global objects for parallel
-#'   workers (forwarded to [furrr::furrr_options()]).
+#' @param par_uncertainty Character; one of `"joint"`, `"fixed"`, `"none"`.
+#'   Controls how the parameter list is sampled before each simulation (see Details).
+#' @param redraw_random Logical; if `TRUE`, re-draw random-effect fields from their
+#'   process models on each run (recommended for projections). If `FALSE`, keep
+#'   random effects and simulate observations only.
+#' @param progress Logical; show a progress bar using [progressr::with_progress()]
+#'   (default `TRUE`).
+#' @param globals Optional character vector of global objects for parallel workers
+#'   (forwarded to [furrr::furrr_options()]).
 #' @param seed Seed passed to [furrr::furrr_options()] for reproducibility.
 #'
 #' @return
-#' A **named list of data frames** (e.g. `catch`, `index`, `N`, `F`, `M`,
-#' `Z`, `ssb`, …), each containing results stacked across `n` simulations and
-#' a `sim` column (1..n).
+#' A **named list of data frames** (e.g., `catch`, `index`, `N`, `F`, `M`, `Z`, `ssb`, …),
+#' each stacked across `n` simulations with a `sim` column.
 #'
 #' @examples
 #' \dontrun{
 #' future::plan(multisession, workers = 4)
 #' fit <- fit_tam(cod_obs, years = 1983:2024, ages = 2:14)
 #'
-#' # Include parameter uncertainty and new process draws (default)
-#' sims <- sim_tam(fit, n = 100, samp_fixed = TRUE, samp_random = TRUE)
+#' # Draw fixed-effects uncertainty and redraw random process fields
+#' sims1 <- sim_tam(fit, n = 10, par_uncertainty = "fixed", redraw_random = TRUE)
 #'
-#' # Conditional simulations (MLE parameters, fixed REs)
-#' sims0 <- sim_tam(fit, n = 100, samp_fixed = FALSE, samp_random = FALSE)
+#' # Joint draw of random and fixed effects, keep random effects, simulate obs only
+#' sims2 <- sim_tam(fit, n = 10, par_uncertainty = "joint", redraw_random = FALSE)
+#'
+#' # Conditional/fast: point estimates, obs only
+#' sims3 <- sim_tam(fit, n = 10, par_uncertainty = "none", redraw_random = FALSE)
 #' }
 #'
 #' @seealso [fit_tam()], [tidy_rep()], [stack_nested()]
@@ -118,18 +165,27 @@
 sim_tam <- function(
     fit,
     n = 10,
-    samp_fixed = TRUE,
-    samp_random = FALSE,
+    par_uncertainty = c("joint", "fixed", "none"),
+    redraw_random = FALSE,
     progress = TRUE,
     globals = NULL,
     seed = TRUE
 ) {
+  match.arg(par_uncertainty)
+
+  draw_par <- switch(
+    par_uncertainty,
+    none  = .draw_none,
+    fixed = .draw_fixed,
+    joint = .make_draw_joint(fit)
+  )
+
   sims <- progressr::with_progress({
     update_progress <- progressr::progressor(steps = n)
     furrr::future_map(
       seq_len(n),
       function(i) {
-        res <- .sim_obs(fit, samp_fixed = samp_fixed, samp_random = samp_random)
+        res <- .sim_obs(fit, par_fun = draw_par, redraw_random = redraw_random)
         update_progress()
         res
       },
@@ -140,7 +196,6 @@ sim_tam <- function(
       )
     )
   }, enable = progress)
-
   names(sims) <- as.character(seq_len(n))
   stack_nested(sims, id_col = "sim")
 }
