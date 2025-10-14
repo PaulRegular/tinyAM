@@ -13,7 +13,7 @@
 #'   Columns:
 #'   - `year`: numeric calendar year.
 #'   - `age`: numeric age (years).
-#'   - `obs`: numeric observed catch in numbers (may include `NA`).
+#'   - `obs`: numeric observed catch in numbers (thousands; may include `NA`).
 #'   - `sd_obs_block`: character; observation-variance block label (`"catch"`).
 #'   - `F_y_block`: factor; year blocks for fishing-mortality mean structure
 #'     (e.g., `"1954-1991"`, `"1992-1997"`, ...).
@@ -33,7 +33,7 @@
 #'   Columns:
 #'   - `year`: integer year.
 #'   - `age`: numeric age (years).
-#'   - `obs`: numeric stock weight-at-age (same units as source; e.g., kg).
+#'   - `obs`: numeric stock weight-at-age (kg).
 #'   - `M_assumption`: numeric assumed natural mortality level by age-year
 #'     (used when constructing `M` mean via formula).
 #'

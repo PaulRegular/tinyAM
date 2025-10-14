@@ -12,7 +12,7 @@ Columns:
 \itemize{
 \item \code{year}: numeric calendar year.
 \item \code{age}: numeric age (years).
-\item \code{obs}: numeric observed catch in numbers (may include \code{NA}).
+\item \code{obs}: numeric observed catch in numbers (thousands; may include \code{NA}).
 \item \code{sd_obs_block}: character; observation-variance block label (\code{"catch"}).
 \item \code{F_y_block}: factor; year blocks for fishing-mortality mean structure
 (e.g., \code{"1954-1991"}, \code{"1992-1997"}, ...).
@@ -34,7 +34,7 @@ Columns:
 \itemize{
 \item \code{year}: integer year.
 \item \code{age}: numeric age (years).
-\item \code{obs}: numeric stock weight-at-age (same units as source; e.g., kg).
+\item \code{obs}: numeric stock weight-at-age (kg).
 \item \code{M_assumption}: numeric assumed natural mortality level by age-year
 (used when constructing \code{M} mean via formula).
 }
