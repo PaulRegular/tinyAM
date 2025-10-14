@@ -52,11 +52,11 @@ from \code{\link[=tidy_tam]{tidy_tam()}} and related TAM model objects:
 }
 \details{
 \itemize{
-\item \code{\link[=plot_trend]{plot_trend()}}: time‐series trends with optional confidence ribbons.
-\item \code{\link[=plot_surface]{plot_surface()}}: age × year heatmaps for matrix quantities (e.g., \code{F}, \code{M}, \code{N}).
-\item \code{\link[=plot_obs_pred]{plot_obs_pred()}}: observed vs predicted fits by year.
-\item \code{\link[=plot_bubbles]{plot_bubbles()}}: residuals (OSA or standardized) as bubbles by age × year.
-\item \code{\link[=plot_resid]{plot_resid()}}: residual diagnostics vs year, cohort, age, and expected values.
+\item \code{plot_trend()}: time‐series trends with optional confidence ribbons.
+\item \code{plot_heatmap()}: age × year heatmaps for matrix quantities (e.g., \code{F}, \code{M}, \code{N}).
+\item \code{plot_obs_pred()}: observed vs predicted fits by year.
+\item \code{plot_bubbles()}: residuals (OSA or standardized) as bubbles by age × year.
+\item \code{plot_resid()}: residual diagnostics vs year, cohort, age, and expected values.
 }
 }
 \examples{
@@ -64,7 +64,8 @@ from \code{\link[=tidy_tam]{tidy_tam()}} and related TAM model objects:
 N_dev <- fit_tam(
   cod_obs, years = 1983:2024, ages = 2:14,
   N_settings = list(process = "iid", init_N0 = FALSE),
-  M_settings = list(process = "off", assumption = ~ I(0.3))
+  M_settings = list(process = "off", assumption = ~ I(0.3)),
+  silent = TRUE
 )
 M_dev <- update(
   N_dev,
@@ -79,8 +80,8 @@ plot_trend(N_dev$pop$biomass, ylab = "Biomass")
 plot_trend(tabs$pop$biomass, color = ~model, ylab = "Biomass")
 
 N_dev$pop$N |>
-  dplyr::mutate(age = factor(age, levels = sort(unique(age)))) |>
-  plot_trend(ylab = "N", color = ~age, colors = viridis::viridis(14))
+  subset(age \%in\% 2:8) |>
+  plot_trend(sub_N, ylab = "N", color = ~as.character(age))
 
 ## Age-Year Heatmap
 plot_heatmap(N_dev$pop$F, zlab = "F")

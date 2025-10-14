@@ -49,7 +49,8 @@
 #' N_dev <- fit_tam(
 #'   cod_obs, years = 1983:2024, ages = 2:14,
 #'   N_settings = list(process = "iid", init_N0 = FALSE),
-#'   M_settings = list(process = "off", assumption = ~ I(0.3))
+#'   M_settings = list(process = "off", assumption = ~ I(0.3)),
+#'   silent = TRUE
 #' )
 #' M_dev <- update(
 #'   N_dev,
@@ -64,8 +65,8 @@
 #' plot_trend(tabs$pop$biomass, color = ~model, ylab = "Biomass")
 #'
 #' N_dev$pop$N |>
-#'   dplyr::mutate(age = factor(age, levels = sort(unique(age)))) |>
-#'   plot_trend(ylab = "N", color = ~age, colors = viridis::viridis(14))
+#'   subset(age %in% 2:8) |>
+#'   plot_trend(sub_N, ylab = "N", color = ~as.character(age))
 #'
 #' ## Age-Year Heatmap
 #' plot_heatmap(N_dev$pop$F, zlab = "F")
