@@ -81,7 +81,7 @@ plot_trend(tabs$pop$biomass, color = ~model, ylab = "Biomass")
 
 N_dev$pop$N |>
   subset(age \%in\% 2:8) |>
-  plot_trend(sub_N, ylab = "N", color = ~as.character(age))
+  plot_trend(ylab = "N", color = ~as.character(age))
 
 ## Age-Year Heatmap
 plot_heatmap(N_dev$pop$F, zlab = "F")

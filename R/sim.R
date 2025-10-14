@@ -50,9 +50,9 @@
 
   function(fit) {
     z <- rnorm(nrow(Q))
-    y <- Matrix::solve(Matrix::t(A$L), z)                # L' y = z
-    y <- as(Matrix::crossprod(A$P, y), "matrix")         # P' y
-    par_full <- as.numeric(mu + y)                       # N(mu, Q^{-1})
+    y <- Matrix::solve(Matrix::t(A$L), z)     # L' y = z
+    y <- Matrix::crossprod(A$P, y)            # P' y
+    par_full <- as.numeric(mu + y)            # N(mu, Q^{-1})
     fit$obj$env$parList(par = par_full)
   }
 }
