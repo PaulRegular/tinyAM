@@ -360,3 +360,44 @@ test_that("tidy_tam: stacking uses intersection of components across models", {
   expect_true(all(vapply(out$obs_pred, is.data.frame, logical(1))))
   expect_true(all(vapply(out$pop,      is.data.frame, logical(1))))
 })
+
+test_that("tidy_tam: includes fixed_par and random_par with correct structure and labeling", {
+  out <- tidy_tam(fit_2023, fit_2024)
+
+  # Ensure the new elements exist
+  expect_true(all(c("fixed_par", "random_par") %in% names(out)))
+
+  # fixed_par should be a data.frame
+  expect_s3_class(out$fixed_par, "data.frame")
+  expect_true(all(c("par", "est", "se", "lwr", "upr") %in% names(out$fixed_par)))
+
+  # random_par should be a list of data.frames
+  expect_type(out$random_par, "list")
+  expect_true(all(vapply(out$random_par, is.data.frame, logical(1))))
+
+  # Label column consistency
+  expect_true("model" %in% names(out$fixed_par))
+  expect_identical(names(out$fixed_par)[1], "model")
+
+  # Each random block should include the label as well
+  expect_true(all(vapply(out$random_par, function(df) "model" %in% names(df), logical(1))))
+
+  # Model labels should match expected values
+  expect_equal(sort(unique(out$fixed_par$model)), c("fit_2023", "fit_2024"))
+
+  # Key parameter names should appear
+  expect_true(any(grepl("sd_*", out$fixed_par$par)))
+  expect_true(any(grepl("q", out$fixed_par$par)))
+
+  # Each random block should contain numeric estimates
+  expect_true(all(vapply(out$random_par, function(df) is.numeric(df$est), logical(1))))
+})
+
+test_that("tidy_tam: single model returns fixed_par and random_par without label column", {
+  out <- tidy_tam(fit_2024)
+  expect_true(is.data.frame(out$fixed_par))
+  expect_false("model" %in% names(out$fixed_par))
+  expect_true(is.list(out$random_par))
+  expect_true(all(vapply(out$random_par, is.data.frame, logical(1))))
+})
+

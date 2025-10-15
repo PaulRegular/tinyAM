@@ -423,63 +423,65 @@ stack_nested <- function(x, id_col = "model") {
 #' Stack TAM outputs across models (retro folds, scenarios, etc.)
 #'
 #' @description
-#' Builds tidy, stacked tables from one or more fitted TAM models. For each
-#' model it collects:
-#' - observation diagnostics via [tidy_obs_pred()], and
-#' - population summaries via [tidy_pop()] (with confidence intervals),
-#' then stacks **per component** across models (e.g., all `"catch"` tables
-#' together; all `"N"` tables together).
+#' Builds tidy, stacked tables from one or more fitted TAM models. For each model it collects:
+#'
+#' - observation diagnostics via [tidy_obs_pred()],
+#' - population summaries via [tidy_pop()] (with confidence intervals), and
+#' - parameter summaries via [tidy_par()] (fixed and random effects),
+#'
+#' then stacks **per component** across models (e.g., all `"catch"` tables together; all `"N"`
+#' tables together; all fixed parameters together; each random-effect block together).
 #'
 #' @details
 #' **Inputs:** Pass models through `...` or via `model_list =`.
+#'
 #' - If `...` supplies **one** model, **no label** column is added.
-#' - If `...` supplies **more than one** model, a label column is added using
-#'   the object/expression names from `...`.
-#' - If `model_list` is used, it **must be a named list**; its names are always
-#'   used as labels (even when length 1).
+#' - If `...` supplies **>1** model, a label column is added using the object/expression names from `...`.
+#' - If `model_list` is used, it **must be a named list**; its names are always used as labels (even when length 1).
 #'
-#' Names (from `...` or `model_list`) are passed through
-#' [utils::type.convert()] with `as.is = TRUE`, so numeric-like labels
-#' (e.g. "2010", "2011") become numeric.
+#' Names (from `...` or `model_list`) are passed through [utils::type.convert()] with `as.is = TRUE`,
+#' so numeric-like labels (e.g. `"2010"`, `"2011"`) become numeric.
 #'
-#' Only components present in **all** models are stacked (intersection of names),
-#' ensuring consistent columns for base-R `rbind()`.
+#' Only components present in **all** models are stacked (intersection of names), ensuring column
+#' compatibility for base `rbind()`. Parameter summaries are stacked separately for **fixed** and
+#' **random** effects: fixed effects in a single data frame; random effects as a named list of data
+#' frames (one per random-effect block, e.g. `"log_f"`, `"log_r"`, `"missing"`, …).
 #'
-#' @param ... One or more fitted TAM objects (as returned by [fit_tam()]).
-#'   Ignored if `model_list` is provided.
-#' @param model_list A **named list** of fitted TAM objects. Required to be named;
-#'   the names are used as label values (even for length-1 lists).
-#' @param interval Confidence level passed to [tidy_pop()] for interval construction.
-#'   Default `0.95`.
-#' @param label Character scalar giving the label column name to add when stacking
-#'   across multiple/named models. Default `"model"`.
+#' @param ... One or more fitted TAM objects (as returned by [fit_tam()]). Ignored if `model_list` is provided.
+#' @param model_list A **named list** of fitted TAM objects. Required to be named; the names are used as label values.
+#' @param interval Confidence level passed to [tidy_pop()] and [tidy_par()] for interval construction. Default `0.95`.
+#' @param label Character scalar giving the label column name to add when stacking across multiple/named models. Default `"model"`.
 #'
 #' @return
-#' A named list with two elements:
+#' A named list with four elements:
+#'
 #' - **obs_pred** — a named list of stacked data frames (e.g., `catch`, `index`);
-#' - **pop** — a named list of stacked data frames (e.g., `ssb`, `N`, `M`,
-#'   `mu_M`, `F`, `mu_F`, `Z`, `ssb_mat`).
-#' Each stacked data frame contains all rows across models, with a label column
-#' added according to the rules above.
+#' - **pop** — a named list of stacked data frames (e.g., `ssb`, `N`, `M`, `mu_M`, `F`, `mu_F`, `Z`, …);
+#' - **fixed_par** — a single stacked data frame of fixed-effect parameters with columns like `par`, `est`, `se`, `lwr`, `upr`, plus indices (e.g., `coef`, `year`, `age`) and the label column when applicable;
+#' - **random_par** — a named list of stacked data frames, one per random-effect block, each with the same schema as `fixed_par` plus block-appropriate indices.
 #'
 #' @examples
-#' # Single model via ...: no label column added
+#' # Single model: no label column added
 #' fit1 <- fit_tam(cod_obs, years = 1983:2024, ages = 2:14)
 #' tabs1 <- tidy_tam(fit1)
-#' head(tabs1$obs_pred$index)
+#' names(tabs1)
+#' head(tabs1$fixed_par)
 #'
-#' # Multiple via ...: label uses the object names
+#' # Two models via ...: label uses object names
 #' fit2 <- update(fit1, years = 1983:2023)
 #' tabs2 <- tidy_tam(fit1, fit2)
-#' head(tabs2$obs_pred$catch)  # contains column "model"
+#' head(tabs2$obs_pred$catch)      # contains column "model"
+#' head(tabs2$fixed_par)           # fixed effects stacked with "model"
+#' names(tabs2$random_par)         # e.g. "log_f", "log_r", "missing", ...
+#' head(tabs2$random_par$log_f)    # random block stacked with "model"
 #'
-#' # Named list: must be named; names always used as label (even length 1)
+#' # Named list: must be named; names used as labels (even length 1)
 #' fits <- list(`2023` = fit2, `2024` = fit1)
 #' tabs3 <- tidy_tam(model_list = fits, label = "retro_year")
-#' head(tabs3$pop$N)  # column "retro_year" has 2023/2024
+#' head(tabs3$pop$N)               # column "retro_year" has 2023/2024
 #'
 #' @importFrom utils type.convert
-#' @seealso [tidy_obs_pred()], [tidy_pop()], [fit_tam()], [fit_retro()]
+#' @seealso [tidy_obs_pred()], [tidy_pop()], [tidy_par()], [fit_tam()], [fit_retro()]
 #' @export
 tidy_tam <- function(..., model_list = NULL, interval = 0.95, label = "model") {
   using_dots <- is.null(model_list)
@@ -503,11 +505,19 @@ tidy_tam <- function(..., model_list = NULL, interval = 0.95, label = "model") {
 
   obs_list <- lapply(model_list, tidy_obs_pred)
   pop_list <- lapply(model_list, tidy_pop, interval = interval)
+  par_list <- lapply(model_list, tidy_par, interval = interval)
 
   obs_pred <- stack_nested(obs_list, id_col = id_col)
   pop      <- stack_nested(pop_list, id_col = id_col)
+  fixed_par  <- stack_nested(lapply(par_list, `[`, "fixed"), id_col = id_col)
+  random_par <- stack_nested(lapply(par_list, `[[`, "random"), id_col = id_col)
 
-  list(obs_pred = obs_pred, pop = pop)
+  list(
+    obs_pred   = obs_pred,
+    pop        = pop,
+    fixed_par  = fixed_par$fixed,
+    random_par = random_par
+  )
 }
 
 
