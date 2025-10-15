@@ -10,9 +10,20 @@
 #'
 #' @examples
 #'
-#' fit <- fit_tam(cod_obs, years = 1983:2024, ages = 2:14, silent = TRUE)
+#' N_dev <- fit_tam(
+#'   cod_obs, years = 1983:2024, ages = 2:14,
+#'   N_settings = list(process = "iid", init_N0 = FALSE),
+#'   M_settings = list(process = "off", assumption = ~ I(0.3)),
+#'   silent = TRUE
+#' )
+#' M_dev <- update(
+#'   N_dev,
+#'   N_settings = list(process = "off", init_N0 = TRUE),
+#'   M_settings = list(process = "ar1", assumption = ~ I(0.3),
+#'                     age_breaks = seq(2, 14, by = 6))
+#' )
 #'
-#' fits <- list("Default" = fit)
+#' fits <- list("N_dev" = N_dev, "M_dev" = M_dev)
 #' vis_fit(fits)
 #'
 #' @export
