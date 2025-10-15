@@ -1,16 +1,4 @@
 
-.tam_cols <- c(
-  "#003e56",
-  "#007187",
-  "#028f8d",
-  "#2aaa85",
-  "#93c25c",
-  "#fec124",
-  "#ffa31d",
-  "#fe8427",
-  "#f05c28"
-)
-
 .buttons <- list(
   list(
     type = "buttons",
@@ -34,9 +22,10 @@
 #' - `plot_resid()`: residual diagnostics vs year, cohort, age, and expected values.
 #'
 #' @param data A data frame containing at least `year` and `est` columns.
+#' @param x Formula specifying x variable
 #' @param ylab Label for the y-axis.
+#' @param xlab Label for the x-axis.
 #' @param zlab Label for the colorbar in heatmaps.
-#' @param x,xlab For residual plots, specify the x variable and its label.
 #' @param title Plot title.
 #' @param add_intervals Logical; if `TRUE`, show confidence intervals when `lwr` and `upr` are present.
 #' @param add_buttons Logical; if `TRUE`, include buttons to toggle y-axis between linear/log.
@@ -92,6 +81,8 @@
 #' @export
 plot_trend <- function(
     data,
+    x = ~year,
+    xlab = "Year",
     ylab = "",
     title = "",
     add_intervals = TRUE,
@@ -103,7 +94,7 @@ plot_trend <- function(
     args$color <- I('#1f77b4')
     args$showlegend <- FALSE
   }
-  p <- do.call(plot_ly, c(list(data = data, x = ~year), args))
+  p <- do.call(plot_ly, c(list(data = data, x = x), args))
 
   if (add_intervals && all(c("lwr", "upr") %in% names(data))) {
     p <- p |> add_ribbons(ymin = ~lwr, ymax = ~upr,
@@ -117,7 +108,7 @@ plot_trend <- function(
     add_lines(y = ~est, line = list(width = 2)) |>
     layout(
       title = title,
-      xaxis = list(title = "Year"),
+      xaxis = list(title = xlab),
       yaxis = list(title = ylab),
       updatemenus = buttons
     )
@@ -175,7 +166,7 @@ plot_obs_pred <- function(
       color = ~I("darkgrey"),
       name = "Observed",
       showlegend = FALSE,
-      opacity = 0.6
+      opacity = 0.5
     ) |>
     add_lines(y = ~pred) |>
     layout(
@@ -248,4 +239,61 @@ plot_resid <- function(
            yaxis = list(title = title))
 
 }
+
+
+
+
+#' Make a flexdashboard for visualizing model fits
+#'
+#' @param fits         A **named list** of fitted TAM objects. Required to be named;
+#'                     the names are used as label values (even for length-1 lists).
+#' @param output_file  Name of file to export using [rmarkdown::render()].
+#'                     If `NULL`, flexdashboard will be rendered using [rmarkdown::run()]
+#' @param ...          Additional arguments to send to [rmarkdown::run()] or
+#'                     [rmarkdown::render()].
+#'
+#' @examples
+#'
+#' fit <- fit_tam(cod_obs, years = 1983:2024, ages = 2:14)
+#'
+#' fits <- list("Default" = fit)
+#' vis_fit(fits)
+#'
+#' @export
+vis_fit <- function(fits = NULL, output_file = NULL, ...) {
+
+  pkg <- c("rmarkdown", "flexdashboard")
+  missing <- pkg[!vapply(pkg, requireNamespace, logical(1), quietly = TRUE)]
+  if (length(missing)) {
+    install_call <- sprintf(
+      "install.packages(c(%s))",
+      paste(sprintf("'%s'", missing), collapse = ", ")
+    )
+    cli::cli_abort(c(
+      "Package{?s} {.pkg {missing}} {cli::qty(length(missing))}is/are required for {.fn vis_fit}.",
+      "i" = "Install with: {.code {install_call}}"
+    ))
+  }
+
+  rmd_file <- system.file("rmd", "vis_fit.Rmd", package = "tinyAM")
+
+  rmd_env <- new.env()
+  rmd_env$fits <- fits
+
+  if (is.null(output_file)) {
+    rmarkdown::run(file = rmd_file,
+                   render_args = list(envir = rmd_env), ...)
+  } else {
+    output_dir <- normalizePath(dirname(output_file))
+    output_file <- basename(output_file)
+    rmarkdown::render(input = rmd_file,
+                      output_file = output_file,
+                      output_dir = output_dir, ...)
+  }
+
+}
+
+
+
+
 

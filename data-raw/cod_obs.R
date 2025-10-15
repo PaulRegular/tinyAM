@@ -1,5 +1,5 @@
 
-library(TAM) # for cut_years and cut_ages functions
+library(tinyAM) # for cut_years and cut_ages functions
 
 ## Re-work small sub-set of inputs for the Northern Cod Assessment Model into TAM structure
 inputs <- NCAM::inputs
@@ -34,8 +34,8 @@ nm$year <- as.numeric(nm$year)
 weight <- merge(weight, nm, by = c("year", "age"))
 
 cod_obs <- list(catch = catch,
-                          index = index,
-                          weight = weight,
-                          maturity = maturity)
+                index = index,
+                weight = weight,
+                maturity = maturity)
 
 usethis::use_data(cod_obs, overwrite = TRUE)

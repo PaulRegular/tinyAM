@@ -24,6 +24,7 @@
 #'   Columns:
 #'   - `year`: integer year.
 #'   - `age`: numeric age (years).
+#'   - `survey`: factor; survey name.
 #'   - `obs`: numeric survey index-at-age (may include `NA`).
 #'   - `samp_time`: numeric sampling time within the year (fraction of a year; e.g., `0.8`).
 #'   - `q_block`: factor; age blocks for catchability.

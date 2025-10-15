@@ -1,0 +1,82 @@
+
+Landings {data-navmenu="Fishery"}
+================================================================================
+
+
+Row {.tabset}
+--------------------------------------------------------------------------------
+
+### Yield
+
+```{r}
+
+obs_yield <- pop$total_yield
+names(obs_yield)[names(obs_yield) == "est"] <- "obs"
+pred_yield <- pop$total_yield_pred
+names(pred_yield)[names(pred_yield) == "est"] <- "pred"
+merge(obs_yield, pred_yield, by = c("year", "model")) |> 
+  plot_obs_pred(color = ~model, colors = cols)
+
+```
+
+
+### Numbers at age
+
+```{r}
+plot_obs_pred(obs_pred$catch, frame = ~age, color = ~model, 
+              colors = cols, ylab = "Catch")
+```
+
+
+Row {.tabset}
+--------------------------------------------------------------------------------
+
+
+### Residuals (age, year)
+
+```{r}
+plot_bubbles(obs_pred$catch, frame = ~model) 
+```
+
+### (year)
+
+```{r}
+plot_resid(obs_pred$catch, x = ~year, xlab = "Year", frame = ~model)
+```
+
+### (age)
+
+```{r}
+plot_resid(obs_pred$catch, x = ~age, xlab = "Age", frame = ~model)
+```
+
+### (cohort)
+
+```{r}
+plot_resid(obs_pred$catch, x = ~(year - age), xlab = "Cohort", frame = ~model)
+```
+
+### (expected)
+
+```{r}
+plot_resid(obs_pred$catch, x = ~log(pred), xlab = "Expected", frame = ~model)
+```
+
+
+Selectivity {data-navmenu="Fishery"}
+================================================================================
+
+
+Row {.tabset}
+--------------------------------------------------------------------------------
+
+### Selectivity
+
+```{r}
+plot_trend(pop$S, x = ~age, xlab = "Age", ylab = "Selectivity", frame = ~year,
+           color = ~model, colors = cols)
+```
+
+
+
+

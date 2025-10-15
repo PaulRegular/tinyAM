@@ -1,0 +1,54 @@
+---
+title: "Tiny Assessment Model Dashboard"
+output:
+  flexdashboard::flex_dashboard:
+    theme: 
+      version: 4
+      bootswatch: litera
+---
+
+
+```{r setup, echo=FALSE}
+library(tinyAM)
+library(plotly)
+```
+
+
+```{r data, include=FALSE}
+
+tam_cols <- c(
+  "#003e56",
+  "#007187",
+  "#028f8d",
+  "#2aaa85",
+  "#93c25c",
+  "#fec124",
+  "#ffa31d",
+  "#fe8427",
+  "#f05c28"
+)
+tam_pal <- colorRampPalette(tam_cols)
+cols <- tam_pal(length(fits))
+
+tabs <- tidy_tam(model_list = fits)
+obs_pred <- tabs$obs_pred
+pop <- tabs$pop
+
+```
+
+```{r fishery, child = "fishery.Rmd"}
+```
+
+
+```{r surveys, child = "surveys.Rmd"}
+```
+
+
+<!--{r trends, child = "trends.Rmd"}{r tables, child = "tables.Rmd"}-->
+
+
+
+
+
+
+

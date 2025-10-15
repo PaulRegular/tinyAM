@@ -11,6 +11,8 @@
 \usage{
 plot_trend(
   data,
+  x = ~year,
+  xlab = "Year",
   ylab = "",
   title = "",
   add_intervals = TRUE,
@@ -29,6 +31,10 @@ plot_resid(data, x = ~year, xlab = "Year", ...)
 \arguments{
 \item{data}{A data frame containing at least \code{year} and \code{est} columns.}
 
+\item{x}{Formula specifying x variable}
+
+\item{xlab}{Label for the x-axis.}
+
 \item{ylab}{Label for the y-axis.}
 
 \item{title}{Plot title.}
@@ -40,8 +46,6 @@ plot_resid(data, x = ~year, xlab = "Year", ...)
 \item{...}{Additional arguments to pass to \code{\link[plotly:plot_ly]{plotly::plot_ly()}} such as \code{color}, \code{colors}, etc.}
 
 \item{zlab}{Label for the colorbar in heatmaps.}
-
-\item{x, xlab}{For residual plots, specify the x variable and its label.}
 }
 \value{
 A Plotly object.
