@@ -24,6 +24,7 @@ test_that("vis_tam runs cleanly with valid fits list", {
   expect_true(file.exists(tmpfile))
 
   # --- Test 2: rmarkdown::run (interactive mode)
+  skip_if_not(interactive())
   skip_on_ci()
   skip_on_cran()
   expect_no_error({
