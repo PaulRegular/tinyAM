@@ -1,5 +1,5 @@
 
-test_that("vis_fit runs cleanly with valid fits list", {
+test_that("vis_tam runs cleanly with valid fits list", {
 
   # Fit two quick models (as in examples)
   N_dev <- fit_tam(
@@ -19,7 +19,7 @@ test_that("vis_fit runs cleanly with valid fits list", {
   # --- Test 1: rmarkdown::render (static mode)
   tmpfile <- tempfile(fileext = ".html")
   expect_no_error({
-    vis_fit(fits, output_file = tmpfile, quiet = TRUE)
+    vis_tam(fits, output_file = tmpfile, quiet = TRUE)
   })
   expect_true(file.exists(tmpfile))
 
@@ -27,7 +27,7 @@ test_that("vis_fit runs cleanly with valid fits list", {
   skip_on_ci()
   skip_on_cran()
   expect_no_error({
-    vis_fit(fits, output_file = NULL, shiny_args = list(quiet = TRUE))
+    vis_tam(fits, output_file = NULL, shiny_args = list(quiet = TRUE))
   })
 
 })

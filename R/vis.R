@@ -24,10 +24,10 @@
 #' )
 #'
 #' fits <- list("N_dev" = N_dev, "M_dev" = M_dev)
-#' vis_fit(fits)
+#' vis_tam(fits)
 #'
 #' @export
-vis_fit <- function(fits = NULL, output_file = NULL, ...) {
+vis_tam <- function(fits = NULL, output_file = NULL, ...) {
 
   pkg <- c("rmarkdown", "flexdashboard")
   missing <- pkg[!vapply(pkg, requireNamespace, logical(1), quietly = TRUE)]
@@ -37,12 +37,12 @@ vis_fit <- function(fits = NULL, output_file = NULL, ...) {
       paste(sprintf("'%s'", missing), collapse = ", ")
     )
     cli::cli_abort(c(
-      "Package{?s} {.pkg {missing}} {cli::qty(length(missing))}is/are required for {.fn vis_fit}.",
+      "Package{?s} {.pkg {missing}} {cli::qty(length(missing))}is/are required for {.fn vis_tam}.",
       "i" = "Install with: {.code {install_call}}"
     ))
   }
 
-  rmd_file <- system.file("rmd", "vis_fit.Rmd", package = "tinyAM")
+  rmd_file <- system.file("rmd", "vis_tam.Rmd", package = "tinyAM")
 
   rmd_env <- new.env()
   rmd_env$fits <- fits
