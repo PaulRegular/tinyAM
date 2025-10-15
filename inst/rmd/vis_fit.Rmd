@@ -2,9 +2,23 @@
 title: "Tiny Assessment Model Dashboard"
 output:
   flexdashboard::flex_dashboard:
-    theme: 
+    theme:
       version: 4
-      bootswatch: litera
+      bg: "#FFFFFF"   
+      fg: "#000000"          
+      primary: "#003e56"     
+      secondary: "#fec124"   
+      navbar-bg: "#007187"  
+      navbar-fg: "#FFFFFF"
+      link-color: "#028f8d"
+      base_font:
+        google: Poppins 
+      heading_font:
+        google: Poppins
+      code_font:
+        google:
+          family: JetBrains Mono
+          local: false
 ---
 
 
@@ -24,6 +38,9 @@ pop <- tabs$pop
 
 
 ```{r helpers, include = FALSE}
+
+"#3ADAC6"
+"#ED79F9"
 
 tam_cols <- c(
   "#003e56",
@@ -49,16 +66,16 @@ make_resid_plots <- function(d) {
 
 ```
 
-
 ```{r fishery, child = "fishery.Rmd"}
 ```
-
 
 ```{r surveys, child = "surveys.Rmd"}
 ```
 
+```{r trends, child = "trends.Rmd"}
+```
 
-<!--{r trends, child = "trends.Rmd"}{r tables, child = "tables.Rmd"}-->
+<!--{r tables, child = "tables.Rmd"}-->
 
 
 

@@ -1,5 +1,5 @@
 
-Landings {data-navmenu="Fishery"}
+Fishery
 ================================================================================
 
 
@@ -64,22 +64,4 @@ resid_plots$cohort
 ```{r}
 resid_plots$expected
 ```
-
-
-Selectivity {data-navmenu="Fishery"}
-================================================================================
-
-
-Row {.tabset}
---------------------------------------------------------------------------------
-
-### Selectivity
-
-```{r}
-plot_trend(pop$S, x = ~age, xlab = "Age", ylab = "Selectivity", frame = ~year,
-           color = ~model, colors = cols)
-```
-
-
-
 

@@ -1,5 +1,5 @@
 
-Status and rates {data-navmenu="Trends"}
+Trends
 ================================================================================
 
 Row {.tabset}
@@ -8,122 +8,33 @@ Row {.tabset}
 ### Abundance
 
 ```{r}
-
-rec <- tabs$popest %>% 
-  filter(var == "Rec") %>% 
-  mutate(est = est * 1000, lwr = lwr * 1000, upr = upr * 1000) %>% 
-  rename(Recruitment = est, Year = year) %>% 
-  plot_ly(x = ~Year, color = ~model, colors = cols, legendgroup = ~model) %>% 
-  add_ribbons(ymin = ~lwr, ymax = ~upr, 
-              line = list(width = 0), showlegend = FALSE,
-              alpha = 0.2) %>% 
-  add_lines(y = ~Recruitment)
-
-
-abun <- tabs$popest %>% 
-  filter(var == "numbers") %>% 
-  mutate(est = est * 1000, lwr = lwr * 1000, upr = upr * 1000) %>% 
-  rename(Abundance = est, Year = year) %>% 
-  plot_ly(x = ~Year, color = ~model, colors = cols, legendgroup = ~model,
-          showlegend = FALSE) %>% 
-  add_ribbons(ymin = ~lwr, ymax = ~upr, 
-              line = list(width = 0), showlegend = FALSE,
-              alpha = 0.2) %>% 
-  add_lines(y = ~Abundance)
-
-
-subplot(rec, abun, nrows = 2, shareX = TRUE, titleY = TRUE)
-
-
+plot_trend(pop$abundance, color = ~model, colors = cols, ylab = "Abundance")
 ```
 
-
-### Biomass
+### Recruitment
 
 ```{r}
-
-bio <- tabs$popest %>% 
-  filter(var == "biomass") %>% 
-  rename(Year = year) %>% 
-  plot_ly(x = ~Year, color = ~model, colors = cols, legendgroup = ~model) %>% 
-  add_ribbons(ymin = ~lwr, ymax = ~upr, 
-              line = list(width = 0), showlegend = FALSE,
-              alpha = 0.2) %>% 
-  add_lines(y = ~est) %>% 
-  layout(yaxis = list(title = "Biomass (t)"))
-
-
-ebio <- tabs$popest %>% 
-  filter(var == "biomass_exploit") %>% 
-  rename(Year = year) %>% 
-  plot_ly(x = ~Year, color = ~model, colors = cols, legendgroup = ~model,
-          showlegend = FALSE) %>% 
-  add_ribbons(ymin = ~lwr, ymax = ~upr, 
-              line = list(width = 0), showlegend = FALSE,
-              alpha = 0.2) %>% 
-  add_lines(y = ~est) %>% 
-  layout(yaxis = list(title = "Exploitable biomass (t)"))
-
-
-subplot(ebio, bio, nrows = 2, shareX = TRUE, titleY = TRUE)
-
-
+plot_trend(pop$recruitment, color = ~model, colors = cols, ylab = "Recruitment")
 ```
 
-
-### Abundance at age
+### SSB
 
 ```{r}
-
-tabs$paa %>% 
-  filter(var == "numbers") %>% 
-  rename(Year = year) %>% 
-  plot_ly(x = ~Year, color = ~model, colors = cols, legendgroup = ~model,
-          frame = ~age) %>% 
-  add_lines(y = ~val * 1000) %>% 
-  layout(yaxis = list(title = "Abundance")) %>% 
-  animation_opts(transition = 0)
-
+plot_trend(pop$ssb, color = ~model, colors = cols, ylab = "SSB")
 ```
 
-
-### Biomass at age
+### Abundance-at-age
 
 ```{r}
-
-tabs$paa %>% 
-  filter(var == "biomass") %>% 
-  rename(Year = year) %>% 
-  plot_ly(x = ~Year, color = ~model, colors = cols, legendgroup = ~model,
-          frame = ~age) %>% 
-  add_lines(y = ~val) %>% 
-  layout(yaxis = list(title = "Biomass (t)")) %>% 
-  animation_opts(transition = 0)
-
-```
-
-### Stock-Recruit
-
-```{r}
-
-ssb <- tabs$popest %>%
-  filter(var == "biomass_plus")
-rec <- tabs$popest %>%
-  filter(var == "Rec") %>%
-  mutate(year = year - 1) # year at age 0
-d <- merge(ssb, rec, by = c("year", "model"), suffixes = c(".ssb", ".rec"))
-
-d %>% 
-  plot_ly(x = ~est.ssb, y = ~est.rec, color = ~model, colors = cols, legendgroup = ~model,
-          text = ~year) %>% 
-  add_markers() %>% 
-  layout(xaxis = list(title = "SSB (10+ Biomass; t)"),
-         yaxis = list(title = "Recruitment")) %>% 
-  animation_opts(transition = 0)
-
+plot_trend(pop$N, color = ~model, colors = cols, frame = ~age, ylab = "N")
 ```
 
 
+<!-- ### Stock-Recruit -->
+
+<!-- ```{r} -->
+
+<!-- ``` -->
 
 
 Row {.tabset}
@@ -132,160 +43,32 @@ Row {.tabset}
 ### Average F
 
 ```{r}
-
-tabs$popest %>% 
-  filter(var == "aveF") %>% 
-  rename(Year = year) %>% 
-  plot_ly(x = ~Year, color = ~model, colors = cols, legendgroup = ~model) %>% 
-  add_ribbons(ymin = ~lwr, ymax = ~upr, 
-              line = list(width = 0), showlegend = FALSE,
-              alpha = 0.2) %>% 
-  add_lines(y = ~est) %>% 
-  layout(yaxis = list(title = "Average F"))
-
+plot_trend(pop$F_bar, color = ~model, colors = cols, ylab = "Average F")
 ```
 
-### F at age
+### F-at-age
 
 ```{r}
-
-tabs$age.res$catch %>% 
-  rename(Year = year) %>% 
-  plot_ly(x = ~Year, color = ~model, colors = cols, legendgroup = ~model,
-          frame = ~age) %>% 
-  add_ribbons(ymin = ~F.L95, ymax = ~F.U95, 
-              line = list(width = 0), showlegend = FALSE,
-              alpha = 0.2) %>% 
-  add_lines(y = ~F) %>% 
-  layout(yaxis = list(title = "F")) %>% 
-  animation_opts(transition = 0)
-
+plot_trend(pop$F, color = ~model, colors = cols, frame = ~age, ylab = "F")
 ```
 
-
-### Process error
+### Selectivity
 
 ```{r}
-
-tabs$pe %>% 
-  rename(Year = year) %>% 
-  plot_ly(x = ~Year, color = ~model, colors = cols, legendgroup = ~model,
-          frame = ~age) %>% 
-  add_lines(y = ~pe) %>% 
-  layout(yaxis = list(title = "Process error")) %>% 
-  animation_opts(transition = 0)
-
+plot_trend(pop$S, x = ~age, xlab = "Age", ylab = "Selectivity", frame = ~year,
+           color = ~model, colors = cols)
 ```
 
-
-Past projections {data-navmenu="Trends"}
-================================================================================
-
-Row {.tabset}
---------------------------------------------------------------------------------
-
-### 2017 projections
+### Average M
 
 ```{r}
-
-int_d <- mse_intervals %>% 
-  filter(om == "Base", core == "SSM revamp", quantity == "Recruitment") %>% 
-  mutate_at(vars(starts_with("p")), function(x) x * 1000) %>% 
-  mutate(model = "base")
-
-mod_d <- tabs$popest %>% 
-  filter(var %in% c("Rec")) %>% 
-  mutate(var = as.character(var)) %>% 
-  mutate(var = dplyr::recode(var, Rec = "Recruitment")) %>%
-  mutate(est = est * 1000) %>% 
-  dplyr::rename(quantity = var)
-
-rec <- plot_ly(color = ~model, colors = cols, legendgroup = ~model) %>% 
-  add_ribbons(x = ~year, ymin = ~p2.5, ymax = ~p97.5, color = I("grey95"),
-              data = int_d, name = "95%", legendgroup = "95%") %>% 
-  add_ribbons(x = ~year, ymin = ~p5, ymax = ~p95, color = I("grey90"),
-              data = int_d, name = "90%", legendgroup = "90%") %>% 
-  add_ribbons(x = ~year, ymin = ~p10, ymax = ~p90, color = I("grey80"),
-              data = int_d, name = "80%", legendgroup = "80%") %>% 
-  add_lines(x = ~year, y = ~est,
-            data = mod_d) %>% 
-  layout(xaxis = list(title = "Year", range = c(2010, max(int_d$year))),
-         yaxis = list(title = "Recruitment"))
-  
-
-int_d <- mse_intervals %>% 
-  filter(om == "Base", core == "SSM revamp", quantity == "Abundance") %>% 
-  mutate_at(vars(starts_with("p")), function(x) x * 1000) %>% 
-  mutate(model = "base")
-
-mod_d <- tabs$popest %>% 
-  filter(var %in% c("numbers")) %>% 
-  mutate(var = as.character(var)) %>% 
-  mutate(var = dplyr::recode(var, numbers = "Abundance")) %>%
-  mutate(est = est * 1000) %>% 
-  dplyr::rename(quantity = var)
-
-abun <- plot_ly(color = ~model, colors = cols, legendgroup = ~model, showlegend = FALSE) %>% 
-  add_ribbons(x = ~year, ymin = ~p2.5, ymax = ~p97.5, color = I("grey95"),
-              data = int_d, name = "95%", legendgroup = "95%") %>% 
-  add_ribbons(x = ~year, ymin = ~p5, ymax = ~p95, color = I("grey90"),
-              data = int_d, name = "90%", legendgroup = "90%") %>% 
-  add_ribbons(x = ~year, ymin = ~p10, ymax = ~p90, color = I("grey80"),
-              data = int_d, name = "80%", legendgroup = "80%") %>% 
-  add_lines(x = ~year, y = ~est,
-            data = mod_d) %>% 
-  layout(xaxis = list(title = "Year", range = c(2010, max(int_d$year))),
-         yaxis = list(title = "Abundance"))
-
-int_d <- mse_intervals %>% 
-  filter(om == "Base", core == "SSM revamp", quantity == "Exploitable biomass") %>% 
-  mutate(model = "base")
-
-mod_d <- tabs$popest %>% 
-  filter(var %in% c("biomass_exploit")) %>% 
-  mutate(var = as.character(var)) %>% 
-  mutate(var = dplyr::recode(var, biomass = "Exploitable biomass")) %>%
-  dplyr::rename(quantity = var)
-
-bio <- plot_ly(color = ~model, colors = cols, legendgroup = ~model, showlegend = FALSE) %>% 
-  add_ribbons(x = ~year, ymin = ~p2.5, ymax = ~p97.5, color = I("grey95"),
-              data = int_d, name = "95%", legendgroup = "95%") %>% 
-  add_ribbons(x = ~year, ymin = ~p5, ymax = ~p95, color = I("grey90"),
-              data = int_d, name = "90%", legendgroup = "90%") %>% 
-  add_ribbons(x = ~year, ymin = ~p10, ymax = ~p90, color = I("grey80"),
-              data = int_d, name = "80%", legendgroup = "80%") %>% 
-  add_lines(x = ~year, y = ~est,
-            data = mod_d) %>% 
-  layout(xaxis = list(title = "Year", range = c(2010, max(int_d$year))),
-         yaxis = list(title = "Exploitable biomass (t)"))
-
-
-int_d <- mse_intervals %>% 
-  filter(om == "Base", core == "SSM revamp", quantity == "Average F") %>% 
-  mutate(model = "base")
-
-mod_d <- tabs$popest %>% 
-  filter(var %in% c("aveF")) %>% 
-  mutate(var = as.character(var)) %>% 
-  mutate(var = dplyr::recode(var, aveF = "Average F")) %>%
-  dplyr::rename(quantity = var)
-
-avef <- plot_ly(color = ~model, colors = cols, legendgroup = ~model, showlegend = FALSE) %>% 
-  add_ribbons(x = ~year, ymin = ~p2.5, ymax = ~p97.5, color = I("grey95"),
-              data = int_d, name = "95%", legendgroup = "95%") %>% 
-  add_ribbons(x = ~year, ymin = ~p5, ymax = ~p95, color = I("grey90"),
-              data = int_d, name = "90%", legendgroup = "90%") %>% 
-  add_ribbons(x = ~year, ymin = ~p10, ymax = ~p90, color = I("grey80"),
-              data = int_d, name = "80%", legendgroup = "80%") %>% 
-  add_lines(x = ~year, y = ~est,
-            data = mod_d) %>% 
-  layout(xaxis = list(title = "Year", range = c(2010, max(int_d$year))),
-         yaxis = list(title = "Average F"))
-
-subplot(rec, bio, abun, avef, nrows = 2, shareX = TRUE, shareY = FALSE, titleX = TRUE, titleY = TRUE,
-        margin = 0.05)
-
+plot_trend(pop$M_bar, color = ~model, colors = cols, ylab = "Average M")
 ```
 
+### M-at-age
+
+```{r}
+plot_trend(pop$M, color = ~model, colors = cols, frame = ~age, ylab = "M")
+```
 
 
