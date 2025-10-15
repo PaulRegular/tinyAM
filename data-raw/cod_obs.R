@@ -16,9 +16,10 @@ catch$F_a_block <- cut_ages(catch$age, seq(min(catch$age), max(catch$age), 2))
 index <- inputs$index |>
   subset(select = c("year", "age", "index"))
 names(index)[names(index) == "index"] <- "obs"
+index$survey <- "Fall 2J3KL"
 index$samp_time <- 0.8
 index$q_block <- cut(index$age, c(min(index$age):6, max(index$age) + 1), right = FALSE)
-index$sd_obs_block <- "index"
+index$sd_obs_block <- index$survey
 
 weight <- inputs$pwts[, c("year", "age", "weight")]
 names(weight)[names(weight) == "weight"] <- "obs"

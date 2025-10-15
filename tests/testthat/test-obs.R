@@ -31,6 +31,12 @@ test_that("check_obs enforces integer-ish years (no fractional years)", {
   expect_error(check_obs(obs), "`catch\\$year` must be numeric", ignore.case = TRUE)
 })
 
+test_that("check_obs requires index$survey present", {
+  obs <- cod_obs
+  obs$index$survey <- NULL
+  expect_error(check_obs(obs), "index\\$survey", perl = TRUE)
+})
+
 test_that("check_obs requires index$samp_time present, numeric in [0,1], and no NAs", {
   # Out-of-range values
   obs <- cod_obs
