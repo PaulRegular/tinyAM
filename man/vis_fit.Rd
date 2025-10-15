@@ -21,7 +21,7 @@ Make a flexdashboard for visualizing model fits
 }
 \examples{
 
-fit <- fit_tam(cod_obs, years = 1983:2024, ages = 2:14)
+fit <- fit_tam(cod_obs, years = 1983:2024, ages = 2:14, silent = TRUE)
 
 fits <- list("Default" = fit)
 vis_fit(fits)

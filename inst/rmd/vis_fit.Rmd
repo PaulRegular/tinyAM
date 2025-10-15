@@ -16,6 +16,15 @@ library(plotly)
 
 ```{r data, include=FALSE}
 
+tabs <- tidy_tam(model_list = fits)
+obs_pred <- tabs$obs_pred
+pop <- tabs$pop
+
+```
+
+
+```{r helpers, include = FALSE}
+
 tam_cols <- c(
   "#003e56",
   "#007187",
@@ -30,11 +39,16 @@ tam_cols <- c(
 tam_pal <- colorRampPalette(tam_cols)
 cols <- tam_pal(length(fits))
 
-tabs <- tidy_tam(model_list = fits)
-obs_pred <- tabs$obs_pred
-pop <- tabs$pop
+make_resid_plots <- function(d) {
+  list(bubbles = plot_bubbles(d, frame = ~model, colors = c(tam_cols[1], tam_cols[9])),
+       year = plot_resid(d, x = ~year, xlab = "Year", frame = ~model, color = ~model, colors = cols),
+       age = plot_resid(d, x = ~age, xlab = "Age", frame = ~model, color = ~model, colors = cols),
+       cohort = plot_resid(d, x = ~(year - age), xlab = "Cohort", frame = ~model, color = ~model, colors = cols),
+       expected = plot_resid(d, x = ~log(pred), xlab = "Expected", frame = ~model, color = ~model, colors = cols))
+}
 
 ```
+
 
 ```{r fishery, child = "fishery.Rmd"}
 ```

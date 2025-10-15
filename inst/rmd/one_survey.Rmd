@@ -1,0 +1,59 @@
+
+{{nm}}  {data-navmenu="Surveys"}
+================================================================================
+
+```{r}
+d <- subset(obs_pred$index, survey == "{{nm}}")
+```
+
+
+
+Row {.tabset}
+--------------------------------------------------------------------------------
+
+### Index-at-age
+
+```{r}
+plot_obs_pred(d, frame = ~age, color = ~model, 
+              colors = cols, ylab = "Index")
+```
+
+
+Row {.tabset}
+--------------------------------------------------------------------------------
+
+```{r}
+resid_plots <- make_resid_plots(d)
+```
+
+### Residuals (age, year)
+
+```{r}
+resid_plots$bubbles
+```
+
+### (year)
+
+```{r}
+resid_plots$year
+```
+
+### (age)
+
+```{r}
+resid_plots$age
+```
+
+### (cohort)
+
+```{r}
+resid_plots$cohort
+```
+
+### (expected)
+
+```{r}
+resid_plots$expected
+```
+
+

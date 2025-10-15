@@ -189,26 +189,37 @@ plot_bubbles <- function(data, ...) {
     data$res <- data$std_res
   }
   data$sign <- ifelse(data$res > 0, "+", "-")
-  data$abs_res <- jitter(abs(data$res), factor = 1e-12) # add a small amount of noise, otherwise plotly does not plot values with the same number
+  data$abs_res <- jitter(abs(data$res), factor = 1e-12) # tiny jitter to avoid identical-size rendering issues
   data <- data[!is.na(data$res), ]
 
-  plot_ly(
-    data,
-    x = ~year,
-    y = ~age,
-    marker = list(
-      size = ~abs_res,
-      sizemin = 1,
-      sizeref = 0.01,
-      sizemode = "area"
-    ),
-    color = ~sign,
-    colors = c("#377EB8", "#E41A1C"),
-    text = ~round(res, 2),
-    ...
-  ) |>
-    add_markers() |>
-    layout(
+  args <- list(...)
+  if (is.null(args$colors)) {
+    args$colors <- c("#377EB8", "#E41A1C")
+  }
+
+  p <- do.call(
+    plotly::plot_ly,
+    c(
+      list(
+        data  = data,
+        x     = ~year,
+        y     = ~age,
+        marker = list(
+          size     = ~abs_res,
+          sizemin  = 1,
+          sizeref  = 0.01,
+          sizemode = "area"
+        ),
+        color = ~sign,
+        text  = ~round(res, 2)
+      ),
+      args
+    )
+  )
+
+  p |>
+    plotly::add_markers() |>
+    plotly::layout(
       title = title,
       xaxis = list(title = "Year"),
       yaxis = list(title = "Age")
@@ -254,7 +265,7 @@ plot_resid <- function(
 #'
 #' @examples
 #'
-#' fit <- fit_tam(cod_obs, years = 1983:2024, ages = 2:14)
+#' fit <- fit_tam(cod_obs, years = 1983:2024, ages = 2:14, silent = TRUE)
 #'
 #' fits <- list("Default" = fit)
 #' vis_fit(fits)

@@ -20,7 +20,7 @@ merge(obs_yield, pred_yield, by = c("year", "model")) |>
 ```
 
 
-### Numbers at age
+### Numbers-at-age
 
 ```{r}
 plot_obs_pred(obs_pred$catch, frame = ~age, color = ~model, 
@@ -31,35 +31,38 @@ plot_obs_pred(obs_pred$catch, frame = ~age, color = ~model,
 Row {.tabset}
 --------------------------------------------------------------------------------
 
+```{r}
+resid_plots <- make_resid_plots(obs_pred$catch)
+```
 
 ### Residuals (age, year)
 
 ```{r}
-plot_bubbles(obs_pred$catch, frame = ~model) 
+resid_plots$bubbles
 ```
 
 ### (year)
 
 ```{r}
-plot_resid(obs_pred$catch, x = ~year, xlab = "Year", frame = ~model)
+resid_plots$year
 ```
 
 ### (age)
 
 ```{r}
-plot_resid(obs_pred$catch, x = ~age, xlab = "Age", frame = ~model)
+resid_plots$age
 ```
 
 ### (cohort)
 
 ```{r}
-plot_resid(obs_pred$catch, x = ~(year - age), xlab = "Cohort", frame = ~model)
+resid_plots$cohort
 ```
 
 ### (expected)
 
 ```{r}
-plot_resid(obs_pred$catch, x = ~log(pred), xlab = "Expected", frame = ~model)
+resid_plots$expected
 ```
 
 

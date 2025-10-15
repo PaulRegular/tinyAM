@@ -1,50 +1,49 @@
 
-Indices {data-navmenu="Surveys"}
-================================================================================
 
+```{r, results = "asis"}
+rmd <- sapply(
+ unique(obs_pred$index$survey),
+ function(nm) {
+   knitr::knit_expand("one_survey.Rmd", nm = nm)
+  }
+ )
+rmd <- paste(rmd, collapse = "\n")
+rendered <- knitr::knit(text = rmd, quiet = TRUE)
 
-Row {.tabset}
---------------------------------------------------------------------------------
-
-### Index at age
-
-```{r}
-plot_obs_pred(obs_pred$index, frame = ~age, color = ~model, 
-              colors = cols, ylab = "Index")
+cat(rendered, sep = "\n")
 ```
 
 
 
+<!-- Catchability {data-navmenu="Surveys"} -->
+<!-- ================================================================================ -->
 
-Catchability {data-navmenu="Surveys"}
-================================================================================
 
+<!-- Row {.tabset} -->
+<!-- -------------------------------------------------------------------------------- -->
 
-Row {.tabset}
---------------------------------------------------------------------------------
+<!-- ### Catchability -->
 
-### Catchability
+<!-- ```{r} -->
 
-```{r}
+<!-- #For fixed color based on model -->
+<!-- cols_list <- c("3NO" = cols[1], -->
+<!--                '3LNO' = cols[2], -->
+<!--                '3NO+3L' = cols[3]) -->
+<!-- bin_sel <- factor(unique(tabs$qest$model),  -->
+<!--                   levels = c("3NO", '3LNO', '3NO+3L') -->
+<!--                   ) == names(cols_list) -->
+<!-- col_sel <- sapply(1:3, function(x)ifelse(bin_sel[x], cols_list[x], NA)) -->
 
-#For fixed color based on model
-cols_list <- c("3NO" = cols[1],
-               '3LNO' = cols[2],
-               '3NO+3L' = cols[3])
-bin_sel <- factor(unique(tabs$qest$model), 
-                  levels = c("3NO", '3LNO', '3NO+3L')
-                  ) == names(cols_list)
-col_sel <- sapply(1:3, function(x)ifelse(bin_sel[x], cols_list[x], NA))
+<!-- tabs$qest %>% -->
+<!--   rename(Survey = survey, Age = age, Q = Eest) %>%  -->
+<!--   plot_ly(x = ~Age, y = ~Q, color = ~model, frame = ~Survey,  -->
+<!--           colors = col_sel) %>%  -->
+<!--   # add_ribbons(ymin = ~E.L, ymax = ~E.U, line = list(width = 0), showlegend = FALSE, -->
+<!--   #             alpha = 0.2) %>%  -->
+<!--   layout(yaxis = list(anchor = 'free')) %>%  -->
+<!--   animation_opts(redraw = T) %>%  -->
+<!--   add_lines() -->
 
-tabs$qest %>%
-  rename(Survey = survey, Age = age, Q = Eest) %>% 
-  plot_ly(x = ~Age, y = ~Q, color = ~model, frame = ~Survey, 
-          colors = col_sel) %>% 
-  # add_ribbons(ymin = ~E.L, ymax = ~E.U, line = list(width = 0), showlegend = FALSE,
-  #             alpha = 0.2) %>% 
-  layout(yaxis = list(anchor = 'free')) %>% 
-  animation_opts(redraw = T) %>% 
-  add_lines()
-
-```
+<!-- ``` -->
 
