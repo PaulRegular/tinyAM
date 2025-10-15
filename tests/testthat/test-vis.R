@@ -6,13 +6,14 @@ test_that("vis_tam runs cleanly with valid fits list", {
     cod_obs, years = 1983:2024, ages = 2:14,
     N_settings = list(process = "iid", init_N0 = FALSE),
     M_settings = list(process = "off", assumption = ~ I(0.3)),
+    proj_settings = list(n_proj = 5, n_mean = 5, F_mult = 1),
     silent = TRUE
   )
   M_dev <- update(
     N_dev,
     N_settings = list(process = "off", init_N0 = TRUE),
     M_settings = list(process = "ar1", assumption = ~ I(0.3),
-                      age_breaks = seq(2, 14, by = 6))
+                      age_breaks = c(2, 14))
   )
   fits <- list("N_dev" = N_dev, "M_dev" = M_dev)
 

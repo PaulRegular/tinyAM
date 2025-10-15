@@ -314,7 +314,7 @@ nll_fun <- function(par, dat, simulate = FALSE) {
 
   if (M_settings$process != "off") {
     eta_log_M <- log_m[, M_settings$age_blocks] - log_mu_M[-1, -1]
-    eta_log_m <- eta_log_M[, !duplicated(M_settings$age_blocks)]
+    eta_log_m <- eta_log_M[, !duplicated(M_settings$age_blocks), drop = FALSE]
     sd_m <- exp(log_sd_m)
     phi <- plogis(logit_phi_m)
     jnll <- jnll - dprocess_2d(eta_log_m, sd = sd_m, phi = phi)

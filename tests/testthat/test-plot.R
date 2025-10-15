@@ -26,14 +26,14 @@ N_dev <- fit_tam(
   cod_obs, years = 1983:2024, ages = 2:14,
   N_settings = list(process = "iid", init_N0 = FALSE),
   M_settings = list(process = "off", assumption = ~ I(0.3)),
+  proj_settings = list(n_proj = 5, n_mean = 5, F_mult = 1),
   silent = TRUE
 )
-
 M_dev <- update(
   N_dev,
   N_settings = list(process = "off", init_N0 = TRUE),
   M_settings = list(process = "ar1", assumption = ~ I(0.3),
-                    age_breaks = seq(2, 14, by = 6))
+                    age_breaks = c(2, 14))
 )
 
 tabs <- tidy_tam(N_dev, M_dev)
@@ -87,7 +87,7 @@ test_that("plot_obs_pred includes both observed (markers) and predicted (lines)"
   p <- plot_obs_pred(N_dev$obs_pred$catch, frame = ~age)
   expect_s3_class(p, "plotly")
 
-  modes <- trace_modes(p)
+  modes <- suppressWarnings(trace_modes(p))
   expect_true(any(grepl("markers", modes, fixed = TRUE)))
   expect_true(any(grepl("lines",   modes, fixed = TRUE)))
 })

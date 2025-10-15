@@ -39,13 +39,14 @@
 #'   cod_obs, years = 1983:2024, ages = 2:14,
 #'   N_settings = list(process = "iid", init_N0 = FALSE),
 #'   M_settings = list(process = "off", assumption = ~ I(0.3)),
+#'   proj_settings = list(n_proj = 5, n_mean = 5, F_mult = 1),
 #'   silent = TRUE
 #' )
 #' M_dev <- update(
 #'   N_dev,
 #'   N_settings = list(process = "off", init_N0 = TRUE),
 #'   M_settings = list(process = "ar1", assumption = ~ I(0.3),
-#'                     age_breaks = seq(2, 14, by = 6))
+#'                     age_breaks = c(2, 14))
 #' )
 #' tabs <- tidy_tam(N_dev, M_dev)
 #'
@@ -104,6 +105,22 @@ plot_trend <- function(
                           showlegend = FALSE)
   }
 
+  shapes <- NULL
+  if ("is_proj" %in% names(data) && any(data$is_proj)) {
+    min_proj_year <- suppressWarnings(min(data$year[data$is_proj], na.rm = TRUE))
+    if (is.finite(min_proj_year)) {
+      shapes <- list(list(
+        type  = "line",
+        x0    = min_proj_year,
+        x1    = min_proj_year,
+        y0    = 0,
+        y1    = 1,
+        yref  = "paper",
+        line  = list(dash = "dot", width = 1, color = "black")
+      ))
+    }
+  }
+
   buttons <- if (add_buttons) .buttons else NULL
 
   p |>
@@ -112,7 +129,8 @@ plot_trend <- function(
       title = title,
       xaxis = list(title = xlab),
       yaxis = list(title = ylab, range = c(0, max_y)),
-      updatemenus = buttons
+      updatemenus = buttons,
+      shapes = shapes
     )
 }
 
@@ -159,6 +177,22 @@ plot_obs_pred <- function(
   }
   max_y <- max(c(data$obs, data$pred), na.rm = TRUE) * 1.05
 
+  shapes <- NULL
+  if ("is_proj" %in% names(data) && any(data$is_proj)) {
+    min_proj_year <- suppressWarnings(min(data$year[data$is_proj], na.rm = TRUE))
+    if (is.finite(min_proj_year)) {
+      shapes <- list(list(
+        type  = "line",
+        x0    = min_proj_year,
+        x1    = min_proj_year,
+        y0    = 0,
+        y1    = 1,
+        yref  = "paper",
+        line  = list(dash = "dot", width = 1, color = "black")
+      ))
+    }
+  }
+
   p <- do.call(plot_ly, c(list(data = data, x = ~year), args))
 
   buttons <- if (add_buttons) .buttons else NULL
@@ -176,7 +210,8 @@ plot_obs_pred <- function(
       title = title,
       xaxis = list(title = "Year"),
       yaxis = list(title = ylab, range = c(0, max_y)),
-      updatemenus = buttons
+      updatemenus = buttons,
+      shapes = shapes
     )
 }
 
