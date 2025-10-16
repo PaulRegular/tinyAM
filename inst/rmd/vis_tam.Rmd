@@ -42,9 +42,6 @@ random_par <- tabs$random_par
 
 ```{r helpers, include = FALSE}
 
-"#3ADAC6"
-"#ED79F9"
-
 tam_cols <- c(
   "#003e56",
   "#007187",
@@ -83,6 +80,9 @@ table_link <- function(x, table_name = NULL, download_text = "Download table") {
 ```
 
 ```{r trends, child = "trends.Rmd"}
+```
+
+```{r parameters, child = "parameters.Rmd"}
 ```
 
 ```{r tables, child = "tables.Rmd"}

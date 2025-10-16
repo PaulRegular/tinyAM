@@ -324,13 +324,14 @@ tidy_par <- function(fit, interval = 0.95) {
     e <- est[[nm]]; s <- se[[nm]]
     if (is.matrix(e)) {
       df <- tidy_mat(e, value_name = "est")
+      df$is_proj <- df$year %in% fit$dat$years[fit$dat$is_proj]
       df$se <- as.vector(s)
     } else {
       if (is.null(names(e))) {
         df <- data.frame(coef = NA, est = e, se = s)
       } else {
         if (nm == "log_r") {
-          df <- data.frame(year = fit$dat$years, est = e, se = s)
+          df <- data.frame(year = fit$dat$years, est = e, se = s, is_proj = fit$dat$is_proj)
         } else {
           df <- data.frame(coef = names(e), est = e, se = s)
         }
@@ -407,9 +408,7 @@ stack_nested <- function(x, id_col = "model") {
     stk <- do.call(rbind, pieces)
     rownames(stk) <- NULL
     if (!is.null(id_col)) {
-      # convert numeric-like labels to numeric (matches tidy_tam docs)
       stk[[id_col]] <- utils::type.convert(stk[[id_col]], as.is = TRUE)
-      # put id first
       ord <- c(id_col, setdiff(names(stk), id_col))
       stk <- stk[, ord, drop = FALSE]
     }
