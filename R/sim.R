@@ -147,7 +147,7 @@
 #'
 #' @examples
 #' \donttest{
-#' if (interactive) {
+#' if (interactive()) {
 #'   # Set-up parallel workers and fit model
 #'   future::plan(future::multisession, workers = 4)
 #'   fit <- fit_tam(cod_obs, years = 1983:2024, ages = 2:14)
