@@ -67,6 +67,13 @@ make_resid_plots <- function(d) {
        expected = plot_resid(d, x = ~log(pred), xlab = "Expected", frame = ~model, color = ~model, colors = cols))
 }
 
+table_link <- function(x, table_name = NULL, download_text = "Download table") {
+  d <- tempdir()
+  f <- file.path(d, paste0(table_name, ".csv"))
+  write.csv(x, file = f)
+  xfun::embed_file(f, text = "Download table")
+}
+
 ```
 
 ```{r fishery, child = "fishery.Rmd"}

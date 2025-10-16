@@ -1,17 +1,4 @@
 
-```{r}
-
-## little helper for adding a link to download a table
-table_link <- function(x, table_name = NULL, download_text = "Download table") {
-  d <- tempdir()
-  f <- file.path(d, paste0(table_name, ".csv"))
-  write.csv(x, file = f)
-  xfun::embed_file(f, text = "Download table")
-}
-
-```
-
-
 Inputs {data-navmenu="Tables"}
 ================================================================================
 
@@ -84,9 +71,14 @@ knitr::kable(fixed_par, digits = 3)
 
 ### Random parameters
 
-```{r}
+```{r, results = "asis", echo = FALSE}
 
-knitr::kable(random_par, digits = 3)
+for (nm in names(random_par)) {
+  tbl <- random_par[[nm]]
+  cat("#### ", nm, "\n\n", sep = "")
+  print(knitr::kable(tbl, digits = 3))
+  cat("\n\n")
+}
 
 ```
 
