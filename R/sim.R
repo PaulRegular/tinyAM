@@ -147,17 +147,20 @@
 #'
 #' @examples
 #' \donttest{
-#' future::plan(multisession, workers = 4)
-#' fit <- fit_tam(cod_obs, years = 1983:2024, ages = 2:14)
+#' if (interactive) {
+#'   # Set-up parallel workers and fit model
+#'   future::plan(future::multisession, workers = 4)
+#'   fit <- fit_tam(cod_obs, years = 1983:2024, ages = 2:14)
 #'
-#' # Draw fixed-effects uncertainty and redraw random process fields
-#' sims1 <- sim_tam(fit, n = 10, par_uncertainty = "fixed", redraw_random = TRUE)
+#'   # Draw fixed-effects uncertainty and redraw random process fields
+#'   sims1 <- sim_tam(fit, n = 10, par_uncertainty = "fixed", redraw_random = TRUE)
 #'
-#' # Joint draw of random and fixed effects, keep random effects, simulate obs only
-#' sims2 <- sim_tam(fit, n = 10, par_uncertainty = "joint", redraw_random = FALSE)
+#'   # Joint draw of random and fixed effects, keep random effects, simulate obs only
+#'   sims2 <- sim_tam(fit, n = 10, par_uncertainty = "joint", redraw_random = FALSE)
 #'
-#' # Conditional/fast: point estimates, obs only
-#' sims3 <- sim_tam(fit, n = 10, par_uncertainty = "none", redraw_random = FALSE)
+#'   # Conditional/fast: point estimates, obs only
+#'   sims3 <- sim_tam(fit, n = 10, par_uncertainty = "none", redraw_random = FALSE)
+#' }
 #' }
 #'
 #' @seealso [fit_tam()], [tidy_rep()], [stack_nested()]
