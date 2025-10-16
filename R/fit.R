@@ -62,6 +62,11 @@
 #'   proj_settings = list(n_proj = 3, n_mean = 3, F_mult = 1)
 #' )
 #'
+#' if (interactive()) {
+#'   fits <- list("without_proj" = fit, "with_proj" = fit2)
+#'   vis_tam(fits)
+#' }
+#'
 #' @importFrom stats nlminb rnorm
 #'
 #' @seealso
@@ -178,18 +183,15 @@ fit_tam <- function(
 #' # Choose your parallel plan (set once per session)
 #' future::plan(future::multisession, workers = 4)
 #'
-#' fit <- fit_tam(
-#'   cod_obs,
-#'   years = 1983:2024,
-#'   ages = 2:14,
-#'   N_settings = list(process = "iid", init_N0 = FALSE),
-#'   F_settings = list(process = "approx_rw", mu_form = NULL),
-#'   M_settings = list(process = "off", assumption = ~M_assumption),
-#'   obs_settings = list(q_form = ~ q_block, sd_form = ~ sd_obs_block)
-#' )
+#' fit <- fit_tam(cod_obs, years = 1983:2024, ages = 2:14)
 #' retros <- fit_retro(fit, folds = 5, progress = TRUE)
 #' head(retros$pop$ssb)
 #' head(retros$mohns_rho)
+#'
+#' if (interactive()) {
+#'   vis_tam(retros$fits)
+#' }
+#'
 #' }
 #'
 #' @seealso
@@ -291,10 +293,16 @@ fit_retro <- function(
 #'
 #' @examples
 #' \dontrun{
+#'
 #' future::plan(future::multisession, workers = 4)
 #' fit <- fit_tam(cod_obs, years = 1983:2024, ages = 2:14)
 #' hc  <- fit_hindcast(fit, folds = 5, progress = TRUE)
 #' hc$hindcast_rmse
+#'
+#' if (interactive()) {
+#'   vis_tam(hc$fits)
+#' }
+#'
 #' }
 #'
 #' @seealso [fit_retro()]

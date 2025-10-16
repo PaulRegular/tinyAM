@@ -111,12 +111,12 @@ plot_trend <- function(
 
   shapes <- NULL
   if ("is_proj" %in% names(data) && any(data$is_proj)) {
-    min_proj_year <- suppressWarnings(min(data$year[data$is_proj], na.rm = TRUE))
-    if (is.finite(min_proj_year)) {
+    max_obs_year <- suppressWarnings(max(data$year[!data$is_proj], na.rm = TRUE))
+    if (is.finite(max_obs_year)) {
       shapes <- list(list(
         type  = "line",
-        x0    = min_proj_year,
-        x1    = min_proj_year,
+        x0    = max_obs_year,
+        x1    = max_obs_year,
         y0    = 0,
         y1    = 1,
         yref  = "paper",
@@ -183,12 +183,12 @@ plot_obs_pred <- function(
 
   shapes <- NULL
   if ("is_proj" %in% names(data) && any(data$is_proj)) {
-    min_proj_year <- suppressWarnings(min(data$year[data$is_proj], na.rm = TRUE))
-    if (is.finite(min_proj_year)) {
+    max_obs_year <- suppressWarnings(max(data$year[!data$is_proj], na.rm = TRUE))
+    if (is.finite(max_obs_year)) {
       shapes <- list(list(
         type  = "line",
-        x0    = min_proj_year,
-        x1    = min_proj_year,
+        x0    = max_obs_year,
+        x1    = max_obs_year,
         y0    = 0,
         y1    = 1,
         yref  = "paper",

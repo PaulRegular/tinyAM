@@ -125,6 +125,11 @@ fit2 <- update(fit,
   proj_settings = list(n_proj = 3, n_mean = 3, F_mult = 1)
 )
 
+if (interactive()) {
+  fits <- list("without_proj" = fit, "with_proj" = fit2)
+  vis_tam(fits)
+}
+
 }
 \seealso{
 \code{\link[=make_dat]{make_dat()}}, \code{\link[=make_par]{make_par()}}, \code{\link[=sim_tam]{sim_tam()}}, \code{\link[=fit_retro]{fit_retro()}},

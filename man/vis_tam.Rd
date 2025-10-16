@@ -4,17 +4,19 @@
 \alias{vis_tam}
 \title{Make a flexdashboard for visualizing model fits}
 \usage{
-vis_tam(fits = NULL, output_file = NULL, ...)
+vis_tam(fits = NULL, output_file = NULL, open_file = TRUE, ...)
 }
 \arguments{
-\item{fits}{A \strong{named list} of fitted TAM objects. Required to be named;
-the names are used as label values (even for length-1 lists).}
+\item{fits}{A \strong{named list} of fitted TAM objects (e.g., \code{fits} list returned by
+\code{\link[=fit_retro]{fit_retro()}}). Names are used to label models.}
 
 \item{output_file}{Name of file to export using \code{\link[rmarkdown:render]{rmarkdown::render()}}.
-If \code{NULL}, flexdashboard will be rendered using \code{\link[rmarkdown:run]{rmarkdown::run()}}}
+If \code{NULL}, a temporary HTML file will be rendered and opened
+automatically in your default browser.}
 
-\item{...}{Additional arguments to send to \code{\link[rmarkdown:run]{rmarkdown::run()}} or
-\code{\link[rmarkdown:render]{rmarkdown::render()}}.}
+\item{open_file}{Logical. Open rendered html file?}
+
+\item{...}{Additional arguments to send to \code{\link[rmarkdown:render]{rmarkdown::render()}}.}
 }
 \description{
 Make a flexdashboard for visualizing model fits

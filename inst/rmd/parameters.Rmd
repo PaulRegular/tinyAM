@@ -18,24 +18,24 @@ Row {.tabset}
 ### Random parameters (r)
 
 ```{r}
-plot_trend(random_par$log_r, color = ~model, colors = cols, ylab = "r")
+plot_trend(random_par$log_r, color = ~model, legendgroup = ~model, colors = cols, ylab = "r")
 ```
 
 ### (f)
 
 ```{r}
-plot_trend(random_par$log_f, color = ~model, colors = cols, frame = ~age, ylab = "f")
+plot_trend(random_par$log_f, color = ~model, legendgroup = ~model, colors = cols, frame = ~age, ylab = "f")
 ```
 
 `r if ("log_n" %in% names(random_par)) "### (n)"`
 
 ```{r, eval = "log_n" %in% names(random_par)}
-plot_trend(random_par$log_n, color = ~model, colors = cols, frame = ~age, ylab = "n")
+plot_trend(random_par$log_n, color = ~model, legendgroup = ~model, colors = cols, frame = ~age, ylab = "n")
 ```
 
 `r if ("log_m" %in% names(random_par)) "### (m)"`
 
 ```{r, eval = "log_m" %in% names(random_par)}
-plot_trend(random_par$log_m, color = ~model, colors = cols, frame = ~age_block, ylab = "m")
+plot_trend(random_par$log_m, color = ~model, legendgroup = ~model, colors = cols, frame = ~age_block, ylab = "m")
 ```
 

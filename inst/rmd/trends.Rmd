@@ -8,25 +8,25 @@ Row {.tabset}
 ### Abundance
 
 ```{r}
-plot_trend(pop$abundance, color = ~model, colors = cols, ylab = "Abundance")
+plot_trend(pop$abundance, color = ~model, legendgroup = ~model, colors = cols, ylab = "Abundance")
 ```
 
 ### Recruitment
 
 ```{r}
-plot_trend(pop$recruitment, color = ~model, colors = cols, ylab = "Recruitment")
+plot_trend(pop$recruitment, color = ~model, legendgroup = ~model, colors = cols, ylab = "Recruitment")
 ```
 
 ### SSB
 
 ```{r}
-plot_trend(pop$ssb, color = ~model, colors = cols, ylab = "SSB")
+plot_trend(pop$ssb, color = ~model, legendgroup = ~model, colors = cols, ylab = "SSB")
 ```
 
 ### Abundance-at-age
 
 ```{r}
-plot_trend(pop$N, color = ~model, colors = cols, frame = ~age, ylab = "N")
+plot_trend(pop$N, color = ~model, legendgroup = ~model, colors = cols, frame = ~age, ylab = "N")
 ```
 
 
@@ -43,32 +43,32 @@ Row {.tabset}
 ### Average F
 
 ```{r}
-plot_trend(pop$F_bar, color = ~model, colors = cols, ylab = "Average F")
+plot_trend(pop$F_bar, color = ~model, legendgroup = ~model, colors = cols, ylab = "Average F")
 ```
 
 ### F-at-age
 
 ```{r}
-plot_trend(pop$F, color = ~model, colors = cols, frame = ~age, ylab = "F")
+plot_trend(pop$F, color = ~model, legendgroup = ~model, colors = cols, frame = ~age, ylab = "F")
 ```
 
 ### Selectivity
 
 ```{r}
 plot_trend(pop$S, x = ~age, xlab = "Age", ylab = "Selectivity", frame = ~year,
-           color = ~model, colors = cols)
+           color = ~model, legendgroup = ~model, colors = cols)
 ```
 
 ### Average M
 
 ```{r}
-plot_trend(pop$M_bar, color = ~model, colors = cols, ylab = "Average M")
+plot_trend(pop$M_bar, color = ~model, legendgroup = ~model, colors = cols, ylab = "Average M")
 ```
 
 ### M-at-age
 
 ```{r}
-plot_trend(pop$M, color = ~model, colors = cols, frame = ~age, ylab = "M")
+plot_trend(pop$M, color = ~model, legendgroup = ~model, colors = cols, frame = ~age, ylab = "M")
 ```
 
 
