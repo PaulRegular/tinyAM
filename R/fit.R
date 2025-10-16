@@ -180,23 +180,23 @@ fit_tam <- function(
 #'
 #' @examples
 #' \donttest{
-#' # Choose your parallel plan (set once per session)
-#' future::plan(future::multisession, workers = 4)
-#'
-#' fit <- fit_tam(cod_obs, years = 1983:2024, ages = 2:14)
-#' retros <- fit_retro(fit, folds = 5, progress = TRUE)
-#' head(retros$pop$ssb)
-#' head(retros$mohns_rho)
-#'
 #' if (interactive()) {
+#'   # Choose your parallel plan (set once per session)
+#'   future::plan(future::multisession, workers = 4)
+#'
+#'   fit <- fit_tam(cod_obs, years = 1983:2024, ages = 2:14, silent = TRUE)
+#'   retros <- fit_retro(fit, folds = 5, progress = TRUE)
+#'   head(retros$pop$ssb)
+#'   head(retros$mohns_rho)
+#'
 #'   vis_tam(retros$fits)
 #' }
-#'
 #' }
 #'
 #' @seealso
 #' [fit_tam()], [sim_tam()]
 #'
+#' @importFrom future plan multisession
 #' @importFrom furrr future_map furrr_options
 #' @importFrom progressr with_progress progressor
 #' @importFrom stats update
@@ -293,16 +293,16 @@ fit_retro <- function(
 #'
 #' @examples
 #' \donttest{
-#'
-#' future::plan(future::multisession, workers = 4)
-#' fit <- fit_tam(cod_obs, years = 1983:2024, ages = 2:14)
-#' hc  <- fit_hindcast(fit, folds = 5, progress = TRUE)
-#' hc$hindcast_rmse
-#'
 #' if (interactive()) {
+#'   # Choose your parallel plan (set once per session)
+#'   future::plan(future::multisession, workers = 4)
+#'
+#'   fit <- fit_tam(cod_obs, years = 1983:2024, ages = 2:14, silent = TRUE)
+#'   hc  <- fit_hindcast(fit, folds = 5, progress = TRUE)
+#'   hc$hindcast_rmse
+#'
 #'   vis_tam(hc$fits)
 #' }
-#'
 #' }
 #'
 #' @seealso [fit_retro()]

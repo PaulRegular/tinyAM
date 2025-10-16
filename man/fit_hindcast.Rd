@@ -25,16 +25,16 @@ same structure as \code{\link[=fit_retro]{fit_retro()}} including \code{hindcast
 }
 \examples{
 \donttest{
-
-future::plan(future::multisession, workers = 4)
-fit <- fit_tam(cod_obs, years = 1983:2024, ages = 2:14)
-hc  <- fit_hindcast(fit, folds = 5, progress = TRUE)
-hc$hindcast_rmse
-
 if (interactive()) {
+  # Choose your parallel plan (set once per session)
+  future::plan(future::multisession, workers = 4)
+
+  fit <- fit_tam(cod_obs, years = 1983:2024, ages = 2:14, silent = TRUE)
+  hc  <- fit_hindcast(fit, folds = 5, progress = TRUE)
+  hc$hindcast_rmse
+
   vis_tam(hc$fits)
 }
-
 }
 
 }

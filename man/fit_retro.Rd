@@ -66,18 +66,17 @@ supports \code{update()} with a \code{years} argument. This function uses
 }
 \examples{
 \donttest{
-# Choose your parallel plan (set once per session)
-future::plan(future::multisession, workers = 4)
-
-fit <- fit_tam(cod_obs, years = 1983:2024, ages = 2:14)
-retros <- fit_retro(fit, folds = 5, progress = TRUE)
-head(retros$pop$ssb)
-head(retros$mohns_rho)
-
 if (interactive()) {
+  # Choose your parallel plan (set once per session)
+  future::plan(future::multisession, workers = 4)
+
+  fit <- fit_tam(cod_obs, years = 1983:2024, ages = 2:14, silent = TRUE)
+  retros <- fit_retro(fit, folds = 5, progress = TRUE)
+  head(retros$pop$ssb)
+  head(retros$mohns_rho)
+
   vis_tam(retros$fits)
 }
-
 }
 
 }
