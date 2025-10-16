@@ -19,6 +19,7 @@ Imports:
     RTMB,
     MASS,
     Matrix,
+    future,
     furrr,
     progressr,
     cli,
