@@ -391,19 +391,18 @@ stack_nested <- function(x, id_col = "model") {
 
   outer_ids <- names(x)
   if (is.null(outer_ids)) outer_ids <- as.character(seq_along(x))
-
-  # Names common to all outer elements
-  sub_names <- Reduce(intersect, lapply(x, names))
-  if (!length(sub_names)) return(list())
+  sub_names <- Reduce(union, lapply(x, names))
 
   out <- stats::setNames(vector("list", length(sub_names)), sub_names)
 
   for (nm in sub_names) {
     pieces <- lapply(seq_along(x), function(i) {
-      df <- x[[i]][[nm]]
-      if (!is.data.frame(df)) df <- as.data.frame(df)
-      if (!is.null(id_col)) df[[id_col]] <- outer_ids[i]
-      df
+      if (nm %in% names(x[[i]])) {
+        df <- x[[i]][[nm]]
+        if (!is.data.frame(df)) df <- as.data.frame(df)
+        if (!is.null(id_col)) df[[id_col]] <- outer_ids[i]
+        df
+      }
     })
     stk <- do.call(rbind, pieces)
     rownames(stk) <- NULL

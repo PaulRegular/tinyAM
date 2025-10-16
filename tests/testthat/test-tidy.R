@@ -269,7 +269,7 @@ test_that("stack_nested adds id column first and type.converts labels", {
   expect_equal(sort(unique(out$ssb$retro_year)), c(2023, 2024))
 })
 
-test_that("stack_nested stacks only common subtables across outer list", {
+test_that("stack_nested stacks all subtables across outer list", {
   x <- list(
     A = list(ssb = data.frame(year=1:2, est=1:2),
              N   = data.frame(year=1:2, age=2:3, est=5:6)),
@@ -277,7 +277,7 @@ test_that("stack_nested stacks only common subtables across outer list", {
   )
   out <- stack_nested(x, id_col = "model")
   expect_true("ssb" %in% names(out))
-  expect_false("N" %in% names(out))  # not common -> dropped
+  expect_true("N" %in% names(out))  # not common but retained for that model
 })
 
 
