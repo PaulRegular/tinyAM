@@ -197,5 +197,5 @@ sim_tam <- function(
     )
   }, enable = progress)
   names(sims) <- as.character(seq_len(n))
-  stack_nested(sims, id_col = "sim")
+  stack_nested(sims, label = "sim")
 }

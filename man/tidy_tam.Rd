@@ -4,7 +4,13 @@
 \alias{tidy_tam}
 \title{Stack TAM outputs across models (retro folds, scenarios, etc.)}
 \usage{
-tidy_tam(..., model_list = NULL, interval = 0.95, label = "model")
+tidy_tam(
+  ...,
+  model_list = NULL,
+  interval = 0.95,
+  label = "model",
+  label_type = "auto"
+)
 }
 \arguments{
 \item{...}{One or more fitted TAM objects (as returned by \code{\link[=fit_tam]{fit_tam()}}). Ignored if \code{model_list} is provided.}
@@ -14,6 +20,14 @@ tidy_tam(..., model_list = NULL, interval = 0.95, label = "model")
 \item{interval}{Confidence level passed to \code{\link[=tidy_pop]{tidy_pop()}} and \code{\link[=tidy_par]{tidy_par()}} for interval construction. Default \code{0.95}.}
 
 \item{label}{Character scalar giving the label column name to add when stacking across multiple/named models. Default \code{"model"}.}
+
+\item{label_type}{Controls how the label column is coerced. One of:
+\itemize{
+\item \code{"auto"} (default): numeric when possible, else character.
+\item \code{"numeric"}: force numeric conversion (with \code{NA} for non-numeric).
+\item \code{"character"}: keep as character.
+\item \code{"factor"}: convert to factor.
+}}
 }
 \value{
 A named list with four elements:

@@ -4,15 +4,27 @@
 \alias{stack_nested}
 \title{Stack identically named subtables from a nested list}
 \usage{
-stack_nested(x, id_col = "model")
+stack_nested(
+  x,
+  label = "model",
+  label_type = c("auto", "numeric", "character", "factor")
+)
 }
 \arguments{
 \item{x}{A named list of results (e.g. sims or models), each containing
 a named list of data.frames (e.g. "ssb", "N", "recruitment", ...).
 Shape: list(\if{html}{\out{<id>}} = list(\if{html}{\out{<subtable>}} = data.frame, ...), ...)}
 
-\item{id_col}{Name of the column to add with the outer id. Default "model".
+\item{label}{Name of the column to add with the outer id. Default "model".
 Set to NULL to omit the id column.}
+
+\item{label_type}{Controls how the label column is coerced. One of:
+\itemize{
+\item \code{"auto"} (default): numeric when possible, else character.
+\item \code{"numeric"}: force numeric conversion (with \code{NA} for non-numeric).
+\item \code{"character"}: keep as character.
+\item \code{"factor"}: convert to factor.
+}}
 }
 \value{
 A named list of data.frames. One element per subtable name. Each
@@ -29,7 +41,7 @@ res <- list(
   sim2 = list(ssb = data.frame(year=1:3, est=11:13),
               N   = data.frame(year=1:2, age=2:3, est=15:16))
 )
-stacked <- stack_nested(res, id_col = "sim")
+stacked <- stack_nested(res, label = "sim")
 str(stacked$ssb)  # has column 'sim'
 
 }

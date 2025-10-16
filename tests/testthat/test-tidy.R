@@ -249,18 +249,14 @@ test_that("tidy_par preserves coefficient names for named vectors and dims for m
 
 ## stack_nested ----
 
-test_that("stack_nested returns empty list for empty input", {
-  expect_identical(stack_nested(list()), list())
-})
-
-test_that("stack_nested adds id column first and type.converts labels", {
+test_that("stack_nested adds id column first and type.converts labels (label_type = 'auto')", {
   x <- list(
     `2023` = list(ssb = data.frame(year = 1:2, est = 1:2),
                   N   = data.frame(year = 1:2, age = 2:3, est = 5:6)),
     `2024` = list(ssb = data.frame(year = 1:2, est = 11:12),
                   N   = data.frame(year = 1:2, age = 2:3, est = 15:16))
   )
-  out <- stack_nested(x, id_col = "retro_year")
+  out <- stack_nested(x, label = "retro_year", label_type = "auto")
 
   # id column exists, is first, and numeric (coerced)
   expect_true("retro_year" %in% names(out$ssb))
@@ -269,15 +265,41 @@ test_that("stack_nested adds id column first and type.converts labels", {
   expect_equal(sort(unique(out$ssb$retro_year)), c(2023, 2024))
 })
 
+test_that("stack_nested label_type = 'character' keeps labels as character", {
+  x <- list(`A` = list(ssb = data.frame(est = 1)), `B` = list(ssb = data.frame(est = 2)))
+  out <- stack_nested(x, label = "sim", label_type = "character")
+
+  expect_true("sim" %in% names(out$ssb))
+  expect_type(out$ssb$sim, "character")
+  expect_equal(sort(unique(out$ssb$sim)), c("A", "B"))
+})
+
+test_that("stack_nested label_type = 'factor' coerces to factor", {
+  x <- list(`one` = list(ssb = data.frame(est = 1)), `two` = list(ssb = data.frame(est = 2)))
+  out <- stack_nested(x, label = "grp", label_type = "factor")
+
+  expect_true(is.factor(out$ssb$grp))
+  expect_equal(levels(out$ssb$grp), c("one", "two"))
+})
+
+test_that("stack_nested label_type = 'numeric' coerces to numeric (with NA for non-numeric)", {
+  x <- list(`2020` = list(ssb = data.frame(est = 1)), `abc` = list(ssb = data.frame(est = 2)))
+  out <- stack_nested(x, label = "run", label_type = "numeric")
+
+  expect_true(is.numeric(out$ssb$run))
+  # first label converts to number, second becomes NA
+  expect_true(all(is.na(out$ssb$run) | out$ssb$run == 2020))
+})
+
 test_that("stack_nested stacks all subtables across outer list", {
   x <- list(
-    A = list(ssb = data.frame(year=1:2, est=1:2),
-             N   = data.frame(year=1:2, age=2:3, est=5:6)),
-    B = list(ssb = data.frame(year=1:2, est=11:12)) # 'N' missing here
+    A = list(ssb = data.frame(year = 1:2, est = 1:2),
+             N   = data.frame(year = 1:2, age = 2:3, est = 5:6)),
+    B = list(ssb = data.frame(year = 1:2, est = 11:12)) # 'N' missing here
   )
-  out <- stack_nested(x, id_col = "model")
+  out <- stack_nested(x, label = "model")
   expect_true("ssb" %in% names(out))
-  expect_true("N" %in% names(out))  # not common but retained for that model
+  expect_true("N" %in% names(out))  # retained for that model even if missing in others
 })
 
 

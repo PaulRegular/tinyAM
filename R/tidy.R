@@ -369,8 +369,14 @@ tidy_par <- function(fit, interval = 0.95) {
 #' @param x A named list of results (e.g. sims or models), each containing
 #'   a named list of data.frames (e.g. "ssb", "N", "recruitment", ...).
 #'   Shape: list(<id> = list(<subtable> = data.frame, ...), ...)
-#' @param id_col Name of the column to add with the outer id. Default "model".
+#' @param label Name of the column to add with the outer id. Default "model".
 #'   Set to NULL to omit the id column.
+#' @param label_type Controls how the label column is coerced. One of:
+#'   - `"auto"` (default): numeric when possible, else character.
+#'   - `"numeric"`: force numeric conversion (with `NA` for non-numeric).
+#'   - `"character"`: keep as character.
+#'   - `"factor"`: convert to factor.
+#'
 #' @return A named list of data.frames. One element per subtable name. Each
 #'   data.frame is the row-bound stack across outer ids, with an added `id_col`
 #'   (if not NULL).
@@ -381,15 +387,17 @@ tidy_par <- function(fit, interval = 0.95) {
 #'   sim2 = list(ssb = data.frame(year=1:3, est=11:13),
 #'               N   = data.frame(year=1:2, age=2:3, est=15:16))
 #' )
-#' stacked <- stack_nested(res, id_col = "sim")
+#' stacked <- stack_nested(res, label = "sim")
 #' str(stacked$ssb)  # has column 'sim'
 #'
 #' @importFrom stats setNames
 #'
 #' @export
-stack_nested <- function(x, id_col = "model") {
-  if (!length(x)) return(list())
+stack_nested <- function(x, label = "model",
+                         label_type = c("auto", "numeric", "character", "factor")) {
+  label_type <- match.arg(label_type)
 
+  id_col <- label
   outer_ids <- names(x)
   if (is.null(outer_ids)) outer_ids <- as.character(seq_along(x))
   sub_names <- Reduce(union, lapply(x, names))
@@ -407,8 +415,15 @@ stack_nested <- function(x, id_col = "model") {
     })
     stk <- do.call(rbind, pieces)
     rownames(stk) <- NULL
+
     if (!is.null(id_col)) {
-      stk[[id_col]] <- utils::type.convert(stk[[id_col]], as.is = TRUE)
+      # Apply label_type coercion
+      stk[[id_col]] <- switch(label_type,
+                              auto      = utils::type.convert(stk[[id_col]], as.is = TRUE),
+                              numeric   = suppressWarnings(as.numeric(stk[[id_col]])),
+                              character = as.character(stk[[id_col]]),
+                              factor    = factor(stk[[id_col]], levels = names(x))
+      )
       ord <- c(id_col, setdiff(names(stk), id_col))
       stk <- stk[, ord, drop = FALSE]
     }
@@ -449,6 +464,7 @@ stack_nested <- function(x, id_col = "model") {
 #' @param model_list A **named list** of fitted TAM objects. Required to be named; the names are used as label values.
 #' @param interval Confidence level passed to [tidy_pop()] and [tidy_par()] for interval construction. Default `0.95`.
 #' @param label Character scalar giving the label column name to add when stacking across multiple/named models. Default `"model"`.
+#' @inheritParams stack_nested
 #'
 #' @return
 #' A named list with four elements:
@@ -481,7 +497,7 @@ stack_nested <- function(x, id_col = "model") {
 #' @importFrom utils type.convert
 #' @seealso [tidy_obs_pred()], [tidy_pop()], [tidy_par()], [fit_tam()], [fit_retro()]
 #' @export
-tidy_tam <- function(..., model_list = NULL, interval = 0.95, label = "model") {
+tidy_tam <- function(..., model_list = NULL, interval = 0.95, label = "model", label_type = "auto") {
   using_dots <- is.null(model_list)
 
   if (using_dots) {
@@ -505,10 +521,10 @@ tidy_tam <- function(..., model_list = NULL, interval = 0.95, label = "model") {
   pop_list <- lapply(model_list, tidy_pop, interval = interval)
   par_list <- lapply(model_list, tidy_par, interval = interval)
 
-  obs_pred <- stack_nested(obs_list, id_col = id_col)
-  pop      <- stack_nested(pop_list, id_col = id_col)
-  fixed_par  <- stack_nested(lapply(par_list, `[`, "fixed"), id_col = id_col)
-  random_par <- stack_nested(lapply(par_list, `[[`, "random"), id_col = id_col)
+  obs_pred <- stack_nested(obs_list, label = id_col, label_type = label_type)
+  pop      <- stack_nested(pop_list, label = id_col, label_type = label_type)
+  fixed_par  <- stack_nested(lapply(par_list, `[`, "fixed"), label = id_col, label_type = label_type)
+  random_par <- stack_nested(lapply(par_list, `[[`, "random"), label = id_col, label_type = label_type)
 
   list(
     obs_pred   = obs_pred,
