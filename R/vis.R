@@ -31,7 +31,7 @@
 #' @export
 vis_tam <- function(fits = NULL, output_file = NULL, ...) {
 
-  pkg <- c("rmarkdown", "flexdashboard")
+  pkg <- c("knitr", "rmarkdown", "flexdashboard")
   missing <- pkg[!vapply(pkg, requireNamespace, logical(1), quietly = TRUE)]
   if (length(missing)) {
     install_call <- sprintf(

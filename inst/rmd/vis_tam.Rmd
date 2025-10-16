@@ -34,6 +34,8 @@ knitr::opts_chunk$set(cache = FALSE)
 tabs <- tidy_tam(model_list = fits)
 obs_pred <- tabs$obs_pred
 pop <- tabs$pop
+fixed_par <- tabs$fixed_par
+random_par <- tabs$random_par
 
 ```
 
@@ -76,7 +78,8 @@ make_resid_plots <- function(d) {
 ```{r trends, child = "trends.Rmd"}
 ```
 
-<!--{r tables, child = "tables.Rmd"}-->
+```{r tables, child = "tables.Rmd"}
+```
 
 
 
