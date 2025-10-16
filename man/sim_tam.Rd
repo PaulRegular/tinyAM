@@ -67,7 +67,7 @@ Parallel execution is supported via \code{\link[furrr:future_map]{furrr::future_
 \code{future::plan()} beforehand if you want parallel workers.
 }
 \examples{
-\dontrun{
+\donttest{
 future::plan(multisession, workers = 4)
 fit <- fit_tam(cod_obs, years = 1983:2024, ages = 2:14)
 

@@ -179,7 +179,7 @@ fit_tam <- function(
 #' year.
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' # Choose your parallel plan (set once per session)
 #' future::plan(future::multisession, workers = 4)
 #'
@@ -292,7 +292,7 @@ fit_retro <- function(
 #' and `fits` (see [fit_retro()] for full details).
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #'
 #' future::plan(future::multisession, workers = 4)
 #' fit <- fit_tam(cod_obs, years = 1983:2024, ages = 2:14)

@@ -24,7 +24,7 @@ retrospective peels and, for each peel, fits a \strong{one-step-ahead projection
 same structure as \code{\link[=fit_retro]{fit_retro()}} including \code{hindcast_rmse}.
 }
 \examples{
-\dontrun{
+\donttest{
 
 future::plan(future::multisession, workers = 4)
 fit <- fit_tam(cod_obs, years = 1983:2024, ages = 2:14)

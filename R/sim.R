@@ -146,7 +146,7 @@
 #' each stacked across `n` simulations with a `sim` column.
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' future::plan(multisession, workers = 4)
 #' fit <- fit_tam(cod_obs, years = 1983:2024, ages = 2:14)
 #'

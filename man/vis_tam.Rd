@@ -22,6 +22,8 @@ automatically in your default browser.}
 Make a flexdashboard for visualizing model fits
 }
 \examples{
+
+\donttest{
 if (interactive()) {
   N_dev <- fit_tam(
     cod_obs, years = 1983:2024, ages = 2:14,
@@ -39,6 +41,7 @@ if (interactive()) {
 
   fits <- list("N_dev" = N_dev, "M_dev" = M_dev)
   vis_tam(fits)
+}
 }
 
 }

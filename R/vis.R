@@ -10,6 +10,8 @@
 #' @param ...          Additional arguments to send to [rmarkdown::render()].
 #'
 #' @examples
+#'
+#' \donttest{
 #' if (interactive()) {
 #'   N_dev <- fit_tam(
 #'     cod_obs, years = 1983:2024, ages = 2:14,
@@ -27,6 +29,7 @@
 #'
 #'   fits <- list("N_dev" = N_dev, "M_dev" = M_dev)
 #'   vis_tam(fits)
+#' }
 #' }
 #'
 #' @importFrom utils browseURL

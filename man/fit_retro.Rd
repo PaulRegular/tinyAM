@@ -65,7 +65,7 @@ supports \code{update()} with a \code{years} argument. This function uses
 \code{future::plan(multisession, workers = 4)}).
 }
 \examples{
-\dontrun{
+\donttest{
 # Choose your parallel plan (set once per session)
 future::plan(future::multisession, workers = 4)
 
