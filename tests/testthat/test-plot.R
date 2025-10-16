@@ -32,7 +32,7 @@ N_dev <- fit_tam(
 M_dev <- update(
   N_dev,
   N_settings = list(process = "off", init_N0 = TRUE),
-  M_settings = list(process = "ar1", assumption = ~ I(0.3),
+  M_settings = list(process = "approx_rw", assumption = ~ I(0.3),
                     age_breaks = c(2, 14))
 )
 
@@ -119,4 +119,37 @@ test_that("plot_resid works with default and custom x", {
   # after build, there should be marker traces
   expect_true(any(grepl("markers", trace_modes(p1), fixed = TRUE)))
   expect_true(any(grepl("markers", trace_modes(p2), fixed = TRUE)))
+})
+
+## plot_par ----
+
+## plot_par ----
+
+test_that("plot_par produces a valid plotly object with segments and markers", {
+  # use small subset of fixed parameters from tidy_tam
+  df <- tabs$fixed_par |> subset(grepl("q|sd", par))
+
+  p1 <- plot_par(df)
+  p2 <- plot_par(df, color = ~model)
+
+  expect_s3_class(p1, "plotly")
+  expect_s3_class(p2, "plotly")
+
+  # after build, should include scatter traces (segments + markers)
+  modes1 <- suppressWarnings(trace_modes(p1))
+  modes2 <- suppressWarnings(trace_modes(p2))
+  types1 <- suppressWarnings(trace_types(p1))
+  types2 <- suppressWarnings(trace_types(p2))
+
+  # expect scatter traces
+  expect_true(any(types1 == "scatter"))
+  expect_true(any(types2 == "scatter"))
+
+  # expect markers present
+  expect_true(any(grepl("markers", modes1, fixed = TRUE)))
+  expect_true(any(grepl("markers", modes2, fixed = TRUE)))
+
+  # expect at least one trace with line (segments)
+  expect_true(any(vapply(plotly_traces(p1), function(x)
+    !is.null(x$line), logical(1))))
 })

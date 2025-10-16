@@ -7,6 +7,7 @@
 \alias{plot_obs_pred}
 \alias{plot_bubbles}
 \alias{plot_resid}
+\alias{plot_par}
 \title{Plot utilities for \code{tidy_tam()} outputs}
 \usage{
 plot_trend(
@@ -27,6 +28,8 @@ plot_obs_pred(data, ylab = "", title = "", add_buttons = TRUE, ...)
 plot_bubbles(data, ...)
 
 plot_resid(data, x = ~year, xlab = "Year", ...)
+
+plot_par(data, ...)
 }
 \arguments{
 \item{data}{A data frame containing at least \code{year} and \code{est} columns.}
@@ -69,13 +72,14 @@ N_dev <- fit_tam(
   cod_obs, years = 1983:2024, ages = 2:14,
   N_settings = list(process = "iid", init_N0 = FALSE),
   M_settings = list(process = "off", assumption = ~ I(0.3)),
+  proj_settings = list(n_proj = 5, n_mean = 5, F_mult = 1),
   silent = TRUE
 )
 M_dev <- update(
   N_dev,
   N_settings = list(process = "off", init_N0 = TRUE),
-  M_settings = list(process = "ar1", assumption = ~ I(0.3),
-                    age_breaks = seq(2, 14, by = 6))
+  M_settings = list(process = "approx_rw", assumption = ~ I(0.3),
+                    age_breaks = c(2, 14))
 )
 tabs <- tidy_tam(N_dev, M_dev)
 
@@ -105,5 +109,9 @@ plot_bubbles(tabs$obs_pred$index, frame = ~model)
 plot_resid(N_dev$obs_pred$catch, x = ~age, xlab = "Age")
 plot_resid(tabs$obs_pred$index, frame = ~model,
             x = ~year, xlab = "Year", showlegend = FALSE)
+
+## Parameter Estimates
+plot_par(N_dev$fixed_par)
+plot_par(tabs$fixed_par, color = ~model)
 
 }

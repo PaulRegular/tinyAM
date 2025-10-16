@@ -45,7 +45,7 @@
 #' M_dev <- update(
 #'   N_dev,
 #'   N_settings = list(process = "off", init_N0 = TRUE),
-#'   M_settings = list(process = "ar1", assumption = ~ I(0.3),
+#'   M_settings = list(process = "approx_rw", assumption = ~ I(0.3),
 #'                     age_breaks = c(2, 14))
 #' )
 #' tabs <- tidy_tam(N_dev, M_dev)
@@ -76,6 +76,10 @@
 #' plot_resid(N_dev$obs_pred$catch, x = ~age, xlab = "Age")
 #' plot_resid(tabs$obs_pred$index, frame = ~model,
 #'             x = ~year, xlab = "Year", showlegend = FALSE)
+#'
+#' ## Parameter Estimates
+#' plot_par(N_dev$fixed_par)
+#' plot_par(tabs$fixed_par, color = ~model)
 #'
 #' @name plot_tam
 #' @import plotly
@@ -289,3 +293,32 @@ plot_resid <- function(
 
 }
 
+#' @rdname plot_tam
+#' @export
+plot_par <- function(data, ...) {
+  data$coef <- factor(ifelse(is.na(data$coef), data$par, paste0(data$par, ": ", data$coef)))
+  max_y <- max(data$upr[grepl("q|sd", data$par)]) * 1.05
+
+  args <- list(...)
+  if (is.null(args$color)) {
+    args$color <- I("#377EB8")
+  }
+  p <- do.call(plot_ly, c(list(data = data, x = ~est, y = ~coef), args))
+
+  p |>
+    add_segments(
+      x = ~lwr, xend = ~upr,
+      y = ~coef, yend = ~coef,
+      showlegend = FALSE
+    ) |>
+    add_markers(showlegend = TRUE) |>
+    layout(
+      xaxis = list(
+        title = "Estimate",
+        range = c(0, max_y)
+      ),
+      yaxis = list(
+        title = ""
+      )
+    )
+}

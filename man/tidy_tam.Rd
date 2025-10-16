@@ -7,72 +7,71 @@
 tidy_tam(..., model_list = NULL, interval = 0.95, label = "model")
 }
 \arguments{
-\item{...}{One or more fitted TAM objects (as returned by \code{\link[=fit_tam]{fit_tam()}}).
-Ignored if \code{model_list} is provided.}
+\item{...}{One or more fitted TAM objects (as returned by \code{\link[=fit_tam]{fit_tam()}}). Ignored if \code{model_list} is provided.}
 
-\item{model_list}{A \strong{named list} of fitted TAM objects. Required to be named;
-the names are used as label values (even for length-1 lists).}
+\item{model_list}{A \strong{named list} of fitted TAM objects. Required to be named; the names are used as label values.}
 
-\item{interval}{Confidence level passed to \code{\link[=tidy_pop]{tidy_pop()}} for interval construction.
-Default \code{0.95}.}
+\item{interval}{Confidence level passed to \code{\link[=tidy_pop]{tidy_pop()}} and \code{\link[=tidy_par]{tidy_par()}} for interval construction. Default \code{0.95}.}
 
-\item{label}{Character scalar giving the label column name to add when stacking
-across multiple/named models. Default \code{"model"}.}
+\item{label}{Character scalar giving the label column name to add when stacking across multiple/named models. Default \code{"model"}.}
 }
 \value{
-A named list with two elements:
+A named list with four elements:
 \itemize{
 \item \strong{obs_pred} — a named list of stacked data frames (e.g., \code{catch}, \code{index});
-\item \strong{pop} — a named list of stacked data frames (e.g., \code{ssb}, \code{N}, \code{M},
-\code{mu_M}, \code{F}, \code{mu_F}, \code{Z}, \code{ssb_mat}).
-Each stacked data frame contains all rows across models, with a label column
-added according to the rules above.
+\item \strong{pop} — a named list of stacked data frames (e.g., \code{ssb}, \code{N}, \code{M}, \code{mu_M}, \code{F}, \code{mu_F}, \code{Z}, …);
+\item \strong{fixed_par} — a single stacked data frame of fixed-effect parameters with columns like \code{par}, \code{est}, \code{se}, \code{lwr}, \code{upr}, plus indices (e.g., \code{coef}, \code{year}, \code{age}) and the label column when applicable;
+\item \strong{random_par} — a named list of stacked data frames, one per random-effect block, each with the same schema as \code{fixed_par} plus block-appropriate indices.
 }
 }
 \description{
-Builds tidy, stacked tables from one or more fitted TAM models. For each
-model it collects:
+Builds tidy, stacked tables from one or more fitted TAM models. For each model it collects:
 \itemize{
-\item observation diagnostics via \code{\link[=tidy_obs_pred]{tidy_obs_pred()}}, and
-\item population summaries via \code{\link[=tidy_pop]{tidy_pop()}} (with confidence intervals),
-then stacks \strong{per component} across models (e.g., all \code{"catch"} tables
-together; all \code{"N"} tables together).
+\item observation diagnostics via \code{\link[=tidy_obs_pred]{tidy_obs_pred()}},
+\item population summaries via \code{\link[=tidy_pop]{tidy_pop()}} (with confidence intervals), and
+\item parameter summaries via \code{\link[=tidy_par]{tidy_par()}} (fixed and random effects),
 }
+
+then stacks \strong{per component} across models (e.g., all \code{"catch"} tables together; all \code{"N"}
+tables together; all fixed parameters together; each random-effect block together).
 }
 \details{
 \strong{Inputs:} Pass models through \code{...} or via \verb{model_list =}.
 \itemize{
 \item If \code{...} supplies \strong{one} model, \strong{no label} column is added.
-\item If \code{...} supplies \strong{more than one} model, a label column is added using
-the object/expression names from \code{...}.
-\item If \code{model_list} is used, it \strong{must be a named list}; its names are always
-used as labels (even when length 1).
+\item If \code{...} supplies \strong{>1} model, a label column is added using the object/expression names from \code{...}.
+\item If \code{model_list} is used, it \strong{must be a named list}; its names are always used as labels (even when length 1).
 }
 
-Names (from \code{...} or \code{model_list}) are passed through
-\code{\link[utils:type.convert]{utils::type.convert()}} with \code{as.is = TRUE}, so numeric-like labels
-(e.g. "2010", "2011") become numeric.
+Names (from \code{...} or \code{model_list}) are passed through \code{\link[utils:type.convert]{utils::type.convert()}} with \code{as.is = TRUE},
+so numeric-like labels (e.g. \code{"2010"}, \code{"2011"}) become numeric.
 
-Only components present in \strong{all} models are stacked (intersection of names),
-ensuring consistent columns for base-R \code{rbind()}.
+Only components present in \strong{all} models are stacked (intersection of names), ensuring column
+compatibility for base \code{rbind()}. Parameter summaries are stacked separately for \strong{fixed} and
+\strong{random} effects: fixed effects in a single data frame; random effects as a named list of data
+frames (one per random-effect block, e.g. \code{"log_f"}, \code{"log_r"}, \code{"missing"}, …).
 }
 \examples{
-# Single model via ...: no label column added
+# Single model: no label column added
 fit1 <- fit_tam(cod_obs, years = 1983:2024, ages = 2:14)
 tabs1 <- tidy_tam(fit1)
-head(tabs1$obs_pred$index)
+names(tabs1)
+head(tabs1$fixed_par)
 
-# Multiple via ...: label uses the object names
+# Two models via ...: label uses object names
 fit2 <- update(fit1, years = 1983:2023)
 tabs2 <- tidy_tam(fit1, fit2)
-head(tabs2$obs_pred$catch)  # contains column "model"
+head(tabs2$obs_pred$catch)      # contains column "model"
+head(tabs2$fixed_par)           # fixed effects stacked with "model"
+names(tabs2$random_par)         # e.g. "log_f", "log_r", "missing", ...
+head(tabs2$random_par$log_f)    # random block stacked with "model"
 
-# Named list: must be named; names always used as label (even length 1)
+# Named list: must be named; names used as labels (even length 1)
 fits <- list(`2023` = fit2, `2024` = fit1)
 tabs3 <- tidy_tam(model_list = fits, label = "retro_year")
-head(tabs3$pop$N)  # column "retro_year" has 2023/2024
+head(tabs3$pop$N)               # column "retro_year" has 2023/2024
 
 }
 \seealso{
-\code{\link[=tidy_obs_pred]{tidy_obs_pred()}}, \code{\link[=tidy_pop]{tidy_pop()}}, \code{\link[=fit_tam]{fit_tam()}}, \code{\link[=fit_retro]{fit_retro()}}
+\code{\link[=tidy_obs_pred]{tidy_obs_pred()}}, \code{\link[=tidy_pop]{tidy_pop()}}, \code{\link[=tidy_par]{tidy_par()}}, \code{\link[=fit_tam]{fit_tam()}}, \code{\link[=fit_retro]{fit_retro()}}
 }

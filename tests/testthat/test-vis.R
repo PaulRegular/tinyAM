@@ -12,7 +12,7 @@ test_that("vis_tam runs cleanly with valid fits list", {
   M_dev <- update(
     N_dev,
     N_settings = list(process = "off", init_N0 = TRUE),
-    M_settings = list(process = "ar1", assumption = ~ I(0.3),
+    M_settings = list(process = "approx_rw", assumption = ~ I(0.3),
                       age_breaks = c(2, 14))
   )
   fits <- list("N_dev" = N_dev, "M_dev" = M_dev)
