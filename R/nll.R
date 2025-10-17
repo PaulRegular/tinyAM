@@ -122,8 +122,9 @@ rprocess_2d <- function(ny, na, phi = c(0, 0), sd = 1) {
 #'   \deqn{\log M_{y,a} = \log \mu^M_{y,a} + \eta^M_{y,a},}
 #'
 #'   where \eqn{\log \mu^M = \texttt{log\_mu\_assumed\_m} + M_\text{modmat}\,\texttt{log\_mu\_m}}.
-#'   If `M_settings$process != "off"`, deviations \eqn{\eta^M} are penalized
-#'   by [dprocess_2d()] and may be grouped by age via `M_settings$age_blocks`.
+#'   If `M_settings$process != "off"`, process deviations (\eqn{\eta^M}) are penalized by [dprocess_2d()]
+#'   for years 2...Y. Deviations are coupled by default between the first and second modeled years.
+#'   Deviations may be coupled by age via `M_settings$age_blocks`.
 #'
 #' - **Observations:** catch-at-age and index-at-age on the log scale:
 #'   \deqn{\log C_{y,a} \sim \mathcal{N}\!\left(
@@ -238,7 +239,8 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   log_recruitment <- log_r
   log_N[, 1] <- log_r
 
-  log_F[!is_proj, ] <- log_f
+  # F_settings$year_blocks <- c(1, seq.int(nrow(log_f)))
+  log_F[!is_proj, ] <- log_f # log_f[F_settings$year_blocks, ]
   if (n_proj > 0) {
     log_k <- log(proj_settings$F_mult)
     log_f_last <- log_f[rep(nrow(log_f), n_proj), , drop = FALSE]
@@ -252,7 +254,8 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   log_mu_M[] <- log_mu_assumed_m + drop(M_modmat %*% log_mu_m)
   M <- mu_M <- exp(log_mu_M)
   if (M_settings$process != "off") {
-    M[-1, -1] <- exp(log_mu_M[-1, -1] + log_m[, M_settings$age_blocks])
+    M_settings$year_blocks <- c(1, seq.int(nrow(log_m))) # couple M process for first and second year
+    M <- exp(log_mu_M + log_m[M_settings$year_blocks, M_settings$age_blocks])
   }
   log_M <- log(M)
   Z <- F + M
@@ -313,14 +316,18 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   ## M deviations ----
 
   if (M_settings$process != "off") {
-    eta_log_M <- log_m[, M_settings$age_blocks] - log_mu_M[-1, -1]
-    eta_log_m <- eta_log_M[, !duplicated(M_settings$age_blocks), drop = FALSE]
+    eta_log_M <- log_m[M_settings$year_blocks, M_settings$age_blocks] - log_mu_M
+    m_years <- !duplicated(M_settings$year_blocks)
+    m_ages  <- !duplicated(M_settings$age_blocks)
+    eta_log_m <- eta_log_M[m_years, m_ages, drop = FALSE]
+
     sd_m <- exp(log_sd_m)
-    phi <- plogis(logit_phi_m)
+    phi  <- plogis(logit_phi_m)
     jnll <- jnll - dprocess_2d(eta_log_m, sd = sd_m, phi = phi)
+
     if (simulate) {
       eta_log_m <- rprocess_2d(nrow(log_m), ncol(log_m), sd = sd_m, phi = phi)
-      log_m <- log_mu_M[-1, -1][, !duplicated(M_settings$age_blocks)] + eta_log_m
+      log_m <- log_mu_M[m_years, m_ages, drop = FALSE] + eta_log_m
     }
   }
 

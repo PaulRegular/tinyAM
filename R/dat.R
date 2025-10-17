@@ -173,7 +173,7 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #' - If `N_settings$process == "off"` and `init_N0 == FALSE`, `init_N0` is
 #'   forced to `TRUE` (with a warning) so the first-year abundance is
 #'   estimable.
-#' - `M_settings$age_breaks` (vector of break points on ages \eqn{\ge} min modeled age + 1)
+#' - `M_settings$age_breaks` (vector of break points on ages)
 #'   defines `M_settings$age_blocks` via [cut_ages()], used
 #'   to couple \eqn{M} deviations across age.
 #' - The AR(1) correlation parameters are only initialized for
@@ -330,13 +330,10 @@ make_dat <- function(
     dat$N_settings$init_N0 <- TRUE
     cli::cli_warn("The first year would lack parameters with process set to 'off' and init_N0 set to FALSE in N_settings; forcing init_N0 to TRUE to estimate initial levels.")
   }
-  M_ages <- dat$ages[-1]
   if (!is.null(M_settings$age_breaks)) {
-    breaks <- dat$M_settings$age_breaks[-1]
-    if (!min(M_ages) %in% breaks) breaks <- c(min(M_ages), breaks)
-    dat$M_settings$age_blocks <- cut_ages(M_ages, breaks)
+    dat$M_settings$age_blocks <- cut_ages(dat$ages, dat$M_settings$age_breaks)
   } else {
-    dat$M_settings$age_blocks <- cut_ages(M_ages, M_ages)
+    dat$M_settings$age_blocks <- cut_ages(dat$ages, dat$ages)
   }
 
   empty_mat <- matrix(NA, nrow = length(dat$years), ncol = length(dat$ages),

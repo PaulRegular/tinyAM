@@ -130,7 +130,7 @@ assumption or a mean structure.
 \item If \code{N_settings$process == "off"} and \code{init_N0 == FALSE}, \code{init_N0} is
 forced to \code{TRUE} (with a warning) so the first-year abundance is
 estimable.
-\item \code{M_settings$age_breaks} (vector of break points on ages \eqn{\ge} min modeled age + 1)
+\item \code{M_settings$age_breaks} (vector of break points on ages)
 defines \code{M_settings$age_blocks} via \code{\link[=cut_ages]{cut_ages()}}, used
 to couple \eqn{M} deviations across age.
 \item The AR(1) correlation parameters are only initialized for

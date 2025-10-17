@@ -78,6 +78,7 @@ test_that("make_dat builds M age_blocks and handles M assumptions / mu_form", {
   # with age_breaks => grouped age blocks for M deviations
   dat1 <- make_dat(
     obs = cod_obs,
+    ages = 2:14,
     M_settings = list(process = "iid", mu_form = NULL, assumption = ~ I(0.3), age_breaks = seq(2, 14, 2))
   )
   expect_true("age_blocks" %in% names(dat1$M_settings))
