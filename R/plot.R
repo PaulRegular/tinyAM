@@ -204,7 +204,7 @@ plot_obs_pred <- function(
   p |>
     add_markers(
       y = ~obs,
-      color = ~I("darkgrey"),
+      color = ~I("grey40"),
       name = "Observed",
       showlegend = FALSE,
       opacity = 0.5

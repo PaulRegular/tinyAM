@@ -4,7 +4,11 @@ source("analysis/comp_retro/001_models.R")
 future::plan(future::multisession, workers = 10)
 
 ncam_style_retros <- fit_retro(ncam_style, folds = 20, hindcast = TRUE)
+vis_tam(ncam_style_retros$fits, output_file = "analysis/comp_retro/003_ncam_style_retros.html")
+
 sam_style_retros <- fit_retro(sam_style, folds = 20, hindcast = TRUE)
+vis_tam(sam_style_retros$fits, output_file = "analysis/comp_retro/003_sam_style_retros.html")
+
 cohort_dev_retros <- fit_retro(cohort_dev, folds = 20, hindcast = TRUE)
 m_dev_retros <- fit_retro(m_dev, folds = 20, hindcast = TRUE)
 
