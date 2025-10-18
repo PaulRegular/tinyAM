@@ -130,7 +130,7 @@ make_par <- function(dat) {
   }
   ## log_f for year 1 and 2 are coupled by default to aid estimation
   par$log_f <- matrix(0, nrow = sum(!dat$is_proj), ncol = length(dat$ages),
-                      dimnames = list(year = dat$years[!dat$is_proj], age = dat$ages)) # [-1, , drop = FALSE]
+                      dimnames = list(year = dat$years[!dat$is_proj], age = dat$ages))[-1, , drop = FALSE]
 
   ## Check for consistent mu M values within age blocks and abort if values are not constant within each block
   if (!is.null(dat$M_settings$age_breaks)) {

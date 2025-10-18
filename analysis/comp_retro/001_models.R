@@ -26,7 +26,7 @@ sam_style1$opt$objective # 989.6083
 
 sam_style2 <- update(sam_style1,
                      N_settings = list(process = "iid", init_N0 = FALSE),
-                     F_settings = list(process = "ar1", mu_form = NULL, mean_ages = 5:14),
+                     F_settings = list(process = "ar1", mu_form = ~F_a_block, mean_ages = 5:14),
                      M_settings = list(process = "off", assumption = ~I(0.3), mean_ages = 5:14))
 sam_style2$sdrep
 
