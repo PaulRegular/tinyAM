@@ -23,7 +23,7 @@
 #'   M_dev <- update(
 #'     N_dev,
 #'     N_settings = list(process = "off", init_N0 = TRUE),
-#'     M_settings = list(process = "approx_rw", assumption = ~ I(0.3),
+#'     M_settings = list(process = "ar1", assumption = ~ I(0.3),
 #'                       age_breaks = c(2, 14))
 #'   )
 #'

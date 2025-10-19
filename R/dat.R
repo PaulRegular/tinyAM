@@ -336,6 +336,11 @@ make_dat <- function(
     dat$M_settings$age_blocks <- cut_ages(dat$ages, dat$ages)
   }
 
+  ## Was using these lines to couple M and F random effects in the first and second year to aid convergence.
+  ## May be useful to retain option
+  dat$M_settings$year_blocks <- cut_years(dat$years, dat$years)
+  dat$F_settings$year_blocks <- cut_years(dat$years[!dat$is_proj], dat$years[!dat$is_proj])
+
   empty_mat <- matrix(NA, nrow = length(dat$years), ncol = length(dat$ages),
                       dimnames = list(year = dat$years, age = dat$ages))
   dat$W <- dat$P <- empty_mat
