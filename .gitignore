@@ -49,5 +49,6 @@ po/*~
 rsconnect/
 
 # Output in the analysis folder
+*.html
 analysis/*.html
 
