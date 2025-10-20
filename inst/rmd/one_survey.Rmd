@@ -22,13 +22,12 @@ plot_obs_pred(d, frame = ~age, color = ~model,
 
 ```{r}
 qest <- d
-names(qest)[names(qest) == "q"] <- "est"
-u_qest <- unique(qest[, c("model", "age", "est")])
+u_qest <- unique(qest[, c("model", "age", "q")])
 if (any(duplicated(u_qest[, c("model", "age")]))) {
-  u_qest <- unique(qest[, c("model", "age", "year", "est")])
-  plot_trend(u_qest, x = ~age, xlab = "Age", ylab = "q", color = ~model, colors = cols, frame = ~year)
+  u_qest <- unique(qest[, c("model", "age", "year", "q")])
+  plot_trend(u_qest, x = ~age, y = ~q, xlab = "Age", color = ~model, colors = cols, frame = ~year)
 } else {
-  plot_trend(u_qest, x = ~age, xlab = "Age", ylab = "q", color = ~model, colors = cols)
+  plot_trend(u_qest, x = ~age, y = ~q, xlab = "Age", color = ~model, colors = cols)
 }
 ```
 

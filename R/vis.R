@@ -11,7 +11,7 @@
 #'
 #' @example inst/examples/example_fits.R
 #' @examples
-#' if (interactive) {
+#' if (interactive()) {
 #'   ## Build dashboard ----
 #'   vis_tam(fits)
 #' }

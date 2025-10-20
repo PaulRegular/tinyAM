@@ -13,6 +13,7 @@
 plot_trend(
   data,
   x = ~year,
+  y = ~est,
   xlab = "Year",
   ylab = "",
   title = "",
@@ -32,9 +33,11 @@ plot_resid(data, x = ~year, xlab = "Year", ...)
 plot_par(data, ...)
 }
 \arguments{
-\item{data}{A data frame containing at least \code{year} and \code{est} columns.}
+\item{data}{A data frame of observations or estimates.}
 
 \item{x}{Formula specifying x variable}
+
+\item{y}{Formula specifying y variable}
 
 \item{xlab}{Label for the x-axis.}
 

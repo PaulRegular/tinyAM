@@ -46,7 +46,7 @@ M_dev <- update(
 ## Combine model objects into named list ----
 fits <- list("N_dev" = N_dev, "M_dev" = M_dev)
 
-if (interactive) {
+if (interactive()) {
   ## Build dashboard ----
   vis_tam(fits)
 }

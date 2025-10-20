@@ -154,12 +154,15 @@
 #'
 #'   # Draw fixed-effects uncertainty and redraw random process fields
 #'   sims1 <- sim_tam(fit, n = 10, par_uncertainty = "fixed", redraw_random = TRUE)
+#'   plot_trend(sims1$ssb, split = ~sim, line = list(width = 0.5))
 #'
 #'   # Joint draw of random and fixed effects, keep random effects, simulate obs only
 #'   sims2 <- sim_tam(fit, n = 10, par_uncertainty = "joint", redraw_random = FALSE)
+#'   plot_trend(sims2$ssb, split = ~sim, line = list(width = 0.5))
 #'
 #'   # Conditional/fast: point estimates, obs only
 #'   sims3 <- sim_tam(fit, n = 10, par_uncertainty = "none", redraw_random = FALSE)
+#'   plot_trend(sims3$index, y = ~obs, frame = ~age, split = ~sim, line = list(width = 0.5))
 #' }
 #' }
 #'

@@ -21,8 +21,9 @@
 #' - `plot_bubbles()`: residuals (OSA or standardized) as bubbles by age × year.
 #' - `plot_resid()`: residual diagnostics vs year, cohort, age, and expected values.
 #'
-#' @param data A data frame containing at least `year` and `est` columns.
+#' @param data A data frame of observations or estimates.
 #' @param x Formula specifying x variable
+#' @param y Formula specifying y variable
 #' @param ylab Label for the y-axis.
 #' @param xlab Label for the x-axis.
 #' @param zlab Label for the colorbar in heatmaps.
@@ -75,6 +76,7 @@
 plot_trend <- function(
     data,
     x = ~year,
+    y = ~est,
     xlab = "Year",
     ylab = "",
     title = "",
@@ -88,7 +90,7 @@ plot_trend <- function(
     args$showlegend <- FALSE
   }
   p <- do.call(plot_ly, c(list(data = data, x = x), args))
-  max_y <- max(data$est, na.rm = TRUE) * 1.05
+  max_y <- max(model.frame(y, data = data), na.rm = TRUE) * 1.05
 
   if (add_intervals && all(c("lwr", "upr") %in% names(data))) {
     max_y <- max(data$upr, na.rm = TRUE) * 1.05
@@ -116,7 +118,7 @@ plot_trend <- function(
   buttons <- if (add_buttons) .buttons else NULL
 
   p |>
-    add_lines(y = ~est, line = list(width = 2)) |>
+    add_lines(y = y) |>
     layout(
       title = title,
       xaxis = list(title = xlab),
