@@ -13,10 +13,6 @@ cod_obs <- tinyAM::cod_obs
 cod_obs$catch$F_a_block <- cut_ages(cod_obs$catch$age, c(0:14))
 cod_obs$weight$collapse <- ifelse(cod_obs$weight$year %in% 1991:1994, 1, 0)
 
-## Couple F and M processes across the first few years to stabilize
-## early estimates and reduce confounding with initial abundance
-year_breaks <- c(1983, 1986:2024)
-
 sam_style1 <- fit_tam(
   cod_obs,
   years = 1983:2024,
@@ -28,14 +24,12 @@ sam_style1 <- fit_tam(
   F_settings = list(
     process = "approx_rw",
     mu_form = NULL,
-    mean_ages = 5:14,
-    year_breaks = year_breaks
+    mean_ages = 5:14
   ),
   M_settings = list(
     process = "off",
     assumption = ~I(0.3),
-    mean_ages = 5:14,
-    year_breaks = year_breaks
+    mean_ages = 5:14
   ),
   obs_settings = list(
     q_form = ~ q_block,
@@ -49,15 +43,14 @@ sam_style1 <- fit_tam(
   )
 )
 sam_style1$sdrep
-sam_style1$opt$objective
+sam_style1$opt$objective # 989.6083
 
 sam_style2 <- update(
   sam_style1,
   F_settings = list(
     process = "ar1",
     mu_form = ~F_a_block,
-    mean_ages = 5:14,
-    year_breaks = year_breaks
+    mean_ages = 5:14
   )
 )
 sam_style2$sdrep
@@ -71,16 +64,14 @@ ncam_style1 <- update(
   F_settings = list(
     process = "approx_rw",
     mu_form = NULL,
-    mean_ages = 5:14,
-    year_breaks = year_breaks
+    mean_ages = 5:14
   ),
   M_settings = list(
-    process = "ar1",
-    mu_form = ~ 0 + collapse,
-    assumption = ~I(0.3),
+    process = "approx_rw",
+    mu_form = NULL,
+    assumption = ~M_assumption,
     age_breaks = c(2:8, 14),
-    mean_ages = 5:14,
-    year_breaks = year_breaks
+    mean_ages = 5:14
   )
 )
 ncam_style1$sdrep
@@ -91,27 +82,42 @@ ncam_style2 <- update(
   F_settings = list(
     process = "approx_rw",
     mu_form = NULL,
-    mean_ages = 5:14,
-    year_breaks = year_breaks
+    mean_ages = 5:14
+  ),
+  M_settings = list(
+    process = "approx_rw",
+    mu_form = ~collapse - 1,
+    assumption = ~I(0.3),
+    age_breaks = c(2, 14),
+    mean_ages = 5:14
+  )
+)
+ncam_style2$sdrep
+
+ncam_style3 <- update(
+  ncam_style1,
+  F_settings = list(
+    process = "approx_rw",
+    mu_form = NULL,
+    mean_ages = 5:14
   ),
   M_settings = list(
     process = "approx_rw",
     mu_form = NULL,
     assumption = ~I(0.3),
     age_breaks = c(2, 14),
-    mean_ages = 5:14,
-    year_breaks = year_breaks
+    mean_ages = 5:14
   )
 )
-ncam_style2$sdrep
-
+ncam_style3$sdrep
 
 vis_tam(
   list(
     sam_style1 = sam_style1,
     sam_style2 = sam_style2,
     ncam_style1 = ncam_style1,
-    ncam_style2 = ncam_style2
+    ncam_style2 = ncam_style2,
+    ncam_style3 = ncam_style3
   ),
   output_file = "analysis/comp_retro/001_models.html"
 )

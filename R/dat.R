@@ -75,6 +75,7 @@ cut_int <- function(x, breaks, ordered = FALSE) {
   idx    <- findInterval(x, starts)
 
   factor(labs[idx], levels = labs, ordered = ordered)
+
 }
 
 ##' @export
@@ -175,9 +176,7 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #'   estimable.
 #' - `M_settings$age_breaks` (vector of break points on ages)
 #'   defines `M_settings$age_blocks` via [cut_ages()], used
-#'   to couple \eqn{M} deviations across age. Likewise `F_settings$year_breaks`
-#'   and `M_settings$year_breaks` defines `*$year_blocks` used to couple \eqn{F}
-#'   and \eqn{M} deviations across years.
+#'   to couple \eqn{M} deviations across age.
 #' - The AR(1) correlation parameters are only initialized for
 #'   processes whose `process == "ar1"`. Correlations are assumed to be 0
 #'   when `process == "iid"`, and 0.99 when `process == "approx_rw"` to approximate
@@ -206,8 +205,6 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #' - `mu_form`: an optional formula for mean-\eqn{F}.
 #' - `mean_ages`: optional vector of ages to include in population weighted
 #'   average F (`F_bar`) calculations. All ages used if absent.
-#' - `year_breaks`: optional integer break points used by [cut_years()] to
-#'   define `year_blocks` for coupling \eqn{F} deviations across years.
 #' @param M_settings A list with elements:
 #' - `process`: one of `"off"`, `"iid"`, `"approx_rw"`, or `"ar1"`.
 #' - `mu_form`: optional formula for mean-\eqn{M} (on the log scale) built
@@ -218,8 +215,8 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #'   `~ log(M_assumption)` stored in the `obs$weight` data.frame.
 #' - `age_breaks`: optional integer break points used by [cut_ages()] to
 #'   define `age_blocks` for coupling \eqn{M} deviations across ages.
-#' - `year_breaks`: optional integer break points used by [cut_years()] to
-#'   define `year_blocks` for coupling \eqn{M} deviations across years.
+#' - `first_dev_year`: integer year at which to start estimating \eqn{M} deviations. Defaults
+#'   to the second year if `NULL`.
 #' - `mean_ages`: optional vector of ages to include in population weighted
 #'   average M (`M_bar`) calculations. All ages used if absent.
 #' @param obs_settings A list with elements:
@@ -280,8 +277,8 @@ make_dat <- function(
     years = NULL,
     ages = NULL,
     N_settings = list(process = "iid", init_N0 = FALSE),
-    F_settings = list(process = "approx_rw", mu_form = NULL, year_breaks = NULL),
-    M_settings = list(process = "off", mu_form = NULL, assumption = ~I(0.2), age_breaks = NULL, year_breaks = NULL),
+    F_settings = list(process = "approx_rw", mu_form = NULL),
+    M_settings = list(process = "off", mu_form = NULL, assumption = ~I(0.2), age_breaks = NULL, first_dev_year = NULL),
     obs_settings = list(sd_form = ~sd_obs_block, q_form = ~q_block, fill_missing = TRUE),
     proj_settings = NULL
 ) {
@@ -341,18 +338,8 @@ make_dat <- function(
   } else {
     dat$M_settings$age_blocks <- cut_ages(dat$ages, dat$ages)
   }
-  if (!is.null(M_settings$year_breaks)) {
-    if (!is.null(proj_settings) && proj_settings$n_proj > 0 && max(M_settings$year_breaks) == max(years)) {
-      dat$M_settings$year_breaks <- c(dat$M_settings$year_breaks, dat$years[dat$is_proj]) # append proj years if absent from year_breaks
-    }
-    dat$M_settings$year_blocks <- cut_years(dat$years, dat$M_settings$year_breaks)
-  } else {
-    dat$M_settings$year_blocks <- cut_years(dat$years, dat$years)
-  }
-  if (!is.null(F_settings$year_breaks)) {
-    dat$F_settings$year_blocks <- cut_years(dat$years[!dat$is_proj], dat$F_settings$year_breaks)
-  } else {
-    dat$F_settings$year_blocks <- cut_years(dat$years[!dat$is_proj], dat$years[!dat$is_proj])
+  if (is.null(M_settings$first_dev_year)) {
+    dat$M_settings$first_dev_year <- dat$years[2]
   }
 
   empty_mat <- matrix(NA, nrow = length(dat$years), ncol = length(dat$ages),

@@ -76,8 +76,6 @@ test_that("make_par shapes adapt when projections are enabled", {
   expect_equal(length(par$log_r), length(dat$years))
   expect_equal(dim(par$log_n), c(length(dat$years), length(dat$ages) - 1))
 
-  # M deviations on -> log_m dims n_year_blocks x n_age_blocks
-  expect_equal(dim(par$log_m), c(nlevels(dat$M_settings$year_blocks), nlevels(dat$M_settings$age_blocks)))
 })
 
 test_that("make_par includes/excludes mean-structure parameters appropriately", {
@@ -143,4 +141,14 @@ test_that("make_par enforces M mu_form constancy within age_blocks (when provide
     make_par(dat_bad),
     "M mean structure varies within M age_blocks"
   )
+})
+
+test_that("make_par starts M deviations at year 2 by default", {
+  dat <- test_dat(M_settings = list(process = "iid", mu_form = ~1))
+  par <- make_par(dat)
+  expect_equal(rownames(par$log_m)[1], as.character(dat$years[2]))
+
+  dat <- test_dat(M_settings = list(process = "iid", mu_form = ~1, first_dev_year = 1983))
+  par <- make_par(dat)
+  expect_equal(rownames(par$log_m)[1], as.character(dat$years[1]))
 })

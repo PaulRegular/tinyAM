@@ -238,7 +238,7 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   log_recruitment <- log_r
   log_N[, 1] <- log_r
 
-  log_F[!is_proj, ] <- log_f[F_settings$year_blocks, ]
+  log_F[!is_proj, ] <- log_f
   if (n_proj > 0) {
     log_k <- log(proj_settings$F_mult)
     log_f_last <- log_f[rep(nrow(log_f), n_proj), , drop = FALSE]
@@ -252,7 +252,8 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   log_mu_M[] <- log_mu_assumed_m + drop(M_modmat %*% log_mu_m)
   M <- mu_M <- exp(log_mu_M)
   if (M_settings$process != "off") {
-    M <- exp(log_mu_M + log_m[M_settings$year_blocks, M_settings$age_blocks])
+    m_years <- rownames(log_m)
+    M[m_years, ] <- exp(log_mu_M[m_years, ] + log_m[, M_settings$age_blocks])
   }
   log_M <- log(M)
   Z <- F + M
@@ -313,11 +314,8 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   ## M deviations ----
 
   if (M_settings$process != "off") {
-    eta_log_M <- log_m[M_settings$year_blocks, M_settings$age_blocks] - log_mu_M
-    m_years <- !duplicated(M_settings$year_blocks, fromLast = TRUE)
-    m_ages  <- !duplicated(M_settings$age_blocks, fromLast = TRUE)
-    eta_log_m <- eta_log_M[m_years, m_ages, drop = FALSE]
-
+    m_ages  <- colnames(log_mu_M)[!duplicated(M_settings$age_blocks)]
+    eta_log_m <- log_m - log_mu_M[m_years, m_ages, drop = FALSE]
     sd_m <- exp(log_sd_m)
     phi  <- plogis(logit_phi_m)
     jnll <- jnll - dprocess_2d(eta_log_m, sd = sd_m, phi = phi)
@@ -330,14 +328,12 @@ nll_fun <- function(par, dat, simulate = FALSE) {
 
   ## F deviations ----
 
-  eta_log_F <- log_F[!is_proj, ] - log_mu_F[!is_proj, ]
-  f_years <- !duplicated(F_settings$year_blocks, fromLast = TRUE)
-  eta_log_f <- eta_log_F[f_years, , drop = FALSE]
+  eta_log_f <- log_F[!is_proj, ] - log_mu_F[!is_proj, ]
   phi <- plogis(logit_phi_f)
   jnll <- jnll - dprocess_2d(eta_log_f, sd = sd_f, phi = phi)
   if (simulate) {
     eta_log_f <- rprocess_2d(nrow(log_f), ncol(log_f), sd = sd_f, phi = phi)
-    log_f <- log_mu_F[!is_proj, ][f_years, , drop = FALSE] + eta_log_f
+    log_f <- log_mu_F[!is_proj, ] + eta_log_f
   }
 
 

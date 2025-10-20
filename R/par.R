@@ -124,12 +124,12 @@ make_par <- function(dat) {
                         dimnames = list(year = dat$years, age = dat$ages[-1]))
   }
   if (dat$M_settings$process != "off") {
-    par$log_m <- matrix(0, nrow = nlevels(dat$M_settings$year_blocks), ncol = nlevels(dat$M_settings$age_blocks),
-                        dimnames = list(year_block = levels(dat$M_settings$year_blocks),
-                                        age_block = levels(dat$M_settings$age_blocks)))
+    m_years <- dat$years[dat$years >= dat$M_settings$first_dev_year]
+    par$log_m <- matrix(0, nrow = length(m_years), ncol = nlevels(dat$M_settings$age_blocks),
+                        dimnames = list(year = m_years, age_block = levels(dat$M_settings$age_blocks)))
   }
-  par$log_f <- matrix(0, nrow = nlevels(dat$F_settings$year_blocks), ncol = length(dat$ages),
-                      dimnames = list(year_block = levels(dat$F_settings$year_blocks), age = dat$ages))
+  par$log_f <- matrix(0, nrow = sum(!dat$is_proj), ncol = length(dat$ages),
+                      dimnames = list(year = dat$years[!dat$is_proj], age = dat$ages))
 
   ## Check for consistent mu M values within age blocks and abort if values are not constant within each block
   if (!is.null(dat$M_settings$age_breaks)) {

@@ -30,12 +30,12 @@ plot_trend(random_par$log_n, color = ~model, legendgroup = ~model, colors = cols
 ### (f)
 
 ```{r}
-plot_trend(random_par$log_f, x = ~year_block, color = ~model, legendgroup = ~model, colors = cols, frame = ~age, ylab = "f")
+plot_trend(random_par$log_f, x = ~year, color = ~model, legendgroup = ~model, colors = cols, frame = ~age, ylab = "f")
 ```
 
 `r if ("log_m" %in% names(random_par)) "### (m)"`
 
 ```{r, eval = "log_m" %in% names(random_par)}
-plot_trend(random_par$log_m, x = ~year_block, color = ~model, legendgroup = ~model, colors = cols, frame = ~age_block, ylab = "m")
+plot_trend(random_par$log_m, x = ~year, color = ~model, legendgroup = ~model, colors = cols, frame = ~age_block, ylab = "m")
 ```
 
