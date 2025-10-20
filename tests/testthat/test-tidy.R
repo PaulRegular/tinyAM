@@ -240,7 +240,7 @@ test_that("tidy_par preserves coefficient names for named vectors and dims for m
   # Matrix random effect (e.g., log_f) → expect year & age columns present
   if ("log_f" %in% names(tp$random)) {
     df <- tp$random$log_f
-    expect_true(all(c("year","age") %in% names(df)))
+    expect_true(all(c("year_block","age") %in% names(df)))
     # row count equals number of cells in the reported F matrix
     expect_equal(nrow(df), length(fit$rep$F))
   }

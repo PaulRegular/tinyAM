@@ -67,23 +67,34 @@ from \code{\link[=tidy_tam]{tidy_tam()}} and related TAM model objects:
 }
 }
 \examples{
-## Fit two models
+
+## Fit two models ----
+## - Couple F and M processes across the first three years to stabilize
+##   early estimates and reduce confounding with initial abundance
+year_breaks <- c(1983, 1986:2024)
 N_dev <- fit_tam(
   cod_obs, years = 1983:2024, ages = 2:14,
   N_settings = list(process = "iid", init_N0 = FALSE),
+  F_settings = list(process = "approx_rw", mu_form = NULL,
+                    year_breaks = year_breaks),
   M_settings = list(process = "off", assumption = ~ I(0.3)),
-  proj_settings = list(n_proj = 5, n_mean = 5, F_mult = 1),
+  proj_settings = list(n_proj = 3, n_mean = 3, F_mult = 1),
   silent = TRUE
 )
 M_dev <- update(
   N_dev,
   N_settings = list(process = "off", init_N0 = TRUE),
   M_settings = list(process = "approx_rw", assumption = ~ I(0.3),
-                    age_breaks = c(2, 14))
+                    age_breaks = c(2, 14), year_breaks = year_breaks)
 )
-tabs <- tidy_tam(N_dev, M_dev)
 
-## Trend plots
+## Combine model objects into named list ----
+fits <- list("N_dev" = N_dev, "M_dev" = M_dev)
+
+## Stack outputs ----
+tabs <- tidy_tam(model_list = fits)
+
+## Trend plots ----
 plot_trend(N_dev$pop$biomass, ylab = "Biomass")
 plot_trend(tabs$pop$biomass, color = ~model, ylab = "Biomass")
 
@@ -91,26 +102,26 @@ N_dev$pop$N |>
   subset(age \%in\% 2:8) |>
   plot_trend(ylab = "N", color = ~as.character(age))
 
-## Age-Year Heatmap
+## Age-Year Heatmap ----
 plot_heatmap(N_dev$pop$F, zlab = "F")
 plot_heatmap(M_dev$pop$F, zlab = "F")
 
-## Observed vs Predicted
+## Observed vs Predicted ----
 plot_obs_pred(N_dev$obs_pred$catch, frame = ~age, ylab = "Catch")
 plot_obs_pred(tabs$obs_pred$index,
               color = ~model, legendgroup = ~model,
               frame = ~age, ylab = "Index")
 
-## Residual Bubbles
+## Residual Bubbles ----
 plot_bubbles(N_dev$obs_pred$catch)
 plot_bubbles(tabs$obs_pred$index, frame = ~model)
 
-## Residual Scatter
+## Residual Scatter ----
 plot_resid(N_dev$obs_pred$catch, x = ~age, xlab = "Age")
 plot_resid(tabs$obs_pred$index, frame = ~model,
             x = ~year, xlab = "Year", showlegend = FALSE)
 
-## Parameter Estimates
+## Parameter Estimates ----
 plot_par(N_dev$fixed_par)
 plot_par(tabs$fixed_par, color = ~model)
 

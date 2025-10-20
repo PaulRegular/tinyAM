@@ -76,8 +76,8 @@ test_that("make_par shapes adapt when projections are enabled", {
   expect_equal(length(par$log_r), length(dat$years))
   expect_equal(dim(par$log_n), c(length(dat$years), length(dat$ages) - 1))
 
-  # M deviations on -> log_m dims (years-1) x n_age_blocks
-  expect_equal(dim(par$log_m), c(length(dat$years) - 1L, nlevels(dat$M_settings$age_blocks)))
+  # M deviations on -> log_m dims n_year_blocks x n_age_blocks
+  expect_equal(dim(par$log_m), c(nlevels(dat$M_settings$year_blocks), nlevels(dat$M_settings$age_blocks)))
 })
 
 test_that("make_par includes/excludes mean-structure parameters appropriately", {

@@ -9,9 +9,9 @@ make_dat(
   years = NULL,
   ages = NULL,
   N_settings = list(process = "iid", init_N0 = FALSE),
-  F_settings = list(process = "approx_rw", mu_form = NULL),
+  F_settings = list(process = "approx_rw", mu_form = NULL, year_breaks = NULL),
   M_settings = list(process = "off", mu_form = NULL, assumption = ~I(0.2), age_breaks =
-    NULL),
+    NULL, year_breaks = NULL),
   obs_settings = list(sd_form = ~sd_obs_block, q_form = ~q_block, fill_missing = TRUE),
   proj_settings = NULL
 )
@@ -40,6 +40,8 @@ this is forced to \code{TRUE}.
 \item \code{mu_form}: an optional formula for mean-\eqn{F}.
 \item \code{mean_ages}: optional vector of ages to include in population weighted
 average F (\code{F_bar}) calculations. All ages used if absent.
+\item \code{year_breaks}: optional integer break points used by \code{\link[=cut_years]{cut_years()}} to
+define \code{year_blocks} for coupling \eqn{F} deviations across years.
 }}
 
 \item{M_settings}{A list with elements:
@@ -53,6 +55,8 @@ log-\eqn{M} offsets, e.g. \code{~ I(0.2)} or a column reference such as
 \code{~ log(M_assumption)} stored in the \code{obs$weight} data.frame.
 \item \code{age_breaks}: optional integer break points used by \code{\link[=cut_ages]{cut_ages()}} to
 define \code{age_blocks} for coupling \eqn{M} deviations across ages.
+\item \code{year_breaks}: optional integer break points used by \code{\link[=cut_years]{cut_years()}} to
+define \code{year_blocks} for coupling \eqn{M} deviations across years.
 \item \code{mean_ages}: optional vector of ages to include in population weighted
 average M (\code{M_bar}) calculations. All ages used if absent.
 }}
@@ -132,7 +136,9 @@ forced to \code{TRUE} (with a warning) so the first-year abundance is
 estimable.
 \item \code{M_settings$age_breaks} (vector of break points on ages)
 defines \code{M_settings$age_blocks} via \code{\link[=cut_ages]{cut_ages()}}, used
-to couple \eqn{M} deviations across age.
+to couple \eqn{M} deviations across age. Likewise \code{F_settings$year_breaks}
+and \code{M_settings$year_breaks} defines \verb{*$year_blocks} used to couple \eqn{F}
+and \eqn{M} deviations across years.
 \item The AR(1) correlation parameters are only initialized for
 processes whose \code{process == "ar1"}. Correlations are assumed to be 0
 when \code{process == "iid"}, and 0.99 when \code{process == "approx_rw"} to approximate

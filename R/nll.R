@@ -123,8 +123,7 @@ rprocess_2d <- function(ny, na, phi = c(0, 0), sd = 1) {
 #'
 #'   where \eqn{\log \mu^M = \texttt{log\_mu\_assumed\_m} + M_\text{modmat}\,\texttt{log\_mu\_m}}.
 #'   If `M_settings$process != "off"`, process deviations (\eqn{\eta^M}) are penalized by [dprocess_2d()]
-#'   for years 2...Y. Deviations are coupled by default between the first and second modeled years.
-#'   Deviations may be coupled by age via `M_settings$age_blocks`.
+#'   for years 2...Y.
 #'
 #' - **Observations:** catch-at-age and index-at-age on the log scale:
 #'   \deqn{\log C_{y,a} \sim \mathcal{N}\!\left(
@@ -239,7 +238,6 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   log_recruitment <- log_r
   log_N[, 1] <- log_r
 
-  F_settings$year_blocks <- c(1, seq.int(nrow(log_f)))
   log_F[!is_proj, ] <- log_f[F_settings$year_blocks, ]
   if (n_proj > 0) {
     log_k <- log(proj_settings$F_mult)
@@ -254,7 +252,6 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   log_mu_M[] <- log_mu_assumed_m + drop(M_modmat %*% log_mu_m)
   M <- mu_M <- exp(log_mu_M)
   if (M_settings$process != "off") {
-    M_settings$year_blocks <- c(1, seq.int(nrow(log_m))) # couple M process for first and second year
     M <- exp(log_mu_M + log_m[M_settings$year_blocks, M_settings$age_blocks])
   }
   log_M <- log(M)
@@ -340,7 +337,7 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   jnll <- jnll - dprocess_2d(eta_log_f, sd = sd_f, phi = phi)
   if (simulate) {
     eta_log_f <- rprocess_2d(nrow(log_f), ncol(log_f), sd = sd_f, phi = phi)
-    log_f <- log_mu_F[f_years, , drop = FALSE] + eta_log_f
+    log_f <- log_mu_F[!is_proj, ][f_years, , drop = FALSE] + eta_log_f
   }
 
 

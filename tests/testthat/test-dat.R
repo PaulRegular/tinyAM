@@ -96,6 +96,50 @@ test_that("make_dat builds M age_blocks and handles M assumptions / mu_form", {
   expect_false("(Intercept)" %in% colnames(dat2$M_modmat))
 })
 
+test_that("make_dat builds F and M year_blocks correctly", {
+  # Test M year_breaks
+  dat_m <- make_dat(
+    obs = cod_obs,
+    years = 1983:1992,
+    M_settings = list(
+      process = "iid",
+      mu_form = NULL,
+      assumption = ~ I(0.3),
+      year_breaks = c(1983, 1987, 1992)
+    )
+  )
+  expect_true("year_blocks" %in% names(dat_m$M_settings))
+  expect_s3_class(dat_m$M_settings$year_blocks, "factor")
+  expect_true(nlevels(dat_m$M_settings$year_blocks) > 1)
+  expect_equal(levels(dat_m$M_settings$year_blocks),
+               c("1983-1986", "1987-1992"))
+
+  # Test F year_breaks (excluding projections)
+  dat_f <- make_dat(
+    obs = cod_obs,
+    years = 1983:1992,
+    F_settings = list(
+      process = "iid",
+      mu_form = NULL,
+      year_breaks = c(1983, 1987, 1992)
+    )
+  )
+  expect_true("year_blocks" %in% names(dat_f$F_settings))
+  expect_s3_class(dat_f$F_settings$year_blocks, "factor")
+  expect_true(nlevels(dat_f$F_settings$year_blocks) > 1)
+  expect_equal(levels(dat_f$F_settings$year_blocks),
+               c("1983-1986", "1987-1992"))
+
+  # Check that defaults (no breaks) still produce one block per year
+  dat_default <- make_dat(
+    obs = cod_obs,
+    years = 1983:1985,
+    M_settings = list(process = "iid", assumption = ~ I(0.3))
+  )
+  expect_equal(nlevels(dat_default$M_settings$year_blocks), length(dat_default$years))
+})
+
+
 test_that("make_dat stops if neither M assumption nor mu_form is provided", {
   expect_error(
     make_dat(

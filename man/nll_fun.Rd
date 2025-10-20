@@ -68,8 +68,7 @@ Deviations \eqn{\eta^F} are penalized by \code{\link[=dprocess_2d]{dprocess_2d()
 
 where \eqn{\log \mu^M = \texttt{log\_mu\_assumed\_m} + M_\text{modmat}\,\texttt{log\_mu\_m}}.
 If \code{M_settings$process != "off"}, process deviations (\eqn{\eta^M}) are penalized by \code{\link[=dprocess_2d]{dprocess_2d()}}
-for years 2...Y. Deviations are coupled by default between the first and second modeled years.
-Deviations may be coupled by age via \code{M_settings$age_blocks}.
+for years 2...Y.
 \item \strong{Observations:} catch-at-age and index-at-age on the log scale:
 \deqn{\log C_{y,a} \sim \mathcal{N}\!\left(
       \log\!\left[N_{y,a}\,\frac{F_{y,a}}{Z_{y,a}}\,(1-e^{-Z_{y,a}})\right],
