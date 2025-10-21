@@ -67,10 +67,10 @@ ncam_style1 <- update(
     mean_ages = 5:14
   ),
   M_settings = list(
-    process = "approx_rw",
+    process = "ar1",
     mu_form = NULL,
     assumption = ~M_assumption,
-    age_breaks = c(2:8, 14),
+    age_breaks = c(3:8, 14),
     mean_ages = 5:14
   )
 )
@@ -88,7 +88,7 @@ ncam_style2 <- update(
     process = "approx_rw",
     mu_form = ~collapse - 1,
     assumption = ~I(0.3),
-    age_breaks = c(2, 14),
+    age_breaks = c(3, 14),
     mean_ages = 5:14
   )
 )
@@ -105,7 +105,7 @@ ncam_style3 <- update(
     process = "approx_rw",
     mu_form = NULL,
     assumption = ~I(0.3),
-    age_breaks = c(2, 14),
+    age_breaks = c(3, 14),
     mean_ages = 5:14
   )
 )
@@ -122,7 +122,7 @@ ncam_style4 <- update(
     process = "ar1",
     mu_form = NULL,
     assumption = ~I(0.3),
-    age_breaks = c(2, 14),
+    age_breaks = c(3, 5, 8, 9, 14),
     mean_ages = 5:14
   )
 )

@@ -138,7 +138,8 @@ make_par <- function(dat) {
     log_mu_M[] <- log_mu_assumed_m + drop(M_modmat %*% dummy_mu_m)
     for(b in levels(M_settings$age_blocks)) {
       if (sum(M_settings$age_blocks == b) > 1) {
-        bmu <- log_mu_M[, which(M_settings$age_blocks == b)]
+        ia <- names(M_settings$age_blocks)[M_settings$age_blocks == b]
+        bmu <- log_mu_M[, ia]
         dups <- apply(bmu, 1, duplicated)
         if (any(colSums(!dups) != 1)) {
           cli::cli_abort(c("M mean structure varies within M age_blocks. ",
