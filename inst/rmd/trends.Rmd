@@ -49,7 +49,18 @@ plot_trend(pop$F_bar, color = ~model, legendgroup = ~model, colors = cols, ylab 
 ### F-at-age
 
 ```{r}
-plot_trend(pop$F, color = ~model, legendgroup = ~model, colors = cols, frame = ~age, ylab = "F")
+plot_trend(pop$F, color = ~model, legendgroup = ~model, colors = cols, frame = ~age, ylab = "F") |> 
+  add_lines(
+    data = pop$mu_F |> subset(est != 1), 
+    x = ~year, y = ~est, 
+    linetype = ~I(2), 
+    line = list(width = 0.5),
+    showlegend = FALSE,
+    color = ~model, 
+    legendgroup = ~model, 
+    colors = cols, 
+    frame = ~age
+  ) 
 ```
 
 ### Selectivity
@@ -68,7 +79,18 @@ plot_trend(pop$M_bar, color = ~model, legendgroup = ~model, colors = cols, ylab 
 ### M-at-age
 
 ```{r}
-plot_trend(pop$M, color = ~model, legendgroup = ~model, colors = cols, frame = ~age, ylab = "M")
+plot_trend(pop$M, color = ~model, legendgroup = ~model, colors = cols, frame = ~age, ylab = "M") |> 
+  add_lines(
+    data = pop$mu_M, 
+    x = ~year, y = ~est, 
+    linetype = ~I(2), 
+    line = list(width = 0.5),
+    showlegend = FALSE,
+    color = ~model, 
+    legendgroup = ~model, 
+    colors = cols, 
+    frame = ~age
+  ) 
 ```
 
 

@@ -128,6 +128,23 @@ ncam_style4 <- update(
 )
 ncam_style4$sdrep
 
+ncam_style5 <- update(
+  ncam_style1,
+  F_settings = list(
+    process = "approx_rw",
+    mu_form = NULL,
+    mean_ages = 5:14
+  ),
+  M_settings = list(
+    process = "ar1",
+    mu_form = NULL,
+    assumption = ~I(0.3),
+    age_breaks = c(3, 14),
+    mean_ages = 5:14
+  )
+)
+ncam_style5$sdrep
+
 vis_tam(
   list(
     sam_style1 = sam_style1,
@@ -135,7 +152,8 @@ vis_tam(
     ncam_style1 = ncam_style1,
     ncam_style2 = ncam_style2,
     ncam_style3 = ncam_style3,
-    ncam_style4 = ncam_style4
+    ncam_style4 = ncam_style4,
+    ncam_style5 = ncam_style5
   ),
   output_file = "analysis/comp_retro/001_models.html"
 )
