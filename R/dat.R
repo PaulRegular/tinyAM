@@ -465,10 +465,10 @@ make_dat <- function(
   .set_phi <- function(type = c("off", "iid", "approx_rw", "ar1")) {
     match.arg(type)
     if (type == "iid") {
-      return(qlogis(c(0, 0)))
+      return(qlogis(c("age" = 0, "year" = 0)))
     }
     if (type == "approx_rw") {
-      return(qlogis(c(0.99, 0.99)))
+      return(qlogis(c("age" = 0.99, "year" = 0.99)))
     }
     if (type == "ar1") {
       return(NULL)

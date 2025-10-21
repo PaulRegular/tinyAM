@@ -100,13 +100,13 @@ make_par <- function(dat) {
     names(par$log_mu_m) <- colnames(dat$M_modmat)
   }
   if (dat$N_settings$process == "ar1") {
-    par$logit_phi_n <- c(0, 0)
+    par$logit_phi_n <- c("age" = 0, "year" = 0)
   }
   if (dat$F_settings$process == "ar1") {
-    par$logit_phi_f <- c(0, 0)
+    par$logit_phi_f <- c("age" = 0, "year" = 0)
   }
   if (dat$M_settings$process == "ar1") {
-    par$logit_phi_m <- c(0, 0)
+    par$logit_phi_m <- c("age" = 0, "year" = 0)
   }
   par$log_q <- numeric(ncol(dat$q_modmat))
   names(par$log_q) <- colnames(dat$q_modmat)

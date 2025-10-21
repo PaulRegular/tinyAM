@@ -354,8 +354,8 @@ tidy_par <- function(fit, interval = 0.95) {
   }
 
   fixed  <- if (length(fix_nms)) do.call(rbind, lapply(fix_nms, .par2df)) else
-    data.frame(par=character(), est=numeric(), se=numeric(),
-               lwr=numeric(), upr=numeric(), check.names = FALSE)
+    data.frame(par = character(), est = numeric(), se = numeric(),
+               lwr = numeric(), upr = numeric(), check.names = FALSE)
   rownames(fixed) <- NULL
 
   random <- stats::setNames(lapply(ran_nms, .par2df), ran_nms)
