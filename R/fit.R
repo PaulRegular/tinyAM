@@ -96,12 +96,18 @@ fit_tam <- function(
   if (dat$M_settings$process != "off") {
     ran <- c(ran, "log_m")
   }
+  map <- list()
+  if (dat$M_settings$process == "ar1" && nlevels(dat$M_settings$age_blocks) == 1) {
+    par$logit_phi_m[1] <- qlogis(0)
+    map$logit_phi_m <- factor(c(NA, 1)) # phi_age moot when only one age block
+  }
 
   make_nll_fun <- function(f, d) function(p) f(p, d) # use closure to avoid global assignment of data
   obj <- RTMB::MakeADFun(
     make_nll_fun(nll_fun, dat),
     par,
     random = ran,
+    map = map,
     silent = silent
   )
 
