@@ -124,9 +124,8 @@ make_par <- function(dat) {
                         dimnames = list(year = dat$years, age = dat$ages[-1]))
   }
   if (dat$M_settings$process != "off") {
-    m_years <- dat$years[dat$years >= dat$M_settings$first_dev_year]
-    par$log_m <- matrix(0, nrow = length(m_years), ncol = nlevels(dat$M_settings$age_blocks),
-                        dimnames = list(year = m_years, age_block = levels(dat$M_settings$age_blocks)))
+    par$log_m <- matrix(0, nrow = length(dat$M_settings$years), ncol = nlevels(dat$M_settings$age_blocks),
+                        dimnames = list(year = dat$M_settings$years, age_block = levels(dat$M_settings$age_blocks)))
   }
   par$log_f <- matrix(0, nrow = sum(!dat$is_proj), ncol = length(dat$ages),
                       dimnames = list(year = dat$years[!dat$is_proj], age = dat$ages))

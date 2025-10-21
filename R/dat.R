@@ -74,7 +74,9 @@ cut_int <- function(x, breaks, ordered = FALSE) {
   labs <- ifelse(starts == ends, starts, paste0(starts, "-", ends))
   idx    <- findInterval(x, starts)
 
-  factor(labs[idx], levels = labs, ordered = ordered)
+  out <- factor(labs[idx], levels = labs, ordered = ordered)
+  names(out) <- x
+  out
 
 }
 
@@ -87,6 +89,42 @@ cut_ages  <- function(ages,  breaks) cut_int(ages,  breaks, ordered = FALSE)
 cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 
 
+#' Split cut labels into start/end columns
+#'
+#' @description
+#' Helper for parsing labels produced by [cut_int()], which are either
+#' `"start-end"` for multi-width blocks or `"k"` for singletons.
+#'
+#' @param x A character or factor vector of labels (e.g., from `cut_int()`).
+#'
+#' @return
+#' A data frame with two **character** columns:
+#' - `start`: the block start
+#' - `end`: the block end
+#'
+#' @details
+#' This function does no validation beyond splitting on `"-"`. Inputs not
+#' produced by [cut_int()] may yield unexpected results.
+#'
+#' @examples
+#' cuts <- cut_int(2:10, c(2, 5, 8, 10))
+#' .split_cuts(cuts)
+#'
+#' singletons <- cut_int(2:10, 2:10)
+#' .split_cuts(singletons)
+#'
+#' mix <- cut_int(2:10, c(2:5, 10))
+#' .split_cuts(mix)
+#'
+#' @seealso [cut_int()]
+#' @keywords internal
+#' @noRd
+.split_cuts <- function(x) {
+  m <- do.call(rbind, strsplit(as.character(x), "-"))
+  if (ncol(m) == 1) m <- cbind(m, m)
+  colnames(m) <- c("start", "end")
+  as.data.frame(m)
+}
 
 
 #' Append projection rows across core obs tables (internal)
@@ -215,8 +253,15 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #'   `~ log(M_assumption)` stored in the `obs$weight` data.frame.
 #' - `age_breaks`: optional integer break points used by [cut_ages()] to
 #'   define `age_blocks` for coupling \eqn{M} deviations across ages.
-#' - `first_dev_year`: integer year at which to start estimating \eqn{M} deviations. Defaults
-#'   to the second year if `NULL`.
+#'   When a narrower set of `age_breaks` than modeled `ages` is provided,
+#'   deviations are only estimated for ages within the specified range; ages
+#'   outside this range are fixed to their mean or assumed levels. By default,
+#'   deviations are estimated for all modeled ages except the youngest, reducing
+#'   confounding between \eqn{M} and recruitment.
+#' - `first_dev_year`: integer year at which to start estimating \eqn{M} deviations.
+#'   Defaults to the second modeled year if `NULL`. Anchoring the first year
+#'   to mean or assumed levels helps minimize confounding between early \eqn{M}
+#'   estimates, initial abundance, and catchability, leading to more stable estimation.
 #' - `mean_ages`: optional vector of ages to include in population weighted
 #'   average M (`M_bar`) calculations. All ages used if absent.
 #' @param obs_settings A list with elements:
@@ -334,13 +379,18 @@ make_dat <- function(
     cli::cli_warn("The first year would lack parameters with process set to 'off' and init_N0 set to FALSE in N_settings; forcing init_N0 to TRUE to estimate initial levels.")
   }
   if (!is.null(M_settings$age_breaks)) {
-    dat$M_settings$age_blocks <- cut_ages(dat$ages, dat$M_settings$age_breaks)
+    m_age_range <- range(dat$M_settings$age_breaks)
+    age_range <- range(dat$ages)
+    m_ages <- seq(max(age_range[1], m_age_range[1]), min(age_range[2], m_age_range[2]), by = 1)
+    dat$M_settings$age_blocks <- cut_ages(m_ages, dat$M_settings$age_breaks)
   } else {
-    dat$M_settings$age_blocks <- cut_ages(dat$ages, dat$ages)
+    dat$M_settings$age_blocks <- cut_ages(dat$ages[-1], range(dat$ages[-1]))
   }
   if (is.null(M_settings$first_dev_year)) {
     dat$M_settings$first_dev_year <- dat$years[2]
   }
+  dat$M_settings$years <- dat$years[dat$years >= dat$M_settings$first_dev_year]
+  dat$M_settings$age_block_start <- .split_cuts(levels(dat$M_settings$age_blocks))$start
 
   empty_mat <- matrix(NA, nrow = length(dat$years), ncol = length(dat$ages),
                       dimnames = list(year = dat$years, age = dat$ages))

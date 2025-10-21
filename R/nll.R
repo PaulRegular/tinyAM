@@ -252,8 +252,9 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   log_mu_M[] <- log_mu_assumed_m + drop(M_modmat %*% log_mu_m)
   M <- mu_M <- exp(log_mu_M)
   if (M_settings$process != "off") {
-    m_years <- rownames(log_m)
-    M[m_years, ] <- exp(log_mu_M[m_years, ] + log_m[, M_settings$age_blocks])
+    iy <- rownames(log_m)
+    ia <- names(M_settings$age_blocks)
+    M[iy, ia] <- exp(log_mu_M[iy, ia] + log_m[, M_settings$age_blocks])
   }
   log_M <- log(M)
   Z <- F + M
@@ -314,15 +315,15 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   ## M deviations ----
 
   if (M_settings$process != "off") {
-    m_ages  <- colnames(log_mu_M)[!duplicated(M_settings$age_blocks)]
-    eta_log_m <- log_m - log_mu_M[m_years, m_ages, drop = FALSE]
+    iy <- rownames(log_m)
+    ia  <- dat$M_settings$age_block_start
+    eta_log_m <- log_m - log_mu_M[iy, ia, drop = FALSE]
     sd_m <- exp(log_sd_m)
     phi  <- plogis(logit_phi_m)
     jnll <- jnll - dprocess_2d(eta_log_m, sd = sd_m, phi = phi)
-
     if (simulate) {
       eta_log_m <- rprocess_2d(nrow(log_m), ncol(log_m), sd = sd_m, phi = phi)
-      log_m <- log_mu_M[m_years, m_ages, drop = FALSE] + eta_log_m
+      log_m <- log_mu_M[iy, ia, drop = FALSE] + eta_log_m
     }
   }
 

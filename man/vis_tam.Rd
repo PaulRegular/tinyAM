@@ -36,7 +36,7 @@ M_dev <- update(
   N_dev,
   N_settings = list(process = "off", init_N0 = TRUE),
   M_settings = list(process = "approx_rw", assumption = ~ I(0.3),
-                    age_breaks = c(2, 14))
+                    age_breaks = c(3, 14))
 )
 
 ## Combine model objects into named list ----

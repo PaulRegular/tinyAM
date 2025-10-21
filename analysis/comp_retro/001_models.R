@@ -10,7 +10,7 @@ library(plotly)
 
 ## More age blocks appear to work better than fewer
 cod_obs <- tinyAM::cod_obs
-cod_obs$catch$F_a_block <- cut_ages(cod_obs$catch$age, c(0:14))
+cod_obs$catch$F_a_block <- cut_ages(cod_obs$catch$age, c(0:5, seq(6, 14, 2)))
 cod_obs$weight$collapse <- ifelse(cod_obs$weight$year %in% 1991:1994, 1, 0)
 
 sam_style1 <- fit_tam(
@@ -110,6 +110,23 @@ ncam_style3 <- update(
   )
 )
 ncam_style3$sdrep
+
+ncam_style4 <- update(
+  ncam_style1,
+  F_settings = list(
+    process = "approx_rw",
+    mu_form = NULL,
+    mean_ages = 5:14
+  ),
+  M_settings = list(
+    process = "ar1",
+    mu_form = NULL,
+    assumption = ~I(0.3),
+    age_breaks = c(2, 14),
+    mean_ages = 5:14
+  )
+)
+ncam_style4$sdrep
 
 vis_tam(
   list(

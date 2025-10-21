@@ -51,8 +51,15 @@ log-\eqn{M} offsets, e.g. \code{~ I(0.2)} or a column reference such as
 \code{~ log(M_assumption)} stored in the \code{obs$weight} data.frame.
 \item \code{age_breaks}: optional integer break points used by \code{\link[=cut_ages]{cut_ages()}} to
 define \code{age_blocks} for coupling \eqn{M} deviations across ages.
-\item \code{first_dev_year}: integer year at which to start estimating \eqn{M} deviations. Defaults
-to the second year if \code{NULL}.
+When a narrower set of \code{age_breaks} than modeled \code{ages} is provided,
+deviations are only estimated for ages within the specified range; ages
+outside this range are fixed to their mean or assumed levels. By default,
+deviations are estimated for all modeled ages except the youngest, reducing
+confounding between \eqn{M} and recruitment.
+\item \code{first_dev_year}: integer year at which to start estimating \eqn{M} deviations.
+Defaults to the second modeled year if \code{NULL}. Anchoring the first year
+to mean or assumed levels helps minimize confounding between early \eqn{M}
+estimates, initial abundance, and catchability, leading to more stable estimation.
 \item \code{mean_ages}: optional vector of ages to include in population weighted
 average M (\code{M_bar}) calculations. All ages used if absent.
 }}

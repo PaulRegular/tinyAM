@@ -74,26 +74,51 @@ test_that("make_dat infers years/ages when NULL and builds expected pieces", {
   expect_gt(ncol(dat$q_modmat), 0)
 })
 
-test_that("make_dat builds M age_blocks and handles M assumptions / mu_form", {
-  # with age_breaks => grouped age blocks for M deviations
-  dat1 <- make_dat(
+test_that("make_dat builds M age_blocks, respects defaults, and handles assumptions/mu_form correctly", {
+
+  # ---- Default behaviour: all ages except the youngest have deviations ----
+  dat_default <- make_dat(
     obs = cod_obs,
     ages = 2:14,
-    M_settings = list(process = "iid", mu_form = NULL, assumption = ~ I(0.3), age_breaks = seq(2, 14, 2))
+    M_settings = list(process = "iid", mu_form = NULL, assumption = ~ I(0.3))
   )
-  expect_true("age_blocks" %in% names(dat1$M_settings))
-  expect_s3_class(dat1$M_settings$age_blocks, "factor")
+  expect_true("age_blocks" %in% names(dat_default$M_settings))
+  expect_s3_class(dat_default$M_settings$age_blocks, "factor")
+  expect_equal(levels(dat_default$M_settings$age_blocks), "3-14")
+  expect_equal(dat_default$M_settings$first_dev_year, dat_default$years[2])
 
-  # If mu_form + assumption => intercept dropped (warning) and M_modmat has no intercept
+  # ---- Custom age_breaks narrower than modeled ages ----
+  dat_agebreaks <- make_dat(
+    obs = cod_obs,
+    ages = 2:14,
+    M_settings = list(process = "iid", mu_form = NULL, assumption = ~ I(0.3),
+                      age_breaks = seq(4, 10, 2))
+  )
+  # Deviations only estimated within the 4–10 range
+  age_levels <- as.integer(names(dat_agebreaks$M_settings$age_blocks))
+  expect_true(min(age_levels) >= 4 && max(age_levels) <= 10)
+
+  # ---- Custom first_dev_year ----
+  dat_firstdev <- make_dat(
+    obs = cod_obs,
+    ages = 2:14,
+    years = 1980:2000,
+    M_settings = list(process = "iid", mu_form = NULL, assumption = ~ I(0.3),
+                      first_dev_year = 1985)
+  )
+  expect_true(all(dat_firstdev$M_settings$years >= 1985))
+  expect_equal(dat_firstdev$M_settings$first_dev_year, 1985)
+
+  # ---- mu_form + assumption => intercept dropped (warning) ----
   expect_warning(
-    dat2 <- make_dat(
+    dat_intercept <- make_dat(
       obs = cod_obs,
-      M_settings = list(process = "off", mu_form = ~ age, assumption = ~ I(0.2)) # default mu_form carries intercept
+      M_settings = list(process = "off", mu_form = ~ age, assumption = ~ I(0.2))
     ),
     "Dropping intercept term.*assumed levels"
   )
-  expect_true(is.matrix(dat2$M_modmat))
-  expect_false("(Intercept)" %in% colnames(dat2$M_modmat))
+  expect_true(is.matrix(dat_intercept$M_modmat))
+  expect_false("(Intercept)" %in% colnames(dat_intercept$M_modmat))
 })
 
 test_that("make_dat stops if neither M assumption nor mu_form is provided", {
