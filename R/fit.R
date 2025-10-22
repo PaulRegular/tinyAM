@@ -228,6 +228,8 @@ fit_tam <- function(
 #'
 #' @param fit A fitted TAM object as returned by [fit_tam()].
 #' @param folds Integer; number of terminal peels (default `2`).
+#' @param start_from_fit Logical; use terminal parameter estimates as starting
+#'    values for retrospective fits?
 #' @param hindcast Logical; fit one-step-ahead projections? If `TRUE`,
 #'    `proj_settings` will be set to `list(n_proj = 1, n_mean = 1, F_mult = 1)`
 #'    to generate a one year status-quo F projection.
@@ -280,7 +282,7 @@ fit_tam <- function(
 fit_retro <- function(
     fit,
     folds = 2,
-    start_from_fit = TRUE,
+    start_from_fit = FALSE,
     hindcast = FALSE,
     grad_tol = 1e-3,
     progress = TRUE,

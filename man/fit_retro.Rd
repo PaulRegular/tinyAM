@@ -7,7 +7,7 @@
 fit_retro(
   fit,
   folds = 2,
-  start_from_fit = TRUE,
+  start_from_fit = FALSE,
   hindcast = FALSE,
   grad_tol = 0.001,
   progress = TRUE,
@@ -18,6 +18,9 @@ fit_retro(
 \item{fit}{A fitted TAM object as returned by \code{\link[=fit_tam]{fit_tam()}}.}
 
 \item{folds}{Integer; number of terminal peels (default \code{2}).}
+
+\item{start_from_fit}{Logical; use terminal parameter estimates as starting
+values for retrospective fits?}
 
 \item{hindcast}{Logical; fit one-step-ahead projections? If \code{TRUE},
 \code{proj_settings} will be set to \code{list(n_proj = 1, n_mean = 1, F_mult = 1)}
