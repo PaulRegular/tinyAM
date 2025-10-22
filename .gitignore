@@ -51,4 +51,6 @@ rsconnect/
 # Output in the analysis folder
 *.html
 analysis/*.html
+*.rds
+analysis/*.rds
 

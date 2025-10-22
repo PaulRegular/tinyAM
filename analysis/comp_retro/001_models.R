@@ -1,7 +1,4 @@
 
-## Exploratory analysis of retro patterns of a model with cohort deviations or
-## M deviations
-
 library(RTMB)
 library(tinyAM)
 library(plotly)
@@ -54,6 +51,16 @@ sam_style2 <- update(
   )
 )
 sam_style2$sdrep
+
+sam_style3 <- update(
+  sam_style1,
+  N_settings = list(
+    process = "ar1",
+    init_N0 = TRUE
+  )
+)
+sam_style3$sdrep
+plot_trend(sam_style3$pop$ssb)
 
 ncam_style1 <- update(
   sam_style1,
@@ -145,17 +152,22 @@ ncam_style5 <- update(
 )
 ncam_style5$sdrep
 
+
+models <- list(
+  sam_style1 = sam_style1,
+  sam_style2 = sam_style2,
+  sam_style3 = sam_style3,
+  ncam_style1 = ncam_style1,
+  ncam_style2 = ncam_style2,
+  ncam_style3 = ncam_style3,
+  ncam_style4 = ncam_style4,
+  ncam_style5 = ncam_style5
+)
+saveRDS(models, file = "analysis/comp_retro/001_models.rds")
+
 vis_tam(
-  list(
-    sam_style1 = sam_style1,
-    sam_style2 = sam_style2,
-    ncam_style1 = ncam_style1,
-    ncam_style2 = ncam_style2,
-    ncam_style3 = ncam_style3,
-    ncam_style4 = ncam_style4,
-    ncam_style5 = ncam_style5
-  ),
-  output_file = "analysis/comp_retro/001_models.html"
+  models,
+  output_file = "analysis/comp_retro/dashboards/001_models.html"
 )
 
 

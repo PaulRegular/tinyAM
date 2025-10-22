@@ -1,4 +1,67 @@
 
+#' Merge user-supplied starting values into parameter list
+#'
+#' @description
+#' Internal helper that overlays user-provided starting values onto the default
+#' parameter list from `make_par(dat)`. Only matching names are updated.
+#'
+#' @details
+#' Scalars are replaced directly, vectors align by names (if present) or by
+#' position, and matrices align by row/column names when available, otherwise
+#' by shape. Non-matching elements remain unchanged. This allows reusing
+#' estimated parameters from previous fits as starting values for new runs or
+#' retros, ensuring consistent initialization without manual trimming.
+#'
+#' @param par0 Base parameter list (usually from `make_par(dat)`).
+#' @param start List of user-supplied starting values with matching structure.
+#'
+#' @return A parameter list like `par0`, updated with matching values from
+#'   `start`.
+#'
+#' @keywords internal
+#' @noRd
+
+.merge_start_par <- function(par0, start) {
+  for (nm in intersect(names(par0), names(start))) {
+    x0 <- par0[[nm]]
+    xs <- start[[nm]]
+
+    # Scalars
+    if (is.numeric(x0) && length(dim(x0)) == 0 && length(x0) == 1L) {
+      if (is.numeric(xs) && length(xs) == 1L) par0[[nm]] <- xs
+      next
+    }
+
+    # Vectors with names
+    if (is.null(dim(x0))) {
+      if (!is.null(names(x0)) && !is.null(names(xs))) {
+        ii <- intersect(names(x0), names(xs))
+        x0[ii] <- xs[ii]
+      } else if (length(xs) == length(x0)) {
+        x0[] <- xs
+      }
+      par0[[nm]] <- x0
+      next
+    }
+
+    # Matrices: align by dimnames when possible, else recycle shape if equal
+    if (is.matrix(x0)) {
+      rnm <- rownames(x0); cnm <- colnames(x0)
+      if (!is.null(dimnames(x0)) && !is.null(dimnames(xs))) {
+        rr <- intersect(rnm, rownames(xs))
+        cc <- intersect(cnm, colnames(xs))
+        if (length(rr) && length(cc)) x0[rr, cc] <- xs[rr, cc]
+      } else if (all(dim(xs) == dim(x0))) {
+        x0[,] <- xs
+      }
+      par0[[nm]] <- x0
+      next
+    }
+  }
+  par0
+}
+
+
 #' Fit a Tiny Assessment Model (TAM)
 #'
 #' @description
@@ -19,12 +82,16 @@
 #'
 #' @param obs A named list of tidy observation tables (e.g., `catch`, `index`,
 #'   `weight`, `maturity`). See [cod_obs] for an example.
-#' @param interval Level in `(0, 1)` to use to generate confidence
-#'                 intervals, where applicable; default `0.95.`
+#' @param interval Level in `(0, 1)` to use to generate confidence intervals,
+#'   where applicable; default `0.95.`
 #' @param silent Logical; if `TRUE`, disables tracing information.
 #' @param add_osa_res Logical; add one-step-ahead residuals? Hard wired to
-#'                    apply the `"oneStepGaussianOffMode"` method.
-#'                    See [RTMB::oneStepPredict()] for details.
+#'   apply the `"oneStepGaussianOffMode"` method. See [RTMB::oneStepPredict()]
+#'   for details.
+#' @param start_par Optional list of starting parameter values, matching the
+#'   structure returned by [make_par()]. Useful for warm starts or retrospective
+#'   runs where parameter estimates from a previous fit are reused to improve
+#'   convergence and speed. Non-matching or missing entries are ignored.
 #' @inheritDotParams make_dat
 #'
 #' @return
@@ -78,6 +145,7 @@ fit_tam <- function(
     interval = 0.95,
     add_osa_res = FALSE,
     silent = FALSE,
+    start_par = NULL,
     ...
 ) {
 
@@ -85,6 +153,9 @@ fit_tam <- function(
 
   dat <- make_dat(obs, ...)
   par <- make_par(dat)
+  if (!is.null(start_par)) {
+    par <- .merge_start_par(par, start_par)
+  }
 
   ran <- c("log_f", "log_r")
   if (dat$obs_settings$fill_missing) {
@@ -158,12 +229,10 @@ fit_tam <- function(
 #' @param fit A fitted TAM object as returned by [fit_tam()].
 #' @param folds Integer; number of terminal peels (default `2`).
 #' @param hindcast Logical; fit one-step-ahead projections? If `TRUE`,
-#'                 `proj_settings` will be set to
-#'                 `list(n_proj = 1, n_mean = 1, F_mult = 1)` to generate a one
-#'                 year status-quo F projection.
+#'    `proj_settings` will be set to `list(n_proj = 1, n_mean = 1, F_mult = 1)`
+#'    to generate a one year status-quo F projection.
 #' @param grad_tol Numeric tolerance for `max|grad|`. Default `1e-3`. Output
-#'                 from retro fits that exceed this tolerance are dropped (see
-#'                 [check_convergence()]).
+#'    from retro fits that exceed this tolerance are dropped (see [check_convergence()]).
 #' @param progress Logical; show progress bar using [progressr::with_progress()].
 #' @param globals Character vector naming global objects to supply to the workers.
 #'
@@ -211,6 +280,7 @@ fit_tam <- function(
 fit_retro <- function(
     fit,
     folds = 2,
+    start_from_fit = TRUE,
     hindcast = FALSE,
     grad_tol = 1e-3,
     progress = TRUE,
@@ -219,6 +289,11 @@ fit_retro <- function(
   min_year <- min(fit$dat$years)
   max_year <- max(fit$dat$years)
   retro_years <- seq(max_year - folds, max_year)
+  if (start_from_fit) {
+    start_par <- as.list(fit$sdrep, "Estimate")
+  } else {
+    start_par <- NULL
+  }
 
   if (hindcast) {
     fit$call$proj_settings <- list(n_proj = 1, n_mean = 1, F_mult = 1)
@@ -228,7 +303,15 @@ fit_retro <- function(
     update_progress <- progressr::progressor(steps = length(retro_years))
     retro <- furrr::future_map(seq_along(retro_years), function(i) {
       r <- suppressWarnings(
-        try(stats::update(fit, years = min_year:retro_years[i], silent = TRUE), silent = TRUE)
+        try(
+          stats::update(
+            fit,
+            years = min_year:retro_years[i],
+            start_par = start_par,
+            silent = TRUE
+          ),
+          silent = TRUE
+        )
       )
       if (inherits(r, "try-error")) {
         update_progress()

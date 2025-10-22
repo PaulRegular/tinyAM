@@ -7,6 +7,7 @@
 fit_retro(
   fit,
   folds = 2,
+  start_from_fit = TRUE,
   hindcast = FALSE,
   grad_tol = 0.001,
   progress = TRUE,
@@ -19,13 +20,11 @@ fit_retro(
 \item{folds}{Integer; number of terminal peels (default \code{2}).}
 
 \item{hindcast}{Logical; fit one-step-ahead projections? If \code{TRUE},
-\code{proj_settings} will be set to
-\code{list(n_proj = 1, n_mean = 1, F_mult = 1)} to generate a one
-year status-quo F projection.}
+\code{proj_settings} will be set to \code{list(n_proj = 1, n_mean = 1, F_mult = 1)}
+to generate a one year status-quo F projection.}
 
 \item{grad_tol}{Numeric tolerance for \verb{max|grad|}. Default \code{1e-3}. Output
-from retro fits that exceed this tolerance are dropped (see
-\code{\link[=check_convergence]{check_convergence()}}).}
+from retro fits that exceed this tolerance are dropped (see \code{\link[=check_convergence]{check_convergence()}}).}
 
 \item{progress}{Logical; show progress bar using \code{\link[progressr:with_progress]{progressr::with_progress()}}.}
 

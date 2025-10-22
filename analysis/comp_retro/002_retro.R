@@ -1,7 +1,33 @@
 
-source("analysis/comp_retro/001_models.R")
+library(tinyAM)
+
+# source("analysis/comp_retro/001_models.R")
+models <- readRDS("analysis/comp_retro/001_models.rds")
 
 future::plan(future::multisession, workers = 10)
+
+retros <- lapply(names(models), function(nm) {
+  try(fit_retro(models[[nm]], folds = 20, hindcast = TRUE, grad_tol = 1e-2))
+})
+
+saveRDS(retros, file = "analysis/comp_retro/002_retros.rds")
+
+
+
+
+
+
+
+
+
+
+
+retros <- vector("list", length(models))
+names(retros) <-
+for (nm in names(models)) {
+  retros[[nm]] <- fit_retro(models[[nm]])
+}
+
 
 ncam_style_retros <- fit_retro(ncam_style, folds = 20, hindcast = TRUE)
 vis_tam(ncam_style_retros$fits, output_file = "analysis/comp_retro/003_ncam_style_retros.html")
