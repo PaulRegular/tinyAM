@@ -47,7 +47,8 @@ plot_par(data, ...)
 
 \item{add_intervals}{Logical; if \code{TRUE}, show confidence intervals when \code{lwr} and \code{upr} are present.}
 
-\item{add_buttons}{Logical; if \code{TRUE}, include buttons to toggle y-axis between linear/log.}
+\item{add_buttons}{Logical; if \code{TRUE}, include buttons to toggle y-axis between Linear / Log and, if
+applicable, Show CI / Hide CI.}
 
 \item{...}{Additional arguments to pass to \code{\link[plotly:plot_ly]{plotly::plot_ly()}} such as \code{color}, \code{colors}, etc.}
 

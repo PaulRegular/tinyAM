@@ -60,7 +60,6 @@ sam_style3 <- update(
   )
 )
 sam_style3$sdrep
-plot_trend(sam_style3$pop$ssb)
 
 ncam_style1 <- update(
   sam_style1,

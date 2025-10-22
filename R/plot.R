@@ -1,11 +1,11 @@
 
-.buttons <- list(
+.log_linear_buttons <- list(
   list(
     type = "buttons",
-    y = 1, x = 0, pad = list(r = 75), xanchor = "right", yanchor = "top",
+    y = 1, x = 0, pad = list(r = 60), xanchor = "right", yanchor = "top",
     buttons = list(
-      list(method = "relayout", args = list("yaxis.type", "linear"), label = "linear"),
-      list(method = "relayout", args = list("yaxis.type", "log"),    label = "log")
+      list(method = "relayout", args = list("yaxis.type", "linear"), label = "Linear"),
+      list(method = "relayout", args = list("yaxis.type", "log"),    label = "Log")
     )
   )
 )
@@ -29,7 +29,8 @@
 #' @param zlab Label for the colorbar in heatmaps.
 #' @param title Plot title.
 #' @param add_intervals Logical; if `TRUE`, show confidence intervals when `lwr` and `upr` are present.
-#' @param add_buttons Logical; if `TRUE`, include buttons to toggle y-axis between linear/log.
+#' @param add_buttons Logical; if `TRUE`, include buttons to toggle y-axis between Linear / Log and, if
+#'   applicable, Show CI / Hide CI.
 #' @param ... Additional arguments to pass to [plotly::plot_ly()] such as `color`, `colors`, etc.
 #'
 #' @return A Plotly object.
@@ -89,14 +90,19 @@ plot_trend <- function(
     args$color <- I('#1f77b4')
     args$showlegend <- FALSE
   }
-  p <- do.call(plot_ly, c(list(data = data, x = x), args))
+
+  p <- do.call(plotly::plot_ly, c(list(data = data, x = x), args))
   max_y <- max(model.frame(y, data = data), na.rm = TRUE) * 1.05
 
-  if (add_intervals && all(c("lwr", "upr") %in% names(data))) {
+  has_ci <- add_intervals && all(c("lwr", "upr") %in% names(data))
+  if (has_ci) {
     max_y <- max(data$upr, na.rm = TRUE) * 1.05
-    p <- p |> add_ribbons(ymin = ~lwr, ymax = ~upr,
-                          opacity = 0.3, line = list(width = 0),
-                          showlegend = FALSE)
+    p <- p |>
+      plotly::add_ribbons(
+        ymin = ~lwr, ymax = ~upr,
+        opacity = 0.3, line = list(width = 0),
+        showlegend = FALSE
+      )
   }
 
   shapes <- NULL
@@ -105,28 +111,68 @@ plot_trend <- function(
     if (is.finite(max_obs_year)) {
       shapes <- list(list(
         type  = "line",
-        x0    = max_obs_year,
-        x1    = max_obs_year,
-        y0    = 0,
-        y1    = 1,
-        yref  = "paper",
+        x0    = max_obs_year, x1 = max_obs_year,
+        y0    = 0, y1 = 1, yref = "paper",
         line  = list(dash = "dot", width = 1, color = "black")
       ))
     }
   }
 
-  buttons <- if (add_buttons) .buttons else NULL
-
-  p |>
-    add_lines(y = y) |>
-    layout(
+  p <- p |>
+    plotly::add_lines(y = y) |>
+    plotly::layout(
       title = title,
       xaxis = list(title = xlab),
       yaxis = list(title = ylab, range = c(0, max_y)),
-      updatemenus = buttons,
       shapes = shapes
     )
+
+  if (add_buttons) {
+    pb <- plotly::plotly_build(p)
+
+    # find ribbon traces (CI)
+    rib_idx <- which(vapply(
+      pb$x$data,
+      function(tr) identical(tr$type, "scatter") && !is.null(tr$fill) && nzchar(tr$fill),
+      logical(1)
+    ))
+
+    menus <- .log_linear_buttons
+
+    if (length(rib_idx)) {
+      idx0 <- as.integer(rib_idx - 1L)
+      menus <- c(
+        menus,
+        list(
+          list(
+            type = "buttons",
+            y = 1, x = 0, pad = list(r = 60, t = 75),
+            xanchor = "right", yanchor = "top",
+            xanchor = "left", yanchor = "bottom",
+            buttons = list(
+              list(
+                label = "Hide CI",
+                method = "restyle",
+                args = list(list(visible = FALSE), idx0)
+              ),
+              list(
+                label = "Show CI",
+                method = "restyle",
+                args = list(list(visible = TRUE), idx0)
+              )
+            )
+          )
+        )
+      )
+    }
+
+    pb$x$layout$updatemenus <- menus
+    return(pb)
+  }
+
+  p
 }
+
 
 #' @rdname plot_tam
 #' @export
@@ -189,7 +235,7 @@ plot_obs_pred <- function(
 
   p <- do.call(plot_ly, c(list(data = data, x = ~year), args))
 
-  buttons <- if (add_buttons) .buttons else NULL
+  buttons <- if (add_buttons) .log_linear_buttons else NULL
 
   p |>
     add_markers(

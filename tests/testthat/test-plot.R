@@ -46,10 +46,13 @@ test_that("plot_trend handles confidence intervals and log buttons", {
   expect_true(any(trace_fills(p) == "toself"))
 
   # updatemenus should include yaxis.type toggle
-  um <- p$x$layoutAttrs[[1]]$updatemenus[[1]]$buttons
-  btn_args <- unlist(lapply(um, `[[`, "args"), recursive = TRUE, use.names = FALSE)
+  umenus <- p$x$layout$updatemenus %||% p$x$layoutAttrs[[1]]$updatemenus
+  expect_true(!is.null(umenus))
+
+  btn_args <- unlist(lapply(umenus[[1]]$buttons, `[[`, "args"), recursive = TRUE, use.names = FALSE)
   expect_true(any(grepl("yaxis.type", as.character(btn_args), fixed = TRUE)))
 })
+
 
 ## plot_heatmap ----
 
