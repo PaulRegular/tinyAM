@@ -3,6 +3,7 @@
 #'
 #' @param fits         A **named list** of fitted TAM objects (e.g., `fits` list returned by
 #'                     [fit_retro()]). Names are used to label models.
+#' @inheritParams tidy_tam
 #' @param output_file  Name of file to export using [rmarkdown::render()].
 #'                     If `NULL`, a temporary HTML file will be rendered and opened
 #'                     automatically in your default browser.
@@ -20,7 +21,7 @@
 #' @importFrom utils browseURL
 #'
 #' @export
-vis_tam <- function(fits = NULL, output_file = NULL, open_file = TRUE, ...) {
+vis_tam <- function(fits = NULL, interval = 0.95, output_file = NULL, open_file = TRUE, ...) {
 
   pkg <- c("knitr", "rmarkdown", "flexdashboard")
   missing <- pkg[!vapply(pkg, requireNamespace, logical(1), quietly = TRUE)]
@@ -38,6 +39,7 @@ vis_tam <- function(fits = NULL, output_file = NULL, open_file = TRUE, ...) {
   rmd_file <- system.file("rmd", "vis_tam.Rmd", package = "tinyAM")
   rmd_env <- new.env(parent = globalenv())
   rmd_env$fits <- fits
+  rmd_env$interval <- interval
 
   if (is.null(output_file)) {
     output_file <- tempfile(pattern = "vis_tam_", fileext = ".html")

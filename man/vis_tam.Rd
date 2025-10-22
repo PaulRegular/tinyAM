@@ -4,11 +4,19 @@
 \alias{vis_tam}
 \title{Make a flexdashboard for visualizing model fits}
 \usage{
-vis_tam(fits = NULL, output_file = NULL, open_file = TRUE, ...)
+vis_tam(
+  fits = NULL,
+  interval = 0.95,
+  output_file = NULL,
+  open_file = TRUE,
+  ...
+)
 }
 \arguments{
 \item{fits}{A \strong{named list} of fitted TAM objects (e.g., \code{fits} list returned by
 \code{\link[=fit_retro]{fit_retro()}}). Names are used to label models.}
+
+\item{interval}{Confidence level passed to \code{\link[=tidy_pop]{tidy_pop()}} and \code{\link[=tidy_par]{tidy_par()}} for interval construction. Default \code{0.95}.}
 
 \item{output_file}{Name of file to export using \code{\link[rmarkdown:render]{rmarkdown::render()}}.
 If \code{NULL}, a temporary HTML file will be rendered and opened

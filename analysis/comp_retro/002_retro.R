@@ -17,6 +17,7 @@ for (nm in names(retros)) {
   if (!inherits(retros[[nm]], "try-error")) {
     vis_tam(
       retros[[nm]]$fits,
+      interval = 0.9,
       output_file = paste0("analysis/comp_retro/outputs/002_retro_", nm, ".html"),
       open_file = FALSE
     )

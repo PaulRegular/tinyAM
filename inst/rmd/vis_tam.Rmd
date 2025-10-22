@@ -31,7 +31,7 @@ knitr::opts_chunk$set(cache = FALSE)
 
 ```{r data, include=FALSE}
 
-tabs <- tidy_tam(model_list = fits, label = "model", label_type = "factor")
+tabs <- tidy_tam(model_list = fits, label = "model", label_type = "factor", interval = interval)
 obs_pred <- tabs$obs_pred
 pop <- tabs$pop
 fixed_par <- tabs$fixed_par
