@@ -163,11 +163,11 @@ models <- list(
   ncam_style4 = ncam_style4,
   ncam_style5 = ncam_style5
 )
-saveRDS(models, file = "analysis/comp_retro/001_models.rds")
+saveRDS(models, file = "analysis/comp_retro/outputs/001_models.rds")
 
 vis_tam(
   models,
-  output_file = "analysis/comp_retro/dashboards/001_models.html"
+  output_file = "analysis/comp_retro/outputs/001_models.html"
 )
 
 
