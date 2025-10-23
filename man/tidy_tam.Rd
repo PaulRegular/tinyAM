@@ -41,9 +41,9 @@ A named list with four elements:
 \description{
 Builds tidy, stacked tables from one or more fitted TAM models. For each model it collects:
 \itemize{
-\item observation diagnostics via \code{\link[=tidy_obs_pred]{tidy_obs_pred()}},
-\item population summaries via \code{\link[=tidy_pop]{tidy_pop()}} (with confidence intervals), and
-\item parameter summaries via \code{\link[=tidy_par]{tidy_par()}} (fixed and random effects),
+\item observation diagnostics from the model's \code{$obs_pred} component (falling back to \code{\link[=tidy_obs_pred]{tidy_obs_pred()}} when absent),
+\item population summaries from \code{$pop} (falling back to \code{\link[=tidy_pop]{tidy_pop()}} when absent), and
+\item parameter summaries from \code{$fixed_par}/\code{$random_par} (falling back to \code{\link[=tidy_par]{tidy_par()}} when absent),
 }
 
 then stacks \strong{per component} across models (e.g., all \code{"catch"} tables together; all \code{"N"}
@@ -60,10 +60,11 @@ tables together; all fixed parameters together; each random-effect block togethe
 Names (from \code{...} or \code{model_list}) are passed through \code{\link[utils:type.convert]{utils::type.convert()}} with \code{as.is = TRUE},
 so numeric-like labels (e.g. \code{"2010"}, \code{"2011"}) become numeric.
 
-Only components present in \strong{all} models are stacked (intersection of names), ensuring column
-compatibility for base \code{rbind()}. Parameter summaries are stacked separately for \strong{fixed} and
-\strong{random} effects: fixed effects in a single data frame; random effects as a named list of data
-frames (one per random-effect block, e.g. \code{"log_f"}, \code{"log_r"}, \code{"missing"}, …).
+Components present in any model are stacked; columns missing from particular models are filled with
+\code{NA} values so diagnostics like one-step-ahead residuals survive stacking. Parameter summaries are
+stacked separately for \strong{fixed} and \strong{random} effects: fixed effects in a single data frame; random
+effects as a named list of data frames (one per random-effect block, e.g. \code{"log_f"}, \code{"log_r"},
+\code{"missing"}, …).
 }
 \examples{
 # Single model: no label column added

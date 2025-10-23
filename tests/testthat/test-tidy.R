@@ -275,6 +275,18 @@ test_that("stack_list works with unnamed lists using positional ids", {
   expect_identical(out$age, 1:4)
 })
 
+test_that("stack_list fills missing columns with NA", {
+  x <- list(
+    A = data.frame(metric = "catch", value = 1),
+    B = data.frame(metric = "catch", value = 2, extra = "x")
+  )
+
+  out <- stack_list(x)
+  expect_true("extra" %in% names(out))
+  expect_true(all(is.na(out$extra[out$model == "A"])))
+  expect_identical(out$extra[out$model == "B"], "x")
+})
+
 
 ## stack_nested ----
 
@@ -450,5 +462,23 @@ test_that("tidy_tam: single model returns fixed_par and random_par without label
   expect_false("model" %in% names(out$fixed_par))
   expect_true(is.list(out$random_par))
   expect_true(all(vapply(out$random_par, is.data.frame, logical(1))))
+})
+
+test_that("tidy_tam preserves precomputed diagnostics (e.g., OSA residuals)", {
+  fit_with_osa <- fit
+  fit_with_osa$obs_pred$catch$osa_res <- seq_len(nrow(fit_with_osa$obs_pred$catch))
+  fit_with_osa$obs_pred$index$osa_res <- seq_len(nrow(fit_with_osa$obs_pred$index))
+
+  single <- tidy_tam(fit_with_osa)
+  expect_true("osa_res" %in% names(single$obs_pred$catch))
+  expect_identical(single$obs_pred$catch$osa_res, seq_len(nrow(fit_with_osa$obs_pred$catch)))
+
+  stacked <- tidy_tam(fit_with_osa, fit)
+  expect_true("osa_res" %in% names(stacked$obs_pred$catch))
+  expect_identical(
+    stacked$obs_pred$catch$osa_res[stacked$obs_pred$catch$model == "fit_with_osa"],
+    seq_len(nrow(fit_with_osa$obs_pred$catch))
+  )
+  expect_true(all(is.na(stacked$obs_pred$catch$osa_res[stacked$obs_pred$catch$model == "fit"])))
 })
 
