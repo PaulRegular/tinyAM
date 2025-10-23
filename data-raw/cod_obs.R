@@ -11,7 +11,7 @@ catch$sd_obs_block <- "catch"
 
 # Label pre-moratorium, limited fishing gear + rec, closed, stewardship + rec / post-moratorium blocks
 catch$F_y_block <- cut_years(catch$year, c(min(catch$year), 1992, 1998, 2002, 2006, max(catch$year)))
-catch$F_a_block <- cut_ages(catch$age, seq(min(catch$age), max(catch$age), 2))
+catch$F_a_block <- cut_ages(catch$age, seq(min(catch$age), max(catch$age), 1))
 
 index <- inputs$index |>
   subset(select = c("year", "age", "index"))

@@ -5,9 +5,7 @@ library(plotly)
 
 ## Terminal fit ----
 
-## More age blocks appear to work better than fewer
 cod_obs <- tinyAM::cod_obs
-cod_obs$catch$F_a_block <- cut_ages(cod_obs$catch$age, 0:14)
 cod_obs$weight$collapse <- ifelse(cod_obs$weight$year %in% 1991:1994, 1, 0)
 
 sam_style1 <- fit_tam(
