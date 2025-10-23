@@ -1,5 +1,6 @@
 
 library(tinyAM)
+library(furrr)
 
 # source("analysis/comp_retro/001_models.R")
 models <- readRDS("analysis/comp_retro/outputs/001_models.rds")
@@ -13,7 +14,7 @@ names(retros) <- names(models)
 
 saveRDS(retros, file = "analysis/comp_retro/outputs/002_retros.rds")
 
-for (nm in names(retros)) {
+lapply(names(retros), function(nm) {
   if (!inherits(retros[[nm]], "try-error")) {
     vis_tam(
       retros[[nm]]$fits,
@@ -22,7 +23,18 @@ for (nm in names(retros)) {
       open_file = FALSE
     )
   }
-}
+})
 
+sapply(names(retros), function(nm) retros[[nm]]$hindcast_rmse) |>
+  sort()
+
+sapply(names(retros), function(nm) (retros[[nm]]$mohns_rho |> subset(metric == "ssb"))$rho) |>
+  sort()
+sapply(names(retros), function(nm) (retros[[nm]]$mohns_rho |> subset(metric == "recruitment"))$rho) |>
+  sort()
+
+N_rho <- lapply(names(retros), function(nm) (retros[[nm]]$mohns_rho |> subset(metric == "N")))
+names(N_rho) <- names(retros)
+stack_list(N_rho)
 
 

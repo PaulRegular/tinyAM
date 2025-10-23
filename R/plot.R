@@ -128,7 +128,11 @@ plot_trend <- function(
     )
 
   if (add_buttons) {
-    data_traces <- p$x$data
+    pb <- plotly::plotly_build(p)
+    data_traces <- pb$x$data
+    if (is.null(data_traces)) {
+      data_traces <- list()
+    }
 
     # find ribbon traces (CI)
     rib_idx <- which(vapply(
@@ -141,35 +145,32 @@ plot_trend <- function(
 
     if (length(rib_idx)) {
       idx0 <- as.integer(rib_idx - 1L)
-      menus <- c(
-        menus,
-        list(
+      ci_menu <- list(
+        type = "buttons",
+        y = 1, x = 0, pad = list(r = 60, t = 75), xanchor = "right", yanchor = "top",
+        buttons = list(
           list(
-            type = "buttons",
-            y = 1, x = 0, pad = list(r = 60, t = 75),
-            xanchor = "right", yanchor = "top",
-            xanchor = "left", yanchor = "bottom",
-            buttons = list(
-              list(
-                label = "Hide CI",
-                method = "restyle",
-                args = list(list(visible = FALSE), idx0)
-              ),
-              list(
-                label = "Show CI",
-                method = "restyle",
-                args = list(list(visible = TRUE), idx0)
-              )
-            )
+            label = "Show CI",
+            method = "restyle",
+            args = list(list(visible = rep(TRUE, length(idx0))), idx0)
+          ),
+          list(
+            label = "Hide CI",
+            method = "restyle",
+            args = list(list(visible = rep(FALSE, length(idx0))), idx0)
           )
         )
       )
+      menus <- c(menus, list(ci_menu))
     }
 
     if (is.null(p$x$layout)) {
       p$x$layout <- list()
     }
     p$x$layout$updatemenus <- menus
+    if (!is.null(pb$x$frames)) {
+      p$x$frames <- pb$x$frames
+    }
   }
 
   p

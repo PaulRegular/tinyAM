@@ -127,8 +127,7 @@ saveRDS(models, file = "analysis/comp_retro/outputs/001_models.rds")
 
 vis_tam(
   models,
-  output_file = "analysis/comp_retro/outputs/001_models.html",
-  interval = 0.9
+  output_file = "analysis/comp_retro/outputs/001_models.html"
 )
 
 

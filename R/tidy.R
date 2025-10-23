@@ -364,6 +364,70 @@ tidy_par <- function(fit, interval = 0.95) {
 }
 
 
+#' Stack a list of tables with an identifier column
+#'
+#' @description
+#' Convenience wrapper around [base::rbind()] for stacking a (named) list of
+#' data frames while recording the source list element in a label column. When
+#' the list is named, the names are used as labels; otherwise, integer indices
+#' (`"1"`, `"2"`, …) are used.
+#'
+#' @param x A list of data frames (or objects coercible to data frames) with the
+#'   same column structure.
+#' @param label A character scalar giving the identifier column name to add. Set
+#'   to `NULL` to omit the identifier column. Default is `"model"`.
+#' @param label_type Desired type for the identifier column: automatic
+#'   conversion via [utils::type.convert()] (`"auto"`, the default), or
+#'   explicit coercion to `"numeric"`, `"character"`, or `"factor"`.
+#'
+#' @return A single data frame produced by row-binding the list elements. If
+#'   `label` is not `NULL`, the identifier column is the first column in the
+#'   output.
+#'
+#' @examples
+#' lst <- list(
+#'   retro_1 = data.frame(age = 2:4, rho = runif(3)),
+#'   retro_2 = data.frame(age = 2:4, rho = runif(3))
+#' )
+#' stack_list(lst, label = "retro")
+#'
+#' @export
+stack_list <- function(x, label = "model",
+                       label_type = c("auto", "numeric", "character", "factor")) {
+  label_type <- match.arg(label_type)
+
+  if (!length(x)) {
+    stop("`x` must contain at least one element.", call. = FALSE)
+  }
+
+  ids <- names(x)
+  if (is.null(ids)) ids <- as.character(seq_along(x))
+
+  pieces <- lapply(seq_along(x), function(i) {
+    df <- x[[i]]
+    if (!is.data.frame(df)) df <- as.data.frame(df)
+    if (!is.null(label)) df[[label]] <- ids[[i]]
+    df
+  })
+
+  out <- do.call(rbind, pieces)
+  rownames(out) <- NULL
+
+  if (!is.null(label)) {
+    out[[label]] <- switch(label_type,
+                           auto      = utils::type.convert(out[[label]], as.is = TRUE),
+                           numeric   = suppressWarnings(as.numeric(out[[label]])),
+                           character = as.character(out[[label]]),
+                           factor    = factor(out[[label]], levels = ids)
+    )
+    ord <- c(label, setdiff(names(out), label))
+    out <- out[, ord, drop = FALSE]
+  }
+
+  out
+}
+
+
 #' Stack identically named subtables from a nested list
 #'
 #' @param x A named list of results (e.g. sims or models), each containing

@@ -247,6 +247,35 @@ test_that("tidy_par preserves coefficient names for named vectors and dims for m
 })
 
 
+## stack_list ----
+
+test_that("stack_list adds label column first and type.converts labels", {
+  x <- list(`2023` = data.frame(age = 2:4, rho = seq_len(3)),
+            `2024` = data.frame(age = 2:4, rho = seq_len(3) * 10))
+
+  out <- stack_list(x, label = "retro", label_type = "auto")
+  expect_identical(names(out), c("retro", "age", "rho"))
+  expect_true(is.numeric(out$retro))
+  expect_equal(out$retro, rep(c(2023, 2024), each = 3))
+})
+
+test_that("stack_list supports explicit label_type coercions", {
+  x <- list(A = data.frame(metric = "N"), B = data.frame(metric = "N"))
+
+  expect_true(is.character(stack_list(x, label_type = "character")$model))
+  expect_true(is.factor(stack_list(x, label_type = "factor")$model))
+  expect_equal(stack_list(x, label_type = "numeric")$model, c(NA_real_, NA_real_))
+})
+
+test_that("stack_list works with unnamed lists using positional ids", {
+  x <- list(data.frame(age = 1:2), data.frame(age = 3:4))
+
+  out <- stack_list(x, label = "scenario")
+  expect_identical(unique(out$scenario), 1:2)
+  expect_identical(out$age, 1:4)
+})
+
+
 ## stack_nested ----
 
 test_that("stack_nested adds id column first and type.converts labels (label_type = 'auto')", {
