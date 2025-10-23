@@ -1,4 +1,16 @@
 
+
+## TODO:
+## Figure out why tidy_tam is dropping osa_res column
+## Ask codex to add classes
+## Check if different sd_obs_blocks for catch can fix retro pattern
+
+
+
+
+
+
+
 library(RTMB)
 library(tinyAM)
 library(plotly)
@@ -7,6 +19,13 @@ library(plotly)
 
 cod_obs <- tinyAM::cod_obs
 cod_obs$weight$collapse <- ifelse(cod_obs$weight$year %in% 1991:1994, 1, 0)
+
+# cod_obs$catch$sd_obs_block <- ifelse(cod_obs$catch$age %in% 4:11, "catch 4-11",
+#                                      ifelse(cod_obs$catch$age %in% 2:3, "catch 2-3",
+#                                             "catch 12-14"))
+
+cod_obs$catch$sd_obs_block <- ifelse(cod_obs$catch$age %in% 2:4, "catch 2-4",
+                                     "catch 5-14")
 
 ## Questions:
 ## How should the random processes be modeled?
@@ -39,7 +58,7 @@ N_iid_F_rw <- fit_tam(
   ),
   obs_settings = list(
     q_form = ~ q_block,
-    sd_form = ~ sd_obs_block,
+    sd_form = ~ sd_obs_block - 1,
     fill_missing = TRUE
   ),
   proj_settings = list(
@@ -49,6 +68,7 @@ N_iid_F_rw <- fit_tam(
   )
 )
 N_iid_F_rw$sdrep
+knitr::kable(N_iid_F_rw$fixed_par, digits = 3)
 N_iid_F_rw$opt$objective # 989.6083
 
 N_iid_F_ar1 <- update(

@@ -30,14 +30,25 @@ sapply(names(retros), function(nm) retros[[nm]]$hindcast_rmse) |>
 
 sapply(names(retros), function(nm) (retros[[nm]]$mohns_rho |> subset(metric == "ssb"))$rho) |>
   sort()
-sapply(names(retros), function(nm) (retros[[nm]]$mohns_rho |> subset(metric == "recruitment"))$rho) |>
-  sort()
 
-N_rho <- lapply(names(retros), function(nm) (retros[[nm]]$mohns_rho |> subset(metric == "N")))
-names(N_rho) <- names(retros)
-N_rho <- stack_list(N_rho, label_type = "factor")
+rhos <- lapply(names(retros), function(nm) (retros[[nm]]$mohns_rho))
+names(rhos) <- names(retros)
+rhos <- stack_list(rhos, label_type = "factor")
+cols <- tam_pal(length(retros))
 
-plot_ly(data = N_rho, x = ~age, y = ~rho, color = ~model,
-        colors = tam_pal(nlevels(N_rho$model))) |>
+counts <- table(rhos$metric)
+age_metrics <- names(which(counts == max(counts)))
+
+rhos |>
+  subset(metric %in% age_metrics) |>
+  plot_ly(x = ~age, y = ~rho, color = ~model, colors = cols,
+          frame = ~metric) |>
   add_bars()
 
+rhos |>
+  subset(!metric %in% age_metrics) |>
+  plot_ly(x = ~metric, y = ~rho, color = ~model, colors = cols) |>
+  add_bars()
+
+retros$N_iid_F_rw$mohns_rho |>
+  subset(metric %in% c("N", "F"))
