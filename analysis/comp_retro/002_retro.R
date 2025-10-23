@@ -35,6 +35,9 @@ sapply(names(retros), function(nm) (retros[[nm]]$mohns_rho |> subset(metric == "
 
 N_rho <- lapply(names(retros), function(nm) (retros[[nm]]$mohns_rho |> subset(metric == "N")))
 names(N_rho) <- names(retros)
-stack_list(N_rho)
+N_rho <- stack_list(N_rho, label_type = "factor")
 
+plot_ly(data = N_rho, x = ~age, y = ~rho, color = ~model,
+        colors = tam_pal(nlevels(N_rho$model))) |>
+  add_bars()
 
