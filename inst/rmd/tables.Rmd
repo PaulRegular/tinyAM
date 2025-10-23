@@ -49,8 +49,14 @@ Row {.tabset}
 
 ### Function calls
 
-```{r}
-lapply(fits, `[[`, "call")
+```{r, results = "asis"}
+calls <- lapply(fits, `[[`, "call")
+calls_parsed <- sapply(calls, deparse1, width.cutoff = 50L, collapse = "\n")
+calls_html <- paste("<pre style='margin:0; white-space:pre-wrap'>\n",
+                    calls_parsed,
+                    "\n</pre>")
+calls_df <- data.frame(Model = names(calls), Call = calls_html)
+knitr::kable(calls_df, format = "html", escape = FALSE, col.names = NULL)
 ```
 
 
