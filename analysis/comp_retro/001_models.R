@@ -8,7 +8,18 @@ library(plotly)
 cod_obs <- tinyAM::cod_obs
 cod_obs$weight$collapse <- ifelse(cod_obs$weight$year %in% 1991:1994, 1, 0)
 
-sam_style1 <- fit_tam(
+## Questions:
+## How should the random processes be modeled?
+## - Should N deviations be iid or ar1?
+## - Should M deviations be iid or ar1?
+## - Should F deviations be approx rw or ar1?
+
+## Conventions:
+## Naming by deviation_process_deviation_process, e.g.:
+## - N_iid_F_rw ~ SAM style model
+## - M_ar1_F_rw ~ NCAM style model
+
+N_iid_F_rw <- fit_tam(
   cod_obs,
   years = 1983:2024,
   ages = 2:14,
@@ -37,30 +48,30 @@ sam_style1 <- fit_tam(
     F_mult = 1
   )
 )
-sam_style1$sdrep
-sam_style1$opt$objective # 989.6083
+N_iid_F_rw$sdrep
+N_iid_F_rw$opt$objective # 989.6083
 
-sam_style2 <- update(
-  sam_style1,
+N_iid_F_ar1 <- update(
+  N_iid_F_rw,
   F_settings = list(
     process = "ar1",
-    mu_form = ~F_a_block,
+    mu_form = ~F_a_block + F_y_block,
     mean_ages = 5:14
   )
 )
-sam_style2$sdrep
+N_iid_F_ar1$sdrep
 
-sam_style3 <- update(
-  sam_style1,
+N_ar1_F_rw <- update(
+  N_iid_F_rw,
   N_settings = list(
     process = "ar1",
-    init_N0 = TRUE
+    init_N0 = FALSE
   )
 )
-sam_style3$sdrep
+N_ar1_F_rw$sdrep
 
-ncam_style1 <- update(
-  sam_style1,
+M_ar1_F_rw <- update(
+  N_iid_F_rw,
   N_settings = list(
     process = "off",
     init_N0 = TRUE
@@ -73,93 +84,45 @@ ncam_style1 <- update(
   M_settings = list(
     process = "ar1",
     mu_form = NULL,
-    assumption = ~M_assumption,
-    age_breaks = c(3:8, 14),
-    mean_ages = 5:14
-  )
-)
-ncam_style1$sdrep
-ncam_style1$opt$objective
-
-ncam_style2 <- update(
-  ncam_style1,
-  F_settings = list(
-    process = "approx_rw",
-    mu_form = NULL,
-    mean_ages = 5:14
-  ),
-  M_settings = list(
-    process = "ar1",
-    mu_form = ~collapse - 1,
     assumption = ~I(0.3),
-    age_breaks = c(3, 5, 7, 9, 11, 14),
+    age_breaks = c(3, 5, 7, 9, 11, 14), # Coupling ages to avoid convergence issues
     mean_ages = 5:14
   )
 )
-ncam_style2$sdrep
+M_ar1_F_rw$sdrep
 
-ncam_style3 <- update(
-  ncam_style1,
-  F_settings = list(
-    process = "approx_rw",
-    mu_form = NULL,
-    mean_ages = 5:14
-  ),
-  M_settings = list(
-    process = "ar1",
-    mu_form = NULL,
-    assumption = ~I(0.3),
-    age_breaks = c(3, 5, 7, 9, 11, 14),
-    mean_ages = 5:14
-  )
-)
-ncam_style3$sdrep
-
-ncam_style4 <- update(
-  ncam_style1,
+M_ar1_F_ar1 <- update(
+  M_ar1_F_rw,
   F_settings = list(
     process = "ar1",
     mu_form = ~F_a_block + F_y_block,
     mean_ages = 5:14
-  ),
+  )
+)
+M_ar1_F_ar1$sdrep
+
+M_iid_F_rw <- update(
+  M_ar1_F_rw,
   M_settings = list(
-    process = "ar1",
+    process = "iid",
     mu_form = NULL,
     assumption = ~I(0.3),
-    age_breaks = c(3, 5, 8, 9, 14),
+    age_breaks = c(3, 5, 7, 9, 11, 14),
     mean_ages = 5:14
   )
 )
-ncam_style4$sdrep
+M_iid_F_rw$sdrep
 
-ncam_style5 <- update(
-  ncam_style1,
-  F_settings = list(
-    process = "approx_rw",
-    mu_form = NULL,
-    mean_ages = 5:14
-  ),
-  M_settings = list(
-    process = "ar1",
-    mu_form = NULL,
-    assumption = ~I(0.3),
-    age_breaks = c(3, 14),
-    mean_ages = 5:14
-  )
+model_names <- c(
+  "N_iid_F_rw",
+  "N_iid_F_ar1",
+  "N_ar1_F_rw",
+  "M_ar1_F_rw",
+  "M_ar1_F_ar1",
+  "M_iid_F_rw"
 )
-ncam_style5$sdrep
+models <- mget(model_names)
 
-
-models <- list(
-  sam_style1 = sam_style1,
-  sam_style2 = sam_style2,
-  sam_style3 = sam_style3,
-  ncam_style1 = ncam_style1,
-  ncam_style2 = ncam_style2,
-  ncam_style3 = ncam_style3,
-  ncam_style4 = ncam_style4,
-  ncam_style5 = ncam_style5
-)
 saveRDS(models, file = "analysis/comp_retro/outputs/001_models.rds")
 
 vis_tam(

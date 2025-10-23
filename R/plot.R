@@ -128,11 +128,11 @@ plot_trend <- function(
     )
 
   if (add_buttons) {
-    pb <- plotly::plotly_build(p)
+    data_traces <- p$x$data
 
     # find ribbon traces (CI)
     rib_idx <- which(vapply(
-      pb$x$data,
+      data_traces,
       function(tr) identical(tr$type, "scatter") && !is.null(tr$fill) && nzchar(tr$fill),
       logical(1)
     ))
@@ -166,8 +166,10 @@ plot_trend <- function(
       )
     }
 
-    pb$x$layout$updatemenus <- menus
-    return(pb)
+    if (is.null(p$x$layout)) {
+      p$x$layout <- list()
+    }
+    p$x$layout$updatemenus <- menus
   }
 
   p

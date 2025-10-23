@@ -49,18 +49,12 @@ plot_trend(pop$F_bar, color = ~model, legendgroup = ~model, colors = cols, ylab 
 ### F-at-age
 
 ```{r}
-plot_trend(pop$F, color = ~model, legendgroup = ~model, colors = cols, frame = ~age, ylab = "F") |> 
-  add_lines(
-    data = pop$mu_F |> subset(est != 1), 
-    x = ~year, y = ~est, 
-    linetype = ~I(2), 
-    line = list(width = 0.5),
-    showlegend = FALSE,
-    color = ~model, 
-    legendgroup = ~model, 
-    colors = cols, 
-    frame = ~age
-  ) 
+mu_F <- pop$mu_F
+names(mu_F)[names(mu_F) == "est"] <- "mu"
+mu_F$mu[mu_F$mu == 1] <- NA
+F <- merge(pop$F, mu_F, by = c("model", "year", "age", "is_proj"))
+plot_trend(F, color = ~model, legendgroup = ~model, colors = cols, frame = ~age, ylab = "F") |> 
+  add_lines(y = ~mu, linetype = I(2), showlegend = FALSE, name = "mu", line = list(width = 0.5)) 
 ```
 
 ### Selectivity
@@ -79,18 +73,11 @@ plot_trend(pop$M_bar, color = ~model, legendgroup = ~model, colors = cols, ylab 
 ### M-at-age
 
 ```{r}
-plot_trend(pop$M, color = ~model, legendgroup = ~model, colors = cols, frame = ~age, ylab = "M") |> 
-  add_lines(
-    data = pop$mu_M, 
-    x = ~year, y = ~est, 
-    linetype = ~I(2), 
-    line = list(width = 0.5),
-    showlegend = FALSE,
-    color = ~model, 
-    legendgroup = ~model, 
-    colors = cols, 
-    frame = ~age
-  ) 
+mu_M <- pop$mu_M
+names(mu_M)[names(mu_M) == "est"] <- "mu"
+M <- merge(pop$M, mu_M, by = c("model", "year", "age", "is_proj"))
+plot_trend(M, color = ~model, legendgroup = ~model, colors = cols, frame = ~age, ylab = "M") |> 
+  add_lines(y = ~mu, linetype = I(2), showlegend = FALSE, name = "mu", line = list(width = 0.5)) 
 ```
 
 
