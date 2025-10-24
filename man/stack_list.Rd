@@ -11,8 +11,7 @@ stack_list(
 )
 }
 \arguments{
-\item{x}{A list of data frames (or objects coercible to data frames) with the
-same column structure.}
+\item{x}{A list of data frames (or objects coercible to data frames).}
 
 \item{label}{A character scalar giving the identifier column name to add. Set
 to \code{NULL} to omit the identifier column. Default is \code{"model"}.}
@@ -30,7 +29,8 @@ output.
 Convenience wrapper around \code{\link[base:cbind]{base::rbind()}} for stacking a (named) list of
 data frames while recording the source list element in a label column. When
 the list is named, the names are used as labels; otherwise, integer indices
-(\code{"1"}, \code{"2"}, …) are used.
+(\code{"1"}, \code{"2"}, …) are used. Columns absent in some elements are filled with
+\code{NA} so inputs need only share column \emph{names} in common.
 }
 \examples{
 lst <- list(

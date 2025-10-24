@@ -275,6 +275,18 @@ test_that("stack_list works with unnamed lists using positional ids", {
   expect_identical(out$age, 1:4)
 })
 
+test_that("stack_list fills missing columns with NA", {
+  x <- list(
+    A = data.frame(metric = "catch", value = 1),
+    B = data.frame(metric = "catch", value = 2, extra = "x")
+  )
+
+  out <- stack_list(x)
+  expect_true("extra" %in% names(out))
+  expect_true(all(is.na(out$extra[out$model == "A"])))
+  expect_identical(out$extra[out$model == "B"], "x")
+})
+
 
 ## stack_nested ----
 
@@ -405,6 +417,40 @@ test_that("tidy_tam: interval argument is forwarded to tidy_pop (lwr/upr present
   expect_true(all(c("est", "lwr", "upr") %in% names(out$pop$ssb)))
 })
 
+test_that("tidy_tam recomputes cached tables when interval differs", {
+  out <- tidy_tam(fit_2024, interval = 0.80)
+
+  pop_80 <- tidy_pop(fit_2024, interval = 0.80)
+  expect_equal(out$pop$ssb$lwr, pop_80$ssb$lwr)
+  expect_equal(out$pop$ssb$upr, pop_80$ssb$upr)
+
+  par_80 <- tidy_par(fit_2024, interval = 0.80)
+  expect_equal(out$fixed_par$lwr, par_80$fixed$lwr)
+  expect_equal(out$fixed_par$upr, par_80$fixed$upr)
+  expect_equal(out$random_par$log_f$lwr, par_80$random$log_f$lwr)
+  expect_equal(out$random_par$log_f$upr, par_80$random$log_f$upr)
+})
+
+test_that("tidy_tam informs when cached intervals differ across models", {
+  fit_a <- fit_2023
+  fit_b <- fit_2024
+
+  fit_a$pop <- tidy_pop(fit_a, interval = 0.90)
+  par_a <- tidy_par(fit_a, interval = 0.90)
+  fit_a$fixed_par <- par_a$fixed
+  fit_a$random_par <- par_a$random
+
+  fit_b$pop <- tidy_pop(fit_b, interval = 0.95)
+  par_b <- tidy_par(fit_b, interval = 0.95)
+  fit_b$fixed_par <- par_b$fixed
+  fit_b$random_par <- par_b$random
+
+  expect_message(
+    tidy_tam(fit_a, fit_b, interval = 0.80),
+    "tidy_tam detected cached summaries built with different intervals"
+  )
+})
+
 test_that("tidy_tam: stacking uses intersection of components across models", {
   # Just a smoke check that all returned subtables are data.frames even if models differ
   out <- tidy_tam(fit_2022, fit_2023, fit_2024)
@@ -450,5 +496,23 @@ test_that("tidy_tam: single model returns fixed_par and random_par without label
   expect_false("model" %in% names(out$fixed_par))
   expect_true(is.list(out$random_par))
   expect_true(all(vapply(out$random_par, is.data.frame, logical(1))))
+})
+
+test_that("tidy_tam preserves precomputed diagnostics (e.g., OSA residuals)", {
+  fit_with_osa <- fit
+  fit_with_osa$obs_pred$catch$osa_res <- seq_len(nrow(fit_with_osa$obs_pred$catch))
+  fit_with_osa$obs_pred$index$osa_res <- seq_len(nrow(fit_with_osa$obs_pred$index))
+
+  single <- tidy_tam(fit_with_osa)
+  expect_true("osa_res" %in% names(single$obs_pred$catch))
+  expect_identical(single$obs_pred$catch$osa_res, seq_len(nrow(fit_with_osa$obs_pred$catch)))
+
+  stacked <- tidy_tam(fit_with_osa, fit)
+  expect_true("osa_res" %in% names(stacked$obs_pred$catch))
+  expect_identical(
+    stacked$obs_pred$catch$osa_res[stacked$obs_pred$catch$model == "fit_with_osa"],
+    seq_len(nrow(fit_with_osa$obs_pred$catch))
+  )
+  expect_true(all(is.na(stacked$obs_pred$catch$osa_res[stacked$obs_pred$catch$model == "fit"])))
 })
 
