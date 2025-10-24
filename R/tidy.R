@@ -572,20 +572,11 @@ stack_nested <- function(x, label = "model",
 #' @seealso [tidy_obs_pred()], [tidy_pop()], [tidy_par()], [fit_tam()], [fit_retro()]
 #' @export
 tidy_tam <- function(..., model_list = NULL, interval = 0.95, label = "model", label_type = "auto") {
-  using_dots <- is.null(model_list)
-
-  if (using_dots) {
-    dots <- list(...)
-    if (!length(dots)) stop("No models supplied.", call. = FALSE)
-    # name from expressions in ...
-    names(dots) <- sapply(substitute(list(...))[-1], deparse1)
-    model_list <- dots
-  } else {
-    if (!length(model_list)) stop("No models supplied.", call. = FALSE)
-    if (is.null(names(model_list)) || any(!nzchar(names(model_list)))) {
-      stop("`model_list` must be a named list (all names non-empty).", call. = FALSE)
-    }
-  }
+  dots <- list(...)
+  dot_expr <- as.list(substitute(list(...)))[-1]
+  fits_info <- .dots_or_list(dots, dot_expr, model_list = model_list, list_arg_name = "model_list")
+  model_list <- fits_info$fits
+  using_dots <- fits_info$using_dots
 
   # add label if: multiple via ... OR any named model_list usage
   add_label <- (using_dots && length(model_list) > 1L) || (!using_dots)
