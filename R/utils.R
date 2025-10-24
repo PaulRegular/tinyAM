@@ -86,15 +86,10 @@
   if (any(!is_fit)) {
     bad <- names(fits)[!is_fit]
     cli::cli_abort(c(
-      "All supplied models must be TAM fit objects (with elements `dat`, `opt`, and `pop`).",
+      "All supplied models must be {.cls tam_fit} objects produced by {.fn fit_tam}.",
       "x" = "Problematic element{?s}: {cli::format_inline('{.val {bad}}')}"
     ))
   }
 
   list(fits = fits, using_dots = using_dots)
 }
-
-.is_tam_fit <- function(x) {
-  is.list(x) && !is.null(names(x)) && all(c("dat", "opt", "pop") %in% names(x))
-}
-

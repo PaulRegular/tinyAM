@@ -95,6 +95,6 @@ test_that("vis_tam errors when supplied objects are not TAM fits", {
     vis_tam(model_list = fake,
             output_file = tempfile(fileext = ".html"), open_file = FALSE,
             render_args = list(quiet = TRUE)),
-    "TAM fit"
+    "All supplied models must be"
   )
 })

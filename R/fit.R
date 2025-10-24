@@ -198,6 +198,8 @@ fit_tam <- function(
     sdrep = sdrep
   )
 
+  class(out) <- c("tam_fit", "list")
+
   par_tabs <- tidy_par(out, interval = interval)
   out$fixed_par <- par_tabs$fixed
   out$random_par <- par_tabs$random
@@ -205,7 +207,7 @@ fit_tam <- function(
   out$pop <- tidy_pop(out, interval = interval)
   out$is_converged <- check_convergence(out, quiet = TRUE)
 
-  out
+  .new_tam_fit(out)
 
 }
 
@@ -288,6 +290,8 @@ fit_retro <- function(
     progress = TRUE,
     globals = NULL
 ) {
+  .require_tam_fit(fit, arg = "fit")
+
   min_year <- min(fit$dat$years)
   max_year <- max(fit$dat$years)
   retro_years <- seq(max_year - folds, max_year)
@@ -399,6 +403,8 @@ fit_retro <- function(
 #' @seealso [fit_retro()]
 #' @export
 fit_hindcast <- function(fit, ...) {
+  .require_tam_fit(fit, arg = "fit")
+
   fit_retro(fit, hindcast = TRUE, ...)
 }
 
@@ -422,9 +428,47 @@ fit_hindcast <- function(fit, ...) {
 #' @importFrom cli cli_inform cli_warn format_warning
 #' @export
 check_convergence <- function(fit, grad_tol = 1e-3, quiet = TRUE) {
-  max_grad <- max(abs(fit$sdrep$gradient.fixed))
+  sdrep <- NULL
+
+  if (.is_tam_fit(fit)) {
+    sdrep <- fit$sdrep
+  } else if (inherits(fit, "sdreport")) {
+    sdrep <- fit
+  } else if (is.list(fit) && !is.null(fit$sdrep)) {
+    sdrep <- fit$sdrep
+  }
+
+  if (is.null(sdrep)) {
+    cli::cli_abort(c(
+      "`{.arg fit}` must be either a {.cls tam_fit}, an {.cls sdreport},",
+      "or a list containing an {.field sdrep} element."
+    ))
+  }
+
+  if (inherits(sdrep, "sdreport")) {
+    grad <- sdrep$gradient.fixed
+    pd_hess <- sdrep$pdHess
+  } else if (is.list(sdrep)) {
+    grad <- sdrep$gradient.fixed
+    pd_hess <- sdrep$pdHess
+  } else {
+    cli::cli_abort(c(
+      "`{.arg fit}$sdrep` must be either an {.cls sdreport} or a list",
+      "with components {.field gradient.fixed} and {.field pdHess}."
+    ))
+  }
+
+  if (is.null(grad)) {
+    cli::cli_abort("`{.arg fit}` must provide a gradient via `sdrep$gradient.fixed`.")
+  }
+
+  if (is.null(pd_hess)) {
+    cli::cli_abort("`{.arg fit}` must provide a Hessian flag via `sdrep$pdHess`.")
+  }
+
+  max_grad <- max(abs(grad))
   grad_ok  <- is.finite(max_grad) && max_grad <= grad_tol
-  hess_ok  <- isTRUE(fit$sdrep$pdHess)
+  hess_ok  <- isTRUE(pd_hess)
   ok       <- grad_ok && hess_ok
 
   main_text <- if (ok) "{.strong Model converged}" else "{.strong Model may not have converged}"
