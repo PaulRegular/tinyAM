@@ -29,6 +29,12 @@ test_that("vis_tam renders cleanly and produces an HTML output", {
 test_that("render_args must be a named list", {
   expect_error(
     vis_tam(fits, output_file = tempfile(fileext = ".html"), open_file = FALSE,
+            render_args = TRUE),
+    "must be a list"
+  )
+
+  expect_error(
+    vis_tam(fits, output_file = tempfile(fileext = ".html"), open_file = FALSE,
             render_args = list(TRUE)),
     "named list"
   )
@@ -39,6 +45,18 @@ test_that("vis_tam accepts models provided via dots", {
 
   expect_no_error({
     vis_tam(N_dev, M_dev, output_file = tmpfile, open_file = FALSE,
+            render_args = list(quiet = TRUE))
+  })
+
+  expect_true(file.exists(tmpfile))
+})
+
+test_that("vis_tam accepts list input supplied through dots", {
+  tmpfile <- tempfile(fileext = ".html")
+
+  expect_no_error({
+    vis_tam(list(N_dev = N_dev, M_dev = M_dev),
+            output_file = tmpfile, open_file = FALSE,
             render_args = list(quiet = TRUE))
   })
 
@@ -59,5 +77,14 @@ test_that("vis_tam rejects unnamed or duplicated model lists", {
     vis_tam(model_list = duped, output_file = tempfile(fileext = ".html"),
             open_file = FALSE, render_args = list(quiet = TRUE)),
     "unique"
+  )
+})
+
+test_that("vis_tam rejects mixed model inputs", {
+  expect_error(
+    vis_tam(N_dev, model_list = fits,
+            output_file = tempfile(fileext = ".html"), open_file = FALSE,
+            render_args = list(quiet = TRUE)),
+    "Supply models either"
   )
 })
