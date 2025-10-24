@@ -262,7 +262,9 @@ tidy_pop <- function(fit, interval = 0.95) {
   sdrep_trends <- tidy_sdrep(fit, interval = interval)
   rep_trends <- tidy_rep(fit)
   not_in_sdrep <- setdiff(names(rep_trends), names(sdrep_trends))
-  c(sdrep_trends, rep_trends[not_in_sdrep])
+  out <- c(sdrep_trends, rep_trends[not_in_sdrep])
+  attr(out, "interval") <- interval
+  out
 }
 
 
@@ -360,6 +362,9 @@ tidy_par <- function(fit, interval = 0.95) {
 
   random <- stats::setNames(lapply(ran_nms, .par2df), ran_nms)
 
+  attr(fixed, "interval") <- interval
+  attr(random, "interval") <- interval
+
   list(fixed = fixed, random = random)
 }
 
@@ -370,10 +375,10 @@ tidy_par <- function(fit, interval = 0.95) {
 #' Convenience wrapper around [base::rbind()] for stacking a (named) list of
 #' data frames while recording the source list element in a label column. When
 #' the list is named, the names are used as labels; otherwise, integer indices
-#' (`"1"`, `"2"`, …) are used.
+#' (`"1"`, `"2"`, …) are used. Columns absent in some elements are filled with
+#' `NA` so inputs need only share column *names* in common.
 #'
-#' @param x A list of data frames (or objects coercible to data frames) with the
-#'   same column structure.
+#' @param x A list of data frames (or objects coercible to data frames).
 #' @param label A character scalar giving the identifier column name to add. Set
 #'   to `NULL` to omit the identifier column. Default is `"model"`.
 #' @param label_type Desired type for the identifier column: automatic
@@ -405,8 +410,26 @@ stack_list <- function(x, label = "model",
 
   pieces <- lapply(seq_along(x), function(i) {
     df <- x[[i]]
+    if (is.null(df)) return(NULL)
     if (!is.data.frame(df)) df <- as.data.frame(df)
     if (!is.null(label)) df[[label]] <- ids[[i]]
+    df
+  })
+
+  keep <- !vapply(pieces, is.null, logical(1))
+  if (!any(keep)) {
+    stop("No data.frames to stack.", call. = FALSE)
+  }
+  pieces <- pieces[keep]
+  ids <- ids[keep]
+
+  all_cols <- Reduce(union, lapply(pieces, names))
+  pieces <- lapply(pieces, function(df) {
+    missing <- setdiff(all_cols, names(df))
+    if (length(missing)) {
+      for (nm in missing) df[[nm]] <- NA
+    }
+    df <- df[, all_cols, drop = FALSE]
     df
   })
 
@@ -461,7 +484,6 @@ stack_nested <- function(x, label = "model",
                          label_type = c("auto", "numeric", "character", "factor")) {
   label_type <- match.arg(label_type)
 
-  id_col <- label
   outer_ids <- names(x)
   if (is.null(outer_ids)) outer_ids <- as.character(seq_along(x))
   sub_names <- Reduce(union, lapply(x, names))
@@ -470,28 +492,15 @@ stack_nested <- function(x, label = "model",
 
   for (nm in sub_names) {
     pieces <- lapply(seq_along(x), function(i) {
-      if (nm %in% names(x[[i]])) {
-        df <- x[[i]][[nm]]
-        if (!is.data.frame(df)) df <- as.data.frame(df)
-        if (!is.null(id_col)) df[[id_col]] <- outer_ids[i]
-        df
-      }
+      if (!is.null(x[[i]][[nm]])) x[[i]][[nm]] else NULL
     })
-    stk <- do.call(rbind, pieces)
-    rownames(stk) <- NULL
-
-    if (!is.null(id_col)) {
-      # Apply label_type coercion
-      stk[[id_col]] <- switch(label_type,
-                              auto      = utils::type.convert(stk[[id_col]], as.is = TRUE),
-                              numeric   = suppressWarnings(as.numeric(stk[[id_col]])),
-                              character = as.character(stk[[id_col]]),
-                              factor    = factor(stk[[id_col]], levels = names(x))
-      )
-      ord <- c(id_col, setdiff(names(stk), id_col))
-      stk <- stk[, ord, drop = FALSE]
+    names(pieces) <- outer_ids
+    pieces <- pieces[!vapply(pieces, is.null, logical(1))]
+    if (!length(pieces)) {
+      out[[nm]] <- NULL
+      next
     }
-    out[[nm]] <- stk
+    out[[nm]] <- stack_list(pieces, label = label, label_type = label_type)
   }
   out
 }
@@ -502,9 +511,9 @@ stack_nested <- function(x, label = "model",
 #' @description
 #' Builds tidy, stacked tables from one or more fitted TAM models. For each model it collects:
 #'
-#' - observation diagnostics via [tidy_obs_pred()],
-#' - population summaries via [tidy_pop()] (with confidence intervals), and
-#' - parameter summaries via [tidy_par()] (fixed and random effects),
+#' - observation diagnostics from the model's `$obs_pred` component (falling back to [tidy_obs_pred()] when absent),
+#' - population summaries from `$pop` (falling back to [tidy_pop()] when absent), and
+#' - parameter summaries from `$fixed_par`/`$random_par` (falling back to [tidy_par()] when absent),
 #'
 #' then stacks **per component** across models (e.g., all `"catch"` tables together; all `"N"`
 #' tables together; all fixed parameters together; each random-effect block together).
@@ -519,10 +528,11 @@ stack_nested <- function(x, label = "model",
 #' Names (from `...` or `model_list`) are passed through [utils::type.convert()] with `as.is = TRUE`,
 #' so numeric-like labels (e.g. `"2010"`, `"2011"`) become numeric.
 #'
-#' Only components present in **all** models are stacked (intersection of names), ensuring column
-#' compatibility for base `rbind()`. Parameter summaries are stacked separately for **fixed** and
-#' **random** effects: fixed effects in a single data frame; random effects as a named list of data
-#' frames (one per random-effect block, e.g. `"log_f"`, `"log_r"`, `"missing"`, …).
+#' Components present in any model are stacked; columns missing from particular models are filled with
+#' `NA` values so diagnostics like one-step-ahead residuals survive stacking. Parameter summaries are
+#' stacked separately for **fixed** and **random** effects: fixed effects in a single data frame; random
+#' effects as a named list of data frames (one per random-effect block, e.g. `"log_f"`, `"log_r"`,
+#' `"missing"`, …).
 #'
 #' @param ... One or more fitted TAM objects (as returned by [fit_tam()]). Ignored if `model_list` is provided.
 #' @param model_list A **named list** of fitted TAM objects. Required to be named; the names are used as label values.
@@ -581,9 +591,52 @@ tidy_tam <- function(..., model_list = NULL, interval = 0.95, label = "model", l
   add_label <- (using_dots && length(model_list) > 1L) || (!using_dots)
   id_col    <- if (add_label) label else NULL
 
-  obs_list <- lapply(model_list, tidy_obs_pred)
-  pop_list <- lapply(model_list, tidy_pop, interval = interval)
-  par_list <- lapply(model_list, tidy_par, interval = interval)
+  cached_interval_values <- unlist(lapply(model_list, function(fit) {
+    intervals <- list(
+      attr(fit$pop, "interval", exact = TRUE),
+      attr(fit$fixed_par, "interval", exact = TRUE),
+      attr(fit$random_par, "interval", exact = TRUE)
+    )
+    intervals <- Filter(Negate(is.null), intervals)
+    unlist(intervals, use.names = FALSE)
+  }), use.names = FALSE)
+  cached_interval_values <- as.numeric(cached_interval_values)
+  cached_interval_values <- cached_interval_values[!is.na(cached_interval_values)]
+  cached_intervals <- unique(cached_interval_values)
+
+  if (length(model_list) > 1L && length(cached_intervals) > 1L) {
+    sorted <- sort(cached_intervals)
+    interval_msg <- cli::format_inline("{.val {sorted}}")
+    cli::cli_inform(c(
+      "i" = "tidy_tam detected cached summaries built with different intervals ({interval_msg}).",
+      " " = "Recomputing summaries at interval {.val {interval}} to align across models."
+    ))
+  }
+
+  obs_list <- lapply(model_list, function(fit) {
+    if (!is.null(fit$obs_pred)) fit$obs_pred else tidy_obs_pred(fit)
+  })
+  interval_matches <- function(x) {
+    stored <- attr(x, "interval", exact = TRUE)
+    !is.null(stored) && isTRUE(all.equal(stored, interval))
+  }
+
+  pop_list <- lapply(model_list, function(fit) {
+    if (!is.null(fit$pop) && interval_matches(fit$pop)) {
+      fit$pop
+    } else {
+      tidy_pop(fit, interval = interval)
+    }
+  })
+  par_list <- lapply(model_list, function(fit) {
+    has_fixed  <- !is.null(fit$fixed_par)
+    has_random <- !is.null(fit$random_par)
+    if (has_fixed && has_random && interval_matches(fit$fixed_par) && interval_matches(fit$random_par)) {
+      list(fixed = fit$fixed_par, random = fit$random_par)
+    } else {
+      tidy_par(fit, interval = interval)
+    }
+  })
 
   obs_pred <- stack_nested(obs_list, label = id_col, label_type = label_type)
   pop      <- stack_nested(pop_list, label = id_col, label_type = label_type)
