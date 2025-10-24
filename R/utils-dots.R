@@ -1,3 +1,37 @@
+#' Validate a (possibly empty) named list input
+#'
+#' @param x Object to validate.
+#' @param arg Character label used in error messages.
+#' @param allow_empty Logical; should zero-length lists be allowed?
+#' @param require_unique Logical; should the names be required to be unique?
+#'
+#' @return The validated list.
+#'
+#' @noRd
+.validate_named_list <- function(x, arg, allow_empty = FALSE, require_unique = TRUE) {
+  if (!is.list(x)) {
+    cli::cli_abort("{.arg {arg}} must be a list.")
+  }
+
+  if (!length(x)) {
+    if (allow_empty) {
+      return(x)
+    }
+    cli::cli_abort("{.arg {arg}} must be a non-empty list.")
+  }
+
+  nm <- names(x)
+  if (is.null(nm) || any(!nzchar(nm))) {
+    cli::cli_abort("{.arg {arg}} must be a named list.")
+  }
+
+  if (require_unique && anyDuplicated(nm)) {
+    cli::cli_abort("{.arg {arg}} names must be unique.")
+  }
+
+  x
+}
+
 #' Normalize TAM model inputs supplied via `...` or `model_list`
 #'
 #' @param dots A list captured from `...` inside a calling function.
@@ -10,6 +44,10 @@
 #' @return A list with elements `fits` (the validated, named list of models) and
 #'   `using_dots` (logical indicating whether the models originated from
 #'   `...`).
+#'
+#' @details Ensures that the resulting list is non-empty (unless the explicit
+#'   list argument is `NULL`), uniquely named, and that every element resembles a
+#'   TAM fit (i.e. contains components `dat`, `opt`, and `pop`).
 #'
 #' @noRd
 .dots_or_list <- function(dots, dot_expr, model_list = NULL, list_arg_name = "model_list") {
@@ -41,16 +79,16 @@
     fits <- model_list
   }
 
-  if (!is.list(fits) || !length(fits)) {
-    cli::cli_abort("Supplied models must be provided as a non-empty list of fits.")
-  }
+  arg_label <- if (using_dots) "models" else list_arg_name
+  fits <- .validate_named_list(fits, arg = arg_label)
 
-  if (is.null(names(fits)) || any(!nzchar(names(fits)))) {
-    cli::cli_abort("Supplied models must form a named list.")
-  }
-
-  if (anyDuplicated(names(fits))) {
-    cli::cli_abort("Model names must be unique.")
+  is_fit <- vapply(fits, .is_tam_fit, logical(1))
+  if (any(!is_fit)) {
+    bad <- names(fits)[!is_fit]
+    cli::cli_abort(c(
+      "All supplied models must be TAM fit objects (with elements `dat`, `opt`, and `pop`).",
+      "x" = "Problematic element{?s}: {cli::format_inline('{.val {bad}}')}"
+    ))
   }
 
   list(fits = fits, using_dots = using_dots)

@@ -46,13 +46,8 @@ vis_tam <- function(..., model_list = NULL, interval = 0.95, output_file = NULL,
     ))
   }
 
-  if (!is.list(render_args)) {
-    cli::cli_abort("`render_args` must be a list.")
-  }
-
-  if (length(render_args) && (is.null(names(render_args)) || any(!nzchar(names(render_args))))) {
-    cli::cli_abort("`render_args` must be a named list.")
-  }
+  render_args <- .validate_named_list(render_args, arg = "render_args", allow_empty = TRUE,
+                                      require_unique = FALSE)
 
   dots <- list(...)
   dot_expr <- as.list(substitute(list(...)))[-1]

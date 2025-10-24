@@ -88,3 +88,13 @@ test_that("vis_tam rejects mixed model inputs", {
     "Supply models either"
   )
 })
+
+test_that("vis_tam errors when supplied objects are not TAM fits", {
+  fake <- list(bad = list(not = "a fit"))
+  expect_error(
+    vis_tam(model_list = fake,
+            output_file = tempfile(fileext = ".html"), open_file = FALSE,
+            render_args = list(quiet = TRUE)),
+    "TAM fit"
+  )
+})
