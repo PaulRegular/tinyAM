@@ -57,45 +57,8 @@ vis_tam <- function(..., model_list = NULL, interval = 0.95, output_file = NULL,
   dots <- list(...)
   dot_expr <- as.list(substitute(list(...)))[-1]
 
-  if (!is.null(model_list) && length(dots)) {
-    cli::cli_abort("Supply models either through `...` or `model_list`, not both.")
-  }
-
-  if (!is.null(model_list)) {
-    fits <- model_list
-  } else if (length(dots)) {
-    is_tam_fit <- function(x) {
-      is.list(x) && !is.null(names(x)) && all(c("dat", "opt", "pop") %in% names(x))
-    }
-
-    if (length(dots) == 1L && is.list(dots[[1]]) && !is_tam_fit(dots[[1]])) {
-      fits <- dots[[1]]
-    } else {
-      current_names <- names(dots)
-      if (is.null(current_names)) {
-        current_names <- rep("", length(dots))
-      }
-      dot_names <- vapply(dot_expr, deparse1, character(1))
-      missing <- !nzchar(current_names)
-      current_names[missing] <- dot_names[missing]
-      names(dots) <- current_names
-      fits <- dots
-    }
-  } else {
-    cli::cli_abort("No models supplied.")
-  }
-
-  if (!is.list(fits) || !length(fits)) {
-    cli::cli_abort("Supplied models must be provided as a non-empty list of fits.")
-  }
-
-  if (is.null(names(fits)) || any(!nzchar(names(fits)))) {
-    cli::cli_abort("Supplied models must form a named list.")
-  }
-
-  if (anyDuplicated(names(fits))) {
-    cli::cli_abort("Model names must be unique.")
-  }
+  fits_info <- .dots_or_list(dots, dot_expr, model_list = model_list, list_arg_name = "model_list")
+  fits <- fits_info$fits
 
   rmd_file <- system.file("rmd", "vis_tam.Rmd", package = "tinyAM")
   rmd_env <- new.env(parent = globalenv())
