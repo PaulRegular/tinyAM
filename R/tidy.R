@@ -171,21 +171,15 @@ tidy_rep <- function(fit) {
     if (is.matrix(rep[[nm]])) {
       d <- tidy_mat(rep[[nm]], value_name = "est")
       d$is_proj <- d$year %in% dat$years[dat$is_proj]
-    } else {
-      vec <- rep[[nm]]
-      d <- data.frame(
-        year = dat$years,
-        is_proj = dat$is_proj,
-        stringsAsFactors = FALSE
-      )
-      d$est <- vec
-      d <- d[c("year", "est", "is_proj")]
-      if (!is.null(names(vec))) {
-        names(d$est) <- names(vec)
-        row.names(d) <- names(vec)
-      }
+      return(d)
     }
-    d
+
+    data.frame(
+      year = dat$years,
+      est = unname(rep[[nm]]),
+      is_proj = dat$is_proj,
+      stringsAsFactors = FALSE
+    )
   })
   names(trends) <- nms
   trends

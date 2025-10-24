@@ -163,7 +163,7 @@ test_that("tidy_rep accepts list inputs with dat/rep members", {
   tr <- tidy_rep(minimal)
 
   expect_s3_class(tr$ssb, "data.frame")
-  expect_equal(tr$ssb$est, fit$rep$ssb)
+  expect_equal(tr$ssb$est, unname(fit$rep$ssb))
   expect_identical(tr$ssb$is_proj, fit$dat$is_proj)
 
   expect_s3_class(tr$N, "data.frame")
