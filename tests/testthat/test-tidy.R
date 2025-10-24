@@ -431,6 +431,26 @@ test_that("tidy_tam recomputes cached tables when interval differs", {
   expect_equal(out$random_par$log_f$upr, par_80$random$log_f$upr)
 })
 
+test_that("tidy_tam informs when cached intervals differ across models", {
+  fit_a <- fit_2023
+  fit_b <- fit_2024
+
+  fit_a$pop <- tidy_pop(fit_a, interval = 0.90)
+  par_a <- tidy_par(fit_a, interval = 0.90)
+  fit_a$fixed_par <- par_a$fixed
+  fit_a$random_par <- par_a$random
+
+  fit_b$pop <- tidy_pop(fit_b, interval = 0.95)
+  par_b <- tidy_par(fit_b, interval = 0.95)
+  fit_b$fixed_par <- par_b$fixed
+  fit_b$random_par <- par_b$random
+
+  expect_message(
+    tidy_tam(fit_a, fit_b, interval = 0.80),
+    "tidy_tam detected cached summaries built with different intervals"
+  )
+})
+
 test_that("tidy_tam: stacking uses intersection of components across models", {
   # Just a smoke check that all returned subtables are data.frames even if models differ
   out <- tidy_tam(fit_2022, fit_2023, fit_2024)

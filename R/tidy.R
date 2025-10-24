@@ -591,6 +591,28 @@ tidy_tam <- function(..., model_list = NULL, interval = 0.95, label = "model", l
   add_label <- (using_dots && length(model_list) > 1L) || (!using_dots)
   id_col    <- if (add_label) label else NULL
 
+  cached_interval_values <- unlist(lapply(model_list, function(fit) {
+    intervals <- list(
+      attr(fit$pop, "interval", exact = TRUE),
+      attr(fit$fixed_par, "interval", exact = TRUE),
+      attr(fit$random_par, "interval", exact = TRUE)
+    )
+    intervals <- Filter(Negate(is.null), intervals)
+    unlist(intervals, use.names = FALSE)
+  }), use.names = FALSE)
+  cached_interval_values <- as.numeric(cached_interval_values)
+  cached_interval_values <- cached_interval_values[!is.na(cached_interval_values)]
+  cached_intervals <- unique(cached_interval_values)
+
+  if (length(model_list) > 1L && length(cached_intervals) > 1L) {
+    sorted <- sort(cached_intervals)
+    interval_msg <- cli::format_inline("{.val {sorted}}")
+    cli::cli_inform(c(
+      "i" = "tidy_tam detected cached summaries built with different intervals ({interval_msg}).",
+      " " = "Recomputing summaries at interval {.val {interval}} to align across models."
+    ))
+  }
+
   obs_list <- lapply(model_list, function(fit) {
     if (!is.null(fit$obs_pred)) fit$obs_pred else tidy_obs_pred(fit)
   })
