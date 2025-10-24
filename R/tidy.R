@@ -262,7 +262,9 @@ tidy_pop <- function(fit, interval = 0.95) {
   sdrep_trends <- tidy_sdrep(fit, interval = interval)
   rep_trends <- tidy_rep(fit)
   not_in_sdrep <- setdiff(names(rep_trends), names(sdrep_trends))
-  c(sdrep_trends, rep_trends[not_in_sdrep])
+  out <- c(sdrep_trends, rep_trends[not_in_sdrep])
+  attr(out, "interval") <- interval
+  out
 }
 
 
@@ -359,6 +361,9 @@ tidy_par <- function(fit, interval = 0.95) {
   rownames(fixed) <- NULL
 
   random <- stats::setNames(lapply(ran_nms, .par2df), ran_nms)
+
+  attr(fixed, "interval") <- interval
+  attr(random, "interval") <- interval
 
   list(fixed = fixed, random = random)
 }
@@ -589,13 +594,22 @@ tidy_tam <- function(..., model_list = NULL, interval = 0.95, label = "model", l
   obs_list <- lapply(model_list, function(fit) {
     if (!is.null(fit$obs_pred)) fit$obs_pred else tidy_obs_pred(fit)
   })
+  interval_matches <- function(x) {
+    stored <- attr(x, "interval", exact = TRUE)
+    !is.null(stored) && isTRUE(all.equal(stored, interval))
+  }
+
   pop_list <- lapply(model_list, function(fit) {
-    if (!is.null(fit$pop)) fit$pop else tidy_pop(fit, interval = interval)
+    if (!is.null(fit$pop) && interval_matches(fit$pop)) {
+      fit$pop
+    } else {
+      tidy_pop(fit, interval = interval)
+    }
   })
   par_list <- lapply(model_list, function(fit) {
     has_fixed  <- !is.null(fit$fixed_par)
     has_random <- !is.null(fit$random_par)
-    if (has_fixed && has_random) {
+    if (has_fixed && has_random && interval_matches(fit$fixed_par) && interval_matches(fit$random_par)) {
       list(fixed = fit$fixed_par, random = fit$random_par)
     } else {
       tidy_par(fit, interval = interval)

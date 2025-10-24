@@ -417,6 +417,20 @@ test_that("tidy_tam: interval argument is forwarded to tidy_pop (lwr/upr present
   expect_true(all(c("est", "lwr", "upr") %in% names(out$pop$ssb)))
 })
 
+test_that("tidy_tam recomputes cached tables when interval differs", {
+  out <- tidy_tam(fit_2024, interval = 0.80)
+
+  pop_80 <- tidy_pop(fit_2024, interval = 0.80)
+  expect_equal(out$pop$ssb$lwr, pop_80$ssb$lwr)
+  expect_equal(out$pop$ssb$upr, pop_80$ssb$upr)
+
+  par_80 <- tidy_par(fit_2024, interval = 0.80)
+  expect_equal(out$fixed_par$lwr, par_80$fixed$lwr)
+  expect_equal(out$fixed_par$upr, par_80$fixed$upr)
+  expect_equal(out$random_par$log_f$lwr, par_80$random$log_f$lwr)
+  expect_equal(out$random_par$log_f$upr, par_80$random$log_f$upr)
+})
+
 test_that("tidy_tam: stacking uses intersection of components across models", {
   # Just a smoke check that all returned subtables are data.frames even if models differ
   out <- tidy_tam(fit_2022, fit_2023, fit_2024)
