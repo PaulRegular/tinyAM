@@ -173,9 +173,16 @@ tidy_rep <- function(fit) {
       d$is_proj <- d$year %in% dat$years[dat$is_proj]
     } else {
       vec <- rep[[nm]]
-      d <- data.frame(year = dat$years, est = vec, is_proj = dat$is_proj)
+      d <- data.frame(
+        year = dat$years,
+        is_proj = dat$is_proj,
+        stringsAsFactors = FALSE
+      )
+      d$est <- vec
+      d <- d[c("year", "est", "is_proj")]
       if (!is.null(names(vec))) {
         names(d$est) <- names(vec)
+        row.names(d) <- names(vec)
       }
     }
     d
