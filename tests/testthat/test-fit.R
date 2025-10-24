@@ -194,3 +194,23 @@ test_that("check_convergence accepts sdreport objects and sdrep lists", {
   expect_true(check_convergence(list(sdrep = sdrep_list), grad_tol = 1e-3, quiet = TRUE))
 })
 
+test_that("check_convergence errors when sdrep details are missing", {
+  expect_error(
+    check_convergence(list()),
+    "must be either",
+    class = "rlang_error"
+  )
+
+  expect_error(
+    check_convergence(list(sdrep = list(pdHess = TRUE))),
+    "must provide a gradient",
+    class = "rlang_error"
+  )
+
+  expect_error(
+    check_convergence(list(sdrep = list(gradient.fixed = 0))),
+    "must provide a Hessian flag",
+    class = "rlang_error"
+  )
+})
+

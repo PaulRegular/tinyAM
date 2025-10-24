@@ -164,24 +164,25 @@ tidy_rep <- function(fit) {
     cli::cli_abort("`{.arg fit}$dat$is_proj` must align with `{.arg fit}$dat$years`.")
   }
 
-  which_mat <- which(sapply(rep, is.matrix))
-  which_vec <- which(sapply(rep, length) == length(dat$years))
-  nms <- c(names(which_mat), names(which_vec))
-  trends <- lapply(nms, function(nm) {
-    if (is.matrix(rep[[nm]])) {
-      d <- tidy_mat(rep[[nm]], value_name = "est")
+  keep <- vapply(rep, function(x) is.matrix(x) || length(x) == length(dat$years),
+                 logical(1))
+  rep_items <- rep[keep]
+
+  trends <- lapply(rep_items, function(x) {
+    if (is.matrix(x)) {
+      d <- tidy_mat(x, value_name = "est")
       d$is_proj <- d$year %in% dat$years[dat$is_proj]
       return(d)
     }
 
     data.frame(
       year = dat$years,
-      est = unname(rep[[nm]]),
+      est = unname(x),
       is_proj = dat$is_proj,
       stringsAsFactors = FALSE
     )
   })
-  names(trends) <- nms
+
   trends
 }
 

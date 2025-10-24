@@ -170,6 +170,32 @@ test_that("tidy_rep accepts list inputs with dat/rep members", {
   expect_true(all(c("year", "age", "est", "is_proj") %in% names(tr$N)))
 })
 
+test_that("tidy_rep validates list structure and metadata", {
+  expect_error(
+    tidy_rep(list()),
+    "must be either",
+    class = "rlang_error"
+  )
+
+  expect_error(
+    tidy_rep(list(dat = list(years = fit$dat$years), rep = list())),
+    "must provide `years` and `is_proj`",
+    class = "rlang_error"
+  )
+
+  expect_error(
+    tidy_rep(list(
+      dat = list(
+        years = fit$dat$years,
+        is_proj = fit$dat$is_proj[-1]
+      ),
+      rep = list(ssb = fit$rep$ssb)
+    )),
+    "must align",
+    class = "rlang_error"
+  )
+})
+
 
 
 ## tidy_sdrep ----
