@@ -41,9 +41,9 @@ A named list with four elements:
 \description{
 Builds tidy, stacked tables from one or more fitted TAM models. For each model it collects:
 \itemize{
-\item observation diagnostics from the model's \code{$obs_pred} component (falling back to \code{\link[=tidy_obs_pred]{tidy_obs_pred()}} when absent),
-\item population summaries from \code{$pop} (falling back to \code{\link[=tidy_pop]{tidy_pop()}} when absent), and
-\item parameter summaries from \code{$fixed_par}/\code{$random_par} (falling back to \code{\link[=tidy_par]{tidy_par()}} when absent),
+\item observation diagnostics from the model's \verb{$obs_pred} component (falling back to \code{\link[=tidy_obs_pred]{tidy_obs_pred()}} when absent),
+\item population summaries from \verb{$pop} (falling back to \code{\link[=tidy_pop]{tidy_pop()}} when absent), and
+\item parameter summaries from \verb{$fixed_par}/\verb{$random_par} (falling back to \code{\link[=tidy_par]{tidy_par()}} when absent),
 }
 
 then stacks \strong{per component} across models (e.g., all \code{"catch"} tables together; all \code{"N"}

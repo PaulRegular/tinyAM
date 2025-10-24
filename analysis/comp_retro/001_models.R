@@ -1,8 +1,7 @@
 
 
 ## TODO:
-## Figure out why tidy_tam is dropping osa_res column
-## Ask codex to add classes
+## Check that osa_res are retained in dashboard when present
 ## Check if different sd_obs_blocks for catch can fix retro pattern
 
 
