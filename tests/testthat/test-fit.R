@@ -30,6 +30,7 @@ test_that("fit_tam runs on a cod dataset and returns expected structure", {
 
   # Structure
   expect_type(fit, "list")
+  expect_s3_class(fit, "tam_fit")
   expect_named(
     fit,
     c("call", "dat", "obj", "opt", "rep", "sdrep", "obs_pred", "pop", "is_converged",
@@ -115,7 +116,16 @@ test_that("fit_retro runs peels and returns stacked outputs", {
     rf <- retros$fits[[1]]
     expect_true(is.list(rf$rep))
     expect_s3_class(rf$sdrep, "sdreport")
+    expect_s3_class(rf, "tam_fit")
   }
+})
+
+test_that("tam_fit summary and print methods provide structured output", {
+  fit <- default_fit
+  sum_fit <- summary(fit)
+  expect_s3_class(sum_fit, "summary_tam_fit")
+  expect_output(print(fit), "Coefficients:")
+  expect_output(print(sum_fit), "Terminal year")
 })
 
 test_that("fit_hindcasts runs peels with a one year projection", {
@@ -132,10 +142,15 @@ test_that("fit_hindcasts runs peels with a one year projection", {
 
 ## check_convergence ----
 
+make_conv_fit <- function(max_grad, pd_hess = TRUE) {
+  fit <- default_fit
+  fit$sdrep$gradient.fixed <- rep(max_grad, length(fit$sdrep$gradient.fixed))
+  fit$sdrep$pdHess <- pd_hess
+  fit
+}
+
 test_that("check_convergence returns TRUE and messages when all checks pass", {
-  fit_ok <- list(
-    sdrep = list(gradient.fixed = c(1e-6, -5e-5), pdHess = TRUE)
-  )
+  fit_ok <- make_conv_fit(max_grad = 5e-5, pd_hess = TRUE)
   expect_message(
     val <- check_convergence(fit_ok, grad_tol = 1e-3, quiet = FALSE),
     "Model converged"
@@ -144,16 +159,12 @@ test_that("check_convergence returns TRUE and messages when all checks pass", {
 })
 
 test_that("check_convergence is silent on success when quiet = TRUE", {
-  fit_ok <- list(
-    sdrep = list(gradient.fixed = c(1e-6, -5e-5), pdHess = TRUE)
-  )
+  fit_ok <- make_conv_fit(max_grad = 5e-5, pd_hess = TRUE)
   expect_silent(check_convergence(fit_ok, grad_tol = 1e-3, quiet = TRUE))
 })
 
 test_that("check_convergence warns and returns FALSE if gradient too large", {
-  fit_bad_grad <- list(
-    sdrep = list(gradient.fixed = c(0.1, -0.2), pdHess = TRUE)
-  )
+  fit_bad_grad <- make_conv_fit(max_grad = 1e-1, pd_hess = TRUE)
   expect_warning(
     val <- check_convergence(fit_bad_grad, grad_tol = 1e-3, quiet = TRUE),
     "Model may not have converged"
@@ -162,13 +173,44 @@ test_that("check_convergence warns and returns FALSE if gradient too large", {
 })
 
 test_that("check_convergence warns and returns FALSE if Hessian not PD", {
-  fit_bad_hess <- list(
-    sdrep = list(gradient.fixed = c(1e-6, 2e-6), pdHess = FALSE)
-  )
+  fit_bad_hess <- make_conv_fit(max_grad = 5e-5, pd_hess = FALSE)
   expect_warning(
     val <- check_convergence(fit_bad_hess, quiet = TRUE),
     "^Model may not have converged"
   )
   expect_false(val)
+})
+
+test_that("check_convergence accepts sdreport objects and sdrep lists", {
+  fit_ok <- make_conv_fit(max_grad = 5e-5, pd_hess = TRUE)
+
+  expect_true(check_convergence(fit_ok$sdrep, grad_tol = 1e-3, quiet = TRUE))
+
+  sdrep_list <- list(
+    gradient.fixed = fit_ok$sdrep$gradient.fixed,
+    pdHess = fit_ok$sdrep$pdHess
+  )
+
+  expect_true(check_convergence(list(sdrep = sdrep_list), grad_tol = 1e-3, quiet = TRUE))
+})
+
+test_that("check_convergence errors when sdrep details are missing", {
+  expect_error(
+    check_convergence(list()),
+    "must be either",
+    class = "rlang_error"
+  )
+
+  expect_error(
+    check_convergence(list(sdrep = list(pdHess = TRUE))),
+    "must provide a gradient",
+    class = "rlang_error"
+  )
+
+  expect_error(
+    check_convergence(list(sdrep = list(gradient.fixed = 0))),
+    "must provide a Hessian flag",
+    class = "rlang_error"
+  )
 })
 

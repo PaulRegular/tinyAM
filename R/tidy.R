@@ -91,7 +91,10 @@ tidy_mat <- tidy_array
 #'
 #' @seealso [fit_tam()], [tidy_rep()], [tidy_sdrep()], [tidy_pop()]
 #' @export
+
 tidy_obs_pred <- function(fit, add_osa_res = FALSE, ...) {
+  fit <- .require_tam_fit(fit, arg = "fit")
+
   obs_pred <- fit$dat$obs[c("catch", "index")]
   pred <- split(exp(fit$rep$log_pred), fit$dat$obs_map$type)
   sd <- split(fit$rep$sd_obs, fit$dat$obs_map$type)
@@ -138,20 +141,48 @@ tidy_obs_pred <- function(fit, add_osa_res = FALSE, ...) {
 #'
 #' @seealso [tidy_obs_pred()], [tidy_sdrep()], [tidy_pop()], [tidy_mat()]
 #' @export
+
 tidy_rep <- function(fit) {
-  which_mat <- which(sapply(fit$rep, is.matrix))
-  which_vec <- which(sapply(fit$rep, length) == length(fit$dat$years))
-  nms <- c(names(which_mat), names(which_vec))
-  trends <- lapply(nms, function(nm) {
-    if (is.matrix(fit$rep[[nm]])) {
-      d <- tidy_mat(fit$rep[[nm]], value_name = "est")
-      d$is_proj <- d$year %in% fit$dat$years[fit$dat$is_proj]
-    } else {
-      d <- data.frame(year = fit$dat$years, est = fit$rep[[nm]], is_proj = fit$dat$is_proj)
+  if (.is_tam_fit(fit)) {
+    dat <- fit$dat
+    rep <- fit$rep
+  } else if (is.list(fit) && !is.null(fit$dat) && !is.null(fit$rep)) {
+    dat <- fit$dat
+    rep <- fit$rep
+  } else {
+    cli::cli_abort(c(
+      "`{.arg fit}` must be either a {.cls tam_fit} or a list with",
+      "an {.field dat} element and an {.field rep} element."
+    ))
+  }
+
+  if (is.null(dat$years) || is.null(dat$is_proj)) {
+    cli::cli_abort("`{.arg fit}$dat` must provide `years` and `is_proj` vectors.")
+  }
+
+  if (length(dat$years) != length(dat$is_proj)) {
+    cli::cli_abort("`{.arg fit}$dat$is_proj` must align with `{.arg fit}$dat$years`.")
+  }
+
+  keep <- vapply(rep, function(x) is.matrix(x) || length(x) == length(dat$years),
+                 logical(1))
+  rep_items <- rep[keep]
+
+  trends <- lapply(rep_items, function(x) {
+    if (is.matrix(x)) {
+      d <- tidy_mat(x, value_name = "est")
+      d$is_proj <- d$year %in% dat$years[dat$is_proj]
+      return(d)
     }
-    d
+
+    data.frame(
+      year = dat$years,
+      est = unname(x),
+      is_proj = dat$is_proj,
+      stringsAsFactors = FALSE
+    )
   })
-  names(trends) <- nms
+
   trends
 }
 
@@ -222,6 +253,8 @@ trans_est <- function(data, transform = exp, scale = 1) {
 #' @seealso [trans_est()], [tidy_rep()], [tidy_pop()]
 #' @export
 tidy_sdrep <- function(fit, interval = 0.95) {
+  fit <- .require_tam_fit(fit, arg = "fit")
+
   ## assumes all ADREPORTED objects are equal length to years and are in log space
   vals <- as.list(fit$sdrep, "Estimate", report = TRUE)
   sds <- as.list(fit$sdrep, "Std. Error", report = TRUE)
@@ -259,6 +292,8 @@ tidy_sdrep <- function(fit, interval = 0.95) {
 #' @seealso [tidy_sdrep()], [tidy_rep()], [tidy_obs_pred()]
 #' @export
 tidy_pop <- function(fit, interval = 0.95) {
+  fit <- .require_tam_fit(fit, arg = "fit")
+
   sdrep_trends <- tidy_sdrep(fit, interval = interval)
   rep_trends <- tidy_rep(fit)
   not_in_sdrep <- setdiff(names(rep_trends), names(sdrep_trends))
@@ -313,6 +348,7 @@ tidy_pop <- function(fit, interval = 0.95) {
 #' @seealso [tidy_mat()], [fit_tam()]
 #' @export
 tidy_par <- function(fit, interval = 0.95) {
+  fit <- .require_tam_fit(fit, arg = "fit")
 
   est <- as.list(fit$sdrep, "Estimate")
   se  <- as.list(fit$sdrep, "Std. Error")
@@ -634,12 +670,27 @@ tidy_tam <- function(..., model_list = NULL, interval = 0.95, label = "model", l
   fixed_par  <- stack_nested(lapply(par_list, `[`, "fixed"), label = id_col, label_type = label_type)
   random_par <- stack_nested(lapply(par_list, `[[`, "random"), label = id_col, label_type = label_type)
 
-  list(
+  fixed_tbl <- fixed_par$fixed
+  attr(fixed_tbl, "interval") <- interval
+
+  random_tbls <- lapply(random_par, function(tab) {
+    attr(tab, "interval") <- interval
+    tab
+  })
+  attr(random_tbls, "interval") <- interval
+
+  out <- list(
     obs_pred   = obs_pred,
     pop        = pop,
-    fixed_par  = fixed_par$fixed,
-    random_par = random_par
+    fixed_par  = fixed_tbl,
+    random_par = random_tbls
   )
+
+  attr(out, "interval") <- interval
+  attr(out, "label") <- id_col
+  attr(out, "label_type") <- label_type
+
+  out
 }
 
 
