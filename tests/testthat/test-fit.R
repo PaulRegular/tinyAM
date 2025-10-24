@@ -142,10 +142,15 @@ test_that("fit_hindcasts runs peels with a one year projection", {
 
 ## check_convergence ----
 
+make_conv_fit <- function(max_grad, pd_hess = TRUE) {
+  fit <- default_fit
+  fit$sdrep$gradient.fixed <- rep(max_grad, length(fit$sdrep$gradient.fixed))
+  fit$sdrep$pdHess <- pd_hess
+  fit
+}
+
 test_that("check_convergence returns TRUE and messages when all checks pass", {
-  fit_ok <- list(
-    sdrep = list(gradient.fixed = c(1e-6, -5e-5), pdHess = TRUE)
-  )
+  fit_ok <- make_conv_fit(max_grad = 5e-5, pd_hess = TRUE)
   expect_message(
     val <- check_convergence(fit_ok, grad_tol = 1e-3, quiet = FALSE),
     "Model converged"
@@ -154,16 +159,12 @@ test_that("check_convergence returns TRUE and messages when all checks pass", {
 })
 
 test_that("check_convergence is silent on success when quiet = TRUE", {
-  fit_ok <- list(
-    sdrep = list(gradient.fixed = c(1e-6, -5e-5), pdHess = TRUE)
-  )
+  fit_ok <- make_conv_fit(max_grad = 5e-5, pd_hess = TRUE)
   expect_silent(check_convergence(fit_ok, grad_tol = 1e-3, quiet = TRUE))
 })
 
 test_that("check_convergence warns and returns FALSE if gradient too large", {
-  fit_bad_grad <- list(
-    sdrep = list(gradient.fixed = c(0.1, -0.2), pdHess = TRUE)
-  )
+  fit_bad_grad <- make_conv_fit(max_grad = 1e-1, pd_hess = TRUE)
   expect_warning(
     val <- check_convergence(fit_bad_grad, grad_tol = 1e-3, quiet = TRUE),
     "Model may not have converged"
@@ -172,13 +173,24 @@ test_that("check_convergence warns and returns FALSE if gradient too large", {
 })
 
 test_that("check_convergence warns and returns FALSE if Hessian not PD", {
-  fit_bad_hess <- list(
-    sdrep = list(gradient.fixed = c(1e-6, 2e-6), pdHess = FALSE)
-  )
+  fit_bad_hess <- make_conv_fit(max_grad = 5e-5, pd_hess = FALSE)
   expect_warning(
     val <- check_convergence(fit_bad_hess, quiet = TRUE),
     "^Model may not have converged"
   )
   expect_false(val)
+})
+
+test_that("check_convergence accepts sdreport objects and sdrep lists", {
+  fit_ok <- make_conv_fit(max_grad = 5e-5, pd_hess = TRUE)
+
+  expect_true(check_convergence(fit_ok$sdrep, grad_tol = 1e-3, quiet = TRUE))
+
+  sdrep_list <- list(
+    gradient.fixed = fit_ok$sdrep$gradient.fixed,
+    pdHess = fit_ok$sdrep$pdHess
+  )
+
+  expect_true(check_convergence(list(sdrep = sdrep_list), grad_tol = 1e-3, quiet = TRUE))
 })
 

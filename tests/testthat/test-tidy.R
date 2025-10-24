@@ -148,6 +148,28 @@ test_that("tidy_rep tidies matrices and vectors, and adds is_proj", {
   expect_true(all(tr$N$is_proj == (tr$N$year %in% fit$dat$years[fit$dat$is_proj])))
 })
 
+test_that("tidy_rep accepts list inputs with dat/rep members", {
+  minimal <- list(
+    dat = list(
+      years = fit$dat$years,
+      is_proj = fit$dat$is_proj
+    ),
+    rep = list(
+      ssb = fit$rep$ssb,
+      N = fit$rep$N
+    )
+  )
+
+  tr <- tidy_rep(minimal)
+
+  expect_s3_class(tr$ssb, "data.frame")
+  expect_equal(tr$ssb$est, fit$rep$ssb)
+  expect_identical(tr$ssb$is_proj, fit$dat$is_proj)
+
+  expect_s3_class(tr$N, "data.frame")
+  expect_true(all(c("year", "age", "est", "is_proj") %in% names(tr$N)))
+})
+
 
 
 ## tidy_sdrep ----

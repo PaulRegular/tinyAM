@@ -143,17 +143,36 @@ tidy_obs_pred <- function(fit, add_osa_res = FALSE, ...) {
 #' @export
 
 tidy_rep <- function(fit) {
-  fit <- .require_tam_fit(fit, arg = "fit")
+  if (.is_tam_fit(fit)) {
+    dat <- fit$dat
+    rep <- fit$rep
+  } else if (is.list(fit) && !is.null(fit$dat) && !is.null(fit$rep)) {
+    dat <- fit$dat
+    rep <- fit$rep
+  } else {
+    cli::cli_abort(c(
+      "`{.arg fit}` must be either a {.cls tam_fit} or a list with",
+      "an {.field dat} element and an {.field rep} element."
+    ))
+  }
 
-  which_mat <- which(sapply(fit$rep, is.matrix))
-  which_vec <- which(sapply(fit$rep, length) == length(fit$dat$years))
+  if (is.null(dat$years) || is.null(dat$is_proj)) {
+    cli::cli_abort("`{.arg fit}$dat` must provide `years` and `is_proj` vectors.")
+  }
+
+  if (length(dat$years) != length(dat$is_proj)) {
+    cli::cli_abort("`{.arg fit}$dat$is_proj` must align with `{.arg fit}$dat$years`.")
+  }
+
+  which_mat <- which(sapply(rep, is.matrix))
+  which_vec <- which(sapply(rep, length) == length(dat$years))
   nms <- c(names(which_mat), names(which_vec))
   trends <- lapply(nms, function(nm) {
-    if (is.matrix(fit$rep[[nm]])) {
-      d <- tidy_mat(fit$rep[[nm]], value_name = "est")
-      d$is_proj <- d$year %in% fit$dat$years[fit$dat$is_proj]
+    if (is.matrix(rep[[nm]])) {
+      d <- tidy_mat(rep[[nm]], value_name = "est")
+      d$is_proj <- d$year %in% dat$years[dat$is_proj]
     } else {
-      d <- data.frame(year = fit$dat$years, est = fit$rep[[nm]], is_proj = fit$dat$is_proj)
+      d <- data.frame(year = dat$years, est = rep[[nm]], is_proj = dat$is_proj)
     }
     d
   })
