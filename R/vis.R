@@ -1,14 +1,23 @@
 
 #' Make a flexdashboard for visualizing model fits
 #'
-#' @param fits         A **named list** of fitted TAM objects (e.g., `fits` list returned by
-#'                     [fit_retro()]). Names are used to label models.
 #' @inheritParams tidy_tam
+#' @param model_list   A **named list** of fitted TAM objects (e.g., `fits` list returned by
+#'                     [fit_retro()]). Names are used to label models.
 #' @param output_file  Name of file to export using [rmarkdown::render()].
 #'                     If `NULL`, a temporary HTML file will be rendered and opened
 #'                     automatically in your default browser.
 #' @param open_file    Logical. Open rendered html file?
-#' @param ...          Additional arguments to send to [rmarkdown::render()].
+#' @param render_args  Named list of additional arguments passed to
+#'                     [rmarkdown::render()].
+#' @param ...          One or more fitted TAM objects (as returned by [fit_tam()]).
+#'                     Ignored if `model_list` is provided. When supplying models
+#'                     through `...`, their object names are used to label models
+#'                     (even when a single model is supplied).
+#' @details Supply models via `...` or `model_list`, but not both. The models must
+#'          form a uniquely named list so they can be labeled in the dashboard.
+#'          Additional arguments for [rmarkdown::render()] can be passed through
+#'          `render_args`, which must itself be a (named) list.
 #'
 #' @example inst/examples/example_fits.R
 #' @examples
@@ -21,7 +30,8 @@
 #' @importFrom utils browseURL
 #'
 #' @export
-vis_tam <- function(fits = NULL, interval = 0.95, output_file = NULL, open_file = TRUE, ...) {
+vis_tam <- function(..., model_list = NULL, interval = 0.95, output_file = NULL,
+                    open_file = TRUE, render_args = list()) {
 
   pkg <- c("knitr", "rmarkdown", "flexdashboard")
   missing <- pkg[!vapply(pkg, requireNamespace, logical(1), quietly = TRUE)]
@@ -36,6 +46,15 @@ vis_tam <- function(fits = NULL, interval = 0.95, output_file = NULL, open_file 
     ))
   }
 
+  render_args <- .validate_named_list(render_args, arg = "render_args", allow_empty = TRUE,
+                                      require_unique = FALSE)
+
+  dots <- list(...)
+  dot_expr <- as.list(substitute(list(...)))[-1]
+
+  fits_info <- .dots_or_list(dots, dot_expr, model_list = model_list, list_arg_name = "model_list")
+  fits <- fits_info$fits
+
   rmd_file <- system.file("rmd", "vis_tam.Rmd", package = "tinyAM")
   rmd_env <- new.env(parent = globalenv())
   rmd_env$fits <- fits
@@ -46,11 +65,16 @@ vis_tam <- function(fits = NULL, interval = 0.95, output_file = NULL, open_file 
   }
   output_dir <- normalizePath(dirname(output_file))
   output_name <- basename(output_file)
-  rmarkdown::render(input = rmd_file,
-                    output_file = output_name,
-                    output_dir = output_dir,
-                    envir = rmd_env,
-                    ...)
+  render_call <- c(
+    list(
+      input = rmd_file,
+      output_file = output_name,
+      output_dir = output_dir,
+      envir = rmd_env
+    ),
+    render_args
+  )
+  do.call(rmarkdown::render, render_call)
 
   if (open_file) utils::browseURL(output_file)
 

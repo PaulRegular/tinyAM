@@ -8,7 +8,7 @@ Row {.tabset}
 ```{r}
 obs_list <- lapply(names(fits), function(nm) fits[[nm]]$dat$obs)
 names(obs_list) <- names(fits)
-obs_stack <- stack_nested(obs_list) 
+obs_stack <- stack_nested(obs_list, label = "model", label_type = "factor")
 ```
 
 

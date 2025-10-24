@@ -398,6 +398,11 @@ test_that("tidy_tam: custom label name is respected across obs_pred and pop", {
   expect_equal(sort(unique(out$pop$ssb$fold)), c("fit_2023", "fit_2024"))
 })
 
+test_that("tidy_tam rejects inputs that are not TAM fits", {
+  fake <- list(bad = list(not = "a fit"))
+  expect_error(tidy_tam(model_list = fake), "TAM fit")
+})
+
 test_that("tidy_tam: outputs are lists of data.frames and preserve is_proj", {
   out <- tidy_tam(fit_2024)
   # structure
