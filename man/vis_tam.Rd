@@ -5,15 +5,20 @@
 \title{Make a flexdashboard for visualizing model fits}
 \usage{
 vis_tam(
-  fits = NULL,
+  ...,
+  model_list = NULL,
   interval = 0.95,
   output_file = NULL,
   open_file = TRUE,
-  ...
+  render_args = list()
 )
 }
 \arguments{
-\item{fits}{A \strong{named list} of fitted TAM objects (e.g., \code{fits} list returned by
+\item{...}{One or more fitted TAM objects (as returned by \code{\link[=fit_tam]{fit_tam()}}).
+Ignored if \code{model_list} is provided. When supplying models through \code{...},
+their object names are used to label models (even when a single model is supplied).}
+
+\item{model_list}{A \strong{named list} of fitted TAM objects (e.g., \code{fits} list returned by
 \code{\link[=fit_retro]{fit_retro()}}). Names are used to label models.}
 
 \item{interval}{Confidence level passed to \code{\link[=tidy_pop]{tidy_pop()}} and \code{\link[=tidy_par]{tidy_par()}} for interval construction. Default \code{0.95}.}
@@ -24,10 +29,16 @@ automatically in your default browser.}
 
 \item{open_file}{Logical. Open rendered html file?}
 
-\item{...}{Additional arguments to send to \code{\link[rmarkdown:render]{rmarkdown::render()}}.}
+\item{render_args}{Named list of additional arguments passed to \code{\link[rmarkdown:render]{rmarkdown::render()}}.}
 }
 \description{
 Make a flexdashboard for visualizing model fits
+}
+\details{
+Supply models via \code{...} or \code{model_list}, but not both. The supplied
+fits must form a uniquely named list so the dashboard can label each model.
+Additional arguments for \code{\link[rmarkdown:render]{rmarkdown::render()}} can be passed through
+\code{render_args}, which must itself be a (named) list.
 }
 \examples{
 
