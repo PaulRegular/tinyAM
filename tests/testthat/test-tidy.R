@@ -353,6 +353,7 @@ fit_2022 <- update(fit, years = min(fit$dat$years):(max(fit$dat$years) - 2))
 
 test_that("tidy_tam: single model via ... adds no label column", {
   out  <- tidy_tam(fit)  # default label = 'model'
+  expect_null(attr(out, "label", exact = TRUE))
   expect_false("model" %in% names(out$obs_pred$catch))
   expect_false("model" %in% names(out$obs_pred$index))
   expect_false("model" %in% names(out$pop$N))
@@ -361,6 +362,7 @@ test_that("tidy_tam: single model via ... adds no label column", {
 
 test_that("tidy_tam: multiple models via ... use object names as labels (and label is first column)", {
   out <- tidy_tam(fit_2023, fit_2024)  # label = 'model'
+  expect_identical(attr(out, "label", exact = TRUE), "model")
   # obs_pred
   expect_true("model" %in% names(out$obs_pred$catch))
   expect_identical(names(out$obs_pred$catch)[1], "model")
@@ -377,6 +379,7 @@ test_that("tidy_tam: model_list must be named; names are used as labels (even le
 
   # Named (length 1) -> label present and equals the name, first column, numeric conversion
   out1 <- tidy_tam(model_list = list(`2024` = fit_2024))
+  expect_identical(attr(out1, "label", exact = TRUE), "model")
   expect_true("model" %in% names(out1$pop$N))
   expect_identical(names(out1$pop$N)[1], "model")
   expect_type(out1$pop$N$model, "integer")   # type.convert coerced it
@@ -384,6 +387,7 @@ test_that("tidy_tam: model_list must be named; names are used as labels (even le
 
   # Named (length >1) -> labels in order of names
   out2 <- tidy_tam(model_list = list(`2023` = fit_2023, `2024` = fit_2024))
+  expect_identical(attr(out2, "label", exact = TRUE), "model")
   expect_true("model" %in% names(out2$obs_pred$catch))
   expect_equal(sort(unique(out2$obs_pred$catch$model)), c(2023, 2024))
   expect_type(out2$obs_pred$catch$model, "integer")
@@ -400,7 +404,7 @@ test_that("tidy_tam: custom label name is respected across obs_pred and pop", {
 
 test_that("tidy_tam rejects inputs that are not TAM fits", {
   fake <- list(bad = list(not = "a fit"))
-  expect_error(tidy_tam(model_list = fake), "TAM fit")
+  expect_error(tidy_tam(model_list = fake), "tam_fit")
 })
 
 test_that("tidy_tam: outputs are lists of data.frames and preserve is_proj", {

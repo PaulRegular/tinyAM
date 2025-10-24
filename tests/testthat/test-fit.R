@@ -30,6 +30,7 @@ test_that("fit_tam runs on a cod dataset and returns expected structure", {
 
   # Structure
   expect_type(fit, "list")
+  expect_s3_class(fit, "tam_fit")
   expect_named(
     fit,
     c("call", "dat", "obj", "opt", "rep", "sdrep", "obs_pred", "pop", "is_converged",
@@ -115,7 +116,16 @@ test_that("fit_retro runs peels and returns stacked outputs", {
     rf <- retros$fits[[1]]
     expect_true(is.list(rf$rep))
     expect_s3_class(rf$sdrep, "sdreport")
+    expect_s3_class(rf, "tam_fit")
   }
+})
+
+test_that("tam_fit summary and print methods provide structured output", {
+  fit <- default_fit
+  sum_fit <- summary(fit)
+  expect_s3_class(sum_fit, "summary_tam_fit")
+  expect_output(print(fit), "Coefficients:")
+  expect_output(print(sum_fit), "Terminal year")
 })
 
 test_that("fit_hindcasts runs peels with a one year projection", {

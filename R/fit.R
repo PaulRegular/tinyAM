@@ -198,6 +198,8 @@ fit_tam <- function(
     sdrep = sdrep
   )
 
+  class(out) <- c("tam_fit", "list")
+
   par_tabs <- tidy_par(out, interval = interval)
   out$fixed_par <- par_tabs$fixed
   out$random_par <- par_tabs$random
@@ -205,7 +207,7 @@ fit_tam <- function(
   out$pop <- tidy_pop(out, interval = interval)
   out$is_converged <- check_convergence(out, quiet = TRUE)
 
-  out
+  .new_tam_fit(out)
 
 }
 
@@ -288,6 +290,8 @@ fit_retro <- function(
     progress = TRUE,
     globals = NULL
 ) {
+  .require_tam_fit(fit, arg = "fit")
+
   min_year <- min(fit$dat$years)
   max_year <- max(fit$dat$years)
   retro_years <- seq(max_year - folds, max_year)
@@ -399,6 +403,8 @@ fit_retro <- function(
 #' @seealso [fit_retro()]
 #' @export
 fit_hindcast <- function(fit, ...) {
+  .require_tam_fit(fit, arg = "fit")
+
   fit_retro(fit, hindcast = TRUE, ...)
 }
 
@@ -422,6 +428,8 @@ fit_hindcast <- function(fit, ...) {
 #' @importFrom cli cli_inform cli_warn format_warning
 #' @export
 check_convergence <- function(fit, grad_tol = 1e-3, quiet = TRUE) {
+  fit <- .require_tam_fit(fit, arg = "fit")
+
   max_grad <- max(abs(fit$sdrep$gradient.fixed))
   grad_ok  <- is.finite(max_grad) && max_grad <= grad_tol
   hess_ok  <- isTRUE(fit$sdrep$pdHess)
