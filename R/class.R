@@ -45,34 +45,6 @@
   if (length(yrs[!proj])) max(yrs[!proj]) else max(yrs)
 }
 
-.terminal_estimate <- function(tab, terminal_year) {
-  if (is.null(tab)) {
-    return(NA_real_)
-  }
-
-  if ("is_proj" %in% names(tab)) {
-    tab <- tab[is.na(tab$is_proj) | !tab$is_proj, , drop = FALSE]
-  }
-  if ("year" %in% names(tab)) {
-    tab <- tab[tab$year == terminal_year, , drop = FALSE]
-  }
-  if (!"est" %in% names(tab)) {
-    return(NA_real_)
-  }
-  if (!nrow(tab)) {
-    return(NA_real_)
-  }
-
-  est <- tab$est
-  if ("age" %in% names(tab)) {
-    est <- sum(est, na.rm = TRUE)
-  } else {
-    est <- est[1]
-  }
-  est
-}
-
-
 .coef_table <- function(fixed_par) {
   interval <- attr(fixed_par, "interval", exact = TRUE)
   if (is.null(interval) || !is.finite(interval)) {
@@ -109,6 +81,79 @@
 }
 
 
+
+.terminal_table <- function(pop, terminal_year) {
+  default_interval <- attr(pop, "interval", exact = TRUE)
+  if (is.null(default_interval) || !is.finite(default_interval)) {
+    default_interval <- 0.95
+  }
+
+  default_ci_level <- formatC(default_interval * 100, format = "fg", digits = 4)
+  default_ci_names <- c(sprintf("Lower %s%%", default_ci_level),
+                        sprintf("Upper %s%%", default_ci_level))
+
+  empty <- matrix(numeric(0), nrow = 0, ncol = 4,
+                  dimnames = list(character(),
+                                  c("Estimate", "Std. Error", default_ci_names)))
+
+  if (is.null(pop)) {
+    return(empty)
+  }
+
+  metrics <- c("abundance", "recruitment", "ssb", "F_bar", "M_bar")
+  rows <- lapply(metrics, function(nm) {
+    tab <- pop[[nm]]
+    if (is.null(tab)) {
+      return(NULL)
+    }
+
+    interval <- attr(tab, "interval", exact = TRUE)
+    if (is.null(interval) || !is.finite(interval)) {
+      interval <- default_interval
+    }
+    ci_level <- formatC(interval * 100, format = "fg", digits = 4)
+    ci_names <- c(sprintf("Lower %s%%", ci_level), sprintf("Upper %s%%", ci_level))
+
+    if ("is_proj" %in% names(tab)) {
+      tab <- tab[is.na(tab$is_proj) | !tab$is_proj, , drop = FALSE]
+    }
+    if ("year" %in% names(tab)) {
+      tab <- tab[tab$year == terminal_year, , drop = FALSE]
+    }
+
+    if (!nrow(tab) || !"est" %in% names(tab)) {
+      return(NULL)
+    }
+
+    if (nrow(tab) > 1 && "age" %in% names(tab)) {
+      totals <- tab[is.na(tab$age), , drop = FALSE]
+      if (nrow(totals) >= 1) {
+        tab <- totals[1, , drop = FALSE]
+      } else {
+        tab <- tab[1, , drop = FALSE]
+      }
+    } else {
+      tab <- tab[1, , drop = FALSE]
+    }
+
+    se <- if ("sd" %in% names(tab)) tab$sd else if ("se" %in% names(tab)) tab$se else NA_real_
+    lower <- if ("lwr" %in% names(tab)) tab$lwr else NA_real_
+    upper <- if ("upr" %in% names(tab)) tab$upr else NA_real_
+
+    matrix(c(tab$est, se, lower, upper), nrow = 1,
+           dimnames = list(nm, c("Estimate", "Std. Error", ci_names)))
+  })
+
+  rows <- Filter(Negate(is.null), rows)
+  if (!length(rows)) {
+    return(empty)
+  }
+
+  mat <- do.call(rbind, rows)
+  mat
+}
+
+
 #' @export
 print.tam_fit <- function(x, ...) {
   x <- .require_tam_fit(x, arg = "x")
@@ -130,17 +175,15 @@ print.tam_fit <- function(x, ...) {
 
   if (nrow(sumry$coefficients)) {
     cat("\nCoefficients:\n")
-    stats::printCoefmat(sumry$coefficients, na.print = "NA", ...)
+    print(sumry$coefficients, ...)
   } else {
     cat("\nCoefficients: (none)\n")
   }
 
-  derived <- sumry$terminal
-  if (length(derived)) {
+  derived <- sumry$terminal_vals
+  if (nrow(derived) > 0) {
     cat(sprintf("\nTerminal year (%s) estimates:\n", sumry$terminal_year))
-    for (nm in names(derived)) {
-      cat(sprintf("  %-11s %s\n", paste0(nm, ":"), format(derived[[nm]], digits = 4, scientific = FALSE)))
-    }
+    print(derived, ...)
   }
 
   invisible(x)
@@ -159,12 +202,12 @@ summary.tam_fit <- function(object, ...) {
   max_grad <- if (!is.null(grad)) max(abs(grad)) else NULL
 
   terminal_year <- .terminal_year(object)
-  metrics <- c("abundance", "recruitment", "ssb", "F_bar", "M_bar")
-  terminal_vals <- vapply(metrics, function(nm) {
-    .terminal_estimate(object$pop[[nm]], terminal_year)
-  }, numeric(1), USE.NAMES = TRUE)
-  terminal_vals <- terminal_vals[!is.na(terminal_vals)]
-  terminal_vals <- as.list(terminal_vals)
+  terminal_vals <- .terminal_table(object$pop, terminal_year)
+  terminal_list <- if (length(terminal_vals) > 0) {
+    stats::setNames(as.list(terminal_vals[, "Estimate"]), rownames(terminal_vals))
+  } else {
+    list()
+  }
 
   coeff <- .coef_table(object$fixed_par)
 
@@ -185,7 +228,8 @@ summary.tam_fit <- function(object, ...) {
     ),
     coefficients = coeff,
     terminal_year = terminal_year,
-    terminal = terminal_vals
+    terminal = terminal_list,
+    terminal_vals = terminal_vals
   )
 
   class(res) <- "summary_tam_fit"
@@ -215,16 +259,14 @@ print.summary_tam_fit <- function(x, ...) {
 
   if (nrow(x$coefficients)) {
     cat("\nCoefficients:\n")
-    stats::printCoefmat(x$coefficients, na.print = "NA", ...)
+    print(x$coefficients, ...)
   } else {
     cat("\nCoefficients: (none)\n")
   }
 
-  if (length(x$terminal)) {
+  if (nrow(x$terminal_vals) > 0) {
     cat(sprintf("\nTerminal year (%s) estimates:\n", x$terminal_year))
-    for (nm in names(x$terminal)) {
-      cat(sprintf("  %-11s %s\n", paste0(nm, ":"), format(x$terminal[[nm]], digits = 4, scientific = FALSE)))
-    }
+    print(x$terminal_vals, ...)
   }
 
   invisible(x)
