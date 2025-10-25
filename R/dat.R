@@ -265,7 +265,7 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #' - `mean_ages`: optional vector of ages to include in population weighted
 #'   average M (`M_bar`) calculations. All ages used if absent.
 #' @param obs_settings A list with elements:
-#' - `sd_form`: formula for observation SD blocks, evaluated on the combined obs map (e.g. `~ sd_obs_block`).
+#' - `sd_catch_form`: formula for observation SD blocks, evaluated on the combined obs map (e.g. `~ sd_obs_block`).
 #' - `q_form`: formula for catchability blocks, evaluated on the index table (e.g. `~ q_block`).
 #' - `fill_missing`: logical - fill missing values, and zeros, using random effects? Default = `TRUE`.
 #'                   Note that one-step-ahead residuals are not currently working when `TRUE`.

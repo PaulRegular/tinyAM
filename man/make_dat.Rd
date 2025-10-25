@@ -68,7 +68,7 @@ average M (\code{M_bar}) calculations. All ages used if absent.
 
 \item{obs_settings}{A list with elements:
 \itemize{
-\item \code{sd_form}: formula for observation SD blocks, evaluated on the combined obs map (e.g. \code{~ sd_obs_block}).
+\item \code{sd_catch_form}: formula for observation SD blocks, evaluated on the combined obs map (e.g. \code{~ sd_obs_block}).
 \item \code{q_form}: formula for catchability blocks, evaluated on the index table (e.g. \code{~ q_block}).
 \item \code{fill_missing}: logical - fill missing values, and zeros, using random effects? Default = \code{TRUE}.
 Note that one-step-ahead residuals are not currently working when \code{TRUE}.

@@ -7,7 +7,7 @@ inputs <- NCAM::inputs
 catch <- as.data.frame.table(inputs$catch.num, responseName = "obs", stringsAsFactors = FALSE)
 catch$age <- as.numeric(catch$age)
 catch$year <- as.numeric(catch$year)
-catch$sd_obs_block <- "catch"
+catch$sd_block <- "catch"
 
 # Label pre-moratorium, limited fishing gear + rec, closed, stewardship + rec / post-moratorium blocks
 catch$F_y_block <- cut_years(catch$year, c(min(catch$year), 1992, 1998, 2002, 2006, max(catch$year)))
@@ -19,7 +19,7 @@ names(index)[names(index) == "index"] <- "obs"
 index$survey <- "Fall 2J3KL"
 index$samp_time <- 0.8
 index$q_block <- cut(index$age, c(min(index$age):6, max(index$age) + 1), right = FALSE)
-index$sd_obs_block <- index$survey
+index$sd_block <- index$survey
 
 weight <- inputs$pwts[, c("year", "age", "weight")]
 names(weight)[names(weight) == "weight"] <- "obs"
