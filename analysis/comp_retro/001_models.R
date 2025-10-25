@@ -1,12 +1,6 @@
 
-
 ## TODO:
-## Check that osa_res are retained in dashboard when present
 ## Check if different sd_obs_blocks for catch can fix retro pattern
-
-
-
-
 
 
 
@@ -66,7 +60,7 @@ N_iid_F_rw <- fit_tam(
     F_mult = 1
   )
 )
-N_iid_F_rw$sdrep
+N_iid_F_rw
 knitr::kable(N_iid_F_rw$fixed_par, digits = 3)
 N_iid_F_rw$opt$objective # 989.6083
 
