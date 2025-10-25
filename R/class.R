@@ -111,7 +111,7 @@
     if (is.null(interval) || !is.finite(interval)) {
       interval <- default_interval
     }
-    ci_level <- formatC(interval * 100, format = "fg", digits = 4)
+    ci_level <- formatC(interval * 100, format = "fg")
     ci_names <- c(sprintf("Lower %s%%", ci_level), sprintf("Upper %s%%", ci_level))
 
     if ("is_proj" %in% names(tab)) {
