@@ -111,7 +111,7 @@
     if (is.null(interval) || !is.finite(interval)) {
       interval <- default_interval
     }
-    ci_level <- formatC(interval * 100, format = "fg", digits = 4)
+    ci_level <- formatC(interval * 100, format = "fg")
     ci_names <- c(sprintf("Lower %s%%", ci_level), sprintf("Upper %s%%", ci_level))
 
     if ("is_proj" %in% names(tab)) {
@@ -155,18 +155,34 @@
 
 
 .format_numbers <- function(x, digits, big_mark = NULL) {
-  out <- rep(NA_character_, length(x))
-  if (!length(x)) {
-    return(out)
+  n <- length(x)
+  if (!n) {
+    return(character())
   }
 
+  digits <- rep_len(as.integer(digits), n)
+
+  if (is.null(big_mark)) {
+    big_mark <- rep_len("", n)
+  } else {
+    big_mark <- rep_len(as.character(big_mark), n)
+    big_mark[is.na(big_mark)] <- ""
+  }
+
+  out <- rep(NA_character_, n)
   is_na <- is.na(x)
   is_inf <- !is_na & !is.finite(x)
   out[is_inf] <- as.character(x[is_inf])
 
-  keep <- !is_na & !is_inf
-  if (any(keep)) {
-    out[keep] <- formatC(x[keep], format = "f", digits = digits, big.mark = big_mark)
+  keep_idx <- which(!is_na & !is_inf)
+  if (length(keep_idx)) {
+    out[keep_idx] <- mapply(
+      function(val, dig, mark) {
+        formatC(val, format = "f", digits = dig, big.mark = mark)
+      },
+      x[keep_idx], digits[keep_idx], big_mark[keep_idx],
+      USE.NAMES = FALSE
+    )
   }
 
   out
@@ -201,11 +217,9 @@
     digits_base <- if (row_key %in% metric_digits0) 0L else 3L
     big_mark <- if (digits_base == 0L) "," else NULL
 
-    for (j in seq_len(ncol(tab))) {
-      digits <- if (is_sd_col[j]) 3L else digits_base
-      big <- if (is_sd_col[j]) NULL else big_mark
-      formatted[i, j] <- .format_numbers(tab[i, j], digits = digits, big_mark = big)
-    }
+    digits <- ifelse(is_sd_col, 3L, digits_base)
+    big <- ifelse(is_sd_col, "", if (is.null(big_mark)) "" else big_mark)
+    formatted[i, ] <- .format_numbers(tab[i, ], digits = digits, big_mark = big)
   }
 
   formatted
@@ -230,11 +244,9 @@
     digits_base <- if (is_r0) 0L else 3L
     big_mark <- if (is_r0 && digits_base == 0L) "," else NULL
 
-    for (j in seq_len(ncol(tab))) {
-      digits <- if (is_sd_col[j]) 3L else digits_base
-      big <- if (is_sd_col[j]) NULL else big_mark
-      formatted[i, j] <- .format_numbers(tab[i, j], digits = digits, big_mark = big)
-    }
+    digits <- ifelse(is_sd_col, 3L, digits_base)
+    big <- ifelse(is_sd_col, "", if (is.null(big_mark)) "" else big_mark)
+    formatted[i, ] <- .format_numbers(tab[i, ], digits = digits, big_mark = big)
   }
 
   formatted
