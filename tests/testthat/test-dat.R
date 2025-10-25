@@ -54,13 +54,14 @@ test_that("make_dat infers years/ages when NULL and builds expected pieces", {
     N_settings = list(process = "iid", init_N0 = FALSE),
     F_settings = list(process = "approx_rw",  mu_form = NULL),
     M_settings = list(process = "off", mu_form = NULL, assumption = ~ I(0.3)),
-    obs_settings = list(sd_form = ~ sd_obs_block, q_form = ~ q_block,
+    obs_settings = list(sd_catch_form = ~1, sd_index_form = ~survey, q_form = ~ q_block,
                         fill_missing = TRUE)
   )
 
   expect_type(dat, "list")
   expect_true(all(c("years","ages","obs","W","P","obs_map","log_obs",
-                    "sd_obs_modmat","q_modmat","F_settings","M_settings","N_settings") %in% names(dat)))
+                    "sd_catch_modmat", "sd_index_modmat","q_modmat",
+                    "F_settings","M_settings","N_settings") %in% names(dat)))
 
   # dims line up
   ny <- length(dat$years); na <- length(dat$ages)
@@ -68,9 +69,11 @@ test_that("make_dat infers years/ages when NULL and builds expected pieces", {
   expect_equal(dim(dat$P), c(ny, na))
 
   # design matrices exist and have columns
-  expect_true(is.matrix(dat$sd_obs_modmat))
+  expect_true(is.matrix(dat$sd_catch_modmat))
+  expect_true(is.matrix(dat$sd_index_modmat))
   expect_true(is.matrix(dat$q_modmat))
-  expect_gt(ncol(dat$sd_obs_modmat), 0)
+  expect_gt(ncol(dat$sd_catch_modmat), 0)
+  expect_gt(ncol(dat$sd_index_modmat), 0)
   expect_gt(ncol(dat$q_modmat), 0)
 })
 

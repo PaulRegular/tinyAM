@@ -8,8 +8,8 @@ test_dat <- function(obs = cod_obs,
                      N_settings = list(process = "iid", init_N0 = FALSE),
                      F_settings = list(process = "approx_rw",  mu_form = NULL),
                      M_settings = list(process = "off", mu_form = NULL, assumption = ~I(0.3)),
-                     obs_settings = list(q_form = ~ q_block, sd_form = ~ sd_obs_block,
-                                         fill_missing = TRUE),
+                     obs_settings = list(q_form = ~ q_block, sd_catch_form = ~1,
+                                         sd_index_form = ~survey, fill_missing = TRUE),
                      proj_settings = NULL) {
   args <- mget(ls())
   do.call(make_dat, args)
@@ -25,11 +25,12 @@ test_that("make_par builds shapes and zeros consistent with dat", {
   par <- make_par(dat)
 
   # basic presence
-  expect_true(all(c("log_sd_r","log_sd_f","log_q","log_sd_obs","log_r","log_f") %in% names(par)))
+  expect_true(all(c("log_sd_r","log_sd_f","log_q","log_sd_catch", "log_sd_index","log_r","log_f") %in% names(par)))
 
   # shapes match the design matrices / grids
   expect_length(par$log_q,      ncol(dat$q_modmat))
-  expect_length(par$log_sd_obs, ncol(dat$sd_obs_modmat))
+  expect_length(par$log_sd_catch, ncol(dat$sd_catch_modmat))
+  expect_length(par$log_sd_index, ncol(dat$sd_index_modmat))
   expect_equal(length(par$log_r), length(dat$years))
 
   # log_f rows are for historical years only (no projections here)

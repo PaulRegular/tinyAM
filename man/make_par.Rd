@@ -10,8 +10,8 @@ make_par(dat)
 \item{dat}{A data list returned by \code{\link[=make_dat]{make_dat()}}, containing design matrices,
 settings, and observation mappings. The shapes and presence/absence of
 parameters depend on elements in \code{dat} (e.g., \code{F_modmat}, \code{M_modmat},
-\code{q_modmat}, \code{sd_obs_modmat}, \code{N_settings}, \code{F_settings}, \code{M_settings},
-\code{years}, \code{ages}, and \code{M_settings$age_blocks}).}
+\code{q_modmat}, \code{sd_catch_modmat}, \code{sd_index_modmat}, \code{N_settings}, \code{F_settings},
+\code{M_settings}, \code{years}, \code{ages}, and \code{M_settings$age_blocks}).}
 }
 \value{
 A named list of initialized parameters suitable to pass to the TAM objective
@@ -65,8 +65,9 @@ with appropriate \code{dimnames} (\verb{year × age} or \verb{year × age_block}
 }
 \item \strong{Observation model}
 \itemize{
+\item \code{log_sd_catch} (length \code{ncol(dat$sd_catch_modmat)})
+\item \code{log_sd_index} (length \code{ncol(dat$sd_index_modmat)})
 \item \code{log_q} (length \code{ncol(dat$q_modmat)})
-\item \code{log_sd_obs} (length \code{ncol(dat$sd_obs_modmat)})
 \item \code{missing} vector of length \code{sum(is.na(dat$log_obs))} (placeholders for
 imputed \code{log_obs})
 }
@@ -83,7 +84,7 @@ dat <- make_dat(
   N_settings = list(process = "iid", init_N0 = FALSE),
   F_settings = list(process = "approx_rw", mu_form = NULL),
   M_settings = list(process = "off", assumption = ~ I(0.3)),
-  obs_settings = list(sd_form = ~ sd_obs_block, q_form = ~ q_block)
+  obs_settings = list(sd_catch_form = ~sd_block, sd_index_form = ~sd_block, q_form = ~ q_block)
 )
 par <- make_par(dat)
 str(par)

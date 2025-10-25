@@ -72,13 +72,14 @@ for years 2...Y.
 \item \strong{Observations:} catch-at-age and index-at-age on the log scale:
 \deqn{\log C_{y,a} \sim \mathcal{N}\!\left(
       \log\!\left[N_{y,a}\,\frac{F_{y,a}}{Z_{y,a}}\,(1-e^{-Z_{y,a}})\right],
-      \sigma^2_{\text{obs}}\right),}
+      \sigma^2_{\text{catch}}\right),}
 
 \deqn{\log I_{y,a} \sim \mathcal{N}\!\left(
-      \log q_{a} + \log N_{y,a} - Z_{y,a}\, t_{y,a}, \sigma^2_{\text{obs}}\right).}
+      \log q_{a} + \log N_{y,a} - Z_{y,a}\, t_{y,a}, \sigma^2_{\text{index}}\right).}
 
-Here \code{sd_obs_modmat \%*\% log_sd_obs} controls observation SD (by block),
-and \code{q_modmat \%*\% log_q} controls age- (or block-) specific catchability.
+Here \code{sd_catch_modmat \%*\% log_sd_catch} controls observation SD for catch-at-age,
+\code{sd_index_modmat \%*\% log_sd_index} for indices-at-age, and \code{q_modmat \%*\% log_q}
+controls age- (or block-) specific catchability.
 }
 
 \strong{Simulation mode:}
@@ -102,8 +103,8 @@ quantities (e.g., \code{N}, \code{F}, \code{M}, \code{Z}, \code{ssb}, \code{log_
 
 The function expects a \code{dat} list in its lexical scope (created by
 \code{\link[=make_dat]{make_dat()}}) containing data matrices/vectors and model matrices
-(\code{SW}, \code{MO}, \code{obs_map}, \code{sd_obs_modmat}, \code{q_modmat}, \code{F_modmat},
-\code{M_modmat}, settings lists, etc.).
+(\code{SW}, \code{MO}, \code{obs_map}, \code{sd_catch_modmat}, \code{sd_index_modmat}, \code{q_modmat},
+\code{F_modmat}, \code{M_modmat}, settings lists, etc.).
 It also relies on helper functions \code{\link[=dprocess_2d]{dprocess_2d()}} and \code{\link[=rprocess_2d]{rprocess_2d()}}
 for process penalties and simulation.
 }
@@ -116,7 +117,7 @@ dat <- make_dat(
   N_settings = list(process = "iid", init_N0 = FALSE),
   F_settings = list(process = "approx_rw", mu_form = NULL),
   M_settings = list(process = "off", assumption = ~ I(0.3)),
-  obs_settings = list(sd_form = ~ sd_obs_block, q_form = ~ q_block)
+  obs_settings = list(sd_catch_form = ~ 1, sd_index_form = ~survey, q_form = ~ q_block)
 )
 par <- make_par(dat)
 make_nll_fun <- function(f, d) function(p) f(p, d)

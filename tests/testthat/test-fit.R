@@ -15,8 +15,8 @@ test_fit <- function(obs = cod_obs,
                      N_settings = list(process = "iid", init_N0 = FALSE),
                      F_settings = list(process = "approx_rw",  mu_form = NULL),
                      M_settings = list(process = "off", mu_form = NULL, assumption = ~I(0.3)),
-                     obs_settings = list(q_form = ~ q_block, sd_form = ~ sd_obs_block,
-                                         fill_missing = TRUE),
+                     obs_settings = list(q_form = ~ q_block, sd_catch_form = ~1,
+                                         sd_index_form = ~survey, fill_missing = TRUE),
                      proj_settings = NULL,
                      silent = TRUE) {
   args <- mget(ls())
@@ -90,14 +90,14 @@ test_that("fit_tam objective is unaffected by projections", {
 
 test_that("fit_tam does not estimate missing values when fill_missing = FALSE", {
   fit <- test_fit(
-    obs_settings = list(q_form = ~ q_block, sd_form = ~ sd_obs_block,
-                        fill_missing = FALSE)
+    obs_settings = list(q_form = ~ q_block, sd_catch_form = ~1,
+                        sd_index_form = ~survey, fill_missing = FALSE),
   )
   expect_false("missing" %in% fit$obj$env$.random)
 })
 
 test_that("fit_tam warns and forces fill_missing to TRUE when mising", {
-  (fit <- test_fit(obs_settings = list(q_form = ~ q_block, sd_form = ~ sd_obs_block))) |>
+  (fit <- test_fit(obs_settings = list(q_form = ~q_block, sd_catch_form = ~1, sd_index_form = ~survey))) |>
     expect_warning(regexp = "fill_missing was NULL", fixed  = FALSE)
   expect_true(fit$dat$obs_settings$fill_missing)
 })

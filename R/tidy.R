@@ -319,8 +319,8 @@ tidy_pop <- function(fit, interval = 0.95) {
 #' (`$random`), one per random block (e.g. `log_f`, `log_r`, `missing`, …).
 #'
 #' Labels are added where applicable:
-#' - For parameters specified using a formula in [make_dat()] (e.g., `log_q`, `log_sd_obs`),
-#;   a `coef` column is added.
+#' - For parameters specified using a formula in [make_dat()] (e.g., `log_q`,
+#'   `log_sd_catch`, `log_sd_index`), a `coef` column is added.
 #' - For `log_r` (recruitment path), a `year` column is used.
 #' - For matrices (e.g., `log_f`, `log_n`), `year` and/or `age` columns are added
 #'   via [tidy_mat()].
