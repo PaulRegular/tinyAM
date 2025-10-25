@@ -50,7 +50,7 @@
   if (is.null(interval) || !is.finite(interval)) {
     interval <- 0.95
   }
-  ci_level <- formatC(interval * 100, format = "fg", digits = 4)
+  ci_level <- formatC(interval * 100, format = "fg")
   ci_names <- c(sprintf("Lower %s%%", ci_level), sprintf("Upper %s%%", ci_level))
 
   if (is.null(fixed_par) || !nrow(fixed_par)) {
@@ -88,7 +88,7 @@
     default_interval <- 0.95
   }
 
-  default_ci_level <- formatC(default_interval * 100, format = "fg", digits = 4)
+  default_ci_level <- formatC(default_interval * 100, format = "fg")
   default_ci_names <- c(sprintf("Lower %s%%", default_ci_level),
                         sprintf("Upper %s%%", default_ci_level))
 
