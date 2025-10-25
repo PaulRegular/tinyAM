@@ -74,9 +74,16 @@
 
 
 .coef_table <- function(fixed_par) {
+  interval <- attr(fixed_par, "interval", exact = TRUE)
+  if (is.null(interval) || !is.finite(interval)) {
+    interval <- 0.95
+  }
+  ci_level <- formatC(interval * 100, format = "fg", digits = 4)
+  ci_names <- c(sprintf("Lower %s%%", ci_level), sprintf("Upper %s%%", ci_level))
+
   if (is.null(fixed_par) || !nrow(fixed_par)) {
     return(matrix(numeric(0), nrow = 0, ncol = 4,
-                  dimnames = list(character(), c("Estimate", "Std. Error", "z value", "Pr(>|z|)"))))
+                  dimnames = list(character(), c("Estimate", "Std. Error", ci_names))))
   }
 
   labels <- fixed_par$par
@@ -92,10 +99,11 @@
 
   est <- fixed_par$est
   se  <- fixed_par$se
-  z   <- est / se
-  p   <- 2 * stats::pnorm(-abs(z))
+  lower <- if ("lwr" %in% names(fixed_par)) fixed_par$lwr else rep(NA_real_, length(est))
+  upper <- if ("upr" %in% names(fixed_par)) fixed_par$upr else rep(NA_real_, length(est))
 
-  out <- cbind(Estimate = est, `Std. Error` = se, `z value` = z, `Pr(>|z|)` = p)
+  out <- cbind(Estimate = est, `Std. Error` = se, lower, upper)
+  colnames(out)[3:4] <- ci_names
   rownames(out) <- labels
   out
 }
