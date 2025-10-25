@@ -154,6 +154,93 @@
 }
 
 
+.format_numbers <- function(x, digits, big_mark = NULL) {
+  out <- rep(NA_character_, length(x))
+  if (!length(x)) {
+    return(out)
+  }
+
+  is_na <- is.na(x)
+  is_inf <- !is_na & !is.finite(x)
+  out[is_inf] <- as.character(x[is_inf])
+
+  keep <- !is_na & !is_inf
+  if (any(keep)) {
+    out[keep] <- formatC(x[keep], format = "f", digits = digits, big.mark = big_mark)
+  }
+
+  out
+}
+
+
+.print_formatted <- function(tab, ...) {
+  dots <- list(...)
+  if (!"quote" %in% names(dots)) {
+    dots$quote <- FALSE
+  }
+  do.call(print, c(list(tab), dots))
+}
+
+
+.format_terminal_display <- function(tab) {
+  if (!is.matrix(tab) || !nrow(tab)) {
+    return(tab)
+  }
+
+  metric_digits0 <- c("abundance", "recruitment", "ssb")
+  row_names <- rownames(tab)
+  col_names <- colnames(tab)
+  is_sd_col <- col_names == "Std. Error"
+
+  formatted <- matrix(NA_character_, nrow = nrow(tab), ncol = ncol(tab),
+                      dimnames = dimnames(tab))
+
+  for (i in seq_len(nrow(tab))) {
+    row_nm <- row_names[i]
+    row_key <- tolower(row_nm)
+    digits_base <- if (row_key %in% metric_digits0) 0L else 3L
+    big_mark <- if (digits_base == 0L) "," else NULL
+
+    for (j in seq_len(ncol(tab))) {
+      digits <- if (is_sd_col[j]) 3L else digits_base
+      big <- if (is_sd_col[j]) NULL else big_mark
+      formatted[i, j] <- .format_numbers(tab[i, j], digits = digits, big_mark = big)
+    }
+  }
+
+  formatted
+}
+
+
+.format_coef_display <- function(tab) {
+  if (!is.matrix(tab) || !nrow(tab)) {
+    return(tab)
+  }
+
+  row_names <- rownames(tab)
+  col_names <- colnames(tab)
+  is_sd_col <- col_names == "Std. Error"
+
+  formatted <- matrix(NA_character_, nrow = nrow(tab), ncol = ncol(tab),
+                      dimnames = dimnames(tab))
+
+  for (i in seq_len(nrow(tab))) {
+    row_nm <- row_names[i]
+    is_r0 <- grepl("\\br0\\b", row_nm)
+    digits_base <- if (is_r0) 0L else 3L
+    big_mark <- if (is_r0 && digits_base == 0L) "," else NULL
+
+    for (j in seq_len(ncol(tab))) {
+      digits <- if (is_sd_col[j]) 3L else digits_base
+      big <- if (is_sd_col[j]) NULL else big_mark
+      formatted[i, j] <- .format_numbers(tab[i, j], digits = digits, big_mark = big)
+    }
+  }
+
+  formatted
+}
+
+
 #' @export
 print.tam_fit <- function(x, ...) {
   x <- .require_tam_fit(x, arg = "x")
@@ -175,7 +262,8 @@ print.tam_fit <- function(x, ...) {
 
   if (nrow(sumry$coefficients)) {
     cat("\nCoefficients:\n")
-    print(sumry$coefficients, ...)
+    coef_tab <- .format_coef_display(sumry$coefficients)
+    .print_formatted(coef_tab, ...)
   } else {
     cat("\nCoefficients: (none)\n")
   }
@@ -183,7 +271,8 @@ print.tam_fit <- function(x, ...) {
   derived <- sumry$terminal_vals
   if (nrow(derived) > 0) {
     cat(sprintf("\nTerminal year (%s) estimates:\n", sumry$terminal_year))
-    print(derived, ...)
+    terminal_tab <- .format_terminal_display(derived)
+    .print_formatted(terminal_tab, ...)
   }
 
   invisible(x)
@@ -259,14 +348,16 @@ print.summary_tam_fit <- function(x, ...) {
 
   if (nrow(x$coefficients)) {
     cat("\nCoefficients:\n")
-    print(x$coefficients, ...)
+    coef_tab <- .format_coef_display(x$coefficients)
+    .print_formatted(coef_tab, ...)
   } else {
     cat("\nCoefficients: (none)\n")
   }
 
   if (nrow(x$terminal_vals) > 0) {
     cat(sprintf("\nTerminal year (%s) estimates:\n", x$terminal_year))
-    print(x$terminal_vals, ...)
+    terminal_tab <- .format_terminal_display(x$terminal_vals)
+    .print_formatted(terminal_tab, ...)
   }
 
   invisible(x)
