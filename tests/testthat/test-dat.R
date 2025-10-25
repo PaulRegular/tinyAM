@@ -54,7 +54,7 @@ test_that("make_dat infers years/ages when NULL and builds expected pieces", {
     N_settings = list(process = "iid", init_N0 = FALSE),
     F_settings = list(process = "approx_rw",  mu_form = NULL),
     M_settings = list(process = "off", mu_form = NULL, assumption = ~ I(0.3)),
-    obs_settings = list(sd_catch_form = ~1, sd_index_form = ~survey, q_form = ~ q_block,
+    obs_settings = list(sd_catch_form = ~1, sd_index_form = ~1, q_form = ~ q_block,
                         fill_missing = TRUE)
   )
 

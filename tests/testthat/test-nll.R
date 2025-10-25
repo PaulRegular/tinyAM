@@ -107,7 +107,7 @@ test_dat <- function(obs = cod_obs,
                      F_settings = list(process = "approx_rw",  mu_form = NULL),
                      M_settings = list(process = "off", mu_form = NULL, assumption = ~I(0.3)),
                      obs_settings = list(q_form = ~ q_block, sd_catch_form = ~1,
-                                         sd_index_form = ~survey, fill_missing = TRUE),
+                                         sd_index_form = ~1, fill_missing = TRUE),
                      proj_settings = NULL) {
   args <- mget(ls())
   do.call(make_dat, args)

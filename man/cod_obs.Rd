@@ -94,7 +94,7 @@ dat <- make_dat(
   F_settings = list(process = "approx_rw", mu_form = NULL),
   M_settings = list(process = "off", mu_form = NULL,
                     assumption = ~ I(0.2), age_breaks = NULL),
-  obs_settings = list(sd_catch_form = ~1, sd_index_form = ~survey, q_form = ~ q_block)
+  obs_settings = list(sd_catch_form = ~ 1, sd_index_form = ~ 1, q_form = ~ q_block)
 )
 
 }

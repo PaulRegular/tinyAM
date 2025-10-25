@@ -12,7 +12,7 @@ make_dat(
   F_settings = list(process = "approx_rw", mu_form = NULL),
   M_settings = list(process = "off", mu_form = NULL, assumption = ~I(0.2), age_breaks =
     NULL, first_dev_year = NULL),
-  obs_settings = list(sd_catch_form = ~1, sd_index_form = ~survey, q_form = ~q_block,
+  obs_settings = list(sd_catch_form = ~1, sd_index_form = ~1, q_form = ~q_block,
     fill_missing = TRUE),
   proj_settings = NULL
 )
@@ -168,7 +168,7 @@ dat <- make_dat(
   N_settings = list(process = "iid", init_N0 = FALSE),
   F_settings = list(process = "approx_rw", mu_form = NULL),
   M_settings = list(process = "off", assumption = ~ I(0.3)),
-  obs_settings = list(sd_catch_form = ~1, sd_survey_form = ~survey, q_form = ~ q_block)
+  obs_settings = list(sd_catch_form = ~ 1, sd_index_form = ~ 1, q_form = ~ q_block)
 )
 
 ## With projection settings
@@ -177,7 +177,7 @@ dat <- make_dat(
   N_settings = list(process = "iid", init_N0 = FALSE),
   F_settings = list(process = "approx_rw", mu_form = NULL),
   M_settings = list(process = "off", assumption = ~ I(0.3)),
-  obs_settings = list(sd_catch_form = ~1, sd_index_form = ~survey, q_form = ~ q_block),
+  obs_settings = list(sd_catch_form = ~ 1, sd_index_form = ~ 1, q_form = ~ q_block),
   proj_settings = list(n_proj = 3, n_mean = 3, F_mult = 1)
 )
 
