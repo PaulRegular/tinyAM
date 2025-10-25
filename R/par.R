@@ -42,8 +42,9 @@
 #'     `age_block = levels(dat$M_settings$age_blocks)`
 #'
 #' - **Observation model**
+#'   - `log_sd_catch` (length `ncol(dat$sd_catch_modmat)`)
+#'   - `log_sd_index` (length `ncol(dat$sd_index_modmat)`)
 #'   - `log_q` (length `ncol(dat$q_modmat)`)
-#'   - `log_sd_obs` (length `ncol(dat$sd_obs_modmat)`)
 #'   - `missing` vector of length `sum(is.na(dat$log_obs))` (placeholders for
 #'     imputed `log_obs`)
 #'
@@ -53,8 +54,8 @@
 #' @param dat A data list returned by [make_dat()], containing design matrices,
 #'   settings, and observation mappings. The shapes and presence/absence of
 #'   parameters depend on elements in `dat` (e.g., `F_modmat`, `M_modmat`,
-#'   `q_modmat`, `sd_obs_modmat`, `N_settings`, `F_settings`, `M_settings`,
-#'   `years`, `ages`, and `M_settings$age_blocks`).
+#'   `q_modmat`, `sd_catch_modmat`, `sd_index_modmat`, `N_settings`, `F_settings`,
+#'   `M_settings`, `years`, `ages`, and `M_settings$age_blocks`).
 #'
 #' @return
 #' A named list of initialized parameters suitable to pass to the TAM objective
@@ -70,7 +71,7 @@
 #'   N_settings = list(process = "iid", init_N0 = FALSE),
 #'   F_settings = list(process = "approx_rw", mu_form = NULL),
 #'   M_settings = list(process = "off", assumption = ~ I(0.3)),
-#'   obs_settings = list(sd_form = ~ sd_obs_block, q_form = ~ q_block)
+#'   obs_settings = list(sd_catch_form = ~sd_block, sd_index_form = ~sd_block, q_form = ~ q_block)
 #' )
 #' par <- make_par(dat)
 #' str(par)
@@ -108,10 +109,12 @@ make_par <- function(dat) {
   if (dat$M_settings$process == "ar1") {
     par$logit_phi_m <- c("age" = 0, "year" = 0)
   }
+  par$log_sd_catch <- numeric(ncol(dat$sd_catch_modmat))
+  names(par$log_sd_catch) <- colnames(dat$sd_catch_modmat)
+  par$log_sd_index <- numeric(ncol(dat$sd_index_modmat))
+  names(par$log_sd_index) <- colnames(dat$sd_index_modmat)
   par$log_q <- numeric(ncol(dat$q_modmat))
   names(par$log_q) <- colnames(dat$q_modmat)
-  par$log_sd_obs <- numeric(ncol(dat$sd_obs_modmat))
-  names(par$log_sd_obs) <- colnames(dat$sd_obs_modmat)
 
   if (dat$obs_settings$fill_missing) {
     par$missing <- numeric(sum(dat$is_missing))

@@ -196,8 +196,10 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #'
 #' **Design matrices**
 #'
-#' - `obs_settings$sd_form` is evaluated on the combined obs map to produce
-#'   `sd_obs_modmat`.
+#' - `obs_settings$sd_catch_form` is evaluated on the catch table to produce
+#'   `sd_catch_modmat`.
+#' - `obs_settings$sd_index_form` is evaluated on the index table to produce
+#'   `sd_index_modmat`.
 #' - `obs_settings$q_form` is evaluated on the index table to produce
 #'   `q_modmat`.
 #' - If `M_settings$mu_form` is provided, `M_modmat <- model.matrix(mu_form,
@@ -265,7 +267,8 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #' - `mean_ages`: optional vector of ages to include in population weighted
 #'   average M (`M_bar`) calculations. All ages used if absent.
 #' @param obs_settings A list with elements:
-#' - `sd_catch_form`: formula for observation SD blocks, evaluated on the combined obs map (e.g. `~ sd_obs_block`).
+#' - `sd_catch_form`: formula for observation SD blocks for catch-at-age data.
+#' - `sd_index_form`: formula for observation SD blocks for index-at-age data.
 #' - `q_form`: formula for catchability blocks, evaluated on the index table (e.g. `~ q_block`).
 #' - `fill_missing`: logical - fill missing values, and zeros, using random effects? Default = `TRUE`.
 #'                   Note that one-step-ahead residuals are not currently working when `TRUE`.
@@ -288,7 +291,7 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #' - `obs_map` — stack of `obs$catch` and `obs$index` mapping variables
 #' - `log_obs`, `is_missing`, `is_observed`, `observed` - vector of log observations (with NA),
 #'   logical vector indicating missing and observed values, and vector of non-missing values, respectively.
-#' - design matrices: `sd_obs_modmat`, `q_modmat`, and optionally `F_modmat`, `M_modmat`
+#' - design matrices: `sd_catch_modmat`, `sd_index_modmat`, `q_modmat`, and optionally `F_modmat`, `M_modmat`
 #' - mean-level placeholders: `log_mu_f` and/or `log_mu_m` (or `log_mu_assumed_m`)
 #' - process settings: `N_settings`, `F_settings`, `M_settings`
 #' - projection settings: `proj_settings`
@@ -300,7 +303,7 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #'   N_settings = list(process = "iid", init_N0 = FALSE),
 #'   F_settings = list(process = "approx_rw", mu_form = NULL),
 #'   M_settings = list(process = "off", assumption = ~ I(0.3)),
-#'   obs_settings = list(sd_form = ~ sd_obs_block, q_form = ~ q_block)
+#'   obs_settings = list(sd_catch_form = ~1, sd_survey_form = ~survey, q_form = ~ q_block)
 #' )
 #'
 #' ## With projection settings
@@ -309,7 +312,7 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #'   N_settings = list(process = "iid", init_N0 = FALSE),
 #'   F_settings = list(process = "approx_rw", mu_form = NULL),
 #'   M_settings = list(process = "off", assumption = ~ I(0.3)),
-#'   obs_settings = list(sd_form = ~ sd_obs_block, q_form = ~ q_block),
+#'   obs_settings = list(sd_catch_form = ~1, sd_index_form = ~survey, q_form = ~ q_block),
 #'   proj_settings = list(n_proj = 3, n_mean = 3, F_mult = 1)
 #' )
 #'
@@ -324,7 +327,7 @@ make_dat <- function(
     N_settings = list(process = "iid", init_N0 = FALSE),
     F_settings = list(process = "approx_rw", mu_form = NULL),
     M_settings = list(process = "off", mu_form = NULL, assumption = ~I(0.2), age_breaks = NULL, first_dev_year = NULL),
-    obs_settings = list(sd_form = ~sd_obs_block, q_form = ~q_block, fill_missing = TRUE),
+    obs_settings = list(sd_catch_form = ~1, sd_index_form = ~survey, q_form = ~q_block, fill_missing = TRUE),
     proj_settings = NULL
 ) {
 
@@ -424,7 +427,8 @@ make_dat <- function(
   dat$is_observed <- obs_fit$is_observed
   dat$observed <- dat$log_obs[!dat$is_missing]
 
-  dat$sd_obs_modmat <- stats::model.matrix(obs_settings$sd_form, data = dat$obs_map)
+  dat$sd_catch_modmat <- stats::model.matrix(obs_settings$sd_catch_form, data = dat$obs$catch)
+  dat$sd_index_modmat <- stats::model.matrix(obs_settings$sd_index_form, data = dat$obs$index)
   dat$q_modmat <- stats::model.matrix(obs_settings$q_form, data = dat$obs$index)
   if (!is.null(dat$F_settings$mu_form)) {
     dat$F_modmat <- stats::model.matrix(F_settings$mu_form, data = dat$obs$catch)
