@@ -264,7 +264,6 @@ print.tam_fit <- function(x, ...) {
   conv <- sumry$convergence
 
   cat(sprintf("\nObjective: %s\n", format(sumry$objective, digits = 6)))
-  cat(sprintf("Converged: %s\n", if (conv$converged) "Yes" else "No"))
   if (!is.null(conv$max_gradient)) {
     cat(sprintf("Max |grad|: %s\n", format(conv$max_gradient, digits = 3, scientific = TRUE)))
   }
@@ -316,7 +315,6 @@ summary.tam_fit <- function(object, ...) {
     call = object$call,
     objective = object$opt$objective,
     convergence = list(
-      converged = isTRUE(object$is_converged),
       max_gradient = max_grad,
       pd_hessian = object$sdrep$pdHess
     ),
@@ -347,7 +345,6 @@ print.summary_tam_fit <- function(x, ...) {
 
   cat(sprintf("\nObjective: %s\n", format(x$objective, digits = 6)))
   conv <- x$convergence
-  cat(sprintf("Converged: %s\n", if (conv$converged) "Yes" else "No"))
   if (!is.null(conv$max_gradient)) {
     cat(sprintf("Max |grad|: %s\n", format(conv$max_gradient, digits = 3, scientific = TRUE)))
   }

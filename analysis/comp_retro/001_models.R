@@ -102,7 +102,7 @@ M_ar1_F_rw <- update(
     mean_ages = 5:14
   )
 )
-M_ar1_F_rw$sdrep
+M_ar1_F_rw
 
 M_ar1_F_ar1 <- update(
   M_ar1_F_rw,

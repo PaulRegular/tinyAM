@@ -6,8 +6,9 @@ Authors@R:
 Description: tinyAM (tiny assessment model; aka TAM) is an experimental R package for fitting 
              age–structured stock assessment models using RTMB. It is designed to 
              be flexible, modular, and lightweight, making it easy to experiment 
-             with different model structures and process assumptions. (Documentation
-             and tests drafted with the assistance of ChatGPT 5 [2025-09-24]).
+             with different model structures and process assumptions. (Documentation,
+             tests, classes, and methods drafted with the assistance of ChatGPT 5 
+             and Codex [2025-10-25]).
 Depends:
     R (>= 4.1.0)
 License: GPL (>= 3)
