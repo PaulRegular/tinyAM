@@ -350,11 +350,9 @@ fit_retro <- function(
   }
 
   fits <- retro[converged]
-  if (length(fits) == 0L) {
-    names(fits) <- NULL
-  }
 
   if (length(fits) == 0L) {
+    names(fits) <- NULL
     empty <- list(
       obs_pred = list(),
       pop = list(),
