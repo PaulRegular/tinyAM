@@ -83,8 +83,8 @@ tidy_mat <- tidy_array
 #' - **catch**: original columns plus `pred`, `sd`, and `std_res`.
 #' - **index**: original columns plus `pred`, `sd`, `q`, and `std_res`.
 #'
+#' @example inst/examples/example_fit_default.R
 #' @examples
-#' fit <- fit_tam(cod_obs, years = 1983:2024, ages = 2:14)
 #' obs_pred <- tidy_obs_pred(fit)
 #' head(obs_pred$catch)
 #' head(obs_pred$index)
@@ -133,8 +133,8 @@ tidy_obs_pred <- function(fit, add_osa_res = FALSE, ...) {
 #' where each data frame has one column per dimension (e.g., `year`, `age`),
 #' a value column `est`, and an `is_proj` column.
 #'
+#' @example inst/examples/example_fit_default.R
 #' @examples
-#' fit <- fit_tam(cod_obs, years = 1983:2024, ages = 2:14)
 #' trends <- tidy_rep(fit)
 #' names(trends)
 #' head(trends$N)
@@ -244,8 +244,8 @@ trans_est <- function(data, transform = exp, scale = 1) {
 #'
 #' - `year`, `est`, `sd`, `lwr`, `upr`, `is_proj` — after applying the chosen transform.
 #'
+#' @example inst/examples/example_fit_default.R
 #' @examples
-#' fit <- fit_tam(cod_obs, years = 1983:2024, ages = 2:14)
 #' trends <- tidy_sdrep(fit, interval = 0.9)
 #' names(trends)
 #' head(trends$ssb)
@@ -284,8 +284,8 @@ tidy_sdrep <- function(fit, interval = 0.95) {
 #' A named list containing the elements returned by [tidy_sdrep()] and
 #' [tidy_rep()] (names preserved).
 #'
+#' @example inst/examples/example_fit_default.R
 #' @examples
-#' fit <- fit_tam(cod_obs, years = 1983:2024, ages = 2:14)
 #' pop <- tidy_pop(fit)
 #' names(pop)
 #'
@@ -337,8 +337,8 @@ tidy_pop <- function(fit, interval = 0.95) {
 #' - `random`: a named list of data frames (one per random block) with the same
 #'   columns as `fixed` (indices appropriate to each random effect).
 #'
+#' @example inst/examples/example_fit_default.R
 #' @examples
-#' fit <- fit_tam(cod_obs, years = 1983:2024, ages = 2:14)
 #' par_tab <- tidy_par(fit)
 #' names(par_tab)
 #' par_tab$fixed
@@ -584,9 +584,10 @@ stack_nested <- function(x, label = "model",
 #' - **fixed_par** — a single stacked data frame of fixed-effect parameters with columns like `par`, `est`, `se`, `lwr`, `upr`, plus indices (e.g., `coef`, `year`, `age`) and the label column when applicable;
 #' - **random_par** — a named list of stacked data frames, one per random-effect block, each with the same schema as `fixed_par` plus block-appropriate indices.
 #'
+#' @example inst/examples/example_fit_default.R
 #' @examples
 #' # Single model: no label column added
-#' fit1 <- fit_tam(cod_obs, years = 1983:2024, ages = 2:14)
+#' fit1 <- fit
 #' tabs1 <- tidy_tam(fit1)
 #' names(tabs1)
 #' head(tabs1$fixed_par)

@@ -113,15 +113,8 @@
 #' - **pop**: A collection of population summaries in tidy format (see
 #'            [tidy_pop()]).
 #'
+#' @example inst/examples/example_fit_default.R
 #' @examples
-#' fit <- fit_tam(
-#'   cod_obs,
-#'   years = 1983:2024, ages = 2:14,
-#'   N_settings = list(process = "iid", init_N0 = FALSE),
-#'   F_settings = list(process = "approx_rw"),
-#'   M_settings = list(process = "off", assumption = ~ I(0.3)),
-#'   obs_settings = list(sd_catch_form = ~1, sd_index_form = ~1, q_form = ~ q_block)
-#' )
 #' fit$sdrep
 #'
 #' ## Fit with projections (status quo F)
@@ -257,13 +250,12 @@ fit_tam <- function(
 #' is added to each data.frame within these objects which specifies the terminal
 #' year.
 #'
+#' @example inst/examples/example_fit_default.R
 #' @examples
 #' \donttest{
 #' if (interactive()) {
 #'   # Choose your parallel plan (set once per session)
 #'   future::plan(future::multisession, workers = 4)
-#'
-#'   fit <- fit_tam(cod_obs, years = 1983:2024, ages = 2:14, silent = TRUE)
 #'   retros <- fit_retro(fit, folds = 5, progress = TRUE)
 #'   head(retros$pop$ssb)
 #'   head(retros$mohns_rho)
@@ -386,13 +378,12 @@ fit_retro <- function(
 #' a list containing `obs_pred`, `pop`, optional `mohns_rho`, `hindcast_rmse`,
 #' and `fits` (see [fit_retro()] for full details).
 #'
+#' @example inst/examples/example_fit_default.R
 #' @examples
 #' \donttest{
 #' if (interactive()) {
 #'   # Choose your parallel plan (set once per session)
 #'   future::plan(future::multisession, workers = 4)
-#'
-#'   fit <- fit_tam(cod_obs, years = 1983:2024, ages = 2:14, silent = TRUE)
 #'   hc  <- fit_hindcast(fit, folds = 5, progress = TRUE)
 #'   hc$hindcast_rmse
 #'
