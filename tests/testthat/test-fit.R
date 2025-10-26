@@ -118,6 +118,52 @@ test_that("fit_retro returns structured empty results when no fits converge", {
   expect_equal(nrow(retros$mohns_rho), 0)
 })
 
+test_that("fit_retro inherits grad_tol stored on the fit when omitted", {
+  fit <- default_fit
+  fit$grad_tol <- 0.0123
+  captured <- list()
+
+  with_mocked_bindings(
+    stats::update = function(object, ...) object,
+    furrr::future_map = function(.x, .f, ...) lapply(.x, .f),
+    progressr::with_progress = function(expr, ...) {
+      eval.parent(substitute(expr))
+    },
+    check_convergence = function(fit, grad_tol, ...) {
+      captured <<- c(captured, list(grad_tol))
+      TRUE
+    }, {
+      fit_retro(fit, folds = 1, progress = FALSE)
+    }
+  )
+
+  expect_length(captured, 1)
+  expect_equal(captured[[1]], 0.0123)
+})
+
+test_that("fit_retro falls back to default grad_tol when fit has none", {
+  fit <- default_fit
+  fit$grad_tol <- NULL
+  captured <- list()
+
+  with_mocked_bindings(
+    stats::update = function(object, ...) object,
+    furrr::future_map = function(.x, .f, ...) lapply(.x, .f),
+    progressr::with_progress = function(expr, ...) {
+      eval.parent(substitute(expr))
+    },
+    check_convergence = function(fit, grad_tol, ...) {
+      captured <<- c(captured, list(grad_tol))
+      TRUE
+    }, {
+      fit_retro(fit, folds = 1, progress = FALSE)
+    }
+  )
+
+  expect_length(captured, 1)
+  expect_equal(captured[[1]], 1e-3)
+})
+
 test_that("tam_fit summary and print methods provide structured output", {
   fit <- default_fit
   sum_fit <- summary(fit)
@@ -144,6 +190,13 @@ test_that("hindcast empty fits surface placeholder RMSE", {
   expect_true("hindcast_rmse" %in% names(hindcasts))
   expect_true(is.na(hindcasts$hindcast_rmse))
   expect_equal(hindcasts$fits, list())
+  expect_equal(hindcasts$obs_pred, list())
+  expect_equal(hindcasts$pop, list())
+  expect_s3_class(hindcasts$mohns_rho, "data.frame")
+  expect_equal(nrow(hindcasts$mohns_rho), 0)
+  expect_s3_class(hindcasts$fixed_par, "data.frame")
+  expect_equal(nrow(hindcasts$fixed_par), 0)
+  expect_equal(hindcasts$random_par, list())
 })
 
 
