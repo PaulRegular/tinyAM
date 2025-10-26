@@ -106,6 +106,18 @@ test_that("fit_retro runs peels and returns stacked outputs", {
   }
 })
 
+test_that("fit_retro returns structured empty results when no fits converge", {
+  fit <- default_fit
+  retros <- fit_retro(fit, folds = 1, progress = FALSE, grad_tol = 0)
+
+  expect_true(is.list(retros))
+  expect_equal(retros$fits, list())
+  expect_equal(retros$obs_pred, list())
+  expect_equal(retros$pop, list())
+  expect_s3_class(retros$mohns_rho, "data.frame")
+  expect_equal(nrow(retros$mohns_rho), 0)
+})
+
 test_that("tam_fit summary and print methods provide structured output", {
   fit <- default_fit
   sum_fit <- summary(fit)
@@ -123,6 +135,15 @@ test_that("fit_hindcasts runs peels with a one year projection", {
     modeled_years <- hindcasts$fits[[1]]$dat$years
     expect_equal(hindcast_year + 1, max(modeled_years))
   }
+})
+
+test_that("hindcast empty fits surface placeholder RMSE", {
+  fit <- default_fit
+  hindcasts <- fit_retro(fit, folds = 1, hindcast = TRUE, progress = FALSE, grad_tol = 0)
+
+  expect_true("hindcast_rmse" %in% names(hindcasts))
+  expect_true(is.na(hindcasts$hindcast_rmse))
+  expect_equal(hindcasts$fits, list())
 })
 
 
