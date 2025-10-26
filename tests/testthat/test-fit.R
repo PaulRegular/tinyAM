@@ -123,18 +123,16 @@ test_that("fit_retro inherits grad_tol stored on the fit when omitted", {
   fit$grad_tol <- 0.0123
   captured <- list()
 
+  original_check <- tinyAM:::check_convergence
+
   with_mocked_bindings(
-    `stats::update` = function(object, ...) object,
-    `furrr::future_map` = function(.x, .f, ...) lapply(.x, .f),
-    `progressr::with_progress` = function(expr, ...) {
-      eval.parent(substitute(expr))
-    },
     check_convergence = function(fit, grad_tol, ...) {
       captured <<- c(captured, list(grad_tol))
-      TRUE
+      original_check(fit, grad_tol = grad_tol, ...)
     }, {
       fit_retro(fit, folds = 1, progress = FALSE)
-    }
+    },
+    .package = "tinyAM"
   )
 
   expect_length(captured, 1)
@@ -146,18 +144,16 @@ test_that("fit_retro falls back to default grad_tol when fit has none", {
   fit$grad_tol <- NULL
   captured <- list()
 
+  original_check <- tinyAM:::check_convergence
+
   with_mocked_bindings(
-    `stats::update` = function(object, ...) object,
-    `furrr::future_map` = function(.x, .f, ...) lapply(.x, .f),
-    `progressr::with_progress` = function(expr, ...) {
-      eval.parent(substitute(expr))
-    },
     check_convergence = function(fit, grad_tol, ...) {
       captured <<- c(captured, list(grad_tol))
-      TRUE
+      original_check(fit, grad_tol = grad_tol, ...)
     }, {
       fit_retro(fit, folds = 1, progress = FALSE)
-    }
+    },
+    .package = "tinyAM"
   )
 
   expect_length(captured, 1)
