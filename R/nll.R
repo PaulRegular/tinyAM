@@ -177,16 +177,8 @@ rprocess_2d <- function(ny, na, phi = c(0, 0), sd = 1) {
 #' It also relies on helper functions [dprocess_2d()] and [rprocess_2d()]
 #' for process penalties and simulation.
 #'
+#' @example inst/examples/example_dat_default.R
 #' @examples
-#' dat <- make_dat(
-#'   cod_obs,
-#'   years = 1983:2024,
-#'   ages  = 2:14,
-#'   N_settings = list(process = "iid", init_N0 = FALSE),
-#'   F_settings = list(process = "approx_rw", mu_form = NULL),
-#'   M_settings = list(process = "off", assumption = ~ I(0.3)),
-#'   obs_settings = list(sd_catch_form = ~ 1, sd_index_form = ~ 1, q_form = ~ q_block)
-#' )
 #' par <- make_par(dat)
 #' make_nll_fun <- function(f, d) function(p) f(p, d)
 #' obj <- RTMB::MakeADFun(make_nll_fun(nll_fun, dat), par,
