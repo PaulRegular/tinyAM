@@ -350,6 +350,22 @@ fit_retro <- function(
   }
 
   fits <- retro[converged]
+
+  if (length(fits) == 0L) {
+    empty <- list(
+      obs_pred = list(),
+      pop = list(),
+      fixed_par = data.frame(),
+      random_par = list(),
+      fits = fits,
+      mohns_rho = data.frame(metric = character(), age = numeric(), rho = numeric())
+    )
+    if (hindcast) {
+      empty$hindcast_rmse <- NA_real_
+    }
+    return(empty)
+  }
+
   out <- c(tidy_tam(model_list = fits, label = "fold"),
            list(fits = fits))
 
