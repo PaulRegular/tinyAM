@@ -1,8 +1,3 @@
-# Load package example observations
-data(cod_obs)
-
-# Build a TAM data list with the defaults used throughout the documentation
-# (explicitly listing the main settings for clarity).
 dat <- make_dat(
   cod_obs,
   years = 1983:2024,
