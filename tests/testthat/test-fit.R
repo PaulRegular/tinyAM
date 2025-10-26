@@ -124,9 +124,9 @@ test_that("fit_retro inherits grad_tol stored on the fit when omitted", {
   captured <- list()
 
   with_mocked_bindings(
-    stats::update = function(object, ...) object,
-    furrr::future_map = function(.x, .f, ...) lapply(.x, .f),
-    progressr::with_progress = function(expr, ...) {
+    `stats::update` = function(object, ...) object,
+    `furrr::future_map` = function(.x, .f, ...) lapply(.x, .f),
+    `progressr::with_progress` = function(expr, ...) {
       eval.parent(substitute(expr))
     },
     check_convergence = function(fit, grad_tol, ...) {
@@ -147,9 +147,9 @@ test_that("fit_retro falls back to default grad_tol when fit has none", {
   captured <- list()
 
   with_mocked_bindings(
-    stats::update = function(object, ...) object,
-    furrr::future_map = function(.x, .f, ...) lapply(.x, .f),
-    progressr::with_progress = function(expr, ...) {
+    `stats::update` = function(object, ...) object,
+    `furrr::future_map` = function(.x, .f, ...) lapply(.x, .f),
+    `progressr::with_progress` = function(expr, ...) {
       eval.parent(substitute(expr))
     },
     check_convergence = function(fit, grad_tol, ...) {
