@@ -1,8 +1,5 @@
 
-## TODO:
-## Check if different sd_obs_blocks for catch can fix retro pattern
-
-
+## TODO: think about supplying sd_index values
 
 library(RTMB)
 library(tinyAM)
@@ -12,13 +9,6 @@ library(plotly)
 
 cod_obs <- tinyAM::cod_obs
 cod_obs$weight$collapse <- ifelse(cod_obs$weight$year %in% 1991:1994, 1, 0)
-
-# cod_obs$catch$sd_obs_block <- ifelse(cod_obs$catch$age %in% 4:11, "catch 4-11",
-#                                      ifelse(cod_obs$catch$age %in% 2:3, "catch 2-3",
-#                                             "catch 12-14"))
-
-cod_obs$catch$sd_obs_block <- ifelse(cod_obs$catch$age %in% 2:4, "catch 2-4",
-                                     "catch 5-14")
 
 ## Questions:
 ## How should the random processes be modeled?
