@@ -71,18 +71,6 @@
 #' head(cod_obs$catch)
 #' with(cod_obs$catch, table(F_y_block, F_a_block))
 #'
-#' # Build a minimal TAM dataset
-#' dat <- make_dat(
-#'   obs = cod_obs,
-#'   years = 1983:2024,
-#'   ages = 2:14,
-#'   N_settings = list(process = "iid", init_N0 = FALSE),
-#'   F_settings = list(process = "approx_rw", mu_form = NULL),
-#'   M_settings = list(process = "off", mu_form = NULL,
-#'                     assumption = ~ I(0.2), age_breaks = NULL),
-#'   obs_settings = list(sd_catch_form = ~ 1, sd_index_form = ~ 1, q_form = ~ q_block)
-#' )
-#'
 #' @docType data
 #' @keywords datasets
 #' @name cod_obs

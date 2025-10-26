@@ -145,13 +145,13 @@
 #' A **named list of data frames** (e.g., `catch`, `index`, `N`, `F`, `M`, `Z`, `ssb`, …),
 #' each stacked across `n` simulations with a `sim` column.
 #'
+#' @example inst/examples/example_fit_default.R
 #' @examples
 #' \donttest{
 #' if (interactive()) {
 #'   # Set-up parallel workers and fit model
 #'   future::plan(future::multisession, workers = 4)
-#'   fit <- fit_tam(cod_obs, years = 1983:2024, ages = 2:14)
-#'
+#' 
 #'   # Draw fixed-effects uncertainty and redraw random process fields
 #'   sims1 <- sim_tam(fit, n = 10, par_uncertainty = "fixed", redraw_random = TRUE)
 #'   plot_trend(sims1$ssb, split = ~sim, line = list(width = 0.5))

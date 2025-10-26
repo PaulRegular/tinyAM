@@ -297,14 +297,9 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #' - projection settings: `proj_settings`
 #' - AR(1) parameter assumptions, `logit_phi_*`, if applicable
 #'
+#' @example inst/examples/example_dat_default.R
 #' @examples
-#' dat <- make_dat(
-#'   cod_obs,
-#'   N_settings = list(process = "iid", init_N0 = FALSE),
-#'   F_settings = list(process = "approx_rw", mu_form = NULL),
-#'   M_settings = list(process = "off", assumption = ~ I(0.3)),
-#'   obs_settings = list(sd_catch_form = ~ 1, sd_index_form = ~ 1, q_form = ~ q_block)
-#' )
+#' names(dat)
 #'
 #' ## With projection settings
 #' dat <- make_dat(
