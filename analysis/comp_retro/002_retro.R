@@ -18,7 +18,6 @@ lapply(names(retros), function(nm) {
   if (!inherits(retros[[nm]], "try-error")) {
     vis_tam(
       retros[[nm]]$fits,
-      interval = 0.9,
       output_file = paste0("analysis/comp_retro/outputs/002_retro_", nm, ".html"),
       open_file = FALSE
     )
@@ -28,7 +27,7 @@ lapply(names(retros), function(nm) {
 sapply(names(retros), function(nm) retros[[nm]]$hindcast_rmse) |>
   sort()
 
-sapply(names(retros), function(nm) (retros[[nm]]$mohns_rho |> subset(metric == "ssb"))$rho) |>
+sapply(names(retros), function(nm) abs((retros[[nm]]$mohns_rho |> subset(metric == "ssb"))$rho)) |>
   sort()
 
 rhos <- lapply(names(retros), function(nm) (retros[[nm]]$mohns_rho))

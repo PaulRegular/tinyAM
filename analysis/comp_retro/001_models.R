@@ -51,7 +51,8 @@ N_iid_F_rw <- fit_tam(
   ),
   obs_settings = list(
     q_form = ~ q_block,
-    sd_form = ~ sd_obs_block - 1,
+    sd_catch_form = ~ 1,
+    sd_index_form = ~ 1,
     fill_missing = TRUE
   ),
   proj_settings = list(
@@ -61,8 +62,7 @@ N_iid_F_rw <- fit_tam(
   )
 )
 N_iid_F_rw
-knitr::kable(N_iid_F_rw$fixed_par, digits = 3)
-N_iid_F_rw$opt$objective # 989.6083
+N_iid_F_rw$opt$objective
 
 N_iid_F_ar1 <- update(
   N_iid_F_rw,
@@ -72,7 +72,7 @@ N_iid_F_ar1 <- update(
     mean_ages = 5:14
   )
 )
-N_iid_F_ar1$sdrep
+N_iid_F_ar1
 
 N_ar1_F_rw <- update(
   N_iid_F_rw,
@@ -81,7 +81,7 @@ N_ar1_F_rw <- update(
     init_N0 = FALSE
   )
 )
-N_ar1_F_rw$sdrep
+N_ar1_F_rw
 
 M_ar1_F_rw <- update(
   N_iid_F_rw,
@@ -112,7 +112,7 @@ M_ar1_F_ar1 <- update(
     mean_ages = 5:14
   )
 )
-M_ar1_F_ar1$sdrep
+M_ar1_F_ar1
 
 M_iid_F_rw <- update(
   M_ar1_F_rw,
@@ -124,7 +124,7 @@ M_iid_F_rw <- update(
     mean_ages = 5:14
   )
 )
-M_iid_F_rw$sdrep
+M_iid_F_rw
 
 model_names <- c(
   "N_iid_F_rw",
