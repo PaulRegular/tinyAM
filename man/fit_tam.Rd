@@ -10,6 +10,7 @@ fit_tam(
   add_osa_res = FALSE,
   silent = FALSE,
   start_par = NULL,
+  grad_tol = 0.01,
   ...
 )
 }
@@ -30,6 +31,9 @@ for details.}
 structure returned by \code{\link[=make_par]{make_par()}}. Useful for warm starts or retrospective
 runs where parameter estimates from a previous fit are reused to improve
 convergence and speed. Non-matching or missing entries are ignored.}
+
+\item{grad_tol}{Numeric tolerance passed to \code{\link[=check_convergence]{check_convergence()}} when
+evaluating the fitted object's gradients. Defaults to \code{1e-2}.}
 
 \item{...}{
   Arguments passed on to \code{\link[=make_dat]{make_dat}}

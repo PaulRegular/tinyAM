@@ -16,7 +16,7 @@ test_that("fit_tam runs on a cod dataset and returns expected structure", {
   expect_named(
     fit,
     c("call", "dat", "obj", "opt", "rep", "sdrep", "obs_pred", "pop", "is_converged",
-      "fixed_par", "random_par"),
+      "fixed_par", "random_par", "grad_tol"),
     ignore.order = TRUE
   )
 
@@ -32,6 +32,7 @@ test_that("fit_tam runs on a cod dataset and returns expected structure", {
   expect_equal(dim(fit$rep$M), c(length(YEARS), length(AGES)))
   expect_equal(dim(fit$rep$Z), c(length(YEARS), length(AGES)))
   expect_equal(length(fit$rep$ssb), length(YEARS))
+  expect_equal(fit$grad_tol, 1e-2)
 })
 
 
