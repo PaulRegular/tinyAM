@@ -46,7 +46,16 @@ via \code{\link[=tidy_mat]{tidy_mat()}}.
 }
 }
 \examples{
-fit <- fit_tam(cod_obs, years = 1983:2024, ages = 2:14)
+fit <- fit_tam(
+  cod_obs,
+  years = 1983:2024,
+  ages = 2:14,
+  N_settings = list(process = "iid", init_N0 = FALSE),
+  F_settings = list(process = "approx_rw", mu_form = NULL),
+  M_settings = list(process = "off", assumption = ~ I(0.3)),
+  obs_settings = list(sd_catch_form = ~ 1, sd_index_form = ~ 1, q_form = ~ q_block),
+  silent = TRUE
+)
 par_tab <- tidy_par(fit)
 names(par_tab)
 par_tab$fixed

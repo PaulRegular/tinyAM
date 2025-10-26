@@ -80,7 +80,7 @@ the logit scale (later transformed by \code{plogis()} in the likelihood).
 dat <- make_dat(
   cod_obs,
   years = 1983:2024,
-  ages  = 2:14,
+  ages = 2:14,
   N_settings = list(process = "iid", init_N0 = FALSE),
   F_settings = list(process = "approx_rw", mu_form = NULL),
   M_settings = list(process = "off", assumption = ~ I(0.3)),

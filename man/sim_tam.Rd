@@ -67,11 +67,20 @@ Parallel execution is supported via \code{\link[furrr:future_map]{furrr::future_
 \code{future::plan()} beforehand if you want parallel workers.
 }
 \examples{
+fit <- fit_tam(
+  cod_obs,
+  years = 1983:2024,
+  ages = 2:14,
+  N_settings = list(process = "iid", init_N0 = FALSE),
+  F_settings = list(process = "approx_rw", mu_form = NULL),
+  M_settings = list(process = "off", assumption = ~ I(0.3)),
+  obs_settings = list(sd_catch_form = ~ 1, sd_index_form = ~ 1, q_form = ~ q_block),
+  silent = TRUE
+)
 \donttest{
 if (interactive()) {
   # Set-up parallel workers and fit model
   future::plan(future::multisession, workers = 4)
-  fit <- fit_tam(cod_obs, years = 1983:2024, ages = 2:14)
 
   # Draw fixed-effects uncertainty and redraw random process fields
   sims1 <- sim_tam(fit, n = 10, par_uncertainty = "fixed", redraw_random = TRUE)

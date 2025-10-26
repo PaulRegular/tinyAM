@@ -67,12 +67,20 @@ supports \code{update()} with a \code{years} argument. This function uses
 \code{future::plan(multisession, workers = 4)}).
 }
 \examples{
+fit <- fit_tam(
+  cod_obs,
+  years = 1983:2024,
+  ages = 2:14,
+  N_settings = list(process = "iid", init_N0 = FALSE),
+  F_settings = list(process = "approx_rw", mu_form = NULL),
+  M_settings = list(process = "off", assumption = ~ I(0.3)),
+  obs_settings = list(sd_catch_form = ~ 1, sd_index_form = ~ 1, q_form = ~ q_block),
+  silent = TRUE
+)
 \donttest{
 if (interactive()) {
   # Choose your parallel plan (set once per session)
   future::plan(future::multisession, workers = 4)
-
-  fit <- fit_tam(cod_obs, years = 1983:2024, ages = 2:14, silent = TRUE)
   retros <- fit_retro(fit, folds = 5, progress = TRUE)
   head(retros$pop$ssb)
   head(retros$mohns_rho)

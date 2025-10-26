@@ -67,8 +67,18 @@ effects as a named list of data frames (one per random-effect block, e.g. \code{
 \code{"missing"}, …).
 }
 \examples{
+fit <- fit_tam(
+  cod_obs,
+  years = 1983:2024,
+  ages = 2:14,
+  N_settings = list(process = "iid", init_N0 = FALSE),
+  F_settings = list(process = "approx_rw", mu_form = NULL),
+  M_settings = list(process = "off", assumption = ~ I(0.3)),
+  obs_settings = list(sd_catch_form = ~ 1, sd_index_form = ~ 1, q_form = ~ q_block),
+  silent = TRUE
+)
 # Single model: no label column added
-fit1 <- fit_tam(cod_obs, years = 1983:2024, ages = 2:14)
+fit1 <- fit
 tabs1 <- tidy_tam(fit1)
 names(tabs1)
 head(tabs1$fixed_par)

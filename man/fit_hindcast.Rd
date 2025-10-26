@@ -24,12 +24,20 @@ retrospective peels and, for each peel, fits a \strong{one-step-ahead projection
 same structure as \code{\link[=fit_retro]{fit_retro()}} including \code{hindcast_rmse}.
 }
 \examples{
+fit <- fit_tam(
+  cod_obs,
+  years = 1983:2024,
+  ages = 2:14,
+  N_settings = list(process = "iid", init_N0 = FALSE),
+  F_settings = list(process = "approx_rw", mu_form = NULL),
+  M_settings = list(process = "off", assumption = ~ I(0.3)),
+  obs_settings = list(sd_catch_form = ~ 1, sd_index_form = ~ 1, q_form = ~ q_block),
+  silent = TRUE
+)
 \donttest{
 if (interactive()) {
   # Choose your parallel plan (set once per session)
   future::plan(future::multisession, workers = 4)
-
-  fit <- fit_tam(cod_obs, years = 1983:2024, ages = 2:14, silent = TRUE)
   hc  <- fit_hindcast(fit, folds = 5, progress = TRUE)
   hc$hindcast_rmse
 
