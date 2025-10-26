@@ -1,5 +1,11 @@
 
-fit <- fit_tam(cod_obs, years = 1983:2024, ages = 2:14, silent = TRUE)
+testthat::skip_if_not_installed("RTMB")
+testthat::skip_if_not(exists("cod_obs"), "cod_obs not available")
+
+fit <- default_fit
+if (is.null(fit)) {
+  fit <- make_test_fit()
+}
 vals <- as.list(fit$sdrep, "Estimate", report = TRUE)
 sds <- as.list(fit$sdrep, "Std. Error", report = TRUE)
 

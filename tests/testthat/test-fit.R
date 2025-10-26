@@ -6,25 +6,6 @@ testthat::skip_if_not(exists("cod_obs"), "cod_obs not available")
 
 set.seed(1)
 
-YEARS <- 1983:2024
-AGES  <- 2:14
-
-test_fit <- function(obs = cod_obs,
-                     years = YEARS,
-                     ages  = AGES,
-                     N_settings = list(process = "iid", init_N0 = FALSE),
-                     F_settings = list(process = "approx_rw",  mu_form = NULL),
-                     M_settings = list(process = "off", mu_form = NULL, assumption = ~I(0.3)),
-                     obs_settings = list(q_form = ~ q_block, sd_catch_form = ~1,
-                                         sd_index_form = ~1, fill_missing = TRUE),
-                     proj_settings = NULL,
-                     silent = TRUE) {
-  args <- mget(ls())
-  do.call(fit_tam, args)
-}
-
-default_fit <- test_fit()
-
 test_that("fit_tam runs on a cod dataset and returns expected structure", {
   fit <- default_fit
 
@@ -55,7 +36,7 @@ test_that("fit_tam runs on a cod dataset and returns expected structure", {
 
 test_that("fit_tam emits warning if the model does not converge", {
   bad_fit <- suppressWarnings({
-    test_fit(
+    make_test_fit(
       N_settings = list(process = "iid", init_N0 = TRUE),
       F_settings = list(process = "iid"),
       M_settings = list(process = "iid", mu_form = NULL, assumption = ~I(0.3))
@@ -69,16 +50,13 @@ test_that("fit_tam works when an survey does not provide an index for all ages",
   obs <- cod_obs
   sub_ages <- 2:10
   obs$index <- obs$index[obs$index$age %in% sub_ages, ]
-  fit <- fit_tam(obs,
-                 years = YEARS,
-                 ages  = AGES,
-                 silent = TRUE)
+  fit <- make_test_fit(obs = obs)
   expect_equal(range(fit$obs_pred$index$age), range(sub_ages))
 })
 
 
 test_that("fit_tam objective is unaffected by projections", {
-  fit <- test_fit(
+  fit <- make_test_fit(
     proj_settings = list(n_proj = 20, n_mean = 20, F_mult = 1)
   )
   expect_equal(round(fit$opt$objective, 4), 989.6083)
@@ -89,7 +67,7 @@ test_that("fit_tam objective is unaffected by projections", {
 })
 
 test_that("fit_tam does not estimate missing values when fill_missing = FALSE", {
-  fit <- test_fit(
+  fit <- make_test_fit(
     obs_settings = list(q_form = ~ q_block, sd_catch_form = ~1,
                         sd_index_form = ~1, fill_missing = FALSE),
   )
@@ -97,7 +75,7 @@ test_that("fit_tam does not estimate missing values when fill_missing = FALSE", 
 })
 
 test_that("fit_tam warns and forces fill_missing to TRUE when mising", {
-  (fit <- test_fit(obs_settings = list(q_form = ~q_block, sd_catch_form = ~1, sd_index_form = ~1))) |>
+  (fit <- make_test_fit(obs_settings = list(q_form = ~q_block, sd_catch_form = ~1, sd_index_form = ~1))) |>
     expect_warning(regexp = "fill_missing was NULL", fixed  = FALSE)
   expect_true(fit$dat$obs_settings$fill_missing)
 })

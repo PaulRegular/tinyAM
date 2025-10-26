@@ -97,29 +97,9 @@ test_that("rprocess_2d edge cases: ny=1 or na=1 behave like 1D AR(1)", {
 
 ## nll_fun ---
 
-YEARS <- 1983:2024
-AGES  <- 2:14
-
-test_dat <- function(obs = cod_obs,
-                     years = YEARS,
-                     ages  = AGES,
-                     N_settings = list(process = "iid", init_N0 = FALSE),
-                     F_settings = list(process = "approx_rw",  mu_form = NULL),
-                     M_settings = list(process = "off", mu_form = NULL, assumption = ~I(0.3)),
-                     obs_settings = list(q_form = ~ q_block, sd_catch_form = ~1,
-                                         sd_index_form = ~1, fill_missing = TRUE),
-                     proj_settings = NULL) {
-  args <- mget(ls())
-  do.call(make_dat, args)
-}
-
 test_that("nll_fun returns finite JNLL and simulates when requested", {
-  dat <- test_dat(
-    N_settings = list(process = "iid", init_N0 = TRUE),
-    F_settings = list(process = "approx_rw", mu_form = NULL),
-    M_settings = list(process = "off", mu_form = NULL, assumption = ~ I(0.3))
-  )
-  par <- make_par(dat)
+  dat <- default_dat
+  par <- default_par
 
   # Likelihood branch
   jnll <- nll_fun(par, dat, simulate = FALSE)
@@ -161,8 +141,7 @@ test_that("nll_fun returns finite JNLL and simulates when requested", {
 })
 
 test_that("nll_fun respects F_mult projections", {
-  dat <- test_dat(
-    years = NULL, ages = NULL,
+  dat <- make_test_dat(
     proj_settings = list(n_proj = 2, n_mean = 3, F_mult = c(0.8, 1.2))
   )
   par <- make_par(dat)
@@ -180,7 +159,7 @@ test_that("nll_fun respects F_mult projections", {
 })
 
 test_that("nll_fun handles AR1 settings and produces finite JNLL", {
-  dat <- test_dat(
+  dat <- make_test_dat(
     N_settings = list(process = "ar1", init_N0 = TRUE),
     F_settings = list(process = "ar1", mu_form = ~ F_a_block + F_y_block),
     M_settings = list(process = "ar1", mu_form = NULL, assumption = ~ I(0.3))
@@ -202,7 +181,7 @@ test_that("nll_fun handles AR1 settings and produces finite JNLL", {
 })
 
 test_that("nll_fun yields finite log_pred for non-missing obs", {
-  dat <- test_dat(
+  dat <- make_test_dat(
     N_settings = list(process = "iid", init_N0 = FALSE),
     F_settings = list(process = "iid", mu_form = NULL),
     M_settings = list(process = "off", mu_form = NULL, assumption = ~ I(0.3))
