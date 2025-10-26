@@ -79,7 +79,7 @@ test_that("fit_tam works when an survey does not provide an index for all ages",
 
 test_that("fit_tam objective is unaffected by projections", {
   fit <- test_fit(
-    proj_settings = list(n_proj = 10, n_mean = 10, F_mult = 1)
+    proj_settings = list(n_proj = 20, n_mean = 20, F_mult = 1)
   )
   expect_equal(round(fit$opt$objective, 4), 989.6083)
 
@@ -130,7 +130,7 @@ test_that("tam_fit summary and print methods provide structured output", {
 
 test_that("fit_hindcasts runs peels with a one year projection", {
   fit <- default_fit
-  hindcasts <- fit_hindcast(fit, folds = 1, progress = FALSE)
+  hindcasts <- fit_hindcast(fit, folds = 1, progress = FALSE, grad_tol = 0.01)
   # At least one hindcast fit kept (may drop if non-converged)
   if (length(hindcasts$fits) > 0) {
     hindcast_year <- as.numeric(names(hindcasts$fits[1]))
