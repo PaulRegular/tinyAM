@@ -38,7 +38,8 @@ random-effect parameters are returned as a named list of data frames
 
 Labels are added where applicable:
 \itemize{
-\item For parameters specified using a formula in \code{\link[=make_dat]{make_dat()}} (e.g., \code{log_q}, \code{log_sd_obs}),
+\item For parameters specified using a formula in \code{\link[=make_dat]{make_dat()}} (e.g., \code{log_q},
+\code{log_sd_catch}, \code{log_sd_index}), a \code{coef} column is added.
 \item For \code{log_r} (recruitment path), a \code{year} column is used.
 \item For matrices (e.g., \code{log_f}, \code{log_n}), \code{year} and/or \code{age} columns are added
 via \code{\link[=tidy_mat]{tidy_mat()}}.

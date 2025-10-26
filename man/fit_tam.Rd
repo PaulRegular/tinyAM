@@ -77,7 +77,8 @@ average M (\code{M_bar}) calculations. All ages used if absent.
 }}
     \item{\code{obs_settings}}{A list with elements:
 \itemize{
-\item \code{sd_form}: formula for observation SD blocks, evaluated on the combined obs map (e.g. \code{~ sd_obs_block}).
+\item \code{sd_catch_form}: formula for observation SD blocks for catch-at-age data.
+\item \code{sd_index_form}: formula for observation SD blocks for index-at-age data.
 \item \code{q_form}: formula for catchability blocks, evaluated on the index table (e.g. \code{~ q_block}).
 \item \code{fill_missing}: logical - fill missing values, and zeros, using random effects? Default = \code{TRUE}.
 Note that one-step-ahead residuals are not currently working when \code{TRUE}.
@@ -137,7 +138,7 @@ fit <- fit_tam(
   N_settings = list(process = "iid", init_N0 = FALSE),
   F_settings = list(process = "approx_rw"),
   M_settings = list(process = "off", assumption = ~ I(0.3)),
-  obs_settings = list(sd_form = ~ sd_obs_block, q_form = ~ q_block)
+  obs_settings = list(sd_catch_form = ~1, sd_index_form = ~1, q_form = ~ q_block)
 )
 fit$sdrep
 

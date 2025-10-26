@@ -14,7 +14,6 @@
 #'   - `year`: numeric calendar year.
 #'   - `age`: numeric age (years).
 #'   - `obs`: numeric observed catch in numbers (thousands; may include `NA`).
-#'   - `sd_obs_block`: character; observation-variance block label (e.g., `"catch"`, age-specific blocks).
 #'   - `F_y_block`: factor; year blocks for fishing-mortality mean structure
 #'     (e.g., `"1954-1991"`, `"1992-1997"`, ...).
 #'   - `F_a_block`: factor; age blocks for fishing-mortality mean structure
@@ -28,7 +27,6 @@
 #'   - `survey`: character or factor; survey name for catchability blocks and labeling plots.
 #'   - `samp_time`: numeric sampling time within the year (fraction of a year; e.g., `0.8`).
 #'   - `q_block`: factor; age blocks for catchability.
-#'   - `sd_obs_block`: character; observation-variance block label (may be age and/or survey specific).
 #'
 #' - **weight**: weight-at-age and mortality assumption used for \eqn{M} mean structure.
 #'   Columns:
@@ -82,7 +80,7 @@
 #'   F_settings = list(process = "approx_rw", mu_form = NULL),
 #'   M_settings = list(process = "off", mu_form = NULL,
 #'                     assumption = ~ I(0.2), age_breaks = NULL),
-#'   obs_settings = list(sd_form = ~ sd_obs_block, q_form = ~ q_block)
+#'   obs_settings = list(sd_catch_form = ~ 1, sd_index_form = ~ 1, q_form = ~ q_block)
 #' )
 #'
 #' @docType data

@@ -12,7 +12,8 @@ make_dat(
   F_settings = list(process = "approx_rw", mu_form = NULL),
   M_settings = list(process = "off", mu_form = NULL, assumption = ~I(0.2), age_breaks =
     NULL, first_dev_year = NULL),
-  obs_settings = list(sd_form = ~sd_obs_block, q_form = ~q_block, fill_missing = TRUE),
+  obs_settings = list(sd_catch_form = ~1, sd_index_form = ~1, q_form = ~q_block,
+    fill_missing = TRUE),
   proj_settings = NULL
 )
 }
@@ -68,7 +69,8 @@ average M (\code{M_bar}) calculations. All ages used if absent.
 
 \item{obs_settings}{A list with elements:
 \itemize{
-\item \code{sd_form}: formula for observation SD blocks, evaluated on the combined obs map (e.g. \code{~ sd_obs_block}).
+\item \code{sd_catch_form}: formula for observation SD blocks for catch-at-age data.
+\item \code{sd_index_form}: formula for observation SD blocks for index-at-age data.
 \item \code{q_form}: formula for catchability blocks, evaluated on the index table (e.g. \code{~ q_block}).
 \item \code{fill_missing}: logical - fill missing values, and zeros, using random effects? Default = \code{TRUE}.
 Note that one-step-ahead residuals are not currently working when \code{TRUE}.
@@ -95,7 +97,7 @@ A named list \code{dat} containing:
 \item \code{obs_map} — stack of \code{obs$catch} and \code{obs$index} mapping variables
 \item \code{log_obs}, \code{is_missing}, \code{is_observed}, \code{observed} - vector of log observations (with NA),
 logical vector indicating missing and observed values, and vector of non-missing values, respectively.
-\item design matrices: \code{sd_obs_modmat}, \code{q_modmat}, and optionally \code{F_modmat}, \code{M_modmat}
+\item design matrices: \code{sd_catch_modmat}, \code{sd_index_modmat}, \code{q_modmat}, and optionally \code{F_modmat}, \code{M_modmat}
 \item mean-level placeholders: \code{log_mu_f} and/or \code{log_mu_m} (or \code{log_mu_assumed_m})
 \item process settings: \code{N_settings}, \code{F_settings}, \code{M_settings}
 \item projection settings: \code{proj_settings}
@@ -123,8 +125,10 @@ treated as \code{NA} (to be handled via random effects).
 
 \strong{Design matrices}
 \itemize{
-\item \code{obs_settings$sd_form} is evaluated on the combined obs map to produce
-\code{sd_obs_modmat}.
+\item \code{obs_settings$sd_catch_form} is evaluated on the catch table to produce
+\code{sd_catch_modmat}.
+\item \code{obs_settings$sd_index_form} is evaluated on the index table to produce
+\code{sd_index_modmat}.
 \item \code{obs_settings$q_form} is evaluated on the index table to produce
 \code{q_modmat}.
 \item If \code{M_settings$mu_form} is provided, \code{M_modmat <- model.matrix(mu_form, data = obs$weight)}. If an \code{assumption} is also supplied, the intercept
@@ -164,7 +168,7 @@ dat <- make_dat(
   N_settings = list(process = "iid", init_N0 = FALSE),
   F_settings = list(process = "approx_rw", mu_form = NULL),
   M_settings = list(process = "off", assumption = ~ I(0.3)),
-  obs_settings = list(sd_form = ~ sd_obs_block, q_form = ~ q_block)
+  obs_settings = list(sd_catch_form = ~ 1, sd_index_form = ~ 1, q_form = ~ q_block)
 )
 
 ## With projection settings
@@ -173,7 +177,7 @@ dat <- make_dat(
   N_settings = list(process = "iid", init_N0 = FALSE),
   F_settings = list(process = "approx_rw", mu_form = NULL),
   M_settings = list(process = "off", assumption = ~ I(0.3)),
-  obs_settings = list(sd_form = ~ sd_obs_block, q_form = ~ q_block),
+  obs_settings = list(sd_catch_form = ~ 1, sd_index_form = ~ 1, q_form = ~ q_block),
   proj_settings = list(n_proj = 3, n_mean = 3, F_mult = 1)
 )
 

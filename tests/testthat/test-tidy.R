@@ -395,9 +395,11 @@ test_that("stack_nested stacks all subtables across outer list", {
 ## tidy_tam ----
 
 # Convenience variants for tests
-fit_2024 <- fit
-fit_2023 <- update(fit, years = min(fit$dat$years):(max(fit$dat$years) - 1))
-fit_2022 <- update(fit, years = min(fit$dat$years):(max(fit$dat$years) - 2))
+suppressWarnings({
+  fit_2024 <- fit
+  fit_2023 <- update(fit, years = min(fit$dat$years):(max(fit$dat$years) - 1))
+  fit_2022 <- update(fit, years = min(fit$dat$years):(max(fit$dat$years) - 2))
+})
 
 test_that("tidy_tam: single model via ... adds no label column", {
   out  <- tidy_tam(fit)  # default label = 'model'

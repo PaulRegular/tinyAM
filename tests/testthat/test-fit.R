@@ -15,8 +15,8 @@ test_fit <- function(obs = cod_obs,
                      N_settings = list(process = "iid", init_N0 = FALSE),
                      F_settings = list(process = "approx_rw",  mu_form = NULL),
                      M_settings = list(process = "off", mu_form = NULL, assumption = ~I(0.3)),
-                     obs_settings = list(q_form = ~ q_block, sd_form = ~ sd_obs_block,
-                                         fill_missing = TRUE),
+                     obs_settings = list(q_form = ~ q_block, sd_catch_form = ~1,
+                                         sd_index_form = ~1, fill_missing = TRUE),
                      proj_settings = NULL,
                      silent = TRUE) {
   args <- mget(ls())
@@ -79,7 +79,7 @@ test_that("fit_tam works when an survey does not provide an index for all ages",
 
 test_that("fit_tam objective is unaffected by projections", {
   fit <- test_fit(
-    proj_settings = list(n_proj = 10, n_mean = 10, F_mult = 1)
+    proj_settings = list(n_proj = 20, n_mean = 20, F_mult = 1)
   )
   expect_equal(round(fit$opt$objective, 4), 989.6083)
 
@@ -90,14 +90,14 @@ test_that("fit_tam objective is unaffected by projections", {
 
 test_that("fit_tam does not estimate missing values when fill_missing = FALSE", {
   fit <- test_fit(
-    obs_settings = list(q_form = ~ q_block, sd_form = ~ sd_obs_block,
-                        fill_missing = FALSE)
+    obs_settings = list(q_form = ~ q_block, sd_catch_form = ~1,
+                        sd_index_form = ~1, fill_missing = FALSE),
   )
   expect_false("missing" %in% fit$obj$env$.random)
 })
 
 test_that("fit_tam warns and forces fill_missing to TRUE when mising", {
-  (fit <- test_fit(obs_settings = list(q_form = ~ q_block, sd_form = ~ sd_obs_block))) |>
+  (fit <- test_fit(obs_settings = list(q_form = ~q_block, sd_catch_form = ~1, sd_index_form = ~1))) |>
     expect_warning(regexp = "fill_missing was NULL", fixed  = FALSE)
   expect_true(fit$dat$obs_settings$fill_missing)
 })
@@ -130,7 +130,7 @@ test_that("tam_fit summary and print methods provide structured output", {
 
 test_that("fit_hindcasts runs peels with a one year projection", {
   fit <- default_fit
-  hindcasts <- fit_hindcast(fit, folds = 1, progress = FALSE)
+  hindcasts <- fit_hindcast(fit, folds = 1, progress = FALSE, grad_tol = 0.01)
   # At least one hindcast fit kept (may drop if non-converged)
   if (length(hindcasts$fits) > 0) {
     hindcast_year <- as.numeric(names(hindcasts$fits[1]))

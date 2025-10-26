@@ -128,13 +128,14 @@ rprocess_2d <- function(ny, na, phi = c(0, 0), sd = 1) {
 #' - **Observations:** catch-at-age and index-at-age on the log scale:
 #'   \deqn{\log C_{y,a} \sim \mathcal{N}\!\left(
 #'       \log\!\left[N_{y,a}\,\frac{F_{y,a}}{Z_{y,a}}\,(1-e^{-Z_{y,a}})\right],
-#'       \sigma^2_{\text{obs}}\right),}
+#'       \sigma^2_{\text{catch}}\right),}
 #'
 #'   \deqn{\log I_{y,a} \sim \mathcal{N}\!\left(
-#'       \log q_{a} + \log N_{y,a} - Z_{y,a}\, t_{y,a}, \sigma^2_{\text{obs}}\right).}
+#'       \log q_{a} + \log N_{y,a} - Z_{y,a}\, t_{y,a}, \sigma^2_{\text{index}}\right).}
 #'
-#'   Here `sd_obs_modmat %*% log_sd_obs` controls observation SD (by block),
-#'   and `q_modmat %*% log_q` controls age- (or block-) specific catchability.
+#'   Here `sd_catch_modmat %*% log_sd_catch` controls observation SD for catch-at-age,
+#'   `sd_index_modmat %*% log_sd_index` for indices-at-age, and `q_modmat %*% log_q`
+#'   controls age- (or block-) specific catchability.
 #'
 #' **Simulation mode:**
 #' When `simulate = TRUE`, the function:
@@ -171,8 +172,8 @@ rprocess_2d <- function(ny, na, phi = c(0, 0), sd = 1) {
 #' @section Dependencies and captured data:
 #' The function expects a `dat` list in its lexical scope (created by
 #' [make_dat()]) containing data matrices/vectors and model matrices
-#' (`SW`, `MO`, `obs_map`, `sd_obs_modmat`, `q_modmat`, `F_modmat`,
-#' `M_modmat`, settings lists, etc.).
+#' (`SW`, `MO`, `obs_map`, `sd_catch_modmat`, `sd_index_modmat`, `q_modmat`,
+#' `F_modmat`, `M_modmat`, settings lists, etc.).
 #' It also relies on helper functions [dprocess_2d()] and [rprocess_2d()]
 #' for process penalties and simulation.
 #'
@@ -184,7 +185,7 @@ rprocess_2d <- function(ny, na, phi = c(0, 0), sd = 1) {
 #'   N_settings = list(process = "iid", init_N0 = FALSE),
 #'   F_settings = list(process = "approx_rw", mu_form = NULL),
 #'   M_settings = list(process = "off", assumption = ~ I(0.3)),
-#'   obs_settings = list(sd_form = ~ sd_obs_block, q_form = ~ q_block)
+#'   obs_settings = list(sd_catch_form = ~ 1, sd_index_form = ~ 1, q_form = ~ q_block)
 #' )
 #' par <- make_par(dat)
 #' make_nll_fun <- function(f, d) function(p) f(p, d)
@@ -345,8 +346,10 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   N_obs <- N[iya]
   Z_obs <- Z[iya]
   F_obs <- F[iya]
-  sd_obs <- exp(drop(sd_obs_modmat %*% log_sd_obs))
-  log_q_obs <- drop(q_modmat %*% log_q)    # length = number of survey index rows
+  sd_catch <- exp(drop(sd_catch_modmat %*% log_sd_catch))
+  sd_index <- exp(drop(sd_index_modmat %*% log_sd_index))
+  sd_obs <- c(sd_catch, sd_index)
+  log_q_obs <- drop(q_modmat %*% log_q) # length = number of survey index rows
   samp_time <- obs_map$samp_time
 
   ic <- obs_map$type == "catch"

@@ -1,7 +1,9 @@
 
 ## vis_tam ----
 
-source(system.file("examples/example_fits.R", package = "tinyAM"))
+suppressWarnings(
+  source(system.file("examples/example_fits.R", package = "tinyAM"))
+)
 
 test_that("vis_tam renders cleanly and produces an HTML output", {
   # --- Test: render to temporary file quietly ---

@@ -13,7 +13,6 @@ Columns:
 \item \code{year}: numeric calendar year.
 \item \code{age}: numeric age (years).
 \item \code{obs}: numeric observed catch in numbers (thousands; may include \code{NA}).
-\item \code{sd_obs_block}: character; observation-variance block label (e.g., \code{"catch"}, age-specific blocks).
 \item \code{F_y_block}: factor; year blocks for fishing-mortality mean structure
 (e.g., \code{"1954-1991"}, \code{"1992-1997"}, ...).
 \item \code{F_a_block}: factor; age blocks for fishing-mortality mean structure
@@ -28,7 +27,6 @@ Columns:
 \item \code{survey}: character or factor; survey name for catchability blocks and labeling plots.
 \item \code{samp_time}: numeric sampling time within the year (fraction of a year; e.g., \code{0.8}).
 \item \code{q_block}: factor; age blocks for catchability.
-\item \code{sd_obs_block}: character; observation-variance block label (may be age and/or survey specific).
 }
 \item \strong{weight}: weight-at-age and mortality assumption used for \eqn{M} mean structure.
 Columns:
@@ -96,7 +94,7 @@ dat <- make_dat(
   F_settings = list(process = "approx_rw", mu_form = NULL),
   M_settings = list(process = "off", mu_form = NULL,
                     assumption = ~ I(0.2), age_breaks = NULL),
-  obs_settings = list(sd_form = ~ sd_obs_block, q_form = ~ q_block)
+  obs_settings = list(sd_catch_form = ~ 1, sd_index_form = ~ 1, q_form = ~ q_block)
 )
 
 }
