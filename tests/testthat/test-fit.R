@@ -3,6 +3,7 @@
 
 testthat::skip_if_not_installed("RTMB")
 testthat::skip_if_not(exists("cod_obs"), "cod_obs not available")
+testthat::skip_if(is.null(default_fit), "default_fit unavailable")
 
 set.seed(1)
 
@@ -36,10 +37,12 @@ test_that("fit_tam runs on a cod dataset and returns expected structure", {
 
 test_that("fit_tam emits warning if the model does not converge", {
   bad_fit <- suppressWarnings({
-    make_test_fit(
+    update(
+      default_fit,
       N_settings = list(process = "iid", init_N0 = TRUE),
       F_settings = list(process = "iid"),
-      M_settings = list(process = "iid", mu_form = NULL, assumption = ~I(0.3))
+      M_settings = list(process = "iid", mu_form = NULL, assumption = ~I(0.3)),
+      silent = TRUE
     )
   })
   expect_warning(check_convergence(bad_fit, quiet = TRUE),
@@ -50,14 +53,16 @@ test_that("fit_tam works when an survey does not provide an index for all ages",
   obs <- cod_obs
   sub_ages <- 2:10
   obs$index <- obs$index[obs$index$age %in% sub_ages, ]
-  fit <- make_test_fit(obs = obs)
+  fit <- update(default_fit, obs = obs, silent = TRUE)
   expect_equal(range(fit$obs_pred$index$age), range(sub_ages))
 })
 
 
 test_that("fit_tam objective is unaffected by projections", {
-  fit <- make_test_fit(
-    proj_settings = list(n_proj = 20, n_mean = 20, F_mult = 1)
+  fit <- update(
+    default_fit,
+    proj_settings = list(n_proj = 20, n_mean = 20, F_mult = 1),
+    silent = TRUE
   )
   expect_equal(round(fit$opt$objective, 4), 989.6083)
 
@@ -67,15 +72,17 @@ test_that("fit_tam objective is unaffected by projections", {
 })
 
 test_that("fit_tam does not estimate missing values when fill_missing = FALSE", {
-  fit <- make_test_fit(
+  fit <- update(
+    default_fit,
     obs_settings = list(q_form = ~ q_block, sd_catch_form = ~1,
                         sd_index_form = ~1, fill_missing = FALSE),
+    silent = TRUE
   )
   expect_false("missing" %in% fit$obj$env$.random)
 })
 
 test_that("fit_tam warns and forces fill_missing to TRUE when mising", {
-  (fit <- make_test_fit(obs_settings = list(q_form = ~q_block, sd_catch_form = ~1, sd_index_form = ~1))) |>
+  (fit <- update(default_fit, obs_settings = list(q_form = ~q_block, sd_catch_form = ~1, sd_index_form = ~1), silent = TRUE)) |>
     expect_warning(regexp = "fill_missing was NULL", fixed  = FALSE)
   expect_true(fit$dat$obs_settings$fill_missing)
 })

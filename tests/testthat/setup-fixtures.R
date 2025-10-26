@@ -3,21 +3,25 @@
 YEARS <- 1983:2024
 AGES  <- 2:14
 
+if (!exists("cod_obs", inherits = TRUE)) {
+  cod_obs <- tinyAM::cod_obs
+}
+
 make_test_dat <- function(...) {
-  dots <- list(...)
-  if (!"obs" %in% names(dots)) {
-    if (!exists("cod_obs", inherits = TRUE)) {
-      stop("cod_obs not available; supply `obs` explicitly", call. = FALSE)
-    }
-    dots$obs <- cod_obs
-  }
-  args <- utils::modifyList(list(years = YEARS, ages = AGES), dots)
+  args <- utils::modifyList(
+    list(
+      obs = cod_obs,
+      years = YEARS,
+      ages = AGES
+    ),
+    list(...)
+  )
   do.call(make_dat, args)
 }
 
 if (exists("cod_obs", inherits = TRUE)) {
   default_dat <- make_test_dat(
-    N_settings = list(process = "iid", init_N0 = TRUE),
+    N_settings = list(process = "iid", init_N0 = FALSE),
     F_settings = list(process = "approx_rw", mu_form = NULL),
     M_settings = list(process = "off", mu_form = NULL, assumption = ~ I(0.3))
   )
@@ -27,41 +31,38 @@ if (exists("cod_obs", inherits = TRUE)) {
   default_par <- NULL
 }
 
-.base_fit_args <- list(
-  obs = NULL,
-  years = YEARS,
-  ages = AGES,
-  N_settings = list(process = "iid", init_N0 = FALSE),
-  F_settings = list(process = "approx_rw", mu_form = NULL),
-  M_settings = list(process = "off", mu_form = NULL, assumption = ~ I(0.3)),
-  obs_settings = list(
-    q_form = ~ q_block,
-    sd_catch_form = ~ 1,
-    sd_index_form = ~ 1,
-    fill_missing = TRUE
-  ),
-  proj_settings = NULL,
-  silent = TRUE
-)
-
-if (exists("cod_obs", inherits = TRUE)) {
-  .base_fit_args$obs <- cod_obs
-}
-
-make_test_fit <- function(...) {
-  if (!requireNamespace("RTMB", quietly = TRUE)) {
-    testthat::skip("RTMB not installed")
-  }
-  args <- utils::modifyList(.base_fit_args, list(...))
-  if (is.null(args$obs)) {
-    stop("`obs` must be supplied when cod_obs is unavailable", call. = FALSE)
-  }
-  do.call(fit_tam, args)
-}
-
-if (requireNamespace("RTMB", quietly = TRUE) && !is.null(.base_fit_args$obs)) {
+if (requireNamespace("RTMB", quietly = TRUE) && exists("cod_obs", inherits = TRUE)) {
   set.seed(1)
-  default_fit <- do.call(fit_tam, .base_fit_args)
+  default_fit <- fit_tam(
+    cod_obs,
+    years = YEARS,
+    ages = AGES,
+    N_settings = list(process = "iid", init_N0 = FALSE),
+    F_settings = list(process = "approx_rw", mu_form = NULL),
+    M_settings = list(process = "off", assumption = ~ I(0.3)),
+    silent = TRUE
+  )
+
+  set.seed(1)
+  N_dev <- update(
+    default_fit,
+    proj_settings = list(n_proj = 3, n_mean = 3, F_mult = 1),
+    silent = TRUE
+  )
+
+  set.seed(1)
+  M_dev <- update(
+    N_dev,
+    N_settings = list(process = "off", init_N0 = TRUE),
+    M_settings = list(
+      process = "ar1",
+      assumption = ~ I(0.3),
+      age_breaks = c(3, 14)
+    ),
+    silent = TRUE
+  )
 } else {
   default_fit <- NULL
+  N_dev <- NULL
+  M_dev <- NULL
 }

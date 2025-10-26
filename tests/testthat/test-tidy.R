@@ -1,11 +1,9 @@
 
 testthat::skip_if_not_installed("RTMB")
 testthat::skip_if_not(exists("cod_obs"), "cod_obs not available")
+testthat::skip_if(is.null(default_fit), "default_fit unavailable")
 
 fit <- default_fit
-if (is.null(fit)) {
-  fit <- make_test_fit()
-}
 vals <- as.list(fit$sdrep, "Estimate", report = TRUE)
 sds <- as.list(fit$sdrep, "Std. Error", report = TRUE)
 
