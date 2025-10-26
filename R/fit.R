@@ -92,6 +92,8 @@
 #'   structure returned by [make_par()]. Useful for warm starts or retrospective
 #'   runs where parameter estimates from a previous fit are reused to improve
 #'   convergence and speed. Non-matching or missing entries are ignored.
+#' @param grad_tol Numeric tolerance passed to [check_convergence()] when
+#'   evaluating the fitted object's gradients. Defaults to `1e-2`.
 #' @inheritDotParams make_dat
 #'
 #' @return
@@ -139,6 +141,7 @@ fit_tam <- function(
     add_osa_res = FALSE,
     silent = FALSE,
     start_par = NULL,
+    grad_tol = 1e-2,
     ...
 ) {
 
@@ -198,7 +201,8 @@ fit_tam <- function(
   out$random_par <- par_tabs$random
   out$obs_pred <- tidy_obs_pred(out, add_osa_res = add_osa_res, trace = !silent)
   out$pop <- tidy_pop(out, interval = interval)
-  out$is_converged <- check_convergence(out, quiet = TRUE)
+  out$is_converged <- check_convergence(out, grad_tol = grad_tol, quiet = TRUE)
+  out$grad_tol <- grad_tol
 
   .new_tam_fit(out)
 
@@ -228,8 +232,10 @@ fit_tam <- function(
 #' @param hindcast Logical; fit one-step-ahead projections? If `TRUE`,
 #'    `proj_settings` will be set to `list(n_proj = 1, n_mean = 1, F_mult = 1)`
 #'    to generate a one year status-quo F projection.
-#' @param grad_tol Numeric tolerance for `max|grad|`. Default `1e-3`. Output
-#'    from retro fits that exceed this tolerance are dropped (see [check_convergence()]).
+#' @param grad_tol Numeric tolerance for `max|grad|`. If `NULL` (default),
+#'   the tolerance stored on `fit` (from [fit_tam()]) is used; otherwise the
+#'   supplied value is passed to [check_convergence()]. Output from retro fits
+#'   that exceed this tolerance are dropped (see [check_convergence()]).
 #' @param progress Logical; show progress bar using [progressr::with_progress()].
 #' @param globals Character vector naming global objects to supply to the workers.
 #'
@@ -278,11 +284,15 @@ fit_retro <- function(
     folds = 2,
     start_from_fit = FALSE,
     hindcast = FALSE,
-    grad_tol = 1e-3,
+    grad_tol = NULL,
     progress = TRUE,
     globals = NULL
 ) {
   .require_tam_fit(fit, arg = "fit")
+
+  if (is.null(grad_tol)) {
+    grad_tol <- if (!is.null(fit$grad_tol)) fit$grad_tol else 1e-3
+  }
 
   min_year <- min(fit$dat$years)
   max_year <- max(fit$dat$years)
@@ -332,6 +342,23 @@ fit_retro <- function(
   }
 
   fits <- retro[converged]
+
+  if (length(fits) == 0L) {
+    names(fits) <- NULL
+    empty <- list(
+      obs_pred = list(),
+      pop = list(),
+      fixed_par = data.frame(),
+      random_par = list(),
+      fits = fits,
+      mohns_rho = data.frame(metric = character(), age = numeric(), rho = numeric())
+    )
+    if (hindcast) {
+      empty$hindcast_rmse <- NA_real_
+    }
+    return(empty)
+  }
+
   out <- c(tidy_tam(model_list = fits, label = "fold"),
            list(fits = fits))
 

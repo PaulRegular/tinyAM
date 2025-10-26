@@ -9,7 +9,7 @@ fit_retro(
   folds = 2,
   start_from_fit = FALSE,
   hindcast = FALSE,
-  grad_tol = 0.001,
+  grad_tol = NULL,
   progress = TRUE,
   globals = NULL
 )
@@ -26,8 +26,10 @@ values for retrospective fits?}
 \code{proj_settings} will be set to \code{list(n_proj = 1, n_mean = 1, F_mult = 1)}
 to generate a one year status-quo F projection.}
 
-\item{grad_tol}{Numeric tolerance for \verb{max|grad|}. Default \code{1e-3}. Output
-from retro fits that exceed this tolerance are dropped (see \code{\link[=check_convergence]{check_convergence()}}).}
+\item{grad_tol}{Numeric tolerance for \verb{max|grad|}. If \code{NULL} (default), the
+stored tolerance from \code{fit} (see \code{\link[=fit_tam]{fit_tam()}}) is reused; otherwise the
+supplied value is passed to \code{\link[=check_convergence]{check_convergence()}}. Output from retro fits that
+exceed this tolerance are dropped.}
 
 \item{progress}{Logical; show progress bar using \code{\link[progressr:with_progress]{progressr::with_progress()}}.}
 

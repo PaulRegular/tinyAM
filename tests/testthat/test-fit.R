@@ -3,27 +3,9 @@
 
 testthat::skip_if_not_installed("RTMB")
 testthat::skip_if_not(exists("cod_obs"), "cod_obs not available")
+testthat::skip_if(is.null(default_fit), "default_fit unavailable")
 
 set.seed(1)
-
-YEARS <- 1983:2024
-AGES  <- 2:14
-
-test_fit <- function(obs = cod_obs,
-                     years = YEARS,
-                     ages  = AGES,
-                     N_settings = list(process = "iid", init_N0 = FALSE),
-                     F_settings = list(process = "approx_rw",  mu_form = NULL),
-                     M_settings = list(process = "off", mu_form = NULL, assumption = ~I(0.3)),
-                     obs_settings = list(q_form = ~ q_block, sd_catch_form = ~1,
-                                         sd_index_form = ~1, fill_missing = TRUE),
-                     proj_settings = NULL,
-                     silent = TRUE) {
-  args <- mget(ls())
-  do.call(fit_tam, args)
-}
-
-default_fit <- test_fit()
 
 test_that("fit_tam runs on a cod dataset and returns expected structure", {
   fit <- default_fit
@@ -34,7 +16,7 @@ test_that("fit_tam runs on a cod dataset and returns expected structure", {
   expect_named(
     fit,
     c("call", "dat", "obj", "opt", "rep", "sdrep", "obs_pred", "pop", "is_converged",
-      "fixed_par", "random_par"),
+      "fixed_par", "random_par", "grad_tol"),
     ignore.order = TRUE
   )
 
@@ -50,15 +32,18 @@ test_that("fit_tam runs on a cod dataset and returns expected structure", {
   expect_equal(dim(fit$rep$M), c(length(YEARS), length(AGES)))
   expect_equal(dim(fit$rep$Z), c(length(YEARS), length(AGES)))
   expect_equal(length(fit$rep$ssb), length(YEARS))
+  expect_equal(fit$grad_tol, 1e-2)
 })
 
 
 test_that("fit_tam emits warning if the model does not converge", {
   bad_fit <- suppressWarnings({
-    test_fit(
+    update(
+      default_fit,
       N_settings = list(process = "iid", init_N0 = TRUE),
       F_settings = list(process = "iid"),
-      M_settings = list(process = "iid", mu_form = NULL, assumption = ~I(0.3))
+      M_settings = list(process = "iid", mu_form = NULL, assumption = ~I(0.3)),
+      silent = TRUE
     )
   })
   expect_warning(check_convergence(bad_fit, quiet = TRUE),
@@ -69,17 +54,16 @@ test_that("fit_tam works when an survey does not provide an index for all ages",
   obs <- cod_obs
   sub_ages <- 2:10
   obs$index <- obs$index[obs$index$age %in% sub_ages, ]
-  fit <- fit_tam(obs,
-                 years = YEARS,
-                 ages  = AGES,
-                 silent = TRUE)
+  fit <- update(default_fit, obs = obs, silent = TRUE)
   expect_equal(range(fit$obs_pred$index$age), range(sub_ages))
 })
 
 
 test_that("fit_tam objective is unaffected by projections", {
-  fit <- test_fit(
-    proj_settings = list(n_proj = 20, n_mean = 20, F_mult = 1)
+  fit <- update(
+    default_fit,
+    proj_settings = list(n_proj = 20, n_mean = 20, F_mult = 1),
+    silent = TRUE
   )
   expect_equal(round(fit$opt$objective, 4), 989.6083)
 
@@ -89,15 +73,17 @@ test_that("fit_tam objective is unaffected by projections", {
 })
 
 test_that("fit_tam does not estimate missing values when fill_missing = FALSE", {
-  fit <- test_fit(
+  fit <- update(
+    default_fit,
     obs_settings = list(q_form = ~ q_block, sd_catch_form = ~1,
                         sd_index_form = ~1, fill_missing = FALSE),
+    silent = TRUE
   )
   expect_false("missing" %in% fit$obj$env$.random)
 })
 
 test_that("fit_tam warns and forces fill_missing to TRUE when mising", {
-  (fit <- test_fit(obs_settings = list(q_form = ~q_block, sd_catch_form = ~1, sd_index_form = ~1))) |>
+  (fit <- update(default_fit, obs_settings = list(q_form = ~q_block, sd_catch_form = ~1, sd_index_form = ~1), silent = TRUE)) |>
     expect_warning(regexp = "fill_missing was NULL", fixed  = FALSE)
   expect_true(fit$dat$obs_settings$fill_missing)
 })
@@ -120,6 +106,43 @@ test_that("fit_retro runs peels and returns stacked outputs", {
   }
 })
 
+test_that("fit_retro returns structured empty results when no fits converge", {
+  fit <- default_fit
+  retros <- fit_retro(fit, folds = 1, progress = FALSE, grad_tol = 0)
+
+  expect_true(is.list(retros))
+  expect_equal(retros$fits, list())
+  expect_equal(retros$obs_pred, list())
+  expect_equal(retros$pop, list())
+  expect_s3_class(retros$mohns_rho, "data.frame")
+  expect_equal(nrow(retros$mohns_rho), 0)
+})
+
+test_that("fit_retro inherits grad_tol stored on the fit when omitted", {
+  fit <- default_fit
+  fit$grad_tol <- 0
+
+  empty <- fit_retro(fit, folds = 1, progress = FALSE)
+
+  expect_equal(empty$fits, list())
+  expect_equal(empty$obs_pred, list())
+  expect_equal(empty$pop, list())
+})
+
+test_that("fit_retro falls back to default grad_tol when fit has none", {
+  fit <- default_fit
+  fit$grad_tol <- NULL
+
+  implicit <- fit_retro(fit, folds = 1, progress = FALSE)
+  explicit <- fit_retro(default_fit, folds = 1, progress = FALSE, grad_tol = 1e-3)
+
+  expect_identical(names(implicit$fits), names(explicit$fits))
+  expect_identical(lapply(implicit$fits, `[[`, "is_converged"),
+                   lapply(explicit$fits, `[[`, "is_converged"))
+  expect_identical(names(implicit$obs_pred), names(explicit$obs_pred))
+  expect_identical(names(implicit$pop), names(explicit$pop))
+})
+
 test_that("tam_fit summary and print methods provide structured output", {
   fit <- default_fit
   sum_fit <- summary(fit)
@@ -137,6 +160,22 @@ test_that("fit_hindcasts runs peels with a one year projection", {
     modeled_years <- hindcasts$fits[[1]]$dat$years
     expect_equal(hindcast_year + 1, max(modeled_years))
   }
+})
+
+test_that("hindcast empty fits surface placeholder RMSE", {
+  fit <- default_fit
+  hindcasts <- fit_retro(fit, folds = 1, hindcast = TRUE, progress = FALSE, grad_tol = 0)
+
+  expect_true("hindcast_rmse" %in% names(hindcasts))
+  expect_true(is.na(hindcasts$hindcast_rmse))
+  expect_equal(hindcasts$fits, list())
+  expect_equal(hindcasts$obs_pred, list())
+  expect_equal(hindcasts$pop, list())
+  expect_s3_class(hindcasts$mohns_rho, "data.frame")
+  expect_equal(nrow(hindcasts$mohns_rho), 0)
+  expect_s3_class(hindcasts$fixed_par, "data.frame")
+  expect_equal(nrow(hindcasts$fixed_par), 0)
+  expect_equal(hindcasts$random_par, list())
 })
 
 
