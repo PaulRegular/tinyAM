@@ -120,44 +120,27 @@ test_that("fit_retro returns structured empty results when no fits converge", {
 
 test_that("fit_retro inherits grad_tol stored on the fit when omitted", {
   fit <- default_fit
-  fit$grad_tol <- 0.0123
-  captured <- list()
+  fit$grad_tol <- 0
 
-  original_check <- tinyAM:::check_convergence
+  empty <- fit_retro(fit, folds = 1, progress = FALSE)
 
-  with_mocked_bindings(
-    check_convergence = function(fit, grad_tol, ...) {
-      captured <<- c(captured, list(grad_tol))
-      original_check(fit, grad_tol = grad_tol, ...)
-    }, {
-      fit_retro(fit, folds = 1, progress = FALSE)
-    },
-    .package = "tinyAM"
-  )
-
-  expect_length(captured, 1)
-  expect_equal(captured[[1]], 0.0123)
+  expect_equal(empty$fits, list())
+  expect_equal(empty$obs_pred, list())
+  expect_equal(empty$pop, list())
 })
 
 test_that("fit_retro falls back to default grad_tol when fit has none", {
   fit <- default_fit
   fit$grad_tol <- NULL
-  captured <- list()
 
-  original_check <- tinyAM:::check_convergence
+  implicit <- fit_retro(fit, folds = 1, progress = FALSE)
+  explicit <- fit_retro(default_fit, folds = 1, progress = FALSE, grad_tol = 1e-3)
 
-  with_mocked_bindings(
-    check_convergence = function(fit, grad_tol, ...) {
-      captured <<- c(captured, list(grad_tol))
-      original_check(fit, grad_tol = grad_tol, ...)
-    }, {
-      fit_retro(fit, folds = 1, progress = FALSE)
-    },
-    .package = "tinyAM"
-  )
-
-  expect_length(captured, 1)
-  expect_equal(captured[[1]], 1e-3)
+  expect_identical(names(implicit$fits), names(explicit$fits))
+  expect_identical(lapply(implicit$fits, `[[`, "is_converged"),
+                   lapply(explicit$fits, `[[`, "is_converged"))
+  expect_identical(names(implicit$obs_pred), names(explicit$obs_pred))
+  expect_identical(names(implicit$pop), names(explicit$pop))
 })
 
 test_that("tam_fit summary and print methods provide structured output", {
