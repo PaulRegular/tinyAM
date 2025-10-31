@@ -173,6 +173,43 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 }
 
 
+#' Aggregate data for plus group (internal)
+#'
+#' @description
+#' This internal helper aggregates observations for ages greater than or equal to
+#' a specified terminal (`plus_age`) into a single plus group. The `"obs"` column is
+#' summed for `catch` and `index` data, and averaged for `weight` and `maturity` data.
+#' Non-aggregated columns (e.g., year) retain their values from the terminal age.
+#'
+#' @param obs Named list with data.frames `catch`, `index`, `weight`, `maturity`.
+#' @param plus_age Integer specifying the terminal age to be modeled.
+#'   All ages greater than or equal to this value are combined into a plus group.
+#' @return A list with the same structure as `obs`, but with all data
+#'   aggregated into the specified plus group.
+#' @keywords internal
+#'
+#' @noRd
+.plus_fun <- function(obs, plus_age) {
+
+  .aggregate_one <- function(df, plus_age, fun) {
+    plus_group <- stats::aggregate(obs ~ year, data = df[df$age >= plus_age, ], FUN = fun, na.rm = FALSE)
+    plus_group$age <- plus_age
+    sub_df <- df[df$age <= plus_age, ]
+    df_out <- merge(sub_df, plus_group, by = c("year", "age"), all.x = TRUE, suffixes = c("", "_plus"))
+    df_out$obs <- ifelse(is.na(df_out$obs_plus), df_out$obs, df_out$obs_plus)
+    df_out$obs_plus <- NULL
+    df_out[order(df_out$age, df_out$year), ]
+  }
+
+  list(
+    catch = .aggregate_one(obs$catch, plus_age, sum),
+    index = .aggregate_one(obs$index, plus_age, sum),
+    weight = .aggregate_one(obs$weight, plus_age, mean),
+    maturity = .aggregate_one(obs$maturity, plus_age, mean)
+  )
+
+}
+
 
 #' Build a self-contained data list for TAM
 #'
@@ -274,7 +311,8 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #'                   Note that one-step-ahead residuals are not currently working when `TRUE`.
 #' @param proj_settings Optional list with elements:
 #' - `n_proj`: number of years to project (default `NULL` disables projections).
-#' - `n_mean`: number of terminal years to average when adding projection rows.
+#' - `n_mean`: number of terminal years to average when adding projection rows. Only the `"obs"` columns
+#'             are averaged. All other columns are copied from the terminal year (by `age`).
 #' - `F_mult`: multiplier to apply to terminal F to set a level to carry forward in the projection years
 #'   (default = `1` to assume status quo F through the projection years). Can be a value of length 1 or
 #'   length = `n_proj`. When it is a vector of length one, that multiplier is recycled across all
