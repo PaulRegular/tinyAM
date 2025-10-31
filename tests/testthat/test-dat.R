@@ -81,9 +81,9 @@ test_that("make_dat aggregates data for ages beyond max(ages) into a plus group"
   dat <- make_dat(obs = cod_obs, ages  = 2:10)
   for (nm in c("catch", "index", "weight", "maturity")) {
     fun <- ifelse(nm %in% c("catch", "index"), sum, mean)
-    fun_out <- dat$obs[[nm]] |> subset(age == 10, select = c("year", "obs"))
-    sub_obs <- cod_obs[[nm]] |> subset(age >= 10)
-    test_out <- stats::aggregate(obs ~ year, data = sub_obs, FUN = fun, na.rm = FALSE)
+    fun_out <- dat$obs[[nm]] |> subset(!is.na(obs) & age == 10, select = c("year", "obs"))
+    sub_obs <- cod_obs[[nm]] |> subset(!is.na(obs) & age >= 10)
+    test_out <- stats::aggregate(obs ~ year, data = sub_obs, FUN = fun)
     comp <- merge(fun_out, test_out, by = "year")
     expect_equal(comp$obs.x, comp$obs.y)
   }
