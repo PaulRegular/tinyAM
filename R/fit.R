@@ -310,17 +310,21 @@ fit_retro <- function(
   progressr::with_progress({
     update_progress <- progressr::progressor(steps = length(retro_years))
     retro <- furrr::future_map(seq_along(retro_years), function(i) {
-      r <- suppressWarnings(
-        try(
-          stats::update(
-            fit,
-            years = min_year:retro_years[i],
-            start_par = start_par,
+      if (retro_years[i] == max_year) {
+        r <- fit # need not re-run terminal year
+      } else {
+        r <- suppressWarnings(
+          try(
+            stats::update(
+              fit,
+              years = min_year:retro_years[i],
+              start_par = start_par,
+              silent = TRUE
+            ),
             silent = TRUE
-          ),
-          silent = TRUE
+          )
         )
-      )
+      }
       if (inherits(r, "try-error")) {
         update_progress()
         return(r)
@@ -342,22 +346,7 @@ fit_retro <- function(
   }
 
   fits <- retro[converged]
-
-  if (length(fits) == 0L) {
-    names(fits) <- NULL
-    empty <- list(
-      obs_pred = list(),
-      pop = list(),
-      fixed_par = data.frame(),
-      random_par = list(),
-      fits = fits,
-      mohns_rho = data.frame(metric = character(), age = numeric(), rho = numeric())
-    )
-    if (hindcast) {
-      empty$hindcast_rmse <- NA_real_
-    }
-    return(empty)
-  }
+  if (length(fits) == 0L) cli::cli_abort("All folds failed convergence checks")
 
   out <- c(tidy_tam(model_list = fits, label = "fold"),
            list(fits = fits))

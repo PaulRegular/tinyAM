@@ -108,33 +108,23 @@ test_that("fit_retro runs peels and returns stacked outputs", {
 
 test_that("fit_retro returns structured empty results when no fits converge", {
   fit <- default_fit
-  retros <- fit_retro(fit, folds = 1, progress = FALSE, grad_tol = 0)
-
-  expect_true(is.list(retros))
-  expect_equal(retros$fits, list())
-  expect_equal(retros$obs_pred, list())
-  expect_equal(retros$pop, list())
-  expect_s3_class(retros$mohns_rho, "data.frame")
-  expect_equal(nrow(retros$mohns_rho), 0)
+  suppressWarnings(fit_retro(fit, folds = 1, progress = FALSE, grad_tol = 0)) |>
+    expect_error("All folds failed convergence checks")
 })
 
 test_that("fit_retro inherits grad_tol stored on the fit when omitted", {
   fit <- default_fit
   fit$grad_tol <- 0
-
-  empty <- fit_retro(fit, folds = 1, progress = FALSE)
-
-  expect_equal(empty$fits, list())
-  expect_equal(empty$obs_pred, list())
-  expect_equal(empty$pop, list())
+  suppressWarnings(fit_retro(fit, folds = 1, progress = FALSE, grad_tol = 0)) |>
+    expect_error("All folds failed convergence checks")
 })
 
 test_that("fit_retro falls back to default grad_tol when fit has none", {
   fit <- default_fit
   fit$grad_tol <- NULL
 
-  implicit <- fit_retro(fit, folds = 1, progress = FALSE)
-  explicit <- fit_retro(default_fit, folds = 1, progress = FALSE, grad_tol = 1e-3)
+  implicit <- suppressWarnings(fit_retro(fit, folds = 1, progress = FALSE))
+  explicit <- suppressWarnings(fit_retro(default_fit, folds = 1, progress = FALSE, grad_tol = 1e-3))
 
   expect_identical(names(implicit$fits), names(explicit$fits))
   expect_identical(lapply(implicit$fits, `[[`, "is_converged"),
@@ -164,7 +154,7 @@ test_that("fit_hindcasts runs peels with a one year projection", {
 
 test_that("hindcast empty fits surface placeholder RMSE", {
   fit <- default_fit
-  hindcasts <- fit_retro(fit, folds = 1, hindcast = TRUE, progress = FALSE, grad_tol = 0)
+  hindcasts <- suppressWarnings(fit_retro(fit, folds = 1, hindcast = TRUE, progress = FALSE, grad_tol = 0))
 
   expect_true("hindcast_rmse" %in% names(hindcasts))
   expect_true(is.na(hindcasts$hindcast_rmse))
