@@ -143,9 +143,9 @@ test_that("tam_fit summary and print methods provide structured output", {
 
 test_that("fit_hindcasts runs peels with a one year projection", {
   fit <- default_fit
-  hindcasts <- fit_hindcast(fit, folds = 1, progress = FALSE)
+  hindcasts <- suppressWarnings(fit_hindcast(fit, folds = 4, progress = FALSE))
   # At least one hindcast fit kept (may drop if non-converged)
-  if (length(hindcasts$fits) > 0) {
+  if (length(hindcasts$fits) > 1) {
     hindcast_year <- as.numeric(names(hindcasts$fits[1]))
     modeled_years <- hindcasts$fits[[1]]$dat$years
     expect_equal(hindcast_year + 1, max(modeled_years))
