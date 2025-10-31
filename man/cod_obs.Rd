@@ -67,15 +67,6 @@ The object was assembled by:
 \item Joining weight-at-age with a natural mortality assumption column
 (\code{M_assumption}) derived from \code{NCAM::inputs$nm}.
 }
-
-Exact dimensions may change if the source data evolve. At the time of inclusion,
-the elements contained approximately:
-\itemize{
-\item \code{catch}: 1,065 rows x 6 columns
-\item \code{index}: 1,065 rows x 6 columns
-\item \code{weight}: 1,065 rows x 4 columns
-\item \code{maturity}: 1,215 rows x 3 columns
-}
 }
 \examples{
 data(cod_obs)
