@@ -133,5 +133,18 @@ vis_tam(
   output_file = "analysis/comp_retro/outputs/001_models.html"
 )
 
+## To age 20
+models_20plus <- lapply(seq_along(models), function(i) {
+  m <- models[[i]]
+  m$call$M_settings$age_breaks = c(3, 5, 7, 9, 11, 13, 15, 17, 20)
+  update(m, ages = 2:20)
+})
+names(models_20plus) <- names(models)
 
+saveRDS(models_20plus, file = "analysis/comp_retro/outputs/001_models_20plus.rds")
+
+vis_tam(
+  models_20plus,
+  output_file = "analysis/comp_retro/outputs/001_models_20plus.html"
+)
 

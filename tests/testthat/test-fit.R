@@ -94,7 +94,7 @@ test_that("fit_tam warns and forces fill_missing to TRUE when mising", {
 
 test_that("fit_retro runs peels and returns stacked outputs", {
   fit <- default_fit
-  retros <- fit_retro(fit, folds = 1, progress = FALSE)
+  retros <- fit_retro(fit, folds = 1, progress = FALSE, grad_tol = 0.01)
   expect_true(is.list(retros))
   expect_true(all(c("obs_pred","pop","fits") %in% names(retros)))
   # At least one retro fit kept (may drop if non-converged)
