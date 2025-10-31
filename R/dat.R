@@ -271,7 +271,9 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #' @param years Integer vector of model years (strictly increasing).
 #'   Inferred from observed data (non-projection) if `NULL`.
 #' @param ages Integer vector of model ages (strictly increasing).
-#'   Inferred from observed data (non-projection) if `NULL`.
+#'   Inferred from observed data (non-projection) if `NULL`. If the ages in
+#'   the data extend beyond `max(ages)`, the `"obs"` column is summed for `catch`
+#'   and `index` data, and averaged for `weight` and `maturity` data.
 #' @param N_settings A list with elements:
 #' - `process`: one of `"off"`, `"iid"`, `"approx_rw"`, or `"ar1"`.
 #' - `init_N0`: logical; if `TRUE`, estimate an initial level for the
@@ -373,6 +375,9 @@ make_dat <- function(
   all_obs_ages  <- sort(unique(unlist(lapply(obs, `[[`, "age"))))
   dat$years <- if (is.null(years)) seq(min(all_obs_years), max(all_obs_years)) else as.integer(years)
   dat$ages <- if (is.null(ages)) seq(min(all_obs_ages), max(all_obs_ages)) else as.integer(ages)
+  if (max(all_obs_ages) > max(dat$ages)) {
+    dat$obs <- .plus_fun(dat$obs, max(dat$ages))
+  }
   dat$obs <- lapply(dat$obs, function(d) {
     d_sub <- d[d$year %in% dat$years & d$age %in% dat$ages, ]
     d_sub[order(d_sub$age, d_sub$year), ] |>

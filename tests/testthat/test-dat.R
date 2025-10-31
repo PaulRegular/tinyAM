@@ -77,6 +77,18 @@ test_that("make_dat infers years/ages when NULL and builds expected pieces", {
   expect_gt(ncol(dat$q_modmat), 0)
 })
 
+test_that("make_dat aggregates data for ages beyond max(ages) into a plus group", {
+  dat <- make_dat(obs = cod_obs, ages  = 2:10)
+  for (nm in c("catch", "index", "weight", "maturity")) {
+    fun <- ifelse(nm %in% c("catch", "index"), sum, mean)
+    fun_out <- dat$obs[[nm]] |> subset(age == 10, select = c("year", "obs"))
+    sub_obs <- cod_obs[[nm]] |> subset(age >= 10)
+    test_out <- stats::aggregate(obs ~ year, data = sub_obs, FUN = fun, na.rm = FALSE)
+    comp <- merge(fun_out, test_out, by = "year")
+    expect_equal(comp$obs.x, comp$obs.y)
+  }
+})
+
 test_that("make_dat builds M age_blocks, respects defaults, and handles assumptions/mu_form correctly", {
 
   # ---- Default behaviour: all ages except the youngest have deviations ----
