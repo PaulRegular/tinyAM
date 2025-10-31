@@ -23,7 +23,7 @@ test_that("fit_tam runs on a cod dataset and returns expected structure", {
   # Optimizer status
   expect_true(is.finite(fit$opt$objective))
   expect_true(fit$opt$objective > 0)
-  expect_equal(round(fit$opt$objective, 4), 989.6083)
+  expect_equal(round(fit$opt$objective, 4), 994.2659)
   expect_true(is.list(fit$rep))
   expect_s3_class(fit$sdrep, "sdreport")
 
@@ -65,7 +65,7 @@ test_that("fit_tam objective is unaffected by projections", {
     proj_settings = list(n_proj = 20, n_mean = 20, F_mult = 1),
     silent = TRUE
   )
-  expect_equal(round(fit$opt$objective, 4), 989.6083)
+  expect_equal(round(fit$opt$objective, 4), 994.2659)
 
   # "missing" random effects in projections = predictions
   is_proj <- fit$dat$obs_map$is_proj

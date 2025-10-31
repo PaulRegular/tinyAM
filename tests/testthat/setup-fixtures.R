@@ -59,8 +59,7 @@ if (requireNamespace("RTMB", quietly = TRUE) && exists("cod_obs", inherits = TRU
       process = "ar1",
       assumption = ~ I(0.3),
       age_breaks = c(3, 14)
-    ),
-    silent = TRUE
+    )
   )
 } else {
   default_fit <- NULL

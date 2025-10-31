@@ -192,13 +192,18 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 .plus_fun <- function(obs, plus_age) {
 
   .aggregate_one <- function(df, plus_age, fun) {
-    plus_group <- stats::aggregate(obs ~ year, data = df[!is.na(df$obs) & df$age >= plus_age, ], FUN = fun)
-    plus_group$age <- plus_age
-    sub_df <- df[df$age <= plus_age, ]
-    df_out <- merge(sub_df, plus_group, by = c("year", "age"), all.x = TRUE, suffixes = c("", "_plus"))
-    df_out$obs <- ifelse(is.na(df_out$obs_plus), df_out$obs, df_out$obs_plus)
-    df_out$obs_plus <- NULL
-    df_out[order(df_out$age, df_out$year), ]
+    plus_df <- df[!is.na(df$obs) & df$age >= plus_age, ]
+    if (nrow(plus_df) == 0) {
+      return(df)
+    } else {
+      plus_group <- stats::aggregate(obs ~ year, data = plus_df, FUN = fun)
+      plus_group$age <- plus_age
+      sub_df <- df[df$age <= plus_age, ]
+      df_out <- merge(sub_df, plus_group, by = c("year", "age"), all.x = TRUE, suffixes = c("", "_plus"))
+      df_out$obs <- ifelse(is.na(df_out$obs_plus), df_out$obs, df_out$obs_plus)
+      df_out$obs_plus <- NULL
+      return(df_out[order(df_out$age, df_out$year), ])
+    }
   }
 
   list(
