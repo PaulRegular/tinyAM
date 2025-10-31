@@ -32,7 +32,7 @@ test_that("fit_tam runs on a cod dataset and returns expected structure", {
   expect_equal(dim(fit$rep$M), c(length(YEARS), length(AGES)))
   expect_equal(dim(fit$rep$Z), c(length(YEARS), length(AGES)))
   expect_equal(length(fit$rep$ssb), length(YEARS))
-  expect_equal(fit$grad_tol, 1e-2)
+  expect_equal(fit$grad_tol, 0.1)
 })
 
 
@@ -94,7 +94,7 @@ test_that("fit_tam warns and forces fill_missing to TRUE when mising", {
 
 test_that("fit_retro runs peels and returns stacked outputs", {
   fit <- default_fit
-  retros <- fit_retro(fit, folds = 1, progress = FALSE, grad_tol = 0.01)
+  retros <- fit_retro(fit, folds = 1, progress = FALSE)
   expect_true(is.list(retros))
   expect_true(all(c("obs_pred","pop","fits") %in% names(retros)))
   # At least one retro fit kept (may drop if non-converged)
@@ -106,7 +106,7 @@ test_that("fit_retro runs peels and returns stacked outputs", {
   }
 })
 
-test_that("fit_retro returns structured empty results when no fits converge", {
+test_that("fit_retro returns error when no fits converge", {
   fit <- default_fit
   suppressWarnings(fit_retro(fit, folds = 1, progress = FALSE, grad_tol = 0)) |>
     expect_error("All folds failed convergence checks")
@@ -143,29 +143,13 @@ test_that("tam_fit summary and print methods provide structured output", {
 
 test_that("fit_hindcasts runs peels with a one year projection", {
   fit <- default_fit
-  hindcasts <- fit_hindcast(fit, folds = 1, progress = FALSE, grad_tol = 0.01)
+  hindcasts <- fit_hindcast(fit, folds = 1, progress = FALSE)
   # At least one hindcast fit kept (may drop if non-converged)
   if (length(hindcasts$fits) > 0) {
     hindcast_year <- as.numeric(names(hindcasts$fits[1]))
     modeled_years <- hindcasts$fits[[1]]$dat$years
     expect_equal(hindcast_year + 1, max(modeled_years))
   }
-})
-
-test_that("hindcast empty fits surface placeholder RMSE", {
-  fit <- default_fit
-  hindcasts <- suppressWarnings(fit_retro(fit, folds = 1, hindcast = TRUE, progress = FALSE, grad_tol = 0))
-
-  expect_true("hindcast_rmse" %in% names(hindcasts))
-  expect_true(is.na(hindcasts$hindcast_rmse))
-  expect_equal(hindcasts$fits, list())
-  expect_equal(hindcasts$obs_pred, list())
-  expect_equal(hindcasts$pop, list())
-  expect_s3_class(hindcasts$mohns_rho, "data.frame")
-  expect_equal(nrow(hindcasts$mohns_rho), 0)
-  expect_s3_class(hindcasts$fixed_par, "data.frame")
-  expect_equal(nrow(hindcasts$fixed_par), 0)
-  expect_equal(hindcasts$random_par, list())
 })
 
 

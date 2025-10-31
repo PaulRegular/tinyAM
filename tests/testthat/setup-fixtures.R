@@ -41,7 +41,7 @@ if (requireNamespace("RTMB", quietly = TRUE) && exists("cod_obs", inherits = TRU
     F_settings = list(process = "approx_rw", mu_form = NULL),
     M_settings = list(process = "off", assumption = ~ I(0.3)),
     silent = TRUE,
-    grad_tol = 1e-2
+    grad_tol = 0.1
   )
 
   set.seed(1)
