@@ -25,7 +25,9 @@ make_dat(
 Inferred from observed data (non-projection) if \code{NULL}.}
 
 \item{ages}{Integer vector of model ages (strictly increasing).
-Inferred from observed data (non-projection) if \code{NULL}.}
+Inferred from observed data (non-projection) if \code{NULL}. If the ages in
+the data extend beyond \code{max(ages)}, the \code{"obs"} column is summed for \code{catch}
+and \code{index} data, and averaged for \code{weight} and \code{maturity} data.}
 
 \item{N_settings}{A list with elements:
 \itemize{
@@ -79,7 +81,8 @@ Note that one-step-ahead residuals are not currently working when \code{TRUE}.
 \item{proj_settings}{Optional list with elements:
 \itemize{
 \item \code{n_proj}: number of years to project (default \code{NULL} disables projections).
-\item \code{n_mean}: number of terminal years to average when adding projection rows.
+\item \code{n_mean}: number of terminal years to average when adding projection rows. Only the \code{"obs"} columns
+are averaged. All other columns are copied from the terminal year (by \code{age}).
 \item \code{F_mult}: multiplier to apply to terminal F to set a level to carry forward in the projection years
 (default = \code{1} to assume status quo F through the projection years). Can be a value of length 1 or
 length = \code{n_proj}. When it is a vector of length one, that multiplier is recycled across all

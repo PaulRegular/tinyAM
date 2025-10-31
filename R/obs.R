@@ -51,14 +51,6 @@
 #' 3. Joining weight-at-age with a natural mortality assumption column
 #'    (`M_assumption`) derived from `NCAM::inputs$nm`.
 #'
-#' Exact dimensions may change if the source data evolve. At the time of inclusion,
-#' the elements contained approximately:
-#'
-#' - `catch`: 1,065 rows x 6 columns
-#' - `index`: 1,065 rows x 6 columns
-#' - `weight`: 1,065 rows x 4 columns
-#' - `maturity`: 1,215 rows x 3 columns
-#'
 #' @source
 #' Derived from the \pkg{NCAM} example inputs
 #' (`NCAM::inputs`). See the NCAM package for provenance and licensing.

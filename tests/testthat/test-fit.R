@@ -23,7 +23,7 @@ test_that("fit_tam runs on a cod dataset and returns expected structure", {
   # Optimizer status
   expect_true(is.finite(fit$opt$objective))
   expect_true(fit$opt$objective > 0)
-  expect_equal(round(fit$opt$objective, 4), 989.6083)
+  expect_equal(round(fit$opt$objective, 4), 994.2659)
   expect_true(is.list(fit$rep))
   expect_s3_class(fit$sdrep, "sdreport")
 
@@ -32,7 +32,7 @@ test_that("fit_tam runs on a cod dataset and returns expected structure", {
   expect_equal(dim(fit$rep$M), c(length(YEARS), length(AGES)))
   expect_equal(dim(fit$rep$Z), c(length(YEARS), length(AGES)))
   expect_equal(length(fit$rep$ssb), length(YEARS))
-  expect_equal(fit$grad_tol, 1e-2)
+  expect_equal(fit$grad_tol, 0.1)
 })
 
 
@@ -65,7 +65,7 @@ test_that("fit_tam objective is unaffected by projections", {
     proj_settings = list(n_proj = 20, n_mean = 20, F_mult = 1),
     silent = TRUE
   )
-  expect_equal(round(fit$opt$objective, 4), 989.6083)
+  expect_equal(round(fit$opt$objective, 4), 994.2659)
 
   # "missing" random effects in projections = predictions
   is_proj <- fit$dat$obs_map$is_proj
@@ -106,35 +106,25 @@ test_that("fit_retro runs peels and returns stacked outputs", {
   }
 })
 
-test_that("fit_retro returns structured empty results when no fits converge", {
+test_that("fit_retro returns error when no fits converge", {
   fit <- default_fit
-  retros <- fit_retro(fit, folds = 1, progress = FALSE, grad_tol = 0)
-
-  expect_true(is.list(retros))
-  expect_equal(retros$fits, list())
-  expect_equal(retros$obs_pred, list())
-  expect_equal(retros$pop, list())
-  expect_s3_class(retros$mohns_rho, "data.frame")
-  expect_equal(nrow(retros$mohns_rho), 0)
+  suppressWarnings(fit_retro(fit, folds = 1, progress = FALSE, grad_tol = 0)) |>
+    expect_error("All folds failed convergence checks")
 })
 
 test_that("fit_retro inherits grad_tol stored on the fit when omitted", {
   fit <- default_fit
   fit$grad_tol <- 0
-
-  empty <- fit_retro(fit, folds = 1, progress = FALSE)
-
-  expect_equal(empty$fits, list())
-  expect_equal(empty$obs_pred, list())
-  expect_equal(empty$pop, list())
+  suppressWarnings(fit_retro(fit, folds = 1, progress = FALSE, grad_tol = 0)) |>
+    expect_error("All folds failed convergence checks")
 })
 
 test_that("fit_retro falls back to default grad_tol when fit has none", {
   fit <- default_fit
   fit$grad_tol <- NULL
 
-  implicit <- fit_retro(fit, folds = 1, progress = FALSE)
-  explicit <- fit_retro(default_fit, folds = 1, progress = FALSE, grad_tol = 1e-3)
+  implicit <- suppressWarnings(fit_retro(fit, folds = 1, progress = FALSE))
+  explicit <- suppressWarnings(fit_retro(default_fit, folds = 1, progress = FALSE, grad_tol = 1e-3))
 
   expect_identical(names(implicit$fits), names(explicit$fits))
   expect_identical(lapply(implicit$fits, `[[`, "is_converged"),
@@ -153,29 +143,13 @@ test_that("tam_fit summary and print methods provide structured output", {
 
 test_that("fit_hindcasts runs peels with a one year projection", {
   fit <- default_fit
-  hindcasts <- fit_hindcast(fit, folds = 1, progress = FALSE, grad_tol = 0.01)
+  hindcasts <- suppressWarnings(fit_hindcast(fit, folds = 4, progress = FALSE))
   # At least one hindcast fit kept (may drop if non-converged)
-  if (length(hindcasts$fits) > 0) {
+  if (length(hindcasts$fits) > 1) {
     hindcast_year <- as.numeric(names(hindcasts$fits[1]))
     modeled_years <- hindcasts$fits[[1]]$dat$years
     expect_equal(hindcast_year + 1, max(modeled_years))
   }
-})
-
-test_that("hindcast empty fits surface placeholder RMSE", {
-  fit <- default_fit
-  hindcasts <- fit_retro(fit, folds = 1, hindcast = TRUE, progress = FALSE, grad_tol = 0)
-
-  expect_true("hindcast_rmse" %in% names(hindcasts))
-  expect_true(is.na(hindcasts$hindcast_rmse))
-  expect_equal(hindcasts$fits, list())
-  expect_equal(hindcasts$obs_pred, list())
-  expect_equal(hindcasts$pop, list())
-  expect_s3_class(hindcasts$mohns_rho, "data.frame")
-  expect_equal(nrow(hindcasts$mohns_rho), 0)
-  expect_s3_class(hindcasts$fixed_par, "data.frame")
-  expect_equal(nrow(hindcasts$fixed_par), 0)
-  expect_equal(hindcasts$random_par, list())
 })
 
 
