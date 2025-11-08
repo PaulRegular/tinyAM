@@ -10,9 +10,10 @@ make_dat(
   ages = NULL,
   N_settings = list(process = "iid", init_N0 = FALSE),
   F_settings = list(process = "approx_rw", mu_form = NULL),
-  M_settings = list(process = "off", mu_form = NULL, assumption = ~I(0.2), age_breaks =
+  M_settings = list(process = "off", mu_form = NULL, mu_supplied = ~I(0.2), age_breaks =
     NULL, first_dev_year = NULL),
-  obs_settings = list(sd_catch_form = ~1, sd_index_form = ~1, q_form = ~q_block,
+  catch_settings = list(sd_form = ~1, sd_supplied = NULL, fill_missing = TRUE),
+  index_settings = list(sd_form = ~1, sd_supplied = NULL, q_form = ~q_block,
     fill_missing = TRUE),
   proj_settings = NULL
 )
@@ -49,9 +50,9 @@ average F (\code{F_bar}) calculations. All ages used if absent.
 \itemize{
 \item \code{process}: one of \code{"off"}, \code{"iid"}, \code{"approx_rw"}, or \code{"ar1"}.
 \item \code{mu_form}: optional formula for mean-\eqn{M} (on the log scale) built
-on \code{obs$weight}. If provided together with \code{assumption}, the intercept
-in \code{mu_form} is dropped (warning) so assumed levels act as fixed offsets.
-\item \code{assumption}: optional one-sided formula giving fixed (non-estimated)
+on \code{obs$weight}. If provided together with \code{mu_supplied}, the intercept
+in \code{mu_form} is dropped (warning) so supplied levels act as fixed offsets.
+\item \code{mu_supplied}: optional one-sided formula giving supplied (non-estimated)
 log-\eqn{M} offsets, e.g. \code{~ I(0.2)} or a column reference such as
 \code{~ log(M_assumption)} stored in the \code{obs$weight} data.frame.
 \item \code{age_breaks}: optional integer break points used by \code{\link[=cut_ages]{cut_ages()}} to
@@ -63,19 +64,31 @@ deviations are estimated for all modeled ages except the youngest, reducing
 confounding between \eqn{M} and recruitment.
 \item \code{first_dev_year}: integer year at which to start estimating \eqn{M} deviations.
 Defaults to the second modeled year if \code{NULL}. Anchoring the first year
-to mean or assumed levels helps minimize confounding between early \eqn{M}
+to mean or supplied levels helps minimize confounding between early \eqn{M}
 estimates, initial abundance, and catchability, leading to more stable estimation.
 \item \code{mean_ages}: optional vector of ages to include in population weighted
 average M (\code{M_bar}) calculations. All ages used if absent.
 }}
 
-\item{obs_settings}{A list with elements:
+\item{catch_settings}{A list with elements:
 \itemize{
-\item \code{sd_catch_form}: formula for observation SD blocks for catch-at-age data.
-\item \code{sd_index_form}: formula for observation SD blocks for index-at-age data.
+\item \code{sd_form}: formula for observation SD blocks for catch-at-age data.
+\item \code{sd_supplied}: optional one-sided formula giving supplied SDs (on the natural
+scale of the log-observation residuals) for catch-at-age data. When provided,
+the intercept is removed from \code{sd_form} so supplied SDs act as offsets.
+\item \code{fill_missing}: logical – fill missing values, and zeros, using random effects?
+Defaults to \code{TRUE}. Note that one-step-ahead residuals are not currently working when \code{TRUE}.
+}}
+
+\item{index_settings}{A list with elements:
+\itemize{
+\item \code{sd_form}: formula for observation SD blocks for index-at-age data.
+\item \code{sd_supplied}: optional one-sided formula giving supplied SDs (on the natural
+scale of the log-observation residuals) for index-at-age data. When provided,
+the intercept is removed from \code{sd_form} so supplied SDs act as offsets.
 \item \code{q_form}: formula for catchability blocks, evaluated on the index table (e.g. \code{~ q_block}).
-\item \code{fill_missing}: logical - fill missing values, and zeros, using random effects? Default = \code{TRUE}.
-Note that one-step-ahead residuals are not currently working when \code{TRUE}.
+\item \code{fill_missing}: logical – fill missing values, and zeros, using random effects?
+Defaults to \code{TRUE}. Note that one-step-ahead residuals are not currently working when \code{TRUE}.
 }}
 
 \item{proj_settings}{Optional list with elements:
@@ -101,8 +114,8 @@ A named list \code{dat} containing:
 \item \code{log_obs}, \code{is_missing}, \code{is_observed}, \code{observed} - vector of log observations (with NA),
 logical vector indicating missing and observed values, and vector of non-missing values, respectively.
 \item design matrices: \code{sd_catch_modmat}, \code{sd_index_modmat}, \code{q_modmat}, and optionally \code{F_modmat}, \code{M_modmat}
-\item mean-level placeholders: \code{log_mu_f} and/or \code{log_mu_m} (or \code{log_mu_assumed_m})
-\item process settings: \code{N_settings}, \code{F_settings}, \code{M_settings}
+\item mean-level placeholders: \code{log_mu_f} and/or \code{log_mu_m} (or \code{log_mu_supplied_m})
+\item process settings: \code{N_settings}, \code{F_settings}, \code{M_settings}, \code{catch_settings}, \code{index_settings}
 \item projection settings: \code{proj_settings}
 \item AR(1) parameter assumptions, \verb{logit_phi_*}, if applicable
 }
@@ -128,17 +141,17 @@ treated as \code{NA} (to be handled via random effects).
 
 \strong{Design matrices}
 \itemize{
-\item \code{obs_settings$sd_catch_form} is evaluated on the catch table to produce
+\item \code{catch_settings$sd_form} is evaluated on the catch table to produce
 \code{sd_catch_modmat}.
-\item \code{obs_settings$sd_index_form} is evaluated on the index table to produce
+\item \code{index_settings$sd_form} is evaluated on the index table to produce
 \code{sd_index_modmat}.
-\item \code{obs_settings$q_form} is evaluated on the index table to produce
+\item \code{index_settings$q_form} is evaluated on the index table to produce
 \code{q_modmat}.
-\item If \code{M_settings$mu_form} is provided, \code{M_modmat <- model.matrix(mu_form, data = obs$weight)}. If an \code{assumption} is also supplied, the intercept
+\item If \code{M_settings$mu_form} is provided, \code{M_modmat <- model.matrix(mu_form, data = obs$weight)}. If \code{mu_supplied} is also provided, the intercept
 in \code{mu_form} is dropped and a warning is issued.
-\item If neither \code{M_settings$mu_form} nor \code{M_settings$assumption} is supplied,
-the function stops, because \eqn{M} must be identified by either a fixed
-assumption or a mean structure.
+\item If neither \code{M_settings$mu_form} nor \code{M_settings$mu_supplied} is supplied,
+the function stops, because \eqn{M} must be identified by either a supplied
+surface or a mean structure.
 }
 
 \strong{Process options and guards}
@@ -172,8 +185,9 @@ dat <- make_dat(
   ages = 2:14,
   N_settings = list(process = "iid", init_N0 = FALSE),
   F_settings = list(process = "approx_rw", mu_form = NULL),
-  M_settings = list(process = "off", assumption = ~ I(0.3)),
-  obs_settings = list(sd_catch_form = ~ 1, sd_index_form = ~ 1, q_form = ~ q_block)
+  M_settings = list(process = "off", mu_supplied = ~ I(0.3)),
+  catch_settings = list(sd_form = ~ 1),
+  index_settings = list(sd_form = ~ 1, q_form = ~ q_block)
 )
 names(dat)
 
@@ -182,8 +196,9 @@ dat <- make_dat(
   cod_obs,
   N_settings = list(process = "iid", init_N0 = FALSE),
   F_settings = list(process = "approx_rw", mu_form = NULL),
-  M_settings = list(process = "off", assumption = ~ I(0.3)),
-  obs_settings = list(sd_catch_form = ~ 1, sd_index_form = ~ 1, q_form = ~ q_block),
+  M_settings = list(process = "off", mu_supplied = ~ I(0.3)),
+  catch_settings = list(sd_form = ~ 1),
+  index_settings = list(sd_form = ~ 1, q_form = ~ q_block),
   proj_settings = list(n_proj = 3, n_mean = 3, F_mult = 1)
 )
 

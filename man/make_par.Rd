@@ -65,11 +65,11 @@ with appropriate \code{dimnames} (\verb{year × age} or \verb{year × age_block}
 }
 \item \strong{Observation model}
 \itemize{
-\item \code{log_sd_catch} (length \code{ncol(dat$sd_catch_modmat)})
-\item \code{log_sd_index} (length \code{ncol(dat$sd_index_modmat)})
+\item \code{log_sd_catch} (length \code{ncol(dat$sd_catch_modmat)}) adjusting any supplied SDs
+\item \code{log_sd_index} (length \code{ncol(dat$sd_index_modmat)}) adjusting any supplied SDs
 \item \code{log_q} (length \code{ncol(dat$q_modmat)})
-\item \code{missing} vector of length \code{sum(is.na(dat$log_obs))} (placeholders for
-imputed \code{log_obs})
+\item \code{missing} vector of length \code{sum(dat$fill_missing_map)} (placeholders for
+imputed \code{log_obs}, if any observation type is set to fill missing values)
 }
 }
 
@@ -83,8 +83,9 @@ dat <- make_dat(
   ages = 2:14,
   N_settings = list(process = "iid", init_N0 = FALSE),
   F_settings = list(process = "approx_rw", mu_form = NULL),
-  M_settings = list(process = "off", assumption = ~ I(0.3)),
-  obs_settings = list(sd_catch_form = ~ 1, sd_index_form = ~ 1, q_form = ~ q_block)
+  M_settings = list(process = "off", mu_supplied = ~ I(0.3)),
+  catch_settings = list(sd_form = ~ 1),
+  index_settings = list(sd_form = ~ 1, q_form = ~ q_block)
 )
 par <- make_par(dat)
 str(par)
