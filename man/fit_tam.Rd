@@ -62,9 +62,9 @@ average F (\code{F_bar}) calculations. All ages used if absent.
 \itemize{
 \item \code{process}: one of \code{"off"}, \code{"iid"}, \code{"approx_rw"}, or \code{"ar1"}.
 \item \code{mu_form}: optional formula for mean-\eqn{M} (on the log scale) built
-on \code{obs$weight}. If provided together with \code{assumption}, the intercept
-in \code{mu_form} is dropped (warning) so assumed levels act as fixed offsets.
-\item \code{assumption}: optional one-sided formula giving fixed (non-estimated)
+on \code{obs$weight}. If provided together with \code{mu_supplied}, the intercept
+in \code{mu_form} is dropped (warning) so supplied levels act as fixed offsets.
+\item \code{mu_supplied}: optional one-sided formula giving supplied (non-estimated)
 log-\eqn{M} offsets, e.g. \code{~ I(0.2)} or a column reference such as
 \code{~ log(M_assumption)} stored in the \code{obs$weight} data.frame.
 \item \code{age_breaks}: optional integer break points used by \code{\link[=cut_ages]{cut_ages()}} to
@@ -81,13 +81,24 @@ estimates, initial abundance, and catchability, leading to more stable estimatio
 \item \code{mean_ages}: optional vector of ages to include in population weighted
 average M (\code{M_bar}) calculations. All ages used if absent.
 }}
-    \item{\code{obs_settings}}{A list with elements:
+    \item{\code{catch_settings}}{A list with elements:
 \itemize{
-\item \code{sd_catch_form}: formula for observation SD blocks for catch-at-age data.
-\item \code{sd_index_form}: formula for observation SD blocks for index-at-age data.
+\item \code{sd_form}: formula for observation SD blocks for catch-at-age data.
+\item \code{sd_supplied}: optional one-sided formula giving supplied SDs (on the natural
+scale of the log-observation residuals) for catch-at-age data. When provided,
+the intercept is removed from \code{sd_form} so supplied SDs act as offsets.
+\item \code{fill_missing}: logical – fill missing values, and zeros, using random effects?
+Defaults to \code{TRUE}. Note that one-step-ahead residuals are not currently working when \code{TRUE}.
+}}
+    \item{\code{index_settings}}{A list with elements:
+\itemize{
+\item \code{sd_form}: formula for observation SD blocks for index-at-age data.
+\item \code{sd_supplied}: optional one-sided formula giving supplied SDs (on the natural
+scale of the log-observation residuals) for index-at-age data. When provided,
+the intercept is removed from \code{sd_form} so supplied SDs act as offsets.
 \item \code{q_form}: formula for catchability blocks, evaluated on the index table (e.g. \code{~ q_block}).
-\item \code{fill_missing}: logical - fill missing values, and zeros, using random effects? Default = \code{TRUE}.
-Note that one-step-ahead residuals are not currently working when \code{TRUE}.
+\item \code{fill_missing}: logical – fill missing values, and zeros, using random effects?
+Defaults to \code{TRUE}. Note that one-step-ahead residuals are not currently working when \code{TRUE}.
 }}
     \item{\code{proj_settings}}{Optional list with elements:
 \itemize{
@@ -145,8 +156,9 @@ fit <- fit_tam(
   ages = 2:14,
   N_settings = list(process = "iid", init_N0 = FALSE),
   F_settings = list(process = "approx_rw", mu_form = NULL),
-  M_settings = list(process = "off", assumption = ~ I(0.3)),
-  obs_settings = list(sd_catch_form = ~ 1, sd_index_form = ~ 1, q_form = ~ q_block),
+  M_settings = list(process = "off", mu_supplied = ~ I(0.3)),
+  catch_settings = list(sd_form = ~ 1),
+  index_settings = list(sd_form = ~ 1, q_form = ~ q_block),
   silent = TRUE
 )
 fit$sdrep

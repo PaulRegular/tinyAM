@@ -3,7 +3,7 @@ test_that("make_par builds shapes and zeros consistent with dat", {
   dat <- make_test_dat(
     N_settings = list(process = "iid", init_N0 = TRUE),
     F_settings = list(process = "ar1", mu_form = ~ F_a_block + F_y_block),
-    M_settings = list(process = "iid", mu_form = ~ 1, assumption = NULL, age_breaks = seq(2, 14, 2))
+    M_settings = list(process = "iid", mu_form = ~ 1, mu_supplied = NULL, age_breaks = seq(2, 14, 2))
   )
   par <- make_par(dat)
 
@@ -48,7 +48,7 @@ test_that("make_par shapes adapt when projections are enabled", {
   dat <- make_test_dat(
     N_settings = list(process = "iid", init_N0 = FALSE),
     F_settings = list(process = "approx_rw", mu_form = NULL),
-    M_settings = list(process = "iid", mu_form = NULL, assumption = ~ I(0.3), age_breaks = seq(2, 14, 2)),
+    M_settings = list(process = "iid", mu_form = NULL, mu_supplied = ~ I(0.3), age_breaks = seq(2, 14, 2)),
     proj_settings = list(n_proj = 2, n_mean = 3, F_mult = 1)
   )
   par <- make_par(dat)
@@ -65,7 +65,7 @@ test_that("make_par includes/excludes mean-structure parameters appropriately", 
   # F mu_form present -> log_mu_f created
   datF  <- make_test_dat(
     F_settings = list(process = "iid", mu_form = ~ F_a_block + F_y_block),
-    M_settings = list(process = "off", mu_form = NULL, assumption = ~ I(0.3))
+    M_settings = list(process = "off", mu_form = NULL, mu_supplied = ~ I(0.3))
   )
   parF <- make_par(datF)
   expect_true("log_mu_f" %in% names(parF))
@@ -74,7 +74,7 @@ test_that("make_par includes/excludes mean-structure parameters appropriately", 
   # F mu_form absent -> log_mu_f absent
   datF0 <- make_test_dat(
     F_settings = list(process = "iid", mu_form = NULL),
-    M_settings = list(process = "off", mu_form = NULL, assumption = ~ I(0.3))
+    M_settings = list(process = "off", mu_form = NULL, mu_supplied = ~ I(0.3))
   )
   parF0 <- make_par(datF0)
   expect_false("log_mu_f" %in% names(parF0))
@@ -82,16 +82,16 @@ test_that("make_par includes/excludes mean-structure parameters appropriately", 
   # M mu_form present -> log_mu_m created
   datM  <- make_test_dat(
     F_settings = list(process = "iid", mu_form = NULL),
-    M_settings = list(process = "iid", mu_form = ~ 1, assumption = NULL, age_breaks = seq(2, 14, 2))
+    M_settings = list(process = "iid", mu_form = ~ 1, mu_supplied = NULL, age_breaks = seq(2, 14, 2))
   )
   parM <- make_par(datM)
   expect_true("log_mu_m" %in% names(parM))
   expect_length(parM$log_mu_m, ncol(datM$M_modmat))
 
-  # Only M assumption -> log_mu_m absent
+  # Only M mu_supplied -> log_mu_m absent
   datM0 <- make_test_dat(
     F_settings = list(process = "iid", mu_form = NULL),
-    M_settings = list(process = "iid", mu_form = NULL, assumption = ~ I(0.3), age_breaks = seq(2, 14, 2))
+    M_settings = list(process = "iid", mu_form = NULL, mu_supplied = ~ I(0.3), age_breaks = seq(2, 14, 2))
   )
   parM0 <- make_par(datM0)
   expect_false("log_mu_m" %in% names(parM0))
@@ -101,7 +101,7 @@ test_that("make_par adds AR1 parameters only for processes set to ar1", {
   dat <- make_test_dat(
     N_settings = list(process = "ar1", init_N0 = FALSE),
     F_settings = list(process = "iid", mu_form = NULL),
-    M_settings = list(process = "off", mu_form = NULL, assumption = ~ I(0.3))
+    M_settings = list(process = "off", mu_form = NULL, mu_supplied = ~ I(0.3))
   )
   par <- make_par(dat)
 
@@ -116,7 +116,7 @@ test_that("make_par enforces M mu_form constancy within age_blocks (when provide
     M_settings = list(
       process = "iid",
       mu_form = ~ factor(age),  # varies by age
-      assumption = NULL,
+      mu_supplied = NULL,
       age_breaks = c(2, 3, 5, 7, 9, 11, 12, 14)  # some blocks with >1 age
     )
   )

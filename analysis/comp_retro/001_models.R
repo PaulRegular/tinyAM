@@ -36,13 +36,16 @@ N_iid_F_rw <- fit_tam(
   ),
   M_settings = list(
     process = "off",
-    assumption = ~I(0.3),
+    mu_supplied = ~I(0.3),
     mean_ages = 5:14
   ),
-  obs_settings = list(
+  catch_settings = list(
+    sd_form = ~ 1,
+    fill_missing = TRUE
+  ),
+  index_settings = list(
+    sd_form = ~ 1,
     q_form = ~ q_block,
-    sd_catch_form = ~ 1,
-    sd_index_form = ~ 1,
     fill_missing = TRUE
   ),
   proj_settings = list(
@@ -87,7 +90,7 @@ M_ar1_F_rw <- update(
   M_settings = list(
     process = "ar1",
     mu_form = NULL,
-    assumption = ~I(0.3),
+    mu_supplied = ~I(0.3),
     age_breaks = c(3, 5, 7, 9, 11, 14), # Coupling ages to avoid convergence issues
     mean_ages = 5:14
   )
@@ -109,7 +112,7 @@ M_iid_F_rw <- update(
   M_settings = list(
     process = "iid",
     mu_form = NULL,
-    assumption = ~I(0.3),
+    mu_supplied = ~I(0.3),
     age_breaks = c(3, 5, 7, 9, 11, 14),
     mean_ages = 5:14
   )

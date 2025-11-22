@@ -154,7 +154,7 @@ fit_tam <- function(
   }
 
   ran <- c("log_f", "log_r")
-  if (dat$obs_settings$fill_missing) {
+  if (dat$any_fill_missing) {
     ran <- c(ran, "missing")
   }
   if (dat$N_settings$process != "off") {

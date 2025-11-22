@@ -53,15 +53,15 @@ test_that("make_dat infers years/ages when NULL and builds expected pieces", {
     ages  = NULL,
     N_settings = list(process = "iid", init_N0 = FALSE),
     F_settings = list(process = "approx_rw",  mu_form = NULL),
-    M_settings = list(process = "off", mu_form = NULL, assumption = ~ I(0.3)),
-    obs_settings = list(sd_catch_form = ~1, sd_index_form = ~1, q_form = ~ q_block,
-                        fill_missing = TRUE)
+    M_settings = list(process = "off", mu_form = NULL, mu_supplied = ~ I(0.3)),
+    catch_settings = list(sd_form = ~1, fill_missing = TRUE),
+    index_settings = list(sd_form = ~1, q_form = ~ q_block, fill_missing = TRUE)
   )
 
   expect_type(dat, "list")
   expect_true(all(c("years","ages","obs","W","P","obs_map","log_obs",
                     "sd_catch_modmat", "sd_index_modmat","q_modmat",
-                    "F_settings","M_settings","N_settings") %in% names(dat)))
+                    "F_settings","M_settings","N_settings","catch_settings","index_settings") %in% names(dat)))
 
   # dims line up
   ny <- length(dat$years); na <- length(dat$ages)
@@ -89,13 +89,13 @@ test_that("make_dat aggregates data for ages beyond max(ages) into a plus group"
   }
 })
 
-test_that("make_dat builds M age_blocks, respects defaults, and handles assumptions/mu_form correctly", {
+test_that("make_dat builds M age_blocks, respects defaults, and handles supplied surfaces/mu_form correctly", {
 
   # ---- Default behaviour: all ages except the youngest have deviations ----
   dat_default <- make_dat(
     obs = cod_obs,
     ages = 2:14,
-    M_settings = list(process = "iid", mu_form = NULL, assumption = ~ I(0.3))
+    M_settings = list(process = "iid", mu_form = NULL, mu_supplied = ~ I(0.3))
   )
   expect_true("age_blocks" %in% names(dat_default$M_settings))
   expect_s3_class(dat_default$M_settings$age_blocks, "factor")
@@ -106,7 +106,7 @@ test_that("make_dat builds M age_blocks, respects defaults, and handles assumpti
   dat_agebreaks <- make_dat(
     obs = cod_obs,
     ages = 2:14,
-    M_settings = list(process = "iid", mu_form = NULL, assumption = ~ I(0.3),
+    M_settings = list(process = "iid", mu_form = NULL, mu_supplied = ~ I(0.3),
                       age_breaks = seq(4, 10, 2))
   )
   # Deviations only estimated within the 4–10 range
@@ -118,31 +118,31 @@ test_that("make_dat builds M age_blocks, respects defaults, and handles assumpti
     obs = cod_obs,
     ages = 2:14,
     years = 1980:2000,
-    M_settings = list(process = "iid", mu_form = NULL, assumption = ~ I(0.3),
+    M_settings = list(process = "iid", mu_form = NULL, mu_supplied = ~ I(0.3),
                       first_dev_year = 1985)
   )
   expect_true(all(dat_firstdev$M_settings$years >= 1985))
   expect_equal(dat_firstdev$M_settings$first_dev_year, 1985)
 
-  # ---- mu_form + assumption => intercept dropped (warning) ----
+  # ---- mu_form + mu_supplied => intercept dropped (warning) ----
   expect_warning(
     dat_intercept <- make_dat(
       obs = cod_obs,
-      M_settings = list(process = "off", mu_form = ~ age, assumption = ~ I(0.2))
+      M_settings = list(process = "off", mu_form = ~ age, mu_supplied = ~ I(0.2))
     ),
-    "Dropping intercept term.*assumed levels"
+    "Dropping intercept term.*supplied levels"
   )
   expect_true(is.matrix(dat_intercept$M_modmat))
   expect_false("(Intercept)" %in% colnames(dat_intercept$M_modmat))
 })
 
-test_that("make_dat stops if neither M assumption nor mu_form is provided", {
+test_that("make_dat stops if neither M mu_supplied nor mu_form is provided", {
   expect_error(
     make_dat(
       obs = cod_obs,
-      M_settings = list(process = "off", mu_form = NULL, assumption = NULL)
+      M_settings = list(process = "off", mu_form = NULL, mu_supplied = NULL)
     ),
-    "Please supply an assumption or mu_form for M"
+    "Please supply mu_supplied or mu_form for M"
   )
 })
 
@@ -243,7 +243,7 @@ test_that("make_dat handles mean_ages correctly", {
     obs = cod_obs,
     ages = 2:5,
     F_settings = list(process = "iid", mean_ages = NULL),
-    M_settings = list(process = "iid", mean_ages = NULL, assumption = ~I(0.2))
+    M_settings = list(process = "iid", mean_ages = NULL, mu_supplied = ~I(0.2))
   )
   expect_equal(dat1$F_settings$mean_ages, 2:5)
   expect_equal(dat1$M_settings$mean_ages, 2:5)
@@ -253,7 +253,7 @@ test_that("make_dat handles mean_ages correctly", {
     obs = cod_obs,
     ages = 2:5,
     F_settings = list(process = "iid", mean_ages = c(2, 4)),
-    M_settings = list(process = "iid", mean_ages = c(3, 5), assumption = ~I(0.2))
+    M_settings = list(process = "iid", mean_ages = c(3, 5), mu_supplied = ~I(0.2))
   )
   expect_equal(dat2$F_settings$mean_ages, c(2, 4))
   expect_equal(dat2$M_settings$mean_ages, c(3, 5))

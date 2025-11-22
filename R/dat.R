@@ -238,18 +238,18 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #'
 #' **Design matrices**
 #'
-#' - `obs_settings$sd_catch_form` is evaluated on the catch table to produce
+#' - `catch_settings$sd_form` is evaluated on the catch table to produce
 #'   `sd_catch_modmat`.
-#' - `obs_settings$sd_index_form` is evaluated on the index table to produce
+#' - `index_settings$sd_form` is evaluated on the index table to produce
 #'   `sd_index_modmat`.
-#' - `obs_settings$q_form` is evaluated on the index table to produce
+#' - `index_settings$q_form` is evaluated on the index table to produce
 #'   `q_modmat`.
 #' - If `M_settings$mu_form` is provided, `M_modmat <- model.matrix(mu_form,
-#'   data = obs$weight)`. If an `assumption` is also supplied, the intercept
+#'   data = obs$weight)`. If `mu_supplied` is also provided, the intercept
 #'   in `mu_form` is dropped and a warning is issued.
-#' - If neither `M_settings$mu_form` nor `M_settings$assumption` is supplied,
-#'   the function stops, because \eqn{M} must be identified by either a fixed
-#'   assumption or a mean structure.
+#' - If neither `M_settings$mu_form` nor `M_settings$mu_supplied` is supplied,
+#'   the function stops, because \eqn{M} must be identified by either a supplied
+#'   surface or a mean structure.
 #'
 #' **Process options and guards**
 #'
@@ -292,9 +292,9 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #' @param M_settings A list with elements:
 #' - `process`: one of `"off"`, `"iid"`, `"approx_rw"`, or `"ar1"`.
 #' - `mu_form`: optional formula for mean-\eqn{M} (on the log scale) built
-#'   on `obs$weight`. If provided together with `assumption`, the intercept
-#'   in `mu_form` is dropped (warning) so assumed levels act as fixed offsets.
-#' - `assumption`: optional one-sided formula giving fixed (non-estimated)
+#'   on `obs$weight`. If provided together with `mu_supplied`, the intercept
+#'   in `mu_form` is dropped (warning) so supplied levels act as fixed offsets.
+#' - `mu_supplied`: optional one-sided formula giving supplied (non-estimated)
 #'   log-\eqn{M} offsets, e.g. `~ I(0.2)` or a column reference such as
 #'   `~ log(M_assumption)` stored in the `obs$weight` data.frame.
 #' - `age_breaks`: optional integer break points used by [cut_ages()] to
@@ -310,12 +310,21 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #'   estimates, initial abundance, and catchability, leading to more stable estimation.
 #' - `mean_ages`: optional vector of ages to include in population weighted
 #'   average M (`M_bar`) calculations. All ages used if absent.
-#' @param obs_settings A list with elements:
-#' - `sd_catch_form`: formula for observation SD blocks for catch-at-age data.
-#' - `sd_index_form`: formula for observation SD blocks for index-at-age data.
+#' @param catch_settings A list with elements:
+#' - `sd_form`: formula for observation SD blocks for catch-at-age data.
+#' - `sd_supplied`: optional one-sided formula giving supplied SDs (on the natural
+#'   scale of the log-observation residuals) for catch-at-age data. When provided,
+#'   the intercept is removed from `sd_form` so supplied SDs act as offsets.
+#' - `fill_missing`: logical – fill missing values, and zeros, using random effects?
+#'   Defaults to `TRUE`. Note that one-step-ahead residuals are not currently working when `TRUE`.
+#' @param index_settings A list with elements:
+#' - `sd_form`: formula for observation SD blocks for index-at-age data.
+#' - `sd_supplied`: optional one-sided formula giving supplied SDs (on the natural
+#'   scale of the log-observation residuals) for index-at-age data. When provided,
+#'   the intercept is removed from `sd_form` so supplied SDs act as offsets.
 #' - `q_form`: formula for catchability blocks, evaluated on the index table (e.g. `~ q_block`).
-#' - `fill_missing`: logical - fill missing values, and zeros, using random effects? Default = `TRUE`.
-#'                   Note that one-step-ahead residuals are not currently working when `TRUE`.
+#' - `fill_missing`: logical – fill missing values, and zeros, using random effects?
+#'   Defaults to `TRUE`. Note that one-step-ahead residuals are not currently working when `TRUE`.
 #' @param proj_settings Optional list with elements:
 #' - `n_proj`: number of years to project (default `NULL` disables projections).
 #' - `n_mean`: number of terminal years to average when adding projection rows. Only the `"obs"` columns
@@ -337,8 +346,8 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #' - `log_obs`, `is_missing`, `is_observed`, `observed` - vector of log observations (with NA),
 #'   logical vector indicating missing and observed values, and vector of non-missing values, respectively.
 #' - design matrices: `sd_catch_modmat`, `sd_index_modmat`, `q_modmat`, and optionally `F_modmat`, `M_modmat`
-#' - mean-level placeholders: `log_mu_f` and/or `log_mu_m` (or `log_mu_assumed_m`)
-#' - process settings: `N_settings`, `F_settings`, `M_settings`
+#' - mean-level placeholders: `log_mu_f` and/or `log_mu_m` (or `log_mu_supplied_m`)
+#' - process settings: `N_settings`, `F_settings`, `M_settings`, `catch_settings`, `index_settings`
 #' - projection settings: `proj_settings`
 #' - AR(1) parameter assumptions, `logit_phi_*`, if applicable
 #'
@@ -351,8 +360,9 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #'   cod_obs,
 #'   N_settings = list(process = "iid", init_N0 = FALSE),
 #'   F_settings = list(process = "approx_rw", mu_form = NULL),
-#'   M_settings = list(process = "off", assumption = ~ I(0.3)),
-#'   obs_settings = list(sd_catch_form = ~ 1, sd_index_form = ~ 1, q_form = ~ q_block),
+#'   M_settings = list(process = "off", mu_supplied = ~ I(0.3)),
+#'   catch_settings = list(sd_form = ~ 1),
+#'   index_settings = list(sd_form = ~ 1, q_form = ~ q_block),
 #'   proj_settings = list(n_proj = 3, n_mean = 3, F_mult = 1)
 #' )
 #'
@@ -366,8 +376,9 @@ make_dat <- function(
     ages = NULL,
     N_settings = list(process = "iid", init_N0 = FALSE),
     F_settings = list(process = "approx_rw", mu_form = NULL),
-    M_settings = list(process = "off", mu_form = NULL, assumption = ~I(0.2), age_breaks = NULL, first_dev_year = NULL),
-    obs_settings = list(sd_catch_form = ~1, sd_index_form = ~1, q_form = ~q_block, fill_missing = TRUE),
+    M_settings = list(process = "off", mu_form = NULL, mu_supplied = ~I(0.2), age_breaks = NULL, first_dev_year = NULL),
+    catch_settings = list(sd_form = ~1, sd_supplied = NULL, fill_missing = TRUE),
+    index_settings = list(sd_form = ~1, sd_supplied = NULL, q_form = ~q_block, fill_missing = TRUE),
     proj_settings = NULL
 ) {
 
@@ -456,12 +467,15 @@ make_dat <- function(
   obs_fit$is_missing <- is.na(obs_fit$log_obs)
   obs_fit$is_observed <- !obs_fit$is_missing
 
-  if (is.null(obs_settings$fill_missing)) {
-    dat$obs_settings$fill_missing <- TRUE
-    cli::cli_warn("obs_settings$fill_missing was NULL; forcing to TRUE")
+  dat$catch_settings <- catch_settings
+  dat$index_settings <- index_settings
+  if (is.null(dat$catch_settings$fill_missing)) {
+    dat$catch_settings$fill_missing <- TRUE
+    cli::cli_warn("catch_settings$fill_missing was NULL; forcing to TRUE")
   }
-  if (sum(obs_fit$is_missing) == 0) {
-    dat$obs_settings$fill_missing <- FALSE # set fill_missing to FALSE if there are no missing values
+  if (is.null(dat$index_settings$fill_missing)) {
+    dat$index_settings$fill_missing <- TRUE
+    cli::cli_warn("index_settings$fill_missing was NULL; forcing to TRUE")
   }
 
   dat$obs_map <- obs_fit[, setdiff(names(obs_fit), c("obs", "log_obs"))]
@@ -470,9 +484,45 @@ make_dat <- function(
   dat$is_observed <- obs_fit$is_observed
   dat$observed <- dat$log_obs[!dat$is_missing]
 
-  dat$sd_catch_modmat <- stats::model.matrix(obs_settings$sd_catch_form, data = dat$obs$catch)
-  dat$sd_index_modmat <- stats::model.matrix(obs_settings$sd_index_form, data = dat$obs$index)
-  dat$q_modmat <- stats::model.matrix(obs_settings$q_form, data = dat$obs$index)
+  catch_missing <- dat$is_missing & dat$obs_map$type == "catch"
+  index_missing <- dat$is_missing & dat$obs_map$type == "index"
+  if (sum(catch_missing) == 0) {
+    dat$catch_settings$fill_missing <- FALSE
+  }
+  if (sum(index_missing) == 0) {
+    dat$index_settings$fill_missing <- FALSE
+  }
+  dat$fill_missing_map <- logical(length(dat$is_missing))
+  dat$fill_missing_map[dat$obs_map$type == "catch"] <- dat$catch_settings$fill_missing
+  dat$fill_missing_map[dat$obs_map$type == "index"] <- dat$index_settings$fill_missing
+  dat$fill_missing_map <- dat$fill_missing_map & dat$is_missing
+  dat$any_fill_missing <- any(dat$fill_missing_map)
+
+  dat$sd_catch_modmat <- stats::model.matrix(dat$catch_settings$sd_form, data = dat$obs$catch)
+  if (!is.null(dat$catch_settings$sd_supplied)) {
+    if ("(Intercept)" %in% colnames(dat$sd_catch_modmat)) {
+      dat$sd_catch_modmat <- stats::model.matrix(update(dat$catch_settings$sd_form, ~ 0 + .), data = dat$obs$catch)
+      dat$catch_settings$sd_form <- update(dat$catch_settings$sd_form, ~ 0 + .)
+      cli::cli_warn("Dropping intercept term in catch sd_form since supplied SDs are provided. Set sd_supplied to NULL to estimate the intercept.")
+    }
+    dat$log_sd_catch_supplied <- log(unlist(stats::model.frame(dat$catch_settings$sd_supplied, data = dat$obs$catch)))
+  } else {
+    dat$log_sd_catch_supplied <- rep(0, nrow(dat$obs$catch))
+  }
+
+  dat$sd_index_modmat <- stats::model.matrix(dat$index_settings$sd_form, data = dat$obs$index)
+  if (!is.null(dat$index_settings$sd_supplied)) {
+    if ("(Intercept)" %in% colnames(dat$sd_index_modmat)) {
+      dat$sd_index_modmat <- stats::model.matrix(update(dat$index_settings$sd_form, ~ 0 + .), data = dat$obs$index)
+      dat$index_settings$sd_form <- update(dat$index_settings$sd_form, ~ 0 + .)
+      cli::cli_warn("Dropping intercept term in index sd_form since supplied SDs are provided. Set sd_supplied to NULL to estimate the intercept.")
+    }
+    dat$log_sd_index_supplied <- log(unlist(stats::model.frame(dat$index_settings$sd_supplied, data = dat$obs$index)))
+  } else {
+    dat$log_sd_index_supplied <- rep(0, nrow(dat$obs$index))
+  }
+
+  dat$q_modmat <- stats::model.matrix(dat$index_settings$q_form, data = dat$obs$index)
   if (!is.null(dat$F_settings$mu_form)) {
     dat$F_modmat <- stats::model.matrix(F_settings$mu_form, data = dat$obs$catch)
   } else {
@@ -482,21 +532,21 @@ make_dat <- function(
 
   if (!is.null(dat$M_settings$mu_form)) {
     dat$M_modmat <- stats::model.matrix(M_settings$mu_form, data = dat$obs$weight)
-    if ("(Intercept)" %in% colnames(dat$M_modmat) && !is.null(dat$M_settings$assumption)) {
+    if ("(Intercept)" %in% colnames(dat$M_modmat) && !is.null(dat$M_settings$mu_supplied)) {
       dat$M_modmat <- stats::model.matrix(update(M_settings$mu_form, ~ 0 + .), data = dat$obs$weight)
-      cli::cli_warn("Dropping intercept term in M mu_form since assumed levels are supplied. Set assumption to NULL to estimate the intercept.")
+      cli::cli_warn("Dropping intercept term in M mu_form since supplied levels are provided. Set mu_supplied to NULL to estimate the intercept.")
     }
   } else {
     dat$log_mu_m <- 0
     dat$M_modmat <- 0
   }
-  if (!is.null(dat$M_settings$assumption)) {
-    dat$log_mu_assumed_m <- log(unlist(stats::model.frame(dat$M_settings$assumption, data = dat$obs$weight)))
+  if (!is.null(dat$M_settings$mu_supplied)) {
+    dat$log_mu_supplied_m <- log(unlist(stats::model.frame(dat$M_settings$mu_supplied, data = dat$obs$weight)))
   } else {
-    dat$log_mu_assumed_m <- 0
+    dat$log_mu_supplied_m <- 0
   }
-  if (is.null(dat$M_settings$mu_form) && is.null(dat$M_settings$assumption)) {
-    stop("Please supply an assumption or mu_form for M.")
+  if (is.null(dat$M_settings$mu_form) && is.null(dat$M_settings$mu_supplied)) {
+    stop("Please supply mu_supplied or mu_form for M.")
   }
 
   .check_ages <- function(x, ages, label) {

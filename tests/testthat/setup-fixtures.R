@@ -23,7 +23,7 @@ if (exists("cod_obs", inherits = TRUE)) {
   default_dat <- make_test_dat(
     N_settings = list(process = "iid", init_N0 = FALSE),
     F_settings = list(process = "approx_rw", mu_form = NULL),
-    M_settings = list(process = "off", mu_form = NULL, assumption = ~ I(0.3))
+    M_settings = list(process = "off", mu_form = NULL, mu_supplied = ~ I(0.3))
   )
   default_par <- make_par(default_dat)
 } else {
@@ -39,7 +39,7 @@ if (requireNamespace("RTMB", quietly = TRUE) && exists("cod_obs", inherits = TRU
     ages = AGES,
     N_settings = list(process = "iid", init_N0 = FALSE),
     F_settings = list(process = "approx_rw", mu_form = NULL),
-    M_settings = list(process = "off", assumption = ~ I(0.3)),
+    M_settings = list(process = "off", mu_supplied = ~ I(0.3)),
     silent = TRUE,
     grad_tol = 0.1
   )
@@ -57,7 +57,7 @@ if (requireNamespace("RTMB", quietly = TRUE) && exists("cod_obs", inherits = TRU
     N_settings = list(process = "off", init_N0 = TRUE),
     M_settings = list(
       process = "ar1",
-      assumption = ~ I(0.3),
+      mu_supplied = ~ I(0.3),
       age_breaks = c(3, 14)
     )
   )

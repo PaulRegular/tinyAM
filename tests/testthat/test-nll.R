@@ -117,13 +117,18 @@ test_that("nll_fun returns finite JNLL and simulates when requested", {
   # Fill-missing logic
   is_miss <- is.na(dat$log_obs)
   expect_true(all(!is.na(sims$log_obs[is_miss])))
-  dat2 <- dat; dat2$obs_settings$fill_missing <- FALSE
+  dat2 <- dat
+  dat2$catch_settings$fill_missing <- FALSE
+  dat2$index_settings$fill_missing <- FALSE
+  dat2$fill_missing_map[] <- FALSE
+  dat2$any_fill_missing <- FALSE
   sims2 <- nll_fun(par, dat2, simulate = TRUE)
   expect_true(all(is.na(sims2$log_obs[is_miss])))
 
   # RTMB object
   make_nll_fun <- function(f, d) function(p) f(p, d)
-  randoms <- c("log_f", "log_r", "missing")
+  randoms <- c("log_f", "log_r")
+  if (dat$any_fill_missing) randoms <- c(randoms, "missing")
   if (dat$N_settings$process != "off") randoms <- c(randoms, "log_n")
   if (dat$M_settings$process != "off") randoms <- c(randoms, "log_m")
 
@@ -162,7 +167,7 @@ test_that("nll_fun handles AR1 settings and produces finite JNLL", {
   dat <- make_test_dat(
     N_settings = list(process = "ar1", init_N0 = TRUE),
     F_settings = list(process = "ar1", mu_form = ~ F_a_block + F_y_block),
-    M_settings = list(process = "ar1", mu_form = NULL, assumption = ~ I(0.3))
+    M_settings = list(process = "ar1", mu_form = NULL, mu_supplied = ~ I(0.3))
   )
   par <- make_par(dat)
 
@@ -184,7 +189,7 @@ test_that("nll_fun yields finite log_pred for non-missing obs", {
   dat <- make_test_dat(
     N_settings = list(process = "iid", init_N0 = FALSE),
     F_settings = list(process = "iid", mu_form = NULL),
-    M_settings = list(process = "off", mu_form = NULL, assumption = ~ I(0.3))
+    M_settings = list(process = "off", mu_form = NULL, mu_supplied = ~ I(0.3))
   )
   par <- make_par(dat)
 

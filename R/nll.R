@@ -121,7 +121,7 @@ rprocess_2d <- function(ny, na, phi = c(0, 0), sd = 1) {
 #' - **Natural mortality:**
 #'   \deqn{\log M_{y,a} = \log \mu^M_{y,a} + \eta^M_{y,a},}
 #'
-#'   where \eqn{\log \mu^M = \texttt{log\_mu\_assumed\_m} + M_\text{modmat}\,\texttt{log\_mu\_m}}.
+#'   where \eqn{\log \mu^M = \texttt{log\_mu\_supplied\_m} + M_\text{modmat}\,\texttt{log\_mu\_m}}.
 #'   If `M_settings$process != "off"`, process deviations (\eqn{\eta^M}) are penalized by [dprocess_2d()]
 #'   for years 2...Y.
 #'
@@ -133,8 +133,8 @@ rprocess_2d <- function(ny, na, phi = c(0, 0), sd = 1) {
 #'   \deqn{\log I_{y,a} \sim \mathcal{N}\!\left(
 #'       \log q_{a} + \log N_{y,a} - Z_{y,a}\, t_{y,a}, \sigma^2_{\text{index}}\right).}
 #'
-#'   Here `sd_catch_modmat %*% log_sd_catch` controls observation SD for catch-at-age,
-#'   `sd_index_modmat %*% log_sd_index` for indices-at-age, and `q_modmat %*% log_q`
+#'   Here `sd_catch_modmat %*% log_sd_catch` adjusts the supplied observation SDs for catch-at-age,
+#'   `sd_index_modmat %*% log_sd_index` does the same for indices-at-age, and `q_modmat %*% log_q`
 #'   controls age- (or block-) specific catchability.
 #'
 #' **Simulation mode:**
@@ -206,8 +206,8 @@ nll_fun <- function(par, dat, simulate = FALSE) {
 
   obs <- exp(log_obs)
   observed <- OBS(observed)
-  if (obs_settings$fill_missing) {
-    log_obs[is_missing] <- missing
+  if (any(fill_missing_map)) {
+    log_obs[fill_missing_map] <- missing
   }
 
   n_obs <- length(log_obs)
@@ -242,7 +242,7 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   mu_F <- exp(log_mu_F)
   F <- exp(log_F)
 
-  log_mu_M[] <- log_mu_assumed_m + drop(M_modmat %*% log_mu_m)
+  log_mu_M[] <- log_mu_supplied_m + drop(M_modmat %*% log_mu_m)
   M <- mu_M <- exp(log_mu_M)
   if (M_settings$process != "off") {
     iy <- rownames(log_m)
@@ -338,8 +338,18 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   N_obs <- N[iya]
   Z_obs <- Z[iya]
   F_obs <- F[iya]
-  sd_catch <- exp(drop(sd_catch_modmat %*% log_sd_catch))
-  sd_index <- exp(drop(sd_index_modmat %*% log_sd_index))
+  if (ncol(sd_catch_modmat) > 0) {
+    log_sd_catch_eff <- drop(sd_catch_modmat %*% log_sd_catch)
+  } else {
+    log_sd_catch_eff <- rep(0, nrow(sd_catch_modmat))
+  }
+  if (ncol(sd_index_modmat) > 0) {
+    log_sd_index_eff <- drop(sd_index_modmat %*% log_sd_index)
+  } else {
+    log_sd_index_eff <- rep(0, nrow(sd_index_modmat))
+  }
+  sd_catch <- exp(log_sd_catch_supplied + log_sd_catch_eff)
+  sd_index <- exp(log_sd_index_supplied + log_sd_index_eff)
   sd_obs <- c(sd_catch, sd_index)
   log_q_obs <- drop(q_modmat %*% log_q) # length = number of survey index rows
   samp_time <- obs_map$samp_time
@@ -351,13 +361,13 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   log_pred[ii] <- log_q_obs + log(N_obs[ii]) - Z_obs[ii] * samp_time[ii]
 
   jnll <- jnll - sum(RTMB::dnorm(observed, log_pred[is_observed], sd = sd_obs[is_observed], log = TRUE))
-  if (obs_settings$fill_missing) {
-    jnll <- jnll - sum(RTMB::dnorm(missing, log_pred[is_missing], sd = sd_obs[is_missing], log = TRUE))
+  if (any(fill_missing_map)) {
+    jnll <- jnll - sum(RTMB::dnorm(missing, log_pred[fill_missing_map], sd = sd_obs[fill_missing_map], log = TRUE))
   }
   if (simulate) {
     log_obs[is_observed] <- stats::rnorm(sum(is_observed), mean = log_pred[is_observed], sd = sd_obs)
-    if (obs_settings$fill_missing) {
-      log_obs[is_missing] <- stats::rnorm(sum(is_missing), mean = log_pred[is_missing], sd = sd_obs)
+    if (any(fill_missing_map)) {
+      log_obs[fill_missing_map] <- stats::rnorm(sum(fill_missing_map), mean = log_pred[fill_missing_map], sd = sd_obs[fill_missing_map])
     }
   }
 
@@ -432,8 +442,8 @@ nll_fun <- function(par, dat, simulate = FALSE) {
     sims <- list(log_f = log_f,
                  log_r = log_r,
                  log_obs = log_obs)
-    if (obs_settings$fill_missing) {
-      sims$missing <- log_obs[is_missing]
+    if (any(fill_missing_map)) {
+      sims$missing <- log_obs[fill_missing_map]
     }
     if (N_settings$process != "off") {
       sims$log_n <- log_n
