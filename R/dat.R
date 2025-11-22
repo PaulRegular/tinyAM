@@ -295,8 +295,8 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #'   on `obs$weight`. If provided together with `mu_supplied`, the intercept
 #'   in `mu_form` is dropped (warning) so supplied levels act as fixed offsets.
 #' - `mu_supplied`: optional one-sided formula giving supplied (non-estimated)
-#'   log-\eqn{M} offsets, e.g. `~ I(0.2)` or a column reference such as
-#'   `~ log(M_assumption)` stored in the `obs$weight` data.frame.
+#'   \eqn{M}, e.g. `~ I(0.2)` or a column reference such as
+#'   `~ M_assumption` stored in the `obs$weight` data.frame.
 #' - `age_breaks`: optional integer break points used by [cut_ages()] to
 #'   define `age_blocks` for coupling \eqn{M} deviations across ages.
 #'   When a narrower set of `age_breaks` than modeled `ages` is provided,

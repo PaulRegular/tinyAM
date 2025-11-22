@@ -66,7 +66,7 @@ Deviations \eqn{\eta^F} are penalized by \code{\link[=dprocess_2d]{dprocess_2d()
 \item \strong{Natural mortality:}
 \deqn{\log M_{y,a} = \log \mu^M_{y,a} + \eta^M_{y,a},}
 
-where \eqn{\log \mu^M = \texttt{log\_mu\_assumed\_m} + M_\text{modmat}\,\texttt{log\_mu\_m}}.
+where \eqn{\log \mu^M = \texttt{log\_mu\_supplied\_m} + M_\text{modmat}\,\texttt{log\_mu\_m}}.
 If \code{M_settings$process != "off"}, process deviations (\eqn{\eta^M}) are penalized by \code{\link[=dprocess_2d]{dprocess_2d()}}
 for years 2...Y.
 \item \strong{Observations:} catch-at-age and index-at-age on the log scale:
@@ -77,8 +77,8 @@ for years 2...Y.
 \deqn{\log I_{y,a} \sim \mathcal{N}\!\left(
       \log q_{a} + \log N_{y,a} - Z_{y,a}\, t_{y,a}, \sigma^2_{\text{index}}\right).}
 
-Here \code{sd_catch_modmat \%*\% log_sd_catch} controls observation SD for catch-at-age,
-\code{sd_index_modmat \%*\% log_sd_index} for indices-at-age, and \code{q_modmat \%*\% log_q}
+Here \code{sd_catch_modmat \%*\% log_sd_catch} adjusts the supplied observation SDs for catch-at-age,
+\code{sd_index_modmat \%*\% log_sd_index} does the same for indices-at-age, and \code{q_modmat \%*\% log_q}
 controls age- (or block-) specific catchability.
 }
 

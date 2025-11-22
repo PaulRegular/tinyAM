@@ -13,8 +13,8 @@ make_dat(
   M_settings = list(process = "off", mu_form = NULL, mu_supplied = ~I(0.2), age_breaks =
     NULL, first_dev_year = NULL),
   catch_settings = list(sd_form = ~1, sd_supplied = NULL, fill_missing = TRUE),
-  index_settings = list(sd_form = ~1, sd_supplied = NULL, q_form = ~q_block,
-    fill_missing = TRUE),
+  index_settings = list(sd_form = ~1, sd_supplied = NULL, q_form = ~q_block, fill_missing
+    = TRUE),
   proj_settings = NULL
 )
 }
@@ -53,8 +53,8 @@ average F (\code{F_bar}) calculations. All ages used if absent.
 on \code{obs$weight}. If provided together with \code{mu_supplied}, the intercept
 in \code{mu_form} is dropped (warning) so supplied levels act as fixed offsets.
 \item \code{mu_supplied}: optional one-sided formula giving supplied (non-estimated)
-log-\eqn{M} offsets, e.g. \code{~ I(0.2)} or a column reference such as
-\code{~ log(M_assumption)} stored in the \code{obs$weight} data.frame.
+\eqn{M}, e.g. \code{~ I(0.2)} or a column reference such as
+\code{~ M_assumption} stored in the \code{obs$weight} data.frame.
 \item \code{age_breaks}: optional integer break points used by \code{\link[=cut_ages]{cut_ages()}} to
 define \code{age_blocks} for coupling \eqn{M} deviations across ages.
 When a narrower set of \code{age_breaks} than modeled \code{ages} is provided,
@@ -64,7 +64,7 @@ deviations are estimated for all modeled ages except the youngest, reducing
 confounding between \eqn{M} and recruitment.
 \item \code{first_dev_year}: integer year at which to start estimating \eqn{M} deviations.
 Defaults to the second modeled year if \code{NULL}. Anchoring the first year
-to mean or supplied levels helps minimize confounding between early \eqn{M}
+to mean or assumed levels helps minimize confounding between early \eqn{M}
 estimates, initial abundance, and catchability, leading to more stable estimation.
 \item \code{mean_ages}: optional vector of ages to include in population weighted
 average M (\code{M_bar}) calculations. All ages used if absent.

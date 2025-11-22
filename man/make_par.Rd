@@ -11,7 +11,8 @@ make_par(dat)
 settings, and observation mappings. The shapes and presence/absence of
 parameters depend on elements in \code{dat} (e.g., \code{F_modmat}, \code{M_modmat},
 \code{q_modmat}, \code{sd_catch_modmat}, \code{sd_index_modmat}, \code{N_settings}, \code{F_settings},
-\code{M_settings}, \code{years}, \code{ages}, and \code{M_settings$age_blocks}).}
+\code{M_settings}, \code{catch_settings}, \code{index_settings}, \code{years}, \code{ages}, and
+\code{M_settings$age_blocks}).}
 }
 \value{
 A named list of initialized parameters suitable to pass to the TAM objective

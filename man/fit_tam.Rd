@@ -65,8 +65,8 @@ average F (\code{F_bar}) calculations. All ages used if absent.
 on \code{obs$weight}. If provided together with \code{mu_supplied}, the intercept
 in \code{mu_form} is dropped (warning) so supplied levels act as fixed offsets.
 \item \code{mu_supplied}: optional one-sided formula giving supplied (non-estimated)
-log-\eqn{M} offsets, e.g. \code{~ I(0.2)} or a column reference such as
-\code{~ log(M_assumption)} stored in the \code{obs$weight} data.frame.
+\eqn{M}, e.g. \code{~ I(0.2)} or a column reference such as
+\code{~ M_assumption} stored in the \code{obs$weight} data.frame.
 \item \code{age_breaks}: optional integer break points used by \code{\link[=cut_ages]{cut_ages()}} to
 define \code{age_blocks} for coupling \eqn{M} deviations across ages.
 When a narrower set of \code{age_breaks} than modeled \code{ages} is provided,
