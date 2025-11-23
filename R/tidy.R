@@ -314,6 +314,14 @@ tidy_pop <- function(fit, interval = 0.95) {
 #' - `log_`  → `exp()` (and the `log_` prefix is dropped, e.g. `log_sd_r` → `sd_r`)
 #' - `logit_` → `plogis()` (and the `logit_` prefix is dropped, e.g. `logit_phi_f` → `phi_f`)
 #'
+#' This convention is relied upon by the printing methods, so parameters tied to
+#' `*_form` arguments that live on the log scale (e.g., `log_mu_f`, `log_sd_*`,
+#' `log_q`) should retain the `log_` prefix to ensure they are correctly
+#' exponentiated in summaries. An exception is the mean-\eqn{M} formula
+#' coefficients (`mu_m`), which operate on the log scale but are named without a
+#' `log_` prefix to reflect that their values may be positive or negative; they
+#' therefore print on the fitted log scale.
+#'
 #' Fixed-effect parameters are returned in a single data frame (`$fixed`);
 #' random-effect parameters are returned as a named list of data frames
 #' (`$random`), one per random block (e.g. `log_f`, `log_r`, `missing`, …).

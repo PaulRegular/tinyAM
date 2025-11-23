@@ -28,10 +28,10 @@ test_that("make_par builds shapes and zeros consistent with dat", {
   expect_true("logit_phi_f" %in% names(par))
   expect_length(par$logit_phi_f, 2)
 
-  # M process iid => log_sd_m present; mu_form => log_mu_m present with right length
+  # M process iid => log_sd_m present; mu_form => mu_m present with right length
   expect_true("log_sd_m" %in% names(par))
-  expect_true("log_mu_m" %in% names(par))
-  expect_length(par$log_mu_m, ncol(dat$M_modmat))
+  expect_true("mu_m" %in% names(par))
+  expect_length(par$mu_m, ncol(dat$M_modmat))
 
   # init_N0 TRUE => log_r0 exists
   expect_true("log_r0" %in% names(par))
@@ -79,22 +79,22 @@ test_that("make_par includes/excludes mean-structure parameters appropriately", 
   parF0 <- make_par(datF0)
   expect_false("log_mu_f" %in% names(parF0))
 
-  # M mu_form present -> log_mu_m created
+  # M mu_form present -> mu_m created
   datM  <- make_test_dat(
     F_settings = list(process = "iid", mu_form = NULL),
     M_settings = list(process = "iid", mu_form = ~ 1, mu_supplied = NULL, age_breaks = seq(2, 14, 2))
   )
   parM <- make_par(datM)
-  expect_true("log_mu_m" %in% names(parM))
-  expect_length(parM$log_mu_m, ncol(datM$M_modmat))
+  expect_true("mu_m" %in% names(parM))
+  expect_length(parM$mu_m, ncol(datM$M_modmat))
 
-  # Only M mu_supplied -> log_mu_m absent
+  # Only M mu_supplied -> mu_m absent
   datM0 <- make_test_dat(
     F_settings = list(process = "iid", mu_form = NULL),
     M_settings = list(process = "iid", mu_form = NULL, mu_supplied = ~ I(0.3), age_breaks = seq(2, 14, 2))
   )
   parM0 <- make_par(datM0)
-  expect_false("log_mu_m" %in% names(parM0))
+  expect_false("mu_m" %in% names(parM0))
 })
 
 test_that("make_par adds AR1 parameters only for processes set to ar1", {
