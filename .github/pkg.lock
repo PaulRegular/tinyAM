@@ -1,0 +1,2 @@
+# pkg.lock used by r-lib/actions setup-r-dependencies caching
+# Lockfile intentionally minimal; populate with package versions if caching needed.
