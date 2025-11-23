@@ -37,7 +37,7 @@
 #' - **Natural mortality (M)**
 #'   - `log_sd_m` (if `dat$M_settings$process != "off"`)
 #'   - `logit_phi_m` length 2 (if `process == "ar1"`)
-#'   - `log_mu_m` coefficients (length `ncol(dat$M_modmat)`) if a mean structure was supplied
+#'   - `mu_m` coefficients (length `ncol(dat$M_modmat)`) if a mean structure was supplied; these act on log-\eqn{M} but are named without the `log_` prefix because they may be positive or negative
 #'   - `log_m` matrix (`year[-1]` × `age_block`) if `process != "off"`, with
 #'     `age_block = levels(dat$M_settings$age_blocks)`
 #'
@@ -90,8 +90,8 @@ make_par <- function(dat) {
     par$log_sd_m <- 0
   }
   if (!is.null(dat$M_settings$mu_form)) {
-    par$log_mu_m <- numeric(ncol(dat$M_modmat))
-    names(par$log_mu_m) <- colnames(dat$M_modmat)
+    par$mu_m <- numeric(ncol(dat$M_modmat))
+    names(par$mu_m) <- colnames(dat$M_modmat)
   }
   if (dat$N_settings$process == "ar1") {
     par$logit_phi_n <- c("age" = 0, "year" = 0)
@@ -130,7 +130,7 @@ make_par <- function(dat) {
   if (!is.null(dat$M_settings$age_breaks)) {
     getAll(par, dat)
     log_mu_M <- matrix(NA, length(years), length(ages), dimnames = list(year = years, age = ages))
-    dummy_mu_m <- seq(1, 10, length = length(log_mu_m))
+    dummy_mu_m <- seq(1, 10, length = length(mu_m))
     log_mu_M[] <- log_mu_supplied_m + drop(M_modmat %*% dummy_mu_m)
     for(b in levels(M_settings$age_blocks)) {
       if (sum(M_settings$age_blocks == b) > 1) {

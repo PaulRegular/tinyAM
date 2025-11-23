@@ -239,14 +239,19 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #' **Design matrices**
 #'
 #' - `catch_settings$sd_form` is evaluated on the catch table to produce
-#'   `sd_catch_modmat`.
+#'   `sd_catch_modmat` and associated **log-scale** parameters `log_sd_catch`
+#'   (intercept removed when `sd_supplied` is provided so supplied SDs act as
+#'   offsets).
 #' - `index_settings$sd_form` is evaluated on the index table to produce
-#'   `sd_index_modmat`.
+#'   `sd_index_modmat` and **log-scale** parameters `log_sd_index`.
 #' - `index_settings$q_form` is evaluated on the index table to produce
-#'   `q_modmat`.
+#'   `q_modmat` and **log-scale** parameters `log_q`.
 #' - If `M_settings$mu_form` is provided, `M_modmat <- model.matrix(mu_form,
-#'   data = obs$weight)`. If `mu_supplied` is also provided, the intercept
-#'   in `mu_form` is dropped and a warning is issued.
+#'   data = obs$weight)` and the resulting coefficients are parameters `mu_m`.
+#'   These coefficients are applied on the log scale to build \eqn{M}, but
+#'   retain the `mu_` prefix to emphasize they can be positive or negative.
+#'   If `mu_supplied` is also provided, the intercept in `mu_form` is dropped
+#'   and a warning is issued.
 #' - If neither `M_settings$mu_form` nor `M_settings$mu_supplied` is supplied,
 #'   the function stops, because \eqn{M} must be identified by either a supplied
 #'   surface or a mean structure.
@@ -286,14 +291,18 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #'   this is forced to `TRUE`.
 #' @param F_settings A list with elements:
 #' - `process`: one of `"iid"`, `"approx_rw"`, or `"ar1"`.
-#' - `mu_form`: an optional formula for mean-\eqn{F}.
+#' - `mu_form`: an optional formula for mean-\eqn{F} (coefficients estimated as
+#'   **log-scale** parameters `log_mu_f`).
 #' - `mean_ages`: optional vector of ages to include in population weighted
 #'   average F (`F_bar`) calculations. All ages used if absent.
 #' @param M_settings A list with elements:
 #' - `process`: one of `"off"`, `"iid"`, `"approx_rw"`, or `"ar1"`.
-#' - `mu_form`: optional formula for mean-\eqn{M} (on the log scale) built
-#'   on `obs$weight`. If provided together with `mu_supplied`, the intercept
-#'   in `mu_form` is dropped (warning) so supplied levels act as fixed offsets.
+#' - `mu_form`: optional formula for mean-\eqn{M} (applied on the log scale) built
+#'   on `obs$weight`, yielding coefficients `mu_m`. These enter the log-\eqn{M}
+#'   surface directly and may therefore be positive or negative; they intentionally
+#'   avoid a `log_` prefix to prevent automatic back-transformation when tidied.
+#'   If provided together with `mu_supplied`, the intercept in `mu_form` is
+#'   dropped (warning) so supplied levels act as fixed offsets.
 #' - `mu_supplied`: optional one-sided formula giving supplied (non-estimated)
 #'   \eqn{M}, e.g. `~ I(0.2)` or a column reference such as
 #'   `~ M_assumption` stored in the `obs$weight` data.frame.
@@ -346,7 +355,7 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #' - `log_obs`, `is_missing`, `is_observed`, `observed` - vector of log observations (with NA),
 #'   logical vector indicating missing and observed values, and vector of non-missing values, respectively.
 #' - design matrices: `sd_catch_modmat`, `sd_index_modmat`, `q_modmat`, and optionally `F_modmat`, `M_modmat`
-#' - mean-level placeholders: `log_mu_f` and/or `log_mu_m` (or `log_mu_supplied_m`)
+#' - mean-level placeholders: `log_mu_f` and/or `mu_m` (or `log_mu_supplied_m`)
 #' - process settings: `N_settings`, `F_settings`, `M_settings`, `catch_settings`, `index_settings`
 #' - projection settings: `proj_settings`
 #' - AR(1) parameter assumptions, `logit_phi_*`, if applicable
@@ -537,7 +546,7 @@ make_dat <- function(
       cli::cli_warn("Dropping intercept term in M mu_form since supplied levels are provided. Set mu_supplied to NULL to estimate the intercept.")
     }
   } else {
-    dat$log_mu_m <- 0
+    dat$mu_m <- 0
     dat$M_modmat <- 0
   }
   if (!is.null(dat$M_settings$mu_supplied)) {

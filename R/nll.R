@@ -242,7 +242,7 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   mu_F <- exp(log_mu_F)
   F <- exp(log_F)
 
-  log_mu_M[] <- log_mu_supplied_m + drop(M_modmat %*% log_mu_m)
+  log_mu_M[] <- log_mu_supplied_m + drop(M_modmat %*% mu_m)
   M <- mu_M <- exp(log_mu_M)
   if (M_settings$process != "off") {
     iy <- rownames(log_m)
