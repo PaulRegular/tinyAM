@@ -121,9 +121,10 @@ rprocess_2d <- function(ny, na, phi = c(0, 0), sd = 1) {
 #' - **Natural mortality:**
 #'   \deqn{\log M_{y,a} = \log \mu^M_{y,a} + \eta^M_{y,a},}
 #'
-#'   where \eqn{\log \mu^M = \texttt{log\_mu\_supplied\_m} + M_\text{modmat}\,\texttt{log\_mu\_m}}.
+#'   where \eqn{\log \mu^M = \texttt{log\_mu\_supplied\_m} + M_\text{modmat}\,\texttt{mu\_m}}.
 #'   If `M_settings$process != "off"`, process deviations (\eqn{\eta^M}) are penalized by [dprocess_2d()]
-#'   for years 2...Y.
+#'   from `M_settings$first_dev_year` onward. The latent `log_m` is absolute log mortality;
+#'   its process residual is `log_m - log_mu_M` at each age-block start.
 #'
 #' - **Observations:** catch-at-age and index-at-age on the log scale:
 #'   \deqn{\log C_{y,a} \sim \mathcal{N}\!\left(
@@ -141,7 +142,7 @@ rprocess_2d <- function(ny, na, phi = c(0, 0), sd = 1) {
 #' When `simulate = TRUE`, the function:
 #'
 #' 1. Draws `log_r` (RW), optional `log_n` (cohort residual field),
-#'    optional `log_m` (M deviations), and `log_f` (F deviations) from
+#'    optional `log_m` (absolute log M states), and `log_f` (F deviations) from
 #'    their respective process models via [rprocess_2d()].
 #' 2. Regenerates predictions and draws `log_obs` from the observation
 #'    model.
@@ -204,7 +205,6 @@ nll_fun <- function(par, dat, simulate = FALSE) {
 
   getAll(par, dat)
 
-  obs <- exp(log_obs)
   observed <- OBS(observed)
   if (any(fill_missing_map)) {
     log_obs[fill_missing_map] <- missing
@@ -225,6 +225,25 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   M <- log_mu_M  <- empty_mat
   Z <- empty_mat
 
+  ## Mean structures and process draws ----
+
+  log_mu_F[] <- drop(F_modmat %*% log_mu_f)
+  log_mu_M[] <- log_mu_supplied_m + drop(M_modmat %*% mu_m)
+  if (simulate) {
+    if (N_settings$init_N0) {
+      log_r[1] <- stats::rnorm(1, mean = log_r0, sd = sd_r)
+    }
+    log_r[-1] <- log_r[1] + cumsum(stats::rnorm(n_years - 1, 0, sd_r))
+    log_f[] <- log_mu_F[!is_proj, ] +
+      rprocess_2d(nrow(log_f), ncol(log_f), sd = sd_f, phi = plogis(logit_phi_f))
+    if (M_settings$process != "off") {
+      iy <- rownames(log_m)
+      ia <- M_settings$age_block_start
+      log_m[] <- log_mu_M[iy, ia, drop = FALSE] +
+        rprocess_2d(nrow(log_m), ncol(log_m), sd = exp(log_sd_m), phi = plogis(logit_phi_m))
+    }
+  }
+
   ## Vital rates ----
 
   recruitment <- exp(log_r)
@@ -238,16 +257,14 @@ nll_fun <- function(par, dat, simulate = FALSE) {
     proj_log_F <- sweep(log_f_last, 1, log_k, `+`)
     log_F[is_proj, ] <- proj_log_F
   }
-  log_mu_F[] <- drop(F_modmat %*% log_mu_f)
   mu_F <- exp(log_mu_F)
   F <- exp(log_F)
 
-  log_mu_M[] <- log_mu_supplied_m + drop(M_modmat %*% mu_m)
   M <- mu_M <- exp(log_mu_M)
   if (M_settings$process != "off") {
     iy <- rownames(log_m)
     ia <- names(M_settings$age_blocks)
-    M[iy, ia] <- exp(log_mu_M[iy, ia] + log_m[, M_settings$age_blocks])
+    M[iy, ia] <- exp(log_m[, M_settings$age_blocks, drop = FALSE])
   }
   log_M <- log(M)
   Z <- F + M
@@ -261,15 +278,24 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   if (N_settings$init_N0) {
     log_N[1, A] <- log_r0 - cumsum(Z[1, A - 1])
   }
-  if (N_settings$process == "off") {
-    for (a in A) {
-      log_N[Y, a] <- log_N[Y - 1, a - 1] - Z[Y - 1, a - 1]
-    }
-    log_N[Y, n_ages] <- log(exp(log_N[Y, n_ages]) + exp(log_N[Y - 1, n_ages] - Z[Y - 1, n_ages]))
-  } else {
+  if (N_settings$process != "off") {
     log_N[, -1] <- log_n
-    pred_log_N[Y, A] <- log_N[Y - 1, A - 1] - Z[Y - 1, A - 1]
-    pred_log_N[Y, n_ages] <- log(exp(pred_log_N[Y, n_ages]) + exp(log_N[Y - 1, n_ages] - Z[Y - 1, n_ages]))
+  }
+  eta_log_N <- matrix(0, n_years - 1, n_ages - 1)
+  if (simulate && N_settings$process != "off") {
+    eta_log_N <- rprocess_2d(n_years - 1, n_ages - 1,
+                            sd = exp(log_sd_n), phi = plogis(logit_phi_n))
+  }
+  for (y in Y) {
+    pred_log_N[y, A] <- log_N[y - 1, A - 1] - Z[y - 1, A - 1]
+    pred_log_N[y, n_ages] <- RTMB::logspace_add(pred_log_N[y, n_ages],
+                                              log_N[y - 1, n_ages] - Z[y - 1, n_ages])
+    if (N_settings$process == "off" || simulate) {
+      log_N[y, A] <- pred_log_N[y, A] + eta_log_N[y - 1, ]
+    }
+  }
+  if (simulate && N_settings$process != "off") {
+    log_n[] <- log_N[, -1]
   }
   N <- exp(log_N)
 
@@ -280,16 +306,9 @@ nll_fun <- function(par, dat, simulate = FALSE) {
 
   if (N_settings$init_N0) {
     jnll <- jnll - RTMB::dnorm(log_N[1, 1], mean = log_r0, sd = sd_r, log = TRUE)
-    if (simulate) {
-      log_r[1] <- stats::rnorm(1, mean = log_r0, sd = sd_r)
-    }
   }
   eta_R <- log_N[2:n_years, 1] - log_N[1:(n_years - 1), 1]
   jnll <- jnll - sum(RTMB::dnorm(eta_R, 0, sd_r, log = TRUE))
-  if (simulate) {
-    eta_R <- stats::rnorm(n_years - 1, 0, sd = sd_r)
-    log_r[2:n_years] <- log_r[1:(n_years - 1)] + eta_R
-  }
 
 
   ## Cohort deviations ----
@@ -299,10 +318,6 @@ nll_fun <- function(par, dat, simulate = FALSE) {
     sd_n <- exp(log_sd_n)
     phi <- plogis(logit_phi_n)
     jnll <- jnll - dprocess_2d(eta_log_N, sd = sd_n, phi = phi)
-    if (simulate) {
-      eta_log_N <- rprocess_2d(n_years - 1, n_ages - 1, sd = sd_n, phi = phi)
-      log_n[-1, ] <- pred_log_N[-1, -1] + eta_log_N
-    }
   }
 
   ## M deviations ----
@@ -314,10 +329,6 @@ nll_fun <- function(par, dat, simulate = FALSE) {
     sd_m <- exp(log_sd_m)
     phi  <- plogis(logit_phi_m)
     jnll <- jnll - dprocess_2d(eta_log_m, sd = sd_m, phi = phi)
-    if (simulate) {
-      eta_log_m <- rprocess_2d(nrow(log_m), ncol(log_m), sd = sd_m, phi = phi)
-      log_m <- log_mu_M[iy, ia, drop = FALSE] + eta_log_m
-    }
   }
 
   ## F deviations ----
@@ -325,17 +336,13 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   eta_log_f <- log_F[!is_proj, ] - log_mu_F[!is_proj, ]
   phi <- plogis(logit_phi_f)
   jnll <- jnll - dprocess_2d(eta_log_f, sd = sd_f, phi = phi)
-  if (simulate) {
-    eta_log_f <- rprocess_2d(nrow(log_f), ncol(log_f), sd = sd_f, phi = phi)
-    log_f <- log_mu_F[!is_proj, ] + eta_log_f
-  }
 
 
   ## Observations ----
 
   log_pred <- numeric(n_obs)
   iya <- sapply(obs_map[, c("year", "age")], as.character)
-  N_obs <- N[iya]
+  log_N_obs <- log_N[iya]
   Z_obs <- Z[iya]
   F_obs <- F[iya]
   if (ncol(sd_catch_modmat) > 0) {
@@ -355,23 +362,26 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   samp_time <- obs_map$samp_time
 
   ic <- obs_map$type == "catch"
-  log_pred[ic] <- log(N_obs[ic]) - log(Z_obs[ic]) + log(1 - exp(- Z_obs[ic])) + log(F_obs[ic])
+  log_pred[ic] <- log_N_obs[ic] - log(Z_obs[ic]) + log(1 - exp(- Z_obs[ic])) + log(F_obs[ic])
 
   ii <- obs_map$type == "index"
-  log_pred[ii] <- log_q_obs + log(N_obs[ii]) - Z_obs[ii] * samp_time[ii]
+  log_pred[ii] <- log_q_obs + log_N_obs[ii] - Z_obs[ii] * samp_time[ii]
 
   jnll <- jnll - sum(RTMB::dnorm(observed, log_pred[is_observed], sd = sd_obs[is_observed], log = TRUE))
   if (any(fill_missing_map)) {
     jnll <- jnll - sum(RTMB::dnorm(missing, log_pred[fill_missing_map], sd = sd_obs[fill_missing_map], log = TRUE))
   }
   if (simulate) {
-    log_obs[is_observed] <- stats::rnorm(sum(is_observed), mean = log_pred[is_observed], sd = sd_obs)
+    log_obs[is_observed] <- stats::rnorm(sum(is_observed), mean = log_pred[is_observed], sd = sd_obs[is_observed])
     if (any(fill_missing_map)) {
       log_obs[fill_missing_map] <- stats::rnorm(sum(fill_missing_map), mean = log_pred[fill_missing_map], sd = sd_obs[fill_missing_map])
     }
   }
 
   ## Derived quantities ----
+
+  obs <- exp(log_obs)
+  obs[is_missing] <- NA
 
   F_full <- apply(F, 1, max)
   S <- sweep(F, 1, F_full, "/")

@@ -73,13 +73,21 @@
   dat <- fit$dat
   par <- par_fun(fit)
 
-  # Draw obs | par
-  sims <- nll_fun(par, dat, simulate = TRUE)
-
-  # Optionally use simulated random effects
   if (redraw_random) {
-    par[obj$env$.random] <- sims[obj$env$.random]
     sims <- nll_fun(par, dat, simulate = TRUE)
+    random_states <- intersect(obj$env$.random, names(sims))
+    par[random_states] <- sims[random_states]
+  } else {
+    # Conditional observation draws keep the supplied latent realization.
+    make_nll_fun <- function(f, d) function(p) f(p, d)
+    rep <- RTMB::MakeADFun(make_nll_fun(nll_fun, dat), par, silent = TRUE)$report()
+    log_obs <- dat$log_obs
+    draw <- dat$is_observed | dat$fill_missing_map
+    log_obs[draw] <- stats::rnorm(sum(draw), rep$log_pred[draw], rep$sd_obs[draw])
+    sims <- list(log_obs = log_obs)
+    if (any(dat$fill_missing_map)) {
+      par$missing <- log_obs[dat$fill_missing_map]
+    }
   }
 
   # Rebuild report with simulated obs (+ maybe simulated RE)

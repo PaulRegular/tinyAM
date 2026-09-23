@@ -17,7 +17,7 @@ parameters depend on elements in \code{dat} (e.g., \code{F_modmat}, \code{M_modm
 \value{
 A named list of initialized parameters suitable to pass to the TAM objective
 function, with elements as described in \strong{Details}. All numeric entries are
-initialized to \code{0} (or the correct length filled with \code{0}), and matrices have
+initialized to \code{0} except \code{log_m}, initialized at its log mean. Matrices have
 informative \code{dimnames}.
 }
 \description{
@@ -32,7 +32,8 @@ it initializes a 2-vector \code{logit_phi_f}; if \code{dat$F_settings$mu_form} i
 \code{NULL} it creates a coefficient vector \code{log_mu_f} of length
 \code{ncol(dat$F_modmat)}, and so on.
 
-All numeric parameters are initialized at \code{0}, and all matrices are created
+Numeric parameters are initialized at \code{0}, except \code{log_m}, which starts at
+its log mean surface so initial M-process residuals are zero. Matrices are created
 with appropriate \code{dimnames} (\verb{year × age} or \verb{year × age_block}).
 
 \strong{Created elements (when applicable) include:}
@@ -60,7 +61,7 @@ with appropriate \code{dimnames} (\verb{year × age} or \verb{year × age_block}
 \itemize{
 \item \code{log_sd_m} (if \code{dat$M_settings$process != "off"})
 \item \code{logit_phi_m} length 2 (if \code{process == "ar1"})
-\item \code{log_mu_m} coefficients (length \code{ncol(dat$M_modmat)}) if a mean structure was supplied
+\item \code{mu_m} coefficients (length \code{ncol(dat$M_modmat)}) if a mean structure was supplied; these act on log-\eqn{M} but are named without the \code{log_} prefix because they may be positive or negative
 \item \code{log_m} matrix (\code{year[-1]} × \code{age_block}) if \code{process != "off"}, with
 \code{age_block = levels(dat$M_settings$age_blocks)}
 }

@@ -294,8 +294,8 @@ fit_retro <- function(
     grad_tol <- if (!is.null(fit$grad_tol)) fit$grad_tol else 1e-3
   }
 
-  min_year <- min(fit$dat$years)
-  max_year <- max(fit$dat$years)
+  min_year <- min(fit$dat$years[!fit$dat$is_proj])
+  max_year <- .terminal_year(fit)
   retro_years <- seq(max_year - folds, max_year)
   if (start_from_fit) {
     start_par <- as.list(fit$sdrep, "Estimate")
@@ -303,24 +303,27 @@ fit_retro <- function(
     start_par <- NULL
   }
 
-  if (hindcast) {
-    fit$call$proj_settings <- list(n_proj = 1, n_mean = 1, F_mult = 1)
-  }
 
   progressr::with_progress({
     update_progress <- progressr::progressor(steps = length(retro_years))
     retro <- furrr::future_map(seq_along(retro_years), function(i) {
-      if (retro_years[i] == max_year) {
+      if (retro_years[i] == max_year && !hindcast) {
         r <- fit # need not re-run terminal year
       } else {
         r <- suppressWarnings(
           try(
-            stats::update(
-              fit,
+            do.call(stats::update, list(
+              object = fit,
               years = min_year:retro_years[i],
+              ages = fit$dat$ages,
+              proj_settings = if (hindcast) {
+                list(n_proj = 1, n_mean = 1, F_mult = 1)
+              } else {
+                fit$dat$proj_settings
+              },
               start_par = start_par,
               silent = TRUE
-            ),
+            )),
             silent = TRUE
           )
         )

@@ -66,9 +66,10 @@ Deviations \eqn{\eta^F} are penalized by \code{\link[=dprocess_2d]{dprocess_2d()
 \item \strong{Natural mortality:}
 \deqn{\log M_{y,a} = \log \mu^M_{y,a} + \eta^M_{y,a},}
 
-where \eqn{\log \mu^M = \texttt{log\_mu\_supplied\_m} + M_\text{modmat}\,\texttt{log\_mu\_m}}.
+where \eqn{\log \mu^M = \texttt{log\_mu\_supplied\_m} + M_\text{modmat}\,\texttt{mu\_m}}.
 If \code{M_settings$process != "off"}, process deviations (\eqn{\eta^M}) are penalized by \code{\link[=dprocess_2d]{dprocess_2d()}}
-for years 2...Y.
+from \code{M_settings$first_dev_year} onward. The latent \code{log_m} is absolute log mortality;
+its process residual is \code{log_m - log_mu_M} at each age-block start.
 \item \strong{Observations:} catch-at-age and index-at-age on the log scale:
 \deqn{\log C_{y,a} \sim \mathcal{N}\!\left(
       \log\!\left[N_{y,a}\,\frac{F_{y,a}}{Z_{y,a}}\,(1-e^{-Z_{y,a}})\right],
@@ -86,7 +87,7 @@ controls age- (or block-) specific catchability.
 When \code{simulate = TRUE}, the function:
 \enumerate{
 \item Draws \code{log_r} (RW), optional \code{log_n} (cohort residual field),
-optional \code{log_m} (M deviations), and \code{log_f} (F deviations) from
+optional \code{log_m} (absolute log M states), and \code{log_f} (F deviations) from
 their respective process models via \code{\link[=rprocess_2d]{rprocess_2d()}}.
 \item Regenerates predictions and draws \code{log_obs} from the observation
 model.

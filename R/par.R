@@ -13,7 +13,8 @@
 #' `NULL` it creates a coefficient vector `log_mu_f` of length
 #' `ncol(dat$F_modmat)`, and so on.
 #'
-#' All numeric parameters are initialized at `0`, and all matrices are created
+#' Numeric parameters are initialized at `0`, except `log_m`, which starts at
+#' its log mean surface so initial M-process residuals are zero. Matrices are created
 #' with appropriate `dimnames` (`year × age` or `year × age_block`).
 #'
 #' **Created elements (when applicable) include:**
@@ -61,7 +62,7 @@
 #' @return
 #' A named list of initialized parameters suitable to pass to the TAM objective
 #' function, with elements as described in **Details**. All numeric entries are
-#' initialized to `0` (or the correct length filled with `0`), and matrices have
+#' initialized to `0` except `log_m`, initialized at its log mean. Matrices have
 #' informative `dimnames`.
 #'
 #' @example inst/examples/example_dat_default.R
@@ -125,6 +126,14 @@ make_par <- function(dat) {
   }
   par$log_f <- matrix(0, nrow = sum(!dat$is_proj), ncol = length(dat$ages),
                       dimnames = list(year = dat$years[!dat$is_proj], age = dat$ages))
+
+  if (dat$M_settings$process != "off") {
+    mu_m_init <- if (is.null(par$mu_m)) dat$mu_m else par$mu_m
+    log_mu_M <- matrix(NA, length(dat$years), length(dat$ages),
+                       dimnames = list(year = dat$years, age = dat$ages))
+    log_mu_M[] <- dat$log_mu_supplied_m + drop(dat$M_modmat %*% mu_m_init)
+    par$log_m[] <- log_mu_M[rownames(par$log_m), dat$M_settings$age_block_start, drop = FALSE]
+  }
 
   ## Check for consistent mu M values within age blocks and abort if values are not constant within each block
   if (!is.null(dat$M_settings$age_breaks)) {
