@@ -7,6 +7,16 @@
 #' a previously constructed `dat` list (see [make_dat()]).
 #'
 #' @details
+#' **Latent-state convention:** `log_r`, `log_n`, `log_f`, and `log_m`
+#' represent latent quantities on the log scale. They are compact fitted
+#' latent-state parameters; `log_N`, `log_F`, and `log_M` are full model
+#' surfaces constructed internally by [nll_fun()]. Process errors are
+#' calculated separately as deviations (`eta_*`): recruitment uses successive
+#' log states, abundance uses cohort predictions, and F and M use their log
+#' mean surfaces. In particular, `log_f` and `log_m` are absolute latent states;
+#' their deviations are `eta_log_f = log_f - log_mu_F` and
+#' `eta_log_m = log_m - log_mu_M` on the corresponding years and age blocks.
+#'
 #' The function inspects `dat` to decide which parameters are required and what
 #' their dimensions should be. For example, if `dat$F_settings$process == "ar1"`
 #' it initializes a 2-vector `logit_phi_f`; if `dat$F_settings$mu_form` is not
@@ -24,7 +34,7 @@
 #'   - `log_r` (length `length(dat$years)`)
 #'   - `log_sd_r`
 #'
-#' - **Abundance deviations (N)**
+#' - **Abundance states and process variability (N)**
 #'   - `log_sd_n` (if `dat$N_settings$process != "off"`)
 #'   - `logit_phi_n` length 2 (if `process == "ar1"`)
 #'   - `log_n` matrix (`year` × `age[-1]`) if `process != "off"`
@@ -39,7 +49,7 @@
 #'   - `log_sd_m` (if `dat$M_settings$process != "off"`)
 #'   - `logit_phi_m` length 2 (if `process == "ar1"`)
 #'   - `mu_m` coefficients (length `ncol(dat$M_modmat)`) if a mean structure was supplied; these act on log-\eqn{M} but are named without the `log_` prefix because they may be positive or negative
-#'   - `log_m` matrix (`year[-1]` × `age_block`) if `process != "off"`, with
+#'   - `log_m` matrix (`M_settings$years` × `age_block`) if `process != "off"`, with
 #'     `age_block = levels(dat$M_settings$age_blocks)`
 #'
 #' - **Observation model**

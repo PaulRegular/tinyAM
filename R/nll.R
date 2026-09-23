@@ -92,6 +92,15 @@ rprocess_2d <- function(ny, na, phi = c(0, 0), sd = 1) {
 #'   (see **Value**).
 #'
 #' @details
+#' **Latent-state convention:** `log_r`, `log_n`, `log_f`, and `log_m`
+#' represent latent quantities on the log scale, not process deviations.
+#' Lowercase names denote compact fitted latent-state parameters; `log_N`,
+#' `log_F`, and `log_M` denote full model surfaces after cohort recursion,
+#' age-block expansion, and/or projection. Process errors are calculated
+#' internally as deviations (`eta_*`) from expected or mean states:
+#' `eta_R` uses successive log-recruitment states, `eta_log_N` uses cohort
+#' predictions, and `eta_log_f` and `eta_log_m` use log mean surfaces.
+#'
 #' The model follows a standard age–structured state–space formulation:
 #'
 #' - **Recruitment:** log-recruits \eqn{\log R_y} evolve as a random walk:
@@ -111,20 +120,26 @@ rprocess_2d <- function(ny, na, phi = c(0, 0), sd = 1) {
 #'   are penalized by [dprocess_2d()] according to the chosen process.
 #'
 #' - **Fishing mortality:**
-#'   \deqn{\log F_{y,a} = \mu^F_{y,a} + \eta^F_{y,a},}
+#'   \deqn{\log F_{y,a} = \log \mu^F_{y,a} + \eta^F_{y,a},}
 #'
-#'   where the optional fixed-effects surface \eqn{\mu^F} comes from
-#'   \eqn{F_\text{modmat} \cdot \texttt{log\_mu\_f}} (if `F_settings$mu_form` is provided).
-#'   Deviations \eqn{\eta^F} are penalized by [dprocess_2d()] using
-#'   `F_settings$process` and `logit_phi_f` (AR1) or a RW/IID penalty.
+#'   where the log mean surface \eqn{\log \mu^F} comes from
+#'   \eqn{F_\text{modmat} \cdot \texttt{log\_mu\_f}} if `F_settings$mu_form`
+#'   is provided, and is zero otherwise. The latent state `log_f` represents
+#'   realized absolute log fishing mortality in observed years. Its process
+#'   deviation is `eta_log_f = log_f - log_mu_F`, with `log_mu_F` restricted
+#'   to those years. These deviations are penalized by [dprocess_2d()] using
+#'   `F_settings$process` and `logit_phi_f` (AR1) or an approximate RW/IID penalty.
 #'
 #' - **Natural mortality:**
 #'   \deqn{\log M_{y,a} = \log \mu^M_{y,a} + \eta^M_{y,a},}
 #'
 #'   where \eqn{\log \mu^M = \texttt{log\_mu\_supplied\_m} + M_\text{modmat}\,\texttt{mu\_m}}.
-#'   If `M_settings$process != "off"`, process deviations (\eqn{\eta^M}) are penalized by [dprocess_2d()]
-#'   from `M_settings$first_dev_year` onward. The latent `log_m` is absolute log mortality;
-#'   its process residual is `log_m - log_mu_M` at each age-block start.
+#'   When `M_settings$process != "off"`, the latent state `log_m` represents
+#'   realized absolute log natural mortality from `M_settings$first_dev_year`
+#'   onward. Its process deviation is `eta_log_m = log_m - log_mu_M`, with
+#'   `log_mu_M` restricted to those years and the age-block starts. These
+#'   deviations are penalized by [dprocess_2d()] using `M_settings$process`
+#'   and `logit_phi_m` (AR1) or an approximate RW/IID penalty.
 #'
 #' - **Observations:** catch-at-age and index-at-age on the log scale:
 #'   \deqn{\log C_{y,a} \sim \mathcal{N}\!\left(
@@ -141,9 +156,12 @@ rprocess_2d <- function(ny, na, phi = c(0, 0), sd = 1) {
 #' **Simulation mode:**
 #' When `simulate = TRUE`, the function:
 #'
-#' 1. Draws `log_r` (RW), optional `log_n` (cohort residual field),
-#'    optional `log_m` (absolute log M states), and `log_f` (F deviations) from
-#'    their respective process models via [rprocess_2d()].
+#' 1. Generates latent states: `log_r` using recruitment RW increments,
+#'    `log_f` and optional `log_m` by adding process deviations to their log
+#'    mean surfaces, and optional `log_n` by adding process deviations to
+#'    recursive cohort predictions. Process fields are drawn via [rprocess_2d()];
+#'    recruitment increments use [stats::rnorm()]. Initial states without a
+#'    specified process distribution retain their supplied values.
 #' 2. Regenerates predictions and draws `log_obs` from the observation
 #'    model.
 #' 3. Returns the simulated objects.
@@ -300,7 +318,7 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   N <- exp(log_N)
 
 
-  ## Recruitment deviations (basic random walk) ----
+  ## Recruitment process (basic random walk) ----
 
   jnll <- 0
 
@@ -311,7 +329,7 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   jnll <- jnll - sum(RTMB::dnorm(eta_R, 0, sd_r, log = TRUE))
 
 
-  ## Cohort deviations ----
+  ## N process ----
 
   if (N_settings$process != "off") {
     eta_log_N <- log_N[-1, -1] - pred_log_N[-1, -1]
@@ -320,7 +338,7 @@ nll_fun <- function(par, dat, simulate = FALSE) {
     jnll <- jnll - dprocess_2d(eta_log_N, sd = sd_n, phi = phi)
   }
 
-  ## M deviations ----
+  ## M process ----
 
   if (M_settings$process != "off") {
     iy <- rownames(log_m)
@@ -331,7 +349,7 @@ nll_fun <- function(par, dat, simulate = FALSE) {
     jnll <- jnll - dprocess_2d(eta_log_m, sd = sd_m, phi = phi)
   }
 
-  ## F deviations ----
+  ## F process ----
 
   eta_log_f <- log_F[!is_proj, ] - log_mu_F[!is_proj, ]
   phi <- plogis(logit_phi_f)

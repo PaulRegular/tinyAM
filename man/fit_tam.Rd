@@ -54,16 +54,20 @@ this is forced to \code{TRUE}.
     \item{\code{F_settings}}{A list with elements:
 \itemize{
 \item \code{process}: one of \code{"iid"}, \code{"approx_rw"}, or \code{"ar1"}.
-\item \code{mu_form}: an optional formula for mean-\eqn{F}.
+\item \code{mu_form}: an optional formula for mean-\eqn{F} (coefficients estimated as
+\strong{log-scale} parameters \code{log_mu_f}).
 \item \code{mean_ages}: optional vector of ages to include in population weighted
 average F (\code{F_bar}) calculations. All ages used if absent.
 }}
     \item{\code{M_settings}}{A list with elements:
 \itemize{
 \item \code{process}: one of \code{"off"}, \code{"iid"}, \code{"approx_rw"}, or \code{"ar1"}.
-\item \code{mu_form}: optional formula for mean-\eqn{M} (on the log scale) built
-on \code{obs$weight}. If provided together with \code{mu_supplied}, the intercept
-in \code{mu_form} is dropped (warning) so supplied levels act as fixed offsets.
+\item \code{mu_form}: optional formula for mean-\eqn{M} (applied on the log scale) built
+on \code{obs$weight}, yielding coefficients \code{mu_m}. These enter the log-\eqn{M}
+surface directly and may therefore be positive or negative; they intentionally
+avoid a \code{log_} prefix to prevent automatic back-transformation when tidied.
+If provided together with \code{mu_supplied}, the intercept in \code{mu_form} is
+dropped (warning) so supplied levels act as fixed offsets.
 \item \code{mu_supplied}: optional one-sided formula giving supplied (non-estimated)
 \eqn{M}, e.g. \code{~ I(0.2)} or a column reference such as
 \code{~ M_assumption} stored in the \code{obs$weight} data.frame.

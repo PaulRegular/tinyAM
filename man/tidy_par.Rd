@@ -32,6 +32,14 @@ back-transformed to the natural scale:
 \item \code{logit_} → \code{plogis()} (and the \code{logit_} prefix is dropped, e.g. \code{logit_phi_f} → \code{phi_f})
 }
 
+This convention is relied upon by the printing methods, so parameters tied to
+\verb{*_form} arguments that live on the log scale (e.g., \code{log_mu_f}, \verb{log_sd_*},
+\code{log_q}) should retain the \code{log_} prefix to ensure they are correctly
+exponentiated in summaries. An exception is the mean-\eqn{M} formula
+coefficients (\code{mu_m}), which operate on the log scale but are named without a
+\code{log_} prefix to reflect that their values may be positive or negative; they
+therefore print on the fitted log scale.
+
 Fixed-effect parameters are returned in a single data frame (\verb{$fixed});
 random-effect parameters are returned as a named list of data frames
 (\verb{$random}), one per random block (e.g. \code{log_f}, \code{log_r}, \code{missing}, …).

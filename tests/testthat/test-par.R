@@ -126,7 +126,7 @@ test_that("make_par enforces M mu_form constancy within age_blocks (when provide
   )
 })
 
-test_that("make_par starts M deviations at year 2 by default", {
+test_that("make_par starts latent M states at year 2 by default", {
   dat <- make_test_dat(
     M_settings = list(process = "iid", mu_form = ~1)
   )

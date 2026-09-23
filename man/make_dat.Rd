@@ -41,7 +41,8 @@ this is forced to \code{TRUE}.
 \item{F_settings}{A list with elements:
 \itemize{
 \item \code{process}: one of \code{"iid"}, \code{"approx_rw"}, or \code{"ar1"}.
-\item \code{mu_form}: an optional formula for mean-\eqn{F}.
+\item \code{mu_form}: an optional formula for mean-\eqn{F} (coefficients estimated as
+\strong{log-scale} parameters \code{log_mu_f}).
 \item \code{mean_ages}: optional vector of ages to include in population weighted
 average F (\code{F_bar}) calculations. All ages used if absent.
 }}
@@ -49,9 +50,12 @@ average F (\code{F_bar}) calculations. All ages used if absent.
 \item{M_settings}{A list with elements:
 \itemize{
 \item \code{process}: one of \code{"off"}, \code{"iid"}, \code{"approx_rw"}, or \code{"ar1"}.
-\item \code{mu_form}: optional formula for mean-\eqn{M} (on the log scale) built
-on \code{obs$weight}. If provided together with \code{mu_supplied}, the intercept
-in \code{mu_form} is dropped (warning) so supplied levels act as fixed offsets.
+\item \code{mu_form}: optional formula for mean-\eqn{M} (applied on the log scale) built
+on \code{obs$weight}, yielding coefficients \code{mu_m}. These enter the log-\eqn{M}
+surface directly and may therefore be positive or negative; they intentionally
+avoid a \code{log_} prefix to prevent automatic back-transformation when tidied.
+If provided together with \code{mu_supplied}, the intercept in \code{mu_form} is
+dropped (warning) so supplied levels act as fixed offsets.
 \item \code{mu_supplied}: optional one-sided formula giving supplied (non-estimated)
 \eqn{M}, e.g. \code{~ I(0.2)} or a column reference such as
 \code{~ M_assumption} stored in the \code{obs$weight} data.frame.
@@ -114,7 +118,7 @@ A named list \code{dat} containing:
 \item \code{log_obs}, \code{is_missing}, \code{is_observed}, \code{observed} - vector of log observations (with NA),
 logical vector indicating missing and observed values, and vector of non-missing values, respectively.
 \item design matrices: \code{sd_catch_modmat}, \code{sd_index_modmat}, \code{q_modmat}, and optionally \code{F_modmat}, \code{M_modmat}
-\item mean-level placeholders: \code{log_mu_f} and/or \code{log_mu_m} (or \code{log_mu_supplied_m})
+\item mean-level placeholders: \code{log_mu_f} and/or \code{mu_m} (or \code{log_mu_supplied_m})
 \item process settings: \code{N_settings}, \code{F_settings}, \code{M_settings}, \code{catch_settings}, \code{index_settings}
 \item projection settings: \code{proj_settings}
 \item AR(1) parameter assumptions, \verb{logit_phi_*}, if applicable
@@ -142,13 +146,18 @@ treated as \code{NA} (to be handled via random effects).
 \strong{Design matrices}
 \itemize{
 \item \code{catch_settings$sd_form} is evaluated on the catch table to produce
-\code{sd_catch_modmat}.
+\code{sd_catch_modmat} and associated \strong{log-scale} parameters \code{log_sd_catch}
+(intercept removed when \code{sd_supplied} is provided so supplied SDs act as
+offsets).
 \item \code{index_settings$sd_form} is evaluated on the index table to produce
-\code{sd_index_modmat}.
+\code{sd_index_modmat} and \strong{log-scale} parameters \code{log_sd_index}.
 \item \code{index_settings$q_form} is evaluated on the index table to produce
-\code{q_modmat}.
-\item If \code{M_settings$mu_form} is provided, \code{M_modmat <- model.matrix(mu_form, data = obs$weight)}. If \code{mu_supplied} is also provided, the intercept
-in \code{mu_form} is dropped and a warning is issued.
+\code{q_modmat} and \strong{log-scale} parameters \code{log_q}.
+\item If \code{M_settings$mu_form} is provided, \code{M_modmat <- model.matrix(mu_form, data = obs$weight)} and the resulting coefficients are parameters \code{mu_m}.
+These coefficients are applied on the log scale to build \eqn{M}, but
+retain the \code{mu_} prefix to emphasize they can be positive or negative.
+If \code{mu_supplied} is also provided, the intercept in \code{mu_form} is dropped
+and a warning is issued.
 \item If neither \code{M_settings$mu_form} nor \code{M_settings$mu_supplied} is supplied,
 the function stops, because \eqn{M} must be identified by either a supplied
 surface or a mean structure.

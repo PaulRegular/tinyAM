@@ -26,6 +26,16 @@ fixed and random-effect parameters used by TAM, based on the structure in
 a previously constructed \code{dat} list (see \code{\link[=make_dat]{make_dat()}}).
 }
 \details{
+\strong{Latent-state convention:} \code{log_r}, \code{log_n}, \code{log_f}, and \code{log_m}
+represent latent quantities on the log scale. They are compact fitted
+latent-state parameters; \code{log_N}, \code{log_F}, and \code{log_M} are full model
+surfaces constructed internally by \code{\link[=nll_fun]{nll_fun()}}. Process errors are
+calculated separately as deviations (\verb{eta_*}): recruitment uses successive
+log states, abundance uses cohort predictions, and F and M use their log
+mean surfaces. In particular, \code{log_f} and \code{log_m} are absolute latent states;
+their deviations are \code{eta_log_f = log_f - log_mu_F} and
+\code{eta_log_m = log_m - log_mu_M} on the corresponding years and age blocks.
+
 The function inspects \code{dat} to decide which parameters are required and what
 their dimensions should be. For example, if \code{dat$F_settings$process == "ar1"}
 it initializes a 2-vector \code{logit_phi_f}; if \code{dat$F_settings$mu_form} is not
@@ -44,7 +54,7 @@ with appropriate \code{dimnames} (\verb{year × age} or \verb{year × age_block}
 \item \code{log_r} (length \code{length(dat$years)})
 \item \code{log_sd_r}
 }
-\item \strong{Abundance deviations (N)}
+\item \strong{Abundance states and process variability (N)}
 \itemize{
 \item \code{log_sd_n} (if \code{dat$N_settings$process != "off"})
 \item \code{logit_phi_n} length 2 (if \code{process == "ar1"})
@@ -62,7 +72,7 @@ with appropriate \code{dimnames} (\verb{year × age} or \verb{year × age_block}
 \item \code{log_sd_m} (if \code{dat$M_settings$process != "off"})
 \item \code{logit_phi_m} length 2 (if \code{process == "ar1"})
 \item \code{mu_m} coefficients (length \code{ncol(dat$M_modmat)}) if a mean structure was supplied; these act on log-\eqn{M} but are named without the \code{log_} prefix because they may be positive or negative
-\item \code{log_m} matrix (\code{year[-1]} × \code{age_block}) if \code{process != "off"}, with
+\item \code{log_m} matrix (\code{M_settings$years} × \code{age_block}) if \code{process != "off"}, with
 \code{age_block = levels(dat$M_settings$age_blocks)}
 }
 \item \strong{Observation model}

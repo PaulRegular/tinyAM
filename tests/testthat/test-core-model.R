@@ -24,19 +24,34 @@ test_that("M states start at their mean, including age blocks and delayed deviat
   }
 })
 
-test_that("simulated absolute log M is centred on its mean surface", {
-  dat <- make_test_dat(years = 2000:2005, ages = 2:6,
-    F_settings = list(process = "iid"),
-    M_settings = list(process = "iid", mu_form = ~ 0 + I(year - 2000),
-                      mu_supplied = ~ I(0.3), age_breaks = c(3, 6)))
-  par <- make_par(dat)
-  par$mu_m[] <- 0.1
-  par$log_sd_m <- log(0.2)
-  rep <- core_report(par, dat)
-  mu <- log(rep$mu_M[rownames(par$log_m), dat$M_settings$age_block_start, drop = FALSE])
-  set.seed(704)
-  draws <- replicate(200, nll_fun(par, dat, simulate = TRUE)$log_m)
-  expect_equal(as.numeric(apply(draws, c(1, 2), mean)), as.numeric(mu), tolerance = 0.04)
+test_that("simulated F and M states share the log-mean and zero-deviation convention", {
+  for (process in c("iid", "ar1")) {
+    dat <- make_test_dat(years = 2000:2005, ages = 2:6,
+      F_settings = list(process = process, mu_form = ~ 1 + I(year - 2000)),
+      M_settings = list(process = process, mu_form = ~ 0 + I(year - 2000),
+                        mu_supplied = ~ I(0.3), age_breaks = c(3, 6)))
+    par <- make_par(dat)
+    par$log_mu_f[] <- c(log(0.4), 0.05)
+    par$mu_m[] <- 0.1
+    par$log_sd_f <- par$log_sd_m <- log(0.2)
+    if (process == "ar1") {
+      par$logit_phi_f[] <- par$logit_phi_m[] <- qlogis(c(0.2, 0.3))
+    }
+    report <- core_report(par, dat)
+    log_mu_F <- log(report$mu_F[!dat$is_proj, , drop = FALSE])
+    log_mu_M <- log(report$mu_M[rownames(par$log_m),
+                               dat$M_settings$age_block_start, drop = FALSE])
+    set.seed(704)
+    draws <- replicate(200, nll_fun(par, dat, simulate = TRUE), simplify = FALSE)
+    mean_log_f <- Reduce(`+`, lapply(draws, `[[`, "log_f")) / length(draws)
+    mean_log_m <- Reduce(`+`, lapply(draws, `[[`, "log_m")) / length(draws)
+    expect_lt(max(abs(mean_log_f - log_mu_F)), 0.06)
+    expect_lt(max(abs(mean_log_m - log_mu_M)), 0.06)
+    eta_log_f <- vapply(draws, function(x) mean(x$log_f - log_mu_F), numeric(1))
+    eta_log_m <- vapply(draws, function(x) mean(x$log_m - log_mu_M), numeric(1))
+    expect_lt(abs(mean(eta_log_f)), 0.03)
+    expect_lt(abs(mean(eta_log_m)), 0.03)
+  }
 })
 
 test_that("simulation uses returned states, recursive cohorts and matching observation SDs", {

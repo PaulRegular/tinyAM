@@ -40,6 +40,15 @@ from the assumed distributions and returns a list of simulated objects
 }
 }
 \details{
+\strong{Latent-state convention:} \code{log_r}, \code{log_n}, \code{log_f}, and \code{log_m}
+represent latent quantities on the log scale, not process deviations.
+Lowercase names denote compact fitted latent-state parameters; \code{log_N},
+\code{log_F}, and \code{log_M} denote full model surfaces after cohort recursion,
+age-block expansion, and/or projection. Process errors are calculated
+internally as deviations (\verb{eta_*}) from expected or mean states:
+\code{eta_R} uses successive log-recruitment states, \code{eta_log_N} uses cohort
+predictions, and \code{eta_log_f} and \code{eta_log_m} use log mean surfaces.
+
 The model follows a standard age–structured state–space formulation:
 \itemize{
 \item \strong{Recruitment:} log-recruits \eqn{\log R_y} evolve as a random walk:
@@ -57,19 +66,25 @@ If \code{N_settings$process != "off"}, residuals
 \eqn{\eta^N_{y,a} = \log N_{y,a} - \widehat{\log N}_{y,a}}
 are penalized by \code{\link[=dprocess_2d]{dprocess_2d()}} according to the chosen process.
 \item \strong{Fishing mortality:}
-\deqn{\log F_{y,a} = \mu^F_{y,a} + \eta^F_{y,a},}
+\deqn{\log F_{y,a} = \log \mu^F_{y,a} + \eta^F_{y,a},}
 
-where the optional fixed-effects surface \eqn{\mu^F} comes from
-\eqn{F_\text{modmat} \cdot \texttt{log\_mu\_f}} (if \code{F_settings$mu_form} is provided).
-Deviations \eqn{\eta^F} are penalized by \code{\link[=dprocess_2d]{dprocess_2d()}} using
-\code{F_settings$process} and \code{logit_phi_f} (AR1) or a RW/IID penalty.
+where the log mean surface \eqn{\log \mu^F} comes from
+\eqn{F_\text{modmat} \cdot \texttt{log\_mu\_f}} if \code{F_settings$mu_form}
+is provided, and is zero otherwise. The latent state \code{log_f} represents
+realized absolute log fishing mortality in observed years. Its process
+deviation is \code{eta_log_f = log_f - log_mu_F}, with \code{log_mu_F} restricted
+to those years. These deviations are penalized by \code{\link[=dprocess_2d]{dprocess_2d()}} using
+\code{F_settings$process} and \code{logit_phi_f} (AR1) or an approximate RW/IID penalty.
 \item \strong{Natural mortality:}
 \deqn{\log M_{y,a} = \log \mu^M_{y,a} + \eta^M_{y,a},}
 
 where \eqn{\log \mu^M = \texttt{log\_mu\_supplied\_m} + M_\text{modmat}\,\texttt{mu\_m}}.
-If \code{M_settings$process != "off"}, process deviations (\eqn{\eta^M}) are penalized by \code{\link[=dprocess_2d]{dprocess_2d()}}
-from \code{M_settings$first_dev_year} onward. The latent \code{log_m} is absolute log mortality;
-its process residual is \code{log_m - log_mu_M} at each age-block start.
+When \code{M_settings$process != "off"}, the latent state \code{log_m} represents
+realized absolute log natural mortality from \code{M_settings$first_dev_year}
+onward. Its process deviation is \code{eta_log_m = log_m - log_mu_M}, with
+\code{log_mu_M} restricted to those years and the age-block starts. These
+deviations are penalized by \code{\link[=dprocess_2d]{dprocess_2d()}} using \code{M_settings$process}
+and \code{logit_phi_m} (AR1) or an approximate RW/IID penalty.
 \item \strong{Observations:} catch-at-age and index-at-age on the log scale:
 \deqn{\log C_{y,a} \sim \mathcal{N}\!\left(
       \log\!\left[N_{y,a}\,\frac{F_{y,a}}{Z_{y,a}}\,(1-e^{-Z_{y,a}})\right],
@@ -86,9 +101,12 @@ controls age- (or block-) specific catchability.
 \strong{Simulation mode:}
 When \code{simulate = TRUE}, the function:
 \enumerate{
-\item Draws \code{log_r} (RW), optional \code{log_n} (cohort residual field),
-optional \code{log_m} (absolute log M states), and \code{log_f} (F deviations) from
-their respective process models via \code{\link[=rprocess_2d]{rprocess_2d()}}.
+\item Generates latent states: \code{log_r} using recruitment RW increments,
+\code{log_f} and optional \code{log_m} by adding process deviations to their log
+mean surfaces, and optional \code{log_n} by adding process deviations to
+recursive cohort predictions. Process fields are drawn via \code{\link[=rprocess_2d]{rprocess_2d()}};
+recruitment increments use \code{\link[stats:Normal]{stats::rnorm()}}. Initial states without a
+specified process distribution retain their supplied values.
 \item Regenerates predictions and draws \code{log_obs} from the observation
 model.
 \item Returns the simulated objects.
