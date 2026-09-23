@@ -40,8 +40,9 @@ vis_tam <- function(..., model_list = NULL, interval = 0.95, output_file = NULL,
       "install.packages(c(%s))",
       paste(sprintf("'%s'", missing), collapse = ", ")
     )
+
     cli::cli_abort(c(
-      "Package{?s} {.pkg {missing}} {cli::qty(length(missing))}is/are required for {.fn vis_tam}.",
+      "Required package(s) not installed: {paste(missing, collapse = ', ')}.",
       "i" = "Install with: {.code {install_call}}"
     ))
   }
