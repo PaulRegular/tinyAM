@@ -163,7 +163,7 @@
 #' if (interactive()) {
 #'   # Set-up parallel workers and fit model
 #'   future::plan(future::multisession, workers = 4)
-#' 
+#'
 #'   # Draw fixed-effects uncertainty and redraw random process fields
 #'   sims1 <- sim_tam(fit, n = 10, par_uncertainty = "fixed", redraw_random = TRUE)
 #'   plot_trend(sims1$ssb, split = ~sim, line = list(width = 0.5))
@@ -189,7 +189,7 @@ sim_tam <- function(
     globals = NULL,
     seed = TRUE
 ) {
-  match.arg(par_uncertainty)
+  par_uncertainty <- match.arg(par_uncertainty)
 
   draw_par <- switch(
     par_uncertainty,
