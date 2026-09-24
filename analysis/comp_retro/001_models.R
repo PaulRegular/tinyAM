@@ -27,8 +27,7 @@ N_iid_F_rw <- fit_tam(
   years = 1983:2024,
   ages = 2:14,
   N_settings = list(
-    process = "iid",
-    init = "exp"
+    process = "iid"
   ),
   F_settings = list(
     process = "approx_rw",
@@ -60,7 +59,9 @@ N_iid_F_rw$opt$objective
 
 N_iid_F_ar1 <- update(
   N_iid_F_rw,
-  N_settings = list(process = "iid", init = "exp"),
+  N_settings = list(
+    process = "iid"
+  ),
   F_settings = list(
     process = "ar1",
     mu_form = ~F_a_block + F_y_block,
@@ -72,8 +73,7 @@ N_iid_F_ar1
 N_ar1_F_rw <- update(
   N_iid_F_rw,
   N_settings = list(
-    process = "ar1",
-    init = "exp"
+    process = "ar1"
   )
 )
 N_ar1_F_rw
@@ -81,8 +81,7 @@ N_ar1_F_rw
 M_ar1_F_rw <- update(
   N_iid_F_rw,
   N_settings = list(
-    process = "off",
-    init = "exp"
+    process = "off"
   ),
   F_settings = list(
     process = "approx_rw",
@@ -101,7 +100,9 @@ M_ar1_F_rw
 
 M_ar1_F_ar1 <- update(
   M_ar1_F_rw,
-  N_settings = list(process = "off", init = "exp"),
+  N_settings = list(
+    process = "off"
+  ),
   F_settings = list(
     process = "ar1",
     mu_form = ~F_a_block + F_y_block,
@@ -112,7 +113,9 @@ M_ar1_F_ar1
 
 M_iid_F_rw <- update(
   M_ar1_F_rw,
-  N_settings = list(process = "off", init = "exp"),
+  N_settings = list(
+    process = "off"
+  ),
   M_settings = list(
     process = "iid",
     mu_form = NULL,
@@ -147,7 +150,7 @@ models_20plus <- lapply(seq_along(models), function(i) {
   m_settings <- m$dat$M_settings[c("process", "mu_form", "mu_supplied", "first_dev_year", "mean_ages")]
   m_settings$age_breaks <- c(3, 5, 7, 9, 11, 13, 15, 17, 20)
   update(m, ages = 2:20, M_settings = m_settings,
-         N_settings = list(process = m$dat$N_settings$process, init = "exp"),
+         N_settings = list(process = m$dat$N_settings$process),
          start_par = as.list(m$sdrep, "Estimate"))
 })
 names(models_20plus) <- names(models)
