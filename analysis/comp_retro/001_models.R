@@ -5,6 +5,7 @@ library(plotly)
 
 cod_obs <- tinyAM::cod_obs
 cod_obs$weight$collapse <- ifelse(cod_obs$weight$year %in% 1991:1994, 1, 0)
+cod_obs$index$obs <- cod_obs$index$obs * 12048556/1000 # bump up to total abundance
 
 ## Questions:
 ## How should the random processes be modeled?
