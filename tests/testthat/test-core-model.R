@@ -68,7 +68,7 @@ test_that("simulation uses returned states, recursive cohorts and matching obser
 
   for (n_process in c("off", "iid", "ar1")) {
     dat <- make_test_dat(years = 2000:2005, ages = 2:6,
-      N_settings = list(process = n_process, init_N0 = TRUE),
+      N_settings = list(process = n_process, init = "exp"),
       F_settings = list(process = "iid"),
       M_settings = list(process = "iid", mu_supplied = ~ I(0.3)),
       proj_settings = list(n_proj = 2, n_mean = 1, F_mult = c(0.8, 1.2)))
@@ -82,7 +82,7 @@ test_that("simulation uses returned states, recursive cohorts and matching obser
     obs_calls <- tail(calls, 2)
     par[intersect(names(par), names(sims))] <- sims[intersect(names(par), names(sims))]
     rep <- core_report(par, dat)
-    expect_equal(as.numeric(diff(sims$log_r)), rep(0.2, length(dat$years) - 1))
+    expect_equal(as.numeric(diff(c(par$log_r0, sims$log_r))), rep(0.2, length(dat$years) - 1))
     expect_false(isTRUE(all.equal(rep$log_pred, before$log_pred)))
     expect_equal(obs_calls[[1]]$mean, rep$log_pred[dat$is_observed])
     expect_equal(obs_calls[[1]]$sd, rep$sd_obs[dat$is_observed])
@@ -103,7 +103,7 @@ test_that("simulation uses returned states, recursive cohorts and matching obser
 test_that("IID and AR1 M models fit with absolute mortality states", {
   for (process in c("iid", "ar1")) {
     fit <- update(default_fit,
-      N_settings = list(process = "off", init_N0 = TRUE),
+      N_settings = list(process = "off", init = "exp"),
       M_settings = list(process = process, mu_supplied = ~ I(0.3), age_breaks = c(3, 14)),
       silent = TRUE)
     expect_true(is.finite(fit$opt$objective))
@@ -116,7 +116,7 @@ test_that("IID and AR1 M models fit with absolute mortality states", {
 
 test_that("generative predictions remain finite when abundance underflows", {
   dat <- make_test_dat(years = 2000:2005, ages = 2:6,
-    N_settings = list(process = "off", init_N0 = TRUE),
+    N_settings = list(process = "off", init = "exp"),
     F_settings = list(process = "iid", mu_form = ~ 1))
   par <- make_par(dat)
   par$log_mu_f[] <- log(2000)
@@ -137,11 +137,11 @@ test_that("retros and every hindcast fold use observed terminal years", {
   original <- fit
   original_par <- fit$obj$env$last.par.best
   terminal <- max(fit$dat$years[!fit$dat$is_proj])
-  retro <- fit_retro(fit, folds = 1, progress = FALSE)
+  retro <- fit_retro(fit, folds = 1, progress = FALSE, start_from_fit = TRUE)
   expect_equal(as.integer(names(retro$fits)), (terminal - 1):terminal)
   expect_equal(vapply(retro$fits, tinyAM:::.terminal_year, numeric(1)),
                setNames(as.numeric((terminal - 1):terminal), names(retro$fits)))
-  hindcast <- fit_hindcast(fit, folds = 1, progress = FALSE)
+  hindcast <- fit_hindcast(fit, folds = 1, progress = FALSE, start_from_fit = TRUE)
   expect_equal(names(hindcast$fits), names(retro$fits))
   for (nm in names(hindcast$fits)) {
     fold <- hindcast$fits[[nm]]

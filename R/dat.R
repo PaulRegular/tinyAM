@@ -258,9 +258,24 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #'
 #' **Process options and guards**
 #'
-#' - If `N_settings$process == "off"` and `init_N0 == FALSE`, `init_N0` is
-#'   forced to `TRUE` (with a warning) so the first-year abundance is
-#'   estimable.
+#' - Initial abundance is controlled by `N_settings$init`, independently of
+#'   the subsequent N process. First-year recruitment is the fixed state
+#'   `log_r0`. All older initial ages use survivorship from recruitment under
+#'   first-year total mortality Z as their baseline, with no equilibrium
+#'   plus-group correction.
+#' - `"exp"` is the default: a parsimonious, comparatively stable nuisance-state
+#'   initialization. More flexible choices are available when first-year data
+#'   support them. `"free"` estimates unpenalized fixed `log_n0` states;
+#'   `"random"` estimates random `log_n0` states whose survivorship residuals
+#'   `eta_log_n0` are IID normal with separately estimated `sd_n0`.
+#' - `sd_r` describes temporal recruitment variation; `sd_n0` describes
+#'   variation across historical cohorts on the initial age margin (potentially
+#'   including mortality-history variation); `sd_n` describes subsequent
+#'   cohort-process deviations. These SDs are estimated separately.
+#' - Random initialization requires at least two ages. Fewer than ten ages
+#'   triggers a heuristic weak-identification warning for `sd_n0`, not a
+#'   prohibition or automatic fallback. The threshold may be revised after
+#'   simulation testing; inspect convergence and sensitivity carefully.
 #' - `M_settings$age_breaks` (vector of break points on ages)
 #'   defines `M_settings$age_blocks` via [cut_ages()], used
 #'   to couple \eqn{M} deviations across age.
@@ -286,9 +301,11 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #'   and `index` data, and averaged for `weight` and `maturity` data.
 #' @param N_settings A list with elements:
 #' - `process`: one of `"off"`, `"iid"`, `"approx_rw"`, or `"ar1"`.
-#' - `init_N0`: logical; if `TRUE`, estimate an initial level for the
-#'   first-year abundance. If `process == "off"` and `init_N0 == FALSE`,
-#'   this is forced to `TRUE`.
+#' - `init`: `"exp"` (default), `"free"`, or `"random"`, independently of
+#'   `process`. All use fixed first-year recruitment `log_r0` as the starting
+#'   anchor. `"exp"` uses deterministic survivorship; `"free"` estimates fixed
+#'   older-age `log_n0` states; `"random"` estimates random `log_n0` states with
+#'   IID survivorship residuals and separate SD `sd_n0`. See **Details**.
 #' @param F_settings A list with elements:
 #' - `process`: one of `"iid"`, `"approx_rw"`, or `"ar1"`.
 #' - `mu_form`: an optional formula for mean-\eqn{F} (coefficients estimated as
@@ -367,7 +384,7 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #' ## With projection settings
 #' dat <- make_dat(
 #'   cod_obs,
-#'   N_settings = list(process = "iid", init_N0 = FALSE),
+#'   N_settings = list(process = "iid", init = "exp"),
 #'   F_settings = list(process = "approx_rw", mu_form = NULL),
 #'   M_settings = list(process = "off", mu_supplied = ~ I(0.3)),
 #'   catch_settings = list(sd_form = ~ 1),
@@ -383,7 +400,7 @@ make_dat <- function(
     obs,
     years = NULL,
     ages = NULL,
-    N_settings = list(process = "iid", init_N0 = FALSE),
+    N_settings = list(process = "iid", init = "exp"),
     F_settings = list(process = "approx_rw", mu_form = NULL),
     M_settings = list(process = "off", mu_form = NULL, mu_supplied = ~I(0.2), age_breaks = NULL, first_dev_year = NULL),
     catch_settings = list(sd_form = ~1, sd_supplied = NULL, fill_missing = TRUE),
@@ -440,9 +457,22 @@ make_dat <- function(
     }
   }
 
-  if (N_settings$process == "off" && !N_settings$init_N0) {
-    dat$N_settings$init_N0 <- TRUE
-    cli::cli_warn("The first year would lack parameters with process set to 'off' and init_N0 set to FALSE in N_settings; forcing init_N0 to TRUE to estimate initial levels.")
+  if ("init_N0" %in% names(N_settings)) {
+    cli::cli_abort("N_settings$init_N0 has been retired. Use N_settings$init = \"exp\", \"free\", or \"random\" instead.")
+  }
+  if (is.null(N_settings$init)) dat$N_settings$init <- "exp"
+  dat$N_settings$init <- match.arg(dat$N_settings$init, c("exp", "free", "random"))
+  if (length(dat$ages) < 2L) {
+    cli::cli_abort("N0 initialization requires at least two modeled ages.")
+  }
+  if (dat$N_settings$init == "random") {
+    n_init_dev <- length(dat$ages) - 1L
+    if (n_init_dev < 1L) {
+      cli::cli_abort("Random N0 initialization requires at least one initial age-to-age deviation (two modeled ages).")
+    }
+    if (length(dat$ages) < 10L) {
+      cli::cli_warn('"random" N0 initialization estimates sd_n0 from only {n_init_dev} initial age-to-age deviations ({length(dat$ages)} modeled ages). sd_n0 may be weakly identified. Consider N_settings$init = "exp", or inspect convergence and sensitivity carefully.')
+    }
   }
   if (!is.null(M_settings$age_breaks)) {
     m_age_range <- range(dat$M_settings$age_breaks)
@@ -450,7 +480,7 @@ make_dat <- function(
     m_ages <- seq(max(age_range[1], m_age_range[1]), min(age_range[2], m_age_range[2]), by = 1)
     dat$M_settings$age_blocks <- cut_ages(m_ages, dat$M_settings$age_breaks)
   } else {
-    dat$M_settings$age_blocks <- cut_ages(dat$ages[-1], range(dat$ages[-1]))
+    dat$M_settings$age_blocks <- cut_ages(dat$ages[-1], unique(range(dat$ages[-1])))
   }
   if (is.null(M_settings$first_dev_year)) {
     dat$M_settings$first_dev_year <- dat$years[2]

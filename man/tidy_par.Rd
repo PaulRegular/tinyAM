@@ -48,7 +48,10 @@ Labels are added where applicable:
 \itemize{
 \item For parameters specified using a formula in \code{\link[=make_dat]{make_dat()}} (e.g., \code{log_q},
 \code{log_sd_catch}, \code{log_sd_index}), a \code{coef} column is added.
-\item For \code{log_r} (recruitment path), a \code{year} column is used.
+\item For \code{log_r}, \code{year} contains years 2:Y; full recruitment is in \code{\link[=tidy_pop]{tidy_pop()}}.
+\item For \code{log_n0}, an \code{age} column identifies the initial older-age state.
+\code{log_r0} and \code{log_n0} are exponentiated to abundance levels; \code{log_sd_n0}
+is exponentiated to the initial-age residual SD.
 \item For matrices (e.g., \code{log_f}, \code{log_n}), \code{year} and/or \code{age} columns are added
 via \code{\link[=tidy_mat]{tidy_mat()}}.
 }
@@ -58,7 +61,7 @@ fit <- fit_tam(
   cod_obs,
   years = 1983:2024,
   ages = 2:14,
-  N_settings = list(process = "iid", init_N0 = FALSE),
+  N_settings = list(process = "iid", init = "exp"),
   F_settings = list(process = "approx_rw", mu_form = NULL),
   M_settings = list(process = "off", mu_supplied = ~ I(0.3)),
   catch_settings = list(sd_form = ~ 1),

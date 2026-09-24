@@ -47,9 +47,11 @@ and \code{index} data, and averaged for \code{weight} and \code{maturity} data.}
     \item{\code{N_settings}}{A list with elements:
 \itemize{
 \item \code{process}: one of \code{"off"}, \code{"iid"}, \code{"approx_rw"}, or \code{"ar1"}.
-\item \code{init_N0}: logical; if \code{TRUE}, estimate an initial level for the
-first-year abundance. If \code{process == "off"} and \code{init_N0 == FALSE},
-this is forced to \code{TRUE}.
+\item \code{init}: \code{"exp"} (default), \code{"free"}, or \code{"random"}, independently of
+\code{process}. All use fixed first-year recruitment \code{log_r0} as the starting
+anchor. \code{"exp"} uses deterministic survivorship; \code{"free"} estimates fixed
+older-age \code{log_n0} states; \code{"random"} estimates random \code{log_n0} states with
+IID survivorship residuals and separate SD \code{sd_n0}. See \strong{Details}.
 }}
     \item{\code{F_settings}}{A list with elements:
 \itemize{
@@ -146,6 +148,7 @@ Random-effect blocks are chosen automatically from the model settings:
 \itemize{
 \item Always includes \code{log_f} and \code{log_r}.
 \item Includes \code{missing} if there are missing observations.
+\item Includes \code{log_n0} only if \code{N_settings$init == "random"}.
 \item Includes \code{log_n} if \code{N_settings$process != "off"}.
 \item Includes \code{log_m} if \code{M_settings$process != "off"}.
 }
@@ -158,7 +161,7 @@ fit <- fit_tam(
   cod_obs,
   years = 1983:2024,
   ages = 2:14,
-  N_settings = list(process = "iid", init_N0 = FALSE),
+  N_settings = list(process = "iid", init = "exp"),
   F_settings = list(process = "approx_rw", mu_form = NULL),
   M_settings = list(process = "off", mu_supplied = ~ I(0.3)),
   catch_settings = list(sd_form = ~ 1),

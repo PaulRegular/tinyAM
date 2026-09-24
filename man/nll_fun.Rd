@@ -22,6 +22,7 @@ If \code{TRUE}, simulate random effects and observations and return them (see \s
 \item If \code{simulate = TRUE}: a list with elements:
 \itemize{
 \item \code{log_f}, \code{log_r} — always returned;
+\item \code{log_n0} — if \code{N_settings$init} is \code{"free"} or \code{"random"};
 \item \code{log_n} — if \code{N_settings$process != "off"};
 \item \code{log_m} — if \code{M_settings$process != "off"};
 \item \code{log_obs} — simulated observations (NAs restored where input was missing);
@@ -40,7 +41,7 @@ from the assumed distributions and returns a list of simulated objects
 }
 }
 \details{
-\strong{Latent-state convention:} \code{log_r}, \code{log_n}, \code{log_f}, and \code{log_m}
+\strong{Latent-state convention:} \code{log_r}, \code{log_n0}, \code{log_n}, \code{log_f}, and \code{log_m}
 represent latent quantities on the log scale, not process deviations.
 Lowercase names denote compact fitted latent-state parameters; \code{log_N},
 \code{log_F}, and \code{log_M} denote full model surfaces after cohort recursion,
@@ -54,14 +55,27 @@ The model follows a standard age–structured state–space formulation:
 \item \strong{Recruitment:} log-recruits \eqn{\log R_y} evolve as a random walk:
 \deqn{\Delta \log R_y \sim \mathcal{N}(0,\sigma_R^2).}
 
-If \code{N_settings$init_N0} is \code{TRUE}, the initial recruit level
-is constrained by:
-\deqn{\log R_1 \sim \mathcal{N}(\log R_0,\sigma_R^2).}
+The fixed parameter \code{log_r0} is the actual first-year state, not a
+hypermean. Random states \code{log_r} contain years 2:Y only. The full path is
+\code{log_recruitment = c(log_r0, log_r)}; the first innovation is
+\code{log_r[1] - log_r0}, followed by successive differences.
+\item \strong{Initial older-age abundance:} independent of \code{N_settings$process}.
+The recursion starts from \code{log_N[1, 1] = log_r0}. For every older age,
+the prediction is \code{log_N[1, a-1] - Z[1, a-1]}, including the terminal age
+without an equilibrium plus-group adjustment. \code{init = "exp"} uses these
+predictions directly. Under \code{"free"} or \code{"random"}, \code{log_n0} contains the
+realized initial log abundance at all older ages. The residual is
+\code{eta_log_n0 = log_n0 - (c(log_r0, head(log_n0, -1)) - Z[1, -n_ages])}.
+\code{"free"} estimates these states without a penalty; \code{"random"} applies an
+IID normal density to the residuals with SD \code{exp(log_sd_n0)}. This SD
+describes the initial age margin, separately from temporal recruitment
+SD \code{sd_r} and subsequent cohort-process SD \code{sd_n}. See \code{\link[=make_dat]{make_dat()}}.
 \item \strong{Numbers-at-age:} forward cohort dynamics with plus-group:
 \deqn{\log N_{y,a} = \log N_{y-1,a-1} - Z_{y-1,a-1},}
 
 with \eqn{Z_{y,a} = F_{y,a} + M_{y,a}}. The plus-group equation is applied
-at the terminal age.
+at the terminal age for transitions from year 1 to year 2 onward.
+Latent older-age states \code{log_n} contain years 2:Y only.
 If \code{N_settings$process != "off"}, residuals
 \eqn{\eta^N_{y,a} = \log N_{y,a} - \widehat{\log N}_{y,a}}
 are penalized by \code{\link[=dprocess_2d]{dprocess_2d()}} according to the chosen process.
@@ -101,12 +115,16 @@ controls age- (or block-) specific catchability.
 \strong{Simulation mode:}
 When \code{simulate = TRUE}, the function:
 \enumerate{
-\item Generates latent states: \code{log_r} using recruitment RW increments,
+\item Generates latent states: \code{log_r} using recruitment RW increments from
+the fixed first-year anchor \code{log_r0},
 \code{log_f} and optional \code{log_m} by adding process deviations to their log
 mean surfaces, and optional \code{log_n} by adding process deviations to
 recursive cohort predictions. Process fields are drawn via \code{\link[=rprocess_2d]{rprocess_2d()}};
 recruitment increments use \code{\link[stats:Normal]{stats::rnorm()}}. Initial states without a
-specified process distribution retain their supplied values.
+specified process distribution retain their supplied values. Random
+initial-age residuals are drawn after F/M and Z are constructed, then
+\code{log_n0} is built recursively from \code{log_r0}. Fixed \code{log_n0} states under
+free initialization are retained.
 \item Regenerates predictions and draws \code{log_obs} from the observation
 model.
 \item Returns the simulated objects.
@@ -133,7 +151,7 @@ dat <- make_dat(
   cod_obs,
   years = 1983:2024,
   ages = 2:14,
-  N_settings = list(process = "iid", init_N0 = FALSE),
+  N_settings = list(process = "iid", init = "exp"),
   F_settings = list(process = "approx_rw", mu_form = NULL),
   M_settings = list(process = "off", mu_supplied = ~ I(0.3)),
   catch_settings = list(sd_form = ~ 1),

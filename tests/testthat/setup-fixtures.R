@@ -21,7 +21,7 @@ make_test_dat <- function(...) {
 
 if (exists("cod_obs", inherits = TRUE)) {
   default_dat <- make_test_dat(
-    N_settings = list(process = "iid", init_N0 = FALSE),
+    N_settings = list(process = "iid", init = "exp"),
     F_settings = list(process = "approx_rw", mu_form = NULL),
     M_settings = list(process = "off", mu_form = NULL, mu_supplied = ~ I(0.3))
   )
@@ -37,7 +37,7 @@ if (requireNamespace("RTMB", quietly = TRUE) && exists("cod_obs", inherits = TRU
     cod_obs,
     years = YEARS,
     ages = AGES,
-    N_settings = list(process = "iid", init_N0 = FALSE),
+    N_settings = list(process = "iid", init = "exp"),
     F_settings = list(process = "approx_rw", mu_form = NULL),
     M_settings = list(process = "off", mu_supplied = ~ I(0.3)),
     silent = TRUE,
@@ -47,6 +47,7 @@ if (requireNamespace("RTMB", quietly = TRUE) && exists("cod_obs", inherits = TRU
   set.seed(1)
   N_dev <- update(
     default_fit,
+    start_par = as.list(default_fit$sdrep, "Estimate"),
     proj_settings = list(n_proj = 3, n_mean = 3, F_mult = 1),
     silent = TRUE
   )
@@ -54,7 +55,7 @@ if (requireNamespace("RTMB", quietly = TRUE) && exists("cod_obs", inherits = TRU
   set.seed(1)
   M_dev <- update(
     N_dev,
-    N_settings = list(process = "off", init_N0 = TRUE),
+    N_settings = list(process = "off", init = "exp"),
     M_settings = list(
       process = "ar1",
       mu_supplied = ~ I(0.3),

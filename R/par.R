@@ -7,7 +7,7 @@
 #' a previously constructed `dat` list (see [make_dat()]).
 #'
 #' @details
-#' **Latent-state convention:** `log_r`, `log_n`, `log_f`, and `log_m`
+#' **Latent-state convention:** `log_r`, `log_n0`, `log_n`, `log_f`, and `log_m`
 #' represent latent quantities on the log scale. They are compact fitted
 #' latent-state parameters; `log_N`, `log_F`, and `log_M` are full model
 #' surfaces constructed internally by [nll_fun()]. Process errors are
@@ -30,14 +30,24 @@
 #' **Created elements (when applicable) include:**
 #'
 #' - **Recruitment & variability**
-#'   - `log_r0` (only if `dat$N_settings$init_N0`)
-#'   - `log_r` (length `length(dat$years)`)
+#'   - `log_r0` (fixed first-year log recruitment, always present)
+#'   - `log_r` (random states for `dat$years[-1]`, length `length(dat$years) - 1`)
 #'   - `log_sd_r`
+#'
+#' - **Initial older-age abundance (independent of the N process)**
+#'   - `log_n0`: realized log abundance at initial ages `ages[-1]`, named by age;
+#'     absent for `init = "exp"`, fixed for `"free"`, random for `"random"`
+#'   - `log_sd_n0`: separate IID initial-age residual SD, only for `init = "random"`
+#'   - `eta_log_n0` is calculated internally from adjacent initial log states
+#'     and first-year mortality; `log_n0` itself is not a deviation.
+#'   - The default `"exp"` initializer is parsimonious survivorship from
+#'     `log_r0`, using first-year Z without an equilibrium plus group.
+#'     See [make_dat()] for the choices and weak-identification warning.
 #'
 #' - **Abundance states and process variability (N)**
 #'   - `log_sd_n` (if `dat$N_settings$process != "off"`)
 #'   - `logit_phi_n` length 2 (if `process == "ar1"`)
-#'   - `log_n` matrix (`year` × `age[-1]`) if `process != "off"`
+#'   - `log_n` matrix (`year[-1]` × `age[-1]`) if `process != "off"`
 #'
 #' - **Fishing mortality (F)**
 #'   - `log_sd_f`
@@ -85,8 +95,12 @@
 make_par <- function(dat) {
 
   par <- list()
-  if (dat$N_settings$init_N0) {
-    par$log_r0 <- 0
+  par$log_r0 <- 0
+  if (dat$N_settings$init != "exp") {
+    par$log_n0 <- setNames(numeric(length(dat$ages) - 1L), as.character(dat$ages[-1]))
+  }
+  if (dat$N_settings$init == "random") {
+    par$log_sd_n0 <- 0
   }
   par$log_sd_r <- 0
   par$log_sd_f <- 0
@@ -124,11 +138,11 @@ make_par <- function(dat) {
     par$missing <- numeric(sum(dat$fill_missing_map))
   }
 
-  par$log_r <- numeric(length(dat$years))
-  names(par$log_r) <- as.character(dat$years)
+  par$log_r <- numeric(length(dat$years) - 1L)
+  names(par$log_r) <- as.character(dat$years[-1])
   if (dat$N_settings$process != "off") {
-    par$log_n <- matrix(0, nrow = length(dat$years), ncol = length(dat$ages) - 1,
-                        dimnames = list(year = dat$years, age = dat$ages[-1]))
+    par$log_n <- matrix(0, nrow = length(dat$years) - 1L, ncol = length(dat$ages) - 1,
+                        dimnames = list(year = dat$years[-1], age = dat$ages[-1]))
   }
   if (dat$M_settings$process != "off") {
     par$log_m <- matrix(0, nrow = length(dat$M_settings$years), ncol = nlevels(dat$M_settings$age_blocks),

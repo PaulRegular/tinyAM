@@ -50,7 +50,7 @@ The simulation has two orthogonal controls:
 \item \strong{Parameter uncertainty} via \code{par_uncertainty}:
 \itemize{
 \item \code{"none"}  — use point estimates \verb{(û, θ̂)}.
-\item \code{"fixed"} — sample \strong{fixed effects} \code{θ ~ MVN(sdrep$par.fixed, sdrep$cov.fixed)}.
+\item \code{"fixed"} — sample \strong{fixed effects} \verb{θ ~ MVN(sdrep$par.fixed, sdrep$cov.fixed)}.
 \item \code{"joint"} — sample \strong{(random + fixed)} jointly from the Laplace
 approximate posterior using the \strong{joint precision} (sparse Cholesky).
 }
@@ -60,6 +60,10 @@ approximate posterior using the \strong{joint precision} (sparse Cholesky).
 (posterior-predictive when \code{par_uncertainty = "joint"}).
 \item \code{TRUE}  — generate \strong{new process fields} for the random effects and re-simulate
 (projection/HCR style prior-predictive runs).
+This includes \code{log_n0} only for \code{N_settings$init = "random"}, generated
+by survivorship and IID residuals from the supplied \code{log_r0} anchor.
+Free initial-age states are retained.
+Fixed anchors may still vary through the chosen \code{par_uncertainty} draw.
 }
 }
 
@@ -71,7 +75,7 @@ fit <- fit_tam(
   cod_obs,
   years = 1983:2024,
   ages = 2:14,
-  N_settings = list(process = "iid", init_N0 = FALSE),
+  N_settings = list(process = "iid", init = "exp"),
   F_settings = list(process = "approx_rw", mu_form = NULL),
   M_settings = list(process = "off", mu_supplied = ~ I(0.3)),
   catch_settings = list(sd_form = ~ 1),

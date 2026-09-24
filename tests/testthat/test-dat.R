@@ -51,7 +51,7 @@ test_that("make_dat infers years/ages when NULL and builds expected pieces", {
     obs = cod_obs,
     years = NULL,
     ages  = NULL,
-    N_settings = list(process = "iid", init_N0 = FALSE),
+    N_settings = list(process = "iid", init = "exp"),
     F_settings = list(process = "approx_rw",  mu_form = NULL),
     M_settings = list(process = "off", mu_form = NULL, mu_supplied = ~ I(0.3)),
     catch_settings = list(sd_form = ~1, fill_missing = TRUE),
@@ -146,15 +146,9 @@ test_that("make_dat stops if neither M mu_supplied nor mu_form is provided", {
   )
 })
 
-test_that("make_dat forces init_N0 to TRUE, with warning, when N process off and init_N0 FALSE", {
-  expect_warning(
-    dat <- make_dat(
-      obs = cod_obs,
-      N_settings = list(process = "off", init_N0 = FALSE)
-    ),
-    "forcing init_N0 to TRUE"
-  )
-  expect_true(dat$N_settings$init_N0)
+test_that("make_dat rejects the retired initialization setting", {
+  expect_error(make_test_dat(N_settings = list(process = "off", init_N0 = FALSE)),
+               "has been retired")
 })
 
 test_that("make_dat appends projection years and shapes obs correctly with proj_settings (F_mult API)", {

@@ -165,7 +165,7 @@ test_that("nll_fun respects F_mult projections", {
 
 test_that("nll_fun handles AR1 settings and produces finite JNLL", {
   dat <- make_test_dat(
-    N_settings = list(process = "ar1", init_N0 = TRUE),
+    N_settings = list(process = "ar1", init = "exp"),
     F_settings = list(process = "ar1", mu_form = ~ F_a_block + F_y_block),
     M_settings = list(process = "ar1", mu_form = NULL, mu_supplied = ~ I(0.3))
   )
@@ -187,7 +187,7 @@ test_that("nll_fun handles AR1 settings and produces finite JNLL", {
 
 test_that("nll_fun yields finite log_pred for non-missing obs", {
   dat <- make_test_dat(
-    N_settings = list(process = "iid", init_N0 = FALSE),
+    N_settings = list(process = "iid", init = "exp"),
     F_settings = list(process = "iid", mu_form = NULL),
     M_settings = list(process = "off", mu_form = NULL, mu_supplied = ~ I(0.3))
   )

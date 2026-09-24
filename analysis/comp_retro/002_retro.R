@@ -2,13 +2,14 @@
 library(tinyAM)
 library(furrr)
 
-# source("analysis/comp_retro/001_models.R")
-models <- readRDS("analysis/comp_retro/outputs/001_models.rds")
+# Regenerate current model objects: saved fits from the previous N0
+# parameterization must not be reused. This also refreshes the model RDS files.
+source("analysis/comp_retro/001_models.R")
 
 future::plan(future::multisession, workers = 10)
 
 retros <- lapply(names(models), function(nm) {
-  try(fit_retro(models[[nm]], folds = 20, hindcast = TRUE, grad_tol = 1e-2))
+  try(fit_retro(models[[nm]], folds = 20, hindcast = TRUE, start_from_fit = TRUE, grad_tol = 1e-2))
 })
 names(retros) <- names(models)
 

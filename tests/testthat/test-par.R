@@ -1,7 +1,7 @@
 
 test_that("make_par builds shapes and zeros consistent with dat", {
   dat <- make_test_dat(
-    N_settings = list(process = "iid", init_N0 = TRUE),
+    N_settings = list(process = "iid", init = "exp"),
     F_settings = list(process = "ar1", mu_form = ~ F_a_block + F_y_block),
     M_settings = list(process = "iid", mu_form = ~ 1, mu_supplied = NULL, age_breaks = seq(2, 14, 2))
   )
@@ -14,7 +14,7 @@ test_that("make_par builds shapes and zeros consistent with dat", {
   expect_length(par$log_q,      ncol(dat$q_modmat))
   expect_length(par$log_sd_catch, ncol(dat$sd_catch_modmat))
   expect_length(par$log_sd_index, ncol(dat$sd_index_modmat))
-  expect_equal(length(par$log_r), length(dat$years))
+  expect_equal(length(par$log_r), length(dat$years) - 1L)
 
   # log_f rows are for historical years only (no projections here)
   expect_equal(dim(par$log_f), c(sum(!dat$is_proj), length(dat$ages)))
@@ -22,7 +22,7 @@ test_that("make_par builds shapes and zeros consistent with dat", {
 
   # N process = iid -> log_n + log_sd_n
   expect_true("log_sd_n" %in% names(par))
-  expect_equal(dim(par$log_n), c(length(dat$years), length(dat$ages) - 1))
+  expect_equal(dim(par$log_n), c(length(dat$years) - 1L, length(dat$ages) - 1))
 
   # AR1 for F => logit_phi_f present (length 2)
   expect_true("logit_phi_f" %in% names(par))
@@ -33,7 +33,7 @@ test_that("make_par builds shapes and zeros consistent with dat", {
   expect_true("mu_m" %in% names(par))
   expect_length(par$mu_m, ncol(dat$M_modmat))
 
-  # init_N0 TRUE => log_r0 exists
+  # First-year recruitment always has a fixed anchor
   expect_true("log_r0" %in% names(par))
 
   # missing placeholder length equals NA count in log_obs
@@ -46,7 +46,7 @@ test_that("make_par builds shapes and zeros consistent with dat", {
 
 test_that("make_par shapes adapt when projections are enabled", {
   dat <- make_test_dat(
-    N_settings = list(process = "iid", init_N0 = FALSE),
+    N_settings = list(process = "iid", init = "exp"),
     F_settings = list(process = "approx_rw", mu_form = NULL),
     M_settings = list(process = "iid", mu_form = NULL, mu_supplied = ~ I(0.3), age_breaks = seq(2, 14, 2)),
     proj_settings = list(n_proj = 2, n_mean = 3, F_mult = 1)
@@ -56,8 +56,8 @@ test_that("make_par shapes adapt when projections are enabled", {
   expect_equal(nrow(par$log_f), sum(!dat$is_proj))
   expect_equal(ncol(par$log_f), length(dat$ages))
 
-  expect_equal(length(par$log_r), length(dat$years))
-  expect_equal(dim(par$log_n), c(length(dat$years), length(dat$ages) - 1))
+  expect_equal(length(par$log_r), length(dat$years) - 1L)
+  expect_equal(dim(par$log_n), c(length(dat$years) - 1L, length(dat$ages) - 1))
 
 })
 
@@ -99,7 +99,7 @@ test_that("make_par includes/excludes mean-structure parameters appropriately", 
 
 test_that("make_par adds AR1 parameters only for processes set to ar1", {
   dat <- make_test_dat(
-    N_settings = list(process = "ar1", init_N0 = FALSE),
+    N_settings = list(process = "ar1", init = "exp"),
     F_settings = list(process = "iid", mu_form = NULL),
     M_settings = list(process = "off", mu_form = NULL, mu_supplied = ~ I(0.3))
   )

@@ -27,7 +27,7 @@
     xs <- start[[nm]]
 
     # Scalars
-    if (is.numeric(x0) && length(dim(x0)) == 0 && length(x0) == 1L) {
+    if (is.numeric(x0) && length(dim(x0)) == 0 && length(x0) == 1L && is.null(names(x0))) {
       if (is.numeric(xs) && length(xs) == 1L) par0[[nm]] <- xs
       next
     }
@@ -74,6 +74,7 @@
 #'
 #' - Always includes `log_f` and `log_r`.
 #' - Includes `missing` if there are missing observations.
+#' - Includes `log_n0` only if `N_settings$init == "random"`.
 #' - Includes `log_n` if `N_settings$process != "off"`.
 #' - Includes `log_m` if `M_settings$process != "off"`.
 #'
@@ -154,6 +155,9 @@ fit_tam <- function(
   }
 
   ran <- c("log_f", "log_r")
+  if (dat$N_settings$init == "random") {
+    ran <- c(ran, "log_n0")
+  }
   if (dat$any_fill_missing) {
     ran <- c(ran, "missing")
   }

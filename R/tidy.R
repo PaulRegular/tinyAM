@@ -329,7 +329,10 @@ tidy_pop <- function(fit, interval = 0.95) {
 #' Labels are added where applicable:
 #' - For parameters specified using a formula in [make_dat()] (e.g., `log_q`,
 #'   `log_sd_catch`, `log_sd_index`), a `coef` column is added.
-#' - For `log_r` (recruitment path), a `year` column is used.
+#' - For `log_r`, `year` contains years 2:Y; full recruitment is in [tidy_pop()].
+#' - For `log_n0`, an `age` column identifies the initial older-age state.
+#'   `log_r0` and `log_n0` are exponentiated to abundance levels; `log_sd_n0`
+#'   is exponentiated to the initial-age residual SD.
 #' - For matrices (e.g., `log_f`, `log_n`), `year` and/or `age` columns are added
 #'   via [tidy_mat()].
 #'
@@ -377,7 +380,9 @@ tidy_par <- function(fit, interval = 0.95) {
         df <- data.frame(coef = NA, est = e, se = s)
       } else {
         if (nm == "log_r") {
-          df <- data.frame(year = fit$dat$years, est = e, se = s, is_proj = fit$dat$is_proj)
+          df <- data.frame(year = fit$dat$years[-1], est = e, se = s, is_proj = fit$dat$is_proj[-1])
+        } else if (nm == "log_n0") {
+          df <- data.frame(coef = names(e), age = as.integer(names(e)), est = e, se = s)
         } else {
           df <- data.frame(coef = names(e), est = e, se = s)
         }
@@ -399,7 +404,7 @@ tidy_par <- function(fit, interval = 0.95) {
     df
   }
 
-  fixed  <- if (length(fix_nms)) do.call(rbind, lapply(fix_nms, .par2df)) else
+  fixed  <- if (length(fix_nms)) stack_list(lapply(fix_nms, .par2df), label = NULL) else
     data.frame(par = character(), est = numeric(), se = numeric(),
                lwr = numeric(), upr = numeric(), check.names = FALSE)
   rownames(fixed) <- NULL

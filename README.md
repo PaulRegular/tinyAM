@@ -46,6 +46,14 @@ Age-year deviations in abundance, fishing mortality, and natural mortality can b
 
 Mean structures for quantities such as fishing mortality, natural mortality, catchability, and observation error can be specified using familiar R formulas and design matrices.
 
+Initial abundance is specified independently of the subsequent N process through
+`N_settings$init`: `"exp"` (default) uses parsimonious survivorship from fixed
+first-year recruitment (`log_r0`), `"free"` estimates fixed older-age `log_n0`
+states, and `"random"` estimates random states with IID survivorship residuals
+(`eta_log_n0`) and a separate SD. Recruitment and N process states begin in
+year 2. Random initialization requires at least two ages and warns below ten
+ages because its SD may be weakly identified.
+
 ## Workflow
 
 A typical tinyAM workflow is:
@@ -59,7 +67,7 @@ fit <- fit_tam(
   ages = 2:14,
   N_settings = list(
     process = "iid",
-    init_N0 = FALSE
+    init = "exp"
   ),
   F_settings = list(
     process = "approx_rw",

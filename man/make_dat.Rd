@@ -8,7 +8,7 @@ make_dat(
   obs,
   years = NULL,
   ages = NULL,
-  N_settings = list(process = "iid", init_N0 = FALSE),
+  N_settings = list(process = "iid", init = "exp"),
   F_settings = list(process = "approx_rw", mu_form = NULL),
   M_settings = list(process = "off", mu_form = NULL, mu_supplied = ~I(0.2), age_breaks =
     NULL, first_dev_year = NULL),
@@ -33,9 +33,11 @@ and \code{index} data, and averaged for \code{weight} and \code{maturity} data.}
 \item{N_settings}{A list with elements:
 \itemize{
 \item \code{process}: one of \code{"off"}, \code{"iid"}, \code{"approx_rw"}, or \code{"ar1"}.
-\item \code{init_N0}: logical; if \code{TRUE}, estimate an initial level for the
-first-year abundance. If \code{process == "off"} and \code{init_N0 == FALSE},
-this is forced to \code{TRUE}.
+\item \code{init}: \code{"exp"} (default), \code{"free"}, or \code{"random"}, independently of
+\code{process}. All use fixed first-year recruitment \code{log_r0} as the starting
+anchor. \code{"exp"} uses deterministic survivorship; \code{"free"} estimates fixed
+older-age \code{log_n0} states; \code{"random"} estimates random \code{log_n0} states with
+IID survivorship residuals and separate SD \code{sd_n0}. See \strong{Details}.
 }}
 
 \item{F_settings}{A list with elements:
@@ -165,9 +167,24 @@ surface or a mean structure.
 
 \strong{Process options and guards}
 \itemize{
-\item If \code{N_settings$process == "off"} and \code{init_N0 == FALSE}, \code{init_N0} is
-forced to \code{TRUE} (with a warning) so the first-year abundance is
-estimable.
+\item Initial abundance is controlled by \code{N_settings$init}, independently of
+the subsequent N process. First-year recruitment is the fixed state
+\code{log_r0}. All older initial ages use survivorship from recruitment under
+first-year total mortality Z as their baseline, with no equilibrium
+plus-group correction.
+\item \code{"exp"} is the default: a parsimonious, comparatively stable nuisance-state
+initialization. More flexible choices are available when first-year data
+support them. \code{"free"} estimates unpenalized fixed \code{log_n0} states;
+\code{"random"} estimates random \code{log_n0} states whose survivorship residuals
+\code{eta_log_n0} are IID normal with separately estimated \code{sd_n0}.
+\item \code{sd_r} describes temporal recruitment variation; \code{sd_n0} describes
+variation across historical cohorts on the initial age margin (potentially
+including mortality-history variation); \code{sd_n} describes subsequent
+cohort-process deviations. These SDs are estimated separately.
+\item Random initialization requires at least two ages. Fewer than ten ages
+triggers a heuristic weak-identification warning for \code{sd_n0}, not a
+prohibition or automatic fallback. The threshold may be revised after
+simulation testing; inspect convergence and sensitivity carefully.
 \item \code{M_settings$age_breaks} (vector of break points on ages)
 defines \code{M_settings$age_blocks} via \code{\link[=cut_ages]{cut_ages()}}, used
 to couple \eqn{M} deviations across age.
@@ -192,7 +209,7 @@ dat <- make_dat(
   cod_obs,
   years = 1983:2024,
   ages = 2:14,
-  N_settings = list(process = "iid", init_N0 = FALSE),
+  N_settings = list(process = "iid", init = "exp"),
   F_settings = list(process = "approx_rw", mu_form = NULL),
   M_settings = list(process = "off", mu_supplied = ~ I(0.3)),
   catch_settings = list(sd_form = ~ 1),
@@ -203,7 +220,7 @@ names(dat)
 ## With projection settings
 dat <- make_dat(
   cod_obs,
-  N_settings = list(process = "iid", init_N0 = FALSE),
+  N_settings = list(process = "iid", init = "exp"),
   F_settings = list(process = "approx_rw", mu_form = NULL),
   M_settings = list(process = "off", mu_supplied = ~ I(0.3)),
   catch_settings = list(sd_form = ~ 1),

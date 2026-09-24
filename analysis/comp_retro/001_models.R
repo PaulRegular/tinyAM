@@ -5,8 +5,6 @@ library(RTMB)
 library(tinyAM)
 library(plotly)
 
-## Terminal fit ----
-
 cod_obs <- tinyAM::cod_obs
 cod_obs$weight$collapse <- ifelse(cod_obs$weight$year %in% 1991:1994, 1, 0)
 
@@ -15,6 +13,11 @@ cod_obs$weight$collapse <- ifelse(cod_obs$weight$year %in% 1991:1994, 1, 0)
 ## - Should N deviations be iid or ar1?
 ## - Should M deviations be iid or ar1?
 ## - Should F deviations be approx rw or ar1?
+## All comparisons use the same exp N0 initialization, independent of process.
+## Regenerate both model lists and downstream retrospectives after changes to
+## the parameter structure; older serialized fits are not compatible.
+
+dir.create("analysis/comp_retro/outputs", recursive = TRUE, showWarnings = FALSE)
 
 ## Conventions:
 ## Naming by deviation_process_deviation_process, e.g.:
@@ -27,7 +30,7 @@ N_iid_F_rw <- fit_tam(
   ages = 2:14,
   N_settings = list(
     process = "iid",
-    init_N0 = FALSE
+    init = "exp"
   ),
   F_settings = list(
     process = "approx_rw",
@@ -59,6 +62,7 @@ N_iid_F_rw$opt$objective
 
 N_iid_F_ar1 <- update(
   N_iid_F_rw,
+  N_settings = list(process = "iid", init = "exp"),
   F_settings = list(
     process = "ar1",
     mu_form = ~F_a_block + F_y_block,
@@ -71,7 +75,7 @@ N_ar1_F_rw <- update(
   N_iid_F_rw,
   N_settings = list(
     process = "ar1",
-    init_N0 = FALSE
+    init = "exp"
   )
 )
 N_ar1_F_rw
@@ -80,7 +84,7 @@ M_ar1_F_rw <- update(
   N_iid_F_rw,
   N_settings = list(
     process = "off",
-    init_N0 = TRUE
+    init = "exp"
   ),
   F_settings = list(
     process = "approx_rw",
@@ -99,6 +103,7 @@ M_ar1_F_rw
 
 M_ar1_F_ar1 <- update(
   M_ar1_F_rw,
+  N_settings = list(process = "off", init = "exp"),
   F_settings = list(
     process = "ar1",
     mu_form = ~F_a_block + F_y_block,
@@ -109,6 +114,7 @@ M_ar1_F_ar1
 
 M_iid_F_rw <- update(
   M_ar1_F_rw,
+  N_settings = list(process = "off", init = "exp"),
   M_settings = list(
     process = "iid",
     mu_form = NULL,
@@ -133,14 +139,18 @@ saveRDS(models, file = "analysis/comp_retro/outputs/001_models.rds")
 
 vis_tam(
   models,
-  output_file = "analysis/comp_retro/outputs/001_models.html"
+  output_file = "analysis/comp_retro/outputs/001_models.html",
+  open_file = FALSE
 )
 
 ## To age 20
 models_20plus <- lapply(seq_along(models), function(i) {
   m <- models[[i]]
-  m$call$M_settings$age_breaks = c(3, 5, 7, 9, 11, 13, 15, 17, 20)
-  update(m, ages = 2:20)
+  m_settings <- m$dat$M_settings[c("process", "mu_form", "mu_supplied", "first_dev_year", "mean_ages")]
+  m_settings$age_breaks <- c(3, 5, 7, 9, 11, 13, 15, 17, 20)
+  update(m, ages = 2:20, M_settings = m_settings,
+         N_settings = list(process = m$dat$N_settings$process, init = "exp"),
+         start_par = as.list(m$sdrep, "Estimate"))
 })
 names(models_20plus) <- names(models)
 
@@ -148,6 +158,7 @@ saveRDS(models_20plus, file = "analysis/comp_retro/outputs/001_models_20plus.rds
 
 vis_tam(
   models_20plus,
-  output_file = "analysis/comp_retro/outputs/001_models_20plus.html"
+  output_file = "analysis/comp_retro/outputs/001_models_20plus.html",
+  open_file = FALSE
 )
 

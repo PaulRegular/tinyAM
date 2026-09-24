@@ -132,6 +132,10 @@
 #'     (posterior-predictive when `par_uncertainty = "joint"`).
 #'   - `TRUE`  — generate **new process fields** for the random effects and re-simulate
 #'     (projection/HCR style prior-predictive runs).
+#'     This includes `log_n0` only for `N_settings$init = "random"`, generated
+#'     by survivorship and IID residuals from the supplied `log_r0` anchor.
+#'     Free initial-age states are retained.
+#'     Fixed anchors may still vary through the chosen `par_uncertainty` draw.
 #'
 #' Parallel execution is supported via [furrr::future_map()]. Call
 #' `future::plan()` beforehand if you want parallel workers.

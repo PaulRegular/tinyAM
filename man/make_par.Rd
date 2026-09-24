@@ -26,7 +26,7 @@ fixed and random-effect parameters used by TAM, based on the structure in
 a previously constructed \code{dat} list (see \code{\link[=make_dat]{make_dat()}}).
 }
 \details{
-\strong{Latent-state convention:} \code{log_r}, \code{log_n}, \code{log_f}, and \code{log_m}
+\strong{Latent-state convention:} \code{log_r}, \code{log_n0}, \code{log_n}, \code{log_f}, and \code{log_m}
 represent latent quantities on the log scale. They are compact fitted
 latent-state parameters; \code{log_N}, \code{log_F}, and \code{log_M} are full model
 surfaces constructed internally by \code{\link[=nll_fun]{nll_fun()}}. Process errors are
@@ -50,15 +50,26 @@ with appropriate \code{dimnames} (\verb{year × age} or \verb{year × age_block}
 \itemize{
 \item \strong{Recruitment & variability}
 \itemize{
-\item \code{log_r0} (only if \code{dat$N_settings$init_N0})
-\item \code{log_r} (length \code{length(dat$years)})
+\item \code{log_r0} (fixed first-year log recruitment, always present)
+\item \code{log_r} (random states for \code{dat$years[-1]}, length \code{length(dat$years) - 1})
 \item \code{log_sd_r}
+}
+\item \strong{Initial older-age abundance (independent of the N process)}
+\itemize{
+\item \code{log_n0}: realized log abundance at initial ages \code{ages[-1]}, named by age;
+absent for \code{init = "exp"}, fixed for \code{"free"}, random for \code{"random"}
+\item \code{log_sd_n0}: separate IID initial-age residual SD, only for \code{init = "random"}
+\item \code{eta_log_n0} is calculated internally from adjacent initial log states
+and first-year mortality; \code{log_n0} itself is not a deviation.
+\item The default \code{"exp"} initializer is parsimonious survivorship from
+\code{log_r0}, using first-year Z without an equilibrium plus group.
+See \code{\link[=make_dat]{make_dat()}} for the choices and weak-identification warning.
 }
 \item \strong{Abundance states and process variability (N)}
 \itemize{
 \item \code{log_sd_n} (if \code{dat$N_settings$process != "off"})
 \item \code{logit_phi_n} length 2 (if \code{process == "ar1"})
-\item \code{log_n} matrix (\code{year} × \code{age[-1]}) if \code{process != "off"}
+\item \code{log_n} matrix (\code{year[-1]} × \code{age[-1]}) if \code{process != "off"}
 }
 \item \strong{Fishing mortality (F)}
 \itemize{
@@ -93,7 +104,7 @@ dat <- make_dat(
   cod_obs,
   years = 1983:2024,
   ages = 2:14,
-  N_settings = list(process = "iid", init_N0 = FALSE),
+  N_settings = list(process = "iid", init = "exp"),
   F_settings = list(process = "approx_rw", mu_form = NULL),
   M_settings = list(process = "off", mu_supplied = ~ I(0.3)),
   catch_settings = list(sd_form = ~ 1),

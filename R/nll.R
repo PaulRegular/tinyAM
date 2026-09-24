@@ -92,7 +92,7 @@ rprocess_2d <- function(ny, na, phi = c(0, 0), sd = 1) {
 #'   (see **Value**).
 #'
 #' @details
-#' **Latent-state convention:** `log_r`, `log_n`, `log_f`, and `log_m`
+#' **Latent-state convention:** `log_r`, `log_n0`, `log_n`, `log_f`, and `log_m`
 #' represent latent quantities on the log scale, not process deviations.
 #' Lowercase names denote compact fitted latent-state parameters; `log_N`,
 #' `log_F`, and `log_M` denote full model surfaces after cohort recursion,
@@ -106,15 +106,29 @@ rprocess_2d <- function(ny, na, phi = c(0, 0), sd = 1) {
 #' - **Recruitment:** log-recruits \eqn{\log R_y} evolve as a random walk:
 #'   \deqn{\Delta \log R_y \sim \mathcal{N}(0,\sigma_R^2).}
 #'
-#'   If `N_settings$init_N0` is `TRUE`, the initial recruit level
-#'   is constrained by:
-#'   \deqn{\log R_1 \sim \mathcal{N}(\log R_0,\sigma_R^2).}
+#'   The fixed parameter `log_r0` is the actual first-year state, not a
+#'   hypermean. Random states `log_r` contain years 2:Y only. The full path is
+#'   `log_recruitment = c(log_r0, log_r)`; the first innovation is
+#'   `log_r[1] - log_r0`, followed by successive differences.
+#'
+#' - **Initial older-age abundance:** independent of `N_settings$process`.
+#'   The recursion starts from `log_N[1, 1] = log_r0`. For every older age,
+#'   the prediction is `log_N[1, a-1] - Z[1, a-1]`, including the terminal age
+#'   without an equilibrium plus-group adjustment. `init = "exp"` uses these
+#'   predictions directly. Under `"free"` or `"random"`, `log_n0` contains the
+#'   realized initial log abundance at all older ages. The residual is
+#'   `eta_log_n0 = log_n0 - (c(log_r0, head(log_n0, -1)) - Z[1, -n_ages])`.
+#'   `"free"` estimates these states without a penalty; `"random"` applies an
+#'   IID normal density to the residuals with SD `exp(log_sd_n0)`. This SD
+#'   describes the initial age margin, separately from temporal recruitment
+#'   SD `sd_r` and subsequent cohort-process SD `sd_n`. See [make_dat()].
 #'
 #' - **Numbers-at-age:** forward cohort dynamics with plus-group:
 #'   \deqn{\log N_{y,a} = \log N_{y-1,a-1} - Z_{y-1,a-1},}
 #'
 #'   with \eqn{Z_{y,a} = F_{y,a} + M_{y,a}}. The plus-group equation is applied
-#'   at the terminal age.
+#'   at the terminal age for transitions from year 1 to year 2 onward.
+#'   Latent older-age states `log_n` contain years 2:Y only.
 #'   If `N_settings$process != "off"`, residuals
 #'   \eqn{\eta^N_{y,a} = \log N_{y,a} - \widehat{\log N}_{y,a}}
 #'   are penalized by [dprocess_2d()] according to the chosen process.
@@ -156,12 +170,16 @@ rprocess_2d <- function(ny, na, phi = c(0, 0), sd = 1) {
 #' **Simulation mode:**
 #' When `simulate = TRUE`, the function:
 #'
-#' 1. Generates latent states: `log_r` using recruitment RW increments,
+#' 1. Generates latent states: `log_r` using recruitment RW increments from
+#'    the fixed first-year anchor `log_r0`,
 #'    `log_f` and optional `log_m` by adding process deviations to their log
 #'    mean surfaces, and optional `log_n` by adding process deviations to
 #'    recursive cohort predictions. Process fields are drawn via [rprocess_2d()];
 #'    recruitment increments use [stats::rnorm()]. Initial states without a
-#'    specified process distribution retain their supplied values.
+#'    specified process distribution retain their supplied values. Random
+#'    initial-age residuals are drawn after F/M and Z are constructed, then
+#'    `log_n0` is built recursively from `log_r0`. Fixed `log_n0` states under
+#'    free initialization are retained.
 #' 2. Regenerates predictions and draws `log_obs` from the observation
 #'    model.
 #' 3. Returns the simulated objects.
@@ -183,6 +201,7 @@ rprocess_2d <- function(ny, na, phi = c(0, 0), sd = 1) {
 #' - If `simulate = FALSE`: a single numeric JNLL value.
 #' - If `simulate = TRUE`: a list with elements:
 #'   - `log_f`, `log_r` — always returned;
+#'   - `log_n0` — if `N_settings$init` is `"free"` or `"random"`;
 #'   - `log_n` — if `N_settings$process != "off"`;
 #'   - `log_m` — if `M_settings$process != "off"`;
 #'   - `log_obs` — simulated observations (NAs restored where input was missing);
@@ -248,10 +267,7 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   log_mu_F[] <- drop(F_modmat %*% log_mu_f)
   log_mu_M[] <- log_mu_supplied_m + drop(M_modmat %*% mu_m)
   if (simulate) {
-    if (N_settings$init_N0) {
-      log_r[1] <- stats::rnorm(1, mean = log_r0, sd = sd_r)
-    }
-    log_r[-1] <- log_r[1] + cumsum(stats::rnorm(n_years - 1, 0, sd_r))
+    log_r[] <- log_r0 + cumsum(stats::rnorm(n_years - 1, 0, sd_r))
     log_f[] <- log_mu_F[!is_proj, ] +
       rprocess_2d(nrow(log_f), ncol(log_f), sd = sd_f, phi = plogis(logit_phi_f))
     if (M_settings$process != "off") {
@@ -264,9 +280,10 @@ nll_fun <- function(par, dat, simulate = FALSE) {
 
   ## Vital rates ----
 
-  recruitment <- exp(log_r)
-  log_recruitment <- log_r
-  log_N[, 1] <- log_r
+  log_recruitment <- c(log_r0, log_r)
+  names(log_recruitment) <- years
+  recruitment <- exp(log_recruitment)
+  log_N[, 1] <- log_recruitment
 
   log_F[!is_proj, ] <- log_f
   if (n_proj > 0) {
@@ -289,15 +306,31 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   log_Z <- log(Z)
 
 
-  ## Cohort equation (assumes max age = plus group) ----
+  ## Initial abundance (independent of the subsequent N process) ----
+
+  eta_log_n0 <- numeric(n_ages - 1L)
+  if (simulate && N_settings$init == "random") {
+    eta_log_n0[] <- stats::rnorm(n_ages - 1L, 0, exp(log_sd_n0))
+  }
+  for (a in 2:n_ages) {
+    pred_log_N[1, a] <- log_N[1, a - 1] - Z[1, a - 1]
+    if (N_settings$init == "exp" || (simulate && N_settings$init == "random")) {
+      log_N[1, a] <- pred_log_N[1, a] + eta_log_n0[a - 1L]
+    } else {
+      log_N[1, a] <- log_n0[a - 1L]
+    }
+  }
+  eta_log_n0 <- log_N[1, -1] - pred_log_N[1, -1]
+  if (simulate && N_settings$init == "random") {
+    log_n0[] <- log_N[1, -1]
+  }
+
+  ## Cohort equation (plus group after the initial year) ----
 
   Y <- 2:n_years
   A <- 2:n_ages
-  if (N_settings$init_N0) {
-    log_N[1, A] <- log_r0 - cumsum(Z[1, A - 1])
-  }
   if (N_settings$process != "off") {
-    log_N[, -1] <- log_n
+    log_N[-1, -1] <- log_n
   }
   eta_log_N <- matrix(0, n_years - 1, n_ages - 1)
   if (simulate && N_settings$process != "off") {
@@ -313,18 +346,21 @@ nll_fun <- function(par, dat, simulate = FALSE) {
     }
   }
   if (simulate && N_settings$process != "off") {
-    log_n[] <- log_N[, -1]
+    log_n[] <- log_N[-1, -1, drop = FALSE]
   }
   N <- exp(log_N)
 
 
-  ## Recruitment process (basic random walk) ----
+  ## Initial age process ----
 
   jnll <- 0
 
-  if (N_settings$init_N0) {
-    jnll <- jnll - RTMB::dnorm(log_N[1, 1], mean = log_r0, sd = sd_r, log = TRUE)
+  if (N_settings$init == "random") {
+    jnll <- jnll - sum(RTMB::dnorm(eta_log_n0, 0, exp(log_sd_n0), log = TRUE))
   }
+
+  ## Recruitment process (basic random walk) ----
+
   eta_R <- log_N[2:n_years, 1] - log_N[1:(n_years - 1), 1]
   jnll <- jnll - sum(RTMB::dnorm(eta_R, 0, sd_r, log = TRUE))
 
@@ -332,7 +368,7 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   ## N process ----
 
   if (N_settings$process != "off") {
-    eta_log_N <- log_N[-1, -1] - pred_log_N[-1, -1]
+    eta_log_N <- log_N[-1, -1, drop = FALSE] - pred_log_N[-1, -1, drop = FALSE]
     sd_n <- exp(log_sd_n)
     phi <- plogis(logit_phi_n)
     jnll <- jnll - dprocess_2d(eta_log_N, sd = sd_n, phi = phi)
@@ -470,6 +506,9 @@ nll_fun <- function(par, dat, simulate = FALSE) {
     sims <- list(log_f = log_f,
                  log_r = log_r,
                  log_obs = log_obs)
+    if (N_settings$init != "exp") {
+      sims$log_n0 <- log_n0
+    }
     if (any(fill_missing_map)) {
       sims$missing <- log_obs[fill_missing_map]
     }

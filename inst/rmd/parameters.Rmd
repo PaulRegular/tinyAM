@@ -8,7 +8,13 @@ Row {.tabset}
 ### Fixed parameters
 
 ```{r}
-plot_par(fixed_par, color = ~model, legendgroup = ~model, colors = cols)
+plot_par(subset(fixed_par, par != "n0"), color = ~model, legendgroup = ~model, colors = cols)
+```
+
+`r if (any(fixed_par$par == "n0")) "### Fixed initial abundance"`
+
+```{r, eval = any(fixed_par$par == "n0")}
+plot_trend(subset(fixed_par, par == "n0"), x = ~age, xlab = "Age", color = ~model, legendgroup = ~model, colors = cols, ylab = "Initial abundance")
 ```
 
 
@@ -16,6 +22,9 @@ Row {.tabset}
 --------------------------------------------------------------------------------
 
 ### Random parameters (r)
+
+Recruitment states below begin in year 2. The fixed first-year anchor is
+reported as `r0`; the population recruitment panel includes every year.
 
 ```{r}
 plot_trend(random_par$log_r, color = ~model, legendgroup = ~model, colors = cols, ylab = "r")
@@ -25,6 +34,12 @@ plot_trend(random_par$log_r, color = ~model, legendgroup = ~model, colors = cols
 
 ```{r, eval = "log_n" %in% names(random_par)}
 plot_trend(random_par$log_n, color = ~model, legendgroup = ~model, colors = cols, frame = ~age, ylab = "n")
+```
+
+`r if ("log_n0" %in% names(random_par)) "### Initial abundance"`
+
+```{r, eval = "log_n0" %in% names(random_par)}
+plot_trend(random_par$log_n0, x = ~age, xlab = "Age", color = ~model, legendgroup = ~model, colors = cols, ylab = "Initial abundance")
 ```
 
 ### (f)
