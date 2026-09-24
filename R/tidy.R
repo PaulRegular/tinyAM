@@ -37,15 +37,14 @@
 #' @export tidy_array tidy_mat
 tidy_array <- function(x, value_name = "x", require_dimnames = TRUE) {
   if (!is.matrix(x) && !is.array(x)) {
-    stop("`x` must be a matrix or array.", call. = FALSE)
+    cli::cli_abort("{.arg x} must be a matrix or array.")
   }
 
   nm <- dimnames(x)
 
   if (require_dimnames) {
     if (is.null(nm) || any(vapply(nm, is.null, logical(1)))) {
-      stop("All dimensions must have names (dimnames). Set `require_dimnames = FALSE` to allow defaults.",
-           call. = FALSE)
+      cli::cli_abort("All dimensions must have names (dimnames). Set {.code require_dimnames = FALSE} to allow defaults.")
     }
   }
 
@@ -454,7 +453,7 @@ stack_list <- function(x, label = "model",
   label_type <- match.arg(label_type)
 
   if (!length(x)) {
-    stop("`x` must contain at least one element.", call. = FALSE)
+    cli::cli_abort("{.arg x} must contain at least one element.")
   }
 
   ids <- names(x)
@@ -470,7 +469,7 @@ stack_list <- function(x, label = "model",
 
   keep <- !vapply(pieces, is.null, logical(1))
   if (!any(keep)) {
-    stop("No data.frames to stack.", call. = FALSE)
+    cli::cli_abort("No data frames to stack.")
   }
   pieces <- pieces[keep]
   ids <- ids[keep]
@@ -709,5 +708,4 @@ tidy_tam <- function(..., model_list = NULL, interval = 0.95, label = "model", l
 
   out
 }
-
 

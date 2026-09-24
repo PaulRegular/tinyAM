@@ -60,12 +60,24 @@ cut_int <- function(x, breaks, ordered = FALSE) {
 
   nm <- deparse1(substitute(x))
 
-  stopifnot(is.numeric(x), is.numeric(breaks))
-  if (anyNA(x))                       stop(sprintf("`%s` must be non-NA.", nm), call. = FALSE)
-  if (any(x %% 1 != 0))               stop(sprintf("`%s` must be integer-valued.", nm), call. = FALSE)
-  if (anyNA(breaks) || any(diff(breaks) <= 0)) stop("`breaks` must be strictly increasing and non-NA.", call. = FALSE)
-  if (min(x) != breaks[1])            stop(sprintf("The first break must equal min(%s).", nm), call. = FALSE)
-  if (max(x) != utils::tail(breaks, 1))      stop(sprintf("The last break must equal max(%s).", nm), call. = FALSE)
+  if (!is.numeric(x) || !is.numeric(breaks)) {
+    cli::cli_abort("{.arg x} and {.arg breaks} must be numeric.")
+  }
+  if (anyNA(x)) {
+    cli::cli_abort("{.arg {nm}} must be non-NA.")
+  }
+  if (any(x %% 1 != 0)) {
+    cli::cli_abort("{.arg {nm}} must be integer-valued.")
+  }
+  if (anyNA(breaks) || any(diff(breaks) <= 0)) {
+    cli::cli_abort("{.arg breaks} must be strictly increasing and non-NA.")
+  }
+  if (min(x) != breaks[1]) {
+    cli::cli_abort(sprintf("The first break must equal min(%s).", nm))
+  }
+  if (max(x) != utils::tail(breaks, 1)) {
+    cli::cli_abort(sprintf("The last break must equal max(%s).", nm))
+  }
 
   k <- length(breaks)
   open_end <- k >= 2L && (breaks[k] - breaks[k - 1L] > 1L)
@@ -591,7 +603,7 @@ make_dat <- function(
     dat$log_mu_supplied_m <- 0
   }
   if (is.null(dat$M_settings$mu_form) && is.null(dat$M_settings$mu_supplied)) {
-    stop("Please supply mu_supplied or mu_form for M.")
+    cli::cli_abort("Please supply mu_supplied or mu_form for M.")
   }
 
   .check_ages <- function(x, ages, label) {
@@ -623,4 +635,3 @@ make_dat <- function(
   dat
 
 }
-

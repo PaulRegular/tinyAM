@@ -30,13 +30,12 @@
 #' ~ survey + mono(q_block, by = survey)
 #' @export
 mono <- function(x, by = NULL) {
-  stop("mono() is only supported as an additive term in index_settings$q_form.",
-       call. = FALSE)
+  cli::cli_abort("mono() is only supported as an additive term in {.arg index_settings$q_form}.")
 }
 
 .parse_q_formula <- function(formula, data) {
   if (!inherits(formula, "formula")) {
-    stop("q_form must be a formula.", call. = FALSE)
+    cli::cli_abort("{.arg q_form} must be a formula.")
   }
   contains_mono <- function(x) {
     if (!is.call(x)) return(FALSE)
@@ -49,18 +48,18 @@ mono <- function(x, by = NULL) {
   if (!contains_mono(formula)) {
     return(list(q_modmat = stats::model.matrix(formula, data = data)))
   }
-  if (length(formula) != 2L) stop("Monotonic q_form must be one-sided.", call. = FALSE)
+  if (length(formula) != 2L) cli::cli_abort("Monotonic {.arg q_form} must be one-sided.")
   specs <- list()
   strip <- function(x) {
     if (!contains_mono(x)) return(x)
     if (is.call(x) && identical(x[[1L]], as.name("mono"))) {
       spec <- tryCatch(match.call(mono, x), error = function(e) {
-        stop("Invalid mono() arguments: ", conditionMessage(e), call. = FALSE)
+        cli::cli_abort("Invalid mono() arguments: {conditionMessage(e)}")
       })
       spec <- as.list(spec)[-1L]
       column <- function(arg, label) {
         if (!is.symbol(arg) || !as.character(arg) %in% names(data)) {
-          stop("mono() ", label, " must name an existing index column.", call. = FALSE)
+          cli::cli_abort("mono() {.arg {label}} must name an existing index column.")
         }
         as.character(arg)
       }
@@ -82,7 +81,7 @@ mono <- function(x, by = NULL) {
       if (length(args) == 1L) return(args[[1L]])
       return(as.call(c(list(as.name("+")), args)))
     }
-    stop("mono() must be an additive term, without interactions or transformations.", call. = FALSE)
+    cli::cli_abort("mono() must be an additive term, without interactions or transformations.")
   }
   ordinary <- formula
   rhs <- strip(formula[[2L]])
@@ -91,13 +90,12 @@ mono <- function(x, by = NULL) {
   ordinary_vars <- all.vars(stats::terms(ordinary, data = data))
   if (anyDuplicated(variables) || any(variables %in% ordinary_vars) ||
       any(variables %in% unlist(lapply(specs, `[[`, "by")))) {
-    stop("A mono() variable cannot also have ordinary, duplicate, or grouping effects in q_form.",
-         call. = FALSE)
+    cli::cli_abort("A mono() variable cannot also have ordinary, duplicate, or grouping effects in {.arg q_form}.")
   }
   design <- lapply(specs, .make_mono_q_design, data = data)
   q_modmat <- stats::model.matrix(ordinary, data = data)
   if (nrow(q_modmat) != nrow(data)) {
-    stop("Missing ordinary q covariates would misalign mono() observation rows.", call. = FALSE)
+    cli::cli_abort("Missing ordinary q covariates would misalign mono() observation rows.")
   }
   list(q_modmat = q_modmat,
        q_mono_modmat = do.call(cbind, lapply(design, `[[`, "matrix")),
@@ -108,12 +106,12 @@ mono <- function(x, by = NULL) {
   x <- data[[spec$variable]]
   if (!(is.numeric(x) || is.factor(x)) || !is.null(dim(x)) || anyNA(x) ||
       (is.numeric(x) && any(!is.finite(x)))) {
-    stop("mono() x must be numeric or a factor, with no missing or non-finite values.", call. = FALSE)
+    cli::cli_abort("mono() {.arg x} must be numeric or a factor, with no missing or non-finite values.")
   }
   ordered_levels <- if (is.factor(x)) levels(x) else sort(unique(x))
   group <- if (is.null(spec$by)) rep("all", length(x)) else data[[spec$by]]
   if (!is.atomic(group) || !is.null(dim(group)) || anyNA(group)) {
-    stop("mono() by must be a categorical column with no missing values.", call. = FALSE)
+    cli::cli_abort("mono() {.arg by} must be a categorical column with no missing values.")
   }
   groups <- if (is.factor(group)) levels(droplevels(group)) else unique(group)
   matrices <- steps <- vector("list", length(groups))
@@ -121,7 +119,7 @@ mono <- function(x, by = NULL) {
     rows <- which(group == groups[i])
     lev <- ordered_levels[ordered_levels %in% x[rows]]
     if (length(lev) < 2L) {
-      stop("mono() needs at least two observed levels in each group (", groups[i], ").", call. = FALSE)
+      cli::cli_abort("mono() needs at least two observed levels in each group ({groups[i]}).")
     }
     k <- length(lev) - 1L
     mat <- matrix(0, nrow(data), k)
