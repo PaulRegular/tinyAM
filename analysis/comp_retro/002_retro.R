@@ -2,8 +2,6 @@
 library(tinyAM)
 library(furrr)
 
-# Regenerate current model objects: saved fits from the previous N0
-# parameterization must not be reused. This also refreshes the model RDS files.
 source("analysis/comp_retro/001_models.R")
 
 future::plan(future::multisession, workers = 10)

@@ -45,7 +45,7 @@ N_iid_F_rw <- fit_tam(
   ),
   index_settings = list(
     sd_form = ~ 1,
-    q_form = ~ q_block,
+    q_form = ~ mono(q_block),
     fill_missing = TRUE
   ),
   proj_settings = list(

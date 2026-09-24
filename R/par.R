@@ -66,6 +66,10 @@
 #'   - `log_sd_catch` (length `ncol(dat$sd_catch_modmat)`) adjusting any supplied SDs
 #'   - `log_sd_index` (length `ncol(dat$sd_index_modmat)`) adjusting any supplied SDs
 #'   - `log_q` (length `ncol(dat$q_modmat)`)
+#'   - `log_dq` only for [mono()] terms (length `ncol(dat$q_mono_modmat)`):
+#'     fixed log positive-increment magnitudes on the log-q scale, initialized
+#'     to `log(0.05)` for a nearly flat curve. Names identify block transitions
+#'     and groups; these parameters are not absolute log-q levels.
 #'   - `missing` vector of length `sum(dat$fill_missing_map)` (placeholders for
 #'     imputed `log_obs`, if any observation type is set to fill missing values)
 #'
@@ -133,6 +137,11 @@ make_par <- function(dat) {
   names(par$log_sd_index) <- colnames(dat$sd_index_modmat)
   par$log_q <- numeric(ncol(dat$q_modmat))
   names(par$log_q) <- colnames(dat$q_modmat)
+  if (!is.null(dat$q_mono_modmat)) {
+    # Small positive log-q steps start the monotonic curve close to flat.
+    par$log_dq <- setNames(rep(log(0.05), ncol(dat$q_mono_modmat)),
+                           colnames(dat$q_mono_modmat))
+  }
 
   if (dat$any_fill_missing) {
     par$missing <- numeric(sum(dat$fill_missing_map))

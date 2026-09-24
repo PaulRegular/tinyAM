@@ -30,6 +30,9 @@ back-transformed to the natural scale:
 \itemize{
 \item \code{log_}  → \code{exp()} (and the \code{log_} prefix is dropped, e.g. \code{log_sd_r} → \code{sd_r})
 \item \code{logit_} → \code{plogis()} (and the \code{logit_} prefix is dropped, e.g. \code{logit_phi_f} → \code{phi_f})
+\item For \code{\link[=mono]{mono()}} catchability terms, \code{dq = exp(log_dq)} is a positive step
+magnitude on the log-q scale, not absolute q. Coefficient names identify
+transitions and groups. Actual observation-specific q is in \code{\link[=tidy_obs_pred]{tidy_obs_pred()}}.
 }
 
 This convention is relied upon by the printing methods, so parameters tied to

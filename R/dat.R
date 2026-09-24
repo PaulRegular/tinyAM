@@ -246,6 +246,9 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #'   `sd_index_modmat` and **log-scale** parameters `log_sd_index`.
 #' - `index_settings$q_form` is evaluated on the index table to produce
 #'   `q_modmat` and **log-scale** parameters `log_q`.
+#'   Additive [mono()] terms instead contribute cumulative indicators
+#'   in `q_mono_modmat`, with positive log-q step magnitudes `exp(log_dq)`.
+#'   `q_mono_steps` records each transition and its optional group.
 #' - If `M_settings$mu_form` is provided, `M_modmat <- model.matrix(mu_form,
 #'   data = obs$weight)` and the resulting coefficients are parameters `mu_m`.
 #'   These coefficients are applied on the log scale to build \eqn{M}, but
@@ -348,7 +351,9 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #' - `sd_supplied`: optional one-sided formula giving supplied SDs (on the natural
 #'   scale of the log-observation residuals) for index-at-age data. When provided,
 #'   the intercept is removed from `sd_form` so supplied SDs act as offsets.
-#' - `q_form`: formula for catchability blocks, evaluated on the index table (e.g. `~ q_block`).
+#' - `q_form`: formula for catchability, evaluated on the index table. Ordinary
+#'   `~ q_block` is unconstrained; `~ mono(q_block)` increases across ordered
+#'   blocks. See [mono()] for independent increasing curves by survey.
 #' - `fill_missing`: logical – fill missing values, and zeros, using random effects?
 #'   Defaults to `TRUE`. Note that one-step-ahead residuals are not currently working when `TRUE`.
 #' @param proj_settings Optional list with elements:
@@ -561,7 +566,8 @@ make_dat <- function(
     dat$log_sd_index_supplied <- rep(0, nrow(dat$obs$index))
   }
 
-  dat$q_modmat <- stats::model.matrix(dat$index_settings$q_form, data = dat$obs$index)
+  q_design <- .parse_q_formula(dat$index_settings$q_form, dat$obs$index)
+  dat[names(q_design)] <- q_design
   if (!is.null(dat$F_settings$mu_form)) {
     dat$F_modmat <- stats::model.matrix(F_settings$mu_form, data = dat$obs$catch)
   } else {

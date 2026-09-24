@@ -102,7 +102,9 @@ Defaults to \code{TRUE}. Note that one-step-ahead residuals are not currently wo
 \item \code{sd_supplied}: optional one-sided formula giving supplied SDs (on the natural
 scale of the log-observation residuals) for index-at-age data. When provided,
 the intercept is removed from \code{sd_form} so supplied SDs act as offsets.
-\item \code{q_form}: formula for catchability blocks, evaluated on the index table (e.g. \code{~ q_block}).
+\item \code{q_form}: formula for catchability, evaluated on the index table. Ordinary
+\code{~ q_block} is unconstrained; \code{~ mono(q_block)} increases across ordered
+blocks. See \code{\link[=mono]{mono()}} for independent increasing curves by survey.
 \item \code{fill_missing}: logical – fill missing values, and zeros, using random effects?
 Defaults to \code{TRUE}. Note that one-step-ahead residuals are not currently working when \code{TRUE}.
 }}
