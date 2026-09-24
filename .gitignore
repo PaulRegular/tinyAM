@@ -54,3 +54,4 @@ analysis/*.html
 *.rds
 analysis/*.rds
 
+.positai

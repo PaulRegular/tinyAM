@@ -23,9 +23,6 @@ Row {.tabset}
 
 ### Random parameters (r)
 
-Recruitment states below begin in year 2. The fixed first-year anchor is
-reported as `r0`; the population recruitment panel includes every year.
-
 ```{r}
 plot_trend(random_par$log_r, color = ~model, legendgroup = ~model, colors = cols, ylab = "r")
 ```

@@ -1,6 +1,4 @@
 
-## TODO: think about supplying sd_index values
-
 library(RTMB)
 library(tinyAM)
 library(plotly)
