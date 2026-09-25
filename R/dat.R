@@ -434,6 +434,29 @@ make_dat <- function(
   all_obs_ages  <- sort(unique(unlist(lapply(obs, `[[`, "age"))))
   dat$years <- if (is.null(years)) seq(min(all_obs_years), max(all_obs_years)) else as.integer(years)
   dat$ages <- if (is.null(ages)) seq(min(all_obs_ages), max(all_obs_ages)) else as.integer(ages)
+  if (min(dat$years) < min(all_obs_years) ||
+      max(dat$years) > max(all_obs_years)) {
+    cli::cli_abort(c(
+      "{.arg years} must fall within the years available in {.arg obs}.",
+      "x" = "Requested years: {min(dat$years)}-{max(dat$years)}.",
+      "i" = "Available years: {min(all_obs_years)}-{max(all_obs_years)}.",
+      "i" = "Use {.arg proj_settings} for years beyond the terminal data year."
+    ))
+  }
+  if (min(dat$ages) < min(all_obs_ages) ||
+      max(dat$ages) > max(all_obs_ages)) {
+    cli::cli_abort(c(
+      "{.arg ages} must fall within the ages available in {.arg obs}.",
+      "x" = "Requested ages: {min(dat$ages)}-{max(dat$ages)}.",
+      "i" = "Available ages: {min(all_obs_ages)}-{max(all_obs_ages)}."
+    ))
+  }
+  if (any(diff(dat$years) != 1L)) {
+    cli::cli_abort("{.arg years} must be consecutive years.")
+  }
+  if (any(diff(dat$ages) != 1L)) {
+    cli::cli_abort("{.arg ages} must be consecutive ages.")
+  }
   if (max(all_obs_ages) > max(dat$ages)) {
     dat$obs <- .plus_fun(dat$obs, max(dat$ages))
   }
@@ -449,7 +472,7 @@ make_dat <- function(
     dat$obs <- .add_proj_rows(dat$obs, n_proj = proj_settings$n_proj, n_mean = proj_settings$n_mean)
     years_plus <- sort(unique(unlist(lapply(dat$obs, `[[`, "year"))))
     dat$proj_years <- setdiff(years_plus, dat$years)
-    dat$is_proj <- c(dat$is_proj, rep(TRUE, proj_settings$n_proj))
+    dat$is_proj <- years_plus %in% dat$proj_years
     dat$years <- years_plus # update years vec to include proj_years
     if (is.null(proj_settings$F_mult) || any(is.na(proj_settings$F_mult))) {
       cli::cli_abort("{.strong Please specify proj_settings$F_mult (non-NA).}")
