@@ -5,7 +5,9 @@ library(plotly)
 
 cod_obs <- tinyAM::cod_obs
 cod_obs$weight$collapse <- ifelse(cod_obs$weight$year %in% 1991:1994, 1, 0)
+
 cod_obs$index$obs <- cod_obs$index$obs * 12048556/1000 # bump up to total abundance
+cod_obs$index$q_block <- cut(cod_obs$index$age, c(min(cod_obs$index$age):6, max(cod_obs$index$age) + 1), right = FALSE)
 
 ## Questions:
 ## How should the random processes be modeled?
@@ -26,7 +28,7 @@ dir.create("analysis/comp_retro/outputs", recursive = TRUE, showWarnings = FALSE
 N_iid_F_rw <- fit_tam(
   cod_obs,
   years = 1983:2024,
-  ages = 2:14,
+  ages = 1:14,
   N_settings = list(
     process = "iid"
   ),

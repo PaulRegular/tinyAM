@@ -312,8 +312,11 @@ tidy_pop <- function(fit, interval = 0.95) {
 #'
 #' - `log_`  → `exp()` (and the `log_` prefix is dropped, e.g. `log_sd_r` → `sd_r`)
 #' - `logit_` → `plogis()` (and the `logit_` prefix is dropped, e.g. `logit_phi_f` → `phi_f`)
-#' - For [mono()] catchability terms, `dq = exp(log_dq)` is a positive step
-#'   magnitude on the log-q scale, not absolute q. Coefficient names identify
+#' - For [mono()] catchability terms, `dq` is a non-negative step on the
+#'   log-q scale. Estimates and SEs are reported directly on this same scale,
+#'   with untransformed Wald intervals (which may cross zero at a boundary).
+#'   These local curvature SEs are not boundary-adjusted inference.
+#'   Coefficient names identify
 #'   transitions and groups. Actual observation-specific q is in [tidy_obs_pred()].
 #'
 #' This convention is relied upon by the printing methods, so parameters tied to

@@ -45,6 +45,11 @@ those draws. Results are returned as tidy data frames stacked across \code{n}
 simulations with a \verb{sim = 1..n} column.
 }
 \details{
+For \code{\link[=mono]{mono()}} effects, negative \code{dq} values from Gaussian parameter draws
+are clipped to zero before generating predictions or observations. This
+projects the normal approximation onto the feasible increments and adds
+probability at zero; it is not a boundary-corrected posterior sampler.
+
 The simulation has two orthogonal controls:
 \itemize{
 \item \strong{Parameter uncertainty} via \code{par_uncertainty}:

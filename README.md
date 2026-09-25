@@ -61,15 +61,18 @@ changes between ordered blocks:
 
 ```r
 ~ q_block                                      # unconstrained
-~ mono(q_block)                                # increasing
+~ mono(q_block)                                # non-decreasing
 ~ survey + mono(q_block, by = survey)           # independent survey curves
 ```
 
 Use these as `index_settings$q_form`. Numeric levels are sorted increasingly;
 factor levels follow their declared order. The first represented level is the
-baseline. Later levels add positive log-q increments
-`dq = exp(log_dq)`, initialized at 0.05. Increments can approach zero; pooled
-blocks give exact plateaus. Each `by` group uses its own represented levels
+baseline. Later levels add non-negative log-q increments
+`dq`, fitted directly with a zero lower bound and initialized at 0.05. Zero
+increments allow exact plateaus between separate levels; pooled blocks also
+give exact plateaus. Estimates and SEs for `dq` share the increment scale;
+Wald inference is only a local approximation at an active boundary.
+Each `by` group uses its own represented levels
 (at least two) and independent steps. Ordinary terms supply baselines:
 omitting `survey` in the last example shares one intercept across surveys.
 Other ordinary covariates are held constant when interpreting monotonicity.

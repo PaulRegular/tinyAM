@@ -93,8 +93,8 @@ Defaults to \code{TRUE}. Note that one-step-ahead residuals are not currently wo
 scale of the log-observation residuals) for index-at-age data. When provided,
 the intercept is removed from \code{sd_form} so supplied SDs act as offsets.
 \item \code{q_form}: formula for catchability, evaluated on the index table. Ordinary
-\code{~ q_block} is unconstrained; \code{~ mono(q_block)} increases across ordered
-blocks. See \code{\link[=mono]{mono()}} for independent increasing curves by survey.
+\code{~ q_block} is unconstrained; \code{~ mono(q_block)} is non-decreasing across ordered
+blocks. See \code{\link[=mono]{mono()}} for independent non-decreasing curves by survey.
 \item \code{fill_missing}: logical – fill missing values, and zeros, using random effects?
 Defaults to \code{TRUE}. Note that one-step-ahead residuals are not currently working when \code{TRUE}.
 }}
@@ -158,7 +158,7 @@ offsets).
 \item \code{index_settings$q_form} is evaluated on the index table to produce
 \code{q_modmat} and \strong{log-scale} parameters \code{log_q}.
 Additive \code{\link[=mono]{mono()}} terms instead contribute cumulative indicators
-in \code{q_mono_modmat}, with positive log-q step magnitudes \code{exp(log_dq)}.
+in \code{q_mono_modmat}, with directly fitted non-negative log-q increments \code{dq}.
 \code{q_mono_steps} records each transition and its optional group.
 \item If \code{M_settings$mu_form} is provided, \code{M_modmat <- model.matrix(mu_form, data = obs$weight)} and the resulting coefficients are parameters \code{mu_m}.
 These coefficients are applied on the log scale to build \eqn{M}, but

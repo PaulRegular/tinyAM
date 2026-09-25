@@ -259,7 +259,7 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #' - `index_settings$q_form` is evaluated on the index table to produce
 #'   `q_modmat` and **log-scale** parameters `log_q`.
 #'   Additive [mono()] terms instead contribute cumulative indicators
-#'   in `q_mono_modmat`, with positive log-q step magnitudes `exp(log_dq)`.
+#'   in `q_mono_modmat`, with directly fitted non-negative log-q increments `dq`.
 #'   `q_mono_steps` records each transition and its optional group.
 #' - If `M_settings$mu_form` is provided, `M_modmat <- model.matrix(mu_form,
 #'   data = obs$weight)` and the resulting coefficients are parameters `mu_m`.
@@ -364,8 +364,8 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #'   scale of the log-observation residuals) for index-at-age data. When provided,
 #'   the intercept is removed from `sd_form` so supplied SDs act as offsets.
 #' - `q_form`: formula for catchability, evaluated on the index table. Ordinary
-#'   `~ q_block` is unconstrained; `~ mono(q_block)` increases across ordered
-#'   blocks. See [mono()] for independent increasing curves by survey.
+#'   `~ q_block` is unconstrained; `~ mono(q_block)` is non-decreasing across ordered
+#'   blocks. See [mono()] for independent non-decreasing curves by survey.
 #' - `fill_missing`: logical – fill missing values, and zeros, using random effects?
 #'   Defaults to `TRUE`. Note that one-step-ahead residuals are not currently working when `TRUE`.
 #' @param proj_settings Optional list with elements:

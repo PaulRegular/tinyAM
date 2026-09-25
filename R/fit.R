@@ -68,6 +68,9 @@
 #' Builds data with [make_dat()], initializes parameters with [make_par()],
 #' constructs the RTMB objective, optimizes it, and returns a fitted object with
 #' reports and standard errors.
+#' [mono()] increments `dq` are optimized directly with a lower bound of zero.
+#' Their standard errors remain on the increment scale. At this boundary,
+#' normal-approximation intervals are descriptive local curvature summaries.
 #'
 #' @details
 #' Random-effect blocks are chosen automatically from the model settings:
@@ -153,6 +156,9 @@ fit_tam <- function(
   if (!is.null(start_par)) {
     par <- .merge_start_par(par, start_par)
   }
+  if (!is.null(par$dq) && any(!is.finite(par$dq) | par$dq < 0)) {
+    cli::cli_abort("Starting {.arg dq} increments must be finite and non-negative.")
+  }
 
   ran <- c("log_f", "log_r")
   if (dat$N_settings$init == "random") {
@@ -182,8 +188,11 @@ fit_tam <- function(
     silent = silent
   )
 
+  lower <- rep(-Inf, length(obj$par))
+  lower[names(obj$par) == "dq"] <- 0
   opt <- try(stats::nlminb(
     obj$par, obj$fn, obj$gr,
+    lower = lower,
     control = list(eval.max = 1000, iter.max = 1000)
   ))
   rep <- obj$report()
@@ -428,11 +437,14 @@ fit_hindcast <- function(fit, ...) {
 #'
 #' @description
 #' Checks two basics and returns `TRUE` only if all pass:
-#' (1) maximum absolute gradient from `sdreport`,
+#' (1) maximum absolute gradient from `sdreport`, projected at active `dq` bounds,
 #' (2) Hessian positive-definite flag.
 #'
 #' If all pass, a short success message is printed unless `quiet = TRUE`.
 #' If any check fails, a warning is emitted (not suppressed by `quiet`).
+#' For a `dq` estimate of zero, a positive derivative satisfies the lower-bound
+#' optimality condition and is treated as zero in this check. The raw gradient
+#' stored in `sdreport` is unchanged.
 #'
 #' @param fit A fitted TAM object containing `$sdrep`.
 #' @param grad_tol Numeric tolerance for `max|grad|`. Default `1e-3`.
@@ -480,6 +492,12 @@ check_convergence <- function(fit, grad_tol = 1e-3, quiet = TRUE) {
     cli::cli_abort("`{.arg fit}` must provide a Hessian flag via `sdrep$pdHess`.")
   }
 
+  # At an active lower bound a positive derivative satisfies the KKT condition.
+  # Keep sdreport's raw gradient intact for users inspecting diagnostics.
+  if (!is.null(sdrep$par.fixed)) {
+    active <- names(sdrep$par.fixed) == "dq" & sdrep$par.fixed == 0 & is.finite(grad)
+    grad[active] <- pmin(grad[active], 0)
+  }
   max_grad <- max(abs(grad))
   grad_ok  <- is.finite(max_grad) && max_grad <= grad_tol
   hess_ok  <- isTRUE(pd_hess)

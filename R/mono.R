@@ -6,11 +6,13 @@
 #' Supply factor levels in the scientifically intended order.
 #'
 #' The first represented level has no increment. Subsequent log-q levels add
-#' cumulative positive magnitudes
-#' `dq = exp(log_dq)`. These are increments on the log-q scale, not absolute q.
-#' Steps start at 0.05, giving a nearly flat initial curve. Separate levels have
-#' strictly positive step magnitudes, which can approach zero; exact plateaus
-#' are represented by pooling observations into the same level.
+#' cumulative non-negative increments `dq`, fitted directly with a lower bound
+#' of zero by [fit_tam()]. These are increments on the log-q scale, not absolute
+#' q. Steps start at 0.05. A zero step gives an exact plateau between separate
+#' levels at a finite parameter value; pooled levels also retain identical q.
+#' When optimizing [nll_fun()] directly, supply the same zero lower bounds for
+#' `dq`. Standard errors describe local curvature on the increment scale;
+#' inference at an active boundary need not follow a symmetric normal law.
 #'
 #' `by` gives each group independent steps, using only levels represented in
 #' that group, in their declared order. Each group needs at least two levels.

@@ -103,8 +103,8 @@ Defaults to \code{TRUE}. Note that one-step-ahead residuals are not currently wo
 scale of the log-observation residuals) for index-at-age data. When provided,
 the intercept is removed from \code{sd_form} so supplied SDs act as offsets.
 \item \code{q_form}: formula for catchability, evaluated on the index table. Ordinary
-\code{~ q_block} is unconstrained; \code{~ mono(q_block)} increases across ordered
-blocks. See \code{\link[=mono]{mono()}} for independent increasing curves by survey.
+\code{~ q_block} is unconstrained; \code{~ mono(q_block)} is non-decreasing across ordered
+blocks. See \code{\link[=mono]{mono()}} for independent non-decreasing curves by survey.
 \item \code{fill_missing}: logical – fill missing values, and zeros, using random effects?
 Defaults to \code{TRUE}. Note that one-step-ahead residuals are not currently working when \code{TRUE}.
 }}
@@ -144,6 +144,9 @@ standardized residuals (see \code{\link[=tidy_obs_pred]{tidy_obs_pred()}}).
 Builds data with \code{\link[=make_dat]{make_dat()}}, initializes parameters with \code{\link[=make_par]{make_par()}},
 constructs the RTMB objective, optimizes it, and returns a fitted object with
 reports and standard errors.
+\code{\link[=mono]{mono()}} increments \code{dq} are optimized directly with a lower bound of zero.
+Their standard errors remain on the increment scale. At this boundary,
+normal-approximation intervals are descriptive local curvature summaries.
 }
 \details{
 Random-effect blocks are chosen automatically from the model settings:

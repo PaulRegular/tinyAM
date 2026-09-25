@@ -110,8 +110,8 @@ and \code{logit_phi_m} (AR1) or an approximate RW/IID penalty.
 Here \code{sd_catch_modmat \%*\% log_sd_catch} adjusts the supplied observation SDs for catch-at-age,
 \code{sd_index_modmat \%*\% log_sd_index} does the same for indices-at-age, and \code{q_modmat \%*\% log_q}
 controls age- (or block-) specific catchability.
-With \code{\link[=mono]{mono()}} terms, \code{q_mono_modmat \%*\% exp(log_dq)} is added to this
-ordinary component. Cumulative indicators enforce increasing q,
+With \code{\link[=mono]{mono()}} terms, \code{q_mono_modmat \%*\% dq} is added to this
+ordinary component. Non-negative increments enforce non-decreasing q,
 with independent steps per \code{by} group. The survey observation
 equation and its SD are otherwise unchanged.
 }

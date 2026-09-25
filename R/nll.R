@@ -166,8 +166,8 @@ rprocess_2d <- function(ny, na, phi = c(0, 0), sd = 1) {
 #'   Here `sd_catch_modmat %*% log_sd_catch` adjusts the supplied observation SDs for catch-at-age,
 #'   `sd_index_modmat %*% log_sd_index` does the same for indices-at-age, and `q_modmat %*% log_q`
 #'   controls age- (or block-) specific catchability.
-#'   With [mono()] terms, `q_mono_modmat %*% exp(log_dq)` is added to this
-#'   ordinary component. Cumulative indicators enforce increasing q,
+#'   With [mono()] terms, `q_mono_modmat %*% dq` is added to this
+#'   ordinary component. Non-negative increments enforce non-decreasing q,
 #'   with independent steps per `by` group. The survey observation
 #'   equation and its SD are otherwise unchanged.
 #'
@@ -418,7 +418,7 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   sd_obs <- c(sd_catch, sd_index)
   log_q_obs <- drop(q_modmat %*% log_q) # length = number of survey index rows
   if (!is.null(dat$q_mono_modmat)) {
-    log_q_obs <- log_q_obs + drop(dat$q_mono_modmat %*% exp(log_dq))
+    log_q_obs <- log_q_obs + drop(dat$q_mono_modmat %*% dq)
   }
   samp_time <- obs_map$samp_time
 
