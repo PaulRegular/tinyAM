@@ -26,11 +26,23 @@ transparent, and consistent with existing package structure.
 - Every exported function must have roxygen2 documentation.
 - Use roxygen markdown syntax.
 - Document new arguments in the function where they are introduced.
-- Include mathematical definitions for model parameters/processes when useful.
+- Include mathematical definitions for model parameters and processes when useful.
 - Keep terminology consistent across `make_dat()`, `make_par()`, `nll_fun()`,
   simulation, tidying, and documentation.
 - Regenerate documentation after modifying exported interfaces.
-
+- Write user-facing documentation primarily for fisheries biologists and ecologists
+  with basic statistical training.
+- Use plain biological and modelling language first.
+- Explain what an option does, what assumption it represents, and when a user might
+  choose it before describing implementation details.
+- Keep equations and statistical precision where useful, but place more technical
+  material such as parameterizations, likelihood details, transformations,
+  covariance structures, and implementation terminology in `Details` or clearly
+  identified technical sections.
+- Define statistical jargon when it cannot reasonably be avoided.
+- Write examples to emphasize specifying, fitting, and interpreting assessment
+  models rather than package internals.
+  
 ## Errors and messages
 
 - Use `cli::cli_abort()` for user-facing errors.
