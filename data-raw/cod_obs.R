@@ -9,7 +9,7 @@ catch$age <- as.numeric(catch$age)
 catch$year <- as.numeric(catch$year)
 
 # Label pre-moratorium, limited fishing gear + rec, closed, stewardship + rec / post-moratorium blocks
-catch$F_y_block <- cut_years(catch$year, c(min(catch$year), 1992, 1998, 2002, 2006, max(catch$year)))
+catch$F_y_block <- cut_years(catch$year, c(min(catch$year), 1992, 1998, 2002, 2006, 2023, max(catch$year)))
 catch$F_a_block <- cut_ages(catch$age, seq(min(catch$age), max(catch$age), 1))
 
 index <- inputs$index |>
