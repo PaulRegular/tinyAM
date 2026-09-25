@@ -191,6 +191,8 @@ tidy_rep <- function(fit) {
 #' @description
 #' Applies a transformation (e.g., `exp`) and optional rescaling to the columns
 #' `est`, `lwr`, and `upr` of a data frame.
+#' SE columns and their scale labels are left unchanged; this helper does not
+#' calculate transformed standard errors.
 #'
 #' @param data A data frame containing columns `est`, `lwr`, and `upr`.
 #' @param transform A function applied to `est`, `lwr`, and `upr`
@@ -232,8 +234,14 @@ trans_est <- function(data, transform = exp, scale = 1) {
 #' - Estimates are on the log scale and are transformed with `exp` via [trans_est()].
 #' - List element names are cleaned by removing a leading `"log_"` prefix.
 #'
-#' The interval is constructed as `est ± z * sd` with
+#' The interval is constructed as `est ± z * se` with
 #' `z = qnorm(1 - (1 - interval) / 2)`.
+#' Estimates and confidence limits are then exponentiated. The `se` column is
+#' the standard error on the log scale, labelled by `se_scale = "log"`.
+#' A small log-scale SE approximates the coefficient of variation (CV):
+#' for example, `0.10` is approximately 10% relative uncertainty. This
+#' approximation becomes less accurate for large SEs; use the confidence limits
+#' to describe uncertainty on the reported scale.
 #'
 #' @param fit A fitted TAM object as returned by [fit_tam()].
 #' @param interval Confidence level in `(0, 1)`; default `0.95`.
@@ -241,7 +249,7 @@ trans_est <- function(data, transform = exp, scale = 1) {
 #' @return
 #' A named list of data frames (one per series), each with columns:
 #'
-#' - `year`, `est`, `sd`, `lwr`, `upr`, `is_proj` — after applying the chosen transform.
+#' - `year`, `est`, `lwr`, `upr`, `se`, `se_scale`, `is_proj`.
 #'
 #' @example inst/examples/example_fit_default.R
 #' @examples
@@ -256,13 +264,14 @@ tidy_sdrep <- function(fit, interval = 0.95) {
 
   ## assumes all ADREPORTED objects are equal length to years and are in log space
   vals <- as.list(fit$sdrep, "Estimate", report = TRUE)
-  sds <- as.list(fit$sdrep, "Std. Error", report = TRUE)
+  ses <- as.list(fit$sdrep, "Std. Error", report = TRUE)
   df <- lapply(seq_along(vals), function(i) {
     d <- data.frame(year = fit$dat$years,
                     est = vals[[i]],
-                    sd = sds[[i]],
-                    lwr = vals[[i]] - qnorm(1 - ((1 - interval) / 2)) * sds[[i]],
-                    upr = vals[[i]] + qnorm(1 - ((1 - interval) / 2)) * sds[[i]],
+                    lwr = vals[[i]] - qnorm(1 - ((1 - interval) / 2)) * ses[[i]],
+                    upr = vals[[i]] + qnorm(1 - ((1 - interval) / 2)) * ses[[i]],
+                    se = ses[[i]],
+                    se_scale = "log",
                     is_proj = fit$dat$is_proj) |>
       trans_est(transform = exp)
   })
@@ -312,6 +321,15 @@ tidy_pop <- function(fit, interval = 0.95) {
 #'
 #' - `log_`  → `exp()` (and the `log_` prefix is dropped, e.g. `log_sd_r` → `sd_r`)
 #' - `logit_` → `plogis()` (and the `logit_` prefix is dropped, e.g. `logit_phi_f` → `phi_f`)
+#'
+#' Estimates and confidence limits are shown on the reported scale. SEs remain
+#' on the fitted scale, identified by `se_scale`: `"log"`, `"logit"`, or
+#' `"reported"` (the same scale as the displayed estimate). A small log-scale
+#' SE approximates a CV: `0.10` is approximately 10% relative uncertainty.
+#' This interpretation does not apply to logit or reported-scale SEs, and is
+#' unreliable for large log-scale SEs. Confidence limits are the preferred
+#' summary of uncertainty on the reported scale.
+#'
 #' - For [mono()] catchability terms, `dq` is a non-negative step on the
 #'   log-q scale. Estimates and SEs are reported directly on this same scale,
 #'   with untransformed Wald intervals (which may cross zero at a boundary).
@@ -348,8 +366,8 @@ tidy_pop <- function(fit, interval = 0.95) {
 #' @return
 #' A list with two elements:
 #' - `fixed`: a data frame stacking all fixed-effect parameters with columns
-#'   `par`, `est`, `se`, `lwr`, `upr`, plus any index columns such as
-#'   `coef`, `year`, `age`.
+#'   parameter/index columns (`par`, `coef`, `year`, `age`, as applicable), then
+#'   `est`, `lwr`, `upr`, `se`, `se_scale`, and `is_proj` when applicable.
 #' - `random`: a named list of data frames (one per random block) with the same
 #'   columns as `fixed` (indices appropriate to each random effect).
 #'
@@ -397,6 +415,14 @@ tidy_par <- function(fit, interval = 0.95) {
     df$lwr <- df$est - z * df$se
     df$upr <- df$est + z * df$se
 
+    df$se_scale <- if (startsWith(nm, "logit_")) {
+      "logit"
+    } else if (startsWith(nm, "log_")) {
+      "log"
+    } else {
+      "reported"
+    }
+
     if (startsWith(nm, "logit_")) {
       df <- trans_est(df, transform = plogis, scale = 1)
       df$par <- sub("^logit_", "", df$par)
@@ -406,13 +432,18 @@ tidy_par <- function(fit, interval = 0.95) {
     } else {
       df <- trans_est(df, transform = NULL, scale = 1)
     }
-    df
+    values <- c("est", "lwr", "upr", "se", "se_scale")
+    df[, c(setdiff(names(df), c(values, "is_proj")), values,
+           intersect("is_proj", names(df))), drop = FALSE]
   }
 
   fixed  <- if (length(fix_nms)) stack_list(lapply(fix_nms, .par2df), label = NULL) else
-    data.frame(par = character(), est = numeric(), se = numeric(),
-               lwr = numeric(), upr = numeric(), check.names = FALSE)
+    data.frame(par = character(), est = numeric(), lwr = numeric(), upr = numeric(),
+               se = numeric(), se_scale = character(), check.names = FALSE)
   rownames(fixed) <- NULL
+  values <- c("est", "lwr", "upr", "se", "se_scale")
+  fixed <- fixed[, c(setdiff(names(fixed), c(values, "is_proj")), values,
+                     intersect("is_proj", names(fixed))), drop = FALSE]
 
   random <- stats::setNames(lapply(ran_nms, .par2df), ran_nms)
 

@@ -12,9 +12,8 @@ cod_obs$weight$collapse <- ifelse(cod_obs$weight$year %in% 1991:1994, 1, 0)
 ## - Should N deviations be iid or ar1?
 ## - Should M deviations be iid or ar1?
 ## - Should F deviations be approx rw or ar1?
-## All comparisons use the same exp N0 initialization, independent of process.
-## Regenerate both model lists and downstream retrospectives after changes to
-## the parameter structure; older serialized fits are not compatible.
+## All comparisons use the same exp N0 initialization and the
+## same baseline M assumption.
 
 dir.create("analysis/comp_retro/outputs", recursive = TRUE, showWarnings = FALSE)
 

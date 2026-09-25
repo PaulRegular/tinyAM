@@ -14,7 +14,7 @@ tidy_sdrep(fit, interval = 0.95)
 \value{
 A named list of data frames (one per series), each with columns:
 \itemize{
-\item \code{year}, \code{est}, \code{sd}, \code{lwr}, \code{upr}, \code{is_proj} — after applying the chosen transform.
+\item \code{year}, \code{est}, \code{lwr}, \code{upr}, \code{se}, \code{se_scale}, \code{is_proj}.
 }
 }
 \description{
@@ -30,8 +30,14 @@ Assumptions:
 \item List element names are cleaned by removing a leading \code{"log_"} prefix.
 }
 
-The interval is constructed as \verb{est ± z * sd} with
+The interval is constructed as \verb{est ± z * se} with
 \code{z = qnorm(1 - (1 - interval) / 2)}.
+Estimates and confidence limits are then exponentiated. The \code{se} column is
+the standard error on the log scale, labelled by \code{se_scale = "log"}.
+A small log-scale SE approximates the coefficient of variation (CV):
+for example, \code{0.10} is approximately 10\% relative uncertainty. This
+approximation becomes less accurate for large SEs; use the confidence limits
+to describe uncertainty on the reported scale.
 }
 \examples{
 fit <- fit_tam(

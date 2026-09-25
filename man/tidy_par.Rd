@@ -16,8 +16,8 @@ tidy_par(fit, interval = 0.95)
 A list with two elements:
 \itemize{
 \item \code{fixed}: a data frame stacking all fixed-effect parameters with columns
-\code{par}, \code{est}, \code{se}, \code{lwr}, \code{upr}, plus any index columns such as
-\code{coef}, \code{year}, \code{age}.
+parameter/index columns (\code{par}, \code{coef}, \code{year}, \code{age}, as applicable), then
+\code{est}, \code{lwr}, \code{upr}, \code{se}, \code{se_scale}, and \code{is_proj} when applicable.
 \item \code{random}: a named list of data frames (one per random block) with the same
 columns as \code{fixed} (indices appropriate to each random effect).
 }
@@ -30,6 +30,16 @@ back-transformed to the natural scale:
 \itemize{
 \item \code{log_}  → \code{exp()} (and the \code{log_} prefix is dropped, e.g. \code{log_sd_r} → \code{sd_r})
 \item \code{logit_} → \code{plogis()} (and the \code{logit_} prefix is dropped, e.g. \code{logit_phi_f} → \code{phi_f})
+}
+
+Estimates and confidence limits are shown on the reported scale. SEs remain
+on the fitted scale, identified by \code{se_scale}: \code{"log"}, \code{"logit"}, or
+\code{"reported"} (the same scale as the displayed estimate). A small log-scale
+SE approximates a CV: \code{0.10} is approximately 10\% relative uncertainty.
+This interpretation does not apply to logit or reported-scale SEs, and is
+unreliable for large log-scale SEs. Confidence limits are the preferred
+summary of uncertainty on the reported scale.
+\itemize{
 \item For \code{\link[=mono]{mono()}} catchability terms, \code{dq} is a non-negative step on the
 log-q scale. Estimates and SEs are reported directly on this same scale,
 with untransformed Wald intervals (which may cross zero at a boundary).
