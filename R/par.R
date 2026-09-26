@@ -75,6 +75,10 @@
 #'
 #' All scalar SD parameters are on the log scale, and AR(1) parameters are on
 #' the logit scale (later transformed by `plogis()` in the likelihood).
+#' Temporal RW processes have no correlation parameters. Their first process
+#' row supplies a conditional starting state during simulation and has no
+#' increment penalty. See [fit_tam()] for mean coefficients or SDs held fixed
+#' when they have no effect on the RW likelihood.
 #'
 #' @param dat A data list returned by [make_dat()], containing design matrices,
 #'   settings, and observation mappings. The shapes and presence/absence of

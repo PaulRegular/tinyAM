@@ -78,7 +78,8 @@ at the terminal age for transitions from year 1 to year 2 onward.
 Latent older-age states \code{log_n} contain years 2:Y only.
 If \code{N_settings$process != "off"}, residuals
 \eqn{\eta^N_{y,a} = \log N_{y,a} - \widehat{\log N}_{y,a}}
-are penalized by \code{\link[=dprocess_2d]{dprocess_2d()}} according to the chosen process.
+use Normal densities directly (IID), \code{\link[=dprocess_ar1]{dprocess_ar1()}} (AR1), or
+\code{\link[=dprocess_rw]{dprocess_rw()}} (RW).
 \item \strong{Fishing mortality:}
 \deqn{\log F_{y,a} = \log \mu^F_{y,a} + \eta^F_{y,a},}
 
@@ -87,8 +88,8 @@ where the log mean surface \eqn{\log \mu^F} comes from
 is provided, and is zero otherwise. The latent state \code{log_f} represents
 realized absolute log fishing mortality in observed years. Its process
 deviation is \code{eta_log_f = log_f - log_mu_F}, with \code{log_mu_F} restricted
-to those years. These deviations are penalized by \code{\link[=dprocess_2d]{dprocess_2d()}} using
-\code{F_settings$process} and \code{logit_phi_f} (AR1) or an approximate RW/IID penalty.
+to those years. These deviations use Normal densities directly for IID,
+\code{\link[=dprocess_ar1]{dprocess_ar1()}} for AR1, or \code{\link[=dprocess_rw]{dprocess_rw()}} for a temporal RW.
 \item \strong{Natural mortality:}
 \deqn{\log M_{y,a} = \log \mu^M_{y,a} + \eta^M_{y,a},}
 
@@ -97,8 +98,15 @@ When \code{M_settings$process != "off"}, the latent state \code{log_m} represent
 realized absolute log natural mortality from \code{M_settings$first_dev_year}
 onward. Its process deviation is \code{eta_log_m = log_m - log_mu_M}, with
 \code{log_mu_M} restricted to those years and the age-block starts. These
-deviations are penalized by \code{\link[=dprocess_2d]{dprocess_2d()}} using \code{M_settings$process}
-and \code{logit_phi_m} (AR1) or an approximate RW/IID penalty.
+deviations use Normal densities directly for IID, \code{\link[=dprocess_ar1]{dprocess_ar1()}} for
+AR1, or \code{\link[=dprocess_rw]{dprocess_rw()}} for RW.
+}
+
+\strong{Temporal RW:} successive rows of each process-deviation matrix differ
+by independent Normal increments with SD \verb{exp(log_sd_*)}. Columns are
+independent. There is no AR parameter, mean reversion, or constraint on
+the overall level, and the first process row has no increment penalty.
+\itemize{
 \item \strong{Observations:} catch-at-age and index-at-age on the log scale:
 \deqn{\log C_{y,a} \sim \mathcal{N}\!\left(
       \log\!\left[N_{y,a}\,\frac{F_{y,a}}{Z_{y,a}}\,(1-e^{-Z_{y,a}})\right],
@@ -123,8 +131,15 @@ When \code{simulate = TRUE}, the function:
 the fixed first-year anchor \code{log_r0},
 \code{log_f} and optional \code{log_m} by adding process deviations to their log
 mean surfaces, and optional \code{log_n} by adding process deviations to
-recursive cohort predictions. Process fields are drawn via \code{\link[=rprocess_2d]{rprocess_2d()}};
-recruitment increments use \code{\link[stats:Normal]{stats::rnorm()}}. Initial states without a
+recursive cohort predictions. IID fields use \code{\link[stats:Normal]{stats::rnorm()}} directly;
+AR1 fields use \code{\link[=rprocess_ar1]{rprocess_ar1()}}; RW
+fields use \code{\link[=rprocess_rw]{rprocess_rw()}}, retaining the first supplied process state
+and drawing subsequent deviations conditionally. For N, the first
+cohort residual is computed from the retained \code{log_n[1, ]} and the
+simulated initial population and mortality. Thus the first \code{log_n}
+row remains unchanged, while later rows follow the simulated recursion.
+
+Recruitment increments use \code{\link[stats:Normal]{stats::rnorm()}}. Initial states without a
 specified process distribution retain their supplied values. Random
 initial-age residuals are drawn after F/M and Z are constructed, then
 \code{log_n0} is built recursively from \code{log_r0}. Fixed \code{log_n0} states under
@@ -146,7 +161,8 @@ The function expects a \code{dat} list in its lexical scope (created by
 \code{\link[=make_dat]{make_dat()}}) containing data matrices/vectors and model matrices
 (\code{SW}, \code{MO}, \code{obs_map}, \code{sd_catch_modmat}, \code{sd_index_modmat}, \code{q_modmat},
 \code{F_modmat}, \code{M_modmat}, settings lists, etc.).
-It also relies on helper functions \code{\link[=dprocess_2d]{dprocess_2d()}} and \code{\link[=rprocess_2d]{rprocess_2d()}}
+It also relies on \code{\link[=dprocess_ar1]{dprocess_ar1()}}, \code{\link[=rprocess_ar1]{rprocess_ar1()}}, \code{\link[=dprocess_rw]{dprocess_rw()}},
+and \code{\link[=rprocess_rw]{rprocess_rw()}}
 for process penalties and simulation.
 }
 
@@ -156,7 +172,7 @@ dat <- make_dat(
   years = 1983:2024,
   ages = 2:14,
   N_settings = list(process = "iid", init = "exp"),
-  F_settings = list(process = "approx_rw", mu_form = NULL),
+  F_settings = list(process = "rw", mu_form = NULL),
   M_settings = list(process = "off", mu_supplied = ~ I(0.3)),
   catch_settings = list(sd_form = ~ 1),
   index_settings = list(sd_form = ~ 1, q_form = ~ q_block)
@@ -177,5 +193,5 @@ sims  <- nll_fun(p_hat, dat, simulate = TRUE)
 }
 \seealso{
 \code{\link[=make_dat]{make_dat()}}, \code{\link[=make_par]{make_par()}}, \code{\link[=fit_tam]{fit_tam()}}, \code{\link[=sim_tam]{sim_tam()}},
-\code{\link[=dprocess_2d]{dprocess_2d()}}, \code{\link[=rprocess_2d]{rprocess_2d()}}
+\code{\link[=dprocess_ar1]{dprocess_ar1()}}, \code{\link[=rprocess_ar1]{rprocess_ar1()}}
 }

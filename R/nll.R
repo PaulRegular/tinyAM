@@ -1,14 +1,15 @@
 
-#' 2D Gaussian Process Densities and Simulators (age × year)
+#' Separable AR1 process: density and simulation
 #'
-#' @title Two–dimensional process error: density and simulation
+#' @title Separable AR1 process error: density and simulation
 #'
 #' @description
-#' Helpers for working with simple age × year process-error fields, assuming a
-#' separable 2D AR(1) structure.
+#' Helpers for a two-dimensional (2D) AR1 process, with separable correlation
+#' across years and ages. TAM uses these helpers only for `process = "ar1"`;
+#' IID processes use Normal densities and draws directly.
 #'
-#' - [dprocess_2d()] returns the log-density contribution for a given matrix `x`.
-#' - [rprocess_2d()] generates a matrix draw with the requested dependence structure.
+#' - [dprocess_ar1()] returns the log-density contribution for a given matrix `x`.
+#' - [rprocess_ar1()] generates a matrix draw with the requested dependence structure.
 #'
 #' @details
 #' Let \eqn{X \in \mathbb{R}^{n_y \times n_a}} denote the process on
@@ -25,30 +26,30 @@
 #' \eqn{\phi^{|i-j|}}.
 #'
 #' @param x A numeric matrix (\eqn{n_y \times n_a}) of process residuals
-#'   for [dprocess_2d()].
+#'   for [dprocess_ar1()].
 #' @param ny,na Positive integers: numbers of years and ages for
-#'   [rprocess_2d()].
+#'   [rprocess_ar1()].
 #' @param phi Length-2 numeric vector \code{c(phi_age, phi_year)} with
-#'   values in \eqn{(0, 1)} for AR(1).
+#'   values in \eqn{(-1, 1)} for AR(1); zero gives independence.
 #' @param sd Positive scalar \eqn{\sigma}.
 #'
 #' @return
-#' - [dprocess_2d()]: a single numeric log-density value.
-#' - [rprocess_2d()]: a numeric matrix of dimension \eqn{n_y \times n_a}.
+#' - [dprocess_ar1()]: a single numeric log-density value.
+#' - [rprocess_ar1()]: a numeric matrix of dimension \eqn{n_y \times n_a}.
 #'
 #' @examples
 #' # Simulate then calculate log-density
 #' set.seed(1)
-#' X_ar1 <- rprocess_2d(ny = 10, na = 8, sd = 0.3, phi = c(0.5, 0.9))
-#' dprocess_2d(X_ar1, sd = 0.3, phi = c(0.5, 0.9))
+#' X_ar1 <- rprocess_ar1(ny = 10, na = 8, sd = 0.3, phi = c(0.5, 0.9))
+#' dprocess_ar1(X_ar1, sd = 0.3, phi = c(0.5, 0.9))
 #'
 #' @seealso
 #' [RTMB::dseparable()], [RTMB::dautoreg()], [MASS::mvrnorm()]
 #'
 #' @import RTMB
-#' @rdname process_2d
+#' @rdname process_ar1
 #' @export
-dprocess_2d <- function(x, phi = c(0, 0), sd = 1) {
+dprocess_ar1 <- function(x, phi = c(0, 0), sd = 1) {
 
   phi_age  <- phi[1]
   phi_year <- phi[2]
@@ -59,9 +60,9 @@ dprocess_2d <- function(x, phi = c(0, 0), sd = 1) {
 
 }
 
-#' @rdname process_2d
+#' @rdname process_ar1
 #' @export
-rprocess_2d <- function(ny, na, phi = c(0, 0), sd = 1) {
+rprocess_ar1 <- function(ny, na, phi = c(0, 0), sd = 1) {
 
   phi_age  <- phi[1]
   phi_year <- phi[2]
@@ -76,6 +77,51 @@ rprocess_2d <- function(ny, na, phi = c(0, 0), sd = 1) {
   z <- MASS::mvrnorm(1L, mu = rep(0, ny * na), Sigma = Sigma)
   return(matrix(z, ny, na))
 
+}
+
+
+#' Temporal random-walk process: density and simulation
+#'
+#' @description
+#' A random walk allows process deviations to persist and change from one year
+#' to the next, independently for each age or age block. There is no tendency
+#' to return to a mean and no correlation between ages.
+#'
+#' @details
+#' For a year by age matrix `x`, increments
+#' `x[y, a] - x[y - 1, a]` are independent Normal variables with mean zero
+#' and standard deviation `sd`. The first row has no increment density.
+#' [rprocess_rw()] keeps that starting row and simulates subsequent rows
+#' conditionally. In TAM these helpers act on process deviations from the
+#' existing mean surfaces (F/M) or cohort predictions (N).
+#'
+#' @param x A numeric matrix with years in rows and ages or age blocks in columns.
+#'   For simulation, only the first row supplies starting values.
+#' @param sd Positive scalar standard deviation of year-to-year increments.
+#' @return [dprocess_rw()] returns the summed log density of increments;
+#'   [rprocess_rw()] returns a matrix with the dimensions and names of `x`.
+#' @examples
+#' x <- matrix(0, 5, 2)
+#' set.seed(1)
+#' x <- rprocess_rw(x, sd = 0.2)
+#' dprocess_rw(x, sd = 0.2)
+#' @rdname process_rw
+#' @export
+dprocess_rw <- function(x, sd = 1) {
+  if (nrow(x) < 2L) return(0)
+  increments <- x[-1, , drop = FALSE] - x[-nrow(x), , drop = FALSE]
+  sum(RTMB::dnorm(increments, 0, sd, log = TRUE))
+}
+
+#' @rdname process_rw
+#' @export
+rprocess_rw <- function(x, sd = 1) {
+  if (nrow(x) > 1L) {
+    for (y in 2:nrow(x)) {
+      x[y, ] <- x[y - 1L, ] + stats::rnorm(ncol(x), 0, sd)
+    }
+  }
+  x
 }
 
 
@@ -131,7 +177,8 @@ rprocess_2d <- function(ny, na, phi = c(0, 0), sd = 1) {
 #'   Latent older-age states `log_n` contain years 2:Y only.
 #'   If `N_settings$process != "off"`, residuals
 #'   \eqn{\eta^N_{y,a} = \log N_{y,a} - \widehat{\log N}_{y,a}}
-#'   are penalized by [dprocess_2d()] according to the chosen process.
+#'   use Normal densities directly (IID), [dprocess_ar1()] (AR1), or
+#'   [dprocess_rw()] (RW).
 #'
 #' - **Fishing mortality:**
 #'   \deqn{\log F_{y,a} = \log \mu^F_{y,a} + \eta^F_{y,a},}
@@ -141,8 +188,8 @@ rprocess_2d <- function(ny, na, phi = c(0, 0), sd = 1) {
 #'   is provided, and is zero otherwise. The latent state `log_f` represents
 #'   realized absolute log fishing mortality in observed years. Its process
 #'   deviation is `eta_log_f = log_f - log_mu_F`, with `log_mu_F` restricted
-#'   to those years. These deviations are penalized by [dprocess_2d()] using
-#'   `F_settings$process` and `logit_phi_f` (AR1) or an approximate RW/IID penalty.
+#'   to those years. These deviations use Normal densities directly for IID,
+#'   [dprocess_ar1()] for AR1, or [dprocess_rw()] for a temporal RW.
 #'
 #' - **Natural mortality:**
 #'   \deqn{\log M_{y,a} = \log \mu^M_{y,a} + \eta^M_{y,a},}
@@ -152,8 +199,13 @@ rprocess_2d <- function(ny, na, phi = c(0, 0), sd = 1) {
 #'   realized absolute log natural mortality from `M_settings$first_dev_year`
 #'   onward. Its process deviation is `eta_log_m = log_m - log_mu_M`, with
 #'   `log_mu_M` restricted to those years and the age-block starts. These
-#'   deviations are penalized by [dprocess_2d()] using `M_settings$process`
-#'   and `logit_phi_m` (AR1) or an approximate RW/IID penalty.
+#'   deviations use Normal densities directly for IID, [dprocess_ar1()] for
+#'   AR1, or [dprocess_rw()] for RW.
+#'
+#' **Temporal RW:** successive rows of each process-deviation matrix differ
+#' by independent Normal increments with SD `exp(log_sd_*)`. Columns are
+#' independent. There is no AR parameter, mean reversion, or constraint on
+#' the overall level, and the first process row has no increment penalty.
 #'
 #' - **Observations:** catch-at-age and index-at-age on the log scale:
 #'   \deqn{\log C_{y,a} \sim \mathcal{N}\!\left(
@@ -178,8 +230,15 @@ rprocess_2d <- function(ny, na, phi = c(0, 0), sd = 1) {
 #'    the fixed first-year anchor `log_r0`,
 #'    `log_f` and optional `log_m` by adding process deviations to their log
 #'    mean surfaces, and optional `log_n` by adding process deviations to
-#'    recursive cohort predictions. Process fields are drawn via [rprocess_2d()];
-#'    recruitment increments use [stats::rnorm()]. Initial states without a
+#'    recursive cohort predictions. IID fields use [stats::rnorm()] directly;
+#'    AR1 fields use [rprocess_ar1()]; RW
+#'    fields use [rprocess_rw()], retaining the first supplied process state
+#'    and drawing subsequent deviations conditionally. For N, the first
+#'    cohort residual is computed from the retained `log_n[1, ]` and the
+#'    simulated initial population and mortality. Thus the first `log_n`
+#'    row remains unchanged, while later rows follow the simulated recursion.
+#'
+#'    Recruitment increments use [stats::rnorm()]. Initial states without a
 #'    specified process distribution retain their supplied values. Random
 #'    initial-age residuals are drawn after F/M and Z are constructed, then
 #'    `log_n0` is built recursively from `log_r0`. Fixed `log_n0` states under
@@ -216,7 +275,8 @@ rprocess_2d <- function(ny, na, phi = c(0, 0), sd = 1) {
 #' [make_dat()]) containing data matrices/vectors and model matrices
 #' (`SW`, `MO`, `obs_map`, `sd_catch_modmat`, `sd_index_modmat`, `q_modmat`,
 #' `F_modmat`, `M_modmat`, settings lists, etc.).
-#' It also relies on helper functions [dprocess_2d()] and [rprocess_2d()]
+#' It also relies on [dprocess_ar1()], [rprocess_ar1()], [dprocess_rw()],
+#' and [rprocess_rw()]
 #' for process penalties and simulation.
 #'
 #' @example inst/examples/example_dat_default.R
@@ -238,7 +298,7 @@ rprocess_2d <- function(ny, na, phi = c(0, 0), sd = 1) {
 #'
 #' @seealso
 #' [make_dat()], [make_par()], [fit_tam()], [sim_tam()],
-#' [dprocess_2d()], [rprocess_2d()]
+#' [dprocess_ar1()], [rprocess_ar1()]
 #' @export
 nll_fun <- function(par, dat, simulate = FALSE) {
 
@@ -272,13 +332,25 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   log_mu_M[] <- log_mu_supplied_m + drop(M_modmat %*% mu_m)
   if (simulate) {
     log_r[] <- log_r0 + cumsum(stats::rnorm(n_years - 1, 0, sd_r))
-    log_f[] <- log_mu_F[!is_proj, ] +
-      rprocess_2d(nrow(log_f), ncol(log_f), sd = sd_f, phi = plogis(logit_phi_f))
+    mu_f <- log_mu_F[!is_proj, , drop = FALSE]
+    log_f[] <- mu_f + if (F_settings$process == "rw") {
+      rprocess_rw(log_f - mu_f, sd = sd_f)
+    } else if (F_settings$process == "iid") {
+      matrix(stats::rnorm(length(log_f), 0, sd_f), nrow(log_f), ncol(log_f))
+    } else {
+      rprocess_ar1(nrow(log_f), ncol(log_f), sd = sd_f, phi = plogis(logit_phi_f))
+    }
     if (M_settings$process != "off") {
       iy <- rownames(log_m)
       ia <- M_settings$age_block_start
-      log_m[] <- log_mu_M[iy, ia, drop = FALSE] +
-        rprocess_2d(nrow(log_m), ncol(log_m), sd = exp(log_sd_m), phi = plogis(logit_phi_m))
+      mu_m_process <- log_mu_M[iy, ia, drop = FALSE]
+      log_m[] <- mu_m_process + if (M_settings$process == "rw") {
+        rprocess_rw(log_m - mu_m_process, sd = exp(log_sd_m))
+      } else if (M_settings$process == "iid") {
+        matrix(stats::rnorm(length(log_m), 0, exp(log_sd_m)), nrow(log_m), ncol(log_m))
+      } else {
+        rprocess_ar1(nrow(log_m), ncol(log_m), sd = exp(log_sd_m), phi = plogis(logit_phi_m))
+      }
     }
   }
 
@@ -337,14 +409,21 @@ nll_fun <- function(par, dat, simulate = FALSE) {
     log_N[-1, -1] <- log_n
   }
   eta_log_N <- matrix(0, n_years - 1, n_ages - 1)
-  if (simulate && N_settings$process != "off") {
-    eta_log_N <- rprocess_2d(n_years - 1, n_ages - 1,
+  if (simulate && N_settings$process == "iid") {
+    eta_log_N[] <- stats::rnorm(length(eta_log_N), 0, exp(log_sd_n))
+  } else if (simulate && N_settings$process == "ar1") {
+    eta_log_N <- rprocess_ar1(n_years - 1, n_ages - 1,
                             sd = exp(log_sd_n), phi = plogis(logit_phi_n))
   }
   for (y in Y) {
     pred_log_N[y, A] <- log_N[y - 1, A - 1] - Z[y - 1, A - 1]
     pred_log_N[y, n_ages] <- RTMB::logspace_add(pred_log_N[y, n_ages],
                                               log_N[y - 1, n_ages] - Z[y - 1, n_ages])
+    if (simulate && N_settings$process == "rw" && y == 2L) {
+      # The first cohort residual has no RW density: retain its supplied state.
+      eta_log_N[1, ] <- log_n[1, ] - pred_log_N[y, A]
+      eta_log_N <- rprocess_rw(eta_log_N, sd = exp(log_sd_n))
+    }
     if (N_settings$process == "off" || simulate) {
       log_N[y, A] <- pred_log_N[y, A] + eta_log_N[y - 1, ]
     }
@@ -374,8 +453,13 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   if (N_settings$process != "off") {
     eta_log_N <- log_N[-1, -1, drop = FALSE] - pred_log_N[-1, -1, drop = FALSE]
     sd_n <- exp(log_sd_n)
-    phi <- plogis(logit_phi_n)
-    jnll <- jnll - dprocess_2d(eta_log_N, sd = sd_n, phi = phi)
+    jnll <- jnll - if (N_settings$process == "rw") {
+      dprocess_rw(eta_log_N, sd = sd_n)
+    } else if (N_settings$process == "iid") {
+      sum(RTMB::dnorm(eta_log_N, 0, sd_n, log = TRUE))
+    } else {
+      dprocess_ar1(eta_log_N, sd = sd_n, phi = plogis(logit_phi_n))
+    }
   }
 
   ## M process ----
@@ -385,15 +469,25 @@ nll_fun <- function(par, dat, simulate = FALSE) {
     ia  <- dat$M_settings$age_block_start
     eta_log_m <- log_m - log_mu_M[iy, ia, drop = FALSE]
     sd_m <- exp(log_sd_m)
-    phi  <- plogis(logit_phi_m)
-    jnll <- jnll - dprocess_2d(eta_log_m, sd = sd_m, phi = phi)
+    jnll <- jnll - if (M_settings$process == "rw") {
+      dprocess_rw(eta_log_m, sd = sd_m)
+    } else if (M_settings$process == "iid") {
+      sum(RTMB::dnorm(eta_log_m, 0, sd_m, log = TRUE))
+    } else {
+      dprocess_ar1(eta_log_m, sd = sd_m, phi = plogis(logit_phi_m))
+    }
   }
 
   ## F process ----
 
   eta_log_f <- log_F[!is_proj, ] - log_mu_F[!is_proj, ]
-  phi <- plogis(logit_phi_f)
-  jnll <- jnll - dprocess_2d(eta_log_f, sd = sd_f, phi = phi)
+  jnll <- jnll - if (F_settings$process == "rw") {
+    dprocess_rw(eta_log_f, sd = sd_f)
+  } else if (F_settings$process == "iid") {
+    sum(RTMB::dnorm(eta_log_f, 0, sd_f, log = TRUE))
+  } else {
+    dprocess_ar1(eta_log_f, sd = sd_f, phi = plogis(logit_phi_f))
+  }
 
 
   ## Observations ----

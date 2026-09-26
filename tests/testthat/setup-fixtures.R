@@ -22,7 +22,7 @@ make_test_dat <- function(...) {
 if (exists("cod_obs", inherits = TRUE)) {
   default_dat <- make_test_dat(
     N_settings = list(process = "iid", init = "exp"),
-    F_settings = list(process = "approx_rw", mu_form = NULL),
+    F_settings = list(process = "rw", mu_form = NULL),
     M_settings = list(process = "off", mu_form = NULL, mu_supplied = ~ I(0.3))
   )
   default_par <- make_par(default_dat)
@@ -38,7 +38,7 @@ if (requireNamespace("RTMB", quietly = TRUE) && exists("cod_obs", inherits = TRU
     years = YEARS,
     ages = AGES,
     N_settings = list(process = "iid", init = "exp"),
-    F_settings = list(process = "approx_rw", mu_form = NULL),
+    F_settings = list(process = "rw", mu_form = NULL),
     M_settings = list(process = "off", mu_supplied = ~ I(0.3)),
     silent = TRUE,
     grad_tol = 0.1

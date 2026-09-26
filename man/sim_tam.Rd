@@ -68,6 +68,9 @@ approximate posterior using the \strong{joint precision} (sparse Cholesky).
 This includes \code{log_n0} only for \code{N_settings$init = "random"}, generated
 by survivorship and IID residuals from the supplied \code{log_r0} anchor.
 Free initial-age states are retained.
+Temporal RW fields retain their supplied first process row and draw
+subsequent deviations conditionally; see \code{\link[=nll_fun]{nll_fun()}} for the N cohort
+construction. No distribution is imposed on the RW starting row.
 Fixed anchors may still vary through the chosen \code{par_uncertainty} draw.
 }
 }
@@ -81,7 +84,7 @@ fit <- fit_tam(
   years = 1983:2024,
   ages = 2:14,
   N_settings = list(process = "iid", init = "exp"),
-  F_settings = list(process = "approx_rw", mu_form = NULL),
+  F_settings = list(process = "rw", mu_form = NULL),
   M_settings = list(process = "off", mu_supplied = ~ I(0.3)),
   catch_settings = list(sd_form = ~ 1),
   index_settings = list(sd_form = ~ 1, q_form = ~ q_block),

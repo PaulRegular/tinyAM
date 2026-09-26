@@ -9,7 +9,7 @@ make_dat(
   years = NULL,
   ages = NULL,
   N_settings = list(process = "iid", init = "exp"),
-  F_settings = list(process = "approx_rw", mu_form = NULL),
+  F_settings = list(process = "rw", mu_form = NULL),
   M_settings = list(process = "off", mu_form = NULL, mu_supplied = ~I(0.2), age_breaks =
     NULL, first_dev_year = NULL),
   catch_settings = list(sd_form = ~1, sd_supplied = NULL, fill_missing = TRUE),
@@ -32,7 +32,7 @@ and \code{index} data, and averaged for \code{weight} and \code{maturity} data.}
 
 \item{N_settings}{A list with elements:
 \itemize{
-\item \code{process}: one of \code{"off"}, \code{"iid"}, \code{"approx_rw"}, or \code{"ar1"}.
+\item \code{process}: one of \code{"off"}, \code{"iid"}, \code{"rw"}, or \code{"ar1"}.
 \item \code{init}: \code{"exp"} (default), \code{"free"}, or \code{"random"}, independently of
 \code{process}. All use fixed first-year recruitment \code{log_r0} as the starting
 anchor. \code{"exp"} uses deterministic survivorship; \code{"free"} estimates fixed
@@ -42,7 +42,7 @@ IID survivorship residuals and separate SD \code{sd_n0}. See \strong{Details}.
 
 \item{F_settings}{A list with elements:
 \itemize{
-\item \code{process}: one of \code{"iid"}, \code{"approx_rw"}, or \code{"ar1"}.
+\item \code{process}: one of \code{"iid"}, \code{"rw"}, or \code{"ar1"}.
 \item \code{mu_form}: an optional formula for mean-\eqn{F} (coefficients estimated as
 \strong{log-scale} parameters \code{log_mu_f}).
 \item \code{mean_ages}: optional vector of ages to include in population weighted
@@ -51,7 +51,7 @@ average F (\code{F_bar}) calculations. All ages used if absent.
 
 \item{M_settings}{A list with elements:
 \itemize{
-\item \code{process}: one of \code{"off"}, \code{"iid"}, \code{"approx_rw"}, or \code{"ar1"}.
+\item \code{process}: one of \code{"off"}, \code{"iid"}, \code{"rw"}, or \code{"ar1"}.
 \item \code{mu_form}: optional formula for mean-\eqn{M} (applied on the log scale) built
 on \code{obs$weight}, yielding coefficients \code{mu_m}. These enter the log-\eqn{M}
 surface directly and may therefore be positive or negative; they intentionally
@@ -195,8 +195,12 @@ defines \code{M_settings$age_blocks} via \code{\link[=cut_ages]{cut_ages()}}, us
 to couple \eqn{M} deviations across age.
 \item The AR(1) correlation parameters are only initialized for
 processes whose \code{process == "ar1"}. Correlations are assumed to be 0
-when \code{process == "iid"}, and 0.99 when \code{process == "approx_rw"} to approximate
-a random walk across ages and years.
+when \code{process == "iid"}. A temporal random walk (\code{"rw"}) has independent
+year-to-year increments within each age or age block, with no age
+correlation or AR parameter. Its first process row is unpenalized.
+For N the walk acts on cohort residuals; for F/M it acts on deviations
+from their existing log mean surfaces. Initial abundance, the M process
+start year, and terminal-F projections retain their usual meanings.
 }
 
 \strong{Projections (optional)}
@@ -215,7 +219,7 @@ dat <- make_dat(
   years = 1983:2024,
   ages = 2:14,
   N_settings = list(process = "iid", init = "exp"),
-  F_settings = list(process = "approx_rw", mu_form = NULL),
+  F_settings = list(process = "rw", mu_form = NULL),
   M_settings = list(process = "off", mu_supplied = ~ I(0.3)),
   catch_settings = list(sd_form = ~ 1),
   index_settings = list(sd_form = ~ 1, q_form = ~ q_block)
@@ -226,7 +230,7 @@ names(dat)
 dat <- make_dat(
   cod_obs,
   N_settings = list(process = "iid", init = "exp"),
-  F_settings = list(process = "approx_rw", mu_form = NULL),
+  F_settings = list(process = "rw", mu_form = NULL),
   M_settings = list(process = "off", mu_supplied = ~ I(0.3)),
   catch_settings = list(sd_form = ~ 1),
   index_settings = list(sd_form = ~ 1, q_form = ~ q_block),

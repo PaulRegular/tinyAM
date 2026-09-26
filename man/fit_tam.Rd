@@ -46,7 +46,7 @@ the data extend beyond \code{max(ages)}, the \code{"obs"} column is summed for \
 and \code{index} data, and averaged for \code{weight} and \code{maturity} data.}
     \item{\code{N_settings}}{A list with elements:
 \itemize{
-\item \code{process}: one of \code{"off"}, \code{"iid"}, \code{"approx_rw"}, or \code{"ar1"}.
+\item \code{process}: one of \code{"off"}, \code{"iid"}, \code{"rw"}, or \code{"ar1"}.
 \item \code{init}: \code{"exp"} (default), \code{"free"}, or \code{"random"}, independently of
 \code{process}. All use fixed first-year recruitment \code{log_r0} as the starting
 anchor. \code{"exp"} uses deterministic survivorship; \code{"free"} estimates fixed
@@ -55,7 +55,7 @@ IID survivorship residuals and separate SD \code{sd_n0}. See \strong{Details}.
 }}
     \item{\code{F_settings}}{A list with elements:
 \itemize{
-\item \code{process}: one of \code{"iid"}, \code{"approx_rw"}, or \code{"ar1"}.
+\item \code{process}: one of \code{"iid"}, \code{"rw"}, or \code{"ar1"}.
 \item \code{mu_form}: an optional formula for mean-\eqn{F} (coefficients estimated as
 \strong{log-scale} parameters \code{log_mu_f}).
 \item \code{mean_ages}: optional vector of ages to include in population weighted
@@ -63,7 +63,7 @@ average F (\code{F_bar}) calculations. All ages used if absent.
 }}
     \item{\code{M_settings}}{A list with elements:
 \itemize{
-\item \code{process}: one of \code{"off"}, \code{"iid"}, \code{"approx_rw"}, or \code{"ar1"}.
+\item \code{process}: one of \code{"off"}, \code{"iid"}, \code{"rw"}, or \code{"ar1"}.
 \item \code{mu_form}: optional formula for mean-\eqn{M} (applied on the log scale) built
 on \code{obs$weight}, yielding coefficients \code{mu_m}. These enter the log-\eqn{M}
 surface directly and may therefore be positive or negative; they intentionally
@@ -160,6 +160,13 @@ Random-effect blocks are chosen automatically from the model settings:
 
 A warning is issued if the number of random effects exceeds 1.5 times the
 number of observed data points (rough identifiability check).
+
+For RW processes, mean coefficients that have no effect on either increments
+or mortality outside the fitted process states are held at their starting
+values. For example, a constant F mean cancels from all RW increments.
+An RW SD is also held fixed if the process has only one row (no increments).
+These parameters cannot be estimated from the likelihood; no constraint is
+imposed on the latent states themselves.
 }
 \examples{
 fit <- fit_tam(
@@ -167,7 +174,7 @@ fit <- fit_tam(
   years = 1983:2024,
   ages = 2:14,
   N_settings = list(process = "iid", init = "exp"),
-  F_settings = list(process = "approx_rw", mu_form = NULL),
+  F_settings = list(process = "rw", mu_form = NULL),
   M_settings = list(process = "off", mu_supplied = ~ I(0.3)),
   catch_settings = list(sd_form = ~ 1),
   index_settings = list(sd_form = ~ 1, q_form = ~ q_block),

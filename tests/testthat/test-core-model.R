@@ -63,7 +63,7 @@ test_that("simulation uses returned states, recursive cohorts and matching obser
       rep_len(mean, n) + rep_len(sd, n)
     }, .package = "stats")
   testthat::local_mocked_bindings(
-    rprocess_2d = function(ny, na, phi = c(0, 0), sd = 1) matrix(0.1, ny, na),
+    rprocess_ar1 = function(ny, na, phi = c(0, 0), sd = 1) matrix(0.1, ny, na),
     .package = "tinyAM")
 
   for (n_process in c("off", "iid", "ar1")) {
@@ -77,6 +77,8 @@ test_that("simulation uses returned states, recursive cohorts and matching obser
     dat$log_sd_index_supplied <- log(seq_len(nrow(dat$obs$index)) / 50)
     par <- make_par(dat)
     par$log_sd_r <- log(0.2)
+    par$log_sd_f <- par$log_sd_m <- log(0.1)
+    if (n_process != "off") par$log_sd_n <- log(0.1)
     before <- core_report(par, dat)
     sims <- nll_fun(par, dat, simulate = TRUE)
     obs_calls <- tail(calls, 2)

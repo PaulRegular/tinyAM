@@ -296,8 +296,12 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #'   to couple \eqn{M} deviations across age.
 #' - The AR(1) correlation parameters are only initialized for
 #'   processes whose `process == "ar1"`. Correlations are assumed to be 0
-#'   when `process == "iid"`, and 0.99 when `process == "approx_rw"` to approximate
-#'   a random walk across ages and years.
+#'   when `process == "iid"`. A temporal random walk (`"rw"`) has independent
+#'   year-to-year increments within each age or age block, with no age
+#'   correlation or AR parameter. Its first process row is unpenalized.
+#'   For N the walk acts on cohort residuals; for F/M it acts on deviations
+#'   from their existing log mean surfaces. Initial abundance, the M process
+#'   start year, and terminal-F projections retain their usual meanings.
 #'
 #' **Projections (optional)**
 #'
@@ -315,20 +319,20 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #'   the data extend beyond `max(ages)`, the `"obs"` column is summed for `catch`
 #'   and `index` data, and averaged for `weight` and `maturity` data.
 #' @param N_settings A list with elements:
-#' - `process`: one of `"off"`, `"iid"`, `"approx_rw"`, or `"ar1"`.
+#' - `process`: one of `"off"`, `"iid"`, `"rw"`, or `"ar1"`.
 #' - `init`: `"exp"` (default), `"free"`, or `"random"`, independently of
 #'   `process`. All use fixed first-year recruitment `log_r0` as the starting
 #'   anchor. `"exp"` uses deterministic survivorship; `"free"` estimates fixed
 #'   older-age `log_n0` states; `"random"` estimates random `log_n0` states with
 #'   IID survivorship residuals and separate SD `sd_n0`. See **Details**.
 #' @param F_settings A list with elements:
-#' - `process`: one of `"iid"`, `"approx_rw"`, or `"ar1"`.
+#' - `process`: one of `"iid"`, `"rw"`, or `"ar1"`.
 #' - `mu_form`: an optional formula for mean-\eqn{F} (coefficients estimated as
 #'   **log-scale** parameters `log_mu_f`).
 #' - `mean_ages`: optional vector of ages to include in population weighted
 #'   average F (`F_bar`) calculations. All ages used if absent.
 #' @param M_settings A list with elements:
-#' - `process`: one of `"off"`, `"iid"`, `"approx_rw"`, or `"ar1"`.
+#' - `process`: one of `"off"`, `"iid"`, `"rw"`, or `"ar1"`.
 #' - `mu_form`: optional formula for mean-\eqn{M} (applied on the log scale) built
 #'   on `obs$weight`, yielding coefficients `mu_m`. These enter the log-\eqn{M}
 #'   surface directly and may therefore be positive or negative; they intentionally
@@ -402,7 +406,7 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #' dat <- make_dat(
 #'   cod_obs,
 #'   N_settings = list(process = "iid", init = "exp"),
-#'   F_settings = list(process = "approx_rw", mu_form = NULL),
+#'   F_settings = list(process = "rw", mu_form = NULL),
 #'   M_settings = list(process = "off", mu_supplied = ~ I(0.3)),
 #'   catch_settings = list(sd_form = ~ 1),
 #'   index_settings = list(sd_form = ~ 1, q_form = ~ q_block),
@@ -418,7 +422,7 @@ make_dat <- function(
     years = NULL,
     ages = NULL,
     N_settings = list(process = "iid", init = "exp"),
-    F_settings = list(process = "approx_rw", mu_form = NULL),
+    F_settings = list(process = "rw", mu_form = NULL),
     M_settings = list(process = "off", mu_form = NULL, mu_supplied = ~I(0.2), age_breaks = NULL, first_dev_year = NULL),
     catch_settings = list(sd_form = ~1, sd_supplied = NULL, fill_missing = TRUE),
     index_settings = list(sd_form = ~1, sd_supplied = NULL, q_form = ~q_block, fill_missing = TRUE),
@@ -426,6 +430,10 @@ make_dat <- function(
 ) {
 
   dat <- mget(ls())
+
+  dat$N_settings$process <- match.arg(dat$N_settings$process, c("off", "iid", "rw", "ar1"))
+  dat$F_settings$process <- match.arg(dat$F_settings$process, c("iid", "rw", "ar1"))
+  dat$M_settings$process <- match.arg(dat$M_settings$process, c("off", "iid", "rw", "ar1"))
 
   check_obs(obs)
 
@@ -639,17 +647,11 @@ make_dat <- function(
   dat$F_settings$mean_ages <- .check_ages(dat$F_settings$mean_ages, dat$ages, "F_settings$mean_ages")
   dat$M_settings$mean_ages <- .check_ages(dat$M_settings$mean_ages, dat$ages, "M_settings$mean_ages")
 
-  .set_phi <- function(type = c("off", "iid", "approx_rw", "ar1")) {
-    match.arg(type)
+  .set_phi <- function(type) {
     if (type == "iid") {
       return(qlogis(c("age" = 0, "year" = 0)))
     }
-    if (type == "approx_rw") {
-      return(qlogis(c("age" = 0.99, "year" = 0.99)))
-    }
-    if (type == "ar1") {
-      return(NULL)
-    }
+    NULL
   }
   dat$logit_phi_n <- .set_phi(dat$N_settings$process)
   dat$logit_phi_f <- .set_phi(dat$F_settings$process)

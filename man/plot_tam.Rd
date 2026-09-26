@@ -76,7 +76,7 @@ from \code{\link[=tidy_tam]{tidy_tam()}} and related TAM model objects:
 N_dev <- fit_tam(
   cod_obs, years = 1983:2024, ages = 2:14,
   N_settings = list(process = "iid", init = "exp"),
-  F_settings = list(process = "approx_rw", mu_form = NULL),
+  F_settings = list(process = "rw", mu_form = NULL),
   M_settings = list(process = "off", mu_supplied = ~ I(0.3)),
   silent = TRUE
 )

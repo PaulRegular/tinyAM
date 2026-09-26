@@ -36,7 +36,7 @@ test_that("recruitment has a fixed first-year anchor and subsequent RW states", 
 test_that("each initializer is independent of the subsequent N process", {
   for (init in c("exp", "free", "random")) {
     initial <- list()
-    for (process in c("off", "iid", "approx_rw", "ar1")) {
+    for (process in c("off", "iid", "rw", "ar1")) {
       dat <- make_test_dat(years = 2000:2003,
         N_settings = list(process = process, init = init))
       par <- make_par(dat)
@@ -138,8 +138,8 @@ test_that("N states represent only genuine cohort transitions with a plus group"
   expect_equal(nll_fun(par, dat) - nll_fun(par, deterministic),
                -length(par$log_n) * dnorm(0, 0, 0.3, log = TRUE))
   testthat::local_mocked_bindings(
-    rprocess_2d = function(ny, na, phi = c(0, 0), sd = 1) matrix(0.2, ny, na),
-    .package = "tinyAM")
+    rnorm = function(n, mean = 0, sd = 1) rep_len(mean, n) + 0.2,
+    .package = "stats")
   sims <- nll_fun(par, dat, simulate = TRUE)
   par[intersect(names(sims), names(par))] <- sims[intersect(names(sims), names(par))]
   rep <- n0_report(par, dat)

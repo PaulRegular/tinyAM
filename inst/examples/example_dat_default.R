@@ -3,7 +3,7 @@ dat <- make_dat(
   years = 1983:2024,
   ages = 2:14,
   N_settings = list(process = "iid", init = "exp"),
-  F_settings = list(process = "approx_rw", mu_form = NULL),
+  F_settings = list(process = "rw", mu_form = NULL),
   M_settings = list(process = "off", mu_supplied = ~ I(0.3)),
   catch_settings = list(sd_form = ~ 1),
   index_settings = list(sd_form = ~ 1, q_form = ~ q_block)

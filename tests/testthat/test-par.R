@@ -47,7 +47,7 @@ test_that("make_par builds shapes and zeros consistent with dat", {
 test_that("make_par shapes adapt when projections are enabled", {
   dat <- make_test_dat(
     N_settings = list(process = "iid", init = "exp"),
-    F_settings = list(process = "approx_rw", mu_form = NULL),
+    F_settings = list(process = "rw", mu_form = NULL),
     M_settings = list(process = "iid", mu_form = NULL, mu_supplied = ~ I(0.3), age_breaks = seq(2, 14, 2)),
     proj_settings = list(n_proj = 2, n_mean = 3, F_mult = 1)
   )

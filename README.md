@@ -93,7 +93,7 @@ fit <- fit_tam(
     init = "exp"
   ),
   F_settings = list(
-    process = "approx_rw",
+    process = "rw",
     mu_form = NULL
   ),
   M_settings = list(

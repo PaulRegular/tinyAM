@@ -142,6 +142,9 @@
 #'     This includes `log_n0` only for `N_settings$init = "random"`, generated
 #'     by survivorship and IID residuals from the supplied `log_r0` anchor.
 #'     Free initial-age states are retained.
+#'     Temporal RW fields retain their supplied first process row and draw
+#'     subsequent deviations conditionally; see [nll_fun()] for the N cohort
+#'     construction. No distribution is imposed on the RW starting row.
 #'     Fixed anchors may still vary through the chosen `par_uncertainty` draw.
 #'
 #' Parallel execution is supported via [furrr::future_map()]. Call

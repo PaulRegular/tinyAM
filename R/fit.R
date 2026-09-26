@@ -84,6 +84,13 @@
 #' A warning is issued if the number of random effects exceeds 1.5 times the
 #' number of observed data points (rough identifiability check).
 #'
+#' For RW processes, mean coefficients that have no effect on either increments
+#' or mortality outside the fitted process states are held at their starting
+#' values. For example, a constant F mean cancels from all RW increments.
+#' An RW SD is also held fixed if the process has only one row (no increments).
+#' These parameters cannot be estimated from the likelihood; no constraint is
+#' imposed on the latent states themselves.
+#'
 #' @param obs A named list of tidy observation tables (e.g., `catch`, `index`,
 #'   `weight`, `maturity`). See [cod_obs] for an example.
 #' @param interval Level in `(0, 1)` to use to generate confidence intervals,
@@ -174,6 +181,35 @@ fit_tam <- function(
     ran <- c(ran, "log_m")
   }
   map <- list()
+  for (process in c("n", "f", "m")) {
+    settings <- dat[[paste0(toupper(process), "_settings")]]
+    if (settings$process != "rw") next
+    states <- par[[paste0("log_", process)]]
+    if (nrow(states) < 2L) {
+      map[[paste0("log_sd_", process)]] <- factor(NA)
+    }
+    if (process == "n") next
+    coef_name <- if (process == "f") "log_mu_f" else "mu_m"
+    if (is.null(par[[coef_name]])) next
+    design <- dat[[paste0(toupper(process), "_modmat")]]
+    fixed <- vapply(seq_len(ncol(design)), function(j) {
+      surface <- matrix(design[, j], length(dat$years), length(dat$ages),
+                        dimnames = list(dat$years, dat$ages))
+      if (process == "f") {
+        field <- surface[!dat$is_proj, , drop = FALSE]
+      } else {
+        field <- surface[rownames(states), settings$age_block_start, drop = FALSE]
+        surface[rownames(states), names(settings$age_blocks)] <- 0
+        if (any(surface != 0)) return(FALSE) # Mean still controls M outside process states.
+      }
+      nrow(field) < 2L || all(field[-1, , drop = FALSE] == field[-nrow(field), , drop = FALSE])
+    }, logical(1))
+    if (any(fixed)) {
+      indices <- seq_along(fixed)
+      indices[fixed] <- NA_integer_
+      map[[coef_name]] <- factor(indices)
+    }
+  }
   if (dat$M_settings$process == "ar1" && nlevels(dat$M_settings$age_blocks) == 1) {
     par$logit_phi_m[1] <- qlogis(0)
     map$logit_phi_m <- factor(c(NA, 1)) # phi_age moot when only one age block
@@ -525,6 +561,5 @@ check_convergence <- function(fit, grad_tol = 1e-3, quiet = TRUE) {
 
   ok
 }
-
 
 

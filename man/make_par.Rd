@@ -102,6 +102,10 @@ imputed \code{log_obs}, if any observation type is set to fill missing values)
 
 All scalar SD parameters are on the log scale, and AR(1) parameters are on
 the logit scale (later transformed by \code{plogis()} in the likelihood).
+Temporal RW processes have no correlation parameters. Their first process
+row supplies a conditional starting state during simulation and has no
+increment penalty. See \code{\link[=fit_tam]{fit_tam()}} for mean coefficients or SDs held fixed
+when they have no effect on the RW likelihood.
 }
 \examples{
 dat <- make_dat(
@@ -109,7 +113,7 @@ dat <- make_dat(
   years = 1983:2024,
   ages = 2:14,
   N_settings = list(process = "iid", init = "exp"),
-  F_settings = list(process = "approx_rw", mu_form = NULL),
+  F_settings = list(process = "rw", mu_form = NULL),
   M_settings = list(process = "off", mu_supplied = ~ I(0.3)),
   catch_settings = list(sd_form = ~ 1),
   index_settings = list(sd_form = ~ 1, q_form = ~ q_block)
