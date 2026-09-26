@@ -6,6 +6,8 @@ library(plotly)
 cod_obs <- tinyAM::cod_obs
 cod_obs$weight$collapse <- ifelse(cod_obs$weight$year %in% 1991:1994, 1, 0)
 # cod_obs$index$q_block <- cut(cod_obs$index$age, c(min(cod_obs$index$age):6, max(cod_obs$index$age) + 1), right = FALSE)
+cod_obs$index$smith_sound_q_block <- cut(cod_obs$index$age, c(min(cod_obs$index$age):14, max(cod_obs$index$age) + 1), right = FALSE)
+cod_obs$index$smith_sound_year <- as.integer(cod_obs$index$year %in% 1995:2005)
 
 ## Questions:
 ## How should the random processes be modeled?
@@ -25,12 +27,12 @@ dir.create("analysis/comp_retro/outputs", recursive = TRUE, showWarnings = FALSE
 N_iid_F_rw <- fit_tam(
   cod_obs,
   years = 1983:2025,
-  ages = 1:14,
+  ages = 2:14,
   N_settings = list(
     process = "iid"
   ),
   F_settings = list(
-    process = "approx_rw",
+    process = "rw",
     mu_form = NULL,
     mean_ages = 5:14
   ),
@@ -45,7 +47,7 @@ N_iid_F_rw <- fit_tam(
   ),
   index_settings = list(
     sd_form = ~ 1,
-    q_form = ~ mono(q_block),
+    q_form = ~ mono(q_block) + smith_sound_year:smith_sound_q_block,
     fill_missing = TRUE
   ),
   proj_settings = list(
@@ -84,7 +86,7 @@ M_ar1_F_rw <- update(
     process = "off"
   ),
   F_settings = list(
-    process = "approx_rw",
+    process = "rw",
     mu_form = NULL,
     mean_ages = 5:14
   ),
