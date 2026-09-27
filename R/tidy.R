@@ -67,7 +67,7 @@ tidy_mat <- tidy_array
 #' Tidy observed, predicted, and residual diagnostics
 #'
 #' @description
-#' Extracts observations, predictions, and standard errors for `catch` and `index`
+#' Extracts observations, predictions, and observation SDs for `catch` and `index`
 #' from a fitted TAM object, and adds standardized residuals on the log scale.
 #'
 #' @param fit A fitted TAM object as returned by [fit_tam()].
@@ -75,6 +75,15 @@ tidy_mat <- tidy_array
 #'                    apply the `"oneStepGaussianOffMode"` method.
 #'                    See [RTMB::oneStepPredict()] for details.
 #' @param ... Arguments to pass to [RTMB::oneStepPredict()].
+#'
+#' @details
+#' `pred` is the conditional median on the natural scale. `sd` is the fitted
+#' SD of log observations, not a standard error of the prediction. Standardized
+#' residuals are `(log(obs) - log(pred)) / sd`; zero and missing observations
+#' have missing residuals. These conditional residuals do not account for the
+#' uncertainty in fitted states. Optional one-step-ahead residuals use a
+#' different predictive calculation and are not currently supported with filled
+#' missing observations. See [tinyAM-model] for the observation equations.
 #'
 #' @return
 #' A named list with two data frames:
@@ -220,12 +229,12 @@ trans_est <- function(data, transform = exp, scale = 1) {
 
 
 
-#' Tidy `sdreport` time series with confidence intervals
+#' Population time series with confidence intervals
 #'
 #' @description
-#' Extracts ADREPORTED time-series from `fit$sdrep`, computes normal-approximation
-#' intervals, applies a transformation (default `exp`), and returns a list of
-#' tidy data frames.
+#' Returns annual recruitment, abundance, biomass, spawning biomass, and
+#' average F and M, with confidence limits and clearly labelled SE scales.
+#' Estimates and limits are reported in the units of each population quantity.
 #'
 #' @details
 #' Assumptions:
@@ -279,10 +288,11 @@ tidy_sdrep <- function(fit, interval = 0.95) {
   df
 }
 
-#' Collect population summaries (sdreport + report trends)
+#' Collect population trends and age-specific estimates
 #'
 #' @description
-#' Convenience wrapper that combines [tidy_sdrep()] and [tidy_rep()]
+#' Combines population time series with uncertainty from [tidy_sdrep()] and
+#' age-specific estimates and other reported quantities from [tidy_rep()]
 #' into a single named list for downstream plotting and summaries.
 #'
 #' @param fit A fitted TAM object as returned by [fit_tam()].
@@ -314,8 +324,13 @@ tidy_pop <- function(fit, interval = 0.95) {
 #' Tidy parameter estimates (fixed & random) with CIs and back-transforms
 #'
 #' @description
-#' Creates a tidy summary of parameter estimates from a fitted TAM object,
-#' combining estimates (`Estimate`) and standard errors (`Std. Error`) from
+#' Summarizes fitted parameters with estimates, confidence limits, and clearly
+#' labelled SE scales. Use this to inspect process variability, catchability
+#' effects, and latent population states. Actual catchability for each survey
+#' observation is available from [tidy_obs_pred()].
+#'
+#' @details
+#' Combines estimates (`Estimate`) and standard errors (`Std. Error`) from
 #' `fit$sdrep`. Parameters whose names begin with `log_` or `logit_` are
 #' back-transformed to the natural scale:
 #'
@@ -337,10 +352,10 @@ tidy_pop <- function(fit, interval = 0.95) {
 #'   Coefficient names identify
 #'   transitions and groups. Actual observation-specific q is in [tidy_obs_pred()].
 #'
-#' This convention is relied upon by the printing methods, so parameters tied to
-#' `*_form` arguments that live on the log scale (e.g., `log_mu_f`, `log_sd_*`,
-#' `log_q`) should retain the `log_` prefix to ensure they are correctly
-#' exponentiated in summaries. An exception is the mean-\eqn{M} formula
+#' Formula coefficients named `log_mu_f`, `log_sd_*`, or `log_q` are
+#' exponentiated in summaries. An exponentiated slope is a multiplicative
+#' change per unit covariate, not the fitted F, SD, or q surface itself.
+#' An exception is the mean-\eqn{M} formula
 #' coefficients (`mu_m`), which operate on the log scale but are named without a
 #' `log_` prefix to reflect that their values may be positive or negative; they
 #' therefore print on the fitted log scale.
@@ -550,8 +565,8 @@ stack_list <- function(x, label = "model",
 #'   - `"factor"`: convert to factor.
 #'
 #' @return A named list of data.frames. One element per subtable name. Each
-#'   data.frame is the row-bound stack across outer ids, with an added `id_col`
-#'   (if not NULL).
+#'   data.frame is the row-bound stack across outer ids, with an added column
+#'   named by `label` (unless `label = NULL`).
 #' @examples
 #' res <- list(
 #'   sim1 = list(ssb = data.frame(year=1:3, est=1:3),
@@ -619,7 +634,7 @@ stack_nested <- function(x, label = "model",
 #' effects as a named list of data frames (one per random-effect block, e.g. `"log_f"`, `"log_r"`,
 #' `"missing"`, …).
 #'
-#' @param ... One or more fitted TAM objects (as returned by [fit_tam()]). Ignored if `model_list` is provided.
+#' @param ... One or more fitted TAM objects (as returned by [fit_tam()]). Supply these or `model_list`, not both.
 #' @param model_list A **named list** of fitted TAM objects. Required to be named; the names are used as label values.
 #' @param interval Confidence level passed to [tidy_pop()] and [tidy_par()] for interval construction. Default `0.95`.
 #' @param label Character scalar giving the label column name to add when stacking across multiple/named models. Default `"model"`.

@@ -38,15 +38,18 @@ evaluating the fitted object's gradients. Defaults to \code{1e-2}.}
 \item{...}{
   Arguments passed on to \code{\link[=make_dat]{make_dat}}
   \describe{
-    \item{\code{years}}{Integer vector of model years (strictly increasing).
+    \item{\code{years}}{Consecutive historical model years (at least two).
 Inferred from observed data (non-projection) if \code{NULL}.}
-    \item{\code{ages}}{Integer vector of model ages (strictly increasing).
+    \item{\code{ages}}{Consecutive model ages (at least two).
 Inferred from observed data (non-projection) if \code{NULL}. If the ages in
 the data extend beyond \code{max(ages)}, the \code{"obs"} column is summed for \code{catch}
-and \code{index} data, and averaged for \code{weight} and \code{maturity} data.}
+and \code{index} data within each year (and survey for indices), and averaged
+without abundance weighting for \code{weight} and \code{maturity} data.}
     \item{\code{N_settings}}{A list with elements:
 \itemize{
-\item \code{process}: one of \code{"off"}, \code{"iid"}, \code{"rw"}, or \code{"ar1"}.
+\item \code{process}: \code{"off"} for deterministic cohort survival, \code{"iid"} for independent
+cohort residuals, \code{"rw"} for residuals that accumulate through time, or
+\code{"ar1"} for residuals correlated between years and ages. See \link{tinyAM-model}.
 \item \code{init}: \code{"exp"} (default), \code{"free"}, or \code{"random"}, independently of
 \code{process}. All use fixed first-year recruitment \code{log_r0} as the starting
 anchor. \code{"exp"} uses deterministic survivorship; \code{"free"} estimates fixed
@@ -55,7 +58,9 @@ IID survivorship residuals and separate SD \code{sd_n0}. See \strong{Details}.
 }}
     \item{\code{F_settings}}{A list with elements:
 \itemize{
-\item \code{process}: one of \code{"iid"}, \code{"rw"}, or \code{"ar1"}.
+\item \code{process}: \code{"iid"} for independent departures from the mean log F,
+\code{"rw"} for departures that accumulate over time, or \code{"ar1"} for departures
+correlated between years and ages.
 \item \code{mu_form}: an optional formula for mean-\eqn{F} (coefficients estimated as
 \strong{log-scale} parameters \code{log_mu_f}).
 \item \code{mean_ages}: optional vector of ages to include in population weighted
@@ -63,7 +68,8 @@ average F (\code{F_bar}) calculations. All ages used if absent.
 }}
     \item{\code{M_settings}}{A list with elements:
 \itemize{
-\item \code{process}: one of \code{"off"}, \code{"iid"}, \code{"rw"}, or \code{"ar1"}.
+\item \code{process}: \code{"off"} uses only supplied/mean M. Otherwise \code{"iid"}, \code{"rw"},
+and \code{"ar1"} have the same meanings as for F, on selected years/age blocks.
 \item \code{mu_form}: optional formula for mean-\eqn{M} (applied on the log scale) built
 on \code{obs$weight}, yielding coefficients \code{mu_m}. These enter the log-\eqn{M}
 surface directly and may therefore be positive or negative; they intentionally
@@ -74,16 +80,18 @@ dropped (warning) so supplied levels act as fixed offsets.
 \eqn{M}, e.g. \code{~ I(0.2)} or a column reference such as
 \code{~ M_assumption} stored in the \code{obs$weight} data.frame.
 \item \code{age_breaks}: optional integer break points used by \code{\link[=cut_ages]{cut_ages()}} to
-define \code{age_blocks} for coupling \eqn{M} deviations across ages.
+define \code{age_blocks} sharing absolute latent M states across ages.
 When a narrower set of \code{age_breaks} than modeled \code{ages} is provided,
-deviations are only estimated for ages within the specified range; ages
+process states are only estimated for ages within the specified range; ages
 outside this range are fixed to their mean or assumed levels. By default,
-deviations are estimated for all modeled ages except the youngest, reducing
-confounding between \eqn{M} and recruitment.
-\item \code{first_dev_year}: integer year at which to start estimating \eqn{M} deviations.
-Defaults to the second modeled year if \code{NULL}. Anchoring the first year
-to mean or assumed levels helps minimize confounding between early \eqn{M}
-estimates, initial abundance, and catchability, leading to more stable estimation.
+blocks use \code{cut_ages(ages[-1], unique(range(ages[-1])))}, usually one block
+excluding the youngest age; two older ages form separate singleton blocks.
+This restricts
+how M can trade off against recruitment; it does not guarantee identifiability.
+\item \code{first_dev_year}: one historical modeled year at which M process states
+begin. Defaults to the second year if \code{NULL}. Earlier M stays at its mean
+or supplied value; earlier years are not coupled to the first latent state.
+Ignored when the M process is off.
 \item \code{mean_ages}: optional vector of ages to include in population weighted
 average M (\code{M_bar}) calculations. All ages used if absent.
 }}
@@ -111,17 +119,18 @@ Defaults to \code{TRUE}. Note that one-step-ahead residuals are not currently wo
     \item{\code{proj_settings}}{Optional list with elements:
 \itemize{
 \item \code{n_proj}: number of years to project (default \code{NULL} disables projections).
-\item \code{n_mean}: number of terminal years to average when adding projection rows. Only the \code{"obs"} columns
-are averaged. All other columns are copied from the terminal year (by \code{age}).
+\item \code{n_mean}: number of recent historical years used to average weight and
+maturity by age. Catch/index observations in projection years are missing.
+Other columns are copied from the last available year in each table.
 \item \code{F_mult}: multiplier to apply to terminal F to set a level to carry forward in the projection years
-(default = \code{1} to assume status quo F through the projection years). Can be a value of length 1 or
+(required when projecting; use \code{1} for status quo F). Can be a value of length 1 or
 length = \code{n_proj}. When it is a vector of length one, that multiplier is recycled across all
 projection years.
 }}
   }}
 }
 \value{
-A list with components:
+A \code{tam_fit} list with components:
 \itemize{
 \item \strong{call}: matched call.
 \item \strong{dat}: data list returned by \code{\link[=make_dat]{make_dat()}}.
@@ -141,18 +150,23 @@ standardized residuals (see \code{\link[=tidy_obs_pred]{tidy_obs_pred()}}).
 }
 }
 \description{
-Builds data with \code{\link[=make_dat]{make_dat()}}, initializes parameters with \code{\link[=make_par]{make_par()}},
-constructs the RTMB objective, optimizes it, and returns a fitted object with
-reports and standard errors.
-\code{\link[=mono]{mono()}} increments \code{dq} are optimized directly with a lower bound of zero.
-Their standard errors remain on the increment scale. At this boundary,
-normal-approximation intervals are descriptive local curvature summaries.
+Estimates abundance, recruitment, and mortality from catch-at-age and survey
+observations. Returns population trends, observation diagnostics, parameter
+estimates, and uncertainty tables. Use \code{N_settings}, \code{F_settings}, and
+\code{M_settings} to specify where unexplained biological variation is allowed.
+See \code{\link[=make_dat]{make_dat()}} for options and \link{tinyAM-model} for the model equations.
 }
 \details{
+Builds data with \code{\link[=make_dat]{make_dat()}} and initial parameters with \code{\link[=make_par]{make_par()}}.
+RTMB integrates random effects using the Laplace approximation; \code{nlminb}
+optimizes the remaining fixed effects. \code{\link[=mono]{mono()}} increments \code{dq} have a zero
+lower bound. Their SEs remain on the increment scale, but symmetric Wald
+intervals are only local approximations at a boundary.
+
 Random-effect blocks are chosen automatically from the model settings:
 \itemize{
 \item Always includes \code{log_f} and \code{log_r}.
-\item Includes \code{missing} if there are missing observations.
+\item Includes \code{missing} if missing observations are set to be filled.
 \item Includes \code{log_n0} only if \code{N_settings$init == "random"}.
 \item Includes \code{log_n} if \code{N_settings$process != "off"}.
 \item Includes \code{log_m} if \code{M_settings$process != "off"}.
@@ -167,6 +181,12 @@ values. For example, a constant F mean cancels from all RW increments.
 An RW SD is also held fixed if the process has only one row (no increments).
 These parameters cannot be estimated from the likelihood; no constraint is
 imposed on the latent states themselves.
+For AR1, the correlation for an axis containing a single row or column is
+fixed at zero; otherwise it would be confounded with the SD.
+
+\code{is_converged} summarizes gradient and curvature checks. Also inspect
+\code{opt$convergence} and \code{opt$message}; a passing numerical check does not
+establish that the data identify every biological component.
 }
 \examples{
 fit <- fit_tam(
@@ -180,7 +200,8 @@ fit <- fit_tam(
   index_settings = list(sd_form = ~ 1, q_form = ~ q_block),
   silent = TRUE
 )
-fit$sdrep
+fit
+head(fit$pop$ssb)
 
 ## Fit with projections (status quo F)
 fit2 <- update(fit,

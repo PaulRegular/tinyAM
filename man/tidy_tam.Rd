@@ -13,7 +13,7 @@ tidy_tam(
 )
 }
 \arguments{
-\item{...}{One or more fitted TAM objects (as returned by \code{\link[=fit_tam]{fit_tam()}}). Ignored if \code{model_list} is provided.}
+\item{...}{One or more fitted TAM objects (as returned by \code{\link[=fit_tam]{fit_tam()}}). Supply these or \code{model_list}, not both.}
 
 \item{model_list}{A \strong{named list} of fitted TAM objects. Required to be named; the names are used as label values.}
 

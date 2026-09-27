@@ -61,12 +61,19 @@ truncated year range.
 \details{
 Run a retrospective (peel) analysis
 
-Peel years are \code{(max_year - folds) : max_year}.
+Peel years are \code{(max_year - folds) : max_year}, where \code{max_year} is the
+final historical year (\code{is_proj == FALSE}). Existing projection years
+never become terminal assessment years. This produces \code{folds + 1} fits,
+including the full historical assessment. The original fit is reused for
+that assessment unless hindcasts are requested.
 Each refit is attempted with \code{try()} so individual failures do not stop the sequence.
-Refits are generated via \code{update(fit, years = ...)}; ensure your \code{fit} object
-supports \code{update()} with a \code{years} argument. This function uses
+Refits are generated via \code{update(fit, years = ...)}. This function uses
 \code{\link[furrr:future_map]{furrr::future_map()}} to run the retros in parallel. Remember to plan your session (e.g.,
 \code{future::plan(multisession, workers = 4)}).
+Every hindcast replaces any input projection settings with one status-quo-F
+year without changing the supplied fit. Failed or non-converged fits are
+omitted from the returned tables and fits. Summary scores therefore describe
+the retained folds, not necessarily every requested fold.
 }
 \examples{
 fit <- fit_tam(

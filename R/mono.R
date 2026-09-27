@@ -1,5 +1,12 @@
 #' Monotonic survey catchability in a formula
 #'
+#' @description
+#' Use `mono()` in `index_settings$q_form` when catchability should stay level
+#' or increase across ordered age or size groups. Unlike ordinary factor
+#' effects, it cannot describe a decline or dome with other covariates held
+#' constant. Flat sections are allowed; the rate of increase is estimated.
+#'
+#' @details
 #' Use `mono()` as an additive term in `index_settings$q_form`. It is a
 #' formula marker, not a numeric transformation. Numeric values are ordered
 #' increasingly; factors (including ordered factors) use their declared levels.
@@ -25,7 +32,7 @@
 #' @param x Name of a numeric or factor column in the index observations.
 #' @param by Optional name of a categorical grouping column.
 #' @return A formula marker; calling this function directly raises an error.
-#' @seealso [make_dat()], [make_par()], [tidy_obs_pred()], [tidy_par()]
+#' @seealso [make_dat()], [make_par()], [tidy_obs_pred()], [tidy_par()], [tinyAM-model]
 #' @examples
 #' ~ q_block # ordinary unconstrained q
 #' ~ mono(q_block)

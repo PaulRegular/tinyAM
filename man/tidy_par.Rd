@@ -23,8 +23,13 @@ columns as \code{fixed} (indices appropriate to each random effect).
 }
 }
 \description{
-Creates a tidy summary of parameter estimates from a fitted TAM object,
-combining estimates (\code{Estimate}) and standard errors (\verb{Std. Error}) from
+Summarizes fitted parameters with estimates, confidence limits, and clearly
+labelled SE scales. Use this to inspect process variability, catchability
+effects, and latent population states. Actual catchability for each survey
+observation is available from \code{\link[=tidy_obs_pred]{tidy_obs_pred()}}.
+}
+\details{
+Combines estimates (\code{Estimate}) and standard errors (\verb{Std. Error}) from
 \code{fit$sdrep}. Parameters whose names begin with \code{log_} or \code{logit_} are
 back-transformed to the natural scale:
 \itemize{
@@ -48,10 +53,10 @@ Coefficient names identify
 transitions and groups. Actual observation-specific q is in \code{\link[=tidy_obs_pred]{tidy_obs_pred()}}.
 }
 
-This convention is relied upon by the printing methods, so parameters tied to
-\verb{*_form} arguments that live on the log scale (e.g., \code{log_mu_f}, \verb{log_sd_*},
-\code{log_q}) should retain the \code{log_} prefix to ensure they are correctly
-exponentiated in summaries. An exception is the mean-\eqn{M} formula
+Formula coefficients named \code{log_mu_f}, \verb{log_sd_*}, or \code{log_q} are
+exponentiated in summaries. An exponentiated slope is a multiplicative
+change per unit covariate, not the fitted F, SD, or q surface itself.
+An exception is the mean-\eqn{M} formula
 coefficients (\code{mu_m}), which operate on the log scale but are named without a
 \code{log_} prefix to reflect that their values may be positive or negative; they
 therefore print on the fitted log scale.

@@ -16,29 +16,22 @@
 #' - **is_proj**: logical; `TRUE` for projection rows, `FALSE` otherwise.
 #'
 #' @details
-#' The function:
+#' Projection rows are excluded. The largest retained `fold` is the reference
+#' assessment. Each earlier peel contributes its estimate at `year == fold`,
+#' compared with the reference estimate for that same year:
+#' \deqn{\rho=\frac{1}{K}\sum_{k=1}^K
+#' \frac{\widehat X^{(k)}_{t_k}-\widehat X^{(ref)}_{t_k}}
+#' {\widehat X^{(ref)}_{t_k}}.}
+#' Positive values mean the peeled fits tend to estimate higher values than
+#' the reference fit. Supply a single quantity and, for age-specific output,
+#' one age at a time. `fold` must already identify terminal historical years;
+#' no year shifting or relabeling is performed. Each matched peel has equal weight.
+#' If failed fits were dropped, the reference is the latest retained fit.
+#' Missing differences are omitted; zero reference estimates can yield infinite
+#' or undefined differences.
 #'
-#' 1. Coerces `fold` to numeric.
-#' 2. If `max(year) > max(fold)`, adds 1 to `fold` to handle
-#'    conventions where each peel's estimate is reported for the
-#'    subsequent calendar year (i.e., “stepped forward by one year”).
-#' 3. Identifies terminal estimates (`fold == max(fold)`) as the
-#'    reference series.
-#' 4. For each peel, extracts the estimate at the peel year
-#'    (`year == fold`) and merges with the terminal estimate for the
-#'    same year.
-#' 5. Computes proportional difference
-#'    \deqn{\rho = \frac{ \text{est}_{\text{retro}} - \text{est}_{\text{terminal}} }
-#'                { \text{est}_{\text{terminal}} }}
-#'    and returns the mean across peels.
-#'
-#' Observations with zero terminal estimates will produce `Inf`/`NaN`
-#' in the proportional difference; consider filtering or transforming
-#' input accordingly if this is a concern.
-#'
-#' @return
-#' A single numeric value: the mean proportional difference (Mohn's rho).
-#' Returns `NA` if no valid pairs are available.
+#' @return A single numeric proportional difference. Returns `NaN` (a missing
+#'   numeric value) if there are no non-missing comparisons.
 #'
 #' @examples
 #' df <- data.frame(
@@ -91,26 +84,25 @@ compute_mohns_rho <- function(data) {
 #'   Zeros in `obs`/`pred` are converted to `NA` before logging.
 #'
 #' @details
-#' The function:
+#' Matches projected rows (`is_proj == TRUE`) with available historical
+#' observations by year and age, also using `type` and `survey` when present.
+#' Include `type` when combining catch and index tables, and `survey` when
+#' combining surveys. Conflicting observations for the same key cause an error.
+#' Repeated copies of the same observation across folds count only once per
+#' prediction. Each matched forecast receives equal weight.
 #'
-#' 1. Selects one–step–ahead projections via `is_proj == TRUE` (projected rows).
-#' 2. Extracts observed values at the peel year via `year == fold`
-#'    (observed rows).
-#' 3. Merges observed and projected values by `(year, age)`.
-#' 4. Optionally transforms to log scale (after replacing exact zeros with `NA`).
-#' 5. Computes squared errors \eqn{(\mathrm{obs} - \mathrm{pred})^2} and returns
-#'    \deqn{\mathrm{RMSE} = \sqrt{\mathrm{mean}\big[(\mathrm{obs} - \mathrm{pred})^2\big]}}
-#'    with `na.rm = TRUE`.
+#' On the natural scale,
+#' \deqn{\mathrm{RMSE}=\sqrt{\frac{1}{K}\sum_i(Y_i-\widetilde Y_i)^2}.}
+#' With `log = TRUE`, both values are logged first. Log RMSE measures departures
+#' on a relative scale and is often more useful when catch and survey units differ.
+#' It still combines errors from different series and is not a likelihood score.
+#' Zeros and missing pairs are omitted for log RMSE; zeros are retained on the
+#' natural scale. Predictions beyond the available observations do not contribute.
+#' All projection rows are eligible; use [fit_hindcast()] for one-year horizons
+#' or subset the input to the desired forecast horizon.
 #'
-#' Notes:
-#' - If `log = TRUE`, exact zeros are dropped (set to `NA`) before `log()`.
-#'   Consider adding a small constant beforehand if you prefer to retain zeros.
-#' - Only year–age pairs present in **both** the observed-at-fold and projected
-#'   sets contribute to the RMSE (via the merge).
-#'
-#' @return
-#' A single numeric value: the RMSE between observed and one–step–ahead projected
-#' values for matched `(year, age)` pairs. Returns `NA` if no valid pairs exist.
+#' @return A single numeric RMSE. Returns `NaN` (a missing numeric value) if
+#'   there are no non-missing matched forecast errors.
 #'
 #' @examples
 #' \dontrun{
@@ -124,9 +116,13 @@ compute_mohns_rho <- function(data) {
 #'
 #' @export
 compute_hindcast_rmse <- function(data, log = TRUE) {
-  proj_d <- data[data$is_proj, c("year", "age", "pred")]
-  obs_d <- data[data$year == data$fold, c("year", "age", "obs")]
-  d <- merge(obs_d, proj_d, by = c("year", "age"))
+  keys <- c("year", "age", intersect(c("type", "survey"), names(data)))
+  proj_d <- data[data$is_proj, c(keys, "pred"), drop = FALSE]
+  obs_d <- unique(data[!data$is_proj & !is.na(data$obs), c(keys, "obs"), drop = FALSE])
+  if (anyDuplicated(obs_d[keys])) {
+    cli::cli_abort("Hindcast scoring requires one observed value per year, age, and series. Separate distinct series with {.field type} or {.field survey}.")
+  }
+  d <- merge(obs_d, proj_d, by = keys)
   if (log) {
     d$obs[d$obs == 0] <- NA
     d$pred[d$pred == 0] <- NA

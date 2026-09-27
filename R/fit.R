@@ -65,18 +65,23 @@
 #' Fit a Tiny Assessment Model (TAM)
 #'
 #' @description
-#' Builds data with [make_dat()], initializes parameters with [make_par()],
-#' constructs the RTMB objective, optimizes it, and returns a fitted object with
-#' reports and standard errors.
-#' [mono()] increments `dq` are optimized directly with a lower bound of zero.
-#' Their standard errors remain on the increment scale. At this boundary,
-#' normal-approximation intervals are descriptive local curvature summaries.
+#' Estimates abundance, recruitment, and mortality from catch-at-age and survey
+#' observations. Returns population trends, observation diagnostics, parameter
+#' estimates, and uncertainty tables. Use `N_settings`, `F_settings`, and
+#' `M_settings` to specify where unexplained biological variation is allowed.
+#' See [make_dat()] for options and [tinyAM-model] for the model equations.
 #'
 #' @details
+#' Builds data with [make_dat()] and initial parameters with [make_par()].
+#' RTMB integrates random effects using the Laplace approximation; `nlminb`
+#' optimizes the remaining fixed effects. [mono()] increments `dq` have a zero
+#' lower bound. Their SEs remain on the increment scale, but symmetric Wald
+#' intervals are only local approximations at a boundary.
+#'
 #' Random-effect blocks are chosen automatically from the model settings:
 #'
 #' - Always includes `log_f` and `log_r`.
-#' - Includes `missing` if there are missing observations.
+#' - Includes `missing` if missing observations are set to be filled.
 #' - Includes `log_n0` only if `N_settings$init == "random"`.
 #' - Includes `log_n` if `N_settings$process != "off"`.
 #' - Includes `log_m` if `M_settings$process != "off"`.
@@ -90,6 +95,12 @@
 #' An RW SD is also held fixed if the process has only one row (no increments).
 #' These parameters cannot be estimated from the likelihood; no constraint is
 #' imposed on the latent states themselves.
+#' For AR1, the correlation for an axis containing a single row or column is
+#' fixed at zero; otherwise it would be confounded with the SD.
+#'
+#' `is_converged` summarizes gradient and curvature checks. Also inspect
+#' `opt$convergence` and `opt$message`; a passing numerical check does not
+#' establish that the data identify every biological component.
 #'
 #' @param obs A named list of tidy observation tables (e.g., `catch`, `index`,
 #'   `weight`, `maturity`). See [cod_obs] for an example.
@@ -108,7 +119,7 @@
 #' @inheritDotParams make_dat
 #'
 #' @return
-#' A list with components:
+#' A `tam_fit` list with components:
 #'
 #' - **call**: matched call.
 #' - **dat**: data list returned by [make_dat()].
@@ -128,7 +139,8 @@
 #'
 #' @example inst/examples/example_fit_default.R
 #' @examples
-#' fit$sdrep
+#' fit
+#' head(fit$pop$ssb)
 #'
 #' ## Fit with projections (status quo F)
 #' fit2 <- update(fit,
@@ -210,9 +222,17 @@ fit_tam <- function(
       map[[coef_name]] <- factor(indices)
     }
   }
-  if (dat$M_settings$process == "ar1" && nlevels(dat$M_settings$age_blocks) == 1) {
-    par$logit_phi_m[1] <- qlogis(0)
-    map$logit_phi_m <- factor(c(NA, 1)) # phi_age moot when only one age block
+  for (process in c("n", "f", "m")) {
+    if (dat[[paste0(toupper(process), "_settings")]]$process != "ar1") next
+    states <- par[[paste0("log_", process)]]
+    singleton <- c(ncol(states), nrow(states)) == 1L # age, year
+    if (any(singleton)) {
+      nm <- paste0("logit_phi_", process)
+      par[[nm]][singleton] <- qlogis(0)
+      indices <- 1:2
+      indices[singleton] <- NA_integer_
+      map[[nm]] <- factor(indices)
+    }
   }
 
   make_nll_fun <- function(f, d) function(p) f(p, d) # use closure to avoid global assignment of data
@@ -267,12 +287,19 @@ fit_tam <- function(
 #' truncated year range.
 #'
 #' @details
-#' Peel years are `(max_year - folds) : max_year`.
+#' Peel years are `(max_year - folds) : max_year`, where `max_year` is the
+#' final historical year (`is_proj == FALSE`). Existing projection years
+#' never become terminal assessment years. This produces `folds + 1` fits,
+#' including the full historical assessment. The original fit is reused for
+#' that assessment unless hindcasts are requested.
 #' Each refit is attempted with `try()` so individual failures do not stop the sequence.
-#' Refits are generated via `update(fit, years = ...)`; ensure your `fit` object
-#' supports `update()` with a `years` argument. This function uses
+#' Refits are generated via `update(fit, years = ...)`. This function uses
 #' [furrr::future_map()] to run the retros in parallel. Remember to plan your session (e.g.,
 #' `future::plan(multisession, workers = 4)`).
+#' Every hindcast replaces any input projection settings with one status-quo-F
+#' year without changing the supplied fit. Failed or non-converged fits are
+#' omitted from the returned tables and fits. Summary scores therefore describe
+#' the retained folds, not necessarily every requested fold.
 #'
 #' @param fit A fitted TAM object as returned by [fit_tam()].
 #' @param folds Integer; number of terminal peels (default `2`).
@@ -419,9 +446,7 @@ fit_retro <- function(
   out$mohns_rho <- rhos
 
   if (hindcast) {
-    cols <- c("year", "age", "obs", "pred", "fold", "is_proj")
-    d <- rbind(out$obs_pred$catch[, cols],
-               out$obs_pred$index[, cols])
+    d <- stack_list(out$obs_pred[c("catch", "index")], label = "type")
     out$hindcast_rmse <- compute_hindcast_rmse(d)
   }
 
@@ -561,5 +586,3 @@ check_convergence <- function(fit, grad_tol = 1e-3, quiet = TRUE) {
 
   ok
 }
-
-

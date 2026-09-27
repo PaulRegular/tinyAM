@@ -2,7 +2,7 @@
 % Please edit documentation in R/tidy.R
 \name{tidy_pop}
 \alias{tidy_pop}
-\title{Collect population summaries (sdreport + report trends)}
+\title{Collect population trends and age-specific estimates}
 \usage{
 tidy_pop(fit, interval = 0.95)
 }
@@ -16,7 +16,8 @@ A named list containing the elements returned by \code{\link[=tidy_sdrep]{tidy_s
 \code{\link[=tidy_rep]{tidy_rep()}} (names preserved).
 }
 \description{
-Convenience wrapper that combines \code{\link[=tidy_sdrep]{tidy_sdrep()}} and \code{\link[=tidy_rep]{tidy_rep()}}
+Combines population time series with uncertainty from \code{\link[=tidy_sdrep]{tidy_sdrep()}} and
+age-specific estimates and other reported quantities from \code{\link[=tidy_rep]{tidy_rep()}}
 into a single named list for downstream plotting and summaries.
 }
 \examples{

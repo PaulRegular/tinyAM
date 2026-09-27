@@ -15,7 +15,7 @@ vis_tam(
 }
 \arguments{
 \item{...}{One or more fitted TAM objects (as returned by \code{\link[=fit_tam]{fit_tam()}}).
-Ignored if \code{model_list} is provided. When supplying models
+Supply these or \code{model_list}, not both. When supplying models
 through \code{...}, their object names are used to label models
 (even when a single model is supplied).}
 
@@ -25,13 +25,17 @@ through \code{...}, their object names are used to label models
 \item{interval}{Confidence level passed to \code{\link[=tidy_pop]{tidy_pop()}} and \code{\link[=tidy_par]{tidy_par()}} for interval construction. Default \code{0.95}.}
 
 \item{output_file}{Name of file to export using \code{\link[rmarkdown:render]{rmarkdown::render()}}.
-If \code{NULL}, a temporary HTML file will be rendered and opened
-automatically in your default browser.}
+If \code{NULL}, a temporary HTML file is rendered.
+The file opens in your browser only when \code{open_file = TRUE}.}
 
 \item{open_file}{Logical. Open rendered html file?}
 
 \item{render_args}{Named list of additional arguments passed to
 \code{\link[rmarkdown:render]{rmarkdown::render()}}.}
+}
+\value{
+Used for its side effects: writes an HTML dashboard and optionally
+opens it in the browser. Supply \code{output_file} to retain a known file path.
 }
 \description{
 Make a flexdashboard for visualizing model fits

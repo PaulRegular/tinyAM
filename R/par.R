@@ -23,8 +23,9 @@
 #' `NULL` it creates a coefficient vector `log_mu_f` of length
 #' `ncol(dat$F_modmat)`, and so on.
 #'
-#' Numeric parameters are initialized at `0`, except `log_m`, which starts at
-#' its log mean surface so initial M-process residuals are zero. Matrices are created
+#' Numeric parameters are initialized at `0`, except `dq` (initialized at `0.05`)
+#' and `log_m`, which starts at its log mean surface so initial M-process
+#' residuals are zero. These are starting values, not priors. Matrices are created
 #' with appropriate `dimnames` (`year × age` or `year × age_block`).
 #'
 #' **Created elements (when applicable) include:**
@@ -53,7 +54,7 @@
 #'   - `log_sd_f`
 #'   - `logit_phi_f` length 2 (if `process == "ar1"`)
 #'   - `log_mu_f` coefficients (length `ncol(dat$F_modmat)`) if a mean structure was supplied
-#'   - `log_f` matrix (`year` × `age`)
+#'   - `log_f` matrix (historical `year` × `age`; no projection rows)
 #'
 #' - **Natural mortality (M)**
 #'   - `log_sd_m` (if `dat$M_settings$process != "off"`)
@@ -90,7 +91,7 @@
 #' @return
 #' A named list of initialized parameters suitable to pass to the TAM objective
 #' function, with elements as described in **Details**. All numeric entries are
-#' initialized to `0` except `log_m`, initialized at its log mean. Matrices have
+#' initialized to `0` except `dq` (`0.05`) and `log_m` (its log mean). Matrices have
 #' informative `dimnames`.
 #'
 #' @example inst/examples/example_dat_default.R
@@ -98,7 +99,7 @@
 #' par <- make_par(dat)
 #' str(par)
 #'
-#' @seealso [make_dat()]
+#' @seealso [make_dat()], [fit_tam()], [tinyAM-model]
 #' @export
 make_par <- function(dat) {
 
@@ -173,19 +174,22 @@ make_par <- function(dat) {
   }
 
   ## Check for consistent mu M values within age blocks and abort if values are not constant within each block
-  if (!is.null(dat$M_settings$age_breaks)) {
+  if (dat$M_settings$process != "off") {
     getAll(par, dat)
-    log_mu_M <- matrix(NA, length(years), length(ages), dimnames = list(year = years, age = ages))
-    dummy_mu_m <- seq(1, 10, length = length(mu_m))
-    log_mu_M[] <- log_mu_supplied_m + drop(M_modmat %*% dummy_mu_m)
+    # Every mean component must be constant within a shared absolute M state.
+    mean_parts <- cbind(log_mu_supplied_m, M_modmat)
     for(b in levels(M_settings$age_blocks)) {
       if (sum(M_settings$age_blocks == b) > 1) {
         ia <- names(M_settings$age_blocks)[M_settings$age_blocks == b]
-        bmu <- log_mu_M[, ia]
-        dups <- apply(bmu, 1, duplicated)
-        if (any(colSums(!dups) != 1)) {
+        varies <- vapply(seq_len(ncol(mean_parts)), function(j) {
+          surface <- matrix(mean_parts[, j], length(years), length(ages),
+                            dimnames = list(year = years, age = ages))
+          bmu <- surface[, ia, drop = FALSE]
+          any(bmu != bmu[, 1])
+        }, logical(1))
+        if (any(varies)) {
           cli::cli_abort(c("M mean structure varies within M age_blocks. ",
-                           "x" = "When using M_settings$age_breaks, mu_form and/or mu_supplied must be constant within each block."))
+                           "x" = "mu_form and mu_supplied must be constant within each M process age block. Use finer age_breaks for age-varying M."))
         }
       }
     }

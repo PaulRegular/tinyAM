@@ -2,7 +2,7 @@
 #' Northern cod example data for TAM
 #'
 #' @description
-#' A compact, tidy-ish list of inputs prepared for the Tiny Assessment Model (TAM),
+#' Example catch, survey, weight, and maturity tables for the Tiny Assessment Model (TAM),
 #' derived from data used in the assessment of Northern cod, NAFO Divisions 2J3KL.
 #' This is intended for vignettes, examples, and tests.
 #'
@@ -83,9 +83,13 @@
 #' Additional requirements:
 #' - `index$samp_time` is **required**, numeric in **\[0, 1\]**, and **no NA**.
 #' - `weight$obs` and `maturity$obs` must not contain `NA`.
-#' - `catch`, `weight`, and `maturity` must contain a row for **every**
+#' - Non-missing observations must be finite and non-negative; maturity must
+#'   be a proportion in `[0, 1]`. Zero catch/index values are accepted here but
+#'   treated as missing by [make_dat()], because the observation model is on logs.
+#' - `catch`, `weight`, and `maturity` must contain exactly one row for **every**
 #'   `(year, age)` combination over the global modeled range
 #'   (from min to max year and age across all tables).
+#' - Survey tables may omit year-age combinations.
 #'
 #' On failure the function aborts with a `cli` error. On success, it returns
 #' `TRUE` (invisibly).
@@ -160,6 +164,12 @@ check_obs <- function(obs) {
         "x" = "`{nm}$obs` must be available for all years and ages (no NA)."
       ))
     }
+    if (any(!is.finite(x$obs[!is.na(x$obs)])) || any(x$obs < 0, na.rm = TRUE)) {
+      cli::cli_abort("{nm}$obs must contain finite, non-negative values (NA allowed for catch and index).")
+    }
+    if (nm == "maturity" && any(x$obs > 1)) {
+      cli::cli_abort("maturity$obs must contain proportions between 0 and 1.")
+    }
 
     # index survey and samp_time: required, numeric in [0,1], no NA
     if (nm == "index") {
@@ -200,6 +210,9 @@ check_obs <- function(obs) {
 
   must_be_full <- c("catch", "weight", "maturity")
   for (nm in must_be_full) {
+    if (anyDuplicated(obs[[nm]][, c("year", "age")])) {
+      cli::cli_abort("{.arg {nm}} must have exactly one row per year and age; duplicate rows would misalign the model surfaces.")
+    }
     xy <- unique(obs[[nm]][, c("year", "age")])
     if (nrow(xy) != grid_size) {
       cli::cli_abort(c(

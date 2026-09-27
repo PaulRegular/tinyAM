@@ -15,12 +15,17 @@ mono(x, by = NULL)
 A formula marker; calling this function directly raises an error.
 }
 \description{
+Use \code{mono()} in \code{index_settings$q_form} when catchability should stay level
+or increase across ordered age or size groups. Unlike ordinary factor
+effects, it cannot describe a decline or dome with other covariates held
+constant. Flat sections are allowed; the rate of increase is estimated.
+}
+\details{
 Use \code{mono()} as an additive term in \code{index_settings$q_form}. It is a
 formula marker, not a numeric transformation. Numeric values are ordered
 increasingly; factors (including ordered factors) use their declared levels.
 Supply factor levels in the scientifically intended order.
-}
-\details{
+
 The first represented level has no increment. Subsequent log-q levels add
 cumulative non-negative increments \code{dq}, fitted directly with a lower bound
 of zero by \code{\link[=fit_tam]{fit_tam()}}. These are increments on the log-q scale, not absolute
@@ -44,5 +49,5 @@ transformed arguments, and ordinary effects of the same \code{x} are unsupported
 ~ survey + mono(q_block, by = survey)
 }
 \seealso{
-\code{\link[=make_dat]{make_dat()}}, \code{\link[=make_par]{make_par()}}, \code{\link[=tidy_obs_pred]{tidy_obs_pred()}}, \code{\link[=tidy_par]{tidy_par()}}
+\code{\link[=make_dat]{make_dat()}}, \code{\link[=make_par]{make_par()}}, \code{\link[=tidy_obs_pred]{tidy_obs_pred()}}, \code{\link[=tidy_par]{tidy_par()}}, \link{tinyAM-model}
 }

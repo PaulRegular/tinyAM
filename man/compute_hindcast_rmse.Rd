@@ -24,8 +24,8 @@ predictions), \code{FALSE} otherwise.
 Zeros in \code{obs}/\code{pred} are converted to \code{NA} before logging.}
 }
 \value{
-A single numeric value: the RMSE between observed and one–step–ahead projected
-values for matched \verb{(year, age)} pairs. Returns \code{NA} if no valid pairs exist.
+A single numeric RMSE. Returns \code{NaN} (a missing numeric value) if
+there are no non-missing matched forecast errors.
 }
 \description{
 Calculates the root–mean–squared error (RMSE) between observed values and
@@ -33,25 +33,22 @@ one–step–ahead projections from a hindcast run (e.g., a data frame from
 \code{hindcasts$obs_pred$catch} or \code{hindcasts$obs_pred$index}).
 }
 \details{
-The function:
-\enumerate{
-\item Selects one–step–ahead projections via \code{is_proj == TRUE} (projected rows).
-\item Extracts observed values at the peel year via \code{year == fold}
-(observed rows).
-\item Merges observed and projected values by \verb{(year, age)}.
-\item Optionally transforms to log scale (after replacing exact zeros with \code{NA}).
-\item Computes squared errors \eqn{(\mathrm{obs} - \mathrm{pred})^2} and returns
-\deqn{\mathrm{RMSE} = \sqrt{\mathrm{mean}\big[(\mathrm{obs} - \mathrm{pred})^2\big]}}
-with \code{na.rm = TRUE}.
-}
+Matches projected rows (\code{is_proj == TRUE}) with available historical
+observations by year and age, also using \code{type} and \code{survey} when present.
+Include \code{type} when combining catch and index tables, and \code{survey} when
+combining surveys. Conflicting observations for the same key cause an error.
+Repeated copies of the same observation across folds count only once per
+prediction. Each matched forecast receives equal weight.
 
-Notes:
-\itemize{
-\item If \code{log = TRUE}, exact zeros are dropped (set to \code{NA}) before \code{log()}.
-Consider adding a small constant beforehand if you prefer to retain zeros.
-\item Only year–age pairs present in \strong{both} the observed-at-fold and projected
-sets contribute to the RMSE (via the merge).
-}
+On the natural scale,
+\deqn{\mathrm{RMSE}=\sqrt{\frac{1}{K}\sum_i(Y_i-\widetilde Y_i)^2}.}
+With \code{log = TRUE}, both values are logged first. Log RMSE measures departures
+on a relative scale and is often more useful when catch and survey units differ.
+It still combines errors from different series and is not a likelihood score.
+Zeros and missing pairs are omitted for log RMSE; zeros are retained on the
+natural scale. Predictions beyond the available observations do not contribute.
+All projection rows are eligible; use \code{\link[=fit_hindcast]{fit_hindcast()}} for one-year horizons
+or subset the input to the desired forecast horizon.
 }
 \examples{
 \dontrun{

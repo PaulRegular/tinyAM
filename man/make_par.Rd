@@ -17,7 +17,7 @@ parameters depend on elements in \code{dat} (e.g., \code{F_modmat}, \code{M_modm
 \value{
 A named list of initialized parameters suitable to pass to the TAM objective
 function, with elements as described in \strong{Details}. All numeric entries are
-initialized to \code{0} except \code{log_m}, initialized at its log mean. Matrices have
+initialized to \code{0} except \code{dq} (\code{0.05}) and \code{log_m} (its log mean). Matrices have
 informative \code{dimnames}.
 }
 \description{
@@ -42,8 +42,9 @@ it initializes a 2-vector \code{logit_phi_f}; if \code{dat$F_settings$mu_form} i
 \code{NULL} it creates a coefficient vector \code{log_mu_f} of length
 \code{ncol(dat$F_modmat)}, and so on.
 
-Numeric parameters are initialized at \code{0}, except \code{log_m}, which starts at
-its log mean surface so initial M-process residuals are zero. Matrices are created
+Numeric parameters are initialized at \code{0}, except \code{dq} (initialized at \code{0.05})
+and \code{log_m}, which starts at its log mean surface so initial M-process
+residuals are zero. These are starting values, not priors. Matrices are created
 with appropriate \code{dimnames} (\verb{year × age} or \verb{year × age_block}).
 
 \strong{Created elements (when applicable) include:}
@@ -76,7 +77,7 @@ See \code{\link[=make_dat]{make_dat()}} for the choices and weak-identification 
 \item \code{log_sd_f}
 \item \code{logit_phi_f} length 2 (if \code{process == "ar1"})
 \item \code{log_mu_f} coefficients (length \code{ncol(dat$F_modmat)}) if a mean structure was supplied
-\item \code{log_f} matrix (\code{year} × \code{age})
+\item \code{log_f} matrix (historical \code{year} × \code{age}; no projection rows)
 }
 \item \strong{Natural mortality (M)}
 \itemize{
@@ -123,5 +124,5 @@ str(par)
 
 }
 \seealso{
-\code{\link[=make_dat]{make_dat()}}
+\code{\link[=make_dat]{make_dat()}}, \code{\link[=fit_tam]{fit_tam()}}, \link{tinyAM-model}
 }

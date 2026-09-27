@@ -22,17 +22,20 @@ make_dat(
 \item{obs}{A list of tidy observation data.frames: \code{catch}, \code{index},
 \code{weight}, and \code{maturity}. See \strong{Details}.}
 
-\item{years}{Integer vector of model years (strictly increasing).
+\item{years}{Consecutive historical model years (at least two).
 Inferred from observed data (non-projection) if \code{NULL}.}
 
-\item{ages}{Integer vector of model ages (strictly increasing).
+\item{ages}{Consecutive model ages (at least two).
 Inferred from observed data (non-projection) if \code{NULL}. If the ages in
 the data extend beyond \code{max(ages)}, the \code{"obs"} column is summed for \code{catch}
-and \code{index} data, and averaged for \code{weight} and \code{maturity} data.}
+and \code{index} data within each year (and survey for indices), and averaged
+without abundance weighting for \code{weight} and \code{maturity} data.}
 
 \item{N_settings}{A list with elements:
 \itemize{
-\item \code{process}: one of \code{"off"}, \code{"iid"}, \code{"rw"}, or \code{"ar1"}.
+\item \code{process}: \code{"off"} for deterministic cohort survival, \code{"iid"} for independent
+cohort residuals, \code{"rw"} for residuals that accumulate through time, or
+\code{"ar1"} for residuals correlated between years and ages. See \link{tinyAM-model}.
 \item \code{init}: \code{"exp"} (default), \code{"free"}, or \code{"random"}, independently of
 \code{process}. All use fixed first-year recruitment \code{log_r0} as the starting
 anchor. \code{"exp"} uses deterministic survivorship; \code{"free"} estimates fixed
@@ -42,7 +45,9 @@ IID survivorship residuals and separate SD \code{sd_n0}. See \strong{Details}.
 
 \item{F_settings}{A list with elements:
 \itemize{
-\item \code{process}: one of \code{"iid"}, \code{"rw"}, or \code{"ar1"}.
+\item \code{process}: \code{"iid"} for independent departures from the mean log F,
+\code{"rw"} for departures that accumulate over time, or \code{"ar1"} for departures
+correlated between years and ages.
 \item \code{mu_form}: an optional formula for mean-\eqn{F} (coefficients estimated as
 \strong{log-scale} parameters \code{log_mu_f}).
 \item \code{mean_ages}: optional vector of ages to include in population weighted
@@ -51,7 +56,8 @@ average F (\code{F_bar}) calculations. All ages used if absent.
 
 \item{M_settings}{A list with elements:
 \itemize{
-\item \code{process}: one of \code{"off"}, \code{"iid"}, \code{"rw"}, or \code{"ar1"}.
+\item \code{process}: \code{"off"} uses only supplied/mean M. Otherwise \code{"iid"}, \code{"rw"},
+and \code{"ar1"} have the same meanings as for F, on selected years/age blocks.
 \item \code{mu_form}: optional formula for mean-\eqn{M} (applied on the log scale) built
 on \code{obs$weight}, yielding coefficients \code{mu_m}. These enter the log-\eqn{M}
 surface directly and may therefore be positive or negative; they intentionally
@@ -62,16 +68,18 @@ dropped (warning) so supplied levels act as fixed offsets.
 \eqn{M}, e.g. \code{~ I(0.2)} or a column reference such as
 \code{~ M_assumption} stored in the \code{obs$weight} data.frame.
 \item \code{age_breaks}: optional integer break points used by \code{\link[=cut_ages]{cut_ages()}} to
-define \code{age_blocks} for coupling \eqn{M} deviations across ages.
+define \code{age_blocks} sharing absolute latent M states across ages.
 When a narrower set of \code{age_breaks} than modeled \code{ages} is provided,
-deviations are only estimated for ages within the specified range; ages
+process states are only estimated for ages within the specified range; ages
 outside this range are fixed to their mean or assumed levels. By default,
-deviations are estimated for all modeled ages except the youngest, reducing
-confounding between \eqn{M} and recruitment.
-\item \code{first_dev_year}: integer year at which to start estimating \eqn{M} deviations.
-Defaults to the second modeled year if \code{NULL}. Anchoring the first year
-to mean or assumed levels helps minimize confounding between early \eqn{M}
-estimates, initial abundance, and catchability, leading to more stable estimation.
+blocks use \code{cut_ages(ages[-1], unique(range(ages[-1])))}, usually one block
+excluding the youngest age; two older ages form separate singleton blocks.
+This restricts
+how M can trade off against recruitment; it does not guarantee identifiability.
+\item \code{first_dev_year}: one historical modeled year at which M process states
+begin. Defaults to the second year if \code{NULL}. Earlier M stays at its mean
+or supplied value; earlier years are not coupled to the first latent state.
+Ignored when the M process is off.
 \item \code{mean_ages}: optional vector of ages to include in population weighted
 average M (\code{M_bar}) calculations. All ages used if absent.
 }}
@@ -102,10 +110,11 @@ Defaults to \code{TRUE}. Note that one-step-ahead residuals are not currently wo
 \item{proj_settings}{Optional list with elements:
 \itemize{
 \item \code{n_proj}: number of years to project (default \code{NULL} disables projections).
-\item \code{n_mean}: number of terminal years to average when adding projection rows. Only the \code{"obs"} columns
-are averaged. All other columns are copied from the terminal year (by \code{age}).
+\item \code{n_mean}: number of recent historical years used to average weight and
+maturity by age. Catch/index observations in projection years are missing.
+Other columns are copied from the last available year in each table.
 \item \code{F_mult}: multiplier to apply to terminal F to set a level to carry forward in the projection years
-(default = \code{1} to assume status quo F through the projection years). Can be a value of length 1 or
+(required when projecting; use \code{1} for status quo F). Can be a value of length 1 or
 length = \code{n_proj}. When it is a vector of length one, that multiplier is recycled across all
 projection years.
 }}
@@ -129,20 +138,21 @@ logical vector indicating missing and observed values, and vector of non-missing
 }
 }
 \description{
-\code{make_dat()} converts tidy observation inputs and modeling options into the
-structured list \code{dat} expected by TAM’s likelihood and simulation functions.
-It expands an age–year grid, merges observations, constructs design matrices for
-observation SDs, catchability, and mean-\eqn{F} and/or mean-\eqn{M} (when used),
-and derives helper mappings and settings.
+Prepares catch, survey, weight, and maturity data for the chosen model years
+and ages. Checks input coverage, combines older ages into a plus group when
+needed, and sets up mortality, catchability, and observation-error formulas.
+Optional projection settings append future years. \code{\link[=fit_tam]{fit_tam()}} calls this
+function automatically; call it directly to inspect a model specification.
 }
 \details{
 \strong{Observation handling}
 \itemize{
 \item Inputs are expected as a list with components \code{catch}, \code{index}, \code{weight},
 and \code{maturity}. Each must include columns \code{year}, \code{age}, and a value column
-named \code{obs} (for \code{catch}/\code{index}) or renamed from \code{weight}/\code{mat}. See
+named \code{obs}. Rename any differently named input columns before calling. See
 \link{cod_obs} for an example of the required structure.
-\item Observations are merged to the full \code{expand.grid(year, age)}.
+\item Catch, weight, and maturity must already contain exactly one row per
+year-age combination across the input range. Survey tables may be sparse.
 \item A combined observation table is created for catch and index; \code{log(0)} is
 treated as \code{NA} (to be handled via random effects).
 }
@@ -192,7 +202,8 @@ prohibition or automatic fallback. The threshold may be revised after
 simulation testing; inspect convergence and sensitivity carefully.
 \item \code{M_settings$age_breaks} (vector of break points on ages)
 defines \code{M_settings$age_blocks} via \code{\link[=cut_ages]{cut_ages()}}, used
-to couple \eqn{M} deviations across age.
+to share absolute latent \eqn{M} states across ages. All mean components
+must be constant across ages within each fitted block.
 \item The AR(1) correlation parameters are only initialized for
 processes whose \code{process == "ar1"}. Correlations are assumed to be 0
 when \code{process == "iid"}. A temporal random walk (\code{"rw"}) has independent
@@ -239,5 +250,5 @@ dat <- make_dat(
 
 }
 \seealso{
-\code{\link[stats:model.matrix]{stats::model.matrix()}}, \code{\link[=cut_ages]{cut_ages()}}
+\code{\link[=fit_tam]{fit_tam()}}, \link{tinyAM-model}, \code{\link[stats:model.matrix]{stats::model.matrix()}}, \code{\link[=cut_ages]{cut_ages()}}
 }

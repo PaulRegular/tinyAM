@@ -68,7 +68,16 @@ from \code{\link[=tidy_tam]{tidy_tam()}} and related TAM model objects:
 \item \code{plot_obs_pred()}: observed vs predicted fits by year.
 \item \code{plot_bubbles()}: residuals (OSA or standardized) as bubbles by age × year.
 \item \code{plot_resid()}: residual diagnostics vs year, cohort, age, and expected values.
+\item \code{plot_par()}: parameter estimates and confidence limits, including signed effects.
 }
+
+These functions display the supplied tables without refitting the model or
+recalculating uncertainty. Trend ribbons use \code{lwr} and \code{upr} confidence limits;
+they are not prediction intervals for future observations. Catch and survey
+predictions are conditional medians. Residuals come from \code{\link[=tidy_obs_pred]{tidy_obs_pred()}}.
+Subset to a single survey or supply a grouping aesthetic when combining surveys
+so distinct series are not connected. A log axis requires positive values.
+See \link{tinyAM-model} for definitions and units of population quantities.
 }
 \examples{
 

@@ -16,7 +16,8 @@ for \code{\link[=dprocess_ar1]{dprocess_ar1()}}.}
 \item{phi}{Length-2 numeric vector \code{c(phi_age, phi_year)} with
 values in \eqn{(-1, 1)} for AR(1); zero gives independence.}
 
-\item{sd}{Positive scalar \eqn{\sigma}.}
+\item{sd}{Positive innovation-scale SD \eqn{\sigma}; the marginal SD is
+\eqn{\sigma/\sqrt{(1-\phi_\text{age}^2)(1-\phi_\text{year}^2)}}.}
 
 \item{ny, na}{Positive integers: numbers of years and ages for
 \code{\link[=rprocess_ar1]{rprocess_ar1()}}.}

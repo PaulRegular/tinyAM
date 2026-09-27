@@ -1,10 +1,11 @@
 
 <!-- badges: start -->
-[![R-CMD-check](https://github.com/PaulRegular/tinyAM/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/PaulRegular/tinyAM/actions/workflows/R-CMD-check.yaml)
-[![Codecov test coverage](https://codecov.io/gh/PaulRegular/tinyAM/graph/badge.svg)](https://app.codecov.io/gh/PaulRegular/tinyAM)
+
+[![R-CMD-check](https://github.com/PaulRegular/tinyAM/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/PaulRegular/tinyAM/actions/workflows/R-CMD-check.yaml) [![Codecov test coverage](https://codecov.io/gh/PaulRegular/tinyAM/graph/badge.svg)](https://app.codecov.io/gh/PaulRegular/tinyAM)
+
 <!-- badges: end -->
 
-# tinyAM <img src="man/figures/logo.png" align="right" height="138" alt="" />
+# tinyAM <img src="man/figures/logo.png" align="right" height="138"/>
 
 **tinyAM** (*tiny assessment model*; aka TAM) is an experimental R package for fitting age-structured stock assessment models using [RTMB](https://github.com/kaskr/RTMB).
 
@@ -42,46 +43,37 @@ The core model is an age-structured state-space model with:
 - one or more survey indices with within-year sampling times; and
 - lognormal observation models for catch and survey indices.
 
-Age-year deviations in abundance, fishing mortality, and natural mortality can be represented using a common two-dimensional process model, including IID, highly correlated approximate random-walk, and estimated AR(1) structures.
+Departures from expected log abundance or mean log mortality can follow three processes:
+
+- `"iid"`: independent departures in each year and age or age block;
+- `"rw"`: departures accumulate from year to year, independently across ages;
+- `"ar1"`: departures are correlated across adjacent years and ages and return toward a mean.
+
+A random walk has no penalty on its starting level. Its SD describes annual increments; an AR1 SD is an innovation scale, not the marginal variability of the states. Recruitment also follows a temporal random walk.
 
 Mean structures for quantities such as fishing mortality, natural mortality, catchability, and observation error can be specified using familiar R formulas and design matrices.
 
-Initial abundance is specified independently of the subsequent N process through
-`N_settings$init`: `"exp"` (default) uses parsimonious survivorship from fixed
-first-year recruitment (`log_r0`), `"free"` estimates fixed older-age `log_n0`
-states, and `"random"` estimates random states with IID survivorship residuals
-(`eta_log_n0`) and a separate SD. Recruitment and N process states begin in
-year 2. Random initialization requires at least two ages and warns below ten
-ages because its SD may be weakly identified.
+Initial abundance is specified independently of the subsequent N process through `N_settings$init`: `"exp"` (default) uses parsimonious survivorship from fixed first-year recruitment (`log_r0`), `"free"` estimates fixed older-age `log_n0` states, and `"random"` estimates random states with IID survivorship residuals (`eta_log_n0`) and a separate SD. Recruitment and N process states begin in year 2. Random initialization requires at least two ages and warns below ten ages because its SD may be weakly identified.
+
+For an active M process, the default normally shares one state across all ages except the youngest, starting in year 2 (see `?make_dat` for very short age ranges). Earlier M and excluded ages retain their supplied or mean values. F is estimated in every historical year. These boundary assumptions can affect initial abundance and catchability estimates; they are not guarantees of identifiability. The full equations and conventions are in `help("tinyAM-model", package = "tinyAM")`.
 
 ## Monotonic survey catchability
 
-Catchability formulas can retain an unconstrained shape or impose monotonic
-changes between ordered blocks:
+Catchability formulas can retain an unconstrained shape or impose monotonic changes between ordered blocks:
 
-```r
+``` r
 ~ q_block                                      # unconstrained
 ~ mono(q_block)                                # non-decreasing
 ~ survey + mono(q_block, by = survey)           # independent survey curves
 ```
 
-Use these as `index_settings$q_form`. Numeric levels are sorted increasingly;
-factor levels follow their declared order. The first represented level is the
-baseline. Later levels add non-negative log-q increments
-`dq`, fitted directly with a zero lower bound and initialized at 0.05. Zero
-increments allow exact plateaus between separate levels; pooled blocks also
-give exact plateaus. Estimates and SEs for `dq` share the increment scale;
-Wald inference is only a local approximation at an active boundary.
-Each `by` group uses its own represented levels
-(at least two) and independent steps. Ordinary terms supply baselines:
-omitting `survey` in the last example shares one intercept across surveys.
-Other ordinary covariates are held constant when interpreting monotonicity.
+Use these as `index_settings$q_form`. Numeric levels are sorted increasingly; factor levels follow their declared order. The first represented level is the baseline. Later levels add non-negative log-q increments `dq`, fitted directly with a zero lower bound and initialized at 0.05. Zero increments allow exact plateaus between separate levels; pooled blocks also give exact plateaus. Estimates and SEs for `dq` share the increment scale; Wald inference is only a local approximation at an active boundary. Each `by` group uses its own represented levels (at least two) and independent steps. Ordinary terms supply baselines: omitting `survey` in the last example shares one intercept across surveys. Other ordinary covariates are held constant when interpreting monotonicity.
 
 ## Workflow
 
 A typical tinyAM workflow is:
 
-```r
+``` r
 library(tinyAM)
 
 fit <- fit_tam(
@@ -114,7 +106,7 @@ fit
 
 Alternative models can then be constructed by modifying the fitted call:
 
-```r
+``` r
 fit_ar1 <- update(
   fit,
   F_settings = list(
@@ -126,7 +118,7 @@ fit_ar1 <- update(
 
 Because fitted models share a common structure, they can be compared using the same downstream tools.
 
-```r
+``` r
 fits <- list(
   "F random walk" = fit,
   "F AR1" = fit_ar1
@@ -151,6 +143,22 @@ tinyAM includes tools for examining both model fit and model behaviour, includin
 
 The likelihood also serves as the model's simulation engine, helping to keep estimation and simulation assumptions consistent.
 
+``` r
+check_convergence(fit)
+fit$opt$message
+head(fit$pop$ssb)
+plot_trend(fit$pop$ssb, ylab = "Spawning stock biomass")
+
+# One-year forecasts refitted from historical terminal years
+# hindcasts <- fit_hindcast(fit, folds = 3)
+
+# Possible observations conditional on the fitted population history
+sims <- sim_tam(fit, n = 10, par_uncertainty = "none",
+                redraw_random = FALSE, seed = 1)
+```
+
+`redraw_random = TRUE` regenerates process states across the whole modeled period; it is not a future-only forecast conditional on the fitted history. Projections use terminal historical F times a chosen multiplier, recent mean weights and maturities, and continuing recruitment/N/M processes. Compare diagnostics and sensitivities before treating differences among model outputs as biological evidence.
+
 ## Outputs
 
 Internally, tinyAM uses matrices and arrays where these naturally reflect the age-year structure of the model.
@@ -167,6 +175,12 @@ For analysis, fitted quantities are converted to tidy data frames. A `tam_fit` o
 
 The underlying model components remain accessible so that unusual or experimental analyses are not hidden behind a high-level interface.
 
+Uncertainty tables put `est`, `lwr`, and `upr` first, then `se` and `se_scale`. Estimates and confidence limits are on the reported scale; SEs stay on the estimation scale. A small log-scale SE, such as 0.10, approximates 10% relative uncertainty (CV). This approximation is poor for large SEs, so use the confidence limits to communicate uncertainty. Observation `sd` describes variation in log measurements and is a different quantity from the SE of an estimate.
+
+Catch and survey predictions are conditional medians of lognormal observations. Their arithmetic means are higher. Zero observations are treated as missing, not as observations from a count or censoring model. SSB is calculated at the start of the year without an extra spawning-time mortality correction.
+
+For practical help, start with `?fit_tam`, `?make_dat`, and `?mono`. For mathematical details, use `help("tinyAM-model", package = "tinyAM")`, `?dprocess_ar1`, and `?dprocess_rw`.
+
 ## Current status
 
 tinyAM is under active development and should currently be considered **highly experimental**.
@@ -182,7 +196,7 @@ The package currently uses Northern cod data as an example and development test 
 
 The development version can be installed from GitHub:
 
-```r
+``` r
 # install.packages("remotes")
 remotes::install_github("PaulRegular/tinyAM")
 ```

@@ -263,20 +263,41 @@
 
 #' Print and summarize a TAM fit
 #'
-#' Estimates and confidence limits are shown first, followed by the standard
-#' error and its scale. A small log-scale SE approximates a coefficient of
-#' variation (CV): `0.10` is approximately 10% relative uncertainty. Logit-scale
-#' SEs are not CVs. `reported` means the same scale as the displayed estimate,
-#' including quantities such as `dq` that are fitted directly on a log-q scale.
+#' Summarize parameter estimates, uncertainty, convergence information, and
+#' terminal population quantities from a fitted TAM model. Estimates and
+#' confidence limits are shown with their standard errors and the scale on
+#' which those standard errors are reported.
 #'
-#' @param x,object A fitted TAM object, or its summary for `print.summary_tam_fit()`.
-#' @param ... Additional arguments passed to printing functions; unused by `summary()`.
+#' @details
+#' Standard errors may be reported on different scales depending on the
+#' parameterization. For parameters estimated on a log scale, a small SE
+#' approximately corresponds to a coefficient of variation (CV); for example,
+#' an SE of `0.10` is approximately 10% relative uncertainty. Logit-scale SEs
+#' should not be interpreted as CVs. An SE scale of `reported` means that the
+#' SE is on the same scale as the displayed estimate. This includes quantities
+#' such as `dq`, which are fitted directly as increments on the log-q scale.
+#'
+#' The displayed maximum gradient is the raw fixed-effect gradient. Parameters
+#' fitted at a boundary need not have a raw gradient of zero at a valid
+#' constrained optimum. For example, a `dq` estimate at its lower bound of zero
+#' can have a positive raw gradient while [check_convergence()] still passes its
+#' constrained optimality check.
+#'
+#' Terminal summaries exclude projection years.
+#'
+#' @param x,object A fitted TAM object, or its summary for
+#'   `print.summary_tam_fit()`.
+#' @param ... Additional arguments passed to printing functions; unused by
+#'   `summary()`.
+#'
 #' @return `summary()` returns a `summary_tam_fit` list. Its `coefficients` and
-#'   `terminal_vals` are data frames with numeric estimate, confidence-limit and
-#'   SE columns, and a character `SE scale` column. Printing returns its input
-#'   invisibly. The confidence level is taken from the tidy tables (95% by default).
+#'   `terminal_vals` components are data frames containing numeric estimates,
+#'   confidence limits, standard errors, and a character `SE scale` column.
+#'   Printing methods return their input invisibly. The confidence level is
+#'   taken from the tidy tables (95% by default).
+#'
 #' @name tam_fit_summary
-#' @seealso [tidy_par()], [tidy_pop()]
+#' @seealso [tidy_par()], [tidy_pop()], [check_convergence()]
 #' @export
 print.tam_fit <- function(x, ...) {
   x <- .require_tam_fit(x, arg = "x")

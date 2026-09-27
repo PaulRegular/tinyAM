@@ -2,7 +2,7 @@
 % Please edit documentation in R/tidy.R
 \name{tidy_sdrep}
 \alias{tidy_sdrep}
-\title{Tidy \code{sdreport} time series with confidence intervals}
+\title{Population time series with confidence intervals}
 \usage{
 tidy_sdrep(fit, interval = 0.95)
 }
@@ -18,9 +18,9 @@ A named list of data frames (one per series), each with columns:
 }
 }
 \description{
-Extracts ADREPORTED time-series from \code{fit$sdrep}, computes normal-approximation
-intervals, applies a transformation (default \code{exp}), and returns a list of
-tidy data frames.
+Returns annual recruitment, abundance, biomass, spawning biomass, and
+average F and M, with confidence limits and clearly labelled SE scales.
+Estimates and limits are reported in the units of each population quantity.
 }
 \details{
 Assumptions:

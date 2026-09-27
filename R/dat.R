@@ -13,9 +13,11 @@
 #' with argument names that read naturally for common assessment inputs.
 #'
 #' @details
-#' Let `breaks = (b1, b2, ..., bm)`. Blocks are
-#' `[b1, b2-1], [b2, b3-1], ..., [b_{m-1}, b_m]` on the integer line.
-#' If `b_{m-1} = b_m`, the last block is the singleton `{b_m}`.
+#' Breaks normally mark the first value in each block. The final break must
+#' equal `max(x)`. If the gap between the last two breaks exceeds one, the final
+#' break closes the preceding block rather than starting a singleton. For
+#' example, `c(2, 5, 8)` gives `2-4` and `5-8`, whereas `c(2, 5, 7, 8)` gives
+#' `2-4`, `5-6`, `7`, and `8`. This convention also defines M age blocks.
 #'
 #' **Input requirements (enforced):**
 #'
@@ -161,24 +163,29 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #'
 #' @noRd
 .add_proj_rows <- function(obs, n_proj = 3, n_mean = 3) {
-  .add_one <- function(x) {
-    max_year   <- max(x$year, na.rm = TRUE)
+  max_year <- max(unlist(lapply(obs, `[[`, "year")))
+  .add_one <- function(x, nm) {
     proj_years <- seq.int(max_year + 1L, max_year + n_proj)
     mean_years <- seq.int(max_year - n_mean + 1L, max_year)
-    aux <- x[x$year == max_year, setdiff(names(x), c("year", "obs")), drop = FALSE]
-    mean_obs <- stats::aggregate(
-      obs ~ age,
-      data = x[x$year %in% mean_years, ],
-      FUN = mean
-    ) |> merge(aux, by = "age")
-    proj_grid <- expand.grid(year = proj_years, age = mean_obs$age)
-    proj_rows <- merge(proj_grid, mean_obs, by = "age")[, names(x)]
+    template <- x[x$year == max(x$year), , drop = FALSE]
+    if (nm %in% c("weight", "maturity")) {
+      mean_obs <- stats::aggregate(obs ~ age, data = x[x$year %in% mean_years, ], FUN = mean)
+      template$obs <- mean_obs$obs[match(template$age, mean_obs$age)]
+    } else {
+      template$obs <- NA_real_
+    }
+    proj_rows <- do.call(rbind, lapply(proj_years, function(year) {
+      rows <- template
+      rows$year <- year
+      rows
+    }))
     proj_rows$is_proj <- TRUE
     x$is_proj <- FALSE
     x_with_proj <- rbind(x, proj_rows)
     x_with_proj[order(x_with_proj$age, x_with_proj$year), ]
   }
-  obs_with_proj <- lapply(obs, .add_one)
+  obs_with_proj <- lapply(names(obs), function(nm) .add_one(obs[[nm]], nm))
+  names(obs_with_proj) <- names(obs)
   obs_with_proj$catch$obs[obs_with_proj$catch$is_proj] <- NA
   obs_with_proj$index$obs[obs_with_proj$index$is_proj] <- NA
   obs_with_proj
@@ -203,24 +210,28 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #' @noRd
 .plus_fun <- function(obs, plus_age) {
 
-  .aggregate_one <- function(df, plus_age, fun) {
-    plus_df <- df[!is.na(df$obs) & df$age >= plus_age, ]
+  .aggregate_one <- function(df, plus_age, fun, groups = "year") {
+    plus_df <- df[df$age >= plus_age, , drop = FALSE]
     if (nrow(plus_df) == 0) {
       return(df)
     } else {
-      plus_group <- stats::aggregate(obs ~ year, data = plus_df, FUN = fun)
-      plus_group$age <- plus_age
-      sub_df <- df[df$age <= plus_age, ]
-      df_out <- merge(sub_df, plus_group, by = c("year", "age"), all.x = TRUE, suffixes = c("", "_plus"))
-      df_out$obs <- ifelse(is.na(df_out$obs_plus), df_out$obs, df_out$obs_plus)
-      df_out$obs_plus <- NULL
+      plus_group <- stats::aggregate(plus_df["obs"], plus_df[groups], FUN = function(x) {
+        if (all(is.na(x))) NA_real_ else fun(x, na.rm = TRUE)
+      })
+      # Retain metadata at the plus age, or the first available older age.
+      template <- plus_df[order(plus_df$age), , drop = FALSE]
+      template <- template[!duplicated(template[groups]), , drop = FALSE]
+      template$age <- plus_age
+      plus_rows <- merge(template[, setdiff(names(template), "obs"), drop = FALSE],
+                         plus_group, by = groups)
+      df_out <- rbind(df[df$age < plus_age, , drop = FALSE], plus_rows[, names(df), drop = FALSE])
       return(df_out[order(df_out$age, df_out$year), ])
     }
   }
 
   list(
     catch = .aggregate_one(obs$catch, plus_age, sum),
-    index = .aggregate_one(obs$index, plus_age, sum),
+    index = .aggregate_one(obs$index, plus_age, sum, groups = c("year", "survey")),
     weight = .aggregate_one(obs$weight, plus_age, mean),
     maturity = .aggregate_one(obs$maturity, plus_age, mean)
   )
@@ -231,20 +242,21 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #' Build a self-contained data list for TAM
 #'
 #' @description
-#' `make_dat()` converts tidy observation inputs and modeling options into the
-#' structured list `dat` expected by TAM’s likelihood and simulation functions.
-#' It expands an age–year grid, merges observations, constructs design matrices for
-#' observation SDs, catchability, and mean-\eqn{F} and/or mean-\eqn{M} (when used),
-#' and derives helper mappings and settings.
+#' Prepares catch, survey, weight, and maturity data for the chosen model years
+#' and ages. Checks input coverage, combines older ages into a plus group when
+#' needed, and sets up mortality, catchability, and observation-error formulas.
+#' Optional projection settings append future years. [fit_tam()] calls this
+#' function automatically; call it directly to inspect a model specification.
 #'
 #' @details
 #' **Observation handling**
 #'
 #' - Inputs are expected as a list with components `catch`, `index`, `weight`,
 #'   and `maturity`. Each must include columns `year`, `age`, and a value column
-#'   named `obs` (for `catch`/`index`) or renamed from `weight`/`mat`. See
+#'   named `obs`. Rename any differently named input columns before calling. See
 #'   [cod_obs] for an example of the required structure.
-#' - Observations are merged to the full `expand.grid(year, age)`.
+#' - Catch, weight, and maturity must already contain exactly one row per
+#'   year-age combination across the input range. Survey tables may be sparse.
 #' - A combined observation table is created for catch and index; `log(0)` is
 #'   treated as `NA` (to be handled via random effects).
 #'
@@ -293,7 +305,8 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #'   simulation testing; inspect convergence and sensitivity carefully.
 #' - `M_settings$age_breaks` (vector of break points on ages)
 #'   defines `M_settings$age_blocks` via [cut_ages()], used
-#'   to couple \eqn{M} deviations across age.
+#'   to share absolute latent \eqn{M} states across ages. All mean components
+#'   must be constant across ages within each fitted block.
 #' - The AR(1) correlation parameters are only initialized for
 #'   processes whose `process == "ar1"`. Correlations are assumed to be 0
 #'   when `process == "iid"`. A temporal random walk (`"rw"`) has independent
@@ -312,27 +325,33 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #'
 #' @param obs A list of tidy observation data.frames: `catch`, `index`,
 #'   `weight`, and `maturity`. See **Details**.
-#' @param years Integer vector of model years (strictly increasing).
+#' @param years Consecutive historical model years (at least two).
 #'   Inferred from observed data (non-projection) if `NULL`.
-#' @param ages Integer vector of model ages (strictly increasing).
+#' @param ages Consecutive model ages (at least two).
 #'   Inferred from observed data (non-projection) if `NULL`. If the ages in
 #'   the data extend beyond `max(ages)`, the `"obs"` column is summed for `catch`
-#'   and `index` data, and averaged for `weight` and `maturity` data.
+#'   and `index` data within each year (and survey for indices), and averaged
+#'   without abundance weighting for `weight` and `maturity` data.
 #' @param N_settings A list with elements:
-#' - `process`: one of `"off"`, `"iid"`, `"rw"`, or `"ar1"`.
+#' - `process`: `"off"` for deterministic cohort survival, `"iid"` for independent
+#'   cohort residuals, `"rw"` for residuals that accumulate through time, or
+#'   `"ar1"` for residuals correlated between years and ages. See [tinyAM-model].
 #' - `init`: `"exp"` (default), `"free"`, or `"random"`, independently of
 #'   `process`. All use fixed first-year recruitment `log_r0` as the starting
 #'   anchor. `"exp"` uses deterministic survivorship; `"free"` estimates fixed
 #'   older-age `log_n0` states; `"random"` estimates random `log_n0` states with
 #'   IID survivorship residuals and separate SD `sd_n0`. See **Details**.
 #' @param F_settings A list with elements:
-#' - `process`: one of `"iid"`, `"rw"`, or `"ar1"`.
+#' - `process`: `"iid"` for independent departures from the mean log F,
+#'   `"rw"` for departures that accumulate over time, or `"ar1"` for departures
+#'   correlated between years and ages.
 #' - `mu_form`: an optional formula for mean-\eqn{F} (coefficients estimated as
 #'   **log-scale** parameters `log_mu_f`).
 #' - `mean_ages`: optional vector of ages to include in population weighted
 #'   average F (`F_bar`) calculations. All ages used if absent.
 #' @param M_settings A list with elements:
-#' - `process`: one of `"off"`, `"iid"`, `"rw"`, or `"ar1"`.
+#' - `process`: `"off"` uses only supplied/mean M. Otherwise `"iid"`, `"rw"`,
+#'   and `"ar1"` have the same meanings as for F, on selected years/age blocks.
 #' - `mu_form`: optional formula for mean-\eqn{M} (applied on the log scale) built
 #'   on `obs$weight`, yielding coefficients `mu_m`. These enter the log-\eqn{M}
 #'   surface directly and may therefore be positive or negative; they intentionally
@@ -343,16 +362,18 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #'   \eqn{M}, e.g. `~ I(0.2)` or a column reference such as
 #'   `~ M_assumption` stored in the `obs$weight` data.frame.
 #' - `age_breaks`: optional integer break points used by [cut_ages()] to
-#'   define `age_blocks` for coupling \eqn{M} deviations across ages.
+#'   define `age_blocks` sharing absolute latent M states across ages.
 #'   When a narrower set of `age_breaks` than modeled `ages` is provided,
-#'   deviations are only estimated for ages within the specified range; ages
+#'   process states are only estimated for ages within the specified range; ages
 #'   outside this range are fixed to their mean or assumed levels. By default,
-#'   deviations are estimated for all modeled ages except the youngest, reducing
-#'   confounding between \eqn{M} and recruitment.
-#' - `first_dev_year`: integer year at which to start estimating \eqn{M} deviations.
-#'   Defaults to the second modeled year if `NULL`. Anchoring the first year
-#'   to mean or assumed levels helps minimize confounding between early \eqn{M}
-#'   estimates, initial abundance, and catchability, leading to more stable estimation.
+#'   blocks use `cut_ages(ages[-1], unique(range(ages[-1])))`, usually one block
+#'   excluding the youngest age; two older ages form separate singleton blocks.
+#'   This restricts
+#'   how M can trade off against recruitment; it does not guarantee identifiability.
+#' - `first_dev_year`: one historical modeled year at which M process states
+#'   begin. Defaults to the second year if `NULL`. Earlier M stays at its mean
+#'   or supplied value; earlier years are not coupled to the first latent state.
+#'   Ignored when the M process is off.
 #' - `mean_ages`: optional vector of ages to include in population weighted
 #'   average M (`M_bar`) calculations. All ages used if absent.
 #' @param catch_settings A list with elements:
@@ -374,10 +395,11 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #'   Defaults to `TRUE`. Note that one-step-ahead residuals are not currently working when `TRUE`.
 #' @param proj_settings Optional list with elements:
 #' - `n_proj`: number of years to project (default `NULL` disables projections).
-#' - `n_mean`: number of terminal years to average when adding projection rows. Only the `"obs"` columns
-#'             are averaged. All other columns are copied from the terminal year (by `age`).
+#' - `n_mean`: number of recent historical years used to average weight and
+#'   maturity by age. Catch/index observations in projection years are missing.
+#'   Other columns are copied from the last available year in each table.
 #' - `F_mult`: multiplier to apply to terminal F to set a level to carry forward in the projection years
-#'   (default = `1` to assume status quo F through the projection years). Can be a value of length 1 or
+#'   (required when projecting; use `1` for status quo F). Can be a value of length 1 or
 #'   length = `n_proj`. When it is a vector of length one, that multiplier is recycled across all
 #'   projection years.
 #'
@@ -415,7 +437,7 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #'
 #' @importFrom stats model.frame model.matrix
 #'
-#' @seealso [stats::model.matrix()], [cut_ages()]
+#' @seealso [fit_tam()], [tinyAM-model], [stats::model.matrix()], [cut_ages()]
 #' @export
 make_dat <- function(
     obs,
@@ -436,6 +458,14 @@ make_dat <- function(
   dat$M_settings$process <- match.arg(dat$M_settings$process, c("off", "iid", "rw", "ar1"))
 
   check_obs(obs)
+
+  for (nm in c("years", "ages")) {
+    x <- get(nm)
+    if (!is.null(x) && (!is.numeric(x) || !length(x) ||
+        any(!is.finite(x)) || any(x != trunc(x)))) {
+      cli::cli_abort("{.arg {nm}} must be a nonempty vector of integer values.")
+    }
+  }
 
   ## Subset obs
   all_obs_years <- sort(unique(unlist(lapply(obs, `[[`, "year"))))
@@ -474,6 +504,9 @@ make_dat <- function(
       droplevels()
   })
   dat$is_proj <- rep(FALSE, length(dat$years))
+  if (length(dat$years) < 2L) {
+    cli::cli_abort("At least two historical years are required for recruitment and cohort transitions.")
+  }
 
   ## Add projection dat
   if (!is.null(proj_settings) && proj_settings$n_proj > 0) {
@@ -484,6 +517,10 @@ make_dat <- function(
     dat$years <- years_plus # update years vec to include proj_years
     if (is.null(proj_settings$F_mult) || any(is.na(proj_settings$F_mult))) {
       cli::cli_abort("{.strong Please specify proj_settings$F_mult (non-NA).}")
+    }
+    if (!is.numeric(proj_settings$F_mult) || any(!is.finite(proj_settings$F_mult)) ||
+        any(proj_settings$F_mult < 0)) {
+      cli::cli_abort("proj_settings$F_mult must contain finite, non-negative multipliers.")
     }
     if (length(proj_settings$F_mult) == 1L) {
       dat$proj_settings$F_mult <- rep(proj_settings$F_mult, proj_settings$n_proj)
@@ -532,6 +569,13 @@ make_dat <- function(
   }
   if (is.null(M_settings$first_dev_year)) {
     dat$M_settings$first_dev_year <- dat$years[2]
+  }
+  if (dat$M_settings$process != "off") {
+    start <- dat$M_settings$first_dev_year
+    if (length(start) != 1L || !is.numeric(start) || !is.finite(start) ||
+        start != as.integer(start) || !start %in% dat$years[!dat$is_proj]) {
+      cli::cli_abort("M_settings$first_dev_year must be a single historical modeled year.")
+    }
   }
   dat$M_settings$years <- dat$years[dat$years >= dat$M_settings$first_dev_year]
   dat$M_settings$age_block_start <- .split_cuts(levels(dat$M_settings$age_blocks))$start
@@ -592,7 +636,7 @@ make_dat <- function(
       dat$catch_settings$sd_form <- update(dat$catch_settings$sd_form, ~ 0 + .)
       cli::cli_warn("Dropping intercept term in catch sd_form since supplied SDs are provided. Set sd_supplied to NULL to estimate the intercept.")
     }
-    dat$log_sd_catch_supplied <- log(unlist(stats::model.frame(dat$catch_settings$sd_supplied, data = dat$obs$catch)))
+    dat$log_sd_catch_supplied <- .log_supplied(dat$catch_settings$sd_supplied, dat$obs$catch, "catch sd_supplied")
   } else {
     dat$log_sd_catch_supplied <- rep(0, nrow(dat$obs$catch))
   }
@@ -604,7 +648,7 @@ make_dat <- function(
       dat$index_settings$sd_form <- update(dat$index_settings$sd_form, ~ 0 + .)
       cli::cli_warn("Dropping intercept term in index sd_form since supplied SDs are provided. Set sd_supplied to NULL to estimate the intercept.")
     }
-    dat$log_sd_index_supplied <- log(unlist(stats::model.frame(dat$index_settings$sd_supplied, data = dat$obs$index)))
+    dat$log_sd_index_supplied <- .log_supplied(dat$index_settings$sd_supplied, dat$obs$index, "index sd_supplied")
   } else {
     dat$log_sd_index_supplied <- rep(0, nrow(dat$obs$index))
   }
@@ -629,12 +673,23 @@ make_dat <- function(
     dat$M_modmat <- 0
   }
   if (!is.null(dat$M_settings$mu_supplied)) {
-    dat$log_mu_supplied_m <- log(unlist(stats::model.frame(dat$M_settings$mu_supplied, data = dat$obs$weight)))
+    dat$log_mu_supplied_m <- .log_supplied(dat$M_settings$mu_supplied, dat$obs$weight, "M mu_supplied")
   } else {
     dat$log_mu_supplied_m <- 0
   }
   if (is.null(dat$M_settings$mu_form) && is.null(dat$M_settings$mu_supplied)) {
     cli::cli_abort("Please supply mu_supplied or mu_form for M.")
+  }
+
+  # model.matrix() can silently omit rows with missing covariates.
+  design_tables <- c(sd_catch_modmat = "catch", sd_index_modmat = "index",
+                     q_modmat = "index", F_modmat = "catch", M_modmat = "weight")
+  for (nm in names(design_tables)) {
+    x <- dat[[nm]]
+    if (is.matrix(x) && (nrow(x) != nrow(dat$obs[[design_tables[[nm]]]]) ||
+        any(!is.finite(x)))) {
+      cli::cli_abort("{nm} must have one finite row per observation. Check for missing or non-finite formula covariates.")
+    }
   }
 
   .check_ages <- function(x, ages, label) {
@@ -659,4 +714,15 @@ make_dat <- function(
 
   dat
 
+}
+
+# Evaluate positive offsets without silently dropping missing observation rows.
+.log_supplied <- function(formula, data, label) {
+  x <- stats::model.frame(formula, data = data, na.action = stats::na.pass)
+  if (ncol(x) != 1L || !is.numeric(x[[1L]]) ||
+      !nrow(x) %in% c(1L, nrow(data)) || any(!is.finite(x[[1L]])) ||
+      any(x[[1L]] <= 0)) {
+    cli::cli_abort("{label} must supply one positive finite value, or one per observation row.")
+  }
+  log(x[[1L]])
 }

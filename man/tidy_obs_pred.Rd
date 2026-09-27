@@ -23,8 +23,17 @@ A named list with two data frames:
 }
 }
 \description{
-Extracts observations, predictions, and standard errors for \code{catch} and \code{index}
+Extracts observations, predictions, and observation SDs for \code{catch} and \code{index}
 from a fitted TAM object, and adds standardized residuals on the log scale.
+}
+\details{
+\code{pred} is the conditional median on the natural scale. \code{sd} is the fitted
+SD of log observations, not a standard error of the prediction. Standardized
+residuals are \code{(log(obs) - log(pred)) / sd}; zero and missing observations
+have missing residuals. These conditional residuals do not account for the
+uncertainty in fitted states. Optional one-step-ahead residuals use a
+different predictive calculation and are not currently supported with filled
+missing observations. See \link{tinyAM-model} for the observation equations.
 }
 \examples{
 fit <- fit_tam(

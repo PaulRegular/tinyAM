@@ -115,10 +115,10 @@
 #' Simulate from a fitted TAM
 #'
 #' @description
-#' Runs the TAM likelihood in simulation mode to generate synthetic observations,
-#' and optionally random-effect fields, then recomputes reported quantities under
-#' those draws. Results are returned as tidy data frames stacked across `n`
-#' simulations with a `sim = 1..n` column.
+#' Generates possible catch and survey observations from a fitted model, with
+#' options to include parameter uncertainty and new population histories.
+#' Use these draws to explore uncertainty or test whether simulated data resemble
+#' the observations. Results are tidy data frames with a `sim = 1..n` column.
 #'
 #' @details
 #' For [mono()] effects, negative `dq` values from Gaussian parameter draws
@@ -132,13 +132,13 @@
 #'   - `"none"`  — use point estimates `(û, θ̂)`.
 #'   - `"fixed"` — sample **fixed effects** `θ ~ MVN(sdrep$par.fixed, sdrep$cov.fixed)`.
 #'   - `"joint"` — sample **(random + fixed)** jointly from the Laplace
-#'     approximate posterior using the **joint precision** (sparse Cholesky).
+#'     Gaussian approximation using the **joint precision** (sparse Cholesky).
 #'
 #' - **Random-effect handling** via `redraw_random`:
 #'   - `FALSE` — keep the sampled/fitted random effects and simulate **observations only**
-#'     (posterior-predictive when `par_uncertainty = "joint"`).
+#'     (an approximate predictive draw when `par_uncertainty = "joint"`).
 #'   - `TRUE`  — generate **new process fields** for the random effects and re-simulate
-#'     (projection/HCR style prior-predictive runs).
+#'     across the entire modeled history, including historical years.
 #'     This includes `log_n0` only for `N_settings$init = "random"`, generated
 #'     by survivorship and IID residuals from the supplied `log_r0` anchor.
 #'     Free initial-age states are retained.
@@ -146,6 +146,8 @@
 #'     subsequent deviations conditionally; see [nll_fun()] for the N cohort
 #'     construction. No distribution is imposed on the RW starting row.
 #'     Fixed anchors may still vary through the chosen `par_uncertainty` draw.
+#'     This is not a future-only forecast conditional on historical states.
+#'     See [tinyAM-model] for the exact simulation and projection assumptions.
 #'
 #' Parallel execution is supported via [furrr::future_map()]. Call
 #' `future::plan()` beforehand if you want parallel workers.
@@ -155,7 +157,7 @@
 #' @param par_uncertainty Character; one of `"joint"`, `"fixed"`, `"none"`.
 #'   Controls how the parameter list is sampled before each simulation (see Details).
 #' @param redraw_random Logical; if `TRUE`, re-draw random-effect fields from their
-#'   process models on each run (recommended for projections). If `FALSE`, keep
+#'   process models over the whole modeled period on each run. If `FALSE`, keep
 #'   random effects and simulate observations only.
 #' @param progress Logical; show a progress bar using [progressr::with_progress()]
 #'   (default `TRUE`).
