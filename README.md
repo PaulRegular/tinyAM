@@ -197,8 +197,8 @@ The package currently uses Northern cod data as an example and development test 
 The development version can be installed from GitHub:
 
 ``` r
-# install.packages("remotes")
-remotes::install_github("PaulRegular/tinyAM")
+# install.packages("pak")
+pak::pak("PaulRegular/tinyAM")
 ```
 
 ## Why tinyAM?
