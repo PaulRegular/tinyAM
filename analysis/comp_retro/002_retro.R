@@ -2,7 +2,8 @@
 library(tinyAM)
 library(furrr)
 
-source("analysis/comp_retro/001_models.R")
+# source("analysis/comp_retro/001_models.R")
+models <- readRDS("analysis/comp_retro/outputs/001_models.rds")
 
 future::plan(future::multisession, workers = 2)
 

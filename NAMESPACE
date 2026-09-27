@@ -3,6 +3,7 @@
 S3method(print,summary_tam_fit)
 S3method(print,tam_fit)
 S3method(summary,tam_fit)
+S3method(update,tam_fit)
 export(check_convergence)
 export(check_obs)
 export(compute_hindcast_rmse)

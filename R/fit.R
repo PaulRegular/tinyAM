@@ -170,6 +170,18 @@ fit_tam <- function(
 
   call <- match.call()
 
+  refit_args <- c(
+    list(
+      obs = obs,
+      interval = interval,
+      add_osa_res = add_osa_res,
+      silent = silent,
+      start_par = start_par,
+      grad_tol = grad_tol
+    ),
+    list(...)
+  )
+
   dat <- make_dat(obs, ...)
   par <- make_par(dat)
   if (!is.null(start_par)) {
@@ -256,6 +268,7 @@ fit_tam <- function(
 
   out <- list(
     call = call,
+    refit_args = refit_args,
     dat = dat,
     obj = obj,
     opt = opt,
@@ -275,6 +288,62 @@ fit_tam <- function(
 
   .new_tam_fit(out)
 
+}
+
+
+#' Update a fitted TAM model
+#'
+#' Refit a TAM model after changing one or more arguments. Arguments not
+#' supplied in `...` are taken from the evaluated inputs stored in the
+#' original fit, so updating does not depend on objects remaining available
+#' in the original calling environment.
+#'
+#' @param object A fitted `tam_fit` object.
+#' @param ... Named arguments to replace in the original fit.
+#' @param evaluate Logical; if `TRUE`, fit and return the updated model.
+#'   If `FALSE`, return the updated call without fitting.
+#'
+#' @return An updated `tam_fit` object when `evaluate = TRUE`; otherwise,
+#'   the updated call.
+#'
+#' @export
+update.tam_fit <- function(object, ..., evaluate = TRUE) {
+  object <- .require_tam_fit(object, arg = "object")
+
+  changes <- list(...)
+
+  if (length(changes) &&
+      (is.null(names(changes)) || any(names(changes) == ""))) {
+    cli::cli_abort("All arguments supplied to {.fn update} must be named.")
+  }
+
+  # Keep a readable call for printing and inspection.
+  new_call <- object$call
+  change_expr <- as.list(match.call(expand.dots = FALSE)$...)
+
+  if (length(change_expr)) {
+    for (nm in names(change_expr)) {
+      new_call[[nm]] <- change_expr[[nm]]
+    }
+  }
+
+  if (!evaluate) {
+    return(new_call)
+  }
+
+  # Use the evaluated inputs stored in the fit rather than re-evaluating
+  # symbols from the original calling environment.
+  args <- object$refit_args
+  if (length(changes)) {
+    args[names(changes)] <- changes
+  }
+
+  out <- do.call(fit_tam, args)
+
+  # Preserve the concise user-facing call instead of the expanded do.call().
+  out$call <- new_call
+
+  out
 }
 
 
