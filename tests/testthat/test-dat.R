@@ -51,8 +51,8 @@ test_that("make_dat infers years/ages when NULL and builds expected pieces", {
     obs = cod_obs,
     years = NULL,
     ages  = NULL,
-    N_settings = list(process = "iid", init_N0 = FALSE),
-    F_settings = list(process = "approx_rw",  mu_form = NULL),
+    N_settings = list(process = "iid", init = "exp"),
+    F_settings = list(process = "rw",  mu_form = NULL),
     M_settings = list(process = "off", mu_form = NULL, mu_supplied = ~ I(0.3)),
     catch_settings = list(sd_form = ~1, fill_missing = TRUE),
     index_settings = list(sd_form = ~1, q_form = ~ q_block, fill_missing = TRUE)
@@ -79,13 +79,16 @@ test_that("make_dat infers years/ages when NULL and builds expected pieces", {
 
 test_that("make_dat aggregates data for ages beyond max(ages) into a plus group", {
   dat <- make_dat(obs = cod_obs, ages  = 2:10)
-  for (nm in c("catch", "index", "weight", "maturity")) {
-    fun <- ifelse(nm %in% c("catch", "index"), sum, mean)
+  for (nm in c("catch", "index")) {
     fun_out <- dat$obs[[nm]] |> subset(!is.na(obs) & age == 10, select = c("year", "obs"))
     sub_obs <- cod_obs[[nm]] |> subset(!is.na(obs) & age >= 10)
-    test_out <- stats::aggregate(obs ~ year, data = sub_obs, FUN = fun)
+    test_out <- stats::aggregate(obs ~ year, data = sub_obs, FUN = sum)
     comp <- merge(fun_out, test_out, by = "year")
     expect_equal(comp$obs.x, comp$obs.y)
+  }
+  for (nm in c("weight", "maturity")) {
+    expected <- subset(cod_obs[[nm]], age == 10)$obs
+    expect_equal(subset(dat$obs[[nm]], age == 10)$obs, expected)
   }
 })
 
@@ -146,15 +149,9 @@ test_that("make_dat stops if neither M mu_supplied nor mu_form is provided", {
   )
 })
 
-test_that("make_dat forces init_N0 to TRUE, with warning, when N process off and init_N0 FALSE", {
-  expect_warning(
-    dat <- make_dat(
-      obs = cod_obs,
-      N_settings = list(process = "off", init_N0 = FALSE)
-    ),
-    "forcing init_N0 to TRUE"
-  )
-  expect_true(dat$N_settings$init_N0)
+test_that("make_dat rejects the retired initialization setting", {
+  expect_error(make_test_dat(N_settings = list(process = "off", init_N0 = FALSE)),
+               "has been retired")
 })
 
 test_that("make_dat appends projection years and shapes obs correctly with proj_settings (F_mult API)", {
@@ -268,4 +265,3 @@ test_that("make_dat handles mean_ages correctly", {
     "F_settings\\$mean_ages"
   )
 })
-

@@ -23,7 +23,7 @@ sim_tam(
 Controls how the parameter list is sampled before each simulation (see Details).}
 
 \item{redraw_random}{Logical; if \code{TRUE}, re-draw random-effect fields from their
-process models on each run (recommended for projections). If \code{FALSE}, keep
+process models over the whole modeled period on each run. If \code{FALSE}, keep
 random effects and simulate observations only.}
 
 \item{progress}{Logical; show a progress bar using \code{\link[progressr:with_progress]{progressr::with_progress()}}
@@ -39,12 +39,17 @@ A \strong{named list of data frames} (e.g., \code{catch}, \code{index}, \code{N}
 each stacked across \code{n} simulations with a \code{sim} column.
 }
 \description{
-Runs the TAM likelihood in simulation mode to generate synthetic observations,
-and optionally random-effect fields, then recomputes reported quantities under
-those draws. Results are returned as tidy data frames stacked across \code{n}
-simulations with a \verb{sim = 1..n} column.
+Generates possible catch and survey observations from a fitted model, with
+options to include parameter uncertainty and new population histories.
+Use these draws to explore uncertainty or test whether simulated data resemble
+the observations. Results are tidy data frames with a \verb{sim = 1..n} column.
 }
 \details{
+For \code{\link[=mono]{mono()}} effects, negative \code{dq} values from Gaussian parameter draws
+are clipped to zero before generating predictions or observations. This
+projects the normal approximation onto the feasible increments and adds
+probability at zero; it is not a boundary-corrected posterior sampler.
+
 The simulation has two orthogonal controls:
 \itemize{
 \item \strong{Parameter uncertainty} via \code{par_uncertainty}:
@@ -52,14 +57,23 @@ The simulation has two orthogonal controls:
 \item \code{"none"}  — use point estimates \verb{(û, θ̂)}.
 \item \code{"fixed"} — sample \strong{fixed effects} \code{θ ~ MVN(sdrep$par.fixed, sdrep$cov.fixed)}.
 \item \code{"joint"} — sample \strong{(random + fixed)} jointly from the Laplace
-approximate posterior using the \strong{joint precision} (sparse Cholesky).
+Gaussian approximation using the \strong{joint precision} (sparse Cholesky).
 }
 \item \strong{Random-effect handling} via \code{redraw_random}:
 \itemize{
 \item \code{FALSE} — keep the sampled/fitted random effects and simulate \strong{observations only}
-(posterior-predictive when \code{par_uncertainty = "joint"}).
+(an approximate predictive draw when \code{par_uncertainty = "joint"}).
 \item \code{TRUE}  — generate \strong{new process fields} for the random effects and re-simulate
-(projection/HCR style prior-predictive runs).
+across the entire modeled history, including historical years.
+This includes \code{log_n0} only for \code{N_settings$init = "random"}, generated
+by survivorship and IID residuals from the supplied \code{log_r0} anchor.
+Free initial-age states are retained.
+Temporal RW fields retain their supplied first process row and draw
+subsequent deviations conditionally; see \code{\link[=nll_fun]{nll_fun()}} for the N cohort
+construction. No distribution is imposed on the RW starting row.
+Fixed anchors may still vary through the chosen \code{par_uncertainty} draw.
+This is not a future-only forecast conditional on historical states.
+See \link{tinyAM-model} for the exact simulation and projection assumptions.
 }
 }
 
@@ -71,8 +85,8 @@ fit <- fit_tam(
   cod_obs,
   years = 1983:2024,
   ages = 2:14,
-  N_settings = list(process = "iid", init_N0 = FALSE),
-  F_settings = list(process = "approx_rw", mu_form = NULL),
+  N_settings = list(process = "iid", init = "exp"),
+  F_settings = list(process = "rw", mu_form = NULL),
   M_settings = list(process = "off", mu_supplied = ~ I(0.3)),
   catch_settings = list(sd_form = ~ 1),
   index_settings = list(sd_form = ~ 1, q_form = ~ q_block),

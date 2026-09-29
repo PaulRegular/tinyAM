@@ -13,7 +13,7 @@ tidy_tam(
 )
 }
 \arguments{
-\item{...}{One or more fitted TAM objects (as returned by \code{\link[=fit_tam]{fit_tam()}}). Ignored if \code{model_list} is provided.}
+\item{...}{One or more fitted TAM objects (as returned by \code{\link[=fit_tam]{fit_tam()}}). Supply these or \code{model_list}, not both.}
 
 \item{model_list}{A \strong{named list} of fitted TAM objects. Required to be named; the names are used as label values.}
 
@@ -71,8 +71,8 @@ fit <- fit_tam(
   cod_obs,
   years = 1983:2024,
   ages = 2:14,
-  N_settings = list(process = "iid", init_N0 = FALSE),
-  F_settings = list(process = "approx_rw", mu_form = NULL),
+  N_settings = list(process = "iid", init = "exp"),
+  F_settings = list(process = "rw", mu_form = NULL),
   M_settings = list(process = "off", mu_supplied = ~ I(0.3)),
   catch_settings = list(sd_form = ~ 1),
   index_settings = list(sd_form = ~ 1, q_form = ~ q_block),

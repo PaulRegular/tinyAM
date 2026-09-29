@@ -2,7 +2,7 @@
 % Please edit documentation in R/tidy.R
 \name{tidy_sdrep}
 \alias{tidy_sdrep}
-\title{Tidy \code{sdreport} time series with confidence intervals}
+\title{Population time series with confidence intervals}
 \usage{
 tidy_sdrep(fit, interval = 0.95)
 }
@@ -14,13 +14,13 @@ tidy_sdrep(fit, interval = 0.95)
 \value{
 A named list of data frames (one per series), each with columns:
 \itemize{
-\item \code{year}, \code{est}, \code{sd}, \code{lwr}, \code{upr}, \code{is_proj} — after applying the chosen transform.
+\item \code{year}, \code{est}, \code{lwr}, \code{upr}, \code{se}, \code{se_scale}, \code{is_proj}.
 }
 }
 \description{
-Extracts ADREPORTED time-series from \code{fit$sdrep}, computes normal-approximation
-intervals, applies a transformation (default \code{exp}), and returns a list of
-tidy data frames.
+Returns annual recruitment, abundance, biomass, spawning biomass, and
+average F and M, with confidence limits and clearly labelled SE scales.
+Estimates and limits are reported in the units of each population quantity.
 }
 \details{
 Assumptions:
@@ -30,16 +30,22 @@ Assumptions:
 \item List element names are cleaned by removing a leading \code{"log_"} prefix.
 }
 
-The interval is constructed as \verb{est ± z * sd} with
+The interval is constructed as \verb{est ± z * se} with
 \code{z = qnorm(1 - (1 - interval) / 2)}.
+Estimates and confidence limits are then exponentiated. The \code{se} column is
+the standard error on the log scale, labelled by \code{se_scale = "log"}.
+A small log-scale SE approximates the coefficient of variation (CV):
+for example, \code{0.10} is approximately 10\% relative uncertainty. This
+approximation becomes less accurate for large SEs; use the confidence limits
+to describe uncertainty on the reported scale.
 }
 \examples{
 fit <- fit_tam(
   cod_obs,
   years = 1983:2024,
   ages = 2:14,
-  N_settings = list(process = "iid", init_N0 = FALSE),
-  F_settings = list(process = "approx_rw", mu_form = NULL),
+  N_settings = list(process = "iid", init = "exp"),
+  F_settings = list(process = "rw", mu_form = NULL),
   M_settings = list(process = "off", mu_supplied = ~ I(0.3)),
   catch_settings = list(sd_form = ~ 1),
   index_settings = list(sd_form = ~ 1, q_form = ~ q_block),

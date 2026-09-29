@@ -8,8 +8,8 @@ make_dat(
   obs,
   years = NULL,
   ages = NULL,
-  N_settings = list(process = "iid", init_N0 = FALSE),
-  F_settings = list(process = "approx_rw", mu_form = NULL),
+  N_settings = list(process = "iid", init = "exp"),
+  F_settings = list(process = "rw", mu_form = NULL),
   M_settings = list(process = "off", mu_form = NULL, mu_supplied = ~I(0.2), age_breaks =
     NULL, first_dev_year = NULL),
   catch_settings = list(sd_form = ~1, sd_supplied = NULL, fill_missing = TRUE),
@@ -22,50 +22,65 @@ make_dat(
 \item{obs}{A list of tidy observation data.frames: \code{catch}, \code{index},
 \code{weight}, and \code{maturity}. See \strong{Details}.}
 
-\item{years}{Integer vector of model years (strictly increasing).
+\item{years}{Consecutive historical model years (at least two).
 Inferred from observed data (non-projection) if \code{NULL}.}
 
-\item{ages}{Integer vector of model ages (strictly increasing).
+\item{ages}{Consecutive model ages (at least two).
 Inferred from observed data (non-projection) if \code{NULL}. If the ages in
 the data extend beyond \code{max(ages)}, the \code{"obs"} column is summed for \code{catch}
-and \code{index} data, and averaged for \code{weight} and \code{maturity} data.}
+and \code{index} data within each year (and survey for indices). Older-age
+weight and maturity are retained for abundance-based aggregation inside
+\code{\link[=nll_fun]{nll_fun()}}, preserving biomass and mature biomass in the plus group.}
 
 \item{N_settings}{A list with elements:
 \itemize{
-\item \code{process}: one of \code{"off"}, \code{"iid"}, \code{"approx_rw"}, or \code{"ar1"}.
-\item \code{init_N0}: logical; if \code{TRUE}, estimate an initial level for the
-first-year abundance. If \code{process == "off"} and \code{init_N0 == FALSE},
-this is forced to \code{TRUE}.
+\item \code{process}: \code{"off"} for deterministic cohort survival, \code{"iid"} for independent
+cohort residuals, \code{"rw"} for residuals that accumulate through time, or
+\code{"ar1"} for residuals correlated between years and ages. See \link{tinyAM-model}.
+\item \code{init}: \code{"exp"} (default), \code{"free"}, or \code{"random"}, independently of
+\code{process}. All use fixed first-year recruitment \code{log_r0} as the starting
+anchor. \code{"exp"} uses deterministic survivorship; \code{"free"} estimates fixed
+older-age \code{log_n0} states; \code{"random"} estimates random \code{log_n0} states with
+IID survivorship residuals and separate SD \code{sd_n0}. See \strong{Details}.
 }}
 
 \item{F_settings}{A list with elements:
 \itemize{
-\item \code{process}: one of \code{"iid"}, \code{"approx_rw"}, or \code{"ar1"}.
-\item \code{mu_form}: an optional formula for mean-\eqn{F}.
+\item \code{process}: \code{"iid"} for independent departures from the mean log F,
+\code{"rw"} for departures that accumulate over time, or \code{"ar1"} for departures
+correlated between years and ages.
+\item \code{mu_form}: an optional formula for mean-\eqn{F} (coefficients estimated as
+\strong{log-scale} parameters \code{log_mu_f}).
 \item \code{mean_ages}: optional vector of ages to include in population weighted
 average F (\code{F_bar}) calculations. All ages used if absent.
 }}
 
 \item{M_settings}{A list with elements:
 \itemize{
-\item \code{process}: one of \code{"off"}, \code{"iid"}, \code{"approx_rw"}, or \code{"ar1"}.
-\item \code{mu_form}: optional formula for mean-\eqn{M} (on the log scale) built
-on \code{obs$weight}. If provided together with \code{mu_supplied}, the intercept
-in \code{mu_form} is dropped (warning) so supplied levels act as fixed offsets.
+\item \code{process}: \code{"off"} uses only supplied/mean M. Otherwise \code{"iid"}, \code{"rw"},
+and \code{"ar1"} have the same meanings as for F, on selected years/age blocks.
+\item \code{mu_form}: optional formula for mean-\eqn{M} (applied on the log scale) built
+on \code{obs$weight}, yielding coefficients \code{mu_m}. These enter the log-\eqn{M}
+surface directly and may therefore be positive or negative; they intentionally
+avoid a \code{log_} prefix to prevent automatic back-transformation when tidied.
+If provided together with \code{mu_supplied}, the intercept in \code{mu_form} is
+dropped (warning) so supplied levels act as fixed offsets.
 \item \code{mu_supplied}: optional one-sided formula giving supplied (non-estimated)
 \eqn{M}, e.g. \code{~ I(0.2)} or a column reference such as
 \code{~ M_assumption} stored in the \code{obs$weight} data.frame.
 \item \code{age_breaks}: optional integer break points used by \code{\link[=cut_ages]{cut_ages()}} to
-define \code{age_blocks} for coupling \eqn{M} deviations across ages.
+define \code{age_blocks} sharing absolute latent M states across ages.
 When a narrower set of \code{age_breaks} than modeled \code{ages} is provided,
-deviations are only estimated for ages within the specified range; ages
+process states are only estimated for ages within the specified range; ages
 outside this range are fixed to their mean or assumed levels. By default,
-deviations are estimated for all modeled ages except the youngest, reducing
-confounding between \eqn{M} and recruitment.
-\item \code{first_dev_year}: integer year at which to start estimating \eqn{M} deviations.
-Defaults to the second modeled year if \code{NULL}. Anchoring the first year
-to mean or assumed levels helps minimize confounding between early \eqn{M}
-estimates, initial abundance, and catchability, leading to more stable estimation.
+blocks use \code{cut_ages(ages[-1], unique(range(ages[-1])))}, usually one block
+excluding the youngest age; two older ages form separate singleton blocks.
+This restricts
+how M can trade off against recruitment; it does not guarantee identifiability.
+\item \code{first_dev_year}: one historical modeled year at which M process states
+begin. Defaults to the second year if \code{NULL}. Earlier M stays at its mean
+or supplied value; earlier years are not coupled to the first latent state.
+Ignored when the M process is off.
 \item \code{mean_ages}: optional vector of ages to include in population weighted
 average M (\code{M_bar}) calculations. All ages used if absent.
 }}
@@ -86,7 +101,9 @@ Defaults to \code{TRUE}. Note that one-step-ahead residuals are not currently wo
 \item \code{sd_supplied}: optional one-sided formula giving supplied SDs (on the natural
 scale of the log-observation residuals) for index-at-age data. When provided,
 the intercept is removed from \code{sd_form} so supplied SDs act as offsets.
-\item \code{q_form}: formula for catchability blocks, evaluated on the index table (e.g. \code{~ q_block}).
+\item \code{q_form}: formula for catchability, evaluated on the index table. Ordinary
+\code{~ q_block} is unconstrained; \code{~ mono(q_block)} is non-decreasing across ordered
+blocks. See \code{\link[=mono]{mono()}} for independent non-decreasing curves by survey.
 \item \code{fill_missing}: logical – fill missing values, and zeros, using random effects?
 Defaults to \code{TRUE}. Note that one-step-ahead residuals are not currently working when \code{TRUE}.
 }}
@@ -94,10 +111,11 @@ Defaults to \code{TRUE}. Note that one-step-ahead residuals are not currently wo
 \item{proj_settings}{Optional list with elements:
 \itemize{
 \item \code{n_proj}: number of years to project (default \code{NULL} disables projections).
-\item \code{n_mean}: number of terminal years to average when adding projection rows. Only the \code{"obs"} columns
-are averaged. All other columns are copied from the terminal year (by \code{age}).
+\item \code{n_mean}: number of recent historical years used to average weight and
+maturity by age. Catch/index observations in projection years are missing.
+Other columns are copied from the last available year in each table.
 \item \code{F_mult}: multiplier to apply to terminal F to set a level to carry forward in the projection years
-(default = \code{1} to assume status quo F through the projection years). Can be a value of length 1 or
+(required when projecting; use \code{1} for status quo F). Can be a value of length 1 or
 length = \code{n_proj}. When it is a vector of length one, that multiplier is recycled across all
 projection years.
 }}
@@ -110,45 +128,68 @@ A named list \code{dat} containing:
 \item \code{proj_years} — integer vector of projection years, if used
 \item \code{obs} — per-type tables restricted to \code{years} x \code{ages} (including \code{proj_years}, if used)
 \item \code{W}, \code{P} — mean weight-at-age, and proportion mature at age matrices (\verb{year x age})
+\item \code{plus_ages}, \code{W_plus_input}, \code{P_plus_input} — retained biological ages and
+inputs, present only when biological data extend above \code{max(ages)}. The last
+retained age represents a hidden plus group. Effective modeled W/P and hidden
+abundance \code{N_plus} can then be inspected in the likelihood report (\code{fit$rep}).
 \item \code{obs_map} — stack of \code{obs$catch} and \code{obs$index} mapping variables
 \item \code{log_obs}, \code{is_missing}, \code{is_observed}, \code{observed} - vector of log observations (with NA),
 logical vector indicating missing and observed values, and vector of non-missing values, respectively.
 \item design matrices: \code{sd_catch_modmat}, \code{sd_index_modmat}, \code{q_modmat}, and optionally \code{F_modmat}, \code{M_modmat}
-\item mean-level placeholders: \code{log_mu_f} and/or \code{log_mu_m} (or \code{log_mu_supplied_m})
+\item mean-level placeholders: \code{log_mu_f} and/or \code{mu_m} (or \code{log_mu_supplied_m})
 \item process settings: \code{N_settings}, \code{F_settings}, \code{M_settings}, \code{catch_settings}, \code{index_settings}
 \item projection settings: \code{proj_settings}
 \item AR(1) parameter assumptions, \verb{logit_phi_*}, if applicable
 }
 }
 \description{
-\code{make_dat()} converts tidy observation inputs and modeling options into the
-structured list \code{dat} expected by TAM’s likelihood and simulation functions.
-It expands an age–year grid, merges observations, constructs design matrices for
-observation SDs, catchability, and mean-\eqn{F} and/or mean-\eqn{M} (when used),
-and derives helper mappings and settings.
+Prepares catch, survey, weight, and maturity data for the chosen model years
+and ages. Checks input coverage, combines older ages into a plus group when
+needed, and sets up mortality, catchability, and observation-error formulas.
+Optional projection settings append future years. \code{\link[=fit_tam]{fit_tam()}} calls this
+function automatically; call it directly to inspect a model specification.
 }
 \details{
 \strong{Observation handling}
 \itemize{
 \item Inputs are expected as a list with components \code{catch}, \code{index}, \code{weight},
 and \code{maturity}. Each must include columns \code{year}, \code{age}, and a value column
-named \code{obs} (for \code{catch}/\code{index}) or renamed from \code{weight}/\code{mat}. See
+named \code{obs}. Rename any differently named input columns before calling. See
 \link{cod_obs} for an example of the required structure.
-\item Observations are merged to the full \code{expand.grid(year, age)}.
+\item Catch, weight, and maturity must already contain exactly one row per
+year-age combination across the input range. Survey tables may be sparse.
 \item A combined observation table is created for catch and index; \code{log(0)} is
 treated as \code{NA} (to be handled via random effects).
+\item When biological inputs extend above the modeled plus age, the underlying
+weight and maturity values are retained in \code{W_plus_input} and \code{P_plus_input},
+indexed by \code{years} and \code{plus_ages}. Their projection rows use the same
+recent-year averages by biological age as other weight/maturity inputs.
+\code{dat$W}, \code{dat$P}, and \code{dat$obs} retain the input values at modeled ages;
+their terminal biological values are placeholders. \code{\link[=nll_fun]{nll_fun()}} replaces
+terminal W by an abundance-weighted mean and terminal P by a biomass-weighted
+proportion using its reconstructed hidden age composition. See \link{tinyAM-model}.
+Formula covariates continue to use the input rows at modeled ages, not these
+effective biological values; this avoids circular mortality calculations.
 }
 
 \strong{Design matrices}
 \itemize{
 \item \code{catch_settings$sd_form} is evaluated on the catch table to produce
-\code{sd_catch_modmat}.
+\code{sd_catch_modmat} and associated \strong{log-scale} parameters \code{log_sd_catch}
+(intercept removed when \code{sd_supplied} is provided so supplied SDs act as
+offsets).
 \item \code{index_settings$sd_form} is evaluated on the index table to produce
-\code{sd_index_modmat}.
+\code{sd_index_modmat} and \strong{log-scale} parameters \code{log_sd_index}.
 \item \code{index_settings$q_form} is evaluated on the index table to produce
-\code{q_modmat}.
-\item If \code{M_settings$mu_form} is provided, \code{M_modmat <- model.matrix(mu_form, data = obs$weight)}. If \code{mu_supplied} is also provided, the intercept
-in \code{mu_form} is dropped and a warning is issued.
+\code{q_modmat} and \strong{log-scale} parameters \code{log_q}.
+Additive \code{\link[=mono]{mono()}} terms instead contribute cumulative indicators
+in \code{q_mono_modmat}, with directly fitted non-negative log-q increments \code{dq}.
+\code{q_mono_steps} records each transition and its optional group.
+\item If \code{M_settings$mu_form} is provided, \code{M_modmat <- model.matrix(mu_form, data = obs$weight)} and the resulting coefficients are parameters \code{mu_m}.
+These coefficients are applied on the log scale to build \eqn{M}, but
+retain the \code{mu_} prefix to emphasize they can be positive or negative.
+If \code{mu_supplied} is also provided, the intercept in \code{mu_form} is dropped
+and a warning is issued.
 \item If neither \code{M_settings$mu_form} nor \code{M_settings$mu_supplied} is supplied,
 the function stops, because \eqn{M} must be identified by either a supplied
 surface or a mean structure.
@@ -156,16 +197,36 @@ surface or a mean structure.
 
 \strong{Process options and guards}
 \itemize{
-\item If \code{N_settings$process == "off"} and \code{init_N0 == FALSE}, \code{init_N0} is
-forced to \code{TRUE} (with a warning) so the first-year abundance is
-estimable.
+\item Initial abundance is controlled by \code{N_settings$init}, independently of
+the subsequent N process. First-year recruitment is the fixed state
+\code{log_r0}. All older initial ages use survivorship from recruitment under
+first-year total mortality Z as their baseline, with no equilibrium
+plus-group correction.
+\item \code{"exp"} is the default: a parsimonious, comparatively stable nuisance-state
+initialization. More flexible choices are available when first-year data
+support them. \code{"free"} estimates unpenalized fixed \code{log_n0} states;
+\code{"random"} estimates random \code{log_n0} states whose survivorship residuals
+\code{eta_log_n0} are IID normal with separately estimated \code{sd_n0}.
+\item \code{sd_r} describes temporal recruitment variation; \code{sd_n0} describes
+variation across historical cohorts on the initial age margin (potentially
+including mortality-history variation); \code{sd_n} describes subsequent
+cohort-process deviations. These SDs are estimated separately.
+\item Random initialization requires at least two ages. Fewer than ten ages
+triggers a heuristic weak-identification warning for \code{sd_n0}, not a
+prohibition or automatic fallback. The threshold may be revised after
+simulation testing; inspect convergence and sensitivity carefully.
 \item \code{M_settings$age_breaks} (vector of break points on ages)
 defines \code{M_settings$age_blocks} via \code{\link[=cut_ages]{cut_ages()}}, used
-to couple \eqn{M} deviations across age.
+to share absolute latent \eqn{M} states across ages. All mean components
+must be constant across ages within each fitted block.
 \item The AR(1) correlation parameters are only initialized for
 processes whose \code{process == "ar1"}. Correlations are assumed to be 0
-when \code{process == "iid"}, and 0.99 when \code{process == "approx_rw"} to approximate
-a random walk across ages and years.
+when \code{process == "iid"}. A temporal random walk (\code{"rw"}) has independent
+year-to-year increments within each age or age block, with no age
+correlation or AR parameter. Its first process row is unpenalized.
+For N the walk acts on cohort residuals; for F/M it acts on deviations
+from their existing log mean surfaces. Initial abundance, the M process
+start year, and terminal-F projections retain their usual meanings.
 }
 
 \strong{Projections (optional)}
@@ -183,8 +244,8 @@ dat <- make_dat(
   cod_obs,
   years = 1983:2024,
   ages = 2:14,
-  N_settings = list(process = "iid", init_N0 = FALSE),
-  F_settings = list(process = "approx_rw", mu_form = NULL),
+  N_settings = list(process = "iid", init = "exp"),
+  F_settings = list(process = "rw", mu_form = NULL),
   M_settings = list(process = "off", mu_supplied = ~ I(0.3)),
   catch_settings = list(sd_form = ~ 1),
   index_settings = list(sd_form = ~ 1, q_form = ~ q_block)
@@ -194,8 +255,8 @@ names(dat)
 ## With projection settings
 dat <- make_dat(
   cod_obs,
-  N_settings = list(process = "iid", init_N0 = FALSE),
-  F_settings = list(process = "approx_rw", mu_form = NULL),
+  N_settings = list(process = "iid", init = "exp"),
+  F_settings = list(process = "rw", mu_form = NULL),
   M_settings = list(process = "off", mu_supplied = ~ I(0.3)),
   catch_settings = list(sd_form = ~ 1),
   index_settings = list(sd_form = ~ 1, q_form = ~ q_block),
@@ -204,5 +265,5 @@ dat <- make_dat(
 
 }
 \seealso{
-\code{\link[stats:model.matrix]{stats::model.matrix()}}, \code{\link[=cut_ages]{cut_ages()}}
+\code{\link[=fit_tam]{fit_tam()}}, \link{tinyAM-model}, \code{\link[stats:model.matrix]{stats::model.matrix()}}, \code{\link[=cut_ages]{cut_ages()}}
 }

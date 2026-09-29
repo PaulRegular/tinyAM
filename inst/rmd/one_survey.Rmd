@@ -11,6 +11,27 @@ d <- subset(obs_pred$index, survey == "{{nm}}")
 Row {.tabset}
 --------------------------------------------------------------------------------
 
+### Aggregate index
+
+```{r}
+d |> 
+  group_by(year, model) |> 
+  summarise(
+    obs = sum(obs, na.rm = TRUE),
+    pred = sum(pred, na.rm = TRUE),
+    is_proj = unique(is_proj),
+    .groups = "drop"
+  ) |> 
+  mutate(
+    obs = ifelse(obs == 0, NA, obs)
+  ) |> 
+  plot_obs_pred(
+    color = ~model,
+    colors = cols,
+    ylab = "Aggregate index"
+  )
+```
+
 ### Index-at-age
 
 ```{r}

@@ -2,111 +2,73 @@
 % Please edit documentation in R/nll.R
 \name{nll_fun}
 \alias{nll_fun}
-\title{Negative log-likelihood (and simulator) for the Tiny Assessment Model}
+\title{Evaluate or simulate the tinyAM model}
 \usage{
+nll_fun(par, dat, simulate = FALSE)
+
 nll_fun(par, dat, simulate = FALSE)
 }
 \arguments{
-\item{par}{Named list of parameters in the format produced by
-\code{\link[=make_par]{make_par()}}. This includes scalars (e.g., \verb{log_sd_*}), vectors
-(e.g., \code{log_r}, \code{log_q}), and matrices (e.g., \code{log_f}, \code{log_n}, \code{log_m}).}
+\item{par}{Parameter list with the structure produced by \code{\link[=make_par]{make_par()}}.}
 
-\item{dat}{Named list of data and setting inputs produced by \code{\link[=make_dat]{make_dat()}}.}
+\item{dat}{Data and settings returned by \code{\link[=make_dat]{make_dat()}}.}
 
-\item{simulate}{Logical. If \code{FALSE}, return the JNLL.
-If \code{TRUE}, simulate random effects and observations and return them (see \strong{Value}).}
+\item{simulate}{Logical; generate process states and observations instead of
+returning the likelihood? Defaults to \code{FALSE}.}
 }
 \value{
-\itemize{
-\item If \code{simulate = FALSE}: a single numeric JNLL value.
-\item If \code{simulate = TRUE}: a list with elements:
-\itemize{
-\item \code{log_f}, \code{log_r} — always returned;
-\item \code{log_n} — if \code{N_settings$process != "off"};
-\item \code{log_m} — if \code{M_settings$process != "off"};
-\item \code{log_obs} — simulated observations (NAs restored where input was missing);
-\item \code{missing} — the simulated values at missing-observation positions.
-}
-}
+With \code{simulate = FALSE}, a scalar joint negative log-likelihood.
+When used inside \code{\link[RTMB:TMB-interface]{RTMB::MakeADFun()}}, reported population and observation
+quantities are available through the resulting object's \code{report()} method;
+selected log population summaries also receive uncertainty via \code{sdreport()}.
+With \code{TRUE}, a list containing \code{log_f}, \code{log_r}, \code{log_obs}, and applicable
+\code{log_n0}, \code{log_n}, \code{log_m}, and \code{missing} values. Unfilled missing
+observations remain \code{NA}; filled entries contain simulated log observations.
 }
 \description{
-Core objective function for TAM.
-\itemize{
-\item When \code{simulate = FALSE} (default) it returns the joint negative log-likelihood (JNLL)
-of the state–space model given parameters in \code{par} and data/flags in the captured \code{dat} list.
-\item When \code{simulate = TRUE}, it draws the model’s random effects and observations
-from the assumed distributions and returns a list of simulated objects
-(see \strong{Value}).
-}
+Evaluates the population and observation equations for a parameter list.
+Most users should use \code{\link[=fit_tam]{fit_tam()}} to fit a model and \code{\link[=sim_tam]{sim_tam()}} to generate
+simulated data. This lower-level function is useful for checking model
+equations or simulating from chosen parameter values.
 }
 \details{
-The model follows a standard age–structured state–space formulation:
-\itemize{
-\item \strong{Recruitment:} log-recruits \eqn{\log R_y} evolve as a random walk:
-\deqn{\Delta \log R_y \sim \mathcal{N}(0,\sigma_R^2).}
+See \link{tinyAM-model} for the complete state equations, process distributions,
+likelihood, initial conditions, and derived quantities.
 
-If \code{N_settings$init_N0} is \code{TRUE}, the initial recruit level
-is constrained by:
-\deqn{\log R_1 \sim \mathcal{N}(\log R_0,\sigma_R^2).}
-\item \strong{Numbers-at-age:} forward cohort dynamics with plus-group:
-\deqn{\log N_{y,a} = \log N_{y-1,a-1} - Z_{y-1,a-1},}
+\strong{Latent-state convention:} \code{log_r}, \code{log_n0}, \code{log_n}, \code{log_f}, and \code{log_m}
+represent absolute latent quantities on the log scale. Full model surfaces
+are \code{log_N}, \code{log_F}, and \code{log_M}. Process deviations are separate quantities:
+recruitment uses successive log states (\code{eta_R}), N uses cohort predictions
+(\code{eta_log_N}), and F/M use their mean log surfaces (\code{eta_log_f}, \code{eta_log_m}).
+In particular, \code{log_f = log_mu_F + eta_log_f} and
+\code{log_m = log_mu_M + eta_log_m} on their represented years and ages/blocks.
+The mean is not added again when constructing mortality from the latent state.
 
-with \eqn{Z_{y,a} = F_{y,a} + M_{y,a}}. The plus-group equation is applied
-at the terminal age.
-If \code{N_settings$process != "off"}, residuals
-\eqn{\eta^N_{y,a} = \log N_{y,a} - \widehat{\log N}_{y,a}}
-are penalized by \code{\link[=dprocess_2d]{dprocess_2d()}} according to the chosen process.
-\item \strong{Fishing mortality:}
-\deqn{\log F_{y,a} = \mu^F_{y,a} + \eta^F_{y,a},}
+With \code{simulate = FALSE}, the result is the joint negative log-likelihood.
+It includes recruitment, active N/F/M processes, random initial abundance,
+and Gaussian densities for observed or filled log observations. Random
+effects are integrated out by \code{\link[=fit_tam]{fit_tam()}}, not by this function itself.
+Normal densities are evaluated on log observations, so predictions on the
+natural scale are conditional medians rather than arithmetic means.
 
-where the optional fixed-effects surface \eqn{\mu^F} comes from
-\eqn{F_\text{modmat} \cdot \texttt{log\_mu\_f}} (if \code{F_settings$mu_form} is provided).
-Deviations \eqn{\eta^F} are penalized by \code{\link[=dprocess_2d]{dprocess_2d()}} using
-\code{F_settings$process} and \code{logit_phi_f} (AR1) or a RW/IID penalty.
-\item \strong{Natural mortality:}
-\deqn{\log M_{y,a} = \log \mu^M_{y,a} + \eta^M_{y,a},}
-
-where \eqn{\log \mu^M = \texttt{log\_mu\_supplied\_m} + M_\text{modmat}\,\texttt{log\_mu\_m}}.
-If \code{M_settings$process != "off"}, process deviations (\eqn{\eta^M}) are penalized by \code{\link[=dprocess_2d]{dprocess_2d()}}
-for years 2...Y.
-\item \strong{Observations:} catch-at-age and index-at-age on the log scale:
-\deqn{\log C_{y,a} \sim \mathcal{N}\!\left(
-      \log\!\left[N_{y,a}\,\frac{F_{y,a}}{Z_{y,a}}\,(1-e^{-Z_{y,a}})\right],
-      \sigma^2_{\text{catch}}\right),}
-
-\deqn{\log I_{y,a} \sim \mathcal{N}\!\left(
-      \log q_{a} + \log N_{y,a} - Z_{y,a}\, t_{y,a}, \sigma^2_{\text{index}}\right).}
-
-Here \code{sd_catch_modmat \%*\% log_sd_catch} adjusts the supplied observation SDs for catch-at-age,
-\code{sd_index_modmat \%*\% log_sd_index} does the same for indices-at-age, and \code{q_modmat \%*\% log_q}
-controls age- (or block-) specific catchability.
+With \code{simulate = TRUE}, recruitment and mortality states are drawn first.
+N is then constructed through initial-age and cohort recursion, followed by
+predictions and observation draws with the SD for each matching row.
+Derived quantities therefore use the same realization as the returned states.
+If biological inputs extend above the modeled plus age, hidden age abundances
+are reconstructed after N. Effective terminal W and P preserve biomass and
+mature biomass; see \link{tinyAM-model}. No extra parameters or process penalties
+are introduced. \code{N_plus}, \code{W}, and \code{P} are then included in \code{report()}.
+Random N0 is redrawn; free N0 and \code{log_r0} remain supplied fixed states.
+RW processes retain their starting state because it has no process density.
+For N, the first \code{log_n} row is retained and its starting residual is computed
+against the newly simulated cohort prediction. Subsequent residuals follow
+the temporal walk. No new F states are drawn for projection years: projected
+F is terminal historical F times the specified multiplier.
 }
-
-\strong{Simulation mode:}
-When \code{simulate = TRUE}, the function:
-\enumerate{
-\item Draws \code{log_r} (RW), optional \code{log_n} (cohort residual field),
-optional \code{log_m} (M deviations), and \code{log_f} (F deviations) from
-their respective process models via \code{\link[=rprocess_2d]{rprocess_2d()}}.
-\item Regenerates predictions and draws \code{log_obs} from the observation
-model.
-\item Returns the simulated objects.
-}
-
-Missing observations are preserved (filled and then reset to \code{NA}).
-
-\code{REPORT()} and \code{ADREPORT()} calls inside the function make derived
-quantities (e.g., \code{N}, \code{F}, \code{M}, \code{Z}, \code{ssb}, \code{log_ssb}) available through
-\code{obj$report()} / \code{sdreport()} when used via \strong{RTMB}.
-}
-\section{Dependencies and captured data}{
-
-The function expects a \code{dat} list in its lexical scope (created by
-\code{\link[=make_dat]{make_dat()}}) containing data matrices/vectors and model matrices
-(\code{SW}, \code{MO}, \code{obs_map}, \code{sd_catch_modmat}, \code{sd_index_modmat}, \code{q_modmat},
-\code{F_modmat}, \code{M_modmat}, settings lists, etc.).
-It also relies on helper functions \code{\link[=dprocess_2d]{dprocess_2d()}} and \code{\link[=rprocess_2d]{rprocess_2d()}}
-for process penalties and simulation.
+\section{Simulate from fitted parameters}{
+p_hat <- as.list(sdrep, "Estimate")
+sims  <- nll_fun(p_hat, dat, simulate = TRUE)
 }
 
 \examples{
@@ -114,27 +76,21 @@ dat <- make_dat(
   cod_obs,
   years = 1983:2024,
   ages = 2:14,
-  N_settings = list(process = "iid", init_N0 = FALSE),
-  F_settings = list(process = "approx_rw", mu_form = NULL),
+  N_settings = list(process = "iid", init = "exp"),
+  F_settings = list(process = "rw", mu_form = NULL),
   M_settings = list(process = "off", mu_supplied = ~ I(0.3)),
   catch_settings = list(sd_form = ~ 1),
   index_settings = list(sd_form = ~ 1, q_form = ~ q_block)
 )
 par <- make_par(dat)
-make_nll_fun <- function(f, d) function(p) f(p, d)
-obj <- RTMB::MakeADFun(make_nll_fun(nll_fun, dat), par,
-  random = c("log_n", "log_f","log_r", "missing"), silent = TRUE
-)
-opt <- nlminb(obj$par, obj$fn, obj$gr)
-rep <- obj$report()
-sdrep <- RTMB::sdreport(obj)
-
-# Simulate from fitted parameters
-p_hat <- as.list(sdrep, "Estimate")
-sims  <- nll_fun(p_hat, dat, simulate = TRUE)
+set.seed(1)
+simulated <- nll_fun(par, dat, simulate = TRUE)
+head(exp(simulated$log_r))
 
 }
 \seealso{
+\link{tinyAM-model}, \code{\link[=make_dat]{make_dat()}}, \code{\link[=make_par]{make_par()}}, \code{\link[=fit_tam]{fit_tam()}}, \code{\link[=sim_tam]{sim_tam()}}
+
 \code{\link[=make_dat]{make_dat()}}, \code{\link[=make_par]{make_par()}}, \code{\link[=fit_tam]{fit_tam()}}, \code{\link[=sim_tam]{sim_tam()}},
-\code{\link[=dprocess_2d]{dprocess_2d()}}, \code{\link[=rprocess_2d]{rprocess_2d()}}
+\code{\link[=dprocess_ar1]{dprocess_ar1()}}, \code{\link[=rprocess_ar1]{rprocess_ar1()}}
 }

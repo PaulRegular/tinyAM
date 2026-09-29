@@ -5,19 +5,21 @@
 #' @param model_list   A **named list** of fitted TAM objects (e.g., `fits` list returned by
 #'                     [fit_retro()]). Names are used to label models.
 #' @param output_file  Name of file to export using [rmarkdown::render()].
-#'                     If `NULL`, a temporary HTML file will be rendered and opened
-#'                     automatically in your default browser.
+#'                     If `NULL`, a temporary HTML file is rendered.
+#'                     The file opens in your browser only when `open_file = TRUE`.
 #' @param open_file    Logical. Open rendered html file?
 #' @param render_args  Named list of additional arguments passed to
 #'                     [rmarkdown::render()].
 #' @param ...          One or more fitted TAM objects (as returned by [fit_tam()]).
-#'                     Ignored if `model_list` is provided. When supplying models
+#'                     Supply these or `model_list`, not both. When supplying models
 #'                     through `...`, their object names are used to label models
 #'                     (even when a single model is supplied).
 #' @details Supply models via `...` or `model_list`, but not both. The models must
 #'          form a uniquely named list so they can be labeled in the dashboard.
 #'          Additional arguments for [rmarkdown::render()] can be passed through
 #'          `render_args`, which must itself be a (named) list.
+#' @return Used for its side effects: writes an HTML dashboard and optionally
+#'   opens it in the browser. Supply `output_file` to retain a known file path.
 #'
 #' @example inst/examples/example_fits.R
 #' @examples
@@ -40,8 +42,9 @@ vis_tam <- function(..., model_list = NULL, interval = 0.95, output_file = NULL,
       "install.packages(c(%s))",
       paste(sprintf("'%s'", missing), collapse = ", ")
     )
+
     cli::cli_abort(c(
-      "Package{?s} {.pkg {missing}} {cli::qty(length(missing))}is/are required for {.fn vis_tam}.",
+      "Required package(s) not installed: {paste(missing, collapse = ', ')}.",
       "i" = "Install with: {.code {install_call}}"
     ))
   }

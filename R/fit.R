@@ -27,7 +27,7 @@
     xs <- start[[nm]]
 
     # Scalars
-    if (is.numeric(x0) && length(dim(x0)) == 0 && length(x0) == 1L) {
+    if (is.numeric(x0) && length(dim(x0)) == 0 && length(x0) == 1L && is.null(names(x0))) {
       if (is.numeric(xs) && length(xs) == 1L) par0[[nm]] <- xs
       next
     }
@@ -65,20 +65,42 @@
 #' Fit a Tiny Assessment Model (TAM)
 #'
 #' @description
-#' Builds data with [make_dat()], initializes parameters with [make_par()],
-#' constructs the RTMB objective, optimizes it, and returns a fitted object with
-#' reports and standard errors.
+#' Estimates abundance, recruitment, and mortality from catch-at-age and survey
+#' observations. Returns population trends, observation diagnostics, parameter
+#' estimates, and uncertainty tables. Use `N_settings`, `F_settings`, and
+#' `M_settings` to specify where unexplained biological variation is allowed.
+#' See [make_dat()] for options and [tinyAM-model] for the model equations.
 #'
 #' @details
+#' Builds data with [make_dat()] and initial parameters with [make_par()].
+#' RTMB integrates random effects using the Laplace approximation; `nlminb`
+#' optimizes the remaining fixed effects. [mono()] increments `dq` have a zero
+#' lower bound. Their SEs remain on the increment scale, but symmetric Wald
+#' intervals are only local approximations at a boundary.
+#'
 #' Random-effect blocks are chosen automatically from the model settings:
 #'
 #' - Always includes `log_f` and `log_r`.
-#' - Includes `missing` if there are missing observations.
+#' - Includes `missing` if missing observations are set to be filled.
+#' - Includes `log_n0` only if `N_settings$init == "random"`.
 #' - Includes `log_n` if `N_settings$process != "off"`.
 #' - Includes `log_m` if `M_settings$process != "off"`.
 #'
 #' A warning is issued if the number of random effects exceeds 1.5 times the
 #' number of observed data points (rough identifiability check).
+#'
+#' For RW processes, mean coefficients that have no effect on either increments
+#' or mortality outside the fitted process states are held at their starting
+#' values. For example, a constant F mean cancels from all RW increments.
+#' An RW SD is also held fixed if the process has only one row (no increments).
+#' These parameters cannot be estimated from the likelihood; no constraint is
+#' imposed on the latent states themselves.
+#' For AR1, the correlation for an axis containing a single row or column is
+#' fixed at zero; otherwise it would be confounded with the SD.
+#'
+#' `is_converged` summarizes gradient and curvature checks. Also inspect
+#' `opt$convergence` and `opt$message`; a passing numerical check does not
+#' establish that the data identify every biological component.
 #'
 #' @param obs A named list of tidy observation tables (e.g., `catch`, `index`,
 #'   `weight`, `maturity`). See [cod_obs] for an example.
@@ -97,7 +119,7 @@
 #' @inheritDotParams make_dat
 #'
 #' @return
-#' A list with components:
+#' A `tam_fit` list with components:
 #'
 #' - **call**: matched call.
 #' - **dat**: data list returned by [make_dat()].
@@ -117,7 +139,8 @@
 #'
 #' @example inst/examples/example_fit_default.R
 #' @examples
-#' fit$sdrep
+#' fit
+#' head(fit$pop$ssb)
 #'
 #' ## Fit with projections (status quo F)
 #' fit2 <- update(fit,
@@ -147,13 +170,31 @@ fit_tam <- function(
 
   call <- match.call()
 
+  refit_args <- c(
+    list(
+      obs = obs,
+      interval = interval,
+      add_osa_res = add_osa_res,
+      silent = silent,
+      start_par = start_par,
+      grad_tol = grad_tol
+    ),
+    list(...)
+  )
+
   dat <- make_dat(obs, ...)
   par <- make_par(dat)
   if (!is.null(start_par)) {
     par <- .merge_start_par(par, start_par)
   }
+  if (!is.null(par$dq) && any(!is.finite(par$dq) | par$dq < 0)) {
+    cli::cli_abort("Starting {.arg dq} increments must be finite and non-negative.")
+  }
 
   ran <- c("log_f", "log_r")
+  if (dat$N_settings$init == "random") {
+    ran <- c(ran, "log_n0")
+  }
   if (dat$any_fill_missing) {
     ran <- c(ran, "missing")
   }
@@ -164,9 +205,46 @@ fit_tam <- function(
     ran <- c(ran, "log_m")
   }
   map <- list()
-  if (dat$M_settings$process == "ar1" && nlevels(dat$M_settings$age_blocks) == 1) {
-    par$logit_phi_m[1] <- qlogis(0)
-    map$logit_phi_m <- factor(c(NA, 1)) # phi_age moot when only one age block
+  for (process in c("n", "f", "m")) {
+    settings <- dat[[paste0(toupper(process), "_settings")]]
+    if (settings$process != "rw") next
+    states <- par[[paste0("log_", process)]]
+    if (nrow(states) < 2L) {
+      map[[paste0("log_sd_", process)]] <- factor(NA)
+    }
+    if (process == "n") next
+    coef_name <- if (process == "f") "log_mu_f" else "mu_m"
+    if (is.null(par[[coef_name]])) next
+    design <- dat[[paste0(toupper(process), "_modmat")]]
+    fixed <- vapply(seq_len(ncol(design)), function(j) {
+      surface <- matrix(design[, j], length(dat$years), length(dat$ages),
+                        dimnames = list(dat$years, dat$ages))
+      if (process == "f") {
+        field <- surface[!dat$is_proj, , drop = FALSE]
+      } else {
+        field <- surface[rownames(states), settings$age_block_start, drop = FALSE]
+        surface[rownames(states), names(settings$age_blocks)] <- 0
+        if (any(surface != 0)) return(FALSE) # Mean still controls M outside process states.
+      }
+      nrow(field) < 2L || all(field[-1, , drop = FALSE] == field[-nrow(field), , drop = FALSE])
+    }, logical(1))
+    if (any(fixed)) {
+      indices <- seq_along(fixed)
+      indices[fixed] <- NA_integer_
+      map[[coef_name]] <- factor(indices)
+    }
+  }
+  for (process in c("n", "f", "m")) {
+    if (dat[[paste0(toupper(process), "_settings")]]$process != "ar1") next
+    states <- par[[paste0("log_", process)]]
+    singleton <- c(ncol(states), nrow(states)) == 1L # age, year
+    if (any(singleton)) {
+      nm <- paste0("logit_phi_", process)
+      par[[nm]][singleton] <- qlogis(0)
+      indices <- 1:2
+      indices[singleton] <- NA_integer_
+      map[[nm]] <- factor(indices)
+    }
   }
 
   make_nll_fun <- function(f, d) function(p) f(p, d) # use closure to avoid global assignment of data
@@ -178,8 +256,11 @@ fit_tam <- function(
     silent = silent
   )
 
+  lower <- rep(-Inf, length(obj$par))
+  lower[names(obj$par) == "dq"] <- 0
   opt <- try(stats::nlminb(
     obj$par, obj$fn, obj$gr,
+    lower = lower,
     control = list(eval.max = 1000, iter.max = 1000)
   ))
   rep <- obj$report()
@@ -187,6 +268,7 @@ fit_tam <- function(
 
   out <- list(
     call = call,
+    refit_args = refit_args,
     dat = dat,
     obj = obj,
     opt = opt,
@@ -209,6 +291,63 @@ fit_tam <- function(
 }
 
 
+#' Update a fitted TAM model
+#'
+#' Refit a TAM model after changing one or more arguments. Arguments not
+#' supplied in `...` are taken from the evaluated inputs stored in the
+#' original fit, so updating does not depend on objects remaining available
+#' in the original calling environment.
+#'
+#' @param object A fitted `tam_fit` object.
+#' @param ... Named arguments to replace in the original fit.
+#' @param evaluate Logical; if `TRUE`, fit and return the updated model.
+#'   If `FALSE`, return the updated call without fitting.
+#'
+#' @return An updated `tam_fit` object when `evaluate = TRUE`; otherwise,
+#'   the updated call.
+#'
+#' @export
+update.tam_fit <- function(object, ..., evaluate = TRUE) {
+  object <- .require_tam_fit(object, arg = "object")
+
+  changes <- list(...)
+
+  if (length(changes) &&
+      (is.null(names(changes)) || any(names(changes) == ""))) {
+    cli::cli_abort("All arguments supplied to {.fn update} must be named.")
+  }
+
+  # Keep a readable call for printing and inspection.
+  change_expr <- as.list(match.call(expand.dots = FALSE)$...)
+
+  new_call <- as.list(object$call)
+
+  if (length(change_expr)) {
+    new_call[names(change_expr)] <- change_expr
+  }
+
+  new_call <- as.call(new_call)
+
+  if (!evaluate) {
+    return(new_call)
+  }
+
+  # Refit using the evaluated inputs stored with the original fit.
+  args <- object$refit_args
+
+  if (length(changes)) {
+    args[names(changes)] <- changes
+  }
+
+  out <- do.call(fit_tam, args)
+
+  # Preserve the concise user-facing call.
+  out$call <- new_call
+
+  out
+}
+
+
 #' Run a retrospective (peel) analysis
 #'
 #' @title Retrospective fits for TAM
@@ -218,12 +357,19 @@ fit_tam <- function(
 #' truncated year range.
 #'
 #' @details
-#' Peel years are `(max_year - folds) : max_year`.
+#' Peel years are `(max_year - folds) : max_year`, where `max_year` is the
+#' final historical year (`is_proj == FALSE`). Existing projection years
+#' never become terminal assessment years. This produces `folds + 1` fits,
+#' including the full historical assessment. The original fit is reused for
+#' that assessment unless hindcasts are requested.
 #' Each refit is attempted with `try()` so individual failures do not stop the sequence.
-#' Refits are generated via `update(fit, years = ...)`; ensure your `fit` object
-#' supports `update()` with a `years` argument. This function uses
+#' Refits are generated via `update(fit, years = ...)`. This function uses
 #' [furrr::future_map()] to run the retros in parallel. Remember to plan your session (e.g.,
 #' `future::plan(multisession, workers = 4)`).
+#' Every hindcast replaces any input projection settings with one status-quo-F
+#' year without changing the supplied fit. Failed or non-converged fits are
+#' omitted from the returned tables and fits. Summary scores therefore describe
+#' the retained folds, not necessarily every requested fold.
 #'
 #' @param fit A fitted TAM object as returned by [fit_tam()].
 #' @param folds Integer; number of terminal peels (default `2`).
@@ -294,8 +440,8 @@ fit_retro <- function(
     grad_tol <- if (!is.null(fit$grad_tol)) fit$grad_tol else 1e-3
   }
 
-  min_year <- min(fit$dat$years)
-  max_year <- max(fit$dat$years)
+  min_year <- min(fit$dat$years[!fit$dat$is_proj])
+  max_year <- .terminal_year(fit)
   retro_years <- seq(max_year - folds, max_year)
   if (start_from_fit) {
     start_par <- as.list(fit$sdrep, "Estimate")
@@ -303,24 +449,27 @@ fit_retro <- function(
     start_par <- NULL
   }
 
-  if (hindcast) {
-    fit$call$proj_settings <- list(n_proj = 1, n_mean = 1, F_mult = 1)
-  }
 
   progressr::with_progress({
     update_progress <- progressr::progressor(steps = length(retro_years))
     retro <- furrr::future_map(seq_along(retro_years), function(i) {
-      if (retro_years[i] == max_year) {
+      if (retro_years[i] == max_year && !hindcast) {
         r <- fit # need not re-run terminal year
       } else {
         r <- suppressWarnings(
           try(
-            stats::update(
-              fit,
+            do.call(update, list(
+              object = fit,
               years = min_year:retro_years[i],
+              ages = fit$dat$ages,
+              proj_settings = if (hindcast) {
+                list(n_proj = 1, n_mean = 1, F_mult = 1)
+              } else {
+                fit$dat$proj_settings
+              },
               start_par = start_par,
               silent = TRUE
-            ),
+            )),
             silent = TRUE
           )
         )
@@ -367,9 +516,7 @@ fit_retro <- function(
   out$mohns_rho <- rhos
 
   if (hindcast) {
-    cols <- c("year", "age", "obs", "pred", "fold", "is_proj")
-    d <- rbind(out$obs_pred$catch[, cols],
-               out$obs_pred$index[, cols])
+    d <- stack_list(out$obs_pred[c("catch", "index")], label = "type")
     out$hindcast_rmse <- compute_hindcast_rmse(d)
   }
 
@@ -421,11 +568,14 @@ fit_hindcast <- function(fit, ...) {
 #'
 #' @description
 #' Checks two basics and returns `TRUE` only if all pass:
-#' (1) maximum absolute gradient from `sdreport`,
+#' (1) maximum absolute gradient from `sdreport`, projected at active `dq` bounds,
 #' (2) Hessian positive-definite flag.
 #'
 #' If all pass, a short success message is printed unless `quiet = TRUE`.
 #' If any check fails, a warning is emitted (not suppressed by `quiet`).
+#' For a `dq` estimate of zero, a positive derivative satisfies the lower-bound
+#' optimality condition and is treated as zero in this check. The raw gradient
+#' stored in `sdreport` is unchanged.
 #'
 #' @param fit A fitted TAM object containing `$sdrep`.
 #' @param grad_tol Numeric tolerance for `max|grad|`. Default `1e-3`.
@@ -473,6 +623,12 @@ check_convergence <- function(fit, grad_tol = 1e-3, quiet = TRUE) {
     cli::cli_abort("`{.arg fit}` must provide a Hessian flag via `sdrep$pdHess`.")
   }
 
+  # At an active lower bound a positive derivative satisfies the KKT condition.
+  # Keep sdreport's raw gradient intact for users inspecting diagnostics.
+  if (!is.null(sdrep$par.fixed)) {
+    active <- names(sdrep$par.fixed) == "dq" & sdrep$par.fixed == 0 & is.finite(grad)
+    grad[active] <- pmin(grad[active], 0)
+  }
   max_grad <- max(abs(grad))
   grad_ok  <- is.finite(max_grad) && max_grad <= grad_tol
   hess_ok  <- isTRUE(pd_hess)
@@ -500,6 +656,3 @@ check_convergence <- function(fit, grad_tol = 1e-3, quiet = TRUE) {
 
   ok
 }
-
-
-

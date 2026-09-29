@@ -28,8 +28,8 @@ Set to NULL to omit the id column.}
 }
 \value{
 A named list of data.frames. One element per subtable name. Each
-data.frame is the row-bound stack across outer ids, with an added \code{id_col}
-(if not NULL).
+data.frame is the row-bound stack across outer ids, with an added column
+named by \code{label} (unless \code{label = NULL}).
 }
 \description{
 Stack identically named subtables from a nested list

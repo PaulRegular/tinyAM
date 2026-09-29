@@ -21,6 +21,8 @@ The input data frame with \code{est}, \code{lwr}, and \code{upr} transformed and
 \description{
 Applies a transformation (e.g., \code{exp}) and optional rescaling to the columns
 \code{est}, \code{lwr}, and \code{upr} of a data frame.
+SE columns and their scale labels are left unchanged; this helper does not
+calculate transformed standard errors.
 }
 \examples{
 d <- data.frame(est = log(100), lwr = log(80), upr = log(120))

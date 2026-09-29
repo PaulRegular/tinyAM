@@ -54,8 +54,10 @@
   ci_names <- c(sprintf("Lower %s%%", ci_level), sprintf("Upper %s%%", ci_level))
 
   if (is.null(fixed_par) || !nrow(fixed_par)) {
-    return(matrix(numeric(0), nrow = 0, ncol = 4,
-                  dimnames = list(character(), c("Estimate", "Std. Error", ci_names))))
+    out <- data.frame(Estimate = numeric(), lower = numeric(), upper = numeric(),
+                      `Std. Error` = numeric(), `SE scale` = character(), check.names = FALSE)
+    names(out)[2:3] <- ci_names
+    return(out)
   }
 
   labels <- fixed_par$par
@@ -74,9 +76,10 @@
   lower <- if ("lwr" %in% names(fixed_par)) fixed_par$lwr else rep(NA_real_, length(est))
   upper <- if ("upr" %in% names(fixed_par)) fixed_par$upr else rep(NA_real_, length(est))
 
-  out <- cbind(Estimate = est, `Std. Error` = se, lower, upper)
-  colnames(out)[3:4] <- ci_names
-  rownames(out) <- labels
+  out <- data.frame(Estimate = est, lower, upper, `Std. Error` = se,
+                    `SE scale` = fixed_par$se_scale, check.names = FALSE)
+  names(out)[2:3] <- ci_names
+  rownames(out) <- make.unique(labels)
   out
 }
 
@@ -92,9 +95,9 @@
   default_ci_names <- c(sprintf("Lower %s%%", default_ci_level),
                         sprintf("Upper %s%%", default_ci_level))
 
-  empty <- matrix(numeric(0), nrow = 0, ncol = 4,
-                  dimnames = list(character(),
-                                  c("Estimate", "Std. Error", default_ci_names)))
+  empty <- data.frame(Estimate = numeric(), lower = numeric(), upper = numeric(),
+                      `Std. Error` = numeric(), `SE scale` = character(), check.names = FALSE)
+  names(empty)[2:3] <- default_ci_names
 
   if (is.null(pop)) {
     return(empty)
@@ -136,12 +139,13 @@
       tab <- tab[1, , drop = FALSE]
     }
 
-    se <- if ("sd" %in% names(tab)) tab$sd else if ("se" %in% names(tab)) tab$se else NA_real_
     lower <- if ("lwr" %in% names(tab)) tab$lwr else NA_real_
     upper <- if ("upr" %in% names(tab)) tab$upr else NA_real_
 
-    matrix(c(tab$est, se, lower, upper), nrow = 1,
-           dimnames = list(nm, c("Estimate", "Std. Error", ci_names)))
+    out <- data.frame(Estimate = tab$est, lower, upper, `Std. Error` = tab$se,
+                      `SE scale` = tab$se_scale, row.names = nm, check.names = FALSE)
+    names(out)[2:3] <- ci_names
+    out
   })
 
   rows <- Filter(Negate(is.null), rows)
@@ -199,14 +203,15 @@
 
 
 .format_terminal_display <- function(tab) {
-  if (!is.matrix(tab) || !nrow(tab)) {
+  if (!nrow(tab)) {
     return(tab)
   }
 
   metric_digits0 <- c("abundance", "recruitment", "ssb")
   row_names <- rownames(tab)
   col_names <- colnames(tab)
-  is_sd_col <- col_names == "Std. Error"
+  numeric_cols <- col_names != "SE scale"
+  is_sd_col <- col_names[numeric_cols] == "Std. Error"
 
   formatted <- matrix(NA_character_, nrow = nrow(tab), ncol = ncol(tab),
                       dimnames = dimnames(tab))
@@ -219,21 +224,23 @@
 
     digits <- ifelse(is_sd_col, 3L, digits_base)
     big <- ifelse(is_sd_col, "", if (is.null(big_mark)) "" else big_mark)
-    formatted[i, ] <- .format_numbers(tab[i, ], digits = digits, big_mark = big)
+    formatted[i, numeric_cols] <- .format_numbers(unlist(tab[i, numeric_cols]), digits = digits, big_mark = big)
   }
+  formatted[, "SE scale"] <- tab[, "SE scale"]
 
   formatted
 }
 
 
 .format_coef_display <- function(tab) {
-  if (!is.matrix(tab) || !nrow(tab)) {
+  if (!nrow(tab)) {
     return(tab)
   }
 
   row_names <- rownames(tab)
   col_names <- colnames(tab)
-  is_sd_col <- col_names == "Std. Error"
+  numeric_cols <- col_names != "SE scale"
+  is_sd_col <- col_names[numeric_cols] == "Std. Error"
 
   formatted <- matrix(NA_character_, nrow = nrow(tab), ncol = ncol(tab),
                       dimnames = dimnames(tab))
@@ -246,13 +253,51 @@
 
     digits <- ifelse(is_sd_col, 3L, digits_base)
     big <- ifelse(is_sd_col, "", if (is.null(big_mark)) "" else big_mark)
-    formatted[i, ] <- .format_numbers(tab[i, ], digits = digits, big_mark = big)
+    formatted[i, numeric_cols] <- .format_numbers(unlist(tab[i, numeric_cols]), digits = digits, big_mark = big)
   }
+  formatted[, "SE scale"] <- tab[, "SE scale"]
 
   formatted
 }
 
 
+#' Print and summarize a TAM fit
+#'
+#' Summarize parameter estimates, uncertainty, convergence information, and
+#' terminal population quantities from a fitted TAM model. Estimates and
+#' confidence limits are shown with their standard errors and the scale on
+#' which those standard errors are reported.
+#'
+#' @details
+#' Standard errors may be reported on different scales depending on the
+#' parameterization. For parameters estimated on a log scale, a small SE
+#' approximately corresponds to a coefficient of variation (CV); for example,
+#' an SE of `0.10` is approximately 10% relative uncertainty. Logit-scale SEs
+#' should not be interpreted as CVs. An SE scale of `reported` means that the
+#' SE is on the same scale as the displayed estimate. This includes quantities
+#' such as `dq`, which are fitted directly as increments on the log-q scale.
+#'
+#' The displayed maximum gradient is the raw fixed-effect gradient. Parameters
+#' fitted at a boundary need not have a raw gradient of zero at a valid
+#' constrained optimum. For example, a `dq` estimate at its lower bound of zero
+#' can have a positive raw gradient while [check_convergence()] still passes its
+#' constrained optimality check.
+#'
+#' Terminal summaries exclude projection years.
+#'
+#' @param x,object A fitted TAM object, or its summary for
+#'   `print.summary_tam_fit()`.
+#' @param ... Additional arguments passed to printing functions; unused by
+#'   `summary()`.
+#'
+#' @return `summary()` returns a `summary_tam_fit` list. Its `coefficients` and
+#'   `terminal_vals` components are data frames containing numeric estimates,
+#'   confidence limits, standard errors, and a character `SE scale` column.
+#'   Printing methods return their input invisibly. The confidence level is
+#'   taken from the tidy tables (95% by default).
+#'
+#' @name tam_fit_summary
+#' @seealso [tidy_par()], [tidy_pop()], [check_convergence()]
 #' @export
 print.tam_fit <- function(x, ...) {
   x <- .require_tam_fit(x, arg = "x")
@@ -286,10 +331,12 @@ print.tam_fit <- function(x, ...) {
     .print_formatted(terminal_tab, ...)
   }
 
+  .print_se_note()
   invisible(x)
 }
 
 
+#' @rdname tam_fit_summary
 #' @export
 summary.tam_fit <- function(object, ...) {
   object <- .require_tam_fit(object, arg = "object")
@@ -303,7 +350,7 @@ summary.tam_fit <- function(object, ...) {
 
   terminal_year <- .terminal_year(object)
   terminal_vals <- .terminal_table(object$pop, terminal_year)
-  terminal_list <- if (length(terminal_vals) > 0) {
+  terminal_list <- if (nrow(terminal_vals) > 0) {
     stats::setNames(as.list(terminal_vals[, "Estimate"]), rownames(terminal_vals))
   } else {
     list()
@@ -336,6 +383,7 @@ summary.tam_fit <- function(object, ...) {
 }
 
 
+#' @rdname tam_fit_summary
 #' @export
 print.summary_tam_fit <- function(x, ...) {
   cat("Call:\n")
@@ -369,6 +417,13 @@ print.summary_tam_fit <- function(x, ...) {
     .print_formatted(terminal_tab, ...)
   }
 
+  .print_se_note()
   invisible(x)
+}
+
+.print_se_note <- function() {
+  cat("\nSE scale: reported = same scale as estimate; logit = log-odds.\n",
+      "A small log-scale SE approximates CV (0.10 is about 10%); use CIs for large SEs.\n",
+      sep = "")
 }
 

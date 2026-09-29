@@ -20,6 +20,16 @@
 #' - `plot_obs_pred()`: observed vs predicted fits by year.
 #' - `plot_bubbles()`: residuals (OSA or standardized) as bubbles by age × year.
 #' - `plot_resid()`: residual diagnostics vs year, cohort, age, and expected values.
+#' - `plot_par()`: parameter estimates and confidence limits, including signed effects.
+#'
+#' @details
+#' These functions display the supplied tables without refitting the model or
+#' recalculating uncertainty. Trend ribbons use `lwr` and `upr` confidence limits;
+#' they are not prediction intervals for future observations. Catch and survey
+#' predictions are conditional medians. Residuals come from [tidy_obs_pred()].
+#' Subset to a single survey or supply a grouping aesthetic when combining surveys
+#' so distinct series are not connected. A log axis requires positive values.
+#' See [tinyAM-model] for definitions and units of population quantities.
 #'
 #' @param data A data frame of observations or estimates.
 #' @param x Formula specifying x variable
@@ -336,7 +346,6 @@ plot_resid <- function(
 #' @export
 plot_par <- function(data, ...) {
   data$coef <- factor(ifelse(is.na(data$coef), data$par, paste0(data$par, ": ", data$coef)))
-  max_y <- max(data$upr[grepl("q|sd", data$par)]) * 1.05
 
   args <- list(...)
   if (is.null(args$color)) {
@@ -353,8 +362,7 @@ plot_par <- function(data, ...) {
     add_markers(showlegend = TRUE) |>
     layout(
       xaxis = list(
-        title = "Estimate",
-        range = c(0, max_y)
+        title = "Estimate"
       ),
       yaxis = list(
         title = ""

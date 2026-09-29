@@ -16,21 +16,50 @@ tidy_par(fit, interval = 0.95)
 A list with two elements:
 \itemize{
 \item \code{fixed}: a data frame stacking all fixed-effect parameters with columns
-\code{par}, \code{est}, \code{se}, \code{lwr}, \code{upr}, plus any index columns such as
-\code{coef}, \code{year}, \code{age}.
+parameter/index columns (\code{par}, \code{coef}, \code{year}, \code{age}, as applicable), then
+\code{est}, \code{lwr}, \code{upr}, \code{se}, \code{se_scale}, and \code{is_proj} when applicable.
 \item \code{random}: a named list of data frames (one per random block) with the same
 columns as \code{fixed} (indices appropriate to each random effect).
 }
 }
 \description{
-Creates a tidy summary of parameter estimates from a fitted TAM object,
-combining estimates (\code{Estimate}) and standard errors (\verb{Std. Error}) from
+Summarizes fitted parameters with estimates, confidence limits, and clearly
+labelled SE scales. Use this to inspect process variability, catchability
+effects, and latent population states. Actual catchability for each survey
+observation is available from \code{\link[=tidy_obs_pred]{tidy_obs_pred()}}.
+}
+\details{
+Combines estimates (\code{Estimate}) and standard errors (\verb{Std. Error}) from
 \code{fit$sdrep}. Parameters whose names begin with \code{log_} or \code{logit_} are
 back-transformed to the natural scale:
 \itemize{
 \item \code{log_}  → \code{exp()} (and the \code{log_} prefix is dropped, e.g. \code{log_sd_r} → \code{sd_r})
 \item \code{logit_} → \code{plogis()} (and the \code{logit_} prefix is dropped, e.g. \code{logit_phi_f} → \code{phi_f})
 }
+
+Estimates and confidence limits are shown on the reported scale. SEs remain
+on the fitted scale, identified by \code{se_scale}: \code{"log"}, \code{"logit"}, or
+\code{"reported"} (the same scale as the displayed estimate). A small log-scale
+SE approximates a CV: \code{0.10} is approximately 10\% relative uncertainty.
+This interpretation does not apply to logit or reported-scale SEs, and is
+unreliable for large log-scale SEs. Confidence limits are the preferred
+summary of uncertainty on the reported scale.
+\itemize{
+\item For \code{\link[=mono]{mono()}} catchability terms, \code{dq} is a non-negative step on the
+log-q scale. Estimates and SEs are reported directly on this same scale,
+with untransformed Wald intervals (which may cross zero at a boundary).
+These local curvature SEs are not boundary-adjusted inference.
+Coefficient names identify
+transitions and groups. Actual observation-specific q is in \code{\link[=tidy_obs_pred]{tidy_obs_pred()}}.
+}
+
+Formula coefficients named \code{log_mu_f}, \verb{log_sd_*}, or \code{log_q} are
+exponentiated in summaries. An exponentiated slope is a multiplicative
+change per unit covariate, not the fitted F, SD, or q surface itself.
+An exception is the mean-\eqn{M} formula
+coefficients (\code{mu_m}), which operate on the log scale but are named without a
+\code{log_} prefix to reflect that their values may be positive or negative; they
+therefore print on the fitted log scale.
 
 Fixed-effect parameters are returned in a single data frame (\verb{$fixed});
 random-effect parameters are returned as a named list of data frames
@@ -40,7 +69,10 @@ Labels are added where applicable:
 \itemize{
 \item For parameters specified using a formula in \code{\link[=make_dat]{make_dat()}} (e.g., \code{log_q},
 \code{log_sd_catch}, \code{log_sd_index}), a \code{coef} column is added.
-\item For \code{log_r} (recruitment path), a \code{year} column is used.
+\item For \code{log_r}, \code{year} contains years 2:Y; full recruitment is in \code{\link[=tidy_pop]{tidy_pop()}}.
+\item For \code{log_n0}, an \code{age} column identifies the initial older-age state.
+\code{log_r0} and \code{log_n0} are exponentiated to abundance levels; \code{log_sd_n0}
+is exponentiated to the initial-age residual SD.
 \item For matrices (e.g., \code{log_f}, \code{log_n}), \code{year} and/or \code{age} columns are added
 via \code{\link[=tidy_mat]{tidy_mat()}}.
 }
@@ -50,8 +82,8 @@ fit <- fit_tam(
   cod_obs,
   years = 1983:2024,
   ages = 2:14,
-  N_settings = list(process = "iid", init_N0 = FALSE),
-  F_settings = list(process = "approx_rw", mu_form = NULL),
+  N_settings = list(process = "iid", init = "exp"),
+  F_settings = list(process = "rw", mu_form = NULL),
   M_settings = list(process = "off", mu_supplied = ~ I(0.3)),
   catch_settings = list(sd_form = ~ 1),
   index_settings = list(sd_form = ~ 1, q_form = ~ q_block),

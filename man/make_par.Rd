@@ -17,7 +17,7 @@ parameters depend on elements in \code{dat} (e.g., \code{F_modmat}, \code{M_modm
 \value{
 A named list of initialized parameters suitable to pass to the TAM objective
 function, with elements as described in \strong{Details}. All numeric entries are
-initialized to \code{0} (or the correct length filled with \code{0}), and matrices have
+initialized to \code{0} except \code{dq} (\code{0.05}) and \code{log_m} (its log mean). Matrices have
 informative \code{dimnames}.
 }
 \description{
@@ -26,42 +26,65 @@ fixed and random-effect parameters used by TAM, based on the structure in
 a previously constructed \code{dat} list (see \code{\link[=make_dat]{make_dat()}}).
 }
 \details{
+\strong{Latent-state convention:} \code{log_r}, \code{log_n0}, \code{log_n}, \code{log_f}, and \code{log_m}
+represent latent quantities on the log scale. They are compact fitted
+latent-state parameters; \code{log_N}, \code{log_F}, and \code{log_M} are full model
+surfaces constructed internally by \code{\link[=nll_fun]{nll_fun()}}. Process errors are
+calculated separately as deviations (\verb{eta_*}): recruitment uses successive
+log states, abundance uses cohort predictions, and F and M use their log
+mean surfaces. In particular, \code{log_f} and \code{log_m} are absolute latent states;
+their deviations are \code{eta_log_f = log_f - log_mu_F} and
+\code{eta_log_m = log_m - log_mu_M} on the corresponding years and age blocks.
+
 The function inspects \code{dat} to decide which parameters are required and what
 their dimensions should be. For example, if \code{dat$F_settings$process == "ar1"}
 it initializes a 2-vector \code{logit_phi_f}; if \code{dat$F_settings$mu_form} is not
 \code{NULL} it creates a coefficient vector \code{log_mu_f} of length
 \code{ncol(dat$F_modmat)}, and so on.
 
-All numeric parameters are initialized at \code{0}, and all matrices are created
+Numeric parameters are initialized at \code{0}, except \code{dq} (initialized at \code{0.05})
+and \code{log_m}, which starts at its log mean surface so initial M-process
+residuals are zero. These are starting values, not priors. Matrices are created
 with appropriate \code{dimnames} (\verb{year × age} or \verb{year × age_block}).
 
 \strong{Created elements (when applicable) include:}
 \itemize{
 \item \strong{Recruitment & variability}
 \itemize{
-\item \code{log_r0} (only if \code{dat$N_settings$init_N0})
-\item \code{log_r} (length \code{length(dat$years)})
+\item \code{log_r0} (fixed first-year log recruitment, always present)
+\item \code{log_r} (random states for \code{dat$years[-1]}, length \code{length(dat$years) - 1})
 \item \code{log_sd_r}
 }
-\item \strong{Abundance deviations (N)}
+\item \strong{Initial older-age abundance (independent of the N process)}
+\itemize{
+\item \code{log_n0}: realized log abundance at initial ages \code{ages[-1]}, named by age;
+absent for \code{init = "exp"}, fixed for \code{"free"}, random for \code{"random"}
+\item \code{log_sd_n0}: separate IID initial-age residual SD, only for \code{init = "random"}
+\item \code{eta_log_n0} is calculated internally from adjacent initial log states
+and first-year mortality; \code{log_n0} itself is not a deviation.
+\item The default \code{"exp"} initializer is parsimonious survivorship from
+\code{log_r0}, using first-year Z without an equilibrium plus group.
+See \code{\link[=make_dat]{make_dat()}} for the choices and weak-identification warning.
+}
+\item \strong{Abundance states and process variability (N)}
 \itemize{
 \item \code{log_sd_n} (if \code{dat$N_settings$process != "off"})
 \item \code{logit_phi_n} length 2 (if \code{process == "ar1"})
-\item \code{log_n} matrix (\code{year} × \code{age[-1]}) if \code{process != "off"}
+\item \code{log_n} matrix (\code{year[-1]} × \code{age[-1]}) if \code{process != "off"}
 }
 \item \strong{Fishing mortality (F)}
 \itemize{
 \item \code{log_sd_f}
 \item \code{logit_phi_f} length 2 (if \code{process == "ar1"})
 \item \code{log_mu_f} coefficients (length \code{ncol(dat$F_modmat)}) if a mean structure was supplied
-\item \code{log_f} matrix (\code{year} × \code{age})
+\item \code{log_f} matrix (historical \code{year} × \code{age}; no projection rows)
 }
 \item \strong{Natural mortality (M)}
 \itemize{
 \item \code{log_sd_m} (if \code{dat$M_settings$process != "off"})
 \item \code{logit_phi_m} length 2 (if \code{process == "ar1"})
-\item \code{log_mu_m} coefficients (length \code{ncol(dat$M_modmat)}) if a mean structure was supplied
-\item \code{log_m} matrix (\code{year[-1]} × \code{age_block}) if \code{process != "off"}, with
+\item \code{mu_m} coefficients (length \code{ncol(dat$M_modmat)}) if a mean structure was supplied; these act on log-\eqn{M} but are named without the \code{log_} prefix because they may be positive or negative
+\item \code{log_m} matrix (\code{M_settings$years} × \code{age_block}) if \code{process != "off"}, with
 \code{age_block = levels(dat$M_settings$age_blocks)}
 }
 \item \strong{Observation model}
@@ -69,6 +92,10 @@ with appropriate \code{dimnames} (\verb{year × age} or \verb{year × age_block}
 \item \code{log_sd_catch} (length \code{ncol(dat$sd_catch_modmat)}) adjusting any supplied SDs
 \item \code{log_sd_index} (length \code{ncol(dat$sd_index_modmat)}) adjusting any supplied SDs
 \item \code{log_q} (length \code{ncol(dat$q_modmat)})
+\item \code{dq} only for \code{\link[=mono]{mono()}} terms (length \code{ncol(dat$q_mono_modmat)}):
+fixed non-negative increments on the log-q scale, initialized to \code{0.05}
+for a nearly flat curve and bounded below by zero in \code{\link[=fit_tam]{fit_tam()}}. Names
+identify transitions and groups; these are not absolute q levels.
 \item \code{missing} vector of length \code{sum(dat$fill_missing_map)} (placeholders for
 imputed \code{log_obs}, if any observation type is set to fill missing values)
 }
@@ -76,14 +103,18 @@ imputed \code{log_obs}, if any observation type is set to fill missing values)
 
 All scalar SD parameters are on the log scale, and AR(1) parameters are on
 the logit scale (later transformed by \code{plogis()} in the likelihood).
+Temporal RW processes have no correlation parameters. Their first process
+row supplies a conditional starting state during simulation and has no
+increment penalty. See \code{\link[=fit_tam]{fit_tam()}} for mean coefficients or SDs held fixed
+when they have no effect on the RW likelihood.
 }
 \examples{
 dat <- make_dat(
   cod_obs,
   years = 1983:2024,
   ages = 2:14,
-  N_settings = list(process = "iid", init_N0 = FALSE),
-  F_settings = list(process = "approx_rw", mu_form = NULL),
+  N_settings = list(process = "iid", init = "exp"),
+  F_settings = list(process = "rw", mu_form = NULL),
   M_settings = list(process = "off", mu_supplied = ~ I(0.3)),
   catch_settings = list(sd_form = ~ 1),
   index_settings = list(sd_form = ~ 1, q_form = ~ q_block)
@@ -93,5 +124,5 @@ str(par)
 
 }
 \seealso{
-\code{\link[=make_dat]{make_dat()}}
+\code{\link[=make_dat]{make_dat()}}, \code{\link[=fit_tam]{fit_tam()}}, \link{tinyAM-model}
 }

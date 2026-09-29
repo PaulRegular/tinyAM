@@ -37,9 +37,11 @@ Convenience wrappers \code{\link[=cut_ages]{cut_ages()}} and \code{\link[=cut_ye
 with argument names that read naturally for common assessment inputs.
 }
 \details{
-Let \verb{breaks = (b1, b2, ..., bm)}. Blocks are
-\verb{[b1, b2-1], [b2, b3-1], ..., [b_\{m-1\}, b_m]} on the integer line.
-If \verb{b_\{m-1\} = b_m}, the last block is the singleton \code{{b_m}}.
+Breaks normally mark the first value in each block. The final break must
+equal \code{max(x)}. If the gap between the last two breaks exceeds one, the final
+break closes the preceding block rather than starting a singleton. For
+example, \code{c(2, 5, 8)} gives \code{2-4} and \code{5-8}, whereas \code{c(2, 5, 7, 8)} gives
+\code{2-4}, \code{5-6}, \code{7}, and \code{8}. This convention also defines M age blocks.
 
 \strong{Input requirements (enforced):}
 \itemize{

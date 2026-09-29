@@ -96,7 +96,7 @@ for (nm in names(random_par)) {
 table_link(pop$abundance, table_name = "abundance")
 d <- pop$abundance
 d$year <- as.character(d$year)
-d$sd <- format(d$sd, digits = 1)
+d$se <- format(d$se, digits = 1)
 knitr::kable(d, digits = 0, format.args = list(big.mark = ","))
 ```
 
@@ -106,7 +106,7 @@ knitr::kable(d, digits = 0, format.args = list(big.mark = ","))
 table_link(pop$recruitment, table_name = "recruitment")
 d <- pop$recruitment
 d$year <- as.character(d$year)
-d$sd <- format(d$sd, digits = 1)
+d$se <- format(d$se, digits = 1)
 knitr::kable(d, digits = 0, format.args = list(big.mark = ","))
 ```
 
@@ -116,7 +116,7 @@ knitr::kable(d, digits = 0, format.args = list(big.mark = ","))
 table_link(pop$ssb, table_name = "ssb")
 d <- pop$ssb
 d$year <- as.character(d$year)
-d$sd <- format(d$sd, digits = 1)
+d$se <- format(d$se, digits = 1)
 knitr::kable(d, digits = 0, format.args = list(big.mark = ","))
 ```
 

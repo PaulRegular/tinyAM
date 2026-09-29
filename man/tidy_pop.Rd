@@ -2,7 +2,7 @@
 % Please edit documentation in R/tidy.R
 \name{tidy_pop}
 \alias{tidy_pop}
-\title{Collect population summaries (sdreport + report trends)}
+\title{Collect population trends and age-specific estimates}
 \usage{
 tidy_pop(fit, interval = 0.95)
 }
@@ -16,7 +16,8 @@ A named list containing the elements returned by \code{\link[=tidy_sdrep]{tidy_s
 \code{\link[=tidy_rep]{tidy_rep()}} (names preserved).
 }
 \description{
-Convenience wrapper that combines \code{\link[=tidy_sdrep]{tidy_sdrep()}} and \code{\link[=tidy_rep]{tidy_rep()}}
+Combines population time series with uncertainty from \code{\link[=tidy_sdrep]{tidy_sdrep()}} and
+age-specific estimates and other reported quantities from \code{\link[=tidy_rep]{tidy_rep()}}
 into a single named list for downstream plotting and summaries.
 }
 \examples{
@@ -24,8 +25,8 @@ fit <- fit_tam(
   cod_obs,
   years = 1983:2024,
   ages = 2:14,
-  N_settings = list(process = "iid", init_N0 = FALSE),
-  F_settings = list(process = "approx_rw", mu_form = NULL),
+  N_settings = list(process = "iid", init = "exp"),
+  F_settings = list(process = "rw", mu_form = NULL),
   M_settings = list(process = "off", mu_supplied = ~ I(0.3)),
   catch_settings = list(sd_form = ~ 1),
   index_settings = list(sd_form = ~ 1, q_form = ~ q_block),

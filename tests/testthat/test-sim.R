@@ -67,7 +67,7 @@ test_that("sim_tam: n controls the number of stacked simulations", {
 })
 
 test_that("sim_tam works when projecting (is_proj propagated)", {
-  ## N deviations
+  ## N process
   proj_sim <- sim_tam(
     N_dev, n = 5,
     par_uncertainty = "fixed",
@@ -76,7 +76,7 @@ test_that("sim_tam works when projecting (is_proj propagated)", {
   )
   expect_true(any(proj_sim$index$is_proj))
 
-  ## Also check that it works for M deviations
+  ## Also check that it works with an active M process
   proj_sim <- sim_tam(
     M_dev, n = 5,
     par_uncertainty = "fixed",

@@ -18,9 +18,12 @@ Logical: \code{TRUE} if all checks pass, otherwise \code{FALSE}.
 }
 \description{
 Checks two basics and returns \code{TRUE} only if all pass:
-(1) maximum absolute gradient from \code{sdreport},
+(1) maximum absolute gradient from \code{sdreport}, projected at active \code{dq} bounds,
 (2) Hessian positive-definite flag.
 
 If all pass, a short success message is printed unless \code{quiet = TRUE}.
 If any check fails, a warning is emitted (not suppressed by \code{quiet}).
+For a \code{dq} estimate of zero, a positive derivative satisfies the lower-bound
+optimality condition and is treated as zero in this check. The raw gradient
+stored in \code{sdreport} is unchanged.
 }

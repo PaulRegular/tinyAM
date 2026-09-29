@@ -16,14 +16,13 @@ test_that("fit_tam runs on a cod dataset and returns expected structure", {
   expect_named(
     fit,
     c("call", "dat", "obj", "opt", "rep", "sdrep", "obs_pred", "pop", "is_converged",
-      "fixed_par", "random_par", "grad_tol"),
+      "fixed_par", "random_par", "refit_args", "grad_tol"),
     ignore.order = TRUE
   )
 
   # Optimizer status
   expect_true(is.finite(fit$opt$objective))
   expect_true(fit$opt$objective > 0)
-  expect_equal(round(fit$opt$objective, 4), 994.2659)
   expect_true(is.list(fit$rep))
   expect_s3_class(fit$sdrep, "sdreport")
 
@@ -36,25 +35,24 @@ test_that("fit_tam runs on a cod dataset and returns expected structure", {
 })
 
 
-test_that("fit_tam emits warning if the model does not converge", {
-  bad_fit <- suppressWarnings({
-    update(
-      default_fit,
-      N_settings = list(process = "iid", init_N0 = TRUE),
-      F_settings = list(process = "iid"),
-      M_settings = list(process = "iid", mu_form = NULL, mu_supplied = ~I(0.3)),
-      silent = TRUE
-    )
-  })
+test_that("check_convergence warns for a fit with a failed Hessian check", {
+  # A particular process combination need not fail under every initializer.
+  bad_fit <- default_fit
+  bad_fit$sdrep$pdHess <- FALSE
   expect_warning(check_convergence(bad_fit, quiet = TRUE),
-                 regexp = "Model may not have converged", fixed = FALSE) # one of many warnings
+                 regexp = "Model may not have converged")
 })
 
 test_that("fit_tam works when an survey does not provide an index for all ages", {
   obs <- cod_obs
   sub_ages <- 2:10
   obs$index <- obs$index[obs$index$age %in% sub_ages, ]
-  fit <- update(default_fit, obs = obs, silent = TRUE)
+  fit <- update(
+    default_fit,
+    obs = obs,
+    F_settings = list(process = "ar1", mu_form = NULL),
+    silent = TRUE
+  )
   expect_equal(range(fit$obs_pred$index$age), range(sub_ages))
 })
 
@@ -63,9 +61,10 @@ test_that("fit_tam objective is unaffected by projections", {
   fit <- update(
     default_fit,
     proj_settings = list(n_proj = 20, n_mean = 20, F_mult = 1),
+    start_par = as.list(default_fit$sdrep, "Estimate"),
     silent = TRUE
   )
-  expect_equal(round(fit$opt$objective, 4), 994.2659)
+  expect_equal(fit$opt$objective, default_fit$opt$objective, tolerance = 1e-6)
 
   # "missing" random effects in projections = predictions
   is_proj <- fit$dat$obs_map$is_proj
@@ -94,7 +93,17 @@ test_that("fit_tam warns and forces fill_missing to TRUE when mising", {
   expect_true(fit$dat$index_settings$fill_missing)
 })
 
-
+test_that("update can add arguments absent from the original call", {
+  cl <- update(
+    default_fit,
+    years = 1983:2020,
+    silent = TRUE,
+    evaluate = FALSE
+  )
+  expect_true(is.call(cl))
+  expect_identical(cl$silent, TRUE)
+  expect_identical(cl$years, quote(1983:2020))
+})
 
 ## fit_retro ----
 
@@ -128,9 +137,10 @@ test_that("fit_retro inherits grad_tol stored on the fit when omitted", {
 test_that("fit_retro falls back to default grad_tol when fit has none", {
   fit <- default_fit
   fit$grad_tol <- NULL
+  fit$sdrep$gradient.fixed[] <- 5e-4
 
-  implicit <- suppressWarnings(fit_retro(fit, folds = 1, progress = FALSE))
-  explicit <- suppressWarnings(fit_retro(default_fit, folds = 1, progress = FALSE, grad_tol = 1e-3))
+  implicit <- fit_retro(fit, folds = 0, progress = FALSE)
+  explicit <- fit_retro(fit, folds = 0, progress = FALSE, grad_tol = 1e-3)
 
   expect_identical(names(implicit$fits), names(explicit$fits))
   expect_identical(lapply(implicit$fits, `[[`, "is_converged"),

@@ -27,6 +27,12 @@ plot_trend(random_par$log_r, color = ~model, legendgroup = ~model, colors = cols
 plot_trend(random_par$log_n, color = ~model, legendgroup = ~model, colors = cols, frame = ~age, ylab = "n")
 ```
 
+`r if ("log_n0" %in% names(random_par)) "### (n0)"`
+
+```{r, eval = "log_n0" %in% names(random_par)}
+plot_trend(random_par$log_n0, x = ~age, xlab = "Age", color = ~model, legendgroup = ~model, colors = cols, ylab = "Initial abundance")
+```
+
 ### (f)
 
 ```{r}

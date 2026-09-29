@@ -18,8 +18,8 @@ Mohn's rho is calculated.
 }}
 }
 \value{
-A single numeric value: the mean proportional difference (Mohn's rho).
-Returns \code{NA} if no valid pairs are available.
+A single numeric proportional difference. Returns \code{NaN} (a missing
+numeric value) if there are no non-missing comparisons.
 }
 \description{
 Calculates Mohn's rho (the average proportional retrospective bias)
@@ -27,26 +27,19 @@ from a long-format data frame containing terminal and peeled estimates
 across retrospective runs.
 }
 \details{
-The function:
-\enumerate{
-\item Coerces \code{fold} to numeric.
-\item If \code{max(year) > max(fold)}, adds 1 to \code{fold} to handle
-conventions where each peel's estimate is reported for the
-subsequent calendar year (i.e., “stepped forward by one year”).
-\item Identifies terminal estimates (\code{fold == max(fold)}) as the
-reference series.
-\item For each peel, extracts the estimate at the peel year
-(\code{year == fold}) and merges with the terminal estimate for the
-same year.
-\item Computes proportional difference
-\deqn{\rho = \frac{ \text{est}_{\text{retro}} - \text{est}_{\text{terminal}} }
-               { \text{est}_{\text{terminal}} }}
-and returns the mean across peels.
-}
-
-Observations with zero terminal estimates will produce \code{Inf}/\code{NaN}
-in the proportional difference; consider filtering or transforming
-input accordingly if this is a concern.
+Projection rows are excluded. The largest retained \code{fold} is the reference
+assessment. Each earlier peel contributes its estimate at \code{year == fold},
+compared with the reference estimate for that same year:
+\deqn{\rho=\frac{1}{K}\sum_{k=1}^K
+\frac{\widehat X^{(k)}_{t_k}-\widehat X^{(ref)}_{t_k}}
+{\widehat X^{(ref)}_{t_k}}.}
+Positive values mean the peeled fits tend to estimate higher values than
+the reference fit. Supply a single quantity and, for age-specific output,
+one age at a time. \code{fold} must already identify terminal historical years;
+no year shifting or relabeling is performed. Each matched peel has equal weight.
+If failed fits were dropped, the reference is the latest retained fit.
+Missing differences are omitted; zero reference estimates can yield infinite
+or undefined differences.
 }
 \examples{
 df <- data.frame(

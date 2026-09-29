@@ -37,15 +37,14 @@
 #' @export tidy_array tidy_mat
 tidy_array <- function(x, value_name = "x", require_dimnames = TRUE) {
   if (!is.matrix(x) && !is.array(x)) {
-    stop("`x` must be a matrix or array.", call. = FALSE)
+    cli::cli_abort("{.arg x} must be a matrix or array.")
   }
 
   nm <- dimnames(x)
 
   if (require_dimnames) {
     if (is.null(nm) || any(vapply(nm, is.null, logical(1)))) {
-      stop("All dimensions must have names (dimnames). Set `require_dimnames = FALSE` to allow defaults.",
-           call. = FALSE)
+      cli::cli_abort("All dimensions must have names (dimnames). Set {.code require_dimnames = FALSE} to allow defaults.")
     }
   }
 
@@ -68,7 +67,7 @@ tidy_mat <- tidy_array
 #' Tidy observed, predicted, and residual diagnostics
 #'
 #' @description
-#' Extracts observations, predictions, and standard errors for `catch` and `index`
+#' Extracts observations, predictions, and observation SDs for `catch` and `index`
 #' from a fitted TAM object, and adds standardized residuals on the log scale.
 #'
 #' @param fit A fitted TAM object as returned by [fit_tam()].
@@ -76,6 +75,15 @@ tidy_mat <- tidy_array
 #'                    apply the `"oneStepGaussianOffMode"` method.
 #'                    See [RTMB::oneStepPredict()] for details.
 #' @param ... Arguments to pass to [RTMB::oneStepPredict()].
+#'
+#' @details
+#' `pred` is the conditional median on the natural scale. `sd` is the fitted
+#' SD of log observations, not a standard error of the prediction. Standardized
+#' residuals are `(log(obs) - log(pred)) / sd`; zero and missing observations
+#' have missing residuals. These conditional residuals do not account for the
+#' uncertainty in fitted states. Optional one-step-ahead residuals use a
+#' different predictive calculation and are not currently supported with filled
+#' missing observations. See [tinyAM-model] for the observation equations.
 #'
 #' @return
 #' A named list with two data frames:
@@ -192,6 +200,8 @@ tidy_rep <- function(fit) {
 #' @description
 #' Applies a transformation (e.g., `exp`) and optional rescaling to the columns
 #' `est`, `lwr`, and `upr` of a data frame.
+#' SE columns and their scale labels are left unchanged; this helper does not
+#' calculate transformed standard errors.
 #'
 #' @param data A data frame containing columns `est`, `lwr`, and `upr`.
 #' @param transform A function applied to `est`, `lwr`, and `upr`
@@ -219,12 +229,12 @@ trans_est <- function(data, transform = exp, scale = 1) {
 
 
 
-#' Tidy `sdreport` time series with confidence intervals
+#' Population time series with confidence intervals
 #'
 #' @description
-#' Extracts ADREPORTED time-series from `fit$sdrep`, computes normal-approximation
-#' intervals, applies a transformation (default `exp`), and returns a list of
-#' tidy data frames.
+#' Returns annual recruitment, abundance, biomass, spawning biomass, and
+#' average F and M, with confidence limits and clearly labelled SE scales.
+#' Estimates and limits are reported in the units of each population quantity.
 #'
 #' @details
 #' Assumptions:
@@ -233,8 +243,14 @@ trans_est <- function(data, transform = exp, scale = 1) {
 #' - Estimates are on the log scale and are transformed with `exp` via [trans_est()].
 #' - List element names are cleaned by removing a leading `"log_"` prefix.
 #'
-#' The interval is constructed as `est ± z * sd` with
+#' The interval is constructed as `est ± z * se` with
 #' `z = qnorm(1 - (1 - interval) / 2)`.
+#' Estimates and confidence limits are then exponentiated. The `se` column is
+#' the standard error on the log scale, labelled by `se_scale = "log"`.
+#' A small log-scale SE approximates the coefficient of variation (CV):
+#' for example, `0.10` is approximately 10% relative uncertainty. This
+#' approximation becomes less accurate for large SEs; use the confidence limits
+#' to describe uncertainty on the reported scale.
 #'
 #' @param fit A fitted TAM object as returned by [fit_tam()].
 #' @param interval Confidence level in `(0, 1)`; default `0.95`.
@@ -242,7 +258,7 @@ trans_est <- function(data, transform = exp, scale = 1) {
 #' @return
 #' A named list of data frames (one per series), each with columns:
 #'
-#' - `year`, `est`, `sd`, `lwr`, `upr`, `is_proj` — after applying the chosen transform.
+#' - `year`, `est`, `lwr`, `upr`, `se`, `se_scale`, `is_proj`.
 #'
 #' @example inst/examples/example_fit_default.R
 #' @examples
@@ -257,13 +273,14 @@ tidy_sdrep <- function(fit, interval = 0.95) {
 
   ## assumes all ADREPORTED objects are equal length to years and are in log space
   vals <- as.list(fit$sdrep, "Estimate", report = TRUE)
-  sds <- as.list(fit$sdrep, "Std. Error", report = TRUE)
+  ses <- as.list(fit$sdrep, "Std. Error", report = TRUE)
   df <- lapply(seq_along(vals), function(i) {
     d <- data.frame(year = fit$dat$years,
                     est = vals[[i]],
-                    sd = sds[[i]],
-                    lwr = vals[[i]] - qnorm(1 - ((1 - interval) / 2)) * sds[[i]],
-                    upr = vals[[i]] + qnorm(1 - ((1 - interval) / 2)) * sds[[i]],
+                    lwr = vals[[i]] - qnorm(1 - ((1 - interval) / 2)) * ses[[i]],
+                    upr = vals[[i]] + qnorm(1 - ((1 - interval) / 2)) * ses[[i]],
+                    se = ses[[i]],
+                    se_scale = "log",
                     is_proj = fit$dat$is_proj) |>
       trans_est(transform = exp)
   })
@@ -271,10 +288,11 @@ tidy_sdrep <- function(fit, interval = 0.95) {
   df
 }
 
-#' Collect population summaries (sdreport + report trends)
+#' Collect population trends and age-specific estimates
 #'
 #' @description
-#' Convenience wrapper that combines [tidy_sdrep()] and [tidy_rep()]
+#' Combines population time series with uncertainty from [tidy_sdrep()] and
+#' age-specific estimates and other reported quantities from [tidy_rep()]
 #' into a single named list for downstream plotting and summaries.
 #'
 #' @param fit A fitted TAM object as returned by [fit_tam()].
@@ -306,18 +324,38 @@ tidy_pop <- function(fit, interval = 0.95) {
 #' Tidy parameter estimates (fixed & random) with CIs and back-transforms
 #'
 #' @description
-#' Creates a tidy summary of parameter estimates from a fitted TAM object,
-#' combining estimates (`Estimate`) and standard errors (`Std. Error`) from
+#' Summarizes fitted parameters with estimates, confidence limits, and clearly
+#' labelled SE scales. Use this to inspect process variability, catchability
+#' effects, and latent population states. Actual catchability for each survey
+#' observation is available from [tidy_obs_pred()].
+#'
+#' @details
+#' Combines estimates (`Estimate`) and standard errors (`Std. Error`) from
 #' `fit$sdrep`. Parameters whose names begin with `log_` or `logit_` are
 #' back-transformed to the natural scale:
 #'
 #' - `log_`  → `exp()` (and the `log_` prefix is dropped, e.g. `log_sd_r` → `sd_r`)
 #' - `logit_` → `plogis()` (and the `logit_` prefix is dropped, e.g. `logit_phi_f` → `phi_f`)
 #'
-#' This convention is relied upon by the printing methods, so parameters tied to
-#' `*_form` arguments that live on the log scale (e.g., `log_mu_f`, `log_sd_*`,
-#' `log_q`) should retain the `log_` prefix to ensure they are correctly
-#' exponentiated in summaries. An exception is the mean-\eqn{M} formula
+#' Estimates and confidence limits are shown on the reported scale. SEs remain
+#' on the fitted scale, identified by `se_scale`: `"log"`, `"logit"`, or
+#' `"reported"` (the same scale as the displayed estimate). A small log-scale
+#' SE approximates a CV: `0.10` is approximately 10% relative uncertainty.
+#' This interpretation does not apply to logit or reported-scale SEs, and is
+#' unreliable for large log-scale SEs. Confidence limits are the preferred
+#' summary of uncertainty on the reported scale.
+#'
+#' - For [mono()] catchability terms, `dq` is a non-negative step on the
+#'   log-q scale. Estimates and SEs are reported directly on this same scale,
+#'   with untransformed Wald intervals (which may cross zero at a boundary).
+#'   These local curvature SEs are not boundary-adjusted inference.
+#'   Coefficient names identify
+#'   transitions and groups. Actual observation-specific q is in [tidy_obs_pred()].
+#'
+#' Formula coefficients named `log_mu_f`, `log_sd_*`, or `log_q` are
+#' exponentiated in summaries. An exponentiated slope is a multiplicative
+#' change per unit covariate, not the fitted F, SD, or q surface itself.
+#' An exception is the mean-\eqn{M} formula
 #' coefficients (`mu_m`), which operate on the log scale but are named without a
 #' `log_` prefix to reflect that their values may be positive or negative; they
 #' therefore print on the fitted log scale.
@@ -329,7 +367,10 @@ tidy_pop <- function(fit, interval = 0.95) {
 #' Labels are added where applicable:
 #' - For parameters specified using a formula in [make_dat()] (e.g., `log_q`,
 #'   `log_sd_catch`, `log_sd_index`), a `coef` column is added.
-#' - For `log_r` (recruitment path), a `year` column is used.
+#' - For `log_r`, `year` contains years 2:Y; full recruitment is in [tidy_pop()].
+#' - For `log_n0`, an `age` column identifies the initial older-age state.
+#'   `log_r0` and `log_n0` are exponentiated to abundance levels; `log_sd_n0`
+#'   is exponentiated to the initial-age residual SD.
 #' - For matrices (e.g., `log_f`, `log_n`), `year` and/or `age` columns are added
 #'   via [tidy_mat()].
 #'
@@ -340,8 +381,8 @@ tidy_pop <- function(fit, interval = 0.95) {
 #' @return
 #' A list with two elements:
 #' - `fixed`: a data frame stacking all fixed-effect parameters with columns
-#'   `par`, `est`, `se`, `lwr`, `upr`, plus any index columns such as
-#'   `coef`, `year`, `age`.
+#'   parameter/index columns (`par`, `coef`, `year`, `age`, as applicable), then
+#'   `est`, `lwr`, `upr`, `se`, `se_scale`, and `is_proj` when applicable.
 #' - `random`: a named list of data frames (one per random block) with the same
 #'   columns as `fixed` (indices appropriate to each random effect).
 #'
@@ -377,7 +418,9 @@ tidy_par <- function(fit, interval = 0.95) {
         df <- data.frame(coef = NA, est = e, se = s)
       } else {
         if (nm == "log_r") {
-          df <- data.frame(year = fit$dat$years, est = e, se = s, is_proj = fit$dat$is_proj)
+          df <- data.frame(year = fit$dat$years[-1], est = e, se = s, is_proj = fit$dat$is_proj[-1])
+        } else if (nm == "log_n0") {
+          df <- data.frame(coef = names(e), age = as.integer(names(e)), est = e, se = s)
         } else {
           df <- data.frame(coef = names(e), est = e, se = s)
         }
@@ -386,6 +429,14 @@ tidy_par <- function(fit, interval = 0.95) {
     df <- cbind(data.frame(par = nm), df)
     df$lwr <- df$est - z * df$se
     df$upr <- df$est + z * df$se
+
+    df$se_scale <- if (startsWith(nm, "logit_")) {
+      "logit"
+    } else if (startsWith(nm, "log_")) {
+      "log"
+    } else {
+      "reported"
+    }
 
     if (startsWith(nm, "logit_")) {
       df <- trans_est(df, transform = plogis, scale = 1)
@@ -396,13 +447,18 @@ tidy_par <- function(fit, interval = 0.95) {
     } else {
       df <- trans_est(df, transform = NULL, scale = 1)
     }
-    df
+    values <- c("est", "lwr", "upr", "se", "se_scale")
+    df[, c(setdiff(names(df), c(values, "is_proj")), values,
+           intersect("is_proj", names(df))), drop = FALSE]
   }
 
-  fixed  <- if (length(fix_nms)) do.call(rbind, lapply(fix_nms, .par2df)) else
-    data.frame(par = character(), est = numeric(), se = numeric(),
-               lwr = numeric(), upr = numeric(), check.names = FALSE)
+  fixed  <- if (length(fix_nms)) stack_list(lapply(fix_nms, .par2df), label = NULL) else
+    data.frame(par = character(), est = numeric(), lwr = numeric(), upr = numeric(),
+               se = numeric(), se_scale = character(), check.names = FALSE)
   rownames(fixed) <- NULL
+  values <- c("est", "lwr", "upr", "se", "se_scale")
+  fixed <- fixed[, c(setdiff(names(fixed), c(values, "is_proj")), values,
+                     intersect("is_proj", names(fixed))), drop = FALSE]
 
   random <- stats::setNames(lapply(ran_nms, .par2df), ran_nms)
 
@@ -446,7 +502,7 @@ stack_list <- function(x, label = "model",
   label_type <- match.arg(label_type)
 
   if (!length(x)) {
-    stop("`x` must contain at least one element.", call. = FALSE)
+    cli::cli_abort("{.arg x} must contain at least one element.")
   }
 
   ids <- names(x)
@@ -462,7 +518,7 @@ stack_list <- function(x, label = "model",
 
   keep <- !vapply(pieces, is.null, logical(1))
   if (!any(keep)) {
-    stop("No data.frames to stack.", call. = FALSE)
+    cli::cli_abort("No data frames to stack.")
   }
   pieces <- pieces[keep]
   ids <- ids[keep]
@@ -509,8 +565,8 @@ stack_list <- function(x, label = "model",
 #'   - `"factor"`: convert to factor.
 #'
 #' @return A named list of data.frames. One element per subtable name. Each
-#'   data.frame is the row-bound stack across outer ids, with an added `id_col`
-#'   (if not NULL).
+#'   data.frame is the row-bound stack across outer ids, with an added column
+#'   named by `label` (unless `label = NULL`).
 #' @examples
 #' res <- list(
 #'   sim1 = list(ssb = data.frame(year=1:3, est=1:3),
@@ -578,7 +634,7 @@ stack_nested <- function(x, label = "model",
 #' effects as a named list of data frames (one per random-effect block, e.g. `"log_f"`, `"log_r"`,
 #' `"missing"`, …).
 #'
-#' @param ... One or more fitted TAM objects (as returned by [fit_tam()]). Ignored if `model_list` is provided.
+#' @param ... One or more fitted TAM objects (as returned by [fit_tam()]). Supply these or `model_list`, not both.
 #' @param model_list A **named list** of fitted TAM objects. Required to be named; the names are used as label values.
 #' @param interval Confidence level passed to [tidy_pop()] and [tidy_par()] for interval construction. Default `0.95`.
 #' @param label Character scalar giving the label column name to add when stacking across multiple/named models. Default `"model"`.
@@ -701,5 +757,4 @@ tidy_tam <- function(..., model_list = NULL, interval = 0.95, label = "model", l
 
   out
 }
-
 

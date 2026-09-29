@@ -54,7 +54,7 @@ Derived from the \pkg{NCAM} example inputs
 data(cod_obs)
 }
 \description{
-A compact, tidy-ish list of inputs prepared for the Tiny Assessment Model (TAM),
+Example catch, survey, weight, and maturity tables for the Tiny Assessment Model (TAM),
 derived from data used in the assessment of Northern cod, NAFO Divisions 2J3KL.
 This is intended for vignettes, examples, and tests.
 }

@@ -24,9 +24,13 @@ Additional requirements:
 \itemize{
 \item \code{index$samp_time} is \strong{required}, numeric in \strong{[0, 1]}, and \strong{no NA}.
 \item \code{weight$obs} and \code{maturity$obs} must not contain \code{NA}.
-\item \code{catch}, \code{weight}, and \code{maturity} must contain a row for \strong{every}
+\item Non-missing observations must be finite and non-negative; maturity must
+be a proportion in \verb{[0, 1]}. Zero catch/index values are accepted here but
+treated as missing by \code{\link[=make_dat]{make_dat()}}, because the observation model is on logs.
+\item \code{catch}, \code{weight}, and \code{maturity} must contain exactly one row for \strong{every}
 \verb{(year, age)} combination over the global modeled range
 (from min to max year and age across all tables).
+\item Survey tables may omit year-age combinations.
 }
 
 On failure the function aborts with a \code{cli} error. On success, it returns

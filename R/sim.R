@@ -72,14 +72,24 @@
   obj <- fit$obj
   dat <- fit$dat
   par <- par_fun(fit)
+  # Gaussian uncertainty draws can cross the optimizer's dq lower bound.
+  if (!is.null(par$dq)) par$dq[] <- pmax(par$dq, 0)
 
-  # Draw obs | par
-  sims <- nll_fun(par, dat, simulate = TRUE)
-
-  # Optionally use simulated random effects
   if (redraw_random) {
-    par[obj$env$.random] <- sims[obj$env$.random]
     sims <- nll_fun(par, dat, simulate = TRUE)
+    random_states <- intersect(obj$env$.random, names(sims))
+    par[random_states] <- sims[random_states]
+  } else {
+    # Conditional observation draws keep the supplied latent realization.
+    make_nll_fun <- function(f, d) function(p) f(p, d)
+    rep <- RTMB::MakeADFun(make_nll_fun(nll_fun, dat), par, silent = TRUE)$report()
+    log_obs <- dat$log_obs
+    draw <- dat$is_observed | dat$fill_missing_map
+    log_obs[draw] <- stats::rnorm(sum(draw), rep$log_pred[draw], rep$sd_obs[draw])
+    sims <- list(log_obs = log_obs)
+    if (any(dat$fill_missing_map)) {
+      par$missing <- log_obs[dat$fill_missing_map]
+    }
   }
 
   # Rebuild report with simulated obs (+ maybe simulated RE)
@@ -105,25 +115,39 @@
 #' Simulate from a fitted TAM
 #'
 #' @description
-#' Runs the TAM likelihood in simulation mode to generate synthetic observations,
-#' and optionally random-effect fields, then recomputes reported quantities under
-#' those draws. Results are returned as tidy data frames stacked across `n`
-#' simulations with a `sim = 1..n` column.
+#' Generates possible catch and survey observations from a fitted model, with
+#' options to include parameter uncertainty and new population histories.
+#' Use these draws to explore uncertainty or test whether simulated data resemble
+#' the observations. Results are tidy data frames with a `sim = 1..n` column.
 #'
 #' @details
+#' For [mono()] effects, negative `dq` values from Gaussian parameter draws
+#' are clipped to zero before generating predictions or observations. This
+#' projects the normal approximation onto the feasible increments and adds
+#' probability at zero; it is not a boundary-corrected posterior sampler.
+#'
 #' The simulation has two orthogonal controls:
 #'
 #' - **Parameter uncertainty** via `par_uncertainty`:
 #'   - `"none"`  — use point estimates `(û, θ̂)`.
 #'   - `"fixed"` — sample **fixed effects** `θ ~ MVN(sdrep$par.fixed, sdrep$cov.fixed)`.
 #'   - `"joint"` — sample **(random + fixed)** jointly from the Laplace
-#'     approximate posterior using the **joint precision** (sparse Cholesky).
+#'     Gaussian approximation using the **joint precision** (sparse Cholesky).
 #'
 #' - **Random-effect handling** via `redraw_random`:
 #'   - `FALSE` — keep the sampled/fitted random effects and simulate **observations only**
-#'     (posterior-predictive when `par_uncertainty = "joint"`).
+#'     (an approximate predictive draw when `par_uncertainty = "joint"`).
 #'   - `TRUE`  — generate **new process fields** for the random effects and re-simulate
-#'     (projection/HCR style prior-predictive runs).
+#'     across the entire modeled history, including historical years.
+#'     This includes `log_n0` only for `N_settings$init = "random"`, generated
+#'     by survivorship and IID residuals from the supplied `log_r0` anchor.
+#'     Free initial-age states are retained.
+#'     Temporal RW fields retain their supplied first process row and draw
+#'     subsequent deviations conditionally; see [nll_fun()] for the N cohort
+#'     construction. No distribution is imposed on the RW starting row.
+#'     Fixed anchors may still vary through the chosen `par_uncertainty` draw.
+#'     This is not a future-only forecast conditional on historical states.
+#'     See [tinyAM-model] for the exact simulation and projection assumptions.
 #'
 #' Parallel execution is supported via [furrr::future_map()]. Call
 #' `future::plan()` beforehand if you want parallel workers.
@@ -133,7 +157,7 @@
 #' @param par_uncertainty Character; one of `"joint"`, `"fixed"`, `"none"`.
 #'   Controls how the parameter list is sampled before each simulation (see Details).
 #' @param redraw_random Logical; if `TRUE`, re-draw random-effect fields from their
-#'   process models on each run (recommended for projections). If `FALSE`, keep
+#'   process models over the whole modeled period on each run. If `FALSE`, keep
 #'   random effects and simulate observations only.
 #' @param progress Logical; show a progress bar using [progressr::with_progress()]
 #'   (default `TRUE`).
@@ -151,7 +175,7 @@
 #' if (interactive()) {
 #'   # Set-up parallel workers and fit model
 #'   future::plan(future::multisession, workers = 4)
-#' 
+#'
 #'   # Draw fixed-effects uncertainty and redraw random process fields
 #'   sims1 <- sim_tam(fit, n = 10, par_uncertainty = "fixed", redraw_random = TRUE)
 #'   plot_trend(sims1$ssb, split = ~sim, line = list(width = 0.5))
@@ -177,7 +201,7 @@ sim_tam <- function(
     globals = NULL,
     seed = TRUE
 ) {
-  match.arg(par_uncertainty)
+  par_uncertainty <- match.arg(par_uncertainty)
 
   draw_par <- switch(
     par_uncertainty,
