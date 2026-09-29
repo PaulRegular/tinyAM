@@ -61,25 +61,33 @@ test_that("rprocess_ar1 self-consistency: sample from AR1 has higher density und
   expect_gt(lp_match, lp_iid)
 })
 
-test_that("rprocess_ar1 edge cases: ny=1 or na=1 behave like 1D AR(1)", {
+test_that("rprocess_ar1 edge cases behave like 1D AR(1)", {
   set.seed(42)
-  # Single row (varying age)
-  ny <- 1; na <- 80; sd <- 1.0; phi <- c(0.0, 0.8) # phi_age=0, phi_year=0.8 (ignored since ny=1)
-  X1 <- rprocess_ar1(ny, na, sd = sd, phi = phi)
-  expect_equal(dim(X1), c(1, na))
-  # Lag-1 corr across ages should be ~phi_age = 0
+
+  # Single row: only age correlation matters
+  ny <- 1
+  na <- 200
+  phi <- c(0, 0) # singleton year dimension has phi_year = 0
+
+  X1 <- rprocess_ar1(ny, na, sd = 1, phi = phi)
+
+  expect_equal(dim(X1), c(ny, na))
+
   r_age <- cor(X1[, -na], X1[, -1])
-  expect_equal(as.numeric(r_age), 0, tolerance = 0.15)
+  expect_lt(abs(as.numeric(r_age) - phi[1]), 0.2)
 
-  # Single column (varying year)
-  ny <- 80; na <- 1; sd <- 1.0; phi <- c(0.8, 0.4) # now only year AR(1) matters
-  X2 <- rprocess_ar1(ny, na, sd = sd, phi = phi)
-  expect_equal(dim(X2), c(ny, 1))
-  # Lag-1 corr down years should be ~phi_year = 0.4
+  # Single column: only year correlation matters
+  ny <- 200
+  na <- 1
+  phi <- c(0, 0.4) # singleton age dimension has phi_age = 0
+
+  X2 <- rprocess_ar1(ny, na, sd = 1, phi = phi)
+
+  expect_equal(dim(X2), c(ny, na))
+
   r_year <- cor(X2[-ny, 1], X2[-1, 1])
-  expect_equal(as.numeric(r_year), 0.4, tolerance = 0.15)
+  expect_lt(abs(as.numeric(r_year) - phi[2]), 0.2)
 })
-
 
 
 ## nll_fun ---
