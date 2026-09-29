@@ -43,8 +43,9 @@ Inferred from observed data (non-projection) if \code{NULL}.}
     \item{\code{ages}}{Consecutive model ages (at least two).
 Inferred from observed data (non-projection) if \code{NULL}. If the ages in
 the data extend beyond \code{max(ages)}, the \code{"obs"} column is summed for \code{catch}
-and \code{index} data within each year (and survey for indices), and averaged
-without abundance weighting for \code{weight} and \code{maturity} data.}
+and \code{index} data within each year (and survey for indices). Older-age
+weight and maturity are retained for abundance-based aggregation inside
+\code{\link[=nll_fun]{nll_fun()}}, preserving biomass and mature biomass in the plus group.}
     \item{\code{N_settings}}{A list with elements:
 \itemize{
 \item \code{process}: \code{"off"} for deterministic cohort survival, \code{"iid"} for independent

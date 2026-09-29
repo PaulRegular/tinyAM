@@ -55,6 +55,10 @@ With \code{simulate = TRUE}, recruitment and mortality states are drawn first.
 N is then constructed through initial-age and cohort recursion, followed by
 predictions and observation draws with the SD for each matching row.
 Derived quantities therefore use the same realization as the returned states.
+If biological inputs extend above the modeled plus age, hidden age abundances
+are reconstructed after N. Effective terminal W and P preserve biomass and
+mature biomass; see \link{tinyAM-model}. No extra parameters or process penalties
+are introduced. \code{N_plus}, \code{W}, and \code{P} are then included in \code{report()}.
 Random N0 is redrawn; free N0 and \code{log_r0} remain supplied fixed states.
 RW processes retain their starting state because it has no process density.
 For N, the first \code{log_n} row is retained and its starting residual is computed

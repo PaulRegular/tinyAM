@@ -73,6 +73,55 @@ follows the selected process below. Its matrix is \eqn{(T-1)\times(A-1)}.
 An N random walk acts on these cohort residuals, not on absolute abundance.
 }
 
+\subsection{Weight and maturity within a shortened plus group}{
+
+If the oldest biological input age \eqn{B} exceeds the modeled plus age
+\eqn{A}, weight and maturity inputs are retained for \eqn{A,\ldots,B}.
+The last internal age is interpreted as \eqn{B+}. Hidden abundances
+\eqn{n_{t,j}}, \eqn{j=0,\ldots,K-1}, with \eqn{K=B-A+1}, partition the
+modeled total \eqn{N_{t,A}}; they are not additional fitted parameters.
+Here A and B denote biological age labels rather than matrix indices.
+
+In the first year, let \eqn{s=\exp(-Z_{1,A})}. Geometric survivor shares are
+\eqn{p_j=(1-s)s^j} for \eqn{j<K-1} and \eqn{p_{K-1}=s^{K-1}} for the
+hidden plus-group tail. Normalize these shares and set
+\eqn{n_{1,j}=N_{1,A}p_j/\sum_k p_k}. This assumes constant plus-group
+mortality for the initial internal composition, without changing the
+chosen initial total abundance (\code{exp}, \code{free}, or \code{random}).
+
+Subsequent predicted components are
+\deqn{v_{t,0}=N_{t-1,A-1}e^{-Z_{t-1,A-1}},}
+\deqn{v_{t,j}=n_{t-1,j-1}e^{-Z_{t-1,A}},\quad 1\le j<K-1,}
+\deqn{v_{t,K-1}=(n_{t-1,K-2}+n_{t-1,K-1})e^{-Z_{t-1,A}}.}
+Their sum equals the ordinary plus-group cohort prediction. A common
+scaling factor incorporates any N process deviation:
+\deqn{n_{t,j}=N_{t,A}\frac{v_{t,j}}{\sum_k v_{t,k}}.}
+All hidden ages therefore experience the modeled plus-group mortality,
+while entrants experience the previous modeled age's mortality.
+Calculations use log abundances and normalized log shares for stability.
+
+Effective terminal biology is
+\deqn{W_{t,A}^{eff}=\frac{\sum_j n_{t,j}W_{t,A+j}^{input}}{N_{t,A}},\qquad
+P_{t,A}^{eff}=\frac{\sum_j n_{t,j}W_{t,A+j}^{input}P_{t,A+j}^{input}}
+{\sum_j n_{t,j}W_{t,A+j}^{input}}.}
+Weight is abundance-weighted; maturity is biomass-weighted. Thus modeled
+terminal biomass and mature biomass equal their hidden-age sums exactly,
+and effective maturity remains a proportion. When all hidden input weights
+in a year are zero, effective W and P are set to zero (biomass and mature
+biomass are both zero). Supplied biology at the oldest input age applies
+to all fish in its hidden plus group.
+
+These effective values are used for biomass, SSB, and weight-based yield
+summaries in both estimation and simulation. Projection biological inputs
+are averaged over recent years separately at each retained age before this
+aggregation. Catch/index aggregation, the N/F/M/Z equations, process penalties,
+and observation equations are unchanged. Formula covariates still use the
+input rows at modeled ages, not the effective W/P values. If the modeled and biological
+maximum ages are equal, there is no hidden-age calculation. With hidden
+ages, \code{fit$rep$N_plus}, \code{fit$rep$W}, and \code{fit$rep$P} report the resulting
+abundance and effective biology; the inputs remain in \code{fit$dat}.
+}
+
 \subsection{Mortality means and latent states}{
 
 Formula design matrices define
@@ -173,8 +222,8 @@ random effects with the same observation equation; integrating each out
 contributes one, hence no data information. Otherwise they contribute no
 density. Complete catch, weight, and maturity year-age grids are required;
 surveys may be sparse. Reducing the maximum age sums catch and index within
-year (and within survey for indices), and takes unweighted arithmetic means
-of older-age weight and maturity. Other covariates come from the plus age
+year (and within survey for indices). Weight and maturity use the hidden-age
+abundance and biomass weighting described above. Other covariates come from the plus age
 or the first available older age. Check that this aggregation suits the data.
 }
 

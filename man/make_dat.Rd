@@ -28,8 +28,9 @@ Inferred from observed data (non-projection) if \code{NULL}.}
 \item{ages}{Consecutive model ages (at least two).
 Inferred from observed data (non-projection) if \code{NULL}. If the ages in
 the data extend beyond \code{max(ages)}, the \code{"obs"} column is summed for \code{catch}
-and \code{index} data within each year (and survey for indices), and averaged
-without abundance weighting for \code{weight} and \code{maturity} data.}
+and \code{index} data within each year (and survey for indices). Older-age
+weight and maturity are retained for abundance-based aggregation inside
+\code{\link[=nll_fun]{nll_fun()}}, preserving biomass and mature biomass in the plus group.}
 
 \item{N_settings}{A list with elements:
 \itemize{
@@ -127,6 +128,10 @@ A named list \code{dat} containing:
 \item \code{proj_years} — integer vector of projection years, if used
 \item \code{obs} — per-type tables restricted to \code{years} x \code{ages} (including \code{proj_years}, if used)
 \item \code{W}, \code{P} — mean weight-at-age, and proportion mature at age matrices (\verb{year x age})
+\item \code{plus_ages}, \code{W_plus_input}, \code{P_plus_input} — retained biological ages and
+inputs, present only when biological data extend above \code{max(ages)}. The last
+retained age represents a hidden plus group. Effective modeled W/P and hidden
+abundance \code{N_plus} can then be inspected in the likelihood report (\code{fit$rep}).
 \item \code{obs_map} — stack of \code{obs$catch} and \code{obs$index} mapping variables
 \item \code{log_obs}, \code{is_missing}, \code{is_observed}, \code{observed} - vector of log observations (with NA),
 logical vector indicating missing and observed values, and vector of non-missing values, respectively.
@@ -155,6 +160,16 @@ named \code{obs}. Rename any differently named input columns before calling. See
 year-age combination across the input range. Survey tables may be sparse.
 \item A combined observation table is created for catch and index; \code{log(0)} is
 treated as \code{NA} (to be handled via random effects).
+\item When biological inputs extend above the modeled plus age, the underlying
+weight and maturity values are retained in \code{W_plus_input} and \code{P_plus_input},
+indexed by \code{years} and \code{plus_ages}. Their projection rows use the same
+recent-year averages by biological age as other weight/maturity inputs.
+\code{dat$W}, \code{dat$P}, and \code{dat$obs} retain the input values at modeled ages;
+their terminal biological values are placeholders. \code{\link[=nll_fun]{nll_fun()}} replaces
+terminal W by an abundance-weighted mean and terminal P by a biomass-weighted
+proportion using its reconstructed hidden age composition. See \link{tinyAM-model}.
+Formula covariates continue to use the input rows at modeled ages, not these
+effective biological values; this avoids circular mortality calculations.
 }
 
 \strong{Design matrices}

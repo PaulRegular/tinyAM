@@ -16,7 +16,7 @@ test_that("fit_tam runs on a cod dataset and returns expected structure", {
   expect_named(
     fit,
     c("call", "dat", "obj", "opt", "rep", "sdrep", "obs_pred", "pop", "is_converged",
-      "fixed_par", "random_par", "grad_tol"),
+      "fixed_par", "random_par", "refit_args", "grad_tol"),
     ignore.order = TRUE
   )
 
@@ -93,7 +93,17 @@ test_that("fit_tam warns and forces fill_missing to TRUE when mising", {
   expect_true(fit$dat$index_settings$fill_missing)
 })
 
-
+test_that("update can add arguments absent from the original call", {
+  cl <- update(
+    default_fit,
+    years = 1983:2020,
+    silent = TRUE,
+    evaluate = FALSE
+  )
+  expect_true(is.call(cl))
+  expect_identical(cl$silent, TRUE)
+  expect_identical(cl$years, quote(1983:2020))
+})
 
 ## fit_retro ----
 

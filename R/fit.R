@@ -318,29 +318,30 @@ update.tam_fit <- function(object, ..., evaluate = TRUE) {
   }
 
   # Keep a readable call for printing and inspection.
-  new_call <- object$call
   change_expr <- as.list(match.call(expand.dots = FALSE)$...)
 
+  new_call <- as.list(object$call)
+
   if (length(change_expr)) {
-    for (nm in names(change_expr)) {
-      new_call[[nm]] <- change_expr[[nm]]
-    }
+    new_call[names(change_expr)] <- change_expr
   }
+
+  new_call <- as.call(new_call)
 
   if (!evaluate) {
     return(new_call)
   }
 
-  # Use the evaluated inputs stored in the fit rather than re-evaluating
-  # symbols from the original calling environment.
+  # Refit using the evaluated inputs stored with the original fit.
   args <- object$refit_args
+
   if (length(changes)) {
     args[names(changes)] <- changes
   }
 
   out <- do.call(fit_tam, args)
 
-  # Preserve the concise user-facing call instead of the expanded do.call().
+  # Preserve the concise user-facing call.
   out$call <- new_call
 
   out
@@ -457,7 +458,7 @@ fit_retro <- function(
       } else {
         r <- suppressWarnings(
           try(
-            do.call(stats::update, list(
+            do.call(update, list(
               object = fit,
               years = min_year:retro_years[i],
               ages = fit$dat$ages,

@@ -197,14 +197,15 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #' @description
 #' This internal helper aggregates observations for ages greater than or equal to
 #' a specified terminal (`plus_age`) into a single plus group. The `"obs"` column is
-#' summed for `catch` and `index` data, and averaged for `weight` and `maturity` data.
-#' Non-aggregated columns (e.g., year) retain their values from the terminal age.
+#' summed for `catch` and `index` data. Weight and maturity tables retain all
+#' ages for abundance-based aggregation inside [nll_fun()]. Other catch/index
+#' columns retain their values from the plus age or first available older age.
 #'
 #' @param obs Named list with data.frames `catch`, `index`, `weight`, `maturity`.
 #' @param plus_age Integer specifying the terminal age to be modeled.
 #'   All ages greater than or equal to this value are combined into a plus group.
-#' @return A list with the same structure as `obs`, but with all data
-#'   aggregated into the specified plus group.
+#' @return A list with the same structure as `obs`, with catch/index observations
+#'   aggregated into the specified plus group and biological tables unchanged.
 #' @keywords internal
 #'
 #' @noRd
@@ -232,8 +233,8 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
   list(
     catch = .aggregate_one(obs$catch, plus_age, sum),
     index = .aggregate_one(obs$index, plus_age, sum, groups = c("year", "survey")),
-    weight = .aggregate_one(obs$weight, plus_age, mean),
-    maturity = .aggregate_one(obs$maturity, plus_age, mean)
+    weight = obs$weight,
+    maturity = obs$maturity
   )
 
 }
@@ -259,6 +260,16 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #'   year-age combination across the input range. Survey tables may be sparse.
 #' - A combined observation table is created for catch and index; `log(0)` is
 #'   treated as `NA` (to be handled via random effects).
+#' - When biological inputs extend above the modeled plus age, the underlying
+#'   weight and maturity values are retained in `W_plus_input` and `P_plus_input`,
+#'   indexed by `years` and `plus_ages`. Their projection rows use the same
+#'   recent-year averages by biological age as other weight/maturity inputs.
+#'   `dat$W`, `dat$P`, and `dat$obs` retain the input values at modeled ages;
+#'   their terminal biological values are placeholders. [nll_fun()] replaces
+#'   terminal W by an abundance-weighted mean and terminal P by a biomass-weighted
+#'   proportion using its reconstructed hidden age composition. See [tinyAM-model].
+#'   Formula covariates continue to use the input rows at modeled ages, not these
+#'   effective biological values; this avoids circular mortality calculations.
 #'
 #' **Design matrices**
 #'
@@ -330,8 +341,9 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #' @param ages Consecutive model ages (at least two).
 #'   Inferred from observed data (non-projection) if `NULL`. If the ages in
 #'   the data extend beyond `max(ages)`, the `"obs"` column is summed for `catch`
-#'   and `index` data within each year (and survey for indices), and averaged
-#'   without abundance weighting for `weight` and `maturity` data.
+#'   and `index` data within each year (and survey for indices). Older-age
+#'   weight and maturity are retained for abundance-based aggregation inside
+#'   [nll_fun()], preserving biomass and mature biomass in the plus group.
 #' @param N_settings A list with elements:
 #' - `process`: `"off"` for deterministic cohort survival, `"iid"` for independent
 #'   cohort residuals, `"rw"` for residuals that accumulate through time, or
@@ -411,6 +423,10 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #' - `proj_years` — integer vector of projection years, if used
 #' - `obs` — per-type tables restricted to `years` x `ages` (including `proj_years`, if used)
 #' - `W`, `P` — mean weight-at-age, and proportion mature at age matrices (`year x age`)
+#' - `plus_ages`, `W_plus_input`, `P_plus_input` — retained biological ages and
+#'   inputs, present only when biological data extend above `max(ages)`. The last
+#'   retained age represents a hidden plus group. Effective modeled W/P and hidden
+#'   abundance `N_plus` can then be inspected in the likelihood report (`fit$rep`).
 #' - `obs_map` — stack of `obs$catch` and `obs$index` mapping variables
 #' - `log_obs`, `is_missing`, `is_observed`, `observed` - vector of log observations (with NA),
 #'   logical vector indicating missing and observed values, and vector of non-missing values, respectively.
@@ -498,11 +514,13 @@ make_dat <- function(
   if (max(all_obs_ages) > max(dat$ages)) {
     dat$obs <- .plus_fun(dat$obs, max(dat$ages))
   }
-  dat$obs <- lapply(dat$obs, function(d) {
-    d_sub <- d[d$year %in% dat$years & d$age %in% dat$ages, ]
+  dat$obs <- stats::setNames(lapply(names(dat$obs), function(nm) {
+    d <- dat$obs[[nm]]
+    keep_age <- if (nm %in% c("weight", "maturity")) d$age >= min(dat$ages) else d$age %in% dat$ages
+    d_sub <- d[d$year %in% dat$years & keep_age, ]
     d_sub[order(d_sub$age, d_sub$year), ] |>
       droplevels()
-  })
+  }), names(dat$obs))
   dat$is_proj <- rep(FALSE, length(dat$years))
   if (length(dat$years) < 2L) {
     cli::cli_abort("At least two historical years are required for recruitment and cohort transitions.")
@@ -582,6 +600,17 @@ make_dat <- function(
 
   empty_mat <- matrix(NA, nrow = length(dat$years), ncol = length(dat$ages),
                       dimnames = list(year = dat$years, age = dat$ages))
+  if (max(dat$obs$weight$age) > max(dat$ages)) {
+    dat$plus_ages <- seq.int(max(dat$ages), max(dat$obs$weight$age))
+    plus_dimnames <- list(year = dat$years, age = dat$plus_ages)
+    dat$W_plus_input <- matrix(dat$obs$weight$obs[dat$obs$weight$age %in% dat$plus_ages],
+                               length(dat$years), length(dat$plus_ages), dimnames = plus_dimnames)
+    dat$P_plus_input <- matrix(dat$obs$maturity$obs[dat$obs$maturity$age %in% dat$plus_ages],
+                               length(dat$years), length(dat$plus_ages), dimnames = plus_dimnames)
+    for (nm in c("weight", "maturity")) {
+      dat$obs[[nm]] <- droplevels(dat$obs[[nm]][dat$obs[[nm]]$age %in% dat$ages, ])
+    }
+  }
   dat$W <- dat$P <- empty_mat
   dat$W[] <- dat$obs$weight$obs
   dat$P[] <- dat$obs$maturity$obs

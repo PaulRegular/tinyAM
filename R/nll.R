@@ -159,6 +159,10 @@ rprocess_rw <- function(x, sd = 1) {
 #' N is then constructed through initial-age and cohort recursion, followed by
 #' predictions and observation draws with the SD for each matching row.
 #' Derived quantities therefore use the same realization as the returned states.
+#' If biological inputs extend above the modeled plus age, hidden age abundances
+#' are reconstructed after N. Effective terminal W and P preserve biomass and
+#' mature biomass; see [tinyAM-model]. No extra parameters or process penalties
+#' are introduced. `N_plus`, `W`, and `P` are then included in `report()`.
 #' Random N0 is redrawn; free N0 and `log_r0` remain supplied fixed states.
 #' RW processes retain their starting state because it has no process density.
 #' For N, the first `log_n` row is retained and its starting residual is computed
@@ -339,6 +343,39 @@ nll_fun <- function(par, dat, simulate = FALSE) {
     log_n[] <- log_N[-1, -1, drop = FALSE]
   }
   N <- exp(log_N)
+
+  ## Biological composition within the modeled plus group ----
+
+  if (!is.null(dat$plus_ages)) {
+    n_plus <- length(dat$plus_ages)
+    log_N_plus <- matrix(0, n_years, n_plus,
+                         dimnames = list(year = years, age = dat$plus_ages))
+    # A geometric survivor distribution, with the remaining tail in Amax+.
+    log_components <- -(seq_len(n_plus) - 1L) * Z[1, n_ages]
+    log_components[-n_plus] <- log_components[-n_plus] + log(-expm1(-Z[1, n_ages]))
+    for (y in seq_len(n_years)) {
+      if (y > 1L) {
+        log_components <- c(log_N[y - 1L, n_ages - 1L] - Z[y - 1L, n_ages - 1L],
+                            log_N_plus[y - 1L, -n_plus] - Z[y - 1L, n_ages])
+        log_components[n_plus] <- RTMB::logspace_add(log_components[n_plus],
+          log_N_plus[y - 1L, n_plus] - Z[y - 1L, n_ages])
+      }
+      # A common rescaling carries any N-process deviation into all hidden ages.
+      log_shares <- log_components - Reduce(RTMB::logspace_add, log_components)
+      log_N_plus[y, ] <- log_N[y, n_ages] + log_shares
+      shares <- exp(log_shares)
+      W[y, n_ages] <- sum(shares * dat$W_plus_input[y, ])
+      P[y, n_ages] <- if (all(dat$W_plus_input[y, ] == 0)) {
+        0 # No biomass: mature biomass is also zero, whatever its proportion.
+      } else {
+        sum(shares * dat$W_plus_input[y, ] * dat$P_plus_input[y, ]) / W[y, n_ages]
+      }
+    }
+    N_plus <- exp(log_N_plus)
+    REPORT(N_plus)
+    REPORT(W)
+    REPORT(P)
+  }
 
 
   ## Initial age process ----
