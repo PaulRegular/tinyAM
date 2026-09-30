@@ -171,3 +171,10 @@ initial-state integration, and which biomass and Fbar definitions to compare.
 Changing the three process/observation assumptions together would obscure the
 cause of differences. This branch documents those decisions without changing
 tinyAM's core model.
+
+## Validation
+
+All 93 offline SAM assertions passed. The final built-package full suite passed
+1,154 assertions with no failures or warnings and one interactive-only skip.
+`R CMD check --no-manual` returned **Status: OK**. See [validation.md](validation.md)
+for the environment, integration checks and practical limitations.
