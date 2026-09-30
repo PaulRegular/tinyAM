@@ -3,7 +3,7 @@
 #'
 #' @inheritParams tidy_tam
 #' @param model_list   A **named list** of fitted TAM objects or reporting references
-#'                     from [sam_to_tam_comparison()] (e.g., `fits` list returned by
+#'                     from [sam_to_tam_list()] (e.g., `fits` list returned by
 #'                     [fit_retro()]). Names are used to label models.
 #' @param output_file  Name of file to export using [rmarkdown::render()].
 #'                     If `NULL`, a temporary HTML file is rendered.
@@ -19,7 +19,7 @@
 #'          form a uniquely named list so they can be labeled in the dashboard.
 #'          Additional arguments for [rmarkdown::render()] can be passed through
 #'          `render_args`, which must itself be a (named) list.
-#'          Reporting references from [sam_to_tam_comparison()] may be mixed
+#'          Reporting references from [sam_to_tam_list()] may be mixed
 #'          with tinyAM fits. Their native definitions and unavailable outputs
 #'          are identified in the dashboard; they are not refittable TAM objects.
 #' @return Used for its side effects: writes an HTML dashboard and optionally

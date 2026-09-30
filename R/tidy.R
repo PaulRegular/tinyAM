@@ -628,7 +628,7 @@ stack_nested <- function(x, label = "model",
 #'
 #' @details
 #' **Inputs:** Pass models through `...` or via `model_list =`.
-#' Reporting references from [sam_to_tam_comparison()] are also accepted.
+#' Reporting references from [sam_to_tam_list()] are also accepted.
 #' Their source tables are recalculated at `interval`; native definitions and
 #' missing uncertainty are retained without constructing a tinyAM optimizer.
 #'
@@ -692,7 +692,7 @@ tidy_tam <- function(..., model_list = NULL, interval = 0.95, label = "model", l
 
   # Reporting references have no RTMB optimizer; rebuild only their source tables.
   model_list <- lapply(model_list, function(fit) {
-    if (inherits(fit, "tam_comparison")) {
+    if (inherits(fit, "tam_list")) {
       tabs <- .sam_comparison_tables(fit$source_fit, interval)
       # Respect an explicitly selected reporting period, while retaining the source fit.
       for (nm in c("pop", "obs_pred", "random_par")) {

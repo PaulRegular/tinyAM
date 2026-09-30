@@ -242,7 +242,7 @@ sam_to_tam_obs <- function(sam_fit) {
 #' density-dependent q, scaling, initial-state priors, biological process models,
 #' and supplied observation attributes separately. Unknown fields are reported,
 #' so this table is not a universal SAM compatibility certificate.
-#' @seealso [sam_to_tam_obs()], [sam_to_tam_comparison()]
+#' @seealso [sam_to_tam_obs()], [sam_to_tam_list()]
 #' @export
 sam_to_tam_audit <- function(sam_fit, settings = NULL) {
   x <- .sam_source(sam_fit)
@@ -607,44 +607,53 @@ sam_to_tam_settings <- function(sam_fit, overrides = list()) {
   list(pop = pop, obs_pred = obs_pred, fixed_par = fixed, random_par = random)
 }
 
-#' Prepare a SAM fit for comparison in tinyAM dashboards
+#' Convert a fitted SAM object to a list for comparison with tinyAM
 #'
-#' Display existing SAM outputs alongside tinyAM fits without refitting SAM or
-#' manufacturing a tinyAM optimizer. This is a reporting object, not a `tam_fit`;
-#' it cannot be simulated, updated or used for retrospective fitting.
+#' Convert a fitted SAM object into a list similar to a `tam_fit` object to ease
+#' comparisons, especially through a dashboard made with [vis_tam()]. The list
+#' contains SAM's fitted values and available uncertainty, arranged for use with
+#' [tidy_tam()] and [vis_tam()]. The supplied SAM fit is left unchanged.
 #'
 #' @param sam_fit A fitted SAM object.
 #' @param interval Confidence level in `(0, 1)`. Log-scale uncertainty is
 #'   transformed to natural-scale intervals, with `se` retained on the log scale.
-#' @return A `tam_comparison` list containing `dat`, `pop`, `obs_pred`,
-#'   `fixed_par`, `random_par`, source fit and reporting notes. Population tables
-#'   retain SAM's native definitions; abundance/selectivity/Mbar are explicitly
-#'   calculated from fitted states without newly fabricated uncertainty.
+#' @return A list of class `tam_list` containing `dat`, `pop`, `obs_pred`,
+#'   `fixed_par`, `random_par`, the source fit and notes explaining comparison
+#'   differences. It resembles a `tam_fit` for reporting but cannot be fitted,
+#'   updated, simulated or used for retrospective fitting.
 #' @details
-#' Requires suggested package \pkg{stockassessment}. SAM's arithmetic Fbar and
-#' spawning-time SSB must not be confused with tinyAM's native definitions.
-#' Missing reports and unavailable uncertainty remain missing. Observation
-#' residuals are conditional standardized log residuals, not one-step residuals.
+#' Requires suggested package \pkg{stockassessment}. SAM's own definitions are
+#' retained: average fishing mortality gives equal weight to each age, and
+#' spawning biomass accounts for mortality before spawning. tinyAM's reported
+#' average fishing mortality is weighted by abundance, and its spawning biomass
+#' is measured at the beginning of the year. Biological inputs may also differ
+#' from SAM's fitted biological values.
+#'
+#' Missing values and unavailable uncertainty remain missing. Total abundance,
+#' selectivity and average natural mortality are calculated from fitted states
+#' without adding uncertainty estimates. Observation residuals describe the fit
+#' to individual observations; they are not one-step-ahead residuals.
 #' @seealso [sam_to_tam_obs()], [sam_to_tam_settings()], [sam_to_tam_audit()], [vis_tam()]
 #' @export
-sam_to_tam_comparison <- function(sam_fit, interval = 0.95) {
+sam_to_tam_list <- function(sam_fit, interval = 0.95) {
   if (length(interval) != 1L || !is.finite(interval) || interval <= 0 || interval >= 1) cli::cli_abort("interval must be in (0, 1).")
   tabs <- .sam_comparison_tables(sam_fit, interval)
   x <- .sam_source(sam_fit)
-  notes <- c("SAM reference: native arithmetic Fbar, spawning-time SSB and modeled biological surfaces.",
-             "Original biological inputs are shown in the input tables; missing values are retained.",
-             "State-based abundance, selectivity and Mbar have no newly calculated uncertainty.",
-             "Only q is displayed in the fixed-parameter panel; other SAM parameters have different meanings.",
-             "Dashboard yield uses original stock weights for both models; this is not SAM's native catch biomass.",
-             "Unavailable reports are omitted from mixed panels; missing uncertainty is never filled.")
+  notes <- c("Average fishing mortality (Fbar): SAM gives each age equal weight; tinyAM weights ages by their estimated abundance.",
+             "Spawning biomass (SSB): SAM accounts for mortality before spawning; tinyAM reports biomass at the beginning of the year.",
+             "Weight, maturity and natural mortality: SAM may estimate these values. The input tables show the original supplied values, including any missing values.",
+             "Catch biomass (yield): this dashboard uses the original stock weights for both models. SAM's own catch biomass uses catch weights, which may differ.",
+             "Uncertainty: total abundance, selectivity and average natural mortality are calculated from SAM's fitted states without new confidence intervals. Missing reports or uncertainty are left out or shown as missing.",
+             "Parameters: only survey catchability (q) is shown among SAM's fixed parameters, because the other parameters do not correspond directly to tinyAM's.",
+             "Residuals: the SAM residuals shown here describe the fit to individual observations; they are not one-step-ahead residuals.")
   structure(c(list(call = match.call(), dat = list(obs = sam_to_tam_obs(sam_fit), years = x$years,
                                                    ages = seq.int(x$conf$minAge, x$conf$maxAge), is_proj = rep(FALSE, length(x$years))),
-                   source_fit = sam_fit, reporting_notes = notes), tabs), class = c("tam_comparison", "list"))
+                   source_fit = sam_fit, reporting_notes = notes), tabs), class = c("tam_list", "list"))
 }
 
 #' @export
-update.tam_comparison <- function(object, ...) {
-  cli::cli_abort("A tam_comparison is a reporting object and cannot be updated or fitted.")
+update.tam_list <- function(object, ...) {
+  cli::cli_abort("A tam_list is a reporting object and cannot be updated or fitted.")
 }
 
 

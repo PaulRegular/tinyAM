@@ -86,7 +86,7 @@
   if (any(!is_fit)) {
     bad <- names(fits)[!is_fit]
     cli::cli_abort(c(
-      "All supplied models must be {.cls tam_fit} objects or {.cls tam_comparison} reporting objects.",
+      "All supplied models must be {.cls tam_fit} objects or {.cls tam_list} reporting objects.",
       "x" = "Problematic element{?s}: {cli::format_inline('{.val {bad}}')}"
     ))
   }
@@ -94,4 +94,4 @@
   list(fits = fits, using_dots = using_dots)
 }
 
-.is_reporting_fit <- function(x) .is_tam_fit(x) || inherits(x, "tam_comparison")
+.is_reporting_fit <- function(x) .is_tam_fit(x) || inherits(x, "tam_list")

@@ -30,11 +30,11 @@ write.csv(sam_to_tam_audit(sam_fit, settings), file.path(results, "audit.csv"), 
 # Fit and compare ----
 tam_fit <- do.call(fit_tam, c(list(obs = tam_obs, silent = TRUE), settings))
 saveRDS(tam_fit, file.path(tam_fits_dir, "tinyAM_fit.rds"))
-sam_comparison <- sam_to_tam_comparison(sam_fit)
-sam_comparison$dat$years <- years
-sam_comparison$dat$is_proj <- rep(FALSE, length(years))
-sam_comparison$dat$obs <- tam_obs
-models <- list(SAM = sam_comparison, tinyAM = tam_fit)
+sam_list <- sam_to_tam_list(sam_fit)
+sam_list$dat$years <- years
+sam_list$dat$is_proj <- rep(FALSE, length(years))
+sam_list$dat$obs <- tam_obs
+models <- list(SAM = sam_list, tinyAM = tam_fit)
 
 diagnostics <- data.frame(model = c("SAM", "tinyAM"),
   convergence_code = c(sam_fit$opt$convergence, tam_fit$opt$convergence),

@@ -104,7 +104,7 @@ test_that("vis_tam errors when supplied objects are not TAM fits", {
 
 test_that("mixed SAM and tinyAM dashboards render without fabricated reports", {
   skip_if_not_installed("stockassessment")
-  ref <- sam_to_tam_comparison(sam_fixture())
+  ref <- sam_to_tam_list(sam_fixture())
   file <- tempfile(fileext = ".html")
   expect_no_error(vis_tam(model_list = list(SAM = ref, tinyAM = N_dev),
     output_file = file, open_file = FALSE, render_args = list(quiet = TRUE)))
@@ -113,7 +113,9 @@ test_that("mixed SAM and tinyAM dashboards render without fabricated reports", {
   con <- file(file, "rb")
   html <- readLines(con, warn = FALSE)
   close(con)
-  expect_true(any(grepl("SAM reference", html, fixed = TRUE)))
+  expect_true(any(grepl("Not all fitted and reported values from SAM are directly comparable", html, fixed = TRUE)))
+  expect_true(any(grepl("SAM gives each age equal weight", html, fixed = TRUE)))
+  expect_true(any(grepl("tinyAM reports biomass at the beginning of the year", html, fixed = TRUE)))
   for (metric in c("N", "F", "M")) {
     for (field in c("lwr", "upr", "se", "se_scale")) {
       expect_true(any(grepl(paste0(">", field, "_", metric, "</th>"), html, fixed = TRUE)))

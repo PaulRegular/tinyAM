@@ -40,5 +40,5 @@ and supplied observation attributes separately. Unknown fields are reported,
 so this table is not a universal SAM compatibility certificate.
 }
 \seealso{
-\code{\link[=sam_to_tam_obs]{sam_to_tam_obs()}}, \code{\link[=sam_to_tam_comparison]{sam_to_tam_comparison()}}
+\code{\link[=sam_to_tam_obs]{sam_to_tam_obs()}}, \code{\link[=sam_to_tam_list]{sam_to_tam_list()}}
 }

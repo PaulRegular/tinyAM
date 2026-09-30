@@ -42,11 +42,11 @@ random_par <- tabs$random_par
 
 ```{r comparison-notes, results='asis', echo=FALSE}
 if (any(vapply(fits, function(f) length(f$reporting_notes) > 0, logical(1)))) {
-  cat("\n\nReference notes\n================================================================================\n\nColumn\n--------------------------------------------------------------------------------\n\n### Definitions and unavailable reports\n\n")
+  cat("\n\nCaveats\n================================================================================\n\nColumn\n--------------------------------------------------------------------------------\n\n### Comparing SAM and tinyAM\n\n")
 }
 for (nm in names(fits)) {
   notes <- fits[[nm]]$reporting_notes
-  if (length(notes)) cat(paste0("**", nm, " reference notes:**\n\n", paste0("- ", notes, collapse="\n"), "\n\n"))
+  if (length(notes)) cat(paste0("**Not all fitted and reported values from SAM are directly comparable to those produced by tinyAM, such as:**\n\n", paste0("- ", notes, collapse="\n"), "\n\n"))
 }
 ```
 

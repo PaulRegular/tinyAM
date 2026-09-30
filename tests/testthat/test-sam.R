@@ -92,8 +92,8 @@ test_that("SAM comparison reports native states and honest uncertainty", {
   skip_if_not_installed("stockassessment")
   f <- sam_fixture()
   before <- unserialize(serialize(f, NULL))
-  x <- sam_to_tam_comparison(f)
-  expect_s3_class(x, "tam_comparison")
+  x <- sam_to_tam_list(f)
+  expect_s3_class(x, "tam_list")
   expect_false(inherits(x, "tam_fit"))
   expect_null(x$obj)
   expect_equal(x$pop$N$est, as.vector(stockassessment::ntable(f)))
@@ -115,5 +115,5 @@ test_that("SAM comparison reports native states and honest uncertainty", {
   expect_equal(sort(unique(tidy_tam(x)$pop$N$year)), 2001:2002)
   expect_identical(f, before)
   f$sdrep <- NULL
-  expect_null(sam_to_tam_comparison(f)$pop$ssb)
+  expect_null(sam_to_tam_list(f)$pop$ssb)
 })
