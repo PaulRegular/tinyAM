@@ -141,13 +141,14 @@ knitr::kable(d, digits = 3)
 ### Metrics-at-age
 
 ```{r}
-d <- pop$N
-names(d)[names(d) == "est"] <- "N"
-for (nm in c("F", "M")) {
-  new_d <- pop[[nm]]
-  names(new_d)[names(new_d) == "est"] <- nm
-  d <- merge(d, new_d, by = c("age", "year", "model", "is_proj"))
-}
+keys <- c("age", "year", "model", "is_proj")
+metric_tables <- lapply(c("N", "F", "M"), function(metric) {
+  d <- pop[[metric]]
+  fields <- setdiff(names(d), keys)
+  names(d)[match(fields, names(d))] <- ifelse(fields == "est", metric, paste0(fields, "_", metric))
+  d
+})
+d <- Reduce(function(x, y) merge(x, y, by = keys), metric_tables)
 table_link(d, table_name = "Metrics-at-age")
 knitr::kable(d, digits = 3)
 ```

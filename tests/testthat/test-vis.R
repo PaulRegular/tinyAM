@@ -114,6 +114,13 @@ test_that("mixed SAM and tinyAM dashboards render without fabricated reports", {
   html <- readLines(con, warn = FALSE)
   close(con)
   expect_true(any(grepl("SAM reference", html, fixed = TRUE)))
+  for (metric in c("N", "F", "M")) {
+    for (field in c("lwr", "upr", "se", "se_scale")) {
+      expect_true(any(grepl(paste0(">", field, "_", metric, "</th>"), html, fixed = TRUE)))
+    }
+  }
+  expect_false(any(grepl(">se.x</th>", html, fixed = TRUE)))
+  expect_false(any(grepl(">se.y</th>", html, fixed = TRUE)))
   ref$source_fit$sdrep <- NULL
   expect_no_error(vis_tam(model_list = list(SAM = ref), output_file = file,
     open_file = FALSE, render_args = list(quiet = TRUE)))
