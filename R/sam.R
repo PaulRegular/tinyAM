@@ -36,6 +36,64 @@
     paste0(" + ", paste(columns, collapse = " + ")) else "")
 }
 
+# Ordinary values from a SAM fit; no parsing or serialized optimizer calls.
+.sam_source <- function(sam_fit) {
+  if (!is.list(sam_fit) || !all(c("data", "conf", "pl", "opt") %in% names(sam_fit)) ||
+      !is.list(sam_fit$opt) || length(sam_fit$opt$objective) != 1L ||
+      !is.finite(sam_fit$opt$objective)) cli::cli_abort("Supply a fitted SAM object with data, conf, pl and a finite optimizer objective.")
+  dat <- sam_fit$data
+  conf <- sam_fit$conf
+  bounds <- c(conf$minAge, conf$maxAge)
+  if (length(bounds) != 2L || anyNA(bounds) || any(bounds != trunc(bounds)) ||
+      bounds[1] < 0 || bounds[2] <= bounds[1]) cli::cli_abort("Invalid SAM modeled age range.")
+  ages <- seq.int(bounds[1], bounds[2])
+  years <- dat$years
+  if (length(years) < 2L || anyNA(years) || any(years != trunc(years)) || any(diff(years) != 1)) cli::cli_abort("SAM years must be consecutive.")
+  aux <- dat$aux
+  if (!is.matrix(aux) || !all(c("year", "fleet", "age") %in% colnames(aux)) ||
+      nrow(aux) != length(dat$logobs)) cli::cli_abort("SAM observation rows and logobs do not align.")
+  raw <- data.frame(year = aux[, "year"], fleet_id = aux[, "fleet"], age = aux[, "age"], obs = exp(dat$logobs))
+  if (anyDuplicated(raw[c("year", "fleet_id", "age")])) cli::cli_abort("Duplicate SAM year/fleet/age observation rows.")
+  nf <- length(dat$fleetTypes)
+  if (!nf || anyNA(raw[c("year", "fleet_id", "age")]) ||
+      any(!raw$fleet_id %in% seq_len(nf)) || any(!raw$year %in% years)) cli::cli_abort("Invalid SAM observation identifiers.")
+  fleet_names <- attr(dat, "fleetNames")
+  if (length(fleet_names) != nf) fleet_names <- paste("Fleet", seq_len(nf))
+  if (length(dat$sampleTimes) != nf) cli::cli_abort("SAM sampling times do not match fleets.")
+  if (any(!raw$age %in% ages)) cli::cli_abort("SAM observation ages fall outside the modeled age range.")
+  if (any(!seq_len(nf) %in% raw$fleet_id)) cli::cli_abort("Every SAM fleet must contain observation rows.")
+  fleet_ages <- lapply(seq_len(nf), function(i) range(raw$age[raw$fleet_id == i]))
+  fleets <- data.frame(fleet_id = seq_len(nf), fleet_name = fleet_names, fleet_type = dat$fleetTypes,
+                       min_age = vapply(fleet_ages, min, numeric(1)), max_age = vapply(fleet_ages, max, numeric(1)),
+                       samp_time = dat$sampleTimes)
+  mats <- lapply(seq_len(nf), function(i) {
+    d <- raw[raw$fleet_id == i, ]
+    ys <- seq.int(min(d$year), max(d$year))
+    aa <- seq.int(fleets$min_age[i], fleets$max_age[i])
+    m <- matrix(NA_real_, length(ys), length(aa), dimnames = list(year = ys, age = aa))
+    m[cbind(match(d$year, ys), match(d$age, aa))] <- d$obs
+    # Effort was already applied by SAM and cannot be recovered from logobs.
+    attr(m, "effort") <- rep(NA_real_, length(ys))
+    m
+  })
+  names(mats) <- fleet_names
+  data <- list(catch = mats[dat$fleetTypes == 0], surveys = mats[dat$fleetTypes == 2])
+  fields <- c(sw = "stockMeanWeight", cw = "catchMeanWeight", mo = "propMat",
+              nm = "natMor", pf = "propF", pm = "propM")
+  for (nm in names(fields)) {
+    m <- dat[[fields[[nm]]]]
+    if (length(dim(m)) == 3L && dim(m)[3] == 1L) m <- m[, , 1]
+    if (is.matrix(m)) {
+      if (is.null(rownames(m))) rownames(m) <- utils::head(years, nrow(m))
+      if (is.null(colnames(m))) colnames(m) <- utils::head(ages, ncol(m))
+    }
+    data[[nm]] <- m
+  }
+  list(data = data, fleets = fleets, conf = conf, years = years, raw = raw,
+       observation_weights = dat$weight)
+}
+
+
 #' Translate standard SAM observations for tinyAM
 #'
 #' Use the same catch, survey, and biological inputs in tinyAM. Successful
@@ -325,3 +383,268 @@ sam_to_tam_audit <- function(sam_fit, settings = NULL) {
   out <- do.call(rbind, rows)
   .sam_audit_settings(out, sam_fit, settings)
 }
+
+#' Translate SAM assumptions into tinyAM fitting settings
+#'
+#' Generate a transparent approximation using existing tinyAM options. Review
+#' [sam_to_tam_audit()] before fitting; translating settings does not reproduce
+#' the SAM likelihood and does not guarantee numerical convergence.
+#'
+#' @param sam_fit A fitted SAM object.
+#' @param overrides Named list of `fit_tam()` arguments. Nested settings are
+#'   merged by name; explicit `NULL` values replace defaults. `obs` is supplied
+#'   separately and cannot be overridden here.
+#' @return A named list suitable for
+#'   `do.call(fit_tam, c(list(obs = sam_to_tam_obs(sam_fit)), settings))`.
+#' @details
+#' The baseline uses IID survival errors, free initial abundance, independent
+#' F random-walk increments, supplied input M, and original weight/maturity.
+#' q and observation-SD blocks retain SAM's keys. Observation errors are
+#' independent lognormal; catch scaling, biological process models, correlated
+#' innovations and additional variance groups are not reproduced.
+#' Missing biological values are never filled. Choose a complete input period
+#' explicitly and subset the translated observations before calling `fit_tam()`.
+#' No fitted SAM estimates constrain the resulting tinyAM fit.
+#' @export
+sam_to_tam_settings <- function(sam_fit, overrides = list()) {
+  x <- .sam_source(sam_fit)
+  obs <- sam_to_tam_obs(sam_fit)
+  if (anyNA(obs$index$q_key) || anyNA(obs$index$sd_key) || anyNA(obs$catch$sd_key) ||
+      any(obs$index$sd_key < 0) || any(obs$catch$sd_key < 0)) {
+    cli::cli_abort("SAM active observation cells require complete q and observation-SD keys.")
+  }
+  q_form <- if (any(obs$index$q_key == -1)) {
+    cols <- grep("^q_key_", names(obs$index), value = TRUE)
+    if (length(cols)) stats::reformulate(cols, intercept = FALSE) else ~ 0
+  } else if (nlevels(obs$index$q_block) == 1L) ~ 1 else ~ 0 + q_block
+  catch_sd <- if (nlevels(obs$catch$sd_block) == 1L) ~ 1 else ~ 0 + sd_block
+  index_sd <- if (nlevels(obs$index$sd_block) == 1L) ~ 1 else ~ 0 + sd_block
+  if (length(x$conf$fbarRange) != 2L || anyNA(x$conf$fbarRange) ||
+      any(!x$conf$fbarRange %in% seq.int(x$conf$minAge, x$conf$maxAge))) {
+    cli::cli_abort("SAM fbarRange must identify two modeled age bounds.")
+  }
+  settings <- list(years = x$years, ages = seq.int(x$conf$minAge, x$conf$maxAge),
+                   N_settings = list(process = "iid", init = "free"),
+                   F_settings = list(process = "rw", mu_form = NULL,
+                                     mean_ages = seq.int(min(x$conf$fbarRange), max(x$conf$fbarRange))),
+                   M_settings = list(process = "off", mu_form = NULL, mu_supplied = ~ M_assumption,
+                                     age_breaks = NULL, first_dev_year = NULL),
+                   catch_settings = list(sd_form = catch_sd, sd_supplied = NULL, fill_missing = FALSE),
+                   index_settings = list(q_form = q_form, sd_form = index_sd,
+                                         sd_supplied = NULL, fill_missing = FALSE),
+                   proj_settings = NULL)
+  overrides <- .validate_named_list(overrides, "overrides", allow_empty = TRUE)
+  allowed <- c(setdiff(names(formals(make_dat)), "obs"),
+               setdiff(names(formals(fit_tam)), c("obs", "...")))
+  unknown <- setdiff(names(overrides), allowed)
+  if (length(unknown)) cli::cli_abort("Unknown settings override(s): {paste(unknown, collapse = ', ')}.")
+  utils::modifyList(settings, overrides, keep.null = TRUE)
+}
+
+.sam_design_matches <- function(form, data, key) {
+  if (is.null(form) || anyNA(key)) return(FALSE)
+  if (any(grepl("mono\\s*\\(", deparse(form)))) return(FALSE)
+  design <- tryCatch(stats::model.matrix(form, data), error = function(e) NULL)
+  if (is.null(design) || nrow(design) != nrow(data) || any(!is.finite(design))) return(FALSE)
+  levels <- sort(unique(key[key >= 0]))
+  expected <- matrix(0, length(key), length(levels))
+  for (i in seq_along(levels)) expected[, i] <- as.numeric(key == levels[i])
+  rank <- function(m) if (!ncol(m)) 0L else qr(m)$rank
+  rank(design) == rank(expected) && rank(cbind(design, expected)) == rank(expected)
+}
+
+.sam_audit_settings <- function(out, sam_fit, settings) {
+  obs <- sam_to_tam_obs(sam_fit)
+  describe <- function(x) paste(deparse(x, width.cutoff = 80L), collapse = " ")
+  out$tam_setting <- "See mapping"
+  set <- function(field, setting, exact = TRUE, note = "") {
+    i <- match(field, out$sam_setting)
+    if (is.na(i)) return(invisible(NULL))
+    out$tam_setting[i] <<- describe(setting)
+    if (!exact && out$tam_status[i] != "not_checked") out$tam_status[i] <<- "unsupported"
+    if (nzchar(note)) out$notes[i] <<- paste(out$notes[i], note)
+  }
+  set("minAge/maxAge", settings$ages, identical(as.integer(settings$ages), seq.int(sam_fit$conf$minAge, sam_fit$conf$maxAge)))
+  set("corFlag", settings$F_settings, identical(settings$F_settings$process, "rw") &&
+        is.null(settings$F_settings$mu_form),
+      "The applied F model is shown in tam_setting; no correlated innovations are introduced.")
+  set("keyVarF", settings$F_settings$process, identical(settings$F_settings$process, "rw"))
+  set("keyVarLogN", settings$N_settings, identical(settings$N_settings$process, "iid"))
+  set("initState", settings$N_settings$init, identical(settings$N_settings$init, "free"))
+  set("keyLogFpar", settings$index_settings$q_form,
+      .sam_design_matches(settings$index_settings$q_form, obs$index, obs$index$q_key))
+  set("keyVarObs", list(catch = settings$catch_settings$sd_form, index = settings$index_settings$sd_form),
+      .sam_design_matches(settings$catch_settings$sd_form, obs$catch, obs$catch$sd_key) &&
+        .sam_design_matches(settings$index_settings$sd_form, obs$index, obs$index$sd_key) &&
+        is.null(settings$catch_settings$sd_supplied) && is.null(settings$index_settings$sd_supplied))
+  supplied <- tryCatch(.log_supplied(settings$M_settings$mu_supplied, obs$weight, "M mu_supplied"), error = function(e) NULL)
+  set("nm.dat", settings$M_settings,
+      identical(settings$M_settings$process, "off") && is.null(settings$M_settings$mu_form) &&
+        !is.null(supplied) && isTRUE(all.equal(exp(supplied), obs$weight$M_assumption, check.attributes = FALSE)))
+  set("fbarRange", settings$F_settings$mean_ages)
+  selected <- lapply(obs, function(d) d[d$year %in% settings$years & d$age %in% settings$ages, ])
+  complete <- length(settings$years) > 0 && length(settings$ages) > 0 &&
+    all(settings$years %in% sam_fit$data$years) &&
+    all(settings$ages %in% seq.int(sam_fit$conf$minAge, sam_fit$conf$maxAge)) &&
+    nrow(selected$weight) == length(settings$years) * length(settings$ages) &&
+    all(is.finite(selected$weight$obs)) && all(is.finite(selected$maturity$obs)) &&
+    all(is.finite(selected$weight$M_assumption) & selected$weight$M_assumption > 0)
+  extra <- data.frame(component = "input period", sam_setting = "selected years",
+                      sam_value = paste(range(sam_fit$data$years), collapse = ":"),
+                      tam_status = if (!complete) "unsupported" else if (identical(as.numeric(settings$years), as.numeric(sam_fit$data$years))) "supported" else "partially_supported",
+                      tam_mapping = "Original biological inputs; no automatic imputation",
+                      notes = if (complete) "Comparison must use the common fitted period." else "Selected original biological inputs contain missing values; explicitly choose a complete period before fitting.",
+                      tam_setting = paste(range(settings$years), collapse = ":"))
+  rbind(out, extra)
+}
+
+
+
+
+.sam_estimates <- function(log_est, log_se = NULL, interval = 0.95) {
+  if (is.null(log_se)) log_se <- rep(NA_real_, length(log_est))
+  z <- stats::qnorm(0.5 + interval / 2)
+  data.frame(est = exp(as.vector(log_est)), lwr = exp(as.vector(log_est) - z * as.vector(log_se)),
+             upr = exp(as.vector(log_est) + z * as.vector(log_se)), se = as.vector(log_se), se_scale = "log")
+}
+
+.sam_comparison_tables <- function(sam_fit, interval) {
+  if (!requireNamespace("stockassessment", quietly = TRUE)) cli::cli_abort("Install stockassessment to extract SAM comparison tables.")
+  x <- .sam_source(sam_fit)
+  years <- x$years
+  ages <- seq.int(x$conf$minAge, x$conf$maxAge)
+  N <- stockassessment::ntable(sam_fit)
+  F <- stockassessment::faytable(sam_fit)
+  state <- function(m, se = NULL) {
+    d <- .sam_long(m)
+    names(d)[names(d) == "obs"] <- "value"
+    out <- cbind(d[c("year", "age")], .sam_estimates(log(d$value), se, interval))
+    out$is_proj <- FALSE
+    out
+  }
+  N_tab <- state(N, if (!is.null(sam_fit$plsd$logN)) t(sam_fit$plsd$logN) else NULL)
+  fkeys <- sam_fit$conf$keyLogFsta[which(sam_fit$data$fleetTypes == 0), ]
+  fse <- if (!is.null(sam_fit$plsd$logF) && all(fkeys >= 0)) t(sam_fit$plsd$logF[fkeys + 1L, , drop = FALSE]) else NULL
+  F_tab <- state(F, fse)
+  M <- x$data$nm[as.character(years), as.character(ages), drop = FALSE]
+  if (isTRUE(sam_fit$conf$mortalityModel > 0) && length(sam_fit$pl$logNM)) {
+    M <- exp(sam_fit$pl$logNM[seq_along(years), seq_along(ages), drop = FALSE])
+    dimnames(M) <- dimnames(N)
+  }
+  trend <- function(nm) {
+    values <- sam_fit$sdrep$value
+    i <- which(names(values) == nm)
+    if (length(i) != length(years)) return(NULL)
+    cbind(data.frame(year = years), .sam_estimates(values[i], sam_fit$sdrep$sd[i], interval), is_proj = FALSE)
+  }
+  plain <- function(values) data.frame(year = years, est = values, lwr = NA_real_, upr = NA_real_,
+                                       se = NA_real_, se_scale = NA_character_, is_proj = FALSE)
+  pop <- list(N = N_tab, F = F_tab, M = state(M), ssb = trend("logssb"),
+              recruitment = trend("logR"), F_bar = trend("logfbar"), biomass = trend("logtsb"),
+              abundance = plain(rowSums(N)))
+  # These two summaries are unambiguous state transformations, without invented SEs.
+  pop$S <- state(F / apply(F, 1, max))
+  pop$M_bar <- plain(rowSums(M * N) / rowSums(N))
+  obs <- sam_to_tam_obs(sam_fit)
+  predictions <- x$raw
+  predictions$pred <- if (length(sam_fit$rep$predObs) == nrow(predictions)) exp(sam_fit$rep$predObs) else NA_real_
+  predictions$sd <- NA_real_
+  for (f in x$fleets$fleet_id) {
+    cov <- sam_fit$rep$obsCov[[f]]
+    rows <- which(predictions$fleet_id == f)
+    if (!is.matrix(cov)) next
+    sd <- sqrt(diag(cov))[predictions$age[rows] - x$fleets$min_age[f] + 1L]
+    w <- x$observation_weights[rows]
+    if (length(w)) {
+      weighted <- !is.na(w)
+      flag <- sam_fit$conf$fixVarToWeight
+      if (length(flag)) sd[weighted] <- if (rep(flag, length.out = nrow(x$fleets))[f] == 1)
+        sqrt(w[weighted]) else sd[weighted] / sqrt(w[weighted])
+    }
+    # Prediction-dependent SD cannot be recovered from a static covariance table.
+    link <- sam_fit$conf$predVarObsLink
+    if (is.matrix(link)) sd[link[cbind(f, predictions$age[rows] - min(ages) + 1L)] >= 0 &
+                              !is.na(link[cbind(f, predictions$age[rows] - min(ages) + 1L)])] <- NA_real_
+    predictions$sd[rows] <- sd
+  }
+  key <- function(d) paste(d$year, d$fleet_id, d$age, sep = ":")
+  obs_pred <- lapply(obs[c("catch", "index")], function(d) {
+    i <- match(key(d), key(predictions))
+    d$pred <- predictions$pred[i]
+    d$sd <- predictions$sd[i]
+    d$std_res <- ifelse(is.finite(d$obs) & d$obs > 0 & d$sd > 0,
+                        (log(d$obs) - log(d$pred)) / d$sd, NA_real_)
+    d$is_proj <- FALSE
+    d
+  })
+  # tinyAM's dashboard yield definition uses stock weight, including for SAM.
+  cw <- obs$weight$obs[match(paste(obs_pred$catch$year, obs_pred$catch$age),
+                             paste(obs$weight$year, obs$weight$age))]
+  yield <- function(v) plain(vapply(years, function(y) {
+    i <- obs_pred$catch$year == y
+    if (anyNA(v[i])) NA_real_ else sum(v[i] * cw[i])
+  }, numeric(1)))
+  pop$total_yield <- yield(obs_pred$catch$obs)
+  pop$total_yield_pred <- yield(obs_pred$catch$pred)
+  q <- obs_pred$index$q_key
+  obs_pred$index$q <- ifelse(q == -1, 1, exp(sam_fit$pl$logFpar[pmax(q + 1L, 1L)]))
+  # SAM conditional residuals retain SAM covariance/likelihood interpretation.
+  for (f in x$fleets$fleet_id) {
+    if (!identical(as.character(sam_fit$conf$obsLikelihoodFlag[f]), "LN") ||
+        (!is.null(sam_fit$conf$fracMixObs) && sam_fit$conf$fracMixObs[f] != 0)) {
+      for (nm in names(obs_pred)) obs_pred[[nm]]$std_res[obs_pred[[nm]]$fleet_id == f] <- NA_real_
+    }
+  }
+  fixed <- data.frame(par = character(), coef = character(), est = numeric(), lwr = numeric(),
+                      upr = numeric(), se = numeric(), se_scale = character())
+  if (length(sam_fit$pl$logFpar)) {
+    fixed <- cbind(data.frame(par = "q", coef = paste0("q_block", seq_along(sam_fit$pl$logFpar) - 1L)),
+                   .sam_estimates(sam_fit$pl$logFpar, sam_fit$plsd$logFpar, interval))
+  }
+  random <- list(log_f = transform(F_tab, par = "f"), log_r = transform(N_tab[N_tab$age == min(ages), ], par = "r"))
+  pop <- Filter(Negate(is.null), pop)
+  attr(pop, "interval") <- attr(fixed, "interval") <- attr(random, "interval") <- interval
+  list(pop = pop, obs_pred = obs_pred, fixed_par = fixed, random_par = random)
+}
+
+#' Prepare a SAM fit for comparison in tinyAM dashboards
+#'
+#' Display existing SAM outputs alongside tinyAM fits without refitting SAM or
+#' manufacturing a tinyAM optimizer. This is a reporting object, not a `tam_fit`;
+#' it cannot be simulated, updated or used for retrospective fitting.
+#'
+#' @param sam_fit A fitted SAM object.
+#' @param interval Confidence level in `(0, 1)`. Log-scale uncertainty is
+#'   transformed to natural-scale intervals, with `se` retained on the log scale.
+#' @return A `tam_comparison` list containing `dat`, `pop`, `obs_pred`,
+#'   `fixed_par`, `random_par`, source fit and reporting notes. Population tables
+#'   retain SAM's native definitions; abundance/selectivity/Mbar are explicitly
+#'   calculated from fitted states without newly fabricated uncertainty.
+#' @details
+#' Requires suggested package \pkg{stockassessment}. SAM's arithmetic Fbar and
+#' spawning-time SSB must not be confused with tinyAM's native definitions.
+#' Missing reports and unavailable uncertainty remain missing. Observation
+#' residuals are conditional standardized log residuals, not one-step residuals.
+#' @seealso [sam_to_tam_obs()], [sam_to_tam_settings()], [sam_to_tam_audit()], [vis_tam()]
+#' @export
+sam_to_tam_comparison <- function(sam_fit, interval = 0.95) {
+  if (length(interval) != 1L || !is.finite(interval) || interval <= 0 || interval >= 1) cli::cli_abort("interval must be in (0, 1).")
+  tabs <- .sam_comparison_tables(sam_fit, interval)
+  x <- .sam_source(sam_fit)
+  notes <- c("SAM reference: native arithmetic Fbar, spawning-time SSB and modeled biological surfaces.",
+             "Original biological inputs are shown in the input tables; missing values are retained.",
+             "State-based abundance, selectivity and Mbar have no newly calculated uncertainty.",
+             "Only q is displayed in the fixed-parameter panel; other SAM parameters have different meanings.",
+             "Dashboard yield uses original stock weights for both models; this is not SAM's native catch biomass.",
+             "Unavailable reports are omitted from mixed panels; missing uncertainty is never filled.")
+  structure(c(list(call = match.call(), dat = list(obs = sam_to_tam_obs(sam_fit), years = x$years,
+                                                   ages = seq.int(x$conf$minAge, x$conf$maxAge), is_proj = rep(FALSE, length(x$years))),
+                   source_fit = sam_fit, reporting_notes = notes), tabs), class = c("tam_comparison", "list"))
+}
+
+#' @export
+update.tam_comparison <- function(object, ...) {
+  cli::cli_abort("A tam_comparison is a reporting object and cannot be updated or fitted.")
+}
+
+
