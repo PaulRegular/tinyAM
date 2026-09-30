@@ -165,6 +165,10 @@ sam_to_tam_obs <- function(x) {
 #' Formulas do not couple latent F states or create process/observation covariance.
 #' Shared catch/index SD keys require one parameter across two tinyAM parameter
 #' vectors and therefore are only partially supported.
+#' SAM integrates initial abundance states even without an initial-state density;
+#' tinyAM's free initializer estimates initial abundance and recruitment as fixed
+#' parameters. Their conditional state equations agree but marginal likelihoods
+#' differ, so this boundary treatment is only partially supported.
 #'
 #' The audit targets standard Gaussian SAM models. It checks enabled mixtures,
 #' density-dependent q, scaling, initial-state priors, biological process models,
@@ -274,9 +278,12 @@ sam_tam_assumptions <- function(x) {
   add("observation attributes", "supplied observation attributes", if (!length(obs_attributes)) "supported" else "not_checked",
       "no supplied covariance/weight/partition attributes", "Any supplied attributes require separate validation; they must not be confused with keyVarObs.",
       if (length(obs_attributes)) obs_attributes else "none")
-  for (nm in c("fracMixF", "fracMixN", "fracMixObs", "stockWeightModel", "catchWeightModel", "matureModel", "mortalityModel", "initState", "logNMeanAssumption")) {
+  add("initial abundance", "initState", if (identical(as.numeric(conf$initState), 0)) "partially_supported" else "unsupported",
+      'N_settings$init = "free"; no starting-state density',
+      "Both omit the initial-state density, but SAM integrates all initial logN states while tinyAM estimates log_r0 and free log_n0 as fixed parameters. Conditional equations agree; marginal likelihoods differ.")
+  for (nm in c("fracMixF", "fracMixN", "fracMixObs", "stockWeightModel", "catchWeightModel", "matureModel", "mortalityModel", "logNMeanAssumption")) {
     add("additional model option", nm, if (isTRUE(all(conf[[nm]] == 0))) "supported" else "unsupported",
-        if (nm == "initState") 'N_settings$init = "free"; no starting-state density' else "zero/off option",
+        "zero/off option",
         "Only the zero/off option is matched; nonzero values require a separate mathematical mapping.")
   }
   add("density-dependent q", "keyQpow", if (isTRUE(all(conf$keyQpow < 0))) "supported" else "unsupported",
@@ -313,8 +320,9 @@ sam_tam_assumptions <- function(x) {
 #' calls the saved optimizer or TMB object and does not require
 #' \pkg{stockassessment}. Missing outputs remain explicitly unavailable.
 #'
-#' @param fit Saved SAM fitted list containing `data`, `conf`, `pl`, and optionally
-#'   `rep` and `sdrep$value`. Initial parameter objects are not fitted references.
+#' @param fit Saved SAM fitted list containing `data`, `conf`, `pl`, and `opt`
+#'   with a finite objective, and optionally `rep` and `sdrep$value`.
+#'   Initial parameter objects are not fitted references.
 #' @param provenance Text identifying the public fitted file and source revision.
 #' @return A list with `tables`, `availability`, and `provenance`. Tables include
 #'   N and F at age, q, reported SSB/recruitment/Fbar, and observed/predicted catch
@@ -331,7 +339,9 @@ sam_tam_assumptions <- function(x) {
 #' @export
 sam_reference <- function(fit, provenance = "unspecified saved SAM fit") {
   required <- c("data", "conf", "pl", "opt")
-  if (!is.list(fit) || !all(required %in% names(fit))) {
+  if (!is.list(fit) || !all(required %in% names(fit)) ||
+      !is.list(fit$opt) || length(fit$opt$objective) != 1L ||
+      !is.finite(fit$opt$objective)) {
     cli::cli_abort("Supply a saved fitted SAM list with data, conf, pl, and opt; initial parameters are not reference estimates.")
   }
   years <- fit$data$years

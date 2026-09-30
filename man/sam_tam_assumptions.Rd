@@ -26,6 +26,10 @@ keys, with one coefficient per block (or an intercept for a single block).
 Formulas do not couple latent F states or create process/observation covariance.
 Shared catch/index SD keys require one parameter across two tinyAM parameter
 vectors and therefore are only partially supported.
+SAM integrates initial abundance states even without an initial-state density;
+tinyAM's free initializer estimates initial abundance and recruitment as fixed
+parameters. Their conditional state equations agree but marginal likelihoods
+differ, so this boundary treatment is only partially supported.
 
 The audit targets standard Gaussian SAM models. It checks enabled mixtures,
 density-dependent q, scaling, initial-state priors, biological process models,

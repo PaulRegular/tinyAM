@@ -7,8 +7,9 @@
 sam_reference(fit, provenance = "unspecified saved SAM fit")
 }
 \arguments{
-\item{fit}{Saved SAM fitted list containing \code{data}, \code{conf}, \code{pl}, and optionally
-\code{rep} and \code{sdrep$value}. Initial parameter objects are not fitted references.}
+\item{fit}{Saved SAM fitted list containing \code{data}, \code{conf}, \code{pl}, and \code{opt}
+with a finite objective, and optionally \code{rep} and \code{sdrep$value}.
+Initial parameter objects are not fitted references.}
 
 \item{provenance}{Text identifying the public fitted file and source revision.}
 }

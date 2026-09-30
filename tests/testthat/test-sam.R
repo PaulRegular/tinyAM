@@ -80,6 +80,7 @@ test_that("assumption audit separates formula sharing from state and covariance"
     expect_identical(status(x, nm), "supported", info = nm)
   }
   expect_identical(status(x, "fbarRange"), "partially_supported")
+  expect_identical(status(x, "initState"), "partially_supported")
   expect_identical(status(x, "unknownOption"), "not_checked")
   x$data$nm[1, 1] <- 0
   expect_identical(status(x, "nm.dat"), "unsupported")
@@ -118,9 +119,18 @@ test_that("fixed q cells also have an exact formula mapping", {
   row <- audit[audit$sam_setting == "keyLogFpar", ]
   expect_identical(row$tam_status, "supported")
   expect_identical(row$tam_mapping, "index_settings$q_form = ~ 0 + q_key_0")
+  dat <- make_dat(obs, ages = 1:3, years = 2000:2002,
+    index_settings = list(q_form = ~ 0 + q_key_0, sd_form = ~ 0 + sd_block, fill_missing = FALSE))
+  expect_equal(unname(exp(drop(dat$q_modmat %*% log(0.4)))),
+               ifelse(dat$obs$index$q_key == -1, 1, 0.4))
   x$conf$keyLogFpar[,] <- -1
   audit <- sam_tam_assumptions(x)
   expect_identical(audit$tam_mapping[audit$sam_setting == "keyLogFpar"], "index_settings$q_form = ~ 0")
+  dat <- make_dat(sam_to_tam_obs(x), ages = 1:3, years = 2000:2002,
+    index_settings = list(q_form = ~ 0, sd_form = ~ 0 + sd_block, fill_missing = FALSE))
+  expect_equal(ncol(dat$q_modmat), 0)
+  obj <- RTMB::MakeADFun(function(p) nll_fun(p, dat), make_par(dat), silent = TRUE)
+  expect_true(is.finite(obj$fn(obj$par)))
 })
 
 test_that("unsupported fleets and executable attributes cannot be silently converted", {
@@ -148,7 +158,7 @@ test_that("unsupported fleets and executable attributes cannot be silently conve
 
 test_that("saved reference extraction maps fitted states and stored predictions", {
   x <- sam_fixture()
-  fit <- list(conf = x$conf, opt = list(convergence = 0),
+  fit <- list(conf = x$conf, opt = list(convergence = 0, objective = 10),
     data = list(years = 2000:2002, fleetTypes = c(0, 2, 2),
       aux = matrix(c(2000, 1, 1, 2000, 2, 1), 2, 3, byrow = TRUE),
       logobs = log(c(10, 5))),
@@ -172,4 +182,6 @@ test_that("saved reference extraction maps fitted states and stored predictions"
   expect_true(all(is.na(ref$tables$catch$pred)))
   expect_false(ref$availability$available[ref$availability$quantity == "observation_predictions"])
   expect_error(sam_reference(list(logN = 1)), "initial parameters")
+  fit$opt <- NA # sam.fit(run=FALSE) is not a fitted reference
+  expect_error(sam_reference(fit), "initial parameters")
 })
