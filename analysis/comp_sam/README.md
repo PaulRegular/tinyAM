@@ -1,180 +1,87 @@
-# SAM input bridge and compatibility audit
+# Compare a fitted SAM assessment with tinyAM
 
-Translating SAM data does not reproduce a SAM assessment. This branch separates
-input conversion, mathematical compatibility, and extraction of public reference
-results. It does not alter tinyAM's model or defaults.
-
-The first case is North Sea cod from the public
-[fishfollower/SAM repository](https://github.com/fishfollower/SAM), pinned to
-`c6cfd035c7de59f7b3421dde31901efbca4cb0e8`. Inputs and explicit configuration
-changes are in `testmore/nscod/`. A fitted regression-test object is also public
-at `stockassessment/tests/nscod/fit.expected.Rdata`; its provenance and agreement
-with the selected case must be checked before comparison. It is a repository
-example, not necessarily a current ICES advice assessment.
-
-Source review covers `stockassessment/R/reading.R` (`read.ices`, `read.surveys`,
-`read.data.files`, `setup.sam.data`), `conf.R` (`defcon`, `loadConf`), `run.R`
-(`sam.fit`), `tables.R`, and the C++ implementations under
-`stockassessment/inst/include/SAM/`. The
-[current package manual](https://fishfollower.r-universe.dev/stockassessment/doc/manual.html)
-is a secondary reference; source resolves discrepancies with older documentation.
-
-The bridge must preserve these distinctions:
-
-- Survey values are divided by the row's effort denominator. Sampling time is
-  the mean of the two timing endpoints, as in `setup.sam.data`.
-- Negative survey entries represent missing values; explicit zeros remain zeros
-  in the translated observations. tinyAM later treats zero catch/index values
-  as missing, like SAM's setup step.
-- q and observation-SD grouping can use factor columns and formulas. SD sharing
-  across catch and index tables cannot be enforced by their separate parameter
-  vectors.
-- Sharing a mean through a formula does not share a latent F state. SAM's
-  correlated random-walk innovations are also different from tinyAM's stationary
-  AR1 process.
-- SAM's Fbar is an arithmetic average over its configured ages; tinyAM's
-  reported F_bar is abundance weighted. Compare arithmetic Fbar separately.
-- Spawning-time mortality and catch weight must be retained as source metadata;
-  they must not silently replace tinyAM's beginning-year SSB or stock-weight
-  yield conventions.
-
-No installed `stockassessment` package is required. Offline fixtures will test
-the supported file formats and mappings. Public inputs will be downloaded by a
-pinned, reproducible workflow; tests must not access the internet.
-
-## Run the example
-
-From the repository root, after installing tinyAM (or loading the development
-package with `pkgload::load_all()`):
+This workflow starts from `stockassessment::fitfromweb("WKCOD_combined_99")`.
+It does not reconstruct or refit SAM, compare likelihood equality, or change
+any tinyAM model equations.
 
 ```r
-source("analysis/comp_sam/001_download.R")
-source("analysis/comp_sam/002_nscod.R")
-# Optional: validate and refit with an installed stockassessment package.
-source("analysis/comp_sam/003_validate_sam.R")
+sam_fit <- stockassessment::fitfromweb("WKCOD_combined_99")
+tam_obs <- sam_to_tam_obs(sam_fit)
+settings <- sam_to_tam_settings(sam_fit)
+audit <- sam_to_tam_audit(sam_fit, settings)
+# Explicitly select a complete biological input period before fitting.
+tam_fit <- do.call(fit_tam, c(list(obs = tam_obs), settings))
+sam_comparison <- sam_to_tam_comparison(sam_fit)
+vis_tam(model_list = list(SAM = sam_comparison, tinyAM = tam_fit))
 ```
 
-The first script verifies 14 source files against `source_manifest.csv`, including
-the public fitted object. Raw downloads and serialized working objects are
-ignored by Git; readable input, audit, reference and diagnostic CSVs are retained
-under `results/`. `nscod.cfg` records the pinned `defcon()` defaults with the
-explicit changes in `testmore/nscod/script.R`. It excludes the alternate
-`scriptcc.R` prediction-dependent observation-variance model.
+Install/load this branch and run `source("analysis/comp_sam/001_compare.R")`
+from the repository root for the complete worked case. The script selects
+**1983�2022**, because original maturity is absent for 1963�1982. It subsets
+all input tables explicitly. Neither missing observations nor maturity are
+replaced using SAM fitted parameters.
 
-The core bridge reads ICES table codes 1/2/3/5, standard survey blocks, and SAM's
-`$field` configuration files. Unknown configuration fields are retained and
-marked `not_checked`; absent settings are never filled with inferred defaults.
-Executable file attributes, unsupported observation fleets and silent catch-fleet
-aggregation are deliberately excluded. This is a first-case reader, not a
-replacement for every SAM import format.
+The reference is cached in `cache/`, with retrieval provenance and an RDS
+checksum in CSV files. To retrieve a new reference, explicitly remove the
+cached reference first. Reference and fitted RDS files and generated HTML
+assets are ignored by Git; scripts and exported review tables are retained.
+SAM estimates initialize the tinyAM optimizer without fixing any coefficients
+or states. Settings are unchanged after audit: IID survival errors, free
+initial abundance, independent temporal F random-walk increments, supplied
+original M, and exact q/observation-SD sharing within observation tables.
 
-## Exact mappings for this case
+## Read the outputs
 
-The modeled period is 1963–2015, ages 1–6, with age 6 a population plus group.
-Catch observations end in 2014; the missing 2015 catch is represented by `NA`.
-Both surveys retain their original age ranges, fleet identity and sampling time.
-Biological input grids include 2015. Source values and units are unchanged;
-these files do not independently establish physical units, so no unit conversion
-is assumed.
+- `results/SAM_tinyAM_dashboard.html`: native population trends, age-specific
+  states, q, catch/survey predictions, parameters and available intervals.
+- `results/common_definitions.html`: shared-definition population trends.
+- `results/settings.csv` and `audit.csv`: applied settings and all reviewed
+  assumptions, including unsupported features and unresolved legacy fields.
+- `results/diagnostics.csv`: optimizer status, gradient, Hessian and uncertainty
+  diagnostics, elapsed time, and parameter counts.
+- `results/trend_agreement.csv`: descriptive relative differences, trend
+  correlation and terminal-year differences. No agreement threshold or ranking.
+- Other CSVs retain original inputs, native reports with uncertainty, predictions,
+  q comparisons, shared-definition trends, and N/F comparisons by age.
 
-| SAM input/assumption | tinyAM mapping |
-|---|---|
-| `cn.dat` | `catch$obs`, with year/age/fleet metadata |
-| `survey.dat` | `index$obs`, survey identity, effort and mean timing |
-| `sw.dat`, `mo.dat` | `weight$obs`, `maturity$obs` |
-| `nm.dat` | `weight$M_assumption`; `M_settings = list(process = "off", mu_form = NULL, mu_supplied = ~ M_assumption)` |
-| `keyLogFpar` | `q_block` from global keys; `q_form = ~ 0 + q_block` (nine coefficients) |
-| `keyVarObs` | `sd_block` from global keys; `sd_form = ~ 0 + sd_block` (three catch and four index coefficients) |
-| `keyVarLogN = c(0,1,1,1,1,1)` | IID survival residuals with one SD; separate recruitment SD |
-| recruitment code 0 | Random walk on log recruitment |
-| independent LN observation errors | Existing independent lognormal likelihood |
-| zero spawning-mortality timing | Beginning-year SSB |
+Common SSB uses original maturity, weight and spawning timing for both fitted
+N/F surfaces. Common Fbar is arithmetic over ages 2�4. Common catch biomass
+uses original catch weights (unavailable for 2022). No SEs or confidence
+intervals are invented for recomputed common summaries. Native confidence
+intervals retain each model's own definitions and uncertainty calculation.
+`se_scale = "log"` means the estimate and interval are natural-scale, while
+`se` is a log-scale standard error; it approximates a CV only for small errors.
 
-The reusable converter also handles q fixed at 1: active `-1` q cells receive
-zero rows in numeric `q_key_*` indicator columns. A formula without an intercept
-then estimates only the other blocks. With every q fixed, `q_form = ~ 0` gives
-zero log q. Unit tests exercise these mappings through `make_dat()`.
+## Interpretation of the first case
 
-For this case there is no shared observation-SD key across catch and surveys.
-Such sharing would be only partially supported because tinyAM estimates separate
-catch and index coefficient vectors. Shared q across surveys is exact. Neither
-`mu_form` nor `mono()` can reproduce equality of two fitted latent F states or
-correlation between process innovations.
+The cached SAM reference records optimizer code 1 ("false convergence (8)")
+despite a stored maximum fixed-effect gradient of 8.4e-9, a positive-definite
+Hessian and finite reported SEs. These native diagnostics are retained; SAM is
+not refitted or silently certified as converged.
 
-## Barriers to exact assessment replication
+The translated tinyAM fit converged (code 0, maximum absolute gradient 0.000403,
+positive-definite Hessian and successful uncertainty estimation). Shared-definition
+SSB and recruitment follow SAM closely in trend (correlations 0.997 and 0.998).
+Their mean absolute relative differences are 3.7% and 4.5%; 2022 tinyAM estimates
+are 13.1% and 2.3% lower, respectively. Arithmetic Fbar has correlation 0.970,
+mean absolute relative difference 9.4%, and is **51.7% higher in 2022**.
+Predicted catch biomass has correlation 0.997, but differs by +34.8% in its last
+available year, 2021. Agreement in long-term trends does not establish agreement
+in recent fishing mortality or projections.
 
-Three active process/observation assumptions in the selected case are unsupported:
+SAM uses correlated F increments and estimated maturity in this case; the
+approximation uses independent increments and original maturity. SAM's initial
+states are integrated, while tinyAM estimates free first-year abundance as fixed
+parameters. The SAM reference also conditions on 1963�1982 data, whereas the
+explicit tinyAM fit begins in 1983. Missing legacy `initState` and
+`logNMeanAssumption` settings remain unresolved in the audit. Native Fbar differs
+in weighting: SAM is arithmetic, tinyAM abundance-weighted. These differences
+are documented explanations to investigate, not demonstrated causal allocations
+of the observed discrepancies. No likelihood values or AICs are used to rank
+models with different inputs and likelihoods.
 
-1. `corFlag = 2`: AR1 correlation across the **F random-walk increments**.
-   tinyAM's `rw` has independent increments; its stationary `ar1` process is a
-   different model.
-2. `keyVarF = c(0,1,1,1,1,1)`: two F-process SDs. tinyAM currently has one.
-3. Estimated catch scaling in 1993–2005: thirteen shared scale parameters.
-   Adjusting raw observations by unknown fitted scales would not replicate this
-   likelihood.
-
-Initial abundance is **partially supported**, rather than fully equivalent:
-`initState = 0` and `N_settings$init = "free"` both omit an initial-state density.
-However, SAM integrates all first-year log N states, whereas tinyAM estimates
-`log_r0` and free `log_n0` as fixed parameters. The conditional population
-equations agree, but the fitted marginal likelihood differs. This additional
-inference distinction must be addressed before claiming exact replication.
-
-`002_nscod.R` constructs only an explicitly simplified structural tinyAM model:
-independent F increments, one F SD and no catch scaling. It retains the raw data,
-q/observation-SD blocks, supplied M and IID N process. Its initial joint objective
-and gradient are finite. It is **not optimized** and its initial objective must
-not be compared with SAM's fitted marginal objective.
-
-Two reported-quantity differences remain even where observation/population
-equations agree: SAM reports arithmetic Fbar over ages 2–4, whereas tinyAM reports
-an abundance-weighted F_bar; SAM uses catch mean weight for catch biomass, whereas
-tinyAM yield uses stock mean weight. Catch weight and spawning timing remain
-metadata for explicit calculations. They do not silently change tinyAM summaries.
-
-## Public and current SAM reference results
-
-`sam_reference()` extracts fitted N/F/q, stored reported SSB/recruitment/Fbar, and
-stored observation predictions. It never calls an old serialized optimizer and
-rejects unfitted starting objects. `SAM_*.csv` contains the public saved reference;
-`reference_availability.csv` records which outputs were stored. N/F table `obs`
-columns contain fitted state estimates, not measurements. No uncertainty is
-invented during extraction.
-
-The installed package was **stockassessment 0.12.0**, built from the same pinned
-source commit. `003_validate_sam.R` checks inputs against `read.ices()`, constructs
-data with `setup.sam.data()`, checks settings with `loadConf()`, and compares both
-references with `ntable()`, `faytable()`, `qtable()`, `ssbtable()`, `rectable()` and
-`fbartable()`. SAM's `qtable()` returns log q; the bridge reports its exponential.
-All checks passed.
-
-The fresh fit used SAM's default optimizer and three Newton steps:
-
-| Diagnostic | Result |
-|---|---|
-| Optimizer | code 0, relative convergence (4) |
-| Objective | 145.516678075642 |
-| Maximum absolute gradient | 4.07 × 10⁻¹¹ |
-| SD estimates finite | yes |
-| Fixed-effect Hessian positive definite | yes |
-| Public saved objective | 145.516678075519 |
-| Largest absolute SSB difference from saved fit | 4.88 × 10⁻⁶, in source units |
-
-Current outputs are named `SAM_current_*.csv`; diagnostics include package
-version/source, elapsed fit time and comparison with the saved fit. This numerical
-agreement supports the input interpretation; it is not evidence of equivalence
-between SAM and the simplified tinyAM model.
-
-Scientific decisions for a subsequent comparison are whether to retain the F
-innovation correlation, two F-process SDs and catch scaling, how to handle the
-initial-state integration, and which biomass and Fbar definitions to compare.
-Changing the three process/observation assumptions together would obscure the
-cause of differences. This branch documents those decisions without changing
-tinyAM's core model.
-
-## Validation
-
-All 93 offline SAM assertions passed. The final built-package full suite passed
-1,154 assertions with no failures or warnings and one interactive-only skip.
-`R CMD check --no-manual` returned **Status: OK**. See [validation.md](validation.md)
-for the environment, integration checks and practical limitations.
+Next scientific questions are whether correlated F increments account for the
+terminal-age F differences, how the longer SAM history influences 1983 boundary
+states, and how fitted versus original maturity affects native SSB. Resolving
+these questions requires explicitly controlled sensitivity analyses; this bridge
+does not add new model capabilities or undocumented rescue adjustments.

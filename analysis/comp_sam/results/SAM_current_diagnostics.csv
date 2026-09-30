@@ -1,2 +1,0 @@
-"package_version","source_commit","convergence","message","objective","max_abs_gradient","sdreport_success","positive_definite_hessian","elapsed_seconds","historical_objective","max_abs_SSB_difference"
-"0.12.0","c6cfd035c7de59f7b3421dde31901efbca4cb0e8",0,"relative convergence (4)",145.516678075642,4.06736866409574e-11,TRUE,TRUE,2.08000000000001,145.516678075519,4.87943179905415e-06
