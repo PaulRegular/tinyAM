@@ -117,6 +117,10 @@ test_that("tidy_obs_pred builds residual diagnostics for catch and index", {
 })
 
 test_that("tidy_obs_pred adds osa residuals", {
+  # Regression: loading SAM adds a second TMB DLL; residuals must still work.
+  if (requireNamespace("stockassessment", quietly = TRUE)) {
+    expect_true("stockassessment" %in% loadedNamespaces())
+  }
   n_observed <- length(fit$dat$observed)
   out <- tidy_obs_pred(fit, add_osa_res = TRUE, trace = FALSE, parallel = TRUE, reverse = FALSE)
   expect_true("osa_res" %in% names(out$catch))

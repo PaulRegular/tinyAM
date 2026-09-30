@@ -34,6 +34,8 @@ have missing residuals. These conditional residuals do not account for the
 uncertainty in fitted states. Optional one-step-ahead residuals use a
 different predictive calculation and are not currently supported with filled
 missing observations. See \link{tinyAM-model} for the observation equations.
+When stockassessment is loaded, one-step residuals run sequentially: the
+upstream TMB parallel helper cannot select between SAM and RTMB libraries.
 }
 \examples{
 fit <- fit_tam(

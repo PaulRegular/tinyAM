@@ -14,12 +14,13 @@ vis_tam(
 )
 }
 \arguments{
-\item{...}{One or more fitted TAM objects (as returned by \code{\link[=fit_tam]{fit_tam()}}).
+\item{...}{One or more TAM fits or reporting references.
 Supply these or \code{model_list}, not both. When supplying models
 through \code{...}, their object names are used to label models
 (even when a single model is supplied).}
 
-\item{model_list}{A \strong{named list} of fitted TAM objects (e.g., \code{fits} list returned by
+\item{model_list}{A \strong{named list} of fitted TAM objects or reporting references
+from \code{\link[=sam_to_tam_comparison]{sam_to_tam_comparison()}} (e.g., \code{fits} list returned by
 \code{\link[=fit_retro]{fit_retro()}}). Names are used to label models.}
 
 \item{interval}{Confidence level passed to \code{\link[=tidy_pop]{tidy_pop()}} and \code{\link[=tidy_par]{tidy_par()}} for interval construction. Default \code{0.95}.}
@@ -45,6 +46,9 @@ Supply models via \code{...} or \code{model_list}, but not both. The models must
 form a uniquely named list so they can be labeled in the dashboard.
 Additional arguments for \code{\link[rmarkdown:render]{rmarkdown::render()}} can be passed through
 \code{render_args}, which must itself be a (named) list.
+Reporting references from \code{\link[=sam_to_tam_comparison]{sam_to_tam_comparison()}} may be mixed
+with tinyAM fits. Their native definitions and unavailable outputs
+are identified in the dashboard; they are not refittable TAM objects.
 }
 \examples{
 

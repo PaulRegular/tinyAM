@@ -100,3 +100,17 @@ test_that("vis_tam errors when supplied objects are not TAM fits", {
     "All supplied models must be"
   )
 })
+
+
+test_that("mixed SAM and tinyAM dashboards render without fabricated reports", {
+  skip_if_not_installed("stockassessment")
+  ref <- sam_to_tam_comparison(sam_fixture())
+  file <- tempfile(fileext = ".html")
+  expect_no_error(vis_tam(model_list = list(SAM = ref, tinyAM = N_dev),
+    output_file = file, open_file = FALSE, render_args = list(quiet = TRUE)))
+  expect_true(file.exists(file))
+  expect_true(any(grepl("SAM reference", readLines(file, warn = FALSE), fixed = TRUE)))
+  ref$source_fit$sdrep <- NULL
+  expect_no_error(vis_tam(model_list = list(SAM = ref), output_file = file,
+    open_file = FALSE, render_args = list(quiet = TRUE)))
+})

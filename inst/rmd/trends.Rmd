@@ -8,25 +8,25 @@ Row {.tabset}
 ### Abundance
 
 ```{r}
-plot_trend(pop$abundance, color = ~model, legendgroup = ~model, colors = cols, ylab = "Abundance")
+plot_report(pop$abundance, color = ~model, legendgroup = ~model, colors = cols, ylab = "Abundance")
 ```
 
 ### Recruitment
 
 ```{r}
-plot_trend(pop$recruitment, color = ~model, legendgroup = ~model, colors = cols, ylab = "Recruitment")
+plot_report(pop$recruitment, color = ~model, legendgroup = ~model, colors = cols, ylab = "Recruitment")
 ```
 
 ### SSB
 
 ```{r}
-plot_trend(pop$ssb, color = ~model, legendgroup = ~model, colors = cols, ylab = "SSB")
+plot_report(pop$ssb, color = ~model, legendgroup = ~model, colors = cols, ylab = "SSB")
 ```
 
 ### Abundance-at-age
 
 ```{r}
-plot_trend(pop$N, color = ~model, legendgroup = ~model, colors = cols, frame = ~age, ylab = "N")
+plot_report(pop$N, color = ~model, legendgroup = ~model, colors = cols, frame = ~age, ylab = "N")
 ```
 
 
@@ -43,40 +43,44 @@ Row {.tabset}
 ### Average F
 
 ```{r}
-plot_trend(pop$F_bar, color = ~model, legendgroup = ~model, colors = cols, ylab = "Average F")
+plot_report(pop$F_bar, color = ~model, legendgroup = ~model, colors = cols, ylab = "Average F")
 ```
 
 ### F-at-age
 
 ```{r}
 mu_F <- pop$mu_F
-names(mu_F)[names(mu_F) == "est"] <- "mu"
-mu_F$mu[mu_F$mu == 1] <- NA
-F <- merge(pop$F, mu_F, by = c("model", "year", "age", "is_proj"))
-plot_trend(F, color = ~model, legendgroup = ~model, colors = cols, frame = ~age, ylab = "F") |> 
+if (!is.null(mu_F)) {
+  names(mu_F)[names(mu_F) == "est"] <- "mu"
+  mu_F$mu[mu_F$mu == 1] <- NA
+}
+F <- if (is.null(mu_F)) transform(pop$F, mu = NA_real_) else
+  merge(pop$F, mu_F, by = c("model", "year", "age", "is_proj"), all.x = TRUE)
+plot_report(F, color = ~model, legendgroup = ~model, colors = cols, frame = ~age, ylab = "F") |>
   add_lines(y = ~mu, linetype = I(2), showlegend = FALSE, name = "mu", line = list(width = 0.5)) 
 ```
 
 ### Selectivity
 
 ```{r}
-plot_trend(pop$S, x = ~age, xlab = "Age", ylab = "Selectivity", frame = ~year,
+plot_report(pop$S, x = ~age, xlab = "Age", ylab = "Selectivity", frame = ~year,
            color = ~model, legendgroup = ~model, colors = cols)
 ```
 
 ### Average M
 
 ```{r}
-plot_trend(pop$M_bar, color = ~model, legendgroup = ~model, colors = cols, ylab = "Average M")
+plot_report(pop$M_bar, color = ~model, legendgroup = ~model, colors = cols, ylab = "Average M")
 ```
 
 ### M-at-age
 
 ```{r}
 mu_M <- pop$mu_M
-names(mu_M)[names(mu_M) == "est"] <- "mu"
-M <- merge(pop$M, mu_M, by = c("model", "year", "age", "is_proj"))
-plot_trend(M, color = ~model, legendgroup = ~model, colors = cols, frame = ~age, ylab = "M") |> 
+if (!is.null(mu_M)) names(mu_M)[names(mu_M) == "est"] <- "mu"
+M <- if (is.null(mu_M)) transform(pop$M, mu = NA_real_) else
+  merge(pop$M, mu_M, by = c("model", "year", "age", "is_proj"), all.x = TRUE)
+plot_report(M, color = ~model, legendgroup = ~model, colors = cols, frame = ~age, ylab = "M") |>
   add_lines(y = ~mu, linetype = I(2), showlegend = FALSE, name = "mu", line = list(width = 0.5)) 
 ```
 

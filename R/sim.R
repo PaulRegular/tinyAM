@@ -201,6 +201,7 @@ sim_tam <- function(
     globals = NULL,
     seed = TRUE
 ) {
+  fit <- .require_tam_fit(fit, arg = "fit")
   par_uncertainty <- match.arg(par_uncertainty)
 
   draw_par <- switch(

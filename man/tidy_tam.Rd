@@ -51,6 +51,9 @@ tables together; all fixed parameters together; each random-effect block togethe
 }
 \details{
 \strong{Inputs:} Pass models through \code{...} or via \verb{model_list =}.
+Reporting references from \code{\link[=sam_to_tam_comparison]{sam_to_tam_comparison()}} are also accepted.
+Their source tables are recalculated at \code{interval}; native definitions and
+missing uncertainty are retained without constructing a tinyAM optimizer.
 \itemize{
 \item If \code{...} supplies \strong{one} model, \strong{no label} column is added.
 \item If \code{...} supplies \strong{>1} model, a label column is added using the object/expression names from \code{...}.

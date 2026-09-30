@@ -4,10 +4,10 @@
 \alias{sam_to_tam_obs}
 \title{Translate standard SAM observations for tinyAM}
 \usage{
-sam_to_tam_obs(x)
+sam_to_tam_obs(sam_fit)
 }
 \arguments{
-\item{x}{Source list returned by \code{\link[=read_sam_files]{read_sam_files()}}.}
+\item{sam_fit}{A fitted SAM object, for example from \code{stockassessment::fitfromweb()}.}
 }
 \value{
 A standard \code{obs} list with \code{catch}, \code{index}, \code{weight}, and \code{maturity}.
@@ -17,7 +17,7 @@ natural mortality (\code{M_assumption}), and spawning timing are retained.
 \description{
 Use the same catch, survey, and biological inputs in tinyAM. Successful
 conversion does not imply that the two assessment models are equivalent;
-inspect \code{\link[=sam_tam_assumptions]{sam_tam_assumptions()}} before constructing a model.
+inspect \code{\link[=sam_to_tam_audit]{sam_to_tam_audit()}} before constructing a model.
 }
 \details{
 Exactly one type-0 catch fleet and type-2 age-specific surveys are supported.
@@ -26,8 +26,9 @@ silently changing population or observation equations.
 
 A full catch grid includes \code{NA} for unobserved years, including terminal survey
 years. Biological values must exist for each modeled year and age; they are
-never extrapolated. Negative catch entries become missing; zero catch and
-survey values remain zero. \code{q_block} and \code{sd_block} use the original global SAM
+never extrapolated or filled. Missing biological inputs require an explicit
+complete fitting period. SAM has already removed nonpositive observations;
+their original values and effort denominators cannot be recovered. \code{q_block} and \code{sd_block} use the original global SAM
 keys, preserving sharing across surveys. Separate tinyAM catch/index SD
 parameter vectors cannot enforce sharing between those two components.
 When q keys include \code{-1} (fixed q = 1), additional \code{q_key_0}, \code{q_key_1}, etc.

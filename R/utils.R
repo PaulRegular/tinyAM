@@ -62,7 +62,7 @@
       cli::cli_abort("No models supplied.")
     }
 
-    if (length(dots) == 1L && is.list(dots[[1]]) && !.is_tam_fit(dots[[1]])) {
+    if (length(dots) == 1L && is.list(dots[[1]]) && !.is_reporting_fit(dots[[1]])) {
       fits <- dots[[1]]
     } else {
       current_names <- names(dots)
@@ -82,14 +82,16 @@
   arg_label <- if (using_dots) "models" else list_arg_name
   fits <- .validate_named_list(fits, arg = arg_label)
 
-  is_fit <- vapply(fits, .is_tam_fit, logical(1))
+  is_fit <- vapply(fits, .is_reporting_fit, logical(1))
   if (any(!is_fit)) {
     bad <- names(fits)[!is_fit]
     cli::cli_abort(c(
-      "All supplied models must be {.cls tam_fit} objects produced by {.fn fit_tam}.",
+      "All supplied models must be {.cls tam_fit} objects or {.cls tam_comparison} reporting objects.",
       "x" = "Problematic element{?s}: {cli::format_inline('{.val {bad}}')}"
     ))
   }
 
   list(fits = fits, using_dots = using_dots)
 }
+
+.is_reporting_fit <- function(x) .is_tam_fit(x) || inherits(x, "tam_comparison")

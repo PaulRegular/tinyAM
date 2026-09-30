@@ -104,7 +104,7 @@ plot_trend <- function(
   p <- do.call(plotly::plot_ly, c(list(data = data, x = x), args))
   max_y <- max(model.frame(y, data = data), na.rm = TRUE) * 1.05
 
-  has_ci <- add_intervals && all(c("lwr", "upr") %in% names(data))
+  has_ci <- add_intervals && all(c("lwr", "upr") %in% names(data)) && any(is.finite(data$upr))
   if (has_ci) {
     max_y <- max(data$upr, na.rm = TRUE) * 1.05
     p <- p |>

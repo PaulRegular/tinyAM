@@ -84,6 +84,8 @@ tidy_mat <- tidy_array
 #' uncertainty in fitted states. Optional one-step-ahead residuals use a
 #' different predictive calculation and are not currently supported with filled
 #' missing observations. See [tinyAM-model] for the observation equations.
+#' When stockassessment is loaded, one-step residuals run sequentially: the
+#' upstream TMB parallel helper cannot select between SAM and RTMB libraries.
 #'
 #' @return
 #' A named list with two data frames:
@@ -117,7 +119,13 @@ tidy_obs_pred <- function(fit, add_osa_res = FALSE, ...) {
   obs_pred$index$std_res <- with(obs_pred$index, ifelse(obs == 0, NA, (log(obs) - log(pred)) / sd))
 
   if (add_osa_res) {
-    osa_res <- RTMB::oneStepPredict(fit$obj, method = "oneStepGaussianOffMode", ...)
+    args <- list(...)
+    if (isTRUE(args$parallel) && "stockassessment" %in% loadedNamespaces()) {
+      args$parallel <- FALSE
+      cli::cli_inform("Calculating one-step residuals sequentially while SAM and RTMB are loaded.")
+    }
+    osa_res <- do.call(RTMB::oneStepPredict,
+      c(list(obj = fit$obj, method = "oneStepGaussianOffMode"), args))
     split_osa_res <- split(osa_res$residual, fit$dat$obs_map$type[fit$dat$obs_map$is_observed])
     split_is_observed <- split(fit$dat$obs_map$is_observed, fit$dat$obs_map$type)
     obs_pred$catch$osa_res <- obs_pred$index$osa_res <- NA
@@ -620,6 +628,9 @@ stack_nested <- function(x, label = "model",
 #'
 #' @details
 #' **Inputs:** Pass models through `...` or via `model_list =`.
+#' Reporting references from [sam_to_tam_comparison()] are also accepted.
+#' Their source tables are recalculated at `interval`; native definitions and
+#' missing uncertainty are retained without constructing a tinyAM optimizer.
 #'
 #' - If `...` supplies **one** model, **no label** column is added.
 #' - If `...` supplies **>1** model, a label column is added using the object/expression names from `...`.
@@ -678,6 +689,20 @@ tidy_tam <- function(..., model_list = NULL, interval = 0.95, label = "model", l
   fits_info <- .dots_or_list(dots, dot_expr, model_list = model_list, list_arg_name = "model_list")
   model_list <- fits_info$fits
   using_dots <- fits_info$using_dots
+
+  # Reporting references have no RTMB optimizer; rebuild only their source tables.
+  model_list <- lapply(model_list, function(fit) {
+    if (inherits(fit, "tam_comparison")) {
+      tabs <- .sam_comparison_tables(fit$source_fit, interval)
+      # Respect an explicitly selected reporting period, while retaining the source fit.
+      for (nm in c("pop", "obs_pred", "random_par")) {
+        tabs[[nm]] <- lapply(tabs[[nm]], function(d) d[d$year %in% fit$dat$years, , drop = FALSE])
+        attr(tabs[[nm]], "interval") <- interval
+      }
+      fit[names(tabs)] <- tabs
+    }
+    fit
+  })
 
   # add label if: multiple via ... OR any named model_list usage
   add_label <- (using_dots && length(model_list) > 1L) || (!using_dots)

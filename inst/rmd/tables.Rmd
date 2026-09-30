@@ -92,7 +92,7 @@ for (nm in names(random_par)) {
 
 ### Abundance
 
-```{r}
+```{r, eval = !is.null(pop$abundance)}
 table_link(pop$abundance, table_name = "abundance")
 d <- pop$abundance
 d$year <- as.character(d$year)
@@ -102,7 +102,7 @@ knitr::kable(d, digits = 0, format.args = list(big.mark = ","))
 
 ### Recruitment
 
-```{r}
+```{r, eval = !is.null(pop$recruitment)}
 table_link(pop$recruitment, table_name = "recruitment")
 d <- pop$recruitment
 d$year <- as.character(d$year)
@@ -112,7 +112,7 @@ knitr::kable(d, digits = 0, format.args = list(big.mark = ","))
 
 ### Spawning stock biomass
 
-```{r}
+```{r, eval = !is.null(pop$ssb)}
 table_link(pop$ssb, table_name = "ssb")
 d <- pop$ssb
 d$year <- as.character(d$year)
@@ -122,7 +122,7 @@ knitr::kable(d, digits = 0, format.args = list(big.mark = ","))
 
 ### Average F
 
-```{r}
+```{r, eval = !is.null(pop$F_bar)}
 table_link(pop$F_bar, table_name = "F_bar")
 d <- pop$F_bar
 d$year <- as.character(d$year)
@@ -131,7 +131,7 @@ knitr::kable(d, digits = 3)
 
 ### Average M
 
-```{r}
+```{r, eval = !is.null(pop$M_bar)}
 table_link(pop$M_bar, table_name = "M_bar")
 d <- pop$M_bar
 d$year <- as.character(d$year)

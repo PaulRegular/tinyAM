@@ -40,9 +40,9 @@
 #'
 #' Use the same catch, survey, and biological inputs in tinyAM. Successful
 #' conversion does not imply that the two assessment models are equivalent;
-#' inspect [sam_tam_assumptions()] before constructing a model.
+#' inspect [sam_to_tam_audit()] before constructing a model.
 #'
-#' @param x Source list returned by [read_sam_files()].
+#' @param sam_fit A fitted SAM object, for example from `stockassessment::fitfromweb()`.
 #' @return A standard `obs` list with `catch`, `index`, `weight`, and `maturity`.
 #'   Source fleet IDs, q/SD keys and factor blocks, plus-group flags, catch weight,
 #'   natural mortality (`M_assumption`), and spawning timing are retained.
@@ -53,8 +53,9 @@
 #'
 #' A full catch grid includes `NA` for unobserved years, including terminal survey
 #' years. Biological values must exist for each modeled year and age; they are
-#' never extrapolated. Negative catch entries become missing; zero catch and
-#' survey values remain zero. `q_block` and `sd_block` use the original global SAM
+#' never extrapolated or filled. Missing biological inputs require an explicit
+#' complete fitting period. SAM has already removed nonpositive observations;
+#' their original values and effort denominators cannot be recovered. `q_block` and `sd_block` use the original global SAM
 #' keys, preserving sharing across surveys. Separate tinyAM catch/index SD
 #' parameter vectors cannot enforce sharing between those two components.
 #' When q keys include `-1` (fixed q = 1), additional `q_key_0`, `q_key_1`, etc.
@@ -64,7 +65,8 @@
 #' `propF` and `propM` are metadata only. Stock mean weight supplies `weight$obs`;
 #' catch mean weight is retained as `catch_weight` and does not replace it.
 #' @export
-sam_to_tam_obs <- function(x) {
+sam_to_tam_obs <- function(sam_fit) {
+  x <- .sam_source(sam_fit)
   fleets <- x$fleets
   if (sum(fleets$fleet_type == 0) != 1L) {
     cli::cli_abort("Conversion requires one SAM catch fleet; multiple fleets cannot be silently combined.")
@@ -76,13 +78,19 @@ sam_to_tam_obs <- function(x) {
   conf <- x$conf
   bounds <- c(conf$minAge, conf$maxAge)
   if (!length(bounds)) bounds <- range(as.integer(colnames(x$data$catch[[1]])))
-  ages <- .sam_range(bounds, "configuration")
+  ages <- seq.int(bounds[1], bounds[2])
   if (any(fleets$min_age < min(ages) | fleets$max_age > max(ages))) {
     cli::cli_abort("Source fleet ages fall outside the configuration; explicit age reduction is required before conversion.")
   }
-  mats <- c(x$data$catch, x$data$surveys)
-  years <- seq.int(min(vapply(mats, function(m) min(as.integer(rownames(m))), integer(1))),
-                   max(vapply(mats, function(m) max(as.integer(rownames(m))), integer(1))))
+  pg <- conf$maxAgePlusGroup
+  if (length(pg) == nrow(fleets) && any(pg[fleets$fleet_type == 2] == 1 &
+                                      fleets$max_age[fleets$fleet_type == 2] < max(ages))) {
+    cli::cli_abort("Survey plus groups below the modeled terminal age cannot be translated faithfully.")
+  }
+  if (length(pg) && isTRUE(pg[which(fleets$fleet_type == 0)] == 0)) {
+    cli::cli_abort("tinyAM requires a terminal catch plus group; this SAM structure cannot be translated faithfully.")
+  }
+  years <- x$years
   grid <- expand.grid(year = years, age = ages)
   grid <- grid[order(grid$year, grid$age), ]
   rownames(grid) <- NULL
@@ -154,7 +162,9 @@ sam_to_tam_obs <- function(x) {
 #' covariance, and biological summaries. An input conversion is not an assessment
 #' replication. No fitting or automatic approximation is performed.
 #'
-#' @param x Source list returned by [read_sam_files()].
+#' @param sam_fit A fitted SAM object.
+#' @param settings Named `fit_tam()` arguments, normally from [sam_to_tam_settings()].
+#'   `NULL` audits the generated baseline.
 #' @return A data frame with `component`, `sam_setting`, `sam_value`, `tam_status`,
 #'   `tam_mapping`, and `notes`. Statuses are `supported`, `partially_supported`,
 #'   `unsupported`, or `not_checked`. Missing and unreviewed fields remain
@@ -174,9 +184,11 @@ sam_to_tam_obs <- function(x) {
 #' density-dependent q, scaling, initial-state priors, biological process models,
 #' and supplied observation attributes separately. Unknown fields are reported,
 #' so this table is not a universal SAM compatibility certificate.
-#' @seealso [sam_to_tam_obs()], [sam_reference()]
+#' @seealso [sam_to_tam_obs()], [sam_to_tam_comparison()]
 #' @export
-sam_tam_assumptions <- function(x) {
+sam_to_tam_audit <- function(sam_fit, settings = NULL) {
+  x <- .sam_source(sam_fit)
+  if (is.null(settings)) settings <- sam_to_tam_settings(sam_fit)
   conf <- x$conf
   fleets <- x$fleets
   nc <- sum(fleets$fleet_type == 0)
@@ -205,7 +217,7 @@ sam_tam_assumptions <- function(x) {
   add("catch fleets", "fleetTypes (catch)", if (nc == 1L) "supported" else "unsupported",
       "one type-0 catch table", "Multiple catch fleets cannot share tinyAM's single F surface without changing assumptions.", fleets$fleet_type[fleets$fleet_type %in% c(0, 1, 7)])
   add("survey fleets", "fleetTypes (survey)", if (ns > 0 && all(fleets$fleet_type %in% c(0, 2))) "supported" else "unsupported",
-      "index$survey and index$samp_time", "Type 2 only; timing is the mean of source endpoints, with row effort normalization.", fleets$fleet_type[fleets$fleet_type != 0])
+      "index$survey and index$samp_time", "Type 2 only; stored timing and already normalized observations are retained.", fleets$fleet_type[fleets$fleet_type != 0])
   fkeys <- conf$keyLogFsta
   frow <- if (is.matrix(fkeys) && nc == 1L) fkeys[fleets$fleet_type == 0, ] else numeric()
   f_ok <- length(frow) > 0 && !anyNA(frow) && all(frow >= 0) && !anyDuplicated(frow)
@@ -258,7 +270,7 @@ sam_tam_assumptions <- function(x) {
   add("stock weight", "sw.dat", "supported", "weight$obs", "Unchanged stock mean weight, with original source units.", x$data$sw)
   add("catch weight", "cw.dat", "partially_supported", "weight$catch_weight metadata",
       "Catch numbers use the same Baranov equation, but tinyAM yield uses stock weight; compare catch biomass using retained catch weight separately.", x$data$cw)
-  zero_timing <- !is.null(x$data$pf) && !is.null(x$data$pm) && all(x$data$pf == 0) && all(x$data$pm == 0)
+  zero_timing <- !is.null(x$data$pf) && !is.null(x$data$pm) && isTRUE(all(x$data$pf == 0)) && isTRUE(all(x$data$pm == 0))
   add("spawning timing", "propF/propM", if (zero_timing) "supported" else "unsupported",
       "weight$propF and weight$propM metadata", "SAM SSB includes exp(-F*propF-M*propM); tinyAM SSB is at the beginning of the year.",
       if (is.null(x$data$pf) || is.null(x$data$pm)) NULL else c(x$data$pf, x$data$pm))
@@ -270,13 +282,12 @@ sam_tam_assumptions <- function(x) {
       "inactive only when catch scaling is off", "Scaling years must not be replaced by fixed data adjustments to unknown fitted scales.")
   add("catch scaling keys", "keyParScaledYA", if (!length(conf$keyParScaledYA)) "supported" else "unsupported",
       "inactive only when catch scaling is off", "Keys share estimated scaling parameters across years/ages.")
-  obs_attributes <- unlist(lapply(c(x$data$catch, x$data$surveys), function(m)
-    intersect(names(attributes(m)), c("weight", "cov", "cov-weight", "cor", "part"))))
+  obs_attributes <- if (any(!is.na(x$observation_weights))) "weight" else character()
   add("observation weights", "fixVarToWeight", if (!length(obs_attributes)) "supported" else "partially_supported",
       "supplied SD = sqrt(weight) when flag=1; otherwise SD offset = 1/sqrt(weight)",
-      "Inactive when no observation-weight attributes are supplied. Otherwise exact only with known positive weights, compatible SD groups and independent LN errors. Custom attributes are rejected by the minimal reader.")
+      "Inactive when no observation-weight attributes are supplied. Otherwise exact only with known positive weights, compatible SD groups and independent LN errors. Supplied observation weights are retained for audit; the baseline omits their likelihood effects.")
   add("observation attributes", "supplied observation attributes", if (!length(obs_attributes)) "supported" else "not_checked",
-      "no supplied covariance/weight/partition attributes", "Any supplied attributes require separate validation; they must not be confused with keyVarObs.",
+      "no supplied covariance/weight/partition attributes", "Any supplied weights require separate validation; they must not be confused with keyVarObs.",
       if (length(obs_attributes)) obs_attributes else "none")
   add("initial abundance", "initState", if (identical(as.numeric(conf$initState), 0)) "partially_supported" else "unsupported",
       'N_settings$init = "free"; no starting-state density',
@@ -311,94 +322,6 @@ sam_tam_assumptions <- function(x) {
   for (nm in setdiff(names(conf), checked)) {
     add("unreviewed configuration", nm, "not_checked", notes = "Retained without inferring compatibility; inspect if active.")
   }
-  do.call(rbind, rows)
-}
-
-#' Extract reference tables from a saved SAM fit without running SAM
-#'
-#' Inspect public fitted output stored as ordinary R lists. This helper never
-#' calls the saved optimizer or TMB object and does not require
-#' \pkg{stockassessment}. Missing outputs remain explicitly unavailable.
-#'
-#' @param fit Saved SAM fitted list containing `data`, `conf`, `pl`, and `opt`
-#'   with a finite objective, and optionally `rep` and `sdrep$value`.
-#'   Initial parameter objects are not fitted references.
-#' @param provenance Text identifying the public fitted file and source revision.
-#' @return A list with `tables`, `availability`, and `provenance`. Tables include
-#'   N and F at age, q, reported SSB/recruitment/Fbar, and observed/predicted catch
-#'   and survey values where stored. `availability` identifies each extraction
-#'   and missing component. Estimates carry no newly fabricated uncertainty.
-#' @details
-#' N is `exp(t(pl$logN))`. F maps unique `pl$logF` states through `keyLogFsta`
-#' and sums type-0 fleet F, as in SAM's `ntable()` and `faytable()`. q is the
-#' exponentiated `logFpar` selected by `keyLogFpar`. These transformations are
-#' unambiguous extractions from fitted states, not new fits. Reported trends are
-#' read from their named log-scale `sdrep$value` entries; they are not recomputed
-#' using tinyAM's biological summary conventions. Observation predictions are
-#' extracted directly from `rep$predObs`, including any SAM catch scaling.
-#' @export
-sam_reference <- function(fit, provenance = "unspecified saved SAM fit") {
-  required <- c("data", "conf", "pl", "opt")
-  if (!is.list(fit) || !all(required %in% names(fit)) ||
-      !is.list(fit$opt) || length(fit$opt$objective) != 1L ||
-      !is.finite(fit$opt$objective)) {
-    cli::cli_abort("Supply a saved fitted SAM list with data, conf, pl, and opt; initial parameters are not reference estimates.")
-  }
-  years <- fit$data$years
-  ages <- seq.int(fit$conf$minAge, fit$conf$maxAge)
-  tables <- list()
-  available <- list()
-  add <- function(nm, tab, method) {
-    if (!is.null(tab)) tables[[nm]] <<- tab
-    available[[length(available) + 1L]] <<- data.frame(quantity = nm,
-      available = !is.null(tab), method = if (is.null(tab)) "Not stored in supplied fit" else method)
-  }
-  state <- function(nm) {
-    z <- fit$pl[[nm]]
-    if (is.null(z)) return(NULL)
-    if (!is.matrix(z) || ncol(z) != length(years)) cli::cli_abort("Saved SAM {nm} dimensions do not match years.")
-    exp(t(z))
-  }
-  N <- state("logN")
-  if (!is.null(N)) {
-    if (ncol(N) != length(ages)) cli::cli_abort("Saved SAM logN dimensions do not match ages.")
-    dimnames(N) <- list(year = years, age = ages)
-  }
-  add("N", if (is.null(N)) NULL else .sam_long(N), "exp(t(fitted logN)); SAM ntable")
-  states <- state("logF")
-  F <- if (is.null(states)) NULL else matrix(0, length(years), length(ages), dimnames = list(year = years, age = ages))
-  if (!is.null(F)) for (i in which(fit$data$fleetTypes == 0)) {
-    keys <- fit$conf$keyLogFsta[i, ]
-    active <- keys >= 0
-    F[, active] <- F[, active, drop = FALSE] + states[, keys[active] + 1L, drop = FALSE]
-  }
-  add("F", if (is.null(F)) NULL else .sam_long(F), "mapped fitted logF, summed across catch fleets; SAM faytable")
-  q <- NULL
-  if (!is.null(fit$pl$logFpar)) {
-    q <- expand.grid(fleet_id = which(fit$data$fleetTypes == 2), age = ages)
-    keys <- fit$conf$keyLogFpar[cbind(q$fleet_id, q$age - min(ages) + 1L)]
-    q$q_key <- keys
-    q$est <- ifelse(keys >= 0, exp(fit$pl$logFpar[pmax(keys + 1L, 1L)]), NA_real_)
-    q <- q[keys >= 0, ]
-  }
-  add("q", q, "exp(fitted logFpar) mapped by keyLogFpar")
-  trends <- c(SSB = "logssb", recruitment = "logR", Fbar = "logfbar")
-  for (label in names(trends)) {
-    nm <- trends[[label]]
-    vals <- fit$sdrep$value
-    z <- vals[names(vals) == nm]
-    tab <- if (length(z) == length(years)) data.frame(year = years, est = exp(unname(z))) else NULL
-    add(label, tab, paste0("stored sdreport ", nm, "; exponentiated"))
-  }
-  obs <- NULL
-  if (!is.null(fit$data$aux) && !is.null(fit$data$logobs)) {
-    obs <- data.frame(year = fit$data$aux[, 1], fleet_id = fit$data$aux[, 2], age = fit$data$aux[, 3], obs = exp(fit$data$logobs))
-    obs$pred <- if (length(fit$rep$predObs) == nrow(obs)) exp(fit$rep$predObs) else NA_real_
-    obs$fleet_type <- fit$data$fleetTypes[obs$fleet_id]
-  }
-  add("catch", if (is.null(obs)) NULL else obs[obs$fleet_type == 0, ], "stored logobs and rep$predObs; exponentiated, with SAM scaling")
-  add("index", if (is.null(obs)) NULL else obs[obs$fleet_type == 2, ], "stored logobs and rep$predObs; exponentiated")
-  add("observation_predictions", if (is.null(obs) || all(is.na(obs$pred))) NULL else obs,
-      "direct fitted rep$predObs extraction")
-  list(tables = tables, availability = do.call(rbind, available), provenance = provenance)
+  out <- do.call(rbind, rows)
+  .sam_audit_settings(out, sam_fit, settings)
 }

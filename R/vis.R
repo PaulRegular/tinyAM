@@ -2,7 +2,8 @@
 #' Make a flexdashboard for visualizing model fits
 #'
 #' @inheritParams tidy_tam
-#' @param model_list   A **named list** of fitted TAM objects (e.g., `fits` list returned by
+#' @param model_list   A **named list** of fitted TAM objects or reporting references
+#'                     from [sam_to_tam_comparison()] (e.g., `fits` list returned by
 #'                     [fit_retro()]). Names are used to label models.
 #' @param output_file  Name of file to export using [rmarkdown::render()].
 #'                     If `NULL`, a temporary HTML file is rendered.
@@ -10,7 +11,7 @@
 #' @param open_file    Logical. Open rendered html file?
 #' @param render_args  Named list of additional arguments passed to
 #'                     [rmarkdown::render()].
-#' @param ...          One or more fitted TAM objects (as returned by [fit_tam()]).
+#' @param ...          One or more TAM fits or reporting references.
 #'                     Supply these or `model_list`, not both. When supplying models
 #'                     through `...`, their object names are used to label models
 #'                     (even when a single model is supplied).
@@ -18,6 +19,9 @@
 #'          form a uniquely named list so they can be labeled in the dashboard.
 #'          Additional arguments for [rmarkdown::render()] can be passed through
 #'          `render_args`, which must itself be a (named) list.
+#'          Reporting references from [sam_to_tam_comparison()] may be mixed
+#'          with tinyAM fits. Their native definitions and unavailable outputs
+#'          are identified in the dashboard; they are not refittable TAM objects.
 #' @return Used for its side effects: writes an HTML dashboard and optionally
 #'   opens it in the browser. Supply `output_file` to retain a known file path.
 #'

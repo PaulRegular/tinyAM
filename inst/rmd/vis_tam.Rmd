@@ -40,6 +40,16 @@ random_par <- tabs$random_par
 ```
 
 
+```{r comparison-notes, results='asis', echo=FALSE}
+if (any(vapply(fits, function(f) length(f$reporting_notes) > 0, logical(1)))) {
+  cat("Reference notes\n================================================================================\n\nColumn\n--------------------------------------------------------------------------------\n\n### Definitions and unavailable reports\n\n")
+}
+for (nm in names(fits)) {
+  notes <- fits[[nm]]$reporting_notes
+  if (length(notes)) cat(paste0("**", nm, " reference notes:**\n\n", paste0("- ", notes, collapse="\n"), "\n\n"))
+}
+```
+
 ```{r helpers, include = FALSE}
 
 cols <- tam_pal(length(fits))
@@ -50,6 +60,11 @@ make_resid_plots <- function(d) {
        age = plot_resid(d, x = ~age, xlab = "Age", frame = ~model, color = ~model, colors = cols),
        cohort = plot_resid(d, x = ~(year - age), xlab = "Cohort", frame = ~model, color = ~model, colors = cols),
        expected = plot_resid(d, x = ~log(pred), xlab = "Expected", frame = ~model, color = ~model, colors = cols))
+}
+
+plot_report <- function(d, ...) {
+  if (is.null(d) || !nrow(d)) return(htmltools::p("Report unavailable in the supplied fit."))
+  plot_trend(d, ...)
 }
 
 table_link <- function(x, table_name = NULL, download_text = "Download table") {
