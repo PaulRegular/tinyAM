@@ -109,7 +109,11 @@ test_that("mixed SAM and tinyAM dashboards render without fabricated reports", {
   expect_no_error(vis_tam(model_list = list(SAM = ref, tinyAM = N_dev),
     output_file = file, open_file = FALSE, render_args = list(quiet = TRUE)))
   expect_true(file.exists(file))
-  expect_true(any(grepl("SAM reference", readLines(file, warn = FALSE), fixed = TRUE)))
+  # Embedded JavaScript contains Ctrl-Z; Windows text mode stops before the body.
+  con <- file(file, "rb")
+  html <- readLines(con, warn = FALSE)
+  close(con)
+  expect_true(any(grepl("SAM reference", html, fixed = TRUE)))
   ref$source_fit$sdrep <- NULL
   expect_no_error(vis_tam(model_list = list(SAM = ref), output_file = file,
     open_file = FALSE, render_args = list(quiet = TRUE)))
