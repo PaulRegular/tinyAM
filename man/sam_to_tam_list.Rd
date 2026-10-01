@@ -2,7 +2,7 @@
 % Please edit documentation in R/sam.R
 \name{sam_to_tam_list}
 \alias{sam_to_tam_list}
-\title{Convert a fitted SAM object to a list for comparison with tinyAM}
+\title{Convert a fitted SAM object to a \code{tam_list} for comparison with tinyAM}
 \usage{
 sam_to_tam_list(sam_fit, interval = 0.95)
 }
@@ -19,10 +19,9 @@ differences. It resembles a \code{tam_fit} for reporting but cannot be fitted,
 updated, simulated or used for retrospective fitting.
 }
 \description{
-Convert a fitted SAM object into a list similar to a \code{tam_fit} object to ease
-comparisons, especially through a dashboard made with \code{\link[=vis_tam]{vis_tam()}}. The list
-contains SAM's fitted values and available uncertainty, arranged for use with
-\code{\link[=tidy_tam]{tidy_tam()}} and \code{\link[=vis_tam]{vis_tam()}}. The supplied SAM fit is left unchanged.
+Convert a fitted SAM object into a reporting list with a structure similar to
+a \code{tam_fit} object. Use it with \code{\link[=tidy_tam]{tidy_tam()}} or alongside a tinyAM fit in
+\code{\link[=vis_tam]{vis_tam()}} to compare the assessments. The supplied SAM fit is left unchanged.
 }
 \details{
 Requires suggested package \pkg{stockassessment}. SAM's own definitions are

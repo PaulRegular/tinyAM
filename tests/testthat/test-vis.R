@@ -113,9 +113,10 @@ test_that("mixed SAM and tinyAM dashboards render without fabricated reports", {
   con <- file(file, "rb")
   html <- readLines(con, warn = FALSE)
   close(con)
+  expect_true(any(grepl("FYI", html, fixed = TRUE)))
   expect_true(any(grepl("Not all fitted and reported values from SAM are directly comparable", html, fixed = TRUE)))
   expect_true(any(grepl("SAM gives each age equal weight", html, fixed = TRUE)))
-  expect_true(any(grepl("tinyAM reports biomass at the beginning of the year", html, fixed = TRUE)))
+  expect_true(any(grepl("tinyAM measures biomass at the start of the year", html, fixed = TRUE)))
   for (metric in c("N", "F", "M")) {
     for (field in c("lwr", "upr", "se", "se_scale")) {
       expect_true(any(grepl(paste0(">", field, "_", metric, "</th>"), html, fixed = TRUE)))

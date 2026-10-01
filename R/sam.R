@@ -607,12 +607,11 @@ sam_to_tam_settings <- function(sam_fit, overrides = list()) {
   list(pop = pop, obs_pred = obs_pred, fixed_par = fixed, random_par = random)
 }
 
-#' Convert a fitted SAM object to a list for comparison with tinyAM
+#' Convert a fitted SAM object to a `tam_list` for comparison with tinyAM
 #'
-#' Convert a fitted SAM object into a list similar to a `tam_fit` object to ease
-#' comparisons, especially through a dashboard made with [vis_tam()]. The list
-#' contains SAM's fitted values and available uncertainty, arranged for use with
-#' [tidy_tam()] and [vis_tam()]. The supplied SAM fit is left unchanged.
+#' Convert a fitted SAM object into a reporting list with a structure similar to
+#' a `tam_fit` object. Use it with [tidy_tam()] or alongside a tinyAM fit in
+#' [vis_tam()] to compare the assessments. The supplied SAM fit is left unchanged.
 #'
 #' @param sam_fit A fitted SAM object.
 #' @param interval Confidence level in `(0, 1)`. Log-scale uncertainty is
@@ -639,13 +638,13 @@ sam_to_tam_list <- function(sam_fit, interval = 0.95) {
   if (length(interval) != 1L || !is.finite(interval) || interval <= 0 || interval >= 1) cli::cli_abort("interval must be in (0, 1).")
   tabs <- .sam_comparison_tables(sam_fit, interval)
   x <- .sam_source(sam_fit)
-  notes <- c("Average fishing mortality (Fbar): SAM gives each age equal weight; tinyAM weights ages by their estimated abundance.",
-             "Spawning biomass (SSB): SAM accounts for mortality before spawning; tinyAM reports biomass at the beginning of the year.",
-             "Weight, maturity and natural mortality: SAM may estimate these values. The input tables show the original supplied values, including any missing values.",
-             "Catch biomass (yield): this dashboard uses the original stock weights for both models. SAM's own catch biomass uses catch weights, which may differ.",
-             "Uncertainty: total abundance, selectivity and average natural mortality are calculated from SAM's fitted states without new confidence intervals. Missing reports or uncertainty are left out or shown as missing.",
-             "Parameters: only survey catchability (q) is shown among SAM's fixed parameters, because the other parameters do not correspond directly to tinyAM's.",
-             "Residuals: the SAM residuals shown here describe the fit to individual observations; they are not one-step-ahead residuals.")
+  notes <- c("Average fishing mortality: SAM gives each age equal weight; tinyAM gives more weight to ages with more fish.",
+             "Spawning biomass: SAM counts mortality before spawning; tinyAM measures biomass at the start of the year.",
+             "Weight, maturity and natural mortality: SAM may estimate these values. The dashboard shows the original supplied inputs when available; they can differ from SAM's fitted values.",
+             "Catch biomass: the comparison uses stock weights for both models. SAM uses catch weights, which can give a different result.",
+             "Uncertainty: SAM does not report confidence intervals for every quantity shown. Total abundance, selectivity and average natural mortality are calculated from SAM's fitted results without adding intervals; unavailable values remain missing.",
+             "Parameters: survey catchability (q) is the only SAM fixed parameter with a direct counterpart shown here. Other SAM parameters do not have a direct match in tinyAM.",
+             "Residuals: SAM's residuals show how well it fits each observation; they do not show one-year-ahead prediction errors.")
   structure(c(list(call = match.call(), dat = list(obs = sam_to_tam_obs(sam_fit), years = x$years,
                                                    ages = seq.int(x$conf$minAge, x$conf$maxAge), is_proj = rep(FALSE, length(x$years))),
                    source_fit = sam_fit, reporting_notes = notes), tabs), class = c("tam_list", "list"))
