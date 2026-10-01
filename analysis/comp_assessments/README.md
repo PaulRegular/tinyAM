@@ -46,6 +46,15 @@ assumption and value also identifies the table, page, model field, or file from
 which it came. Unknown information is recorded as `unknown` with an explanation,
 not guessed.
 
+Select the newest production assessment whose public inputs and outputs can be
+linked to the same model run and recorded clearly. A newer advisory report may
+provide selected updates before detailed sources are available for that run; do
+not mix those values with inputs from an earlier assessment. Use the detailed
+research document for the selected run's inputs and results, even when it was
+published after the advisory report, and use the framework research document to
+describe model assumptions. Record the assessment year, last input year, and
+last reported estimate year separately.
+
 ## Initial candidates
 
 The initial sampling frame aims for prominent production assessments across
