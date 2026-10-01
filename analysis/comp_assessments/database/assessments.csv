@@ -1,0 +1,1 @@
+assessment_id,stock_id,assessment_year,terminal_year,assessment_type,model_family,model_version,is_current,is_production,framework_year,assessment_url,framework_url,data_url,model_url,repository_url,assumptions_status,inputs_status,outputs_status,notes
