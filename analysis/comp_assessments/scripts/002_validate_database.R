@@ -117,8 +117,8 @@ if (anyDuplicated(current_stocks)) {
 
 allowed_sources <- c("native_model", "official_machine_readable", "official_table",
                      "digitized", "reconstructed", "charbonneau_seed")
-allowed_input_types <- c("catch", "index", "weight", "catch_weight", "maturity", "M")
-allowed_output_types <- c("N", "F", "SSB", "biomass", "recruitment", "Fbar", "q",
+allowed_input_types <- c("catch", "landings", "index", "weight", "catch_weight", "maturity", "M")
+allowed_output_types <- c("N", "F", "M", "SSB", "biomass", "recruitment", "Fbar", "Mbar", "q",
                           "predicted_catch", "predicted_index")
 for (name in c("inputs", "outputs")) {
   x <- tables[[name]]
@@ -135,21 +135,32 @@ for (name in c("inputs", "outputs")) {
   for (field in c("year", "age", "value")) {
     raw <- x[[field]]
     numeric <- suppressWarnings(as.numeric(raw))
+    missing_index <- is.na(numeric)
+    required <- if (field == "year") {
+      rep(TRUE, length(numeric))
+    } else if (field == "age" && name == "inputs") {
+      x$type != "landings"
+    } else if (field == "age" && name == "outputs") {
+      x$type %in% c("N", "F", "M", "q", "predicted_catch", "predicted_index")
+    } else {
+      rep(FALSE, length(numeric))
+    }
     if (any(!is.na(raw) & is.na(numeric)) ||
-        (field %in% c("year", "age") && (anyNA(numeric) || any(numeric != as.integer(numeric))))) {
+        (field %in% c("year", "age") &&
+         (any(missing_index & required) || any(numeric[!missing_index] != as.integer(numeric[!missing_index]))))) {
       stop(name, "$", field, " must contain numeric", if (field == "value") " or blank" else " whole numbers", " values.", call. = FALSE)
     }
     if (field == "value" && any(numeric < 0, na.rm = TRUE)) {
       stop(name, "$value cannot be negative.", call. = FALSE)
     }
-    if (any(!is.finite(numeric), na.rm = TRUE)) {
+    if (any(!is.na(numeric) & !is.finite(numeric))) {
       stop(name, "$", field, " must contain finite values.", call. = FALSE)
     }
   }
   for (field in intersect(c("se", "lwr", "upr", "samp_time"), names(x))) {
     raw <- x[[field]]
     numeric <- suppressWarnings(as.numeric(raw))
-    if (any(!is.na(raw) & is.na(numeric)) || any(!is.finite(numeric), na.rm = TRUE)) {
+    if (any(!is.na(raw) & is.na(numeric)) || any(!is.na(numeric) & !is.finite(numeric))) {
       stop(name, "$", field, " must contain numeric finite values or blanks.", call. = FALSE)
     }
     if (field == "samp_time" && any(numeric < 0 | numeric > 1, na.rm = TRUE)) {

@@ -1,1 +1,2 @@
-stock_id,charbonneau_id,authority,authority_stock_id,scientific_name,common_name,area,region,ocean,notes
+"stock_id","charbonneau_id","authority","authority_stock_id","scientific_name","common_name","area","region","ocean","notes"
+"dfo_cod_2j3kl","DFO_2J3KL_Gadus_morhua","DFO","NAFO 2J3KL","Gadus morhua","Northern cod","2J3KL","Newfoundland and Labrador","Northwest Atlantic","Candidate identified in the Charbonneau-Keith PLOS 2026 dataset; its historical model label and years are not used as production facts."

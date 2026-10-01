@@ -26,7 +26,9 @@ Five ordinary CSV tables live in `database/`:
 - `assessments.csv`: the production run investigated, its data end year,
   model-defining framework, source links, and collection status.
 - `assumptions.csv`: source assessment settings in long form.
-- `inputs.csv`: original catch, survey, biological, and natural mortality inputs.
+- `inputs.csv`: original catch-at-age, total landings, survey, biological, and
+  natural mortality inputs. Aggregate landings have a blank age and are retained
+  separately from catch-at-age observations.
 - `outputs.csv`: reported population quantities and uncertainty where available.
 
 The database records what each source assessment did. It does not store tinyAM
@@ -62,8 +64,9 @@ will be documented here.
 
 Source `R/database_to_tiny_obs.R` and call
 `database_to_tiny_obs(assessment_id, inputs)` to reshape one assessment's
-canonical input rows into tinyAM's `catch`, `index`, `weight`, and `maturity`
-tables. It preserves reported values, units, survey names, and observation
+canonical catch-at-age, survey, and biological input rows into tinyAM's `catch`,
+`index`, `weight`, and `maturity` tables. Aggregate landings are retained in the
+database but are not used as catch-at-age observations. The helper preserves reported values, units, survey names, and observation
 timing. It does not choose model settings or infer population processes.
 Natural mortality stays in `inputs.csv` for a separate, informed model setup.
 If a source structure cannot be represented without combining fleets, sexes,
