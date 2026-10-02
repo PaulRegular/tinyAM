@@ -799,19 +799,13 @@ Differences should be interpreted in light of documented translation choices, su
 
 Do not interpret a difference as a model failure before checking whether it follows from an intentional translation choice.
 
+In addition to basic percent difference and bias summary statistics for the abovmentioned outputs, build a tam_list using available output data from the accepted assessment and use it in `vis_tam()` to produce an interactive html to ease visual comparison.
+
 ------------------------------------------------------------------------
 
 # 22. Scope discipline
 
-Do not preemptively build exported package converters such as:
-
-``` text
-sam_to_tam()
-ss3_to_tam()
-wham_to_tam()
-```
-
-unless repeated real use demonstrates that they are needed.
+Do not preemptively build exported package converters.
 
 Prefer small analysis-local helpers that emerge from repeated transformations.
 
