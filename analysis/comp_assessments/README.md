@@ -65,13 +65,15 @@ page, or file appears in `source_reference`. Digitized or reconstructed values
 are labelled accordingly. Unknown information is recorded as `unknown` with an
 explanation, not guessed.
 
-Represent the most recent assessment for which detailed, coherent inputs,
-assumptions, and outputs are publicly available. When a newer assessment is
-documented only by a summary or advice product, use the most recent earlier
-detailed assessment as its own record. Do not fill gaps in that record with
-values from the newer summary. Use the relevant framework document to clarify
-assumptions that the detailed assessment does not explain. Record the
-assessment year, last input year, and last reported estimate year separately.
+Represent the latest accepted production assessment, using the most recent
+authoritative detailed source that documents that run. A detailed source may be
+published after the advice or summary product, so distinguish the source's
+publication date from the assessment year and data terminal year. If no detailed
+source for the latest accepted assessment is available, use earlier detailed
+material and the relevant framework only for context; do not substitute earlier
+run inputs or outputs. Record unresolved gaps and keep completeness statuses
+partial where needed. Record the assessment year, last input year, and last
+reported estimate year separately.
 
 ## Initial candidates
 
@@ -164,13 +166,19 @@ that the last full assessment was completed in 2019. The database therefore
 represents the detailed 2019 SCA assessment to 2018, under the 2012 framework.
 The 2024 summary and rebuilding-plan research document are retained only as
 context in the local source cache; none of their estimates are mixed into the
-2019 record. That record contains 54 annual stock-catch values for 1965-2018 (tonnes), plus
-480 source-reported landed numbers-at-age values for 1971-2018 (ages 3-12+, in
-thousand fish). The age counts do not establish the full fitted composition
-series, which the model describes as ages 2-12+. It also retains 759 annual
-maturity rows carried forward between source-listed change years. The record
-remains partial: the model spans 1950-2018, and fitted survey inputs, full catch
-compositions, and additional biological series remain to be curated. The recorded
-population outputs are maximum-likelihood estimates from Tables 21-23; the
-report's other population summaries are generally posterior medians. Natural
-mortality-at-age is shown graphically but is not tabulated in the report.
+2019 record. That record contains 54 annual stock-catch values for 1965-2018
+(tonnes), plus 480 source-reported landed numbers-at-age values for 1971-2018
+(ages 3-12+, in thousand fish). These age counts do not recover the full fitted
+catch-composition series, which the model describes as ages 2-12+. It also
+retains 759 annual maturity rows carried forward between source-listed change
+years. Survey indices and age compositions are reconstructed from the published
+age-specific tables: the RV series has 46 aggregate biomass-index years because
+weights-at-age are not tabulated for 1980 and 1985; the mobile-sentinel series
+covers 2003-2018; and the longline index covers 1995-2017. These reconstructed
+inputs are labeled as such and remain partial because the report does not
+publish the original fitted age-composition samples, the full catch-composition
+series, all RV biomass-index years, or all inputs over the model's 1950-2018
+span. The recorded population outputs are maximum-likelihood estimates from
+Tables 21-23; the report's other population summaries are generally posterior
+medians. Natural mortality-at-age is shown graphically but is not tabulated in
+the report.

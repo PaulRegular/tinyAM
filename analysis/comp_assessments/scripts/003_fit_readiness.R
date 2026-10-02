@@ -50,7 +50,9 @@ readiness <- lapply(seq_len(nrow(assessments)), function(i) {
 
   catch <- x[x$type == "catch" & x$measure == "numbers_at_age", , drop = FALSE]
   catch_age <- catch
-  index <- x[x$type == "index" & x$measure == "numbers_at_age", , drop = FALSE]
+  index <- x[x$type == "index", , drop = FALSE]
+  index_age_rows <- index[index$measure %in% c("numbers_at_age", "biomass_at_age",
+                                                "proportion_at_age"), , drop = FALSE]
   weight <- x[x$type == "weight" & x$measure == "weight_at_age", , drop = FALSE]
   catch_weight <- x[x$type == "catch_weight" & x$measure == "weight_at_age", , drop = FALSE]
   maturity_cohort <- x[x$type == "maturity" & x$year_basis == "birth_cohort", , drop = FALSE]
@@ -74,7 +76,7 @@ readiness <- lapply(seq_len(nrow(assessments)), function(i) {
   sampling_time <- suppressWarnings(as.numeric(index$sampling_time))
   timing_recorded <- nrow(index) > 0L && all(is.finite(sampling_time) & sampling_time >= 0 & sampling_time <= 1)
   timing_exact <- timing_recorded && !any(grepl("approx", index$notes, ignore.case = TRUE))
-  index_age <- nrow(index) > 0L && all(!is.na(index$age))
+  index_age <- nrow(index_age_rows) > 0L && all(!is.na(index_age_rows$age))
   catch_grid <- grid_complete(catch, years, ages)
   catch_age_grid <- grid_complete(catch_age, years, ages)
   catch_age_source_grid <- if (nrow(catch_age)) {

@@ -220,11 +220,9 @@ If multiple candidate model runs are found, determine which one corresponds to t
 
 Do not select a model object solely because it is the newest file or repository.
 
-The database should capture the most recently available detailed assessment inputs, assumptions, and outputs. If the latest assessment is documented only by a summary product, advice document, FSAR, or other high-level publication, search for the most recent earlier detailed assessment source—such as a Research Document, model object, reproducible repository, or native input/output files—that provides sufficient detail on the accepted assessment model.
+Use the most recent authoritative detailed source that documents the accepted production model. A detailed Research Document may be published a year or more after its Science Advisory Report or other summary product, so publication year and assessment year must not be treated as the same thing. Check the model version, terminal data year, and accepted run described by the detailed source, and record the assessment year and data terminal year separately from the source's publication date.
 
-For example, if a summary document is available for a 2026 assessment but the detailed 2026 Research Document has not yet been published, recover inputs, assumptions, and outputs from the most recent earlier assessment for which detailed documentation is available. If important model assumptions are not described in that detailed assessment document, consult the relevant framework or benchmark document for clarification.
-
-Do not infer missing details from summary products when a more detailed earlier source or framework document is available.
+For example, if a later-published Research Document provides the inputs, assumptions, and outputs for the assessment summarized in an earlier advice document, use that Research Document for the detailed extraction. If no detailed source for the latest accepted assessment can be found, consult the most recent earlier detailed assessment and the relevant framework or benchmark document for context, but do not substitute earlier-run inputs or outputs for the accepted assessment or combine material from different runs. Record any unresolved gaps and keep completeness statuses partial where appropriate.
 
 ## 2.3 Source discipline
 
