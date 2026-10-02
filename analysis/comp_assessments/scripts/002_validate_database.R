@@ -117,7 +117,7 @@ if (anyDuplicated(current_stocks)) {
 
 allowed_sources <- c("native_model", "official_machine_readable", "official_table",
                      "digitized", "reconstructed", "charbonneau_seed")
-allowed_input_types <- c("catch", "landings", "index", "weight", "catch_weight", "maturity", "M")
+allowed_input_types <- c("catch", "catch_at_age", "landings", "index", "weight", "catch_weight", "maturity", "maturity_cohort", "M")
 allowed_output_types <- c("N", "F", "M", "SSB", "biomass", "recruitment", "Fbar", "Mbar", "q",
                           "predicted_catch", "predicted_index")
 for (name in c("inputs", "outputs")) {
@@ -170,7 +170,7 @@ for (name in c("inputs", "outputs")) {
       stop("outputs$se cannot be negative.", call. = FALSE)
     }
   }
-  if (name == "inputs" && any(x$type == "maturity" &
+  if (name == "inputs" && any(x$type %in% c("maturity", "maturity_cohort") &
       !is.na(x$value) & (as.numeric(x$value) < 0 | as.numeric(x$value) > 1))) {
     stop("maturity input values must be proportions from 0 to 1.", call. = FALSE)
   }
