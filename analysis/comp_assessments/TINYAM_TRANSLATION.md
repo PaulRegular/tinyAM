@@ -92,6 +92,11 @@ survey
 samp_time
 ```
 
+Formula covariates such as `q_block` are also needed when referenced by model
+settings. The analysis-local database translator adds `q_block` for age and
+`q_key` for observed survey-by-age combinations, allowing the settings to show
+whether catchability is shared across surveys or estimated separately.
+
 Natural mortality is supplied through model settings rather than as a fifth `obs` table.
 
 ------------------------------------------------------------------------
