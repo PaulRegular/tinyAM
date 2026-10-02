@@ -222,7 +222,24 @@ proportion_at_age
 weight_at_age
 maturity_at_age
 natural_mortality_at_age
+landings_numbers_at_age
+landings_fraction_at_age
+landings_weight_at_age
+discard_weight_at_age
+log_index_sd
+landings_proportion
 ```
+
+`landings_numbers_at_age` and `landings_fraction_at_age` retain removal components
+used by a source model alongside its combined catch. Landings and discard weights
+are distinct from combined catch weights. `log_index_sd` stores a supplied
+standard deviation of the log survey index as a separate age/year record with
+the same survey identity as the corresponding observation; use `type = index`,
+`basis = log_scale`, and document whether it fixes variance or supplies a relative
+weight. `landings_proportion` retains a source landings-weight composition by substock
+or quarter (`basis = proportion_biomass`); these records have no age. Reference
+components are retained, and report rounding is not silently renormalized.
+These measures are required by the 2025 Northern Shelf cod assessment.
 
 Additional measures may be added when necessary, but should remain explicit and biologically interpretable.
 
@@ -236,6 +253,7 @@ proportion_biomass
 kg_per_fish
 proportion
 per_year
+log_scale
 ```
 
 For example:

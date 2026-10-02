@@ -144,9 +144,11 @@ allowed_output_types <- c("population", "mortality", "biomass", "recruitment", "
                           "index", "catchability")
 allowed_input_measures <- c("numbers_at_age", "biomass_at_age", "total_numbers",
                             "total_biomass", "proportion_at_age", "weight_at_age",
-                            "maturity_at_age", "natural_mortality_at_age")
+                            "maturity_at_age", "natural_mortality_at_age",
+                            "landings_proportion", "landings_numbers_at_age", "landings_fraction_at_age",
+                            "landings_weight_at_age", "discard_weight_at_age", "log_index_sd")
 allowed_bases <- c("numbers", "biomass", "proportion_numbers", "proportion_biomass",
-                   "kg_per_fish", "proportion", "per_year")
+                   "kg_per_fish", "proportion", "per_year", "log_scale")
 for (name in c("inputs", "outputs")) {
   x <- tables[[name]]
   if (anyNA(x$source_type) || any(!x$source_type %in% allowed_sources)) {
@@ -178,7 +180,9 @@ for (name in c("inputs", "outputs")) {
   }
   age_required <- if (name == "inputs") {
     x$measure %in% c("numbers_at_age", "biomass_at_age", "proportion_at_age",
-                     "weight_at_age", "maturity_at_age", "natural_mortality_at_age")
+                     "weight_at_age", "maturity_at_age", "natural_mortality_at_age",
+                     "landings_numbers_at_age", "landings_fraction_at_age",
+                     "landings_weight_at_age", "discard_weight_at_age", "log_index_sd")
   } else {
     has_age_group <- if ("age_group" %in% names(x)) {
       !is.na(x$age_group) & nzchar(x$age_group)
@@ -205,6 +209,13 @@ for (name in c("inputs", "outputs")) {
         any(!is.na(sampling_time) & (!is.finite(sampling_time) |
                                      sampling_time < 0 | sampling_time > 1))) {
       stop("inputs$sampling_time must be numeric in [0, 1] where present.", call. = FALSE)
+    }
+    proportion <- x$basis %in% c("proportion", "proportion_numbers", "proportion_biomass")
+    if (any(proportion & value > 1)) {
+      stop("Input proportions must lie in [0, 1].", call. = FALSE)
+    }
+    if (any(x$measure == "log_index_sd" & value <= 0)) {
+      stop("Supplied log-index SDs must be positive.", call. = FALSE)
     }
   } else {
     if ("age_group" %in% names(x) && any(x$measure %in% c("Fbar", "Mbar") &

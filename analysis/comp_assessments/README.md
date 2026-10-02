@@ -189,3 +189,26 @@ medians. The report also states terminal estimates for M at ages 5-8 and 9+
 and fully recruited q for the RV and mobile-sentinel surveys; these are stored
 as grouped or time-invariant outputs with their source identified as report
 text.
+
+### Northern Shelf cod (2025)
+
+The North Sea cod catalogue entry is represented by the accepted three-substock
+Northern Shelf assessment after the 2023 benchmark. Original biological
+observations remain separate from fitted biological surfaces. All seven index
+streams retain their supplied log-scale SDs; model timing is 0.125 for Q1, 0.75
+for Q3+Q4 and 0 for forward-shifted recruitment indices. Fitted inputs extend
+through the 2025 Q1 survey, while catches and reported F end in 2024.
+
+See [the source review](source_reviews/ices_cod_north_sea.md) for coverage, pinned
+workflow revisions and remaining gaps. Cached sources remain gitignored. The
+source-specific importer requires Python with pdfplumber and base R:
+
+```sh
+python analysis/comp_assessments/scripts/004_import_north_sea_cod.py . --rscript Rscript
+Rscript analysis/comp_assessments/scripts/002_validate_database.R
+Rscript analysis/comp_assessments/scripts/005_validate_north_sea_cod.R
+```
+
+The importer checks all 2,688 native N/F/M values against the detailed report
+and can be rerun without changing other assessments. Completeness statuses
+remain partial; this record does not borrow observations from older runs.
