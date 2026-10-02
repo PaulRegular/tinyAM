@@ -137,6 +137,7 @@ for (name in names(duplicates)) {
 }
 
 allowed_sources <- c("native_model", "official_machine_readable", "official_table",
+                     "official_document",
                      "digitized", "reconstructed_source_input", "charbonneau_seed")
 allowed_input_types <- c("catch", "index", "weight", "catch_weight", "maturity", "M")
 allowed_output_types <- c("population", "mortality", "biomass", "recruitment", "catch",
@@ -170,7 +171,11 @@ for (name in c("inputs", "outputs")) {
       stop("inputs$year_basis must be calendar_year or birth_cohort.", call. = FALSE)
     }
   }
-  year <- whole_year(x, "year", name)
+  year <- whole_year(x, "year", name, allow_blank = name == "outputs")
+  blank_year <- is.na(x$year) | !nzchar(as.character(x$year))
+  if (name == "outputs" && any(blank_year & x$measure != "q")) {
+    stop("outputs$year may be blank only for time-invariant q estimates.", call. = FALSE)
+  }
   age_required <- if (name == "inputs") {
     x$measure %in% c("numbers_at_age", "biomass_at_age", "proportion_at_age",
                      "weight_at_age", "maturity_at_age", "natural_mortality_at_age")

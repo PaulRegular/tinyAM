@@ -57,13 +57,14 @@ Use official agency and assessment team sources where possible, in this order:
 native fitted object, native model files, reproducible assessment repository,
 official machine readable files or tables, then official reports. Digitized or
 reconstructed values are labelled as such. `source_type` uses `native_model`,
-`official_machine_readable`, `official_table`, `digitized`,
+`official_machine_readable`, `official_table`, `official_document`, `digitized`,
 `reconstructed_source_input`, or `charbonneau_seed`. Source locations are stored in `assessments.csv`; each
-assumption and value also identifies its source location. `official_table` covers
-values copied from official report tables or figures; the precise table, figure,
-page, or file appears in `source_reference`. Digitized or reconstructed values
-are labelled accordingly. Unknown information is recorded as `unknown` with an
-explanation, not guessed.
+assumption and value also identifies its source location. `official_table`
+covers values copied from official report tables, while `official_document`
+covers values stated in report prose. The precise table, page, or file appears
+in `source_reference`. Digitized or reconstructed values are labelled
+accordingly. Unknown information is recorded as `unknown` with an explanation,
+not guessed.
 
 Represent the latest accepted production assessment, using the most recent
 authoritative detailed source that documents that run. A detailed source may be
@@ -161,24 +162,30 @@ does report fitted F and natural-mortality process parameters; the F correlation
 and variance and the M-process correlations, variance, baseline M, and Capelin
 effect are now described in assumptions.csv. M is estimated in the model, not
 supplied as an input.
-For Southern Gulf cod, the 2024 Science Advisory Report is a summary and says
-that the last full assessment was completed in 2019. The database therefore
-represents the detailed 2019 SCA assessment to 2018, under the 2012 framework.
-The 2024 summary and rebuilding-plan research document are retained only as
-context in the local source cache; none of their estimates are mixed into the
-2019 record. That record contains 54 annual stock-catch values for 1965-2018
+For Southern Gulf cod, the 2024 Science Advisory Report is the latest accepted
+assessment, using the SCA model through 2023. DFO identifies the 2019 run as the
+last full assessment and says the same population model was used again in 2024.
+The 2024 database record is current but partial: it contains the reported 2023
+SSB estimate and does not borrow observation series or estimated outputs from
+the 2019 run. Structural settings are cross-referenced to the 2019 detailed
+report only where the 2024 summary confirms the same population model was used.
+The detailed 2019 SCA assessment remains as a historical record under the 2012
+framework. It contains 54 annual stock-catch values for 1965-2018
 (tonnes), plus 480 source-reported landed numbers-at-age values for 1971-2018
 (ages 3-12+, in thousand fish). These age counts do not recover the full fitted
 catch-composition series, which the model describes as ages 2-12+. It also
 retains 759 annual maturity rows carried forward between source-listed change
-years. Survey indices and age compositions are reconstructed from the published
-age-specific tables: the RV series has 46 aggregate biomass-index years because
+years. Its survey records keep the model's aggregate index separate from its
+age-composition input. Both are explicitly marked reconstructions from
+published age-specific source tables, and no derived age-specific abundance
+series is entered. The reconstructed RV aggregate biomass series has 46 years because
 weights-at-age are not tabulated for 1980 and 1985; the mobile-sentinel series
-covers 2003-2018; and the longline index covers 1995-2017. These reconstructed
-inputs are labeled as such and remain partial because the report does not
-publish the original fitted age-composition samples, the full catch-composition
-series, all RV biomass-index years, or all inputs over the model's 1950-2018
-span. The recorded population outputs are maximum-likelihood estimates from
-Tables 21-23; the report's other population summaries are generally posterior
-medians. Natural mortality-at-age is shown graphically but is not tabulated in
-the report.
+covers 2003-2018; and the longline index covers 1995-2017. These inputs remain
+partial because the report does not publish all original composition samples,
+all RV biomass-index years, or every input over the model's 1950-2018 span. The
+recorded population outputs are maximum-likelihood estimates from Tables
+21-23; the report's other population summaries are generally posterior
+medians. The report also states terminal estimates for M at ages 5-8 and 9+
+and fully recruited q for the RV and mobile-sentinel surveys; these are stored
+as grouped or time-invariant outputs with their source identified as report
+text.

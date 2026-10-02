@@ -262,10 +262,15 @@ Use:
 native_model
 official_machine_readable
 official_table
+official_document
 digitized
 reconstructed_source_input
 charbonneau_seed
 ```
+
+Use `official_document` for values stated in an official report's prose when
+they are not presented in a numerical table. Use `official_table` for values
+transcribed from tables and `digitized` for values recovered from figures.
 
 `reconstructed_source_input` means that the actual accepted-model input was not directly available but was reconstructed from authoritative source quantities. Record the reconstruction in `transformation`.
 
@@ -312,7 +317,7 @@ Long-format outputs from the accepted assessment.
 | `sex`              | Sex where applicable            |
 | `region`           | Region where applicable         |
 | `season`           | Season where applicable         |
-| `year`             | Year                            |
+| `year`             | Year; blank for time-invariant estimates such as reported catchability parameters |
 | `age`              | Age where applicable            |
 | `age_group`        | Optional age range for grouped measures such as Fbar or Mbar |
 | `value`            | Point estimate                  |
