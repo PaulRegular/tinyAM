@@ -1,2 +1,3 @@
 "stock_id","charbonneau_id","authority","authority_stock_id","scientific_name","common_name","area","region","ocean","notes"
 "dfo_cod_2j3kl","DFO_2J3KL_Gadus_morhua","DFO","NAFO 2J3KL","Gadus morhua","Northern cod","2J3KL","Newfoundland and Labrador","Northwest Atlantic","Candidate identified in the Charbonneau-Keith PLOS 2026 dataset; its historical model label and years are not used as production facts."
+"dfo_cod_4t4vn","DFO_4T-4VN_Gadus_morhua","DFO","NAFO 4T-4Vn (November-April)","Gadus morhua","Southern Gulf of St. Lawrence cod","4T-4Vn (November-April)","Gulf of St. Lawrence","Northwest Atlantic","Candidate identified in the Charbonneau-Keith PLOS 2026 dataset. Its curated historical model label and year span are not treated as current assessment facts."

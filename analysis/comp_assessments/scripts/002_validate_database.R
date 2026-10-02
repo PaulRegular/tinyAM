@@ -20,7 +20,7 @@ schemas <- list(
              "year", "age", "value", "unit", "samp_time", "source_type",
              "source_reference", "notes"),
   outputs = c("assessment_id", "type", "fleet", "survey", "sex", "region", "season",
-              "year", "age", "value", "se", "lwr", "upr", "unit", "source_type",
+              "year", "age", "age_group", "value", "se", "lwr", "upr", "unit", "source_type",
               "source_reference", "notes")
 )
 tables <- list(stocks = stocks, assessments = assessments, assumptions = assumptions,
@@ -50,7 +50,7 @@ for (name in c("assumptions", "inputs", "outputs")) {
 duplicates <- list(
   assumptions = c("assessment_id", "component", "setting"),
   inputs = c("assessment_id", "type", "fleet", "survey", "sex", "region", "season", "year", "age"),
-  outputs = c("assessment_id", "type", "fleet", "survey", "sex", "region", "season", "year", "age")
+  outputs = c("assessment_id", "type", "fleet", "survey", "sex", "region", "season", "year", "age", "age_group")
 )
 for (name in names(duplicates)) {
   if (anyDuplicated(tables[[name]][duplicates[[name]]])) {
@@ -128,6 +128,10 @@ for (name in c("inputs", "outputs")) {
   allowed_types <- if (name == "inputs") allowed_input_types else allowed_output_types
   if (anyNA(x$type) || any(!x$type %in% allowed_types)) {
     stop(name, "$type must use the documented assessment value labels.", call. = FALSE)
+  }
+  if (name == "outputs" && any(x$type %in% c("Fbar", "Mbar") &
+      (is.na(x$age_group) | !nzchar(x$age_group)))) {
+    stop("Grouped Fbar and Mbar outputs must identify their age_group.", call. = FALSE)
   }
   if (anyNA(x$source_reference) || any(!nzchar(x$source_reference))) {
     stop(name, "$source_reference must identify the source location.", call. = FALSE)
