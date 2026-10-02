@@ -27,17 +27,25 @@ Five ordinary CSV tables live in `database/`:
   model-defining framework, source links, and collection status.
 - `assumptions.csv`: source assessment settings in long form.
 - `inputs.csv`: observed catch-at-age counts, survey data, biological inputs,
-  and natural mortality. `catch_at_age` stores numeric values, not proportions;
-  when a source reports proportions, convert them using a matching total on the
-  same measurement basis and record the calculation and units. Keep total
-  landings only when needed for that conversion; detailed gear splits are not
-  needed for this database. `weight` and
+  and natural mortality. `catch_at_age` stores numeric values, not proportions.
+  When a source reports number proportions, multiply them by the matching total
+  number of fish for that year, stock, fleet/area, and period. If only total
+  landed biomass is available, the product is biomass at age; convert that to
+  fish numbers only with compatible age-specific weights. Cite both source
+  values and record the calculation and units. Keep total landings only when
+  needed for a documented conversion; detailed gear splits are not needed for
+  this database. `weight` and
   `catch_weight` stay separate when a source uses distinct stock and fishery
   weights. `maturity_cohort` preserves maturity ogives indexed by birth cohort.
   `samp_time` records survey timing as a fraction of the year from 0 to 1 for
   each survey observation. Seasonal approximations are explained in row notes.
 - `outputs.csv`: reported population quantities and uncertainty where available.
   `age_group` records grouped estimates such as F for ages 5-8 or M for ages 9+.
+
+Relevant assessment PDFs and public data/model files are cached locally by
+stock in the gitignored `source_cache/` folder when they can be retrieved. The
+manifest records each source and any retrieval limitation; cached files are
+not committed.
 
 The database records what each source assessment did. It does not store tinyAM
 settings, proposed formulas, or judgements about whether tinyAM can reproduce a
