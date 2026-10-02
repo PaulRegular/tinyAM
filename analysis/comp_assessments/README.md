@@ -15,7 +15,7 @@ derived from model outputs. We prefer the latest accepted assessment and its
 original data and model documentation. The curated database warns that its
 quality checks cover stocks used in its analyses; consult the stock-specific
 source material before relying on an extracted value. This work does not replace
-or supersede the Charbonneau–Keith database.
+or supersede the Charbonneau–Keith database. Downloaded assessment PDFs and useful public data/model files are kept locally by stock under the gitignored `source_cache/` folder; each manifest records the source URL, retrieval date, and checksum.
 
 ## What is recorded
 
@@ -26,10 +26,18 @@ Five ordinary CSV tables live in `database/`:
 - `assessments.csv`: the production run investigated, its data end year,
   model-defining framework, source links, and collection status.
 - `assumptions.csv`: source assessment settings in long form.
-- `inputs.csv`: original catch-at-age, total landings, survey, biological, and
-  natural mortality inputs. Aggregate landings have a blank age and are retained
-  separately from catch-at-age observations.
+- `inputs.csv`: observed catch-at-age counts, survey data, biological inputs,
+  and natural mortality. `catch_at_age` stores numeric values, not proportions;
+  when a source reports proportions, convert them using a matching total on the
+  same measurement basis and record the calculation and units. Keep total
+  landings only when needed for that conversion; detailed gear splits are not
+  needed for this database. `weight` and
+  `catch_weight` stay separate when a source uses distinct stock and fishery
+  weights. `maturity_cohort` preserves maturity ogives indexed by birth cohort.
+  `samp_time` records survey timing as a fraction of the year from 0 to 1 for
+  each survey observation. Seasonal approximations are explained in row notes.
 - `outputs.csv`: reported population quantities and uncertainty where available.
+  `age_group` records grouped estimates such as F for ages 5-8 or M for ages 9+.
 
 The database records what each source assessment did. It does not store tinyAM
 settings, proposed formulas, or judgements about whether tinyAM can reproduce a
@@ -42,9 +50,11 @@ official machine readable files or tables, then official reports. Digitized or
 reconstructed values are labelled as such. `source_type` uses `native_model`,
 `official_machine_readable`, `official_table`, `digitized`, `reconstructed`,
 or `charbonneau_seed`. Source locations are stored in `assessments.csv`; each
-assumption and value also identifies the table, page, model field, or file from
-which it came. Unknown information is recorded as `unknown` with an explanation,
-not guessed.
+assumption and value also identifies its source location. `official_table` covers
+values copied from official report tables or figures; the precise table, figure,
+page, or file appears in `source_reference`. Digitized or reconstructed values
+are labelled accordingly. Unknown information is recorded as `unknown` with an
+explanation, not guessed.
 
 Select the newest production assessment whose public inputs and outputs can be
 linked to the same model run and recorded clearly. A newer advisory report may
@@ -72,11 +82,13 @@ will be documented here.
 ## Using the records
 
 Source `R/database_to_tiny_obs.R` and call
-`database_to_tiny_obs(assessment_id, inputs)` to reshape one assessment's
-canonical catch-at-age, survey, and biological input rows into tinyAM's `catch`,
-`index`, `weight`, and `maturity` tables. Aggregate landings are retained in the
-database but are not used as catch-at-age observations. The helper preserves reported values, units, survey names, and observation
-timing. It does not choose model settings or infer population processes.
+`database_to_tiny_obs(assessment_id, inputs)` to reshape compatible `catch`,
+`index`, `weight`, and `maturity` rows into tinyAM observation tables. The
+helper does not yet convert source `catch_at_age` rows automatically because
+those tables can differ from the assessment likelihood inputs (for example,
+reported landings-at-age versus the model full catch composition). It preserves
+stored values, units, survey names, and observation timing. It does not choose
+model settings or infer population processes.
 Natural mortality stays in `inputs.csv` for a separate, informed model setup.
 If a source structure cannot be represented without combining fleets, sexes,
 or seasons, the helper reports that limitation instead of silently combining
@@ -90,7 +102,62 @@ and assessment status. To review the selected curated records, run
 The final argument selects one candidate for review; the script does not add it
 to the source-assessment tables.
 
+Run `Rscript analysis/comp_assessments/scripts/003_fit_readiness.R` to export
+`results/fit_readiness.csv`. It reports each assessment's modeled years and ages,
+recruitment age, plus group, input counts, surveys and times, full-grid coverage,
+model-output availability, converter result, and `tinyAM::check_obs()` result.
+Grid checks use the source model's full year and age range, not merely the span
+of the rows that happened to be extracted. A partial source record remains
+partial even when some rows can be converted.
+
 This first database pass documents source assessments only. It does not fit
 tinyAM across the stock set, guarantee that every reported quantity can be
 reproduced, or resolve differences among assessment methods. Input and output
 availability varies by agency and stock; gaps remain explicit in the tables.
+
+## Notes from the cod extraction review
+
+For Northern cod, the database represents the 2025 production assessment under
+the 2023 framework. DFO's detailed research document for that run was published
+in April 2026; its model inputs extend through 2024 and selected estimates are
+reported through 2025. DFO later published a 2026 assessment summary to 2026
+(Science Advisory Report 2026/030), but it does not provide the full numerical
+input and model-output series needed to link those data to that run. Following
+the selection rule above, the 2026 summary is not entered as a separate
+assessment and none of its values are mixed into the 2025 record.
+
+The 2025 record contains 819 official commercial catch numbers-at-age values
+for ages 2-14 in 1962-2024 and 507 age-specific fall RV survey values. The
+published catch counts are retained directly; monthly and division-by-gear
+landings tables are omitted because they are not needed for this catch-at-age
+record. The fall survey omits 2004 and 2021 because of coverage problems and was not
+conducted in 2022; season-only timing is stored as an explicit 0.75
+approximation.
+Table 9 contributes 825
+beginning-of-year stock weight-at-age values for ages 0-14 in 1954-2008;
+values for 2009-2024 are not yet transcribed. Table 10 contributes 1,065
+mid-year catch weight-at-age values for ages 0-14 in 1954-2024. Both weight
+surfaces come from a cohort-based growth model, and their pre-1983 cells are
+hindcasts rather than direct survey measurements. Table 8 contributes 1,065
+female maturity-at-age estimates for cohorts 1954-2024. Their year field is a
+birth-cohort index, so an assessment-specific cohort-to-calendar-year mapping
+is needed before using them as tinyAM maturity inputs. Numerical Sentinel,
+Smith Sound, juvenile-survey, Capelin, tagging, and age-specific model-output
+series remain untranscribed. M is estimated within the model, not supplied.
+All catch-at-age values currently stored in the database are already counts in
+thousand fish; no proportion-to-count conversion was needed.
+
+For Southern Gulf cod, the 2024 assessment to 2023 reused the SCA model adopted
+in 2012 and updated through 2019. Its record includes annual outputs: SSB for
+1950-2023; recruitment of fish younger than age 4; and F for ages 5-8 and M for
+ages 5-8 and 9+ for 1950-2023. These output tables are transcribed from DFO
+2024 rebuilding-plan materials, which cite the 2024/026 assessment. The plan
+2023 SSB (11.9 kt; 95% CI 7.8-16.5) differs from the assessment report direct
+value (12 kt; 10.5-21.6); the database uses the report value for 2023 and the
+plan table only through 2022. The 2024 record still lacks updated catch-at-age
+proportions, survey observations, weight, maturity, and M values. The 2019
+record contains 480 reported landed numbers-at-age values for 1971-2018 (ages
+3-12+, in thousand fish). These are source-reported counts, not the full
+catch-composition inputs used by the SCA model. It also retains 759 annual rows
+derived by carrying source-listed maturity ogives forward to their next stated
+change year; these do not complete the 2024 assessment inputs.

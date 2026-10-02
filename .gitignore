@@ -54,4 +54,7 @@ analysis/*.html
 *.rds
 analysis/*.rds
 
+# Local assessment source documents and model/data files
+analysis/comp_assessments/source_cache/
+
 .positai
