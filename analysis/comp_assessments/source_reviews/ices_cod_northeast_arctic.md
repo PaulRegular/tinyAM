@@ -26,10 +26,10 @@ The native observation array has 2,710 slots, of which 2,377 contain fitted obse
 
 | Native index | Fitted years | Sampling fraction | Observations |
 |---|---|---:|---:|
-| FLT15_I:NorBarTrSur_I | 1981–2026 | 0.137 | 290 |
+| FLT15_I:NorBarTrSur_I | 1981–2013 | 0.137 | 290 |
 | FLT15_II:NorBarTrSur_II | 2014–2026 | 0.137 | 130 |
 | FLT16:NorBarLofAcSur | 1985–2026 | 0.1725 | 403 |
-| FLT18:RusSweptArea | 1982–2025 | 0.95 | 336 |
+| FLT18:RusSweptArea | 1982–2017 | 0.95 | 336 |
 | FLT007:Ecosystem | 2004–2025 | 0.7 | 190 |
 
 Catch observations end in 2025; fitted survey observations extend through 2026.
@@ -66,4 +66,9 @@ assigning completeness statuses.
 6,576 input rows, 4,793 output rows and 41 assumptions are represented. Original SAM log-observations are exponentiated to their native scale; missing slots are omitted rather than filled. Fixed final M includes externally iterated cannibalism mortality. N and summary quantities extend through fitted survey year 2026; historical F/Fbar end in catch year 2025. Predictions use the corresponding native observation rows. Available summary intervals are preserved; log-scale SEs are not placed in the canonical natural-scale SE field.
 
 Structural validation and scripts/007_validate_northeast_arctic_cod.R passed. Source exporters and report crosschecks are retained in the cache. No core package mathematics changed.
+
+
+## Benchmark follow-up
+
+WKBARFAR 2021 sections 2.3.1–2.3.2 confirm survey terminal age 12+, the 2014 winter-trawl split with separate q and shared error parameters, independent F innovations, and deliberate exclusion of suspicious historical catch values of one. The 2026 report section 3.2 confirms that the Russian survey was discontinued after 2017; empty later slots are not observations. The prediction–variance link was tested but excluded at the 2021 benchmark, then adopted in 2026. These are distinct accepted configurations.
 

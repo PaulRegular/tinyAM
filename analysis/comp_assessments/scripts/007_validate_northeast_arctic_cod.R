@@ -14,6 +14,8 @@ timing <- c("FLT15_I:NorBarTrSur_I" = .137, "FLT15_II:NorBarTrSur_II" = .137,
             "FLT007:Ecosystem" = .7)
 stopifnot(setequal(unique(index$survey), names(timing)))
 stopifnot(all(index$sampling_time == timing[index$survey]))
+stopifnot(max(index$year[index$survey == "FLT15_I:NorBarTrSur_I"]) == 2013)
+stopifnot(max(index$year[index$survey == "FLT18:RusSweptArea"]) == 2017)
 catch <- inputs[inputs$type == "catch", ]
 stopifnot(nrow(catch) == 1028, max(catch$year) == 2025)
 stopifnot(!any(catch$year == 2011 & catch$age == 15))
@@ -33,3 +35,4 @@ stopifnot(r$value[r$year == 2026] < 140000)
 interval <- outputs[!is.na(outputs$lwr), ]
 stopifnot(all(interval$lwr <= interval$value), all(interval$value <= interval$upr))
 cat("Northeast Arctic cod inventory, timing, exclusions, state mapping and reporting checks passed.\n")
+
