@@ -97,6 +97,7 @@ One row per assessment event or model run represented in the database.
 | `stock_id` | Foreign key to `stocks.csv` |
 | `assessment_year` | Year of the assessment/advice |
 | `terminal_year` | Last year of data fitted by the model |
+| `estimate_terminal_year` | Last year with a population estimate reported; may be later than `terminal_year` |
 | `assessment_type` | Annual, update, benchmark, framework, etc. |
 | `model_family` | SAM, Stock Synthesis, WHAM, NCAM, VPA/ADAPT, etc. |
 | `model_version` | Model/package/version identifier where known |
@@ -179,11 +180,12 @@ Long-format representation of numerical inputs supplied to the accepted assessme
 | `sex` | Sex |
 | `region` | Spatial region used by the fitted model |
 | `season` | Season |
-| `year` | Calendar/model year |
+| `year` | Calendar/model year, or cohort identifier when `year_basis` says so |
+| `year_basis` | Optional meaning of `year`; use `calendar_year` or `birth_cohort` |
 | `age` | Age |
 | `value` | Numerical value |
 | `unit` | Explicit unit |
-| `sampling_time` | Timing within year when part of the source/model definition |
+| `sampling_time` | Timing within year as a fraction from 0 to 1 when part of the source/model definition |
 | `source_type` | Provenance category |
 | `source_reference` | Specific file/table/object/page |
 | `transformation` | Transformation used only to recover the accepted-model input |
@@ -273,6 +275,13 @@ Do not use `reconstructed_source_input` for values derived solely for a downstre
 
 Changing a source table from wide to long form is allowed when scientific meaning is unchanged.
 
+When the source gives catch-at-age as number proportions, use the matching total
+number of removals to express the stored age values as numbers at age. Record
+the calculation, matching year/fleet/area, source references, and units in
+`transformation`; retain the total-removal series when it is needed to make
+that conversion. Do not convert biomass proportions to numbers without
+compatible age-specific weights.
+
 Example:
 
 ``` text
@@ -305,6 +314,7 @@ Long-format outputs from the accepted assessment.
 | `season`           | Season where applicable         |
 | `year`             | Year                            |
 | `age`              | Age where applicable            |
+| `age_group`        | Optional age range for grouped measures such as Fbar or Mbar |
 | `value`            | Point estimate                  |
 | `se`               | Standard error if available     |
 | `lwr`              | Lower interval if available     |
@@ -343,6 +353,10 @@ msy
 Use measures only when they are defined by the accepted assessment.
 
 Retain uncertainty where readily available.
+
+`type` identifies the broad output family; `measure` identifies the exact
+quantity. For example, an age-specific fishing mortality row uses
+`type = mortality` and `measure = fishing_mortality_at_age`.
 
 ------------------------------------------------------------------------
 

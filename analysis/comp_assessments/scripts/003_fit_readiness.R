@@ -48,19 +48,31 @@ readiness <- lapply(seq_len(nrow(assessments)), function(i) {
   ages <- model_ages(age_text)
   years <- if (!is.na(year_start) && !is.na(year_end)) seq(year_start, year_end) else integer()
 
-  catch <- x[x$type == "catch", , drop = FALSE]
-  catch_age <- x[x$type == "catch_at_age", , drop = FALSE]
-  index <- x[x$type == "index", , drop = FALSE]
-  weight <- x[x$type == "weight", , drop = FALSE]
-  catch_weight <- x[x$type == "catch_weight", , drop = FALSE]
-  maturity <- x[x$type == "maturity", , drop = FALSE]
-  maturity_cohort <- x[x$type == "maturity_cohort", , drop = FALSE]
+  catch <- x[x$type == "catch" & x$measure == "numbers_at_age", , drop = FALSE]
+  catch_age <- catch
+  index <- x[x$type == "index" & x$measure == "numbers_at_age", , drop = FALSE]
+  weight <- x[x$type == "weight" & x$measure == "weight_at_age", , drop = FALSE]
+  catch_weight <- x[x$type == "catch_weight" & x$measure == "weight_at_age", , drop = FALSE]
+  maturity_cohort <- x[x$type == "maturity" & x$year_basis == "birth_cohort", , drop = FALSE]
+  maturity <- x[x$type == "maturity" & x$measure == "maturity_at_age" &
+                  x$year_basis == "calendar_year", , drop = FALSE]
   m_input <- x[x$type == "M", , drop = FALSE]
-  m_output <- y[y$type == "M" & !is.na(y$age), , drop = FALSE]
-  index_surveys <- unique(index$survey[!is.na(index$survey) & nzchar(index$survey)])
-  index_times <- if (nrow(index)) unique(paste0(index$survey, "=", ifelse(is.na(index$samp_time), "unknown", index$samp_time))) else character()
-  samp_time <- suppressWarnings(as.numeric(index$samp_time))
-  timing_recorded <- nrow(index) > 0L && all(is.finite(samp_time) & samp_time >= 0 & samp_time <= 1)
+  m_output <- y[y$measure == "natural_mortality_at_age" & !is.na(y$age), , drop = FALSE]
+  documented_surveys <- a$survey[!is.na(a$survey) & nzchar(a$survey)]
+  index_surveys <- unique(c(index$survey[!is.na(index$survey) & nzchar(index$survey)],
+                            documented_surveys))
+  input_times <- if (nrow(index)) {
+    paste0(index$survey, "=", ifelse(is.na(index$sampling_time), "unknown", index$sampling_time))
+  } else character()
+  timing_rows <- a[a$setting %in% c("sampling_time", "rv_sampling_time"), , drop = FALSE]
+  input_survey_names <- unique(index$survey[!is.na(index$survey) & nzchar(index$survey)])
+  timing_rows <- timing_rows[!timing_rows$survey %in% input_survey_names, , drop = FALSE]
+  assumed_times <- if (nrow(timing_rows)) {
+    paste0(timing_rows$survey, "=", timing_rows$value)
+  } else character()
+  index_times <- unique(c(input_times, assumed_times))
+  sampling_time <- suppressWarnings(as.numeric(index$sampling_time))
+  timing_recorded <- nrow(index) > 0L && all(is.finite(sampling_time) & sampling_time >= 0 & sampling_time <= 1)
   timing_exact <- timing_recorded && !any(grepl("approx", index$notes, ignore.case = TRUE))
   index_age <- nrow(index) > 0L && all(!is.na(index$age))
   catch_grid <- grid_complete(catch, years, ages)
@@ -78,7 +90,8 @@ readiness <- lapply(seq_len(nrow(assessments)), function(i) {
                   seq(min(maturity_cohort$age), max(maturity_cohort$age)))
   } else FALSE
   m_grid <- grid_complete(m_input, years, ages) || grid_complete(m_output, years, ages)
-  has_expected_obs <- all(c("catch", "index", "weight", "maturity") %in% x$type)
+  has_expected_obs <- all(c(nrow(catch) > 0L, nrow(index) > 0L,
+                            nrow(weight) > 0L, nrow(maturity) > 0L))
   conversion_ok <- FALSE
   check_obs_ok <- FALSE
   conversion_error <- "Required catch, index, weight, and maturity rows are not all present."
@@ -95,13 +108,11 @@ readiness <- lapply(seq_len(nrow(assessments)), function(i) {
       conversion_error <- conditionMessage(conversion)
     }
   }
-  output_types <- unique(y$type)
-  has_age_output <- function(type) any(y$type == type & !is.na(y$age))
   missing <- c(
     if (!catch_grid) "complete catch-at-age observations on the full modeled year-age grid",
     if (!nrow(catch_age)) "numerical catch-at-age inputs" else if (!catch_age_source_grid) "gaps within the available catch-age year-age series",
     if (!index_age) "age-structured survey indices",
-    if (!length(index_surveys)) "survey identities" else if (length(index_surveys) < 2L && grepl("survey|index", setting(a, "data", "assessment_inputs", ""), ignore.case = TRUE)) "other model survey series are not transcribed",
+    if (!length(index_surveys)) "survey identities" else if (!nrow(index)) "numerical observations from the documented survey series are not transcribed" else if (length(index_surveys) < 2L && grepl("survey|index", setting(a, "data", "assessment_inputs", ""), ignore.case = TRUE)) "other model survey series are not transcribed",
     if (!timing_exact) "exact survey sampling times (recorded times may be season-level approximations)",
     if (!weight_grid) "complete stock weight-at-age matrix for all modeled years and ages",
     if (!maturity_grid) {
@@ -134,15 +145,16 @@ readiness <- lapply(seq_len(nrow(assessments)), function(i) {
     recruitment_age = setting(a, "N", "recruitment_age", setting(a, "recruitment", "recruitment_age")),
     plus_group = setting(a, "population", "plus_group", "unknown"),
     catch_rows = count("catch"),
-    catch_at_age_rows = count("catch_at_age"),
+    catch_at_age_rows = nrow(catch_age),
     catch_at_age_source_years = if (nrow(catch_age)) paste(range(catch_age$year), collapse = "-") else "unknown",
     catch_at_age_source_ages = if (nrow(catch_age)) paste(range(catch_age$age), collapse = "-") else "unknown",
-    landings_rows = count("landings"),
+    landings_rows = sum(x$type == "catch" &
+                          x$measure %in% c("total_numbers", "total_biomass")),
     index_rows = count("index"),
     weight_rows = count("weight"),
     catch_weight_rows = count("catch_weight"),
-    maturity_rows = count("maturity"),
-    maturity_cohort_rows = count("maturity_cohort"),
+    maturity_rows = nrow(maturity),
+    maturity_cohort_rows = nrow(maturity_cohort),
     maturity_cohort_years = if (nrow(maturity_cohort)) paste(range(maturity_cohort$year), collapse = "-") else "unknown",
     maturity_cohort_ages = if (nrow(maturity_cohort)) paste(range(maturity_cohort$age), collapse = "-") else "unknown",
     maturity_cohort_source_grid_complete = maturity_cohort_source_grid,
@@ -162,10 +174,10 @@ readiness <- lapply(seq_len(nrow(assessments)), function(i) {
     M_numerical_values_available = m_grid,
     database_to_tiny_obs_succeeds = conversion_ok,
     tinyAM_check_obs_passes = check_obs_ok,
-    N_at_age_output = has_age_output("N"),
-    F_at_age_output = has_age_output("F"),
-    SSB_output = "SSB" %in% output_types,
-    recruitment_output = "recruitment" %in% output_types,
+    N_at_age_output = any(y$measure == "numbers_at_age" & !is.na(y$age)),
+    F_at_age_output = any(y$measure == "fishing_mortality_at_age" & !is.na(y$age)),
+    SSB_output = any(y$measure == "SSB"),
+    recruitment_output = any(y$measure == "recruitment"),
     missing_items = if (length(missing)) paste(missing, collapse = "; ") else "none",
     stringsAsFactors = FALSE
   )

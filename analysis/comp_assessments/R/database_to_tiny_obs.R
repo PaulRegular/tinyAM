@@ -1,7 +1,8 @@
 database_to_tiny_obs <- function(assessment_id, inputs) {
-  required <- c("assessment_id", "type", "fleet", "survey", "sex", "region",
-                "season", "year", "age", "value", "unit", "samp_time",
-                "source_type", "source_reference", "notes")
+  required <- c("assessment_id", "type", "measure", "basis", "fleet", "survey",
+                "sex", "region", "season", "year", "year_basis", "age",
+                "value", "unit", "sampling_time", "source_type",
+                "source_reference", "transformation", "notes")
   missing <- setdiff(required, names(inputs))
   if (length(missing)) {
     stop("inputs is missing required columns: ", paste(missing, collapse = ", "), call. = FALSE)
@@ -48,32 +49,45 @@ database_to_tiny_obs <- function(assessment_id, inputs) {
     }
     d
   }
-  pick <- function(type) x[x$type == type, , drop = FALSE]
+  pick <- function(type, measure = NULL) {
+    keep <- x$type == type
+    if (!is.null(measure)) keep <- keep & x$measure == measure
+    x[keep, , drop = FALSE]
+  }
   as_obs <- function(d) {
     d$obs <- d$value
     d
   }
 
-  catch_source <- numeric_rows(pick("catch"), "catch", allow_missing = TRUE)
+  catch_source <- numeric_rows(pick("catch", "numbers_at_age"),
+                               "catch numbers-at-age", allow_missing = TRUE)
   if (nrow(catch_source) && length(unique(as.character(catch_source$fleet))) != 1L) {
     stop("tinyAM's catch table accepts one fleet; catch fleets were not combined.", call. = FALSE)
   }
   for (field in c("sex", "region", "season")) one_group(catch_source[[field]], paste("catch ", field, " group", sep = ""))
 
-  index_source <- numeric_rows(pick("index"), "index", allow_missing = TRUE)
+  index_source <- numeric_rows(pick("index", "numbers_at_age"),
+                               "index numbers-at-age", allow_missing = TRUE)
   if (anyNA(index_source$survey) || any(!nzchar(as.character(index_source$survey)))) {
     stop("Every index row needs its original survey name.", call. = FALSE)
   }
-  if (!is.numeric(index_source$samp_time) || anyNA(index_source$samp_time) ||
-      any(index_source$samp_time < 0 | index_source$samp_time > 1)) {
-    stop("Every index row needs a numeric samp_time from 0 to 1.", call. = FALSE)
+  if (!is.numeric(index_source$sampling_time) || anyNA(index_source$sampling_time) ||
+      any(index_source$sampling_time < 0 | index_source$sampling_time > 1)) {
+    stop("Every index row needs a numeric sampling_time from 0 to 1.", call. = FALSE)
   }
   if (anyDuplicated(key(index_source, c("year", "age", "survey")))) {
     stop("Index rows must be unique by year, age, and survey.", call. = FALSE)
   }
 
-  weight_source <- numeric_rows(pick("weight"), "weight")
-  maturity_source <- numeric_rows(pick("maturity"), "maturity")
+  weight_source <- numeric_rows(pick("weight", "weight_at_age"), "weight")
+  maturity_source <- x[x$type == "maturity" & x$measure == "maturity_at_age" &
+                         x$year_basis == "calendar_year", , drop = FALSE]
+  if (!nrow(maturity_source) && any(x$type == "maturity" &
+                                     x$year_basis == "birth_cohort")) {
+    stop("Cohort-specific maturity needs an explicit cohort-to-year mapping before tinyAM use.",
+         call. = FALSE)
+  }
+  maturity_source <- numeric_rows(maturity_source, "calendar-year maturity")
   if (any(maturity_source$value > 1)) stop("Maturity values must be proportions from 0 to 1.", call. = FALSE)
   if (!setequal(key(weight_source, c("year", "age")),
                 key(maturity_source, c("year", "age")))) {
@@ -101,6 +115,8 @@ database_to_tiny_obs <- function(assessment_id, inputs) {
                                           key(catch_source, c("year", "age")))]
   catch$obs <- catch$value
   catch$fleet <- one_value(catch_source$fleet, "catch fleet")
+  index_source$samp_time <- index_source$sampling_time
+  index_source$sampling_time <- NULL
   index <- as_obs(index_source)
   weight <- as_obs(weight_source)
   maturity <- as_obs(maturity_source)
