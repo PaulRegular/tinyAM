@@ -506,6 +506,23 @@ Do not declare an assessment input-complete merely because one usable catch seri
 
 `outputs_status` and `assumptions_status` likewise refer to completeness relative to the accepted assessment.
 
+## Stock source reviews
+
+Keep stock-specific review notes in one Markdown file per stock under
+`analysis/comp_assessments/source_reviews/`, named with the stable stock ID.
+Use that file for accepted-run verification, source trails, input and output
+coverage, transformations, validation findings, and unresolved gaps. When a
+stock has several assessment records, identify the assessment IDs and keep
+run-specific notes clearly separated within the stock's file.
+
+Keep the README focused on the database's purpose, structure and usage, with
+a compact index linking to the stock review files. Do not put detailed
+stock-specific review notes in the README or duplicate them there. Move any
+existing stock notes into the appropriate review file when revisiting a stock.
+The database tables remain the source of numerical values, assumptions,
+provenance and completeness statuses; review files explain the supporting
+checks and limitations.
+
 ## Source cache
 
 Relevant source files may be cached locally under:
