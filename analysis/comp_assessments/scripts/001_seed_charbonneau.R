@@ -7,8 +7,7 @@ candidate_stocks <- c(
   ices_herring_north_sea = "ICES-HAWG_ NS-IV 3a,7d_Clupea_harengus",
   afsc_pollock_ebs = "AFSC_ESB_Gadus_chalcogrammus",
   afsc_pollock_goa = "AFSC_GOA_Gadus_chalcogrammus",
-  afsc_cod_goa = "AFSC_GOA_Gadus_macrocephalus",
-  nefsc_haddock_georges_bank = "NEFSC-GARMIII_5Y_Melanogrammus_Aeglefinus"
+  afsc_cod_goa = "AFSC_GOA_Gadus_macrocephalus"
 )
 
 args <- commandArgs(trailingOnly = TRUE)

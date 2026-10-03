@@ -41,3 +41,6 @@ The stock script constructs age 8+ before fitting: sums catch/landings/discard n
 
 5,249 inputs, 2,353 outputs and 24 assumptions. Catch, landings fractions, stock/catch/landings/discard weights, maturity, M, both surveys and all 667 relative log-SD factors are represented. The SD factor is 1/sqrt(native precision weight), with the source weight retained in each row note; this is a relative input, not the fitted final observation SD. All 648 summary/interval and 981 N/F surface crosschecks passed. Structural validation and scripts/010_validate_north_sea_haddock.R passed. No core model changes.
 
+## Spawning definition resolved
+
+The accepted object's propF and propM matrices each contain 495 cells, spanning 1972–2026 and ages 0–8+, with all values zero. Both source matrices are now retained as biological inputs. These values define beginning-of-year spawning biomass; they are separate from survey sampling times and do not justify substituting a nonzero spawning fraction. The source-specific validator checks every cell against the cached native exports. Coverage is now 6,239 inputs, 2,353 outputs and 25 assumptions. Survey-unit clarification, initial-state semantics, framework follow-up, q and state uncertainty remain unresolved; statuses remain partial.

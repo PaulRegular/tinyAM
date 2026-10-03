@@ -127,6 +127,10 @@ duplicates <- list(
   outputs = c("assessment_id", "type", "measure", "fleet", "survey", "sex", "region",
               "season", "year", "age", "age_group")
 )
+composition_dimensions <- c("observation_id", "length_bin", "length_bin_lower",
+                            "length_bin_upper", "sample_size", "age_error", "partition")
+duplicates$inputs <- c(duplicates$inputs,
+                      intersect(composition_dimensions, names(inputs)))
 for (name in names(duplicates)) {
   x <- tables[[name]]
   key <- do.call(paste, c(lapply(x[duplicates[[name]]], function(z) {
@@ -139,16 +143,18 @@ for (name in names(duplicates)) {
 allowed_sources <- c("native_model", "official_machine_readable", "official_table",
                      "official_document",
                      "digitized", "reconstructed_source_input", "charbonneau_seed")
-allowed_input_types <- c("catch", "index", "weight", "catch_weight", "maturity", "M")
+allowed_input_types <- c("catch", "index", "weight", "catch_weight", "maturity", "M", "covariate", "biology")
 allowed_output_types <- c("population", "mortality", "biomass", "recruitment", "catch",
                           "index", "catchability")
 allowed_input_measures <- c("numbers_at_age", "biomass_at_age", "total_numbers",
-                            "total_biomass", "proportion_at_age", "weight_at_age", "spawning_weight_at_age",
+                            "total_biomass", "proportion_at_age", "proportion_at_length",
+                            "conditional_proportion_at_age", "weight_at_age", "spawning_weight_at_age",
                             "maturity_at_age", "natural_mortality_at_age",
                             "landings_proportion", "landings_numbers_at_age", "landings_fraction_at_age",
-                            "landings_weight_at_age", "discard_weight_at_age", "log_index_sd", "larval_abundance_index")
+                            "landings_weight_at_age", "discard_weight_at_age", "log_index_sd", "larval_abundance_index", "environmental_covariate", "fraction_F_before_spawning",
+                            "fraction_M_before_spawning")
 allowed_bases <- c("numbers", "biomass", "proportion_numbers", "proportion_biomass",
-                   "kg_per_fish", "proportion", "per_year", "log_scale")
+                   "kg_per_fish", "proportion", "per_year", "log_scale", "native_covariate")
 for (name in c("inputs", "outputs")) {
   x <- tables[[name]]
   if (anyNA(x$source_type) || any(!x$source_type %in% allowed_sources)) {
@@ -180,7 +186,8 @@ for (name in c("inputs", "outputs")) {
   }
   age_required <- if (name == "inputs") {
     x$measure %in% c("numbers_at_age", "biomass_at_age", "proportion_at_age",
-                     "weight_at_age", "spawning_weight_at_age", "maturity_at_age", "natural_mortality_at_age",
+                     "conditional_proportion_at_age", "fraction_F_before_spawning",
+                     "fraction_M_before_spawning", "weight_at_age", "spawning_weight_at_age", "maturity_at_age", "natural_mortality_at_age",
                      "landings_numbers_at_age", "landings_fraction_at_age",
                      "landings_weight_at_age", "discard_weight_at_age")
   } else {
@@ -197,8 +204,10 @@ for (name in c("inputs", "outputs")) {
     stop(name, "$age must contain whole ages for age-specific measures.", call. = FALSE)
   }
   value <- suppressWarnings(as.numeric(x$value))
-  if (anyNA(value) || any(!is.finite(value)) || any(value < 0)) {
-    stop(name, "$value must contain finite non-negative numbers.", call. = FALSE)
+  signed <- if (name == "inputs") x$type == "covariate" &
+    x$measure == "environmental_covariate" & x$basis == "native_covariate" else rep(FALSE, nrow(x))
+  if (anyNA(value) || any(!is.finite(value)) || any(value < 0 & !signed)) {
+    stop(name, "$value must contain finite numbers; negative values are allowed only for environmental covariates.", call. = FALSE)
   }
   if (name == "inputs") {
     if (any(x$type == "maturity" & (value < 0 | value > 1))) {
@@ -238,6 +247,38 @@ for (name in c("inputs", "outputs")) {
   }
 }
 
+composition <- inputs$measure %in% c("proportion_at_length", "conditional_proportion_at_age")
+if (any(composition)) {
+  missing <- setdiff(composition_dimensions, names(inputs))
+  if (length(missing)) stop("Composition inputs lack dimensions: ", paste(missing, collapse=", "))
+  z <- inputs[composition, , drop = FALSE]
+  for (field in setdiff(composition_dimensions, "observation_id")) {
+    values <- suppressWarnings(as.numeric(z[[field]]))
+    if (any(!is.na(z[[field]]) & (is.na(values) | !is.finite(values)))) {
+      stop("Composition inputs$", field, " must contain finite numbers or blanks.")
+    }
+    z[[field]] <- values
+  }
+  for (field in c("age_error", "partition")) {
+    if (any(z[[field]] < 0 | z[[field]] != floor(z[[field]]), na.rm = TRUE)) {
+      stop("Composition inputs$", field, " must contain non-negative integer codes.")
+    }
+  }
+  if (anyNA(z$observation_id) || any(!nzchar(z$observation_id)) ||
+      anyNA(z$sample_size) || any(z$sample_size <= 0)) {
+    stop("Composition inputs need observation IDs and positive supplied sample sizes.")
+  }
+  length_rows <- z$measure == "proportion_at_length"
+  if (any(length_rows & (is.na(z$length_bin) | z$length_bin < 0))) {
+    stop("Length compositions need non-negative native length-bin labels.")
+  }
+  age_rows <- z$measure == "conditional_proportion_at_age"
+  if (any(age_rows & (is.na(z$length_bin_lower) | is.na(z$length_bin_upper) |
+                     z$length_bin_upper < z$length_bin_lower | is.na(z$age_error)))) {
+    stop("Conditional age compositions need ordered conditioning bins and age-error codes.")
+  }
+}
+
 cat("Database valid: ", nrow(stocks), " stocks, ", nrow(assessments),
     " assessments, ", nrow(assumptions), " assumptions, ", nrow(inputs),
     " inputs, and ", nrow(outputs), " outputs.\n", sep = "")
@@ -253,3 +294,4 @@ for (id in assessments$assessment_id) {
       "; ages: ", if (any(is.finite(ages))) paste(range(ages[is.finite(ages)]), collapse = "-") else "unknown",
       "\n", sep = "")
 }
+

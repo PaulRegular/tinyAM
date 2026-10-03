@@ -416,3 +416,35 @@ Downstream-analysis-specific transformations, settings, compatibility judgments,
 `spawning_weight_at_age` distinguishes supplied spawning-stock weights from
 population weights when the source uses different biological surfaces. Use
 `type = weight`, `basis = kg_per_fish`; do not label biological purposes as spatial regions.
+
+## Native length and conditional age compositions
+
+`proportion_at_length` and `conditional_proportion_at_age` retain the composition
+representation consumed by an assessment. Use `basis = proportion_numbers` and
+`unit = proportion`. Do not replace these with an unconditional age distribution.
+
+Optional input columns preserve their dimensions:
+
+- `observation_id`: stable source record identifier, shared by its composition cells.
+- `length_bin`: native length-bin label for a length composition, in cm.
+- `length_bin_lower`, `length_bin_upper`: native conditioning-bin codes/bounds for
+  conditional age composition; specify the coding method and units in notes.
+- `sample_size`: supplied input sample size, distinct from an estimated effective size.
+- `age_error`: native ageing-error definition code; interpretation belongs in assumptions.
+- `partition`: native retained/discard/combined observation code, documented in notes.
+
+These columns are blank for inputs to which they do not apply. Preserve the
+source month in notes and record survey timing separately as a fraction of year.
+
+## Environmental covariates
+
+Use `type = covariate`, `measure = environmental_covariate` and
+`basis = native_covariate` for supplied environmental series used by the model.
+Signed finite values are permitted. Preserve the native scale and identify the
+variable and consuming model component in provenance/notes; do not standardize
+it again or treat it as an abundance index.
+
+`type = biology` with `fraction_F_before_spawning` or
+`fraction_M_before_spawning` records supplied year-age mortality fractions used
+in spawning biomass, with `basis = proportion`. Preserve fleet dimensions for F
+where present. These are biological inputs, separate from survey sampling timing.

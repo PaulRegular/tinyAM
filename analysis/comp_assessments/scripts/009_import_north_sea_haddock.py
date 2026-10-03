@@ -86,6 +86,11 @@ for row in rows('native_summary.csv'):
     output_row(kind, measure, row, unit,
                notes='Native estimate with published approximate 95% interval exp(log estimate +/- 2 log-SE). SE omitted because canonical SE has no scale field. Recruitment is age 0; Fbar is ages 2–4. Fitted 2026 recruitment is distinct from resampled advice recruitment.')
 
+for key,measure in [('propF','fraction_F_before_spawning'),('propM','fraction_M_before_spawning')]:
+    for row in rows('native_'+key+'.csv'):
+        input_row('biology',measure,'proportion',row,'proportion',fleet=row.get('fleet',''),
+                  notes='Original full year-age spawning-fraction matrix used by SAM; values are zero. Preserve source matrix without inventing a nonzero spawning time.')
+
 def assumption(component, setting, value, notes='', survey='', fleet='', reference=None):
     assumptions.append(dict(assessment_id=assessment, component=component, setting=setting,
                             value=value, notes=notes, survey=survey, fleet=fleet,
@@ -103,6 +108,7 @@ assumption('F','state_sharing','Independent representation at every modeled age'
 assumption('F','process','Age-correlated log-F random-walk increments','corFlag=2: AR1 correlation between age innovations; common innovation variance across ages.',fleet='Residual catch',reference=run+'conf/model.cfg')
 assumption('F','Fbar_age_range','2–4')
 assumption('M','treatment','Fixed annual supplied SMS mortality; age 8+ aggregated before fitting',reference=report+'; section 8.2.4; '+run+'src/datascript.R')
+assumption('biology','spawning_fractions','Zero F and M fractions before spawning in every native year-age cell','Both native matrices represented directly; beginning-of-year SSB definition.')
 assumption('biology','weights_maturity','Fixed annual supplied matrices; 8+ calculated before fitting','Stock weight, maturity and M use catch-number weights; component catch weights use corresponding component-number weights.',reference=run+'src/datascript.R')
 assumption('catch','components','Single total-catch fleet; landings, discards, BMS and industrial bycatch contribute','Component weights and landings fractions retained as supplied to SAM.',fleet='Residual catch')
 assumption('observation','likelihood','Lognormal; independent observation errors across age','obsCorStruct=ID for all three fleets.')
@@ -130,7 +136,7 @@ record=dict(assessment_id=assessment,stock_id=stock_id,assessment_year=2026,term
             is_current='TRUE',is_applied='TRUE',framework_year=2022,assessment_url=report,
             framework_url='',data_url=run+'data/',model_url=source,repository_url='',
             inputs_status='partial',outputs_status='partial',assumptions_status='partial',
-            notes='Accepted final run verified against 648 summary estimates/interval endpoints and 981 N/F-at-age values. All catch and both survey streams plus supplied matrices and relative survey SD factors represented. Survey-unit clarification, spawning fractions, benchmark/2025 review and detailed initial-state semantics remain unresolved. Numerical q and state uncertainty not yet exported. Baseline object in baserun is historical and not used. See source_reviews/ices_haddock_north_sea.md.')
+            notes='Accepted final run verified against 648 summary estimates/interval endpoints and 981 N/F-at-age values. All catch and both survey streams plus supplied matrices and relative survey SD factors represented. Survey-unit clarification, benchmark/2025 review and detailed initial-state semantics remain unresolved. Numerical q and state uncertainty not yet exported. Baseline object in baserun is historical and not used. See source_reviews/ices_haddock_north_sea.md.')
 for filename,new,key in [('stocks.csv',[stock],'stock_id'),('assessments.csv',[record],'assessment_id'),
                          ('inputs.csv',inputs,'assessment_id'),('outputs.csv',outputs,'assessment_id'),
                          ('assumptions.csv',assumptions,'assessment_id')]:

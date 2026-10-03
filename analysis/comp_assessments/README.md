@@ -142,3 +142,6 @@ in `source_reviews/`, with one Markdown file per stock.
 - [North Sea herring](source_reviews/ices_herring_north_sea.md)
 - [Eastern Bering Sea pollock](source_reviews/afsc_pollock_ebs.md)
 - [Gulf of Alaska pollock](source_reviews/afsc_pollock_goa.md)
+- [Gulf of Alaska Pacific cod](source_reviews/afsc_cod_goa.md)
+- [Georges Bank haddock](source_reviews/nefsc_haddock_georges_bank.md)
+

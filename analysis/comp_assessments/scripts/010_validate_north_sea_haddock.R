@@ -5,7 +5,7 @@ read <- function(name) {
 }
 inputs <- read("inputs")
 outputs <- read("outputs")
-stopifnot(nrow(inputs) == 5249, nrow(outputs) == 2353)
+stopifnot(nrow(inputs) == 6239, nrow(outputs) == 2353)
 obs <- inputs[inputs$type == "index" & inputs$measure == "numbers_at_age", ]
 sd <- inputs[inputs$measure == "log_index_sd", ]
 key <- function(x) paste(x$survey, x$year, x$age)
@@ -31,3 +31,14 @@ stopifnot(abs(ssb$value - 667758) > 30000)
 interval <- outputs[!is.na(outputs$lwr), ]
 stopifnot(all(interval$lwr <= interval$value), all(interval$value <= interval$upr))
 cat("Haddock survey coverage, SD pairing, age surfaces and forecast separation passed.\n")
+
+for (measure in c("fraction_F_before_spawning", "fraction_M_before_spawning")) {
+  x <- inputs[inputs$measure == measure, ]
+  stopifnot(nrow(x) == 495, all(x$value == 0),
+            setequal(x$year, 1972:2026), setequal(x$age, 0:8))
+  native <- read.csv(file.path("analysis/comp_assessments/source_cache/ices_haddock_north_sea_2026",
+    if (measure == "fraction_F_before_spawning") "native_propF.csv" else "native_propM.csv"))
+  joined <- merge(x, native, by = c("year", "age"))
+  stopifnot(nrow(joined) == 495, all(joined$value.x == joined$value.y))
+}
+cat("Both native spawning-fraction matrices verified.\n")
