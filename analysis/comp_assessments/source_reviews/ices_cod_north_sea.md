@@ -67,9 +67,9 @@ Cached sources remain gitignored. The
 source-specific importer requires Python with pdfplumber and base R:
 
 ```sh
-python analysis/comp_assessments/scripts/004_import_north_sea_cod.py . --rscript Rscript
-Rscript analysis/comp_assessments/scripts/002_validate_database.R
-Rscript analysis/comp_assessments/scripts/005_validate_north_sea_cod.R
+python analysis/comp_assessments/scripts/database/004_import_north_sea_cod.py . --rscript Rscript
+Rscript analysis/comp_assessments/scripts/database/002_validate_database.R
+Rscript analysis/comp_assessments/scripts/database/005_validate_north_sea_cod.R
 ```
 
 The importer checks all 2,688 native N/F/M values against the detailed report

@@ -1,4 +1,4 @@
-source("analysis/comp_assessments/scripts/002_validate_database.R")
+source("analysis/comp_assessments/scripts/database/002_validate_database.R")
 id <- "nefsc_haddock_georges_bank_2026"
 x <- inputs[inputs$assessment_id == id, ]
 y <- outputs[outputs$assessment_id == id, ]

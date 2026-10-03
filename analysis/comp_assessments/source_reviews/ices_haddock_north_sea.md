@@ -39,7 +39,7 @@ The stock script constructs age 8+ before fitting: sums catch/landings/discard n
 
 ## Canonical import
 
-6,906 inputs, 2,373 outputs and 25 assumptions. Catch, landings fractions, stock/catch/landings/discard weights, maturity, M, both surveys, all 667 native relative precision weights and all 667 derived relative log-SD factors are represented. The SD factor is 1/sqrt(weight); it is a relative input, not the fitted final observation SD. All 648 summary/interval and 981 N/F surface crosschecks passed. Structural validation and scripts/010_validate_north_sea_haddock.R passed. No core model changes.
+6,906 inputs, 2,373 outputs and 25 assumptions. Catch, landings fractions, stock/catch/landings/discard weights, maturity, M, both surveys, all 667 native relative precision weights and all 667 derived relative log-SD factors are represented. The SD factor is 1/sqrt(weight); it is a relative input, not the fitted final observation SD. All 648 summary/interval and 981 N/F surface crosschecks passed. Structural validation and scripts/database/010_validate_north_sea_haddock.R passed. No core model changes.
 
 ## Spawning definition resolved
 

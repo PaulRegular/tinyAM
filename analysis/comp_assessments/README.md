@@ -84,7 +84,7 @@ and other age structured models. The ten preferred candidates are Northern cod
 (2J3KL), southern Gulf cod (4T-4VN), North Sea cod, Northeast Arctic cod, North
 Sea haddock, North Sea herring, eastern Bering Sea pollock, Gulf of Alaska
 pollock, Gulf of Alaska Pacific cod, and Georges Bank haddock. Their PLOS 2026
-curated seed records are listed by `scripts/001_seed_charbonneau.R`; the seed's
+curated seed records are listed by `scripts/database/001_seed_charbonneau.R`; the seed's
 year range and model label are not treated as current production assessment
 facts. A stock may be replaced only if it is absent from the curated starting
 frame or has no identifiable comparable production assessment. Any substitution
@@ -107,14 +107,14 @@ or seasons, the helper reports that limitation instead of silently combining
 the data.
 
 From the repository root, run
-`Rscript analysis/comp_assessments/scripts/002_validate_database.R` to check
+`Rscript analysis/comp_assessments/scripts/database/002_validate_database.R` to check
 required columns, identifiers, links, duplicate rows, value types, source labels,
 and assessment status. To review the selected curated records, run
-`Rscript analysis/comp_assessments/scripts/001_seed_charbonneau.R path/to/metadata_no_age_corection.csv dfo_cod_2j3kl`.
+`Rscript analysis/comp_assessments/scripts/database/001_seed_charbonneau.R path/to/metadata_no_age_corection.csv dfo_cod_2j3kl`.
 The final argument selects one candidate for review; the script does not add it
 to the source-assessment tables.
 
-Run `Rscript analysis/comp_assessments/scripts/003_fit_readiness.R` to export
+Run `Rscript analysis/comp_assessments/scripts/database/003_fit_readiness.R` to export
 `results/fit_readiness.csv`. It reports each assessment's modeled years and ages,
 recruitment age, plus group, input counts, surveys and times, full-grid coverage,
 model-output availability, converter result, and `tinyAM::check_obs()` result.

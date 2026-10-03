@@ -1,4 +1,4 @@
-source("analysis/comp_assessments/scripts/002_validate_database.R")
+source("analysis/comp_assessments/scripts/database/002_validate_database.R")
 id <- "afsc_pollock_ebs_2024"
 x <- inputs[inputs$assessment_id == id, ]
 y <- outputs[outputs$assessment_id == id, ]
