@@ -91,6 +91,12 @@ for key,measure in [('propF','fraction_F_before_spawning'),('propM','fraction_M_
         input_row('biology',measure,'proportion',row,'proportion',fleet=row.get('fleet',''),
                   notes='Original full year-age spawning-fraction matrix used by SAM; values are zero. Preserve source matrix without inventing a nonzero spawning time.')
 
+for row in rows('native_catchability.csv'):
+    outputs.append(dict(assessment_id=assessment,type='catchability',measure=row['measure'],survey=row['survey'],age=row['age'],
+                        value=row['value'],se=row['se'],lwr=row['lwr'],upr=row['upr'],unit='native index coefficient' if row['measure']=='q' else 'dimensionless',
+                        source_type='native_model',source_reference=source+'; '+('logFpar' if row['measure']=='q' else 'logQpow')+' key '+row['key'],
+                        notes='Time-invariant coefficient in I=q*(N at survey time)^power. Natural-scale delta-method SE; 95% log-Wald interval. q units depend on native survey scale and power; it is not a simple proportion caught.'))
+
 def assumption(component, setting, value, notes='', survey='', fleet='', reference=None):
     assumptions.append(dict(assessment_id=assessment, component=component, setting=setting,
                             value=value, notes=notes, survey=survey, fleet=fleet,
@@ -101,7 +107,9 @@ assumption('population','modeled_years','1972–2026')
 assumption('population','modeled_ages','0–8; terminal 8+ group')
 assumption('population','recruitment_age','0')
 assumption('population','sex_region_season_structure','Combined sexes; one Northern Shelf stock; annual model')
-assumption('population','initial_state','unknown','Initial-state implementation remains to be reviewed.')
+assumption('population','initial_state','initState=0: no explicit first-state process density',
+           'First-year logN/logF remain latent random effects in the Laplace fit. Ordinary N/F transition densities start in year 2; a broad first-state prior is added only for observation residual calculations, not the ordinary assessment likelihood.',
+           reference='https://github.com/fishfollower/SAM/blob/1cc464b80f6f/stockassessment/inst/include/SAM/n.hpp; https://github.com/fishfollower/SAM/blob/1cc464b80f6f/stockassessment/inst/include/SAM/f.hpp')
 assumption('recruitment','treatment','Log-recruitment random walk; no stock–recruit relationship','stockRecruitmentModelCode=0; no constant-recruitment breaks.')
 assumption('N','process_variance_sharing','Recruitment separate; ages 1–7 shared; plus group separate','keyVarLogN=0,1,1,1,1,1,1,1,2')
 assumption('F','state_sharing','Independent representation at every modeled age','keyLogFsta=0,1,2,3,4,5,6,7,8',fleet='Residual catch')
@@ -117,7 +125,9 @@ assumption('observation','survey_weighting','Relative precision weight = 1/log(1
 for label,ages,timing in [('delta-GAMNS-WCQ1','1–8+',.125),('delta-GAMNS-WCQ3+Q4','0–8+',.75)]:
     assumption('survey','age_range',ages,survey=label)
     assumption('survey','sampling_time',timing,survey=label)
-    assumption('q','structure','Fixed age-specific q; no density-dependent power',survey=label)
+    assumption('q','structure','Time-invariant age-specific coefficient, with density-dependent power at young ages',
+               'Power applies at Q1 age 1 and Q3+Q4 ages 0–1; all other fitted survey ages have power 1. I=q*(N at survey time)^power.',
+               survey=label,reference=run+'conf/model.cfg; https://github.com/fishfollower/SAM/blob/1cc464b80f6f/stockassessment/inst/include/SAM/predobs.hpp')
 assumption('assessment','forecast_distinction','Advice resamples 2000–2025 recruitment and uses forecast weights and three-year mean maturity/M','Native fitted 2026 SSB differs from advice forecast SSB; preserve native quantities.',reference=report+'; section 8.6')
 for row in obs:
     if row['fleet']=='1':
@@ -136,7 +146,7 @@ record=dict(assessment_id=assessment,stock_id=stock_id,assessment_year=2026,term
             is_current='TRUE',is_applied='TRUE',framework_year=2022,assessment_url=report,
             framework_url='',data_url=run+'data/',model_url=source,repository_url='',
             inputs_status='partial',outputs_status='partial',assumptions_status='partial',
-            notes='Accepted final run verified against 648 summary estimates/interval endpoints and 981 N/F-at-age values. All catch and both survey streams plus supplied matrices and relative survey SD factors represented. Survey-unit clarification, benchmark/2025 review and detailed initial-state semantics remain unresolved. Numerical q and state uncertainty not yet exported. Baseline object in baserun is historical and not used. See source_reviews/ices_haddock_north_sea.md.')
+            notes='Accepted final run verified against 648 summary estimates/interval endpoints and 981 N/F-at-age values. All catch and both survey streams plus supplied matrices and relative survey SD factors represented. Survey-unit clarification, benchmark/2025 review and detailed other framework semantics remain unresolved. Catchability coefficients and powers with transformed uncertainty are represented; state uncertainty remains pending. Baseline object in baserun is historical and not used. See source_reviews/ices_haddock_north_sea.md.')
 for filename,new,key in [('stocks.csv',[stock],'stock_id'),('assessments.csv',[record],'assessment_id'),
                          ('inputs.csv',inputs,'assessment_id'),('outputs.csv',outputs,'assessment_id'),
                          ('assumptions.csv',assumptions,'assessment_id')]:

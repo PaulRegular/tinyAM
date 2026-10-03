@@ -80,3 +80,15 @@ Structural validation and scripts/007_validate_northeast_arctic_cod.R passed. So
 
 WKBARFAR 2021 sections 2.3.1–2.3.2 confirm survey terminal age 12+, the 2014 winter-trawl split with separate q and shared error parameters, independent F innovations, and deliberate exclusion of suspicious historical catch values of one. The 2026 report section 3.2 confirms that the Russian survey was discontinued after 2017; empty later slots are not observations. The prediction–variance link was tested but excluded at the 2021 benchmark, then adopted in 2026. These are distinct accepted configurations.
 
+## Spawning inputs and catchability uncertainty
+
+The accepted fit has no logQpow parameters and all keyQpow entries are -1, confirming no density-dependent power. Fifty survey-age q values now represent 45 unique logFpar parameters across the five index series; ages 11 and 12 share q within each series. Values come directly from native fixed effects. Reported SEs are natural-scale delta-method approximations and intervals are 95% log-Wald intervals; neither log SEs nor arbitrary units are substituted.
+
+Both propF and propM full matrices (81 years by 13 ages) are now retained as biological inputs, adding 2,106 source cells. All are zero, consistent with the earlier assumption notes. The stock-specific validator confirms the zero spawning fractions, q age sharing and uncertainty transformation. Coverage is now 8,682 inputs, 4,843 outputs and 41 assumptions. Completeness remains partial pending remaining unit/initial-state and statistical interpretation issues.
+## Initial-state semantics resolved
+
+Both native initN/initF vectors are empty and initState=0. The accepted SAM revision's n.hpp and f.hpp evaluate ordinary process transitions from the second modeled year onward, with no explicit density for the first logN/logF state. Those first-year states remain latent random effects in the Laplace fit. A broad first-state normal prior is added only when calculating observation residuals; it must not be described as a regular assessment prior. The native configuration checks pass. This resolves the earlier initial-state gap without changing the fitted object or model mathematics.
+
+Exact source files:
+https://github.com/fishfollower/SAM/blob/1cc464b80f6f/stockassessment/inst/include/SAM/n.hpp
+https://github.com/fishfollower/SAM/blob/1cc464b80f6f/stockassessment/inst/include/SAM/f.hpp

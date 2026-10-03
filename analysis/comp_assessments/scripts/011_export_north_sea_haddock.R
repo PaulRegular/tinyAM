@@ -47,3 +47,25 @@ print(summary[summary$year >= 2025, ])
 
 
 
+
+p <- fit$sdrep$par.fixed
+s <- sqrt(diag(fit$sdrep$cov.fixed))
+q_tables <- list()
+for (measure in c('q', 'q_power')) {
+  parameter <- if (measure == 'q') 'logFpar' else 'logQpow'
+  keys <- if (measure == 'q') fit$conf$keyLogFpar else fit$conf$keyQpow
+  vals <- p[names(p) == parameter]
+  ses <- s[names(p) == parameter]
+  stopifnot(length(vals) == length(fit$pl[[parameter]]), all(abs(vals-fit$pl[[parameter]]) < 1e-10))
+  ages <- fit$conf$minAge:fit$conf$maxAge
+  for (f in 2:3) for (a in seq_along(ages)) {
+    key <- keys[f, a]
+    if (key < 0) next
+    k <- key + 1
+    q_tables[[length(q_tables)+1]] <- data.frame(measure=measure, survey=fleet[f], age=ages[a], key=key,
+      value=exp(vals[k]), se=exp(vals[k])*ses[k],
+      lwr=exp(vals[k]-qnorm(.975)*ses[k]), upr=exp(vals[k]+qnorm(.975)*ses[k]),
+      log_estimate=vals[k], log_se=ses[k])
+  }
+}
+write.csv(do.call(rbind, q_tables), file.path(cache, 'native_catchability.csv'), row.names=FALSE)

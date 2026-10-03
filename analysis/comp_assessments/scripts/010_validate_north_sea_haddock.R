@@ -5,7 +5,7 @@ read <- function(name) {
 }
 inputs <- read("inputs")
 outputs <- read("outputs")
-stopifnot(nrow(inputs) == 6239, nrow(outputs) == 2353)
+stopifnot(nrow(inputs) == 6239, nrow(outputs) == 2373)
 obs <- inputs[inputs$type == "index" & inputs$measure == "numbers_at_age", ]
 sd <- inputs[inputs$measure == "log_index_sd", ]
 key <- function(x) paste(x$survey, x$year, x$age)
@@ -42,3 +42,22 @@ for (measure in c("fraction_F_before_spawning", "fraction_M_before_spawning")) {
   stopifnot(nrow(joined) == 495, all(joined$value.x == joined$value.y))
 }
 cat("Both native spawning-fraction matrices verified.\n")
+
+q <- outputs[outputs$type == "catchability", ]
+stopifnot(nrow(q) == 20, all(is.na(q$year)), all(q$se > 0),
+          all(q$lwr < q$value), all(q$upr > q$value))
+power <- q[q$measure == "q_power", ]
+stopifnot(nrow(power) == 3,
+          setequal(paste(power$survey, power$age), c("delta-GAMNS-WCQ1 1", "delta-GAMNS-WCQ3+Q4 0", "delta-GAMNS-WCQ3+Q4 1")))
+native_q <- read.csv("analysis/comp_assessments/source_cache/ices_haddock_north_sea_2026/native_catchability.csv")
+joined <- merge(q, native_q, by = c("measure", "survey", "age"))
+stopifnot(nrow(joined) == 20, all(abs(joined$value.x-exp(joined$log_estimate)) < 1e-10),
+          all(abs(joined$se.x-joined$value.x*joined$log_se) < 1e-10))
+cat("Catchability power mapping and uncertainty scales verified.\n")
+
+model_env <- new.env()
+load("analysis/comp_assessments/source_cache/ices_haddock_north_sea_2026/run_model.RData", model_env)
+stopifnot(model_env$fit$conf$initState == 0,
+          length(model_env$fit$pl$initN) == 0, length(model_env$fit$pl$initF) == 0,
+          all(c("logN", "logF") %in% names(model_env$fit$sdrep$par.random)))
+cat("Native initial-state configuration verified.\n")

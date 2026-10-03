@@ -20,6 +20,12 @@ analysis/comp_assessments/
 
 All canonical tables should remain ordinary CSV files so they can be inspected directly in R, Excel, or a text editor.
 
+This document defines source records, not the tinyAM analysis pipeline.
+Use `PROTOCOL.md` to obtain, verify, or repair those records, and
+`TINYAM_TRANSLATION.md` to convert them into observations, fit models, and
+compare results. A source-data gap discovered during translation may require
+a validated database revision; downstream model choices remain separate.
+
 ## Core principles
 
 1.  **Represent the accepted assessment faithfully.** Preserve the dimensions and meaning of the accepted model, including fleets, surveys, sexes, regions, and seasons where applicable.
@@ -128,6 +134,12 @@ not_applicable
 Use `not_applicable` sparingly.
 
 Status fields describe completeness relative to the accepted assessment, not relative to a downstream analysis.
+
+Keep translation readiness, fitting failures, convergence results, and
+comparison completion in analysis diagnostics. A partial source record can
+support a documented limited analysis, and a complete source record can still
+require modeling approximations. Neither case changes what these status
+fields mean.
 
 ------------------------------------------------------------------------
 
@@ -301,12 +313,24 @@ Do not use `reconstructed_source_input` for values derived solely for a downstre
 
 Changing a source table from wide to long form is allowed when scientific meaning is unchanged.
 
-When the source gives catch-at-age as number proportions, use the matching total
-number of removals to express the stored age values as numbers at age. Record
-the calculation, matching year/fleet/area, source references, and units in
-`transformation`; retain the total-removal series when it is needed to make
-that conversion. Do not convert biomass proportions to numbers without
-compatible age-specific weights.
+Catch-at-age is the working quantity required by the tinyAM translation.
+Distinguish two source situations:
+
+- If proportions describe an underlying numbers-at-age input that is not
+  otherwise available, recover that accepted-model input using matching total
+  removals. Record the calculation, year/fleet/area, source references, and
+  units in `transformation`, with `source_type = reconstructed_source_input`.
+- If the accepted model fits a total and an age composition separately, retain
+  both native inputs. Their conversion to tinyAM numbers-at-age is a derived
+  analysis product and belongs outside the canonical tables.
+
+Number proportions multiplied by total numbers give numbers-at-age; multiplied
+by total biomass, they do not directly give fish counts. Conversions involving
+biomass require compatible catch weights and the documented formulas in
+`TINYAM_TRANSLATION.md`. Retain the source quantities needed to reproduce a
+reconstruction, and do not sum overlapping direct and reconstructed values.
+Total landings and gear detail are otherwise optional unless material to the
+accepted model or the conversion.
 
 Example:
 
@@ -380,6 +404,26 @@ Use measures only when they are defined by the accepted assessment.
 
 Retain uncertainty where readily available.
 
+## Uncertainty and estimate definitions
+
+The `se` column records a standard error, not a coefficient of variation (CV).
+Document its scale in `notes`: normally the natural scale of `value`, or an
+explicitly reported log scale. Identify delta-method natural-scale SEs as
+approximations. Do not silently put a CV in `se` or infer a scale from the size
+of the number. If only a CV is available, preserve it with its source meaning
+in notes; any conversion to an SE must be justified and documented.
+
+For `lwr` and `upr`, record the interval level and whether it is a confidence
+or credible interval. Identify whether `value` is a mean, median, or another
+reported estimate when that distinction matters. Unknown uncertainty or
+interval construction remains unknown; missing values must not be interpreted
+as zero uncertainty or used to invent new intervals.
+
+Keep native definitions, such as recruitment age, SSB timing and sex convention,
+Fbar age range and weighting, and terminal age groups, in the associated
+assumptions and row notes. Common-definition comparisons calculated for tinyAM
+belong in analysis outputs rather than replacing source values here.
+
 `type` identifies the broad output family; `measure` identifies the exact
 quantity. For example, an age-specific fishing mortality row uses
 `type = mortality` and `measure = fishing_mortality_at_age`.
@@ -448,3 +492,8 @@ it again or treat it as an abundance index.
 `fraction_M_before_spawning` records supplied year-age mortality fractions used
 in spawning biomass, with `basis = proportion`. Preserve fleet dimensions for F
 where present. These are biological inputs, separate from survey sampling timing.
+
+Time-invariant `q_power` outputs may have a blank year, like `q`. Record the
+power separately from the catchability coefficient and document the observation
+equation; a coefficient in a power relationship is not a simple catch fraction.
+Natural-scale SEs obtained by the delta method must be identified as such.

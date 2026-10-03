@@ -84,6 +84,18 @@ for row in rows('native_summary.csv'):
     output_row(kind, measure, row, unit,
                notes='Native estimate with 95% log-scale Wald interval. SE omitted because canonical SE has no scale field. Recruitment is age 3; Fbar is ages 5–10. Fitted 2026 recruitment is not the RCT3 forecast used for advice.')
 
+for key,measure in [('propF','fraction_F_before_spawning'),('propM','fraction_M_before_spawning')]:
+    for row in rows('native_'+key+'.csv'):
+        inputs.append(dict(assessment_id=assessment,type='biology',measure=measure,basis='proportion',
+                           fleet=row.get('fleet',''),year=row['year'],year_basis='calendar_year',age=row['age'],value=row['value'],unit='proportion',
+                           source_type='native_model',source_reference=source+'; fit$data$'+key,
+                           notes='Original full source matrix; zero mortality fraction before spawning. Distinct from survey sampling timing.'))
+for row in rows('native_catchability.csv'):
+    outputs.append(dict(assessment_id=assessment,type='catchability',measure='q',survey=row['survey'],age=row['age'],
+                        value=row['value'],se=row['se'],lwr=row['lwr'],upr=row['upr'],unit='native index coefficient',
+                        source_type='native_model',source_reference=source+'; logFpar key '+row['key'],
+                        notes='Time-invariant q coefficient; no density-dependent power. Natural-scale delta-method SE and 95% log-Wald interval. Ages 11 and 12 share the same fitted coefficient. Native survey units retained.'))
+
 def assumption(component, setting, value, notes='', survey='', fleet='', reference=None):
     assumptions.append(dict(assessment_id=assessment, component=component, setting=setting,
                             value=value, notes=notes, survey=survey, fleet=fleet,
@@ -94,7 +106,9 @@ assumption('population','modeled_years','1946–2026')
 assumption('population','modeled_ages','3–15; terminal 15+ group')
 assumption('population','recruitment_age','3')
 assumption('population','sex_region_season_structure','Combined sexes; single NEA cod stock; annual model')
-assumption('population','initial_state','unknown','initState=0; implementation semantics require further source review.')
+assumption('population','initial_state','initState=0: no explicit first-state process density',
+           'First-year logN/logF remain latent random effects in the Laplace fit. Ordinary N/F transition densities start in year 2; a broad first-state prior is added only for observation residual calculations, not the ordinary assessment likelihood.',
+           reference='https://github.com/fishfollower/SAM/blob/1cc464b80f6f/stockassessment/inst/include/SAM/n.hpp; https://github.com/fishfollower/SAM/blob/1cc464b80f6f/stockassessment/inst/include/SAM/f.hpp')
 assumption('recruitment','treatment','Stochastic log recruitment; no stock–recruit relationship','stockRecruitmentModelCode=0; no constant recruitment breaks.')
 assumption('N','process_variance_sharing','Age 3 separate; ages 4–15 share a variance','keyVarLogN=0,1,1,1,1,1,1,1,1,1,1,1,1')
 assumption('F','state_sharing','Separate ages 3–13; ages 14 and 15 share a state','keyLogFsta=0,1,2,3,4,5,6,7,8,9,10,11,11',fleet='Residual catch')

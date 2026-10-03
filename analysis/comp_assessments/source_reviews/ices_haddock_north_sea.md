@@ -44,3 +44,18 @@ The stock script constructs age 8+ before fitting: sums catch/landings/discard n
 ## Spawning definition resolved
 
 The accepted object's propF and propM matrices each contain 495 cells, spanning 1972–2026 and ages 0–8+, with all values zero. Both source matrices are now retained as biological inputs. These values define beginning-of-year spawning biomass; they are separate from survey sampling times and do not justify substituting a nonzero spawning fraction. The source-specific validator checks every cell against the cached native exports. Coverage is now 6,239 inputs, 2,353 outputs and 25 assumptions. Survey-unit clarification, initial-state semantics, framework follow-up, q and state uncertainty remain unresolved; statuses remain partial.
+## Catchability power correction
+
+Inspection of the accepted fit and exact SAM revision revealed an error in the previous assumption text: this model DOES estimate density-dependent survey powers. keyQpow activates separate powers at Q1 age 1 and Q3+Q4 ages 0 and 1. The other survey ages use power 1. The exact prediction code multiplies log abundance after survey-time survival by exp(logQpow), then adds logFpar: I=q*(N at survey time)^power. Thus age-specific q coefficients at affected ages cannot be interpreted as simple fractions caught.
+
+The incorrect no-power assumption has been replaced. Seventeen q coefficients and three powers are exported from native fixed effects and their covariance, with natural-scale delta-method SEs and 95% log-Wald intervals. Source-specific checks confirm parameter-to-age mapping, values and SE scales. The accepted object is unchanged. Coverage is 6,239 inputs, 2,373 outputs and 25 assumptions; all statuses remain partial. This finding supersedes the earlier description of catchability without density dependence.
+
+Code source:
+https://github.com/fishfollower/SAM/blob/1cc464b80f6f/stockassessment/inst/include/SAM/predobs.hpp
+## Initial-state semantics resolved
+
+Both native initN/initF vectors are empty and initState=0. The accepted SAM revision's n.hpp and f.hpp evaluate ordinary process transitions from the second modeled year onward, with no explicit density for the first logN/logF state. Those first-year states remain latent random effects in the Laplace fit. A broad first-state normal prior is added only when calculating observation residuals; it must not be described as a regular assessment prior. The native configuration checks pass. This resolves the earlier initial-state gap without changing the fitted object or model mathematics.
+
+Exact source files:
+https://github.com/fishfollower/SAM/blob/1cc464b80f6f/stockassessment/inst/include/SAM/n.hpp
+https://github.com/fishfollower/SAM/blob/1cc464b80f6f/stockassessment/inst/include/SAM/f.hpp

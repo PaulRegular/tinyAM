@@ -3,7 +3,7 @@ id <- "afsc_pollock_goa_2024"
 x <- inputs[inputs$assessment_id == id, ]
 y <- outputs[outputs$assessment_id == id, ]
 a <- assessments[assessments$assessment_id == id, ]
-stopifnot(nrow(x) == 5134, nrow(y) == 660, a$model_version == "23d",
+stopifnot(nrow(x) == 5174, nrow(y) == 708, a$model_version == "23d",
           a$inputs_status == "partial", a$outputs_status == "partial")
 index <- x[x$type == "index", ]
 totals <- index[index$measure == "total_biomass", ]
@@ -38,3 +38,55 @@ stopifnot(nrow(n) == 550, nrow(r) == 55, nrow(ssb) == 55,
           all(r$lwr <= r$value & r$value <= r$upr),
           all(ssb$lwr <= ssb$value & ssb$value <= ssb$upr), all(is.na(y$se)))
 message("GOA pollock survey coverage, timing, grouped compositions, biology and uncertainty checks passed.")
+
+covariate <- x[x$type == "covariate", ]
+native <- read.csv("analysis/comp_assessments/source_cache/afsc_pollock_goa_2024/native_inputs_raw.csv")
+stopifnot(nrow(covariate) == 40,
+          identical(as.numeric(covariate$year), native$value[native$key == "Ecov_obs_year"]),
+          identical(covariate$value, native$value[native$key == "Ecov_obs"]),
+          all(covariate$basis == "native_covariate"),
+          all(covariate$survey == "Shelikof winter acoustic"))
+message("GOA pollock environmental observations match native input values and years.")
+
+stopifnot(all(is.finite(comp$sample_size)), all(comp$sample_size > 0))
+for (label in c("Combined fishery", unique(comp$survey[!is.na(comp$survey)]))) {
+  z <- if (label == "Combined fishery") fsh else comp[!is.na(comp$survey) & comp$survey == label, ]
+  stopifnot(all(vapply(split(z$sample_size, z$year), function(v) length(unique(v)) == 1, logical(1))))
+}
+age_transition <- native[native$key == "age_trans", ]
+stopifnot(nrow(age_transition) == 100, all(age_transition$value >= 0),
+          all(abs(tapply(age_transition$value, age_transition$row, sum) - 1) < 0.00011))
+message("Composition sample sizes and native age-transition dimensions validated.")
+
+source_sizes <- list("Combined fishery" = c("fshyrs", "multN_fsh", "1"),
+                     "Shelikof winter acoustic" = c("srv_acyrs1", "multN_srv1", "2"),
+                     "NMFS bottom trawl" = c("srv_acyrs2", "multN_srv2", "1"),
+                     "ADF&G crab/groundfish trawl" = c("srv_acyrs3", "multN_srv3", "2"),
+                     "Summer acoustic" = c("srv_acyrs6", "multN_srv6", "2"))
+for (label in names(source_sizes)) {
+  keys <- source_sizes[[label]]
+  years <- native$value[native$key == keys[1]]
+  sizes <- native$value[native$key == keys[2]] * as.numeric(keys[3])
+  z <- if (label == "Combined fishery") fsh else comp[!is.na(comp$survey) & comp$survey == label, ]
+  stopifnot(identical(z$sample_size, sizes[match(z$year, years)]))
+}
+record <- assumptions[assumptions$assessment_id == id & assumptions$setting == "age_error_matrix", ]
+recorded_matrix <- as.numeric(strsplit(gsub("]", "", gsub("[", "", record$value, fixed = TRUE), fixed = TRUE), ",")[[1]])
+source_matrix <- age_transition[order(age_transition$row, age_transition$column), ]
+stopifnot(nrow(record) == 1, identical(recorded_matrix, source_matrix$value))
+message("All composition weights and recorded age-error cells match native inputs exactly.")
+
+stopifnot(length(native$value[native$key == "rwlk_sd"]) == 54,
+          all(native$value[native$key == "rwlk_sd"] == 0.05))
+q_sd <- assumptions$value[assumptions$assessment_id == id & assumptions$setting == "catchability_increment_sd"]
+q_sd <- as.numeric(strsplit(gsub("]", "", gsub("[", "", q_sd, fixed = TRUE), fixed = TRUE), ",")[[1]])
+stopifnot(identical(q_sd, native$value[native$key == "q3_rwlk_sd"]))
+message("Active fishery and survey process-penalty scales match native values.")
+
+biomass <- y[y$measure == "total_biomass", ]
+source_biomass <- read.csv("analysis/comp_assessments/source_cache/afsc_pollock_goa_2024/report_age3plus_biomass.csv")
+stopifnot(nrow(biomass) == 48, all(biomass$age_group == "3+"),
+          identical(biomass$value, as.numeric(source_biomass$value)),
+          identical(ssb$value[match(source_biomass$year, ssb$year)], as.numeric(source_biomass$ssb)),
+          identical(r$value[match(source_biomass$year, r$year)], as.numeric(source_biomass$recruitment)))
+message("Age-3+ biomass validated; table SSB and recruitment agree with independent published table.")
