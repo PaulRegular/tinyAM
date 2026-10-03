@@ -146,7 +146,7 @@ allowed_input_measures <- c("numbers_at_age", "biomass_at_age", "total_numbers",
                             "total_biomass", "proportion_at_age", "weight_at_age",
                             "maturity_at_age", "natural_mortality_at_age",
                             "landings_proportion", "landings_numbers_at_age", "landings_fraction_at_age",
-                            "landings_weight_at_age", "discard_weight_at_age", "log_index_sd")
+                            "landings_weight_at_age", "discard_weight_at_age", "log_index_sd", "larval_abundance_index")
 allowed_bases <- c("numbers", "biomass", "proportion_numbers", "proportion_biomass",
                    "kg_per_fish", "proportion", "per_year", "log_scale")
 for (name in c("inputs", "outputs")) {

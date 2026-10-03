@@ -260,3 +260,43 @@ ices_haddock_north_sea_2026,survey,,delta-GAMNS-WCQ3+Q4,,,,age_range,0–8+,http
 ices_haddock_north_sea_2026,survey,,delta-GAMNS-WCQ3+Q4,,,,sampling_time,0.75,https://stockassessment.org/datadisk/stockassessment/userdirs/user3/NShaddock_WGNSSK2026_Run1/run/model.RData,
 ices_haddock_north_sea_2026,q,,delta-GAMNS-WCQ3+Q4,,,,structure,Fixed age-specific q; no density-dependent power,https://stockassessment.org/datadisk/stockassessment/userdirs/user3/NShaddock_WGNSSK2026_Run1/run/model.RData,
 ices_haddock_north_sea_2026,assessment,,,,,,forecast_distinction,Advice resamples 2000–2025 recruitment and uses forecast weights and three-year mean maturity/M,https://ndownloader.figshare.com/files/66104291; section 8.6,Native fitted 2026 SSB differs from advice forecast SSB; preserve native quantities.
+ices_herring_north_sea_2026,population,,,,,,modeled_years,1947–2026,https://doi.org/10.17895/ices.pub.31424315; Table 2.6.2.7,
+ices_herring_north_sea_2026,population,,,,,,ages,0–8 winter rings; plus group 8+,https://doi.org/10.17895/ices.pub.31424315; Table 2.6.2.7,
+ices_herring_north_sea_2026,population,,,,,,recruitment_age,0 winter rings,https://doi.org/10.17895/ices.pub.31424315; Table 2.6.2.7,
+ices_herring_north_sea_2026,assessment,,,,,,accepted_run,NSAS_HAWG2026_sf,https://doi.org/10.17895/ices.pub.31424315; Section 2.6; pinned model_sf.R,Single-fleet historical assessment; multifleet model supports fleet forecasts.
+ices_herring_north_sea_2026,N,,,,,,variance_sharing,Recruitment separate; ages 1–8 share variance,https://doi.org/10.17895/ices.pub.31424315; Table 2.6.2.7,
+ices_herring_north_sea_2026,F,Combined catch,,,,,state_sharing,Ages 0–6 separate; ages 7–8 share one state,https://doi.org/10.17895/ices.pub.31424315; Table 2.6.2.7,
+ices_herring_north_sea_2026,F,Combined catch,,,,,innovation_variance_sharing,Ages 0–1 / 2–5 / 6–8,https://doi.org/10.17895/ices.pub.31424315; Table 2.6.2.7,
+ices_herring_north_sea_2026,F,Combined catch,,,,,age_correlation,AR1,https://doi.org/10.17895/ices.pub.31424315; utilities_model_config.R: config_sf_IBPNSherring2021,Pinned single-fleet configuration sets cor.F=2.
+ices_herring_north_sea_2026,catch,Combined catch,,,,,excluded_years,1978–1979,https://doi.org/10.17895/ices.pub.31424315; data_construct_input.R; Table 2.6.1.6,Closure catch observations deliberately set to NA.
+ices_herring_north_sea_2026,M,,,,,,structure,Externally supplied SMS-2023 age-year mortality plus 0.02,https://doi.org/10.17895/ices.pub.31424315; Section 2.4.3; model_sf.R,Not internally estimated. Report M table remains cached but omitted from canonical inputs until offset inclusion is verified.
+ices_herring_north_sea_2026,biology,,,,,,terminal_year_inputs,unknown,https://doi.org/10.17895/ices.pub.31424315; Table 2.6.2.7,Published annual biology tables end in 2025; accepted 2026 construction not yet verified.
+ices_herring_north_sea_2026,biology,,,,,,spawning_mortality_fractions,unknown,https://doi.org/10.17895/ices.pub.31424315; Table 2.6.2.7,fprop.txt and mprop.txt are cited but current native files not recovered.
+ices_herring_north_sea_2026,population,,,,,,initial_state_treatment,unknown,https://doi.org/10.17895/ices.pub.31424315; Table 2.6.2.7,Requires verified FLSAM implementation or benchmark documentation.
+ices_herring_north_sea_2026,index,,HERAS,,,,observation_correlation,Independent,https://doi.org/10.17895/ices.pub.31424315; Table 2.6.2.7,
+ices_herring_north_sea_2026,index,,HERAS,,,,sampling_time,unknown,https://doi.org/10.17895/ices.pub.31424315; fleet.txt unavailable,
+ices_herring_north_sea_2026,index,,HERAS,,,,units,unknown,https://doi.org/10.17895/ices.pub.31424315; Table 2.6.2.7,Published native values preserved; numerical scale not silently converted.
+ices_herring_north_sea_2026,index,,IBTS0,,,,observation_correlation,Independent,https://doi.org/10.17895/ices.pub.31424315; Table 2.6.2.7,
+ices_herring_north_sea_2026,index,,IBTS0,,,,sampling_time,unknown,https://doi.org/10.17895/ices.pub.31424315; fleet.txt unavailable,
+ices_herring_north_sea_2026,index,,IBTS0,,,,units,unknown,https://doi.org/10.17895/ices.pub.31424315; Table 2.6.2.7,Published native values preserved; numerical scale not silently converted.
+ices_herring_north_sea_2026,index,,IBTS-Q1,,,,observation_correlation,Independent,https://doi.org/10.17895/ices.pub.31424315; Table 2.6.2.7,
+ices_herring_north_sea_2026,index,,IBTS-Q1,,,,sampling_time,unknown,https://doi.org/10.17895/ices.pub.31424315; fleet.txt unavailable,
+ices_herring_north_sea_2026,index,,IBTS-Q1,,,,units,unknown,https://doi.org/10.17895/ices.pub.31424315; Table 2.6.2.7,Published native values preserved; numerical scale not silently converted.
+ices_herring_north_sea_2026,index,,IBTS-Q3,,,,observation_correlation,AR1 across ages,https://doi.org/10.17895/ices.pub.31424315; Table 2.6.2.7,
+ices_herring_north_sea_2026,index,,IBTS-Q3,,,,sampling_time,unknown,https://doi.org/10.17895/ices.pub.31424315; fleet.txt unavailable,
+ices_herring_north_sea_2026,index,,IBTS-Q3,,,,units,unknown,https://doi.org/10.17895/ices.pub.31424315; Table 2.6.2.7,Published native values preserved; numerical scale not silently converted.
+ices_herring_north_sea_2026,index,,LAI-SNS,,,,observation_correlation,Independent,https://doi.org/10.17895/ices.pub.31424315; Table 2.6.2.7,
+ices_herring_north_sea_2026,index,,LAI-SNS,,,,sampling_time,0.67,https://doi.org/10.17895/ices.pub.31424315; data_construct_input.R,
+ices_herring_north_sea_2026,index,,LAI-SNS,,,,units,unknown,https://doi.org/10.17895/ices.pub.31424315; Table 2.6.2.7,Published native values preserved; numerical scale not silently converted.
+ices_herring_north_sea_2026,index,,LAI-CNS,,,,observation_correlation,Independent,https://doi.org/10.17895/ices.pub.31424315; Table 2.6.2.7,
+ices_herring_north_sea_2026,index,,LAI-CNS,,,,sampling_time,0.67,https://doi.org/10.17895/ices.pub.31424315; data_construct_input.R,
+ices_herring_north_sea_2026,index,,LAI-CNS,,,,units,unknown,https://doi.org/10.17895/ices.pub.31424315; Table 2.6.2.7,Published native values preserved; numerical scale not silently converted.
+ices_herring_north_sea_2026,index,,LAI-BUN,,,,observation_correlation,Independent,https://doi.org/10.17895/ices.pub.31424315; Table 2.6.2.7,
+ices_herring_north_sea_2026,index,,LAI-BUN,,,,sampling_time,0.67,https://doi.org/10.17895/ices.pub.31424315; data_construct_input.R,
+ices_herring_north_sea_2026,index,,LAI-BUN,,,,units,unknown,https://doi.org/10.17895/ices.pub.31424315; Table 2.6.2.7,Published native values preserved; numerical scale not silently converted.
+ices_herring_north_sea_2026,index,,LAI-ORSH,,,,observation_correlation,Independent,https://doi.org/10.17895/ices.pub.31424315; Table 2.6.2.7,
+ices_herring_north_sea_2026,index,,LAI-ORSH,,,,sampling_time,0.67,https://doi.org/10.17895/ices.pub.31424315; data_construct_input.R,
+ices_herring_north_sea_2026,index,,LAI-ORSH,,,,units,unknown,https://doi.org/10.17895/ices.pub.31424315; Table 2.6.2.7,Published native values preserved; numerical scale not silently converted.
+ices_herring_north_sea_2026,q,,,,,,sharing,HERAS ages 1–2 / 3–8; Q1 one q; IBTS0 one q; Q3 age-specific; all four LAI share q,https://doi.org/10.17895/ices.pub.31424315; Table 2.6.2.7,
+ices_herring_north_sea_2026,q,,,,,,power_law,None configured,https://doi.org/10.17895/ices.pub.31424315; Table 2.6.2.7,
+ices_herring_north_sea_2026,index,,,,,,LAI_structure,Partial spawning-component indices with three logP variance parameters,https://doi.org/10.17895/ices.pub.31424315; Table 2.6.2.7,Time-window dimensions retained; detailed logP process interpretation unresolved.

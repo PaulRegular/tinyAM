@@ -241,6 +241,8 @@ or quarter (`basis = proportion_biomass`); these records have no age. Reference
 components are retained, and report rounding is not silently renormalized.
 These measures are required by the 2025 Northern Shelf cod assessment.
 
+`larval_abundance_index` preserves the partial spawning-component larval indices used by North Sea herring. Use `type = index`, `basis = numbers`, blank fish age, and explicit spawning component in `region` and survey time window in `season`. Native units and configured model timing must be documented separately; time-window column numbers are not fish ages.
+
 Additional measures may be added when necessary, but should remain explicit and biologically interpretable.
 
 ## Initial `basis` vocabulary
