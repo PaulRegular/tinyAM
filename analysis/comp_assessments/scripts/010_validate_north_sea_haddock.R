@@ -5,7 +5,7 @@ read <- function(name) {
 }
 inputs <- read("inputs")
 outputs <- read("outputs")
-stopifnot(nrow(inputs) == 6239, nrow(outputs) == 2373)
+stopifnot(nrow(inputs) == 6906, nrow(outputs) == 2373)
 obs <- inputs[inputs$type == "index" & inputs$measure == "numbers_at_age", ]
 sd <- inputs[inputs$measure == "log_index_sd", ]
 key <- function(x) paste(x$survey, x$year, x$age)
@@ -30,7 +30,7 @@ stopifnot(abs(ssb$value - 699809.6) < .1)
 stopifnot(abs(ssb$value - 667758) > 30000)
 interval <- outputs[!is.na(outputs$lwr), ]
 stopifnot(all(interval$lwr <= interval$value), all(interval$value <= interval$upr))
-cat("Haddock survey coverage, SD pairing, age surfaces and forecast separation passed.\n")
+cat("Haddock survey weights, SD pairing, age surfaces and forecast separation passed.\n")
 
 for (measure in c("fraction_F_before_spawning", "fraction_M_before_spawning")) {
   x <- inputs[inputs$measure == measure, ]
@@ -61,3 +61,62 @@ stopifnot(model_env$fit$conf$initState == 0,
           length(model_env$fit$pl$initN) == 0, length(model_env$fit$pl$initF) == 0,
           all(c("logN", "logF") %in% names(model_env$fit$sdrep$par.random)))
 cat("Native initial-state configuration verified.\n")
+
+precision <- inputs[inputs$type == "index" &
+                      inputs$measure == "relative_precision_weight", ]
+stopifnot(
+  nrow(precision) == 667L,
+  setequal(key(precision), key(obs)),
+  !anyDuplicated(key(precision)),
+  all(precision$value > 0),
+  all(precision$sampling_time[precision$survey == "delta-GAMNS-WCQ1"] == .125),
+  all(precision$sampling_time[precision$survey == "delta-GAMNS-WCQ3+Q4"] == .75)
+)
+
+cv_rows <- function(filename, survey) {
+  path <- file.path(
+    "analysis/comp_assessments/source_cache/ices_haddock_north_sea_2026",
+    filename
+  )
+  header <- scan(path, skip = 2, n = 5, quiet = TRUE)
+  years <- seq.int(as.integer(header[1]), as.integer(header[2]))
+  ages <- seq.int(as.integer(header[3]), as.integer(header[4]))
+  cv <- as.matrix(read.table(path, skip = 5, header = FALSE))
+  stopifnot(nrow(cv) == length(years), ncol(cv) >= length(ages))
+  cv <- cv[, seq_along(ages), drop = FALSE]
+  grid <- expand.grid(year = years, age = ages)
+  data.frame(
+    survey = survey,
+    year = grid$year,
+    age = grid$age,
+    expected = 1 / log1p(as.vector(cv)^2)
+  )
+}
+cv <- rbind(
+  cv_rows("data_survey-haddock-Q1-1-8plus_CV.dat", "delta-GAMNS-WCQ1"),
+  cv_rows("data_survey-haddock-Q3Q4-0-8plus_CV.dat", "delta-GAMNS-WCQ3+Q4")
+)
+weight_check <- merge(
+  precision[, c("survey", "year", "age", "value")],
+  cv,
+  by = c("survey", "year", "age"),
+  all = TRUE
+)
+stopifnot(
+  nrow(weight_check) == 667L,
+  !anyNA(weight_check$value),
+  !anyNA(weight_check$expected),
+  max(abs(weight_check$value - weight_check$expected)) < 1e-10
+)
+precision_values <- precision[, c("survey", "year", "age", "value")]
+names(precision_values)[4] <- "weight"
+sd_values <- sd[, c("survey", "year", "age", "value")]
+names(sd_values)[4] <- "relative_sd"
+paired <- merge(precision_values, sd_values,
+                by = c("survey", "year", "age"), all = TRUE)
+stopifnot(
+  nrow(paired) == 667L,
+  !anyNA(paired$relative_sd),
+  max(abs(paired$relative_sd - 1 / sqrt(paired$weight))) < 1e-12
+)
+cat("Native precision weights and relative log-SD factors verified.\n")
