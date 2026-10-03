@@ -175,11 +175,15 @@ for (name in c("inputs", "outputs")) {
         any(!x$basis %in% allowed_bases)) {
       stop("inputs.csv has an undocumented measure or basis.", call. = FALSE)
     }
-    if (any(!x$year_basis %in% c("calendar_year", "birth_cohort"))) {
-      stop("inputs$year_basis must be calendar_year or birth_cohort.", call. = FALSE)
+
+    has_year <- !is.na(x$year) & nzchar(as.character(x$year))
+    has_year_basis <- !is.na(x$year_basis) & nzchar(as.character(x$year_basis))
+    if (any(has_year & !x$year_basis %in% c("calendar_year", "birth_cohort")) ||
+        any(!has_year & has_year_basis)) {
+      stop("inputs$year_basis must identify a supplied year dimension.", call. = FALSE)
     }
   }
-  year <- whole_year(x, "year", name, allow_blank = name == "outputs")
+  year <- whole_year(x, "year", name, allow_blank = name %in% c("inputs", "outputs"))
   blank_year <- is.na(x$year) | !nzchar(as.character(x$year))
   if (name == "outputs" && any(blank_year & !x$measure %in% c("q", "q_power"))) {
     stop("outputs$year may be blank only for time-invariant q or q_power estimates.", call. = FALSE)

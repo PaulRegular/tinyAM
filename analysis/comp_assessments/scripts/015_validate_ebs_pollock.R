@@ -32,5 +32,5 @@ stopifnot(nrow(n) == 610L, nrow(r) == 61L,
 message("EBS pollock composition, survey timing/exclusion and output-group checks passed.")
 m <- x[x$type == "M", ]
 stopifnot(nrow(m) == 15, identical(m$age, 1:15),
-          identical(m$value, c(.9, .45, rep(.3, 13))), all(m$year == 1964))
+          identical(m$value, c(.9, .45, rep(.3, 13))), all(is.na(m$year)), all(is.na(m$year_basis)))
 message("Fixed age-specific M inputs verified.")
