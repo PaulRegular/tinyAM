@@ -12,6 +12,13 @@ The objective is to represent the accepted model faithfully, not to collect ever
 
 Follow the schema and controlled vocabularies in `DATABASE_STRUCTURE.md`.
 
+Use this protocol to curate or repair source records. Follow
+`TINYAM_TRANSLATION.md` for translating those records, fitting tinyAM models,
+and comparing results. New extraction, validation, translation, and analysis
+code should use R. Keep source-import scripts separate from the routine
+database-to-model workflow; fitting must not depend on rerunning an importer
+or reading source-cache files directly.
+
 ------------------------------------------------------------------------
 
 # 1. Starting point: Charbonneau–Keith repository
@@ -300,6 +307,18 @@ Preserve the representation actually used by the model, including as applicable:
 
 If the model uses a total plus an age composition, retain both.
 
+Catch-at-age is the working quantity required for the tinyAM translation.
+If a report supplies proportions describing an underlying catch-at-age input,
+recover that input using matching totals and, when biomass is involved,
+compatible catch weights; document the calculation. If the accepted model
+instead fits totals and compositions separately, preserve those native inputs
+and derive tinyAM catch-at-age outside the canonical database. Do not count
+the native and reconstructed representations twice.
+
+Total landings are otherwise optional unless the accepted model uses them or
+they are needed for a documented conversion. Detailed gear splits are not
+required unless they correspond to separate fitted fleets.
+
 If the model combines several real-world fisheries into one modeled fleet, represent the modeled fleet rather than inventing finer fleet distinctions.
 
 Capture catch weight-at-age when it is an explicit model input or needed to interpret a biomass-based catch input.
@@ -452,6 +471,10 @@ Preserve fleet, survey, sex, region, and season dimensions where the output is s
 
 Retain uncertainty when practical.
 
+Document the SE scale, interval level and type, and point-estimate convention
+using the rules in `DATABASE_STRUCTURE.md`. A reported CV or log-scale SE
+must not be presented as a natural-scale SE without a documented conversion.
+
 Do not use fitted outputs as substitutes for source inputs.
 
 ------------------------------------------------------------------------
@@ -487,6 +510,10 @@ In that case:
 - do not present the reconstructed value as directly published.
 
 This exception concerns reconstruction of the accepted assessment, not preparation for a downstream analysis.
+
+These restrictions apply to canonical source records. Derived tinyAM
+observations, settings, comparisons, and fitted results belong in analysis
+outputs, as described in `TINYAM_TRANSLATION.md`.
 
 ------------------------------------------------------------------------
 
@@ -525,7 +552,8 @@ checks and limitations.
 
 ## Source cache
 
-Relevant source files may be cached locally under:
+For every stock processed or revisited, cache the authoritative source files
+used for curation locally under:
 
 ``` text
 analysis/comp_assessments/source_cache/
@@ -534,6 +562,14 @@ analysis/comp_assessments/source_cache/
 This directory must remain gitignored.
 
 Useful cached artifacts include assessment/framework PDFs, native input/output files, fitted objects, supplementary CSVs, and configuration files.
+
+Organize files by stock and assessment run. Maintain a manifest identifying the
+source URL, retrieval date, file checksum, and represented assessment. Record
+failed or restricted downloads and any alternative source used. Keep useful
+files already cached; do not download every document or unrelated material.
+
+Use the cache to repair canonical records. The routine tinyAM translation and
+fitting workflow reads the database, not native files from the cache.
 
 Keep authoritative URLs in `assessments.csv`.
 
@@ -602,6 +638,29 @@ Status:
 
 Do not move on merely because one or two useful data streams have been recovered.
 
+## Gaps discovered during translation
+
+When a translator identifies a missing or inconsistent source input,
+assumption, or output, return to this protocol and revisit that stock's
+authoritative sources. Correct or complete the canonical records, update the
+source review and relevant completeness statuses, run validation, and reload
+the revised database before retrying translation. Record the database revision
+used in the resulting analysis.
+
+Do not change source values, drop required ages, or shorten the fitted period
+simply to make tinyAM accept the data. Document a genuine unresolved source gap
+and continue with other requested stocks when it cannot be filled.
+
+Distinguish these gaps from unsupported source-model features. For example,
+an assessment that estimates M may have no fixed numerical M input to recover.
+Curate its actual assumptions and estimated outputs; choose any simplified
+tinyAM M treatment outside the canonical tables.
+
+Curation completion does not mean a tinyAM model has been fitted. When the
+active task includes translation, follow `TINYAM_TRANSLATION.md` through
+validation, a fitting attempt, convergence diagnostics, and comparison exports
+for converged fits.
+
 ------------------------------------------------------------------------
 
 # 10. Validation and final review
@@ -650,6 +709,12 @@ Reusable source-specific helpers may be added later when repeated real use justi
 # 12. Agent task completion
 
 The protocol does not define how many assessments to add or review. The active task does.
+
+For tasks that also require tinyAM translation, report curation progress and
+modeling progress separately: translated, blocked, fit failed or did not
+converge, and converged with comparison outputs. Keep these analysis statuses
+outside the canonical completeness fields. An exported observation table or
+settings template alone does not complete a requested fitting task.
 
 If the goal says:
 

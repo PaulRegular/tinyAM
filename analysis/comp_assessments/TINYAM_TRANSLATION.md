@@ -6,61 +6,133 @@ This document defines how a curated source assessment is transformed into data a
 
 The canonical assessment database is intentionally richer than tinyAM. It preserves the fleets, surveys, biological inputs, and statistical assumptions of the accepted source assessment.
 
-Translation therefore has two distinct stages:
+The expected result for each selected assessment is a documented tinyAM model,
+a record of its convergence, and, when it converges, a saved model and a
+dashboard comparing it with the accepted assessment. Preparing observation
+tables alone does not complete a translation task.
 
-1.  **data processing** — convert curated source inputs into the data structures required by tinyAM;
-2.  **model specification** — audit source assumptions and choose the closest defensible tinyAM representation.
+Data conversion and model specification are separate: the shared converters
+reshape recorded information, while the stock script makes the scientific
+choices. Missing or incorrect source records must be repaired under
+`PROTOCOL.md` before translation resumes. Such repairs improve the source
+database; tinyAM-specific transformations and simplifications remain separate
+analysis products.
 
-These steps are analysis choices and must not alter the canonical source database.
+`DATABASE_STRUCTURE.md` defines the canonical tables, `PROTOCOL.md` defines
+source curation, and this document defines the workflow from those tables to
+fitted models and comparisons. Use R for new extraction, validation,
+translation, and analysis code.
 
 ------------------------------------------------------------------------
 
 # 1. Translation workflow
 
-For a selected `assessment_id`:
+Load the canonical database once and loop over the requested assessments.
+Normally select the current accepted record for each stock; use a historical
+record only when that assessment is explicitly part of the task. Keep all
+inputs, assumptions, and outputs tied to the same `assessment_id`.
 
 ``` text
-canonical database
+load canonical database
         ↓
-select source inputs
+select assessment and its stock specification
         ↓
-prepare catch-at-age
+database_to_tam_obs(): catch, index, weights, maturity, and M assumption
         ↓
-prepare survey indices-at-age
+review source assumptions and specify tinyAM settings
         ↓
-prepare stock weight and maturity
-        ↓
-prepare M
-        ↓
-construct tinyAM obs
-        ↓
-audit source assumptions
-        ↓
-choose tinyAM settings
-        ↓
-make_dat()
+check_obs() and make_dat()
         ↓
 fit_tam()
         ↓
-compare with source-assessment outputs
+check convergence and record diagnostics
+        ↓
+if converged: save model and construct source reference with database_to_tam_list()
+        ↓
+export comparison dashboard and concise numerical summary
 ```
 
-A useful analysis-local structure is:
+When a source-data gap prevents translation or a requested comparison:
+
+1. identify the missing quantity and whether it is an input, assumption, or output;
+2. review `PROTOCOL.md`, the stock source review, and cached authoritative files;
+3. obtain or correct the source records in the canonical database, retaining provenance;
+4. validate the revised records and reload the database before retrying translation.
+
+Record the database revision used for every fit. A reader restricted to committed
+records must read the newly validated and committed revision after a repair,
+rather than continue using its old snapshot. If authoritative information cannot
+be recovered, report the blocker and continue with other requested stocks.
+
+An unsupported model feature is not automatically a missing-data problem.
+For example, a source model may estimate M without a fixed M input. That case
+requires a documented tinyAM model choice, not a fabricated input table.
+
+## Shared code and stock scripts
+
+Keep the routine workflow small:
+
+- one R driver loads the database and loops over stock specifications;
+- `database_to_tam_obs.R` creates the observation list and incorporates M;
+- `database_to_tam_M.R` handles numerical M and describes unresolved M treatment;
+- `database_to_tam_list.R` creates a reporting reference from recorded outputs;
+- one small R script per stock supplies data selections, named `fit_tam()`
+  arguments, and plain-language background text.
+
+Shared code handles validation, fitting, diagnostics, and exports. Stock
+scripts should not duplicate converters or parse native source files. Keep
+source-import scripts separate; they are used when repairing the database,
+not on every model run. Keep these database-specific helpers analysis-local.
+
+A useful directory structure is:
 
 ``` text
 analysis/comp_assessments/
 ├── R/
-│   ├── prepare_tiny_obs.R
-│   ├── audit_assumptions.R
-│   └── helpers_*.R
+│   ├── database_to_tam_obs.R
+│   ├── database_to_tam_M.R
+│   ├── database_to_tam_list.R
+│   └── audit_assumptions.R
+├── scripts/
+│   ├── run_translations.R
+│   ├── stocks/
+│   └── curation/
 ├── results/
-│   ├── processed_inputs/
-│   ├── audits/
-│   └── fits/
-└── ...
+│   └── <assessment_id>/
+└── source_cache/                 # gitignored authoritative source files
 ```
 
-The exact file names may evolve. The important boundary is that translation code remains outside the canonical database.
+The converter names and layout above define the intended interface. Existing
+`database_to_tiny_*` helpers must be renamed consistently with their callers.
+The database-output converter and `vis_tam(background = ...)` support are
+required implementation steps; these instructions do not imply that those
+interfaces already exist.
+
+## Stock background
+
+Each stock script supplies a short Markdown table aligned with `make_dat()`:
+
+| Component | Accepted assessment | tinyAM representation | Reason for difference |
+|-----------|---------------------|-----------------------|-----------------------|
+| Years | Fitted historical years | Years used in this fit | Explain any restricted period |
+| Ages | Recruitment age and terminal age group | Model ages and plus group | Explain any age restriction or grouping |
+| N | Recruitment, survival, process variation, and initial abundance | `N_settings` and recruitment treatment | Explain omitted or changed population assumptions |
+| F | Fleets, selectivity, and changes through time | `F_settings` and catch aggregation | Explain the simplified fishery structure |
+| M | Fixed or estimated mortality, age groups, and time variation | M assumption and `M_settings` | Explain the baseline and any estimated process |
+| Catch | Removal streams and observation-error model | Catch observations and `catch_settings` | Explain reconstruction and error-model differences |
+| Index | Surveys, timing, catchability, and observation errors | Retained surveys and `index_settings` | Explain exclusions, q sharing, and error-model differences |
+| Weights | Stock, catch, survey, and spawning weights | Weight series used and conversions | Explain any substituted weights |
+| Maturity | Age/year structure, sex convention, and spawning timing | Maturity and biomass convention | Explain differences in SSB definition |
+
+Use short biological explanations rather than only process names or formulas.
+Identify whether each choice preserves, approximates, or omits the source
+assumption. Honor previously agreed stock-specific choices and record them
+here. Include source references where needed, without repeating the full
+curation history from `source_reviews/`.
+
+Pass this Markdown to `vis_tam(background = background)`. The dashboard should
+display a Background page only when text is supplied; ordinary dashboards
+without background text retain their existing layout.
 
 ------------------------------------------------------------------------
 
@@ -97,7 +169,11 @@ settings. The analysis-local database translator adds `q_block` for age and
 `q_key` for observed survey-by-age combinations, allowing the settings to show
 whether catchability is shared across surveys or estimated separately.
 
-Natural mortality is supplied through model settings rather than as a fifth `obs` table.
+`database_to_tam_obs()` incorporates a numerical M assumption in
+`obs$weight$M_assumption`, using `database_to_tam_M()` internally.
+`M_settings$mu_supplied` can then reference `~ M_assumption`.
+`M_settings` determines whether mortality is fixed or has an estimated process;
+there is no fifth M observation table or new observation class.
 
 ------------------------------------------------------------------------
 
@@ -123,6 +199,13 @@ Model specification is different. It includes decisions such as:
 - how observation SDs are shared.
 
 Do not hide model choices inside basic data-wrangling helpers.
+
+Use the accepted model's year and age range as the starting point. Do not
+silently shorten the period, change the plus group, repeat an annual biological
+series, or drop a survey merely to make validation pass. First investigate
+whether the missing source information can be recovered. An explicitly chosen
+restricted analysis must explain its limits in the stock background and use
+the corresponding common period and age groups for comparisons.
 
 ------------------------------------------------------------------------
 
@@ -150,7 +233,7 @@ If total catch in numbers $C_{f,t}$ and number proportions $p^N_{f,t,a}$ are ava
 
 $$C_{f,t,a} = C_{f,t} p^N_{f,t,a}.$$
 
-`database_to_tiny_obs()` applies this calculation only when the number-
+`database_to_tam_obs()` applies this calculation only when the number-
 proportion rows match one annual `total_numbers` row on year and catch-stream
 identity. It retains the source proportions as reported rather than
 renormalizing them. Missing matches, duplicate totals, and overlapping direct
@@ -213,6 +296,12 @@ This is a deliberate simplification relative to assessments that estimate fleet-
 The source database remains fleet-specific.
 
 The translation/audit should record that the tinyAM model is using an aggregate fishery.
+
+Do not add overlapping direct catch-at-age and reconstructed totals/compositions
+twice. Retain the source representation needed to understand the accepted
+likelihood; follow the canonical catch rules in `DATABASE_STRUCTURE.md` and
+`PROTOCOL.md` when deciding whether a reconstructed series is a source input
+or a derived translation product.
 
 ## 4.7 Landings and discards
 
@@ -336,6 +425,12 @@ resolve sampling timing, which must still be documented before fitting.
 The observation translation records selected and excluded survey names in
 its provenance attribute.
 
+Deriving age-specific observations from one total and an age composition changes
+the observation model. The derived ages share information from the same total;
+tinyAM's age-specific lognormal likelihood does not automatically reproduce
+that dependence or the source composition likelihood. Explain this approximation
+in the stock background rather than claiming an exact likelihood mapping.
+
 ------------------------------------------------------------------------
 
 # 6. Preparing stock weight-at-age
@@ -369,6 +464,10 @@ Do not silently interpolate missing source values.
 
 If a complete weight surface cannot be constructed from defensible source information, flag the assessment as not yet fit-ready.
 
+Follow the database-repair loop in Section 1 before accepting a restricted
+period or age range. Expand a constant vector only when the source assumption
+actually makes it constant.
+
 ------------------------------------------------------------------------
 
 # 7. Preparing maturity-at-age
@@ -393,7 +492,11 @@ All translated maturity values must lie in `[0,1]`.
 
 # 8. Preparing natural mortality
 
-Natural mortality is not part of `obs`, but a baseline or mean M representation is required to fit tinyAM.
+A defensible baseline or mean M representation is required to fit tinyAM.
+`database_to_tam_obs()` includes its numerical values in
+`obs$weight$M_assumption`; `M_settings` specifies how those values enter the
+model. The converter must distinguish a source-supplied M surface from an
+explicitly chosen baseline for a tinyAM approximation.
 
 The source assessment may use:
 
@@ -417,7 +520,8 @@ M_settings = list(
 )
 ```
 
-An age-year source surface may be joined to the weight table and referenced through a column such as:
+The shared observation converter joins an age-year source surface to the weight
+table by year and age, checks coverage and uniqueness, and makes it available as:
 
 ``` r
 ~ M_assumption
@@ -434,6 +538,17 @@ Use the assumption audit to determine:
 - whether an M-process sensitivity analysis is warranted.
 
 This is a model-specification decision, not data wrangling.
+
+If numerical baseline values are chosen for the approximation, supply them
+explicitly to the observation converter and record their origin and purpose.
+Do not silently substitute source-estimated M outputs as fixed inputs, choose
+an arbitrary default, or describe starting values as a fixed mortality
+assumption. If M is estimated, the stock script must explain what is estimated
+and how the supplied values or mean structure are used.
+
+The absence of fixed M inputs in an assessment that estimates M is not, by
+itself, a curation gap. Recover the source assumptions and available estimated
+outputs, then specify a defensible tinyAM representation.
 
 ------------------------------------------------------------------------
 
@@ -520,6 +635,10 @@ A passing result means the translated observation object satisfies current tinyA
 
 It does not establish that the chosen model settings faithfully reproduce the source assessment.
 
+Also run `make_dat()` with the stock's proposed settings to check formula
+covariates, supplied M, blocking, and model dimensions before fitting. Valid
+observations alone do not establish that a model is ready to estimate.
+
 ------------------------------------------------------------------------
 
 # 10. Plus groups
@@ -538,6 +657,13 @@ models population ages through 15, keep the survey observation as its original
 fitted model object may have age-specific population outputs at 13–15 without
 having separate survey observations for those ages. Do not copy fitted values
 or split the 12+ survey observation into invented age-specific inputs.
+
+Preserving the 12+ label does not make it a single-age-12 observation. Its
+prediction must represent the matching age group, such as a sum over ages
+12–15. If the current tinyAM observation model cannot represent that group,
+use a documented compatible alternative or exclude the grouped observation
+explicitly. Do not fit it against age-12 abundance alone. Apply the same rule
+when comparing grouped population or mortality outputs.
 
 ------------------------------------------------------------------------
 
@@ -699,6 +825,13 @@ However, distinguish carefully between:
 
 Formula equivalence does not imply stochastic-process equivalence.
 
+Preserve source q and observation-SD sharing through formulas wherever the
+mapping is equivalent. A nonlinear or power catchability relationship is not
+the same as a simple proportional q coefficient; identify any unsupported
+structure and explain the chosen approximation. Do not adjust source
+observations using fitted catchability or other fitted parameters to make a
+simpler observation model appear equivalent.
+
 ------------------------------------------------------------------------
 
 # 17. Replication-oriented versus standardized models
@@ -735,24 +868,21 @@ A successful replication-oriented model does not automatically define the standa
 
 # 18. Save processed translation outputs separately
 
-Useful derived artifacts may be saved under:
+Save results by `assessment_id`. Keep the routine outputs small and useful:
 
-``` text
-results/processed_inputs/
-```
+- translated observations as an RDS object, with translation provenance;
+- the stock background Markdown and the settings used;
+- one concise diagnostics table recording each fitting attempt;
+- for a converged fit, the model RDS and comparison HTML dashboard;
+- a compact comparison CSV for available, comparable population metrics.
 
-Examples:
+Save intermediate CSVs or detailed audits when they support a specific check,
+not as a mandatory collection of duplicate tables on every run. Existing
+`results/processed_inputs/` files remain derived analysis products.
 
-- fleet-specific reconstructed catch-at-age;
-- aggregate catch-at-age;
-- survey numbers-at-age derived from totals/compositions;
-- expanded weight/maturity matrices;
-- M surfaces;
-- translation diagnostics.
-
-These are analysis products.
-
-They should not be written back into canonical `inputs.csv` unless they are themselves verified accepted-model inputs.
+These products must not be written back into canonical `inputs.csv` or
+`outputs.csv`. Source-data corrections identified during translation follow
+the separate curation and validation process.
 
 ------------------------------------------------------------------------
 
@@ -787,12 +917,16 @@ or equivalent analysis-local metadata.
 
 # 20. Fit-readiness checklist
 
-A curated assessment is ready for an initial tinyAM fit when the translation can produce:
+A selected assessment is ready for an initial tinyAM fit when the translation
+and its proposed settings satisfy the checks below. Canonical completeness
+statuses and translation readiness are different: a partial assessment may
+support a clearly limited fit, while a complete source model may contain
+features that tinyAM cannot represent.
 
 ## Catch
 
 - numerical catch-at-age;
-- one complete modeled year × age grid;
+- one complete modeled year × age grid, with unavailable catch recorded as NA;
 - common units across fleets before aggregation.
 
 ## Surveys
@@ -811,27 +945,134 @@ A curated assessment is ready for an initial tinyAM fit when the translation can
 
 ## Natural mortality
 
-- a defensible baseline/mean M representation.
+- a defensible baseline/mean M representation;
+- numerical supplied values included in `obs$weight$M_assumption` when used;
+- explicit treatment of source-estimated M and any missing source assumptions.
 
 ## Validation
 
-- `tinyAM::check_obs(obs)` passes.
+- `tinyAM::check_obs(obs)` passes;
+- `make_dat()` succeeds with the proposed years, ages, and settings;
+- all retained observations have compatible age groups and prediction definitions;
+- the stock background explains the accepted assumptions and chosen differences.
 
 Fit-readiness does not imply source-assessment equivalence.
+
+## Fit and assess convergence
+
+Once the checks pass, attempt the stock's documented `fit_tam()` model.
+Do not stop at exporting observations or a settings template. Ensure the R
+environment can load tinyAM and the packages needed for fitting and rendering;
+missing software is an execution blocker, not a source-data gap.
+
+Use `is_converged(fit)` together with the optimizer result and uncertainty
+diagnostics. Record at least:
+
+- assessment ID, database revision, and attempt identifier;
+- convergence result;
+- optimizer convergence code and message;
+- objective value and maximum absolute gradient;
+- whether standard errors were obtained and whether the Hessian was positive
+  definite, meaning the local curvature supports uncertainty estimation;
+- errors or warnings that affect interpretation.
+
+Catch failures per stock so one error does not stop the whole loop. Retain
+diagnostics for failed or non-converged attempts, identify the reason, and
+continue with other requested stocks. Report numerical convergence separately
+from biological plausibility and source-model agreement.
+
+An additional attempt may investigate a clear numerical issue, such as poor
+starting values, but must record what changed. Do not repeatedly change data,
+processes, or q structures merely to obtain convergence. Source estimates may
+provide starting values; they must not silently constrain tinyAM estimates.
+
+For a converged fit, save the fitted object and proceed to comparison. Report
+successful completion only when the documented fit and comparison outputs
+exist. Report investigated blockers, failed attempts, and non-converged fits
+as separate outcomes, rather than counting them as successful models.
+Preparation of a usable `obs` list alone is not completion.
 
 ------------------------------------------------------------------------
 
 # 21. Compare fitted outputs with the accepted assessment
 
-Use source `outputs.csv` to compare, where available:
+## Build the source reporting reference
+
+Use `database_to_tam_list()` to translate available canonical `outputs.csv`
+records for the same assessment into a `tam_list`. This is a reporting list
+with a structure similar to a `tam_fit`, not an object that can be fitted,
+updated, simulated, projected, or used for retrospective estimation.
+
+Include year-age population tables and available aggregate trends. Supply
+translated source observations where needed to show the input data, but leave
+unavailable predictions, q estimates, parameters, residuals, and uncertainty
+missing. Do not construct an optimizer or invent random effects to satisfy the
+dashboard. Known fixed M may be shown from the documented source input, clearly
+labelled as fixed rather than estimated.
+
+`tidy_tam()` and `vis_tam()` must accept these reporting tables without assuming
+that every `tam_list` contains a SAM fitted object. Missing panels should give
+a short explanation; they must not cause the dashboard to fail.
+
+Use source outputs to compare, where available:
 
 - N-at-age;
 - F-at-age;
+- M-at-age;
 - SSB;
 - recruitment;
-- Fbar;
-- predicted catch/index;
-- uncertainty.
+- other reported quantities, predictions, and uncertainty when useful.
+
+## Match the definitions
+
+Match units, fitted historical years, recruitment age, age groups, fleet/sex/
+region dimensions, and whether estimates refer to the beginning of the year
+or spawning time. Keep projection years separate from fitted historical years.
+Do not split grouped outputs into invented single-age estimates or pool
+different assessment runs.
+
+Retain native source outputs. When definitions differ, identify the difference
+in the background and dashboard. A separately labelled common-definition
+quantity may be calculated only when the necessary source states and biology
+are available. Do not present percent differences between incompatible
+definitions as a like-for-like comparison.
+
+Respect the reported uncertainty scale and interval meaning documented in
+`DATABASE_STRUCTURE.md`. Keep source intervals when their confidence level or
+construction cannot be reconstructed. Missing uncertainty is not zero
+uncertainty; do not manufacture SEs or intervals from point estimates alone.
+
+## Export the dashboard and a concise summary
+
+For a converged fit, use:
+
+``` r
+vis_tam(
+  model_list = list(Assessment = assessment_reference, tinyAM = tam_fit),
+  background = background,
+  output_file = dashboard_file,
+  open_file = FALSE
+)
+```
+
+This example describes the intended Background interface noted in Section 1.
+The dashboard is the primary way to inspect differences in trajectories and
+age patterns. Include available SSB, recruitment, N, F, and M, and show other
+panels only when their data are available.
+
+For comparable metric values, calculate:
+
+$$\text{percent difference}
+= 100\frac{\text{tinyAM estimate} - \text{source estimate}}
+{\text{source estimate}}.$$
+
+Export a small table with metric, year, age or age group where relevant, source
+estimate, tinyAM estimate, and percent difference. Zero or missing source
+denominators give an unavailable percent difference with an explanation.
+Include available uncertainty without forcing identical interval definitions.
+Additional summary statistics are optional; avoid exporting many tables that
+repeat the dashboard. Impose no arbitrary agreement threshold or likelihood-
+equality requirement.
 
 Differences should be interpreted in light of documented translation choices, such as:
 
@@ -843,8 +1084,6 @@ Differences should be interpreted in light of documented translation choices, su
 
 Do not interpret a difference as a model failure before checking whether it follows from an intentional translation choice.
 
-In addition to basic percent difference and bias summary statistics for the abovmentioned outputs, build a tam_list using available output data from the accepted assessment and use it in `vis_tam()` to produce an interactive html to ease visual comparison.
-
 ------------------------------------------------------------------------
 
 # 22. Scope discipline
@@ -852,6 +1091,15 @@ In addition to basic percent difference and bias summary statistics for the abov
 Do not preemptively build exported package converters.
 
 Prefer small analysis-local helpers that emerge from repeated transformations.
+
+The shared database converters described here are justified by this multi-stock
+workflow. Keep them analysis-local; the reusable Background argument belongs
+in the package dashboard interface. No broader model mathematics or package
+API redesign is required by this task.
+
+Keep source curation, translation, and fitting responsibilities clear. New
+code uses R; existing source importers may be retained separately for provenance
+without becoming dependencies of the model-running loop.
 
 Keep the source database independent of tinyAM.
 
