@@ -16,8 +16,15 @@ setting <- function(x, component, name, default = NA_character_) {
 }
 
 model_ages <- function(text) {
+  if (length(text) != 1L || is.na(text) || !nzchar(text)) return(integer())
   ages <- as.integer(unlist(regmatches(text, gregexpr("[0-9]+", text))))
   if (length(ages) >= 2L) seq(min(ages), max(ages)) else integer()
+}
+
+year_bounds <- function(text) {
+  if (length(text) != 1L || is.na(text) || !nzchar(text)) return(integer())
+  years <- as.integer(unlist(regmatches(text, gregexpr("[0-9]{4}", text))))
+  if (length(years) >= 2L) range(years) else integer()
 }
 
 grid_complete <- function(x, years, ages) {
@@ -32,6 +39,9 @@ grid_complete <- function(x, years, ages) {
 source_converter <- function() {
   env <- new.env(parent = globalenv())
   sys.source(file.path(root, "R", "database_to_tiny_obs.R"), envir = env)
+  if (!requireNamespace("cli", quietly = TRUE)) {
+    env$.translation_abort <- function(message) stop(message, call. = FALSE)
+  }
   env$database_to_tiny_obs
 }
 
@@ -41,18 +51,32 @@ readiness <- lapply(seq_len(nrow(assessments)), function(i) {
   x <- inputs[inputs$assessment_id == id, , drop = FALSE]
   y <- outputs[outputs$assessment_id == id, , drop = FALSE]
   year_start <- suppressWarnings(as.integer(setting(a, "model", "time_series_start_year")))
-  if (is.na(year_start)) year_start <- suppressWarnings(as.integer(min(x$year, na.rm = TRUE)))
   year_end <- suppressWarnings(as.integer(setting(a, "model", "data_terminal_year")))
+  year_text <- setting(a, "population", "modeled_years")
+  if (is.na(year_start) || is.na(year_end)) {
+    bounds <- year_bounds(year_text)
+    if (length(bounds) == 2L) {
+      if (is.na(year_start)) year_start <- bounds[[1]]
+      if (is.na(year_end)) year_end <- bounds[[2]]
+    }
+  }
+  if (is.na(year_start)) year_start <- suppressWarnings(as.integer(min(x$year, na.rm = TRUE)))
   if (is.na(year_end)) year_end <- assessments$terminal_year[i]
-  age_text <- setting(a, "population", "age_range")
+  age_text <- setting(a, "population", "age_range",
+                      setting(a, "population", "modeled_ages",
+                              setting(a, "population", "ages")))
   ages <- model_ages(age_text)
   years <- if (!is.na(year_start) && !is.na(year_end)) seq(year_start, year_end) else integer()
 
-  catch <- x[x$type == "catch" & x$measure == "numbers_at_age", , drop = FALSE]
-  catch_age <- catch
+  catch_direct <- x[x$type == "catch" & x$measure == "numbers_at_age", , drop = FALSE]
+  catch_proportion <- x[x$type == "catch" & x$measure == "proportion_at_age", , drop = FALSE]
+  catch_age <- rbind(catch_direct, catch_proportion)
   index <- x[x$type == "index", , drop = FALSE]
   index_age_rows <- index[index$measure %in% c("numbers_at_age", "biomass_at_age",
                                                 "proportion_at_age"), , drop = FALSE]
+  unsupported_index <- index[!index$measure %in% c("numbers_at_age", "biomass_at_age",
+                                                    "proportion_at_age", "total_numbers",
+                                                    "total_biomass", "log_index_sd"), , drop = FALSE]
   weight <- x[x$type == "weight" & x$measure == "weight_at_age", , drop = FALSE]
   catch_weight <- x[x$type == "catch_weight" & x$measure == "weight_at_age", , drop = FALSE]
   maturity_cohort <- x[x$type == "maturity" & x$year_basis == "birth_cohort", , drop = FALSE]
@@ -77,7 +101,7 @@ readiness <- lapply(seq_len(nrow(assessments)), function(i) {
   timing_recorded <- nrow(index) > 0L && all(is.finite(sampling_time) & sampling_time >= 0 & sampling_time <= 1)
   timing_exact <- timing_recorded && !any(grepl("approx", index$notes, ignore.case = TRUE))
   index_age <- nrow(index_age_rows) > 0L && all(!is.na(index_age_rows$age))
-  catch_grid <- grid_complete(catch, years, ages)
+  catch_grid <- grid_complete(catch_age, years, ages)
   catch_age_grid <- grid_complete(catch_age, years, ages)
   catch_age_source_grid <- if (nrow(catch_age)) {
     grid_complete(catch_age, seq(min(catch_age$year), max(catch_age$year)),
@@ -92,7 +116,7 @@ readiness <- lapply(seq_len(nrow(assessments)), function(i) {
                   seq(min(maturity_cohort$age), max(maturity_cohort$age)))
   } else FALSE
   m_grid <- grid_complete(m_input, years, ages) || grid_complete(m_output, years, ages)
-  has_expected_obs <- all(c(nrow(catch) > 0L, nrow(index) > 0L,
+  has_expected_obs <- all(c(nrow(catch_age) > 0L, nrow(index_age_rows) > 0L,
                             nrow(weight) > 0L, nrow(maturity) > 0L))
   conversion_ok <- FALSE
   check_obs_ok <- FALSE
@@ -111,8 +135,12 @@ readiness <- lapply(seq_len(nrow(assessments)), function(i) {
     }
   }
   missing <- c(
-    if (!catch_grid) "complete catch-at-age observations on the full modeled year-age grid",
-    if (!nrow(catch_age)) "numerical catch-at-age inputs" else if (!catch_age_source_grid) "gaps within the available catch-age year-age series",
+    if (!nrow(catch_age)) "numerical catch-at-age inputs",
+    if (nrow(unsupported_index)) paste0(
+      "index measures need a documented tinyAM mapping: ",
+      paste(unique(paste0(unsupported_index$survey, " (",
+                          unsupported_index$measure, ")")), collapse = "; ")
+    ),
     if (!index_age) "age-structured survey indices",
     if (!length(index_surveys)) "survey identities" else if (!nrow(index)) "numerical observations from the documented survey series are not transcribed" else if (length(index_surveys) < 2L && grepl("survey|index", setting(a, "data", "assessment_inputs", ""), ignore.case = TRUE)) "other model survey series are not transcribed",
     if (!timing_exact) "exact survey sampling times (recorded times may be season-level approximations)",

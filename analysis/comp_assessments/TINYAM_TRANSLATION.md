@@ -150,6 +150,13 @@ If total catch in numbers $C_{f,t}$ and number proportions $p^N_{f,t,a}$ are ava
 
 $$C_{f,t,a} = C_{f,t} p^N_{f,t,a}.$$
 
+`database_to_tiny_obs()` applies this calculation only when the number-
+proportion rows match one annual `total_numbers` row on year and catch-stream
+identity. It retains the source proportions as reported rather than
+renormalizing them. Missing matches, duplicate totals, and overlapping direct
+and reconstructed year-age values are errors; the helper never silently drops
+or double counts catch input.
+
 ## 4.3 Total biomass + biomass proportions
 
 If total catch biomass $B_{f,t}$ and biomass proportions $p^B_{f,t,a}$ are available:
@@ -185,6 +192,10 @@ $$C_{f,t,a}
 C^N_{f,t}
 \frac{p^B_{f,t,a}/w^C_{f,t,a}}
 {\sum_j p^B_{f,t,j}/w^C_{f,t,j}}.$$
+
+The helper currently reconstructs direct catch numbers-at-age and number
+proportions paired with total numbers. Biomass-based catch reconstruction needs
+compatible catch-weight data and is not inferred from stock weights.
 
 ## 4.6 Aggregate fleets
 
@@ -305,6 +316,12 @@ When the exact fractional timing is not available:
 Use the survey series corresponding to the spatial extent actually fitted by the accepted assessment.
 
 Do not use finer-scale subarea series when the assessment fits a combined index unless the analysis explicitly intends to deviate from the accepted model.
+
+The observation translator stops when a selected survey has a measure that
+cannot be interpreted as an age-specific abundance index. Do not force a
+special likelihood, such as a larval or spawning-component index, into the
+standard abundance-index table. Exclude it explicitly for a limited
+approximation or define and audit a scientifically defensible mapping first.
 
 ------------------------------------------------------------------------
 

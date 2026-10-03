@@ -100,6 +100,40 @@ expect_equal(plus_obs$index$obs[plus_obs$index$survey == "Acoustic"], 90)
 expect_equal(plus_obs$index$obs[plus_obs$index$survey == "Relative"], 5)
 expect_equal(plus_obs$index$obs[plus_obs$index$year == 2001], 4)
 
+catch_proportion_inputs <- inputs[inputs$type != "catch", , drop = FALSE]
+catch_proportion_inputs <- rbind(
+  catch_proportion_inputs,
+  row("catch", "proportion_at_age", "proportion_numbers", fleet = "fishery",
+      year = 2000, age = 1:2, value = c(0.2, 0.7), unit = "proportion"),
+  row("catch", "total_numbers", "numbers", fleet = "fishery",
+      year = 2000, age = NA_real_, value = 400, unit = "thousand fish")
+)
+catch_proportion_obs <- database_to_tiny_obs(
+  "translation_fixture", catch_proportion_inputs, years = 2000:2001, ages = 1:2,
+  weight_survey = "RV", sampling_times = sampling_times
+)
+expect_equal(catch_proportion_obs$catch$obs[catch_proportion_obs$catch$year == 2000],
+             c(80000, 280000))
+expect_equal(all(is.na(catch_proportion_obs$catch$obs[
+  catch_proportion_obs$catch$year == 2001])), TRUE)
+expect_equal(grepl("without renormalizing",
+                   attr(catch_proportion_obs, "translation")$catch_method), TRUE)
+missing_catch_total <- catch_proportion_inputs[
+  catch_proportion_inputs$measure != "total_numbers", , drop = FALSE]
+catch_error <- tryCatch(database_to_tiny_obs(
+  "translation_fixture", missing_catch_total, years = 2000:2001, ages = 1:2,
+  weight_survey = "RV", sampling_times = sampling_times
+), error = identity)
+expect_equal(grepl("matching annual total_numbers", conditionMessage(catch_error)), TRUE)
+
+missing_index_total <- inputs[!(inputs$type == "index" &
+                                  inputs$measure == "total_biomass"), , drop = FALSE]
+index_error <- tryCatch(database_to_tiny_obs(
+  "translation_fixture", missing_index_total, years = 2000:2001, ages = 1:2,
+  weight_survey = "RV", sampling_times = sampling_times
+), error = identity)
+expect_equal(grepl("no matching total index values", conditionMessage(index_error)), TRUE)
+
 thousand_inputs <- inputs
 thousand_inputs$unit[thousand_inputs$type == "catch"] <- "thousand fish"
 thousand_obs <- database_to_tiny_obs(
@@ -215,5 +249,12 @@ for (survey in unique(nea_obs$index$survey)) {
   expect_equal(unique(nea_obs$index$samp_time[nea_obs$index$survey == survey]),
                as.numeric(source_time))
 }
+
+herring_inputs <- inputs_db[inputs_db$assessment_id == "ices_herring_north_sea_2026", , drop = FALSE]
+herring_error <- tryCatch(.translation_index(
+  herring_inputs, data.frame(), data.frame(), years = 1947:2026, ages = 0:8,
+  sampling_times = NULL
+), error = identity)
+expect_equal(grepl("Unsupported index measure", conditionMessage(herring_error)), TRUE)
 
 cat("Translation helper tests passed.\n")

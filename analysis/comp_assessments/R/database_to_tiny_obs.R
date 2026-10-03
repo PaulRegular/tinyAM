@@ -122,6 +122,115 @@
   .translation_number_multiplier(unit)
 }
 
+.translation_catch_at_age <- function(x, years, ages) {
+  direct <- .translation_measure(x, "catch", "numbers_at_age")
+  composition <- .translation_measure(x, "catch", "proportion_at_age")
+  totals <- .translation_measure(x, "catch", "total_numbers")
+  if (!nrow(direct) && !nrow(composition)) {
+    .translation_abort("No source catch-at-age or number-proportion inputs are recorded.")
+  }
+  if (nrow(direct)) direct <- .translation_calendar_rows(direct, "catch numbers-at-age")
+  if (nrow(composition)) composition <- .translation_calendar_rows(composition, "catch age composition")
+  source_rows <- rbind(direct, composition)
+  .translation_one_group(source_rows, c("fleet", "sex", "region", "season"),
+                         "Catch-at-age input")
+  direct <- direct[direct$year %in% years & direct$age >= min(ages), , drop = FALSE]
+  composition <- composition[composition$year %in% years &
+                               composition$age >= min(ages), , drop = FALSE]
+  totals <- totals[totals$year %in% years, , drop = FALSE]
+
+  converted <- list()
+  provenance <- list()
+  units <- list()
+  k <- 0L
+
+  if (nrow(direct)) {
+    multiplier <- vapply(direct$unit, .translation_number_multiplier, numeric(1))
+    direct$value <- direct$value * multiplier
+    if (anyDuplicated(.translation_key(direct, c("year", "age")))) {
+      .translation_abort("Catch numbers-at-age has duplicate year-age rows before plus-group aggregation.")
+    }
+    converted[[length(converted) + 1L]] <- direct[c("year", "age", "value")]
+    units[[length(units) + 1L]] <- data.frame(
+      source_unit = direct$unit, multiplier_to_fish = multiplier,
+      stringsAsFactors = FALSE
+    )
+    k <- k + 1L
+    provenance[[k]] <- .translation_source_provenance(
+      direct, "catch",
+      "Source numbers-at-age retained and converted to individual fish; ages above the selected maximum summed into the plus age.")
+  }
+
+  if (nrow(composition)) {
+    basis <- as.character(composition$basis)
+    if (anyNA(basis) || !all(basis == "proportion_numbers")) {
+      .translation_abort("Catch proportions can be reconstructed only when basis = 'proportion_numbers'.")
+    }
+    if (any(composition$value > 1)) {
+      .translation_abort("Catch number proportions must be in [0, 1].")
+    }
+    if (!nrow(totals)) {
+      .translation_abort("Catch number proportions need matching annual total_numbers inputs.")
+    }
+    totals <- totals[!is.na(totals$year_basis) & totals$year_basis == "calendar_year", , drop = FALSE]
+    totals$year <- suppressWarnings(as.numeric(as.character(totals$year)))
+    totals$value <- suppressWarnings(as.numeric(as.character(totals$value)))
+    if (!nrow(totals) || anyNA(totals$year) || anyNA(totals$value) ||
+        any(!is.finite(totals$year)) || any(!is.finite(totals$value)) ||
+        any(totals$year != as.integer(totals$year)) || any(totals$value < 0) ||
+        any(!is.na(totals$age))) {
+      .translation_abort("Catch total_numbers rows need finite calendar years, non-negative values, and no age dimension.")
+    }
+    group_columns <- c("year", "fleet", "sex", "region", "season")
+    composition_key <- .translation_key(composition, group_columns)
+    total_key <- .translation_key(totals, group_columns)
+    if (anyDuplicated(total_key)) {
+      .translation_abort("Catch total_numbers has multiple rows for a year and catch stream.")
+    }
+    total_index <- match(composition_key, total_key)
+    if (anyNA(total_index)) {
+      .translation_abort("Some catch number-proportion rows have no matching total_numbers value for the same year and catch stream.")
+    }
+    composition_age_key <- .translation_key(composition, c(group_columns, "age"))
+    if (anyDuplicated(composition_age_key)) {
+      .translation_abort("Catch proportions contain duplicate year-age rows before plus-group aggregation.")
+    }
+    multiplier <- vapply(totals$unit[total_index], .translation_number_multiplier, numeric(1))
+    composition$value <- composition$value * totals$value[total_index] * multiplier
+    converted[[length(converted) + 1L]] <- composition[c("year", "age", "value")]
+    units[[length(units) + 1L]] <- data.frame(
+      source_unit = totals$unit[total_index], multiplier_to_fish = multiplier,
+      stringsAsFactors = FALSE
+    )
+    k <- k + 1L
+    source <- rbind(composition, totals[unique(total_index), , drop = FALSE])
+    provenance[[k]] <- .translation_source_provenance(
+      source, "catch",
+      "Number proportions multiplied by matching annual total_numbers without renormalizing the source proportions; ages above the selected maximum summed into the plus age.")
+  }
+
+  catch_source <- if (length(converted)) {
+    do.call(rbind, converted)
+  } else {
+    data.frame(year = numeric(), age = numeric(), value = numeric())
+  }
+  catch_key <- .translation_key(catch_source, c("year", "age"))
+  if (anyDuplicated(catch_key)) {
+    .translation_abort("Catch inputs contain overlapping year-age values from multiple representations.")
+  }
+  catch_source$age <- pmin(catch_source$age, max(ages))
+  catch_source <- stats::aggregate(value ~ year + age, catch_source, sum)
+  grid <- .translation_grid(years, ages)
+  catch <- data.frame(year = grid$year, age = grid$age,
+                      obs = catch_source$value[match(
+                        .translation_key(grid, c("year", "age")),
+                        .translation_key(catch_source, c("year", "age")))])
+
+  list(catch = catch,
+       units = unique(do.call(rbind, units)),
+       provenance = do.call(rbind, provenance))
+}
+
 .translation_sampling_time <- function(rows, survey, sampling_times) {
   values <- suppressWarnings(as.numeric(as.character(rows$sampling_time)))
   values <- unique(values[is.finite(values)])
@@ -150,6 +259,21 @@
 .translation_index <- function(x, all_weights, stock_weights, years, ages,
                                sampling_times, surveys = NULL,
                                exclude_index_years = NULL) {
+  supported_measures <- c("numbers_at_age", "proportion_at_age",
+                          "total_numbers", "total_biomass", "log_index_sd")
+  unsupported <- x[!is.na(x$type) & x$type == "index" &
+                     (is.na(x$measure) | !x$measure %in% supported_measures), ,
+                   drop = FALSE]
+  if (!is.null(surveys)) unsupported <- unsupported[unsupported$survey %in% surveys, , drop = FALSE]
+  if (nrow(unsupported)) {
+    descriptions <- unique(paste0(unsupported$survey, " (", unsupported$measure, ")"))
+    .translation_abort(paste(
+      "Unsupported index measure(s) would be omitted from tinyAM obs:",
+      paste(descriptions, collapse = "; "),
+      ". Select other surveys explicitly or add a documented translation."
+    ))
+  }
+
   direct <- .translation_measure(x, "index", "numbers_at_age")
   composition <- x[!is.na(x$type) & x$type == "index" &
                      !is.na(x$measure) & x$measure == "proportion_at_age", , drop = FALSE]
@@ -243,17 +367,24 @@
     for (survey in unique(as.character(composition$survey))) {
       comp <- composition[composition$survey == survey &
                             composition$year %in% years, , drop = FALSE]
+      if (!nrow(comp)) next
       .translation_one_group(comp, c("sex", "region", "season"),
                              paste("Index composition for", survey))
       totals_survey <- totals[!is.na(totals$survey) & totals$survey == survey &
                                 totals$year %in% years, , drop = FALSE]
-      if (!nrow(comp) || !nrow(totals_survey)) next
+      if (!nrow(totals_survey)) {
+        .translation_abort(paste("Index age composition for", survey,
+                                 "has no matching total index values."))
+      }
       w <- .translation_weights_for_index(survey, all_weights, stock_weights,
                                            years, ages)
       for (year in unique(comp$year)) {
         cp <- comp[comp$year == year, , drop = FALSE]
         total <- totals_survey[totals_survey$year == year, , drop = FALSE]
-        if (!nrow(total)) next
+        if (!nrow(total)) {
+          .translation_abort(paste("Index age composition for", survey, year,
+                                   "has no matching total index value."))
+        }
         if (nrow(total) != 1L) .translation_abort(paste("Multiple aggregate index values for", survey, year))
         if (anyDuplicated(cp$age)) .translation_abort(paste("Duplicate composition ages for", survey, year))
         if (nrow(cp) > 1L && length(unique(cp$basis)) > 1L) {
@@ -344,12 +475,16 @@
 #'
 #' This analysis-local helper preserves source values where they are already
 #' numbers-at-age and makes required transformations explicit. When an
-#' aggregate biomass index and age composition are both available, it derives
-#' numbers-at-age using the matching survey weight-at-age when available, or
-#' the selected weight series otherwise. Direct indices recorded in a native
+#' annual total number of catch removals and number proportions-at-age are
+#' recorded, it multiplies the matching values without renormalizing them.
+#' When both an aggregate biomass index and an age composition are available,
+#' it derives numbers-at-age using the matching survey weight-at-age when
+#' available, or the selected weight series otherwise. Direct indices recorded in a native
 #' survey-index scale are preserved without converting them to fish counts.
 #' Survey timing must be in the source rows or supplied explicitly; unknown
 #' timing is never replaced silently.
+#' Index measures without an age-abundance translation are reported as errors
+#' unless their surveys are explicitly excluded with `surveys`.
 #' The translated index also carries `q_block` (age) and `q_key`
 #' (survey-by-age) factors so the fit can state catchability sharing explicitly.
 #'
@@ -369,7 +504,7 @@
 #'   accepted source assessment, one vector per survey.
 #'
 #' @return A `tinyAM` observation list with a `translation` attribute recording
-#'   unit conversions, derived-index methods, and source references.
+#'   catch/index reconstruction methods, unit conversions, and source references.
 database_to_tiny_obs <- function(assessment_id, inputs, years = NULL, ages = NULL,
                                  weight_survey = NULL, sampling_times = NULL,
                                  surveys = NULL, exclude_index_years = NULL) {
@@ -424,34 +559,8 @@ database_to_tiny_obs <- function(assessment_id, inputs, years = NULL, ages = NUL
 
   weight <- .translation_surface(all_weights, years, ages, "Weight-at-age")
   maturity <- .translation_surface(maturity_source, years, ages, "Maturity-at-age")
-  catch_source <- .translation_measure(x, "catch", "numbers_at_age")
-  if (!nrow(catch_source)) .translation_abort("No source catch numbers-at-age are recorded.")
-  catch_source <- .translation_calendar_rows(catch_source, "catch numbers-at-age")
-  .translation_one_group(catch_source, c("fleet", "sex", "region", "season"),
-                         "Catch-at-age input")
-  catch_source <- catch_source[catch_source$year %in% years & catch_source$age >= min(ages), , drop = FALSE]
-  catch_source$value <- catch_source$value * vapply(catch_source$unit,
-                                                     .translation_number_multiplier,
-                                                     numeric(1))
-  catch_unit_conversion <- unique(data.frame(
-    source_unit = catch_source$unit,
-    multiplier_to_fish = vapply(catch_source$unit,
-                                .translation_number_multiplier,
-                                numeric(1)),
-    stringsAsFactors = FALSE
-  ))
-  if (anyDuplicated(.translation_key(catch_source, c("year", "age")))) {
-    .translation_abort("Catch-at-age has duplicate year-age rows before plus-group aggregation.")
-  }
-  catch_source$age <- pmin(catch_source$age, max(ages))
-  if (nrow(catch_source)) {
-    catch_source <- stats::aggregate(value ~ year + age, catch_source, sum)
-  }
-  grid <- .translation_grid(years, ages)
-  catch <- data.frame(year = grid$year, age = grid$age,
-                      obs = catch_source$value[match(
-                        .translation_key(grid, c("year", "age")),
-                        .translation_key(catch_source, c("year", "age")))])
+  catch_translation <- .translation_catch_at_age(x, years, ages)
+  catch <- catch_translation$catch
 
   index <- .translation_index(x, source_weights, selected_weight_source, years, ages,
                               sampling_times, surveys, exclude_index_years)
@@ -461,9 +570,7 @@ database_to_tiny_obs <- function(assessment_id, inputs, years = NULL, ages = NUL
   obs <- list(catch = catch, index = index, weight = weight, maturity = maturity)
   index_provenance <- attr(index, "translation")
   source_provenance <- rbind(
-    .translation_source_provenance(
-      .translation_measure(x, "catch", "numbers_at_age"), "catch",
-      "Numbers-at-age retained and converted to individual fish; older ages collapsed to the selected plus age."),
+    catch_translation$provenance,
     do.call(rbind, lapply(seq_len(nrow(index_provenance)), function(i) {
       survey_rows <- x[!is.na(x$survey) &
                          x$survey == index_provenance$survey[[i]] &
@@ -489,8 +596,9 @@ database_to_tiny_obs <- function(assessment_id, inputs, years = NULL, ages = NUL
     weight_survey = weight_survey,
     sampling_times_override = sampling_times,
     excluded_index_years = exclude_index_years,
-    catch_method = "source numbers-at-age; catch and index values older than max(ages) summed into the plus age",
-    catch_units = catch_unit_conversion,
+    catch_method = paste(unique(catch_translation$provenance$method),
+                         collapse = "; "),
+    catch_units = catch_translation$units,
     source_provenance = source_provenance,
     index = attr(index, "translation")
   )

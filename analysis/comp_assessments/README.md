@@ -116,8 +116,10 @@ Run `Rscript analysis/comp_assessments/scripts/003_fit_readiness.R` to export
 recruitment age, plus group, input counts, surveys and times, full-grid coverage,
 model-output availability, converter result, and `tinyAM::check_obs()` result.
 Grid checks use the source model's full year and age range, not merely the span
-of the rows that happened to be extracted. A partial source record remains
-partial even when some rows can be converted.
+of the rows that happened to be extracted. Missing catch cells are allowed by
+tinyAM and are reported as source coverage gaps rather than treated as a
+conversion failure. A partial source record remains partial even when some rows
+can be converted.
 
 This first database pass documents source assessments only. It does not fit
 tinyAM across the stock set, guarantee that every reported quantity can be
