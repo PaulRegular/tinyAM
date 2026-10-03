@@ -257,4 +257,31 @@ herring_error <- tryCatch(.translation_index(
 ), error = identity)
 expect_equal(grepl("Unsupported index measure", conditionMessage(herring_error)), TRUE)
 
+herring_surveys <- c("HERAS", "IBTS0", "IBTS-Q1", "IBTS-Q3")
+herring_timing_error <- tryCatch(database_to_tiny_obs(
+  "ices_herring_north_sea_2026", inputs_db, years = 1947:2025, ages = 0:8,
+  surveys = herring_surveys
+), error = identity)
+expect_equal(grepl("Survey timing is unknown", conditionMessage(herring_timing_error)), TRUE)
+
+# Artificial times exercise the mapping; they are not assessment timing choices.
+herring_before <- herring_inputs
+herring_obs <- database_to_tiny_obs(
+  "ices_herring_north_sea_2026", inputs_db, years = 1947:2025, ages = 0:8,
+  surveys = herring_surveys,
+  sampling_times = setNames(rep(0.5, 4), herring_surveys)
+)
+expect_equal(setequal(unique(herring_obs$index$survey), herring_surveys), TRUE)
+expect_equal(setequal(attr(herring_obs, "translation")$excluded_surveys,
+                      c("LAI-SNS", "LAI-CNS", "LAI-BUN", "LAI-ORSH")), TRUE)
+herring_direct <- herring_inputs[herring_inputs$type == "index" &
+                                   herring_inputs$survey %in% herring_surveys &
+                                   herring_inputs$year <= 2025, , drop = FALSE]
+herring_match <- match(paste(herring_direct$year, herring_direct$age, herring_direct$survey),
+                       paste(herring_obs$index$year, herring_obs$index$age,
+                             herring_obs$index$survey))
+expect_equal(herring_obs$index$obs[herring_match], as.numeric(herring_direct$value))
+expect_equal(herring_inputs, herring_before)
+expect_equal(sum(is.na(herring_obs$catch$obs)), 18L)
+
 cat("Translation helper tests passed.\n")

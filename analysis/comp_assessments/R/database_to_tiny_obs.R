@@ -118,7 +118,7 @@
 
 .translation_index_multiplier <- function(unit) {
   unit <- tolower(trimws(as.character(unit)))
-  if (grepl("^(native[ _]+)?survey[ _]?index$", unit)) return(1)
+  if (grepl("^(native[ _]+)?survey[ _]?index( \\(unit unresolved\\))?$", unit)) return(1)
   .translation_number_multiplier(unit)
 }
 
@@ -344,7 +344,7 @@
       result[[length(result) + 1L]] <- direct[c("year", "age", "obs", "survey", "samp_time")]
       for (survey in unique(as.character(direct_source$survey))) {
         source <- direct_source[direct_source$survey == survey, , drop = FALSE]
-        method <- if (grepl("^(native[ _]+)?survey[ _]?index$",
+        method <- if (grepl("^(native[ _]+)?survey[ _]?index( \\(unit unresolved\\))?$",
                             tolower(trimws(source$unit[[1]])))) {
           "native survey index values retained on their source scale"
         } else {
@@ -595,6 +595,12 @@ database_to_tiny_obs <- function(assessment_id, inputs, years = NULL, ages = NUL
     ages = ages,
     weight_survey = weight_survey,
     sampling_times_override = sampling_times,
+    selected_surveys = if (is.null(surveys)) {
+      unique(na.omit(x$survey[x$type == "index"]))
+    } else surveys,
+    excluded_surveys = if (is.null(surveys)) character() else {
+      setdiff(unique(na.omit(x$survey[x$type == "index"])), surveys)
+    },
     excluded_index_years = exclude_index_years,
     catch_method = paste(unique(catch_translation$provenance$method),
                          collapse = "; "),
