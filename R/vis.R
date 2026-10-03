@@ -2,13 +2,13 @@
 #' Make a flexdashboard for visualizing model fits
 #'
 #' @inheritParams tidy_tam
-#' @param model_list   A **named list** of fitted TAM objects or reporting references
-#'                     from [sam_to_tam_list()] (e.g., `fits` list returned by
-#'                     [fit_retro()]). Names are used to label models.
+#' @param model_list   A **named list** of fitted TAM objects or precomputed
+#'                     reporting lists of class `tam_list`. Names label models.
 #' @param output_file  Name of file to export using [rmarkdown::render()].
 #'                     If `NULL`, a temporary HTML file is rendered.
 #'                     The file opens in your browser only when `open_file = TRUE`.
 #' @param open_file    Logical. Open rendered html file?
+#' @param background Optional Markdown text shown on a Background dashboard page.
 #' @param render_args  Named list of additional arguments passed to
 #'                     [rmarkdown::render()].
 #' @param ...          One or more TAM fits or reporting references.
@@ -19,9 +19,9 @@
 #'          form a uniquely named list so they can be labeled in the dashboard.
 #'          Additional arguments for [rmarkdown::render()] can be passed through
 #'          `render_args`, which must itself be a (named) list.
-#'          Reporting references from [sam_to_tam_list()] may be mixed
-#'          with tinyAM fits. Their native definitions and unavailable outputs
-#'          are identified in the dashboard; they are not refittable TAM objects.
+#'          Precomputed reporting lists may be mixed with tinyAM fits; they are
+#'          not refittable TAM objects. Supply `background` to add a page
+#'          describing assessment assumptions and translation choices.
 #' @return Used for its side effects: writes an HTML dashboard and optionally
 #'   opens it in the browser. Supply `output_file` to retain a known file path.
 #'
@@ -37,8 +37,7 @@
 #'
 #' @export
 vis_tam <- function(..., model_list = NULL, interval = 0.95, output_file = NULL,
-                    open_file = TRUE, render_args = list()) {
-
+                    open_file = TRUE, background = NULL, render_args = list()) {
   pkg <- c("knitr", "rmarkdown", "flexdashboard")
   missing <- pkg[!vapply(pkg, requireNamespace, logical(1), quietly = TRUE)]
   if (length(missing)) {
@@ -51,6 +50,15 @@ vis_tam <- function(..., model_list = NULL, interval = 0.95, output_file = NULL,
       "Required package(s) not installed: {paste(missing, collapse = ', ')}.",
       "i" = "Install with: {.code {install_call}}"
     ))
+  }
+
+  if (!is.null(background)) {
+    if (!is.character(background) || !length(background) || anyNA(background)) {
+      cli::cli_abort("{.arg background} must be NULL or Markdown text.")
+    }
+    background <- paste(background, collapse = "\n")
+    background <- enc2utf8(background)
+    if (!nzchar(trimws(background))) background <- NULL
   }
 
   render_args <- .validate_named_list(render_args, arg = "render_args", allow_empty = TRUE,
@@ -66,6 +74,7 @@ vis_tam <- function(..., model_list = NULL, interval = 0.95, output_file = NULL,
   rmd_env <- new.env(parent = globalenv())
   rmd_env$fits <- fits
   rmd_env$interval <- interval
+  rmd_env$background <- background
 
   if (is.null(output_file)) {
     output_file <- tempfile(pattern = "vis_tam_", fileext = ".html")

@@ -520,6 +520,7 @@ stack_list <- function(x, label = "model",
     df <- x[[i]]
     if (is.null(df)) return(NULL)
     if (!is.data.frame(df)) df <- as.data.frame(df)
+    if (!nrow(df)) return(NULL)
     if (!is.null(label)) df[[label]] <- ids[[i]]
     df
   })
@@ -628,9 +629,11 @@ stack_nested <- function(x, label = "model",
 #'
 #' @details
 #' **Inputs:** Pass models through `...` or via `model_list =`.
-#' Reporting references from [sam_to_tam_list()] are also accepted.
-#' Their source tables are recalculated at `interval`; native definitions and
-#' missing uncertainty are retained without constructing a tinyAM optimizer.
+#' Precomputed reporting lists of class `tam_list` are also accepted. Their
+#' existing tables and uncertainty are retained without constructing a tinyAM
+#' optimizer. A reporting list may contain a named `comparison_scales` vector;
+#' those factors are applied to the matching tinyAM population estimates and
+#' uncertainty so the combined tables use the reporting list's units.
 #'
 #' - If `...` supplies **one** model, **no label** column is added.
 #' - If `...` supplies **>1** model, a label column is added using the object/expression names from `...`.
@@ -690,20 +693,6 @@ tidy_tam <- function(..., model_list = NULL, interval = 0.95, label = "model", l
   model_list <- fits_info$fits
   using_dots <- fits_info$using_dots
 
-  # Reporting references have no RTMB optimizer; rebuild only their source tables.
-  model_list <- lapply(model_list, function(fit) {
-    if (inherits(fit, "tam_list")) {
-      tabs <- .sam_comparison_tables(fit$source_fit, interval)
-      # Respect an explicitly selected reporting period, while retaining the source fit.
-      for (nm in c("pop", "obs_pred", "random_par")) {
-        tabs[[nm]] <- lapply(tabs[[nm]], function(d) d[d$year %in% fit$dat$years, , drop = FALSE])
-        attr(tabs[[nm]], "interval") <- interval
-      }
-      fit[names(tabs)] <- tabs
-    }
-    fit
-  })
-
   # add label if: multiple via ... OR any named model_list usage
   add_label <- (using_dots && length(model_list) > 1L) || (!using_dots)
   id_col    <- if (add_label) label else NULL
@@ -739,13 +728,53 @@ tidy_tam <- function(..., model_list = NULL, interval = 0.95, label = "model", l
   }
 
   pop_list <- lapply(model_list, function(fit) {
+    if (inherits(fit, "tam_list")) return(fit$pop)
     if (!is.null(fit$pop) && interval_matches(fit$pop)) {
       fit$pop
     } else {
       tidy_pop(fit, interval = interval)
     }
   })
+  reporting_lists <- Filter(function(fit) inherits(fit, "tam_list"), model_list)
+  comparison_scales <- lapply(reporting_lists, `[[`, "comparison_scales")
+  comparison_scales <- Filter(function(x) length(x) > 0L, comparison_scales)
+  if (length(comparison_scales)) {
+    comparison_scales <- lapply(comparison_scales, function(x) {
+      if (is.list(x)) x <- unlist(x, use.names = TRUE)
+      if (!is.numeric(x) || is.null(names(x)) || any(!nzchar(names(x))) ||
+          anyDuplicated(names(x)) || any(!is.finite(x)) || any(x <= 0)) {
+        cli::cli_abort("A {.cls tam_list} {.field comparison_scales} value must be a named vector of positive finite numbers.")
+      }
+      x
+    })
+    if (length(comparison_scales) > 1L &&
+        !all(vapply(comparison_scales[-1L], identical, logical(1), comparison_scales[[1L]]))) {
+      cli::cli_abort("Comparison lists use different {.field comparison_scales}; the fitted outputs cannot be shown on one scale.")
+    }
+    comparison_scales <- comparison_scales[[1L]]
+    reference_pop <- reporting_lists[[1L]]$pop
+    for (i in seq_along(model_list)) {
+      if (inherits(model_list[[i]], "tam_list")) next
+      for (metric in intersect(names(comparison_scales), names(pop_list[[i]]))) {
+        tab <- pop_list[[i]][[metric]]
+        scale <- comparison_scales[[metric]]
+        for (field in intersect(c("est", "se", "lwr", "upr"), names(tab))) {
+          tab[[field]] <- tab[[field]] * scale
+        }
+        reference <- reference_pop[[metric]]
+        if (is.data.frame(reference) && "unit" %in% names(reference)) {
+          units <- unique(as.character(reference$unit[!is.na(reference$unit) &
+                                                        nzchar(as.character(reference$unit))]))
+          if (length(units) == 1L) tab$unit <- units[[1L]]
+        }
+        pop_list[[i]][[metric]] <- tab
+      }
+    }
+  }
   par_list <- lapply(model_list, function(fit) {
+    if (inherits(fit, "tam_list")) {
+      return(list(fixed = fit$fixed_par, random = fit$random_par))
+    }
     has_fixed  <- !is.null(fit$fixed_par)
     has_random <- !is.null(fit$random_par)
     if (has_fixed && has_random && interval_matches(fit$fixed_par) && interval_matches(fit$random_par)) {

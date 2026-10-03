@@ -95,3 +95,8 @@
 }
 
 .is_reporting_fit <- function(x) .is_tam_fit(x) || inherits(x, "tam_list")
+
+#' @export
+update.tam_list <- function(object, ...) {
+  cli::cli_abort("A tam_list is a reporting object and cannot be updated or fitted.")
+}
