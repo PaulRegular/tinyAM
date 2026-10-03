@@ -51,7 +51,13 @@ inputs <- do.call(rbind, list(
       year = 2000, age = NA_real_, value = 1, unit = "t per tow"),
   row("index", "numbers_at_age", "numbers", survey = "RV",
       year = 2001, age = 1:2, value = c(4, 0), unit = "fish per 1,000 hooks",
-      sampling_time = 0.75)
+      sampling_time = 0.75),
+  row("index", "numbers_at_age", "numbers", survey = "Acoustic",
+      year = 2000, age = 1:2, value = c(40, 50), unit = "native survey index",
+      sampling_time = 0.25),
+  row("index", "numbers_at_age", "numbers", survey = "Relative",
+      year = 2000, age = 1:2, value = c(2, 3), unit = "survey_index",
+      sampling_time = 0.4)
 ))
 
 sampling_times <- c(Longline = 0.6)
@@ -67,10 +73,18 @@ expect_equal(obs$index$obs[obs$index$year == 2000 & obs$index$survey == "Longlin
 expect_equal(obs$index$samp_time[obs$index$survey == "RV"], rep(0.75, 4))
 expect_equal(obs$index$samp_time[obs$index$survey == "Longline"], rep(0.6, 2))
 expect_equal(as.character(obs$index$q_block), as.character(obs$index$age))
-expect_equal(length(unique(obs$index$q_key)), 4L)
+expect_equal(length(unique(obs$index$q_key)), 8L)
+expect_equal(obs$index$obs[obs$index$survey == "Acoustic"], c(40, 50))
+expect_equal(obs$index$obs[obs$index$survey == "Relative"], c(2, 3))
 provenance <- attr(obs, "translation")$source_provenance
 expect_equal(setequal(provenance$component, c("catch", "index", "weight", "maturity")), TRUE)
 expect_equal(all(grepl("fixture table", provenance$source_reference)), TRUE)
+expect_equal(grepl("retained on their source scale",
+                   provenance$method[provenance$component == "index" &
+                                       provenance$survey == "Acoustic"]), TRUE)
+expect_equal(grepl("retained on their source scale",
+                   provenance$method[provenance$component == "index" &
+                                       provenance$survey == "Relative"]), TRUE)
 expect_equal(obs$catch$obs[obs$catch$year == 2001 & obs$catch$age == 2], NA_real_)
 expect_equal(obs$index$obs[obs$index$year == 2001], c(4, 0))
 
@@ -82,6 +96,8 @@ expect_equal(plus_obs$catch$obs[plus_obs$catch$year == 2000], 30)
 expect_equal(plus_obs$index$obs[plus_obs$index$year == 2000 &
                                  plus_obs$index$survey == "RV"],
              sum(expected_age_numbers))
+expect_equal(plus_obs$index$obs[plus_obs$index$survey == "Acoustic"], 90)
+expect_equal(plus_obs$index$obs[plus_obs$index$survey == "Relative"], 5)
 expect_equal(plus_obs$index$obs[plus_obs$index$year == 2001], 4)
 
 thousand_inputs <- inputs
@@ -94,6 +110,8 @@ expect_equal(thousand_obs$catch$obs[thousand_obs$catch$year == 2000],
              c(10000, 20000))
 expect_equal(attr(thousand_obs, "translation")$catch_units$multiplier_to_fish,
              1000)
+expect_equal(unname(vapply(c("native survey index", "survey_index"),
+                           .translation_index_multiplier, numeric(1))), c(1, 1))
 
 m_inputs <- inputs[0, ]
 m_inputs <- rbind(
@@ -146,5 +164,56 @@ expect_equal(as.integer(table(sg_obs$index$survey)), c(320L, 161L, 160L))
 expect_equal(any(sg_obs$index$survey == "DFO September RV survey" &
                    sg_obs$index$year == 2003), FALSE)
 expect_equal(all(sg_obs$index$samp_time %in% c(0.75, 0.625, 0.67)), TRUE)
+
+nea_id <- "ices_cod_northeast_arctic_2026"
+nea_obs <- database_to_tiny_obs(nea_id, inputs_db,
+                                years = 1946:2026, ages = 3:15)
+nea_m <- database_to_tiny_M(nea_id, inputs_db, assumptions_db,
+                            years = 1946:2026, ages = 3:15)
+expect_equal(nrow(nea_obs$catch), 1053L)
+expect_equal(sum(!is.na(nea_obs$catch$obs)), 1028L)
+expect_equal(nrow(nea_obs$index), 1349L)
+expect_equal(sort(as.integer(table(nea_obs$index$survey))),
+             sort(c(290L, 130L, 403L, 336L, 190L)))
+expect_equal(range(nea_obs$index$age), c(3, 12))
+expect_equal(sum(nea_obs$index$age %in% 13:15), 0L)
+expect_equal(range(nea_obs$catch$age), c(3, 15))
+nea_catch <- inputs_db[inputs_db$assessment_id == nea_id &
+                         inputs_db$type == "catch" &
+                         inputs_db$measure == "numbers_at_age", , drop = FALSE]
+nea_catch_match <- match(
+  paste(nea_catch$year, nea_catch$age),
+  paste(nea_obs$catch$year, nea_obs$catch$age)
+)
+expect_equal(nea_obs$catch$obs[nea_catch_match],
+             as.numeric(nea_catch$value) * 1000)
+nea_direct <- inputs_db[inputs_db$assessment_id == nea_id &
+                           inputs_db$type == "index" &
+                           inputs_db$measure == "numbers_at_age", , drop = FALSE]
+nea_index_match <- match(
+  paste(nea_direct$year, nea_direct$age, nea_direct$survey),
+  paste(nea_obs$index$year, nea_obs$index$age, nea_obs$index$survey)
+)
+expect_equal(nea_obs$index$obs[nea_index_match], as.numeric(nea_direct$value))
+nea_provenance <- attr(nea_obs, "translation")$source_provenance
+expect_equal(all(grepl("retained on their source scale",
+                       nea_provenance$method[nea_provenance$component == "index"])), TRUE)
+expect_equal(nea_m$status, "fixed_numerical_input")
+expect_equal(nea_m$M_settings$process, "off")
+expect_equal(nrow(nea_m$surface), 1053L)
+nea_m_source <- inputs_db[inputs_db$assessment_id == nea_id &
+                            inputs_db$type == "M" &
+                            inputs_db$measure == "natural_mortality_at_age", , drop = FALSE]
+nea_m_match <- match(paste(nea_m_source$year, nea_m_source$age),
+                     paste(nea_m$surface$year, nea_m$surface$age))
+expect_equal(nea_m$surface$M_assumption[nea_m_match],
+             as.numeric(nea_m_source$value))
+for (survey in unique(nea_obs$index$survey)) {
+  source_time <- unique(inputs_db$sampling_time[
+    inputs_db$assessment_id == nea_id & inputs_db$type == "index" &
+      inputs_db$survey == survey & !is.na(inputs_db$sampling_time)])
+  expect_equal(unique(nea_obs$index$samp_time[nea_obs$index$survey == survey]),
+               as.numeric(source_time))
+}
 
 cat("Translation helper tests passed.\n")

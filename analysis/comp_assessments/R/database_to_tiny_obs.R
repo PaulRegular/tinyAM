@@ -116,6 +116,12 @@
   .translation_abort(paste("Cannot convert number unit to individual fish:", unit))
 }
 
+.translation_index_multiplier <- function(unit) {
+  unit <- tolower(trimws(as.character(unit)))
+  if (grepl("^(native[ _]+)?survey[ _]?index$", unit)) return(1)
+  .translation_number_multiplier(unit)
+}
+
 .translation_sampling_time <- function(rows, survey, sampling_times) {
   values <- suppressWarnings(as.numeric(as.character(rows$sampling_time)))
   values <- unique(values[is.finite(values)])
@@ -200,9 +206,9 @@
     }
     direct <- direct[direct$year %in% years & direct$age >= min(ages), , drop = FALSE]
     if (nrow(direct)) {
-    direct$value <- direct$value * vapply(direct$unit,
-                                           .translation_number_multiplier,
-                                           numeric(1))
+      direct_source <- direct
+      direct_multiplier <- vapply(direct$unit, .translation_index_multiplier, numeric(1))
+      direct$value <- direct$value * direct_multiplier
       direct$age <- pmin(direct$age, max(ages))
       direct <- stats::aggregate(value ~ year + age + survey, direct, sum)
       direct$samp_time <- vapply(seq_len(nrow(direct)), function(i) {
@@ -212,13 +218,23 @@
       }, numeric(1))
       direct$obs <- direct$value
       result[[length(result) + 1L]] <- direct[c("year", "age", "obs", "survey", "samp_time")]
-      k <- k + 1L
-      provenance[[k]] <- data.frame(
-        survey = paste(unique(direct$survey), collapse = "; "),
-        method = "source numbers-at-age converted to individual fish; ages above the selected maximum summed into the plus age",
-        source_reference = paste(unique(x$source_reference[x$type == "index"]), collapse = "; "),
-        stringsAsFactors = FALSE
-      )
+      for (survey in unique(as.character(direct_source$survey))) {
+        source <- direct_source[direct_source$survey == survey, , drop = FALSE]
+        method <- if (grepl("^(native[ _]+)?survey[ _]?index$",
+                            tolower(trimws(source$unit[[1]])))) {
+          "native survey index values retained on their source scale"
+        } else {
+          "source numbers-at-age converted to individual fish"
+        }
+        k <- k + 1L
+        provenance[[k]] <- data.frame(
+          survey = survey,
+          method = paste(method,
+                         "ages above the selected maximum summed into the plus age"),
+          source_reference = paste(unique(source$source_reference), collapse = "; "),
+          stringsAsFactors = FALSE
+        )
+      }
     }
   }
 
@@ -330,8 +346,10 @@
 #' numbers-at-age and makes required transformations explicit. When an
 #' aggregate biomass index and age composition are both available, it derives
 #' numbers-at-age using the matching survey weight-at-age when available, or
-#' the selected weight series otherwise. Survey timing must be in the source
-#' rows or supplied explicitly; unknown timing is never replaced silently.
+#' the selected weight series otherwise. Direct indices recorded in a native
+#' survey-index scale are preserved without converting them to fish counts.
+#' Survey timing must be in the source rows or supplied explicitly; unknown
+#' timing is never replaced silently.
 #' The translated index also carries `q_block` (age) and `q_key`
 #' (survey-by-age) factors so the fit can state catchability sharing explicitly.
 #'

@@ -38,6 +38,14 @@ landings fractions and pre-spawning F/M fractions. M includes externally
 calculated cannibalism mortality; it is fixed within the saved SAM fit, rather
 than an internally estimated mortality process.
 
+The cached fit contains survey observations and corresponding fitted values
+only through the source terminal age group 12+; it has no survey rows at ages
+13–15 to add to the database. It does contain separate population, catch, and
+fishing-mortality outputs at ages 13–15. Keep the observed survey series as
+ages 3–12+, and retain the model's age-3–15 structure for the other inputs and
+outputs. The 12+ index cannot be split into ages 13–15 from this fit without
+inventing age-specific observations.
+
 ## Accepted-run evidence and remaining checks
 
 The saved fit uses the prediction–observation-variance link added in 2026,

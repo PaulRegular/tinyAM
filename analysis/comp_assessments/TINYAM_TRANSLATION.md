@@ -228,7 +228,9 @@ If the survey provides direct abundance-at-age:
 
 $$I^N_{s,t,a}$$
 
-retain the survey identity and harmonize units only as needed.
+retain the survey identity and harmonize units only as needed. If the source
+reports values on a native survey-index scale, keep those values unchanged;
+do not treat an index as a count of fish.
 
 ## 5.2 Total abundance + number proportions
 
@@ -499,6 +501,13 @@ tinyAM may model the same plus age or a deliberately different age range.
 When biological weight/maturity data extend above the modeled plus age, retain those source values where possible because tinyAM can use hidden older ages in its internal plus-group biology.
 
 Do not silently collapse source data before deciding on the modeled age range.
+
+If a source survey reports one terminal group such as 12+ while the assessment
+models population ages through 15, keep the survey observation as its original
+12+ group (stored at age 12) and retain the model's 13–15 population ages. A
+fitted model object may have age-specific population outputs at 13–15 without
+having separate survey observations for those ages. Do not copy fitted values
+or split the 12+ survey observation into invented age-specific inputs.
 
 ------------------------------------------------------------------------
 
