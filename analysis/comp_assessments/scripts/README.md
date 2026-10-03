@@ -8,7 +8,12 @@ Use these scripts to seed, import, review, validate, and export assessment recor
 
 ## `translation/`
 
-`run_translations.R` loads the reviewed database and runs the matching stock specifications in `translation/stocks/`. Each stock file defines one `translate_stock()` function with its observation conversion, fit settings, comparison scales, and background table.
+`translation/run_translations.R` loads the reviewed database and runs current
+accepted assessments with matching specifications in `translation/stocks/`.
+Each stock file is named for its `assessment_id` and defines one
+`translate_stock()` function with its data conversion, fit settings, and
+background text. These files are intentionally unnumbered: the assessment ID
+identifies the stock, and the driver selects the current records.
 
 Run the translation workflow and its focused converter checks with:
 

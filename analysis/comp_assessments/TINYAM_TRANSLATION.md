@@ -94,11 +94,14 @@ analysis/comp_assessments/
 │   ├── database_to_tam_list.R
 │   └── audit_assumptions.R
 ├── scripts/
-│   ├── run_translations.R
-│   ├── stocks/
-│   └── curation/
+│   ├── database/
+│   └── translation/
+│       ├── run_translations.R
+│       └── stocks/
+│           └── <assessment_id>.R
+├── tests/
 ├── results/
-│   └── <assessment_id>/
+│   └── translations/<assessment_id>/
 └── source_cache/                 # gitignored authoritative source files
 ```
 
