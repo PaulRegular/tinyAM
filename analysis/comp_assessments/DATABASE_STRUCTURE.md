@@ -233,7 +233,8 @@ landings_proportion
 `landings_numbers_at_age` and `landings_fraction_at_age` retain removal components
 used by a source model alongside its combined catch. Landings and discard weights
 are distinct from combined catch weights. `log_index_sd` stores a supplied
-standard deviation of the log survey index as a separate age/year record with
+standard deviation of the log survey index as a separate year record, with age
+when the index is age-specific, and
 the same survey identity as the corresponding observation; use `type = index`,
 `basis = log_scale`, and document whether it fixes variance or supplies a relative
 weight. `landings_proportion` retains a source landings-weight composition by substock
@@ -411,3 +412,7 @@ Per-assessment summaries should include:
 - assumptions represented.
 
 Downstream-analysis-specific transformations, settings, compatibility judgments, and fitted results do not belong in the canonical database.
+
+`spawning_weight_at_age` distinguishes supplied spawning-stock weights from
+population weights when the source uses different biological surfaces. Use
+`type = weight`, `basis = kg_per_fish`; do not label biological purposes as spatial regions.

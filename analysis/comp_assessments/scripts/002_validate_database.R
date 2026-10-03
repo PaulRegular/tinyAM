@@ -143,7 +143,7 @@ allowed_input_types <- c("catch", "index", "weight", "catch_weight", "maturity",
 allowed_output_types <- c("population", "mortality", "biomass", "recruitment", "catch",
                           "index", "catchability")
 allowed_input_measures <- c("numbers_at_age", "biomass_at_age", "total_numbers",
-                            "total_biomass", "proportion_at_age", "weight_at_age",
+                            "total_biomass", "proportion_at_age", "weight_at_age", "spawning_weight_at_age",
                             "maturity_at_age", "natural_mortality_at_age",
                             "landings_proportion", "landings_numbers_at_age", "landings_fraction_at_age",
                             "landings_weight_at_age", "discard_weight_at_age", "log_index_sd", "larval_abundance_index")
@@ -180,9 +180,9 @@ for (name in c("inputs", "outputs")) {
   }
   age_required <- if (name == "inputs") {
     x$measure %in% c("numbers_at_age", "biomass_at_age", "proportion_at_age",
-                     "weight_at_age", "maturity_at_age", "natural_mortality_at_age",
+                     "weight_at_age", "spawning_weight_at_age", "maturity_at_age", "natural_mortality_at_age",
                      "landings_numbers_at_age", "landings_fraction_at_age",
-                     "landings_weight_at_age", "discard_weight_at_age", "log_index_sd")
+                     "landings_weight_at_age", "discard_weight_at_age")
   } else {
     has_age_group <- if ("age_group" %in% names(x)) {
       !is.na(x$age_group) & nzchar(x$age_group)

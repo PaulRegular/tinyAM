@@ -138,3 +138,4 @@ in `source_reviews/`, with one Markdown file per stock.
 - [North Sea haddock](source_reviews/ices_haddock_north_sea.md)
 - [North Sea herring](source_reviews/ices_herring_north_sea.md)
 - [Eastern Bering Sea pollock](source_reviews/afsc_pollock_ebs.md)
+- [Gulf of Alaska pollock](source_reviews/afsc_pollock_goa.md)

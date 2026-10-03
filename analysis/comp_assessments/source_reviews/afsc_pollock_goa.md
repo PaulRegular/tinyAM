@@ -1,0 +1,63 @@
+# Gulf of Alaska pollock: accepted-assessment source review
+
+Status: canonical record afsc_pollock_goa_2024 imported; inputs, outputs and assumptions remain partial.
+Charbonneau identifier: AFSC_GOA_Gadus_chalcogrammus.
+
+## Accepted assessment
+
+The November 2024 detailed SAFE chapter is cached as source_cache/afsc_pollock_goa_2024/2024_GOA_pollock_SAFE.pdf (118 pages).
+Source: https://meetings.npfmc.org/CommentReview/DownloadFile?fileName=GOA+Pollock+2024.pdf&p=bd9a9aa2-3a33-4841-9133-d9ccf593e051.pdf
+
+Final December 2024 SSC report, page 40, explicitly accepts Model 23d for the Western/Central/West Yakutat stock. It endorses revised survey CVs/sample sizes, a Shelikof catchability covariate, removal of Shelikof age-1/age-2 indices, and Dirichlet-multinomial composition likelihoods. The separate Southeast Outside Tier 5 assessment must not be combined with this age-structured stock.
+SSC source: https://meetings.npfmc.org/CommentReview/DownloadFile?fileName=SSC+Report+Dec+2024_FINAL.pdf&p=2587e1ac-2a37-4a80-b68b-7a8c7e7a02ca.pdf
+
+The 2025 catch-only notice is cached separately. Its assessment identity and specification rollover still need direct checking against the accepted 2024 run before canonical import.
+Source: https://meetings.npfmc.org/CommentReview/DownloadFile?fileName=1.+Pollock.pdf&p=b8e2f063-e4d4-4749-a5c3-ac04a7bbc612.pdf
+
+## Native files
+
+Official repository: https://github.com/afsc-assessments/GOApollock
+Inspected commit: aefe1692520510d55fd25db60121b292a53840a3.
+Cached metadata, recursive tree, README, data/2024/pk24_12.txt, data/2024/goa_pk.cpp, data/2024/run_assessment.R, R/tmb_fns.R, R/utils.R and data/READMD.md.
+
+The README explains that annual releases reproduce assessments, while some SAFE inputs/outputs are not publicly shared. No fitted 2024 object appears in the inspected tree. Earlier ADMB/WHAM runs are context, not replacements for Model 23d.
+
+The 2024 script explicitly labels the fit '23d: 2024 final' and requests D-M composition likelihoods. Its first comment incorrectly says 2023; the actual path, data filename, version label and terminal year identify 2024. It fixes log_q4/log_q5 and doubles multN_srv1, multN_srv3 and multN_srv6 after reading. Those post-read transformations must be retained in model-ready composition weights.
+
+The inspected official read_dat function was evaluated independently, without fitting or executing the assessment workflow. It validated the final -999 sentinel, start 1970, terminal 2024, recruitment age 1 and terminal modeled age 10. Parsed values are cached as native_inputs_raw.rds and a lossless key/row/column/value CSV. These are raw parsed inputs, not yet fully transformed inputs consumed by the model.
+
+## Inventory and pending checks
+
+Native total catch: 55 years, tonnes, 1970–2024; terminal catch is assumed 131,000 t. Fishery age compositions: 49 years, 1975–2023, 10 columns, with lower/upper accumulation ages. Annual fishery weights: 55 by 10. Fishery length-composition placeholders have zero sample sizes and must not be mistaken for fitted observations.
+
+Survey blocks 1, 2, 3 and 6 contain respectively 31, 16, 37 and 6 total-index observations, and 31, 16, 20 and 6 age-composition rows. Survey identities, units, fitted accumulation ages, positive-weight length compositions and annual timing must be matched to the report/source before import. Blocks 4 and 5 remain in the file, but their log-SD values must be inspected: implementation only contributes their likelihood when log SD is positive. Merely finding these arrays does not establish that they are fitted.
+
+The source uses annual survey timing fractions directly in N * exp(-timing * Z), with survey-specific weight matrices. Preserve the timing for each observation year. The environmental catchability component has 40 observed years plus a latent AR1 surface; it is a material input, not optional descriptive context.
+
+Natural mortality is coded as the age vector 1.39, 0.69, 0.48, 0.37, 0.34, 0.30, 0.30, 0.29, 0.28, 0.29, multiplied by natMscalar. The default parameter map fixes natMscalar at 1. This requires report crosscheck; the summary's scalar M=0.3 is not a substitute for the fitted age-specific vector.
+
+The default reader/preparation code fixes sigmaR at its starting value 1.3. Verify this against the accepted report, rather than assuming the September proposed sigmaR=1.0 was retained. Confirm the exact annual release/reference commit if numerical crosschecks reveal discrepancies.
+
+Next: inspect the 2025 rollover notice; complete fitted-stream/biology/configuration inventory; compare native values with report tables; extract accepted historical outputs and uncertainty; import and validate the stock as one coherent unit.
+
+## Finalized report and staging checks
+
+The finalized 120-page chapter is now cached as 2024_GOA_pollock_SAFE_final.pdf, from https://files.npfmc.org/SAFE/2024/GOApollock.pdf. Prefer it to the earlier 118-page Plan Team draft for extraction.
+
+The 2025 catch notice explicitly confirms no new assessment in 2025. Its GOA-wide totals include Southeast Outside: 2025 ABC 181,022 + 9,749 = 190,771 t; 2026 ABC 133,075 + 9,749 = 142,824 t; 2025 OFL 210,111 + 12,998 = 223,109 t; 2026 OFL 153,971 + 12,998 = 166,969 t. Thus the notice supports production use of the 2024 result; its combined totals must not be stored as outputs of the W/C/WYK age-structured model.
+
+Final report page 16 confirms recruitment sigmaR=1.3, agreeing with the native default fixed parameter. September's proposed 1.0 was not the final convention. Pages 19–20 explain fixed external age-specific M, rescaled to average 0.3 for older fish, and a constant maturity vector based on 1983–2024 female observations. The native maturity vector matches the printed all-years row to rounding. The annual maturity estimates in Table 1.16 are supporting observations, not the maturity surface consumed by this model.
+
+Native arrays confirm all Shelikof age-1/age-2 index log SDs are zero, so their likelihood contributions are disabled. All fishery and survey length-composition sample sizes are zero. Do not import these disabled streams as fitted input coverage.
+
+Active indices are Shelikof winter acoustic (block 1, 31 observations, 1992–2024), NMFS bottom trawl (block 2, 16, 1990–2023), ADF&G crab/groundfish (block 3, 37, 1988–2024), and summer acoustic (block 6, 6, 2013–2023). Source timing fractions are 0.209, annual 0.543–0.584, 0.60989 and 0.519 respectively. Some report prose/tabulated likelihood summaries have stale end years; native arrays control the actual fitted input dates.
+
+Cached stage_report_outputs.py extracted 550 historical numbers-at-age values from Table 1.22 and 110 recruitment/SSB estimates with published 95% intervals and CVs from Table 1.24. Checks require 55 years, 10 ages, valid interval ordering, and exact agreement between printed age-1 N and recruitment. They passed. Units are million fish and thousand tonnes. No SE has been inferred from the rounded CVs. These are source-staged outputs, not yet canonical records.
+
+## Canonical import and validation
+
+scripts/016_import_goa_pollock.py imports 5,134 input values, 660 historical output values and 33 assumptions. scripts/017_validate_goa_pollock.R passed, together with full database structural validation. Coverage includes one combined fishery, four active biomass/composition surveys, annual survey/fishery/population/spawning weights, and constant supplied maturity and M vectors. Model years are 1970–2024, ages 1–10+, recruitment age 1, combined-sex abundance with female SSB fraction 0.5. Spawning survival timing is 0.21, distinct from the winter acoustic observation timing 0.209.
+
+Fishery age compositions accumulate ages 1–2 into their first fitted age bin; Shelikof compositions accumulate ages 1–3. These model-ready aggregations are labeled reconstructed_source_input with explicit formulas. Remaining compositions preserve native numerical values, without silent renormalization. Survey total biomass units are million tonnes on the native scale. SD rows match the same observation years and sampling times, with blank fish age for aggregate indices. Supplied spawning weights use measure spawning_weight_at_age, distinct from population weight_at_age and survey-specific weights; biological purposes are not treated as spatial regions.
+
+Remaining gaps: canonical numerical environmental covariate/observation-error and age-error matrices; complete process/selectivity/q/initial-state inventory; F-at-age and further outputs. Composition sample-size values and accepted post-read multipliers are recorded in input notes and native cache, but a dedicated numerical weighting representation remains pending. Completeness statuses remain partial. No new model fit or numerical substitutions were used.
