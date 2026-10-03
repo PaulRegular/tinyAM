@@ -96,14 +96,59 @@
   data.frame(year = grid$year, age = grid$age, obs = x$value[i])
 }
 
+.translation_repeat_biology <- function(x, years, reference_year, label) {
+  if (is.null(reference_year)) return(x)
+  if (length(reference_year) != 1L || !is.finite(reference_year) ||
+      reference_year != as.integer(reference_year)) {
+    .translation_abort(paste(label, "reference year must be one whole year."))
+  }
+  x <- x[x$year == reference_year, , drop = FALSE]
+  if (!nrow(x) || anyDuplicated(x$age)) {
+    .translation_abort(paste(label, "reference year needs one source value per age."))
+  }
+  do.call(rbind, lapply(years, function(year) {
+    x$year <- year
+    x
+  }))
+}
+
 .translation_biomass_to_kg <- function(value, unit) {
   unit <- tolower(trimws(as.character(unit)))
+  if (grepl("^(thousand|1000|1,000) (t|tonnes?)( |$)", unit)) return(value * 1e6)
   if (grepl("kt", unit, fixed = TRUE)) return(value * 1e6)
   if (grepl("kg", unit, fixed = TRUE)) return(value)
   if (grepl("tonne", unit, fixed = TRUE) || grepl("(^|[^a-z])t($|[^a-z])", unit)) {
     return(value * 1000)
   }
   .translation_abort(paste("Cannot convert biomass unit to kg:", unit))
+}
+
+.translation_weight_to_kg <- function(value, unit) {
+  unit <- tolower(trimws(as.character(unit)))
+  if (grepl("^kg($|[/ _])", unit)) return(value)
+  if (grepl("^g($|[/ _])", unit)) return(value / 1000)
+  .translation_abort(paste("Cannot convert weight-at-age unit to kg per fish:", unit))
+}
+
+.translation_catch_weights <- function(x, composition) {
+  weights <- .translation_measure(x, "catch_weight", "weight_at_age")
+  columns <- c("year", "fleet", "sex", "region", "season")
+  weights <- weights[.translation_key(weights, columns) %in%
+                       .translation_key(composition, columns), , drop = FALSE]
+  columns <- c(columns, "age")
+  if (anyDuplicated(.translation_key(weights, columns))) {
+    .translation_abort("Catch weights contain duplicate year-age rows for the catch stream.")
+  }
+  i <- match(.translation_key(composition, columns), .translation_key(weights, columns))
+  if (anyNA(i)) {
+    .translation_abort("Biomass-based catch reconstruction needs matching catch weights for every source composition age; stock weights are not substituted.")
+  }
+  weights <- weights[i, , drop = FALSE]
+  weights$value <- mapply(.translation_weight_to_kg, weights$value, weights$unit)
+  if (any(!is.finite(weights$value)) || any(weights$value <= 0)) {
+    .translation_abort("Catch weights must be positive and finite for biomass reconstruction.")
+  }
+  weights
 }
 
 .translation_number_multiplier <- function(unit) {
@@ -125,7 +170,7 @@
 .translation_catch_at_age <- function(x, years, ages) {
   direct <- .translation_measure(x, "catch", "numbers_at_age")
   composition <- .translation_measure(x, "catch", "proportion_at_age")
-  totals <- .translation_measure(x, "catch", "total_numbers")
+  totals <- x[x$type == "catch" & x$measure %in% c("total_numbers", "total_biomass"), , drop = FALSE]
   if (!nrow(direct) && !nrow(composition)) {
     .translation_abort("No source catch-at-age or number-proportion inputs are recorded.")
   }
@@ -135,8 +180,7 @@
   .translation_one_group(source_rows, c("fleet", "sex", "region", "season"),
                          "Catch-at-age input")
   direct <- direct[direct$year %in% years & direct$age >= min(ages), , drop = FALSE]
-  composition <- composition[composition$year %in% years &
-                               composition$age >= min(ages), , drop = FALSE]
+  composition <- composition[composition$year %in% years, , drop = FALSE]
   totals <- totals[totals$year %in% years, , drop = FALSE]
 
   converted <- list()
@@ -163,14 +207,14 @@
 
   if (nrow(composition)) {
     basis <- as.character(composition$basis)
-    if (anyNA(basis) || !all(basis == "proportion_numbers")) {
-      .translation_abort("Catch proportions can be reconstructed only when basis = 'proportion_numbers'.")
+    if (anyNA(basis) || !all(basis %in% c("proportion_numbers", "proportion_biomass"))) {
+      .translation_abort("Catch proportions need an explicit number or biomass basis.")
     }
     if (any(composition$value > 1)) {
-      .translation_abort("Catch number proportions must be in [0, 1].")
+      .translation_abort("Catch proportions must be in [0, 1].")
     }
     if (!nrow(totals)) {
-      .translation_abort("Catch number proportions need matching annual total_numbers inputs.")
+      .translation_abort("Catch proportions need matching annual total_numbers or total_biomass inputs.")
     }
     totals <- totals[!is.na(totals$year_basis) & totals$year_basis == "calendar_year", , drop = FALSE]
     totals$year <- suppressWarnings(as.numeric(as.character(totals$year)))
@@ -179,24 +223,61 @@
         any(!is.finite(totals$year)) || any(!is.finite(totals$value)) ||
         any(totals$year != as.integer(totals$year)) || any(totals$value < 0) ||
         any(!is.na(totals$age))) {
-      .translation_abort("Catch total_numbers rows need finite calendar years, non-negative values, and no age dimension.")
+      .translation_abort("Catch totals need finite calendar years, non-negative values, and no age dimension.")
     }
     group_columns <- c("year", "fleet", "sex", "region", "season")
     composition_key <- .translation_key(composition, group_columns)
     total_key <- .translation_key(totals, group_columns)
     if (anyDuplicated(total_key)) {
-      .translation_abort("Catch total_numbers has multiple rows for a year and catch stream.")
+      .translation_abort("Catch totals have multiple representations for a year and catch stream; select one explicitly.")
     }
     total_index <- match(composition_key, total_key)
     if (anyNA(total_index)) {
-      .translation_abort("Some catch number-proportion rows have no matching total_numbers value for the same year and catch stream.")
+      .translation_abort("Some catch proportion rows have no matching total_numbers or total_biomass value for the same year and catch stream.")
     }
     composition_age_key <- .translation_key(composition, c(group_columns, "age"))
     if (anyDuplicated(composition_age_key)) {
       .translation_abort("Catch proportions contain duplicate year-age rows before plus-group aggregation.")
     }
-    multiplier <- vapply(totals$unit[total_index], .translation_number_multiplier, numeric(1))
-    composition$value <- composition$value * totals$value[total_index] * multiplier
+    multiplier <- rep(NA_real_, nrow(composition))
+    methods <- character()
+    weight_sources <- list()
+    for (group in unique(composition_key)) {
+      rows <- which(composition_key == group)
+      cp <- composition[rows, , drop = FALSE]
+      total <- totals[total_index[rows[[1]]], , drop = FALSE]
+      if (length(unique(cp$basis)) != 1L) {
+        .translation_abort("Catch composition mixes number and biomass proportions within a year and stream.")
+      }
+      p <- cp$value
+      if (total$measure == "total_numbers" && cp$basis[[1]] == "proportion_numbers") {
+        multiplier[rows] <- .translation_number_multiplier(total$unit)
+        numbers <- p * total$value * multiplier[rows]
+        method <- "Number proportions multiplied by matching annual total_numbers without renormalizing the source proportions"
+      } else {
+        weights <- .translation_catch_weights(x, cp)
+        w <- weights$value
+        weight_sources[[length(weight_sources) + 1L]] <- weights
+        if (total$measure == "total_biomass") {
+          biomass <- .translation_biomass_to_kg(total$value, total$unit)
+          if (cp$basis[[1]] == "proportion_numbers") {
+            if (sum(p * w) <= 0) .translation_abort("Catch number proportions need a positive weighted sum.")
+            numbers <- biomass * p / sum(p * w)
+            method <- "Total catch biomass (kg) times number proportions divided by sum(number proportions times catch weight (kg/fish))"
+          } else {
+            numbers <- biomass * p / w
+            method <- "Total catch biomass (kg) times biomass proportions divided by catch weight (kg/fish), without renormalizing proportions"
+          }
+        } else {
+          multiplier[rows] <- .translation_number_multiplier(total$unit)
+          if (sum(p / w) <= 0) .translation_abort("Catch biomass proportions need a positive weight-adjusted sum.")
+          numbers <- total$value * multiplier[rows] * (p / w) / sum(p / w)
+          method <- "Total catch numbers times (biomass proportions / catch weight) normalized over all source composition ages"
+        }
+      }
+      composition$value[rows] <- numbers
+      methods <- c(methods, method)
+    }
     converted[[length(converted) + 1L]] <- composition[c("year", "age", "value")]
     units[[length(units) + 1L]] <- data.frame(
       source_unit = totals$unit[total_index], multiplier_to_fish = multiplier,
@@ -204,9 +285,11 @@
     )
     k <- k + 1L
     source <- rbind(composition, totals[unique(total_index), , drop = FALSE])
+    if (length(weight_sources)) source <- rbind(source, do.call(rbind, weight_sources))
     provenance[[k]] <- .translation_source_provenance(
       source, "catch",
-      "Number proportions multiplied by matching annual total_numbers without renormalizing the source proportions; ages above the selected maximum summed into the plus age.")
+      paste(paste(unique(methods), collapse = "; "),
+            "Reconstruction uses all source composition ages before selecting model ages and summing older ages into the plus age."))
   }
 
   catch_source <- if (length(converted)) {
@@ -218,6 +301,7 @@
   if (anyDuplicated(catch_key)) {
     .translation_abort("Catch inputs contain overlapping year-age values from multiple representations.")
   }
+  catch_source <- catch_source[catch_source$age >= min(ages), , drop = FALSE]
   catch_source$age <- pmin(catch_source$age, max(ages))
   catch_source <- stats::aggregate(value ~ year + age, catch_source, sum)
   grid <- .translation_grid(years, ages)
@@ -447,8 +531,10 @@
           method = paste0("age composition x aggregate index reconstructed as numbers-at-age using ",
                           if (any(w$survey == survey, na.rm = TRUE)) {
                             "survey-specific weights"
+                          } else if (any(!is.na(w$survey) & nzchar(w$survey))) {
+                            "selected survey weights as an approximation"
                           } else {
-                            "selected biological weight-at-age series"
+                            "stock weights as an approximation"
                           }, "; ages above the selected maximum summed into the plus age"),
           source_reference = paste(unique(c(cp$source_reference, total$source_reference,
                                              w$source_reference)), collapse = "; "),
@@ -502,12 +588,22 @@
 #'   an analysis choice and should be recorded in the assumption audit.
 #' @param exclude_index_years Optional named list of years excluded by the
 #'   accepted source assessment, one vector per survey.
+#' @param weight_reference_year,maturity_reference_year Optional source year
+#'   whose age vector is explicitly assumed constant over the requested years.
+#'   Use only when this constant-vector treatment is documented; these arguments
+#'   do not infer constancy from an incomplete annual series.
+#' @param maturity_multiplier Optional finite non-negative scalar applied to
+#'   translated maturity, for a documented source convention such as a female
+#'   fraction.
 #'
 #' @return A `tinyAM` observation list with a `translation` attribute recording
 #'   catch/index reconstruction methods, unit conversions, and source references.
 database_to_tiny_obs <- function(assessment_id, inputs, years = NULL, ages = NULL,
                                  weight_survey = NULL, sampling_times = NULL,
-                                 surveys = NULL, exclude_index_years = NULL) {
+                                 surveys = NULL, exclude_index_years = NULL,
+                                 weight_reference_year = NULL,
+                                 maturity_reference_year = NULL,
+                                 maturity_multiplier = 1) {
   x <- .translation_rows(inputs, assessment_id)
   if (!is.null(sampling_times)) {
     if (is.null(names(sampling_times)) || any(!nzchar(names(sampling_times))) ||
@@ -516,9 +612,15 @@ database_to_tiny_obs <- function(assessment_id, inputs, years = NULL, ages = NUL
       .translation_abort("sampling_times must be a named numeric vector with values in [0, 1].")
     }
   }
+  if (length(maturity_multiplier) != 1L || !is.finite(maturity_multiplier) ||
+      maturity_multiplier < 0) {
+    .translation_abort("maturity_multiplier must be one finite, non-negative number.")
+  }
 
   source_weights <- .translation_calendar_rows(
     .translation_measure(x, "weight", "weight_at_age"), "weight-at-age")
+  source_weights$value <- mapply(.translation_weight_to_kg,
+                                source_weights$value, source_weights$unit)
   all_weights <- source_weights
   if (!is.null(weight_survey)) {
     all_weights <- all_weights[!is.na(all_weights$survey) &
@@ -557,8 +659,17 @@ database_to_tiny_obs <- function(assessment_id, inputs, years = NULL, ages = NUL
     .translation_abort("ages must be a non-empty consecutive sequence of whole ages.")
   }
 
+  all_weights <- .translation_repeat_biology(all_weights, years,
+                                             weight_reference_year, "Weight-at-age")
   weight <- .translation_surface(all_weights, years, ages, "Weight-at-age")
-  maturity <- .translation_surface(maturity_source, years, ages, "Maturity-at-age")
+  maturity <- .translation_surface(.translation_repeat_biology(
+    maturity_source, years, maturity_reference_year, "Maturity-at-age"),
+    years, ages, "Maturity-at-age")
+  maturity$obs <- maturity$obs * maturity_multiplier
+  if (any(maturity$obs > 1)) {
+    .translation_abort("Scaled maturity values must remain in proportions between 0 and 1.")
+  }
+  selected_weight_source <- all_weights
   catch_translation <- .translation_catch_at_age(x, years, ages)
   catch <- catch_translation$catch
 
@@ -584,16 +695,31 @@ database_to_tiny_obs <- function(assessment_id, inputs, years = NULL, ages = NUL
     })),
     .translation_source_provenance(
       all_weights, "weight",
-      paste("Selected weight series:", weight_survey)),
+      paste("Stock weight converted to kg per fish. Selected weight series:", weight_survey,
+            if (!is.null(weight_reference_year)) {
+              paste("Constant source vector from", weight_reference_year, "expanded across model years.")
+            } else "Annual source values retained.")),
     .translation_source_provenance(
       maturity_source, "maturity",
-      "Calendar-year maturity retained on the requested year-age grid.")
+      paste(
+        if (is.null(maturity_reference_year)) {
+          "Calendar-year maturity retained on the requested year-age grid."
+        } else paste("Constant source maturity vector from", maturity_reference_year,
+                     "expanded across model years."),
+        if (maturity_multiplier != 1) {
+          paste("Translated maturity multiplied by", maturity_multiplier,
+                "to match the source SSB convention.")
+        } else "No additional maturity scaling."
+      ))
   )
   attr(obs, "translation") <- list(
     assessment_id = assessment_id,
     years = years,
     ages = ages,
     weight_survey = weight_survey,
+    weight_reference_year = weight_reference_year,
+    maturity_reference_year = maturity_reference_year,
+    maturity_multiplier = maturity_multiplier,
     sampling_times_override = sampling_times,
     selected_surveys = if (is.null(surveys)) {
       unique(na.omit(x$survey[x$type == "index"]))

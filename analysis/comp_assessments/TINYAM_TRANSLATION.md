@@ -193,9 +193,12 @@ C^N_{f,t}
 \frac{p^B_{f,t,a}/w^C_{f,t,a}}
 {\sum_j p^B_{f,t,j}/w^C_{f,t,j}}.$$
 
-The helper currently reconstructs direct catch numbers-at-age and number
-proportions paired with total numbers. Biomass-based catch reconstruction needs
-compatible catch-weight data and is not inferred from stock weights.
+All four total/composition combinations above are supported when the required
+matching total and composition rows are present. Biomass-based catch
+reconstruction requires compatible catch-weight rows and never substitutes
+stock weights. It converts the full source age composition before applying a
+requested age range, so biomass-to-number calculations retain their correct
+denominators.
 
 ## 4.6 Aggregate fleets
 

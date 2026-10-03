@@ -98,6 +98,9 @@ index, weight, and calendar-year maturity rows into tinyAM observation tables.
 The helper does not choose model settings, infer population processes, or map
 cohort-indexed maturity onto calendar years. It preserves stored values, units,
 survey names, and observation timing.
+Use `R/read_committed_assessment.R` when analysis scripts must read only a
+reviewed database snapshot; it returns the commit identifier alongside the
+selected stock and assessment records.
 Natural mortality stays in `inputs.csv` for a separate, informed model setup.
 If a source structure cannot be represented without combining fleets, sexes,
 or seasons, the helper reports that limitation instead of silently combining

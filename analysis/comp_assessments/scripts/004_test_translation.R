@@ -8,7 +8,9 @@ if (!requireNamespace("cli", quietly = TRUE)) {
 
 expect_equal <- function(actual, expected, tolerance = 1e-10) {
   if (!isTRUE(all.equal(actual, expected, tolerance = tolerance))) {
-    stop("Values differ: ", paste(capture.output(str(actual)), collapse = " "),
+    stop("Values differ for ", deparse(substitute(actual)), ": ",
+         paste(capture.output(str(actual)), collapse = " "),
+         " expected ", paste(capture.output(str(expected)), collapse = " "),
          call. = FALSE)
   }
 }
@@ -87,6 +89,15 @@ expect_equal(grepl("retained on their source scale",
                                        provenance$survey == "Relative"]), TRUE)
 expect_equal(obs$catch$obs[obs$catch$year == 2001 & obs$catch$age == 2], NA_real_)
 expect_equal(obs$index$obs[obs$index$year == 2001], c(4, 0))
+constant_biology <- database_to_tiny_obs(
+  "translation_fixture", inputs, years = 2000:2001, ages = 1:2,
+  weight_survey = "RV", sampling_times = sampling_times,
+  weight_reference_year = 2000, maturity_reference_year = 2000,
+  maturity_multiplier = 0.5
+)
+expect_equal(constant_biology$weight$obs[constant_biology$weight$year == 2001], c(1, 2))
+expect_equal(constant_biology$maturity$obs[constant_biology$maturity$year == 2001], c(0.05, 0.4))
+expect_equal(attr(constant_biology, "translation")$maturity_multiplier, 0.5)
 
 plus_obs <- database_to_tiny_obs(
   "translation_fixture", inputs, years = 2000:2001, ages = 1,
@@ -133,6 +144,40 @@ index_error <- tryCatch(database_to_tiny_obs(
   weight_survey = "RV", sampling_times = sampling_times
 ), error = identity)
 expect_equal(grepl("no matching total index values", conditionMessage(index_error)), TRUE)
+
+biomass_catch <- catch_proportion_inputs
+biomass_catch$measure[biomass_catch$measure == "total_numbers"] <- "total_biomass"
+biomass_catch$unit[biomass_catch$measure == "total_biomass"] <- "thousand t"
+biomass_catch$value[biomass_catch$measure == "total_biomass"] <- 0.001
+biomass_catch <- rbind(biomass_catch,
+  row("catch_weight", "weight_at_age", "kg_per_fish", fleet = "fishery",
+      year = 2000, age = 1:2, value = c(1000, 2000), unit = "g/fish"))
+bc <- .translation_catch_at_age(biomass_catch, 2000:2001, 1:2)$catch
+expect_equal(bc$obs[bc$year == 2000], 1000 * c(0.2, 0.7) / 1.6)
+expect_equal(sum(bc$obs[bc$year == 2000] * c(1, 2)), 1000)
+restricted_bc <- .translation_catch_at_age(biomass_catch, 2000:2001, 2)$catch
+expect_equal(restricted_bc$obs[restricted_bc$year == 2000], 1000 * 0.7 / 1.6)
+biomass_catch$basis[biomass_catch$type == "catch" &
+                      biomass_catch$measure == "proportion_at_age"] <- "proportion_biomass"
+bc <- .translation_catch_at_age(biomass_catch, 2000:2001, 1:2)$catch
+expect_equal(bc$obs[bc$year == 2000], c(200, 350))
+biomass_catch$measure[biomass_catch$measure == "total_biomass"] <- "total_numbers"
+biomass_catch$unit[biomass_catch$measure == "total_numbers"] <- "fish"
+biomass_catch$value[biomass_catch$measure == "total_numbers"] <- 550
+bc <- .translation_catch_at_age(biomass_catch, 2000:2001, 1:2)$catch
+expect_equal(bc$obs[bc$year == 2000], c(200, 350))
+missing_catch_weights <- biomass_catch[biomass_catch$type != "catch_weight", ]
+weight_error <- tryCatch(.translation_catch_at_age(missing_catch_weights, 2000:2001, 1:2),
+                         error = identity)
+expect_equal(grepl("matching catch weights", conditionMessage(weight_error)), TRUE)
+stock_weights_catch <- biomass_catch
+stock_weights_catch$type[stock_weights_catch$type == "catch_weight"] <- "weight"
+stock_weight_error <- tryCatch(
+  .translation_catch_at_age(stock_weights_catch, 2000:2001, 1:2),
+  error = identity
+)
+expect_equal(grepl("stock weights are not substituted",
+                   conditionMessage(stock_weight_error)), TRUE)
 
 thousand_inputs <- inputs
 thousand_inputs$unit[thousand_inputs$type == "catch"] <- "thousand fish"
@@ -283,5 +328,49 @@ herring_match <- match(paste(herring_direct$year, herring_direct$age, herring_di
 expect_equal(herring_obs$index$obs[herring_match], as.numeric(herring_direct$value))
 expect_equal(herring_inputs, herring_before)
 expect_equal(sum(is.na(herring_obs$catch$obs)), 18L)
+
+source(file.path(root, "R", "read_committed_assessment.R"))
+ebs <- read_committed_assessment("afsc_pollock_ebs_2024")
+expect_equal(nrow(ebs$assessment), 1L)
+expect_equal(all(ebs$inputs$assessment_id == "afsc_pollock_ebs_2024"), TRUE)
+expect_equal(grepl("^[[:xdigit:]]{40}$", ebs$commit), TRUE)
+ebs_surveys <- c("NMFS bottom-trawl VAST", "NMFS acoustic-trawl",
+                 "NMFS acoustic-trawl age-1 index")
+ebs_obs <- database_to_tiny_obs(
+  "afsc_pollock_ebs_2024", ebs$inputs, years = 1964:2024, ages = 1:15,
+  surveys = ebs_surveys, maturity_reference_year = 1964,
+  maturity_multiplier = 0.5
+)
+expect_equal(dim(ebs_obs$catch), c(915L, 3L))
+expect_equal(sum(is.na(ebs_obs$catch$obs)), 15L)
+expect_equal(dim(ebs_obs$maturity), c(915L, 3L))
+ebs_maturity <- ebs$inputs[ebs$inputs$type == "maturity", , drop = FALSE]
+expect_equal(ebs_obs$maturity$obs[ebs_obs$maturity$year == 1964],
+             ebs_maturity$value[match(1:15, ebs_maturity$age)] * 0.5)
+expect_equal(setequal(unique(ebs_obs$index$survey), ebs_surveys), TRUE)
+expect_equal(sum(ebs_obs$index$survey == "NMFS bottom-trawl VAST"), 630L)
+expect_equal(sum(ebs_obs$index$survey == "NMFS acoustic-trawl"), 266L)
+expect_equal(sum(ebs_obs$index$survey == "NMFS acoustic-trawl age-1 index"), 18L)
+expect_equal(any(ebs_obs$index$survey == "NMFS acoustic-trawl age-1 index" &
+                   ebs_obs$index$year == 2024), FALSE)
+ebs_index_method <- attr(ebs_obs, "translation")$index
+expect_equal(all(grepl("stock weights as an approximation",
+                       ebs_index_method$method[ebs_index_method$survey %in%
+                                                 c("NMFS bottom-trawl VAST",
+                                                   "NMFS acoustic-trawl")])), TRUE)
+ebs_catch_weight <- ebs$inputs[ebs$inputs$type == "catch_weight" &
+                                 ebs$inputs$year < 2024, , drop = FALSE]
+ebs_catch_weight$key <- paste(ebs_catch_weight$year, ebs_catch_weight$age)
+ebs_catch <- ebs_obs$catch
+ebs_catch$key <- paste(ebs_obs$catch$year, ebs_obs$catch$age)
+weighted_catch <- ebs_obs$catch$obs[match(ebs_catch_weight$key, ebs_catch$key)] *
+  ebs_catch_weight$value
+catch_biomass <- tapply(weighted_catch, ebs_catch_weight$year, sum)
+total_biomass <- ebs$inputs[ebs$inputs$type == "catch" &
+                              ebs$inputs$measure == "total_biomass" &
+                              ebs$inputs$year < 2024, , drop = FALSE]
+expect_equal(as.numeric(catch_biomass),
+             as.numeric(total_biomass$value[
+               match(names(catch_biomass), total_biomass$year)] * 1e6))
 
 cat("Translation helper tests passed.\n")
