@@ -54,9 +54,9 @@ for r in mortality:
  assert not r['lwr'] and not r['upr']
 previous=subprocess.check_output(['git','show','HEAD:analysis/comp_assessments/database/inputs.csv'],cwd=root).decode('utf-8-sig')
 old=[r for r in csv.DictReader(io.StringIO(previous)) if r['assessment_id']!='afsc_cod_goa_2026']
-previous_ids={r['assessment_id'] for r in old}
-preserved=[{key:r[key] for key in old[0]} for r in rows if r['assessment_id'] in previous_ids]
-assert preserved==old,'Existing scientific input records changed'
+previous_rows=Counter(tuple(r[key] for key in old[0]) for r in old)
+current_rows=Counter(tuple(r[key] for key in old[0]) for r in rows)
+assert all(current_rows[row] >= count for row,count in previous_rows.items()), 'Existing scientific input records changed'
 print('Pacific cod counts, 1,039 source compositions, timing and all prior input values verified.')
 
 

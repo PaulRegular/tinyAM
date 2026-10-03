@@ -3,7 +3,7 @@ id <- "afsc_pollock_ebs_2024"
 x <- inputs[inputs$assessment_id == id, ]
 y <- outputs[outputs$assessment_id == id, ]
 a <- assessments[assessments$assessment_id == id, ]
-stopifnot(nrow(x) == 3811L, nrow(y) == 793L,
+stopifnot(nrow(x) == 3826L, nrow(y) == 793L,
           a$assessment_year == 2024, a$terminal_year == 2024,
           a$inputs_status == "partial", a$outputs_status == "partial",
           a$assumptions_status == "partial")
@@ -30,3 +30,7 @@ stopifnot(nrow(n) == 610L, nrow(r) == 61L,
           all(abs(n$value[n$age == 1] * 1000 - r$value) <= 6),
           all(is.na(y$se)), all(is.na(y$lwr)), all(is.na(y$upr)))
 message("EBS pollock composition, survey timing/exclusion and output-group checks passed.")
+m <- x[x$type == "M", ]
+stopifnot(nrow(m) == 15, identical(m$age, 1:15),
+          identical(m$value, c(.9, .45, rep(.3, 13))), all(m$year == 1964))
+message("Fixed age-specific M inputs verified.")

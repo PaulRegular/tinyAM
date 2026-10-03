@@ -26,7 +26,7 @@ https://apps-nefsc.fisheries.noaa.gov/saw/sasi_files.php?year=2026&species_id=5&
 
 ## Numerical cross-check targets
 
-The pre-review report gives 2025 SSB 29,037 t, Fbar (ages 5–7) 0.21 and age-1 recruitment 2,284 thousand fish. It says no retrospective adjustment was applied. These are cross-check targets, not yet canonical imported values: accepted-run verification and the Charbonneau stock identity still need completion.
+The report gives 2025 SSB 29,037 t, Fbar (ages 5–7) 0.21 and age-1 recruitment 2,284 thousand fish, with no retrospective adjustment. These values agree with the canonical imported outputs and are checked by the validator below.
 
 The existing candidate association to NEFSC-GARMIII_5Y_Melanogrammus_Aeglefinus denotes Gulf of Maine haddock, not Georges Bank haddock; do not carry that identity into this stock.
 
@@ -44,3 +44,7 @@ The NOAA portal's 2022 Research Track search (species 5, stock 1, review type 5)
 The 2026 assessment record now contains eight published Catch for Assessment totals (2018–2025), the constant nine-age M vector stored once, 24 historical outputs (SSB, Fbar and age-1 recruitment for 2018–2025), and 16 documented assumptions. Terminal SSB/F match the final peer-review report. Published terminal 95% intervals are retained; missing SEs and other intervals are not invented. The accepted process is 2DAR1 and M is fixed at 0.2, according to final TOR 3.
 
 All three completeness statuses remain partial. This initial summary import is not a completed curation: numerical catch-at-age, survey inputs/timing, historical biological matrices, full N/F-at-age outputs and current native configuration are still outstanding. No older framework numerical data have been substituted.
+
+## Follow-up source checks
+
+A renewed search for the 2026 WHAM object found no current native input archive. The WHAM comparison vignette explicitly labels its 2019 Georges Bank example as very preliminary; it is not a substitute for the accepted 2026 run (https://timjmiller.github.io/wham/articles/ex08_compare.html). The 2026 numerical catch, SSB, recruitment and Fbar rows are now checked directly against cached report text by `scripts/022_validate_georges_bank_haddock.R`, together with model identity, terminal year, fixed-M representation and continued partial status. Missing survey and age-composition coverage is tested explicitly rather than concealed by historical example data.

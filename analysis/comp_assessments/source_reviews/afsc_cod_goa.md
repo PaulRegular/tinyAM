@@ -1,6 +1,6 @@
 # Gulf of Alaska Pacific cod: accepted-assessment source review
 
-Status: accepted-run/source inventory in progress; no canonical record imported yet.
+Status: canonical partial record afsc_cod_goa_2026 imported; remaining inputs, assumptions and outputs are under review.
 Charbonneau identifier: AFSC_GOA_Gadus_macrocephalus.
 
 ## January 2026 assessment
@@ -19,7 +19,7 @@ The report states 2026 ABC 41,520 t and OFL 49,782 t, projected total age-0+ bio
 The report page 2 directly links to https://afsc-assessments.github.io/goapcod/2025_Assessment/January_Model/.
 Corresponding repository: https://github.com/afsc-assessments/goapcod
 Inspected revision: e632807e4947686c16caf99b864bfe8466f8dbca.
-The native archive docs/2025_Assessment/January_Model/model_files/M24.0_SS3_files.zip is cached and unpacked locally. It contains GOAPcod2025Dec08.dat, Model24_0.ctl, starter.ss and forecast.ss. No fitted output file is included in this archive; linked diagnostic/figure pages may provide additional outputs.
+The native archive docs/2025_Assessment/January_Model/model_files/M24.0_SS3_files.zip is cached and unpacked locally. It contains GOAPcod2025Dec08.dat, Model24_0.ctl, starter.ss and forecast.ss. The archive itself has no fitted output file; the matching management-run repository contains a compact ss3.rep, discussed below.
 
 The starter names those exact data/control files and has retro_yr=0. The data specify 1977–2025, one annual season, two subseasons, spawning month 1, one sex and area, maximum modeled age 10, and seven fleet definitions. The three removal fleets are FshTrawl, FshLL and FshPot. The report explicitly says the longline category includes jig catches. Survey definitions also include Srv, LLSrv, ADFG and Seine; determine which actually contribute positive-weight observations before assuming four fitted surveys. Report inventory identifies bottom trawl and longline surveys as fitted abundance/composition streams.
 
@@ -38,7 +38,7 @@ Length compositions have 182 positive year/fleet rows: trawl 48, longline/jig 46
 The official Stock Synthesis manual explains that a negative fleet code excludes a composition observation's likelihood contribution, even though predictions and diagnostics may still be calculated. It also confirms that the observation's month determines survey timing; the fleet-definition timing field is not sufficient.
 Manual: https://nmfs-ost.github.io/ss3-doc/SS330_User_Manual_release.html
 
-The repository worktree had concurrent user edits to database_to_tiny_obs.R and 004_test_translation.R during this review; these are outside the source extraction work and must remain untouched.
+The repository worktree had concurrent user edits to database_to_tam_obs.R and 004_test_translation.R during this review; these are outside the source extraction work and must remain untouched.
 
 ## Historical summary staging
 
@@ -64,23 +64,33 @@ The data file sets Lbin_method=1 (population-length bins), while the observation
 
 Every positive index observation uses month 7. Length and age composition records use months 1 or 7. Survey timing must therefore be derived from the observation month, not the fleet-definition default. Fishery composition timing and continuous catch timing remain distinct.
 
-The composition schema validator now checks finite numeric dimensions, non-negative integer age-error/partition codes, positive supplied sample sizes, observation IDs and ordered conditioning labels before announcing validation success. The existing canonical database passes structural validation; the Pacific cod composition rows are not yet imported.
+The composition schema validator checks finite numeric dimensions, non-negative integer age-error/partition codes, positive supplied sample sizes, observation IDs and ordered conditioning labels. The canonical Pacific cod composition rows now retain the native conditioning labels, sample sizes and age-error codes; source and database validation pass.
 ## Canonical coverage and validation
 
-Assessment afsc_cod_goa_2026 now contains 12,643 input cells: 147 catch totals, 52 index observations, 52 index log SDs, 3,822 length-proportion cells and 8,570 conditional-age-proportion cells. The 1,039 composition observations retain supplied sample sizes, native length labels/conditioning bounds, age-error codes and partitions. The canonical table also contains 147 historical outputs (49 each for SSB, total biomass and recruitment) and 16 initial assumptions.
+Assessment afsc_cod_goa_2026 contains 12,689 input cells: 147 catch totals, 52 index observations, 52 index log SDs, 46 environmental covariates, 3,822 length-proportion cells and 8,570 conditional-age-proportion cells. The 1,039 composition observations retain supplied sample sizes, native length labels/conditioning bounds, age-error codes and partitions. The outputs table contains 147 historical summaries, 539 repeated year/age representations of two shared M estimates, and two published baseline-q estimates. The assessment has 34 documented assumptions.
 
-The source-specific validator checks each composition cell against the cached native data, verifies observation counts, sample sizes and timing, and confirms that adding optional composition dimensions leaves all earlier input values unchanged. These checks and full database structural validation pass. All completeness statuses remain partial: equilibrium inputs, numerical ageing errors, mean size-at-age, temperature covariates, complete selectivity/q assumptions and N/F/M-at-age outputs still require work. This is an intermediate import, not a completed assessment.
+The source-specific validator checks each composition cell against the cached native data, verifies observation counts, sample sizes and timing, and confirms that adding optional composition dimensions leaves all earlier input values unchanged. These checks and full database structural validation pass. All completeness statuses remain partial. Equilibrium inputs, selectivity details, interpretation of environmental-covariate units and N/F-at-age outputs still require work. Published baseline q estimates and source ageing-error vectors are recorded; they do not complete the assessment.
 ## Additional material input review
 
 The control links longline catchability to environmental variable 1 (env_var&link=101). All 46 supplied annual temperature-covariate values, 1979–2024, are now represented verbatim as environmental covariates, including negative values. Native scaling units remain unresolved; no restandardization was applied. Source-specific validation checks every year/value against the data section.
 
 All 16 mean-size-at-age observations have negative fleet code -4 and therefore no fitted likelihood contribution. Their absence from canonical fitted observations is intentional; source records remain cached. Three initial-equilibrium catch values and their supplied SEs are retained in fleet-specific assumptions because native year -999 is not a calendar year. The two ageing-error mean/SD definitions (age 0 through age 10) are retained once as numerical assumption vectors. Definition 2's -1 mean flags must not be interpreted as measured negative ages or an empirical misclassification matrix.
 
-Pacific cod coverage is now 12,689 input cells, 147 historical outputs and 25 assumptions. Structural and source-specific validation pass. Biological parameter semantics, full selectivity/q structure and fitted N/F/M surfaces remain incomplete; all statuses remain partial. The earlier gap list is superseded for temperature, equilibrium catches and source ageing-error vectors.
+Pacific cod coverage is now 12,689 input cells, 688 outputs and 34 assumptions. Structural and source-specific validation pass. Selectivity details, covariate units and fitted N/F-at-age surfaces remain incomplete; all statuses remain partial. The earlier gap list is superseded for temperature, equilibrium catches and source ageing-error vectors.
 ## Estimated mortality and fixed biological parameters
 
 Table 2.6 reports estimated M=0.50 (SD 0.023) outside the 2014–2016 block and M=0.84 (SD 0.053) inside it. The native control specifies age-constant M (natM_type=0) with replacement block 4 covering exactly 2014–2016. The database now expands these rounded published estimates to 1977–2025, ages 0–10+, as 539 mortality output cells. These are repeated representations of two shared parameters, not independently estimated age/year values; notes state the rounding and shared uncertainty. No confidence intervals are manufactured.
 
 Fixed weight-length coefficient/exponent, maturity length/slope, stock-recruit steepness and recruitment sigma are now retained as numerical assumptions from negative-phase control parameters. They are input parameters, not estimated age-specific biological surfaces. The compact ss3.rep does not contain N-at-age or M-at-age tables; its exploitation and length-selectivity sections cannot be relabeled as full F-at-age.
 
-Coverage is now 12,689 input cells, 686 outputs and 31 assumptions. Source validation verifies the M block/year/age mapping and absence of invented intervals, alongside native composition/covariate checks; full structural validation passes. N/F-at-age and remaining process/selectivity interpretation still require work. Status remains partial.
+Coverage is now 12,689 input cells, 688 outputs and 34 assumptions. Source validation verifies the M block/year/age mapping and absence of invented intervals, alongside native composition/covariate checks; full structural validation passes. N/F-at-age and selectivity interpretation still require work. Status remains partial.
+
+## Active-survey catchability controls
+
+The accepted native control estimates baseline log q for both active surveys (phase 1). Bottom-trawl q has no environmental term; longline q also estimates the environmental coefficient (phase 5, env-var/link 101). Neither baseline uses annual deviations or time blocks. These parameter controls are now explicit assumptions, verified by scripts/023_review_goa_cod_catchability.R. Parameter starting values are not exported as estimates. This source-review script supplements the initial importer; it belongs to curation, not routine database-to-model translation. Structural validation passes. The published baseline q estimates are summarized below; selectivity details remain unresolved.
+
+## Published baseline catchability estimates
+
+Table 2.6 supplies bottom-trawl baseline q=1.28 (SD 0.123) and longline baseline q=1.17 (SD 0.108). Both are now outputs, with no invented confidence limits. The cached safe_tbls.R confirms exponentiation of log-q estimates and natural-scale delta-method SDs. These rounded baseline coefficients are distinct from starting values and from the environmentally varying annual longline q surface. scripts/024_import_goa_cod_catchability.R records and checks the published values.
+
+The current report explicitly states that CFSR was discontinued and no 2025 value was available. SS3 uses a zero environmental effect in that year; this model rule is now an assumption, not an observed-zero input. The 46 supplied covariates remain 1979–2024. Physical anomaly units remain unresolved.
