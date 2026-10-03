@@ -34,11 +34,11 @@ Survey blocks 1, 2, 3 and 6 contain respectively 31, 16, 37 and 6 total-index ob
 
 The source uses annual survey timing fractions directly in N * exp(-timing * Z), with survey-specific weight matrices. Preserve the timing for each observation year. The environmental catchability component has 40 observed years plus a latent AR1 surface; it is a material input, not optional descriptive context.
 
-Natural mortality is coded as the age vector 1.39, 0.69, 0.48, 0.37, 0.34, 0.30, 0.30, 0.29, 0.28, 0.29, multiplied by natMscalar. The default parameter map fixes natMscalar at 1. This requires report crosscheck; the summary's scalar M=0.3 is not a substitute for the fitted age-specific vector.
+Natural mortality is coded as the age vector 1.39, 0.69, 0.48, 0.37, 0.34, 0.30, 0.30, 0.29, 0.28, 0.29, multiplied by natMscalar. The default parameter map fixes natMscalar at 1. The final report confirms externally supplied age-specific M rescaled to an older-age average of 0.3; the scalar is not a substitute for the vector.
 
-The default reader/preparation code fixes sigmaR at its starting value 1.3. Verify this against the accepted report, rather than assuming the September proposed sigmaR=1.0 was retained. Confirm the exact annual release/reference commit if numerical crosschecks reveal discrepancies.
+The default reader/preparation code fixes sigmaR at 1.3. Final report page 16 confirms this value; the September proposal of 1.0 was not retained. The accepted 2024 repository revision is pinned above.
 
-Next: inspect the 2025 rollover notice; complete fitted-stream/biology/configuration inventory; compare native values with report tables; extract accepted historical outputs and uncertainty; import and validate the stock as one coherent unit.
+The 2025 rollover notice, fitted-stream and biology inventory, native/report cross-checks, historical outputs and uncertainty have since been reviewed below. Remaining source gaps are listed at the end.
 
 ## Finalized report and staging checks
 
@@ -56,11 +56,11 @@ Cached stage_report_outputs.py extracted 550 historical numbers-at-age values fr
 
 ## Canonical import and validation
 
-scripts/016_import_goa_pollock.py imports 5,174 input values, 708 historical output values and 43 assumptions. scripts/017_validate_goa_pollock.R passed, together with full database structural validation. Coverage includes one combined fishery, four active biomass/composition surveys, annual survey/fishery/population/spawning weights, and constant supplied maturity and M vectors. Model years are 1970–2024, ages 1–10+, recruitment age 1, combined-sex abundance with female SSB fraction 0.5. Spawning survival timing is 0.21, distinct from the winter acoustic observation timing 0.209.
+The canonical record contains 5,174 input values, 708 historical output values and 49 assumptions after the prior review below. scripts/017_validate_goa_pollock.R passed, together with full database structural validation. Coverage includes one combined fishery, four active biomass/composition surveys, annual survey/fishery/population/spawning weights, and constant supplied maturity and M vectors. Model years are 1970–2024, ages 1–10+, recruitment age 1, combined-sex abundance with female SSB fraction 0.5. Spawning survival timing is 0.21, distinct from the winter acoustic observation timing 0.209.
 
 Fishery age compositions accumulate ages 1–2 into their first fitted age bin; Shelikof compositions accumulate ages 1–3. These model-ready aggregations are labeled reconstructed_source_input with explicit formulas. Remaining compositions preserve native numerical values, without silent renormalization. Survey total biomass units are million tonnes on the native scale. SD rows match the same observation years and sampling times, with blank fish age for aggregate indices. Supplied spawning weights use measure spawning_weight_at_age, distinct from population weight_at_age and survey-specific weights; biological purposes are not treated as spatial regions.
 
-Remaining gaps: physical environmental-covariate units, a complete inventory of supplied penalty scales and survey selectivity/prior details, and F-at-age and further outputs. The environmental observations, fixed observation SD, age-error matrix and composition sample sizes are now represented. Completeness statuses remain partial. No new model fit or numerical substitutions were used.
+Remaining gaps are the physical environmental-covariate units and age-specific F outputs, which are not available in the cached report or model files. Active selectivity priors and the Dirichlet-multinomial parameter prior are now recorded from the pinned source, alongside the temporal penalty scales, environmental observations, observation SD, age-error matrix and composition sample sizes. Completeness statuses remain partial. No model fit or numerical substitutions were used.
 
 ## Native process and initial-state review
 
