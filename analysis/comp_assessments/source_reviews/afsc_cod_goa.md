@@ -38,7 +38,6 @@ Length compositions have 182 positive year/fleet rows: trawl 48, longline/jig 46
 The official Stock Synthesis manual explains that a negative fleet code excludes a composition observation's likelihood contribution, even though predictions and diagnostics may still be calculated. It also confirms that the observation's month determines survey timing; the fleet-definition timing field is not sufficient.
 Manual: https://nmfs-ost.github.io/ss3-doc/SS330_User_Manual_release.html
 
-The repository worktree had concurrent user edits to database_to_tam_obs.R and 004_test_translation.R during this review; these are outside the source extraction work and must remain untouched.
 
 ## Historical summary staging
 

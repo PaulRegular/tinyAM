@@ -1,6 +1,6 @@
 root <- file.path("analysis", "comp_assessments")
-source(file.path(root, "R", "database_to_tiny_obs.R"))
-source(file.path(root, "R", "database_to_tiny_M.R"))
+source(file.path(root, "R", "database_to_tam_obs.R"))
+source(file.path("R", "obs.R"))
 source(file.path(root, "R", "audit_assumptions.R"))
 if (!requireNamespace("cli", quietly = TRUE)) {
   .translation_abort <- function(message) stop(message, call. = FALSE)
@@ -63,7 +63,7 @@ inputs <- do.call(rbind, list(
 ))
 
 sampling_times <- c(Longline = 0.6)
-obs <- database_to_tiny_obs(
+obs <- database_to_tam_obs(
   "translation_fixture", inputs, years = 2000:2001, ages = 1:2,
   weight_survey = "RV", sampling_times = sampling_times
 )
@@ -89,7 +89,7 @@ expect_equal(grepl("retained on their source scale",
                                        provenance$survey == "Relative"]), TRUE)
 expect_equal(obs$catch$obs[obs$catch$year == 2001 & obs$catch$age == 2], NA_real_)
 expect_equal(obs$index$obs[obs$index$year == 2001], c(4, 0))
-constant_biology <- database_to_tiny_obs(
+constant_biology <- database_to_tam_obs(
   "translation_fixture", inputs, years = 2000:2001, ages = 1:2,
   weight_survey = "RV", sampling_times = sampling_times,
   weight_reference_year = 2000, maturity_reference_year = 2000,
@@ -99,7 +99,46 @@ expect_equal(constant_biology$weight$obs[constant_biology$weight$year == 2001], 
 expect_equal(constant_biology$maturity$obs[constant_biology$maturity$year == 2001], c(0.05, 0.4))
 expect_equal(attr(constant_biology, "translation")$maturity_multiplier, 0.5)
 
-plus_obs <- database_to_tiny_obs(
+stock_weight_inputs <- rbind(
+  inputs,
+  row("weight", "weight_at_age", "kg_per_fish", year = 2000:2001,
+      age = 1, value = c(10, 10), unit = "kg/fish"),
+  row("weight", "weight_at_age", "kg_per_fish", year = 2000:2001,
+      age = 2, value = c(20, 20), unit = "kg/fish")
+)
+stock_weight_obs <- database_to_tam_obs(
+  "translation_fixture", stock_weight_inputs, years = 2000:2001, ages = 1:2,
+  sampling_times = sampling_times
+)
+expect_equal(stock_weight_obs$weight$obs[stock_weight_obs$weight$year == 2000],
+             c(10, 20))
+expect_equal(stock_weight_obs$index$obs[
+  stock_weight_obs$index$survey == "RV" & stock_weight_obs$index$year == 2000
+], expected_age_numbers)
+expected_longline <- 1000 * c(0.25, 0.75) / sum(c(0.25, 0.75) * c(10, 20))
+expect_equal(stock_weight_obs$index$obs[
+  stock_weight_obs$index$survey == "Longline" & stock_weight_obs$index$year == 2000
+], expected_longline)
+stock_index_weight_obs <- database_to_tam_obs(
+  "translation_fixture", stock_weight_inputs, years = 2000:2001, ages = 1:2,
+  sampling_times = sampling_times, index_weight_source = "stock"
+)
+expect_equal(stock_index_weight_obs$index$obs[
+  stock_index_weight_obs$index$survey == "RV" & stock_index_weight_obs$index$year == 2000
+], expected_longline)
+
+index_sd_inputs <- rbind(
+  inputs,
+  row("index", "index_sd", "index_scale", survey = "RV", year = 2000,
+      age = NA_real_, value = 0.1, unit = "t per tow")
+)
+index_sd_obs <- database_to_tam_obs(
+  "translation_fixture", index_sd_inputs, years = 2000:2001, ages = 1:2,
+  weight_survey = "RV", sampling_times = sampling_times
+)
+expect_equal(index_sd_obs$index$obs, obs$index$obs)
+
+plus_obs <- database_to_tam_obs(
   "translation_fixture", inputs, years = 2000:2001, ages = 1,
   weight_survey = "RV", sampling_times = sampling_times
 )
@@ -119,7 +158,7 @@ catch_proportion_inputs <- rbind(
   row("catch", "total_numbers", "numbers", fleet = "fishery",
       year = 2000, age = NA_real_, value = 400, unit = "thousand fish")
 )
-catch_proportion_obs <- database_to_tiny_obs(
+catch_proportion_obs <- database_to_tam_obs(
   "translation_fixture", catch_proportion_inputs, years = 2000:2001, ages = 1:2,
   weight_survey = "RV", sampling_times = sampling_times
 )
@@ -131,7 +170,7 @@ expect_equal(grepl("without renormalizing",
                    attr(catch_proportion_obs, "translation")$catch_method), TRUE)
 missing_catch_total <- catch_proportion_inputs[
   catch_proportion_inputs$measure != "total_numbers", , drop = FALSE]
-catch_error <- tryCatch(database_to_tiny_obs(
+catch_error <- tryCatch(database_to_tam_obs(
   "translation_fixture", missing_catch_total, years = 2000:2001, ages = 1:2,
   weight_survey = "RV", sampling_times = sampling_times
 ), error = identity)
@@ -139,7 +178,7 @@ expect_equal(grepl("matching annual total_numbers", conditionMessage(catch_error
 
 missing_index_total <- inputs[!(inputs$type == "index" &
                                   inputs$measure == "total_biomass"), , drop = FALSE]
-index_error <- tryCatch(database_to_tiny_obs(
+index_error <- tryCatch(database_to_tam_obs(
   "translation_fixture", missing_index_total, years = 2000:2001, ages = 1:2,
   weight_survey = "RV", sampling_times = sampling_times
 ), error = identity)
@@ -181,7 +220,7 @@ expect_equal(grepl("stock weights are not substituted",
 
 thousand_inputs <- inputs
 thousand_inputs$unit[thousand_inputs$type == "catch"] <- "thousand fish"
-thousand_obs <- database_to_tiny_obs(
+thousand_obs <- database_to_tam_obs(
   "translation_fixture", thousand_inputs, years = 2000:2001, ages = 1:2,
   weight_survey = "RV", sampling_times = sampling_times
 )
@@ -198,10 +237,28 @@ m_inputs <- rbind(
   row("M", "natural_mortality_at_age", "per_year", year = NA_real_,
       age = 1:2, value = c(0.2, 0.3), unit = "per_year", year_basis = NA_character_)
 )
-m <- database_to_tiny_M("translation_fixture", m_inputs, years = 2000:2001, ages = 1:2)
+m <- database_to_tam_M("translation_fixture", m_inputs, years = 2000:2001, ages = 1:2)
 expect_equal(m$status, "fixed_numerical_input")
 expect_equal(m$surface$M_assumption, c(0.2, 0.2, 0.3, 0.3))
 expect_equal(m$M_settings$process, "off")
+
+fixed_m_inputs <- rbind(
+  inputs,
+  row("M", "natural_mortality_at_age", "per_year", year = NA_real_,
+      age = 1:2, value = c(0.2, 0.3), unit = "per year",
+      year_basis = NA_character_)
+)
+fixed_m_inputs_before <- fixed_m_inputs
+obs_with_m <- database_to_tam_obs(
+  "translation_fixture", fixed_m_inputs, years = 2000:2001, ages = 1:2,
+  weight_survey = "RV", sampling_times = sampling_times
+)
+expect_equal(obs_with_m$weight$M_assumption, c(0.2, 0.2, 0.3, 0.3))
+expect_equal(attr(obs_with_m, "translation")$M$status,
+             "fixed_numerical_input")
+expect_equal(sum(attr(obs_with_m, "translation")$source_provenance$component == "M"),
+             1L)
+expect_equal(fixed_m_inputs, fixed_m_inputs_before)
 
 read_table <- function(name) {
   read.csv(file.path(root, "database", name), stringsAsFactors = FALSE,
@@ -221,12 +278,12 @@ expect_equal(audit$tinyam_support[audit$component == "index" &
                                     grepl("unknown", audit$value, ignore.case = TRUE)],
              "unsupported")
 
-m_estimated <- database_to_tiny_M("dfo_cod_4t4vn_2019", inputs_db,
+m_estimated <- database_to_tam_M("dfo_cod_4t4vn_2019", inputs_db,
                                   assumptions_db, years = 1971:2018, ages = 2:11)
 expect_equal(m_estimated$status, "estimated_in_source")
 expect_equal(is.null(m_estimated$surface), TRUE)
 
-sg_obs <- database_to_tiny_obs(
+sg_obs <- database_to_tam_obs(
   "dfo_cod_4t4vn_2019", inputs_db, years = 1986:2018, ages = 2:11,
   weight_survey = "DFO September RV survey",
   sampling_times = c("DFO September RV survey" = 0.75,
@@ -245,9 +302,9 @@ expect_equal(any(sg_obs$index$survey == "DFO September RV survey" &
 expect_equal(all(sg_obs$index$samp_time %in% c(0.75, 0.625, 0.67)), TRUE)
 
 nea_id <- "ices_cod_northeast_arctic_2026"
-nea_obs <- database_to_tiny_obs(nea_id, inputs_db,
+nea_obs <- database_to_tam_obs(nea_id, inputs_db,
                                 years = 1946:2026, ages = 3:15)
-nea_m <- database_to_tiny_M(nea_id, inputs_db, assumptions_db,
+nea_m <- database_to_tam_M(nea_id, inputs_db, assumptions_db,
                             years = 1946:2026, ages = 3:15)
 expect_equal(nrow(nea_obs$catch), 1053L)
 expect_equal(sum(!is.na(nea_obs$catch$obs)), 1028L)
@@ -303,20 +360,24 @@ herring_error <- tryCatch(.translation_index(
 expect_equal(grepl("Unsupported index measure", conditionMessage(herring_error)), TRUE)
 
 herring_surveys <- c("HERAS", "IBTS0", "IBTS-Q1", "IBTS-Q3")
-herring_timing_error <- tryCatch(database_to_tiny_obs(
-  "ices_herring_north_sea_2026", inputs_db, years = 1947:2025, ages = 0:8,
-  surveys = herring_surveys
+herring_missing_time <- inputs_db
+herring_missing_time$sampling_time[
+  herring_missing_time$assessment_id == "ices_herring_north_sea_2026" &
+    herring_missing_time$survey %in% herring_surveys
+] <- NA_real_
+herring_timing_error <- tryCatch(database_to_tam_obs(
+  "ices_herring_north_sea_2026", herring_missing_time,
+  years = 1947:2025, ages = 0:8, surveys = herring_surveys
 ), error = identity)
 expect_equal(grepl("Survey timing is unknown", conditionMessage(herring_timing_error)), TRUE)
 
-# Artificial times exercise the mapping; they are not assessment timing choices.
 herring_before <- herring_inputs
-herring_obs <- database_to_tiny_obs(
+herring_obs <- database_to_tam_obs(
   "ices_herring_north_sea_2026", inputs_db, years = 1947:2025, ages = 0:8,
-  surveys = herring_surveys,
-  sampling_times = setNames(rep(0.5, 4), herring_surveys)
+  surveys = herring_surveys
 )
 expect_equal(setequal(unique(herring_obs$index$survey), herring_surveys), TRUE)
+expect_equal(sort(unique(herring_obs$index$samp_time)), c(0.125, 0.5, 0.625))
 expect_equal(setequal(attr(herring_obs, "translation")$excluded_surveys,
                       c("LAI-SNS", "LAI-CNS", "LAI-BUN", "LAI-ORSH")), TRUE)
 herring_direct <- herring_inputs[herring_inputs$type == "index" &
@@ -330,20 +391,31 @@ expect_equal(herring_inputs, herring_before)
 expect_equal(sum(is.na(herring_obs$catch$obs)), 18L)
 
 source(file.path(root, "R", "read_committed_assessment.R"))
-ebs <- read_committed_assessment("afsc_pollock_ebs_2024")
+db <- read_committed_database()
+ebs <- read_committed_assessment("afsc_pollock_ebs_2024", database = db)
 expect_equal(nrow(ebs$assessment), 1L)
 expect_equal(all(ebs$inputs$assessment_id == "afsc_pollock_ebs_2024"), TRUE)
 expect_equal(grepl("^[[:xdigit:]]{40}$", ebs$commit), TRUE)
 ebs_surveys <- c("NMFS bottom-trawl VAST", "NMFS acoustic-trawl",
                  "NMFS acoustic-trawl age-1 index")
-ebs_obs <- database_to_tiny_obs(
+ebs_obs <- database_to_tam_obs(
   "afsc_pollock_ebs_2024", ebs$inputs, years = 1964:2024, ages = 1:15,
   surveys = ebs_surveys, maturity_reference_year = 1964,
-  maturity_multiplier = 0.5
+  maturity_multiplier = 0.5,
+  index_weight_source = "stock",
+  assumptions = ebs$assumptions
 )
 expect_equal(dim(ebs_obs$catch), c(915L, 3L))
 expect_equal(sum(is.na(ebs_obs$catch$obs)), 15L)
 expect_equal(dim(ebs_obs$maturity), c(915L, 3L))
+expect_equal(ebs_obs$weight$M_assumption[ebs_obs$weight$age == 1],
+             rep(0.9, 61))
+expect_equal(ebs_obs$weight$M_assumption[ebs_obs$weight$age == 2],
+             rep(0.45, 61))
+expect_equal(ebs_obs$weight$M_assumption[ebs_obs$weight$age >= 3],
+             rep(0.3, 61 * 13))
+expect_equal(attr(ebs_obs, "translation")$M$status,
+             "fixed_numerical_input")
 ebs_maturity <- ebs$inputs[ebs$inputs$type == "maturity", , drop = FALSE]
 expect_equal(ebs_obs$maturity$obs[ebs_obs$maturity$year == 1964],
              ebs_maturity$value[match(1:15, ebs_maturity$age)] * 0.5)
@@ -373,4 +445,135 @@ expect_equal(as.numeric(catch_biomass),
              as.numeric(total_biomass$value[
                match(names(catch_biomass), total_biomass$year)] * 1e6))
 
+source(file.path(root, "R", "database_to_tam_list.R"))
+ebs_reference <- database_to_tam_list(
+  "afsc_pollock_ebs_2024", ebs$outputs, obs = ebs_obs,
+  years = 1964:2024, ages = 1:15, terminal_year = 2024
+)
+expect_equal(inherits(ebs_reference, "tam_list"), TRUE)
+expect_equal("source_fit" %in% names(ebs_reference), FALSE)
+expect_equal(nrow(ebs_reference$pop$ssb), 61L)
+expect_equal(nrow(ebs_reference$pop$M), 915L)
+expect_equal(all(is.na(ebs_reference$pop$M$se)), TRUE)
+expect_equal(all(is.na(ebs_reference$obs_pred$catch$pred)), TRUE)
+expect_equal(all(is.na(ebs_reference$pop$ssb$se_scale)), TRUE)
+
+ns_haddock_id <- "ices_haddock_north_sea_2026"
+ns_haddock <- read_committed_assessment(ns_haddock_id, database = db)
+ns_haddock_obs <- database_to_tam_obs(
+  ns_haddock_id, ns_haddock$inputs,
+  years = 1972:2026, ages = 0:8, assumptions = ns_haddock$assumptions
+)
+expect_equal(check_obs(ns_haddock_obs), TRUE)
+expect_equal(nrow(ns_haddock_obs$index), 667L)
+expect_equal(all(is.finite(ns_haddock_obs$index$relative_sd)), TRUE)
+expect_equal(all(abs(ns_haddock_obs$index$relative_sd^2 *
+                       ns_haddock_obs$index$relative_precision_weight - 1) < 1e-10), TRUE)
+
+nea_reference <- database_to_tam_list(
+  "ices_cod_northeast_arctic_2026", db$outputs,
+  obs = nea_obs, years = 1946:2026, ages = 3:12,
+  terminal_year = 2026, age_plus_group = 12
+)
+source_n_plus <- db$outputs[db$outputs$assessment_id == "ices_cod_northeast_arctic_2026" &
+                              db$outputs$type == "population" &
+                              db$outputs$measure == "numbers_at_age" &
+                              db$outputs$year == 2026 & db$outputs$age >= 12, , drop = FALSE]
+expect_equal(nea_reference$pop$N$est[
+  nea_reference$pop$N$year == 2026 & nea_reference$pop$N$age == 12
+], sum(as.numeric(source_n_plus$value)))
+
+template_years <- 2000:2002
+template_ages <- 1:2
+template_grid <- expand.grid(year = template_years, age = template_ages)
+template_pop <- list(
+  ssb = data.frame(year = template_years, est = NA_real_, se = NA_real_,
+                   se_scale = NA_character_, lwr = NA_real_, upr = NA_real_,
+                   is_proj = FALSE),
+  N = data.frame(template_grid, est = NA_real_, is_proj = FALSE),
+  F = data.frame(template_grid, est = NA_real_, is_proj = FALSE),
+  M = data.frame(template_grid, est = NA_real_, is_proj = FALSE),
+  recruitment = data.frame(year = template_years, est = NA_real_,
+                           is_proj = FALSE)
+)
+template_obs <- list(
+  catch = data.frame(year = rep(template_years, each = 2),
+                     age = rep(template_ages, length(template_years)),
+                     fleet = "fishery", obs = 10:15),
+  index = data.frame(year = rep(template_years, each = 2),
+                     age = rep(template_ages, length(template_years)),
+                     survey = "RV", obs = 20:25),
+  weight = data.frame(year = rep(template_years, each = 2), age = rep(template_ages, 3),
+                      M_assumption = 0.2),
+  maturity = data.frame(year = rep(template_years, each = 2), age = rep(template_ages, 3),
+                        obs = 0.5)
+)
+template_fit <- list(
+  call = quote(fit_tam()), refit_args = list(),
+  dat = list(obs = template_obs, years = template_years,
+             ages = template_ages, is_proj = rep(FALSE, 3)),
+  obj = list(fn = function(x) x), opt = list(par = 1), rep = list(
+    ssb = setNames(rep(NA_real_, 3), template_years),
+    recruitment = setNames(rep(NA_real_, 3), template_years),
+    N = matrix(NA_real_, 3, 2,
+               dimnames = list(year = template_years, age = template_ages)),
+    M = matrix(NA_real_, 3, 2,
+               dimnames = list(year = template_years, age = template_ages))
+  ),
+  sdrep = NULL,
+  fixed_par = data.frame(par = "log_sd_catch", coef = "fishery", est = 1,
+                         se = 0.1, se_scale = "sd", lwr = 0.8, upr = 1.2),
+  random_par = list(log_f = data.frame(year = template_years[1:2], age = 1L,
+                                       est = 1:2)),
+  obs_pred = list(
+    catch = data.frame(year = template_obs$catch$year, age = template_obs$catch$age,
+                       fleet = template_obs$catch$fleet, obs = template_obs$catch$obs,
+                       pred = 1:6, sd = 1, std_res = 0, osa_res = 0),
+    index = data.frame(year = template_obs$index$year, age = template_obs$index$age,
+                       survey = template_obs$index$survey, obs = template_obs$index$obs,
+                       pred = 1:6, sd = 1, std_res = 0, osa_res = 0, q = 1)
+  ),
+  pop = template_pop, is_converged = TRUE, grad_tol = 0.01
+)
+source_outputs <- data.frame(
+  assessment_id = "translation_fixture",
+  type = c("biomass", "population"),
+  measure = c("SSB", "numbers_at_age"),
+  year = c(2000, 2000), age = c(NA, 1), age_group = NA_character_,
+  value = c(900, 100), se = NA_real_, lwr = NA_real_, upr = NA_real_,
+  unit = c("t", "fish"), source_type = "official_table",
+  source_reference = "fixture", notes = NA_character_
+)
+template_reference <- database_to_tam_list(
+  "translation_fixture", source_outputs, obs = template_obs,
+  years = template_years, ages = template_ages, terminal_year = 2002,
+  comparison_scales = c(ssb = 1e-3), template = template_fit
+)
+expect_equal(names(template_reference), c(names(template_fit), "comparison_scales"))
+expect_equal(names(template_reference$pop), names(template_fit$pop))
+expect_equal(names(template_reference$rep), names(template_fit$rep))
+expect_equal(names(template_reference$obs_pred), names(template_fit$obs_pred))
+expect_equal(names(template_reference$random_par), names(template_fit$random_par))
+expect_equal(nrow(template_reference$pop$N), nrow(template_fit$pop$N))
+expect_equal(nrow(template_reference$random_par$log_f),
+             nrow(template_fit$random_par$log_f))
+expect_equal(template_reference$random_par$log_f$year,
+             template_fit$random_par$log_f$year)
+expect_equal(all(is.na(template_reference$random_par$log_f$est)), TRUE)
+expect_equal(template_reference$pop$N$est[template_reference$pop$N$year == 2000 &
+                                            template_reference$pop$N$age == 1], 100)
+expect_equal(all(is.na(template_reference$pop$N$est[
+  !(template_reference$pop$N$year == 2000 & template_reference$pop$N$age == 1)
+])), TRUE)
+expect_equal(template_reference$pop$M$est, rep(0.2, 6))
+expect_equal(template_reference$rep$ssb, c(`2000` = 900, `2001` = NA, `2002` = NA))
+expect_equal(template_reference$rep$N["2000", "1"], 100)
+expect_equal(template_reference$rep$N["2001", "1"], NA_real_)
+expect_equal(template_reference$rep$M[, "2"],
+             setNames(rep(0.2, 3), as.character(template_years)))
+expect_equal(template_reference$dat$obs, template_obs)
+expect_equal(template_reference$obs_pred$catch$pred, rep(NA_real_, 6))
+expect_equal(template_reference$fixed_par$est, NA_real_)
+expect_equal(template_fit$fixed_par$est, 1)
+expect_equal(template_reference$comparison_scales, c(ssb = 1e-3))
 cat("Translation helper tests passed.\n")

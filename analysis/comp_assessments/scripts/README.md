@@ -1,22 +1,18 @@
 # Assessment scripts
 
-Scripts are grouped by purpose.
+Scripts are grouped by purpose. Run them from the repository root.
 
 ## `database/`
 
-Seed, import, review, validate, and export assessment records here. The fit-readiness check also belongs here because it checks whether the recorded inputs are complete enough to translate. Run these scripts from the repository root.
-
-For example:
-
-```sh
-Rscript analysis/comp_assessments/scripts/database/002_validate_database.R
-Rscript analysis/comp_assessments/scripts/database/003_fit_readiness.R
-```
+Use these scripts to seed, import, review, validate, and export assessment records. The fit-readiness check reports whether each record is ready for translation.
 
 ## `translation/`
 
-Converter checks and focused, stock-specific translation scripts belong here. Run the converter check from the repository root:
+`run_translations.R` loads the reviewed database and runs the matching stock specifications in `translation/stocks/`. Each stock file defines one `translate_stock()` function with its observation conversion, fit settings, comparison scales, and background table.
+
+Run the translation workflow and its focused converter checks with:
 
 ```sh
-Rscript analysis/comp_assessments/scripts/translation/004_test_translation.R
+Rscript analysis/comp_assessments/scripts/translation/run_translations.R
+Rscript analysis/comp_assessments/tests/test_translation.R
 ```
