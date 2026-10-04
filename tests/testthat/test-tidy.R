@@ -583,3 +583,22 @@ test_that("tidy_tam preserves precomputed diagnostics (e.g., OSA residuals)", {
   expect_true(all(is.na(stacked$obs_pred$catch$osa_res[stacked$obs_pred$catch$model == "fit"])))
 })
 
+test_that("tidy_tam accepts a tam_ref without an optimizer", {
+  summaries <- tidy_par(fit_2024)
+  reference <- list(
+    obs_pred = fit_2024$obs_pred,
+    pop = tidy_pop(fit_2024),
+    fixed_par = summaries$fixed,
+    random_par = summaries$random,
+    comparison_scales = c(ssb = 1e-3)
+  )
+  class(reference) <- c("tam_ref", "list")
+
+  tabs <- tidy_tam(model_list = list(Assessment = reference, tinyAM = fit_2024))
+
+  expect_equal(tabs$pop$ssb$est[tabs$pop$ssb$model == "Assessment"],
+               reference$pop$ssb$est)
+  expect_equal(tabs$pop$ssb$est[tabs$pop$ssb$model == "tinyAM"],
+               tidy_pop(fit_2024)$ssb$est * 1e-3)
+})
+
