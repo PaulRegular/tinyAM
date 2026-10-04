@@ -1,7 +1,9 @@
 root <- "analysis/comp_assessments/database"
 read <- function(name) {
   x <- read.csv(file.path(root, paste0(name, ".csv")), stringsAsFactors = FALSE)
-  x[x$assessment_id == "ices_haddock_north_sea_2026", ]
+  x <- x[x$assessment_id == "ices_haddock_north_sea_2026", ]
+  x$value <- suppressWarnings(as.numeric(as.character(x$value)))
+  x
 }
 inputs <- read("inputs")
 outputs <- read("outputs")
@@ -61,6 +63,53 @@ stopifnot(model_env$fit$conf$initState == 0,
           length(model_env$fit$pl$initN) == 0, length(model_env$fit$pl$initF) == 0,
           all(c("logN", "logF") %in% names(model_env$fit$sdrep$par.random)))
 cat("Native initial-state configuration verified.\n")
+
+fit <- model_env$fit
+years <- as.integer(fit$data$years)
+ages <- seq.int(min(fit$data$minAgePerFleet), max(fit$data$maxAgePerFleet))
+n_state <- length(fit$pl$logN)
+state_se_log <- sqrt(fit$sdrep$diag.cov.random)
+state_interval <- function(log_state, se_log, state_years) {
+  grid <- expand.grid(age = ages, year = state_years)
+  estimate <- as.vector(log_state[, seq_along(state_years), drop = FALSE])
+  se_log <- se_log[seq_along(estimate)]
+  data.frame(
+    year = grid$year,
+    age = grid$age,
+    value = exp(estimate),
+    se = exp(estimate) * se_log,
+    lwr = exp(estimate - qnorm(0.975) * se_log),
+    upr = exp(estimate + qnorm(0.975) * se_log)
+  )
+}
+check_state_interval <- function(measure, type, expected) {
+  actual <- outputs[outputs$measure == measure & outputs$type == type, ]
+  joined <- merge(expected, actual, by = c("year", "age"), suffixes = c("_expected", "_actual"))
+  stopifnot(
+    nrow(joined) == nrow(expected),
+    !anyNA(joined$se_actual),
+    max(abs(joined$value_expected - joined$value_actual) /
+          pmax(1, joined$value_expected)) < 1e-10,
+    max(abs(joined$se_expected - joined$se_actual) /
+          pmax(1, joined$se_expected)) < 1e-10,
+    max(abs(joined$lwr_expected - joined$lwr_actual) /
+          pmax(1, joined$lwr_expected)) < 1e-10,
+    max(abs(joined$upr_expected - joined$upr_actual) /
+          pmax(1, joined$upr_expected)) < 1e-10,
+    all(grepl("conditional on fitted fixed parameters", actual$notes, fixed = TRUE))
+  )
+}
+check_state_interval(
+  "numbers_at_age",
+  "population",
+  state_interval(fit$pl$logN, state_se_log[n_state + seq_len(n_state)], years)
+)
+check_state_interval(
+  "fishing_mortality_at_age",
+  "mortality",
+  state_interval(fit$pl$logF, state_se_log[seq_len(n_state)], years[years <= max(years) - 1L])
+)
+cat("Conditional N/F state uncertainty and 95% intervals verified.\n")
 
 precision <- inputs[inputs$type == "index" &
                       inputs$measure == "relative_precision_weight", ]
