@@ -1,6 +1,6 @@
 # Northeast Arctic cod: 2026 source review
 
-Status: canonical record `ices_cod_northeast_arctic_2026` imported; inputs, outputs and assumptions remain partial pending the source checks below.
+Completeness remains partial; verified source findings and the remaining gaps are summarized below.
 
 ## Identity and source trail
 
@@ -61,17 +61,12 @@ definitions and input substitutions before comparing these quantities.
 
 All 320 recruitment, TSB, SSB and Fbar values for 1946–2025 match table 3.18 within published rounding. This establishes trajectory-level agreement with the accepted report, rather than relying on the run name or two terminal values.
 
-Next checks: compare the complete native N/F/M surfaces with report tables
-3.15–3.17; inspect the 2021
-benchmark and stock annex; verify source units and missing-value conventions;
-inspect cannibalism iteration inputs and configuration-key meanings before
-assigning completeness statuses.
-
+The native N/F/M surfaces, benchmark configuration, source timing and missing-value conventions have now been checked. Source-level uncertainty and unit interpretations that remain unresolved are listed below.
 
 
 ## Canonical extraction and validation
 
-6,576 input rows, 4,793 output rows and 41 assumptions are represented. Original SAM log-observations are exponentiated to their native scale; missing slots are omitted rather than filled. Fixed final M includes externally iterated cannibalism mortality. N and summary quantities extend through fitted survey year 2026; historical F/Fbar end in catch year 2025. Predictions use the corresponding native observation rows. Available summary intervals are preserved; log-scale SEs are not placed in the canonical natural-scale SE field.
+8,682 input rows, 4,843 output rows and 41 assumptions are represented. Original SAM log-observations are exponentiated to their native scale; missing slots are omitted rather than filled. Fixed final M includes externally iterated cannibalism mortality. N and summary quantities extend through fitted survey year 2026; historical F/Fbar end in catch year 2025. Predictions use the corresponding native observation rows. Available summary intervals are preserved; log-scale SEs are not placed in the canonical natural-scale SE field.
 
 Structural validation and scripts/database/007_validate_northeast_arctic_cod.R passed. Source exporters and report crosschecks are retained in the cache. No core package mathematics changed.
 
@@ -84,7 +79,7 @@ WKBARFAR 2021 sections 2.3.1–2.3.2 confirm survey terminal age 12+, the 2014 w
 
 The accepted fit has no logQpow parameters and all keyQpow entries are -1, confirming no density-dependent power. Fifty survey-age q values now represent 45 unique logFpar parameters across the five index series; ages 11 and 12 share q within each series. Values come directly from native fixed effects. Reported SEs are natural-scale delta-method approximations and intervals are 95% log-Wald intervals; neither log SEs nor arbitrary units are substituted.
 
-Both propF and propM full matrices (81 years by 13 ages) are now retained as biological inputs, adding 2,106 source cells. All are zero, consistent with the earlier assumption notes. The stock-specific validator confirms the zero spawning fractions, q age sharing and uncertainty transformation. Coverage is now 8,682 inputs, 4,843 outputs and 41 assumptions. Completeness remains partial pending remaining unit/initial-state and statistical interpretation issues.
+Both propF and propM full matrices (81 years by 13 ages) are now retained as biological inputs, adding 2,106 source cells. All are zero, consistent with the earlier assumption notes. The stock-specific validator confirms the zero spawning fractions, q age sharing and uncertainty transformation. Coverage is now 8,682 inputs, 4,843 outputs and 41 assumptions. Completeness remains partial because source units and remaining statistical-interpretation details are unresolved; initial-state semantics are documented below.
 ## Initial-state semantics resolved
 
 Both native initN/initF vectors are empty and initState=0. The accepted SAM revision's n.hpp and f.hpp evaluate ordinary process transitions from the second modeled year onward, with no explicit density for the first logN/logF state. Those first-year states remain latent random effects in the Laplace fit. A broad first-state normal prior is added only when calculating observation residuals; it must not be described as a regular assessment prior. The native configuration checks pass. This resolves the earlier initial-state gap without changing the fitted object or model mathematics.
