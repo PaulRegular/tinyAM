@@ -435,7 +435,7 @@ approximation or define and audit a scientifically defensible mapping first.
 For North Sea herring, retain `HERAS`, `IBTS0`, `IBTS-Q1`, and `IBTS-Q3`
 as the selected surveys. The four `LAI-*` spawning-component series are
 excluded pending mapping, as recorded in
-`results/audits/ices_herring_north_sea_2026_translation_decisions.csv`.
+`scripts/translation/stocks/ices_herring_north_sea_2026_translation_decisions.csv`.
 Native survey-index values are retained even when their numerical units are
 unresolved; their scale is absorbed by survey catchability. This does not
 resolve sampling timing, which must still be documented before fitting.

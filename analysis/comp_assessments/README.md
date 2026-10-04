@@ -51,7 +51,7 @@ not committed.
 The database records what each source assessment did. It does not store tinyAM
 settings, proposed formulas, or judgements about whether tinyAM can reproduce a
 feature. `R/audit_assumptions.R` compares documented source assumptions with
-current tinyAM capabilities; its results belong in `results/audits/`.
+current tinyAM capabilities. Each translation run saves this audit in its assessment-specific folder under `results/translations/`.
 
 Use official agency and assessment team sources where possible, in this order:
 native fitted object, native model files, reproducible assessment repository,
