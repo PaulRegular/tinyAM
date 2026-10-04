@@ -1,6 +1,6 @@
 root <- "analysis/comp_assessments"
 pkgload::load_all(".", quiet = TRUE)
-source(file.path(root, "R", "read_committed_assessment.R"))
+source(file.path(root, "R", "read_database.R"))
 source(file.path(root, "R", "database_to_tam_obs.R"))
 
 stock <- new.env(parent = globalenv())

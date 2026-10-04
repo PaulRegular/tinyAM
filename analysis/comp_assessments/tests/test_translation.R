@@ -429,12 +429,34 @@ expect_equal(herring_obs$index$obs[herring_match], as.numeric(herring_direct$val
 expect_equal(herring_inputs, herring_before)
 expect_equal(sum(is.na(herring_obs$catch$obs)), 18L)
 
-source(file.path(root, "R", "read_committed_assessment.R"))
+source(file.path(root, "R", "read_database.R"))
+working_db <- read_database()
 db <- read_committed_database()
+expect_equal(working_db$database_source, "working_tree")
+expect_equal(db$database_source, "committed")
+expect_equal(grepl("^[[:xdigit:]]{40}$", working_db$commit), TRUE)
+
+fixture_dir <- tempfile("assessment_database_")
+dir.create(fixture_dir)
+database_files <- c("stocks.csv", "assessments.csv", "assumptions.csv",
+                    "inputs.csv", "outputs.csv")
+for (name in database_files) {
+  write.csv(data.frame(source_file = name), file.path(fixture_dir, name),
+            row.names = FALSE)
+}
+fixture_db <- read_database(fixture_dir)
+expect_equal(unname(vapply(fixture_db[c("stocks", "assessments", "assumptions",
+                                       "inputs", "outputs")],
+                           function(table) table$source_file[[1]], character(1))),
+             database_files)
+
+working_ebs <- read_assessment("afsc_pollock_ebs_2024", working_db)
 ebs <- read_committed_assessment("afsc_pollock_ebs_2024", database = db)
 expect_equal(nrow(ebs$assessment), 1L)
 expect_equal(all(ebs$inputs$assessment_id == "afsc_pollock_ebs_2024"), TRUE)
 expect_equal(grepl("^[[:xdigit:]]{40}$", ebs$commit), TRUE)
+expect_equal(working_ebs$inputs, ebs$inputs)
+expect_equal(read_assessment("afsc_pollock_ebs_2024", db)$inputs, ebs$inputs)
 ebs_surveys <- c("NMFS bottom-trawl VAST", "NMFS acoustic-trawl",
                  "NMFS acoustic-trawl age-1 index")
 ebs_obs <- database_to_tam_obs(
