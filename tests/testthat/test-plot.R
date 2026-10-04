@@ -55,6 +55,18 @@ test_that("plot_trend handles confidence intervals and log buttons", {
   expect_true(any(grepl("yaxis.type", as.character(btn_args), fixed = TRUE)))
 })
 
+test_that("plot_trend keeps confidence ribbons when frames are used", {
+  d <- expand.grid(year = 2000:2002, age = 1:2)
+  d$est <- d$year - 1999 + d$age
+  d$lwr <- d$est - 0.5
+  d$upr <- d$est + 0.5
+  p <- plot_trend(d, frame = ~age, add_intervals = TRUE)
+  built <- plotly::plotly_build(p)
+
+  expect_true(length(built$x$frames) > 0L)
+  expect_true(any(trace_fills(p) == "toself"))
+})
+
 
 ## plot_heatmap ----
 

@@ -17,15 +17,15 @@ Row {.tabset}
 d |> 
   group_by(year, model) |> 
   summarise(
-    obs = sum(obs, na.rm = TRUE),
-    pred = sum(pred, na.rm = TRUE),
+    obs = if (any(is.finite(obs))) sum(obs, na.rm = TRUE) else NA_real_,
+    pred = if (any(is.finite(pred))) sum(pred, na.rm = TRUE) else NA_real_,
     is_proj = unique(is_proj),
     .groups = "drop"
   ) |> 
   mutate(
     obs = ifelse(obs == 0, NA, obs)
   ) |> 
-  plot_obs_pred(
+  plot_obs_pred_report(
     color = ~model,
     colors = cols,
     ylab = "Aggregate index"
@@ -35,20 +35,20 @@ d |>
 ### Index-at-age
 
 ```{r}
-plot_obs_pred(d, frame = ~age, color = ~model, 
-              colors = cols, ylab = "Index")
+plot_obs_pred_report(d, frame = ~age, color = ~model,
+                     colors = cols, ylab = "Index")
 ```
 
 ### Catchability
 
 ```{r}
-qest <- d
+qest <- plot_rows(d, "q")
 u_qest <- unique(qest[, c("model", "age", "q")])
 if (any(duplicated(u_qest[, c("model", "age")]))) {
   u_qest <- unique(qest[, c("model", "age", "year", "q")])
-  plot_trend(u_qest, x = ~age, y = ~q, xlab = "Age", color = ~model, colors = cols, frame = ~year)
+  if (nrow(u_qest)) plot_trend(u_qest, x = ~age, y = ~q, xlab = "Age", color = ~model, colors = cols, frame = ~year) else plotly::plot_ly()
 } else {
-  plot_trend(u_qest, x = ~age, y = ~q, xlab = "Age", color = ~model, colors = cols)
+  if (nrow(u_qest)) plot_trend(u_qest, x = ~age, y = ~q, xlab = "Age", color = ~model, colors = cols) else plotly::plot_ly()
 }
 ```
 

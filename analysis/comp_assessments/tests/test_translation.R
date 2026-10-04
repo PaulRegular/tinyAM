@@ -99,6 +99,32 @@ expect_equal(constant_biology$weight$obs[constant_biology$weight$year == 2001], 
 expect_equal(constant_biology$maturity$obs[constant_biology$maturity$year == 2001], c(0.05, 0.4))
 expect_equal(attr(constant_biology, "translation")$maturity_multiplier, 0.5)
 
+static_inputs <- inputs[!(inputs$type == "weight" |
+                            inputs$type == "maturity"), , drop = FALSE]
+static_inputs <- rbind(
+  static_inputs,
+  row("weight", "weight_at_age", "kg_per_fish", survey = "RV",
+      year = NA_real_, year_basis = NA_character_, age = 1:2,
+      value = c(1, 2), unit = "kg/fish"),
+  row("maturity", "maturity_at_age", "proportion",
+      year = NA_real_, year_basis = NA_character_, age = 1:2,
+      value = c(0.1, 0.8), unit = "proportion"),
+  row("M", "natural_mortality_at_age", "per_year",
+      year = NA_real_, year_basis = NA_character_, age = 1:2,
+      value = c(0.2, 0.3), unit = "per year")
+)
+static_obs <- database_to_tam_obs(
+  "translation_fixture", static_inputs, years = 2000:2001, ages = 1:2,
+  weight_survey = "RV", sampling_times = sampling_times
+)
+expect_equal(static_obs$weight$obs[static_obs$weight$year == 2001], c(1, 2))
+expect_equal(static_obs$maturity$obs[static_obs$maturity$year == 2001], c(0.1, 0.8))
+expect_equal(static_obs$weight$M_assumption[static_obs$weight$age == 1], rep(0.2, 2))
+expect_equal(static_obs$weight$M_assumption[static_obs$weight$age == 2], rep(0.3, 2))
+expect_equal(grepl("Time-invariant source maturity vector expanded",
+                   attr(static_obs, "translation")$source_provenance$method[
+                     attr(static_obs, "translation")$source_provenance$component == "maturity"]), TRUE)
+
 stock_weight_inputs <- rbind(
   inputs,
   row("weight", "weight_at_age", "kg_per_fish", year = 2000:2001,
@@ -137,6 +163,19 @@ index_sd_obs <- database_to_tam_obs(
   weight_survey = "RV", sampling_times = sampling_times
 )
 expect_equal(index_sd_obs$index$obs, obs$index$obs)
+
+log_index_sd_inputs <- rbind(
+  inputs,
+  row("index", "log_index_sd", "log_scale", survey = "RV", year = 2000,
+      age = NA_real_, value = 0.1, unit = "log scale")
+)
+log_index_sd_obs <- database_to_tam_obs(
+  "translation_fixture", log_index_sd_inputs, years = 2000:2001, ages = 1:2,
+  weight_survey = "RV", sampling_times = sampling_times
+)
+expect_equal(log_index_sd_obs$index$relative_sd[
+  log_index_sd_obs$index$survey == "RV" & log_index_sd_obs$index$year == 2000
+], rep(0.1, 2))
 
 plus_obs <- database_to_tam_obs(
   "translation_fixture", inputs, years = 2000:2001, ages = 1,
@@ -537,11 +576,13 @@ template_fit <- list(
 )
 source_outputs <- data.frame(
   assessment_id = "translation_fixture",
-  type = c("biomass", "population"),
-  measure = c("SSB", "numbers_at_age"),
-  year = c(2000, 2000), age = c(NA, 1), age_group = NA_character_,
-  value = c(900, 100), se = NA_real_, lwr = NA_real_, upr = NA_real_,
-  unit = c("t", "fish"), source_type = "official_table",
+  type = c("biomass", "population", "mortality", "mortality"),
+  measure = c("SSB", "numbers_at_age", "fishing_mortality_at_age",
+              "fishing_mortality_at_age"),
+  year = c(2000, 2000, 2000, 2000), age = c(NA, 1, 1, 2), age_group = NA_character_,
+  fleet = c(NA_character_, NA_character_, "Residual catch", "Residual catch"),
+  value = c(900, 100, 0.1, 0.2), se = NA_real_, lwr = NA_real_, upr = NA_real_,
+  unit = c("t", "fish", "per year", "per year"), source_type = "official_table",
   source_reference = "fixture", notes = NA_character_
 )
 template_reference <- database_to_tam_list(
@@ -562,6 +603,13 @@ expect_equal(template_reference$random_par$log_f$year,
 expect_equal(all(is.na(template_reference$random_par$log_f$est)), TRUE)
 expect_equal(template_reference$pop$N$est[template_reference$pop$N$year == 2000 &
                                             template_reference$pop$N$age == 1], 100)
+expect_equal(template_reference$pop$F$est[template_reference$pop$F$year == 2000 &
+                                            template_reference$pop$F$age == 1], 0.1)
+expect_equal(template_reference$pop$F$est[template_reference$pop$F$year == 2000 &
+                                            template_reference$pop$F$age == 2], 0.2)
+expect_equal(all(is.na(template_reference$pop$F$est[
+  template_reference$pop$F$year != 2000
+])), TRUE)
 expect_equal(all(is.na(template_reference$pop$N$est[
   !(template_reference$pop$N$year == 2000 & template_reference$pop$N$age == 1)
 ])), TRUE)

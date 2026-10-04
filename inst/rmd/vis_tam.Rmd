@@ -11,14 +11,13 @@ output:
       navbar-bg: "#007187"  
       navbar-fg: "#FFFFFF"
       link-color: "#028f8d"
-      base_font:
-        google: Poppins 
-      heading_font:
-        google: Poppins
-      code_font:
-        google:
-          family: JetBrains Mono
-          local: false
+      base_font: Poppins
+      heading_font: Poppins
+      code_font: JetBrains Mono
+header-includes:
+  - '<link rel="preconnect" href="https://fonts.googleapis.com">'
+  - '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>'
+  - '<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">'
 ---
 
 
@@ -32,6 +31,15 @@ knitr::opts_chunk$set(cache = FALSE)
 ```{r data, include=FALSE}
 
 tabs <- tidy_tam(model_list = fits, label = "model", label_type = "factor", interval = interval)
+set_model_levels <- function(x, model_names) {
+  if (is.data.frame(x) && "model" %in% names(x)) {
+    x$model <- factor(as.character(x$model), levels = model_names)
+  } else if (is.list(x)) {
+    x[] <- lapply(x, set_model_levels, model_names = model_names)
+  }
+  x
+}
+tabs <- set_model_levels(tabs, names(fits))
 obs_pred <- tabs$obs_pred
 pop <- tabs$pop
 fixed_par <- tabs$fixed_par
@@ -40,22 +48,32 @@ random_par <- tabs$random_par
 ```
 
 
-```{r comparison-notes, results='asis', echo=FALSE}
-if (any(vapply(fits, function(f) length(f$reporting_notes) > 0, logical(1)))) {
-  cat("\n\nComparing SAM and tinyAM\n================================================================================\n\nFYI\n--------------------------------------------------------------------------------\n\n")
-}
-for (nm in names(fits)) {
-  notes <- fits[[nm]]$reporting_notes
-  if (length(notes)) {
-    cat(paste0("Not all fitted and reported values from SAM are directly comparable to those produced by tinyAM, such as:\n\n",
-      paste0("- ", notes, collapse = "\n"), "\n\n"))
-  }
-}
+```{r background, child = if (is.null(background)) NULL else "background.Rmd"}
 ```
 
 ```{r helpers, include = FALSE}
 
 cols <- tam_pal(length(fits))
+
+plot_rows <- function(d, columns) {
+  if (!is.data.frame(d)) return(NULL)
+  columns <- intersect(columns, names(d))
+  if (!length(columns)) return(d[0, , drop = FALSE])
+  keep <- Reduce(`|`, lapply(columns, function(nm) is.finite(d[[nm]])))
+  d[keep, , drop = FALSE]
+}
+
+plot_report <- function(d, ...) {
+  d <- plot_rows(d, "est")
+  if (is.null(d) || !nrow(d)) return(plotly::plot_ly())
+  plot_trend(d, ...)
+}
+
+plot_obs_pred_report <- function(d, ...) {
+  d <- plot_rows(d, c("obs", "pred"))
+  if (is.null(d) || !nrow(d)) return(plotly::plot_ly())
+  plot_obs_pred(d, ...)
+}
 
 make_resid_plots <- function(d) {
   list(bubbles = plot_bubbles(d, frame = ~model, colors = tam_pal(2)),
@@ -63,11 +81,6 @@ make_resid_plots <- function(d) {
        age = plot_resid(d, x = ~age, xlab = "Age", frame = ~model, color = ~model, colors = cols),
        cohort = plot_resid(d, x = ~(year - age), xlab = "Cohort", frame = ~model, color = ~model, colors = cols),
        expected = plot_resid(d, x = ~log(pred), xlab = "Expected", frame = ~model, color = ~model, colors = cols))
-}
-
-plot_report <- function(d, ...) {
-  if (is.null(d) || !nrow(d)) return(htmltools::p("Report unavailable in the supplied fit."))
-  plot_trend(d, ...)
 }
 
 table_link <- function(x, table_name = NULL, download_text = "Download table") {

@@ -57,7 +57,7 @@ if (!is.null(mu_F)) {
 F <- if (is.null(mu_F)) transform(pop$F, mu = NA_real_) else
   merge(pop$F, mu_F, by = c("model", "year", "age", "is_proj"), all.x = TRUE)
 plot_report(F, color = ~model, legendgroup = ~model, colors = cols, frame = ~age, ylab = "F") |>
-  add_lines(y = ~mu, linetype = I(2), showlegend = FALSE, name = "mu", line = list(width = 0.5)) 
+  add_lines(y = ~mu, showlegend = FALSE, name = "mu", line = list(width = 0.5))
 ```
 
 ### Selectivity
@@ -81,7 +81,7 @@ if (!is.null(mu_M)) names(mu_M)[names(mu_M) == "est"] <- "mu"
 M <- if (is.null(mu_M)) transform(pop$M, mu = NA_real_) else
   merge(pop$M, mu_M, by = c("model", "year", "age", "is_proj"), all.x = TRUE)
 plot_report(M, color = ~model, legendgroup = ~model, colors = cols, frame = ~age, ylab = "M") |>
-  add_lines(y = ~mu, linetype = I(2), showlegend = FALSE, name = "mu", line = list(width = 0.5)) 
+  add_lines(y = ~mu, showlegend = FALSE, name = "mu", line = list(width = 0.5))
 ```
 
 

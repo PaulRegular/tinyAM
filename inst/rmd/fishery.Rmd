@@ -9,24 +9,22 @@ Row {.tabset}
 ### Yield
 
 ```{r}
-
 obs_yield <- pop$total_yield
 names(obs_yield)[names(obs_yield) == "est"] <- "obs"
 obs_yield$obs[obs_yield$is_proj] <- NA
 obs_yield$is_proj <- NULL
 pred_yield <- pop$total_yield_pred
 names(pred_yield)[names(pred_yield) == "est"] <- "pred"
-merge(obs_yield, pred_yield, by = c("year", "model")) |> 
-  plot_obs_pred(color = ~model, colors = cols)
-
+merge(obs_yield, pred_yield, by = c("year", "model")) |>
+  plot_obs_pred_report(color = ~model, colors = cols)
 ```
 
 
 ### Numbers-at-age
 
 ```{r}
-plot_obs_pred(obs_pred$catch, frame = ~age, color = ~model, 
-              colors = cols, ylab = "Catch")
+plot_obs_pred_report(obs_pred$catch, frame = ~age, color = ~model,
+                     colors = cols, ylab = "Catch")
 ```
 
 
