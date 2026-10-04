@@ -37,7 +37,30 @@ translate_stock <- function(source) {
   plus_weight$source_type <- "translation_assumption"
   plus_weight$transformation <- "Age-11 RV weight carried forward to the tinyAM 12+ group."
   plus_weight$notes <- "Fit-only proxy; RV weights are not reported for ages 12+."
-  inputs <- rbind(source$inputs, interpolated_weights, plus_weight)
+
+  landings_at_age <- !is.na(source$inputs$type) &
+    source$inputs$type == "catch" &
+    !is.na(source$inputs$measure) &
+    source$inputs$measure == "landings_numbers_at_age"
+  if (!any(landings_at_age)) {
+    cli::cli_abort("The source-reported landings-at-age series is missing.")
+  }
+  catch_proxy <- source$inputs[landings_at_age, , drop = FALSE]
+  catch_proxy$measure <- "numbers_at_age"
+  catch_proxy$source_type <- "translation_assumption"
+  catch_proxy$transformation <- paste(
+    "Used source landings-at-age as a fit-only proxy for catch-at-age;",
+    "no scaling to total catch was possible because the fitted age",
+    "composition was not tabulated."
+  )
+  catch_proxy$notes <- paste(
+    "This is not the accepted model's catch-at-age input. The source",
+    "model fits total catch biomass and age proportions separately."
+  )
+  inputs <- rbind(
+    source$inputs[!landings_at_age, , drop = FALSE], catch_proxy,
+    interpolated_weights, plus_weight
+  )
 
   obs <- database_to_tam_obs(
     source$assessment$assessment_id,
@@ -103,12 +126,12 @@ translate_stock <- function(source) {
       "",
       "| Component | Accepted assessment | tinyAM representation | Reason for difference |",
       "|---|---|---|---|",
-      "| Years | The SCA model covers 1950-2018; reported catch-at-age begins in 1971. RV weights are missing for 1980 and 1985. | Fit 1971-2018. Linearly interpolate RV weights for 1980 and 1985 for this fit only; exclude RV indices in those years and the anomalous 2003 index. | This retains the full reported catch-at-age period without adding reconstructed values to the source database. |",
+      "| Years | The SCA model covers 1950-2018; source landings-at-age data begin in 1971. RV weights are missing for 1980 and 1985. | Fit 1971-2018. Linearly interpolate RV weights for 1980 and 1985 for this fit only; exclude RV indices in those years and the anomalous 2003 index. | This retains the full landings-at-age period without adding reconstructed values to the source database. |",
       "| Ages | The population model uses ages 2-12+, while survey age compositions cover ages 2-11. | Use ages 2-12, with age 12 as the plus group. | The reported RV age-11 weight is carried to 12+ as a fit-only weight proxy. |",
       "| N | Recruitment enters at age 2, depends on SSB two years earlier, and has autocorrelated variation; initial cohorts are reconstructed from recruitment. | Use exponential initial abundance, deterministic cohort survival, and tinyAM's recruitment process. | tinyAM does not reproduce the source stock-recruit relationship, recruitment autocorrelation, or initial-cohort estimation. |",
       "| F | The source estimates fully recruited F and period-specific logistic selectivity. | Use an age- and year-correlated AR1 F process. | This is a simpler representation of changing fishing mortality and selectivity. |",
       "| M | The source estimates annual M random walks for ages 2-4, 5-8, and 9+, with initial levels informed by priors. | Use IID annual M deviations in the same age groups, around the reported initial levels of 0.65 and 0.15. | The source random walk did not yield a stable tinyAM fit here; IID departures retain time-varying M but omit temporal correlation. |",
-      "| Catch | The source fits annual catch biomass and catch proportions-at-age for ages 2-12+. The database contains landed numbers-at-age for ages 3-12+ from 1971 onward. | Fit recorded numbers-at-age directly for 1971-2018; age-2 catches remain missing. | The source catch and composition likelihoods are unavailable, and tinyAM uses a lognormal age-specific observation model. |",
+      "| Catch | The source fits annual catch biomass and proportions-at-age for ages 2-12+. The database contains landed numbers-at-age for ages 3-12+ from 1971 onward, not the fitted catch composition. | Use the landings-at-age series as an explicit fit-only proxy for catch-at-age in 1971-2018; age 2 remains missing. | The original age proportions are not tabulated, so landings cannot be scaled to the source's total catch. tinyAM then uses a lognormal age-specific observation model rather than the source's total-plus-composition likelihood. |",
       "| Index | The source uses RV, mobile sentinel, and longline indices. RV 2003 is excluded by the assessment; longline combines July-October observations. | Use RV and mobile sentinel age-specific indices, with sampling times 0.75 and 0.625. Exclude RV 2003 and omit longline. | The timing values are seasonal approximations; one within-year time is not supported for the longline series. |",
       "| Weights and maturity | Survey weights and year-varying maturity are reported; the source's RV weights are available by age 2-11. | Use RV weights for population biomass and source survey weights for index reconstruction. Retain annual maturity. | Age-12+ RV weight is unavailable and uses the age-11 proxy noted above. The source does not specify maturity by sex. |",
       "| Comparison | Tables 21-23 report MLE SSB and age-specific N and F, plus recruitment; the report gives terminal M for ages 5-8 and 9+. Other estimates are posterior medians. | Compare SSB, N, F, recruitment, and the two reported terminal M groups over 1971-2018, scaling numbers and biomass to tinyAM units. | The terminal M groups are repeated across their constituent ages for the dashboard; age-specific M was not published, and the published estimates are not all on the same uncertainty basis. |",

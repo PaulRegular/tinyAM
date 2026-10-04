@@ -42,6 +42,20 @@ source_converter <- function() {
   sys.source(file.path(root, "R", "database_to_tam_obs.R"), envir = env)
   env$database_to_tam_obs
 }
+source_stock_translation <- function(id, assessment, inputs, outputs, assumptions) {
+  script <- file.path(root, "scripts", "translation", "stocks", paste0(id, ".R"))
+  if (!file.exists(script)) return(NULL)
+
+  env <- new.env(parent = globalenv())
+  sys.source(file.path(root, "R", "database_to_tam_obs.R"), envir = env)
+  sys.source(script, envir = env)
+  env$translate_stock(list(
+    assessment = assessment,
+    inputs = inputs,
+    outputs = outputs,
+    assumptions = assumptions
+  ))
+}
 readiness <- lapply(seq_len(nrow(assessments)), function(i) {
   id <- assessments$assessment_id[i]
   a <- assumptions[assumptions$assessment_id == id, , drop = FALSE]
@@ -129,9 +143,19 @@ readiness <- lapply(seq_len(nrow(assessments)), function(i) {
   conversion_ok <- FALSE
   check_obs_ok <- FALSE
   conversion_error <- "Required catch, index, weight, and maturity rows are not all present."
-  if (has_expected_obs) {
-    conversion <- tryCatch(source_converter()(id, inputs, years = years, ages = ages,
-      assumptions = assumptions), error = identity)
+  stock_script <- file.path(root, "scripts", "translation", "stocks", paste0(id, ".R"))
+  if (has_expected_obs || file.exists(stock_script)) {
+    conversion <- tryCatch({
+      translated <- source_stock_translation(
+        id, assessments[i, , drop = FALSE], x, y, a
+      )
+      if (is.null(translated)) {
+        source_converter()(id, inputs, years = years, ages = ages,
+                           assumptions = assumptions)
+      } else {
+        translated$obs
+      }
+    }, error = identity)
     conversion_ok <- !inherits(conversion, "error")
     if (conversion_ok) {
       conversion_error <- ""
@@ -181,6 +205,8 @@ readiness <- lapply(seq_len(nrow(assessments)), function(i) {
     catch_at_age_source_ages = if (nrow(catch_age)) paste(range(catch_age$age), collapse = "-") else "unknown",
     landings_rows = sum(x$type == "catch" &
                           x$measure %in% c("total_numbers", "total_biomass")),
+    landings_at_age_rows = sum(x$type == "catch" &
+                                 x$measure == "landings_numbers_at_age"),
     index_rows = count("index"),
     weight_rows = count("weight"),
     catch_weight_rows = count("catch_weight"),

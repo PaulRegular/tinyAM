@@ -11,12 +11,27 @@ sys.source(
   envir = stock_env
 )
 source_data <- read_assessment("dfo_cod_4t4vn_2019", read_database())
+landings_at_age <- source_data$inputs[
+  source_data$inputs$type == "catch" &
+    source_data$inputs$measure == "landings_numbers_at_age",
+  , drop = FALSE
+]
+stopifnot(nrow(landings_at_age) == 480L)
+stopifnot(!any(source_data$inputs$type == "catch" &
+                 source_data$inputs$measure == "numbers_at_age"))
 translated <- stock_env$translate_stock(source_data)
 obs <- translated$obs
 
 stopifnot(identical(translated$years, 1971:2018))
 stopifnot(identical(translated$ages, 2:12))
 stopifnot(check_obs(obs))
+expected_key <- paste(landings_at_age$year, landings_at_age$age, sep = ":")
+observed_catch <- obs$catch[!is.na(obs$catch$obs), , drop = FALSE]
+catch_key <- paste(observed_catch$year, observed_catch$age, sep = ":")
+expected_rows <- match(catch_key, expected_key)
+stopifnot(!anyNA(expected_rows))
+stopifnot(nrow(observed_catch) == 480L)
+stopifnot(all(observed_catch$obs == landings_at_age$value[expected_rows] * 1000))
 stopifnot(setequal(unique(obs$index$survey), c(
   "DFO September RV survey", "Mobile Sentinel August survey"
 )))
@@ -33,6 +48,9 @@ stopifnot(all(obs$weight$M_assumption[obs$weight$age >= 5] == 0.15))
 stopifnot(all(is.finite(obs$weight$obs[obs$weight$year %in% c(1980, 1985)])))
 stopifnot(any(grepl("translation_assumption",
                     attr(obs, "translation")$source_provenance$source_type)))
+catch_provenance <- attr(obs, "translation")$source_provenance
+stopifnot(any(catch_provenance$component == "catch" &
+                catch_provenance$source_type == "translation_assumption"))
 stopifnot(setequal(unique(translated$comparison_outputs$measure), c(
   "numbers_at_age", "fishing_mortality_at_age", "natural_mortality_at_age",
   "SSB", "recruitment"
@@ -46,3 +64,21 @@ stopifnot(setequal(ref$pop$M$age, 5:12))
 stopifnot(all(ref$pop$M$year == 2018L))
 stopifnot(all(ref$pop$M$est[ref$pop$M$age %in% 5:8] == 0.81))
 stopifnot(all(ref$pop$M$est[ref$pop$M$age %in% 9:12] == 0.85))
+
+readiness_env <- new.env(parent = globalenv())
+sys.source(
+  file.path(root, "scripts", "database", "003_fit_readiness.R"),
+  envir = readiness_env
+)
+readiness <- utils::read.csv(
+  file.path(root, "results", "fit_readiness.csv"),
+  stringsAsFactors = FALSE
+)
+southern_gulf <- readiness[
+  readiness$assessment_id == "dfo_cod_4t4vn_2019", , drop = FALSE
+]
+stopifnot(nrow(southern_gulf) == 1L)
+stopifnot(southern_gulf$catch_at_age_rows == 0L)
+stopifnot(southern_gulf$landings_at_age_rows == 480L)
+stopifnot(isTRUE(southern_gulf$database_to_tam_obs_succeeds))
+stopifnot(isTRUE(southern_gulf$tinyAM_check_obs_passes))
