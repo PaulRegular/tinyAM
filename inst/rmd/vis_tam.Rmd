@@ -11,9 +11,14 @@ output:
       navbar-bg: "#007187"  
       navbar-fg: "#FFFFFF"
       link-color: "#028f8d"
-      base_font: Poppins
-      heading_font: Poppins
-      code_font: JetBrains Mono
+      base_font: 
+         google: Poppins
+      heading_font: 
+         google: Poppins
+      code_font: 
+         google:
+            family: JetBrains Mono
+            local: false
 header-includes:
   - '<link rel="preconnect" href="https://fonts.googleapis.com">'
   - '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>'
