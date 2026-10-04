@@ -9,6 +9,12 @@ database <- read_committed_database()
 assessments <- database$assessments[
   database$assessments$is_current & database$assessments$is_applied, , drop = FALSE
 ]
+requested_assessments <- commandArgs(trailingOnly = TRUE)
+if (length(requested_assessments)) {
+  unknown <- setdiff(requested_assessments, assessments$assessment_id)
+  if (length(unknown)) stop("Unknown assessment_id: ", paste(unknown, collapse = ", "))
+  assessments <- assessments[match(requested_assessments, assessments$assessment_id), , drop = FALSE]
+}
 readiness <- read.csv(file.path(root, "results", "fit_readiness.csv"),
                       stringsAsFactors = FALSE, check.names = FALSE)
 stock_scripts <- file.path(root, "scripts", "translation", "stocks")
@@ -108,9 +114,10 @@ diagnostics <- lapply(assessments$assessment_id, function(assessment_id) {
              file.path(out_dir, "fit_settings.R"))
 
   started <- Sys.time()
-  fit <- tryCatch(do.call(tinyAM::fit_tam,
-                          c(list(obs = translated$obs, years = translated$years,
-                                 ages = translated$ages, silent = TRUE), translated$settings)),
+  fit_args <- c(list(obs = translated$obs, years = translated$years,
+                     ages = translated$ages, silent = TRUE), translated$settings)
+  if (!is.null(translated$start_par)) fit_args$start_par <- translated$start_par
+  fit <- tryCatch(do.call(tinyAM::fit_tam, fit_args),
                   error = identity)
   elapsed <- as.numeric(difftime(Sys.time(), started, units = "secs"))
   if (inherits(fit, "error")) {
@@ -176,6 +183,13 @@ diagnostics <- lapply(assessments$assessment_id, function(assessment_id) {
 })
 
 diagnostics <- do.call(rbind, diagnostics)
-write.csv(diagnostics, file.path(output_root, "fit_diagnostics.csv"),
-          row.names = FALSE, na = "")
+diagnostics_path <- file.path(output_root, "fit_diagnostics.csv")
+if (length(requested_assessments) && file.exists(diagnostics_path)) {
+  previous <- read.csv(diagnostics_path, stringsAsFactors = FALSE)
+  if (identical(names(previous), names(diagnostics))) {
+    previous <- previous[!previous$assessment_id %in% diagnostics$assessment_id, , drop = FALSE]
+    diagnostics <- rbind(previous, diagnostics)
+  }
+}
+write.csv(diagnostics, diagnostics_path, row.names = FALSE, na = "")
 print(diagnostics, row.names = FALSE)
