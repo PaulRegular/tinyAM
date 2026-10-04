@@ -157,7 +157,29 @@ run_assessment <- function(assessment_id, database = NULL, fit = TRUE,
   started <- Sys.time()
   fit_args <- c(list(obs = translated$obs, years = translated$years,
                      ages = translated$ages, silent = TRUE), translated$settings)
-  if (!is.null(translated$start_par)) fit_args$start_par <- translated$start_par
+  if (!is.null(translated$start_par)) {
+    fit_args$start_par <- translated$start_par
+  } else if (!is.null(translated$warm_start_settings)) {
+    warm_settings <- utils::modifyList(
+      translated$settings, translated$warm_start_settings
+    )
+    warm_args <- c(list(obs = translated$obs, years = translated$years,
+                        ages = translated$ages, silent = TRUE), warm_settings)
+    warm_fit <- tryCatch(do.call(tinyAM::fit_tam, warm_args), error = identity)
+    if (inherits(warm_fit, "error") || !isTRUE(warm_fit$is_converged)) {
+      result$diagnostics <- .assessment_diagnostics(
+        assessment_id, database, "warm_start_failed",
+        elapsed = as.numeric(difftime(Sys.time(), started, units = "secs")),
+        reason = if (inherits(warm_fit, "error")) {
+          conditionMessage(warm_fit)
+        } else {
+          "The preliminary fit did not converge."
+        }
+      )
+      return(result)
+    }
+    fit_args$start_par <- as.list(warm_fit$sdrep, "Estimate")
+  }
   fitted <- tryCatch(do.call(tinyAM::fit_tam, fit_args), error = identity)
   elapsed <- as.numeric(difftime(Sys.time(), started, units = "secs"))
   if (inherits(fitted, "error")) {

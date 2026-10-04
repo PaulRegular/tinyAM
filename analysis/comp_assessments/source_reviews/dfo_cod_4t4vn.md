@@ -62,12 +62,19 @@ biological details may be available upon request, but they are not in this
 public file. This inventory therefore does not recover the accepted run's
 catch compositions or survey age compositions.
 
-The tinyAM fit converges with the simplified M process, but its terminal adult
-M estimates are much lower than the accepted assessment's reported values.
-This is not a like-for-like M process: the source's 0.15 prior means apply to
-initial M levels for ages 5+ through 1971, while the tinyAM approximation uses
-them as fixed centers for independent annual deviations throughout 1971-2018.
-The ages 2-4 initial level likewise uses the source's 0.65 prior mean. The
-source report's terminal M estimates are 0.81 for ages 5-8 and 0.85 for ages 9+; the
-tinyAM fit estimates about 0.13 and 0.09, respectively. This difference should
-be visible in the comparison and should not be described as close agreement.
+The tinyAM recipe uses annual M random walks from 1972, matching the source's
+process form and age groups. The source fixes the innovation SD at 0.075 and
+uses prior means for the initial levels through 1971; tinyAM estimates the
+innovation SD and keeps those initial levels as supplied baselines. Because
+the direct random-walk fit was numerically unstable from default starting
+values, the runner first fits an IID-M approximation and uses its estimates
+only to initialize the random-walk fit. The accepted assessment reports
+terminal M of 0.81 for ages 5-8 and 0.85 for ages 9+. The random-walk tinyAM
+fit converged (optimizer code 0, maximum absolute gradient 0.00081,
+positive-definite Hessian). Its terminal M estimates are 0.58 and 0.61, about
+28% below the accepted values. Across the eight reported age-group values,
+median absolute percent difference is 28.1%, down from 86.8% in the IID fit.
+SSB agreement also improved (mean absolute percent difference 26.5%, versus
+369.9% in the IID fit), while recruitment remains a poor match (507.4%). These
+are useful diagnostics, not evidence that the simplified fit reproduces the
+accepted assessment.

@@ -45,8 +45,12 @@ stopifnot(identical(
 ))
 stopifnot(all(obs$weight$M_assumption[obs$weight$age <= 4] == 0.65))
 stopifnot(all(obs$weight$M_assumption[obs$weight$age >= 5] == 0.15))
-stopifnot(identical(translated$settings$M_settings$process, "iid"))
+stopifnot(identical(translated$settings$M_settings$process, "rw"))
 stopifnot(identical(translated$settings$M_settings$age_breaks, c(2, 5, 9, 12)))
+stopifnot(identical(translated$settings$M_settings$first_dev_year, 1972L))
+stopifnot(identical(
+  translated$warm_start_settings$M_settings$process, "iid"
+))
 stopifnot(all(is.finite(obs$weight$obs[obs$weight$year %in% c(1980, 1985)])))
 stopifnot(any(grepl("translation_assumption",
                     attr(obs, "translation")$source_provenance$source_type)))
