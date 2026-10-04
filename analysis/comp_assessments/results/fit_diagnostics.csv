@@ -1,6 +1,6 @@
 "assessment_id","database_revision","status","is_converged","optimizer_code","optimizer_message","objective","max_abs_gradient","sdreport_success","positive_definite_hessian","n_fixed_effects","n_random_effects","elapsed_seconds","reason"
 "dfo_cod_2j3kl_2025","e5a568101b4375358bc494098924986c79b38b25","converged",TRUE,0,"relative convergence (4)",1103.80432029395,0.000500833887127794,TRUE,TRUE,25,1469,22.1503601074219,""
-"dfo_cod_4t4vn_2019","d5a77f9ccbb33b5e4fed2170d1bcdfad18562374","converged",TRUE,0,"relative convergence (4)",897.814776039938,0.000814265040181283,TRUE,TRUE,29,716,,""
+"dfo_cod_4t4vn_2019","c9ceeaccdb06a0087e1f4272aa0072bb9df8508e","converged",TRUE,0,"relative convergence (4)",897.814776039938,0.000814265040181283,TRUE,TRUE,29,716,129.5434,""
 "ices_cod_north_sea_2025","e5a568101b4375358bc494098924986c79b38b25","converged",TRUE,0,"relative convergence (4)",294.385591873905,7.57837553722052e-06,TRUE,TRUE,19,553,1.61175012588501,""
 "ices_herring_north_sea_2026","e5a568101b4375358bc494098924986c79b38b25","converged",TRUE,0,"relative convergence (4)",856.468468292174,0.000413048498735025,TRUE,TRUE,34,1413,5.64701700210571,""
 "afsc_pollock_ebs_2024","e5a568101b4375358bc494098924986c79b38b25","converged",TRUE,0,"relative convergence (4)",2409.94441240859,0.00108595660583433,TRUE,TRUE,37,975,182.29056096077,""
