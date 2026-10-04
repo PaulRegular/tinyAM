@@ -1,11 +1,15 @@
 # Southern Gulf cod (4T–4VN) source review
 
 For Southern Gulf cod, the 2024 Science Advisory Report is the latest accepted
-assessment, using the SCA model through 2023. DFO identifies the 2019 run as the
-last full assessment and says the same population model was used again in 2024.
-The 2024 database record is current but partial: it contains the reported 2023
-SSB estimate and does not borrow observation series or estimated outputs from
-the 2019 run. Structural settings are cross-referenced to the 2019 detailed
+assessment used for advice, applying the SCA model through 2023. DFO identifies
+the 2019 run as the last full assessment and says the same population model was
+used again in 2024. The 2019 assessment is therefore the current detailed record
+in the canonical database: it is the most recent accepted run with recoverable
+detailed inputs, assumptions, and outputs, though some of those records remain
+partial. The 2024 assessment remains a separate summary-only record and is
+marked as applied for advice, but not current. Its reported outputs stay under
+the 2024 assessment ID; no 2019 observations or estimated outputs are copied to
+the 2024 record. Structural settings are cross-referenced to the 2019 detailed
 report only where the 2024 summary confirms the same population model was used.
 An official DFO dataset was found for annual SSB medians and the 2.5th, 25th,
 75th, and 97.5th percentiles from the assessment to 2023, in thousands of
