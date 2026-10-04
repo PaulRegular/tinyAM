@@ -894,8 +894,7 @@ Save results by `assessment_id`. Keep the routine outputs small and useful:
 - a compact comparison CSV for available, comparable population metrics.
 
 Save intermediate CSVs or detailed audits when they support a specific check,
-not as a mandatory collection of duplicate tables on every run. Existing
-`results/processed_inputs/` files remain derived analysis products.
+not as a mandatory collection of duplicate tables on every run.
 
 These products must not be written back into canonical `inputs.csv` or
 `outputs.csv`. Source-data corrections identified during translation follow
