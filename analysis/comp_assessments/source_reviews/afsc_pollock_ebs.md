@@ -60,3 +60,9 @@ All 1,764 cells of the 42-by-42 supplied covariance matrix are now preserved as 
 ## Composition weights and active observation likelihoods
 
 The 60 fishery, 42 BTS and 19 ATS sam values have been captured by year as native composition likelihood weights. These are the values passed to robust_p and remain distinct from raw age frequencies. Control flags also verify BTS full-covariance biomass likelihood, ATS biomass likelihood and separate ATS age-1 treatment. Numerical BTS covariance is independently stored by calendar-year rows. The no-age-error switch is zero, so the accepted fit uses an identity ageing-error treatment.
+
+## Remaining native observation inputs
+
+The database now includes the source-specific weight-at-age matrices for BTS (42 years), ATS (19 years), and AVO (18 years), each across ages 1–15. It also includes the four native index-SD vectors: CPUE (12 years), AVO (18), BTS (42), and ATS (19). CPUE and AVO use their native-scale SDs in their residual likelihoods; ATS converts its supplied SDs to log-scale variance; BTS uses the supplied full covariance under `DoCovBTS=1`, so its SD vector is retained but is not the active likelihood variance.
+
+The native temperature vector is recorded by BTS year. Its unit is not stated in the model data file, and the control fixes the temperature slope at zero. The single fishery length-composition vector is also recorded after the same normalization used by the model; its fixed likelihood weight is 50. The model code defines its length-bin values as 20–69 in unit increments, but the input does not identify their units.

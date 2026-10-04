@@ -8,4 +8,9 @@ ctl <- trimws(readLines('analysis/comp_assessments/source_cache/afsc_pollock_ebs
 j <- which(ctl=='#ctrl_flag'); stopifnot(length(j)==1,as.numeric(ctl[j+3])==1)
 code <- paste(readLines('analysis/comp_assessments/source_cache/afsc_pollock_ebs_2024/source_pm.tpl',warn=FALSE),collapse='\n')
 stopifnot(grepl('if (current_phase()<3)',code,fixed=TRUE),grepl('rec_like(4) =  .1*norm2(log_initdevs)',code,fixed=TRUE))
-cat('\nThe additional mean-initial-abundance constraint is optimization-phase conditioning only: 10*(log_avginit-log_avgrec)^2 applies below phase 3 and is removed from the final objective. The final initial-age penalty is 0.1*sum(log_initdevs^2), multiplied by ctrl_flag(3)=1. This distinction is now explicit in the assumptions record.\n',file='analysis/comp_assessments/source_reviews/afsc_pollock_ebs.md',append=TRUE)
+review_path <- 'analysis/comp_assessments/source_reviews/afsc_pollock_ebs.md'
+review_note <- 'The additional mean-initial-abundance constraint is optimization-phase conditioning only: 10*(log_avginit-log_avgrec)^2 applies below phase 3 and is removed from the final objective. The final initial-age penalty is 0.1*sum(log_initdevs^2), multiplied by ctrl_flag(3)=1. This distinction is now explicit in the assumptions record.'
+review <- paste(readLines(review_path, warn = FALSE), collapse = '\n')
+if (!grepl(review_note, review, fixed = TRUE)) {
+  cat('\n\n', review_note, '\n', file = review_path, append = TRUE)
+}

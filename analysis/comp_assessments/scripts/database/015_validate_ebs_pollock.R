@@ -3,7 +3,7 @@ id <- "afsc_pollock_ebs_2024"
 x <- inputs[inputs$assessment_id == id, ]
 y <- outputs[outputs$assessment_id == id, ]
 a <- assessments[assessments$assessment_id == id, ]
-stopifnot(nrow(x) == 3826L, nrow(y) == 793L,
+stopifnot(nrow(x) == 5194L, nrow(y) == 793L,
           a$assessment_year == 2024, a$terminal_year == 2024,
           a$inputs_status == "partial", a$outputs_status == "partial",
           a$assumptions_status == "partial")
@@ -34,3 +34,31 @@ m <- x[x$type == "M", ]
 stopifnot(nrow(m) == 15, identical(m$age, 1:15),
           identical(m$value, c(.9, .45, rep(.3, 13))), all(is.na(m$year)), all(is.na(m$year_basis)))
 message("Fixed age-specific M inputs verified.")
+initial <- assumptions[assumptions$assessment_id == id &
+                         assumptions$setting == "initial_abundance_parameterization", ]
+stopifnot(nrow(initial) == 1L,
+          grepl("log_avginit", initial$notes, fixed = TRUE),
+          grepl("ctrl_flag(3)=1", initial$notes, fixed = TRUE),
+          grepl("phases below 3", initial$notes, fixed = TRUE))
+
+survey_weights <- x[x$type == "weight" & x$measure == "weight_at_age" &
+                      !is.na(x$survey) & nzchar(x$survey), ]
+stopifnot(nrow(survey_weights) == 1185L,
+          nrow(survey_weights[survey_weights$survey == "NMFS bottom-trawl VAST", ]) == 630L,
+          nrow(survey_weights[survey_weights$survey == "NMFS acoustic-trawl", ]) == 285L,
+          nrow(survey_weights[survey_weights$survey == "Acoustic vessels of opportunity", ]) == 270L,
+          all(survey_weights$age %in% 1:15))
+index_sd <- x[x$measure == "index_sd", ]
+stopifnot(nrow(index_sd) == 91L,
+          all(index_sd$value > 0),
+          nrow(index_sd[index_sd$survey == "Historical fishery CPUE", ]) == 12L,
+          nrow(index_sd[index_sd$survey == "Acoustic vessels of opportunity", ]) == 18L,
+          nrow(index_sd[index_sd$survey == "NMFS bottom-trawl VAST", ]) == 42L,
+          nrow(index_sd[index_sd$survey == "NMFS acoustic-trawl", ]) == 19L)
+length_comp <- x[x$measure == "proportion_at_length", ]
+stopifnot(nrow(length_comp) == 50L,
+          abs(sum(length_comp$value) - 1) < 1e-12,
+          all(length_comp$sample_size == 50),
+          all(length_comp$length_bin == 20:69))
+stopifnot(nrow(x[x$measure == "environmental_covariate", ]) == 42L)
+message("Survey weights, index SDs, length composition, and temperature rows verified.")
