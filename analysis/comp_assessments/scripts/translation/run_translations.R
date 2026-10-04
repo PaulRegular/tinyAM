@@ -103,7 +103,8 @@ diagnostics <- lapply(assessments$assessment_id, function(assessment_id) {
             file.path(out_dir, "source_provenance.csv"), row.names = FALSE, na = "")
   write.csv(audit_assumptions(assessment_id, source_data$assumptions),
             file.path(out_dir, "assumption_audit.csv"), row.names = FALSE, na = "")
-  writeLines(capture.output(dput(translated$settings)),
+  settings_output <- capture.output(dput(translated$settings))
+  writeLines(sub("[ \\t]+$", "", settings_output),
              file.path(out_dir, "fit_settings.R"))
 
   started <- Sys.time()
@@ -139,13 +140,16 @@ diagnostics <- lapply(assessments$assessment_id, function(assessment_id) {
             row.names = FALSE, na = "")
   summary <- do.call(rbind, lapply(split(differences, differences$metric), function(x) {
     valid <- x[is.finite(x$percent_difference), , drop = FALSE]
-    terminal <- valid[valid$year == max(valid$year), , drop = FALSE]
+    terminal_year <- if (nrow(valid)) max(valid$year) else NA_integer_
+    terminal <- if (nrow(valid)) {
+      valid[valid$year == terminal_year, , drop = FALSE]
+    } else valid
     data.frame(
       metric = x$metric[[1]],
       n = nrow(valid),
       mean_absolute_percent_difference = if (nrow(valid)) mean(abs(valid$percent_difference)) else NA_real_,
       median_absolute_percent_difference = if (nrow(valid)) stats::median(abs(valid$percent_difference)) else NA_real_,
-      terminal_year = if (nrow(terminal)) max(terminal$year) else NA_integer_,
+      terminal_year = terminal_year,
       terminal_mean_percent_difference = if (nrow(terminal)) mean(terminal$percent_difference) else NA_real_,
       trend_correlation = if (nrow(valid) > 1L) {
         tryCatch(stats::cor(valid$source, valid$tinyAM), error = function(e) NA_real_)
