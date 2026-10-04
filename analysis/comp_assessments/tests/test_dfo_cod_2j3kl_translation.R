@@ -14,6 +14,11 @@ source_year <- source_data$inputs$year
 source_basis <- source_data$inputs$year_basis
 translated <- stock$translate_stock(source_data)
 obs <- translated$obs
+all_maturity <- source_data$inputs[
+  source_data$inputs$type == "maturity" &
+    source_data$inputs$measure == "maturity_at_age",
+  , drop = FALSE
+]
 
 tinyAM::check_obs(obs)
 readiness <- read.csv(file.path(root, "results", "fit_readiness.csv"),
@@ -43,6 +48,11 @@ stopifnot(
   all(source_maturity$type == "maturity"),
   all(source_maturity$measure == "maturity_at_age"),
   all(source_maturity$year_basis == "calendar_year"),
+  nrow(all_maturity) == 71L * 15L,
+  setequal(all_maturity$year, 1954:2024),
+  setequal(all_maturity$age, 0:14),
+  all(all_maturity$year_basis == "calendar_year"),
+  !anyDuplicated(paste(all_maturity$year, all_maturity$age)),
   !any(source_data$inputs$type == "maturity_cohort" |
          source_data$inputs$measure == "maturity_cohort"),
   nrow(obs$catch) == 57L * 13L,
@@ -61,7 +71,7 @@ stopifnot(
   identical(source_data$inputs$year_basis, source_basis),
   readiness$maturity_rows[readiness$assessment_id == "dfo_cod_2j3kl_2025"] == 1065L,
   readiness$maturity_full_year_age_grid[readiness$assessment_id == "dfo_cod_2j3kl_2025"],
-  !("maturity_cohort_rows" %in% names(readiness)),
+  !any(grepl("maturity_cohort", names(readiness))),
   audit$tinyam_support[audit$setting == "maturity_at_age"] == "supported",
   dat$N_settings$process == "iid",
   dat$N_settings$init == "free",
