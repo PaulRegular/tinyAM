@@ -40,3 +40,12 @@ medians. The report also states terminal estimates for M at ages 5-8 and 9+
 and fully recruited q for the RV and mobile-sentinel surveys; these are stored
 as grouped or time-invariant outputs with their source identified as report
 text.
+
+The DFO [4T September RV survey dataset](https://open.canada.ca/data/en/dataset/1989de32-bc5d-c696-879c-54d422438e64)
+and its data dictionary were also checked and cached. The public table gives
+tow-level total numbers and weights by species, not the age composition or
+age-specific biological matrices used by the assessment. DFO cautions that
+these catches cannot be used directly as ecological catch rates without
+accounting for vessel, gear, and time-of-day effects. They therefore do not
+replace the assessment's calibrated RV index or close the remaining input
+gaps.
