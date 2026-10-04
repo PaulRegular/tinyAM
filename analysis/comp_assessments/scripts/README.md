@@ -24,7 +24,12 @@ pkgload::load_all(".", quiet = TRUE)
 source("analysis/comp_assessments/R/run_assessment.R")
 
 x <- run_assessment("dfo_cod_2j3kl_2025")
-runs <- run_assessments(parallel = TRUE, workers = 4)
+runs <- run_assessments(
+  database = read_committed_database(),
+  parallel = TRUE,
+  workers = 4,
+  save_results = TRUE
+)
 ```
 
 Use `run_assessment(..., fit = FALSE)` to inspect the translated observations

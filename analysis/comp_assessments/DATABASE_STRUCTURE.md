@@ -20,11 +20,11 @@ analysis/comp_assessments/
 
 All canonical tables should remain ordinary CSV files so they can be inspected directly in R, Excel, or a text editor.
 
-This document defines source records, not the tinyAM analysis pipeline.
-Use `PROTOCOL.md` to obtain, verify, or repair those records, and
-`TINYAM_TRANSLATION.md` to convert them into observations, fit models, and
-compare results. A source-data gap discovered during translation may require
-a validated database revision; downstream model choices remain separate.
+This document defines the canonical source records and database schema. It does
+not define stock-specific analysis transformations, model settings, or
+comparisons. Use `PROTOCOL.md` to obtain, verify, or repair records. If a
+downstream analysis reveals a source-data gap, validate and revise the affected
+database records while keeping analysis-specific choices separate.
 
 ## Core principles
 
@@ -107,7 +107,7 @@ One row per assessment event or model run represented in the database.
 | `assessment_type` | Annual, update, benchmark, framework, etc. |
 | `model_family` | SAM, Stock Synthesis, WHAM, NCAM, VPA/ADAPT, etc. |
 | `model_version` | Model/package/version identifier where known |
-| `is_current` | Whether this is the most recent accepted assessment with a detailed record recoverable for the canonical database. It may predate newer summary-only advice or an FSAR; see `PROTOCOL.md`. |
+| `is_current` | Whether this is the most recent accepted assessment with detailed inputs, assumptions, and outputs recoverable for the canonical database. It marks the current detailed assessment, which may predate newer summary-only advice or an FSAR; see `PROTOCOL.md`. |
 | `is_applied` | Whether this assessment was accepted and applied for advice in its assessment cycle. More than one historical assessment can be `TRUE`. |
 | `framework_year` | Benchmark/framework year defining the current model, if distinct |
 | `assessment_url` | Main authoritative assessment/report URL |

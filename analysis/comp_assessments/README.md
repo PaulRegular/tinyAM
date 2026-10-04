@@ -17,6 +17,10 @@ This analysis translates selected production age-structured assessments into tin
 
 The five CSVs in `database/` are canonical. Source PDFs, data files, and model objects are cached locally under the gitignored `source_cache/` directory when available. Do not place tinyAM settings or derived run outputs in the canonical tables.
 
+The assessment marked `is_current` is the latest accepted assessment with
+detailed inputs, assumptions, and outputs recoverable for the database. It may
+predate newer summary-only advice or an FSAR.
+
 ## Validate the database
 
 From the repository root, run:

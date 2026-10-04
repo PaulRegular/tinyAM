@@ -30,11 +30,12 @@ translation, and analysis code.
 
 Use `run_assessment()` for one stock while developing a translation and
 `run_assessments()` for a reproducible batch. Normally select the record marked
-`is_current`, which is the most recent accepted assessment with detailed
-information represented in the canonical database. It may predate newer
-summary-only advice or an FSAR. Use another record only when that assessment is
-explicitly part of the task. Keep all inputs, assumptions, and outputs tied to
-the same `assessment_id`.
+`is_current`: the most recent accepted assessment for which detailed inputs,
+assumptions, and outputs can be recovered for the canonical database. This is
+the current detailed assessment and may predate the newest advice, FSAR, or
+publication when later material is summary-only. Use another record only when
+that assessment is explicitly part of the task. Keep all inputs, assumptions,
+and outputs tied to the same `assessment_id`.
 
 ``` text
 load canonical database
@@ -950,10 +951,10 @@ Canonical completeness statuses and model readiness are different: a partial
 assessment may support a clearly limited fit, while a complete source model may
 contain features that tinyAM cannot represent.
 
-The repository's `results/fit_readiness.csv` is an earlier observation/data
-readiness screen. It checks source coverage, observation conversion, and
-`check_obs()`; it does not load stock recipes or call `make_dat()`. The
-model-readiness checks below apply after the recipe and settings are available.
+The repository's `results/fit_readiness.csv` is an observation/data-readiness
+screen. It checks source coverage, observation conversion, and `check_obs()`;
+it does not load stock recipes or call `make_dat()`. The model-readiness checks
+below apply after the recipe and settings are available.
 
 ## Catch
 

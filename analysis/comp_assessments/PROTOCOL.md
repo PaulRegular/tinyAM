@@ -230,9 +230,11 @@ If multiple candidate model runs are found, determine which one corresponds to t
 
 Do not select a model object solely because it is the newest file or repository.
 
-The canonical database should represent the most recent accepted assessment for which detailed inputs, assumptions, and outputs can be recovered from authoritative sources. A detailed Research Document may be published a year or more after its Science Advisory Report or other summary product, so publication year and assessment year must not be treated as the same thing. Check the model version, terminal data year, and accepted run described by the detailed source, and record the assessment year and data terminal year separately from the source's publication date.
+The canonical database's current detailed record is the most recent accepted assessment for which detailed inputs, assumptions, and outputs can be recovered from authoritative sources. Mark this record `is_current = TRUE`. It does not necessarily correspond to the year of the newest advice, FSAR, or publication.
 
-If a newer accepted assessment is described only by summary material, it does not displace the most recent assessment with recoverable detailed information as the current detailed assessment in the canonical database. Record the newer advice or FSAR and explain that its detailed inputs, assumptions, or outputs were unavailable. Keep any summary-only values attached to that newer assessment record; do not use them as substitutes for, or combine them with, inputs and outputs from an earlier run. Earlier detailed values remain attached to their own assessment and run. Record unresolved gaps and keep completeness statuses partial where appropriate.
+A later accepted assessment described only by summary material does not displace the current detailed record. Record that newer assessment and explain which details were unavailable. Keep its published summary values attached to its own assessment record; never substitute them for, or combine them with, inputs or outputs from another run. Keep each run's detailed values attached to that run. Record unresolved gaps and keep completeness statuses partial where appropriate.
+
+A detailed Research Document may be published a year or more after its Science Advisory Report or other summary product, so publication year and assessment year must not be treated as the same thing. Check the model version, terminal data year, and accepted run described by the detailed source, and record the assessment year and data terminal year separately from the source's publication date.
 
 ## 2.3 Source discipline
 
