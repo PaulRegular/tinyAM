@@ -49,3 +49,11 @@ these catches cannot be used directly as ecological catch rates without
 accounting for vessel, gear, and time-of-day effects. They therefore do not
 replace the assessment's calibrated RV index or close the remaining input
 gaps.
+
+DFO's [age-estimation structures inventory](https://open.canada.ca/data/en/dataset/98913402-688c-1615-9895-ec96b214be5a)
+was also checked and cached. Its 648 cod rows summarize numbers of structures
+by source, year, and month (1948–2025); they do not contain individual age
+readings or proportions-at-age. The portal says specimen-level age and
+biological details may be available upon request, but they are not in this
+public file. This inventory therefore does not recover the accepted run's
+catch compositions or survey age compositions.
