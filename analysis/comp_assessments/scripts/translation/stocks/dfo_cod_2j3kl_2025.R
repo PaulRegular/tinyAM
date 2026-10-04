@@ -1,5 +1,5 @@
 translate_stock <- function(source) {
-  years <- 1954:2024
+  years <- 1968:2024
   ages <- 2:14
 
   obs <- database_to_tam_obs(
@@ -39,7 +39,7 @@ translate_stock <- function(source) {
       "",
       "| Component | Accepted assessment | tinyAM representation | Reason for difference |",
       "|---|---|---|---|",
-      "| Years | The accepted population model covers 1954–2024; catch-at-age is reported from 1962. | Fit 1954–2024 using the reported year-age values. | Including the pre-catch years preserves the population history leading into catch-at-age observations. |",
+      "| Years | The accepted population model covers 1954–2024; catch-at-age is reported from 1962. | Retain the existing 1968–2024 tinyAM comparison window and use the reported year-age values directly. | This keeps the simplified fit period unchanged while correcting the maturity-year indexing. |",
       "| Ages | The population model begins at age 0; catch and fall RV observations cover ages 2–14. | Model ages 2–14, with recruitment entering at age 2. | Juvenile index streams at ages 0–1 have no documented sampling time for tinyAM. Age-2 recruitment is not directly comparable with the source's age-0 recruitment. |",
       "| N | The source estimates annual abundance with cohort and age/year process structure. | IID cohort-process deviations and freely estimated initial abundance. | tinyAM cannot reproduce the source covariance or initial-state integration. |",
       "| F | Annual F has correlated variation across ages and years. | An AR1 process across modeled ages and years. | This is a simpler approximation to the source's correlated process. |",

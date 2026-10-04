@@ -92,8 +92,15 @@ audit_assumptions <- function(assessment_id, assumptions) {
        "tinyAM accepts annual weight-at-age when the required model grid is complete.")
   mark(key == "weight|weight_at_age", "supported",
        "tinyAM accepts annual weight-at-age when the required model grid is complete.")
-  mark(key == "biological|maturity_at_age", "partially_supported",
-       "Calendar-year maturity is supported; cohort-indexed maturity needs a defensible cohort-to-year mapping.")
+  maturity <- key == "biological|maturity_at_age"
+  cohort_indexed_maturity <- grepl(
+    "birth[ _-]cohort|cohort[ _-]year|cohort-indexed",
+    paste(value, x$notes), ignore.case = TRUE
+  )
+  mark(maturity, "supported",
+       "The reported maturity values are indexed by calendar year and age; a cohort effect in the estimation model does not change the table indexing.")
+  mark(maturity & cohort_indexed_maturity, "partially_supported",
+       "Maturity values indexed by birth cohort need a defensible mapping to calendar year before tinyAM use.")
 
   x[c("component", "fleet", "survey", "setting", "value", "tinyam_support",
       "source_reference", "notes", "audit_notes")]

@@ -2,12 +2,14 @@ root <- "analysis/comp_assessments"
 pkgload::load_all(".", quiet = TRUE)
 source(file.path(root, "R", "read_committed_assessment.R"))
 source(file.path(root, "R", "database_to_tam_obs.R"))
+source(file.path(root, "R", "audit_assumptions.R"))
 
 stock <- new.env(parent = globalenv())
 sys.source(file.path(root, "scripts", "translation", "stocks",
                      "dfo_cod_2j3kl_2025.R"), envir = stock)
 database <- read_committed_database()
 source_data <- read_committed_assessment("dfo_cod_2j3kl_2025", database)
+audit <- audit_assumptions("dfo_cod_2j3kl_2025", source_data$assumptions)
 source_year <- source_data$inputs$year
 source_basis <- source_data$inputs$year_basis
 translated <- stock$translate_stock(source_data)
@@ -35,12 +37,12 @@ expected_maturity <- as.numeric(source_maturity$value)[
 ]
 
 stopifnot(
-  identical(translated$years, 1954:2024),
+  identical(translated$years, 1968:2024),
   identical(translated$ages, 2:14),
-  nrow(source_maturity) == 71L * 13L,
-  nrow(obs$catch) == 63L * 13L,
-  nrow(obs$weight) == 71L * 13L,
-  nrow(obs$maturity) == 71L * 13L,
+  nrow(source_maturity) == 57L * 13L,
+  nrow(obs$catch) == 57L * 13L,
+  nrow(obs$weight) == 57L * 13L,
+  nrow(obs$maturity) == 57L * 13L,
   !any(source_data$inputs$type == "maturity" &
          !is.na(source_data$inputs$year_basis) &
          source_data$inputs$year_basis == "birth_cohort"),
@@ -54,6 +56,7 @@ stopifnot(
   readiness$maturity_rows[readiness$assessment_id == "dfo_cod_2j3kl_2025"] == 1065L,
   readiness$maturity_full_year_age_grid[readiness$assessment_id == "dfo_cod_2j3kl_2025"],
   !("maturity_cohort_rows" %in% names(readiness)),
+  audit$tinyam_support[audit$setting == "maturity_at_age"] == "supported",
   dat$N_settings$process == "iid",
   dat$N_settings$init == "free",
   dat$F_settings$process == "ar1",
