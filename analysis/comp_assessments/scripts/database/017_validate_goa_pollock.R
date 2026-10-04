@@ -25,9 +25,12 @@ stopifnot(nrow(fsh) == 441, min(fsh$age) == 2, max(fsh$year) == 2023,
           nrow(shelikof) == 248, min(shelikof$age) == 3,
           all(fsh$source_type == "reconstructed_source_input"),
           all(shelikof$source_type == "reconstructed_source_input"))
-stopifnot(nrow(x[x$type == "M", ]) == 10,
-          nrow(x[x$type == "maturity", ]) == 10,
-          all(x$year[x$type %in% c("M", "maturity")] == 1970),
+fixed_m <- x[x$type == "M" & x$measure == "natural_mortality_at_age", ]
+fixed_maturity <- x[x$type == "maturity" & x$measure == "maturity_at_age", ]
+stopifnot(nrow(fixed_m) == 10, nrow(fixed_maturity) == 10,
+          setequal(fixed_m$age, 1:10), setequal(fixed_maturity$age, 1:10),
+          all(is.na(fixed_m$year)), all(is.na(fixed_m$year_basis)),
+          all(is.na(fixed_maturity$year)), all(is.na(fixed_maturity$year_basis)),
           nrow(x[x$measure == "spawning_weight_at_age", ]) == 550)
 n <- y[y$measure == "numbers_at_age", ]
 r <- y[y$measure == "recruitment", ]
