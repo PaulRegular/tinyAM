@@ -10,12 +10,15 @@ report only where the 2024 summary confirms the same population model was used.
 An official DFO dataset was found for annual SSB medians and the 2.5th, 25th,
 75th, and 97.5th percentiles from the assessment to 2023, in thousands of
 tonnes. Its [SSB CSV](https://api-proxy.edh-cde.dfo-mpo.gc.ca/catalogue/records/fe51e3da-0e0b-11ef-90aa-8b219c568296/attachments/NAFO-4T4VN-Atlantic-Cod-spawning-stock-biomass-estimates-1950-2023.csv)
-is named `NAFO-4T4VN-Atlantic-Cod-spawning-stock-biomass-estimates-1950-2023.csv`.
-The dataset landing page reports an update date of 2026-04-17. The attachment
-could not be downloaded in this environment because outbound TLS connections
-fail, so no annual SSB records have been added yet. The reported 2023 median
-and 95% interval already stored from the 2024 report remain the only current-run
-output values in the database.
+and [data dictionary](https://api-proxy.edh-cde.dfo-mpo.gc.ca/catalogue/records/fe51e3da-0e0b-11ef-90aa-8b219c568296/attachments/Atlantic-Cod-biomass-estimates-data-dictionary.csv)
+are cached locally; the dataset page reports an update date of 2026-04-17.
+The annual series has been added as machine-readable SSB medians, with the
+2.5th and 97.5th percentiles in `lwr` and `upr`; the 25th and 75th percentiles
+remain in the cached CSV. The 2023 median (11.88645 kt) rounds to the report's
+12 kt. However, the CSV's 2023 2.5th/97.5th percentiles (7.84041 and 16.53004
+kt) differ from the report's stated 95% interval (10.5–21.6 kt). No conversion
+or reconciliation is assumed; the database uses the consistent percentile
+series and records the report discrepancy in the 2023 output note.
 
 The detailed 2019 SCA assessment remains as a historical record under the 2012
 framework. It contains 54 annual stock-catch values for 1965-2018
