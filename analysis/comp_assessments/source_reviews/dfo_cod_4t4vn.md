@@ -61,3 +61,13 @@ readings or proportions-at-age. The portal says specimen-level age and
 biological details may be available upon request, but they are not in this
 public file. This inventory therefore does not recover the accepted run's
 catch compositions or survey age compositions.
+
+The tinyAM fit converges with the simplified M process, but its terminal adult
+M estimates are much lower than the accepted assessment's reported values.
+This is not a like-for-like M process: the source's 0.15 prior means apply to
+initial M levels for ages 5+ through 1971, while the tinyAM approximation uses
+them as fixed centers for independent annual deviations throughout 1971-2018.
+The ages 2-4 initial level likewise uses the source's 0.65 prior mean. The
+source report's terminal M estimates are 0.81 for ages 5-8 and 0.85 for ages 9+; the
+tinyAM fit estimates about 0.13 and 0.09, respectively. This difference should
+be visible in the comparison and should not be described as close agreement.
