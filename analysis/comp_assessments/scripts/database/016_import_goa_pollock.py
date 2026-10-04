@@ -24,7 +24,8 @@ def matrix_row(key, i):
 inputs, outputs, assumptions = [], [], []
 def add(kind, measure, basis, year, value, unit, age='', fleet='', survey='', timing='', field='', notes='', transformation='', source=native, sample_size=''):
     inputs.append(dict(assessment_id=assessment, type=kind, measure=measure, basis=basis,
-                       year=int(year), year_basis='calendar_year', value=value, unit=unit, age=age,
+                       year='' if year is None else int(year),
+                       year_basis='' if year is None else 'calendar_year', value=value, unit=unit, age=age,
                        fleet=fleet, survey=survey, sampling_time=timing, sample_size=sample_size, source_type='reconstructed_source_input' if transformation else 'native_model',
                        source_reference=source + '; ' + field, notes=notes, transformation=transformation))
 def assume(component, setting, value, notes='', survey='', fleet='', source=report):
@@ -44,10 +45,10 @@ for i, year in enumerate(range(1970, 2025), 1):
                        notes='Supplied survey weight matrix used for this biological purpose. Distinct population and spawning weights; 10+.')
             inputs.append(row)
 for age, value in enumerate(vector('mat'), 1):
-    add('maturity', 'maturity_at_age', 'proportion', 1970, value, 'proportion', age, field='mat',
+    add('maturity', 'maturity_at_age', 'proportion', None, value, 'proportion', age, field='mat',
         notes='Constant female maturity vector, 1983–2024 average, valid in all model years; stored once. Female fraction 0.5 is applied separately in SSB.')
 for age, value in enumerate([1.39, .69, .48, .37, .34, .30, .30, .29, .28, .29], 1):
-    add('M', 'natural_mortality_at_age', 'per_year', 1970, value, 'per year', age, source=code, field='M',
+    add('M', 'natural_mortality_at_age', 'per_year', None, value, 'per year', age, source=code, field='M',
         notes='Fixed external age-specific vector, valid 1970–2024, stored once. natMscalar fixed at 1 by accepted preparation map.')
 
 for year, value in zip(vector('Ecov_obs_year'), vector('Ecov_obs')):
