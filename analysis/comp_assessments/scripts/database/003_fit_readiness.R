@@ -85,7 +85,6 @@ readiness <- lapply(seq_len(nrow(assessments)), function(i) {
   survey_weight_series <- unique(weight_series[!is.na(weight_series) & nzchar(weight_series)])
   model_weight <- if (nrow(stock_weight)) stock_weight else if (length(survey_weight_series) == 1L) weight else weight[0, , drop = FALSE]
   catch_weight <- x[x$type == "catch_weight" & x$measure == "weight_at_age", , drop = FALSE]
-  maturity_cohort <- x[!is.na(x$type) & x$type == "maturity" & !is.na(x$year_basis) & x$year_basis == "birth_cohort", , drop = FALSE]
   maturity <- x[!is.na(x$type) & x$type == "maturity" & !is.na(x$measure) &
                   x$measure == "maturity_at_age" & !is.na(x$year_basis) & x$year_basis == "calendar_year", , drop = FALSE]
   maturity_static <- x[!is.na(x$type) & x$type == "maturity" & !is.na(x$measure) &
@@ -119,11 +118,6 @@ readiness <- lapply(seq_len(nrow(assessments)), function(i) {
   catch_weight_grid <- grid_complete(catch_weight, years, ages)
   maturity_static_grid <- nrow(maturity_static) > 0L && !anyNA(maturity_static$age) && !anyDuplicated(maturity_static$age) && setequal(maturity_static$age, ages)
   maturity_grid <- grid_complete(maturity, years, ages) || maturity_static_grid
-  maturity_cohort_source_grid <- if (nrow(maturity_cohort)) {
-    grid_complete(maturity_cohort,
-                  seq(min(maturity_cohort$year), max(maturity_cohort$year)),
-                  seq(min(maturity_cohort$age), max(maturity_cohort$age)))
-  } else FALSE
   m_grid <- grid_complete(m_input, years, ages)
   m_estimated <- any(grepl("estimate|random walk|time series",
                            setting(a, "M", "process", ""), ignore.case = TRUE)) ||
@@ -160,15 +154,7 @@ readiness <- lapply(seq_len(nrow(assessments)), function(i) {
     if (!length(index_surveys)) "survey identities" else if (!nrow(index)) "numerical observations from the documented survey series are not transcribed" else if (length(index_surveys) < 2L && grepl("survey|index", setting(a, "data", "assessment_inputs", ""), ignore.case = TRUE)) "other model survey series are not transcribed",
     if (!timing_exact) "exact survey sampling times (recorded times may be season-level approximations)",
     if (!weight_grid) "complete stock weight-at-age matrix for all modeled years and ages",
-    if (!maturity_grid) {
-      if (nrow(maturity_cohort) && maturity_cohort_source_grid) {
-        "cohort-specific maturity needs an explicit cohort-to-year mapping before tinyAM use"
-      } else if (nrow(maturity_cohort)) {
-        "gaps within the available cohort-specific maturity series"
-      } else {
-        "complete maturity-at-age matrix for all modeled years and ages"
-      }
-    },
+    if (!maturity_grid) "complete calendar-year maturity-at-age matrix for all modeled years and ages",
     if (!m_represented) "a documented M treatment: supplied numerical values or a source-estimated M structure",
     if (!conversion_ok) paste("database_to_tam_obs failed:", conversion_error),
     if (conversion_ok && !requireNamespace("tinyAM", quietly = TRUE)) "tinyAM is not installed; check_obs was not run",
@@ -199,10 +185,6 @@ readiness <- lapply(seq_len(nrow(assessments)), function(i) {
     weight_rows = count("weight"),
     catch_weight_rows = count("catch_weight"),
     maturity_rows = nrow(maturity) + nrow(maturity_static),
-    maturity_cohort_rows = nrow(maturity_cohort),
-    maturity_cohort_years = if (nrow(maturity_cohort)) paste(range(maturity_cohort$year), collapse = "-") else "unknown",
-    maturity_cohort_ages = if (nrow(maturity_cohort)) paste(range(maturity_cohort$age), collapse = "-") else "unknown",
-    maturity_cohort_source_grid_complete = maturity_cohort_source_grid,
     M_rows = count("M"),
     surveys = if (length(index_surveys)) paste(index_surveys, collapse = "; ") else "none",
     survey_sampling_times = if (length(index_times)) paste(index_times, collapse = "; ") else "unknown",
@@ -234,6 +216,6 @@ write.csv(readiness, file.path(root, "results", "fit_readiness.csv"), row.names 
 print(readiness[, c("assessment_id", "modeled_first_year", "modeled_terminal_year",
                     "minimum_age", "maximum_age", "catch_rows", "catch_at_age_rows",
                     "index_rows", "weight_rows", "catch_weight_rows", "maturity_rows",
-                    "maturity_cohort_rows", "M_rows",
+                    "M_rows",
                     "database_to_tam_obs_succeeds", "tinyAM_check_obs_passes", "missing_items")],
       row.names = FALSE)

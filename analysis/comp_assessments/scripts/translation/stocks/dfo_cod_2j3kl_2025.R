@@ -1,17 +1,10 @@
 translate_stock <- function(source) {
-  years <- 1968:2024
+  years <- 1954:2024
   ages <- 2:14
-  inputs <- source$inputs
-  maturity_rows <- inputs$type == "maturity" &
-    inputs$measure == "maturity_at_age" &
-    inputs$year_basis == "birth_cohort"
-  inputs$year[maturity_rows] <- as.numeric(inputs$year[maturity_rows]) +
-    as.numeric(inputs$age[maturity_rows])
-  inputs$year_basis[maturity_rows] <- "calendar_year"
 
   obs <- database_to_tam_obs(
     source$assessment$assessment_id,
-    inputs,
+    source$inputs,
     years = years,
     ages = ages,
     surveys = "DFO fall RV survey",
@@ -46,14 +39,14 @@ translate_stock <- function(source) {
       "",
       "| Component | Accepted assessment | tinyAM representation | Reason for difference |",
       "|---|---|---|---|",
-      "| Years | The accepted population model begins before the available complete calendar-year maturity surface; catch-at-age is reported from 1962 and the fitted inputs end in 2024. | Fit 1968–2024, the first full year-age maturity grid through the terminal input year. | This avoids inventing early-year maturity values. |",
+      "| Years | The accepted population model covers 1954–2024; catch-at-age is reported from 1962. | Fit 1954–2024 using the reported year-age values. | Including the pre-catch years preserves the population history leading into catch-at-age observations. |",
       "| Ages | The population model begins at age 0; catch and fall RV observations cover ages 2–14. | Model ages 2–14, with recruitment entering at age 2. | Juvenile index streams at ages 0–1 have no documented sampling time for tinyAM. Age-2 recruitment is not directly comparable with the source's age-0 recruitment. |",
       "| N | The source estimates annual abundance with cohort and age/year process structure. | IID cohort-process deviations and freely estimated initial abundance. | tinyAM cannot reproduce the source covariance or initial-state integration. |",
       "| F | Annual F has correlated variation across ages and years. | An AR1 process across modeled ages and years. | This is a simpler approximation to the source's correlated process. |",
       "| M | M has a baseline of 0.312 per year, a Capelin-to-cod biomass effect, and correlated process errors. | Fix M at the reported baseline of 0.312 per year. | The numerical Capelin covariate is not tabulated, so the annual source M pattern cannot be reconstructed. |",
       "| Catch | Catch-at-age counts cover ages 2–14; reported landings are a separate bounded input. | Fit the direct catch-at-age values with tinyAM's lognormal observation model; omit reported landings. | The likelihoods differ. Source zero cells are treated as missing by tinyAM's log-scale observation model. |",
       "| Index | The fall RV age-specific index covers ages 2–14 in surveyed years; other inputs include sentinel, Smith Sound, and juvenile surveys. | Use the fall RV series, with separate q for ages 2–5 and shared q for ages 6–14. Set its seasonal timing to 0.75. | The remaining series have unresolved timing, units, or age mappings. The reported 0.75 is a seasonal approximation. |",
-      "| Weights and maturity | Annual stock weights and female maturity by birth cohort are available across the assessment inputs. | Retain stock weights and map female maturity to calendar year using calendar year = birth cohort + age. | The mapped surface is complete for 1968–2024 and is derived from the source values without changing the database; tinyAM has no sex-structured population. |",
+      "| Weights and maturity | Annual stock weights and female maturity-at-age are reported by calendar year through 2024. The maturity model included a cohort effect. | Use the reported year-by-age values directly. | The source estimation already accounts for the cohort effect; no reindexing is needed. tinyAM has no sex-structured population. |",
       "| Maturity and SSB | The source reports age-0+ population and spawning biomass. | Calculate SSB over modeled ages 2–14. | Age-0 and age-1 abundance is outside this fit, so SSB and total-abundance comparisons are approximate. |",
       "",
       "The source report shows age-specific population and mortality outputs graphically but does not provide the numeric surfaces needed for an age-by-age comparison. The model comparison is therefore limited to the numerical aggregate outputs stored in the database and should be interpreted alongside these differences."

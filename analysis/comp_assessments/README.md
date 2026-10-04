@@ -36,8 +36,10 @@ Five ordinary CSV tables live in `database/`:
   values and record the calculation and units. Keep total landings when they
   are a model input or are needed for a documented conversion; detailed gear
   splits are not needed unless the fitted model uses them. `weight` and `catch_weight` stay separate when a source uses
-  distinct stock and fishery weights. `year_basis = birth_cohort` preserves
-  maturity ogives indexed by cohort without treating cohort as calendar year.
+  distinct stock and fishery weights. `year_basis` distinguishes calendar-year
+  data from values genuinely indexed by birth cohort. Use the year basis shown
+  by the source table; a cohort effect in the estimation model alone does not
+  make reported year-by-age values birth-cohort indexed.
   `sampling_time` records survey timing as a fraction of the year from 0 to 1.
   Seasonal approximations are explained in row notes.
 - `outputs.csv`: reported population quantities and uncertainty where available.

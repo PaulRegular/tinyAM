@@ -14,6 +14,8 @@ translated <- stock$translate_stock(source_data)
 obs <- translated$obs
 
 tinyAM::check_obs(obs)
+readiness <- read.csv(file.path(root, "results", "fit_readiness.csv"),
+                      stringsAsFactors = FALSE)
 dat <- do.call(tinyAM::make_dat, c(
   list(obs = obs, years = translated$years, ages = translated$ages),
   translated$settings
@@ -22,22 +24,26 @@ dat <- do.call(tinyAM::make_dat, c(
 source_maturity <- source_data$inputs[
   source_data$inputs$type == "maturity" &
     source_data$inputs$measure == "maturity_at_age" &
-    source_data$inputs$year_basis == "birth_cohort" &
+    source_data$inputs$year_basis == "calendar_year" &
+    source_data$inputs$year %in% translated$years &
     source_data$inputs$age %in% translated$ages,
   , drop = FALSE
 ]
-source_key <- paste(source_maturity$year + source_maturity$age,
-                    source_maturity$age)
+source_key <- paste(source_maturity$year, source_maturity$age)
 expected_maturity <- as.numeric(source_maturity$value)[
   match(paste(obs$maturity$year, obs$maturity$age), source_key)
 ]
 
 stopifnot(
-  identical(translated$years, 1968:2024),
+  identical(translated$years, 1954:2024),
   identical(translated$ages, 2:14),
-  nrow(obs$catch) == 57L * 13L,
-  nrow(obs$weight) == 57L * 13L,
-  nrow(obs$maturity) == 57L * 13L,
+  nrow(source_maturity) == 71L * 13L,
+  nrow(obs$catch) == 63L * 13L,
+  nrow(obs$weight) == 71L * 13L,
+  nrow(obs$maturity) == 71L * 13L,
+  !any(source_data$inputs$type == "maturity" &
+         !is.na(source_data$inputs$year_basis) &
+         source_data$inputs$year_basis == "birth_cohort"),
   nrow(obs$index) == 507L,
   sum(obs$index$obs == 0) == 106L,
   isTRUE(all.equal(obs$maturity$obs, expected_maturity)),
@@ -45,6 +51,9 @@ stopifnot(
   setequal(levels(obs$index$q_key), c("age_2", "age_3", "age_4", "age_5", "age_6_plus")),
   identical(source_data$inputs$year, source_year),
   identical(source_data$inputs$year_basis, source_basis),
+  readiness$maturity_rows[readiness$assessment_id == "dfo_cod_2j3kl_2025"] == 1065L,
+  readiness$maturity_full_year_age_grid[readiness$assessment_id == "dfo_cod_2j3kl_2025"],
+  !("maturity_cohort_rows" %in% names(readiness)),
   dat$N_settings$process == "iid",
   dat$N_settings$init == "free",
   dat$F_settings$process == "ar1",

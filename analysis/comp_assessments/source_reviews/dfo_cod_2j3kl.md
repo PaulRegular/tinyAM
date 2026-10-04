@@ -19,9 +19,11 @@ is not an xteNCAM input. 2004 and 2021 are excluded from the age series, and
 2022 was not surveyed.
 The database also includes 239 age-specific sentinel values, 13 Smith Sound
 biomass estimates and 119 sampled age counts, and 88 Fleming/Newman juvenile
-index values. Table 9 and Table 10 now both contribute 1,065 age-weight rows
-for 1954-2024, and Table 8 contributes 1,065 female maturity values indexed by
-birth cohort. Reported catch counts remain counts in thousand fish; no
+index values. Table 9 and Table 10 each contribute 1,065 age-weight rows for
+1954-2024. Table 8 reports 1,065 female maturity-at-age estimates as
+calendar-year-by-age values for 1954-2024. The maturity model used a cohort
+effect, but that does not change the table year-age indexing. Reported catch
+counts remain counts in thousand fish; no
 proportion-to-count conversion was needed. Fall timing is represented by a
 0.75 season-level approximation; Smith Sound timing is derived from reported
 months, while sentinel and juvenile survey timing remains unknown.
