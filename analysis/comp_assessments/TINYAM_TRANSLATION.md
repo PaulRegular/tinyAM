@@ -7,9 +7,10 @@ This document defines how a curated source assessment is transformed into data a
 The canonical assessment database is intentionally richer than tinyAM. It preserves the fleets, surveys, biological inputs, and statistical assumptions of the accepted source assessment.
 
 The expected result for each selected assessment is a documented tinyAM model,
-a record of its convergence, and, when it converges, a saved model and a
-dashboard comparing it with the accepted assessment. Preparing observation
-tables alone does not complete a translation task.
+a record of its convergence, and, when it converges, a comparison with the
+accepted assessment. Fits and dashboards can be cached locally when useful;
+they are not routine committed outputs. Preparing observation tables alone does
+not complete a translation task.
 
 Data conversion and model specification are separate: the shared converters
 reshape recorded information, while the stock script makes the scientific
@@ -27,10 +28,11 @@ translation, and analysis code.
 
 # 1. Translation workflow
 
-Load the canonical database once and loop over the requested assessments.
-Normally select the current accepted record for each stock; use a historical
-record only when that assessment is explicitly part of the task. Keep all
-inputs, assumptions, and outputs tied to the same `assessment_id`.
+Use `run_assessment()` for one stock while developing a translation and
+`run_assessments()` for a reproducible batch. Normally select the current
+accepted record for each stock; use a historical record only when that
+assessment is explicitly part of the task. Keep all inputs, assumptions, and
+outputs tied to the same `assessment_id`.
 
 ``` text
 load canonical database
@@ -47,9 +49,11 @@ fit_tam()
         ↓
 check convergence and record diagnostics
         ↓
-if converged: save model and construct source reference with database_to_tam_ref()
+if converged: construct source reference with database_to_tam_ref()
         ↓
-export comparison dashboard and concise numerical summary
+return results; optionally render a dashboard or cache the fit locally
+        ↓
+for a batch, write shared diagnostics and comparison summaries once
 ```
 
 When a source-data gap prevents translation or a requested comparison:
@@ -89,26 +93,34 @@ A useful directory structure is:
 ``` text
 analysis/comp_assessments/
 ├── R/
+│   ├── read_database.R
 │   ├── database_to_tam_obs.R
 │   ├── database_to_tam_ref.R
-│   └── audit_assumptions.R
+│   ├── audit_assumptions.R
+│   └── run_assessment.R
 ├── scripts/
 │   ├── database/
 │   └── translation/
-│       ├── run_translations.R
+│       ├── run_stock.R
+│       ├── run_all.R
 │       └── stocks/
 │           └── <assessment_id>.R
 ├── tests/
 ├── results/
-│   └── translations/<assessment_id>/
+│   ├── fit_readiness.csv
+│   ├── fit_diagnostics.csv
+│   ├── comparison_summary.csv
+│   ├── sensitivity_summary.csv
+│   └── cache/                    # gitignored local fits and dashboards
 └── source_cache/                 # gitignored authoritative source files
 ```
 
-The converter names and layout above define the intended interface. Existing
-`database_to_tiny_*` helpers must be renamed consistently with their callers.
-The database-output converter and `vis_tam(background = ...)` support are
-required implementation steps; these instructions do not imply that those
-interfaces already exist.
+`run_stock.R` reads the working-tree database and leaves the selected run's
+objects in the RStudio workspace. `run_all.R` reads the committed snapshot and
+uses `future::multisession` through `furrr`; workers load tinyAM from the current
+repository checkout. Workers return objects only. The parent process writes
+aggregate CSV files after all workers finish, and restores the previous future
+plan. Set `parallel = FALSE` when debugging.
 
 ## Stock background
 
@@ -883,18 +895,20 @@ A successful replication-oriented model does not automatically define the standa
 
 ------------------------------------------------------------------------
 
-# 18. Save processed translation outputs separately
+# 18. Keep generated outputs small
 
-Save results by `assessment_id`. Keep the routine outputs small and useful:
+The committed results are the assessment-level fit-readiness table, one
+diagnostics table, one comparison-summary table, and the small sensitivity
+summary retained from prior focused checks. Do not commit duplicate per-stock
+fits, translated observations, audits, settings, or dashboards; those can be
+recreated from the database and stock translation script.
 
-- translated observations as an RDS object, with translation provenance;
-- the stock background Markdown and the settings used;
-- one concise diagnostics table recording each fitting attempt;
-- for a converged fit, the model RDS and comparison HTML dashboard;
-- a compact comparison CSV for available, comparable population metrics.
-
-Save intermediate CSVs or detailed audits when they support a specific check,
-not as a mandatory collection of duplicate tables on every run.
+`run_assessment(..., cache = TRUE)` optionally saves a fitted object under
+`results/cache/<assessment_id>/`. A dashboard is optional through
+`dashboard = TRUE` and is cached there only when caching is enabled. Both
+`run_assessment()` and `run_assessments()` leave caching off by default.
+`run_assessments(..., save_results = TRUE)` writes the shared diagnostic and
+comparison-summary tables once in the parent process.
 
 These products must not be written back into canonical `inputs.csv` or
 `outputs.csv`. Source-data corrections identified during translation follow
@@ -1018,8 +1032,8 @@ Use `database_to_tam_ref()` to translate available canonical `outputs.csv`
 records for the same assessment into a `tam_ref`. Pass the converged tinyAM fit
 as `template` so the comparison list keeps the same output tables, years, ages,
 and groups. The helper blanks reported values first, then fills values available
-from the assessment; missing values remain `NA`. This is a reporting list with
-a structure similar to a `tam_fit`, not an object that can be fitted, updated,
+from the assessment; missing values remain `NA`. This `tam_ref` object has
+reporting tables arranged like a `tam_fit`; it cannot be fitted, updated,
 simulated, projected, or used for retrospective estimation.
 
 Include year-age population tables and available aggregate trends. Supply
@@ -1064,7 +1078,7 @@ uncertainty; do not manufacture SEs or intervals from point estimates alone.
 
 ## Export the dashboard and a concise summary
 
-For a converged fit, use:
+For a converged fit, optionally use:
 
 ``` r
 vis_tam(

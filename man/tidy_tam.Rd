@@ -53,9 +53,9 @@ tables together; all fixed parameters together; each random-effect block togethe
 \strong{Inputs:} Pass models through \code{...} or via \verb{model_list =}.
 Precomputed assessment reference objects of class \code{tam_ref} are also accepted. Their
 existing tables and uncertainty are retained without constructing a tinyAM
-optimizer. A reporting list may contain a named \code{comparison_scales} vector;
+optimizer. A \code{tam_ref} may contain a named \code{comparison_scales} vector;
 those factors are applied to the matching tinyAM population estimates and
-uncertainty so the combined tables use the reporting list's units.
+uncertainty so the combined tables use the reference's units.
 \itemize{
 \item If \code{...} supplies \strong{one} model, \strong{no label} column is added.
 \item If \code{...} supplies \strong{>1} model, a label column is added using the object/expression names from \code{...}.

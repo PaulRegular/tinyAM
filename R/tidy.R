@@ -631,9 +631,9 @@ stack_nested <- function(x, label = "model",
 #' **Inputs:** Pass models through `...` or via `model_list =`.
 #' Precomputed assessment reference objects of class `tam_ref` are also accepted. Their
 #' existing tables and uncertainty are retained without constructing a tinyAM
-#' optimizer. A reporting list may contain a named `comparison_scales` vector;
+#' optimizer. A `tam_ref` may contain a named `comparison_scales` vector;
 #' those factors are applied to the matching tinyAM population estimates and
-#' uncertainty so the combined tables use the reporting list's units.
+#' uncertainty so the combined tables use the reference's units.
 #'
 #' - If `...` supplies **one** model, **no label** column is added.
 #' - If `...` supplies **>1** model, a label column is added using the object/expression names from `...`.

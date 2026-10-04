@@ -102,7 +102,7 @@ test_that("vis_tam errors when supplied objects are not TAM fits", {
 })
 
 
-test_that("database reporting lists accept a Background page", {
+test_that("tam_ref objects accept a Background page", {
   blank_values <- function(x, keys) {
     for (name in setdiff(names(x), keys)) x[[name]][] <- NA
     x
