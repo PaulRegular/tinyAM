@@ -97,9 +97,10 @@ will be documented here.
 Source `R/database_to_tam_obs.R` and call
 `database_to_tam_obs(assessment_id, inputs)` to reshape compatible catch,
 index, weight, and calendar-year maturity rows into tinyAM observation tables.
-The helper does not choose model settings, infer population processes, or map
-cohort-indexed maturity onto calendar years. It preserves stored values, units,
-survey names, and observation timing.
+The helper does not choose model settings or infer population processes. It
+uses maturity reported by calendar year and age as given; a series reported by
+birth cohort would need a defensible mapping before conversion. It preserves
+stored values, units, survey names, and observation timing.
 Use `R/read_database.R` for assessment data. `read_database()` reads the CSVs
 from the working tree; `read_committed_database()` reads the tables from Git
 HEAD. `read_assessment()` selects the same assessment from either database.

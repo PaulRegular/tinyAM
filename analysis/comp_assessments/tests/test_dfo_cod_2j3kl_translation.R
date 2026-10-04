@@ -7,8 +7,8 @@ source(file.path(root, "R", "audit_assumptions.R"))
 stock <- new.env(parent = globalenv())
 sys.source(file.path(root, "scripts", "translation", "stocks",
                      "dfo_cod_2j3kl_2025.R"), envir = stock)
-database <- read_committed_database()
-source_data <- read_committed_assessment("dfo_cod_2j3kl_2025", database)
+database <- read_database()
+source_data <- read_assessment("dfo_cod_2j3kl_2025", database)
 audit <- audit_assumptions("dfo_cod_2j3kl_2025", source_data$assumptions)
 source_year <- source_data$inputs$year
 source_basis <- source_data$inputs$year_basis
@@ -40,12 +40,18 @@ stopifnot(
   identical(translated$years, 1968:2024),
   identical(translated$ages, 2:14),
   nrow(source_maturity) == 57L * 13L,
+  all(source_maturity$type == "maturity"),
+  all(source_maturity$measure == "maturity_at_age"),
+  all(source_maturity$year_basis == "calendar_year"),
+  !any(source_data$inputs$type == "maturity_cohort" |
+         source_data$inputs$measure == "maturity_cohort"),
   nrow(obs$catch) == 57L * 13L,
   nrow(obs$weight) == 57L * 13L,
   nrow(obs$maturity) == 57L * 13L,
   !any(source_data$inputs$type == "maturity" &
          !is.na(source_data$inputs$year_basis) &
          source_data$inputs$year_basis == "birth_cohort"),
+  !any(grepl("cohort", source_maturity$notes, ignore.case = TRUE)),
   nrow(obs$index) == 507L,
   sum(obs$index$obs == 0) == 106L,
   isTRUE(all.equal(obs$maturity$obs, expected_maturity)),
