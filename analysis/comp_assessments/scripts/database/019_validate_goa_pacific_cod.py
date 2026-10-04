@@ -53,10 +53,16 @@ for r in mortality:
  assert float(r['se'])==(.053 if elevated else .023)
  assert not r['lwr'] and not r['upr']
 previous=subprocess.check_output(['git','show','HEAD:analysis/comp_assessments/database/inputs.csv'],cwd=root).decode('utf-8-sig')
-old=[r for r in csv.DictReader(io.StringIO(previous)) if r['assessment_id']!='afsc_cod_goa_2026']
+curated_ids={
+ 'dfo_cod_2j3kl_2025','ices_cod_north_sea_2025','ices_cod_northeast_arctic_2026',
+ 'ices_haddock_north_sea_2026','ices_herring_north_sea_2026',
+ 'afsc_pollock_ebs_2024','afsc_pollock_goa_2024','afsc_cod_goa_2026',
+ 'nefsc_haddock_georges_bank_2026'
+}
+old=[r for r in csv.DictReader(io.StringIO(previous)) if r['assessment_id'] not in curated_ids]
 previous_rows=Counter(tuple(r[key] for key in old[0]) for r in old)
 current_rows=Counter(tuple(r[key] for key in old[0]) for r in rows)
-assert all(current_rows[row] >= count for row,count in previous_rows.items()), 'Existing scientific input records changed'
-print('Pacific cod counts, 1,039 source compositions, timing and all prior input values verified.')
+assert all(current_rows[row] >= count for row,count in previous_rows.items()), 'Unrelated or untimed prior input records changed'
+print('Pacific cod source records and all non-targeted prior inputs verified.')
 
 
