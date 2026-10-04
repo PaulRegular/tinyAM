@@ -1,0 +1,48 @@
+pkgload::load_all(".", quiet = TRUE)
+
+root <- file.path("analysis", "comp_assessments")
+source(file.path(root, "R", "read_database.R"))
+source(file.path(root, "R", "database_to_tam_obs.R"))
+source(file.path(root, "R", "database_to_tam_ref.R"))
+
+stock_env <- new.env(parent = environment())
+sys.source(
+  file.path(root, "scripts", "translation", "stocks", "dfo_cod_4t4vn_2019.R"),
+  envir = stock_env
+)
+source_data <- read_assessment("dfo_cod_4t4vn_2019", read_database())
+translated <- stock_env$translate_stock(source_data)
+obs <- translated$obs
+
+stopifnot(identical(translated$years, 1971:2018))
+stopifnot(identical(translated$ages, 2:12))
+stopifnot(check_obs(obs))
+stopifnot(setequal(unique(obs$index$survey), c(
+  "DFO September RV survey", "Mobile Sentinel August survey"
+)))
+stopifnot(!any(obs$index$survey == "DFO September RV survey" &
+                 obs$index$year %in% c(1980, 1985, 2003)))
+stopifnot(all(obs$index$samp_time[obs$index$survey == "DFO September RV survey"] == 0.75))
+stopifnot(all(obs$index$samp_time[obs$index$survey == "Mobile Sentinel August survey"] == 0.625))
+stopifnot(identical(
+  obs$weight$obs[obs$weight$age == 12],
+  obs$weight$obs[obs$weight$age == 11]
+))
+stopifnot(all(obs$weight$M_assumption[obs$weight$age <= 4] == 0.65))
+stopifnot(all(obs$weight$M_assumption[obs$weight$age >= 5] == 0.15))
+stopifnot(all(is.finite(obs$weight$obs[obs$weight$year %in% c(1980, 1985)])))
+stopifnot(any(grepl("translation_assumption",
+                    attr(obs, "translation")$source_provenance$source_type)))
+stopifnot(setequal(unique(translated$comparison_outputs$measure), c(
+  "numbers_at_age", "fishing_mortality_at_age", "natural_mortality_at_age",
+  "SSB", "recruitment"
+)))
+ref <- database_to_tam_ref(
+  "dfo_cod_4t4vn_2019", translated$comparison_outputs,
+  obs = obs, years = translated$years, ages = translated$ages,
+  terminal_year = 2018, age_plus_group = 12
+)
+stopifnot(setequal(ref$pop$M$age, 5:12))
+stopifnot(all(ref$pop$M$year == 2018L))
+stopifnot(all(ref$pop$M$est[ref$pop$M$age %in% 5:8] == 0.81))
+stopifnot(all(ref$pop$M$est[ref$pop$M$age %in% 9:12] == 0.85))
