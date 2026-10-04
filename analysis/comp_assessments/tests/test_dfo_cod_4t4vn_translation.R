@@ -73,11 +73,11 @@ stopifnot(all(ref$pop$M$est[ref$pop$M$age %in% 9:12] == 0.85))
 
 readiness_env <- new.env(parent = globalenv())
 sys.source(
-  file.path(root, "scripts", "database", "003_fit_readiness.R"),
+  file.path(root, "scripts", "database", "003_observation_readiness.R"),
   envir = readiness_env
 )
 readiness <- utils::read.csv(
-  file.path(root, "results", "fit_readiness.csv"),
+  file.path(root, "results", "observation_readiness.csv"),
   stringsAsFactors = FALSE
 )
 southern_gulf <- readiness[

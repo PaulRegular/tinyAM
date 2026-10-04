@@ -110,7 +110,7 @@ analysis/comp_assessments/
 │           └── <assessment_id>.R
 ├── tests/
 ├── results/
-│   ├── fit_readiness.csv
+│   ├── observation_readiness.csv
 │   ├── fit_diagnostics.csv
 │   ├── comparison_summary.csv
 │   ├── sensitivity_summary.csv
@@ -895,7 +895,7 @@ A successful replication-oriented model does not automatically define the standa
 # 18. Keep generated outputs small
 
 The committed results are the assessment-level observation/data-readiness
-table (`fit_readiness.csv`), one
+table (`observation_readiness.csv`), one
 diagnostics table, one comparison-summary table, and the small sensitivity
 summary retained from prior focused checks. Do not commit duplicate per-stock
 fits, translated observations, audits, settings, or dashboards; those can be
@@ -951,7 +951,7 @@ Canonical completeness statuses and model readiness are different: a partial
 assessment may support a clearly limited fit, while a complete source model may
 contain features that tinyAM cannot represent.
 
-The repository's `results/fit_readiness.csv` is an observation/data-readiness
+The repository's `results/observation_readiness.csv` is an observation/data-readiness
 screen. It checks source coverage, observation conversion, and `check_obs()`;
 it does not load stock recipes or call `make_dat()`. The model-readiness checks
 below apply after the recipe and settings are available.

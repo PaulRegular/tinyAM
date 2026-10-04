@@ -230,9 +230,9 @@ If multiple candidate model runs are found, determine which one corresponds to t
 
 Do not select a model object solely because it is the newest file or repository.
 
-The canonical database's current detailed record is the most recent accepted assessment for which detailed inputs, assumptions, and outputs can be recovered from authoritative sources. Mark this record `is_current = TRUE`. It does not necessarily correspond to the year of the newest advice, FSAR, or publication.
+The canonical database's current detailed record must be the most recent accepted assessment for which detailed inputs, assumptions, and outputs can be recovered from authoritative sources. Mark this record `is_current = TRUE`. It may predate the newest advice, FSAR, or publication.
 
-A later accepted assessment described only by summary material does not displace the current detailed record. Record that newer assessment and explain which details were unavailable. Keep its published summary values attached to its own assessment record; never substitute them for, or combine them with, inputs or outputs from another run. Keep each run's detailed values attached to that run. Record unresolved gaps and keep completeness statuses partial where appropriate.
+If a newer accepted assessment is documented only in summary material, record it separately and explain which details were unavailable. Its published values belong to that assessment alone: they do not displace the most recent detailed assessment as current, and must not be substituted for or combined with another run's inputs or outputs. Keep unresolved gaps visible and completeness statuses partial where appropriate.
 
 A detailed Research Document may be published a year or more after its Science Advisory Report or other summary product, so publication year and assessment year must not be treated as the same thing. Check the model version, terminal data year, and accepted run described by the detailed source, and record the assessment year and data terminal year separately from the source's publication date.
 

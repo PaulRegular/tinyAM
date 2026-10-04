@@ -27,10 +27,10 @@ From the repository root, run:
 
 ```r
 source("analysis/comp_assessments/scripts/database/002_validate_database.R")
-source("analysis/comp_assessments/scripts/database/003_fit_readiness.R")
+source("analysis/comp_assessments/scripts/database/003_observation_readiness.R")
 ```
 
-`fit_readiness.csv` is an observation/data readiness screen: it reports input
+`observation_readiness.csv` is an observation/data readiness screen: it reports input
 coverage, whether observation translation succeeds, and whether
 `tinyAM::check_obs()` passes. It does not load each stock recipe or call
 `make_dat()`; recipe-level model readiness is checked during translation. A
@@ -63,4 +63,4 @@ runs <- run_assessments(
 
 ## Committed results and local cache
 
-`results/` retains `fit_readiness.csv`, `fit_diagnostics.csv`, `comparison_summary.csv`, and a compact `sensitivity_summary.csv`. Fitted objects and dashboards are generated on request and may be saved under the gitignored `results/cache/<assessment_id>/` directory with `cache = TRUE`. They are not committed by the normal workflows.
+`results/` retains `observation_readiness.csv`, `fit_diagnostics.csv`, `comparison_summary.csv`, and a compact `sensitivity_summary.csv`. Fitted objects and dashboards are generated on request and may be saved under the gitignored `results/cache/<assessment_id>/` directory with `cache = TRUE`. They are not committed by the normal workflows.

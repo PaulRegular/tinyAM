@@ -107,7 +107,7 @@ One row per assessment event or model run represented in the database.
 | `assessment_type` | Annual, update, benchmark, framework, etc. |
 | `model_family` | SAM, Stock Synthesis, WHAM, NCAM, VPA/ADAPT, etc. |
 | `model_version` | Model/package/version identifier where known |
-| `is_current` | Whether this is the most recent accepted assessment with detailed inputs, assumptions, and outputs recoverable for the canonical database. It marks the current detailed assessment, which may predate newer summary-only advice or an FSAR; see `PROTOCOL.md`. |
+| `is_current` | Whether this is the most recent accepted assessment with detailed inputs, assumptions, and outputs recoverable for the canonical database. A newer summary-only assessment is recorded separately and does not displace it; see `PROTOCOL.md`. |
 | `is_applied` | Whether this assessment was accepted and applied for advice in its assessment cycle. More than one historical assessment can be `TRUE`. |
 | `framework_year` | Benchmark/framework year defining the current model, if distinct |
 | `assessment_url` | Main authoritative assessment/report URL |

@@ -238,7 +238,7 @@ readiness <- lapply(seq_len(nrow(assessments)), function(i) {
 })
 readiness <- do.call(rbind, readiness)
 dir.create(file.path(root, "results"), showWarnings = FALSE, recursive = TRUE)
-write.csv(readiness, file.path(root, "results", "fit_readiness.csv"), row.names = FALSE, na = "")
+write.csv(readiness, file.path(root, "results", "observation_readiness.csv"), row.names = FALSE, na = "")
 print(readiness[, c("assessment_id", "modeled_first_year", "modeled_terminal_year",
                     "minimum_age", "maximum_age", "catch_rows", "catch_at_age_rows",
                     "index_rows", "weight_rows", "catch_weight_rows", "maturity_rows",
