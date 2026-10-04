@@ -5,6 +5,7 @@ read_table <- function(name) {
 }
 
 assessments <- read_table("assessments.csv")
+assessments <- assessments[assessments$is_current & assessments$is_applied, , drop = FALSE]
 assumptions <- read_table("assumptions.csv")
 inputs <- read_table("inputs.csv")
 outputs <- read_table("outputs.csv")
@@ -38,13 +39,9 @@ grid_complete <- function(x, years, ages) {
 
 source_converter <- function() {
   env <- new.env(parent = globalenv())
-  sys.source(file.path(root, "R", "database_to_tiny_obs.R"), envir = env)
-  if (!requireNamespace("cli", quietly = TRUE)) {
-    env$.translation_abort <- function(message) stop(message, call. = FALSE)
-  }
-  env$database_to_tiny_obs
+  sys.source(file.path(root, "R", "database_to_tam_obs.R"), envir = env)
+  env$database_to_tam_obs
 }
-
 readiness <- lapply(seq_len(nrow(assessments)), function(i) {
   id <- assessments$assessment_id[i]
   a <- assumptions[assumptions$assessment_id == id, , drop = FALSE]
@@ -71,17 +68,28 @@ readiness <- lapply(seq_len(nrow(assessments)), function(i) {
   catch_direct <- x[x$type == "catch" & x$measure == "numbers_at_age", , drop = FALSE]
   catch_proportion <- x[x$type == "catch" & x$measure == "proportion_at_age", , drop = FALSE]
   catch_age <- rbind(catch_direct, catch_proportion)
+  if (!length(ages) && nrow(catch_age) &&
+      all(is.finite(catch_age$age)) && !anyNA(catch_age$age)) {
+    ages <- seq.int(min(catch_age$age), max(catch_age$age))
+  }
   index <- x[x$type == "index", , drop = FALSE]
   index_age_rows <- index[index$measure %in% c("numbers_at_age", "biomass_at_age",
                                                 "proportion_at_age"), , drop = FALSE]
   unsupported_index <- index[!index$measure %in% c("numbers_at_age", "biomass_at_age",
                                                     "proportion_at_age", "total_numbers",
-                                                    "total_biomass", "log_index_sd"), , drop = FALSE]
+                                                    "total_biomass", "log_index_sd",
+                                                    "relative_precision_weight"), , drop = FALSE]
   weight <- x[x$type == "weight" & x$measure == "weight_at_age", , drop = FALSE]
+  weight_series <- as.character(weight$survey)
+  stock_weight <- weight[is.na(weight_series) | !nzchar(weight_series), , drop = FALSE]
+  survey_weight_series <- unique(weight_series[!is.na(weight_series) & nzchar(weight_series)])
+  model_weight <- if (nrow(stock_weight)) stock_weight else if (length(survey_weight_series) == 1L) weight else weight[0, , drop = FALSE]
   catch_weight <- x[x$type == "catch_weight" & x$measure == "weight_at_age", , drop = FALSE]
-  maturity_cohort <- x[x$type == "maturity" & x$year_basis == "birth_cohort", , drop = FALSE]
-  maturity <- x[x$type == "maturity" & x$measure == "maturity_at_age" &
-                  x$year_basis == "calendar_year", , drop = FALSE]
+  maturity_cohort <- x[!is.na(x$type) & x$type == "maturity" & !is.na(x$year_basis) & x$year_basis == "birth_cohort", , drop = FALSE]
+  maturity <- x[!is.na(x$type) & x$type == "maturity" & !is.na(x$measure) &
+                  x$measure == "maturity_at_age" & !is.na(x$year_basis) & x$year_basis == "calendar_year", , drop = FALSE]
+  maturity_static <- x[!is.na(x$type) & x$type == "maturity" & !is.na(x$measure) &
+                    x$measure == "maturity_at_age" & is.na(x$year) & is.na(x$year_basis), , drop = FALSE]
   m_input <- x[x$type == "M", , drop = FALSE]
   m_output <- y[y$measure == "natural_mortality_at_age" & !is.na(y$age), , drop = FALSE]
   documented_surveys <- a$survey[!is.na(a$survey) & nzchar(a$survey)]
@@ -107,22 +115,29 @@ readiness <- lapply(seq_len(nrow(assessments)), function(i) {
     grid_complete(catch_age, seq(min(catch_age$year), max(catch_age$year)),
                   seq(min(catch_age$age), max(catch_age$age)))
   } else FALSE
-  weight_grid <- grid_complete(weight, years, ages)
+  weight_grid <- grid_complete(model_weight, years, ages)
   catch_weight_grid <- grid_complete(catch_weight, years, ages)
-  maturity_grid <- grid_complete(maturity, years, ages)
+  maturity_static_grid <- nrow(maturity_static) > 0L && !anyNA(maturity_static$age) && !anyDuplicated(maturity_static$age) && setequal(maturity_static$age, ages)
+  maturity_grid <- grid_complete(maturity, years, ages) || maturity_static_grid
   maturity_cohort_source_grid <- if (nrow(maturity_cohort)) {
     grid_complete(maturity_cohort,
                   seq(min(maturity_cohort$year), max(maturity_cohort$year)),
                   seq(min(maturity_cohort$age), max(maturity_cohort$age)))
   } else FALSE
-  m_grid <- grid_complete(m_input, years, ages) || grid_complete(m_output, years, ages)
+  m_grid <- grid_complete(m_input, years, ages)
+  m_estimated <- any(grepl("estimate|random walk|time series",
+                           setting(a, "M", "process", ""), ignore.case = TRUE)) ||
+    any(grepl("estimate|random walk|time series",
+              a$value[a$component == "M"], ignore.case = TRUE))
+  m_represented <- m_grid || (nrow(m_input) > 0L && anyNA(m_input$year)) || m_estimated
   has_expected_obs <- all(c(nrow(catch_age) > 0L, nrow(index_age_rows) > 0L,
-                            nrow(weight) > 0L, nrow(maturity) > 0L))
+                            nrow(model_weight) > 0L, nrow(maturity) + nrow(maturity_static) > 0L))
   conversion_ok <- FALSE
   check_obs_ok <- FALSE
   conversion_error <- "Required catch, index, weight, and maturity rows are not all present."
   if (has_expected_obs) {
-    conversion <- tryCatch(source_converter()(id, inputs), error = identity)
+    conversion <- tryCatch(source_converter()(id, inputs, years = years, ages = ages,
+      assumptions = assumptions), error = identity)
     conversion_ok <- !inherits(conversion, "error")
     if (conversion_ok) {
       conversion_error <- ""
@@ -154,8 +169,8 @@ readiness <- lapply(seq_len(nrow(assessments)), function(i) {
         "complete maturity-at-age matrix for all modeled years and ages"
       }
     },
-    if (!m_grid) "numerical M-at-age values over the modeled years",
-    if (!conversion_ok) paste("database_to_tiny_obs failed:", conversion_error),
+    if (!m_represented) "a documented M treatment: supplied numerical values or a source-estimated M structure",
+    if (!conversion_ok) paste("database_to_tam_obs failed:", conversion_error),
     if (conversion_ok && !requireNamespace("tinyAM", quietly = TRUE)) "tinyAM is not installed; check_obs was not run",
     if (conversion_ok && requireNamespace("tinyAM", quietly = TRUE) && !check_obs_ok) "tinyAM::check_obs failed"
   )
@@ -183,7 +198,7 @@ readiness <- lapply(seq_len(nrow(assessments)), function(i) {
     index_rows = count("index"),
     weight_rows = count("weight"),
     catch_weight_rows = count("catch_weight"),
-    maturity_rows = nrow(maturity),
+    maturity_rows = nrow(maturity) + nrow(maturity_static),
     maturity_cohort_rows = nrow(maturity_cohort),
     maturity_cohort_years = if (nrow(maturity_cohort)) paste(range(maturity_cohort$year), collapse = "-") else "unknown",
     maturity_cohort_ages = if (nrow(maturity_cohort)) paste(range(maturity_cohort$age), collapse = "-") else "unknown",
@@ -202,7 +217,8 @@ readiness <- lapply(seq_len(nrow(assessments)), function(i) {
     catch_weight_full_year_age_grid = catch_weight_grid,
     maturity_full_year_age_grid = maturity_grid,
     M_numerical_values_available = m_grid,
-    database_to_tiny_obs_succeeds = conversion_ok,
+    M_estimated_in_source = m_estimated,
+    database_to_tam_obs_succeeds = conversion_ok,
     tinyAM_check_obs_passes = check_obs_ok,
     N_at_age_output = any(y$measure == "numbers_at_age" & !is.na(y$age)),
     F_at_age_output = any(y$measure == "fishing_mortality_at_age" & !is.na(y$age)),
@@ -219,5 +235,5 @@ print(readiness[, c("assessment_id", "modeled_first_year", "modeled_terminal_yea
                     "minimum_age", "maximum_age", "catch_rows", "catch_at_age_rows",
                     "index_rows", "weight_rows", "catch_weight_rows", "maturity_rows",
                     "maturity_cohort_rows", "M_rows",
-                    "database_to_tiny_obs_succeeds", "tinyAM_check_obs_passes", "missing_items")],
+                    "database_to_tam_obs_succeeds", "tinyAM_check_obs_passes", "missing_items")],
       row.names = FALSE)
