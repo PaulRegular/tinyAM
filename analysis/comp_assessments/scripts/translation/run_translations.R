@@ -130,8 +130,13 @@ diagnostics <- lapply(assessments$assessment_id, function(assessment_id) {
     return(diagnostics)
   }
 
+  comparison_outputs <- if (is.null(translated$comparison_outputs)) {
+    database$outputs
+  } else {
+    translated$comparison_outputs
+  }
   reference <- database_to_tam_list(
-    assessment_id, database$outputs, obs = translated$obs,
+    assessment_id, comparison_outputs, obs = translated$obs,
     years = translated$years, ages = translated$ages,
     terminal_year = source_data$assessment$terminal_year[[1]],
     age_plus_group = translated$age_plus_group,

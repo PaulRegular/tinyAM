@@ -203,6 +203,8 @@
 
 .translation_number_multiplier <- function(unit) {
   unit <- tolower(trimws(as.character(unit)))
+  unit <- gsub("_", " ", unit, fixed = TRUE)
+  unit <- gsub("\\s+", " ", unit)
   count_unit <- "(fish|individuals?|numbers?|counts?)"
   if (grepl(paste0("(million|10\\^?6|1,?000,?000)\\s*", count_unit), unit)) return(1e6)
   if (grepl(paste0("(billion|10\\^?9|1,?000,?000,?000)\\s*", count_unit), unit)) return(1e9)
