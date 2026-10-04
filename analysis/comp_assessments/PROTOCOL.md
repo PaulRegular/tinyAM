@@ -6,9 +6,11 @@ This document defines the standing protocol for adding, reviewing, and revising 
 
 The governing question is:
 
-> **What data and assumptions entered the accepted assessment, and what did that assessment estimate?**
+> **What data and assumptions entered the most recent accepted assessment with recoverable detail, and what did it estimate?**
 
-The objective is to represent the accepted model faithfully, not to collect every table in every report.
+The objective is to represent that detailed assessment faithfully, while recording
+any newer summary-only advice separately, not to collect every table in every
+report.
 
 Follow the schema and controlled vocabularies in `DATABASE_STRUCTURE.md`.
 
@@ -42,8 +44,9 @@ For each candidate stock:
 1.  locate the stock in the Charbonneau–Keith repository;
 2.  record its Charbonneau identifier;
 3.  inspect the metadata, notes, source assessment, and cited documents;
-4.  trace the stock to the relevant current accepted assessment;
-5.  retrieve the accepted assessment's authoritative inputs, outputs, and assumptions whenever possible.
+4.  identify the latest accepted assessment used for advice;
+5.  identify the most recent accepted assessment with recoverable detailed inputs, assumptions, and outputs for the canonical record;
+6.  retrieve authoritative inputs, outputs, and assumptions for that detailed assessment whenever possible.
 
 Charbonneau–Keith is the default place to **start**, but not automatically the preferred source for every numerical value.
 
@@ -58,7 +61,7 @@ Its contents may include:
 
 Do not assume a Charbonneau–Keith value is an original assessment input.
 
-When a stock has received a newer accepted assessment than the one represented in Charbonneau–Keith, retain the Charbonneau stock identity as the starting point and curate the current accepted assessment unless the active task requests a historical assessment.
+When a stock has received a newer accepted assessment than the one represented in Charbonneau–Keith, retain the Charbonneau stock identity as the starting point. Curate the most recent accepted assessment with recoverable detailed inputs, assumptions, and outputs; if newer advice is summary-only, record it and its limitations separately. Use a different assessment only when the active task requests it.
 
 If a requested stock is not represented in the curated Charbonneau–Keith set, document that fact before adding it from another authoritative source.
 
@@ -227,9 +230,9 @@ If multiple candidate model runs are found, determine which one corresponds to t
 
 Do not select a model object solely because it is the newest file or repository.
 
-Use the most recent authoritative detailed source that documents the accepted production model. A detailed Research Document may be published a year or more after its Science Advisory Report or other summary product, so publication year and assessment year must not be treated as the same thing. Check the model version, terminal data year, and accepted run described by the detailed source, and record the assessment year and data terminal year separately from the source's publication date.
+The canonical database should represent the most recent accepted assessment for which detailed inputs, assumptions, and outputs can be recovered from authoritative sources. A detailed Research Document may be published a year or more after its Science Advisory Report or other summary product, so publication year and assessment year must not be treated as the same thing. Check the model version, terminal data year, and accepted run described by the detailed source, and record the assessment year and data terminal year separately from the source's publication date.
 
-For example, if a later-published Research Document provides the inputs, assumptions, and outputs for the assessment summarized in an earlier advice document, use that Research Document for the detailed extraction. If no detailed source for the latest accepted assessment can be found, consult the most recent earlier detailed assessment and the relevant framework or benchmark document for context, but do not substitute earlier-run inputs or outputs for the accepted assessment or combine material from different runs. Record any unresolved gaps and keep completeness statuses partial where appropriate.
+If a newer accepted assessment is described only by summary material, it does not displace the most recent assessment with recoverable detailed information as the current detailed assessment in the canonical database. Record the newer advice or FSAR and explain that its detailed inputs, assumptions, or outputs were unavailable. Keep any summary-only values attached to that newer assessment record; do not use them as substitutes for, or combine them with, inputs and outputs from an earlier run. Earlier detailed values remain attached to their own assessment and run. Record unresolved gaps and keep completeness statuses partial where appropriate.
 
 ## 2.3 Source discipline
 
@@ -252,7 +255,8 @@ When the native assessment object or input files are found, preserve their prove
 Before extracting numerical data, establish:
 
 - stock identity and assessment authority;
-- latest accepted assessment;
+- latest accepted assessment and data terminal year;
+- most recent accepted assessment with recoverable detailed inputs, assumptions, and outputs for the canonical current record;
 - terminal fitted data year;
 - model family/version where known;
 - model-defining benchmark or framework when distinct;
@@ -582,7 +586,7 @@ Do not mix artifacts from different assessment runs without preserving provenanc
 For every assessment:
 
 1.  locate the stock in Charbonneau–Keith where applicable and record its identifier;
-2.  verify the current accepted assessment and accepted/base run;
+2.  verify the latest accepted assessment used for advice and the accepted/base run selected for this database record under Section 2.2;
 3.  identify the model-defining benchmark/framework;
 4.  inventory modeled years, ages, fleets, surveys, sexes, regions, seasons, and plus group;
 5.  enumerate all material input streams before extraction;

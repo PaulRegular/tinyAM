@@ -107,8 +107,8 @@ One row per assessment event or model run represented in the database.
 | `assessment_type` | Annual, update, benchmark, framework, etc. |
 | `model_family` | SAM, Stock Synthesis, WHAM, NCAM, VPA/ADAPT, etc. |
 | `model_version` | Model/package/version identifier where known |
-| `is_current` | Whether this is the current represented assessment for the stock |
-| `is_applied` | Whether this is the accepted assessment model used for advice |
+| `is_current` | Whether this is the most recent accepted assessment with a detailed record recoverable for the canonical database. It may predate newer summary-only advice or an FSAR; see `PROTOCOL.md`. |
+| `is_applied` | Whether this assessment was accepted and applied for advice in its assessment cycle. More than one historical assessment can be `TRUE`. |
 | `framework_year` | Benchmark/framework year defining the current model, if distinct |
 | `assessment_url` | Main authoritative assessment/report URL |
 | `framework_url` | Benchmark/framework/methodology URL |
@@ -253,14 +253,17 @@ the same survey identity as the corresponding observation; use `type = index`,
 weight. `landings_proportion` retains a source landings-weight composition by substock
 or quarter (`basis = proportion_biomass`); these records have no age. Reference
 components are retained, and report rounding is not silently renormalized.
-These measures are required by the 2025 Northern Shelf cod assessment.
 
 relative_precision_weight stores a native relative index-precision weight
 for each survey, year and age. Use type = index and basis =
 relative_precision. Record the weight scale and any equivalent relative
 log-SD transformation in the notes.
 
-`larval_abundance_index` preserves the partial spawning-component larval indices used by North Sea herring. Use `type = index`, `basis = numbers`, blank fish age, and explicit spawning component in `region` and survey time window in `season`. Native units and configured model timing must be documented separately; time-window column numbers are not fish ages.
+`larval_abundance_index` represents an index tied to a spawning component. Use
+`type = index`, `basis = numbers`, blank fish age, and record the spawning
+component in `region` and survey time window in `season`. Native units and
+configured model timing should be documented separately; time-window column
+numbers are not fish ages.
 
 `index_sd` stores a supplied standard deviation on the native scale of a survey
 index, matched to the same survey and year as the observation. Use
@@ -327,24 +330,17 @@ Do not use `reconstructed_source_input` for values derived solely for a downstre
 
 Changing a source table from wide to long form is allowed when scientific meaning is unchanged.
 
-Catch-at-age is the working quantity required by the tinyAM translation.
-Distinguish two source situations:
-
-- If proportions describe an underlying numbers-at-age input that is not
-  otherwise available, recover that accepted-model input using matching total
-  removals. Record the calculation, year/fleet/area, source references, and
-  units in `transformation`, with `source_type = reconstructed_source_input`.
-- If the accepted model fits a total and an age composition separately, retain
-  both native inputs. Their conversion to tinyAM numbers-at-age is a derived
-  analysis product and belongs outside the canonical tables.
-
-Number proportions multiplied by total numbers give numbers-at-age; multiplied
-by total biomass, they do not directly give fish counts. Conversions involving
-biomass require compatible catch weights and the documented formulas in
-`TINYAM_TRANSLATION.md`. Retain the source quantities needed to reproduce a
-reconstruction, and do not sum overlapping direct and reconstructed values.
-Total landings and gear detail are otherwise optional unless material to the
-accepted model or the conversion.
+Preserve the quantities and dimensions actually used by the accepted model.
+When a source input must be reconstructed from other authoritative source
+quantities, record the calculation, source references, and units in
+`transformation`, with `source_type = reconstructed_source_input`. If the model
+uses separate total and composition observations, retain them as separate
+source inputs rather than presenting a derived quantity as a native input.
+Do not place values derived only for a downstream analysis in the canonical
+tables. Keep source quantities needed to reproduce a documented reconstruction,
+and do not sum overlapping direct and reconstructed values. Include other
+removal details when they are part of the accepted model or needed to document
+the source inputs.
 
 Example:
 
@@ -435,8 +431,8 @@ as zero uncertainty or used to invent new intervals.
 
 Keep native definitions, such as recruitment age, SSB timing and sex convention,
 Fbar age range and weighting, and terminal age groups, in the associated
-assumptions and row notes. Common-definition comparisons calculated for tinyAM
-belong in analysis outputs rather than replacing source values here.
+assumptions and row notes. Common-definition comparisons belong in analysis
+outputs rather than replacing source values here.
 
 `type` identifies the broad output family; `measure` identifies the exact
 quantity. For example, an age-specific fishing mortality row uses

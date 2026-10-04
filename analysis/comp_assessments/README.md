@@ -26,7 +26,11 @@ source("analysis/comp_assessments/scripts/database/002_validate_database.R")
 source("analysis/comp_assessments/scripts/database/003_fit_readiness.R")
 ```
 
-The readiness table reports input coverage, whether translation succeeds, and whether `tinyAM::check_obs()` passes. A ready observation object does not guarantee model convergence.
+`fit_readiness.csv` is an observation/data readiness screen: it reports input
+coverage, whether observation translation succeeds, and whether
+`tinyAM::check_obs()` passes. It does not load each stock recipe or call
+`make_dat()`; recipe-level model readiness is checked during translation. A
+ready observation object does not guarantee model convergence.
 
 ## Fit one assessment in RStudio
 
@@ -45,7 +49,12 @@ Source `scripts/translation/run_all.R` for the reproducible batch. It reads the 
 ```r
 pkgload::load_all(".", quiet = TRUE)
 source("analysis/comp_assessments/R/run_assessment.R")
-runs <- run_assessments(workers = 4, save_results = TRUE)
+runs <- run_assessments(
+  database = read_committed_database(),
+  parallel = TRUE,
+  workers = 4,
+  save_results = TRUE
+)
 ```
 
 ## Committed results and local cache

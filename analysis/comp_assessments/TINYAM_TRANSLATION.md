@@ -29,10 +29,12 @@ translation, and analysis code.
 # 1. Translation workflow
 
 Use `run_assessment()` for one stock while developing a translation and
-`run_assessments()` for a reproducible batch. Normally select the current
-accepted record for each stock; use a historical record only when that
-assessment is explicitly part of the task. Keep all inputs, assumptions, and
-outputs tied to the same `assessment_id`.
+`run_assessments()` for a reproducible batch. Normally select the record marked
+`is_current`, which is the most recent accepted assessment with detailed
+information represented in the canonical database. It may predate newer
+summary-only advice or an FSAR. Use another record only when that assessment is
+explicitly part of the task. Keep all inputs, assumptions, and outputs tied to
+the same `assessment_id`.
 
 ``` text
 load canonical database
@@ -443,16 +445,10 @@ cannot be interpreted as an age-specific abundance index. Do not force a
 special likelihood, such as a larval or spawning-component index, into the
 standard abundance-index table. Exclude it explicitly for a limited
 approximation or define and audit a scientifically defensible mapping first.
-
-For North Sea herring, retain `HERAS`, `IBTS0`, `IBTS-Q1`, and `IBTS-Q3`
-as the selected surveys. The four `LAI-*` spawning-component series are
-excluded pending mapping, as recorded in
-`scripts/translation/stocks/ices_herring_north_sea_2026_translation_decisions.csv`.
-Native survey-index values are retained even when their numerical units are
-unresolved; their scale is absorbed by survey catchability. This does not
-resolve sampling timing, which must still be documented before fitting.
-The observation translation records selected and excluded survey names in
-its provenance attribute.
+Record stock-specific survey selection, exclusions, unresolved units, and
+timing choices in that stock's background or translation-decisions file. The
+observation translation records selected and excluded survey names in its
+provenance attribute.
 
 Deriving age-specific observations from one total and an age composition changes
 the observation model. The derived ages share information from the same total;
@@ -897,7 +893,8 @@ A successful replication-oriented model does not automatically define the standa
 
 # 18. Keep generated outputs small
 
-The committed results are the assessment-level fit-readiness table, one
+The committed results are the assessment-level observation/data-readiness
+table (`fit_readiness.csv`), one
 diagnostics table, one comparison-summary table, and the small sensitivity
 summary retained from prior focused checks. Do not commit duplicate per-stock
 fits, translated observations, audits, settings, or dashboards; those can be
@@ -945,13 +942,18 @@ or equivalent analysis-local metadata.
 
 ------------------------------------------------------------------------
 
-# 20. Fit-readiness checklist
+# 20. Model-readiness checklist
 
-A selected assessment is ready for an initial tinyAM fit when the translation
-and its proposed settings satisfy the checks below. Canonical completeness
-statuses and translation readiness are different: a partial assessment may
-support a clearly limited fit, while a complete source model may contain
-features that tinyAM cannot represent.
+A selected assessment is ready for an initial tinyAM fit when its stock recipe,
+translated observations, and proposed settings satisfy the checks below.
+Canonical completeness statuses and model readiness are different: a partial
+assessment may support a clearly limited fit, while a complete source model may
+contain features that tinyAM cannot represent.
+
+The repository's `results/fit_readiness.csv` is an earlier observation/data
+readiness screen. It checks source coverage, observation conversion, and
+`check_obs()`; it does not load stock recipes or call `make_dat()`. The
+model-readiness checks below apply after the recipe and settings are available.
 
 ## Catch
 
@@ -986,7 +988,7 @@ features that tinyAM cannot represent.
 - all retained observations have compatible age groups and prediction definitions;
 - the stock background explains the accepted assumptions and chosen differences.
 
-Fit-readiness does not imply source-assessment equivalence.
+Passing these model-readiness checks does not imply source-assessment equivalence.
 
 ## Fit and assess convergence
 
@@ -1016,11 +1018,16 @@ starting values, but must record what changed. Do not repeatedly change data,
 processes, or q structures merely to obtain convergence. Source estimates may
 provide starting values; they must not silently constrain tinyAM estimates.
 
-For a converged fit, save the fitted object and proceed to comparison. Report
-successful completion only when the documented fit and comparison outputs
-exist. Report investigated blockers, failed attempts, and non-converged fits
-as separate outcomes, rather than counting them as successful models.
-Preparation of a usable `obs` list alone is not completion.
+For a converged fit, `run_assessment()` returns the fitted object, source
+reference, detailed differences, and summary in memory. The fit is cached only
+when `cache = TRUE`. A dashboard is rendered only when `dashboard = TRUE` and
+is stored in the local cache only when caching is also enabled; otherwise it is
+written to a temporary file. A successful run does not require a per-stock fit
+or detailed-difference file on disk. The batch runner writes aggregate
+diagnostics and comparison summaries only when `save_results = TRUE`. Report
+investigated blockers, failed attempts, and non-converged fits as separate
+outcomes, rather than counting them as successful models. Preparing a usable
+`obs` list alone is not completion.
 
 ------------------------------------------------------------------------
 
@@ -1076,7 +1083,7 @@ Respect the reported uncertainty scale and interval meaning documented in
 construction cannot be reconstructed. Missing uncertainty is not zero
 uncertainty; do not manufacture SEs or intervals from point estimates alone.
 
-## Export the dashboard and a concise summary
+## Review the dashboard and comparison summary
 
 For a converged fit, optionally use:
 
@@ -1094,19 +1101,23 @@ The dashboard is the primary way to inspect differences in trajectories and
 age patterns. Include available SSB, recruitment, N, F, and M, and show other
 panels only when their data are available.
 
+For comparable metric values, the runner returns detailed differences in
+`x$differences` and summary statistics in `x$summary`. The batch runner writes
+the aggregate comparison summary when requested; detailed per-stock
+differences remain in memory unless deliberately exported for a specific
+review. Avoid routine per-stock exports that duplicate the dashboard.
+
 For comparable metric values, calculate:
 
 $$\text{percent difference}
 = 100\frac{\text{tinyAM estimate} - \text{source estimate}}
 {\text{source estimate}}.$$
 
-Export a small table with metric, year, age or age group where relevant, source
-estimate, tinyAM estimate, and percent difference. Zero or missing source
-denominators give an unavailable percent difference with an explanation.
-Include available uncertainty without forcing identical interval definitions.
-Additional summary statistics are optional; avoid exporting many tables that
-repeat the dashboard. Impose no arbitrary agreement threshold or likelihood-
-equality requirement.
+Zero or missing source denominators give an unavailable percent difference
+with an explanation. Include available uncertainty without forcing identical
+interval definitions. Additional summary statistics are optional; avoid
+exporting many tables that repeat the dashboard. Impose no arbitrary agreement
+threshold or likelihood-equality requirement.
 
 Differences should be interpreted in light of documented translation choices, such as:
 
