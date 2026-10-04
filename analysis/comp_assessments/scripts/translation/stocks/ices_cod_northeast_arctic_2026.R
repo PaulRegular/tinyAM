@@ -36,7 +36,7 @@ translate_stock <- function(source) {
                             fill_missing = TRUE)
     ),
     background = c(
-      "## Northeast Arctic cod: accepted 2026 SAM assessment",
+      "### Northeast Arctic cod: accepted 2026 SAM assessment",
       "",
       "| Component | Accepted assessment | tinyAM representation | Reason for difference |",
       "|---|---|---|---|",

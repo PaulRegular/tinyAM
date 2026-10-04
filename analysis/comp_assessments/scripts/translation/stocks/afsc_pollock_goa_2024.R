@@ -60,7 +60,7 @@ translate_stock <- function(source) {
   q_form <- stats::reformulate(q_terms, intercept = FALSE)
 
   background <- c(
-    "## Gulf of Alaska pollock: accepted 2024 Model 23d",
+    "### Gulf of Alaska pollock: accepted 2024 Model 23d",
     "",
     "| Component | Accepted assessment | tinyAM representation | Reason for difference |",
     "|---|---|---|---|",

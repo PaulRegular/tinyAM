@@ -35,7 +35,7 @@ translate_stock <- function(source) {
                             sd_form = ~ 1, fill_missing = FALSE)
     ),
     background = c(
-      "## Northern cod (2J3KL): accepted 2025 xteNCAM assessment",
+      "### Northern cod (2J3KL): accepted 2025 xteNCAM assessment",
       "",
       "| Component | Accepted assessment | tinyAM representation | Reason for difference |",
       "|---|---|---|---|",

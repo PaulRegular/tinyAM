@@ -30,7 +30,7 @@ translate_stock <- function(source) {
                             fill_missing = TRUE)
     ),
     background = c(
-      "## Northern Shelf haddock: accepted 2026 SAM assessment",
+      "### Northern Shelf haddock: accepted 2026 SAM assessment",
       "",
       "| Component | Accepted assessment | tinyAM representation | Reason for difference |",
       "|---|---|---|---|",

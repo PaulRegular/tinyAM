@@ -82,7 +82,7 @@ translate_stock <- function(source) {
     comparison_scales = c(N = 1e-3, recruitment = 1e-3, ssb = 1e-3, F_bar = 1),
     settings = settings,
     background = c(
-      "## North Sea autumn-spawning herring: accepted 2026 single-fleet assessment",
+      "### North Sea autumn-spawning herring: accepted 2026 single-fleet assessment",
       "",
       "| Component | Accepted assessment | tinyAM representation | Reason for difference |",
       "|---|---|---|---|",

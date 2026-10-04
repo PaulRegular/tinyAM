@@ -122,7 +122,7 @@ translate_stock <- function(source) {
       )
     ),
     background = c(
-      "## Southern Gulf cod: accepted detailed assessment to 2018",
+      "### Southern Gulf cod: accepted detailed assessment to 2018",
       "",
       "| Component | Accepted assessment | tinyAM representation | Reason for difference |",
       "|---|---|---|---|",

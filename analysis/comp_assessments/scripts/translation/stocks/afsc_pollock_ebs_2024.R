@@ -38,7 +38,7 @@ translate_stock <- function(source) {
                             fill_missing = FALSE)
     ),
     background = c(
-      "## Eastern Bering Sea pollock: accepted 2024 Model 23.0",
+      "### Eastern Bering Sea pollock: accepted 2024 Model 23.0",
       "",
       "| Component | Accepted assessment | tinyAM representation | Reason for difference |",
       "|---|---|---|---|",

@@ -108,7 +108,7 @@ translate_stock <- function(source) {
                             fill_missing = FALSE)
     ),
     background = c(
-      "## Northern Shelf cod: accepted 2025 three-substock SAM assessment",
+      "### Northern Shelf cod: accepted 2025 three-substock SAM assessment",
       "",
       "| Component | Accepted assessment | tinyAM representation | Reason for difference |",
       "|---|---|---|---|",
