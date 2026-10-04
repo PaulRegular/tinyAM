@@ -1,12 +1,12 @@
 # North Sea / Northern Shelf cod source review
 
-Review date: 2026-10-02. A source-reviewed partial record has been added; this is not an input-completeness declaration.
+Review date: 2026-10-03. The source-reviewed record remains partial; this is not an input-completeness declaration.
 
 ## Identity and accepted run
 
 Charbonneau identifier: `ICES-WGNSSK_NS 4-7d,20_Gadus_morhua`. The catalogue uses the 2020 report, with data ending in 2019. Its old stock boundary must not be carried forward unchanged: the 2023 benchmark combined North Sea and West of Scotland cod in a three-substock Northern Shelf assessment (`cod.27.46a7d20`).
 
-The latest cod advice found in the ICES Library search is the September 2025 advice, DOI `10.17895/ices.advice.27202566`. The ASD lists that assessment as active (combined key 19639; Northwestern 19661; Southern 19662; Viking 19663). The June 2026 WGNSSK report states that no cod advice was issued in spring. Search for an autumn 2026 update again before finalizing current status.
+As checked on 2026-10-03, the ICES Advice and Scenarios Database lists `cod.27.46a7d20` with assessment year 2025 and status Active; its advice is DOI `10.17895/ices.advice.27202566`. The assessment components are the combined stock (key 19639), Northwestern (19661), Southern (19662) and Viking (19663). The advice applies to 2026 catches. The June 2026 WGNSSK report states that no cod advice was issued that spring. No later active cod assessment was listed in the ASD at this review date (https://asd.ices.dk/viewAdvice/4010?handler=SubComm).
 
 Detailed accepted-run source: WGNSSK 2025 autumn cod chapter, https://ndownloader.figshare.com/files/59358443 (ICES Library article 29085995). Framework: WKBCOD 2023, https://doi.org/10.17895/ices.pub.22591423. Stock annex revised in 2024: https://ndownloader.figshare.com/files/47179495.
 
