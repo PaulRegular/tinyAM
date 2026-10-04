@@ -262,6 +262,12 @@ log-SD transformation in the notes.
 
 `larval_abundance_index` preserves the partial spawning-component larval indices used by North Sea herring. Use `type = index`, `basis = numbers`, blank fish age, and explicit spawning component in `region` and survey time window in `season`. Native units and configured model timing must be documented separately; time-window column numbers are not fish ages.
 
+`index_sd` stores a supplied standard deviation on the native scale of a survey
+index, matched to the same survey and year as the observation. Use
+`type = index`, `basis = index_scale`, and the same units as the index. If the
+model transforms this SD for its likelihood, document that transformation in
+`notes`; retain the supplied value here.
+
 Additional measures may be added when necessary, but should remain explicit and biologically interpretable.
 
 ## Initial `basis` vocabulary
@@ -276,6 +282,7 @@ proportion
 per_year
 log_scale
 relative_precision
+index_scale
 ```
 
 For example:

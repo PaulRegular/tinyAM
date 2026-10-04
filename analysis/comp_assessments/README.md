@@ -92,8 +92,8 @@ will be documented here.
 
 ## Using the records
 
-Source `R/database_to_tiny_obs.R` and call
-`database_to_tiny_obs(assessment_id, inputs)` to reshape compatible catch,
+Source `R/database_to_tam_obs.R` and call
+`database_to_tam_obs(assessment_id, inputs)` to reshape compatible catch,
 index, weight, and calendar-year maturity rows into tinyAM observation tables.
 The helper does not choose model settings, infer population processes, or map
 cohort-indexed maturity onto calendar years. It preserves stored values, units,

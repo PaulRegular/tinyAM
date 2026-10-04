@@ -73,8 +73,8 @@ requires a documented tinyAM model choice, not a fabricated input table.
 Keep the routine workflow small:
 
 - one R driver loads the database and loops over stock specifications;
-- `database_to_tam_obs.R` creates the observation list and incorporates M;
-- `database_to_tam_M.R` handles numerical M and describes unresolved M treatment;
+- `database_to_tam_obs.R` creates the observation list, adds numerical M to
+  `obs$weight$M_assumption`, and records the source M treatment;
 - `database_to_tam_list.R` creates a reporting reference from recorded outputs;
 - one small R script per stock supplies data selections, named `fit_tam()`
   arguments, and plain-language background text.
@@ -90,7 +90,6 @@ A useful directory structure is:
 analysis/comp_assessments/
 ├── R/
 │   ├── database_to_tam_obs.R
-│   ├── database_to_tam_M.R
 │   ├── database_to_tam_list.R
 │   └── audit_assumptions.R
 ├── scripts/
@@ -173,7 +172,10 @@ settings. The analysis-local database translator adds `q_block` for age and
 whether catchability is shared across surveys or estimated separately.
 
 `database_to_tam_obs()` incorporates a numerical M assumption in
-`obs$weight$M_assumption`, using `database_to_tam_M()` internally.
+`obs$weight$M_assumption`; its M translation helper is defined in that same
+file, so there is no separate M converter to source. When the database has
+relative index-SD inputs, the converter joins them to the matching survey,
+year, and age rows as `relative_sd` for an explicit `sd_supplied` setting.
 `M_settings$mu_supplied` can then reference `~ M_assumption`.
 `M_settings` determines whether mortality is fixed or has an estimated process;
 there is no fifth M observation table or new observation class.
@@ -382,7 +384,19 @@ Use, in order of preference:
 2.  another weight series explicitly associated with that index;
 3.  stock weight-at-age as a documented approximation.
 
-Do not silently use stock weight-at-age when the source assessment defines a different survey weight.
+`database_to_tam_obs()` uses a matching survey-weight series by default and
+falls back to the selected biological weight series when no matching series is
+available. Set `index_weight_source = "stock"` when a documented approximation
+requires stock weights for every survey, even when survey-specific weights are
+also present. Record that choice in the stock background and translation
+provenance. Do not silently use stock weight-at-age when the source assessment
+defines a different survey weight.
+
+For tinyAM's biological weight surface, an unlabeled stock-weight series is
+selected by default when present. If the database contains only one labeled
+series, it is used; if multiple labeled series are present, select one with
+`weight_survey`. Use `weight_survey = ""` to explicitly select unlabeled stock
+weights.
 
 ## 5.7 Survey timing
 
@@ -1002,9 +1016,12 @@ Preparation of a usable `obs` list alone is not completion.
 ## Build the source reporting reference
 
 Use `database_to_tam_list()` to translate available canonical `outputs.csv`
-records for the same assessment into a `tam_list`. This is a reporting list
-with a structure similar to a `tam_fit`, not an object that can be fitted,
-updated, simulated, projected, or used for retrospective estimation.
+records for the same assessment into a `tam_list`. Pass the converged tinyAM fit
+as `template` so the comparison list keeps the same output tables, years, ages,
+and groups. The helper blanks reported values first, then fills values available
+from the assessment; missing values remain `NA`. This is a reporting list with
+a structure similar to a `tam_fit`, not an object that can be fitted, updated,
+simulated, projected, or used for retrospective estimation.
 
 Include year-age population tables and available aggregate trends. Supply
 translated source observations where needed to show the input data, but leave
@@ -1014,8 +1031,9 @@ dashboard. Known fixed M may be shown from the documented source input, clearly
 labelled as fixed rather than estimated.
 
 `tidy_tam()` and `vis_tam()` must accept these reporting tables without assuming
-that every `tam_list` contains a SAM fitted object. Missing panels should give
-a short explanation; they must not cause the dashboard to fail.
+that every `tam_list` contains an optimizer or full assessment output. Tables
+show unavailable entries as blank `NA` values, and plots show only the available
+values.
 
 Use source outputs to compare, where available:
 
