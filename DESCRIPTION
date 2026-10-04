@@ -31,6 +31,7 @@ RoxygenNote: 7.3.2
 LazyData: true
 Suggests: 
     stockassessment,
+    pkgload,
     knitr,
     rmarkdown,
     flexdashboard,

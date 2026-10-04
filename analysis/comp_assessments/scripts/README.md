@@ -1,23 +1,32 @@
 # Assessment scripts
 
-Scripts are grouped by purpose. Run them from the repository root.
+Run these scripts from the repository root in RStudio.
 
-## `database/`
+## Database
 
-Use these scripts to seed, import, review, validate, and export assessment records. The fit-readiness check reports whether each record is ready for translation.
+Scripts in `database/` seed, import, validate, and report the assessment database.
 
-## `translation/`
+## Translation and fitting
 
-`translation/run_translations.R` loads the reviewed database and runs current
-accepted assessments with matching specifications in `translation/stocks/`.
-Each stock file is named for its `assessment_id` and defines one
-`translate_stock()` function with its data conversion, fit settings, and
-background text. These files are intentionally unnumbered: the assessment ID
-identifies the stock, and the driver selects the current records.
+Open and source `translation/run_stock.R` to fit one assessment interactively.
+Change `assessment_id` in that file first. It reads the working-tree database
+and leaves `obs`, `settings`, `fit`, `ref`, `audit`, `diagnostics`, and
+`comparison` in the workspace.
 
-Run the translation workflow and its focused converter checks with:
+Source `translation/run_all.R` for the reproducible all-assessment run. It reads
+the committed database snapshot, fits with four multisession workers, and writes
+the aggregate diagnostics and comparison summaries from the main R process.
 
-```sh
-Rscript analysis/comp_assessments/scripts/translation/run_translations.R
-Rscript analysis/comp_assessments/tests/test_translation.R
+Functions can also be called directly:
+
+```r
+pkgload::load_all(".", quiet = TRUE)
+source("analysis/comp_assessments/R/run_assessment.R")
+
+x <- run_assessment("dfo_cod_2j3kl_2025")
+runs <- run_assessments(parallel = TRUE, workers = 4)
 ```
+
+Use `run_assessment(..., fit = FALSE)` to inspect the translated observations
+and settings before fitting. Use `run_assessments(parallel = FALSE)` when
+debugging a multi-assessment run.

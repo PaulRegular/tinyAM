@@ -124,7 +124,17 @@ run_assessment <- function(assessment_id, database = NULL, fit = TRUE,
   }
 
   stock_env <- new.env(parent = environment())
-  sys.source(script, envir = stock_env)
+  sourced <- tryCatch({
+    sys.source(script, envir = stock_env)
+    NULL
+  }, error = identity)
+  if (inherits(sourced, "error")) {
+    result$diagnostics <- .assessment_diagnostics(
+      assessment_id, database, "translation_script_failed",
+      reason = conditionMessage(sourced)
+    )
+    return(result)
+  }
   translated <- tryCatch(stock_env$translate_stock(source), error = identity)
   if (inherits(translated, "error")) {
     result$diagnostics <- .assessment_diagnostics(
@@ -163,6 +173,11 @@ run_assessment <- function(assessment_id, database = NULL, fit = TRUE,
     if (isTRUE(fitted$is_converged)) "converged" else "not_converged",
     fit = fitted, elapsed = elapsed
   )
+  cache_dir <- file.path(.assessment_root, "results", "cache", assessment_id)
+  if (cache) {
+    dir.create(cache_dir, recursive = TRUE, showWarnings = FALSE)
+    saveRDS(fitted, file.path(cache_dir, "fit.rds"))
+  }
   if (!isTRUE(fitted$is_converged)) return(result)
 
   outputs <- if (is.null(translated$comparison_outputs)) {
@@ -190,11 +205,6 @@ run_assessment <- function(assessment_id, database = NULL, fit = TRUE,
     result$differences, assessment_id
   )
 
-  cache_dir <- file.path(.assessment_root, "results", "cache", assessment_id)
-  if (cache) {
-    dir.create(cache_dir, recursive = TRUE, showWarnings = FALSE)
-    saveRDS(fitted, file.path(cache_dir, "fit.rds"))
-  }
   if (dashboard) {
     result$dashboard_file <- if (cache) {
       file.path(cache_dir, "dashboard.html")
@@ -209,4 +219,163 @@ run_assessment <- function(assessment_id, database = NULL, fit = TRUE,
     )
   }
   result
+}
+
+.failed_assessment_run <- function(assessment_id, database, error) {
+  result <- list(
+    assessment_id = assessment_id,
+    source = NULL,
+    obs = NULL,
+    settings = NULL,
+    fit = NULL,
+    ref = NULL,
+    audit = NULL,
+    diagnostics = .assessment_diagnostics(
+      assessment_id, database, "runner_failed",
+      reason = conditionMessage(error)
+    ),
+    differences = NULL,
+    summary = NULL,
+    background = NULL,
+    dashboard_file = NULL
+  )
+  result
+}
+
+.parallel_assessment_worker <- function(assessment_id, database, repo_root, fit) {
+  original_wd <- getwd()
+  on.exit(setwd(original_wd), add = TRUE)
+  tryCatch(
+    {
+      setwd(repo_root)
+      pkgload::load_all(repo_root, quiet = TRUE)
+      runner_env <- new.env(parent = globalenv())
+      sys.source(file.path(repo_root, "analysis", "comp_assessments", "R",
+                           "run_assessment.R"), envir = runner_env)
+      runner_env$run_assessment(
+        assessment_id, database = database, fit = fit,
+        dashboard = FALSE, cache = FALSE
+      )
+    },
+    error = function(e) .failed_assessment_run(assessment_id, database, e)
+  )
+}
+
+run_assessments <- function(assessment_ids = NULL, database = NULL,
+                            parallel = FALSE, workers = 4L, fit = TRUE,
+                            dashboard = FALSE, cache = FALSE,
+                            save_results = FALSE) {
+  if (is.null(database)) database <- read_database()
+  if (!is.logical(parallel) || length(parallel) != 1L || is.na(parallel) ||
+      !is.logical(fit) || length(fit) != 1L || is.na(fit) ||
+      !is.logical(dashboard) || length(dashboard) != 1L || is.na(dashboard) ||
+      !is.logical(cache) || length(cache) != 1L || is.na(cache) ||
+      !is.logical(save_results) || length(save_results) != 1L || is.na(save_results)) {
+    stop("parallel, fit, dashboard, cache, and save_results must each be one TRUE/FALSE value.",
+         call. = FALSE)
+  }
+  if (length(workers) != 1L || is.na(workers) || !is.numeric(workers) ||
+      !is.finite(workers) || workers < 1 || workers != as.integer(workers)) {
+    stop("workers must be one positive integer.", call. = FALSE)
+  }
+
+  eligible <- database$assessments$assessment_id[
+    !is.na(database$assessments$is_current) & database$assessments$is_current &
+      !is.na(database$assessments$is_applied) & database$assessments$is_applied
+  ]
+  if (is.null(assessment_ids)) {
+    assessment_ids <- eligible
+  } else {
+    if (!is.character(assessment_ids) || !length(assessment_ids) ||
+        anyNA(assessment_ids) || any(!nzchar(assessment_ids)) ||
+        anyDuplicated(assessment_ids)) {
+      stop("assessment_ids must be a non-empty character vector without missing or duplicate values.",
+           call. = FALSE)
+    }
+    unknown <- setdiff(assessment_ids, database$assessments$assessment_id)
+    if (length(unknown)) {
+      stop("Unknown assessment_id: ", paste(unknown, collapse = ", "), call. = FALSE)
+    }
+  }
+
+  safe_run <- function(id) {
+    tryCatch(
+      run_assessment(id, database = database, fit = fit,
+                     dashboard = FALSE, cache = FALSE),
+      error = function(e) .failed_assessment_run(id, database, e)
+    )
+  }
+  if (parallel) {
+    if (!requireNamespace("pkgload", quietly = TRUE)) {
+      stop("Install pkgload to run parallel workers from the current tinyAM checkout.",
+           call. = FALSE)
+    }
+    repo_root <- normalizePath(getwd(), winslash = "/", mustWork = TRUE)
+    old_plan <- future::plan()
+    on.exit(future::plan(old_plan), add = TRUE)
+    future::plan(future::multisession, workers = as.integer(workers))
+    runs <- furrr::future_map(
+      assessment_ids, .parallel_assessment_worker,
+      database = database, repo_root = repo_root, fit = fit,
+      .options = furrr::furrr_options(seed = TRUE)
+    )
+  } else {
+    runs <- lapply(assessment_ids, safe_run)
+  }
+  names(runs) <- assessment_ids
+
+  for (id in assessment_ids) {
+    result <- runs[[id]]
+    if (!is.null(result$fit) && cache) {
+      cache_dir <- file.path(.assessment_root, "results", "cache", id)
+      dir.create(cache_dir, recursive = TRUE, showWarnings = FALSE)
+      saveRDS(result$fit, file.path(cache_dir, "fit.rds"))
+    }
+    if (dashboard && !is.null(result$fit) && isTRUE(result$fit$is_converged) &&
+        !is.null(result$ref)) {
+      result$dashboard_file <- if (cache) {
+        file.path(.assessment_root, "results", "cache", id, "dashboard.html")
+      } else {
+        tempfile(pattern = paste0(id, "_"), fileext = ".html")
+      }
+      tinyAM::vis_tam(
+        model_list = list(Accepted = result$ref, tinyAM = result$fit),
+        background = result$background,
+        output_file = result$dashboard_file,
+        open_file = FALSE
+      )
+      runs[[id]] <- result
+    }
+  }
+
+  diagnostics <- if (length(runs)) {
+    do.call(rbind, lapply(runs, `[[`, "diagnostics"))
+  } else {
+    data.frame()
+  }
+  summaries <- Filter(function(x) is.data.frame(x) && nrow(x),
+                      lapply(runs, `[[`, "summary"))
+  comparison_summary <- if (length(summaries)) {
+    do.call(rbind, summaries)
+  } else {
+    data.frame(assessment_id = character(), metric = character(), n = integer(),
+               mean_absolute_percent_difference = numeric(),
+               median_absolute_percent_difference = numeric(),
+               terminal_year = integer(), terminal_mean_percent_difference = numeric(),
+               trend_correlation = numeric())
+  }
+  rownames(diagnostics) <- NULL
+  rownames(comparison_summary) <- NULL
+  if (save_results) {
+    results_dir <- file.path(.assessment_root, "results")
+    dir.create(results_dir, recursive = TRUE, showWarnings = FALSE)
+    write.csv(diagnostics, file.path(results_dir, "fit_diagnostics.csv"),
+              row.names = FALSE, na = "")
+    write.csv(comparison_summary,
+              file.path(results_dir, "comparison_summary.csv"),
+              row.names = FALSE, na = "")
+  }
+  attr(runs, "diagnostics") <- diagnostics
+  attr(runs, "comparison_summary") <- comparison_summary
+  runs
 }
