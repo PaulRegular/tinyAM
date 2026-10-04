@@ -2,7 +2,7 @@ root <- file.path("analysis", "comp_assessments")
 pkgload::load_all(".", quiet = TRUE)
 source(file.path(root, "R", "read_committed_assessment.R"))
 source(file.path(root, "R", "database_to_tam_obs.R"))
-source(file.path(root, "R", "database_to_tam_list.R"))
+source(file.path(root, "R", "database_to_tam_ref.R"))
 source(file.path(root, "R", "audit_assumptions.R"))
 
 database <- read_committed_database()
@@ -135,7 +135,7 @@ diagnostics <- lapply(assessments$assessment_id, function(assessment_id) {
   } else {
     translated$comparison_outputs
   }
-  reference <- database_to_tam_list(
+  reference <- database_to_tam_ref(
     assessment_id, comparison_outputs, obs = translated$obs,
     years = translated$years, ages = translated$ages,
     terminal_year = source_data$assessment$terminal_year[[1]],

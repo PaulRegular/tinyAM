@@ -86,7 +86,7 @@
   if (any(!is_fit)) {
     bad <- names(fits)[!is_fit]
     cli::cli_abort(c(
-      "All supplied models must be {.cls tam_fit} objects or {.cls tam_list} reporting objects.",
+      "All supplied models must be {.cls tam_fit} objects or {.cls tam_ref} reference objects.",
       "x" = "Problematic element{?s}: {cli::format_inline('{.val {bad}}')}"
     ))
   }
@@ -94,9 +94,9 @@
   list(fits = fits, using_dots = using_dots)
 }
 
-.is_reporting_fit <- function(x) .is_tam_fit(x) || inherits(x, "tam_list")
+.is_reporting_fit <- function(x) .is_tam_fit(x) || inherits(x, "tam_ref")
 
 #' @export
-update.tam_list <- function(object, ...) {
-  cli::cli_abort("A tam_list is a reporting object and cannot be updated or fitted.")
+update.tam_ref <- function(object, ...) {
+  cli::cli_abort("A tam_ref is a reporting reference and cannot be updated or fitted.")
 }

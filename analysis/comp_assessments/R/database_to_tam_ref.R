@@ -82,7 +82,7 @@
   x
 }
 
-database_to_tam_list <- function(assessment_id, outputs, obs = NULL, years = NULL,
+database_to_tam_ref <- function(assessment_id, outputs, obs = NULL, years = NULL,
                                   ages = NULL, terminal_year = NULL,
                                   age_plus_group = NULL,
                                   comparison_scales = NULL, template = NULL) {
@@ -319,6 +319,6 @@ database_to_tam_list <- function(assessment_id, outputs, obs = NULL, years = NUL
   }
 
   out$comparison_scales <- comparison_scales
-  class(out) <- c("tam_list", "list")
+  class(out) <- c("tam_ref", "list")
   out
 }

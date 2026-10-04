@@ -484,12 +484,12 @@ expect_equal(as.numeric(catch_biomass),
              as.numeric(total_biomass$value[
                match(names(catch_biomass), total_biomass$year)] * 1e6))
 
-source(file.path(root, "R", "database_to_tam_list.R"))
-ebs_reference <- database_to_tam_list(
+source(file.path(root, "R", "database_to_tam_ref.R"))
+ebs_reference <- database_to_tam_ref(
   "afsc_pollock_ebs_2024", ebs$outputs, obs = ebs_obs,
   years = 1964:2024, ages = 1:15, terminal_year = 2024
 )
-expect_equal(inherits(ebs_reference, "tam_list"), TRUE)
+expect_equal(inherits(ebs_reference, "tam_ref"), TRUE)
 expect_equal("source_fit" %in% names(ebs_reference), FALSE)
 expect_equal(nrow(ebs_reference$pop$ssb), 61L)
 expect_equal(nrow(ebs_reference$pop$M), 915L)
@@ -509,7 +509,7 @@ expect_equal(all(is.finite(ns_haddock_obs$index$relative_sd)), TRUE)
 expect_equal(all(abs(ns_haddock_obs$index$relative_sd^2 *
                        ns_haddock_obs$index$relative_precision_weight - 1) < 1e-10), TRUE)
 
-nea_reference <- database_to_tam_list(
+nea_reference <- database_to_tam_ref(
   "ices_cod_northeast_arctic_2026", db$outputs,
   obs = nea_obs, years = 1946:2026, ages = 3:12,
   terminal_year = 2026, age_plus_group = 12
@@ -585,7 +585,7 @@ source_outputs <- data.frame(
   unit = c("t", "fish", "per year", "per year"), source_type = "official_table",
   source_reference = "fixture", notes = NA_character_
 )
-template_reference <- database_to_tam_list(
+template_reference <- database_to_tam_ref(
   "translation_fixture", source_outputs, obs = template_obs,
   years = template_years, ages = template_ages, terminal_year = 2002,
   comparison_scales = c(ssb = 1e-3), template = template_fit

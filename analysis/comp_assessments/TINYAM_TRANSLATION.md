@@ -47,7 +47,7 @@ fit_tam()
         ↓
 check convergence and record diagnostics
         ↓
-if converged: save model and construct source reference with database_to_tam_list()
+if converged: save model and construct source reference with database_to_tam_ref()
         ↓
 export comparison dashboard and concise numerical summary
 ```
@@ -75,7 +75,7 @@ Keep the routine workflow small:
 - one R driver loads the database and loops over stock specifications;
 - `database_to_tam_obs.R` creates the observation list, adds numerical M to
   `obs$weight$M_assumption`, and records the source M treatment;
-- `database_to_tam_list.R` creates a reporting reference from recorded outputs;
+- `database_to_tam_ref.R` creates an assessment reference from recorded outputs;
 - one small R script per stock supplies data selections, named `fit_tam()`
   arguments, and plain-language background text.
 
@@ -90,7 +90,7 @@ A useful directory structure is:
 analysis/comp_assessments/
 ├── R/
 │   ├── database_to_tam_obs.R
-│   ├── database_to_tam_list.R
+│   ├── database_to_tam_ref.R
 │   └── audit_assumptions.R
 ├── scripts/
 │   ├── database/
@@ -1014,8 +1014,8 @@ Preparation of a usable `obs` list alone is not completion.
 
 ## Build the source reporting reference
 
-Use `database_to_tam_list()` to translate available canonical `outputs.csv`
-records for the same assessment into a `tam_list`. Pass the converged tinyAM fit
+Use `database_to_tam_ref()` to translate available canonical `outputs.csv`
+records for the same assessment into a `tam_ref`. Pass the converged tinyAM fit
 as `template` so the comparison list keeps the same output tables, years, ages,
 and groups. The helper blanks reported values first, then fills values available
 from the assessment; missing values remain `NA`. This is a reporting list with
@@ -1030,7 +1030,7 @@ dashboard. Known fixed M may be shown from the documented source input, clearly
 labelled as fixed rather than estimated.
 
 `tidy_tam()` and `vis_tam()` must accept these reporting tables without assuming
-that every `tam_list` contains an optimizer or full assessment output. Tables
+that every `tam_ref` contains an optimizer or full assessment output. Tables
 show unavailable entries as blank `NA` values, and plots show only the available
 values.
 

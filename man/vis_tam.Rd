@@ -21,8 +21,7 @@ through \code{...}, their object names are used to label models
 (even when a single model is supplied).}
 
 \item{model_list}{A \strong{named list} of fitted TAM objects or precomputed
-reporting lists of class \code{tam_list} (e.g., \code{fits} list returned by
-\code{\link[=fit_retro]{fit_retro()}}). Names are used to label models.}
+reference objects of class \code{tam_ref}. Names label models.}
 
 \item{interval}{Confidence level passed to \code{\link[=tidy_pop]{tidy_pop()}} and \code{\link[=tidy_par]{tidy_par()}} for interval construction. Default \code{0.95}.}
 
@@ -49,9 +48,9 @@ Supply models via \code{...} or \code{model_list}, but not both. The models must
 form a uniquely named list so they can be labeled in the dashboard.
 Additional arguments for \code{\link[rmarkdown:render]{rmarkdown::render()}} can be passed through
 \code{render_args}, which must itself be a (named) list.
-Precomputed reporting lists may be mixed with tinyAM fits; they are not
-refittable TAM objects. Supply \code{background} to add a page describing
-assessment assumptions and translation choices.
+Precomputed assessment references may be mixed with tinyAM fits; they are
+not refittable TAM objects. Supply \code{background} to add a page
+describing assessment assumptions and translation choices.
 }
 \examples{
 

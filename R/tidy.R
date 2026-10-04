@@ -629,7 +629,7 @@ stack_nested <- function(x, label = "model",
 #'
 #' @details
 #' **Inputs:** Pass models through `...` or via `model_list =`.
-#' Precomputed reporting lists of class `tam_list` are also accepted. Their
+#' Precomputed assessment reference objects of class `tam_ref` are also accepted. Their
 #' existing tables and uncertainty are retained without constructing a tinyAM
 #' optimizer. A reporting list may contain a named `comparison_scales` vector;
 #' those factors are applied to the matching tinyAM population estimates and
@@ -728,33 +728,33 @@ tidy_tam <- function(..., model_list = NULL, interval = 0.95, label = "model", l
   }
 
   pop_list <- lapply(model_list, function(fit) {
-    if (inherits(fit, "tam_list")) return(fit$pop)
+    if (inherits(fit, "tam_ref")) return(fit$pop)
     if (!is.null(fit$pop) && interval_matches(fit$pop)) {
       fit$pop
     } else {
       tidy_pop(fit, interval = interval)
     }
   })
-  reporting_lists <- Filter(function(fit) inherits(fit, "tam_list"), model_list)
-  comparison_scales <- lapply(reporting_lists, `[[`, "comparison_scales")
+  references <- Filter(function(fit) inherits(fit, "tam_ref"), model_list)
+  comparison_scales <- lapply(references, `[[`, "comparison_scales")
   comparison_scales <- Filter(function(x) length(x) > 0L, comparison_scales)
   if (length(comparison_scales)) {
     comparison_scales <- lapply(comparison_scales, function(x) {
       if (is.list(x)) x <- unlist(x, use.names = TRUE)
       if (!is.numeric(x) || is.null(names(x)) || any(!nzchar(names(x))) ||
           anyDuplicated(names(x)) || any(!is.finite(x)) || any(x <= 0)) {
-        cli::cli_abort("A {.cls tam_list} {.field comparison_scales} value must be a named vector of positive finite numbers.")
+        cli::cli_abort("A {.cls tam_ref} {.field comparison_scales} value must be a named vector of positive finite numbers.")
       }
       x
     })
     if (length(comparison_scales) > 1L &&
         !all(vapply(comparison_scales[-1L], identical, logical(1), comparison_scales[[1L]]))) {
-      cli::cli_abort("Comparison lists use different {.field comparison_scales}; the fitted outputs cannot be shown on one scale.")
+      cli::cli_abort("Assessment references use different {.field comparison_scales}; the fitted outputs cannot be shown on one scale.")
     }
     comparison_scales <- comparison_scales[[1L]]
-    reference_pop <- reporting_lists[[1L]]$pop
+    reference_pop <- references[[1L]]$pop
     for (i in seq_along(model_list)) {
-      if (inherits(model_list[[i]], "tam_list")) next
+      if (inherits(model_list[[i]], "tam_ref")) next
       for (metric in intersect(names(comparison_scales), names(pop_list[[i]]))) {
         tab <- pop_list[[i]][[metric]]
         scale <- comparison_scales[[metric]]
@@ -772,7 +772,7 @@ tidy_tam <- function(..., model_list = NULL, interval = 0.95, label = "model", l
     }
   }
   par_list <- lapply(model_list, function(fit) {
-    if (inherits(fit, "tam_list")) {
+    if (inherits(fit, "tam_ref")) {
       return(list(fixed = fit$fixed_par, random = fit$random_par))
     }
     has_fixed  <- !is.null(fit$fixed_par)

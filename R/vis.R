@@ -3,7 +3,7 @@
 #'
 #' @inheritParams tidy_tam
 #' @param model_list   A **named list** of fitted TAM objects or precomputed
-#'                     reporting lists of class `tam_list`. Names label models.
+#'                     reference objects of class `tam_ref`. Names label models.
 #' @param output_file  Name of file to export using [rmarkdown::render()].
 #'                     If `NULL`, a temporary HTML file is rendered.
 #'                     The file opens in your browser only when `open_file = TRUE`.
@@ -19,7 +19,7 @@
 #'          form a uniquely named list so they can be labeled in the dashboard.
 #'          Additional arguments for [rmarkdown::render()] can be passed through
 #'          `render_args`, which must itself be a (named) list.
-#'          Precomputed reporting lists may be mixed with tinyAM fits; they are
+#'          Precomputed assessment references may be mixed with tinyAM fits; they are
 #'          not refittable TAM objects. Supply `background` to add a page
 #'          describing assessment assumptions and translation choices.
 #' @return Used for its side effects: writes an HTML dashboard and optionally

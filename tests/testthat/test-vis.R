@@ -120,7 +120,7 @@ test_that("database reporting lists accept a Background page", {
                             keys = c("year", "age", "survey", "fleet", "samp_time",
                                      "q_block", "q_key", "is_proj", "obs"))
   source <- N_dev
-  source$call <- quote(database_to_tam_list("fixture"))
+  source$call <- quote(database_to_tam_ref("fixture"))
   source$pop <- source_pop
   source$obs_pred <- source_obs_pred
   source$fixed_par <- blank_values(N_dev$fixed_par, c("par", "coef", "age"))
@@ -130,7 +130,7 @@ test_that("database reporting lists accept a Background page", {
   source$is_converged <- NA
   source$grad_tol <- NA_real_
   source$comparison_scales <- c(ssb = 1e-3, N = 1e-3, recruitment = 1e-3)
-  class(source) <- c("tam_list", "list")
+  class(source) <- c("tam_ref", "list")
 
   expect_equal(names(source$pop), names(N_dev$pop))
   expect_equal(names(source$rep), names(N_dev$rep))
