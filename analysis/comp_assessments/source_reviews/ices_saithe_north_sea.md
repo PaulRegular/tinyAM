@@ -1,61 +1,89 @@
 # North Sea saithe source review
 
-## Assessment identified
+## Assessment and source
 
-ICES assessed saithe (*Pollachius virens*) in subareas 4 and 6 and Division 3.a
-under stock code `pok.27.3a46`. The 2026 advice is linked to assessment key
-22504. Its published summary table reports recruitment at age 3, fishing
-pressure for ages 4–7, and annual stock-summary values. For 2025 it reports
-recruitment of 214,587 thousand, spawning-stock biomass of 116,722 tonnes,
-total biomass of 259,593 tonnes, and F for ages 4–7 of 0.414. The table also
-provides lower and upper uncertainty bounds for those quantities.
+The current detailed accepted assessment is the 2026 ICES assessment of
+saithe (*Pollachius virens*) in subareas 4 and 6 and Division 3.a, stock code
+`pok.27.3a46`, assessment key 22504. The working group's 2026 report is
+published as [ICES Scientific Reports 8:43](https://doi.org/10.17895/ices.pub.32676345).
+The accepted assessment is also represented in the [ICES advice database](https://doi.org/10.17895/ices.advice.30932291)
+and [Stock Assessment Graphs, key 22504](https://standardgraphs.ices.dk/ViewSourceData.aspx?key=22504).
+The [2024 WKBGAD benchmark](https://doi.org/10.17895/ices.pub.25002470)
+documents the model framework and revisions to biological inputs.
 
-The [2026 WGNSSK report](https://agris.fao.org/search/es/records/6a96d767dd5645257f1c9d53)
-is a detailed 1,183-page report published as ICES Scientific Reports 8:43.
-Its [PDF](https://archimer.ifremer.fr/doc/01075/118685/133209.pdf) is publicly
-listed. The 2026 ICES advice and source table are available through the
-[Advice and Scenarios Database](https://doi.org/10.17895/ices.advice.30932291)
-and [Stock Assessment Graphs, assessment key 22504](https://standardgraphs.ices.dk/ViewSourceData.aspx?key=22504).
+The full WGNSSK 2026 PDF is cached locally at
+`analysis/comp_assessments/source_cache/ices_saithe_north_sea_2026/WGNSSK_2026.pdf`.
+Its SHA-256 is
+`9d33846cf100dd8544ba30dbeffc7435a857a71854d318dbc7b383d668b03857`.
+The cache is gitignored. Numerical values imported into the canonical database
+are transcribed from this report's tables by
+`scripts/database/048_import_ices_saithe_north_sea_2026.R`.
 
-## Assessment structure recovered
+## Accepted assessment recovered
 
-The [2024 WKBGAD benchmark report](https://ices-library.figshare.com/articles/report/Benchmark_workshop_on_selected_haddock_and_saithe_stocks_WKBGAD_/25002470)
-describes North Sea saithe as an existing SAM assessment. It records the
-benchmark's review of life-history inputs, survey and commercial CPUE index
-models, and stock weights. The assessment used catch numbers-at-age and
-catch weights-at-age for catch fractions raised through InterCatch, a
-design-based North Sea IBTS Q3 index for ages 3–8, and a combined commercial
-CPUE index scaled to exploitable biomass. The 2026 Stock Assessment Graphs
-page confirms that the summary outputs report recruitment at age 3 and F for
-ages 4–7.
+The assessment is a SAM age-structured model over 1967–2025 and ages 3–10+.
+The report supplies total catch numbers-at-age, total catch weight-at-age,
+stock weight-at-age, and annual maturity-at-age for those years and ages
+(Tables 14.3.5, 14.3.8, 14.3.11, and 14.3.12). Separate landings/discard
+number and weight tables are also published; the model input catch series is
+the combined catch at age. The database retains the combined model inputs.
 
-The 2025 WGNSSK report is available as [ICES Scientific Reports 7:57](https://doi.org/10.17895/ices.pub.29085995).
-The 2026 WGNSSK report supersedes it for the current assessment year. The
-2024 benchmark is useful for model context, but neither an older stock run nor
-benchmark settings can stand in for the accepted 2026 run's actual inputs.
+Stock weight is the scientifically appropriate weight for biomass and SSB
+calculations. The report states that 2003–2025 stock weights are model-based
+estimates using survey data only, because catch weights overestimate stock
+weights through about age 6. The 1967–2002 stock-weight series is derived by
+scaling catch weights by ratios estimated over 2003–2022. The accepted annual
+stock-weight values are transcribed as reported; the earlier values are not
+reconstructed again from catch weights.
 
-## Remaining gap
+Natural mortality is fixed by age using the Lorenzen relationship with mean
+stock weight-at-age, scaled so age-9 M is about 0.2. The reported values at
+ages 3–10+ are 0.384, 0.335, 0.294, 0.259, 0.232, 0.212, 0.197, and 0.177
+per year (Section 14.3.3, report page 497).
 
-The full 2026 report and model inputs have not been recovered into the local
-source cache. Direct downloads of ICES/figshare and the linked report PDF fail
-with TLS/access errors in this environment. A read of the historical
-`NS_saithe_2024_benchmark_final` object through `stockassessment::fitfromweb()`
-also failed at the TLS connection. The directory is a historical benchmark
-run and is not being used as a substitute for the 2026 accepted assessment.
+The age-specific research-vessel index combines Q3 and Q4 surveys and reports
+ages 3–8 for 1992–2025. A second series is standardized commercial trawl CPUE,
+available from 2000–2025 and tuned to exploitable biomass in SAM (Table
+14.3.13). Its annual values are relative CPUE, not absolute biomass. Both
+series are retained in `inputs.csv` with their distinct meanings.
 
-The accessible 2026 summary table does not provide the accepted run's
-numerical catch-at-age, processed survey indices, annual stock and catch
-weights, maturity, natural mortality, or age-specific N and F surfaces. The
-2026 report is publicly listed, so these are retrieval/extraction gaps rather
-than evidence that the inputs do not exist. Until the detailed report and
-model files can be inspected and cached, this stock is not ready for a
-canonical numerical input record or tinyAM fit. No output values are being
-reused as model inputs.
+The printed SAM configuration is Table 14.4.1. It is timestamped
+12 March 2024, despite being reproduced in the 2026 report. It specifies
+recruitment at age 3; F states for ages 3–8 with ages 9 and 10+ coupled; an
+AR(1) correlation of F states across ages; a separate N-process variance for
+recruitment and shared variance for older ages; lognormal observations; known
+stock weights, catch weights, maturity, and M; and age-correlated residuals
+for catch and the age-specific survey. Fbar is ages 4–7. The configuration
+date and exact 2026 sampling fractions remain flagged rather than treated as
+newly verified settings.
 
-## Sources
+The report gives accepted N-at-age for ages 3–10+ and F-at-age for ages 3–8
+and 9+ through 2025 (Tables 14.4.2–14.4.3). It explicitly says F at age 9 and
+10+ is coupled, so the F output surface uses a single 9+ value. Table 14.6.1
+provides recruitment-at-age-3, SSB, TSB, and Fbar 4–7 with 95% intervals
+through 2025. The 2026 short-term forecast values are stored separately from
+the historical fitted period.
 
-- [ICES advice 2026, assessment key 22504](https://doi.org/10.17895/ices.advice.30932291)
-- [ICES Stock Assessment Graphs source data, key 22504](https://standardgraphs.ices.dk/ViewSourceData.aspx?key=22504)
-- [WGNSSK 2026 report record and PDF link](https://agris.fao.org/search/es/records/6a96d767dd5645257f1c9d53)
-- [WGNSSK 2025 report](https://doi.org/10.17895/ices.pub.29085995)
-- [WKBGAD 2024 benchmark report](https://doi.org/10.17895/ices.pub.25002470)
+## Remaining limitations for translation
+
+- The final 2026 native SAM data/model object was not located. The report
+  provides rounded inputs and outputs, but not age-specific uncertainty or
+  fitted observation predictions.
+- Exact 2026 within-year sampling fractions are absent from the report. The
+  cached 2024 native data object has sample times 0.730 for the Q3–Q4 index
+  and 0.525 for commercial CPUE; these are useful context, not verified 2026
+  values.
+- tinyAM's current observation structure does not represent a single
+  aggregate relative CPUE observation tuned to exploitable biomass. The
+  translation therefore fits the Q3–Q4 age-specific index and records the
+  CPUE series as omitted from the fit. It does not divide aggregate CPUE among
+  ages or treat its relative scale as absolute biomass.
+- tinyAM cannot exactly reproduce SAM's age-correlated F states and residuals,
+  shared F state at ages 9–10+, or N-process variance sharing. These are
+  documented simplifications for the proof-of-concept fit.
+
+The database status remains partial for assumptions, inputs, and outputs
+because the current native run object and exact sampling fractions are
+unavailable, and the published age-specific surfaces lack reported
+uncertainty. No plot-derived values or fitted estimates are being substituted
+for inputs.

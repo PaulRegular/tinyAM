@@ -226,6 +226,7 @@ biomass_at_age
 total_numbers
 total_biomass
 proportion_at_age
+relative_biomass_index
 relative_precision_weight
 relative_standard_error
 ```
@@ -265,6 +266,10 @@ the estimate for an age-specific catch or index observation. Use basis =
 `relative_scale`, retain the reported value and unit, and record whether the
 assessment used it as an observation weight. It is a source precision measure,
 not an observation or a tinyAM-estimated standard error.
+
+`relative_biomass_index` stores an aggregate relative index, such as standardized
+CPUE tuned to exploitable biomass. It is not an absolute biomass observation;
+use `basis = index_scale` and document the scale and model interpretation.
 
 `larval_abundance_index` represents an index tied to a spawning component. Use
 `type = index`, `basis = numbers`, blank fish age, and record the spawning
