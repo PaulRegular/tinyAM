@@ -408,6 +408,8 @@ Use `natural_mortality_at_age` when M is estimated.
 
 ``` text
 total_biomass
+mature_biomass_at_age
+total_mortality_at_age
 predicted_catch
 predicted_index
 Fbar

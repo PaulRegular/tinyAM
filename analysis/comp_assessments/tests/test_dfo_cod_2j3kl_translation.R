@@ -62,22 +62,57 @@ stopifnot(
          !is.na(source_data$inputs$year_basis) &
          source_data$inputs$year_basis == "birth_cohort"),
   !any(grepl("cohort", source_maturity$notes, ignore.case = TRUE)),
-  nrow(obs$index) == 507L,
-  sum(obs$index$obs == 0) == 106L,
+  nrow(obs$index) == 507L + 7L * 12L,
   isTRUE(all.equal(obs$maturity$obs, expected_maturity)),
-  all(obs$weight$M_assumption == 0.312),
-  setequal(levels(obs$index$q_key), c("age_2", "age_3", "age_4", "age_5", "age_6_plus")),
+  all(obs$weight$M_assumption == median(source_data$outputs$value[
+    source_data$outputs$measure == "Mbar"])),
+  setequal(unique(as.character(obs$index$q_key[obs$index$survey == "DFO fall RV survey"])),
+           c("RV age 2", "RV age 3", "RV age 4", "RV age 5", "RV age 6+")),
   identical(source_data$inputs$year, source_year),
   identical(source_data$inputs$year_basis, source_basis),
   readiness$maturity_rows[readiness$assessment_id == "dfo_cod_2j3kl_2025"] == 1065L,
   readiness$maturity_full_year_age_grid[readiness$assessment_id == "dfo_cod_2j3kl_2025"],
   !any(grepl("maturity_cohort", names(readiness))),
   audit$tinyam_support[audit$setting == "maturity_at_age"] == "supported",
-  dat$N_settings$process == "iid",
-  dat$N_settings$init == "free",
-  dat$F_settings$process == "ar1",
-  dat$M_settings$process == "off",
-  all(obs$index$samp_time == 0.75)
+  dat$N_settings$process == "off",
+  dat$N_settings$init == "exp",
+  dat$F_settings$process == "rw",
+  dat$M_settings$process == "ar1",
+  min(dat$M_settings$years) == 1984,
+  all(obs$index$samp_time[obs$index$survey == "DFO fall RV survey"] == 0.75),
+  all(obs$index$smith_sound_year[obs$index$survey != "DFO fall RV survey"] == 0),
+  !anyNA(dat$q_modmat)
 )
+
+smith <- obs$index[obs$index$survey == "Smith Sound acoustic survey", ]
+samples <- source_data$inputs[source_data$inputs$survey %in% "Smith Sound acoustic survey" &
+                               source_data$inputs$unit %in% "fish_sampled", ]
+for (year in unique(smith$year)) {
+  cp <- samples[samples$year == year & samples$age %in% 1:13, ]
+  weights <- source_data$inputs[source_data$inputs$type == "weight" &
+                                 source_data$inputs$year == year, ]
+  w <- weights$value[match(cp$age, weights$age)]
+  biomass <- source_data$inputs$value[source_data$inputs$survey %in% "Smith Sound acoustic survey" &
+                                      source_data$inputs$year == year &
+                                      source_data$inputs$measure == "total_biomass"]
+  expected <- biomass * 1000 * cp$value / sum(cp$value * w)
+  fitted_rows <- smith[smith$year == year, ]
+  stopifnot(isTRUE(all.equal(fitted_rows$obs, expected[match(fitted_rows$age, cp$age)])))
+}
+juvenile_trial <- stock$translate_stock(source_data, juveniles = TRUE)
+juvenile_obs <- juvenile_trial$obs$index
+stopifnot(identical(juvenile_trial$ages, 0:14),
+          all(juvenile_obs$samp_time[juvenile_obs$survey == "Fleming juvenile survey"] == 9.5/12),
+          all(juvenile_obs$samp_time[juvenile_obs$survey == "Newman Sound juvenile survey"] == 9/12),
+          setequal(unique(as.character(juvenile_obs$q_key[grepl("juvenile", juvenile_obs$survey)])),
+                   c("juvenile age 0", "juvenile age 1")),
+          identical(source_data$inputs$year, source_year))
+
+for (measure in c("numbers_at_age", "biomass_at_age", "mature_biomass_at_age",
+                  "total_mortality_at_age", "natural_mortality_at_age", "fishing_mortality_at_age")) {
+  rows <- source_data$outputs[source_data$outputs$measure == measure, ]
+  stopifnot(setequal(rows$age, 0:14), !anyDuplicated(paste(rows$year, rows$age)),
+            all(is.na(rows$se)), all(is.na(rows$lwr)), all(is.na(rows$upr)))
+}
 
 cat("Northern cod translation tests passed.\n")

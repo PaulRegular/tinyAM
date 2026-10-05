@@ -204,7 +204,8 @@ for (name in c("inputs", "outputs")) {
       rep(FALSE, nrow(x))
     }
     x$measure %in% c("numbers_at_age", "biomass_at_age", "fishing_mortality_at_age",
-                     "natural_mortality_at_age") & !has_age_group
+                     "natural_mortality_at_age", "mature_biomass_at_age",
+                     "total_mortality_at_age") & !has_age_group
   }
   age <- suppressWarnings(as.numeric(x$age))
   if (any(age_required & (is.na(age) | !is.finite(age) | age != as.integer(age)))) {
