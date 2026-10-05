@@ -4,15 +4,19 @@ Background {#assessment-background}
 <style>
 #assessment-background table {
   width: 100%;
+  table-layout: fixed;
 }
-#assessment-background th:first-child,
-#assessment-background td:first-child {
-  width: 1%;
-  white-space: nowrap;
+#assessment-background col {
+  width: auto;
 }
-#assessment-background th:not(:first-child),
-#assessment-background td:not(:first-child) {
-  width: 33%;
+#assessment-background col:first-child,
+#assessment-background th:first-child {
+  width: 14.2857%;
+}
+#assessment-background th,
+#assessment-background td {
+  vertical-align: top;
+  overflow-wrap: break-word;
 }
 </style>
 
