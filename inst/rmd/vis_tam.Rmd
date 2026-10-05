@@ -2,6 +2,7 @@
 title: "Tiny Assessment Model Dashboard"
 output:
   flexdashboard::flex_dashboard:
+    self_contained: true
     theme:
       version: 4
       bg: "#FFFFFF"   
@@ -11,20 +12,15 @@ output:
       navbar-bg: "#007187"  
       navbar-fg: "#FFFFFF"
       link-color: "#028f8d"
-      base_font: 
-         google: Poppins
-      heading_font: 
-         google: Poppins
-      code_font: 
-         google:
-            family: JetBrains Mono
-            local: false
-header-includes:
-  - '<link rel="preconnect" href="https://fonts.googleapis.com">'
-  - '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>'
-  - '<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">'
+      base_font: Arial
+      heading_font: Arial
+      code_font: monospace
+# Google Fonts are intentionally disabled so the dashboard stays self-contained.
+# header-includes:
+#   - '<link rel="preconnect" href="https://fonts.googleapis.com">'
+#   - '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>'
+#   - '<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">'
 ---
-
 
 ```{r setup, echo=FALSE}
 library(tinyAM)
