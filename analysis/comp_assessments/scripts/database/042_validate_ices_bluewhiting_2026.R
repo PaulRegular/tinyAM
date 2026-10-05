@@ -8,6 +8,8 @@ database <- lapply(c("stocks", "assessments", "assumptions", "inputs", "outputs"
                    ))
 names(database) <- c("stocks", "assessments", "assumptions", "inputs", "outputs")
 sam <- readRDS(file.path(root, "source_cache", assessment_id, "BW-2026.rds"))
+years <- as.integer(sam$data$years)
+ages <- seq.int(sam$data$minAgePerFleet[[1L]], sam$data$maxAgePerFleet[[1L]])
 
 stock <- database$stocks[database$stocks$stock_id == "ices_bluewhiting_northeast_atlantic", ]
 assessment <- database$assessments[database$assessments$assessment_id == assessment_id, ]
@@ -48,6 +50,13 @@ stopifnot(nrow(total_biomass) == 1L,
 stopifnot(nrow(subset(outputs, measure == "process_sd")) == 3L)
 stopifnot(nrow(subset(outputs, measure == "observation_sd")) == 9L)
 stopifnot(all(subset(outputs, measure %in% c("process_sd", "observation_sd"))$value > 0))
+for (measure in c("numbers_at_age", "fishing_mortality_at_age",
+                  "natural_mortality_at_age")) {
+  surface <- outputs[outputs$measure == measure, , drop = FALSE]
+  stopifnot(nrow(surface) == length(years) * length(ages))
+  stopifnot(all(surface$age_group[surface$age == max(ages)] == "10+"))
+  stopifnot(all(is.na(surface$age_group[surface$age != max(ages)])))
+}
 stopifnot(isTRUE(sam$opt$convergence == 0L), isTRUE(sam$sdrep$pdHess))
 
 cat("Blue whiting database record validated: ", nrow(inputs),

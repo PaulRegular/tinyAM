@@ -224,6 +224,9 @@ surface_output <- function(surface, type, measure, unit, se = NULL,
   surface <- as.matrix(surface)
   grid <- expand.grid(year = as.integer(rownames(surface)),
                       age = as.integer(colnames(surface)))
+  if (length(age_group) > 1L) {
+    age_group <- age_group[match(grid$age, as.integer(colnames(surface)))]
+  }
   surface_se <- if (is.null(se)) rep(NA_real_, length(surface)) else as.vector(se)
   output_rows(type, measure, grid$year, grid$age, age_group,
               as.vector(surface), surface_se, unit = unit, notes = notes)

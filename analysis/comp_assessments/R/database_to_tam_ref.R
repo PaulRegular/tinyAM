@@ -136,7 +136,8 @@ database_to_tam_ref <- function(assessment_id, outputs, obs = NULL, years = NULL
 
   age_label <- function(rows) {
     age <- as.character(rows$age)
-    grouped <- !is.na(rows$age_group) & nzchar(as.character(rows$age_group))
+    grouped <- (is.na(age) | !nzchar(age)) &
+      !is.na(rows$age_group) & nzchar(as.character(rows$age_group))
     age[grouped] <- as.character(rows$age_group[grouped])
     if (all(is.na(age) | grepl("^[0-9]+$", age))) {
       suppressWarnings(as.integer(age))
