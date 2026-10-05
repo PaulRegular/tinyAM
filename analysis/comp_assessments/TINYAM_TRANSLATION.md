@@ -3,6 +3,8 @@
 ## Purpose
 
 This document defines how a curated source assessment is transformed into data and model settings suitable for a tinyAM analysis.
+Read the [scope and provenance statement](README.md#scope-and-provenance)
+before interpreting these illustrative model comparisons.
 
 The canonical assessment database is intentionally richer than tinyAM. It preserves the fleets, surveys, biological inputs, and statistical assumptions of the accepted source assessment.
 
@@ -437,8 +439,14 @@ samp_time
 When the exact fractional timing is not available:
 
 - derive it from documented survey timing only when defensible;
+- consult the framework/benchmark research document and cited survey reports
+  when the production report does not give sufficient timing detail;
 - record the approximation;
 - do not default all surveys to `0.5`.
+
+A documented sampling season is not an exact annual index time. If a season
+midpoint is used, pass it explicitly through `sampling_times` and record it in
+the stock background; do not label it as a recovered source-model parameter.
 
 ## 5.8 Spatial scale
 
@@ -1084,6 +1092,29 @@ quantity may be calculated only when the necessary source states and biology
 are available. Do not present percent differences between incompatible
 definitions as a like-for-like comparison.
 
+The runner compares recruitment only when the reported or explicitly recorded
+recruitment age equals tinyAM's first modeled age. It sums accepted N over
+exactly the modeled ages only when every required age is available in that
+year. Partial age coverage does not become a partial annual total. Mortality
+means are recalculated using matching ages and accepted N as weights; an
+arithmetic source Fbar is not compared directly with tinyAM's population-weighted
+Fbar.
+
+For biomass and SSB, use matching reported biomass or mature-biomass-at-age
+tables when available. Otherwise, when accepted N is available, a labelled
+common-definition calculation can use the same translated weights and maturity
+as tinyAM. This latter calculation compares population estimates under shared
+biology, not the source model's native biomass or spawning-time SSB. The native
+values stay in the reference for dashboard context. A tinyAM plug-in M baseline
+must not be presented as accepted M; only reported estimated M or a documented
+fixed numerical source input can fill that reference surface.
+
+Unreconciled definitions are marked `non_equivalent`; missing numerical outputs
+are marked `unavailable`. Both receive missing differences and an explanatory
+reason. Grouped outputs are compared only after a documented age mapping, and
+dimensions must map uniquely. Derived sums and mortality means do not receive
+invented uncertainty from individual SEs without the required covariance.
+
 Respect the reported uncertainty scale and interval meaning documented in
 `DATABASE_STRUCTURE.md`. Keep source intervals when their confidence level or
 construction cannot be reconstructed. Missing uncertainty is not zero
@@ -1124,6 +1155,15 @@ with an explanation. Include available uncertainty without forcing identical
 interval definitions. Additional summary statistics are optional; avoid
 exporting many tables that repeat the dashboard. Impose no arbitrary agreement
 threshold or likelihood-equality requirement.
+
+`mean_absolute_difference`, mean/median absolute percent differences, and the
+terminal percent difference describe scale agreement. Absolute differences
+retain the reported comparison unit and include valid zero source values;
+percent differences exclude zero denominators. `trend_correlation` describes
+trajectory agreement: annual metrics use correlation across common years;
+age-specific metrics use the mean of within-age correlations across years.
+Constant series have no defined correlation and are omitted from that mean.
+This avoids treating the age gradient itself as evidence of temporal agreement.
 
 Differences should be interpreted in light of documented translation choices, such as:
 

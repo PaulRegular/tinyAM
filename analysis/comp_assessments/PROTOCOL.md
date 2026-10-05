@@ -13,6 +13,9 @@ any newer summary-only advice separately, not to collect every table in every
 report.
 
 Follow the schema and controlled vocabularies in `DATABASE_STRUCTURE.md`.
+The [scope and provenance statement](README.md#scope-and-provenance) applies
+to all records and their downstream use. Extraction and automated checks do
+not substitute for verification against the authoritative sources.
 
 Use this protocol to curate or repair source records. Follow
 `TINYAM_TRANSLATION.md` for translating those records, fitting tinyAM models,
@@ -82,6 +85,15 @@ After identifying the stock, seek evidence approximately in this order:
 Prefer the original input structure actually consumed by the accepted model.
 
 When native model files or fitted objects are publicly available, inspect them before relying on transcribed report tables.
+
+If the detailed production assessment omits a specification (for example survey
+timing, catchability sharing, initial states or biomass definitions), consult
+the framework or benchmark research document and the supporting survey reports
+it cites before recording `unknown`. Confirm that the production model retains
+that specification. Framework documents can clarify model structure; their
+historical observations, parameter estimates and sensitivity outputs must not
+be substituted for quantities from the represented production run. Record the
+source and any remaining ambiguity explicitly.
 
 ## 2.1 Where to look for model objects, native files, and reproducible assessments
 

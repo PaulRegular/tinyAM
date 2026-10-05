@@ -2,6 +2,15 @@
 
 This analysis translates selected production age-structured assessments into tinyAM models and compares their reported population estimates. The database preserves source values and assumptions; stock scripts make the tinyAM-specific choices. A close fit is an empirical comparison, not a claim that the models use identical likelihoods or assumptions.
 
+## Scope and provenance
+
+The assessment database was constructed with substantial agentic-AI assistance.
+Source records have not all been exhaustively human-verified; check values,
+definitions and provenance against the authoritative assessment sources before
+using them in research. The tinyAM translations are illustrative abstractions
+and proof-of-concept models. They are not exact reproductions, official stock
+assessments or management advice.
+
 ## Where to look
 
 | Material | Location |
@@ -64,3 +73,9 @@ runs <- run_assessments(
 ## Committed results and local cache
 
 `results/` retains `observation_readiness.csv`, `fit_diagnostics.csv`, `comparison_summary.csv`, and a compact `sensitivity_summary.csv`. Fitted objects and dashboards are generated on request and may be saved under the gitignored `results/cache/<assessment_id>/` directory with `cache = TRUE`. They are not committed by the normal workflows.
+
+Comparison summaries separate scale agreement (absolute and percent differences)
+from trajectory agreement (`trend_correlation`). Each row records its unit,
+definition and matching status. Native aggregates are retained for dashboard
+context; common-age calculations used in the summary are labelled separately.
+See `TINYAM_TRANSLATION.md` for the matching rules and their limitations.
