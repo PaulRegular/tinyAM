@@ -1,3 +1,0 @@
-"model","convergence_code","message","max_abs_gradient","positive_definite_hessian"
-"SAM",1,"false convergence (8)",8.39553848663854e-09,TRUE
-"tinyAM",0,"relative convergence (4)",0.000857458359798252,TRUE
