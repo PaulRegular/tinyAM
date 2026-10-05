@@ -10,6 +10,13 @@ comparison_example <- .assessment_comparison_summary(
   "example_assessment"
 )
 stopifnot(comparison_example$assessment_id == "example_assessment")
+constant_comparison <- .assessment_comparison_summary(
+  data.frame(metric = "M", year = 2020:2021, age = 1L,
+             source = 0.2, tinyAM = 0.2,
+             percent_difference = c(0, 0)),
+  "constant_assessment"
+)
+stopifnot(is.na(constant_comparison$trend_correlation))
 
 serial <- run_assessments(assessment_ids, database = database, fit = FALSE)
 stopifnot(

@@ -76,6 +76,11 @@ rm(.assessment_helper)
     valid <- x[is.finite(x$percent_difference), , drop = FALSE]
     terminal_year <- if (nrow(valid)) max(valid$year) else NA_integer_
     terminal <- if (nrow(valid)) valid[valid$year == terminal_year, , drop = FALSE] else valid
+    trend_correlation <- if (nrow(valid) > 1L &&
+                            stats::sd(valid$source) > 0 &&
+                            stats::sd(valid$tinyAM) > 0) {
+      stats::cor(valid$source, valid$tinyAM)
+    } else NA_real_
     data.frame(
       assessment_id = assessment_id,
       metric = x$metric[[1]],
@@ -84,9 +89,7 @@ rm(.assessment_helper)
       median_absolute_percent_difference = if (nrow(valid)) stats::median(abs(valid$percent_difference)) else NA_real_,
       terminal_year = terminal_year,
       terminal_mean_percent_difference = if (nrow(terminal)) mean(terminal$percent_difference) else NA_real_,
-      trend_correlation = if (nrow(valid) > 1L) {
-        tryCatch(stats::cor(valid$source, valid$tinyAM), error = function(e) NA_real_)
-      } else NA_real_
+      trend_correlation = trend_correlation
     )
   }))
   rownames(summary) <- NULL
