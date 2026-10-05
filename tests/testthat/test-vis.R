@@ -5,6 +5,26 @@ suppressWarnings(
   source(system.file("examples/example_fits.R", package = "tinyAM"))
 )
 
+dashboard_plots <- function(file) {
+  html <- paste(readLines(file, warn = FALSE), collapse = "\n")
+  scripts <- regmatches(html, gregexpr(
+    '(?s)<script type="application/json"[^>]*>.*?</script>', html, perl = TRUE
+  ))[[1L]]
+  widgets <- lapply(scripts, function(script) {
+    json <- sub("^<script[^>]*>", "", script)
+    json <- sub("</script>$", "", json)
+    jsonlite::fromJSON(json, simplifyVector = FALSE)
+  })
+  lapply(Filter(function(widget) !is.null(widget$x$layout), widgets), `[[`, "x")
+}
+
+dashboard_residuals <- function(plots) {
+  Filter(function(plot) {
+    title <- unlist(c(plot$layout$title, plot$layout$yaxis$title))
+    any(grepl("residuals", title, fixed = TRUE))
+  }, plots)
+}
+
 test_that("vis_tam renders cleanly and produces an HTML output", {
   # --- Test: render to temporary file quietly ---
   tmpfile <- tempfile(fileext = ".html")
@@ -16,6 +36,17 @@ test_that("vis_tam renders cleanly and produces an HTML output", {
 
   expect_true(file.exists(tmpfile))
   expect_match(readLines(tmpfile, n = 1L), "<!DOCTYPE html>", fixed = TRUE)
+
+  residuals <- dashboard_residuals(dashboard_plots(tmpfile))
+  expect_gt(length(residuals), 0L)
+  for (plot in residuals) {
+    expect_gt(length(plot$data), 0L)
+    expect_true(any(is.finite(unlist(lapply(plot$data, `[[`, "y")))))
+    frame_names <- vapply(plot$frames, `[[`, character(1), "name")
+    expect_setequal(frame_names, names(fits))
+    expect_true(all(vapply(plot$frames, function(frame) length(frame$traces) > 0L,
+                           logical(1))))
+  }
 
   # --- Skip interactive browser behavior on CI / non-interactive sessions ---
   skip_if_not(interactive())
@@ -110,6 +141,8 @@ test_that("tam_ref objects accept a Background page", {
   source_pop <- lapply(N_dev$pop, blank_values,
                        keys = c("year", "age", "is_proj"))
   source_pop$ssb$est <- N_dev$pop$ssb$est + 1
+  source_pop$N$est <- N_dev$pop$N$est + 1
+  source_pop$F$est <- N_dev$pop$F$est + 0.1
   source_pop$ssb$unit <- "t"
   source_pop$N$unit <- "thousand fish"
   source_pop$recruitment$unit <- "thousand fish"
@@ -119,6 +152,7 @@ test_that("tam_ref objects accept a Background page", {
   source_obs_pred <- lapply(source_obs_pred, blank_values,
                             keys = c("year", "age", "survey", "fleet", "samp_time",
                                      "q_block", "q_key", "is_proj", "obs"))
+  source_obs_pred <- lapply(source_obs_pred, function(x) { x$osa_res <- NA_real_; x })
   source <- N_dev
   source$call <- quote(database_to_tam_ref("fixture"))
   source$pop <- source_pop
@@ -139,7 +173,7 @@ test_that("tam_ref objects accept a Background page", {
   expect_true(all(is.na(source$random_par$log_f$est)))
   expect_equal(source$pop$N[c("year", "age", "is_proj")],
                N_dev$pop$N[c("year", "age", "is_proj")])
-  expect_true(all(is.na(source$pop$N$est)))
+  expect_true(all(is.finite(source$pop$N$est)))
 
   tabs <- tidy_tam(model_list = list(Assessment = source, tinyAM = N_dev))
   expect_true(all(c("Assessment", "tinyAM") %in% tabs$pop$ssb$model))
@@ -158,8 +192,9 @@ test_that("tam_ref objects accept a Background page", {
   file <- tempfile(fileext = ".html")
   vis_tam(model_list = list(Assessment = source, tinyAM = N_dev),
           background = c("## Assessment assumptions", "",
-                         "| Component | Details |", "|---|---|",
-                         "| Years | 2000\u20132024 and ages are retained. |"),
+                         "| Component | Accepted assessment | tinyAM representation | Reason |",
+                         "|---|---|---|---|",
+                         "| Years | 2000\u20132024 and ages are retained. | Same years | Common period |"),
           output_file = file, open_file = FALSE,
           render_args = list(quiet = TRUE))
   con <- file(file, "rb")
@@ -168,6 +203,7 @@ test_that("tam_ref objects accept a Background page", {
   expect_true(any(grepl("Background", html, fixed = TRUE)))
   expect_true(any(grepl("Assessment assumptions", html, fixed = TRUE)))
   expect_true(any(grepl("ages are retained", html, fixed = TRUE)))
+  expect_true(any(grepl('id="assessment-background"', html, fixed = TRUE)))
   expect_true(any(grepl("<th>Component</th>", html, fixed = TRUE)))
   expect_true(any(grepl("<td>Years</td>", html, fixed = TRUE)))
   expect_true(any(grepl("<h1>Fishery</h1>", html, fixed = TRUE)))
@@ -189,4 +225,26 @@ test_that("tam_ref objects accept a Background page", {
   visible_html <- gsub("(?is)<(script|style)\\b.*?</\\1>", "", visible_html,
                         perl = TRUE)
   expect_false(grepl("unavailable", tolower(visible_html), fixed = TRUE))
+
+  plots <- dashboard_plots(file)
+  residuals <- dashboard_residuals(plots)
+  expect_gt(length(residuals), 0L)
+  for (plot in residuals) {
+    expect_gt(length(plot$data), 0L)
+    expect_true(any(is.finite(unlist(lapply(plot$data, `[[`, "y")))))
+    expect_length(plot$frames, 0L)
+  }
+  for (metric in c("N", "F")) {
+    comparisons <- Filter(function(plot) {
+      identical(unname(unlist(plot$layout$yaxis$title)), metric)
+    }, plots)
+    expect_gt(length(comparisons), 0L)
+    for (plot in comparisons) {
+      traces <- c(plot$data, unlist(lapply(plot$frames, `[[`, "data"), recursive = FALSE))
+      reference <- Filter(function(trace) identical(trace$name, "Assessment") &&
+                            identical(trace$mode, "lines"), traces)
+      expect_gt(length(reference), 0L)
+      expect_true(any(is.finite(unlist(lapply(reference, `[[`, "y")))))
+    }
+  }
 })

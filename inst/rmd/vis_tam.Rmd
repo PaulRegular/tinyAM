@@ -81,11 +81,24 @@ plot_obs_pred_report <- function(d, ...) {
 }
 
 make_resid_plots <- function(d) {
-  list(bubbles = plot_bubbles(d, frame = ~model, colors = tam_pal(2)),
-       year = plot_resid(d, x = ~year, xlab = "Year", frame = ~model, color = ~model, colors = cols),
-       age = plot_resid(d, x = ~age, xlab = "Age", frame = ~model, color = ~model, colors = cols),
-       cohort = plot_resid(d, x = ~(year - age), xlab = "Cohort", frame = ~model, color = ~model, colors = cols),
-       expected = plot_resid(d, x = ~log(pred), xlab = "Expected", frame = ~model, color = ~model, colors = cols))
+  fitted_models <- names(fits)[vapply(fits, inherits, logical(1), "tam_fit")]
+  d <- d[d$model %in% fitted_models, , drop = FALSE]
+  if ("osa_res" %in% names(d) && !any(is.finite(d$osa_res))) {
+    d$osa_res <- NULL
+  }
+  residual <- if ("osa_res" %in% names(d)) "osa_res" else "std_res"
+  d <- droplevels(plot_rows(d, residual))
+  if (!nrow(d)) {
+    return(setNames(rep(list(plotly::plot_ly()), 5),
+                    c("bubbles", "year", "age", "cohort", "expected")))
+  }
+  frame <- if (length(unique(d$model)) > 1L) ~model else NULL
+  resid_cols <- cols[match(levels(d$model), names(fits))]
+  list(bubbles = plot_bubbles(d, frame = frame, colors = tam_pal(2)),
+       year = plot_resid(d, x = ~year, xlab = "Year", frame = frame, color = ~model, colors = resid_cols),
+       age = plot_resid(d, x = ~age, xlab = "Age", frame = frame, color = ~model, colors = resid_cols),
+       cohort = plot_resid(d, x = ~(year - age), xlab = "Cohort", frame = frame, color = ~model, colors = resid_cols),
+       expected = plot_resid(d, x = ~log(pred), xlab = "Expected", frame = frame, color = ~model, colors = resid_cols))
 }
 
 table_link <- function(x, table_name = NULL, download_text = "Download table") {
