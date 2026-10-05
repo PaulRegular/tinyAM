@@ -164,6 +164,17 @@ index_sd_obs <- database_to_tam_obs(
 )
 expect_equal(index_sd_obs$index$obs, obs$index$obs)
 
+relative_error_inputs <- rbind(
+  inputs,
+  row("index", "relative_standard_error", "relative_scale", survey = "RV",
+      year = 2000, age = 1:2, value = c(0.1, 0.2), unit = "relative standard error")
+)
+relative_error_obs <- database_to_tam_obs(
+  "translation_fixture", relative_error_inputs, years = 2000:2001, ages = 1:2,
+  weight_survey = "RV", sampling_times = sampling_times
+)
+expect_equal(relative_error_obs$index$obs, obs$index$obs)
+
 log_index_sd_inputs <- rbind(
   inputs,
   row("index", "log_index_sd", "log_scale", survey = "RV", year = 2000,

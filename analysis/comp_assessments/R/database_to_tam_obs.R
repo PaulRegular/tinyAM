@@ -399,7 +399,8 @@
                                index_weight_source = "source") {
   supported_measures <- c("numbers_at_age", "proportion_at_age",
                           "total_numbers", "total_biomass", "log_index_sd",
-                          "index_sd", "relative_precision_weight")
+                          "index_sd", "relative_precision_weight",
+                          "relative_standard_error")
   unsupported <- x[!is.na(x$type) & x$type == "index" &
                      (is.na(x$measure) | !x$measure %in% supported_measures), ,
                    drop = FALSE]
