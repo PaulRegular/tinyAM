@@ -236,6 +236,14 @@ test_that("tam_ref objects accept a Background page", {
   visible_html <- gsub("(?is)<(script|style)\\b.*?</\\1>", "", visible_html,
                         perl = TRUE)
   expect_false(grepl("unavailable", tolower(visible_html), fixed = TRUE))
+  expect_false(grepl("database_to_tam_ref", visible_html, fixed = TRUE))
+  call_start <- regexpr('<div id="function-calls"', visible_html, fixed = TRUE)[[1L]]
+  expect_gt(call_start, 0L)
+  call_html <- substring(visible_html, call_start)
+  call_html <- strsplit(call_html, '<div id="output"', fixed = TRUE)[[1L]][1L]
+  expect_true(grepl("<td\\b[^>]*>\\s*tinyAM\\s*</td>", call_html, perl = TRUE))
+  expect_true(grepl("fit_tam(", call_html, fixed = TRUE))
+  expect_false(grepl("<td\\b[^>]*>\\s*Assessment\\s*</td>", call_html, perl = TRUE))
 
   plots <- dashboard_plots(file)
   residuals <- dashboard_residuals(plots)

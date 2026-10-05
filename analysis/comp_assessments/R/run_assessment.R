@@ -8,6 +8,12 @@ for (.assessment_helper in c(
 }
 rm(.assessment_helper)
 
+.assessment_fit_call <- function(args) {
+  args$obs <- quote(obs)
+  if (!is.null(args$start_par)) args$start_par <- quote(start_par)
+  as.call(c(list(quote(fit_tam)), args))
+}
+
 .assessment_diagnostics <- function(assessment_id, database, status,
                                     fit = NULL, elapsed = NA_real_, reason = "") {
   gradient <- if (is.null(fit)) numeric() else
@@ -189,6 +195,7 @@ run_assessment <- function(assessment_id, database = NULL, fit = TRUE,
     )
     return(result)
   }
+  fitted$call <- .assessment_fit_call(fit_args)
   result$fit <- fitted
   result$diagnostics <- .assessment_diagnostics(
     assessment_id, database,

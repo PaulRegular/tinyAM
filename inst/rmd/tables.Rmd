@@ -50,15 +50,18 @@ Row {.tabset}
 ### Function calls
 
 ```{r, results = "asis"}
-calls <- lapply(fits, `[[`, "call")
-calls_parsed <- sapply(calls, deparse1, width.cutoff = 50L, collapse = "\n")
-calls_html <- paste("<pre style='margin:0; white-space:pre-wrap'>\n",
-                    calls_parsed,
-                    "\n</pre>")
-calls_df <- data.frame(Model = names(calls), Call = calls_html)
-cat('<div style="height: 100%; overflow-y: auto;">\n\n')
-knitr::kable(calls_df, format = "html", escape = FALSE, col.names = NULL)
-cat('\n</div>\n\n')
+call_fits <- Filter(function(fit) inherits(fit, "tam_fit"), fits)
+calls <- lapply(call_fits, `[[`, "call")
+if (length(calls)) {
+  calls_parsed <- sapply(calls, deparse1, width.cutoff = 50L, collapse = "\n")
+  calls_html <- paste("<pre style='margin:0; white-space:pre-wrap'>\n",
+                      calls_parsed,
+                      "\n</pre>")
+  calls_df <- data.frame(Model = names(calls), Call = calls_html)
+  cat('<div style="height: 100%; overflow-y: auto;">\n\n')
+  print(knitr::kable(calls_df, format = "html", escape = FALSE, col.names = NULL))
+  cat('\n</div>\n\n')
+}
 ```
 
 
