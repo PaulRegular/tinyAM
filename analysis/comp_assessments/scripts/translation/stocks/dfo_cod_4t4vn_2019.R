@@ -127,7 +127,7 @@ translate_stock <- function(source) {
       "### Southern Gulf cod: accepted detailed assessment to 2018",
       "",
       "| Component | Accepted assessment | tinyAM representation | Reason for difference |",
-      "|---|---|---|---|",
+      "|---|------|------|------|",
       "| Years | The SCA model covers 1950-2018; source landings-at-age data begin in 1971. RV weights are missing for 1980 and 1985. | Fit 1971-2018. Linearly interpolate RV weights for 1980 and 1985 for this fit only; exclude RV indices in those years and the anomalous 2003 index. | This retains the full landings-at-age period without adding reconstructed values to the source database. |",
       "| Ages | The population model uses ages 2-12+, while survey age compositions cover ages 2-11. | Use ages 2-12, with age 12 as the plus group. | The reported RV age-11 weight is carried to 12+ as a fit-only weight proxy. |",
       "| N | Recruitment enters at age 2, depends on SSB two years earlier, and has autocorrelated variation; initial cohorts are reconstructed from recruitment. | Use exponential initial abundance, deterministic cohort survival, and tinyAM's recruitment process. | tinyAM does not reproduce the source stock-recruit relationship, recruitment autocorrelation, or initial-cohort estimation. |",

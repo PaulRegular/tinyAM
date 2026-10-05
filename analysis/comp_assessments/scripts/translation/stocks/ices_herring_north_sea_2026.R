@@ -85,7 +85,7 @@ translate_stock <- function(source) {
       "### North Sea autumn-spawning herring: accepted 2026 single-fleet assessment",
       "",
       "| Component | Accepted assessment | tinyAM representation | Reason for difference |",
-      "|---|---|---|---|",
+      "|---|------|------|------|",
       "| Years | The population model spans 1947–2026. Catch, weights, maturity and published M inputs end in 2025. | Fit 1947–2025 and compare on those common years. | The accepted 2026 biological inputs are not available in the report tables. |",
       "| Ages | Ages 0–8 winter rings, with age 8 as the plus group. | Ages 0–8, with age 8 as the plus group. | Source age labels are winter-ring classes. |",
       "| N | Recruitment has its own process variance; ages 1–8 share another variance. | Random-walk cohort deviations and free initial older-age abundance. | Variance sharing and initial-state integration differ from FLSAM. |",

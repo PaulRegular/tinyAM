@@ -111,7 +111,7 @@ translate_stock <- function(source) {
       "### Northern Shelf cod: accepted 2025 three-substock SAM assessment",
       "",
       "| Component | Accepted assessment | tinyAM representation | Reason for difference |",
-      "|---|---|---|---|",
+      "|---|------|------|------|",
       "| Years | The accepted population model spans 1983–2025; catch ends in 2024 and supplied M observations end in 2022. | Fit 1983–2022. | This uses only years with a complete supplied M surface and compares outputs over that common period. |",
       "| Ages | Three substocks are modeled at ages 1–7+, with age 7 as the plus group. | Fit one combined population at ages 1–7, retaining age 7 as the plus group. | tinyAM has no substock population structure. |",
       "| N | Recruitment follows a random walk and each substock has its own abundance process. | One random-walk cohort process with free initial abundance. | Substock-specific processes and their covariance are not represented. |",

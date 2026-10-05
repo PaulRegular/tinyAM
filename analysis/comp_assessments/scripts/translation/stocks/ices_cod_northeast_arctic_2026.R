@@ -39,7 +39,7 @@ translate_stock <- function(source) {
       "### Northeast Arctic cod: accepted 2026 SAM assessment",
       "",
       "| Component | Accepted assessment | tinyAM representation | Reason for difference |",
-      "|---|---|---|---|",
+      "|---|------|------|------|",
       "| Years | Population and survey series span 1946–2026; catch ends in 2025. | Fit years 1946–2026. | Retains the final survey year; the 2026 catch row is missing. |",
       "| Ages | Population model ages 3–15, with survey observations reported as ages 3–12+. | Fit ages 3–12 with source biology retained through age 15; tinyAM's age-12 plus group uses hidden ages 12–15. | The grouped survey values remain 12+ observations and are compared with the corresponding grouped predictions. |",
       "| N | Stochastic recruitment, age-structured process variation, and no first-state process density. | Random-walk recruitment, IID abundance process, and free initial abundance. | These are the closest available settings; process variance sharing differs from SAM. |",

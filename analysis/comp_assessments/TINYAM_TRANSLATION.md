@@ -130,7 +130,7 @@ plan. Set `parallel = FALSE` when debugging.
 Each stock script supplies a short Markdown table aligned with `make_dat()`:
 
 | Component | Accepted assessment | tinyAM representation | Reason for difference |
-|-----------|---------------------|-----------------------|-----------------------|
+|---|------|------|------|
 | Years | Fitted historical years | Years used in this fit | Explain any restricted period |
 | Ages | Recruitment age and terminal age group | Model ages and plus group | Explain any age restriction or grouping |
 | N | Recruitment, survival, process variation, and initial abundance | `N_settings` and recruitment treatment | Explain omitted or changed population assumptions |
@@ -150,6 +150,11 @@ curation history from `source_reviews/`.
 Pass this Markdown to `vis_tam(background = background)`. The dashboard should
 display a Background page only when text is supplied; ordinary dashboards
 without background text retain their existing layout.
+
+The Background option accepts general Markdown and imposes no table-specific
+styling. For these stock tables, the separator `|---|------|------|------|`
+sets relative column widths of 1:2:2:2 in Pandoc. Keep layout choices in the
+stock scripts.
 
 ------------------------------------------------------------------------
 

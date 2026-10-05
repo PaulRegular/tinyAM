@@ -33,7 +33,7 @@ translate_stock <- function(source) {
       "### Northern Shelf haddock: accepted 2026 SAM assessment",
       "",
       "| Component | Accepted assessment | tinyAM representation | Reason for difference |",
-      "|---|---|---|---|",
+      "|---|------|------|------|",
       "| Years | Population and survey series span 1972–2026; catch ends in 2025. | Fit years 1972–2026. | Retains the final survey year; catch is unavailable in 2026. |",
       "| Ages | Ages 0–8+, with age 8 as a plus group. | Ages 0–8, with age 8 as the plus group. | The age range and plus group are retained. |",
       "| N | Random-walk recruitment; N-process variance differs for recruits, ages 1–7 and the plus group; the first state has no process density. | Random-walk recruitment, IID abundance process and free initial abundance. | tinyAM cannot match the source's exact variance sharing. |",

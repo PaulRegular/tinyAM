@@ -63,7 +63,7 @@ translate_stock <- function(source) {
     "### Gulf of Alaska pollock: accepted 2024 Model 23d",
     "",
     "| Component | Accepted assessment | tinyAM representation | Reason for difference |",
-    "|---|---|---|---|",
+    "|---|------|------|------|",
     "| Years | 1970-2024; the accepted age-structured model is the Western/Central/West Yakutat stock. | Fit 1970-2024. | The accepted model period and stock area are retained. |",
     "| Ages | Ages 1-10+, with recruitment at age 1. | Ages 1-10, with age 10 as the plus group. | The terminal group is retained. |",
     "| N | Recruitment varies with fixed SD 1.3; older fish survive deterministically, and initial ages are tied to first-year recruitment and M. | Exponential initial abundance, no older-age process, and tinyAM's estimated random-walk recruitment process. | tinyAM cannot fix recruitment SD or reproduce the source's exact initial-state construction. |",

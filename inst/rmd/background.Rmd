@@ -1,25 +1,6 @@
 Background {#assessment-background}
 ================================================================================
 
-<style>
-#assessment-background table {
-  width: 100%;
-  table-layout: fixed;
-}
-#assessment-background col {
-  width: auto;
-}
-#assessment-background col:first-child,
-#assessment-background th:first-child {
-  width: 14.2857%;
-}
-#assessment-background th,
-#assessment-background td {
-  vertical-align: top;
-  overflow-wrap: break-word;
-}
-</style>
-
 ```{r, results='asis', echo=FALSE}
 knitr::asis_output(paste(background, collapse = "\n"))
 ```

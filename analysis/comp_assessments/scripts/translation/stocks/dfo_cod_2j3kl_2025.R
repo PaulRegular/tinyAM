@@ -38,7 +38,7 @@ translate_stock <- function(source) {
       "### Northern cod (2J3KL): accepted 2025 xteNCAM assessment",
       "",
       "| Component | Accepted assessment | tinyAM representation | Reason for difference |",
-      "|---|---|---|---|",
+      "|---|------|------|------|",
       "| Years | The accepted population model covers 1954–2024; catch-at-age is reported from 1962. | Retain the existing 1968–2024 tinyAM comparison window and use the reported year-age values directly. | This keeps the simplified fit period unchanged while correcting the maturity-year indexing. |",
       "| Ages | The population model begins at age 0; catch and fall RV observations cover ages 2–14. | Model ages 2–14, with recruitment entering at age 2. | Juvenile index streams at ages 0–1 have no documented sampling time for tinyAM. Age-2 recruitment is not directly comparable with the source's age-0 recruitment. |",
       "| N | The source estimates annual abundance with cohort and age/year process structure. | IID cohort-process deviations and freely estimated initial abundance. | tinyAM cannot reproduce the source covariance or initial-state integration. |",

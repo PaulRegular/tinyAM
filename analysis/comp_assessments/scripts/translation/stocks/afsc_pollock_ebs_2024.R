@@ -41,7 +41,7 @@ translate_stock <- function(source) {
       "### Eastern Bering Sea pollock: accepted 2024 Model 23.0",
       "",
       "| Component | Accepted assessment | tinyAM representation | Reason for difference |",
-      "|---|---|---|---|",
+      "|---|------|------|------|",
       "| Years | Population model years 1964-2024. | Fit 1964-2024. | The accepted model period is retained. |",
       "| Ages | Ages 1-15, with age 15 as the model plus group. | Ages 1-15, with age 15 as the plus group. | The model age range is retained; report tables may group ages 10-15 as 10+. |",
       "| N | Age-1 recruitment varies by year; initial ages 2-15 have a shared log mean and regularized age deviations. | Exponential initial abundance, deterministic older-age survival, and tinyAM's recruitment process. | The source initial-age penalty and recruitment variance are not reproduced. |",
