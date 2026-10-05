@@ -32,7 +32,9 @@ from the previous assessment.
 The numerical indices are NASF acoustic abundance at ages 3–12+ (1988–2008
 and 2015–2025), IESNS Barents Sea at age 2 (1991–2024 except 2008), IESNS
 Norwegian Sea at ages 3–12+ (1996–2025), and BESS at ages 2–3 (2004–2024). The 2025 fitted
-period uses values through 2024. The database keeps source survey units and
+period uses values through 2024. Although the Barents abundance table lists
+ages 1–5, its SAM relative-error table specifies age 2 only, so only age 2 is
+recorded as a fitted index input. The database keeps source survey units and
 records approximate seasonal timing: 0.13 for NASF, 0.42 for IESNS Barents,
 0.38 for IESNS Norwegian Sea, and 0.75 for BESS. Exact fitted fleet settings
 were not recovered.

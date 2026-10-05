@@ -290,6 +290,8 @@ assumptions <- do.call(rbind, list(
                  "NASF is split into pre-2015 and 2015-onward series in the benchmark. RFID point estimates are available only in a figure, so numerical rows are not fabricated."),
   new_assumption("index", "missing_observation_year", "IESNS Barents Sea: 2008", report_url,
                  "Table 4.4.7.2 has no abundance-at-age values for 2008; no observation is added for that year."),
+  new_assumption("index", "IESNS_Barents_model_age", "2", report_url,
+                 "The abundance table lists ages 1-5, but the relative-standard-error table used by SAM provides a value only for age 2; only age 2 is recorded as an accepted-model index input."),
   new_assumption("index", "survey_timing", "Approximate seasonal midpoints", report_url,
                  "NASF 0.13; IESNS Barents 0.42; IESNS Norwegian Sea 0.38; BESS 0.75. Exact accepted fleet settings were not recovered."),
   new_assumption("index", "external_precision", "Relative standard errors", report_url,
