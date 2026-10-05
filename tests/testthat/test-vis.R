@@ -190,15 +190,22 @@ test_that("tam_ref objects accept a Background page", {
   expect_equal(as.numeric(accepted_ssb[[1L]]$y), source_pop$ssb$est)
 
   file <- tempfile(fileext = ".html")
+  background <- c(
+    "## Assessment assumptions", "",
+    "| Component | Accepted assessment | tinyAM representation | Reason |",
+    "|---|---|---|---|",
+    "| Years | 2000\u20132024 and ages are retained. | Same years | Common period |",
+    "| Ages | 2\u201314 | Same ages | Retain the age range |",
+    "| Weights and maturity | The assessment\u2019s year-age inputs | Original values | Preserve inputs |",
+    "", "All assessment assumptions are included."
+  )
+  Encoding(background) <- "unknown"
   vis_tam(model_list = list(Assessment = source, tinyAM = N_dev),
-          background = c("## Assessment assumptions", "",
-                         "| Component | Accepted assessment | tinyAM representation | Reason |",
-                         "|---|---|---|---|",
-                         "| Years | 2000\u20132024 and ages are retained. | Same years | Common period |"),
+          background = background,
           output_file = file, open_file = FALSE,
           render_args = list(quiet = TRUE))
   con <- file(file, "rb")
-  html <- readLines(con, warn = FALSE)
+  html <- readLines(con, warn = FALSE, encoding = "UTF-8")
   close(con)
   expect_true(any(grepl("Background", html, fixed = TRUE)))
   expect_true(any(grepl("Assessment assumptions", html, fixed = TRUE)))
@@ -206,6 +213,10 @@ test_that("tam_ref objects accept a Background page", {
   expect_true(any(grepl('id="assessment-background"', html, fixed = TRUE)))
   expect_true(any(grepl("<th>Component</th>", html, fixed = TRUE)))
   expect_true(any(grepl("<td>Years</td>", html, fixed = TRUE)))
+  expect_true(any(grepl("2000\u20132024", html, fixed = TRUE)))
+  expect_true(any(grepl("<td>Ages</td>", html, fixed = TRUE)))
+  expect_true(any(grepl("<td>Weights and maturity</td>", html, fixed = TRUE)))
+  expect_true(any(grepl("All assessment assumptions are included.", html, fixed = TRUE)))
   expect_true(any(grepl("<h1>Fishery</h1>", html, fixed = TRUE)))
   expect_true(any(grepl("<h1>Trends</h1>", html, fixed = TRUE)))
   expect_true(any(grepl("<h1>Parameters</h1>", html, fixed = TRUE)))

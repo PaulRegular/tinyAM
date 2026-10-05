@@ -56,8 +56,9 @@ vis_tam <- function(..., model_list = NULL, interval = 0.95, output_file = NULL,
     if (!is.character(background) || !length(background) || anyNA(background)) {
       cli::cli_abort("{.arg background} must be NULL or Markdown text.")
     }
-    background <- paste(background, collapse = "\n")
-    background <- enc2utf8(background)
+    unmarked_utf8 <- Encoding(background) == "unknown" & validUTF8(background)
+    Encoding(background)[unmarked_utf8] <- "UTF-8"
+    background <- paste(enc2utf8(background), collapse = "\n")
     if (!nzchar(trimws(background))) background <- NULL
   }
 
