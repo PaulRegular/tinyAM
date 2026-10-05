@@ -62,19 +62,23 @@ biological details may be available upon request, but they are not in this
 public file. This inventory therefore does not recover the accepted run's
 catch compositions or survey age compositions.
 
-The tinyAM recipe uses annual M random walks from 1972, matching the source's
-process form and age groups. The source fixes the innovation SD at 0.075 and
-uses prior means for the initial levels through 1971; tinyAM estimates the
-innovation SD and keeps those initial levels as supplied baselines. Because
-the direct random-walk fit was numerically unstable from default starting
-values, the runner first fits an IID-M approximation and uses its estimates
-only to initialize the random-walk fit. The accepted assessment reports
-terminal M of 0.81 for ages 5-8 and 0.85 for ages 9+. The random-walk tinyAM
-fit converged (optimizer code 0, maximum absolute gradient 0.00081,
-positive-definite Hessian). Its terminal M estimates are 0.58 and 0.61, about
-28% below the accepted values. Across the eight reported age-group values,
-median absolute percent difference is 28.1%, down from 86.8% in the IID fit.
-SSB agreement also improved (mean absolute percent difference 26.5%, versus
-369.9% in the IID fit), while recruitment remains a poor match (507.4%). These
-are useful diagnostics, not evidence that the simplified fit reproduces the
-accepted assessment.
+The accepted assessment estimates log-M random walks for ages 2–4, 5–8, and
+9+. Each group's initial M level is held constant through 1971 and has a
+normal prior on the natural M scale (means 0.65, 0.15, and 0.15; SD 0.05);
+log-M innovations begin in 1972 and have a fixed SD of 0.075. The tinyAM
+translation now includes 1971 as the free first process state, so the first
+penalized change is from 1971 to 1972. The prior means are used only to
+initialize the tinyAM states: tinyAM cannot apply the source's initial-M prior
+or fix the innovation SD, so it estimates that SD and leaves the first M state
+unpenalized. Because the direct random-walk fit was numerically unstable from
+default starting values, the runner first fits an IID-M approximation and uses
+its estimates only to initialize the random-walk fit. The accepted assessment
+reports terminal M of 0.81 for ages 5-8 and 0.85 for ages 9+. The corrected
+tinyAM random-walk fit converged (optimizer code 0, maximum absolute gradient
+0.0027, positive-definite Hessian). Its 2018 M estimates are 0.62 and 0.60 for
+ages 5-8 and 9-12+, respectively. Across the eight age values used for
+comparison (the two reported source groups are expanded across their ages),
+the mean and median absolute percent difference are both 26.2%. Mean absolute
+differences are 34.7% for SSB, 40.3% for abundance-at-age, and 138.4% for
+recruitment. The fit converged, but these differences show that the simplified
+model is not a close reproduction of the accepted assessment.

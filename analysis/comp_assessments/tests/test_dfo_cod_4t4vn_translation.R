@@ -43,11 +43,22 @@ stopifnot(identical(
   obs$weight$obs[obs$weight$age == 12],
   obs$weight$obs[obs$weight$age == 11]
 ))
-stopifnot(all(obs$weight$M_assumption[obs$weight$age <= 4] == 0.65))
-stopifnot(all(obs$weight$M_assumption[obs$weight$age >= 5] == 0.15))
+stopifnot(all(obs$weight$M_prior_mean[obs$weight$age <= 4] == 0.65))
+stopifnot(all(obs$weight$M_prior_mean[obs$weight$age %in% 5:8] == 0.15))
+stopifnot(all(obs$weight$M_prior_mean[obs$weight$age >= 9] == 0.15))
 stopifnot(identical(translated$settings$M_settings$process, "rw"))
 stopifnot(identical(translated$settings$M_settings$age_breaks, c(2, 5, 9, 12)))
-stopifnot(identical(translated$settings$M_settings$first_dev_year, 1972L))
+stopifnot(identical(translated$settings$M_settings$first_dev_year, 1971L))
+dat <- do.call(tinyAM::make_dat, c(
+  list(obs = obs, years = translated$years, ages = translated$ages),
+  translated$settings
+))
+par <- tinyAM::make_par(dat)
+stopifnot(identical(rownames(par$log_m), as.character(1971:2018)))
+stopifnot(identical(colnames(par$log_m), c("2-4", "5-8", "9-12")))
+stopifnot(isTRUE(all.equal(
+  unname(par$log_m[1, ]), log(c(0.65, 0.15, 0.15))
+)))
 stopifnot(identical(
   translated$warm_start_settings$M_settings$process, "iid"
 ))

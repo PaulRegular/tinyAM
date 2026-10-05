@@ -73,7 +73,7 @@ translate_stock <- function(source) {
     exclude_index_years = setNames(list(c(1980, 1985, 2003)), rv),
     assumptions = source$assumptions
   )
-  obs$weight$M_assumption <- ifelse(obs$weight$age <= 4, 0.65, 0.15)
+  obs$weight$M_prior_mean <- ifelse(obs$weight$age <= 4, 0.65, 0.15)
   comparison_outputs <- source$outputs[
     source$outputs$measure %in% c(
       "numbers_at_age", "fishing_mortality_at_age", "SSB", "recruitment"
@@ -111,9 +111,9 @@ translate_stock <- function(source) {
       M_settings = list(
         process = "rw",
         mu_form = NULL,
-        mu_supplied = ~ M_assumption,
+        mu_supplied = ~ M_prior_mean,
         age_breaks = c(2, 5, 9, 12),
-        first_dev_year = 1972L
+        first_dev_year = 1971L
       ),
       catch_settings = list(sd_form = ~ 1, fill_missing = FALSE),
       index_settings = list(
@@ -132,7 +132,7 @@ translate_stock <- function(source) {
       "| Ages | The population model uses ages 2-12+, while survey age compositions cover ages 2-11. | Use ages 2-12, with age 12 as the plus group. | The reported RV age-11 weight is carried to 12+ as a fit-only weight proxy. |",
       "| N | Recruitment enters at age 2, depends on SSB two years earlier, and has autocorrelated variation; initial cohorts are reconstructed from recruitment. | Use exponential initial abundance, deterministic cohort survival, and tinyAM's recruitment process. | tinyAM does not reproduce the source stock-recruit relationship, recruitment autocorrelation, or initial-cohort estimation. |",
       "| F | The source estimates fully recruited F and period-specific logistic selectivity. | Use an age- and year-correlated AR1 F process. | This is a simpler representation of changing fishing mortality and selectivity. |",
-      "| M | The source estimates annual M random walks for ages 2-4, 5-8, and 9+, beginning in 1972. Prior means of 0.65, 0.15, and 0.15 apply to the initial levels through 1971. | Use the same age groups and a tinyAM random walk from 1972, with supplied initial levels for 1971. The final fit is initialized from a converged IID-M fit; those estimates are starting values only. | tinyAM estimates the random-walk SD, whereas the source fixes it at 0.075; tinyAM also does not include the source's prior distribution for initial M. |",
+      "| M | The source estimates log-M random walks for ages 2-4, 5-8, and 9+. Each group has one estimated initial M level through 1971, with prior means 0.65, 0.15, and 0.15 and SD 0.05; log-M increments begin in 1972 with SD fixed at 0.075. | Use the same age groups, with the first tinyAM M state in 1971 and random-walk increments from 1972. The prior means initialize those states; the final fit is initialized from a converged IID-M fit, whose estimates are starting values only. | tinyAM cannot apply the source prior to initial M or fix the random-walk SD at 0.075, so it estimates the increment SD and leaves each initial M state unpenalized. |",
       "| Catch | The source fits annual catch biomass and proportions-at-age for ages 2-12+. The database contains landed numbers-at-age for ages 3-12+ from 1971 onward, not the fitted catch composition. | Use the landings-at-age series as an explicit fit-only proxy for catch-at-age in 1971-2018; age 2 remains missing. | The original age proportions are not tabulated, so landings cannot be scaled to the source's total catch. tinyAM then uses a lognormal age-specific observation model rather than the source's total-plus-composition likelihood. |",
       "| Index | The source uses RV, mobile sentinel, and longline indices. RV 2003 is excluded by the assessment; longline combines July-October observations. | Use RV and mobile sentinel age-specific indices, with sampling times 0.75 and 0.625. Exclude RV 2003 and omit longline. | The timing values are seasonal approximations; one within-year time is not supported for the longline series. |",
       "| Weights and maturity | Survey weights and year-varying maturity are reported; the source's RV weights are available by age 2-11. | Use RV weights for population biomass and source survey weights for index reconstruction. Retain annual maturity. | Age-12+ RV weight is unavailable and uses the age-11 proxy noted above. The source does not specify maturity by sex. |",
