@@ -227,6 +227,7 @@ total_numbers
 total_biomass
 proportion_at_age
 relative_precision_weight
+relative_standard_error
 ```
 
 ### Biology
@@ -259,6 +260,12 @@ for each survey, year and age. Use type = index and basis =
 relative_precision. Record the weight scale and any equivalent relative
 log-SD transformation in the notes.
 
+`relative_standard_error` stores the source-reported standard error divided by
+the estimate for an age-specific catch or index observation. Use basis =
+`relative_scale`, retain the reported value and unit, and record whether the
+assessment used it as an observation weight. It is a source precision measure,
+not an observation or a tinyAM-estimated standard error.
+
 `larval_abundance_index` represents an index tied to a spawning component. Use
 `type = index`, `basis = numbers`, blank fish age, and record the spawning
 component in `region` and survey time window in `season`. Native units and
@@ -285,6 +292,7 @@ proportion
 per_year
 log_scale
 relative_precision
+relative_scale
 index_scale
 ```
 

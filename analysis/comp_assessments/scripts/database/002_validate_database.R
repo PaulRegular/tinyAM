@@ -151,11 +151,11 @@ allowed_input_measures <- c("numbers_at_age", "biomass_at_age", "total_numbers",
                             "conditional_proportion_at_age", "weight_at_age", "spawning_weight_at_age",
                             "maturity_at_age", "natural_mortality_at_age",
                             "landings_proportion", "landings_numbers_at_age", "landings_fraction_at_age",
-                            "landings_weight_at_age", "discard_weight_at_age", "log_index_sd", "index_sd", "relative_precision_weight", "larval_abundance_index", "environmental_covariate", "fraction_F_before_spawning",
+                            "landings_weight_at_age", "discard_weight_at_age", "log_index_sd", "index_sd", "relative_precision_weight", "relative_standard_error", "larval_abundance_index", "environmental_covariate", "fraction_F_before_spawning",
                             "fraction_M_before_spawning")
 allowed_bases <- c("numbers", "biomass", "proportion_numbers", "proportion_biomass",
                    "kg_per_fish", "proportion", "per_year", "log_scale", "native_covariate",
-                   "relative_precision", "index_scale")
+                   "relative_precision", "relative_scale", "index_scale")
 for (name in c("inputs", "outputs")) {
   x <- tables[[name]]
   if (anyNA(x$source_type) || any(!x$source_type %in% allowed_sources)) {
@@ -195,7 +195,7 @@ for (name in c("inputs", "outputs")) {
     x$measure %in% c("numbers_at_age", "biomass_at_age", "proportion_at_age",
                      "conditional_proportion_at_age", "fraction_F_before_spawning",
                      "fraction_M_before_spawning", "weight_at_age", "spawning_weight_at_age", "maturity_at_age", "natural_mortality_at_age",
-                     "landings_numbers_at_age", "landings_fraction_at_age",
+                     "landings_numbers_at_age", "landings_fraction_at_age", "relative_standard_error",
                      "landings_weight_at_age", "discard_weight_at_age", "relative_precision_weight")
   } else {
     has_age_group <- if ("age_group" %in% names(x)) {
