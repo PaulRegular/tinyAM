@@ -1,5 +1,20 @@
-Background
+Background {#assessment-background}
 ================================================================================
+
+<style>
+#assessment-background table {
+  width: 100%;
+}
+#assessment-background th:first-child,
+#assessment-background td:first-child {
+  width: 1%;
+  white-space: nowrap;
+}
+#assessment-background th:not(:first-child),
+#assessment-background td:not(:first-child) {
+  width: 33%;
+}
+</style>
 
 ```{r, results='asis', echo=FALSE}
 knitr::asis_output(paste(background, collapse = "\n"))
