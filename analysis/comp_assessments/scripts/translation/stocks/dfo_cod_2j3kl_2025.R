@@ -72,7 +72,7 @@ translate_stock <- function(source, smith_sound = TRUE, juveniles = FALSE) {
     ages = ages,
     obs = obs,
     comparison_scales = c(
-      recruitment = 1e-6, ssb = 1e-6, abundance = 1e-6,
+      N = 1e-6, recruitment = 1e-6, ssb = 1e-6, abundance = 1e-6,
       biomass = 1e-6, F_bar = 1, M_bar = 1, Z_bar = 1
     ),
     settings = list(

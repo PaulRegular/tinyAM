@@ -180,6 +180,8 @@ database_to_tam_ref <- function(assessment_id, outputs, obs = NULL, years = NULL
     total_biomass = "biomass",
     total_numbers = "abundance",
     biomass_at_age = "biomass_at_age",
+    mature_biomass_at_age = "ssb_mat",
+    total_mortality_at_age = "Z",
     Fbar = "F_bar",
     Mbar = "M_bar",
     Zbar = "Z_bar"
@@ -193,6 +195,8 @@ database_to_tam_ref <- function(assessment_id, outputs, obs = NULL, years = NULL
     total_biomass = "biomass",
     total_numbers = "population",
     biomass_at_age = "biomass",
+    mature_biomass_at_age = "biomass",
+    total_mortality_at_age = "mortality",
     Fbar = "mortality",
     Mbar = "mortality",
     Zbar = "mortality"
@@ -205,7 +209,9 @@ database_to_tam_ref <- function(assessment_id, outputs, obs = NULL, years = NULL
     if (nrow(rows)) pop[[unname(measure_map[[measure]])]] <- reporting_table(rows)
   }
 
-  if (is.null(pop$M) && !is.null(obs$weight$M_assumption)) {
+  source_m_status <- attr(obs, "translation")$M$status
+  if (is.null(pop$M) && !is.null(obs$weight$M_assumption) &&
+      identical(source_m_status, "fixed_numerical_input")) {
     m <- unique(obs$weight[c("year", "age", "M_assumption")])
     names(m)[[3L]] <- "est"
     m$year <- as.integer(m$year)
@@ -213,9 +219,11 @@ database_to_tam_ref <- function(assessment_id, outputs, obs = NULL, years = NULL
     m$se_scale <- NA_character_
     m$lwr <- NA_real_
     m$upr <- NA_real_
-    m$unit <- NA_character_
+    m$unit <- "per year"
     m$source_type <- "translated_source_input"
-    m$source_reference <- NA_character_
+    provenance <- attr(obs, "translation")$source_provenance
+    m$source_reference <- if (is.null(provenance)) NA_character_ else
+      paste(unique(provenance$source_reference[provenance$component == "M"]), collapse = "; ")
     m$notes <- "Fixed natural mortality input; not an estimated output."
     m$is_proj <- FALSE
     pop$M <- m[c("year", "age", "est", "se", "se_scale", "lwr", "upr",
@@ -320,6 +328,8 @@ database_to_tam_ref <- function(assessment_id, outputs, obs = NULL, years = NULL
   }
 
   out$comparison_scales <- comparison_scales
+  # Keep native definitions and age coverage before filling the fitted template.
+  attr(out, "source_pop") <- pop
   class(out) <- c("tam_ref", "list")
   out
 }
