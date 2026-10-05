@@ -27,7 +27,7 @@ age_table_years <- list(
   `4.4.4.2` = 1950:2025,
   `4.4.5.1` = 1950:2025,
   `4.4.7.1` = 1988:2025,
-  `4.4.7.2` = 1991:2024,
+  `4.4.7.2` = c(1991:2007, 2009:2024),
   `4.4.7.3` = 1996:2025,
   `4.4.7.4` = 2004:2024,
   `4.4.8.1` = 1988:2024,
@@ -288,6 +288,8 @@ assumptions <- do.call(rbind, list(
   new_assumption("weight", "catch_weight", "Annual catch weight-at-age", report_url),
   new_assumption("index", "surveys", "NASF, IESNS Barents, IESNS Norwegian Sea, BESS, and RFID", report_url,
                  "NASF is split into pre-2015 and 2015-onward series in the benchmark. RFID point estimates are available only in a figure, so numerical rows are not fabricated."),
+  new_assumption("index", "missing_observation_year", "IESNS Barents Sea: 2008", report_url,
+                 "Table 4.4.7.2 has no abundance-at-age values for 2008; no observation is added for that year."),
   new_assumption("index", "survey_timing", "Approximate seasonal midpoints", report_url,
                  "NASF 0.13; IESNS Barents 0.42; IESNS Norwegian Sea 0.38; BESS 0.75. Exact accepted fleet settings were not recovered."),
   new_assumption("index", "external_precision", "Relative standard errors", report_url,
@@ -453,14 +455,14 @@ append_rows <- function(path, rows) {
                      col.names = FALSE, append = TRUE, na = "")
 }
 
+input_rows <- do.call(rbind, inputs)
+output_rows <- do.call(rbind, outputs)
 stock_path <- file.path(database, "stocks.csv")
 stock_existing <- read.csv(stock_path, colClasses = "character", na.strings = "",
                            check.names = FALSE)
 if (any(stock_existing$stock_id == stock_row$stock_id)) {
   stop("Norwegian spring-spawning herring stock already exists.", call. = FALSE)
 }
-input_rows <- do.call(rbind, inputs)
-output_rows <- do.call(rbind, outputs)
 paths <- file.path(database, c("assessments.csv", "assumptions.csv",
                                "inputs.csv", "outputs.csv"))
 rows <- list(assessment_rows, assumptions, input_rows, output_rows)
