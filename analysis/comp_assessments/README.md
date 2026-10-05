@@ -12,7 +12,7 @@ This analysis translates selected production age-structured assessments into tin
 | Translation, fitting, and comparison workflow | `TINYAM_TRANSLATION.md` |
 | Stock-specific source checks and unresolved gaps | `source_reviews/` |
 | Shared readers, converters, audits, and runners | `R/` |
-| Stock model choices and RStudio entry scripts | `scripts/translation/` |
+| Database construction and stock model choices scripts | `scripts/translation/` |
 | Readiness and aggregate run results | `results/` |
 
 The five CSVs in `database/` are canonical. Source PDFs, data files, and model objects are cached locally under the gitignored `source_cache/` directory when available. Do not place tinyAM settings or derived run outputs in the canonical tables.
@@ -36,7 +36,7 @@ coverage, whether observation translation succeeds, and whether
 `make_dat()`; recipe-level model readiness is checked during translation. A
 ready observation object does not guarantee model convergence.
 
-## Fit one assessment in RStudio
+## Fit one assessment
 
 Open `scripts/translation/run_stock.R`, set `assessment_id`, then source it. It uses the working-tree database and leaves the source record, observations, settings, fit, reference, audit, diagnostics, and comparison summary in the workspace. Use `fit = FALSE` through `run_assessment()` to inspect a translation first.
 
