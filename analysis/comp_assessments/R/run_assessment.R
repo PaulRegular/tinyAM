@@ -94,7 +94,7 @@ rm(.assessment_helper)
 }
 
 run_assessment <- function(assessment_id, database = NULL, fit = TRUE,
-                            dashboard = FALSE, cache = FALSE) {
+                            dashboard = FALSE, cache = FALSE, silent = TRUE) {
   if (is.null(database)) database <- read_database()
   if (length(fit) != 1L || is.na(fit) || !is.logical(fit) ||
       length(dashboard) != 1L || is.na(dashboard) || !is.logical(dashboard) ||
@@ -162,7 +162,7 @@ run_assessment <- function(assessment_id, database = NULL, fit = TRUE,
 
   started <- Sys.time()
   fit_args <- c(list(obs = translated$obs, years = translated$years,
-                     ages = translated$ages, silent = TRUE), translated$settings)
+                     ages = translated$ages, silent = silent), translated$settings)
   if (!is.null(translated$start_par)) {
     fit_args$start_par <- translated$start_par
   } else if (!is.null(translated$warm_start_settings)) {
@@ -170,7 +170,7 @@ run_assessment <- function(assessment_id, database = NULL, fit = TRUE,
       translated$settings, translated$warm_start_settings
     )
     warm_args <- c(list(obs = translated$obs, years = translated$years,
-                        ages = translated$ages, silent = TRUE), warm_settings)
+                        ages = translated$ages, silent = silent), warm_settings)
     warm_fit <- tryCatch(do.call(tinyAM::fit_tam, warm_args), error = identity)
     if (inherits(warm_fit, "error") || !isTRUE(warm_fit$is_converged)) {
       result$diagnostics <- .assessment_diagnostics(
