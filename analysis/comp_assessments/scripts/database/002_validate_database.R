@@ -186,8 +186,10 @@ for (name in c("inputs", "outputs")) {
   }
   year <- whole_year(x, "year", name, allow_blank = name %in% c("inputs", "outputs"))
   blank_year <- is.na(x$year) | !nzchar(as.character(x$year))
-  if (name == "outputs" && any(blank_year & !x$measure %in% c("q", "q_power"))) {
-    stop("outputs$year may be blank only for time-invariant q or q_power estimates.", call. = FALSE)
+  if (name == "outputs" && any(blank_year & !x$measure %in% c(
+    "q", "q_power", "process_sd", "observation_sd"
+  ))) {
+    stop("outputs$year may be blank only for time-invariant parameters or SD estimates.", call. = FALSE)
   }
   age_required <- if (name == "inputs") {
     x$measure %in% c("numbers_at_age", "biomass_at_age", "proportion_at_age",

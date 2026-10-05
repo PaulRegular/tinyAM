@@ -269,6 +269,27 @@ predictions <- rbind(
               notes = "Exponentiated SAM log-scale fitted predictions.")
 )
 
+sd_outputs <- rbind(
+  output_rows("population", "process_sd", year = NA_integer_,
+              age_group = c("1", "2-10"), value = exp(sam$pl$logSdLogN),
+              unit = "log-scale SD",
+              notes = "Fitted N-process standard deviation on log states."),
+  output_rows("mortality", "process_sd", year = NA_integer_,
+              age_group = "1-10", value = exp(sam$pl$logSdLogFsta),
+              unit = "log-scale SD",
+              notes = "Fitted age-correlated F-increment standard deviation on log states."),
+  output_rows("catch", "observation_sd", year = NA_integer_,
+              age_group = c("1", "2", "3-8", "9-10"),
+              value = exp(sam$pl$logSdLogObs[1:4]), unit = "log-scale SD",
+              fleet = "Commercial catch",
+              notes = "Fitted SD of log catch observations; the source model also correlates residuals across ages."),
+  output_rows("index", "observation_sd", year = NA_integer_,
+              age_group = c("1", "2", "3", "4-6", "7-8"),
+              value = exp(sam$pl$logSdLogObs[5:9]), unit = "log-scale SD",
+              survey = "IBWSS",
+              notes = "Fitted SD of log survey observations; the source model also correlates residuals across ages.")
+)
+
 outputs <- rbind(
   surface_output(n_est, "population", "numbers_at_age", "thousand fish",
                  se = n_se,
@@ -294,7 +315,8 @@ outputs <- rbind(
   output_rows("catchability", "q", year = NA_integer_, age = q_age,
               age_group = q_groups, value = q_value, unit = "index per abundance unit",
               survey = "IBWSS", notes = "Exponentiated SAM log-q parameter; shared across the documented age groups."),
-  predictions
+  predictions,
+  sd_outputs
 )
 
 stopifnot(nrow(catch) == length(years) * length(ages))

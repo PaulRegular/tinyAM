@@ -45,6 +45,9 @@ stopifnot(nrow(fbar) == 1L, abs(fbar$value - 0.5082964) < 1e-6)
 total_biomass <- subset(outputs, measure == "total_biomass" & year == 2025)
 stopifnot(nrow(total_biomass) == 1L,
           abs(total_biomass$value - 8578674) < 1)
+stopifnot(nrow(subset(outputs, measure == "process_sd")) == 3L)
+stopifnot(nrow(subset(outputs, measure == "observation_sd")) == 9L)
+stopifnot(all(subset(outputs, measure %in% c("process_sd", "observation_sd"))$value > 0))
 stopifnot(isTRUE(sam$opt$convergence == 0L), isTRUE(sam$sdrep$pdHess))
 
 cat("Blue whiting database record validated: ", nrow(inputs),
