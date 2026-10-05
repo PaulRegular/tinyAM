@@ -333,23 +333,15 @@ m_estimated <- database_to_tam_M("dfo_cod_4t4vn_2019", inputs_db,
 expect_equal(m_estimated$status, "estimated_in_source")
 expect_equal(is.null(m_estimated$surface), TRUE)
 
-sg_obs <- database_to_tam_obs(
+# Raw landings require the documented stock-recipe catch proxy.
+sg_error <- tryCatch(database_to_tam_obs(
   "dfo_cod_4t4vn_2019", inputs_db, years = 1986:2018, ages = 2:11,
   weight_survey = "DFO September RV survey",
-  sampling_times = c("DFO September RV survey" = 0.75,
-                     "Mobile Sentinel August survey" = 0.625,
-                     "Longline Sentinel survey" = 0.67),
-  surveys = c("DFO September RV survey", "Mobile Sentinel August survey",
-              "Longline Sentinel survey"),
-  exclude_index_years = list("DFO September RV survey" = 2003)
-)
-expect_equal(nrow(sg_obs$weight), 330L)
-expect_equal(sum(is.na(sg_obs$catch$obs)), 33L)
-expect_equal(any(!is.finite(sg_obs$index$obs)), FALSE)
-expect_equal(as.integer(table(sg_obs$index$survey)), c(320L, 161L, 160L))
-expect_equal(any(sg_obs$index$survey == "DFO September RV survey" &
-                   sg_obs$index$year == 2003), FALSE)
-expect_equal(all(sg_obs$index$samp_time %in% c(0.75, 0.625, 0.67)), TRUE)
+  sampling_times = c("DFO September RV survey" = 0.75),
+  surveys = "DFO September RV survey"
+), error = identity)
+expect_equal(inherits(sg_error, "error"), TRUE)
+expect_equal(grepl("No source catch-at-age", conditionMessage(sg_error)), TRUE)
 
 nea_id <- "ices_cod_northeast_arctic_2026"
 nea_obs <- database_to_tam_obs(nea_id, inputs_db,
@@ -580,6 +572,8 @@ template_obs <- list(
   maturity = data.frame(year = rep(template_years, each = 2), age = rep(template_ages, 3),
                         obs = 0.5)
 )
+attr(template_obs, "translation") <- list(M = list(status = "fixed_numerical_input"))
+
 template_fit <- list(
   call = quote(fit_tam()), refit_args = list(),
   dat = list(obs = template_obs, years = template_years,

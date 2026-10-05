@@ -100,3 +100,18 @@ age-specific mortality surfaces with tinyAM's population weighting. Preserve
 the native Table 17/18 aggregates for dashboard context and label comparisons
 derived from rounded age-specific tables separately. No plot digitization or
 invented SEs are used.
+
+## Integration check (2026-10-05)
+
+`check_northern_cod_indices.R` compares the RV-only fit, RV plus reconstructed
+Smith Sound, and RV/Smith plus the juvenile indices using the same other
+settings. RV alone and RV plus Smith converge, with optimizer code 0,
+maximum absolute gradients below 0.001, positive-definite Hessians and
+successful uncertainty estimation. The main recipe retains Smith Sound.
+
+The age-0/1 trial fails with an NA/NaN gradient evaluation. No valid optimizer
+result or gradient is available for that trial. It is not selected, and no
+undocumented starting-value adjustments or extra model constraints are used
+to force convergence. The source's zero F at ages 0-1 and exact annual juvenile
+timing remain limitations of this trial. See `results/northern_cod_indices.csv`
+for the compact diagnostics and recorded database revision.

@@ -35,3 +35,7 @@ runs <- run_assessments(
 Use `run_assessment(..., fit = FALSE)` to inspect the translated observations
 and settings before fitting. Use `run_assessments(parallel = FALSE)` when
 debugging a multi-assessment run.
+
+Run `translation/check_northern_cod_indices.R` to compare the RV-only,
+RV/Smith Sound and juvenile-index trial fits. It writes compact diagnostics
+to `results/northern_cod_indices.csv` without saving fitted objects.

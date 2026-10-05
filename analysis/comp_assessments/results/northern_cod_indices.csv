@@ -1,0 +1,4 @@
+"assessment_id","database_revision","status","is_converged","optimizer_code","optimizer_message","objective","max_abs_gradient","sdreport_success","positive_definite_hessian","n_fixed_effects","n_random_effects","elapsed_seconds","reason","trial","selected"
+"dfo_cod_2j3kl_2025","8da4d9a09fba4d16ea6617a775e30d5216ed8c81","converged",TRUE,0,"relative convergence (4)",1031.09323590403,0.000962795063230715,TRUE,TRUE,19,1002,355.33284497261,"","RV",FALSE
+"dfo_cod_2j3kl_2025","8da4d9a09fba4d16ea6617a775e30d5216ed8c81","converged",TRUE,0,"relative convergence (4)",1106.66573123487,0.000958891844653476,TRUE,TRUE,32,1002,306.626887083054,"","RV_Smith",TRUE
+"dfo_cod_2j3kl_2025","8da4d9a09fba4d16ea6617a775e30d5216ed8c81","fit_failed",FALSE,,,,,TRUE,FALSE,,1116,198.358824014664,"Optimizer did not return a result: Error in stats::nlminb(obj$par, obj$fn, obj$gr, lower = lower, control = list(eval.max = 1000, : NA/NaN gradient evaluation","RV_Smith_juveniles",FALSE
