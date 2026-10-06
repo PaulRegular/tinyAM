@@ -157,6 +157,16 @@ if (length(weighted)) {
     transformation = "Copied the finite native SAM observation precision weights.",
     notes = "SAM fits other index observations without a finite row-specific precision weight; missing weights remain unfilled."
   ))
+  inputs <- rbind(inputs, input_rows(
+    "index", "log_index_sd", "log_scale",
+    aux$year[weighted], aux$age[weighted], 1 / sqrt(dat$weight[weighted]),
+    "relative log-scale SD factor",
+    survey = fleet_names[aux$fleet[weighted]],
+    sampling_time = sample_times[aux$fleet[weighted]],
+    source_reference = paste0(model_url, "; fit$data$weight and fit$data$aux"),
+    transformation = "Derived as 1/sqrt(native precision weight), matching the relative SD multiplier in the SAM lognormal likelihood.",
+    notes = "The multiplier applies to the estimated observation SD; observations with no native precision weight use a multiplier of 1 in tinyAM."
+  ))
 }
 
 output_rows <- function(type, measure, year, age = NA_integer_,

@@ -6,7 +6,7 @@ The canonical record represents the accepted 2026 ICES HAWG assessment, fitted f
 
 ## Inputs and assumptions
 
-The cached fit contains all 315 total-catch-at-age observations and 372 finite survey observations (five HERAS ages 2-6 are missing in 1999), annual stock and catch weights, maturity, fixed natural mortality, spawning fractions, and the finite observation precision weights supplied to SAM. Survey names, age ranges, plus groups, and sampling fractions are taken from the accepted object. The report and native configuration specify the source age sharing and likelihood structures.
+The cached fit contains all 315 total-catch-at-age observations and 372 finite survey observations (five HERAS ages 2-6 are missing in 1999), annual stock and catch weights, maturity, fixed natural mortality, spawning fractions, and the finite observation precision weights supplied to SAM and their equivalent relative SD factors. Survey names, age ranges, plus groups, and sampling fractions are taken from the accepted object. The report and native configuration specify the source age sharing and likelihood structures.
 
 The report states that M is time-invariant and age-specific, derived from North Sea autumn-spawning herring M, and profiled during the 2025 benchmark. The production model uses mortalityModel=0; the M values in the database are fixed inputs, not estimated by this assessment. Maturity is time-invariant. Fractions of annual fishing and natural mortality before spawning are 0.168 and 0.25.
 
