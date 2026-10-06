@@ -421,6 +421,7 @@ Use `natural_mortality_at_age` when M is estimated.
 ``` text
 total_biomass
 mature_biomass_at_age
+biomass_by_age_group
 total_mortality_at_age
 predicted_catch
 predicted_index
@@ -433,6 +434,8 @@ msy
 ```
 
 Use measures only when they are defined by the accepted assessment.
+
+biomass_by_age_group stores a reported aggregate biomass for a named age group, such as 3+. Put the group label in age_group and leave age blank; it is not an age-specific biomass surface.
 
 Retain uncertainty where readily available. Parameter estimates reported by the accepted assessment may be stored as `type = biology`, with `measure` naming the exact parameter and `age` or `year` set only when that dimension applies.
 

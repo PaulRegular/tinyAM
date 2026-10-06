@@ -220,7 +220,9 @@ run_assessment <- function(assessment_id, database = NULL, fit = TRUE,
 
   result$differences <- .assessment_percent_differences(
     fitted, result$ref, assumptions = source$assumptions,
-    comparison_aggregates = translated$comparison_aggregates
+    comparison_aggregates = translated$comparison_aggregates,
+    comparison_age_groups = translated$comparison_age_groups,
+    comparison_definitions = translated$comparison_definitions
   )
   result$summary <- .assessment_comparison_summary(
     result$differences, assessment_id

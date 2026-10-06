@@ -704,6 +704,15 @@ use a documented compatible alternative or exclude the grouped observation
 explicitly. Do not fit it against age-12 abundance alone. Apply the same rule
 when comparing grouped population or mortality outputs.
 
+For fitted-output comparisons, a report's display groups are separate from the
+model's plus group. A stock recipe can declare an explicit
+comparison_age_groups mapping, such as N = list("10+" = 10:15), so a source
+10+ estimate is compared with the sum of tinyAM ages 10-15 without changing the
+tinyAM model plus age. Never compare a reported 10+ value with tinyAM age 10
+alone. In database_to_tam_ref(), additive N and biomass values are summed
+when multiple source ages are collapsed; F and M are N-weighted only when
+multiple source ages are actually combined. A single source rate already at
+the requested terminal age is retained as reported.
 ------------------------------------------------------------------------
 
 # 11. Audit source assumptions before choosing settings

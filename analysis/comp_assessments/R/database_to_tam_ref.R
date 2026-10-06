@@ -180,6 +180,7 @@ database_to_tam_ref <- function(assessment_id, outputs, obs = NULL, years = NULL
     total_biomass = "biomass",
     total_numbers = "abundance",
     biomass_at_age = "biomass_at_age",
+    biomass_by_age_group = "biomass_at_age",
     mature_biomass_at_age = "ssb_mat",
     total_mortality_at_age = "Z",
     Fbar = "F_bar",
@@ -195,6 +196,7 @@ database_to_tam_ref <- function(assessment_id, outputs, obs = NULL, years = NULL
     total_biomass = "biomass",
     total_numbers = "population",
     biomass_at_age = "biomass",
+    biomass_by_age_group = "biomass",
     mature_biomass_at_age = "biomass",
     total_mortality_at_age = "mortality",
     Fbar = "mortality",
@@ -243,7 +245,10 @@ database_to_tam_ref <- function(assessment_id, outputs, obs = NULL, years = NULL
       rows <- lapply(by_year, function(group) {
         row <- group[1L, , drop = FALSE]
         values <- group$est
-        if (metric %in% c("F", "M")) {
+        collapsed <- nrow(group) > 1L
+        if (!collapsed) {
+          row$est <- values[[1L]]
+        } else if (metric %in% c("F", "M")) {
           weights <- source_n$est[match(
             paste(group$year, as.integer(as.character(group$age))),
             paste(source_n$year, source_n$age)
@@ -261,13 +266,29 @@ database_to_tam_ref <- function(assessment_id, outputs, obs = NULL, years = NULL
         }
         row$age <- age_plus_group
         if ("age_group" %in% names(row)) row$age_group <- paste0(age_plus_group, "+")
-        row$se <- row$lwr <- row$upr <- NA_real_
-        row$notes <- paste(
-          c(na.omit(c(row$notes, paste0("Ages ", age_plus_group, "+"),
-                      if (metric %in% c("F", "M")) "N-weighted mean." else "summed.")),
-            "Grouped for comparison with the tinyAM plus age; uncertainty is not combined."),
-          collapse = " "
-        )
+        if (collapsed) {
+          row$se <- row$lwr <- row$upr <- NA_real_
+          if ("source_reference" %in% names(row)) {
+            row$source_reference <- paste(unique(group$source_reference), collapse = "; ")
+          }
+        }
+        source_notes <- if ("notes" %in% names(group)) {
+          unique(group$notes[!is.na(group$notes) & nzchar(group$notes)])
+        } else character()
+        transformation_note <- if (collapsed) {
+          paste0("Collapsed ", nrow(group), " source ages for comparison with the tinyAM plus age; ",
+                 if (metric %in% c("F", "M")) {
+                   "F/M is N-weighted and uncertainty is not combined."
+                 } else {
+                   "values are summed and uncertainty is not combined."
+                 })
+        } else {
+          paste0("One source row at age ", age_plus_group,
+                 " or older was retained without aggregation.")
+        }
+        if ("notes" %in% names(row)) {
+          row$notes <- paste(c(source_notes, transformation_note), collapse = " ")
+        }
         row
       })
       pop[[metric]] <- do.call(rbind, c(list(lower), rows))
@@ -313,10 +334,19 @@ database_to_tam_ref <- function(assessment_id, outputs, obs = NULL, years = NULL
     }
 
     for (name in names(pop)) {
-      if (is.data.frame(out$pop[[name]]) && is.data.frame(pop[[name]])) {
-        out$pop[[name]] <- .fill_tam_table(out$pop[[name]], pop[[name]])
+      source_table <- pop[[name]]
+      if (is.data.frame(source_table) && "age_group" %in% names(source_table)) {
+        group <- as.character(source_table$age_group)
+        is_group <- grepl("^[0-9]+\\+$", group)
+        group_start <- suppressWarnings(as.integer(sub("\\+$", "", group)))
+        model_plus <- if (length(template$dat$ages)) max(template$dat$ages) else NA_integer_
+        source_table <- source_table[!is_group | group_start == model_plus, , drop = FALSE]
+      }
+      if (is.data.frame(source_table) && !nrow(source_table)) source_table <- NULL
+      if (is.data.frame(out$pop[[name]]) && is.data.frame(source_table)) {
+        out$pop[[name]] <- .fill_tam_table(out$pop[[name]], source_table)
       } else {
-        out$pop[[name]] <- pop[[name]]
+        out$pop[[name]] <- source_table
       }
     }
     for (name in intersect(names(out$rep), names(out$pop))) {

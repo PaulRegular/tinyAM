@@ -104,3 +104,117 @@ attr(obs, "translation") <- list(M = list(status = "fixed_numerical_input"))
 ref <- database_to_tam_ref("dfo_cod_2j3kl_2025", output, obs = obs)
 stopifnot(ref$pop$M$est == 0.3)
 cat("Matched assessment definition tests passed.\n")
+# Explicit display-age mappings keep report groups distinct from the model plus group.
+ages <- 1:15
+years <- 2000:2001
+tiny_n <- expand.grid(year = years, age = ages)
+tiny_n$est <- tiny_n$age * 1e9
+tiny_bio <- tiny_n
+tiny_bio$est <- tiny_bio$age * 1000
+accepted_n <- expand.grid(year = years, age = 1:10)
+accepted_n$age_group <- NA_character_
+accepted_n$est <- NA_real_
+for (year in years) {
+  for (age in 1:9) {
+    row <- accepted_n$year == year & accepted_n$age == age
+    accepted_n$est[row] <- tiny_n$est[tiny_n$year == year & tiny_n$age == age] / 1e9
+  }
+  row <- accepted_n$year == year & accepted_n$age == 10
+  accepted_n$age_group[row] <- "10+"
+  accepted_n$est[row] <- sum(tiny_n$est[tiny_n$year == year & tiny_n$age %in% 10:15]) / 1e9
+}
+accepted_n$unit <- "billion fish"
+accepted_bio <- data.frame(
+  year = years, age_group = "3+", est = vapply(years, function(year) {
+    sum(tiny_bio$est[tiny_bio$year == year & tiny_bio$age %in% 3:15]) / 1e6
+  }, numeric(1)), unit = "thousand t", stringsAsFactors = FALSE
+)
+accepted_ssb <- data.frame(year = years, est = 100, unit = "thousand t")
+accepted_rec <- data.frame(year = years, age = 1, est = 1, unit = "million fish")
+fit_grouped <- list(
+  dat = list(years = years, ages = ages),
+  pop = list(
+    N = tiny_n,
+    abundance = aggregate(est ~ year, tiny_n, sum),
+    biomass_at_age = tiny_bio,
+    ssb = data.frame(year = years, est = 100),
+    recruitment = data.frame(year = years, age = 1, est = 1e6)
+  )
+)
+ref_grouped <- list(pop = list(
+  N = accepted_n, biomass_at_age = accepted_bio, ssb = accepted_ssb,
+  recruitment = accepted_rec
+))
+attr(ref_grouped, "source_pop") <- ref_grouped$pop
+ref_grouped$comparison_scales <- c(
+  N = 1e-9, abundance = 1e-9, recruitment = 1e-6,
+  biomass_at_age = 1e-6, ssb = 1e-6
+)
+grouped <- .assessment_percent_differences(
+  fit_grouped, ref_grouped, comparison_age_groups = list(
+    N = list("10+" = 10:15),
+    biomass_at_age = list("3+" = 3:15)
+  ), comparison_aggregates = "ssb",
+  comparison_definitions = list(ssb = list(
+    status = "approximate",
+    definition = "Spawning-time source SSB versus begin-year tinyAM SSB",
+    reason = "The within-year survival adjustment differs."
+  ))
+)
+n_group <- grouped[grouped$metric == "N" & grouped$age == "10+", ]
+n_age <- grouped[grouped$metric == "N" & grouped$age == "10", ]
+abundance <- grouped[grouped$metric == "abundance", ]
+bio_group <- grouped[grouped$metric == "biomass_at_age" & grouped$age == "3+", ]
+ssb_comparison <- grouped[grouped$metric == "ssb", ]
+stopifnot(
+  nrow(n_group) == length(years),
+  all(n_group$comparison_status == "matched"),
+  all(n_group$source == n_group$tinyAM),
+  grepl("10-15", n_group$definition[1L], fixed = TRUE),
+  nrow(n_age) == 0L,
+  nrow(abundance) == length(years),
+  all(abundance$source == abundance$tinyAM),
+  grepl("explicit reported age groups", abundance$definition[1L], fixed = TRUE),
+  nrow(bio_group) == length(years),
+  all(bio_group$source == bio_group$tinyAM),
+  all(ssb_comparison$comparison_status == "approximate"),
+  grepl("survival adjustment", ssb_comparison$reason[1L], fixed = TRUE)
+)
+unmapped <- .assessment_percent_differences(fit_grouped, ref_grouped)
+stopifnot(
+  unmapped$comparison_status[unmapped$metric == "N"] == "non_equivalent",
+  all(is.na(unmapped$source[unmapped$metric == "N"])),
+  unmapped$comparison_status[unmapped$metric == "abundance"] == "non_equivalent"
+)
+
+grouped_output <- data.frame(
+  assessment_id = "grouped",
+  type = "biomass",
+  measure = "biomass_by_age_group",
+  year = 2020L,
+  age = NA_integer_,
+  age_group = "3+",
+  value = 10,
+  se = NA_real_,
+  lwr = NA_real_,
+  upr = NA_real_,
+  unit = "thousand t",
+  source_type = "official_table",
+  source_reference = "Table",
+  notes = "Reported 3+ biomass.",
+  stringsAsFactors = FALSE
+)
+template <- list(
+  dat = list(years = 2020L, ages = 1:15, is_proj = FALSE),
+  pop = list(),
+  rep = list(),
+  obs_pred = list(),
+  fixed_par = data.frame(par = character(), coef = character(), est = numeric()),
+  random_par = list()
+)
+grouped_ref <- database_to_tam_ref(
+  "grouped", grouped_output, years = 2020L, ages = 1:15,
+  age_plus_group = 15L, template = template
+)
+stopifnot(is.null(grouped_ref$pop$biomass_at_age))
+cat("Reported age-group comparison tests passed.\n")
