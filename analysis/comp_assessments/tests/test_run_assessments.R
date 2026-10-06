@@ -66,12 +66,13 @@ failed <- run_assessments(
   c("dfo_cod_2j3kl_2025", "ices_cod_north_sea_2025"),
   database = bad_database, parallel = TRUE, workers = 2, fit = FALSE
 )
-blocked <- run_assessments("afsc_cod_goa_2026", database = database,
-                           fit = FALSE)
+goa <- run_assessments("afsc_cod_goa_2026", database = database,
+                       fit = FALSE)
 stopifnot(
   failed$dfo_cod_2j3kl_2025$diagnostics$status == "translation_failed",
   !is.null(failed$ices_cod_north_sea_2025$obs),
-  blocked$afsc_cod_goa_2026$diagnostics$status == "blocked_no_stock_spec"
+  goa$afsc_cod_goa_2026$diagnostics$status == "not_fitted",
+  !is.null(goa$afsc_cod_goa_2026$obs)
 )
 
 cat("Multi-assessment runner tests passed.\n")

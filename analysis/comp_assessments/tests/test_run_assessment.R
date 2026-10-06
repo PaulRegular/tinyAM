@@ -15,11 +15,12 @@ stopifnot(
   result$diagnostics$database_revision == result$source$commit
 )
 
-blocked <- run_assessment("afsc_cod_goa_2026", fit = FALSE)
+goa <- run_assessment("afsc_cod_goa_2026", fit = FALSE)
 stopifnot(
-  blocked$source$assessment$assessment_id == "afsc_cod_goa_2026",
-  blocked$diagnostics$status == "blocked_no_stock_spec",
-  grepl("No stock translation recipe", blocked$diagnostics$reason)
+  goa$source$assessment$assessment_id == "afsc_cod_goa_2026",
+  goa$diagnostics$status == "not_fitted",
+  nrow(goa$obs$catch) > 0,
+  nrow(goa$obs$index) > 0
 )
 
 args <- list(obs = result$obs, years = 1968:2024, ages = 2:14,

@@ -1,6 +1,6 @@
 # Gulf of Alaska Pacific cod: accepted-assessment source review
 
-Status: canonical partial record afsc_cod_goa_2026 imported; remaining inputs, assumptions and outputs are under review.
+Status: canonical partial record afsc_cod_goa_2026 imported. Inputs and reported summary outputs are transcribed; numerical N-at-age/F-at-age surfaces and detailed selectivity outputs are not available from the recovered files.
 Charbonneau identifier: AFSC_GOA_Gadus_macrocephalus.
 
 ## January 2026 assessment
@@ -63,7 +63,8 @@ The data file sets Lbin_method=1 (population-length bins), while the observation
 
 Every positive index observation uses month 7. Length and age composition records use months 1 or 7. Survey timing must therefore be derived from the observation month, not the fleet-definition default. Fishery composition timing and continuous catch timing remain distinct.
 
-The composition schema validator checks finite numeric dimensions, non-negative integer age-error/partition codes, positive supplied sample sizes, observation IDs and ordered conditioning labels. The canonical Pacific cod composition rows now retain the native conditioning labels, sample sizes and age-error codes; source and database validation pass.
+The composition schema validator checks finite numeric dimensions, non-negative integer age-error/partition codes, positive supplied sample sizes, observation IDs and ordered conditioning labels. The canonical Pacific cod composition rows retain the native conditioning labels, sample sizes and age-error codes; source and database validation pass. The tinyAM translation uses a pooled age-length key and does not preserve the source conditional-composition likelihood.
+
 ## Canonical coverage and validation
 
 Assessment afsc_cod_goa_2026 contains 12,689 input cells: 147 catch totals, 52 index observations, 52 index log SDs, 46 environmental covariates, 3,822 length-proportion cells and 8,570 conditional-age-proportion cells. The 1,039 composition observations retain supplied sample sizes, native length labels/conditioning bounds, age-error codes and partitions. The outputs table contains 147 historical summaries, 539 repeated year/age representations of two shared M estimates, and two published baseline-q estimates. The assessment has 34 documented assumptions.
@@ -97,3 +98,13 @@ The current report explicitly states that CFSR was discontinued and no 2025 valu
 ## Published growth parameters
 
 Table 2.6 of the January 2026 assessment reports estimates and standard deviations for beginning-year length at ages 1 and 10, the von Bertalanffy growth rate, and length-at-age standard deviation at ages 1 and 10. These five estimates are now recorded in `outputs.csv` with their reported natural-scale standard deviations. The accepted control specifies one von Bertalanffy growth pattern and length-at-age standard deviation as a function of mean length. These parameters support an explicit translation-time reconstruction of biological surfaces; they are not direct annual weight-at-age or maturity-at-age input tables. The record remains partial because fitted abundance-at-age and a complete output inventory are unavailable.
+
+## tinyAM translation and fit
+
+The translation fits 2007–2025, when the fishery length-composition series and conditional age-at-length samples overlap. For each fishery, it pools conditional age proportions across the available 2007–2024 age samples, weighted by supplied sample size, then combines that key with annual length proportions. This reconstructs age proportions for the 2025 catch without presenting them as published age-specific catches. Annual fishery biomass is converted to numbers with reconstructed weight-at-age, then the three fishery catches are combined. Native bins are matched by their stored labels. Each annual length composition has at least 95% key coverage; uncovered length-bin mass is omitted and the resulting age shares are renormalized.
+
+Only the age-sampled NMFS bottom-trawl survey is translated. Its every-other-year aggregate numbers index is allocated across ages with the pooled key. The supplied aggregate log SD is repeated across reconstructed age rows, so the accepted conditional-composition and covariance likelihoods are not reproduced. Source observations specify month 7 but not a within-month date; the translation uses timing 0.5 (midyear). The longline survey is omitted because its age composition is unavailable.
+
+Weight-at-age and maturity-at-age are reconstructed from the reported mean-length growth curve and the accepted weight-length and length-logistic parameters. Length variation is not integrated over. A 0.5 female multiplier is used to match the published female SSB convention. The accepted M estimates are supplied as fixed M, including the higher 2014–2016 block; its reported uncertainty is not fitted. The translated model uses exponential N initialization without an N process and an IID age-year F process. Fleet-specific selectivity, the accepted F/N surfaces, and the source composition likelihood are not represented.
+
+The fit converged with optimizer code 0, maximum absolute gradient 0.00012, and a positive-definite Hessian (objective 676.04; 6 fixed and 208 random effects). In exploratory fits with the same observations, random-walk and AR1 F processes did not have positive-definite Hessians; the IID F version is retained as the converged simple translation, not as evidence that it is the preferred scientific process. The comparative diagnostics use the reported aggregate female SSB over 2007–2025; source age-specific SSB contributions are unavailable, so the comparison is explicitly aggregate. Recruitment is not compared because accepted recruitment is age 0 and tinyAM recruitment is age 1. Accepted N-at-age and F-at-age were not recovered. The M comparison is identical by construction because accepted numerical M was supplied as fixed M.
