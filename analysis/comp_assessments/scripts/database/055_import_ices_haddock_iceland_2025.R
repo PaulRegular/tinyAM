@@ -101,7 +101,7 @@ age_inputs <- function(type, measure, basis, years, values, unit,
 static_M <- input_row(
   "M", "natural_mortality_at_age", "per_year",
   year = NA_real_, age = ages, value = rep(0.2, length(ages)),
-  unit = "per year", source_reference = paste(source_name, "technical report, model inputs"),
+  unit = "per year", source_reference = "MFRI 2025 technical report, model inputs",
   notes = "Natural mortality is fixed at 0.2 for all ages and years.",
   source_type = "official_document"
 )
@@ -121,11 +121,11 @@ inputs_add <- rbind(
              notes = "Maturity-at-age from the March survey; the source reports pre-1985 values as the 1985 age vector."),
   age_inputs("index", "numbers_at_age", "index_scale", 1985:2024, smb,
              "survey index (unit unresolved)", paste(source_name, "IS-SMB spring survey indices-at-age"),
-             notes = "Official age-specific spring survey series. The source labels these values as numbers but does not identify a physical unit in the table.",
+             notes = "Official age-specific spring survey series. The source labels these values as numbers but does not identify a physical unit in the table; sampling_time 0.20 is a month-midpoint approximation, not the exact accepted-model timing.",
              survey = "IS-SMB", season = "spring", sampling_time = 0.20),
   age_inputs("index", "numbers_at_age", "index_scale", 1995:2024, smh,
              "survey index (unit unresolved)", paste(source_name, "IS-SMH autumn survey indices-at-age"),
-             notes = "Official age-specific autumn survey series. The source labels these values as numbers but does not identify a physical unit in the table.",
+             notes = "Official age-specific autumn survey series. The source labels these values as numbers but does not identify a physical unit in the table; sampling_time 0.80 is a month-midpoint approximation, not the exact accepted-model timing.",
              survey = "IS-SMH", season = "autumn", sampling_time = 0.80),
   static_M
 )
@@ -174,12 +174,12 @@ outputs_add <- rbind(
 
 assumption_rows <- function(id, reference, notes) {
   component <- c("assessment", "population", "recruitment", "F", "M",
-                 "catch", "index", "index", "survey_timing", "spawning",
-                 "weight", "maturity", "selectivity")
+                 "catch", "index", "index", "spawning", "weight",
+                 "maturity", "selectivity")
   setting <- c("model_family", "age_structure", "recruitment_age", "process",
                "natural_mortality", "catch_data", "spring_survey",
-               "autumn_survey", "sampling_time", "pre_spawn_mortality",
-               "weight_schedule", "maturity_schedule", "selectivity")
+               "autumn_survey", "pre_spawn_mortality", "weight_schedule",
+               "maturity_schedule", "selectivity")
   value <- c("SAM state-space statistical catch-at-age model",
              "Ages 1-12+, age 12 is the plus group; model starts in 1979",
              "Recruitment at age 1",
@@ -188,21 +188,29 @@ assumption_rows <- function(id, reference, notes) {
              "Commercial catch-at-age and catch weights",
              "IS-SMB age-specific spring survey",
              "IS-SMH age-specific autumn survey",
-             "March and October survey timing; 0.20 and 0.80 are month-midpoint approximations, not recovered exact model fractions",
              "F fraction before spawning 0.4; M fraction before spawning 0.3",
              "March survey stock weights; pre-1985 vector held at 1985 values",
              "March survey maturity; pre-1985 vector held at 1985 values",
              "Selectivity allowed to vary over time")
-  data.frame(
+  rows <- data.frame(
     assessment_id = id, component = component, fleet = "", survey = "",
     sex = "combined", region = "ICES 5.a", season = "",
     setting = setting, value = value, source_reference = reference,
     notes = notes, stringsAsFactors = FALSE
   )
+  timing_rows <- data.frame(
+    assessment_id = id, component = "survey_timing", fleet = "",
+    survey = c("IS-SMB", "IS-SMH"), sex = "combined", region = "ICES 5.a",
+    season = c("spring", "autumn"), setting = "sampling_time",
+    value = c("0.20 month-midpoint approximation for March",
+              "0.80 month-midpoint approximation for October"),
+    source_reference = reference, notes = notes, stringsAsFactors = FALSE
+  )
+  rbind(rows, timing_rows)
 }
 assumptions_add <- rbind(
   assumption_rows(
-    assessment_id, paste(source_name, "technical report; ICES WKICEGAD 2025"),
+    assessment_id, "MFRI 2025 technical report; ICES WKICEGAD 2025",
     "Reported structure for the detailed 2025 assessment. The exact SAM process covariance and all parameter-sharing settings are not available in the extracted source tables."
   ),
   assumption_rows(
