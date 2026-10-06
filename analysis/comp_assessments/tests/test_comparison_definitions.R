@@ -59,6 +59,12 @@ x <- .assessment_percent_differences(fit, reference)
 stopifnot(x$comparison_status[x$metric == "abundance"] == "non_equivalent",
           x$comparison_status[x$metric == "ssb"] == "non_equivalent",
           x$comparison_status[x$metric == "F_bar"] == "non_equivalent")
+x <- .assessment_percent_differences(fit, reference,
+                                     comparison_aggregates = "ssb")
+stopifnot(x$comparison_status[x$metric == "ssb"] == "matched",
+          all(x$source[x$metric == "ssb"] == 999),
+          grepl("Reported aggregate female SSB", x$definition[x$metric == "ssb"]),
+          x$comparison_status[x$metric == "F_bar"] == "non_equivalent")
 
 # Zero accepted values still contribute to absolute differences, not percentages.
 example <- data.frame(metric = "N", year = rep(years, 2), age = rep(2:3, each = 3),

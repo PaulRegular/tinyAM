@@ -32,7 +32,8 @@
                                                F = 1, M = 1,
                                                abundance = 1e-3, biomass = 1e-3,
                                                F_bar = 1, M_bar = 1),
-                                             assumptions = NULL) {
+                                             assumptions = NULL,
+                                             comparison_aggregates = character()) {
   if (!is.null(reference$comparison_scales)) {
     scales[names(reference$comparison_scales)] <- reference$comparison_scales
   }
@@ -91,6 +92,12 @@
         definition <- paste("Accepted N with shared translated weights",
                             if (metric == "ssb") "and maturity" else "",
                             "over ages", paste(range(ages), collapse = "-"))
+      }
+      if (is.null(source) && metric %in% comparison_aggregates &&
+          metric == "ssb" && !is.null(native$ssb) &&
+          (!"age" %in% names(native$ssb) || all(is.na(native$ssb$age)))) {
+        source <- native$ssb[c("year", "est")]
+        definition <- "Reported aggregate female SSB; source age-specific contributions are unavailable"
       }
       if (is.null(source) && !is.null(native[[metric]])) {
         status <- "non_equivalent"
