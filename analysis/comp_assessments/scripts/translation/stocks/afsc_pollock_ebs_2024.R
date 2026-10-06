@@ -4,8 +4,14 @@ translate_stock <- function(source) {
   surveys <- c(
     "NMFS bottom-trawl VAST",
     "NMFS acoustic-trawl",
+
+    # The accepted model treats ATS age 1 as a separate recruitment index.
+    # Include that source stream here so database_to_tam_obs() imports it;
+    # it is combined back into the main acoustic-trawl survey below for the
+    # simpler tinyAM age-specific index representation.
     "NMFS acoustic-trawl age-1 index"
   )
+
   obs <- database_to_tam_obs(
     source$assessment$assessment_id,
     source$inputs,
@@ -19,10 +25,22 @@ translate_stock <- function(source) {
     assumptions = source$assumptions
   )
 
-  ## Simplify and place the age 1 acoustic-trawl index in with the rest of the survey
-  obs$index$survey[obs$index$survey == "NMFS acoustic-trawl age-1 index"] <- "NMFS acoustic-trawl"
+  ## The accepted assessment removes ATS age 1 from the ordinary age-composition
+  ## likelihood and fits it separately as a recruitment index. For tinyAM, retain
+  ## that information but treat it as age 1 of the same acoustic-trawl survey.
+  ## The source-specific 2024 age-1 observation remains absent because it failed
+  ## the accepted model's uncertainty/exclusion criterion during database import.
+  obs$index$survey[
+    obs$index$survey == "NMFS acoustic-trawl age-1 index"
+  ] <- "NMFS acoustic-trawl"
+
+  ## Approximate survey selectivity/catchability with survey-by-age q blocks.
+  ## Ages 9+ share q, matching the accepted ATS terminal selectivity treatment
+  ## more closely while keeping the tinyAM representation parsimonious.
   obs$index$q_age_block <- ifelse(
-    obs$index$age >= 10, "10+", as.character(obs$index$age)
+    obs$index$age >= 9,
+    "9+",
+    as.character(obs$index$age)
   )
   obs$index$q_key <- interaction(
     obs$index$survey,
@@ -53,19 +71,40 @@ translate_stock <- function(source) {
       "### Eastern Bering Sea pollock: accepted 2024 Model 23.0",
       "",
       "| Component | Accepted assessment | tinyAM representation | Reason for difference |",
-      "|---|------|------|------|",
+      "|---|---|---|---|",
+
       "| Years | Population model years 1964-2024. | Fit 1964-2024. | The accepted model period is retained. |",
-      "| Ages | Ages 1-15, with age 15 as the model plus group. | Ages 1-15, with age 15 as the plus group. | The model age range is retained; report tables may group ages 10-15 as 10+. |",
-      "| N | Age-1 recruitment varies by year; initial ages 2-15 have a shared log mean and regularized age deviations. | Exponential initial abundance, deterministic older-age survival, and tinyAM's recruitment process. | The source initial-age penalty and recruitment variance are not reproduced. |",
-      "| F | Fishing mortality varies annually and uses age-selectivity curves with time-varying parameters. | An age-year random-walk process for F. | This is a broad process approximation, not the source selectivity model. |",
-      "| M | Fixed age-specific values: 0.9 at age 1, 0.45 at age 2, and 0.3 at ages 3-15. | The same supplied age-specific M; no M process is estimated. | The accepted numerical vector is retained. |",
-      "| Catch | Total fishery biomass and annual age compositions; the 2024 fishery composition is unavailable. | Reconstruct numbers-at-age using source catch weights; fit only observed age-year cells. | tinyAM fits age-specific observations rather than separate total-biomass and composition likelihoods. |",
-      "| Index | VAST and acoustic-trawl biomass indices with age compositions; ATS age 1 is a separate index. | Reconstruct age-specific indices with source survey weights; use time-invariant q by survey and age, and fit the age-1 series separately. | tinyAM uses independent lognormal errors and does not reproduce the VAST covariance or composition likelihoods. |",
-      "| Weights and maturity | Annual stock, catch, and survey weights; a fixed maturity vector and female fraction 0.5. | Stock weights for biology, source weights for observation conversion, and the source maturity vector multiplied by 0.5. | The accepted biological inputs and female spawning convention are retained. |",
+
+      "| Ages | Ages 1-15, with age 15 as the model plus group. | Ages 1-15, with age 15 as the plus group. | The model age range is retained. Published tables sometimes aggregate ages 10-15 as 10+. |",
+
+      "| Recruitment and N | Age-1 recruitment varies annually. Initial ages 2-15 have a shared mean with regularized age deviations; subsequent cohorts are propagated through F and M. | Recruitment follows tinyAM's temporal process. Older ages follow cohort survival with IID abundance deviations, and initial abundance uses exponential survivorship. | IID N deviations provide additional flexibility relative to the accepted model and materially improve convergence and residual behaviour. The source initial-age parameterization is not reproduced. |",
+
+      "| F | Annual fishing mortality is a scalar level multiplied by time-varying fishery selectivity-at-age. Selectivity changes are themselves regularized through time. | Age-specific F follows independent temporal random walks. | This is a compact approximation to annual fishing intensity combined with changing selectivity rather than a direct reproduction of the source parameterization. |",
+
+      "| M | Fixed age-specific values: 0.9 at age 1, 0.45 at age 2, and 0.3 at ages 3-15. | The same supplied age-specific M values are used with no M process. | The accepted numerical M vector is retained directly. |",
+
+      "| Catch | Total fishery biomass is fitted separately from annual age compositions. Composition likelihoods use annual effective weights and therefore give very little influence to extremely rare age cells. The 2024 fishery composition is unavailable. | Reconstruct catch-at-age in numbers using source catch weights and fit observed age-year cells directly. Log-SD follows a quadratic function of age, allowing greater uncertainty at young and old ages and the lowest uncertainty at intermediate ages. | tinyAM uses an age-specific lognormal observation model rather than separate total-catch and composition likelihoods. The age-dependent SD structure prevents sparse tail observations, especially age 1, from dominating the fit. |",
+
+      "| Bottom-trawl survey | VAST biomass index and age composition are fitted with survey selectivity and a full covariance treatment for the biomass series. | Reconstruct an age-specific mid-year index using source survey weights. Catchability is estimated by survey and age block, with ages 9+ sharing q. | tinyAM uses independent lognormal age-specific observations and does not reproduce the VAST biomass covariance or native composition likelihood. |",
+
+      "| Acoustic-trawl survey | The ATS biomass index is fitted with age composition over ages 2-15. Age 1 is removed from that composition and fitted separately as a recruitment index; the 2024 age-1 observation is excluded by the source uncertainty rule. | Combine the accepted age-1 recruitment-index information with the remaining ATS observations as one age-specific acoustic-trawl survey. Catchability is estimated by age, with ages 9+ sharing q. | This preserves the source age-1 information while simplifying the accepted model's likelihood decomposition into a single tinyAM survey representation. The excluded 2024 age-1 observation remains omitted. |",
+
+      "| Survey q | Bottom-trawl and acoustic surveys use survey-specific catchability together with structured, partly time-varying selectivity. ATS selectivity is constant from age 9 onward in the accepted model. | Estimate survey-by-age q, pooling ages 9+ within each survey. | The age blocks provide a simple approximation to survey selectivity while avoiding weakly identified catchability parameters at sparse old ages. |",
+
+      "| Index error | Survey biomass and age-composition information are represented by separate likelihood components with source-specific variance or covariance structures. | Use one log-scale observation-error parameter per survey for the reconstructed age-specific indices. | This is a simpler independent-error approximation and does not reproduce composition sampling weights or within-survey covariance. |",
+
+      "| Weights and maturity | Annual stock, catch, BTS and ATS weights-at-age are supplied. Maturity is fixed and multiplied by 0.5 for female spawning biomass. | Use stock weights for population biomass, source-specific weights for observation conversion, and source maturity multiplied by 0.5. | The accepted biological inputs and female-SSB convention are retained. |",
+
+      "| SSB | Female spawning biomass is calculated from ages 1-15 using annual stock weights and the fixed maturity schedule. | Female SSB is calculated over the same modeled ages using the translated stock weights and maturity schedule. | This is a directly comparable aggregate quantity, although tinyAM does not reproduce the accepted spawning-time survival adjustment exactly. |",
+
       "",
-      "Historical fishery CPUE and acoustic-vessel-only indices are omitted because the database has no age compositions for translating them into age-specific indices. The source also applies observation covariance and composition weights that tinyAM does not represent.",
+      "The translation deliberately simplifies the accepted likelihood architecture while retaining the same model years, ages, fixed natural mortality and core biological inputs. The final tinyAM specification uses IID abundance deviations, age-specific random-walk F, age-dependent catch observation error, and survey-by-age catchability with ages 9+ pooled.",
       "",
-      "The extracted accepted outputs do not include F-at-age values, so the accepted F surface is unavailable in the comparison dashboard. A free-initial-age fit failed under both random-walk and AR1 F processes; the exponential N0 fit converged with the random-walk F process."
+      "The accepted model treats acoustic age 1 as a separate recruitment index. tinyAM instead includes it as age 1 of the acoustic-trawl survey, while retaining the source exclusion of the 2024 age-1 observation. This keeps the observation structure compact without discarding the recruitment information.",
+      "",
+      "Historical fishery CPUE and acoustic-vessel-of-opportunity indices remain omitted because they do not have the age-composition information needed for the current age-specific tinyAM translation.",
+      "",
+      "Additional accepted-model output comparisons remain a follow-up task. In particular, published N-at-age should compare ages 1-9 directly and accepted 10+ against tinyAM ages 10-15 combined; age-1 recruitment, female SSB, total abundance, age-3+ biomass and potentially F-at-age/F summaries should also be checked for definition-matched comparisons."
     )
   )
 }
