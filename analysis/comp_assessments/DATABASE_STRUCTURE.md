@@ -108,7 +108,7 @@ One row per assessment event or model run represented in the database.
 | `model_family` | SAM, Stock Synthesis, WHAM, NCAM, VPA/ADAPT, etc. |
 | `model_version` | Model/package/version identifier where known |
 | `is_current` | Whether this is the most recent accepted assessment with detailed inputs, assumptions, and outputs recoverable for the canonical database. A newer summary-only assessment is recorded separately and does not displace it; see `PROTOCOL.md`. |
-| `is_applied` | Whether this assessment was accepted and applied for advice in its assessment cycle. More than one historical assessment can be `TRUE`. |
+| `is_applied` | Whether this assessment was applied for advice in its assessment cycle. A current detailed benchmark can be `FALSE` if it has not yet been used for advice; more than one historical assessment can be `TRUE`. |
 | `framework_year` | Benchmark/framework year defining the current model, if distinct |
 | `assessment_url` | Main authoritative assessment/report URL |
 | `framework_url` | Benchmark/framework/methodology URL |
@@ -222,6 +222,7 @@ Add new types only when a real assessment requires them.
 
 ``` text
 numbers_at_age
+index_by_age_group
 biomass_at_age
 total_numbers
 total_biomass
@@ -230,6 +231,12 @@ relative_biomass_index
 relative_precision_weight
 relative_standard_error
 ```
+
+An index_by_age_group row preserves a native index value that combines
+multiple age classes and cannot be represented as a single-age observation.
+Store the lower age in age and record the full source age interval, including
+any plus group, in notes. This measure is kept for provenance and is not
+passed to tinyAM's single-age index likelihood.
 
 ### Biology
 

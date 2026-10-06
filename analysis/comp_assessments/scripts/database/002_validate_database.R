@@ -70,8 +70,6 @@ for (field in c("is_current", "is_applied")) {
   }
 }
 current <- logical_value(assessments$is_current)
-applied <- logical_value(assessments$is_applied)
-if (any(current & !applied)) stop("A current assessment must be marked applied.", call. = FALSE)
 for (i in seq_len(nrow(assessments))) {
   row <- assessments[i, ]
   for (table_name in c("assumptions", "inputs", "outputs")) {
@@ -146,7 +144,8 @@ allowed_sources <- c("native_model", "official_machine_readable", "official_tabl
 allowed_input_types <- c("catch", "index", "weight", "catch_weight", "maturity", "M", "covariate", "biology")
 allowed_output_types <- c("population", "mortality", "biomass", "recruitment", "catch",
                           "index", "catchability")
-allowed_input_measures <- c("numbers_at_age", "biomass_at_age", "total_numbers",
+allowed_input_measures <- c("numbers_at_age", "index_by_age_group",
+                            "biomass_at_age", "total_numbers",
                             "total_biomass", "proportion_at_age", "proportion_at_length",
                             "conditional_proportion_at_age", "weight_at_age", "spawning_weight_at_age",
                             "maturity_at_age", "natural_mortality_at_age",
@@ -193,7 +192,8 @@ for (name in c("inputs", "outputs")) {
     stop("outputs$year may be blank only for time-invariant parameters or SD estimates.", call. = FALSE)
   }
   age_required <- if (name == "inputs") {
-    x$measure %in% c("numbers_at_age", "biomass_at_age", "proportion_at_age",
+    x$measure %in% c("numbers_at_age", "index_by_age_group",
+                     "biomass_at_age", "proportion_at_age",
                      "conditional_proportion_at_age", "fraction_F_before_spawning",
                      "fraction_M_before_spawning", "weight_at_age", "spawning_weight_at_age", "maturity_at_age", "natural_mortality_at_age",
                      "landings_numbers_at_age", "landings_fraction_at_age", "relative_standard_error",

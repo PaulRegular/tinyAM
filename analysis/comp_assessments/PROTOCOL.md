@@ -242,7 +242,7 @@ If multiple candidate model runs are found, determine which one corresponds to t
 
 Do not select a model object solely because it is the newest file or repository.
 
-The canonical database's current detailed record must be the most recent accepted assessment for which detailed inputs, assumptions, and outputs can be recovered from authoritative sources. Mark this record `is_current = TRUE`. It may predate the newest advice, FSAR, or publication.
+The canonical database's current detailed record must be the most recent accepted assessment for which detailed inputs, assumptions, and outputs can be recovered from authoritative sources. Mark this record `is_current = TRUE`. It may predate the newest advice, FSAR, or publication. A current benchmark can have `is_applied = FALSE` when it has not yet been used in an advice cycle; `is_current` and `is_applied` record different facts.
 
 If a newer accepted assessment is documented only in summary material, record it separately and explain which details were unavailable. Its published values belong to that assessment alone: they do not displace the most recent detailed assessment as current, and must not be substituted for or combined with another run's inputs or outputs. Keep unresolved gaps visible and completeness statuses partial where appropriate.
 
