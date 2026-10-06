@@ -143,7 +143,7 @@ allowed_sources <- c("native_model", "official_machine_readable", "official_tabl
                      "digitized", "reconstructed_source_input", "charbonneau_seed")
 allowed_input_types <- c("catch", "index", "weight", "catch_weight", "maturity", "M", "covariate", "biology")
 allowed_output_types <- c("population", "mortality", "biomass", "recruitment", "catch",
-                          "index", "catchability")
+                          "index", "catchability", "biology")
 allowed_input_measures <- c("numbers_at_age", "index_by_age_group",
                             "biomass_at_age", "total_numbers",
                             "total_biomass", "proportion_at_age", "proportion_at_length",
@@ -187,9 +187,10 @@ for (name in c("inputs", "outputs")) {
   year <- whole_year(x, "year", name, allow_blank = name %in% c("inputs", "outputs"))
   blank_year <- is.na(x$year) | !nzchar(as.character(x$year))
   if (name == "outputs" && any(blank_year & !x$measure %in% c(
-    "q", "q_power", "process_sd", "observation_sd"
+    "q", "q_power", "process_sd", "observation_sd",
+    "growth_length_at_age", "growth_rate", "growth_sd_length_at_age"
   ))) {
-    stop("outputs$year may be blank only for time-invariant parameters or SD estimates.", call. = FALSE)
+    stop("outputs$year may be blank only for time-invariant parameter estimates or SD estimates.", call. = FALSE)
   }
   age_required <- if (name == "inputs") {
     x$measure %in% c("numbers_at_age", "index_by_age_group",

@@ -385,7 +385,7 @@ Long-format outputs from the accepted assessment.
 | Column             | Description                     |
 |--------------------|---------------------------------|
 | `assessment_id`    | Foreign key                     |
-| `type`             | Broad output family             |
+| `type`             | Broad family: population, mortality, biomass, recruitment, catch, index, catchability, or biology |
 | `measure`          | Exact output represented        |
 | `fleet`            | Fleet where applicable          |
 | `survey`           | Survey where applicable         |
@@ -434,7 +434,7 @@ msy
 
 Use measures only when they are defined by the accepted assessment.
 
-Retain uncertainty where readily available.
+Retain uncertainty where readily available. Parameter estimates reported by the accepted assessment may be stored as `type = biology`, with `measure` naming the exact parameter and `age` or `year` set only when that dimension applies.
 
 ## Uncertainty and estimate definitions
 
