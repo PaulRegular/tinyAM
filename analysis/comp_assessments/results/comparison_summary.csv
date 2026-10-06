@@ -153,3 +153,12 @@
 "ices_herring_western_baltic_2026","biomass_at_age","t","unavailable","Matching annual age-specific states","No numerical output is available on the matching definition.",0,,,,,,
 "ices_herring_western_baltic_2026","recruitment","thousand fish","matched","Recruitment at age 0","",35,50401287.9408206,126.383306731204,122.930393372713,2025,74.5340779156251,0.986314863963594
 "ices_herring_western_baltic_2026","ssb","t","matched","Accepted N with shared translated weights and maturity over ages 0-8","",35,709847.257787431,304.572298677763,307.008782363526,2025,294.881260648961,0.822908511872958
+"ices_norway_pout_north_sea_2026_benchmark","F","per year","matched","Matching annual age-specific states","",164,0.464133953925314,102.641297751561,35.8667543487442,2024,112.017172323754,0.913456014473975
+"ices_norway_pout_north_sea_2026_benchmark","F_bar","per year","matched","N-weighted F over ages 1,2","",41,0.124058676474523,30.4440350838261,23.8328567698585,2024,-6.35800284057281,0.908265754488644
+"ices_norway_pout_north_sea_2026_benchmark","M","per year","matched","Matching annual age-specific states","",164,1.35393051783556e-18,1.51292432853734e-16,0,2024,0,1
+"ices_norway_pout_north_sea_2026_benchmark","M_bar","per year","unavailable","N-weighted M over ages 0,1,2,3","No numerical output is available on the matching definition.",0,,,,,,
+"ices_norway_pout_north_sea_2026_benchmark","N","million fish","matched","Matching annual age-specific states","",123,2797.28006719439,38.8205520928165,32.6541538937924,2024,-53.40599590873,0.85720201073536
+"ices_norway_pout_north_sea_2026_benchmark","abundance","thousand fish","unavailable","Sum of reported N over ages 0-3","No numerical output is available on the matching definition.",0,,,,,,
+"ices_norway_pout_north_sea_2026_benchmark","biomass","t","matched","Sum of reported biomass_at_age over ages 0-3","",41,167852.91606577,30.0678696252585,31.2067880281719,2024,-48.2741195660226,0.9731372901447
+"ices_norway_pout_north_sea_2026_benchmark","recruitment","million fish","matched","Recruitment at age 0","",41,20710.0829545543,31.9796411725609,32.3430560143768,2024,-49.6440819667853,0.955943283977121
+"ices_norway_pout_north_sea_2026_benchmark","ssb","t","matched","Sum of reported ssb_mat over ages 0-3","",41,38412.4108315321,29.1249352408441,29.5073388607704,2024,-47.0516899929856,0.979285645107856
