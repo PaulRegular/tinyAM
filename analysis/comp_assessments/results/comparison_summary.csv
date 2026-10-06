@@ -171,3 +171,12 @@
 "ices_norway_pout_north_sea_2026_benchmark","biomass","t","matched","Sum of reported biomass_at_age over ages 0-3","",41,167852.91606577,30.0678696252585,31.2067880281719,2024,-48.2741195660226,0.9731372901447
 "ices_norway_pout_north_sea_2026_benchmark","recruitment","million fish","matched","Recruitment at age 0","",41,20710.0829545543,31.9796411725609,32.3430560143768,2024,-49.6440819667853,0.955943283977121
 "ices_norway_pout_north_sea_2026_benchmark","ssb","t","matched","Sum of reported ssb_mat over ages 0-3","",41,38412.4108315321,29.1249352408441,29.5073388607704,2024,-47.0516899929856,0.979285645107856
+"nefsc_atlantic_mackerel_2018","F","per year","matched","Matching annual age-specific states","",490,0.23746228078282,77.3606923874232,38.515314276944,2016,35.1604155557115,0.82970517963447
+"nefsc_atlantic_mackerel_2018","F_bar","per year","matched","N-weighted F over ages 6,7,8,9,10","",49,0.267294897159559,78.3259467627404,41.4318746209155,2016,34.467273058814,0.800442016136417
+"nefsc_atlantic_mackerel_2018","M","per year","matched","Matching annual age-specific states","",490,1.69932095605891e-19,8.49660478029456e-17,0,2016,0,
+"nefsc_atlantic_mackerel_2018","M_bar","per year","matched","N-weighted M over ages 1,2,3,4,5,6,7,8,9,10","",49,1.98254111540207e-17,9.91270557701033e-15,0,2016,0,-0.127000127000191
+"nefsc_atlantic_mackerel_2018","N","million fish","matched","Matching annual age-specific states","",490,69.9930496699103,41.6127582813563,35.8850522740739,2016,-28.193200673495,0.886278880468356
+"nefsc_atlantic_mackerel_2018","abundance","thousand fish","matched","Sum of reported N over ages 1-10","",49,613082.142005609,25.9850984017753,21.7896394180828,2016,-38.8404037034818,0.877165592511197
+"nefsc_atlantic_mackerel_2018","biomass","t","matched","Accepted N with shared translated weights  over ages 1-10","",49,170443.556982839,26.6458778818699,21.6388874476805,2016,-36.028451935511,0.921273463676483
+"nefsc_atlantic_mackerel_2018","recruitment","million fish","matched","Recruitment at age 1","",49,255.338071534281,36.9321480889163,32.4205998553723,2016,-42.9184189772107,0.613808201966825
+"nefsc_atlantic_mackerel_2018","ssb","t","matched","Accepted N with shared translated weights and maturity over ages 1-10","",49,129904.48991968,26.4380409876158,20.3870678723934,2016,-29.2389332514541,0.946014590673813
