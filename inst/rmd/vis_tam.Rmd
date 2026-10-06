@@ -49,9 +49,6 @@ random_par <- tabs$random_par
 ```
 
 
-```{r background, child = if (is.null(background)) NULL else "background.Rmd"}
-```
-
 ```{r helpers, include = FALSE}
 
 cols <- tam_pal(length(fits))
@@ -104,6 +101,9 @@ table_link <- function(x, table_name = NULL, download_text = "Download table") {
   xfun::embed_file(f, text = "Download table")
 }
 
+```
+
+```{r background, child = if (is.null(background)) NULL else "background.Rmd"}
 ```
 
 ```{r fishery, child = "fishery.Rmd"}
