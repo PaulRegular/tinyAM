@@ -1,41 +1,69 @@
 # Summer flounder source review
 
-## Assessment and available files
+## Assessment represented
 
-The latest accepted assessment is the 2025 NOAA Fisheries management-track
-assessment, based on data through 2024. The June 2025 peer-review panel found it
-met the terms of reference and represented the best scientific information
-available. It uses ASAP and updates catch, survey indices, weights, and reference
-points. The assessment combines sexes, estimates recruitment at age 0, and
-reports fully selected fishing mortality at age 4. Its four fishery fleets are
-commercial and recreational landings and discards.
+The 2025 management-track assessment is the latest accepted assessment and
+supports current advice, using data through 2024. Its public materials provide
+summary and diagnostic outputs, but the SASINF package available for this
+review did not include age-specific input tables or fitted age surfaces. The
+canonical database therefore represents the latest accepted assessment with
+recoverable detailed age data: the 2018 SAW-66 accepted ASAP run
+`F2018_BASE_V2`, through 2017. The 2025 summary is recorded separately and is
+not used to fill gaps in the 2018 record.
 
-The 2025 NOAA SASINF download is cached locally under
-`source_cache/nefsc_summer_flounder_2025/`. It contains a nine-page assessment
-summary, a 323-page plots file, bridge-run material, and a presentation. The
-portal's separate **Tables** and **Models** searches return only the nine-page
-summary. The package contains no age-specific input tables, model input files,
-or fitted ASAP object. The summary has recent total catch, SSB, fully selected
-F, and recruitment values, but those do not supply the full age-specific series
-needed for a tinyAM fit and comparison.
+The accepted 2018 model combines sexes, uses true ages 0-7+, and estimates
+recruitment at true age 0. It has four catch fleets: commercial landings,
+commercial discards, recreational landings, and recreational discards. It
+retains a large set of fishery-independent indices. The database currently
+contains only the NEFSC Bigelow spring and fall age indices.
 
-The 2023 SASINF package is also cached under
-`source_cache/nefsc_summer_flounder_2023/`. It likewise contains a nine-page
-summary, plots, and a presentation, but no machine-readable model inputs or
-fitted object. It therefore does not close the input gap for a reproducible
-age-structured fit.
+## Data and translation decisions
+
+- Catch-at-age values are transcribed from Tables A3, A6, A10, A23, A28, and
+  A32. Fleet tables report ages 0-10; ages 7-10 are summed to the accepted
+  model's 7+ group, and Maine-Virginia and North Carolina commercial landings
+  are summed for the commercial-landings fleet. Table A32's published total is
+  preserved as a separate aggregate series, not as a fifth fleet. The fleet
+  age series and published aggregate differ by as much as 941 thousand fish in
+  an age-year cell, although annual totals are close. The difference is
+  documented rather than reconciled by altering source values. A tinyAM fit
+  should use either the published aggregate catch or the four fleets, never
+  both together.
+- The NEFSC Bigelow spring and fall age-index rows are transcribed from Tables
+  A40-A41 for 2009-2017 and 2009-2016, respectively. Sampling times 0.25 and
+  0.75 are seasonal midpoint approximations; the source report does not give
+  within-season timing for these series. The other indices used by
+  `F2018_BASE_V2` are not yet represented.
+- M is fixed at age in the accepted model. The age 0-7+ values are 0.26, 0.26,
+  0.26, 0.25, 0.25, 0.25, 0.25, and 0.24 per year (Table A90). These values
+  are stored as source inputs, not as estimated M outputs.
+- Table A90 reports mean November SSB weights at age for 2013-2017. Those
+  published values are stored as the source schedule; using them as a
+  time-invariant weight series across a tinyAM historical fit is an explicit
+  approximation, not an annual accepted weight surface.
+- Table A86 reports the combined-sex, three-year moving-window maturity ogive
+  through 2016. No 2017 row is reported because 2017 fall maturity data were
+  unavailable. A fit that extends through 2017 must state how it handles that
+  final year; the conservative comparison period using the available maturity
+  data is 1982-2016.
+- Tables A87-A89 provide annual SSB, recruitment, F-at-age, and January 1
+  abundance-at-age through 2017. Recruitment is at true age 0. The report
+  provides terminal-year 90% MCMC intervals for aggregate F and SSB, but no
+  matched age-specific uncertainty table was recovered.
 
 ## Translation status
 
-No summer flounder observations or assessment outputs have been added to the
-canonical database, and no tinyAM fit has been attempted. Reconstructing the
-missing age-specific series from plots or substituting an older assessment's
-inputs would create an undocumented approximation. The stock remains blocked
-until age-specific catch, survey, biology, and fitted-output data for one
-accepted assessment can be recovered.
+The source inputs and outputs above have been added to the canonical database.
+The accepted run retained more observations and assessment detail than the
+current tinyAM translation can represent. Before fitting, select a catch
+representation that avoids double-counting and record the omitted surveys and
+static SSB-weight approximation in the stock recipe. Comparisons should be
+limited to definitions and years that can be matched; in particular, the
+available maturity schedule ends in 2016.
 
 ## Sources
 
+- [66th SAW Summer Flounder Assessment Report (2018)](https://repository.library.noaa.gov/view/noaa/23031/noaa_23031_DS1.pdf)
 - [2025 June Management Track Peer Review Panel Report](https://www.fisheries.noaa.gov/s3/2025-07/2025-June-Management-Track-Peer-Review-Panel-Report-508.pdf)
 - [NOAA SASINF assessment-data search](https://apps-nefsc.fisheries.noaa.gov/saw/sasi.php)
 - [2025 Summer Flounder Management Track Assessment Report](https://asmfc.org/wp-content/uploads/2025/08/SF_Management_Track_Assessment_2025.pdf)
