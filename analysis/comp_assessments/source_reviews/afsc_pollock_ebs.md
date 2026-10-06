@@ -66,3 +66,77 @@ The 60 fishery, 42 BTS and 19 ATS sam values have been captured by year as nativ
 The database now includes the source-specific weight-at-age matrices for BTS (42 years), ATS (19 years), and AVO (18 years), each across ages 1–15. It also includes the four native index-SD vectors: CPUE (12 years), AVO (18), BTS (42), and ATS (19). CPUE and AVO use their native-scale SDs in their residual likelihoods; ATS converts its supplied SDs to log-scale variance; BTS uses the supplied full covariance under `DoCovBTS=1`, so its SD vector is retained but is not the active likelihood variance.
 
 The native temperature vector is recorded by BTS year. Its unit is not stated in the model data file, and the control fixes the temperature slope at zero. The single fishery length-composition vector is also recorded after the same normalization used by the model; its fixed likelihood weight is 50. The model code defines its length-bin values as 20–69 in unit increments, but the input does not identify their units.
+
+## Recovered outputs and comparison definitions
+
+The accepted report's historical outputs are retained in their native units:
+N-at-age (ages 1–9 and a reported 10+ group), age-1 recruitment, female SSB,
+and one age-3+ biomass total for each year from 1964–2024. The 10+ report row
+is not age 10. In comparisons it maps to the sum of tinyAM ages 10–15, while
+the tinyAM model plus group remains age 15. Total abundance is calculated
+from all accepted N groups and compared with tinyAM abundance across ages
+1–15. Recruitment is matched at age 1.
+
+SAFE Table 26's age-3+ biomass is stored as biomass_by_age_group, with age
+blank and age_group set to 3+. It is compared with tinyAM biomass summed over
+ages 3–15. Female SSB is available for both fits over ages 1–15, but the
+accepted value is calculated at the source spawning time and tinyAM reports
+beginning-year SSB. Its comparison is therefore labelled approximate. Printed
+CV fields are not converted to standard errors; uncertainty is unavailable
+for these source outputs.
+
+Annual accepted F-at-age was reconstructed from the fitted parameter file
+runs/lastyr/pm_or.parxx, the selectivity-change table runs/data/selvar24.dat,
+and source/pm.tpl, all at pinned repository revision
+44e0cb0ac8698e1d3954273e8aaf760d7c76cba5. The reconstruction uses
+F(y,a) = exp(log_avg_F + log_F_devs[y]) * exp(log_sel[y,a]); selectivity
+coefficients are extended through age 15 as the source code specifies,
+time-varying deviations are applied in their flagged years, and exp(log_sel)
+is re-normalized to arithmetic mean one across ages for each year. All 915
+year-age values pass the source normalization check: their annual age mean
+equals exp(log_avg_F + log_F_devs[y]). This is a deterministic reconstruction
+from the accepted fitted object and its implementation, not values digitized
+from figures. F uncertainty is unavailable. No Fbar comparison is reported
+because a common age range and weighting definition have not been established.
+The record remains partial because other accepted inputs, assumptions and
+uncertainty are not fully represented.
+
+## Finalized tinyAM translation
+
+The stock recipe retains years 1964–2024, ages 1–15 and model plus group 15.
+N uses IID process deviations with exponential initial abundance. F follows
+age-specific temporal random walks. M is off as a process and uses the exact
+source fixed vector: 0.9 at age 1, 0.45 at age 2, and 0.3 at ages 3–15.
+Catch log-SD has linear and quadratic age terms. Survey q is separate by
+survey-age block, with ages 9+ pooled within each survey, and one estimated
+observation SD is used per survey.
+
+In the accepted assessment ATS age 1 is a separate recruitment index and ATS
+age composition covers ages 2–15; the 2024 ATS age-1 observation is excluded
+by the source uncertainty rule. The tinyAM recipe imports the separate source
+age-1 stream, relabels it as the common acoustic-trawl survey, and fits all
+available ATS ages as one age-specific index. This preserves age-1 information
+while simplifying the source likelihood. The accepted fishery uses total
+biomass plus age composition, BTS uses its full biomass covariance, and
+fishery/survey selectivity is structured and time-varying. tinyAM's direct
+age-specific catch likelihood, independent survey errors, and process forms
+are deliberate simpler approximations; they do not reproduce those source
+likelihood components.
+
+The finalized tinyAM fit converged with optimizer code 0 (relative convergence
+(4)), objective 1,917.084, maximum absolute gradient 0.00194 and a
+positive-definite Hessian; it has 27 fixed and 1,815 random effects. Common-
+definition scale differences and trajectory correlations are:
+
+| Metric | Cells | Mean absolute percent difference | Terminal-year percent difference | Trend correlation | Status |
+|---|---:|---:|---:|---:|---|
+| N-at-age, including mapped 10+ | 610 | 41.51% | +23.23% | 0.867 | Matched |
+| Total abundance, ages 1–15 | 61 | 22.85% | +20.76% | 0.649 | Matched |
+| F-at-age | 915 | 50.90% | -8.23% | 0.481 | Matched |
+| Age-1 recruitment | 61 | 33.66% | +21.53% | 0.638 | Matched |
+| Age-3+ biomass | 61 | 22.94% | +11.37% | 0.878 | Matched |
+| Female SSB | 61 | 39.64% | +24.96% | 0.896 | Approximate |
+
+Fixed M compares identically by construction. These statistics describe scale
+agreement and trajectory agreement separately; they are not a fit-quality
+threshold or a scientific ranking.

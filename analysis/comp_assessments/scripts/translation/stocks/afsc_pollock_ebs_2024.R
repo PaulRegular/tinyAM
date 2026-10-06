@@ -56,6 +56,18 @@ translate_stock <- function(source) {
     comparison_scales = c(
       N = 1e-9, recruitment = 1e-6, ssb = 1e-6, biomass_at_age = 1e-6
     ),
+    comparison_age_groups = list(
+      N = list("10+" = 10:15),
+      biomass_at_age = list("3+" = 3:15)
+    ),
+    comparison_aggregates = "ssb",
+    comparison_definitions = list(
+      ssb = list(
+        status = "approximate",
+        definition = "Female SSB at source spawning time versus tinyAM begin-year SSB, ages 1-15",
+        reason = "tinyAM does not reproduce the source spawning-time survival adjustment."
+      )
+    ),
     settings = list(
       N_settings = list(process = "iid", init = "exp"), # iid N deviations improved convergence
       F_settings = list(process = "rw", mu_form = NULL),
@@ -93,9 +105,9 @@ translate_stock <- function(source) {
 
       "| Index error | Survey biomass and age-composition information are represented by separate likelihood components with source-specific variance or covariance structures. | Use one log-scale observation-error parameter per survey for the reconstructed age-specific indices. | This is a simpler independent-error approximation and does not reproduce composition sampling weights or within-survey covariance. |",
 
-      "| Weights and maturity | Annual stock, catch, BTS and ATS weights-at-age are supplied. Maturity is fixed and multiplied by 0.5 for female spawning biomass. | Use stock weights for population biomass, source-specific weights for observation conversion, and source maturity multiplied by 0.5. | The accepted biological inputs and female-SSB convention are retained. |",
+      "| Weights and maturity | Annual stock, catch, BTS and ATS weights-at-age are supplied. Maturity is fixed and multiplied by 0.5 for female spawning biomass. | Use stock weights for population biomass, source-specific weights for observation conversion, and source maturity multiplied by 0.5. | The accepted biological inputs and female-SSB convention are retained, but source spawning-time survival is not reproduced. |",
 
-      "| SSB | Female spawning biomass is calculated from ages 1-15 using annual stock weights and the fixed maturity schedule. | Female SSB is calculated over the same modeled ages using the translated stock weights and maturity schedule. | This is a directly comparable aggregate quantity, although tinyAM does not reproduce the accepted spawning-time survival adjustment exactly. |",
+      "| SSB | Female spawning biomass is calculated from ages 1-15 using annual stock weights and the fixed maturity schedule. | Female SSB is calculated over the same modeled ages using the translated stock weights and maturity schedule. | The ages and female convention align, but the different spawning-time survival adjustment makes this an approximate comparison. |",
 
       "",
       "The translation deliberately simplifies the accepted likelihood architecture while retaining the same model years, ages, fixed natural mortality and core biological inputs. The final tinyAM specification uses IID abundance deviations, age-specific random-walk F, age-dependent catch observation error, and survey-by-age catchability with ages 9+ pooled.",
@@ -104,7 +116,7 @@ translate_stock <- function(source) {
       "",
       "Historical fishery CPUE and acoustic-vessel-of-opportunity indices remain omitted because they do not have the age-composition information needed for the current age-specific tinyAM translation.",
       "",
-      "Additional accepted-model output comparisons remain a follow-up task. In particular, published N-at-age should compare ages 1-9 directly and accepted 10+ against tinyAM ages 10-15 combined; age-1 recruitment, female SSB, total abundance, age-3+ biomass and potentially F-at-age/F summaries should also be checked for definition-matched comparisons."
+      "Available outputs are compared on explicit common definitions: N ages 1-9 directly and accepted 10+ against the sum of tinyAM ages 10-15; age-1 recruitment directly; and total abundance across ages 1-15. Female SSB is shown as an approximate comparison because source spawning-time survival differs from tinyAM beginning-year SSB. Reported age-3+ biomass is compared with tinyAM biomass summed over ages 3-15. F-at-age is reconstructed from the pinned fitted parameters and source code; uncertainty is not available. Fixed M matches by construction because the accepted age-specific vector is supplied."
     )
   )
 }

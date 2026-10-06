@@ -3,7 +3,7 @@ id <- "afsc_pollock_ebs_2024"
 x <- inputs[inputs$assessment_id == id, ]
 y <- outputs[outputs$assessment_id == id, ]
 a <- assessments[assessments$assessment_id == id, ]
-stopifnot(nrow(x) == 5194L, nrow(y) == 793L,
+stopifnot(nrow(x) == 5194L, nrow(y) == 1708L,
           a$assessment_year == 2024, a$terminal_year == 2024,
           a$inputs_status == "partial", a$outputs_status == "partial",
           a$assumptions_status == "partial")
@@ -62,3 +62,46 @@ stopifnot(nrow(length_comp) == 50L,
           all(length_comp$length_bin == 20:69))
 stopifnot(nrow(x[x$measure == "environmental_covariate", ]) == 42L)
 message("Survey weights, index SDs, length composition, and temperature rows verified.")
+
+bio_group <- y[y$measure == "biomass_by_age_group", ]
+f <- y[y$measure == "fishing_mortality_at_age", ]
+stopifnot(
+  nrow(bio_group) == 61L,
+  all(bio_group$age_group == "3+"),
+  all(is.na(bio_group$age)),
+  all(bio_group$source_type == "official_table"),
+  nrow(f) == 61L * 15L,
+  all(f$year %in% 1964:2024),
+  all(f$age %in% 1:15),
+  all(f$source_type == "native_model"),
+  all(is.finite(f$value) & f$value > 0),
+  all(f$age_group[f$age == 15] == "15+"),
+  all(is.na(f$age_group[f$age < 15])),
+  all(grepl("44e0cb0ac8698e1d3954273e8aaf760d7c76cba5", f$source_reference,
+            fixed = TRUE)),
+  all(grepl("reconstructed", f$notes, ignore.case = TRUE))
+)
+
+par_path <- file.path(
+  "analysis", "comp_assessments", "source_cache", id, "pm_or.parxx"
+)
+par_lines <- readLines(par_path, warn = FALSE)
+markers <- grep("^# [A-Za-z0-9_]+:$", par_lines)
+par_names <- sub("^# ([A-Za-z0-9_]+):$", "\\1", par_lines[markers])
+par_values <- lapply(seq_along(markers), function(i) {
+  end <- if (i < length(markers)) markers[i + 1L] - 1L else length(par_lines)
+  values <- suppressWarnings(as.numeric(unlist(strsplit(
+    trimws(par_lines[(markers[i] + 1L):end]), "[[:space:]]+"
+  ))))
+  values[is.finite(values)]
+})
+names(par_values) <- par_names
+expected_fmean <- exp(par_values$log_avg_F + par_values$log_F_devs)
+observed_fmean <- aggregate(value ~ year, f, mean)
+observed_fmean <- observed_fmean$value[match(1964:2024, observed_fmean$year)]
+stopifnot(
+  length(expected_fmean) == 61L,
+  length(observed_fmean) == 61L,
+  isTRUE(all.equal(observed_fmean, expected_fmean, tolerance = 1e-10))
+)
+message("Recovered biomass group and reconstructed F-at-age outputs verified.")
