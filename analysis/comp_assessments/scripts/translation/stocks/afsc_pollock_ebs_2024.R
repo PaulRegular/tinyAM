@@ -19,6 +19,17 @@ translate_stock <- function(source) {
     assumptions = source$assumptions
   )
 
+  ## Simplify and place the age 1 acoustic-trawl index in with the rest of the survey
+  obs$index$survey[obs$index$survey == "NMFS acoustic-trawl age-1 index"] <- "NMFS acoustic-trawl"
+  obs$index$q_age_block <- ifelse(
+    obs$index$age >= 10, "10+", as.character(obs$index$age)
+  )
+  obs$index$q_key <- interaction(
+    obs$index$survey,
+    obs$index$q_age_block,
+    drop = TRUE
+  )
+
   list(
     years = years,
     ages = ages,
@@ -28,11 +39,12 @@ translate_stock <- function(source) {
       N = 1e-9, recruitment = 1e-6, ssb = 1e-6, biomass_at_age = 1e-6
     ),
     settings = list(
-      N_settings = list(process = "off", init = "exp"),
+      N_settings = list(process = "iid", init = "exp"), # iid N deviations improved convergence
       F_settings = list(process = "rw", mu_form = NULL),
       M_settings = list(process = "off", mu_form = NULL,
                         mu_supplied = ~ M_assumption),
-      catch_settings = list(sd_form = ~ 1, fill_missing = FALSE),
+      catch_settings = list(sd_form =  ~ age + I(age^2), # Apply a quadratic effect to account for noisy tails
+                            fill_missing = FALSE),
       index_settings = list(q_form = ~ 0 + q_key,
                             sd_form = ~ 0 + survey,
                             fill_missing = FALSE)
