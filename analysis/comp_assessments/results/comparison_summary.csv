@@ -99,7 +99,7 @@
 "ices_bluewhiting_northeast_atlantic_2026","F","per year","matched","Matching annual age-specific states","",460,0.0939450187587143,23.8120218988166,15.1397418075558,2026,22.7601305154251,0.746913769979821
 "ices_bluewhiting_northeast_atlantic_2026","F_bar","per year","matched","N-weighted F over ages 3,4,5,6,7","",46,0.0216551800334387,7.90987323411506,5.4920069486645,2026,-0.297781096231459,0.955123476279237
 "ices_bluewhiting_northeast_atlantic_2026","M","per year","matched","Matching annual age-specific states","",460,4.2236745502044e-19,2.1118372751022e-16,0,2026,0,
-"ices_bluewhiting_northeast_atlantic_2026","M_bar","per year","matched","N-weighted M over ages 1,2,3,4,5,6,7,8,9,10","",46,2.17217548296226e-17,1.08608774148113e-14,1.38777878078145e-14,2026,0,0
+"ices_bluewhiting_northeast_atlantic_2026","M_bar","per year","matched","N-weighted M over ages 1,2,3,4,5,6,7,8,9,10","",46,2.17217548296226e-17,1.08608774148113e-14,1.38777878078145e-14,2026,0,
 "ices_bluewhiting_northeast_atlantic_2026","N","thousand fish","matched","Matching annual age-specific states","",460,766574.492209233,18.476372039692,10.9464141851148,2026,-8.36722620339287,0.969926498295709
 "ices_bluewhiting_northeast_atlantic_2026","abundance","thousand fish","matched","Sum of reported N over ages 1-10","",46,4172776.13010805,5.53825731944324,5.049712022027,2026,-3.80228927135783,0.987978255625595
 "ices_bluewhiting_northeast_atlantic_2026","biomass","t","matched","Accepted N with shared translated weights  over ages 1-10","",46,311187.977767616,5.08915305717961,4.65184963955134,2026,-4.26607472514262,0.986994716951124
@@ -174,9 +174,19 @@
 "nefsc_atlantic_mackerel_2018","F","per year","matched","Matching annual age-specific states","",490,0.23746228078282,77.3606923874232,38.515314276944,2016,35.1604155557115,0.82970517963447
 "nefsc_atlantic_mackerel_2018","F_bar","per year","matched","N-weighted F over ages 6,7,8,9,10","",49,0.267294897159559,78.3259467627404,41.4318746209155,2016,34.467273058814,0.800442016136417
 "nefsc_atlantic_mackerel_2018","M","per year","matched","Matching annual age-specific states","",490,1.69932095605891e-19,8.49660478029456e-17,0,2016,0,
-"nefsc_atlantic_mackerel_2018","M_bar","per year","matched","N-weighted M over ages 1,2,3,4,5,6,7,8,9,10","",49,1.98254111540207e-17,9.91270557701033e-15,0,2016,0,-0.127000127000191
+"nefsc_atlantic_mackerel_2018","M_bar","per year","matched","N-weighted M over ages 1,2,3,4,5,6,7,8,9,10","",49,1.98254111540207e-17,9.91270557701033e-15,0,2016,0,
 "nefsc_atlantic_mackerel_2018","N","million fish","matched","Matching annual age-specific states","",490,69.9930496699103,41.6127582813563,35.8850522740739,2016,-28.193200673495,0.886278880468356
 "nefsc_atlantic_mackerel_2018","abundance","thousand fish","matched","Sum of reported N over ages 1-10","",49,613082.142005609,25.9850984017753,21.7896394180828,2016,-38.8404037034818,0.877165592511197
 "nefsc_atlantic_mackerel_2018","biomass","t","matched","Accepted N with shared translated weights  over ages 1-10","",49,170443.556982839,26.6458778818699,21.6388874476805,2016,-36.028451935511,0.921273463676483
 "nefsc_atlantic_mackerel_2018","recruitment","million fish","matched","Recruitment at age 1","",49,255.338071534281,36.9321480889163,32.4205998553723,2016,-42.9184189772107,0.613808201966825
 "nefsc_atlantic_mackerel_2018","ssb","t","matched","Accepted N with shared translated weights and maturity over ages 1-10","",49,129904.48991968,26.4380409876158,20.3870678723934,2016,-29.2389332514541,0.946014590673813
+"ices_haddock_iceland_2025","F","per year","matched","Matching annual age-specific states","",552,0.139449038467145,28.7715722345262,12.4133298171462,2024,16.8698630653112,0.715334282261076
+"ices_haddock_iceland_2025","F_bar","per year","matched","N-weighted F over ages 1,2,3,4,5,6,7,8,9,10,11,12","",46,0.0122353261098691,7.26306798613698,6.03743028259724,2024,-5.99158493251908,0.969490042529004
+"ices_haddock_iceland_2025","M","per year","matched","Matching annual age-specific states","",552,2.01127359533543e-19,1.00563679766771e-16,0,2024,0,
+"ices_haddock_iceland_2025","M_bar","per year","matched","N-weighted M over ages 1,2,3,4,5,6,7,8,9,10,11,12","",46,2.23251369082233e-17,1.11625684541116e-14,1.38777878078145e-14,2024,0,
+"ices_haddock_iceland_2025","N","thousand fish","matched","Matching annual age-specific states","",552,2918.21067600533,16.6331613794284,10.3371605623859,2024,-7.2231122051943,0.983194682623915
+"ices_haddock_iceland_2025","abundance","thousand fish","matched","Sum of reported N over ages 1-12","",46,20567.6891666879,6.28051024292624,4.54130420339094,2024,-1.86319665663567,0.987938482729141
+"ices_haddock_iceland_2025","biomass","t","matched","Accepted N with shared translated weights  over ages 1-12","",46,10282.1235987977,5.76029356667997,4.08171078848803,2024,-5.10058702265215,0.98034878275778
+"ices_haddock_iceland_2025","biomass_at_age","t","unavailable","Matching annual age-specific states","No numerical output is available on the matching definition.",0,,,,,,
+"ices_haddock_iceland_2025","recruitment","thousand fish","matched","Recruitment at age 1","",46,12360.6550915951,17.0680320096681,9.48246135610997,2024,12.4246289355533,0.978892803834443
+"ices_haddock_iceland_2025","ssb","t","matched","Accepted N with shared translated weights and maturity over ages 1-12","",46,6489.52456432983,6.16767087657054,4.78870241934541,2024,-4.96075969677684,0.975076111027905
