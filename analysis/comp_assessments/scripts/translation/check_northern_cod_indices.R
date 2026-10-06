@@ -7,11 +7,14 @@ stock <- new.env(parent = globalenv())
 sys.source(file.path(root, "scripts", "translation", "stocks",
                      "dfo_cod_2j3kl_2025.R"), stock)
 
-trials <- c("RV", "RV_Smith", "RV_Smith_juveniles")
-diagnostics <- lapply(trials, function(trial) {
-  translated <- stock$translate_stock(
-    accepted, smith_sound = trial != "RV", juveniles = trial == "RV_Smith_juveniles"
-  )
+trials <- list(
+  RV = list(smith_sound = FALSE, juveniles = FALSE),
+  RV_Smith = list(smith_sound = TRUE, juveniles = FALSE),
+  RV_Juveniles = list(smith_sound = FALSE, juveniles = TRUE),
+  RV_Smith_juveniles = list(smith_sound = TRUE, juveniles = TRUE)
+)
+diagnostics <- lapply(names(trials), function(trial) {
+  translated <- do.call(stock$translate_stock, c(list(accepted), trials[[trial]]))
   started <- Sys.time()
   fitted <- tryCatch(do.call(tinyAM::fit_tam, c(
     list(obs = translated$obs, years = translated$years, ages = translated$ages,
@@ -27,7 +30,7 @@ diagnostics <- lapply(trials, function(trial) {
   )
   result$reason <- gsub("[[:space:]]+", " ", trimws(result$reason))
   result$trial <- trial
-  result$selected <- trial == "RV_Smith"
+  result$selected <- identical(trial, "RV_Smith")
   print(result)
   result
 })
