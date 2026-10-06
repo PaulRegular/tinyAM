@@ -52,8 +52,11 @@ rm(.assessment_helper)
     terminal_year <- if (nrow(valid)) max(valid$year) else NA_integer_
     terminal <- if (nrow(valid)) valid[valid$year == terminal_year, , drop = FALSE] else valid
     trends <- if (nrow(valid)) split(valid, ifelse(is.na(valid$age), "all", valid$age)) else list()
+    has_variation <- function(value) {
+      diff(range(value)) > sqrt(.Machine$double.eps) * max(1, max(abs(value)))
+    }
     correlations <- vapply(trends, function(z) {
-      if (nrow(z) > 1L && stats::sd(z$source) > 0 && stats::sd(z$tinyAM) > 0)
+      if (nrow(z) > 1L && has_variation(z$source) && has_variation(z$tinyAM))
         stats::cor(z$source, z$tinyAM) else NA_real_
     }, numeric(1))
     trend_correlation <- if (any(is.finite(correlations)))
