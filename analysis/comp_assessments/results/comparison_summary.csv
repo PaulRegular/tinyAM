@@ -124,3 +124,32 @@
 "ices_plaice_north_sea_2026","biomass","t","matched","Accepted N with shared translated weights  over ages 1-10","",69,100430.94280205,9.20209673038739,7.38979568610783,2025,2.82679112101966,0.933546031309131
 "ices_plaice_north_sea_2026","recruitment","thousand fish","matched","Recruitment at age 1","",69,255196.417726514,7.38727875694895,5.38529989143474,2025,5.52479044179823,0.97775066833378
 "ices_plaice_north_sea_2026","ssb","t","matched","Accepted N with shared translated weights and maturity over ages 1-10","",69,89907.2940455097,11.2108416138221,7.84416090293348,2025,3.06759787810359,0.904652680443205
+"ices_saithe_north_sea_2026","F","per year","matched","Matching annual age-specific states","",472,0.297596655489972,73.3063778157799,76.9594363853556,2025,-84.054525097163,0.742408667814221
+"ices_saithe_north_sea_2026","F_bar","per year","matched","N-weighted F over ages 4,5,6,7","",59,0.266758882668223,61.5262730013505,62.3690020693265,2025,-76.2238428975204,0.960272470160235
+"ices_saithe_north_sea_2026","M","per year","matched","Matching annual age-specific states","",472,1.43482212928251e-17,5.75793247797979e-15,0,2025,-7.71814858977726e-16,
+"ices_saithe_north_sea_2026","M_bar","per year","matched","N-weighted M over ages 3,4,5,6,7,8,9,10","",59,0.0334641701254062,9.87878599344885,9.54463166124666,2025,-8.31217831615202,0.867674372339254
+"ices_saithe_north_sea_2026","N","thousand fish","matched","Matching annual age-specific states","",472,77137.3329403013,783.211160563327,298.150867121569,2025,1087.115084348,0.734660795500303
+"ices_saithe_north_sea_2026","abundance","thousand fish","matched","Sum of reported N over ages 3-10","",59,617098.66352241,180.582192259597,136.154050479183,2025,289.955841285306,0.367797352289481
+"ices_saithe_north_sea_2026","biomass","t","matched","Accepted N with shared translated weights  over ages 3-10","",59,1644032.8181071,429.454613493783,328.649629192321,2025,684.045067272039,0.374824780670188
+"ices_saithe_north_sea_2026","recruitment","thousand fish","matched","Recruitment at age 3","",59,154352.175579705,99.699141895447,68.0569391714745,2025,206.07124248532,0.657716476307553
+"ices_saithe_north_sea_2026","ssb","t","matched","Accepted N with shared translated weights and maturity over ages 3-10","",59,1431366.71734284,682.346207055939,523.220255203757,2025,1219.71297061808,0.477764818262457
+"ices_whiting_north_sea_2026","F","per year","matched","Matching annual age-specific states","",441,0.174585342562395,57.1376808024709,56.7419792017018,2026,-50.6203930383507,0.883409792369966
+"ices_whiting_north_sea_2026","F_bar","per year","matched","N-weighted F over ages 2,3,4,5","",49,0.124944488637636,50.9750847507139,54.8796114440759,2026,-57.6638290013465,0.893327758971252
+"ices_whiting_north_sea_2026","M","per year","matched","Matching annual age-specific states","",441,0.0410430866043046,5.43952186639584,3.66067217907954,2026,-2.40350051243389,0.888682572760536
+"ices_whiting_north_sea_2026","M_bar","per year","matched","N-weighted M over ages 0,1,2,3,4,5,6,7,8","",49,0.115945896525487,8.52031875279175,7.79837166803361,2026,-16.7653959593549,0.894508220265545
+"ices_whiting_north_sea_2026","N","thousand fish","matched","Matching annual age-specific states","",441,980308.093008108,350.005279324085,108.959708836336,2026,225.429255281291,0.909139068974013
+"ices_whiting_north_sea_2026","abundance","thousand fish","matched","Sum of reported N over ages 0-8","",49,8613775.61956314,50.0198325990708,41.735888097858,2026,23.3716045430522,0.851533061011868
+"ices_whiting_north_sea_2026","biomass","t","matched","Accepted N with shared translated weights  over ages 0-8","",49,409670.069670877,105.487938217031,106.430471614064,2026,177.409962265074,0.789557419413094
+"ices_whiting_north_sea_2026","biomass_at_age","t","unavailable","Matching annual age-specific states","No numerical output is available on the matching definition.",0,,,,,,
+"ices_whiting_north_sea_2026","recruitment","thousand fish","matched","Recruitment at age 0","",48,6168174.92140772,48.8342628527651,34.7477792600369,2025,-0.52731093040148,0.797287610750266
+"ices_whiting_north_sea_2026","ssb","t","matched","Accepted N with shared translated weights and maturity over ages 0-8","",49,336526.643005465,159.92158274214,161.565388137835,2026,256.364597980758,0.743922212776845
+"ices_herring_western_baltic_2026","F","per year","matched","Matching annual age-specific states","",315,0.135964745924982,55.1222802534344,50.1066592509724,2025,-13.841379864298,0.849845079398686
+"ices_herring_western_baltic_2026","F_bar","per year","matched","N-weighted F over ages 2,3,4,5","",35,0.0621756648573301,40.4175284085751,40.8619792078895,2025,-17.5115718898162,0.967222881709551
+"ices_herring_western_baltic_2026","M","per year","matched","Matching annual age-specific states","",315,8.8112938462314e-19,2.03663411756458e-16,0,2025,0,
+"ices_herring_western_baltic_2026","M_bar","per year","matched","N-weighted M over ages 0,1,2,3,4,5,6,7,8","",35,0.0192620928330567,1.30689295363495,0.908562246179872,2025,-0.88290246453331,0.86052892319624
+"ices_herring_western_baltic_2026","N","thousand fish","matched","Matching annual age-specific states","",315,7187868.6039985,785.135583846157,105.078989040328,2025,426.006860736937,0.861876536626443
+"ices_herring_western_baltic_2026","abundance","thousand fish","matched","Sum of reported N over ages 0-8","",35,64687745.264445,122.80659637769,123.029450297614,2025,72.242374583357,0.989635456527503
+"ices_herring_western_baltic_2026","biomass","t","matched","Accepted N with shared translated weights  over ages 0-8","",35,963713.057894455,194.805443421231,192.893219556293,2025,159.278352711081,0.963978550301368
+"ices_herring_western_baltic_2026","biomass_at_age","t","unavailable","Matching annual age-specific states","No numerical output is available on the matching definition.",0,,,,,,
+"ices_herring_western_baltic_2026","recruitment","thousand fish","matched","Recruitment at age 0","",35,50401287.9408206,126.383306731204,122.930393372713,2025,74.5340779156251,0.986314863963594
+"ices_herring_western_baltic_2026","ssb","t","matched","Accepted N with shared translated weights and maturity over ages 0-8","",35,709847.257787431,304.572298677763,307.008782363526,2025,294.881260648961,0.822908511872958
