@@ -47,6 +47,15 @@
 "afsc_pollock_ebs_2024","biomass_at_age","kt","unavailable","Matching annual age-specific states","No numerical output is available on the matching definition.",0,,,,,,
 "afsc_pollock_ebs_2024","recruitment","million fish","matched","Recruitment at age 1","",61,5756.01412498991,27.2970073435569,20.0731360599054,2024,37.8212102572651,0.827716930339759
 "afsc_pollock_ebs_2024","ssb","kt","non_equivalent","Accepted N with shared translated weights and maturity over ages 1-15","Native aggregate cannot be reconciled to the modeled ages and biological definition.",0,,,,,,
+"afsc_cod_goa_2026","F","per year","unavailable","Matching annual age-specific states","No numerical output is available on the matching definition.",0,,,,,,
+"afsc_cod_goa_2026","F_bar","per year","unavailable","N-weighted F over ages 1,2,3,4,5,6,7,8,9,10","No numerical output is available on the matching definition.",0,,,,,,
+"afsc_cod_goa_2026","M","per year","matched","Matching annual age-specific states","",171,0,0,0,2025,0,1
+"afsc_cod_goa_2026","M_bar","per year","unavailable","N-weighted M over ages 1,2,3,4,5,6,7,8,9,10","No numerical output is available on the matching definition.",0,,,,,,
+"afsc_cod_goa_2026","N","thousand fish","unavailable","Matching annual age-specific states","No numerical output is available on the matching definition.",0,,,,,,
+"afsc_cod_goa_2026","abundance","thousand fish","unavailable","Sum of reported N over ages 1-10","No numerical output is available on the matching definition.",0,,,,,,
+"afsc_cod_goa_2026","biomass","t","unavailable","Sum of reported biomass_at_age over ages 1-10","No numerical output is available on the matching definition.",0,,,,,,
+"afsc_cod_goa_2026","recruitment","thousand fish","non_equivalent","Matching annual age-specific states","Recruitment ages differ or the accepted recruitment age is unresolved.",0,,,,,,
+"afsc_cod_goa_2026","ssb","kt","matched","Reported aggregate female SSB; source age-specific contributions are unavailable","",19,32.5482173526013,43.1213797956885,43.0855269705734,2025,-44.7857625360811,0.918511040482053
 "ices_haddock_north_sea_2026","F","per year","matched","Matching annual age-specific states","",486,0.276517720101943,326.1471912406,34.1707842488273,2025,2521.18636368653,0.817115041169236
 "ices_haddock_north_sea_2026","F_bar","per year","matched","N-weighted F over ages 0,1,2,3,4,5,6,7,8","",54,0.0210243548097862,24.8534475370729,17.6200704724041,2025,121.63845191869,0.943915321240519
 "ices_haddock_north_sea_2026","M","per year","matched","Matching annual age-specific states","",495,7.34541496090381e-18,2.80745498025364e-15,0,2026,-1.77035180607405e-15,1
