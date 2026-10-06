@@ -3,6 +3,16 @@ root <- file.path("analysis", "comp_assessments")
 source("analysis/comp_assessments/R/run_assessment.R")
 database <- read_database()
 assessment_ids <- c("ices_cod_north_sea_2025", "dfo_cod_2j3kl_2025")
+current_ids <- database$assessments$assessment_id[
+  !is.na(database$assessments$is_current) & database$assessments$is_current
+]
+current_batch <- run_assessments(database = database, fit = FALSE)
+stopifnot(
+  setequal(names(current_batch), current_ids),
+  "ices_norway_pout_north_sea_2026_benchmark" %in% names(current_batch),
+  current_batch$ices_norway_pout_north_sea_2026_benchmark$diagnostics$status ==
+    "not_fitted"
+)
 comparison_example <- .assessment_comparison_summary(
   data.frame(metric = "ssb", year = 2020:2021, age = NA_integer_,
              source = c(100, 90), tinyAM = c(95, 92),

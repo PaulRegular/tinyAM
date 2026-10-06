@@ -295,8 +295,7 @@ run_assessments <- function(assessment_ids = NULL, database = NULL,
   }
 
   eligible <- database$assessments$assessment_id[
-    !is.na(database$assessments$is_current) & database$assessments$is_current &
-      !is.na(database$assessments$is_applied) & database$assessments$is_applied
+    !is.na(database$assessments$is_current) & database$assessments$is_current
   ]
   if (is.null(assessment_ids)) {
     assessment_ids <- eligible

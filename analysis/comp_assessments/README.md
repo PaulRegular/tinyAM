@@ -59,6 +59,9 @@ x <- run_assessment("dfo_cod_2j3kl_2025")
 
 Source `scripts/translation/run_all.R` for the reproducible batch. It reads the committed database snapshot, uses four `future::multisession` workers through `furrr`, and writes aggregate results once in the parent process. Assessments without stock recipes and individual fit failures remain visible in the returned diagnostics. Use `parallel = FALSE` when debugging.
 
+The batch includes every assessment marked `is_current`, including a current
+accepted benchmark that has not yet been applied for advice.
+
 ```r
 pkgload::load_all(".", quiet = TRUE)
 source("analysis/comp_assessments/R/run_assessment.R")
