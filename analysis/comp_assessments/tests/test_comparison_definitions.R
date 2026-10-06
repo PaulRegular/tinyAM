@@ -74,6 +74,14 @@ example <- data.frame(metric = "N", year = rep(years, 2), age = rep(2:3, each = 
 summary <- .assessment_comparison_summary(example, "test")
 stopifnot(summary$n == 6L, summary$mean_absolute_difference == 8/6,
           abs(summary$trend_correlation + 1) < 1e-12)
+flat <- data.frame(
+  metric = "M_bar", year = years, age = NA_integer_,
+  source = 0.2 + c(-2, 0, 2) * .Machine$double.eps,
+  tinyAM = 0.2 + c(1, -2, 1) * .Machine$double.eps,
+  percent_difference = 0, comparison_status = "matched",
+  definition = "N-weighted M", reason = "", unit = "per year"
+)
+stopifnot(is.na(.assessment_comparison_summary(flat, "test")$trend_correlation))
 failed <- .assessment_diagnostics("test", list(commit = "test"), "not_converged",
   fit = list(opt = structure("NA/NaN gradient evaluation", class = "try-error"),
              is_converged = FALSE, sdrep = list(pdHess = FALSE),
