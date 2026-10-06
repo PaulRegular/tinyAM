@@ -215,7 +215,7 @@
 
 .translation_index_multiplier <- function(unit) {
   unit <- tolower(trimws(as.character(unit)))
-  if (grepl("^(native[ _]+)?survey[ _]?index( \\(unit unresolved\\))?$", unit)) return(1)
+  if (grepl("^(native[ _-]+)?survey[ _-]?index( \\(unit unresolved\\)| units?)?$", unit)) return(1)
   .translation_number_multiplier(unit)
 }
 

@@ -86,3 +86,11 @@ SAM's exact age-correlated F increments, N-process variance sharing, or M GMRF.
 It will retain the reported data, q sharing, timing and observation precision
 as far as tinyAM's existing model allows. These are model differences, not
 corrections to the accepted SAM assessment.
+
+The current translation fits random-walk recruitment, abundance and F, with
+exponential initial abundance. The accepted 2022 numerical M input is held
+through 2026 and fixed in tinyAM; a trial estimated M process produced
+non-finite optimizer gradients, so it is not used in the reported fit. This
+carry-forward is only a transparent approximation to provide the later-year
+M surface that tinyAM requires. It does not replace the accepted SAM M states
+in the database or imply that M was constant after 2022.

@@ -278,8 +278,9 @@ expect_equal(thousand_obs$catch$obs[thousand_obs$catch$year == 2000],
              c(10000, 20000))
 expect_equal(attr(thousand_obs, "translation")$catch_units$multiplier_to_fish,
              1000)
-expect_equal(unname(vapply(c("native survey index", "survey_index"),
-                           .translation_index_multiplier, numeric(1))), c(1, 1))
+expect_equal(unname(vapply(c("native survey index", "survey_index",
+                             "native survey-index units"),
+                           .translation_index_multiplier, numeric(1))), c(1, 1, 1))
 
 m_inputs <- inputs[0, ]
 m_inputs <- rbind(
