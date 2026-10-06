@@ -54,12 +54,19 @@ contains only the NEFSC Bigelow spring and fall age indices.
 ## Translation status
 
 The source inputs and outputs above have been added to the canonical database.
-The accepted run retained more observations and assessment detail than the
-current tinyAM translation can represent. Before fitting, select a catch
-representation that avoids double-counting and record the omitted surveys and
-static SSB-weight approximation in the stock recipe. Comparisons should be
-limited to definitions and years that can be matched; in particular, the
-available maturity schedule ends in 2016.
+The initial tinyAM translation uses the published aggregate catch series once,
+the Bigelow spring/fall age indices, and the static SSB-weight approximation.
+Its 1982-2016 fit did not pass tinyAM's convergence check: the optimizer
+returned code 0 with objective 757.41 and maximum gradient 0.00045, but the
+Hessian was not positive definite (24 fixed and 552 random effects). The
+standard-error calculation returned, but it is not treated as a successful
+fit. No model-comparison dashboard was generated. No alternate settings were
+tried to force convergence.
+
+The accepted run retained more observations and assessment detail than this
+tinyAM translation can represent. Any later comparison should be limited to
+definitions and years that can be matched; in particular, the available
+maturity schedule ends in 2016.
 
 ## Sources
 
