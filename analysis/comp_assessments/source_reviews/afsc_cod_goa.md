@@ -1,6 +1,6 @@
 # Gulf of Alaska Pacific cod: accepted-assessment source review
 
-Status: canonical partial record afsc_cod_goa_2026 imported. Inputs and reported summary outputs are transcribed; numerical N-at-age/F-at-age surfaces and detailed selectivity outputs are not available from the recovered files.
+Status: canonical partial record afsc_cod_goa_2026 imported. Inputs and reported summary outputs are transcribed; numerical N-at-age and F-at-age surfaces from the current accepted run have not been recovered.
 Charbonneau identifier: AFSC_GOA_Gadus_macrocephalus.
 
 ## January 2026 assessment
@@ -81,7 +81,7 @@ Pacific cod coverage is now 12,689 input cells, 688 outputs and 34 assumptions. 
 
 Table 2.6 reports estimated M=0.50 (SD 0.023) outside the 2014–2016 block and M=0.84 (SD 0.053) inside it. The native control specifies age-constant M (natM_type=0) with replacement block 4 covering exactly 2014–2016. The database now expands these rounded published estimates to 1977–2025, ages 0–10+, as 539 mortality output cells. These are repeated representations of two shared parameters, not independently estimated age/year values; notes state the rounding and shared uncertainty. No confidence intervals are manufactured.
 
-Fixed weight-length coefficient/exponent, maturity length/slope, stock-recruit steepness and recruitment sigma are retained as numerical assumptions from negative-phase control parameters. The native stock-recruit code 3 selects the standard Beverton-Holt relationship, now recorded in the assumptions table. They are input parameters, not estimated age-specific biological surfaces. The compact ss3.rep does not contain N-at-age or M-at-age tables; its exploitation and length-selectivity sections cannot be relabeled as full F-at-age.
+Fixed weight-length coefficient/exponent, maturity length/slope, stock-recruit steepness and recruitment sigma are retained as numerical assumptions from negative-phase control parameters. The native stock-recruit code 3 selects the standard Beverton-Holt relationship, now recorded in the assumptions table. They are input parameters, not estimated age-specific biological surfaces. The compact ss3.rep does not contain N-at-age or F-at-age surfaces. Table 2.6 supplies age-constant M estimates with a 2014–2016 block; the database repeats these shared estimates over year and age to match the canonical mortality surface, not as independent age-year estimates.
 
 Coverage is now 12,689 input cells, 688 outputs and 34 assumptions. Source validation verifies the M block/year/age mapping and absence of invented intervals, alongside native composition/covariate checks; full structural validation passes. N/F-at-age and selectivity interpretation still require work. Status remains partial.
 
@@ -105,10 +105,35 @@ The translation fits 2007–2025, when the fishery length-composition series and
 
 Only the age-sampled NMFS bottom-trawl survey is translated. Its every-other-year aggregate numbers index is allocated across ages with the pooled key. The supplied aggregate log SD is repeated across reconstructed age rows, so the accepted conditional-composition and covariance likelihoods are not reproduced. Source observations specify month 7 but not a within-month date; the translation uses timing 0.5 (midyear). The longline survey is omitted because its age composition is unavailable.
 
-Weight-at-age and maturity-at-age are reconstructed from the reported mean-length growth curve and the accepted weight-length and length-logistic parameters. Length variation is not integrated over. A 0.5 female multiplier is used to match the published female SSB convention. The accepted M estimates are supplied as fixed M, including the higher 2014–2016 block; its reported uncertainty is not fitted. The translated model uses exponential N initialization without an N process and an IID age-year F process. Fleet-specific selectivity, the accepted F/N surfaces, and the source composition likelihood are not represented.
+Weight-at-age and maturity-at-age are reconstructed from the reported mean-length growth curve and the accepted weight-length and length-logistic parameters. Length variation is not integrated over. A 0.5 female multiplier is used to match the published female SSB convention. The accepted M estimates are supplied as fixed M, including the higher 2014–2016 block; its reported uncertainty is not fitted. The finalized tinyAM model uses exponential N initialization with N process off, IID F deviations around an age-specific mean, supplied fixed M, and age-specific q. Age-specific F means and q materially improved the source fishery/survey representation. An unconstrained q block was retained after a monotone-q alternative gave a similar result. A free initial-abundance fit was tested but did not converge reliably. The source fleet selectivity, accepted N/F surfaces and composition likelihood are not represented.
 
-With the corrected catch-at-age reconstruction, the IID-F translation converged (optimizer code 0, objective 643.47, maximum absolute gradient 0.0000484, positive-definite Hessian, 6 fixed and 208 random effects). Its aggregate female SSB comparison over 2007–2025 has a mean absolute difference of 32.55 kt (43.1%), terminal-year difference of -44.8%, and trend correlation of 0.919. The source age-specific SSB contributions are unavailable, so this is explicitly an aggregate comparison.
+The finalized fit converged (optimizer code 0, relative convergence (4), objective 274.38, maximum absolute gradient 0.000411, positive-definite Hessian, 25 fixed and 208 random effects). The approximate aggregate SSB comparison over 2007–2025 used source tonnes and tinyAM kilograms scaled by 1e-3: mean absolute difference 24,893 t (32.10%), terminal-year difference +7.73%, and trend correlation 0.945. The M comparison contains 190 age-year cells and is equal by construction. The source age-specific SSB contributions are unavailable, so this is explicitly an aggregate comparison.
 
-Using the same observations, an RW-F fit also converged (code 0, objective 355.71, maximum absolute gradient 0.0000585, positive-definite Hessian). Its mean absolute SSB percent difference was 77.9%, terminal-year difference +47.9%, and trend correlation 0.962. An AR1-F fit did not converge (code 1, objective 293.70, maximum gradient 0.00151, non-positive-definite Hessian and undefined standard errors). Objective values across these process models are not a model-selection criterion. The recipe retains IID as a simple illustrative fit; the RW result shows that it is not the only converged option, and these comparisons do not establish which F process is scientifically preferred.
+
 
 Recruitment is not compared because accepted recruitment is age 0 and tinyAM recruitment is age 1. Accepted N-at-age and F-at-age were not recovered. The M comparison is identical by construction because accepted numerical M was supplied as fixed M; it is not an independent validation of the M translation.
+
+## Cached fitted-object check
+
+The cached goapcod_obj.RDS at
+https://github.com/pete-hulson/goa_pcod/blob/facf41573f9a0b609d0096611bc9302aaab43abe/2025/rsch/SPoRC/goapcod_mod_files/goapcod_obj.RDS
+was inspected rather than assumed to be the accepted 2026 fit. Its fitted
+years end in 2024, and its aggregate SSB does not reproduce the current Model
+24.0 report series (for example, 78,050 t versus 81,532 t in 1977 and 62,366
+t versus 72,336 t in 2007). It therefore is not used to populate accepted
+outputs. The current accepted source remains the pinned 2025/mgmt/24.0/ss3.rep
+and the official report. The compact report supports historical aggregate
+female SSB, age-0 recruitment and the published M blocks, but does not provide
+accepted N-at-age or F-at-age surfaces. Do not derive them from plots or from
+this mismatched cached fit object.
+
+The comparison keeps accepted SSB in tonnes and scales tinyAM kilograms to
+tonnes by 1e-3. It is approximate because the source aggregate covers ages
+0+ while tinyAM starts at age 1. The dashboard also retains accepted total
+biomass in tonnes and recruitment in billions, but reports no percent
+difference: age-0 biomass cannot be removed from the aggregate total, and
+source recruitment is age 0 while tinyAM recruitment is age 1. Accepted M is
+numerically available and matches tinyAM by construction because the reported
+M blocks are supplied as fixed M; it is not an independent model validation.
+N-at-age, F-at-age and definition-matched F summaries remain unavailable. The
+assessment stays partial.

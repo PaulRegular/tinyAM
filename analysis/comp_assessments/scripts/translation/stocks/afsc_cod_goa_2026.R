@@ -774,27 +774,26 @@ translate_stock <- function(source) {
   ## Do not convert the source values here.
 
   comparison_outputs <- outputs[
-    outputs$type == "biomass" &
-      outputs$measure == "SSB" &
+    outputs$measure %in% c("SSB", "total_biomass", "recruitment") &
       outputs$year %in% years,
     ,
     drop = FALSE
   ]
 
-  if (!nrow(comparison_outputs)) {
+  if (!any(comparison_outputs$measure == "SSB")) {
     stop(
       "No GOA female SSB outputs are available for the selected comparison years.",
       call. = FALSE
     )
   }
 
-  if (
-    any(
-      tolower(trimws(comparison_outputs$unit)) != "t"
-    )
-  ) {
+  biomass_rows <- comparison_outputs$measure %in% c("SSB", "total_biomass")
+  if (any(tolower(trimws(comparison_outputs$unit[biomass_rows])) != "t") ||
+      any(tolower(trimws(comparison_outputs$unit[
+        comparison_outputs$measure == "recruitment"
+      ])) != "billion fish")) {
     stop(
-      "GOA SSB comparison expects source tonnes.",
+      "GOA aggregate biomass and recruitment outputs have unexpected units.",
       call. = FALSE
     )
   }
@@ -806,39 +805,45 @@ translate_stock <- function(source) {
     "so this is an approximate aggregate comparison."
   )
 
-  comparison_outputs$notes <- ifelse(
-    is.na(comparison_outputs$notes) |
-      !nzchar(trimws(comparison_outputs$notes)),
+  ssb_rows <- comparison_outputs$measure == "SSB"
+  comparison_outputs$notes[ssb_rows] <- ifelse(
+    is.na(comparison_outputs$notes[ssb_rows]) |
+      !nzchar(trimws(comparison_outputs$notes[ssb_rows])),
     ssb_note,
-    paste(
-      comparison_outputs$notes,
-      ssb_note
-    )
+    paste(comparison_outputs$notes[ssb_rows], ssb_note)
   )
 
   ## Model specification ----
-  ##
-  ## age_plus_group is intentionally not supplied to database_to_tam_ref().
-  ## The only direct aggregate source comparison is SSB, while translated
-  ## M is already represented on the tinyAM ages 1:10 grid. Re-applying the
-  ## generic reference plus-group aggregation would incorrectly require
-  ## unavailable accepted N-at-age weights for the age-10 M value.
 
   list(
     years = years,
     ages = ages,
+    age_plus_group = 10,
     obs = obs,
 
     comparison_outputs = comparison_outputs,
 
-    # tinyAM biomass is kg; accepted SSB is tonnes.
+    # tinyAM biomass is kg; accepted biomass is tonnes and recruitment is billions.
     comparison_scales = c(
-      ssb = 1e-3
+      ssb = 1e-3,
+      biomass = 1e-3,
+      recruitment = 1e-9
     ),
 
-    # Source age-specific SSB contributions are unavailable, so allow
-    # comparison with the reported aggregate female SSB.
+    # Source SSB is age 0+; tinyAM SSB is age 1-10+.
     comparison_aggregates = "ssb",
+    comparison_definitions = list(
+      ssb = list(
+        status = "approximate",
+        definition = "Aggregate female SSB: accepted ages 0+ versus tinyAM ages 1-10+",
+        reason = "The accepted age-0 contribution cannot be removed from the available aggregate output."
+      ),
+      biomass = list(
+        status = "non_equivalent",
+        definition = "Accepted total biomass ages 0+ versus tinyAM ages 1-10+",
+        reason = "The accepted age-0 biomass cannot be removed from the reported aggregate total."
+      )
+    ),
 
     settings = list(
       N_settings = list(
@@ -897,6 +902,10 @@ translate_stock <- function(source) {
       "| Weights and maturity | The model uses a combined-sex growth pattern, weight-length relationship and length-logistic maturity; published female SSB is one-half of the native spawning output. | Reconstruct mean length-at-age from reported growth parameters, calculate weight-at-age from the accepted weight-length relationship, and evaluate maturity at mean length. Maturity is multiplied by 0.5 for female SSB. | Length-at-age variation is not integrated, but the accepted biological functions and female-SSB convention are retained. |",
 
       "| SSB | Published female spawning biomass is age 0+ and reported in tonnes. | Calculate female SSB over ages 1-10+ and convert tinyAM biomass from kg to tonnes for comparison. | Source age-specific SSB contributions are unavailable, so the age-0 component cannot currently be removed. The aggregate comparison is therefore approximate rather than exactly age-matched. |",
+
+      "| Total biomass | The published aggregate covers ages 0+ and is reported in tonnes. | tinyAM reports population biomass over ages 1-10+. | Both totals are shown in tonnes for context, but the age-0 contribution cannot be removed, so no like-for-like percent difference is calculated. |",
+
+      "| Recruitment | Recruitment enters at age 0 and is reported in billions of fish. | tinyAM recruitment enters at age 1 and is shown in billions of fish. | The age definitions differ, so the dashboard can show both trajectories but the comparison is marked non-equivalent. |",
 
       "",
       "The pooled age-length keys use native bin labels and source observations from 2007 onward. They cover at least 95% of each selected annual length composition; uncovered length-bin mass is renormalized. The 2025 catch uses the key pooled from age samples through 2024.",
