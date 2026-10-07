@@ -344,6 +344,18 @@ Do not combine removal streams without understanding how the source assessment t
 
 ------------------------------------------------------------------------
 
+## 4.8 Reporting total catch biomass
+
+Stock recipes may optionally provide `catch_reporting`, with `weights`
+(`year`, `age`, `weight` in kg/fish) and `totals` (`year`, `yield` in kg).
+The runner then reports the original total catch biomass and sums predicted
+catch numbers times catch weights over all model ages. This avoids comparing
+an incomplete composition with an all-age prediction, or substituting stock
+weights for catch weights. It changes the yield reporting tables only; it does
+not add a total-catch likelihood or alter fitted predictions.
+
+------------------------------------------------------------------------
+
 # 5. Preparing survey/index-at-age data
 
 Every survey used in the accepted assessment should be considered.

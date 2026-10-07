@@ -14,6 +14,29 @@ rm(.assessment_helper)
   as.call(c(list(quote(fit_tam)), args))
 }
 
+.assessment_catch_reporting <- function(fit, reporting) {
+  if (is.null(reporting)) return(fit)
+  catch <- fit$obs_pred$catch
+  weights <- reporting$weights
+  key <- function(x) paste(x$year, x$age)
+  index <- match(key(catch), key(weights))
+  if (anyDuplicated(key(weights)) || anyNA(index) ||
+      any(!is.finite(weights$weight) | weights$weight <= 0)) {
+    cli::cli_abort("Catch reporting requires one positive catch weight for every predicted year and age.")
+  }
+  predicted <- tapply(catch$pred * weights$weight[index], catch$year, sum)
+  totals <- reporting$totals
+  if (anyDuplicated(totals$year) || any(!is.finite(totals$yield) | totals$yield < 0)) {
+    cli::cli_abort("Catch reporting requires unique years and non-negative total yields in kg.")
+  }
+  # Reporting only: source total biomass and all-age predictions use catch weights.
+  fit$pop$total_yield$est <- totals$yield[match(fit$pop$total_yield$year, totals$year)]
+  fit$pop$total_yield_pred$est <- as.numeric(predicted[as.character(fit$pop$total_yield_pred$year)])
+  fit$rep$total_yield <- fit$pop$total_yield$est
+  fit$rep$total_yield_pred <- fit$pop$total_yield_pred$est
+  fit
+}
+
 .assessment_diagnostics <- function(assessment_id, database, status,
                                     fit = NULL, elapsed = NA_real_, reason = "") {
   opt <- if (is.list(fit$opt)) fit$opt else NULL
@@ -185,6 +208,7 @@ run_assessment <- function(assessment_id, database = NULL, fit = TRUE,
     return(result)
   }
   fitted$call <- .assessment_fit_call(fit_args)
+  fitted <- .assessment_catch_reporting(fitted, translated$catch_reporting)
   result$fit <- fitted
   result$diagnostics <- .assessment_diagnostics(
     assessment_id, database,

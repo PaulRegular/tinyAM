@@ -77,3 +77,91 @@ Native age-transition row sums differ from one by up to 0.0001 because of suppli
 Survey selectivity shapes and fixed/estimated limbs are now recorded separately for all four active surveys. All 54 fishery ascending log-slope increment SDs equal 0.05; ascending inflection SDs are 0.2. The 54 ADF&G log-q increment SDs are preserved in transition order and checked directly against native inputs. Supplied q1/q2 penalty arrays are not treated as active annual processes because their corresponding deviations are fixed at zero.
 
 Final Table 1.23 adds 48 accepted-run beginning-year age-3+ biomass estimates for 1977–2024, in thousand tonnes. The previous-assessment columns are excluded. SSB and recruitment in the same rows agree exactly with independently extracted Table 1.24. Harvest rate is catch divided by age-3+ biomass, not instantaneous F; it is not used to manufacture F-at-age.
+
+## tinyAM translation review
+
+The pinned selectivity equations do not pool older survey ages explicitly. They
+use a descending logistic for Shelikof, an ascending logistic for ADF&G, and
+double logistics for bottom trawl and summer acoustic. Bottom-trawl descending
+slope and inflection are fixed at exp(1) and 20, so its descending multiplier is
+indistinguishable from one over ages 1-10. Summer acoustic has its ascending
+slope and inflection fixed at exp(4.9) and 0.5, making its ascending multiplier
+indistinguishable from one over these ages. Thus increasing trawl and decreasing
+acoustic curves are defensible approximations to the implemented source shapes.
+The revised tinyAM formula uses independent monotone steps by survey, with
+reversed age order for the acoustics. Plateaus are possible, rather than an
+arbitrary fixed threshold for pooling old ages. These are not fitted source
+logistic curves. The bottom-trawl absolute-q prior remains unrepresented, so
+shape constraints alone do not reproduce the source abundance-scale constraint.
+
+ADF&G annual effects use a single year factor in place of manually created
+dummy columns, retaining the first composition year as the baseline. The
+observed environmental covariate still applies only to Shelikof. Source latent
+environmental uncertainty, annual-q penalties and age-reading error are not
+implemented in tinyAM.
+
+A quadratic log-SD was tested to allow higher variability at both ends of the
+fitted age range, but the combined model did not converge from either the
+original or staged starts. The retained model uses a common catch log-SD.
+Ages 1-2 remain unobserved separately because
+the accepted first composition bin combines them. Their SD and predictions
+are extrapolations; these unobserved ages do not contribute to the catch
+likelihood. Conditional standardized residuals do not validate the omitted
+pooled bin or an aggregate catch fit.
+
+The yield panel now uses the original annual total catch biomass (tonnes
+converted to kg) and predicted catches at all model ages multiplied by the
+corresponding catch weights. Previously it compared incomplete observed ages
+3-10 with predictions at ages 1-10, both weighted by stock weights. This is a
+reporting correction, not an additional total-catch likelihood. The fishery
+reconstruction still approximates the pooled ages 1-2 weight by the recorded
+age-2 weight. Predictions remain conditional medians, without a lognormal mean
+correction. Plotly's missing-observation trace indexing is corrected separately;
+the underlying catch predictions were present at every age.
+
+Accepted SSB is `sum(N * exp(-0.21 * Z) * wt_spawn * 0.5 * mat)`;
+tinyAM SSB is `sum(N * wt_pop * 0.5 * mat)` at the start of the year.
+The source preparation sets `wt_spawn = wt_srv1` and `wt_pop = wt_srv2`.
+Differences in weights and timing, as well as q's omitted absolute-scale prior,
+must be considered before attributing all SSB disagreement to age-specific q.
+
+### Numerical and reporting checks
+
+The retained revision changes survey curve shape, not the N/F/M processes or
+catch-SD formula. It was fitted from the previous fitted states, and a repeat
+run returned the same result. Positive derivatives at zero mono increments
+satisfy the lower-bound optimality condition; the gradients below use the
+package's existing projected-gradient convention.
+
+| Fit | Objective | Maximum projected gradient | Positive-definite Hessian | Outcome |
+|---|---:|---:|---|---|
+| Original | 1018.232 | 0.00121 | Yes | Converged |
+| Survey shape, common catch SD | 1056.099 | 0.000724 | Yes | Converged; retained |
+| Polynomial catch SD, free age q | 1007.277 | 0.0170 | Yes | Above gradient tolerance |
+| Survey shape + polynomial catch SD | 2303.757 | 139.0 | No | Evaluation limit; rejected |
+| Same combined model, started from the converged survey-shape fit | 1043.167 | 3.57 | Yes | Evaluation limit; rejected |
+
+The retained common catch log-SD is 0.417 (previously 0.437). Eighteen monotone
+increments are exactly zero. The polynomial-only fit estimated larger SD at
+ages 3 and 10 (0.689 and 0.584), with its lowest value near age 7 (0.303), but
+this pattern did not yield a stable combined model.
+
+Correct all-age, catch-weighted yield predictions remain too large: the median
+predicted/observed annual total ratio declines from 3.64 to 1.80, rather than
+reaching agreement. In the original fit, ages 1-2 account for a median 74% of
+predicted yield. Over only observed catch ages, the median predicted/observed
+ratio is 0.928. Good observed-age residuals therefore conceal a substantial
+unobserved-age problem. No catch observations were adjusted to resolve it.
+
+The median ratio of native tinyAM to native accepted SSB rises from 0.401 to
+0.469. This is an illustrative scale comparison, not a matched-definition
+diagnostic: spawning timing and weight definitions differ as noted above.
+Source total-catch and grouped-age likelihoods, source fishery selectivity,
+and the bottom-trawl absolute-q prior remain important structural differences.
+The revision does not establish that any one of these explains the remaining
+abundance/SSB discrepancy.
+
+A quadratic mean-log-F sensitivity was also attempted with the survey-shape
+and polynomial-SD changes, but was stopped after 20 minutes without a completed
+fit. Its convergence and Hessian are unknown. It was not retained: the recipe
+still uses the original age-specific F means and AR1 process.
