@@ -94,6 +94,35 @@ test_that("plot_obs_pred includes both observed (markers) and predicted (lines)"
   expect_true(any(grepl("lines",   modes, fixed = TRUE)))
 })
 
+test_that("empty observed ages retain prediction traces in every frame", {
+  d <- expand.grid(year = 2000:2002, age = 1:3)
+  d$obs <- ifelse(d$age < 3, NA_real_, 10)
+  d$pred <- 11
+  original <- d
+  built <- plotly::plotly_build(plot_obs_pred(d, frame = ~age))
+  expect_identical(d, original)
+  expect_equal(length(built$x$data), 2L)
+  for (frame in built$x$frames) {
+    expect_equal(frame$traces, 0:1)
+    expect_equal(vapply(frame$data, `[[`, character(1), "mode"),
+                 c("markers", "lines"))
+    expect_equal(as.numeric(frame$data[[2]]$y), rep(11, 3))
+  }
+})
+
+test_that("missing reference predictions retain model traces in catch frames", {
+  d <- expand.grid(year = 2000:2002, age = 1:3, model = c("Accepted", "tinyAM"))
+  d$obs <- ifelse(d$age < 3, NA_real_, 10)
+  d$pred <- ifelse(d$model == "tinyAM", 11, NA_real_)
+  built <- plotly::plotly_build(plot_obs_pred(d, frame = ~age, color = ~model))
+  expect_equal(length(built$x$data), 3L)
+  for (frame in built$x$frames) {
+    expect_equal(frame$traces, 0:2)
+    expect_equal(vapply(frame$data, `[[`, character(1), "mode"),
+                 c("markers", "lines", "lines"))
+  }
+})
+
 ## plot_bubbles ----
 
 test_that("plot_bubbles produces marker traces", {

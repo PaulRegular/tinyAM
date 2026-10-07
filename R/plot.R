@@ -230,6 +230,13 @@ plot_obs_pred <- function(
   }
   max_y <- max(c(data$obs, data$pred), na.rm = TRUE) * 1.05
 
+  if (!is.null(args$frame)) {
+    # Keep empty series in every frame so Plotly retains the same trace indices.
+    # Inf becomes a non-rendered point; the original observations stay unchanged.
+    data$obs[is.na(data$obs)] <- Inf
+    data$pred[is.na(data$pred)] <- Inf
+  }
+
   shapes <- NULL
   if ("is_proj" %in% names(data) && any(data$is_proj)) {
     max_obs_year <- suppressWarnings(max(data$year[!data$is_proj], na.rm = TRUE))

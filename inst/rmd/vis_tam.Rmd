@@ -68,8 +68,8 @@ plot_report <- function(d, ...) {
 }
 
 plot_obs_pred_report <- function(d, ...) {
-  d <- plot_rows(d, c("obs", "pred"))
-  if (is.null(d) || !nrow(d)) return(plotly::plot_ly())
+  available <- plot_rows(d, c("obs", "pred"))
+  if (is.null(available) || !nrow(available)) return(plotly::plot_ly())
   plot_obs_pred(d, ...)
 }
 

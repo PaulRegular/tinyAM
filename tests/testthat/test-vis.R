@@ -6,7 +6,10 @@ suppressWarnings(
 )
 
 dashboard_plots <- function(file) {
-  html <- paste(readLines(file, warn = FALSE), collapse = "\n")
+  # Embedded Plotly code contains Ctrl-Z, which ends Windows text-mode reads.
+  con <- file(file, "rb")
+  on.exit(close(con))
+  html <- paste(readLines(con, warn = FALSE, encoding = "UTF-8"), collapse = "\n")
   scripts <- regmatches(html, gregexpr(
     '(?s)<script type="application/json"[^>]*>.*?</script>', html, perl = TRUE
   ))[[1L]]
@@ -239,8 +242,10 @@ test_that("tam_ref objects accept a Background page", {
   expect_false(grepl("database_to_tam_ref", visible_html, fixed = TRUE))
   call_start <- regexpr('<div id="function-calls"', visible_html, fixed = TRUE)[[1L]]
   expect_gt(call_start, 0L)
-  call_html <- substring(visible_html, call_start)
-  call_html <- strsplit(call_html, '<div id="output"', fixed = TRUE)[[1L]][1L]
+  call_html <- regmatches(visible_html, regexpr(
+    '(?s)<div id="function-calls".*?(?=<div id="output")',
+    visible_html, perl = TRUE
+  ))
   expect_true(grepl("<td\\b[^>]*>\\s*tinyAM\\s*</td>", call_html, perl = TRUE))
   expect_true(grepl("fit_tam(", call_html, fixed = TRUE))
   expect_false(grepl("<td\\b[^>]*>\\s*Assessment\\s*</td>", call_html, perl = TRUE))
