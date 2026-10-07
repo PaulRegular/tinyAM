@@ -63,6 +63,26 @@ translate_stock <- function(source) {
   obs$index$q_order <- ifelse(trawl, obs$index$age, 11 - obs$index$age)
   q_form <- ~ survey + mono(q_order, by = survey) + environmental_effect + adfg_year
 
+
+
+
+
+  obs$index$q_age_block <- cut(
+    obs$index$age,
+    breaks = c(0, 2, 4, 6, 8, 10),
+    labels = c("1-2", "3-4", "5-6", "7-8", "9-10")
+  )
+
+  obs$index$q_key <- interaction(
+    obs$index$survey,
+    obs$index$q_age_block,
+    drop = TRUE
+  )
+
+  q_form <- ~ 0 + q_key + environmental_effect + adfg_year
+
+
+
   catch_weights <- source$inputs[source$inputs$type == "catch_weight" &
                                   source$inputs$measure == "weight_at_age", ]
   catch_totals <- source$inputs[source$inputs$type == "catch" &
@@ -109,15 +129,16 @@ translate_stock <- function(source) {
       ssb = 1e-6, biomass = 1e-6, biomass_at_age = 1e-6
     ),
     settings = list(
-      N_settings = list(process = "off", init = "exp"),
-      F_settings = list(process = "ar1", mu_form = ~ 0 + age_factor,
+      N_settings = list(process = "iid", init = "exp"), # off would not converge
+      F_settings = list(process = "rw", mu_form = ~ NULL,
                         mean_ages = 3:10),
       M_settings = list(process = "off", mu_form = NULL,
                         mu_supplied = ~ M_assumption, mean_ages = 3:10),
       catch_settings = list(sd_form = ~ 1, fill_missing = FALSE),
       index_settings = list(q_form = q_form,
                             sd_form = ~ 0 + survey,
-                            fill_missing = TRUE)
+                            sd_supplied = ~relative_sd,
+                            fill_missing = FALSE)
     ),
     background = background
   )
