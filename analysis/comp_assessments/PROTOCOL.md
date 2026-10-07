@@ -258,6 +258,10 @@ Do not:
 - assume that a public model object is the accepted assessment without verification;
 - mix inputs or outputs from different assessment runs.
 
+Within the same assessment, prioritize the most complete age and time detail supported by authoritative sources. Do not collapse or pool observations merely to imitate the coarser groups used by the model when more detailed source values are available. Preserve the model-ready grouped data and the more detailed table as distinct records when both are informative, and label each record's role and provenance.
+
+When translating an assessment, use the most detailed defensible source series that tinyAM can represent. Record any aggregation needed to map reported ages into tinyAM's model ages, such as summing ages into a terminal plus group. Keep the accepted model's actual likelihood grouping explicit so a detailed reporting table is not mistaken for the exact observation vector used by that likelihood. Retain rounding and unresolved precision limits in the notes. Do not count overlapping source and derived series twice in a fit.
+
 Keep raw observations, model inputs, transformed inputs, fitted values, outputs, and diagnostics conceptually distinct.
 
 When the native assessment object or input files are found, preserve their provenance and use them as the preferred basis for populating the database. Report tables should generally be used as a cross-check or fallback when native inputs are available.
