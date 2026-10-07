@@ -12,7 +12,9 @@ translated <- stock$translate_stock(source_data)
 obs <- translated$obs
 
 tinyAM::check_obs(obs)
-stopifnot(all(is.na(obs$catch$obs[obs$catch$age == 2])))
+stopifnot(any(is.finite(obs$catch$obs[obs$catch$age == 1])),
+          any(is.finite(obs$catch$obs[obs$catch$age == 2])),
+          all(is.na(obs$catch$obs[obs$catch$year < 1975])))
 shelikof <- obs$index$survey == "Shelikof winter acoustic"
 stopifnot(!any(shelikof & obs$index$age == 3),
           any(is.finite(obs$index$obs[shelikof & obs$index$age >= 4])))
@@ -39,6 +41,18 @@ for (survey in unique(dat$obs$index$survey)) {
   stopifnot(all(direction * diff(by_age) > 0))
 }
 stopifnot(length(unique(dat$q_mono_steps$by_level)) == 4)
+
+catch_numbers <- source_data$inputs[source_data$inputs$type == "catch" &
+                                      source_data$inputs$measure == "numbers_at_age", ]
+stopifnot(nrow(catch_numbers) == 49 * 15,
+          setequal(catch_numbers$year, 1975:2023),
+          setequal(catch_numbers$age, 1:15),
+          all(catch_numbers$source_type == "official_table"),
+          catch_numbers$value[catch_numbers$year == 2023 & catch_numbers$age == 1] == 0.43,
+          catch_numbers$value[catch_numbers$year == 2023 & catch_numbers$age == 2] == 8.57,
+          obs$catch$obs[obs$catch$year == 2023 & obs$catch$age == 1] == 430000,
+          obs$catch$obs[obs$catch$year == 2023 & obs$catch$age == 2] == 8570000,
+          obs$catch$obs[obs$catch$year == 2023 & obs$catch$age == 10] == 8890000)
 
 totals <- source_data$inputs[source_data$inputs$type == "catch" &
                               source_data$inputs$measure == "total_biomass", ]

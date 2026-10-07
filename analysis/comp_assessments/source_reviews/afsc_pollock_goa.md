@@ -28,7 +28,7 @@ The inspected official read_dat function was evaluated independently, without fi
 
 ## Inventory and pending checks
 
-Native total catch: 55 years, tonnes, 1970–2024; terminal catch is assumed 131,000 t. Fishery age compositions: 49 years, 1975–2023, 10 columns, with lower/upper accumulation ages. Annual fishery weights: 55 by 10. Fishery length-composition placeholders have zero sample sizes and must not be mistaken for fitted observations.
+Native total catch: 55 years, tonnes, 1970–2024; terminal catch is assumed 131,000 t. Native fishery age compositions: 49 years, 1975–2023, 10 fitted columns, with lower/upper accumulation ages. Final SAFE Table 1.6 also publishes catch numbers at ages 1–15 for those years; those detailed values are now stored separately in the canonical inputs with their report provenance. Annual fishery weights: 55 by 10. Fishery length-composition placeholders have zero sample sizes and must not be mistaken for fitted observations.
 
 Survey blocks 1, 2, 3 and 6 contain respectively 31, 16, 37 and 6 total-index observations, and 31, 16, 20 and 6 age-composition rows. Survey identities, units, fitted accumulation ages, positive-weight length compositions and annual timing must be matched to the report/source before import. Blocks 4 and 5 remain in the file, but their log-SD values must be inspected: implementation only contributes their likelihood when log SD is positive. Merely finding these arrays does not establish that they are fitted.
 
@@ -56,9 +56,9 @@ Cached stage_report_outputs.py extracted 550 historical numbers-at-age values fr
 
 ## Canonical import and validation
 
-The canonical record contains 5,174 input values, 708 historical output values and 49 assumptions after the prior review below. scripts/database/017_validate_goa_pollock.R passed, together with full database structural validation. Coverage includes one combined fishery, four active biomass/composition surveys, annual survey/fishery/population/spawning weights, and constant supplied maturity and M vectors. Model years are 1970–2024, ages 1–10+, recruitment age 1, combined-sex abundance with female SSB fraction 0.5. Spawning survival timing is 0.21, distinct from the winter acoustic observation timing 0.209.
+The canonical record contains 5,909 input values, 708 historical output values and 49 assumptions after the catch-table update. scripts/database/017_validate_goa_pollock.R passed, together with full database structural validation. Coverage includes one combined fishery, four active biomass/composition surveys, annual survey/fishery/population/spawning weights, and constant supplied maturity and M vectors. Model years are 1970–2024, ages 1–10+, recruitment age 1, combined-sex abundance with female SSB fraction 0.5. Spawning survival timing is 0.21, distinct from the winter acoustic observation timing 0.209.
 
-Fishery age compositions accumulate ages 1–2 into their first fitted age bin; Shelikof compositions accumulate ages 1–3. These model-ready aggregations are labeled reconstructed_source_input with explicit formulas. Remaining compositions preserve native numerical values, without silent renormalization. Survey total biomass units are million tonnes on the native scale. SD rows match the same observation years and sampling times, with blank fish age for aggregate indices. Supplied spawning weights use measure spawning_weight_at_age, distinct from population weight_at_age and survey-specific weights; biological purposes are not treated as spatial regions.
+The accepted fishery likelihood accumulates ages 1–2 into its first fitted bin and ages 10+ into the terminal bin. The canonical database retains these native grouped proportions and separately stores the report's finer catch numbers at ages 1–15. tinyAM now uses the finer published catch table, summing reported ages 10–15 into its model age-10 plus group. Shelikof compositions accumulate ages 1–3; these model-ready aggregations are labeled reconstructed_source_input with explicit formulas. Remaining compositions preserve native numerical values, without silent renormalization. Survey total biomass units are million tonnes on the native scale. SD rows match the same observation years and sampling times, with blank fish age for aggregate indices. Supplied spawning weights use measure spawning_weight_at_age, distinct from population weight_at_age and survey-specific weights; biological purposes are not treated as spatial regions.
 
 Remaining gaps are the physical environmental-covariate units and age-specific F outputs, which are not available in the cached report or model files. Active selectivity priors and the Dirichlet-multinomial parameter prior are now recorded from the pinned source, alongside the temporal penalty scales, environmental observations, observation SD, age-error matrix and composition sample sizes. Completeness statuses remain partial. No model fit or numerical substitutions were used.
 
@@ -103,21 +103,21 @@ implemented in tinyAM.
 A quadratic log-SD was tested to allow higher variability at both ends of the
 fitted age range, but the combined model did not converge from either the
 original or staged starts. The retained model uses a common catch log-SD.
-Ages 1-2 remain unobserved separately because
-the accepted first composition bin combines them. Their SD and predictions
-are extrapolations; these unobserved ages do not contribute to the catch
-likelihood. Conditional standardized residuals do not validate the omitted
-pooled bin or an aggregate catch fit.
+The detailed Table 1.6 catch numbers-at-age are now used by tinyAM for ages
+1-15, with ages 10-15 summed into the model's age-10 plus group. This restores
+separate young-age observations and avoids reconstructing their counts from the
+pooled composition. Published values are rounded to 0.01 million fish; a printed
+zero is below that reporting precision and is treated as missing by tinyAM's
+lognormal likelihood. The accepted assessment itself continues to fit its
+ages-1-2 and 10+ pooled composition with age-reading error.
 
-The yield panel now uses the original annual total catch biomass (tonnes
-converted to kg) and predicted catches at all model ages multiplied by the
-corresponding catch weights. Previously it compared incomplete observed ages
-3-10 with predictions at ages 1-10, both weighted by stock weights. This is a
-reporting correction, not an additional total-catch likelihood. The fishery
-reconstruction still approximates the pooled ages 1-2 weight by the recorded
-age-2 weight. Predictions remain conditional medians, without a lognormal mean
-correction. Plotly's missing-observation trace indexing is corrected separately;
-the underlying catch predictions were present at every age.
+The yield panel uses the original annual total catch biomass (tonnes converted
+to kg) and predicted catches at all model ages multiplied by corresponding
+catch weights. This remains a reporting comparison, not an additional
+total-catch likelihood. Predictions are conditional medians, without a
+lognormal mean correction. Plotly's missing-observation trace indexing is
+corrected separately; the underlying catch predictions were present at every
+age.
 
 Accepted SSB is `sum(N * exp(-0.21 * Z) * wt_spawn * 0.5 * mat)`;
 tinyAM SSB is `sum(N * wt_pop * 0.5 * mat)` at the start of the year.
@@ -127,11 +127,14 @@ must be considered before attributing all SSB disagreement to age-specific q.
 
 ### Numerical and reporting checks
 
-The retained revision changes survey curve shape, not the N/F/M processes or
-catch-SD formula. It was fitted from the previous fitted states, and a repeat
-run returned the same result. Positive derivatives at zero mono increments
-satisfy the lower-bound optimality condition; the gradients below use the
-package's existing projected-gradient convention.
+The survey-shape fits below were exploratory runs made before the report's
+age-specific catch table was connected to tinyAM. Their fit statistics describe
+that earlier, incomplete catch translation and are retained only as context.
+The final translation uses the same reviewed survey curves, F/N/M settings and
+common catch-SD formula, now fitted to the reported catch numbers at ages 1-15.
+Its likelihood contains 490 age-year rows, including 49 observations each for
+ages 1 and 2. Printed zeroes in the report are below its rounding precision and
+are omitted by the lognormal likelihood.
 
 | Fit | Objective | Maximum projected gradient | Positive-definite Hessian | Outcome |
 |---|---:|---:|---|---|
@@ -140,22 +143,20 @@ package's existing projected-gradient convention.
 | Polynomial catch SD, free age q | 1007.277 | 0.0170 | Yes | Above gradient tolerance |
 | Survey shape + polynomial catch SD | 2303.757 | 139.0 | No | Evaluation limit; rejected |
 | Same combined model, started from the converged survey-shape fit | 1043.167 | 3.57 | Yes | Evaluation limit; rejected |
+| Detailed catch-at-age data, retained settings | 1208.747 | 0.0008 | Yes | Converged; current fit |
 
-The retained common catch log-SD is 0.417 (previously 0.437). Eighteen monotone
-increments are exactly zero. The polynomial-only fit estimated larger SD at
-ages 3 and 10 (0.689 and 0.584), with its lowest value near age 7 (0.303), but
-this pattern did not yield a stable combined model.
+In the earlier age-incomplete fits, the common catch log-SD was 0.417 and the
+survey-shape fit had 18 exactly-zero monotone increments. The polynomial-only
+fit estimated larger SD at ages 3 and 10 (0.689 and 0.584), with its lowest
+value near age 7 (0.303), but this pattern did not yield a stable combined
+model. These exploratory results predate the catch-table correction.
 
-Correct all-age, catch-weighted yield predictions remain too large: the median
-predicted/observed annual total ratio declines from 3.64 to 1.80, rather than
-reaching agreement. In the original fit, ages 1-2 account for a median 74% of
-predicted yield. Over only observed catch ages, the median predicted/observed
-ratio is 0.928. Good observed-age residuals therefore conceal a substantial
-unobserved-age problem. No catch observations were adjusted to resolve it.
-
-The median ratio of native tinyAM to native accepted SSB rises from 0.401 to
-0.469. This is an illustrative scale comparison, not a matched-definition
-diagnostic: spawning timing and weight definitions differ as noted above.
+The earlier finding that ages 1-2 predictions were unchecked no longer applies:
+the current fit uses the published young-age catch numbers. The median
+predicted/observed ratio for age 1 is 1.48 and for age 2 is 0.92. Overall
+trajectory correlations and scale differences are in the refreshed comparison
+table; SSB remains definition-mismatched because spawning time and weight
+definitions differ as noted above.
 Source total-catch and grouped-age likelihoods, source fishery selectivity,
 and the bottom-trawl absolute-q prior remain important structural differences.
 The revision does not establish that any one of these explains the remaining

@@ -8,6 +8,15 @@ before interpreting these illustrative model comparisons.
 
 The canonical assessment database is intentionally richer than tinyAM. It preserves the fleets, surveys, biological inputs, and statistical assumptions of the accepted source assessment.
 
+Within an assessment, preserve the finest authoritative data available even
+when the accepted model pools ages or years in its likelihood. A translation
+may use a more detailed reported series when tinyAM can represent it, while
+keeping the source likelihood's pooling and any report rounding explicit.
+Aggregate reported ages only as required by tinyAM's model age grid; for
+example, a model plus group at age 10 receives the sum of reported ages 10 and
+older. Do not fit both overlapping detailed and pooled versions of the same
+observations.
+
 The expected result for each selected assessment is a documented tinyAM model,
 a record of its convergence, and, when it converges, a comparison with the
 accepted assessment. Fits and dashboards can be cached locally when useful;

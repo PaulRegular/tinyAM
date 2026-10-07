@@ -5,6 +5,9 @@ Run these scripts from the repository root in RStudio.
 ## Database
 
 Scripts in `database/` seed, import, validate, and report the assessment database.
+For GOA pollock, run `032_import_goa_pollock_catch_numbers.R` after the base
+import to extract the detailed age-1–15 catch table from the cached final SAFE
+and refresh its canonical input rows.
 
 ## Translation and fitting
 

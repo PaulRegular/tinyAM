@@ -3,7 +3,7 @@ id <- "afsc_pollock_goa_2024"
 x <- inputs[inputs$assessment_id == id, ]
 y <- outputs[outputs$assessment_id == id, ]
 a <- assessments[assessments$assessment_id == id, ]
-stopifnot(nrow(x) == 5174, nrow(y) == 708, a$model_version == "23d",
+stopifnot(nrow(x) == 5909, nrow(y) == 708, a$model_version == "23d",
           a$inputs_status == "partial", a$outputs_status == "partial")
 index <- x[x$type == "index", ]
 totals <- index[index$measure == "total_biomass", ]
@@ -25,6 +25,22 @@ stopifnot(nrow(fsh) == 441, min(fsh$age) == 2, max(fsh$year) == 2023,
           nrow(shelikof) == 248, min(shelikof$age) == 3,
           all(fsh$source_type == "reconstructed_source_input"),
           all(shelikof$source_type == "reconstructed_source_input"))
+catch_numbers <- x[x$type == "catch" & x$measure == "numbers_at_age", ]
+catch_numbers_source <- read.csv(
+  "analysis/comp_assessments/source_cache/afsc_pollock_goa_2024/report_catch_numbers_at_age.csv"
+)
+catch_numbers <- catch_numbers[order(catch_numbers$year, catch_numbers$age), ]
+catch_numbers_source <- catch_numbers_source[order(catch_numbers_source$year,
+                                                    catch_numbers_source$age), ]
+stopifnot(nrow(catch_numbers) == 49 * 15,
+          identical(catch_numbers$year, catch_numbers_source$year),
+          identical(catch_numbers$age, catch_numbers_source$age),
+          identical(catch_numbers$value, catch_numbers_source$value),
+          all(catch_numbers$unit == "million fish"),
+          all(catch_numbers$source_type == "official_table"),
+          all(grepl("Table 1.6, p. 37", catch_numbers$source_reference, fixed = TRUE)),
+          catch_numbers$value[catch_numbers$year == 2023 & catch_numbers$age == 1] == 0.43,
+          catch_numbers$value[catch_numbers$year == 2023 & catch_numbers$age == 2] == 8.57)
 fixed_m <- x[x$type == "M" & x$measure == "natural_mortality_at_age", ]
 fixed_maturity <- x[x$type == "maturity" & x$measure == "maturity_at_age", ]
 stopifnot(nrow(fixed_m) == 10, nrow(fixed_maturity) == 10,
@@ -40,7 +56,7 @@ stopifnot(nrow(n) == 550, nrow(r) == 55, nrow(ssb) == 55,
           all(n$age_group[n$age == 10] == "10+"),
           all(r$lwr <= r$value & r$value <= r$upr),
           all(ssb$lwr <= ssb$value & ssb$value <= ssb$upr), all(is.na(y$se)))
-message("GOA pollock survey coverage, timing, grouped compositions, biology and uncertainty checks passed.")
+message("GOA pollock survey coverage, detailed catch numbers, grouped compositions, biology and uncertainty checks passed.")
 
 covariate <- x[x$type == "covariate", ]
 native <- read.csv("analysis/comp_assessments/source_cache/afsc_pollock_goa_2024/native_inputs_raw.csv")

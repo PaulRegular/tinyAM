@@ -9,9 +9,21 @@ translate_stock <- function(source) {
     "Summer acoustic"
   )
 
+  catch_numbers <- source$inputs[
+    source$inputs$type == "catch" & source$inputs$measure == "numbers_at_age",
+    , drop = FALSE
+  ]
+  if (!nrow(catch_numbers) || !setequal(catch_numbers$age, 1:15)) {
+    cli::cli_abort("GOA pollock needs the published catch numbers for ages 1-15.")
+  }
+  translation_inputs <- source$inputs[
+    !(source$inputs$type == "catch" & source$inputs$measure == "proportion_at_age"),
+    , drop = FALSE
+  ]
+
   obs <- database_to_tam_obs(
     assessment_id,
-    source$inputs,
+    translation_inputs,
     years = years,
     ages = ages,
     weight_survey = "",
@@ -21,7 +33,6 @@ translate_stock <- function(source) {
     assumptions = source$assumptions
   )
 
-  obs$catch$obs[obs$catch$age == 2] <- NA_real_
   obs$catch$age_factor <- factor(obs$catch$age, levels = ages)
   shelikof <- obs$index$survey == "Shelikof winter acoustic"
   obs$index <- obs$index[!(shelikof & obs$index$age == 3), , drop = FALSE]
@@ -75,13 +86,13 @@ translate_stock <- function(source) {
     "| N | Recruitment varies with fixed SD 1.3; older fish survive deterministically, and initial ages are tied to first-year recruitment and M. | Exponential initial abundance, no older-age process, and tinyAM's estimated random-walk recruitment process. | tinyAM cannot fix recruitment SD or reproduce the source's exact initial-state construction. |",
     "| F | One fishery with double-logistic selectivity; ascending selectivity parameters change annually with penalties. | Age-specific mean log F with an AR1 process over ages and years. | This is a smooth age-time approximation, not the source's selectivity parameterization. |",
     "| M | Fixed external age-specific M; the accepted model fixes its scalar at 1. | The same supplied M vector with the M process off. | The fixed mortality input is retained. |",
-    "| Catch | Total catch biomass plus number compositions; the first composition bin combines ages 1-2 and age 10 is 10+. | Reconstructed catch numbers-at-age with a common log-SD; the grouped ages 1-2 bin is not fitted as age 2. The yield panel compares the original total catch biomass with predictions over all ages using catch weights. | tinyAM has no grouped catch prediction or separate total-catch and Dirichlet-multinomial likelihood. |",
+    "| Catch | Total catch biomass plus number compositions; the accepted likelihood pools ages 1-2 and ages 10+, while the detailed report table gives catch numbers separately for ages 1-15. | Published catch numbers at ages 1-15 with a common log-SD; ages 10-15 are summed into tinyAM age 10+. The yield panel compares original total catch biomass with all-age predictions using catch weights. | The report table is rounded to 0.01 million fish; tinyAM does not reproduce the source's pooled composition, age-reading error, total-catch or Dirichlet-multinomial likelihood. |",
     "| Index | Four active biomass indices with periodic age compositions; Shelikof age-1/2 indices are disabled and its first composition bin pools ages 1-3. Shelikof q includes an environmental effect and ADF&G q varies annually. | Age-specific numbers reconstructed with matching survey weights; the pooled Shelikof ages 1-3 bin is omitted rather than treated as age 3, and remaining reported ages are retained. Catchability rises with age for the two trawls and declines with age for both acoustic surveys, using independent monotone steps that can form plateaus. It includes the observed Shelikof covariate and ADF&G annual effects on composition years. | Monotone steps approximate the source logistic limbs; there is no source rule that explicitly pools older ages. Aggregate-only years, latent environmental dynamics, q penalties and the bottom-trawl q prior, supplied aggregate-index SDs, grouped-age predictions, age-reading error, and the source composition likelihood are not represented. |",
     "| Weights and maturity | Annual stock, catch, and survey weights; a constant maturity vector and female fraction 0.5. | Annual stock weights, source survey/catch weights for conversions, and source maturity multiplied by 0.5. | Separate weight purposes are retained during conversion; tinyAM SSB uses stock weights at the start of the year, while accepted SSB uses spawning weights after survival to year fraction 0.21. |",
     "",
     "Catch and survey compositions are converted to numbers-at-age with their corresponding annual total and weights. The accepted source reports population numbers, recruitment, and SSB in million fish and thousand tonnes; comparison scales convert tinyAM outputs to those units.",
     "",
-    "Ages 1-2 have no separate catch observations: their predictions are inferred from the population and F processes, not directly checked by the catch likelihood. Yield predictions sum conditional median catches; they do not include a lognormal mean correction. The accepted F surface is unavailable."
+    "The detailed report table gives catch numbers by age 1-15 for 1975-2023. Values are rounded to 0.01 million fish, so printed zeros are below the table's reporting precision; tinyAM's lognormal catch likelihood treats zeros as missing. The accepted model's native composition still pools ages 1-2 and 10+, and its age-reading-error matrix is not represented in tinyAM. Yield predictions sum conditional median catches; they do not include a lognormal mean correction. The accepted F surface is unavailable."
   )
 
   list(
