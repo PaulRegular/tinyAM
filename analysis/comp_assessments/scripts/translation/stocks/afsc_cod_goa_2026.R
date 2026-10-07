@@ -878,6 +878,9 @@ translate_stock <- function(source) {
     background = c(
       "### Gulf of Alaska Pacific cod: accepted 2026 update, Model 24.0",
       "",
+      print_sources(source$assessment),
+      "",
+
       "| Component | Accepted assessment | tinyAM representation | Reason for difference |",
       "|---|---|---|---|",
 

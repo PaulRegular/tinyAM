@@ -110,6 +110,9 @@ translate_stock <- function(source) {
     background = c(
       "### Northern Shelf cod: accepted 2025 three-substock SAM assessment",
       "",
+      print_sources(source$assessment),
+      "",
+
       "| Component | Accepted assessment | tinyAM representation | Reason for difference |",
       "|---|------|------|------|",
       "| Years | The accepted population model spans 1983–2025; catch ends in 2024 and supplied M observations end in 2022. | Fit 1983–2022. | This uses only years with a complete supplied M surface and compares outputs over that common period. |",

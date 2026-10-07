@@ -84,6 +84,9 @@ translate_stock <- function(source) {
     background = c(
       "### North Sea autumn-spawning herring: accepted 2026 single-fleet assessment",
       "",
+      print_sources(source$assessment),
+      "",
+
       "| Component | Accepted assessment | tinyAM representation | Reason for difference |",
       "|---|------|------|------|",
       "| Years | The population model spans 1947–2026. Catch, weights, maturity and published M inputs end in 2025. | Fit 1947–2025 and compare on those common years. | The accepted 2026 biological inputs are not available in the report tables. |",

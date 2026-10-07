@@ -31,6 +31,9 @@ translate_stock <- function(source) {
     background = c(
       "### Icelandic haddock: 2025 benchmark assessment",
       "",
+      print_sources(source$assessment),
+      "",
+
       "| Component | Accepted assessment | tinyAM representation | Reason for difference |",
       "|---|---|---|---|",
       "| Years | Catch and biological inputs cover 1979–2024; population estimates extend to 2025. | Fit 1979–2024. | The 2025 estimate is retained in the reference but lies beyond the detailed input period. |",

@@ -78,6 +78,9 @@ translate_stock <- function(source) {
     background = c(
       "### North Sea plaice: accepted 2026 SAM assessment",
       "",
+      print_sources(source$assessment),
+      "",
+
       "| Component | Accepted assessment | tinyAM representation | Reason for difference |",
       "|---|------|------|------|",
       "| Years | Catch, biological inputs, and fitted N/F estimates cover 1957–2025; ICES also reports 2026 recruitment and SSB advice forecasts. | Fit 1957–2025. | 2026 is an advice forecast, not a full historical model year. |",

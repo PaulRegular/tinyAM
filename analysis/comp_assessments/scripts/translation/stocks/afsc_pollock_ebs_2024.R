@@ -82,6 +82,9 @@ translate_stock <- function(source) {
     background = c(
       "### Eastern Bering Sea pollock: accepted 2024 Model 23.0",
       "",
+      print_sources(source$assessment),
+      "",
+
       "| Component | Accepted assessment | tinyAM representation | Reason for difference |",
       "|---|---|---|---|",
 

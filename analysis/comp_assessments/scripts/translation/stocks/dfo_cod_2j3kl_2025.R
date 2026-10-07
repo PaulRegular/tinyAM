@@ -106,6 +106,9 @@ translate_stock <- function(source, smith_sound = TRUE, juveniles = FALSE) {
     background = c(
       "### Northern cod (2J3KL): accepted 2025 xteNCAM assessment",
       "",
+      print_sources(source$assessment),
+      "",
+
       "| Component | Accepted assessment | tinyAM representation | Reason for difference |",
       "|---|------|------|------|",
       "| Years | The accepted xteNCAM model covers 1954–2024; commercial catch-at-age is reported from 1962. | Fit 1968–2024, retaining the historical tinyAM Northern cod analysis window. | The shorter period is an analysis simplification rather than a feature of the accepted assessment. |",

@@ -79,6 +79,9 @@ translate_stock <- function(source) {
   background <- c(
     "### Gulf of Alaska pollock: accepted 2024 Model 23d",
     "",
+    print_sources(source$assessment),
+    "",
+
     "| Component | Accepted assessment | tinyAM representation | Reason for difference |",
     "|---|------|------|------|",
     "| Years | 1970-2024; the accepted age-structured model is the Western/Central/West Yakutat stock. | Fit 1970-2024. | The accepted model period and stock area are retained. |",

@@ -152,6 +152,12 @@ Each stock script supplies a short Markdown table aligned with `make_dat()`:
 | Weights | Stock, catch, survey, and spawning weights | Weight series used and conversions | Explain any substituted weights |
 | Maturity | Age/year structure, sex convention, and spawning timing | Maturity and biomass convention | Explain differences in SSB definition |
 
+Every stock background should include an `Assessment documentation` section
+generated from the canonical assessment metadata, preferably with
+`print_sources(source$assessment)`. The stock script controls where this section
+appears in its background; `assessments.csv` remains the source of truth for
+the URLs, and dashboard rendering does not append links automatically.
+
 Use short biological explanations rather than only process names or formulas.
 Identify whether each choice preserves, approximates, or omits the source
 assumption. Honor previously agreed stock-specific choices and record them

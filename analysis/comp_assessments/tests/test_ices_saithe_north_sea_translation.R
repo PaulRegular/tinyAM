@@ -1,4 +1,5 @@
 root <- file.path("analysis", "comp_assessments")
+source(file.path(root, "R", "run_assessment.R"))
 pkgload::load_all(".", quiet = TRUE)
 source(file.path(root, "R", "read_database.R"))
 source(file.path(root, "R", "database_to_tam_obs.R"))

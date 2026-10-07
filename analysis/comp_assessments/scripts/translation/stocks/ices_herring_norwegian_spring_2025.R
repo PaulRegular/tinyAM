@@ -77,6 +77,9 @@ translate_stock <- function(source) {
     background = c(
       "### Norwegian spring-spawning herring: accepted 2025 SAM assessment",
       "",
+      print_sources(source$assessment),
+      "",
+
       "| Component | Accepted assessment | tinyAM representation | Reason for difference |",
       "|---|------|------|------|",
       "| Years | Catch-at-age is fitted through 2024; reported N and F estimates extend through 2025. | Fit 1988–2024. | This uses the accepted fitted period with catch data and compares the common historical years. |",

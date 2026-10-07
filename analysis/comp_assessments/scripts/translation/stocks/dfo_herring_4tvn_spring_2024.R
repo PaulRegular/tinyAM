@@ -175,6 +175,9 @@ translate_stock <- function(source) {
     background = c(
       "### Southern Gulf spring-spawning herring: detailed assessment to 2023",
       "",
+      print_sources(source$assessment),
+      "",
+
       "The current database record is DFO's accepted 2024 assessment. The 2026 assessment is recorded separately as summary-only because its detailed methods and numerical tables are still in preparation. The 2022 report supplies model-method context where the 2024 support document is silent.",
       "",
       "| Component | Accepted assessment | tinyAM representation | Reason for difference |",

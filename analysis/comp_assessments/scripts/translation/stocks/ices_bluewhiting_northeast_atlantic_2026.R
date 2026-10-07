@@ -96,6 +96,9 @@ translate_stock <- function(source) {
     background = c(
       "### Northeast Atlantic blue whiting: accepted 2026 SAM assessment",
       "",
+      print_sources(source$assessment),
+      "",
+
       "| Component | Accepted assessment | tinyAM representation | Reason for difference |",
       "|---|------|------|------|",
       "| Years | Catch covers 1981–2026; IBWSS covers 2004–2026 except 2010 and 2020. | Fit 1981–2026. | All native model years are retained. |",

@@ -47,6 +47,9 @@ translate_stock <- function(source) {
     background = c(
       "### Atlantic mackerel: accepted 2018 ASAP assessment",
       "",
+      print_sources(source$assessment),
+      "",
+
       "| Component | Accepted assessment | tinyAM representation | Reason for difference |",
       "|---|---|---|---|",
       "| Years | Final ASAP Run 118 covers 1968-2016. | Fit 1968-2016. | The full detailed time series is represented. |",

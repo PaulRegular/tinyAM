@@ -38,6 +38,9 @@ translate_stock <- function(source) {
     background = c(
       "### Northeast Arctic cod: accepted 2026 SAM assessment",
       "",
+      print_sources(source$assessment),
+      "",
+
       "| Component | Accepted assessment | tinyAM representation | Reason for difference |",
       "|---|------|------|------|",
       "| Years | Population and survey series span 1946–2026; catch ends in 2025. | Fit years 1946–2026. | Retains the final survey year; the 2026 catch row is missing. |",

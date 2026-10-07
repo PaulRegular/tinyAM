@@ -114,6 +114,9 @@ translate_stock <- function(source) {
     background = c(
       "### Western Baltic spring-spawning herring: accepted 2026 SAM assessment",
       "",
+      print_sources(source$assessment),
+      "",
+
       "| Component | Accepted assessment | tinyAM representation | Main simplification |",
       "|---|---|---|---|",
       "| Years and ages | 1991–2025; ages 0–8+, with recruitment at age 0. | Fit ages 0–8, with age 8 as the plus group. | The source age range is retained. |",

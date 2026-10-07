@@ -32,6 +32,9 @@ translate_stock <- function(source) {
     background = c(
       "### Northern Shelf haddock: accepted 2026 SAM assessment",
       "",
+      print_sources(source$assessment),
+      "",
+
       "| Component | Accepted assessment | tinyAM representation | Reason for difference |",
       "|---|------|------|------|",
       "| Years | Population and survey series span 1972–2026; catch ends in 2025. | Fit years 1972–2026. | Retains the final survey year; catch is unavailable in 2026. |",

@@ -8,6 +8,40 @@ for (.assessment_helper in c(
 }
 rm(.assessment_helper)
 
+print_sources <- function(assessment) {
+  fields <- c(
+    assessment_url = "Assessment report",
+    framework_url = "Framework / methodology",
+    data_url = "Assessment data",
+    model_url = "Native model / fitted run",
+    repository_url = "Assessment repository"
+  )
+  if (is.null(assessment) || is.null(names(assessment))) return(character())
+
+  urls <- vapply(names(fields), function(field) {
+    if (!field %in% names(assessment) ||
+        length(assessment[[field]]) != 1L) {
+      return(NA_character_)
+    }
+    value <- assessment[[field]][[1L]]
+    if (length(value) != 1L || is.na(value)) return(NA_character_)
+    as.character(value)
+  }, character(1))
+
+  keep <- !is.na(urls) & nzchar(trimws(urls))
+  if (!any(keep)) return(character())
+
+  available_urls <- urls[keep]
+  available_labels <- unname(fields[keep])
+  unique_urls <- unique(available_urls)
+  links <- vapply(unique_urls, function(url) {
+    labels <- available_labels[available_urls == url]
+    paste0("- [", paste(labels, collapse = " / "), "](", url, ")")
+  }, character(1), USE.NAMES = FALSE)
+
+  c("### Assessment documentation", links)
+}
+
 .assessment_fit_call <- function(args) {
   args$obs <- quote(obs)
   if (!is.null(args$start_par)) args$start_par <- quote(start_par)

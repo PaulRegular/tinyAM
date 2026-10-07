@@ -80,6 +80,9 @@ translate_stock <- function(source) {
     background = c(
       "### Baltic sprat: accepted 2026 SAM assessment",
       "",
+      print_sources(source$assessment),
+      "",
+
       "| Component | Accepted assessment | tinyAM representation | Reason for difference |",
       "|---|------|------|------|",
       "| Years | Catch and full historical inputs cover 1974–2025; the report also gives an intermediate-year age-1 estimate for 2026. | Fit 1974–2025. | The 2026 age-0 acoustic observation is shifted to age 1 in 2026 and is not a full catch-data year. |",

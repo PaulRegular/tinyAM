@@ -126,6 +126,9 @@ translate_stock <- function(source) {
     background = c(
       "### Southern Gulf cod: accepted detailed assessment to 2018",
       "",
+      print_sources(source$assessment),
+      "",
+
       "| Component | Accepted assessment | tinyAM representation | Reason for difference |",
       "|---|------|------|------|",
       "| Years | The SCA model covers 1950-2018; source landings-at-age data begin in 1971. RV weights are missing for 1980 and 1985. | Fit 1971-2018. Linearly interpolate RV weights for 1980 and 1985 for this fit only; exclude RV indices in those years and the anomalous 2003 index. | This retains the full landings-at-age period without adding reconstructed values to the source database. |",

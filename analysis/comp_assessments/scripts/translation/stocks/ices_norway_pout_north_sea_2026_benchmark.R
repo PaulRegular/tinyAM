@@ -331,6 +331,9 @@ translate_stock <- function(source) {
     background = c(
       "### North Sea Norway pout: accepted 2026 SESAM benchmark",
       "",
+      print_sources(source$assessment),
+      "",
+
       "| Component | Accepted assessment | tinyAM representation | Main simplification |",
       "|---|---|---|---|",
       "| Years | Quarterly inputs and states cover 1984-2025, but the fitted catch series ends in Q3 2025. | Fit 1984-2024, the last complete catch year. | The partial 2025 catch total is not treated as an annual observation. |",

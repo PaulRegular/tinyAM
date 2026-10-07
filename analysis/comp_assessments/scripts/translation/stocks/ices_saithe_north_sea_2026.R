@@ -108,6 +108,9 @@ translate_stock <- function(source) {
     background = c(
       "### North Sea saithe: accepted 2026 SAM assessment",
       "",
+      print_sources(source$assessment),
+      "",
+
       "| Component | Accepted assessment | tinyAM representation | Reason for difference |",
       "|---|------|------|------|",
       "| Years | The fitted assessment covers 1967–2025. A separate 2026 short-term forecast is reported. | Fit 1967–2025. | The 2026 forecast is not a full historical assessment year. |",

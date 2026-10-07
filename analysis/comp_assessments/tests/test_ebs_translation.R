@@ -9,6 +9,11 @@ sys.source(file.path(root, "scripts", "translation", "stocks",
                      "afsc_pollock_ebs_2024.R"), envir = stock)
 translated <- stock$translate_stock(source_data)
 obs <- translated$obs
+documentation <- print_sources(source_data$assessment)
+stopifnot(length(documentation) >= 2L,
+          all(documentation %in% translated$background),
+          any(grepl(source_data$assessment$assessment_url[[1L]],
+                    translated$background, fixed = TRUE)))
 settings <- translated$settings
 
 tinyAM::check_obs(obs)

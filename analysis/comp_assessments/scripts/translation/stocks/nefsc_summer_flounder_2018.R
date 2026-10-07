@@ -37,6 +37,9 @@ translate_stock <- function(source) {
     background = c(
       "### Summer flounder: accepted 2018 ASAP assessment",
       "",
+      print_sources(source$assessment),
+      "",
+
       "| Component | Accepted assessment | tinyAM representation | Reason for difference |",
       "|---|------|------|------|",
       "| Years | F2018_BASE_V2 covers 1982-2017. | Fit 1982-2016. | The reported maturity-at-age series ends in 2016, so no terminal-year value is invented. |",

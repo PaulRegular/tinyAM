@@ -95,6 +95,9 @@ translate_stock <- function(source) {
     background = c(
       "### North Sea whiting: accepted 2026 SAM assessment",
       "",
+      print_sources(source$assessment),
+      "",
+
       "| Component | Accepted assessment | tinyAM representation | Reason for difference |",
       "|---|---|---|---|",
       "| Years | Catch covers 1978–2025; Q1 covers 1983–2026; Q3 covers 1991–2025. | Fit 1978–2026. | Retains the accepted survey terminal year. |",
