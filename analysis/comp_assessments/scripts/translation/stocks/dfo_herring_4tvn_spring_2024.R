@@ -106,16 +106,18 @@ translate_stock <- function(source) {
     obs$catch$age,
     c(2, 4, 6, 8, 11)
   )
-  obs$index$q_period <- tinyAM::cut_years(
-    pmin(obs$index$year, 2021),
-    c(1990, 2000, 2010, 2021)
-  )
+
+  # Provisional unit conversion: Table 15 appears to be
+  # effectively in thousands of fish.
+  is_acoustic <- obs$index$survey == "4Tmno acoustic survey"
+  obs$index$obs[is_acoustic] <-
+    obs$index$obs[is_acoustic] * 1000
 
   is_cpue <- obs$index$survey == "Spring fixed-gear CPUE"
   cpue_min_age <- min(obs$index$age[is_cpue])
 
   cpue_years <- sort(unique(obs$index$year[is_cpue]))
-  cpue_breaks <- floor(seq(min(cpue_years), max(cpue_years), length.out = 5))
+  cpue_breaks <- floor(seq(min(cpue_years), max(cpue_years), length.out = 4))
 
   obs$index$cpue_period <- "baseline"
   obs$index$cpue_period[is_cpue] <- as.character(cut_years(obs$index$year[is_cpue], cpue_breaks))
@@ -123,7 +125,7 @@ translate_stock <- function(source) {
 
   settings <- list(
     N_settings = list(
-      process = "off",
+      process = "iid", # would not converge with "off"
       init = "exp"
     ),
     F_settings = list(
@@ -144,6 +146,7 @@ translate_stock <- function(source) {
     ),
     index_settings = list(
       q_form = ~ 0 + mono(age, by = survey) + cpue_period,
+      q_link = "logit", # acoustic survey is expected to, at best, be very close to 1.
       sd_form = ~ 0 + survey,
       fill_missing = FALSE
     )
