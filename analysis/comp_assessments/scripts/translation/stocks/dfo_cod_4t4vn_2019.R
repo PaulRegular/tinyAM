@@ -148,7 +148,7 @@ translate_stock <- function(source) {
 
       "| Index | The source uses RV, mobile sentinel, and longline indices, including observations at age 2. | Use RV and mobile sentinel indices, restricted to modeled ages 3-12+, with approximate sampling times 0.75 and 0.625. Exclude RV 1980, 1985, and 2003. | Age 2 and the longline index are omitted; survey timing and index reconstruction are approximations. |",
 
-      "| Comparison | The report provides SSB, numbers-at-age, fishing mortality, and age-2 recruitment estimates. | Compare SSB, numbers-at-age for ages 3+, F, and reported terminal M groups. | Direct recruitment comparisons are inappropriate because tinyAM recruitment is defined at age 3 rather than age 2. |",
+      "| Comparison | The report provides SSB, numbers-at-age, fishing mortality, and age-2 recruitment estimates. | Compare SSB, numbers-at-age for ages 3+, F, and reported terminal M groups. | Direct recruitment comparisons are inappropriate because tinyAM recruitment is defined at age 3 rather than age 2. |"
     )
   )
 }
