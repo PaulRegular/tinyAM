@@ -1,6 +1,6 @@
 translate_stock <- function(source) {
   years <- 1971:2018
-  ages <- 2:12
+  ages <- 3:12 # Accepted model starts at age 2, but lack data on catch numbers for age 2; starting at age 3
   rv <- "DFO September RV survey"
   mobile <- "Mobile Sentinel August survey"
 
@@ -97,6 +97,10 @@ translate_stock <- function(source) {
     }))
     comparison_outputs <- rbind(comparison_outputs, terminal_m)
   }
+  obs$catch$age_blocks <- cut_ages(
+    obs$catch$age,
+    c(3, 5, 7, 9, 12)
+  )
 
   list(
     years = years,
@@ -107,15 +111,18 @@ translate_stock <- function(source) {
     comparison_scales = c(N = 1e-3, recruitment = 1e-3, ssb = 1e-3),
     settings = list(
       N_settings = list(process = "off", init = "exp"),
-      F_settings = list(process = "ar1", mu_form = NULL),
+      F_settings = list(process = "ar1", mu_form = ~ 0 + age_blocks),
       M_settings = list(
         process = "rw",
         mu_form = NULL,
         mu_supplied = ~ M_prior_mean,
-        age_breaks = c(2, 5, 9, 12),
+        age_breaks = c(3, 5, 9, 12),
         first_dev_year = 1971L
       ),
-      catch_settings = list(sd_form = ~ 1, fill_missing = FALSE),
+      catch_settings = list(
+        sd_form = ~ 1,
+        fill_missing = FALSE
+      ),
       index_settings = list(
         q_form = ~ 0 + q_key,
         sd_form = ~ 0 + survey,
@@ -129,19 +136,19 @@ translate_stock <- function(source) {
       print_sources(source$assessment),
       "",
 
-      "| Component | Accepted assessment | tinyAM representation | Reason for difference |",
-      "|---|------|------|------|",
-      "| Years | The SCA model covers 1950-2018; source landings-at-age data begin in 1971. RV weights are missing for 1980 and 1985. | Fit 1971-2018. Linearly interpolate RV weights for 1980 and 1985 for this fit only; exclude RV indices in those years and the anomalous 2003 index. | This retains the full landings-at-age period without adding reconstructed values to the source database. |",
-      "| Ages | The population model uses ages 2-12+, while survey age compositions cover ages 2-11. | Use ages 2-12, with age 12 as the plus group. | The reported RV age-11 weight is carried to 12+ as a fit-only weight proxy. |",
-      "| N | Recruitment enters at age 2, depends on SSB two years earlier, and has autocorrelated variation; initial cohorts are reconstructed from recruitment. | Use exponential initial abundance, deterministic cohort survival, and tinyAM's recruitment process. | tinyAM does not reproduce the source stock-recruit relationship, recruitment autocorrelation, or initial-cohort estimation. |",
-      "| F | The source estimates fully recruited F and period-specific logistic selectivity. | Use an age- and year-correlated AR1 F process. | This is a simpler representation of changing fishing mortality and selectivity. |",
-      "| M | The source estimates log-M random walks for ages 2-4, 5-8, and 9+. Each group has one estimated initial M level through 1971, with prior means 0.65, 0.15, and 0.15 and SD 0.05; log-M increments begin in 1972 with SD fixed at 0.075. | Use the same age groups, with the first tinyAM M state in 1971 and random-walk increments from 1972. The prior means initialize those states; the final fit is initialized from a converged IID-M fit, whose estimates are starting values only. | tinyAM cannot apply the source prior to initial M or fix the random-walk SD at 0.075, so it estimates the increment SD and leaves each initial M state unpenalized. |",
-      "| Catch | The source fits annual catch biomass and proportions-at-age for ages 2-12+. The database contains landed numbers-at-age for ages 3-12+ from 1971 onward, not the fitted catch composition. | Use the landings-at-age series as an explicit fit-only proxy for catch-at-age in 1971-2018; age 2 remains missing. | The original age proportions are not tabulated, so landings cannot be scaled to the source's total catch. tinyAM then uses a lognormal age-specific observation model rather than the source's total-plus-composition likelihood. |",
-      "| Index | The source uses RV, mobile sentinel, and longline indices. RV 2003 is excluded by the assessment; longline combines July-October observations. | Use RV and mobile sentinel age-specific indices, with sampling times 0.75 and 0.625. Exclude RV 2003 and omit longline. | The timing values are seasonal approximations; one within-year time is not supported for the longline series. |",
-      "| Weights and maturity | Survey weights and year-varying maturity are reported; the source's RV weights are available by age 2-11. | Use RV weights for population biomass and source survey weights for index reconstruction. Retain annual maturity. | Age-12+ RV weight is unavailable and uses the age-11 proxy noted above. The source does not specify maturity by sex. |",
-      "| Comparison | Tables 21-23 report MLE SSB and age-specific N and F, plus recruitment; the report gives terminal M for ages 5-8 and 9+. Other estimates are posterior medians. | Compare SSB, N, F, recruitment, and the two reported terminal M groups over 1971-2018, scaling numbers and biomass to tinyAM units. | The terminal M groups are repeated across their constituent ages for the dashboard; age-specific M was not published, and the published estimates are not all on the same uncertainty basis. |",
-      "",
-      "This is a limited comparison of model behaviour, not a recreation of the accepted likelihood. The 2024 advice update is recorded separately; no 2024-run inputs or outputs are substituted for this 2019 detailed assessment."
+      "| Ages | The accepted model uses ages 2-12+, with recruitment at age 2. | Fit ages 3-12+, with recruitment at age 3. | Age-2 catch numbers are unavailable in the main published landings series, so age 2 is excluded rather than fitted without catch observations. |",
+
+      "| N | Recruitment enters at age 2 and depends on spawning biomass two years earlier, with autocorrelated variation. | Recruitment enters at age 3, with deterministic cohort survival and a recruitment random walk. | The recruitment age and underlying recruitment dynamics differ from the accepted model. |",
+
+      "| F | The source estimates fully recruited F and period-specific logistic selectivity. | Use a year- and age-correlated AR1 F process with separate mean log F for age blocks 3-4, 5-6, 7-8, and 9-12+. | The blockwise mean and correlated deviations approximate changing fishing mortality without reproducing the source selectivity model. |",
+
+      "| M | The source estimates log-M random walks for ages 2-4, 5-8, and 9+, with priors on initial M and fixed increment SD 0.075. | Use random walks for ages 3-4, 5-8, and 9-12+, with initial states informed by supplied M values and a warm-start fit. | Age 2 is excluded; tinyAM does not reproduce the source initial-M priors or fixed increment SD. |",
+
+      "| Catch | The source fits annual catch biomass and proportions-at-age for ages 2-12+. Published landings numbers-at-age cover ages 3-12+. | Fit published landings numbers-at-age for ages 3-12+ as a proxy for catch-at-age. | The fitted source catch compositions are unavailable, and the tinyAM likelihood differs from the source biomass-plus-composition likelihood. |",
+
+      "| Index | The source uses RV, mobile sentinel, and longline indices, including observations at age 2. | Use RV and mobile sentinel indices, restricted to modeled ages 3-12+, with approximate sampling times 0.75 and 0.625. Exclude RV 1980, 1985, and 2003. | Age 2 and the longline index are omitted; survey timing and index reconstruction are approximations. |",
+
+      "| Comparison | The report provides SSB, numbers-at-age, fishing mortality, and age-2 recruitment estimates. | Compare SSB, numbers-at-age for ages 3+, F, and reported terminal M groups. | Direct recruitment comparisons are inappropriate because tinyAM recruitment is defined at age 3 rather than age 2. |",
     )
   )
 }
