@@ -140,7 +140,8 @@ for (name in names(duplicates)) {
 
 allowed_sources <- c("native_model", "official_machine_readable", "official_table",
                      "official_document",
-                     "digitized", "reconstructed_source_input", "charbonneau_seed")
+                     "digitized", "reconstructed_source_input", "derived_source_output",
+                     "charbonneau_seed")
 allowed_input_types <- c("catch", "index", "weight", "catch_weight", "maturity", "M", "covariate", "biology")
 allowed_output_types <- c("population", "mortality", "biomass", "recruitment", "catch",
                           "index", "catchability", "biology")

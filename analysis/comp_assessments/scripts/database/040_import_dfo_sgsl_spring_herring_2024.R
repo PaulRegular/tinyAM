@@ -214,13 +214,14 @@ outputs$se <- NA_real_
 outputs$lwr <- NA_real_
 outputs$upr <- NA_real_
 annual_output <- function(measure, type, year, value, unit, source_table,
-                          age = NA_real_, age_group = "", notes = "") {
+                          age = NA_real_, age_group = "", notes = "",
+                          source_type = "official_table") {
   data.frame(
     assessment_id = assessment_id, type = type, measure = measure,
     fleet = "", survey = "", sex = "", region = "", season = "",
     year = year, age = age, age_group = age_group, value = value,
     se = NA_real_, lwr = NA_real_, upr = NA_real_, unit = unit,
-    source_type = "official_table",
+    source_type = source_type,
     source_reference = paste(assessment_ref, "Table", source_table),
     notes = notes, stringsAsFactors = FALSE
   )
@@ -240,6 +241,40 @@ outputs <- rbind(
                 fishing_mortality[, 12], "per_year", 20, age_group = "6-8",
                 notes = "January 1 abundance-weighted F for ages 6-8.")
 )
+derived <- rbind(
+  annual_output("total_numbers", "population", abundance[, 1],
+                rowSums(abundance[, 2:11, drop = FALSE]), "thousand fish", 19,
+                source_type = "derived_source_output",
+                notes = "Sum of January 1 MLE abundance over ages 2-11+ from Table 19; no aggregate uncertainty is available."),
+  annual_output("total_biomass", "biomass", biomass[, 1],
+                rowSums(biomass[, 2:11, drop = FALSE]), "tonnes", 18,
+                source_type = "derived_source_output",
+                notes = "Sum of January 1 MLE biomass over ages 2-11+ from Table 18; no aggregate uncertainty is available."),
+  annual_output("SSB", "biomass", biomass[, 1],
+                rowSums(sweep(biomass[, 2:11, drop = FALSE], 2, maturity$value, `*`)),
+                "tonnes", 18, source_type = "derived_source_output",
+                notes = paste(
+                  "January 1 mature biomass: sum of Table 18 MLE biomass-at-age",
+                  "times the knife-edge maturity schedule in DFO 2022/068, p. 10.",
+                  "This is a common January 1 definition, not the assessment's",
+                  "April 1 SSB; pre-spawning mortality and aggregate uncertainty are unavailable."
+                ))
+)
+derived$source_reference[derived$measure == "SSB"] <- paste(
+  assessment_ref, "Table 18; DFO Research Document 2022/068, p. 10"
+)
+mature_biomass <- make_output(
+  cbind(year = biomass[, 1], sweep(biomass[, 2:11, drop = FALSE], 2, maturity$value, `*`)),
+  2:11, ages, "biomass", "mature_biomass_at_age", "tonnes", 18,
+  "January 1 MLE biomass-at-age times knife-edge maturity; not April 1 spawning biomass. Uncertainty unavailable."
+)
+mature_biomass$age_group <- ""
+mature_biomass$se <- mature_biomass$lwr <- mature_biomass$upr <- NA_real_
+mature_biomass$source_type <- "derived_source_output"
+mature_biomass$source_reference <- paste(
+  assessment_ref, "Table 18; DFO Research Document 2022/068, p. 10"
+)
+outputs <- rbind(outputs, derived, mature_biomass[names(outputs)])
 outputs <- outputs[c("assessment_id", "type", "measure", "fleet", "survey",
                      "sex", "region", "season", "year", "age", "age_group", "value",
                      "se", "lwr", "upr", "unit", "source_type",

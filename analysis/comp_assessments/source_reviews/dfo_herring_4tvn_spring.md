@@ -75,6 +75,22 @@ weights combine fixed- and mobile-gear weights and then use a geometric mean
 across adjacent age-year cells. It does not provide the complete fitted
 stock-weight surface or specify exactly how the two gear series are combined.
 
+## Derived source summaries
+
+The database now includes total January 1 abundance and biomass across ages
+2-11+, calculated by summing the published age-specific MLEs. It also includes
+January 1 mature biomass at age and its sum, calculated from published biomass
+and the knife-edge maturity schedule. This uses the source biomass surface,
+not the approximate weights chosen for the tinyAM fit. Native reported 4+
+totals are retained separately. Rounding in the age tables can make a derived
+sum differ slightly from a reported aggregate.
+
+These rows are labeled `derived_source_output`, with formulas and sources in
+their notes and no SEs or intervals. The mature-biomass sum is stored under
+`SSB` for the common January 1 comparison used by tinyAM. It is not the
+accepted assessment's April 1 SSB: applying pre-spawning mortality would
+require the source's estimated M surface, which is unavailable numerically.
+
 ## Translation limits
 
 The tinyAM recipe sums fixed- and mobile-gear catches into one fleet and uses

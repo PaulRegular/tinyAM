@@ -344,6 +344,7 @@ official_table
 official_document
 digitized
 reconstructed_source_input
+derived_source_output
 charbonneau_seed
 ```
 
@@ -442,7 +443,12 @@ Bmsy
 msy
 ```
 
-Use measures only when they are defined by the accepted assessment.
+Use measures defined by the accepted assessment. `derived_source_output` may
+also record an explicitly requested summary calculated from that assessment's
+reported outputs and documented biology. Preserve the native values, identify
+the formula and age range in notes, and leave uncertainty missing when the
+required covariance is unavailable. State timing differences explicitly: a
+sum of January 1 mature biomass is not an April 1 SSB estimate.
 
 biomass_by_age_group stores a reported aggregate biomass for a named age group, such as 3+. Put the group label in age_group and leave age blank; it is not an age-specific biomass surface.
 
