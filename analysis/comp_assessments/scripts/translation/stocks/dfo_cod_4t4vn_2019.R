@@ -136,6 +136,10 @@ translate_stock <- function(source) {
       print_sources(source$assessment),
       "",
 
+      "| Component | Accepted assessment | tinyAM representation | Reason for difference |",
+
+      "|---|------|------|------|",
+
       "| Ages | The accepted model uses ages 2-12+, with recruitment at age 2. | Fit ages 3-12+, with recruitment at age 3. | Age-2 catch numbers are unavailable in the main published landings series, so age 2 is excluded rather than fitted without catch observations. |",
 
       "| N | Recruitment enters at age 2 and depends on spawning biomass two years earlier, with autocorrelated variation. | Recruitment enters at age 3, with deterministic cohort survival and a recruitment random walk. | The recruitment age and underlying recruitment dynamics differ from the accepted model. |",
