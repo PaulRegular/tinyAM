@@ -94,8 +94,11 @@ translate_stock <- function(source) {
     fit_inputs,
     years = years,
     ages = ages,
-    sampling_times = c("Spring fixed-gear CPUE" = 0.25),
-    surveys = "Spring fixed-gear CPUE",
+    sampling_times = c(
+      "Spring fixed-gear CPUE" = 0.25,
+      "4Tmno acoustic survey" = 0.75
+    ),
+    surveys = c("Spring fixed-gear CPUE", "4Tmno acoustic survey"),
     assumptions = source$assumptions
   )
   obs$weight$M_process_center <- 0.2
@@ -104,9 +107,19 @@ translate_stock <- function(source) {
     c(2, 4, 6, 8, 11)
   )
   obs$index$q_period <- tinyAM::cut_years(
-    obs$index$year,
+    pmin(obs$index$year, 2021),
     c(1990, 2000, 2010, 2021)
   )
+
+  is_cpue <- obs$index$survey == "Spring fixed-gear CPUE"
+  cpue_min_age <- min(obs$index$age[is_cpue])
+
+  cpue_years <- sort(unique(obs$index$year[is_cpue]))
+  cpue_breaks <- floor(seq(min(cpue_years), max(cpue_years), length.out = 5))
+
+  obs$index$cpue_period <- "baseline"
+  obs$index$cpue_period[is_cpue] <- as.character(cut_years(obs$index$year[is_cpue], cpue_breaks))
+  obs$index$cpue_period <- factor(obs$index$cpue_period) |> relevel(ref = "baseline")
 
   settings <- list(
     N_settings = list(
@@ -130,8 +143,8 @@ translate_stock <- function(source) {
       fill_missing = FALSE
     ),
     index_settings = list(
-      q_form = ~ 0 + mono(age) + q_period,
-      sd_form = ~ 1,
+      q_form = ~ 0 + mono(age, by = survey) + cpue_period,
+      sd_form = ~ 0 + survey,
       fill_missing = FALSE
     )
   )
@@ -212,11 +225,11 @@ translate_stock <- function(source) {
       "| F | Logistic fishery selectivity changes across three time blocks; the source estimates initial fishing mortality and observation/process terms. | Age- and year-correlated AR1 F states. | This is a compact approximation to changing selectivity; it is not the source's period-specific logistic model. |",
       "| M | Log-M follows random walks for ages 2-6 and 7-11+, with 0.2 initial-M prior means and increment SD fixed at 0.075. | Two M age blocks follow an AR1 process centered on 0.2. | tinyAM's random walk leaves its first M state unpenalized; AR1 supplies a mean-reverting initial-state distribution, but changes the source process and estimates its variation. |",
       "| Catch | Fixed- and mobile-gear catch-at-age are reported separately in thousand fish. The accepted SCA uses total catch and age-composition likelihoods. | Sum gear catches into one age-specific stream; zero ages are filled as latent observations for the lognormal likelihood. | tinyAM cannot reproduce the source total-plus-composition likelihood. |",
-      "| Index | Spring fixed-gear CPUE and a fishery-independent acoustic survey are used as aggregate indices with age compositions; CPUE q follows a random walk. | Use published age-specific CPUE values at a spring timing of 0.25, with a constant q; omit acoustic sample counts. | The report does not provide compatible aggregate index values for tinyAM; acoustic sample counts are composition data, not abundance indices. |",
+      "| Index | Spring fixed-gear CPUE and the fishery-independent acoustic survey are used with age compositions and age-aggregated biomass indices; the acoustic biomass likelihood was weighted by 3 in the 2022 method report. | Use age-specific CPUE and Table 15 acoustic values on their reported native scale, at approximate timings of 0.25 and 0.75. | tinyAM fits age-specific lognormal indices rather than separate age-composition and aggregate-biomass likelihoods. Table 15 gives no numeric scale multiplier; the current q formula is retained and therefore shares its q effects across surveys. |",
       "| Weights and maturity | The source uses a knife-edge maturity schedule at ages 3-4 and beginning-year weights derived from gear-specific catch weights. | Use the same maturity schedule and a fit-only weight surface derived from the published gear weights. | Gear combination for the source weight surface is not fully specified; see the explicit transformation in this recipe. |",
       "| Comparison | Numerical January 1 N, biomass-at-age and F-at-age are published, with age-2 recruitment and Fbar. | Compare these common quantities; the source's tabulated biomass is not SSB. | SSB and age-specific M are not available as numerical tables for this assessment. |",
       "",
-      "The comparison is a structural approximation, not a reproduction of the accepted likelihood. Survey timing is represented by a seasonal midpoint, and the source's estimated M prior is not available as a tinyAM penalty."
+      "The comparison is a structural approximation, not a reproduction of the accepted likelihood. The acoustic table values stay on their native scale; the 2025 biomass download is kept with the separate 2026 record. Acoustic timing is approximated by 0.75 from the late September to early October survey window, and the source's estimated M prior is not available as a tinyAM penalty."
     )
   )
 }

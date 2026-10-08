@@ -10,6 +10,20 @@ lines <- readLines(support_file, warn = FALSE, encoding = "UTF-8")
 assessment_url <- "https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/41256384.pdf"
 methods_url <- "https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/41091589.pdf"
 summary_url <- "https://publications.gc.ca/collections/collection_2026/mpo-dfo/fs70-6/Fs70-6-2026-028-eng.pdf"
+acoustic_data_url <- paste0(
+  "https://open.canada.ca/data/en/dataset/",
+  "7c17f4eb-93fc-11ea-b1dd-f48c505b2a29"
+)
+acoustic_biomass_url <- paste0(
+  "https://api-proxy.edh-cde.dfo-mpo.gc.ca/catalogue/records/",
+  "7c17f4eb-93fc-11ea-b1dd-f48c505b2a29/attachments/",
+  "7C17f4eb_herring_historic_biomass_2025.csv"
+)
+acoustic_dictionary_url <- paste0(
+  "https://api-proxy.edh-cde.dfo-mpo.gc.ca/catalogue/records/",
+  "7c17f4eb-93fc-11ea-b1dd-f48c505b2a29/attachments/",
+  "7c17f4eb_herring_data_dictionary.csv"
+)
 assessment_ref <- "DFO Research Document 2024/058"
 
 table_rows <- function(number, next_number, value_count, years,
@@ -58,6 +72,30 @@ catch_mobile <- table_rows(8, 9, 11, 1978:2022)
 weight_mobile <- table_rows(9, 10, 10, 1978:2022)
 cpue <- table_rows(13, 14, 8, 1990:2021)
 acoustic <- table_rows(15, 16, 9, 1994:2023, "Spring spawners")
+acoustic_biomass_file <- file.path(source_dir, "herring_historic_biomass_2025.csv")
+acoustic_dictionary_file <- file.path(source_dir, "herring_data_dictionary.csv")
+if (!file.exists(acoustic_biomass_file) || !file.exists(acoustic_dictionary_file)) {
+  stop("The cached acoustic biomass CSV or data dictionary is missing.")
+}
+biomass_lines <- readLines(acoustic_biomass_file, warn = FALSE, encoding = "latin1")
+acoustic_biomass_data <- read.csv(
+  text = paste(biomass_lines[-1L], collapse = "\n"), header = FALSE,
+  col.names = c("year", "fall_biomass", "spring_biomass", "total_biomass",
+                "prop_fall", "prop_spring"), check.names = FALSE
+)
+dictionary_lines <- readLines(acoustic_dictionary_file, warn = FALSE,
+                              encoding = "latin1")
+if (ncol(acoustic_biomass_data) != 6L ||
+    !identical(as.integer(acoustic_biomass_data[[1L]]), 1994:2025) ||
+    !all(is.finite(as.numeric(acoustic_biomass_data[[3L]])))) {
+  stop("Unexpected years, columns, or values in the acoustic biomass CSV.")
+}
+if (sum(grepl(
+  "^Spring_acoustic_biomass.*Spring spawners acoustic biomass in tons \\(t\\)",
+  dictionary_lines
+)) != 1L) {
+  stop("The acoustic data dictionary does not confirm spring biomass in tonnes.")
+}
 biomass <- table_rows(18, 19, 11, years)
 abundance <- table_rows(19, 20, 11, years)
 fishing_mortality <- table_rows(20, 21, 11, years)
@@ -100,10 +138,35 @@ inputs <- rbind(
             "number per net-haul", survey = "Spring fixed-gear CPUE",
             season = "spring", source_table = 13,
             notes = "Age-specific CPUE values. The source SCA used the aggregate index with age composition; direct age-specific use is a tinyAM approximation."),
-  long_rows(acoustic, 2:10, 2:10, "index", "numbers_at_age", "numbers",
-            "fish in weighted trawl sample", survey = "4Tmno acoustic trawl samples",
-            season = "fall", source_table = 15,
-            notes = "Spring-spawner weighted trawl sample counts used to form age composition; these are not population abundance estimates and are not used as direct tinyAM indices.")
+  long_rows(acoustic, 2:10, 2:10, "index", "numbers_at_age", "index_scale",
+            "number (index scale; multiplier not stated)",
+            survey = "4Tmno acoustic survey", season = "fall",
+            source_table = 15,
+            notes = paste(
+              "Spring-spawner age-disaggregated acoustic abundance-index values.",
+              "The report does not state a numeric multiplier; values are retained",
+              "on their native scale. The 2022 methods describe the source",
+              "likelihood as age composition plus an aggregate biomass index."
+            ))
+)
+acoustic_biomass_2026 <- data.frame(
+  assessment_id = summary_id,
+  type = "index", measure = "total_biomass", basis = "biomass",
+  fleet = "", survey = "4Tmno acoustic survey", sex = "", region = "",
+  season = "fall", year = as.integer(acoustic_biomass_data[[1L]]),
+  year_basis = "calendar_year", age = NA_real_,
+  value = as.numeric(acoustic_biomass_data[[3L]]), unit = "tonnes",
+  sampling_time = NA_real_, source_type = "official_machine_readable",
+  source_reference = paste0(
+    acoustic_biomass_url, " (Spring_acoustic_biomass); ", acoustic_dictionary_url
+  ),
+  transformation = "",
+  notes = paste(
+    "Spring-spawner acoustic biomass from the 2025 data release.",
+    "Kept with the separate 2026 summary assessment record; values are not",
+    "used as inputs to the accepted 2024 assessment."
+  ),
+  stringsAsFactors = FALSE
 )
 mobile_zero <- long_rows(
   matrix(c(2023, rep(0, 11)), nrow = 1L), 2:11, ages,
@@ -195,8 +258,8 @@ assumptions_2024 <- data.frame(
     "Logistic fishery selectivity with three documented time blocks: 1978-1989, 1990-2004, 2005-2021; 2022-2023 update not separately described",
     "M is estimated for ages 2-6 and 7-11+",
     "Log-M random walks; increment SD fixed at 0.075; initial M prior mean 0.2 and SD 0.1",
-    "Fixed-gear spring CPUE, age values 4-11 published for 1990-2021; the prior documented SCA used aggregate biomass and ages 4-10 composition",
-    "Fishery-independent acoustic survey in September-October; spring age data 2-10 through 2023; prior documented SCA used aggregate biomass and ages 4-8 composition",
+    "Fixed-gear spring CPUE, age values 4-11 published for 1990-2021; the documented SCA used an age-aggregated biomass index and age composition",
+    "Fishery-independent acoustic survey in September-October; spring-spawner age-disaggregated index values for ages 2-10, 1994-2023; the documented SCA used age composition and a separate age-aggregated biomass index",
     "Knife-edge: ages 2-3 immature and ages 4-11+ mature",
     "Annual fixed- and mobile-gear fishery weights are published separately; the combined beginning-of-year stock-weight construction is described but not fully specified in the support document",
     "Fixed- and mobile-gear catch-at-age, ages 2-11+, 1978-2023"
@@ -225,6 +288,14 @@ assumptions_2024$notes[assumptions_2024$setting == "weights"] <-
   "Source methods calculate beginning-of-year weights from fixed and mobile gear weights combined, then use the geometric mean of age a-1 in year t-1 and age a in year t. The report does not publish the complete fitted stock-weight matrix or specify how the two gear series are combined."
 assumptions_2024$notes[assumptions_2024$setting == "spring_CPUE"] <-
   "No commercial spring CPUE was available for 2022-2023 after the fishery closure."
+assumptions_2024$notes[assumptions_2024$setting == "acoustic_survey"] <- paste(
+  "The 2022/068 methods describe a multivariate-logistic likelihood for",
+  "age composition and a separate lognormal age-aggregated biomass index,",
+  "with the acoustic biomass likelihood weighted by 3. The spring biomass",
+  "index uses ages 4-8; the 2024/058 support report does not restate the",
+  "observation weighting or full likelihood. Table 15 values are preserved",
+  "on their native scale for tinyAM; no multiplier is inferred."
+)
 
 assumptions_2026 <- data.frame(
   component = c("assessment", "model", "population", "population", "N", "F", "M",
@@ -255,6 +326,15 @@ assumptions_2024$assessment_id <- assessment_id
 assumptions_2024 <- assumptions_2024[c("assessment_id", setdiff(names(assumptions_2024), "assessment_id"))]
 assumptions_2026$assessment_id <- summary_id
 assumptions_2026 <- assumptions_2026[c("assessment_id", setdiff(names(assumptions_2026), "assessment_id"))]
+assumptions_2026$source_reference[
+  assumptions_2026$setting == "acoustic"
+] <- paste(acoustic_biomass_url, acoustic_dictionary_url)
+assumptions_2026$notes[
+  assumptions_2026$setting == "acoustic"
+] <- paste(
+  "The CSV and dictionary are cached locally. The series is linked to the",
+  "2026 summary-only record and is not mixed into the 2024 assessment."
+)
 
 stock <- data.frame(
   stock_id = stock_id, charbonneau_id = "", authority = "DFO",
@@ -284,7 +364,7 @@ summary_assessment <- data.frame(
   assessment_type = "full_assessment", model_family = "state-space",
   model_version = "2026 accepted assessment; detailed report in preparation",
   is_current = FALSE, is_applied = TRUE, framework_year = "",
-  assessment_url = summary_url, framework_url = "", data_url = "",
+  assessment_url = summary_url, framework_url = "", data_url = acoustic_data_url,
   model_url = "", repository_url = "", assumptions_status = "partial",
   inputs_status = "partial", outputs_status = "partial",
   notes = "Accepted at the March 2026 peer review and reported through 2025. Numerical input tables, full methods, and model outputs remain unavailable because the detailed DFO Research Document is in preparation. No 2026-run values are mixed into the 2024 detailed record.",
@@ -303,6 +383,15 @@ inputs$length_bin_upper <- NA_real_
 inputs$sample_size <- NA_real_
 inputs$age_error <- NA_real_
 inputs$partition <- NA_real_
+acoustic_biomass_2026$observation_id <- ""
+acoustic_biomass_2026$length_bin <- NA_real_
+acoustic_biomass_2026$length_bin_lower <- NA_real_
+acoustic_biomass_2026$length_bin_upper <- NA_real_
+acoustic_biomass_2026$sample_size <- NA_real_
+acoustic_biomass_2026$age_error <- NA_real_
+acoustic_biomass_2026$partition <- NA_real_
+acoustic_biomass_2026 <- acoustic_biomass_2026[names(inputs)]
+inputs_all <- rbind(inputs, acoustic_biomass_2026)
 
 write_updated <- function(name, new_rows, key) {
   path <- file.path(root, "database", name)
@@ -353,9 +442,9 @@ if (write_database) {
   write_updated("stocks.csv", stock, "stock_id")
   write_updated("assessments.csv", rbind(assessment, summary_assessment), "assessment_id")
   write_updated("assumptions.csv", assumptions, "assessment_id")
-  write_updated("inputs.csv", inputs, "assessment_id")
+  write_updated("inputs.csv", inputs_all, "assessment_id")
   write_updated("outputs.csv", outputs, "assessment_id")
 }
 
-cat("Prepared", nrow(inputs), "source inputs and", nrow(outputs),
+cat("Prepared", nrow(inputs_all), "source inputs and", nrow(outputs),
     "reported outputs for", assessment_id, "and summary record", summary_id, ".\n")

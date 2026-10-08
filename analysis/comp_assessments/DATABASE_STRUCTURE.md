@@ -238,6 +238,15 @@ Store the lower age in age and record the full source age interval, including
 any plus group, in notes. This measure is kept for provenance and is not
 passed to tinyAM's single-age index likelihood.
 
+For `type = index`, `measure = numbers_at_age` normally uses `basis = numbers`
+and a documented count unit. When the source reports age-specific index values
+but does not state its scale multiplier, use `basis = index_scale` and record
+the reported quantity with the missing scale noted, for example
+`number (index scale; multiplier not stated)`. Preserve the values without
+guessing a conversion factor, and explain whether they are used as direct
+observations or as inputs to a separate age-composition and aggregate-index
+likelihood.
+
 ### Biology
 
 ``` text

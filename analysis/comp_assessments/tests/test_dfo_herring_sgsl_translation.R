@@ -17,17 +17,68 @@ stopifnot(
   identical(translated$ages, 2:11),
   tinyAM::check_obs(obs),
   nrow(obs$catch) == 460L,
-  nrow(obs$index) == 256L,
+  nrow(obs$index) == 526L,
   nrow(obs$weight) == 460L,
   nrow(obs$maturity) == 460L,
-  setequal(unique(obs$index$survey), "Spring fixed-gear CPUE"),
-  all(obs$index$samp_time == 0.25),
+  setequal(unique(obs$index$survey),
+           c("Spring fixed-gear CPUE", "4Tmno acoustic survey")),
+  all(obs$index$samp_time[obs$index$survey == "Spring fixed-gear CPUE"] == 0.25),
+  all(obs$index$samp_time[obs$index$survey == "4Tmno acoustic survey"] == 0.75),
   all(obs$maturity$obs[obs$maturity$age %in% 2:3] == 0),
   all(obs$maturity$obs[obs$maturity$age >= 4] == 1),
   all(obs$weight$M_process_center == 0.2),
   !"M_assumption" %in% names(obs$weight),
   identical(attr(obs, "translation")$M$status, "estimated_in_source"),
   !any(translated$comparison_outputs$measure %in% c("SSB", "natural_mortality_at_age"))
+)
+
+acoustic_source <- source_data$inputs[
+  source_data$inputs$type == "index" &
+    source_data$inputs$measure == "numbers_at_age" &
+    source_data$inputs$survey == "4Tmno acoustic survey", , drop = FALSE
+]
+acoustic_observed <- obs$index[
+  obs$index$survey == "4Tmno acoustic survey", , drop = FALSE
+]
+acoustic_match <- merge(
+  acoustic_observed[c("year", "age", "obs")],
+  acoustic_source[c("year", "age", "value")], by = c("year", "age")
+)
+stopifnot(
+  nrow(acoustic_source) == 270L,
+  all(range(as.numeric(acoustic_source$year)) == c(1994, 2023)),
+  all(range(as.numeric(acoustic_source$age)) == c(2, 10)),
+  all(is.finite(acoustic_source$value)),
+  all(acoustic_source$unit == "number (index scale; multiplier not stated)"),
+  all(acoustic_source$basis == "index_scale"),
+  all(acoustic_source$source_type == "official_table"),
+  all(grepl("DFO Research Document 2024/058 Table 15",
+            acoustic_source$source_reference, fixed = TRUE)),
+  acoustic_source$value[acoustic_source$year == 1994 & acoustic_source$age == 3] == 231932,
+  acoustic_source$value[acoustic_source$year == 2023 & acoustic_source$age == 10] == 140,
+  nrow(acoustic_observed) == 270L,
+  nrow(acoustic_match) == 270L,
+  isTRUE(all.equal(acoustic_match$obs, acoustic_match$value)),
+  !anyNA(obs$index$q_period[obs$index$year >= 2022])
+)
+
+latest <- read_assessment("dfo_herring_4tvn_spring_2026", read_database())
+latest_biomass <- latest$inputs[
+  latest$inputs$type == "index" &
+    latest$inputs$measure == "total_biomass" &
+    latest$inputs$survey == "4Tmno acoustic survey", , drop = FALSE
+]
+stopifnot(
+  nrow(latest_biomass) == 32L,
+  all(range(as.numeric(latest_biomass$year)) == c(1994, 2025)),
+  all(latest_biomass$unit == "tonnes"),
+  all(latest_biomass$source_type == "official_machine_readable"),
+  all(grepl("herring_historic_biomass_2025.csv",
+            latest_biomass$source_reference, fixed = TRUE)),
+  latest_biomass$value[latest_biomass$year == 2023] == 7358,
+  latest_biomass$value[latest_biomass$year == 2025] == 25607,
+  !any(source_data$inputs$measure == "total_biomass" &
+         source_data$inputs$survey == "4Tmno acoustic survey")
 )
 
 source_catch <- source_data$inputs[
@@ -53,7 +104,7 @@ stopifnot(
   as.character(dat$M_settings$age_blocks["7"]) == "7-11",
   identical(dim(par$log_f), c(46L, 10L)),
   identical(dim(par$log_m), c(46L, 2L)),
-  sum(dat$fill_missing_map) == 15L,
+  sum(dat$fill_missing_map) == 0L,
   isTRUE(all.equal(rownames(par$log_m), as.character(translated$years))),
   all(is.finite(translated$start_par$log_r)),
   all(is.finite(translated$start_par$log_f)),
