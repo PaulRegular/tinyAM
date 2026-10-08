@@ -80,8 +80,8 @@ Final Table 1.23 adds 48 accepted-run beginning-year age-3+ biomass estimates fo
 
 ## Earlier tinyAM translation review
 
-The following records the earlier exploratory models. The current
-user-selected settings and their scale audit are recorded in the final section.
+The following records earlier exploratory models. The scale audit and latest
+model-review settings are recorded in the subsequent sections.
 
 The pinned selectivity equations do not pool older survey ages explicitly. They
 use a descending logistic for Shelikof, an ascending logistic for ADF&G, and
@@ -155,7 +155,7 @@ value near age 7 (0.303), but this pattern did not yield a stable combined
 model. These exploratory results predate the catch-table correction.
 
 The earlier finding that ages 1-2 predictions were unchecked no longer applies:
-the current fit uses the published young-age catch numbers. The median
+the later fits use the published young-age catch numbers. The median
 predicted/observed ratio for age 1 is 1.48 and for age 2 is 0.92. Overall
 trajectory correlations and scale differences are in the refreshed comparison
 table; SSB remains definition-mismatched because spawning time and weight
@@ -169,9 +169,9 @@ A quadratic mean-log-F sensitivity was also attempted with the survey-shape
 and polynomial-SD changes, but was stopped after 20 minutes without a completed
 fit. Its convergence and Hessian are unknown. It was not retained at that time.
 
-## Scale audit and current translation (7 October 2026)
+## Scale audit and pre-refinement translation (7 October 2026)
 
-The current user-selected recipe uses exponential initial abundance, IID N
+The recipe at the start of this review used exponential initial abundance, IID N
 process deviations, age-specific temporal random walks in F, a common catch
 log-SD, and survey-specific paired-age q blocks (1-2, 3-4, 5-6, 7-8, 9-10).
 The Shelikof observed environmental effect and ADF&G annual effects remain.
@@ -207,7 +207,7 @@ not interchangeable with the native composition/weight inputs. No correction
 was applied to force agreement. Age-reading error and grouped young ages are
 still translation approximations, not unit conversions.
 
-The unchanged current model converged: optimizer code 0, objective 1261.842,
+That unchanged baseline model converged: optimizer code 0, objective 1261.842,
 maximum absolute gradient 0.000919, and positive-definite Hessian. Median
 observation-level q was 0.409 (ADF&G), 1.906 (bottom trawl), 1.251 (Shelikof),
 and 1.041 (summer acoustic). These are the full observation q values including
@@ -220,10 +220,11 @@ model adjustment was applied merely to lower q.
 
 ## Optional logit-q sensitivity (7 October 2026)
 
-`scripts/translation/review_goa_pollock_q_link.R` fits the same observations
-and settings with `index_settings$q_link` set to `"log"` or `"logit"`.
-The main stock recipe retains the log link. The review dashboard contains both
-fits and the accepted outputs; its files and diagnostics are cached locally.
+The initial link sensitivity fitted the same observations and settings with
+`index_settings$q_link` set to `"log"` or `"logit"`. The review script is now
+`scripts/translation/review_goa_pollock.R` and separates the link change from
+the older-age N-process change. Fits, summaries and dashboards are cached
+locally, without replacing aggregate batch outputs.
 
 Both links converged with positive-definite Hessians. The logit fit had objective
 1266.537 versus 1261.842 for the log link, and maximum gradient 0.00106 versus
@@ -245,3 +246,70 @@ on the original log-link predictor. Its restriction does not anchor q near
 one or reproduce the source's bottom-trawl baseline-q prior. The trial is
 numerically valid but does not establish a better abundance scale, and its
 wider uncertainty warrants review before replacing the existing translation.
+
+## Population-process and catchability review (7 October 2026)
+
+All trials retain the original observations, fixed age-specific M, ages 1-10+,
+1970-2024 period, F temporal random walks, survey timing, weights and maturity.
+No package feature was added during this model review. The retained changes
+use existing settings: deterministic older-age survival (`N` process off)
+and a logit q link. Exponential initial abundance, paired-age survey q blocks,
+environmental/year effects and common catch SD are retained.
+
+The four controlled fits separate the effects of the link and N process:
+
+| Model | Objective | Maximum gradient | N mean absolute % difference | Recruitment trend correlation | Shared-biology SSB mean absolute % difference |
+|---|---:|---:|---:|---:|---:|
+| Previous: IID N, log q | 1261.842 | 0.000919 | 57.0 | 0.629 | 62.7 |
+| IID N, logit q | 1266.537 | 0.001059 | 87.8 | 0.611 | 37.7 |
+| N off, log q | 1316.473 | 0.000854 | 58.5 | 0.938 | 65.1 |
+| N off, logit q | 1358.922 | 0.000227 | 46.6 | 0.949 | 29.7 |
+
+All four have optimizer code 0 and positive-definite Hessians. These are
+descriptive comparisons, not a likelihood ranking or scientific validation.
+SSB differences above use accepted N with the same translated stock weights
+and maturity as tinyAM. The dashboard preserves native accepted SSB, whose
+spawning weights and survival timing differ from tinyAM's start-year definition.
+
+With N off and logit q, 2024 tinyAM SSB is 351,022 tonnes (approximate 95%
+interval 244,988-502,950), versus native accepted SSB of 302,000 tonnes
+(published interval 241,000-379,000). On the shared-biology definition the
+terminal SSB difference is +11.0%, compared with -57.6% previously. Total
+abundance and recruitment remain high in 2024 (+83.9% and +79.2%); their
+historical trends improve, but this is not a uniform improvement in scale.
+Survey standardized-residual SDs are 0.965-0.993, with means -0.036 to 0.050;
+catch residual means by age are -0.128 to approximately zero. The common catch
+log-SD is 0.527. Catch predictions remain conditional medians, so aggregate
+yield need not equal a sum of arithmetic means.
+
+Uncertainty checks identify weakly estimated bottom-trawl q blocks: ages 5-6
+and 7-8 approach one, with logit-coefficient SEs about 71 and 612. A positive
+Hessian and small gradient do not make their symmetric Wald intervals reliable.
+Pooling bottom-trawl ages 5+ did not resolve this: its q approached one and
+the coefficient SE increased to about 2568. That pooling was not retained.
+The logit restriction supplies no source-style q prior; it cannot establish
+an absolute abundance scale by itself.
+
+Additional sensitivities were not retained. With IID N, an AR1 F process with
+age-specific means produced false convergence and a non-positive Hessian;
+AR1 N converged but strongly inflated abundance. Monotone q trials with either
+link and either IID or deterministic N had non-positive Hessians. Quadratic
+catch SD converged with the previous log link but worsened agreement; its
+logit trials had curvature/convergence failures. Survey-specific linear and
+quadratic q formulas under IID N improved SSB but left recruitment trends
+weak. Under deterministic N, linear q converged but its acoustic curves rose
+with age, unlike the source shapes; quadratic q on raw age retained a gradient
+of 0.030. The combined deterministic-N, quadratic-q/catch-SD trial was stopped
+after several minutes without completion; no convergence result is claimed.
+
+A quadratic q formula using `survey:poly(age, 2)` was also checked. Its default
+start converged to a different solution (objective 1340.513) with substantially
+worse abundance agreement. Transforming the raw-quadratic fit's full predictor
+exactly into this basis and reusing its other estimates gave objective 1331.791,
+gradient 0.000802 and a positive Hessian. This was a change of basis and starting
+values only; predicted q at the start was verified equal to within 1e-9, without
+clipping or altering observations. Neither solution was retained: the extra
+curve assumptions and sensitivity to starts do not offer a clear advantage
+over the simpler paired-age representation. The retained fit remains a
+provisional illustrative translation, particularly because its near-one
+bottom-trawl q is weakly estimated.

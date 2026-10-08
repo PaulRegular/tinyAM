@@ -33,12 +33,20 @@ stopifnot(identical(deparse(translated$settings$catch_settings$sd_form), "~1"),
           nrow(translated$catch_reporting$weights) == 55 * 10,
           nrow(translated$catch_reporting$totals) == 55)
 
-# Retain the user's paired-age q blocks and process settings.
-stopifnot(identical(translated$settings$N_settings$process, "iid"),
+# Retain paired-age q blocks, with deterministic survival and bounded q.
+stopifnot(identical(translated$settings$N_settings$process, "off"),
+          identical(translated$settings$N_settings$init, "exp"),
           identical(translated$settings$F_settings$process, "rw"),
+          identical(translated$settings$index_settings$q_link, "logit"),
           identical(deparse(translated$settings$index_settings$q_form),
                     "~0 + q_key + environmental_effect + adfg_year"),
           ncol(dat$q_mono_modmat) == 0L)
+par <- tinyAM::make_par(dat)
+stopifnot("logit_q" %in% names(par), !"log_n" %in% names(par))
+reported <- RTMB::MakeADFun(function(p) tinyAM::nll_fun(p, dat), par,
+                           silent = TRUE)$report()
+stopifnot(all(is.finite(reported$N)),
+          all(exp(reported$log_q_obs) == 0.5))
 for (survey in unique(obs$index$survey)) {
   z <- obs$index[obs$index$survey == survey, ]
   expected <- c("1-2", "3-4", "5-6", "7-8", "9-10")[ceiling(z$age / 2)]
