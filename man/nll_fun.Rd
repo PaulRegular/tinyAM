@@ -50,6 +50,10 @@ and Gaussian densities for observed or filled log observations. Random
 effects are integrated out by \code{\link[=fit_tam]{fit_tam()}}, not by this function itself.
 Normal densities are evaluated on log observations, so predictions on the
 natural scale are conditional medians rather than arithmetic means.
+Catchability uses the link chosen by \code{index_settings$q_link}: the log link
+exponentiates the formula predictor, while the logit link applies the inverse
+logit and restricts q to between zero and one. Both estimation and simulation
+use the same predictor, including any \code{\link[=mono]{mono()}} increments.
 
 With \code{simulate = TRUE}, recruitment and mortality states are drawn first.
 N is then constructed through initial-age and cohort recursion, followed by

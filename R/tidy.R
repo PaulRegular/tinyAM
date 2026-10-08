@@ -345,6 +345,11 @@ tidy_pop <- function(fit, interval = 0.95) {
 #' - `log_`  → `exp()` (and the `log_` prefix is dropped, e.g. `log_sd_r` → `sd_r`)
 #' - `logit_` → `plogis()` (and the `logit_` prefix is dropped, e.g. `logit_phi_f` → `phi_f`)
 #'
+#' An exception is `logit_q`: formula coefficients, confidence limits and SEs
+#' remain on the fitted logit scale (`se_scale = "logit"`). A slope or contrast
+#' is not an absolute q and must not be inverse-logit transformed on its own.
+#' Actual observation-specific q is reported by [tidy_obs_pred()].
+#'
 #' Estimates and confidence limits are shown on the reported scale. SEs remain
 #' on the fitted scale, identified by `se_scale`: `"log"`, `"logit"`, or
 #' `"reported"` (the same scale as the displayed estimate). A small log-scale
@@ -354,7 +359,8 @@ tidy_pop <- function(fit, interval = 0.95) {
 #' summary of uncertainty on the reported scale.
 #'
 #' - For [mono()] catchability terms, `dq` is a non-negative step on the
-#'   log-q scale. Estimates and SEs are reported directly on this same scale,
+#'   selected q-link scale (log-q or logit-q). Estimates and SEs are reported
+#'   directly on this same scale,
 #'   with untransformed Wald intervals (which may cross zero at a boundary).
 #'   These local curvature SEs are not boundary-adjusted inference.
 #'   Coefficient names identify
@@ -373,7 +379,7 @@ tidy_pop <- function(fit, interval = 0.95) {
 #' (`$random`), one per random block (e.g. `log_f`, `log_r`, `missing`, …).
 #'
 #' Labels are added where applicable:
-#' - For parameters specified using a formula in [make_dat()] (e.g., `log_q`,
+#' - For parameters specified using a formula in [make_dat()] (e.g., `log_q`, `logit_q`,
 #'   `log_sd_catch`, `log_sd_index`), a `coef` column is added.
 #' - For `log_r`, `year` contains years 2:Y; full recruitment is in [tidy_pop()].
 #' - For `log_n0`, an `age` column identifies the initial older-age state.
@@ -446,7 +452,9 @@ tidy_par <- function(fit, interval = 0.95) {
       "reported"
     }
 
-    if (startsWith(nm, "logit_")) {
+    if (nm == "logit_q") {
+      df <- trans_est(df, transform = NULL, scale = 1)
+    } else if (startsWith(nm, "logit_")) {
       df <- trans_est(df, transform = plogis, scale = 1)
       df$par <- sub("^logit_", "", df$par)
     } else if (startsWith(nm, "log_")) {

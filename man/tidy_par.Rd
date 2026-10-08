@@ -37,6 +37,11 @@ back-transformed to the natural scale:
 \item \code{logit_} → \code{plogis()} (and the \code{logit_} prefix is dropped, e.g. \code{logit_phi_f} → \code{phi_f})
 }
 
+An exception is \code{logit_q}: formula coefficients, confidence limits and SEs
+remain on the fitted logit scale (\code{se_scale = "logit"}). A slope or contrast
+is not an absolute q and must not be inverse-logit transformed on its own.
+Actual observation-specific q is reported by \code{\link[=tidy_obs_pred]{tidy_obs_pred()}}.
+
 Estimates and confidence limits are shown on the reported scale. SEs remain
 on the fitted scale, identified by \code{se_scale}: \code{"log"}, \code{"logit"}, or
 \code{"reported"} (the same scale as the displayed estimate). A small log-scale
@@ -46,7 +51,8 @@ unreliable for large log-scale SEs. Confidence limits are the preferred
 summary of uncertainty on the reported scale.
 \itemize{
 \item For \code{\link[=mono]{mono()}} catchability terms, \code{dq} is a non-negative step on the
-log-q scale. Estimates and SEs are reported directly on this same scale,
+selected q-link scale (log-q or logit-q). Estimates and SEs are reported
+directly on this same scale,
 with untransformed Wald intervals (which may cross zero at a boundary).
 These local curvature SEs are not boundary-adjusted inference.
 Coefficient names identify
@@ -67,7 +73,7 @@ random-effect parameters are returned as a named list of data frames
 
 Labels are added where applicable:
 \itemize{
-\item For parameters specified using a formula in \code{\link[=make_dat]{make_dat()}} (e.g., \code{log_q},
+\item For parameters specified using a formula in \code{\link[=make_dat]{make_dat()}} (e.g., \code{log_q}, \code{logit_q},
 \code{log_sd_catch}, \code{log_sd_index}), a \code{coef} column is added.
 \item For \code{log_r}, \code{year} contains years 2:Y; full recruitment is in \code{\link[=tidy_pop]{tidy_pop()}}.
 \item For \code{log_n0}, an \code{age} column identifies the initial older-age state.

@@ -112,8 +112,17 @@ Defaults to \code{TRUE}. Note that one-step-ahead residuals are not currently wo
 scale of the log-observation residuals) for index-at-age data. When provided,
 the intercept is removed from \code{sd_form} so supplied SDs act as offsets.
 \item \code{q_form}: formula for catchability, evaluated on the index table. Ordinary
-\code{~ q_block} is unconstrained; \code{~ mono(q_block)} is non-decreasing across ordered
+\code{~ q_block} allows any pattern across blocks; \code{~ mono(q_block)} is non-decreasing across ordered
 blocks. See \code{\link[=mono]{mono()}} for independent non-decreasing curves by survey.
+\item \code{q_link}: \code{"log"} (default) allows any positive catchability; \code{"logit"}
+restricts catchability to between zero and one. Use the logit link only
+when the survey index has an absolute abundance scale and this restriction
+is scientifically appropriate. Relative indices or surveys affected by
+herding may need the log link. The same formula and optional \code{\link[=mono]{mono()}}
+terms work with either link. With \code{"logit"}, coefficients and \code{dq} act
+on logit-q rather than log-q; covariate effects are no longer constant
+multipliers of q. This is a restriction, not a prior favouring a value
+near one. q can approach a boundary with large coefficients and SEs.
 \item \code{fill_missing}: logical – fill missing values, and zeros, using random effects?
 Defaults to \code{TRUE}. Note that one-step-ahead residuals are not currently working when \code{TRUE}.
 }}
@@ -163,6 +172,11 @@ RTMB integrates random effects using the Laplace approximation; \code{nlminb}
 optimizes the remaining fixed effects. \code{\link[=mono]{mono()}} increments \code{dq} have a zero
 lower bound. Their SEs remain on the increment scale, but symmetric Wald
 intervals are only local approximations at a boundary.
+Set \code{index_settings$q_link = "logit"} to restrict the full catchability
+prediction to between zero and one; the default \code{"log"} allows q above one.
+Formula coefficients are then named \code{logit_q}, and \code{\link[=mono]{mono()}} increments
+act on logit-q. Starting q coefficients must use the selected link scale:
+old \code{log_q} starts are not reused as \code{logit_q}. See \code{\link[=make_dat]{make_dat()}} and \code{\link[=tidy_par]{tidy_par()}}.
 
 Random-effect blocks are chosen automatically from the model settings:
 \itemize{

@@ -280,9 +280,10 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #' - `index_settings$sd_form` is evaluated on the index table to produce
 #'   `sd_index_modmat` and **log-scale** parameters `log_sd_index`.
 #' - `index_settings$q_form` is evaluated on the index table to produce
-#'   `q_modmat` and **log-scale** parameters `log_q`.
+#'   `q_modmat` and parameters `log_q` (log link) or `logit_q` (logit link).
 #'   Additive [mono()] terms instead contribute cumulative indicators
-#'   in `q_mono_modmat`, with directly fitted non-negative log-q increments `dq`.
+#'   in `q_mono_modmat`, with directly fitted non-negative increments `dq`
+#'   on the selected link scale.
 #'   `q_mono_steps` records each transition and its optional group.
 #' - If `M_settings$mu_form` is provided, `M_modmat <- model.matrix(mu_form,
 #'   data = obs$weight)` and the resulting coefficients are parameters `mu_m`.
@@ -401,8 +402,17 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #'   scale of the log-observation residuals) for index-at-age data. When provided,
 #'   the intercept is removed from `sd_form` so supplied SDs act as offsets.
 #' - `q_form`: formula for catchability, evaluated on the index table. Ordinary
-#'   `~ q_block` is unconstrained; `~ mono(q_block)` is non-decreasing across ordered
+#'   `~ q_block` allows any pattern across blocks; `~ mono(q_block)` is non-decreasing across ordered
 #'   blocks. See [mono()] for independent non-decreasing curves by survey.
+#' - `q_link`: `"log"` (default) allows any positive catchability; `"logit"`
+#'   restricts catchability to between zero and one. Use the logit link only
+#'   when the survey index has an absolute abundance scale and this restriction
+#'   is scientifically appropriate. Relative indices or surveys affected by
+#'   herding may need the log link. The same formula and optional [mono()]
+#'   terms work with either link. With `"logit"`, coefficients and `dq` act
+#'   on logit-q rather than log-q; covariate effects are no longer constant
+#'   multipliers of q. This is a restriction, not a prior favouring a value
+#'   near one. q can approach a boundary with large coefficients and SEs.
 #' - `fill_missing`: logical – fill missing values, and zeros, using random effects?
 #'   Defaults to `TRUE`. Note that one-step-ahead residuals are not currently working when `TRUE`.
 #' @param proj_settings Optional list with elements:
@@ -463,7 +473,7 @@ make_dat <- function(
     F_settings = list(process = "rw", mu_form = NULL),
     M_settings = list(process = "off", mu_form = NULL, mu_supplied = ~I(0.2), age_breaks = NULL, first_dev_year = NULL),
     catch_settings = list(sd_form = ~1, sd_supplied = NULL, fill_missing = TRUE),
-    index_settings = list(sd_form = ~1, sd_supplied = NULL, q_form = ~q_block, fill_missing = TRUE),
+    index_settings = list(sd_form = ~1, sd_supplied = NULL, q_form = ~q_block, q_link = "log", fill_missing = TRUE),
     proj_settings = NULL
 ) {
 
@@ -629,6 +639,13 @@ make_dat <- function(
 
   dat$catch_settings <- catch_settings
   dat$index_settings <- index_settings
+  if (is.null(dat$index_settings$q_link)) dat$index_settings$q_link <- "log"
+  if (!is.character(dat$index_settings$q_link) ||
+      length(dat$index_settings$q_link) != 1L ||
+      is.na(dat$index_settings$q_link) ||
+      !dat$index_settings$q_link %in% c("log", "logit")) {
+    cli::cli_abort("index_settings$q_link must be either {.val log} or {.val logit}.")
+  }
   if (is.null(dat$catch_settings$fill_missing)) {
     dat$catch_settings$fill_missing <- TRUE
     cli::cli_warn("catch_settings$fill_missing was NULL; forcing to TRUE")

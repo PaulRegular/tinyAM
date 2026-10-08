@@ -183,10 +183,15 @@
 #' ## Catchability and observations
 #'
 #' For survey observation row \eqn{i},
-#' \deqn{\log q_i=X_{q,i}\beta_q+B_i d,\qquad d_j\ge0.}
+#' \deqn{\eta_{q,i}=X_{q,i}\beta_q+B_i d,\qquad d_j\ge0.}
+#' The default `q_link = "log"` gives \eqn{q_i=\exp(\eta_{q,i})}.
+#' The optional `q_link = "logit"` gives
+#' \eqn{q_i=1/(1+\exp(-\eta_{q,i}))}, restricting q to between zero and one.
+#' This bounds the full prediction, including covariates; it is not a prior.
+#' Formula coefficients are `log_q` or `logit_q`, respectively.
 #' Ordinary terms in `q_form` build \eqn{X_q}. An additive [mono()] term
 #' builds cumulative step indicators \eqn{B}; its optimized increments are
-#' `dq`, on the log-q scale. For level \eqn{k}, its contribution is
+#' `dq`, on the selected link scale. For level \eqn{k}, its contribution is
 #' \eqn{\sum_{j<k}d_j}. A zero step gives an exact plateau. Separate `by`
 #' groups have independent steps; ordinary terms supply their baselines.
 #' Monotonicity holds with other covariates held constant.

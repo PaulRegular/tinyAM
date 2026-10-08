@@ -154,6 +154,10 @@ rprocess_rw <- function(x, sd = 1) {
 #' effects are integrated out by [fit_tam()], not by this function itself.
 #' Normal densities are evaluated on log observations, so predictions on the
 #' natural scale are conditional medians rather than arithmetic means.
+#' Catchability uses the link chosen by `index_settings$q_link`: the log link
+#' exponentiates the formula predictor, while the logit link applies the inverse
+#' logit and restricts q to between zero and one. Both estimation and simulation
+#' use the same predictor, including any [mono()] increments.
 #'
 #' With `simulate = TRUE`, recruitment and mortality states are drawn first.
 #' N is then constructed through initial-age and cohort recursion, followed by
@@ -454,10 +458,15 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   sd_catch <- exp(log_sd_catch_supplied + log_sd_catch_eff)
   sd_index <- exp(log_sd_index_supplied + log_sd_index_eff)
   sd_obs <- c(sd_catch, sd_index)
-  log_q_obs <- drop(q_modmat %*% log_q) # length = number of survey index rows
+  q_coef <- if (identical(index_settings$q_link, "logit")) logit_q else log_q
+  q_predictor <- drop(q_modmat %*% q_coef)
   if (!is.null(dat$q_mono_modmat)) {
-    log_q_obs <- log_q_obs + drop(dat$q_mono_modmat %*% dq)
+    q_predictor <- q_predictor + drop(dat$q_mono_modmat %*% dq)
   }
+  # Compute log(q) directly to remain stable near the logit boundaries.
+  log_q_obs <- if (identical(index_settings$q_link, "logit")) {
+    -RTMB::logspace_add(0, -q_predictor)
+  } else q_predictor
   samp_time <- obs_map$samp_time
 
   ic <- obs_map$type == "catch"

@@ -77,6 +77,11 @@
 #' optimizes the remaining fixed effects. [mono()] increments `dq` have a zero
 #' lower bound. Their SEs remain on the increment scale, but symmetric Wald
 #' intervals are only local approximations at a boundary.
+#' Set `index_settings$q_link = "logit"` to restrict the full catchability
+#' prediction to between zero and one; the default `"log"` allows q above one.
+#' Formula coefficients are then named `logit_q`, and [mono()] increments
+#' act on logit-q. Starting q coefficients must use the selected link scale:
+#' old `log_q` starts are not reused as `logit_q`. See [make_dat()] and [tidy_par()].
 #'
 #' Random-effect blocks are chosen automatically from the model settings:
 #'

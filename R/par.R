@@ -66,9 +66,11 @@
 #' - **Observation model**
 #'   - `log_sd_catch` (length `ncol(dat$sd_catch_modmat)`) adjusting any supplied SDs
 #'   - `log_sd_index` (length `ncol(dat$sd_index_modmat)`) adjusting any supplied SDs
-#'   - `log_q` (length `ncol(dat$q_modmat)`)
+#'   - `log_q` for `q_link = "log"`, or `logit_q` for `q_link = "logit"`
+#'     (length `ncol(dat$q_modmat)`). Zero coefficients start q at 1 or 0.5,
+#'     respectively, before any [mono()] increments.
 #'   - `dq` only for [mono()] terms (length `ncol(dat$q_mono_modmat)`):
-#'     fixed non-negative increments on the log-q scale, initialized to `0.05`
+#'     fixed non-negative increments on the selected q-link scale, initialized to `0.05`
 #'     for a nearly flat curve and bounded below by zero in [fit_tam()]. Names
 #'     identify transitions and groups; these are not absolute q levels.
 #'   - `missing` vector of length `sum(dat$fill_missing_map)` (placeholders for
@@ -140,10 +142,10 @@ make_par <- function(dat) {
   names(par$log_sd_catch) <- colnames(dat$sd_catch_modmat)
   par$log_sd_index <- numeric(ncol(dat$sd_index_modmat))
   names(par$log_sd_index) <- colnames(dat$sd_index_modmat)
-  par$log_q <- numeric(ncol(dat$q_modmat))
-  names(par$log_q) <- colnames(dat$q_modmat)
+  q_par <- if (identical(dat$index_settings$q_link, "logit")) "logit_q" else "log_q"
+  par[[q_par]] <- setNames(numeric(ncol(dat$q_modmat)), colnames(dat$q_modmat))
   if (!is.null(dat$q_mono_modmat)) {
-    # Small positive log-q steps start the monotonic curve close to flat.
+    # Small positive link-scale steps start the monotonic curve close to flat.
     par$dq <- setNames(rep(0.05, ncol(dat$q_mono_modmat)),
                        colnames(dat$q_mono_modmat))
   }

@@ -91,9 +91,11 @@ See \code{\link[=make_dat]{make_dat()}} for the choices and weak-identification 
 \itemize{
 \item \code{log_sd_catch} (length \code{ncol(dat$sd_catch_modmat)}) adjusting any supplied SDs
 \item \code{log_sd_index} (length \code{ncol(dat$sd_index_modmat)}) adjusting any supplied SDs
-\item \code{log_q} (length \code{ncol(dat$q_modmat)})
+\item \code{log_q} for \code{q_link = "log"}, or \code{logit_q} for \code{q_link = "logit"}
+(length \code{ncol(dat$q_modmat)}). Zero coefficients start q at 1 or 0.5,
+respectively, before any \code{\link[=mono]{mono()}} increments.
 \item \code{dq} only for \code{\link[=mono]{mono()}} terms (length \code{ncol(dat$q_mono_modmat)}):
-fixed non-negative increments on the log-q scale, initialized to \code{0.05}
+fixed non-negative increments on the selected q-link scale, initialized to \code{0.05}
 for a nearly flat curve and bounded below by zero in \code{\link[=fit_tam]{fit_tam()}}. Names
 identify transitions and groups; these are not absolute q levels.
 \item \code{missing} vector of length \code{sum(dat$fill_missing_map)} (placeholders for

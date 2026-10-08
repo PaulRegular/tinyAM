@@ -12,10 +12,12 @@
 #' increasingly; factors (including ordered factors) use their declared levels.
 #' Supply factor levels in the scientifically intended order.
 #'
-#' The first represented level has no increment. Subsequent log-q levels add
+#' The first represented level has no increment. Subsequent link-scale levels add
 #' cumulative non-negative increments `dq`, fitted directly with a lower bound
-#' of zero by [fit_tam()]. These are increments on the log-q scale, not absolute
-#' q. Steps start at 0.05. A zero step gives an exact plateau between separate
+#' of zero by [fit_tam()]. These are increments on the log-q scale by default,
+#' or logit-q when `index_settings$q_link = "logit"`, not absolute q.
+#' Both links preserve non-decreasing q. Steps start at 0.05.
+#' A zero step gives an exact plateau between separate
 #' levels at a finite parameter value; pooled levels also retain identical q.
 #' When optimizing [nll_fun()] directly, supply the same zero lower bounds for
 #' `dq`. Standard errors describe local curvature on the increment scale;
