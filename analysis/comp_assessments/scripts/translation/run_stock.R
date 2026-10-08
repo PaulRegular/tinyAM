@@ -3,7 +3,7 @@ root <- file.path("analysis", "comp_assessments")
 pkgload::load_all(".", quiet = TRUE)
 source(file.path(root, "R", "run_assessment.R"))
 
-assessment_id <- "dfo_cod_4t4vn_2019"
+assessment_id <- "dfo_herring_4tvn_spring_2024"
 
 ## Used for interactive tweaks to the translation script
 # source <- read_assessment(assessment_id, database = read_database())

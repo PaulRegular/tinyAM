@@ -119,7 +119,7 @@ translate_stock <- function(source) {
     ),
     settings = list(
       N_settings = list(process = "off", init = "exp"),
-      F_settings = list(process = "rw", mu_form = ~ NULL,
+      F_settings = list(process = "rw", mu_form = NULL,
                         mean_ages = 3:10),
       M_settings = list(process = "off", mu_form = NULL,
                         mu_supplied = ~ M_assumption, mean_ages = 3:10),

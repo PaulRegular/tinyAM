@@ -99,17 +99,41 @@ translate_stock <- function(source) {
     assumptions = source$assumptions
   )
   obs$weight$M_process_center <- 0.2
+  obs$catch$age_blocks <- cut_ages(
+    obs$catch$age,
+    c(2, 4, 6, 8, 11)
+  )
+  obs$index$q_period <- tinyAM::cut_years(
+    obs$index$year,
+    c(1990, 2000, 2010, 2021)
+  )
 
   settings <- list(
-    N_settings = list(process = "off", init = "exp"),
-    F_settings = list(process = "ar1", mu_form = NULL),
-    M_settings = list(
-      process = "ar1", mu_form = NULL, mu_supplied = ~ M_process_center,
-      age_breaks = c(2, 7, 11), first_dev_year = 1978L
+    N_settings = list(
+      process = "off",
+      init = "exp"
     ),
-    catch_settings = list(sd_form = ~ 1, fill_missing = TRUE),
-    index_settings = list(q_form = ~ 1, sd_form = ~ 1,
-                          fill_missing = TRUE)
+    F_settings = list(
+      process = "ar1",
+      mu_form = ~ 0 + age_blocks,
+      mean_ages = 6:8
+    ),
+    M_settings = list(
+      process = "ar1",
+      mu_form = NULL,
+      mu_supplied = ~ M_process_center,
+      age_breaks = c(2, 7, 11),
+      first_dev_year = 1978L
+    ),
+    catch_settings = list(
+      sd_form = ~ 1,
+      fill_missing = FALSE
+    ),
+    index_settings = list(
+      q_form = ~ 0 + mono(age) + q_period,
+      sd_form = ~ 1,
+      fill_missing = FALSE
+    )
   )
   dat <- do.call(tinyAM::make_dat, c(
     list(obs = obs, years = years, ages = ages), settings
