@@ -4,8 +4,8 @@ source_file <- file.path(root, "source_cache", assessment_id, "assessment.txt")
 lines <- readLines(source_file, warn = FALSE)
 
 read_table <- function(number, next_number, value_count) {
-  start <- grep(paste0("Table ", number, "."), lines, fixed = TRUE)[[1]]
-  end <- grep(paste0("Table ", next_number, "."), lines, fixed = TRUE)
+  start <- grep(paste0("^Table ", number, "\\."), trimws(lines))[[1]]
+  end <- grep(paste0("^Table ", next_number, "\\."), trimws(lines))
   end <- end[end > start][[1]]
   rows <- lines[seq.int(start + 1L, end - 1L)]
   rows <- rows[grepl("^[[:space:]]*(19|20)[0-9]{2}[[:space:]]+", rows)]
@@ -13,10 +13,14 @@ read_table <- function(number, next_number, value_count) {
   if (!length(values) || any(lengths(values) != value_count + 1L)) {
     stop("Unexpected source row structure in Table ", number, ".")
   }
-  matrix(as.numeric(unlist(values)), ncol = value_count + 1L, byrow = TRUE)
+  values <- unlist(values)
+  values[values == "-"] <- NA_character_
+  matrix(as.numeric(values), ncol = value_count + 1L, byrow = TRUE)
 }
 
 tables <- list(
+  catch_weight = read_table(24, 25, 10),
+  sentinel = read_table(28, 29, 11),
   catch = read_table(30, 31, 10),
   biomass = read_table(32, 33, 12),
   abundance = read_table(33, 34, 12),
@@ -52,6 +56,11 @@ check_annual <- function(measure, source, column, age_group = "") {
 
 catch <- inputs[inputs$type == "catch", , drop = FALSE]
 catch <- catch[order(catch$year, catch$age), , drop = FALSE]
+weights <- inputs[inputs$type == "catch_weight", , drop = FALSE]
+weights <- weights[order(weights$year, weights$age), , drop = FALSE]
+weight_values <- as.vector(t(tables$catch_weight[, -1, drop = FALSE]))
+index <- inputs[inputs$type == "index", , drop = FALSE]
+index <- index[order(index$year, index$age), , drop = FALSE]
 fixed_m <- inputs[inputs$type == "M", , drop = FALSE]
 m_estimated <- outputs[outputs$measure == "natural_mortality_at_age", , drop = FALSE]
 m_source <- tables$natural_mortality[tables$natural_mortality[, 1] >= 1984,
@@ -59,6 +68,17 @@ m_source <- tables$natural_mortality[tables$natural_mortality[, 1] >= 1984,
 m_estimated <- m_estimated[order(m_estimated$year, m_estimated$age), , drop = FALSE]
 
 stopifnot(
+  all(tables$catch_weight[, 1] == 1974:2024),
+  sum(is.na(weight_values)) == 7L,
+  nrow(weights) == 503L,
+  same_values(weights$value, weight_values[!is.na(weight_values)]),
+  all(weights$unit == "kg"),
+  all(tables$sentinel[, 1] == 1995:2024),
+  nrow(index) == 330L,
+  same_values(index$value, as.vector(t(tables$sentinel[, -1, drop = FALSE]))),
+  all(index$survey == "Sentinel mobile"),
+  all(index$unit == "mean numbers per tow"),
+  all(index$sampling_time == 0.54),
   all(tables$catch[, 1] == 1974:2024),
   all(tables$biomass[, 1] == 1973:2024),
   all(tables$abundance[, 1] == 1973:2024),
