@@ -68,6 +68,29 @@ obs <- database_to_tam_obs(
   weight_survey = "RV", sampling_times = sampling_times
 )
 expected_age_numbers <- 1000 * c(0.25, 0.75) / sum(c(0.25, 0.75) * c(1, 2))
+
+# Equivalent biomass and weight units must give identical numbers of fish.
+for (unit in c("kg", "t", "thousand t", "million t", "million tonnes")) {
+  equivalent <- inputs
+  total <- equivalent$type == "index" & equivalent$measure == "total_biomass"
+  equivalent$unit[total] <- unit
+  equivalent$value[total] <- switch(unit, kg = 1000, t = 1,
+                                    "thousand t" = 1e-3,
+                                    "million t" = 1e-6,
+                                    "million tonnes" = 1e-6)
+  for (weight_unit in c("kg/fish", "g/fish")) {
+    weights <- equivalent$type == "weight"
+    equivalent$unit[weights] <- weight_unit
+    equivalent$value[weights] <- inputs$value[weights] *
+      if (weight_unit == "g/fish") 1000 else 1
+    converted <- database_to_tam_obs(
+      "translation_fixture", equivalent, years = 2000:2001, ages = 1:2,
+      weight_survey = "RV", sampling_times = sampling_times
+    )
+    expect_equal(converted$index$obs, obs$index$obs)
+  }
+}
+
 expect_equal(obs$index$obs[obs$index$year == 2000 & obs$index$survey == "RV"],
              expected_age_numbers)
 expect_equal(obs$index$obs[obs$index$year == 2000 & obs$index$survey == "Longline"],

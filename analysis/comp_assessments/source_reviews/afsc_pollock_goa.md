@@ -78,7 +78,10 @@ Survey selectivity shapes and fixed/estimated limbs are now recorded separately 
 
 Final Table 1.23 adds 48 accepted-run beginning-year age-3+ biomass estimates for 1977–2024, in thousand tonnes. The previous-assessment columns are excluded. SSB and recruitment in the same rows agree exactly with independently extracted Table 1.24. Harvest rate is catch divided by age-3+ biomass, not instantaneous F; it is not used to manufacture F-at-age.
 
-## tinyAM translation review
+## Earlier tinyAM translation review
+
+The following records the earlier exploratory models. The current
+user-selected settings and their scale audit are recorded in the final section.
 
 The pinned selectivity equations do not pool older survey ages explicitly. They
 use a descending logistic for Shelikof, an ascending logistic for ADF&G, and
@@ -143,7 +146,7 @@ are omitted by the lognormal likelihood.
 | Polynomial catch SD, free age q | 1007.277 | 0.0170 | Yes | Above gradient tolerance |
 | Survey shape + polynomial catch SD | 2303.757 | 139.0 | No | Evaluation limit; rejected |
 | Same combined model, started from the converged survey-shape fit | 1043.167 | 3.57 | Yes | Evaluation limit; rejected |
-| Detailed catch-at-age data, retained settings | 1208.747 | 0.0008 | Yes | Converged; current fit |
+| Detailed catch-at-age data, retained settings | 1208.747 | 0.0008 | Yes | Converged; earlier fit |
 
 In the earlier age-incomplete fits, the common catch log-SD was 0.417 and the
 survey-shape fit had 18 exactly-zero monotone increments. The polynomial-only
@@ -164,5 +167,81 @@ abundance/SSB discrepancy.
 
 A quadratic mean-log-F sensitivity was also attempted with the survey-shape
 and polynomial-SD changes, but was stopped after 20 minutes without a completed
-fit. Its convergence and Hessian are unknown. It was not retained: the recipe
-still uses the original age-specific F means and AR1 process.
+fit. Its convergence and Hessian are unknown. It was not retained at that time.
+
+## Scale audit and current translation (7 October 2026)
+
+The current user-selected recipe uses exponential initial abundance, IID N
+process deviations, age-specific temporal random walks in F, a common catch
+log-SD, and survey-specific paired-age q blocks (1-2, 3-4, 5-6, 7-8, 9-10).
+The Shelikof observed environmental effect and ADF&G annual effects remain.
+Survey log-SDs combine supplied aggregate-index log-SDs with an estimated level
+per survey. These settings supersede the earlier exploratory fits above.
+
+The pinned C++ source constructs catch biomass as
+`1e6 * sum(C * wt_fsh)` in tonnes, with C and population N in billions of fish
+and weights in kg per fish. Its survey biomass equation omits that factor:
+`sum(q * N * exp(-timing * Z) * selectivity * wt_srv)` is therefore in million
+tonnes. The canonical survey totals correctly retain that native unit. The
+translation converts million tonnes to kg with a factor of 1e9, then obtains
+individual fish as `biomass_kg * p_age / sum(p_age * weight_kg)`.
+The recent conversion fix in commit 4dd97fd corrected the former factor of
+1000 for these totals, which understated survey numbers by a factor of one
+million. No further unit error was found.
+
+Catch numbers from final SAFE Table 1.6 remain in million fish in the database
+and become individual fish with a factor of 1e6; total catch tonnes become kg
+with a factor of 1000. Annual stock, catch and survey weights remain kg per
+fish. Accepted N and recruitment remain million fish, and SSB/biomass remain
+thousand tonnes; comparison factors of 1e-6 convert tinyAM fish/kg to those
+native reporting units without altering source values.
+
+Before omitting the pooled Shelikof bin, reconstructed numbers multiplied by
+matching survey weights reproduce every corresponding source biomass total
+for all four surveys (maximum relative error 2.3e-16). Omission of that bin
+leaves the retained ages unchanged. As an independent scale check, the 1992
+Shelikof ages 4-9 reproduce final SAFE Table 1.11 to its printed precision
+(0.1 million fish). Native-input reconstructions for bottom-trawl and summer
+surveys differ slightly from the published Table 1.9 counts; those tables are
+not interchangeable with the native composition/weight inputs. No correction
+was applied to force agreement. Age-reading error and grouped young ages are
+still translation approximations, not unit conversions.
+
+The unchanged current model converged: optimizer code 0, objective 1261.842,
+maximum absolute gradient 0.000919, and positive-definite Hessian. Median
+observation-level q was 0.409 (ADF&G), 1.906 (bottom trawl), 1.251 (Shelikof),
+and 1.041 (summer acoustic). These are the full observation q values including
+annual/environmental effects, rather than exponentiated covariate coefficients.
+q is an estimated index-to-population multiplier and is not constrained to
+0-1. The source's separately normalized selectivity curves and bottom-trawl q
+prior are not reproduced by this recipe. The remaining abundance/q scale
+tradeoff has not been resolved by this unit audit; no additional scaling or
+model adjustment was applied merely to lower q.
+
+## Optional logit-q sensitivity (7 October 2026)
+
+`scripts/translation/review_goa_pollock_q_link.R` fits the same observations
+and settings with `index_settings$q_link` set to `"log"` or `"logit"`.
+The main stock recipe retains the log link. The review dashboard contains both
+fits and the accepted outputs; its files and diagnostics are cached locally.
+
+Both links converged with positive-definite Hessians. The logit fit had objective
+1266.537 versus 1261.842 for the log link, and maximum gradient 0.00106 versus
+0.00092. All logit q predictions were below one, with survey maxima 0.398
+(ADF&G), 0.703 (bottom trawl), 0.677 (Shelikof), and 0.420 (summer acoustic).
+Catch/index standardized residual SDs were 0.679/0.904, versus 0.690/0.906.
+
+Terminal 2024 SSB increased from 134,050 to 467,441 tonnes. Its log-scale SE
+increased from 0.262 to 0.715; the logit fit's approximate 95% interval was
+115,019-1,899,690 tonnes. A second fit starting other parameters from the
+previous log-link fit and projecting capped baseline q onto the logit design
+reproduced the same objective and SSB, with maximum gradient 0.000192.
+The cap (0.99) was used only to construct finite starting values, not as a
+model bound or adjustment to observations.
+
+The logit option changes environmental/year effects from constant multipliers
+of q to additive effects on logit-q. It is therefore more than a simple cap
+on the original log-link predictor. Its restriction does not anchor q near
+one or reproduce the source's bottom-trawl baseline-q prior. The trial is
+numerically valid but does not establish a better abundance scale, and its
+wider uncertainty warrants review before replacing the existing translation.

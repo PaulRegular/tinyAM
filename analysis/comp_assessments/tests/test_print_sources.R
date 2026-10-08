@@ -12,7 +12,7 @@ all_sources <- data.frame(
 )
 all_lines <- print_sources(all_sources)
 stopifnot(
-  identical(all_lines[[1L]], "### Assessment documentation"),
+  identical(all_lines[[1L]], "#### Assessment documentation"),
   all(vapply(c(
     "- [Assessment report](https://example.test/report%2F2026)",
     "- [Framework / methodology](https://example.test/framework)",
