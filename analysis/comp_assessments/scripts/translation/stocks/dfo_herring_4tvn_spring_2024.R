@@ -8,6 +8,7 @@ translate_stock <- function(source) {
       inputs$season == "spring",
     , drop = FALSE
   ]
+  gear_catch <- catch[c("year", "age", "fleet", "value")]
   catch <- aggregate(value ~ year + age, catch, sum)
   catch_rows <- data.frame(
     assessment_id = source$assessment$assessment_id,
@@ -27,9 +28,22 @@ translate_stock <- function(source) {
       inputs$season == "spring" & inputs$value > 0,
     , drop = FALSE
   ]
-  combined_weights <- aggregate(value ~ year + age, gear_weights, function(x) {
-    exp(mean(log(x)))
-  })
+  gear_weights <- merge(
+    gear_weights[c("year", "age", "fleet", "value")], gear_catch,
+    by = c("year", "age", "fleet"), suffixes = c("_weight", "_catch")
+  )
+  combined_weights <- do.call(rbind, lapply(
+    split(gear_weights, interaction(gear_weights$year, gear_weights$age)),
+    function(x) {
+      if (!nrow(x)) return(NULL)
+      value <- if (sum(x$value_catch) > 0) {
+        stats::weighted.mean(x$value_weight, x$value_catch)
+      } else {
+        mean(x$value_weight)
+      }
+      data.frame(year = x$year[1], age = x$age[1], value = value)
+    }
+  ))
   weight_grid <- expand.grid(year = years, age = ages)
   weight_grid <- merge(weight_grid, combined_weights,
                        by = c("year", "age"), all.x = TRUE, sort = FALSE)
@@ -61,7 +75,8 @@ translate_stock <- function(source) {
     sampling_time = NA_real_, source_type = "translation_assumption",
     source_reference = "DFO Research Document 2024/058, Tables 5 and 9; DFO Research Document 2022/068, p. 6",
     transformation = paste(
-      "Geometric mean of available fixed/mobile weights by year-age; missing",
+      "Catch-number-weighted arithmetic mean of available fixed/mobile weights",
+      "by year-age (unweighted mean if both catches are zero); missing",
       "values interpolated within age. Beginning-year age a uses the geometric",
       "mean of age a-1 in year t-1 and age a in year t; age 2 and 1978 use",
       "same-year weights because earlier ages/years are unavailable."
@@ -107,14 +122,7 @@ translate_stock <- function(source) {
     c(2, 4, 6, 8, 11)
   )
 
-  # Provisional unit conversion: Table 15 appears to be
-  # effectively in thousands of fish.
-  is_acoustic <- obs$index$survey == "4Tmno acoustic survey"
-  obs$index$obs[is_acoustic] <-
-    obs$index$obs[is_acoustic] * 1000
-
   is_cpue <- obs$index$survey == "Spring fixed-gear CPUE"
-  cpue_min_age <- min(obs$index$age[is_cpue])
 
   cpue_years <- sort(unique(obs$index$year[is_cpue]))
   cpue_breaks <- floor(seq(min(cpue_years), max(cpue_years), length.out = 4))
@@ -125,7 +133,7 @@ translate_stock <- function(source) {
 
   settings <- list(
     N_settings = list(
-      process = "iid", # would not converge with "off"
+      process = "iid",
       init = "exp"
     ),
     F_settings = list(
@@ -146,7 +154,7 @@ translate_stock <- function(source) {
     ),
     index_settings = list(
       q_form = ~ 0 + mono(age, by = survey) + cpue_period,
-      q_link = "logit", # acoustic survey is expected to, at best, be very close to 1.
+      q_link = "log",
       sd_form = ~ 0 + survey,
       fill_missing = FALSE
     )
@@ -183,14 +191,19 @@ translate_stock <- function(source) {
     log(source_recruitment$value[-1] * 1000), as.character(years[-1])
   )
   start_par$log_f[] <- log(pmax(source_F, 1e-6))
-  index_rows <- obs$index
+  start_par$log_n[] <- log(source_N[-1, -1])
+  index_rows <- dat$obs$index
   index_N <- source_N[cbind(match(index_rows$year, years), match(index_rows$age, ages))]
   index_F <- source_F[cbind(match(index_rows$year, years), match(index_rows$age, ages))]
-  q_start <- stats::median(
-    index_rows$obs / (index_N * exp(-(index_F + 0.2) * index_rows$samp_time)),
-    na.rm = TRUE
-  )
-  start_par$log_q[] <- log(q_start)
+  q_start <- index_rows$obs /
+    (index_N * exp(-(index_F + 0.2) * index_rows$samp_time))
+  positive <- is.finite(q_start) & q_start > 0
+  start_par$log_q[] <- stats::lm.fit(
+    dat$q_modmat[positive, , drop = FALSE],
+    log(q_start[positive]) - drop(
+      dat$q_mono_modmat[positive, , drop = FALSE] %*% start_par$dq
+    )
+  )$coefficients
   start_par$log_sd_r <- log(0.5)
   start_par$log_sd_f <- log(0.2)
   start_par$log_sd_m <- log(0.075)
@@ -205,11 +218,20 @@ translate_stock <- function(source) {
     comparison_outputs = source$outputs[
       source$outputs$measure %in% c(
         "numbers_at_age", "fishing_mortality_at_age", "biomass_at_age",
-        "recruitment", "Fbar"
-      ), , drop = FALSE
+        "recruitment", "Fbar", "total_numbers", "total_biomass",
+        "SSB", "mature_biomass_at_age"
+      ) & !(source$outputs$measure %in% c("total_numbers", "total_biomass") &
+              !is.na(source$outputs$age_group)), , drop = FALSE
     ],
     comparison_scales = c(N = 1e-3, F = 1, recruitment = 1e-3,
-                          biomass_at_age = 1e-3, F_bar = 1),
+                          abundance = 1e-3, biomass = 1e-3,
+                          biomass_at_age = 1e-3, ssb = 1e-3,
+                          ssb_mat = 1e-3, F_bar = 1),
+    comparison_definitions = list(ssb = list(
+      status = "matched",
+      definition = "January 1 mature biomass at ages 4-11+, derived from reported biomass-at-age and maturity",
+      reason = "This common-definition comparison is not the accepted assessment's April 1 SSB. Source uncertainty is unavailable."
+    )),
     start_par = start_par,
     settings = settings,
     background = c(
@@ -224,15 +246,18 @@ translate_stock <- function(source) {
       "|---|------|------|------|",
       "| Years | The SCA reports 1978-2023 population estimates; CPUE is available for 1990-2021. | Fit 1978-2023 and retain the spring fixed-gear CPUE series at 1990-2021. | Catch and population outputs extend beyond the CPUE series. |",
       "| Ages | Ages 2-11+, with age 11 as the plus group. | Ages 2-11, with age 11 as the plus group. | The reported age range is retained. |",
-      "| N | Age-2 recruitment varies annually; older first-year cohorts are reconstructed from recruitment and survival. | Exponential initial abundance with tinyAM's estimated annual recruitment variation. | tinyAM does not reproduce the source's initial-cohort estimation or fixed recruitment SD. |",
+      "| N | Age-2 recruitment varies annually, with initial-cohort deviations; older cohorts subsequently follow survival. | Exponential initial abundance, annual recruitment variation and IID process error for older ages. | The older-age N process is retained for a stable fit; it adds flexibility absent from the source survival model. Recruitment variation is estimated rather than fixed. |",
       "| F | Logistic fishery selectivity changes across three time blocks; the source estimates initial fishing mortality and observation/process terms. | Age- and year-correlated AR1 F states. | This is a compact approximation to changing selectivity; it is not the source's period-specific logistic model. |",
       "| M | Log-M follows random walks for ages 2-6 and 7-11+, with 0.2 initial-M prior means and increment SD fixed at 0.075. | Two M age blocks follow an AR1 process centered on 0.2. | tinyAM's random walk leaves its first M state unpenalized; AR1 supplies a mean-reverting initial-state distribution, but changes the source process and estimates its variation. |",
-      "| Catch | Fixed- and mobile-gear catch-at-age are reported separately in thousand fish. The accepted SCA uses total catch and age-composition likelihoods. | Sum gear catches into one age-specific stream; zero ages are filled as latent observations for the lognormal likelihood. | tinyAM cannot reproduce the source total-plus-composition likelihood. |",
-      "| Index | Spring fixed-gear CPUE and the fishery-independent acoustic survey are used with age compositions and age-aggregated biomass indices; the acoustic biomass likelihood was weighted by 3 in the 2022 method report. | Use age-specific CPUE and Table 15 acoustic values on their reported native scale, at approximate timings of 0.25 and 0.75. | tinyAM fits age-specific lognormal indices rather than separate age-composition and aggregate-biomass likelihoods. Table 15 gives no numeric scale multiplier; the current q formula is retained and therefore shares its q effects across surveys. |",
-      "| Weights and maturity | The source uses a knife-edge maturity schedule at ages 3-4 and beginning-year weights derived from gear-specific catch weights. | Use the same maturity schedule and a fit-only weight surface derived from the published gear weights. | Gear combination for the source weight surface is not fully specified; see the explicit transformation in this recipe. |",
-      "| Comparison | Numerical January 1 N, biomass-at-age and F-at-age are published, with age-2 recruitment and Fbar. | Compare these common quantities; the source's tabulated biomass is not SSB. | SSB and age-specific M are not available as numerical tables for this assessment. |",
+      "| Catch | Fixed- and mobile-gear catch-at-age are reported separately in thousand fish. The accepted SCA uses total catch and age-composition likelihoods. | Sum gear catches into one age-specific stream and convert to fish. Zeros and missing observations are excluded rather than filled. | tinyAM cannot reproduce the source total-plus-composition likelihood. |",
+      "| Index | Spring fixed-gear CPUE and the acoustic survey use age compositions and age-aggregated biomass indices; the acoustic biomass likelihood was weighted by 3 in the 2022 method report. | Use CPUE ages 4-11 and acoustic ages 2-10 at approximate timings of 0.25 and 0.75, with separate non-decreasing age-q curves and separate observation SDs. CPUE q changes in three time blocks. | tinyAM fits age-specific lognormal indices rather than composition plus aggregate biomass. The 2022 biomass likelihoods use CPUE ages 4-10 and acoustic ages 4-8. CPUE time blocks approximate the source q random walk. |",
+      "| Index scale | Table 15's acoustic index has no stated numeric multiplier. | Preserve the published values and estimate q with a log link. | q is an index scaling coefficient, not a verified fraction of fish surveyed; an upper bound of 1 would depend on an undocumented unit conversion. |",
+      "| Weights and maturity | Maturity is knife-edge between ages 3 and 4. Beginning-year weights use combined fishery weights and a geometric mean across adjacent age-year cells. | Combine gear weights with a catch-number-weighted mean, then apply the adjacent-cell geometric mean and the same maturity schedule. | Gear weighting is inferred: its median difference from weights implied by published biomass/N is 0.073%. Missing cells, age 2 and 1978 still require the documented approximation. |",
+      "| Comparison | January 1 N, biomass-at-age and F-at-age, age-2 recruitment and Fbar are tabulated. | Also show total abundance, total biomass and January 1 mature biomass derived from the source age tables. | Derived source totals have no uncertainty. The SSB panel compares January 1 mature biomass, not the assessment's April 1 SSB. No numerical M surface is available. |",
       "",
-      "The comparison is a structural approximation, not a reproduction of the accepted likelihood. The acoustic table values stay on their native scale; the 2025 biomass download is kept with the separate 2026 record. Acoustic timing is approximated by 0.75 from the late September to early October survey window, and the source's estimated M prior is not available as a tinyAM penalty."
+      "The comparison is a structural approximation, not a reproduction of the accepted likelihood. Acoustic values stay on their native scale; the 2025 biomass download belongs to the separate 2026 record. Acoustic timing is approximated by 0.75 from the late September to early October survey window. The source's initial-M prior, fixed process SDs and acoustic likelihood weight are not reproduced.",
+      "",
+      "The current fit retains IID N, exponential initial abundance and AR1 M. Trials with source-like deterministic older-age survival or free/random initial abundance did not converge from the tested starts. An M random walk and smoother CPUE q converged but worsened agreement with the source outputs. The revised gear-weight calculation improves the biological representation; it does not remove the remaining differences in abundance, recruitment or mortality."
     )
   )
 }

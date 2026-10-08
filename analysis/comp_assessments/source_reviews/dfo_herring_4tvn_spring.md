@@ -100,24 +100,88 @@ uses the 1994-2023 Table 15 acoustic age series at a late-season midpoint of
 tinyAM instead treats the reported age series as age-specific lognormal index
 observations on the source scale. This preserves the published values without
 inventing a multiplier, but it is not the accepted model's likelihood. The
-existing q formula is unchanged and therefore shares catchability effects
-between the two surveys.
+two surveys have separate non-decreasing age-q curves and separate observation
+SDs. CPUE catchability varies in three blocks (1990-1999, 2000-2009 and
+2010-2021), rather than the source's annual random walk. Acoustic catchability
+is constant through time. A log link allows q to act as an index scaling
+coefficient; the undocumented acoustic multiplier does not justify interpreting
+q as a surveyed fraction bounded by 1. The provisional multiplication of
+acoustic observations by 1,000 has been removed. Changing that constant and
+the q link leaves the fitted population states essentially unchanged in this
+case, because the previous upper bound was not active.
 
 The recipe builds a fit-only stock-weight approximation from the published
-gear weights. It combines the two gear values with a geometric mean when both
-are available, interpolates missing values within age, and constructs
+gear weights. It combines the two gear values with an arithmetic mean weighted
+by catch numbers at that age; if both gear catches are zero, it uses the mean
+of available positive weights. It interpolates missing values within age and constructs
 beginning-year weights from the geometric mean of age `a - 1` in year `t - 1`
 and age `a` in year `t`. Age 2 and the first modeled year use same-year
 weights because the earlier age-year cells are unavailable. These values are
-not added to the canonical source-input table.
+not added to the canonical source-input table. The gear-weighting rule is an
+inference, not a fully specified source instruction. Its median absolute
+percentage difference from the weights implied by the reported biomass/N
+surface is 0.073%, compared with 2.63% for the former equal geometric gear
+mean. Source biomass/N is used only to check this rule, never as an input to
+the fit. Boundary cells and rounding account for some remaining differences.
 
 The source publishes no numerical April 1 spawning biomass or age-specific M
 surface in the detailed output tables. Its tabulated biomass is January 1
-biomass, so it is not labeled as SSB. The tinyAM M process is centered on the
+biomass; the derived mature-biomass comparison is explicitly labeled January
+1 rather than accepted April 1 SSB. The tinyAM M process is centered on the
 source's 0.2 initial-M prior mean and split at ages 2-6 and 7-11+, but it uses
 AR1 rather than the source random walk because tinyAM's random-walk initial
 state is unpenalized and the source prior cannot be applied as a matching
 penalty. MLE M estimates are not used as fixed inputs or comparison values.
+
+The translation retains the revised model's exponential initial abundance,
+IID N process for older ages, AR1 F, and two AR1 M blocks. F mean age blocks
+are 2-3, 4-5, 6-7 and 8-11; Fbar uses ages 6-8. The source model does not
+include the same older-age N process and estimates initial cohorts differently.
+Combined catch-at-age is converted from thousand fish to fish. Both catch and
+index settings exclude zeros and missing values instead of estimating filled
+observations. Source N, F and recruitment provide starting values only;
+catchability starts use the corresponding, sorted observation rows.
+
+## Refinement trials (October 2026)
+
+Each trial changed one assumption from the revised model. The native-scale,
+log-q version was used for the trials below; converged states from that fit
+were also used as starting values where needed. The source-like choices are
+approximations using existing tinyAM settings, not reconstructions of the
+accepted likelihood.
+
+| Trial | Converged / positive Hessian | Median absolute % difference: total N | January 1 mature biomass | Decision |
+|---|---|---:|---:|---|
+| Revised input model | Yes / yes | 42.2 | 17.0 | Baseline |
+| Native acoustic scale and log q | Yes / yes | 42.2 | 17.0 | Retain: avoids assuming an unpublished multiplier or a q fraction |
+| Restrict CPUE to ages 4-10 and acoustic to 4-8 | Yes / yes | 32.8 | 22.6 | Do not retain: mixed agreement; keep the more detailed published indices |
+| M random walk | Yes / yes | 49.7 | 27.5 | Do not retain: worse agreement; no matching initial-M prior |
+| Separate survey baselines with a three-degree-of-freedom natural spline for CPUE year | Yes / yes | 50.5 | 31.8 | Do not retain: worse agreement than CPUE blocks |
+| No older-age N process | No / no | — | — | Do not retain: false convergence from source and fitted-state starts |
+| Free initial abundance | No / no | — | — | Do not retain: false convergence/evaluation limit |
+| Random initial abundance | No / no | — | — | Do not retain: false convergence |
+| Final, with catch-number-weighted gear weights | Yes / yes | 42.2 | 19.0 | Retain: better supported biological inputs; overall output agreement is mixed |
+
+The final fit has optimizer code 0, objective 1173.766 and a positive-definite
+reported Hessian. Its raw maximum gradient is about 18.24 at a zero monotone-q
+increment; a positive derivative there satisfies the lower-bound optimality
+condition. The package's convergence check projects that component to zero.
+The maximum projected gradient is 0.000144, below the 0.01 tolerance.
+The native/log-q fit reproduces the original population-state estimates to
+numerical tolerance. Gear weights enter derived biomass, not the number-based
+observation likelihood, so their correction does not change fitted N or F.
+
+The final mean absolute percentage difference in January 1 mature biomass is
+24.9%, compared with 25.3% before the gear-weight correction. Its terminal-year
+difference improves from -36.5% to -33.8%, while its median difference worsens
+from 17.0% to 19.0%. Total biomass's terminal difference improves from -57.0%
+to -55.4%. This is a modest biological correction, not a general improvement
+in replication: terminal abundance remains 64.5% lower and recruitment 88.5%
+lower than the source MLEs. Matching source aggregate/composition likelihoods,
+acoustic weighting, M priors and fixed process SDs remains outside this
+translation. Failed trial fits are not evidence that these alternatives are
+scientifically inappropriate; only the tested starts/settings are ruled out
+for this recipe.
 
 The stock does not yet have a Charbonneau identifier in the local crosswalk.
 The identifier is left blank until a source crosswalk can confirm it.

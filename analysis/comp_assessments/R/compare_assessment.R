@@ -197,7 +197,7 @@
     reason <- "No numerical output is available on the matching definition."
     status <- "unavailable"
     comparison_definition <- comparison_definitions[[metric]]
-    if (metric %in% c("N", "F", "M", "biomass_at_age") &&
+    if (metric %in% c("N", "F", "M", "biomass_at_age", "ssb_mat") &&
         !is.null(source) && !is.null(tiny)) {
       cells <- .assessment_age_comparison_cells(
         source, tiny, ages, comparison_age_groups[[metric]]
@@ -311,7 +311,7 @@
         reason <- "Native mortality mean lacks a recoverable matching age range and population weighting."
       }
     }
-    keys <- if (metric %in% c("N", "F", "M", "biomass_at_age")) c("year", "age") else "year"
+    keys <- if (metric %in% c("N", "F", "M", "biomass_at_age", "ssb_mat")) c("year", "age") else "year"
     if (!is.null(source) && !is.null(tiny) &&
         all(c(keys, "est") %in% names(source)) && all(c(keys, "est") %in% names(tiny))) {
       source <- source[c(keys, "est")]
