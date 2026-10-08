@@ -80,6 +80,16 @@
 "ices_cod_northeast_arctic_2026","N","thousand fish","matched","Reported age 3 compared with tinyAM age 3","",810,14949.1791479071,10.6592011226639,5.31839430009512,2026,25.9131885177515,0.987134390874878
 "ices_cod_northeast_arctic_2026","recruitment","thousand fish","matched","Recruitment at age 3","",81,70405.5935432365,9.28550212744745,8.07445093367222,2026,19.3605104892401,0.982864264188959
 "ices_cod_northeast_arctic_2026","ssb","t","matched","Accepted N with shared translated weights and maturity over ages 3-12","",81,78412.9572080367,12.2864226506928,7.14765393244498,2026,30.242988747679,0.963477672305577
+"afsc_pollock_goa_2024","abundance","million fish","matched","Total abundance across modeled ages 1-10; explicit reported age groups are matched to sums of tinyAM ages.","",55,2856.46597898518,29.2093741719673,26.1088400504727,2024,83.9302340585461,0.9366389697715
+"afsc_pollock_goa_2024","biomass","kt","matched","Accepted N with shared translated weights  over ages 1-10","",55,526.850880884142,26.150507350557,30.6783488627168,2024,48.8157495694707,0.911979372399175
+"afsc_pollock_goa_2024","biomass_at_age","kt","unavailable","Matching annual age-specific states","No numerical output is available on the matching definition.",0,,,,,,
+"afsc_pollock_goa_2024","F","per year","unavailable","Matching annual age-specific states","No numerical output is available on the matching definition.",0,,,,,,
+"afsc_pollock_goa_2024","F_bar","per year","unavailable","N-weighted F over ages 3,4,5,6,7,8,9,10","No numerical output is available on the matching definition.",0,,,,,,
+"afsc_pollock_goa_2024","M","per year","matched","Reported age 1 compared with tinyAM age 1","",550,5.55111512312578e-18,1.63268091856641e-15,0,2024,1.63268091856641e-15,
+"afsc_pollock_goa_2024","M_bar","per year","matched","N-weighted M over ages 3,4,5,6,7,8,9,10","",55,0.0108009621230843,2.9414765574724,2.36095050658713,2024,7.04639200048772,0.923895390412898
+"afsc_pollock_goa_2024","N","million fish","matched","Reported age 1 compared with tinyAM age 1","",550,345.72563447398,46.5523646906487,32.6411664150763,2024,104.078099327211,0.950064385305072
+"afsc_pollock_goa_2024","recruitment","million fish","matched","Recruitment at age 1","",55,2192.58422266977,50.4213397032512,25.9079717909254,2024,79.1611087609294,0.948870888387582
+"afsc_pollock_goa_2024","ssb","kt","matched","Accepted N with shared translated weights and maturity over ages 1-10","",55,128.030593807949,29.6725196160965,34.7991871048224,2024,11.0474769773237,0.924322252176407
 "dfo_herring_4tvn_spring_2024","abundance","thousand fish","matched","Total abundance across modeled ages 2-11; explicit reported age groups are matched to sums of tinyAM ages.","",46,254392.638808177,31.6592532133733,25.1141862215153,2023,-71.7665417474087,0.699621101282604
 "dfo_herring_4tvn_spring_2024","biomass","t","matched","Sum of reported biomass_at_age over ages 2-11","",46,44916.6376060908,38.9045207289914,29.3764669100793,2023,-62.8026650900533,0.689006930348469
 "dfo_herring_4tvn_spring_2024","biomass_at_age","t","matched","Reported age 2 compared with tinyAM age 2","",460,7818.33269830166,136.832066234413,70.4454490044824,2023,-42.8346229906,0.760840546830493
