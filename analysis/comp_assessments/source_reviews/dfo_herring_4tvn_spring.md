@@ -156,6 +156,7 @@ accepted likelihood.
 | Native acoustic scale and log q | Yes / yes | 42.2 | 17.0 | Retain: avoids assuming an unpublished multiplier or a q fraction |
 | Restrict CPUE to ages 4-10 and acoustic to 4-8 | Yes / yes | 32.8 | 22.6 | Do not retain: mixed agreement; keep the more detailed published indices |
 | M random walk | Yes / yes | 49.7 | 27.5 | Do not retain: worse agreement; no matching initial-M prior |
+| AR1 rather than IID older-age N process | Yes / yes | 53.6 | 27.1 | Do not retain: closer terminal biomass but worse historical agreement |
 | Separate survey baselines with a three-degree-of-freedom natural spline for CPUE year | Yes / yes | 50.5 | 31.8 | Do not retain: worse agreement than CPUE blocks |
 | No older-age N process | No / no | — | — | Do not retain: false convergence from source and fitted-state starts |
 | Free initial abundance | No / no | — | — | Do not retain: false convergence/evaluation limit |
@@ -182,6 +183,13 @@ acoustic weighting, M priors and fixed process SDs remains outside this
 translation. Failed trial fits are not evidence that these alternatives are
 scientifically inappropriate; only the tested starts/settings are ruled out
 for this recipe.
+
+The AR1 N sensitivity brings terminal January 1 mature biomass to 5.8% below
+the source, but its historical median difference is 27.1% and mean difference
+35.0% (versus 17.0% and 25.3% for the baseline with the same weights). Its
+median total-abundance difference also rises to 53.6%. It is therefore not
+selected merely for a closer terminal estimate; this trade-off warrants
+inspection if a correlated N process is explored further.
 
 The stock does not yet have a Charbonneau identifier in the local crosswalk.
 The identifier is left blank until a source crosswalk can confirm it.
