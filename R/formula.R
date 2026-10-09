@@ -1,4 +1,4 @@
-#' Structured catchability effects in formulas
+#' Random catchability effects in formulas
 #'
 #' @description
 #' Allow catchability to vary among groups or through time without fitting an
@@ -20,12 +20,6 @@
 #' AR1, one correlation. IID/AR1 effects are not forcibly centered. SD is estimated
 #' unless supplied: marginal SD for IID, increment/innovation SD for RW/AR1.
 #'
-#' `logistic(x)` is a rising selectivity curve
-#' \eqn{S(x) = 1 / (1 + \exp\{-k(x-a_{50})\})}, with positive slope \eqn{k}.
-#' It multiplies catchability after the selected inverse link. Thus logit q
-#' remains below one. Midpoint and slope are estimated separately for categorical
-#' `by` groups; numeric `by` is unsupported for logistic curves.
-#'
 #' Terms must be additive, with bare column names. Unsupported aliases and
 #' observation-specific IID effects indistinguishable from estimated observation
 #' error are rejected. For sparse data, simpler formulas or supplied process SDs
@@ -38,8 +32,7 @@
 #' includes future process variation. These are conditional predictions on the
 #' link scale, not marginal response-scale means.
 #'
-#' @param x Column defining levels (IID), ordered steps (RW/AR1), or numeric
-#'   age/size (logistic).
+#' @param x Column defining levels (IID) or ordered steps (RW/AR1).
 #' @param by Optional column: numeric multiplier or categorical groups.
 #' @param sd Optional positive fixed process SD. `NULL` estimates it.
 #' @param phi Optional fixed AR1 correlation in `[0, 1)`. `NULL` estimates it.
@@ -49,8 +42,7 @@
 #' ~ survey + rw(year, by = survey)
 #' ~ survey + ar1(year, by = survey)
 #' ~ survey + (1 | vessel)
-#' ~ survey + logistic(age, by = survey)
-#' @seealso [mono()], [prepare_tam()], [fit_tam()], [check_tam()]
+#' @seealso [catchability_curves], [prepare_tam()], [fit_tam()], [check_tam()]
 #' @name formula_effects
 #' @export
 iid <- function(x, by = NULL, sd = NULL) .formula_marker_error("iid")
@@ -63,7 +55,7 @@ rw <- function(x, by = NULL, sd = NULL) .formula_marker_error("rw")
 #' @export
 ar1 <- function(x, by = NULL, sd = NULL, phi = NULL) .formula_marker_error("ar1")
 
-#' @rdname formula_effects
+#' @rdname catchability_curves
 #' @export
 logistic <- function(x, by = NULL) .formula_marker_error("logistic")
 
@@ -388,17 +380,21 @@ logistic <- function(x, by = NULL) .formula_marker_error("logistic")
        nll = nll, parameters = simulated)
 }
 
-#' Monotonic survey catchability in a formula
+#' Rising catchability curves in formulas
 #'
 #' @description
-#' Use `mono()` in `index_settings$q_form` when catchability should stay level
-#' or increase across ordered age or size groups. Unlike ordinary factor
-#' effects, it cannot describe a decline or dome with other covariates held
-#' constant. Flat sections are allowed; the rate of increase is estimated.
+#' Use these terms in `index_settings$q_form` when catchability should increase
+#' with age or size. `mono()` fits flexible non-decreasing steps, including exact
+#' plateaus. `logistic()` fits a smooth rising selectivity curve. Ordinary formula
+#' terms supply baseline catchability; neither curve describes a dome with other
+#' covariates held constant.
 #'
 #' @details
-#' Use `mono()` as an additive term in `index_settings$q_form`. It is a
-#' formula marker, not a numeric transformation. Numeric values are ordered
+#' Both functions are additive formula markers, not numeric transformations.
+#'
+#' ## Flexible steps: mono()
+#'
+#' Numeric values are ordered
 #' increasingly; factors (including ordered factors) use their declared levels.
 #' Supply factor levels in the scientifically intended order.
 #'
@@ -421,14 +417,31 @@ logistic <- function(x, by = NULL) .formula_marker_error("logistic")
 #' holds with those covariates held constant. Interactions involving `mono()`,
 #' transformed arguments, and ordinary effects of the same `x` are unsupported.
 #'
-#' @param x Name of a numeric or factor column in the index observations.
+#' ## Smooth selectivity: logistic()
+#'
+#' For numeric age or size, the curve is
+#' \eqn{S(x) = 1 / (1 + \exp\{-k(x-a_{50})\})}, with positive slope \eqn{k}.
+#' The midpoint \eqn{a_{50}} is the age/size at half the asymptotic selectivity.
+#' This curve multiplies catchability after the selected inverse link, rather
+#' than adding a sigmoid on the link scale. Thus logit q remains below one.
+#' Ordinary terms supply its baseline: `~ survey + logistic(age, by = survey)`
+#' gives survey-specific baselines and curves. Each curve needs at least three
+#' observed x values. Numeric `by` and interactions are unsupported.
+#' Midpoint and positive slope are fixed effects, not Gaussian random effects.
+#' Redundant curves, such as logistic plus an unrestricted factor of the same
+#' age, are rejected. See [formula_effects] for variation around these curves.
+#'
+#' @param x Name of a column in index observations: numeric or factor for
+#'   `mono()`, numeric age/size for `logistic()`.
 #' @param by Optional name of a categorical grouping column.
 #' @return A formula marker; calling this function directly raises an error.
-#' @seealso [prepare_tam()], [make_par()], [tidy_obs_pred()], [tidy_par()], [tinyAM-model]
+#' @seealso [formula_effects], [prepare_tam()], [make_par()], [tidy_obs_pred()], [tidy_par()], [tinyAM-model]
 #' @examples
 #' ~ q_block # ordinary unconstrained q
 #' ~ mono(q_block)
 #' ~ survey + mono(q_block, by = survey)
+#' ~ survey + logistic(age, by = survey)
+#' @name catchability_curves
 #' @export
 mono <- function(x, by = NULL) {
   cli::cli_abort("mono() is only supported as an additive term in {.arg index_settings$q_form}.")

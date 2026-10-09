@@ -5,20 +5,16 @@
 \alias{iid}
 \alias{rw}
 \alias{ar1}
-\alias{logistic}
-\title{Structured catchability effects in formulas}
+\title{Random catchability effects in formulas}
 \usage{
 iid(x, by = NULL, sd = NULL)
 
 rw(x, by = NULL, sd = NULL)
 
 ar1(x, by = NULL, sd = NULL, phi = NULL)
-
-logistic(x, by = NULL)
 }
 \arguments{
-\item{x}{Column defining levels (IID), ordered steps (RW/AR1), or numeric
-age/size (logistic).}
+\item{x}{Column defining levels (IID) or ordered steps (RW/AR1).}
 
 \item{by}{Optional column: numeric multiplier or categorical groups.}
 
@@ -49,12 +45,6 @@ character \code{by} gives independent group trajectories sharing one SD and, for
 AR1, one correlation. IID/AR1 effects are not forcibly centered. SD is estimated
 unless supplied: marginal SD for IID, increment/innovation SD for RW/AR1.
 
-\code{logistic(x)} is a rising selectivity curve
-\eqn{S(x) = 1 / (1 + \exp\{-k(x-a_{50})\})}, with positive slope \eqn{k}.
-It multiplies catchability after the selected inverse link. Thus logit q
-remains below one. Midpoint and slope are estimated separately for categorical
-\code{by} groups; numeric \code{by} is unsupported for logistic curves.
-
 Terms must be additive, with bare column names. Unsupported aliases and
 observation-specific IID effects indistinguishable from estimated observation
 error are rejected. For sparse data, simpler formulas or supplied process SDs
@@ -72,8 +62,7 @@ link scale, not marginal response-scale means.
 ~ survey + rw(year, by = survey)
 ~ survey + ar1(year, by = survey)
 ~ survey + (1 | vessel)
-~ survey + logistic(age, by = survey)
 }
 \seealso{
-\code{\link[=mono]{mono()}}, \code{\link[=prepare_tam]{prepare_tam()}}, \code{\link[=fit_tam]{fit_tam()}}, \code{\link[=check_tam]{check_tam()}}
+\link{catchability_curves}, \code{\link[=prepare_tam]{prepare_tam()}}, \code{\link[=fit_tam]{fit_tam()}}, \code{\link[=check_tam]{check_tam()}}
 }
