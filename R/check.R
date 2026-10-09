@@ -316,6 +316,8 @@ print.tam_check <- function(x, ...) {
       if (!is.null(x$optimizer_message)) paste0(" (", x$optimizer_message, ")"), "\n", sep = "")
   cat(sprintf("Max |gradient|: %s adjusted; %s raw (tolerance %s)\n",
               signif(x$max_gradient, 3), signif(x$raw_max_gradient, 3), x$grad_tol))
+  cat("Positive-definite Hessian: ", if (is.null(x$pd_hessian)) "not assessed" else
+    if (isTRUE(x$pd_hessian)) "yes" else "no", "\n", sep = "")
   cat("Structural checks: ", switch(x$structural_status,
     no_known_issues = "no known redundancies detected; biological identifiability is not established",
     issues = "issues detected", not_assessed = "not assessed"), "\n", sep = "")

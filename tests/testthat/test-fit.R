@@ -153,6 +153,9 @@ test_that("tam_fit summary and print methods provide structured output", {
   fit <- default_fit
   sum_fit <- summary(fit)
   expect_s3_class(sum_fit, "summary_tam_fit")
+  expect_equal(sum_fit$convergence, check_tam(fit))
+  expect_output(print(fit), "Numerical convergence: passed")
+  expect_output(print(sum_fit), "Structural checks:")
   expect_output(print(fit), "Coefficients:")
   expect_output(print(sum_fit), "Terminal year")
 })

@@ -45,6 +45,7 @@ obs_pred <- tabs$obs_pred
 pop <- tabs$pop
 fixed_par <- tabs$fixed_par
 random_par <- tabs$random_par
+checks <- lapply(Filter(function(fit) inherits(fit, "tam_fit"), fits), check_tam)
 
 ```
 
@@ -116,6 +117,9 @@ table_link <- function(x, table_name = NULL, download_text = "Download table") {
 ```
 
 ```{r parameters, child = "parameters.Rmd"}
+```
+
+```{r diagnostics, child = if (length(checks)) "diagnostics.Rmd" else NULL}
 ```
 
 ```{r tables, child = "tables.Rmd"}

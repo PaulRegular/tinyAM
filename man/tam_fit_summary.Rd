@@ -42,11 +42,10 @@ should not be interpreted as CVs. An SE scale of \code{reported} means that the
 SE is on the same scale as the displayed estimate. This includes quantities
 such as \code{dq}, which are fitted directly as increments on the log-q scale.
 
-The displayed maximum gradient is the raw fixed-effect gradient. Parameters
-fitted at a boundary need not have a raw gradient of zero at a valid
-constrained optimum. For example, a \code{dq} estimate at its lower bound of zero
-can have a positive raw gradient while \code{\link[=check_tam]{check_tam()}} still passes its
-constrained optimality check.
+Numerical, structural and advisory findings come from \code{\link[=check_tam]{check_tam()}}. Both
+raw and bound-adjusted gradients are displayed. A parameter at a bound can
+have a nonzero raw gradient at a valid constrained optimum. Advisory findings
+do not change numerical convergence and do not establish biological suitability.
 
 Terminal summaries exclude projection years.
 }

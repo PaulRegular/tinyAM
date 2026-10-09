@@ -1,0 +1,56 @@
+Diagnostics
+================================================================================
+
+Row {.tabset}
+--------------------------------------------------------------------------------
+
+### Numerical checks
+
+```{r, results = "asis"}
+for (nm in names(checks)) {
+  cat("#### ", nm, "\n\n", sep = "")
+  print(knitr::kable(checks[[nm]]$numerical))
+  cat("\n\n")
+}
+```
+
+### Structural checks
+
+Passing these checks does not establish that the data distinguish abundance,
+mortality and catchability, or that the biological assumptions are suitable.
+
+```{r, results = "asis"}
+for (nm in names(checks)) {
+  cat("#### ", nm, "\n\n", sep = "")
+  print(knitr::kable(checks[[nm]]$structural))
+  cat("\n\n")
+}
+```
+
+### Advisory findings
+
+These findings flag patterns to investigate. They do not change numerical
+convergence. Conditional residuals also reflect fitted-state shrinkage.
+
+```{r, results = "asis"}
+for (nm in names(checks)) {
+  cat("#### ", nm, "\n\n", sep = "")
+  print(knitr::kable(checks[[nm]]$advisories))
+  cat("\n\n")
+}
+```
+
+### Residual summaries
+
+Only positive historical observations are included. Lag-1 correlation uses
+adjacent years, with at least five pairs.
+
+```{r}
+knitr::kable(stack_list(lapply(checks, `[[`, "residuals"), label = "model"), digits = 3)
+```
+
+### Data support
+
+```{r}
+knitr::kable(stack_list(lapply(checks, `[[`, "data"), label = "model"))
+```

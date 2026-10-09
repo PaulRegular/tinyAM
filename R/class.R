@@ -277,11 +277,10 @@
 #' SE is on the same scale as the displayed estimate. This includes quantities
 #' such as `dq`, which are fitted directly as increments on the log-q scale.
 #'
-#' The displayed maximum gradient is the raw fixed-effect gradient. Parameters
-#' fitted at a boundary need not have a raw gradient of zero at a valid
-#' constrained optimum. For example, a `dq` estimate at its lower bound of zero
-#' can have a positive raw gradient while [check_tam()] still passes its
-#' constrained optimality check.
+#' Numerical, structural and advisory findings come from [check_tam()]. Both
+#' raw and bound-adjusted gradients are displayed. A parameter at a bound can
+#' have a nonzero raw gradient at a valid constrained optimum. Advisory findings
+#' do not change numerical convergence and do not establish biological suitability.
 #'
 #' Terminal summaries exclude projection years.
 #'
@@ -306,15 +305,8 @@ print.tam_fit <- function(x, ...) {
   print(x$call)
 
   sumry <- summary(x)
-  conv <- sumry$convergence
-
   cat(sprintf("\nObjective: %s\n", format(sumry$objective, digits = 6)))
-  if (!is.null(conv$max_gradient)) {
-    cat(sprintf("Max |grad|: %s\n", format(conv$max_gradient, digits = 3, scientific = TRUE)))
-  }
-  if (!is.null(conv$pd_hessian)) {
-    cat(sprintf("pdHess: %s\n", if (conv$pd_hessian) "Yes" else "No"))
-  }
+  print(sumry$convergence)
 
   if (nrow(sumry$coefficients)) {
     cat("\nCoefficients:\n")
@@ -345,9 +337,6 @@ summary.tam_fit <- function(object, ...) {
   ages  <- object$dat$ages
   obs_n <- sum(object$dat$obs_map$is_observed)
 
-  grad <- object$sdrep$gradient.fixed
-  max_grad <- if (!is.null(grad)) max(abs(grad)) else NULL
-
   terminal_year <- .terminal_year(object)
   terminal_vals <- .terminal_table(object$pop, terminal_year)
   terminal_list <- if (nrow(terminal_vals) > 0) {
@@ -361,10 +350,7 @@ summary.tam_fit <- function(object, ...) {
   res <- list(
     call = object$call,
     objective = object$opt$objective,
-    convergence = list(
-      max_gradient = max_grad,
-      pd_hessian = object$sdrep$pdHess
-    ),
+    convergence = check_tam(object),
     data = list(
       years = range(years),
       n_years = length(unique(years)),
@@ -392,11 +378,7 @@ print.summary_tam_fit <- function(x, ...) {
   }
 
   cat(sprintf("\nObjective: %s\n", format(x$objective, digits = 6)))
-  conv <- x$convergence
-  if (!is.null(conv$max_gradient)) {
-    cat(sprintf("Max |grad|: %s\n", format(conv$max_gradient, digits = 3, scientific = TRUE)))
-  }
-  cat(sprintf("pdHess: %s\n", if (conv$pd_hessian) "Yes" else "No"))
+  print(x$convergence)
 
   cat(sprintf("\nObservations: %d  Years: %s-%s  Ages: %s-%s\n",
               x$data$n_observations,
