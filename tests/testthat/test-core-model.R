@@ -69,7 +69,7 @@ test_that("simulation uses returned states, recursive cohorts and matching obser
   for (n_process in c("off", "iid", "ar1")) {
     dat <- make_test_dat(years = 2000:2005, ages = 2:6,
       N_settings = list(process = n_process, init = "exp"),
-      F_settings = list(process = "iid"),
+      F_settings = list(process = "iid", mu_form = ~ 1),
       M_settings = list(process = "iid", mu_supplied = ~ I(0.3)),
       proj_settings = list(n_proj = 2, n_mean = 1, F_mult = c(0.8, 1.2)))
     # Missing rows precede observed rows; every row has a distinct SD.

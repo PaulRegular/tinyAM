@@ -55,7 +55,11 @@ IID survivorship residuals and separate SD \code{sd_n0}. See \strong{Details}.
 \code{"rw"} for departures that accumulate over time, or \code{"ar1"} for departures
 correlated between years and ages.
 \item \code{mu_form}: an optional formula for mean-\eqn{F} (coefficients estimated as
-\strong{log-scale} parameters \code{log_mu_f}).
+\strong{log-scale} parameters \code{log_mu_f}). Required for \code{"iid"} and \code{"ar1"};
+use \code{~ 1} for one estimated mean level or \code{~ factor(age)} for age-specific
+means. For \code{"rw"}, \code{NULL} is allowed. Mean columns constant through time
+cancel from RW increments and are removed with a warning. Remaining
+columns must be identifiable from historical year-to-year differences.
 \item \code{mean_ages}: optional vector of ages to include in population weighted
 average F (\code{F_bar}) calculations. All ages used if absent.
 }}
@@ -202,9 +206,10 @@ Random-effect blocks are chosen automatically from the model settings:
 A warning is issued if the number of random effects exceeds 1.5 times the
 number of observed data points (rough identifiability check).
 
-For RW processes, mean coefficients that have no effect on either increments
-or mortality outside the fitted process states are held at their starting
-values. For example, a constant F mean cancels from all RW increments.
+For F random walks, \code{\link[=prepare_tam]{prepare_tam()}} removes time-invariant mean columns
+because they cancel from all increments. For M random walks, mean coefficients
+with no effect on either increments or mortality outside the fitted process
+states are held at their starting values.
 An RW SD is also held fixed if the process has only one row (no increments).
 These parameters cannot be estimated from the likelihood; no constraint is
 imposed on the latent states themselves.

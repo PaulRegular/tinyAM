@@ -94,9 +94,10 @@
 #' A warning is issued if the number of random effects exceeds 1.5 times the
 #' number of observed data points (rough identifiability check).
 #'
-#' For RW processes, mean coefficients that have no effect on either increments
-#' or mortality outside the fitted process states are held at their starting
-#' values. For example, a constant F mean cancels from all RW increments.
+#' For F random walks, [prepare_tam()] removes time-invariant mean columns
+#' because they cancel from all increments. For M random walks, mean coefficients
+#' with no effect on either increments or mortality outside the fitted process
+#' states are held at their starting values.
 #' An RW SD is also held fixed if the process has only one row (no increments).
 #' These parameters cannot be estimated from the likelihood; no constraint is
 #' imposed on the latent states themselves.

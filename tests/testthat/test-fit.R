@@ -50,7 +50,7 @@ test_that("fit_tam works when an survey does not provide an index for all ages",
   fit <- update(
     default_fit,
     data = obs,
-    F_settings = list(process = "ar1", mu_form = NULL),
+    F_settings = list(process = "ar1", mu_form = ~ 1),
     silent = TRUE
   )
   expect_equal(range(fit$obs_pred$index$age), range(sub_ages))

@@ -50,7 +50,11 @@ IID survivorship residuals and separate SD \code{sd_n0}. See \strong{Details}.
 \code{"rw"} for departures that accumulate over time, or \code{"ar1"} for departures
 correlated between years and ages.
 \item \code{mu_form}: an optional formula for mean-\eqn{F} (coefficients estimated as
-\strong{log-scale} parameters \code{log_mu_f}).
+\strong{log-scale} parameters \code{log_mu_f}). Required for \code{"iid"} and \code{"ar1"};
+use \code{~ 1} for one estimated mean level or \code{~ factor(age)} for age-specific
+means. For \code{"rw"}, \code{NULL} is allowed. Mean columns constant through time
+cancel from RW increments and are removed with a warning. Remaining
+columns must be identifiable from historical year-to-year differences.
 \item \code{mean_ages}: optional vector of ages to include in population weighted
 average F (\code{F_bar}) calculations. All ages used if absent.
 }}

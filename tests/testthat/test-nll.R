@@ -183,7 +183,7 @@ test_that("nll_fun handles AR1 settings and produces finite JNLL", {
 test_that("nll_fun yields finite log_pred for non-missing obs", {
   dat <- make_test_dat(
     N_settings = list(process = "iid", init = "exp"),
-    F_settings = list(process = "iid", mu_form = NULL),
+    F_settings = list(process = "iid", mu_form = ~ 1),
     M_settings = list(process = "off", mu_form = NULL, mu_supplied = ~ I(0.3))
   )
   par <- make_par(dat)

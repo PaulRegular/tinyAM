@@ -20,7 +20,7 @@ translate_stock <- function(source) {
 
   settings <- list(
     N_settings = list(process = "iid", init = "exp"),
-    F_settings = list(process = "ar1", mu_form = NULL, mean_ages = 4:7),
+    F_settings = list(process = "ar1", mu_form = ~ factor(age), mean_ages = 4:7),
     M_settings = list(process = "off", mu_form = NULL,
                       mu_supplied = ~ M_assumption),
     catch_settings = list(sd_form = ~ 0 + sd_block, fill_missing = FALSE),
@@ -116,7 +116,7 @@ translate_stock <- function(source) {
       "| Years | The fitted assessment covers 1967–2025. A separate 2026 short-term forecast is reported. | Fit 1967–2025. | The 2026 forecast is not a full historical assessment year. |",
       "| Ages | Ages 3–10+, with recruitment at age 3. SAM shares the F state for ages 9 and 10+. | Ages 3–10, with age 10 as the plus group. | The comparison repeats the single accepted 9+ F state across ages 9 and 10+ as specified by SAM. |",
       "| N | SAM estimates abundance at ages 3–10+, with separate process variance for recruitment and shared variance for older ages. | Exponential initial abundance and IID N process residuals; accepted N-at-age initializes the fit only. | tinyAM does not reproduce SAM's N variance sharing or initial-state integration. |",
-      "| F | SAM estimates age-specific F with AR(1) age correlation and shared states at ages 9–10+. Fbar is ages 4–7. | AR(1) F process with age-specific states and Fbar ages 4–7; accepted F-at-age initializes the fit only. | The shared 9+ state and exact SAM covariance are approximated. |",
+      "| F | SAM estimates age-specific F with AR(1) age correlation and shared states at ages 9–10+. Fbar is ages 4–7. | AR(1) F process around estimated age-specific means and Fbar ages 4–7; accepted F-at-age initializes the fit only. | The shared 9+ state and exact SAM covariance are approximated. |",
       "| M | Fixed, age-specific natural mortality derived from mean stock weights under Lorenzen's relationship. | Use the published fixed M-at-age values. | The accepted numerical values are retained. |",
       "| Catch | Combined catch numbers-at-age and catch weight-at-age, ages 3–10+. | Use both reported surfaces with three catch-SD age groups. | The fleet is combined and SAM's cross-age observation correlation is not reproduced. |",
       "| Index | Q3–Q4 research-vessel index at ages 3–8, plus annual commercial CPUE tuned to exploitable biomass. | Fit the age-specific survey index with q estimated by age. | tinyAM does not represent the aggregate biomass-targeted CPUE observation; it is retained in the database but omitted from the fit. |",

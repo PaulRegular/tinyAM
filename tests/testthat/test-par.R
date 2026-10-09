@@ -73,7 +73,7 @@ test_that("make_par includes/excludes mean-structure parameters appropriately", 
 
   # F mu_form absent -> log_mu_f absent
   datF0 <- make_test_dat(
-    F_settings = list(process = "iid", mu_form = NULL),
+    F_settings = list(process = "rw", mu_form = NULL),
     M_settings = list(process = "off", mu_form = NULL, mu_supplied = ~ I(0.3))
   )
   parF0 <- make_par(datF0)
@@ -81,7 +81,7 @@ test_that("make_par includes/excludes mean-structure parameters appropriately", 
 
   # M mu_form present -> mu_m created
   datM  <- make_test_dat(
-    F_settings = list(process = "iid", mu_form = NULL),
+    F_settings = list(process = "iid", mu_form = ~ 1),
     M_settings = list(process = "iid", mu_form = ~ 1, mu_supplied = NULL, age_breaks = seq(2, 14, 2))
   )
   parM <- make_par(datM)
@@ -90,7 +90,7 @@ test_that("make_par includes/excludes mean-structure parameters appropriately", 
 
   # Only M mu_supplied -> mu_m absent
   datM0 <- make_test_dat(
-    F_settings = list(process = "iid", mu_form = NULL),
+    F_settings = list(process = "iid", mu_form = ~ 1),
     M_settings = list(process = "iid", mu_form = NULL, mu_supplied = ~ I(0.3), age_breaks = seq(2, 14, 2))
   )
   parM0 <- make_par(datM0)
@@ -100,7 +100,7 @@ test_that("make_par includes/excludes mean-structure parameters appropriately", 
 test_that("make_par adds AR1 parameters only for processes set to ar1", {
   dat <- make_test_dat(
     N_settings = list(process = "ar1", init = "exp"),
-    F_settings = list(process = "iid", mu_form = NULL),
+    F_settings = list(process = "iid", mu_form = ~ 1),
     M_settings = list(process = "off", mu_form = NULL, mu_supplied = ~ I(0.3))
   )
   par <- make_par(dat)

@@ -16,7 +16,7 @@ test_that("RW N and M fits support warm starts, projections and shorter year ran
   for (process in c("N", "M")) {
     fit <- update(default_fit, silent = TRUE,
       N_settings = list(process = if (process == "N") "rw" else "off", init = "exp"),
-      F_settings = list(process = "rw", mu_form = ~ 1),
+      F_settings = list(process = "rw", mu_form = NULL),
       M_settings = list(process = if (process == "M") "rw" else "off",
                         mu_supplied = ~ I(.3), age_breaks = c(3, 14)),
       start_par = as.list(default_fit$sdrep, "Estimate"))
@@ -101,12 +101,12 @@ test_that("likelihood and simulation use RW residuals and preserve model boundar
     }, .package = "tinyAM")
   dat <- make_test_dat(years = 2000:2005, ages = 2:6,
     N_settings = list(process = "rw", init = "free"),
-    F_settings = list(process = "rw", mu_form = ~ 1 + I(year - 2000)),
+    F_settings = list(process = "rw", mu_form = ~ 0 + I(year - 2000)),
     M_settings = list(process = "rw", mu_form = ~ 0 + I(year - 2000),
       mu_supplied = ~ I(.3), first_dev_year = 2002, age_breaks = c(3, 6)),
     proj_settings = list(n_proj = 2, n_mean = 1, F_mult = c(.8, 1.2)))
   par <- make_par(dat)
-  par$log_mu_f[] <- c(-2, .1)
+  par$log_mu_f[] <- .1
   par$mu_m[] <- .05
   par$log_f[] <- -1
   par$log_m[] <- -1.5

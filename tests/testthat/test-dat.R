@@ -239,7 +239,7 @@ test_that("prepare_tam handles mean_ages correctly", {
   dat1 <- prepare_tam(
     data = cod_obs,
     ages = 2:5,
-    F_settings = list(process = "iid", mean_ages = NULL),
+    F_settings = list(process = "iid", mu_form = ~ 1, mean_ages = NULL),
     M_settings = list(process = "iid", mean_ages = NULL, mu_supplied = ~I(0.2))
   )
   expect_equal(dat1$F_settings$mean_ages, 2:5)
@@ -249,7 +249,7 @@ test_that("prepare_tam handles mean_ages correctly", {
   dat2 <- prepare_tam(
     data = cod_obs,
     ages = 2:5,
-    F_settings = list(process = "iid", mean_ages = c(2, 4)),
+    F_settings = list(process = "iid", mu_form = ~ 1, mean_ages = c(2, 4)),
     M_settings = list(process = "iid", mean_ages = c(3, 5), mu_supplied = ~I(0.2))
   )
   expect_equal(dat2$F_settings$mean_ages, c(2, 4))
@@ -260,7 +260,7 @@ test_that("prepare_tam handles mean_ages correctly", {
     prepare_tam(
       data = cod_obs,
       ages = 2:5,
-      F_settings = list(process = "iid", mean_ages = c(6, 7))
+      F_settings = list(process = "iid", mu_form = ~ 1, mean_ages = c(6, 7))
     ),
     "F_settings\\$mean_ages"
   )

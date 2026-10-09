@@ -4,7 +4,7 @@ audit_report <- function(par, dat) {
 
 test_that("mean mortality at a single selected age equals that age's rate", {
   dat <- make_test_dat(years = 2000:2003, ages = 2:6,
-    F_settings = list(process = "iid", mean_ages = 3),
+    F_settings = list(process = "iid", mu_form = ~ 1, mean_ages = 3),
     M_settings = list(process = "off", mu_supplied = ~ I(.2), mean_ages = 4))
   rep <- audit_report(make_par(dat), dat)
   expect_equal(unname(rep$F_bar), unname(rep$F[, "3"]))

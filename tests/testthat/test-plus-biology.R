@@ -13,7 +13,7 @@ plus_biology_obs <- function() {
 plus_biology_dat <- function(process = "iid", ages = 2:4, proj = NULL, init = "exp") {
   suppressWarnings(prepare_tam(plus_biology_obs(), ages = ages,
     N_settings = list(process = process, init = init),
-    F_settings = list(process = "iid"),
+    F_settings = list(process = "iid", mu_form = ~ 1),
     M_settings = list(process = "off", mu_supplied = ~ I(.2)),
     index_settings = list(q_form = ~ 1, sd_form = ~ 1, fill_missing = TRUE),
     proj_settings = proj))

@@ -359,7 +359,11 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #'   `"rw"` for departures that accumulate over time, or `"ar1"` for departures
 #'   correlated between years and ages.
 #' - `mu_form`: an optional formula for mean-\eqn{F} (coefficients estimated as
-#'   **log-scale** parameters `log_mu_f`).
+#'   **log-scale** parameters `log_mu_f`). Required for `"iid"` and `"ar1"`;
+#'   use `~ 1` for one estimated mean level or `~ factor(age)` for age-specific
+#'   means. For `"rw"`, `NULL` is allowed. Mean columns constant through time
+#'   cancel from RW increments and are removed with a warning. Remaining
+#'   columns must be identifiable from historical year-to-year differences.
 #' - `mean_ages`: optional vector of ages to include in population weighted
 #'   average F (`F_bar`) calculations. All ages used if absent.
 #' @param M_settings A list with elements:
@@ -483,6 +487,13 @@ prepare_tam <- function(
   dat$N_settings$process <- match.arg(dat$N_settings$process, c("off", "iid", "rw", "ar1"))
   dat$F_settings$process <- match.arg(dat$F_settings$process, c("iid", "rw", "ar1"))
   dat$M_settings$process <- match.arg(dat$M_settings$process, c("off", "iid", "rw", "ar1"))
+
+  if (dat$F_settings$process != "rw" && is.null(dat$F_settings$mu_form)) {
+    cli::cli_abort(c(
+      "F_settings$mu_form is required for {.val {dat$F_settings$process}} F processes.",
+      "i" = "Use {.code ~ 1} for an estimated common mean or {.code ~ factor(age)} for age-specific means."
+    ))
+  }
 
   check_obs(obs)
 
@@ -704,7 +715,34 @@ prepare_tam <- function(
   dat[names(q_design)] <- q_design
   if (!is.null(dat$F_settings$mu_form)) {
     dat$F_modmat <- stats::model.matrix(F_settings$mu_form, data = dat$obs$catch)
-  } else {
+    if (nrow(dat$F_modmat) != nrow(dat$obs$catch) ||
+        any(!is.finite(dat$F_modmat)) || !ncol(dat$F_modmat)) {
+      cli::cli_abort("F_settings$mu_form must produce a finite, non-empty design for every modeled year and age.")
+    }
+    historical <- dat$F_modmat[!dat$obs$catch$is_proj, , drop = FALSE]
+    if (qr(historical)$rank < ncol(historical)) {
+      cli::cli_abort("F_settings$mu_form has a rank-deficient historical design. Remove redundant terms.")
+    }
+    if (dat$F_settings$process == "rw") {
+      n_historical <- sum(!dat$is_proj)
+      increments <- vapply(seq_len(ncol(historical)), function(j) {
+        surface <- matrix(historical[, j], n_historical, length(dat$ages))
+        as.vector(surface[-1, , drop = FALSE] - surface[-n_historical, , drop = FALSE])
+      }, numeric((n_historical - 1L) * length(dat$ages)))
+      redundant <- colSums(abs(increments)) == 0
+      if (any(redundant)) {
+        dropped <- colnames(historical)[redundant]
+        cli::cli_warn("Dropping time-invariant F mean columns for the RW process: {paste(dropped, collapse = ', ')}. These cancel from all process increments.")
+        dat$F_modmat <- dat$F_modmat[, !redundant, drop = FALSE]
+        increments <- increments[, !redundant, drop = FALSE]
+        if (!ncol(increments)) dat$F_settings$mu_form <- NULL
+      }
+      if (ncol(increments) && qr(increments)$rank < ncol(increments)) {
+        cli::cli_abort("F_settings$mu_form is not identifiable from RW increments. Remove redundant temporal mean terms.")
+      }
+    }
+  }
+  if (is.null(dat$F_settings$mu_form)) {
     dat$log_mu_f <- 0
     dat$F_modmat <- 0
   }

@@ -132,7 +132,7 @@ translate_stock <- function(source) {
 
   settings <- list(
     N_settings = list(process = "iid", init = "exp"),
-    F_settings = list(process = "ar1", mu_form = NULL, mean_ages = 1:2),
+    F_settings = list(process = "ar1", mu_form = ~ factor(age), mean_ages = 1:2),
     M_settings = list(process = "off", mu_form = NULL,
                       mu_supplied = ~ M_assumption),
     catch_settings = list(sd_form = ~ 0 + sd_block, fill_missing = FALSE),
@@ -339,7 +339,7 @@ translate_stock <- function(source) {
       "| Years | Quarterly inputs and states cover 1984-2025, but the fitted catch series ends in Q3 2025. | Fit 1984-2024, the last complete catch year. | The partial 2025 catch total is not treated as an annual observation. |",
       "| Ages | Ages 0-3+, with recruitment entering in Q3. | Annual ages 0-3, with age 0 represented at recruitment. | Recruitment timing is annualized; source Q3 timing is retained for survey predictions. |",
       "| N | Quarterly age-specific abundance; process variance is shared for ages 0-2 and separate for age 3+. | IID annual abundance process with exponential initial abundance. | The quarterly process and its age-specific variance sharing are not reproduced. |",
-      "| F | Quarterly log-F random walk with AR(1) dependence across ages; Fbar is ages 1-2. | Annual AR(1) F process and Fbar ages 1-2. | tinyAM applies AR(1) in both year and age and cannot combine the source random walk with its age correlation; quarterly variation and the big-jump adjustment are approximated. |",
+      "| F | Quarterly log-F random walk with AR(1) dependence across ages; Fbar is ages 1-2. | Annual AR(1) F process around estimated age-specific means and Fbar ages 1-2. | tinyAM applies AR(1) in both year and age and cannot combine the source random walk with its age correlation; quarterly variation and the big-jump adjustment are approximated. |",
       "| M | Fixed quarterly age-specific M from North Sea SMS; the 2022 pattern is carried through 2025. | Supply annual-equivalent M as fixed mortality. | Older ages use all four quarters; age 0 uses Q3-Q4 exposure after recruitment. |",
       "| Catch | Quarterly catch-at-age in millions of fish, with separate age-0, ages 1-2, and age-3+ error groups. | Sum quarterly catches to annual numbers and retain the same three error groups. | The joint quarterly catch likelihood is not represented. |",
       "| Index | Five fleet series sampled in Q1 or Q3, with fleet-age q and SD sharing. | Keep direct age-specific observations and use q blocks that follow the reported sharing. | The grouped age-2-3+ IBTS observation is retained in the database but omitted because tinyAM has no grouped-age index likelihood. |",

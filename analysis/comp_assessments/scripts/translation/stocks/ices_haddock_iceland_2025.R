@@ -20,7 +20,7 @@ translate_stock <- function(source) {
     ),
     settings = list(
       N_settings = list(process = "iid", init = "free"),
-      F_settings = list(process = "ar1", mu_form = NULL),
+      F_settings = list(process = "ar1", mu_form = ~ factor(age)),
       M_settings = list(process = "off", mu_form = NULL,
                         mu_supplied = ~ M_assumption),
       catch_settings = list(sd_form = ~ 1, fill_missing = FALSE),
@@ -39,7 +39,7 @@ translate_stock <- function(source) {
       "| Years | Catch and biological inputs cover 1979–2024; population estimates extend to 2025. | Fit 1979–2024. | The 2025 estimate is retained in the reference but lies beyond the detailed input period. |",
       "| Ages | Ages 1–12+, with age 12 as the plus group. | Ages 1–12, with age 12 as the plus group. | The accepted age range is retained. |",
       "| N | SAM estimates annual abundance and age-1 recruitment. | IID abundance process with a free initial age structure. | This is a simpler process than the accepted SAM model. |",
-      "| F | Selectivity and fishing mortality vary over time. | AR1 F process across ages and years. | Approximates time variation; SAM covariance and parameter sharing are not reproduced. |",
+      "| F | Selectivity and fishing mortality vary over time. | AR1 F process around an estimated mean for each age. | Approximates time variation; SAM covariance and parameter sharing are not reproduced. |",
       "| M | Fixed at 0.2 per year for all ages. | Supplied fixed M=0.2. | The accepted assumption is retained. |",
       "| Catch | Commercial catch numbers-at-age and catch weights. | Catch numbers-at-age with one estimated observation-error scale. | tinyAM uses its standard catch likelihood rather than SAM's full likelihood structure. |",
       "| Index | IS-SMB in March and IS-SMH in October, both at age. | Native-scale age indices with series-by-age q and survey-specific observation error. | The published tables do not identify a physical index unit or exact timing fractions. |",

@@ -101,7 +101,7 @@ test_that("random initialization adds exactly its own IID normal likelihood", {
 test_that("simulated N0 uses simulated mortality and IID initial-age increments", {
   dat <- make_test_dat(years = 2000:2003,
     N_settings = list(process = "iid", init = "random"),
-    F_settings = list(process = "iid"),
+    F_settings = list(process = "iid", mu_form = ~ 1),
     M_settings = list(process = "iid", mu_supplied = ~I(0.3), first_dev_year = 2000))
   par <- make_par(dat)
   par$log_r0 <- log(200)
