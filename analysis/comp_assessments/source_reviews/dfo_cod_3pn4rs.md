@@ -12,6 +12,11 @@ The [2025/074 framework report](https://publications.gc.ca/collections/collectio
 [2022/049 survey-input report](https://publications.gc.ca/collections/collection_2022/mpo-dfo/fs70-5/Fs70-5-2022-049-eng.pdf),
 and [2024/045 weight and model report](https://publications.gc.ca/collections/collection_2024/mpo-dfo/fs70-5/Fs70-5-2024-045-eng.pdf)
 are cached with checksums in the local source manifest.
+The production assessment also cites [2025/032, the 2024 August survey
+report](https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/41297039.pdf).
+This report is now cached: its cod results are Figures 31–33, while its three
+tables describe stations, taxa and specimen sampling. It does not supply a
+numerical cod age-by-year index or biological input matrix.
 
 The report provides catch-at-age in thousands of fish for ages 2–11+ in
 1974–2024 and model outputs for abundance, biomass, fishing mortality, natural
@@ -72,6 +77,21 @@ has an all-year series excluding shallow strata 101–103 and a 2003-onward seri
 including them. Table 28 does not identify that choice explicitly, so no
 unverified spatial correction has been imposed.
 
+The logical labels for any future reconstruction from the raw RV archives are:
+
+| Vessel / gear label | Period described by the production report | Public age samples in 4RS within the assessment period |
+|---|---|---|
+| DFO August — Lady Hammond / Western IIA | 1984–1990 | No Lady Hammond archive recovered |
+| DFO August — Alfred Needler / URI | 1990–2004 | 1990–2003 |
+| DFO August — Teleost / Campelen | 2004–2022 | 2004–2022 |
+| DFO August — John Cabot / modified Campelen | Comparative fishing in 2021–2022; regular survey from 2023 | 2023–2024; the cached 2022 samples have no ages |
+
+These labels distinguish potential uncalibrated observation streams; they are
+not additional numerical indices in the database. Comparative and regular
+survey tows must be distinguished before constructing annual indices. The
+published Sentinel mobile series already standardizes tow geometry, so it
+retains its existing label rather than being split artificially.
+
 ## Biological limitation and translation decision
 
 Annual beginning-of-year stock weights and female maturity ogives are also
@@ -107,8 +127,19 @@ report, framework and supporting biology/survey reports have all been checked;
 this is a remaining data gap, not a catchability restriction. No output
 estimates have been reused as observations or biological inputs.
 
+The revisit found no additional numerical assessment-input surfaces in these
+sources. The recoverable inputs remain the 330 Sentinel mobile index cells
+and 503 commercial catch-weight cells, alongside catch-at-age and fixed M.
+Catch weights do not supply the missing stock-weight surface. The readiness
+test now checks the maturity gap independently using complete test-only
+weights; these fixtures are never written to the database or used in a fit.
+To proceed without inventing biology, the needed source products are annual
+beginning-of-year stock weights and the revised female maturity proportions
+for the selected model years and ages. Additional survey indices would be
+useful but are not required for a clearly labelled Sentinel-only model.
+
 The cached source files and checksums are listed in
-`source_cache/dfo_cod_3pn4rs_2025/manifest.csv`. Table extraction is checked by
+`source_cache/dfo_cod_3pn4rs_2025/manifest.csv`.
 `scripts/database/038_import_dfo_cod_3pn4rs_2025.R` reproduces the canonical
 table imports; `039_validate_dfo_cod_3pn4rs_2025.R` checks every imported value
 against the cached tables. `057_cache_dfo_cod_3pn4rs_sources.R` retrieves the

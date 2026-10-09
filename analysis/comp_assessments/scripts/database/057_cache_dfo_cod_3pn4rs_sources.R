@@ -45,6 +45,16 @@ for (name in names(catalogues)) {
                 "Not annual assessment indices, stock weights or fitted maturity ogives."))
   }
 }
+path <- cache("rv-survey-2024.pdf",
+  "https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/41297039.pdf",
+  "survey_methods_pdf",
+  paste("Research Document 2025/032, cited by the production assessment.",
+        "Cod results in Figures 31-33; no numerical annual age-specific",
+        "index, stock-weight or maturity matrix."))
+if (!startsWith(readChar(path, 4, useBytes = TRUE), "%PDF")) {
+  cli::cli_abort("The August survey download is not a PDF.")
+}
+writeLines(pdftools::pdf_text(path), file.path(root, "rv-survey-2024.txt"))
 path <- cache("maturity.pdf",
   "https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/41287332.pdf",
   "maturity_methods_pdf",

@@ -40,4 +40,21 @@ stopifnot(inherits(error, "error"),
           grepl("weight|maturity", conditionMessage(error)),
           identical(source_data, before),
           source_data$assessment$inputs_status == "partial")
+# Isolate maturity readiness with test-only complete weights, never source data.
+weight_fixture <- source_data$inputs[rep(1L, 30L * 10L), ]
+weight_fixture$type <- "weight"
+weight_fixture$measure <- "weight_at_age"
+weight_fixture$basis <- "kg_per_fish"
+weight_fixture$unit <- "kg"
+weight_fixture$year <- rep(1995:2024, each = 10L)
+weight_fixture$age <- rep(2:11, times = 30L)
+weight_fixture$value <- 1
+weight_fixture$source_reference <- "Test fixture, not assessment biology"
+error <- tryCatch(database_to_tam_obs(
+  "dfo_cod_3pn4rs_2025", rbind(source_data$inputs, weight_fixture),
+  years = 1995:2024, ages = 2:11
+), error = identity)
+stopifnot(inherits(error, "error"),
+          grepl("maturity", conditionMessage(error)),
+          identical(source_data, before))
 cat("3Pn4RS source-input tests passed.\n")
