@@ -10,7 +10,7 @@ Experimental branch: `formula-expansion`, starting at `e801800` on
 2. Expand `q_form` with IID, random intercepts, RW, AR1 and logistic selectivity.
    Validate mathematics, simulation, uncertainty, projections, warm starts and
    dashboard displays before evaluating stock applications.
-3. Review the Stage 2 evidence with the user before extending F/M mean formulas.
+3. Extend F/M mean formulas, as subsequently authorized by the user.
    Begin with shared temporal mean processes and IID residual processes.
    Multiple temporal processes need a separate identifiability review.
 4. Review possible variance structures as a research question. Do not expose
@@ -40,8 +40,10 @@ Experimental branch: `formula-expansion`, starting at `e801800` on
 ## Reporting and dashboard
 
 Show signed IID/random-intercept effects with intervals and RW/AR1 trajectories
-with intervals. Show RW increments separately. Distinguish numeric-by raw
-effects from their multiplied contributions. Report process SDs, correlation,
+with intervals. The Parameters menu has Fixed and Random pages; formula tabs
+show effect trends only, with short readable names. Increments and numeric-by
+contributions remain available in tidy data, but are not dashboard tabs.
+Report process SDs, correlation,
 and logistic midpoint/slope with explicit SE scales. Catchability pages show
 the combined response-scale curve and uncertainty, observed support and
 projections. Retain existing visual style and framed ribbons; allow incomplete
@@ -64,6 +66,64 @@ Evaluate candidates separately from the accepted models for GOA cod, EBS and
 GOA pollock, Southern Gulf cod and spring herring. Change one assumption at a
 time and preserve their data and accepted baseline settings. Agreement with
 accepted trajectories alone is not evidence of statistical correctness.
+
+## Catchability validation
+
+Phase 2 recovery and stock experiments are separate from the F/M mean study.
+Run from the repository root:
+
+```r
+system2(file.path(R.home("bin"), "Rscript"),
+        "analysis/formula_expansion/test_q_validation.R")
+system2(file.path(R.home("bin"), "Rscript"),
+        c("analysis/formula_expansion/simulate_q_effects.R", "100", "30"))
+system2(file.path(R.home("bin"), "Rscript"),
+        "analysis/formula_expansion/validate_q_workflow.R")
+system2(file.path(R.home("bin"), "Rscript"),
+        "analysis/formula_expansion/evaluate_q_stocks.R")
+rmarkdown::render("analysis/formula_expansion/q_effects_report.Rmd",
+                  output_dir = "analysis/formula_expansion/results")
+```
+
+`q_validation.R` contains the shared designs and recovery calculations. The study
+uses both q links, categorical and numeric multipliers, six effect specifications,
+replicated and sparse observations, and estimated process/observation SDs.
+Failures and warnings are retained, including structural rejections. The recovery
+file records every attempt, seed, interval, and numerical check; checkpoint files
+are marked incomplete until the entire study finishes.
+
+Stock experiments fit the settled recipes afresh from a pinned committed database.
+Candidate q formulas are in a separate experiment script; canonical stock scripts,
+their observations and other model settings are not changed. GOA pollock candidates
+replace its annual ADF&G fixed effects rather than duplicating them. Failed
+candidates remain labelled in local dashboards. Aggregate comparative-assessment
+CSV files are not overwritten. All fits, diagnostic tables, dashboards and report
+figures go under ignored `results/`; retain only code, tests and report text in Git.
+
+The recovery report distinguishes mathematical correctness, numerical success,
+parameter/curve recovery, and agreement with accepted assessment outputs. Neither
+good numerical checks nor closer accepted trajectories establish identifiability.
+Retrospective tests report failed folds and never treat projection years as
+assessment terminal years. Stock decisions need review before replacing baselines.
+
+### Phase 2 evidence
+
+Replicated full-model numerical success was 73–100%, below the 90% target in
+several cases. Isolated Gaussian fits all passed with replicated observations;
+logistic fits were less reliable. Sparse numeric-by effects could converge while
+underestimating their SD, and AR1 correlation tended to be underestimated.
+Keep these options experimental and inspect uncertainty, rather than treating
+convergence as evidence that changing q is identifiable.
+
+All five stock baselines converged; ten of fourteen candidates converged.
+EBS RW/AR1, Southern Gulf RW and herring logistic did not pass. Baseline stock
+recipes remain unchanged. One logistic retrospective fold also failed; its actual
+retained fold count is recorded. The HTML report includes recovery figures,
+intervals, diagnostic tables and definition-matched assessment comparisons.
+
+Phase 2 checks: 1,603 passing package assertions, one interactive-only skip,
+all 29 comparative-assessment test files passed, and `R CMD check --no-manual`
+Status OK. Recovery comprises 2,400 isolated and 480 full-model attempts.
 
 ## F/M mean validation
 

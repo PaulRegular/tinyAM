@@ -1,0 +1,253 @@
+---
+title: "Catchability formula effects: recovery and stock experiments"
+output:
+  html_document:
+    self_contained: true
+    toc: false
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE,
+  fig.width = 9, fig.height = 5, dpi = 120, fig.path = "results/q_figures/")
+library(ggplot2)
+study <- readRDS("results/q_recovery.rds")
+stopifnot(isTRUE(study$complete))
+stocks <- readRDS("results/q_stocks/results.rds")
+workflow <- readRDS("results/q_workflow.rds")
+d <- study$diagnostics
+p <- study$parameters
+p$kind <- ifelse(grepl("^sd_", p$parameter), "Process SD",
+  ifelse(grepl("^phi_", p$parameter), "AR1 correlation",
+    ifelse(grepl("^q_a50_", p$parameter), "Logistic midpoint", "Logistic slope")))
+labels <- c(iid = "IID by survey", rw = "RW by survey", ar1 = "AR1 by survey",
+  intercept = "Random intercept", numeric_by = "RW multiplied by age", logistic = "Logistic curve")
+summarize <- function(data, fields, fun) {
+  keys <- interaction(data[fields], drop = TRUE, lex.order = TRUE)
+  do.call(rbind, lapply(split(data, keys), function(x) cbind(x[1, fields, drop = FALSE], fun(x))))
+}
+numerical <- summarize(d, c("scope", "spec", "link", "design"), function(x) {
+  fitted <- is.finite(x$gradient)
+  data.frame(attempts = nrow(x), fitted = sum(fitted), passed = sum(x$converged),
+    pass_percent = round(100 * mean(x$converged), 1),
+    curve_RMSE = round(mean(x$q_rmse[x$converged], na.rm = TRUE), 3),
+    curve_coverage = round(100 * mean(x$q_coverage[x$converged], na.rm = TRUE), 1))
+})
+dense <- subset(numerical, design == "replicated")
+full <- subset(dense, scope == "full")
+```
+
+## Main findings
+
+The study completed `r sum(d$scope == "isolated")` isolated attempts and
+`r sum(d$scope == "full")` full-assessment attempts. Well-informed full-model
+numerical success ranged from `r min(full$pass_percent)`% to
+`r max(full$pass_percent)`%. The planned 90% target was
+`r if (all(full$pass_percent >= 90)) "met in every well-informed full-model case" else "not met in every well-informed full-model case"`.
+
+The formulas are mathematically checked, but numerical convergence is not proof
+that changing catchability is distinguishable from abundance or observation error.
+Sparse cases and individual stock results below determine where caution is needed.
+No tolerances were relaxed, no unsuccessful fits were rescued, and no settled
+stock specifications were replaced.
+
+With replicated observations and known abundance, every Gaussian case passed;
+logistic success was 87% with the log link and 73% with the logit link. Full-model
+Gaussian success was 83–100%, and logistic success was 73–77%. Process SD recovery
+was generally reasonable with replication, but estimated AR1 correlation tended
+to be below the generating value. These results support cautious use, not a
+claim that every option is numerically reliable.
+
+## What was tested
+
+Each effect was tested with both log and logit links: IID effects by survey,
+RW and AR1 trajectories by survey, conventional random intercepts, a shared RW
+multiplied by age/8, and separate logistic age curves for two surveys. Process
+SDs and AR1 correlation were estimated, not fixed. Logistic midpoints and slopes
+were also estimated. The generating SD was 0.18 and AR1 correlation 0.65.
+
+The isolated experiment treats abundance and survival as known. It uses 40 years,
+eight ages and two surveys, with observation log-SD 0.1 estimated alongside q.
+There are `r study$n_isolated` replicates per effect, link and support design.
+Sparse Gaussian designs have one observation per year and survey; sparse logistic
+designs see only ages 1–3, without the upper plateau.
+
+The full assessment has 30 years, ages 1–8, two surveys at year fractions 0.25
+and 0.75, fixed M=0.25, exponential initial abundance, RW recruitment, and IID F
+around an age-specific mean. Catch log-SD is fixed at 0.08; survey log-SD 0.1
+is estimated. There are `r study$n_full` replicates per effect/link, plus sparse
+IID and AR1 cases. Starts retain the generating population values and baseline q,
+but reset formula states, SDs, correlations and logistic parameters. These are
+favorable-start recovery tests, not a test of arbitrary starting values.
+
+Only the catchability formula changes in stock experiments. GOA pollock replaces
+its fixed annual ADF&G term with an IID/RW/AR1 effect restricted to that survey.
+Other candidates add temporal q variation or replace the age curve with logistic
+selectivity. Canonical data, settled baselines and other model settings remain intact.
+
+## Numerical performance and q recovery
+
+A pass requires optimizer code zero, successful uncertainty calculation with a
+positive-definite Hessian, and maximum absolute gradient ≤0.01. Rejections before
+fitting remain in the denominator. Curve RMSE and interval coverage below use
+numerically successful fits, so their denominators are smaller when fitting fails.
+Coverage is first calculated within each replicate and then averaged; age/year
+cells are not independent experimental replicates.
+
+```{r numerical-figure}
+ggplot(numerical, aes(labels[spec], pass_percent, fill = design)) +
+  geom_col(position = "dodge") + geom_hline(yintercept = 90, linetype = 2) +
+  facet_grid(scope ~ link) + coord_flip() +
+  labs(x = NULL, y = "Numerical passes (%)", fill = "Support") + theme_bw()
+```
+
+Sparse full-assessment trials cover only IID and AR1. Other blank sparse bars
+were not tested; zero-success log-link IID/random-intercept cases were rejected.
+
+```{r numerical-table}
+knitr::kable(numerical, row.names = FALSE)
+```
+
+```{r recovery-figure, fig.height=8}
+pd <- merge(p, d[, c("scope", "spec", "link", "design", "replicate", "converged")],
+  by = c("scope", "spec", "link", "design", "replicate"))
+sd_data <- subset(pd, design == "replicated" & kind == "Process SD" & converged)
+ggplot(sd_data, aes(labels[spec], estimate, fill = scope)) +
+  geom_boxplot(outlier.shape = NA) + geom_hline(yintercept = .18, linetype = 2) +
+  facet_wrap(~ link, ncol = 1) + coord_flip() +
+  labs(x = NULL, y = "Estimated process SD", fill = "Experiment") + theme_bw()
+```
+
+<details>
+<summary>Parameter recovery and interval coverage</summary>
+
+```{r recovery-table}
+recovery <- summarize(pd, c("scope", "spec", "link", "design", "kind"), function(x) {
+  x <- x[x$converged & is.finite(x$estimate) & is.finite(x$lower) & is.finite(x$upper), ]
+  if (!nrow(x)) return(data.frame(replicates = 0, bias = NA, coverage_percent = NA, MC_SE = NA))
+  within <- summarize(x, "replicate", function(z) data.frame(
+    bias = mean(z$estimate - z$truth), coverage = mean(z$lower <= z$truth & z$upper >= z$truth)))
+  data.frame(replicates = nrow(within), bias = round(mean(within$bias), 3),
+    coverage_percent = round(100 * mean(within$coverage), 1),
+    MC_SE = round(100 * sd(within$coverage) / sqrt(nrow(within)), 1))
+})
+knitr::kable(recovery, row.names = FALSE)
+```
+
+</details>
+
+MC_SE is the Monte Carlo standard error of coverage in percentage points.
+Small differences from 95% are not interpreted without this sampling uncertainty.
+Zero MC_SE when every interval covers does not establish perfect coverage.
+
+```{r example-curves, fig.height=8}
+curves <- do.call(rbind, study$examples[grepl("^full_.*_replicated_1$", names(study$examples))])
+logistic_curves <- subset(curves, spec == "logistic" & year == 2000)
+curves <- subset(curves, age == 4 & survey == "early" & spec != "logistic")
+ggplot(curves, aes(year)) +
+  geom_ribbon(aes(ymin = lower, ymax = upper), fill = "#93C25C", alpha = .35) +
+  geom_line(aes(y = truth), color = "#003E56") +
+  geom_line(aes(y = estimate), color = "#F05C28") +
+  facet_grid(spec ~ link, scales = "free_y") + labs(y = "q", x = "Year") + theme_bw()
+```
+
+Dark lines show generating q; orange lines are fitted q and ribbons are fitted
+95% intervals. These are first-replicate examples, not selected best fits.
+
+```{r logistic-curves}
+ggplot(logistic_curves, aes(age)) +
+  geom_ribbon(aes(ymin = lower, ymax = upper), fill = "#93C25C", alpha = .35) +
+  geom_line(aes(y = truth), color = "#003E56") +
+  geom_line(aes(y = estimate), color = "#F05C28") +
+  facet_grid(survey ~ link) + labs(y = "q", x = "Age") + theme_bw()
+```
+
+Logistic effects change the age curve rather than adding a temporal trajectory.
+
+## Sparse support and identifiability
+
+```{r sparse-errors}
+errors <- subset(d, !is.finite(gradient))
+if (nrow(errors)) knitr::kable(summarize(errors,
+  c("scope", "spec", "link", "design", "message"), function(x) data.frame(attempts = nrow(x))))
+```
+
+One observation per IID level is an exact process/observation-variance alias
+under the log link and is rejected. A nonlinear logit link does not make sparse
+data automatically informative: inspect variance recovery, coverage and warnings.
+Logistic curves without observations near the plateau can trade off their maximum
+q, midpoint and slope. Prefer supported age ranges, simpler age curves or
+externally justified fixed process SDs; numerical success alone is insufficient.
+Sparse numeric-by RW experiments had downward-biased process SDs despite 100%
+isolated numerical success. A small multiplier can leave the shared trajectory
+weakly measured. The sparse trials therefore provide a counterexample to using
+convergence alone as the acceptance criterion.
+
+## Stock applications
+
+All five settled baselines converged. Ten of fourteen candidates converged.
+EBS pollock RW/AR1 failed the gradient check; Southern Gulf cod RW had a very
+large gradient and failed uncertainty estimation. Herring logistic had a small
+gradient but a non-positive-definite Hessian. GOA cod, GOA pollock, Southern Gulf
+AR1 and herring RW/AR1 passed numerical checks. None replaces its settled baseline.
+
+```{r stock-table}
+knitr::kable(stocks$diagnostics[, c("assessment_id", "model", "is_converged",
+  "optimizer_code", "max_abs_gradient", "positive_definite_hessian", "objective")], digits = 4)
+```
+
+<details>
+<summary>Candidate process and selectivity parameter intervals</summary>
+
+```{r stock-parameters}
+stock_parameters <- do.call(rbind, stocks$parameters)
+stock_parameters <- merge(stock_parameters,
+  stocks$diagnostics[, c("assessment_id", "model", "is_converged")],
+  by = c("assessment_id", "model"))
+knitr::kable(stock_parameters[, c("assessment_id", "model", "is_converged",
+  "par", "coef", "est", "lwr", "upr")], digits = 3, row.names = FALSE)
+```
+
+</details>
+
+```{r stock-comparison}
+s <- subset(stocks$summaries, metric %in% c("ssb", "recruitment"))
+knitr::kable(s[, c("assessment_id", "model", "metric", "comparison_status",
+  "median_absolute_percent_difference", "trend_correlation")], digits = 3)
+```
+
+Percent differences describe scale agreement; trend correlation describes
+trajectory agreement. Source timing, age and biomass-definition differences remain
+as labelled by the canonical comparison workflow. Better agreement is not evidence
+that a candidate's extra process is identifiable or scientifically preferable.
+
+Dashboards for each stock are in `results/q_stocks/<assessment_id>/dashboard.html`.
+They show Accepted, the settled baseline and candidate fits, including clearly
+labelled numerical failures. Process intervals and conditional residuals should
+be reviewed alongside the diagnostics rather than selecting the closest trajectory.
+
+## Updates, projections, retrospectives and simulation
+
+```{r workflow-table}
+knitr::kable(workflow, row.names = FALSE)
+```
+
+These integration runs use estimated q-process SDs and AR1 correlation. They
+check compact-state names after peeling, historical terminal years with three
+existing projection years, one-year hindcast projections, and simulation from
+the projected fit. A successful partial retrospective is reported with its actual
+number of retained folds; failed folds are not counted as successes.
+
+## Scope of the decision
+
+Retain the formula options as experimental tools with the existing exact-alias
+checks. Routine permission to specify a formula is separate from evidence that a
+particular stock supports it. Use parsimonious q effects, inspect SD/correlation
+uncertainty, and test sensitivity against the settled baseline before interpreting
+time-varying q. This work does not authorize replacing any accepted stock recipe
+or adding variance processes. The tables, warnings and dashboards are the review
+gate for stock-specific decisions.
+
+An observation-SD derivative bug found by the study was fixed: concatenating fixed
+catch SDs before estimated survey SDs had discarded their differentiation type.
+The correction preserves the existing SD formulas and observation likelihood.
+The report and scripts are tracked; fits, figures and rendered output are ignored.
