@@ -145,6 +145,8 @@
 #'                  standardized residuals (see [tidy_obs_pred()]).
 #' - **pop**: A collection of population summaries in tidy format (see
 #'            [tidy_pop()]).
+#' - **formula_effects**: When Gaussian q, F or M formula terms are present, signed effect levels,
+#'   RW increments and numeric-by contributions for reporting and dashboards.
 #'
 #' @example inst/examples/example_fit_default.R
 #' @examples
@@ -206,7 +208,7 @@ fit_tam <- function(
     cli::cli_abort("Starting {.arg dq} increments must be finite and non-negative.")
   }
 
-  ran <- c("log_f", "log_r", .q_random_parameters(dat))
+  ran <- c("log_f", "log_r", .formula_random_parameters(dat))
   if (dat$N_settings$init == "random") {
     ran <- c(ran, "log_n0")
   }
@@ -289,7 +291,8 @@ fit_tam <- function(
   parameter_values <- obj$env$last.par
   rep <- obj$report(parameter_values)
   sdreport_error <- NULL
-  sdrep <- tryCatch(RTMB::sdreport(obj, par.fixed = opt$par, getJointPrecision = TRUE),
+  sdrep <- tryCatch(RTMB::sdreport(obj, par.fixed = opt$par,
+    getJointPrecision = TRUE, getReportCovariance = FALSE),
     error = function(e) {
       sdreport_error <<- conditionMessage(e)
       NULL
@@ -316,8 +319,9 @@ fit_tam <- function(
   par_tabs <- tidy_par(out, interval = interval)
   out$fixed_par <- par_tabs$fixed
   out$random_par <- par_tabs$random
-  out$obs_pred <- tidy_obs_pred(out, add_osa_res = add_osa_res, trace = !silent)
+  out$obs_pred <- tidy_obs_pred(out, add_osa_res = add_osa_res, interval = interval, trace = !silent)
   out$pop <- tidy_pop(out, interval = interval)
+  if (length(.formula_terms(dat))) out$formula_effects <- .tidy_formula_effects(out, interval = interval)
   out$diagnostics <- check_tam(out)
   out$is_converged <- out$diagnostics$is_converged
   if (!out$is_converged) {

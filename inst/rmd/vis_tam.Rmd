@@ -45,6 +45,7 @@ obs_pred <- tabs$obs_pred
 pop <- tabs$pop
 fixed_par <- tabs$fixed_par
 random_par <- tabs$random_par
+formula_effects <- tabs$formula_effects
 checks <- lapply(Filter(function(fit) inherits(fit, "tam_fit"), fits), check_tam)
 
 ```

@@ -157,7 +157,7 @@ make_par <- function(dat) {
     par$dq <- setNames(rep(0.05, ncol(dat$q_mono_modmat)),
                        colnames(dat$q_mono_modmat))
   }
-  par <- c(par, .q_term_parameters(dat$q_terms))
+  par <- c(par, .q_term_parameters(.formula_terms(dat)))
 
   if (dat$any_fill_missing) {
     par$missing <- numeric(sum(dat$fill_missing_map))
@@ -189,6 +189,9 @@ make_par <- function(dat) {
     getAll(par, dat)
     # Every mean component must be constant within a shared absolute M state.
     mean_parts <- cbind(log_mu_supplied_m, M_modmat)
+    for (term in dat$M_terms) {
+      mean_parts <- cbind(mean_parts, .q_term_design(term, nrow(dat$obs$weight)))
+    }
     for(b in levels(M_settings$age_blocks)) {
       if (sum(M_settings$age_blocks == b) > 1) {
         ia <- names(M_settings$age_blocks)[M_settings$age_blocks == b]

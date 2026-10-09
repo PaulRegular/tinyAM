@@ -55,6 +55,9 @@ use \code{~ 1} for one estimated mean level or \code{~ factor(age)} for age-spec
 means. For \code{"rw"}, \code{NULL} is allowed. Mean columns constant through time
 cancel from RW increments and are removed with a warning. Remaining
 columns must be identifiable from historical year-to-year differences.
+With IID residuals, \code{\link[=iid]{iid()}}, \code{\link[=rw]{rw()}} and \code{\link[=ar1]{ar1()}} can add random mean effects,
+e.g. \code{~ factor(age) + rw(year)}. Only one temporal mean term is supported;
+structured means with temporal residual processes are not yet enabled.
 \item \code{mean_ages}: optional vector of ages to include in population weighted
 average F (\code{F_bar}) calculations. All ages used if absent.
 }}
@@ -69,6 +72,9 @@ surface directly and may therefore be positive or negative; they intentionally
 avoid a \code{log_} prefix to prevent automatic back-transformation when tidied.
 If provided together with \code{mu_supplied}, the intercept in \code{mu_form} is
 dropped (warning) so supplied levels act as fixed offsets.
+\code{\link[=iid]{iid()}}, \code{\link[=rw]{rw()}} and \code{\link[=ar1]{ar1()}} support random mean effects with IID residuals
+or the residual process off. Use \code{~ 0 + rw(year)} to vary supplied M through
+time. All mean components must be constant within fitted M age blocks.
 \item \code{mu_supplied}: optional one-sided formula giving supplied (non-estimated)
 \eqn{M}, e.g. \code{~ I(0.2)} or a column reference such as
 \code{~ M_assumption} stored in the \code{obs$weight} data.frame.

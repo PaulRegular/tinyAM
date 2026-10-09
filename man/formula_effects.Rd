@@ -5,7 +5,7 @@
 \alias{iid}
 \alias{rw}
 \alias{ar1}
-\title{Random catchability effects in formulas}
+\title{Random effects in model formulas}
 \usage{
 iid(x, by = NULL, sd = NULL)
 
@@ -14,7 +14,8 @@ rw(x, by = NULL, sd = NULL)
 ar1(x, by = NULL, sd = NULL, phi = NULL)
 }
 \arguments{
-\item{x}{Column defining levels (IID) or ordered steps (RW/AR1).}
+\item{x}{Column in the relevant observation table defining levels (IID) or
+ordered steps (RW/AR1).}
 
 \item{by}{Optional column: numeric multiplier or categorical groups.}
 
@@ -28,7 +29,8 @@ Formula markers; direct calls raise an error.
 \description{
 Allow catchability to vary among groups or through time without fitting an
 unrelated fixed coefficient for every value. Use these markers as additive
-terms in \code{index_settings$q_form}; ordinary formula terms supply the baseline.
+terms in \code{index_settings$q_form}, \code{F_settings$mu_form}, or
+\code{M_settings$mu_form}; ordinary formula terms supply the baseline.
 }
 \details{
 \code{iid(x)} gives each level an independent, mean-zero Normal effect.
@@ -56,12 +58,35 @@ out when there are no observations. At the fitted mode, new IID levels have
 zero effect, RW holds its last level, and AR1 decays toward zero. Simulation
 includes future process variation. These are conditional predictions on the
 link scale, not marginal response-scale means.
+
+For F and M means, effects are added to log mean mortality. The absolute
+latent states remain \code{log_f} and \code{log_m}; their residuals are calculated
+relative to the resulting mean surfaces. A shared \code{rw(year)} or \code{ar1(year)}
+can describe a population-wide change while \code{process = "iid"} represents
+independent residual fluctuations by age (F) or age block (M).
+M also supports structured means with \code{process = "off"}.
+Existing supplied M is an offset: \code{~ 0 + rw(year)} modifies it without
+estimating another baseline. Effects must be constant within each fitted
+M age block. Use a categorical age column for separate trajectories;
+numeric \code{by = age} instead multiplies one shared trajectory by age.
+
+Initially, one temporal mean term is permitted per F/M surface, with IID
+residuals or M residuals off. Structured means with RW/AR1 residuals are
+rejected pending evidence that both temporal components can be separated.
+Two estimated IID variances on the same states are also rejected.
+Known design redundancies are checked, but sparse observations and the
+trade-off between F, M, recruitment and catchability can still make a
+numerically converged model weakly identified. Use recovery simulations
+before interpreting separate process components.
 }
 \examples{
 ~ survey + iid(year, by = survey)
 ~ survey + rw(year, by = survey)
 ~ survey + ar1(year, by = survey)
 ~ survey + (1 | vessel)
+# F_settings = list(process = "iid", mu_form = ~ factor(age) + rw(year))
+# M_settings = list(process = "off", mu_supplied = ~ I(0.2),
+#                   mu_form = ~ 0 + ar1(year))
 }
 \seealso{
 \link{catchability_curves}, \code{\link[=prepare_tam]{prepare_tam()}}, \code{\link[=fit_tam]{fit_tam()}}, \code{\link[=check_tam]{check_tam()}}

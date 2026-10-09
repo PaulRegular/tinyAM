@@ -69,6 +69,40 @@ test_that("vis_tam renders cleanly and produces an HTML output", {
   })
 })
 
+test_that("formula-effect dashboards retain signed effects, increments and framed ribbons", {
+  process <- update(default_fit, silent = TRUE,
+    index_settings = list(q_form = ~ q_block + rw(year, by = age, sd = .1) +
+      ar1(year, sd = .1, phi = .6) + iid(age, sd = .1), sd_form = ~1,
+      fill_missing = FALSE), start_par = as.list(default_fit$sdrep, "Estimate"))
+  reference <- default_fit
+  reference$obs_pred$index$q <- NA_real_
+  class(reference) <- c("tam_ref", "list")
+  file <- tempfile(fileext = ".html")
+  expect_no_error(vis_tam(model_list = list(Accepted = reference, ordinary = default_fit,
+    process = process), output_file = file, open_file = FALSE,
+    render_args = list(quiet = TRUE)))
+  con <- file(file, "rb")
+  html <- paste(readLines(con, warn = FALSE), collapse = "\n")
+  close(con)
+  expect_match(html, "Catchability: rw_year_age", fixed = TRUE)
+  expect_match(html, "Increments: rw_year_age", fixed = TRUE)
+  expect_match(html, "Multiplied contribution: rw_year_age", fixed = TRUE)
+  expect_match(html, "Catchability: ar1_year", fixed = TRUE)
+  expect_match(html, "Catchability: iid_age", fixed = TRUE)
+  plots <- dashboard_plots(file)
+  effects <- Filter(function(p) any(grepl("Effect on catchability", unlist(p$layout$yaxis$title))), plots)
+  expect_gte(length(effects), 5L)
+  for (p in effects) {
+    expect_equal(p$layout$yaxis$type, "linear")
+    expect_lt(unlist(p$layout$yaxis$range)[1], 0)
+    expect_false(any(grepl("yaxis.type", unlist(p$layout$updatemenus), fixed = TRUE)))
+  }
+  framed <- Filter(function(p) length(p$frames) > 1L, effects)
+  expect_gt(length(framed), 0)
+  expect_true(any(vapply(framed, function(p) any(vapply(p$data,
+    function(trace) !is.null(trace$fill) && grepl("^to", trace$fill), logical(1))), logical(1))))
+})
+
 test_that("render_args must be a named list", {
   expect_error(
     vis_tam(fits, output_file = tempfile(fileext = ".html"), open_file = FALSE,

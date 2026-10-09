@@ -367,6 +367,9 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #'   means. For `"rw"`, `NULL` is allowed. Mean columns constant through time
 #'   cancel from RW increments and are removed with a warning. Remaining
 #'   columns must be identifiable from historical year-to-year differences.
+#'   With IID residuals, [iid()], [rw()] and [ar1()] can add random mean effects,
+#'   e.g. `~ factor(age) + rw(year)`. Only one temporal mean term is supported;
+#'   structured means with temporal residual processes are not yet enabled.
 #' - `mean_ages`: optional vector of ages to include in population weighted
 #'   average F (`F_bar`) calculations. All ages used if absent.
 #' @param M_settings A list with elements:
@@ -378,6 +381,9 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #'   avoid a `log_` prefix to prevent automatic back-transformation when tidied.
 #'   If provided together with `mu_supplied`, the intercept in `mu_form` is
 #'   dropped (warning) so supplied levels act as fixed offsets.
+#'   [iid()], [rw()] and [ar1()] support random mean effects with IID residuals
+#'   or the residual process off. Use `~ 0 + rw(year)` to vary supplied M through
+#'   time. All mean components must be constant within fitted M age blocks.
 #' - `mu_supplied`: optional one-sided formula giving supplied (non-estimated)
 #'   \eqn{M}, e.g. `~ I(0.2)` or a column reference such as
 #'   `~ M_assumption` stored in the `obs$weight` data.frame.
@@ -720,8 +726,12 @@ prepare_tam <- function(
   q_design <- .parse_q_formula(dat$index_settings$q_form, dat$obs$index)
   dat[names(q_design)] <- q_design
   .check_q_terms(dat)
+  dat$F_terms <- dat$M_terms <- list()
   if (!is.null(dat$F_settings$mu_form)) {
-    dat$F_modmat <- stats::model.matrix(F_settings$mu_form, data = dat$obs$catch)
+    mean_design <- .parse_mean_formula(dat$F_settings$mu_form, dat, "F")
+    dat$F_modmat <- mean_design$matrix
+    dat$F_terms <- mean_design$terms
+    .check_mean_terms(dat, "F")
     if (nrow(dat$F_modmat) != nrow(dat$obs$catch) ||
         any(!is.finite(dat$F_modmat)) || !ncol(dat$F_modmat)) {
       cli::cli_abort("F_settings$mu_form must produce a finite, non-empty design for every modeled year and age.")
@@ -755,11 +765,14 @@ prepare_tam <- function(
   }
 
   if (!is.null(dat$M_settings$mu_form)) {
-    dat$M_modmat <- stats::model.matrix(M_settings$mu_form, data = dat$obs$weight)
+    mean_design <- .parse_mean_formula(dat$M_settings$mu_form, dat, "M")
+    dat$M_modmat <- mean_design$matrix
+    dat$M_terms <- mean_design$terms
     if ("(Intercept)" %in% colnames(dat$M_modmat) && !is.null(dat$M_settings$mu_supplied)) {
-      dat$M_modmat <- stats::model.matrix(update(M_settings$mu_form, ~ 0 + .), data = dat$obs$weight)
+      dat$M_modmat <- .parse_mean_formula(update(dat$M_settings$mu_form, ~ 0 + .), dat, "M")$matrix
       cli::cli_warn("Dropping intercept term in M mu_form since supplied levels are provided. Set mu_supplied to NULL to estimate the intercept.")
     }
+    .check_mean_terms(dat, "M")
   } else {
     dat$mu_m <- 0
     dat$M_modmat <- 0

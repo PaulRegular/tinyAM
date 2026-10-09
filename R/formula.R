@@ -1,9 +1,10 @@
-#' Random catchability effects in formulas
+#' Random effects in model formulas
 #'
 #' @description
 #' Allow catchability to vary among groups or through time without fitting an
 #' unrelated fixed coefficient for every value. Use these markers as additive
-#' terms in `index_settings$q_form`; ordinary formula terms supply the baseline.
+#' terms in `index_settings$q_form`, `F_settings$mu_form`, or
+#' `M_settings$mu_form`; ordinary formula terms supply the baseline.
 #'
 #' @details
 #' `iid(x)` gives each level an independent, mean-zero Normal effect.
@@ -32,7 +33,28 @@
 #' includes future process variation. These are conditional predictions on the
 #' link scale, not marginal response-scale means.
 #'
-#' @param x Column defining levels (IID) or ordered steps (RW/AR1).
+#' For F and M means, effects are added to log mean mortality. The absolute
+#' latent states remain `log_f` and `log_m`; their residuals are calculated
+#' relative to the resulting mean surfaces. A shared `rw(year)` or `ar1(year)`
+#' can describe a population-wide change while `process = "iid"` represents
+#' independent residual fluctuations by age (F) or age block (M).
+#' M also supports structured means with `process = "off"`.
+#' Existing supplied M is an offset: `~ 0 + rw(year)` modifies it without
+#' estimating another baseline. Effects must be constant within each fitted
+#' M age block. Use a categorical age column for separate trajectories;
+#' numeric `by = age` instead multiplies one shared trajectory by age.
+#'
+#' Initially, one temporal mean term is permitted per F/M surface, with IID
+#' residuals or M residuals off. Structured means with RW/AR1 residuals are
+#' rejected pending evidence that both temporal components can be separated.
+#' Two estimated IID variances on the same states are also rejected.
+#' Known design redundancies are checked, but sparse observations and the
+#' trade-off between F, M, recruitment and catchability can still make a
+#' numerically converged model weakly identified. Use recovery simulations
+#' before interpreting separate process components.
+#'
+#' @param x Column in the relevant observation table defining levels (IID) or
+#'   ordered steps (RW/AR1).
 #' @param by Optional column: numeric multiplier or categorical groups.
 #' @param sd Optional positive fixed process SD. `NULL` estimates it.
 #' @param phi Optional fixed AR1 correlation in `[0, 1)`. `NULL` estimates it.
@@ -42,6 +64,9 @@
 #' ~ survey + rw(year, by = survey)
 #' ~ survey + ar1(year, by = survey)
 #' ~ survey + (1 | vessel)
+#' # F_settings = list(process = "iid", mu_form = ~ factor(age) + rw(year))
+#' # M_settings = list(process = "off", mu_supplied = ~ I(0.2),
+#' #                   mu_form = ~ 0 + ar1(year))
 #' @seealso [catchability_curves], [prepare_tam()], [fit_tam()], [check_tam()]
 #' @name formula_effects
 #' @export
@@ -60,7 +85,7 @@ ar1 <- function(x, by = NULL, sd = NULL, phi = NULL) .formula_marker_error("ar1"
 logistic <- function(x, by = NULL) .formula_marker_error("logistic")
 
 .formula_marker_error <- function(term) {
-  cli::cli_abort("{term}() is only supported as an additive term in {.arg index_settings$q_form}.")
+  cli::cli_abort("{term}() is a formula marker. Use it in {.arg index_settings$q_form}, {.arg F_settings$mu_form}, or {.arg M_settings$mu_form}; logistic() is restricted to q_form.")
 }
 
 .formula_call_name <- function(x) {
@@ -84,7 +109,7 @@ logistic <- function(x, by = NULL) .formula_marker_error("logistic")
   specs <- list()
   column <- function(x, label) {
     if (!is.symbol(x) || !as.character(x) %in% names(data)) {
-      cli::cli_abort("Structured {.arg {label}} must name an existing index column.")
+        cli::cli_abort("Structured {.arg {label}} must name an existing observation column.")
     }
     as.character(x)
   }
@@ -328,6 +353,10 @@ logistic <- function(x, by = NULL) .formula_marker_error("logistic")
   contribution <- selectivity <- numeric(nrow(dat$obs$index))
   nll <- 0
   simulated <- list()
+  rw_terms <- Filter(function(term) term$type == "rw", dat$q_terms)
+  increments <- numeric(sum(vapply(rw_terms, function(term)
+    sum(vapply(term$groups, function(g) length(g$states), integer(1))), integer(1))))
+  increment_offset <- 0L
   for (term in dat$q_terms) {
     if (term$type == "logistic") {
       a50 <- par[[paste0("q_a50_", term$id)]]
@@ -359,6 +388,10 @@ logistic <- function(x, by = NULL) .formula_marker_error("logistic")
       }
       if (term$type == "iid") nll <- nll - sum(RTMB::dnorm(x, 0, sd, log = TRUE))
       if (term$type == "rw") {
+        delta <- x
+        if (length(x) > 1L) delta[-1L] <- x[-1L] - x[-length(x)]
+        increments[increment_offset + seq_along(delta)] <- delta
+        increment_offset <- increment_offset + length(delta)
         nll <- nll - RTMB::dnorm(x[1L], 0, sd, log = TRUE)
         if (length(x) > 1L) nll <- nll - sum(RTMB::dnorm(
           x[-1L] - x[-length(x)], 0, sd, log = TRUE))
@@ -377,7 +410,67 @@ logistic <- function(x, by = NULL) .formula_marker_error("logistic")
     simulated[[term$parameter]] <- states
   }
   list(contribution = contribution, log_selectivity = selectivity,
-       nll = nll, parameters = simulated)
+       nll = nll, parameters = simulated, rw_increments = increments)
+}
+
+.q_level_metadata <- function(term) {
+  all_levels <- unique(unlist(lapply(term$groups, `[[`, "levels"), use.names = FALSE))
+  do.call(rbind, lapply(term$groups, function(g) {
+    level <- as.character(g$levels)
+    data.frame(term = term$id, process = term$type, variable = term$variable,
+      by = if (is.null(term$by)) NA_character_ else term$by, group = g$group,
+      level = level, coordinate = if (is.numeric(g$levels)) g$levels else match(g$levels, all_levels),
+      is_proj = seq_along(level) > g$n_historical,
+      is_fixed = term$type == "rw" & seq_along(level) == 1L)
+  }))
+}
+
+.tidy_q_effects <- function(fit, interval = .95, increment_report = "eta_q_increments") {
+  terms <- Filter(function(term) term$type != "logistic", fit$dat$q_terms)
+  if (!length(terms)) return(list())
+  estimate <- .tam_parameter_summary(fit, "Estimate")
+  error <- .tam_parameter_summary(fit, "Std. Error")
+  z <- stats::qnorm(.5 + interval / 2)
+  report_errors <- if (is.null(fit[["sdrep"]])) NULL else
+    as.list(fit[["sdrep"]], "Std. Error", report = TRUE)
+  out <- list(levels = list(), increments = list(), contributions = list())
+  offset <- 0L
+  for (term in terms) {
+    tab <- .q_level_metadata(term)
+    tab$est <- tab$se <- numeric(nrow(tab))
+    tab$est[!tab$is_fixed] <- estimate[[term$parameter]]
+    tab$se[!tab$is_fixed] <- error[[term$parameter]]
+    tab$lwr <- tab$est - z * tab$se
+    tab$upr <- tab$est + z * tab$se
+    tab$se_scale <- "reported"
+    out$levels[[term$id]] <- tab
+    if (term$type == "rw") {
+      delta <- tab[!tab$is_fixed, , drop = FALSE]
+      ii <- offset + seq_len(nrow(delta))
+      delta$est <- fit$rep[[increment_report]][ii]
+      delta$se <- if (is.null(report_errors)) NA_real_ else report_errors[[increment_report]][ii]
+      delta$lwr <- delta$est - z * delta$se
+      delta$upr <- delta$est + z * delta$se
+      out$increments[[term$id]] <- delta
+      offset <- offset + nrow(delta)
+    }
+    if (!is.null(term$by) && is.numeric(fit$dat$obs$index[[term$by]])) {
+      d <- fit$dat$obs$index
+      rows <- unlist(lapply(term$groups, `[[`, "rows"), use.names = FALSE)
+      index <- unlist(lapply(term$groups, `[[`, "index"), use.names = FALSE)
+      contribution <- cbind(d[rows, intersect(c("year", "age", "survey", "is_proj"), names(d)), drop = FALSE],
+        tab[index, c("term", "process", "variable", "group", "level", "coordinate", "est", "lwr", "upr", "se", "se_scale")])
+      contribution$multiplier <- term$multiplier[rows]
+      contribution$est <- contribution$est * contribution$multiplier
+      limits <- cbind(contribution$lwr, contribution$upr) * contribution$multiplier
+      contribution$lwr <- apply(limits, 1, min)
+      contribution$upr <- apply(limits, 1, max)
+      contribution$se <- contribution$se * abs(contribution$multiplier)
+      out$contributions[[term$id]] <- unique(contribution)
+    }
+  }
+  attr(out, "interval") <- interval
+  out
 }
 
 #' Rising catchability curves in formulas

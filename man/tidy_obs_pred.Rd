@@ -4,7 +4,7 @@
 \alias{tidy_obs_pred}
 \title{Tidy observed, predicted, and residual diagnostics}
 \usage{
-tidy_obs_pred(fit, add_osa_res = FALSE, ...)
+tidy_obs_pred(fit, add_osa_res = FALSE, interval = 0.95, ...)
 }
 \arguments{
 \item{fit}{A fitted TAM object as returned by \code{\link[=fit_tam]{fit_tam()}}.}
@@ -13,6 +13,8 @@ tidy_obs_pred(fit, add_osa_res = FALSE, ...)
 apply the \code{"oneStepGaussianOffMode"} method.
 See \code{\link[RTMB:OSA-residuals]{RTMB::oneStepPredict()}} for details.}
 
+\item{interval}{Confidence level for combined catchability intervals.}
+
 \item{...}{Arguments to pass to \code{\link[RTMB:OSA-residuals]{RTMB::oneStepPredict()}}.}
 }
 \value{
@@ -20,6 +22,9 @@ A named list with two data frames:
 \itemize{
 \item \strong{catch}: original columns plus \code{pred}, \code{sd}, and \code{std_res}.
 \item \strong{index}: original columns plus \code{pred}, \code{sd}, \code{q}, and \code{std_res}.
+Combined catchability intervals are \code{q_lwr}/\code{q_upr}; \code{q_se} is on the
+selected link scale named in \code{q_se_scale}. They include uncertainty across
+the full formula, rather than combining separate coefficient SEs.
 }
 }
 \description{

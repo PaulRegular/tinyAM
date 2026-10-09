@@ -49,3 +49,13 @@ plot_report(random_par$log_f, x = ~year, color = ~model, legendgroup = ~model, c
 ```{r, eval = "log_m" %in% names(random_par)}
 plot_report(random_par$log_m, x = ~year, color = ~model, legendgroup = ~model, colors = cols, frame = ~age_block, ylab = "m")
 ```
+
+```{r, results = "asis"}
+for (term in names(formula_effects$levels)) {
+  effect <- formula_effects$levels[[term]]
+  increments <- formula_effects$increments[[term]]
+  contribution <- formula_effects$contributions[[term]]
+  rendered <- knitr::knit_child("one_formula_effect.Rmd", quiet = TRUE)
+  cat(rendered, sep = "\n")
+}
+```

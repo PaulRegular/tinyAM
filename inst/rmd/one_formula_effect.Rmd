@@ -1,0 +1,25 @@
+### `r if (unique(effect$component) == "q") "Catchability" else paste(unique(effect$component), "mean")`: `r term`
+
+```{r}
+frame <- if (length(unique(effect$group)) > 1L) ~group else NULL
+tinyAM:::.plot_q_effect(effect, points = unique(effect$process) == "iid", frame = frame,
+  color = ~model, legendgroup = ~model, colors = cols)
+```
+
+`r if (!is.null(increments)) paste("### Increments:", term)`
+
+```{r, eval = !is.null(increments)}
+frame <- if (length(unique(increments$group)) > 1L) ~group else NULL
+tinyAM:::.plot_q_effect(increments, points = TRUE, frame = frame,
+  color = ~model, legendgroup = ~model, colors = cols)
+```
+
+`r if (!is.null(contribution)) paste("### Multiplied contribution:", term)`
+
+```{r, eval = !is.null(contribution)}
+frame <- if (anyDuplicated(contribution[, c("model", "coordinate")])) {
+  if ("survey" %in% names(contribution)) ~interaction(survey, age) else ~age
+} else NULL
+tinyAM:::.plot_q_effect(contribution, frame = frame,
+  color = ~model, legendgroup = ~model, colors = cols)
+```

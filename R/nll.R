@@ -243,8 +243,10 @@ nll_fun <- function(par, dat, simulate = FALSE) {
 
   ## Mean structures and process draws ----
 
-  log_mu_F[] <- drop(F_modmat %*% log_mu_f)
-  log_mu_M[] <- log_mu_supplied_m + drop(M_modmat %*% mu_m)
+  F_effects <- .mean_effects(par, dat, "F", simulate)
+  M_effects <- .mean_effects(par, dat, "M", simulate)
+  log_mu_F[] <- drop(F_modmat %*% log_mu_f) + F_effects$contribution
+  log_mu_M[] <- log_mu_supplied_m + drop(M_modmat %*% mu_m) + M_effects$contribution
   if (simulate) {
     log_r[] <- log_r0 + cumsum(stats::rnorm(n_years - 1, 0, sd_r))
     mu_f <- log_mu_F[!is_proj, , drop = FALSE]
@@ -464,7 +466,7 @@ nll_fun <- function(par, dat, simulate = FALSE) {
     q_predictor <- q_predictor + drop(dat$q_mono_modmat %*% dq)
   }
   q_effects <- .q_effects(par, dat, simulate = simulate)
-  jnll <- jnll + q_effects$nll
+  jnll <- jnll + q_effects$nll + F_effects$nll + M_effects$nll
   q_predictor <- q_predictor + q_effects$contribution
   # Compute log(q) directly to remain stable near the logit boundaries.
   log_q_obs <- if (identical(index_settings$q_link, "logit")) {
@@ -552,6 +554,21 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   REPORT(log_obs)
   REPORT(sd_obs)
   REPORT(log_q_obs)
+  q_link_prediction <- if (identical(index_settings$q_link, "logit")) {
+    if (any(vapply(dat$q_terms, function(term) term$type == "logistic", logical(1)))) {
+      log_q_obs - log(-expm1(log_q_obs))
+    } else q_predictor
+  } else log_q_obs
+  ADREPORT(q_link_prediction)
+  eta_q_increments <- q_effects$rw_increments
+  REPORT(eta_q_increments)
+  if (length(eta_q_increments)) ADREPORT(eta_q_increments)
+  eta_mu_F_increments <- F_effects$rw_increments
+  eta_mu_M_increments <- M_effects$rw_increments
+  REPORT(eta_mu_F_increments)
+  REPORT(eta_mu_M_increments)
+  if (length(eta_mu_F_increments)) ADREPORT(eta_mu_F_increments)
+  if (length(eta_mu_M_increments)) ADREPORT(eta_mu_M_increments)
 
   ADREPORT(log_recruitment)
   ADREPORT(log_abundance)
@@ -576,7 +593,7 @@ nll_fun <- function(par, dat, simulate = FALSE) {
     if (M_settings$process != "off") {
       sims$log_m <- log_m
     }
-    return(c(sims, q_effects$parameters))
+    return(c(sims, q_effects$parameters, F_effects$parameters, M_effects$parameters))
   }
 
   jnll

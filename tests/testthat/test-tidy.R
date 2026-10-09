@@ -211,8 +211,11 @@ test_that("tidy_rep validates list structure and metadata", {
 test_that("tidy_sdrep extracts, transforms, and renames series", {
   trends <- tidy_sdrep(fit, interval = 0.95)
   expect_true(all(c("ssb","recruitment","abundance") %in% names(trends)))
-  expect_true(all(grepl("^log_", names(vals)))) # tidy_sdrep assumes all ADREPORTEd values are in log space
-  expect_true(all(sapply(vals, length) == length(fit$dat$years))) # tidy_sdreport assumes all ADREPORTed values have a length = n_years
+  population <- vals[setdiff(names(vals), c("q_link_prediction", "eta_q_increments"))]
+  expect_true(all(grepl("^log_", names(population))))
+  expect_true(all(lengths(population) == length(fit$dat$years)))
+  expect_false("q_link_prediction" %in% names(trends))
+  expect_length(vals$q_link_prediction, nrow(fit$dat$obs$index))
 
   # Check one series numerically
   z <- qnorm(0.975)

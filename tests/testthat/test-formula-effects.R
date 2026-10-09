@@ -222,4 +222,70 @@ test_that("formula processes fit and warm starts align named states", {
   expect_true(all(grepl("198[3-9]|199[0-9]|200[0-9]|201[0-9]|2020", labels)))
   set.seed(205)
   expect_no_error(tinyAM:::.sim_obs(fit, tinyAM:::.draw_none, redraw_random = TRUE))
+  effects <- fit$formula_effects$levels[[term$id]]
+  expect_equal(effects$est, unname(estimates[[term$parameter]]))
+  expect_true(all(effects$se_scale == "reported"))
+  expect_equal(effects$coordinate, YEARS)
+  expect_true(all(is.finite(fit$obs_pred$index$q_se)))
+  expect_equal(fit$obs_pred$index$q_se,
+    as.numeric(as.list(fit$sdrep, "Std. Error", report = TRUE)$q_link_prediction))
+  tabs <- tidy_tam(model_list = list(process = fit, ordinary = default_fit), interval = .9)
+  expect_equal(unique(tabs$formula_effects$levels[[term$id]]$model), "process")
+  interval <- subset(tabs$obs_pred$index, model == "process")
+  expect_true(all(interval$q_upr - interval$q_lwr <
+    fit$obs_pred$index$q_upr - fit$obs_pred$index$q_lwr))
+})
+
+test_that("RW increments and numeric-by contributions retain correct signed uncertainty", {
+  dat <- make_test_dat(index_settings = list(sd_form = ~1,
+    q_form = ~ q_block + rw(year, by = age, sd = .2), fill_missing = FALSE))
+  p <- make_par(dat)
+  term <- dat$q_terms[[1]]
+  p[[term$parameter]][] <- -.2
+  obj <- RTMB::MakeADFun(function(p) nll_fun(p, dat), p, silent = TRUE)
+  # Supply known local curvature without fitting the population again.
+  summaries <- p
+  errors <- lapply(p, function(x) { x[] <- .1; x })
+  fit <- structure(list(dat = dat, obj = obj, rep = obj$report(),
+    parameter_values = obj$env$last.par), class = "tam_fit")
+  local_mocked_bindings(.tam_parameter_summary = function(fit, what) {
+    if (what == "Estimate") summaries else errors
+  }, .package = "tinyAM")
+  effects <- tinyAM:::.tidy_q_effects(fit)
+  levels <- effects$levels[[term$id]]
+  expect_equal(levels$est, c(0, rep(-.2, length(YEARS) - 1L)))
+  expect_equal(levels$se, c(0, rep(.1, length(YEARS) - 1L)))
+  expect_true(levels$is_fixed[1])
+  increments <- effects$increments[[term$id]]
+  expect_equal(increments$est, c(-.2, rep(0, length(YEARS) - 2L)))
+  expect_true(all(is.na(increments$se)))
+  contribution <- effects$contributions[[term$id]]
+  expect_equal(contribution$est[contribution$year > min(YEARS)],
+    -.2 * contribution$age[contribution$year > min(YEARS)])
+  expect_equal(contribution$se[contribution$year > min(YEARS)],
+    .1 * contribution$age[contribution$year > min(YEARS)])
+  expect_false("eta_q_increments" %in% names(tidy_rep(fit)))
+  plot <- plotly::plotly_build(tinyAM:::.plot_q_effect(levels))
+  expect_equal(plot$x$layout$yaxis$type, "linear")
+  expect_lt(plot$x$layout$yaxis$range[1], -.2)
+})
+
+test_that("logit catchability intervals include logistic curves and remain bounded", {
+  dat <- make_test_dat(index_settings = list(sd_form = ~1,
+    q_form = ~ logistic(age), q_link = "logit", fill_missing = FALSE))
+  p <- make_par(dat)
+  obj <- RTMB::MakeADFun(function(p) {
+    nll_fun(p, dat)
+    Reduce(`+`, lapply(p, function(x) sum(x^2))) / (2 * .1^2)
+  }, p, silent = TRUE)
+  fit <- structure(list(dat = dat, obj = obj, rep = obj$report(),
+    sdrep = RTMB::sdreport(obj, getReportCovariance = FALSE)), class = "tam_fit")
+  tab <- tidy_obs_pred(fit)$index
+  expect_true(all(tab$q_lwr > 0 & tab$q_upr < 1))
+  expect_true(all(tab$q_se_scale == "logit"))
+  z <- qnorm(.975)
+  values <- as.list(fit$sdrep, "Estimate", report = TRUE)$q_link_prediction
+  ses <- as.list(fit$sdrep, "Std. Error", report = TRUE)$q_link_prediction
+  expect_equal(tab$q_lwr, as.numeric(plogis(values - z * ses)))
+  expect_equal(tab$q, as.numeric(plogis(values)))
 })
