@@ -38,6 +38,7 @@
   d <- .mean_formula_data(dat, component)
   fixed <- dat[[paste0(component, "_modmat")]]
   proxy <- list(obs = list(index = d), q_terms = terms, q_modmat = fixed,
+    mean_component = component,
     index_settings = list(q_link = "log"),
     sd_index_modmat = matrix(if (settings$process == "iid") 1 else numeric(), nrow(d),
                             if (settings$process == "iid") 1L else 0L))
@@ -52,7 +53,7 @@
       # A free mean variance must have replication beyond a single M state.
       active <- z[effective | outside, , drop = FALSE]
       if (all(colSums(active != 0) <= 1L)) {
-        cli::cli_abort("{term$id} duplicates the IID M residual variance. Share effects across independent age blocks or supply one SD.")
+        cli::cli_abort("Unreplicated IID M mean effects with IID residuals are not enabled with both SDs estimated. Share effects across independent age blocks or supply one SD.")
       }
     }
   }

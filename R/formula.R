@@ -322,7 +322,9 @@ logistic <- function(x, by = NULL) .formula_marker_error("logistic")
           length(unique(diagonal[active])) == 1L) {
         s <- dat$sd_index_modmat[rows, , drop = FALSE]
         if (ncol(s) && qr(cbind(s, as.numeric(active)))$rank == qr(s)$rank) {
-          cli::cli_abort("{id} is indistinguishable from estimated observation error. Use replicated levels or supply one SD.")
+          noise <- if (is.null(dat$mean_component)) "observation error" else
+            paste("IID", dat$mean_component, "residual variance")
+          cli::cli_abort("{id} is indistinguishable from estimated {noise}. Use replicated levels or supply one SD.")
         }
       }
     }
