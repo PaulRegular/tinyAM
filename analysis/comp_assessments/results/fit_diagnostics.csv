@@ -10,7 +10,7 @@
 "ices_cod_northeast_arctic_2026","1d0bacdd92651b78f9cab542a0c3f838b41f846f","converged",TRUE,0,"relative convergence (4)",1649.99003182878,0.00222718015128409,TRUE,TRUE,64,1620,16.7832129001617,""
 "afsc_pollock_goa_2024","1d0bacdd92651b78f9cab542a0c3f838b41f846f","converged",TRUE,0,"relative convergence (4)",1358.92168802535,0.000227008844857102,TRUE,TRUE,39,604,35.8322770595551,""
 "dfo_cod_3pn4rs_2025","1d0bacdd92651b78f9cab542a0c3f838b41f846f","blocked_no_stock_spec",,,"",,,,,,,,"No stock translation recipe is available."
-"dfo_herring_4tvn_spring_2024","8b56bd23b52773026bc8c97095f96ac823e240c2","converged",TRUE,0,"relative convergence (4)",1173.76577337948,18.2446221952558,TRUE,TRUE,35,1002,6.22478890419006,"Raw gradient includes active zero dq increments; maximum projected gradient 0.000144063."
+"dfo_herring_4tvn_spring_2024","ec61f30a55cd3ac377d30ef0917de1fe60db62d3","converged",TRUE,0,"relative convergence (4)",1173.76577339421,18.244592710897,TRUE,TRUE,35,1002,10.1753959655762,"Raw gradient includes active zero dq increments; maximum projected gradient 5.37645e-05."
 "ices_bluewhiting_northeast_atlantic_2026","1d0bacdd92651b78f9cab542a0c3f838b41f846f","converged",TRUE,0,"relative convergence (4)",537.908732690382,0.00049229336400447,TRUE,TRUE,26,505,12.270455121994,""
 "ices_herring_norwegian_spring_2025","1d0bacdd92651b78f9cab542a0c3f838b41f846f","converged",TRUE,0,"relative convergence (4)",1026.99322854688,0.00048834524019814,TRUE,TRUE,53,803,1.96984505653381,""
 "ices_sprat_baltic_2026","1d0bacdd92651b78f9cab542a0c3f838b41f846f","converged",TRUE,0,"relative convergence (4)",474.004128783679,0.000355668135185061,TRUE,TRUE,28,824,2.19449090957642,""

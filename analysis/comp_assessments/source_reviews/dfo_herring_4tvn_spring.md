@@ -113,9 +113,8 @@ uses the 1994-2023 Table 15 acoustic age series at a late-season midpoint of
 0.75. The source model used age composition and aggregate biomass likelihoods;
 tinyAM instead treats the reported age series as age-specific lognormal index
 observations in fish after resolving the table units. This is not the accepted
-model's likelihood. The
-two surveys have separate non-decreasing age-q curves and separate observation
-SDs. CPUE catchability varies in three blocks (1990-1999, 2000-2009 and
+model's likelihood. The two surveys have separate non-decreasing age-q curves
+and separate observation SDs. CPUE catchability varies in three blocks (1990-1999, 2000-2009 and
 2010-2021), rather than the source's annual random walk. Acoustic catchability
 is constant through time. A log link allows q to act as an index scaling
 coefficient without imposing an upper bound. The user's original multiplication
@@ -182,7 +181,12 @@ The final fit has optimizer code 0, objective 1173.766 and a positive-definite
 reported Hessian. Its raw maximum gradient is about 18.24 at a zero monotone-q
 increment; a positive derivative there satisfies the lower-bound optimality
 condition. The package's convergence check projects that component to zero.
-The maximum projected gradient is 0.000144, below the 0.01 tolerance.
+After correcting the acoustic unit, the maximum projected gradient is
+0.0000538, below the 0.01 tolerance. Acoustic q ranges from 0.220 to 0.612.
+The rerun changes N, F, M and derived population estimates by less than
+0.0011% relative to the preceding fit, while acoustic predictions scale by
+1,000 to numerical tolerance. The dashboard and comparison summaries use
+this corrected database revision.
 The log-q fit reproduces the original population-state estimates to
 numerical tolerance. Gear weights enter derived biomass, not the number-based
 observation likelihood, so their correction does not change fitted N or F.
