@@ -104,7 +104,7 @@
 #' For AR1, the correlation for an axis containing a single row or column is
 #' fixed at zero; otherwise it would be confounded with the SD.
 #'
-#' `is_converged` summarizes gradient and curvature checks. Also inspect
+#' `is_converged` summarizes optimizer, gradient and uncertainty checks. Also inspect
 #' `opt$convergence` and `opt$message`; a passing numerical check does not
 #' establish that the data identify every biological component.
 #'
@@ -120,7 +120,7 @@
 #'   structure returned by [make_par()]. Useful for warm starts or retrospective
 #'   runs where parameter estimates from a previous fit are reused to improve
 #'   convergence and speed. Non-matching or missing entries are ignored.
-#' @param grad_tol Numeric tolerance passed to [check_convergence()] when
+#' @param grad_tol Numeric tolerance passed to [check_tam()] when
 #'   evaluating the fitted object's gradients. Defaults to `1e-2`.
 #' @inheritParams prepare_tam
 #'
@@ -136,7 +136,8 @@
 #' - **fixed_par**: fixed parameter estimates in a tidy format (see [tidy_par()]).
 #' - **random_par**: list of random parameter estimates in a tidy format (see
 #'                   [tidy_par()]).
-#' - **is_converged**: Did the model converge? (see [check_convergence()])
+#' - **is_converged**: Did numerical checks pass? (see [check_tam()])
+#' - **diagnostics**: Numerical, structural and advisory checks from [check_tam()].
 #' - **obs_pred**: `obs$catch` and `obs$index` data augmented with
 #'                  predicted values, parameter estimates, and
 #'                  standardized residuals (see [tidy_obs_pred()]).
@@ -182,6 +183,11 @@ fit_tam <- function(
 ) {
 
   call <- match.call()
+
+  if (!is.numeric(grad_tol) || length(grad_tol) != 1L ||
+      !is.finite(grad_tol) || grad_tol <= 0) {
+    cli::cli_abort("{.arg grad_tol} must be one positive finite number.")
+  }
 
   refit_args <- mget(names(formals(fit_tam)))
   dat <- prepare_tam(
@@ -255,6 +261,11 @@ fit_tam <- function(
   }
 
   make_nll_fun <- function(f, d) function(p) f(p, d) # use closure to avoid global assignment of data
+  structural <- .check_tam_structure(dat, map)
+  if (any(structural$status == "fail")) {
+    cli::cli_abort(c("Model formulas contain redundant fitted coefficients.",
+      "x" = paste(structural$check[structural$status == "fail"], collapse = ", ")))
+  }
   obj <- RTMB::MakeADFun(
     make_nll_fun(nll_fun, dat),
     par,
@@ -265,13 +276,22 @@ fit_tam <- function(
 
   lower <- rep(-Inf, length(obj$par))
   lower[names(obj$par) == "dq"] <- 0
-  opt <- try(stats::nlminb(
+  opt <- tryCatch(stats::nlminb(
     obj$par, obj$fn, obj$gr,
     lower = lower,
     control = list(eval.max = 1000, iter.max = 1000)
-  ))
-  rep <- obj$report()
-  sdrep <- RTMB::sdreport(obj, getJointPrecision = TRUE)
+  ), error = function(e) cli::cli_abort("Optimization failed: {conditionMessage(e)}"))
+  # Synchronize reports and the conditional random states with the returned solution.
+  obj$fn(opt$par)
+  gradient <- obj$gr(opt$par)
+  parameter_values <- obj$env$last.par
+  rep <- obj$report(parameter_values)
+  sdreport_error <- NULL
+  sdrep <- tryCatch(RTMB::sdreport(obj, par.fixed = opt$par, getJointPrecision = TRUE),
+    error = function(e) {
+      sdreport_error <<- conditionMessage(e)
+      NULL
+    })
 
   out <- list(
     call = call,
@@ -280,7 +300,13 @@ fit_tam <- function(
     obj = obj,
     opt = opt,
     rep = rep,
-    sdrep = sdrep
+    sdrep = sdrep,
+    sdreport_error = sdreport_error,
+    gradient = gradient,
+    parameter_values = parameter_values,
+    parameter_map = map,
+    bounds = list(lower = lower, upper = rep(Inf, length(lower))),
+    grad_tol = grad_tol
   )
 
   class(out) <- c("tam_fit", "list")
@@ -290,8 +316,11 @@ fit_tam <- function(
   out$random_par <- par_tabs$random
   out$obs_pred <- tidy_obs_pred(out, add_osa_res = add_osa_res, trace = !silent)
   out$pop <- tidy_pop(out, interval = interval)
-  out$is_converged <- check_convergence(out, grad_tol = grad_tol, quiet = TRUE)
-  out$grad_tol <- grad_tol
+  out$diagnostics <- check_tam(out)
+  out$is_converged <- out$diagnostics$is_converged
+  if (!out$is_converged) {
+    cli::cli_warn("Numerical convergence checks did not pass; inspect {.code check_tam(fit)}.")
+  }
 
   .new_tam_fit(out)
 
@@ -387,8 +416,8 @@ update.tam_fit <- function(object, ..., evaluate = TRUE) {
 #'    to generate a one year status-quo F projection.
 #' @param grad_tol Numeric tolerance for `max|grad|`. If `NULL` (default),
 #'   the tolerance stored on `fit` (from [fit_tam()]) is used; otherwise the
-#'   supplied value is passed to [check_convergence()]. Output from retro fits
-#'   that exceed this tolerance are dropped (see [check_convergence()]).
+#'   supplied value is passed to [check_tam()]. Folds failing numerical checks
+#'   are dropped; structural and advisory findings remain separate.
 #' @param progress Logical; show progress bar using [progressr::with_progress()].
 #' @param globals Character vector naming global objects to supply to the workers.
 #'
@@ -444,7 +473,7 @@ fit_retro <- function(
   .require_tam_fit(fit, arg = "fit")
 
   if (is.null(grad_tol)) {
-    grad_tol <- if (!is.null(fit$grad_tol)) fit$grad_tol else 1e-3
+    grad_tol <- if (!is.null(fit$grad_tol)) fit$grad_tol else 1e-2
   }
 
   min_year <- min(fit$dat$years[!fit$dat$is_proj])
@@ -485,7 +514,9 @@ fit_retro <- function(
         update_progress()
         return(r)
       }
-      r$is_converged <- check_convergence(r, grad_tol = grad_tol)
+      r$grad_tol <- grad_tol
+      r$diagnostics <- check_tam(r, grad_tol = grad_tol)
+      r$is_converged <- r$diagnostics$is_converged
       update_progress()
       r
     }, .options = furrr::furrr_options(seed = 1, packages = "tinyAM", globals = globals))
@@ -567,99 +598,4 @@ fit_hindcast <- function(fit, ...) {
   .require_tam_fit(fit, arg = "fit")
 
   fit_retro(fit, hindcast = TRUE, ...)
-}
-
-
-
-#' Quick convergence check for a TAM fit
-#'
-#' @description
-#' Checks two basics and returns `TRUE` only if all pass:
-#' (1) maximum absolute gradient from `sdreport`, projected at active `dq` bounds,
-#' (2) Hessian positive-definite flag.
-#'
-#' If all pass, a short success message is printed unless `quiet = TRUE`.
-#' If any check fails, a warning is emitted (not suppressed by `quiet`).
-#' For a `dq` estimate of zero, a positive derivative satisfies the lower-bound
-#' optimality condition and is treated as zero in this check. The raw gradient
-#' stored in `sdreport` is unchanged.
-#'
-#' @param fit A fitted TAM object containing `$sdrep`.
-#' @param grad_tol Numeric tolerance for `max|grad|`. Default `1e-3`.
-#' @param quiet Logical; if `TRUE` (default) suppresses the success message.
-#'
-#' @return Logical: `TRUE` if all checks pass, otherwise `FALSE`.
-#' @importFrom cli cli_inform cli_warn format_warning
-#' @export
-check_convergence <- function(fit, grad_tol = 1e-3, quiet = TRUE) {
-  sdrep <- NULL
-
-  if (.is_tam_fit(fit)) {
-    sdrep <- fit$sdrep
-  } else if (inherits(fit, "sdreport")) {
-    sdrep <- fit
-  } else if (is.list(fit) && !is.null(fit$sdrep)) {
-    sdrep <- fit$sdrep
-  }
-
-  if (is.null(sdrep)) {
-    cli::cli_abort(c(
-      "`{.arg fit}` must be either a {.cls tam_fit}, an {.cls sdreport},",
-      "or a list containing an {.field sdrep} element."
-    ))
-  }
-
-  if (inherits(sdrep, "sdreport")) {
-    grad <- sdrep$gradient.fixed
-    pd_hess <- sdrep$pdHess
-  } else if (is.list(sdrep)) {
-    grad <- sdrep$gradient.fixed
-    pd_hess <- sdrep$pdHess
-  } else {
-    cli::cli_abort(c(
-      "`{.arg fit}$sdrep` must be either an {.cls sdreport} or a list",
-      "with components {.field gradient.fixed} and {.field pdHess}."
-    ))
-  }
-
-  if (is.null(grad)) {
-    cli::cli_abort("`{.arg fit}` must provide a gradient via `sdrep$gradient.fixed`.")
-  }
-
-  if (is.null(pd_hess)) {
-    cli::cli_abort("`{.arg fit}` must provide a Hessian flag via `sdrep$pdHess`.")
-  }
-
-  # At an active lower bound a positive derivative satisfies the KKT condition.
-  # Keep sdreport's raw gradient intact for users inspecting diagnostics.
-  if (!is.null(sdrep$par.fixed)) {
-    active <- names(sdrep$par.fixed) == "dq" & sdrep$par.fixed == 0 & is.finite(grad)
-    grad[active] <- pmin(grad[active], 0)
-  }
-  max_grad <- max(abs(grad))
-  grad_ok  <- is.finite(max_grad) && max_grad <= grad_tol
-  hess_ok  <- isTRUE(pd_hess)
-  ok       <- grad_ok && hess_ok
-
-  main_text <- if (ok) "{.strong Model converged}" else "{.strong Model may not have converged}"
-  grad_text <- sprintf("Maximum gradient [%s] %s tolerance [%s])",
-                       signif(max_grad, 1),
-                       if (grad_ok) "<=" else ">",
-                       grad_tol)
-  hess_text <- sprintf("Hessian %s positive definite",
-                       if (hess_ok) "was" else "was not")
-  grad_bullet <- if (grad_ok) "v" else "x"
-  hess_bullet <- if (hess_ok) "v" else "x"
-  bullets <- c(main_text, grad_text, hess_text)
-  names(bullets) <- c("", grad_bullet, hess_bullet)
-
-  if (ok) {
-    if (!quiet) {
-      cli::cli_inform(message = bullets)
-    }
-  } else {
-    cli::cli_warn(message = bullets)
-  }
-
-  ok
 }

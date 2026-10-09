@@ -55,7 +55,7 @@ The simulation has two orthogonal controls:
 \item \strong{Parameter uncertainty} via \code{par_uncertainty}:
 \itemize{
 \item \code{"none"}  — use point estimates \verb{(û, θ̂)}.
-\item \code{"fixed"} — sample \strong{fixed effects} \verb{θ ~ MVN(sdrep$par.fixed, sdrep$cov.fixed)}.
+\item \code{"fixed"} — sample \strong{fixed effects} \code{θ ~ MVN(sdrep$par.fixed, sdrep$cov.fixed)}.
 \item \code{"joint"} — sample \strong{(random + fixed)} jointly from the Laplace
 Gaussian approximation using the \strong{joint precision} (sparse Cholesky).
 }

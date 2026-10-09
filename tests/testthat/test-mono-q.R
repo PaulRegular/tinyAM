@@ -34,25 +34,32 @@ test_that("a fitted plateau has finite direct-scale increments and SEs", {
   expect_equal(unname(estimates$dq), rep(0, 3))
   expect_equal(unname(exp(mono_values(design, estimates$log_q, estimates$dq))),
                rep(exp(-2), 4), tolerance = 1e-6)
-  fit <- structure(list(obj = obj, dat = list(), sdrep = sdrep), class = "tam_fit")
+  fit <- structure(list(obj = obj, dat = list(), sdrep = sdrep, opt = opt,
+    rep = list(log_pred = drop(design$q_modmat %*% estimates$log_q +
+      design$q_mono_modmat %*% estimates$dq), sd_obs = rep(.1, 4))), class = "tam_fit")
   steps <- subset(tidy_par(fit)$fixed, par == "dq")
   expect_equal(steps$est, rep(0, 3))
   expect_equal(steps$se, unname(as.list(sdrep, "Std. Error")$dq))
   expect_true(all(is.finite(steps$se) & steps$se > 0 & steps$se < 1))
-  expect_true(check_convergence(fit))
+  expect_true(check_tam(fit)$is_converged)
 })
 
 test_that("convergence diagnostics respect only valid active-bound gradients", {
-  fit <- list(sdrep = list(par.fixed = c(dq = 0), gradient.fixed = 2, pdHess = TRUE))
-  expect_true(check_convergence(fit))
+  fit <- structure(list(opt = list(par = c(dq = 0), convergence = 0,
+    objective = 1, message = "OK"), dat = list(),
+    rep = list(log_pred = 0, sd_obs = 1),
+    sdrep = list(par.fixed = c(dq = 0), gradient.fixed = 2,
+                 pdHess = TRUE, cov.fixed = matrix(1))), class = "tam_fit")
+  expect_true(check_tam(fit)$is_converged)
   expect_identical(fit$sdrep$gradient.fixed, 2)
   fit$sdrep$gradient.fixed <- Inf
-  expect_warning(expect_false(check_convergence(fit)), "may not have converged")
+  expect_false(check_tam(fit)$is_converged)
   fit$sdrep$gradient.fixed <- -2
-  expect_warning(expect_false(check_convergence(fit)), "may not have converged")
+  expect_false(check_tam(fit)$is_converged)
   fit$sdrep$par.fixed[] <- .1
+  fit$opt$par[] <- .1
   fit$sdrep$gradient.fixed <- 2
-  expect_warning(expect_false(check_convergence(fit)), "may not have converged")
+  expect_false(check_tam(fit)$is_converged)
 })
 
 test_that("numeric order, declared factor order and pooled plateaus are retained", {

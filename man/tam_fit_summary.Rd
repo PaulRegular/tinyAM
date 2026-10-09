@@ -45,11 +45,11 @@ such as \code{dq}, which are fitted directly as increments on the log-q scale.
 The displayed maximum gradient is the raw fixed-effect gradient. Parameters
 fitted at a boundary need not have a raw gradient of zero at a valid
 constrained optimum. For example, a \code{dq} estimate at its lower bound of zero
-can have a positive raw gradient while \code{\link[=check_convergence]{check_convergence()}} still passes its
+can have a positive raw gradient while \code{\link[=check_tam]{check_tam()}} still passes its
 constrained optimality check.
 
 Terminal summaries exclude projection years.
 }
 \seealso{
-\code{\link[=tidy_par]{tidy_par()}}, \code{\link[=tidy_pop]{tidy_pop()}}, \code{\link[=check_convergence]{check_convergence()}}
+\code{\link[=tidy_par]{tidy_par()}}, \code{\link[=tidy_pop]{tidy_pop()}}, \code{\link[=check_tam]{check_tam()}}
 }

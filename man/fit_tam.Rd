@@ -152,7 +152,7 @@ structure returned by \code{\link[=make_par]{make_par()}}. Useful for warm start
 runs where parameter estimates from a previous fit are reused to improve
 convergence and speed. Non-matching or missing entries are ignored.}
 
-\item{grad_tol}{Numeric tolerance passed to \code{\link[=check_convergence]{check_convergence()}} when
+\item{grad_tol}{Numeric tolerance passed to \code{\link[=check_tam]{check_tam()}} when
 evaluating the fitted object's gradients. Defaults to \code{1e-2}.}
 }
 \value{
@@ -167,7 +167,8 @@ A \code{tam_fit} list with components:
 \item \strong{fixed_par}: fixed parameter estimates in a tidy format (see \code{\link[=tidy_par]{tidy_par()}}).
 \item \strong{random_par}: list of random parameter estimates in a tidy format (see
 \code{\link[=tidy_par]{tidy_par()}}).
-\item \strong{is_converged}: Did the model converge? (see \code{\link[=check_convergence]{check_convergence()}})
+\item \strong{is_converged}: Did numerical checks pass? (see \code{\link[=check_tam]{check_tam()}})
+\item \strong{diagnostics}: Numerical, structural and advisory checks from \code{\link[=check_tam]{check_tam()}}.
 \item \strong{obs_pred}: \code{obs$catch} and \code{obs$index} data augmented with
 predicted values, parameter estimates, and
 standardized residuals (see \code{\link[=tidy_obs_pred]{tidy_obs_pred()}}).
@@ -216,7 +217,7 @@ imposed on the latent states themselves.
 For AR1, the correlation for an axis containing a single row or column is
 fixed at zero; otherwise it would be confounded with the SD.
 
-\code{is_converged} summarizes gradient and curvature checks. Also inspect
+\code{is_converged} summarizes optimizer, gradient and uncertainty checks. Also inspect
 \code{opt$convergence} and \code{opt$message}; a passing numerical check does not
 establish that the data identify every biological component.
 }

@@ -4,7 +4,7 @@
 #' @keywords internal
 #' @noRd
 .draw_none <- function(fit) {
-  as.list(fit$sdrep, "Estimate")
+  .tam_parameter_summary(fit, "Estimate")
 }
 
 #' Draw fixed effects from MVN(sdreport) and map back to par list
@@ -18,7 +18,8 @@
 #' @noRd
 #' @importFrom MASS mvrnorm
 .draw_fixed <- function(fit) {
-  sdr <- fit$sdrep
+  .require_tam_uncertainty(fit)
+  sdr <- fit[["sdrep"]]
   mu <- sdr$par.fixed
   V  <- sdr$cov.fixed
   fixed <- as.numeric(MASS::mvrnorm(1L, mu = mu, Sigma = V))
@@ -38,7 +39,8 @@
 #' @noRd
 #' @importFrom Matrix Cholesky expand solve
 .make_draw_joint <- function(fit) {
-  sdr <- fit$sdrep
+  .require_tam_uncertainty(fit)
+  sdr <- fit[["sdrep"]]
   if (is.null(sdr$jointPrecision)) {
     sdr <- RTMB::sdreport(fit$obj, getJointPrecision = TRUE)
   }
@@ -54,6 +56,12 @@
     y <- Matrix::crossprod(A$P, y)            # P' y
     par_full <- as.numeric(mu + y)            # N(mu, Q^{-1})
     fit$obj$env$parList(par = par_full)
+  }
+}
+
+.require_tam_uncertainty <- function(fit) {
+  if (is.null(fit[["sdrep"]]) || !isTRUE(fit[["sdrep"]]$pdHess)) {
+    cli::cli_abort("Parameter-uncertainty draws require a successful uncertainty calculation with a positive-definite Hessian. Inspect {.code check_tam(fit)}, or use {.code par_uncertainty = 'none'}.")
   }
 }
 

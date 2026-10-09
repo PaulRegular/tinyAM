@@ -280,7 +280,7 @@
 #' The displayed maximum gradient is the raw fixed-effect gradient. Parameters
 #' fitted at a boundary need not have a raw gradient of zero at a valid
 #' constrained optimum. For example, a `dq` estimate at its lower bound of zero
-#' can have a positive raw gradient while [check_convergence()] still passes its
+#' can have a positive raw gradient while [check_tam()] still passes its
 #' constrained optimality check.
 #'
 #' Terminal summaries exclude projection years.
@@ -297,7 +297,7 @@
 #'   taken from the tidy tables (95% by default).
 #'
 #' @name tam_fit_summary
-#' @seealso [tidy_par()], [tidy_pop()], [check_convergence()]
+#' @seealso [tidy_par()], [tidy_pop()], [check_tam()]
 #' @export
 print.tam_fit <- function(x, ...) {
   x <- .require_tam_fit(x, arg = "x")

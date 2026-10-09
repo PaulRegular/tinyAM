@@ -279,9 +279,19 @@ trans_est <- function(data, transform = exp, scale = 1) {
 tidy_sdrep <- function(fit, interval = 0.95) {
   fit <- .require_tam_fit(fit, arg = "fit")
 
+  if (is.null(fit[["sdrep"]])) {
+    series <- intersect(c("recruitment", "abundance", "biomass", "ssb", "F_bar", "M_bar"),
+                        names(fit$rep))
+    return(stats::setNames(lapply(series, function(nm) {
+      data.frame(year = fit$dat$years, est = unname(fit$rep[[nm]]),
+        lwr = NA_real_, upr = NA_real_, se = NA_real_, se_scale = "log",
+        is_proj = fit$dat$is_proj)
+    }), series))
+  }
+
   ## assumes all ADREPORTED objects are equal length to years and are in log space
-  vals <- as.list(fit$sdrep, "Estimate", report = TRUE)
-  ses <- as.list(fit$sdrep, "Std. Error", report = TRUE)
+  vals <- as.list(fit[["sdrep"]], "Estimate", report = TRUE)
+  ses <- as.list(fit[["sdrep"]], "Std. Error", report = TRUE)
   df <- lapply(seq_along(vals), function(i) {
     d <- data.frame(year = fit$dat$years,
                     est = vals[[i]],
@@ -413,8 +423,8 @@ tidy_pop <- function(fit, interval = 0.95) {
 tidy_par <- function(fit, interval = 0.95) {
   fit <- .require_tam_fit(fit, arg = "fit")
 
-  est <- as.list(fit$sdrep, "Estimate")
-  se  <- as.list(fit$sdrep, "Std. Error")
+  est <- .tam_parameter_summary(fit, "Estimate")
+  se  <- .tam_parameter_summary(fit, "Std. Error")
   nms <- intersect(names(est), names(se))
 
   ran_nms <- fit$obj$env$.random
@@ -482,6 +492,15 @@ tidy_par <- function(fit, interval = 0.95) {
   attr(random, "interval") <- interval
 
   list(fixed = fixed, random = random)
+}
+
+.tam_parameter_summary <- function(fit, what) {
+  if (!is.null(fit[["sdrep"]])) return(as.list(fit[["sdrep"]], what))
+  estimates <- fit$obj$env$parList(par = fit$parameter_values)
+  attr(estimates, "check.passed") <- NULL
+  attr(estimates, "what") <- what
+  if (what == "Estimate") return(estimates)
+  lapply(estimates, function(x) { x[] <- NA_real_; x })
 }
 
 

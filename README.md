@@ -144,7 +144,7 @@ tinyAM includes tools for examining both model fit and model behaviour, includin
 The likelihood also serves as the model's simulation engine, helping to keep estimation and simulation assumptions consistent.
 
 ``` r
-check_convergence(fit)
+check_tam(fit)
 fit$opt$message
 head(fit$pop$ssb)
 plot_trend(fit$pop$ssb, ylab = "Spawning stock biomass")
