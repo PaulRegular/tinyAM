@@ -13,16 +13,17 @@ translate_stock <- function(source) {
     assumptions = source$assumptions
   )
 
-  obs$catch$sd_block <- factor(ifelse(
-    obs$catch$age == 0, "sam_sd_5",
-    ifelse(obs$catch$age == 1, "sam_sd_6", "sam_sd_0")
-  ))
+  catch_block <- cut_ages(obs$catch$age, c(0, 1, 2, 8))
+  levels(catch_block) <- c("sam_sd_5", "sam_sd_6", "sam_sd_0")
+  obs$catch$sd_block <- factor(as.character(catch_block))
+  geras <- obs$index$survey == "GERAS"
+  geras_q <- cut_ages(obs$index$age[geras], 1:3)
+  levels(geras_q) <- c("sam_q_2", "sam_q_2", "sam_q_7")
   obs$index$q_key <- with(obs$index, ifelse(
     survey == "HERAS", ifelse(age == 2, "sam_q_0", "sam_q_1"),
-    ifelse(survey == "GERAS", ifelse(age <= 2, "sam_q_2", "sam_q_7"),
-           ifelse(survey == "N20", "sam_q_3",
-                  paste0("sam_q_", age + 1L)))
+    ifelse(survey == "N20", "sam_q_3", paste0("sam_q_", age + 1L))
   ))
+  obs$index$q_key[geras] <- as.character(geras_q)
   obs$index$q_key <- factor(obs$index$q_key)
   obs$index$sd_block <- factor(ifelse(
     obs$index$survey == "HERAS", "sam_sd_1",

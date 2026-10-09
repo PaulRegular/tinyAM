@@ -54,15 +54,12 @@ translate_stock <- function(source) {
 
   adfg <- "ADF&G crab/groundfish trawl"
   adfg_years <- sort(unique(obs$index$year[obs$index$survey == adfg]))
-  obs$index$adfg_year <- factor(
+  obs$index$adfg_year <- droplevels(cut_years(
     ifelse(obs$index$survey == adfg, obs$index$year, adfg_years[1]),
-    levels = adfg_years
-  )
-  obs$index$q_age_block <- cut(
-    obs$index$age,
-    breaks = c(0, 2, 4, 6, 8, 10),
-    labels = c("1-2", "3-4", "5-6", "7-8", "9-10")
-  )
+    seq(min(adfg_years), max(adfg_years))
+  ))
+  obs$index$q_age_block <- cut_ages(obs$index$age, c(1, 3, 5, 7, 9, 10))
+  levels(obs$index$q_age_block) <- c("1-2", "3-4", "5-6", "7-8", "9-10", "9-10")
 
   obs$index$q_key <- interaction(
     obs$index$survey,

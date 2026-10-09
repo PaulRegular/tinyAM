@@ -14,26 +14,24 @@ translate_stock <- function(source) {
   )
   obs$weight$M_assumption <- obs$weight$M_assumption + 0.02
 
-  obs$catch$sd_block <- factor(ifelse(
-    obs$catch$age <= 1, "ages_0_1",
-    ifelse(obs$catch$age <= 6, "ages_2_6", "ages_7_8")
-  ))
-  obs$index$sd_block <- factor(ifelse(
-    obs$index$survey == "HERAS",
-    paste0("HERAS_", ifelse(obs$index$age <= 1, obs$index$age,
-                            ifelse(obs$index$age == 2, 2,
-                                   ifelse(obs$index$age == 3, 3,
-                                          ifelse(obs$index$age <= 6, "4_6", "7_8"))))),
-    ifelse(obs$index$survey == "IBTS-Q3" & obs$index$age <= 1,
-           "IBTS-Q3_0_1",
-           ifelse(obs$index$survey == "IBTS-Q3", "IBTS-Q3_2_5", obs$index$survey))
-  ))
-  obs$index$q_key <- factor(ifelse(
-    obs$index$survey == "HERAS",
-    ifelse(obs$index$age <= 2, "HERAS_1_2", "HERAS_3_8"),
-    ifelse(obs$index$survey == "IBTS-Q3",
-           paste0("IBTS-Q3_", obs$index$age), obs$index$survey)
-  ))
+  obs$catch$sd_block <- cut_ages(obs$catch$age, c(0, 2, 7, 8))
+  levels(obs$catch$sd_block) <- c("ages_0_1", "ages_2_6", "ages_7_8", "ages_7_8")
+  heras <- obs$index$survey == "HERAS"
+  q3 <- obs$index$survey == "IBTS-Q3"
+  heras_sd <- cut_ages(obs$index$age[heras], c(1:4, 7, 8))
+  levels(heras_sd) <- c("1", "2", "3", "4_6", "7_8", "7_8")
+  q3_sd <- cut_ages(obs$index$age[q3], c(0, 2, 5))
+  levels(q3_sd) <- c("0_1", "2_5")
+  obs$index$sd_block <- obs$index$survey
+  obs$index$sd_block[heras] <- paste0("HERAS_", heras_sd)
+  obs$index$sd_block[q3] <- paste0("IBTS-Q3_", q3_sd)
+  obs$index$sd_block <- factor(obs$index$sd_block)
+  heras_q <- cut_ages(obs$index$age[heras], c(1, 3, 8))
+  levels(heras_q) <- c("1_2", "3_8")
+  obs$index$q_key <- obs$index$survey
+  obs$index$q_key[heras] <- paste0("HERAS_", heras_q)
+  obs$index$q_key[q3] <- paste0("IBTS-Q3_", obs$index$age[q3])
+  obs$index$q_key <- factor(obs$index$q_key)
 
   settings <- list(
     N_settings = list(process = "rw", init = "free"),

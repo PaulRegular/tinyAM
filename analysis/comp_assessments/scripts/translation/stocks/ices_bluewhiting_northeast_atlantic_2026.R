@@ -9,16 +9,11 @@ translate_stock <- function(source) {
     assumptions = source$assumptions
   )
 
-  catch_group <- ifelse(obs$catch$age == 1, "1",
-                       ifelse(obs$catch$age == 2, "2",
-                              ifelse(obs$catch$age <= 8, "3-8", "9-10")))
-  obs$catch$sd_group <- factor(catch_group,
-                               levels = c("1", "2", "3-8", "9-10"))
-  q_group <- ifelse(obs$index$age <= 4, as.character(obs$index$age), "5-8")
-  sd_group <- ifelse(obs$index$age <= 3, as.character(obs$index$age),
-                     ifelse(obs$index$age <= 6, "4-6", "7-8"))
-  obs$index$sd_group <- factor(sd_group,
-                               levels = c("1", "2", "3", "4-6", "7-8"))
+  obs$catch$sd_group <- cut_ages(obs$catch$age, c(1, 2, 3, 9, 10))
+  levels(obs$catch$sd_group) <- c("1", "2", "3-8", "9-10", "9-10")
+  q_group <- as.character(cut_ages(obs$index$age, c(1:5, 8)))
+  obs$index$sd_group <- cut_ages(obs$index$age, c(1:4, 7, 8))
+  levels(obs$index$sd_group) <- c("1", "2", "3", "4-6", "7-8", "7-8")
   obs$index$q_key <- interaction(obs$index$survey, q_group,
                                  drop = TRUE, sep = ".")
 

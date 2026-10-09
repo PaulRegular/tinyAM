@@ -16,7 +16,7 @@ translate_stock <- function(source) {
   )
 
   obs$index$sd_block <- factor(obs$index$survey)
-  q_age <- ifelse(obs$index$age >= 6, "6-8", as.character(obs$index$age))
+  q_age <- as.character(cut_ages(obs$index$age, c(1:6, 8)))
   obs$index$q_key <- interaction(obs$index$survey, q_age,
                                  drop = TRUE, sep = ".")
 

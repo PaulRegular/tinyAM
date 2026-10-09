@@ -46,21 +46,10 @@ translate_stock <- function(source, smith_sound = TRUE, juveniles = FALSE) {
   obs$index$q_key[juvenile] <- paste("juvenile age", obs$index$age[juvenile])
   obs$index$q_key <- factor(obs$index$q_key)
   obs$index$sd_key <- factor(ifelse(juvenile, "juvenile", obs$index$survey))
-  smith_breaks <- c(
-    seq(2, 13, 2),
-    15
+  obs$index$smith_sound_q_key <- cut_ages(
+    pmax(obs$index$age, 2), c(seq(2, 12, 2), 14)
   )
-  obs$index$smith_sound_q_key <- cut(
-    obs$index$age,
-    breaks = smith_breaks,
-    labels = paste0(
-      "age ",
-      head(smith_breaks, -1),
-      "-",
-      tail(smith_breaks, -1) - 1
-    ),
-    right = FALSE
-  )
+  levels(obs$index$smith_sound_q_key) <- paste("age", levels(obs$index$smith_sound_q_key))
   # The interaction must be zero, rather than NA, on non-RV observations.
   obs$index$smith_sound_q_key[!rv] <- levels(obs$index$smith_sound_q_key)[1L]
   obs$index$smith_sound_year <- as.integer(

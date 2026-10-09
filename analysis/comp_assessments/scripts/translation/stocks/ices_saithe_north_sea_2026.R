@@ -12,10 +12,8 @@ translate_stock <- function(source) {
     assumptions = source$assumptions
   )
 
-  obs$catch$sd_block <- factor(ifelse(
-    obs$catch$age == 3, "age3",
-    ifelse(obs$catch$age <= 5, "age4_5", "age6_plus")
-  ))
+  obs$catch$sd_block <- cut_ages(obs$catch$age, c(3, 4, 6, 10))
+  levels(obs$catch$sd_block) <- c("age3", "age4_5", "age6_plus")
   obs$index$q_age <- factor(obs$index$age, levels = 3:8)
 
   settings <- list(

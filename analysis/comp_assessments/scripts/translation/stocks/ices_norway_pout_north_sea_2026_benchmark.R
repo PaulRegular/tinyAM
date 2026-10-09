@@ -105,8 +105,8 @@ translate_stock <- function(source) {
     assumptions = source$assumptions
   )
 
-  catch_group <- ifelse(obs$catch$age == 0, "age0",
-                        ifelse(obs$catch$age <= 2, "age1_2", "age3plus"))
+  catch_group <- cut_ages(obs$catch$age, 0:3)
+  levels(catch_group) <- c("age0", "age1_2", "age1_2", "age3plus")
   obs$catch$sd_block <- factor(catch_group,
                                levels = c("age0", "age1_2", "age3plus"))
   survey_code <- c(

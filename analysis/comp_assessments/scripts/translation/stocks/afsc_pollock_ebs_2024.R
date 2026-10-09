@@ -37,11 +37,9 @@ translate_stock <- function(source) {
   ## Approximate survey selectivity/catchability with survey-by-age q blocks.
   ## Ages 9+ share q, matching the accepted ATS terminal selectivity treatment
   ## more closely while keeping the tinyAM representation parsimonious.
-  obs$index$q_age_block <- ifelse(
-    obs$index$age >= 9,
-    "9+",
-    as.character(obs$index$age)
-  )
+  q_age_block <- cut_ages(obs$index$age, c(1:9, 15))
+  levels(q_age_block)[levels(q_age_block) == "9-15"] <- "9+"
+  obs$index$q_age_block <- as.character(q_age_block)
   obs$index$q_key <- interaction(
     obs$index$survey,
     obs$index$q_age_block,
