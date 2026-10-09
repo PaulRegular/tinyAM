@@ -10,7 +10,7 @@ rm(.assessment_helper)
 
 
 .assessment_fit_call <- function(args) {
-  args$obs <- quote(obs)
+  args$data <- quote(data)
   if (!is.null(args$start_par)) args$start_par <- quote(start_par)
   as.call(c(list(quote(fit_tam)), args))
 }
@@ -209,7 +209,7 @@ run_assessment <- function(assessment_id, database = NULL, fit = TRUE,
   }
 
   started <- Sys.time()
-  fit_args <- c(list(obs = translated$obs, years = translated$years,
+  fit_args <- c(list(data = translated$obs, years = translated$years,
                      ages = translated$ages, silent = silent), translated$settings)
   if (!is.null(translated$start_par)) {
     fit_args$start_par <- translated$start_par
@@ -217,7 +217,7 @@ run_assessment <- function(assessment_id, database = NULL, fit = TRUE,
     warm_settings <- utils::modifyList(
       translated$settings, translated$warm_start_settings
     )
-    warm_args <- c(list(obs = translated$obs, years = translated$years,
+    warm_args <- c(list(data = translated$obs, years = translated$years,
                         ages = translated$ages, silent = silent), warm_settings)
     warm_fit <- tryCatch(do.call(tinyAM::fit_tam, warm_args), error = identity)
     if (inherits(warm_fit, "error") || !isTRUE(warm_fit$is_converged)) {

@@ -34,7 +34,7 @@
 #' @param x Name of a numeric or factor column in the index observations.
 #' @param by Optional name of a categorical grouping column.
 #' @return A formula marker; calling this function directly raises an error.
-#' @seealso [make_dat()], [make_par()], [tidy_obs_pred()], [tidy_par()], [tinyAM-model]
+#' @seealso [prepare_tam()], [make_par()], [tidy_obs_pred()], [tidy_par()], [tinyAM-model]
 #' @examples
 #' ~ q_block # ordinary unconstrained q
 #' ~ mono(q_block)

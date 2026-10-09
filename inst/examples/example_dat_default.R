@@ -1,4 +1,4 @@
-dat <- make_dat(
+dat <- prepare_tam(
   cod_obs,
   years = 1983:2024,
   ages = 2:14,

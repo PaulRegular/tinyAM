@@ -46,8 +46,8 @@ translate_stock <- function(source) {
                           fill_missing = FALSE)
   )
 
-  model_dat <- do.call(tinyAM::make_dat, c(
-    list(obs = obs, years = years, ages = ages), settings
+  model_dat <- do.call(tinyAM::prepare_tam, c(
+    list(data = obs, years = years, ages = ages), settings
   ))
   start_par <- tinyAM::make_par(model_dat)
   source_surface <- function(measure, type, scale = 1) {

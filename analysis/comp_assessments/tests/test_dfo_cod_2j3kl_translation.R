@@ -24,8 +24,8 @@ all_maturity <- source_data$inputs[
 tinyAM::check_obs(obs)
 readiness <- read.csv(file.path(root, "results", "observation_readiness.csv"),
                       stringsAsFactors = FALSE)
-dat <- do.call(tinyAM::make_dat, c(
-  list(obs = obs, years = translated$years, ages = translated$ages),
+dat <- do.call(tinyAM::prepare_tam, c(
+  list(data = obs, years = translated$years, ages = translated$ages),
   translated$settings
 ))
 

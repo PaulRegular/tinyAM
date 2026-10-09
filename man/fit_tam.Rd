@@ -5,48 +5,39 @@
 \title{Fit a Tiny Assessment Model (TAM)}
 \usage{
 fit_tam(
-  obs,
+  data,
+  years = NULL,
+  ages = NULL,
+  N_settings = list(process = "iid", init = "exp"),
+  F_settings = list(process = "rw", mu_form = NULL),
+  M_settings = list(process = "off", mu_form = NULL, mu_supplied = ~I(0.2), age_breaks =
+    NULL, first_dev_year = NULL),
+  catch_settings = list(sd_form = ~1, sd_supplied = NULL, fill_missing = TRUE),
+  index_settings = list(sd_form = ~1, sd_supplied = NULL, q_form = ~q_block, q_link =
+    "log", fill_missing = TRUE),
+  proj_settings = NULL,
   interval = 0.95,
   add_osa_res = FALSE,
   silent = FALSE,
   start_par = NULL,
-  grad_tol = 0.01,
-  ...
+  grad_tol = 0.01
 )
 }
 \arguments{
-\item{obs}{A named list of tidy observation tables (e.g., \code{catch}, \code{index},
+\item{data}{A named list of tidy observation tables (e.g., \code{catch}, \code{index},
 \code{weight}, \code{maturity}). See \link{cod_obs} for an example.}
 
-\item{interval}{Level in \verb{(0, 1)} to use to generate confidence intervals,
-where applicable; default \verb{0.95.}}
-
-\item{add_osa_res}{Logical; add one-step-ahead residuals? Hard wired to
-apply the \code{"oneStepGaussianOffMode"} method. See \code{\link[RTMB:OSA-residuals]{RTMB::oneStepPredict()}}
-for details.}
-
-\item{silent}{Logical; if \code{TRUE}, disables tracing information.}
-
-\item{start_par}{Optional list of starting parameter values, matching the
-structure returned by \code{\link[=make_par]{make_par()}}. Useful for warm starts or retrospective
-runs where parameter estimates from a previous fit are reused to improve
-convergence and speed. Non-matching or missing entries are ignored.}
-
-\item{grad_tol}{Numeric tolerance passed to \code{\link[=check_convergence]{check_convergence()}} when
-evaluating the fitted object's gradients. Defaults to \code{1e-2}.}
-
-\item{...}{
-  Arguments passed on to \code{\link[=make_dat]{make_dat}}
-  \describe{
-    \item{\code{years}}{Consecutive historical model years (at least two).
+\item{years}{Consecutive historical model years (at least two).
 Inferred from observed data (non-projection) if \code{NULL}.}
-    \item{\code{ages}}{Consecutive model ages (at least two).
+
+\item{ages}{Consecutive model ages (at least two).
 Inferred from observed data (non-projection) if \code{NULL}. If the ages in
 the data extend beyond \code{max(ages)}, the \code{"obs"} column is summed for \code{catch}
 and \code{index} data within each year (and survey for indices). Older-age
 weight and maturity are retained for abundance-based aggregation inside
 \code{\link[=nll_fun]{nll_fun()}}, preserving biomass and mature biomass in the plus group.}
-    \item{\code{N_settings}}{A list with elements:
+
+\item{N_settings}{A list with elements:
 \itemize{
 \item \code{process}: \code{"off"} for deterministic cohort survival, \code{"iid"} for independent
 cohort residuals, \code{"rw"} for residuals that accumulate through time, or
@@ -57,7 +48,8 @@ anchor. \code{"exp"} uses deterministic survivorship; \code{"free"} estimates fi
 older-age \code{log_n0} states; \code{"random"} estimates random \code{log_n0} states with
 IID survivorship residuals and separate SD \code{sd_n0}. See \strong{Details}.
 }}
-    \item{\code{F_settings}}{A list with elements:
+
+\item{F_settings}{A list with elements:
 \itemize{
 \item \code{process}: \code{"iid"} for independent departures from the mean log F,
 \code{"rw"} for departures that accumulate over time, or \code{"ar1"} for departures
@@ -67,7 +59,8 @@ correlated between years and ages.
 \item \code{mean_ages}: optional vector of ages to include in population weighted
 average F (\code{F_bar}) calculations. All ages used if absent.
 }}
-    \item{\code{M_settings}}{A list with elements:
+
+\item{M_settings}{A list with elements:
 \itemize{
 \item \code{process}: \code{"off"} uses only supplied/mean M. Otherwise \code{"iid"}, \code{"rw"},
 and \code{"ar1"} have the same meanings as for F, on selected years/age blocks.
@@ -96,7 +89,8 @@ Ignored when the M process is off.
 \item \code{mean_ages}: optional vector of ages to include in population weighted
 average M (\code{M_bar}) calculations. All ages used if absent.
 }}
-    \item{\code{catch_settings}}{A list with elements:
+
+\item{catch_settings}{A list with elements:
 \itemize{
 \item \code{sd_form}: formula for observation SD blocks for catch-at-age data.
 \item \code{sd_supplied}: optional one-sided formula giving supplied SDs (on the natural
@@ -105,7 +99,8 @@ the intercept is removed from \code{sd_form} so supplied SDs act as offsets.
 \item \code{fill_missing}: logical – fill missing values, and zeros, using random effects?
 Defaults to \code{TRUE}. Note that one-step-ahead residuals are not currently working when \code{TRUE}.
 }}
-    \item{\code{index_settings}}{A list with elements:
+
+\item{index_settings}{A list with elements:
 \itemize{
 \item \code{sd_form}: formula for observation SD blocks for index-at-age data.
 \item \code{sd_supplied}: optional one-sided formula giving supplied SDs (on the natural
@@ -126,7 +121,8 @@ near one. q can approach a boundary with large coefficients and SEs.
 \item \code{fill_missing}: logical – fill missing values, and zeros, using random effects?
 Defaults to \code{TRUE}. Note that one-step-ahead residuals are not currently working when \code{TRUE}.
 }}
-    \item{\code{proj_settings}}{Optional list with elements:
+
+\item{proj_settings}{Optional list with elements:
 \itemize{
 \item \code{n_proj}: number of years to project (default \code{NULL} disables projections).
 \item \code{n_mean}: number of recent historical years used to average weight and
@@ -137,13 +133,29 @@ Other columns are copied from the last available year in each table.
 length = \code{n_proj}. When it is a vector of length one, that multiplier is recycled across all
 projection years.
 }}
-  }}
+
+\item{interval}{Level in \verb{(0, 1)} to use to generate confidence intervals,
+where applicable; default \verb{0.95.}}
+
+\item{add_osa_res}{Logical; add one-step-ahead residuals? Hard wired to
+apply the \code{"oneStepGaussianOffMode"} method. See \code{\link[RTMB:OSA-residuals]{RTMB::oneStepPredict()}}
+for details.}
+
+\item{silent}{Logical; if \code{TRUE}, disables tracing information.}
+
+\item{start_par}{Optional list of starting parameter values, matching the
+structure returned by \code{\link[=make_par]{make_par()}}. Useful for warm starts or retrospective
+runs where parameter estimates from a previous fit are reused to improve
+convergence and speed. Non-matching or missing entries are ignored.}
+
+\item{grad_tol}{Numeric tolerance passed to \code{\link[=check_convergence]{check_convergence()}} when
+evaluating the fitted object's gradients. Defaults to \code{1e-2}.}
 }
 \value{
 A \code{tam_fit} list with components:
 \itemize{
 \item \strong{call}: matched call.
-\item \strong{dat}: data list returned by \code{\link[=make_dat]{make_dat()}}.
+\item \strong{dat}: data list returned by \code{\link[=prepare_tam]{prepare_tam()}}.
 \item \strong{obj}: RTMB \code{ADFun} object.
 \item \strong{opt}: \verb{[stats::nlminb()]} optimization result.
 \item \strong{rep}: list from \code{obj$report()}.
@@ -164,10 +176,10 @@ Estimates abundance, recruitment, and mortality from catch-at-age and survey
 observations. Returns population trends, observation diagnostics, parameter
 estimates, and uncertainty tables. Use \code{N_settings}, \code{F_settings}, and
 \code{M_settings} to specify where unexplained biological variation is allowed.
-See \code{\link[=make_dat]{make_dat()}} for options and \link{tinyAM-model} for the model equations.
+See \code{\link[=prepare_tam]{prepare_tam()}} for options and \link{tinyAM-model} for the model equations.
 }
 \details{
-Builds data with \code{\link[=make_dat]{make_dat()}} and initial parameters with \code{\link[=make_par]{make_par()}}.
+Builds data with \code{\link[=prepare_tam]{prepare_tam()}} and initial parameters with \code{\link[=make_par]{make_par()}}.
 RTMB integrates random effects using the Laplace approximation; \code{nlminb}
 optimizes the remaining fixed effects. \code{\link[=mono]{mono()}} increments \code{dq} have a zero
 lower bound. Their SEs remain on the increment scale, but symmetric Wald
@@ -176,7 +188,7 @@ Set \code{index_settings$q_link = "logit"} to restrict the full catchability
 prediction to between zero and one; the default \code{"log"} allows q above one.
 Formula coefficients are then named \code{logit_q}, and \code{\link[=mono]{mono()}} increments
 act on logit-q. Starting q coefficients must use the selected link scale:
-old \code{log_q} starts are not reused as \code{logit_q}. See \code{\link[=make_dat]{make_dat()}} and \code{\link[=tidy_par]{tidy_par()}}.
+old \code{log_q} starts are not reused as \code{logit_q}. See \code{\link[=prepare_tam]{prepare_tam()}} and \code{\link[=tidy_par]{tidy_par()}}.
 
 Random-effect blocks are chosen automatically from the model settings:
 \itemize{
@@ -230,6 +242,6 @@ if (interactive()) {
 
 }
 \seealso{
-\code{\link[=make_dat]{make_dat()}}, \code{\link[=make_par]{make_par()}}, \code{\link[=sim_tam]{sim_tam()}}, \code{\link[=fit_retro]{fit_retro()}},
+\code{\link[=prepare_tam]{prepare_tam()}}, \code{\link[=make_par]{make_par()}}, \code{\link[=sim_tam]{sim_tam()}}, \code{\link[=fit_retro]{fit_retro()}},
 \code{\link[RTMB:TMB-interface]{RTMB::MakeADFun()}}, \code{\link[RTMB:TMB-interface]{RTMB::sdreport()}}
 }

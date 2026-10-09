@@ -73,7 +73,7 @@ random-effect parameters are returned as a named list of data frames
 
 Labels are added where applicable:
 \itemize{
-\item For parameters specified using a formula in \code{\link[=make_dat]{make_dat()}} (e.g., \code{log_q}, \code{logit_q},
+\item For parameters specified using a formula in \code{\link[=prepare_tam]{prepare_tam()}} (e.g., \code{log_q}, \code{logit_q},
 \code{log_sd_catch}, \code{log_sd_index}), a \code{coef} column is added.
 \item For \code{log_r}, \code{year} contains years 2:Y; full recruitment is in \code{\link[=tidy_pop]{tidy_pop()}}.
 \item For \code{log_n0}, an \code{age} column identifies the initial older-age state.

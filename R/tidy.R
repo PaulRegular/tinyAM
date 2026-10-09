@@ -379,7 +379,7 @@ tidy_pop <- function(fit, interval = 0.95) {
 #' (`$random`), one per random block (e.g. `log_f`, `log_r`, `missing`, …).
 #'
 #' Labels are added where applicable:
-#' - For parameters specified using a formula in [make_dat()] (e.g., `log_q`, `logit_q`,
+#' - For parameters specified using a formula in [prepare_tam()] (e.g., `log_q`, `logit_q`,
 #'   `log_sd_catch`, `log_sd_index`), a `coef` column is added.
 #' - For `log_r`, `year` contains years 2:Y; full recruitment is in [tidy_pop()].
 #' - For `log_n0`, an `age` column identifies the initial older-age state.

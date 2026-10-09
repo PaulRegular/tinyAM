@@ -55,7 +55,7 @@ Mean structures for quantities such as fishing mortality, natural mortality, cat
 
 Initial abundance is specified independently of the subsequent N process through `N_settings$init`: `"exp"` (default) uses parsimonious survivorship from fixed first-year recruitment (`log_r0`), `"free"` estimates fixed older-age `log_n0` states, and `"random"` estimates random states with IID survivorship residuals (`eta_log_n0`) and a separate SD. Recruitment and N process states begin in year 2. Random initialization requires at least two ages and warns below ten ages because its SD may be weakly identified.
 
-For an active M process, the default normally shares one state across all ages except the youngest, starting in year 2 (see `?make_dat` for very short age ranges). Earlier M and excluded ages retain their supplied or mean values. F is estimated in every historical year. These boundary assumptions can affect initial abundance and catchability estimates; they are not guarantees of identifiability. The full equations and conventions are in `help("tinyAM-model", package = "tinyAM")`.
+For an active M process, the default normally shares one state across all ages except the youngest, starting in year 2 (see `?prepare_tam` for very short age ranges). Earlier M and excluded ages retain their supplied or mean values. F is estimated in every historical year. These boundary assumptions can affect initial abundance and catchability estimates; they are not guarantees of identifiability. The full equations and conventions are in `help("tinyAM-model", package = "tinyAM")`.
 
 ## Monotonic survey catchability
 
@@ -179,7 +179,7 @@ Uncertainty tables put `est`, `lwr`, and `upr` first, then `se` and `se_scale`. 
 
 Catch and survey predictions are conditional medians of lognormal observations. Their arithmetic means are higher. Zero observations are treated as missing, not as observations from a count or censoring model. SSB is calculated at the start of the year without an extra spawning-time mortality correction.
 
-For practical help, start with `?fit_tam`, `?make_dat`, and `?mono`. For mathematical details, use `help("tinyAM-model", package = "tinyAM")`, `?dprocess_ar1`, and `?dprocess_rw`.
+For practical help, start with `?fit_tam`, `?prepare_tam`, and `?mono`. For mathematical details, use `help("tinyAM-model", package = "tinyAM")`, `?dprocess_ar1`, and `?dprocess_rw`.
 
 ## Current status
 

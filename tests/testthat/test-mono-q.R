@@ -117,7 +117,7 @@ test_that("multiple surveys map independent monotonic curves into the likelihood
   b$q_block <- pmin(b$age, 4)
   obs$index <- rbind(a, b)
   obs$index$survey <- factor(obs$index$survey)
-  dat <- make_dat(obs = obs, years = 2000:2005, ages = 2:6,
+  dat <- prepare_tam(data = obs, years = 2000:2005, ages = 2:6,
     index_settings = list(q_form = ~survey + mono(q_block, by = survey),
                           sd_form = ~1, fill_missing = TRUE))
   par <- make_par(dat)
@@ -213,7 +213,7 @@ test_that("negative monotonic warm starts fail clearly", {
     index_settings = list(q_form = ~mono(q_block), sd_form = ~1, fill_missing = TRUE))
   par <- make_par(dat)
   par$dq[1] <- -.1
-  expect_error(fit_tam(obs = cod_obs, years = 2000:2005, ages = 2:6,
+  expect_error(fit_tam(data = cod_obs, years = 2000:2005, ages = 2:6,
     index_settings = list(q_form = ~mono(q_block), sd_form = ~1, fill_missing = TRUE),
     start_par = par, silent = TRUE), "finite and non-negative")
 })

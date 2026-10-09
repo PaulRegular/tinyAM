@@ -4,7 +4,7 @@
 #' @description
 #' `make_par()` builds a named list of initial values and shapes for all
 #' fixed and random-effect parameters used by TAM, based on the structure in
-#' a previously constructed `dat` list (see [make_dat()]).
+#' a previously constructed `dat` list (see [prepare_tam()]).
 #'
 #' @details
 #' **Latent-state convention:** `log_r`, `log_n0`, `log_n`, `log_f`, and `log_m`
@@ -43,7 +43,7 @@
 #'     and first-year mortality; `log_n0` itself is not a deviation.
 #'   - The default `"exp"` initializer is parsimonious survivorship from
 #'     `log_r0`, using first-year Z without an equilibrium plus group.
-#'     See [make_dat()] for the choices and weak-identification warning.
+#'     See [prepare_tam()] for the choices and weak-identification warning.
 #'
 #' - **Abundance states and process variability (N)**
 #'   - `log_sd_n` (if `dat$N_settings$process != "off"`)
@@ -83,7 +83,7 @@
 #' increment penalty. See [fit_tam()] for mean coefficients or SDs held fixed
 #' when they have no effect on the RW likelihood.
 #'
-#' @param dat A data list returned by [make_dat()], containing design matrices,
+#' @param dat A data list returned by [prepare_tam()], containing design matrices,
 #'   settings, and observation mappings. The shapes and presence/absence of
 #'   parameters depend on elements in `dat` (e.g., `F_modmat`, `M_modmat`,
 #'   `q_modmat`, `sd_catch_modmat`, `sd_index_modmat`, `N_settings`, `F_settings`,
@@ -101,7 +101,7 @@
 #' par <- make_par(dat)
 #' str(par)
 #'
-#' @seealso [make_dat()], [fit_tam()], [tinyAM-model]
+#' @seealso [prepare_tam()], [fit_tam()], [tinyAM-model]
 #' @export
 make_par <- function(dat) {
 

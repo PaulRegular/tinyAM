@@ -64,8 +64,8 @@ stopifnot(isTRUE(all.equal(
   expected_index, tolerance = 1e-8
 )))
 
-dat <- do.call(tinyAM::make_dat, c(
-  list(obs = obs, years = translated$years, ages = translated$ages),
+dat <- do.call(tinyAM::prepare_tam, c(
+  list(data = obs, years = translated$years, ages = translated$ages),
   settings
 ))
 stopifnot(identical(dat$years, translated$years),

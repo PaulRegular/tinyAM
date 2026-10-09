@@ -17,8 +17,8 @@ stopifnot(length(documentation) >= 2L,
 settings <- translated$settings
 
 tinyAM::check_obs(obs)
-dat <- do.call(tinyAM::make_dat, c(
-  list(obs = obs, years = translated$years, ages = translated$ages),
+dat <- do.call(tinyAM::prepare_tam, c(
+  list(data = obs, years = translated$years, ages = translated$ages),
   settings
 ))
 

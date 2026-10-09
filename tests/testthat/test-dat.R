@@ -44,11 +44,11 @@ test_that("cut_int input validation errors are informative", {
 
 
 
-## make_dat ----
+## prepare_tam ----
 
-test_that("make_dat infers years/ages when NULL and builds expected pieces", {
-  dat <- make_dat(
-    obs = cod_obs,
+test_that("prepare_tam infers years/ages when NULL and builds expected pieces", {
+  dat <- prepare_tam(
+    data = cod_obs,
     years = NULL,
     ages  = NULL,
     N_settings = list(process = "iid", init = "exp"),
@@ -77,8 +77,8 @@ test_that("make_dat infers years/ages when NULL and builds expected pieces", {
   expect_gt(ncol(dat$q_modmat), 0)
 })
 
-test_that("make_dat aggregates data for ages beyond max(ages) into a plus group", {
-  dat <- make_dat(obs = cod_obs, ages  = 2:10)
+test_that("prepare_tam aggregates data for ages beyond max(ages) into a plus group", {
+  dat <- prepare_tam(data = cod_obs, ages  = 2:10)
   for (nm in c("catch", "index")) {
     fun_out <- dat$obs[[nm]] |> subset(!is.na(obs) & age == 10, select = c("year", "obs"))
     sub_obs <- cod_obs[[nm]] |> subset(!is.na(obs) & age >= 10)
@@ -92,11 +92,11 @@ test_that("make_dat aggregates data for ages beyond max(ages) into a plus group"
   }
 })
 
-test_that("make_dat builds M age_blocks, respects defaults, and handles supplied surfaces/mu_form correctly", {
+test_that("prepare_tam builds M age_blocks, respects defaults, and handles supplied surfaces/mu_form correctly", {
 
   # ---- Default behaviour: all ages except the youngest have deviations ----
-  dat_default <- make_dat(
-    obs = cod_obs,
+  dat_default <- prepare_tam(
+    data = cod_obs,
     ages = 2:14,
     M_settings = list(process = "iid", mu_form = NULL, mu_supplied = ~ I(0.3))
   )
@@ -106,8 +106,8 @@ test_that("make_dat builds M age_blocks, respects defaults, and handles supplied
   expect_equal(dat_default$M_settings$first_dev_year, dat_default$years[2])
 
   # ---- Custom age_breaks narrower than modeled ages ----
-  dat_agebreaks <- make_dat(
-    obs = cod_obs,
+  dat_agebreaks <- prepare_tam(
+    data = cod_obs,
     ages = 2:14,
     M_settings = list(process = "iid", mu_form = NULL, mu_supplied = ~ I(0.3),
                       age_breaks = seq(4, 10, 2))
@@ -117,8 +117,8 @@ test_that("make_dat builds M age_blocks, respects defaults, and handles supplied
   expect_true(min(age_levels) >= 4 && max(age_levels) <= 10)
 
   # ---- Custom first_dev_year ----
-  dat_firstdev <- make_dat(
-    obs = cod_obs,
+  dat_firstdev <- prepare_tam(
+    data = cod_obs,
     ages = 2:14,
     years = 1980:2000,
     M_settings = list(process = "iid", mu_form = NULL, mu_supplied = ~ I(0.3),
@@ -129,8 +129,8 @@ test_that("make_dat builds M age_blocks, respects defaults, and handles supplied
 
   # ---- mu_form + mu_supplied => intercept dropped (warning) ----
   expect_warning(
-    dat_intercept <- make_dat(
-      obs = cod_obs,
+    dat_intercept <- prepare_tam(
+      data = cod_obs,
       M_settings = list(process = "off", mu_form = ~ age, mu_supplied = ~ I(0.2))
     ),
     "Dropping intercept term.*supplied levels"
@@ -139,25 +139,25 @@ test_that("make_dat builds M age_blocks, respects defaults, and handles supplied
   expect_false("(Intercept)" %in% colnames(dat_intercept$M_modmat))
 })
 
-test_that("make_dat stops if neither M mu_supplied nor mu_form is provided", {
+test_that("prepare_tam stops if neither M mu_supplied nor mu_form is provided", {
   expect_error(
-    make_dat(
-      obs = cod_obs,
+    prepare_tam(
+      data = cod_obs,
       M_settings = list(process = "off", mu_form = NULL, mu_supplied = NULL)
     ),
     "Please supply mu_supplied or mu_form for M"
   )
 })
 
-test_that("make_dat rejects the retired initialization setting", {
+test_that("prepare_tam rejects the retired initialization setting", {
   expect_error(make_test_dat(N_settings = list(process = "off", init_N0 = FALSE)),
                "has been retired")
 })
 
-test_that("make_dat appends projection years and shapes obs correctly with proj_settings (F_mult API)", {
+test_that("prepare_tam appends projection years and shapes obs correctly with proj_settings (F_mult API)", {
   # n_proj = 2, n_mean = 3, status-quo F multiplier = 1
-  dat <- make_dat(
-    obs = cod_obs,
+  dat <- prepare_tam(
+    data = cod_obs,
     proj_settings = list(n_proj = 2, n_mean = 3, F_mult = 1)
   )
 
@@ -193,12 +193,12 @@ test_that("make_dat appends projection years and shapes obs correctly with proj_
   }
 })
 
-test_that("make_dat recycles, validates, names proj_settings$F_mult", {
+test_that("prepare_tam recycles, validates, names proj_settings$F_mult", {
   maxy <- max(unique(cod_obs$catch$year))
 
   # length-1 F_mult recycled to n_proj and named by proj years
-  dat1 <- make_dat(
-    obs = cod_obs,
+  dat1 <- prepare_tam(
+    data = cod_obs,
     proj_settings = list(n_proj = 2, n_mean = 3, F_mult = 0.9)
   )
   expect_equal(length(dat1$proj_settings$F_mult), length(dat1$proj_years))
@@ -206,8 +206,8 @@ test_that("make_dat recycles, validates, names proj_settings$F_mult", {
   expect_true(all(abs(dat1$proj_settings$F_mult - 0.9) < 1e-12))
 
   # exact-length F_mult accepted (and named)
-  dat2 <- make_dat(
-    obs = cod_obs,
+  dat2 <- prepare_tam(
+    data = cod_obs,
     proj_settings = list(n_proj = 2, n_mean = 3, F_mult = c(1.1, 0.8))
   )
   expect_identical(as.numeric(dat2$proj_settings$F_mult), c(1.1, 0.8))
@@ -215,8 +215,8 @@ test_that("make_dat recycles, validates, names proj_settings$F_mult", {
 
   # length mismatch (>1 and != n_proj) -> error
   expect_error(
-    make_dat(
-      obs = cod_obs,
+    prepare_tam(
+      data = cod_obs,
       proj_settings = list(n_proj = 2, n_mean = 3, F_mult = c(0.8, 0.9, 1.0))
     ),
     "length\\(proj_settings\\$F_mult\\) must equal"
@@ -224,8 +224,8 @@ test_that("make_dat recycles, validates, names proj_settings$F_mult", {
 
   # zero F_mult triggers warning and replacement with 1e-12
   expect_warning(
-    dat3 <- make_dat(
-      obs = cod_obs,
+    dat3 <- prepare_tam(
+      data = cod_obs,
       proj_settings = list(n_proj = 2, n_mean = 3, F_mult = c(0, 0.5))
     ),
     "Zero F not supported; replacing 0 with 1e-12"
@@ -234,10 +234,10 @@ test_that("make_dat recycles, validates, names proj_settings$F_mult", {
   expect_true(any(abs(dat3$proj_settings$F_mult - 0.5)   < 1e-18))
 })
 
-test_that("make_dat handles mean_ages correctly", {
+test_that("prepare_tam handles mean_ages correctly", {
   # Defaults to all ages when NULL
-  dat1 <- make_dat(
-    obs = cod_obs,
+  dat1 <- prepare_tam(
+    data = cod_obs,
     ages = 2:5,
     F_settings = list(process = "iid", mean_ages = NULL),
     M_settings = list(process = "iid", mean_ages = NULL, mu_supplied = ~I(0.2))
@@ -246,8 +246,8 @@ test_that("make_dat handles mean_ages correctly", {
   expect_equal(dat1$M_settings$mean_ages, 2:5)
 
   # Subset of ages is allowed
-  dat2 <- make_dat(
-    obs = cod_obs,
+  dat2 <- prepare_tam(
+    data = cod_obs,
     ages = 2:5,
     F_settings = list(process = "iid", mean_ages = c(2, 4)),
     M_settings = list(process = "iid", mean_ages = c(3, 5), mu_supplied = ~I(0.2))
@@ -257,8 +257,8 @@ test_that("make_dat handles mean_ages correctly", {
 
   # Invalid ages -> error
   expect_error(
-    make_dat(
-      obs = cod_obs,
+    prepare_tam(
+      data = cod_obs,
       ages = 2:5,
       F_settings = list(process = "iid", mean_ages = c(6, 7))
     ),

@@ -42,7 +42,7 @@ source("analysis/comp_assessments/scripts/database/003_observation_readiness.R")
 `observation_readiness.csv` is an observation/data readiness screen: it reports input
 coverage, whether observation translation succeeds, and whether
 `tinyAM::check_obs()` passes. It does not load each stock recipe or call
-`make_dat()`; recipe-level model readiness is checked during translation. A
+`prepare_tam()`; recipe-level model readiness is checked during translation. A
 ready observation object does not guarantee model convergence.
 
 ## Fit one assessment

@@ -51,5 +51,5 @@ transformed arguments, and ordinary effects of the same \code{x} are unsupported
 ~ survey + mono(q_block, by = survey)
 }
 \seealso{
-\code{\link[=make_dat]{make_dat()}}, \code{\link[=make_par]{make_par()}}, \code{\link[=tidy_obs_pred]{tidy_obs_pred()}}, \code{\link[=tidy_par]{tidy_par()}}, \link{tinyAM-model}
+\code{\link[=prepare_tam]{prepare_tam()}}, \code{\link[=make_par]{make_par()}}, \code{\link[=tidy_obs_pred]{tidy_obs_pred()}}, \code{\link[=tidy_par]{tidy_par()}}, \link{tinyAM-model}
 }

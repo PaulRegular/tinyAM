@@ -74,7 +74,7 @@
 #' Check the structure of a TAM obs list
 #'
 #' @description
-#' Validates the minimal structure required by [make_dat()] and [fit_tam()].
+#' Validates the minimal structure required by [prepare_tam()] and [fit_tam()].
 #' The `obs` object must be a list containing data.frames `catch`, `index`,
 #' `weight`, and `maturity`. Each table must include columns `year`, `age`,
 #' and `obs`. Types must be numeric (integerish allowed) for `year` and `age`,
@@ -85,7 +85,7 @@
 #' - `weight$obs` and `maturity$obs` must not contain `NA`.
 #' - Non-missing observations must be finite and non-negative; maturity must
 #'   be a proportion in `[0, 1]`. Zero catch/index values are accepted here but
-#'   treated as missing by [make_dat()], because the observation model is on logs.
+#'   treated as missing by [prepare_tam()], because the observation model is on logs.
 #' - `catch`, `weight`, and `maturity` must contain exactly one row for **every**
 #'   `(year, age)` combination over the global modeled range
 #'   (from min to max year and age across all tables).
@@ -225,4 +225,15 @@ check_obs <- function(obs) {
 
   invisible(TRUE)
 }
+
+#' Check tinyAM input data
+#'
+#' A direct alias of [check_obs()] with identical arguments and validation.
+#' @inheritParams check_obs
+#' @inherit check_obs details
+#' @return `TRUE` (invisibly) if validation passes; otherwise aborts.
+#' @examples
+#' check_tam_data(cod_obs)
+#' @export
+check_tam_data <- check_obs
 

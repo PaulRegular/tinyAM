@@ -175,7 +175,7 @@ rprocess_rw <- function(x, sd = 1) {
 #' F is terminal historical F times the specified multiplier.
 #'
 #' @param par Parameter list with the structure produced by [make_par()].
-#' @param dat Data and settings returned by [make_dat()].
+#' @param dat Data and settings returned by [prepare_tam()].
 #' @param simulate Logical; generate process states and observations instead of
 #'   returning the likelihood? Defaults to `FALSE`.
 #'
@@ -195,7 +195,7 @@ rprocess_rw <- function(x, sd = 1) {
 #' head(exp(simulated$log_r))
 #'
 #' @importFrom stats rnorm
-#' @seealso [tinyAM-model], [make_dat()], [make_par()], [fit_tam()], [sim_tam()]
+#' @seealso [tinyAM-model], [prepare_tam()], [make_par()], [fit_tam()], [sim_tam()]
 #' @export
 nll_fun <- function(f, d) function(p) f(p, d)
 #' obj <- RTMB::MakeADFun(make_nll_fun(nll_fun, dat), par,
@@ -212,7 +212,7 @@ nll_fun <- function(f, d) function(p) f(p, d)
 #' @importFrom stats rnorm
 #'
 #' @seealso
-#' [make_dat()], [make_par()], [fit_tam()], [sim_tam()],
+#' [prepare_tam()], [make_par()], [fit_tam()], [sim_tam()],
 #' [dprocess_ar1()], [rprocess_ar1()]
 #' @export
 nll_fun <- function(par, dat, simulate = FALSE) {

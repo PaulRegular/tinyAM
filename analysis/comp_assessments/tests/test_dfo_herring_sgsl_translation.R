@@ -108,8 +108,8 @@ stopifnot(
   isTRUE(all.equal(catch_comparison$obs, catch_comparison$value * 1000))
 )
 
-dat <- do.call(tinyAM::make_dat, c(
-  list(obs = obs, years = translated$years, ages = translated$ages),
+dat <- do.call(tinyAM::prepare_tam, c(
+  list(data = obs, years = translated$years, ages = translated$ages),
   translated$settings
 ))
 par <- tinyAM::make_par(dat)

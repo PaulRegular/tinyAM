@@ -10,13 +10,13 @@ if (!exists("cod_obs", inherits = TRUE)) {
 make_test_dat <- function(...) {
   args <- utils::modifyList(
     list(
-      obs = cod_obs,
+      data = cod_obs,
       years = YEARS,
       ages = AGES
     ),
     list(...)
   )
-  do.call(make_dat, args)
+  do.call(prepare_tam, args)
 }
 
 if (exists("cod_obs", inherits = TRUE)) {

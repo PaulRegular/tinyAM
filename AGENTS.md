@@ -27,7 +27,7 @@ transparent, and consistent with existing package structure.
 - Use roxygen markdown syntax.
 - Document new arguments in the function where they are introduced.
 - Include mathematical definitions for model parameters and processes when useful.
-- Keep terminology consistent across `make_dat()`, `make_par()`, `nll_fun()`,
+- Keep terminology consistent across `prepare_tam()`, `make_par()`, `nll_fun()`,
   simulation, tidying, and documentation.
 - Regenerate documentation after modifying exported interfaces.
 - Write user-facing documentation primarily for fisheries biologists and ecologists
@@ -70,7 +70,7 @@ transparent, and consistent with existing package structure.
 - Expected/mean log surfaces should use `log_mu_*`.
 - Estimation and simulation must use the same mathematical model.
 - A new process option must update:
-  `make_dat()`, `make_par()`, `nll_fun()`, simulation, tidying,
+  `prepare_tam()`, `make_par()`, `nll_fun()`, simulation, tidying,
   documentation, and tests as applicable.
 - Avoid hidden special cases that cause model semantics to differ between
   fitting and simulation.

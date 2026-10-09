@@ -11,7 +11,7 @@ plus_biology_obs <- function() {
 }
 
 plus_biology_dat <- function(process = "iid", ages = 2:4, proj = NULL, init = "exp") {
-  suppressWarnings(make_dat(plus_biology_obs(), ages = ages,
+  suppressWarnings(prepare_tam(plus_biology_obs(), ages = ages,
     N_settings = list(process = process, init = init),
     F_settings = list(process = "iid"),
     M_settings = list(process = "off", mu_supplied = ~ I(.2)),
@@ -52,7 +52,7 @@ test_that("biological inputs retain all hidden ages and project each age separat
   expect_identical(tinyAM:::.plus_fun(obs, 4)$maturity, obs$maturity)
   # Retained biological ages must not introduce unused M formula coefficients.
   obs$weight$bio_age <- factor(obs$weight$age)
-  modeled <- make_dat(obs, ages = 2:4,
+  modeled <- prepare_tam(obs, ages = 2:4,
     M_settings = list(process = "off", mu_form = ~ bio_age, mu_supplied = NULL),
     index_settings = list(q_form = ~ 1, sd_form = ~ 1, fill_missing = TRUE))
   expect_equal(levels(modeled$obs$weight$bio_age), as.character(2:4))

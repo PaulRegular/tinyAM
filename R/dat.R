@@ -335,7 +335,7 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #'   - `is_proj`: logical vector identifying the projection years;
 #'   - `obs$...$is_proj` rows to each `obs` table identifying the projection years.
 #'
-#' @param obs A list of tidy observation data.frames: `catch`, `index`,
+#' @param data A list of tidy observation data.frames: `catch`, `index`,
 #'   `weight`, and `maturity`. See **Details**.
 #' @param years Consecutive historical model years (at least two).
 #'   Inferred from observed data (non-projection) if `NULL`.
@@ -451,7 +451,7 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #' names(dat)
 #'
 #' ## With projection settings
-#' dat <- make_dat(
+#' dat <- prepare_tam(
 #'   cod_obs,
 #'   N_settings = list(process = "iid", init = "exp"),
 #'   F_settings = list(process = "rw", mu_form = NULL),
@@ -465,8 +465,8 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #'
 #' @seealso [fit_tam()], [tinyAM-model], [stats::model.matrix()], [cut_ages()]
 #' @export
-make_dat <- function(
-    obs,
+prepare_tam <- function(
+    data,
     years = NULL,
     ages = NULL,
     N_settings = list(process = "iid", init = "exp"),
@@ -477,7 +477,8 @@ make_dat <- function(
     proj_settings = NULL
 ) {
 
-  dat <- mget(ls())
+  obs <- data
+  dat <- mget(setdiff(ls(), "data"))
 
   dat$N_settings$process <- match.arg(dat$N_settings$process, c("off", "iid", "rw", "ar1"))
   dat$F_settings$process <- match.arg(dat$F_settings$process, c("iid", "rw", "ar1"))
@@ -501,7 +502,7 @@ make_dat <- function(
   if (min(dat$years) < min(all_obs_years) ||
       max(dat$years) > max(all_obs_years)) {
     cli::cli_abort(c(
-      "{.arg years} must fall within the years available in {.arg obs}.",
+      "{.arg years} must fall within the years available in {.arg data}.",
       "x" = "Requested years: {min(dat$years)}-{max(dat$years)}.",
       "i" = "Available years: {min(all_obs_years)}-{max(all_obs_years)}.",
       "i" = "Use {.arg proj_settings} for years beyond the terminal data year."
@@ -510,7 +511,7 @@ make_dat <- function(
   if (min(dat$ages) < min(all_obs_ages) ||
       max(dat$ages) > max(all_obs_ages)) {
     cli::cli_abort(c(
-      "{.arg ages} must fall within the ages available in {.arg obs}.",
+      "{.arg ages} must fall within the ages available in {.arg data}.",
       "x" = "Requested ages: {min(dat$ages)}-{max(dat$ages)}.",
       "i" = "Available ages: {min(all_obs_ages)}-{max(all_obs_ages)}."
     ))

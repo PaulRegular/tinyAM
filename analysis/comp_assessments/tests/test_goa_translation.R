@@ -20,8 +20,8 @@ shelikof <- obs$index$survey == "Shelikof winter acoustic"
 stopifnot(!any(shelikof & obs$index$age == 3),
           any(is.finite(obs$index$obs[shelikof & obs$index$age >= 4])))
 
-dat <- do.call(tinyAM::make_dat, c(
-  list(obs = obs, years = translated$years, ages = translated$ages),
+dat <- do.call(tinyAM::prepare_tam, c(
+  list(data = obs, years = translated$years, ages = translated$ages),
   translated$settings
 ))
 stopifnot(identical(dat$years, translated$years),

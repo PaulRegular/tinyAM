@@ -306,6 +306,6 @@ have finite log-scale intervals. See \code{\link[=tidy_par]{tidy_par()}} and \co
 }
 }
 \seealso{
-\code{\link[=make_dat]{make_dat()}}, \code{\link[=make_par]{make_par()}}, \code{\link[=nll_fun]{nll_fun()}}, \code{\link[=fit_tam]{fit_tam()}}, \code{\link[=sim_tam]{sim_tam()}},
+\code{\link[=prepare_tam]{prepare_tam()}}, \code{\link[=make_par]{make_par()}}, \code{\link[=nll_fun]{nll_fun()}}, \code{\link[=fit_tam]{fit_tam()}}, \code{\link[=sim_tam]{sim_tam()}},
 \code{\link[=dprocess_ar1]{dprocess_ar1()}}, \code{\link[=dprocess_rw]{dprocess_rw()}}, \code{\link[=mono]{mono()}}
 }

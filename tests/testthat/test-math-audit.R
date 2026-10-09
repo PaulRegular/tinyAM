@@ -30,7 +30,7 @@ test_that("projections retain all catch rows despite recent missing observations
   obs$catch$obs[obs$catch$year %in% 2003:2005 & obs$catch$age == 2] <- NA
   # A survey may end before the historical model does.
   obs$index <- subset(obs$index, year <= 2004)
-  dat <- make_dat(obs = obs, years = 2000:2005, ages = 2:6,
+  dat <- prepare_tam(data = obs, years = 2000:2005, ages = 2:6,
     proj_settings = list(n_proj = 2, n_mean = 3, F_mult = 1))
   expect_equal(as.integer(table(dat$obs$catch$year)), rep(5L, 8))
   expect_equal(sort(unique(dat$obs$index$year[dat$obs$index$is_proj])), 2006:2007)
@@ -126,11 +126,11 @@ test_that("missing formula rows and invalid supplied scales cannot misalign like
   obs <- cod_obs
   obs$index$x <- 1
   obs$index$x[which(obs$index$year == 2001)[1]] <- NA_real_
-  expect_error(make_dat(obs, years = 2000:2003,
+  expect_error(prepare_tam(obs, years = 2000:2003,
     index_settings = list(q_form = ~ x, sd_form = ~ 1, fill_missing = TRUE)), "one finite row")
   obs$weight$x <- .2
   obs$weight$x[which(obs$weight$year == 2001)[1]] <- NA_real_
-  expect_error(make_dat(obs, years = 2000:2003,
+  expect_error(prepare_tam(obs, years = 2000:2003,
     M_settings = list(process = "off", mu_supplied = ~ x)), "positive finite value")
   expect_error(make_test_dat(M_settings = list(mu_supplied = ~ I(0))), "positive finite value")
   expect_error(make_test_dat(years = c(2000, 2001.5)), "integer values")

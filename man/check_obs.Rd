@@ -14,7 +14,7 @@ check_obs(obs)
 \code{TRUE} (invisibly) if validation passes; otherwise aborts.
 }
 \description{
-Validates the minimal structure required by \code{\link[=make_dat]{make_dat()}} and \code{\link[=fit_tam]{fit_tam()}}.
+Validates the minimal structure required by \code{\link[=prepare_tam]{prepare_tam()}} and \code{\link[=fit_tam]{fit_tam()}}.
 The \code{obs} object must be a list containing data.frames \code{catch}, \code{index},
 \code{weight}, and \code{maturity}. Each table must include columns \code{year}, \code{age},
 and \code{obs}. Types must be numeric (integerish allowed) for \code{year} and \code{age},
@@ -26,7 +26,7 @@ Additional requirements:
 \item \code{weight$obs} and \code{maturity$obs} must not contain \code{NA}.
 \item Non-missing observations must be finite and non-negative; maturity must
 be a proportion in \verb{[0, 1]}. Zero catch/index values are accepted here but
-treated as missing by \code{\link[=make_dat]{make_dat()}}, because the observation model is on logs.
+treated as missing by \code{\link[=prepare_tam]{prepare_tam()}}, because the observation model is on logs.
 \item \code{catch}, \code{weight}, and \code{maturity} must contain exactly one row for \strong{every}
 \verb{(year, age)} combination over the global modeled range
 (from min to max year and age across all tables).

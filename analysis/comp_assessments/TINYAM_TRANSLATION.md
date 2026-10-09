@@ -57,7 +57,7 @@ database_to_tam_obs(): catch, index, weights, maturity, and M assumption
         ↓
 review source assumptions and specify tinyAM settings
         ↓
-check_obs() and make_dat()
+check_obs() and prepare_tam()
         ↓
 fit_tam()
         ↓
@@ -138,7 +138,7 @@ plan. Set `parallel = FALSE` when debugging.
 
 ## Stock background
 
-Each stock script supplies a short Markdown table aligned with `make_dat()`:
+Each stock script supplies a short Markdown table aligned with `prepare_tam()`:
 
 | Component | Accepted assessment | tinyAM representation | Reason for difference |
 |---|------|------|------|
@@ -701,7 +701,7 @@ A passing result means the translated observation object satisfies current tinyA
 
 It does not establish that the chosen model settings faithfully reproduce the source assessment.
 
-Also run `make_dat()` with the stock's proposed settings to check formula
+Also run `prepare_tam()` with the stock's proposed settings to check formula
 covariates, supplied M, blocking, and model dimensions before fitting. Valid
 observations alone do not establish that a model is ready to estimate.
 
@@ -1002,7 +1002,7 @@ contain features that tinyAM cannot represent.
 
 The repository's `results/observation_readiness.csv` is an observation/data-readiness
 screen. It checks source coverage, observation conversion, and `check_obs()`;
-it does not load stock recipes or call `make_dat()`. The model-readiness checks
+it does not load stock recipes or call `prepare_tam()`. The model-readiness checks
 below apply after the recipe and settings are available.
 
 ## Catch
@@ -1034,7 +1034,7 @@ below apply after the recipe and settings are available.
 ## Validation
 
 - `tinyAM::check_obs(obs)` passes;
-- `make_dat()` succeeds with the proposed years, ages, and settings;
+- `prepare_tam()` succeeds with the proposed years, ages, and settings;
 - all retained observations have compatible age groups and prediction definitions;
 - the stock background explains the accepted assumptions and chosen differences.
 

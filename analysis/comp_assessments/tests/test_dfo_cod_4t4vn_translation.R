@@ -50,8 +50,8 @@ stopifnot(all(obs$weight$M_prior_mean[obs$weight$age >= 9] == 0.15))
 stopifnot(identical(translated$settings$M_settings$process, "rw"))
 stopifnot(identical(translated$settings$M_settings$age_breaks, c(2, 5, 9, 12)))
 stopifnot(identical(translated$settings$M_settings$first_dev_year, 1971L))
-dat <- do.call(tinyAM::make_dat, c(
-  list(obs = obs, years = translated$years, ages = translated$ages),
+dat <- do.call(tinyAM::prepare_tam, c(
+  list(data = obs, years = translated$years, ages = translated$ages),
   translated$settings
 ))
 par <- tinyAM::make_par(dat)

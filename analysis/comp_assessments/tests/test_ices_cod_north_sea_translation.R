@@ -14,8 +14,8 @@ translated <- stock$translate_stock(source_data)
 obs <- translated$obs
 
 tinyAM::check_obs(obs)
-dat <- do.call(tinyAM::make_dat, c(
-  list(obs = obs, years = translated$years, ages = translated$ages),
+dat <- do.call(tinyAM::prepare_tam, c(
+  list(data = obs, years = translated$years, ages = translated$ages),
   translated$settings
 ))
 

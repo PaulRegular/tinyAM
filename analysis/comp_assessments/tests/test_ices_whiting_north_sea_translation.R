@@ -11,8 +11,8 @@ recipe <- new.env(parent = globalenv())
 sys.source(file.path(root, "scripts", "translation", "stocks",
                      paste0(assessment_id, ".R")), envir = recipe)
 translated <- recipe$translate_stock(source_data)
-dat <- do.call(tinyAM::make_dat, c(
-  list(obs = translated$obs, years = translated$years, ages = translated$ages),
+dat <- do.call(tinyAM::prepare_tam, c(
+  list(data = translated$obs, years = translated$years, ages = translated$ages),
   translated$settings
 ))
 par <- tinyAM::make_par(dat)

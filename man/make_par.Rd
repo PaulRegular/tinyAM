@@ -7,7 +7,7 @@
 make_par(dat)
 }
 \arguments{
-\item{dat}{A data list returned by \code{\link[=make_dat]{make_dat()}}, containing design matrices,
+\item{dat}{A data list returned by \code{\link[=prepare_tam]{prepare_tam()}}, containing design matrices,
 settings, and observation mappings. The shapes and presence/absence of
 parameters depend on elements in \code{dat} (e.g., \code{F_modmat}, \code{M_modmat},
 \code{q_modmat}, \code{sd_catch_modmat}, \code{sd_index_modmat}, \code{N_settings}, \code{F_settings},
@@ -23,7 +23,7 @@ informative \code{dimnames}.
 \description{
 \code{make_par()} builds a named list of initial values and shapes for all
 fixed and random-effect parameters used by TAM, based on the structure in
-a previously constructed \code{dat} list (see \code{\link[=make_dat]{make_dat()}}).
+a previously constructed \code{dat} list (see \code{\link[=prepare_tam]{prepare_tam()}}).
 }
 \details{
 \strong{Latent-state convention:} \code{log_r}, \code{log_n0}, \code{log_n}, \code{log_f}, and \code{log_m}
@@ -64,7 +64,7 @@ absent for \code{init = "exp"}, fixed for \code{"free"}, random for \code{"rando
 and first-year mortality; \code{log_n0} itself is not a deviation.
 \item The default \code{"exp"} initializer is parsimonious survivorship from
 \code{log_r0}, using first-year Z without an equilibrium plus group.
-See \code{\link[=make_dat]{make_dat()}} for the choices and weak-identification warning.
+See \code{\link[=prepare_tam]{prepare_tam()}} for the choices and weak-identification warning.
 }
 \item \strong{Abundance states and process variability (N)}
 \itemize{
@@ -111,7 +111,7 @@ increment penalty. See \code{\link[=fit_tam]{fit_tam()}} for mean coefficients o
 when they have no effect on the RW likelihood.
 }
 \examples{
-dat <- make_dat(
+dat <- prepare_tam(
   cod_obs,
   years = 1983:2024,
   ages = 2:14,
@@ -126,5 +126,5 @@ str(par)
 
 }
 \seealso{
-\code{\link[=make_dat]{make_dat()}}, \code{\link[=fit_tam]{fit_tam()}}, \link{tinyAM-model}
+\code{\link[=prepare_tam]{prepare_tam()}}, \code{\link[=fit_tam]{fit_tam()}}, \link{tinyAM-model}
 }

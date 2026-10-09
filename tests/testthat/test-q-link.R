@@ -19,7 +19,7 @@ test_that("logit bounds the full formula predictor without changing its design",
   obs$index$x <- (obs$index$year - 2000) / 5
   obs$index$group <- factor(ifelse(obs$index$age <= 3, "young", "older"))
   settings <- list(q_form = ~group + x, sd_form = ~1, q_link = "logit", fill_missing = TRUE)
-  dat <- make_test_dat(obs = obs, years = 2000:2005, ages = 2:6,
+  dat <- make_test_dat(data = obs, years = 2000:2005, ages = 2:6,
                        index_settings = settings)
   expect_identical(dat$q_modmat, model.matrix(~group + x, dat$obs$index))
   par <- make_par(dat)

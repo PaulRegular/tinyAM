@@ -11,7 +11,7 @@ nll_fun(par, dat, simulate = FALSE)
 \arguments{
 \item{par}{Parameter list with the structure produced by \code{\link[=make_par]{make_par()}}.}
 
-\item{dat}{Data and settings returned by \code{\link[=make_dat]{make_dat()}}.}
+\item{dat}{Data and settings returned by \code{\link[=prepare_tam]{prepare_tam()}}.}
 
 \item{simulate}{Logical; generate process states and observations instead of
 returning the likelihood? Defaults to \code{FALSE}.}
@@ -76,7 +76,7 @@ sims  <- nll_fun(p_hat, dat, simulate = TRUE)
 }
 
 \examples{
-dat <- make_dat(
+dat <- prepare_tam(
   cod_obs,
   years = 1983:2024,
   ages = 2:14,
@@ -93,8 +93,8 @@ head(exp(simulated$log_r))
 
 }
 \seealso{
-\link{tinyAM-model}, \code{\link[=make_dat]{make_dat()}}, \code{\link[=make_par]{make_par()}}, \code{\link[=fit_tam]{fit_tam()}}, \code{\link[=sim_tam]{sim_tam()}}
+\link{tinyAM-model}, \code{\link[=prepare_tam]{prepare_tam()}}, \code{\link[=make_par]{make_par()}}, \code{\link[=fit_tam]{fit_tam()}}, \code{\link[=sim_tam]{sim_tam()}}
 
-\code{\link[=make_dat]{make_dat()}}, \code{\link[=make_par]{make_par()}}, \code{\link[=fit_tam]{fit_tam()}}, \code{\link[=sim_tam]{sim_tam()}},
+\code{\link[=prepare_tam]{prepare_tam()}}, \code{\link[=make_par]{make_par()}}, \code{\link[=fit_tam]{fit_tam()}}, \code{\link[=sim_tam]{sim_tam()}},
 \code{\link[=dprocess_ar1]{dprocess_ar1()}}, \code{\link[=rprocess_ar1]{rprocess_ar1()}}
 }

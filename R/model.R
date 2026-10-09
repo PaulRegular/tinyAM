@@ -291,7 +291,7 @@
 #' confidence interval when uncertainty is large. Zero derived totals cannot
 #' have finite log-scale intervals. See [tidy_par()] and [tidy_sdrep()].
 #'
-#' @seealso [make_dat()], [make_par()], [nll_fun()], [fit_tam()], [sim_tam()],
+#' @seealso [prepare_tam()], [make_par()], [nll_fun()], [fit_tam()], [sim_tam()],
 #'   [dprocess_ar1()], [dprocess_rw()], [mono()]
 #' @name tinyAM-model
 NULL

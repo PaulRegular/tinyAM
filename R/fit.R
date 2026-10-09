@@ -69,10 +69,10 @@
 #' observations. Returns population trends, observation diagnostics, parameter
 #' estimates, and uncertainty tables. Use `N_settings`, `F_settings`, and
 #' `M_settings` to specify where unexplained biological variation is allowed.
-#' See [make_dat()] for options and [tinyAM-model] for the model equations.
+#' See [prepare_tam()] for options and [tinyAM-model] for the model equations.
 #'
 #' @details
-#' Builds data with [make_dat()] and initial parameters with [make_par()].
+#' Builds data with [prepare_tam()] and initial parameters with [make_par()].
 #' RTMB integrates random effects using the Laplace approximation; `nlminb`
 #' optimizes the remaining fixed effects. [mono()] increments `dq` have a zero
 #' lower bound. Their SEs remain on the increment scale, but symmetric Wald
@@ -81,7 +81,7 @@
 #' prediction to between zero and one; the default `"log"` allows q above one.
 #' Formula coefficients are then named `logit_q`, and [mono()] increments
 #' act on logit-q. Starting q coefficients must use the selected link scale:
-#' old `log_q` starts are not reused as `logit_q`. See [make_dat()] and [tidy_par()].
+#' old `log_q` starts are not reused as `logit_q`. See [prepare_tam()] and [tidy_par()].
 #'
 #' Random-effect blocks are chosen automatically from the model settings:
 #'
@@ -107,7 +107,7 @@
 #' `opt$convergence` and `opt$message`; a passing numerical check does not
 #' establish that the data identify every biological component.
 #'
-#' @param obs A named list of tidy observation tables (e.g., `catch`, `index`,
+#' @param data A named list of tidy observation tables (e.g., `catch`, `index`,
 #'   `weight`, `maturity`). See [cod_obs] for an example.
 #' @param interval Level in `(0, 1)` to use to generate confidence intervals,
 #'   where applicable; default `0.95.`
@@ -121,13 +121,13 @@
 #'   convergence and speed. Non-matching or missing entries are ignored.
 #' @param grad_tol Numeric tolerance passed to [check_convergence()] when
 #'   evaluating the fitted object's gradients. Defaults to `1e-2`.
-#' @inheritDotParams make_dat
+#' @inheritParams prepare_tam
 #'
 #' @return
 #' A `tam_fit` list with components:
 #'
 #' - **call**: matched call.
-#' - **dat**: data list returned by [make_dat()].
+#' - **dat**: data list returned by [prepare_tam()].
 #' - **obj**: RTMB `ADFun` object.
 #' - **opt**: `[stats::nlminb()]` optimization result.
 #' - **rep**: list from `obj$report()`.
@@ -160,34 +160,35 @@
 #' @importFrom stats nlminb rnorm
 #'
 #' @seealso
-#' [make_dat()], [make_par()], [sim_tam()], [fit_retro()],
+#' [prepare_tam()], [make_par()], [sim_tam()], [fit_retro()],
 #' [RTMB::MakeADFun()], [RTMB::sdreport()]
 #' @export
 fit_tam <- function(
-    obs,
+    data,
+    years = NULL,
+    ages = NULL,
+    N_settings = list(process = "iid", init = "exp"),
+    F_settings = list(process = "rw", mu_form = NULL),
+    M_settings = list(process = "off", mu_form = NULL, mu_supplied = ~I(0.2), age_breaks = NULL, first_dev_year = NULL),
+    catch_settings = list(sd_form = ~1, sd_supplied = NULL, fill_missing = TRUE),
+    index_settings = list(sd_form = ~1, sd_supplied = NULL, q_form = ~q_block, q_link = "log", fill_missing = TRUE),
+    proj_settings = NULL,
     interval = 0.95,
     add_osa_res = FALSE,
     silent = FALSE,
     start_par = NULL,
-    grad_tol = 1e-2,
-    ...
+    grad_tol = 1e-2
 ) {
 
   call <- match.call()
 
-  refit_args <- c(
-    list(
-      obs = obs,
-      interval = interval,
-      add_osa_res = add_osa_res,
-      silent = silent,
-      start_par = start_par,
-      grad_tol = grad_tol
-    ),
-    list(...)
+  refit_args <- mget(names(formals(fit_tam)))
+  dat <- prepare_tam(
+    data = data, years = years, ages = ages,
+    N_settings = N_settings, F_settings = F_settings, M_settings = M_settings,
+    catch_settings = catch_settings, index_settings = index_settings,
+    proj_settings = proj_settings
   )
-
-  dat <- make_dat(obs, ...)
   par <- make_par(dat)
   if (!is.null(start_par)) {
     par <- .merge_start_par(par, start_par)

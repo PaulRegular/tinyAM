@@ -25,8 +25,8 @@ translate_stock <- function(source) {
                           fill_missing = FALSE)
   )
 
-  dat <- do.call(tinyAM::make_dat, c(
-    list(obs = obs, years = years, ages = ages), settings
+  dat <- do.call(tinyAM::prepare_tam, c(
+    list(data = obs, years = years, ages = ages), settings
   ))
   start_par <- tinyAM::make_par(dat)
 
