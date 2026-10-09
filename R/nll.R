@@ -459,7 +459,9 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   }
   sd_catch <- exp(log_sd_catch_supplied + log_sd_catch_eff)
   sd_index <- exp(log_sd_index_supplied + log_sd_index_eff)
-  sd_obs <- c(sd_catch, sd_index)
+  sd_obs <- numeric(n_obs)
+  sd_obs[obs_map$type == "catch"] <- sd_catch
+  sd_obs[obs_map$type == "index"] <- sd_index
   q_coef <- if (identical(index_settings$q_link, "logit")) logit_q else log_q
   q_predictor <- drop(q_modmat %*% q_coef)
   if (!is.null(dat$q_mono_modmat)) {

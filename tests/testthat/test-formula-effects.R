@@ -203,6 +203,27 @@ test_that("new q parameters are registered and simulations reuse the returned st
   expect_equal(sd(error / report$sd_obs[dat$is_observed]), 1, tolerance = .1)
 })
 
+test_that("fixed catch SD and estimated index SD preserve differentiable observation scales", {
+  dat <- make_test_dat(catch_settings = list(sd_form = ~ 0, sd_supplied = ~ I(.2),
+    fill_missing = FALSE), index_settings = list(q_form = ~ q_block + ar1(year),
+    sd_form = ~ 1, fill_missing = FALSE))
+  p <- make_par(dat)
+  obj <- RTMB::MakeADFun(function(p) nll_fun(p, dat), p, silent = TRUE)
+  expect_true(is.finite(obj$fn(obj$par)))
+  expect_true(all(is.finite(obj$gr(obj$par))))
+  report <- obj$report()
+  expect_equal(as.numeric(report$sd_obs[dat$obs_map$type == "catch"]),
+    rep(.2, sum(dat$obs_map$type == "catch")))
+  expect_equal(as.numeric(report$sd_obs[dat$obs_map$type == "index"]),
+    rep(1, sum(dat$obs_map$type == "index")))
+  i <- which(names(obj$par) == "log_sd_index")
+  hi <- lo <- obj$par
+  hi[i] <- hi[i] + 1e-5
+  lo[i] <- lo[i] - 1e-5
+  expect_equal(as.numeric(obj$gr(obj$par)[i]),
+    (obj$fn(hi) - obj$fn(lo)) / 2e-5, tolerance = 1e-5)
+})
+
 test_that("formula processes fit and warm starts align named states", {
   fit <- update(default_fit, silent = TRUE,
     index_settings = list(q_form = ~ q_block + ar1(year, sd = .15, phi = .6),
