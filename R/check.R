@@ -311,20 +311,26 @@ check_tam <- function(fit, grad_tol = NULL, detailed = FALSE) {
 #' @param ... Unused.
 #' @export
 print.tam_check <- function(x, ...) {
-  cat("Numerical convergence: ", if (x$is_converged) "passed" else "not passed", "\n", sep = "")
-  cat("Optimizer: ", if (is.null(x$optimizer_code)) "unavailable" else x$optimizer_code,
-      if (!is.null(x$optimizer_message)) paste0(" (", x$optimizer_message, ")"), "\n", sep = "")
-  cat(sprintf("Max |gradient|: %s adjusted; %s raw (tolerance %s)\n",
-              signif(x$max_gradient, 3), signif(x$raw_max_gradient, 3), x$grad_tol))
-  cat("Positive-definite Hessian: ", if (is.null(x$pd_hessian)) "not assessed" else
-    if (isTRUE(x$pd_hessian)) "yes" else "no", "\n", sep = "")
-  cat("Structural checks: ", switch(x$structural_status,
+  inform <- function(text, symbol = "i") {
+    cli::cli_inform(stats::setNames("{text}", symbol))
+  }
+  inform(paste("Numerical convergence:", if (x$is_converged) "passed" else "not passed"),
+         if (x$is_converged) "v" else "x")
+  inform(paste0("Optimizer: ", if (is.null(x$optimizer_code)) "unavailable" else x$optimizer_code,
+                if (!is.null(x$optimizer_message)) paste0(" (", x$optimizer_message, ")")))
+  inform(sprintf("Max |gradient|: %s adjusted; %s raw (tolerance %s)",
+                 signif(x$max_gradient, 3), signif(x$raw_max_gradient, 3), x$grad_tol))
+  inform(paste("Positive-definite Hessian:", if (is.null(x$pd_hessian)) "not assessed" else
+    if (isTRUE(x$pd_hessian)) "yes" else "no"),
+    if (is.null(x$pd_hessian)) "i" else if (isTRUE(x$pd_hessian)) "v" else "x")
+  inform(paste("Structural checks:", switch(x$structural_status,
     no_known_issues = "no known redundancies detected; biological identifiability is not established",
-    issues = "issues detected", not_assessed = "not assessed"), "\n", sep = "")
+    issues = "issues detected", not_assessed = "not assessed")),
+    if (x$structural_status == "issues") "x" else "i")
   failures <- x$numerical[x$numerical$status != "pass", , drop = FALSE]
-  for (detail in failures$detail) cat("  - ", detail, "\n", sep = "")
-  for (detail in x$structural$detail[x$structural$status == "fail"]) cat("  - ", detail, "\n", sep = "")
-  cat("Advisory findings: ", nrow(x$advisories), "\n", sep = "")
-  for (detail in x$advisories$detail) cat("  - ", detail, "\n", sep = "")
+  for (detail in failures$detail) inform(detail, "x")
+  for (detail in x$structural$detail[x$structural$status == "fail"]) inform(detail, "x")
+  inform(paste("Advisory findings:", nrow(x$advisories)))
+  for (detail in x$advisories$detail) inform(detail)
   invisible(x)
 }

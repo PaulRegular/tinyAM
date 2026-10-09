@@ -16,7 +16,7 @@ test_that("numerical diagnostics include optimizer status and use one tolerance"
   expect_true(checks$is_converged)
   expect_true(all(checks$numerical$status == "pass"))
   expect_identical(fit, original)
-  expect_output(print(checks), "Numerical convergence: passed")
+  expect_message(print(checks), "Numerical convergence: passed")
   fit$opt$convergence <- 1
   expect_false(check_tam(fit)$is_converged)
   expect_identical(check_tam(fit)$numerical$status[1], "fail")
