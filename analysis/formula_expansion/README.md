@@ -64,3 +64,45 @@ Evaluate candidates separately from the accepted models for GOA cod, EBS and
 GOA pollock, Southern Gulf cod and spring herring. Change one assumption at a
 time and preserve their data and accepted baseline settings. Agreement with
 accepted trajectories alone is not evidence of statistical correctness.
+
+## F/M mean validation
+
+Stage 3 was authorized on 2026-10-09. IID/RW/AR1 effects now enter the F/M mean
+formulas using the same unique-state densities as q. Initially use IID residuals
+(or M residuals off), and one temporal mean term. Overlapping estimated IID
+variances, saturated fixed/random terms and inconsistent M age blocks are rejected.
+This does not add an F residual-off option or change projection/boundary rules.
+
+Run from the repository root:
+
+```r
+system2(file.path(R.home("bin"), "Rscript"),
+        c("analysis/formula_expansion/simulate_mean_effects.R", "100", "30"))
+rmarkdown::render("analysis/formula_expansion/mean_effects_report.Rmd",
+                  output_dir = "analysis/formula_expansion/results")
+```
+
+Track these two sources and the small deterministic package tests. Generated
+results, representative fits, figures and the HTML report are all in ignored
+`results/`. The report retains seeds and the result object records session
+information. Routine tests verify mathematics and integration; Monte Carlo
+recovery remains an explicit analysis, not a slow or flaky CI test.
+
+### Evidence and decision
+
+The completed study contains 600 isolated fits and 360 full assessment fits.
+All isolated fits passed the numerical criteria. Full-model success ranged
+from 67% to 97% by specification; the 90% target was not met uniformly.
+F SD recovery was generally reasonable, but gradient thresholds were often
+missed. Small shared M variation was difficult to separate from IID M residuals;
+a larger shared signal improved recovery. AR1 correlation remained imprecise.
+
+Retain one structured mean with the existing restrictions. Prefer mean-only M
+before attempting to estimate a second variance component, and require
+stock-specific numerical and sensitivity checks. Do not enable overlapping
+temporal components or variance processes on this evidence. The report shows
+success counts, parameter recovery, intervals and example trajectories.
+
+Final package checks: 1,564 passing assertions, one interactive-only skip,
+and `R CMD check --no-manual` Status OK. PDF manual generation is blocked by
+existing Unicode mathematical symbols in the simulation help page.

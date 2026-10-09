@@ -1,0 +1,273 @@
+---
+title: "F and M formula effects: recovery and permitted combinations"
+output:
+  html_document:
+    self_contained: true
+    toc: false
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE,
+  fig.width = 9, fig.height = 5, dpi = 120, fig.path = "results/figures/")
+results <- readRDS("results/mean_effects_recovery.rds")
+simple <- do.call(rbind, results$simple)
+full <- do.call(rbind, results$full)
+```
+
+## Main findings
+
+**Retain the restricted mean-formula options, but do not treat them as generally
+validated for every assessment.** All 600 isolated fits passed the numerical
+checks. The 360 full assessment fits were more demanding: numerical success
+ranged from 67% to 97% across specifications. No tolerances were relaxed and
+no fit was rescued.
+
+- **F:** mean-process SDs were reasonably recovered. All 90 F fits had optimizer
+  code zero and a positive-definite Hessian; 17 missed the gradient threshold.
+  RW had the most such failures (10/30). This deserves attention in applications,
+  but is not evidence by itself that the process density is wrong.
+- **M:** a small shared signal and IID residuals were difficult to separate.
+  AR1/RW residual SDs tended to be underestimated, with wide intervals and
+  occasional non-positive-definite Hessians. Increasing the shared SD from 0.12
+  to 0.30 brought median residual SDs close to the generating 0.06, although
+  some Hessian failures remained. Start with a structured M mean alone; add
+  residual variation only when the data or external information support it.
+- **AR1 persistence:** correlation tended to be underestimated and intervals
+  were wide, including in the isolated experiment. Do not interpret a fitted
+  correlation as a precise description of persistence without a sensitivity
+  check.
+
+The deterministic tests independently match the marginal Gaussian likelihood
+to an exact calculation. That establishes the density mathematics; the recovery
+experiments reveal the remaining numerical and information limits.
+
+## What is being tested?
+
+Can a shared change in mortality be separated from independent age-specific
+fluctuations? Formula terms describe variation in the **mean log F or log M**.
+The absolute latent mortality states remain unchanged in meaning.
+
+The study uses `iid(year)`, `rw(year)` and `ar1(year)`, with estimated process
+SDs and estimated AR1 correlation. IID effects fluctuate independently; RW
+changes persist; AR1 fluctuations return towards the baseline. RW starts at
+zero. These assumptions have proper, distinct process densities.
+
+The simpler experiment has 40 years with eight replicated ages, or only two
+ages. It observes log mortality with known measurement SD 0.05 and separately
+estimated IID residual SD 0.10. True mean-process SD is 0.18 and AR1 correlation
+is 0.65. There are `r results$n_simple` replicates per design and process.
+
+The full experiment has 30 years, eight ages, catch at age, and two surveys at
+different times of year. It estimates recruitment, age-specific mean F, F
+residual variability, and survey q. M's baseline is supplied. Observation SDs
+are known (0.08), recruitment SD is 0.12, F residual SD is 0.08, M residual SD is
+0.06 when enabled, and shared mean-process SD is 0.12. There are
+`r results$n_full` replicates per specification. M is tested with and without
+IID residuals. This deliberately informative study is **not a validation of
+every real assessment or sparse-data situation**.
+
+A second M experiment increases the shared mean-process SD to 0.30 while
+retaining IID residual SD 0.06. This tests whether poor separation of a small
+M signal improves when there is more information about its variation. SD is
+marginal for IID, increment SD for RW and innovation SD for AR1.
+
+Full fits start at the generating fixed coefficients and absolute states,
+but reset the mean trajectory to zero, process SDs to 0.10, and AR1 correlation
+to 0.50. These favorable starts isolate recovery and numerical problems; they
+do not establish that arbitrary starts work. No failed fit is rescued or
+removed from success-rate denominators.
+
+## Numerical reliability
+
+```{r reliability}
+numerical <- function(tab, groups, n) {
+  first <- tab[!duplicated(tab[, c(groups, "replicate")]), ]
+  do.call(rbind, lapply(split(first, interaction(first[groups], drop = TRUE)), function(d) {
+    good <- d$optimizer == 0 & d$pdHess & is.finite(d$gradient) & d$gradient <= .01
+    if ("converged" %in% names(d)) good <- d$converged
+    cbind(d[1, groups, drop = FALSE], attempted = n, returned = nrow(d),
+      success = sum(good), success_percent = round(100 * sum(good) / n, 1),
+      optimizer_ok = sum(d$optimizer == 0), gradient_ok = sum(is.finite(d$gradient) & d$gradient <= .01),
+      Hessian_ok = sum(d$pdHess), max_gradient = max(d$gradient))
+  }))
+}
+simple_rates <- numerical(simple, c("type", "design"), results$n_simple)
+full_rates <- numerical(full, c("component", "type", "design"), results$n_full)
+knitr::kable(full_rates[, c("component", "type", "design", "success",
+  "optimizer_ok", "gradient_ok", "Hessian_ok", "max_gradient")],
+  digits = 3, row.names = FALSE,
+  col.names = c("Component", "Process", "Design", "Passed", "Optimizer",
+                "Gradient", "Hessian", "Max gradient"))
+```
+
+A successful fit requires optimizer code zero, maximum absolute gradient at
+most 0.01 and a positive-definite fixed-effect Hessian. These checks establish
+numerical reliability, not biological identifiability. The simpler experiment
+uses the same thresholds. Each full specification has 30 attempted fits;
+every attempted fit returned a result.
+
+The separate counts distinguish optimizer failures, an insufficiently small
+gradient, and uncertainty failures. A missed gradient threshold alone does not
+establish structural confounding; poor variance recovery or repeated boundary
+estimates give additional evidence.
+
+```{r reliability-figure}
+rates <- rbind(data.frame(label = paste("Isolated", simple_rates$type, simple_rates$design),
+                          percent = simple_rates$success_percent),
+               data.frame(label = paste(full_rates$component, full_rates$type, full_rates$design),
+                          percent = full_rates$success_percent))
+par(mar = c(4, 16, 1, 1))
+barplot(rates$percent, names.arg = rates$label, horiz = TRUE, las = 1,
+        xlim = c(0, 100), col = "steelblue", cex.names = .8,
+        xlab = "Numerically successful fits (%)")
+abline(v = 90, lty = 2)
+```
+
+## Are the process components recovered?
+
+```{r recovery-table}
+recovery <- function(tab, groups) {
+  do.call(rbind, lapply(split(tab, interaction(tab[groups], drop = TRUE)), function(d) {
+    available <- is.finite(d$estimate)
+    intervals <- is.finite(d$lower) & is.finite(d$upper) & d$pdHess
+    cbind(d[1, groups, drop = FALSE], n_estimates = sum(available),
+      true_value = d$truth[1], median_estimate = median(d$estimate[available]),
+      mean_bias = mean(d$estimate[available] - d$truth[available]),
+      n_intervals = sum(intervals), median_CI_width = median(d$upper[intervals] - d$lower[intervals]),
+      coverage = mean(d$lower[intervals] <= d$truth[intervals] &
+        d$upper[intervals] >= d$truth[intervals]))
+  }))
+}
+summary_full <- recovery(full, c("component", "type", "design", "parameter"))
+knitr::kable(summary_full[, setdiff(names(summary_full), "n_estimates")],
+  digits = 3, row.names = FALSE,
+  col.names = c("Component", "Process", "Design", "Parameter", "True",
+                "Median", "Bias", "Intervals", "CI width", "Coverage"))
+```
+
+Coverage is conditional on available intervals with a positive-definite
+Hessian; numerical failures must be considered alongside it. With 30
+replicates, approximate Monte Carlo uncertainty around nominal 95% coverage is
+about ±8 percentage points; with 100 it is about ±4. A single unusual replicate
+is not a reason to add constraints or optimization tricks.
+
+```{r recovery-figure, fig.height=8}
+par(mfrow = c(1, 2), mar = c(4, 9, 2, 1))
+for (component in c("F", "M")) {
+  d <- full[full$component == component & full$parameter != "phi", ]
+  label <- paste(toupper(d$type), ifelse(d$design == "mean only", "alone",
+    ifelse(grepl("strong", d$design), "strong + IID", "+ IID")),
+                 ifelse(d$parameter == "mean_sd", "mean SD", "residual SD"))
+  label <- factor(label, levels = unique(label))
+  boxplot(d$estimate / d$truth ~ label, las = 1, ylim = c(0, 3), horizontal = TRUE,
+          xlab = "Estimated SD / true SD", ylab = "", main = component,
+          col = "lightblue", outline = FALSE, cex.axis = .8)
+  abline(v = 1, lty = 2)
+}
+```
+
+The figure suppresses extreme outlier points to keep ordinary estimates
+readable; the recovery table uses all finite estimates.
+
+```{r correlation, fig.height=3.5}
+d <- full[full$parameter == "phi", ]
+label <- paste(d$component, ifelse(d$design == "mean only", "mean only",
+  ifelse(grepl("strong", d$design), "strong mean + IID", "mean + IID")))
+par(mar = c(4, 13, 1, 1))
+boxplot(d$estimate ~ label, horizontal = TRUE, las = 1, ylim = c(0, 1),
+        xlab = "Estimated AR1 correlation", ylab = "", col = "lightblue")
+abline(v = .65, lty = 2)
+```
+
+The dashed line is the generating correlation (0.65). In full assessments,
+median correlation-interval widths range from 0.55 to 0.80. Wide intervals can
+cover the truth while still providing little information about persistence.
+Mean-SD interval coverage was 83% for the F-AR1 specification; the study does
+not demonstrate uniformly calibrated uncertainty.
+
+## Example trajectories
+
+```{r trajectories, fig.height=7}
+examples <- results$examples[grepl("^full_.*_TRUE_1$", names(results$examples))]
+par(mfrow = c(2, 3), mar = c(3, 4, 2, 1))
+for (d in examples) {
+  limits <- range(c(d$truth, d$lower, d$upper), finite = TRUE)
+  plot(d$year, d$truth, type = "n", ylim = limits, xlab = "Year", ylab = "Mean log effect",
+       main = paste(d$component[1], d$type[1]))
+  polygon(c(d$year, rev(d$year)), c(d$lower, rev(d$upper)),
+          col = adjustcolor("steelblue", .2), border = NA)
+  lines(d$year, d$truth, lwd = 2)
+  lines(d$year, d$estimate, col = "steelblue", lwd = 2)
+  abline(h = 0, col = "grey")
+}
+```
+
+Black lines show the generating mean effect; blue lines and bands show the
+estimate and its local 95% interval. Examples are the **first replicate**, not
+selected for a good fit. The report evaluates mean components, not agreement
+with an accepted stock assessment.
+
+Zero means no change from the baseline mortality. A log effect of 0.2 raises
+the rate by about 22%; an effect of -0.2 lowers it by about 18%.
+
+```{r stronger-M, fig.height=3.5}
+strong <- results$examples[grepl("_strong_1$", names(results$examples))]
+if (length(strong)) {
+  par(mfrow = c(1, 3), mar = c(3, 4, 2, 1))
+  for (d in strong) {
+    plot(d$year, d$truth, type = "n", ylim = range(d$truth, d$lower, d$upper, finite = TRUE),
+         xlab = "Year", ylab = "Mean log effect", main = paste("Stronger M", d$type[1]))
+    polygon(c(d$year, rev(d$year)), c(d$lower, rev(d$upper)),
+            col = adjustcolor("steelblue", .2), border = NA)
+    lines(d$year, d$truth, lwd = 2)
+    lines(d$year, d$estimate, col = "steelblue", lwd = 2)
+  }
+}
+```
+
+## What should be permitted?
+
+| Combination | Treatment |
+|:--|:--|
+| One shared IID, RW or AR1 mean with IID residuals | Enabled, subject to design checks; interpret recovery results above before estimating both components in a stock assessment. |
+| Structured M mean with residual process off | Enabled; supplied M sets the baseline unless an ordinary mean formula estimates it. |
+| Numeric `by` | One trajectory multiplied by the covariate; not separate age trajectories. |
+| Categorical `by` | Separate trajectories with shared term-level SD/correlation; require adequate replication and compatible M blocks. |
+| Estimated IID mean variance duplicating IID residual variance | Rejected; supply one SD or share effects across replicated states. |
+| Structured means with RW/AR1 residuals | Not enabled pending a separate identifiability study. |
+| Multiple temporal mean terms | Not enabled in this phase. |
+
+Examples of the supported interface are `F_settings = list(process = "iid",
+mu_form = ~ factor(age) + rw(year))` and `M_settings = list(process = "off",
+mu_form = ~ 0 + ar1(year), mu_supplied = ~ M_assumption)`. The second example
+uses supplied M as the baseline and estimates shared deviations around it.
+
+The package has no F residual-process-off option; this work does not add one.
+F projections retain the existing terminal-state policy. Mean-process future
+states have proper densities and integrate out without observations.
+
+```{r errors}
+if (length(results$failures)) {
+  knitr::kable(data.frame(run = names(results$failures), reason = unlist(results$failures)),
+               caption = "Runs that failed to return a result")
+}
+```
+
+The study cannot justify unrestricted overlapping temporal components. It also
+does not establish robustness when observation errors are unknown, q varies
+through time, or N has additional process variation. Those need further
+simulations or stock-specific sensitivity analysis. The recovery experiments
+vary one mortality mean at a time; jointly time-varying F and M means have not
+been evaluated here.
+
+## Reproducibility
+
+Run `simulate_mean_effects.R` from the repository root, then render this report.
+Seeds, configurations and all transformations are in that script. The result
+object contains the R session information. Generated results, example fits and
+this rendered report live in the ignored `results/` folder.
+
+Package validation passed 1,564 assertions, with one interactive-only test
+skipped. `R CMD check --no-manual` returned **Status: OK**. The PDF manual check
+failed on existing Unicode mathematical symbols in the simulation help page;
+its other checks passed.
