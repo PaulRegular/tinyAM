@@ -55,8 +55,15 @@ does not refit the model. \code{detailed = TRUE} also examines the fixed-paramet
 covariance eigenvalues and weakly supported parameter combinations. Profiles,
 one-step residuals, simulations and retrospectives are separate investigations.
 Mortality-mean advisories highlight jointly estimated M mean/residual
-variation and F/M mean variation. They also flag 95\% AR1 correlation intervals
-wider than 0.5 and process-SD intervals spanning more than a factor of ten.
+variation and F/M mean variation. Formula-effect advisories flag 95\% AR1
+correlation intervals wider than 0.5 and process-SD intervals spanning more
+than a factor of ten, including catchability effects. Catchability groups
+with fewer than five observed effect levels are flagged when process SD or
+correlation is estimated. Observation-specific IID effects with estimated
+observation SD receive a caution under the logit link; exact log-link
+variance aliases are rejected before fitting.
+Logistic curves are flagged when the fitted midpoint is outside the observed
+age/size range and its 95\% interval is wider than that range.
 These descriptive thresholds identify imprecise estimates; they do not prove
 a structural problem or change the convergence criteria.
 }

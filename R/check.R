@@ -27,8 +27,15 @@
 #' covariance eigenvalues and weakly supported parameter combinations. Profiles,
 #' one-step residuals, simulations and retrospectives are separate investigations.
 #' Mortality-mean advisories highlight jointly estimated M mean/residual
-#' variation and F/M mean variation. They also flag 95% AR1 correlation intervals
-#' wider than 0.5 and process-SD intervals spanning more than a factor of ten.
+#' variation and F/M mean variation. Formula-effect advisories flag 95% AR1
+#' correlation intervals wider than 0.5 and process-SD intervals spanning more
+#' than a factor of ten, including catchability effects. Catchability groups
+#' with fewer than five observed effect levels are flagged when process SD or
+#' correlation is estimated. Observation-specific IID effects with estimated
+#' observation SD receive a caution under the logit link; exact log-link
+#' variance aliases are rejected before fitting.
+#' Logistic curves are flagged when the fitted midpoint is outside the observed
+#' age/size range and its 95% interval is wider than that range.
 #' These descriptive thresholds identify imprecise estimates; they do not prove
 #' a structural problem or change the convergence criteria.
 #'
@@ -242,8 +249,97 @@ check_tam <- function(fit, grad_tol = NULL, detailed = FALSE) {
   out
 }
 
+.q_process_advisories <- function(dat) {
+  out <- data.frame(issue = character(), detail = character())
+  if (!length(dat$q_terms)) return(out)
+  d <- dat$obs$index
+  if (!is.data.frame(d)) return(out)
+  observed <- !d$is_proj & is.finite(d$obs) & d$obs > 0
+  for (term in dat$q_terms) {
+    if (term$type == "logistic") next
+    if (!is.null(term$sd_parameter) || !is.null(term$phi_parameter)) {
+      for (group in term$groups) {
+        rows <- group$rows[observed[group$rows] & term$multiplier[group$rows] != 0]
+        levels <- length(unique(d[[term$variable]][rows]))
+        if (levels < 5L) out <- rbind(out, data.frame(issue = "q_effect_support",
+          detail = paste0(term$id, ", group ", group$group, ": ", length(rows),
+            " observations cover only ", levels, " effect levels. This group's effect has limited observed support; inspect its uncertainty or consider a simpler grouping/formula or an externally supported SD.")))
+      }
+    }
+    independent <- term$type == "iid" || (term$type == "ar1" && identical(term$phi, 0))
+    if (!independent || is.null(term$sd_parameter) ||
+        !identical(dat$index_settings$q_link, "logit")) next
+    z <- .q_term_design(term, nrow(d))[observed, , drop = FALSE]
+    z <- z[, colSums(abs(z)) > 0, drop = FALSE]
+    s <- dat$sd_index_modmat[observed, , drop = FALSE]
+    active <- rowSums(abs(z)) > 0
+    if (ncol(z) && all(colSums(z != 0) == 1L) && ncol(s) &&
+        any(s[active, , drop = FALSE] != 0)) {
+      out <- rbind(out, data.frame(issue = "q_variance_separation",
+        detail = paste0(term$id, ": each effect level has only one informative observation, and observation SD is also estimated. The logit link does not guarantee that these sources of variation can be separated. Use replicated levels, simplify the effect or supply one SD.")))
+    }
+  }
+  out
+}
+
+.formula_uncertainty_advisories <- function(fit) {
+  out <- data.frame(issue = character(), detail = character())
+  sdr <- fit[["sdrep"]]
+  if (!length(.formula_terms(fit$dat)) || !is.list(sdr) || !isTRUE(sdr$pdHess)) return(out)
+  p <- sdr$par.fixed
+  covariance <- sdr$cov.fixed
+  if (!is.matrix(covariance) || nrow(covariance) != length(p)) return(out)
+  variance <- diag(covariance)
+  variance[!is.finite(variance) | variance < 0] <- NA_real_
+  half_width <- stats::qnorm(.975) * sqrt(variance)
+  wide_sd <- character()
+  for (component in c("q", "F", "M")) {
+    terms <- fit$dat[[paste0(component, "_terms")]]
+    if (!length(terms)) next
+    sd_names <- c(unlist(lapply(terms, `[[`, "sd_parameter")),
+      if (component != "q" && identical(fit$dat[[paste0(component, "_settings")]]$process, "iid"))
+        paste0("log_sd_", tolower(component)))
+    for (term in terms) {
+      i <- match(term$phi_parameter, names(p))
+      if (!length(i) || is.na(i) || !is.finite(half_width[i]) || !is.finite(p[i])) next
+      width <- diff(stats::plogis(p[i] + c(-1, 1) * half_width[i]))
+      if (width > .5) out <- rbind(out, data.frame(issue = "formula_AR1_uncertainty",
+        detail = paste0(term$id, ": the 95% AR1 correlation interval spans more than 0.5. ",
+          "Persistence is weakly estimated; compare with IID/RW effects or a scientifically supported fixed phi before interpreting it.")))
+    }
+    i <- match(sd_names, names(p))
+    i <- i[!is.na(i)]
+    wide <- is.finite(half_width[i]) & is.finite(p[i]) & 2 * half_width[i] > log(10)
+    wide_sd <- c(wide_sd, names(p)[i[wide]])
+  }
+  if (length(wide_sd)) out <- rbind(out, data.frame(issue = "formula_SD_uncertainty",
+    detail = paste0("95% intervals span more than tenfold for ", paste(unique(wide_sd), collapse = ", "),
+      ". These variance components are weakly estimated; compare simpler formulas or use externally supported process SDs.")))
+  d <- fit$dat$obs$index
+  for (term in Filter(function(x) x$type == "logistic", fit$dat$q_terms)) {
+    indices <- which(names(p) == paste0("q_a50_", term$id))
+    if (length(indices) != length(term$groups)) next
+    for (g in seq_along(term$groups)) {
+      group <- term$groups[[g]]
+      rows <- group$rows[!d$is_proj[group$rows] & is.finite(d$obs[group$rows]) & d$obs[group$rows] > 0]
+      if (!length(rows)) next
+      support <- range(d[[term$variable]][rows])
+      i <- indices[g]
+      if (is.finite(p[i]) && is.finite(half_width[i]) &&
+          (p[i] < support[1] || p[i] > support[2]) && 2 * half_width[i] > diff(support)) {
+        out <- rbind(out, data.frame(issue = "logistic_support",
+          detail = paste0(term$id, ", group ", group$group,
+            ": the fitted midpoint lies outside the observed range (", paste(support, collapse = " to "),
+            "), and its 95% interval is wider than that range. The data may not distinguish maximum catchability from the age/size curve. Consider a simpler curve or observations covering its rising part and plateau.")))
+      }
+    }
+  }
+  out
+}
+
 .check_tam_advisories <- function(fit, active, residuals, data) {
-  out <- rbind(.mean_process_advisories(fit$dat), .mean_uncertainty_advisories(fit))
+  out <- rbind(.mean_process_advisories(fit$dat), .q_process_advisories(fit$dat),
+               .formula_uncertainty_advisories(fit))
   add <- function(issue, detail) {
     out <<- rbind(out, data.frame(issue = issue, detail = detail))
   }

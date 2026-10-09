@@ -86,44 +86,6 @@
   out
 }
 
-.mean_uncertainty_advisories <- function(fit) {
-  out <- data.frame(issue = character(), detail = character())
-  terms <- c(fit$dat$F_terms, fit$dat$M_terms)
-  sdr <- fit[["sdrep"]]
-  if (!length(terms) || !is.list(sdr) || !isTRUE(sdr$pdHess)) return(out)
-  p <- sdr$par.fixed
-  covariance <- sdr$cov.fixed
-  if (!is.matrix(covariance) || nrow(covariance) != length(p)) return(out)
-  variance <- diag(covariance)
-  variance[!is.finite(variance) | variance < 0] <- NA_real_
-  se <- sqrt(variance)
-  half_width <- stats::qnorm(.975) * se
-  wide_sd <- character()
-  for (component in c("F", "M")) {
-    component_terms <- fit$dat[[paste0(component, "_terms")]]
-    if (!length(component_terms)) next
-    sd_names <- c(unlist(lapply(component_terms, `[[`, "sd_parameter")),
-      if (identical(fit$dat[[paste0(component, "_settings")]]$process, "iid"))
-        paste0("log_sd_", tolower(component)))
-    for (term in component_terms) {
-      i <- match(term$phi_parameter, names(p))
-      if (!length(i) || is.na(i) || !is.finite(half_width[i]) || !is.finite(p[i])) next
-      width <- diff(stats::plogis(p[i] + c(-1, 1) * half_width[i]))
-      if (width > .5) out <- rbind(out, data.frame(issue = "mortality_AR1_uncertainty",
-        detail = paste0(term$id, ": the 95% AR1 correlation interval spans more than 0.5. ",
-          "Persistence is weakly estimated; compare with IID/RW means or a scientifically supported fixed phi before interpreting it.")))
-    }
-    i <- match(sd_names, names(p))
-    i <- i[!is.na(i)]
-    wide <- is.finite(half_width[i]) & is.finite(p[i]) & 2 * half_width[i] > log(10)
-    wide_sd <- c(wide_sd, names(p)[i[wide]])
-  }
-  if (length(wide_sd)) out <- rbind(out, data.frame(issue = "mortality_SD_uncertainty",
-    detail = paste0("95% intervals span more than tenfold for ", paste(unique(wide_sd), collapse = ", "),
-      ". These variance components are weakly estimated; compare simpler mean/residual structures or use externally supported mean-term SDs.")))
-  out
-}
-
 .mean_effects <- function(par, dat, component, simulate = FALSE) {
   proxy <- list(obs = list(index = .mean_formula_data(dat, component)),
                 q_terms = dat[[paste0(component, "_terms")]])

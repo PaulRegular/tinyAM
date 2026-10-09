@@ -26,6 +26,12 @@
 #' error are rejected. For sparse data, simpler formulas or supplied process SDs
 #' may be necessary. Passing design checks does not establish biological
 #' identifiability; inspect [check_tam()].
+#' With a logit link, fitting warns when observation-specific IID variation and
+#' observation SD are both estimated: the nonlinear link does not guarantee
+#' useful separation. Groups with fewer than five observed effect levels are
+#' also flagged when process SD or correlation is estimated. These are
+#' descriptive cautions, not additional model restrictions. Projection years,
+#' missing/zero observations and zero numeric multipliers do not supply support.
 #'
 #' Forecast states follow the same normalized process density and are integrated
 #' out when there are no observations. At the fitted mode, new IID levels have
@@ -531,6 +537,11 @@ logistic <- function(x, by = NULL) .formula_marker_error("logistic")
 #' Midpoint and positive slope are fixed effects, not Gaussian random effects.
 #' Redundant curves, such as logistic plus an unrestricted factor of the same
 #' age, are rejected. See [formula_effects] for variation around these curves.
+#' Fitting warns if the midpoint lies outside the observed age/size range and
+#' its 95% interval is wider than that range. Maximum catchability and curve
+#' shape may then be difficult to distinguish. Uncertainty advisories require
+#' a successful positive-definite uncertainty calculation; failures are reported
+#' separately by the numerical convergence checks.
 #'
 #' @param x Name of a column in index observations: numeric or factor for
 #'   `mono()`, numeric age/size for `logistic()`.

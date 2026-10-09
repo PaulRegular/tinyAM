@@ -109,6 +109,9 @@
 #' `is_converged` summarizes optimizer, gradient and uncertainty checks. Also inspect
 #' `opt$convergence` and `opt$message`; a passing numerical check does not
 #' establish that the data identify every biological component.
+#' Fitting also warns about sparse catchability effects and wide formula-effect
+#' uncertainty. These advisories are retained by [check_tam()] and do not change
+#' the likelihood, parameter constraints or numerical convergence criteria.
 #'
 #' @param data A named list of tidy observation tables (e.g., `catch`, `index`,
 #'   `weight`, `maturity`). See [cod_obs] for an example.
@@ -201,10 +204,10 @@ fit_tam <- function(
     proj_settings = proj_settings
   )
   par <- make_par(dat)
-  mean_advisories <- .mean_process_advisories(dat)
-  if (nrow(mean_advisories)) {
-    cli::cli_warn(c("Mortality mean-process caution.",
-      stats::setNames(mean_advisories$detail, rep("i", nrow(mean_advisories)))))
+  formula_advisories <- rbind(.mean_process_advisories(dat), .q_process_advisories(dat))
+  if (nrow(formula_advisories)) {
+    cli::cli_warn(c("Formula-effect caution.",
+      stats::setNames(formula_advisories$detail, rep("i", nrow(formula_advisories)))))
   }
   if (!is.null(start_par)) {
     par <- .merge_start_par(par, start_par)
@@ -336,10 +339,10 @@ fit_tam <- function(
       stats::setNames(failed, rep("x", length(failed))),
       "i" = "Optimizer code zero alone is insufficient. A missed gradient tolerance alone does not establish a structural problem."))
   }
-  mean_uncertainty <- .mean_uncertainty_advisories(out)
-  if (nrow(mean_uncertainty)) {
-    cli::cli_warn(c("Mortality process uncertainty is large.",
-      stats::setNames(mean_uncertainty$detail, rep("i", nrow(mean_uncertainty)))))
+  formula_uncertainty <- .formula_uncertainty_advisories(out)
+  if (nrow(formula_uncertainty)) {
+    cli::cli_warn(c("Formula-effect uncertainty or support is limited.",
+      stats::setNames(formula_uncertainty$detail, rep("i", nrow(formula_uncertainty)))))
   }
 
   .new_tam_fit(out)

@@ -197,5 +197,5 @@ test_that("fitting warns about M variance separation before optimizing", {
     F_settings = list(process = "iid", mu_form = ~ factor(age)),
     M_settings = list(process = "iid", mu_form = ~ 0 + rw(year),
       mu_supplied = ~ I(.3), age_breaks = 2:6), silent = TRUE), "stop before optimizer"),
-    "Mortality mean-process caution")
+    "Formula-effect caution")
 })

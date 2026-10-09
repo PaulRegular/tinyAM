@@ -194,9 +194,9 @@ test_that("mortality uncertainty advisories do not change numerical convergence"
   expect_silent(checks <- check_tam(fit))
   expect_identical(fit, original)
   expect_true(checks$is_converged)
-  expect_true(all(c("M_variance_separation", "mortality_AR1_uncertainty",
-                    "mortality_SD_uncertainty") %in% checks$advisories$issue))
-  expect_match(checks$advisories$detail[checks$advisories$issue == "mortality_SD_uncertainty"],
+  expect_true(all(c("M_variance_separation", "formula_AR1_uncertainty",
+                    "formula_SD_uncertainty") %in% checks$advisories$issue))
+  expect_match(checks$advisories$detail[checks$advisories$issue == "formula_SD_uncertainty"],
                "log_sd_m")
   expect_message(print(checks), "Persistence is weakly estimated")
   fit$sdrep$cov.fixed <- diag(rep(.01, 3))
@@ -204,8 +204,62 @@ test_that("mortality uncertainty advisories do not change numerical convergence"
   expect_false(any(grepl("uncertainty$", checks$advisories$issue)))
   fit$sdrep$cov.fixed <- diag(c(.1, 1, 1)^2)
   fit$sdrep$pdHess <- FALSE
-  expect_equal(nrow(tinyAM:::.mean_uncertainty_advisories(fit)), 0)
+  expect_equal(nrow(tinyAM:::.formula_uncertainty_advisories(fit)), 0)
   expect_false(check_tam(fit)$is_converged)
   fit$sdrep <- NULL
-  expect_equal(nrow(tinyAM:::.mean_uncertainty_advisories(fit)), 0)
+  expect_equal(nrow(tinyAM:::.formula_uncertainty_advisories(fit)), 0)
+})
+
+test_that("q process uncertainty uses the same thresholds without changing convergence", {
+  fit <- make_check_fit()
+  p <- c(log_sd_q_ar1_year = log(.18), logit_phi_q_ar1_year = qlogis(.65))
+  fit$opt$par <- fit$sdrep$par.fixed <- p
+  fit$sdrep$gradient.fixed <- c(0, 0)
+  fit$sdrep$cov.fixed <- diag(c(1, 1)^2)
+  fit$dat$q_terms <- list(list(id = "ar1_year", type = "ar1",
+    sd_parameter = names(p)[1], phi_parameter = names(p)[2]))
+  original <- fit
+  expect_silent(checks <- check_tam(fit))
+  expect_true(checks$is_converged)
+  expect_identical(fit, original)
+  expect_true(all(c("formula_AR1_uncertainty", "formula_SD_uncertainty") %in% checks$advisories$issue))
+  expect_match(paste(checks$advisories$detail, collapse = " "), "ar1_year")
+  fit$sdrep$cov.fixed <- diag(c(.01, .01))
+  expect_equal(nrow(tinyAM:::.formula_uncertainty_advisories(fit)), 0)
+  fit$sdrep$cov.fixed <- diag(c(NA_real_, 1))
+  expect_false("formula_SD_uncertainty" %in% tinyAM:::.formula_uncertainty_advisories(fit)$issue)
+  fit$sdrep$pdHess <- FALSE
+  expect_equal(nrow(tinyAM:::.formula_uncertainty_advisories(fit)), 0)
+})
+
+test_that("logistic support uses observed ranges, group-specific midpoints and uncertainty", {
+  d <- expand.grid(age = 1:5, survey = c("A", "B"))
+  d$obs <- 1
+  d$is_proj <- FALSE
+  design <- tinyAM:::.parse_q_formula(~ survey + logistic(age, by = survey), d)
+  fit <- make_check_fit()
+  fit$dat <- c(list(obs = list(index = d)), design)
+  nm <- paste0("q_a50_", design$q_terms[[1]]$id)
+  fit$opt$par <- fit$sdrep$par.fixed <- setNames(c(3, 8), rep(nm, 2))
+  fit$sdrep$gradient.fixed <- c(0, 0)
+  fit$sdrep$cov.fixed <- diag(c(3, 3)^2)
+  original <- fit
+  expect_silent(checks <- check_tam(fit))
+  expect_true(checks$is_converged)
+  expect_identical(fit, original)
+  advice <- subset(checks$advisories, issue == "logistic_support")
+  expect_equal(nrow(advice), 1)
+  expect_match(advice$detail, "group B")
+  expect_match(advice$detail, "1 to 5")
+  fit$sdrep$cov.fixed <- diag(c(.1, .1)^2)
+  expect_equal(nrow(tinyAM:::.formula_uncertainty_advisories(fit)), 0)
+  fit$sdrep$cov.fixed <- diag(c(3, 3)^2)
+  # Outlying unobserved/projection rows cannot make the midpoint look supported.
+  fit$dat$obs$index <- rbind(d, transform(d[1, ], age = 20, survey = "B", obs = NA),
+    transform(d[1, ], age = 20, survey = "B", obs = 0),
+    transform(d[1, ], age = 20, survey = "B", is_proj = TRUE))
+  fit$dat$q_terms[[1]]$groups[[2]]$rows <- c(6:10, 11:13)
+  expect_equal(nrow(tinyAM:::.formula_uncertainty_advisories(fit)), 1)
+  fit$sdrep$pdHess <- FALSE
+  expect_equal(nrow(tinyAM:::.formula_uncertainty_advisories(fit)), 0)
 })

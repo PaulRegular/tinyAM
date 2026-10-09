@@ -12,6 +12,60 @@ effect_dat <- function(formula, data = effect_data()) {
          sd_index_modmat = model.matrix(~ 1, data)), design)
 }
 
+test_that("sparse logit IID models are cautioned, while exact log aliases remain errors", {
+  d <- effect_data()[effect_data()$age == 1, ]
+  d$unique_row <- seq_len(nrow(d))
+  for (form in list(~ iid(unique_row), ~ (1 | unique_row), ~ ar1(year, by = survey, phi = 0))) {
+    dat <- effect_dat(form, d)
+    expect_error(tinyAM:::.check_q_terms(dat), "observation error")
+    dat$index_settings$q_link <- "logit"
+    expect_no_error(tinyAM:::.check_q_terms(dat))
+    advice <- tinyAM:::.q_process_advisories(dat)
+    expect_true("q_variance_separation" %in% advice$issue)
+    expect_match(advice$detail[advice$issue == "q_variance_separation"], "supply one SD")
+    dat$sd_index_modmat <- matrix(numeric(), nrow(d), 0)
+    expect_false("q_variance_separation" %in% tinyAM:::.q_process_advisories(dat)$issue)
+  }
+  dat <- effect_dat(~ iid(unique_row, sd = .2), d)
+  dat$index_settings$q_link <- "logit"
+  expect_equal(nrow(tinyAM:::.q_process_advisories(dat)), 0)
+  dat <- effect_dat(~ iid(year, by = survey))
+  dat$index_settings$q_link <- "logit"
+  expect_equal(nrow(tinyAM:::.q_process_advisories(dat)), 0)
+})
+
+test_that("q support counts exclude missing, zero, projected and zero-multiplier rows", {
+  d <- effect_data()
+  d$obs[d$year == 2004] <- 0
+  d$obs[d$year == 2005] <- NA
+  d <- rbind(d, transform(d[d$year == 2000, ], year = 2006, is_proj = TRUE))
+  dat <- effect_dat(~ rw(year, by = survey), d)
+  advice <- tinyAM:::.q_process_advisories(dat)
+  expect_equal(sum(advice$issue == "q_effect_support"), 2)
+  expect_true(all(grepl("12 observations cover only 4 effect levels", advice$detail)))
+  expect_no_error(tinyAM:::.check_q_terms(dat))
+  d <- effect_data()
+  d$multiplier <- ifelse(d$year >= 2004, 0, .001)
+  dat <- effect_dat(~ rw(year, by = multiplier), d)
+  advice <- tinyAM:::.q_process_advisories(dat)
+  expect_equal(nrow(advice), 1)
+  expect_match(advice$detail, "24 observations cover only 4 effect levels")
+  d$multiplier <- 1e-6
+  expect_equal(nrow(tinyAM:::.q_process_advisories(effect_dat(~ rw(year, by = multiplier), d))), 0)
+  d$multiplier <- 1e6
+  expect_equal(nrow(tinyAM:::.q_process_advisories(effect_dat(~ rw(year, by = multiplier), d))), 0)
+})
+
+test_that("fitting emits the sparse logit IID caution before constructing the objective", {
+  data <- cod_obs
+  data$index$q_row <- seq_len(nrow(data$index))
+  local_mocked_bindings(MakeADFun = function(...) stop("stop before objective"), .package = "RTMB")
+  expect_warning(expect_error(fit_tam(data = data, years = 1983:1995, ages = 2:6,
+    index_settings = list(q_form = ~ iid(q_row), q_link = "logit",
+      sd_form = ~ 1, sd_supplied = NULL, fill_missing = FALSE),
+    silent = TRUE), "stop before objective"), "each effect level has only one informative observation")
+})
+
 test_that("formula compilation preserves ordinary and mono designs", {
   d <- effect_data()
   expect_identical(tinyAM:::.parse_q_formula(~ survey * age, d)$q_modmat,

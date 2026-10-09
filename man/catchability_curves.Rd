@@ -67,6 +67,11 @@ observed x values. Numeric \code{by} and interactions are unsupported.
 Midpoint and positive slope are fixed effects, not Gaussian random effects.
 Redundant curves, such as logistic plus an unrestricted factor of the same
 age, are rejected. See \link{formula_effects} for variation around these curves.
+Fitting warns if the midpoint lies outside the observed age/size range and
+its 95\% interval is wider than that range. Maximum catchability and curve
+shape may then be difficult to distinguish. Uncertainty advisories require
+a successful positive-definite uncertainty calculation; failures are reported
+separately by the numerical convergence checks.
 }
 }
 \examples{

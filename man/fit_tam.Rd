@@ -233,6 +233,9 @@ fixed at zero; otherwise it would be confounded with the SD.
 \code{is_converged} summarizes optimizer, gradient and uncertainty checks. Also inspect
 \code{opt$convergence} and \code{opt$message}; a passing numerical check does not
 establish that the data identify every biological component.
+Fitting also warns about sparse catchability effects and wide formula-effect
+uncertainty. These advisories are retained by \code{\link[=check_tam]{check_tam()}} and do not change
+the likelihood, parameter constraints or numerical convergence criteria.
 }
 \examples{
 fit <- fit_tam(
