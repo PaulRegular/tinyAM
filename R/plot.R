@@ -379,7 +379,7 @@ plot_par <- function(data, ...) {
 
 # Signed formula effects use a linear axis and a zero reference. Keep the
 # existing trend/ribbon implementation for temporal effects.
-.plot_q_effect <- function(data, points = FALSE, frame = NULL, ...) {
+.plot_formula_effect <- function(data, points = FALSE, frame = NULL, ...) {
   if (!nrow(data)) return(plotly::plot_ly())
   limits <- range(c(0, data$est, data$lwr, data$upr), finite = TRUE)
   pad <- max(diff(limits) * .05, .01)

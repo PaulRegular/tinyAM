@@ -1,25 +1,32 @@
 ### `r if (unique(effect$component) == "q") "Catchability" else paste(unique(effect$component), "mean")`: `r term`
 
+This is the formula term's effect before any numeric `by` covariate is applied.
+Zero means no change from the baseline on the model's log or logit scale.
+
 ```{r}
 frame <- if (length(unique(effect$group)) > 1L) ~group else NULL
-tinyAM:::.plot_q_effect(effect, points = unique(effect$process) == "iid", frame = frame,
+tinyAM:::.plot_formula_effect(effect, points = unique(effect$process) == "iid", frame = frame,
   color = ~model, legendgroup = ~model, colors = cols)
 ```
 
-`r if (!is.null(increments)) paste("### Increments:", term)`
+`r if (!is.null(increments)) paste("### Changes between steps:", term)`
+
+`r if (!is.null(increments)) "Each point is the change in this random-walk effect from the previous ordered step, usually the previous year. Positive values raise the effect; negative values lower it. These are changes on the model's log or logit scale, not changes in the full mortality or catchability rate."`
 
 ```{r, eval = !is.null(increments)}
 frame <- if (length(unique(increments$group)) > 1L) ~group else NULL
-tinyAM:::.plot_q_effect(increments, points = TRUE, frame = frame,
+tinyAM:::.plot_formula_effect(increments, points = TRUE, frame = frame,
   color = ~model, legendgroup = ~model, colors = cols)
 ```
 
-`r if (!is.null(contribution)) paste("### Multiplied contribution:", term)`
+`r if (!is.null(contribution)) paste0("### Effect after scaling by ", unique(effect$by), ": ", term)`
+
+`r if (!is.null(contribution)) paste0("This term uses by = ", unique(effect$by), ". The shared effect is multiplied by that covariate for each observation. For example, with by = age, an effect of 0.1 becomes 0.3 at age 3. This scaled value is what the term adds to the model's log or logit predictor.")`
 
 ```{r, eval = !is.null(contribution)}
 frame <- if (anyDuplicated(contribution[, c("model", "coordinate")])) {
   if ("survey" %in% names(contribution)) ~interaction(survey, age) else ~age
 } else NULL
-tinyAM:::.plot_q_effect(contribution, frame = frame,
+tinyAM:::.plot_formula_effect(contribution, frame = frame,
   color = ~model, legendgroup = ~model, colors = cols)
 ```

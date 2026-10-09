@@ -22,6 +22,11 @@
 #'          Precomputed assessment references may be mixed with tinyAM fits; they are
 #'          not refittable TAM objects. Supply `background` to add a page
 #'          describing assessment assumptions and translation choices.
+#'          The Parameters menu separates Fixed and Random pages. Fixed plots
+#'          group similar quantities, with initial abundance shown separately.
+#'          Random plots include latent states and formula effects; RW changes
+#'          and effects multiplied by numeric covariates are explained alongside
+#'          their plots.
 #' @return Used for its side effects: writes an HTML dashboard and optionally
 #'   opens it in the browser. Supply `output_file` to retain a known file path.
 #'
@@ -95,4 +100,21 @@ vis_tam <- function(..., model_list = NULL, interval = 0.95, output_file = NULL,
 
   if (open_file) utils::browseURL(output_file)
 
+}
+
+.fixed_parameter_groups <- function(data) {
+  if (!is.data.frame(data) || !nrow(data)) return(list())
+  par <- data$par
+  category <- rep("Other", nrow(data))
+  category[grepl("^sd_", par)] <- "Process SDs"
+  category[par %in% c("sd_catch", "sd_index")] <- "Observation SDs"
+  category[par %in% c("q", "logit_q")] <- "Catchability"
+  category[par %in% "dq" | grepl("^q_(a50|slope)_", par)] <- "Catchability curves"
+  category[grepl("^mu_", par)] <- "Mortality means"
+  category[grepl("^phi_", par)] <- "Correlations"
+  category[par %in% c("r0", "n0")] <- "Initial abundance"
+  category <- factor(category, levels = c("Process SDs", "Observation SDs",
+    "Catchability", "Catchability curves", "Mortality means", "Correlations",
+    "Initial abundance", "Other"))
+  split(data, category, drop = TRUE)
 }

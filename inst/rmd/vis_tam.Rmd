@@ -117,7 +117,10 @@ table_link <- function(x, table_name = NULL, download_text = "Download table") {
 ```{r trends, child = "trends.Rmd"}
 ```
 
-```{r parameters, child = "parameters.Rmd"}
+```{r fixed-parameters, child = "parameters_fixed.Rmd"}
+```
+
+```{r random-parameters, child = "parameters_random.Rmd"}
 ```
 
 ```{r diagnostics, child = if (length(checks)) "diagnostics.Rmd" else NULL}

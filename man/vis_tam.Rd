@@ -51,6 +51,11 @@ Additional arguments for \code{\link[rmarkdown:render]{rmarkdown::render()}} can
 Precomputed assessment references may be mixed with tinyAM fits; they are
 not refittable TAM objects. Supply \code{background} to add a page
 describing assessment assumptions and translation choices.
+The Parameters menu separates Fixed and Random pages. Fixed plots
+group similar quantities, with initial abundance shown separately.
+Random plots include latent states and formula effects; RW changes
+and effects multiplied by numeric covariates are explained alongside
+their plots.
 }
 \examples{
 

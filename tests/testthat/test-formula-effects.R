@@ -265,7 +265,7 @@ test_that("RW increments and numeric-by contributions retain correct signed unce
   expect_equal(contribution$se[contribution$year > min(YEARS)],
     .1 * contribution$age[contribution$year > min(YEARS)])
   expect_false("eta_q_increments" %in% names(tidy_rep(fit)))
-  plot <- plotly::plotly_build(tinyAM:::.plot_q_effect(levels))
+  plot <- plotly::plotly_build(tinyAM:::.plot_formula_effect(levels))
   expect_equal(plot$x$layout$yaxis$type, "linear")
   expect_lt(plot$x$layout$yaxis$range[1], -.2)
 })
