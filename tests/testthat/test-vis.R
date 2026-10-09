@@ -81,10 +81,10 @@ test_that("vis_tam renders cleanly and produces an HTML output", {
   })
 })
 
-test_that("formula-effect dashboards retain signed effects, increments and framed ribbons", {
+test_that("formula-effect dashboards show only signed trends and framed ribbons", {
   process <- update(default_fit, silent = TRUE,
     index_settings = list(q_form = ~ q_block + rw(year, by = age, sd = .1) +
-      ar1(year, sd = .1, phi = .6) + iid(age, sd = .1), sd_form = ~1,
+      ar1(year, by = q_block, sd = .1, phi = .6) + iid(age, sd = .1), sd_form = ~1,
       fill_missing = FALSE), start_par = as.list(default_fit$sdrep, "Estimate"))
   reference <- default_fit
   reference$obs_pred$index$q <- NA_real_
@@ -96,17 +96,13 @@ test_that("formula-effect dashboards retain signed effects, increments and frame
   con <- file(file, "rb")
   html <- paste(readLines(con, warn = FALSE), collapse = "\n")
   close(con)
-  expect_match(html, "Catchability: rw_year_age", fixed = TRUE)
-  expect_match(html, "Changes between steps: rw_year_age", fixed = TRUE)
-  expect_match(html, "Effect after scaling by age: rw_year_age", fixed = TRUE)
-  expect_match(html, "change in this random-walk effect", fixed = TRUE)
-  expect_true(grepl("an effect of 0.1 becomes 0.3 at age 3",
-                    gsub("\\s+", " ", html), fixed = TRUE))
-  expect_match(html, "Catchability: ar1_year", fixed = TRUE)
-  expect_match(html, "Catchability: iid_age", fixed = TRUE)
+  expect_match(html, "Catchability random walk (year by age)", fixed = TRUE)
+  expect_match(html, "Catchability AR1 (year by q block)", fixed = TRUE)
+  expect_match(html, "Catchability IID (age)", fixed = TRUE)
+  expect_false(grepl("Changes between steps:|Effect after scaling by|Zero means no change", html))
   plots <- dashboard_plots(file)
   effects <- Filter(function(p) any(grepl("Effect on catchability", unlist(p$layout$yaxis$title))), plots)
-  expect_gte(length(effects), 5L)
+  expect_length(effects, 3L)
   for (p in effects) {
     expect_equal(p$layout$yaxis$type, "linear")
     expect_lt(unlist(p$layout$yaxis$range)[1], 0)
@@ -116,6 +112,20 @@ test_that("formula-effect dashboards retain signed effects, increments and frame
   expect_gt(length(framed), 0)
   expect_true(any(vapply(framed, function(p) any(vapply(p$data,
     function(trace) !is.null(trace$fill) && grepl("^to", trace$fill), logical(1))), logical(1))))
+})
+
+test_that("formula-effect labels describe the component and process plainly", {
+  effect <- data.frame(component = "F", process = "rw", variable = "year", by = NA_character_)
+  expect_identical(tinyAM:::.formula_effect_label(effect), "F random walk (year)")
+  effect$component <- "M"
+  effect$process <- "ar1"
+  effect$by <- "age_block"
+  expect_identical(tinyAM:::.formula_effect_label(effect), "M AR1 (year by age block)")
+  effect$component <- "q"
+  effect$process <- "iid"
+  effect$variable <- "age"
+  effect$by <- "survey"
+  expect_identical(tinyAM:::.formula_effect_label(effect), "Catchability IID (age by survey)")
 })
 
 test_that("fixed parameter groups isolate abundance and preserve every coefficient", {

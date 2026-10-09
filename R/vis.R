@@ -24,9 +24,7 @@
 #'          describing assessment assumptions and translation choices.
 #'          The Parameters menu separates Fixed and Random pages. Fixed plots
 #'          group similar quantities, with initial abundance shown separately.
-#'          Random plots include latent states and formula effects; RW changes
-#'          and effects multiplied by numeric covariates are explained alongside
-#'          their plots.
+#'          Random plots include latent states and formula-effect trends.
 #' @return Used for its side effects: writes an HTML dashboard and optionally
 #'   opens it in the browser. Supply `output_file` to retain a known file path.
 #'
@@ -117,4 +115,14 @@ vis_tam <- function(..., model_list = NULL, interval = 0.95, output_file = NULL,
     "Catchability", "Catchability curves", "Mortality means", "Correlations",
     "Initial abundance", "Other"))
   split(data, category, drop = TRUE)
+}
+
+.formula_effect_label <- function(effect) {
+  component <- unique(effect$component)
+  if (component == "q") component <- "Catchability"
+  process <- switch(unique(effect$process), rw = "random walk", ar1 = "AR1", iid = "IID")
+  variable <- unique(effect$variable)
+  by <- unique(effect$by)
+  if (!is.na(by)) variable <- paste(variable, "by", by)
+  paste0(component, " ", process, " (", gsub("_", " ", variable, fixed = TRUE), ")")
 }

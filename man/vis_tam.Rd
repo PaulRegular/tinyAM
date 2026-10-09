@@ -53,9 +53,7 @@ not refittable TAM objects. Supply \code{background} to add a page
 describing assessment assumptions and translation choices.
 The Parameters menu separates Fixed and Random pages. Fixed plots
 group similar quantities, with initial abundance shown separately.
-Random plots include latent states and formula effects; RW changes
-and effects multiplied by numeric covariates are explained alongside
-their plots.
+Random plots include latent states and formula-effect trends.
 }
 \examples{
 
