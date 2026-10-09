@@ -201,6 +201,11 @@ fit_tam <- function(
     proj_settings = proj_settings
   )
   par <- make_par(dat)
+  mean_advisories <- .mean_process_advisories(dat)
+  if (nrow(mean_advisories)) {
+    cli::cli_warn(c("Mortality mean-process caution.",
+      stats::setNames(mean_advisories$detail, rep("i", nrow(mean_advisories)))))
+  }
   if (!is.null(start_par)) {
     par <- .merge_start_par(par, start_par)
   }
@@ -325,7 +330,16 @@ fit_tam <- function(
   out$diagnostics <- check_tam(out)
   out$is_converged <- out$diagnostics$is_converged
   if (!out$is_converged) {
-    cli::cli_warn("Numerical convergence checks did not pass; inspect {.code check_tam(fit)}.")
+    failed <- out$diagnostics$numerical
+    failed <- failed$detail[failed$status != "pass"]
+    cli::cli_warn(c("Numerical convergence checks did not pass; inspect {.code check_tam(fit)}.",
+      stats::setNames(failed, rep("x", length(failed))),
+      "i" = "Optimizer code zero alone is insufficient. A missed gradient tolerance alone does not establish a structural problem."))
+  }
+  mean_uncertainty <- .mean_uncertainty_advisories(out)
+  if (nrow(mean_uncertainty)) {
+    cli::cli_warn(c("Mortality process uncertainty is large.",
+      stats::setNames(mean_uncertainty$detail, rep("i", nrow(mean_uncertainty)))))
   }
 
   .new_tam_fit(out)

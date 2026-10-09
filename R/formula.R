@@ -52,6 +52,12 @@
 #' trade-off between F, M, recruitment and catchability can still make a
 #' numerically converged model weakly identified. Use recovery simulations
 #' before interpreting separate process components.
+#' Fitting warns when M mean and IID residual SDs are both estimated, or when
+#' both F and M mean SDs are estimated. Recovery experiments found weak
+#' separation of small M components and imprecise AR1 persistence; begin with
+#' mean-only M and add residual variation only when supported by the data.
+#' [check_tam()] retains these cautions and flags wide SD/correlation intervals.
+#' Warnings do not change the fitted model or establish non-identifiability.
 #'
 #' @param x Column in the relevant observation table defining levels (IID) or
 #'   ordered steps (RW/AR1).

@@ -179,3 +179,33 @@ test_that("fit_tam retains a usable fit when sdreport fails", {
   expect_true(all(is.na(fit$pop$ssb$se)))
   expect_true(all(is.na(fit$fixed_par$se)))
 })
+
+test_that("mortality uncertainty advisories do not change numerical convergence", {
+  fit <- make_check_fit()
+  p <- c(log_sd_mu_M_ar1_year = log(.12), log_sd_m = log(.06),
+         logit_phi_mu_M_ar1_year = qlogis(.65))
+  fit$opt$par <- fit$sdrep$par.fixed <- p
+  fit$sdrep$gradient.fixed <- rep(0, 3)
+  fit$sdrep$cov.fixed <- diag(c(.1, 1, 1)^2)
+  fit$dat$M_settings <- list(process = "iid")
+  fit$dat$M_terms <- list(list(id = "M_ar1_year", sd_parameter = names(p)[1],
+    phi_parameter = names(p)[3]))
+  original <- fit
+  expect_silent(checks <- check_tam(fit))
+  expect_identical(fit, original)
+  expect_true(checks$is_converged)
+  expect_true(all(c("M_variance_separation", "mortality_AR1_uncertainty",
+                    "mortality_SD_uncertainty") %in% checks$advisories$issue))
+  expect_match(checks$advisories$detail[checks$advisories$issue == "mortality_SD_uncertainty"],
+               "log_sd_m")
+  expect_message(print(checks), "Persistence is weakly estimated")
+  fit$sdrep$cov.fixed <- diag(rep(.01, 3))
+  checks <- check_tam(fit)
+  expect_false(any(grepl("uncertainty$", checks$advisories$issue)))
+  fit$sdrep$cov.fixed <- diag(c(.1, 1, 1)^2)
+  fit$sdrep$pdHess <- FALSE
+  expect_equal(nrow(tinyAM:::.mean_uncertainty_advisories(fit)), 0)
+  expect_false(check_tam(fit)$is_converged)
+  fit$sdrep <- NULL
+  expect_equal(nrow(tinyAM:::.mean_uncertainty_advisories(fit)), 0)
+})

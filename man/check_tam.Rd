@@ -54,6 +54,11 @@ By default the function uses information already available in the fit and
 does not refit the model. \code{detailed = TRUE} also examines the fixed-parameter
 covariance eigenvalues and weakly supported parameter combinations. Profiles,
 one-step residuals, simulations and retrospectives are separate investigations.
+Mortality-mean advisories highlight jointly estimated M mean/residual
+variation and F/M mean variation. They also flag 95\% AR1 correlation intervals
+wider than 0.5 and process-SD intervals spanning more than a factor of ten.
+These descriptive thresholds identify imprecise estimates; they do not prove
+a structural problem or change the convergence criteria.
 }
 \examples{
 \dontrun{

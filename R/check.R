@@ -26,6 +26,11 @@
 #' does not refit the model. `detailed = TRUE` also examines the fixed-parameter
 #' covariance eigenvalues and weakly supported parameter combinations. Profiles,
 #' one-step residuals, simulations and retrospectives are separate investigations.
+#' Mortality-mean advisories highlight jointly estimated M mean/residual
+#' variation and F/M mean variation. They also flag 95% AR1 correlation intervals
+#' wider than 0.5 and process-SD intervals spanning more than a factor of ten.
+#' These descriptive thresholds identify imprecise estimates; they do not prove
+#' a structural problem or change the convergence criteria.
 #'
 #' @param fit A fitted `tam_fit` object.
 #' @param grad_tol Positive gradient tolerance. `NULL` uses the tolerance stored
@@ -238,7 +243,7 @@ check_tam <- function(fit, grad_tol = NULL, detailed = FALSE) {
 }
 
 .check_tam_advisories <- function(fit, active, residuals, data) {
-  out <- data.frame(issue = character(), detail = character())
+  out <- rbind(.mean_process_advisories(fit$dat), .mean_uncertainty_advisories(fit))
   add <- function(issue, detail) {
     out <<- rbind(out, data.frame(issue = issue, detail = detail))
   }

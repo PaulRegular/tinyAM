@@ -169,3 +169,33 @@ test_that("F/M mean effects fit, report signed effects and retain empty fixed de
   tabs <- tidy_tam(model_list = list(mean = fit), interval = .9)
   expect_true(all(c("F", "M") %in% unique(do.call(rbind, tabs$formula_effects$levels)$component)))
 })
+
+test_that("mortality design cautions apply only to the estimated components", {
+  dat <- mean_test_dat("M", "rw", M_settings = list(process = "iid",
+    age_breaks = 2:6, mu_form = ~ 0 + rw(year)))
+  caution <- tinyAM:::.mean_process_advisories(dat)
+  expect_identical(caution$issue, "M_variance_separation")
+  expect_match(caution$detail, "process = 'off'")
+  expect_match(caution$detail, "supply sd")
+  dat$M_settings$process <- "off"
+  expect_equal(nrow(tinyAM:::.mean_process_advisories(dat)), 0)
+  dat$M_settings$process <- "iid"
+  dat$M_terms[[1]]$sd_parameter <- NULL
+  expect_equal(nrow(tinyAM:::.mean_process_advisories(dat)), 0)
+  dat <- mean_test_dat("F", "rw", F_settings = list(mu_form = ~ factor(age) + rw(year)),
+    M_settings = list(process = "off", mu_supplied = ~ I(.3), mu_form = ~ 0 + ar1(year)))
+  caution <- tinyAM:::.mean_process_advisories(dat)
+  expect_identical(caution$issue, "joint_mortality_means")
+  expect_match(caution$detail, "one mortality mean at a time")
+  dat$F_terms[[1]]$sd_parameter <- NULL
+  expect_equal(nrow(tinyAM:::.mean_process_advisories(dat)), 0)
+})
+
+test_that("fitting warns about M variance separation before optimizing", {
+  local_mocked_bindings(nlminb = function(...) stop("stop before optimizer"), .package = "stats")
+  expect_warning(expect_error(fit_tam(data = cod_obs, years = 1983:1995, ages = 2:6,
+    F_settings = list(process = "iid", mu_form = ~ factor(age)),
+    M_settings = list(process = "iid", mu_form = ~ 0 + rw(year),
+      mu_supplied = ~ I(.3), age_breaks = 2:6), silent = TRUE), "stop before optimizer"),
+    "Mortality mean-process caution")
+})
