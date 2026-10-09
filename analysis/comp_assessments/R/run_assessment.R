@@ -269,7 +269,10 @@ run_assessment <- function(assessment_id, database = NULL, fit = TRUE,
     terminal_year = source$assessment$terminal_year[[1]],
     age_plus_group = translated$age_plus_group,
     comparison_scales = translated$comparison_scales,
-    template = fitted
+    template = fitted, assumptions = source$assumptions,
+    comparison_aggregates = translated$comparison_aggregates,
+    comparison_age_groups = translated$comparison_age_groups,
+    comparison_definitions = translated$comparison_definitions
   ), error = identity)
   if (inherits(result$ref, "error")) {
     result$diagnostics$status <- "reference_failed"
@@ -278,12 +281,7 @@ run_assessment <- function(assessment_id, database = NULL, fit = TRUE,
     return(result)
   }
 
-  result$differences <- .assessment_percent_differences(
-    fitted, result$ref, assumptions = source$assumptions,
-    comparison_aggregates = translated$comparison_aggregates,
-    comparison_age_groups = translated$comparison_age_groups,
-    comparison_definitions = translated$comparison_definitions
-  )
+  result$differences <- .assessment_percent_differences(result$ref)
   result$summary <- .assessment_comparison_summary(
     result$differences, assessment_id
   )

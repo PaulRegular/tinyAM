@@ -85,7 +85,11 @@
 database_to_tam_ref <- function(assessment_id, outputs, obs = NULL, years = NULL,
                                   ages = NULL, terminal_year = NULL,
                                   age_plus_group = NULL,
-                                  comparison_scales = NULL, template = NULL) {
+                                  comparison_scales = NULL, template = NULL,
+                                  assumptions = NULL,
+                                  comparison_aggregates = character(),
+                                  comparison_age_groups = list(),
+                                  comparison_definitions = list()) {
   required <- c("assessment_id", "type", "measure", "year", "age", "age_group",
                 "value", "se", "lwr", "upr", "unit")
   missing <- setdiff(required, names(outputs))
@@ -116,9 +120,23 @@ database_to_tam_ref <- function(assessment_id, outputs, obs = NULL, years = NULL
   }
   if (is.null(ages)) {
     ages <- if (is.null(template)) sort(unique(source$age[!is.na(source$age)])) else template$dat$ages
+    if (!length(ages) && !is.null(obs$weight$age)) ages <- sort(unique(obs$weight$age))
+  }
+  for (name in c("years", "ages")) {
+    value <- get(name)
+    if (!is.numeric(value) || anyNA(value) || any(!is.finite(value)) ||
+        any(value != as.integer(value)) || anyDuplicated(value) ||
+        (length(value) > 1L && any(diff(value) != 1L))) {
+      cli::cli_abort("{name} must be a consecutive sequence of whole numbers.")
+    }
   }
   years <- as.integer(years)
   ages <- as.integer(ages)
+  if (!is.null(template) &&
+      (!identical(years, as.integer(template$dat$years)) ||
+       !identical(ages, as.integer(template$dat$ages)))) {
+    cli::cli_abort("Requested years and ages must match the fitted template.")
+  }
   if (!is.null(age_plus_group) &&
       (length(age_plus_group) != 1L || !is.numeric(age_plus_group) ||
        !is.finite(age_plus_group) || age_plus_group != as.integer(age_plus_group) ||
@@ -206,9 +224,43 @@ database_to_tam_ref <- function(assessment_id, outputs, obs = NULL, years = NULL
   pop <- list()
   for (measure in names(measure_map)) {
     rows <- source[source$measure == measure &
-                      source$type == unname(type_map[[measure]]) &
-                      !is.na(source$value), , drop = FALSE]
+                      source$type == unname(type_map[[measure]]), , drop = FALSE]
     if (nrow(rows)) pop[[unname(measure_map[[measure]])]] <- reporting_table(rows)
+  }
+  native_pop <- pop
+
+  # Recruitment on the model grid is N at its first age in the same year.
+  if (length(ages)) {
+    recruitment_age <- unique(stats::na.omit(pop$recruitment$age))
+    if (!length(recruitment_age) && !is.null(assumptions)) {
+      value <- unique(assumptions$value[assumptions$setting == "recruitment_age"])
+      if (length(value) == 1L && grepl("^[0-9]+$", value)) recruitment_age <- as.integer(value)
+    }
+    if (length(recruitment_age) != 1L || recruitment_age != min(ages)) {
+      n <- pop$N
+      if (!is.null(n)) {
+        at_age <- suppressWarnings(as.integer(as.character(n$age))) == min(ages)
+        if ("age_group" %in% names(n)) {
+          grouped <- !is.na(n$age_group) & nzchar(n$age_group) &
+            n$age_group != as.character(n$age)
+          at_age <- at_age & !grouped
+        }
+        n <- n[which(at_age), , drop = FALSE]
+      }
+      if (!is.null(n) && nrow(n)) {
+        n$notes <- paste(n$notes, "Comparable recruitment: accepted beginning-of-year N at age",
+                         min(ages), "in the same calendar year; native recruitment is retained separately.")
+        pop$recruitment <- n
+        units <- unique(n$unit)
+        if (length(units) == 1L) {
+          comparison_scales["recruitment"] <- 1 / .translation_number_multiplier(units)
+        }
+      } else {
+        pop$recruitment <- NULL
+      }
+    } else if (is.null(pop$recruitment$age)) {
+      pop$recruitment$age <- rep(min(ages), nrow(pop$recruitment))
+    }
   }
 
   source_m_status <- attr(obs, "translation")$M$status
@@ -234,21 +286,26 @@ database_to_tam_ref <- function(assessment_id, outputs, obs = NULL, years = NULL
 
   if (!is.null(age_plus_group)) {
     source_n <- pop$N
-    for (metric in intersect(c("N", "F", "M", "biomass_at_age"), names(pop))) {
+    for (metric in intersect(c("N", "F", "M", "Z", "biomass_at_age", "ssb_mat"), names(pop))) {
       x <- pop[[metric]]
       age_number <- suppressWarnings(as.integer(as.character(x$age)))
       in_plus <- !is.na(age_number) & age_number >= age_plus_group
       if (!any(in_plus)) next
       lower <- x[!in_plus, , drop = FALSE]
       plus <- x[in_plus, , drop = FALSE]
+      expected_ages <- unique(age_number[in_plus])
       by_year <- split(plus, plus$year)
       rows <- lapply(by_year, function(group) {
         row <- group[1L, , drop = FALSE]
         values <- group$est
         collapsed <- nrow(group) > 1L
-        if (!collapsed) {
+        complete <- all(is.finite(values)) && age_plus_group %in% group$age &&
+          (!collapsed || setequal(as.integer(as.character(group$age)), expected_ages))
+        if (!complete) {
+          row$est <- NA_real_
+        } else if (!collapsed) {
           row$est <- values[[1L]]
-        } else if (metric %in% c("F", "M")) {
+        } else if (metric %in% c("F", "M", "Z")) {
           weights <- source_n$est[match(
             paste(group$year, as.integer(as.character(group$age))),
             paste(source_n$year, source_n$age)
@@ -261,12 +318,11 @@ database_to_tam_ref <- function(assessment_id, outputs, obs = NULL, years = NULL
             row$est <- stats::weighted.mean(values, weights)
           }
         } else {
-          row$est <- sum(values, na.rm = TRUE)
-          if (!any(is.finite(values))) row$est <- NA_real_
+          row$est <- sum(values)
         }
         row$age <- age_plus_group
         if ("age_group" %in% names(row)) row$age_group <- paste0(age_plus_group, "+")
-        if (collapsed) {
+        if (collapsed || !complete) {
           row$se <- row$lwr <- row$upr <- NA_real_
           if ("source_reference" %in% names(row)) {
             row$source_reference <- paste(unique(group$source_reference), collapse = "; ")
@@ -277,14 +333,15 @@ database_to_tam_ref <- function(assessment_id, outputs, obs = NULL, years = NULL
         } else character()
         transformation_note <- if (collapsed) {
           paste0("Collapsed ", nrow(group), " source ages for comparison with the tinyAM plus age; ",
-                 if (metric %in% c("F", "M")) {
-                   "F/M is N-weighted and uncertainty is not combined."
+                 if (metric %in% c("F", "M", "Z")) {
+                   "Mortality is N-weighted and uncertainty is not combined."
                  } else {
                    "values are summed and uncertainty is not combined."
                  })
         } else {
-          paste0("One source row at age ", age_plus_group,
-                 " or older was retained without aggregation.")
+          if (complete) paste0("One source row at age ", age_plus_group,
+                               " was retained without aggregation.") else
+            "Incomplete source ages or values; the plus-group estimate is unavailable."
         }
         if ("notes" %in% names(row)) {
           row$notes <- paste(c(source_notes, transformation_note), collapse = " ")
@@ -294,6 +351,34 @@ database_to_tam_ref <- function(assessment_id, outputs, obs = NULL, years = NULL
       pop[[metric]] <- do.call(rbind, c(list(lower), rows))
       rownames(pop[[metric]]) <- NULL
     }
+  }
+
+  # Preserve source groups for comparison construction, then fill model grids.
+  source_pop <- lapply(pop, function(x) x[x$year %in% years, , drop = FALSE])
+  age_metrics <- c("N", "F", "M", "Z", "biomass_at_age", "ssb_mat")
+  for (name in names(pop)) {
+    x <- source_pop[[name]]
+    age_specific <- name %in% age_metrics
+    if (age_specific) {
+      if ("age_group" %in% names(x)) {
+        grouped <- !is.na(x$age_group) & grepl("^[0-9]+\\+$", x$age_group)
+        start <- suppressWarnings(as.integer(sub("\\+$", "", x$age_group)))
+        x <- x[!grouped | start == max(ages), , drop = FALSE]
+      }
+      x$age <- suppressWarnings(as.integer(as.character(x$age)))
+      x <- x[x$age %in% ages, , drop = FALSE]
+      grid <- expand.grid(year = years, age = ages, KEEP.OUT.ATTRS = FALSE)
+    } else {
+      grid <- data.frame(year = years)
+      if (name == "recruitment" && length(ages)) grid$age <- min(ages)
+      # Native aggregate age labels are metadata, not individual fish ages.
+      if (name != "recruitment") x$age <- NULL
+    }
+    grid$est <- NA_real_
+    grid$se <- grid$lwr <- grid$upr <- NA_real_
+    grid$se_scale <- NA_character_
+    grid$is_proj <- grid$year > terminal_year
+    pop[[name]] <- .fill_tam_table(grid, x)
   }
 
   if (is.null(template)) {
@@ -358,8 +443,36 @@ database_to_tam_ref <- function(assessment_id, outputs, obs = NULL, years = NULL
   }
 
   out$comparison_scales <- comparison_scales
-  # Keep native definitions and age coverage before filling the fitted template.
-  attr(out, "source_pop") <- pop
+  attr(out, "native_pop") <- native_pop
+  attr(out, "source_pop") <- source_pop
+  if (!is.null(template)) {
+    common <- .tam_reference_comparisons(
+      template, out, assumptions = assumptions,
+      comparison_aggregates = comparison_aggregates,
+      comparison_age_groups = comparison_age_groups,
+      comparison_definitions = comparison_definitions
+    )
+    out$comparisons <- common
+    out$comparison_scales <- attr(common, "scales")
+    for (metric in intersect(c("abundance", "biomass", "ssb", "F_bar", "M_bar"),
+                             names(out$pop))) {
+      rows <- common[common$metric == metric & !is.na(common$year), , drop = FALSE]
+      tab <- out$pop[[metric]]
+      if (!is.data.frame(tab) || !"year" %in% names(tab)) next
+      index <- match(tab$year, rows$year)
+      tab$est <- rows$source[index]
+      tab$unit <- rows$unit[index]
+      tab$se <- tab$lwr <- tab$upr <- NA_real_
+      tab$definition <- rows$definition[index]
+      tab$comparison_status <- rows$comparison_status[index]
+      tab$notes <- rows$reason[index]
+      tab$source_type <- "common_definition_comparison"
+      out$pop[[metric]] <- tab
+    }
+    for (name in intersect(names(out$rep), names(out$pop))) {
+      out$rep[[name]] <- .fill_tam_report_array(out$rep[[name]], out$pop[[name]], years, ages)
+    }
+  }
   class(out) <- c("tam_ref", "list")
   out
 }

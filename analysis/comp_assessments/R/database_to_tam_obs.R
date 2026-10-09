@@ -371,7 +371,13 @@
   }
   catch_source <- catch_source[catch_source$age >= min(ages), , drop = FALSE]
   catch_source$age <- pmin(catch_source$age, max(ages))
-  catch_source <- stats::aggregate(value ~ year + age, catch_source, sum)
+  if (nrow(catch_source)) {
+    catch_source <- stats::aggregate(value ~ year + age, catch_source, sum)
+  }
+  if (!length(provenance)) {
+    provenance[[1L]] <- .translation_source_provenance(
+      source_rows, "catch", "No catch observations in the requested grid; cells remain NA.")
+  }
   grid <- .translation_grid(years, ages)
   catch <- data.frame(year = grid$year, age = grid$age,
                       obs = catch_source$value[match(

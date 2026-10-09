@@ -165,7 +165,14 @@ matched_fit <- list(
   dat = list(years = translated$years, ages = translated$ages),
   pop = list(ssb_mat = transform(reference$pop$ssb_mat, est = est * 1000))
 )
-differences <- .assessment_percent_differences(matched_fit, reference)
+matched_fit$rep <- matched_fit$obs_pred <- matched_fit$random_par <- list()
+matched_fit$fixed_par <- data.frame()
+matched_reference <- database_to_tam_ref(
+  "dfo_herring_4tvn_spring_2024", translated$comparison_outputs,
+  years = translated$years, ages = translated$ages,
+  comparison_scales = translated$comparison_scales, template = matched_fit
+)
+differences <- .assessment_percent_differences(matched_reference)
 matched <- differences[differences$metric == "ssb_mat", ]
 stopifnot(nrow(matched) == 460L, all(matched$comparison_status == "matched"),
           all(matched$unit == "t"),

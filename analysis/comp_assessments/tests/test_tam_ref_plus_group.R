@@ -1,8 +1,9 @@
 root <- file.path("analysis", "comp_assessments")
 source(file.path(root, "R", "database_to_tam_ref.R"))
+source(file.path(root, "R", "database_to_tam_obs.R"))
 
 years <- 2000:2002
-ages <- 1:3
+ages <- 1:2
 obs <- list(
   catch = data.frame(year = 2000, age = 1, fleet = "fishery", obs = 1),
   index = data.frame(year = 2000, age = 1, survey = "RV", obs = 1),
@@ -30,6 +31,7 @@ outputs <- rbind(
   output_rows("mortality", "natural_mortality_at_age", 2001, 2, 0.4,
               se = 0.04, lwr = 0.3, upr = 0.5)
 )
+outputs$unit[outputs$measure == "numbers_at_age"] <- "fish"
 reference <- database_to_tam_ref(
   "plus_group_fixture", outputs, obs = obs, years = years, ages = ages,
   terminal_year = 2002, age_plus_group = 2L

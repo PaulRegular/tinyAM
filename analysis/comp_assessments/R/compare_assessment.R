@@ -158,7 +158,7 @@
   if (is.na(unit)) paste(if (numbers) "fish" else "kg", "x", scale) else unit
 }
 
-.assessment_percent_differences <- function(fit, reference,
+.tam_reference_comparisons <- function(fit, reference,
                                              scales = c(ssb = 1e-3,
                                                recruitment = 1e-3, N = 1e-3,
                                                F = 1, M = 1,
@@ -212,13 +212,10 @@
           comparison_definition$status
         common$reason <- if (is.null(comparison_definition$reason)) "" else
           comparison_definition$reason
-        common$absolute_difference <- abs(common$tinyAM - common$source)
-        common$percent_difference <- ifelse(common$source != 0,
-          100 * (common$tinyAM - common$source) / common$source, NA_real_)
         common$definition <- if (is.null(comparison_definition$definition))
           common$definition else comparison_definition$definition
         return(common[c("metric", "year", "age", "source", "tinyAM",
-                         "absolute_difference", "percent_difference", "unit",
+                         "unit",
                          "comparison_status", "definition", "reason")])
       }
       status <- if (grepl("no explicit comparison_age_groups", cells$reason, fixed = TRUE))
@@ -332,18 +329,29 @@
             comparison_definition$definition
           common$reason <- if (is.null(comparison_definition$reason)) "" else
             comparison_definition$reason
-          common$absolute_difference <- abs(common$tinyAM - common$source)
-          common$percent_difference <- ifelse(is.finite(common$source) & common$source != 0,
-            100 * (common$tinyAM - common$source) / common$source, NA_real_)
-          return(common[c("metric", "year", "age", "source", "tinyAM", "absolute_difference",
-                           "percent_difference", "unit", "comparison_status", "definition", "reason")])
+          return(common[c("metric", "year", "age", "source", "tinyAM",
+                           "unit", "comparison_status", "definition", "reason")])
         }
       } else reason <- "Output dimensions do not map uniquely to matching year-age groups."
     }
     data.frame(metric = metric, year = NA_integer_, age = NA_character_, source = NA_real_,
-               tinyAM = NA_real_, absolute_difference = NA_real_, percent_difference = NA_real_,
+               tinyAM = NA_real_,
                unit = unit, comparison_status = status, definition = definition, reason = reason,
                stringsAsFactors = FALSE)
   })
-  do.call(rbind, rows)
+  out <- do.call(rbind, rows)
+  attr(out, "scales") <- scales
+  out
+}
+
+.assessment_percent_differences <- function(reference) {
+  common <- reference$comparisons
+  if (is.null(common)) {
+    cli::cli_abort("Translate the accepted reference with a fitted template before calculating differences.")
+  }
+  common$absolute_difference <- abs(common$tinyAM - common$source)
+  common$percent_difference <- ifelse(is.finite(common$source) & common$source != 0,
+    100 * (common$tinyAM - common$source) / common$source, NA_real_)
+  common[c("metric", "year", "age", "source", "tinyAM", "absolute_difference",
+           "percent_difference", "unit", "comparison_status", "definition", "reason")]
 }

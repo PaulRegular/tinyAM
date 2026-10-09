@@ -223,6 +223,21 @@ expect_equal(plus_obs$index$obs[plus_obs$index$survey == "Acoustic"], 90)
 expect_equal(plus_obs$index$obs[plus_obs$index$survey == "Relative"], 5)
 expect_equal(plus_obs$index$obs[plus_obs$index$year == 2001], 4)
 
+inputs_before <- inputs
+subset_obs <- database_to_tam_obs(
+  "translation_fixture", inputs, years = 2001, ages = 2,
+  weight_survey = "RV", sampling_times = sampling_times
+)
+expect_equal(inputs, inputs_before)
+for (table in subset_obs) {
+  expect_equal(all(table$year == 2001), TRUE)
+  expect_equal(all(table$age == 2), TRUE)
+}
+expect_equal(all(is.na(subset_obs$catch$obs)), TRUE)
+expect_equal(subset_obs$index$obs, 0)
+expect_equal(subset_obs$weight$obs, 2)
+expect_equal(subset_obs$maturity$obs, 0.8)
+
 catch_proportion_inputs <- inputs[inputs$type != "catch", , drop = FALSE]
 catch_proportion_inputs <- rbind(
   catch_proportion_inputs,
@@ -636,12 +651,13 @@ source_outputs <- data.frame(
   unit = c("t", "fish", "per year", "per year"), source_type = "official_table",
   source_reference = "fixture", notes = NA_character_
 )
+source(file.path(root, "R", "compare_assessment.R"))
 template_reference <- database_to_tam_ref(
   "translation_fixture", source_outputs, obs = template_obs,
   years = template_years, ages = template_ages, terminal_year = 2002,
   comparison_scales = c(ssb = 1e-3), template = template_fit
 )
-expect_equal(names(template_reference), c(names(template_fit), "comparison_scales"))
+expect_equal(names(template_reference), c(names(template_fit), "comparison_scales", "comparisons"))
 expect_equal(names(template_reference$pop), names(template_fit$pop))
 expect_equal(names(template_reference$rep), names(template_fit$rep))
 expect_equal(names(template_reference$obs_pred), names(template_fit$obs_pred))
@@ -665,7 +681,8 @@ expect_equal(all(is.na(template_reference$pop$N$est[
   !(template_reference$pop$N$year == 2000 & template_reference$pop$N$age == 1)
 ])), TRUE)
 expect_equal(template_reference$pop$M$est, rep(0.2, 6))
-expect_equal(template_reference$rep$ssb, c(`2000` = 900, `2001` = NA, `2002` = NA))
+expect_equal(all(is.na(template_reference$rep$ssb)), TRUE)
+expect_equal(attr(template_reference, "native_pop")$ssb$est, 900)
 expect_equal(template_reference$rep$N["2000", "1"], 100)
 expect_equal(template_reference$rep$N["2001", "1"], NA_real_)
 expect_equal(template_reference$rep$M[, "2"],
@@ -674,5 +691,6 @@ expect_equal(template_reference$dat$obs, template_obs)
 expect_equal(template_reference$obs_pred$catch$pred, rep(NA_real_, 6))
 expect_equal(template_reference$fixed_par$est, NA_real_)
 expect_equal(template_fit$fixed_par$est, 1)
-expect_equal(template_reference$comparison_scales, c(ssb = 1e-3))
+expect_equal(template_reference$comparison_scales[["ssb"]], 1e-3)
+expect_equal(template_reference$comparison_scales[["recruitment"]], 1)
 cat("Translation helper tests passed.\n")

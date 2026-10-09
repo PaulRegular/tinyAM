@@ -24,7 +24,7 @@ translated <- stock_env$translate_stock(source_data)
 obs <- translated$obs
 
 stopifnot(identical(translated$years, 1971:2018))
-stopifnot(identical(translated$ages, 2:12))
+stopifnot(identical(translated$ages, 3:12))
 stopifnot(check_obs(obs))
 expected_key <- paste(landings_at_age$year, landings_at_age$age, sep = ":")
 observed_catch <- obs$catch[!is.na(obs$catch$obs), , drop = FALSE]
@@ -48,7 +48,7 @@ stopifnot(all(obs$weight$M_prior_mean[obs$weight$age <= 4] == 0.65))
 stopifnot(all(obs$weight$M_prior_mean[obs$weight$age %in% 5:8] == 0.15))
 stopifnot(all(obs$weight$M_prior_mean[obs$weight$age >= 9] == 0.15))
 stopifnot(identical(translated$settings$M_settings$process, "rw"))
-stopifnot(identical(translated$settings$M_settings$age_breaks, c(2, 5, 9, 12)))
+stopifnot(identical(translated$settings$M_settings$age_breaks, c(3, 5, 9, 12)))
 stopifnot(identical(translated$settings$M_settings$first_dev_year, 1971L))
 dat <- do.call(tinyAM::prepare_tam, c(
   list(data = obs, years = translated$years, ages = translated$ages),
@@ -56,7 +56,7 @@ dat <- do.call(tinyAM::prepare_tam, c(
 ))
 par <- tinyAM::make_par(dat)
 stopifnot(identical(rownames(par$log_m), as.character(1971:2018)))
-stopifnot(identical(colnames(par$log_m), c("2-4", "5-8", "9-12")))
+stopifnot(identical(colnames(par$log_m), c("3-4", "5-8", "9-12")))
 stopifnot(isTRUE(all.equal(
   unname(par$log_m[1, ]), log(c(0.65, 0.15, 0.15))
 )))
@@ -78,10 +78,11 @@ ref <- database_to_tam_ref(
   obs = obs, years = translated$years, ages = translated$ages,
   terminal_year = 2018, age_plus_group = 12
 )
-stopifnot(setequal(ref$pop$M$age, 5:12))
-stopifnot(all(ref$pop$M$year == 2018L))
-stopifnot(all(ref$pop$M$est[ref$pop$M$age %in% 5:8] == 0.81))
-stopifnot(all(ref$pop$M$est[ref$pop$M$age %in% 9:12] == 0.85))
+stopifnot(setequal(ref$pop$M$age, 3:12), setequal(ref$pop$M$year, 1971:2018))
+known_m <- ref$pop$M[is.finite(ref$pop$M$est), ]
+stopifnot(all(known_m$year == 2018L), setequal(known_m$age, 5:12))
+stopifnot(all(known_m$est[known_m$age %in% 5:8] == 0.81))
+stopifnot(all(known_m$est[known_m$age %in% 9:12] == 0.85))
 
 readiness_env <- new.env(parent = globalenv())
 sys.source(

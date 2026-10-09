@@ -158,6 +158,11 @@ generated from the canonical assessment metadata, preferably with
 appears in its background; `assessments.csv` remains the source of truth for
 the URLs, and dashboard rendering does not append links automatically.
 
+Define consecutive age and year blocks with `cut_ages()` and `cut_years()`.
+Check boundary memberships and preserve the intended parameter-sharing labels.
+Non-consecutive sharing, such as one age versus all other ages, can remain an
+explicit conditional assignment.
+
 Use short biological explanations rather than only process names or formulas.
 Identify whether each choice preserves, approximates, or omits the source
 assumption. Honor previously agreed stock-specific choices and record them
@@ -1128,9 +1133,22 @@ quantity may be calculated only when the necessary source states and biology
 are available. Do not present percent differences between incompatible
 definitions as a like-for-like comparison.
 
-The runner compares recruitment only when the reported or explicitly recorded
-recruitment age equals tinyAM's first modeled age. It sums accepted N over
-exactly the modeled ages only when every required age is available in that
+Reference translation defines comparable recruitment at tinyAM's first modeled
+age. If the accepted recruitment age differs, it uses accepted beginning-of-year
+N at that age in the **same calendar year**. It never shifts years to match a
+cohort. Missing accepted N remains missing. Native recruitment, original units
+and provenance are retained in the database and the reference's `native_pop`
+attribute. The aligned series supplies both the dashboard and numerical
+comparison.
+
+Reference translation fills the requested year–age grid, including missing
+cells, and constructs its `comparisons` table before downstream reporting.
+Numerical summaries use this table; they do not repeat age/year matching.
+Annual common-definition outputs appear in the reference's reporting tables,
+while native aggregates remain in `native_pop`. Derived aggregates have no
+invented uncertainty.
+
+It sums accepted N over exactly the modeled ages only when every required age is available in that
 year. Partial age coverage does not become a partial annual total. Mortality
 means are recalculated using matching ages and accepted N as weights; an
 arithmetic source Fbar is not compared directly with tinyAM's population-weighted
@@ -1141,7 +1159,7 @@ tables when available. Otherwise, when accepted N is available, a labelled
 common-definition calculation can use the same translated weights and maturity
 as tinyAM. This latter calculation compares population estimates under shared
 biology, not the source model's native biomass or spawning-time SSB. The native
-values stay in the reference for dashboard context. A tinyAM plug-in M baseline
+values stay in `native_pop` for separate source context. A tinyAM plug-in M baseline
 must not be presented as accepted M; only reported estimated M or a documented
 fixed numerical source input can fill that reference surface.
 

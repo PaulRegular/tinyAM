@@ -99,9 +99,15 @@ m_fit <- list(
     est = obs$weight$M_assumption
   ))
 )
-m_comparison <- .assessment_percent_differences(
-  m_fit, reference, scales = c(M = 1)
+m_fit$rep <- m_fit$obs_pred <- m_fit$random_par <- list()
+m_fit$fixed_par <- data.frame()
+m_reference <- database_to_tam_ref(
+  "afsc_cod_goa_2026", database$outputs, obs = obs,
+  years = translated$years, ages = translated$ages,
+  age_plus_group = translated$age_plus_group,
+  comparison_scales = translated$comparison_scales, template = m_fit
 )
+m_comparison <- .assessment_percent_differences(m_reference)
 m_comparison <- m_comparison[m_comparison$metric == "M", ]
 stopifnot(
   nrow(m_comparison) == 19L * 10L,
