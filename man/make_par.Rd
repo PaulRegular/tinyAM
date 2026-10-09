@@ -98,6 +98,14 @@ respectively, before any \code{\link[=mono]{mono()}} increments.
 fixed non-negative increments on the selected q-link scale, initialized to \code{0.05}
 for a nearly flat curve and bounded below by zero in \code{\link[=fit_tam]{fit_tam()}}. Names
 identify transitions and groups; these are not absolute q levels.
+\item Structured Gaussian q terms have signed \verb{eta_q_*} states, initially zero,
+and estimated \verb{log_sd_q_*} parameters initially \code{log(0.1)} unless SD is
+supplied. Estimated \verb{logit_phi_q_*} starts at correlation 0.5.
+RW states omit the zero anchor. Forecast states retain their normalized
+process densities and integrate out of the historical likelihood.
+\item Logistic curves have \verb{q_a50_*} midpoints and positive \verb{log_q_slope_*}
+coefficients, initialized from each group's observed coordinate range.
+Names identify terms, groups and unique states for warm starts.
 \item \code{missing} vector of length \code{sum(dat$fill_missing_map)} (placeholders for
 imputed \code{log_obs}, if any observation type is set to fill missing values)
 }

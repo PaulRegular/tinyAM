@@ -463,10 +463,14 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   if (!is.null(dat$q_mono_modmat)) {
     q_predictor <- q_predictor + drop(dat$q_mono_modmat %*% dq)
   }
+  q_effects <- .q_effects(par, dat, simulate = simulate)
+  jnll <- jnll + q_effects$nll
+  q_predictor <- q_predictor + q_effects$contribution
   # Compute log(q) directly to remain stable near the logit boundaries.
   log_q_obs <- if (identical(index_settings$q_link, "logit")) {
     -RTMB::logspace_add(0, -q_predictor)
   } else q_predictor
+  log_q_obs <- log_q_obs + q_effects$log_selectivity
   samp_time <- obs_map$samp_time
 
   ic <- obs_map$type == "catch"
@@ -572,7 +576,7 @@ nll_fun <- function(par, dat, simulate = FALSE) {
     if (M_settings$process != "off") {
       sims$log_m <- log_m
     }
-    return(sims)
+    return(c(sims, q_effects$parameters))
   }
 
   jnll

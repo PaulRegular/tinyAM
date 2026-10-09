@@ -113,6 +113,9 @@ the intercept is removed from \code{sd_form} so supplied SDs act as offsets.
 \item \code{q_form}: formula for catchability, evaluated on the index table. Ordinary
 \code{~ q_block} allows any pattern across blocks; \code{~ mono(q_block)} is non-decreasing across ordered
 blocks. See \code{\link[=mono]{mono()}} for independent non-decreasing curves by survey.
+Structured effects such as \code{~ survey + ar1(year, by = survey)} allow shared
+annual changes across ages. \code{~ survey + logistic(age, by = survey)} fits rising
+selectivity curves. See \link{formula_effects} for assumptions and constraints.
 \item \code{q_link}: \code{"log"} (default) allows any positive catchability; \code{"logit"}
 restricts catchability to between zero and one. Use the logit link only
 when the survey index has an absolute abundance scale and this restriction
@@ -202,6 +205,8 @@ Random-effect blocks are chosen automatically from the model settings:
 \item Includes \code{log_n0} only if \code{N_settings$init == "random"}.
 \item Includes \code{log_n} if \code{N_settings$process != "off"}.
 \item Includes \code{log_m} if \code{M_settings$process != "off"}.
+\item Includes the unique \verb{eta_q_*} states of Gaussian catchability formula terms.
+Logistic midpoint/slope and process SD/correlation are fixed effects.
 }
 
 A warning is issued if the number of random effects exceeds 1.5 times the

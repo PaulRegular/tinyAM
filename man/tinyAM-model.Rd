@@ -193,7 +193,7 @@ held at their starting values rather than estimated from a flat likelihood.
 \subsection{Catchability and observations}{
 
 For survey observation row \eqn{i},
-\deqn{\eta_{q,i}=X_{q,i}\beta_q+B_i d,\qquad d_j\ge0.}
+\deqn{\eta_{q,i}=X_{q,i}\beta_q+B_i d+\sum_h z_{h,i},\qquad d_j\ge0.}
 The default \code{q_link = "log"} gives \eqn{q_i=\exp(\eta_{q,i})}.
 The optional \code{q_link = "logit"} gives
 \eqn{q_i=1/(1+\exp(-\eta_{q,i}))}, restricting q to between zero and one.
@@ -205,6 +205,13 @@ builds cumulative step indicators \eqn{B}; its optimized increments are
 \eqn{\sum_{j<k}d_j}. A zero step gives an exact plateau. Separate \code{by}
 groups have independent steps; ordinary terms supply their baselines.
 Monotonicity holds with other covariates held constant.
+Gaussian formula terms \eqn{z_h} can be IID, random intercepts, anchored RWs,
+or stationary AR1 processes; see \link{formula_effects}. Their normalized densities
+include each unique state or increment once, rather than each observation row.
+A categorical \code{by} separates trajectories with shared process parameters;
+numeric \code{by} multiplies one shared trajectory. Logistic terms multiply the
+inverse-link prediction by rising selectivity curves, so the logit link still
+restricts the full catchability to below one.
 
 Catch and index predictions are
 \deqn{\widetilde C_{t,a}=N_{t,a}\frac{F_{t,a}}{Z_{t,a}}

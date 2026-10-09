@@ -73,6 +73,14 @@
 #'     fixed non-negative increments on the selected q-link scale, initialized to `0.05`
 #'     for a nearly flat curve and bounded below by zero in [fit_tam()]. Names
 #'     identify transitions and groups; these are not absolute q levels.
+#'   - Structured Gaussian q terms have signed `eta_q_*` states, initially zero,
+#'     and estimated `log_sd_q_*` parameters initially `log(0.1)` unless SD is
+#'     supplied. Estimated `logit_phi_q_*` starts at correlation 0.5.
+#'     RW states omit the zero anchor. Forecast states retain their normalized
+#'     process densities and integrate out of the historical likelihood.
+#'   - Logistic curves have `q_a50_*` midpoints and positive `log_q_slope_*`
+#'     coefficients, initialized from each group's observed coordinate range.
+#'     Names identify terms, groups and unique states for warm starts.
 #'   - `missing` vector of length `sum(dat$fill_missing_map)` (placeholders for
 #'     imputed `log_obs`, if any observation type is set to fill missing values)
 #'
@@ -149,6 +157,7 @@ make_par <- function(dat) {
     par$dq <- setNames(rep(0.05, ncol(dat$q_mono_modmat)),
                        colnames(dat$q_mono_modmat))
   }
+  par <- c(par, .q_term_parameters(dat$q_terms))
 
   if (dat$any_fill_missing) {
     par$missing <- numeric(sum(dat$fill_missing_map))

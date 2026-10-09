@@ -108,6 +108,9 @@ the intercept is removed from \code{sd_form} so supplied SDs act as offsets.
 \item \code{q_form}: formula for catchability, evaluated on the index table. Ordinary
 \code{~ q_block} allows any pattern across blocks; \code{~ mono(q_block)} is non-decreasing across ordered
 blocks. See \code{\link[=mono]{mono()}} for independent non-decreasing curves by survey.
+Structured effects such as \code{~ survey + ar1(year, by = survey)} allow shared
+annual changes across ages. \code{~ survey + logistic(age, by = survey)} fits rising
+selectivity curves. See \link{formula_effects} for assumptions and constraints.
 \item \code{q_link}: \code{"log"} (default) allows any positive catchability; \code{"logit"}
 restricts catchability to between zero and one. Use the logit link only
 when the survey index has an absolute abundance scale and this restriction
@@ -199,6 +202,9 @@ Additive \code{\link[=mono]{mono()}} terms instead contribute cumulative indicat
 in \code{q_mono_modmat}, with directly fitted non-negative increments \code{dq}
 on the selected link scale.
 \code{q_mono_steps} records each transition and its optional group.
+Structured \code{\link[=iid]{iid()}}, \code{\link[=rw]{rw()}}, \code{\link[=ar1]{ar1()}}, random-intercept and \code{\link[=logistic]{logistic()}}
+terms are recorded separately in \code{q_terms}. Their unique states and process
+parameters are added by \code{\link[=make_par]{make_par()}}, rather than treated as ordinary columns.
 \item If \code{M_settings$mu_form} is provided, \code{M_modmat <- model.matrix(mu_form, data = obs$weight)} and the resulting coefficients are parameters \code{mu_m}.
 These coefficients are applied on the log scale to build \eqn{M}, but
 retain the \code{mu_} prefix to emphasize they can be positive or negative.

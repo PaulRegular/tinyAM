@@ -90,6 +90,8 @@
 #' - Includes `log_n0` only if `N_settings$init == "random"`.
 #' - Includes `log_n` if `N_settings$process != "off"`.
 #' - Includes `log_m` if `M_settings$process != "off"`.
+#' - Includes the unique `eta_q_*` states of Gaussian catchability formula terms.
+#'   Logistic midpoint/slope and process SD/correlation are fixed effects.
 #'
 #' A warning is issued if the number of random effects exceeds 1.5 times the
 #' number of observed data points (rough identifiability check).
@@ -204,7 +206,7 @@ fit_tam <- function(
     cli::cli_abort("Starting {.arg dq} increments must be finite and non-negative.")
   }
 
-  ran <- c("log_f", "log_r")
+  ran <- c("log_f", "log_r", .q_random_parameters(dat))
   if (dat$N_settings$init == "random") {
     ran <- c(ran, "log_n0")
   }

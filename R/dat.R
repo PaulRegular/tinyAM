@@ -285,6 +285,9 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #'   in `q_mono_modmat`, with directly fitted non-negative increments `dq`
 #'   on the selected link scale.
 #'   `q_mono_steps` records each transition and its optional group.
+#'   Structured [iid()], [rw()], [ar1()], random-intercept and [logistic()]
+#'   terms are recorded separately in `q_terms`. Their unique states and process
+#'   parameters are added by [make_par()], rather than treated as ordinary columns.
 #' - If `M_settings$mu_form` is provided, `M_modmat <- model.matrix(mu_form,
 #'   data = obs$weight)` and the resulting coefficients are parameters `mu_m`.
 #'   These coefficients are applied on the log scale to build \eqn{M}, but
@@ -408,6 +411,9 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #' - `q_form`: formula for catchability, evaluated on the index table. Ordinary
 #'   `~ q_block` allows any pattern across blocks; `~ mono(q_block)` is non-decreasing across ordered
 #'   blocks. See [mono()] for independent non-decreasing curves by survey.
+#'   Structured effects such as `~ survey + ar1(year, by = survey)` allow shared
+#'   annual changes across ages. `~ survey + logistic(age, by = survey)` fits rising
+#'   selectivity curves. See [formula_effects] for assumptions and constraints.
 #' - `q_link`: `"log"` (default) allows any positive catchability; `"logit"`
 #'   restricts catchability to between zero and one. Use the logit link only
 #'   when the survey index has an absolute abundance scale and this restriction
@@ -713,6 +719,7 @@ prepare_tam <- function(
 
   q_design <- .parse_q_formula(dat$index_settings$q_form, dat$obs$index)
   dat[names(q_design)] <- q_design
+  .check_q_terms(dat)
   if (!is.null(dat$F_settings$mu_form)) {
     dat$F_modmat <- stats::model.matrix(F_settings$mu_form, data = dat$obs$catch)
     if (nrow(dat$F_modmat) != nrow(dat$obs$catch) ||
