@@ -13,7 +13,7 @@ The source files are cached locally under
 `source_cache/dfo_sgsl_herring_spring_2023/`. The cache includes the 2024
 support document, the 2022 methods report used for method context, the 2026
 science advisory report, the DFO acoustic biomass CSV and data dictionary,
-and a file manifest.
+the 2016/060 acoustic table used to clarify units, and a file manifest.
 
 ## Inputs and assumptions recovered
 
@@ -31,9 +31,23 @@ describes the acoustic trawl samples as weighted by acoustic density and uses
 them to allocate the survey signal by spawning component and age. Figure 19
 labels the values as abundance-at-age in numbers, and the 2022/068 methods call
 the series an age-disaggregated acoustic abundance index. The table does not
-state a scale multiplier, so the values are kept unchanged as
-`number (index scale; multiplier not stated)`. The previous importer
-incorrectly called them weighted sample counts and excluded them from tinyAM.
+state a scale multiplier. DFO Research Document 2016/060, Table 16 (p. 36),
+explicitly labels the same historical acoustic series as thousands of fish.
+For example, its 1994 age-4 value is 100,087, compared with 100,062 in the
+2024 table; its 2006 age-4 value is 24,601 in both reports. These small
+historical revisions do not imply a change of units. The canonical database
+therefore retains the 2024 values in `thousand fish`, with the unit source and
+resolution recorded. The shared converter multiplies them by 1,000 to obtain
+fish. No manual multiplier is needed in the stock recipe.
+
+The biomass provides an independent scale check: the 2023 Table 15 spring
+values sum to 55,619 thousand fish. The later official CSV's 7,358 t of
+spring biomass implies a mean weight of about 0.132 kg per fish on that scale,
+whereas treating the table as individual fish would imply about 132 kg per
+fish. This is a scale cross-check only; the later CSV is not added to the
+2024 fit. The previous importer incorrectly called the observations weighted
+sample counts and later treated the multiplier as unresolved. Both descriptions
+have now been corrected using the historical unit documentation.
 
 The accepted 2024 model's acoustic likelihood is only partly recoverable. The
 2022/068 methods describe a multivariate-logistic age-composition likelihood,
@@ -52,7 +66,7 @@ The Open Government biomass CSV and dictionary are cached with provenance.
 The dictionary states that spring acoustic biomass is in tonnes, with values
 for 1994-2025. The 1994-2023 rows are kept on the separate 2026 summary record;
 2024-2025 are not attached to the 2024 assessment. The 2024 translation uses
-Table 15 values alone on their native scale to avoid mixing the later CSV
+Table 15 values alone, converted from thousand fish to fish, to avoid mixing the later CSV
 release into the accepted 2024 record. The latest file is useful as a
 cross-check, but it is not confirmed to reproduce the 2024 model's acoustic
 biomass inputs: its 2022 total is 27,209 t versus 27,268.7 t in the 2024
@@ -98,17 +112,18 @@ published age-specific spring CPUE at a seasonal midpoint of 0.25. It now also
 uses the 1994-2023 Table 15 acoustic age series at a late-season midpoint of
 0.75. The source model used age composition and aggregate biomass likelihoods;
 tinyAM instead treats the reported age series as age-specific lognormal index
-observations on the source scale. This preserves the published values without
-inventing a multiplier, but it is not the accepted model's likelihood. The
+observations in fish after resolving the table units. This is not the accepted
+model's likelihood. The
 two surveys have separate non-decreasing age-q curves and separate observation
 SDs. CPUE catchability varies in three blocks (1990-1999, 2000-2009 and
 2010-2021), rather than the source's annual random walk. Acoustic catchability
 is constant through time. A log link allows q to act as an index scaling
-coefficient; the undocumented acoustic multiplier does not justify interpreting
-q as a surveyed fraction bounded by 1. The provisional multiplication of
-acoustic observations by 1,000 has been removed. Changing that constant and
-the q link leaves the fitted population states essentially unchanged in this
-case, because the previous upper bound was not active.
+coefficient without imposing an upper bound. The user's original multiplication
+of acoustic values by 1,000 was correct; the correction is now made through
+the canonical unit rather than a manual fit-only adjustment. Resolving the unit
+raises fitted acoustic q by a factor of 1,000 (maximum about 0.612) while
+leaving population states essentially unchanged under the log link. A plausible
+q supports the scale check but is not, by itself, evidence for a unit conversion.
 
 The recipe builds a fit-only stock-weight approximation from the published
 gear weights. It combines the two gear values with an arithmetic mean weighted
@@ -144,8 +159,8 @@ catchability starts use the corresponding, sorted observation rows.
 
 ## Refinement trials (October 2026)
 
-Each trial changed one assumption from the revised model. The native-scale,
-log-q version was used for the trials below; converged states from that fit
+Each trial changed one assumption from the revised model. The previously
+unresolved-scale, log-q version was used for the trials below; converged states from that fit
 were also used as starting values where needed. The source-like choices are
 approximations using existing tinyAM settings, not reconstructions of the
 accepted likelihood.
@@ -153,7 +168,7 @@ accepted likelihood.
 | Trial | Converged / positive Hessian | Median absolute % difference: total N | January 1 mature biomass | Decision |
 |---|---|---:|---:|---|
 | Revised input model | Yes / yes | 42.2 | 17.0 | Baseline |
-| Native acoustic scale and log q | Yes / yes | 42.2 | 17.0 | Retain: avoids assuming an unpublished multiplier or a q fraction |
+| Previously unresolved acoustic scale and log q | Yes / yes | 42.2 | 17.0 | Log link retained; acoustic units subsequently corrected to thousand fish |
 | Restrict CPUE to ages 4-10 and acoustic to 4-8 | Yes / yes | 32.8 | 22.6 | Do not retain: mixed agreement; keep the more detailed published indices |
 | M random walk | Yes / yes | 49.7 | 27.5 | Do not retain: worse agreement; no matching initial-M prior |
 | AR1 rather than IID older-age N process | Yes / yes | 53.6 | 27.1 | Do not retain: closer terminal biomass but worse historical agreement |
@@ -168,7 +183,7 @@ reported Hessian. Its raw maximum gradient is about 18.24 at a zero monotone-q
 increment; a positive derivative there satisfies the lower-bound optimality
 condition. The package's convergence check projects that component to zero.
 The maximum projected gradient is 0.000144, below the 0.01 tolerance.
-The native/log-q fit reproduces the original population-state estimates to
+The log-q fit reproduces the original population-state estimates to
 numerical tolerance. Gear weights enter derived biomass, not the number-based
 observation likelihood, so their correction does not change fitted N or F.
 
@@ -198,4 +213,5 @@ The identifier is left blank until a source crosswalk can confirm it.
 
 - [DFO Research Document 2024/058](https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/41256384.pdf)
 - [DFO Research Document 2022/068](https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/41091589.pdf)
+- [DFO Research Document 2016/060, Table 16: acoustic units](https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/365860.pdf)
 - [DFO Science Advisory Report 2026/028](https://publications.gc.ca/collections/collection_2026/mpo-dfo/fs70-6/Fs70-6-2026-028-eng.pdf)

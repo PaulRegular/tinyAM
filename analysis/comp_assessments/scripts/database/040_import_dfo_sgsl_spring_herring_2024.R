@@ -9,6 +9,7 @@ lines <- readLines(support_file, warn = FALSE, encoding = "UTF-8")
 
 assessment_url <- "https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/41256384.pdf"
 methods_url <- "https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/41091589.pdf"
+acoustic_scale_url <- "https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/365860.pdf"
 summary_url <- "https://publications.gc.ca/collections/collection_2026/mpo-dfo/fs70-6/Fs70-6-2026-028-eng.pdf"
 acoustic_data_url <- paste0(
   "https://open.canada.ca/data/en/dataset/",
@@ -138,16 +139,27 @@ inputs <- rbind(
             "number per net-haul", survey = "Spring fixed-gear CPUE",
             season = "spring", source_table = 13,
             notes = "Age-specific CPUE values. The source SCA used the aggregate index with age composition; direct age-specific use is a tinyAM approximation."),
-  long_rows(acoustic, 2:10, 2:10, "index", "numbers_at_age", "index_scale",
-            "number (index scale; multiplier not stated)",
+  long_rows(acoustic, 2:10, 2:10, "index", "numbers_at_age", "numbers",
+            "thousand fish",
             survey = "4Tmno acoustic survey", season = "fall",
             source_table = 15,
             notes = paste(
               "Spring-spawner age-disaggregated acoustic abundance-index values.",
-              "The report does not state a numeric multiplier; values are retained",
-              "on their native scale. The 2022 methods describe the source",
+              "Table 15 omits the unit; DFO Research Document 2016/060 Table 16",
+              "explicitly identifies the same historical series as thousands of fish.",
+              "Table 15 values are retained unchanged in thousand fish; conversion",
+              "to fish requires multiplication by 1000. The 2022 methods describe the source",
               "likelihood as age composition plus an aggregate biomass index."
             ))
+)
+acoustic_rows <- inputs$survey == "4Tmno acoustic survey"
+inputs$source_reference[acoustic_rows] <- paste(
+  assessment_ref, "Table 15; DFO Research Document 2016/060 Table 16 (unit clarification)",
+  acoustic_scale_url
+)
+inputs$transformation[acoustic_rows] <- paste(
+  "Resolved the omitted unit as thousand fish using the historical acoustic",
+  "table in DFO 2016/060; retained the 2024 Table 15 numerical values."
 )
 acoustic_biomass_2026 <- data.frame(
   assessment_id = summary_id,
@@ -328,8 +340,9 @@ assumptions_2024$notes[assumptions_2024$setting == "acoustic_survey"] <- paste(
   "age composition and a separate lognormal age-aggregated biomass index,",
   "with the acoustic biomass likelihood weighted by 3. The spring biomass",
   "index uses ages 4-8; the 2024/058 support report does not restate the",
-  "observation weighting or full likelihood. Table 15 values are preserved",
-  "on their native scale for tinyAM; no multiplier is inferred."
+  "observation weighting or full likelihood. Table 15 values are recorded",
+  "in thousand fish, following the explicit units for the same acoustic",
+  "series in DFO 2016/060 Table 16; conversion to fish multiplies by 1000."
 )
 
 assumptions_2026 <- data.frame(
