@@ -12,7 +12,8 @@ for (ids in capability_evidence) {
 }
 stopifnot(length(capability_evidence$correlated_F_increments) == 10L,
           length(capability_evidence$correlated_observations) == 9L,
-          length(capability_evidence$latent_SD_groups) == 8L,
+          length(capability_evidence$latent_SD_groups) == 9L,
+          'dfo_cod_3pn4rs_2025' %in% capability_evidence$latent_SD_groups,
           !'ices_cod_northeast_arctic_2026' %in% capability_evidence$correlated_F_increments,
           !'ices_bluewhiting_northeast_atlantic_2026' %in% capability_evidence$latent_SD_groups)
 
