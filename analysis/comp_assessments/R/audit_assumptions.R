@@ -52,15 +52,22 @@ audit_assumptions <- function(assessment_id, assumptions) {
   mark(key == "recruitment|process", "partially_supported",
        "tinyAM has recruitment and cohort processes, but these do not automatically reproduce the source process.")
   mark(key == "recruitment|deviation_distribution", "partially_supported",
-       "tinyAM uses a basic random walk for recruitment; it does not fit the source autocorrelated recruitment-rate deviations.")
+       "tinyAM supports IID, RW and stationary AR1 recruitment residuals. An AR1 recruitment rate multiplied by SSB is a different equation; verify the source recruitment age, lag and bias correction.")
+  recruitment_curve <- x$component == "recruitment" &
+    x$setting %in% c("stock_recruit", "stock_recruitment")
+  mark(recruitment_curve & grepl("Beverton.Holt|Ricker", value, ignore.case = TRUE),
+       "partially_supported",
+       "BH and Ricker median-recruitment curves are available with IID or AR1 residuals. Check age, parent-SSB timing, active parameters and source bias correction; a fixed steepness of one is not a free BH curve.")
+  mark(recruitment_curve & grepl("hockey|segmented", value, ignore.case = TRUE),
+       "unsupported", "tinyAM does not implement the source hockey-stick recruitment curve; BH and Ricker are not equivalent replacements.")
   mark(key == "F|fishing_mortality", "partially_supported",
        "tinyAM estimates an age-year F surface; fleet-specific fully recruited F and selectivity are not identical.")
   mark(key == "F|fishery_selectivity", "partially_supported",
        "tinyAM can estimate flexible F-at-age but does not reproduce this period-specific selectivity structure directly.")
   mark(key == "M|process", "partially_supported",
-       "tinyAM supports age-blocked RW M states; its first state is unpenalized and the process SD is estimated, unlike the source priors and fixed SD.")
+       "tinyAM supports age-blocked IID, RW and AR1 M states and structured mean formulas. Check the source density, first-state treatment, fixed process SDs and priors separately.")
   mark(key == "M|process_sd", "partially_supported",
-       "The RW structure is available, but tinyAM estimates its innovation SD instead of fixing it at the source value.")
+       "The ordinary M residual SD is estimated. A mean-formula RW with supplied SD and process off can instead represent fixed increments; verify the initial-state treatment and source priors separately.")
   mark(key == "M|initial_priors", "unsupported",
        "tinyAM has no matching prior distribution for the starting M levels; reported source means may only be used as starting values.")
   mark(key == "M|natural_mortality", "partially_supported",
@@ -83,11 +90,26 @@ audit_assumptions <- function(assessment_id, assumptions) {
   mark(key == "index|likelihood", "partially_supported",
        "tinyAM fits age-specific lognormal observations; aggregate-index and composition likelihoods are different.")
   mark(key == "index|catchability_age_structure", "partially_supported",
-       "tinyAM can estimate survey-by-age q terms, but the report does not document the source parameter-sharing keys.")
+       "tinyAM supports fixed sharing groups, monotone/logistic age curves and IID/RW/AR1 catchability effects. Verify the documented keys, normalization and q link before selecting a formula.")
   mark(key == "index|age_composition_likelihood", "partially_supported",
        "tinyAM does not fit a multivariate composition likelihood; any abundance-at-age conversion is an approximation.")
   mark(key == "catch|catch_likelihood", "partially_supported",
        "tinyAM uses lognormal catch-at-age observations, unlike a source model that fits totals and age composition separately.")
+  observation_correlation <- x$component %in% c("catch", "index", "observation") &
+    grepl("correlation", x$setting)
+  mark(observation_correlation & grepl("independent|^ID$", value, ignore.case = TRUE),
+       "supported", "Independent lognormal observation errors are available; their SD can have fixed or structured formula effects.")
+  mark(observation_correlation & grepl("AR|covariance|correlated", value, ignore.case = TRUE) &
+         !grepl("independent", value, ignore.case = TRUE),
+       "unsupported", "Structured mean or SD effects do not reproduce correlation between observation residuals; tinyAM has no matching multivariate observation likelihood.")
+  mark(x$component %in% c("catch", "index", "observation") &
+         x$setting %in% c("observation_process", "observation_likelihood") &
+         grepl("AR|covariance|correlated", value, ignore.case = TRUE) &
+         !grepl("independent", value, ignore.case = TRUE),
+       "partially_supported", "Lognormal observations are available, but the source residual covariance is not reproduced by mean or SD formula effects.")
+  mark(x$component == "F" & grepl("correlation|process", x$setting) &
+         grepl("correlated.*increment|increment.*correlation|age.correlated.*random.walk", value, ignore.case = TRUE),
+       "partially_supported", "Age-correlated RW innovations differ from independent RWs and the stationary two-dimensional AR1 process; extra mean effects do not reproduce that covariance.")
   mark(key == "biology|weight_at_age", "supported",
        "tinyAM accepts annual weight-at-age when the required model grid is complete.")
   mark(key == "weight|weight_at_age", "supported",
