@@ -72,7 +72,15 @@ the historical fitted period.
 - Exact 2026 within-year sampling fractions are absent from the report. The
   cached 2024 native data object has sample times 0.730 for the Q3–Q4 index
   and 0.525 for commercial CPUE; these are useful context, not verified 2026
-  values.
+values.
+
+The printed F variance keys are `0 1 2 3 3 3 3 3`: ages 3, 4 and 5 have
+separate innovation SDs, with ages 6–10+ sharing one. tinyAM's retained F
+process has one SD. Separate recruitment and shared older-cohort SDs are
+already supported; that simpler N variance grouping is not itself a missing
+capability. The initial-state treatment and F density still differ. The common
+SSB comparison uses accepted N with the same translated biology as tinyAM;
+it does not imply identical native spawning-time SSB.
 - tinyAM's current observation structure does not represent a single
   aggregate relative CPUE observation tuned to exploitable biomass. The
   translation therefore fits the Q3–Q4 age-specific index and records the
