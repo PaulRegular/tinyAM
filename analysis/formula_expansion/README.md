@@ -276,3 +276,31 @@ from the prespecified RW warm start; two had gradients just above 0.01. Keep
 these options experimental: curve support and interval calibration remain
 important limitations even when fitting succeeds. The full suite passed 1,818
 assertions with one interactive-only skip; `R CMD check --no-manual` was OK.
+
+## Recruitment self-tests, cross-tests and noise
+
+The follow-up crosses RW, BH–IID, BH–AR1, Ricker–IID and Ricker–AR1 truths
+with all five fitted recruitment specifications. Each dataset is shared across
+its five fits. This explicitly tests fitting curves to RW-generated recruitment,
+as well as recovering the correct curve. The original recovery study fits only
+the generating specification.
+
+```r
+system2(file.path(R.home("bin"), "Rscript"),
+        "analysis/formula_expansion/test_recruitment_cross_validation.R")
+system2(file.path(R.home("bin"), "Rscript"),
+        c("analysis/formula_expansion/simulate_recruitment_cross.R", "100", "30", "6"))
+system2(file.path(R.home("bin"), "Rscript"),
+        c("analysis/formula_expansion/simulate_recruitment_noise.R", "100", "30", "3"))
+rmarkdown::render("analysis/formula_expansion/recruitment_cross_report.Rmd",
+                  output_dir = "analysis/formula_expansion/results")
+```
+
+The cross-test records 2,500 isolated and 750 full requested fits. The BH noise
+study adds 600 isolated and 180 full fits at SDs 0.15, 0.35 and 0.60. It separates
+narrow parent SSB from wider contrast; full wider-SSB cases use a declared
+synthetic fishing-pressure covariate in both generating and fitted F means.
+No assessment recipe is changed. These checkpoints also retain failures,
+warnings, seeds and source fingerprints. Curve parameters have no recovery
+truth when recruitment is a RW. Diagnostic flags are descriptive cautions,
+not a formal test for a biological stock–recruit relationship.

@@ -1,0 +1,273 @@
+---
+title: "Recruitment self-tests, cross-tests, and noise"
+output:
+  html_document:
+    self_contained: true
+    toc: false
+    mathjax: null
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE,
+  fig.width = 9, fig.height = 5, dpi = 120, fig.path = "results/recruitment_cross_figures/")
+library(dplyr)
+library(ggplot2)
+labels <- c(rw = "RW", bh_iid = "BH + IID", bh_ar1 = "BH + AR1",
+  ricker_iid = "Ricker + IID", ricker_ar1 = "Ricker + AR1")
+cross <- readRDS("results/recruitment_cross_recovery.rds")
+noise <- readRDS("results/recruitment_noise_recovery.rds")
+stopifnot(isTRUE(cross$complete), isTRUE(noise$complete))
+flatten <- function(study) do.call(c, lapply(study$results, `[[`, "results"))
+fits <- flatten(cross)
+attempts <- do.call(rbind, lapply(fits, `[[`, "attempt"))
+noise_fits <- flatten(noise)
+noise_attempts <- do.call(rbind, lapply(noise_fits, `[[`, "attempt"))
+stopifnot(nrow(attempts) == 25L * (cross$n_simple + cross$n_full),
+  nrow(noise_attempts) == 6L * (noise$n_simple + noise$n_full),
+  !anyDuplicated(with(attempts, paste(stage, truth, fitted, replicate))))
+attempts$near_RW <- vapply(fits, function(x) !is.null(x$estimates$logit_phi_r) &&
+  plogis(x$estimates$logit_phi_r) > .98, logical(1))
+attempts$support_warning <- with(attempts, curve_warning | persistence_warning | near_RW)
+correlation <- do.call(c, lapply(cross$results, function(dataset) {
+  vapply(dataset$results, function(fit) {
+    p <- fit$estimates
+    if (is.null(p)) return(NA_real_)
+    case <- fit$attempt$fitted
+    R <- if (fit$attempt$stage == "isolated") dataset$generation$log_R else c(p$log_r0, p$log_r)
+    if (case == "rw") e <- diff(R) else if (fit$attempt$stage == "full") {
+      e <- log(fit$pairs$recruitment) - log(fit$pairs$prediction)
+    } else {
+      S <- dataset$generation$S[-length(R)]
+      density <- p$log_sr_beta + log(S)
+      mean <- p$log_sr_alpha + log(S) - if (startsWith(case, "bh"))
+        pmax(0, density) + log1p(exp(-abs(density))) else exp(density)
+      e <- R[-1L] - mean
+      if (endsWith(case, "ar1")) e[-1L] <- e[-1L] - plogis(p$logit_phi_r) * e[-length(e)]
+    }
+    if (endsWith(case, "ar1")) e <- e[-1L]
+    if (length(e) < 15L || any(!is.finite(e)) || sd(e) == 0) return(NA_real_)
+    cor(head(e, -1L), tail(e, -1L))
+  }, numeric(1))
+}))
+attempts$innovation_correlation <- unname(correlation)
+```
+
+## What is being tested?
+
+Generating recruitment from BH does not guarantee that a short assessment can
+recover its shape. In the original full BH–IID example, parent SSB varied only
+1.7-fold. Its true median recruitment changed by about 26%; the log-scale
+variation in that median was 0.052, against an innovation SD of 0.35. That is
+a weak signal relative to annual recruitment variation. The fitted curve was
+almost flat, despite numerical convergence.
+
+This study asks two separate questions:
+
+- Can the correct model recover recruitment parameters, and what happens when
+  the wrong recruitment model is fitted?
+- Does lower recruitment SD help, or is a wider range of parent SSB needed?
+
+The first experiment crosses **RW, BH–IID, BH–AR1, Ricker–IID and Ricker–AR1**:
+every simulated dataset is fitted with all five options. There are
+`r cross$n_simple` isolated datasets and `r cross$n_full` full-assessment datasets
+per truth, giving `r nrow(attempts)` requested fits. Matching truth/fitted entries
+are self-tests; off-diagonal entries are cross-tests. RW truth has no
+stock–recruit curve parameters to recover.
+
+Isolated tests observe 80 annual recruitments directly, with parent SSB spanning
+200–5,000. Curves use alpha 2, beta 0.001, SD 0.35 and AR1 correlation 0.6.
+RW draws accumulate annual log increments independently of the supplied SSB.
+The full assessments use the earlier 50-year, eight-age, two-survey design.
+Recruitment and parent SSB come from one chronological simulated population.
+Mortality, biology and observation assumptions are identical across the five
+fits to each dataset.
+
+All full candidates start from one prespecified RW fit to that dataset, even
+if its numerical checks fail but it returns estimates. Its status is recorded.
+An error in that starting fit prevents candidate fits and is retained. This
+differs from the original recovery study's rule of stopping at a failed warm
+start. No candidate receives a rescue optimization or altered tolerance.
+Isolated curves start through first recruitment at first parent SSB, with
+beta = 1/SSB, SD 0.5 and AR1 correlation 0.5. Numerical success requires
+optimizer code zero, a positive-definite Hessian, and maximum gradient <0.01.
+
+## Numerical success and support warnings
+
+```{r cross-summary, include=FALSE}
+summary <- attempts |>
+  group_by(stage, truth, fitted) |>
+  summarise(requested = n(), converged = sum(success),
+    success_percent = 100 * mean(success),
+    support_warning_percent = if (any(success)) 100 * mean(support_warning[success]) else NA_real_,
+    correlation_warning_percent = if (any(success)) 100 * mean(parameter_correlation[success]) else NA_real_,
+    residual_persistence_percent = if (any(success)) 100 * mean(abs(innovation_correlation[success]) > .5, na.rm = TRUE) else NA_real_,
+    .groups = "drop")
+```
+
+```{r convergence}
+ggplot(summary, aes(fitted, truth, fill = success_percent)) +
+  geom_tile() + geom_text(aes(label = round(success_percent)), size = 3.5) +
+  facet_wrap(~ stage) + scale_x_discrete(labels = labels) + scale_y_discrete(labels = labels) +
+  scale_fill_gradient(limits = c(0, 100), low = "white", high = "steelblue") +
+  labs(x = "Fitted recruitment model", y = "Generating model", fill = "Success (%)") +
+  theme_minimal() + theme(axis.text.x = element_text(angle = 35, hjust = 1))
+```
+
+```{r warnings}
+ggplot(subset(summary, fitted != "rw"), aes(fitted, truth, fill = support_warning_percent)) +
+  geom_tile() + geom_text(aes(label = round(support_warning_percent)), size = 3.5) +
+  facet_wrap(~ stage) + scale_x_discrete(labels = labels) + scale_y_discrete(labels = labels) +
+  scale_fill_gradient(limits = c(0, 100), low = "white", high = "darkorange") +
+  labs(x = "Fitted curve", y = "Generating model", fill = "Support warnings (%)") +
+  theme_minimal() + theme(axis.text.x = element_text(angle = 35, hjust = 1))
+```
+
+Warnings are counted only among numerically successful fits. They include
+parent SSB varying by less than twofold, a curve-parameter interval spanning
+more than tenfold, an AR1 correlation interval wider than 0.5, or correlation
+above 0.98. The isolated tests evaluate recruitment-specific advisories;
+full fits use `check_tam()`, also retaining covariance and generic parameter
+correlation checks. These are descriptive safeguards, not calibrated tests
+for the presence of a biological stock–recruit relationship.
+
+The detailed table also explores correlation between consecutive recruitment
+innovations, flagging absolute correlation above 0.5 with at least 15 values.
+The first stationary AR1 residual is excluded. This is a separate exploratory
+check, not an existing automatic warning: persistent unexplained recruitment
+can reveal an unsuitable IID assumption even when curve intervals look precise.
+Full-assessment innovations depend on inferred states and their shrinkage,
+so this statistic is also descriptive rather than a formal test.
+
+<details>
+<summary>Counts and diagnostic rates for every truth/fitted combination</summary>
+
+```{r counts}
+knitr::kable(summary, digits = 1)
+```
+
+</details>
+
+## Parameter recovery in compatible models
+
+```{r coverage}
+parameters <- do.call(rbind, lapply(fits, function(x) {
+  if (is.null(x$parameters)) return(NULL)
+  p <- x$parameters
+  names(p)[names(p) == "truth"] <- "generating_value"
+  cbind(x$attempt[rep(1L, nrow(p)), c("stage", "truth", "fitted", "success")], p)
+}))
+coverage <- parameters |>
+  filter(success, is.finite(lower), is.finite(upper)) |>
+  group_by(stage, truth, fitted, parameter) |>
+  summarise(intervals = n(), coverage_percent = 100 * mean(lower <= generating_value & generating_value <= upper),
+    median_error = median(estimate - generating_value), median_interval_width = median(upper - lower), .groups = "drop")
+```
+
+Curve recovery is evaluated only when generating and fitted curves belong to
+the same family. Residual SD and correlation recovery are evaluated only for
+self-tests, because their meanings differ under the wrong residual process.
+Intervals are assessed on the optimized log/logit scale. There is no invented
+alpha or beta truth for RW-generated recruitment.
+
+<details>
+<summary>Parameter coverage and interval widths</summary>
+
+```{r coverage-table}
+knitr::kable(coverage, digits = 2)
+```
+
+</details>
+
+## BH: noise versus parent-SSB contrast
+
+The second experiment fits BH–IID to BH–IID data at SDs 0.15, 0.35 and 0.60
+(roughly 15%, 36% and 66% CV). It contains `r nrow(noise_attempts)` requested fits.
+Isolated SSB is either concentrated near 1,000 or spans 200–5,000. In full
+assessments, the natural design is compared with a known oscillating fishing
+pressure covariate. That covariate enters both generating and fitted F means,
+creating SSB variation independently of recruitment noise. This is a declared
+synthetic contrast experiment, not a modification to any stock recipe.
+
+```{r noise-summary}
+noise_contrast <- do.call(rbind, lapply(noise$results, function(x) {
+  a <- x$results$bh_iid$attempt
+  S <- head(x$generation$S, -1L)
+  p <- x$generation$truth
+  baseline <- p$log_sr_alpha + log(S) - log1p(exp(p$log_sr_beta) * S)
+  data.frame(stage = a$stage, contrast = a$contrast, sigma = a$sigma,
+    parent_SSB_ratio = max(S) / min(S), log_curve_signal = sd(baseline),
+    signal_to_noise = sd(baseline) / a$sigma)
+}))
+noise_summary <- noise_attempts |>
+  group_by(stage, contrast, sigma) |>
+  summarise(requested = n(), converged = sum(success), success_percent = 100 * mean(success),
+    support_warning_percent = if (any(success)) 100 * mean(curve_warning[success]) else NA_real_, .groups = "drop") |>
+  left_join(noise_contrast |> group_by(stage, contrast, sigma) |>
+    summarise(across(c(parent_SSB_ratio, log_curve_signal, signal_to_noise), median), .groups = "drop"),
+    by = c("stage", "contrast", "sigma"))
+knitr::kable(noise_summary, digits = 1)
+```
+
+SSB ratios and signal measures are medians over all generated datasets. The
+signal is the SD of the true log median recruitment over sampled parent SSB;
+signal-to-noise divides that by the generating recruitment SD. These describe
+the experimental contrast, rather than a formal identifiability threshold.
+
+```{r noise-curves}
+examples <- Filter(function(x) {
+  a <- x$results$bh_iid$attempt
+  a$stage == "full" && a$replicate == 1L
+}, noise$results)
+curves <- do.call(rbind, lapply(examples, function(x) {
+  fit <- x$results$bh_iid
+  if (is.null(fit$curve)) return(NULL)
+  S <- fit$curve$ssb
+  true <- exp(x$generation$truth$log_sr_alpha) * S /
+    (1 + exp(x$generation$truth$log_sr_beta) * S)
+  rbind(data.frame(contrast = fit$attempt$contrast, sigma = fit$attempt$sigma,
+    ssb = S, recruitment = true, curve = "Generating median"),
+    data.frame(contrast = fit$attempt$contrast, sigma = fit$attempt$sigma,
+      ssb = S, recruitment = fit$curve$est, curve = "Fitted median"))
+}))
+points <- do.call(rbind, lapply(examples, function(x) {
+  data.frame(contrast = x$results$bh_iid$attempt$contrast,
+    sigma = x$results$bh_iid$attempt$sigma,
+    ssb = head(x$generation$S, -1L), recruitment = exp(x$generation$log_R[-1L]))
+}))
+ggplot(curves, aes(ssb, recruitment)) +
+  geom_point(data = points, colour = "grey60", alpha = .5, size = 1) +
+  geom_line(aes(colour = curve), linewidth = .7) +
+  facet_grid(contrast ~ sigma, scales = "free") +
+  labs(x = "Parent SSB", y = "Recruitment", colour = NULL) +
+  theme_minimal() + theme(legend.position = "bottom")
+```
+
+The six examples above are the first prespecified full-assessment replicates,
+including any unsuccessful fits that still returned a curve. Points are
+simulated parent SSB and recruitment; lines are the generating and fitted
+median relationships. These examples illustrate the sampled SSB range; the
+tables retain every replicate rather than selecting successful examples.
+
+```{r noise-parameters}
+noise_parameters <- do.call(rbind, lapply(noise_fits, function(x) {
+  if (is.null(x$parameters)) return(NULL)
+  cbind(x$attempt[rep(1L, nrow(x$parameters)), c("stage", "contrast", "sigma", "success")], x$parameters)
+}))
+ggplot(subset(noise_parameters, success & grepl("log_sr_", parameter)),
+  aes(factor(sigma), estimate - truth, fill = contrast)) +
+  geom_hline(yintercept = 0, colour = "grey60") + geom_boxplot() +
+  facet_grid(parameter ~ stage, scales = "free_y") +
+  labs(x = "Recruitment innovation SD", y = "Curve-parameter error on log scale", fill = "SSB contrast") + theme_minimal()
+```
+
+Lowering SD also reduces recruitment-driven SSB variation in a closed
+population. It need not improve shape recovery if it removes the source of
+parent-SSB contrast. Useful curve information requires both contrast and an
+adequate signal relative to noise. Local Wald intervals can be misleading near
+nearly flat curve limits; wide parameter intervals and numerical failures
+remain part of the evidence.
+
+All seeds, warnings, errors, attempted fits and available uncertainty remain
+in the ignored result objects. None are removed because a wrong model fits
+well or a correct model fits poorly. A converged curve, or absence of a
+warning, does not establish a causal stock–recruit relationship.
