@@ -30,6 +30,7 @@ Use exactly one \code{\link[=iid]{iid()}}, \code{\link[=rw]{rw()}}, or \code{\li
 \code{by} grouping. Ordinary covariates are read from \code{obs$maturity} at the youngest
 modeled age; their values at older ages may be \code{NA}. Covariates refer to the
 recruitment year. Construct lagged or standardized columns explicitly.
+Covariate coefficients are estimated; \code{offset()} terms are not supported.
 Projections hold their terminal values and announce that assumption.
 
 \code{bh(ssb)} rises toward a plateau; \code{ricker(ssb)} can decline at high spawning

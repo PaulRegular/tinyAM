@@ -78,8 +78,12 @@ tidy_recruitment <- function(fit, interval = .95) {
       factor(levels[1L], levels = levels, ordered = is.ordered(value))
     }
   }
-  X <- stats::model.matrix(rec$fixed_form, reference)
-  X <- X[, colnames(rec$matrix), drop = FALSE]
+  X <- matrix(numeric(), 1L, 0L)
+  if (ncol(rec$matrix)) {
+    frame <- stats::model.frame(rec$terms, reference, xlev = rec$xlevels, na.action = stats::na.pass)
+    X <- stats::model.matrix(rec$terms, frame, contrasts.arg = rec$contrasts)
+    X <- X[, colnames(rec$matrix), drop = FALSE]
+  }
   offset <- if (ncol(X)) drop(X %*% p$rec_beta) else 0
   parent <- exp(fit$rep$rec_log_parent[!fit$dat$is_proj[rec$eligible]])
   S <- seq(.05 * min(parent), 1.2 * max(parent), length.out = 100L)

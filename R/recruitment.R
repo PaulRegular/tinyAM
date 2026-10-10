@@ -79,7 +79,14 @@
   if ("ssb" %in% variables) cli::cli_abort("Use modeled ssb only inside bh() or ricker(); supply other annual covariates explicitly.")
   if (any(!variables %in% names(data))) cli::cli_abort("Recruitment covariates must be columns of obs$maturity at the youngest modeled age.")
   frame <- stats::model.frame(fixed_form, data, na.action = stats::na.pass)
+  if (!is.null(stats::model.offset(frame))) {
+    cli::cli_abort("Recruitment offset() terms are not supported; use an ordinary covariate term.")
+  }
   matrix <- stats::model.matrix(fixed_form, frame)
+  terms <- attr(frame, "terms")
+  contrasts <- attr(matrix, "contrasts")
+  categorical <- vapply(frame, function(x) is.factor(x) || is.character(x), logical(1))
+  xlevels <- lapply(frame[categorical], function(x) if (is.factor(x)) levels(x) else levels(factor(x)))
   if (nrow(matrix) != length(dat$years) || any(!is.finite(matrix))) {
     cli::cli_abort("rec_form needs finite covariate values in every modeled recruitment year.")
   }
@@ -121,7 +128,8 @@
   dat$N_settings$rec_form <- form
   dat$rec <- c(rec, list(matrix = matrix, eligible = eligible, historical = historical,
                        boundary = seq_len(first - 1L), data = data, covariates = held,
-                       curve = curve, fixed_form = fixed_form))
+                       curve = curve, fixed_form = fixed_form,
+                       terms = terms, contrasts = contrasts, xlevels = xlevels))
   dat
 }
 
@@ -138,6 +146,7 @@
 #' `by` grouping. Ordinary covariates are read from `obs$maturity` at the youngest
 #' modeled age; their values at older ages may be `NA`. Covariates refer to the
 #' recruitment year. Construct lagged or standardized columns explicitly.
+#' Covariate coefficients are estimated; `offset()` terms are not supported.
 #' Projections hold their terminal values and announce that assumption.
 #'
 #' `bh(ssb)` rises toward a plateau; `ricker(ssb)` can decline at high spawning

@@ -36,6 +36,7 @@ test_that("recruitment covariates come only from youngest-age maturity rows", {
   expect_equal(tinyAM:::.rec_nll(r, tinyAM:::.rec_mean(p, d), p, d),
                -sum(dnorm(diff(r) - .4 * diff(d$rec$data$temp), 0, 1, log = TRUE)))
   expect_error(make_test_dat(N_settings = list(rec_form = ~ absent + iid(year))), "covariates")
+  expect_error(make_test_dat(data = obs, N_settings = list(rec_form = ~ offset(temp) + iid(year))), "offset")
   expect_error(make_test_dat(N_settings = list(rec_form = ~ iid(year) + ar1(year))), "exactly one")
   expect_error(make_test_dat(N_settings = list(rec_form = ~ rw(age))), "year without")
   expect_error(make_test_dat(N_settings = list(rec_form = ~ factor(year) + iid(year))), "saturated")
@@ -264,7 +265,29 @@ test_that("curve displays use median numeric covariates and declared factor leve
   tab <- tidy_recruitment(fit)
   expect_equal(tab$reference$value, c("6", "b"))
   expect_equal(log(tab$curve$est), unname(tinyAM:::.rec_log_curve(log(tab$curve$ssb), p, "bh") + .6))
+  withr::local_options(contrasts = c("contr.sum", "contr.poly"))
+  expect_equal(tidy_recruitment(fit)$curve, tab$curve)
   obs$maturity$temp <- 1
   expect_warning(d <- make_test_dat(data = obs, N_settings = list(rec_form = ~ temp + rw(year))), "cancel")
   expect_false("rec_beta" %in% names(make_par(d)))
+})
+
+test_that("recruitment curve displays retain fitted covariate bases", {
+  obs <- cod_obs
+  obs$maturity$temp <- ifelse(obs$maturity$age == 2, obs$maturity$year - 1983, NA)
+  for (term in c("poly(temp, 2)", "scale(temp)", "splines::ns(temp, df = 3)")) {
+    form <- as.formula(paste("~ bh(ssb) +", term, "+ iid(year)"))
+    d <- make_test_dat(data = obs, years = 1983:1995, ages = 2:8,
+      N_settings = list(process = "off", rec_form = form))
+    p <- make_par(d)
+    p$rec_beta[] <- seq_along(p$rec_beta) / 10
+    obj <- RTMB::MakeADFun(function(p) nll_fun(p, d), p, silent = TRUE)
+    fit <- structure(list(dat = d, obj = obj, rep = obj$report(), sdrep = NULL,
+      parameter_values = obj$env$last.par), class = c("tam_fit", "list"))
+    tab <- tidy_recruitment(fit)
+    offset <- drop(d$rec$matrix[d$rec$data$temp == 6, , drop = FALSE] %*% p$rec_beta)
+    expect_equal(tab$reference$value, "6")
+    expect_equal(log(tab$curve$est),
+      unname(tinyAM:::.rec_log_curve(log(tab$curve$ssb), p, "bh") + offset))
+  }
 })
