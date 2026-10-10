@@ -1,5 +1,14 @@
 # Western Baltic spring-spawning herring (her.27.20-24), 2026
 
+## Formula review (2026-10-10)
+
+An IID older-cohort survival candidate was tested separately from the retained
+recruitment RW, q sharing and F process. It reported false convergence
+(optimizer code 1, gradient 0.042), a non-positive-definite Hessian and a
+near-zero variance component. Scale disagreement also increased. Retain the
+baseline; the source hockey-stick recruitment and correlated observation/F
+processes remain different. No BH/Ricker curve was substituted for hockey-stick.
+
 ## Assessment represented
 
 The canonical record represents the accepted 2026 ICES HAWG assessment, fitted for 1991–2025. The report identifies the production run as WBSS_HAWG_2026, a single-fleet SAM assessment available from stockassessment.org. The official fit object is cached locally with the full HAWG 2026 report and the ICES Stock Assessment Graphs source page. The model object reports SAM 0.12.0, optimizer convergence code 0, and objective 414.9946.
