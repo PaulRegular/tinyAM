@@ -91,6 +91,7 @@
 #' - Includes `log_n` if `N_settings$process != "off"`.
 #' - Includes `log_m` if `M_settings$process != "off"`.
 #' - Includes the unique `eta_q_*` states of Gaussian catchability formula terms.
+#' - Includes Gaussian F/M mean and catch/index log-SD formula states.
 #'   Logistic midpoint/slope and process SD/correlation are fixed effects.
 #'
 #' A warning is issued if the number of random effects exceeds 1.5 times the
@@ -148,7 +149,7 @@
 #'                  standardized residuals (see [tidy_obs_pred()]).
 #' - **pop**: A collection of population summaries in tidy format (see
 #'            [tidy_pop()]).
-#' - **formula_effects**: When Gaussian q, F or M formula terms are present, signed effect levels,
+#' - **formula_effects**: When Gaussian q, F/M mean or observation SD formula terms are present, signed effect levels,
 #'   RW increments and numeric-by contributions for reporting and dashboards.
 #'
 #' @example inst/examples/example_fit_default.R
@@ -204,7 +205,8 @@ fit_tam <- function(
     proj_settings = proj_settings
   )
   par <- make_par(dat)
-  formula_advisories <- rbind(.mean_process_advisories(dat), .q_process_advisories(dat))
+  formula_advisories <- rbind(.mean_process_advisories(dat), .q_process_advisories(dat),
+                             .sd_process_advisories(dat))
   if (nrow(formula_advisories)) {
     cli::cli_warn(c("Formula-effect caution.",
       stats::setNames(formula_advisories$detail, rep("i", nrow(formula_advisories)))))

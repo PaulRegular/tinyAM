@@ -206,7 +206,7 @@ tidy_rep <- function(fit) {
 
   keep <- vapply(rep, function(x) is.matrix(x) || length(x) == length(dat$years),
                  logical(1))
-  keep[grepl("^eta_(q|mu_[FM])_increments$", names(keep))] <- FALSE
+  keep[grepl("^eta_(q|mu_[FM]|sd_catch|sd_index)_increments$", names(keep))] <- FALSE
   rep_items <- rep[keep]
 
   trends <- lapply(rep_items, function(x) {
@@ -317,7 +317,7 @@ tidy_sdrep <- function(fit, interval = 0.95) {
   ## assumes all ADREPORTED objects are equal length to years and are in log space
   vals <- as.list(fit[["sdrep"]], "Estimate", report = TRUE)
   ses <- as.list(fit[["sdrep"]], "Std. Error", report = TRUE)
-  vals <- vals[!grepl("^(q_link_prediction|eta_(q|mu_[FM])_increments)$", names(vals))]
+  vals <- vals[!grepl("^(q_link_prediction|eta_(q|mu_[FM]|sd_catch|sd_index)_increments)$", names(vals))]
   ses <- ses[names(vals)]
   df <- lapply(seq_along(vals), function(i) {
     d <- data.frame(year = fit$dat$years,
@@ -716,7 +716,7 @@ stack_nested <- function(x, label = "model",
 #' - **pop** — a named list of stacked data frames (e.g., `ssb`, `N`, `M`, `mu_M`, `F`, `mu_F`, `Z`, …);
 #' - **fixed_par** — a single stacked data frame of fixed-effect parameters with columns like `par`, `est`, `se`, `lwr`, `upr`, plus indices (e.g., `coef`, `year`, `age`) and the label column when applicable;
 #' - **random_par** — a named list of stacked data frames, one per random-effect block, each with the same schema as `fixed_par` plus block-appropriate indices.
-#' - **formula_effects** — signed Gaussian effect levels, RW increments and
+#' - **formula_effects** — signed Gaussian q, F/M mean and log observation-SD effect levels, RW increments and
 #'   numeric-by contributions, grouped by term. Intervals use their joint fitted
 #'   uncertainty; the zero RW anchor is explicitly marked as fixed.
 #'

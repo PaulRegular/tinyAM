@@ -4,7 +4,8 @@
 #' Allow catchability to vary among groups or through time without fitting an
 #' unrelated fixed coefficient for every value. Use these markers as additive
 #' terms in `index_settings$q_form`, `F_settings$mu_form`, or
-#' `M_settings$mu_form`; ordinary formula terms supply the baseline.
+#' `M_settings$mu_form`, `catch_settings$sd_form`, or `index_settings$sd_form`;
+#' ordinary formula terms supply the baseline.
 #'
 #' @details
 #' `iid(x)` gives each level an independent, mean-zero Normal effect.
@@ -65,6 +66,29 @@
 #' [check_tam()] retains these cautions and flags wide SD/correlation intervals.
 #' Warnings do not change the fitted model or establish non-identifiability.
 #'
+#' In observation SD formulas, Gaussian effects modify log SD:
+#' \eqn{\log \sigma_i = \log \sigma_{supplied,i} + X_i\beta + z_i}.
+#' A positive effect increases residual spread; it does not change the expected
+#' log observation. For example, `~ iid(age)` partially pools SDs across ages,
+#' while `~ survey + rw(age, by = survey)` gives separate smooth age patterns.
+#' SD remains positive. Supplied SDs are offsets and remove the ordinary
+#' intercept, as for fixed SD formulas. The effect's process SD describes
+#' variation in log SD, not observation error itself. There is no requirement
+#' that the age curve rise at either tail; a quadratic fixed age term is also
+#' a useful simpler alternative when that pattern is expected.
+#'
+#' One RW/AR1 term is initially allowed per observation SD surface. `mono()`
+#' and `logistic()` remain catchability curves. Replication across years at each
+#' age helps estimate residual spread; a few ages give little information about
+#' AR1 persistence. Fitting warns about levels with fewer than three observations
+#' and estimated processes with fewer than five observed levels per group.
+#' These descriptive cautions exclude missing/zero observations and projections.
+#' Observation-specific random SDs are scale mixtures, not the same variance
+#' component as an additive Gaussian random mean; they are permitted with a
+#' sparse-support warning. SD effects are integrated using RTMB's Laplace
+#' approximation, so recovery checks are especially useful with sparse data.
+#' This extension does not introduce formulas for latent N/F/M process SDs.
+#'
 #' @param x Column in the relevant observation table defining levels (IID) or
 #'   ordered steps (RW/AR1).
 #' @param by Optional column: numeric multiplier or categorical groups.
@@ -79,6 +103,9 @@
 #' # F_settings = list(process = "iid", mu_form = ~ factor(age) + rw(year))
 #' # M_settings = list(process = "off", mu_supplied = ~ I(0.2),
 #' #                   mu_form = ~ 0 + ar1(year))
+#' # catch_settings = list(sd_form = ~ iid(age), fill_missing = FALSE)
+#' # index_settings = list(q_form = ~ survey,
+#' #                       sd_form = ~ survey + ar1(age, by = survey))
 #' @seealso [catchability_curves], [prepare_tam()], [fit_tam()], [check_tam()]
 #' @name formula_effects
 #' @export
@@ -97,7 +124,7 @@ ar1 <- function(x, by = NULL, sd = NULL, phi = NULL) .formula_marker_error("ar1"
 logistic <- function(x, by = NULL) .formula_marker_error("logistic")
 
 .formula_marker_error <- function(term) {
-  cli::cli_abort("{term}() is a formula marker. Use it in {.arg index_settings$q_form}, {.arg F_settings$mu_form}, or {.arg M_settings$mu_form}; logistic() is restricted to q_form.")
+  cli::cli_abort("{term}() is a formula marker. Use it in q_form, F/M mu_form, or catch/index sd_form; logistic() is restricted to q_form.")
 }
 
 .formula_call_name <- function(x) {

@@ -120,6 +120,8 @@ vis_tam <- function(..., model_list = NULL, interval = 0.95, output_file = NULL,
 .formula_effect_label <- function(effect) {
   component <- unique(effect$component)
   if (component == "q") component <- "Catchability"
+  if (component == "sd_catch") component <- "Catch SD"
+  if (component == "sd_index") component <- "Survey SD"
   process <- switch(unique(effect$process), rw = "random walk", ar1 = "AR1", iid = "IID")
   variable <- unique(effect$variable)
   by <- unique(effect$by)

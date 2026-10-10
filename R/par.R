@@ -66,6 +66,11 @@
 #' - **Observation model**
 #'   - `log_sd_catch` (length `ncol(dat$sd_catch_modmat)`) adjusting any supplied SDs
 #'   - `log_sd_index` (length `ncol(dat$sd_index_modmat)`) adjusting any supplied SDs
+#'   - Gaussian observation-SD terms add signed `eta_sd_catch_*` or
+#'     `eta_sd_index_*` log-SD effects, initially zero, with process SD parameters
+#'     `log_sd_catch_*`/`log_sd_index_*` initially `log(0.1)` unless supplied.
+#'     Estimated AR1 correlations start at 0.5. These process SDs measure
+#'     variation in log observation SD, not observation SD itself.
 #'   - `log_q` for `q_link = "log"`, or `logit_q` for `q_link = "logit"`
 #'     (length `ncol(dat$q_modmat)`). Zero coefficients start q at 1 or 0.5,
 #'     respectively, before any [mono()] increments.

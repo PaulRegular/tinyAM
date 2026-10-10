@@ -457,8 +457,10 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   } else {
     log_sd_index_eff <- rep(0, nrow(sd_index_modmat))
   }
-  sd_catch <- exp(log_sd_catch_supplied + log_sd_catch_eff)
-  sd_index <- exp(log_sd_index_supplied + log_sd_index_eff)
+  sd_catch_effects <- .sd_effects(par, dat, "catch", simulate)
+  sd_index_effects <- .sd_effects(par, dat, "index", simulate)
+  sd_catch <- exp(log_sd_catch_supplied + log_sd_catch_eff + sd_catch_effects$contribution)
+  sd_index <- exp(log_sd_index_supplied + log_sd_index_eff + sd_index_effects$contribution)
   sd_obs <- numeric(n_obs)
   sd_obs[obs_map$type == "catch"] <- sd_catch
   sd_obs[obs_map$type == "index"] <- sd_index
@@ -469,6 +471,7 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   }
   q_effects <- .q_effects(par, dat, simulate = simulate)
   jnll <- jnll + q_effects$nll + F_effects$nll + M_effects$nll
+  jnll <- jnll + sd_catch_effects$nll + sd_index_effects$nll
   q_predictor <- q_predictor + q_effects$contribution
   # Compute log(q) directly to remain stable near the logit boundaries.
   log_q_obs <- if (identical(index_settings$q_link, "logit")) {
@@ -571,6 +574,12 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   REPORT(eta_mu_M_increments)
   if (length(eta_mu_F_increments)) ADREPORT(eta_mu_F_increments)
   if (length(eta_mu_M_increments)) ADREPORT(eta_mu_M_increments)
+  eta_sd_catch_increments <- sd_catch_effects$rw_increments
+  eta_sd_index_increments <- sd_index_effects$rw_increments
+  REPORT(eta_sd_catch_increments)
+  REPORT(eta_sd_index_increments)
+  if (length(eta_sd_catch_increments)) ADREPORT(eta_sd_catch_increments)
+  if (length(eta_sd_index_increments)) ADREPORT(eta_sd_index_increments)
 
   ADREPORT(log_recruitment)
   ADREPORT(log_abundance)
@@ -595,7 +604,8 @@ nll_fun <- function(par, dat, simulate = FALSE) {
     if (M_settings$process != "off") {
       sims$log_m <- log_m
     }
-    return(c(sims, q_effects$parameters, F_effects$parameters, M_effects$parameters))
+    return(c(sims, q_effects$parameters, F_effects$parameters, M_effects$parameters,
+             sd_catch_effects$parameters, sd_index_effects$parameters))
   }
 
   jnll

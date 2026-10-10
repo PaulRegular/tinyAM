@@ -102,7 +102,8 @@ average M (\code{M_bar}) calculations. All ages used if absent.
 
 \item{catch_settings}{A list with elements:
 \itemize{
-\item \code{sd_form}: formula for observation SD blocks for catch-at-age data.
+\item \code{sd_form}: formula for log observation SD for catch-at-age data. Ordinary
+terms and Gaussian \link{formula_effects} are supported, e.g. \code{~ iid(age)}.
 \item \code{sd_supplied}: optional one-sided formula giving supplied SDs (on the natural
 scale of the log-observation residuals) for catch-at-age data. When provided,
 the intercept is removed from \code{sd_form} so supplied SDs act as offsets.
@@ -112,7 +113,9 @@ Defaults to \code{TRUE}. Note that one-step-ahead residuals are not currently wo
 
 \item{index_settings}{A list with elements:
 \itemize{
-\item \code{sd_form}: formula for observation SD blocks for index-at-age data.
+\item \code{sd_form}: formula for log observation SD for index-at-age data. Ordinary
+terms and Gaussian \link{formula_effects} are supported, e.g.
+\code{~ survey + rw(age, by = survey)}.
 \item \code{sd_supplied}: optional one-sided formula giving supplied SDs (on the natural
 scale of the log-observation residuals) for index-at-age data. When provided,
 the intercept is removed from \code{sd_form} so supplied SDs act as offsets.
@@ -183,7 +186,7 @@ predicted values, parameter estimates, and
 standardized residuals (see \code{\link[=tidy_obs_pred]{tidy_obs_pred()}}).
 \item \strong{pop}: A collection of population summaries in tidy format (see
 \code{\link[=tidy_pop]{tidy_pop()}}).
-\item \strong{formula_effects}: When Gaussian q, F or M formula terms are present, signed effect levels,
+\item \strong{formula_effects}: When Gaussian q, F/M mean or observation SD formula terms are present, signed effect levels,
 RW increments and numeric-by contributions for reporting and dashboards.
 }
 }
@@ -214,6 +217,7 @@ Random-effect blocks are chosen automatically from the model settings:
 \item Includes \code{log_n} if \code{N_settings$process != "off"}.
 \item Includes \code{log_m} if \code{M_settings$process != "off"}.
 \item Includes the unique \verb{eta_q_*} states of Gaussian catchability formula terms.
+\item Includes Gaussian F/M mean and catch/index log-SD formula states.
 Logistic midpoint/slope and process SD/correlation are fixed effects.
 }
 

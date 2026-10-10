@@ -92,7 +92,9 @@
   .q_effects(par, proxy, simulate = simulate)
 }
 
-.formula_terms <- function(dat) c(dat$q_terms, dat$F_terms, dat$M_terms)
+.formula_terms <- function(dat) {
+  c(dat$q_terms, dat$F_terms, dat$M_terms, dat$sd_catch_terms, dat$sd_index_terms)
+}
 
 .formula_random_parameters <- function(dat) {
   unlist(lapply(.formula_terms(dat), `[[`, "parameter"), use.names = FALSE)
@@ -100,13 +102,16 @@
 
 .tidy_formula_effects <- function(fit, interval = .95) {
   all <- list(q = .tidy_q_effects(fit, interval))
-  for (component in c("F", "M")) {
+  for (component in c("F", "M", "sd_catch", "sd_index")) {
     if (!length(fit$dat[[paste0(component, "_terms")]])) next
     proxy <- fit
     proxy$dat$q_terms <- fit$dat[[paste0(component, "_terms")]]
-    proxy$dat$obs$index <- .mean_formula_data(fit$dat, component)
+    proxy$dat$obs$index <- if (startsWith(component, "sd_")) {
+      fit$dat$obs[[sub("^sd_", "", component)]]
+    } else .mean_formula_data(fit$dat, component)
     all[[component]] <- .tidy_q_effects(proxy, interval,
-      increment_report = paste0("eta_mu_", component, "_increments"))
+      increment_report = paste0("eta_", if (startsWith(component, "sd_")) "" else "mu_",
+                                component, "_increments"))
   }
   out <- list(levels = list(), increments = list(), contributions = list())
   for (component in names(all)) for (part in names(out)) {

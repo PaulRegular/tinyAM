@@ -293,11 +293,11 @@ check_tam <- function(fit, grad_tol = NULL, detailed = FALSE) {
   variance[!is.finite(variance) | variance < 0] <- NA_real_
   half_width <- stats::qnorm(.975) * sqrt(variance)
   wide_sd <- character()
-  for (component in c("q", "F", "M")) {
+  for (component in c("q", "F", "M", "sd_catch", "sd_index")) {
     terms <- fit$dat[[paste0(component, "_terms")]]
     if (!length(terms)) next
     sd_names <- c(unlist(lapply(terms, `[[`, "sd_parameter")),
-      if (component != "q" && identical(fit$dat[[paste0(component, "_settings")]]$process, "iid"))
+      if (component %in% c("F", "M") && identical(fit$dat[[paste0(component, "_settings")]]$process, "iid"))
         paste0("log_sd_", tolower(component)))
     for (term in terms) {
       i <- match(term$phi_parameter, names(p))
@@ -339,6 +339,7 @@ check_tam <- function(fit, grad_tol = NULL, detailed = FALSE) {
 
 .check_tam_advisories <- function(fit, active, residuals, data) {
   out <- rbind(.mean_process_advisories(fit$dat), .q_process_advisories(fit$dat),
+               .sd_process_advisories(fit$dat),
                .formula_uncertainty_advisories(fit))
   add <- function(issue, detail) {
     out <<- rbind(out, data.frame(issue = issue, detail = detail))

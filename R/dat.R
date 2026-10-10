@@ -279,6 +279,10 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #'   offsets).
 #' - `index_settings$sd_form` is evaluated on the index table to produce
 #'   `sd_index_modmat` and **log-scale** parameters `log_sd_index`.
+#'   Both SD formulas support additive [iid()], [rw()], [ar1()] and random
+#'   intercepts; their compact unique states are stored in `sd_catch_terms`
+#'   and `sd_index_terms`. They modify log observation SD, with supplied SDs
+#'   acting as offsets. See [formula_effects] for interpretation and support checks.
 #' - `index_settings$q_form` is evaluated on the index table to produce
 #'   `q_modmat` and parameters `log_q` (log link) or `logit_q` (logit link).
 #'   Additive [mono()] terms instead contribute cumulative indicators
@@ -403,14 +407,17 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #' - `mean_ages`: optional vector of ages to include in population weighted
 #'   average M (`M_bar`) calculations. All ages used if absent.
 #' @param catch_settings A list with elements:
-#' - `sd_form`: formula for observation SD blocks for catch-at-age data.
+#' - `sd_form`: formula for log observation SD for catch-at-age data. Ordinary
+#'   terms and Gaussian [formula_effects] are supported, e.g. `~ iid(age)`.
 #' - `sd_supplied`: optional one-sided formula giving supplied SDs (on the natural
 #'   scale of the log-observation residuals) for catch-at-age data. When provided,
 #'   the intercept is removed from `sd_form` so supplied SDs act as offsets.
 #' - `fill_missing`: logical – fill missing values, and zeros, using random effects?
 #'   Defaults to `TRUE`. Note that one-step-ahead residuals are not currently working when `TRUE`.
 #' @param index_settings A list with elements:
-#' - `sd_form`: formula for observation SD blocks for index-at-age data.
+#' - `sd_form`: formula for log observation SD for index-at-age data. Ordinary
+#'   terms and Gaussian [formula_effects] are supported, e.g.
+#'   `~ survey + rw(age, by = survey)`.
 #' - `sd_supplied`: optional one-sided formula giving supplied SDs (on the natural
 #'   scale of the log-observation residuals) for index-at-age data. When provided,
 #'   the intercept is removed from `sd_form` so supplied SDs act as offsets.
@@ -699,10 +706,12 @@ prepare_tam <- function(
   dat$fill_missing_map <- dat$fill_missing_map & dat$is_missing
   dat$any_fill_missing <- any(dat$fill_missing_map)
 
-  dat$sd_catch_modmat <- stats::model.matrix(dat$catch_settings$sd_form, data = dat$obs$catch)
+  sd_design <- .parse_sd_formula(dat$catch_settings$sd_form, dat$obs$catch, "catch")
+  dat$sd_catch_modmat <- sd_design$matrix
+  dat$sd_catch_terms <- sd_design$terms
   if (!is.null(dat$catch_settings$sd_supplied)) {
     if ("(Intercept)" %in% colnames(dat$sd_catch_modmat)) {
-      dat$sd_catch_modmat <- stats::model.matrix(update(dat$catch_settings$sd_form, ~ 0 + .), data = dat$obs$catch)
+      dat$sd_catch_modmat <- .parse_sd_formula(update(dat$catch_settings$sd_form, ~ 0 + .), dat$obs$catch, "catch")$matrix
       dat$catch_settings$sd_form <- update(dat$catch_settings$sd_form, ~ 0 + .)
       cli::cli_warn("Dropping intercept term in catch sd_form since supplied SDs are provided. Set sd_supplied to NULL to estimate the intercept.")
     }
@@ -711,10 +720,12 @@ prepare_tam <- function(
     dat$log_sd_catch_supplied <- rep(0, nrow(dat$obs$catch))
   }
 
-  dat$sd_index_modmat <- stats::model.matrix(dat$index_settings$sd_form, data = dat$obs$index)
+  sd_design <- .parse_sd_formula(dat$index_settings$sd_form, dat$obs$index, "index")
+  dat$sd_index_modmat <- sd_design$matrix
+  dat$sd_index_terms <- sd_design$terms
   if (!is.null(dat$index_settings$sd_supplied)) {
     if ("(Intercept)" %in% colnames(dat$sd_index_modmat)) {
-      dat$sd_index_modmat <- stats::model.matrix(update(dat$index_settings$sd_form, ~ 0 + .), data = dat$obs$index)
+      dat$sd_index_modmat <- .parse_sd_formula(update(dat$index_settings$sd_form, ~ 0 + .), dat$obs$index, "index")$matrix
       dat$index_settings$sd_form <- update(dat$index_settings$sd_form, ~ 0 + .)
       cli::cli_warn("Dropping intercept term in index sd_form since supplied SDs are provided. Set sd_supplied to NULL to estimate the intercept.")
     }
@@ -723,6 +734,8 @@ prepare_tam <- function(
     dat$log_sd_index_supplied <- rep(0, nrow(dat$obs$index))
   }
 
+  .check_sd_terms(dat, "catch")
+  .check_sd_terms(dat, "index")
   q_design <- .parse_q_formula(dat$index_settings$q_form, dat$obs$index)
   dat[names(q_design)] <- q_design
   .check_q_terms(dat)

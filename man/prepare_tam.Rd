@@ -97,7 +97,8 @@ average M (\code{M_bar}) calculations. All ages used if absent.
 
 \item{catch_settings}{A list with elements:
 \itemize{
-\item \code{sd_form}: formula for observation SD blocks for catch-at-age data.
+\item \code{sd_form}: formula for log observation SD for catch-at-age data. Ordinary
+terms and Gaussian \link{formula_effects} are supported, e.g. \code{~ iid(age)}.
 \item \code{sd_supplied}: optional one-sided formula giving supplied SDs (on the natural
 scale of the log-observation residuals) for catch-at-age data. When provided,
 the intercept is removed from \code{sd_form} so supplied SDs act as offsets.
@@ -107,7 +108,9 @@ Defaults to \code{TRUE}. Note that one-step-ahead residuals are not currently wo
 
 \item{index_settings}{A list with elements:
 \itemize{
-\item \code{sd_form}: formula for observation SD blocks for index-at-age data.
+\item \code{sd_form}: formula for log observation SD for index-at-age data. Ordinary
+terms and Gaussian \link{formula_effects} are supported, e.g.
+\code{~ survey + rw(age, by = survey)}.
 \item \code{sd_supplied}: optional one-sided formula giving supplied SDs (on the natural
 scale of the log-observation residuals) for index-at-age data. When provided,
 the intercept is removed from \code{sd_form} so supplied SDs act as offsets.
@@ -202,6 +205,10 @@ effective biological values; this avoids circular mortality calculations.
 offsets).
 \item \code{index_settings$sd_form} is evaluated on the index table to produce
 \code{sd_index_modmat} and \strong{log-scale} parameters \code{log_sd_index}.
+Both SD formulas support additive \code{\link[=iid]{iid()}}, \code{\link[=rw]{rw()}}, \code{\link[=ar1]{ar1()}} and random
+intercepts; their compact unique states are stored in \code{sd_catch_terms}
+and \code{sd_index_terms}. They modify log observation SD, with supplied SDs
+acting as offsets. See \link{formula_effects} for interpretation and support checks.
 \item \code{index_settings$q_form} is evaluated on the index table to produce
 \code{q_modmat} and parameters \code{log_q} (log link) or \code{logit_q} (logit link).
 Additive \code{\link[=mono]{mono()}} terms instead contribute cumulative indicators

@@ -402,6 +402,7 @@ plot_par <- function(data, ...) {
   plotly::layout(p, xaxis = list(title = unique(data$variable)[1L],
     tickvals = unique(data$coordinate), ticktext = unique(data$level)),
     yaxis = list(title = if ("component" %in% names(data) && unique(data$component) != "q")
-      paste("Effect on log", unique(data$component)) else "Effect on catchability's link scale", type = "linear",
+      if (startsWith(unique(data$component), "sd_")) "Effect on log SD" else
+        paste("Effect on log", unique(data$component)) else "Effect on catchability's link scale", type = "linear",
                  range = limits + c(-pad, pad)), shapes = shapes)
 }

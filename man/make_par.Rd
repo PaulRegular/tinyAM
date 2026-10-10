@@ -91,6 +91,11 @@ See \code{\link[=prepare_tam]{prepare_tam()}} for the choices and weak-identific
 \itemize{
 \item \code{log_sd_catch} (length \code{ncol(dat$sd_catch_modmat)}) adjusting any supplied SDs
 \item \code{log_sd_index} (length \code{ncol(dat$sd_index_modmat)}) adjusting any supplied SDs
+\item Gaussian observation-SD terms add signed \verb{eta_sd_catch_*} or
+\verb{eta_sd_index_*} log-SD effects, initially zero, with process SD parameters
+\verb{log_sd_catch_*}/\verb{log_sd_index_*} initially \code{log(0.1)} unless supplied.
+Estimated AR1 correlations start at 0.5. These process SDs measure
+variation in log observation SD, not observation SD itself.
 \item \code{log_q} for \code{q_link = "log"}, or \code{logit_q} for \code{q_link = "logit"}
 (length \code{ncol(dat$q_modmat)}). Zero coefficients start q at 1 or 0.5,
 respectively, before any \code{\link[=mono]{mono()}} increments.
