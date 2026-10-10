@@ -1,5 +1,20 @@
 # Gulf of Alaska Pacific cod: accepted-assessment source review
 
+## Formula review (2026-10-10)
+
+The active control fixes BH steepness at one and recruitment SD at 0.44;
+this is not evidence for a free BH curve. Fixed-SD IID recruitment, a rising
+logistic survey-q curve, and a quadratic catch log-SD were tested separately.
+IID reduced approximate SSB average error from 32.1% to 29.4%, but terminal
+error rose from 7.7% to 18.2% and trend correlation decreased. Logistic q gave
+only a small average change (31.5%) and left age-patterned survey residuals;
+the native selectivity is length-based, not this age curve. Quadratic catch SD
+failed Hessian checks and the abundance scale diverged. Retain the finalized
+age-specific mean F and q, IID F, deterministic survival and exp initializer.
+No matched N/F or recruitment comparisons are available to support changing
+that decision. M agreement remains supplied by construction. All attempts and
+warnings are recorded in the local review cache and translation-review table.
+
 Status: canonical partial record afsc_cod_goa_2026 imported. Inputs and reported summary outputs are transcribed; numerical N-at-age and F-at-age surfaces from the current accepted run have not been recovered.
 Charbonneau identifier: AFSC_GOA_Gadus_macrocephalus.
 
