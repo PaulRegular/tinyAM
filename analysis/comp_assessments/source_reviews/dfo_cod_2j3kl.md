@@ -94,8 +94,9 @@ scientifically negligible.
 
 Compare N and mortality at matching ages. Sum accepted N, biomass and mature
 biomass only over the tinyAM ages; do not compare accepted age-0+ totals with
-tinyAM age-2+ totals. Recruitment remains unavailable for the age-2+ fit:
-Table 17 reports age-0 recruitment. Common F/M means use the matching N and
+tinyAM age-2+ totals. Table 17's native age-0 recruitment is not compared with
+tinyAM recruitment. The accepted N-at-age surface supplies a separately
+labelled age-2 abundance comparison with tinyAM recruitment. Common F/M means use the matching N and
 age-specific mortality surfaces with tinyAM's population weighting. Preserve
 the native Table 17/18 aggregates for dashboard context and label comparisons
 derived from rounded age-specific tables separately. No plot digitization or
@@ -122,3 +123,18 @@ constraints are used to force convergence. The source's zero F at ages 0-1 and
 approximate annual juvenile timing remain limitations. See
 `results/northern_cod_indices.csv` for diagnostics and each run's database
 revision.
+
+## Recruitment-formula review (2026-10-10)
+
+Framework 2025/034, equation 2.26, relates age-zero recruitment to same-year
+SSB. The age-2+ translation cannot apply that equation exactly. BH + IID and
+BH + AR1 at age two with a two-year parent lag were tested as survivor
+approximations, using the same observations, biology and mortality settings.
+Both failed positive-definite Hessian checks (gradients 0.0021 and 0.0016).
+Their SSB average absolute percent differences were 59.5% and 40.1%, versus
+36.8% for the RW baseline; slightly higher trajectory correlations do not
+resolve the failed uncertainty calculation or worse scale agreement. The IID
+candidate also flagged correlated recruitment innovations. Retain the
+baseline. No juvenile timing, young-age F constraint or mortality assumption
+was changed to rescue the curves. Attempts and warnings are retained in the
+local review cache and `results/translation_review.csv`.
