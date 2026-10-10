@@ -94,13 +94,20 @@ Keep the routine workflow small:
 - `database_to_tam_obs.R` creates the observation list, adds numerical M to
   `obs$weight$M_assumption`, and records the source M treatment;
 - `database_to_tam_ref.R` creates an assessment reference from recorded outputs;
-- one small R script per stock supplies data selections, named `fit_tam()`
-  arguments, and plain-language background text.
+- one small R script per stock prepares observations, shows a literal
+  `fit_tam()` call, and defines background and comparison metadata at top level.
 
-Shared code handles validation, fitting, diagnostics, and exports. Stock
+Shared code handles validation, diagnostics, references and exports. Stock
 scripts should not duplicate converters or parse native source files. Keep
 source-import scripts separate; they are used when repairing the database,
 not on every model run. Keep these database-specific helpers analysis-local.
+
+Do not return a settings list from `translate_stock()`. Keep years, ages,
+survey selections, formulas, processes and initialization visible in the stock
+script. Guard all fitting with `if (do_fit)`, including any explicit warm-start
+call. The runner supplies `source`, `do_fit` and `silent` in an isolated
+environment; `fit = FALSE` must not run a preliminary fit. Fitted settings live
+in `fit$dat`, rather than a duplicate `result$settings` object.
 
 A useful directory structure is:
 
@@ -129,8 +136,10 @@ analysis/comp_assessments/
 └── source_cache/                 # gitignored authoritative source files
 ```
 
-`run_stock.R` reads the working-tree database and leaves the selected run's
-objects in the RStudio workspace. `run_all.R` reads the committed snapshot and
+`run_stock.R` reads the working-tree database, sets the execution controls and
+sources the selected stock script, leaving observations, fit and background
+in the RStudio workspace. Use `run_assessment()` for shared comparisons and
+optional dashboards/cache. `run_all.R` reads the committed snapshot and
 uses `future::multisession` through `furrr`; workers load tinyAM from the current
 repository checkout. Workers return objects only. The parent process writes
 aggregate CSV files after all workers finish, and restores the previous future
@@ -810,6 +819,19 @@ Compare the actual mathematical structure.
 
 For broad comparative analyses, a standardized tinyAM N process may intentionally differ from the source assessment. Record that explicitly.
 
+Recruitment is separate from older-cohort deviations: `N_settings$rec_form`
+defaults to `~ rw(year)`, while `N_settings$process` controls survival variation.
+Supported alternatives include `~ iid(year)`, `~ bh(ssb) + iid(year)` and
+`~ ricker(ssb) + ar1(year)`, with fixed annual covariates when justified.
+Recruitment means abundance at the youngest modeled age. Parent SSB is
+start-of-year mature biomass; the default lag is that recruitment age. Early
+states with no modeled parent SSB are fixed boundary parameters, not fabricated
+historical SSB. The curves describe median recruitment, without an automatic
+lognormal correction. Check the source equation, age, lag, spawning convention,
+bias correction and fixed versus estimated parameters before calling these
+options equivalent. Fixed BH steepness one does not justify estimating a free
+two-parameter BH curve.
+
 ------------------------------------------------------------------------
 
 # 13. Choosing `F_settings`
@@ -838,6 +860,12 @@ ar1
 
 and an optional mean-F formula.
 
+Mean formulas can include `iid()`, `rw()` or `ar1()` effects, for example
+`mu_form = ~ factor(age) + rw(year)` with an IID residual F process. Follow the
+package's safeguards for overlapping temporal processes. A shared temporal
+mean plus independent residuals does not reproduce correlated RW innovations
+across ages. `logistic()` is a catchability curve, not a fishery-selectivity term.
+
 Do not claim fleet-level replication when the translated model uses aggregate catch.
 
 ------------------------------------------------------------------------
@@ -861,6 +889,18 @@ Then determine:
 
 For standardized cross-stock analyses, document any deliberate departure from source-model M treatment.
 
+Structured IID/RW/AR1 mean effects are also available for M. Extra M mean and
+residual variation may be weakly separable; inspect uncertainty and advisories.
+Source priors or fixed latent F/M process SDs are not reproduced merely by
+using their values as starting parameters.
+
+A standalone stochastic M mean can use a known increment SD, for example
+`process = "off", mu_form = ~ 0 + age_group + rw(year, by = age_group, sd = 0.075)`.
+Here M varies through the mean formula even though the separate residual
+process is off. Its first effect is anchored and the group coefficients set
+the starting levels; this does not supply a prior on those levels. Check the
+source first-increment year and parameter-integration convention explicitly.
+
 ------------------------------------------------------------------------
 
 # 15. Choosing catch observation settings
@@ -881,6 +921,13 @@ When multiple source fleets have been aggregated, source fleet-specific observat
 
 The audit should explicitly identify this loss of structure.
 
+Catch and index `sd_form` can contain fixed age trends or Gaussian formula
+effects. Age effects may help represent noisier young and old observations,
+but mean effects, variance effects and observation correlation are different
+models. Temporal variance effects remain experimental; follow the package's
+support warnings and compare simpler alternatives. These formulas do not
+change the scalar SDs of the latent F, M or N residual processes.
+
 ------------------------------------------------------------------------
 
 # 16. Choosing survey q and index settings
@@ -893,7 +940,13 @@ For every survey retained in the translated data, review:
 - observation SD structure;
 - observation correlation.
 
-Current tinyAM can represent q using formula-based structures and optional monotone age effects.
+Current tinyAM supports fixed q formulas, `mono()` and rising `logistic()` age
+curves, IID/RW/AR1 Gaussian effects and random intercepts `(1 | group)`.
+Gaussian effects allow numeric multipliers or categorical `by` groups;
+logistic curves allow categorical groups. Preserve the retained `q_link`
+(log or logit) unless source evidence supports changing it. Effects act on
+that link scale; the logistic age curve multiplies q after applying the link.
+It does not represent a dome or double-logistic selectivity curve.
 
 A source assessment may have survey-specific parameter blocks that can be represented using covariates and formulas.
 
@@ -943,6 +996,29 @@ This model may intentionally simplify:
 These two objectives should not be conflated.
 
 A successful replication-oriented model does not automatically define the standardized comparative model.
+
+## Review and retention policy
+
+Before fitting candidates, review source equations and which parameters are
+active, fixed or penalized. Specify a small candidate set, test individual
+changes first, and combine them only when those results support it. Keep
+observations, historical periods, ages, units and comparison definitions
+unchanged. Retain every warning, failure and attempted model in the local
+review cache; track reproducible candidate code and one compact results table.
+
+Use `check_tam()` for optimizer status, gradients, Hessian and numerical checks.
+Review structural checks and statistical-support advisories separately.
+Inspect residuals and parameter uncertainty, not just a convergence flag.
+Evaluate scale differences and `trend_correlation` separately for matched
+SSB, recruitment, N and F. Label approximate comparisons, exclude unavailable
+or non-equivalent ones, and do not count fixed-M agreement as improvement.
+Keep the baseline when results are mixed or weakly supported; flag the
+trade-off for review. Raw objectives across different process formulations
+and likelihood equality are not model-selection criteria.
+
+Stock backgrounds describe only the retained model. Detailed development
+history stays in review code/results and Git. Refresh aggregate diagnostics
+and comparisons only with a complete final batch, not a subset of stocks.
 
 ------------------------------------------------------------------------
 

@@ -557,6 +557,18 @@ Do not declare an assessment input-complete merely because one usable catch seri
 
 ## Stock source reviews
 
+When reviewing model specifications, verify the actual source equations and
+parameter activation, not only labels such as RW, AR1, BH or logistic. Record
+which curve, variance and correlation parameters are estimated, fixed,
+penalized or mapped out in the accepted run. Check recruitment age and parent
+year, spawning-time survival, lognormal bias corrections, selectivity
+normalization and the scale on which covariates/processes act. Consult the
+framework/benchmark and pinned native code when the production report omits
+these details. An unused input array is not evidence of an active process;
+a logistic survey curve does not establish logistic fishery F. Preserve these
+source facts in the canonical assumptions; downstream candidate choices and
+their diagnostics belong in the translation review, not the database.
+
 Keep stock-specific review notes in one Markdown file per stock under
 `analysis/comp_assessments/source_reviews/`, named with the stable stock ID.
 Use that file for accepted-run verification, source trails, input and output
