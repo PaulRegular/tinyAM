@@ -47,14 +47,13 @@ source_stock_translation <- function(id, assessment, inputs, outputs, assumption
   if (!file.exists(script)) return(NULL)
 
   env <- new.env(parent = globalenv())
-  sys.source(file.path(root, "R", "database_to_tam_obs.R"), envir = env)
+  sys.source(file.path(root, "R", "run_assessment.R"), envir = env)
+  env$source <- list(assessment = assessment, inputs = inputs,
+                     outputs = outputs, assumptions = assumptions)
+  env$do_fit <- FALSE
+  env$silent <- TRUE
   sys.source(script, envir = env)
-  env$translate_stock(list(
-    assessment = assessment,
-    inputs = inputs,
-    outputs = outputs,
-    assumptions = assumptions
-  ))
+  list(obs = env$obs)
 }
 readiness <- lapply(seq_len(nrow(assessments)), function(i) {
   id <- assessments$assessment_id[i]
