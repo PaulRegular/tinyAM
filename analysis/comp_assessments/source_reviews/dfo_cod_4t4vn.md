@@ -1,5 +1,16 @@
 # Southern Gulf cod (4T–4VN) source review
 
+## Formula review (2026-10-10)
+
+The source uses age-2 recruitment equal to lagged SSB times an AR1 recruitment
+rate. A fixed-SD (`sd = 0.5`) AR1 recruitment candidate at the translation's
+age three was tested as a partial approximation, not that source equation.
+It converged and slightly improved F scale, but recruitment error increased
+from 36.3% to 86.8% and N error from 23.2% to 29.9%; recruitment and N trends
+weakened. Retain RW recruitment and the existing explicit IID-M warm start
+followed by RW M. Source initial-M priors and fixed mortality innovation SDs
+remain unsupported; their starting values are not treated as priors.
+
 For Southern Gulf cod, the 2024 Science Advisory Report is the latest accepted
 assessment used for advice, applying the SCA model through 2023. DFO identifies
 the 2019 run as the last full assessment and says the same population model was
