@@ -353,6 +353,10 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #'   weight and maturity are retained for abundance-based aggregation inside
 #'   [nll_fun()], preserving biomass and mature biomass in the plus group.
 #' @param N_settings A list with elements:
+#' - `rec_form`: recruitment formula, default `~ rw(year)`. Use one of [iid()],
+#'   [rw()], or [ar1()] on `year`, optionally with fixed covariates from
+#'   `obs$maturity` at the youngest modeled age. First-year recruitment remains
+#'   a freely estimated fixed anchor; `process` below controls older cohorts.
 #' - `process`: `"off"` for deterministic cohort survival, `"iid"` for independent
 #'   cohort residuals, `"rw"` for residuals that accumulate through time, or
 #'   `"ar1"` for residuals correlated between years and ages. See [tinyAM-model].
@@ -830,7 +834,7 @@ prepare_tam <- function(
   dat$logit_phi_f <- .set_phi(dat$F_settings$process)
   dat$logit_phi_m <- .set_phi(dat$M_settings$process)
 
-  dat
+  .parse_recruitment(dat)
 
 }
 

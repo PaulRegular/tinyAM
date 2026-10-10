@@ -34,6 +34,10 @@ weight and maturity are retained for abundance-based aggregation inside
 
 \item{N_settings}{A list with elements:
 \itemize{
+\item \code{rec_form}: recruitment formula, default \code{~ rw(year)}. Use one of \code{\link[=iid]{iid()}},
+\code{\link[=rw]{rw()}}, or \code{\link[=ar1]{ar1()}} on \code{year}, optionally with fixed covariates from
+\code{obs$maturity} at the youngest modeled age. First-year recruitment remains
+a freely estimated fixed anchor; \code{process} below controls older cohorts.
 \item \code{process}: \code{"off"} for deterministic cohort survival, \code{"iid"} for independent
 cohort residuals, \code{"rw"} for residuals that accumulate through time, or
 \code{"ar1"} for residuals correlated between years and ages. See \link{tinyAM-model}.

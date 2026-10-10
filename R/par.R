@@ -126,7 +126,9 @@ make_par <- function(dat) {
   if (dat$N_settings$init == "random") {
     par$log_sd_n0 <- 0
   }
-  par$log_sd_r <- 0
+  if (is.null(dat$rec$sd)) par$log_sd_r <- 0
+  if (ncol(dat$rec$matrix)) par$rec_beta <- setNames(numeric(ncol(dat$rec$matrix)), colnames(dat$rec$matrix))
+  if (dat$rec$type == "ar1" && is.null(dat$rec$phi)) par$logit_phi_r <- c(year = 0)
   par$log_sd_f <- 0
   if (!is.null(dat$F_settings$mu_form)) {
     par$log_mu_f <- numeric(ncol(dat$F_modmat))

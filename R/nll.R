@@ -231,7 +231,6 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   n_ages <- length(ages)
   n_proj <- proj_settings$n_proj
 
-  sd_r <- exp(log_sd_r)
   sd_f <- exp(log_sd_f)
 
   empty_mat <- matrix(NA, n_years, n_ages,
@@ -248,7 +247,7 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   log_mu_F[] <- drop(F_modmat %*% log_mu_f) + F_effects$contribution
   log_mu_M[] <- log_mu_supplied_m + drop(M_modmat %*% mu_m) + M_effects$contribution
   if (simulate) {
-    log_r[] <- log_r0 + cumsum(stats::rnorm(n_years - 1, 0, sd_r))
+    log_r[] <- .simulate_rec(par, dat)
     mu_f <- log_mu_F[!is_proj, , drop = FALSE]
     log_f[] <- mu_f + if (F_settings$process == "rw") {
       rprocess_rw(log_f - mu_f, sd = sd_f)
@@ -392,10 +391,10 @@ nll_fun <- function(par, dat, simulate = FALSE) {
     jnll <- jnll - sum(RTMB::dnorm(eta_log_n0, 0, exp(log_sd_n0), log = TRUE))
   }
 
-  ## Recruitment process (basic random walk) ----
+  ## Recruitment process ----
 
-  eta_R <- log_N[2:n_years, 1] - log_N[1:(n_years - 1), 1]
-  jnll <- jnll - sum(RTMB::dnorm(eta_R, 0, sd_r, log = TRUE))
+  log_mu_R <- .rec_mean(par, dat)
+  jnll <- jnll + .rec_nll(log_recruitment, log_mu_R, par, dat)
 
 
   ## N process ----
