@@ -8,8 +8,11 @@ age three was tested as a partial approximation, not that source equation.
 It converged and slightly improved F scale, but recruitment error increased
 from 36.3% to 86.8% and N error from 23.2% to 29.9%; recruitment and N trends
 weakened. Retain RW recruitment and the existing explicit IID-M warm start
-followed by RW M. Source initial-M priors and fixed mortality innovation SDs
-remain unsupported; their starting values are not treated as priors.
+followed by RW M. A separate age-blocked M mean RW with the source fixed
+increment SD of 0.075 failed the explicit preliminary fit's Hessian check;
+no final fit was attempted. Fixed increment SDs are expressible through mean
+effects, but source initial-M priors remain unsupported. Starting values are
+not treated as priors.
 
 For Southern Gulf cod, the 2024 Science Advisory Report is the latest accepted
 assessment used for advice, applying the SCA model through 2023. DFO identifies
