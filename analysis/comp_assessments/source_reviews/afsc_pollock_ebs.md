@@ -1,5 +1,16 @@
 # Eastern Bering Sea pollock: accepted-assessment source review
 
+## Formula review (2026-10-10)
+
+A common temporal F RW plus IID residuals was tested against the finalized
+independent age-RW model, with all observations and other settings unchanged.
+Matched average errors increased for F (50.9% to 56.0%), N (41.5% to 45.3%)
+and recruitment (33.7% to 35.8%); their trajectory correlations also decreased.
+The candidate converged but flagged a process-SD interval spanning more than
+tenfold and strong fixed-parameter correlations. Retain the baseline. A shared
+mean effect does not replicate the source time-varying selectivity covariance;
+the composition likelihood and BTS covariance remain separate limitations.
+
 Status: canonical record afsc_pollock_ebs_2024 imported; inputs, outputs and assumptions remain partial.
 Charbonneau identifier: AFSC_ESB_Gadus_chalcogrammus (historical catalogue spelling ESB).
 
