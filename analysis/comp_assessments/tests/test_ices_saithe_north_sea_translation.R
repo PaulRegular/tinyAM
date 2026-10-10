@@ -70,3 +70,14 @@ stopifnot(
 )
 
 cat("North Sea saithe translation structure passed.\n")
+
+ref <- database_to_tam_ref(assessment_id, translated$comparison_outputs,
+  obs = translated$obs, years = translated$years, ages = translated$ages,
+  age_plus_group = translated$age_plus_group, assumptions = source_data$assumptions)
+tiny <- expand.grid(year = translated$years, age = translated$ages)
+tiny$est <- 1
+cells <- .assessment_age_comparison_cells(ref$pop$F, tiny, translated$ages)
+stopifnot(nrow(cells$rows) == 59L * 8L,
+          sum(cells$rows$age == '9') == 59L,
+          sum(cells$rows$age == '10') == 59L)
+cat('Shared terminal F states remain available for age-specific comparison.\n')

@@ -23,23 +23,8 @@ dat <- tinyAM::prepare_tam(data = obs, years = years, ages = ages, N_settings = 
     index_settings = list(q_form = ~0 + q_age, sd_form = ~1, fill_missing = FALSE))
 start_par <- tinyAM::make_par(dat)
 
-source_surface <- function(type, measure, multiplier = 1) {
-  rows <- source$outputs[source$outputs$type == type &
-                           source$outputs$measure == measure &
-                           source$outputs$year %in% years &
-                           source$outputs$age %in% ages, , drop = FALSE]
-  surface <- matrix(NA_real_, length(years), length(ages),
-                    dimnames = list(as.character(years), as.character(ages)))
-  index <- cbind(match(as.integer(rows$year), years),
-                 match(as.integer(rows$age), ages))
-  surface[index] <- as.numeric(rows$value) * multiplier
-  if (any(!is.finite(surface)) || any(surface <= 0)) {
-    stop("The accepted ", measure, " surface is incomplete or non-positive.")
-  }
-  surface
-}
 
-source_N <- source_surface("population", "numbers_at_age", 1000)
+source_N <- .translation_start_surface(source$outputs, "population", "numbers_at_age", years, ages, 1000)
 source_F <- matrix(NA_real_, length(years), length(ages),
                    dimnames = dimnames(source_N))
 f_rows <- source$outputs[source$outputs$type == "mortality" &
@@ -82,6 +67,11 @@ f_plus$age_group <- "10+"
 f_plus$notes <- paste(f_plus$notes,
                       "The source model constrains ages 9 and 10+ to one F state; duplicated here only to align common comparison ages.")
 comparison_outputs <- rbind(comparison_outputs, f_plus)
+shared_f <- comparison_outputs$measure == "fishing_mortality_at_age" &
+  comparison_outputs$age_group %in% "9+"
+comparison_outputs$age_group[shared_f] <- NA_character_
+comparison_outputs$notes[shared_f] <- paste(comparison_outputs$notes[shared_f],
+  "The shared F state is displayed at age 9 and repeated at age 10+; it is not a pooled age-group rate.")
 
 
 ## Background and comparisons ----

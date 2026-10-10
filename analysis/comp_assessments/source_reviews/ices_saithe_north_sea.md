@@ -1,5 +1,17 @@
 # North Sea saithe source review
 
+## Formula review (2026-10-10)
+
+Replacing stationary AR1 F with independent temporal F RWs reduced scale
+errors for SSB (723% to 401%), N (830% to 430%), recruitment (103% to 63%)
+and F (75% to 65%). It converged, but SSB and F trajectory correlations
+weakened; substantial disagreement remains. Retain the baseline and flag the
+alternative for review rather than select it from scale improvements alone.
+Source age-correlated innovations, four F SD groups and aggregate CPUE remain
+different. For comparison only, the reported shared 9+ F state is displayed
+separately at ages 9 and 10+. This is the source's explicit equality constraint,
+not a pooled-rate average; canonical source rows are unchanged.
+
 ## Assessment and source
 
 The current detailed accepted assessment is the 2026 ICES assessment of
