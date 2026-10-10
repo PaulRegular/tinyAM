@@ -1,0 +1,7 @@
+### `r tinyAM:::.formula_effect_label(effect)`
+
+```{r}
+frame <- if (length(unique(effect$group)) > 1L) ~group else NULL
+tinyAM:::.plot_formula_effect(effect, points = unique(effect$process) == "iid", frame = frame,
+  color = ~model, legendgroup = ~model, colors = cols)
+```

@@ -12,7 +12,8 @@
 #' years and ages, and `"rw"` allows departures to accumulate over time without
 #' returning to a mean. These choices make different assumptions, even when
 #' they produce similar fitted curves. N and M can also have their process
-#' switched `"off"`. Recruitment always follows a temporal random walk.
+#' switched `"off"`. Recruitment defaults to a temporal random walk;
+#' `N_settings$rec_form` can describe stock-recruit relationships and covariates.
 #'
 #' @details
 #' ## Indices, units, and states
@@ -39,10 +40,18 @@
 #' ## Recruitment and initial abundance
 #'
 #' Recruitment is \eqn{R_t=N_{t,1}}. The first log recruitment `log_r0` is an
-#' estimated fixed state with no process penalty. Subsequent `log_r` states obey
+#' estimated fixed state with no process penalty. By default, subsequent `log_r` states obey
 #' \deqn{\log R_t=\log R_{t-1}+\epsilon^R_t,\qquad
 #' \epsilon^R_t\stackrel{ind}{\sim}N(0,\sigma_R^2),\quad t=2,\ldots,T.}
-#' There is no stock-recruitment relationship or drift term.
+#' Alternative [recruitment_formulas] allow IID/AR1 residuals, fixed covariates,
+#' and Beverton-Holt or Ricker curves. For a curve,
+#' \deqn{\log R_t=\log g(SSB_{t-L})+X_t\gamma+u_t.}
+#' SSB is the start-of-year mature biomass defined below. Lag defaults to the
+#' youngest modeled age. Additional early years without in-window parent SSB
+#' use free fixed recruitment states without a process penalty. Curve-plus-RW
+#' residuals are not supported. Curves describe medians, not arithmetic means.
+#' AR1 starts at its first eligible year with a stationary residual distribution.
+#' See [recruitment_formulas] for the equations, units and zero-lag restrictions.
 #'
 #' Initial older-age abundance is chosen independently of the subsequent N
 #' process. Write \eqn{b_a=\log N_{1,a-1}-Z_{1,a-1}}, for \eqn{a=2,\ldots,A}.
@@ -183,7 +192,7 @@
 #' ## Catchability and observations
 #'
 #' For survey observation row \eqn{i},
-#' \deqn{\eta_{q,i}=X_{q,i}\beta_q+B_i d,\qquad d_j\ge0.}
+#' \deqn{\eta_{q,i}=X_{q,i}\beta_q+B_i d+\sum_h z_{h,i},\qquad d_j\ge0.}
 #' The default `q_link = "log"` gives \eqn{q_i=\exp(\eta_{q,i})}.
 #' The optional `q_link = "logit"` gives
 #' \eqn{q_i=1/(1+\exp(-\eta_{q,i}))}, restricting q to between zero and one.
@@ -195,6 +204,13 @@
 #' \eqn{\sum_{j<k}d_j}. A zero step gives an exact plateau. Separate `by`
 #' groups have independent steps; ordinary terms supply their baselines.
 #' Monotonicity holds with other covariates held constant.
+#' Gaussian formula terms \eqn{z_h} can be IID, random intercepts, anchored RWs,
+#' or stationary AR1 processes; see [formula_effects]. Their normalized densities
+#' include each unique state or increment once, rather than each observation row.
+#' A categorical `by` separates trajectories with shared process parameters;
+#' numeric `by` multiplies one shared trajectory. Logistic terms multiply the
+#' inverse-link prediction by rising selectivity curves, so the logit link still
+#' restricts the full catchability to below one.
 #'
 #' Catch and index predictions are
 #' \deqn{\widetilde C_{t,a}=N_{t,a}\frac{F_{t,a}}{Z_{t,a}}
@@ -255,12 +271,15 @@
 #' missing. New formula levels cannot be estimated solely from unobserved future
 #' data. These projections do not forecast changes in supplied covariates.
 #'
-#' [nll_fun()] simulation draws process states before constructing N/F/M/Z,
-#' then predictions and observation draws using each row's SD. Initial RW
+#' [nll_fun()] simulation first draws mortality and then advances abundance
+#' chronologically. Recruitment uses parent SSB from that same realization,
+#' including updated biology within a shortened plus group. Predictions and
+#' observation draws then use each row's SD. Initial RW
 #' states are retained: F/M walks start from the supplied first latent row;
 #' the N walk retains its first `log_n` row and computes that row's residual
 #' against the newly generated cohort prediction. Random N0 is redrawn; free
-#' N0 and first recruitment remain supplied fixed states.
+#' N0, first recruitment and additional early boundary recruitment states
+#' remain supplied fixed states.
 #'
 #' [sim_tam()] can hold parameters fixed, draw fixed effects with their estimated
 #' covariance while retaining fitted random states, or draw all parameters with

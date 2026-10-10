@@ -71,6 +71,7 @@ tidy_mat <- tidy_array
 #' from a fitted TAM object, and adds standardized residuals on the log scale.
 #'
 #' @param fit A fitted TAM object as returned by [fit_tam()].
+#' @param interval Confidence level for combined catchability intervals.
 #' @param add_osa_res Logical; add one-step-ahead residuals? Hard wired to
 #'                    apply the `"oneStepGaussianOffMode"` method.
 #'                    See [RTMB::oneStepPredict()] for details.
@@ -92,6 +93,9 @@ tidy_mat <- tidy_array
 #'
 #' - **catch**: original columns plus `pred`, `sd`, and `std_res`.
 #' - **index**: original columns plus `pred`, `sd`, `q`, and `std_res`.
+#'   Combined catchability intervals are `q_lwr`/`q_upr`; `q_se` is on the
+#'   selected link scale named in `q_se_scale`. They include uncertainty across
+#'   the full formula, rather than combining separate coefficient SEs.
 #'
 #' @example inst/examples/example_fit_default.R
 #' @examples
@@ -102,8 +106,12 @@ tidy_mat <- tidy_array
 #' @seealso [fit_tam()], [tidy_rep()], [tidy_sdrep()], [tidy_pop()]
 #' @export
 
-tidy_obs_pred <- function(fit, add_osa_res = FALSE, ...) {
+tidy_obs_pred <- function(fit, add_osa_res = FALSE, interval = .95, ...) {
   fit <- .require_tam_fit(fit, arg = "fit")
+  if (!is.numeric(interval) || length(interval) != 1L || !is.finite(interval) ||
+      interval <= 0 || interval >= 1) {
+    cli::cli_abort("{.arg interval} must be one number strictly between zero and one.")
+  }
 
   obs_pred <- fit$dat$obs[c("catch", "index")]
   pred <- split(exp(fit$rep$log_pred), fit$dat$obs_map$type)
@@ -116,6 +124,21 @@ tidy_obs_pred <- function(fit, add_osa_res = FALSE, ...) {
   obs_pred$index$pred <- pred$index
   obs_pred$index$sd <- sd$index
   obs_pred$index$q <- exp(fit$rep$log_q_obs)
+  obs_pred$index$q_lwr <- obs_pred$index$q_upr <- obs_pred$index$q_se <- NA_real_
+  obs_pred$index$q_se_scale <- fit$dat$index_settings$q_link
+  if (!is.null(fit[["sdrep"]])) {
+    estimate <- as.list(fit[["sdrep"]], "Estimate", report = TRUE)$q_link_prediction
+    error <- as.list(fit[["sdrep"]], "Std. Error", report = TRUE)$q_link_prediction
+    if (!is.null(estimate)) {
+      estimate <- as.numeric(estimate)
+      error <- as.numeric(error)
+      z <- stats::qnorm(.5 + interval / 2)
+      inverse <- if (identical(fit$dat$index_settings$q_link, "logit")) stats::plogis else exp
+      obs_pred$index$q_lwr <- inverse(estimate - z * error)
+      obs_pred$index$q_upr <- inverse(estimate + z * error)
+      obs_pred$index$q_se <- error
+    }
+  }
   obs_pred$index$std_res <- with(obs_pred$index, ifelse(obs == 0, NA, (log(obs) - log(pred)) / sd))
 
   if (add_osa_res) {
@@ -133,6 +156,7 @@ tidy_obs_pred <- function(fit, add_osa_res = FALSE, ...) {
     obs_pred$index$osa_res[split_is_observed$index] <- split_osa_res$index
   }
 
+  attr(obs_pred, "interval") <- interval
   obs_pred
 }
 
@@ -182,6 +206,8 @@ tidy_rep <- function(fit) {
 
   keep <- vapply(rep, function(x) is.matrix(x) || length(x) == length(dat$years),
                  logical(1))
+  keep[grepl("^eta_(q|mu_[FM]|sd_catch|sd_index)_increments$", names(keep))] <- FALSE
+  keep[startsWith(names(keep), "rec_")] <- FALSE
   rep_items <- rep[keep]
 
   trends <- lapply(rep_items, function(x) {
@@ -279,9 +305,22 @@ trans_est <- function(data, transform = exp, scale = 1) {
 tidy_sdrep <- function(fit, interval = 0.95) {
   fit <- .require_tam_fit(fit, arg = "fit")
 
+  if (is.null(fit[["sdrep"]])) {
+    series <- intersect(c("recruitment", "abundance", "biomass", "ssb", "F_bar", "M_bar"),
+                        names(fit$rep))
+    return(stats::setNames(lapply(series, function(nm) {
+      data.frame(year = fit$dat$years, est = unname(fit$rep[[nm]]),
+        lwr = NA_real_, upr = NA_real_, se = NA_real_, se_scale = "log",
+        is_proj = fit$dat$is_proj)
+    }), series))
+  }
+
   ## assumes all ADREPORTED objects are equal length to years and are in log space
-  vals <- as.list(fit$sdrep, "Estimate", report = TRUE)
-  ses <- as.list(fit$sdrep, "Std. Error", report = TRUE)
+  vals <- as.list(fit[["sdrep"]], "Estimate", report = TRUE)
+  ses <- as.list(fit[["sdrep"]], "Std. Error", report = TRUE)
+  vals <- vals[!grepl("^(q_link_prediction|eta_(q|mu_[FM]|sd_catch|sd_index)_increments)$", names(vals))]
+  vals <- vals[!startsWith(names(vals), "rec_")]
+  ses <- ses[names(vals)]
   df <- lapply(seq_along(vals), function(i) {
     d <- data.frame(year = fit$dat$years,
                     est = vals[[i]],
@@ -381,7 +420,10 @@ tidy_pop <- function(fit, interval = 0.95) {
 #' Labels are added where applicable:
 #' - For parameters specified using a formula in [prepare_tam()] (e.g., `log_q`, `logit_q`,
 #'   `log_sd_catch`, `log_sd_index`), a `coef` column is added.
-#' - For `log_r`, `year` contains years 2:Y; full recruitment is in [tidy_pop()].
+#' - For `log_r`, `year` contains eligible recruitment process years (by default
+#'   years 2:Y). Fixed early `log_r_init` states also carry year labels.
+#'   Full recruitment is in [tidy_pop()]; parent pairs and process diagnostics
+#'   are in [tidy_recruitment()].
 #' - For `log_n0`, an `age` column identifies the initial older-age state.
 #'   `log_r0` and `log_n0` are exponentiated to abundance levels; `log_sd_n0`
 #'   is exponentiated to the initial-age residual SD.
@@ -413,11 +455,12 @@ tidy_pop <- function(fit, interval = 0.95) {
 tidy_par <- function(fit, interval = 0.95) {
   fit <- .require_tam_fit(fit, arg = "fit")
 
-  est <- as.list(fit$sdrep, "Estimate")
-  se  <- as.list(fit$sdrep, "Std. Error")
+  est <- .tam_parameter_summary(fit, "Estimate")
+  se  <- .tam_parameter_summary(fit, "Std. Error")
   nms <- intersect(names(est), names(se))
+  nms <- nms[lengths(est[nms]) > 0L]
 
-  ran_nms <- fit$obj$env$.random
+  ran_nms <- intersect(fit$obj$env$.random, nms)
   fix_nms <- setdiff(nms, ran_nms)
   z       <- stats::qnorm(0.5 + interval / 2)
 
@@ -431,8 +474,10 @@ tidy_par <- function(fit, interval = 0.95) {
       if (is.null(names(e))) {
         df <- data.frame(coef = NA, est = e, se = s)
       } else {
-        if (nm == "log_r") {
-          df <- data.frame(year = fit$dat$years[-1], est = e, se = s, is_proj = fit$dat$is_proj[-1])
+        if (nm %in% c("log_r", "log_r_init")) {
+          yr <- as.integer(names(e))
+          df <- data.frame(year = yr, est = e, se = s, is_proj = yr %in% fit$dat$years[fit$dat$is_proj])
+          if (nm == "log_r_init") df$coef <- as.character(yr)
         } else if (nm == "log_n0") {
           df <- data.frame(coef = names(e), age = as.integer(names(e)), est = e, se = s)
         } else {
@@ -482,6 +527,15 @@ tidy_par <- function(fit, interval = 0.95) {
   attr(random, "interval") <- interval
 
   list(fixed = fixed, random = random)
+}
+
+.tam_parameter_summary <- function(fit, what) {
+  if (!is.null(fit[["sdrep"]])) return(as.list(fit[["sdrep"]], what))
+  estimates <- fit$obj$env$parList(par = fit$parameter_values)
+  attr(estimates, "check.passed") <- NULL
+  attr(estimates, "what") <- what
+  if (what == "Estimate") return(estimates)
+  lapply(estimates, function(x) { x[] <- NA_real_; x })
 }
 
 
@@ -663,12 +717,17 @@ stack_nested <- function(x, label = "model",
 #' @inheritParams stack_nested
 #'
 #' @return
-#' A named list with four elements:
+#' A named list of stacked tables, with `formula_effects` when present:
 #'
 #' - **obs_pred** — a named list of stacked data frames (e.g., `catch`, `index`);
 #' - **pop** — a named list of stacked data frames (e.g., `ssb`, `N`, `M`, `mu_M`, `F`, `mu_F`, `Z`, …);
+#' - **recruitment** — predictions, residuals and optional stock-recruit curves;
+#'   see [tidy_recruitment()];
 #' - **fixed_par** — a single stacked data frame of fixed-effect parameters with columns like `par`, `est`, `se`, `lwr`, `upr`, plus indices (e.g., `coef`, `year`, `age`) and the label column when applicable;
 #' - **random_par** — a named list of stacked data frames, one per random-effect block, each with the same schema as `fixed_par` plus block-appropriate indices.
+#' - **formula_effects** — signed Gaussian q, F/M mean and log observation-SD effect levels, RW increments and
+#'   numeric-by contributions, grouped by term. Intervals use their joint fitted
+#'   uncertainty; the zero RW anchor is explicitly marked as fixed.
 #'
 #' @example inst/examples/example_fit_default.R
 #' @examples
@@ -727,13 +786,20 @@ tidy_tam <- function(..., model_list = NULL, interval = 0.95, label = "model", l
     ))
   }
 
-  obs_list <- lapply(model_list, function(fit) {
-    if (!is.null(fit$obs_pred)) fit$obs_pred else tidy_obs_pred(fit)
-  })
   interval_matches <- function(x) {
     stored <- attr(x, "interval", exact = TRUE)
     !is.null(stored) && isTRUE(all.equal(stored, interval))
   }
+  obs_list <- lapply(model_list, function(fit) {
+    if (inherits(fit, "tam_ref")) return(fit$obs_pred)
+    if (!is.null(fit$obs_pred) && interval_matches(fit$obs_pred)) return(fit$obs_pred)
+    tables <- tidy_obs_pred(fit, interval = interval)
+    for (nm in names(tables)) {
+      extras <- setdiff(names(fit$obs_pred[[nm]]), names(tables[[nm]]))
+      tables[[nm]][extras] <- fit$obs_pred[[nm]][extras]
+    }
+    tables
+  })
 
   pop_list <- lapply(model_list, function(fit) {
     if (inherits(fit, "tam_ref")) return(fit$pop)
@@ -812,6 +878,23 @@ tidy_tam <- function(..., model_list = NULL, interval = 0.95, label = "model", l
     fixed_par  = fixed_tbl,
     random_par = random_tbls
   )
+  recruitment <- lapply(model_list, function(fit) {
+    if (inherits(fit, "tam_ref")) return(list())
+    Filter(function(x) is.data.frame(x) && nrow(x) > 0L, tidy_recruitment(fit, interval))
+  })
+  out$recruitment <- stack_nested(recruitment, label = id_col, label_type = label_type)
+  effects <- lapply(model_list, function(fit) {
+    if (inherits(fit, "tam_ref")) return(list())
+    if (!is.null(fit$formula_effects) && interval_matches(fit$formula_effects)) {
+      fit$formula_effects
+    } else .tidy_formula_effects(fit, interval = interval)
+  })
+  if (any(lengths(effects))) {
+    components <- c("levels", "increments", "contributions")
+    out$formula_effects <- stats::setNames(lapply(components, function(nm) {
+      stack_nested(lapply(effects, `[[`, nm), label = id_col, label_type = label_type)
+    }), components)
+  }
 
   attr(out, "interval") <- interval
   attr(out, "label") <- id_col

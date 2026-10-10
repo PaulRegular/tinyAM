@@ -31,7 +31,8 @@ represent latent quantities on the log scale. They are compact fitted
 latent-state parameters; \code{log_N}, \code{log_F}, and \code{log_M} are full model
 surfaces constructed internally by \code{\link[=nll_fun]{nll_fun()}}. Process errors are
 calculated separately as deviations (\verb{eta_*}): recruitment uses successive
-log states, abundance uses cohort predictions, and F and M use their log
+log states by default, or expectations from \code{rec_form}; abundance uses
+cohort predictions, and F and M use their log
 mean surfaces. In particular, \code{log_f} and \code{log_m} are absolute latent states;
 their deviations are \code{eta_log_f = log_f - log_mu_F} and
 \code{eta_log_m = log_m - log_mu_M} on the corresponding years and age blocks.
@@ -44,7 +45,9 @@ it initializes a 2-vector \code{logit_phi_f}; if \code{dat$F_settings$mu_form} i
 
 Numeric parameters are initialized at \code{0}, except \code{dq} (initialized at \code{0.05})
 and \code{log_m}, which starts at its log mean surface so initial M-process
-residuals are zero. These are starting values, not priors. Matrices are created
+residuals are zero. Stock-recruit parameters use the anchor and initial SSB;
+their recruitment states start on the expected path with zero deviations.
+These are starting values, not priors. Matrices are created
 with appropriate \code{dimnames} (\verb{year × age} or \verb{year × age_block}).
 
 \strong{Created elements (when applicable) include:}
@@ -52,8 +55,17 @@ with appropriate \code{dimnames} (\verb{year × age} or \verb{year × age_block}
 \item \strong{Recruitment & variability}
 \itemize{
 \item \code{log_r0} (fixed first-year log recruitment, always present)
-\item \code{log_r} (random states for \code{dat$years[-1]}, length \code{length(dat$years) - 1})
-\item \code{log_sd_r}
+\item \code{log_r}: absolute random log recruitment in eligible process years;
+by default these are \code{dat$years[-1]}, named by year.
+\item \code{log_r_init}: additional free fixed boundary states when parent SSB lies
+before the modeled period, named by year.
+\item \code{log_sd_r}: estimated recruitment SD unless supplied in the formula.
+\item \code{rec_beta}: fixed log-scale covariate coefficients when present.
+\item \code{log_sr_alpha}, \code{log_sr_beta}: positive curve parameters on the log scale.
+\item \code{logit_phi_r}: estimated recruitment AR1 correlation when not supplied.
+Curve starts pass through the initial recruitment anchor at the first
+available parent SSB. Warm starts without curve parameters reinitialize
+the curve using their population states; see \link{recruitment_formulas}.
 }
 \item \strong{Initial older-age abundance (independent of the N process)}
 \itemize{
@@ -91,6 +103,11 @@ See \code{\link[=prepare_tam]{prepare_tam()}} for the choices and weak-identific
 \itemize{
 \item \code{log_sd_catch} (length \code{ncol(dat$sd_catch_modmat)}) adjusting any supplied SDs
 \item \code{log_sd_index} (length \code{ncol(dat$sd_index_modmat)}) adjusting any supplied SDs
+\item Gaussian observation-SD terms add signed \verb{eta_sd_catch_*} or
+\verb{eta_sd_index_*} log-SD effects, initially zero, with process SD parameters
+\verb{log_sd_catch_*}/\verb{log_sd_index_*} initially \code{log(0.1)} unless supplied.
+Estimated AR1 correlations start at 0.5. These process SDs measure
+variation in log observation SD, not observation SD itself.
 \item \code{log_q} for \code{q_link = "log"}, or \code{logit_q} for \code{q_link = "logit"}
 (length \code{ncol(dat$q_modmat)}). Zero coefficients start q at 1 or 0.5,
 respectively, before any \code{\link[=mono]{mono()}} increments.
@@ -98,6 +115,14 @@ respectively, before any \code{\link[=mono]{mono()}} increments.
 fixed non-negative increments on the selected q-link scale, initialized to \code{0.05}
 for a nearly flat curve and bounded below by zero in \code{\link[=fit_tam]{fit_tam()}}. Names
 identify transitions and groups; these are not absolute q levels.
+\item Structured Gaussian q terms have signed \verb{eta_q_*} states, initially zero,
+and estimated \verb{log_sd_q_*} parameters initially \code{log(0.1)} unless SD is
+supplied. Estimated \verb{logit_phi_q_*} starts at correlation 0.5.
+RW states omit the zero anchor. Forecast states retain their normalized
+process densities and integrate out of the historical likelihood.
+\item Logistic curves have \verb{q_a50_*} midpoints and positive \verb{log_q_slope_*}
+coefficients, initialized from each group's observed coordinate range.
+Names identify terms, groups and unique states for warm starts.
 \item \code{missing} vector of length \code{sum(dat$fill_missing_map)} (placeholders for
 imputed \code{log_obs}, if any observation type is set to fill missing values)
 }

@@ -1,0 +1,246 @@
+---
+title: "Recruitment formulas: recovery and practical limits"
+output:
+  html_document:
+    self_contained: true
+    toc: false
+    mathjax: null
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE,
+  fig.width = 9, fig.height = 5, dpi = 120, fig.path = "results/recruitment_figures/")
+study <- readRDS("results/recruitment_recovery.rds")
+stopifnot(isTRUE(study$complete))
+results <- study$results
+attempts <- do.call(rbind, lapply(results, `[[`, "attempt"))
+stopifnot(nrow(attempts) == 14L * study$n_simple + 6L * study$n_full,
+  !anyDuplicated(with(attempts, paste(stage, case, design, replicate))))
+library(ggplot2)
+library(dplyr)
+parameters <- do.call(rbind, lapply(results, function(x) {
+  if (is.null(x$parameters)) return(NULL)
+  cbind(x$attempt[rep(1L, nrow(x$parameters)), c("stage", "case", "design", "replicate", "success")], x$parameters)
+}))
+parameters$covered <- with(parameters, lower <= truth & truth <= upper)
+summary <- attempts |>
+  group_by(stage, case, design) |>
+  summarise(attempts = n(), passed = sum(success),
+    success_percent = round(100 * mean(success), 1),
+    median_log_curve_error = round(median(curve_rmse, na.rm = TRUE), 3), .groups = "drop")
+```
+
+## Main findings
+
+Recruitment formulas let us separate an environmental or spawning-biomass
+relationship from unexplained good and bad years. Numerical convergence,
+recovery of the relationship, and useful uncertainty are separate questions.
+The comparisons below do not rank stock assessments or establish a biological
+relationship for a particular stock.
+
+The study records `r nrow(attempts)` unique attempts, including
+`r sum(attempts$stage == "full")` full assessments.
+`r sum(!attempts$success)` did not pass all numerical criteria. Every warning,
+error and seed is retained. Failed fits are not rescued or removed.
+
+All 1,400 isolated attempts passed. Full assessments passed in 30/30 BH–IID,
+29/30 BH–AR1, 28/30 Ricker–IID, 27/30 Ricker–AR1, 24/30 covariate–IID and
+28/30 covariate–RW attempts. The stock–recruit cases reached the numerical
+target; covariate–IID did not. Four of its six failures came from the
+prespecified RW warm start; the remaining two had gradients just above 0.01.
+No failed attempt was rerun with adjusted starts or tolerances.
+
+Retain the new options experimentally, with the default RW unchanged.
+Numerical success is encouraging, but it does not establish density dependence.
+The local curve intervals and curve-parameter coverage are not uniformly
+reliable, particularly with narrow SSB support or extrapolation.
+
+## Model and study design
+
+Beverton–Holt rises toward a plateau; Ricker can decline at high parent SSB.
+Both describe **median recruitment**, with positive productivity and
+density-dependence parameters. IID deviations are independent good and bad
+years; AR1 deviations persist between years. Covariate RW models instead
+explain changes in log recruitment. The default RW is unchanged.
+
+- **Isolated recovery:** 100 attempts per case with 80 annual recruitment
+  values observed directly. Four curve/process combinations and two covariate
+  cases are tested. Each curve also has narrow-SSB and SSB-correlated-covariate
+  stress cases. Starts are a declared 0.1 offset from the generating parameters;
+  this tests the density and information in the design, not assessment starts.
+- **Full assessments:** 30 attempts per case, 50 years, eight ages, two surveys,
+  fixed M, age-specific IID F, and no additional cohort-survival deviations.
+  Recruitment is simulated chronologically from the same population that
+  produces catch and survey observations. The fixed initial recruitment is
+  1,000 fish; recruitment innovation SD is 0.35 and AR1 correlation is 0.6.
+  A prespecified data-based RW fit supplies common starting values. Failure of
+  that warm start is counted as failure of the attempt, without a rescue fit.
+
+The criterion is optimizer code zero, positive-definite fixed-effect Hessian,
+and maximum absolute gradient below 0.01. Coverage is conditional on numerical
+success and a finite interval; its denominator is shown. Parameter intervals
+are assessed on their optimized log/logit/coefficient scale. Curve error is
+root mean squared error on the log scale. Full stock–recruit curves use a common
+SSB grid extending beyond the observed range; recruitment-state recovery is
+retained separately in the raw results.
+
+The full assessments are rich in observations, but their closed population
+dynamics can produce a narrow parent-SSB range or concentrate observations
+near a curve's plateau. They are not guaranteed to be rich in information
+about density dependence. This distinction matters when reading their
+numerical success and curve-parameter coverage.
+
+One initial execution completed the isolated runs but stopped before the full
+fits because the worker-launch call was invalid. That checkpoint was retained;
+the corrected execution repeated the isolated runs with identical seeds. No
+model, data, starting rule or tolerance was changed in response to fit failure.
+Documentation and guards for unsupported extreme lags/saturated short series
+were finalized during the study; neither changes any study model's equations,
+inputs or fitting rule. The checkpoint retains the source fingerprint at launch.
+
+A subsequent review found a study-only observation assignment error: survey
+draws in prepared row order were assigned to unsorted input rows. The 132
+completed full attempts and three interrupted attempts were retained in
+`results/recruitment_invalid_observation_order`, with the original study code,
+and excluded from scientific inference. All 180 full attempts were restarted
+with the correct survey/year/age assignment. A regression test now checks
+round-trip observation alignment. The 1,400 isolated results were retained:
+their function body and density/input rules were verified unchanged. Earlier
+full-assessment recovery claims from the invalid run should be disregarded.
+
+## Numerical success and curve recovery
+
+```{r numerical}
+knitr::kable(summary, digits = 3)
+```
+
+```{r numerical-figure}
+ggplot(summary, aes(case, success_percent, fill = design)) +
+  geom_col(position = "dodge") + facet_wrap(~ stage) +
+  geom_hline(yintercept = 90, linetype = 2) +
+  scale_y_continuous(limits = c(0, 100)) +
+  labs(x = NULL, y = "Numerical success (%)", fill = NULL) +
+  theme_minimal() + theme(axis.text.x = element_text(angle = 30, hjust = 1))
+```
+
+The dashed line is the prespecified 90% target in well-informed cases. Stress
+cases can converge while providing little information about curve shape.
+
+<details>
+<summary>Recorded numerical failures</summary>
+
+```{r failures}
+knitr::kable(attempts[!attempts$success,
+  c("stage", "case", "replicate", "optimizer", "gradient", "pdHess", "message")], digits = 4)
+```
+
+</details>
+
+## Representative fitted relationships
+
+```{r curve-data, include=FALSE}
+curves <- do.call(rbind, lapply(results, function(x) {
+  if (is.null(x$curve) || x$attempt$stage != "full" || x$attempt$replicate != 1L ||
+      startsWith(x$attempt$case, "cov")) return(NULL)
+  cbind(case = x$attempt$case, x$curve)
+}))
+```
+
+```{r fitted-curves}
+ggplot(curves, aes(ssb, truth)) +
+  geom_line(colour = "grey30", linewidth = .8) +
+  geom_ribbon(aes(ymin = lower, ymax = upper), fill = "steelblue", alpha = .15) +
+  geom_line(aes(y = estimate), colour = "steelblue", linewidth = .8) +
+  facet_wrap(~ case, scales = "free") +
+  labs(x = "Parent SSB", y = "Median recruitment") + theme_minimal()
+```
+
+Grey is the generating curve; blue is the first recorded fitted curve with its
+95% confidence interval. These intervals describe the median relationship,
+not the spread of future recruitment or uncertainty in parent SSB.
+
+```{r curve-coverage}
+curve_intervals <- do.call(rbind, lapply(results, function(x) {
+  if (!isTRUE(x$attempt$success) || is.null(x$curve$lower)) return(NULL)
+  d <- x$curve
+  usable <- is.finite(d$lower) & is.finite(d$upper)
+  in_range <- if (is.null(x$recruitment)) rep(TRUE, nrow(d)) else
+    d$ssb >= min(x$recruitment$ssb) & d$ssb <= max(x$recruitment$ssb)
+  covered <- d$lower <= d$truth & d$truth <= d$upper
+  cbind(x$attempt[, c("stage", "case", "design", "replicate")],
+    available = mean(usable),
+    coverage_in_range = mean(covered[usable & in_range]),
+    coverage_beyond_range = mean(covered[usable & !in_range]))
+}))
+curve_coverage <- curve_intervals |>
+  filter(stage == "full") |>
+  group_by(case) |>
+  summarise(fits = n(), finite_intervals_percent = round(100 * mean(available), 1),
+    coverage_in_range_percent = round(100 * mean(coverage_in_range), 1),
+    coverage_beyond_range_percent = round(100 * mean(coverage_beyond_range), 1),
+    .groups = "drop")
+knitr::kable(curve_coverage)
+```
+
+Coverage averages over the common grid within each successful fit, then over
+fits. The range is the generating population's historical parent SSB. Curve
+intervals use a local Gaussian approximation. A nearly flat fitted BH curve
+can have narrow prediction intervals despite extremely uncertain productivity
+and density dependence; those intervals need not cover alternative shapes,
+especially beyond observed SSB. Do not treat them as reliable extrapolation.
+
+## Parameter recovery and coverage
+
+<details>
+<summary>Parameter coverage and interval widths</summary>
+
+```{r coverage}
+coverage <- parameters |>
+  filter(success, is.finite(lower), is.finite(upper)) |>
+  group_by(stage, case, design, parameter) |>
+  summarise(intervals = n(), coverage_percent = round(100 * mean(covered), 1),
+    median_error = round(median(estimate - truth), 3),
+    median_interval_width = round(median(upper - lower), 3), .groups = "drop")
+knitr::kable(coverage)
+```
+
+</details>
+
+```{r parameter-errors}
+ggplot(subset(parameters, stage == "full" & success),
+  aes(case, estimate - truth)) +
+  geom_hline(yintercept = 0, colour = "grey60") + geom_boxplot() +
+  facet_wrap(~ parameter, scales = "free_y") +
+  labs(x = NULL, y = "Error on optimized parameter scale") +
+  theme_minimal() + theme(axis.text.x = element_text(angle = 30, hjust = 1))
+```
+
+High coverage with very wide intervals is not precise recovery. Narrow parent
+SSB or correlated environmental effects can hide density dependence. In full
+assessments, estimated parent SSB and mortality add uncertainty that is absent
+from isolated recovery.
+
+## Workflow and interpretation
+
+```{r workflow}
+workflow <- readRDS("results/recruitment_workflow.rds")
+knitr::kable(workflow[, setdiff(names(workflow), "warnings")])
+```
+
+The workflow exercises projections, year-aligned starts, retrospective and
+hindcast folds, generative simulations, tidy uncertainty, and dashboards.
+Warnings and fold convergence are retained independently of structural checks.
+All three projections and dashboards passed. One BH retrospective fold and
+one covariate-RW hindcast fold failed numerical convergence and were excluded
+by the existing fold helpers; their warnings remain recorded. This is not a
+claim that every fold converges.
+Stock–recruit density excludes early fixed boundary states; unavailable
+pre-model parent SSB is never invented. Projection covariates stay at their
+terminal values. IID residuals forecast toward zero; AR1 residuals decay
+toward zero at their fitted correlation.
+
+Start with a simpler recruitment model and examine the range of parent SSB,
+curve intervals, residuals, and sensitivity to environmental covariates before
+interpreting density dependence. The options remain experimental. This study
+does not validate overlapping recruitment processes, steepness, reference
+points, spawning-time SSB, or arbitrary covariate extrapolation.

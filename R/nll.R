@@ -142,7 +142,7 @@ rprocess_rw <- function(x, sd = 1) {
 #' **Latent-state convention:** `log_r`, `log_n0`, `log_n`, `log_f`, and `log_m`
 #' represent absolute latent quantities on the log scale. Full model surfaces
 #' are `log_N`, `log_F`, and `log_M`. Process deviations are separate quantities:
-#' recruitment uses successive log states (`eta_R`), N uses cohort predictions
+#' recruitment uses its formula's conditional predictions (`eta_R`), N uses cohort predictions
 #' (`eta_log_N`), and F/M use their mean log surfaces (`eta_log_f`, `eta_log_m`).
 #' In particular, `log_f = log_mu_F + eta_log_f` and
 #' `log_m = log_mu_M + eta_log_m` on their represented years and ages/blocks.
@@ -159,15 +159,18 @@ rprocess_rw <- function(x, sd = 1) {
 #' logit and restricts q to between zero and one. Both estimation and simulation
 #' use the same predictor, including any [mono()] increments.
 #'
-#' With `simulate = TRUE`, recruitment and mortality states are drawn first.
-#' N is then constructed through initial-age and cohort recursion, followed by
+#' With `simulate = TRUE`, mortality states are drawn first. Recruitment and N
+#' are constructed chronologically, using the same simulated parent SSB for
+#' stock-recruit relationships. This is followed by
 #' predictions and observation draws with the SD for each matching row.
 #' Derived quantities therefore use the same realization as the returned states.
 #' If biological inputs extend above the modeled plus age, hidden age abundances
-#' are reconstructed after N. Effective terminal W and P preserve biomass and
+#' are reconstructed within each year before SSB is calculated. Effective
+#' terminal W and P preserve biomass and
 #' mature biomass; see [tinyAM-model]. No extra parameters or process penalties
 #' are introduced. `N_plus`, `W`, and `P` are then included in `report()`.
-#' Random N0 is redrawn; free N0 and `log_r0` remain supplied fixed states.
+#' Random N0 is redrawn; free N0, `log_r0`, and additional early recruitment
+#' boundary states remain supplied fixed states. See [recruitment_formulas].
 #' RW processes retain their starting state because it has no process density.
 #' For N, the first `log_n` row is retained and its starting residual is computed
 #' against the newly simulated cohort prediction. Subsequent residuals follow
@@ -231,7 +234,6 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   n_ages <- length(ages)
   n_proj <- proj_settings$n_proj
 
-  sd_r <- exp(log_sd_r)
   sd_f <- exp(log_sd_f)
 
   empty_mat <- matrix(NA, n_years, n_ages,
@@ -243,10 +245,11 @@ nll_fun <- function(par, dat, simulate = FALSE) {
 
   ## Mean structures and process draws ----
 
-  log_mu_F[] <- drop(F_modmat %*% log_mu_f)
-  log_mu_M[] <- log_mu_supplied_m + drop(M_modmat %*% mu_m)
+  F_effects <- .mean_effects(par, dat, "F", simulate)
+  M_effects <- .mean_effects(par, dat, "M", simulate)
+  log_mu_F[] <- drop(F_modmat %*% log_mu_f) + F_effects$contribution
+  log_mu_M[] <- log_mu_supplied_m + drop(M_modmat %*% mu_m) + M_effects$contribution
   if (simulate) {
-    log_r[] <- log_r0 + cumsum(stats::rnorm(n_years - 1, 0, sd_r))
     mu_f <- log_mu_F[!is_proj, , drop = FALSE]
     log_f[] <- mu_f + if (F_settings$process == "rw") {
       rprocess_rw(log_f - mu_f, sd = sd_f)
@@ -271,11 +274,6 @@ nll_fun <- function(par, dat, simulate = FALSE) {
 
   ## Vital rates ----
 
-  log_recruitment <- c(log_r0, log_r)
-  names(log_recruitment) <- years
-  recruitment <- exp(log_recruitment)
-  log_N[, 1] <- log_recruitment
-
   log_F[!is_proj, ] <- log_f
   if (n_proj > 0) {
     log_k <- log(proj_settings$F_mult)
@@ -297,90 +295,32 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   log_Z <- log(Z)
 
 
-  ## Initial abundance (independent of the subsequent N process) ----
+  ## Population states and recruitment ----
 
-  eta_log_n0 <- numeric(n_ages - 1L)
-  if (simulate && N_settings$init == "random") {
-    eta_log_n0[] <- stats::rnorm(n_ages - 1L, 0, exp(log_sd_n0))
-  }
-  for (a in 2:n_ages) {
-    pred_log_N[1, a] <- log_N[1, a - 1] - Z[1, a - 1]
-    if (N_settings$init == "exp" || (simulate && N_settings$init == "random")) {
-      log_N[1, a] <- pred_log_N[1, a] + eta_log_n0[a - 1L]
-    } else {
-      log_N[1, a] <- log_n0[a - 1L]
-    }
-  }
-  eta_log_n0 <- log_N[1, -1] - pred_log_N[1, -1]
-  if (simulate && N_settings$init == "random") {
-    log_n0[] <- log_N[1, -1]
-  }
-
-  ## Cohort equation (plus group after the initial year) ----
-
-  Y <- 2:n_years
-  A <- 2:n_ages
-  if (N_settings$process != "off") {
-    log_N[-1, -1] <- log_n
-  }
-  eta_log_N <- matrix(0, n_years - 1, n_ages - 1)
-  if (simulate && N_settings$process == "iid") {
-    eta_log_N[] <- stats::rnorm(length(eta_log_N), 0, exp(log_sd_n))
-  } else if (simulate && N_settings$process == "ar1") {
-    eta_log_N <- rprocess_ar1(n_years - 1, n_ages - 1,
-                            sd = exp(log_sd_n), phi = plogis(logit_phi_n))
-  }
-  for (y in Y) {
-    pred_log_N[y, A] <- log_N[y - 1, A - 1] - Z[y - 1, A - 1]
-    pred_log_N[y, n_ages] <- RTMB::logspace_add(pred_log_N[y, n_ages],
-                                              log_N[y - 1, n_ages] - Z[y - 1, n_ages])
-    if (simulate && N_settings$process == "rw" && y == 2L) {
-      # The first cohort residual has no RW density: retain its supplied state.
-      eta_log_N[1, ] <- log_n[1, ] - pred_log_N[y, A]
-      eta_log_N <- rprocess_rw(eta_log_N, sd = exp(log_sd_n))
-    }
-    if (N_settings$process == "off" || simulate) {
-      log_N[y, A] <- pred_log_N[y, A] + eta_log_N[y - 1, ]
-    }
-  }
-  if (simulate && N_settings$process != "off") {
-    log_n[] <- log_N[-1, -1, drop = FALSE]
-  }
+  population <- .population_states(par, dat, Z, simulate)
+  log_N <- population$log_N
+  pred_log_N <- population$pred_log_N
+  log_recruitment <- population$log_recruitment
+  log_mu_R <- population$log_mu_R
+  log_pred_R <- population$log_pred_R
+  eta_R <- population$eta_R
+  eta_R_state <- population$eta_R_state
+  eta_log_n0 <- population$eta_log_n0
+  W <- population$W
+  P <- population$P
   N <- exp(log_N)
-
-  ## Biological composition within the modeled plus group ----
-
+  recruitment <- exp(log_recruitment)
+  if (simulate) {
+    log_r[] <- log_recruitment[dat$rec$eligible]
+    if (N_settings$init == "random") log_n0[] <- log_N[1, -1]
+    if (N_settings$process != "off") log_n[] <- log_N[-1, -1, drop = FALSE]
+  }
   if (!is.null(dat$plus_ages)) {
-    n_plus <- length(dat$plus_ages)
-    log_N_plus <- matrix(0, n_years, n_plus,
-                         dimnames = list(year = years, age = dat$plus_ages))
-    # A geometric survivor distribution, with the remaining tail in Amax+.
-    log_components <- -(seq_len(n_plus) - 1L) * Z[1, n_ages]
-    log_components[-n_plus] <- log_components[-n_plus] + log(-expm1(-Z[1, n_ages]))
-    for (y in seq_len(n_years)) {
-      if (y > 1L) {
-        log_components <- c(log_N[y - 1L, n_ages - 1L] - Z[y - 1L, n_ages - 1L],
-                            log_N_plus[y - 1L, -n_plus] - Z[y - 1L, n_ages])
-        log_components[n_plus] <- RTMB::logspace_add(log_components[n_plus],
-          log_N_plus[y - 1L, n_plus] - Z[y - 1L, n_ages])
-      }
-      # A common rescaling carries any N-process deviation into all hidden ages.
-      log_shares <- log_components - Reduce(RTMB::logspace_add, log_components)
-      log_N_plus[y, ] <- log_N[y, n_ages] + log_shares
-      shares <- exp(log_shares)
-      W[y, n_ages] <- sum(shares * dat$W_plus_input[y, ])
-      P[y, n_ages] <- if (all(dat$W_plus_input[y, ] == 0)) {
-        0 # No biomass: mature biomass is also zero, whatever its proportion.
-      } else {
-        sum(shares * dat$W_plus_input[y, ] * dat$P_plus_input[y, ]) / W[y, n_ages]
-      }
-    }
-    N_plus <- exp(log_N_plus)
+    N_plus <- population$N_plus
     REPORT(N_plus)
     REPORT(W)
     REPORT(P)
   }
-
 
   ## Initial age process ----
 
@@ -390,10 +330,9 @@ nll_fun <- function(par, dat, simulate = FALSE) {
     jnll <- jnll - sum(RTMB::dnorm(eta_log_n0, 0, exp(log_sd_n0), log = TRUE))
   }
 
-  ## Recruitment process (basic random walk) ----
+  ## Recruitment process ----
 
-  eta_R <- log_N[2:n_years, 1] - log_N[1:(n_years - 1), 1]
-  jnll <- jnll - sum(RTMB::dnorm(eta_R, 0, sd_r, log = TRUE))
+  jnll <- jnll + .rec_nll(log_recruitment, log_mu_R, par, dat)
 
 
   ## N process ----
@@ -455,18 +394,27 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   } else {
     log_sd_index_eff <- rep(0, nrow(sd_index_modmat))
   }
-  sd_catch <- exp(log_sd_catch_supplied + log_sd_catch_eff)
-  sd_index <- exp(log_sd_index_supplied + log_sd_index_eff)
-  sd_obs <- c(sd_catch, sd_index)
+  sd_catch_effects <- .sd_effects(par, dat, "catch", simulate)
+  sd_index_effects <- .sd_effects(par, dat, "index", simulate)
+  sd_catch <- exp(log_sd_catch_supplied + log_sd_catch_eff + sd_catch_effects$contribution)
+  sd_index <- exp(log_sd_index_supplied + log_sd_index_eff + sd_index_effects$contribution)
+  sd_obs <- numeric(n_obs)
+  sd_obs[obs_map$type == "catch"] <- sd_catch
+  sd_obs[obs_map$type == "index"] <- sd_index
   q_coef <- if (identical(index_settings$q_link, "logit")) logit_q else log_q
   q_predictor <- drop(q_modmat %*% q_coef)
   if (!is.null(dat$q_mono_modmat)) {
     q_predictor <- q_predictor + drop(dat$q_mono_modmat %*% dq)
   }
+  q_effects <- .q_effects(par, dat, simulate = simulate)
+  jnll <- jnll + q_effects$nll + F_effects$nll + M_effects$nll
+  jnll <- jnll + sd_catch_effects$nll + sd_index_effects$nll
+  q_predictor <- q_predictor + q_effects$contribution
   # Compute log(q) directly to remain stable near the logit boundaries.
   log_q_obs <- if (identical(index_settings$q_link, "logit")) {
     -RTMB::logspace_add(0, -q_predictor)
   } else q_predictor
+  log_q_obs <- log_q_obs + q_effects$log_selectivity
   samp_time <- obs_map$samp_time
 
   ic <- obs_map$type == "catch"
@@ -539,6 +487,24 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   REPORT(ssb_mat)
   REPORT(ssb)
 
+  rec_log_mean <- log_mu_R[dat$rec$eligible]
+  rec_log_prediction <- log_pred_R[dat$rec$eligible]
+  rec_residual <- if (dat$rec$type == "rw") eta_R[dat$rec$eligible] else eta_R_state[dat$rec$eligible]
+  rec_innovation <- eta_R[dat$rec$eligible]
+  REPORT(rec_log_mean)
+  REPORT(rec_log_prediction)
+  REPORT(rec_residual)
+  REPORT(rec_innovation)
+  ADREPORT(rec_log_mean)
+  ADREPORT(rec_log_prediction)
+  ADREPORT(rec_residual)
+  ADREPORT(rec_innovation)
+  if (!is.null(dat$rec$curve)) {
+    rec_log_parent <- log_ssb[dat$rec$eligible - dat$rec$curve$lag]
+    REPORT(rec_log_parent)
+    ADREPORT(rec_log_parent)
+  }
+
   REPORT(total_catch)
   REPORT(total_catch_pred)
   REPORT(total_yield)
@@ -548,6 +514,27 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   REPORT(log_obs)
   REPORT(sd_obs)
   REPORT(log_q_obs)
+  q_link_prediction <- if (identical(index_settings$q_link, "logit")) {
+    if (any(vapply(dat$q_terms, function(term) term$type == "logistic", logical(1)))) {
+      log_q_obs - log(-expm1(log_q_obs))
+    } else q_predictor
+  } else log_q_obs
+  ADREPORT(q_link_prediction)
+  eta_q_increments <- q_effects$rw_increments
+  REPORT(eta_q_increments)
+  if (length(eta_q_increments)) ADREPORT(eta_q_increments)
+  eta_mu_F_increments <- F_effects$rw_increments
+  eta_mu_M_increments <- M_effects$rw_increments
+  REPORT(eta_mu_F_increments)
+  REPORT(eta_mu_M_increments)
+  if (length(eta_mu_F_increments)) ADREPORT(eta_mu_F_increments)
+  if (length(eta_mu_M_increments)) ADREPORT(eta_mu_M_increments)
+  eta_sd_catch_increments <- sd_catch_effects$rw_increments
+  eta_sd_index_increments <- sd_index_effects$rw_increments
+  REPORT(eta_sd_catch_increments)
+  REPORT(eta_sd_index_increments)
+  if (length(eta_sd_catch_increments)) ADREPORT(eta_sd_catch_increments)
+  if (length(eta_sd_index_increments)) ADREPORT(eta_sd_index_increments)
 
   ADREPORT(log_recruitment)
   ADREPORT(log_abundance)
@@ -560,6 +547,7 @@ nll_fun <- function(par, dat, simulate = FALSE) {
     sims <- list(log_f = log_f,
                  log_r = log_r,
                  log_obs = log_obs)
+    if (!is.null(par$log_r_init)) sims$log_r_init <- par$log_r_init
     if (N_settings$init != "exp") {
       sims$log_n0 <- log_n0
     }
@@ -572,7 +560,8 @@ nll_fun <- function(par, dat, simulate = FALSE) {
     if (M_settings$process != "off") {
       sims$log_m <- log_m
     }
-    return(sims)
+    return(c(sims, q_effects$parameters, F_effects$parameters, M_effects$parameters,
+             sd_catch_effects$parameters, sd_index_effects$parameters))
   }
 
   jnll

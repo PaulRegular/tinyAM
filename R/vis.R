@@ -22,6 +22,13 @@
 #'          Precomputed assessment references may be mixed with tinyAM fits; they are
 #'          not refittable TAM objects. Supply `background` to add a page
 #'          describing assessment assumptions and translation choices.
+#'          The Parameters menu separates Fixed and Random pages. Fixed plots
+#'          group similar quantities, with initial abundance shown separately.
+#'          Stock-recruit models add a relationship page with parent-year pairs,
+#'          median curves at declared reference covariates and conditional
+#'          recruitment predictions. Random parameters also show signed
+#'          recruitment residuals. See [tidy_recruitment()].
+#'          Random plots include latent states and formula-effect trends.
 #' @return Used for its side effects: writes an HTML dashboard and optionally
 #'   opens it in the browser. Supply `output_file` to retain a known file path.
 #'
@@ -95,4 +102,34 @@ vis_tam <- function(..., model_list = NULL, interval = 0.95, output_file = NULL,
 
   if (open_file) utils::browseURL(output_file)
 
+}
+
+.fixed_parameter_groups <- function(data) {
+  if (!is.data.frame(data) || !nrow(data)) return(list())
+  par <- data$par
+  category <- rep("Other", nrow(data))
+  category[grepl("^sd_", par)] <- "Process SDs"
+  category[par %in% c("sd_catch", "sd_index")] <- "Observation SDs"
+  category[par %in% c("q", "logit_q")] <- "Catchability"
+  category[par %in% "dq" | grepl("^q_(a50|slope)_", par)] <- "Catchability curves"
+  category[grepl("^mu_", par)] <- "Mortality means"
+  category[grepl("^phi_", par)] <- "Correlations"
+  category[par %in% c("rec_beta", "sr_alpha", "sr_beta")] <- "Recruitment"
+  category[par %in% c("r0", "r_init", "n0")] <- "Initial abundance"
+  category <- factor(category, levels = c("Process SDs", "Observation SDs",
+    "Catchability", "Catchability curves", "Mortality means", "Correlations",
+    "Recruitment", "Initial abundance", "Other"))
+  split(data, category, drop = TRUE)
+}
+
+.formula_effect_label <- function(effect) {
+  component <- unique(effect$component)
+  if (component == "q") component <- "Catchability"
+  if (component == "sd_catch") component <- "Catch SD"
+  if (component == "sd_index") component <- "Survey SD"
+  process <- switch(unique(effect$process), rw = "random walk", ar1 = "AR1", iid = "IID")
+  variable <- unique(effect$variable)
+  by <- unique(effect$by)
+  if (!is.na(by)) variable <- paste(variable, "by", by)
+  paste0(component, " ", process, " (", gsub("_", " ", variable, fixed = TRUE), ")")
 }

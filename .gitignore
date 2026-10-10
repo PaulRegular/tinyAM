@@ -57,5 +57,6 @@ analysis/*.rds
 # Local assessment source documents and model/data files
 analysis/comp_assessments/source_cache/
 analysis/comp_assessments/results/cache/
+analysis/formula_expansion/results/
 
 .positai

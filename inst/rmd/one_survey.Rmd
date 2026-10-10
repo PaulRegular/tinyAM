@@ -43,12 +43,20 @@ plot_obs_pred_report(d, frame = ~age, color = ~model,
 
 ```{r}
 qest <- plot_rows(d, "q")
-u_qest <- unique(qest[, c("model", "age", "q")])
+for (nm in c("q_lwr", "q_upr")) {
+  if (is.null(qest[[nm]])) qest[[nm]] <- rep(NA_real_, nrow(qest))
+}
+qest$est <- qest$q
+qest$lwr <- qest$q_lwr
+qest$upr <- qest$q_upr
+qest$supported <- is.finite(qest$obs) & qest$obs > 0
+u_qest <- unique(qest[, c("model", "age", "est", "lwr", "upr")])
 if (any(duplicated(u_qest[, c("model", "age")]))) {
-  u_qest <- unique(qest[, c("model", "age", "year", "q")])
-  if (nrow(u_qest)) plot_trend(u_qest, x = ~age, y = ~q, xlab = "Age", color = ~model, colors = cols, frame = ~year) else plotly::plot_ly()
+  u_qest <- unique(qest[, c("model", "age", "year", "est", "lwr", "upr", "is_proj", "supported")])
+  if (nrow(u_qest)) plot_trend(u_qest, x = ~age, xlab = "Age", color = ~model, colors = cols, frame = ~year,
+    text = ~paste("Year:", year, "<br>Observed index:", supported, "<br>Projection:", is_proj)) else plotly::plot_ly()
 } else {
-  if (nrow(u_qest)) plot_trend(u_qest, x = ~age, y = ~q, xlab = "Age", color = ~model, colors = cols) else plotly::plot_ly()
+  if (nrow(u_qest)) plot_trend(u_qest, x = ~age, xlab = "Age", color = ~model, colors = cols) else plotly::plot_ly()
 }
 ```
 

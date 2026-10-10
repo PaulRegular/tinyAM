@@ -1,0 +1,245 @@
+---
+title: "Observation SD effects: age patterns and recovery"
+output:
+  html_document:
+    self_contained: true
+    toc: false
+    mathjax: null
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE,
+  fig.width = 9, fig.height = 5, dpi = 120, fig.path = "results/sd_figures/")
+results <- readRDS("results/sd_effects_recovery.rds")
+stopifnot(isTRUE(results$complete))
+attempts <- results$attempts
+stopifnot(nrow(attempts) == 14L * results$n_simple + 6L * results$n_full,
+  !anyDuplicated(with(attempts, paste(stage, type, design, replicate))))
+parameters <- results$parameters
+library(ggplot2)
+success <- aggregate(success ~ stage + type + design, attempts, mean)
+counts <- aggregate(replicate ~ stage + type + design, attempts, length)
+names(counts)[names(counts) == "replicate"] <- "attempts"
+success <- merge(success, counts)
+parameters <- merge(parameters, attempts[, c("stage", "type", "design", "replicate", "success")])
+parameters$covered <- with(parameters, lower <= truth & truth <= upper)
+curves <- do.call(rbind, lapply(results$curves, function(d) {
+  if (!"group" %in% names(d)) d$group <- "catch"
+  d
+}))
+```
+
+## Main findings
+
+Random age effects can describe changing observation spread without estimating
+an unrelated SD at every age. IID effects partially pool age SDs; RW and AR1
+allow neighbouring ages to be similar. They **do not require** noisier young
+and old fish. A fixed quadratic age curve remains a useful simpler choice when
+that pattern is plausible.
+
+The study separates numerical success from recovery. A fit can pass numerical
+checks yet recover a poor SD curve or an imprecise correlation. Start with
+replicated age effects, inspect uncertainty, and compare simpler SD formulas.
+
+- **IID age effects are a useful starting point.** All 30 catch and 30 survey
+  fits passed numerical checks. Survey process SD was reasonably recovered;
+  catch process SD tended to be underestimated (median about 0.26 versus 0.35).
+- **Smoothing can work, but depends on the observation type.** Survey RW passed
+  28/30 fits and survey AR1 passed 29/30; catch AR1 passed 30/30. AR1 correlations
+  remained imprecise and tended to be underestimated. Many intervals were so
+  wide that high coverage did not imply useful precision.
+- **Catch-SD RW needs particular caution.** Only 13/30 full fits passed;
+  17 stopped with non-finite gradients. All well-replicated isolated RW fits
+  passed, so this is a full-assessment numerical problem, not evidence of an
+  incorrect RW density. An advisory now flags this specification.
+- **Do not overlook fixed curves.** All random-effect curves captured the
+  noisier tails, but the quadratic curve had the smallest error when the truth
+  was quadratic. Sparse random SDs often passed numerical checks while
+  recovering poor curves or underestimating process SD.
+
+Treat temporal changes in SD as exploratory: this study tests processes over
+**age**, not stochastic volatility over time or formulas for latent N/F/M SDs.
+
+There are `r nrow(attempts)` recorded attempts, including
+`r sum(attempts$stage == "full")` full assessments.
+`r sum(!attempts$success)` did not pass the numerical criteria. Errors and
+warnings are retained; there are no rescue fits or relaxed tolerances.
+
+## What changes in the model?
+
+The expected log observation is unchanged. Its SD is
+
+`log(SD) = log(supplied SD) + fixed effects + random effects`
+
+A positive effect increases residual spread; negative effects reduce it.
+The process SD describes variation in **log SD**. For example, an effect of
+0.3 multiplies observation SD by about 1.35. This process SD is distinct from
+the observation SD and the F/M/N process SDs. Formula effects appear under
+Catch SD or Survey SD on the Random parameters page, on the log-SD scale.
+The baseline SD is the value when the effect is zero; it is not the arithmetic
+average of the varying SDs.
+
+Useful starting formulas are `~ iid(age)` for catch and
+`~ survey + rw(age, by = survey)` for survey SD. Categorical `by` gives separate
+age curves with a shared process SD/correlation; numeric `by` multiplies one
+shared effect. Supplied SDs remain offsets. RW starts at zero and its first
+age's baseline comes from ordinary formula terms. AR1 has a stationary start.
+
+## Study design
+
+The isolated experiment observes Normal log residuals with known zero mean,
+15 ages, baseline SD 0.25, effect-process SD 0.35 and AR1 correlation 0.65.
+There are 30, three, or one observations per age, and
+`r results$n_simple` replicates per specification. Baseline SD, process SD and
+AR1 correlation are estimated. Sparse random SDs produce a scale mixture;
+they are not an exact alias of Gaussian random effects on the mean.
+RTMB uses a Laplace approximation for these non-Gaussian random-SD likelihoods.
+
+The noisy-tail experiment uses the same 30 observations per age and the true
+curve `exp(log(0.18) + 0.025 * (age - 8)^2)`. It compares a common SD, quadratic
+fixed curve, IID, RW and AR1 with the **same observations**. The quadratic model
+matches the generating shape by design; this is not a general ranking.
+
+Full assessments have 30 years, 15 ages, catch at age and two surveys at different
+times. N deviations are off, F has IID residuals with age-specific mean, M is
+supplied at 0.25, and q has separate survey baselines. The study varies **one**
+SD surface at a time: catch age effects or survey-specific age effects. Other
+SDs are estimated fixed levels. Recruitment, F, q and both observation-error
+levels are estimated; starts use the generating fixed baselines, without
+knowledge of the simulated latent states. There are `r results$n_full`
+replicates per specification. Simultaneously varying q, N and SD over the
+same ages/years is not validated here.
+
+Numerical success requires optimizer code zero, a positive-definite uncertainty
+Hessian, finite predictions/SDs for full assessments, and maximum absolute
+gradient below 0.01. The well-informed target is 90% success. Success alone
+does not establish structural identifiability or reliable intervals.
+
+## Numerical checks
+
+```{r numerical}
+ggplot(success, aes(type, 100 * success, fill = design)) +
+  geom_col(position = "dodge") + facet_wrap(~ stage, scales = "free_x", nrow = 1) +
+  geom_hline(yintercept = 90, linetype = 2, colour = "grey40") +
+  scale_y_continuous(limits = c(0, 100)) +
+  labs(x = NULL, y = "Numerically successful fits (%)", fill = NULL) + theme_bw()
+```
+
+```{r success-table}
+summary <- success
+summary$success <- round(100 * summary$success, 1)
+names(summary)[names(summary) == "success"] <- "Success (%)"
+knitr::kable(summary, row.names = FALSE)
+```
+
+## Recovery of SD and correlation
+
+The distributions below include finite estimates from failed fits; hollow red
+points identify those fits. Zero Hessian uncertainty, missing intervals and
+non-finite estimates are not interpreted as successful recovery.
+
+```{r parameters, fig.height=9}
+ggplot(parameters[is.finite(parameters$estimate), ], aes(type, estimate)) +
+  geom_boxplot(outlier.shape = NA) +
+  geom_point(data = parameters[!parameters$success & is.finite(parameters$estimate), ],
+    colour = "firebrick", shape = 1, position = position_jitter(width = .1)) +
+  geom_hline(aes(yintercept = truth), data = unique(parameters[, c("stage", "design", "parameter", "truth")]),
+    colour = "steelblue", linetype = 2) +
+  facet_wrap(~ stage + design + parameter, scales = "free", ncol = 3) +
+  labs(x = NULL, y = "Estimated parameter; blue line = truth") + theme_bw()
+```
+
+```{r coverage}
+valid <- parameters[parameters$success & is.finite(parameters$lower) & is.finite(parameters$upper), ]
+coverage <- aggregate(covered ~ stage + type + design + parameter, valid, mean)
+counts <- aggregate(replicate ~ stage + type + design + parameter, valid, length)
+names(counts)[names(counts) == "replicate"] <- "Intervals"
+coverage <- merge(coverage, counts)
+coverage$covered <- round(100 * coverage$covered, 1)
+names(coverage)[names(coverage) == "covered"] <- "Coverage (%)"
+knitr::kable(coverage, row.names = FALSE)
+```
+
+Coverage is conditional on numerical success and available intervals. Short
+age series provide few independent process states even when each age has many
+years of observations. AR1 correlation can therefore remain imprecise.
+
+## Recovering the noisier tails
+
+The grey line is the simulated SD; colours show fitted curves in the first
+replicate, using the same observations for each formula.
+
+```{r tails}
+tail_curves <- subset(curves, stage == "tails")
+ggplot(tail_curves, aes(age)) + geom_line(aes(y = truth), colour = "grey35", linewidth = 1) +
+  geom_line(aes(y = estimate, colour = type)) +
+  labs(x = "Age", y = "Observation SD", colour = "Formula") + theme_bw()
+```
+
+```{r curve-errors}
+rmse <- attempts[is.finite(attempts$log_sd_rmse), ]
+ggplot(rmse, aes(type, log_sd_rmse, fill = design)) +
+  geom_boxplot(outlier.shape = NA) + facet_wrap(~ stage, scales = "free_y", nrow = 1) +
+  labs(x = NULL, y = "Error in the fitted log-SD curve (RMSE)", fill = NULL) + theme_bw()
+```
+
+## Full-model examples
+
+These are the first replicate of every full-model specification, selected
+before fitting. Returned curves remain shown when numerical checks fail.
+The first catch-RW fit stopped before producing estimates, so it has no curve;
+it remains in the failed-fit table.
+
+```{r full-curves}
+full <- subset(curves, stage == "full")
+full <- merge(full, attempts[, c("stage", "type", "design", "replicate", "success")])
+full$panel <- paste(full$design, full$type, ifelse(full$success, "passed", "did not pass"))
+ggplot(full, aes(age, colour = group)) +
+  geom_line(aes(y = truth), linetype = 2) + geom_line(aes(y = estimate)) +
+  facet_wrap(~ panel, scales = "free_y", ncol = 3) +
+  labs(x = "Age", y = "Observation SD; dashed = simulated truth", colour = NULL) + theme_bw()
+```
+
+<details><summary>Warnings and failed fits</summary>
+
+```{r failures}
+fail <- attempts[!attempts$success, c("stage", "type", "design", "replicate", "seed",
+  "optimizer", "gradient", "pdHess", "message")]
+knitr::kable(fail, row.names = FALSE)
+warnings <- unique(attempts[nzchar(attempts$warnings), c("stage", "type", "design", "warnings")])
+knitr::kable(warnings, row.names = FALSE)
+```
+
+</details>
+
+## Scope and reproducibility
+
+```{r workflow}
+if (file.exists("results/sd_workflow.rds")) {
+  knitr::kable(readRDS("results/sd_workflow.rds"), row.names = FALSE)
+}
+```
+
+Workflow checks use the first catch IID and survey RW examples. They retain
+failed-fold warnings and actual fold counts, check stable state names, simulate
+from returned states, and render dashboards with log-SD effects and intervals.
+
+Retain one ordered SD process per observation surface. Saturated fixed/random
+SD designs and duplicate IID variance components are rejected; sparse support
+and wide SD/correlation intervals are advisory findings, not automatic failure.
+No stock recipes, latent-process mathematics, or convergence criteria were
+changed for this study. These experiments are deliberately informative and
+do not establish performance for arbitrary sparse assessments.
+
+Run `simulate_sd_effects.R 100 30 3` from the repository root and render this
+report. Seeds, every attempted fit and session information are saved in the
+ignored `results/sd_effects_recovery.rds`. Only code, report text and
+deterministic tests are tracked. Generated figures, dashboards and fits stay
+local.
+The optional third argument controls independent workers; checkpoints resume
+missing attempts with the same explicit replicate seeds. Worker scheduling
+does not change the generating observations or model settings.
+
+```{r study-notes, results='asis'}
+if (length(results$study_notes)) cat(results$study_notes)
+```

@@ -12,7 +12,8 @@
 #' latent-state parameters; `log_N`, `log_F`, and `log_M` are full model
 #' surfaces constructed internally by [nll_fun()]. Process errors are
 #' calculated separately as deviations (`eta_*`): recruitment uses successive
-#' log states, abundance uses cohort predictions, and F and M use their log
+#' log states by default, or expectations from `rec_form`; abundance uses
+#' cohort predictions, and F and M use their log
 #' mean surfaces. In particular, `log_f` and `log_m` are absolute latent states;
 #' their deviations are `eta_log_f = log_f - log_mu_F` and
 #' `eta_log_m = log_m - log_mu_M` on the corresponding years and age blocks.
@@ -25,15 +26,26 @@
 #'
 #' Numeric parameters are initialized at `0`, except `dq` (initialized at `0.05`)
 #' and `log_m`, which starts at its log mean surface so initial M-process
-#' residuals are zero. These are starting values, not priors. Matrices are created
+#' residuals are zero. Stock-recruit parameters use the anchor and initial SSB;
+#' their recruitment states start on the expected path with zero deviations.
+#' These are starting values, not priors. Matrices are created
 #' with appropriate `dimnames` (`year × age` or `year × age_block`).
 #'
 #' **Created elements (when applicable) include:**
 #'
 #' - **Recruitment & variability**
 #'   - `log_r0` (fixed first-year log recruitment, always present)
-#'   - `log_r` (random states for `dat$years[-1]`, length `length(dat$years) - 1`)
-#'   - `log_sd_r`
+#'   - `log_r`: absolute random log recruitment in eligible process years;
+#'     by default these are `dat$years[-1]`, named by year.
+#'   - `log_r_init`: additional free fixed boundary states when parent SSB lies
+#'     before the modeled period, named by year.
+#'   - `log_sd_r`: estimated recruitment SD unless supplied in the formula.
+#'   - `rec_beta`: fixed log-scale covariate coefficients when present.
+#'   - `log_sr_alpha`, `log_sr_beta`: positive curve parameters on the log scale.
+#'   - `logit_phi_r`: estimated recruitment AR1 correlation when not supplied.
+#'   Curve starts pass through the initial recruitment anchor at the first
+#'   available parent SSB. Warm starts without curve parameters reinitialize
+#'   the curve using their population states; see [recruitment_formulas].
 #'
 #' - **Initial older-age abundance (independent of the N process)**
 #'   - `log_n0`: realized log abundance at initial ages `ages[-1]`, named by age;
@@ -66,6 +78,11 @@
 #' - **Observation model**
 #'   - `log_sd_catch` (length `ncol(dat$sd_catch_modmat)`) adjusting any supplied SDs
 #'   - `log_sd_index` (length `ncol(dat$sd_index_modmat)`) adjusting any supplied SDs
+#'   - Gaussian observation-SD terms add signed `eta_sd_catch_*` or
+#'     `eta_sd_index_*` log-SD effects, initially zero, with process SD parameters
+#'     `log_sd_catch_*`/`log_sd_index_*` initially `log(0.1)` unless supplied.
+#'     Estimated AR1 correlations start at 0.5. These process SDs measure
+#'     variation in log observation SD, not observation SD itself.
 #'   - `log_q` for `q_link = "log"`, or `logit_q` for `q_link = "logit"`
 #'     (length `ncol(dat$q_modmat)`). Zero coefficients start q at 1 or 0.5,
 #'     respectively, before any [mono()] increments.
@@ -73,6 +90,14 @@
 #'     fixed non-negative increments on the selected q-link scale, initialized to `0.05`
 #'     for a nearly flat curve and bounded below by zero in [fit_tam()]. Names
 #'     identify transitions and groups; these are not absolute q levels.
+#'   - Structured Gaussian q terms have signed `eta_q_*` states, initially zero,
+#'     and estimated `log_sd_q_*` parameters initially `log(0.1)` unless SD is
+#'     supplied. Estimated `logit_phi_q_*` starts at correlation 0.5.
+#'     RW states omit the zero anchor. Forecast states retain their normalized
+#'     process densities and integrate out of the historical likelihood.
+#'   - Logistic curves have `q_a50_*` midpoints and positive `log_q_slope_*`
+#'     coefficients, initialized from each group's observed coordinate range.
+#'     Names identify terms, groups and unique states for warm starts.
 #'   - `missing` vector of length `sum(dat$fill_missing_map)` (placeholders for
 #'     imputed `log_obs`, if any observation type is set to fill missing values)
 #'
@@ -113,7 +138,9 @@ make_par <- function(dat) {
   if (dat$N_settings$init == "random") {
     par$log_sd_n0 <- 0
   }
-  par$log_sd_r <- 0
+  if (is.null(dat$rec$sd)) par$log_sd_r <- 0
+  if (ncol(dat$rec$matrix)) par$rec_beta <- setNames(numeric(ncol(dat$rec$matrix)), colnames(dat$rec$matrix))
+  if (dat$rec$type == "ar1" && is.null(dat$rec$phi)) par$logit_phi_r <- c(year = 0)
   par$log_sd_f <- 0
   if (!is.null(dat$F_settings$mu_form)) {
     par$log_mu_f <- numeric(ncol(dat$F_modmat))
@@ -149,13 +176,19 @@ make_par <- function(dat) {
     par$dq <- setNames(rep(0.05, ncol(dat$q_mono_modmat)),
                        colnames(dat$q_mono_modmat))
   }
+  par <- c(par, .q_term_parameters(.formula_terms(dat)))
 
   if (dat$any_fill_missing) {
     par$missing <- numeric(sum(dat$fill_missing_map))
   }
 
-  par$log_r <- numeric(length(dat$years) - 1L)
-  names(par$log_r) <- as.character(dat$years[-1])
+  par$log_r <- setNames(numeric(length(dat$rec$eligible)), as.character(dat$years[dat$rec$eligible]))
+  if (length(dat$rec$boundary) > 1L) {
+    par$log_r_init <- setNames(numeric(length(dat$rec$boundary) - 1L), as.character(dat$years[dat$rec$boundary[-1L]]))
+  }
+  if (!is.null(dat$rec$curve)) {
+    par$log_sr_alpha <- par$log_sr_beta <- 0
+  }
   if (dat$N_settings$process != "off") {
     par$log_n <- matrix(0, nrow = length(dat$years) - 1L, ncol = length(dat$ages) - 1,
                         dimnames = list(year = dat$years[-1], age = dat$ages[-1]))
@@ -180,6 +213,9 @@ make_par <- function(dat) {
     getAll(par, dat)
     # Every mean component must be constant within a shared absolute M state.
     mean_parts <- cbind(log_mu_supplied_m, M_modmat)
+    for (term in dat$M_terms) {
+      mean_parts <- cbind(mean_parts, .q_term_design(term, nrow(dat$obs$weight)))
+    }
     for(b in levels(M_settings$age_blocks)) {
       if (sum(M_settings$age_blocks == b) > 1) {
         ia <- names(M_settings$age_blocks)[M_settings$age_blocks == b]
@@ -197,6 +233,9 @@ make_par <- function(dat) {
     }
   }
 
+  if (!is.null(dat$rec$curve)) {
+    par <- .initialize_rec_curve(par, dat, initialize_states = TRUE)
+  }
   par
 
 }

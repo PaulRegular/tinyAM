@@ -1,0 +1,37 @@
+Stock–recruitment
+================================================================================
+
+Row {.tabset}
+--------------------------------------------------------------------------------
+
+### Relationship
+
+```{r}
+curves <- tabs$recruitment$curve
+pairs <- tabs$recruitment$pairs
+plot <- plot_report(curves, x = ~ssb, xlab = "Parent spawning biomass",
+                    ylab = "Recruitment", color = ~model, colors = cols)
+plotly::add_markers(plot, data = pairs[!pairs$is_proj, ], x = ~ssb,
+                   y = ~recruitment, color = ~model, colors = cols,
+                   text = ~paste("Parent year:", parent_year, "Recruitment year:", year),
+                   hoverinfo = "text+x+y", inherit = FALSE, showlegend = FALSE)
+```
+
+### Predictions
+
+```{r}
+plot_report(tabs$recruitment$prediction, color = ~model, colors = cols,
+            ylab = "Conditional recruitment")
+```
+
+### Reference values
+
+```{r, results='asis'}
+if (is.data.frame(tabs$recruitment$reference)) {
+  print(knitr::kable(tabs$recruitment$reference))
+} else cat("This curve has no additional recruitment covariates.")
+```
+
+Curves show median recruitment at the listed covariate values. Shading shows
+uncertainty in the curve, excluding variation in future recruitment. Parent
+SSB is start-of-year biomass; parent and recruitment years are shown on hover.

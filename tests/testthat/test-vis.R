@@ -39,6 +39,25 @@ test_that("vis_tam renders cleanly and produces an HTML output", {
 
   expect_true(file.exists(tmpfile))
   expect_match(readLines(tmpfile, n = 1L), "<!DOCTYPE html>", fixed = TRUE)
+  con <- file(tmpfile, "rb")
+  html <- paste(readLines(con, warn = FALSE), collapse = "\n")
+  close(con)
+  expect_match(html, "Numerical checks", fixed = TRUE)
+  expect_match(html, "Structural checks", fixed = TRUE)
+  expect_match(html, "Advisory findings", fixed = TRUE)
+  expect_match(html, "Adjusted maximum", fixed = TRUE)
+  expect_match(html, 'data-navmenu="Parameters"', fixed = TRUE)
+  expect_match(html, "<h1>Fixed</h1>", fixed = TRUE)
+  expect_match(html, "<h1>Random</h1>", fixed = TRUE)
+  expect_match(html, "<h3>Process SDs</h3>", fixed = TRUE)
+  expect_match(html, "<h3>Observation SDs</h3>", fixed = TRUE)
+  expect_match(html, "<h3>Initial abundance</h3>", fixed = TRUE)
+  parameter_plots <- Filter(function(p) identical(unlist(p$layout$xaxis$title), "Estimate"),
+                            dashboard_plots(tmpfile))
+  initial <- Filter(function(p) any(grepl("r0", unlist(lapply(p$data, `[[`, "y")), fixed = TRUE)),
+                    parameter_plots)
+  expect_length(initial, 1L)
+  expect_false(any(grepl("sd_|phi_|q", unlist(lapply(initial[[1]]$data, `[[`, "y")))))
 
   residuals <- dashboard_residuals(dashboard_plots(tmpfile))
   expect_gt(length(residuals), 0L)
@@ -60,6 +79,72 @@ test_that("vis_tam renders cleanly and produces an HTML output", {
     vis_tam(fits, output_file = NULL, open_file = TRUE,
             render_args = list(quiet = TRUE))
   })
+})
+
+test_that("formula-effect dashboards show only signed trends and framed ribbons", {
+  process <- update(default_fit, silent = TRUE,
+    index_settings = list(q_form = ~ q_block + rw(year, by = age, sd = .1) +
+      ar1(year, by = q_block, sd = .1, phi = .6) + iid(age, sd = .1), sd_form = ~1,
+      fill_missing = FALSE), start_par = as.list(default_fit$sdrep, "Estimate"))
+  reference <- default_fit
+  reference$obs_pred$index$q <- NA_real_
+  class(reference) <- c("tam_ref", "list")
+  file <- tempfile(fileext = ".html")
+  expect_no_error(vis_tam(model_list = list(Accepted = reference, ordinary = default_fit,
+    process = process), output_file = file, open_file = FALSE,
+    render_args = list(quiet = TRUE)))
+  con <- file(file, "rb")
+  html <- paste(readLines(con, warn = FALSE), collapse = "\n")
+  close(con)
+  expect_match(html, "Catchability random walk (year by age)", fixed = TRUE)
+  expect_match(html, "Catchability AR1 (year by q block)", fixed = TRUE)
+  expect_match(html, "Catchability IID (age)", fixed = TRUE)
+  expect_false(grepl("Changes between steps:|Effect after scaling by|Zero means no change", html))
+  plots <- dashboard_plots(file)
+  effects <- Filter(function(p) any(grepl("Effect on catchability", unlist(p$layout$yaxis$title))), plots)
+  expect_length(effects, 3L)
+  for (p in effects) {
+    expect_equal(p$layout$yaxis$type, "linear")
+    expect_lt(unlist(p$layout$yaxis$range)[1], 0)
+    expect_false(any(grepl("yaxis.type", unlist(p$layout$updatemenus), fixed = TRUE)))
+  }
+  framed <- Filter(function(p) length(p$frames) > 1L, effects)
+  expect_gt(length(framed), 0)
+  expect_true(any(vapply(framed, function(p) any(vapply(p$data,
+    function(trace) !is.null(trace$fill) && grepl("^to", trace$fill), logical(1))), logical(1))))
+})
+
+test_that("formula-effect labels describe the component and process plainly", {
+  effect <- data.frame(component = "F", process = "rw", variable = "year", by = NA_character_)
+  expect_identical(tinyAM:::.formula_effect_label(effect), "F random walk (year)")
+  effect$component <- "M"
+  effect$process <- "ar1"
+  effect$by <- "age_block"
+  expect_identical(tinyAM:::.formula_effect_label(effect), "M AR1 (year by age block)")
+  effect$component <- "q"
+  effect$process <- "iid"
+  effect$variable <- "age"
+  effect$by <- "survey"
+  expect_identical(tinyAM:::.formula_effect_label(effect), "Catchability IID (age by survey)")
+})
+
+test_that("fixed parameter groups isolate abundance and preserve every coefficient", {
+  par <- c("r0", "n0", "sd_f", "sd_mu_M_rw_year", "sd_q_iid_year",
+    "sd_catch", "sd_index", "q", "logit_q", "dq", "q_a50_logistic_age",
+    "q_slope_logistic_age", "mu_f", "mu_m", "phi_mu_F_ar1_year", "future_parameter", NA)
+  d <- data.frame(par = par, est = c(1e6, 5e5, rep(.1, length(par) - 2)))
+  groups <- tinyAM:::.fixed_parameter_groups(d)
+  expect_equal(sum(lengths(lapply(groups, `[[`, "par"))), nrow(d))
+  expect_setequal(groups[["Initial abundance"]]$par, c("r0", "n0"))
+  expect_setequal(groups[["Process SDs"]]$par, c("sd_f", "sd_mu_M_rw_year", "sd_q_iid_year"))
+  expect_setequal(groups[["Observation SDs"]]$par, c("sd_catch", "sd_index"))
+  expect_setequal(groups[["Catchability"]]$par, c("q", "logit_q"))
+  expect_setequal(groups[["Catchability curves"]]$par,
+                  c("dq", "q_a50_logistic_age", "q_slope_logistic_age"))
+  expect_true(all(vapply(groups[names(groups) != "Initial abundance"],
+                        function(x) all(x$est < 1), logical(1))))
+  expect_equal(nrow(groups[["Other"]]), 2L)
+  expect_length(tinyAM:::.fixed_parameter_groups(d[0, ]), 0L)
 })
 
 test_that("render_args must be a named list", {
@@ -222,7 +307,8 @@ test_that("tam_ref objects accept a Background page", {
   expect_true(any(grepl("All assessment assumptions are included.", html, fixed = TRUE)))
   expect_true(any(grepl("<h1>Fishery</h1>", html, fixed = TRUE)))
   expect_true(any(grepl("<h1>Trends</h1>", html, fixed = TRUE)))
-  expect_true(any(grepl("<h1>Parameters</h1>", html, fixed = TRUE)))
+  expect_true(any(grepl("<h1>Fixed</h1>", html, fixed = TRUE)))
+  expect_true(any(grepl("<h1>Random</h1>", html, fixed = TRUE)))
   expect_true(any(grepl("<h1>Inputs</h1>", html, fixed = TRUE)))
   expect_true(any(grepl("Spawning stock biomass", html, fixed = TRUE)))
   expect_true(any(grepl("Average F", html, fixed = TRUE)))

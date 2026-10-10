@@ -34,6 +34,12 @@ weight and maturity are retained for abundance-based aggregation inside
 
 \item{N_settings}{A list with elements:
 \itemize{
+\item \code{rec_form}: recruitment formula, default \code{~ rw(year)}. Use one of \code{\link[=iid]{iid()}},
+\code{\link[=rw]{rw()}}, or \code{\link[=ar1]{ar1()}} on \code{year}, optionally with fixed covariates from
+\code{obs$maturity} at the youngest modeled age. First-year recruitment remains
+a freely estimated fixed anchor; \code{process} below controls older cohorts.
+\code{\link[=bh]{bh()}} and \code{\link[=ricker]{ricker()}} add a median stock-recruit curve with IID/AR1
+residuals. See \link{recruitment_formulas} for lags, boundary states and units.
 \item \code{process}: \code{"off"} for deterministic cohort survival, \code{"iid"} for independent
 cohort residuals, \code{"rw"} for residuals that accumulate through time, or
 \code{"ar1"} for residuals correlated between years and ages. See \link{tinyAM-model}.
@@ -55,6 +61,9 @@ use \code{~ 1} for one estimated mean level or \code{~ factor(age)} for age-spec
 means. For \code{"rw"}, \code{NULL} is allowed. Mean columns constant through time
 cancel from RW increments and are removed with a warning. Remaining
 columns must be identifiable from historical year-to-year differences.
+With IID residuals, \code{\link[=iid]{iid()}}, \code{\link[=rw]{rw()}} and \code{\link[=ar1]{ar1()}} can add random mean effects,
+e.g. \code{~ factor(age) + rw(year)}. Only one temporal mean term is supported;
+structured means with temporal residual processes are not yet enabled.
 \item \code{mean_ages}: optional vector of ages to include in population weighted
 average F (\code{F_bar}) calculations. All ages used if absent.
 }}
@@ -69,6 +78,9 @@ surface directly and may therefore be positive or negative; they intentionally
 avoid a \code{log_} prefix to prevent automatic back-transformation when tidied.
 If provided together with \code{mu_supplied}, the intercept in \code{mu_form} is
 dropped (warning) so supplied levels act as fixed offsets.
+\code{\link[=iid]{iid()}}, \code{\link[=rw]{rw()}} and \code{\link[=ar1]{ar1()}} support random mean effects with IID residuals
+or the residual process off. Use \code{~ 0 + rw(year)} to vary supplied M through
+time. All mean components must be constant within fitted M age blocks.
 \item \code{mu_supplied}: optional one-sided formula giving supplied (non-estimated)
 \eqn{M}, e.g. \code{~ I(0.2)} or a column reference such as
 \code{~ M_assumption} stored in the \code{obs$weight} data.frame.
@@ -91,7 +103,8 @@ average M (\code{M_bar}) calculations. All ages used if absent.
 
 \item{catch_settings}{A list with elements:
 \itemize{
-\item \code{sd_form}: formula for observation SD blocks for catch-at-age data.
+\item \code{sd_form}: formula for log observation SD for catch-at-age data. Ordinary
+terms and Gaussian \link{formula_effects} are supported, e.g. \code{~ iid(age)}.
 \item \code{sd_supplied}: optional one-sided formula giving supplied SDs (on the natural
 scale of the log-observation residuals) for catch-at-age data. When provided,
 the intercept is removed from \code{sd_form} so supplied SDs act as offsets.
@@ -101,13 +114,18 @@ Defaults to \code{TRUE}. Note that one-step-ahead residuals are not currently wo
 
 \item{index_settings}{A list with elements:
 \itemize{
-\item \code{sd_form}: formula for observation SD blocks for index-at-age data.
+\item \code{sd_form}: formula for log observation SD for index-at-age data. Ordinary
+terms and Gaussian \link{formula_effects} are supported, e.g.
+\code{~ survey + rw(age, by = survey)}.
 \item \code{sd_supplied}: optional one-sided formula giving supplied SDs (on the natural
 scale of the log-observation residuals) for index-at-age data. When provided,
 the intercept is removed from \code{sd_form} so supplied SDs act as offsets.
 \item \code{q_form}: formula for catchability, evaluated on the index table. Ordinary
 \code{~ q_block} allows any pattern across blocks; \code{~ mono(q_block)} is non-decreasing across ordered
 blocks. See \code{\link[=mono]{mono()}} for independent non-decreasing curves by survey.
+Structured effects such as \code{~ survey + ar1(year, by = survey)} allow shared
+annual changes across ages. \code{~ survey + logistic(age, by = survey)} fits rising
+selectivity curves. See \link{formula_effects} for assumptions and constraints.
 \item \code{q_link}: \code{"log"} (default) allows any positive catchability; \code{"logit"}
 restricts catchability to between zero and one. Use the logit link only
 when the survey index has an absolute abundance scale and this restriction
@@ -193,12 +211,19 @@ effective biological values; this avoids circular mortality calculations.
 offsets).
 \item \code{index_settings$sd_form} is evaluated on the index table to produce
 \code{sd_index_modmat} and \strong{log-scale} parameters \code{log_sd_index}.
+Both SD formulas support additive \code{\link[=iid]{iid()}}, \code{\link[=rw]{rw()}}, \code{\link[=ar1]{ar1()}} and random
+intercepts; their compact unique states are stored in \code{sd_catch_terms}
+and \code{sd_index_terms}. They modify log observation SD, with supplied SDs
+acting as offsets. See \link{formula_effects} for interpretation and support checks.
 \item \code{index_settings$q_form} is evaluated on the index table to produce
 \code{q_modmat} and parameters \code{log_q} (log link) or \code{logit_q} (logit link).
 Additive \code{\link[=mono]{mono()}} terms instead contribute cumulative indicators
 in \code{q_mono_modmat}, with directly fitted non-negative increments \code{dq}
 on the selected link scale.
 \code{q_mono_steps} records each transition and its optional group.
+Structured \code{\link[=iid]{iid()}}, \code{\link[=rw]{rw()}}, \code{\link[=ar1]{ar1()}}, random-intercept and \code{\link[=logistic]{logistic()}}
+terms are recorded separately in \code{q_terms}. Their unique states and process
+parameters are added by \code{\link[=make_par]{make_par()}}, rather than treated as ordinary columns.
 \item If \code{M_settings$mu_form} is provided, \code{M_modmat <- model.matrix(mu_form, data = obs$weight)} and the resulting coefficients are parameters \code{mu_m}.
 These coefficients are applied on the log scale to build \eqn{M}, but
 retain the \code{mu_} prefix to emphasize they can be positive or negative.

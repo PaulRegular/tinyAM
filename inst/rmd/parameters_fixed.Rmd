@@ -1,0 +1,19 @@
+Fixed {data-navmenu="Parameters"}
+================================================================================
+
+Row {.tabset}
+--------------------------------------------------------------------------------
+
+```{r, results = "asis"}
+groups <- tinyAM:::.fixed_parameter_groups(fixed_par)
+for (category in names(groups)) {
+  parameter_group <- groups[[category]]
+  rendered <- knitr::knit_child(text = c(
+    paste("###", category), "",
+    "```{r}",
+    'd <- plot_rows(parameter_group, "est")',
+    "if (nrow(d)) plot_par(d, color = ~model, legendgroup = ~model, colors = cols) else plotly::plot_ly()",
+    "```", ""), quiet = TRUE)
+  cat(rendered, sep = "\n")
+}
+```

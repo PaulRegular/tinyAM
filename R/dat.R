@@ -279,12 +279,19 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #'   offsets).
 #' - `index_settings$sd_form` is evaluated on the index table to produce
 #'   `sd_index_modmat` and **log-scale** parameters `log_sd_index`.
+#'   Both SD formulas support additive [iid()], [rw()], [ar1()] and random
+#'   intercepts; their compact unique states are stored in `sd_catch_terms`
+#'   and `sd_index_terms`. They modify log observation SD, with supplied SDs
+#'   acting as offsets. See [formula_effects] for interpretation and support checks.
 #' - `index_settings$q_form` is evaluated on the index table to produce
 #'   `q_modmat` and parameters `log_q` (log link) or `logit_q` (logit link).
 #'   Additive [mono()] terms instead contribute cumulative indicators
 #'   in `q_mono_modmat`, with directly fitted non-negative increments `dq`
 #'   on the selected link scale.
 #'   `q_mono_steps` records each transition and its optional group.
+#'   Structured [iid()], [rw()], [ar1()], random-intercept and [logistic()]
+#'   terms are recorded separately in `q_terms`. Their unique states and process
+#'   parameters are added by [make_par()], rather than treated as ordinary columns.
 #' - If `M_settings$mu_form` is provided, `M_modmat <- model.matrix(mu_form,
 #'   data = obs$weight)` and the resulting coefficients are parameters `mu_m`.
 #'   These coefficients are applied on the log scale to build \eqn{M}, but
@@ -346,6 +353,12 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #'   weight and maturity are retained for abundance-based aggregation inside
 #'   [nll_fun()], preserving biomass and mature biomass in the plus group.
 #' @param N_settings A list with elements:
+#' - `rec_form`: recruitment formula, default `~ rw(year)`. Use one of [iid()],
+#'   [rw()], or [ar1()] on `year`, optionally with fixed covariates from
+#'   `obs$maturity` at the youngest modeled age. First-year recruitment remains
+#'   a freely estimated fixed anchor; `process` below controls older cohorts.
+#'   [bh()] and [ricker()] add a median stock-recruit curve with IID/AR1
+#'   residuals. See [recruitment_formulas] for lags, boundary states and units.
 #' - `process`: `"off"` for deterministic cohort survival, `"iid"` for independent
 #'   cohort residuals, `"rw"` for residuals that accumulate through time, or
 #'   `"ar1"` for residuals correlated between years and ages. See [tinyAM-model].
@@ -364,6 +377,9 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #'   means. For `"rw"`, `NULL` is allowed. Mean columns constant through time
 #'   cancel from RW increments and are removed with a warning. Remaining
 #'   columns must be identifiable from historical year-to-year differences.
+#'   With IID residuals, [iid()], [rw()] and [ar1()] can add random mean effects,
+#'   e.g. `~ factor(age) + rw(year)`. Only one temporal mean term is supported;
+#'   structured means with temporal residual processes are not yet enabled.
 #' - `mean_ages`: optional vector of ages to include in population weighted
 #'   average F (`F_bar`) calculations. All ages used if absent.
 #' @param M_settings A list with elements:
@@ -375,6 +391,9 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #'   avoid a `log_` prefix to prevent automatic back-transformation when tidied.
 #'   If provided together with `mu_supplied`, the intercept in `mu_form` is
 #'   dropped (warning) so supplied levels act as fixed offsets.
+#'   [iid()], [rw()] and [ar1()] support random mean effects with IID residuals
+#'   or the residual process off. Use `~ 0 + rw(year)` to vary supplied M through
+#'   time. All mean components must be constant within fitted M age blocks.
 #' - `mu_supplied`: optional one-sided formula giving supplied (non-estimated)
 #'   \eqn{M}, e.g. `~ I(0.2)` or a column reference such as
 #'   `~ M_assumption` stored in the `obs$weight` data.frame.
@@ -394,20 +413,26 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #' - `mean_ages`: optional vector of ages to include in population weighted
 #'   average M (`M_bar`) calculations. All ages used if absent.
 #' @param catch_settings A list with elements:
-#' - `sd_form`: formula for observation SD blocks for catch-at-age data.
+#' - `sd_form`: formula for log observation SD for catch-at-age data. Ordinary
+#'   terms and Gaussian [formula_effects] are supported, e.g. `~ iid(age)`.
 #' - `sd_supplied`: optional one-sided formula giving supplied SDs (on the natural
 #'   scale of the log-observation residuals) for catch-at-age data. When provided,
 #'   the intercept is removed from `sd_form` so supplied SDs act as offsets.
 #' - `fill_missing`: logical – fill missing values, and zeros, using random effects?
 #'   Defaults to `TRUE`. Note that one-step-ahead residuals are not currently working when `TRUE`.
 #' @param index_settings A list with elements:
-#' - `sd_form`: formula for observation SD blocks for index-at-age data.
+#' - `sd_form`: formula for log observation SD for index-at-age data. Ordinary
+#'   terms and Gaussian [formula_effects] are supported, e.g.
+#'   `~ survey + rw(age, by = survey)`.
 #' - `sd_supplied`: optional one-sided formula giving supplied SDs (on the natural
 #'   scale of the log-observation residuals) for index-at-age data. When provided,
 #'   the intercept is removed from `sd_form` so supplied SDs act as offsets.
 #' - `q_form`: formula for catchability, evaluated on the index table. Ordinary
 #'   `~ q_block` allows any pattern across blocks; `~ mono(q_block)` is non-decreasing across ordered
 #'   blocks. See [mono()] for independent non-decreasing curves by survey.
+#'   Structured effects such as `~ survey + ar1(year, by = survey)` allow shared
+#'   annual changes across ages. `~ survey + logistic(age, by = survey)` fits rising
+#'   selectivity curves. See [formula_effects] for assumptions and constraints.
 #' - `q_link`: `"log"` (default) allows any positive catchability; `"logit"`
 #'   restricts catchability to between zero and one. Use the logit link only
 #'   when the survey index has an absolute abundance scale and this restriction
@@ -687,10 +712,12 @@ prepare_tam <- function(
   dat$fill_missing_map <- dat$fill_missing_map & dat$is_missing
   dat$any_fill_missing <- any(dat$fill_missing_map)
 
-  dat$sd_catch_modmat <- stats::model.matrix(dat$catch_settings$sd_form, data = dat$obs$catch)
+  sd_design <- .parse_sd_formula(dat$catch_settings$sd_form, dat$obs$catch, "catch")
+  dat$sd_catch_modmat <- sd_design$matrix
+  dat$sd_catch_terms <- sd_design$terms
   if (!is.null(dat$catch_settings$sd_supplied)) {
     if ("(Intercept)" %in% colnames(dat$sd_catch_modmat)) {
-      dat$sd_catch_modmat <- stats::model.matrix(update(dat$catch_settings$sd_form, ~ 0 + .), data = dat$obs$catch)
+      dat$sd_catch_modmat <- .parse_sd_formula(update(dat$catch_settings$sd_form, ~ 0 + .), dat$obs$catch, "catch")$matrix
       dat$catch_settings$sd_form <- update(dat$catch_settings$sd_form, ~ 0 + .)
       cli::cli_warn("Dropping intercept term in catch sd_form since supplied SDs are provided. Set sd_supplied to NULL to estimate the intercept.")
     }
@@ -699,10 +726,12 @@ prepare_tam <- function(
     dat$log_sd_catch_supplied <- rep(0, nrow(dat$obs$catch))
   }
 
-  dat$sd_index_modmat <- stats::model.matrix(dat$index_settings$sd_form, data = dat$obs$index)
+  sd_design <- .parse_sd_formula(dat$index_settings$sd_form, dat$obs$index, "index")
+  dat$sd_index_modmat <- sd_design$matrix
+  dat$sd_index_terms <- sd_design$terms
   if (!is.null(dat$index_settings$sd_supplied)) {
     if ("(Intercept)" %in% colnames(dat$sd_index_modmat)) {
-      dat$sd_index_modmat <- stats::model.matrix(update(dat$index_settings$sd_form, ~ 0 + .), data = dat$obs$index)
+      dat$sd_index_modmat <- .parse_sd_formula(update(dat$index_settings$sd_form, ~ 0 + .), dat$obs$index, "index")$matrix
       dat$index_settings$sd_form <- update(dat$index_settings$sd_form, ~ 0 + .)
       cli::cli_warn("Dropping intercept term in index sd_form since supplied SDs are provided. Set sd_supplied to NULL to estimate the intercept.")
     }
@@ -711,10 +740,17 @@ prepare_tam <- function(
     dat$log_sd_index_supplied <- rep(0, nrow(dat$obs$index))
   }
 
+  .check_sd_terms(dat, "catch")
+  .check_sd_terms(dat, "index")
   q_design <- .parse_q_formula(dat$index_settings$q_form, dat$obs$index)
   dat[names(q_design)] <- q_design
+  .check_q_terms(dat)
+  dat$F_terms <- dat$M_terms <- list()
   if (!is.null(dat$F_settings$mu_form)) {
-    dat$F_modmat <- stats::model.matrix(F_settings$mu_form, data = dat$obs$catch)
+    mean_design <- .parse_mean_formula(dat$F_settings$mu_form, dat, "F")
+    dat$F_modmat <- mean_design$matrix
+    dat$F_terms <- mean_design$terms
+    .check_mean_terms(dat, "F")
     if (nrow(dat$F_modmat) != nrow(dat$obs$catch) ||
         any(!is.finite(dat$F_modmat)) || !ncol(dat$F_modmat)) {
       cli::cli_abort("F_settings$mu_form must produce a finite, non-empty design for every modeled year and age.")
@@ -748,11 +784,14 @@ prepare_tam <- function(
   }
 
   if (!is.null(dat$M_settings$mu_form)) {
-    dat$M_modmat <- stats::model.matrix(M_settings$mu_form, data = dat$obs$weight)
+    mean_design <- .parse_mean_formula(dat$M_settings$mu_form, dat, "M")
+    dat$M_modmat <- mean_design$matrix
+    dat$M_terms <- mean_design$terms
     if ("(Intercept)" %in% colnames(dat$M_modmat) && !is.null(dat$M_settings$mu_supplied)) {
-      dat$M_modmat <- stats::model.matrix(update(M_settings$mu_form, ~ 0 + .), data = dat$obs$weight)
+      dat$M_modmat <- .parse_mean_formula(update(dat$M_settings$mu_form, ~ 0 + .), dat, "M")$matrix
       cli::cli_warn("Dropping intercept term in M mu_form since supplied levels are provided. Set mu_supplied to NULL to estimate the intercept.")
     }
+    .check_mean_terms(dat, "M")
   } else {
     dat$mu_m <- 0
     dat$M_modmat <- 0
@@ -797,7 +836,7 @@ prepare_tam <- function(
   dat$logit_phi_f <- .set_phi(dat$F_settings$process)
   dat$logit_phi_m <- .set_phi(dat$M_settings$process)
 
-  dat
+  .parse_recruitment(dat)
 
 }
 

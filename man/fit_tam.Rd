@@ -39,6 +39,12 @@ weight and maturity are retained for abundance-based aggregation inside
 
 \item{N_settings}{A list with elements:
 \itemize{
+\item \code{rec_form}: recruitment formula, default \code{~ rw(year)}. Use one of \code{\link[=iid]{iid()}},
+\code{\link[=rw]{rw()}}, or \code{\link[=ar1]{ar1()}} on \code{year}, optionally with fixed covariates from
+\code{obs$maturity} at the youngest modeled age. First-year recruitment remains
+a freely estimated fixed anchor; \code{process} below controls older cohorts.
+\code{\link[=bh]{bh()}} and \code{\link[=ricker]{ricker()}} add a median stock-recruit curve with IID/AR1
+residuals. See \link{recruitment_formulas} for lags, boundary states and units.
 \item \code{process}: \code{"off"} for deterministic cohort survival, \code{"iid"} for independent
 cohort residuals, \code{"rw"} for residuals that accumulate through time, or
 \code{"ar1"} for residuals correlated between years and ages. See \link{tinyAM-model}.
@@ -60,6 +66,9 @@ use \code{~ 1} for one estimated mean level or \code{~ factor(age)} for age-spec
 means. For \code{"rw"}, \code{NULL} is allowed. Mean columns constant through time
 cancel from RW increments and are removed with a warning. Remaining
 columns must be identifiable from historical year-to-year differences.
+With IID residuals, \code{\link[=iid]{iid()}}, \code{\link[=rw]{rw()}} and \code{\link[=ar1]{ar1()}} can add random mean effects,
+e.g. \code{~ factor(age) + rw(year)}. Only one temporal mean term is supported;
+structured means with temporal residual processes are not yet enabled.
 \item \code{mean_ages}: optional vector of ages to include in population weighted
 average F (\code{F_bar}) calculations. All ages used if absent.
 }}
@@ -74,6 +83,9 @@ surface directly and may therefore be positive or negative; they intentionally
 avoid a \code{log_} prefix to prevent automatic back-transformation when tidied.
 If provided together with \code{mu_supplied}, the intercept in \code{mu_form} is
 dropped (warning) so supplied levels act as fixed offsets.
+\code{\link[=iid]{iid()}}, \code{\link[=rw]{rw()}} and \code{\link[=ar1]{ar1()}} support random mean effects with IID residuals
+or the residual process off. Use \code{~ 0 + rw(year)} to vary supplied M through
+time. All mean components must be constant within fitted M age blocks.
 \item \code{mu_supplied}: optional one-sided formula giving supplied (non-estimated)
 \eqn{M}, e.g. \code{~ I(0.2)} or a column reference such as
 \code{~ M_assumption} stored in the \code{obs$weight} data.frame.
@@ -96,7 +108,8 @@ average M (\code{M_bar}) calculations. All ages used if absent.
 
 \item{catch_settings}{A list with elements:
 \itemize{
-\item \code{sd_form}: formula for observation SD blocks for catch-at-age data.
+\item \code{sd_form}: formula for log observation SD for catch-at-age data. Ordinary
+terms and Gaussian \link{formula_effects} are supported, e.g. \code{~ iid(age)}.
 \item \code{sd_supplied}: optional one-sided formula giving supplied SDs (on the natural
 scale of the log-observation residuals) for catch-at-age data. When provided,
 the intercept is removed from \code{sd_form} so supplied SDs act as offsets.
@@ -106,13 +119,18 @@ Defaults to \code{TRUE}. Note that one-step-ahead residuals are not currently wo
 
 \item{index_settings}{A list with elements:
 \itemize{
-\item \code{sd_form}: formula for observation SD blocks for index-at-age data.
+\item \code{sd_form}: formula for log observation SD for index-at-age data. Ordinary
+terms and Gaussian \link{formula_effects} are supported, e.g.
+\code{~ survey + rw(age, by = survey)}.
 \item \code{sd_supplied}: optional one-sided formula giving supplied SDs (on the natural
 scale of the log-observation residuals) for index-at-age data. When provided,
 the intercept is removed from \code{sd_form} so supplied SDs act as offsets.
 \item \code{q_form}: formula for catchability, evaluated on the index table. Ordinary
 \code{~ q_block} allows any pattern across blocks; \code{~ mono(q_block)} is non-decreasing across ordered
 blocks. See \code{\link[=mono]{mono()}} for independent non-decreasing curves by survey.
+Structured effects such as \code{~ survey + ar1(year, by = survey)} allow shared
+annual changes across ages. \code{~ survey + logistic(age, by = survey)} fits rising
+selectivity curves. See \link{formula_effects} for assumptions and constraints.
 \item \code{q_link}: \code{"log"} (default) allows any positive catchability; \code{"logit"}
 restricts catchability to between zero and one. Use the logit link only
 when the survey index has an absolute abundance scale and this restriction
@@ -152,7 +170,7 @@ structure returned by \code{\link[=make_par]{make_par()}}. Useful for warm start
 runs where parameter estimates from a previous fit are reused to improve
 convergence and speed. Non-matching or missing entries are ignored.}
 
-\item{grad_tol}{Numeric tolerance passed to \code{\link[=check_convergence]{check_convergence()}} when
+\item{grad_tol}{Numeric tolerance passed to \code{\link[=check_tam]{check_tam()}} when
 evaluating the fitted object's gradients. Defaults to \code{1e-2}.}
 }
 \value{
@@ -167,12 +185,17 @@ A \code{tam_fit} list with components:
 \item \strong{fixed_par}: fixed parameter estimates in a tidy format (see \code{\link[=tidy_par]{tidy_par()}}).
 \item \strong{random_par}: list of random parameter estimates in a tidy format (see
 \code{\link[=tidy_par]{tidy_par()}}).
-\item \strong{is_converged}: Did the model converge? (see \code{\link[=check_convergence]{check_convergence()}})
+\item \strong{is_converged}: Did numerical checks pass? (see \code{\link[=check_tam]{check_tam()}})
+\item \strong{diagnostics}: Numerical, structural and advisory checks from \code{\link[=check_tam]{check_tam()}}.
 \item \strong{obs_pred}: \code{obs$catch} and \code{obs$index} data augmented with
 predicted values, parameter estimates, and
 standardized residuals (see \code{\link[=tidy_obs_pred]{tidy_obs_pred()}}).
 \item \strong{pop}: A collection of population summaries in tidy format (see
 \code{\link[=tidy_pop]{tidy_pop()}}).
+\item \strong{rec}: Recruitment predictions and residuals, with parent pairs and
+curve tables for stock-recruit models (see \code{\link[=tidy_recruitment]{tidy_recruitment()}}).
+\item \strong{formula_effects}: When Gaussian q, F/M mean or observation SD formula terms are present, signed effect levels,
+RW increments and numeric-by contributions for reporting and dashboards.
 }
 }
 \description{
@@ -196,11 +219,15 @@ old \code{log_q} starts are not reused as \code{logit_q}. See \code{\link[=prepa
 
 Random-effect blocks are chosen automatically from the model settings:
 \itemize{
-\item Always includes \code{log_f} and \code{log_r}.
+\item Always includes \code{log_f} and eligible \code{log_r} states. Early recruitment
+anchors are fixed; see \link{recruitment_formulas}.
 \item Includes \code{missing} if missing observations are set to be filled.
 \item Includes \code{log_n0} only if \code{N_settings$init == "random"}.
 \item Includes \code{log_n} if \code{N_settings$process != "off"}.
 \item Includes \code{log_m} if \code{M_settings$process != "off"}.
+\item Includes the unique \verb{eta_q_*} states of Gaussian catchability formula terms.
+\item Includes Gaussian F/M mean and catch/index log-SD formula states.
+Logistic midpoint/slope and process SD/correlation are fixed effects.
 }
 
 A warning is issued if the number of random effects exceeds 1.5 times the
@@ -216,9 +243,12 @@ imposed on the latent states themselves.
 For AR1, the correlation for an axis containing a single row or column is
 fixed at zero; otherwise it would be confounded with the SD.
 
-\code{is_converged} summarizes gradient and curvature checks. Also inspect
+\code{is_converged} summarizes optimizer, gradient and uncertainty checks. Also inspect
 \code{opt$convergence} and \code{opt$message}; a passing numerical check does not
 establish that the data identify every biological component.
+Fitting also warns about sparse catchability effects and wide formula-effect
+uncertainty. These advisories are retained by \code{\link[=check_tam]{check_tam()}} and do not change
+the likelihood, parameter constraints or numerical convergence criteria.
 }
 \examples{
 fit <- fit_tam(

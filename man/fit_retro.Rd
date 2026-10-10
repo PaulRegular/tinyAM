@@ -28,8 +28,8 @@ to generate a one year status-quo F projection.}
 
 \item{grad_tol}{Numeric tolerance for \verb{max|grad|}. If \code{NULL} (default),
 the tolerance stored on \code{fit} (from \code{\link[=fit_tam]{fit_tam()}}) is used; otherwise the
-supplied value is passed to \code{\link[=check_convergence]{check_convergence()}}. Output from retro fits
-that exceed this tolerance are dropped (see \code{\link[=check_convergence]{check_convergence()}}).}
+supplied value is passed to \code{\link[=check_tam]{check_tam()}}. Folds failing numerical checks
+are dropped; structural and advisory findings remain separate.}
 
 \item{progress}{Logical; show progress bar using \code{\link[progressr:with_progress]{progressr::with_progress()}}.}
 

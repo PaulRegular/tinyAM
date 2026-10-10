@@ -45,6 +45,8 @@ obs_pred <- tabs$obs_pred
 pop <- tabs$pop
 fixed_par <- tabs$fixed_par
 random_par <- tabs$random_par
+formula_effects <- tabs$formula_effects
+checks <- lapply(Filter(function(fit) inherits(fit, "tam_fit"), fits), check_tam)
 
 ```
 
@@ -115,7 +117,16 @@ table_link <- function(x, table_name = NULL, download_text = "Download table") {
 ```{r trends, child = "trends.Rmd"}
 ```
 
-```{r parameters, child = "parameters.Rmd"}
+```{r recruitment, child = if (length(tabs$recruitment$curve)) "recruitment.Rmd" else NULL}
+```
+
+```{r fixed-parameters, child = "parameters_fixed.Rmd"}
+```
+
+```{r random-parameters, child = "parameters_random.Rmd"}
+```
+
+```{r diagnostics, child = if (length(checks)) "diagnostics.Rmd" else NULL}
 ```
 
 ```{r tables, child = "tables.Rmd"}

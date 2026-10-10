@@ -46,17 +46,17 @@ rm(.assessment_helper)
     status <- "fit_failed"
     reason <- paste("Optimizer did not return a result:", paste(as.character(fit$opt), collapse = " "))
   }
-  gradient <- if (is.null(opt)) numeric() else
-    tryCatch(fit$obj$gr(fit$opt$par), error = function(e) numeric())
+  checks <- if (inherits(fit, "tam_fit")) tinyAM::check_tam(fit) else NULL
   data.frame(
     assessment_id = assessment_id,
     database_revision = if (length(database$commit)) database$commit[[1]] else NA_character_,
     status = status,
-    is_converged = if (is.null(fit)) NA else isTRUE(fit$is_converged),
+    is_converged = if (is.null(checks)) NA else checks$is_converged,
     optimizer_code = if (is.null(opt)) NA_integer_ else opt$convergence,
     optimizer_message = if (is.null(opt) || is.null(opt$message)) "" else opt$message,
     objective = if (is.null(opt)) NA_real_ else opt$objective,
-    max_abs_gradient = if (length(gradient)) max(abs(gradient), na.rm = TRUE) else NA_real_,
+    max_abs_gradient = if (is.null(checks)) NA_real_ else checks$max_gradient,
+    raw_max_abs_gradient = if (is.null(checks)) NA_real_ else checks$raw_max_gradient,
     sdreport_success = if (is.null(fit)) NA else sdrep_ok,
     positive_definite_hessian = if (is.null(fit)) NA else sdrep_ok && isTRUE(fit$sdrep$pdHess),
     n_fixed_effects = if (is.null(opt)) NA_integer_ else length(opt$par),
