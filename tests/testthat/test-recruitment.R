@@ -197,6 +197,28 @@ test_that("stock-recruit support warnings remain advisory", {
   expect_true(all(c("stock_recruit_support", "stock_recruit_uncertainty", "recruitment_AR1_uncertainty") %in% issues))
 })
 
+test_that("stock-recruit innovation advisories use historical process years", {
+  for (process in c("iid", "ar1")) {
+    d <- make_test_dat(years = 1983:2005, ages = 2:8,
+      N_settings = list(process = "off", rec_form = as.formula(paste0("~ bh(ssb) + ", process, "(year)"))),
+      proj_settings = list(n_proj = 3, n_mean = 2, F_mult = 1))
+    n <- length(d$rec$eligible)
+    fit <- list(dat = d, rep = list(rec_log_parent = log(seq(100, 1000, length.out = n)),
+      rec_innovation = seq_len(n)), sdrep = NULL)
+    expect_true("recruitment_innovation_correlation" %in% tinyAM:::.rec_fit_advisories(fit)$issue)
+    withr::local_seed(918)
+    e <- rnorm(n)
+    e[d$is_proj[d$rec$eligible]] <- 1e8
+    if (process == "ar1") e[1L] <- 1e8
+    fit$rep$rec_innovation <- e
+    expect_false("recruitment_innovation_correlation" %in% tinyAM:::.rec_fit_advisories(fit)$issue)
+    fit$rep$rec_innovation[] <- 0
+    expect_false("recruitment_innovation_correlation" %in% tinyAM:::.rec_fit_advisories(fit)$issue)
+    fit$rep$rec_innovation <- c(seq_len(14), rep(NA_real_, n - 14L))
+    expect_false("recruitment_innovation_correlation" %in% tinyAM:::.rec_fit_advisories(fit)$issue)
+  }
+})
+
 test_that("initial recruitment deviations are zero under a stock-recruit curve", {
   for (curve in c("bh", "ricker")) for (process in c("iid", "ar1")) {
     d <- make_test_dat(years = 1983:1995, ages = 2:8, N_settings = list(process = "off",

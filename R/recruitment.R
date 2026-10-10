@@ -384,6 +384,13 @@ ricker <- function(ssb, lag = NULL) {
       out <- rbind(out, data.frame(issue = "stock_recruit_support", detail =
         "Fitted parent SSB varies by less than a factor of two. Stock-recruit curve shape may be weakly supported; examine uncertainty and covariate sensitivity."))
     }
+    e <- fit$rep$rec_innovation[!fit$dat$is_proj[rec$eligible]]
+    if (rec$type == "ar1") e <- e[-1L]
+    if (length(e) >= 15L && all(is.finite(e)) && stats::sd(e) > 0 &&
+        abs(stats::cor(e[-length(e)], e[-1L])) > .5) {
+      out <- rbind(out, data.frame(issue = "recruitment_innovation_correlation", detail =
+        "Adjacent recruitment innovations remain strongly correlated. Inspect recruitment residuals and compare the residual process before interpreting the stock-recruit curve."))
+    }
   }
   sdr <- fit[["sdrep"]]
   if (!is.list(sdr) || !isTRUE(sdr$pdHess)) return(out)

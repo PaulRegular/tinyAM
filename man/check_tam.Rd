@@ -64,6 +64,12 @@ observation SD receive a caution under the logit link; exact log-link
 variance aliases are rejected before fitting.
 Logistic curves are flagged when the fitted midpoint is outside the observed
 age/size range and its 95\% interval is wider than that range.
+Stock-recruit advisories flag limited parent-SSB contrast, wide curve or AR1
+intervals, and absolute correlation above 0.5 between adjacent recruitment
+innovations when at least 15 historical innovations are available. The first
+stationary AR1 residual is excluded. Innovations depend on fitted states;
+this check can reveal an unsuitable residual process but does not establish
+or rule out a biological stock-recruit relationship.
 These descriptive thresholds identify imprecise estimates; they do not prove
 a structural problem or change the convergence criteria.
 }
