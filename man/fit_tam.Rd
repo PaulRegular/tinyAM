@@ -43,6 +43,8 @@ weight and maturity are retained for abundance-based aggregation inside
 \code{\link[=rw]{rw()}}, or \code{\link[=ar1]{ar1()}} on \code{year}, optionally with fixed covariates from
 \code{obs$maturity} at the youngest modeled age. First-year recruitment remains
 a freely estimated fixed anchor; \code{process} below controls older cohorts.
+\code{\link[=bh]{bh()}} and \code{\link[=ricker]{ricker()}} add a median stock-recruit curve with IID/AR1
+residuals. See \link{recruitment_formulas} for lags, boundary states and units.
 \item \code{process}: \code{"off"} for deterministic cohort survival, \code{"iid"} for independent
 cohort residuals, \code{"rw"} for residuals that accumulate through time, or
 \code{"ar1"} for residuals correlated between years and ages. See \link{tinyAM-model}.
@@ -190,6 +192,8 @@ predicted values, parameter estimates, and
 standardized residuals (see \code{\link[=tidy_obs_pred]{tidy_obs_pred()}}).
 \item \strong{pop}: A collection of population summaries in tidy format (see
 \code{\link[=tidy_pop]{tidy_pop()}}).
+\item \strong{rec}: Recruitment predictions and residuals, with parent pairs and
+curve tables for stock-recruit models (see \code{\link[=tidy_recruitment]{tidy_recruitment()}}).
 \item \strong{formula_effects}: When Gaussian q, F/M mean or observation SD formula terms are present, signed effect levels,
 RW increments and numeric-by contributions for reporting and dashboards.
 }
@@ -215,7 +219,8 @@ old \code{log_q} starts are not reused as \code{logit_q}. See \code{\link[=prepa
 
 Random-effect blocks are chosen automatically from the model settings:
 \itemize{
-\item Always includes \code{log_f} and \code{log_r}.
+\item Always includes \code{log_f} and eligible \code{log_r} states. Early recruitment
+anchors are fixed; see \link{recruitment_formulas}.
 \item Includes \code{missing} if missing observations are set to be filled.
 \item Includes \code{log_n0} only if \code{N_settings$init == "random"}.
 \item Includes \code{log_n} if \code{N_settings$process != "off"}.

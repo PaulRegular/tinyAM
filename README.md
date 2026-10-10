@@ -49,13 +49,38 @@ Departures from expected log abundance or mean log mortality can follow three pr
 - `"rw"`: departures accumulate from year to year, independently across ages;
 - `"ar1"`: departures are correlated across adjacent years and ages and return toward a mean.
 
-A random walk has no penalty on its starting level. Its SD describes annual increments; an AR1 SD is an innovation scale, not the marginal variability of the states. Recruitment also follows a temporal random walk.
+A random walk has no penalty on its starting level. Its SD describes annual increments; an AR1 SD is an innovation scale, not the marginal variability of the states. Recruitment defaults to a temporal random walk; `N_settings$rec_form` also supports IID or AR1 fluctuations, covariates, and Beverton–Holt or Ricker stock–recruit relationships.
 
 Mean structures for quantities such as fishing mortality, natural mortality, catchability, and observation error can be specified using familiar R formulas and design matrices.
 
-Initial abundance is specified independently of the subsequent N process through `N_settings$init`: `"exp"` (default) uses parsimonious survivorship from fixed first-year recruitment (`log_r0`), `"free"` estimates fixed older-age `log_n0` states, and `"random"` estimates random states with IID survivorship residuals (`eta_log_n0`) and a separate SD. Recruitment and N process states begin in year 2. Random initialization requires at least two ages and warns below ten ages because its SD may be weakly identified.
+Initial abundance is specified independently of the subsequent N process through `N_settings$init`: `"exp"` (default) uses parsimonious survivorship from fixed first-year recruitment (`log_r0`), `"free"` estimates fixed older-age `log_n0` states, and `"random"` estimates random states with IID survivorship residuals (`eta_log_n0`) and a separate SD. N process states begin in year 2. Recruitment starts there by default; stock–recruit models retain additional free early recruitment states when parent SSB precedes the modeled period. Random initialization requires at least two ages and warns below ten ages because its SD may be weakly identified.
 
 For an active M process, the default normally shares one state across all ages except the youngest, starting in year 2 (see `?prepare_tam` for very short age ranges). Earlier M and excluded ages retain their supplied or mean values. F is estimated in every historical year. These boundary assumptions can affect initial abundance and catchability estimates; they are not guarantees of identifiability. The full equations and conventions are in `help("tinyAM-model", package = "tinyAM")`.
+
+## Recruitment formulas
+
+Set `N_settings$rec_form` to describe recruitment at the youngest modeled age:
+
+```r
+~ rw(year)                              # default: changes accumulate
+~ iid(year)                             # independent good and bad years
+~ bh(ssb) + iid(year)                    # recruitment approaches a plateau
+~ ricker(ssb) + ar1(year)                # decline at high SSB, persistent residuals
+~ temperature + rw(year)                # covariate effects on recruitment changes
+```
+
+`N_settings$process` separately controls survival deviations in older cohorts.
+Annual covariates belong in `obs$maturity` at the youngest age; older-age entries
+may be missing. Curves describe median recruitment from start-of-year parent
+SSB. The lag defaults to recruitment age, and early years without modeled
+parent SSB remain free fixed states. Curve-plus-RW residuals are not supported.
+
+Use `check_tam()` to inspect uncertainty as well as numerical convergence.
+Limited SSB variation can leave curve shape poorly estimated even in a
+converged fit. `tidy_recruitment()` provides parent pairs, predictions and
+residuals; `vis_tam()` adds a stock–recruitment page when a curve is fitted.
+See `?recruitment_formulas` for equations and safeguards, and
+[runnable examples](inst/examples/example_recruitment.R).
 
 ## Monotonic survey catchability
 

@@ -38,6 +38,8 @@ weight and maturity are retained for abundance-based aggregation inside
 \code{\link[=rw]{rw()}}, or \code{\link[=ar1]{ar1()}} on \code{year}, optionally with fixed covariates from
 \code{obs$maturity} at the youngest modeled age. First-year recruitment remains
 a freely estimated fixed anchor; \code{process} below controls older cohorts.
+\code{\link[=bh]{bh()}} and \code{\link[=ricker]{ricker()}} add a median stock-recruit curve with IID/AR1
+residuals. See \link{recruitment_formulas} for lags, boundary states and units.
 \item \code{process}: \code{"off"} for deterministic cohort survival, \code{"iid"} for independent
 cohort residuals, \code{"rw"} for residuals that accumulate through time, or
 \code{"ar1"} for residuals correlated between years and ages. See \link{tinyAM-model}.

@@ -31,7 +31,8 @@ represent latent quantities on the log scale. They are compact fitted
 latent-state parameters; \code{log_N}, \code{log_F}, and \code{log_M} are full model
 surfaces constructed internally by \code{\link[=nll_fun]{nll_fun()}}. Process errors are
 calculated separately as deviations (\verb{eta_*}): recruitment uses successive
-log states, abundance uses cohort predictions, and F and M use their log
+log states by default, or expectations from \code{rec_form}; abundance uses
+cohort predictions, and F and M use their log
 mean surfaces. In particular, \code{log_f} and \code{log_m} are absolute latent states;
 their deviations are \code{eta_log_f = log_f - log_mu_F} and
 \code{eta_log_m = log_m - log_mu_M} on the corresponding years and age blocks.
@@ -44,7 +45,9 @@ it initializes a 2-vector \code{logit_phi_f}; if \code{dat$F_settings$mu_form} i
 
 Numeric parameters are initialized at \code{0}, except \code{dq} (initialized at \code{0.05})
 and \code{log_m}, which starts at its log mean surface so initial M-process
-residuals are zero. These are starting values, not priors. Matrices are created
+residuals are zero. Stock-recruit parameters use the anchor and initial SSB;
+their recruitment states start on the expected path with zero deviations.
+These are starting values, not priors. Matrices are created
 with appropriate \code{dimnames} (\verb{year × age} or \verb{year × age_block}).
 
 \strong{Created elements (when applicable) include:}
@@ -52,8 +55,17 @@ with appropriate \code{dimnames} (\verb{year × age} or \verb{year × age_block}
 \item \strong{Recruitment & variability}
 \itemize{
 \item \code{log_r0} (fixed first-year log recruitment, always present)
-\item \code{log_r} (random states for \code{dat$years[-1]}, length \code{length(dat$years) - 1})
-\item \code{log_sd_r}
+\item \code{log_r}: absolute random log recruitment in eligible process years;
+by default these are \code{dat$years[-1]}, named by year.
+\item \code{log_r_init}: additional free fixed boundary states when parent SSB lies
+before the modeled period, named by year.
+\item \code{log_sd_r}: estimated recruitment SD unless supplied in the formula.
+\item \code{rec_beta}: fixed log-scale covariate coefficients when present.
+\item \code{log_sr_alpha}, \code{log_sr_beta}: positive curve parameters on the log scale.
+\item \code{logit_phi_r}: estimated recruitment AR1 correlation when not supplied.
+Curve starts pass through the initial recruitment anchor at the first
+available parent SSB. Warm starts without curve parameters reinitialize
+the curve using their population states; see \link{recruitment_formulas}.
 }
 \item \strong{Initial older-age abundance (independent of the N process)}
 \itemize{

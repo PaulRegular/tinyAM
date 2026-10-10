@@ -75,6 +75,7 @@ can obscure the relationship. Inspect \code{\link[=check_tam]{check_tam()}} and 
 ~ ricker(ssb, lag = 2) + ar1(year)
 # Add temperature to obs$maturity at the youngest modeled age, then use:
 ~ bh(ssb) + temperature + iid(year)
+# Runnable fitting examples are in inst/examples/example_recruitment.R.
 }
 \seealso{
 \code{\link[=prepare_tam]{prepare_tam()}}, \code{\link[=fit_tam]{fit_tam()}}, \code{\link[=sim_tam]{sim_tam()}}, \code{\link[=check_tam]{check_tam()}}

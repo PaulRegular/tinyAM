@@ -147,6 +147,9 @@
 #'     (an approximate predictive draw when `par_uncertainty = "joint"`).
 #'   - `TRUE`  — generate **new process fields** for the random effects and re-simulate
 #'     across the entire modeled history, including historical years.
+#'     Recruitment follows `N_settings$rec_form`. Stock-recruit draws use
+#'     parent SSB from the same simulated population; fixed early recruitment
+#'     boundary states are retained. See [recruitment_formulas].
 #'     This includes `log_n0` only for `N_settings$init = "random"`, generated
 #'     by survivorship and IID residuals from the supplied `log_r0` anchor.
 #'     Free initial-age states are retained.

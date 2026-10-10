@@ -357,6 +357,8 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #'   [rw()], or [ar1()] on `year`, optionally with fixed covariates from
 #'   `obs$maturity` at the youngest modeled age. First-year recruitment remains
 #'   a freely estimated fixed anchor; `process` below controls older cohorts.
+#'   [bh()] and [ricker()] add a median stock-recruit curve with IID/AR1
+#'   residuals. See [recruitment_formulas] for lags, boundary states and units.
 #' - `process`: `"off"` for deterministic cohort survival, `"iid"` for independent
 #'   cohort residuals, `"rw"` for residuals that accumulate through time, or
 #'   `"ar1"` for residuals correlated between years and ages. See [tinyAM-model].

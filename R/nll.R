@@ -142,7 +142,7 @@ rprocess_rw <- function(x, sd = 1) {
 #' **Latent-state convention:** `log_r`, `log_n0`, `log_n`, `log_f`, and `log_m`
 #' represent absolute latent quantities on the log scale. Full model surfaces
 #' are `log_N`, `log_F`, and `log_M`. Process deviations are separate quantities:
-#' recruitment uses successive log states (`eta_R`), N uses cohort predictions
+#' recruitment uses its formula's conditional predictions (`eta_R`), N uses cohort predictions
 #' (`eta_log_N`), and F/M use their mean log surfaces (`eta_log_f`, `eta_log_m`).
 #' In particular, `log_f = log_mu_F + eta_log_f` and
 #' `log_m = log_mu_M + eta_log_m` on their represented years and ages/blocks.
@@ -159,15 +159,18 @@ rprocess_rw <- function(x, sd = 1) {
 #' logit and restricts q to between zero and one. Both estimation and simulation
 #' use the same predictor, including any [mono()] increments.
 #'
-#' With `simulate = TRUE`, recruitment and mortality states are drawn first.
-#' N is then constructed through initial-age and cohort recursion, followed by
+#' With `simulate = TRUE`, mortality states are drawn first. Recruitment and N
+#' are constructed chronologically, using the same simulated parent SSB for
+#' stock-recruit relationships. This is followed by
 #' predictions and observation draws with the SD for each matching row.
 #' Derived quantities therefore use the same realization as the returned states.
 #' If biological inputs extend above the modeled plus age, hidden age abundances
-#' are reconstructed after N. Effective terminal W and P preserve biomass and
+#' are reconstructed within each year before SSB is calculated. Effective
+#' terminal W and P preserve biomass and
 #' mature biomass; see [tinyAM-model]. No extra parameters or process penalties
 #' are introduced. `N_plus`, `W`, and `P` are then included in `report()`.
-#' Random N0 is redrawn; free N0 and `log_r0` remain supplied fixed states.
+#' Random N0 is redrawn; free N0, `log_r0`, and additional early recruitment
+#' boundary states remain supplied fixed states. See [recruitment_formulas].
 #' RW processes retain their starting state because it has no process density.
 #' For N, the first `log_n` row is retained and its starting residual is computed
 #' against the newly simulated cohort prediction. Subsequent residuals follow

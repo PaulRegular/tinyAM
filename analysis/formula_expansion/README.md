@@ -225,3 +225,54 @@ were recomputed with identical seeds; full assessment fits were unaffected.
 Both workflow examples passed projections, two retrospective folds, two
 hindcast folds, simulation and dashboard checks. The final full package suite
 and `R CMD check --no-manual` passed.
+
+## Recruitment validation
+
+Recruitment formulas use the existing absolute log-recruitment states. They
+support a default RW, IID/AR1 residuals, annual covariates, and Beverton–Holt or
+Ricker curves with IID/AR1 residuals. The curve describes median recruitment.
+Parent SSB is start-of-year; unavailable pre-model parents leave free fixed
+boundary recruitment states rather than reconstructed SSB.
+
+Run from the repository root:
+
+```r
+system2(file.path(R.home("bin"), "Rscript"),
+        "analysis/formula_expansion/test_recruitment_validation.R")
+system2(file.path(R.home("bin"), "Rscript"),
+        c("analysis/formula_expansion/simulate_recruitment.R", "100", "30", "3"))
+system2(file.path(R.home("bin"), "Rscript"),
+        "analysis/formula_expansion/validate_recruitment_workflow.R")
+rmarkdown::render("analysis/formula_expansion/recruitment_report.Rmd",
+                  output_dir = "analysis/formula_expansion/results")
+```
+
+`recruitment_validation.R` holds the designs and recovery calculations. The
+study records 1,400 isolated attempts and 180 full assessments across six
+specifications, with narrow-SSB and correlated-covariate stress cases. Seeds,
+warnings, failures, uncertainty, and source fingerprints are retained. The
+optional worker count changes scheduling only; checkpoints resume missing
+attempts with unchanged source and replicate counts. Numerical success,
+parameter recovery, and coverage are separate outcomes.
+
+The workflow checks projections, named starts, retrospective/hindcast folds,
+simulation, tidy uncertainty, and three dashboards. The runnable package
+example is `inst/examples/example_recruitment.R`. Keep these sources and the
+concise report text; generated results, fits, figures, and HTML remain ignored.
+
+A study-only survey-row assignment error invalidated an earlier set of full
+attempts. Those attempts and the original study source remain in the ignored
+`results/recruitment_invalid_observation_order/` archive. The full experiment
+was restarted with corrected row alignment; a deterministic regression test
+checks that simulated observations survive preparation without reordering.
+Package simulation and the earlier formula studies were unaffected.
+
+### Recruitment evidence
+
+All 1,400 isolated attempts passed numerical checks. Full assessments passed
+30/30 BH–IID, 29/30 BH–AR1, 28/30 Ricker–IID, 27/30 Ricker–AR1, 24/30
+covariate–IID and 28/30 covariate–RW attempts. Four covariate–IID failures came
+from the prespecified RW warm start; two had gradients just above 0.01. Keep
+these options experimental: curve support and interval calibration remain
+important limitations even when fitting succeeds. The full suite passed 1,818
+assertions with one interactive-only skip; `R CMD check --no-manual` was OK.

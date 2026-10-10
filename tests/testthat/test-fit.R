@@ -15,7 +15,7 @@ test_that("fit_tam runs on a cod dataset and returns expected structure", {
   expect_s3_class(fit, "tam_fit")
   expect_named(
     fit,
-    c("call", "dat", "obj", "opt", "rep", "sdrep", "obs_pred", "pop", "is_converged",
+    c("call", "dat", "obj", "opt", "rep", "sdrep", "obs_pred", "pop", "rec", "is_converged",
       "fixed_par", "random_par", "refit_args", "grad_tol", "diagnostics",
       "sdreport_error", "gradient", "parameter_values", "parameter_map", "bounds"),
     ignore.order = TRUE

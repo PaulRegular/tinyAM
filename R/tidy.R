@@ -420,7 +420,10 @@ tidy_pop <- function(fit, interval = 0.95) {
 #' Labels are added where applicable:
 #' - For parameters specified using a formula in [prepare_tam()] (e.g., `log_q`, `logit_q`,
 #'   `log_sd_catch`, `log_sd_index`), a `coef` column is added.
-#' - For `log_r`, `year` contains years 2:Y; full recruitment is in [tidy_pop()].
+#' - For `log_r`, `year` contains eligible recruitment process years (by default
+#'   years 2:Y). Fixed early `log_r_init` states also carry year labels.
+#'   Full recruitment is in [tidy_pop()]; parent pairs and process diagnostics
+#'   are in [tidy_recruitment()].
 #' - For `log_n0`, an `age` column identifies the initial older-age state.
 #'   `log_r0` and `log_n0` are exponentiated to abundance levels; `log_sd_n0`
 #'   is exponentiated to the initial-age residual SD.
@@ -714,10 +717,12 @@ stack_nested <- function(x, label = "model",
 #' @inheritParams stack_nested
 #'
 #' @return
-#' A named list with four basic elements, and `formula_effects` when present:
+#' A named list of stacked tables, with `formula_effects` when present:
 #'
 #' - **obs_pred** — a named list of stacked data frames (e.g., `catch`, `index`);
 #' - **pop** — a named list of stacked data frames (e.g., `ssb`, `N`, `M`, `mu_M`, `F`, `mu_F`, `Z`, …);
+#' - **recruitment** — predictions, residuals and optional stock-recruit curves;
+#'   see [tidy_recruitment()];
 #' - **fixed_par** — a single stacked data frame of fixed-effect parameters with columns like `par`, `est`, `se`, `lwr`, `upr`, plus indices (e.g., `coef`, `year`, `age`) and the label column when applicable;
 #' - **random_par** — a named list of stacked data frames, one per random-effect block, each with the same schema as `fixed_par` plus block-appropriate indices.
 #' - **formula_effects** — signed Gaussian q, F/M mean and log observation-SD effect levels, RW increments and

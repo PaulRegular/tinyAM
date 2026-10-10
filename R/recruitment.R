@@ -39,7 +39,8 @@
       if (!identical(args$ssb, quote(ssb))) cli::cli_abort("{type}() must use the model's ssb.")
       lag <- if (is.null(args$lag) || identical(args$lag, quote(NULL))) min(dat$ages) else
         tryCatch(eval(args$lag, environment(form)), error = function(e) NULL)
-      if (!is.numeric(lag) || length(lag) != 1L || !is.finite(lag) || lag < 0 || lag != floor(lag)) {
+      if (!is.numeric(lag) || length(lag) != 1L || !is.finite(lag) || lag < 0 ||
+          lag != floor(lag) || lag > .Machine$integer.max) {
         cli::cli_abort("Stock-recruit lag must be one non-negative integer.")
       }
       curves[[length(curves) + 1L]] <<- list(type = type, lag = as.integer(lag))
@@ -89,7 +90,7 @@
     if (length(removed)) cli::cli_warn("Constant recruitment RW covariates cancel from increments and are removed: {paste(removed, collapse = ', ')}.")
     matrix <- matrix[, !constant, drop = FALSE]
   }
-  first <- if (is.null(curve)) 2L else max(2L, curve$lag + 1L)
+  first <- if (is.null(curve)) 2L else max(2L, curve$lag + 1)
   if (first > sum(!dat$is_proj)) cli::cli_abort("No historical parent-recruit pairs are available; shorten lag or extend modeled years.")
   eligible <- seq.int(first, length(dat$years))
   historical <- eligible[!dat$is_proj[eligible]]
@@ -109,8 +110,10 @@
   if (!is.null(curve) && ncol(design) && qr(cbind(1, design))$rank < ncol(design) + 1L) {
     cli::cli_abort("Recruitment covariates duplicate the stock-recruit productivity baseline; remove constant or redundant columns.")
   }
-  if (ncol(design) && (qr(design)$rank < ncol(design) ||
-      (is.null(rec$sd) && ncol(design) >= n))) {
+  fixed_parameters <- ncol(design) + if (is.null(curve)) 0L else 2L
+  if ((ncol(design) && qr(design)$rank < ncol(design)) ||
+      fixed_parameters > n ||
+      (is.null(rec$sd) && fixed_parameters >= n)) {
     cli::cli_abort("Recruitment fixed effects are redundant or saturated; simplify rec_form.")
   }
   held <- setdiff(variables, "year")
@@ -184,6 +187,7 @@
 #' ~ ricker(ssb, lag = 2) + ar1(year)
 #' # Add temperature to obs$maturity at the youngest modeled age, then use:
 #' ~ bh(ssb) + temperature + iid(year)
+#' # Runnable fitting examples are in inst/examples/example_recruitment.R.
 #' @seealso [prepare_tam()], [fit_tam()], [sim_tam()], [check_tam()]
 #' @name recruitment_formulas
 #' @export
@@ -240,7 +244,7 @@ ricker <- function(ssb, lag = NULL) {
 }
 
 # One chronological population construction for estimation and simulation.
-.population_states <- function(par, dat, Z, simulate = FALSE) {
+.population_states <- function(par, dat, Z, simulate = FALSE, initialize = FALSE) {
   "[<-" <- RTMB::ADoverload("[<-")
   T <- length(dat$years)
   A <- length(dat$ages)
@@ -312,9 +316,9 @@ ricker <- function(ssb, lag = NULL) {
         rw = log_recruitment[y - 1L] + mean[y] - mean[y - 1L],
         iid = log_mu_R[y],
         ar1 = log_mu_R[y] + if (y == dat$rec$eligible[1L]) 0 else scale$phi * u[y - 1L])
-      if (simulate) {
+      if (simulate || initialize) {
         sd <- if (dat$rec$type == "ar1" && y == dat$rec$eligible[1L]) scale$sd / sqrt(1 - scale$phi^2) else scale$sd
-        log_recruitment[y] <- stats::rnorm(1L, log_pred_R[y], sd)
+        log_recruitment[y] <- if (simulate) stats::rnorm(1L, log_pred_R[y], sd) else log_pred_R[y]
         log_N[y, 1L] <- log_recruitment[y]
       }
       u[y] <- log_recruitment[y] - log_mu_R[y]
@@ -340,8 +344,9 @@ ricker <- function(ssb, lag = NULL) {
   out
 }
 
-.initialize_rec_curve <- function(par, dat) {
-  mean_M <- matrix(dat$log_mu_supplied_m + drop(dat$M_modmat %*% if (is.null(par$mu_m)) dat$mu_m else par$mu_m),
+.initialize_rec_curve <- function(par, dat, initialize_states = FALSE) {
+  mean_M <- matrix(dat$log_mu_supplied_m + drop(dat$M_modmat %*% if (is.null(par$mu_m)) dat$mu_m else par$mu_m) +
+                     .mean_effects(par, dat, "M")$contribution,
                    length(dat$years), length(dat$ages), dimnames = list(dat$years, dat$ages))
   M <- exp(mean_M)
   if (!is.null(par[["log_m"]])) M[rownames(par[["log_m"]]), names(dat$M_settings$age_blocks)] <-
@@ -354,7 +359,9 @@ ricker <- function(ssb, lag = NULL) {
   i <- dat$rec$eligible[1L] - dat$rec$curve$lag
   S <- sum(exp(initial$log_N[i, ]) * initial$W[i, ] * initial$P[i, ])
   par$log_sr_beta <- -log(S)
-  par$log_sr_alpha <- par$log_r0 - log(S) + if (dat$rec$curve$type == "bh") log(2) else 1
+  par$log_sr_alpha <- par$log_r0 - .rec_mean(par, dat)[dat$rec$eligible[1L]] - log(S) +
+    if (dat$rec$curve$type == "bh") log(2) else 1
+  if (initialize_states) par$log_r[] <- .population_states(par, dat, F + M, initialize = TRUE)$log_recruitment[dat$rec$eligible]
   par
 }
 

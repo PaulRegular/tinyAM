@@ -24,8 +24,12 @@ test_that("recruitment has a fixed first-year anchor and subsequent RW states", 
   constant$log_r0 <- constant$log_r0 + 10
   constant$log_r[] <- constant$log_r0
   expect_equal(nll_fun(constant, no_obs), nll_fun(par, no_obs) - sum(increments^2) / 2)
+  next_increment <- 0L
   testthat::local_mocked_bindings(rnorm = function(n, mean = 0, sd = 1) {
-    if (n == length(increments)) return(increments)
+    if (n == 1L) {
+      next_increment <<- next_increment + 1L
+      return(mean + increments[next_increment])
+    }
     rep_len(mean, n)
   }, .package = "stats")
   sim <- nll_fun(par, dat, simulate = TRUE)

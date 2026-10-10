@@ -12,7 +12,8 @@
 #' latent-state parameters; `log_N`, `log_F`, and `log_M` are full model
 #' surfaces constructed internally by [nll_fun()]. Process errors are
 #' calculated separately as deviations (`eta_*`): recruitment uses successive
-#' log states, abundance uses cohort predictions, and F and M use their log
+#' log states by default, or expectations from `rec_form`; abundance uses
+#' cohort predictions, and F and M use their log
 #' mean surfaces. In particular, `log_f` and `log_m` are absolute latent states;
 #' their deviations are `eta_log_f = log_f - log_mu_F` and
 #' `eta_log_m = log_m - log_mu_M` on the corresponding years and age blocks.
@@ -25,15 +26,26 @@
 #'
 #' Numeric parameters are initialized at `0`, except `dq` (initialized at `0.05`)
 #' and `log_m`, which starts at its log mean surface so initial M-process
-#' residuals are zero. These are starting values, not priors. Matrices are created
+#' residuals are zero. Stock-recruit parameters use the anchor and initial SSB;
+#' their recruitment states start on the expected path with zero deviations.
+#' These are starting values, not priors. Matrices are created
 #' with appropriate `dimnames` (`year × age` or `year × age_block`).
 #'
 #' **Created elements (when applicable) include:**
 #'
 #' - **Recruitment & variability**
 #'   - `log_r0` (fixed first-year log recruitment, always present)
-#'   - `log_r` (random states for `dat$years[-1]`, length `length(dat$years) - 1`)
-#'   - `log_sd_r`
+#'   - `log_r`: absolute random log recruitment in eligible process years;
+#'     by default these are `dat$years[-1]`, named by year.
+#'   - `log_r_init`: additional free fixed boundary states when parent SSB lies
+#'     before the modeled period, named by year.
+#'   - `log_sd_r`: estimated recruitment SD unless supplied in the formula.
+#'   - `rec_beta`: fixed log-scale covariate coefficients when present.
+#'   - `log_sr_alpha`, `log_sr_beta`: positive curve parameters on the log scale.
+#'   - `logit_phi_r`: estimated recruitment AR1 correlation when not supplied.
+#'   Curve starts pass through the initial recruitment anchor at the first
+#'   available parent SSB. Warm starts without curve parameters reinitialize
+#'   the curve using their population states; see [recruitment_formulas].
 #'
 #' - **Initial older-age abundance (independent of the N process)**
 #'   - `log_n0`: realized log abundance at initial ages `ages[-1]`, named by age;
@@ -222,7 +234,7 @@ make_par <- function(dat) {
   }
 
   if (!is.null(dat$rec$curve)) {
-    par <- .initialize_rec_curve(par, dat)
+    par <- .initialize_rec_curve(par, dat, initialize_states = TRUE)
   }
   par
 

@@ -24,6 +24,10 @@
 #'          describing assessment assumptions and translation choices.
 #'          The Parameters menu separates Fixed and Random pages. Fixed plots
 #'          group similar quantities, with initial abundance shown separately.
+#'          Stock-recruit models add a relationship page with parent-year pairs,
+#'          median curves at declared reference covariates and conditional
+#'          recruitment predictions. Random parameters also show signed
+#'          recruitment residuals. See [tidy_recruitment()].
 #'          Random plots include latent states and formula-effect trends.
 #' @return Used for its side effects: writes an HTML dashboard and optionally
 #'   opens it in the browser. Supply `output_file` to retain a known file path.

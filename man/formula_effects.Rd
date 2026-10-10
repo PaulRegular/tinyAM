@@ -32,6 +32,8 @@ unrelated fixed coefficient for every value. Use these markers as additive
 terms in \code{index_settings$q_form}, \code{F_settings$mu_form}, or
 \code{M_settings$mu_form}, \code{catch_settings$sd_form}, or \code{index_settings$sd_form};
 ordinary formula terms supply the baseline.
+\code{N_settings$rec_form} also supports one annual Gaussian residual process;
+see \link{recruitment_formulas} for its distinct initial-state convention.
 }
 \details{
 \code{iid(x)} gives each level an independent, mean-zero Normal effect.

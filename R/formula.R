@@ -6,6 +6,8 @@
 #' terms in `index_settings$q_form`, `F_settings$mu_form`, or
 #' `M_settings$mu_form`, `catch_settings$sd_form`, or `index_settings$sd_form`;
 #' ordinary formula terms supply the baseline.
+#' `N_settings$rec_form` also supports one annual Gaussian residual process;
+#' see [recruitment_formulas] for its distinct initial-state convention.
 #'
 #' @details
 #' `iid(x)` gives each level an independent, mean-zero Normal effect.

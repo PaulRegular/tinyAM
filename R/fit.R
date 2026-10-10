@@ -93,7 +93,8 @@
 #'
 #' Random-effect blocks are chosen automatically from the model settings:
 #'
-#' - Always includes `log_f` and `log_r`.
+#' - Always includes `log_f` and eligible `log_r` states. Early recruitment
+#'   anchors are fixed; see [recruitment_formulas].
 #' - Includes `missing` if missing observations are set to be filled.
 #' - Includes `log_n0` only if `N_settings$init == "random"`.
 #' - Includes `log_n` if `N_settings$process != "off"`.
@@ -157,6 +158,8 @@
 #'                  standardized residuals (see [tidy_obs_pred()]).
 #' - **pop**: A collection of population summaries in tidy format (see
 #'            [tidy_pop()]).
+#' - **rec**: Recruitment predictions and residuals, with parent pairs and
+#'            curve tables for stock-recruit models (see [tidy_recruitment()]).
 #' - **formula_effects**: When Gaussian q, F/M mean or observation SD formula terms are present, signed effect levels,
 #'   RW increments and numeric-by contributions for reporting and dashboards.
 #'
