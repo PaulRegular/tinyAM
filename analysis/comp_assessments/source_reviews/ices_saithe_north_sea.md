@@ -57,6 +57,14 @@ for catch and the age-specific survey. Fbar is ages 4–7. The configuration
 date and exact 2026 sampling fractions remain flagged rather than treated as
 newly verified settings.
 
+The printed F variance keys are `0 1 2 3 3 3 3 3`: ages 3, 4 and 5 have
+separate innovation SDs, with ages 6–10+ sharing one. tinyAM's retained F
+process has one SD. Separate recruitment and shared older-cohort SDs are
+already supported; that simpler N variance grouping is not itself a missing
+capability. The initial-state treatment and F density still differ. The common
+SSB comparison uses accepted N with the same translated biology as tinyAM;
+it does not imply identical native spawning-time SSB.
+
 The report gives accepted N-at-age for ages 3–10+ and F-at-age for ages 3–8
 and 9+ through 2025 (Tables 14.4.2–14.4.3). It explicitly says F at age 9 and
 10+ is coupled, so the F output surface uses a single 9+ value. Table 14.6.1
@@ -72,15 +80,7 @@ the historical fitted period.
 - Exact 2026 within-year sampling fractions are absent from the report. The
   cached 2024 native data object has sample times 0.730 for the Q3–Q4 index
   and 0.525 for commercial CPUE; these are useful context, not verified 2026
-values.
-
-The printed F variance keys are `0 1 2 3 3 3 3 3`: ages 3, 4 and 5 have
-separate innovation SDs, with ages 6–10+ sharing one. tinyAM's retained F
-process has one SD. Separate recruitment and shared older-cohort SDs are
-already supported; that simpler N variance grouping is not itself a missing
-capability. The initial-state treatment and F density still differ. The common
-SSB comparison uses accepted N with the same translated biology as tinyAM;
-it does not imply identical native spawning-time SSB.
+  values.
 - tinyAM's current observation structure does not represent a single
   aggregate relative CPUE observation tuned to exploitable biomass. The
   translation therefore fits the Q3–Q4 age-specific index and records the
