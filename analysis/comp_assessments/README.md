@@ -111,3 +111,5 @@ difference; `*_trend` is trajectory correlation. The matching status is retained
 alongside each metric. Detailed definitions and units are in the aggregate
 comparison summary and cached reference objects. Diagnostic failures remain
 visible; their comparison values are not grounds for selecting that model.
+Pinned baseline models and candidates use the same current comparison
+definitions, including corrections to reported age-group interpretation.

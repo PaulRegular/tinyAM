@@ -35,6 +35,12 @@ review_candidates <- list(
   ),
   nefsc_atlantic_mackerel_2018 = list(
     shared_f_rw = list(F_settings = list(process = 'iid', mu_form = ~ factor(age) + rw(year)))
+  ),
+  ices_saithe_north_sea_2026 = list(
+    independent_f_rw = list(F_settings = list(process = 'rw', mu_form = NULL))
+  ),
+  ices_herring_western_baltic_2026 = list(
+    iid_survival = list(N_settings = list(process = 'iid'))
   )
 )
 
@@ -53,10 +59,10 @@ review_inventory <- c(
   ices_haddock_north_sea_2026 = 'Retain RW recruitment and source q/error groups. Density-dependent q powers and age-correlated F increments are not logistic catchability.',
   ices_herring_north_sea_2026 = 'Retain RW recruitment and source q sharing. Larval spawning-component observations remain excluded; extra q effects do not supply that mapping.',
   ices_herring_norwegian_spring_2025 = 'Retain baseline; exact process and q-sharing configuration is unresolved. Do not guess a logistic curve or temporal effect.',
-  ices_herring_western_baltic_2026 = 'Retain baseline RW approximation. Hockey-stick recruitment is not BH/Ricker; source q keys are already used.',
+  ices_herring_western_baltic_2026 = 'Test IID survival errors separately from recruitment. Hockey-stick recruitment is not BH/Ricker; source q keys are already used.',
   ices_norway_pout_north_sea_2026_benchmark = 'Retain annual approximation as non-converged. Quarterly recruitment and mortality cannot be recovered by adding annual formula effects.',
   ices_plaice_north_sea_2026 = 'Retain RW recruitment and flexible survey-age q. Printed sharing keys are not fully mapped to individual surveys; do not invent their assignments.',
-  ices_saithe_north_sea_2026 = 'Retain RW recruitment and source q sharing. Shared terminal F states and correlated innovations are distinct from mean-formula effects.',
+  ices_saithe_north_sea_2026 = 'Test temporal F RWs instead of stationary AR1 F. Shared terminal states, age-correlated increments and four innovation SD groups remain distinct.',
   ices_sprat_baltic_2026 = 'Retain RW recruitment and current survey groups. Source age-zero index is already shifted to age one; spawning survival and terminal F sharing remain different.',
   ices_whiting_north_sea_2026 = 'Retain RW recruitment, N and F and source survey-age q. Observation correlations and M GMRF remain distinct unsupported likelihood structures.',
   nefsc_atlantic_mackerel_2018 = 'Test a shared temporal F mean with IID residuals to approximate time-constant fishery selectivity. Logistic q is not fishery selectivity; the aggregate egg index lacks an age allocation.',
@@ -79,7 +85,9 @@ review_decisions <- c(
   'dfo_cod_4t4vn_2019/fixed_sd_m_rw' = 'retained_baseline_tradeoff',
   'dfo_herring_4tvn_spring_2024/cpue_q_rw' = 'retained_baseline_tradeoff',
   'dfo_herring_4tvn_spring_2024/fixed_sd_m_rw' = 'retained_baseline_worse_agreement',
-  'nefsc_atlantic_mackerel_2018/shared_f_rw' = 'retained_baseline_worse_agreement'
+  'nefsc_atlantic_mackerel_2018/shared_f_rw' = 'retained_baseline_worse_agreement',
+  'ices_saithe_north_sea_2026/independent_f_rw' = 'retained_baseline_tradeoff',
+  'ices_herring_western_baltic_2026/iid_survival' = 'rejected_numerical'
 )
 review_decision_notes <- c(
   'dfo_cod_2j3kl_2025/bh_iid' = 'Non-positive-definite Hessian; worse scale agreement; correlated recruitment innovations.',
@@ -95,7 +103,9 @@ review_decision_notes <- c(
   'dfo_cod_4t4vn_2019/fixed_sd_m_rw' = 'With the baseline preliminary fit, all trends and N/SSB scale improve, but F scale and terminal recruitment worsen. Retain baseline and flag this alternative for review.',
   'dfo_herring_4tvn_spring_2024/cpue_q_rw' = 'Trends improve but SSB error increases from 25% to 67%, F from 63% to 192%; 15 active bounds.',
   'dfo_herring_4tvn_spring_2024/fixed_sd_m_rw' = 'Numerical checks pass but abundance scale diverges; AR1 persistence and fixed-parameter correlation advisories. Initial-M priors are not reproduced.',
-  'nefsc_atlantic_mackerel_2018/shared_f_rw' = 'F trend improves but N/recruitment/SSB scale and trends worsen; terminal SSB difference doubles.'
+  'nefsc_atlantic_mackerel_2018/shared_f_rw' = 'F trend improves but N/recruitment/SSB scale and trends worsen; terminal SSB difference doubles.',
+  'ices_saithe_north_sea_2026/independent_f_rw' = 'Scale errors fall, but SSB and F trends weaken; substantial scale disagreement persists. Flag this alternative rather than replace the baseline.',
+  'ices_herring_western_baltic_2026/iid_survival' = 'False convergence, gradient 0.042, non-positive-definite Hessian and a near-zero SD; scale disagreement worsens.'
 )
 
 # Confirmed source features, counted once per assessment. Unknown is not absent.
@@ -132,7 +142,27 @@ capability_evidence <- list(
   if (!is.null(attr(text, 'status'))) cli::cli_abort('Cannot read the pinned baseline recipe for {id}.')
   e <- new.env(parent = environment())
   eval(parse(text = text), e)
-  e$translate_stock(read_assessment(id, database))
+  recipe <- e$translate_stock(read_assessment(id, database))
+  current <- new.env(parent = environment())
+  current$source <- read_assessment(id, database)
+  current$do_fit <- FALSE
+  current$silent <- TRUE
+  sys.source(path, current)
+  for (field in c('background', 'comparison_outputs', 'comparison_scales', 'comparison_aggregates',
+                  'comparison_age_groups', 'comparison_definitions', 'age_plus_group')) {
+    recipe[[field]] <- current[[field]]
+  }
+  recipe
+}
+
+.review_reference <- function(id, fit, recipe, database) {
+  source <- read_assessment(id, database)
+  outputs <- if (is.null(recipe$comparison_outputs)) database$outputs else recipe$comparison_outputs
+  database_to_tam_ref(id, outputs, obs = recipe$obs, years = recipe$years, ages = recipe$ages,
+    terminal_year = source$assessment$terminal_year[[1]], age_plus_group = recipe$age_plus_group,
+    comparison_scales = recipe$comparison_scales, template = fit, assumptions = source$assumptions,
+    comparison_aggregates = recipe$comparison_aggregates, comparison_age_groups = recipe$comparison_age_groups,
+    comparison_definitions = recipe$comparison_definitions)
 }
 
 .review_fit <- function(id, recipe, changes, database) {
@@ -163,15 +193,7 @@ capability_evidence <- list(
     }
     fit <- do.call(tinyAM::fit_tam, args)
     fit <- .assessment_catch_reporting(fit, z$catch_reporting)
-    source <- read_assessment(id, database)
-    outputs <- if (is.null(z$comparison_outputs)) database$outputs else z$comparison_outputs
-    ref <- database_to_tam_ref(
-      id, outputs, obs = z$obs, years = z$years, ages = z$ages,
-      terminal_year = source$assessment$terminal_year[[1]], age_plus_group = z$age_plus_group,
-      comparison_scales = z$comparison_scales, template = fit, assumptions = source$assumptions,
-      comparison_aggregates = z$comparison_aggregates, comparison_age_groups = z$comparison_age_groups,
-      comparison_definitions = z$comparison_definitions
-    )
+    ref <- .review_reference(id, fit, z, database)
     list(fit = fit, ref = ref, recipe = z,
          diagnostics = .assessment_diagnostics(id, database,
            if (fit$is_converged) 'converged' else 'not_converged', fit),
@@ -224,6 +246,17 @@ review_translations <- function(database = read_database(), assessment_ids = NUL
         out <- .review_fit(id, recipe, options[[candidate]], database)
         out$review_revision <- review_revision
         out$database_revision <- database$commit
+        saveRDS(out, path)
+      }
+      if (inherits(out$fit, 'tam_fit')) {
+        comparison_recipe <- out$recipe
+        for (field in c('comparison_outputs', 'comparison_scales', 'comparison_aggregates',
+                        'comparison_age_groups', 'comparison_definitions', 'age_plus_group')) {
+          comparison_recipe[[field]] <- recipe[[field]]
+        }
+        out$ref <- .review_reference(id, out$fit, comparison_recipe, database)
+        out$summary <- .assessment_comparison_summary(.assessment_percent_differences(out$ref), id)
+        out$recipe <- comparison_recipe
         saveRDS(out, path)
       }
       s <- data.frame(assessment_id = id, candidate = candidate)
