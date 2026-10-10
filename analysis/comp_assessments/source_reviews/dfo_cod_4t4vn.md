@@ -9,10 +9,15 @@ It converged and slightly improved F scale, but recruitment error increased
 from 36.3% to 86.8% and N error from 23.2% to 29.9%; recruitment and N trends
 weakened. Retain RW recruitment and the existing explicit IID-M warm start
 followed by RW M. A separate age-blocked M mean RW with the source fixed
-increment SD of 0.075 failed the explicit preliminary fit's Hessian check;
-no final fit was attempted. Fixed increment SDs are expressible through mean
-effects, but source initial-M priors remain unsupported. Starting values are
-not treated as priors.
+increment SD of 0.075 initially failed when combined with IID M in the
+preliminary fit. Reusing the unchanged baseline preliminary fit instead
+allowed the standalone mean-RW model to converge (gradient 0.000164,
+positive-definite Hessian). All four trajectory correlations improved; mean
+SSB error fell from 18.3% to 15.3% and N error from 23.2% to 20.6%. However,
+F error rose from 43.8% to 50.8%, and terminal recruitment changed from +19.7%
+to -50.1%. Retain the baseline and flag this alternative for review. Fixed
+increment SDs are expressible through mean effects, but source initial-M
+priors remain unsupported. Starting values are not treated as priors.
 
 For Southern Gulf cod, the 2024 Science Advisory Report is the latest accepted
 assessment used for advice, applying the SCA model through 2023. DFO identifies
