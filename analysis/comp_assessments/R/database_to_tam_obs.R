@@ -122,6 +122,20 @@
   data.frame(year = grid$year, age = grid$age, obs = x$value[i])
 }
 
+.translation_start_surface <- function(outputs, type, measure, years, ages,
+                                       multiplier = 1) {
+  rows <- outputs[outputs$type == type & outputs$measure == measure, , drop = FALSE]
+  rows <- .translation_surface(rows, years, ages, paste('Accepted', measure))
+  value <- as.numeric(rows$obs) * multiplier
+  if (any(!is.finite(value)) || any(value <= 0)) {
+    .translation_abort(paste('Accepted', measure, 'starting values must be finite and positive.'))
+  }
+  surface <- matrix(NA_real_, length(years), length(ages),
+                    dimnames = list(as.character(years), as.character(ages)))
+  surface[cbind(match(rows$year, years), match(rows$age, ages))] <- value
+  surface
+}
+
 .translation_repeat_biology <- function(x, years, reference_year, label) {
   static <- x[is.na(x$year), , drop = FALSE]
   if (nrow(static)) {

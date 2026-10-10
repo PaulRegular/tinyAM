@@ -39,33 +39,10 @@ dat <- tinyAM::prepare_tam(data = obs, years = years, ages = ages, N_settings = 
     index_settings = list(q_form = ~0 + q_key, sd_form = ~0 + sd_block, sd_supplied = ~relative_sd, fill_missing = FALSE))
 start_par <- tinyAM::make_par(dat)
 
-source_surface <- function(type, measure, multiplier = 1) {
-  rows <- source$outputs[
-    source$outputs$type == type & source$outputs$measure == measure &
-      !is.na(source$outputs$year) & !is.na(source$outputs$age) &
-      as.integer(source$outputs$year) %in% years &
-      as.integer(source$outputs$age) %in% ages,
-    , drop = FALSE
-  ]
-  surface <- matrix(
-    NA_real_, length(years), length(ages),
-    dimnames = list(as.character(years), as.character(ages))
-  )
-  index <- cbind(match(as.integer(rows$year), years),
-                 match(as.integer(rows$age), ages))
-  if (anyNA(index) || anyDuplicated(paste(index[, 1], index[, 2]))) {
-    stop("Source ", measure, " rows do not map uniquely to the model grid.")
-  }
-  surface[index] <- as.numeric(rows$value) * multiplier
-  if (any(!is.finite(surface)) || any(surface <= 0)) {
-    stop("The accepted ", measure, " surface is incomplete or non-positive.")
-  }
-  surface
-}
 
-source_N <- source_surface("population", "numbers_at_age", 1000)
-source_F <- source_surface("mortality", "fishing_mortality_at_age")
-source_M <- source_surface("mortality", "natural_mortality_at_age")
+source_N <- .translation_start_surface(source$outputs, "population", "numbers_at_age", years, ages, 1000)
+source_F <- .translation_start_surface(source$outputs, "mortality", "fishing_mortality_at_age", years, ages)
+source_M <- .translation_start_surface(source$outputs, "mortality", "natural_mortality_at_age", years, ages)
 start_par$log_r0 <- log(source_N[1L, "0"])
 start_par$log_r <- setNames(log(source_N[-1L, "0"]),
                             as.character(years[-1L]))

@@ -17,22 +17,10 @@ levels(obs$index$sd_group) <- c("1", "2", "3", "4-6", "7-8", "7-8")
 obs$index$q_key <- interaction(obs$index$survey, q_group,
                                drop = TRUE, sep = ".")
 
-source_surface <- function(type, measure, multiplier = 1) {
-  rows <- source$outputs[source$outputs$type == type &
-                           source$outputs$measure == measure &
-                           !is.na(source$outputs$age), , drop = FALSE]
-  value <- matrix(NA_real_, length(years), length(ages),
-                  dimnames = list(year = as.character(years),
-                                  age = as.character(ages)))
-  row <- match(as.integer(rows$year), years)
-  age <- match(as.integer(rows$age), ages)
-  value[cbind(row, age)] <- as.numeric(rows$value) * multiplier
-  if (any(!is.finite(value))) stop("The accepted source surface is incomplete.")
-  value
-}
 
-source_N <- source_surface("population", "numbers_at_age", multiplier = 1000)
-source_F <- source_surface("mortality", "fishing_mortality_at_age")
+source_N <- .translation_start_surface(source$outputs, "population", "numbers_at_age", years, ages, 1000)
+source_F <- .translation_start_surface(source$outputs, "mortality", "fishing_mortality_at_age", years, ages)
+names(dimnames(source_N)) <- names(dimnames(source_F)) <- c("year", "age")
 q_rows <- source$outputs[source$outputs$measure == "q" &
                            source$outputs$survey == "IBWSS", , drop = FALSE]
 q_age_groups <- c("1", "2", "3", "4", "5-8")

@@ -33,23 +33,11 @@ obs <- database_to_tam_obs(
 obs$index$q_key <- interaction(obs$index$survey, obs$index$q_block,
                                drop = TRUE, lex.order = TRUE)
 
-source_surface <- function(type, measure, multiplier = 1) {
-  rows <- source$outputs[source$outputs$type == type &
-                           source$outputs$measure == measure &
-                           !is.na(source$outputs$age), , drop = FALSE]
-  value <- matrix(NA_real_, length(years), length(ages),
-                  dimnames = list(year = as.character(years),
-                                  age = as.character(ages)))
-  index <- cbind(match(as.character(rows$year), as.character(years)),
-                 match(as.character(rows$age), as.character(ages)))
-  value[index] <- as.numeric(rows$value) * multiplier
-  if (any(!is.finite(value))) stop("The accepted source surface is incomplete.")
-  value
-}
 
-source_N <- source_surface("population", "numbers_at_age", 1000)
-source_F <- source_surface("mortality", "fishing_mortality_at_age")
-source_M <- source_surface("mortality", "natural_mortality_at_age")
+source_N <- .translation_start_surface(source$outputs, "population", "numbers_at_age", years, ages, 1000)
+source_F <- .translation_start_surface(source$outputs, "mortality", "fishing_mortality_at_age", years, ages)
+source_M <- .translation_start_surface(source$outputs, "mortality", "natural_mortality_at_age", years, ages)
+names(dimnames(source_N)) <- names(dimnames(source_F)) <- names(dimnames(source_M)) <- c("year", "age")
 q_design <- stats::model.matrix(~ 0 + q_key, data = obs$index)
 survey_year <- match(as.character(obs$index$year), rownames(source_N))
 survey_age <- match(as.character(obs$index$age), colnames(source_N))

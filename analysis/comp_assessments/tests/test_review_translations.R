@@ -35,8 +35,10 @@ for (id in ids) {
   stopifnot(isTRUE(all.equal(original$obs, now$obs, check.environment = FALSE)))
   old <- do.call(tinyAM::prepare_tam, c(list(data = original$obs,
     years = original$years, ages = original$ages), original$settings))
-  new <- .test_stock(read_assessment(id, db))$dat
-  stopifnot(isTRUE(all.equal(old, new, check.environment = FALSE)))
+  stock <- .test_stock(read_assessment(id, db))
+  stopifnot(isTRUE(all.equal(old, stock$dat, check.environment = FALSE)))
+  starts <- all.equal(original$start_par, stock$start_par, check.environment = FALSE)
+  if (!isTRUE(starts)) stop(id, ': ', paste(starts, collapse = '; '))
 }
 
 fixture <- data.frame(

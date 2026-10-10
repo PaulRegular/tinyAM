@@ -39,23 +39,8 @@ model_dat <- tinyAM::prepare_tam(data = obs, years = years, ages = ages, N_setti
     mu_form = NULL, mu_supplied = ~M_assumption), catch_settings = list(sd_form = ~0 + sd_block, fill_missing = FALSE),
     index_settings = list(q_form = ~0 + q_key, sd_form = ~0 + sd_block, fill_missing = FALSE))
 start_par <- tinyAM::make_par(model_dat)
-source_surface <- function(measure, type, scale = 1) {
-  rows <- source$outputs[
-    source$outputs$measure == measure & source$outputs$type == type &
-      source$outputs$year %in% years & source$outputs$age %in% ages,
-    , drop = FALSE
-  ]
-  surface <- matrix(NA_real_, length(years), length(ages),
-                    dimnames = list(years, ages))
-  index <- cbind(match(rows$year, years), match(rows$age, ages))
-  surface[index] <- as.numeric(rows$value) * scale
-  if (any(!is.finite(surface)) || any(surface <= 0)) {
-    stop("The accepted ", measure, " surface is incomplete or non-positive.")
-  }
-  surface
-}
-source_N <- source_surface("numbers_at_age", "population", 1000)
-source_F <- source_surface("fishing_mortality_at_age", "mortality")
+source_N <- .translation_start_surface(source$outputs, "population", "numbers_at_age", years, ages, 1000)
+source_F <- .translation_start_surface(source$outputs, "mortality", "fishing_mortality_at_age", years, ages)
 start_par$log_r0 <- log(source_N[1, 1])
 start_par$log_n0 <- log(source_N[1, -1])
 start_par$log_r <- log(source_N[-1, 1])
