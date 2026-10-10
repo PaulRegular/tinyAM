@@ -469,8 +469,9 @@ tidy_par <- function(fit, interval = 0.95) {
       if (is.null(names(e))) {
         df <- data.frame(coef = NA, est = e, se = s)
       } else {
-        if (nm == "log_r") {
-          df <- data.frame(year = fit$dat$years[-1], est = e, se = s, is_proj = fit$dat$is_proj[-1])
+        if (nm %in% c("log_r", "log_r_init")) {
+          yr <- as.integer(names(e))
+          df <- data.frame(year = yr, est = e, se = s, is_proj = yr %in% fit$dat$years[fit$dat$is_proj])
         } else if (nm == "log_n0") {
           df <- data.frame(coef = names(e), age = as.integer(names(e)), est = e, se = s)
         } else {

@@ -247,7 +247,6 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   log_mu_F[] <- drop(F_modmat %*% log_mu_f) + F_effects$contribution
   log_mu_M[] <- log_mu_supplied_m + drop(M_modmat %*% mu_m) + M_effects$contribution
   if (simulate) {
-    log_r[] <- .simulate_rec(par, dat)
     mu_f <- log_mu_F[!is_proj, , drop = FALSE]
     log_f[] <- mu_f + if (F_settings$process == "rw") {
       rprocess_rw(log_f - mu_f, sd = sd_f)
@@ -272,11 +271,6 @@ nll_fun <- function(par, dat, simulate = FALSE) {
 
   ## Vital rates ----
 
-  log_recruitment <- c(log_r0, log_r)
-  names(log_recruitment) <- years
-  recruitment <- exp(log_recruitment)
-  log_N[, 1] <- log_recruitment
-
   log_F[!is_proj, ] <- log_f
   if (n_proj > 0) {
     log_k <- log(proj_settings$F_mult)
@@ -298,90 +292,32 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   log_Z <- log(Z)
 
 
-  ## Initial abundance (independent of the subsequent N process) ----
+  ## Population states and recruitment ----
 
-  eta_log_n0 <- numeric(n_ages - 1L)
-  if (simulate && N_settings$init == "random") {
-    eta_log_n0[] <- stats::rnorm(n_ages - 1L, 0, exp(log_sd_n0))
-  }
-  for (a in 2:n_ages) {
-    pred_log_N[1, a] <- log_N[1, a - 1] - Z[1, a - 1]
-    if (N_settings$init == "exp" || (simulate && N_settings$init == "random")) {
-      log_N[1, a] <- pred_log_N[1, a] + eta_log_n0[a - 1L]
-    } else {
-      log_N[1, a] <- log_n0[a - 1L]
-    }
-  }
-  eta_log_n0 <- log_N[1, -1] - pred_log_N[1, -1]
-  if (simulate && N_settings$init == "random") {
-    log_n0[] <- log_N[1, -1]
-  }
-
-  ## Cohort equation (plus group after the initial year) ----
-
-  Y <- 2:n_years
-  A <- 2:n_ages
-  if (N_settings$process != "off") {
-    log_N[-1, -1] <- log_n
-  }
-  eta_log_N <- matrix(0, n_years - 1, n_ages - 1)
-  if (simulate && N_settings$process == "iid") {
-    eta_log_N[] <- stats::rnorm(length(eta_log_N), 0, exp(log_sd_n))
-  } else if (simulate && N_settings$process == "ar1") {
-    eta_log_N <- rprocess_ar1(n_years - 1, n_ages - 1,
-                            sd = exp(log_sd_n), phi = plogis(logit_phi_n))
-  }
-  for (y in Y) {
-    pred_log_N[y, A] <- log_N[y - 1, A - 1] - Z[y - 1, A - 1]
-    pred_log_N[y, n_ages] <- RTMB::logspace_add(pred_log_N[y, n_ages],
-                                              log_N[y - 1, n_ages] - Z[y - 1, n_ages])
-    if (simulate && N_settings$process == "rw" && y == 2L) {
-      # The first cohort residual has no RW density: retain its supplied state.
-      eta_log_N[1, ] <- log_n[1, ] - pred_log_N[y, A]
-      eta_log_N <- rprocess_rw(eta_log_N, sd = exp(log_sd_n))
-    }
-    if (N_settings$process == "off" || simulate) {
-      log_N[y, A] <- pred_log_N[y, A] + eta_log_N[y - 1, ]
-    }
-  }
-  if (simulate && N_settings$process != "off") {
-    log_n[] <- log_N[-1, -1, drop = FALSE]
-  }
+  population <- .population_states(par, dat, Z, simulate)
+  log_N <- population$log_N
+  pred_log_N <- population$pred_log_N
+  log_recruitment <- population$log_recruitment
+  log_mu_R <- population$log_mu_R
+  log_pred_R <- population$log_pred_R
+  eta_R <- population$eta_R
+  eta_R_state <- population$eta_R_state
+  eta_log_n0 <- population$eta_log_n0
+  W <- population$W
+  P <- population$P
   N <- exp(log_N)
-
-  ## Biological composition within the modeled plus group ----
-
+  recruitment <- exp(log_recruitment)
+  if (simulate) {
+    log_r[] <- log_recruitment[dat$rec$eligible]
+    if (N_settings$init == "random") log_n0[] <- log_N[1, -1]
+    if (N_settings$process != "off") log_n[] <- log_N[-1, -1, drop = FALSE]
+  }
   if (!is.null(dat$plus_ages)) {
-    n_plus <- length(dat$plus_ages)
-    log_N_plus <- matrix(0, n_years, n_plus,
-                         dimnames = list(year = years, age = dat$plus_ages))
-    # A geometric survivor distribution, with the remaining tail in Amax+.
-    log_components <- -(seq_len(n_plus) - 1L) * Z[1, n_ages]
-    log_components[-n_plus] <- log_components[-n_plus] + log(-expm1(-Z[1, n_ages]))
-    for (y in seq_len(n_years)) {
-      if (y > 1L) {
-        log_components <- c(log_N[y - 1L, n_ages - 1L] - Z[y - 1L, n_ages - 1L],
-                            log_N_plus[y - 1L, -n_plus] - Z[y - 1L, n_ages])
-        log_components[n_plus] <- RTMB::logspace_add(log_components[n_plus],
-          log_N_plus[y - 1L, n_plus] - Z[y - 1L, n_ages])
-      }
-      # A common rescaling carries any N-process deviation into all hidden ages.
-      log_shares <- log_components - Reduce(RTMB::logspace_add, log_components)
-      log_N_plus[y, ] <- log_N[y, n_ages] + log_shares
-      shares <- exp(log_shares)
-      W[y, n_ages] <- sum(shares * dat$W_plus_input[y, ])
-      P[y, n_ages] <- if (all(dat$W_plus_input[y, ] == 0)) {
-        0 # No biomass: mature biomass is also zero, whatever its proportion.
-      } else {
-        sum(shares * dat$W_plus_input[y, ] * dat$P_plus_input[y, ]) / W[y, n_ages]
-      }
-    }
-    N_plus <- exp(log_N_plus)
+    N_plus <- population$N_plus
     REPORT(N_plus)
     REPORT(W)
     REPORT(P)
   }
-
 
   ## Initial age process ----
 
@@ -393,7 +329,6 @@ nll_fun <- function(par, dat, simulate = FALSE) {
 
   ## Recruitment process ----
 
-  log_mu_R <- .rec_mean(par, dat)
   jnll <- jnll + .rec_nll(log_recruitment, log_mu_R, par, dat)
 
 
@@ -591,6 +526,7 @@ nll_fun <- function(par, dat, simulate = FALSE) {
     sims <- list(log_f = log_f,
                  log_r = log_r,
                  log_obs = log_obs)
+    if (!is.null(par$log_r_init)) sims$log_r_init <- par$log_r_init
     if (N_settings$init != "exp") {
       sims$log_n0 <- log_n0
     }

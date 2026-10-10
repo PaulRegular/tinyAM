@@ -58,6 +58,14 @@
       next
     }
   }
+  # A changed recruitment lag can move a year between fixed and random states.
+  recruitment <- c(start$log_r_init, start$log_r)
+  if (length(recruitment) && !is.null(names(recruitment))) {
+    for (nm in c("log_r_init", "log_r")) {
+      years <- intersect(names(par0[[nm]]), names(recruitment))
+      if (length(years)) par0[[nm]][years] <- recruitment[years]
+    }
+  }
   par0
 }
 
