@@ -1,5 +1,15 @@
 # Atlantic mackerel source review
 
+## Formula review (2026-10-10)
+
+A shared temporal F RW with IID age residuals was tested as an approximation
+to source time-constant fishery selectivity. It converged and improved F trend
+correlation, but worsened N, recruitment and SSB scale/trends; terminal SSB
+difference changed from -29.2% to -58.1%. Retain the AR1 F baseline. Logistic
+survey q would not reproduce the source fishery selectivity, and the aggregate
+egg index cannot be allocated to ages without new information. No extra
+observations or biological assumptions were added for this trial.
+
 ## Assessment represented
 
 The canonical database represents the 2018 64th Northeast Regional Stock
