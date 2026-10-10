@@ -1,5 +1,17 @@
 # Southern Gulf spring-spawning herring
 
+## Formula review (2026-10-10)
+
+An annual RW catchability effect restricted to spring CPUE was tested against
+the retained period effects, keeping separate monotone age curves, the log
+link, observation SDs and mortality processes. It converged and improved
+trajectory correlations, but common-definition SSB error rose from 24.9% to
+67.1% and F error from 62.8% to 192.3%. Fifteen parameters were at bounds.
+Retain the period model: stronger trend correlation alone does not compensate
+for these scale and support problems. The 2022 framework's CPUE RW supplies
+method context where the 2024 document is silent; aggregate CPUE/power
+catchability and source M priors still differ from the translation.
+
 ## Assessment record
 
 The canonical database represents the accepted 2024 assessment to 2023, the
