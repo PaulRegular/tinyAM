@@ -12,6 +12,12 @@ for these scale and support problems. The 2022 framework's CPUE RW supplies
 method context where the 2024 document is silent; aggregate CPUE/power
 catchability and source M priors still differ from the translation.
 
+A separate age-blocked M mean RW used the source fixed increment SD of 0.075.
+It passed numerical convergence checks but produced implausibly large
+abundance scales, with persistence and parameter-correlation advisories.
+Retain the baseline M process. Supplied mean-effect SDs can express the fixed
+increments; they do not reproduce the source starting-M priors.
+
 ## Assessment record
 
 The canonical database represents the accepted 2024 assessment to 2023, the
