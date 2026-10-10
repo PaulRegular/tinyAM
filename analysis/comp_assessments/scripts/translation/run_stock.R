@@ -11,4 +11,8 @@ do_fit <- TRUE
 silent <- FALSE
 base::source(file.path(root, "scripts", "translation", "stocks",
                        paste0(assessment_id, ".R")), local = TRUE)
+if (!is.null(fit)) {
+  fit <- .assessment_catch_reporting(fit, if (exists('catch_reporting', inherits = FALSE))
+    catch_reporting else NULL)
+}
 fit

@@ -17,4 +17,15 @@ for (path in paths) {
             isTRUE(all.equal(result$obs, stock$obs)))
 }
 stopifnot(!exists('warm_fit', inherits=FALSE))
+
+# Run the interactive setup with fitting disabled, in a separate workspace.
+interactive_env <- new.env(parent = globalenv())
+for (statement in parse('analysis/comp_assessments/scripts/translation/run_stock.R')) {
+  if (is.call(statement) && identical(statement[[1]], quote(`<-`)) &&
+      identical(statement[[2]], quote(do_fit))) statement[[3]] <- FALSE
+  eval(statement, interactive_env)
+}
+stopifnot(is.null(interactive_env$fit), is.list(interactive_env$obs),
+          length(interactive_env$background) > 0L,
+          identical(interactive_env$source$assessment$assessment_id, 'dfo_herring_4tvn_spring_2024'))
 cat('Top-level stock scripts and fitting-disabled isolation passed.\n')
