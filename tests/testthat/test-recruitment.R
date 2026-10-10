@@ -66,6 +66,12 @@ test_that("stock-recruit curves and derivatives match their definitions", {
     obj <- RTMB::MakeADFun(function(p) sum(tinyAM:::.rec_log_curve(log(S), p, type)), p, silent = TRUE)
     expected_grad <- c(3, if (type == "bh") -sum(.02 * S / (1 + .02 * S)) else -sum(.02 * S))
     expect_equal(unname(obj$gr(obj$par)), matrix(expected_grad, 1), tolerance = 1e-10)
+    for (s in S) {
+      obj_S <- RTMB::MakeADFun(function(x) tinyAM:::.rec_log_curve(x$log_S, p, type),
+        list(log_S = log(s)), silent = TRUE)
+      expected_S <- if (type == "bh") 1 / (1 + .02 * s) else 1 - .02 * s
+      expect_equal(as.numeric(obj_S$gr(obj_S$par)), expected_S, tolerance = 1e-10)
+    }
   }
 })
 
@@ -87,8 +93,9 @@ test_that("stock-recruit boundaries and lags align by year", {
 })
 
 test_that("simulated recruitment uses parent SSB from the same population", {
-  for (type in c("bh", "ricker")) for (n_process in c("off", "iid")) {
-    form <- as.formula(paste0("~ ", type, "(ssb) + ar1(year, sd = 0.2, phi = 0.4)"))
+  for (type in c("bh", "ricker")) for (process in c("iid", "ar1")) for (n_process in c("off", "iid")) {
+    form <- as.formula(paste0("~ ", type, "(ssb) + ", process, "(year, sd = 0.2",
+      if (process == "ar1") ", phi = 0.4" else "", ")"))
     d <- make_test_dat(years = 1983:1995, ages = 2:8,
       N_settings = list(process = n_process, rec_form = form),
       proj_settings = list(n_proj = 2, n_mean = 2, F_mult = 1))
@@ -99,8 +106,17 @@ test_that("simulated recruitment uses parent SSB from the same population", {
     report <- RTMB::MakeADFun(function(p) nll_fun(p, d), p, silent = TRUE)$report()
     states <- tinyAM:::.population_states(p, d, report$Z)
     i <- d$rec$eligible
-    expected <- tinyAM:::.rec_log_curve(log(report$ssb[i - 2L]), p, type)
+    S <- report$ssb[i - 2L]
+    alpha <- exp(p$log_sr_alpha)
+    beta <- exp(p$log_sr_beta)
+    expected <- log(if (type == "bh") alpha * S / (1 + beta * S) else alpha * S * exp(-beta * S))
     expect_equal(unname(states$log_mu_R[i]), unname(expected))
+    expect_equal(unname(report$rec_log_parent), unname(log(S)))
+    u <- log(report$recruitment[i]) - expected
+    density <- if (process == "iid") -sum(dnorm(u, 0, .2, log = TRUE)) else
+      -dnorm(u[1L], 0, .2 / sqrt(1 - .4^2), log = TRUE) -
+        sum(dnorm(tail(u, -1L), .4 * head(u, -1L), .2, log = TRUE))
+    expect_equal(unname(tinyAM:::.rec_nll(log(report$recruitment), states$log_mu_R, p, d)), unname(density))
     expect_equal(states$log_N, log(report$N))
     expect_equal(states$W * states$P * report$N, report$ssb_mat)
     expect_equal(simulated$log_r_init, p$log_r_init)

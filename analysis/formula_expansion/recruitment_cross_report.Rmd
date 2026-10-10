@@ -58,14 +58,55 @@ Generating recruitment from BH does not guarantee that a short assessment can
 recover its shape. In the original full BH–IID example, parent SSB varied only
 1.7-fold. Its true median recruitment changed by about 26%; the log-scale
 variation in that median was 0.052, against an innovation SD of 0.35. That is
-a weak signal relative to annual recruitment variation. The fitted curve was
-almost flat, despite numerical convergence.
+a weak signal relative to annual recruitment variation. In that sample, the
+correlation between log parent SSB and log recruitment was -0.03 in the
+simulated population and -0.02 in the fitted states. The fitted curve was
+almost flat, despite numerical convergence: a monotone BH curve cannot follow
+a negative association. The dashboard displayed the fitted result correctly.
+The fitted recruitment SD was 0.366 (95% interval 0.300–0.447), close to the
+generating 0.35; it was not grossly inflated.
 
 This study asks two separate questions:
 
 - Can the correct model recover recruitment parameters, and what happens when
   the wrong recruitment model is fitted?
 - Does lower recruitment SD help, or is a wider range of parent SSB needed?
+
+## Equation audit
+
+The implemented log curves are `log(alpha) + log(S) - log(1 + beta*S)`
+for BH and `log(alpha) + log(S) - beta*S` for Ricker. Independent checks
+of the ordinary-scale equations, parameter derivatives, derivatives with
+respect to log SSB, parent-year alignment, Gaussian likelihoods and displayed
+curves agreed to numerical precision. Simulation uses the parent SSB from
+the same chronological population. IID SD is the residual SD; AR1 SD is the
+innovation SD, with a stationary first residual. No lognormal mean correction
+is applied: both curves describe median recruitment.
+
+```{r original-contrast}
+original <- readRDS("results/recruitment_recovery.rds")
+original_contrast <- do.call(rbind, lapply(names(labels)[-1L], function(case) {
+  x <- original$results[[paste0("full_", case, "_well informed_1")]]
+  p <- setNames(x$parameters$truth, sub(":1$", "", x$parameters$parameter))
+  S <- head(x$recruitment$ssb, -1L)
+  beta <- exp(p[["log_sr_beta"]])
+  g <- if (startsWith(case, "bh")) exp(p[["log_sr_alpha"]]) * S / (1 + beta * S) else
+    exp(p[["log_sr_alpha"]]) * S * exp(-beta * S)
+  data.frame(Model = labels[[case]], SSB_ratio = max(S) / min(S),
+    Median_recruitment_ratio = max(g) / min(g), Log_curve_SD = sd(log(g)),
+    Recruitment_SD = exp(p[["log_sd_r"]]),
+    Sample_correlation = cor(log(S), log(tail(x$recruitment$truth, -1L))))
+}))
+knitr::kable(original_contrast, digits = 3)
+```
+
+These are the first prespecified examples, not a ranking of curve families.
+The Ricker examples did **not** have greater SSB contrast or a stronger
+recruitment signal than BH–IID. Their sampled SSB straddled the Ricker peak,
+so a shallow dome could fit despite a weak negative association. BH must
+increase, whereas Ricker can decline: their derivatives with respect to
+log SSB are `1/(1 + beta*S)` and `1 - beta*S`, respectively. A visually
+plausible Ricker curve alone does not demonstrate better identification.
 
 The first experiment crosses **RW, BH–IID, BH–AR1, Ricker–IID and Ricker–AR1**:
 every simulated dataset is fitted with all five options. There are
@@ -205,7 +246,7 @@ noise_summary <- noise_attempts |>
   left_join(noise_contrast |> group_by(stage, contrast, sigma) |>
     summarise(across(c(parent_SSB_ratio, log_curve_signal, signal_to_noise), median), .groups = "drop"),
     by = c("stage", "contrast", "sigma"))
-knitr::kable(noise_summary, digits = 1)
+knitr::kable(noise_summary, digits = c(0, 0, 2, 0, 0, 1, 1, 1, 3, 2))
 ```
 
 SSB ratios and signal measures are medians over all generated datasets. The
