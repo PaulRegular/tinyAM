@@ -75,6 +75,7 @@
   data <- dat$obs$maturity[dat$obs$maturity$age == min(dat$ages), , drop = FALSE]
   data <- data[match(dat$years, data$year), , drop = FALSE]
   variables <- all.vars(fixed_form)
+  if ("ssb" %in% variables) cli::cli_abort("Use modeled ssb only inside bh() or ricker(); supply other annual covariates explicitly.")
   if (any(!variables %in% names(data))) cli::cli_abort("Recruitment covariates must be columns of obs$maturity at the youngest modeled age.")
   frame <- stats::model.frame(fixed_form, data, na.action = stats::na.pass)
   matrix <- stats::model.matrix(fixed_form, frame)
@@ -105,6 +106,9 @@
     if (any(!possible[parent])) cli::cli_abort("Parent SSB is zero in some stock-recruit years; supply valid weight and maturity or revise lag/years.")
   }
   design <- if (rec$type == "rw") matrix[historical, , drop = FALSE] - matrix[historical - 1L, , drop = FALSE] else matrix[historical, , drop = FALSE]
+  if (!is.null(curve) && ncol(design) && qr(cbind(1, design))$rank < ncol(design) + 1L) {
+    cli::cli_abort("Recruitment covariates duplicate the stock-recruit productivity baseline; remove constant or redundant columns.")
+  }
   if (ncol(design) && (qr(design)$rank < ncol(design) ||
       (is.null(rec$sd) && ncol(design) >= n))) {
     cli::cli_abort("Recruitment fixed effects are redundant or saturated; simplify rec_form.")
@@ -114,7 +118,7 @@
   dat$N_settings$rec_form <- form
   dat$rec <- c(rec, list(matrix = matrix, eligible = eligible, historical = historical,
                        boundary = seq_len(first - 1L), data = data, covariates = held,
-                       curve = curve))
+                       curve = curve, fixed_form = fixed_form))
   dat
 }
 
@@ -206,7 +210,7 @@ ricker <- function(ssb, lag = NULL) {
 .rec_scale <- function(par, dat) {
   list(sd = if (is.null(dat$rec$sd)) exp(par$log_sd_r) else dat$rec$sd,
        phi = if (dat$rec$type == "ar1") {
-         if (is.null(dat$rec$phi)) stats::plogis(par$logit_phi_r) else dat$rec$phi
+         if (is.null(dat$rec$phi)) plogis(par$logit_phi_r) else dat$rec$phi
        } else 0)
 }
 
@@ -323,4 +327,63 @@ ricker <- function(ssb, lag = NULL) {
     eta_R = log_recruitment - log_pred_R, eta_R_state = u,
     eta_log_n0 = eta_log_n0, W = W, P = P,
     N_plus = if (!is.null(dat$plus_ages)) exp(log_N_plus) else NULL)
+}
+
+.rec_process_advisories <- function(dat) {
+  out <- data.frame(issue = character(), detail = character())
+  rec <- dat$rec
+  if (!is.null(rec) && (rec$type != "rw" || ncol(rec$matrix) || !is.null(rec$curve)) &&
+      length(rec$historical) < 5L && (is.null(rec$sd) || (rec$type == "ar1" && is.null(rec$phi)))) {
+    out <- rbind(out, data.frame(issue = "recruitment_support", detail =
+      "Fewer than five historical recruitment process years inform estimated SD/correlation. Consider a simpler formula or externally supported sd/phi."))
+  }
+  out
+}
+
+.initialize_rec_curve <- function(par, dat) {
+  mean_M <- matrix(dat$log_mu_supplied_m + drop(dat$M_modmat %*% if (is.null(par$mu_m)) dat$mu_m else par$mu_m),
+                   length(dat$years), length(dat$ages), dimnames = list(dat$years, dat$ages))
+  M <- exp(mean_M)
+  if (!is.null(par[["log_m"]])) M[rownames(par[["log_m"]]), names(dat$M_settings$age_blocks)] <-
+    exp(par[["log_m"]][, dat$M_settings$age_blocks, drop = FALSE])
+  F <- matrix(0, length(dat$years), length(dat$ages))
+  F[!dat$is_proj, ] <- exp(par$log_f)
+  if (any(dat$is_proj)) F[dat$is_proj, ] <- sweep(exp(par$log_f[rep(nrow(par$log_f), sum(dat$is_proj)), , drop = FALSE]),
+                                                  1L, dat$proj_settings$F_mult, `*`)
+  initial <- .population_states(par, dat, F + M)
+  i <- dat$rec$eligible[1L] - dat$rec$curve$lag
+  S <- sum(exp(initial$log_N[i, ]) * initial$W[i, ] * initial$P[i, ])
+  par$log_sr_beta <- -log(S)
+  par$log_sr_alpha <- par$log_r0 - log(S) + if (dat$rec$curve$type == "bh") log(2) else 1
+  par
+}
+
+.rec_fit_advisories <- function(fit) {
+  out <- data.frame(issue = character(), detail = character())
+  rec <- fit$dat$rec
+  if (is.null(rec)) return(out)
+  if (!is.null(rec$curve)) {
+    S <- exp(fit$rep$rec_log_parent[!fit$dat$is_proj[rec$eligible]])
+    if (length(S) && all(is.finite(S)) && max(S) / min(S) < 2) {
+      out <- rbind(out, data.frame(issue = "stock_recruit_support", detail =
+        "Fitted parent SSB varies by less than a factor of two. Stock-recruit curve shape may be weakly supported; examine uncertainty and covariate sensitivity."))
+    }
+  }
+  sdr <- fit[["sdrep"]]
+  if (!is.list(sdr) || !isTRUE(sdr$pdHess)) return(out)
+  p <- sdr$par.fixed
+  se <- sqrt(pmax(0, diag(sdr$cov.fixed)))
+  if (!is.null(rec$curve)) {
+    i <- which(names(p) %in% c("log_sr_alpha", "log_sr_beta"))
+    if (any(2 * stats::qnorm(.975) * se[i] > log(10), na.rm = TRUE)) {
+      out <- rbind(out, data.frame(issue = "stock_recruit_uncertainty", detail =
+        "A stock-recruit parameter's 95% interval spans more than tenfold. Curve shape is weakly estimated; compare simpler recruitment models before interpreting density dependence."))
+    }
+  }
+  i <- which(names(p) == "logit_phi_r")
+  if (length(i) && is.finite(se[i]) && diff(stats::plogis(p[i] + c(-1, 1) * stats::qnorm(.975) * se[i])) > .5) {
+    out <- rbind(out, data.frame(issue = "recruitment_AR1_uncertainty", detail =
+      "The recruitment AR1 correlation interval spans more than 0.5. Persistence is imprecise; compare IID recruitment or an externally supported phi."))
+  }
+  out
 }

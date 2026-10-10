@@ -10,6 +10,13 @@ Row {.tabset}
 plot_report(random_par$log_r, color = ~model, legendgroup = ~model, colors = cols, ylab = "Recruitment (r)")
 ```
 
+### Recruitment residuals
+
+```{r}
+plot_report(tabs$recruitment$residual, color = ~model, colors = cols,
+            ylab = "Log recruitment deviation")
+```
+
 `r if ("log_n" %in% names(random_par)) "### Abundance (N)"`
 
 ```{r, eval = "log_n" %in% names(random_par)}

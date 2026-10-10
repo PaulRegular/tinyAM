@@ -212,6 +212,8 @@ test_that("tidy_sdrep extracts, transforms, and renames series", {
   trends <- tidy_sdrep(fit, interval = 0.95)
   expect_true(all(c("ssb","recruitment","abundance") %in% names(trends)))
   population <- vals[setdiff(names(vals), c("q_link_prediction", "eta_q_increments"))]
+  population <- population[!startsWith(names(population), "rec_")]
+  expect_false(any(startsWith(names(trends), "rec_")))
   expect_true(all(grepl("^log_", names(population))))
   expect_true(all(lengths(population) == length(fit$dat$years)))
   expect_false("q_link_prediction" %in% names(trends))

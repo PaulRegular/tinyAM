@@ -360,12 +360,13 @@ plot_par <- function(data, ...) {
   }
   p <- do.call(plot_ly, c(list(data = data, x = ~est, y = ~coef), args))
 
-  p |>
+  if (any(is.finite(data$lwr) & is.finite(data$upr))) p <- p |>
     add_segments(
       x = ~lwr, xend = ~upr,
       y = ~coef, yend = ~coef,
       showlegend = FALSE
-    ) |>
+    )
+  p |>
     add_markers(showlegend = TRUE) |>
     layout(
       xaxis = list(

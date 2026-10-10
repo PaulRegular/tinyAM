@@ -340,6 +340,7 @@ check_tam <- function(fit, grad_tol = NULL, detailed = FALSE) {
 .check_tam_advisories <- function(fit, active, residuals, data) {
   out <- rbind(.mean_process_advisories(fit$dat), .q_process_advisories(fit$dat),
                .sd_process_advisories(fit$dat),
+               .rec_process_advisories(fit$dat), .rec_fit_advisories(fit),
                .formula_uncertainty_advisories(fit))
   add <- function(issue, detail) {
     out <<- rbind(out, data.frame(issue = issue, detail = detail))

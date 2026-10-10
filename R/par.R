@@ -222,18 +222,7 @@ make_par <- function(dat) {
   }
 
   if (!is.null(dat$rec$curve)) {
-    log_mu_M <- matrix(dat$log_mu_supplied_m + drop(dat$M_modmat %*% if (is.null(par$mu_m)) dat$mu_m else par$mu_m),
-                       length(dat$years), length(dat$ages), dimnames = list(dat$years, dat$ages))
-    initial_M <- exp(log_mu_M)
-    if (!is.null(par$log_m)) initial_M[rownames(par$log_m), names(dat$M_settings$age_blocks)] <-
-      exp(par$log_m[, dat$M_settings$age_blocks, drop = FALSE])
-    initial_F <- matrix(exp(par$log_f[1L, ]), length(dat$years), length(dat$ages), byrow = TRUE)
-    initial_Z <- initial_F + initial_M
-    initial <- .population_states(par, dat, initial_Z)
-    i <- dat$rec$eligible[1L] - dat$rec$curve$lag
-    S <- sum(exp(initial$log_N[i, ]) * initial$W[i, ] * initial$P[i, ])
-    par$log_sr_beta <- -log(S)
-    par$log_sr_alpha <- par$log_r0 - log(S) + if (dat$rec$curve$type == "bh") log(2) else 1
+    par <- .initialize_rec_curve(par, dat)
   }
   par
 

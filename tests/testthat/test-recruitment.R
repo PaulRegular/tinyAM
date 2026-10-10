@@ -122,3 +122,55 @@ test_that("zero-lag models reject circular SSB and unavailable parent data", {
   set.seed(94)
   expect_true(all(is.finite(nll_fun(p, d, simulate = TRUE)$log_r)))
 })
+
+test_that("recruitment reports exclude boundaries and keep uncertainty scales", {
+  d <- make_test_dat(years = 1983:1995, ages = 2:8,
+    N_settings = list(process = "off", rec_form = ~ bh(ssb) + iid(year)))
+  p <- make_par(d)
+  obj <- RTMB::MakeADFun(function(p) nll_fun(p, d), p, silent = TRUE)
+  fit <- list(dat = d, obj = obj, rep = obj$report(), sdrep = NULL,
+              parameter_values = obj$env$last.par)
+  class(fit) <- c("tam_fit", "list")
+  tab <- tidy_recruitment(fit)
+  expect_equal(tab$pairs$year, 1985:1995)
+  expect_equal(tab$pairs$parent_year, 1983:1993)
+  expect_true(all(is.na(tab$residual$se)))
+  expect_true(all(tab$residual$se_scale == "reported"))
+  expect_true(all(tab$curve$se_scale == "log"))
+  expect_true(all(is.na(tab$curve$se)))
+  expect_equal(nrow(tab$reference), 0L)
+  expect_false(any(grepl("^rec_", names(tidy_sdrep(fit)))))
+  obs <- cod_obs
+  obs$maturity$constant <- 1
+  expect_error(prepare_tam(obs, years = 1983:1995, ages = 2:8,
+    N_settings = list(rec_form = ~ bh(ssb) + constant + iid(year))), "productivity")
+})
+
+test_that("estimated recruitment AR1 links remain differentiable", {
+  d <- make_test_dat(years = 1983:1995, ages = 2:8,
+    N_settings = list(process = "off", rec_form = ~ bh(ssb) + ar1(year)))
+  p <- make_par(d)
+  obj <- RTMB::MakeADFun(function(p) nll_fun(p, d), p, silent = TRUE)
+  expect_true(all(is.finite(obj$gr(obj$par))))
+})
+
+test_that("curve parameters without intervals still plot and boundary years align", {
+  d <- data.frame(par = c("sr_alpha", "sr_beta"), coef = NA_character_,
+    est = c(2, .001), lwr = NA_real_, upr = NA_real_)
+  expect_s3_class(plotly::plotly_build(plot_par(d)), "plotly")
+  older <- make_test_dat(N_settings = list(rec_form = ~ bh(ssb, lag = 4) + iid(year)))
+  younger <- make_test_dat(N_settings = list(rec_form = ~ bh(ssb, lag = 2) + iid(year)))
+  p <- make_par(older)
+  p$log_r_init[] <- c(1, 2, 3)
+  merged <- tinyAM:::.merge_start_par(make_par(younger), p)
+  expect_equal(unname(merged$log_r[c("1985", "1986")]), c(2, 3))
+})
+
+test_that("stock-recruit support warnings remain advisory", {
+  d <- make_test_dat(N_settings = list(rec_form = ~ ricker(ssb) + ar1(year)))
+  fit <- list(dat = d, rep = list(rec_log_parent = log(seq(100, 120, length.out = length(d$rec$eligible)))),
+    sdrep = list(pdHess = TRUE, par.fixed = c(log_sr_alpha = 0, log_sr_beta = 0, logit_phi_r = 0),
+                 cov.fixed = diag(c(4, 4, 1))))
+  issues <- tinyAM:::.rec_fit_advisories(fit)$issue
+  expect_true(all(c("stock_recruit_support", "stock_recruit_uncertainty", "recruitment_AR1_uncertainty") %in% issues))
+})

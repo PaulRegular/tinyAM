@@ -214,13 +214,16 @@ fit_tam <- function(
   )
   par <- make_par(dat)
   formula_advisories <- rbind(.mean_process_advisories(dat), .q_process_advisories(dat),
-                             .sd_process_advisories(dat))
+                             .sd_process_advisories(dat), .rec_process_advisories(dat))
   if (nrow(formula_advisories)) {
     cli::cli_warn(c("Formula-effect caution.",
       stats::setNames(formula_advisories$detail, rep("i", nrow(formula_advisories)))))
   }
   if (!is.null(start_par)) {
     par <- .merge_start_par(par, start_par)
+    if (!is.null(dat$rec$curve) && !any(c("log_sr_alpha", "log_sr_beta") %in% names(start_par))) {
+      par <- .initialize_rec_curve(par, dat)
+    }
   }
   if (!is.null(par$dq) && any(!is.finite(par$dq) | par$dq < 0)) {
     cli::cli_abort("Starting {.arg dq} increments must be finite and non-negative.")
@@ -339,6 +342,7 @@ fit_tam <- function(
   out$random_par <- par_tabs$random
   out$obs_pred <- tidy_obs_pred(out, add_osa_res = add_osa_res, interval = interval, trace = !silent)
   out$pop <- tidy_pop(out, interval = interval)
+  out$rec <- tidy_recruitment(out, interval = interval)
   if (length(.formula_terms(dat))) out$formula_effects <- .tidy_formula_effects(out, interval = interval)
   out$diagnostics <- check_tam(out)
   out$is_converged <- out$diagnostics$is_converged
@@ -349,7 +353,7 @@ fit_tam <- function(
       stats::setNames(failed, rep("x", length(failed))),
       "i" = "Optimizer code zero alone is insufficient. A missed gradient tolerance alone does not establish a structural problem."))
   }
-  formula_uncertainty <- .formula_uncertainty_advisories(out)
+  formula_uncertainty <- rbind(.formula_uncertainty_advisories(out), .rec_fit_advisories(out))
   if (nrow(formula_uncertainty)) {
     cli::cli_warn(c("Formula-effect uncertainty or support is limited.",
       stats::setNames(formula_uncertainty$detail, rep("i", nrow(formula_uncertainty)))))

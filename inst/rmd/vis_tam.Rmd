@@ -117,6 +117,9 @@ table_link <- function(x, table_name = NULL, download_text = "Download table") {
 ```{r trends, child = "trends.Rmd"}
 ```
 
+```{r recruitment, child = if (length(tabs$recruitment$curve)) "recruitment.Rmd" else NULL}
+```
+
 ```{r fixed-parameters, child = "parameters_fixed.Rmd"}
 ```
 

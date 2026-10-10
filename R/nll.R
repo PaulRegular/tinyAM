@@ -484,6 +484,24 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   REPORT(ssb_mat)
   REPORT(ssb)
 
+  rec_log_mean <- log_mu_R[dat$rec$eligible]
+  rec_log_prediction <- log_pred_R[dat$rec$eligible]
+  rec_residual <- if (dat$rec$type == "rw") eta_R[dat$rec$eligible] else eta_R_state[dat$rec$eligible]
+  rec_innovation <- eta_R[dat$rec$eligible]
+  REPORT(rec_log_mean)
+  REPORT(rec_log_prediction)
+  REPORT(rec_residual)
+  REPORT(rec_innovation)
+  ADREPORT(rec_log_mean)
+  ADREPORT(rec_log_prediction)
+  ADREPORT(rec_residual)
+  ADREPORT(rec_innovation)
+  if (!is.null(dat$rec$curve)) {
+    rec_log_parent <- log_ssb[dat$rec$eligible - dat$rec$curve$lag]
+    REPORT(rec_log_parent)
+    ADREPORT(rec_log_parent)
+  }
+
   REPORT(total_catch)
   REPORT(total_catch_pred)
   REPORT(total_yield)

@@ -110,10 +110,11 @@ vis_tam <- function(..., model_list = NULL, interval = 0.95, output_file = NULL,
   category[par %in% "dq" | grepl("^q_(a50|slope)_", par)] <- "Catchability curves"
   category[grepl("^mu_", par)] <- "Mortality means"
   category[grepl("^phi_", par)] <- "Correlations"
-  category[par %in% c("r0", "n0")] <- "Initial abundance"
+  category[par %in% c("rec_beta", "sr_alpha", "sr_beta")] <- "Recruitment"
+  category[par %in% c("r0", "r_init", "n0")] <- "Initial abundance"
   category <- factor(category, levels = c("Process SDs", "Observation SDs",
     "Catchability", "Catchability curves", "Mortality means", "Correlations",
-    "Initial abundance", "Other"))
+    "Recruitment", "Initial abundance", "Other"))
   split(data, category, drop = TRUE)
 }
 

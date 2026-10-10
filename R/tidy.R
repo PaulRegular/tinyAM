@@ -207,6 +207,7 @@ tidy_rep <- function(fit) {
   keep <- vapply(rep, function(x) is.matrix(x) || length(x) == length(dat$years),
                  logical(1))
   keep[grepl("^eta_(q|mu_[FM]|sd_catch|sd_index)_increments$", names(keep))] <- FALSE
+  keep[startsWith(names(keep), "rec_")] <- FALSE
   rep_items <- rep[keep]
 
   trends <- lapply(rep_items, function(x) {
@@ -318,6 +319,7 @@ tidy_sdrep <- function(fit, interval = 0.95) {
   vals <- as.list(fit[["sdrep"]], "Estimate", report = TRUE)
   ses <- as.list(fit[["sdrep"]], "Std. Error", report = TRUE)
   vals <- vals[!grepl("^(q_link_prediction|eta_(q|mu_[FM]|sd_catch|sd_index)_increments)$", names(vals))]
+  vals <- vals[!startsWith(names(vals), "rec_")]
   ses <- ses[names(vals)]
   df <- lapply(seq_along(vals), function(i) {
     d <- data.frame(year = fit$dat$years,
@@ -472,6 +474,7 @@ tidy_par <- function(fit, interval = 0.95) {
         if (nm %in% c("log_r", "log_r_init")) {
           yr <- as.integer(names(e))
           df <- data.frame(year = yr, est = e, se = s, is_proj = yr %in% fit$dat$years[fit$dat$is_proj])
+          if (nm == "log_r_init") df$coef <- as.character(yr)
         } else if (nm == "log_n0") {
           df <- data.frame(coef = names(e), age = as.integer(names(e)), est = e, se = s)
         } else {
@@ -870,6 +873,11 @@ tidy_tam <- function(..., model_list = NULL, interval = 0.95, label = "model", l
     fixed_par  = fixed_tbl,
     random_par = random_tbls
   )
+  recruitment <- lapply(model_list, function(fit) {
+    if (inherits(fit, "tam_ref")) return(list())
+    Filter(function(x) is.data.frame(x) && nrow(x) > 0L, tidy_recruitment(fit, interval))
+  })
+  out$recruitment <- stack_nested(recruitment, label = id_col, label_type = label_type)
   effects <- lapply(model_list, function(fit) {
     if (inherits(fit, "tam_ref")) return(list())
     if (!is.null(fit$formula_effects) && interval_matches(fit$formula_effects)) {
