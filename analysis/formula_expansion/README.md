@@ -304,3 +304,24 @@ No assessment recipe is changed. These checkpoints also retain failures,
 warnings, seeds and source fingerprints. Curve parameters have no recovery
 truth when recruitment is a RW. Diagnostic flags are descriptive cautions,
 not a formal test for a biological stock–recruit relationship.
+
+The equation audit checks ordinary-scale BH/Ricker values, log-parameter and
+log-SSB derivatives, parent-year alignment, Gaussian densities and curve
+display values. The original flat BH example has little recruitment signal
+relative to noise; the Ricker examples are near their peak and much of their
+visible rise is extrapolation. Lower SD alone does not reliably resolve weak
+curve support. Wider SSB contrast substantially improves BH parameter recovery.
+
+Curve displays preserve the fitted covariate basis and factor contrasts.
+`check_tam()` also flags strongly correlated historical stock-recruit
+innovations. This is separate from numerical convergence and cannot establish
+a biological relationship. The cross-report compares recorded support
+warnings with this additional screen; it retains every failure.
+
+The completed cross-study passed 2,498/2,500 isolated and 698/750 full fits.
+Ricker–IID self-tests passed 25/30 full fits; the five failures had gradients
+above 0.01 despite optimizer success and positive-definite Hessians. Its beta
+interval coverage was only 76% among passing full fits. Keep curve inference
+experimental: appearance and numerical convergence do not guarantee support
+or calibrated uncertainty. The follow-up suite passed 1,872 assertions with
+one interactive-only skip; `R CMD check --no-manual` was OK.
