@@ -114,6 +114,10 @@ component as an additive Gaussian random mean; they are permitted with a
 sparse-support warning. SD effects are integrated using RTMB's Laplace
 approximation, so recovery checks are especially useful with sparse data.
 This extension does not introduce formulas for latent N/F/M process SDs.
+Estimated catch-SD age random walks also trigger an advisory: full-model
+recovery simulations frequently failed when F was estimated jointly, despite
+good isolated recovery. Compare IID age effects or a fixed age curve and
+inspect numerical diagnostics. This caution does not forbid the model.
 }
 \examples{
 ~ survey + iid(year, by = survey)

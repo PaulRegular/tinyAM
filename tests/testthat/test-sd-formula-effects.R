@@ -45,6 +45,27 @@ test_that("fixed formulas and supplied SD offsets preserve their scale", {
     sd_supplied = ~ I(.2))), "Dropping intercept")
 })
 
+test_that("random SD changes spread and its density, not the observation mean", {
+  dat <- sd_test_dat()
+  p <- make_par(dat)
+  term <- dat$sd_catch_terms[[1]]
+  obj <- RTMB::MakeADFun(function(p) nll_fun(p, dat), p, silent = TRUE)
+  before <- obj$fn(obj$par)
+  initial <- obj$report()
+  modified <- obj$par
+  indices <- names(modified) == term$parameter
+  modified[indices] <- seq(-.3, .3, length.out = sum(indices))
+  after <- obj$fn(modified)
+  final <- obj$report()
+  expect_equal(final$log_pred, initial$log_pred)
+  rows <- dat$is_observed
+  observation_change <- sum(dnorm(dat$observed, initial$log_pred[rows], initial$sd_obs[rows], log = TRUE)) -
+    sum(dnorm(dat$observed, final$log_pred[rows], final$sd_obs[rows], log = TRUE))
+  process_change <- sum(dnorm(rep(0, sum(indices)), 0, .3, log = TRUE)) -
+    sum(dnorm(modified[indices], 0, .3, log = TRUE))
+  expect_equal(after - before, observation_change + process_change, tolerance = 1e-8)
+})
+
 test_that("SD simulation uses returned states and matching observation rows", {
   dat <- sd_test_dat("rw", index_settings = list(q_form = ~ q_block,
     sd_form = ~ ar1(age, sd = .3, phi = .6), fill_missing = FALSE))
@@ -131,6 +152,13 @@ test_that("SD designs reject redundancies but do not alias mean and scale varian
   expect_equal(nrow(tinyAM:::.sd_process_advisories(well)), 0L)
   thin <- sd_test_dat(ages = 2:5, catch_settings = list(sd_form = ~ ar1(age)))
   expect_true("SD_effect_support" %in% tinyAM:::.sd_process_advisories(thin)$issue)
+  fragile <- sd_test_dat(catch_settings = list(sd_form = ~ rw(age)))
+  advisory <- tinyAM:::.sd_process_advisories(fragile)
+  expect_true("catch_SD_RW" %in% advisory$issue)
+  expect_match(advisory$detail[advisory$issue == "catch_SD_RW"], "when F is also estimated")
+  expect_false("catch_SD_RW" %in% tinyAM:::.sd_process_advisories(sd_test_dat("rw"))$issue)
+  expect_false("catch_SD_RW" %in% tinyAM:::.sd_process_advisories(
+    sd_test_dat("rw", "index", index_settings = list(sd_form = ~ rw(age))))$issue)
 })
 
 test_that("SD random intercepts and by specifications use the same formula rules", {

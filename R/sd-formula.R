@@ -43,6 +43,11 @@
     d <- dat$obs[[component]]
     observed <- !d$is_proj & is.finite(d$obs) & d$obs > 0
     for (term in terms) {
+      if (component == "catch" && term$type == "rw" && term$variable == "age" &&
+          !is.null(term$sd_parameter)) {
+        out <- rbind(out, data.frame(issue = "catch_SD_RW", detail = paste0(term$id,
+          ": estimating an age random walk in catch SD can be numerically fragile when F is also estimated. Full assessment recovery simulations frequently failed despite repeated observations at each age. Compare IID age effects or a fixed age curve, and inspect check_tam(fit).")))
+      }
       for (group in term$groups) {
         rows <- group$rows[observed[group$rows] & term$multiplier[group$rows] != 0]
         support <- table(d[[term$variable]][rows])
