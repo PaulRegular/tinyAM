@@ -1,3 +1,4 @@
+source("analysis/comp_assessments/tests/helper_stock.R")
 root <- "analysis/comp_assessments"
 source(file.path(root, "R", "run_assessment.R"))
 pkgload::load_all(".", quiet = TRUE)
@@ -5,12 +6,9 @@ source(file.path(root, "R", "read_database.R"))
 source(file.path(root, "R", "database_to_tam_obs.R"))
 source(file.path(root, "R", "database_to_tam_ref.R"))
 
-stock <- new.env(parent = globalenv())
-sys.source(file.path(root, "scripts", "translation", "stocks",
-                     "dfo_herring_4tvn_spring_2024.R"), envir = stock)
 source_data <- read_assessment("dfo_herring_4tvn_spring_2024", read_database())
 original <- source_data
-translated <- stock$translate_stock(source_data)
+translated <- .test_stock(source_data)
 obs <- translated$obs
 
 stopifnot(

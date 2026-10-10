@@ -1,3 +1,4 @@
+source("analysis/comp_assessments/tests/helper_stock.R")
 pkgload::load_all(".", quiet = TRUE)
 
 root <- file.path("analysis", "comp_assessments")
@@ -6,11 +7,6 @@ source(file.path(root, "R", "read_database.R"))
 source(file.path(root, "R", "database_to_tam_obs.R"))
 source(file.path(root, "R", "database_to_tam_ref.R"))
 
-stock_env <- new.env(parent = environment())
-sys.source(
-  file.path(root, "scripts", "translation", "stocks", "dfo_cod_4t4vn_2019.R"),
-  envir = stock_env
-)
 source_data <- read_assessment("dfo_cod_4t4vn_2019", read_database())
 landings_at_age <- source_data$inputs[
   source_data$inputs$type == "catch" &
@@ -20,7 +16,7 @@ landings_at_age <- source_data$inputs[
 stopifnot(nrow(landings_at_age) == 480L)
 stopifnot(!any(source_data$inputs$type == "catch" &
                  source_data$inputs$measure == "numbers_at_age"))
-translated <- stock_env$translate_stock(source_data)
+translated <- .test_stock(source_data)
 obs <- translated$obs
 
 stopifnot(identical(translated$years, 1971:2018))
@@ -61,7 +57,7 @@ stopifnot(isTRUE(all.equal(
   unname(par$log_m[1, ]), log(c(0.65, 0.15, 0.15))
 )))
 stopifnot(identical(
-  translated$warm_start_settings$M_settings$process, "iid"
+  translated$warm_call$M_settings$process, "iid"
 ))
 stopifnot(all(is.finite(obs$weight$obs[obs$weight$year %in% c(1980, 1985)])))
 stopifnot(any(grepl("translation_assumption",

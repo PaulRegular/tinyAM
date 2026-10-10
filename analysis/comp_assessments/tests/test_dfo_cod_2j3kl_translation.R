@@ -1,3 +1,4 @@
+source("analysis/comp_assessments/tests/helper_stock.R")
 root <- "analysis/comp_assessments"
 source(file.path(root, "R", "run_assessment.R"))
 pkgload::load_all(".", quiet = TRUE)
@@ -5,15 +6,12 @@ source(file.path(root, "R", "read_database.R"))
 source(file.path(root, "R", "database_to_tam_obs.R"))
 source(file.path(root, "R", "audit_assumptions.R"))
 
-stock <- new.env(parent = globalenv())
-sys.source(file.path(root, "scripts", "translation", "stocks",
-                     "dfo_cod_2j3kl_2025.R"), envir = stock)
 database <- read_database()
 source_data <- read_assessment("dfo_cod_2j3kl_2025", database)
 audit <- audit_assumptions("dfo_cod_2j3kl_2025", source_data$assumptions)
 source_year <- source_data$inputs$year
 source_basis <- source_data$inputs$year_basis
-translated <- stock$translate_stock(source_data)
+translated <- .test_stock(source_data)
 obs <- translated$obs
 all_maturity <- source_data$inputs[
   source_data$inputs$type == "maturity" &
@@ -100,7 +98,7 @@ for (year in unique(smith$year)) {
   fitted_rows <- smith[smith$year == year, ]
   stopifnot(isTRUE(all.equal(fitted_rows$obs, expected[match(fitted_rows$age, cp$age)])))
 }
-juvenile_trial <- stock$translate_stock(source_data, juveniles = TRUE)
+juvenile_trial <- .test_stock(source_data, juveniles = TRUE)
 juvenile_obs <- juvenile_trial$obs$index
 stopifnot(identical(juvenile_trial$ages, 0:14),
           all(juvenile_obs$samp_time[juvenile_obs$survey == "Fleming juvenile survey"] == 9.5/12),

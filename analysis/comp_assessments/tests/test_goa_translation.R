@@ -1,15 +1,13 @@
+source("analysis/comp_assessments/tests/helper_stock.R")
 root <- "analysis/comp_assessments"
 source(file.path(root, "R", "run_assessment.R"))
 pkgload::load_all(".", quiet = TRUE)
 source(file.path(root, "R", "read_database.R"))
 source(file.path(root, "R", "database_to_tam_obs.R"))
 
-stock <- new.env(parent = globalenv())
-sys.source(file.path(root, "scripts", "translation", "stocks",
-                     "afsc_pollock_goa_2024.R"), envir = stock)
 database <- read_database()
 source_data <- read_assessment("afsc_pollock_goa_2024", database)
-translated <- stock$translate_stock(source_data)
+translated <- .test_stock(source_data)
 obs <- translated$obs
 
 tinyAM::check_obs(obs)

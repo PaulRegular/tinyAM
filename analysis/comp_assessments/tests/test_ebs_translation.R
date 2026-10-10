@@ -1,13 +1,11 @@
+source("analysis/comp_assessments/tests/helper_stock.R")
 root <- file.path("analysis", "comp_assessments")
 pkgload::load_all(".", quiet = TRUE)
 source(file.path(root, "R", "run_assessment.R"))
 
 database <- read_database()
 source_data <- read_assessment("afsc_pollock_ebs_2024", database)
-stock <- new.env(parent = globalenv())
-sys.source(file.path(root, "scripts", "translation", "stocks",
-                     "afsc_pollock_ebs_2024.R"), envir = stock)
-translated <- stock$translate_stock(source_data)
+translated <- .test_stock(source_data)
 obs <- translated$obs
 documentation <- print_sources(source_data$assessment)
 stopifnot(length(documentation) >= 2L,

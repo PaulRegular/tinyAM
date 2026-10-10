@@ -1,3 +1,4 @@
+source("analysis/comp_assessments/tests/helper_stock.R")
 root <- file.path("analysis", "comp_assessments")
 pkgload::load_all(".", quiet = TRUE)
 source(file.path(root, "R", "run_assessment.R"))
@@ -7,9 +8,7 @@ for (id in c("ices_haddock_north_sea_2026", "ices_haddock_iceland_2025",
              "ices_saithe_north_sea_2026", "nefsc_summer_flounder_2018")) {
   source_data <- read_assessment(id, database)
   stock <- new.env(parent = globalenv())
-  sys.source(file.path(root, "scripts", "translation", "stocks",
-                       paste0(id, ".R")), stock)
-  translated <- stock$translate_stock(source_data)
+  translated <- .test_stock(source_data)
   dat <- do.call(tinyAM::prepare_tam, c(
     list(data = translated$obs, years = translated$years, ages = translated$ages),
     translated$settings

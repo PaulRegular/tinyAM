@@ -1,9 +1,9 @@
+source("analysis/comp_assessments/tests/helper_stock.R")
 source('analysis/comp_assessments/R/run_assessment.R')
 db <- read_database()
 translate <- function(id) {
  e <- new.env(parent = environment())
- sys.source(file.path('analysis/comp_assessments/scripts/translation/stocks',paste0(id,'.R')),e)
- e$translate_stock(read_assessment(id,db))$obs
+ .test_stock(read_assessment(id,db))$obs
 }
 expect_block <- function(actual, expected) stopifnot(identical(as.character(actual),as.character(expected)))
 
@@ -39,4 +39,3 @@ expect_block(obs$catch$sd_block,ifelse(obs$catch$age==3,'age3',ifelse(obs$catch$
 obs <- translate('ices_sprat_baltic_2026')
 expect_block(obs$index$q_key,paste(obs$index$survey,ifelse(obs$index$age>=6,'6-8',obs$index$age),sep='.'))
 cat('Recipe age and year block boundaries are unchanged.\n')
-

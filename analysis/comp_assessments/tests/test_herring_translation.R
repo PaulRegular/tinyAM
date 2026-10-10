@@ -1,15 +1,13 @@
+source("analysis/comp_assessments/tests/helper_stock.R")
 root <- "analysis/comp_assessments"
 source(file.path(root, "R", "run_assessment.R"))
 pkgload::load_all(".", quiet = TRUE)
 source(file.path(root, "R", "read_database.R"))
 source(file.path(root, "R", "database_to_tam_obs.R"))
 
-stock <- new.env(parent = globalenv())
-sys.source(file.path(root, "scripts", "translation", "stocks",
-                     "ices_herring_north_sea_2026.R"), envir = stock)
 database <- read_committed_database()
 source_data <- read_committed_assessment("ices_herring_north_sea_2026", database)
-translated <- stock$translate_stock(source_data)
+translated <- .test_stock(source_data)
 obs <- translated$obs
 
 tinyAM::check_obs(obs)

@@ -9,12 +9,6 @@ for (.assessment_helper in c(
 rm(.assessment_helper)
 
 
-.assessment_fit_call <- function(args) {
-  args$data <- quote(data)
-  if (!is.null(args$start_par)) args$start_par <- quote(start_par)
-  as.call(c(list(quote(fit_tam)), args))
-}
-
 .assessment_catch_reporting <- function(fit, reporting) {
   if (is.null(reporting)) return(fit)
   catch <- fit$obs_pred$catch
@@ -156,7 +150,6 @@ run_assessment <- function(assessment_id, database = NULL, fit = TRUE,
     assessment_id = assessment_id,
     source = source,
     obs = NULL,
-    settings = NULL,
     fit = NULL,
     ref = NULL,
     audit = audit,
@@ -178,72 +171,33 @@ run_assessment <- function(assessment_id, database = NULL, fit = TRUE,
   }
 
   stock_env <- new.env(parent = environment())
+  stock_env$source <- source
+  stock_env$do_fit <- fit
+  stock_env$silent <- silent
+  stock_env$fit_stage <- "translation"
+  stock_env$fit_started <- Sys.time()
   sourced <- tryCatch({
     sys.source(script, envir = stock_env)
     NULL
   }, error = identity)
+  translated <- as.list(stock_env)
+  result$obs <- translated$obs
+  result$background <- translated$background
+  elapsed <- as.numeric(difftime(Sys.time(), stock_env$fit_started, units = "secs"))
   if (inherits(sourced, "error")) {
     result$diagnostics <- .assessment_diagnostics(
-      assessment_id, database, "translation_script_failed",
-      reason = conditionMessage(sourced)
+      assessment_id, database, paste0(stock_env$fit_stage, "_failed"),
+      elapsed = elapsed, reason = conditionMessage(sourced)
     )
     return(result)
   }
-  translated <- tryCatch(stock_env$translate_stock(source), error = identity)
-  if (inherits(translated, "error")) {
-    result$diagnostics <- .assessment_diagnostics(
-      assessment_id, database, "translation_failed",
-      reason = conditionMessage(translated)
-    )
-    return(result)
-  }
-  result$obs <- translated$obs
-  result$settings <- translated$settings
-  result$background <- translated$background
-
   if (!fit) {
     result$diagnostics <- .assessment_diagnostics(
       assessment_id, database, "not_fitted", reason = "fit = FALSE."
     )
     return(result)
   }
-
-  started <- Sys.time()
-  fit_args <- c(list(data = translated$obs, years = translated$years,
-                     ages = translated$ages, silent = silent), translated$settings)
-  if (!is.null(translated$start_par)) {
-    fit_args$start_par <- translated$start_par
-  } else if (!is.null(translated$warm_start_settings)) {
-    warm_settings <- utils::modifyList(
-      translated$settings, translated$warm_start_settings
-    )
-    warm_args <- c(list(data = translated$obs, years = translated$years,
-                        ages = translated$ages, silent = silent), warm_settings)
-    warm_fit <- tryCatch(do.call(tinyAM::fit_tam, warm_args), error = identity)
-    if (inherits(warm_fit, "error") || !isTRUE(warm_fit$is_converged)) {
-      result$diagnostics <- .assessment_diagnostics(
-        assessment_id, database, "warm_start_failed",
-        elapsed = as.numeric(difftime(Sys.time(), started, units = "secs")),
-        reason = if (inherits(warm_fit, "error")) {
-          conditionMessage(warm_fit)
-        } else {
-          "The preliminary fit did not converge."
-        }
-      )
-      return(result)
-    }
-    fit_args$start_par <- as.list(warm_fit$sdrep, "Estimate")
-  }
-  fitted <- tryCatch(do.call(tinyAM::fit_tam, fit_args), error = identity)
-  elapsed <- as.numeric(difftime(Sys.time(), started, units = "secs"))
-  if (inherits(fitted, "error")) {
-    result$diagnostics <- .assessment_diagnostics(
-      assessment_id, database, "fit_failed", elapsed = elapsed,
-      reason = conditionMessage(fitted)
-    )
-    return(result)
-  }
-  fitted$call <- .assessment_fit_call(fit_args)
+  fitted <- stock_env$fit
   fitted <- .assessment_catch_reporting(fitted, translated$catch_reporting)
   result$fit <- fitted
   result$diagnostics <- .assessment_diagnostics(
@@ -307,7 +261,6 @@ run_assessment <- function(assessment_id, database = NULL, fit = TRUE,
     assessment_id = assessment_id,
     source = NULL,
     obs = NULL,
-    settings = NULL,
     fit = NULL,
     ref = NULL,
     audit = NULL,

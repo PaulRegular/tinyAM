@@ -1,3 +1,4 @@
+source("analysis/comp_assessments/tests/helper_stock.R")
 root <- file.path("analysis", "comp_assessments")
 source(file.path(root, "R", "run_assessment.R"))
 pkgload::load_all(".", quiet = TRUE)
@@ -6,10 +7,7 @@ source(file.path(root, "R", "database_to_tam_obs.R"))
 
 assessment_id <- "ices_plaice_north_sea_2026"
 source_data <- read_assessment(assessment_id, read_database())
-recipe <- new.env(parent = globalenv())
-sys.source(file.path(root, "scripts", "translation", "stocks",
-                     paste0(assessment_id, ".R")), envir = recipe)
-translated <- recipe$translate_stock(source_data)
+translated <- .test_stock(source_data)
 dat <- do.call(tinyAM::prepare_tam, c(
   list(data = translated$obs, years = translated$years, ages = translated$ages),
   translated$settings
