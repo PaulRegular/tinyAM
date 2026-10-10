@@ -13,8 +13,9 @@ Experimental branch: `formula-expansion`, starting at `e801800` on
 3. Extend F/M mean formulas, as subsequently authorized by the user.
    Begin with shared temporal mean processes and IID residual processes.
    Multiple temporal processes need a separate identifiability review.
-4. Review possible variance structures as a research question. Do not expose
-   stochastic volatility or another variance process without a further decision.
+4. Extend catch/index SD formulas with age IID/RW/AR1 effects, as subsequently
+   authorized by the user. Evaluate replicated and sparse SD recovery before
+   considering temporal stochastic volatility or latent-process SD formulas.
 
 ## Agreed conventions
 
@@ -166,3 +167,61 @@ success counts, parameter recovery, intervals and example trajectories.
 Final package checks: 1,564 passing assertions, one interactive-only skip,
 and `R CMD check --no-manual` Status OK. PDF manual generation is blocked by
 existing Unicode mathematical symbols in the simulation help page.
+
+## Observation SD validation
+
+Phase 4 adds Gaussian formula effects to `catch_settings$sd_form` and
+`index_settings$sd_form`. Effects enter log SD, not the observation mean.
+Supplied SDs remain offsets; process SDs quantify variation in log observation
+SD. Begin with replicated age effects; a small number of ages may poorly
+identify AR1 correlation even with many observations per age. One RW/AR1
+term per SD surface is currently permitted. This does not add formulas for
+latent N/F/M SDs or validate temporal stochastic volatility.
+
+Run from the repository root:
+
+```r
+system2(file.path(R.home("bin"), "Rscript"),
+        "analysis/formula_expansion/test_sd_validation.R")
+system2(file.path(R.home("bin"), "Rscript"),
+        c("analysis/formula_expansion/simulate_sd_effects.R", "100", "30", "3"))
+system2(file.path(R.home("bin"), "Rscript"),
+        "analysis/formula_expansion/validate_sd_workflow.R")
+rmarkdown::render("analysis/formula_expansion/sd_effects_report.Rmd",
+                  output_dir = "analysis/formula_expansion/results")
+```
+
+`sd_validation.R` contains the designs and recovery calculations. The study
+records 900 isolated process-recovery attempts, 500 noisy-tail fits comparing
+common/quadratic/IID/RW/AR1 curves, and 180 full assessments varying catch or
+survey age SDs. Every attempt, seed, warning, interval and error is retained.
+Numerical success and SD-curve recovery are reported separately; coverage is
+conditional on numerical success and available intervals. No failed fit is
+rescued or silently removed. The optional third argument controls independent
+R workers (default one). Checkpoints resume missing attempts only; fixed seeds
+inside each replicate make results independent of scheduling. Use the same
+replicate counts when resuming. Workflow checks cover named warm starts,
+projections, retrospective/hindcast folds, simulation, tidy effects and two
+dashboards. Only the source, concise report text and deterministic tests are
+tracked; results, representative fits, figures and dashboards are ignored.
+Source fingerprints prevent resuming a checkpoint with changed model or study
+code; move the old checkpoint aside to start a new study after source edits.
+
+### Phase 4 evidence
+
+All 1,580 attempts are complete. Full assessments passed numerical checks in
+30/30 catch IID, 13/30 catch RW, 30/30 catch AR1, 30/30 survey IID, 28/30 survey
+RW and 29/30 survey AR1 cases. All well-replicated isolated processes passed,
+but sparse SD curves were poorly recovered despite frequent numerical success.
+AR1 correlations were imprecise and underestimated. Catch process SDs also
+tended to be underestimated. Retain the options experimentally, prefer IID
+age effects as a starting point, and flag estimated catch-SD age RWs.
+
+The correctly specified quadratic curve outperformed random effects for the
+quadratic noisy-tail example; the random curves nevertheless captured the
+tails. A recovery-curve synchronization bug after `sdreport()` was corrected
+and covered by an intercept-score regression test. Standalone experiments
+were recomputed with identical seeds; full assessment fits were unaffected.
+Both workflow examples passed projections, two retrospective folds, two
+hindcast folds, simulation and dashboard checks. The final full package suite
+and `R CMD check --no-manual` passed.
