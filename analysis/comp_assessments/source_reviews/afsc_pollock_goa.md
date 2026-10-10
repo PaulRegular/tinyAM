@@ -1,5 +1,18 @@
 # Gulf of Alaska pollock: accepted-assessment source review
 
+## Formula review (2026-10-10)
+
+Source fixed-SD IID recruitment (`sd = 1.3`) and a penalized annual ADF&G q RW
+were tested separately, retaining the current logit link, age blocks,
+environmental covariate, observations and biology. IID improved recruitment
+error (50.4% to 45.3%) and its trend, but worsened common-definition SSB error
+(29.7% to 31.9%) and trend (0.924 to 0.916). ADF&G q RW produced only tiny
+N/recruitment gains, worsened average SSB, and added a parameter-correlation
+advisory. Neither removes boundary-q or residual concerns. Retain the baseline;
+source log-q increments and their varying penalty SDs are not exactly a
+constant-SD process on logit-q. These mixed results are flagged in the review
+table rather than combined into an untested model.
+
 Status: canonical record afsc_pollock_goa_2024 imported; inputs, outputs and assumptions remain partial.
 Charbonneau identifier: AFSC_GOA_Gadus_chalcogrammus.
 
