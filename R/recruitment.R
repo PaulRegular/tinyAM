@@ -375,7 +375,8 @@ ricker <- function(ssb, lag = NULL) {
                                                   1L, dat$proj_settings$F_mult, `*`)
   initial <- .population_states(par, dat, F + M)
   i <- dat$rec$eligible[1L] - dat$rec$curve$lag
-  S <- sum(exp(initial$log_N[i, ]) * initial$W[i, ] * initial$P[i, ])
+  S <- sum(.ssb_at_age(exp(initial$log_N[i, ]), initial$W[i, ], initial$P[i, ],
+    (F + M)[i, ], dat$ssb_settings$spawn_time))
   par$log_sr_beta <- -log(S)
   par$log_sr_alpha <- par$log_r0 - .rec_mean(par, dat)[dat$rec$eligible[1L]] - log(S) +
     if (dat$rec$curve$type == "bh") log(2) else 1

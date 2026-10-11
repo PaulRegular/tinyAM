@@ -36,6 +36,20 @@ test_that("simulated BH/Ricker parents use the same spawning-time population", {
   }
 })
 
+test_that("curve initialization anchors the configured spawning-time SSB", {
+  for (curve in c("bh", "ricker")) for (time in c(0, .25, 1)) {
+    dat <- make_test_dat(years = 1983:1995, ages = 2:8,
+      N_settings = list(process = "off", rec_form = as.formula(paste0("~ ", curve, "(ssb) + iid(year)"))),
+      ssb_settings = list(spawn_time = time))
+    par <- make_par(dat)
+    report <- RTMB::MakeADFun(function(p) nll_fun(p, dat), par, silent = TRUE)$report()
+    parent <- dat$rec$eligible[1L] - dat$rec$curve$lag
+    S <- report$ssb[parent]
+    expect_equal(unname(exp(par$log_sr_beta)), unname(1 / S))
+    expect_equal(unname(exp(tinyAM:::.rec_log_curve(log(S), par, curve))), exp(par$log_r0))
+  }
+})
+
 test_that("spawning timing survives updates and retrospective/hindcast folds", {
   fit <- suppressWarnings(update(default_fit, ssb_settings = list(spawn_time = .25), silent = TRUE))
   expect_true(all(fit$pop$ssb$spawn_time == .25))
