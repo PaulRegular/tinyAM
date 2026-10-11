@@ -60,6 +60,9 @@ IID survivorship residuals and separate SD \code{sd_n0}. See \strong{Details}.
 \item \code{process}: \code{"iid"} for independent departures from the mean log F,
 \code{"rw"} for departures that accumulate over time, or \code{"ar1"} for departures
 correlated between years and ages.
+\code{"cor_rw"} accumulates changes over time with AR1 correlation between
+annual increments at neighbouring ages. It estimates one signed age
+correlation; its SD is the marginal SD of annual log-F increments.
 \item \code{mu_form}: an optional formula for mean-\eqn{F} (coefficients estimated as
 \strong{log-scale} parameters \code{log_mu_f}). Required for \code{"iid"} and \code{"ar1"};
 use \code{~ 1} for one estimated mean level or \code{~ factor(age)} for age-specific

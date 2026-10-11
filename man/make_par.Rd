@@ -88,6 +88,8 @@ See \code{\link[=prepare_tam]{prepare_tam()}} for the choices and weak-identific
 \itemize{
 \item \code{log_sd_f}
 \item \code{logit_phi_f} length 2 (if \code{process == "ar1"})
+\item \code{atanh_rho_f}: signed age correlation of annual F increments
+(if \code{process == "cor_rw"}), reported as \code{rho_f} through \code{tanh()}.
 \item \code{log_mu_f} coefficients (length \code{ncol(dat$F_modmat)}) if a mean structure was supplied
 \item \code{log_f} matrix (historical \code{year} × \code{age}; no projection rows)
 }

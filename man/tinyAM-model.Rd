@@ -179,6 +179,12 @@ row is unpenalized. Conditional on starting residual \eqn{e_{1,a}},
 \eqn{\operatorname{Cov}(e_{i,a},e_{j,b})=
   \mathbb{1}(a=b)\sigma^2\min(i-1,j-1)}.
 This defines a density of increments, not a proper prior over all levels.
+\item \strong{Correlated F RW:} \code{process = "cor_rw"} uses independent annual
+increment vectors with covariance
+\eqn{\Sigma_{ab}=\sigma_a\sigma_b\rho^{|a-b|}}. Its first row is
+unpenalized, as for RW. The signed correlation \eqn{-1<\rho<1} is
+estimated through \code{tanh(atanh_rho_f)}. Here SD describes each age's
+annual increment, without the AR1 variance inflation below.
 \item \strong{AR1:} the whole matrix has a stationary zero-mean Gaussian density with
 \deqn{\operatorname{Cov}\{\operatorname{vec}(\eta)\}=
   \frac{\sigma^2}{(1-\phi_a^2)(1-\phi_t^2)}\;C_a\otimes C_t,}
@@ -193,7 +199,7 @@ Scalar SDs use \verb{exp(log_sd_*)}. Fitted AR1 correlations use
 one. A singleton matrix axis has its correlation fixed at zero, since it
 cannot be distinguished from the variance scale. The standalone AR1 helpers
 also accept negative correlations with absolute value below one.
-RW has no correlation parameters. If a RW matrix has only one row, its SD
+Independent RW has no correlation parameters. If a RW matrix has only one row, its SD
 is held fixed because there are no increments. Mean coefficients that cancel
 from all RW increments and do not control any other mortality cells are
 held at their starting values rather than estimated from a flat likelihood.

@@ -184,7 +184,7 @@ check_tam <- function(fit, grad_tol = NULL, detailed = FALSE) {
     if (nm == "q_modmat" && !is.null(dat$q_mono_modmat)) {
       x <- cbind(x, dat$q_mono_modmat[historical, , drop = FALSE])
     }
-    if (nm == "F_modmat" && dat$F_settings$process == "rw" && ncol(x)) {
+    if (nm == "F_modmat" && dat$F_settings$process %in% c("rw", "cor_rw") && ncol(x)) {
       ny <- sum(!dat$is_proj)
       x <- vapply(seq_len(ncol(x)), function(j) {
         z <- matrix(x[, j], ny, length(dat$ages))
@@ -347,7 +347,7 @@ check_tam <- function(fit, grad_tol = NULL, detailed = FALSE) {
   out <- rbind(.mean_process_advisories(fit$dat), .q_process_advisories(fit$dat),
                .sd_process_advisories(fit$dat),
                .rec_process_advisories(fit$dat), .rec_fit_advisories(fit),
-               .formula_uncertainty_advisories(fit))
+               .formula_uncertainty_advisories(fit), .cor_rw_advisories(fit))
   add <- function(issue, detail) {
     out <<- rbind(out, data.frame(issue = issue, detail = detail))
   }

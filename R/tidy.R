@@ -489,7 +489,9 @@ tidy_par <- function(fit, interval = 0.95) {
     df$lwr <- df$est - z * df$se
     df$upr <- df$est + z * df$se
 
-    df$se_scale <- if (startsWith(nm, "logit_")) {
+    df$se_scale <- if (startsWith(nm, "atanh_")) {
+      "atanh"
+    } else if (startsWith(nm, "logit_")) {
       "logit"
     } else if (startsWith(nm, "log_")) {
       "log"
@@ -497,7 +499,10 @@ tidy_par <- function(fit, interval = 0.95) {
       "reported"
     }
 
-    if (nm == "logit_q") {
+    if (startsWith(nm, "atanh_")) {
+      df <- trans_est(df, transform = tanh, scale = 1)
+      df$par <- sub("^atanh_", "", df$par)
+    } else if (nm == "logit_q") {
       df <- trans_est(df, transform = NULL, scale = 1)
     } else if (startsWith(nm, "logit_")) {
       df <- trans_est(df, transform = plogis, scale = 1)

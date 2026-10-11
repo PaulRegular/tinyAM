@@ -371,6 +371,9 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #' - `process`: `"iid"` for independent departures from the mean log F,
 #'   `"rw"` for departures that accumulate over time, or `"ar1"` for departures
 #'   correlated between years and ages.
+#'   `"cor_rw"` accumulates changes over time with AR1 correlation between
+#'   annual increments at neighbouring ages. It estimates one signed age
+#'   correlation; its SD is the marginal SD of annual log-F increments.
 #' - `mu_form`: an optional formula for mean-\eqn{F} (coefficients estimated as
 #'   **log-scale** parameters `log_mu_f`). Required for `"iid"` and `"ar1"`;
 #'   use `~ 1` for one estimated mean level or `~ factor(age)` for age-specific
@@ -510,10 +513,10 @@ prepare_tam <- function(
   dat <- mget(setdiff(ls(), "data"))
 
   dat$N_settings$process <- match.arg(dat$N_settings$process, c("off", "iid", "rw", "ar1"))
-  dat$F_settings$process <- match.arg(dat$F_settings$process, c("iid", "rw", "ar1"))
+  dat$F_settings$process <- match.arg(dat$F_settings$process, c("iid", "rw", "cor_rw", "ar1"))
   dat$M_settings$process <- match.arg(dat$M_settings$process, c("off", "iid", "rw", "ar1"))
 
-  if (dat$F_settings$process != "rw" && is.null(dat$F_settings$mu_form)) {
+  if (!dat$F_settings$process %in% c("rw", "cor_rw") && is.null(dat$F_settings$mu_form)) {
     cli::cli_abort(c(
       "F_settings$mu_form is required for {.val {dat$F_settings$process}} F processes.",
       "i" = "Use {.code ~ 1} for an estimated common mean or {.code ~ factor(age)} for age-specific means."
@@ -759,7 +762,7 @@ prepare_tam <- function(
     if (qr(historical)$rank < ncol(historical)) {
       cli::cli_abort("F_settings$mu_form has a rank-deficient historical design. Remove redundant terms.")
     }
-    if (dat$F_settings$process == "rw") {
+    if (dat$F_settings$process %in% c("rw", "cor_rw")) {
       n_historical <- sum(!dat$is_proj)
       increments <- vapply(seq_len(ncol(historical)), function(j) {
         surface <- matrix(historical[, j], n_historical, length(dat$ages))

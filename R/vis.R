@@ -113,7 +113,7 @@ vis_tam <- function(..., model_list = NULL, interval = 0.95, output_file = NULL,
   category[par %in% c("q", "logit_q")] <- "Catchability"
   category[par %in% "dq" | grepl("^q_(a50|slope)_", par)] <- "Catchability curves"
   category[grepl("^mu_", par)] <- "Mortality means"
-  category[grepl("^phi_", par)] <- "Correlations"
+  category[grepl("^(phi_|rho_)", par)] <- "Correlations"
   category[par %in% c("rec_beta", "sr_alpha", "sr_beta")] <- "Recruitment"
   category[par %in% c("r0", "r_init", "n0")] <- "Initial abundance"
   category <- factor(category, levels = c("Process SDs", "Observation SDs",

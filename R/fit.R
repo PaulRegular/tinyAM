@@ -248,7 +248,7 @@ fit_tam <- function(
   map <- list()
   for (process in c("n", "f", "m")) {
     settings <- dat[[paste0(toupper(process), "_settings")]]
-    if (settings$process != "rw") next
+    if (!settings$process %in% c("rw", "cor_rw")) next
     states <- par[[paste0("log_", process)]]
     if (nrow(states) < 2L) {
       map[[paste0("log_sd_", process)]] <- factor(NA)
@@ -356,7 +356,8 @@ fit_tam <- function(
       stats::setNames(failed, rep("x", length(failed))),
       "i" = "Optimizer code zero alone is insufficient. A missed gradient tolerance alone does not establish a structural problem."))
   }
-  formula_uncertainty <- rbind(.formula_uncertainty_advisories(out), .rec_fit_advisories(out))
+  formula_uncertainty <- rbind(.formula_uncertainty_advisories(out), .rec_fit_advisories(out),
+                               .cor_rw_advisories(out))
   if (nrow(formula_uncertainty)) {
     cli::cli_warn(c("Formula-effect uncertainty or support is limited.",
       stats::setNames(formula_uncertainty$detail, rep("i", nrow(formula_uncertainty)))))

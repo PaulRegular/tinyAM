@@ -65,6 +65,8 @@
 #' - **Fishing mortality (F)**
 #'   - `log_sd_f`
 #'   - `logit_phi_f` length 2 (if `process == "ar1"`)
+#'   - `atanh_rho_f`: signed age correlation of annual F increments
+#'     (if `process == "cor_rw"`), reported as `rho_f` through `tanh()`.
 #'   - `log_mu_f` coefficients (length `ncol(dat$F_modmat)`) if a mean structure was supplied
 #'   - `log_f` matrix (historical `year` × `age`; no projection rows)
 #'
@@ -142,6 +144,7 @@ make_par <- function(dat) {
   if (ncol(dat$rec$matrix)) par$rec_beta <- setNames(numeric(ncol(dat$rec$matrix)), colnames(dat$rec$matrix))
   if (dat$rec$type == "ar1" && is.null(dat$rec$phi)) par$logit_phi_r <- c(year = 0)
   par$log_sd_f <- 0
+  if (dat$F_settings$process == "cor_rw") par$atanh_rho_f <- 0
   if (!is.null(dat$F_settings$mu_form)) {
     par$log_mu_f <- numeric(ncol(dat$F_modmat))
     names(par$log_mu_f) <- colnames(dat$F_modmat)
