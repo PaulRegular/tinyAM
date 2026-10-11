@@ -275,8 +275,13 @@ ricker <- function(ssb, lag = NULL) {
   }
   eta_log_n0 <- log_N[1L, -1L] - pred_log_N[1L, -1L]
   eta_log_N <- matrix(0, T - 1L, A - 1L)
-  if (simulate && dat$N_settings$process == "iid") eta_log_N[] <- stats::rnorm(length(eta_log_N), 0, exp(par$log_sd_n))
-  if (simulate && dat$N_settings$process == "ar1") eta_log_N <- rprocess_ar1(T - 1L, A - 1L, sd = exp(par$log_sd_n), phi = stats::plogis(par$logit_phi_n))
+  if (simulate && dat$N_settings$process != "off" && !dat$process_sd$N$default && dat$N_settings$process != "rw") {
+    eta_log_N <- .rprocess_scaled(eta_log_N, .process_sd(par, dat, "N"), dat$N_settings$process,
+      phi = if (dat$N_settings$process == "ar1") stats::plogis(par$logit_phi_n) else c(0, 0))
+  } else {
+    if (simulate && dat$N_settings$process == "iid") eta_log_N[] <- stats::rnorm(length(eta_log_N), 0, exp(par$log_sd_n))
+    if (simulate && dat$N_settings$process == "ar1") eta_log_N <- rprocess_ar1(T - 1L, A - 1L, sd = exp(par$log_sd_n), phi = stats::plogis(par$logit_phi_n))
+  }
   W <- dat$W
   P <- dat$P
   log_ssb <- numeric(T)
@@ -294,7 +299,8 @@ ricker <- function(ssb, lag = NULL) {
       pred_log_N[y, A] <- RTMB::logspace_add(pred_log_N[y, A], log_N[y - 1L, A] - Z[y - 1L, A])
       if (simulate && dat$N_settings$process == "rw" && y == 2L) {
         eta_log_N[1L, ] <- par$log_n[1L, ] - pred_log_N[y, older]
-        eta_log_N <- rprocess_rw(eta_log_N, sd = exp(par$log_sd_n))
+        eta_log_N <- if (dat$process_sd$N$default) rprocess_rw(eta_log_N, sd = exp(par$log_sd_n)) else
+          .rprocess_scaled(eta_log_N, .process_sd(par, dat, "N"), "rw")
       }
       if (dat$N_settings$process == "off" || simulate) log_N[y, older] <- pred_log_N[y, older] + eta_log_N[y - 1L, ]
     }

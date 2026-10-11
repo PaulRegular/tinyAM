@@ -17,3 +17,17 @@ for (category in names(groups)) {
   cat(rendered, sep = "\n")
 }
 ```
+
+```{r, results = "asis"}
+for (component in c("F", "N", "M")) {
+  process_sd <- pop[[paste0("sd_", component)]]
+  if (is.null(process_sd)) next
+  process_sd <- process_sd[!duplicated(process_sd[c("model", "age")]), ]
+  rendered <- knitr::knit_child(text = c(
+    paste("###", component, "process SD"), "",
+    "```{r}",
+    'plot_report(plot_rows(process_sd, "est"), x = ~age, color = ~model, legendgroup = ~model, colors = cols, ylab = "Process SD")',
+    "```", ""), quiet = TRUE)
+  cat(rendered, sep = "\n")
+}
+```

@@ -53,6 +53,10 @@ cohort residuals, \code{"rw"} for residuals that accumulate through time, or
 anchor. \code{"exp"} uses deterministic survivorship; \code{"free"} estimates fixed
 older-age \code{log_n0} states; \code{"random"} estimates random \code{log_n0} states with
 IID survivorship residuals and separate SD \code{sd_n0}. See \strong{Details}.
+\item \code{sd_form}: ordinary formula for log SD of older-age survival residuals,
+default \code{~ 1}. Use \code{~ factor(age)} or a supplied age-sharing column in
+\code{obs$weight}. Its design must be constant across years. Recruitment and
+initial-abundance SDs remain separate. Random-effect SD terms are not enabled.
 }}
 
 \item{F_settings}{A list with elements:
@@ -63,6 +67,10 @@ correlated between years and ages.
 \code{"cor_rw"} accumulates changes over time with AR1 correlation between
 annual increments at neighbouring ages. It estimates one signed age
 correlation; its SD is the marginal SD of annual log-F increments.
+\item \code{sd_form}: ordinary age-based formula for log process SD, default \code{~ 1},
+evaluated on \code{obs$weight}. Sharing an SD does not share latent F states.
+IID SDs describe residuals; RW/correlated-RW SDs describe annual increments;
+stationary AR1 retains its innovation-scale convention.
 \item \code{mu_form}: an optional formula for mean-\eqn{F} (coefficients estimated as
 \strong{log-scale} parameters \code{log_mu_f}). Required for \code{"iid"} and \code{"ar1"};
 use \code{~ 1} for one estimated mean level or \code{~ factor(age)} for age-specific
@@ -80,6 +88,9 @@ average F (\code{F_bar}) calculations. All ages used if absent.
 \itemize{
 \item \code{process}: \code{"off"} uses only supplied/mean M. Otherwise \code{"iid"}, \code{"rw"},
 and \code{"ar1"} have the same meanings as for F, on selected years/age blocks.
+\item \code{sd_form}: ordinary age-based formula for log process SD, default \code{~ 1}.
+Evaluated on \code{obs$weight} and required to be constant within each fitted M
+age block and across years. Use finer age_breaks for distinct state SDs.
 \item \code{mu_form}: optional formula for mean-\eqn{M} (applied on the log scale) built
 on \code{obs$weight}, yielding coefficients \code{mu_m}. These enter the log-\eqn{M}
 surface directly and may therefore be positive or negative; they intentionally

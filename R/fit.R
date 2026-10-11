@@ -217,7 +217,8 @@ fit_tam <- function(
   )
   par <- make_par(dat)
   formula_advisories <- rbind(.mean_process_advisories(dat), .q_process_advisories(dat),
-                             .sd_process_advisories(dat), .rec_process_advisories(dat))
+                             .sd_process_advisories(dat), .rec_process_advisories(dat),
+                             .process_sd_advisories(dat))
   if (nrow(formula_advisories)) {
     cli::cli_warn(c("Formula-effect caution.",
       stats::setNames(formula_advisories$detail, rep("i", nrow(formula_advisories)))))
@@ -251,7 +252,8 @@ fit_tam <- function(
     if (!settings$process %in% c("rw", "cor_rw")) next
     states <- par[[paste0("log_", process)]]
     if (nrow(states) < 2L) {
-      map[[paste0("log_sd_", process)]] <- factor(NA)
+      design <- dat$process_sd[[toupper(process)]]
+      map[[design$parameter]] <- factor(rep(NA, length(par[[design$parameter]])))
     }
     if (process == "n") next
     coef_name <- if (process == "f") "log_mu_f" else "mu_m"
@@ -357,7 +359,7 @@ fit_tam <- function(
       "i" = "Optimizer code zero alone is insufficient. A missed gradient tolerance alone does not establish a structural problem."))
   }
   formula_uncertainty <- rbind(.formula_uncertainty_advisories(out), .rec_fit_advisories(out),
-                               .cor_rw_advisories(out))
+                               .cor_rw_advisories(out), .process_sd_fit_advisories(out))
   if (nrow(formula_uncertainty)) {
     cli::cli_warn(c("Formula-effect uncertainty or support is limited.",
       stats::setNames(formula_uncertainty$detail, rep("i", nrow(formula_uncertainty)))))

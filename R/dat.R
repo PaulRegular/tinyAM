@@ -367,6 +367,10 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #'   anchor. `"exp"` uses deterministic survivorship; `"free"` estimates fixed
 #'   older-age `log_n0` states; `"random"` estimates random `log_n0` states with
 #'   IID survivorship residuals and separate SD `sd_n0`. See **Details**.
+#' - `sd_form`: ordinary formula for log SD of older-age survival residuals,
+#'   default `~ 1`. Use `~ factor(age)` or a supplied age-sharing column in
+#'   `obs$weight`. Its design must be constant across years. Recruitment and
+#'   initial-abundance SDs remain separate. Random-effect SD terms are not enabled.
 #' @param F_settings A list with elements:
 #' - `process`: `"iid"` for independent departures from the mean log F,
 #'   `"rw"` for departures that accumulate over time, or `"ar1"` for departures
@@ -374,6 +378,10 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #'   `"cor_rw"` accumulates changes over time with AR1 correlation between
 #'   annual increments at neighbouring ages. It estimates one signed age
 #'   correlation; its SD is the marginal SD of annual log-F increments.
+#' - `sd_form`: ordinary age-based formula for log process SD, default `~ 1`,
+#'   evaluated on `obs$weight`. Sharing an SD does not share latent F states.
+#'   IID SDs describe residuals; RW/correlated-RW SDs describe annual increments;
+#'   stationary AR1 retains its innovation-scale convention.
 #' - `mu_form`: an optional formula for mean-\eqn{F} (coefficients estimated as
 #'   **log-scale** parameters `log_mu_f`). Required for `"iid"` and `"ar1"`;
 #'   use `~ 1` for one estimated mean level or `~ factor(age)` for age-specific
@@ -388,6 +396,9 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #' @param M_settings A list with elements:
 #' - `process`: `"off"` uses only supplied/mean M. Otherwise `"iid"`, `"rw"`,
 #'   and `"ar1"` have the same meanings as for F, on selected years/age blocks.
+#' - `sd_form`: ordinary age-based formula for log process SD, default `~ 1`.
+#'   Evaluated on `obs$weight` and required to be constant within each fitted M
+#'   age block and across years. Use finer age_breaks for distinct state SDs.
 #' - `mu_form`: optional formula for mean-\eqn{M} (applied on the log scale) built
 #'   on `obs$weight`, yielding coefficients `mu_m`. These enter the log-\eqn{M}
 #'   surface directly and may therefore be positive or negative; they intentionally
@@ -838,6 +849,15 @@ prepare_tam <- function(
   dat$logit_phi_n <- .set_phi(dat$N_settings$process)
   dat$logit_phi_f <- .set_phi(dat$F_settings$process)
   dat$logit_phi_m <- .set_phi(dat$M_settings$process)
+
+  dat$process_sd <- stats::setNames(lapply(c("N", "F", "M"), function(component) {
+    .parse_process_sd(dat, component)
+  }), c("N", "F", "M"))
+  for (component in c("N", "F", "M")) {
+    if (is.null(dat[[paste0(component, "_settings")]]$sd_form)) {
+      dat[[paste0(component, "_settings")]]$sd_form <- ~ 1
+    }
+  }
 
   .parse_recruitment(dat)
 

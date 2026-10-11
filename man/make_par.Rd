@@ -37,6 +37,11 @@ mean surfaces. In particular, \code{log_f} and \code{log_m} are absolute latent 
 their deviations are \code{eta_log_f = log_f - log_mu_F} and
 \code{eta_log_m = log_m - log_mu_M} on the corresponding years and age blocks.
 
+For nonconstant process-SD formulas, \code{sd_beta_n}, \code{sd_beta_f}, and
+\code{sd_beta_m} are ordinary coefficients of log SD. They are reported on their
+coefficient scale, while derived \code{sd_N}, \code{sd_F}, and \code{sd_M} report actual
+process SDs by age with uncertainty. Default \code{~ 1} retains \verb{log_sd_*}.
+
 The function inspects \code{dat} to decide which parameters are required and what
 their dimensions should be. For example, if \code{dat$F_settings$process == "ar1"}
 it initializes a 2-vector \code{logit_phi_f}; if \code{dat$F_settings$mu_form} is not

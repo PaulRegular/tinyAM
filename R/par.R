@@ -18,6 +18,11 @@
 #' their deviations are `eta_log_f = log_f - log_mu_F` and
 #' `eta_log_m = log_m - log_mu_M` on the corresponding years and age blocks.
 #'
+#' For nonconstant process-SD formulas, `sd_beta_n`, `sd_beta_f`, and
+#' `sd_beta_m` are ordinary coefficients of log SD. They are reported on their
+#' coefficient scale, while derived `sd_N`, `sd_F`, and `sd_M` report actual
+#' process SDs by age with uncertainty. Default `~ 1` retains `log_sd_*`.
+#'
 #' The function inspects `dat` to decide which parameters are required and what
 #' their dimensions should be. For example, if `dat$F_settings$process == "ar1"`
 #' it initializes a 2-vector `logit_phi_f`; if `dat$F_settings$mu_form` is not
@@ -154,6 +159,12 @@ make_par <- function(dat) {
   }
   if (dat$M_settings$process != "off") {
     par$log_sd_m <- 0
+  }
+  for (component in names(dat$process_sd)) {
+    design <- dat$process_sd[[component]]
+    if (is.null(design) || design$default) next
+    par[[paste0("log_sd_", tolower(component))]] <- NULL
+    par[[design$parameter]] <- setNames(numeric(ncol(design$matrix)), colnames(design$matrix))
   }
   if (!is.null(dat$M_settings$mu_form)) {
     par$mu_m <- numeric(ncol(dat$M_modmat))

@@ -234,7 +234,7 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   n_ages <- length(ages)
   n_proj <- proj_settings$n_proj
 
-  sd_f <- exp(log_sd_f)
+  sd_f <- .process_sd(par, dat, "F")
 
   empty_mat <- matrix(NA, n_years, n_ages,
                       dimnames = list(year = years, age = ages))
@@ -251,7 +251,10 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   log_mu_M[] <- log_mu_supplied_m + drop(M_modmat %*% mu_m) + M_effects$contribution
   if (simulate) {
     mu_f <- log_mu_F[!is_proj, , drop = FALSE]
-    log_f[] <- mu_f + if (F_settings$process == "rw") {
+    log_f[] <- mu_f + if (!dat$process_sd$F$default && F_settings$process != "cor_rw") {
+      .rprocess_scaled(log_f - mu_f, sd_f, F_settings$process,
+        phi = if (F_settings$process == "ar1") plogis(logit_phi_f) else c(0, 0))
+    } else if (F_settings$process == "rw") {
       rprocess_rw(log_f - mu_f, sd = sd_f)
     } else if (F_settings$process == "cor_rw") {
       .rprocess_cor_rw(log_f - mu_f, sd = sd_f, rho = tanh(atanh_rho_f))
@@ -264,7 +267,10 @@ nll_fun <- function(par, dat, simulate = FALSE) {
       iy <- rownames(log_m)
       ia <- M_settings$age_block_start
       mu_m_process <- log_mu_M[iy, ia, drop = FALSE]
-      log_m[] <- mu_m_process + if (M_settings$process == "rw") {
+      log_m[] <- mu_m_process + if (!dat$process_sd$M$default) {
+        .rprocess_scaled(log_m - mu_m_process, .process_sd(par, dat, "M"), M_settings$process,
+          phi = if (M_settings$process == "ar1") plogis(logit_phi_m) else c(0, 0))
+      } else if (M_settings$process == "rw") {
         rprocess_rw(log_m - mu_m_process, sd = exp(log_sd_m))
       } else if (M_settings$process == "iid") {
         matrix(stats::rnorm(length(log_m), 0, exp(log_sd_m)), nrow(log_m), ncol(log_m))
@@ -341,8 +347,11 @@ nll_fun <- function(par, dat, simulate = FALSE) {
 
   if (N_settings$process != "off") {
     eta_log_N <- log_N[-1, -1, drop = FALSE] - pred_log_N[-1, -1, drop = FALSE]
-    sd_n <- exp(log_sd_n)
-    jnll <- jnll - if (N_settings$process == "rw") {
+    sd_n <- .process_sd(par, dat, "N")
+    jnll <- jnll - if (!dat$process_sd$N$default) {
+      .dprocess_scaled(eta_log_N, sd_n, N_settings$process,
+        phi = if (N_settings$process == "ar1") plogis(logit_phi_n) else c(0, 0))
+    } else if (N_settings$process == "rw") {
       dprocess_rw(eta_log_N, sd = sd_n)
     } else if (N_settings$process == "iid") {
       sum(RTMB::dnorm(eta_log_N, 0, sd_n, log = TRUE))
@@ -357,8 +366,11 @@ nll_fun <- function(par, dat, simulate = FALSE) {
     iy <- rownames(log_m)
     ia  <- dat$M_settings$age_block_start
     eta_log_m <- log_m - log_mu_M[iy, ia, drop = FALSE]
-    sd_m <- exp(log_sd_m)
-    jnll <- jnll - if (M_settings$process == "rw") {
+    sd_m <- .process_sd(par, dat, "M")
+    jnll <- jnll - if (!dat$process_sd$M$default) {
+      .dprocess_scaled(eta_log_m, sd_m, M_settings$process,
+        phi = if (M_settings$process == "ar1") plogis(logit_phi_m) else c(0, 0))
+    } else if (M_settings$process == "rw") {
       dprocess_rw(eta_log_m, sd = sd_m)
     } else if (M_settings$process == "iid") {
       sum(RTMB::dnorm(eta_log_m, 0, sd_m, log = TRUE))
@@ -370,7 +382,10 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   ## F process ----
 
   eta_log_f <- log_F[!is_proj, ] - log_mu_F[!is_proj, ]
-  jnll <- jnll - if (F_settings$process == "rw") {
+  jnll <- jnll - if (!dat$process_sd$F$default && F_settings$process != "cor_rw") {
+    .dprocess_scaled(eta_log_f, sd_f, F_settings$process,
+      phi = if (F_settings$process == "ar1") plogis(logit_phi_f) else c(0, 0))
+  } else if (F_settings$process == "rw") {
     dprocess_rw(eta_log_f, sd = sd_f)
   } else if (F_settings$process == "cor_rw") {
     .dprocess_cor_rw(eta_log_f, sd = sd_f, rho = tanh(atanh_rho_f))
@@ -490,6 +505,25 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   REPORT(biomass)
   REPORT(ssb_mat)
   REPORT(ssb)
+
+  if (!dat$process_sd$F$default) {
+    sd_F <- .process_sd_surface(par, dat, "F")
+    log_sd_F <- log(sd_F)
+    REPORT(sd_F)
+    ADREPORT(log_sd_F)
+  }
+  if (N_settings$process != "off" && !dat$process_sd$N$default) {
+    sd_N <- .process_sd_surface(par, dat, "N")
+    log_sd_N <- log(sd_N)
+    REPORT(sd_N)
+    ADREPORT(log_sd_N)
+  }
+  if (M_settings$process != "off" && !dat$process_sd$M$default) {
+    sd_M <- .process_sd_surface(par, dat, "M")
+    log_sd_M <- log(sd_M)
+    REPORT(sd_M)
+    ADREPORT(log_sd_M)
+  }
 
   rec_log_mean <- log_mu_R[dat$rec$eligible]
   rec_log_prediction <- log_pred_R[dat$rec$eligible]

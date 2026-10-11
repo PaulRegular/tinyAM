@@ -185,8 +185,15 @@
 #'   scale; marginal SD is larger when correlations are positive.
 #'   Correlation between age blocks uses their index distance, not block widths.
 #'
-#' Scalar SDs use `exp(log_sd_*)`. Fitted AR1 correlations use
-#' `plogis(logit_phi_*)` and are restricted to positive correlations less than
+#' Scalar SDs use `exp(log_sd_*)`.
+#' Ordinary age-based `sd_form` formulas replace scalar SDs with
+#' \eqn{\sigma_a=\exp(X_a\beta)}. Sharing an SD does not share states.
+#' For stationary AR1, standardize each age by its innovation SD before
+#' evaluating the same separable correlation density, including the scale
+#' Jacobian. Its marginal SD remains
+#' \eqn{\sigma_a/\sqrt{(1-\phi_a^2)(1-\phi_t^2)}}.
+#'
+#' Fitted AR1 correlations use `plogis(logit_phi_*)` and are restricted to positive correlations less than
 #' one. A singleton matrix axis has its correlation fixed at zero, since it
 #' cannot be distinguished from the variance scale. The standalone AR1 helpers
 #' also accept negative correlations with absolute value below one.

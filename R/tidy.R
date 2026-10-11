@@ -322,6 +322,16 @@ tidy_sdrep <- function(fit, interval = 0.95) {
   vals <- vals[!startsWith(names(vals), "rec_")]
   ses <- ses[names(vals)]
   df <- lapply(seq_along(vals), function(i) {
+    if (is.matrix(vals[[i]])) {
+      dimnames(vals[[i]]) <- dimnames(fit$rep[[sub("^log_", "", names(vals)[i])]])
+      d <- tidy_mat(vals[[i]], value_name = "est")
+      d$se <- as.vector(ses[[i]])
+      d$lwr <- d$est - qnorm(1 - ((1 - interval) / 2)) * d$se
+      d$upr <- d$est + qnorm(1 - ((1 - interval) / 2)) * d$se
+      d$se_scale <- "log"
+      d$is_proj <- d$year %in% fit$dat$years[fit$dat$is_proj]
+      return(trans_est(d, transform = exp))
+    }
     d <- data.frame(year = fit$dat$years,
                     est = vals[[i]],
                     lwr = vals[[i]] - qnorm(1 - ((1 - interval) / 2)) * ses[[i]],
@@ -489,7 +499,9 @@ tidy_par <- function(fit, interval = 0.95) {
     df$lwr <- df$est - z * df$se
     df$upr <- df$est + z * df$se
 
-    df$se_scale <- if (startsWith(nm, "atanh_")) {
+    df$se_scale <- if (startsWith(nm, "sd_beta_")) {
+      "log SD coefficient"
+    } else if (startsWith(nm, "atanh_")) {
       "atanh"
     } else if (startsWith(nm, "logit_")) {
       "logit"
