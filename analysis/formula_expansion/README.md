@@ -1,7 +1,9 @@
 # Formula expansion
 
-Experimental branch: `formula-expansion`, starting at `e801800` on
-`comp-assessments`. Milestones are committed separately; this branch is not merged.
+The original `formula-expansion` work is merged into `comp-assessments`.
+The subsequent process study uses `process-expansion`, starting from
+`comp-assessments` at `a048fb9`. Its milestones are committed separately;
+this experimental branch is not merged.
 
 ## Stages and review gates
 
@@ -18,6 +20,15 @@ Experimental branch: `formula-expansion`, starting at `e801800` on
    considering temporal stochastic volatility or latent-process SD formulas.
 
 ## Agreed conventions
+
+The subsequent process expansion adds correlated F RW increments, ordinary
+age-based latent-process SD formulas and a stock-wide spawning fraction.
+Run `validate_process_expansion.R` for 600 isolated and 90 full-assessment
+replicates, then `trial_process_assessments.R` for source-supported stock trials.
+Render `process_expansion_report.Rmd` after both runs. Code and report text are
+tracked; results, fits, figures and dashboards stay under ignored `results/`.
+The concise findings are in `PROCESS_EXPANSION.md`. Existing stock recipes are
+not modified by these studies.
 
 - Gaussian formula effects enter the selected log/logit predictor.
 - Numeric `by` multiplies one shared process; categorical `by` gives separate

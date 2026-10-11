@@ -47,11 +47,13 @@ Settings {data-navmenu="Tables"}
 Row {.tabset}
 --------------------------------------------------------------------------------
 
-### Function calls
+### SSB timing
 
 ```{r, results = "asis"}
 knitr::kable(ssb_timing, format = "html")
 ```
+
+### Function calls
 
 ```{r, results = "asis"}
 call_fits <- Filter(function(fit) inherits(fit, "tam_fit"), fits)

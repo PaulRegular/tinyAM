@@ -49,6 +49,17 @@ Departures from expected log abundance or mean log mortality can follow three pr
 - `"rw"`: departures accumulate from year to year, independently across ages;
 - `"ar1"`: departures are correlated across adjacent years and ages and return toward a mean.
 
+F also supports `"cor_rw"`: annual log-F changes are correlated between ages,
+while their effects accumulate over time. N, F and M settings accept ordinary
+age-based `sd_form` formulas, such as `~ age_group`, to share process SDs.
+These formulas use columns in the weight table and do not share latent states.
+Their default `~ 1` retains a common SD.
+
+`ssb_settings = list(spawn_time = 0.25)` accounts for survival to spawning at
+one quarter of the year. The same SSB supplies stock–recruit relationships.
+Default zero retains start-of-year SSB; see `?process_variation` for equations,
+SD interpretations and examples.
+
 A random walk has no penalty on its starting level. Its SD describes annual increments; an AR1 SD is an innovation scale, not the marginal variability of the states. Recruitment defaults to a temporal random walk; `N_settings$rec_form` also supports IID or AR1 fluctuations, covariates, and Beverton–Holt or Ricker stock–recruit relationships.
 
 Mean structures for quantities such as fishing mortality, natural mortality, catchability, and observation error can be specified using familiar R formulas and design matrices.

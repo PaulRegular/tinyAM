@@ -1,5 +1,12 @@
 # Remaining assessment capabilities
 
+**Process-expansion follow-up:** F now supports AR1 age-correlated RW increments
+(`cor_rw`), and N/F/M support ordinary age-based log-SD sharing formulas.
+Stock-wide spawning-time SSB is also available. The prevalence counts below
+remain those of the source review; these three rows now describe supported
+options requiring source-definition checks, rather than absent features. See
+[the process study](../formula_expansion/PROCESS_EXPANSION.md) for recovery and application evidence.
+
 This review covers **23 current detailed assessment records: 21 stock recipes
 and two blocked translations**. Counts below are confirmed minimums, once per
 assessment, not fleet or database-row counts. The explicit membership sets are
@@ -12,12 +19,12 @@ source inputs to fit; their limited known specifications remain in the inventory
 
 | Feature family | Confirmed / 23 | Examples and source evidence | Current workaround / support | Potential benefit | Complexity |
 |---|---:|---|---|---|---|
-| Correlated F random-walk innovations across ages | 10 | [North Sea haddock](source_reviews/ices_haddock_north_sea.md), [blue whiting](source_reviews/ices_bluewhiting_northeast_atlantic_2026.md) | Independent age RWs or stationary 2D AR1. Shared mean effects do not give the source innovation covariance. | Retain common annual mortality changes without replacing an RW with a stationary process. | Moderate |
+| Correlated F random-walk innovations across ages | 10 | [North Sea haddock](source_reviews/ices_haddock_north_sea.md), [blue whiting](source_reviews/ices_bluewhiting_northeast_atlantic_2026.md) | `cor_rw` now supports AR1 age-correlated increments. Verify source correlation and first-state conventions; arbitrary covariance remains unsupported. | Retain common annual mortality changes without replacing an RW with a stationary process. | Implemented for F |
 | Correlated observation errors, including full biomass covariance | 9 | [NE Arctic cod](source_reviews/ices_cod_northeast_arctic.md), [EBS pollock](source_reviews/afsc_pollock_ebs.md) | Independent lognormal observations; mean/SD random effects are not equivalent. | Represent joint information and uncertainty more faithfully. | Moderate–high |
-| Multiple age-sharing groups for latent F/N process SDs | 9 | [Plaice](source_reviews/ices_plaice_north_sea.md), [Northern Gulf cod](source_reviews/dfo_cod_3pn4rs.md) | One residual-process SD per F/N/M. Recruitment already has its own SD; ordinary recruitment-versus-survival sharing is **not** counted as a gap. Observation-SD formulas are supported. | Different process variability for young ages or plus groups without extra observation noise. | Moderate |
+| Multiple age-sharing groups for latent F/N process SDs | 9 | [Plaice](source_reviews/ices_plaice_north_sea.md), [Northern Gulf cod](source_reviews/dfo_cod_3pn4rs.md) | Ordinary age-based `sd_form` is now supported for N/F/M, with M designs constant within fitted state blocks. Recruitment remains separate. | Different process variability for young ages or plus groups without extra observation noise. | Implemented |
 | Totals plus age/length composition likelihoods | 9 | [GOA cod](source_reviews/afsc_cod_goa.md), [Northern Shelf cod](source_reviews/ices_cod_north_sea.md) | Convert recoverable totals/compositions to age observations, or omit unsupported components. Multinomial, Dirichlet-multinomial and logistic-normal source likelihoods differ. | Use original observation units and sample-size information. | High |
 | Fleet, substock and normalized selectivity structures | 8 | [GOA pollock](source_reviews/afsc_pollock_goa.md), [summer flounder](source_reviews/nefsc_summer_flounder.md) | Aggregate removals and flexible F-at-age. Logistic q is supported, but is not logistic fishery F, double-logistic selectivity or fleet-specific F. | Preserve fishery distinctions, selectivity normalization and associated observations. | High |
-| Survival to spawning time in SSB | 6 | [Baltic sprat](source_reviews/ices_sprat_baltic.md), [EBS pollock](source_reviews/afsc_pollock_ebs.md) | Start-year mature biomass; recompute common-definition references when N and biology permit, otherwise label approximate. | Match parent SSB and reported biomass timing. | Low–moderate |
+| Survival to spawning time in SSB | 6 | [Baltic sprat](source_reviews/ices_sprat_baltic.md), [EBS pollock](source_reviews/afsc_pollock_ebs.md) | Stock-wide `ssb_settings$spawn_time` is now supported, shared by F/M. Separate F/M fractions and seasonal biology remain unsupported. | Match parent SSB and reported biomass timing. | Implemented for a common fraction |
 | Priors on starting mortality, q or selectivity | 3 | [Southern Gulf cod](source_reviews/dfo_cod_4t4vn.md), [GOA pollock](source_reviews/afsc_pollock_goa.md) | Starting values or q logit restriction are not priors. Fixed Gaussian effect SDs are supported, including a standalone M mean RW; the source starting-level priors remain different. | Reproduce external information and stabilize genuinely weak boundaries. | Moderate |
 | Recruitment curves beyond BH/Ricker | 2 | [Western Baltic herring](source_reviews/ices_herring_western_baltic_2026.md), [Southern Gulf cod](source_reviews/dfo_cod_4t4vn.md) | RW or stationary recruitment; hockey-stick and SSB times an AR1 recruitment rate remain distinct. | Match those recruitment equations without substituting another curve. | Moderate |
 
@@ -44,7 +51,10 @@ translation starts at age two. Its BH candidates are survivor approximations,
 not exact source relationships. See the review table for actual attempts and
 retention decisions; fitting an available feature is not itself an improvement.
 
-## Suggested priorities
+## Priorities from the source review
+
+Items 1 and 3 below are now implemented within the limits described above.
+The remaining items are proposals, not authorized additions.
 
 1. **Age-correlated F RW innovations**, followed by simple **latent SD sharing
    groups**: common needs that fit the existing state-space architecture.

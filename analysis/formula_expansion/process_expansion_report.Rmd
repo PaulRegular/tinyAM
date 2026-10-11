@@ -1,0 +1,180 @@
+---
+title: "Process expansion: recovery and assessment trials"
+output:
+  html_document:
+    self_contained: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE,
+  fig.width = 8, fig.height = 4.5, fig.path = "results/process_expansion/figures/")
+attempts <- readRDS("results/process_expansion/recovery.rds")
+trials <- readRDS("results/process_expansion/assessments/trials.rds")
+```
+
+## What was tested
+
+F can follow a random walk whose annual changes are correlated across ages.
+Ordinary age-based formulas can share or vary process SDs for F, N and M.
+Spawning-time SSB accounts for mortality before spawning and supplies the same
+parent biomass to stock–recruit models.
+
+The study includes 100 isolated Gaussian replicates for each common/grouped
+SD design for F, N and M, and 30 full assessments for each grouped design.
+Full assessments use 30 years, eight ages, two surveys and known observation
+log-SDs of 0.08. These informative synthetic data do not validate every stock.
+All attempts and warnings are retained; no failed fit is rescued.
+
+## Numerical success and recovery
+
+```{r}
+groups <- sub("_[0-9]+$", "", names(attempts))
+summary <- do.call(rbind, lapply(unique(groups), function(group) {
+  a <- attempts[groups == group]
+  data.frame(Design = group, Attempts = length(a),
+    Passed = sum(vapply(a, function(x) isTRUE(x$numerical), logical(1))),
+    Errors = sum(vapply(a, function(x) !is.null(x$error), logical(1))),
+    `Hessian passed` = sum(vapply(a, function(x) isTRUE(x$pdHess), logical(1))), check.names = FALSE)
+}))
+knitr::kable(summary)
+recovery <- do.call(rbind, lapply(names(attempts), function(name) {
+  d <- attempts[[name]]$recovery
+  if (is.null(d)) return(NULL)
+  d$design <- sub("_[0-9]+$", "", name)
+  d
+}))
+coverage <- aggregate(covered ~ design + parameter, recovery, function(x) mean(x, na.rm = TRUE))
+knitr::kable(coverage, digits = 2, col.names = c("Design", "Parameter", "95% interval coverage"))
+```
+
+Coverage uses attempts with available intervals, including numerically failed
+fits if intervals were returned. Errors remain in the numerical-success
+denominator. SD coefficients are on the log-SD scale. Correlation intervals
+use its unconstrained transformation; they are not truncated Normal intervals.
+
+```{r}
+full <- recovery[startsWith(recovery$design, "full"), ]
+par(mar = c(5, 11, 4, 2) + .1)
+for (component in c("F", "N", "M")) {
+  d <- full[full$design == paste0("full_", component, "_grouped"), ]
+  d$error <- d$estimate - d$truth
+  d$parameter <- factor(d$parameter,
+    levels = c("(Intercept)", "age_groupyoung", "rho_f"),
+    labels = c("Older log SD", "Young/older log SD", "Age correlation"))
+  boxplot(error ~ parameter, d, horizontal = TRUE, las = 1,
+    main = paste(component, "process: parameter recovery"),
+    xlab = "Estimate minus generating value", ylab = "")
+  abline(v = 0, col = "grey50", lty = 2)
+}
+```
+
+All 690 fits passed numerical checks. Full-assessment median older/young SDs
+were 0.199/0.101 for F, 0.203/0.097 for N and 0.199/0.085 for M, compared with
+generating values of 0.20/0.10. Some young-age M SDs approached zero. Wide
+intervals and convergence should not be mistaken for precise M recovery.
+F age-correlation interval coverage was 26/30 in full assessments; these
+small experiments do not establish generally calibrated uncertainty.
+
+## Source-supported assessment trials
+
+EBS pollock tests the pinned source spawning fraction, 0.25. Northern Shelf
+haddock tests correlated F changes and the separate plus-group N SD. North
+Sea plaice tests correlated F changes and its four published F-SD sharing
+keys. Individual changes precede combinations; combinations are attempted
+only when both individual fits pass numerical checks. Existing recipes are
+unchanged.
+
+```{r}
+trial_summary <- do.call(rbind, lapply(names(trials), function(name) {
+  fit <- trials[[name]]$fit
+  data.frame(Trial = name, Converged = !is.null(fit) && fit$is_converged,
+    `Positive Hessian` = !is.null(fit$sdrep) && isTRUE(fit$sdrep$pdHess),
+    Gradient = if (is.null(fit)) NA_real_ else max(abs(fit$gradient)),
+    Error = if (is.null(trials[[name]]$error)) "" else trials[[name]]$error, check.names = FALSE)
+}))
+knitr::kable(trial_summary, digits = 5)
+comparisons <- do.call(rbind, lapply(names(trials), function(name) {
+  d <- trials[[name]]$comparison_summary
+  if (is.null(d)) return(NULL)
+  d$trial <- sub("^.*/", "", name)
+  d
+}))
+if (!is.null(comparisons)) {
+  selected <- comparisons[comparisons$metric %in% c("ssb", "N", "recruitment", "F"), ]
+  knitr::kable(selected[c("assessment_id", "trial", "metric", "comparison_status",
+    "mean_absolute_percent_difference", "trend_correlation")], digits = 2)
+}
+```
+
+Scale disagreement and trajectory agreement are separate. Fixed-M agreement
+does not count as improvement. SSB timing can match while biological inputs
+remain approximate. Known observation dependence, q powers and selectivity
+differences remain outside these additions. Local dashboards and cached
+diagnostics provide the detailed review; no assessment specification is
+automatically selected from these results.
+
+```{r ssb-trends}
+for (id in unique(sub("/.*$", "", names(trials)))) {
+  available <- trials[startsWith(names(trials), paste0(id, "/"))]
+  reference <- available[[1]]$ref$pop$ssb
+  series <- lapply(available, function(x) {
+    d <- x$fit$pop$ssb
+    scale <- x$ref$comparison_scales[["ssb"]]
+    if (is.null(scale)) scale <- 1
+    d$est <- d$est * scale
+    d
+  })
+  title <- c(afsc_pollock_ebs_2024 = "Eastern Bering Sea pollock",
+    ices_haddock_north_sea_2026 = "Northern Shelf haddock",
+    ices_plaice_north_sea_2026 = "North Sea plaice")[[id]]
+  plot(reference$year, reference$est, type = "l", lwd = 2,
+    ylim = range(c(reference$est, unlist(lapply(series, `[[`, "est"))), na.rm = TRUE),
+    xlab = "Year", ylab = "Female SSB (source reporting units)", main = title)
+  for (i in seq_along(series)) lines(series[[i]]$year, series[[i]]$est, col = i + 1, lwd = 2)
+  labels <- gsub("_", " ", sub("^.*/", "", names(available)))
+  legend("topleft", c("Accepted", labels),
+    col = seq_len(length(series) + 1), lwd = 2, bty = "n", cex = .8)
+}
+```
+
+EBS spawning time reduces the SSB scale difference from 39.6% to 27.3%, with
+essentially unchanged population states and residuals. Its refit failed the
+gradient criterion (0.037 versus 0.01), despite optimizer success and a positive
+Hessian. At identical parameters the likelihood is bit-for-bit unchanged:
+this recipe has no stock–recruit curve, so spawning time changes reporting
+only. The failed restart is retained, not rescued or promoted.
+
+Haddock's grouped N SD improves SSB, N and F agreement but worsens recruitment
+agreement; its largest survey residual also increases. Correlated F alone
+does not improve the overall comparison. Plaice has mixed metric changes:
+correlated F improves F agreement but worsens SSB, N and recruitment scale
+agreement. These results support keeping the options available, not replacing
+the accepted stock recipes automatically.
+
+```{r residual-summary}
+residuals <- do.call(rbind, lapply(names(trials), function(name) {
+  fit <- trials[[name]]$fit
+  if (is.null(fit)) return(NULL)
+  do.call(rbind, lapply(c("catch", "index"), function(type) {
+    d <- fit$obs_pred[[type]]
+    data.frame(Trial = name, Observation = type,
+      Mean = mean(d$std_res, na.rm = TRUE), SD = sd(d$std_res, na.rm = TRUE),
+      `Largest absolute residual` = max(abs(d$std_res), na.rm = TRUE), check.names = FALSE)
+  }))
+}))
+knitr::kable(residuals, digits = 2)
+```
+
+Conditional residual spread also reflects fitted-state shrinkage. Persistent
+survey outliers and fixed-parameter correlation advisories remain in these
+applications. The dashboards retain uncertainty ribbons, new SD profiles and
+the SSB-timing table; no unavailable uncertainty is manufactured.
+
+## Validation
+
+The full package suite passed 1,965 assertions with one interactive-only skip.
+All 32 comparative-assessment test scripts and general database validation
+passed. `R CMD check --no-manual` completed with zero errors, warnings or notes.
+These checks include density normalization, negative/zero age correlation,
+age-SD alignment, spawning-time initialization and parent recruitment,
+projections, warm starts, updates, folds, reporting and dashboard rendering.

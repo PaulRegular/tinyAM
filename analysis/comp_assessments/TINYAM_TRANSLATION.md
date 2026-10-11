@@ -855,6 +855,7 @@ Then choose among current tinyAM:
 ``` text
 iid
 rw
+cor_rw
 ar1
 ```
 
@@ -865,6 +866,20 @@ Mean formulas can include `iid()`, `rw()` or `ar1()` effects, for example
 package's safeguards for overlapping temporal processes. A shared temporal
 mean plus independent residuals does not reproduce correlated RW innovations
 across ages. `logistic()` is a catchability curve, not a fishery-selectivity term.
+
+`cor_rw` provides AR1 age correlation between annual F increments; its SDs are
+marginal increment SDs. Use it only when that covariance matches the source
+assumption. N, F and M can have ordinary age-based `sd_form` terms, with sharing
+covariates in the weight table. Designs must be constant across years at each
+active age; M sharing must also be constant within fitted M state blocks.
+Recruitment and initial-abundance SDs remain separate. Inspect group uncertainty
+and `check_tam()` advisories rather than equating convergence with support.
+
+Use `ssb_settings = list(spawn_time = ...)` when a documented spawning fraction
+is recoverable. The same mortality-adjusted SSB is reported and used as the
+stock–recruit parent. Compare matching age ranges, biological inputs and timing;
+accepted N and biology alone cannot reconstruct spawning-time SSB without
+accepted mortality. The default fraction zero retains start-of-year SSB.
 
 Do not claim fleet-level replication when the translated model uses aggregate catch.
 
@@ -926,7 +941,8 @@ effects. Age effects may help represent noisier young and old observations,
 but mean effects, variance effects and observation correlation are different
 models. Temporal variance effects remain experimental; follow the package's
 support warnings and compare simpler alternatives. These formulas do not
-change the scalar SDs of the latent F, M or N residual processes.
+change latent process SDs; N/F/M settings have separate age-based `sd_form`
+arguments without temporal or random-effect terms.
 
 ------------------------------------------------------------------------
 

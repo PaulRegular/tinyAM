@@ -62,6 +62,12 @@ stopifnot(
   all(abs(x$source[x$metric == "F_bar"] - 0.3) < 1e-12),
   all(x$percent_difference[x$metric == "N"] == 0)
 )
+timed_fit <- fit
+timed_fit$dat$ssb_settings <- list(spawn_time = .25)
+timed_comparison <- .compare_fixture(timed_fit, reference)
+stopifnot(all(timed_comparison$comparison_status[timed_comparison$metric == "ssb"] == "non_equivalent"),
+          all(is.na(timed_comparison$percent_difference[timed_comparison$metric == "ssb"])))
+# Accepted N without accepted mortality cannot supply spawning-time survival.
 reference$pop$recruitment$age <- 2L
 reference$pop$recruitment$est <- 10
 x <- .compare_fixture(fit, reference)

@@ -259,7 +259,10 @@
         source <- .assessment_age_summary(native[[age_metric]], ages,
                                            model_ages = fit$dat$ages)
         definition <- paste("Sum of reported", age_metric, "over ages", paste(range(ages), collapse = "-"))
+        spawn_time <- fit$dat$ssb_settings$spawn_time
+        if (is.null(spawn_time)) spawn_time <- 0
         if (is.null(source) && metric %in% c("biomass", "ssb") &&
+            (metric != "ssb" || spawn_time == 0) &&
             !is.null(native$N) && !is.null(fit$dat$W)) {
           n <- native$N
           index <- cbind(match(n$year, fit$dat$years), match(n$age, ages))

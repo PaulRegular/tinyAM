@@ -67,7 +67,7 @@ audit_assumptions <- function(assessment_id, assumptions) {
   mark(key == "M|process", "partially_supported",
        "tinyAM supports age-blocked IID, RW and AR1 M states and structured mean formulas. Check the source density, first-state treatment, fixed process SDs and priors separately.")
   mark(key == "M|process_sd", "partially_supported",
-       "The ordinary M residual SD is estimated. A mean-formula RW with supplied SD and process off can instead represent fixed increments; verify the initial-state treatment and source priors separately.")
+       "M residual SDs can be estimated with ordinary age-sharing formulas, constant within fitted M state blocks. A mean-formula RW with supplied SD and process off can represent fixed increments; verify initial-state treatment and source priors separately.")
   mark(key == "M|initial_priors", "unsupported",
        "tinyAM has no matching prior distribution for the starting M levels; reported source means may only be used as starting values.")
   mark(key == "M|natural_mortality", "partially_supported",
@@ -109,7 +109,7 @@ audit_assumptions <- function(assessment_id, assumptions) {
        "partially_supported", "Lognormal observations are available, but the source residual covariance is not reproduced by mean or SD formula effects.")
   mark(x$component == "F" & grepl("correlation|process", x$setting) &
          grepl("correlated.*increment|increment.*correlation|age.correlated.*random.walk", value, ignore.case = TRUE),
-       "partially_supported", "Age-correlated RW innovations differ from independent RWs and the stationary two-dimensional AR1 process; extra mean effects do not reproduce that covariance.")
+       "partially_supported", "F process cor_rw supports AR1 age-correlated annual RW innovations with marginal age-specific SDs. Verify the source covariance, SD sharing and first-state treatment; arbitrary covariance and correlated N/M RWs are not supported.")
   mark(key == "biology|weight_at_age", "supported",
        "tinyAM accepts annual weight-at-age when the required model grid is complete.")
   mark(key == "weight|weight_at_age", "supported",
