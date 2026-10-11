@@ -198,7 +198,8 @@ fit_tam <- function(
     add_osa_res = FALSE,
     silent = FALSE,
     start_par = NULL,
-    grad_tol = 1e-2
+    grad_tol = 1e-2,
+    ssb_settings = list(spawn_time = 0)
 ) {
 
   call <- match.call()
@@ -213,7 +214,7 @@ fit_tam <- function(
     data = data, years = years, ages = ages,
     N_settings = N_settings, F_settings = F_settings, M_settings = M_settings,
     catch_settings = catch_settings, index_settings = index_settings,
-    proj_settings = proj_settings
+    proj_settings = proj_settings, ssb_settings = ssb_settings
   )
   par <- make_par(dat)
   formula_advisories <- rbind(.mean_process_advisories(dat), .q_process_advisories(dat),

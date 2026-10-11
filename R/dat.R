@@ -458,6 +458,11 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #'   near one. q can approach a boundary with large coefficients and SEs.
 #' - `fill_missing`: logical – fill missing values, and zeros, using random effects?
 #'   Defaults to `TRUE`. Note that one-step-ahead residuals are not currently working when `TRUE`.
+#' @param ssb_settings List with `spawn_time`, a supplied fraction of the year
+#'   between 0 and 1, default zero. SSB includes survival through this fraction
+#'   of annual F and M. The same definition supplies parent SSB for recruitment.
+#'   Weight, maturity, total biomass and abundance retain their supplied or
+#'   start-of-year definitions. Spawning time is constant across years.
 #' @param proj_settings Optional list with elements:
 #' - `n_proj`: number of years to project (default `NULL` disables projections).
 #' - `n_mean`: number of recent historical years used to average weight and
@@ -517,11 +522,20 @@ prepare_tam <- function(
     M_settings = list(process = "off", mu_form = NULL, mu_supplied = ~I(0.2), age_breaks = NULL, first_dev_year = NULL),
     catch_settings = list(sd_form = ~1, sd_supplied = NULL, fill_missing = TRUE),
     index_settings = list(sd_form = ~1, sd_supplied = NULL, q_form = ~q_block, q_link = "log", fill_missing = TRUE),
-    proj_settings = NULL
+    proj_settings = NULL,
+    ssb_settings = list(spawn_time = 0)
 ) {
 
   obs <- data
   dat <- mget(setdiff(ls(), "data"))
+
+  if (!is.list(ssb_settings)) cli::cli_abort("ssb_settings must be a list with spawn_time.")
+  time <- ssb_settings$spawn_time
+  if (is.null(time)) time <- 0
+  if (!is.numeric(time) || length(time) != 1L || !is.finite(time) || time < 0 || time > 1) {
+    cli::cli_abort("ssb_settings$spawn_time must be one finite fraction of a year between 0 and 1.")
+  }
+  dat$ssb_settings <- list(spawn_time = time)
 
   dat$N_settings$process <- match.arg(dat$N_settings$process, c("off", "iid", "rw", "ar1"))
   dat$F_settings$process <- match.arg(dat$F_settings$process, c("iid", "rw", "cor_rw", "ar1"))

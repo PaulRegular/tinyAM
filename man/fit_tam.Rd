@@ -20,7 +20,8 @@ fit_tam(
   add_osa_res = FALSE,
   silent = FALSE,
   start_par = NULL,
-  grad_tol = 0.01
+  grad_tol = 0.01,
+  ssb_settings = list(spawn_time = 0)
 )
 }
 \arguments{
@@ -186,6 +187,12 @@ convergence and speed. Non-matching or missing entries are ignored.}
 
 \item{grad_tol}{Numeric tolerance passed to \code{\link[=check_tam]{check_tam()}} when
 evaluating the fitted object's gradients. Defaults to \code{1e-2}.}
+
+\item{ssb_settings}{List with \code{spawn_time}, a supplied fraction of the year
+between 0 and 1, default zero. SSB includes survival through this fraction
+of annual F and M. The same definition supplies parent SSB for recruitment.
+Weight, maturity, total biomass and abundance retain their supplied or
+start-of-year definitions. Spawning time is constant across years.}
 }
 \value{
 A \code{tam_fit} list with components:

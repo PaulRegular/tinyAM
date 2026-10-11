@@ -50,6 +50,10 @@ Row {.tabset}
 ### Function calls
 
 ```{r, results = "asis"}
+knitr::kable(ssb_timing, format = "html")
+```
+
+```{r, results = "asis"}
 call_fits <- Filter(function(fit) inherits(fit, "tam_fit"), fits)
 calls <- lapply(call_fits, `[[`, "call")
 if (length(calls)) {

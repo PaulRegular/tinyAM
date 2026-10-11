@@ -46,7 +46,8 @@
 #' Alternative [recruitment_formulas] allow IID/AR1 residuals, fixed covariates,
 #' and Beverton-Holt or Ricker curves. For a curve,
 #' \deqn{\log R_t=\log g(SSB_{t-L})+X_t\gamma+u_t.}
-#' SSB is the start-of-year mature biomass defined below. Lag defaults to the
+#' SSB is mature biomass at the configured spawning time, defined below.
+#' Lag defaults to the
 #' youngest modeled age. Additional early years without in-window parent SSB
 #' use free fixed recruitment states without a process penalty. Curve-plus-RW
 #' residuals are not supported. Curves describe medians, not arithmetic means.
@@ -308,8 +309,12 @@
 #' ## Derived quantities and uncertainty tables
 #'
 #' Abundance is \eqn{\sum_a N_{t,a}}, biomass is \eqn{\sum_a W_{t,a}N_{t,a}},
-#' and SSB is \eqn{\sum_a W_{t,a}P_{t,a}N_{t,a}} at the start of the year.
-#' No spawning-time survival or sex-ratio adjustment is added. Fully selected F
+#' and SSB is \eqn{\sum_a W_{t,a}P_{t,a}N_{t,a}e^{-\tau Z_{t,a}}}, where
+#' \eqn{\tau} is `ssb_settings$spawn_time`, default zero. It is one supplied
+#' fraction of the year for both F and M. This same quantity supplies parent
+#' SSB for recruitment. Weight and maturity retain their supplied definitions;
+#' seasonal growth, maturation and an additional sex-ratio adjustment are not
+#' introduced. Fully selected F
 #' is \eqn{\max_a F_{t,a}} and selectivity is F divided by that maximum.
 #' `F_bar` and `M_bar` are abundance-weighted means over their selected ages.
 #' Total catch sums numbers; yield uses the supplied stock weights, not a

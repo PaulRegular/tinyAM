@@ -373,6 +373,7 @@ tidy_pop <- function(fit, interval = 0.95) {
   rep_trends <- tidy_rep(fit)
   not_in_sdrep <- setdiff(names(rep_trends), names(sdrep_trends))
   out <- c(sdrep_trends, rep_trends[not_in_sdrep])
+  if (!is.null(out$ssb)) out$ssb$spawn_time <- fit$dat$ssb_settings$spawn_time
   attr(out, "interval") <- interval
   out
 }

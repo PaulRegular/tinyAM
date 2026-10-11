@@ -20,7 +20,7 @@ plot_report(pop$recruitment, color = ~model, legendgroup = ~model, colors = cols
 ### SSB
 
 ```{r}
-plot_report(pop$ssb, color = ~model, legendgroup = ~model, colors = cols, ylab = "SSB")
+plot_report(pop$ssb, color = ~model, legendgroup = ~model, colors = cols, ylab = ssb_label)
 ```
 
 ### Abundance-at-age

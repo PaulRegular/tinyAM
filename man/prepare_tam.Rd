@@ -15,7 +15,8 @@ prepare_tam(
   catch_settings = list(sd_form = ~1, sd_supplied = NULL, fill_missing = TRUE),
   index_settings = list(sd_form = ~1, sd_supplied = NULL, q_form = ~q_block, q_link =
     "log", fill_missing = TRUE),
-  proj_settings = NULL
+  proj_settings = NULL,
+  ssb_settings = list(spawn_time = 0)
 )
 }
 \arguments{
@@ -164,6 +165,12 @@ Other columns are copied from the last available year in each table.
 length = \code{n_proj}. When it is a vector of length one, that multiplier is recycled across all
 projection years.
 }}
+
+\item{ssb_settings}{List with \code{spawn_time}, a supplied fraction of the year
+between 0 and 1, default zero. SSB includes survival through this fraction
+of annual F and M. The same definition supplies parent SSB for recruitment.
+Weight, maturity, total biomass and abundance retain their supplied or
+start-of-year definitions. Spawning time is constant across years.}
 }
 \value{
 A named list \code{dat} containing:

@@ -152,7 +152,8 @@
 #' `bh(ssb)` rises toward a plateau; `ricker(ssb)` can decline at high spawning
 #' biomass. Either curve supports IID or AR1 residuals. These curves describe
 #' median recruitment, not the arithmetic mean, and use the model's existing
-#' start-of-year SSB and supplied weight/maturity units.
+#' SSB at `ssb_settings$spawn_time` (start-of-year by default) and supplied
+#' weight/maturity units. Spawning timing changes both reported and parent SSB.
 #' With parent biomass \eqn{S_{t-L}}, their definitions are
 #' \deqn{g_{BH}(S)=\alpha S/(1+\beta S),\qquad
 #' g_{Ricker}(S)=\alpha S\exp(-\beta S),\quad \alpha,\beta>0.}
@@ -187,7 +188,7 @@
 #'
 #' @param ssb The literal `ssb`, referring to modeled spawning stock biomass.
 #' @param lag Non-negative integer parent-year lag. `NULL` uses the youngest
-#'   modeled age. SSB is start-of-year, not adjusted to spawning time.
+#'   modeled age. SSB uses the supplied `ssb_settings$spawn_time`, default zero.
 #' @return Formula markers; direct calls raise an error.
 #' @examples
 #' ~ rw(year)
@@ -323,7 +324,8 @@ ricker <- function(ssb, lag = NULL) {
         parent <- y - dat$rec$curve$lag
         parent_ssb <- if (parent == y) {
           # Zero-lag validation guarantees no mature biomass in recruitment age.
-          log(sum(exp(log_N[y, older]) * W[y, older] * P[y, older]))
+          log(sum(.ssb_at_age(exp(log_N[y, older]), W[y, older], P[y, older],
+            Z[y, older], dat$ssb_settings$spawn_time)))
         } else log_ssb[parent]
         log_mu_R[y] <- mean[y] + .rec_log_curve(parent_ssb, par, dat$rec$curve$type)
       }
@@ -338,7 +340,8 @@ ricker <- function(ssb, lag = NULL) {
       }
       u[y] <- log_recruitment[y] - log_mu_R[y]
     }
-    log_ssb[y] <- log(sum(exp(log_N[y, ]) * W[y, ] * P[y, ]))
+    log_ssb[y] <- log(sum(.ssb_at_age(exp(log_N[y, ]), W[y, ], P[y, ],
+      Z[y, ], dat$ssb_settings$spawn_time)))
   }
   names(log_recruitment) <- dat$years
   list(log_N = log_N, pred_log_N = pred_log_N, log_recruitment = log_recruitment,
