@@ -153,7 +153,8 @@
 #' biomass. Either curve supports IID or AR1 residuals. These curves describe
 #' median recruitment, not the arithmetic mean, and use the model's existing
 #' SSB at `data$maturity$spawn_time` (start-of-year by default) and supplied
-#' weight/maturity units. Spawning timing changes both reported and parent SSB.
+#' weight/maturity units. Spawning timing may vary by year and age, changes
+#' both reported and parent SSB, and uses terminal age-specific values in projections.
 #' With parent biomass \eqn{S_{t-L}}, their definitions are
 #' \deqn{g_{BH}(S)=\alpha S/(1+\beta S),\qquad
 #' g_{Ricker}(S)=\alpha S\exp(-\beta S),\quad \alpha,\beta>0.}

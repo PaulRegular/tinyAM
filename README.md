@@ -57,8 +57,13 @@ Their default `~ 1` retains a common SD.
 
 `data$maturity$spawn_time <- 0.25` accounts for survival to spawning at
 one quarter of the year. The same SSB supplies stock–recruit relationships.
-Default zero retains start-of-year SSB; see `?process_variation` for equations,
+Omit the column for start-of-year SSB. Timing can vary by year and age;
+projections retain terminal values at each age. See `?process_variation` for equations,
 SD interpretations and examples.
+
+Settings lists can be partial. Initial fits inherit package defaults; updates
+retain the original settings. For example,
+`update(fit, N_settings = list(init = "free"))` changes only initialization.
 
 A random walk has no penalty on its starting level. Its SD describes annual increments; an AR1 SD is an innovation scale, not the marginal variability of the states. Recruitment defaults to a temporal random walk; `N_settings$rec_form` also supports IID or AR1 fluctuations, covariates, and Beverton–Holt or Ricker stock–recruit relationships.
 

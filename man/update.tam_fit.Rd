@@ -7,11 +7,7 @@
 \method{update}{tam_fit}(object, ..., evaluate = TRUE)
 }
 \arguments{
-\item{object}{A fitted \code{tam_fit} object.
-Settings lists are updated by entry name: omitted entries retain their original
-values. Formulas and vectors are replaced in full. Explicit \code{NULL} clears
-optional entries; \code{proj_settings = NULL} disables projections. An empty list
-changes nothing. Initial fits instead fill omitted settings from package defaults.}
+\item{object}{A fitted \code{tam_fit} object.}
 
 \item{...}{Named arguments to change in the original fit. For settings lists,
 supply only the entries to change, e.g. \code{N_settings = list(init = "free")}.}
@@ -28,4 +24,10 @@ Refit a TAM model after changing one or more arguments. Arguments not
 supplied in \code{...} are taken from the evaluated inputs stored in the
 original fit, so updating does not depend on objects remaining available
 in the original calling environment.
+}
+\details{
+Settings lists are updated by entry name: omitted entries retain their original
+values. Formulas and vectors are replaced in full. Explicit \code{NULL} clears
+optional entries; \code{proj_settings = NULL} disables projections. An empty list
+changes nothing. Initial fits instead fill omitted settings from package defaults.
 }

@@ -77,3 +77,23 @@ test_that("projection settings can be enabled, partially changed and disabled", 
   expect_error(make_test_dat(proj_settings = list(n_mean = 2)), "n_proj")
   expect_error(make_test_dat(proj_settings = list(n_proj = NA)), "integer")
 })
+
+test_that("Usage shows every supported settings entry and optional projections", {
+  expected <- list(
+    N_settings = c("process", "init", "rec_form", "sd_form"),
+    F_settings = c("process", "mu_form", "sd_form", "mean_ages"),
+    M_settings = c("process", "mu_form", "mu_supplied", "sd_form", "age_breaks", "first_dev_year", "mean_ages"),
+    catch_settings = c("sd_form", "sd_supplied", "fill_missing"),
+    index_settings = c("sd_form", "sd_supplied", "q_form", "q_link", "fill_missing"))
+  for (fun in c("fit_tam", "prepare_tam")) {
+    usage <- tinyAM:::.settings_usage(fun)
+    call <- parse(text = sub("^@usage\n", "", usage))[[1L]]
+    for (name in names(expected)) {
+      entries <- eval(call[[name]], envir = asNamespace("tinyAM"))
+      expect_identical(names(entries), expected[[name]])
+      expect_equal(entries, tinyAM:::.settings_defaults(name))
+    }
+    expect_null(call$proj_settings)
+    expect_match(usage, "# proj_settings = list(n_proj = 3, n_mean = 3, F_mult = 1)", fixed = TRUE)
+  }
+})

@@ -19,6 +19,9 @@ A named list containing the elements returned by \code{\link[=tidy_sdrep]{tidy_s
 Combines population time series with uncertainty from \code{\link[=tidy_sdrep]{tidy_sdrep()}} and
 age-specific estimates and other reported quantities from \code{\link[=tidy_rep]{tidy_rep()}}
 into a single named list for downstream plotting and summaries.
+SSB includes a timing label and the common spawning fraction for each year.
+Its fraction is \code{NA} when ages have different spawning times; the full
+timing table remains in the fitted data and dashboard settings.
 }
 \examples{
 fit <- fit_tam(

@@ -17,9 +17,11 @@ SDs and random-effect SD terms are not enabled for these latent processes.
 
 \code{data$maturity$spawn_time <- 0.25} evaluates mature biomass after
 one quarter of annual mortality. This SSB is also used by stock–recruit
-relationships. The default zero retains start-of-year SSB. This option
-assumes constant mortality during the year, using the supplied weights and
-maturity; it does not model seasonal growth or spawning schedules.
+relationships. Omit the column for start-of-year SSB. Timing may vary by
+year and age; projections retain the terminal value at each age. A present
+column must contain finite fractions in \verb{[0, 1]} everywhere. Age-specific SSB
+sums contributions at different spawning dates. Mortality is constant within
+the year; supplied weight and maturity do not change seasonally.
 }
 \details{
 \strong{Correlated increments.} Let \eqn{e_{t,a}=\log F_{t,a}-\log\mu_{F,t,a}}.
@@ -43,9 +45,10 @@ can be negative; they are not individually SDs. \code{fit$pop$sd_F}, \code{sd_N}
 \code{sd_M} contain derived positive SD profiles and RTMB confidence intervals
 for nondefault formulas. For M, the reported ages identify state-block starts.
 
-\strong{Spawning biomass.} \eqn{SSB_t=\sum_a N_{t,a}W_{t,a}P_{t,a}e^{-\tau Z_{t,a}}}.
-The supplied \eqn{\tau\in[0,1]} applies to F and M in every historical and
-projection year. The chronological population path constructs plus-group
+\strong{Spawning biomass.} \eqn{SSB_t=\sum_a N_{t,a}W_{t,a}P_{t,a}e^{-\tau_{t,a} Z_{t,a}}}.
+The supplied \eqn{\tau_{t,a}\in[0,1]} applies to F and M in each historical and
+projection year. Hidden ages use their own timing before aggregation. The
+chronological population path constructs plus-group
 biology before calculating SSB and its recruitment contribution. Abundance
 and total biomass remain start-of-year quantities. Comparison definitions
 must match age range, biological inputs and spawning time.

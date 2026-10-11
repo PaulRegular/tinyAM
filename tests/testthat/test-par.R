@@ -128,13 +128,13 @@ test_that("make_par enforces M mu_form constancy within age_blocks (when provide
 
 test_that("make_par starts latent M states at year 2 by default", {
   dat <- make_test_dat(
-    M_settings = list(process = "iid", mu_form = ~1)
+    M_settings = list(process = "iid", mu_form = ~1, mu_supplied = NULL)
   )
   par <- make_par(dat)
   expect_equal(rownames(par$log_m)[1], as.character(dat$years[2]))
 
   dat <- make_test_dat(
-    M_settings = list(process = "iid", mu_form = ~1, first_dev_year = 1983)
+    M_settings = list(process = "iid", mu_form = ~1, mu_supplied = NULL, first_dev_year = 1983)
   )
   par <- make_par(dat)
   expect_equal(rownames(par$log_m)[1], as.character(dat$years[1]))

@@ -52,3 +52,17 @@
   }
   args
 }
+
+# Keep Usage synchronized with function formals, including optional projections.
+.settings_usage <- function(name) {
+  defaults <- formals(get(name))
+  entries <- vapply(names(defaults), function(key) {
+    if (identical(defaults[[key]], quote(expr = ))) return(key)
+    value <- trimws(deparse(defaults[[key]], width.cutoff = 70L), which = "right")
+    paste0(key, " = ", paste(value, collapse = "\n    "))
+  }, character(1))
+  paste(c("@usage", paste0(name, "("),
+    paste0("  ", entries, c(rep(",", length(entries) - 1L), "")), ")", "",
+    "# Optional projections:",
+    "# proj_settings = list(n_proj = 3, n_mean = 3, F_mult = 1)"), collapse = "\n")
+}

@@ -24,6 +24,8 @@ Additional requirements:
 \itemize{
 \item \code{index$samp_time} is \strong{required}, numeric in \strong{[0, 1]}, and \strong{no NA}.
 \item \code{weight$obs} and \code{maturity$obs} must not contain \code{NA}.
+\item Optional \code{maturity$spawn_time} must contain finite numeric fractions in
+\verb{[0, 1]} for every year and age. Absence means zero; see \code{\link[=prepare_tam]{prepare_tam()}}.
 \item Non-missing observations must be finite and non-negative; maturity must
 be a proportion in \verb{[0, 1]}. Zero catch/index values are accepted here but
 treated as missing by \code{\link[=prepare_tam]{prepare_tam()}}, because the observation model is on logs.

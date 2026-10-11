@@ -351,6 +351,9 @@ tidy_sdrep <- function(fit, interval = 0.95) {
 #' Combines population time series with uncertainty from [tidy_sdrep()] and
 #' age-specific estimates and other reported quantities from [tidy_rep()]
 #' into a single named list for downstream plotting and summaries.
+#' SSB includes a timing label and the common spawning fraction for each year.
+#' Its fraction is `NA` when ages have different spawning times; the full
+#' timing table remains in the fitted data and dashboard settings.
 #'
 #' @param fit A fitted TAM object as returned by [fit_tam()].
 #' @param interval Confidence level for intervals passed to [tidy_sdrep()]; default `0.95`.

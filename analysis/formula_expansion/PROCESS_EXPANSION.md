@@ -14,9 +14,10 @@ figures, detailed tables and dashboards remain in ignored
   covariates. N uses destination ages; M uses unique state blocks. Temporal
   SDs and random-effect SD terms are rejected. Default `~ 1` retains scalar
   parameters and existing likelihood/simulation paths.
-- `data$maturity$spawn_time`: a stock-wide fraction in [0, 1]. Survival through
+- `data$maturity$spawn_time`: optional age/year fractions in [0, 1]. Survival through
   that fraction of F + M affects reported SSB and stock–recruit parent SSB in
-  the same chronological population path. Default zero preserves previous SSB.
+  the same chronological population path. An absent column preserves start-of-year SSB;
+  projections retain terminal timing and hidden ages contribute separately.
 
 Coefficients and derived SDs have distinct reporting scales. SD profiles and
 SSB retain RTMB uncertainty; correlation and weak-SD advisories are separate

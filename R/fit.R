@@ -123,6 +123,11 @@
 #' uncertainty. These advisories are retained by [check_tam()] and do not change
 #' the likelihood, parameter constraints or numerical convergence criteria.
 #'
+#' Omitted entries in a settings list use package defaults; [update()] instead
+#' retains the original fit's entries. Use explicit `NULL` to remove an optional
+#' formula or supplied offset. Unknown or duplicate entry names are errors.
+#' Supply spawning timing in `data$maturity$spawn_time`; see [prepare_tam()].
+#'
 #' @param data A named list of tidy observation tables (e.g., `catch`, `index`,
 #'   `weight`, `maturity`). See [cod_obs] for an example.
 #' @param interval Level in `(0, 1)` to use to generate confidence intervals,
@@ -137,6 +142,7 @@
 #'   convergence and speed. Non-matching or missing entries are ignored.
 #' @param grad_tol Numeric tolerance passed to [check_tam()] when
 #'   evaluating the fitted object's gradients. Defaults to `1e-2`.
+#'
 #' @inheritParams prepare_tam
 #'
 #' @return
@@ -183,6 +189,7 @@
 #' @seealso
 #' [prepare_tam()], [make_par()], [sim_tam()], [fit_retro()],
 #' [RTMB::MakeADFun()], [RTMB::sdreport()]
+#' @eval .settings_usage("fit_tam")
 #' @export
 fit_tam <- function(
     data,
@@ -379,12 +386,12 @@ fit_tam <- function(
 #' original fit, so updating does not depend on objects remaining available
 #' in the original calling environment.
 #'
-#' @param object A fitted `tam_fit` object.
 #' Settings lists are updated by entry name: omitted entries retain their original
 #' values. Formulas and vectors are replaced in full. Explicit `NULL` clears
 #' optional entries; `proj_settings = NULL` disables projections. An empty list
 #' changes nothing. Initial fits instead fill omitted settings from package defaults.
 #'
+#' @param object A fitted `tam_fit` object.
 #' @param ... Named arguments to change in the original fit. For settings lists,
 #'   supply only the entries to change, e.g. `N_settings = list(init = "free")`.
 #' @param evaluate Logical; if `TRUE`, fit and return the updated model.

@@ -36,7 +36,8 @@
 #'   - `M_assumption`: numeric assumed natural mortality level by age-year
 #'     (used when constructing `M` mean via formula).
 #'
-#' - **maturity**: maturity-at-age (proportion mature).
+#' - **maturity**: maturity-at-age (proportion mature). An optional `spawn_time`
+#'   column can supply spawning fractions; it is not present in this example.
 #'   Columns:
 #'   - `year`: numeric year.
 #'   - `age`: numeric age (years).
@@ -83,6 +84,8 @@
 #' Additional requirements:
 #' - `index$samp_time` is **required**, numeric in **\[0, 1\]**, and **no NA**.
 #' - `weight$obs` and `maturity$obs` must not contain `NA`.
+#' - Optional `maturity$spawn_time` must contain finite numeric fractions in
+#'   `[0, 1]` for every year and age. Absence means zero; see [prepare_tam()].
 #' - Non-missing observations must be finite and non-negative; maturity must
 #'   be a proportion in `[0, 1]`. Zero catch/index values are accepted here but
 #'   treated as missing by [prepare_tam()], because the observation model is on logs.

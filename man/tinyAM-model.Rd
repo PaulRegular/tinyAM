@@ -322,9 +322,10 @@ and yield totals.
 \subsection{Derived quantities and uncertainty tables}{
 
 Abundance is \eqn{\sum_a N_{t,a}}, biomass is \eqn{\sum_a W_{t,a}N_{t,a}},
-and SSB is \eqn{\sum_a W_{t,a}P_{t,a}N_{t,a}e^{-\tau Z_{t,a}}}, where
-\eqn{\tau} is \code{data$maturity$spawn_time}, default zero. It is one supplied
-fraction of the year for both F and M. This same quantity supplies parent
+and SSB is \eqn{\sum_a W_{t,a}P_{t,a}N_{t,a}e^{-\tau_{t,a} Z_{t,a}}}, where
+\eqn{\tau_{t,a}} is \code{data$maturity$spawn_time}, zero if absent. Each supplied
+fraction applies to both F and M and may vary by year and age. This same
+quantity supplies parent
 SSB for recruitment. Weight and maturity retain their supplied definitions;
 seasonal growth, maturation and an additional sex-ratio adjustment are not
 introduced. Fully selected F

@@ -11,12 +11,15 @@ prepare_tam(
   N_settings = list(process = "iid", init = "exp", rec_form = ~rw(year), sd_form = ~1),
   F_settings = list(process = "rw", mu_form = NULL, sd_form = ~1, mean_ages = NULL),
   M_settings = list(process = "off", mu_form = NULL, mu_supplied = ~I(0.2), sd_form = ~1,
-    age_breaks = NULL, first_dev_year = NULL, mean_ages = NULL),
+        age_breaks = NULL, first_dev_year = NULL, mean_ages = NULL),
   catch_settings = list(sd_form = ~1, sd_supplied = NULL, fill_missing = TRUE),
-  index_settings = list(sd_form = ~1, sd_supplied = NULL, q_form = ~q_block, q_link =
-    "log", fill_missing = TRUE),
+  index_settings = list(sd_form = ~1, sd_supplied = NULL, q_form = ~q_block, q_link = "log",
+        fill_missing = TRUE),
   proj_settings = NULL
 )
+
+# Optional projections:
+# proj_settings = list(n_proj = 3, n_mean = 3, F_mult = 1)
 }
 \arguments{
 \item{data}{A list of tidy observation data.frames: \code{catch}, \code{index},
@@ -156,11 +159,11 @@ Defaults to \code{TRUE}. Note that one-step-ahead residuals are not currently wo
 \item{proj_settings}{Optional list with elements:
 \itemize{
 \item \code{n_proj}: number of years to project (default \code{NULL} disables projections).
-\item \code{n_mean}: number of recent historical years used to average weight and
+\item \code{n_mean}: number of recent historical years (default \code{3}) used to average weight and
 maturity by age. Catch/index observations in projection years are missing.
 Other columns are copied from the last available year in each table.
 \item \code{F_mult}: multiplier to apply to terminal F to set a level to carry forward in the projection years
-(required when projecting; use \code{1} for status quo F). Can be a value of length 1 or
+(default \code{1}, status quo F). Can be a value of length 1 or
 length = \code{n_proj}. When it is a vector of length one, that multiplier is recycled across all
 projection years.
 }}
@@ -172,6 +175,8 @@ A named list \code{dat} containing:
 \item \code{is_proj} — logical vector identifying whether year is projected
 \item \code{proj_years} — integer vector of projection years, if used
 \item \code{obs} — per-type tables restricted to \code{years} x \code{ages} (including \code{proj_years}, if used)
+\item \code{spawn_time}, \code{spawn_time_plus} — timing matrices on modeled ages and,
+when retained, biological plus ages
 \item \code{W}, \code{P} — mean weight-at-age, and proportion mature at age matrices (\verb{year x age})
 \item \code{plus_ages}, \code{W_plus_input}, \code{P_plus_input} — retained biological ages and
 inputs, present only when biological data extend above \code{max(ages)}. The last
@@ -195,6 +200,28 @@ Optional projection settings append future years. \code{\link[=fit_tam]{fit_tam(
 function automatically; call it directly to inspect a model specification.
 }
 \details{
+\strong{Settings lists}
+
+Supply only the entries to change from the defaults shown in Usage. Formulas
+and vectors replace an entire entry. Optional \code{NULL} entries clear a formula,
+offset or age selection; \code{rec_form = NULL} restores \code{~ rw(year)} and a latent
+\code{sd_form = NULL} restores \code{~ 1}. Required entries cannot be \code{NULL}.
+\code{\link[=update]{update()}} retains unspecified entries from the original fit instead.
+
+\strong{Spawning time}
+
+An optional \code{data$maturity$spawn_time} column supplies spawning timing as a
+fraction of the year for each year and age. If absent, timing is zero
+(start-of-year SSB). If present, every value must be finite and between zero
+and one, including immature and retained older biological ages. Projections
+carry forward the terminal historical value at each biological age.
+SSB includes survival through this fraction of annual F and M. The same
+definition supplies recruitment parents and uncertainty. Age-specific timing
+sums each age's contribution at its own spawning time; it is not a snapshot
+on one common date. Hidden plus-age contributions are calculated separately
+before summing. Weight and maturity remain supplied quantities; seasonal
+growth and maturation are not modeled.
+
 \strong{Observation handling}
 \itemize{
 \item Inputs are expected as a list with components \code{catch}, \code{index}, \code{weight},

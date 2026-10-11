@@ -879,7 +879,9 @@ Use `data$maturity$spawn_time` when a documented spawning fraction
 is recoverable. The same mortality-adjusted SSB is reported and used as the
 stock–recruit parent. Compare matching age ranges, biological inputs and timing;
 accepted N and biology alone cannot reconstruct spawning-time SSB without
-accepted mortality. The default fraction zero retains start-of-year SSB.
+accepted mortality. An absent column retains start-of-year SSB. Supply complete age/year timing
+when documented; projections retain terminal values at each biological age.
+Age-specific timing sums spawning contributions rather than a common-date snapshot.
 
 Do not claim fleet-level replication when the translated model uses aggregate catch.
 

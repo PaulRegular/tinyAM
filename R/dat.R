@@ -250,6 +250,28 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #' function automatically; call it directly to inspect a model specification.
 #'
 #' @details
+#' **Settings lists**
+#'
+#' Supply only the entries to change from the defaults shown in Usage. Formulas
+#' and vectors replace an entire entry. Optional `NULL` entries clear a formula,
+#' offset or age selection; `rec_form = NULL` restores `~ rw(year)` and a latent
+#' `sd_form = NULL` restores `~ 1`. Required entries cannot be `NULL`.
+#' [update()] retains unspecified entries from the original fit instead.
+#'
+#' **Spawning time**
+#'
+#' An optional `data$maturity$spawn_time` column supplies spawning timing as a
+#' fraction of the year for each year and age. If absent, timing is zero
+#' (start-of-year SSB). If present, every value must be finite and between zero
+#' and one, including immature and retained older biological ages. Projections
+#' carry forward the terminal historical value at each biological age.
+#' SSB includes survival through this fraction of annual F and M. The same
+#' definition supplies recruitment parents and uncertainty. Age-specific timing
+#' sums each age's contribution at its own spawning time; it is not a snapshot
+#' on one common date. Hidden plus-age contributions are calculated separately
+#' before summing. Weight and maturity remain supplied quantities; seasonal
+#' growth and maturation are not modeled.
+#'
 #' **Observation handling**
 #'
 #' - Inputs are expected as a list with components `catch`, `index`, `weight`,
@@ -460,11 +482,11 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #'   Defaults to `TRUE`. Note that one-step-ahead residuals are not currently working when `TRUE`.
 #' @param proj_settings Optional list with elements:
 #' - `n_proj`: number of years to project (default `NULL` disables projections).
-#' - `n_mean`: number of recent historical years used to average weight and
+#' - `n_mean`: number of recent historical years (default `3`) used to average weight and
 #'   maturity by age. Catch/index observations in projection years are missing.
 #'   Other columns are copied from the last available year in each table.
 #' - `F_mult`: multiplier to apply to terminal F to set a level to carry forward in the projection years
-#'   (required when projecting; use `1` for status quo F). Can be a value of length 1 or
+#'   (default `1`, status quo F). Can be a value of length 1 or
 #'   length = `n_proj`. When it is a vector of length one, that multiplier is recycled across all
 #'   projection years.
 #'
@@ -475,6 +497,8 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #' - `is_proj` — logical vector identifying whether year is projected
 #' - `proj_years` — integer vector of projection years, if used
 #' - `obs` — per-type tables restricted to `years` x `ages` (including `proj_years`, if used)
+#' - `spawn_time`, `spawn_time_plus` — timing matrices on modeled ages and,
+#'   when retained, biological plus ages
 #' - `W`, `P` — mean weight-at-age, and proportion mature at age matrices (`year x age`)
 #' - `plus_ages`, `W_plus_input`, `P_plus_input` — retained biological ages and
 #'   inputs, present only when biological data extend above `max(ages)`. The last
@@ -507,6 +531,7 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #' @importFrom stats model.frame model.matrix
 #'
 #' @seealso [fit_tam()], [tinyAM-model], [stats::model.matrix()], [cut_ages()]
+#' @eval .settings_usage("prepare_tam")
 #' @export
 prepare_tam <- function(
     data,

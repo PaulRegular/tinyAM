@@ -74,7 +74,7 @@ test_that("RW is accepted for N/F/M without AR parameters; retired process is re
   expect_false(any(grepl("logit_phi", names(dat))))
   expect_identical(make_test_dat()$F_settings$process, "rw")
   for (setting in c("N_settings", "F_settings", "M_settings")) {
-    args <- setNames(list(list(process = "approx_rw", mu_supplied = ~ I(.3))), setting)
+    args <- setNames(list(list(process = "approx_rw")), setting)
     expect_error(do.call(make_test_dat, args), "arg")
   }
 })

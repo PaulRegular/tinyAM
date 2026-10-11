@@ -11,10 +11,10 @@ fit_tam(
   N_settings = list(process = "iid", init = "exp", rec_form = ~rw(year), sd_form = ~1),
   F_settings = list(process = "rw", mu_form = NULL, sd_form = ~1, mean_ages = NULL),
   M_settings = list(process = "off", mu_form = NULL, mu_supplied = ~I(0.2), sd_form = ~1,
-    age_breaks = NULL, first_dev_year = NULL, mean_ages = NULL),
+        age_breaks = NULL, first_dev_year = NULL, mean_ages = NULL),
   catch_settings = list(sd_form = ~1, sd_supplied = NULL, fill_missing = TRUE),
-  index_settings = list(sd_form = ~1, sd_supplied = NULL, q_form = ~q_block, q_link =
-    "log", fill_missing = TRUE),
+  index_settings = list(sd_form = ~1, sd_supplied = NULL, q_form = ~q_block, q_link = "log",
+        fill_missing = TRUE),
   proj_settings = NULL,
   interval = 0.95,
   add_osa_res = FALSE,
@@ -22,6 +22,9 @@ fit_tam(
   start_par = NULL,
   grad_tol = 0.01
 )
+
+# Optional projections:
+# proj_settings = list(n_proj = 3, n_mean = 3, F_mult = 1)
 }
 \arguments{
 \item{data}{A named list of tidy observation tables (e.g., \code{catch}, \code{index},
@@ -161,11 +164,11 @@ Defaults to \code{TRUE}. Note that one-step-ahead residuals are not currently wo
 \item{proj_settings}{Optional list with elements:
 \itemize{
 \item \code{n_proj}: number of years to project (default \code{NULL} disables projections).
-\item \code{n_mean}: number of recent historical years used to average weight and
+\item \code{n_mean}: number of recent historical years (default \code{3}) used to average weight and
 maturity by age. Catch/index observations in projection years are missing.
 Other columns are copied from the last available year in each table.
 \item \code{F_mult}: multiplier to apply to terminal F to set a level to carry forward in the projection years
-(required when projecting; use \code{1} for status quo F). Can be a value of length 1 or
+(default \code{1}, status quo F). Can be a value of length 1 or
 length = \code{n_proj}. When it is a vector of length one, that multiplier is recycled across all
 projection years.
 }}
@@ -263,6 +266,11 @@ establish that the data identify every biological component.
 Fitting also warns about sparse catchability effects and wide formula-effect
 uncertainty. These advisories are retained by \code{\link[=check_tam]{check_tam()}} and do not change
 the likelihood, parameter constraints or numerical convergence criteria.
+
+Omitted entries in a settings list use package defaults; \code{\link[=update]{update()}} instead
+retains the original fit's entries. Use explicit \code{NULL} to remove an optional
+formula or supplied offset. Unknown or duplicate entry names are errors.
+Supply spawning timing in \code{data$maturity$spawn_time}; see \code{\link[=prepare_tam]{prepare_tam()}}.
 }
 \examples{
 fit <- fit_tam(

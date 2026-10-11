@@ -37,7 +37,8 @@ Columns:
 \item \code{M_assumption}: numeric assumed natural mortality level by age-year
 (used when constructing \code{M} mean via formula).
 }
-\item \strong{maturity}: maturity-at-age (proportion mature).
+\item \strong{maturity}: maturity-at-age (proportion mature). An optional \code{spawn_time}
+column can supply spawning fractions; it is not present in this example.
 Columns:
 \itemize{
 \item \code{year}: numeric year.
