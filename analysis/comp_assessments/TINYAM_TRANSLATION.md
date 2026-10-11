@@ -39,8 +39,8 @@ translation, and analysis code.
 
 # 1. Translation workflow
 
-Use `run_assessment()` for one stock while developing a translation and
-`run_assessments()` for a reproducible batch. Normally select the record marked
+Use `run_stock.R` and `view_assessment()` for interactive model development,
+`run_assessment()` to rerun one stock recipe, and `run_assessments()` for a reproducible batch. Normally select the record marked
 `is_current`: the most recent accepted assessment for which detailed inputs,
 assumptions, and outputs can be recovered for the canonical database. This is
 the current detailed assessment and may predate the newest advice, FSAR, or
@@ -136,10 +136,35 @@ analysis/comp_assessments/
 └── source_cache/                 # gitignored authoritative source files
 ```
 
-`run_stock.R` reads the working-tree database, sets the execution controls and
-sources the selected stock script, leaving observations, fit and background
-in the RStudio workspace. Use `run_assessment()` for shared comparisons and
-optional dashboards/cache. `run_all.R` reads the committed snapshot and
+`run_stock.R` reads the working-tree database and sources the selected stock
+script in a fresh environment. Prepared objects, fit and background are exposed
+in the workspace, together with an `assessment` context containing the canonical
+source and comparison options. Stock model calls remain visible in their scripts.
+Rerun an edited Model section or use `update()`, then rerun only the Preview line:
+
+```r
+fit <- update(fit, catch_settings = list(sd_form = ~ age + I(age^2)))
+preview <- view_assessment(fit, assessment)
+```
+
+`view_assessment()` never fits a model. It refreshes the Accepted reference using
+the supplied fit's years, ages and biological inputs, applies the same catch
+reporting and unit/definition rules as the batch runner, and returns the fit,
+reference, diagnostics, detailed differences and summary invisibly. Summaries
+use historical years; projection rows remain available in the dashboard. Age-group
+mappings must remain valid on the current model grid; revise
+`assessment$comparison` explicitly when changing the age range.
+
+By default, the dashboard opens from a temporary HTML file; no fits, CSVs or
+persistent dashboards are exported. Supply `output_file` to retain a file, or
+`open_file = FALSE` to render without opening. A fit that fails numerical checks
+can still be previewed when usable predictions exist, with a warning and the
+existing dashboard diagnostics. Missing uncertainty is not replaced. These are
+exploratory previews, not successful batch results. The batch convergence rules
+are unchanged. `run_assessment()` reruns the recipe rather than previewing an
+edited fit, and retains its optional dashboard/cache controls.
+
+`run_all.R` reads the committed snapshot and
 uses `future::multisession` through `furrr`; workers load tinyAM from the current
 repository checkout. Workers return objects only. The parent process writes
 aggregate CSV files after all workers finish, and restores the previous future

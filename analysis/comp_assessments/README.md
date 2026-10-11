@@ -49,10 +49,31 @@ ready observation object does not guarantee model convergence.
 
 ## Fit one assessment
 
-Open `scripts/translation/run_stock.R`, set `assessment_id`, then source it. It loads the working-tree database and sources the selected stock script. The observations, years, ages, literal `fit_tam()` call, fit, background and comparison metadata are visible in your workspace. You can then rerun sections of that stock script interactively.
+Open `scripts/translation/run_stock.R`, set `assessment_id`, then source it. It
+loads the working-tree database, fits the selected stock script and opens a
+temporary dashboard comparing tinyAM with the Accepted assessment. Observations,
+years, ages, fit, background and the `assessment` comparison context remain in
+your workspace. Each stock script retains its visible `fit_tam()` call.
+
+Edit and rerun the stock script's Model section, or update the current fit. Then
+rerun the Preview line in `run_stock.R`:
+
+```r
+fit <- update(fit, catch_settings = list(sd_form = ~ age + I(age^2)))
+preview <- view_assessment(fit, assessment)
+preview$summary
+```
+
+The preview uses the supplied fit without fitting again, rebuilds the Accepted
+reference on its grid, and saves nothing into the repository. Its temporary HTML
+opens in the browser. Use `open_file = FALSE` to render without opening, or
+`output_file = "experiment.html"` to retain a dashboard. A non-converged fit with
+usable predictions can be previewed with a warning; missing uncertainty remains
+missing. Inspect `check_tam(fit)` before interpreting such a fit. If you change
+the age range, revise incompatible mappings in `assessment$comparison` explicitly.
 
 For diagnostics, references and an optional dashboard, use the shared runner.
-It sources the same script in an isolated environment. `fit = FALSE` prepares
+It refits the stock script rather than previewing an edited fit. `fit = FALSE` prepares
 observations without running final or preliminary fits. Settings are available
 in `x$fit$dat`; the result does not duplicate them in a settings list.
 

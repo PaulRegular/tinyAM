@@ -135,6 +135,109 @@ print_sources <- function(assessment) {
   c("#### Assessment documentation", links)
 }
 
+.assessment_stock <- function(source, do_fit, silent) {
+  stock_env <- new.env(parent = environment(.assessment_stock))
+  stock_env$source <- source
+  stock_env$do_fit <- do_fit
+  stock_env$silent <- silent
+  stock_env$fit_stage <- "translation"
+  stock_env$fit_started <- Sys.time()
+  script <- file.path(.assessment_root, "scripts", "translation", "stocks",
+                      paste0(source$assessment$assessment_id[[1]], ".R"))
+  error <- tryCatch({ sys.source(script, envir = stock_env); NULL }, error = identity)
+  list(env = stock_env, error = error)
+}
+
+.assessment_context <- function(source, translated) {
+  keys <- c("age_plus_group", "comparison_scales", "comparison_outputs",
+            "comparison_aggregates", "comparison_age_groups", "comparison_definitions",
+            "catch_reporting")
+  list(assessment_id = source$assessment$assessment_id[[1]], source = source,
+       background = translated$background,
+       comparison = stats::setNames(lapply(keys, function(key) translated[[key]]), keys))
+}
+
+.assessment_comparison <- function(fit, assessment) {
+  if (!inherits(fit, "tam_fit")) cli::cli_abort("Supply a fitted tinyAM model as {.arg fit}.")
+  if (!is.list(assessment) || is.null(assessment$source$assessment) ||
+      !is.list(assessment$comparison)) {
+    cli::cli_abort("Load the assessment context with {.file run_stock.R} or {.fn run_assessment}.")
+  }
+  if (!all(c("dat", "pop", "rep", "obs_pred", "fixed_par", "random_par") %in% names(fit)) ||
+      !any(vapply(fit$obs_pred, function(x) is.data.frame(x) &&
+                  "pred" %in% names(x) && any(is.finite(x$pred)), logical(1)))) {
+    cli::cli_abort("This fit has no usable reporting predictions. Inspect {.code check_tam(fit)} and refit before previewing.")
+  }
+  comparison <- assessment$comparison
+  plus <- comparison$age_plus_group
+  if (!is.null(plus) && !identical(as.numeric(plus), as.numeric(max(fit$dat$ages)))) {
+    cli::cli_abort("The comparison plus age ({plus}) differs from the fitted plus age ({max(fit$dat$ages)}). Update {.code assessment$comparison$age_plus_group} for this age range.")
+  }
+  mappings <- comparison$comparison_age_groups
+  if (!is.null(mappings) && (!is.list(mappings) || (length(mappings) &&
+      (is.null(names(mappings)) || anyNA(names(mappings)) || any(!nzchar(names(mappings))) ||
+       anyDuplicated(names(mappings)))))) {
+    cli::cli_abort("{.code assessment$comparison$comparison_age_groups} must be a uniquely named list of metrics.")
+  }
+  for (metric in names(mappings)) {
+    groups <- comparison$comparison_age_groups[[metric]]
+    if (!is.list(groups) || (length(groups) &&
+        (is.null(names(groups)) || anyNA(names(groups)) || any(!nzchar(names(groups))) ||
+         anyDuplicated(names(groups))))) {
+      cli::cli_abort("Comparison age groups for {metric} must be a uniquely named list.")
+    }
+    valid <- vapply(groups, function(ages) is.numeric(ages) && length(ages) > 0L &&
+      all(is.finite(ages)) && all(ages == trunc(ages)) && all(ages %in% fit$dat$ages) &&
+      !anyDuplicated(ages), logical(1))
+    if (!all(valid) || anyDuplicated(unlist(groups, use.names = FALSE))) {
+      cli::cli_abort("Comparison age groups for {metric} must map to distinct fitted ages. Update {.code assessment$comparison$comparison_age_groups} for this age range.")
+    }
+  }
+  fit <- .assessment_catch_reporting(fit, comparison$catch_reporting)
+  outputs <- if (is.null(comparison$comparison_outputs)) assessment$source$outputs else
+    comparison$comparison_outputs
+  obs <- if (is.null(fit$refit_args$data)) fit$dat$obs else fit$refit_args$data
+  ref <- database_to_tam_ref(
+    assessment$assessment_id, outputs, obs = obs,
+    years = fit$dat$years, ages = fit$dat$ages,
+    terminal_year = assessment$source$assessment$terminal_year[[1]],
+    age_plus_group = plus, comparison_scales = comparison$comparison_scales,
+    template = fit, assumptions = assessment$source$assumptions,
+    comparison_aggregates = comparison$comparison_aggregates,
+    comparison_age_groups = comparison$comparison_age_groups,
+    comparison_definitions = comparison$comparison_definitions
+  )
+  differences <- .assessment_percent_differences(ref)
+  historical <- is.na(differences$year) | differences$year %in% fit$dat$years[!fit$dat$is_proj]
+  list(fit = fit, ref = ref, differences = differences,
+       summary = .assessment_comparison_summary(differences[historical, ], assessment$assessment_id))
+}
+
+# Preview a supplied fit without re-running its stock script or exporting results.
+view_assessment <- function(fit, assessment, output_file = NULL, open_file = TRUE) {
+  if (!is.logical(open_file) || length(open_file) != 1L || is.na(open_file)) {
+    cli::cli_abort("{.arg open_file} must be TRUE or FALSE.")
+  }
+  if (!is.null(output_file) && (!is.character(output_file) || length(output_file) != 1L ||
+      is.na(output_file) || !nzchar(output_file))) {
+    cli::cli_abort("{.arg output_file} must be NULL or one HTML file path.")
+  }
+  result <- .assessment_comparison(fit, assessment)
+  result$diagnostics <- .assessment_diagnostics(assessment$assessment_id,
+    assessment$source, "preview", fit = result$fit)
+  result$diagnostics$status <- if (isTRUE(result$diagnostics$is_converged)) "converged" else
+    "not_converged"
+  if (!isTRUE(result$diagnostics$is_converged)) {
+    cli::cli_warn("This fit has not passed numerical convergence checks. The dashboard is exploratory; inspect {.code check_tam(fit)} before interpreting estimates or uncertainty.")
+  }
+  result$dashboard_file <- if (is.null(output_file)) tempfile("assessment_preview_", fileext = ".html") else
+    output_file
+  tinyAM::vis_tam(model_list = list(Accepted = result$ref, tinyAM = result$fit),
+    background = assessment$background, output_file = result$dashboard_file,
+    open_file = open_file)
+  invisible(result)
+}
+
 run_assessment <- function(assessment_id, database = NULL, fit = TRUE,
                             dashboard = FALSE, cache = FALSE, silent = TRUE) {
   if (is.null(database)) database <- read_database()
@@ -170,19 +273,14 @@ run_assessment <- function(assessment_id, database = NULL, fit = TRUE,
     return(result)
   }
 
-  stock_env <- new.env(parent = environment())
-  stock_env$source <- source
-  stock_env$do_fit <- fit
-  stock_env$silent <- silent
-  stock_env$fit_stage <- "translation"
-  stock_env$fit_started <- Sys.time()
-  sourced <- tryCatch({
-    sys.source(script, envir = stock_env)
-    NULL
-  }, error = identity)
+  stock <- .assessment_stock(source, do_fit = fit, silent = silent)
+  stock_env <- stock$env
+  sourced <- stock$error
   translated <- as.list(stock_env)
   result$obs <- translated$obs
-  result$background <- translated$background
+  context <- .assessment_context(source, translated)
+  result$background <- context$background
+  result$comparison <- context$comparison
   elapsed <- as.numeric(difftime(Sys.time(), stock_env$fit_started, units = "secs"))
   if (inherits(sourced, "error")) {
     result$diagnostics <- .assessment_diagnostics(
@@ -212,33 +310,13 @@ run_assessment <- function(assessment_id, database = NULL, fit = TRUE,
   }
   if (!isTRUE(fitted$is_converged)) return(result)
 
-  outputs <- if (is.null(translated$comparison_outputs)) {
-    database$outputs
-  } else {
-    translated$comparison_outputs
-  }
-  result$ref <- tryCatch(database_to_tam_ref(
-    assessment_id, outputs, obs = translated$obs,
-    years = translated$years, ages = translated$ages,
-    terminal_year = source$assessment$terminal_year[[1]],
-    age_plus_group = translated$age_plus_group,
-    comparison_scales = translated$comparison_scales,
-    template = fitted, assumptions = source$assumptions,
-    comparison_aggregates = translated$comparison_aggregates,
-    comparison_age_groups = translated$comparison_age_groups,
-    comparison_definitions = translated$comparison_definitions
-  ), error = identity)
-  if (inherits(result$ref, "error")) {
+  comparison <- tryCatch(.assessment_comparison(fitted, result), error = identity)
+  if (inherits(comparison, "error")) {
     result$diagnostics$status <- "reference_failed"
-    result$diagnostics$reason <- conditionMessage(result$ref)
-    result$ref <- NULL
+    result$diagnostics$reason <- conditionMessage(comparison)
     return(result)
   }
-
-  result$differences <- .assessment_percent_differences(result$ref)
-  result$summary <- .assessment_comparison_summary(
-    result$differences, assessment_id
-  )
+  result[c("ref", "differences", "summary")] <- comparison[c("ref", "differences", "summary")]
 
   if (dashboard) {
     result$dashboard_file <- if (cache) {

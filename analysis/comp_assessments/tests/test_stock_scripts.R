@@ -29,3 +29,18 @@ stopifnot(is.null(interactive_env$fit), is.list(interactive_env$obs),
           length(interactive_env$background) > 0L,
           identical(interactive_env$source$assessment$assessment_id, 'dfo_herring_4tvn_spring_2024'))
 cat('Top-level stock scripts and fitting-disabled isolation passed.\n')
+
+# Loading another stock must clear absent comparison options, including in the workspace.
+interactive_env$comparison_age_groups <- list(N = list(stale = 999))
+for (statement in parse('analysis/comp_assessments/scripts/translation/run_stock.R')) {
+  if (is.call(statement) && identical(statement[[1]], quote(`<-`))) {
+    if (identical(statement[[2]], quote(do_fit))) statement[[3]] <- FALSE
+    if (identical(statement[[2]], quote(assessment_id))) statement[[3]] <- 'afsc_cod_goa_2026'
+  }
+  eval(statement, interactive_env)
+}
+stopifnot(interactive_env$assessment$assessment_id == 'afsc_cod_goa_2026',
+          is.null(interactive_env$assessment$comparison$comparison_age_groups),
+          is.null(interactive_env$comparison_age_groups),
+          interactive_env$assessment$comparison$age_plus_group == 10,
+          is.null(interactive_env$fit))
