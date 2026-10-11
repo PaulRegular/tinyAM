@@ -188,9 +188,10 @@ fit_tam <- function(
     data,
     years = NULL,
     ages = NULL,
-    N_settings = list(process = "iid", init = "exp"),
-    F_settings = list(process = "rw", mu_form = NULL),
-    M_settings = list(process = "off", mu_form = NULL, mu_supplied = ~I(0.2), age_breaks = NULL, first_dev_year = NULL),
+    N_settings = list(process = "iid", init = "exp", rec_form = ~ rw(year), sd_form = ~ 1),
+    F_settings = list(process = "rw", mu_form = NULL, sd_form = ~ 1, mean_ages = NULL),
+    M_settings = list(process = "off", mu_form = NULL, mu_supplied = ~I(0.2), sd_form = ~ 1,
+                      age_breaks = NULL, first_dev_year = NULL, mean_ages = NULL),
     catch_settings = list(sd_form = ~1, sd_supplied = NULL, fill_missing = TRUE),
     index_settings = list(sd_form = ~1, sd_supplied = NULL, q_form = ~q_block, q_link = "log", fill_missing = TRUE),
     proj_settings = NULL,
@@ -209,7 +210,8 @@ fit_tam <- function(
     cli::cli_abort("{.arg grad_tol} must be one positive finite number.")
   }
 
-  refit_args <- mget(names(formals(fit_tam)))
+  refit_args <- .complete_settings(mget(names(formals(fit_tam))))
+  list2env(refit_args[.settings_names], envir = environment())
   dat <- prepare_tam(
     data = data, years = years, ages = ages,
     N_settings = N_settings, F_settings = F_settings, M_settings = M_settings,
@@ -379,7 +381,13 @@ fit_tam <- function(
 #' in the original calling environment.
 #'
 #' @param object A fitted `tam_fit` object.
-#' @param ... Named arguments to replace in the original fit.
+#' Settings lists are updated by entry name: omitted entries retain their original
+#' values. Formulas and vectors are replaced in full. Explicit `NULL` clears
+#' optional entries; `proj_settings = NULL` disables projections. An empty list
+#' changes nothing. Initial fits instead fill omitted settings from package defaults.
+#'
+#' @param ... Named arguments to change in the original fit. For settings lists,
+#'   supply only the entries to change, e.g. `N_settings = list(init = "free")`.
 #' @param evaluate Logical; if `TRUE`, fit and return the updated model.
 #'   If `FALSE`, return the updated call without fitting.
 #'
@@ -393,31 +401,24 @@ update.tam_fit <- function(object, ..., evaluate = TRUE) {
   changes <- list(...)
 
   if (length(changes) &&
-      (is.null(names(changes)) || any(names(changes) == ""))) {
-    cli::cli_abort("All arguments supplied to {.fn update} must be named.")
+      (is.null(names(changes)) || anyNA(names(changes)) ||
+       any(names(changes) == "") || anyDuplicated(names(changes)))) {
+    cli::cli_abort("All arguments supplied to {.fn update} must have unique, nonempty names.")
   }
 
-  # Keep a readable call for printing and inspection.
-  change_expr <- as.list(match.call(expand.dots = FALSE)$...)
-
-  new_call <- as.list(object$call)
-
-  if (length(change_expr)) {
-    new_call[names(change_expr)] <- change_expr
-  }
-
-  new_call <- as.call(new_call)
-
-  if (!evaluate) {
-    return(new_call)
-  }
-
-  # Refit using the evaluated inputs stored with the original fit.
+  # Use requested inputs, before preparation changes offsets or designs.
   args <- object$refit_args
-
-  if (length(changes)) {
-    args[names(changes)] <- changes
+  change_expr <- as.list(match.call(expand.dots = FALSE)$...)
+  new_call <- as.list(object$call)
+  for (name in names(changes)) {
+    value <- if (name %in% .settings_names) {
+      .merge_settings(args[[name]], changes[[name]], name)
+    } else changes[[name]]
+    args[name] <- list(value)
+    new_call[name] <- if (name %in% .settings_names) list(value) else change_expr[name]
   }
+  new_call <- as.call(new_call)
+  if (!evaluate) return(new_call)
 
   out <- do.call(fit_tam, args)
 

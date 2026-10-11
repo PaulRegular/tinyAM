@@ -8,10 +8,10 @@ fit_tam(
   data,
   years = NULL,
   ages = NULL,
-  N_settings = list(process = "iid", init = "exp"),
-  F_settings = list(process = "rw", mu_form = NULL),
-  M_settings = list(process = "off", mu_form = NULL, mu_supplied = ~I(0.2), age_breaks =
-    NULL, first_dev_year = NULL),
+  N_settings = list(process = "iid", init = "exp", rec_form = ~rw(year), sd_form = ~1),
+  F_settings = list(process = "rw", mu_form = NULL, sd_form = ~1, mean_ages = NULL),
+  M_settings = list(process = "off", mu_form = NULL, mu_supplied = ~I(0.2), sd_form = ~1,
+    age_breaks = NULL, first_dev_year = NULL, mean_ages = NULL),
   catch_settings = list(sd_form = ~1, sd_supplied = NULL, fill_missing = TRUE),
   index_settings = list(sd_form = ~1, sd_supplied = NULL, q_form = ~q_block, q_link =
     "log", fill_missing = TRUE),

@@ -517,17 +517,21 @@ prepare_tam <- function(
     data,
     years = NULL,
     ages = NULL,
-    N_settings = list(process = "iid", init = "exp"),
-    F_settings = list(process = "rw", mu_form = NULL),
-    M_settings = list(process = "off", mu_form = NULL, mu_supplied = ~I(0.2), age_breaks = NULL, first_dev_year = NULL),
+    N_settings = list(process = "iid", init = "exp", rec_form = ~ rw(year), sd_form = ~ 1),
+    F_settings = list(process = "rw", mu_form = NULL, sd_form = ~ 1, mean_ages = NULL),
+    M_settings = list(process = "off", mu_form = NULL, mu_supplied = ~I(0.2), sd_form = ~ 1,
+                      age_breaks = NULL, first_dev_year = NULL, mean_ages = NULL),
     catch_settings = list(sd_form = ~1, sd_supplied = NULL, fill_missing = TRUE),
     index_settings = list(sd_form = ~1, sd_supplied = NULL, q_form = ~q_block, q_link = "log", fill_missing = TRUE),
     proj_settings = NULL,
     ssb_settings = list(spawn_time = 0)
 ) {
 
+  settings <- .complete_settings(mget(.settings_names))
+  list2env(settings, envir = environment())
   obs <- data
-  dat <- mget(setdiff(ls(), "data"))
+  dat <- mget(setdiff(names(formals(prepare_tam)), "data"))
+  dat$obs <- obs
 
   if (!is.list(ssb_settings)) cli::cli_abort("ssb_settings must be a list with spawn_time.")
   time <- ssb_settings$spawn_time
@@ -635,10 +639,6 @@ prepare_tam <- function(
     }
   }
 
-  if ("init_N0" %in% names(N_settings)) {
-    cli::cli_abort("N_settings$init_N0 has been retired. Use N_settings$init = \"exp\", \"free\", or \"random\" instead.")
-  }
-  if (is.null(N_settings$init)) dat$N_settings$init <- "exp"
   dat$N_settings$init <- match.arg(dat$N_settings$init, c("exp", "free", "random"))
   if (length(dat$ages) < 2L) {
     cli::cli_abort("N0 initialization requires at least two modeled ages.")
@@ -704,20 +704,11 @@ prepare_tam <- function(
 
   dat$catch_settings <- catch_settings
   dat$index_settings <- index_settings
-  if (is.null(dat$index_settings$q_link)) dat$index_settings$q_link <- "log"
   if (!is.character(dat$index_settings$q_link) ||
       length(dat$index_settings$q_link) != 1L ||
       is.na(dat$index_settings$q_link) ||
       !dat$index_settings$q_link %in% c("log", "logit")) {
     cli::cli_abort("index_settings$q_link must be either {.val log} or {.val logit}.")
-  }
-  if (is.null(dat$catch_settings$fill_missing)) {
-    dat$catch_settings$fill_missing <- TRUE
-    cli::cli_warn("catch_settings$fill_missing was NULL; forcing to TRUE")
-  }
-  if (is.null(dat$index_settings$fill_missing)) {
-    dat$index_settings$fill_missing <- TRUE
-    cli::cli_warn("index_settings$fill_missing was NULL; forcing to TRUE")
   }
 
   dat$obs_map <- obs_fit[, setdiff(names(obs_fit), c("obs", "log_obs"))]

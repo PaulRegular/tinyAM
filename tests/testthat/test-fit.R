@@ -81,14 +81,13 @@ test_that("fit_tam does not estimate missing values when fill_missing = FALSE", 
   expect_false("missing" %in% fit$obj$env$.random)
 })
 
-test_that("fit_tam warns and forces fill_missing to TRUE when mising", {
+test_that("partial catch settings inherit fill_missing", {
   (fit <- update(
     default_fit,
     catch_settings = list(sd_form = ~1),
     index_settings = list(sd_form = ~1, q_form = ~q_block, fill_missing = TRUE),
     silent = TRUE
-  )) |>
-    expect_warning(regexp = "catch_settings\\$fill_missing was NULL", fixed  = FALSE)
+  ))
   expect_true(fit$dat$catch_settings$fill_missing)
   expect_true(fit$dat$index_settings$fill_missing)
 })
