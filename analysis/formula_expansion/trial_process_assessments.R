@@ -50,7 +50,8 @@ for (id in c("afsc_pollock_ebs_2024", "ices_haddock_north_sea_2026", "ices_plaic
   saveRDS(attempts, file.path(root, "trials.rds"))
   if (is.null(baseline$fit)) next
   variants <- if (id == "afsc_pollock_ebs_2024") {
-    list(spawning_time = list(ssb_settings = list(spawn_time = .25)))
+    stock$obs$maturity$spawn_time <- .25
+    list(spawning_time = list())
   } else if (id == "ices_haddock_north_sea_2026") {
     stock$obs$weight$N_sd_group <- factor(ifelse(stock$obs$weight$age == 8, "plus", "older"))
     list(correlated_F = list(F_settings = list(process = "cor_rw")),

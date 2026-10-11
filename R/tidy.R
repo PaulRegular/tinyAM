@@ -373,7 +373,14 @@ tidy_pop <- function(fit, interval = 0.95) {
   rep_trends <- tidy_rep(fit)
   not_in_sdrep <- setdiff(names(rep_trends), names(sdrep_trends))
   out <- c(sdrep_trends, rep_trends[not_in_sdrep])
-  if (!is.null(out$ssb)) out$ssb$spawn_time <- fit$dat$ssb_settings$spawn_time
+  if (!is.null(out$ssb)) {
+    timing <- .ssb_timing_table(fit$dat)
+    times <- vapply(split(timing$spawn_time, timing$year), function(x) {
+      if (length(unique(x)) == 1L) x[1L] else NA_real_
+    }, numeric(1))
+    out$ssb$spawn_time <- times[as.character(out$ssb$year)]
+    out$ssb$timing <- .ssb_timing_label(fit$dat)
+  }
   attr(out, "interval") <- interval
   out
 }

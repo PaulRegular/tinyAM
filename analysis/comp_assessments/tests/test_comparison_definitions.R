@@ -63,7 +63,7 @@ stopifnot(
   all(x$percent_difference[x$metric == "N"] == 0)
 )
 timed_fit <- fit
-timed_fit$dat$ssb_settings <- list(spawn_time = .25)
+timed_fit$dat$spawn_time <- matrix(.25, length(timed_fit$dat$years), length(timed_fit$dat$ages))
 timed_comparison <- .compare_fixture(timed_fit, reference)
 stopifnot(all(timed_comparison$comparison_status[timed_comparison$metric == "ssb"] == "non_equivalent"),
           all(is.na(timed_comparison$percent_difference[timed_comparison$metric == "ssb"])))

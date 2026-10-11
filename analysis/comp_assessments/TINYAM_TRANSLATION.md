@@ -875,7 +875,7 @@ active age; M sharing must also be constant within fitted M state blocks.
 Recruitment and initial-abundance SDs remain separate. Inspect group uncertainty
 and `check_tam()` advisories rather than equating convergence with support.
 
-Use `ssb_settings = list(spawn_time = ...)` when a documented spawning fraction
+Use `data$maturity$spawn_time` when a documented spawning fraction
 is recoverable. The same mortality-adjusted SSB is reported and used as the
 stock–recruit parent. Compare matching age ranges, biological inputs and timing;
 accepted N and biology alone cannot reconstruct spawning-time SSB without

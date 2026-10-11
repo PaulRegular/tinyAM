@@ -310,7 +310,7 @@
 #'
 #' Abundance is \eqn{\sum_a N_{t,a}}, biomass is \eqn{\sum_a W_{t,a}N_{t,a}},
 #' and SSB is \eqn{\sum_a W_{t,a}P_{t,a}N_{t,a}e^{-\tau Z_{t,a}}}, where
-#' \eqn{\tau} is `ssb_settings$spawn_time`, default zero. It is one supplied
+#' \eqn{\tau} is `data$maturity$spawn_time`, default zero. It is one supplied
 #' fraction of the year for both F and M. This same quantity supplies parent
 #' SSB for recruitment. Weight and maturity retain their supplied definitions;
 #' seasonal growth, maturation and an additional sex-ratio adjustment are not

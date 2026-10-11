@@ -152,7 +152,7 @@
 #' `bh(ssb)` rises toward a plateau; `ricker(ssb)` can decline at high spawning
 #' biomass. Either curve supports IID or AR1 residuals. These curves describe
 #' median recruitment, not the arithmetic mean, and use the model's existing
-#' SSB at `ssb_settings$spawn_time` (start-of-year by default) and supplied
+#' SSB at `data$maturity$spawn_time` (start-of-year by default) and supplied
 #' weight/maturity units. Spawning timing changes both reported and parent SSB.
 #' With parent biomass \eqn{S_{t-L}}, their definitions are
 #' \deqn{g_{BH}(S)=\alpha S/(1+\beta S),\qquad
@@ -188,7 +188,7 @@
 #'
 #' @param ssb The literal `ssb`, referring to modeled spawning stock biomass.
 #' @param lag Non-negative integer parent-year lag. `NULL` uses the youngest
-#'   modeled age. SSB uses the supplied `ssb_settings$spawn_time`, default zero.
+#'   modeled age. SSB uses the supplied `data$maturity$spawn_time`, default zero.
 #' @return Formula markers; direct calls raise an error.
 #' @examples
 #' ~ rw(year)
@@ -286,6 +286,7 @@ ricker <- function(ssb, lag = NULL) {
   W <- dat$W
   P <- dat$P
   log_ssb <- numeric(T)
+  ssb_mat <- matrix(0, T, A, dimnames = dimnames(log_N))
   mean <- .rec_mean(par, dat)
   log_mu_R <- log_pred_R <- mean
   u <- numeric(T)
@@ -324,8 +325,8 @@ ricker <- function(ssb, lag = NULL) {
         parent <- y - dat$rec$curve$lag
         parent_ssb <- if (parent == y) {
           # Zero-lag validation guarantees no mature biomass in recruitment age.
-          log(sum(.ssb_at_age(exp(log_N[y, older]), W[y, older], P[y, older],
-            Z[y, older], dat$ssb_settings$spawn_time)))
+          log(sum(.ssb_contributions(exp(log_N[y, ]), W[y, ], P[y, ], Z[y, ], dat,
+            if (!is.null(dat$plus_ages)) exp(log_N_plus[y, ]) else NULL, year = y)))
         } else log_ssb[parent]
         log_mu_R[y] <- mean[y] + .rec_log_curve(parent_ssb, par, dat$rec$curve$type)
       }
@@ -340,14 +341,15 @@ ricker <- function(ssb, lag = NULL) {
       }
       u[y] <- log_recruitment[y] - log_mu_R[y]
     }
-    log_ssb[y] <- log(sum(.ssb_at_age(exp(log_N[y, ]), W[y, ], P[y, ],
-      Z[y, ], dat$ssb_settings$spawn_time)))
+    ssb_mat[y, ] <- .ssb_contributions(exp(log_N[y, ]), W[y, ], P[y, ], Z[y, ], dat,
+      if (!is.null(dat$plus_ages)) exp(log_N_plus[y, ]) else NULL, year = y)
+    log_ssb[y] <- log(sum(ssb_mat[y, ]))
   }
   names(log_recruitment) <- dat$years
   list(log_N = log_N, pred_log_N = pred_log_N, log_recruitment = log_recruitment,
     log_mu_R = log_mu_R, log_pred_R = log_pred_R,
     eta_R = log_recruitment - log_pred_R, eta_R_state = u,
-    eta_log_n0 = eta_log_n0, W = W, P = P,
+    eta_log_n0 = eta_log_n0, W = W, P = P, ssb_mat = ssb_mat,
     N_plus = if (!is.null(dat$plus_ages)) exp(log_N_plus) else NULL)
 }
 
@@ -375,8 +377,7 @@ ricker <- function(ssb, lag = NULL) {
                                                   1L, dat$proj_settings$F_mult, `*`)
   initial <- .population_states(par, dat, F + M)
   i <- dat$rec$eligible[1L] - dat$rec$curve$lag
-  S <- sum(.ssb_at_age(exp(initial$log_N[i, ]), initial$W[i, ], initial$P[i, ],
-    (F + M)[i, ], dat$ssb_settings$spawn_time))
+  S <- sum(initial$ssb_mat[i, ])
   par$log_sr_beta <- -log(S)
   par$log_sr_alpha <- par$log_r0 - .rec_mean(par, dat)[dat$rec$eligible[1L]] - log(S) +
     if (dat$rec$curve$type == "bh") log(2) else 1

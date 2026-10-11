@@ -55,7 +55,7 @@ age-based `sd_form` formulas, such as `~ age_group`, to share process SDs.
 These formulas use columns in the weight table and do not share latent states.
 Their default `~ 1` retains a common SD.
 
-`ssb_settings = list(spawn_time = 0.25)` accounts for survival to spawning at
+`data$maturity$spawn_time <- 0.25` accounts for survival to spawning at
 one quarter of the year. The same SSB supplies stock–recruit relationships.
 Default zero retains start-of-year SSB; see `?process_variation` for equations,
 SD interpretations and examples.

@@ -473,7 +473,7 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   biomass_mat <- W * N
   biomass <- rowSums(biomass_mat)
   log_biomass <- log(biomass)
-  ssb_mat <- .ssb_at_age(N, W, P, Z, dat$ssb_settings$spawn_time)
+  ssb_mat <- population$ssb_mat
   ssb <- rowSums(ssb_mat)
   log_ssb <- log(ssb)
 

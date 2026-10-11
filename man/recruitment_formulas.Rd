@@ -14,7 +14,7 @@ ricker(ssb, lag = NULL)
 \item{ssb}{The literal \code{ssb}, referring to modeled spawning stock biomass.}
 
 \item{lag}{Non-negative integer parent-year lag. \code{NULL} uses the youngest
-modeled age. SSB uses the supplied \code{ssb_settings$spawn_time}, default zero.}
+modeled age. SSB uses the supplied \code{data$maturity$spawn_time}, default zero.}
 }
 \value{
 Formula markers; direct calls raise an error.
@@ -36,7 +36,7 @@ Projections hold their terminal values and announce that assumption.
 \code{bh(ssb)} rises toward a plateau; \code{ricker(ssb)} can decline at high spawning
 biomass. Either curve supports IID or AR1 residuals. These curves describe
 median recruitment, not the arithmetic mean, and use the model's existing
-SSB at \code{ssb_settings$spawn_time} (start-of-year by default) and supplied
+SSB at \code{data$maturity$spawn_time} (start-of-year by default) and supplied
 weight/maturity units. Spawning timing changes both reported and parent SSB.
 With parent biomass \eqn{S_{t-L}}, their definitions are
 \deqn{g_{BH}(S)=\alpha S/(1+\beta S),\qquad

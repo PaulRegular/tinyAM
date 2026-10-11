@@ -57,7 +57,7 @@ observations <- function() {
   index$relative_sd <- .08
   list(catch = transform(grid, obs = 1, relative_sd = .08), index = index,
     weight = transform(grid, obs = .2 * age^1.5, age_group = factor(ifelse(age <= 4, "young", "old"))),
-    maturity = transform(grid, obs = plogis(age - 4)))
+    maturity = transform(grid, obs = plogis(age - 4), spawn_time = .25))
 }
 
 full <- function(component, seed, keep_fit = FALSE) {
@@ -66,8 +66,7 @@ full <- function(component, seed, keep_fit = FALSE) {
     F_settings = list(process = "rw"),
     M_settings = list(process = "off", mu_supplied = ~ I(.25)),
     catch_settings = list(sd_form = ~ 0, sd_supplied = ~ relative_sd, fill_missing = FALSE),
-    index_settings = list(q_form = ~ survey, sd_form = ~ 0, sd_supplied = ~ relative_sd, fill_missing = FALSE),
-    ssb_settings = list(spawn_time = .25))
+    index_settings = list(q_form = ~ survey, sd_form = ~ 0, sd_supplied = ~ relative_sd, fill_missing = FALSE))
   settings[[paste0(component, "_settings")]]$process <- if (component == "F") "cor_rw" else "iid"
   settings[[paste0(component, "_settings")]]$sd_form <- ~ age_group
   if (component == "M") {

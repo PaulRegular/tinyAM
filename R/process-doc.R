@@ -12,7 +12,7 @@
 #' Ordinary numeric and categorical age-based terms are supported. Temporal
 #' SDs and random-effect SD terms are not enabled for these latent processes.
 #'
-#' `ssb_settings = list(spawn_time = 0.25)` evaluates mature biomass after
+#' `data$maturity$spawn_time <- 0.25` evaluates mature biomass after
 #' one quarter of annual mortality. This SSB is also used by stock–recruit
 #' relationships. The default zero retains start-of-year SSB. This option
 #' assumes constant mortality during the year, using the supplied weights and
@@ -53,11 +53,11 @@
 #'
 #' @examples
 #' data <- cod_obs
+#' data$maturity$spawn_time <- 0.25
 #' data$weight$age_group <- factor(ifelse(data$weight$age < 6, "young", "older"))
 #' dat <- prepare_tam(data,
 #'   F_settings = list(process = "cor_rw", sd_form = ~ age_group),
-#'   N_settings = list(process = "iid", sd_form = ~ 1),
-#'   ssb_settings = list(spawn_time = 0.25))
+#'   N_settings = list(process = "iid", sd_form = ~ 1))
 #' make_par(dat)$sd_beta_f
 #'
 #' @name process_variation

@@ -171,6 +171,13 @@ check_obs <- function(obs) {
       cli::cli_abort("maturity$obs must contain proportions between 0 and 1.")
     }
 
+    if (nm == "maturity" && "spawn_time" %in% names(x)) {
+      time <- x$spawn_time
+      if (!is.numeric(time) || any(!is.finite(time)) || any(time < 0 | time > 1)) {
+        cli::cli_abort("maturity$spawn_time must contain finite fractions between 0 and 1 for every year and age.")
+      }
+    }
+
     # index survey and samp_time: required, numeric in [0,1], no NA
     if (nm == "index") {
       if (!("survey" %in% names(x))) {

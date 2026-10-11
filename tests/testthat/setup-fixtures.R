@@ -14,7 +14,7 @@ make_test_dat <- function(...) {
       years = YEARS,
       ages = AGES
     ),
-    list(...)
+    list(...), keep.null = TRUE
   )
   do.call(prepare_tam, args)
 }
