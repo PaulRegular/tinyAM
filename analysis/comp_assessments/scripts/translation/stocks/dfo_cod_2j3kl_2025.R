@@ -32,7 +32,7 @@ obs <- database_to_tam_obs(
 # Use the accepted assessment's median reported Mbar as the fixed baseline.
 # This is a replication-oriented plug-in choice; tinyAM estimates deviations
 # around this level because estimating both the M level and process was unstable.
-obs$weight$M_assumption <- median(
+obs$pop_covariates$M_assumption <- median(
   source$outputs$value[source$outputs$measure == "Mbar"],
   na.rm = TRUE
 )

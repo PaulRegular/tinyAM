@@ -117,6 +117,9 @@ test_that("fit_retro runs peels and returns stacked outputs", {
     expect_true(is.list(rf$rep))
     expect_s3_class(rf$sdrep, "sdreport")
     expect_s3_class(rf, "tam_fit")
+    expect_identical(rf$refit_args$data, fit$refit_args$data)
+    expect_true(all(rf$dat$pop_data$year %in% rf$dat$years))
+    expect_true("NCAM_M_assumption" %in% names(rf$dat$pop_data))
   }
 })
 

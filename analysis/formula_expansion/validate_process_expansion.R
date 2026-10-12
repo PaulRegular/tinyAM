@@ -56,8 +56,9 @@ observations <- function() {
   index$obs <- 1
   index$relative_sd <- .08
   list(catch = transform(grid, obs = 1, relative_sd = .08), index = index,
-    weight = transform(grid, obs = .2 * age^1.5, age_group = factor(ifelse(age <= 4, "young", "old"))),
-    maturity = transform(grid, obs = plogis(age - 4), spawn_time = .25))
+    weight = transform(grid, obs = .2 * age^1.5),
+    maturity = transform(grid, obs = plogis(age - 4), spawn_time = .25),
+    pop_covariates = transform(grid, age_group = factor(ifelse(age <= 4, "young", "old"))))
 }
 
 full <- function(component, seed, keep_fit = FALSE) {

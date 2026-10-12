@@ -25,7 +25,7 @@ stopifnot(
   all(obs$index$samp_time[obs$index$survey == "4Tmno acoustic survey"] == 0.75),
   all(obs$maturity$obs[obs$maturity$age %in% 2:3] == 0),
   all(obs$maturity$obs[obs$maturity$age >= 4] == 1),
-  all(obs$weight$M_process_center == 0.2),
+  all(obs$pop_covariates$M_process_center == 0.2),
   !"M_assumption" %in% names(obs$weight),
   identical(attr(obs, "translation")$M$status, "estimated_in_source"),
   identical(source_data, original),

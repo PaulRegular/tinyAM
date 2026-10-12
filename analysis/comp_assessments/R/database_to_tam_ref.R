@@ -264,9 +264,9 @@ database_to_tam_ref <- function(assessment_id, outputs, obs = NULL, years = NULL
   }
 
   source_m_status <- attr(obs, "translation")$M$status
-  if (is.null(pop$M) && !is.null(obs$weight$M_assumption) &&
+  if (is.null(pop$M) && !is.null(obs$pop_covariates$M_assumption) &&
       identical(source_m_status, "fixed_numerical_input")) {
-    m <- unique(obs$weight[c("year", "age", "M_assumption")])
+    m <- unique(obs$pop_covariates[c("year", "age", "M_assumption")])
     names(m)[[3L]] <- "est"
     m$year <- as.integer(m$year)
     m$se <- NA_real_

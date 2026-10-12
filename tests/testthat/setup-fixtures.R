@@ -8,14 +8,9 @@ if (!exists("cod_obs", inherits = TRUE)) {
 }
 
 make_test_dat <- function(...) {
-  args <- utils::modifyList(
-    list(
-      data = cod_obs,
-      years = YEARS,
-      ages = AGES
-    ),
-    list(...), keep.null = TRUE
-  )
+  args <- list(data = cod_obs, years = YEARS, ages = AGES)
+  supplied <- list(...)
+  args[names(supplied)] <- supplied
   do.call(prepare_tam, args)
 }
 

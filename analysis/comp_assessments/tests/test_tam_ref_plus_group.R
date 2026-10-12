@@ -10,7 +10,8 @@ obs <- list(
   weight = expand.grid(year = years, age = 1:2),
   maturity = expand.grid(year = years, age = 1:2)
 )
-obs$weight$M_assumption <- 0.2
+obs$pop_covariates <- obs$weight[c("year", "age")]
+obs$pop_covariates$M_assumption <- 0.2
 obs$maturity$obs <- 0.5
 output_rows <- function(type, measure, year, age, value, se = NA_real_,
                         lwr = NA_real_, upr = NA_real_) {

@@ -43,7 +43,7 @@ expected_m <- do.call(rbind, lapply(split(
   data.frame(year = x$year[[1]], age = x$age[[1]],
              M = sum(x$value[x$quarter %in% quarter]) * 0.25)
 }))
-actual_m <- translated$obs$weight[c("year", "age", "M_assumption")]
+actual_m <- translated$obs$pop_covariates[c("year", "age", "M_assumption")]
 m_match <- match(paste(expected_m$year, expected_m$age),
                  paste(actual_m$year, actual_m$age))
 

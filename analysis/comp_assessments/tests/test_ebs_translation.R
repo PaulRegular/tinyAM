@@ -36,7 +36,7 @@ keys_by_survey <- aggregate(
   q_key ~ survey, high_age_keys,
   function(x) length(unique(as.character(x)))
 )
-m_values <- unique(obs$weight[c("age", "M_assumption")])
+m_values <- unique(obs$pop_covariates[c("age", "M_assumption")])
 m_values <- m_values[order(m_values$age), ]
 
 stopifnot(

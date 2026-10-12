@@ -12,7 +12,7 @@ obs <- database_to_tam_obs(
   surveys = surveys,
   assumptions = source$assumptions
 )
-obs$weight$M_assumption <- obs$weight$M_assumption + 0.02
+obs$pop_covariates$M_assumption <- obs$pop_covariates$M_assumption + 0.02
 
 obs$catch$sd_block <- cut_ages(obs$catch$age, c(0, 2, 7, 8))
 levels(obs$catch$sd_block) <- c("ages_0_1", "ages_2_6", "ages_7_8", "ages_7_8")

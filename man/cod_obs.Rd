@@ -5,46 +5,17 @@
 \alias{cod_obs}
 \title{Northern cod example data for TAM}
 \format{
-A named list of four data frames:
+A \code{tam_data} list containing five data frames:
 \itemize{
-\item \strong{catch}: commercial catch-at-age observations and blocking variables.
-Columns:
-\itemize{
-\item \code{year}: numeric calendar year.
-\item \code{age}: numeric age (years).
-\item \code{obs}: numeric observed catch in numbers (thousands; may include \code{NA}).
-\item \code{F_y_block}: factor; year blocks for fishing-mortality mean structure
-(e.g., \code{"1954-1991"}, \code{"1992-1997"}, ...).
-\item \code{F_a_block}: factor; age blocks for fishing-mortality mean structure
-(e.g., \code{"0-1"}, \code{"2-3"}, ...).
-}
-\item \strong{index}: survey (index) observations and blocking variables.
-Columns:
-\itemize{
-\item \code{year}: integer year.
-\item \code{age}: numeric age (years).
-\item \code{obs}: numeric survey index-at-age (may include \code{NA}).
-\item \code{survey}: character or factor; survey name for catchability blocks and labeling plots.
-\item \code{samp_time}: numeric sampling time within the year (fraction of a year; e.g., \code{0.8}).
-\item \code{q_block}: factor; age blocks for catchability.
-}
-\item \strong{weight}: weight-at-age and mortality assumption used for \eqn{M} mean structure.
-Columns:
-\itemize{
-\item \code{year}: integer year.
-\item \code{age}: numeric age (years).
-\item \code{obs}: numeric stock weight-at-age (kg).
-\item \code{M_assumption}: numeric assumed natural mortality level by age-year
-(used when constructing \code{M} mean via formula).
-}
-\item \strong{maturity}: maturity-at-age (proportion mature). An optional \code{spawn_time}
-column can supply spawning fractions; it is not present in this example.
-Columns:
-\itemize{
-\item \code{year}: numeric year.
-\item \code{age}: numeric age (years).
-\item \code{obs}: numeric proportion mature (0-1).
-}
+\item \strong{catch}: \code{year}, \code{age}, and catch numbers \code{obs} (thousands; may be missing).
+\item \strong{index}: \code{year}, \code{age}, survey abundance \code{obs} (thousands), \code{survey},
+sampling fraction \code{samp_time}, and catchability age group \code{q_block}.
+\item \strong{weight}: \code{year}, \code{age}, and stock weight \code{obs} (kg per fish).
+\item \strong{maturity}: \code{year}, \code{age}, and proportion mature \code{obs} (0-1).
+Optional spawning timing is not supplied in this example.
+\item \strong{pop_covariates}: \code{year}, \code{age}, fishing-mortality mean blocks
+\code{F_y_block} and \code{F_a_block}, \code{NCAM_M_assumption}, and
+\code{allometric_M_assumption} (natural mortality rates per year).
 }
 }
 \source{
@@ -60,22 +31,18 @@ derived from data used in the assessment of Northern cod, NAFO Divisions 2J3KL.
 This is intended for vignettes, examples, and tests.
 }
 \details{
-The object was assembled by:
-\enumerate{
-\item Converting NCAM arrays to tidy data frames.
-\item Creating blocking variables for \code{F} by year (\code{F_y_block}) and age
-(\code{F_a_block}) using \code{\link[=cut_years]{cut_years()}} and \code{\link[=cut_ages]{cut_ages()}}.
-\item Joining weight-at-age with a natural mortality assumption column
-(\code{M_assumption}) derived from \code{NCAM::inputs$nm}.
-}
+NCAM inputs are converted to year-age tables. Population blocks and mortality
+assumptions are kept separately from observations and supplied biology.
+The allometric assumption follows the weight exponent in Lorenzen (1996),
+scaled to mean M of 0.30 across ages 5-14. See \code{data-raw/cod_obs.R} for
+construction and \code{\link[=as_tam_data]{as_tam_data()}} for the table roles.
 }
 \examples{
 data(cod_obs)
 names(cod_obs)
 
-# Peek at catch blocks
-head(cod_obs$catch)
-with(cod_obs$catch, table(F_y_block, F_a_block))
+cod_obs
+head(cod_obs$pop_covariates)
 
 }
 \keyword{datasets}

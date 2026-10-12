@@ -26,7 +26,7 @@ stopifnot(
   setequal(unique(obs$index$survey), c("HERAS", "IBTS-Q1", "IBTS0", "IBTS-Q3")),
   all(obs$index$age %in% 0:8),
   !any(obs$index$survey %in% c("LAI-SNS", "LAI-CNS", "LAI-BUN", "LAI-ORSH")),
-  all(obs$weight$M_assumption > 0),
+  all(obs$pop_covariates$M_assumption > 0),
   all(obs$index$samp_time == c(HERAS = 0.5, `IBTS-Q1` = 0.125,
                               IBTS0 = 0.125, `IBTS-Q3` = 0.625)[obs$index$survey]),
   setequal(levels(obs$index$q_key), c("HERAS_1_2", "HERAS_3_8", "IBTS-Q1",
@@ -51,6 +51,6 @@ m_source <- source_data$inputs[
 m_key <- paste(obs$weight$year, obs$weight$age)
 source_key <- paste(m_source$year, m_source$age)
 expected_m <- as.numeric(m_source$value[match(m_key, source_key)]) + 0.02
-stopifnot(isTRUE(all.equal(obs$weight$M_assumption, expected_m)))
+stopifnot(isTRUE(all.equal(obs$pop_covariates$M_assumption, expected_m)))
 
 cat("North Sea herring translation tests passed.\n")

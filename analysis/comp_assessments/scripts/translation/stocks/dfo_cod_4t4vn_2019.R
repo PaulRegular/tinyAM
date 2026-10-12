@@ -73,7 +73,7 @@ obs <- database_to_tam_obs(
   exclude_index_years = setNames(list(c(1980, 1985, 2003)), rv),
   assumptions = source$assumptions
 )
-obs$weight$M_prior_mean <- ifelse(obs$weight$age <= 4, 0.65, 0.15)
+obs$pop_covariates$M_prior_mean <- ifelse(obs$pop_covariates$age <= 4, 0.65, 0.15)
 comparison_outputs <- source$outputs[
   source$outputs$measure %in% c(
     "numbers_at_age", "fishing_mortality_at_age", "SSB", "recruitment"
@@ -97,8 +97,8 @@ if (nrow(terminal_m)) {
   }))
   comparison_outputs <- rbind(comparison_outputs, terminal_m)
 }
-obs$catch$age_blocks <- cut_ages(
-  obs$catch$age,
+obs$pop_covariates$age_blocks <- cut_ages(
+  obs$pop_covariates$age,
   c(3, 5, 7, 9, 12)
 )
 

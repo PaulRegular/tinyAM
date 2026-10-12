@@ -41,6 +41,15 @@ knitr::kable(obs_stack$maturity, digits = 2)
 ```
 
 
+```{r, results = "asis"}
+if (!is.null(obs_stack$pop_covariates)) {
+  cat("\n### Population covariates\n\n")
+  table_link(obs_stack$pop_covariates, table_name = "pop_covariates")
+  print(knitr::kable(obs_stack$pop_covariates, digits = 2))
+}
+```
+
+
 Settings {data-navmenu="Tables"}
 ================================================================================
 

@@ -39,7 +39,7 @@ weight and maturity are retained for abundance-based aggregation inside
 \itemize{
 \item \code{rec_form}: recruitment formula, default \code{~ rw(year)}. Use one of \code{\link[=iid]{iid()}},
 \code{\link[=rw]{rw()}}, or \code{\link[=ar1]{ar1()}} on \code{year}, optionally with fixed covariates from
-\code{obs$maturity} at the youngest modeled age. First-year recruitment remains
+\code{data$pop_covariates} at the youngest modeled age. First-year recruitment remains
 a freely estimated fixed anchor; \code{process} below controls older cohorts.
 \code{\link[=bh]{bh()}} and \code{\link[=ricker]{ricker()}} add a median stock-recruit curve with IID/AR1
 residuals. See \link{recruitment_formulas} for lags, boundary states and units.
@@ -53,7 +53,7 @@ older-age \code{log_n0} states; \code{"random"} estimates random \code{log_n0} s
 IID survivorship residuals and separate SD \code{sd_n0}. See \strong{Details}.
 \item \code{sd_form}: ordinary formula for log SD of older-age survival residuals,
 default \code{~ 1}. Use \code{~ factor(age)} or a supplied age-sharing column in
-\code{obs$weight}. Its design must be constant across years. Recruitment and
+\code{data$pop_covariates}. Its design must be constant across years. Recruitment and
 initial-abundance SDs remain separate. Random-effect SD terms are not enabled.
 }}
 
@@ -66,11 +66,11 @@ correlated between years and ages.
 annual increments at neighbouring ages. It estimates one signed age
 correlation; its SD is the marginal SD of annual log-F increments.
 \item \code{sd_form}: ordinary age-based formula for log process SD, default \code{~ 1},
-evaluated on \code{obs$weight}. Sharing an SD does not share latent F states.
+evaluated on \code{data$pop_covariates}. Sharing an SD does not share latent F states.
 IID SDs describe residuals; RW/correlated-RW SDs describe annual increments;
 stationary AR1 retains its innovation-scale convention.
 \item \code{mu_form}: an optional formula for mean-\eqn{F} (coefficients estimated as
-\strong{log-scale} parameters \code{log_mu_f}). Required for \code{"iid"} and \code{"ar1"};
+\strong{log-scale} parameters \code{log_mu_f}), evaluated on \code{data$pop_covariates}. Required for \code{"iid"} and \code{"ar1"};
 use \code{~ 1} for one estimated mean level or \code{~ factor(age)} for age-specific
 means. For \code{"rw"}, \code{NULL} is allowed. Mean columns constant through time
 cancel from RW increments and are removed with a warning. Remaining
@@ -87,10 +87,10 @@ average F (\code{F_bar}) calculations. All ages used if absent.
 \item \code{process}: \code{"off"} uses only supplied/mean M. Otherwise \code{"iid"}, \code{"rw"},
 and \code{"ar1"} have the same meanings as for F, on selected years/age blocks.
 \item \code{sd_form}: ordinary age-based formula for log process SD, default \code{~ 1}.
-Evaluated on \code{obs$weight} and required to be constant within each fitted M
+Evaluated on \code{data$pop_covariates} and required to be constant within each fitted M
 age block and across years. Use finer age_breaks for distinct state SDs.
 \item \code{mu_form}: optional formula for mean-\eqn{M} (applied on the log scale) built
-on \code{obs$weight}, yielding coefficients \code{mu_m}. These enter the log-\eqn{M}
+on \code{data$pop_covariates}, yielding coefficients \code{mu_m}. These enter the log-\eqn{M}
 surface directly and may therefore be positive or negative; they intentionally
 avoid a \code{log_} prefix to prevent automatic back-transformation when tidied.
 If provided together with \code{mu_supplied}, the intercept in \code{mu_form} is
@@ -100,7 +100,7 @@ or the residual process off. Use \code{~ 0 + rw(year)} to vary supplied M throug
 time. All mean components must be constant within fitted M age blocks.
 \item \code{mu_supplied}: optional one-sided formula giving supplied (non-estimated)
 \eqn{M}, e.g. \code{~ I(0.2)} or a column reference such as
-\code{~ M_assumption} stored in the \code{obs$weight} data.frame.
+\code{~ M_assumption} stored in the \code{data$pop_covariates} data.frame.
 \item \code{age_breaks}: optional integer break points used by \code{\link[=cut_ages]{cut_ages()}} to
 define \code{age_blocks} sharing absolute latent M states across ages.
 When a narrower set of \code{age_breaks} than modeled \code{ages} is provided,
@@ -227,7 +227,8 @@ growth and maturation are not modeled.
 \item Inputs are expected as a list with components \code{catch}, \code{index}, \code{weight},
 and \code{maturity}. Each must include columns \code{year}, \code{age}, and a value column
 named \code{obs}. Rename any differently named input columns before calling. See
-\link{cod_obs} for an example of the required structure.
+\link{cod_obs} for an example of the required structure. The optional
+\code{pop_covariates} table supplies population formula inputs; see \code{\link[=as_tam_data]{as_tam_data()}}.
 \item Catch, weight, and maturity must already contain exactly one row per
 year-age combination across the input range. Survey tables may be sparse.
 \item A combined observation table is created for catch and index; \code{log(0)} is
@@ -265,7 +266,7 @@ on the selected link scale.
 Structured \code{\link[=iid]{iid()}}, \code{\link[=rw]{rw()}}, \code{\link[=ar1]{ar1()}}, random-intercept and \code{\link[=logistic]{logistic()}}
 terms are recorded separately in \code{q_terms}. Their unique states and process
 parameters are added by \code{\link[=make_par]{make_par()}}, rather than treated as ordinary columns.
-\item If \code{M_settings$mu_form} is provided, \code{M_modmat <- model.matrix(mu_form, data = obs$weight)} and the resulting coefficients are parameters \code{mu_m}.
+\item If \code{M_settings$mu_form} is provided, \code{M_modmat <- model.matrix(mu_form, data = data$pop_covariates)} and the resulting coefficients are parameters \code{mu_m}.
 These coefficients are applied on the log scale to build \eqn{M}, but
 retain the \code{mu_} prefix to emphasize they can be positive or negative.
 If \code{mu_supplied} is also provided, the intercept in \code{mu_form} is dropped

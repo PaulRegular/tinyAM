@@ -163,7 +163,7 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #'
 #' @noRd
 .add_proj_rows <- function(obs, n_proj = 3, n_mean = 3) {
-  max_year <- max(unlist(lapply(obs, `[[`, "year")))
+  max_year <- max(unlist(lapply(obs[c("catch", "index", "weight", "maturity")], `[[`, "year")))
   .add_one <- function(x, nm) {
     proj_years <- seq.int(max_year + 1L, max_year + n_proj)
     mean_years <- seq.int(max_year - n_mean + 1L, max_year)
@@ -171,7 +171,7 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
     if (nm %in% c("weight", "maturity")) {
       mean_obs <- stats::aggregate(obs ~ age, data = x[x$year %in% mean_years, ], FUN = mean)
       template$obs <- mean_obs$obs[match(template$age, mean_obs$age)]
-    } else {
+    } else if (nm != "pop_covariates") {
       template$obs <- NA_real_
     }
     proj_rows <- do.call(rbind, lapply(proj_years, function(year) {
@@ -185,7 +185,7 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
     x_with_proj[order(x_with_proj$age, x_with_proj$year), ]
   }
   obs_with_proj <- lapply(names(obs), function(nm) .add_one(obs[[nm]], nm))
-  names(obs_with_proj) <- names(obs)
+  attributes(obs_with_proj) <- attributes(obs)
   obs_with_proj$catch$obs[obs_with_proj$catch$is_proj] <- NA
   obs_with_proj$index$obs[obs_with_proj$index$is_proj] <- NA
   obs_with_proj
@@ -230,12 +230,9 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
     }
   }
 
-  list(
-    catch = .aggregate_one(obs$catch, plus_age, sum),
-    index = .aggregate_one(obs$index, plus_age, sum, groups = c("year", "survey")),
-    weight = obs$weight,
-    maturity = obs$maturity
-  )
+  obs$catch <- .aggregate_one(obs$catch, plus_age, sum)
+  obs$index <- .aggregate_one(obs$index, plus_age, sum, groups = c("year", "survey"))
+  obs
 
 }
 
@@ -277,7 +274,8 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #' - Inputs are expected as a list with components `catch`, `index`, `weight`,
 #'   and `maturity`. Each must include columns `year`, `age`, and a value column
 #'   named `obs`. Rename any differently named input columns before calling. See
-#'   [cod_obs] for an example of the required structure.
+#'   [cod_obs] for an example of the required structure. The optional
+#'   `pop_covariates` table supplies population formula inputs; see [as_tam_data()].
 #' - Catch, weight, and maturity must already contain exactly one row per
 #'   year-age combination across the input range. Survey tables may be sparse.
 #' - A combined observation table is created for catch and index; `log(0)` is
@@ -315,7 +313,7 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #'   terms are recorded separately in `q_terms`. Their unique states and process
 #'   parameters are added by [make_par()], rather than treated as ordinary columns.
 #' - If `M_settings$mu_form` is provided, `M_modmat <- model.matrix(mu_form,
-#'   data = obs$weight)` and the resulting coefficients are parameters `mu_m`.
+#'   data = data$pop_covariates)` and the resulting coefficients are parameters `mu_m`.
 #'   These coefficients are applied on the log scale to build \eqn{M}, but
 #'   retain the `mu_` prefix to emphasize they can be positive or negative.
 #'   If `mu_supplied` is also provided, the intercept in `mu_form` is dropped
@@ -377,7 +375,7 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #' @param N_settings A list with elements:
 #' - `rec_form`: recruitment formula, default `~ rw(year)`. Use one of [iid()],
 #'   [rw()], or [ar1()] on `year`, optionally with fixed covariates from
-#'   `obs$maturity` at the youngest modeled age. First-year recruitment remains
+#'   `data$pop_covariates` at the youngest modeled age. First-year recruitment remains
 #'   a freely estimated fixed anchor; `process` below controls older cohorts.
 #'   [bh()] and [ricker()] add a median stock-recruit curve with IID/AR1
 #'   residuals. See [recruitment_formulas] for lags, boundary states and units.
@@ -391,7 +389,7 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #'   IID survivorship residuals and separate SD `sd_n0`. See **Details**.
 #' - `sd_form`: ordinary formula for log SD of older-age survival residuals,
 #'   default `~ 1`. Use `~ factor(age)` or a supplied age-sharing column in
-#'   `obs$weight`. Its design must be constant across years. Recruitment and
+#'   `data$pop_covariates`. Its design must be constant across years. Recruitment and
 #'   initial-abundance SDs remain separate. Random-effect SD terms are not enabled.
 #' @param F_settings A list with elements:
 #' - `process`: `"iid"` for independent departures from the mean log F,
@@ -401,11 +399,11 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #'   annual increments at neighbouring ages. It estimates one signed age
 #'   correlation; its SD is the marginal SD of annual log-F increments.
 #' - `sd_form`: ordinary age-based formula for log process SD, default `~ 1`,
-#'   evaluated on `obs$weight`. Sharing an SD does not share latent F states.
+#'   evaluated on `data$pop_covariates`. Sharing an SD does not share latent F states.
 #'   IID SDs describe residuals; RW/correlated-RW SDs describe annual increments;
 #'   stationary AR1 retains its innovation-scale convention.
 #' - `mu_form`: an optional formula for mean-\eqn{F} (coefficients estimated as
-#'   **log-scale** parameters `log_mu_f`). Required for `"iid"` and `"ar1"`;
+#'   **log-scale** parameters `log_mu_f`), evaluated on `data$pop_covariates`. Required for `"iid"` and `"ar1"`;
 #'   use `~ 1` for one estimated mean level or `~ factor(age)` for age-specific
 #'   means. For `"rw"`, `NULL` is allowed. Mean columns constant through time
 #'   cancel from RW increments and are removed with a warning. Remaining
@@ -419,10 +417,10 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #' - `process`: `"off"` uses only supplied/mean M. Otherwise `"iid"`, `"rw"`,
 #'   and `"ar1"` have the same meanings as for F, on selected years/age blocks.
 #' - `sd_form`: ordinary age-based formula for log process SD, default `~ 1`.
-#'   Evaluated on `obs$weight` and required to be constant within each fitted M
+#'   Evaluated on `data$pop_covariates` and required to be constant within each fitted M
 #'   age block and across years. Use finer age_breaks for distinct state SDs.
 #' - `mu_form`: optional formula for mean-\eqn{M} (applied on the log scale) built
-#'   on `obs$weight`, yielding coefficients `mu_m`. These enter the log-\eqn{M}
+#'   on `data$pop_covariates`, yielding coefficients `mu_m`. These enter the log-\eqn{M}
 #'   surface directly and may therefore be positive or negative; they intentionally
 #'   avoid a `log_` prefix to prevent automatic back-transformation when tidied.
 #'   If provided together with `mu_supplied`, the intercept in `mu_form` is
@@ -432,7 +430,7 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #'   time. All mean components must be constant within fitted M age blocks.
 #' - `mu_supplied`: optional one-sided formula giving supplied (non-estimated)
 #'   \eqn{M}, e.g. `~ I(0.2)` or a column reference such as
-#'   `~ M_assumption` stored in the `obs$weight` data.frame.
+#'   `~ M_assumption` stored in the `data$pop_covariates` data.frame.
 #' - `age_breaks`: optional integer break points used by [cut_ages()] to
 #'   define `age_blocks` sharing absolute latent M states across ages.
 #'   When a narrower set of `age_breaks` than modeled `ages` is provided,
@@ -563,7 +561,7 @@ prepare_tam <- function(
     ))
   }
 
-  check_obs(obs)
+  check_tam_data(obs)
 
   for (nm in c("years", "ages")) {
     x <- get(nm)
@@ -574,8 +572,8 @@ prepare_tam <- function(
   }
 
   ## Subset obs
-  all_obs_years <- sort(unique(unlist(lapply(obs, `[[`, "year"))))
-  all_obs_ages  <- sort(unique(unlist(lapply(obs, `[[`, "age"))))
+  all_obs_years <- sort(unique(unlist(lapply(obs[c("catch", "index", "weight", "maturity")], `[[`, "year"))))
+  all_obs_ages  <- sort(unique(unlist(lapply(obs[c("catch", "index", "weight", "maturity")], `[[`, "age"))))
   dat$years <- if (is.null(years)) seq(min(all_obs_years), max(all_obs_years)) else as.integer(years)
   dat$ages <- if (is.null(ages)) seq(min(all_obs_ages), max(all_obs_ages)) else as.integer(ages)
   if (min(dat$years) < min(all_obs_years) ||
@@ -611,6 +609,7 @@ prepare_tam <- function(
     d_sub[order(d_sub$age, d_sub$year), ] |>
       droplevels()
   }), names(dat$obs))
+  attributes(dat$obs) <- attributes(obs)
   dat$is_proj <- rep(FALSE, length(dat$years))
   if (length(dat$years) < 2L) {
     cli::cli_abort("At least two historical years are required for recruitment and cohort transitions.")
@@ -649,6 +648,10 @@ prepare_tam <- function(
       dat$obs[[nm]]$is_proj <- FALSE
     }
   }
+
+  dat$pop_data <- if (is.null(dat$obs$pop_covariates)) {
+    expand.grid(year = dat$years, age = dat$ages)
+  } else dat$obs$pop_covariates
 
   dat$N_settings$init <- match.arg(dat$N_settings$init, c("exp", "free", "random"))
   if (length(dat$ages) < 2L) {
@@ -786,11 +789,11 @@ prepare_tam <- function(
     dat$F_modmat <- mean_design$matrix
     dat$F_terms <- mean_design$terms
     .check_mean_terms(dat, "F")
-    if (nrow(dat$F_modmat) != nrow(dat$obs$catch) ||
+    if (nrow(dat$F_modmat) != nrow(dat$pop_data) ||
         any(!is.finite(dat$F_modmat)) || !ncol(dat$F_modmat)) {
       cli::cli_abort("F_settings$mu_form must produce a finite, non-empty design for every modeled year and age.")
     }
-    historical <- dat$F_modmat[!dat$obs$catch$is_proj, , drop = FALSE]
+    historical <- dat$F_modmat[!dat$is_proj[match(dat$pop_data$year, dat$years)], , drop = FALSE]
     if (qr(historical)$rank < ncol(historical)) {
       cli::cli_abort("F_settings$mu_form has a rank-deficient historical design. Remove redundant terms.")
     }
@@ -832,7 +835,7 @@ prepare_tam <- function(
     dat$M_modmat <- 0
   }
   if (!is.null(dat$M_settings$mu_supplied)) {
-    dat$log_mu_supplied_m <- .log_supplied(dat$M_settings$mu_supplied, dat$obs$weight, "M mu_supplied")
+    dat$log_mu_supplied_m <- .log_supplied(dat$M_settings$mu_supplied, .population_data(dat, dat$M_settings$mu_supplied, "M_settings$mu_supplied"), "M mu_supplied")
   } else {
     dat$log_mu_supplied_m <- 0
   }
@@ -842,10 +845,10 @@ prepare_tam <- function(
 
   # model.matrix() can silently omit rows with missing covariates.
   design_tables <- c(sd_catch_modmat = "catch", sd_index_modmat = "index",
-                     q_modmat = "index", F_modmat = "catch", M_modmat = "weight")
+                     q_modmat = "index", F_modmat = "population", M_modmat = "population")
   for (nm in names(design_tables)) {
     x <- dat[[nm]]
-    if (is.matrix(x) && (nrow(x) != nrow(dat$obs[[design_tables[[nm]]]]) ||
+    if (is.matrix(x) && (nrow(x) != nrow(if (design_tables[[nm]] == "population") dat$pop_data else dat$obs[[design_tables[[nm]]]]) ||
         any(!is.finite(x)))) {
       cli::cli_abort("{nm} must have one finite row per observation. Check for missing or non-finite formula covariates.")
     }

@@ -27,7 +27,7 @@ The default \code{~ rw(year)} retains tinyAM's original recruitment random walk.
 }
 \details{
 Use exactly one \code{\link[=iid]{iid()}}, \code{\link[=rw]{rw()}}, or \code{\link[=ar1]{ar1()}} residual term on \code{year}, without
-\code{by} grouping. Ordinary covariates are read from \code{obs$maturity} at the youngest
+\code{by} grouping. Ordinary covariates are read from \code{data$pop_covariates} at the youngest
 modeled age; their values at older ages may be \code{NA}. Covariates refer to the
 recruitment year. Construct lagged or standardized columns explicitly.
 Covariate coefficients are estimated; \code{offset()} terms are not supported.
@@ -76,7 +76,7 @@ can obscure the relationship. Inspect \code{\link[=check_tam]{check_tam()}} and 
 ~ iid(year)
 ~ bh(ssb) + iid(year)
 ~ ricker(ssb, lag = 2) + ar1(year)
-# Add temperature to obs$maturity at the youngest modeled age, then use:
+# Add temperature to data$pop_covariates at the youngest modeled age, then use:
 ~ bh(ssb) + temperature + iid(year)
 # Runnable fitting examples are in inst/examples/example_recruitment.R.
 }

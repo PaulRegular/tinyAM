@@ -20,7 +20,7 @@ catch_1978 <- source_data$inputs[
     source_data$inputs$measure == "numbers_at_age" &
     source_data$inputs$year == 1978,
 ]
-m_surface <- translated$obs$weight
+m_surface <- translated$obs$pop_covariates
 m_2022 <- m_surface[m_surface$year == 2022, c("age", "M_assumption")]
 
 stopifnot(

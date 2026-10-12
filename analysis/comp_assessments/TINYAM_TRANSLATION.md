@@ -92,7 +92,7 @@ Keep the routine workflow small:
 
 - one R driver loads the database and loops over stock specifications;
 - `database_to_tam_obs.R` creates the observation list, adds numerical M to
-  `obs$weight$M_assumption`, and records the source M treatment;
+  `obs$pop_covariates$M_assumption`, and records the source M treatment;
 - `database_to_tam_ref.R` creates an assessment reference from recorded outputs;
 - one small R script per stock prepares observations, shows a literal
   `fit_tam()` call, and defines background and comparison metadata at top level.
@@ -223,11 +223,12 @@ obs <- list(
   catch = ...,
   index = ...,
   weight = ...,
-  maturity = ...
+  maturity = ...,
+  pop_covariates = ...
 )
 ```
 
-Every component contains:
+The four observation and biological tables contain:
 
 ``` text
 year
@@ -248,13 +249,26 @@ settings. The analysis-local database translator adds `q_block` for age and
 whether catchability is shared across surveys or estimated separately.
 
 `database_to_tam_obs()` incorporates a numerical M assumption in
-`obs$weight$M_assumption`; its M translation helper is defined in that same
+`obs$pop_covariates$M_assumption`; its M translation helper is defined in that same
 file, so there is no separate M converter to source. When the database has
 relative index-SD inputs, the converter joins them to the matching survey,
 year, and age rows as `relative_sd` for an explicit `sd_supplied` setting.
 `M_settings$mu_supplied` can then reference `~ M_assumption`.
 `M_settings` determines whether mortality is fixed or has an estimated process;
-there is no fifth M observation table or new observation class.
+M is a population input, not an additional likelihood observation.
+
+The converter returns a `tam_data` list. Its optional `pop_covariates` table
+contains one row per input year and age and supplies all variables referenced
+by N/F/M formulas, including supplied M, process-SD groups and recruitment
+covariates. It requires `year` and `age`, not `obs`. Missing values are allowed
+where unused; recruitment covariates are read at the youngest modeled age.
+Population formulas do not search observation or biological tables for columns.
+
+For a model plus group, use the explicit terminal-age covariate row rather than
+averaging or summing covariates. Projections carry terminal values forward by
+age. Catch/index SD and q covariates remain in their observation tables; weight,
+maturity and spawning timing remain supplied biology. Plain lists also work,
+and `check_tam_data()` validates either representation.
 
 ------------------------------------------------------------------------
 
@@ -599,7 +613,7 @@ All translated maturity values must lie in `[0,1]`.
 
 A defensible baseline or mean M representation is required to fit tinyAM.
 `database_to_tam_obs()` includes its numerical values in
-`obs$weight$M_assumption`; `M_settings` specifies how those values enter the
+`obs$pop_covariates$M_assumption`; `M_settings` specifies how those values enter the
 model. The converter must distinguish a source-supplied M surface from an
 explicitly chosen baseline for a tinyAM approximation.
 
@@ -1152,7 +1166,7 @@ below apply after the recipe and settings are available.
 ## Natural mortality
 
 - a defensible baseline/mean M representation;
-- numerical supplied values included in `obs$weight$M_assumption` when used;
+- numerical supplied values included in `obs$pop_covariates$M_assumption` when used;
 - explicit treatment of source-estimated M and any missing source assumptions.
 
 ## Validation

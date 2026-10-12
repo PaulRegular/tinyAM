@@ -51,11 +51,12 @@ test_that("biological inputs retain all hidden ages and project each age separat
   expect_identical(tinyAM:::.plus_fun(obs, 4)$weight, obs$weight)
   expect_identical(tinyAM:::.plus_fun(obs, 4)$maturity, obs$maturity)
   # Retained biological ages must not introduce unused M formula coefficients.
-  obs$weight$bio_age <- factor(obs$weight$age)
+  obs$pop_covariates <- obs$weight[c("year", "age")]
+  obs$pop_covariates$bio_age <- factor(obs$pop_covariates$age)
   modeled <- prepare_tam(obs, ages = 2:4,
     M_settings = list(process = "off", mu_form = ~ bio_age, mu_supplied = NULL),
     index_settings = list(q_form = ~ 1, sd_form = ~ 1, fill_missing = TRUE))
-  expect_equal(levels(modeled$obs$weight$bio_age), as.character(2:4))
+  expect_equal(levels(modeled$obs$pop_covariates$bio_age), as.character(2:4))
   expect_equal(ncol(modeled$M_modmat), 3)
   expect_equal(length(make_par(modeled)$mu_m), 3)
 })

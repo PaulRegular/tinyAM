@@ -10,7 +10,7 @@ forcing F to return to an average level. \code{"rw"} retains independent changes
 
 \code{sd_form} in N, F and M settings describes how much process variation is
 allowed at each age. For example, \code{~ age_group} estimates shared SDs for
-user-defined age groups stored in \code{data$weight}; it does not pool abundance
+user-defined age groups stored in \code{data$pop_covariates}; it does not pool abundance
 or mortality states. Start with few groups and examine their uncertainty.
 Ordinary numeric and categorical age-based terms are supported. Temporal
 SDs and random-effect SD terms are not enabled for these latent processes.
@@ -60,7 +60,7 @@ especially when estimating M variability from limited mortality information.
 \examples{
 data <- cod_obs
 data$maturity$spawn_time <- 0.25
-data$weight$age_group <- factor(ifelse(data$weight$age < 6, "young", "older"))
+data$pop_covariates$age_group <- factor(ifelse(data$pop_covariates$age < 6, "young", "older"))
 dat <- prepare_tam(data,
   F_settings = list(process = "cor_rw", sd_form = ~ age_group),
   N_settings = list(process = "iid", sd_form = ~ 1))

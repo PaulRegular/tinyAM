@@ -7,50 +7,24 @@
 #' This is intended for vignettes, examples, and tests.
 #'
 #' @format
-#' A named list of four data frames:
+#' A `tam_data` list containing five data frames:
 #'
-#' - **catch**: commercial catch-at-age observations and blocking variables.
-#'   Columns:
-#'   - `year`: numeric calendar year.
-#'   - `age`: numeric age (years).
-#'   - `obs`: numeric observed catch in numbers (thousands; may include `NA`).
-#'   - `F_y_block`: factor; year blocks for fishing-mortality mean structure
-#'     (e.g., `"1954-1991"`, `"1992-1997"`, ...).
-#'   - `F_a_block`: factor; age blocks for fishing-mortality mean structure
-#'     (e.g., `"0-1"`, `"2-3"`, ...).
-#'
-#' - **index**: survey (index) observations and blocking variables.
-#'   Columns:
-#'   - `year`: integer year.
-#'   - `age`: numeric age (years).
-#'   - `obs`: numeric survey index-at-age (may include `NA`).
-#'   - `survey`: character or factor; survey name for catchability blocks and labeling plots.
-#'   - `samp_time`: numeric sampling time within the year (fraction of a year; e.g., `0.8`).
-#'   - `q_block`: factor; age blocks for catchability.
-#'
-#' - **weight**: weight-at-age and mortality assumption used for \eqn{M} mean structure.
-#'   Columns:
-#'   - `year`: integer year.
-#'   - `age`: numeric age (years).
-#'   - `obs`: numeric stock weight-at-age (kg).
-#'   - `M_assumption`: numeric assumed natural mortality level by age-year
-#'     (used when constructing `M` mean via formula).
-#'
-#' - **maturity**: maturity-at-age (proportion mature). An optional `spawn_time`
-#'   column can supply spawning fractions; it is not present in this example.
-#'   Columns:
-#'   - `year`: numeric year.
-#'   - `age`: numeric age (years).
-#'   - `obs`: numeric proportion mature (0-1).
+#' - **catch**: `year`, `age`, and catch numbers `obs` (thousands; may be missing).
+#' - **index**: `year`, `age`, survey abundance `obs` (thousands), `survey`,
+#'   sampling fraction `samp_time`, and catchability age group `q_block`.
+#' - **weight**: `year`, `age`, and stock weight `obs` (kg per fish).
+#' - **maturity**: `year`, `age`, and proportion mature `obs` (0-1).
+#'   Optional spawning timing is not supplied in this example.
+#' - **pop_covariates**: `year`, `age`, fishing-mortality mean blocks
+#'   `F_y_block` and `F_a_block`, `NCAM_M_assumption`, and
+#'   `allometric_M_assumption` (natural mortality rates per year).
 #'
 #' @details
-#' The object was assembled by:
-#'
-#' 1. Converting NCAM arrays to tidy data frames.
-#' 2. Creating blocking variables for `F` by year (`F_y_block`) and age
-#'    (`F_a_block`) using [cut_years()] and [cut_ages()].
-#' 3. Joining weight-at-age with a natural mortality assumption column
-#'    (`M_assumption`) derived from `NCAM::inputs$nm`.
+#' NCAM inputs are converted to year-age tables. Population blocks and mortality
+#' assumptions are kept separately from observations and supplied biology.
+#' The allometric assumption follows the weight exponent in Lorenzen (1996),
+#' scaled to mean M of 0.30 across ages 5-14. See `data-raw/cod_obs.R` for
+#' construction and [as_tam_data()] for the table roles.
 #'
 #' @source
 #' Derived from the \pkg{NCAM} example inputs
@@ -60,9 +34,8 @@
 #' data(cod_obs)
 #' names(cod_obs)
 #'
-#' # Peek at catch blocks
-#' head(cod_obs$catch)
-#' with(cod_obs$catch, table(F_y_block, F_a_block))
+#' cod_obs
+#' head(cod_obs$pop_covariates)
 #'
 #' @docType data
 #' @keywords datasets
@@ -72,7 +45,7 @@
 
 
 
-#' Check the structure of a TAM obs list
+#' Check tinyAM input data
 #'
 #' @description
 #' Validates the minimal structure required by [prepare_tam()] and [fit_tam()].
@@ -97,7 +70,7 @@
 #' On failure the function aborts with a `cli` error. On success, it returns
 #' `TRUE` (invisibly).
 #'
-#' @param obs A named list expected to contain data.frames `catch`, `index`,
+#' @param data A named list expected to contain data.frames `catch`, `index`,
 #'   `weight`, and `maturity` with the columns described above.
 #'
 #' @return `TRUE` (invisibly) if validation passes; otherwise aborts.
@@ -107,12 +80,17 @@
 #'
 #' @importFrom cli cli_abort cli_warn
 #' @export
-check_obs <- function(obs) {
+check_tam_data <- function(data) {
+  obs <- data
   if (!is.list(obs)) {
     cli::cli_abort(c(
       "{.strong Invalid input}",
       "x" = "`obs` must be a list."
     ))
+  }
+
+  if (is.null(names(obs)) || anyNA(names(obs)) || any(!nzchar(names(obs))) || anyDuplicated(names(obs))) {
+    cli::cli_abort("data must have unique, nonempty table names.")
   }
 
   required_tabs <- c("catch", "index", "weight", "maturity")
@@ -211,14 +189,27 @@ check_obs <- function(obs) {
 
   for (nm in required_tabs) check_one(obs[[nm]], nm)
 
-  # global year/age range (min..max), then require full grid in chosen tables
-  obs_years <- unlist(lapply(obs, function(d) d$year))
-  obs_ages  <- unlist(lapply(obs, function(d) d$age))
+  # Covariates cannot change the range supplied by observations and biology.
+  obs_years <- unlist(lapply(obs[required_tabs], function(d) d$year))
+  obs_ages  <- unlist(lapply(obs[required_tabs], function(d) d$age))
   years <- seq.int(min(obs_years, na.rm = TRUE), max(obs_years, na.rm = TRUE))
   ages  <- seq.int(min(obs_ages,  na.rm = TRUE), max(obs_ages,  na.rm = TRUE))
   grid_size <- length(years) * length(ages)
 
-  must_be_full <- c("catch", "weight", "maturity")
+  if (!is.null(obs$pop_covariates)) {
+    d <- obs$pop_covariates
+    if (!is.data.frame(d) || !all(c("year", "age") %in% names(d))) {
+      cli::cli_abort("pop_covariates must be a data.frame with year and age columns.")
+    }
+    if (!.is_integerish(d$year) || !.is_integerish(d$age)) {
+      cli::cli_abort("pop_covariates year and age must be finite numeric integer values.")
+    }
+    if (any(!d$year %in% years) || any(!d$age %in% ages)) {
+      cli::cli_abort("pop_covariates must use the year-age range supplied by catch, index, weight and maturity.")
+    }
+  }
+  must_be_full <- c("catch", "weight", "maturity",
+                    if (!is.null(obs$pop_covariates)) "pop_covariates")
   for (nm in must_be_full) {
     if (anyDuplicated(obs[[nm]][, c("year", "age")])) {
       cli::cli_abort("{.arg {nm}} must have exactly one row per year and age; duplicate rows would misalign the model surfaces.")
@@ -236,14 +227,14 @@ check_obs <- function(obs) {
   invisible(TRUE)
 }
 
-#' Check tinyAM input data
+#' Check the structure of a TAM obs list
 #'
-#' A direct alias of [check_obs()] with identical arguments and validation.
-#' @inheritParams check_obs
-#' @inherit check_obs details
+#' A convenience wrapper for [check_tam_data()].
+#' @param obs A named list of tinyAM input tables.
+#' @inherit check_tam_data details
 #' @return `TRUE` (invisibly) if validation passes; otherwise aborts.
 #' @examples
 #' check_tam_data(cod_obs)
 #' @export
-check_tam_data <- check_obs
+check_obs <- function(obs) check_tam_data(obs)
 

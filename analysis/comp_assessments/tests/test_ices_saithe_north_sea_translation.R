@@ -19,7 +19,7 @@ inputs <- source_data$inputs
 outputs <- source_data$outputs
 m_expected <- c(.384, .335, .294, .259, .232, .212, .197, .177)
 m_actual <- vapply(translated$ages, function(age) {
-  unique(translated$obs$weight$M_assumption[
+  unique(translated$obs$pop_covariates$M_assumption[
     translated$obs$weight$age == age
   ])
 }, numeric(1))

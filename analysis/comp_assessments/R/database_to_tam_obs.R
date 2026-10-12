@@ -834,6 +834,7 @@ database_to_tam_obs <- function(assessment_id, inputs, years = NULL, ages = NULL
     source_weights, years, NULL, "Index weight-at-age"
   )
   weight <- .translation_surface(selected_weight_source, years, ages, "Weight-at-age")
+  pop_covariates <- weight[c("year", "age")]
   m_translation <- database_to_tam_M(assessment_id, inputs, assumptions,
                                      years = years, ages = ages)
   if (!is.null(m_translation$surface)) {
@@ -841,7 +842,7 @@ database_to_tam_obs <- function(assessment_id, inputs, years = NULL, ages = NULL
     m_surface_key <- .translation_key(m_translation$surface, c("year", "age"))
     m_index <- match(m_key, m_surface_key)
     if (anyNA(m_index)) .translation_abort("Numerical M does not match the translated year-age grid.")
-    weight$M_assumption <- m_translation$surface$M_assumption[m_index]
+    pop_covariates$M_assumption <- m_translation$surface$M_assumption[m_index]
   }
   maturity <- .translation_surface(.translation_repeat_biology(
     maturity_source, years, maturity_reference_year, "Maturity-at-age"),
@@ -860,7 +861,8 @@ database_to_tam_obs <- function(assessment_id, inputs, years = NULL, ages = NULL
   index$q_block <- factor(index$age, levels = ages)
   index$q_key <- interaction(index$survey, index$q_block, drop = TRUE,
                              lex.order = TRUE)
-  obs <- list(catch = catch, index = index, weight = weight, maturity = maturity)
+  obs <- list(catch = catch, index = index, weight = weight, maturity = maturity,
+              pop_covariates = pop_covariates)
   index_provenance <- attr(index, "translation")
   source_provenance <- rbind(
     catch_translation$provenance,
@@ -936,15 +938,14 @@ database_to_tam_obs <- function(assessment_id, inputs, years = NULL, ages = NULL
   )
   attr(obs$index, "translation") <- NULL
 
-  if (requireNamespace("tinyAM", quietly = TRUE)) tinyAM::check_obs(obs)
-  obs
+  tinyAM::as_tam_data(obs)
 }
 
 
 #' Translate a numerical natural-mortality input for tinyAM
 #'
 #' A fixed numerical M surface can be supplied to tinyAM after joining the
-#' returned `surface` to `obs$weight`. When the accepted assessment estimates M,
+#' returned `surface` to `obs$pop_covariates`. When the accepted assessment estimates M,
 #' this helper reports that structure but does not substitute fitted M outputs
 #' or choose a simplified M process.
 #'

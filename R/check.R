@@ -166,13 +166,14 @@ check_tam <- function(fit, grad_tol = NULL, detailed = FALSE) {
 .check_tam_structure <- function(dat, parameter_map = list()) {
   out <- data.frame(check = character(), status = character(), detail = character())
   designs <- c(q_modmat = "index", sd_index_modmat = "index",
-               sd_catch_modmat = "catch", F_modmat = "catch", M_modmat = "weight")
+               sd_catch_modmat = "catch", F_modmat = "population", M_modmat = "population")
   parameters <- c(q_modmat = if (identical(dat$index_settings$q_link, "logit")) "logit_q" else "log_q",
                   sd_index_modmat = "log_sd_index", sd_catch_modmat = "log_sd_catch",
                   F_modmat = "log_mu_f", M_modmat = "mu_m")
   for (nm in names(designs)) {
     x <- dat[[nm]]
-    d <- dat$obs[[designs[[nm]]]]
+    d <- if (designs[[nm]] == "population") dat$pop_data else dat$obs[[designs[[nm]]]]
+    if (!is.null(d) && designs[[nm]] == "population") d$is_proj <- dat$is_proj[match(d$year, dat$years)]
     if (!is.matrix(x) || is.null(d)) next
     mapped <- parameter_map[[parameters[[nm]]]]
     if (!is.null(mapped)) x <- x[, !is.na(mapped), drop = FALSE]

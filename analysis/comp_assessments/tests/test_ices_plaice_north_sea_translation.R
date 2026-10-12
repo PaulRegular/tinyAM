@@ -32,7 +32,7 @@ stopifnot(
          translated$obs$index$year == 2003L),
   all(translated$obs$index$samp_time[translated$obs$index$survey == "IBTS Q1"] == .125),
   all(translated$obs$index$samp_time[translated$obs$index$survey != "IBTS Q1"] == .75),
-  all(is.finite(translated$obs$weight$M_assumption)),
+  all(is.finite(translated$obs$pop_covariates$M_assumption)),
   identical(dat$N_settings$process, "iid"),
   identical(dat$F_settings$process, "rw"),
   identical(dat$F_settings$mean_ages, 2:6),

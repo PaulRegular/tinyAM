@@ -53,13 +53,13 @@ for (id in c("afsc_pollock_ebs_2024", "ices_haddock_north_sea_2026", "ices_plaic
     stock$obs$maturity$spawn_time <- .25
     list(spawning_time = list())
   } else if (id == "ices_haddock_north_sea_2026") {
-    stock$obs$weight$N_sd_group <- factor(ifelse(stock$obs$weight$age == 8, "plus", "older"))
+    stock$obs$pop_covariates$N_sd_group <- factor(ifelse(stock$obs$pop_covariates$age == 8, "plus", "older"))
     list(correlated_F = list(F_settings = list(process = "cor_rw")),
       grouped_N_SD = list(N_settings = list(process = "iid", init = "free", sd_form = ~ N_sd_group)))
   } else {
     # Published keyVarF: 0 1 2 2 2 2 2 3 3 3 (ages 1:10).
     keys <- c(0, 1, 2, 2, 2, 2, 2, 3, 3, 3)
-    stock$obs$weight$F_sd_group <- factor(keys[match(stock$obs$weight$age, 1:10)])
+    stock$obs$pop_covariates$F_sd_group <- factor(keys[match(stock$obs$pop_covariates$age, 1:10)])
     list(correlated_F = list(F_settings = list(process = "cor_rw", mean_ages = 2:6)),
       grouped_F_SD = list(F_settings = list(process = "rw", mean_ages = 2:6, sd_form = ~ F_sd_group)))
   }

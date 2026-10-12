@@ -19,7 +19,8 @@
   if (walk(formula[[2L]]) || "year" %in% all.vars(formula)) {
     cli::cli_abort("{label} supports ordinary age-based formulas, not temporal or random-effect SD terms.")
   }
-  d <- dat$obs$weight
+  d <- .population_data(dat, formula, label)
+  d$is_proj <- dat$is_proj[match(d$year, dat$years)]
   active <- if (component == "N") dat$ages[-1L] else if (component == "M") {
     as.numeric(names(settings$age_blocks))
   } else dat$ages

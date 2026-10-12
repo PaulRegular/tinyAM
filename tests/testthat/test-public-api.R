@@ -10,13 +10,13 @@ test_that("prepare_tam and fit_tam expose the same data and model arguments", {
   dat <- prepare_tam(data = cod_obs, years = 2000:2005, ages = 2:6)
   expect_true("obs" %in% names(dat))
   expect_false("data" %in% names(dat))
-  expect_true(all(vapply(dat$obs, function(x) "obs" %in% names(x), logical(1))))
+  expect_true(all(vapply(dat$obs[c("catch", "index", "weight", "maturity")], function(x) "obs" %in% names(x), logical(1))))
   expect_error(prepare_tam(obs = cod_obs), "unused argument")
   expect_error(fit_tam(obs = cod_obs), "unused argument")
 })
 
-test_that("check_tam_data is exactly the existing validator", {
-  expect_identical(check_tam_data, check_obs)
+test_that("both input validators use the same checks", {
+  expect_identical(check_tam_data(cod_obs), check_obs(cod_obs))
   expect_invisible(check_tam_data(cod_obs))
   invalid <- cod_obs
   invalid$index$samp_time[1] <- 2

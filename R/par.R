@@ -228,7 +228,7 @@ make_par <- function(dat) {
     # Every mean component must be constant within a shared absolute M state.
     mean_parts <- cbind(log_mu_supplied_m, M_modmat)
     for (term in dat$M_terms) {
-      mean_parts <- cbind(mean_parts, .q_term_design(term, nrow(dat$obs$weight)))
+      mean_parts <- cbind(mean_parts, .q_term_design(term, nrow(dat$pop_data)))
     }
     for(b in levels(M_settings$age_blocks)) {
       if (sum(M_settings$age_blocks == b) > 1) {

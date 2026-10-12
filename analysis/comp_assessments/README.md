@@ -43,7 +43,7 @@ source("analysis/comp_assessments/scripts/database/003_observation_readiness.R")
 
 `observation_readiness.csv` is an observation/data readiness screen: it reports input
 coverage, whether observation translation succeeds, and whether
-`tinyAM::check_obs()` passes. It does not load each stock recipe or call
+`tinyAM::check_tam_data()` passes. It does not load each stock recipe or call
 `prepare_tam()`; recipe-level model readiness is checked during translation. A
 ready observation object does not guarantee model convergence.
 
@@ -53,7 +53,10 @@ Open `scripts/translation/run_stock.R`, set `assessment_id`, then source it. It
 loads the working-tree database, fits the selected stock script and opens a
 temporary dashboard comparing tinyAM with the Accepted assessment. Observations,
 years, ages, fit, background and the `assessment` comparison context remain in
-your workspace. Each stock script retains its visible `fit_tam()` call.
+your workspace. Each stock script retains its visible `fit_tam()` call. Observations are a
+`tam_data` list; population formula columns belong in `obs$pop_covariates`.
+Catch/index covariates describe observation SD and q, while weight, maturity
+and spawning timing stay in their biological tables.
 
 Edit and rerun the stock script's Model section, or update the current fit. Then
 rerun the Preview line in `run_stock.R`:
