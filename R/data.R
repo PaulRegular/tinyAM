@@ -61,7 +61,7 @@ print.tam_data <- function(x, n = 5, ...) {
         preview <- format(as.data.frame(preview), ...)
         separator <- preview[1L, , drop = FALSE]
         separator[] <- "\u22ee"
-        rownames(separator) <- "..."
+        rownames(separator) <- "\u22ee"
         preview <- rbind(preview[seq_len(n), , drop = FALSE], separator,
                          preview[seq.int(n + 1L, nrow(preview)), , drop = FALSE])
       }
