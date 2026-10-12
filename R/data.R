@@ -56,7 +56,16 @@ print.tam_data <- function(x, n = 5, ...) {
       cli::cli_text("Years {min(d$year)}\u2013{max(d$year)}; ages {min(d$age)}\u2013{max(d$age)}")
       rows <- if (nrow(d) <= 2 * n) seq_len(nrow(d)) else
         c(seq_len(n), seq.int(nrow(d) - n + 1L, nrow(d)))
-      print(d[rows, , drop = FALSE], ...)
+      preview <- d[rows, , drop = FALSE]
+      if (nrow(d) > 2 * n) {
+        preview <- format(as.data.frame(preview), ...)
+        separator <- preview[1L, , drop = FALSE]
+        separator[] <- "\u22ee"
+        rownames(separator) <- "..."
+        preview <- rbind(preview[seq_len(n), , drop = FALSE], separator,
+                         preview[seq.int(n + 1L, nrow(preview)), , drop = FALSE])
+      }
+      print(preview, ...)
     }
   }
   invisible(x)

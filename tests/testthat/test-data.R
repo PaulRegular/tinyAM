@@ -112,3 +112,17 @@ test_that("updates retain population covariates", {
   expect_equal(unique(subset(projected$dat$pop_data, is_proj)$year), 2021)
   expect_identical(levels(projected$dat$pop_data$F_a_block), levels(changed$dat$pop_data$F_a_block))
 })
+
+test_that("data previews separate head and tail with vertical dots in every column", {
+  table <- data.frame(year = 2000:2005, age = 1:6, group = factor(letters[1:6]))
+  x <- structure(list(example = table), class = c("tam_data", "list"))
+  original <- x
+  text <- capture.output(print(x, n = 2))
+  pattern <- "\u22ee|<U\\+22EE>"
+  separator <- text[grepl(pattern, text)]
+  expect_length(separator, 1L)
+  expect_length(regmatches(separator, gregexpr(pattern, separator))[[1L]], ncol(table))
+  expect_identical(x, original)
+  text <- capture.output(print(x, n = 3))
+  expect_false(any(grepl(pattern, text)))
+})
