@@ -73,11 +73,14 @@
   if (!is.null(curve) && rec$type == "rw") cli::cli_abort("Stock-recruit curves currently support IID or AR1 residuals, not RW residuals.")
   fixed_form <- form
   fixed_form[[2L]] <- if (is.null(ordinary)) 1 else ordinary
-  data <- dat$obs$maturity[dat$obs$maturity$age == min(dat$ages), , drop = FALSE]
+  data <- .population_data(dat, fixed_form, "N_settings$rec_form")
+  data <- data[data$age == min(dat$ages), , drop = FALSE]
   data <- data[match(dat$years, data$year), , drop = FALSE]
+  biology <- dat$obs$maturity[dat$obs$maturity$age == min(dat$ages), , drop = FALSE]
+  rownames(data) <- rownames(biology)[match(dat$years, biology$year)]
   variables <- all.vars(fixed_form)
   if ("ssb" %in% variables) cli::cli_abort("Use modeled ssb only inside bh() or ricker(); supply other annual covariates explicitly.")
-  if (any(!variables %in% names(data))) cli::cli_abort("Recruitment covariates must be columns of obs$maturity at the youngest modeled age.")
+  if (any(!variables %in% names(data))) cli::cli_abort("Recruitment covariates must be columns of data$pop_covariates at the youngest modeled age.")
   frame <- stats::model.frame(fixed_form, data, na.action = stats::na.pass)
   if (!is.null(stats::model.offset(frame))) {
     cli::cli_abort("Recruitment offset() terms are not supported; use an ordinary covariate term.")

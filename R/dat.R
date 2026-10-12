@@ -163,7 +163,7 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #'
 #' @noRd
 .add_proj_rows <- function(obs, n_proj = 3, n_mean = 3) {
-  max_year <- max(unlist(lapply(obs, `[[`, "year")))
+  max_year <- max(unlist(lapply(obs[c("catch", "index", "weight", "maturity")], `[[`, "year")))
   .add_one <- function(x, nm) {
     proj_years <- seq.int(max_year + 1L, max_year + n_proj)
     mean_years <- seq.int(max_year - n_mean + 1L, max_year)
@@ -171,7 +171,7 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
     if (nm %in% c("weight", "maturity")) {
       mean_obs <- stats::aggregate(obs ~ age, data = x[x$year %in% mean_years, ], FUN = mean)
       template$obs <- mean_obs$obs[match(template$age, mean_obs$age)]
-    } else {
+    } else if (nm != "pop_covariates") {
       template$obs <- NA_real_
     }
     proj_rows <- do.call(rbind, lapply(proj_years, function(year) {
@@ -230,12 +230,9 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
     }
   }
 
-  list(
-    catch = .aggregate_one(obs$catch, plus_age, sum),
-    index = .aggregate_one(obs$index, plus_age, sum, groups = c("year", "survey")),
-    weight = obs$weight,
-    maturity = obs$maturity
-  )
+  obs$catch <- .aggregate_one(obs$catch, plus_age, sum)
+  obs$index <- .aggregate_one(obs$index, plus_age, sum, groups = c("year", "survey"))
+  obs
 
 }
 
@@ -563,7 +560,7 @@ prepare_tam <- function(
     ))
   }
 
-  check_obs(obs)
+  check_tam_data(obs)
 
   for (nm in c("years", "ages")) {
     x <- get(nm)
@@ -574,8 +571,8 @@ prepare_tam <- function(
   }
 
   ## Subset obs
-  all_obs_years <- sort(unique(unlist(lapply(obs, `[[`, "year"))))
-  all_obs_ages  <- sort(unique(unlist(lapply(obs, `[[`, "age"))))
+  all_obs_years <- sort(unique(unlist(lapply(obs[c("catch", "index", "weight", "maturity")], `[[`, "year"))))
+  all_obs_ages  <- sort(unique(unlist(lapply(obs[c("catch", "index", "weight", "maturity")], `[[`, "age"))))
   dat$years <- if (is.null(years)) seq(min(all_obs_years), max(all_obs_years)) else as.integer(years)
   dat$ages <- if (is.null(ages)) seq(min(all_obs_ages), max(all_obs_ages)) else as.integer(ages)
   if (min(dat$years) < min(all_obs_years) ||
@@ -649,6 +646,10 @@ prepare_tam <- function(
       dat$obs[[nm]]$is_proj <- FALSE
     }
   }
+
+  dat$pop_data <- if (is.null(dat$obs$pop_covariates)) {
+    expand.grid(year = dat$years, age = dat$ages)
+  } else dat$obs$pop_covariates
 
   dat$N_settings$init <- match.arg(dat$N_settings$init, c("exp", "free", "random"))
   if (length(dat$ages) < 2L) {
@@ -786,11 +787,11 @@ prepare_tam <- function(
     dat$F_modmat <- mean_design$matrix
     dat$F_terms <- mean_design$terms
     .check_mean_terms(dat, "F")
-    if (nrow(dat$F_modmat) != nrow(dat$obs$catch) ||
+    if (nrow(dat$F_modmat) != nrow(dat$pop_data) ||
         any(!is.finite(dat$F_modmat)) || !ncol(dat$F_modmat)) {
       cli::cli_abort("F_settings$mu_form must produce a finite, non-empty design for every modeled year and age.")
     }
-    historical <- dat$F_modmat[!dat$obs$catch$is_proj, , drop = FALSE]
+    historical <- dat$F_modmat[!dat$is_proj[match(dat$pop_data$year, dat$years)], , drop = FALSE]
     if (qr(historical)$rank < ncol(historical)) {
       cli::cli_abort("F_settings$mu_form has a rank-deficient historical design. Remove redundant terms.")
     }
@@ -832,7 +833,7 @@ prepare_tam <- function(
     dat$M_modmat <- 0
   }
   if (!is.null(dat$M_settings$mu_supplied)) {
-    dat$log_mu_supplied_m <- .log_supplied(dat$M_settings$mu_supplied, dat$obs$weight, "M mu_supplied")
+    dat$log_mu_supplied_m <- .log_supplied(dat$M_settings$mu_supplied, .population_data(dat, dat$M_settings$mu_supplied, "M_settings$mu_supplied"), "M mu_supplied")
   } else {
     dat$log_mu_supplied_m <- 0
   }
@@ -842,10 +843,10 @@ prepare_tam <- function(
 
   # model.matrix() can silently omit rows with missing covariates.
   design_tables <- c(sd_catch_modmat = "catch", sd_index_modmat = "index",
-                     q_modmat = "index", F_modmat = "catch", M_modmat = "weight")
+                     q_modmat = "index", F_modmat = "population", M_modmat = "population")
   for (nm in names(design_tables)) {
     x <- dat[[nm]]
-    if (is.matrix(x) && (nrow(x) != nrow(dat$obs[[design_tables[[nm]]]]) ||
+    if (is.matrix(x) && (nrow(x) != nrow(if (design_tables[[nm]] == "population") dat$pop_data else dat$obs[[design_tables[[nm]]]]) ||
         any(!is.finite(x)))) {
       cli::cli_abort("{nm} must have one finite row per observation. Check for missing or non-finite formula covariates.")
     }

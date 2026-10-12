@@ -1,11 +1,13 @@
 # Mean effects use the same unique-state compiler and densities as q effects.
 .mean_formula_data <- function(dat, component) {
-  d <- dat$obs[[if (component == "F") "catch" else "weight"]]
+  d <- .population_data(dat)
+  d$is_proj <- dat$is_proj[match(d$year, dat$years)]
   d$obs <- 1
   d
 }
 
 .parse_mean_formula <- function(formula, dat, component) {
+  .population_data(dat, formula, paste0(component, "_settings$mu_form"))
   d <- .mean_formula_data(dat, component)
   design <- .parse_q_formula(formula, d)
   terms <- design$q_terms

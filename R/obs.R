@@ -72,7 +72,7 @@
 
 
 
-#' Check the structure of a TAM obs list
+#' Check tinyAM input data
 #'
 #' @description
 #' Validates the minimal structure required by [prepare_tam()] and [fit_tam()].
@@ -97,7 +97,7 @@
 #' On failure the function aborts with a `cli` error. On success, it returns
 #' `TRUE` (invisibly).
 #'
-#' @param obs A named list expected to contain data.frames `catch`, `index`,
+#' @param data A named list expected to contain data.frames `catch`, `index`,
 #'   `weight`, and `maturity` with the columns described above.
 #'
 #' @return `TRUE` (invisibly) if validation passes; otherwise aborts.
@@ -107,12 +107,17 @@
 #'
 #' @importFrom cli cli_abort cli_warn
 #' @export
-check_obs <- function(obs) {
+check_tam_data <- function(data) {
+  obs <- data
   if (!is.list(obs)) {
     cli::cli_abort(c(
       "{.strong Invalid input}",
       "x" = "`obs` must be a list."
     ))
+  }
+
+  if (is.null(names(obs)) || anyNA(names(obs)) || any(!nzchar(names(obs))) || anyDuplicated(names(obs))) {
+    cli::cli_abort("data must have unique, nonempty table names.")
   }
 
   required_tabs <- c("catch", "index", "weight", "maturity")
@@ -211,14 +216,27 @@ check_obs <- function(obs) {
 
   for (nm in required_tabs) check_one(obs[[nm]], nm)
 
-  # global year/age range (min..max), then require full grid in chosen tables
-  obs_years <- unlist(lapply(obs, function(d) d$year))
-  obs_ages  <- unlist(lapply(obs, function(d) d$age))
+  # Covariates cannot change the range supplied by observations and biology.
+  obs_years <- unlist(lapply(obs[required_tabs], function(d) d$year))
+  obs_ages  <- unlist(lapply(obs[required_tabs], function(d) d$age))
   years <- seq.int(min(obs_years, na.rm = TRUE), max(obs_years, na.rm = TRUE))
   ages  <- seq.int(min(obs_ages,  na.rm = TRUE), max(obs_ages,  na.rm = TRUE))
   grid_size <- length(years) * length(ages)
 
-  must_be_full <- c("catch", "weight", "maturity")
+  if (!is.null(obs$pop_covariates)) {
+    d <- obs$pop_covariates
+    if (!is.data.frame(d) || !all(c("year", "age") %in% names(d))) {
+      cli::cli_abort("pop_covariates must be a data.frame with year and age columns.")
+    }
+    if (!.is_integerish(d$year) || !.is_integerish(d$age)) {
+      cli::cli_abort("pop_covariates year and age must be finite numeric integer values.")
+    }
+    if (any(!d$year %in% years) || any(!d$age %in% ages)) {
+      cli::cli_abort("pop_covariates must use the year-age range supplied by catch, index, weight and maturity.")
+    }
+  }
+  must_be_full <- c("catch", "weight", "maturity",
+                    if (!is.null(obs$pop_covariates)) "pop_covariates")
   for (nm in must_be_full) {
     if (anyDuplicated(obs[[nm]][, c("year", "age")])) {
       cli::cli_abort("{.arg {nm}} must have exactly one row per year and age; duplicate rows would misalign the model surfaces.")
@@ -236,14 +254,14 @@ check_obs <- function(obs) {
   invisible(TRUE)
 }
 
-#' Check tinyAM input data
+#' Check the structure of a TAM obs list
 #'
-#' A direct alias of [check_obs()] with identical arguments and validation.
-#' @inheritParams check_obs
-#' @inherit check_obs details
+#' A convenience wrapper for [check_tam_data()].
+#' @param obs A named list of tinyAM input tables.
+#' @inherit check_tam_data details
 #' @return `TRUE` (invisibly) if validation passes; otherwise aborts.
 #' @examples
 #' check_tam_data(cod_obs)
 #' @export
-check_tam_data <- check_obs
+check_obs <- function(obs) check_tam_data(obs)
 
