@@ -25,7 +25,7 @@ simple_recovery <- function(type, sparse = FALSE, seed) {
   d <- expand.grid(year = 2000:2039, age = seq_len(if (sparse) 2L else 8L))
   d$obs <- 1
   d$is_proj <- FALSE
-  dat <- list(obs = list(catch = d))
+  dat <- list(pop_data = d, years = sort(unique(d$year)), is_proj = rep(FALSE, 40))
   compiled <- tinyAM:::.parse_mean_formula(process_formula(type, "F"), dat, "F")
   dat$F_terms <- compiled$terms
   p <- tinyAM:::.q_term_parameters(dat$F_terms)

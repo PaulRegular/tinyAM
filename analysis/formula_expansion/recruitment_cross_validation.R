@@ -4,7 +4,7 @@ rec_cross_cases <- c("rw", rec_cases[1:4])
 rec_cross_formula <- function(case) if (case == "rw") ~ rw(year) else rec_formula(case)
 rec_cross_settings <- function(form, obs) {
   settings <- rec_settings(form)
-  if ("f_pressure" %in% names(obs$catch)) settings$F_settings$mu_form <- ~ factor(age) + f_pressure
+  if ("f_pressure" %in% names(obs$pop_covariates)) settings$F_settings$mu_form <- ~ factor(age) + f_pressure
   settings
 }
 rec_cross_parameters <- function(generated, fitted) {
@@ -17,7 +17,7 @@ rec_cross_parameters <- function(generated, fitted) {
 rec_cross_simulation <- function(case, stage, seed, sigma = .35, contrast = "natural") {
   set.seed(seed)
   obs <- rec_inputs(if (stage == "isolated") 2000:2079 else 2000:2049)
-  if (stage == "full" && contrast == "wider") obs$catch$f_pressure <- 1.5 * sin(2 * pi * (obs$catch$year - 2000) / 25)
+  if (stage == "full" && contrast == "wider") obs$pop_covariates$f_pressure <- 1.5 * sin(2 * pi * (obs$pop_covariates$year - 2000) / 25)
   d <- do.call(prepare_tam, c(list(data = obs), rec_cross_settings(rec_cross_formula(case), obs)))
   p <- make_par(d)
   p$log_r0 <- log(1000)

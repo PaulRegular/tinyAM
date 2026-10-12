@@ -12,10 +12,11 @@ rec_inputs <- function(years = 2000:2049) {
   index <- rbind(transform(d, obs = 100, survey = "A", samp_time = .3),
                  transform(d, obs = 100, survey = "B", samp_time = .8))
   weight <- transform(d, obs = age^2 / 10)
-  maturity <- transform(d, obs = .5 * plogis(2 * (age - 3)),
-                         temperature = sin((year - min(year)) / 4))
-  maturity$temperature[maturity$age != 1L] <- NA
-  list(catch = catch, index = index, weight = weight, maturity = maturity)
+  maturity <- transform(d, obs = .5 * plogis(2 * (age - 3)))
+  pop_covariates <- transform(d, temperature = sin((year - min(year)) / 4))
+  pop_covariates$temperature[pop_covariates$age != 1L] <- NA
+  list(catch = catch, index = index, weight = weight, maturity = maturity,
+       pop_covariates = pop_covariates)
 }
 
 rec_settings <- function(form) {

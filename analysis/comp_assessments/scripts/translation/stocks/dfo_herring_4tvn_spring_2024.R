@@ -116,9 +116,9 @@ obs <- database_to_tam_obs(
   surveys = c("Spring fixed-gear CPUE", "4Tmno acoustic survey"),
   assumptions = source$assumptions
 )
-obs$weight$M_process_center <- 0.2
-obs$catch$age_blocks <- cut_ages(
-  obs$catch$age,
+obs$pop_covariates$M_process_center <- 0.2
+obs$pop_covariates$age_blocks <- cut_ages(
+  obs$pop_covariates$age,
   c(2, 4, 6, 8, 11)
 )
 

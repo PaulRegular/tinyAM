@@ -4,7 +4,7 @@ library(tinyAM)
 library(plotly)
 
 cod_obs <- tinyAM::cod_obs
-cod_obs$weight$collapse <- ifelse(cod_obs$weight$year %in% 1991:1994, 1, 0)
+cod_obs$pop_covariates$collapse <- ifelse(cod_obs$pop_covariates$year %in% 1991:1994, 1, 0)
 # cod_obs$index$q_block <- cut(cod_obs$index$age, c(min(cod_obs$index$age):6, max(cod_obs$index$age) + 1), right = FALSE)
 cod_obs$index$smith_sound_q_block <- cut(cod_obs$index$age, c(min(cod_obs$index$age):14, max(cod_obs$index$age) + 1), right = FALSE)
 cod_obs$index$smith_sound_year <- as.integer(cod_obs$index$year %in% 1995:2005)

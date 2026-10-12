@@ -140,6 +140,10 @@ capability_evidence <- list(
   path <- paste0('analysis/comp_assessments/scripts/translation/stocks/', id, '.R')
   text <- system2('git', c('show', paste0(review_revision, ':', path)), stdout = TRUE)
   if (!is.null(attr(text, 'status'))) cli::cli_abort('Cannot read the pinned baseline recipe for {id}.')
+  # Adapt pinned source recipes to the current input-table layout.
+  text <- gsub('obs$weight$M_', 'obs$pop_covariates$M_', text, fixed = TRUE)
+  text <- gsub('obs$catch$age_blocks', 'obs$pop_covariates$age_blocks', text, fixed = TRUE)
+  text <- gsub('obs$catch$age_factor', 'obs$pop_covariates$age_factor', text, fixed = TRUE)
   e <- new.env(parent = environment())
   eval(parse(text = text), e)
   recipe <- e$translate_stock(read_assessment(id, database))
@@ -173,11 +177,11 @@ capability_evidence <- list(
   z$obs$index$adfg_effect <- as.numeric(z$obs$index$survey == 'ADF&G crab/groundfish trawl')
   z$obs$index$cpue_effect <- as.numeric(grepl('CPUE', z$obs$index$survey, ignore.case = TRUE))
   if (id == 'dfo_cod_4t4vn_2019') {
-    z$obs$weight$M_formula_group <- factor(ifelse(z$obs$weight$age < 5, '3-4',
-      ifelse(z$obs$weight$age < 9, '5-8', '9+')))
+    z$obs$pop_covariates$M_formula_group <- factor(ifelse(z$obs$pop_covariates$age < 5, '3-4',
+      ifelse(z$obs$pop_covariates$age < 9, '5-8', '9+')))
   }
   if (id == 'dfo_herring_4tvn_spring_2024') {
-    z$obs$weight$M_formula_group <- factor(ifelse(z$obs$weight$age < 7, '2-6', '7+'))
+    z$obs$pop_covariates$M_formula_group <- factor(ifelse(z$obs$pop_covariates$age < 7, '2-6', '7+'))
   }
   warnings <- character()
   started <- Sys.time()

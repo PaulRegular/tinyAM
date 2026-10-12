@@ -31,9 +31,9 @@ stopifnot(
   grepl("q_block",
         paste(deparse(settings$index_settings$q_form), collapse = "")),
   length(unique(obs$index$q_block)) > 1L,
-  all(is.finite(obs$weight$M_assumption)),
-  all(obs$weight$M_assumption[obs$weight$year %in% 2014:2016] == 0.84),
-  all(obs$weight$M_assumption[!obs$weight$year %in% 2014:2016] == 0.50),
+  all(is.finite(obs$pop_covariates$M_assumption)),
+  all(obs$pop_covariates$M_assumption[obs$pop_covariates$year %in% 2014:2016] == 0.84),
+  all(obs$pop_covariates$M_assumption[!obs$pop_covariates$year %in% 2014:2016] == 0.50),
   setequal(unique(translated$comparison_outputs$measure),
            c("SSB", "total_biomass", "recruitment")),
   all(translated$comparison_outputs$unit[
@@ -83,7 +83,7 @@ stopifnot(
   setequal(paste(m_reference$year, m_reference$age),
            paste(m_expected$year, m_expected$age)),
   all(m_reference$est ==
-        obs$weight$M_assumption[
+        obs$pop_covariates$M_assumption[
           match(paste(m_reference$year, m_reference$age),
                 paste(obs$weight$year, obs$weight$age))
         ])
@@ -94,7 +94,7 @@ m_fit <- list(
   pop = list(M = data.frame(
     year = obs$weight$year,
     age = obs$weight$age,
-    est = obs$weight$M_assumption
+    est = obs$pop_covariates$M_assumption
   ))
 )
 m_fit$rep <- m_fit$obs_pred <- m_fit$random_par <- list()

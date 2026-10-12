@@ -24,7 +24,7 @@ obs <- database_to_tam_obs(
   assumptions = source$assumptions
 )
 
-obs$catch$age_factor <- factor(obs$catch$age, levels = ages)
+obs$pop_covariates$age_factor <- factor(obs$pop_covariates$age, levels = ages)
 
 
 ## Background and comparisons ----

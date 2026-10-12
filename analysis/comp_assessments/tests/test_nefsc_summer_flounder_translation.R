@@ -44,7 +44,7 @@ stopifnot(
   identical(dat$M_settings$process, "off"),
   identical(dim(par$log_n), c(34L, 7L)),
   all(is.finite(translated$obs$weight$obs)),
-  all(is.finite(translated$obs$weight$M_assumption)),
+  all(is.finite(translated$obs$pop_covariates$M_assumption)),
   grepl("published total numbers-at-age once", paste(translated$background, collapse = " "))
 )
 

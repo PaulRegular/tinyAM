@@ -39,7 +39,7 @@ stopifnot(
   nrow(translated$obs$index) == 464L,
   !any(translated$obs$index$year == 2026),
   nlevels(translated$obs$index$q_key) == 19L,
-  all(is.finite(translated$obs$weight$M_assumption)),
+  all(is.finite(translated$obs$pop_covariates$M_assumption)),
   identical(as.numeric(catch_1974$value), 2854471),
   identical(as.numeric(bass_2001$value), 8225),
   identical(as.numeric(m_1974$value), 0.75),

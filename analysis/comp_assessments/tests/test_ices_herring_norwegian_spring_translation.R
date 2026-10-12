@@ -42,10 +42,10 @@ stopifnot(
   nrow(translated$obs$catch) == 37L * 11L,
   nrow(translated$obs$weight) == 37L * 11L,
   nrow(translated$obs$maturity) == 37L * 11L,
-  all(translated$obs$weight$M_assumption[
+  all(translated$obs$pop_covariates$M_assumption[
     translated$obs$weight$age == 2
   ] == 0.9),
-  all(translated$obs$weight$M_assumption[
+  all(translated$obs$pop_covariates$M_assumption[
     translated$obs$weight$age > 2
   ] == 0.15),
   identical(as.numeric(translated_value), as.numeric(cohort_value)),

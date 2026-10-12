@@ -1,6 +1,6 @@
 root <- file.path("analysis", "comp_assessments")
 source(file.path(root, "R", "database_to_tam_obs.R"))
-source(file.path("R", "obs.R"))
+check_obs <- tinyAM::check_obs
 source(file.path(root, "R", "audit_assumptions.R"))
 if (!requireNamespace("cli", quietly = TRUE)) {
   .translation_abort <- function(message) stop(message, call. = FALSE)
@@ -142,8 +142,8 @@ static_obs <- database_to_tam_obs(
 )
 expect_equal(static_obs$weight$obs[static_obs$weight$year == 2001], c(1, 2))
 expect_equal(static_obs$maturity$obs[static_obs$maturity$year == 2001], c(0.1, 0.8))
-expect_equal(static_obs$weight$M_assumption[static_obs$weight$age == 1], rep(0.2, 2))
-expect_equal(static_obs$weight$M_assumption[static_obs$weight$age == 2], rep(0.3, 2))
+expect_equal(static_obs$pop_covariates$M_assumption[static_obs$pop_covariates$age == 1], rep(0.2, 2))
+expect_equal(static_obs$pop_covariates$M_assumption[static_obs$pop_covariates$age == 2], rep(0.3, 2))
 expect_equal(grepl("Time-invariant source maturity vector expanded",
                    attr(static_obs, "translation")$source_provenance$method[
                      attr(static_obs, "translation")$source_provenance$component == "maturity"]), TRUE)
@@ -342,7 +342,7 @@ obs_with_m <- database_to_tam_obs(
   "translation_fixture", fixed_m_inputs, years = 2000:2001, ages = 1:2,
   weight_survey = "RV", sampling_times = sampling_times
 )
-expect_equal(obs_with_m$weight$M_assumption, c(0.2, 0.2, 0.3, 0.3))
+expect_equal(obs_with_m$pop_covariates$M_assumption, c(0.2, 0.2, 0.3, 0.3))
 expect_equal(attr(obs_with_m, "translation")$M$status,
              "fixed_numerical_input")
 expect_equal(sum(attr(obs_with_m, "translation")$source_provenance$component == "M"),
@@ -511,11 +511,11 @@ ebs_obs <- database_to_tam_obs(
 expect_equal(dim(ebs_obs$catch), c(915L, 3L))
 expect_equal(sum(is.na(ebs_obs$catch$obs)), 15L)
 expect_equal(dim(ebs_obs$maturity), c(915L, 3L))
-expect_equal(ebs_obs$weight$M_assumption[ebs_obs$weight$age == 1],
+expect_equal(ebs_obs$pop_covariates$M_assumption[ebs_obs$pop_covariates$age == 1],
              rep(0.9, 61))
-expect_equal(ebs_obs$weight$M_assumption[ebs_obs$weight$age == 2],
+expect_equal(ebs_obs$pop_covariates$M_assumption[ebs_obs$pop_covariates$age == 2],
              rep(0.45, 61))
-expect_equal(ebs_obs$weight$M_assumption[ebs_obs$weight$age >= 3],
+expect_equal(ebs_obs$pop_covariates$M_assumption[ebs_obs$pop_covariates$age >= 3],
              rep(0.3, 61 * 13))
 expect_equal(attr(ebs_obs, "translation")$M$status,
              "fixed_numerical_input")
@@ -606,8 +606,9 @@ template_obs <- list(
   index = data.frame(year = rep(template_years, each = 2),
                      age = rep(template_ages, length(template_years)),
                      survey = "RV", obs = 20:25),
-  weight = data.frame(year = rep(template_years, each = 2), age = rep(template_ages, 3),
-                      M_assumption = 0.2),
+  weight = data.frame(year = rep(template_years, each = 2), age = rep(template_ages, 3)),
+  pop_covariates = data.frame(year = rep(template_years, each = 2),
+                             age = rep(template_ages, 3), M_assumption = 0.2),
   maturity = data.frame(year = rep(template_years, each = 2), age = rep(template_ages, 3),
                         obs = 0.5)
 )

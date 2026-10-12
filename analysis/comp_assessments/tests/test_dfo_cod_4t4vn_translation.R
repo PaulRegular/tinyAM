@@ -40,9 +40,9 @@ stopifnot(identical(
   obs$weight$obs[obs$weight$age == 12],
   obs$weight$obs[obs$weight$age == 11]
 ))
-stopifnot(all(obs$weight$M_prior_mean[obs$weight$age <= 4] == 0.65))
-stopifnot(all(obs$weight$M_prior_mean[obs$weight$age %in% 5:8] == 0.15))
-stopifnot(all(obs$weight$M_prior_mean[obs$weight$age >= 9] == 0.15))
+stopifnot(all(obs$pop_covariates$M_prior_mean[obs$pop_covariates$age <= 4] == 0.65))
+stopifnot(all(obs$pop_covariates$M_prior_mean[obs$pop_covariates$age %in% 5:8] == 0.15))
+stopifnot(all(obs$pop_covariates$M_prior_mean[obs$pop_covariates$age >= 9] == 0.15))
 stopifnot(identical(translated$settings$M_settings$process, "rw"))
 stopifnot(identical(translated$settings$M_settings$age_breaks, c(3, 5, 9, 12)))
 stopifnot(identical(translated$settings$M_settings$first_dev_year, 1971L))

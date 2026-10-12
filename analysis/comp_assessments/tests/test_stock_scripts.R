@@ -7,7 +7,8 @@ for (path in paths) {
   record <- read_assessment(id, database)
   original <- record
   stock <- .test_stock(record)
-  stopifnot(identical(record, original), is.null(stock$fit),
+  stopifnot(identical(record, original), is.null(stock$fit), inherits(stock$obs, "tam_data"),
+            isTRUE(tinyAM::check_tam_data(stock$obs)),
             is.null(stock$settings$settings), is.call(stock$fit_call),
             identical(stock$fit_call[[1]], quote(tinyAM::fit_tam)))
   # Script variables must stay local when the runner loads another stock.
@@ -27,7 +28,7 @@ for (statement in parse('analysis/comp_assessments/scripts/translation/run_stock
 }
 stopifnot(is.null(interactive_env$fit), is.list(interactive_env$obs),
           length(interactive_env$background) > 0L,
-          identical(interactive_env$source$assessment$assessment_id, 'dfo_herring_4tvn_spring_2024'))
+          identical(interactive_env$source$assessment$assessment_id, interactive_env$assessment_id))
 cat('Top-level stock scripts and fitting-disabled isolation passed.\n')
 
 # Loading another stock must clear absent comparison options, including in the workspace.

@@ -128,7 +128,8 @@ stopifnot(failed$status == "fit_failed", is.na(failed$optimizer_code),
 db <- read_database()
 output <- db$outputs[db$outputs$assessment_id == "dfo_cod_2j3kl_2025" &
                        db$outputs$measure == "SSB", ][1, ]
-obs <- list(weight = data.frame(year = output$year, age = 2L, M_assumption = 0.3))
+obs <- list(pop_covariates = data.frame(year = output$year, age = 2L, M_assumption = 0.3))
+obs$weight <- obs$pop_covariates[c("year", "age")]
 for (status in c("estimated_in_source", "no_numerical_input")) {
   attr(obs, "translation") <- list(M = list(status = status))
   ref <- database_to_tam_ref("dfo_cod_2j3kl_2025", output, obs = obs)

@@ -63,7 +63,7 @@ stopifnot(
   !any(grepl("cohort", source_maturity$notes, ignore.case = TRUE)),
   nrow(obs$index) == 507L + 7L * 12L,
   isTRUE(all.equal(obs$maturity$obs, expected_maturity)),
-  all(obs$weight$M_assumption == median(source_data$outputs$value[
+  all(obs$pop_covariates$M_assumption == median(source_data$outputs$value[
     source_data$outputs$measure == "Mbar"])),
   setequal(unique(as.character(obs$index$q_key[obs$index$survey == "DFO fall RV survey"])),
            c("RV age 2", "RV age 3", "RV age 4", "RV age 5", "RV age 6+")),
