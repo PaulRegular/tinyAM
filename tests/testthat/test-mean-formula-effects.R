@@ -59,7 +59,7 @@ test_that("mean/residual variance aliases and temporal overlaps are rejected", {
   expect_error(mean_test_dat("F", "rw", F_settings = list(
     mu_form = ~ rw(year) + ar1(year))), "one temporal")
   expect_error(mean_test_dat("F", "iid", F_settings = list(
-    mu_form = ~ iid(year, by = factor_age))), "existing observation column")
+    mu_form = ~ iid(year, by = factor_age))), "pop_covariates")
   expect_error(mean_test_dat("F", "iid", F_settings = list(
     mu_form = ~ iid(year, by = age_group))), "IID F residual variance")
   expect_error(mean_test_dat("M", "iid", M_settings = list(process = "iid",

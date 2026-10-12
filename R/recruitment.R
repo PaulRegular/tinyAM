@@ -146,7 +146,7 @@
 #'
 #' @details
 #' Use exactly one [iid()], [rw()], or [ar1()] residual term on `year`, without
-#' `by` grouping. Ordinary covariates are read from `obs$maturity` at the youngest
+#' `by` grouping. Ordinary covariates are read from `data$pop_covariates` at the youngest
 #' modeled age; their values at older ages may be `NA`. Covariates refer to the
 #' recruitment year. Construct lagged or standardized columns explicitly.
 #' Covariate coefficients are estimated; `offset()` terms are not supported.
@@ -199,7 +199,7 @@
 #' ~ iid(year)
 #' ~ bh(ssb) + iid(year)
 #' ~ ricker(ssb, lag = 2) + ar1(year)
-#' # Add temperature to obs$maturity at the youngest modeled age, then use:
+#' # Add temperature to data$pop_covariates at the youngest modeled age, then use:
 #' ~ bh(ssb) + temperature + iid(year)
 #' # Runnable fitting examples are in inst/examples/example_recruitment.R.
 #' @seealso [prepare_tam()], [fit_tam()], [sim_tam()], [check_tam()]

@@ -1,6 +1,6 @@
 test_that("process SD formulas align to ages and unique M states", {
   obs <- cod_obs
-  obs$weight$age_group <- factor(ifelse(obs$weight$age < 5, "young", "old"), levels = c("young", "old"))
+  obs$pop_covariates$age_group <- factor(ifelse(obs$pop_covariates$age < 5, "young", "old"), levels = c("young", "old"))
   dat <- make_test_dat(data = obs, years = 1983:1988, ages = 2:6,
     N_settings = list(process = "iid", sd_form = ~ age_group),
     F_settings = list(process = "cor_rw", sd_form = ~ factor(age)),
@@ -39,9 +39,9 @@ test_that("process SD guards reject unsupported or conflicting designs", {
   expect_error(make_test_dat(M_settings = list(process = "iid", mu_supplied = ~ I(.3),
     sd_form = ~ factor(age), age_breaks = c(3, 14))), "within an M age block")
   obs <- cod_obs
-  obs$weight$varying <- obs$weight$year
+  obs$pop_covariates$varying <- obs$pop_covariates$year
   expect_error(make_test_dat(data = obs, F_settings = list(process = "rw", sd_form = ~ varying)), "varies across years")
-  obs$weight$varying[] <- NA
+  obs$pop_covariates$varying[] <- NA
   expect_error(make_test_dat(data = obs, F_settings = list(process = "rw", sd_form = ~ varying)), "complete covariates")
   expect_error(make_test_dat(N_settings = list(process = "off", sd_form = ~ age)), "no process")
 })

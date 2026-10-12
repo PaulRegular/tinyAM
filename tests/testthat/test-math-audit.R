@@ -128,15 +128,15 @@ test_that("missing formula rows and invalid supplied scales cannot misalign like
   obs$index$x[which(obs$index$year == 2001)[1]] <- NA_real_
   expect_error(prepare_tam(obs, years = 2000:2003,
     index_settings = list(q_form = ~ x, sd_form = ~ 1, fill_missing = TRUE)), "one finite row")
-  obs$weight$x <- .2
-  obs$weight$x[which(obs$weight$year == 2001)[1]] <- NA_real_
+  obs$pop_covariates$x <- .2
+  obs$pop_covariates$x[which(obs$pop_covariates$year == 2001)[1]] <- NA_real_
   expect_error(prepare_tam(obs, years = 2000:2003,
     M_settings = list(process = "off", mu_supplied = ~ x)), "positive finite value")
   expect_error(make_test_dat(M_settings = list(mu_supplied = ~ I(0))), "positive finite value")
   expect_error(make_test_dat(years = c(2000, 2001.5)), "integer values")
   expect_error(make_test_dat(proj_settings = list(n_proj = 1, n_mean = 1, F_mult = -1)),
     "non-negative multipliers")
-  for (nm in names(obs)) {
+  for (nm in c("catch", "index", "weight", "maturity")) {
     bad <- cod_obs
     bad[[nm]]$obs[1] <- -1
     expect_error(check_obs(bad), "non-negative values")

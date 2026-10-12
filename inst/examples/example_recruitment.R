@@ -16,9 +16,9 @@ ricker_ar1 <- update(base, N_settings = list(process = "off", rec_form = ~ ricke
 
 ## An illustrative covariate; replace with measured annual values ----
 data <- cod_obs
-data$maturity$temperature <- NA_real_
+data$pop_covariates$temperature <- NA_real_
 i <- data$maturity$age == 2
-data$maturity$temperature[i] <- sin((data$maturity$year[i] - 1983) / 5)
+data$pop_covariates$temperature[i] <- sin((data$pop_covariates$year[i] - 1983) / 5)
 start$rec_beta <- c(start$rec_beta, temperature = 0)
 covariate <- update(base, data = data,
   N_settings = list(process = "off", rec_form = ~ temperature + iid(year)), start_par = start)

@@ -274,7 +274,8 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #' - Inputs are expected as a list with components `catch`, `index`, `weight`,
 #'   and `maturity`. Each must include columns `year`, `age`, and a value column
 #'   named `obs`. Rename any differently named input columns before calling. See
-#'   [cod_obs] for an example of the required structure.
+#'   [cod_obs] for an example of the required structure. The optional
+#'   `pop_covariates` table supplies population formula inputs; see [as_tam_data()].
 #' - Catch, weight, and maturity must already contain exactly one row per
 #'   year-age combination across the input range. Survey tables may be sparse.
 #' - A combined observation table is created for catch and index; `log(0)` is
@@ -312,7 +313,7 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #'   terms are recorded separately in `q_terms`. Their unique states and process
 #'   parameters are added by [make_par()], rather than treated as ordinary columns.
 #' - If `M_settings$mu_form` is provided, `M_modmat <- model.matrix(mu_form,
-#'   data = obs$weight)` and the resulting coefficients are parameters `mu_m`.
+#'   data = data$pop_covariates)` and the resulting coefficients are parameters `mu_m`.
 #'   These coefficients are applied on the log scale to build \eqn{M}, but
 #'   retain the `mu_` prefix to emphasize they can be positive or negative.
 #'   If `mu_supplied` is also provided, the intercept in `mu_form` is dropped
@@ -374,7 +375,7 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #' @param N_settings A list with elements:
 #' - `rec_form`: recruitment formula, default `~ rw(year)`. Use one of [iid()],
 #'   [rw()], or [ar1()] on `year`, optionally with fixed covariates from
-#'   `obs$maturity` at the youngest modeled age. First-year recruitment remains
+#'   `data$pop_covariates` at the youngest modeled age. First-year recruitment remains
 #'   a freely estimated fixed anchor; `process` below controls older cohorts.
 #'   [bh()] and [ricker()] add a median stock-recruit curve with IID/AR1
 #'   residuals. See [recruitment_formulas] for lags, boundary states and units.
@@ -388,7 +389,7 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #'   IID survivorship residuals and separate SD `sd_n0`. See **Details**.
 #' - `sd_form`: ordinary formula for log SD of older-age survival residuals,
 #'   default `~ 1`. Use `~ factor(age)` or a supplied age-sharing column in
-#'   `obs$weight`. Its design must be constant across years. Recruitment and
+#'   `data$pop_covariates`. Its design must be constant across years. Recruitment and
 #'   initial-abundance SDs remain separate. Random-effect SD terms are not enabled.
 #' @param F_settings A list with elements:
 #' - `process`: `"iid"` for independent departures from the mean log F,
@@ -398,7 +399,7 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #'   annual increments at neighbouring ages. It estimates one signed age
 #'   correlation; its SD is the marginal SD of annual log-F increments.
 #' - `sd_form`: ordinary age-based formula for log process SD, default `~ 1`,
-#'   evaluated on `obs$weight`. Sharing an SD does not share latent F states.
+#'   evaluated on `data$pop_covariates`. Sharing an SD does not share latent F states.
 #'   IID SDs describe residuals; RW/correlated-RW SDs describe annual increments;
 #'   stationary AR1 retains its innovation-scale convention.
 #' - `mu_form`: an optional formula for mean-\eqn{F} (coefficients estimated as
@@ -416,10 +417,10 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #' - `process`: `"off"` uses only supplied/mean M. Otherwise `"iid"`, `"rw"`,
 #'   and `"ar1"` have the same meanings as for F, on selected years/age blocks.
 #' - `sd_form`: ordinary age-based formula for log process SD, default `~ 1`.
-#'   Evaluated on `obs$weight` and required to be constant within each fitted M
+#'   Evaluated on `data$pop_covariates` and required to be constant within each fitted M
 #'   age block and across years. Use finer age_breaks for distinct state SDs.
 #' - `mu_form`: optional formula for mean-\eqn{M} (applied on the log scale) built
-#'   on `obs$weight`, yielding coefficients `mu_m`. These enter the log-\eqn{M}
+#'   on `data$pop_covariates`, yielding coefficients `mu_m`. These enter the log-\eqn{M}
 #'   surface directly and may therefore be positive or negative; they intentionally
 #'   avoid a `log_` prefix to prevent automatic back-transformation when tidied.
 #'   If provided together with `mu_supplied`, the intercept in `mu_form` is
@@ -429,7 +430,7 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #'   time. All mean components must be constant within fitted M age blocks.
 #' - `mu_supplied`: optional one-sided formula giving supplied (non-estimated)
 #'   \eqn{M}, e.g. `~ I(0.2)` or a column reference such as
-#'   `~ M_assumption` stored in the `obs$weight` data.frame.
+#'   `~ M_assumption` stored in the `data$pop_covariates` data.frame.
 #' - `age_breaks`: optional integer break points used by [cut_ages()] to
 #'   define `age_blocks` sharing absolute latent M states across ages.
 #'   When a narrower set of `age_breaks` than modeled `ages` is provided,

@@ -28,7 +28,7 @@ test_that("recruitment IID and AR1 use normalized residual densities", {
 
 test_that("recruitment covariates come only from youngest-age maturity rows", {
   obs <- tinyAM::cod_obs
-  obs$maturity$temp <- ifelse(obs$maturity$age == min(AGES), sin(obs$maturity$year), NA)
+  obs$pop_covariates$temp <- ifelse(obs$pop_covariates$age == min(AGES), sin(obs$pop_covariates$year), NA)
   d <- make_test_dat(data = obs, N_settings = list(process = "off", rec_form = ~ temp + rw(year)))
   p <- make_par(d)
   p$rec_beta[] <- .4
@@ -163,7 +163,7 @@ test_that("recruitment reports exclude boundaries and keep uncertainty scales", 
   expect_equal(nrow(tab$reference), 0L)
   expect_false(any(grepl("^rec_", names(tidy_sdrep(fit)))))
   obs <- cod_obs
-  obs$maturity$constant <- 1
+  obs$pop_covariates$constant <- 1
   expect_error(prepare_tam(obs, years = 1983:1995, ages = 2:8,
     N_settings = list(rec_form = ~ bh(ssb) + constant + iid(year))), "productivity")
 })
@@ -232,8 +232,8 @@ test_that("initial recruitment deviations are zero under a stock-recruit curve",
 
 test_that("recruitment projections hold only referenced annual covariates", {
   obs <- cod_obs
-  obs$maturity$temp <- ifelse(obs$maturity$age == 2, sin(obs$maturity$year), NA)
-  obs$maturity$unused <- NA_real_
+  obs$pop_covariates$temp <- ifelse(obs$pop_covariates$age == 2, sin(obs$pop_covariates$year), NA)
+  obs$pop_covariates$unused <- NA_real_
   expect_message(d <- make_test_dat(data = obs, years = 1983:1995, ages = 2:8,
     N_settings = list(process = "off", rec_form = ~ temp + ar1(year, sd = .2, phi = .5)),
     proj_settings = list(n_proj = 2, n_mean = 2, F_mult = 1)), "terminal covariate values: temp")
@@ -275,8 +275,8 @@ test_that("recruitment age and N0 choices preserve boundary semantics", {
 
 test_that("curve displays use median numeric covariates and declared factor levels", {
   obs <- cod_obs
-  obs$maturity$temp <- ifelse(obs$maturity$age == 2, obs$maturity$year - 1983, NA)
-  obs$maturity$phase <- factor(ifelse(obs$maturity$year %% 2, "b", "a"), levels = c("b", "a"))
+  obs$pop_covariates$temp <- ifelse(obs$pop_covariates$age == 2, obs$pop_covariates$year - 1983, NA)
+  obs$pop_covariates$phase <- factor(ifelse(obs$pop_covariates$year %% 2, "b", "a"), levels = c("b", "a"))
   d <- make_test_dat(data = obs, years = 1983:1995, ages = 2:8,
     N_settings = list(process = "off", rec_form = ~ bh(ssb) + temp + phase + iid(year)))
   p <- make_par(d)
@@ -289,14 +289,14 @@ test_that("curve displays use median numeric covariates and declared factor leve
   expect_equal(log(tab$curve$est), unname(tinyAM:::.rec_log_curve(log(tab$curve$ssb), p, "bh") + .6))
   withr::local_options(contrasts = c("contr.sum", "contr.poly"))
   expect_equal(tidy_recruitment(fit)$curve, tab$curve)
-  obs$maturity$temp <- 1
+  obs$pop_covariates$temp <- 1
   expect_warning(d <- make_test_dat(data = obs, N_settings = list(rec_form = ~ temp + rw(year))), "cancel")
   expect_false("rec_beta" %in% names(make_par(d)))
 })
 
 test_that("recruitment curve displays retain fitted covariate bases", {
   obs <- cod_obs
-  obs$maturity$temp <- ifelse(obs$maturity$age == 2, obs$maturity$year - 1983, NA)
+  obs$pop_covariates$temp <- ifelse(obs$pop_covariates$age == 2, obs$pop_covariates$year - 1983, NA)
   for (term in c("poly(temp, 2)", "scale(temp)", "splines::ns(temp, df = 3)")) {
     form <- as.formula(paste("~ bh(ssb) +", term, "+ iid(year)"))
     d <- make_test_dat(data = obs, years = 1983:1995, ages = 2:8,

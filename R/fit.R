@@ -129,7 +129,8 @@
 #' Supply spawning timing in `data$maturity$spawn_time`; see [prepare_tam()].
 #'
 #' @param data A named list of tidy observation tables (e.g., `catch`, `index`,
-#'   `weight`, `maturity`). See [cod_obs] for an example.
+#'   `weight`, `maturity`) and optional `pop_covariates`. A [tam_data][as_tam_data]
+#'   object or plain list can be used. See [cod_obs] for an example.
 #' @param interval Level in `(0, 1)` to use to generate confidence intervals,
 #'   where applicable; default `0.95.`
 #' @param silent Logical; if `TRUE`, disables tracing information.

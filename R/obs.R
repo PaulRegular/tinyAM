@@ -7,50 +7,24 @@
 #' This is intended for vignettes, examples, and tests.
 #'
 #' @format
-#' A named list of four data frames:
+#' A `tam_data` list containing five data frames:
 #'
-#' - **catch**: commercial catch-at-age observations and blocking variables.
-#'   Columns:
-#'   - `year`: numeric calendar year.
-#'   - `age`: numeric age (years).
-#'   - `obs`: numeric observed catch in numbers (thousands; may include `NA`).
-#'   - `F_y_block`: factor; year blocks for fishing-mortality mean structure
-#'     (e.g., `"1954-1991"`, `"1992-1997"`, ...).
-#'   - `F_a_block`: factor; age blocks for fishing-mortality mean structure
-#'     (e.g., `"0-1"`, `"2-3"`, ...).
-#'
-#' - **index**: survey (index) observations and blocking variables.
-#'   Columns:
-#'   - `year`: integer year.
-#'   - `age`: numeric age (years).
-#'   - `obs`: numeric survey index-at-age (may include `NA`).
-#'   - `survey`: character or factor; survey name for catchability blocks and labeling plots.
-#'   - `samp_time`: numeric sampling time within the year (fraction of a year; e.g., `0.8`).
-#'   - `q_block`: factor; age blocks for catchability.
-#'
-#' - **weight**: weight-at-age and mortality assumption used for \eqn{M} mean structure.
-#'   Columns:
-#'   - `year`: integer year.
-#'   - `age`: numeric age (years).
-#'   - `obs`: numeric stock weight-at-age (kg).
-#'   - `M_assumption`: numeric assumed natural mortality level by age-year
-#'     (used when constructing `M` mean via formula).
-#'
-#' - **maturity**: maturity-at-age (proportion mature). An optional `spawn_time`
-#'   column can supply spawning fractions; it is not present in this example.
-#'   Columns:
-#'   - `year`: numeric year.
-#'   - `age`: numeric age (years).
-#'   - `obs`: numeric proportion mature (0-1).
+#' - **catch**: `year`, `age`, and catch numbers `obs` (thousands; may be missing).
+#' - **index**: `year`, `age`, survey abundance `obs` (thousands), `survey`,
+#'   sampling fraction `samp_time`, and catchability age group `q_block`.
+#' - **weight**: `year`, `age`, and stock weight `obs` (kg per fish).
+#' - **maturity**: `year`, `age`, and proportion mature `obs` (0-1).
+#'   Optional spawning timing is not supplied in this example.
+#' - **pop_covariates**: `year`, `age`, fishing-mortality mean blocks
+#'   `F_y_block` and `F_a_block`, `NCAM_M_assumption`, and
+#'   `allometric_M_assumption` (natural mortality rates per year).
 #'
 #' @details
-#' The object was assembled by:
-#'
-#' 1. Converting NCAM arrays to tidy data frames.
-#' 2. Creating blocking variables for `F` by year (`F_y_block`) and age
-#'    (`F_a_block`) using [cut_years()] and [cut_ages()].
-#' 3. Joining weight-at-age with a natural mortality assumption column
-#'    (`M_assumption`) derived from `NCAM::inputs$nm`.
+#' NCAM inputs are converted to year-age tables. Population blocks and mortality
+#' assumptions are kept separately from observations and supplied biology.
+#' The allometric assumption follows the weight exponent in Lorenzen (1996),
+#' scaled to mean M of 0.30 across ages 5-14. See `data-raw/cod_obs.R` for
+#' construction and [as_tam_data()] for the table roles.
 #'
 #' @source
 #' Derived from the \pkg{NCAM} example inputs
@@ -60,9 +34,8 @@
 #' data(cod_obs)
 #' names(cod_obs)
 #'
-#' # Peek at catch blocks
-#' head(cod_obs$catch)
-#' with(cod_obs$catch, table(F_y_block, F_a_block))
+#' cod_obs
+#' head(cod_obs$pop_covariates)
 #'
 #' @docType data
 #' @keywords datasets
