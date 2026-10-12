@@ -70,7 +70,7 @@ evaluated on \code{data$pop_covariates}. Sharing an SD does not share latent F s
 IID SDs describe residuals; RW/correlated-RW SDs describe annual increments;
 stationary AR1 retains its innovation-scale convention.
 \item \code{mu_form}: an optional formula for mean-\eqn{F} (coefficients estimated as
-\strong{log-scale} parameters \code{log_mu_f}). Required for \code{"iid"} and \code{"ar1"};
+\strong{log-scale} parameters \code{log_mu_f}), evaluated on \code{data$pop_covariates}. Required for \code{"iid"} and \code{"ar1"};
 use \code{~ 1} for one estimated mean level or \code{~ factor(age)} for age-specific
 means. For \code{"rw"}, \code{NULL} is allowed. Mean columns constant through time
 cancel from RW increments and are removed with a warning. Remaining

@@ -42,6 +42,8 @@ test_that("vis_tam renders cleanly and produces an HTML output", {
   con <- file(tmpfile, "rb")
   html <- paste(readLines(con, warn = FALSE), collapse = "\n")
   close(con)
+  expect_match(html, "Population covariates", fixed = TRUE)
+  expect_match(html, "NCAM_M_assumption", fixed = TRUE)
   expect_match(html, "Numerical checks", fixed = TRUE)
   expect_match(html, "Structural checks", fixed = TRUE)
   expect_match(html, "Advisory findings", fixed = TRUE)

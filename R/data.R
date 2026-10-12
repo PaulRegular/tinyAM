@@ -53,7 +53,7 @@ print.tam_data <- function(x, n = 5, ...) {
     d <- x[[nm]]
     cli::cli_h2("{nm}: {nrow(d)} rows, {ncol(d)} columns")
     if (nrow(d)) {
-      cli::cli_text("Years {min(d$year)}–{max(d$year)}; ages {min(d$age)}–{max(d$age)}")
+      cli::cli_text("Years {min(d$year)}\u2013{max(d$year)}; ages {min(d$age)}\u2013{max(d$age)}")
       rows <- if (nrow(d) <= 2 * n) seq_len(nrow(d)) else
         c(seq_len(n), seq.int(nrow(d) - n + 1L, nrow(d)))
       print(d[rows, , drop = FALSE], ...)
@@ -70,7 +70,8 @@ print.tam_data <- function(x, n = 5, ...) {
       if (!is.call(x)) return(x)
       parts <- as.list(x)
       if (.formula_call_name(x) %in% c("iid", "rw", "ar1")) {
-        if (!is.null(names(parts))) parts <- parts[!names(parts) %in% c("sd", "phi")]
+        parts <- as.list(match.call(get(.formula_call_name(x), mode = "function"), x))
+        parts <- parts[!names(parts) %in% c("sd", "phi")]
       }
       as.call(lapply(parts, variables))
     }

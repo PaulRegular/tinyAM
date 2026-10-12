@@ -87,3 +87,28 @@ test_that("printing shows compact table previews", {
   expect_invisible(print(x, n = 1))
   expect_error(print(x, n = 0), "positive integer")
 })
+
+test_that("prepared and projected inputs preserve class and provenance", {
+  x <- as_tam_data(population_fixture())
+  attr(x, "translation") <- list(source = "fixture")
+  dat <- make_test_dat(data = x, years = 1983:1990, ages = 2:6,
+    proj_settings = list(n_proj = 1))
+  expect_s3_class(dat$obs, "tam_data")
+  expect_identical(attr(dat$obs, "translation"), attr(x, "translation"))
+  sd <- .2
+  positional <- make_test_dat(data = x, years = 1983:1990, ages = 2:6,
+    F_settings = list(process = "iid", mu_form = ~ factor(age) + rw(year, NULL, sd)))
+  expect_identical(positional$F_terms[[1]]$sd, sd)
+})
+
+test_that("updates retain population covariates", {
+  before <- default_fit
+  changed <- update(default_fit, years = 1983:2020, start_par = as.list(default_fit$sdrep, "Estimate"), silent = TRUE)
+  expect_identical(changed$refit_args$data, default_fit$refit_args$data)
+  expect_identical(default_fit, before)
+  expect_true(all(changed$dat$pop_data$year %in% 1983:2020))
+  expect_true("NCAM_M_assumption" %in% names(changed$dat$pop_data))
+  projected <- update(changed, proj_settings = list(n_proj = 1), silent = TRUE)
+  expect_equal(unique(subset(projected$dat$pop_data, is_proj)$year), 2021)
+  expect_identical(levels(projected$dat$pop_data$F_a_block), levels(changed$dat$pop_data$F_a_block))
+})

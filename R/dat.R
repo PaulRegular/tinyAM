@@ -185,7 +185,7 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
     x_with_proj[order(x_with_proj$age, x_with_proj$year), ]
   }
   obs_with_proj <- lapply(names(obs), function(nm) .add_one(obs[[nm]], nm))
-  names(obs_with_proj) <- names(obs)
+  attributes(obs_with_proj) <- attributes(obs)
   obs_with_proj$catch$obs[obs_with_proj$catch$is_proj] <- NA
   obs_with_proj$index$obs[obs_with_proj$index$is_proj] <- NA
   obs_with_proj
@@ -403,7 +403,7 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #'   IID SDs describe residuals; RW/correlated-RW SDs describe annual increments;
 #'   stationary AR1 retains its innovation-scale convention.
 #' - `mu_form`: an optional formula for mean-\eqn{F} (coefficients estimated as
-#'   **log-scale** parameters `log_mu_f`). Required for `"iid"` and `"ar1"`;
+#'   **log-scale** parameters `log_mu_f`), evaluated on `data$pop_covariates`. Required for `"iid"` and `"ar1"`;
 #'   use `~ 1` for one estimated mean level or `~ factor(age)` for age-specific
 #'   means. For `"rw"`, `NULL` is allowed. Mean columns constant through time
 #'   cancel from RW increments and are removed with a warning. Remaining
@@ -609,6 +609,7 @@ prepare_tam <- function(
     d_sub[order(d_sub$age, d_sub$year), ] |>
       droplevels()
   }), names(dat$obs))
+  attributes(dat$obs) <- attributes(obs)
   dat$is_proj <- rep(FALSE, length(dat$years))
   if (length(dat$years) < 2L) {
     cli::cli_abort("At least two historical years are required for recruitment and cohort transitions.")

@@ -52,7 +52,7 @@ Departures from expected log abundance or mean log mortality can follow three pr
 F also supports `"cor_rw"`: annual log-F changes are correlated between ages,
 while their effects accumulate over time. N, F and M settings accept ordinary
 age-based `sd_form` formulas, such as `~ age_group`, to share process SDs.
-These formulas use columns in the weight table and do not share latent states.
+These formulas use columns in `data$pop_covariates` and do not share latent states.
 Their default `~ 1` retains a common SD.
 
 `data$maturity$spawn_time <- 0.25` accounts for survival to spawning at
@@ -73,6 +73,23 @@ Initial abundance is specified independently of the subsequent N process through
 
 For an active M process, the default normally shares one state across all ages except the youngest, starting in year 2 (see `?prepare_tam` for very short age ranges). Earlier M and excluded ages retain their supplied or mean values. F is estimated in every historical year. These boundary assumptions can affect initial abundance and catchability estimates; they are not guarantees of identifiability. The full equations and conventions are in `help("tinyAM-model", package = "tinyAM")`.
 
+## Input data
+
+Use a named list of `catch`, `index`, `weight`, and `maturity` tables, with an
+optional `pop_covariates` table. Population covariates and supplied M assumptions
+belong in `pop_covariates`; observation-SD and q covariates stay in catch/index.
+Weight, maturity and spawning timing stay in the biological tables.
+
+```r
+data <- as_tam_data(cod_obs)
+data                              # compact previews of all tables
+check_tam_data(data)
+```
+
+The class is optional; plain lists also work. Population covariates have one
+row per input year and age. Missing values are allowed where unused, and
+projections carry terminal values forward by age. See `?as_tam_data`.
+
 ## Recruitment formulas
 
 Set `N_settings$rec_form` to describe recruitment at the youngest modeled age:
@@ -86,7 +103,7 @@ Set `N_settings$rec_form` to describe recruitment at the youngest modeled age:
 ```
 
 `N_settings$process` separately controls survival deviations in older cohorts.
-Annual covariates belong in `obs$maturity` at the youngest age; older-age entries
+Annual covariates belong in `data$pop_covariates` at the youngest modeled age; older-age entries
 may be missing. Curves describe median recruitment from start-of-year parent
 SSB. The lag defaults to recruitment age, and early years without modeled
 parent SSB remain free fixed states. Curve-plus-RW residuals are not supported.
