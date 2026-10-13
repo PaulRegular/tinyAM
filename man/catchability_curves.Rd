@@ -90,6 +90,8 @@ For logistic, \eqn{\log\mu_F = X\beta + \log S(x)}. The baseline therefore
 gives the asymptotic F when other covariates are held constant. Midpoint
 \verb{F_a50_*} and positive slope \verb{log_F_slope_*} are fitted separately from q
 curves. Realized F fluctuates around this log mean and need not be monotonic.
+\code{mu_F} is the exponential of expected log F, rather than an arithmetic
+average over lognormal process draws.
 Static curves are rejected with RW/correlated-RW residuals because they
 cancel from the increments. Gaussian structured mean terms retain their
 existing IID-residual restriction, including when combined with a curve.

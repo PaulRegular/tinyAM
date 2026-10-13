@@ -26,6 +26,13 @@ test_that("F curves define the log mean without changing residual densities", {
     obj <- RTMB::MakeADFun(function(p) nll_fun(p, d), p, silent = TRUE)
     expect_true(all(is.finite(obj$gr(obj$par))))
     expect_equal(as.numeric(obj$report()$mu_F[1, ]), as.numeric(mean))
+    ordinary <- f_curve_dat(~ factor(age), process)
+    equivalent <- make_par(ordinary)
+    shared <- intersect(names(equivalent), names(p))
+    equivalent[shared] <- p[shared]
+    equivalent$log_mu_f <- setNames(c(log(mean[1L]), log(mean[-1L] / mean[1L])),
+                                    colnames(ordinary$F_modmat))
+    expect_equal(as.numeric(nll_fun(p, d)), as.numeric(nll_fun(equivalent, ordinary)), tolerance = 1e-10)
     initial <- make_par(d)
     initial_mean <- matrix(tinyAM:::.mean_effects(initial, d, "F")$contribution, length(d$years))
     expect_equal(unname(initial$log_f), unname(initial_mean))
@@ -68,6 +75,22 @@ test_that("F curve safeguards do not unlock Gaussian temporal overlaps", {
   expect_error(f_curve_dat(~ mono(age, by = year)), "categorical")
   expect_error(f_curve_dat(~ logistic(age) + rw(year), "ar1"), "IID residuals")
   expect_error(f_curve_dat(~ logistic(age), M_settings = list(mu_form = ~ logistic(age))), "F only")
+})
+
+test_that("F logistic support cautions remain separate from numerical diagnostics", {
+  d <- f_curve_dat()
+  term <- d$F_terms[[1L]]
+  fit <- list(dat = d, sdrep = list(pdHess = TRUE,
+    par.fixed = setNames(12, term$a50_parameter), cov.fixed = matrix(25)))
+  advice <- tinyAM:::.formula_uncertainty_advisories(fit)
+  expect_equal(advice$issue, "logistic_support")
+  expect_match(advice$detail, "baseline F")
+  expect_match(advice$detail, "2 to 8")
+  fit$sdrep$cov.fixed[] <- .01
+  expect_equal(nrow(tinyAM:::.formula_uncertainty_advisories(fit)), 0L)
+  groups <- tinyAM:::.fixed_parameter_groups(data.frame(
+    par = c("dmu_f", "F_a50_F_logistic_age", "F_slope_F_logistic_age")))
+  expect_equal(nrow(groups[["Mortality means"]]), 3L)
 })
 
 test_that("F curve simulation and projection use the same mean surface", {
@@ -134,4 +157,30 @@ test_that("F curve fits retain tidy scales, uncertainty and update paths", {
   expect_equal(nrow(retro$fits[[1]]$rep$F), 19L)
   hindcast <- fit_hindcast(fit, folds = 1, start_from_fit = TRUE, progress = FALSE)
   expect_true(all(vapply(hindcast$fits, inherits, logical(1), "tam_fit")))
+  if (requireNamespace("rmarkdown", quietly = TRUE) && rmarkdown::pandoc_available()) {
+    path <- tempfile(fileext = ".html")
+    reference <- fit
+    class(reference) <- c("tam_ref", "list")
+    reference$pop$mu_F[, c("est", "lwr", "upr", "se")] <- NA_real_
+    reference$dat$F_mono_modmat <- NULL
+    reference$dat$F_terms <- list(list(type = NA_character_))
+    expect_no_error(vis_tam(model_list = list(Reference = reference, tinyAM = fit),
+                            output_file = path, open_file = FALSE,
+                            render_args = list(quiet = TRUE)))
+    con <- file(path, "rb")
+    html <- paste(readLines(con, warn = FALSE), collapse = "\n")
+    close(con)
+    expect_match(html, "Mean F", fixed = TRUE)
+    expect_match(html, "Mortality means", fixed = TRUE)
+    scripts <- regmatches(html, gregexpr(
+      '(?s)<script type="application/json"[^>]*>.*?</script>', html, perl = TRUE))[[1L]]
+    widgets <- lapply(scripts, function(script) jsonlite::fromJSON(
+      sub('</script>$', '', sub('^<script[^>]*>', '', script)), simplifyVector = FALSE))
+    mean_plots <- Filter(function(widget) any(unlist(widget$x$layout$yaxis$title) == "Mean F"), widgets)
+    expect_length(mean_plots, 1L)
+    expect_length(mean_plots[[1L]]$x$data, 2L)
+    ribbons <- vapply(mean_plots[[1L]]$x$data, function(trace)
+      !is.null(trace$fill) && trace$fill %in% c("toself", "tonexty"), logical(1))
+    expect_true(any(ribbons))
+  }
 })

@@ -29,9 +29,10 @@
 #' `NULL` it creates a coefficient vector `log_mu_f` of length
 #' `ncol(dat$F_modmat)`, and so on.
 #'
-#' Numeric parameters are initialized at `0`, except `dq` (initialized at `0.05`)
-#' and `log_m`, which starts at its log mean surface so initial M-process
-#' residuals are zero. Stock-recruit parameters use the anchor and initial SSB;
+#' Most numeric parameters start at `0`. Monotonic increments `dq` and `dmu_f`
+#' start at `0.05`; logistic curves start from the coordinate range. `log_m`
+#' and F curve states start at their log means so initial process residuals
+#' are zero. Stock-recruit parameters use the anchor and initial SSB;
 #' their recruitment states start on the expected path with zero deviations.
 #' These are starting values, not priors. Matrices are created
 #' with appropriate `dimnames` (`year × age` or `year × age_block`).
@@ -128,7 +129,8 @@
 #' @return
 #' A named list of initialized parameters suitable to pass to the TAM objective
 #' function, with elements as described in **Details**. All numeric entries are
-#' initialized to `0` except `dq` (`0.05`) and `log_m` (its log mean). Matrices have
+#' start as described in **Details**, with zero initial process deviations where
+#' mean initialization applies. Matrices have
 #' informative `dimnames`.
 #'
 #' @example inst/examples/example_dat_default.R

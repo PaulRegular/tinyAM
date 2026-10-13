@@ -17,7 +17,8 @@ parameters depend on elements in \code{dat} (e.g., \code{F_modmat}, \code{M_modm
 \value{
 A named list of initialized parameters suitable to pass to the TAM objective
 function, with elements as described in \strong{Details}. All numeric entries are
-initialized to \code{0} except \code{dq} (\code{0.05}) and \code{log_m} (its log mean). Matrices have
+start as described in \strong{Details}, with zero initial process deviations where
+mean initialization applies. Matrices have
 informative \code{dimnames}.
 }
 \description{
@@ -48,9 +49,10 @@ it initializes a 2-vector \code{logit_phi_f}; if \code{dat$F_settings$mu_form} i
 \code{NULL} it creates a coefficient vector \code{log_mu_f} of length
 \code{ncol(dat$F_modmat)}, and so on.
 
-Numeric parameters are initialized at \code{0}, except \code{dq} (initialized at \code{0.05})
-and \code{log_m}, which starts at its log mean surface so initial M-process
-residuals are zero. Stock-recruit parameters use the anchor and initial SSB;
+Most numeric parameters start at \code{0}. Monotonic increments \code{dq} and \code{dmu_f}
+start at \code{0.05}; logistic curves start from the coordinate range. \code{log_m}
+and F curve states start at their log means so initial process residuals
+are zero. Stock-recruit parameters use the anchor and initial SSB;
 their recruitment states start on the expected path with zero deviations.
 These are starting values, not priors. Matrices are created
 with appropriate \code{dimnames} (\verb{year × age} or \verb{year × age_block}).

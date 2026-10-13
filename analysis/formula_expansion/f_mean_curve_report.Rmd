@@ -1,0 +1,111 @@
+---
+title: "Rising F mean curves: recovery study"
+output:
+  html_document:
+    self_contained: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE,
+  fig.width = 8, fig.height = 4.5, fig.path = "results/f_mean_curves/figures/")
+attempts <- readRDS("results/f_mean_curves/recovery.rds")
+groups <- vapply(attempts, function(a) paste(a$kind, a$curve, a$process, a$stress), character(1))
+```
+
+## What was tested
+
+`mono(age)` describes a flexible non-decreasing mean F, including exact plateaus.
+`logistic(age)` describes a smooth rising mean that approaches an estimated
+asymptote. Realized F fluctuates around either mean, with IID or separable AR1
+residuals. These curves constrain the mean, rather than each annual F profile.
+
+There are 100 isolated Gaussian replicates and 30 full-population replicates
+for each of the four curve/process combinations. Each stress case adds 20
+replicates at both levels. The mono stress has four exact zero increments;
+the logistic stress places its midpoint at the youngest observed age, limiting
+information below the midpoint. Full assessments have 30 years, eight ages,
+two surveys, fixed M and observation log-SDs of 0.08. All attempts and warnings
+are retained. Fits are not retried or simplified.
+
+## Numerical success
+
+```{r}
+summary <- do.call(rbind, lapply(unique(groups), function(group) {
+  a <- attempts[groups == group]
+  data.frame(Design = group, Attempts = length(a),
+    Passed = sum(vapply(a, function(x) isTRUE(x$numerical), logical(1))),
+    Errors = sum(vapply(a, function(x) !is.null(x$error), logical(1))),
+    `Positive Hessian` = sum(vapply(a, function(x) isTRUE(x$pdHess), logical(1))), check.names = FALSE)
+}))
+knitr::kable(summary)
+```
+
+Numerical convergence requires optimizer success, a positive-definite Hessian
+and a sufficiently small gradient. Mono uses the gradient appropriate to its
+zero bounds. These checks do not establish statistical support for the curve.
+
+## Curve and parameter recovery
+
+```{r}
+recovery <- do.call(rbind, lapply(names(attempts), function(name) {
+  a <- attempts[[name]]
+  if (is.null(a$recovery)) return(NULL)
+  transform(a$recovery, design = groups[[name]], numerical = isTRUE(a$numerical))
+}))
+recovery$bias <- recovery$estimate - recovery$truth
+tab <- aggregate(covered ~ design, recovery, mean, na.rm = TRUE)
+names(tab)[2] <- "Parameter coverage"
+knitr::kable(tab, digits = 3)
+```
+
+Coverage is reported for all attempts with available uncertainty, including
+those failing numerical checks. Boundary Wald intervals for mono are local
+approximations. Their coverage must not be interpreted as boundary-adjusted
+inference. The detailed results retain parameter bias and uncertainty on each
+parameter's fitted scale; midpoints, log slopes and log-F increments are not
+averaged together.
+
+```{r}
+full <- Filter(function(a) a$kind == "full" && !is.null(a$curve_rmse), attempts)
+if (length(full)) {
+  labels <- vapply(full, function(a) paste(a$curve, a$process, a$stress), character(1))
+  rmse <- vapply(full, `[[`, numeric(1), "curve_rmse")
+  par(mar = c(8, 4, 1, 1))
+  boxplot(split(rmse, labels), las = 2, ylab = "Mean-F curve RMSE (per year)", col = "grey85")
+}
+```
+
+```{r profiles}
+paths <- list.files("results/f_mean_curves", "^full_.*none_1[.]rds$", full.names = TRUE)
+if (length(paths)) {
+  par(mfrow = c(2, 2), mar = c(4, 4, 2, 1))
+  for (path in paths) {
+    fit <- readRDS(path)
+    curve <- if (grepl("mono", path)) "mono" else "logistic"
+    profile <- subset(tinyAM::tidy_pop(fit)$mu_F, year == min(fit$dat$years))
+    truth <- if (curve == "mono") .08 * exp(c(0, cumsum(c(.7, .5, .3, .15, .1, .05, .05)))) else
+      .5 * plogis(1.1 * (profile$age - 4.5))
+    plot(profile$age, profile$est, type = "l", xlab = "Age", ylab = "Mean F",
+         ylim = range(c(truth, profile$lwr, profile$upr), finite = TRUE),
+         main = paste(curve, fit$dat$F_settings$process))
+    polygon(c(profile$age, rev(profile$age)), c(profile$lwr, rev(profile$upr)),
+            col = adjustcolor("steelblue", .2), border = NA)
+    lines(profile$age, profile$est, col = "steelblue", lwd = 2)
+    lines(profile$age, truth, col = "black", lwd = 2)
+  }
+}
+```
+
+Black lines show the generating mean; blue lines and ribbons show the fitted
+mean and local 95% intervals for the first replicate. These examples supplement
+the full recovery distributions; they do not select successful replicates.
+
+## Interpretation
+
+Use a rising F mean when the fishing pattern supports that biological
+assumption. Retain an ordinary baseline. Static curves cannot be identified
+from RW increments, and Gaussian temporal mean terms keep their existing
+IID-residual restriction. AR1 persistence and poorly sampled rising portions
+can weaken curve information. Inspect uncertainty and residuals alongside
+numerical diagnostics. These synthetic studies do not authorize replacing any
+settled assessment recipe.

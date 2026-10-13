@@ -30,6 +30,6 @@ testthat::test_that("noise and parent contrast are separate generating assumptio
   testthat::expect_equal(small$truth$log_sd_r, log(.15))
   testthat::expect_equal(large$truth$log_sd_r, log(.6))
   full <- rec_cross_simulation("bh_iid", "full", 72L, contrast = "wider")
-  testthat::expect_true("f_pressure" %in% names(full$obs$catch))
+  testthat::expect_true("f_pressure" %in% names(full$obs$pop_covariates))
   testthat::expect_true(all(is.finite(full$log_R)))
 })

@@ -133,7 +133,13 @@
 #' An absent F formula contributes zero. Either M contribution may be absent
 #' (then contributes zero on the log scale), but at least one is required.
 #' The M formula intercept is removed when supplied M is also present.
-#' Design rows follow the catch table for F and the weight table for M.
+#' Design rows use the aligned population-covariate frame for F and M.
+#'
+#' F mean curves with IID/AR1 residuals add cumulative non-negative log-F
+#' increments for [mono()], or \eqn{\log S(a)} for [logistic()], so the latter
+#' multiplies the ordinary mean F by rising selectivity. These are fixed curve
+#' parameters, separate from Gaussian mean effects and latent F states. Static
+#' curves cancel from RW increments and are not supported there.
 #'
 #' Historical F has one `log_f` state per year and age:
 #' \deqn{\log F_{t,a}=\log\mu^F_{t,a}+\eta^F_{t,a},\quad t\le H.}

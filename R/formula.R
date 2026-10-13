@@ -598,6 +598,8 @@ logistic <- function(x, by = NULL) .formula_marker_error("logistic")
 #' gives the asymptotic F when other covariates are held constant. Midpoint
 #' `F_a50_*` and positive slope `log_F_slope_*` are fitted separately from q
 #' curves. Realized F fluctuates around this log mean and need not be monotonic.
+#' `mu_F` is the exponential of expected log F, rather than an arithmetic
+#' average over lognormal process draws.
 #' Static curves are rejected with RW/correlated-RW residuals because they
 #' cancel from the increments. Gaussian structured mean terms retain their
 #' existing IID-residual restriction, including when combined with a curve.

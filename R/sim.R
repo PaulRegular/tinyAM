@@ -80,7 +80,7 @@
   obj <- fit$obj
   dat <- fit$dat
   par <- par_fun(fit)
-  # Gaussian uncertainty draws can cross the optimizer's dq lower bound.
+  # Gaussian uncertainty draws can cross monotonic-increment lower bounds.
   for (name in c("dq", "dmu_f")) if (!is.null(par[[name]])) par[[name]][] <- pmax(par[[name]], 0)
 
   if (redraw_random) {
