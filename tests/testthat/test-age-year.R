@@ -140,3 +140,32 @@ test_that("different projection horizons do not split a common year into frames"
   expect_match(views[[2]]$.view_hover[views[[2]]$is_proj][1], "(projection)", fixed = TRUE)
   expect_false(any(grepl("(projection)", views[[2]]$.view_hover[!views[[2]]$is_proj], fixed = TRUE)))
 })
+
+test_that("view buttons inherit native Plotly styling and control spacing", {
+  d <- age_year_data()
+  for (intervals in c(TRUE, FALSE)) {
+    p <- plot_trend(d, frame = ~age, add_intervals = intervals)
+    native <- plotly::plotly_build(p)$x$layout$updatemenus
+    for (view in c("annual", "profile")) {
+      menus <- plotly::plotly_build(tinyAM:::.age_year_menu(p, view))$x$layout$updatemenus
+      menu <- menus[[length(menus)]]
+      controls <- Filter(function(menu) any(unlist(lapply(menu$buttons, `[[`, "label")) %in%
+        c("Linear", "Log", "Show CI", "Hide CI")), native)
+      previous <- controls[[length(controls)]]
+      expect_length(menus, length(native) + 1L)
+      expect_identical(menu[c("type", "x", "y", "xanchor", "yanchor")],
+                       previous[c("type", "x", "y", "xanchor", "yanchor")])
+      expect_identical(menu$pad$r, previous$pad$r)
+      expect_equal(menu$pad$t, if (intervals) 150 else 75)
+      expect_equal(menu$active, if (view == "annual") 0 else 1)
+      expect_identical(vapply(menu$buttons, `[[`, character(1), "label"),
+                       c("Annual trends", "Age profiles"))
+      expect_true(all(vapply(menu$buttons, function(button) identical(button$execute, FALSE), logical(1))))
+    }
+  }
+  d$obs <- d$est
+  d$pred <- d$est
+  menus <- plotly::plotly_build(tinyAM:::.age_year_menu(plot_obs_pred(d), "annual"))$x$layout$updatemenus
+  expect_length(menus, 2L)
+  expect_equal(menus[[2]]$pad$t, 75)
+})

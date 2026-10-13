@@ -133,22 +133,20 @@ vis_tam <- function(..., model_list = NULL, interval = 0.95, output_file = NULL,
       ifelse(projection, " (projection)", ""), "<br>Age: ", data$age)
     args$text <- ~.view_hover
   }
-  make_view <- function(x, xlab, frame, prefix) {
+  make_view <- function(x, xlab, frame, prefix, view) {
     animated <- length(unique(data[[all.vars(frame)]])) > 1L
     if (!animated) frame <- NULL
     p <- do.call(plot, c(list(data = data, x = x, xlab = xlab, frame = frame), args))
     if (animated) p <- plotly::animation_slider(p,
       currentvalue = list(prefix = prefix), pad = list(t = 45))
+    p <- .age_year_menu(p, view)
     p$width <- "100%"
     p$height <- "100%"
     p
   }
-  annual <- make_view(~year, "Year", ~age, "Age: ")
-  profile <- make_view(~age, "Age", ~.view_year, "Year: ")
+  annual <- make_view(~year, "Year", ~age, "Age: ", "annual")
+  profile <- make_view(~age, "Age", ~.view_year, "Year: ", "profile")
   initial <- if (identical(all.vars(frame), "age")) "annual" else "profile"
-  button <- function(view, label) htmltools::tags$button(
-    type = "button", class = "btn btn-default btn-sm", `data-view` = view,
-    `aria-pressed` = if (view == initial) "true" else "false", label)
   panel <- function(view, widget) htmltools::tags$div(
     class = "tam-age-year-panel", `data-view` = view,
     style = paste0("flex:1;min-height:0;", if (view != initial) "display:none;"), widget)
@@ -157,11 +155,24 @@ vis_tam <- function(..., model_list = NULL, interval = 0.95, output_file = NULL,
   htmltools::browsable(htmltools::tags$div(
     class = "tam-age-year", `data-default-view` = initial,
     style = "display:flex;flex-direction:column;width:100%;height:100%;min-height:400px;",
-    htmltools::tags$div(class = "btn-group tam-age-year-buttons", role = "group",
-      `aria-label` = "Plot view", style = "flex:none;align-self:flex-start;margin-bottom:4px;",
-      button("annual", "Annual trends"), button("profile", "Age profiles")),
     panel("annual", annual), panel("profile", profile),
     htmltools::tags$script(htmltools::HTML(script))))
+}
+
+.age_year_menu <- function(p, view) {
+  menus <- plotly::plotly_build(p)$x$layout$updatemenus
+  controls <- Filter(function(menu) any(unlist(lapply(menu$buttons, `[[`, "label")) %in%
+    c("Linear", "Log", "Show CI", "Hide CI")), menus)
+  menu <- if (length(controls)) controls[[length(controls)]] else .log_linear_buttons[[1L]]
+  menu$name <- "tam-age-year-view"
+  menu$pad$t <- if (is.null(menu$pad$t)) 75 else menu$pad$t + 75
+  menu$active <- match(view, c("annual", "profile")) - 1L
+  menu$buttons <- list(
+    list(method = "skip", execute = FALSE, args = list("annual"), label = "Annual trends"),
+    list(method = "skip", execute = FALSE, args = list("profile"), label = "Age profiles"))
+  if (is.null(p$x$layout)) p$x$layout <- list()
+  p$x$layout$updatemenus <- c(menus, list(menu))
+  p
 }
 
 .mortality_plot_data <- function(data, mean, fits, component) {
