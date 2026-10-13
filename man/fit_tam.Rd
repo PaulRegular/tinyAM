@@ -94,6 +94,10 @@ columns must be identifiable from historical year-to-year differences.
 With IID residuals, \code{\link[=iid]{iid()}}, \code{\link[=rw]{rw()}} and \code{\link[=ar1]{ar1()}} can add random mean effects,
 e.g. \code{~ factor(age) + rw(year)}. Only one temporal mean term is supported;
 structured means with temporal residual processes are not yet enabled.
+\code{\link[=mono]{mono()}} and \code{\link[=logistic]{logistic()}} can instead describe a rising mean age curve
+with IID or AR1 residuals, e.g. \code{~ logistic(age)}. Ordinary terms supply
+baseline F; realized F can depart from the rising mean. Static curves are
+not identifiable with RW/correlated-RW residuals. See \link{catchability_curves}.
 \item \code{mean_ages}: optional vector of ages to include in population weighted
 average F (\code{F_bar}) calculations. All ages used if absent.
 }}
@@ -236,7 +240,7 @@ See \code{\link[=prepare_tam]{prepare_tam()}} for options and \link{tinyAM-model
 \details{
 Builds data with \code{\link[=prepare_tam]{prepare_tam()}} and initial parameters with \code{\link[=make_par]{make_par()}}.
 RTMB integrates random effects using the Laplace approximation; \code{nlminb}
-optimizes the remaining fixed effects. \code{\link[=mono]{mono()}} increments \code{dq} have a zero
+optimizes the remaining fixed effects. \code{\link[=mono]{mono()}} increments \code{dq} and \code{dmu_f} have a zero
 lower bound. Their SEs remain on the increment scale, but symmetric Wald
 intervals are only local approximations at a boundary.
 Set \code{index_settings$q_link = "logit"} to restrict the full catchability

@@ -73,6 +73,9 @@
 #'   - `atanh_rho_f`: signed age correlation of annual F increments
 #'     (if `process == "cor_rw"`), reported as `rho_f` through `tanh()`.
 #'   - `log_mu_f` coefficients (length `ncol(dat$F_modmat)`) if a mean structure was supplied
+#'   - `dmu_f`: directly fitted non-negative log-mean-F increments for [mono()]
+#'   - `F_a50_*`, `log_F_slope_*`: midpoint and log positive slope for [logistic()]
+#'     mean curves. F states start at their complete mean curve, giving zero residuals.
 #'   - `log_f` matrix (historical `year` × `age`; no projection rows)
 #'
 #' - **Natural mortality (M)**
@@ -191,6 +194,9 @@ make_par <- function(dat) {
                        colnames(dat$q_mono_modmat))
   }
   par <- c(par, .q_term_parameters(.formula_terms(dat)))
+  if (!is.null(dat$F_mono_modmat)) {
+    par$dmu_f <- setNames(rep(.05, ncol(dat$F_mono_modmat)), colnames(dat$F_mono_modmat))
+  }
 
   if (dat$any_fill_missing) {
     par$missing <- numeric(sum(dat$fill_missing_map))
@@ -213,6 +219,12 @@ make_par <- function(dat) {
   }
   par$log_f <- matrix(0, nrow = sum(!dat$is_proj), ncol = length(dat$ages),
                       dimnames = list(year = dat$years[!dat$is_proj], age = dat$ages))
+  if (!is.null(dat$F_mono_modmat) || any(vapply(dat$F_terms, function(x) x$type == "logistic", logical(1)))) {
+    surface <- matrix(drop(dat$F_modmat %*% par$log_mu_f) +
+                        .mean_effects(par, dat, "F")$contribution,
+                      length(dat$years), length(dat$ages))
+    par$log_f[] <- surface[!dat$is_proj, , drop = FALSE]
+  }
 
   if (dat$M_settings$process != "off") {
     mu_m_init <- if (is.null(par$mu_m)) dat$mu_m else par$mu_m

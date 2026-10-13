@@ -55,6 +55,9 @@ selected q-link scale (log-q or logit-q). Estimates and SEs are reported
 directly on this same scale,
 with untransformed Wald intervals (which may cross zero at a boundary).
 These local curvature SEs are not boundary-adjusted inference.
+F mean-curve increments \code{dmu_f} likewise remain on their fitted log-F
+increment scale. F logistic midpoints are on the age/covariate scale;
+slopes are reported positive, with SEs on their fitted log scale.
 Coefficient names identify
 transitions and groups. Actual observation-specific q is in \code{\link[=tidy_obs_pred]{tidy_obs_pred()}}.
 }

@@ -497,6 +497,9 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   REPORT(M_bar)
   REPORT(F)
   REPORT(mu_F)
+  if (!is.null(dat$F_mono_modmat) || any(vapply(dat$F_terms, function(x) x$type == "logistic", logical(1)))) {
+    ADREPORT(log_mu_F)
+  }
   REPORT(F_full)
   REPORT(F_bar)
   REPORT(S)

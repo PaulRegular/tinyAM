@@ -82,7 +82,7 @@
 #' @details
 #' Builds data with [prepare_tam()] and initial parameters with [make_par()].
 #' RTMB integrates random effects using the Laplace approximation; `nlminb`
-#' optimizes the remaining fixed effects. [mono()] increments `dq` have a zero
+#' optimizes the remaining fixed effects. [mono()] increments `dq` and `dmu_f` have a zero
 #' lower bound. Their SEs remain on the increment scale, but symmetric Wald
 #' intervals are only local approximations at a boundary.
 #' Set `index_settings$q_link = "logit"` to restrict the full catchability
@@ -240,8 +240,8 @@ fit_tam <- function(
       par <- .initialize_rec_curve(par, dat)
     }
   }
-  if (!is.null(par$dq) && any(!is.finite(par$dq) | par$dq < 0)) {
-    cli::cli_abort("Starting {.arg dq} increments must be finite and non-negative.")
+  for (name in c("dq", "dmu_f")) if (!is.null(par[[name]]) && any(!is.finite(par[[name]]) | par[[name]] < 0)) {
+    cli::cli_abort("Starting {.arg {name}} increments must be finite and non-negative.")
   }
 
   ran <- c("log_f", "log_r", .formula_random_parameters(dat))
@@ -316,7 +316,7 @@ fit_tam <- function(
   )
 
   lower <- rep(-Inf, length(obj$par))
-  lower[names(obj$par) == "dq"] <- 0
+  lower[names(obj$par) %in% c("dq", "dmu_f")] <- 0
   opt <- tryCatch(stats::nlminb(
     obj$par, obj$fn, obj$gr,
     lower = lower,

@@ -96,6 +96,9 @@ See \code{\link[=prepare_tam]{prepare_tam()}} for the choices and weak-identific
 \item \code{atanh_rho_f}: signed age correlation of annual F increments
 (if \code{process == "cor_rw"}), reported as \code{rho_f} through \code{tanh()}.
 \item \code{log_mu_f} coefficients (length \code{ncol(dat$F_modmat)}) if a mean structure was supplied
+\item \code{dmu_f}: directly fitted non-negative log-mean-F increments for \code{\link[=mono]{mono()}}
+\item \verb{F_a50_*}, \verb{log_F_slope_*}: midpoint and log positive slope for \code{\link[=logistic]{logistic()}}
+mean curves. F states start at their complete mean curve, giving zero residuals.
 \item \code{log_f} matrix (historical \code{year} × \code{age}; no projection rows)
 }
 \item \strong{Natural mortality (M)}

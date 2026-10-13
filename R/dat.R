@@ -417,6 +417,10 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #'   With IID residuals, [iid()], [rw()] and [ar1()] can add random mean effects,
 #'   e.g. `~ factor(age) + rw(year)`. Only one temporal mean term is supported;
 #'   structured means with temporal residual processes are not yet enabled.
+#'   [mono()] and [logistic()] can instead describe a rising mean age curve
+#'   with IID or AR1 residuals, e.g. `~ logistic(age)`. Ordinary terms supply
+#'   baseline F; realized F can depart from the rising mean. Static curves are
+#'   not identifiable with RW/correlated-RW residuals. See [catchability_curves].
 #' - `mean_ages`: optional vector of ages to include in population weighted
 #'   average F (`F_bar`) calculations. All ages used if absent.
 #' @param M_settings A list with elements:
@@ -513,7 +517,7 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #'   logical vector indicating missing and observed values, and vector of non-missing values, respectively.
 #' - design matrices: `sd_catch_modmat`, `sd_index_modmat`, `q_modmat`, and optionally `F_modmat`, `M_modmat`
 #' - mean-level placeholders: `log_mu_f` and/or `mu_m` (or `log_mu_supplied_m`)
-#' - process settings: `N_settings`, `F_settings`, `M_settings`, `catch_settings`, `index_settings`
+#' - process settings: `N_settings`, `rec_settings`, `F_settings`, `M_settings`, `catch_settings`, `index_settings`
 #' - projection settings: `proj_settings`
 #' - AR(1) parameter assumptions, `logit_phi_*`, if applicable
 #'
@@ -795,6 +799,8 @@ prepare_tam <- function(
     mean_design <- .parse_mean_formula(dat$F_settings$mu_form, dat, "F")
     dat$F_modmat <- mean_design$matrix
     dat$F_terms <- mean_design$terms
+    dat$F_mono_modmat <- mean_design$mono_matrix
+    dat$F_mono_steps <- mean_design$mono_steps
     .check_mean_terms(dat, "F")
     if (nrow(dat$F_modmat) != nrow(dat$pop_data) ||
         any(!is.finite(dat$F_modmat)) || !ncol(dat$F_modmat)) {

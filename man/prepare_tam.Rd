@@ -88,6 +88,10 @@ columns must be identifiable from historical year-to-year differences.
 With IID residuals, \code{\link[=iid]{iid()}}, \code{\link[=rw]{rw()}} and \code{\link[=ar1]{ar1()}} can add random mean effects,
 e.g. \code{~ factor(age) + rw(year)}. Only one temporal mean term is supported;
 structured means with temporal residual processes are not yet enabled.
+\code{\link[=mono]{mono()}} and \code{\link[=logistic]{logistic()}} can instead describe a rising mean age curve
+with IID or AR1 residuals, e.g. \code{~ logistic(age)}. Ordinary terms supply
+baseline F; realized F can depart from the rising mean. Static curves are
+not identifiable with RW/correlated-RW residuals. See \link{catchability_curves}.
 \item \code{mean_ages}: optional vector of ages to include in population weighted
 average F (\code{F_bar}) calculations. All ages used if absent.
 }}
@@ -197,7 +201,7 @@ abundance \code{N_plus} can then be inspected in the likelihood report (\code{fi
 logical vector indicating missing and observed values, and vector of non-missing values, respectively.
 \item design matrices: \code{sd_catch_modmat}, \code{sd_index_modmat}, \code{q_modmat}, and optionally \code{F_modmat}, \code{M_modmat}
 \item mean-level placeholders: \code{log_mu_f} and/or \code{mu_m} (or \code{log_mu_supplied_m})
-\item process settings: \code{N_settings}, \code{F_settings}, \code{M_settings}, \code{catch_settings}, \code{index_settings}
+\item process settings: \code{N_settings}, \code{rec_settings}, \code{F_settings}, \code{M_settings}, \code{catch_settings}, \code{index_settings}
 \item projection settings: \code{proj_settings}
 \item AR(1) parameter assumptions, \verb{logit_phi_*}, if applicable
 }

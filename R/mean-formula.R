@@ -11,20 +11,46 @@
   d <- .mean_formula_data(dat, component)
   design <- .parse_q_formula(formula, d)
   terms <- design$q_terms
-  if (!is.null(design$q_mono_modmat) ||
-      any(vapply(terms, function(x) x$type == "logistic", logical(1)))) {
-    cli::cli_abort("{component}_settings$mu_form supports iid(), rw() and ar1(), not catchability curves.")
+  logistic <- Filter(function(x) x$type == "logistic", terms)
+  mono <- design$q_mono_steps
+  n_mono <- if (is.null(mono)) 0L else length(unique(mono$variable))
+  has_curve <- n_mono + length(logistic) > 0L
+  if (has_curve) {
+    if (component != "F") cli::cli_abort("M_settings$mu_form does not support catchability curves: mono() and logistic() are enabled for F only.")
+    if (n_mono + length(logistic) != 1L) cli::cli_abort("Use one mono() or logistic() curve in F_settings$mu_form.")
+    if (!dat$F_settings$process %in% c("iid", "ar1")) {
+      cli::cli_abort("F mean curves require process = 'iid' or 'ar1'. Static age curves cancel from RW increments.")
+    }
+    variable <- if (n_mono) mono$variable[1L] else logistic[[1L]]$variable
+    x <- d[[variable]]
+    if (!is.numeric(x) || any(vapply(split(x, d$age), function(z) length(unique(z)) != 1L, logical(1)))) {
+      cli::cli_abort("F mean curves must use numeric age or an age-derived population covariate constant across years at each age.")
+    }
+    by <- if (n_mono) mono$by[1L] else logistic[[1L]]$by
+    if (!is.null(by) && !is.na(by) && is.numeric(d[[by]])) cli::cli_abort("F mean curves require categorical by groups.")
+    if (!ncol(design$q_modmat)) cli::cli_abort("F mean curves require an ordinary baseline; retain the intercept or supply group baselines.")
+    fixed <- design$q_modmat[!d$is_proj, , drop = FALSE]
+    if (qr(cbind(fixed, 1))$rank > qr(fixed)$rank) cli::cli_abort("F mean curves require an ordinary baseline; retain the intercept or supply group baselines.")
+    if (n_mono) {
+      combined <- cbind(design$q_modmat, design$q_mono_modmat)
+      combined <- combined[!d$is_proj, , drop = FALSE]
+      if (qr(combined)$rank < ncol(combined)) cli::cli_abort("The mono F curve duplicates ordinary mean terms. Remove redundant age effects or supply group baselines.")
+    }
   }
   for (i in seq_along(terms)) {
     term <- terms[[i]]
     term$id <- paste(component, term$id, sep = "_")
-    term$parameter <- paste0("eta_mu_", term$id)
+    if (term$type == "logistic") {
+      term$a50_parameter <- paste0("F_a50_", term$id)
+      term$slope_parameter <- paste0("log_F_slope_", term$id)
+    } else term$parameter <- paste0("eta_mu_", term$id)
     if (!is.null(term$sd_parameter)) term$sd_parameter <- paste0("log_sd_mu_", term$id)
     if (!is.null(term$phi_parameter)) term$phi_parameter <- paste0("logit_phi_mu_", term$id)
     terms[[i]] <- term
   }
   if (length(terms)) names(terms) <- vapply(terms, `[[`, character(1), "id")
-  list(matrix = design$q_modmat, terms = terms)
+  list(matrix = design$q_modmat, terms = terms,
+       mono_matrix = design$q_mono_modmat, mono_steps = mono)
 }
 
 .check_mean_terms <- function(dat, component) {
@@ -36,7 +62,8 @@
       "i" = "Multiple RW/AR1 mean terms may explain the same changes in mortality; their separate contributions have not been validated.",
       "i" = "Retain one rw() or ar1() term and use IID residuals for independent fluctuations."))
   }
-  if (!settings$process %in% c("iid", "off")) {
+  gaussian <- Filter(function(x) x$type != "logistic", terms)
+  if (length(gaussian) && !settings$process %in% c("iid", "off")) {
     alternative <- if (component == "M") ", or use process = 'off' to vary only the M mean" else ""
     cli::cli_abort(c("Structured {component} means currently require IID residuals{if (component == 'M') ' or process = off' else ''}.",
       "i" = "Structured means and temporal residual processes may explain overlapping mortality variation; this combination has not been validated.",
@@ -45,6 +72,7 @@
   d <- .mean_formula_data(dat, component)
   fixed <- dat[[paste0(component, "_modmat")]]
   proxy <- list(obs = list(index = d), q_terms = terms, q_modmat = fixed,
+    q_mono_modmat = if (component == "F") dat$F_mono_modmat else NULL,
     mean_component = component,
     index_settings = list(q_link = "log"),
     sd_index_modmat = matrix(if (settings$process == "iid") 1 else numeric(), nrow(d),
@@ -91,7 +119,14 @@
 .mean_effects <- function(par, dat, component, simulate = FALSE) {
   proxy <- list(obs = list(index = .mean_formula_data(dat, component)),
                 q_terms = dat[[paste0(component, "_terms")]])
-  .q_effects(par, proxy, simulate = simulate)
+  out <- .q_effects(par, proxy, simulate = simulate)
+  if (component == "F") {
+    out$contribution <- out$contribution + out$log_selectivity
+    if (!is.null(dat$F_mono_modmat)) {
+      out$contribution <- out$contribution + drop(dat$F_mono_modmat %*% par$dmu_f)
+    }
+  }
+  out
 }
 
 .formula_terms <- function(dat) {

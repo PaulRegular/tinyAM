@@ -81,7 +81,7 @@
   dat <- fit$dat
   par <- par_fun(fit)
   # Gaussian uncertainty draws can cross the optimizer's dq lower bound.
-  if (!is.null(par$dq)) par$dq[] <- pmax(par$dq, 0)
+  for (name in c("dq", "dmu_f")) if (!is.null(par[[name]])) par[[name]][] <- pmax(par[[name]], 0)
 
   if (redraw_random) {
     sims <- nll_fun(par, dat, simulate = TRUE)
@@ -129,7 +129,7 @@
 #' the observations. Results are tidy data frames with a `sim = 1..n` column.
 #'
 #' @details
-#' For [mono()] effects, negative `dq` values from Gaussian parameter draws
+#' For [mono()] effects, negative `dq` or `dmu_f` values from Gaussian parameter draws
 #' are clipped to zero before generating predictions or observations. This
 #' projects the normal approximation onto the feasible increments and adds
 #' probability at zero; it is not a boundary-corrected posterior sampler.
