@@ -1,6 +1,11 @@
 ## Observations ----
 years <- 1991:2025
-ages <- 0:5 # truncated to age 5, setting it as the plus group, to avoid issues with survey plus groups being earlier than the population plus group
+
+# Use age 5 as the population plus group so all survey plus groups
+# fall at the population plus age. The translation helper aggregates
+# older catch/index observations into 5+.
+ages <- 0:5
+
 assessment_id <- source$assessment$assessment_id
 inputs <- source$inputs
 
@@ -40,17 +45,38 @@ age_plus_group <- max(ages)
 comparison_scales <- c(N = 0.001, recruitment = 0.001, ssb = 0.001, biomass = 0.001, abundance = 0.001,
     biomass_at_age = 0.001, F = 1, M = 1, F_bar = 1)
 
-background <- c("### Western Baltic spring-spawning herring: accepted 2026 SAM assessment", "", print_sources(source$assessment),
-    "", "| Component | Accepted assessment | tinyAM representation | Main simplification |", "|---|---|---|---|",
-    sprintf("| Years and ages | 1991–2025; ages 0–8+, with recruitment at age 0. | Fit ages %s–%s, with age %s as the plus group. | Older source ages are combined when the selected maximum age is lower. |", min(ages), max(ages), max(ages)),
-    "| N | SAM uses a segmented recruitment relationship, a separate recruitment variance, and shared survival variance for ages 1–8. | Random-walk recruitment with its own SD, a cohort random walk with shared SD, and exponential initial abundance. | The hockey-stick relationship, survival-error dynamics and initial-state integration differ; separate recruitment and survival SDs are available. |",
-    "| F | SAM has age-specific F, AR(1) dependence across ages, and one shared state for ages 7–8; Fbar is ages 2–5. | Random-walk F with independent age processes. | tinyAM does not represent the source cross-age covariance or the shared oldest-age state. |",
-    "| M | Fixed, time-invariant age-specific M derived from NSAS herring and profiled at the 2025 benchmark. | Use the same fixed M-at-age values in every year. | M is not estimated in either fit. |",
-    "| Catch | Total catch at age in thousands of fish; lognormal errors have separate variances for ages 0, 1, and 2–8. | Convert to individual fish and retain those three observation-SD groups. | The source's other model details are simplified. |",
-    "| Indices | HERAS ages 2–6+, GERAS ages 1–3, N20 age 0, and IBTS/BITS Q1 ages 3–5+; timings are 0.625, 0.8, 0.4, and 0.136365. | Retain all available observations, exact timing, q-sharing groups, and IBTS/BITS relative SD factors. | tinyAM uses independent age residuals rather than the source's AR(1) age errors. Five 1999 HERAS values are missing in the source. |",
-    "| Weights and maturity | Annual stock and catch weights; constant maturity ogive; spawning fractions are 0.168 for F and 0.25 for M. | Use source weights and maturity, without the pre-spawning survival adjustment. | Biological inputs are retained; spawning timing differs. |",
-    "| SSB | Based on source N, weights and maturity after survival to spawning. | Calculate start-year SSB; use accepted N with the same translated biology for common-definition comparisons. | The common comparison excludes spawning-time survival and is distinct from native SAM SSB. |",
-    "", "Source N, F, and q values initialize the tinyAM fit but do not constrain it. The observation precision weight provided for IBTS/BITS Q1 is retained with its equivalent SD multiplier; absent source weights on the other indices use a neutral multiplier of one.")
+
+background <- c(
+  "### Western Baltic spring-spawning herring: accepted 2026 SAM assessment",
+  "",
+  print_sources(source$assessment),
+  "",
+  "| Component | Accepted assessment | tinyAM representation | Main simplification |",
+  "|---|---|---|---|",
+
+  "| Years and ages | 1991–2025; ages 0–8+, with recruitment at age 0. | Fit ages 0–5+, aggregating source catch and survey observations at ages 5 and older into the new plus group. | The reduced age structure avoids survey plus groups falling below the population plus group, but does not reproduce all age-specific dynamics of ages 5–8+. |",
+
+  "| N | SAM uses a segmented (hockey-stick) stock-recruitment relationship, separate recruitment-process variance, and shared survival-process variance across ages 1–8. | Use IID older-cohort survival deviations, free initial abundance, and a separate recruitment process. | The hockey-stick relationship, reduced age structure, and initial-state treatment remain different. |",
+
+  "| F | SAM estimates age-specific F with AR(1) dependence across ages, and shares the F state for ages 7 and 8. Fbar is ages 2–5. | Use correlated F random walks (cor_rw) over ages 0–5+, with mean_ages = 2:5. | Cross-age dependence is better approximated, but the source age-specific F structure and shared oldest-age state are not reproduced exactly. The translated age-5+ F is not directly equivalent to source age-5 F. |",
+
+  "| M | Fixed, time-invariant age-specific M derived from NSAS herring and profiled at the 2025 benchmark. | Retain the published M values through age 5. | The age-5 M value is applied to the translated 5+ group rather than constructing an aggregate mortality schedule for ages 5–8+. |",
+
+  "| Catch | Total catch-at-age in thousands of fish, with lognormal observation errors grouped for ages 0, 1, and 2–8. | Convert to individual fish, sum ages 5–8+ into 5+, and retain the three catch observation-SD groups. | Catch totals are preserved under aggregation, but the original age-specific observations and error structure are not. |",
+
+  "| Indices | HERAS ages 2–6+, GERAS ages 1–3, N20 age 0, and IBTS/BITS Q1 ages 3–5+. Sampling fractions are 0.625, 0.8, 0.4, and 0.136365, respectively. | Combine HERAS ages 5 and 6+ into one 5+ index; retain the native IBTS/BITS 5+ index. Other survey ages remain unchanged. Preserve sampling fractions, q-sharing groups, and available relative SD factors. | Aggregated HERAS observations do not reproduce the original joint lognormal likelihood or cross-age residual correlation. Five HERAS observations are missing in 1999. |",
+
+  "| Weights and maturity | Annual stock and catch weights, constant maturity ogive, and spawning fractions of 0.168 for F and 0.25 for M. | Retain supplied biology through age 5, without pre-spawning survival adjustments. | Age-5 biological values proxy for the translated 5+ group; older-age biological contributions and spawning-time survival are approximated. |",
+
+  "| SSB and comparison | SAM calculates SSB using its full 0–8+ population and survival to spawning. | Calculate start-year SSB over the reduced 0–5+ model and use a common definition when comparing with accepted states. | Accepted abundance must be aggregated consistently into 5+ for comparison. Native SAM SSB and Fbar are not strictly equivalent to reduced-age quantities. |",
+
+  "",
+  "The age truncation is an intentional approximation to align the model plus group with the earliest survey plus group. The translation helper sums source catch and index observations above the selected maximum age; it does not automatically construct abundance-weighted biology or fitted-state starting values for the new plus group.",
+  "",
+  "The N process has been changed to iid and the F process to cor_rw to more closely approximate the accepted SAM configuration. The accepted hockey-stick recruitment relationship and age-correlated survey observation errors are not reproduced.",
+  "",
+  "The IBTS/BITS Q1 observation precision factors are retained through their equivalent SD multipliers. Missing relative SD factors for other indices use a neutral multiplier of one."
+)
 
 ## Model ----
 fit <- NULL
