@@ -56,18 +56,6 @@ Settings {data-navmenu="Tables"}
 Row {.tabset}
 --------------------------------------------------------------------------------
 
-### SSB timing
-
-```{r, results = "asis"}
-knitr::kable(ssb_timing, format = "html")
-for (name in names(fits)) {
-  if (!inherits(fits[[name]], "tam_fit")) next
-  timing <- tinyAM:::.ssb_timing_table(fits[[name]]$dat)
-  timing$model <- name
-  print(knitr::kable(timing, format = "html"))
-}
-```
-
 ### Function calls
 
 ```{r, results = "asis"}
