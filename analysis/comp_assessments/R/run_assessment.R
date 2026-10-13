@@ -170,8 +170,15 @@ print_sources <- function(assessment) {
   }
   comparison <- assessment$comparison
   plus <- comparison$age_plus_group
-  if (!is.null(plus) && !identical(as.numeric(plus), as.numeric(max(fit$dat$ages)))) {
-    cli::cli_abort("The comparison plus age ({plus}) differs from the fitted plus age ({max(fit$dat$ages)}). Update {.code assessment$comparison$age_plus_group} for this age range.")
+  source_ages <- suppressWarnings(as.numeric(c(assessment$source$inputs$age,
+                                               assessment$source$outputs$age)))
+  if (!is.null(plus)) {
+    if (!is.numeric(plus) || length(plus) != 1L || !is.finite(plus) ||
+        plus != trunc(plus) || !plus %in% c(source_ages, fit$dat$ages)) {
+      cli::cli_abort("The comparison plus age must be a recorded source age or the fitted plus age.")
+    }
+    # The supplied fit determines the terminal group, including for age subsets.
+    plus <- max(fit$dat$ages)
   }
   mappings <- comparison$comparison_age_groups
   if (!is.null(mappings) && (!is.list(mappings) || (length(mappings) &&
@@ -187,7 +194,8 @@ print_sources <- function(assessment) {
       cli::cli_abort("Comparison age groups for {metric} must be a uniquely named list.")
     }
     valid <- vapply(groups, function(ages) is.numeric(ages) && length(ages) > 0L &&
-      all(is.finite(ages)) && all(ages == trunc(ages)) && all(ages %in% fit$dat$ages) &&
+      all(is.finite(ages)) && all(ages == trunc(ages)) &&
+      all(ages %in% c(source_ages, fit$dat$ages)) &&
       !anyDuplicated(ages), logical(1))
     if (!all(valid) || anyDuplicated(unlist(groups, use.names = FALSE))) {
       cli::cli_abort("Comparison age groups for {metric} must map to distinct fitted ages. Update {.code assessment$comparison$comparison_age_groups} for this age range.")

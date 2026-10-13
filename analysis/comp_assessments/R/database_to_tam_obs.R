@@ -1044,6 +1044,7 @@ database_to_tam_M <- function(assessment_id, inputs, assumptions = NULL,
     names(surface)[[3]] <- "M_assumption"
     notes <- "Source numerical M surface retained on the requested year-age grid."
   } else if (has_age) {
+    m <- m[m$age %in% ages, , drop = FALSE]
     if (anyDuplicated(m$age) || !setequal(m$age, ages)) {
       .translation_abort("Time-invariant age-specific M must contain one value for every requested age.")
     }
@@ -1052,6 +1053,7 @@ database_to_tam_M <- function(assessment_id, inputs, assumptions = NULL,
     surface <- data.frame(year = grid$year, age = grid$age, M_assumption = value)
     notes <- "Time-invariant age-specific M vector expanded over requested years."
   } else {
+    m <- m[m$year %in% years, , drop = FALSE]
     if (anyDuplicated(m$year) || !setequal(m$year, years)) {
       .translation_abort("Age-invariant M must contain one value for every requested year.")
     }

@@ -151,9 +151,17 @@ preview <- view_assessment(fit, assessment)
 the supplied fit's years, ages and biological inputs, applies the same catch
 reporting and unit/definition rules as the batch runner, and returns the fit,
 reference, diagnostics, detailed differences and summary invisibly. Summaries
-use historical years; projection rows remain available in the dashboard. Age-group
-mappings must remain valid on the current model grid; revise
-`assessment$comparison` explicitly when changing the age range.
+use historical years; projection rows remain available in the dashboard. The
+comparison plus age follows the supplied fit's maximum age. For example,
+changing `ages` from `0:8` to `0:7` combines source ages 7 and 8+ into 7+ for
+catch, indices and age-specific output comparisons. Summed outputs have no
+combined uncertainty; mortality rates use accepted N as weights.
+
+Fixed M and biological inputs are selected on the requested age grid; missing
+or duplicated values on that grid remain errors. No extra M values are required
+outside it. Explicit reported age-group mappings that extend outside the fit
+remain unavailable rather than comparing a partial group. Revise those mappings
+only when the source supports a complete comparison.
 
 By default, the dashboard opens from a temporary HTML file; no fits, CSVs or
 persistent dashboards are exported. Supply `output_file` to retain a file, or
