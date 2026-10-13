@@ -186,7 +186,7 @@ Each stock script supplies a short Markdown table aligned with `prepare_tam()`:
 |---|------|------|------|
 | Years | Fitted historical years | Years used in this fit | Explain any restricted period |
 | Ages | Recruitment age and terminal age group | Model ages and plus group | Explain any age restriction or grouping |
-| N | Recruitment, survival, process variation, and initial abundance | `N_settings` and recruitment treatment | Explain omitted or changed population assumptions |
+| N | Recruitment, survival, process variation, and initial abundance | `N_settings` and `rec_settings` | Explain omitted or changed population assumptions |
 | F | Fleets, selectivity, and changes through time | `F_settings` and catch aggregation | Explain the simplified fishery structure |
 | M | Fixed or estimated mortality, age groups, and time variation | M assumption and `M_settings` | Explain the baseline and any estimated process |
 | Catch | Removal streams and observation-error model | Catch observations and `catch_settings` | Explain reconstruction and error-model differences |
@@ -866,12 +866,13 @@ Compare the actual mathematical structure.
 
 For broad comparative analyses, a standardized tinyAM N process may intentionally differ from the source assessment. Record that explicitly.
 
-Recruitment is separate from older-cohort deviations: `N_settings$rec_form`
-defaults to `~ rw(year)`, while `N_settings$process` controls survival variation.
-Supported alternatives include `~ iid(year)`, `~ bh(ssb) + iid(year)` and
-`~ ricker(ssb) + ar1(year)`, with fixed annual covariates when justified.
+Recruitment is separate from older-cohort deviations: `rec_settings$process`
+defaults to `"rw"`, while `N_settings$process` controls survival variation.
+Set `rec_settings$mu_form = ~ 1` for a constant IID/AR1 baseline, or use
+`~ bh(ssb)` or `~ ricker(ssb)` with IID/AR1 residuals. Mean formulas may include
+fixed annual covariates when justified; process markers do not belong in them.
 Recruitment means abundance at the youngest modeled age. Parent SSB is
-start-of-year mature biomass; the default lag is that recruitment age. Early
+mature biomass at the supplied spawning time (zero by default); the default lag is that recruitment age. Early
 states with no modeled parent SSB are fixed boundary parameters, not fabricated
 historical SSB. The curves describe median recruitment, without an automatic
 lognormal correction. Check the source equation, age, lag, spawning convention,
@@ -912,12 +913,16 @@ Mean formulas can include `iid()`, `rw()` or `ar1()` effects, for example
 `mu_form = ~ factor(age) + rw(year)` with an IID residual F process. Follow the
 package's safeguards for overlapping temporal processes. A shared temporal
 mean plus independent residuals does not reproduce correlated RW innovations
-across ages. `logistic()` is a catchability curve, not a fishery-selectivity term.
+across ages. With IID/AR1 residuals, `mu_form = ~ logistic(age)` or `~ mono(age)`
+can describe a rising long-term mean F. The mean is constrained, rather than
+each annual F profile. These static curves cancel from RW increments and are
+not supported with RW/correlated-RW residuals. They do not reproduce fleet-specific
+or double-logistic selectivity automatically.
 
 `cor_rw` provides AR1 age correlation between annual F increments; its SDs are
 marginal increment SDs. Use it only when that covariance matches the source
 assumption. N, F and M can have ordinary age-based `sd_form` terms, with sharing
-covariates in the weight table. Designs must be constant across years at each
+covariates in `pop_covariates`. Designs must be constant across years at each
 active age; M sharing must also be constant within fitted M state blocks.
 Recruitment and initial-abundance SDs remain separate. Inspect group uncertainty
 and `check_tam()` advisories rather than equating convergence with support.

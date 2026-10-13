@@ -1,5 +1,5 @@
 test_that("prepare_tam and fit_tam expose the same data and model arguments", {
-  settings <- c("data", "years", "ages", "N_settings", "F_settings",
+  settings <- c("data", "years", "ages", "N_settings", "rec_settings", "F_settings",
                 "M_settings", "catch_settings", "index_settings", "proj_settings")
   expect_identical(names(formals(prepare_tam)), settings)
   expect_true(all(settings %in% names(formals(fit_tam))))

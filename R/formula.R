@@ -6,8 +6,8 @@
 #' terms in `index_settings$q_form`, `F_settings$mu_form`, or
 #' `M_settings$mu_form`, `catch_settings$sd_form`, or `index_settings$sd_form`;
 #' ordinary formula terms supply the baseline.
-#' `N_settings$rec_form` also supports one annual Gaussian residual process;
-#' see [recruitment_formulas] for its distinct initial-state convention.
+#' Recruitment uses a separate named residual process in `rec_settings`;
+#' see [recruitment_formulas] for its initial-state convention.
 #'
 #' @details
 #' `iid(x)` gives each level an independent, mean-zero Normal effect.
@@ -130,7 +130,7 @@ ar1 <- function(x, by = NULL, sd = NULL, phi = NULL) .formula_marker_error("ar1"
 logistic <- function(x, by = NULL) .formula_marker_error("logistic")
 
 .formula_marker_error <- function(term) {
-  cli::cli_abort("{term}() is a formula marker. Use it in q_form, F/M mu_form, catch/index sd_form, or N_settings$rec_form; logistic() is restricted to q_form.")
+  cli::cli_abort("{term}() is a formula marker. Use Gaussian terms in q_form, F/M mu_form, or catch/index sd_form; logistic() belongs in q_form or F mu_form.")
 }
 
 .formula_call_name <- function(x) {
@@ -145,7 +145,7 @@ logistic <- function(x, by = NULL) .formula_marker_error("logistic")
 .parse_q_formula <- function(formula, data) {
   if (!inherits(formula, "formula")) cli::cli_abort("{.arg q_form} must be a formula.")
   if (any(c("bh", "ricker") %in% all.names(formula))) {
-    cli::cli_abort("bh() and ricker() are restricted to N_settings$rec_form.")
+    cli::cli_abort("bh() and ricker() are restricted to rec_settings$mu_form.")
   }
   special <- c("iid", "rw", "ar1", "logistic", "|")
   contains <- function(x) {
@@ -288,6 +288,10 @@ logistic <- function(x, by = NULL) .formula_marker_error("logistic")
   spec$parameter <- if (spec$type == "logistic") NULL else paste0("eta_q_", id)
   spec$sd_parameter <- if (is.null(spec$sd) && spec$type != "logistic") paste0("log_sd_q_", id) else NULL
   spec$phi_parameter <- if (spec$type == "ar1" && is.null(spec$phi)) paste0("logit_phi_q_", id) else NULL
+  if (spec$type == "logistic") {
+    spec$a50_parameter <- paste0("q_a50_", id)
+    spec$slope_parameter <- paste0("log_q_slope_", id)
+  }
   spec
 }
 
@@ -296,9 +300,9 @@ logistic <- function(x, by = NULL) .formula_marker_error("logistic")
   for (term in terms) {
     labels <- vapply(term$groups, `[[`, character(1), "group")
     if (term$type == "logistic") {
-      parameters[[paste0("q_a50_", term$id)]] <- stats::setNames(
+      parameters[[term$a50_parameter]] <- stats::setNames(
         vapply(term$groups, `[[`, numeric(1), "midpoint"), labels)
-      parameters[[paste0("log_q_slope_", term$id)]] <- stats::setNames(log(
+      parameters[[term$slope_parameter]] <- stats::setNames(log(
         vapply(term$groups, `[[`, numeric(1), "slope")), labels)
     } else {
       states <- unlist(lapply(term$groups, `[[`, "states"), use.names = FALSE)
@@ -409,8 +413,8 @@ logistic <- function(x, by = NULL) .formula_marker_error("logistic")
   increment_offset <- 0L
   for (term in dat$q_terms) {
     if (term$type == "logistic") {
-      a50 <- par[[paste0("q_a50_", term$id)]]
-      slope <- exp(par[[paste0("log_q_slope_", term$id)]])
+      a50 <- par[[term$a50_parameter]]
+      slope <- exp(par[[term$slope_parameter]])
       for (i in seq_along(term$groups)) {
         rows <- term$groups[[i]]$rows
         predictor <- slope[i] * (dat$obs$index[[term$variable]][rows] - a50[i])
@@ -523,11 +527,12 @@ logistic <- function(x, by = NULL) .formula_marker_error("logistic")
   out
 }
 
-#' Rising catchability curves in formulas
+#' Rising catchability and mean fishing-mortality curves
 #'
 #' @description
 #' Use these terms in `index_settings$q_form` when catchability should increase
-#' with age or size. `mono()` fits flexible non-decreasing steps, including exact
+#' with age or size, or in `F_settings$mu_form` for a rising long-term mean F.
+#' `mono()` fits flexible non-decreasing steps, including exact
 #' plateaus. `logistic()` fits a smooth rising selectivity curve. Ordinary formula
 #' terms supply baseline catchability; neither curve describes a dome with other
 #' covariates held constant.
@@ -579,8 +584,31 @@ logistic <- function(x, by = NULL) .formula_marker_error("logistic")
 #' a successful positive-definite uncertainty calculation; failures are reported
 #' separately by the numerical convergence checks.
 #'
-#' @param x Name of a column in index observations: numeric or factor for
-#'   `mono()`, numeric age/size for `logistic()`.
+#' ## Mean fishing mortality
+#'
+#' With `F_settings$process = "iid"` or `"ar1"`, use `~ mono(age)` or
+#' `~ logistic(age)`. Ordinary terms provide the baseline F. One curve is allowed;
+#' its numeric coordinate must be age or an age-derived `pop_covariates` column
+#' constant across years at each age. Categorical `by` groups may have separate
+#' curves. M mean curves are not enabled.
+#'
+#' For mono, \eqn{\log\mu_F = X\beta + C d}, where C contains cumulative
+#' indicators and the directly fitted `dmu_f` increments satisfy \eqn{d\geq0}.
+#' For logistic, \eqn{\log\mu_F = X\beta + \log S(x)}. The baseline therefore
+#' gives the asymptotic F when other covariates are held constant. Midpoint
+#' `F_a50_*` and positive slope `log_F_slope_*` are fitted separately from q
+#' curves. Realized F fluctuates around this log mean and need not be monotonic.
+#' `mu_F` is the exponential of expected log F, rather than an arithmetic
+#' average over lognormal process draws.
+#' Static curves are rejected with RW/correlated-RW residuals because they
+#' cancel from the increments. Gaussian structured mean terms retain their
+#' existing IID-residual restriction, including when combined with a curve.
+#' `dmu_f` has the same zero bounds and boundary-inference limitations as `dq`.
+#' [tidy_pop()] reports mean-F profiles with joint RTMB-derived uncertainty.
+#'
+#' @param x Name of an index column for q: numeric or factor for `mono()`,
+#'   numeric age/size for `logistic()`. F mean curves require numeric age or
+#'   an age-derived population covariate.
 #' @param by Optional name of a categorical grouping column.
 #' @return A formula marker; calling this function directly raises an error.
 #' @seealso [formula_effects], [prepare_tam()], [make_par()], [tidy_obs_pred()], [tidy_par()], [tinyAM-model]
@@ -589,10 +617,12 @@ logistic <- function(x, by = NULL) .formula_marker_error("logistic")
 #' ~ mono(q_block)
 #' ~ survey + mono(q_block, by = survey)
 #' ~ survey + logistic(age, by = survey)
+#' # F_settings = list(process = "iid", mu_form = ~ mono(age))
+#' # F_settings = list(process = "ar1", mu_form = ~ logistic(age))
 #' @name catchability_curves
 #' @export
 mono <- function(x, by = NULL) {
-  cli::cli_abort("mono() is only supported as an additive term in {.arg index_settings$q_form}.")
+  cli::cli_abort("mono() is only supported as an additive term in index_settings$q_form or F_settings$mu_form.")
 }
 
 .parse_mono_q_formula <- function(formula, data) {

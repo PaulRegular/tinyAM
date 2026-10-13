@@ -17,7 +17,8 @@ parameters depend on elements in \code{dat} (e.g., \code{F_modmat}, \code{M_modm
 \value{
 A named list of initialized parameters suitable to pass to the TAM objective
 function, with elements as described in \strong{Details}. All numeric entries are
-initialized to \code{0} except \code{dq} (\code{0.05}) and \code{log_m} (its log mean). Matrices have
+start as described in \strong{Details}, with zero initial process deviations where
+mean initialization applies. Matrices have
 informative \code{dimnames}.
 }
 \description{
@@ -31,7 +32,7 @@ represent latent quantities on the log scale. They are compact fitted
 latent-state parameters; \code{log_N}, \code{log_F}, and \code{log_M} are full model
 surfaces constructed internally by \code{\link[=nll_fun]{nll_fun()}}. Process errors are
 calculated separately as deviations (\verb{eta_*}): recruitment uses successive
-log states by default, or expectations from \code{rec_form}; abundance uses
+log states by default, or expectations from \code{rec_settings}; abundance uses
 cohort predictions, and F and M use their log
 mean surfaces. In particular, \code{log_f} and \code{log_m} are absolute latent states;
 their deviations are \code{eta_log_f = log_f - log_mu_F} and
@@ -48,9 +49,10 @@ it initializes a 2-vector \code{logit_phi_f}; if \code{dat$F_settings$mu_form} i
 \code{NULL} it creates a coefficient vector \code{log_mu_f} of length
 \code{ncol(dat$F_modmat)}, and so on.
 
-Numeric parameters are initialized at \code{0}, except \code{dq} (initialized at \code{0.05})
-and \code{log_m}, which starts at its log mean surface so initial M-process
-residuals are zero. Stock-recruit parameters use the anchor and initial SSB;
+Most numeric parameters start at \code{0}. Monotonic increments \code{dq} and \code{dmu_f}
+start at \code{0.05}; logistic curves start from the coordinate range. \code{log_m}
+and F curve states start at their log means so initial process residuals
+are zero. Stock-recruit parameters use the anchor and initial SSB;
 their recruitment states start on the expected path with zero deviations.
 These are starting values, not priors. Matrices are created
 with appropriate \code{dimnames} (\verb{year × age} or \verb{year × age_block}).
@@ -64,7 +66,7 @@ with appropriate \code{dimnames} (\verb{year × age} or \verb{year × age_block}
 by default these are \code{dat$years[-1]}, named by year.
 \item \code{log_r_init}: additional free fixed boundary states when parent SSB lies
 before the modeled period, named by year.
-\item \code{log_sd_r}: estimated recruitment SD unless supplied in the formula.
+\item \code{log_sd_r}: estimated recruitment SD unless supplied in \code{rec_settings$sd}.
 \item \code{rec_beta}: fixed log-scale covariate coefficients when present.
 \item \code{log_sr_alpha}, \code{log_sr_beta}: positive curve parameters on the log scale.
 \item \code{logit_phi_r}: estimated recruitment AR1 correlation when not supplied.
@@ -96,6 +98,9 @@ See \code{\link[=prepare_tam]{prepare_tam()}} for the choices and weak-identific
 \item \code{atanh_rho_f}: signed age correlation of annual F increments
 (if \code{process == "cor_rw"}), reported as \code{rho_f} through \code{tanh()}.
 \item \code{log_mu_f} coefficients (length \code{ncol(dat$F_modmat)}) if a mean structure was supplied
+\item \code{dmu_f}: directly fitted non-negative log-mean-F increments for \code{\link[=mono]{mono()}}
+\item \verb{F_a50_*}, \verb{log_F_slope_*}: midpoint and log positive slope for \code{\link[=logistic]{logistic()}}
+mean curves. F states start at their complete mean curve, giving zero residuals.
 \item \code{log_f} matrix (historical \code{year} × \code{age}; no projection rows)
 }
 \item \strong{Natural mortality (M)}

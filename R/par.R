@@ -12,7 +12,7 @@
 #' latent-state parameters; `log_N`, `log_F`, and `log_M` are full model
 #' surfaces constructed internally by [nll_fun()]. Process errors are
 #' calculated separately as deviations (`eta_*`): recruitment uses successive
-#' log states by default, or expectations from `rec_form`; abundance uses
+#' log states by default, or expectations from `rec_settings`; abundance uses
 #' cohort predictions, and F and M use their log
 #' mean surfaces. In particular, `log_f` and `log_m` are absolute latent states;
 #' their deviations are `eta_log_f = log_f - log_mu_F` and
@@ -29,9 +29,10 @@
 #' `NULL` it creates a coefficient vector `log_mu_f` of length
 #' `ncol(dat$F_modmat)`, and so on.
 #'
-#' Numeric parameters are initialized at `0`, except `dq` (initialized at `0.05`)
-#' and `log_m`, which starts at its log mean surface so initial M-process
-#' residuals are zero. Stock-recruit parameters use the anchor and initial SSB;
+#' Most numeric parameters start at `0`. Monotonic increments `dq` and `dmu_f`
+#' start at `0.05`; logistic curves start from the coordinate range. `log_m`
+#' and F curve states start at their log means so initial process residuals
+#' are zero. Stock-recruit parameters use the anchor and initial SSB;
 #' their recruitment states start on the expected path with zero deviations.
 #' These are starting values, not priors. Matrices are created
 #' with appropriate `dimnames` (`year × age` or `year × age_block`).
@@ -44,7 +45,7 @@
 #'     by default these are `dat$years[-1]`, named by year.
 #'   - `log_r_init`: additional free fixed boundary states when parent SSB lies
 #'     before the modeled period, named by year.
-#'   - `log_sd_r`: estimated recruitment SD unless supplied in the formula.
+#'   - `log_sd_r`: estimated recruitment SD unless supplied in `rec_settings$sd`.
 #'   - `rec_beta`: fixed log-scale covariate coefficients when present.
 #'   - `log_sr_alpha`, `log_sr_beta`: positive curve parameters on the log scale.
 #'   - `logit_phi_r`: estimated recruitment AR1 correlation when not supplied.
@@ -73,6 +74,9 @@
 #'   - `atanh_rho_f`: signed age correlation of annual F increments
 #'     (if `process == "cor_rw"`), reported as `rho_f` through `tanh()`.
 #'   - `log_mu_f` coefficients (length `ncol(dat$F_modmat)`) if a mean structure was supplied
+#'   - `dmu_f`: directly fitted non-negative log-mean-F increments for [mono()]
+#'   - `F_a50_*`, `log_F_slope_*`: midpoint and log positive slope for [logistic()]
+#'     mean curves. F states start at their complete mean curve, giving zero residuals.
 #'   - `log_f` matrix (historical `year` × `age`; no projection rows)
 #'
 #' - **Natural mortality (M)**
@@ -125,7 +129,8 @@
 #' @return
 #' A named list of initialized parameters suitable to pass to the TAM objective
 #' function, with elements as described in **Details**. All numeric entries are
-#' initialized to `0` except `dq` (`0.05`) and `log_m` (its log mean). Matrices have
+#' start as described in **Details**, with zero initial process deviations where
+#' mean initialization applies. Matrices have
 #' informative `dimnames`.
 #'
 #' @example inst/examples/example_dat_default.R
@@ -191,6 +196,9 @@ make_par <- function(dat) {
                        colnames(dat$q_mono_modmat))
   }
   par <- c(par, .q_term_parameters(.formula_terms(dat)))
+  if (!is.null(dat$F_mono_modmat)) {
+    par$dmu_f <- setNames(rep(.05, ncol(dat$F_mono_modmat)), colnames(dat$F_mono_modmat))
+  }
 
   if (dat$any_fill_missing) {
     par$missing <- numeric(sum(dat$fill_missing_map))
@@ -213,6 +221,12 @@ make_par <- function(dat) {
   }
   par$log_f <- matrix(0, nrow = sum(!dat$is_proj), ncol = length(dat$ages),
                       dimnames = list(year = dat$years[!dat$is_proj], age = dat$ages))
+  if (!is.null(dat$F_mono_modmat) || any(vapply(dat$F_terms, function(x) x$type == "logistic", logical(1)))) {
+    surface <- matrix(drop(dat$F_modmat %*% par$log_mu_f) +
+                        .mean_effects(par, dat, "F")$contribution,
+                      length(dat$years), length(dat$ages))
+    par$log_f[] <- surface[!dat$is_proj, , drop = FALSE]
+  }
 
   if (dat$M_settings$process != "off") {
     mu_m_init <- if (is.null(par$mu_m)) dat$mu_m else par$mu_m

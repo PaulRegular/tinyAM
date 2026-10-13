@@ -2,10 +2,10 @@ pkgload::load_all(quiet = TRUE)
 source("analysis/formula_expansion/recruitment_validation.R")
 
 testthat::test_that("simulated observations retain the prepared survey/year/age row mapping", {
-  d <- do.call(prepare_tam, c(list(data = rec_inputs()), rec_settings(~ rw(year))))
+  d <- do.call(prepare_tam, c(list(data = rec_inputs()), rec_fit_settings(list(process = "rw", mu_form = NULL))))
   generated <- list(log_obs = log(seq_len(nrow(d$obs_map))))
   obs <- rec_observations(generated, d)
-  again <- do.call(prepare_tam, c(list(data = obs), rec_settings(~ rw(year))))
+  again <- do.call(prepare_tam, c(list(data = obs), rec_fit_settings(list(process = "rw", mu_form = NULL))))
   testthat::expect_equal(again$log_obs, generated$log_obs)
   testthat::expect_equal(again$obs_map[c("type", "year", "age", "survey")],
                          d$obs_map[c("type", "year", "age", "survey")])
@@ -34,7 +34,7 @@ testthat::test_that("the isolated study uses the exact recruitment likelihood", 
 
 testthat::test_that("simulated stock-recruit curves use the current biological surface", {
   for (case in rec_cases[1:4]) {
-    d <- do.call(prepare_tam, c(list(data = rec_inputs()), rec_settings(rec_formula(case))))
+    d <- do.call(prepare_tam, c(list(data = rec_inputs()), rec_fit_settings(rec_spec(case))))
     p <- make_par(d)
     set.seed(952L)
     simulated <- nll_fun(p, d, simulate = TRUE)

@@ -42,7 +42,7 @@ test_that("population keys are complete and cannot extend the model range", {
 test_that("all population formulas use keyed covariates and active ages", {
   x <- population_fixture()
   args <- list(data = x, years = 1983:1990, ages = 2:6,
-    N_settings = list(sd_form = ~ group, rec_form = ~ temp + iid(year)),
+    N_settings = list(sd_form = ~ group), rec_settings = list(process = "iid", mu_form = ~ temp),
     F_settings = list(process = "iid", mu_form = ~ group, sd_form = ~ group),
     M_settings = list(mu_supplied = ~ M_assumption))
   a <- do.call(prepare_tam, args)
@@ -56,7 +56,7 @@ test_that("all population formulas use keyed covariates and active ages", {
   expect_error(make_test_dat(data = x, M_settings = list(mu_supplied = ~ missing_variable)),
     "M_settings\\$mu_supplied.*data\\$pop_covariates")
   expect_error(make_test_dat(data = x, F_settings = list(process = "iid", mu_form = ~ missing_variable)), "F_settings")
-  expect_error(make_test_dat(data = x, N_settings = list(rec_form = ~ missing_variable + iid(year))), "N_settings")
+  expect_error(make_test_dat(data = x, rec_settings = list(process = "iid", mu_form = ~ missing_variable)), "rec_settings")
 })
 
 test_that("plus ages use explicit covariates and projections hold terminal rows", {
@@ -121,7 +121,7 @@ test_that("data previews separate head and tail with vertical dots in every colu
   pattern <- "\u22ee|<U\\+22EE>"
   separator <- text[grepl(pattern, text)]
   expect_length(separator, 1L)
-  expect_length(regmatches(separator, gregexpr(pattern, separator))[[1L]], ncol(table))
+  expect_length(regmatches(separator, gregexpr(pattern, separator))[[1L]], ncol(table) + 1L)
   expect_identical(x, original)
   text <- capture.output(print(x, n = 3))
   expect_false(any(grepl(pattern, text)))

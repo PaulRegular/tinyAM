@@ -51,6 +51,8 @@ plot_report(pop$F_bar, color = ~model, legendgroup = ~model, colors = cols, ylab
 ```{r}
 mu_F <- pop$mu_F
 if (!is.null(mu_F)) {
+  # Annual F and its mean have different uncertainty.
+  mu_F <- mu_F[, c("model", "year", "age", "is_proj", "est"), drop = FALSE]
   names(mu_F)[names(mu_F) == "est"] <- "mu"
   mu_F$mu[mu_F$mu == 1] <- NA
 }
@@ -58,6 +60,22 @@ F <- if (is.null(mu_F)) transform(pop$F, mu = NA_real_) else
   merge(pop$F, mu_F, by = c("model", "year", "age", "is_proj"), all.x = TRUE)
 plot_report(F, color = ~model, legendgroup = ~model, colors = cols, frame = ~age, ylab = "F") |>
   add_lines(y = ~mu, showlegend = FALSE, name = "mu", line = list(width = 0.5))
+```
+
+```{r, results = "asis"}
+has_F_curve <- vapply(fits, function(fit) {
+  inherits(fit, "tam_fit") && (!is.null(fit$dat$F_mono_modmat) ||
+    any(vapply(fit$dat$F_terms, function(term) term$type == "logistic", logical(1))))
+}, logical(1))
+if (any(has_F_curve)) {
+  cat("\n### Mean F\n\n")
+}
+```
+
+```{r, eval = any(has_F_curve)}
+F_mean <- pop$mu_F[is.finite(pop$mu_F$est), , drop = FALSE]
+plot_report(F_mean, x = ~age, xlab = "Age", ylab = "Mean F", frame = ~year,
+  color = ~model, legendgroup = ~model, colors = cols)
 ```
 
 ### Selectivity

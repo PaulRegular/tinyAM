@@ -45,7 +45,7 @@ Use these draws to explore uncertainty or test whether simulated data resemble
 the observations. Results are tidy data frames with a \verb{sim = 1..n} column.
 }
 \details{
-For \code{\link[=mono]{mono()}} effects, negative \code{dq} values from Gaussian parameter draws
+For \code{\link[=mono]{mono()}} effects, negative \code{dq} or \code{dmu_f} values from Gaussian parameter draws
 are clipped to zero before generating predictions or observations. This
 projects the normal approximation onto the feasible increments and adds
 probability at zero; it is not a boundary-corrected posterior sampler.
@@ -65,7 +65,7 @@ Gaussian approximation using the \strong{joint precision} (sparse Cholesky).
 (an approximate predictive draw when \code{par_uncertainty = "joint"}).
 \item \code{TRUE}  — generate \strong{new process fields} for the random effects and re-simulate
 across the entire modeled history, including historical years.
-Recruitment follows \code{N_settings$rec_form}. Stock-recruit draws use
+Recruitment follows \code{rec_settings}. Stock-recruit draws use
 parent SSB from the same simulated population; fixed early recruitment
 boundary states are retained. See \link{recruitment_formulas}.
 This includes \code{log_n0} only for \code{N_settings$init = "random"}, generated

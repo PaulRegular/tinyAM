@@ -1,36 +1,38 @@
 # Recruitment residuals act on absolute log recruitment, not additional states.
 .parse_recruitment <- function(dat) {
-  form <- dat$N_settings$rec_form
-  if (is.null(form)) form <- ~ rw(year)
-  if (!inherits(form, "formula") || length(form) != 2L) {
-    cli::cli_abort("N_settings$rec_form must be a one-sided formula.")
+  settings <- dat$rec_settings
+  type <- settings$process
+  if (!is.character(type) || length(type) != 1L || is.na(type) ||
+      !type %in% c("rw", "iid", "ar1")) {
+    cli::cli_abort("rec_settings$process must be 'rw', 'iid', or 'ar1'.")
   }
-  process <- list()
+  fixed <- function(value, name, upper = Inf, zero = FALSE) {
+    if (is.null(value)) return(NULL)
+    if (!is.numeric(value) || length(value) != 1L || !is.finite(value) ||
+        value < 0 || (!zero && value == 0) || value >= upper) {
+      cli::cli_abort("rec_settings${name} must be one finite {if (zero) 'non-negative' else 'positive'} number below {upper}.")
+    }
+    value
+  }
+  if (type != "ar1" && !is.null(settings$phi)) {
+    cli::cli_abort("rec_settings$phi is only used with process = 'ar1'; set phi = NULL.")
+  }
+  rec <- list(type = type, sd = fixed(settings$sd, "sd"),
+              phi = fixed(settings$phi, "phi", 1, TRUE))
+  form <- settings$mu_form
+  if (is.null(form)) {
+    if (type != "rw") cli::cli_abort("rec_settings$mu_form is required for IID/AR1 recruitment. Use ~ 1 for a constant mean.")
+    form <- ~ 1
+  }
+  if (!inherits(form, "formula") || length(form) != 2L) {
+    cli::cli_abort("rec_settings$mu_form must be a one-sided formula.")
+  }
   curves <- list()
   strip <- function(x) {
     if (!is.call(x)) return(x)
     type <- .formula_call_name(x)
     if (type %in% c("iid", "rw", "ar1")) {
-      fun <- switch(type, iid = iid, rw = rw, ar1 = ar1)
-      x[[1L]] <- as.name(type)
-      args <- tryCatch(as.list(match.call(fun, x))[-1L], error = function(e)
-        cli::cli_abort("Invalid recruitment {type}() arguments."))
-      if (!identical(args$x, quote(year)) ||
-          (!is.null(args$by) && !identical(args$by, quote(NULL)))) {
-        cli::cli_abort("Recruitment residuals must use year without by grouping.")
-      }
-      fixed <- function(x, name, upper = Inf, zero = FALSE) {
-        if (is.null(x) || identical(x, quote(NULL))) return(NULL)
-        value <- tryCatch(eval(x, environment(form)), error = function(e) NULL)
-        if (!is.numeric(value) || length(value) != 1L || !is.finite(value) ||
-            value < 0 || (!zero && value == 0) || value >= upper) {
-          cli::cli_abort("Recruitment {name} must be one finite {if (zero) 'non-negative' else 'positive'} number below {upper}.")
-        }
-        value
-      }
-      process[[length(process) + 1L]] <<- list(type = type,
-        sd = fixed(args$sd, "sd"), phi = fixed(args$phi, "phi", 1, TRUE))
-      return(NULL)
+      cli::cli_abort("Recruitment residual process terms belong in rec_settings$process, not mu_form. Use process = '{type}'.")
     }
     if (type %in% c("bh", "ricker")) {
       x[[1L]] <- as.name(type)
@@ -66,14 +68,12 @@
     x
   }
   ordinary <- strip(form[[2L]])
-  if (length(process) != 1L) cli::cli_abort("rec_form requires exactly one iid(year), rw(year), or ar1(year) residual process.")
-  rec <- process[[1L]]
-  if (length(curves) > 1L) cli::cli_abort("rec_form allows one stock-recruit curve.")
+  if (length(curves) > 1L) cli::cli_abort("rec_settings$mu_form allows one stock-recruit curve.")
   curve <- if (length(curves)) curves[[1L]] else NULL
   if (!is.null(curve) && rec$type == "rw") cli::cli_abort("Stock-recruit curves currently support IID or AR1 residuals, not RW residuals.")
   fixed_form <- form
   fixed_form[[2L]] <- if (is.null(ordinary)) 1 else ordinary
-  data <- .population_data(dat, fixed_form, "N_settings$rec_form")
+  data <- .population_data(dat, fixed_form, "rec_settings$mu_form")
   data <- data[data$age == min(dat$ages), , drop = FALSE]
   data <- data[match(dat$years, data$year), , drop = FALSE]
   biology <- dat$obs$maturity[dat$obs$maturity$age == min(dat$ages), , drop = FALSE]
@@ -91,7 +91,7 @@
   categorical <- vapply(frame, function(x) is.factor(x) || is.character(x), logical(1))
   xlevels <- lapply(frame[categorical], function(x) if (is.factor(x)) levels(x) else levels(factor(x)))
   if (nrow(matrix) != length(dat$years) || any(!is.finite(matrix))) {
-    cli::cli_abort("rec_form needs finite covariate values in every modeled recruitment year.")
+    cli::cli_abort("rec_settings$mu_form needs finite covariate values in every modeled recruitment year.")
   }
   if (!is.null(curve)) matrix <- matrix[, colnames(matrix) != "(Intercept)", drop = FALSE]
   if (rec$type == "rw") {
@@ -124,11 +124,10 @@
   if ((ncol(design) && qr(design)$rank < ncol(design)) ||
       fixed_parameters > n ||
       (is.null(rec$sd) && fixed_parameters >= n)) {
-    cli::cli_abort("Recruitment fixed effects are redundant or saturated; simplify rec_form.")
+    cli::cli_abort("Recruitment fixed effects are redundant or saturated; simplify rec_settings$mu_form.")
   }
   held <- setdiff(variables, "year")
   if (any(dat$is_proj) && length(held)) cli::cli_inform("Recruitment projections hold terminal covariate values: {paste(held, collapse = ', ')}.")
-  dat$N_settings$rec_form <- form
   dat$rec <- c(rec, list(matrix = matrix, eligible = eligible, historical = historical,
                        boundary = seq_len(first - 1L), data = data, covariates = held,
                        curve = curve, fixed_form = fixed_form,
@@ -140,13 +139,15 @@
 #'
 #' @description
 #' Recruitment is the number of fish entering the youngest modeled age.
-#' Use `N_settings$rec_form` to describe persistent changes, independent good and
-#' bad years, environmental effects, or a relationship with spawning biomass.
-#' The default `~ rw(year)` retains tinyAM's original recruitment random walk.
+#' Use `rec_settings$process` for annual fluctuations and `rec_settings$mu_form`
+#' for environmental effects or a relationship with spawning biomass. The
+#' default `process = "rw", mu_form = NULL` retains the original random walk.
 #'
 #' @details
-#' Use exactly one [iid()], [rw()], or [ar1()] residual term on `year`, without
-#' `by` grouping. Ordinary covariates are read from `data$pop_covariates` at the youngest
+#' Choose `"iid"`, `"rw"`, or `"ar1"` in `process`; process markers and grouping
+#' are not supported in recruitment mean formulas. IID/AR1 require `mu_form`,
+#' with `~ 1` for a constant baseline. Ordinary covariates are read from
+#' `data$pop_covariates` at the youngest
 #' modeled age; their values at older ages may be `NA`. Covariates refer to the
 #' recruitment year. Construct lagged or standardized columns explicitly.
 #' Covariate coefficients are estimated; `offset()` terms are not supported.
@@ -173,7 +174,7 @@
 #' Without a curve, IID/AR1 use \eqn{\log R_t=X_t\gamma+u_t}.
 #' A RW instead obeys
 #' \deqn{\log R_t-\log R_{t-1}=(X_t-X_{t-1})\gamma+\epsilon_t.}
-#' Constant columns cancel and are removed. SD is estimated unless supplied;
+#' Constant columns cancel and are removed. `sd` is estimated unless supplied;
 #' estimated AR1 correlation is positive, or a fixed `phi` in `[0, 1)` can be
 #' supplied. See [formula_effects] for these process conventions.
 #'
@@ -195,24 +196,24 @@
 #'   modeled age. SSB uses the supplied `data$maturity$spawn_time`, default zero.
 #' @return Formula markers; direct calls raise an error.
 #' @examples
-#' ~ rw(year)
-#' ~ iid(year)
-#' ~ bh(ssb) + iid(year)
-#' ~ ricker(ssb, lag = 2) + ar1(year)
+#' list(process = "rw", mu_form = NULL)
+#' list(process = "iid", mu_form = ~ 1)
+#' list(process = "iid", mu_form = ~ bh(ssb))
+#' list(process = "ar1", mu_form = ~ ricker(ssb, lag = 2))
 #' # Add temperature to data$pop_covariates at the youngest modeled age, then use:
-#' ~ bh(ssb) + temperature + iid(year)
+#' list(process = "iid", mu_form = ~ bh(ssb) + temperature)
 #' # Runnable fitting examples are in inst/examples/example_recruitment.R.
 #' @seealso [prepare_tam()], [fit_tam()], [sim_tam()], [check_tam()]
 #' @name recruitment_formulas
 #' @export
 bh <- function(ssb, lag = NULL) {
-  cli::cli_abort("bh() is a recruitment formula marker; use it in N_settings$rec_form.")
+  cli::cli_abort("bh() is a recruitment formula marker; use it in rec_settings$mu_form.")
 }
 
 #' @rdname recruitment_formulas
 #' @export
 ricker <- function(ssb, lag = NULL) {
-  cli::cli_abort("ricker() is a recruitment formula marker; use it in N_settings$rec_form.")
+  cli::cli_abort("ricker() is a recruitment formula marker; use it in rec_settings$mu_form.")
 }
 
 .rec_log_curve <- function(log_ssb, par, type) {

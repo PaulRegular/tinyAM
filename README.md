@@ -65,7 +65,7 @@ Settings lists can be partial. Initial fits inherit package defaults; updates
 retain the original settings. For example,
 `update(fit, N_settings = list(init = "free"))` changes only initialization.
 
-A random walk has no penalty on its starting level. Its SD describes annual increments; an AR1 SD is an innovation scale, not the marginal variability of the states. Recruitment defaults to a temporal random walk; `N_settings$rec_form` also supports IID or AR1 fluctuations, covariates, and Beverton–Holt or Ricker stock–recruit relationships.
+A random walk has no penalty on its starting level. Its SD describes annual increments; an AR1 SD is an innovation scale, not the marginal variability of the states. Recruitment defaults to a temporal random walk; `rec_settings` separates its process from mean formulas for covariates and Beverton–Holt or Ricker stock–recruit relationships.
 
 Mean structures for quantities such as fishing mortality, natural mortality, catchability, and observation error can be specified using familiar R formulas and design matrices.
 
@@ -92,20 +92,22 @@ projections carry terminal values forward by age. See `?as_tam_data`.
 
 ## Recruitment formulas
 
-Set `N_settings$rec_form` to describe recruitment at the youngest modeled age:
+Use `rec_settings` to describe recruitment at the youngest modeled age:
 
 ```r
-~ rw(year)                              # default: changes accumulate
-~ iid(year)                             # independent good and bad years
-~ bh(ssb) + iid(year)                    # recruitment approaches a plateau
-~ ricker(ssb) + ar1(year)                # decline at high SSB, persistent residuals
-~ temperature + rw(year)                # covariate effects on recruitment changes
+rec_settings = list(process = "rw", mu_form = NULL) # default
+rec_settings = list(process = "iid", mu_form = ~ 1)
+rec_settings = list(process = "iid", mu_form = ~ bh(ssb))
+rec_settings = list(process = "ar1", mu_form = ~ ricker(ssb))
+rec_settings = list(process = "rw", mu_form = ~ temperature)
 ```
 
 `N_settings$process` separately controls survival deviations in older cohorts.
 Annual covariates belong in `data$pop_covariates` at the youngest modeled age; older-age entries
-may be missing. Curves describe median recruitment from start-of-year parent
-SSB. The lag defaults to recruitment age, and early years without modeled
+may be missing. IID/AR1 require an explicit mean, such as `mu_form = ~ 1`.
+Supply `sd` or AR1 `phi` in the settings list to fix them; otherwise they are
+estimated. Curves describe median recruitment from parent SSB at the supplied
+spawning time (zero by default). The lag defaults to recruitment age, and early years without modeled
 parent SSB remain free fixed states. Curve-plus-RW residuals are not supported.
 
 Use `check_tam()` to inspect uncertainty as well as numerical convergence.
@@ -114,6 +116,23 @@ converged fit. `tidy_recruitment()` provides parent pairs, predictions and
 residuals; `vis_tam()` adds a stock–recruitment page when a curve is fitted.
 See `?recruitment_formulas` for equations and safeguards, and
 [runnable examples](inst/examples/example_recruitment.R).
+
+## Rising mean F curves
+
+When fisheries progressively select older fish, the long-term mean F can be
+specified with a flexible rising curve or a smooth logistic curve:
+
+```r
+F_settings = list(process = "iid", mu_form = ~ mono(age))
+F_settings = list(process = "ar1", mu_form = ~ logistic(age))
+```
+
+Ordinary terms supply baseline F. `mono()` fits non-negative log-F increments
+`dmu_f`, including exact plateaus; `logistic()` multiplies baseline F by rising
+selectivity. Annual realized F can depart from these means. RW residuals do
+not identify static age curves, so these combinations are rejected. See
+`?catchability_curves` for equations, grouping and uncertainty limitations, and
+[fitting examples](inst/examples/example_f_mean_curves.R).
 
 ## Monotonic survey catchability
 

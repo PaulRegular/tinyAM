@@ -30,6 +30,8 @@ stopifnot(nrow(record) == length(current) + sum(lengths(review_candidates)),
 # The frozen model comparison must use the same observations, ages and years.
 ids <- sub('[.]R$', '', list.files('analysis/comp_assessments/scripts/translation/stocks'))
 for (id in ids) {
+  # The later, manually settled saithe age/q grouping has its own stock test.
+  if (id == 'ices_saithe_north_sea_2026') next
   original <- .review_recipe(id, db)
   now <- run_assessment(id, db, fit = FALSE)
   stopifnot(isTRUE(all.equal(original$obs, now$obs, check.environment = FALSE)))

@@ -7,6 +7,13 @@ this experimental branch is not merged.
 
 ## Stages and review gates
 
+Recruitment settings and rising F mean curves are reviewed in
+[`F_MEAN_CURVES.md`](F_MEAN_CURVES.md). Run `f_mean_curve_validation.R` for the
+recovery study and render `f_mean_curve_report.Rmd` for its figures. Generated
+outputs remain in ignored `results/f_mean_curves/`; stock recipes are unchanged.
+Source the validation script and call `view_f_curve_examples()` to view the
+first full-replicate fits without refitting them.
+
 1. Centralize numerical, structural and advisory diagnostics in `check_tam()`.
    Use them in fitting, retrospectives, print/summary methods and the dashboard.
 2. Expand `q_form` with IID, random intercepts, RW, AR1 and logistic selectivity.

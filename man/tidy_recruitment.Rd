@@ -33,8 +33,8 @@ uncertainty remains \code{NA}. Curve intervals do not include new process noise.
 }
 \examples{
 \dontrun{
-fit <- fit_tam(cod_obs, N_settings = list(process = "off",
-  rec_form = ~ bh(ssb) + iid(year)))
+fit <- fit_tam(cod_obs, N_settings = list(process = "off"),
+  rec_settings = list(process = "iid", mu_form = ~ bh(ssb)))
 tidy_recruitment(fit)$pairs
 }
 }

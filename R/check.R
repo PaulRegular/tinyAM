@@ -81,7 +81,7 @@ check_tam <- function(fit, grad_tol = NULL, detailed = FALSE) {
   bounds <- fit$bounds
   if (is.null(bounds) && !is.null(parameters)) {
     lower <- rep(-Inf, length(parameters))
-    lower[names(parameters) == "dq"] <- 0
+    lower[names(parameters) %in% c("dq", "dmu_f")] <- 0
     bounds <- list(lower = lower, upper = rep(Inf, length(parameters)))
   }
   projected <- .project_gradient(gradient, parameters, bounds)
@@ -322,9 +322,10 @@ check_tam <- function(fit, grad_tol = NULL, detailed = FALSE) {
   if (length(wide_sd)) out <- rbind(out, data.frame(issue = "formula_SD_uncertainty",
     detail = paste0("95% intervals span more than tenfold for ", paste(unique(wide_sd), collapse = ", "),
       ". These variance components are weakly estimated; compare simpler formulas or use externally supported process SDs.")))
-  d <- fit$dat$obs$index
-  for (term in Filter(function(x) x$type == "logistic", fit$dat$q_terms)) {
-    indices <- which(names(p) == paste0("q_a50_", term$id))
+  for (term in Filter(function(x) x$type == "logistic", c(fit$dat$q_terms, fit$dat$F_terms))) {
+    is_F <- startsWith(term$id, "F_")
+    d <- if (is_F) .mean_formula_data(fit$dat, "F") else fit$dat$obs$index
+    indices <- which(names(p) == term$a50_parameter)
     if (length(indices) != length(term$groups)) next
     for (g in seq_along(term$groups)) {
       group <- term$groups[[g]]
@@ -337,7 +338,8 @@ check_tam <- function(fit, grad_tol = NULL, detailed = FALSE) {
         out <- rbind(out, data.frame(issue = "logistic_support",
           detail = paste0(term$id, ", group ", group$group,
             ": the fitted midpoint lies outside the observed range (", paste(support, collapse = " to "),
-            "), and its 95% interval is wider than that range. The data may not distinguish maximum catchability from the age/size curve. Consider a simpler curve or observations covering its rising part and plateau.")))
+            "), and its 95% interval is wider than that range. The data may not distinguish the baseline ",
+            if (is_F) "F" else "catchability", " from the age/size curve. Consider a simpler curve or observations covering its rising part and plateau.")))
       }
     }
   }
