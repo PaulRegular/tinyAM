@@ -51,11 +51,17 @@
   if (length(groups)) {
     valid_groups <- vapply(groups, function(x) {
       is.numeric(x) && length(x) > 0L && !anyNA(x) && all(is.finite(x)) &&
-        !anyDuplicated(x) && all(x %in% ages)
+        all(x == trunc(x)) && !anyDuplicated(x)
     }, logical(1))
     mapped <- unlist(groups, use.names = FALSE)
     if (!all(valid_groups) || anyDuplicated(mapped)) {
       stop("comparison_age_groups must map each reported group to distinct modeled ages.")
+    }
+    if (any(!mapped %in% ages)) {
+      return(list(rows = NULL, reason = paste(
+        "Reported age-group mappings include ages outside the fitted age range;",
+        "a complete group comparison is unavailable."
+      )))
     }
   }
   source_label <- if ("age" %in% names(source)) as.character(source$age) else

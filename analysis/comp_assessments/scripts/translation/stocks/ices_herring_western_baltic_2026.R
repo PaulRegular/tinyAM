@@ -13,7 +13,7 @@ obs <- database_to_tam_obs(
   assumptions = source$assumptions
 )
 
-catch_block <- cut_ages(obs$catch$age, c(0, 1, 2, 8))
+catch_block <- cut_ages(obs$catch$age, c(0, 1, 2, max(ages)))
 levels(catch_block) <- c("sam_sd_5", "sam_sd_6", "sam_sd_0")
 obs$catch$sd_block <- factor(as.character(catch_block))
 geras <- obs$index$survey == "GERAS"
@@ -70,14 +70,14 @@ start_par$log_q[] <- q_start[names(start_par$log_q)]
 
 ## Background and comparisons ----
 
-age_plus_group <- 8
+age_plus_group <- max(ages)
 
 comparison_scales <- c(N = 0.001, recruitment = 0.001, ssb = 0.001, biomass = 0.001, abundance = 0.001,
     biomass_at_age = 0.001, F = 1, M = 1, F_bar = 1)
 
 background <- c("### Western Baltic spring-spawning herring: accepted 2026 SAM assessment", "", print_sources(source$assessment),
     "", "| Component | Accepted assessment | tinyAM representation | Main simplification |", "|---|---|---|---|",
-    "| Years and ages | 1991–2025; ages 0–8+, with recruitment at age 0. | Fit ages 0–8, with age 8 as the plus group. | The source age range is retained. |",
+    sprintf("| Years and ages | 1991–2025; ages 0–8+, with recruitment at age 0. | Fit ages %s–%s, with age %s as the plus group. | Older source ages are combined when the selected maximum age is lower. |", min(ages), max(ages), max(ages)),
     "| N | SAM uses a segmented recruitment relationship, a separate recruitment variance, and shared survival variance for ages 1–8. | Random-walk recruitment with its own SD, a cohort random walk with shared SD, and exponential initial abundance. | The hockey-stick relationship, survival-error dynamics and initial-state integration differ; separate recruitment and survival SDs are available. |",
     "| F | SAM has age-specific F, AR(1) dependence across ages, and one shared state for ages 7–8; Fbar is ages 2–5. | Random-walk F with independent age processes. | tinyAM does not represent the source cross-age covariance or the shared oldest-age state. |",
     "| M | Fixed, time-invariant age-specific M derived from NSAS herring and profiled at the 2025 benchmark. | Use the same fixed M-at-age values in every year. | M is not estimated in either fit. |",
