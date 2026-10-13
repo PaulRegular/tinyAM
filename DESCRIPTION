@@ -24,6 +24,7 @@ Imports:
     furrr,
     progressr,
     cli,
+    htmltools,
     plotly
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)

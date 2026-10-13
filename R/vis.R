@@ -104,6 +104,54 @@ vis_tam <- function(..., model_list = NULL, interval = 0.95, output_file = NULL,
 
 }
 
+# Two independent widgets retain their animation and control state when hidden.
+.plot_age_year <- function(data, plot = plot_trend, x = ~year, xlab = "Year",
+                           frame = NULL, ...) {
+  args <- list(...)
+  eligible <- all(c("year", "age") %in% names(data)) &&
+    ((identical(all.vars(x), "year") && identical(all.vars(frame), "age")) ||
+       (identical(all.vars(x), "age") && identical(all.vars(frame), "year")))
+  if (!eligible || !nrow(data)) {
+    return(do.call(plot, c(list(data = data, x = x, xlab = xlab, frame = frame), args)))
+  }
+  data <- data[order(data$year, data$age), , drop = FALSE]
+  projection <- if ("is_proj" %in% names(data)) data$is_proj else rep(FALSE, nrow(data))
+  year_labels <- paste0(data$year, ifelse(projection, " (projection)", ""))
+  data$.view_year <- factor(year_labels, levels = unique(year_labels))
+  if (is.null(args$text)) {
+    data$.view_hover <- paste0("Year: ", year_labels, "<br>Age: ", data$age)
+    args$text <- ~.view_hover
+  }
+  make_view <- function(x, xlab, frame, prefix) {
+    animated <- length(unique(data[[all.vars(frame)]])) > 1L
+    if (!animated) frame <- NULL
+    p <- do.call(plot, c(list(data = data, x = x, xlab = xlab, frame = frame), args))
+    if (animated) p <- plotly::animation_slider(p, currentvalue = list(prefix = prefix))
+    p$width <- "100%"
+    p$height <- "100%"
+    p
+  }
+  annual <- make_view(~year, "Year", ~age, "Age: ")
+  profile <- make_view(~age, "Age", ~.view_year, "Year: ")
+  initial <- if (identical(all.vars(frame), "age")) "annual" else "profile"
+  button <- function(view, label) htmltools::tags$button(
+    type = "button", class = "btn btn-default btn-sm", `data-view` = view,
+    `aria-pressed` = if (view == initial) "true" else "false", label)
+  panel <- function(view, widget) htmltools::tags$div(
+    class = "tam-age-year-panel", `data-view` = view,
+    style = paste0("flex:1;min-height:0;", if (view != initial) "display:none;"), widget)
+  script <- paste(readLines(system.file("js", "age-year.js", package = "tinyAM"),
+                           warn = FALSE), collapse = "\n")
+  htmltools::browsable(htmltools::tags$div(
+    class = "tam-age-year", `data-default-view` = initial,
+    style = "display:flex;flex-direction:column;width:100%;height:100%;min-height:400px;",
+    htmltools::tags$div(class = "btn-group tam-age-year-buttons", role = "group",
+      `aria-label` = "Plot view", style = "flex:none;align-self:flex-start;margin-bottom:4px;",
+      button("annual", "Annual trends"), button("profile", "Age profiles")),
+    panel("annual", annual), panel("profile", profile),
+    htmltools::tags$script(htmltools::HTML(script))))
+}
+
 .fixed_parameter_groups <- function(data) {
   if (!is.data.frame(data) || !nrow(data)) return(list())
   par <- data$par

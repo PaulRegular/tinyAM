@@ -29,6 +29,9 @@
 #' predictions are conditional medians. Residuals come from [tidy_obs_pred()].
 #' Subset to a single survey or supply a grouping aesthetic when combining surveys
 #' so distinct series are not connected. A log axis requires positive values.
+#' Both trend and observed/predicted plots accept an `x` formula and `xlab`;
+#' use `x = ~ age, xlab = "Age", frame = ~ year` for annual age profiles.
+#' The historical/projection separator is shown only on a year axis.
 #' See [tinyAM-model] for definitions and units of population quantities.
 #'
 #' @param data A data frame of observations or estimates.
@@ -116,7 +119,7 @@ plot_trend <- function(
   }
 
   shapes <- NULL
-  if ("is_proj" %in% names(data) && any(data$is_proj)) {
+  if (identical(all.vars(x), "year") && "is_proj" %in% names(data) && any(data$is_proj)) {
     max_obs_year <- suppressWarnings(max(data$year[!data$is_proj], na.rm = TRUE))
     if (is.finite(max_obs_year)) {
       shapes <- list(list(
@@ -220,6 +223,8 @@ plot_obs_pred <- function(
     ylab = "",
     title = "",
     add_buttons = TRUE,
+    x = ~year,
+    xlab = "Year",
     ...
 ) {
   args <- list(...)
@@ -238,7 +243,7 @@ plot_obs_pred <- function(
   }
 
   shapes <- NULL
-  if ("is_proj" %in% names(data) && any(data$is_proj)) {
+  if (identical(all.vars(x), "year") && "is_proj" %in% names(data) && any(data$is_proj)) {
     max_obs_year <- suppressWarnings(max(data$year[!data$is_proj], na.rm = TRUE))
     if (is.finite(max_obs_year)) {
       shapes <- list(list(
@@ -253,7 +258,7 @@ plot_obs_pred <- function(
     }
   }
 
-  p <- do.call(plot_ly, c(list(data = data, x = ~year), args))
+  p <- do.call(plot_ly, c(list(data = data, x = x), args))
 
   buttons <- if (add_buttons) .log_linear_buttons else NULL
 
@@ -268,7 +273,7 @@ plot_obs_pred <- function(
     add_lines(y = ~pred) |>
     layout(
       title = title,
-      xaxis = list(title = "Year"),
+      xaxis = list(title = xlab),
       yaxis = list(title = ylab, range = c(0, max_y)),
       updatemenus = buttons,
       shapes = shapes

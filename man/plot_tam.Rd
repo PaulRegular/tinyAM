@@ -24,7 +24,15 @@ plot_trend(
 
 plot_heatmap(data, zlab = "Estimate", title = "", ...)
 
-plot_obs_pred(data, ylab = "", title = "", add_buttons = TRUE, ...)
+plot_obs_pred(
+  data,
+  ylab = "",
+  title = "",
+  add_buttons = TRUE,
+  x = ~year,
+  xlab = "Year",
+  ...
+)
 
 plot_bubbles(data, ...)
 
@@ -77,6 +85,9 @@ they are not prediction intervals for future observations. Catch and survey
 predictions are conditional medians. Residuals come from \code{\link[=tidy_obs_pred]{tidy_obs_pred()}}.
 Subset to a single survey or supply a grouping aesthetic when combining surveys
 so distinct series are not connected. A log axis requires positive values.
+Both trend and observed/predicted plots accept an \code{x} formula and \code{xlab};
+use \verb{x = ~ age, xlab = "Age", frame = ~ year} for annual age profiles.
+The historical/projection separator is shown only on a year axis.
 See \link{tinyAM-model} for definitions and units of population quantities.
 }
 \examples{
