@@ -33,41 +33,6 @@ obs$index$sd_block <- factor(ifelse(
 obs$index$relative_sd[!is.finite(obs$index$relative_sd)] <- 1
 
 
-dat <- tinyAM::prepare_tam(data = obs, years = years, ages = ages, N_settings = list(process = "rw",
-    init = "exp"), F_settings = list(process = "rw", mu_form = NULL, mean_ages = 2:5), M_settings = list(process = "off",
-    mu_form = NULL, mu_supplied = ~M_assumption), catch_settings = list(sd_form = ~0 + sd_block, fill_missing = FALSE),
-    index_settings = list(q_form = ~0 + q_key, sd_form = ~0 + sd_block, sd_supplied = ~relative_sd, fill_missing = FALSE))
-start_par <- tinyAM::make_par(dat)
-
-
-source_N <- .translation_start_surface(source$outputs, "population", "numbers_at_age", years, ages, 1000)
-source_F <- .translation_start_surface(source$outputs, "mortality", "fishing_mortality_at_age", years, ages)
-source_M <- .translation_start_surface(source$outputs, "mortality", "natural_mortality_at_age", years, ages)
-start_par$log_r0 <- log(source_N[1L, "0"])
-start_par$log_r <- setNames(log(source_N[-1L, "0"]),
-                            as.character(years[-1L]))
-start_par$log_n <- log(source_N[-1L, as.character(ages[-1L]), drop = FALSE])
-start_par$log_f <- log(source_F)
-
-index <- obs$index
-q_design <- stats::model.matrix(~ 0 + q_key, data = index)
-row_index <- cbind(match(as.character(index$year), rownames(source_N)),
-                   match(as.character(index$age), colnames(source_N)))
-n_at_survey <- source_N[row_index] *
-  exp(-(source_F[row_index] + source_M[row_index]) * index$samp_time)
-q_start <- vapply(seq_len(ncol(q_design)), function(j) {
-  selected <- q_design[, j] == 1
-  log(stats::median(index$obs[selected] / n_at_survey[selected],
-                    na.rm = TRUE))
-}, numeric(1))
-names(q_start) <- colnames(q_design)
-if (!setequal(names(q_start), names(start_par$log_q)) ||
-    any(!is.finite(q_start))) {
-  stop("Could not create finite source-based starting values for q.")
-}
-start_par$log_q[] <- q_start[names(start_par$log_q)]
-
-
 ## Background and comparisons ----
 
 age_plus_group <- max(ages)
