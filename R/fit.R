@@ -196,7 +196,8 @@ fit_tam <- function(
     data,
     years = NULL,
     ages = NULL,
-    N_settings = list(process = "iid", init = "exp", rec_form = ~ rw(year), sd_form = ~ 1),
+    N_settings = list(process = "iid", init = "exp", sd_form = ~ 1),
+    rec_settings = list(process = "rw", mu_form = NULL, sd = NULL, phi = NULL),
     F_settings = list(process = "rw", mu_form = NULL, sd_form = ~ 1, mean_ages = NULL),
     M_settings = list(process = "off", mu_form = NULL, mu_supplied = ~I(0.2), sd_form = ~ 1,
                       age_breaks = NULL, first_dev_year = NULL, mean_ages = NULL),
@@ -221,7 +222,7 @@ fit_tam <- function(
   list2env(refit_args[.settings_names], envir = environment())
   dat <- prepare_tam(
     data = data, years = years, ages = ages,
-    N_settings = N_settings, F_settings = F_settings, M_settings = M_settings,
+    N_settings = N_settings, rec_settings = rec_settings, F_settings = F_settings, M_settings = M_settings,
     catch_settings = catch_settings, index_settings = index_settings,
     proj_settings = proj_settings
   )

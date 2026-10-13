@@ -16,7 +16,7 @@ testthat::test_that("a RW truth has no curve parameters to recover", {
   testthat::expect_length(rec_cross_parameters(simulated, "bh_iid"), 0L)
   testthat::expect_length(rec_cross_parameters(simulated, "ricker_ar1"), 0L)
   testthat::expect_equal(rec_cross_parameters(simulated, "rw")$log_sd_r, log(.35))
-  d <- do.call(prepare_tam, c(list(data = simulated$obs), rec_settings(~ rw(year))))
+  d <- do.call(prepare_tam, c(list(data = simulated$obs), rec_fit_settings(list(process = "rw", mu_form = NULL))))
   expected <- -sum(dnorm(diff(simulated$log_R), 0, .35, log = TRUE))
   testthat::expect_equal(tinyAM:::.rec_nll(simulated$log_R, rep(0, length(d$years)), simulated$truth, d), expected)
 })

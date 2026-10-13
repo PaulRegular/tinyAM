@@ -65,7 +65,7 @@ Settings lists can be partial. Initial fits inherit package defaults; updates
 retain the original settings. For example,
 `update(fit, N_settings = list(init = "free"))` changes only initialization.
 
-A random walk has no penalty on its starting level. Its SD describes annual increments; an AR1 SD is an innovation scale, not the marginal variability of the states. Recruitment defaults to a temporal random walk; `N_settings$rec_form` also supports IID or AR1 fluctuations, covariates, and Beverton–Holt or Ricker stock–recruit relationships.
+A random walk has no penalty on its starting level. Its SD describes annual increments; an AR1 SD is an innovation scale, not the marginal variability of the states. Recruitment defaults to a temporal random walk; `rec_settings` separates its process from mean formulas for covariates and Beverton–Holt or Ricker stock–recruit relationships.
 
 Mean structures for quantities such as fishing mortality, natural mortality, catchability, and observation error can be specified using familiar R formulas and design matrices.
 
@@ -92,14 +92,14 @@ projections carry terminal values forward by age. See `?as_tam_data`.
 
 ## Recruitment formulas
 
-Set `N_settings$rec_form` to describe recruitment at the youngest modeled age:
+Use `rec_settings` to describe recruitment at the youngest modeled age:
 
 ```r
-~ rw(year)                              # default: changes accumulate
-~ iid(year)                             # independent good and bad years
-~ bh(ssb) + iid(year)                    # recruitment approaches a plateau
-~ ricker(ssb) + ar1(year)                # decline at high SSB, persistent residuals
-~ temperature + rw(year)                # covariate effects on recruitment changes
+rec_settings = list(process = "rw", mu_form = NULL) # default
+rec_settings = list(process = "iid", mu_form = ~ 1)
+rec_settings = list(process = "iid", mu_form = ~ bh(ssb))
+rec_settings = list(process = "ar1", mu_form = ~ ricker(ssb))
+rec_settings = list(process = "rw", mu_form = ~ temperature)
 ```
 
 `N_settings$process` separately controls survival deviations in older cohorts.

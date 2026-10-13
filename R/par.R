@@ -12,7 +12,7 @@
 #' latent-state parameters; `log_N`, `log_F`, and `log_M` are full model
 #' surfaces constructed internally by [nll_fun()]. Process errors are
 #' calculated separately as deviations (`eta_*`): recruitment uses successive
-#' log states by default, or expectations from `rec_form`; abundance uses
+#' log states by default, or expectations from `rec_settings`; abundance uses
 #' cohort predictions, and F and M use their log
 #' mean surfaces. In particular, `log_f` and `log_m` are absolute latent states;
 #' their deviations are `eta_log_f = log_f - log_mu_F` and
@@ -44,7 +44,7 @@
 #'     by default these are `dat$years[-1]`, named by year.
 #'   - `log_r_init`: additional free fixed boundary states when parent SSB lies
 #'     before the modeled period, named by year.
-#'   - `log_sd_r`: estimated recruitment SD unless supplied in the formula.
+#'   - `log_sd_r`: estimated recruitment SD unless supplied in `rec_settings$sd`.
 #'   - `rec_beta`: fixed log-scale covariate coefficients when present.
 #'   - `log_sr_alpha`, `log_sr_beta`: positive curve parameters on the log scale.
 #'   - `logit_phi_r`: estimated recruitment AR1 correlation when not supplied.

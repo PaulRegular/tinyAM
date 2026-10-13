@@ -24,7 +24,7 @@ test_that("spawning-time survival uses the supplied fraction of F and M", {
 test_that("simulated BH/Ricker parents use the same spawning-time population", {
   for (curve in c("bh", "ricker")) {
     dat <- make_test_dat(years = 1983:1995, ages = 2:8,
-      N_settings = list(process = "iid", rec_form = as.formula(paste0("~ ", curve, "(ssb) + iid(year, sd = .2)"))),
+      N_settings = list(process = "iid"), rec_settings = list(process = "iid", sd = .2, mu_form = as.formula(paste0("~ ", curve, "(ssb)"))),
       data = timed_obs(.25),
       proj_settings = list(n_proj = 2, n_mean = 2, F_mult = 1))
     par <- make_par(dat)
@@ -45,7 +45,7 @@ test_that("simulated BH/Ricker parents use the same spawning-time population", {
 test_that("curve initialization anchors the configured spawning-time SSB", {
   for (curve in c("bh", "ricker")) for (time in c(0, .25, 1)) {
     dat <- make_test_dat(years = 1983:1995, ages = 2:8,
-      N_settings = list(process = "off", rec_form = as.formula(paste0("~ ", curve, "(ssb) + iid(year)"))),
+      N_settings = list(process = "off"), rec_settings = list(process = "iid", mu_form = as.formula(paste0("~ ", curve, "(ssb)"))),
       data = timed_obs(time))
     par <- make_par(dat)
     report <- RTMB::MakeADFun(function(p) nll_fun(p, dat), par, silent = TRUE)$report()
@@ -130,12 +130,12 @@ test_that("zero-lag parent SSB uses age-specific timing without circularity", {
   data$maturity$obs[data$maturity$age == 2] <- 0
   data$maturity$spawn_time <- data$maturity$age / 20
   dat <- make_test_dat(data = data, years = 1983:1995, ages = 2:8,
-    N_settings = list(process = "off", rec_form = ~ bh(ssb, lag = 0) + iid(year)))
+    N_settings = list(process = "off"), rec_settings = list(process = "iid", mu_form = ~ bh(ssb, lag = 0)))
   par <- make_par(dat)
   report <- RTMB::MakeADFun(function(p) nll_fun(p, dat), par, silent = TRUE)$report()
   expect_equal(report$rec_log_parent, log(report$ssb[dat$rec$eligible]), ignore_attr = TRUE)
   data$maturity$obs[data$maturity$age == 2] <- .1
-  expect_error(make_test_dat(data = data, N_settings = list(rec_form = ~ bh(ssb, lag = 0) + iid(year))), "circular")
+  expect_error(make_test_dat(data = data, rec_settings = list(process = "iid", mu_form = ~ bh(ssb, lag = 0))), "circular")
 })
 
 test_that("variable timing is reported honestly and retains derived uncertainty", {
@@ -150,7 +150,7 @@ test_that("variable timing is reported honestly and retains derived uncertainty"
   expect_equal(timing$spawn_time, timing$age / 30)
   for (curve in c("bh", "ricker")) {
     dat <- make_test_dat(data = data, years = 1983:1995, ages = 2:8,
-      N_settings = list(rec_form = as.formula(paste0("~ ", curve, "(ssb) + iid(year, sd = .2)"))))
+      rec_settings = list(process = "iid", sd = .2, mu_form = as.formula(paste0("~ ", curve, "(ssb)"))))
     par <- make_par(dat)
     set.seed(897)
     simulated <- nll_fun(par, dat, simulate = TRUE)

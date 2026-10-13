@@ -21,13 +21,15 @@ Formula markers; direct calls raise an error.
 }
 \description{
 Recruitment is the number of fish entering the youngest modeled age.
-Use \code{N_settings$rec_form} to describe persistent changes, independent good and
-bad years, environmental effects, or a relationship with spawning biomass.
-The default \code{~ rw(year)} retains tinyAM's original recruitment random walk.
+Use \code{rec_settings$process} for annual fluctuations and \code{rec_settings$mu_form}
+for environmental effects or a relationship with spawning biomass. The
+default \verb{process = "rw", mu_form = NULL} retains the original random walk.
 }
 \details{
-Use exactly one \code{\link[=iid]{iid()}}, \code{\link[=rw]{rw()}}, or \code{\link[=ar1]{ar1()}} residual term on \code{year}, without
-\code{by} grouping. Ordinary covariates are read from \code{data$pop_covariates} at the youngest
+Choose \code{"iid"}, \code{"rw"}, or \code{"ar1"} in \code{process}; process markers and grouping
+are not supported in recruitment mean formulas. IID/AR1 require \code{mu_form},
+with \code{~ 1} for a constant baseline. Ordinary covariates are read from
+\code{data$pop_covariates} at the youngest
 modeled age; their values at older ages may be \code{NA}. Covariates refer to the
 recruitment year. Construct lagged or standardized columns explicitly.
 Covariate coefficients are estimated; \code{offset()} terms are not supported.
@@ -54,7 +56,7 @@ Both are optimized on the log scale, independently of equilibrium assumptions.
 Without a curve, IID/AR1 use \eqn{\log R_t=X_t\gamma+u_t}.
 A RW instead obeys
 \deqn{\log R_t-\log R_{t-1}=(X_t-X_{t-1})\gamma+\epsilon_t.}
-Constant columns cancel and are removed. SD is estimated unless supplied;
+Constant columns cancel and are removed. \code{sd} is estimated unless supplied;
 estimated AR1 correlation is positive, or a fixed \code{phi} in \verb{[0, 1)} can be
 supplied. See \link{formula_effects} for these process conventions.
 
@@ -72,12 +74,12 @@ Limited SSB variation, correlated covariates, and other population processes
 can obscure the relationship. Inspect \code{\link[=check_tam]{check_tam()}} and recovery simulations.
 }
 \examples{
-~ rw(year)
-~ iid(year)
-~ bh(ssb) + iid(year)
-~ ricker(ssb, lag = 2) + ar1(year)
+list(process = "rw", mu_form = NULL)
+list(process = "iid", mu_form = ~ 1)
+list(process = "iid", mu_form = ~ bh(ssb))
+list(process = "ar1", mu_form = ~ ricker(ssb, lag = 2))
 # Add temperature to data$pop_covariates at the youngest modeled age, then use:
-~ bh(ssb) + temperature + iid(year)
+list(process = "iid", mu_form = ~ bh(ssb) + temperature)
 # Runnable fitting examples are in inst/examples/example_recruitment.R.
 }
 \seealso{

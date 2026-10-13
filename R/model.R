@@ -13,7 +13,7 @@
 #' returning to a mean. These choices make different assumptions, even when
 #' they produce similar fitted curves. N and M can also have their process
 #' switched `"off"`. Recruitment defaults to a temporal random walk;
-#' `N_settings$rec_form` can describe stock-recruit relationships and covariates.
+#' `rec_settings$mu_form` can describe stock-recruit relationships and covariates.
 #'
 #' @details
 #' ## Indices, units, and states

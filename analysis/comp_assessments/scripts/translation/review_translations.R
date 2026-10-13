@@ -2,11 +2,11 @@
 review_revision <- '29068994feee4b2e078ac911e92e0c4fe1d200af'
 review_candidates <- list(
   dfo_cod_2j3kl_2025 = list(
-    bh_iid = list(N_settings = list(rec_form = ~ bh(ssb) + iid(year))),
-    bh_ar1 = list(N_settings = list(rec_form = ~ bh(ssb) + ar1(year)))
+    bh_iid = list(rec_settings = list(process = "iid", mu_form = ~ bh(ssb))),
+    bh_ar1 = list(rec_settings = list(process = "ar1", mu_form = ~ bh(ssb)))
   ),
   afsc_cod_goa_2026 = list(
-    iid_recruitment = list(N_settings = list(rec_form = ~ iid(year, sd = 0.44))),
+    iid_recruitment = list(rec_settings = list(process = "iid", mu_form = ~ 1, sd = 0.44)),
     logistic_q = list(index_settings = list(q_form = ~ logistic(age))),
     catch_age_sd = list(catch_settings = list(sd_form = ~ age + I(age^2)))
   ),
@@ -14,11 +14,11 @@ review_candidates <- list(
     shared_f_rw = list(F_settings = list(process = 'iid', mu_form = ~ factor(age) + rw(year)))
   ),
   afsc_pollock_goa_2024 = list(
-    iid_recruitment = list(N_settings = list(rec_form = ~ iid(year, sd = 1.3))),
+    iid_recruitment = list(rec_settings = list(process = "iid", mu_form = ~ 1, sd = 1.3)),
     adfg_q_rw = list(index_settings = list(q_form = ~ 0 + q_key + environmental_effect + rw(year, by = adfg_effect)))
   ),
   dfo_cod_4t4vn_2019 = list(
-    ar1_recruitment = list(N_settings = list(rec_form = ~ ar1(year, sd = 0.5))),
+    ar1_recruitment = list(rec_settings = list(process = "ar1", mu_form = ~ 1, sd = 0.5)),
     fixed_sd_m_rw_iid_warm = list(M_settings = list(process = 'off',
       mu_form = ~ 0 + M_formula_group + rw(year, by = M_formula_group, sd = 0.075),
       mu_supplied = ~ M_prior_mean)),

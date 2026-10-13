@@ -65,7 +65,7 @@ Gaussian approximation using the \strong{joint precision} (sparse Cholesky).
 (an approximate predictive draw when \code{par_uncertainty = "joint"}).
 \item \code{TRUE}  — generate \strong{new process fields} for the random effects and re-simulate
 across the entire modeled history, including historical years.
-Recruitment follows \code{N_settings$rec_form}. Stock-recruit draws use
+Recruitment follows \code{rec_settings}. Stock-recruit draws use
 parent SSB from the same simulated population; fixed early recruitment
 boundary states are retained. See \link{recruitment_formulas}.
 This includes \code{log_n0} only for \code{N_settings$init = "random"}, generated

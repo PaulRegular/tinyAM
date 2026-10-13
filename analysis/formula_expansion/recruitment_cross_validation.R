@@ -1,9 +1,9 @@
 source("analysis/formula_expansion/recruitment_validation.R")
 
 rec_cross_cases <- c("rw", rec_cases[1:4])
-rec_cross_formula <- function(case) if (case == "rw") ~ rw(year) else rec_formula(case)
+rec_cross_spec <- function(case) if (case == "rw") list(process = "rw", mu_form = NULL) else rec_spec(case)
 rec_cross_settings <- function(form, obs) {
-  settings <- rec_settings(form)
+  settings <- rec_fit_settings(form)
   if ("f_pressure" %in% names(obs$pop_covariates)) settings$F_settings$mu_form <- ~ factor(age) + f_pressure
   settings
 }
@@ -18,7 +18,7 @@ rec_cross_simulation <- function(case, stage, seed, sigma = .35, contrast = "nat
   set.seed(seed)
   obs <- rec_inputs(if (stage == "isolated") 2000:2079 else 2000:2049)
   if (stage == "full" && contrast == "wider") obs$pop_covariates$f_pressure <- 1.5 * sin(2 * pi * (obs$pop_covariates$year - 2000) / 25)
-  d <- do.call(prepare_tam, c(list(data = obs), rec_cross_settings(rec_cross_formula(case), obs)))
+  d <- do.call(prepare_tam, c(list(data = obs), rec_cross_settings(rec_cross_spec(case), obs)))
   p <- make_par(d)
   p$log_r0 <- log(1000)
   p$log_sd_r <- log(sigma)
@@ -62,7 +62,7 @@ rec_cross_simulation <- function(case, stage, seed, sigma = .35, contrast = "nat
 }
 
 rec_cross_isolated <- function(generated, fitted) {
-  d <- do.call(prepare_tam, c(list(data = generated$obs), rec_cross_settings(rec_cross_formula(fitted), generated$obs)))
+  d <- do.call(prepare_tam, c(list(data = generated$obs), rec_cross_settings(rec_cross_spec(fitted), generated$obs)))
   p <- list(log_sd_r = log(.5))
   if (d$rec$type == "ar1") p$logit_phi_r <- qlogis(.5)
   if (!is.null(d$rec$curve)) {
@@ -96,7 +96,7 @@ rec_cross_isolated <- function(generated, fitted) {
 rec_cross_full <- function(generated, fitted, baseline) {
   fit <- if (fitted == "rw") baseline else do.call(fit_tam,
     c(list(data = generated$obs, start_par = tinyAM:::.tam_parameter_summary(baseline, "Estimate"),
-      silent = TRUE, add_osa_res = FALSE), rec_cross_settings(rec_cross_formula(fitted), generated$obs)))
+      silent = TRUE, add_osa_res = FALSE), rec_cross_settings(rec_cross_spec(fitted), generated$obs)))
   checks <- check_tam(fit, detailed = TRUE)
   estimates <- tinyAM:::.tam_parameter_summary(fit, "Estimate")
   list(diagnostics = rec_diagnostics(fit$obj, fit$opt, fit$sdrep),

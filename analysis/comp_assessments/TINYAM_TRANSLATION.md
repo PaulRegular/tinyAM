@@ -858,10 +858,11 @@ Compare the actual mathematical structure.
 
 For broad comparative analyses, a standardized tinyAM N process may intentionally differ from the source assessment. Record that explicitly.
 
-Recruitment is separate from older-cohort deviations: `N_settings$rec_form`
-defaults to `~ rw(year)`, while `N_settings$process` controls survival variation.
-Supported alternatives include `~ iid(year)`, `~ bh(ssb) + iid(year)` and
-`~ ricker(ssb) + ar1(year)`, with fixed annual covariates when justified.
+Recruitment is separate from older-cohort deviations: `rec_settings$process`
+defaults to `"rw"`, while `N_settings$process` controls survival variation.
+Set `rec_settings$mu_form = ~ 1` for a constant IID/AR1 baseline, or use
+`~ bh(ssb)` or `~ ricker(ssb)` with IID/AR1 residuals. Mean formulas may include
+fixed annual covariates when justified; process markers do not belong in them.
 Recruitment means abundance at the youngest modeled age. Parent SSB is
 start-of-year mature biomass; the default lag is that recruitment age. Early
 states with no modeled parent SSB are fixed boundary parameters, not fabricated

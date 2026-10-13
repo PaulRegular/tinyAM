@@ -6,8 +6,8 @@
 #' terms in `index_settings$q_form`, `F_settings$mu_form`, or
 #' `M_settings$mu_form`, `catch_settings$sd_form`, or `index_settings$sd_form`;
 #' ordinary formula terms supply the baseline.
-#' `N_settings$rec_form` also supports one annual Gaussian residual process;
-#' see [recruitment_formulas] for its distinct initial-state convention.
+#' Recruitment uses a separate named residual process in `rec_settings`;
+#' see [recruitment_formulas] for its initial-state convention.
 #'
 #' @details
 #' `iid(x)` gives each level an independent, mean-zero Normal effect.
@@ -130,7 +130,7 @@ ar1 <- function(x, by = NULL, sd = NULL, phi = NULL) .formula_marker_error("ar1"
 logistic <- function(x, by = NULL) .formula_marker_error("logistic")
 
 .formula_marker_error <- function(term) {
-  cli::cli_abort("{term}() is a formula marker. Use it in q_form, F/M mu_form, catch/index sd_form, or N_settings$rec_form; logistic() is restricted to q_form.")
+  cli::cli_abort("{term}() is a formula marker. Use it in q_form, F/M mu_form, or catch/index sd_form; logistic() is restricted to q_form.")
 }
 
 .formula_call_name <- function(x) {
@@ -145,7 +145,7 @@ logistic <- function(x, by = NULL) .formula_marker_error("logistic")
 .parse_q_formula <- function(formula, data) {
   if (!inherits(formula, "formula")) cli::cli_abort("{.arg q_form} must be a formula.")
   if (any(c("bh", "ricker") %in% all.names(formula))) {
-    cli::cli_abort("bh() and ricker() are restricted to N_settings$rec_form.")
+    cli::cli_abort("bh() and ricker() are restricted to rec_settings$mu_form.")
   }
   special <- c("iid", "rw", "ar1", "logistic", "|")
   contains <- function(x) {

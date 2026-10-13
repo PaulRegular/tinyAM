@@ -12,8 +12,8 @@ test_that("default recruitment retains the original random-walk density and layo
 
 test_that("recruitment IID and AR1 use normalized residual densities", {
   for (type in c("iid", "ar1")) {
-    form <- as.formula(paste0("~ ", type, "(year, sd = 0.3", if (type == "ar1") ", phi = 0.6" else "", ")"))
-    d <- make_test_dat(N_settings = list(process = "off", rec_form = form))
+    spec <- list(process = type, mu_form = ~ 1, sd = .3, phi = if (type == "ar1") .6 else NULL)
+    d <- make_test_dat(N_settings = list(process = "off"), rec_settings = spec)
     p <- make_par(d)
     p$rec_beta[] <- 2
     r <- seq_len(length(d$years)) / 10
@@ -26,27 +26,27 @@ test_that("recruitment IID and AR1 use normalized residual densities", {
   }
 })
 
-test_that("recruitment covariates come only from youngest-age maturity rows", {
+test_that("recruitment covariates come only from youngest-age population covariate rows", {
   obs <- tinyAM::cod_obs
   obs$pop_covariates$temp <- ifelse(obs$pop_covariates$age == min(AGES), sin(obs$pop_covariates$year), NA)
-  d <- make_test_dat(data = obs, N_settings = list(process = "off", rec_form = ~ temp + rw(year)))
+  d <- make_test_dat(data = obs, N_settings = list(process = "off"), rec_settings = list(process = "rw", mu_form = ~ temp))
   p <- make_par(d)
   p$rec_beta[] <- .4
   r <- seq_len(length(d$years)) / 10
   expect_equal(tinyAM:::.rec_nll(r, tinyAM:::.rec_mean(p, d), p, d),
                -sum(dnorm(diff(r) - .4 * diff(d$rec$data$temp), 0, 1, log = TRUE)))
-  expect_error(make_test_dat(N_settings = list(rec_form = ~ absent + iid(year))), "covariates")
-  expect_error(make_test_dat(data = obs, N_settings = list(rec_form = ~ offset(temp) + iid(year))), "offset")
-  expect_error(make_test_dat(N_settings = list(rec_form = ~ iid(year) + ar1(year))), "exactly one")
-  expect_error(make_test_dat(N_settings = list(rec_form = ~ rw(age))), "year without")
-  expect_error(make_test_dat(N_settings = list(rec_form = ~ factor(year) + iid(year))), "saturated")
-  expect_error(make_test_dat(N_settings = list(rec_form = ~ year * rw(year))), "additive")
+  expect_error(make_test_dat(rec_settings = list(process = "iid", mu_form = ~ absent)), "covariates")
+  expect_error(make_test_dat(data = obs, rec_settings = list(process = "iid", mu_form = ~ offset(temp))), "offset")
+  expect_error(make_test_dat(rec_settings = list(process = "iid", mu_form = ~ iid(year) + ar1(year))), "residual process terms")
+  expect_error(make_test_dat(rec_settings = list(mu_form = ~ rw(age))), "residual process terms")
+  expect_error(make_test_dat(rec_settings = list(process = "iid", mu_form = ~ factor(year))), "saturated")
+  expect_error(make_test_dat(rec_settings = list(mu_form = ~ year * rw(year))), "additive")
 })
 
 test_that("Gaussian recruitment simulation keeps the anchor and residual convention", {
   for (type in c("iid", "ar1", "rw")) {
-    form <- as.formula(paste0("~ ", type, "(year, sd = 0.2", if (type == "ar1") ", phi = 0.5" else "", ")"))
-    d <- make_test_dat(N_settings = list(process = "off", rec_form = form))
+    spec <- list(process = type, mu_form = ~ 1, sd = .2, phi = if (type == "ar1") .5 else NULL)
+    d <- make_test_dat(N_settings = list(process = "off"), rec_settings = spec)
     p <- make_par(d)
     p$log_r0 <- 1
     if (!is.null(p$rec_beta)) p$rec_beta[] <- 2
@@ -79,14 +79,14 @@ test_that("stock-recruit curves and derivatives match their definitions", {
 test_that("stock-recruit boundaries and lags align by year", {
   for (lag in c(1L, 2L, 4L)) {
     d <- make_test_dat(years = 1983:1995, ages = 2:8,
-      N_settings = list(process = "off", rec_form = as.formula(substitute(~ bh(ssb, lag = L) + iid(year), list(L = lag)))))
+      N_settings = list(process = "off"), rec_settings = list(process = "iid", mu_form = as.formula(substitute(~ bh(ssb, lag = L), list(L = lag)))))
     p <- make_par(d)
     expect_equal(names(p$log_r), as.character(d$years[seq.int(max(2L, lag + 1L), 13L)]))
     expect_equal(length(p$log_r_init), max(0L, lag - 1L))
     obj <- RTMB::MakeADFun(function(p) nll_fun(p, d), p, silent = TRUE)
     expect_true(is.finite(obj$fn()))
     shortened <- make_test_dat(years = 1983:1990, ages = 2:8,
-      N_settings = d$N_settings)
+      N_settings = d$N_settings, rec_settings = d$rec_settings)
     p$log_r[] <- seq_along(p$log_r)
     start <- tinyAM:::.merge_start_par(make_par(shortened), p)
     expect_equal(start$log_r, p$log_r[names(start$log_r)])
@@ -95,10 +95,10 @@ test_that("stock-recruit boundaries and lags align by year", {
 
 test_that("simulated recruitment uses parent SSB from the same population", {
   for (type in c("bh", "ricker")) for (process in c("iid", "ar1")) for (n_process in c("off", "iid")) {
-    form <- as.formula(paste0("~ ", type, "(ssb) + ", process, "(year, sd = 0.2",
-      if (process == "ar1") ", phi = 0.4" else "", ")"))
+    spec <- list(process = process, mu_form = as.formula(paste0("~ ", type, "(ssb)")),
+                 sd = .2, phi = if (process == "ar1") .4 else NULL)
     d <- make_test_dat(years = 1983:1995, ages = 2:8,
-      N_settings = list(process = n_process, rec_form = form),
+      N_settings = list(process = n_process), rec_settings = spec,
       proj_settings = list(n_proj = 2, n_mean = 2, F_mult = 1))
     p <- make_par(d)
     set.seed(713)
@@ -125,20 +125,20 @@ test_that("simulated recruitment uses parent SSB from the same population", {
 })
 
 test_that("zero-lag models reject circular SSB and unavailable parent data", {
-  expect_error(make_test_dat(N_settings = list(rec_form = ~ bh(ssb, lag = 0) + iid(year))), "circular")
-  expect_error(make_test_dat(N_settings = list(rec_form = ~ bh(ssb) + rw(year))), "not RW")
-  expect_error(make_test_dat(N_settings = list(rec_form = ~ bh(ssb) + ricker(ssb) + iid(year))), "one stock-recruit")
-  expect_error(make_test_dat(N_settings = list(rec_form = ~ bh(ssb, lag = -1) + iid(year))), "non-negative")
-  expect_error(make_test_dat(N_settings = list(rec_form = ~ bh(ssb, lag = 1e12) + iid(year))), "non-negative")
+  expect_error(make_test_dat(rec_settings = list(process = "iid", mu_form = ~ bh(ssb, lag = 0))), "circular")
+  expect_error(make_test_dat(rec_settings = list(process = "rw", mu_form = ~ bh(ssb))), "not RW")
+  expect_error(make_test_dat(rec_settings = list(process = "iid", mu_form = ~ bh(ssb) + ricker(ssb))), "one stock-recruit")
+  expect_error(make_test_dat(rec_settings = list(process = "iid", mu_form = ~ bh(ssb, lag = -1))), "non-negative")
+  expect_error(make_test_dat(rec_settings = list(process = "iid", mu_form = ~ bh(ssb, lag = 1e12))), "non-negative")
   expect_error(make_test_dat(years = 1983:1986,
-    N_settings = list(rec_form = ~ bh(ssb) + iid(year))), "saturated")
+    rec_settings = list(process = "iid", mu_form = ~ bh(ssb))), "saturated")
   expect_error(make_test_dat(years = 1983:1985,
-    N_settings = list(rec_form = ~ bh(ssb) + iid(year, sd = .3))), "saturated")
-  expect_error(make_test_dat(years = 1983:1985, N_settings = list(rec_form = ~ bh(ssb, lag = 3) + iid(year))), "No historical")
+    rec_settings = list(process = "iid", mu_form = ~ bh(ssb), sd = .3)), "saturated")
+  expect_error(make_test_dat(years = 1983:1985, rec_settings = list(process = "iid", mu_form = ~ bh(ssb, lag = 3))), "No historical")
   obs <- cod_obs
   obs$maturity$obs[obs$maturity$age == 2] <- 0
   d <- make_test_dat(data = obs, years = 1983:1995, ages = 2:8,
-    N_settings = list(process = "off", rec_form = ~ bh(ssb, lag = 0) + iid(year)))
+    N_settings = list(process = "off"), rec_settings = list(process = "iid", mu_form = ~ bh(ssb, lag = 0)))
   p <- make_par(d)
   expect_true(is.finite(nll_fun(p, d)))
   set.seed(94)
@@ -147,7 +147,7 @@ test_that("zero-lag models reject circular SSB and unavailable parent data", {
 
 test_that("recruitment reports exclude boundaries and keep uncertainty scales", {
   d <- make_test_dat(years = 1983:1995, ages = 2:8,
-    N_settings = list(process = "off", rec_form = ~ bh(ssb) + iid(year)))
+    N_settings = list(process = "off"), rec_settings = list(process = "iid", mu_form = ~ bh(ssb)))
   p <- make_par(d)
   obj <- RTMB::MakeADFun(function(p) nll_fun(p, d), p, silent = TRUE)
   fit <- list(dat = d, obj = obj, rep = obj$report(), sdrep = NULL,
@@ -165,12 +165,12 @@ test_that("recruitment reports exclude boundaries and keep uncertainty scales", 
   obs <- cod_obs
   obs$pop_covariates$constant <- 1
   expect_error(prepare_tam(obs, years = 1983:1995, ages = 2:8,
-    N_settings = list(rec_form = ~ bh(ssb) + constant + iid(year))), "productivity")
+    rec_settings = list(process = "iid", mu_form = ~ bh(ssb) + constant)), "productivity")
 })
 
 test_that("estimated recruitment AR1 links remain differentiable", {
   d <- make_test_dat(years = 1983:1995, ages = 2:8,
-    N_settings = list(process = "off", rec_form = ~ bh(ssb) + ar1(year)))
+    N_settings = list(process = "off"), rec_settings = list(process = "ar1", mu_form = ~ bh(ssb)))
   p <- make_par(d)
   obj <- RTMB::MakeADFun(function(p) nll_fun(p, d), p, silent = TRUE)
   expect_true(all(is.finite(obj$gr(obj$par))))
@@ -180,8 +180,8 @@ test_that("curve parameters without intervals still plot and boundary years alig
   d <- data.frame(par = c("sr_alpha", "sr_beta"), coef = NA_character_,
     est = c(2, .001), lwr = NA_real_, upr = NA_real_)
   expect_s3_class(plotly::plotly_build(plot_par(d)), "plotly")
-  older <- make_test_dat(N_settings = list(rec_form = ~ bh(ssb, lag = 4) + iid(year)))
-  younger <- make_test_dat(N_settings = list(rec_form = ~ bh(ssb, lag = 2) + iid(year)))
+  older <- make_test_dat(rec_settings = list(process = "iid", mu_form = ~ bh(ssb, lag = 4)))
+  younger <- make_test_dat(rec_settings = list(process = "iid", mu_form = ~ bh(ssb, lag = 2)))
   p <- make_par(older)
   p$log_r_init[] <- c(1, 2, 3)
   merged <- tinyAM:::.merge_start_par(make_par(younger), p)
@@ -189,7 +189,7 @@ test_that("curve parameters without intervals still plot and boundary years alig
 })
 
 test_that("stock-recruit support warnings remain advisory", {
-  d <- make_test_dat(N_settings = list(rec_form = ~ ricker(ssb) + ar1(year)))
+  d <- make_test_dat(rec_settings = list(process = "ar1", mu_form = ~ ricker(ssb)))
   fit <- list(dat = d, rep = list(rec_log_parent = log(seq(100, 120, length.out = length(d$rec$eligible)))),
     sdrep = list(pdHess = TRUE, par.fixed = c(log_sr_alpha = 0, log_sr_beta = 0, logit_phi_r = 0),
                  cov.fixed = diag(c(4, 4, 1))))
@@ -200,7 +200,7 @@ test_that("stock-recruit support warnings remain advisory", {
 test_that("stock-recruit innovation advisories use historical process years", {
   for (process in c("iid", "ar1")) {
     d <- make_test_dat(years = 1983:2005, ages = 2:8,
-      N_settings = list(process = "off", rec_form = as.formula(paste0("~ bh(ssb) + ", process, "(year)"))),
+      N_settings = list(process = "off"), rec_settings = list(process = process, mu_form = ~ bh(ssb)),
       proj_settings = list(n_proj = 3, n_mean = 2, F_mult = 1))
     n <- length(d$rec$eligible)
     fit <- list(dat = d, rep = list(rec_log_parent = log(seq(100, 1000, length.out = n)),
@@ -221,8 +221,8 @@ test_that("stock-recruit innovation advisories use historical process years", {
 
 test_that("initial recruitment deviations are zero under a stock-recruit curve", {
   for (curve in c("bh", "ricker")) for (process in c("iid", "ar1")) {
-    d <- make_test_dat(years = 1983:1995, ages = 2:8, N_settings = list(process = "off",
-      rec_form = as.formula(paste0("~ ", curve, "(ssb) + ", process, "(year)"))))
+    d <- make_test_dat(years = 1983:1995, ages = 2:8, N_settings = list(process = "off"),
+      rec_settings = list(process = process, mu_form = as.formula(paste0("~ ", curve, "(ssb)"))))
     p <- make_par(d)
     report <- RTMB::MakeADFun(function(p) nll_fun(p, d), p, silent = TRUE)$report()
     expect_equal(unname(report$rec_residual), rep(0, length(d$rec$eligible)), tolerance = 1e-12)
@@ -235,7 +235,7 @@ test_that("recruitment projections hold only referenced annual covariates", {
   obs$pop_covariates$temp <- ifelse(obs$pop_covariates$age == 2, sin(obs$pop_covariates$year), NA)
   obs$pop_covariates$unused <- NA_real_
   expect_message(d <- make_test_dat(data = obs, years = 1983:1995, ages = 2:8,
-    N_settings = list(process = "off", rec_form = ~ temp + ar1(year, sd = .2, phi = .5)),
+    N_settings = list(process = "off"), rec_settings = list(process = "ar1", mu_form = ~ temp, sd = .2, phi = .5),
     proj_settings = list(n_proj = 2, n_mean = 2, F_mult = 1)), "terminal covariate values: temp")
   expect_equal(tail(d$rec$data$temp, 3), rep(sin(1995), 3))
   p <- make_par(d)
@@ -246,8 +246,8 @@ test_that("recruitment projections hold only referenced annual covariates", {
   p$log_r[c("1996", "1997")] <- tail(tinyAM:::.rec_mean(p, d), 2) + c(.5, .25)
   states <- tinyAM:::.population_states(p, d, matrix(.3, length(d$years), length(d$ages)))
   expect_equal(unname(tail(states$eta_R, 2)), c(0, 0), tolerance = 1e-12)
-  expect_error(make_test_dat(N_settings = list(rec_form = ~ iid(year, by = age))), "without by")
-  expect_error(make_test_dat(N_settings = list(rec_form = ~ bh(ssb) + logistic(age) + iid(year))), "Unsupported")
+  expect_error(make_test_dat(rec_settings = list(process = "iid", mu_form = ~ iid(year, by = age))), "residual process terms")
+  expect_error(make_test_dat(rec_settings = list(process = "iid", mu_form = ~ bh(ssb) + logistic(age))), "Unsupported")
 })
 
 test_that("recruitment age and N0 choices preserve boundary semantics", {
@@ -255,7 +255,7 @@ test_that("recruitment age and N0 choices preserve boundary semantics", {
   for (name in names(obs)) obs[[name]]$age <- obs[[name]]$age - 2L
   obs$maturity$obs[obs$maturity$age == 0] <- 0
   d <- make_test_dat(data = obs, years = 1983:1995, ages = 0:6,
-    N_settings = list(process = "off", rec_form = ~ bh(ssb) + iid(year)))
+    N_settings = list(process = "off"), rec_settings = list(process = "iid", mu_form = ~ bh(ssb)))
   expect_equal(d$rec$curve$lag, 0L)
   expect_equal(d$rec$boundary, 1L)
   p <- make_par(d)
@@ -263,7 +263,7 @@ test_that("recruitment age and N0 choices preserve boundary semantics", {
   expect_equal(unname(report$rec_log_parent), unname(log(report$ssb[-1L])))
   for (init in c("exp", "free", "random")) {
     d <- make_test_dat(years = 1983:1995, ages = 2:14,
-      N_settings = list(process = "iid", init = init, rec_form = ~ ricker(ssb, lag = 4) + iid(year)))
+      N_settings = list(process = "iid", init = init), rec_settings = list(process = "iid", mu_form = ~ ricker(ssb, lag = 4)))
     p <- make_par(d)
     obj <- RTMB::MakeADFun(function(p) nll_fun(p, d), p, silent = TRUE)
     expect_true(is.finite(obj$fn()))
@@ -278,7 +278,7 @@ test_that("curve displays use median numeric covariates and declared factor leve
   obs$pop_covariates$temp <- ifelse(obs$pop_covariates$age == 2, obs$pop_covariates$year - 1983, NA)
   obs$pop_covariates$phase <- factor(ifelse(obs$pop_covariates$year %% 2, "b", "a"), levels = c("b", "a"))
   d <- make_test_dat(data = obs, years = 1983:1995, ages = 2:8,
-    N_settings = list(process = "off", rec_form = ~ bh(ssb) + temp + phase + iid(year)))
+    N_settings = list(process = "off"), rec_settings = list(process = "iid", mu_form = ~ bh(ssb) + temp + phase))
   p <- make_par(d)
   p$rec_beta[] <- c(.1, .3)
   obj <- RTMB::MakeADFun(function(p) nll_fun(p, d), p, silent = TRUE)
@@ -290,7 +290,7 @@ test_that("curve displays use median numeric covariates and declared factor leve
   withr::local_options(contrasts = c("contr.sum", "contr.poly"))
   expect_equal(tidy_recruitment(fit)$curve, tab$curve)
   obs$pop_covariates$temp <- 1
-  expect_warning(d <- make_test_dat(data = obs, N_settings = list(rec_form = ~ temp + rw(year))), "cancel")
+  expect_warning(d <- make_test_dat(data = obs, rec_settings = list(process = "rw", mu_form = ~ temp)), "cancel")
   expect_false("rec_beta" %in% names(make_par(d)))
 })
 
@@ -298,9 +298,9 @@ test_that("recruitment curve displays retain fitted covariate bases", {
   obs <- cod_obs
   obs$pop_covariates$temp <- ifelse(obs$pop_covariates$age == 2, obs$pop_covariates$year - 1983, NA)
   for (term in c("poly(temp, 2)", "scale(temp)", "splines::ns(temp, df = 3)")) {
-    form <- as.formula(paste("~ bh(ssb) +", term, "+ iid(year)"))
+    spec <- list(process = "iid", mu_form = as.formula(paste("~ bh(ssb) +", term)))
     d <- make_test_dat(data = obs, years = 1983:1995, ages = 2:8,
-      N_settings = list(process = "off", rec_form = form))
+      N_settings = list(process = "off"), rec_settings = spec)
     p <- make_par(d)
     p$rec_beta[] <- seq_along(p$rec_beta) / 10
     obj <- RTMB::MakeADFun(function(p) nll_fun(p, d), p, silent = TRUE)

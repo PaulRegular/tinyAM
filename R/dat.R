@@ -251,7 +251,7 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #'
 #' Supply only the entries to change from the defaults shown in Usage. Formulas
 #' and vectors replace an entire entry. Optional `NULL` entries clear a formula,
-#' offset or age selection; `rec_form = NULL` restores `~ rw(year)` and a latent
+#' offset or age selection; recruitment defaults to an anchored RW and a latent
 #' `sd_form = NULL` restores `~ 1`. Required entries cannot be `NULL`.
 #' [update()] retains unspecified entries from the original fit instead.
 #'
@@ -373,12 +373,6 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #'   weight and maturity are retained for abundance-based aggregation inside
 #'   [nll_fun()], preserving biomass and mature biomass in the plus group.
 #' @param N_settings A list with elements:
-#' - `rec_form`: recruitment formula, default `~ rw(year)`. Use one of [iid()],
-#'   [rw()], or [ar1()] on `year`, optionally with fixed covariates from
-#'   `data$pop_covariates` at the youngest modeled age. First-year recruitment remains
-#'   a freely estimated fixed anchor; `process` below controls older cohorts.
-#'   [bh()] and [ricker()] add a median stock-recruit curve with IID/AR1
-#'   residuals. See [recruitment_formulas] for lags, boundary states and units.
 #' - `process`: `"off"` for deterministic cohort survival, `"iid"` for independent
 #'   cohort residuals, `"rw"` for residuals that accumulate through time, or
 #'   `"ar1"` for residuals correlated between years and ages. See [tinyAM-model].
@@ -391,6 +385,18 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #'   default `~ 1`. Use `~ factor(age)` or a supplied age-sharing column in
 #'   `data$pop_covariates`. Its design must be constant across years. Recruitment and
 #'   initial-abundance SDs remain separate. Random-effect SD terms are not enabled.
+#' @param rec_settings A list controlling recruitment separately from cohort survival:
+#' - `process`: `"rw"` (default), `"iid"`, or `"ar1"` for annual log-recruitment
+#'   residuals. First-year recruitment remains a freely estimated fixed anchor.
+#' - `mu_form`: one-sided formula for the expected log recruitment. `NULL` is
+#'   allowed for RW; IID/AR1 require an explicit formula, such as `~ 1` for a
+#'   constant mean. Use [bh()] or [ricker()] for a median stock-recruit curve
+#'   with IID/AR1 residuals. Ordinary covariates come from `data$pop_covariates`
+#'   at the youngest modeled age. See [recruitment_formulas].
+#' - `sd`: positive fixed recruitment SD, or `NULL` to estimate it. This is
+#'   an innovation SD for RW/AR1 and a marginal SD for IID.
+#' - `phi`: fixed AR1 correlation in `[0, 1)`, or `NULL` to estimate it.
+#'   Must be `NULL` for other processes. Estimated correlations are positive.
 #' @param F_settings A list with elements:
 #' - `process`: `"iid"` for independent departures from the mean log F,
 #'   `"rw"` for departures that accumulate over time, or `"ar1"` for departures
@@ -535,7 +541,8 @@ prepare_tam <- function(
     data,
     years = NULL,
     ages = NULL,
-    N_settings = list(process = "iid", init = "exp", rec_form = ~ rw(year), sd_form = ~ 1),
+    N_settings = list(process = "iid", init = "exp", sd_form = ~ 1),
+    rec_settings = list(process = "rw", mu_form = NULL, sd = NULL, phi = NULL),
     F_settings = list(process = "rw", mu_form = NULL, sd_form = ~ 1, mean_ages = NULL),
     M_settings = list(process = "off", mu_form = NULL, mu_supplied = ~I(0.2), sd_form = ~ 1,
                       age_breaks = NULL, first_dev_year = NULL, mean_ages = NULL),

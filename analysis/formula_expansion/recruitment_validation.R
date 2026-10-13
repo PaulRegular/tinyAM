@@ -1,9 +1,9 @@
 rec_cases <- c("bh_iid", "bh_ar1", "ricker_iid", "ricker_ar1", "cov_iid", "cov_rw")
 
-rec_formula <- function(case) {
+rec_spec <- function(case) {
   parts <- strsplit(case, "_")[[1L]]
   curve <- if (parts[1L] == "cov") "temperature" else paste0(parts[1L], "(ssb)")
-  stats::as.formula(paste("~", curve, "+", paste0(parts[2L], "(year)")))
+  list(process = parts[2L], mu_form = stats::as.formula(paste("~", curve)))
 }
 
 rec_inputs <- function(years = 2000:2049) {
@@ -19,8 +19,8 @@ rec_inputs <- function(years = 2000:2049) {
        pop_covariates = pop_covariates)
 }
 
-rec_settings <- function(form) {
-  list(N_settings = list(process = "off", init = "exp", rec_form = form),
+rec_fit_settings <- function(spec) {
+  list(N_settings = list(process = "off", init = "exp"), rec_settings = spec,
     F_settings = list(process = "iid", mu_form = ~ factor(age)),
     M_settings = list(process = "off", mu_supplied = ~ I(.2)),
     catch_settings = list(sd_form = ~ 1, fill_missing = FALSE),
@@ -54,7 +54,7 @@ rec_observations <- function(simulated, dat) {
 rec_isolated_recovery <- function(case, design, seed) {
   set.seed(seed)
   obs <- rec_inputs(2000:2079)
-  d <- do.call(prepare_tam, c(list(data = obs), rec_settings(rec_formula(case))))
+  d <- do.call(prepare_tam, c(list(data = obs), rec_fit_settings(rec_spec(case))))
   p <- make_par(d)
   truth <- list(log_sd_r = log(.35))
   if (d$rec$type == "ar1") truth$logit_phi_r <- qlogis(.6)
@@ -121,7 +121,7 @@ rec_isolated_recovery <- function(case, design, seed) {
 rec_full_recovery <- function(case, seed) {
   set.seed(seed)
   obs <- rec_inputs()
-  settings <- rec_settings(rec_formula(case))
+  settings <- rec_fit_settings(rec_spec(case))
   d <- do.call(prepare_tam, c(list(data = obs), settings))
   p <- make_par(d)
   p$log_r0 <- log(1000)
@@ -140,7 +140,7 @@ rec_full_recovery <- function(case, seed) {
   p[names(generated)[names(generated) %in% names(p)]] <- generated[names(generated) %in% names(p)]
   report <- RTMB::MakeADFun(function(p) nll_fun(p, d), p, silent = TRUE)$report()
   obs <- rec_observations(generated, d)
-  baseline_settings <- rec_settings(~ rw(year))
+  baseline_settings <- rec_fit_settings(list(process = "rw", mu_form = NULL))
   baseline <- do.call(fit_tam, c(list(data = obs, silent = TRUE, add_osa_res = FALSE), baseline_settings))
   warm_start <- rec_diagnostics(baseline$obj, baseline$opt, baseline$sdrep)
   if (!baseline$is_converged) {

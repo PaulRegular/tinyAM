@@ -8,7 +8,8 @@ prepare_tam(
   data,
   years = NULL,
   ages = NULL,
-  N_settings = list(process = "iid", init = "exp", rec_form = ~rw(year), sd_form = ~1),
+  N_settings = list(process = "iid", init = "exp", sd_form = ~1),
+  rec_settings = list(process = "rw", mu_form = NULL, sd = NULL, phi = NULL),
   F_settings = list(process = "rw", mu_form = NULL, sd_form = ~1, mean_ages = NULL),
   M_settings = list(process = "off", mu_form = NULL, mu_supplied = ~I(0.2), sd_form = ~1,
         age_breaks = NULL, first_dev_year = NULL, mean_ages = NULL),
@@ -37,12 +38,6 @@ weight and maturity are retained for abundance-based aggregation inside
 
 \item{N_settings}{A list with elements:
 \itemize{
-\item \code{rec_form}: recruitment formula, default \code{~ rw(year)}. Use one of \code{\link[=iid]{iid()}},
-\code{\link[=rw]{rw()}}, or \code{\link[=ar1]{ar1()}} on \code{year}, optionally with fixed covariates from
-\code{data$pop_covariates} at the youngest modeled age. First-year recruitment remains
-a freely estimated fixed anchor; \code{process} below controls older cohorts.
-\code{\link[=bh]{bh()}} and \code{\link[=ricker]{ricker()}} add a median stock-recruit curve with IID/AR1
-residuals. See \link{recruitment_formulas} for lags, boundary states and units.
 \item \code{process}: \code{"off"} for deterministic cohort survival, \code{"iid"} for independent
 cohort residuals, \code{"rw"} for residuals that accumulate through time, or
 \code{"ar1"} for residuals correlated between years and ages. See \link{tinyAM-model}.
@@ -55,6 +50,21 @@ IID survivorship residuals and separate SD \code{sd_n0}. See \strong{Details}.
 default \code{~ 1}. Use \code{~ factor(age)} or a supplied age-sharing column in
 \code{data$pop_covariates}. Its design must be constant across years. Recruitment and
 initial-abundance SDs remain separate. Random-effect SD terms are not enabled.
+}}
+
+\item{rec_settings}{A list controlling recruitment separately from cohort survival:
+\itemize{
+\item \code{process}: \code{"rw"} (default), \code{"iid"}, or \code{"ar1"} for annual log-recruitment
+residuals. First-year recruitment remains a freely estimated fixed anchor.
+\item \code{mu_form}: one-sided formula for the expected log recruitment. \code{NULL} is
+allowed for RW; IID/AR1 require an explicit formula, such as \code{~ 1} for a
+constant mean. Use \code{\link[=bh]{bh()}} or \code{\link[=ricker]{ricker()}} for a median stock-recruit curve
+with IID/AR1 residuals. Ordinary covariates come from \code{data$pop_covariates}
+at the youngest modeled age. See \link{recruitment_formulas}.
+\item \code{sd}: positive fixed recruitment SD, or \code{NULL} to estimate it. This is
+an innovation SD for RW/AR1 and a marginal SD for IID.
+\item \code{phi}: fixed AR1 correlation in \verb{[0, 1)}, or \code{NULL} to estimate it.
+Must be \code{NULL} for other processes. Estimated correlations are positive.
 }}
 
 \item{F_settings}{A list with elements:
@@ -204,7 +214,7 @@ function automatically; call it directly to inspect a model specification.
 
 Supply only the entries to change from the defaults shown in Usage. Formulas
 and vectors replace an entire entry. Optional \code{NULL} entries clear a formula,
-offset or age selection; \code{rec_form = NULL} restores \code{~ rw(year)} and a latent
+offset or age selection; recruitment defaults to an anchored RW and a latent
 \code{sd_form = NULL} restores \code{~ 1}. Required entries cannot be \code{NULL}.
 \code{\link[=update]{update()}} retains unspecified entries from the original fit instead.
 
