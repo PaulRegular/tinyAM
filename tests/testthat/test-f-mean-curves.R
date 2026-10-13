@@ -170,17 +170,26 @@ test_that("F curve fits retain tidy scales, uncertainty and update paths", {
     con <- file(path, "rb")
     html <- paste(readLines(con, warn = FALSE), collapse = "\n")
     close(con)
-    expect_match(html, "Mean F", fixed = TRUE)
+    expect_false(grepl("<h3>Mean F</h3>", html, fixed = TRUE))
+    expect_match(html, "Annual trends", fixed = TRUE)
+    expect_match(html, "Age profiles", fixed = TRUE)
     expect_match(html, "Mortality means", fixed = TRUE)
     scripts <- regmatches(html, gregexpr(
       '(?s)<script type="application/json"[^>]*>.*?</script>', html, perl = TRUE))[[1L]]
     widgets <- lapply(scripts, function(script) jsonlite::fromJSON(
       sub('</script>$', '', sub('^<script[^>]*>', '', script)), simplifyVector = FALSE))
-    mean_plots <- Filter(function(widget) any(unlist(widget$x$layout$yaxis$title) == "Mean F"), widgets)
-    expect_length(mean_plots, 1L)
-    expect_length(mean_plots[[1L]]$x$data, 2L)
-    ribbons <- vapply(mean_plots[[1L]]$x$data, function(trace)
-      !is.null(trace$fill) && trace$fill %in% c("toself", "tonexty"), logical(1))
-    expect_true(any(ribbons))
+    F_plots <- Filter(function(widget) any(unlist(widget$x$layout$yaxis$title) == "F"), widgets)
+    expect_length(F_plots, 2L)
+    expect_setequal(vapply(F_plots, function(widget) unlist(widget$x$layout$xaxis$title),
+                          character(1)), c("Year", "Age"))
+    for (plot in F_plots) {
+      ribbons <- vapply(plot$x$data, function(trace)
+        !is.null(trace$fill) && trace$fill %in% c("toself", "tonexty"), logical(1))
+      expect_true(any(ribbons))
+      mean_lines <- Filter(function(trace) !is.null(trace$hovertemplate) &&
+        any(grepl("Process mean:", trace$hovertemplate, fixed = TRUE)), plot$x$data)
+      expect_true(any(vapply(mean_lines, function(trace)
+        any(is.finite(unlist(trace$y))), logical(1))))
+    }
   }
 })

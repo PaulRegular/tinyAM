@@ -8,13 +8,25 @@
       if (panel.style.display === "none") return;
       const graph = panel.querySelector(".js-plotly-plot");
       if (graph && graph._fullLayout && window.Plotly && panel.clientWidth) {
-        Plotly.Plots.resize(graph);
+        Plotly.Plots.resize(graph).catch(function (error) {
+          // A view may be hidden while Plotly's deferred resize is pending.
+          if (panel.clientWidth) console.warn(error);
+        });
       }
     });
   }
   buttons.forEach(function (button) {
     button.addEventListener("click", function () {
       panels.forEach(function (panel) {
+        if (panel.style.display !== "none" && panel.dataset.view !== button.dataset.view) {
+          const graph = panel.querySelector(".js-plotly-plot");
+          if (graph && graph._fullLayout && graph.querySelector(".slider-container")) {
+            Plotly.animate(graph, [null], {mode: "immediate", frame: {duration: 0},
+              transition: {duration: 0}}).catch(function () {
+                // Cancelling an animation can reject its pending promise.
+              });
+          }
+        }
         panel.style.display = panel.dataset.view === button.dataset.view ? "" : "none";
       });
       buttons.forEach(function (other) {

@@ -71,15 +71,15 @@ plot_rows <- function(d, columns) {
 }
 
 plot_report <- function(d, ...) {
-  d <- plot_rows(d, "est")
-  if (is.null(d) || !nrow(d)) return(plotly::plot_ly())
-  plot_trend(d, ...)
+  available <- plot_rows(d, "est")
+  if (is.null(available) || !nrow(available)) return(plotly::plot_ly())
+  tinyAM:::.plot_age_year(d, ...)
 }
 
 plot_obs_pred_report <- function(d, ...) {
   available <- plot_rows(d, c("obs", "pred"))
   if (is.null(available) || !nrow(available)) return(plotly::plot_ly())
-  plot_obs_pred(d, ...)
+  tinyAM:::.plot_age_year(d, plot = plot_obs_pred, ...)
 }
 
 make_resid_plots <- function(d) {

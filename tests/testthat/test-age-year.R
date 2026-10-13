@@ -81,3 +81,62 @@ test_that("observed-predicted plots accept an age axis without changing defaults
     expect_true(any(vapply(p$x$data, function(tr) tr$mode == "lines", logical(1))))
   }
 })
+
+test_that("mortality means retain ones without borrowing annual uncertainty", {
+  d <- age_year_data()
+  mean <- transform(d, est = 1, lwr = .8, upr = 1.2)
+  fits <- list(A = structure(list(dat = list(F_settings = list(mu_form = ~1))), class = "tam_fit"),
+               B = structure(list(dat = list(F_settings = list(mu_form = NULL))), class = "tam_fit"))
+  joined <- tinyAM:::.mortality_plot_data(d, mean, fits, "F")
+  expect_identical(joined$est, d$est)
+  expect_identical(joined$lwr, d$lwr)
+  expect_identical(joined$upr, d$upr)
+  expect_true(all(joined$mean_est[joined$model == "A"] == 1))
+  expect_true(all(is.na(joined$mean_est[joined$model == "B"])))
+  joined$lwr <- joined$upr <- NA_real_
+  p <- plotly::plotly_build(tinyAM:::.plot_mortality(joined, frame = ~age,
+    color = ~model, legendgroup = ~model))
+  ribbons <- Filter(function(tr) !is.null(tr$fill), p$x$data)
+  expect_gt(length(ribbons), 0L)
+  expect_true(all(vapply(ribbons, function(tr) all(is.na(tr$y) | tr$y <= 1.2), logical(1))))
+  mean_lines <- Filter(function(tr) !is.null(tr$hovertemplate), p$x$data)
+  expect_gt(length(mean_lines), 0L)
+  expect_match(paste(unlist(p$x$layout$updatemenus), collapse = " "), "Hide CI", fixed = TRUE)
+})
+
+test_that("sparse reference surfaces retain model traces in both orientations", {
+  d <- age_year_data()
+  d$est[d$model == "A" & (d$age == 2 | d$year == 2001)] <- NA_real_
+  d$lwr <- d$upr <- NA_real_
+  original <- d
+  plots <- list()
+  plot <- function(...) {
+    p <- plot_trend(...)
+    plots[[length(plots) + 1L]] <<- plotly::plotly_build(p)
+    p
+  }
+  tinyAM:::.plot_age_year(d, plot = plot, frame = ~age, color = ~model, legendgroup = ~model)
+  expect_identical(d, original)
+  for (p in plots) {
+    expect_length(p$x$data, 2L)
+    for (frame in p$x$frames) {
+      expect_equal(frame$traces, 0:1)
+      expect_length(frame$data, 2L)
+    }
+  }
+})
+
+test_that("different projection horizons do not split a common year into frames", {
+  d <- age_year_data()
+  d$is_proj[d$model == "A"] <- FALSE
+  views <- list()
+  plot <- function(data, ...) {
+    views[[length(views) + 1L]] <<- data
+    plot_trend(data, ...)
+  }
+  tinyAM:::.plot_age_year(d, plot = plot, frame = ~age, color = ~model)
+  expect_equal(levels(views[[2]]$.view_year), c("2000", "2001", "2002 (includes projections)"))
+  expect_equal(length(unique(views[[2]]$.view_year[views[[2]]$year == 2002])), 1L)
+  expect_match(views[[2]]$.view_hover[views[[2]]$is_proj][1], "(projection)", fixed = TRUE)
+  expect_false(any(grepl("(projection)", views[[2]]$.view_hover[!views[[2]]$is_proj], fixed = TRUE)))
+})

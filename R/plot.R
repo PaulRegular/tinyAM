@@ -104,12 +104,17 @@ plot_trend <- function(
     args$showlegend <- FALSE
   }
 
+  values <- unlist(model.frame(y, data = data), use.names = FALSE)
+  max_y <- max(c(0, values[is.finite(values)])) * 1.05
+  if (!is.null(args$frame) && identical(all.vars(y), "est")) {
+    # Retain empty model traces in every animation frame.
+    data$est[is.na(data$est)] <- Inf
+  }
   p <- do.call(plotly::plot_ly, c(list(data = data, x = x), args))
-  max_y <- max(model.frame(y, data = data), na.rm = TRUE) * 1.05
 
   has_ci <- add_intervals && all(c("lwr", "upr") %in% names(data)) && any(is.finite(data$upr))
   if (has_ci) {
-    max_y <- max(data$upr, na.rm = TRUE) * 1.05
+    max_y <- max(c(max_y, data$upr[is.finite(data$upr)] * 1.05))
     p <- p |>
       plotly::add_ribbons(
         ymin = ~lwr, ymax = ~upr,
@@ -140,7 +145,12 @@ plot_trend <- function(
       shapes = shapes
     )
 
-  if (add_buttons) {
+  if (add_buttons) p <- .plot_trend_buttons(p)
+  p
+}
+
+# Build CI controls after all layers, including process-mean ribbons, are added.
+.plot_trend_buttons <- function(p) {
     pb <- plotly::plotly_build(p)
     data_traces <- pb$x$data
     if (is.null(data_traces)) {
@@ -184,8 +194,6 @@ plot_trend <- function(
     if (!is.null(pb$x$frames)) {
       p$x$frames <- pb$x$frames
     }
-  }
-
   p
 }
 

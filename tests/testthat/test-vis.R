@@ -48,6 +48,19 @@ test_that("vis_tam renders cleanly and produces an HTML output", {
   expect_match(html, "Numerical checks", fixed = TRUE)
   expect_match(html, "Structural checks", fixed = TRUE)
   expect_match(html, "Advisory findings", fixed = TRUE)
+  expect_match(html, "Annual trends", fixed = TRUE)
+  expect_match(html, "Age profiles", fixed = TRUE)
+  expect_match(html, 'data-default-view="annual"', fixed = TRUE)
+  expect_match(html, 'data-default-view="profile"', fixed = TRUE)
+  expect_match(html, "<h3>Average F</h3>", fixed = TRUE)
+  expect_false(grepl("<h3>Mean F</h3>", html, fixed = TRUE))
+  age_year_plots <- Filter(function(p) any(unlist(p$layout$yaxis$title) %in% c("N", "F", "M", "Selectivity", "Catch", "Index")),
+                           dashboard_plots(tmpfile))
+  for (metric in c("N", "F", "M", "Selectivity", "Catch", "Index")) {
+    views <- Filter(function(p) identical(unlist(p$layout$yaxis$title), metric), age_year_plots)
+    expect_true(all(c("Year", "Age") %in% vapply(views, function(p)
+      unlist(p$layout$xaxis$title), character(1))))
+  }
   expect_match(html, "Adjusted maximum", fixed = TRUE)
   expect_match(html, 'data-navmenu="Parameters"', fixed = TRUE)
   expect_match(html, "<h1>Fixed</h1>", fixed = TRUE)

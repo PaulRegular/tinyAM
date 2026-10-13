@@ -29,6 +29,11 @@
 #'          recruitment predictions. Random parameters also show signed
 #'          recruitment residuals. See [tidy_recruitment()].
 #'          Random plots include latent states and formula-effect trends.
+#'          Age-year plots offer Annual trends (year axis, age selector) and
+#'          Age profiles (age axis, year selector). Each plot starts in its
+#'          specified orientation and retains each view's controls when switching.
+#'          F-at-age and M-at-age include available process means and their
+#'          separate confidence ribbons; Average F remains the population summary.
 #' @return Used for its side effects: writes an HTML dashboard and optionally
 #'   opens it in the browser. Supply `output_file` to retain a known file path.
 #'
@@ -116,17 +121,24 @@ vis_tam <- function(..., model_list = NULL, interval = 0.95, output_file = NULL,
   }
   data <- data[order(data$year, data$age), , drop = FALSE]
   projection <- if ("is_proj" %in% names(data)) data$is_proj else rep(FALSE, nrow(data))
-  year_labels <- paste0(data$year, ifelse(projection, " (projection)", ""))
+  years <- unique(data$year)
+  suffix <- vapply(years, function(year) {
+    flags <- projection[data$year == year]
+    if (all(flags)) " (projection)" else if (any(flags)) " (includes projections)" else ""
+  }, character(1))
+  year_labels <- paste0(data$year, suffix[match(data$year, years)])
   data$.view_year <- factor(year_labels, levels = unique(year_labels))
   if (is.null(args$text)) {
-    data$.view_hover <- paste0("Year: ", year_labels, "<br>Age: ", data$age)
+    data$.view_hover <- paste0("Year: ", data$year,
+      ifelse(projection, " (projection)", ""), "<br>Age: ", data$age)
     args$text <- ~.view_hover
   }
   make_view <- function(x, xlab, frame, prefix) {
     animated <- length(unique(data[[all.vars(frame)]])) > 1L
     if (!animated) frame <- NULL
     p <- do.call(plot, c(list(data = data, x = x, xlab = xlab, frame = frame), args))
-    if (animated) p <- plotly::animation_slider(p, currentvalue = list(prefix = prefix))
+    if (animated) p <- plotly::animation_slider(p,
+      currentvalue = list(prefix = prefix), pad = list(t = 45))
     p$width <- "100%"
     p$height <- "100%"
     p
@@ -150,6 +162,46 @@ vis_tam <- function(..., model_list = NULL, interval = 0.95, output_file = NULL,
       button("annual", "Annual trends"), button("profile", "Age profiles")),
     panel("annual", annual), panel("profile", profile),
     htmltools::tags$script(htmltools::HTML(script))))
+}
+
+.mortality_plot_data <- function(data, mean, fits, component) {
+  for (nm in c("est", "lwr", "upr")) data[[paste0("mean_", nm)]] <- NA_real_
+  if (is.null(mean) || !nrow(mean)) return(data)
+  if (component == "F") {
+    no_mean <- names(fits)[vapply(fits, function(fit) {
+      inherits(fit, "tam_fit") && is.null(fit$dat$F_settings$mu_form)
+    }, logical(1))]
+    mean <- mean[!mean$model %in% no_mean, , drop = FALSE]
+  }
+  keys <- c("model", "year", "age", "is_proj")
+  key <- function(d) do.call(paste, c(d[keys], sep = "\r"))
+  rows <- match(key(data), key(mean))
+  for (nm in intersect(c("est", "lwr", "upr"), names(mean))) {
+    data[[paste0("mean_", nm)]] <- mean[[nm]][rows]
+  }
+  data
+}
+
+.plot_mortality <- function(data, ...) {
+  for (nm in c("lwr", "upr")) {
+    if (is.null(data[[nm]])) data[[nm]] <- NA_real_
+  }
+  p <- plot_trend(data, add_buttons = FALSE, ...)
+  if (any(is.finite(data$mean_est))) {
+    if (any(is.finite(data$mean_upr))) {
+      p <- plotly::add_ribbons(p, ymin = ~mean_lwr, ymax = ~mean_upr,
+        opacity = .15, line = list(width = 0), showlegend = FALSE,
+        hoverinfo = "skip")
+    }
+    # Missing reference means must not drop or shift animation traces.
+    data$mean_est[is.na(data$mean_est)] <- Inf
+    p <- plotly::add_lines(p, data = data, y = ~mean_est, showlegend = FALSE,
+      line = list(width = .5),
+      hovertemplate = "Process mean: %{y}<br>%{text}<extra>%{fullData.name}</extra>")
+    values <- unlist(data[c("est", "upr", "mean_est", "mean_upr")])
+    p <- plotly::layout(p, yaxis = list(range = c(0, max(c(0, values[is.finite(values)])) * 1.05)))
+  }
+  .plot_trend_buttons(p)
 }
 
 .fixed_parameter_groups <- function(data) {

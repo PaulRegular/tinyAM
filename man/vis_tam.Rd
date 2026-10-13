@@ -58,6 +58,11 @@ median curves at declared reference covariates and conditional
 recruitment predictions. Random parameters also show signed
 recruitment residuals. See \code{\link[=tidy_recruitment]{tidy_recruitment()}}.
 Random plots include latent states and formula-effect trends.
+Age-year plots offer Annual trends (year axis, age selector) and
+Age profiles (age axis, year selector). Each plot starts in its
+specified orientation and retains each view's controls when switching.
+F-at-age and M-at-age include available process means and their
+separate confidence ribbons; Average F remains the population summary.
 }
 \examples{
 
