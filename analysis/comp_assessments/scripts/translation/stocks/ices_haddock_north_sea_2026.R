@@ -8,6 +8,7 @@ obs <- database_to_tam_obs(
   ages = ages,
   assumptions = source$assumptions
 )
+obs$pop_covariates$N_sd_key <- factor(ifelse(obs$pop_covariates$age == 8, "sd_8+", "sd_1-8"))
 
 
 ## Background and comparisons ----
@@ -19,20 +20,43 @@ comparison_scales <- c(
   biomass_at_age = 0.001
 )
 
+
 background <- c(
-  "### Northern Shelf haddock: accepted 2026 SAM assessment", "", print_sources(source$assessment),
-  "", "| Component | Accepted assessment | tinyAM representation | Reason for difference |", "|---|------|------|------|",
-  "| Years | Population and survey series span 1972–2026; catch ends in 2025. | Fit years 1972–2026. | Retains the final survey year; catch is unavailable in 2026. |",
-  "| Ages | Ages 0–8+, with age 8 as a plus group. | Ages 0–8, with age 8 as the plus group. | The age range and plus group are retained. |",
-  "| N | Random-walk recruitment; N-process variance differs for recruits, ages 1–7 and the plus group; the first state has no process density. | Random-walk recruitment, IID abundance process and free initial abundance. | tinyAM cannot match the source's exact variance sharing. |",
-  "| F | Time-varying F with age-correlated process deviations. | AR1 F process around an estimated mean for each age. | This approximates the source correlation structure; its temporal process is not identical. |",
-  "| M | Fixed annual age-specific M from the accepted fit. | Fixed supplied M from the accepted run. | The source numerical surface is retained. |",
-  "| Catch | One total-catch fleet, recorded as numbers-at-age. | Source numbers-at-age and one estimated catch-error scale. | tinyAM uses independent lognormal errors. |",
-  "| Index | Q1 ages 1–8+ and Q3+Q4 ages 0–8+; q varies by survey and age; selected ages use a density-dependent q power. | Native age-specific survey indices, survey-by-age q, and supplied relative SD factors. | tinyAM retains the observation weights but has no q-power term or independent-error correlation structure. |",
-  "| Weights and maturity | Annual stock weights and maturity; spawning fractions are zero. | Annual source values retained. | No biological surface is substituted. |",
-  "", "Survey indices retain their native scale because the source documents do not provide a calibrated physical unit.",
-  "", "Comparison units: tinyAM numbers, recruitment and biomass are converted to the accepted assessment's reported units in the dashboard and comparison tables."
+  "### Northern Shelf haddock: accepted 2026 SAM assessment",
+  "",
+  print_sources(source$assessment),
+  "",
+  "| Component | Accepted assessment | tinyAM representation | Reason for difference |",
+  "|---|---|---|---|",
+
+  "| Years | Population and survey series span 1972–2026; commercial catch ends in 2025. | Fit 1972–2026. | Retains the final Q1 survey year; commercial catch is unavailable for 2026. |",
+
+  "| Ages | Ages 0–8+, with age 8 as the plus group. | Retain ages 0–8+, including the age-8 plus group. | The accepted population age structure is preserved. |",
+
+  "| N | Recruitment follows a random walk. Older-cohort survival has separate process-SD groups for ages 1–7 and the 8+ group; the initial states have no ordinary process density. | Random-walk recruitment, IID cohort-survival deviations, free initial abundance, and age-grouped process SDs through N_sd_key. | The process variance grouping is approximated more closely, but initial-state treatment and the full SAM process specification may differ. |",
+
+  "| F | Random-walk F with AR(1) correlation across ages in annual increments, separate F states by age, and one shared innovation variance. | Correlated F random walks (cor_rw), with age-correlated annual log-F increments and one shared process SD. | The principal temporal and cross-age covariance structure is now represented; exact SAM initial-state and covariance conventions may differ. |",
+
+  "| M | Fixed annual age-specific natural mortality from the accepted assessment. | Retain the supplied fixed M-at-age surface. | The accepted numerical M inputs are preserved; no mortality process is estimated. |",
+
+  "| Catch | One total-catch fleet, with commercial catch numbers-at-age through 2025. | Retain source catch-at-age with one estimated lognormal observation SD; missing values are eligible for model-based filling. | tinyAM uses a simplified independent lognormal catch likelihood rather than the complete native observation configuration. |",
+
+  "| Indices | Delta-GAM standardized Q1 ages 1–8+ and Q3+Q4 ages 0–8+, sampled at fractions 0.125 and 0.75. Catchability varies by survey and age; selected young ages have estimated density-dependent q powers. Observation errors are independent. | Retain both survey indices, their sampling times, survey-by-age q parameters, survey-specific observation SDs, and supplied relative SD factors. | The accepted density-dependent q powers are not represented; observation variance sharing may differ, but both models use independent observation errors. |",
+
+  "| Weights and maturity | Annual stock weights and maturity from the accepted run; spawning fractions for F and M are zero. | Retain the annual biological surfaces and beginning-of-year spawning convention. | The accepted biological inputs and SSB timing are preserved. |",
+
+  "",
+  "The revised translation uses IID cohort-survival deviations with age-grouped process SDs and correlated F random walks. These settings more closely reproduce the accepted SAM process structure than the previous IID N model with a single survival SD and stationary AR1 F model.",
+  "",
+  "Recruitment retains a separate random-walk process. The correlated F process represents AR(1) dependence across ages in annual log-F increments, rather than stationary fluctuations around age-specific mean F.",
+  "",
+  "The main remaining observation-model difference is the accepted assessment's density-dependent survey catchability at Q1 age 1 and Q3+Q4 ages 0–1. tinyAM uses ordinary survey-by-age catchability without those power parameters.",
+  "",
+  "Survey observations retain their native numerical scales because calibrated physical units were not specified. Supplied relative precision factors are retained through equivalent log-scale SD multipliers.",
+  "",
+  "Comparison units: tinyAM numbers, recruitment and biomass are converted to the accepted assessment's reported units in the dashboard and comparison tables. Accepted fitted 2026 values remain distinct from advice forecast quantities."
 )
+
 
 ## Model ----
 fit <- NULL
@@ -43,8 +67,8 @@ if (do_fit) {
     data = obs,
     years = years,
     ages = ages,
-    N_settings = list(process = "iid", init = "free"),
-    F_settings = list(process = "ar1", mu_form = ~ factor(age)),
+    N_settings = list(process = "iid", init = "free", sd_form = ~N_sd_key),
+    F_settings = list(process = "cor_rw", mu_form = NULL),
     M_settings = list(process = "off", mu_form = NULL, mu_supplied = ~M_assumption),
     catch_settings = list(sd_form = ~1, fill_missing = TRUE),
     index_settings = list(q_form = ~ 0 + q_key, sd_form = ~ 0 + survey, sd_supplied = ~relative_sd, fill_missing = TRUE),
