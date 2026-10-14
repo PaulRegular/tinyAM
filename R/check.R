@@ -550,9 +550,6 @@ print.tam_check <- function(x, ...) {
     if (status == "pass") "v" else if (status == "fail") "x" else "i"
   }
 
-  objective <- x$numerical$detail[x$numerical$check == "objective"]
-  if (length(objective)) cat(objective, "\n")
-
   inform(
     paste("Numerical convergence:", if (x$is_converged) "passed" else "not passed"),
     if (x$is_converged) "v" else "x"

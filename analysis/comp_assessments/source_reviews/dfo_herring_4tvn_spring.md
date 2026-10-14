@@ -1,235 +1,393 @@
 # Southern Gulf spring-spawning herring
 
-## Formula review (2026-10-10)
-
-An annual RW catchability effect restricted to spring CPUE was tested against
-the retained period effects, keeping separate monotone age curves, the log
-link, observation SDs and mortality processes. It converged and improved
-trajectory correlations, but common-definition SSB error rose from 24.9% to
-67.1% and F error from 62.8% to 192.3%. Fifteen parameters were at bounds.
-Retain the period model: stronger trend correlation alone does not compensate
-for these scale and support problems. The 2022 framework's CPUE RW supplies
-method context where the 2024 document is silent; aggregate CPUE/power
-catchability and source M priors still differ from the translation.
-
-A separate age-blocked M mean RW used the source fixed increment SD of 0.075.
-It passed numerical convergence checks but produced implausibly large
-abundance scales, with persistence and parameter-correlation advisories.
-Retain the baseline M process. Supplied mean-effect SDs can express the fixed
-increments; they do not reproduce the source starting-M priors.
+Translation revision: 2026-10-14.
 
 ## Assessment record
 
-The canonical database represents the accepted 2024 assessment to 2023, the
-most recent assessment with detailed numerical tables available. DFO Research
-Document 2024/058 is a data and support document; it does not provide a full
-description of the model run. The 2026 accepted assessment to 2025 is recorded
-separately as summary-only because its detailed research document is still in
-preparation. No 2026-run data or estimates are mixed into the 2024 record.
+The canonical database represents the accepted 2024 assessment to 2023, the most recent assessment with detailed numerical tables recovered for this stock.
 
-The source files are cached locally under
-`source_cache/dfo_sgsl_herring_spring_2023/`. The cache includes the 2024
-support document, the 2022 methods report used for method context, the 2026
-science advisory report, the DFO acoustic biomass CSV and data dictionary,
-the 2016/060 acoustic table used to clarify units, and a file manifest.
+DFO Research Document 2024/058 is primarily a data and supporting document. It does not provide a complete specification of the fitted statistical catch-at-age (SCA) model.
+
+The accepted 2026 assessment to 2025 is recorded separately as summary-only because the detailed model documentation and complete numerical input and output tables have not been recovered. No 2026-run data or estimates are mixed into the 2024 record.
+
+DFO Research Document 2022/068 provides the most recent detailed SCA methods description used in this review. Its equations and parameter settings are retained as methodological context, but are not assumed to be independently verified for every component of the 2024 assessment.
+
+Source material is cached under `source_cache/dfo_sgsl_herring_spring_2023/`, including the 2024 supporting document, 2022 methods report, 2026 Science Advisory Report, acoustic biomass CSV and dictionary, historical acoustic unit documentation, and file manifest.
 
 ## Inputs and assumptions recovered
 
-The 2024 support document reports fixed- and mobile-gear spring catch-at-age
-and weight-at-age, spring fixed-gear CPUE by age, and spring-spawner acoustic
-age-index values for ages 2-10 in 1994-2023. It also reports numerical January
-1 abundance, biomass-at-age, and fishing-mortality-at-age estimates. The
-fishery age range is 2-11+, with age 11 as the plus group. The 2023
-mobile-gear catch-at-age is represented by zeros because the annual landings
-table reports no mobile-gear spring catch that year; this expansion is labeled
-as a reconstruction in the input records.
+### Catch and population structure
 
-Table 15 is not a table of raw fish processed from trawl samples. The report
-describes the acoustic trawl samples as weighted by acoustic density and uses
-them to allocate the survey signal by spawning component and age. Figure 19
-labels the values as abundance-at-age in numbers, and the 2022/068 methods call
-the series an age-disaggregated acoustic abundance index. The table does not
-state a scale multiplier. DFO Research Document 2016/060, Table 16 (p. 36),
-explicitly labels the same historical acoustic series as thousands of fish.
-For example, its 1994 age-4 value is 100,087, compared with 100,062 in the
-2024 table; its 2006 age-4 value is 24,601 in both reports. These small
-historical revisions do not imply a change of units. The canonical database
-therefore retains the 2024 values in `thousand fish`, with the unit source and
-resolution recorded. The shared converter multiplies them by 1,000 to obtain
-fish. No manual multiplier is needed in the stock recipe.
+The 2024 document provides fixed- and mobile-gear spring catch-at-age and weight-at-age, spring fixed-gear CPUE by age, acoustic age-index values, and January 1 abundance, biomass-at-age and fishing-mortality-at-age estimates.
 
-The biomass provides an independent scale check: the 2023 Table 15 spring
-values sum to 55,619 thousand fish. The later official CSV's 7,358 t of
-spring biomass implies a mean weight of about 0.132 kg per fish on that scale,
-whereas treating the table as individual fish would imply about 132 kg per
-fish. This is a scale cross-check only; the later CSV is not added to the
-2024 fit. The previous importer incorrectly called the observations weighted
-sample counts and later treated the multiplier as unresolved. Both descriptions
-have now been corrected using the historical unit documentation.
+The assessment covers 1978–2023 and ages 2–11+, with age 11 as the plus group.
 
-The accepted 2024 model's acoustic likelihood is only partly recoverable. The
-2022/068 methods describe a multivariate-logistic age-composition likelihood,
-with small age proportions grouped with adjacent ages until they exceed 0.01,
-and a separate lognormal acoustic biomass likelihood. Spring acoustic biomass
-uses ages 4-8 and its likelihood weight is 3; CPUE biomass weight is 1. The
-2024/058 support document says the 2020 SCA model was updated, but does not
-repeat the 2022 likelihood details or confirm that the weights and age groups
-were unchanged. The tinyAM translation uses the published age-index values at
-ages 2-10 as direct age-specific observations; this differs from the source's
-composition-plus-aggregate-biomass likelihood, whose biomass component uses
-ages 4-8. This uncertainty remains recorded rather than presented as a
-verified 2024 setting.
+The 2023 mobile-gear spring catch-at-age is reconstructed as zero because the annual landings table reports no mobile-gear spring catch that year. This is identified as a reconstruction rather than an independently reported catch-at-age series.
 
-The Open Government biomass CSV and dictionary are cached with provenance.
-The dictionary states that spring acoustic biomass is in tonnes, with values
-for 1994-2025. The 1994-2023 rows are kept on the separate 2026 summary record;
-2024-2025 are not attached to the 2024 assessment. The 2024 translation uses
-Table 15 values alone, converted from thousand fish to fish, to avoid mixing the later CSV
-release into the accepted 2024 record. The latest file is useful as a
-cross-check, but it is not confirmed to reproduce the 2024 model's acoustic
-biomass inputs: its 2022 total is 27,209 t versus 27,268.7 t in the 2024
-support report, while its 2023 total (19,363 t) agrees with the reported
-19,363.8 t after rounding. The 2021 total in the current file (23,147.68 t)
-differs from the 2022/068 methods report's 37,953.1 t. The reason for that
-revision and the exact age-aggregated biomass series used by the 2024 run
-remain unresolved.
+The translation combines the two fishing gears into one total catch-at-age stream. The source SCA observation model uses total catch and age-composition likelihoods rather than the independent age-specific lognormal likelihood used by tinyAM.
 
-The most recent detailed methods description is DFO Research Document
-2022/068. It describes estimated age-2 recruitment, logistic selectivity in
-three periods, separate log-M random walks for ages 2-6 and 7-11+, a 0.2
-initial-M prior mean, fixed M-increment SD 0.075, and a random walk in the
-spring CPUE catchability. These settings are useful context but may not capture
-changes made for the 2022-2023 assessment.
+### Survey observations and acoustic units
 
-The maturity schedule is knife-edge between ages 3 and 4: ages 2-3 are
-immature, and ages 4-11+ are mature. The methods report says beginning-year
-weights combine fixed- and mobile-gear weights and then use a geometric mean
-across adjacent age-year cells. It does not provide the complete fitted
-stock-weight surface or specify exactly how the two gear series are combined.
+The two survey series are:
 
-## Derived source summaries
+- Spring fixed-gear CPUE, available for 1990–2021.
+- The spring-spawner 4Tmno acoustic survey, with age-index observations for ages 2–10 in 1994–2023.
 
-The database now includes total January 1 abundance and biomass across ages
-2-11+, calculated by summing the published age-specific MLEs. It also includes
-January 1 mature biomass at age and its sum, calculated from published biomass
-and the knife-edge maturity schedule. This uses the source biomass surface,
-not the approximate weights chosen for the tinyAM fit. Native reported 4+
-totals are retained separately. Rounding in the age tables can make a derived
-sum differ slightly from a reported aggregate.
+The 2024 supporting report describes acoustic trawl samples weighted by acoustic density to allocate the survey signal by spawning component and age. Its Table 15 is an abundance-at-age index, not raw trawl sample counts.
 
-These rows are labeled `derived_source_output`, with formulas and sources in
-their notes and no SEs or intervals. The mature-biomass sum is stored under
-`SSB` for the common January 1 comparison used by tinyAM. It is not the
-accepted assessment's April 1 SSB: applying pre-spawning mortality would
-require the source's estimated M surface, which is unavailable numerically.
+Table 15 does not identify a numerical scale multiplier. DFO Research Document 2016/060, Table 16, explicitly labels the corresponding historical acoustic series in thousands of fish.
 
-## Translation limits
+For example, the 1994 age-4 observation is 100,087 in the earlier table and 100,062 in the 2024 report; the 2006 age-4 observation is 24,601 in both. These differences are consistent with historical revisions rather than a change in units.
 
-The tinyAM recipe sums fixed- and mobile-gear catches into one fleet and uses
-published age-specific spring CPUE at a seasonal midpoint of 0.25. It now also
-uses the 1994-2023 Table 15 acoustic age series at a late-season midpoint of
-0.75. The source model used age composition and aggregate biomass likelihoods;
-tinyAM instead treats the reported age series as age-specific lognormal index
-observations in fish after resolving the table units. This is not the accepted
-model's likelihood. The two surveys have separate non-decreasing age-q curves
-and separate observation SDs. CPUE catchability varies in three blocks (1990-1999, 2000-2009 and
-2010-2021), rather than the source's annual random walk. Acoustic catchability
-is constant through time. A log link allows q to act as an index scaling
-coefficient without imposing an upper bound. The user's original multiplication
-of acoustic values by 1,000 was correct; the correction is now made through
-the canonical unit rather than a manual fit-only adjustment. Resolving the unit
-raises fitted acoustic q by a factor of 1,000 (maximum about 0.612) while
-leaving population states essentially unchanged under the log link. A plausible
-q supports the scale check but is not, by itself, evidence for a unit conversion.
+The canonical database therefore retains the published 2024 acoustic index values in thousand fish. The shared converter multiplies them by 1,000 before fitting tinyAM.
 
-The recipe builds a fit-only stock-weight approximation from the published
-gear weights. It combines the two gear values with an arithmetic mean weighted
-by catch numbers at that age; if both gear catches are zero, it uses the mean
-of available positive weights. It interpolates missing values within age and constructs
-beginning-year weights from the geometric mean of age `a - 1` in year `t - 1`
-and age `a` in year `t`. Age 2 and the first modeled year use same-year
-weights because the earlier age-year cells are unavailable. These values are
-not added to the canonical source-input table. The gear-weighting rule is an
-inference, not a fully specified source instruction. Its median absolute
-percentage difference from the weights implied by the reported biomass/N
-surface is 0.073%, compared with 2.63% for the former equal geometric gear
-mean. Source biomass/N is used only to check this rule, never as an input to
-the fit. Boundary cells and rounding account for some remaining differences.
+A separate biomass-scale check supports this interpretation. The 2023 acoustic age-index values sum to 55,619 thousand fish, while a later official spring biomass estimate of 7,358 t implies an average weight of approximately 0.132 kg per fish. Treating the table as individual fish would imply approximately 132 kg per fish.
 
-The source publishes no numerical April 1 spawning biomass or age-specific M
-surface in the detailed output tables. Its tabulated biomass is January 1
-biomass; the derived mature-biomass comparison is explicitly labeled January
-1 rather than accepted April 1 SSB. The tinyAM M process is centered on the
-source's 0.2 initial-M prior mean and split at ages 2-6 and 7-11+, but it uses
-AR1 rather than the source random walk because tinyAM's random-walk initial
-state is unpenalized and the source prior cannot be applied as a matching
-penalty. MLE M estimates are not used as fixed inputs or comparison values.
+The later biomass estimate is used only for validation and is not introduced as an observation in the 2024 model translation.
 
-The translation retains the revised model's exponential initial abundance,
-IID N process for older ages, AR1 F, and two AR1 M blocks. F mean age blocks
-are 2-3, 4-5, 6-7 and 8-11; Fbar uses ages 6-8. The source model does not
-include the same older-age N process and estimates initial cohorts differently.
-Combined catch-at-age is converted from thousand fish to fish. Both catch and
-index settings exclude zeros and missing values instead of estimating filled
-observations. Source N, F and recruitment provide starting values only;
-catchability starts use the corresponding, sorted observation rows.
+### Acoustic biomass provenance
 
-## Refinement trials (October 2026)
+The Open Government acoustic biomass CSV and its dictionary report spring biomass in tonnes over 1994–2025.
 
-Each trial changed one assumption from the revised model. The previously
-unresolved-scale, log-q version was used for the trials below; converged states from that fit
-were also used as starting values where needed. The source-like choices are
-approximations using existing tinyAM settings, not reconstructions of the
-accepted likelihood.
+These values are retained separately from the fitted 2024 assessment. In particular, 2024–2025 observations are not inserted into the 2024 translation.
 
-| Trial | Converged / positive Hessian | Median absolute % difference: total N | January 1 mature biomass | Decision |
-|---|---|---:|---:|---|
-| Revised input model | Yes / yes | 42.2 | 17.0 | Baseline |
-| Previously unresolved acoustic scale and log q | Yes / yes | 42.2 | 17.0 | Log link retained; acoustic units subsequently corrected to thousand fish |
-| Restrict CPUE to ages 4-10 and acoustic to 4-8 | Yes / yes | 32.8 | 22.6 | Do not retain: mixed agreement; keep the more detailed published indices |
-| M random walk | Yes / yes | 49.7 | 27.5 | Do not retain: worse agreement; no matching initial-M prior |
-| AR1 rather than IID older-age N process | Yes / yes | 53.6 | 27.1 | Do not retain: closer terminal biomass but worse historical agreement |
-| Separate survey baselines with a three-degree-of-freedom natural spline for CPUE year | Yes / yes | 50.5 | 31.8 | Do not retain: worse agreement than CPUE blocks |
-| No older-age N process | No / no | — | — | Do not retain: false convergence from source and fitted-state starts |
-| Free initial abundance | No / no | — | — | Do not retain: false convergence/evaluation limit |
-| Random initial abundance | No / no | — | — | Do not retain: false convergence |
-| Final, with catch-number-weighted gear weights | Yes / yes | 42.2 | 19.0 | Retain: better supported biological inputs; overall output agreement is mixed |
+The latest CSV is not confirmed to reproduce every historical biomass input used by the accepted 2024 SCA model.
 
-The final fit has optimizer code 0, objective 1173.766 and a positive-definite
-reported Hessian. Its raw maximum gradient is about 18.24 at a zero monotone-q
-increment; a positive derivative there satisfies the lower-bound optimality
-condition. The package's convergence check projects that component to zero.
-After correcting the acoustic unit, the maximum projected gradient is
-0.0000538, below the 0.01 tolerance. Acoustic q ranges from 0.220 to 0.612.
-The rerun changes N, F, M and derived population estimates by less than
-0.0011% relative to the preceding fit, while acoustic predictions scale by
-1,000 to numerical tolerance. The dashboard and comparison summaries use
-this corrected database revision.
-The log-q fit reproduces the original population-state estimates to
-numerical tolerance. Gear weights enter derived biomass, not the number-based
-observation likelihood, so their correction does not change fitted N or F.
+Examples include:
 
-The final mean absolute percentage difference in January 1 mature biomass is
-24.9%, compared with 25.3% before the gear-weight correction. Its terminal-year
-difference improves from -36.5% to -33.8%, while its median difference worsens
-from 17.0% to 19.0%. Total biomass's terminal difference improves from -57.0%
-to -55.4%. This is a modest biological correction, not a general improvement
-in replication: terminal abundance remains 64.5% lower and recruitment 88.5%
-lower than the source MLEs. Matching source aggregate/composition likelihoods,
-acoustic weighting, M priors and fixed process SDs remains outside this
-translation. Failed trial fits are not evidence that these alternatives are
-scientifically inappropriate; only the tested starts/settings are ruled out
-for this recipe.
+- 2022: 27,209 t in the latest CSV versus 27,268.7 t in the 2024 supporting report.
+- 2023: 19,363 t in the latest CSV versus 19,363.8 t in the report, consistent after rounding.
+- 2021: 23,147.68 t in the latest CSV versus 37,953.1 t in the 2022 methods report.
 
-The AR1 N sensitivity brings terminal January 1 mature biomass to 5.8% below
-the source, but its historical median difference is 27.1% and mean difference
-35.0% (versus 17.0% and 25.3% for the baseline with the same weights). Its
-median total-abundance difference also rises to 53.6%. It is therefore not
-selected merely for a closer terminal estimate; this trade-off warrants
-inspection if a correlated N process is explored further.
+The reasons for these revisions and the exact historical aggregate-biomass likelihood inputs remain unresolved.
 
-The stock does not yet have a Charbonneau identifier in the local crosswalk.
-The identifier is left blank until a source crosswalk can confirm it.
+## Documented SCA model structure
+
+DFO Research Document 2022/068 describes the SCA model used as methodological context for the 2024 assessment.
+
+### Recruitment and abundance
+
+Recruitment enters at age 2 and varies annually.
+
+Older cohorts are propagated through survival, with initial-cohort deviations handled separately from the ordinary annual recruitment process.
+
+The documented SCA does not contain the same independently estimated older-cohort survival deviations used by tinyAM.
+
+### Fishing mortality
+
+Fishing mortality is represented using annual fishing intensity and logistic fishery selectivity.
+
+The documented selectivity periods are:
+
+- 1978–1989.
+- 1990–2004.
+- 2005 onward.
+
+A schematic representation is:
+
+`F[a,t] = F[t] * S[a,period(t)]`
+
+where the logistic selectivity curve varies among periods.
+
+This imposes a structured age pattern on fishing mortality rather than independently estimating a full time series of F for every age.
+
+The 2024 supporting report does not fully restate these equations or confirm every historical parameter grouping.
+
+### Natural mortality
+
+Natural mortality varies between years in two age groups:
+
+- Ages 2–6.
+- Ages 7–11+.
+
+The documented model uses random walks on log M, with fixed annual increment SD of 0.075 and initial-M prior means of 0.2.
+
+The initial-state prior is material: the random walks alone do not anchor the initial mortality level.
+
+The numerical fitted M-at-age surface was not recovered from the 2024 assessment tables.
+
+### CPUE catchability
+
+The 2022 methods describe a single annual fully recruited CPUE catchability coefficient, varying through a random walk on the log scale.
+
+The documented process is:
+
+`log(q[t]) = log(q[t-1]) + epsilon[t]`
+
+with annual increments distributed as:
+
+`epsilon[t] ~ N(0, 0.1^2)`
+
+The 1990 catchability establishes the initial level.
+
+The documented CPUE observation structure also uses age-dependent selectivity, rather than unrelated age-specific annual catchability trajectories.
+
+The temporal catchability process and the age-selectivity pattern are distinct model components.
+
+The fixed increment SD of 0.1 is the last documented value. Its continued use in the accepted 2024 run has not been independently confirmed.
+
+### Observation likelihoods
+
+The documented SCA uses age compositions and aggregate biomass indices for spring CPUE and the acoustic survey.
+
+The 2022 methods describe a multivariate-logistic age-composition likelihood. Small age proportions are grouped with adjacent ages until they exceed 0.01.
+
+The acoustic biomass likelihood is lognormal, uses ages 4–8, and carries likelihood weight 3. The documented CPUE biomass component uses ages 4–10 and weight 1.
+
+The 2024 supporting document does not confirm that these age groupings and weights remained unchanged in every respect.
+
+These features are not reproduced by the current tinyAM translation, which uses age-specific lognormal survey observations.
+
+## Biological inputs and derived comparison outputs
+
+### Weights and maturity
+
+Maturity is knife-edge between ages 3 and 4: ages 2–3 are immature, and ages 4–11+ are mature.
+
+The documented beginning-year stock-weight construction combines fixed- and mobile-gear weights, then uses a geometric mean across adjacent age-year cells.
+
+The complete fitted stock-weight surface and precise gear-combination rule were not published.
+
+The tinyAM translation constructs a fit-only approximation by combining positive gear weights using catch-number-weighted arithmetic means. When both gear catches are zero, it uses the arithmetic mean of available positive gear weights.
+
+Missing weights are interpolated within age.
+
+For an ordinary interior cell, beginning-year weight at age a in year t is calculated as the geometric mean of the combined gear weight at age a−1 in year t−1 and age a in year t.
+
+Age 2 and the first model year use available same-year values because preceding cells are unavailable.
+
+This procedure is an inference, not a fully verified source calculation.
+
+Its median absolute percentage difference from weights implied by the published biomass and abundance surfaces is 0.073%, compared with 2.63% for the earlier equal geometric gear mean.
+
+Source biomass divided by abundance is used to evaluate the weight approximation, not as a fitted model input.
+
+### Population comparison definitions
+
+The canonical database includes derived total January 1 abundance and biomass, obtained by summing the reported ages 2–11+.
+
+It also includes January 1 mature biomass, calculated from the reported biomass-at-age and knife-edge maturity schedule.
+
+These derived values use the source's published biomass surface, not tinyAM's approximate stock weights. They are identified as derived source outputs, without additional uncertainty estimates.
+
+The source's published biomass-at-age represents January 1 biomass.
+
+The common-definition SSB comparison therefore uses January 1 mature biomass. It is not the accepted assessment's April 1 SSB, which would require pre-spawning survival calculated from the unavailable fitted M surface.
+
+## tinyAM translation revision (2026-10-14)
+
+The latest translation retains the documented observations and fit-only biological transformations but revises the F and CPUE catchability processes.
+
+The principal changes relative to the earlier baseline are:
+
+- Correlated random-walk fishing mortality replaces stationary AR1 F around age-blocked means.
+- CPUE catchability uses an annual random walk rather than three fixed temporal levels.
+- A separate survey baseline is estimated so the first CPUE year has an identifiable absolute catchability.
+- The CPUE random-walk increment SD is estimated rather than fixed at the documented value of 0.1.
+- The acoustic survey is excluded from the CPUE random walk.
+
+No source-derived population or fishing-mortality estimates are used as optimizer starting values in the latest script.
+
+### Model period and population ages
+
+The translated model fits 1978–2023 and ages 2–11+, retaining age 11 as the plus group.
+
+The two commercial fishing gears are combined into one catch stream. Both CPUE and acoustic survey observations are retained on their respective published age ranges.
+
+### Recruitment and abundance
+
+The translation specifies:
+
+`N_settings = list(process = "iid", init = "exp")`
+
+Age-2 recruitment follows tinyAM's default random-walk recruitment process.
+
+Initial older-age abundance is obtained through the exponential survivorship initializer.
+
+Older-cohort survival deviations are estimated as independent process errors.
+
+This is a more flexible population model than the accepted SCA's documented deterministic cohort-survival structure. The additional survival process is retained as part of the numerically workable approximation.
+
+### Fishing mortality
+
+The current translation specifies:
+
+`F_settings = list(process = "cor_rw", mu_form = NULL, mean_ages = 6:8)`
+
+Fishing mortality follows age-correlated random walks on the log scale.
+
+For age a and year t, annual changes are:
+
+`log(F[a,t]) - log(F[a,t-1]) = eta[a,t]`
+
+with correlation across ages described by an AR1 covariance for the annual increments.
+
+The process permits persistent temporal changes in age-specific fishing mortality while encouraging related ages to change together.
+
+Unlike the accepted SCA, it does not impose period-specific logistic fishery selectivity or a common annual fully selected fishing-mortality coefficient.
+
+Period-specific logistic F mean curves with AR1 deviations were explored but did not produce a satisfactory converged fit. They are not retained in the latest translation.
+
+The script still constructs `fishery_period` using the documented 1978, 1990 and 2005 boundaries, but the final `F_settings` does not reference that covariate. It has no effect on the fitted F process.
+
+The previous age-blocked mean-F covariate is likewise not used in the final `F_settings`.
+
+Fbar is calculated over ages 6–8.
+
+### Natural mortality
+
+The current translation specifies:
+
+`M_settings = list(process = "ar1", mu_form = NULL, mu_supplied = ~M_process_center, age_breaks = c(2, 7, 11), first_dev_year = 1978L)`
+
+The supplied mortality centre is 0.2.
+
+Natural mortality is represented by two age-blocked, stationary AR1 processes on the log scale, corresponding to ages 2–6 and 7–11+.
+
+The processes fluctuate around the supplied mortality centre rather than following unrestricted random walks.
+
+The temporal and age-block correlation parameters and process variation are estimated.
+
+This differs from the documented SCA in three important ways:
+
+- The source uses random walks rather than stationary AR1 processes.
+- The source fixes the M increment SD at 0.075.
+- The source has explicit initial-M priors that are not reproduced by the translation.
+
+The AR1 process is retained because it provides a stationary mortality reference and has been more numerically manageable in this translation.
+
+Source M estimates are not used as fixed inputs or comparison observations.
+
+### CPUE catchability
+
+The current translation uses a separate baseline and age-selectivity curve for each survey, with an annual random walk restricted to CPUE.
+
+Its catchability formula is:
+
+`q_form = ~0 + survey + mono(age, by = survey) + rw(cpue_year, by = cpue_active)`
+
+The link is logarithmic.
+
+The ordinary survey terms estimate separate absolute catchability levels for the CPUE and acoustic series.
+
+The `mono(age, by = survey)` term estimates a non-decreasing age-catchability curve for each survey. These flexible age curves can plateau but do not enforce the logistic shape described in the SCA methods.
+
+The CPUE random-walk term allows a single annual catchability multiplier shared across CPUE ages.
+
+For CPUE, the fitted log-catchability structure is:
+
+`log(q[a,t]) = alpha_CPUE + g_CPUE(a) + u[t]`
+
+where the first CPUE random-walk deviation is zero and subsequent deviations follow:
+
+`u[t] - u[t-1] ~ N(0, sigma_q^2)`
+
+The random-walk increment SD, `sigma_q`, is estimated rather than fixed.
+
+A fixed SD of 0.1, as documented in the 2022 methods, was tested but did not produce a converged translation fit. Estimating the SD was more numerically successful and is retained.
+
+This is a deliberate simplification and departure from the last documented source penalty, not confirmation that the accepted SCA estimates the same parameter.
+
+The first CPUE year defines the random-walk baseline. Its absolute catchability is estimated through the survey intercept and age curve; it does not depend on a separately estimated first-year random-walk deviation.
+
+The implementation uses a numeric CPUE indicator. The indicator equals one for CPUE observations and zero for acoustic observations, so the annual random walk does not affect acoustic catchability.
+
+The acoustic survey retains its separate baseline and non-decreasing age curve, constant through time.
+
+The previously fitted three-period CPUE catchability terms are not retained.
+
+### Survey observation likelihoods
+
+The translation uses:
+
+`index_settings = list(q_form = ~0 + survey + mono(age, by = survey) + rw(cpue_year, by = cpue_active), q_link = "log", sd_form = ~0 + survey)`
+
+Separate observation SD parameters are estimated for CPUE and acoustic observations.
+
+The acoustic index is fitted using its documented thousand-fish scale converted to fish through the canonical data converter.
+
+The CPUE and acoustic age-index observations are fitted using independent age-specific lognormal errors.
+
+This differs substantially from the documented SCA age-composition and aggregate-biomass likelihoods. In particular, the accepted acoustic biomass weighting is not reproduced.
+
+CPUE timing is approximated at 0.25 of the year and the acoustic survey at 0.75. The latter reflects the late September to early October survey window.
+
+Neither survey timing is claimed to reproduce the exact native SCA timing convention.
+
+In the supplied latest script, `fill_missing` is omitted from the catch and index settings. Under the current tinyAM defaults, this activates missing-observation filling for both components. The earlier translation explicitly used `fill_missing = FALSE`.
+
+This implementation choice should be made explicit after verifying that the default was intended. Filled observations are latent model quantities, not additional measured data.
+
+### Catch observations
+
+The translated catch model retains summed fixed- and mobile-gear catch numbers-at-age, converted from thousand fish to individual fish.
+
+One estimated catch observation SD is used:
+
+`catch_settings = list(sd_form = ~1)`
+
+The source's combined total-catch and age-composition likelihood is not reproduced.
+
+### Model interpretation
+
+The revised model is a relatively flexible age-structured state-space approximation to the accepted SCA.
+
+Its key structural features are random-walk recruitment, independent older-cohort survival deviations, age-correlated random-walk F, stationary two-block AR1 M, and an estimated CPUE catchability random walk.
+
+These processes can compensate for one another, especially because the translation does not reproduce the original aggregate survey biomass and age-composition likelihoods.
+
+Consequently, numerical convergence and agreement with accepted population estimates should be evaluated separately from exact structural equivalence.
+
+The latest model is retained as a workable approximation rather than characterized as a complete reproduction of the accepted assessment.
+
+## Earlier refinement trials (historical results)
+
+The following experiments were documented on 2026-10-10 using earlier translation configurations. Their results provide development history and should not be interpreted as current-model performance.
+
+| Trial | Converged / positive Hessian | Median absolute % difference: total N | January 1 mature biomass |
+|---|---|---:|---:|
+| Earlier revised-input baseline | Yes / yes | 42.2 | 17.0 |
+| Earlier log-q and unresolved-scale configuration | Yes / yes | 42.2 | 17.0 |
+| Restrict CPUE to ages 4–10 and acoustic to 4–8 | Yes / yes | 32.8 | 22.6 |
+| M random walk | Yes / yes | 49.7 | 27.5 |
+| AR1 rather than IID older-age N | Yes / yes | 53.6 | 27.1 |
+| Three-degree-of-freedom spline for CPUE year | Yes / yes | 50.5 | 31.8 |
+| No older-age N process | No / no | — | — |
+| Free initial abundance | No / no | — | — |
+| Random initial abundance | No / no | — | — |
+| Earlier final fit with revised gear-weight construction | Yes / yes | 42.2 | 19.0 |
+
+The former three-period CPUE baseline also underwent an annual CPUE catchability RW sensitivity test. That earlier candidate converged and improved some trajectory correlations, but mean January 1 mature-biomass error increased from 24.9% to 67.1%, and fishing-mortality error increased from 62.8% to 192.3%.
+
+Those results were obtained before the current survey-baseline parameterization and other model revisions. They should not be used as estimates of the present configuration's performance.
+
+The earlier final model had optimizer code 0, objective 1173.766 and a positive-definite reported Hessian. Its maximum projected gradient after the acoustic unit correction was 0.0000538.
+
+The earlier model's mean absolute percentage difference in January 1 mature biomass was 24.9%, with a terminal-year difference of −33.8%.
+
+Its terminal abundance and recruitment remained substantially below the accepted source estimates.
+
+These values are retained as historical benchmarks only. The latest CPUE-RW and correlated-F configuration requires its own numerical convergence and comparison results before updated performance claims can be recorded.
+
+The earlier M and initial-state sensitivity tests do not establish that alternative biological assumptions are scientifically inappropriate; they describe the outcomes of the tested translation configurations and starting conditions.
+
+## Remaining translation limitations
+
+The principal limitations of the current translation are:
+
+- The documented age-composition and aggregate-biomass likelihoods are replaced by direct age-specific lognormal observations.
+- The acoustic biomass likelihood weight is not reproduced.
+- CPUE and acoustic selectivity are modelled with monotone age curves rather than the documented logistic forms.
+- The CPUE catchability random-walk SD is estimated rather than fixed at 0.1.
+- The F process is an age-correlated random walk without the source's period-specific logistic fishery selectivity.
+- The M process is stationary AR1 rather than the documented random walk with fixed increment SD and initial-state priors.
+- IID older-cohort survival deviations are added to the documented SCA survival structure.
+- The stock-weight surface remains a closely checked but inferred approximation.
+- The comparison uses January 1 mature biomass rather than native April 1 SSB.
+- The accepted age-specific M estimates and uncertainty surfaces remain unavailable.
+- Exact observation-model settings for the accepted 2024 assessment are not fully recoverable from the supporting document.
+
+These differences explain why the model should be evaluated as a translation of the major population dynamics and available observations, not as an exact reproduction of the accepted statistical likelihood.
 
 ## Sources
 
@@ -237,3 +395,21 @@ The identifier is left blank until a source crosswalk can confirm it.
 - [DFO Research Document 2022/068](https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/41091589.pdf)
 - [DFO Research Document 2016/060, Table 16: acoustic units](https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/365860.pdf)
 - [DFO Science Advisory Report 2026/028](https://publications.gc.ca/collections/collection_2026/mpo-dfo/fs70-6/Fs70-6-2026-028-eng.pdf)
+
+The relevant source documents, cached numerical files and manifest are retained under `source_cache/dfo_sgsl_herring_spring_2023/`.
+
+The stock does not yet have a verified Charbonneau identifier in the local crosswalk, so no identifier is assigned.
+
+## Record summary
+
+The canonical record represents the accepted 2024 Southern Gulf spring-spawning herring assessment, with detailed inputs and outputs through 2023.
+
+The latest tinyAM translation retains the published age-specific catch, CPUE and acoustic observations and applies a carefully checked approximation to beginning-year stock weights.
+
+It uses random-walk recruitment, IID cohort-survival variation, correlated F random walks, stationary two-block AR1 natural mortality and a CPUE-specific random walk in catchability.
+
+This model is more consistent with the documented temporal CPUE catchability process than the earlier three-period fixed-effect approximation, although its estimated process SD differs from the documented source setting.
+
+The translation is retained as a practical approximation of a more complex SCA assessment. Its principal unresolved differences involve the original observation likelihood, selectivity constraints and mortality-process priors.
+
+Source completeness remains partial, and the latest numerical performance should be recorded separately from the historical refinement results.
