@@ -17,9 +17,9 @@
 #' checks does not prove that abundance, mortality and catchability are
 #' distinguishable from the available data. Advisory findings include strong
 #' parameter correlations, variance or correlation boundaries, sparse data and
-#' conditional residual patterns. These do not change numerical convergence.
+#' standardized residual patterns. These do not change numerical convergence.
 #' Residual summaries exclude projections and missing or zero observations.
-#' Conditional residuals depend on fitted states and their shrinkage; they are
+#' Standardized residuals depend on fitted states and their shrinkage; they are
 #' not independent tests of the assumed observation distribution.
 #'
 #' By default the function uses information already available in the fit and
@@ -388,12 +388,12 @@ check_tam <- function(fit, grad_tol = NULL, detailed = FALSE) {
   }
   supported <- residuals$n >= 10L
   if (any(supported & abs(residuals$mean) > .5)) {
-    add("residual_location", "Some age/series groups have conditional mean residuals outside -0.5 to 0.5.")
+    add("residual_location", "Some age/series groups have mean standardized residuals outside -0.5 to 0.5.")
   }
   if (any(supported & (residuals$sd < .5 | residuals$sd > 1.5), na.rm = TRUE)) {
-    add("residual_spread", "Some age/series groups have conditional residual SDs outside 0.5 to 1.5; fitted-state shrinkage also affects spread.")
+    add("residual_spread", "Some age/series groups have standardized residual SDs outside 0.5 to 1.5; fitted-state shrinkage also affects spread.")
   }
-  if (any(residuals$max_abs > 3)) add("residual_outliers", "Some conditional residuals exceed three SDs in absolute value.")
+  if (any(residuals$max_abs > 3)) add("residual_outliers", "Some standardized residuals exceed three SDs in absolute value.")
   if (any(abs(residuals$lag1) > .5, na.rm = TRUE)) {
     add("residual_correlation", "Some age/series groups have absolute adjacent-year residual correlation above 0.5.")
   }

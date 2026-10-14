@@ -45,9 +45,9 @@ Structural checks look for redundant formula coefficients. Passing these
 checks does not prove that abundance, mortality and catchability are
 distinguishable from the available data. Advisory findings include strong
 parameter correlations, variance or correlation boundaries, sparse data and
-conditional residual patterns. These do not change numerical convergence.
+standardized residual patterns. These do not change numerical convergence.
 Residual summaries exclude projections and missing or zero observations.
-Conditional residuals depend on fitted states and their shrinkage; they are
+Standardized residuals depend on fitted states and their shrinkage; they are
 not independent tests of the assumed observation distribution.
 
 By default the function uses information already available in the fit and

@@ -35,7 +35,7 @@ from a fitted TAM object, and adds standardized residuals on the log scale.
 \code{pred} is the conditional median on the natural scale. \code{sd} is the fitted
 SD of log observations, not a standard error of the prediction. Standardized
 residuals are \code{(log(obs) - log(pred)) / sd}; zero and missing observations
-have missing residuals. These conditional residuals do not account for the
+have missing residuals. These standardized residuals do not account for the
 uncertainty in fitted states. Optional one-step-ahead residuals use a
 different predictive calculation and are not currently supported with filled
 missing observations. See \link{tinyAM-model} for the observation equations.

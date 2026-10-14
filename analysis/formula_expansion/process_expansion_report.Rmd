@@ -165,7 +165,7 @@ residuals <- do.call(rbind, lapply(names(trials), function(name) {
 knitr::kable(residuals, digits = 2)
 ```
 
-Conditional residual spread also reflects fitted-state shrinkage. Persistent
+Standardized residual spread also reflects fitted-state shrinkage. Persistent
 survey outliers and fixed-parameter correlation advisories remain in these
 applications. The dashboards retain uncertainty ribbons, new SD profiles and
 the SSB-timing table; no unavailable uncertainty is manufactured.

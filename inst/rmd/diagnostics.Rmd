@@ -30,7 +30,7 @@ for (nm in names(checks)) {
 ### Advisory findings
 
 These findings flag patterns to investigate. They do not change numerical
-convergence. Conditional residuals also reflect fitted-state shrinkage.
+convergence. Standardized residuals also reflect fitted-state shrinkage.
 
 ```{r, results = "asis"}
 for (nm in names(checks)) {
