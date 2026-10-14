@@ -154,16 +154,21 @@ test_that("fit_retro falls back to default grad_tol when fit has none", {
   expect_identical(names(implicit$pop), names(explicit$pop))
 })
 
+
 test_that("tam_fit summary and print methods provide structured output", {
   fit <- default_fit
   sum_fit <- summary(fit)
+
   expect_s3_class(sum_fit, "summary_tam_fit")
   expect_equal(sum_fit$convergence, check_tam(fit))
+
   expect_message(print(fit), "Numerical convergence: passed")
-  expect_message(print(sum_fit), "Structural checks:")
+  expect_message(print(sum_fit), "Model structure:")
+
   expect_output(print(fit), "Coefficients:")
   expect_output(print(sum_fit), "Terminal year")
 })
+
 
 test_that("fit_hindcasts runs peels with a one year projection", {
   fit <- default_fit
