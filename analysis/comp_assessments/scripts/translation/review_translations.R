@@ -144,6 +144,9 @@ capability_evidence <- list(
   text <- gsub('obs$weight$M_', 'obs$pop_covariates$M_', text, fixed = TRUE)
   text <- gsub('obs$catch$age_blocks', 'obs$pop_covariates$age_blocks', text, fixed = TRUE)
   text <- gsub('obs$catch$age_factor', 'obs$pop_covariates$age_factor', text, fixed = TRUE)
+  # The pinned review predates observed-only likelihood handling.
+  text <- gsub(',\\s*(#[^\n]*\n\\s*)?fill_missing\\s*=\\s*(TRUE|FALSE)', '',
+               paste(text, collapse = '\n'), perl = TRUE)
   e <- new.env(parent = environment())
   eval(parse(text = text), e)
   recipe <- e$translate_stock(read_assessment(id, database))

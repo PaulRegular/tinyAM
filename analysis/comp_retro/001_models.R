@@ -42,13 +42,11 @@ N_iid_F_rw <- fit_tam(
     mean_ages = 5:14
   ),
   catch_settings = list(
-    sd_form = ~ 1,
-    fill_missing = TRUE
+    sd_form = ~ 1
   ),
   index_settings = list(
     sd_form = ~ 1,
-    q_form = ~ mono(q_block) + smith_sound_year:smith_sound_q_block,
-    fill_missing = TRUE
+    q_form = ~ mono(q_block) + smith_sound_year:smith_sound_q_block
   ),
   proj_settings = list(
     n_proj = 5,

@@ -15,8 +15,7 @@ test_that("recruitment has a fixed first-year anchor and subsequent RW states", 
   expect_equal(names(rep$recruitment), as.character(dat$years))
   no_obs <- dat
   no_obs$observed <- numeric()
-  no_obs$is_observed[] <- no_obs$fill_missing_map[] <- FALSE
-  no_obs$any_fill_missing <- FALSE
+  no_obs$is_observed[] <- FALSE
   constant <- par
   constant$log_r[] <- constant$log_r0
   expect_equal(nll_fun(par, no_obs) - nll_fun(constant, no_obs),
@@ -77,9 +76,7 @@ test_that("free initialization spans arbitrary initial older-age abundance witho
   # With observations removed and N deterministic, no likelihood term depends
   # on the initial older ages. Free states must add no penalty.
   dat$observed <- numeric()
-  dat$is_observed[] <- dat$fill_missing_map[] <- FALSE
-  dat$any_fill_missing <- FALSE
-  par$missing <- NULL
+  dat$is_observed[] <- FALSE
   nll <- nll_fun(par, dat)
   par$log_n0[] <- 0
   expect_equal(nll_fun(par, dat), nll)

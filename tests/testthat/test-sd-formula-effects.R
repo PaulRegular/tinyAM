@@ -2,8 +2,8 @@ sd_test_dat <- function(type = "iid", component = "catch", ...) {
   form <- switch(type, iid = ~ iid(age, sd = .3), rw = ~ rw(age, sd = .3),
     ar1 = ~ ar1(age, sd = .3, phi = .6))
   args <- list(data = cod_obs, years = 1983:1989, ages = 2:8,
-    catch_settings = list(sd_form = ~ 1, fill_missing = FALSE),
-    index_settings = list(q_form = ~ q_block, sd_form = ~ 1, fill_missing = FALSE))
+    catch_settings = list(sd_form = ~ 1),
+    index_settings = list(q_form = ~ q_block, sd_form = ~ 1))
   args[[paste0(component, "_settings")]]$sd_form <- form
   do.call(prepare_tam, utils::modifyList(args, list(...)))
 }
@@ -68,7 +68,7 @@ test_that("random SD changes spread and its density, not the observation mean", 
 
 test_that("SD simulation uses returned states and matching observation rows", {
   dat <- sd_test_dat("rw", index_settings = list(q_form = ~ q_block,
-    sd_form = ~ ar1(age, sd = .3, phi = .6), fill_missing = FALSE))
+    sd_form = ~ ar1(age, sd = .3, phi = .6)))
   p <- make_par(dat)
   p$log_sd_catch[] <- log(.2)
   p$log_sd_index[] <- log(.4)
@@ -101,7 +101,7 @@ test_that("SD simulation uses returned states and matching observation rows", {
 
 test_that("grouping, warm starts, forecasts and uncertainty retain SD semantics", {
   dat <- sd_test_dat("ar1", "index", index_settings = list(q_form = ~ q_block,
-    sd_form = ~ ar1(year, by = survey, sd = .3, phi = .6), fill_missing = FALSE),
+    sd_form = ~ ar1(year, by = survey, sd = .3, phi = .6)),
     proj_settings = list(n_proj = 2, n_mean = 2, F_mult = 1))
   p <- make_par(dat)
   term <- dat$sd_index_terms[[1]]

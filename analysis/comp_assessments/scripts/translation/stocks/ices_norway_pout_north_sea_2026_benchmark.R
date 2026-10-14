@@ -187,8 +187,8 @@ if (any(!is.finite(source_n)) || any(source_n <= 0) ||
 
 dat <- tinyAM::prepare_tam(data = obs, years = years, ages = ages, N_settings = list(process = "iid",
     init = "exp"), F_settings = list(process = "ar1", mu_form = ~factor(age), mean_ages = 1:2), M_settings = list(process = "off",
-    mu_form = NULL, mu_supplied = ~M_assumption), catch_settings = list(sd_form = ~0 + sd_block, fill_missing = FALSE),
-    index_settings = list(q_form = ~0 + q_key, sd_form = ~0 + sd_block, fill_missing = FALSE))
+    mu_form = NULL, mu_supplied = ~M_assumption), catch_settings = list(sd_form = ~0 + sd_block),
+    index_settings = list(q_form = ~0 + q_key, sd_form = ~0 + sd_block))
 start_par <- tinyAM::make_par(dat)
 start_par$log_r0 <- log(source_n[1L, "0"])
 start_par$log_r <- setNames(log(source_n[-1L, "0"]), as.character(years[-1L]))
@@ -340,8 +340,8 @@ if (do_fit) {
     N_settings = list(process = "iid", init = "exp"),
     F_settings = list(process = "ar1", mu_form = ~factor(age), mean_ages = 1:2),
     M_settings = list(process = "off", mu_form = NULL, mu_supplied = ~M_assumption),
-    catch_settings = list(sd_form = ~0 + sd_block, fill_missing = FALSE),
-    index_settings = list(q_form = ~0 + q_key, sd_form = ~0 + sd_block, fill_missing = FALSE),
+    catch_settings = list(sd_form = ~0 + sd_block),
+    index_settings = list(q_form = ~0 + q_key, sd_form = ~0 + sd_block),
     silent = silent,
     start_par = start_par
   )

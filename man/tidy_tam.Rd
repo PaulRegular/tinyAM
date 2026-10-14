@@ -74,7 +74,7 @@ Components present in any model are stacked; columns missing from particular mod
 \code{NA} values so diagnostics like one-step-ahead residuals survive stacking. Parameter summaries are
 stacked separately for \strong{fixed} and \strong{random} effects: fixed effects in a single data frame; random
 effects as a named list of data frames (one per random-effect block, e.g. \code{"log_f"}, \code{"log_r"},
-\code{"missing"}, …).
+…).
 }
 \examples{
 fit <- fit_tam(
@@ -99,7 +99,7 @@ fit2 <- update(fit1, years = 1983:2023)
 tabs2 <- tidy_tam(fit1, fit2)
 head(tabs2$obs_pred$catch)      # contains column "model"
 head(tabs2$fixed_par)           # fixed effects stacked with "model"
-names(tabs2$random_par)         # e.g. "log_f", "log_r", "missing", ...
+names(tabs2$random_par)         # e.g. "log_f", "log_r", ...
 head(tabs2$random_par$log_f)    # random block stacked with "model"
 
 # Named list: must be named; names used as labels (even length 1)

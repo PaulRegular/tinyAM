@@ -52,8 +52,6 @@ stopifnot(
   identical(settings$M_settings$mu_form, NULL),
   grepl("M_assumption",
         paste(deparse(settings$M_settings$mu_supplied), collapse = "")),
-  identical(settings$catch_settings$fill_missing, FALSE),
-  identical(settings$index_settings$fill_missing, FALSE),
   grepl("q_key", paste(deparse(settings$index_settings$q_form), collapse = "")),
   grepl("survey", paste(deparse(settings$index_settings$sd_form), collapse = "")),
   grepl("age", paste(deparse(settings$catch_settings$sd_form), collapse = ""), fixed = TRUE),

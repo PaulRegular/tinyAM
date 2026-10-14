@@ -54,8 +54,8 @@ test_that("prepare_tam infers years/ages when NULL and builds expected pieces", 
     N_settings = list(process = "iid", init = "exp"),
     F_settings = list(process = "rw",  mu_form = NULL),
     M_settings = list(process = "off", mu_form = NULL, mu_supplied = ~ I(0.3)),
-    catch_settings = list(sd_form = ~1, fill_missing = TRUE),
-    index_settings = list(sd_form = ~1, q_form = ~ q_block, fill_missing = TRUE)
+    catch_settings = list(sd_form = ~1),
+    index_settings = list(sd_form = ~1, q_form = ~ q_block)
   )
 
   expect_type(dat, "list")

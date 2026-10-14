@@ -109,21 +109,12 @@ test_that("nll_fun returns finite JNLL and simulates when requested", {
   if (dat$N_settings$process != "off") expect_true("log_n" %in% names(sims))
   if (dat$M_settings$process != "off") expect_true("log_m" %in% names(sims) || TRUE)
 
-  # Fill-missing logic
   is_miss <- is.na(dat$log_obs)
-  expect_true(all(!is.na(sims$log_obs[is_miss])))
-  dat2 <- dat
-  dat2$catch_settings$fill_missing <- FALSE
-  dat2$index_settings$fill_missing <- FALSE
-  dat2$fill_missing_map[] <- FALSE
-  dat2$any_fill_missing <- FALSE
-  sims2 <- nll_fun(par, dat2, simulate = TRUE)
-  expect_true(all(is.na(sims2$log_obs[is_miss])))
+  expect_true(all(is.na(sims$log_obs[is_miss])))
 
   # RTMB object
   make_nll_fun <- function(f, d) function(p) f(p, d)
   randoms <- c("log_f", "log_r")
-  if (dat$any_fill_missing) randoms <- c(randoms, "missing")
   if (dat$N_settings$process != "off") randoms <- c(randoms, "log_n")
   if (dat$M_settings$process != "off") randoms <- c(randoms, "log_m")
 
@@ -147,7 +138,7 @@ test_that("nll_fun respects F_mult projections", {
   par <- make_par(dat)
 
   make_nll_fun <- function(f, d) function(p) f(p, d)
-  randoms <- c("log_f", "log_r", "missing", "log_n")
+  randoms <- c("log_f", "log_r", "log_n")
   obj <- RTMB::MakeADFun(make_nll_fun(nll_fun, dat), par, random = randoms, silent = TRUE)
   rep <- obj$report()
 
@@ -172,7 +163,7 @@ test_that("nll_fun handles AR1 settings and produces finite JNLL", {
   expect_true(is.finite(jnll))
 
   make_nll_fun <- function(f, d) function(p) f(p, d)
-  randoms <- c("log_f","log_r","log_n","log_m","missing")
+  randoms <- c("log_f","log_r","log_n","log_m")
   obj <- RTMB::MakeADFun(make_nll_fun(nll_fun, dat), par, random = randoms, silent = TRUE)
   opt <- nlminb(obj$par, obj$fn, obj$gr, control = list(iter.max = 20, eval.max = 20))
   expect_true(is.finite(opt$objective))
@@ -190,7 +181,7 @@ test_that("nll_fun yields finite log_pred for non-missing obs", {
 
   make_nll_fun <- function(f, d) function(p) f(p, d)
   obj <- RTMB::MakeADFun(make_nll_fun(nll_fun, dat), par,
-                         random = c("log_f","log_r","log_n","missing"),
+                         random = c("log_f","log_r","log_n"),
                          silent = TRUE)
   invisible(obj$fn(obj$par))
   rep <- obj$report()

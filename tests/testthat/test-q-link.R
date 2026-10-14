@@ -1,7 +1,7 @@
 test_that("q_link defaults to log and rejects invalid links", {
   dat <- make_test_dat(years = 2000:2005, ages = 2:6)
   explicit <- make_test_dat(years = 2000:2005, ages = 2:6,
-    index_settings = list(q_form = ~q_block, sd_form = ~1, q_link = "log", fill_missing = TRUE))
+    index_settings = list(q_form = ~q_block, sd_form = ~1, q_link = "log"))
   expect_identical(dat$index_settings$q_link, "log")
   expect_identical(make_par(dat), make_par(explicit))
   expect_identical(nll_fun(make_par(dat), dat), nll_fun(make_par(explicit), explicit))
@@ -10,7 +10,7 @@ test_that("q_link defaults to log and rejects invalid links", {
   expect_identical(a, b)
   for (link in list("identity", "logi", c("log", "logit"), NA_character_, 1)) {
     expect_error(make_test_dat(years = 2000:2005, ages = 2:6,
-      index_settings = list(q_form = ~1, sd_form = ~1, q_link = link, fill_missing = TRUE)), "q_link")
+      index_settings = list(q_form = ~1, sd_form = ~1, q_link = link)), "q_link")
   }
 })
 
@@ -18,7 +18,7 @@ test_that("logit bounds the full formula predictor without changing its design",
   obs <- cod_obs
   obs$index$x <- (obs$index$year - 2000) / 5
   obs$index$group <- factor(ifelse(obs$index$age <= 3, "young", "older"))
-  settings <- list(q_form = ~group + x, sd_form = ~1, q_link = "logit", fill_missing = TRUE)
+  settings <- list(q_form = ~group + x, sd_form = ~1, q_link = "logit")
   dat <- make_test_dat(data = obs, years = 2000:2005, ages = 2:6,
                        index_settings = settings)
   expect_identical(dat$q_modmat, model.matrix(~group + x, dat$obs$index))
@@ -41,7 +41,7 @@ test_that("logit bounds the full formula predictor without changing its design",
 
 test_that("logit log predictions and gradients stay finite at extreme predictors", {
   dat <- make_test_dat(years = 2000:2005, ages = 2:6,
-    index_settings = list(q_form = ~1, sd_form = ~1, q_link = "logit", fill_missing = TRUE))
+    index_settings = list(q_form = ~1, sd_form = ~1, q_link = "logit"))
   for (eta in c(-1000, 1000)) {
     par <- make_par(dat)
     par$logit_q[] <- eta
@@ -55,7 +55,7 @@ test_that("logit log predictions and gradients stay finite at extreme predictors
 
 test_that("mono retains non-decreasing q and exact plateaus with the logit link", {
   dat <- make_test_dat(years = 2000:2005, ages = 2:6,
-    index_settings = list(q_form = ~mono(q_block), sd_form = ~1, q_link = "logit", fill_missing = TRUE))
+    index_settings = list(q_form = ~mono(q_block), sd_form = ~1, q_link = "logit"))
   par <- make_par(dat)
   par$logit_q[] <- -2
   par$dq[] <- rep_len(c(0, .5), length(par$dq))
@@ -72,7 +72,7 @@ test_that("mono retains non-decreasing q and exact plateaus with the logit link"
 test_that("simulation and tidied observations use the same logit catchability", {
   dat <- make_test_dat(years = 2000:2005, ages = 2:6,
     F_settings = list(process = "iid", mu_form = ~1),
-    index_settings = list(q_form = ~q_block, sd_form = ~1, q_link = "logit", fill_missing = TRUE))
+    index_settings = list(q_form = ~q_block, sd_form = ~1, q_link = "logit"))
   par <- make_par(dat)
   par$logit_q[] <- seq_along(par$logit_q) / 10
   calls <- list()
@@ -84,7 +84,7 @@ test_that("simulation and tidied observations use the same logit catchability", 
   par[intersect(names(par), names(sim))] <- sim[intersect(names(par), names(sim))]
   obj <- RTMB::MakeADFun(function(p) nll_fun(p, dat), par, silent = TRUE)
   report <- obj$report()
-  expect_equal(tail(calls, 2)[[1]], report$log_pred[dat$is_observed])
+  expect_equal(tail(calls, 1)[[1]], report$log_pred[dat$is_observed])
   fit <- structure(list(dat = dat, rep = report), class = c("tam_fit", "list"))
   expect_equal(tidy_obs_pred(fit)$index$q,
                unname(plogis(drop(dat$q_modmat %*% par$logit_q))))
@@ -107,7 +107,7 @@ test_that("logit q coefficients and SEs are reported on their fitted scale", {
 
 test_that("fits, updates and parameter draws retain the selected q link", {
   fit <- fit_tam(cod_obs, years = 2000:2005, ages = 2:6, silent = TRUE,
-    index_settings = list(q_form = ~1, sd_form = ~1, q_link = "logit", fill_missing = TRUE))
+    index_settings = list(q_form = ~1, sd_form = ~1, q_link = "logit"))
   expect_true(is.finite(fit$opt$objective))
   expect_true(all(fit$obs_pred$index$q > 0 & fit$obs_pred$index$q <= 1))
   expect_true("logit_q" %in% names(as.list(fit$sdrep, "Estimate")))
@@ -123,5 +123,8 @@ test_that("fits, updates and parameter draws retain the selected q link", {
   }, .package = "stats")
   sims <- sim_tam(fit, n = 1, par_uncertainty = "none", redraw_random = FALSE,
                   progress = FALSE, seed = 812)
-  expect_equal(sims$index$obs, unname(fit$obs_pred$index$pred), tolerance = 1e-6)
+  observed <- !is.na(fit$obs_pred$index$obs) & fit$obs_pred$index$obs > 0
+  expect_equal(sims$index$obs[observed],
+               unname(fit$obs_pred$index$pred[observed]), tolerance = 1e-6)
+  expect_true(all(is.na(sims$index$obs[!observed])))
 })

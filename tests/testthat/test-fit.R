@@ -66,30 +66,19 @@ test_that("fit_tam objective is unaffected by projections", {
   )
   expect_equal(fit$opt$objective, default_fit$opt$objective, tolerance = 1e-6)
 
-  # "missing" random effects in projections = predictions
   is_proj <- fit$dat$obs_map$is_proj
-  expect_equal(fit$rep$log_obs[is_proj], fit$rep$log_pred[is_proj])
+  expect_true(all(is.na(fit$rep$log_obs[is_proj])))
+  expect_true(all(is.finite(fit$rep$log_pred[is_proj])))
 })
 
-test_that("fit_tam does not estimate missing values when fill_missing = FALSE", {
+test_that("fit_tam does not estimate missing observation values", {
   fit <- update(
     default_fit,
-    catch_settings = list(sd_form = ~1, fill_missing = FALSE),
-    index_settings = list(sd_form = ~1, q_form = ~ q_block, fill_missing = FALSE),
+    catch_settings = list(sd_form = ~1),
+    index_settings = list(sd_form = ~1, q_form = ~ q_block),
     silent = TRUE
   )
   expect_false("missing" %in% fit$obj$env$.random)
-})
-
-test_that("partial catch settings inherit fill_missing", {
-  (fit <- update(
-    default_fit,
-    catch_settings = list(sd_form = ~1),
-    index_settings = list(sd_form = ~1, q_form = ~q_block, fill_missing = TRUE),
-    silent = TRUE
-  ))
-  expect_true(fit$dat$catch_settings$fill_missing)
-  expect_true(fit$dat$index_settings$fill_missing)
 })
 
 test_that("update can add arguments absent from the original call", {

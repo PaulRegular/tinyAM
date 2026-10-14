@@ -134,8 +134,8 @@ obs$index$cpue_period <- factor(obs$index$cpue_period) |> relevel(ref = "baselin
 dat <- tinyAM::prepare_tam(data = obs, years = years, ages = ages, N_settings = list(process = "iid",
     init = "exp"), F_settings = list(process = "ar1", mu_form = ~0 + age_blocks, mean_ages = 6:8), M_settings = list(process = "ar1",
     mu_form = NULL, mu_supplied = ~M_process_center, age_breaks = c(2, 7, 11), first_dev_year = 1978L),
-    catch_settings = list(sd_form = ~1, fill_missing = FALSE), index_settings = list(q_form = ~0 + mono(age,
-        by = survey) + cpue_period, q_link = "log", sd_form = ~0 + survey, fill_missing = FALSE))
+    catch_settings = list(sd_form = ~1), index_settings = list(q_form = ~0 + mono(age,
+        by = survey) + cpue_period, q_link = "log", sd_form = ~0 + survey))
 start_par <- tinyAM::make_par(dat)
 source_surface <- function(measure, type, scale = 1) {
   rows <- source$outputs[
@@ -229,9 +229,9 @@ if (do_fit) {
     F_settings = list(process = "ar1", mu_form = ~0 + age_blocks, mean_ages = 6:8),
     M_settings = list(process = "ar1", mu_form = NULL, mu_supplied = ~M_process_center, age_breaks = c(2,
         7, 11), first_dev_year = 1978L),
-    catch_settings = list(sd_form = ~1, fill_missing = FALSE),
+    catch_settings = list(sd_form = ~1),
     index_settings = list(q_form = ~0 + mono(age, by = survey) + cpue_period, q_link = "log", sd_form = ~0 +
-        survey, fill_missing = FALSE),
+        survey),
     silent = silent,
     start_par = start_par
   )

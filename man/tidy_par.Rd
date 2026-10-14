@@ -72,7 +72,7 @@ therefore print on the fitted log scale.
 
 Fixed-effect parameters are returned in a single data frame (\verb{$fixed});
 random-effect parameters are returned as a named list of data frames
-(\verb{$random}), one per random block (e.g. \code{log_f}, \code{log_r}, \code{missing}, …).
+(\verb{$random}), one per random block (e.g. \code{log_f}, \code{log_r}, …).
 
 Labels are added where applicable:
 \itemize{
@@ -104,7 +104,7 @@ fit <- fit_tam(
 par_tab <- tidy_par(fit)
 names(par_tab)
 par_tab$fixed
-names(par_tab$random)        # e.g., "log_f", "log_r", "missing", ...
+names(par_tab$random)        # e.g., "log_f", "log_r", ...
 head(par_tab$random$log_f)
 
 }

@@ -237,7 +237,7 @@ check_tam <- function(fit, grad_tol = NULL, detailed = FALSE) {
 
 .check_tam_data_summary <- function(dat) {
   out <- data.frame(type = character(), survey = character(), observed = integer(),
-                    zero = integer(), missing = integer(), filled = integer(),
+                    zero = integer(), missing = integer(),
                     years = integer())
   for (type in c("catch", "index")) {
     d <- dat$obs[[type]]
@@ -249,7 +249,6 @@ check_tam <- function(fit, grad_tol = NULL, detailed = FALSE) {
       out <- rbind(out, data.frame(type = type, survey = as.character(z$survey[1]),
         observed = sum(observed), zero = sum(z$obs == 0, na.rm = TRUE),
         missing = sum(is.na(z$obs)),
-        filled = if (isTRUE(dat[[paste0(type, "_settings")]]$fill_missing)) sum(!observed) else 0L,
         years = length(unique(z$year[observed]))))
     }
   }
@@ -379,9 +378,6 @@ check_tam <- function(fit, grad_tol = NULL, detailed = FALSE) {
   }
   if (nrow(data) && any(data$years < 5L)) {
     add("sparse_series", "Some observation series have fewer than five observed years.")
-  }
-  if (nrow(data) && any(data$filled > data$observed)) {
-    add("filled_observations", "Some series contain more filled than observed values; filled values do not provide additional observations.")
   }
   if (identical(fit$dat$N_settings$init, "random") && length(fit$dat$ages) < 10L) {
     add("initial_abundance", "Random initial-abundance variability is estimated from fewer than nine age transitions.")

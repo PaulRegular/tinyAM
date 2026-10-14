@@ -37,8 +37,7 @@ SD of log observations, not a standard error of the prediction. Standardized
 residuals are \code{(log(obs) - log(pred)) / sd}; zero and missing observations
 have missing residuals. These standardized residuals do not account for the
 uncertainty in fitted states. Optional one-step-ahead residuals use a
-different predictive calculation and are not currently supported with filled
-missing observations. See \link{tinyAM-model} for the observation equations.
+different predictive calculation. See \link{tinyAM-model} for the observation equations.
 When stockassessment is loaded, one-step residuals run sequentially: the
 upstream TMB parallel helper cannot select between SAM and RTMB libraries.
 }

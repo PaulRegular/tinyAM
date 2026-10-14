@@ -90,8 +90,8 @@ if (do_fit) {
     N_settings = list(process = "iid", init = "free"),
     F_settings = list(process = "cor_rw", mu_form = NULL, mean_ages = 2:5),
     M_settings = list(process = "off", mu_form = NULL, mu_supplied = ~M_assumption),
-    catch_settings = list(sd_form = ~0 + sd_block, fill_missing = FALSE),
-    index_settings = list(q_form = ~0 + q_key, sd_form = ~0 + sd_block, sd_supplied = ~relative_sd, fill_missing = FALSE),
+    catch_settings = list(sd_form = ~0 + sd_block),
+    index_settings = list(q_form = ~0 + q_key, sd_form = ~0 + sd_block, sd_supplied = ~relative_sd),
     silent = silent
   )
 }

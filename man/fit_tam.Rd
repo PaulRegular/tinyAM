@@ -13,9 +13,8 @@ fit_tam(
   F_settings = list(process = "rw", mu_form = NULL, sd_form = ~1, mean_ages = NULL),
   M_settings = list(process = "off", mu_form = NULL, mu_supplied = ~I(0.2), sd_form = ~1,
         age_breaks = NULL, first_dev_year = NULL, mean_ages = NULL),
-  catch_settings = list(sd_form = ~1, sd_supplied = NULL, fill_missing = TRUE),
-  index_settings = list(sd_form = ~1, sd_supplied = NULL, q_form = ~q_block, q_link = "log",
-        fill_missing = TRUE),
+  catch_settings = list(sd_form = ~1, sd_supplied = NULL),
+  index_settings = list(sd_form = ~1, sd_supplied = NULL, q_form = ~q_block, q_link = "log"),
   proj_settings = NULL,
   interval = 0.95,
   add_osa_res = FALSE,
@@ -145,8 +144,6 @@ terms and Gaussian \link{formula_effects} are supported, e.g. \code{~ iid(age)}.
 \item \code{sd_supplied}: optional one-sided formula giving supplied SDs (on the natural
 scale of the log-observation residuals) for catch-at-age data. When provided,
 the intercept is removed from \code{sd_form} so supplied SDs act as offsets.
-\item \code{fill_missing}: logical – fill missing values, and zeros, using random effects?
-Defaults to \code{TRUE}. Note that one-step-ahead residuals are not currently working when \code{TRUE}.
 }}
 
 \item{index_settings}{A list with elements:
@@ -172,8 +169,6 @@ terms work with either link. With \code{"logit"}, coefficients and \code{dq} act
 on logit-q rather than log-q; covariate effects are no longer constant
 multipliers of q. This is a restriction, not a prior favouring a value
 near one. q can approach a boundary with large coefficients and SEs.
-\item \code{fill_missing}: logical – fill missing values, and zeros, using random effects?
-Defaults to \code{TRUE}. Note that one-step-ahead residuals are not currently working when \code{TRUE}.
 }}
 
 \item{proj_settings}{Optional list with elements:
@@ -253,7 +248,6 @@ Random-effect blocks are chosen automatically from the model settings:
 \itemize{
 \item Always includes \code{log_f} and eligible \code{log_r} states. Early recruitment
 anchors are fixed; see \link{recruitment_formulas}.
-\item Includes \code{missing} if missing observations are set to be filled.
 \item Includes \code{log_n0} only if \code{N_settings$init == "random"}.
 \item Includes \code{log_n} if \code{N_settings$process != "off"}.
 \item Includes \code{log_m} if \code{M_settings$process != "off"}.

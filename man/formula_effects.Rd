@@ -129,7 +129,7 @@ inspect numerical diagnostics. This caution does not forbid the model.
 # F_settings = list(process = "iid", mu_form = ~ factor(age) + rw(year))
 # M_settings = list(process = "off", mu_supplied = ~ I(0.2),
 #                   mu_form = ~ 0 + ar1(year))
-# catch_settings = list(sd_form = ~ iid(age), fill_missing = FALSE)
+# catch_settings = list(sd_form = ~ iid(age))
 # index_settings = list(q_form = ~ survey,
 #                       sd_form = ~ survey + ar1(age, by = survey))
 }

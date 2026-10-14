@@ -23,8 +23,8 @@ obs$index$q_key <- interaction(obs$index$survey, q_age,
 
 dat <- tinyAM::prepare_tam(data = obs, years = years, ages = ages, N_settings = list(process = "iid",
     init = "exp"), F_settings = list(process = "rw", mu_form = NULL, mean_ages = 3:5), M_settings = list(process = "off",
-    mu_form = NULL, mu_supplied = ~M_assumption), catch_settings = list(sd_form = ~1, fill_missing = FALSE),
-    index_settings = list(q_form = ~0 + q_key, sd_form = ~0 + sd_block, fill_missing = FALSE))
+    mu_form = NULL, mu_supplied = ~M_assumption), catch_settings = list(sd_form = ~1),
+    index_settings = list(q_form = ~0 + q_key, sd_form = ~0 + sd_block))
 start_par <- tinyAM::make_par(dat)
 
 
@@ -74,8 +74,8 @@ if (do_fit) {
     N_settings = list(process = "iid", init = "exp"),
     F_settings = list(process = "rw", mu_form = NULL, mean_ages = 3:5),
     M_settings = list(process = "off", mu_form = NULL, mu_supplied = ~M_assumption),
-    catch_settings = list(sd_form = ~1, fill_missing = FALSE),
-    index_settings = list(q_form = ~0 + q_key, sd_form = ~0 + sd_block, fill_missing = FALSE),
+    catch_settings = list(sd_form = ~1),
+    index_settings = list(q_form = ~0 + q_key, sd_form = ~0 + sd_block),
     silent = silent,
     start_par = start_par
   )

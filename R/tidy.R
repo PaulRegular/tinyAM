@@ -83,8 +83,7 @@ tidy_mat <- tidy_array
 #' residuals are `(log(obs) - log(pred)) / sd`; zero and missing observations
 #' have missing residuals. These standardized residuals do not account for the
 #' uncertainty in fitted states. Optional one-step-ahead residuals use a
-#' different predictive calculation and are not currently supported with filled
-#' missing observations. See [tinyAM-model] for the observation equations.
+#' different predictive calculation. See [tinyAM-model] for the observation equations.
 #' When stockassessment is loaded, one-step residuals run sequentially: the
 #' upstream TMB parallel helper cannot select between SAM and RTMB libraries.
 #'
@@ -439,7 +438,7 @@ tidy_pop <- function(fit, interval = 0.95) {
 #'
 #' Fixed-effect parameters are returned in a single data frame (`$fixed`);
 #' random-effect parameters are returned as a named list of data frames
-#' (`$random`), one per random block (e.g. `log_f`, `log_r`, `missing`, …).
+#' (`$random`), one per random block (e.g. `log_f`, `log_r`, …).
 #'
 #' Labels are added where applicable:
 #' - For parameters specified using a formula in [prepare_tam()] (e.g., `log_q`, `logit_q`,
@@ -471,7 +470,7 @@ tidy_pop <- function(fit, interval = 0.95) {
 #' par_tab <- tidy_par(fit)
 #' names(par_tab)
 #' par_tab$fixed
-#' names(par_tab$random)        # e.g., "log_f", "log_r", "missing", ...
+#' names(par_tab$random)        # e.g., "log_f", "log_r", ...
 #' head(par_tab$random$log_f)
 #'
 #' @seealso [tidy_mat()], [fit_tam()]
@@ -739,7 +738,7 @@ stack_nested <- function(x, label = "model",
 #' `NA` values so diagnostics like one-step-ahead residuals survive stacking. Parameter summaries are
 #' stacked separately for **fixed** and **random** effects: fixed effects in a single data frame; random
 #' effects as a named list of data frames (one per random-effect block, e.g. `"log_f"`, `"log_r"`,
-#' `"missing"`, …).
+#' …).
 #'
 #' @param ... One or more fitted TAM objects (as returned by [fit_tam()]). Supply these or `model_list`, not both.
 #' @param model_list A **named list** of fitted TAM objects. Required to be named; the names are used as label values.
@@ -773,7 +772,7 @@ stack_nested <- function(x, label = "model",
 #' tabs2 <- tidy_tam(fit1, fit2)
 #' head(tabs2$obs_pred$catch)      # contains column "model"
 #' head(tabs2$fixed_par)           # fixed effects stacked with "model"
-#' names(tabs2$random_par)         # e.g. "log_f", "log_r", "missing", ...
+#' names(tabs2$random_par)         # e.g. "log_f", "log_r", ...
 #' head(tabs2$random_par$log_f)    # random block stacked with "model"
 #'
 #' # Named list: must be named; names used as labels (even length 1)

@@ -127,9 +127,9 @@ q_full_settings <- function(spec, link) {
   list(N_settings = list(process = "off", init = "exp"),
     F_settings = list(process = "iid", mu_form = ~ factor(age)),
     M_settings = list(process = "off", mu_supplied = ~ I(.25)),
-    catch_settings = list(sd_form = ~ 0, sd_supplied = ~ relative_sd, fill_missing = FALSE),
+    catch_settings = list(sd_form = ~ 0, sd_supplied = ~ relative_sd),
     index_settings = list(q_form = q_formula(spec), q_link = link, sd_form = ~ 1,
-      sd_supplied = NULL, fill_missing = FALSE))
+      sd_supplied = NULL))
 }
 
 q_full_recovery <- function(spec, link, seed, sparse = FALSE) {

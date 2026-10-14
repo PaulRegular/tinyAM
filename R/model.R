@@ -276,10 +276,9 @@
 #' are \eqn{\widetilde Y\exp(\tau^2/2)}.
 #'
 #' Zero and NA catch/index values are treated as missing, not as censored values
-#' or counts. With `fill_missing = TRUE`, their log observations are Gaussian
-#' random effects with the same observation equation; integrating each out
-#' contributes one, hence no data information. Otherwise they contribute no
-#' density. Complete catch, weight, and maturity year-age grids are required;
+#' or counts. They contribute no observation density and remain missing in
+#' simulation. Population states and observation predictions are still calculated
+#' throughout the model grid. Complete catch, weight, and maturity year-age grids are required;
 #' surveys may be sparse. Reducing the maximum age sums catch and index within
 #' year (and within survey for indices). Weight and maturity use the hidden-age
 #' abundance and biomass weighting described above. Other covariates come from the plus age
@@ -296,7 +295,7 @@
 #' their residual transformations have unit triangular Jacobians.
 #'
 #' [fit_tam()] integrates `log_r`, active `log_n`, `log_f`, active `log_m`,
-#' filled missing values, and random `log_n0` using RTMB's Laplace approximation.
+#' and random `log_n0` using RTMB's Laplace approximation.
 #' All remaining estimated parameters, including free `log_n0`, are fixed
 #' effects optimized by `nlminb`; `dq` has a zero lower bound. Uncertainty is a
 #' local Gaussian approximation from curvature, with delta-method uncertainty
@@ -336,9 +335,8 @@
 #' zero. `redraw_random = TRUE` then regenerates process histories across the
 #' whole modeled period; it is not a future-only forecast conditional on all
 #' historical states. With `FALSE`, observations alone are redrawn conditional
-#' on the fitted or sampled states. Filled missing log observations can be
-#' returned, but originally missing cells remain excluded from reported catch
-#' and yield totals.
+#' on the fitted or sampled states. Missing observation cells remain `NA` in
+#' simulations and are excluded from observed catch and yield totals.
 #'
 #' ## Derived quantities and uncertainty tables
 #'

@@ -110,7 +110,8 @@ test_that("F curve simulation and projection use the same mean surface", {
     p$log_r <- sim$log_r
     obj <- RTMB::MakeADFun(function(p) nll_fun(p, d), p, silent = TRUE)
     rep <- obj$report()
-    expect_equal(sim$log_obs, rep$log_pred, tolerance = 1e-9)
+    expect_equal(sim$log_obs[d$is_observed], rep$log_pred[d$is_observed], tolerance = 1e-9)
+    expect_true(all(is.na(sim$log_obs[d$is_missing])))
     expect_equal(rep$F[17, ], rep$F[16, ], ignore_attr = TRUE)
     expect_equal(rep$F[18, ], rep$F[16, ] * .5, ignore_attr = TRUE)
   }
@@ -123,8 +124,8 @@ test_that("F curve fits retain tidy scales, uncertainty and update paths", {
     weight = transform(grid, obs = .2 * age^1.5), maturity = transform(grid, obs = plogis(age - 4)))
   settings <- list(N_settings = list(process = "off"),
     F_settings = list(process = "iid", mu_form = ~ mono(age)),
-    catch_settings = list(sd_form = ~ 0, sd_supplied = ~ relative_sd, fill_missing = FALSE),
-    index_settings = list(q_form = ~ 1, sd_form = ~ 0, sd_supplied = ~ relative_sd, fill_missing = FALSE))
+    catch_settings = list(sd_form = ~ 0, sd_supplied = ~ relative_sd),
+    index_settings = list(q_form = ~ 1, sd_form = ~ 0, sd_supplied = ~ relative_sd))
   d <- do.call(prepare_tam, c(list(data = data), settings))
   p <- make_par(d)
   p$log_r0 <- log(1e6); p$log_sd_r <- log(.2); p$log_sd_f <- log(.15)

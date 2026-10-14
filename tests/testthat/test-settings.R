@@ -59,7 +59,7 @@ test_that("updates retain requested formulas rather than preparation-adjusted fo
   object$refit_args$index_settings$sd_form <- ~ 1
   object$refit_args$index_settings$sd_supplied <- ~ I(.2)
   object$dat$index_settings$sd_form <- ~ 0
-  cl <- update(object, index_settings = list(fill_missing = FALSE), evaluate = FALSE)
+  cl <- update(object, index_settings = list(q_link = "logit"), evaluate = FALSE)
   expect_identical(cl$index_settings$sd_form, ~ 1)
   expect_identical(cl$index_settings$sd_supplied, ~ I(.2))
 })
@@ -84,8 +84,8 @@ test_that("Usage shows every supported settings entry and optional projections",
     rec_settings = c("process", "mu_form", "sd", "phi"),
     F_settings = c("process", "mu_form", "sd_form", "mean_ages"),
     M_settings = c("process", "mu_form", "mu_supplied", "sd_form", "age_breaks", "first_dev_year", "mean_ages"),
-    catch_settings = c("sd_form", "sd_supplied", "fill_missing"),
-    index_settings = c("sd_form", "sd_supplied", "q_form", "q_link", "fill_missing"))
+    catch_settings = c("sd_form", "sd_supplied"),
+    index_settings = c("sd_form", "sd_supplied", "q_form", "q_link"))
   for (fun in c("fit_tam", "prepare_tam")) {
     usage <- tinyAM:::.settings_usage(fun)
     call <- parse(text = sub("^@usage\n", "", usage))[[1L]]

@@ -36,8 +36,8 @@ obs$index$q_key <- factor(obs$index$q_key)
 
 model_dat <- tinyAM::prepare_tam(data = obs, years = years, ages = ages, N_settings = list(process = "rw",
     init = "free"), F_settings = list(process = "rw", mu_form = NULL, mean_ages = 2:6), M_settings = list(process = "off",
-    mu_form = NULL, mu_supplied = ~M_assumption), catch_settings = list(sd_form = ~0 + sd_block, fill_missing = FALSE),
-    index_settings = list(q_form = ~0 + q_key, sd_form = ~0 + sd_block, fill_missing = FALSE))
+    mu_form = NULL, mu_supplied = ~M_assumption), catch_settings = list(sd_form = ~0 + sd_block),
+    index_settings = list(q_form = ~0 + q_key, sd_form = ~0 + sd_block))
 start_par <- tinyAM::make_par(model_dat)
 source_N <- .translation_start_surface(source$outputs, "population", "numbers_at_age", years, ages, 1000)
 source_F <- .translation_start_surface(source$outputs, "mortality", "fishing_mortality_at_age", years, ages)
@@ -79,8 +79,8 @@ if (do_fit) {
     N_settings = list(process = "rw", init = "free"),
     F_settings = list(process = "rw", mu_form = NULL, mean_ages = 2:6),
     M_settings = list(process = "off", mu_form = NULL, mu_supplied = ~M_assumption),
-    catch_settings = list(sd_form = ~0 + sd_block, fill_missing = FALSE),
-    index_settings = list(q_form = ~0 + q_key, sd_form = ~0 + sd_block, fill_missing = FALSE),
+    catch_settings = list(sd_form = ~0 + sd_block),
+    index_settings = list(q_form = ~0 + q_key, sd_form = ~0 + sd_block),
     silent = silent,
     start_par = start_par
   )

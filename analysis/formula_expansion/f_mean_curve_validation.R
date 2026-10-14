@@ -15,9 +15,9 @@ f_curve_settings <- function(curve, process) {
     F_settings = list(process = process,
       mu_form = if (curve == "mono") ~ mono(age) else ~ logistic(age)),
     M_settings = list(process = "off", mu_supplied = ~ I(.25)),
-    catch_settings = list(sd_form = ~ 0, sd_supplied = ~ relative_sd, fill_missing = FALSE),
+    catch_settings = list(sd_form = ~ 0, sd_supplied = ~ relative_sd),
     index_settings = list(q_form = ~ survey, sd_form = ~ 0,
-                          sd_supplied = ~ relative_sd, fill_missing = FALSE))
+                          sd_supplied = ~ relative_sd))
 }
 
 f_curve_truth <- function(dat, curve, stress = "none") {

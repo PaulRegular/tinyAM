@@ -15,7 +15,7 @@ plus_biology_dat <- function(process = "iid", ages = 2:4, proj = NULL, init = "e
     N_settings = list(process = process, init = init),
     F_settings = list(process = "iid", mu_form = ~ 1),
     M_settings = list(process = "off", mu_supplied = ~ I(.2)),
-    index_settings = list(q_form = ~ 1, sd_form = ~ 1, fill_missing = TRUE),
+    index_settings = list(q_form = ~ 1, sd_form = ~ 1),
     proj_settings = proj))
 }
 
@@ -55,7 +55,7 @@ test_that("biological inputs retain all hidden ages and project each age separat
   obs$pop_covariates$bio_age <- factor(obs$pop_covariates$age)
   modeled <- prepare_tam(obs, ages = 2:4,
     M_settings = list(process = "off", mu_form = ~ bio_age, mu_supplied = NULL),
-    index_settings = list(q_form = ~ 1, sd_form = ~ 1, fill_missing = TRUE))
+    index_settings = list(q_form = ~ 1, sd_form = ~ 1))
   expect_equal(levels(modeled$obs$pop_covariates$bio_age), as.character(2:4))
   expect_equal(ncol(modeled$M_modmat), 3)
   expect_equal(length(make_par(modeled)$mu_m), 3)

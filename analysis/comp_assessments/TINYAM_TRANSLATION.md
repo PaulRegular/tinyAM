@@ -981,8 +981,7 @@ Current tinyAM allows:
 ``` r
 catch_settings = list(
   sd_form = ...,
-  sd_supplied = ...,
-  fill_missing = ...
+  sd_supplied = ...
 )
 ```
 
