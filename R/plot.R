@@ -21,6 +21,7 @@
 #' - `plot_bubbles()`: residuals (OSA or standardized) as bubbles by age × year.
 #' - `plot_resid()`: residual diagnostics vs year, cohort, age, and expected values.
 #' - `plot_par()`: parameter estimates and confidence limits, including signed effects.
+#' - `add_plot_buttons()`: finish Linear / Log and CI controls after adding layers.
 #'
 #' @details
 #' These functions display the supplied tables without refitting the model or
@@ -32,6 +33,9 @@
 #' Both trend and observed/predicted plots accept an `x` formula and `xlab`;
 #' use `x = ~ age, xlab = "Age", frame = ~ year` for annual age profiles.
 #' The historical/projection separator is shown only on a year axis.
+#' [plot_age_year()] assembles both orientations with view-switching buttons.
+#' For custom overlays, call `plot_trend(add_buttons = FALSE)`, add the layers
+#' with Plotly, then call `add_plot_buttons()` so CI controls include all ribbons.
 #' See [tinyAM-model] for definitions and units of population quantities.
 #'
 #' @param data A data frame of observations or estimates.
@@ -41,6 +45,7 @@
 #' @param xlab Label for the x-axis.
 #' @param zlab Label for the colorbar in heatmaps.
 #' @param title Plot title.
+#' @param p A Plotly object, with all desired layers already added.
 #' @param add_intervals Logical; if `TRUE`, show confidence intervals when `lwr` and `upr` are present.
 #' @param add_buttons Logical; if `TRUE`, include buttons to toggle y-axis between Linear / Log and, if
 #'   applicable, Show CI / Hide CI.
@@ -98,6 +103,9 @@ plot_trend <- function(
     add_buttons = TRUE,
     ...
 ) {
+  if (!is.data.frame(data) || !nrow(data)) {
+    return(plotly::plot_ly(x = numeric(), y = numeric(), type = "scatter", mode = "lines"))
+  }
   args <- list(...)
   if (!"color" %in% names(args)) {
     args$color <- I('#1f77b4')
@@ -105,6 +113,9 @@ plot_trend <- function(
   }
 
   values <- unlist(model.frame(y, data = data), use.names = FALSE)
+  if (!any(is.finite(values))) {
+    return(plotly::plot_ly(x = numeric(), y = numeric(), type = "scatter", mode = "lines"))
+  }
   max_y <- max(c(0, values[is.finite(values)])) * 1.05
   if (!is.null(args$frame) && identical(all.vars(y), "est")) {
     # Retain empty model traces in every animation frame.
@@ -145,12 +156,13 @@ plot_trend <- function(
       shapes = shapes
     )
 
-  if (add_buttons) p <- .plot_trend_buttons(p)
+  if (add_buttons) p <- add_plot_buttons(p)
   p
 }
 
-# Build CI controls after all layers, including process-mean ribbons, are added.
-.plot_trend_buttons <- function(p) {
+#' @rdname plot_tam
+#' @export
+add_plot_buttons <- function(p) {
     pb <- plotly::plotly_build(p)
     data_traces <- pb$x$data
     if (is.null(data_traces)) {
@@ -235,6 +247,10 @@ plot_obs_pred <- function(
     xlab = "Year",
     ...
 ) {
+  if (!is.data.frame(data) || !nrow(data) ||
+      !any(is.finite(c(data$obs, data$pred)))) {
+    return(plotly::plot_ly(x = numeric(), y = numeric(), type = "scatter", mode = "lines"))
+  }
   args <- list(...)
   if (!"color" %in% names(args)) {
     args$color <- I('#1f77b4')
@@ -419,4 +435,107 @@ plot_par <- function(data, ...) {
       if (startsWith(unique(data$component), "sd_")) "Effect on log SD" else
         paste("Effect on log", unique(data$component)) else "Effect on catchability's link scale", type = "linear",
                  range = limits + c(-pad, pad)), shapes = shapes)
+}
+
+#' Switch between annual trends and age profiles
+#'
+#' @description
+#' Display an age-year table with Annual trends and Age profiles buttons, using
+#' the same plots and controls as the dashboard. Each view retains its selected
+#' animation frame, axis scale, confidence intervals and legend selections.
+#'
+#' @param data Data frame containing numeric year and age columns, plus the
+#'   estimates or observations required by the plotting function.
+#' @param plot Function used to draw each view. Defaults to [plot_trend()]; use
+#'   [plot_obs_pred()] for observations and predictions. A custom function must
+#'   accept `data`, `x`, `xlab`, `frame` and additional plotting arguments, and
+#'   return a Plotly object. Add custom layers inside that function.
+#' @inheritParams plot_tam
+#' @param frame Formula selecting the initial view: `~ age` for Annual trends
+#'   (the default), or `~ year` with `x = ~ age` for Age profiles.
+#'   Other frame/axis combinations produce a single ordinary plot.
+#' @details
+#' The two views use separate widgets, without refitting or changing the input
+#' table. Projection boundaries appear only on year axes; projection years are
+#' identified in the age-profile selector and default hover text. Multiple
+#' displays can be embedded in the same HTML document independently.
+#' Use [plot_trend()] or [plot_obs_pred()] directly for a single view; their
+#' returned Plotly objects remain available for adding layers or changing layout.
+#' @return A browsable HTML container holding two Plotly widgets for age-year
+#'   views. Other frame/axis combinations return the supplied plotting function's
+#'   Plotly object. Modify individual plots through `plot` before assembly.
+#' @examples
+#' d <- expand.grid(year = 2000:2004, age = 1:3)
+#' d$est <- exp(0.1 * (d$year - 2000) + 0.2 * d$age)
+#' plot_age_year(d, ylab = "Abundance")
+#' plot_age_year(d, x = ~ age, xlab = "Age", frame = ~ year)
+#' d$pred <- d$est
+#' d$obs <- d$est * 1.1
+#' plot_age_year(d, plot = plot_obs_pred, ylab = "Catch")
+#' @seealso [plot_trend()], [plot_obs_pred()], [add_plot_buttons()], [vis_tam()]
+#' @export
+plot_age_year <- function(data, plot = plot_trend, x = ~year, xlab = "Year",
+                          frame = ~age, ...) {
+  args <- list(...)
+  eligible <- all(c("year", "age") %in% names(data)) &&
+    ((identical(all.vars(x), "year") && identical(all.vars(frame), "age")) ||
+       (identical(all.vars(x), "age") && identical(all.vars(frame), "year")))
+  if (!eligible || !nrow(data)) {
+    return(do.call(plot, c(list(data = data, x = x, xlab = xlab, frame = frame), args)))
+  }
+  data <- data[order(data$year, data$age), , drop = FALSE]
+  projection <- if ("is_proj" %in% names(data)) data$is_proj else rep(FALSE, nrow(data))
+  years <- unique(data$year)
+  suffix <- vapply(years, function(year) {
+    flags <- projection[data$year == year]
+    if (all(flags)) " (projection)" else if (any(flags)) " (includes projections)" else ""
+  }, character(1))
+  year_labels <- paste0(data$year, suffix[match(data$year, years)])
+  data$.view_year <- factor(year_labels, levels = unique(year_labels))
+  if (is.null(args$text)) {
+    data$.view_hover <- paste0("Year: ", data$year,
+      ifelse(projection, " (projection)", ""), "<br>Age: ", data$age)
+    args$text <- ~.view_hover
+  }
+  make_view <- function(x, xlab, frame, prefix, view) {
+    animated <- length(unique(data[[all.vars(frame)]])) > 1L
+    if (!animated) frame <- NULL
+    p <- do.call(plot, c(list(data = data, x = x, xlab = xlab, frame = frame), args))
+    p <- .age_year_menu(p, view)
+    if (animated && length(p$x$frames)) p <- plotly::animation_slider(p,
+      currentvalue = list(prefix = prefix), pad = list(t = 45))
+    p$width <- "100%"
+    p$height <- "100%"
+    p
+  }
+  annual <- make_view(~year, "Year", ~age, "Age: ", "annual")
+  profile <- make_view(~age, "Age", ~.view_year, "Year: ", "profile")
+  initial <- if (identical(all.vars(frame), "age")) "annual" else "profile"
+  panel <- function(view, widget) htmltools::tags$div(
+    class = "tam-age-year-panel", `data-view` = view,
+    style = paste0("flex:1;min-height:0;", if (view != initial) "display:none;"), widget)
+  script <- paste(readLines(system.file("js", "age-year.js", package = "tinyAM"),
+                           warn = FALSE), collapse = "\n")
+  htmltools::browsable(htmltools::tags$div(
+    class = "tam-age-year", `data-default-view` = initial,
+    style = "display:flex;flex-direction:column;width:100%;height:100%;min-height:400px;",
+    panel("annual", annual), panel("profile", profile),
+    htmltools::tags$script(htmltools::HTML(script))))
+}
+
+.age_year_menu <- function(p, view) {
+  p <- plotly::plotly_build(p)
+  menus <- p$x$layout$updatemenus
+  controls <- Filter(function(menu) any(unlist(lapply(menu$buttons, `[[`, "label")) %in%
+    c("Linear", "Log", "Show CI", "Hide CI")), menus)
+  menu <- if (length(controls)) controls[[length(controls)]] else .log_linear_buttons[[1L]]
+  menu$name <- "tam-age-year-view"
+  menu$pad$t <- if (is.null(menu$pad$t)) 75 else menu$pad$t + 75
+  menu$active <- match(view, c("annual", "profile")) - 1L
+  menu$buttons <- list(
+    list(method = "skip", execute = FALSE, args = list("annual"), label = "Annual trends"),
+    list(method = "skip", execute = FALSE, args = list("profile"), label = "Age profiles"))
+  if (is.null(p$x$layout)) p$x$layout <- list()
+  p$x$layout$updatemenus <- c(menus, list(menu))
+  p
 }

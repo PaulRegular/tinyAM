@@ -3,6 +3,7 @@
 \name{plot_tam}
 \alias{plot_tam}
 \alias{plot_trend}
+\alias{add_plot_buttons}
 \alias{plot_heatmap}
 \alias{plot_obs_pred}
 \alias{plot_bubbles}
@@ -21,6 +22,8 @@ plot_trend(
   add_buttons = TRUE,
   ...
 )
+
+add_plot_buttons(p)
 
 plot_heatmap(data, zlab = "Estimate", title = "", ...)
 
@@ -60,6 +63,8 @@ applicable, Show CI / Hide CI.}
 
 \item{...}{Additional arguments to pass to \code{\link[plotly:plot_ly]{plotly::plot_ly()}} such as \code{color}, \code{colors}, etc.}
 
+\item{p}{A Plotly object, with all desired layers already added.}
+
 \item{zlab}{Label for the colorbar in heatmaps.}
 }
 \value{
@@ -77,6 +82,7 @@ from \code{\link[=tidy_tam]{tidy_tam()}} and related TAM model objects:
 \item \code{plot_bubbles()}: residuals (OSA or standardized) as bubbles by age × year.
 \item \code{plot_resid()}: residual diagnostics vs year, cohort, age, and expected values.
 \item \code{plot_par()}: parameter estimates and confidence limits, including signed effects.
+\item \code{add_plot_buttons()}: finish Linear / Log and CI controls after adding layers.
 }
 
 These functions display the supplied tables without refitting the model or
@@ -88,6 +94,9 @@ so distinct series are not connected. A log axis requires positive values.
 Both trend and observed/predicted plots accept an \code{x} formula and \code{xlab};
 use \verb{x = ~ age, xlab = "Age", frame = ~ year} for annual age profiles.
 The historical/projection separator is shown only on a year axis.
+\code{\link[=plot_age_year]{plot_age_year()}} assembles both orientations with view-switching buttons.
+For custom overlays, call \code{plot_trend(add_buttons = FALSE)}, add the layers
+with Plotly, then call \code{add_plot_buttons()} so CI controls include all ribbons.
 See \link{tinyAM-model} for definitions and units of population quantities.
 }
 \examples{

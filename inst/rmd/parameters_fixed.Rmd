@@ -26,7 +26,7 @@ for (component in c("F", "N", "M")) {
   rendered <- knitr::knit_child(text = c(
     paste("###", component, "process SD"), "",
     "```{r}",
-    'plot_report(plot_rows(process_sd, "est"), x = ~age, color = ~model, legendgroup = ~model, colors = cols, ylab = "Process SD")',
+    'plot_trend(plot_rows(process_sd, "est"), x = ~age, color = ~model, legendgroup = ~model, colors = cols, ylab = "Process SD")',
     "```", ""), quiet = TRUE)
   cat(rendered, sep = "\n")
 }

@@ -9,7 +9,7 @@ Row {.tabset}
 ```{r}
 curves <- tabs$recruitment$curve
 pairs <- tabs$recruitment$pairs
-plot <- plot_report(curves, x = ~ssb, xlab = "Parent spawning biomass",
+plot <- plot_trend(curves, x = ~ssb, xlab = "Parent spawning biomass",
                     ylab = "Recruitment", color = ~model, colors = cols)
 plotly::add_markers(plot, data = pairs[!pairs$is_proj, ], x = ~ssb,
                    y = ~recruitment, color = ~model, colors = cols,
@@ -20,7 +20,7 @@ plotly::add_markers(plot, data = pairs[!pairs$is_proj, ], x = ~ssb,
 ### Predictions
 
 ```{r}
-plot_report(tabs$recruitment$prediction, color = ~model, colors = cols,
+plot_trend(tabs$recruitment$prediction, color = ~model, colors = cols,
             ylab = "Conditional recruitment")
 ```
 

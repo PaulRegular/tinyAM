@@ -225,6 +225,8 @@ check_tam(fit)
 fit$opt$message
 head(fit$pop$ssb)
 plot_trend(fit$pop$ssb, ylab = "Spawning stock biomass")
+plot_age_year(fit$pop$F, ylab = "F")
+plot_age_year(fit$obs_pred$catch, plot = plot_obs_pred, ylab = "Catch")
 
 # One-year forecasts refitted from historical terminal years
 # hindcasts <- fit_hindcast(fit, folds = 3)

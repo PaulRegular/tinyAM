@@ -63,6 +63,10 @@ Age profiles (age axis, year selector). Each plot starts in its
 specified orientation and retains each view's controls when switching.
 F-at-age and M-at-age include available process means and their
 separate confidence ribbons; Average F remains the population summary.
+Reproduce ordinary dashboard plots with \code{\link[=plot_trend]{plot_trend()}} and
+\code{\link[=plot_obs_pred]{plot_obs_pred()}}, or use \code{\link[=plot_age_year]{plot_age_year()}} for the two orientations.
+The small F/M mean-overlay helpers and their line styling live in
+\code{inst/rmd/vis_tam.Rmd}.
 }
 \examples{
 

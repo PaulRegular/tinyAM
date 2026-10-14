@@ -70,16 +70,44 @@ plot_rows <- function(d, columns) {
   d[keep, , drop = FALSE]
 }
 
-plot_report <- function(d, ...) {
-  available <- plot_rows(d, "est")
-  if (is.null(available) || !nrow(available)) return(plotly::plot_ly())
-  tinyAM:::.plot_age_year(d, ...)
+mortality_plot_data <- function(data, mean, fits, component) {
+  for (nm in c("est", "lwr", "upr")) data[[paste0("mean_", nm)]] <- NA_real_
+  if (is.null(mean) || !nrow(mean)) return(data)
+  if (component == "F") {
+    no_mean <- names(fits)[vapply(fits, function(fit) {
+      inherits(fit, "tam_fit") && is.null(fit$dat$F_settings$mu_form)
+    }, logical(1))]
+    mean <- mean[!mean$model %in% no_mean, , drop = FALSE]
+  }
+  keys <- c("model", "year", "age", "is_proj")
+  key <- function(d) do.call(paste, c(d[keys], sep = "\r"))
+  rows <- match(key(data), key(mean))
+  for (nm in intersect(c("est", "lwr", "upr"), names(mean))) {
+    data[[paste0("mean_", nm)]] <- mean[[nm]][rows]
+  }
+  data
 }
 
-plot_obs_pred_report <- function(d, ...) {
-  available <- plot_rows(d, c("obs", "pred"))
-  if (is.null(available) || !nrow(available)) return(plotly::plot_ly())
-  tinyAM:::.plot_age_year(d, plot = plot_obs_pred, ...)
+plot_mortality <- function(data, mean_line = list(dash = "dot", width = .5), ...) {
+  for (nm in c("lwr", "upr")) {
+    if (is.null(data[[nm]])) data[[nm]] <- NA_real_
+  }
+  p <- plot_trend(data, add_buttons = FALSE, ...)
+  if (any(is.finite(data$mean_est))) {
+    if (any(is.finite(data$mean_upr))) {
+      p <- plotly::add_ribbons(p, ymin = ~mean_lwr, ymax = ~mean_upr,
+        opacity = .15, line = list(width = 0), showlegend = FALSE,
+        hoverinfo = "skip")
+    }
+    # Missing reference means must not drop or shift animation traces.
+    data$mean_est[is.na(data$mean_est)] <- Inf
+    p <- plotly::add_lines(p, data = data, y = ~mean_est, showlegend = FALSE,
+      line = mean_line,
+      hovertemplate = "Process mean: %{y}<br>%{text}<extra>%{fullData.name}</extra>")
+    values <- unlist(data[c("est", "upr", "mean_est", "mean_upr")])
+    p <- plotly::layout(p, yaxis = list(range = c(0, max(c(0, values[is.finite(values)])) * 1.05)))
+  }
+  add_plot_buttons(p)
 }
 
 make_resid_plots <- function(d) {

@@ -95,6 +95,9 @@ transparent, and consistent with existing package structure.
 - Match the surrounding code style.
 - Prefer clear vectorized/base-R code over clever abstractions.
 - Keep helpers small and single-purpose.
+- Dashboard chunks should primarily call exported plotting functions, so users
+  can reproduce the displayed plots outside the dashboard. Keep small
+  dashboard-specific overlays in the template, with styling visible there.
 - Avoid deep nesting.
 - Use descriptive object names consistent with existing model notation.
 - Do not introduce a new dependency just for code style or convenience.
