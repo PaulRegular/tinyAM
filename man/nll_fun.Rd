@@ -22,8 +22,8 @@ When used inside \code{\link[RTMB:TMB-interface]{RTMB::MakeADFun()}}, reported p
 quantities are available through the resulting object's \code{report()} method;
 selected log population summaries also receive uncertainty via \code{sdreport()}.
 With \code{TRUE}, a list containing \code{log_f}, \code{log_r}, \code{log_obs}, and applicable
-\code{log_n0}, \code{log_n}, \code{log_m}, and \code{missing} values. Unfilled missing
-observations remain \code{NA}; filled entries contain simulated log observations.
+\code{log_n0}, \code{log_n}, and \code{log_m} values. Missing observations remain \code{NA};
+predictions and population states are calculated for the full model grid.
 }
 \description{
 Evaluates the population and observation equations for a parameter list.
@@ -46,7 +46,7 @@ The mean is not added again when constructing mortality from the latent state.
 
 With \code{simulate = FALSE}, the result is the joint negative log-likelihood.
 It includes recruitment, active N/F/M processes, random initial abundance,
-and Gaussian densities for observed or filled log observations. Random
+and Gaussian densities for observed log observations. Random
 effects are integrated out by \code{\link[=fit_tam]{fit_tam()}}, not by this function itself.
 Normal densities are evaluated on log observations, so predictions on the
 natural scale are conditional medians rather than arithmetic means.

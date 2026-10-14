@@ -119,10 +119,9 @@ See `TINYAM_TRANSLATION.md` for the matching rules and their limitations.
 
 ## Reviewing model choices
 
-`scripts/translation/review_translations.R` records source-led candidates and
-the pinned baseline revision. Source it after the runner, then call
-`review_translations()`. Every attempt, including failures and advisories, is
-cached locally; `results/translation_review.csv` is the compact tracked record.
+`results/translation_review.csv` retains the historical candidate review and
+its pinned baseline revision. The retired review script remains in Git history;
+current model choices are visible in each stock script's `fit_tam()` call.
 The review includes all current detailed assessments and records blockers for
 those without recipes. Baselines remain when changes weaken diagnostics or
 trade one comparison improvement for another loss. Numerical convergence and

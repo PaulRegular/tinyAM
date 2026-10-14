@@ -31,8 +31,8 @@ dat <- tinyAM::prepare_tam(
   ), F_settings = list(process = "rw", mu_form = NULL, mean_ages = 5:12), M_settings = list(
     process = "off",
     mu_form = NULL, mu_supplied = ~M_assumption
-  ), catch_settings = list(sd_form = ~1, fill_missing = FALSE),
-  index_settings = list(q_form = ~ 0 + q_key, sd_form = ~ 0 + survey, fill_missing = FALSE)
+  ), catch_settings = list(sd_form = ~1),
+  index_settings = list(q_form = ~ 0 + q_key, sd_form = ~ 0 + survey)
 )
 start_par <- tinyAM::make_par(dat)
 source_N <- .translation_start_surface(source$outputs, "population", "numbers_at_age", years, ages, 1e+06)
@@ -84,8 +84,8 @@ if (do_fit) {
     N_settings = list(process = "iid", init = "free"),
     F_settings = list(process = "rw", mu_form = NULL, mean_ages = 5:12),
     M_settings = list(process = "off", mu_form = NULL, mu_supplied = ~M_assumption),
-    catch_settings = list(sd_form = ~1, fill_missing = FALSE),
-    index_settings = list(q_form = ~ 0 + q_key, sd_form = ~ 0 + survey, fill_missing = FALSE),
+    catch_settings = list(sd_form = ~1),
+    index_settings = list(q_form = ~ 0 + q_key, sd_form = ~ 0 + survey),
     silent = silent,
     start_par = start_par
   )

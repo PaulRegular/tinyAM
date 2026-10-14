@@ -124,9 +124,8 @@ sd_full_recovery <- function(type, component, seed) {
     N_settings = list(process = "off", init = "exp"),
     F_settings = list(process = "iid", mu_form = ~ factor(age)),
     M_settings = list(process = "off", mu_supplied = ~ I(.25)),
-    catch_settings = list(sd_form = ~1, fill_missing = FALSE),
-    index_settings = list(q_form = ~survey, sd_form = ~survey, fill_missing = FALSE)
-  )
+    catch_settings = list(sd_form = ~ 1),
+    index_settings = list(q_form = ~ survey, sd_form = ~ survey))
   settings[[paste0(component, "_settings")]]$sd_form <- sd_formula(type, component == "index")
   dat <- do.call(prepare_tam, c(list(data = sd_observations()), settings))
   p <- make_par(dat)

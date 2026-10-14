@@ -95,8 +95,8 @@ if (do_fit) {
     N_settings = list(process = "iid", init = "exp"),
     F_settings = list(process = "rw", mu_form = NULL),
     M_settings = list(process = "off", mu_form = NULL, mu_supplied = ~M_assumption),
-    catch_settings = list(sd_form = ~ age + I(age^2), fill_missing = FALSE),
-    index_settings = list(q_form = ~ 0 + q_key, sd_form = ~ 0 + survey, fill_missing = FALSE),
+    catch_settings = list(sd_form = ~ age + I(age^2)),
+    index_settings = list(q_form = ~ 0 + q_key, sd_form = ~ 0 + survey),
     silent = silent
   )
 }

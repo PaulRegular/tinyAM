@@ -102,13 +102,13 @@ if (do_fit) {
       process = "ar1", mu_form = NULL, mu_supplied = ~M_assumption, first_dev_year = 1984,
       age_breaks = c(3, 5, 7, 9, 11, 14), mean_ages = 5:14
     ),
-    catch_settings = list(sd_form = ~1, fill_missing = FALSE),
+    catch_settings = list(sd_form = ~1),
     index_settings = list(q_form = ~ q_key + smith_sound_year:smith_sound_q_key, sd_form = if (length(surveys) >
       1L) {
       ~ 0 + sd_key
     } else {
       ~1
-    }, fill_missing = FALSE),
+    }),
     silent = silent
   )
 }

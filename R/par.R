@@ -108,8 +108,6 @@
 #'   - Logistic curves have `q_a50_*` midpoints and positive `log_q_slope_*`
 #'     coefficients, initialized from each group's observed coordinate range.
 #'     Names identify terms, groups and unique states for warm starts.
-#'   - `missing` vector of length `sum(dat$fill_missing_map)` (placeholders for
-#'     imputed `log_obs`, if any observation type is set to fill missing values)
 #'
 #' All scalar SD parameters are on the log scale, and AR(1) parameters are on
 #' the logit scale (later transformed by `plogis()` in the likelihood).
@@ -198,10 +196,6 @@ make_par <- function(dat) {
   par <- c(par, .q_term_parameters(.formula_terms(dat)))
   if (!is.null(dat$F_mono_modmat)) {
     par$dmu_f <- setNames(rep(.05, ncol(dat$F_mono_modmat)), colnames(dat$F_mono_modmat))
-  }
-
-  if (dat$any_fill_missing) {
-    par$missing <- numeric(sum(dat$fill_missing_map))
   }
 
   par$log_r <- setNames(numeric(length(dat$rec$eligible)), as.character(dat$years[dat$rec$eligible]))

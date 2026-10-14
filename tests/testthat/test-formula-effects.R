@@ -62,14 +62,10 @@ test_that("fitting emits the sparse logit IID caution before constructing the ob
   data <- cod_obs
   data$index$q_row <- seq_len(nrow(data$index))
   local_mocked_bindings(MakeADFun = function(...) stop("stop before objective"), .package = "RTMB")
-  expect_warning(expect_error(fit_tam(
-    data = data, years = 1983:1995, ages = 2:6,
-    index_settings = list(
-      q_form = ~ iid(q_row), q_link = "logit",
-      sd_form = ~1, sd_supplied = NULL, fill_missing = FALSE
-    ),
-    silent = TRUE
-  ), "stop before objective"), "each effect level has only one informative observation")
+  expect_warning(expect_error(fit_tam(data = data, years = 1983:1995, ages = 2:6,
+    index_settings = list(q_form = ~ iid(q_row), q_link = "logit",
+      sd_form = ~ 1, sd_supplied = NULL),
+    silent = TRUE), "stop before objective"), "each effect level has only one informative observation")
 })
 
 test_that("formula compilation preserves ordinary and mono designs", {
@@ -277,10 +273,8 @@ test_that("forecast states integrate out and have the intended conditional means
 })
 
 test_that("new q parameters are registered and simulations reuse the returned states", {
-  dat <- make_test_dat(index_settings = list(
-    sd_form = ~1,
-    q_form = ~ q_block + iid(year, sd = .2), fill_missing = FALSE
-  ))
+  dat <- make_test_dat(index_settings = list(sd_form = ~1,
+    q_form = ~ q_block + iid(year, sd = .2)))
   p <- make_par(dat)
   term <- dat$q_terms[[1]]
   expect_true(term$parameter %in% names(p))
@@ -299,13 +293,8 @@ test_that("new q parameters are registered and simulations reuse the returned st
 })
 
 test_that("fixed catch SD and estimated index SD preserve differentiable observation scales", {
-  dat <- make_test_dat(catch_settings = list(
-    sd_form = ~0, sd_supplied = ~ I(.2),
-    fill_missing = FALSE
-  ), index_settings = list(
-    q_form = ~ q_block + ar1(year),
-    sd_form = ~1, fill_missing = FALSE
-  ))
+  dat <- make_test_dat(catch_settings = list(sd_form = ~ 0, sd_supplied = ~ I(.2)), index_settings = list(q_form = ~ q_block + ar1(year),
+    sd_form = ~ 1))
   p <- make_par(dat)
   obj <- RTMB::MakeADFun(function(p) nll_fun(p, dat), p, silent = TRUE)
   expect_true(is.finite(obj$fn(obj$par)))
@@ -330,14 +319,10 @@ test_that("fixed catch SD and estimated index SD preserve differentiable observa
 })
 
 test_that("formula processes fit and warm starts align named states", {
-  fit <- update(default_fit,
-    silent = TRUE,
-    index_settings = list(
-      q_form = ~ q_block + ar1(year, sd = .15, phi = .6),
-      sd_form = ~1, fill_missing = FALSE
-    ),
-    start_par = as.list(default_fit$sdrep, "Estimate")
-  )
+  fit <- update(default_fit, silent = TRUE,
+    index_settings = list(q_form = ~ q_block + ar1(year, sd = .15, phi = .6),
+                          sd_form = ~1),
+    start_par = as.list(default_fit$sdrep, "Estimate"))
   term <- fit$dat$q_terms[[1]]
   expect_true(term$parameter %in% fit$obj$env$.random)
   expect_true(is.finite(fit$opt$objective))
@@ -371,10 +356,8 @@ test_that("formula processes fit and warm starts align named states", {
 })
 
 test_that("RW increments and numeric-by contributions retain correct signed uncertainty", {
-  dat <- make_test_dat(index_settings = list(
-    sd_form = ~1,
-    q_form = ~ q_block + rw(year, by = age, sd = .2), fill_missing = FALSE
-  ))
+  dat <- make_test_dat(index_settings = list(sd_form = ~1,
+    q_form = ~ q_block + rw(year, by = age, sd = .2)))
   p <- make_par(dat)
   term <- dat$q_terms[[1]]
   p[[term$parameter]][] <- -.2
@@ -416,10 +399,8 @@ test_that("RW increments and numeric-by contributions retain correct signed unce
 })
 
 test_that("logit catchability intervals include logistic curves and remain bounded", {
-  dat <- make_test_dat(index_settings = list(
-    sd_form = ~1,
-    q_form = ~ logistic(age), q_link = "logit", fill_missing = FALSE
-  ))
+  dat <- make_test_dat(index_settings = list(sd_form = ~1,
+    q_form = ~ logistic(age), q_link = "logit"))
   p <- make_par(dat)
   obj <- RTMB::MakeADFun(function(p) {
     nll_fun(p, dat)

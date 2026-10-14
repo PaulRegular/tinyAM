@@ -1,4 +1,3 @@
-
 ## Observations ----
 years <- 1978:2023
 ages <- 2:11
@@ -231,6 +230,7 @@ background <- c(
   "",
   "Acoustic values are converted using canonical units. The January 1 mature-biomass comparison is distinct from accepted April 1 SSB, and the 2026 assessment's updated biomass data are not mixed into the 2024 record."
 )
+
 
 
 ## Model ----

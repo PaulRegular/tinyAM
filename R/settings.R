@@ -39,8 +39,8 @@
     rec_settings = "process",
     F_settings = "process",
     M_settings = "process",
-    catch_settings = c("sd_form", "fill_missing"),
-    index_settings = c("sd_form", "q_form", "q_link", "fill_missing"),
+    catch_settings = c("sd_form"),
+    index_settings = c("sd_form", "q_form", "q_link"),
     proj_settings = c("n_proj", "n_mean", "F_mult")
   )
   missing <- required[vapply(base[required], is.null, logical(1))]

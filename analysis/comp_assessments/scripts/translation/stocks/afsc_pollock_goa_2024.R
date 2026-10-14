@@ -135,9 +135,9 @@ if (do_fit) {
     N_settings = list(process = "off", init = "exp"),
     F_settings = list(process = "rw", mu_form = NULL, mean_ages = 3:10),
     M_settings = list(process = "off", mu_form = NULL, mu_supplied = ~M_assumption, mean_ages = 3:10),
-    catch_settings = list(sd_form = ~1, fill_missing = FALSE),
+    catch_settings = list(sd_form = ~1),
     index_settings = list(q_form = ~ 0 + q_key + environmental_effect + adfg_year, q_link = "logit", sd_form = ~ 0 +
-      survey, sd_supplied = ~relative_sd, fill_missing = FALSE),
+      survey, sd_supplied = ~relative_sd),
     silent = silent
   )
 }

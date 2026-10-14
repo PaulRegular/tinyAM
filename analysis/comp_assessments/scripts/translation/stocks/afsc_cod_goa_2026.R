@@ -842,8 +842,8 @@ if (do_fit) {
     N_settings = list(process = "off", init = "exp"),
     F_settings = list(process = "iid", mu_form = ~ factor(age)),
     M_settings = list(process = "off", mu_form = NULL, mu_supplied = ~M_assumption),
-    catch_settings = list(sd_form = ~1, fill_missing = FALSE),
-    index_settings = list(q_form = ~q_block, sd_form = ~1, sd_supplied = ~relative_sd, fill_missing = FALSE),
+    catch_settings = list(sd_form = ~1),
+    index_settings = list(q_form = ~q_block, sd_form = ~1, sd_supplied = ~relative_sd),
     silent = silent
   )
 }

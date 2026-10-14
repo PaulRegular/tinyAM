@@ -35,8 +35,7 @@ test_that("make_par builds shapes and zeros consistent with dat", {
   # First-year recruitment always has a fixed anchor
   expect_true("log_r0" %in% names(par))
 
-  # missing placeholder length equals NA count in log_obs
-  expect_length(par$missing, sum(is.na(dat$log_obs)))
+  expect_false("missing" %in% names(par))
 
   # everything numeric initialized at 0
   numeric_slots <- Filter(is.numeric, par)

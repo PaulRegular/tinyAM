@@ -146,13 +146,9 @@ test_that("multiple surveys map independent monotonic curves into the likelihood
   b$q_block <- pmin(b$age, 4)
   obs$index <- rbind(a, b)
   obs$index$survey <- factor(obs$index$survey)
-  dat <- prepare_tam(
-    data = obs, years = 2000:2005, ages = 2:6,
-    index_settings = list(
-      q_form = ~ survey + mono(q_block, by = survey),
-      sd_form = ~1, fill_missing = TRUE
-    )
-  )
+  dat <- prepare_tam(data = obs, years = 2000:2005, ages = 2:6,
+    index_settings = list(q_form = ~survey + mono(q_block, by = survey),
+                          sd_form = ~1))
   par <- make_par(dat)
   par$log_q[] <- c(-2, 1)
   par$dq[] <- c(.1, .2, .3, .4, .5)
@@ -175,10 +171,8 @@ test_that("ordinary q matrices, parameters, predictions and simulation remain un
     )
   }
   for (f in list(~q_block, ~1)) {
-    dat <- make_test_dat(
-      years = 2000:2005, ages = 2:6,
-      index_settings = list(q_form = f, sd_form = ~1, fill_missing = TRUE)
-    )
+    dat <- make_test_dat(years = 2000:2005, ages = 2:6,
+                         index_settings = list(q_form = f, sd_form = ~1))
     old <- dat
     old$q_modmat <- stats::model.matrix(f, data = dat$obs$index)
     expect_identical(dat$q_modmat, old$q_modmat)
@@ -198,11 +192,9 @@ test_that("ordinary q matrices, parameters, predictions and simulation remain un
 })
 
 test_that("monotonic q integrates with RTMB, simulation and observation predictions", {
-  dat <- make_test_dat(
-    years = 2000:2005, ages = 2:6,
-    F_settings = list(process = "iid", mu_form = ~1),
-    index_settings = list(q_form = ~ mono(q_block), sd_form = ~1, fill_missing = TRUE)
-  )
+  dat <- make_test_dat(years = 2000:2005, ages = 2:6,
+                       F_settings = list(process = "iid", mu_form = ~1),
+                       index_settings = list(q_form = ~mono(q_block), sd_form = ~1))
   par <- make_par(dat)
   expect_equal(unname(par$dq), rep(.05, ncol(dat$q_mono_modmat)))
   expect_identical(names(par$dq), dat$q_mono_steps$coef)
@@ -225,7 +217,7 @@ test_that("monotonic q integrates with RTMB, simulation and observation predicti
   par[intersect(names(par), names(sim))] <- sim[intersect(names(par), names(sim))]
   report <- RTMB::MakeADFun(function(p) nll_fun(p, dat), par, silent = TRUE)$report()
   expect_equal(report$log_q_obs, expected_q, ignore_attr = TRUE)
-  expect_equal(tail(calls, 2)[[1]], report$log_pred[dat$is_observed])
+  expect_equal(tail(calls, 1)[[1]], report$log_pred[dat$is_observed])
   ii <- dat$obs_map$type == "index"
   rows <- cbind(match(dat$obs$index$year, dat$years), match(dat$obs$index$age, dat$ages))
   expect_equal(unname(report$log_pred[ii]), unname(expected_q + log(report$N)[rows] -
@@ -233,10 +225,8 @@ test_that("monotonic q integrates with RTMB, simulation and observation predicti
 })
 
 test_that("simulation projects negative uncertainty draws onto feasible dq", {
-  dat <- make_test_dat(
-    years = 2000:2005, ages = 2:6,
-    index_settings = list(q_form = ~ mono(q_block), sd_form = ~1, fill_missing = TRUE)
-  )
+  dat <- make_test_dat(years = 2000:2005, ages = 2:6,
+    index_settings = list(q_form = ~mono(q_block), sd_form = ~1))
   par <- make_par(dat)
   par$dq[] <- rep_len(c(-.2, .3, 0), length(par$dq))
   feasible <- par
@@ -253,25 +243,19 @@ test_that("simulation projects negative uncertainty draws onto feasible dq", {
 })
 
 test_that("negative monotonic warm starts fail clearly", {
-  dat <- make_test_dat(
-    years = 2000:2005, ages = 2:6,
-    index_settings = list(q_form = ~ mono(q_block), sd_form = ~1, fill_missing = TRUE)
-  )
+  dat <- make_test_dat(years = 2000:2005, ages = 2:6,
+    index_settings = list(q_form = ~mono(q_block), sd_form = ~1))
   par <- make_par(dat)
   par$dq[1] <- -.1
-  expect_error(fit_tam(
-    data = cod_obs, years = 2000:2005, ages = 2:6,
-    index_settings = list(q_form = ~ mono(q_block), sd_form = ~1, fill_missing = TRUE),
-    start_par = par, silent = TRUE
-  ), "finite and non-negative")
+  expect_error(fit_tam(data = cod_obs, years = 2000:2005, ages = 2:6,
+    index_settings = list(q_form = ~mono(q_block), sd_form = ~1),
+    start_par = par, silent = TRUE), "finite and non-negative")
 })
 
 test_that("constant and monotonic q fit and retain useful tidy outputs", {
-  for (f in list(~1, ~ mono(q_block))) {
-    fit <- update(default_fit,
-      index_settings = list(q_form = f, sd_form = ~1, fill_missing = TRUE),
-      start_par = as.list(default_fit$sdrep, "Estimate"), silent = TRUE
-    )
+  for (f in list(~1, ~mono(q_block))) {
+    fit <- update(default_fit, index_settings = list(q_form = f, sd_form = ~1),
+                  start_par = as.list(default_fit$sdrep, "Estimate"), silent = TRUE)
     expect_true(is.finite(fit$opt$objective))
     expect_true(all(is.finite(fit$obj$gr(fit$opt$par))))
     expect_equal(fit$obs_pred$index$q, unname(exp(fit$rep$log_q_obs)))

@@ -96,12 +96,9 @@ full_recovery <- function(component, type, seed, residual = TRUE, mean_sd = .12)
     N_settings = list(process = "off", init = "exp"),
     F_settings = list(process = "iid", mu_form = ~ factor(age)),
     M_settings = list(process = "off", mu_supplied = ~ I(.25)),
-    catch_settings = list(sd_form = ~0, sd_supplied = ~relative_sd, fill_missing = FALSE),
-    index_settings = list(
-      q_form = ~survey, sd_form = ~0,
-      sd_supplied = ~relative_sd, fill_missing = FALSE
-    )
-  )
+    catch_settings = list(sd_form = ~ 0, sd_supplied = ~ relative_sd),
+    index_settings = list(q_form = ~ survey, sd_form = ~ 0,
+      sd_supplied = ~ relative_sd))
   settings[[paste0(component, "_settings")]]$mu_form <- process_formula(type, component)
   if (component == "M" && residual) {
     settings$M_settings$process <- "iid"

@@ -135,8 +135,6 @@ process densities and integrate out of the historical likelihood.
 \item Logistic curves have \verb{q_a50_*} midpoints and positive \verb{log_q_slope_*}
 coefficients, initialized from each group's observed coordinate range.
 Names identify terms, groups and unique states for warm starts.
-\item \code{missing} vector of length \code{sum(dat$fill_missing_map)} (placeholders for
-imputed \code{log_obs}, if any observation type is set to fill missing values)
 }
 }
 

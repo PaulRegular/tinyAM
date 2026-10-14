@@ -129,7 +129,7 @@ stopifnot(
   as.character(dat$M_settings$age_blocks["7"]) == "7-11",
   identical(dim(par$log_f), c(46L, 10L)),
   identical(dim(par$log_m), c(46L, 2L)),
-  sum(dat$fill_missing_map) == 0L,
+  !"missing" %in% names(par),
   isTRUE(all.equal(rownames(par$log_m), as.character(translated$years))),
   all(is.finite(translated$start_par$log_r)),
   all(is.finite(translated$start_par$log_f)),

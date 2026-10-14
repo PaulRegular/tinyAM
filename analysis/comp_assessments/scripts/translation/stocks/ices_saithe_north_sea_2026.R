@@ -24,8 +24,8 @@ dat <- tinyAM::prepare_tam(
   ), F_settings = list(process = "ar1", mu_form = ~ factor(age), mean_ages = 4:7), M_settings = list(
     process = "off",
     mu_form = NULL, mu_supplied = ~M_assumption
-  ), catch_settings = list(sd_form = ~ 0 + sd_block, fill_missing = FALSE),
-  index_settings = list(q_form = ~ 0 + q_age, sd_form = ~1, fill_missing = FALSE)
+  ), catch_settings = list(sd_form = ~ 0 + sd_block),
+  index_settings = list(q_form = ~ 0 + q_age, sd_form = ~1)
 )
 start_par <- tinyAM::make_par(dat)
 
@@ -134,8 +134,8 @@ if (do_fit) {
     N_settings = list(process = "iid", init = "exp"),
     F_settings = list(process = "cor_rw", mean_ages = 4:7),
     M_settings = list(process = "off", mu_form = NULL, mu_supplied = ~M_assumption),
-    catch_settings = list(sd_form = ~ 0 + sd_block, fill_missing = FALSE),
-    index_settings = list(q_form = ~ mono(q_age), sd_form = ~1, fill_missing = FALSE),
+    catch_settings = list(sd_form = ~ 0 + sd_block),
+    index_settings = list(q_form = ~ mono(q_age), sd_form = ~1),
     silent = silent,
     start_par = start_par
   )

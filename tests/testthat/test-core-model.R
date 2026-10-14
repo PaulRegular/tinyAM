@@ -95,21 +95,16 @@ test_that("simulation uses returned states, recursive cohorts and matching obser
     if (n_process != "off") par$log_sd_n <- log(0.1)
     before <- core_report(par, dat)
     sims <- nll_fun(par, dat, simulate = TRUE)
-    obs_calls <- tail(calls, 2)
+    obs_calls <- tail(calls, 1)
     par[intersect(names(par), names(sims))] <- sims[intersect(names(par), names(sims))]
     rep <- core_report(par, dat)
     expect_equal(as.numeric(diff(c(par$log_r0, sims$log_r))), rep(0.2, length(dat$years) - 1))
     expect_false(isTRUE(all.equal(rep$log_pred, before$log_pred)))
     expect_equal(obs_calls[[1]]$mean, rep$log_pred[dat$is_observed])
     expect_equal(obs_calls[[1]]$sd, rep$sd_obs[dat$is_observed])
-    expect_equal(
-      sims$log_obs[dat$is_observed],
-      unname(rep$log_pred[dat$is_observed] + rep$sd_obs[dat$is_observed])
-    )
-    expect_equal(
-      sims$missing,
-      unname(rep$log_pred[dat$fill_missing_map] + rep$sd_obs[dat$fill_missing_map])
-    )
+    expect_equal(sims$log_obs[dat$is_observed],
+                 unname(rep$log_pred[dat$is_observed] + rep$sd_obs[dat$is_observed]))
+    expect_true(all(is.na(sims$log_obs[dat$is_missing])))
     for (y in 2:nrow(rep$N)) {
       survivors <- rep$N[y - 1, ] * exp(-rep$Z[y - 1, ])
       expected <- survivors[-length(survivors)]
@@ -148,7 +143,8 @@ test_that("generative predictions remain finite when abundance underflows", {
   par$log_sd_f <- log(0.01)
   set.seed(510)
   sims <- nll_fun(par, dat, simulate = TRUE)
-  expect_true(all(is.finite(sims$log_obs)))
+  expect_true(all(is.finite(sims$log_obs[dat$is_observed])))
+  expect_true(all(is.na(sims$log_obs[dat$is_missing])))
   par[intersect(names(par), names(sims))] <- sims[intersect(names(par), names(sims))]
   report <- core_report(par, dat)
   expect_true(any(report$N == 0))
@@ -202,6 +198,8 @@ test_that("sim_tam keeps observations consistent with redrawn and retained state
     names(catch)[names(catch) == "est"] <- "F"
     catch <- merge(catch, sim$Z[, c("year", "age", "est")], by = c("year", "age"))
     expected <- with(catch, log(N * F / est * (1 - exp(-est))))
-    expect_equal(log(catch$obs), expected, tolerance = 1e-6)
+    observed <- !is.na(catch$obs)
+    expect_equal(log(catch$obs[observed]), expected[observed], tolerance = 1e-6)
+    expect_true(all(is.finite(expected)))
   }
 })

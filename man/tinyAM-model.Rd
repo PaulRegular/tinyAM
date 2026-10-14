@@ -286,10 +286,9 @@ Predictions \eqn{\widetilde Y} are conditional medians. Arithmetic means
 are \eqn{\widetilde Y\exp(\tau^2/2)}.
 
 Zero and NA catch/index values are treated as missing, not as censored values
-or counts. With \code{fill_missing = TRUE}, their log observations are Gaussian
-random effects with the same observation equation; integrating each out
-contributes one, hence no data information. Otherwise they contribute no
-density. Complete catch, weight, and maturity year-age grids are required;
+or counts. They contribute no observation density and remain missing in
+simulation. Population states and observation predictions are still calculated
+throughout the model grid. Complete catch, weight, and maturity year-age grids are required;
 surveys may be sparse. Reducing the maximum age sums catch and index within
 year (and within survey for indices). Weight and maturity use the hidden-age
 abundance and biomass weighting described above. Other covariates come from the plus age
@@ -307,7 +306,7 @@ for the same observed data. Latent parameters are defined in log coordinates;
 their residual transformations have unit triangular Jacobians.
 
 \code{\link[=fit_tam]{fit_tam()}} integrates \code{log_r}, active \code{log_n}, \code{log_f}, active \code{log_m},
-filled missing values, and random \code{log_n0} using RTMB's Laplace approximation.
+and random \code{log_n0} using RTMB's Laplace approximation.
 All remaining estimated parameters, including free \code{log_n0}, are fixed
 effects optimized by \code{nlminb}; \code{dq} has a zero lower bound. Uncertainty is a
 local Gaussian approximation from curvature, with delta-method uncertainty
@@ -348,9 +347,8 @@ not an exact posterior sampler. Negative drawn \code{dq} values are clipped to
 zero. \code{redraw_random = TRUE} then regenerates process histories across the
 whole modeled period; it is not a future-only forecast conditional on all
 historical states. With \code{FALSE}, observations alone are redrawn conditional
-on the fitted or sampled states. Filled missing log observations can be
-returned, but originally missing cells remain excluded from reported catch
-and yield totals.
+on the fitted or sampled states. Missing observation cells remain \code{NA} in
+simulations and are excluded from observed catch and yield totals.
 }
 
 \subsection{Derived quantities and uncertainty tables}{

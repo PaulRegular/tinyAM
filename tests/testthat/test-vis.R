@@ -111,14 +111,9 @@ test_that("vis_tam renders cleanly and produces an HTML output", {
 })
 
 test_that("formula-effect dashboards show only signed trends and framed ribbons", {
-  process <- update(default_fit,
-    silent = TRUE,
-    index_settings = list(
-      q_form = ~ q_block + rw(year, by = age, sd = .1) +
-        ar1(year, by = q_block, sd = .1, phi = .6) + iid(age, sd = .1), sd_form = ~1,
-      fill_missing = FALSE
-    ), start_par = as.list(default_fit$sdrep, "Estimate")
-  )
+  process <- update(default_fit, silent = TRUE,
+    index_settings = list(q_form = ~ q_block + rw(year, by = age, sd = .1) +
+      ar1(year, by = q_block, sd = .1, phi = .6) + iid(age, sd = .1), sd_form = ~1), start_par = as.list(default_fit$sdrep, "Estimate"))
   reference <- default_fit
   reference$obs_pred$index$q <- NA_real_
   class(reference) <- c("tam_ref", "list")

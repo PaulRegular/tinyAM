@@ -37,6 +37,11 @@
 #'          [plot_obs_pred()], or use [plot_age_year()] for the two orientations.
 #'          The small F/M mean-overlay helpers and their line styling live in
 #'          `inst/rmd/vis_tam.Rmd`.
+#'          Population patterns and Mortality patterns use [plot_matrix()] to
+#'          explore age-year heatmaps, surfaces and contours, with shared ranges
+#'          across models for each metric. Log changes values, not year or age.
+#'          Hover text retains natural units, spawning definitions and projection
+#'          labels. Unknown reference units and unavailable cells remain missing.
 #' @return Used for its side effects: writes an HTML dashboard and optionally
 #'   opens it in the browser. Supply `output_file` to retain a known file path.
 #'

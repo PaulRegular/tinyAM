@@ -110,8 +110,10 @@ stopifnot(
       paste(sum_f_weighted$year, sum_f_weighted$age)
     )]
   )),
-  dat$N_settings$process == "rw",
-  dat$F_settings$process == "rw",
+  grepl("mono", paste(deparse(dat$index_settings$q_form), collapse = "")),
+  dat$N_settings$init == "free",
+  dat$N_settings$process == "iid",
+  dat$F_settings$process == "cor_rw",
   dat$M_settings$process == "off"
 )
 

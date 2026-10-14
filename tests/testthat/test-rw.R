@@ -139,7 +139,7 @@ test_that("likelihood and simulation use RW residuals and preserve model boundar
   expect_equal(unname(simulated_densities[[1]]), unname(draws[[3]]$result))
   expect_equal(unname(simulated_densities[[2]]), unname(draws[[2]]$result))
   expect_equal(unname(simulated_densities[[3]]), unname(draws[[1]]$result))
-  observation_calls <- tail(normal_calls, 2)
+  observation_calls <- tail(normal_calls, 1)
   shared <- intersect(names(par), names(sims))
   par[shared] <- sims[shared]
   rep <- RTMB::MakeADFun(function(p) nll_fun(p, dat), par, silent = TRUE)$report()
@@ -151,5 +151,5 @@ test_that("likelihood and simulation use RW residuals and preserve model boundar
   expect_equal(rep$M[, "2"], rep$mu_M[, "2"])
   expect_equal(observation_calls[[1]]$mean, rep$log_pred[dat$is_observed])
   expect_equal(observation_calls[[1]]$sd, rep$sd_obs[dat$is_observed])
-  expect_equal(observation_calls[[2]]$mean, rep$log_pred[dat$fill_missing_map])
+  expect_true(all(is.na(sims$log_obs[dat$is_missing])))
 })

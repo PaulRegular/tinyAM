@@ -8,6 +8,6 @@ utils::globalVariables(c(
   "logit_phi_n", "logit_phi_f", "logit_phi_m", "atanh_rho_f",
   "log_r0", "log_n0", "log_sd_n0", "log_mu_f", "mu_m", "log_mu_supplied_m", "log_q", "logit_q", "dq",
   "F_modmat", "M_modmat", "q_modmat", "sd_catch_modmat", "sd_index_modmat", "obs_map",
-  "log_sd_catch_supplied", "log_sd_index_supplied", "fill_missing_map", "any_fill_missing",
+  "log_sd_catch_supplied", "log_sd_index_supplied",
   "is_missing", "is_observed", "W", "P"
 ))

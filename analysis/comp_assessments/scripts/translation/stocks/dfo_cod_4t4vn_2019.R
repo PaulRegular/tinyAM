@@ -147,8 +147,8 @@ if (do_fit) {
       3,
       5, 9, 12
     ), first_dev_year = 1971L),
-    catch_settings = list(sd_form = ~1, fill_missing = FALSE),
-    index_settings = list(q_form = ~ 0 + q_key, sd_form = ~ 0 + survey, fill_missing = FALSE),
+    catch_settings = list(sd_form = ~1),
+    index_settings = list(q_form = ~ 0 + q_key, sd_form = ~ 0 + survey),
     silent = silent
   )
   if (!isTRUE(warm_fit$is_converged)) cli::cli_abort("The preliminary fit did not converge.")
@@ -164,8 +164,8 @@ if (do_fit) {
       3,
       5, 9, 12
     ), first_dev_year = 1971L),
-    catch_settings = list(sd_form = ~1, fill_missing = FALSE),
-    index_settings = list(q_form = ~ 0 + q_key, sd_form = ~ 0 + survey, fill_missing = FALSE),
+    catch_settings = list(sd_form = ~1),
+    index_settings = list(q_form = ~ 0 + q_key, sd_form = ~ 0 + survey),
     silent = silent,
     start_par = start_par
   )

@@ -81,9 +81,8 @@ full <- function(component, seed, keep_fit = FALSE) {
     N_settings = list(process = "off", init = "exp"),
     F_settings = list(process = "rw"),
     M_settings = list(process = "off", mu_supplied = ~ I(.25)),
-    catch_settings = list(sd_form = ~0, sd_supplied = ~relative_sd, fill_missing = FALSE),
-    index_settings = list(q_form = ~survey, sd_form = ~0, sd_supplied = ~relative_sd, fill_missing = FALSE)
-  )
+    catch_settings = list(sd_form = ~ 0, sd_supplied = ~ relative_sd),
+    index_settings = list(q_form = ~ survey, sd_form = ~ 0, sd_supplied = ~ relative_sd))
   settings[[paste0(component, "_settings")]]$process <- if (component == "F") "cor_rw" else "iid"
   settings[[paste0(component, "_settings")]]$sd_form <- ~age_group
   if (component == "M") {

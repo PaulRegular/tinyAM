@@ -151,8 +151,8 @@ if (do_fit) {
     N_settings = list(process = "iid", init = "free"),
     F_settings = list(process = "cor_rw", mu_form = NULL),
     M_settings = list(process = "off", mu_form = NULL, mu_supplied = ~M_assumption),
-    catch_settings = list(sd_form = ~1, fill_missing = FALSE),
-    index_settings = list(q_form = ~ mono(q_key), sd_form = ~1, sd_supplied = ~relative_sd, fill_missing = FALSE),
+    catch_settings = list(sd_form = ~1),
+    index_settings = list(q_form = ~ mono(q_key), sd_form = ~1, sd_supplied = ~relative_sd),
     silent = silent
   )
 }

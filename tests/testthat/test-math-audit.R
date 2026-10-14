@@ -148,10 +148,8 @@ test_that("missing formula rows and invalid supplied scales cannot misalign like
   obs <- cod_obs
   obs$index$x <- 1
   obs$index$x[which(obs$index$year == 2001)[1]] <- NA_real_
-  expect_error(prepare_tam(obs,
-    years = 2000:2003,
-    index_settings = list(q_form = ~x, sd_form = ~1, fill_missing = TRUE)
-  ), "one finite row")
+  expect_error(prepare_tam(obs, years = 2000:2003,
+    index_settings = list(q_form = ~ x, sd_form = ~ 1)), "one finite row")
   obs$pop_covariates$x <- .2
   obs$pop_covariates$x[which(obs$pop_covariates$year == 2001)[1]] <- NA_real_
   expect_error(prepare_tam(obs,

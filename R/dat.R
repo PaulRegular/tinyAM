@@ -459,8 +459,6 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #' - `sd_supplied`: optional one-sided formula giving supplied SDs (on the natural
 #'   scale of the log-observation residuals) for catch-at-age data. When provided,
 #'   the intercept is removed from `sd_form` so supplied SDs act as offsets.
-#' - `fill_missing`: logical – fill missing values, and zeros, using random effects?
-#'   Defaults to `TRUE`. Note that one-step-ahead residuals are not currently working when `TRUE`.
 #' @param index_settings A list with elements:
 #' - `sd_form`: formula for log observation SD for index-at-age data. Ordinary
 #'   terms and Gaussian [formula_effects] are supported, e.g.
@@ -483,8 +481,6 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #'   on logit-q rather than log-q; covariate effects are no longer constant
 #'   multipliers of q. This is a restriction, not a prior favouring a value
 #'   near one. q can approach a boundary with large coefficients and SEs.
-#' - `fill_missing`: logical – fill missing values, and zeros, using random effects?
-#'   Defaults to `TRUE`. Note that one-step-ahead residuals are not currently working when `TRUE`.
 #' @param proj_settings Optional list with elements:
 #' - `n_proj`: number of years to project (default `NULL` disables projections).
 #' - `n_mean`: number of recent historical years (default `3`) used to average weight and
@@ -549,8 +545,8 @@ prepare_tam <- function(
     process = "off", mu_form = NULL, mu_supplied = ~ I(0.2), sd_form = ~1,
     age_breaks = NULL, first_dev_year = NULL, mean_ages = NULL
   ),
-  catch_settings = list(sd_form = ~1, sd_supplied = NULL, fill_missing = TRUE),
-  index_settings = list(sd_form = ~1, sd_supplied = NULL, q_form = ~q_block, q_link = "log", fill_missing = TRUE),
+  catch_settings = list(sd_form = ~1, sd_supplied = NULL),
+  index_settings = list(sd_form = ~1, sd_supplied = NULL, q_form = ~q_block, q_link = "log"),
   proj_settings = NULL
 ) {
   settings <- .complete_settings(mget(.settings_names))
@@ -736,7 +732,7 @@ prepare_tam <- function(
   index$type <- "index"
   obs_fit <- rbind(catch, index)
   obs_fit$log_obs <- log(obs_fit$obs)
-  obs_fit$log_obs[is.infinite(obs_fit$log_obs)] <- NA # treat zeros as NA for simplicity; NAs filled using random effects
+  obs_fit$log_obs[is.infinite(obs_fit$log_obs)] <- NA # zero observations are treated as missing
   obs_fit$is_missing <- is.na(obs_fit$log_obs)
   obs_fit$is_observed <- !obs_fit$is_missing
 
@@ -754,20 +750,6 @@ prepare_tam <- function(
   dat$is_missing <- obs_fit$is_missing
   dat$is_observed <- obs_fit$is_observed
   dat$observed <- dat$log_obs[!dat$is_missing]
-
-  catch_missing <- dat$is_missing & dat$obs_map$type == "catch"
-  index_missing <- dat$is_missing & dat$obs_map$type == "index"
-  if (sum(catch_missing) == 0) {
-    dat$catch_settings$fill_missing <- FALSE
-  }
-  if (sum(index_missing) == 0) {
-    dat$index_settings$fill_missing <- FALSE
-  }
-  dat$fill_missing_map <- logical(length(dat$is_missing))
-  dat$fill_missing_map[dat$obs_map$type == "catch"] <- dat$catch_settings$fill_missing
-  dat$fill_missing_map[dat$obs_map$type == "index"] <- dat$index_settings$fill_missing
-  dat$fill_missing_map <- dat$fill_missing_map & dat$is_missing
-  dat$any_fill_missing <- any(dat$fill_missing_map)
 
   sd_design <- .parse_sd_formula(dat$catch_settings$sd_form, dat$obs$catch, "catch")
   dat$sd_catch_modmat <- sd_design$matrix

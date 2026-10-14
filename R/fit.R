@@ -95,7 +95,6 @@
 #'
 #' - Always includes `log_f` and eligible `log_r` states. Early recruitment
 #'   anchors are fixed; see [recruitment_formulas].
-#' - Includes `missing` if missing observations are set to be filled.
 #' - Includes `log_n0` only if `N_settings$init == "random"`.
 #' - Includes `log_n` if `N_settings$process != "off"`.
 #' - Includes `log_m` if `M_settings$process != "off"`.
@@ -203,8 +202,8 @@ fit_tam <- function(
     process = "off", mu_form = NULL, mu_supplied = ~ I(0.2), sd_form = ~1,
     age_breaks = NULL, first_dev_year = NULL, mean_ages = NULL
   ),
-  catch_settings = list(sd_form = ~1, sd_supplied = NULL, fill_missing = TRUE),
-  index_settings = list(sd_form = ~1, sd_supplied = NULL, q_form = ~q_block, q_link = "log", fill_missing = TRUE),
+  catch_settings = list(sd_form = ~1, sd_supplied = NULL),
+  index_settings = list(sd_form = ~1, sd_supplied = NULL, q_form = ~q_block, q_link = "log"),
   proj_settings = NULL,
   interval = 0.95,
   add_osa_res = FALSE,
@@ -254,9 +253,6 @@ fit_tam <- function(
   ran <- c("log_f", "log_r", .formula_random_parameters(dat))
   if (dat$N_settings$init == "random") {
     ran <- c(ran, "log_n0")
-  }
-  if (dat$any_fill_missing) {
-    ran <- c(ran, "missing")
   }
   if (dat$N_settings$process != "off") {
     ran <- c(ran, "log_n")

@@ -259,7 +259,7 @@ that a candidate's extra process is identifiable or scientifically preferable.
 
 Dashboards for each stock are in `results/q_stocks/<assessment_id>/dashboard.html`.
 They show Accepted, the settled baseline and candidate fits, including clearly
-labelled numerical failures. Process intervals and conditional residuals should
+labelled numerical failures. Process intervals and standardized residuals should
 be reviewed alongside the diagnostics rather than selecting the closest trajectory.
 
 ## Updates, projections, retrospectives and simulation

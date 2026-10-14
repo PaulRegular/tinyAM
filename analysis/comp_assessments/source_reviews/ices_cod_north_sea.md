@@ -96,7 +96,7 @@ The other six fitted index streams are omitted. The resulting observation likeli
 
 The revised survey catchability specification is:
 
-`index_settings = list(q_form = ~mono(q_key), sd_form = ~1, sd_supplied = ~relative_sd, fill_missing = FALSE)`
+`index_settings = list(q_form = ~mono(q_key), sd_form = ~1, sd_supplied = ~relative_sd)`
 
 The `mono(q_key)` term imposes **non-decreasing catchability across ordered survey age groups**.
 
@@ -128,7 +128,7 @@ The combined commercial catch numbers-at-age are retained.
 
 The translation uses independent lognormal catch errors with a single estimated observation SD:
 
-`catch_settings = list(sd_form = ~1, fill_missing = FALSE)`
+`catch_settings = list(sd_form = ~1)`
 
 The source's age-correlated catch observation errors, substock landings compositions, and quarterly composition likelihoods are omitted.
 

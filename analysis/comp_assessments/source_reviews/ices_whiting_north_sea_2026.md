@@ -55,7 +55,7 @@ The previous configuration used random-walk cohort-survival deviations and indep
 - `N_settings = list(process = "iid", init = "exp")`
 - `F_settings = list(process = "cor_rw", mu_form = NULL, mean_ages = 2:5)`
 - `M_settings = list(process = "off", mu_supplied = ~M_assumption)`
-- `catch_settings = list(sd_form = ~1, fill_missing = FALSE)`
+- `catch_settings = list(sd_form = ~1)`
 - `index_settings` with survey-by-age catchability, survey-specific baseline SDs, supplied relative SD factors, and no filling of missing observations.
 
 The recruitment process remains a random walk under the default tinyAM recruitment settings, separate from the `N_settings` process. The `iid` N process describes independent deviations from expected cohort survival rather than a random walk in survival deviations.

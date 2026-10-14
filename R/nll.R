@@ -21,7 +21,7 @@
 #'
 #' With `simulate = FALSE`, the result is the joint negative log-likelihood.
 #' It includes recruitment, active N/F/M processes, random initial abundance,
-#' and Gaussian densities for observed or filled log observations. Random
+#' and Gaussian densities for observed log observations. Random
 #' effects are integrated out by [fit_tam()], not by this function itself.
 #' Normal densities are evaluated on log observations, so predictions on the
 #' natural scale are conditional medians rather than arithmetic means.
@@ -58,8 +58,8 @@
 #'   quantities are available through the resulting object's `report()` method;
 #'   selected log population summaries also receive uncertainty via `sdreport()`.
 #'   With `TRUE`, a list containing `log_f`, `log_r`, `log_obs`, and applicable
-#'   `log_n0`, `log_n`, `log_m`, and `missing` values. Unfilled missing
-#'   observations remain `NA`; filled entries contain simulated log observations.
+#'   `log_n0`, `log_n`, and `log_m` values. Missing observations remain `NA`;
+#'   predictions and population states are calculated for the full model grid.
 #'
 #' @example inst/examples/example_dat_default.R
 #' @examples
@@ -73,7 +73,7 @@
 #' @export
 nll_fun <- function(f, d) function(p) f(p, d)
 #' obj <- RTMB::MakeADFun(make_nll_fun(nll_fun, dat), par,
-#'   random = c("log_n", "log_f","log_r", "missing"), silent = TRUE
+#'   random = c("log_n", "log_f","log_r"), silent = TRUE
 #' )
 #' opt <- nlminb(obj$par, obj$fn, obj$gr)
 #' rep <- obj$report()
@@ -95,9 +95,6 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   getAll(par, dat)
 
   observed <- OBS(observed)
-  if (any(fill_missing_map)) {
-    log_obs[fill_missing_map] <- missing
-  }
 
   n_obs <- length(log_obs)
   n_years <- length(years)
@@ -321,14 +318,8 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   log_pred[ii] <- log_q_obs + log_N_obs[ii] - Z_obs[ii] * samp_time[ii]
 
   jnll <- jnll - sum(RTMB::dnorm(observed, log_pred[is_observed], sd = sd_obs[is_observed], log = TRUE))
-  if (any(fill_missing_map)) {
-    jnll <- jnll - sum(RTMB::dnorm(missing, log_pred[fill_missing_map], sd = sd_obs[fill_missing_map], log = TRUE))
-  }
   if (simulate) {
     log_obs[is_observed] <- stats::rnorm(sum(is_observed), mean = log_pred[is_observed], sd = sd_obs[is_observed])
-    if (any(fill_missing_map)) {
-      log_obs[fill_missing_map] <- stats::rnorm(sum(fill_missing_map), mean = log_pred[fill_missing_map], sd = sd_obs[fill_missing_map])
-    }
   }
 
   ## Derived quantities ----
@@ -475,9 +466,6 @@ nll_fun <- function(par, dat, simulate = FALSE) {
     if (!is.null(par$log_r_init)) sims$log_r_init <- par$log_r_init
     if (N_settings$init != "exp") {
       sims$log_n0 <- log_n0
-    }
-    if (any(fill_missing_map)) {
-      sims$missing <- log_obs[fill_missing_map]
     }
     if (N_settings$process != "off") {
       sims$log_n <- log_n

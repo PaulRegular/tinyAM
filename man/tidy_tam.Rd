@@ -34,6 +34,9 @@ A named list of stacked tables, with \code{formula_effects} when present:
 \itemize{
 \item \strong{obs_pred} — a named list of stacked data frames (e.g., \code{catch}, \code{index});
 \item \strong{pop} — a named list of stacked data frames (e.g., \code{ssb}, \code{N}, \code{M}, \code{mu_M}, \code{F}, \code{mu_F}, \code{Z}, …);
+\item \strong{patterns} — population and mortality age-year tables for \code{\link[=plot_matrix]{plot_matrix()}}.
+These use fish, kg and per-year units independently of aggregate comparison
+scales. Reference tables with unknown units remain missing;
 \item \strong{recruitment} — predictions, residuals and optional stock-recruit curves;
 see \code{\link[=tidy_recruitment]{tidy_recruitment()}};
 \item \strong{fixed_par} — a single stacked data frame of fixed-effect parameters with columns like \code{par}, \code{est}, \code{se}, \code{lwr}, \code{upr}, plus indices (e.g., \code{coef}, \code{year}, \code{age}) and the label column when applicable;
@@ -74,7 +77,7 @@ Components present in any model are stacked; columns missing from particular mod
 \code{NA} values so diagnostics like one-step-ahead residuals survive stacking. Parameter summaries are
 stacked separately for \strong{fixed} and \strong{random} effects: fixed effects in a single data frame; random
 effects as a named list of data frames (one per random-effect block, e.g. \code{"log_f"}, \code{"log_r"},
-\code{"missing"}, …).
+…).
 }
 \examples{
 fit <- fit_tam(
@@ -99,7 +102,7 @@ fit2 <- update(fit1, years = 1983:2023)
 tabs2 <- tidy_tam(fit1, fit2)
 head(tabs2$obs_pred$catch)      # contains column "model"
 head(tabs2$fixed_par)           # fixed effects stacked with "model"
-names(tabs2$random_par)         # e.g. "log_f", "log_r", "missing", ...
+names(tabs2$random_par)         # e.g. "log_f", "log_r", ...
 head(tabs2$random_par$log_f)    # random block stacked with "model"
 
 # Named list: must be named; names used as labels (even length 1)
