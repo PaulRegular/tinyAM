@@ -5,8 +5,8 @@ assessment_id <- source$assessment$assessment_id
 
 inputs <- source$inputs
 m_rows <- inputs[inputs$assessment_id == assessment_id &
-                   inputs$type == "M" &
-                   inputs$measure == "natural_mortality_at_age", , drop = FALSE]
+  inputs$type == "M" &
+  inputs$measure == "natural_mortality_at_age", , drop = FALSE]
 last_m_year <- max(as.integer(m_rows$year), na.rm = TRUE)
 extra_years <- setdiff(years, unique(as.integer(m_rows$year)))
 if (length(extra_years)) {
@@ -31,7 +31,8 @@ obs <- database_to_tam_obs(
 )
 
 obs$index$q_key <- interaction(obs$index$survey, obs$index$q_block,
-                               drop = TRUE, lex.order = TRUE)
+  drop = TRUE, lex.order = TRUE
+)
 
 
 source_N <- .translation_start_surface(source$outputs, "population", "numbers_at_age", years, ages, 1000)
@@ -64,20 +65,38 @@ start_par <- list(
 
 age_plus_group <- 8
 
-comparison_scales <- c(N = 0.001, recruitment = 0.001, ssb = 0.001, biomass = 0.001, abundance = 0.001,
-    biomass_at_age = 0.001, F_bar = 1)
+comparison_scales <- c(
+  N = 0.001, recruitment = 0.001, ssb = 0.001, biomass = 0.001, abundance = 0.001,
+  biomass_at_age = 0.001, F_bar = 1
+)
 
-background <- c("### North Sea whiting: accepted 2026 SAM assessment", "", print_sources(source$assessment),
-    "", "| Component | Accepted assessment | tinyAM representation | Reason for difference |", "|---|---|---|---|",
-    "| Years | Catch covers 1978–2025; Q1 covers 1983–2026; Q3 covers 1991–2025. | Fit 1978–2026. | Retains the accepted survey terminal year. |",
-    "| Ages | Ages 0–8+, with recruitment at age 0. | Ages 0–8, with age 8 as the plus group. | The source age range is retained. |",
-    "| N | Random-walk recruitment and abundance with age-specific variance sharing. | Random-walk recruitment, exponential initial abundance, and a cohort random walk with one SD. | tinyAM does not use SAM's age-specific variance sharing or initial-state integration. |",
-    "| F | Random-walk F with AR(1) correlation between age increments; Fbar is ages 2–5. | Random-walk F with independent age increments; Fbar is ages 2–5. | tinyAM does not model age correlation in F increments. |",
-    "| M | WGSAM M observations through 2022; SAM estimates later M with a GMRF. | The 2022 numerical M surface is carried forward through 2026 as a fixed assumption. | tinyAM's estimated M process did not produce a usable fit with these data; later M therefore remains a documented source of mismatch. |",
-    "| Catch | Total catch at age in thousands of fish, with independent lognormal age residuals and shared variance groups. | Source catches converted to individual fish and fitted with one lognormal SD. | tinyAM does not share catch SDs by the source age groups. |",
-    "| Indices | IBTS Q1 ages 1–6+ and Q3 ages 0–6+; Q1 timing is 0.125 and Q3 timing is 0.625. q varies by survey and age. | Source indices, timing, survey-age q, and relative log-scale SD factors are retained. | tinyAM uses independent age residuals instead of the source AR(1) age errors. |",
-    "| Weights and maturity | Annual stock and catch weights and a smoothed maturity surface; spawning fractions are zero. | Native biological surfaces and timing are retained. | No biological inputs are substituted. |",
-    "", "Accepted SAM N and F surfaces initialize the fit only; tinyAM re-estimates them. The native number scale is thousands of fish, so catch and population counts are translated to individual fish; biomass comparisons are scaled back to tonnes. The published 2026 table reports SSB only, while native state surfaces are available through 2026.")
+
+background <- c(
+  "### North Sea whiting: accepted 2026 SAM assessment",
+  "",
+  print_sources(source$assessment),
+  "",
+  "| Component | Accepted assessment | tinyAM representation | Reason for difference |",
+  "|---|---|---|---|",
+  "| Years | Catch covers 1978–2025; IBTS Q1 covers 1983–2026 and Q3 covers 1991–2025. | Fit 1978–2026. | The accepted 2026 survey observation and native terminal states are retained. |",
+  "| Ages | Ages 0–8+, with recruitment at age 0. | Ages 0–8+, with age 8 as the population plus group. | The source population age range is retained. Survey plus groups begin at age 6 and are not yet represented exactly in the observation model. |",
+  "| N | Random-walk recruitment and cohort-survival processes, with age-specific sharing of survival-process variances. | Random-walk recruitment, IID cohort-survival deviations with one shared SD, and exponential initial abundance. | The recruitment process is retained in simplified form, but older-cohort deviations are independent rather than temporally correlated; variance sharing and initial-state treatment also differ. |",
+  "| F | Random-walk F with AR(1) correlation across ages in annual F increments; Fbar covers ages 2–5. | Correlated F random walks (cor_rw), with AR(1) correlation across ages in annual log-F increments and one shared process SD; Fbar covers ages 2–5. | Cross-age correlation is now represented, but SAM's precise F variance grouping and other process details are not necessarily reproduced. |",
+  "| M | WGSAM numerical M observations are available through 2022; SAM uses a mortality GMRF to estimate M, including later years. | Use the numerical M surface through 2022 and hold its final-year values fixed through 2026. No M process is estimated. | The fixed extension replaces SAM's estimated later-year M variation; an estimated tinyAM M process did not yield a usable fit. |",
+  "| Catch | Total catch-at-age in thousands of fish, with independent lognormal observation errors and source-specific age variance groups. | Convert catch numbers to individual fish and fit independent lognormal errors with one shared SD. | SAM's catch observation-SD age groups are simplified to a single parameter. |",
+  "| Indices | IBTS Q1 ages 1–6+ and Q3 ages 0–6+, sampled at fractions 0.125 and 0.625 of the year. Catchability varies by survey and age; observation residuals have AR(1) age correlation. | Retain source observations, survey timing and survey-by-age q groups. Estimate separate baseline lognormal SDs by survey and apply supplied relative SD factors, with independent age residuals. | Cross-age observation correlation is omitted. The native survey 6+ observations are currently represented at age 6 rather than as predictions summed over ages 6–8+. |",
+  "| Weights and maturity | Annual stock and catch weights, smoothed maturity, and zero pre-spawning mortality fractions. Biological age-6+ inputs are expanded across older model ages. | Retain supplied biological values and start-year spawning timing. | The published biological input surfaces are retained, including their source age-group conventions. |",
+  "",
+  "The revised translation uses IID cohort-survival deviations and correlated F random walks, replacing the earlier random-walk N process and independent F random walks. The correlated F process more closely matches SAM's age correlation of annual fishing-mortality increments.",
+  "",
+  "Accepted SAM N and F surfaces provide starting values only. Initial q values are derived from accepted N, F and M estimates together with observed survey indices; all states and catchability parameters are re-estimated by tinyAM.",
+  "",
+  "The native number scale is thousands of fish, so catch and population counts are translated to individual fish. Biomass comparisons are scaled back to tonnes.",
+  "",
+  "The reported 2026 assessment table contains SSB but not the other population summaries for 2026; native fitted state surfaces are nevertheless available through that year.",
+  "",
+  "The 2022 numerical M surface is extended through 2026 solely as a translation assumption. The canonical accepted-model inputs and outputs remain unchanged."
+)
 
 ## Model ----
 fit <- NULL
@@ -88,11 +107,11 @@ if (do_fit) {
     data = obs,
     years = years,
     ages = ages,
-    N_settings = list(process = "rw", init = "exp"),
-    F_settings = list(process = "rw", mu_form = NULL, mean_ages = 2:5),
+    N_settings = list(process = "iid", init = "exp"),
+    F_settings = list(process = "cor_rw", mu_form = NULL, mean_ages = 2:5),
     M_settings = list(process = "off", mu_form = NULL, mu_supplied = ~M_assumption),
     catch_settings = list(sd_form = ~1),
-    index_settings = list(q_form = ~0 + q_key, sd_form = ~0 + survey, sd_supplied = ~relative_sd),
+    index_settings = list(q_form = ~ 0 + q_key, sd_form = ~ 0 + survey, sd_supplied = ~relative_sd),
     silent = silent,
     start_par = start_par
   )

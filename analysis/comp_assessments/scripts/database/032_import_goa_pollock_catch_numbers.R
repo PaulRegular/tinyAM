@@ -17,26 +17,35 @@ if (length(table_pages) != 1L) stop("Could not identify the unique Table 1.6 pag
 lines <- strsplit(pages[[table_pages]], "\\n")[[1]]
 rows <- lapply(lines, function(line) {
   fields <- strsplit(gsub(",", "", trimws(line), fixed = TRUE), "[[:space:]]+")[[1]]
-  if (length(fields) != 17L || !grepl("^(19|20)[0-9]{2}$", fields[[1]])) return(NULL)
+  if (length(fields) != 17L || !grepl("^(19|20)[0-9]{2}$", fields[[1]])) {
+    return(NULL)
+  }
   year <- as.integer(fields[[1]])
-  if (!year %in% 1975:2023) return(NULL)
+  if (!year %in% 1975:2023) {
+    return(NULL)
+  }
   values <- suppressWarnings(as.numeric(fields[-1]))
-  if (anyNA(values) || any(!is.finite(values)) || any(values < 0)) return(NULL)
+  if (anyNA(values) || any(!is.finite(values)) || any(values < 0)) {
+    return(NULL)
+  }
   data.frame(year = year, age = 1:15, value = values[1:15])
 })
 rows <- Filter(Negate(is.null), rows)
 catch_numbers <- do.call(rbind, rows)
 if (is.null(catch_numbers) || nrow(catch_numbers) != 49L * 15L ||
-    !identical(sort(unique(catch_numbers$year)), 1975:2023) ||
-    anyDuplicated(paste(catch_numbers$year, catch_numbers$age))) {
+  !identical(sort(unique(catch_numbers$year)), 1975:2023) ||
+  anyDuplicated(paste(catch_numbers$year, catch_numbers$age))) {
   stop("Table 1.6 did not yield exactly one catch value for every year-age cell.", call. = FALSE)
 }
 utils::write.csv(catch_numbers,
-                 file.path(cache, "report_catch_numbers_at_age.csv"),
-                 row.names = FALSE, na = "")
+  file.path(cache, "report_catch_numbers_at_age.csv"),
+  row.names = FALSE, na = ""
+)
 
-inputs <- utils::read.csv(database, stringsAsFactors = FALSE, na.strings = c("", "NA"),
-                          check.names = FALSE)
+inputs <- utils::read.csv(database,
+  stringsAsFactors = FALSE, na.strings = c("", "NA"),
+  check.names = FALSE
+)
 new <- data.frame(
   assessment_id = "afsc_pollock_goa_2024", type = "catch", measure = "numbers_at_age",
   basis = "numbers", fleet = "Combined fishery", survey = "", sex = "", region = "",
@@ -52,10 +61,12 @@ new <- data.frame(
 )
 new <- new[names(inputs)]
 keep <- !(inputs$assessment_id == "afsc_pollock_goa_2024" &
-          inputs$measure == "numbers_at_age" &
-          inputs$source_reference == source_reference)
+  inputs$measure == "numbers_at_age" &
+  inputs$source_reference == source_reference)
 lines <- readLines(database, warn = FALSE, encoding = "UTF-8")
 writeLines(lines[c(TRUE, keep)], database, useBytes = TRUE)
-utils::write.table(new, database, sep = ",", row.names = FALSE, col.names = FALSE,
-                   append = TRUE, quote = TRUE, na = "")
+utils::write.table(new, database,
+  sep = ",", row.names = FALSE, col.names = FALSE,
+  append = TRUE, quote = TRUE, na = ""
+)
 cat("Imported ", nrow(new), " age-specific catch values from Table 1.6.\n", sep = "")

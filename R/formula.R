@@ -134,11 +134,17 @@ logistic <- function(x, by = NULL) .formula_marker_error("logistic")
 }
 
 .formula_call_name <- function(x) {
-  if (!is.call(x)) return("")
+  if (!is.call(x)) {
+    return("")
+  }
   fun <- x[[1L]]
-  if (is.symbol(fun)) return(as.character(fun))
+  if (is.symbol(fun)) {
+    return(as.character(fun))
+  }
   if (is.call(fun) && as.character(fun[[1L]]) %in% c("::", ":::") &&
-      identical(fun[[2L]], as.name("tinyAM"))) return(as.character(fun[[3L]]))
+    identical(fun[[2L]], as.name("tinyAM"))) {
+    return(as.character(fun[[3L]]))
+  }
   ""
 }
 
@@ -152,51 +158,73 @@ logistic <- function(x, by = NULL) .formula_marker_error("logistic")
     is.call(x) && (.formula_call_name(x) %in% special ||
       any(vapply(as.list(x)[-1L], contains, logical(1))))
   }
-  if (!contains(formula)) return(.parse_mono_q_formula(formula, data))
+  if (!contains(formula)) {
+    return(.parse_mono_q_formula(formula, data))
+  }
   if (length(formula) != 2L) cli::cli_abort("Structured {.arg q_form} must be one-sided.")
   specs <- list()
   column <- function(x, label) {
     if (!is.symbol(x) || !as.character(x) %in% names(data)) {
-        cli::cli_abort("Structured {.arg {label}} must name an existing observation column.")
+      cli::cli_abort("Structured {.arg {label}} must name an existing observation column.")
     }
     as.character(x)
   }
   fixed <- function(x, label, upper = Inf, allow_zero = FALSE) {
-    if (is.null(x) || identical(x, quote(NULL))) return(NULL)
+    if (is.null(x) || identical(x, quote(NULL))) {
+      return(NULL)
+    }
     value <- tryCatch(eval(x, envir = environment(formula)), error = function(e) NULL)
     if (!is.numeric(value) || length(value) != 1L || !is.finite(value) ||
-        value < 0 || (!allow_zero && value == 0) || value >= upper) {
+      value < 0 || (!allow_zero && value == 0) || value >= upper) {
       cli::cli_abort("{label} must be one finite {if (allow_zero) 'non-negative' else 'positive'} number below {upper}.")
     }
     value
   }
   strip <- function(x) {
-    if (!contains(x)) return(x)
+    if (!contains(x)) {
+      return(x)
+    }
     type <- .formula_call_name(x)
     if (type %in% special) {
       if (type == "|") {
         if (length(x) != 3L || !identical(x[[2L]], 1)) {
           cli::cli_abort("Only random intercept syntax {.code (1 | group)} is supported.")
         }
-        spec <- list(type = "iid", variable = column(x[[3L]], "group"), by = NULL,
-                     sd = NULL, phi = NULL)
+        spec <- list(
+          type = "iid", variable = column(x[[3L]], "group"), by = NULL,
+          sd = NULL, phi = NULL
+        )
       } else {
-        fun <- switch(type, iid = iid, rw = rw, ar1 = ar1, logistic = logistic)
+        fun <- switch(type,
+          iid = iid,
+          rw = rw,
+          ar1 = ar1,
+          logistic = logistic
+        )
         x[[1L]] <- as.name(type)
-        args <- tryCatch(as.list(match.call(fun, x))[-1L], error = function(e)
-          cli::cli_abort("Invalid {type}() arguments: {conditionMessage(e)}"))
-        spec <- list(type = type, variable = column(args$x, "x"),
+        args <- tryCatch(as.list(match.call(fun, x))[-1L], error = function(e) {
+          cli::cli_abort("Invalid {type}() arguments: {conditionMessage(e)}")
+        })
+        spec <- list(
+          type = type, variable = column(args$x, "x"),
           by = if (is.null(args$by) || identical(args$by, quote(NULL))) NULL else column(args$by, "by"),
-          sd = fixed(args$sd, "sd"), phi = fixed(args$phi, "phi", 1, TRUE))
+          sd = fixed(args$sd, "sd"), phi = fixed(args$phi, "phi", 1, TRUE)
+        )
       }
       specs[[length(specs) + 1L]] <<- spec
       return(NULL)
     }
-    if (type == "(") return(strip(x[[2L]]))
+    if (type == "(") {
+      return(strip(x[[2L]]))
+    }
     if (type == "+") {
       parts <- Filter(Negate(is.null), lapply(as.list(x)[-1L], strip))
-      if (!length(parts)) return(NULL)
-      if (length(parts) == 1L) return(parts[[1L]])
+      if (!length(parts)) {
+        return(NULL)
+      }
+      if (length(parts) == 1L) {
+        return(parts[[1L]])
+      }
       return(as.call(c(list(as.name("+")), parts)))
     }
     if (type == "-" && length(x) == 3L && !contains(x[[3L]])) {
@@ -219,12 +247,12 @@ logistic <- function(x, by = NULL) .formula_marker_error("logistic")
 .make_q_term <- function(spec, data) {
   x <- data[[spec$variable]]
   if (!is.atomic(x) || !is.null(dim(x)) || anyNA(x) ||
-      (is.numeric(x) && any(!is.finite(x)))) {
+    (is.numeric(x) && any(!is.finite(x)))) {
     cli::cli_abort("Structured {.arg x} must have finite, non-missing values.")
   }
   temporal <- spec$type %in% c("rw", "ar1")
   if (temporal && !(is.ordered(x) ||
-      (is.numeric(x) && all(x == floor(x))))) {
+    (is.numeric(x) && all(x == floor(x))))) {
     cli::cli_abort("RW/AR1 coordinates must be integer numeric values or ordered factors.")
   }
   if (spec$type == "logistic" && !is.numeric(x)) {
@@ -232,7 +260,7 @@ logistic <- function(x, by = NULL) .formula_marker_error("logistic")
   }
   by <- if (is.null(spec$by)) rep("all", nrow(data)) else data[[spec$by]]
   if (!is.atomic(by) || !is.null(dim(by)) || anyNA(by) ||
-      (is.numeric(by) && any(!is.finite(by)))) {
+    (is.numeric(by) && any(!is.finite(by)))) {
     cli::cli_abort("Structured {.arg by} must have finite, non-missing values.")
   }
   numeric_by <- !is.null(spec$by) && is.numeric(by)
@@ -255,8 +283,10 @@ logistic <- function(x, by = NULL) .formula_marker_error("logistic")
       if (length(unique(x[support])) < 3L) {
         cli::cli_abort("logistic() needs at least three observed x values per group.")
       }
-      return(list(group = group, rows = rows, midpoint = stats::median(x[support]),
-                  slope = 4 / diff(range(x[support]))))
+      return(list(
+        group = group, rows = rows, midpoint = stats::median(x[support]),
+        slope = 4 / diff(range(x[support]))
+      ))
     }
     if (temporal && is.numeric(x)) {
       levels <- seq.int(min(x[past]), max(x[rows]))
@@ -278,9 +308,11 @@ logistic <- function(x, by = NULL) .formula_marker_error("logistic")
       cli::cli_abort("Estimating AR1 correlation requires at least three historical steps; supply {.arg phi}.")
     }
     state_levels <- if (spec$type == "rw") levels[-1L] else levels
-    list(group = group, rows = rows, levels = levels, n_historical = n,
-         index = match(x[rows], levels), states = paste(group, state_levels, sep = ":"),
-         is_proj = !state_levels %in% past_levels)
+    list(
+      group = group, rows = rows, levels = levels, n_historical = n,
+      index = match(x[rows], levels), states = paste(group, state_levels, sep = ":"),
+      is_proj = !state_levels %in% past_levels
+    )
   })
   spec$id <- id
   spec$groups <- groups
@@ -301,9 +333,11 @@ logistic <- function(x, by = NULL) .formula_marker_error("logistic")
     labels <- vapply(term$groups, `[[`, character(1), "group")
     if (term$type == "logistic") {
       parameters[[term$a50_parameter]] <- stats::setNames(
-        vapply(term$groups, `[[`, numeric(1), "midpoint"), labels)
+        vapply(term$groups, `[[`, numeric(1), "midpoint"), labels
+      )
       parameters[[term$slope_parameter]] <- stats::setNames(log(
-        vapply(term$groups, `[[`, numeric(1), "slope")), labels)
+        vapply(term$groups, `[[`, numeric(1), "slope")
+      ), labels)
     } else {
       states <- unlist(lapply(term$groups, `[[`, "states"), use.names = FALSE)
       parameters[[term$parameter]] <- stats::setNames(numeric(length(states)), states)
@@ -332,7 +366,9 @@ logistic <- function(x, by = NULL) .formula_marker_error("logistic")
 }
 
 .check_q_terms <- function(dat) {
-  if (!length(dat$q_terms)) return(invisible(NULL))
+  if (!length(dat$q_terms)) {
+    return(invisible(NULL))
+  }
   d <- dat$obs$index
   rows <- !d$is_proj & is.finite(d$obs) & d$obs > 0
   fixed <- dat$q_modmat[rows, , drop = FALSE]
@@ -371,31 +407,42 @@ logistic <- function(x, by = NULL) .formula_marker_error("logistic")
       # Constant observation-specific variance is exactly the same component
       # as a freely estimated observation SD on those rows (for the log link).
       if (identical(dat$index_settings$q_link, "log") &&
-          length(unique(diagonal[active])) == 1L) {
+        length(unique(diagonal[active])) == 1L) {
         s <- dat$sd_index_modmat[rows, , drop = FALSE]
         if (ncol(s) && qr(cbind(s, as.numeric(active)))$rank == qr(s)$rank) {
-          noise <- if (is.null(dat$mean_component)) "observation error" else
+          noise <- if (is.null(dat$mean_component)) {
+            "observation error"
+          } else {
             paste("IID", dat$mean_component, "residual variance")
+          }
           cli::cli_abort("{id} is indistinguishable from estimated {noise}. Use replicated levels or supply one SD.")
         }
       }
     }
   }
-  independent <- vapply(gaussian, function(term) term$type == "iid" ||
-    (term$type == "ar1" && identical(term$phi, 0)), logical(1))
-  candidates <- names(designs)[independent & vapply(gaussian,
-    function(term) is.null(term$sd), logical(1))]
+  independent <- vapply(gaussian, function(term) {
+    term$type == "iid" ||
+      (term$type == "ar1" && identical(term$phi, 0))
+  }, logical(1))
+  candidates <- names(designs)[independent & vapply(
+    gaussian,
+    function(term) is.null(term$sd), logical(1)
+  )]
   if (length(candidates) > 1L) {
     partition <- function(z) {
       index <- max.col(abs(z), ties.method = "first")
-      list(group = match(index, unique(index)),
-           weight = z[cbind(seq_len(nrow(z)), index)])
+      list(
+        group = match(index, unique(index)),
+        weight = z[cbind(seq_len(nrow(z)), index)]
+      )
     }
-    for (i in seq_len(length(candidates) - 1L)) for (j in (i + 1L):length(candidates)) {
-      a <- designs[[candidates[i]]][rows, , drop = FALSE]
-      b <- designs[[candidates[j]]][rows, , drop = FALSE]
-      if (identical(partition(a), partition(b))) {
-        cli::cli_abort("{candidates[i]} and {candidates[j]} define the same IID variance component. Retain one term.")
+    for (i in seq_len(length(candidates) - 1L)) {
+      for (j in (i + 1L):length(candidates)) {
+        a <- designs[[candidates[i]]][rows, , drop = FALSE]
+        b <- designs[[candidates[j]]][rows, , drop = FALSE]
+        if (identical(partition(a), partition(b))) {
+          cli::cli_abort("{candidates[i]} and {candidates[j]} define the same IID variance component. Retain one term.")
+        }
       }
     }
   }
@@ -408,8 +455,9 @@ logistic <- function(x, by = NULL) .formula_marker_error("logistic")
   nll <- 0
   simulated <- list()
   rw_terms <- Filter(function(term) term$type == "rw", dat$q_terms)
-  increments <- numeric(sum(vapply(rw_terms, function(term)
-    sum(vapply(term$groups, function(g) length(g$states), integer(1))), integer(1))))
+  increments <- numeric(sum(vapply(rw_terms, function(term) {
+    sum(vapply(term$groups, function(g) length(g$states), integer(1)))
+  }, integer(1))))
   increment_offset <- 0L
   for (term in dat$q_terms) {
     if (term$type == "logistic") {
@@ -425,7 +473,9 @@ logistic <- function(x, by = NULL) .formula_marker_error("logistic")
     sd <- if (is.null(term$sd)) exp(par[[term$sd_parameter]]) else term$sd
     phi <- if (is.null(term$phi)) {
       if (term$type == "ar1") plogis(par[[term$phi_parameter]]) else 0
-    } else term$phi
+    } else {
+      term$phi
+    }
     states <- par[[term$parameter]]
     offset <- 0L
     for (g in term$groups) {
@@ -447,46 +497,63 @@ logistic <- function(x, by = NULL) .formula_marker_error("logistic")
         increments[increment_offset + seq_along(delta)] <- delta
         increment_offset <- increment_offset + length(delta)
         nll <- nll - RTMB::dnorm(x[1L], 0, sd, log = TRUE)
-        if (length(x) > 1L) nll <- nll - sum(RTMB::dnorm(
-          x[-1L] - x[-length(x)], 0, sd, log = TRUE))
+        if (length(x) > 1L) {
+          nll <- nll - sum(RTMB::dnorm(
+            x[-1L] - x[-length(x)], 0, sd,
+            log = TRUE
+          ))
+        }
         level <- numeric(length(x) + 1L)
         level[-1L] <- x
         x <- level
       }
       if (term$type == "ar1") {
         nll <- nll - RTMB::dnorm(x[1L], 0, sd / sqrt(1 - phi^2), log = TRUE)
-        if (length(x) > 1L) nll <- nll - sum(RTMB::dnorm(
-          x[-1L], phi * x[-length(x)], sd, log = TRUE))
+        if (length(x) > 1L) {
+          nll <- nll - sum(RTMB::dnorm(
+            x[-1L], phi * x[-length(x)], sd,
+            log = TRUE
+          ))
+        }
       }
       contribution[g$rows] <- contribution[g$rows] + x[g$index] * term$multiplier[g$rows]
       offset <- offset + length(g$states)
     }
     simulated[[term$parameter]] <- states
   }
-  list(contribution = contribution, log_selectivity = selectivity,
-       nll = nll, parameters = simulated, rw_increments = increments)
+  list(
+    contribution = contribution, log_selectivity = selectivity,
+    nll = nll, parameters = simulated, rw_increments = increments
+  )
 }
 
 .q_level_metadata <- function(term) {
   all_levels <- unique(unlist(lapply(term$groups, `[[`, "levels"), use.names = FALSE))
   do.call(rbind, lapply(term$groups, function(g) {
     level <- as.character(g$levels)
-    data.frame(term = term$id, process = term$type, variable = term$variable,
+    data.frame(
+      term = term$id, process = term$type, variable = term$variable,
       by = if (is.null(term$by)) NA_character_ else term$by, group = g$group,
       level = level, coordinate = if (is.numeric(g$levels)) g$levels else match(g$levels, all_levels),
       is_proj = seq_along(level) > g$n_historical,
-      is_fixed = term$type == "rw" & seq_along(level) == 1L)
+      is_fixed = term$type == "rw" & seq_along(level) == 1L
+    )
   }))
 }
 
 .tidy_q_effects <- function(fit, interval = .95, increment_report = "eta_q_increments") {
   terms <- Filter(function(term) term$type != "logistic", fit$dat$q_terms)
-  if (!length(terms)) return(list())
+  if (!length(terms)) {
+    return(list())
+  }
   estimate <- .tam_parameter_summary(fit, "Estimate")
   error <- .tam_parameter_summary(fit, "Std. Error")
   z <- stats::qnorm(.5 + interval / 2)
-  report_errors <- if (is.null(fit[["sdrep"]])) NULL else
+  report_errors <- if (is.null(fit[["sdrep"]])) {
+    NULL
+  } else {
     as.list(fit[["sdrep"]], "Std. Error", report = TRUE)
+  }
   out <- list(levels = list(), increments = list(), contributions = list())
   offset <- 0L
   for (term in terms) {
@@ -512,8 +579,10 @@ logistic <- function(x, by = NULL) .formula_marker_error("logistic")
       d <- fit$dat$obs$index
       rows <- unlist(lapply(term$groups, `[[`, "rows"), use.names = FALSE)
       index <- unlist(lapply(term$groups, `[[`, "index"), use.names = FALSE)
-      contribution <- cbind(d[rows, intersect(c("year", "age", "survey", "is_proj"), names(d)), drop = FALSE],
-        tab[index, c("term", "process", "variable", "group", "level", "coordinate", "est", "lwr", "upr", "se", "se_scale")])
+      contribution <- cbind(
+        d[rows, intersect(c("year", "age", "survey", "is_proj"), names(d)), drop = FALSE],
+        tab[index, c("term", "process", "variable", "group", "level", "coordinate", "est", "lwr", "upr", "se", "se_scale")]
+      )
       contribution$multiplier <- term$multiplier[rows]
       contribution$est <- contribution$est * contribution$multiplier
       limits <- cbind(contribution$lwr, contribution$upr) * contribution$multiplier
@@ -613,7 +682,7 @@ logistic <- function(x, by = NULL) .formula_marker_error("logistic")
 #' @return A formula marker; calling this function directly raises an error.
 #' @seealso [formula_effects], [prepare_tam()], [make_par()], [tidy_obs_pred()], [tidy_par()], [tinyAM-model]
 #' @examples
-#' ~ q_block # ordinary unconstrained q
+#' ~q_block # ordinary unconstrained q
 #' ~ mono(q_block)
 #' ~ survey + mono(q_block, by = survey)
 #' ~ survey + logistic(age, by = survey)
@@ -630,10 +699,16 @@ mono <- function(x, by = NULL) {
     cli::cli_abort("{.arg q_form} must be a formula.")
   }
   contains_mono <- function(x) {
-    if (!is.call(x)) return(FALSE)
-    if (identical(x[[1L]], as.name("mono"))) return(TRUE)
+    if (!is.call(x)) {
+      return(FALSE)
+    }
+    if (identical(x[[1L]], as.name("mono"))) {
+      return(TRUE)
+    }
     if (as.character(x[[1L]])[1L] %in% c("::", ":::") &&
-        identical(x[[3L]], as.name("mono"))) return(TRUE)
+      identical(x[[3L]], as.name("mono"))) {
+      return(TRUE)
+    }
     any(vapply(as.list(x), contains_mono, logical(1)))
   }
   # Preserve the original model.matrix path, including contrasts and attributes.
@@ -643,7 +718,9 @@ mono <- function(x, by = NULL) {
   if (length(formula) != 2L) cli::cli_abort("Monotonic {.arg q_form} must be one-sided.")
   specs <- list()
   strip <- function(x) {
-    if (!contains_mono(x)) return(x)
+    if (!contains_mono(x)) {
+      return(x)
+    }
     if (is.call(x) && identical(x[[1L]], as.name("mono"))) {
       spec <- tryCatch(match.call(mono, x), error = function(e) {
         cli::cli_abort("Invalid mono() arguments: {conditionMessage(e)}")
@@ -660,17 +737,23 @@ mono <- function(x, by = NULL) {
       specs[[length(specs) + 1L]] <<- list(variable = variable, by = by)
       return(NULL)
     }
-    if (is.call(x) && identical(x[[1L]], as.name("("))) return(strip(x[[2L]]))
+    if (is.call(x) && identical(x[[1L]], as.name("("))) {
+      return(strip(x[[2L]]))
+    }
     if (is.call(x) && identical(x[[1L]], as.name("-")) && length(x) == 3L &&
-        !contains_mono(x[[3L]])) {
+      !contains_mono(x[[3L]])) {
       left <- strip(x[[2L]])
       return(call("-", if (is.null(left)) 1 else left, x[[3L]]))
     }
     if (is.call(x) && identical(x[[1L]], as.name("+"))) {
       args <- lapply(as.list(x)[-1L], strip)
       args <- Filter(Negate(is.null), args)
-      if (!length(args)) return(NULL)
-      if (length(args) == 1L) return(args[[1L]])
+      if (!length(args)) {
+        return(NULL)
+      }
+      if (length(args) == 1L) {
+        return(args[[1L]])
+      }
       return(as.call(c(list(as.name("+")), args)))
     }
     cli::cli_abort("mono() must be an additive term, without interactions or transformations.")
@@ -681,7 +764,7 @@ mono <- function(x, by = NULL) {
   variables <- vapply(specs, `[[`, character(1), "variable")
   ordinary_vars <- all.vars(stats::terms(ordinary, data = data))
   if (anyDuplicated(variables) || any(variables %in% ordinary_vars) ||
-      any(variables %in% unlist(lapply(specs, `[[`, "by")))) {
+    any(variables %in% unlist(lapply(specs, `[[`, "by")))) {
     cli::cli_abort("A mono() variable cannot also have ordinary, duplicate, or grouping effects in {.arg q_form}.")
   }
   design <- lapply(specs, .make_mono_q_design, data = data)
@@ -689,15 +772,17 @@ mono <- function(x, by = NULL) {
   if (nrow(q_modmat) != nrow(data)) {
     cli::cli_abort("Missing ordinary q covariates would misalign mono() observation rows.")
   }
-  list(q_modmat = q_modmat,
-       q_mono_modmat = do.call(cbind, lapply(design, `[[`, "matrix")),
-       q_mono_steps = do.call(rbind, lapply(design, `[[`, "steps")))
+  list(
+    q_modmat = q_modmat,
+    q_mono_modmat = do.call(cbind, lapply(design, `[[`, "matrix")),
+    q_mono_steps = do.call(rbind, lapply(design, `[[`, "steps"))
+  )
 }
 
 .make_mono_q_design <- function(spec, data) {
   x <- data[[spec$variable]]
   if (!(is.numeric(x) || is.factor(x)) || !is.null(dim(x)) || anyNA(x) ||
-      (is.numeric(x) && any(!is.finite(x)))) {
+    (is.numeric(x) && any(!is.finite(x)))) {
     cli::cli_abort("mono() {.arg x} must be numeric or a factor, with no missing or non-finite values.")
   }
   ordered_levels <- if (is.factor(x)) levels(x) else sort(unique(x))
@@ -716,19 +801,22 @@ mono <- function(x, by = NULL) {
     k <- length(lev) - 1L
     mat <- matrix(0, nrow(data), k)
     mat[rows, ] <- outer(match(x[rows], lev), seq_len(k), `>`)
-    label <- paste0(spec$variable,
-                    if (!is.null(spec$by)) paste0("[", spec$by, "=", groups[i], "]"),
-                    ":", utils::head(lev, -1L), "->", utils::tail(lev, -1L))
+    label <- paste0(
+      spec$variable,
+      if (!is.null(spec$by)) paste0("[", spec$by, "=", groups[i], "]"),
+      ":", utils::head(lev, -1L), "->", utils::tail(lev, -1L)
+    )
     colnames(mat) <- label
     matrices[[i]] <- mat
-    steps[[i]] <- data.frame(coef = label, variable = spec$variable,
+    steps[[i]] <- data.frame(
+      coef = label, variable = spec$variable,
       from_level = as.character(utils::head(lev, -1L)), to_level = as.character(utils::tail(lev, -1L)),
       by = if (is.null(spec$by)) NA_character_ else spec$by,
-      by_level = if (is.null(spec$by)) NA_character_ else as.character(groups[i]))
+      by_level = if (is.null(spec$by)) NA_character_ else as.character(groups[i])
+    )
   }
   list(matrix = do.call(cbind, matrices), steps = do.call(rbind, steps))
 }
-
 
 
 # Mean effects use the same unique-state compiler and densities as q effects.
@@ -776,40 +864,52 @@ mono <- function(x, by = NULL) {
     if (term$type == "logistic") {
       term$a50_parameter <- paste0("F_a50_", term$id)
       term$slope_parameter <- paste0("log_F_slope_", term$id)
-    } else term$parameter <- paste0("eta_mu_", term$id)
+    } else {
+      term$parameter <- paste0("eta_mu_", term$id)
+    }
     if (!is.null(term$sd_parameter)) term$sd_parameter <- paste0("log_sd_mu_", term$id)
     if (!is.null(term$phi_parameter)) term$phi_parameter <- paste0("logit_phi_mu_", term$id)
     terms[[i]] <- term
   }
   if (length(terms)) names(terms) <- vapply(terms, `[[`, character(1), "id")
-  list(matrix = design$q_modmat, terms = terms,
-       mono_matrix = design$q_mono_modmat, mono_steps = mono)
+  list(
+    matrix = design$q_modmat, terms = terms,
+    mono_matrix = design$q_mono_modmat, mono_steps = mono
+  )
 }
 
 .check_mean_terms <- function(dat, component) {
   terms <- dat[[paste0(component, "_terms")]]
-  if (!length(terms)) return(invisible(NULL))
+  if (!length(terms)) {
+    return(invisible(NULL))
+  }
   settings <- dat[[paste0(component, "_settings")]]
   if (sum(vapply(terms, function(x) x$type %in% c("rw", "ar1"), logical(1))) > 1L) {
     cli::cli_abort(c("Use one temporal process in the {component} mean.",
-                     "i" = "Multiple RW/AR1 mean terms may explain the same changes in mortality; their separate contributions have not been validated.",
-                     "i" = "Retain one rw() or ar1() term and use IID residuals for independent fluctuations."))
+      "i" = "Multiple RW/AR1 mean terms may explain the same changes in mortality; their separate contributions have not been validated.",
+      "i" = "Retain one rw() or ar1() term and use IID residuals for independent fluctuations."
+    ))
   }
   gaussian <- Filter(function(x) x$type != "logistic", terms)
   if (length(gaussian) && !settings$process %in% c("iid", "off")) {
     alternative <- if (component == "M") ", or use process = 'off' to vary only the M mean" else ""
     cli::cli_abort(c("Structured {component} means currently require IID residuals{if (component == 'M') ' or process = off' else ''}.",
-                     "i" = "Structured means and temporal residual processes may explain overlapping mortality variation; this combination has not been validated.",
-                     "i" = "Set process = 'iid'{alternative}."))
+      "i" = "Structured means and temporal residual processes may explain overlapping mortality variation; this combination has not been validated.",
+      "i" = "Set process = 'iid'{alternative}."
+    ))
   }
   d <- .mean_formula_data(dat, component)
   fixed <- dat[[paste0(component, "_modmat")]]
-  proxy <- list(obs = list(index = d), q_terms = terms, q_modmat = fixed,
-                q_mono_modmat = if (component == "F") dat$F_mono_modmat else NULL,
-                mean_component = component,
-                index_settings = list(q_link = "log"),
-                sd_index_modmat = matrix(if (settings$process == "iid") 1 else numeric(), nrow(d),
-                                         if (settings$process == "iid") 1L else 0L))
+  proxy <- list(
+    obs = list(index = d), q_terms = terms, q_modmat = fixed,
+    q_mono_modmat = if (component == "F") dat$F_mono_modmat else NULL,
+    mean_component = component,
+    index_settings = list(q_link = "log"),
+    sd_index_modmat = matrix(
+      if (settings$process == "iid") 1 else numeric(), nrow(d),
+      if (settings$process == "iid") 1L else 0L
+    )
+  )
   # M ages sharing one absolute process state supply one replicate, not many.
   if (component == "M" && settings$process == "iid") {
     for (term in terms) {
@@ -822,8 +922,9 @@ mono <- function(x, by = NULL) {
       active <- z[effective | outside, , drop = FALSE]
       if (all(colSums(active != 0) <= 1L)) {
         cli::cli_abort(c("Unreplicated IID M mean effects with IID residuals are not enabled with both SDs estimated.",
-                         "i" = "A shared M age block counts as one state, even when it contains several ages.",
-                         "i" = "Share mean effects across independent age blocks, supply sd in iid(), or use M_settings$process = 'off'."))
+          "i" = "A shared M age block counts as one state, even when it contains several ages.",
+          "i" = "Share mean effects across independent age blocks, supply sd in iid(), or use M_settings$process = 'off'."
+        ))
       }
     }
   }
@@ -839,19 +940,23 @@ mono <- function(x, by = NULL) {
   if (identical(dat$M_settings$process, "iid") && estimated(dat$M_terms)) {
     out <- rbind(out, data.frame(issue = "M_variance_separation", detail = paste(
       "Both M mean-process and IID residual SDs are estimated. Simulations showed that small shared M variation can be difficult to separate from residual variation.",
-      "Start with M_settings$process = 'off', or supply sd in the mean term when external information supports it; check recovery before interpreting both components.")))
+      "Start with M_settings$process = 'off', or supply sd in the mean term when external information supports it; check recovery before interpreting both components."
+    )))
   }
   if (estimated(dat$F_terms) && estimated(dat$M_terms)) {
     out <- rbind(out, data.frame(issue = "joint_mortality_means", detail = paste(
       "F and M mean-process SDs are both estimated. The recovery study varied one mortality mean at a time; joint estimation has not been validated.",
-      "Compare with models varying only one mean and examine sensitivity of F, M and abundance.")))
+      "Compare with models varying only one mean and examine sensitivity of F, M and abundance."
+    )))
   }
   out
 }
 
 .mean_effects <- function(par, dat, component, simulate = FALSE) {
-  proxy <- list(obs = list(index = .mean_formula_data(dat, component)),
-                q_terms = dat[[paste0(component, "_terms")]])
+  proxy <- list(
+    obs = list(index = .mean_formula_data(dat, component)),
+    q_terms = dat[[paste0(component, "_terms")]]
+  )
   out <- .q_effects(par, proxy, simulate = simulate)
   if (component == "F") {
     out$contribution <- out$contribution + out$log_selectivity
@@ -878,25 +983,32 @@ mono <- function(x, by = NULL) {
     proxy$dat$q_terms <- fit$dat[[paste0(component, "_terms")]]
     proxy$dat$obs$index <- if (startsWith(component, "sd_")) {
       fit$dat$obs[[sub("^sd_", "", component)]]
-    } else .mean_formula_data(fit$dat, component)
+    } else {
+      .mean_formula_data(fit$dat, component)
+    }
     all[[component]] <- .tidy_q_effects(proxy, interval,
-                                        increment_report = paste0("eta_", if (startsWith(component, "sd_")) "" else "mu_",
-                                                                  component, "_increments"))
+      increment_report = paste0(
+        "eta_", if (startsWith(component, "sd_")) "" else "mu_",
+        component, "_increments"
+      )
+    )
   }
   out <- list(levels = list(), increments = list(), contributions = list())
-  for (component in names(all)) for (part in names(out)) {
-    tables <- lapply(all[[component]][[part]], function(tab) {
-      tab$component <- component
-      tab
-    })
-    out[[part]] <- c(out[[part]], tables)
+  for (component in names(all)) {
+    for (part in names(out)) {
+      tables <- lapply(all[[component]][[part]], function(tab) {
+        tab$component <- component
+        tab
+      })
+      out[[part]] <- c(out[[part]], tables)
+    }
   }
-  if (!length(out$levels)) return(list())
+  if (!length(out$levels)) {
+    return(list())
+  }
   attr(out, "interval") <- interval
   out
 }
-
-
 
 
 # Observation SD effects reuse the Gaussian formula-state compiler.
@@ -904,7 +1016,7 @@ mono <- function(x, by = NULL) {
   design <- .parse_q_formula(formula, data)
   terms <- design$q_terms
   if (!is.null(design$q_mono_modmat) ||
-      any(vapply(terms, function(x) x$type == "logistic", logical(1)))) {
+    any(vapply(terms, function(x) x$type == "logistic", logical(1)))) {
     cli::cli_abort("{component}_settings$sd_form supports iid(), rw() and ar1(), not catchability curves.")
   }
   for (i in seq_along(terms)) {
@@ -920,20 +1032,26 @@ mono <- function(x, by = NULL) {
 }
 
 .sd_effects <- function(par, dat, component, simulate = FALSE) {
-  .q_effects(par, list(obs = list(index = dat$obs[[component]]),
-                       q_terms = dat[[paste0("sd_", component, "_terms")]]), simulate = simulate)
+  .q_effects(par, list(
+    obs = list(index = dat$obs[[component]]),
+    q_terms = dat[[paste0("sd_", component, "_terms")]]
+  ), simulate = simulate)
 }
 
 .check_sd_terms <- function(dat, component) {
   terms <- dat[[paste0("sd_", component, "_terms")]]
-  if (!length(terms)) return(invisible(NULL))
+  if (!length(terms)) {
+    return(invisible(NULL))
+  }
   if (sum(vapply(terms, function(x) x$type %in% c("rw", "ar1"), logical(1))) > 1L) {
     cli::cli_abort("Use one RW/AR1 term in {component}_settings$sd_form; overlapping ordered SD processes have not been validated.")
   }
   # A random effect on SD is not additive observation variance on the mean scale.
-  .check_q_terms(list(obs = list(index = dat$obs[[component]]), q_terms = terms,
-                      q_modmat = dat[[paste0("sd_", component, "_modmat")]],
-                      index_settings = list(q_link = NULL)))
+  .check_q_terms(list(
+    obs = list(index = dat$obs[[component]]), q_terms = terms,
+    q_modmat = dat[[paste0("sd_", component, "_modmat")]],
+    index_settings = list(q_link = NULL)
+  ))
 }
 
 .sd_process_advisories <- function(dat) {
@@ -945,26 +1063,34 @@ mono <- function(x, by = NULL) {
     observed <- !d$is_proj & is.finite(d$obs) & d$obs > 0
     for (term in terms) {
       if (component == "catch" && term$type == "rw" && term$variable == "age" &&
-          !is.null(term$sd_parameter)) {
-        out <- rbind(out, data.frame(issue = "catch_SD_RW", detail = paste0(term$id,
-                                                                            ": estimating an age random walk in catch SD can be numerically fragile when F is also estimated. Full assessment recovery simulations frequently failed despite repeated observations at each age. Compare IID age effects or a fixed age curve, and inspect check_tam(fit).")))
+        !is.null(term$sd_parameter)) {
+        out <- rbind(out, data.frame(issue = "catch_SD_RW", detail = paste0(
+          term$id,
+          ": estimating an age random walk in catch SD can be numerically fragile when F is also estimated. Full assessment recovery simulations frequently failed despite repeated observations at each age. Compare IID age effects or a fixed age curve, and inspect check_tam(fit)."
+        )))
       }
       for (group in term$groups) {
         rows <- group$rows[observed[group$rows] & term$multiplier[group$rows] != 0]
         support <- table(d[[term$variable]][rows])
         support <- support[support > 0]
-        if (any(support < 3L)) out <- rbind(out, data.frame(issue = "SD_effect_replication",
-                                                            detail = paste0(term$id, ", group ", group$group,
-                                                                            ": some SD effect levels have fewer than three observations. Random SD effects describe residual spread, not mean trends; sparse levels may be weakly estimated. Compare a simpler SD formula and inspect uncertainty.")))
+        if (any(support < 3L)) {
+          out <- rbind(out, data.frame(
+            issue = "SD_effect_replication",
+            detail = paste0(
+              term$id, ", group ", group$group,
+              ": some SD effect levels have fewer than three observations. Random SD effects describe residual spread, not mean trends; sparse levels may be weakly estimated. Compare a simpler SD formula and inspect uncertainty."
+            )
+          ))
+        }
         if ((!is.null(term$sd_parameter) || !is.null(term$phi_parameter)) && length(support) < 5L) {
-          out <- rbind(out, data.frame(issue = "SD_effect_support", detail = paste0(term$id,
-                                                                                    ", group ", group$group, ": only ", length(support),
-                                                                                    " observed levels inform the SD process. Its process SD or AR1 correlation may be imprecise; consider a simpler formula or externally supported sd/phi.")))
+          out <- rbind(out, data.frame(issue = "SD_effect_support", detail = paste0(
+            term$id,
+            ", group ", group$group, ": only ", length(support),
+            " observed levels inform the SD process. Its process SD or AR1 correlation may be imprecise; consider a simpler formula or externally supported sd/phi."
+          )))
         }
       }
     }
   }
   out
 }
-
-

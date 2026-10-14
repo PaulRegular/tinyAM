@@ -1,4 +1,3 @@
-
 #' Tidy a (named) matrix/array into long format
 #'
 #' @description
@@ -21,12 +20,13 @@
 #' column named `value_name`.
 #'
 #' @examples
-#' m <- matrix(1:6, nrow = 2, dimnames = list(age = c("2","3"), year = c("2001","2002","2003")))
+#' m <- matrix(1:6, nrow = 2, dimnames = list(age = c("2", "3"), year = c("2001", "2002", "2003")))
 #' tidy_array(m)
 #'
 #' a <- array(1:8,
-#'            dim = c(2,2,2),
-#'            dimnames = list(age = c("2","3"), year = c("2001","2002"), area = c("N","S")))
+#'   dim = c(2, 2, 2),
+#'   dimnames = list(age = c("2", "3"), year = c("2001", "2002"), area = c("N", "S"))
+#' )
 #' tidy_array(a, value_name = "val")
 #'
 #' # Permissive mode if dimnames are missing:
@@ -108,7 +108,7 @@ tidy_mat <- tidy_array
 tidy_obs_pred <- function(fit, add_osa_res = FALSE, interval = .95, ...) {
   fit <- .require_tam_fit(fit, arg = "fit")
   if (!is.numeric(interval) || length(interval) != 1L || !is.finite(interval) ||
-      interval <= 0 || interval >= 1) {
+    interval <= 0 || interval >= 1) {
     cli::cli_abort("{.arg interval} must be one number strictly between zero and one.")
   }
 
@@ -146,8 +146,10 @@ tidy_obs_pred <- function(fit, add_osa_res = FALSE, interval = .95, ...) {
       args$parallel <- FALSE
       cli::cli_inform("Calculating one-step residuals sequentially while SAM and RTMB are loaded.")
     }
-    osa_res <- do.call(RTMB::oneStepPredict,
-      c(list(obj = fit$obj, method = "oneStepGaussianOffMode"), args))
+    osa_res <- do.call(
+      RTMB::oneStepPredict,
+      c(list(obj = fit$obj, method = "oneStepGaussianOffMode"), args)
+    )
     split_osa_res <- split(osa_res$residual, fit$dat$obs_map$type[fit$dat$obs_map$is_observed])
     split_is_observed <- split(fit$dat$obs_map$is_observed, fit$dat$obs_map$type)
     obs_pred$catch$osa_res <- obs_pred$index$osa_res <- NA
@@ -203,8 +205,10 @@ tidy_rep <- function(fit) {
     cli::cli_abort("`{.arg fit}$dat$is_proj` must align with `{.arg fit}$dat$years`.")
   }
 
-  keep <- vapply(rep, function(x) is.matrix(x) || length(x) == length(dat$years),
-                 logical(1))
+  keep <- vapply(
+    rep, function(x) is.matrix(x) || length(x) == length(dat$years),
+    logical(1)
+  )
   keep[grepl("^eta_(q|mu_[FM]|sd_catch|sd_index)_increments$", names(keep))] <- FALSE
   keep[startsWith(names(keep), "rec_")] <- FALSE
   rep_items <- rep[keep]
@@ -247,19 +251,18 @@ tidy_rep <- function(fit) {
 #'
 #' @examples
 #' d <- data.frame(est = log(100), lwr = log(80), upr = log(120))
-#' trans_est(d)                # exp + no rescale
-#' trans_est(d, transform = NULL, scale = 1000)  # no transform, rescale
+#' trans_est(d) # exp + no rescale
+#' trans_est(d, transform = NULL, scale = 1000) # no transform, rescale
 #'
 #' @keywords internal
 #' @export
 trans_est <- function(data, transform = exp, scale = 1) {
   if (!is.null(transform)) {
-    data[, c("est", "lwr", "upr")] <-  apply(data[, c("est", "lwr", "upr")], 2, transform)
+    data[, c("est", "lwr", "upr")] <- apply(data[, c("est", "lwr", "upr")], 2, transform)
   }
   data[, c("est", "lwr", "upr")] <- data[, c("est", "lwr", "upr")] / scale
   data
 }
-
 
 
 #' Population time series with confidence intervals
@@ -305,12 +308,16 @@ tidy_sdrep <- function(fit, interval = 0.95) {
   fit <- .require_tam_fit(fit, arg = "fit")
 
   if (is.null(fit[["sdrep"]])) {
-    series <- intersect(c("recruitment", "abundance", "biomass", "ssb", "F_bar", "M_bar"),
-                        names(fit$rep))
+    series <- intersect(
+      c("recruitment", "abundance", "biomass", "ssb", "F_bar", "M_bar"),
+      names(fit$rep)
+    )
     return(stats::setNames(lapply(series, function(nm) {
-      data.frame(year = fit$dat$years, est = unname(fit$rep[[nm]]),
+      data.frame(
+        year = fit$dat$years, est = unname(fit$rep[[nm]]),
         lwr = NA_real_, upr = NA_real_, se = NA_real_, se_scale = "log",
-        is_proj = fit$dat$is_proj)
+        is_proj = fit$dat$is_proj
+      )
     }), series))
   }
 
@@ -331,13 +338,15 @@ tidy_sdrep <- function(fit, interval = 0.95) {
       d$is_proj <- d$year %in% fit$dat$years[fit$dat$is_proj]
       return(trans_est(d, transform = exp))
     }
-    d <- data.frame(year = fit$dat$years,
-                    est = vals[[i]],
-                    lwr = vals[[i]] - qnorm(1 - ((1 - interval) / 2)) * ses[[i]],
-                    upr = vals[[i]] + qnorm(1 - ((1 - interval) / 2)) * ses[[i]],
-                    se = ses[[i]],
-                    se_scale = "log",
-                    is_proj = fit$dat$is_proj) |>
+    d <- data.frame(
+      year = fit$dat$years,
+      est = vals[[i]],
+      lwr = vals[[i]] - qnorm(1 - ((1 - interval) / 2)) * ses[[i]],
+      upr = vals[[i]] + qnorm(1 - ((1 - interval) / 2)) * ses[[i]],
+      se = ses[[i]],
+      se_scale = "log",
+      is_proj = fit$dat$is_proj
+    ) |>
       trans_est(transform = exp)
   })
   names(df) <- gsub("log_", "", names(vals))
@@ -479,16 +488,17 @@ tidy_par <- function(fit, interval = 0.95) {
   fit <- .require_tam_fit(fit, arg = "fit")
 
   est <- .tam_parameter_summary(fit, "Estimate")
-  se  <- .tam_parameter_summary(fit, "Std. Error")
+  se <- .tam_parameter_summary(fit, "Std. Error")
   nms <- intersect(names(est), names(se))
   nms <- nms[lengths(est[nms]) > 0L]
 
   ran_nms <- intersect(fit$obj$env$.random, nms)
   fix_nms <- setdiff(nms, ran_nms)
-  z       <- stats::qnorm(0.5 + interval / 2)
+  z <- stats::qnorm(0.5 + interval / 2)
 
   .par2df <- function(nm) {
-    e <- est[[nm]]; s <- se[[nm]]
+    e <- est[[nm]]
+    s <- se[[nm]]
     if (is.matrix(e)) {
       df <- tidy_mat(e, value_name = "est")
       df$is_proj <- df$year %in% fit$dat$years[fit$dat$is_proj]
@@ -534,22 +544,31 @@ tidy_par <- function(fit, interval = 0.95) {
       df$par <- sub("^logit_", "", df$par)
     } else if (startsWith(nm, "log_")) {
       df <- trans_est(df, transform = exp, scale = 1)
-      df$par <- sub("^log_",   "", df$par)
+      df$par <- sub("^log_", "", df$par)
     } else {
       df <- trans_est(df, transform = NULL, scale = 1)
     }
     values <- c("est", "lwr", "upr", "se", "se_scale")
-    df[, c(setdiff(names(df), c(values, "is_proj")), values,
-           intersect("is_proj", names(df))), drop = FALSE]
+    df[, c(
+      setdiff(names(df), c(values, "is_proj")), values,
+      intersect("is_proj", names(df))
+    ), drop = FALSE]
   }
 
-  fixed  <- if (length(fix_nms)) stack_list(lapply(fix_nms, .par2df), label = NULL) else
-    data.frame(par = character(), est = numeric(), lwr = numeric(), upr = numeric(),
-               se = numeric(), se_scale = character(), check.names = FALSE)
+  fixed <- if (length(fix_nms)) {
+    stack_list(lapply(fix_nms, .par2df), label = NULL)
+  } else {
+    data.frame(
+      par = character(), est = numeric(), lwr = numeric(), upr = numeric(),
+      se = numeric(), se_scale = character(), check.names = FALSE
+    )
+  }
   rownames(fixed) <- NULL
   values <- c("est", "lwr", "upr", "se", "se_scale")
-  fixed <- fixed[, c(setdiff(names(fixed), c(values, "is_proj")), values,
-                     intersect("is_proj", names(fixed))), drop = FALSE]
+  fixed <- fixed[, c(
+    setdiff(names(fixed), c(values, "is_proj")), values,
+    intersect("is_proj", names(fixed))
+  ), drop = FALSE]
 
   random <- stats::setNames(lapply(ran_nms, .par2df), ran_nms)
 
@@ -560,12 +579,19 @@ tidy_par <- function(fit, interval = 0.95) {
 }
 
 .tam_parameter_summary <- function(fit, what) {
-  if (!is.null(fit[["sdrep"]])) return(as.list(fit[["sdrep"]], what))
+  if (!is.null(fit[["sdrep"]])) {
+    return(as.list(fit[["sdrep"]], what))
+  }
   estimates <- fit$obj$env$parList(par = fit$parameter_values)
   attr(estimates, "check.passed") <- NULL
   attr(estimates, "what") <- what
-  if (what == "Estimate") return(estimates)
-  lapply(estimates, function(x) { x[] <- NA_real_; x })
+  if (what == "Estimate") {
+    return(estimates)
+  }
+  lapply(estimates, function(x) {
+    x[] <- NA_real_
+    x
+  })
 }
 
 
@@ -610,9 +636,13 @@ stack_list <- function(x, label = "model",
 
   pieces <- lapply(seq_along(x), function(i) {
     df <- x[[i]]
-    if (is.null(df)) return(NULL)
+    if (is.null(df)) {
+      return(NULL)
+    }
     if (!is.data.frame(df)) df <- as.data.frame(df)
-    if (!nrow(df)) return(NULL)
+    if (!nrow(df)) {
+      return(NULL)
+    }
     if (!is.null(label)) df[[label]] <- ids[[i]]
     df
   })
@@ -639,10 +669,10 @@ stack_list <- function(x, label = "model",
 
   if (!is.null(label)) {
     out[[label]] <- switch(label_type,
-                           auto      = utils::type.convert(out[[label]], as.is = TRUE),
-                           numeric   = suppressWarnings(as.numeric(out[[label]])),
-                           character = as.character(out[[label]]),
-                           factor    = factor(out[[label]], levels = ids)
+      auto      = utils::type.convert(out[[label]], as.is = TRUE),
+      numeric   = suppressWarnings(as.numeric(out[[label]])),
+      character = as.character(out[[label]]),
+      factor    = factor(out[[label]], levels = ids)
     )
     ord <- c(label, setdiff(names(out), label))
     out <- out[, ord, drop = FALSE]
@@ -670,13 +700,17 @@ stack_list <- function(x, label = "model",
 #'   named by `label` (unless `label = NULL`).
 #' @examples
 #' res <- list(
-#'   sim1 = list(ssb = data.frame(year=1:3, est=1:3),
-#'               N   = data.frame(year=1:2, age=2:3, est=5:6)),
-#'   sim2 = list(ssb = data.frame(year=1:3, est=11:13),
-#'               N   = data.frame(year=1:2, age=2:3, est=15:16))
+#'   sim1 = list(
+#'     ssb = data.frame(year = 1:3, est = 1:3),
+#'     N = data.frame(year = 1:2, age = 2:3, est = 5:6)
+#'   ),
+#'   sim2 = list(
+#'     ssb = data.frame(year = 1:3, est = 11:13),
+#'     N = data.frame(year = 1:2, age = 2:3, est = 15:16)
+#'   )
 #' )
 #' stacked <- stack_nested(res, label = "sim")
-#' str(stacked$ssb)  # has column 'sim'
+#' str(stacked$ssb) # has column 'sim'
 #'
 #' @importFrom stats setNames
 #'
@@ -781,7 +815,7 @@ stack_nested <- function(x, label = "model",
 #' # Named list: must be named; names used as labels (even length 1)
 #' fits <- list(`2023` = fit2, `2024` = fit1)
 #' tabs3 <- tidy_tam(model_list = fits, label = "retro_year")
-#' head(tabs3$pop$N)               # column "retro_year" has 2023/2024
+#' head(tabs3$pop$N) # column "retro_year" has 2023/2024
 #'
 #' @importFrom utils type.convert
 #' @seealso [tidy_obs_pred()], [tidy_pop()], [tidy_par()], [fit_tam()], [fit_retro()]
@@ -795,7 +829,7 @@ tidy_tam <- function(..., model_list = NULL, interval = 0.95, label = "model", l
 
   # add label if: multiple via ... OR any named model_list usage
   add_label <- (using_dots && length(model_list) > 1L) || (!using_dots)
-  id_col    <- if (add_label) label else NULL
+  id_col <- if (add_label) label else NULL
 
   cached_interval_values <- unlist(lapply(model_list, function(fit) {
     intervals <- list(
@@ -824,8 +858,12 @@ tidy_tam <- function(..., model_list = NULL, interval = 0.95, label = "model", l
     !is.null(stored) && isTRUE(all.equal(stored, interval))
   }
   obs_list <- lapply(model_list, function(fit) {
-    if (inherits(fit, "tam_ref")) return(fit$obs_pred)
-    if (!is.null(fit$obs_pred) && interval_matches(fit$obs_pred)) return(fit$obs_pred)
+    if (inherits(fit, "tam_ref")) {
+      return(fit$obs_pred)
+    }
+    if (!is.null(fit$obs_pred) && interval_matches(fit$obs_pred)) {
+      return(fit$obs_pred)
+    }
     tables <- tidy_obs_pred(fit, interval = interval)
     for (nm in names(tables)) {
       extras <- setdiff(names(fit$obs_pred[[nm]]), names(tables[[nm]]))
@@ -835,7 +873,9 @@ tidy_tam <- function(..., model_list = NULL, interval = 0.95, label = "model", l
   })
 
   pop_list <- lapply(model_list, function(fit) {
-    if (inherits(fit, "tam_ref")) return(fit$pop)
+    if (inherits(fit, "tam_ref")) {
+      return(fit$pop)
+    }
     if (!is.null(fit$pop) && interval_matches(fit$pop)) {
       fit$pop
     } else {
@@ -855,13 +895,13 @@ tidy_tam <- function(..., model_list = NULL, interval = 0.95, label = "model", l
     comparison_scales <- lapply(comparison_scales, function(x) {
       if (is.list(x)) x <- unlist(x, use.names = TRUE)
       if (!is.numeric(x) || is.null(names(x)) || any(!nzchar(names(x))) ||
-          anyDuplicated(names(x)) || any(!is.finite(x)) || any(x <= 0)) {
+        anyDuplicated(names(x)) || any(!is.finite(x)) || any(x <= 0)) {
         cli::cli_abort("A {.cls tam_ref} {.field comparison_scales} value must be a named vector of positive finite numbers.")
       }
       x
     })
     if (length(comparison_scales) > 1L &&
-        !all(vapply(comparison_scales[-1L], identical, logical(1), comparison_scales[[1L]]))) {
+      !all(vapply(comparison_scales[-1L], identical, logical(1), comparison_scales[[1L]]))) {
       cli::cli_abort("Assessment references use different {.field comparison_scales}; the fitted outputs cannot be shown on one scale.")
     }
     comparison_scales <- comparison_scales[[1L]]
@@ -877,7 +917,7 @@ tidy_tam <- function(..., model_list = NULL, interval = 0.95, label = "model", l
         reference <- reference_pop[[metric]]
         if (is.data.frame(reference) && "unit" %in% names(reference)) {
           units <- unique(as.character(reference$unit[!is.na(reference$unit) &
-                                                        nzchar(as.character(reference$unit))]))
+            nzchar(as.character(reference$unit))]))
           if (length(units) == 1L) tab$unit <- units[[1L]]
         }
         pop_list[[i]][[metric]] <- tab
@@ -888,7 +928,7 @@ tidy_tam <- function(..., model_list = NULL, interval = 0.95, label = "model", l
     if (inherits(fit, "tam_ref")) {
       return(list(fixed = fit$fixed_par, random = fit$random_par))
     }
-    has_fixed  <- !is.null(fit$fixed_par)
+    has_fixed <- !is.null(fit$fixed_par)
     has_random <- !is.null(fit$random_par)
     if (has_fixed && has_random && interval_matches(fit$fixed_par) && interval_matches(fit$random_par)) {
       list(fixed = fit$fixed_par, random = fit$random_par)
@@ -898,8 +938,8 @@ tidy_tam <- function(..., model_list = NULL, interval = 0.95, label = "model", l
   })
 
   obs_pred <- stack_nested(obs_list, label = id_col, label_type = label_type)
-  pop      <- stack_nested(pop_list, label = id_col, label_type = label_type)
-  fixed_par  <- stack_nested(lapply(par_list, `[`, "fixed"), label = id_col, label_type = label_type)
+  pop <- stack_nested(pop_list, label = id_col, label_type = label_type)
+  fixed_par <- stack_nested(lapply(par_list, `[`, "fixed"), label = id_col, label_type = label_type)
   random_par <- stack_nested(lapply(par_list, `[[`, "random"), label = id_col, label_type = label_type)
 
   fixed_tbl <- fixed_par$fixed
@@ -919,15 +959,21 @@ tidy_tam <- function(..., model_list = NULL, interval = 0.95, label = "model", l
     random_par = random_tbls
   )
   recruitment <- lapply(model_list, function(fit) {
-    if (inherits(fit, "tam_ref")) return(list())
+    if (inherits(fit, "tam_ref")) {
+      return(list())
+    }
     Filter(function(x) is.data.frame(x) && nrow(x) > 0L, tidy_recruitment(fit, interval))
   })
   out$recruitment <- stack_nested(recruitment, label = id_col, label_type = label_type)
   effects <- lapply(model_list, function(fit) {
-    if (inherits(fit, "tam_ref")) return(list())
+    if (inherits(fit, "tam_ref")) {
+      return(list())
+    }
     if (!is.null(fit$formula_effects) && interval_matches(fit$formula_effects)) {
       fit$formula_effects
-    } else .tidy_formula_effects(fit, interval = interval)
+    } else {
+      .tidy_formula_effects(fit, interval = interval)
+    }
   })
   if (any(lengths(effects))) {
     components <- c("levels", "increments", "contributions")
@@ -991,7 +1037,6 @@ tidy_tam <- function(..., model_list = NULL, interval = 0.95, label = "model", l
 }
 
 
-
 #' Tidy recruitment relationships and residuals
 #'
 #' @description
@@ -1014,8 +1059,10 @@ tidy_tam <- function(..., model_list = NULL, interval = 0.95, label = "model", l
 #' uncertainty remains `NA`. Curve intervals do not include new process noise.
 #' @examples
 #' \dontrun{
-#' fit <- fit_tam(cod_obs, N_settings = list(process = "off"),
-#'   rec_settings = list(process = "iid", mu_form = ~ bh(ssb)))
+#' fit <- fit_tam(cod_obs,
+#'   N_settings = list(process = "off"),
+#'   rec_settings = list(process = "iid", mu_form = ~ bh(ssb))
+#' )
 #' tidy_recruitment(fit)$pairs
 #' }
 #' @seealso [recruitment_formulas], [tidy_tam()], [vis_tam()]
@@ -1023,7 +1070,9 @@ tidy_tam <- function(..., model_list = NULL, interval = 0.95, label = "model", l
 tidy_recruitment <- function(fit, interval = .95) {
   fit <- .require_tam_fit(fit, arg = "fit")
   rec <- fit$dat$rec
-  if (is.null(rec)) return(list())
+  if (is.null(rec)) {
+    return(list())
+  }
   z <- stats::qnorm(.5 + interval / 2)
   sdr <- fit[["sdrep"]]
   errors <- if (is.null(sdr)) list() else as.list(sdr, "Std. Error", report = TRUE)
@@ -1031,26 +1080,32 @@ tidy_recruitment <- function(fit, interval = .95) {
     value <- unname(fit$rep[[name]])
     se <- errors[[name]]
     if (is.null(se)) se <- rep(NA_real_, length(value))
-    d <- data.frame(year = fit$dat$years[rec$eligible], est = value,
-                    lwr = value - z * se, upr = value + z * se, se = unname(se),
-                    se_scale = if (logarithmic) "log" else "reported",
-                    is_proj = fit$dat$is_proj[rec$eligible])
+    d <- data.frame(
+      year = fit$dat$years[rec$eligible], est = value,
+      lwr = value - z * se, upr = value + z * se, se = unname(se),
+      se_scale = if (logarithmic) "log" else "reported",
+      is_proj = fit$dat$is_proj[rec$eligible]
+    )
     if (logarithmic) d <- trans_est(d, exp)
     d
   }
-  out <- list(mean = table("rec_log_mean", TRUE),
-              prediction = table("rec_log_prediction", TRUE),
-              residual = table("rec_residual"), innovation = table("rec_innovation"))
+  out <- list(
+    mean = table("rec_log_mean", TRUE),
+    prediction = table("rec_log_prediction", TRUE),
+    residual = table("rec_residual"), innovation = table("rec_innovation")
+  )
   if (!is.null(rec$curve)) {
     parent <- table("rec_log_parent", TRUE)
     R <- tidy_pop(fit, interval)$recruitment
     R <- R[match(parent$year, R$year), ]
-    out$pairs <- data.frame(year = parent$year,
-                            parent_year = parent$year - rec$curve$lag,
-                            ssb = parent$est, ssb_lwr = parent$lwr, ssb_upr = parent$upr,
-                            recruitment = R$est, recruitment_lwr = R$lwr, recruitment_upr = R$upr,
-                            mean = out$mean$est, prediction = out$prediction$est,
-                            residual = out$residual$est, is_proj = parent$is_proj)
+    out$pairs <- data.frame(
+      year = parent$year,
+      parent_year = parent$year - rec$curve$lag,
+      ssb = parent$est, ssb_lwr = parent$lwr, ssb_upr = parent$upr,
+      recruitment = R$est, recruitment_lwr = R$lwr, recruitment_upr = R$upr,
+      mean = out$mean$est, prediction = out$prediction$est,
+      residual = out$residual$est, is_proj = parent$is_proj
+    )
     curve <- .rec_curve_table(fit, interval)
     out$curve <- curve$curve
     out$reference <- curve$reference
@@ -1067,7 +1122,9 @@ tidy_recruitment <- function(fit, interval = .95) {
   variables <- all.vars(rec$fixed_form)
   for (name in variables) {
     value <- historic[[name]]
-    reference[[name]] <- if (is.numeric(value)) stats::median(value) else {
+    reference[[name]] <- if (is.numeric(value)) {
+      stats::median(value)
+    } else {
       levels <- if (is.factor(value)) levels(value) else sort(unique(value))
       factor(levels[1L], levels = levels, ordered = is.ordered(value))
     }
@@ -1086,20 +1143,28 @@ tidy_recruitment <- function(fit, interval = .95) {
   sdr <- fit[["sdrep"]]
   if (is.list(sdr) && isTRUE(sdr$pdHess)) {
     covariance <- sdr$cov.fixed
-    indices <- c(which(names(sdr$par.fixed) == "log_sr_alpha"),
-                 which(names(sdr$par.fixed) == "log_sr_beta"), which(names(sdr$par.fixed) == "rec_beta"))
+    indices <- c(
+      which(names(sdr$par.fixed) == "log_sr_alpha"),
+      which(names(sdr$par.fixed) == "log_sr_beta"), which(names(sdr$par.fixed) == "rec_beta")
+    )
     density <- exp(p$log_sr_beta) * S
-    gradient <- cbind(1, if (rec$curve$type == "bh") -density / (1 + density) else -density,
-                      matrix(rep(X, each = length(S)), length(S), ncol(X)))
+    gradient <- cbind(
+      1, if (rec$curve$type == "bh") -density / (1 + density) else -density,
+      matrix(rep(X, each = length(S)), length(S), ncol(X))
+    )
     if (length(indices) == ncol(gradient) && all(is.finite(covariance[indices, indices, drop = FALSE]))) {
       se <- sqrt(pmax(0, rowSums((gradient %*% covariance[indices, indices, drop = FALSE]) * gradient)))
     }
   }
   z <- stats::qnorm(.5 + interval / 2)
-  list(curve = data.frame(ssb = S, est = exp(value), lwr = exp(value - z * se),
-                          upr = exp(value + z * se), se = se, se_scale = "log"),
-       reference = data.frame(covariate = variables,
-                              value = vapply(variables, function(name) as.character(reference[[name]]), character(1))))
+  list(
+    curve = data.frame(
+      ssb = S, est = exp(value), lwr = exp(value - z * se),
+      upr = exp(value + z * se), se = se, se_scale = "log"
+    ),
+    reference = data.frame(
+      covariate = variables,
+      value = vapply(variables, function(name) as.character(reference[[name]]), character(1))
+    )
+  )
 }
-
-

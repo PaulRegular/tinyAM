@@ -1,29 +1,32 @@
 source("analysis/comp_assessments/R/run_assessment.R")
 .compare_fixture <- function(fit, reference, ...) {
-  measures <- c(N = "numbers_at_age", F = "fishing_mortality_at_age",
+  measures <- c(
+    N = "numbers_at_age", F = "fishing_mortality_at_age",
     M = "natural_mortality_at_age", recruitment = "recruitment",
     abundance = "total_numbers", biomass = "total_biomass", ssb = "SSB",
-    biomass_at_age = "biomass_by_age_group", F_bar = "Fbar")
+    biomass_at_age = "biomass_by_age_group", F_bar = "Fbar"
+  )
   rows <- lapply(names(reference$pop), function(metric) {
     x <- reference$pop[[metric]]
-    if (is.null(x)) return(NULL)
-    data.frame(assessment_id = "fixture",
-      type = if (metric %in% c("N", "abundance")) "population" else
-        if (metric %in% c("F", "M", "F_bar")) "mortality" else
-        if (metric == "recruitment") "recruitment" else "biomass",
+    if (is.null(x)) {
+      return(NULL)
+    }
+    data.frame(
+      assessment_id = "fixture",
+      type = if (metric %in% c("N", "abundance")) "population" else if (metric %in% c("F", "M", "F_bar")) "mortality" else if (metric == "recruitment") "recruitment" else "biomass",
       measure = measures[[metric]], year = x$year,
       age = if (is.null(x$age)) NA else x$age,
       age_group = if (is.null(x$age_group)) "" else x$age_group,
       value = x$est, se = NA_real_, lwr = NA_real_, upr = NA_real_,
-      unit = if (!is.null(x$unit)) x$unit else
-        if (metric %in% c("N", "abundance", "recruitment")) "fish" else
-        if (metric %in% c("F", "M", "F_bar")) "per year" else "kg",
-      source_type = "fixture", source_reference = "fixture", notes = "")
+      unit = if (!is.null(x$unit)) x$unit else if (metric %in% c("N", "abundance", "recruitment")) "fish" else if (metric %in% c("F", "M", "F_bar")) "per year" else "kg",
+      source_type = "fixture", source_reference = "fixture", notes = ""
+    )
   })
   fit$rep <- fit$obs_pred <- fit$random_par <- list()
   fit$fixed_par <- data.frame()
   ref <- database_to_tam_ref("fixture", do.call(rbind, rows),
-    template = fit, comparison_scales = reference$comparison_scales, ...)
+    template = fit, comparison_scales = reference$comparison_scales, ...
+  )
   .assessment_percent_differences(ref)
 }
 
@@ -34,22 +37,28 @@ f <- n
 f$est <- rep(c(0, 0, 0.1, 0.4), each = 3)
 tiny_n <- n[n$age %in% 2:3, ]
 fit <- list(
-  dat = list(years = years, ages = 2:3, W = matrix(2, 3, 2), P = matrix(0.5, 3, 2),
-             F_settings = list(mean_ages = 2:3), M_settings = list(mean_ages = 2:3)),
-  pop = list(N = tiny_n, F = f[f$age %in% 2:3, ],
-             recruitment = data.frame(year = years, est = 10),
-             abundance = data.frame(year = years, est = 30),
-             biomass = data.frame(year = years, est = 60),
-             ssb = data.frame(year = years, est = 30),
-             F_bar = data.frame(year = years, est = 0.3))
+  dat = list(
+    years = years, ages = 2:3, W = matrix(2, 3, 2), P = matrix(0.5, 3, 2),
+    F_settings = list(mean_ages = 2:3), M_settings = list(mean_ages = 2:3)
+  ),
+  pop = list(
+    N = tiny_n, F = f[f$age %in% 2:3, ],
+    recruitment = data.frame(year = years, est = 10),
+    abundance = data.frame(year = years, est = 30),
+    biomass = data.frame(year = years, est = 60),
+    ssb = data.frame(year = years, est = 30),
+    F_bar = data.frame(year = years, est = 0.3)
+  )
 )
 reference <- list(pop = list(
   N = n, F = f, recruitment = data.frame(year = years, age = 0L, est = 100),
   abundance = data.frame(year = years, est = 180),
   ssb = data.frame(year = years, est = 999),
   F_bar = data.frame(year = years, est = 0.25)
-), comparison_scales = c(N = 1, F = 1, recruitment = 1, abundance = 1,
-                         biomass = 1, ssb = 1, F_bar = 1))
+), comparison_scales = c(
+  N = 1, F = 1, recruitment = 1, abundance = 1,
+  biomass = 1, ssb = 1, F_bar = 1
+))
 original <- reference
 x <- .compare_fixture(fit, reference)
 stopifnot(
@@ -65,8 +74,10 @@ stopifnot(
 timed_fit <- fit
 timed_fit$dat$spawn_time <- matrix(.25, length(timed_fit$dat$years), length(timed_fit$dat$ages))
 timed_comparison <- .compare_fixture(timed_fit, reference)
-stopifnot(all(timed_comparison$comparison_status[timed_comparison$metric == "ssb"] == "non_equivalent"),
-          all(is.na(timed_comparison$percent_difference[timed_comparison$metric == "ssb"])))
+stopifnot(
+  all(timed_comparison$comparison_status[timed_comparison$metric == "ssb"] == "non_equivalent"),
+  all(is.na(timed_comparison$percent_difference[timed_comparison$metric == "ssb"]))
+)
 # Accepted N without accepted mortality cannot supply spawning-time survival.
 reference$pop$recruitment$age <- 2L
 reference$pop$recruitment$est <- 10
@@ -75,13 +86,16 @@ stopifnot(all(x$percent_difference[x$metric == "recruitment"] == 0))
 reference$pop$N$unit <- "million fish"
 reference$pop$N$est <- reference$pop$N$est / 1e6
 x <- .compare_fixture(fit, reference)
-stopifnot(all(x$source[x$metric == "abundance"] == 30),
-          all(x$percent_difference[x$metric == "N"] == 0))
+stopifnot(
+  all(x$source[x$metric == "abundance"] == 30),
+  all(x$percent_difference[x$metric == "N"] == 0)
+)
 reference <- original
 reference$pop$recruitment$age <- NULL
 reference$pop$recruitment$est <- 10
 x <- .compare_fixture(fit, reference,
-  assumptions = data.frame(setting = "recruitment_age", value = "2"))
+  assumptions = data.frame(setting = "recruitment_age", value = "2")
+)
 stopifnot(all(x$percent_difference[x$metric == "recruitment"] == 0))
 
 # Incomplete age coverage must never produce a partial annual total.
@@ -90,24 +104,33 @@ x <- .compare_fixture(fit, reference)
 stopifnot(!2001 %in% x$year[x$metric == "abundance"])
 reference$pop$N <- NULL
 x <- .compare_fixture(fit, reference)
-stopifnot(x$comparison_status[x$metric == "abundance"] == "non_equivalent",
-          x$comparison_status[x$metric == "ssb"] == "non_equivalent",
-          x$comparison_status[x$metric == "F_bar"] == "non_equivalent")
+stopifnot(
+  x$comparison_status[x$metric == "abundance"] == "non_equivalent",
+  x$comparison_status[x$metric == "ssb"] == "non_equivalent",
+  x$comparison_status[x$metric == "F_bar"] == "non_equivalent"
+)
 x <- .compare_fixture(fit, reference,
-                                     comparison_aggregates = "ssb")
-stopifnot(x$comparison_status[x$metric == "ssb"] == "matched",
-          all(x$source[x$metric == "ssb"] == 999),
-          grepl("Reported aggregate female SSB", x$definition[x$metric == "ssb"]),
-          x$comparison_status[x$metric == "F_bar"] == "non_equivalent")
+  comparison_aggregates = "ssb"
+)
+stopifnot(
+  x$comparison_status[x$metric == "ssb"] == "matched",
+  all(x$source[x$metric == "ssb"] == 999),
+  grepl("Reported aggregate female SSB", x$definition[x$metric == "ssb"]),
+  x$comparison_status[x$metric == "F_bar"] == "non_equivalent"
+)
 
 # Zero accepted values still contribute to absolute differences, not percentages.
-example <- data.frame(metric = "N", year = rep(years, 2), age = rep(2:3, each = 3),
-                      source = c(0, 1, 2, 100, 101, 102),
-                      tinyAM = c(2, 1, 0, 102, 101, 100),
-                      percent_difference = c(NA, 0, -100, 2, 0, -100 * 2/102))
+example <- data.frame(
+  metric = "N", year = rep(years, 2), age = rep(2:3, each = 3),
+  source = c(0, 1, 2, 100, 101, 102),
+  tinyAM = c(2, 1, 0, 102, 101, 100),
+  percent_difference = c(NA, 0, -100, 2, 0, -100 * 2 / 102)
+)
 summary <- .assessment_comparison_summary(example, "test")
-stopifnot(summary$n == 6L, summary$mean_absolute_difference == 8/6,
-          abs(summary$trend_correlation + 1) < 1e-12)
+stopifnot(
+  summary$n == 6L, summary$mean_absolute_difference == 8 / 6,
+  abs(summary$trend_correlation + 1) < 1e-12
+)
 flat <- data.frame(
   metric = "M_bar", year = years, age = NA_integer_,
   source = 0.2 + c(-2, 0, 2) * .Machine$double.eps,
@@ -117,17 +140,22 @@ flat <- data.frame(
 )
 stopifnot(is.na(.assessment_comparison_summary(flat, "test")$trend_correlation))
 failed <- .assessment_diagnostics("test", list(commit = "test"), "not_converged",
-  fit = list(opt = structure("NA/NaN gradient evaluation", class = "try-error"),
-             is_converged = FALSE, sdrep = list(pdHess = FALSE),
-             obj = list(env = list(random = 1:3))))
-stopifnot(failed$status == "fit_failed", is.na(failed$optimizer_code),
-          is.na(failed$max_abs_gradient), !failed$positive_definite_hessian,
-          grepl("NA/NaN", failed$reason))
+  fit = list(
+    opt = structure("NA/NaN gradient evaluation", class = "try-error"),
+    is_converged = FALSE, sdrep = list(pdHess = FALSE),
+    obj = list(env = list(random = 1:3))
+  )
+)
+stopifnot(
+  failed$status == "fit_failed", is.na(failed$optimizer_code),
+  is.na(failed$max_abs_gradient), !failed$positive_definite_hessian,
+  grepl("NA/NaN", failed$reason)
+)
 
 # A tinyAM plug-in M baseline must not become an invented accepted M surface.
 db <- read_database()
 output <- db$outputs[db$outputs$assessment_id == "dfo_cod_2j3kl_2025" &
-                       db$outputs$measure == "SSB", ][1, ]
+  db$outputs$measure == "SSB", ][1, ]
 obs <- list(pop_covariates = data.frame(year = output$year, age = 2L, M_assumption = 0.3))
 obs$weight <- obs$pop_covariates[c("year", "age")]
 for (status in c("estimated_in_source", "no_numerical_input")) {
@@ -186,7 +214,8 @@ ref_grouped$comparison_scales <- c(
   biomass_at_age = 1e-6, ssb = 1e-6
 )
 grouped <- .compare_fixture(
-  fit_grouped, ref_grouped, comparison_age_groups = list(
+  fit_grouped, ref_grouped,
+  comparison_age_groups = list(
     N = list("10+" = 10:15),
     biomass_at_age = list("3+" = 3:15)
   ), comparison_aggregates = "ssb",
@@ -248,10 +277,13 @@ template <- list(
   random_par = list()
 )
 grouped_ref <- database_to_tam_ref(
-  "grouped", grouped_output, years = 2020L, ages = 1:15,
+  "grouped", grouped_output,
+  years = 2020L, ages = 1:15,
   age_plus_group = 15L, template = template
 )
-stopifnot(nrow(grouped_ref$pop$biomass_at_age) == 15L,
-          all(is.na(grouped_ref$pop$biomass_at_age$est)),
-          attr(grouped_ref, "native_pop")$biomass_at_age$age_group == "3+")
+stopifnot(
+  nrow(grouped_ref$pop$biomass_at_age) == 15L,
+  all(is.na(grouped_ref$pop$biomass_at_age$est)),
+  attr(grouped_ref, "native_pop")$biomass_at_age$age_group == "3+"
+)
 cat("Reported age-group comparison tests passed.\n")

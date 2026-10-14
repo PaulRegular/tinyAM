@@ -8,13 +8,16 @@ stopifnot(inherits(fit, "tam_fit"), !is.null(assessment$ref))
 testthat::test_that("previews use the supplied fit, refresh comparisons and do not export results", {
   before <- fit
   source_before <- assessment$source
-  aggregate_files <- file.path(.assessment_root, "results",
-    c("fit_diagnostics.csv", "comparison_summary.csv"))
+  aggregate_files <- file.path(
+    .assessment_root, "results",
+    c("fit_diagnostics.csv", "comparison_summary.csv")
+  )
   hashes <- tools::md5sum(aggregate_files)
   captured <- NULL
   testthat::local_mocked_bindings(
     fit_tam = function(...) stop("A preview must never fit a model."),
-    vis_tam = function(...) captured <<- list(...), .package = "tinyAM")
+    vis_tam = function(...) captured <<- list(...), .package = "tinyAM"
+  )
   result <- withVisible(view_assessment(fit, assessment, open_file = FALSE))
   testthat::expect_false(result$visible)
   testthat::expect_false(captured$open_file)
@@ -37,8 +40,10 @@ testthat::test_that("previews use the supplied fit, refresh comparisons and do n
   testthat::expect_identical(result2$dashboard_file, "experiment.html")
   testthat::expect_identical(captured$model_list$tinyAM$pop$ssb$est, changed$pop$ssb$est)
   testthat::expect_false(isTRUE(all.equal(result2$summary, result$value$summary)))
-  testthat::expect_equal(result2$ref$comparisons$tinyAM[result2$ref$comparisons$metric == "ssb"],
-    changed$pop$ssb$est * result2$ref$comparison_scales[["ssb"]])
+  testthat::expect_equal(
+    result2$ref$comparisons$tinyAM[result2$ref$comparisons$metric == "ssb"],
+    changed$pop$ssb$est * result2$ref$comparison_scales[["ssb"]]
+  )
   testthat::expect_identical(fit, before)
   testthat::expect_identical(assessment$source, source_before)
   testthat::expect_identical(tools::md5sum(aggregate_files), hashes)
@@ -74,8 +79,10 @@ testthat::test_that("failed numerical checks do not block usable exploratory pre
   testthat::local_mocked_bindings(vis_tam = function(...) captured <<- list(...), .package = "tinyAM")
   failed <- fit
   failed$opt$convergence <- 1L
-  testthat::expect_warning(result <- view_assessment(failed, assessment, open_file = FALSE),
-    "not passed numerical convergence")
+  testthat::expect_warning(
+    result <- view_assessment(failed, assessment, open_file = FALSE),
+    "not passed numerical convergence"
+  )
   testthat::expect_false(result$diagnostics$is_converged)
   testthat::expect_identical(captured$model_list$tinyAM$opt$convergence, 1L)
   empty <- fit
@@ -108,7 +115,8 @@ testthat::test_that("unavailable metrics retain their status and explanation in 
   reference$comparisons <- rbind(reference$comparisons, row)
   result <- testthat::with_mocked_bindings(.assessment_comparison(fit, assessment),
     database_to_tam_ref = function(...) reference,
-    .env = environment(.assessment_comparison))
+    .env = environment(.assessment_comparison)
+  )
   summary <- result$summary[result$summary$metric == "unavailable_metric", ]
   testthat::expect_equal(nrow(summary), 1L)
   testthat::expect_identical(summary$comparison_status, "unavailable")
@@ -127,8 +135,10 @@ testthat::test_that("missing uncertainty still permits a real temporary comparis
   no_se$pop <- tinyAM::tidy_pop(no_se)
   no_se$rec <- tinyAM::tidy_recruitment(no_se)
   before <- no_se
-  testthat::expect_warning(result <- view_assessment(no_se, assessment, open_file = FALSE),
-    "not passed numerical convergence")
+  testthat::expect_warning(
+    result <- view_assessment(no_se, assessment, open_file = FALSE),
+    "not passed numerical convergence"
+  )
   testthat::expect_true(file.exists(result$dashboard_file))
   testthat::expect_true(all(is.na(result$fit$pop$ssb$se)))
   testthat::expect_true(all(is.finite(result$fit$pop$ssb$est)))

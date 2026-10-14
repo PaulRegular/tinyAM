@@ -21,13 +21,17 @@ wg_report_url <- "https://www.hav.fo/wp-content/uploads/2025/10/WGWIDE-2025_02-b
 
 append_rows <- function(path, rows, id_column = "assessment_id",
                         id_value = assessment_id) {
-  current <- utils::read.csv(path, stringsAsFactors = FALSE,
-                             na.strings = c("", "NA"), check.names = FALSE)
+  current <- utils::read.csv(path,
+    stringsAsFactors = FALSE,
+    na.strings = c("", "NA"), check.names = FALSE
+  )
   if (any(current[[id_column]] == id_value, na.rm = TRUE)) {
     stop("Assessment rows already exist in ", basename(path), ".")
   }
-  utils::write.table(rows, path, sep = ",", quote = TRUE, row.names = FALSE,
-                     col.names = FALSE, append = TRUE, na = "")
+  utils::write.table(rows, path,
+    sep = ",", quote = TRUE, row.names = FALSE,
+    col.names = FALSE, append = TRUE, na = ""
+  )
 }
 
 input_rows <- function(type, measure, basis, year, age, value, unit,
@@ -88,33 +92,43 @@ obs <- exp(sam_data$logobs)
 observation_rows <- data.frame(aux, value = obs)
 catch <- observation_rows[observation_rows$fleet == 1L, , drop = FALSE]
 index <- observation_rows[observation_rows$fleet == 2L &
-                            is.finite(observation_rows$value), , drop = FALSE]
+  is.finite(observation_rows$value), , drop = FALSE]
 
 inputs <- rbind(
   input_rows(
     "catch", "numbers_at_age", "numbers", catch$year, catch$age,
-    catch$value, "thousand fish", fleet = "Commercial catch",
+    catch$value, "thousand fish",
+    fleet = "Commercial catch",
     transformation = "Exponentiated natural-log catch observations from the accepted SAM data object.",
     notes = "SAM fleet 1 is the single aggregate commercial catch stream."
   ),
   input_rows(
     "index", "numbers_at_age", "numbers", index$year, index$age,
-    index$value, "million fish", survey = "IBWSS", season = "spring",
+    index$value, "million fish",
+    survey = "IBWSS", season = "spring",
     sampling_time = sam_data$sampleTimes[[2L]],
     transformation = "Exponentiated natural-log IBWSS observations from the accepted SAM data object.",
     notes = "SAM fleet 2; the source table reports abundance in millions. No survey observations are present in 2010 or 2020."
   ),
-  surface_inputs(sam_data$stockMeanWeight, "weight", "weight_at_age",
-                 "kg_per_fish", "kg", "Annual stock weights from the accepted fit."),
-  surface_inputs(sam_data$catchMeanWeight[, , 1L], "catch_weight",
-                 "weight_at_age", "kg_per_fish", "kg",
-                 "Annual commercial catch weights from the accepted fit."),
-  surface_inputs(sam_data$propMat, "maturity", "maturity_at_age",
-                 "proportion", "proportion",
-                 "The model repeats the time-invariant maturity ogive across years."),
-  surface_inputs(sam_data$natMor, "M", "natural_mortality_at_age",
-                 "per_year", "per year",
-                 "Fixed time-invariant natural mortality repeated across years.")
+  surface_inputs(
+    sam_data$stockMeanWeight, "weight", "weight_at_age",
+    "kg_per_fish", "kg", "Annual stock weights from the accepted fit."
+  ),
+  surface_inputs(
+    sam_data$catchMeanWeight[, , 1L], "catch_weight",
+    "weight_at_age", "kg_per_fish", "kg",
+    "Annual commercial catch weights from the accepted fit."
+  ),
+  surface_inputs(
+    sam_data$propMat, "maturity", "maturity_at_age",
+    "proportion", "proportion",
+    "The model repeats the time-invariant maturity ogive across years."
+  ),
+  surface_inputs(
+    sam_data$natMor, "M", "natural_mortality_at_age",
+    "per_year", "per year",
+    "Fixed time-invariant natural mortality repeated across years."
+  )
 )
 
 assumption <- function(component, setting, value, notes = "",
@@ -140,55 +154,82 @@ assumptions <- do.call(rbind, list(
   assumption("assessment", "assessment_type", "Full age-structured assessment"),
   assumption("assessment", "model_name", "SAM"),
   assumption("assessment", "model_object", "BW-2026"),
-  assumption("assessment", "stockassessment_version",
-             as.character(utils::packageVersion("stockassessment")),
-             paste("RemoteSha", utils::packageDescription("stockassessment")[["RemoteSha"]])),
+  assumption(
+    "assessment", "stockassessment_version",
+    as.character(utils::packageVersion("stockassessment")),
+    paste("RemoteSha", utils::packageDescription("stockassessment")[["RemoteSha"]])
+  ),
   assumption("population", "model_years", paste(range(years), collapse = "-")),
   assumption("population", "model_ages", paste(range(ages), collapse = "-")),
   assumption("population", "recruitment_age", "1"),
   assumption("population", "plus_group_age", "10"),
   assumption("population", "Fbar_ages", paste(sam_conf$fbarRange, collapse = "-")),
   assumption("catch", "catch_streams", "1", "One aggregate commercial catch stream."),
-  assumption("F", "process", "Random walk with age-correlated increments",
-             "Ages 1-9 have separate states; age 10+ shares the age-9 state."),
-  assumption("F", "process_variance_sharing", "One shared F process variance",
-             "The SAM keyVarF configuration shares the process variance across ages."),
-  assumption("F", "process_correlation", "Age-correlated increments",
-             "The accepted SAM fit has corFlag = 2."),
-  assumption("N", "process_variance_sharing", "Age 1 separate; ages 2-10 shared",
-             "Recruitment age has its own variance group; all older ages share another."),
-  assumption("M", "natural_mortality", "0.2 per year at all ages",
-             "Fixed, time-invariant natural mortality from the accepted fit."),
+  assumption(
+    "F", "process", "Random walk with age-correlated increments",
+    "Ages 1-9 have separate states; age 10+ shares the age-9 state."
+  ),
+  assumption(
+    "F", "process_variance_sharing", "One shared F process variance",
+    "The SAM keyVarF configuration shares the process variance across ages."
+  ),
+  assumption(
+    "F", "process_correlation", "Age-correlated increments",
+    "The accepted SAM fit has corFlag = 2."
+  ),
+  assumption(
+    "N", "process_variance_sharing", "Age 1 separate; ages 2-10 shared",
+    "Recruitment age has its own variance group; all older ages share another."
+  ),
+  assumption(
+    "M", "natural_mortality", "0.2 per year at all ages",
+    "Fixed, time-invariant natural mortality from the accepted fit."
+  ),
   assumption("maturity", "maturity_at_age",
-             "0.11, 0.40, 0.82, 0.86, 0.91, 0.94, then 1.00 at ages 7-10",
-             "Time-invariant maturity ogive estimated in 1994 by combining southern and northern areas.",
-             source_reference = "ICES 2026 advice; WGWIDE 2025, Table 2.3.5.1"),
-  assumption("weight", "stock_and_catch_weights",
-             "Annual age-specific stock and catch weights",
-             "The accepted SAM object supplies both surfaces."),
+    "0.11, 0.40, 0.82, 0.86, 0.91, 0.94, then 1.00 at ages 7-10",
+    "Time-invariant maturity ogive estimated in 1994 by combining southern and northern areas.",
+    source_reference = "ICES 2026 advice; WGWIDE 2025, Table 2.3.5.1"
+  ),
+  assumption(
+    "weight", "stock_and_catch_weights",
+    "Annual age-specific stock and catch weights",
+    "The accepted SAM object supplies both surfaces."
+  ),
   assumption("catch", "observation_likelihood", "Lognormal"),
   assumption("index", "observation_likelihood", "Lognormal",
-             survey = "IBWSS"),
+    survey = "IBWSS"
+  ),
   assumption("catch", "observation_correlation", "AR across ages",
-             fleet = "Commercial catch"),
+    fleet = "Commercial catch"
+  ),
   assumption("index", "observation_correlation", "AR across ages",
-             survey = "IBWSS"),
-  assumption("catch", "observation_variance_age_groups",
-             "Age 1; age 2; ages 3-8; ages 9-10"),
+    survey = "IBWSS"
+  ),
+  assumption(
+    "catch", "observation_variance_age_groups",
+    "Age 1; age 2; ages 3-8; ages 9-10"
+  ),
   assumption("index", "observation_variance_age_groups",
-             "Age 1; age 2; age 3; ages 4-6; ages 7-8",
-             survey = "IBWSS"),
+    "Age 1; age 2; age 3; ages 4-6; ages 7-8",
+    survey = "IBWSS"
+  ),
   assumption("index", "survey_catchability_age_groups",
-             "Age 1; age 2; age 3; age 4; ages 5-8",
-             survey = "IBWSS"),
+    "Age 1; age 2; age 3; age 4; ages 5-8",
+    survey = "IBWSS"
+  ),
   assumption("index", "survey_catchability_power", "None",
-             "All keyQpow entries are disabled.", survey = "IBWSS"),
+    "All keyQpow entries are disabled.",
+    survey = "IBWSS"
+  ),
   assumption("index", "sampling_time", "0.245",
-             "Proportion of year for the spring IBWSS survey.", survey = "IBWSS"),
+    "Proportion of year for the spring IBWSS survey.",
+    survey = "IBWSS"
+  ),
   assumption("advice", "2026_recruitment_adjustment",
-             "39,366,774 thousand fish",
-             "For advice, the model-estimated 2026 recruitment was replaced by the 75th percentile of the 1996-2025 geometric mean; this advice adjustment is not part of the native SAM fit.",
-             source_reference = advice_url)
+    "39,366,774 thousand fish",
+    "For advice, the model-estimated 2026 recruitment was replaced by the 75th percentile of the 1996-2025 geometric mean; this advice adjustment is not part of the native SAM fit.",
+    source_reference = advice_url
+  )
 ))
 
 output_rows <- function(type, measure, year, age = NA_integer_, age_group = NA_character_,
@@ -222,22 +263,28 @@ output_rows <- function(type, measure, year, age = NA_integer_, age_group = NA_c
 surface_output <- function(surface, type, measure, unit, se = NULL,
                            age_group = NA_character_, notes = "") {
   surface <- as.matrix(surface)
-  grid <- expand.grid(year = as.integer(rownames(surface)),
-                      age = as.integer(colnames(surface)))
+  grid <- expand.grid(
+    year = as.integer(rownames(surface)),
+    age = as.integer(colnames(surface))
+  )
   if (length(age_group) > 1L) {
     age_group <- age_group[match(grid$age, as.integer(colnames(surface)))]
   }
   surface_se <- if (is.null(se)) rep(NA_real_, length(surface)) else as.vector(se)
   output_rows(type, measure, grid$year, grid$age, age_group,
-              as.vector(surface), surface_se, unit = unit, notes = notes)
+    as.vector(surface), surface_se,
+    unit = unit, notes = notes
+  )
 }
 
 summary_output <- function(x, type, measure, unit, notes = "",
                            age_group = NA_character_) {
   x <- as.data.frame(x)
-  output_rows(type, measure, as.integer(rownames(x)), age_group = age_group,
-              value = x$Estimate,
-              lwr = x$Low, upr = x$High, unit = unit, notes = notes)
+  output_rows(type, measure, as.integer(rownames(x)),
+    age_group = age_group,
+    value = x$Estimate,
+    lwr = x$Low, upr = x$High, unit = unit, notes = notes
+  )
 }
 
 n_est <- stockassessment::ntable(sam)
@@ -254,70 +301,96 @@ q_age <- which(q_key >= 0L)
 q_value <- exp(sam$pl$logFpar[q_key[q_age] + 1L])
 q_groups <- vapply(q_age, function(a) {
   ages_in_group <- q_age[q_key[q_age] == q_key[a]]
-  if (length(ages_in_group) == 1L) as.character(a) else
+  if (length(ages_in_group) == 1L) {
+    as.character(a)
+  } else {
     paste0(min(ages_in_group), "-", max(ages_in_group))
+  }
 }, character(1))
 
 aux$prediction <- exp(sam$rep$predObs)
 predictions <- rbind(
   output_rows("catch", "predicted_catch", aux$year[aux$fleet == 1L],
-              aux$age[aux$fleet == 1L],
-              value = aux$prediction[aux$fleet == 1L],
-              unit = "thousand fish", fleet = "Commercial catch",
-              notes = "Exponentiated SAM log-scale fitted predictions."),
+    aux$age[aux$fleet == 1L],
+    value = aux$prediction[aux$fleet == 1L],
+    unit = "thousand fish", fleet = "Commercial catch",
+    notes = "Exponentiated SAM log-scale fitted predictions."
+  ),
   output_rows("index", "predicted_index", aux$year[aux$fleet == 2L],
-              aux$age[aux$fleet == 2L],
-              value = aux$prediction[aux$fleet == 2L],
-              unit = "million fish", survey = "IBWSS",
-              notes = "Exponentiated SAM log-scale fitted predictions.")
+    aux$age[aux$fleet == 2L],
+    value = aux$prediction[aux$fleet == 2L],
+    unit = "million fish", survey = "IBWSS",
+    notes = "Exponentiated SAM log-scale fitted predictions."
+  )
 )
 
 sd_outputs <- rbind(
-  output_rows("population", "process_sd", year = NA_integer_,
-              age_group = c("1", "2-10"), value = exp(sam$pl$logSdLogN),
-              unit = "log-scale SD",
-              notes = "Fitted N-process standard deviation on log states."),
-  output_rows("mortality", "process_sd", year = NA_integer_,
-              age_group = "1-10", value = exp(sam$pl$logSdLogFsta),
-              unit = "log-scale SD",
-              notes = "Fitted age-correlated F-increment standard deviation on log states."),
-  output_rows("catch", "observation_sd", year = NA_integer_,
-              age_group = c("1", "2", "3-8", "9-10"),
-              value = exp(sam$pl$logSdLogObs[1:4]), unit = "log-scale SD",
-              fleet = "Commercial catch",
-              notes = "Fitted SD of log catch observations; the source model also correlates residuals across ages."),
-  output_rows("index", "observation_sd", year = NA_integer_,
-              age_group = c("1", "2", "3", "4-6", "7-8"),
-              value = exp(sam$pl$logSdLogObs[5:9]), unit = "log-scale SD",
-              survey = "IBWSS",
-              notes = "Fitted SD of log survey observations; the source model also correlates residuals across ages.")
+  output_rows("population", "process_sd",
+    year = NA_integer_,
+    age_group = c("1", "2-10"), value = exp(sam$pl$logSdLogN),
+    unit = "log-scale SD",
+    notes = "Fitted N-process standard deviation on log states."
+  ),
+  output_rows("mortality", "process_sd",
+    year = NA_integer_,
+    age_group = "1-10", value = exp(sam$pl$logSdLogFsta),
+    unit = "log-scale SD",
+    notes = "Fitted age-correlated F-increment standard deviation on log states."
+  ),
+  output_rows("catch", "observation_sd",
+    year = NA_integer_,
+    age_group = c("1", "2", "3-8", "9-10"),
+    value = exp(sam$pl$logSdLogObs[1:4]), unit = "log-scale SD",
+    fleet = "Commercial catch",
+    notes = "Fitted SD of log catch observations; the source model also correlates residuals across ages."
+  ),
+  output_rows("index", "observation_sd",
+    year = NA_integer_,
+    age_group = c("1", "2", "3", "4-6", "7-8"),
+    value = exp(sam$pl$logSdLogObs[5:9]), unit = "log-scale SD",
+    survey = "IBWSS",
+    notes = "Fitted SD of log survey observations; the source model also correlates residuals across ages."
+  )
 )
 
 outputs <- rbind(
   surface_output(n_est, "population", "numbers_at_age", "thousand fish",
-                 se = n_se,
-                 age_group = ifelse(ages == max(ages), "10+", NA_character_),
-                 notes = "Conditional log-state SE converted to the natural scale by the delta method; no at-age 95% interval is supplied."),
+    se = n_se,
+    age_group = ifelse(ages == max(ages), "10+", NA_character_),
+    notes = "Conditional log-state SE converted to the natural scale by the delta method; no at-age 95% interval is supplied."
+  ),
   surface_output(f_est, "mortality", "fishing_mortality_at_age", "per year",
-                 se = f_se,
-                 age_group = ifelse(ages == max(ages), "10+", NA_character_),
-                 notes = "Age 10+ shares the age-9 F state. Conditional log-state SE converted to the natural scale by the delta method; no at-age 95% interval is supplied."),
+    se = f_se,
+    age_group = ifelse(ages == max(ages), "10+", NA_character_),
+    notes = "Age 10+ shares the age-9 F state. Conditional log-state SE converted to the natural scale by the delta method; no at-age 95% interval is supplied."
+  ),
   surface_output(sam_data$natMor, "mortality", "natural_mortality_at_age",
-                 "per year", age_group = ifelse(ages == max(ages), "10+", NA_character_),
-                 notes = "Fixed supplied natural mortality, not an estimated output."),
-  summary_output(stockassessment::ssbtable(sam), "biomass", "SSB", "tonnes",
-                 "Estimate and 95% confidence interval reported in the 2026 advice."),
-  summary_output(stockassessment::tsbtable(sam), "biomass", "total_biomass", "tonnes",
-                 "Estimate and 95% confidence interval from the accepted assessment."),
-  summary_output(stockassessment::rectable(sam), "recruitment", "recruitment",
-                 "thousand fish",
-                 "Age-1 recruitment; estimate and 95% confidence interval reported in the 2026 advice."),
+    "per year",
+    age_group = ifelse(ages == max(ages), "10+", NA_character_),
+    notes = "Fixed supplied natural mortality, not an estimated output."
+  ),
+  summary_output(
+    stockassessment::ssbtable(sam), "biomass", "SSB", "tonnes",
+    "Estimate and 95% confidence interval reported in the 2026 advice."
+  ),
+  summary_output(
+    stockassessment::tsbtable(sam), "biomass", "total_biomass", "tonnes",
+    "Estimate and 95% confidence interval from the accepted assessment."
+  ),
+  summary_output(
+    stockassessment::rectable(sam), "recruitment", "recruitment",
+    "thousand fish",
+    "Age-1 recruitment; estimate and 95% confidence interval reported in the 2026 advice."
+  ),
   summary_output(stockassessment::fbartable(sam), "mortality", "Fbar", "per year",
-                 "Estimate and 95% confidence interval reported in the 2026 advice.",
-                 age_group = "3-7"),
-  output_rows("catchability", "q", year = NA_integer_, age = q_age,
-              age_group = q_groups, value = q_value, unit = "index per abundance unit",
-              survey = "IBWSS", notes = "Exponentiated SAM log-q parameter; shared across the documented age groups."),
+    "Estimate and 95% confidence interval reported in the 2026 advice.",
+    age_group = "3-7"
+  ),
+  output_rows("catchability", "q",
+    year = NA_integer_, age = q_age,
+    age_group = q_groups, value = q_value, unit = "index per abundance unit",
+    survey = "IBWSS", notes = "Exponentiated SAM log-q parameter; shared across the documented age groups."
+  ),
   predictions,
   sd_outputs
 )

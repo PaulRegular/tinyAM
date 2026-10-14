@@ -51,8 +51,10 @@ table_rows <- function(number, next_number, value_count, years,
   tokens <- tokens[lengths(tokens) == expected]
   parsed_years <- as.integer(vapply(tokens, `[[`, character(1), 1L))
   if (!identical(parsed_years, as.integer(years))) {
-    stop("Unexpected years in Table ", number, ": ",
-         paste(parsed_years, collapse = ", "))
+    stop(
+      "Unexpected years in Table ", number, ": ",
+      paste(parsed_years, collapse = ", ")
+    )
   }
   values <- lapply(tokens, function(row) {
     z <- row[-1L]
@@ -81,14 +83,18 @@ if (!file.exists(acoustic_biomass_file) || !file.exists(acoustic_dictionary_file
 biomass_lines <- readLines(acoustic_biomass_file, warn = FALSE, encoding = "latin1")
 acoustic_biomass_data <- read.csv(
   text = paste(biomass_lines[-1L], collapse = "\n"), header = FALSE,
-  col.names = c("year", "fall_biomass", "spring_biomass", "total_biomass",
-                "prop_fall", "prop_spring"), check.names = FALSE
+  col.names = c(
+    "year", "fall_biomass", "spring_biomass", "total_biomass",
+    "prop_fall", "prop_spring"
+  ), check.names = FALSE
 )
-dictionary_lines <- readLines(acoustic_dictionary_file, warn = FALSE,
-                              encoding = "latin1")
+dictionary_lines <- readLines(acoustic_dictionary_file,
+  warn = FALSE,
+  encoding = "latin1"
+)
 if (ncol(acoustic_biomass_data) != 6L ||
-    !identical(as.integer(acoustic_biomass_data[[1L]]), 1994:2025) ||
-    !all(is.finite(as.numeric(acoustic_biomass_data[[3L]])))) {
+  !identical(as.integer(acoustic_biomass_data[[1L]]), 1994:2025) ||
+  !all(is.finite(as.numeric(acoustic_biomass_data[[3L]])))) {
   stop("Unexpected years, columns, or values in the acoustic biomass CSV.")
 }
 if (sum(grepl(
@@ -105,8 +111,10 @@ long_rows <- function(table, value_columns, ages, type, measure, basis, unit,
                       fleet = "", survey = "", season = "",
                       source_table, source_type = "official_table",
                       notes = "") {
-  indices <- expand.grid(year = table[, 1], age_index = seq_along(ages),
-                         KEEP.OUT.ATTRS = FALSE)
+  indices <- expand.grid(
+    year = table[, 1], age_index = seq_along(ages),
+    KEEP.OUT.ATTRS = FALSE
+  )
   indices <- indices[order(indices$year, indices$age_index), ]
   value <- as.vector(t(table[, value_columns, drop = FALSE]))
   keep <- !is.na(value)
@@ -124,33 +132,44 @@ long_rows <- function(table, value_columns, ages, type, measure, basis, unit,
 
 inputs <- rbind(
   long_rows(catch_fixed, 2:11, ages, "catch", "numbers_at_age", "numbers",
-            "thousand fish", "Fixed gear", season = "spring", source_table = 4,
-            notes = "Spring-spawner catch at age; age 11 is the 11+ group."),
+    "thousand fish", "Fixed gear",
+    season = "spring", source_table = 4,
+    notes = "Spring-spawner catch at age; age 11 is the 11+ group."
+  ),
   long_rows(catch_mobile, 2:11, ages, "catch", "numbers_at_age", "numbers",
-            "thousand fish", "Mobile gear", season = "spring", source_table = 8,
-            notes = "Spring-spawner catch at age; age 11 is the 11+ group."),
+    "thousand fish", "Mobile gear",
+    season = "spring", source_table = 8,
+    notes = "Spring-spawner catch at age; age 11 is the 11+ group."
+  ),
   long_rows(weight_fixed, 2:11, ages, "catch_weight", "weight_at_age", "kg_per_fish",
-            "kg per fish", "Fixed gear", season = "spring", source_table = 5,
-            notes = "Published fishery weight at age; a dash denotes an unreported value."),
+    "kg per fish", "Fixed gear",
+    season = "spring", source_table = 5,
+    notes = "Published fishery weight at age; a dash denotes an unreported value."
+  ),
   long_rows(weight_mobile, 2:11, ages, "catch_weight", "weight_at_age", "kg_per_fish",
-            "kg per fish", "Mobile gear", season = "spring", source_table = 9,
-            notes = "Published fishery weight at age; a dash denotes an unreported value."),
+    "kg per fish", "Mobile gear",
+    season = "spring", source_table = 9,
+    notes = "Published fishery weight at age; a dash denotes an unreported value."
+  ),
   long_rows(cpue, 2:9, 4:11, "index", "numbers_at_age", "numbers",
-            "number per net-haul", survey = "Spring fixed-gear CPUE",
-            season = "spring", source_table = 13,
-            notes = "Age-specific CPUE values. The source SCA used the aggregate index with age composition; direct age-specific use is a tinyAM approximation."),
+    "number per net-haul",
+    survey = "Spring fixed-gear CPUE",
+    season = "spring", source_table = 13,
+    notes = "Age-specific CPUE values. The source SCA used the aggregate index with age composition; direct age-specific use is a tinyAM approximation."
+  ),
   long_rows(acoustic, 2:10, 2:10, "index", "numbers_at_age", "numbers",
-            "thousand fish",
-            survey = "4Tmno acoustic survey", season = "fall",
-            source_table = 15,
-            notes = paste(
-              "Spring-spawner age-disaggregated acoustic abundance-index values.",
-              "Table 15 omits the unit; DFO Research Document 2016/060 Table 16",
-              "explicitly identifies the same historical series as thousands of fish.",
-              "Table 15 values are retained unchanged in thousand fish; conversion",
-              "to fish requires multiplication by 1000. The 2022 methods describe the source",
-              "likelihood as age composition plus an aggregate biomass index."
-            ))
+    "thousand fish",
+    survey = "4Tmno acoustic survey", season = "fall",
+    source_table = 15,
+    notes = paste(
+      "Spring-spawner age-disaggregated acoustic abundance-index values.",
+      "Table 15 omits the unit; DFO Research Document 2016/060 Table 16",
+      "explicitly identifies the same historical series as thousands of fish.",
+      "Table 15 values are retained unchanged in thousand fish; conversion",
+      "to fish requires multiplication by 1000. The 2022 methods describe the source",
+      "likelihood as age composition plus an aggregate biomass index."
+    )
+  )
 )
 acoustic_rows <- inputs$survey == "4Tmno acoustic survey"
 inputs$source_reference[acoustic_rows] <- paste(
@@ -183,7 +202,8 @@ acoustic_biomass_2026 <- data.frame(
 mobile_zero <- long_rows(
   matrix(c(2023, rep(0, 11)), nrow = 1L), 2:11, ages,
   "catch", "numbers_at_age", "numbers", "thousand fish",
-  "Mobile gear", season = "spring", source_table = 1,
+  "Mobile gear",
+  season = "spring", source_table = 1,
   source_type = "reconstructed_source_input",
   notes = "The annual landings table reports zero 2023 spring mobile-gear catch; zero catch was assigned to each age."
 )
@@ -205,21 +225,30 @@ inputs <- rbind(inputs, maturity)
 make_output <- function(table, columns, ages, type, measure, unit,
                         source_table, notes) {
   long_rows(table, columns, ages, type, measure, "", unit,
-            source_table = source_table, notes = notes)[
-    c("assessment_id", "type", "measure", "fleet", "survey", "sex",
+    source_table = source_table, notes = notes
+  )[
+    c(
+      "assessment_id", "type", "measure", "fleet", "survey", "sex",
       "region", "season", "year", "age", "value", "unit",
-      "source_type", "source_reference", "notes")
+      "source_type", "source_reference", "notes"
+    )
   ]
 }
 
 outputs <- rbind(
-  make_output(abundance, 2:11, ages, "population", "numbers_at_age",
-              "thousand fish", 19, "January 1 MLE abundance; age 11 is 11+."),
-  make_output(biomass, 2:11, ages, "biomass", "biomass_at_age",
-              "tonnes", 18, "January 1 MLE biomass; this is not April 1 spawning biomass; age 11 is 11+."),
-  make_output(fishing_mortality, 2:11, ages, "mortality",
-              "fishing_mortality_at_age", "per_year", 20,
-              "January 1 fishing mortality; age 11 is 11+.")
+  make_output(
+    abundance, 2:11, ages, "population", "numbers_at_age",
+    "thousand fish", 19, "January 1 MLE abundance; age 11 is 11+."
+  ),
+  make_output(
+    biomass, 2:11, ages, "biomass", "biomass_at_age",
+    "tonnes", 18, "January 1 MLE biomass; this is not April 1 spawning biomass; age 11 is 11+."
+  ),
+  make_output(
+    fishing_mortality, 2:11, ages, "mortality",
+    "fishing_mortality_at_age", "per_year", 20,
+    "January 1 fishing mortality; age 11 is 11+."
+  )
 )
 outputs$age_group <- ""
 outputs$se <- NA_real_
@@ -241,36 +270,48 @@ annual_output <- function(measure, type, year, value, unit, source_table,
 outputs <- rbind(
   outputs,
   annual_output("recruitment", "recruitment", abundance[, 1],
-                abundance[, 2], "thousand fish", 19, age = 2,
-                notes = "Recruitment is the estimated abundance at age 2."),
+    abundance[, 2], "thousand fish", 19,
+    age = 2,
+    notes = "Recruitment is the estimated abundance at age 2."
+  ),
   annual_output("total_numbers", "population", abundance[, 1],
-                abundance[, 12], "thousand fish", 19, age_group = "4+",
-                notes = "January 1 abundance summed over ages 4+."),
+    abundance[, 12], "thousand fish", 19,
+    age_group = "4+",
+    notes = "January 1 abundance summed over ages 4+."
+  ),
   annual_output("total_biomass", "biomass", biomass[, 1],
-                biomass[, 12], "tonnes", 18, age_group = "4+",
-                notes = "January 1 biomass summed over ages 4+; not April 1 SSB."),
+    biomass[, 12], "tonnes", 18,
+    age_group = "4+",
+    notes = "January 1 biomass summed over ages 4+; not April 1 SSB."
+  ),
   annual_output("Fbar", "mortality", fishing_mortality[, 1],
-                fishing_mortality[, 12], "per_year", 20, age_group = "6-8",
-                notes = "January 1 abundance-weighted F for ages 6-8.")
+    fishing_mortality[, 12], "per_year", 20,
+    age_group = "6-8",
+    notes = "January 1 abundance-weighted F for ages 6-8."
+  )
 )
 derived <- rbind(
   annual_output("total_numbers", "population", abundance[, 1],
-                rowSums(abundance[, 2:11, drop = FALSE]), "thousand fish", 19,
-                source_type = "derived_source_output",
-                notes = "Sum of January 1 MLE abundance over ages 2-11+ from Table 19; no aggregate uncertainty is available."),
+    rowSums(abundance[, 2:11, drop = FALSE]), "thousand fish", 19,
+    source_type = "derived_source_output",
+    notes = "Sum of January 1 MLE abundance over ages 2-11+ from Table 19; no aggregate uncertainty is available."
+  ),
   annual_output("total_biomass", "biomass", biomass[, 1],
-                rowSums(biomass[, 2:11, drop = FALSE]), "tonnes", 18,
-                source_type = "derived_source_output",
-                notes = "Sum of January 1 MLE biomass over ages 2-11+ from Table 18; no aggregate uncertainty is available."),
+    rowSums(biomass[, 2:11, drop = FALSE]), "tonnes", 18,
+    source_type = "derived_source_output",
+    notes = "Sum of January 1 MLE biomass over ages 2-11+ from Table 18; no aggregate uncertainty is available."
+  ),
   annual_output("SSB", "biomass", biomass[, 1],
-                rowSums(sweep(biomass[, 2:11, drop = FALSE], 2, maturity$value, `*`)),
-                "tonnes", 18, source_type = "derived_source_output",
-                notes = paste(
-                  "January 1 mature biomass: sum of Table 18 MLE biomass-at-age",
-                  "times the knife-edge maturity schedule in DFO 2022/068, p. 10.",
-                  "This is a common January 1 definition, not the assessment's",
-                  "April 1 SSB; pre-spawning mortality and aggregate uncertainty are unavailable."
-                ))
+    rowSums(sweep(biomass[, 2:11, drop = FALSE], 2, maturity$value, `*`)),
+    "tonnes", 18,
+    source_type = "derived_source_output",
+    notes = paste(
+      "January 1 mature biomass: sum of Table 18 MLE biomass-at-age",
+      "times the knife-edge maturity schedule in DFO 2022/068, p. 10.",
+      "This is a common January 1 definition, not the assessment's",
+      "April 1 SSB; pre-spawning mortality and aggregate uncertainty are unavailable."
+    )
+  )
 )
 derived$source_reference[derived$measure == "SSB"] <- paste(
   assessment_ref, "Table 18; DFO Research Document 2022/068, p. 10"
@@ -287,17 +328,23 @@ mature_biomass$source_reference <- paste(
   assessment_ref, "Table 18; DFO Research Document 2022/068, p. 10"
 )
 outputs <- rbind(outputs, derived, mature_biomass[names(outputs)])
-outputs <- outputs[c("assessment_id", "type", "measure", "fleet", "survey",
-                     "sex", "region", "season", "year", "age", "age_group", "value",
-                     "se", "lwr", "upr", "unit", "source_type",
-                     "source_reference", "notes")]
+outputs <- outputs[c(
+  "assessment_id", "type", "measure", "fleet", "survey",
+  "sex", "region", "season", "year", "age", "age_group", "value",
+  "se", "lwr", "upr", "unit", "source_type",
+  "source_reference", "notes"
+)]
 
 assumptions_2024 <- data.frame(
-  component = c("model", "population", "population", "population", "N", "N",
-                "F", "M", "M", "index", "index", "biology", "biology", "catch"),
-  setting = c("model_family", "years", "ages", "spatial_scale", "recruitment_age",
-              "initial_abundance", "selectivity", "age_groups", "process",
-              "spring_CPUE", "acoustic_survey", "maturity", "weights", "catch_input"),
+  component = c(
+    "model", "population", "population", "population", "N", "N",
+    "F", "M", "M", "index", "index", "biology", "biology", "catch"
+  ),
+  setting = c(
+    "model_family", "years", "ages", "spatial_scale", "recruitment_age",
+    "initial_abundance", "selectivity", "age_groups", "process",
+    "spring_CPUE", "acoustic_survey", "maturity", "weights", "catch_input"
+  ),
   value = c(
     "Statistical catch-at-age model implemented in AD Model Builder",
     "1978-2023", "2-11+", "One spring-spawner population for the sGSL; no regional disaggregation",
@@ -311,8 +358,10 @@ assumptions_2024 <- data.frame(
     "Annual fixed- and mobile-gear fishery weights are published separately; the combined beginning-of-year stock-weight construction is described but not fully specified in the support document",
     "Fixed- and mobile-gear catch-at-age, ages 2-11+, 1978-2023"
   ),
-  survey = c("", "", "", "", "", "", "", "", "", "Spring fixed-gear CPUE",
-            "4Tmno acoustic survey", "", "", ""),
+  survey = c(
+    "", "", "", "", "", "", "", "", "", "Spring fixed-gear CPUE",
+    "4Tmno acoustic survey", "", "", ""
+  ),
   source_reference = c(
     paste(assessment_ref, "p. 6"), paste(assessment_ref, "Tables 4 and 8"),
     paste(assessment_ref, "p. 6"), paste(assessment_ref, "p. 6"),
@@ -346,11 +395,15 @@ assumptions_2024$notes[assumptions_2024$setting == "acoustic_survey"] <- paste(
 )
 
 assumptions_2026 <- data.frame(
-  component = c("assessment", "model", "population", "population", "N", "F", "M",
-                "index", "index", "index", "biology"),
-  setting = c("assessment_type", "model_family", "spatial_scale", "year_range",
-              "process", "process", "process", "commercial_CPUE", "acoustic",
-              "multispecies_RV", "maturity"),
+  component = c(
+    "assessment", "model", "population", "population", "N", "F", "M",
+    "index", "index", "index", "biology"
+  ),
+  setting = c(
+    "assessment_type", "model_family", "spatial_scale", "year_range",
+    "process", "process", "process", "commercial_CPUE", "acoustic",
+    "multispecies_RV", "maturity"
+  ),
   value = c(
     "Full assessment", "State-space model; detailed methods are in preparation",
     "Whole sGSL; spring spawning component", "Input data through 2025",
@@ -361,8 +414,10 @@ assumptions_2026 <- data.frame(
     "Biomass index added for 1994-2025",
     "Data-driven year-by-age maturity estimates replace the historical knife-edge assumption"
   ),
-  survey = c("", "", "", "", "", "", "", "Spring fixed-gear CPUE",
-             "4Tmno acoustic survey", "DFO multispecies RV survey", ""),
+  survey = c(
+    "", "", "", "", "", "", "", "Spring fixed-gear CPUE",
+    "4Tmno acoustic survey", "DFO multispecies RV survey", ""
+  ),
   source_reference = summary_url,
   notes = c(
     "DFO Science Advisory Report 2026/028; peer-reviewed March 18-19, 2026.",
@@ -451,25 +506,30 @@ write_updated <- function(name, new_rows, key) {
     lines_existing <- readLines(path, warn = FALSE, encoding = "UTF-8")
     starts <- paste0(id, ",")
     existing <- lines_existing[startsWith(lines_existing, starts) |
-                                 startsWith(lines_existing, paste0('"', id, '",'))]
+      startsWith(lines_existing, paste0('"', id, '",'))]
     csv_field <- function(x) {
-      if (is.na(x)) return("")
+      if (is.na(x)) {
+        return("")
+      }
       x <- enc2utf8(as.character(x))
       if (grepl('[",\r\n]', x) || grepl("^\\s|\\s$", x)) {
         paste0('"', gsub('"', '""', x, fixed = TRUE), '"')
-      } else x
+      } else {
+        x
+      }
     }
     new_lines <- vapply(seq_len(nrow(current)), function(i) {
       paste(vapply(current, function(column) csv_field(column[i]), character(1)),
-            collapse = ",")
+        collapse = ","
+      )
     }, character(1))
     if (identical(existing, new_lines)) next
     original <- readBin(path, "raw", n = file.info(path)[["size"]])
     crlf <- length(original) > 1L && any(original[-1L] == as.raw(10) &
-                                             original[-length(original)] == as.raw(13))
+      original[-length(original)] == as.raw(13))
     eol <- if (crlf) "\r\n" else "\n"
     existing_rows <- which(startsWith(lines_existing, starts) |
-                             startsWith(lines_existing, paste0('"', id, '",')))
+      startsWith(lines_existing, paste0('"', id, '",')))
     if (length(existing_rows)) {
       first <- min(existing_rows)
       rows <- append(lines_existing[-existing_rows], new_lines, after = first - 1L)
@@ -485,7 +545,9 @@ write_updated <- function(name, new_rows, key) {
 
 write_database <- if (exists("write_database", inherits = FALSE)) {
   isTRUE(write_database)
-} else FALSE
+} else {
+  FALSE
+}
 if (write_database) {
   write_updated("stocks.csv", stock, "stock_id")
   write_updated("assessments.csv", rbind(assessment, summary_assessment), "assessment_id")
@@ -494,5 +556,7 @@ if (write_database) {
   write_updated("outputs.csv", outputs, "assessment_id")
 }
 
-cat("Prepared", nrow(inputs_all), "source inputs and", nrow(outputs),
-    "reported outputs for", assessment_id, "and summary record", summary_id, ".\n")
+cat(
+  "Prepared", nrow(inputs_all), "source inputs and", nrow(outputs),
+  "reported outputs for", assessment_id, "and summary record", summary_id, ".\n"
+)

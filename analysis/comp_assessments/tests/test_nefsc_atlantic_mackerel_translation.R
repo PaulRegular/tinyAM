@@ -44,11 +44,13 @@ stopifnot(
   nrow(translated$obs$weight) == 49L * 10L,
   nrow(translated$obs$maturity) == 49L * 10L,
   nrow(translated$obs$index) == 320L,
-  setequal(unique(translated$obs$index$survey),
-           c("NEFSC Albatross spring trawl", "NEFSC Bigelow spring trawl")),
+  setequal(
+    unique(translated$obs$index$survey),
+    c("NEFSC Albatross spring trawl", "NEFSC Bigelow spring trawl")
+  ),
   setequal(unique(translated$obs$index$age), 3:10),
   all(translated$obs$index$age[translated$obs$index$survey ==
-                                 "NEFSC Bigelow spring trawl"] <= 7),
+    "NEFSC Bigelow spring trawl"] <= 7),
   isTRUE(all.equal(translated$obs$catch$obs[
     translated$obs$catch$year == 1968 & translated$obs$catch$age == 1
   ], expected_catch)),

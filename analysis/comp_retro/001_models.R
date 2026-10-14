@@ -1,4 +1,3 @@
-
 library(RTMB)
 library(tinyAM)
 library(plotly)
@@ -38,7 +37,7 @@ N_iid_F_rw <- fit_tam(
   ),
   M_settings = list(
     process = "off",
-    mu_supplied = ~I(0.3),
+    mu_supplied = ~ I(0.3),
     mean_ages = 5:14
   ),
   catch_settings = list(
@@ -64,7 +63,7 @@ N_iid_F_ar1 <- update(
   ),
   F_settings = list(
     process = "ar1",
-    mu_form = ~F_a_block + F_y_block,
+    mu_form = ~ F_a_block + F_y_block,
     mean_ages = 5:14
   )
 )
@@ -91,7 +90,7 @@ M_ar1_F_rw <- update(
   M_settings = list(
     process = "ar1",
     mu_form = NULL,
-    mu_supplied = ~I(0.3),
+    mu_supplied = ~ I(0.3),
     age_breaks = c(3, 5, 7, 9, 11, 14), # Coupling ages to avoid convergence issues
     mean_ages = 5:14
   )
@@ -105,7 +104,7 @@ M_ar1_F_ar1 <- update(
   ),
   F_settings = list(
     process = "ar1",
-    mu_form = ~F_a_block + F_y_block,
+    mu_form = ~ F_a_block + F_y_block,
     mean_ages = 5:14
   )
 )
@@ -119,7 +118,7 @@ M_iid_F_rw <- update(
   M_settings = list(
     process = "iid",
     mu_form = NULL,
-    mu_supplied = ~I(0.3),
+    mu_supplied = ~ I(0.3),
     age_breaks = c(3, 5, 7, 9, 11, 14),
     mean_ages = 5:14
   )
@@ -149,9 +148,11 @@ models_20plus <- lapply(seq_along(models), function(i) {
   m <- models[[i]]
   m_settings <- m$dat$M_settings[c("process", "mu_form", "mu_supplied", "first_dev_year", "mean_ages")]
   m_settings$age_breaks <- c(3, 5, 7, 9, 11, 13, 15, 17, 20)
-  update(m, ages = 2:20, M_settings = m_settings,
-         N_settings = list(process = m$dat$N_settings$process),
-         start_par = as.list(m$sdrep, "Estimate"))
+  update(m,
+    ages = 2:20, M_settings = m_settings,
+    N_settings = list(process = m$dat$N_settings$process),
+    start_par = as.list(m$sdrep, "Estimate")
+  )
 })
 names(models_20plus) <- names(models)
 
@@ -162,4 +163,3 @@ vis_tam(
   output_file = "analysis/comp_retro/outputs/001_models_20plus.html",
   open_file = FALSE
 )
-

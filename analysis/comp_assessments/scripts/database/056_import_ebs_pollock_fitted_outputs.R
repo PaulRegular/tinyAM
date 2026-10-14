@@ -9,8 +9,10 @@ par_path <- file.path(cache, "pm_or.parxx")
 sel_path <- file.path(cache, "selvar24.dat")
 report_rows_path <- file.path(cache, "report_historical_outputs_raw.csv")
 
-required_files <- c(par_path, sel_path, report_rows_path,
-                    file.path(cache, "source_pm.tpl"))
+required_files <- c(
+  par_path, sel_path, report_rows_path,
+  file.path(cache, "source_pm.tpl")
+)
 if (!all(file.exists(required_files))) {
   stop("Pinned EBS fitted files and report staging must be present in the local source cache.")
 }
@@ -29,24 +31,28 @@ names(par_values) <- par_names
 years <- 1964:2024
 ages <- 1:15
 if (length(par_values$log_avg_F) != 1L ||
-    length(par_values$log_F_devs) != length(years) ||
-    length(par_values$sel_coffs_fsh) != 12L) {
+  length(par_values$log_F_devs) != length(years) ||
+  length(par_values$sel_coffs_fsh) != 12L) {
   stop("The pinned fitted-parameter dimensions do not match the source model years and ages.")
 }
 sel_changes <- as.matrix(read.table(sel_path, header = FALSE))
 change_years <- sel_changes[sel_changes[, 2] > 0 & sel_changes[, 1] < max(years), 1]
 if (ncol(sel_changes) != 4L ||
-    !identical(as.integer(sel_changes[, 1]), years) ||
-    length(par_values$sel_devs_fsh) != length(change_years) * length(par_values$sel_coffs_fsh)) {
+  !identical(as.integer(sel_changes[, 1]), years) ||
+  length(par_values$sel_devs_fsh) != length(change_years) * length(par_values$sel_coffs_fsh)) {
   stop("Fishery selectivity change years do not match the fitted deviation matrix.")
 }
 
 n_selectivity_ages <- length(par_values$sel_coffs_fsh)
 sel_devs <- matrix(par_values$sel_devs_fsh, nrow = length(change_years), byrow = TRUE)
-log_selectivity <- matrix(NA_real_, nrow = length(years), ncol = length(ages),
-                          dimnames = list(years, ages))
-current <- c(par_values$sel_coffs_fsh,
-             rep(tail(par_values$sel_coffs_fsh, 1L), length(ages) - n_selectivity_ages))
+log_selectivity <- matrix(NA_real_,
+  nrow = length(years), ncol = length(ages),
+  dimnames = list(years, ages)
+)
+current <- c(
+  par_values$sel_coffs_fsh,
+  rep(tail(par_values$sel_coffs_fsh, 1L), length(ages) - n_selectivity_ages)
+)
 current <- current - log(mean(exp(current)))
 for (i in seq_along(years)) {
   log_selectivity[i, ] <- current
@@ -62,24 +68,31 @@ for (i in seq_along(years)) {
 f_mortality <- exp(par_values$log_avg_F + par_values$log_F_devs)
 f_at_age <- sweep(exp(log_selectivity), 1L, f_mortality, "*")
 if (any(!is.finite(f_at_age)) || any(f_at_age <= 0) ||
-    max(abs(rowMeans(f_at_age) - f_mortality)) > 1e-10) {
+  max(abs(rowMeans(f_at_age) - f_mortality)) > 1e-10) {
   stop("The reconstructed F surface fails the source selectivity normalization check.")
 }
 
-native_report <- read.csv(report_rows_path, stringsAsFactors = FALSE,
-                          check.names = FALSE)
-expected_report_counts <- c(numbers_at_age = 610L, SSB = 61L,
-                            recruitment = 61L, biomass_at_age = 61L)
+native_report <- read.csv(report_rows_path,
+  stringsAsFactors = FALSE,
+  check.names = FALSE
+)
+expected_report_counts <- c(
+  numbers_at_age = 610L, SSB = 61L,
+  recruitment = 61L, biomass_at_age = 61L
+)
 report_counts <- table(factor(native_report$measure,
-                              levels = names(expected_report_counts)))
+  levels = names(expected_report_counts)
+))
 if (!identical(as.integer(report_counts), unname(expected_report_counts)) ||
-    !identical(sort(unique(native_report$year)), years)) {
+  !identical(sort(unique(native_report$year)), years)) {
   stop("The staged SAFE output rows do not match the expected historical tables.")
 }
 native_report$measure[native_report$measure == "biomass_at_age"] <-
   "biomass_by_age_group"
-output_type <- c(numbers_at_age = "population", SSB = "biomass",
-                 recruitment = "recruitment", biomass_by_age_group = "biomass")
+output_type <- c(
+  numbers_at_age = "population", SSB = "biomass",
+  recruitment = "recruitment", biomass_by_age_group = "biomass"
+)
 output_source <- data.frame(
   assessment_id = assessment_id,
   type = unname(output_type[native_report$measure]),
@@ -140,16 +153,19 @@ f_output <- data.frame(
 
 new_rows <- rbind(output_source, f_output)
 old_lines <- readLines(output_path, warn = FALSE, encoding = "UTF-8")
-old_table <- read.csv(text = paste(old_lines, collapse = "\n"),
-                      stringsAsFactors = FALSE, check.names = FALSE,
-                      colClasses = "character")
+old_table <- read.csv(
+  text = paste(old_lines, collapse = "\n"),
+  stringsAsFactors = FALSE, check.names = FALSE,
+  colClasses = "character"
+)
 if (nrow(old_table) != length(old_lines) - 1L ||
-    !identical(names(old_table), names(new_rows))) {
+  !identical(names(old_table), names(new_rows))) {
   stop("The canonical outputs table does not match the expected schema.")
 }
 keep_lines <- old_lines[-1L][old_table$assessment_id != assessment_id]
 new_text <- capture.output(write.table(
-  new_rows, file = "", sep = ",", row.names = FALSE, col.names = FALSE,
+  new_rows,
+  file = "", sep = ",", row.names = FALSE, col.names = FALSE,
   quote = TRUE, na = ""
 ))
 writeLines(c(old_lines[1L], keep_lines, new_text), output_path, useBytes = TRUE)
@@ -164,11 +180,14 @@ old_note <- "F-at-age is reconstructed from pinned fitted parameters and source 
 new_note <- "The accepted F-at-age surface is reconstructed from pinned fitted parameters and source code, but uncertainty remains unavailable. Other statistical assumptions and output uncertainty remain incomplete;"
 if (grepl(old_note, assessment_lines[assessment_row], fixed = TRUE)) {
   assessment_lines[assessment_row] <- sub(
-    old_note, new_note, assessment_lines[assessment_row], fixed = TRUE
+    old_note, new_note, assessment_lines[assessment_row],
+    fixed = TRUE
   )
 } else if (!grepl(new_note, assessment_lines[assessment_row], fixed = TRUE)) {
   stop("Assessment notes do not match the expected pre-import wording.")
 }
 writeLines(assessment_lines, assessment_path, useBytes = TRUE)
-cat("Imported", nrow(new_rows), "EBS historical output rows, including",
-    nrow(f_output), "source-code-reconstructed F-at-age values.\n")
+cat(
+  "Imported", nrow(new_rows), "EBS historical output rows, including",
+  nrow(f_output), "source-code-reconstructed F-at-age values.\n"
+)

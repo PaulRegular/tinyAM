@@ -26,16 +26,22 @@ stopifnot(
   grepl("age", paste(deparse(settings$F_settings$mu_form), collapse = "")),
   identical(settings$M_settings$process, "off"),
   identical(settings$M_settings$mu_form, NULL),
-  grepl("M_assumption",
-        paste(deparse(settings$M_settings$mu_supplied), collapse = "")),
-  grepl("q_block",
-        paste(deparse(settings$index_settings$q_form), collapse = "")),
+  grepl(
+    "M_assumption",
+    paste(deparse(settings$M_settings$mu_supplied), collapse = "")
+  ),
+  grepl(
+    "q_block",
+    paste(deparse(settings$index_settings$q_form), collapse = "")
+  ),
   length(unique(obs$index$q_block)) > 1L,
   all(is.finite(obs$pop_covariates$M_assumption)),
   all(obs$pop_covariates$M_assumption[obs$pop_covariates$year %in% 2014:2016] == 0.84),
   all(obs$pop_covariates$M_assumption[!obs$pop_covariates$year %in% 2014:2016] == 0.50),
-  setequal(unique(translated$comparison_outputs$measure),
-           c("SSB", "total_biomass", "recruitment")),
+  setequal(
+    unique(translated$comparison_outputs$measure),
+    c("SSB", "total_biomass", "recruitment")
+  ),
   all(translated$comparison_outputs$unit[
     translated$comparison_outputs$measure %in% c("SSB", "total_biomass")
   ] == "t"),
@@ -53,24 +59,29 @@ index_totals <- source_data$inputs[
   source_data$inputs$type == "index" &
     source_data$inputs$survey == "NMFS bottom-trawl survey" &
     source_data$inputs$measure == "total_numbers" &
-    source_data$inputs$year %in% translated$years, , drop = FALSE
+    source_data$inputs$year %in% translated$years, ,
+  drop = FALSE
 ]
 index_sum <- aggregate(obs ~ year, obs$index, sum)
 expected_index <- index_totals$value * 1000
 stopifnot(isTRUE(all.equal(
   index_sum$obs[match(index_totals$year, index_sum$year)],
-  expected_index, tolerance = 1e-8
+  expected_index,
+  tolerance = 1e-8
 )))
 
 dat <- do.call(tinyAM::prepare_tam, c(
   list(data = obs, years = translated$years, ages = translated$ages),
   settings
 ))
-stopifnot(identical(dat$years, translated$years),
-          identical(dat$ages, translated$ages))
+stopifnot(
+  identical(dat$years, translated$years),
+  identical(dat$ages, translated$ages)
+)
 
 reference <- database_to_tam_ref(
-  "afsc_cod_goa_2026", database$outputs, obs = obs,
+  "afsc_cod_goa_2026", database$outputs,
+  obs = obs,
   years = translated$years, ages = translated$ages,
   age_plus_group = translated$age_plus_group,
   comparison_scales = translated$comparison_scales
@@ -80,13 +91,17 @@ m_expected <- expand.grid(year = translated$years, age = translated$ages)
 stopifnot(
   nrow(m_reference) == 19L * 10L,
   all(is.finite(m_reference$est)),
-  setequal(paste(m_reference$year, m_reference$age),
-           paste(m_expected$year, m_expected$age)),
+  setequal(
+    paste(m_reference$year, m_reference$age),
+    paste(m_expected$year, m_expected$age)
+  ),
   all(m_reference$est ==
-        obs$pop_covariates$M_assumption[
-          match(paste(m_reference$year, m_reference$age),
-                paste(obs$weight$year, obs$weight$age))
-        ])
+    obs$pop_covariates$M_assumption[
+      match(
+        paste(m_reference$year, m_reference$age),
+        paste(obs$weight$year, obs$weight$age)
+      )
+    ])
 )
 
 m_fit <- list(
@@ -100,7 +115,8 @@ m_fit <- list(
 m_fit$rep <- m_fit$obs_pred <- m_fit$random_par <- list()
 m_fit$fixed_par <- data.frame()
 m_reference <- database_to_tam_ref(
-  "afsc_cod_goa_2026", database$outputs, obs = obs,
+  "afsc_cod_goa_2026", database$outputs,
+  obs = obs,
   years = translated$years, ages = translated$ages,
   age_plus_group = translated$age_plus_group,
   comparison_scales = translated$comparison_scales, template = m_fit

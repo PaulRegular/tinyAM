@@ -9,40 +9,49 @@ sd_test_dat <- function(type = "iid", component = "catch", ...) {
 }
 
 test_that("SD formulas use compact Gaussian states and unchanged densities", {
-  for (component in c("catch", "index")) for (type in c("iid", "rw", "ar1")) {
-    dat <- sd_test_dat(type, component)
-    p <- make_par(dat)
-    term <- dat[[paste0("sd_", component, "_terms")]][[1]]
-    x <- seq(-.2, .3, length.out = length(p[[term$parameter]]))
-    p[[term$parameter]][] <- x
-    e <- tinyAM:::.sd_effects(p, dat, component)
-    expected <- switch(type,
-      iid = -sum(dnorm(x, 0, .3, log = TRUE)),
-      rw = -sum(dnorm(c(x[1], diff(x)), 0, .3, log = TRUE)),
-      ar1 = -dnorm(x[1], 0, .3 / sqrt(1 - .6^2), log = TRUE) -
-        sum(dnorm(x[-1], .6 * x[-length(x)], .3, log = TRUE)))
-    expect_equal(unname(e$nll), expected, tolerance = 1e-10)
-    expect_length(x, if (type == "rw") 6L else 7L)
-    surface <- if (type == "rw") c(0, x) else x
-    expect_equal(e$contribution, surface[match(dat$obs[[component]]$age, dat$ages)])
-    expect_true(term$parameter %in% tinyAM:::.formula_random_parameters(dat))
+  for (component in c("catch", "index")) {
+    for (type in c("iid", "rw", "ar1")) {
+      dat <- sd_test_dat(type, component)
+      p <- make_par(dat)
+      term <- dat[[paste0("sd_", component, "_terms")]][[1]]
+      x <- seq(-.2, .3, length.out = length(p[[term$parameter]]))
+      p[[term$parameter]][] <- x
+      e <- tinyAM:::.sd_effects(p, dat, component)
+      expected <- switch(type,
+        iid = -sum(dnorm(x, 0, .3, log = TRUE)),
+        rw = -sum(dnorm(c(x[1], diff(x)), 0, .3, log = TRUE)),
+        ar1 = -dnorm(x[1], 0, .3 / sqrt(1 - .6^2), log = TRUE) -
+          sum(dnorm(x[-1], .6 * x[-length(x)], .3, log = TRUE))
+      )
+      expect_equal(unname(e$nll), expected, tolerance = 1e-10)
+      expect_length(x, if (type == "rw") 6L else 7L)
+      surface <- if (type == "rw") c(0, x) else x
+      expect_equal(e$contribution, surface[match(dat$obs[[component]]$age, dat$ages)])
+      expect_true(term$parameter %in% tinyAM:::.formula_random_parameters(dat))
+    }
   }
 })
 
 test_that("fixed formulas and supplied SD offsets preserve their scale", {
-  dat <- sd_test_dat(catch_settings = list(sd_form = ~ 0 + rw(age, sd = .3),
-    sd_supplied = ~ I(.2)))
+  dat <- sd_test_dat(catch_settings = list(
+    sd_form = ~ 0 + rw(age, sd = .3),
+    sd_supplied = ~ I(.2)
+  ))
   p <- make_par(dat)
   term <- dat$sd_catch_terms[[1]]
   p[[term$parameter]][] <- .1
   obj <- RTMB::MakeADFun(function(p) nll_fun(p, dat), p, silent = TRUE)
-  expect_equal(obj$report()$sd_obs[dat$obs_map$type == "catch"],
-    .2 * exp(ifelse(dat$obs$catch$age == 2, 0, .1)))
+  expect_equal(
+    obj$report()$sd_obs[dat$obs_map$type == "catch"],
+    .2 * exp(ifelse(dat$obs$catch$age == 2, 0, .1))
+  )
   ordinary <- sd_test_dat(catch_settings = list(sd_form = ~ age + I(age^2)))
   expect_length(ordinary$sd_catch_terms, 0)
   expect_equal(ordinary$sd_catch_modmat, model.matrix(~ age + I(age^2), ordinary$obs$catch))
-  expect_warning(sd_test_dat(catch_settings = list(sd_form = ~ iid(age, sd = .3),
-    sd_supplied = ~ I(.2))), "Dropping intercept")
+  expect_warning(sd_test_dat(catch_settings = list(
+    sd_form = ~ iid(age, sd = .3),
+    sd_supplied = ~ I(.2)
+  )), "Dropping intercept")
 })
 
 test_that("random SD changes spread and its density, not the observation mean", {
@@ -106,12 +115,16 @@ test_that("grouping, warm starts, forecasts and uncertainty retain SD semantics"
   p <- make_par(dat)
   term <- dat$sd_index_terms[[1]]
   p[[term$parameter]][] <- seq_along(p[[term$parameter]]) / 100
-  shorter <- sd_test_dat("ar1", "index", years = 1983:1987,
-    index_settings = dat$index_settings)
+  shorter <- sd_test_dat("ar1", "index",
+    years = 1983:1987,
+    index_settings = dat$index_settings
+  )
   merged <- tinyAM:::.merge_start_par(make_par(shorter), p)
   expect_equal(merged[[term$parameter]], p[[term$parameter]][names(merged[[term$parameter]])])
-  proxy <- list(dat = dat, parameter_values = p, rep = list(),
-    obj = list(env = list(parList = function(par) par)))
+  proxy <- list(
+    dat = dat, parameter_values = p, rep = list(),
+    obj = list(env = list(parList = function(par) par))
+  )
   tables <- tinyAM:::.tidy_formula_effects(proxy)
   tab <- tables$levels[[term$id]]
   expect_true(all(tab$component == "sd_index"))
@@ -126,7 +139,9 @@ test_that("grouping, warm starts, forecasts and uncertainty retain SD semantics"
       e <- tinyAM:::.sd_effects(pp, d, "index")
       rows <- !d$obs$index$is_proj
       e$nll - sum(RTMB::dnorm(rep(.2, sum(rows)), 0,
-        exp(log(.3) + e$contribution[rows]), log = TRUE))
+        exp(log(.3) + e$contribution[rows]),
+        log = TRUE
+      ))
     }, pp, random = term$parameter, silent = TRUE)
   }
   historical <- sd_test_dat("ar1", "index", index_settings = dat$index_settings)
@@ -142,8 +157,10 @@ test_that("SD designs reject redundancies but do not alias mean and scale varian
   expect_error(sd_test_dat(catch_settings = list(sd_form = ~ rw(age) + ar1(age))), "one RW/AR1")
   obs <- cod_obs
   obs$catch$age_copy <- obs$catch$age
-  expect_error(sd_test_dat(data = obs, catch_settings = list(sd_form = ~ iid(age) + iid(age_copy))),
-    "same IID variance")
+  expect_error(
+    sd_test_dat(data = obs, catch_settings = list(sd_form = ~ iid(age) + iid(age_copy))),
+    "same IID variance"
+  )
   # Unlike a Gaussian random mean, one random log-SD per row is a scale mixture.
   obs$catch$age_group <- factor(obs$catch$age)
   dat <- sd_test_dat(data = obs, catch_settings = list(sd_form = ~ iid(year, by = age_group)))
@@ -158,7 +175,8 @@ test_that("SD designs reject redundancies but do not alias mean and scale varian
   expect_match(advisory$detail[advisory$issue == "catch_SD_RW"], "when F is also estimated")
   expect_false("catch_SD_RW" %in% tinyAM:::.sd_process_advisories(sd_test_dat("rw"))$issue)
   expect_false("catch_SD_RW" %in% tinyAM:::.sd_process_advisories(
-    sd_test_dat("rw", "index", index_settings = list(sd_form = ~ rw(age))))$issue)
+    sd_test_dat("rw", "index", index_settings = list(sd_form = ~ rw(age)))
+  )$issue)
 })
 
 test_that("SD random intercepts and by specifications use the same formula rules", {

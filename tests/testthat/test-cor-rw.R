@@ -4,12 +4,16 @@ test_that("correlated RW uses marginal increment SDs and the full Gaussian densi
   for (rho in c(-.6, 0, .7)) {
     covariance <- outer(sd, sd) * rho^abs(outer(1:3, 1:3, "-"))
     increments <- x[-1, ] - x[-3, ]
-    expected <- sum(apply(increments, 1, function(z) -.5 * (
-      3 * log(2 * pi) + as.numeric(determinant(covariance)$modulus) +
-        sum(z * solve(covariance, z)))))
+    expected <- sum(apply(increments, 1, function(z) {
+      -.5 * (
+        3 * log(2 * pi) + as.numeric(determinant(covariance)$modulus) +
+          sum(z * solve(covariance, z)))
+    }))
     expect_equal(tinyAM::dprocess_cor_rw(x, sd, rho), expected, tolerance = 1e-10)
     obj <- RTMB::MakeADFun(function(p) -tinyAM::dprocess_cor_rw(p$x, exp(p$sd), tanh(p$rho)),
-      list(x = x, sd = log(sd), rho = atanh(rho)), silent = TRUE)
+      list(x = x, sd = log(sd), rho = atanh(rho)),
+      silent = TRUE
+    )
     expect_equal(obj$fn(), -expected, tolerance = 1e-10)
     expect_true(all(is.finite(obj$gr())))
   }
@@ -28,8 +32,10 @@ test_that("correlated RW simulation preserves starts and increment covariance", 
   expect_identical(dimnames(draw), dimnames(x))
   covariance <- outer(sd, sd) * rho^abs(outer(1:3, 1:3, "-"))
   expect_lt(max(abs(cov(draw[-1, ] - draw[-nrow(draw), ]) - covariance)), .015)
-  expect_identical(tinyAM::rprocess_cor_rw(x[1, , drop = FALSE], sd, rho),
-                   x[1, , drop = FALSE])
+  expect_identical(
+    tinyAM::rprocess_cor_rw(x[1, , drop = FALSE], sd, rho),
+    x[1, , drop = FALSE]
+  )
   expect_identical(x[1, ], c(`2` = -1, `3` = 2, `4` = 3))
 })
 
@@ -53,9 +59,11 @@ test_that("correlated F supports fitted uncertainty, warm starts and folds", {
   fit <- suppressWarnings(update(default_fit, F_settings = list(process = "cor_rw"), silent = TRUE))
   expect_true(is.finite(fit$opt$objective))
   expect_true("rho_f" %in% fit$fixed_par$par)
-  refit <- suppressWarnings(update(fit, years = head(YEARS, -1),
+  refit <- suppressWarnings(update(fit,
+    years = head(YEARS, -1),
     start_par = as.list(fit$sdrep, "Estimate"),
-    proj_settings = list(n_proj = 1, n_mean = 1, F_mult = 1), silent = TRUE))
+    proj_settings = list(n_proj = 1, n_mean = 1, F_mult = 1), silent = TRUE
+  ))
   expect_true(is.finite(refit$opt$objective))
   expect_equal(refit$rep$F[nrow(refit$rep$F), ], refit$rep$F[nrow(refit$rep$F) - 1, ])
   expect_error(make_test_dat(M_settings = list(process = "cor_rw")), "arg")

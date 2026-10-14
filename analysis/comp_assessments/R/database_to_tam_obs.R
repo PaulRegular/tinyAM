@@ -3,22 +3,26 @@
 }
 
 .translation_rows <- function(inputs, assessment_id) {
-  required <- c("assessment_id", "type", "measure", "basis", "survey", "fleet",
-                "sex", "region", "season", "year", "year_basis", "age",
-                "value", "unit", "sampling_time", "source_type",
-                "source_reference", "transformation", "notes")
+  required <- c(
+    "assessment_id", "type", "measure", "basis", "survey", "fleet",
+    "sex", "region", "season", "year", "year_basis", "age",
+    "value", "unit", "sampling_time", "source_type",
+    "source_reference", "transformation", "notes"
+  )
   missing <- setdiff(required, names(inputs))
   if (length(missing)) {
-    .translation_abort(paste("inputs is missing required columns:",
-                             paste(missing, collapse = ", ")))
+    .translation_abort(paste(
+      "inputs is missing required columns:",
+      paste(missing, collapse = ", ")
+    ))
   }
   if (length(assessment_id) != 1L || is.na(assessment_id) ||
-      !nzchar(assessment_id)) {
+    !nzchar(assessment_id)) {
     .translation_abort("assessment_id must be one non-empty value.")
   }
 
   x <- inputs[!is.na(inputs$assessment_id) &
-                inputs$assessment_id == assessment_id, , drop = FALSE]
+    inputs$assessment_id == assessment_id, , drop = FALSE]
   if (!nrow(x)) {
     .translation_abort(paste("No input rows found for assessment_id:", assessment_id))
   }
@@ -30,16 +34,18 @@
 
 .translation_measure <- function(x, type, measure) {
   x[!is.na(x$type) & x$type == type & !is.na(x$measure) &
-      x$measure == measure, , drop = FALSE]
+    x$measure == measure, , drop = FALSE]
 }
 
 .translation_one_group <- function(x, columns, label) {
   for (column in columns) {
     values <- unique(as.character(x[[column]][!is.na(x[[column]]) &
-                                               nzchar(as.character(x[[column]]))]))
+      nzchar(as.character(x[[column]]))]))
     if (length(values) > 1L) {
-      .translation_abort(paste(label, "contains multiple", column,
-                               "groups; select or aggregate them explicitly."))
+      .translation_abort(paste(
+        label, "contains multiple", column,
+        "groups; select or aggregate them explicitly."
+      ))
     }
   }
 }
@@ -58,9 +64,9 @@
   }
   if (!nrow(x)) .translation_abort(paste("No calendar-year", label, "inputs are recorded."))
   if (anyNA(x$year) || anyNA(x$age) || anyNA(x$value) ||
-      any(!is.finite(x$year)) || any(!is.finite(x$age)) ||
-      any(x$year != as.integer(x$year)) || any(x$age != as.integer(x$age)) ||
-      any(!is.finite(x$value)) || any(x$value < 0)) {
+    any(!is.finite(x$year)) || any(!is.finite(x$age)) ||
+    any(x$year != as.integer(x$year)) || any(x$age != as.integer(x$age)) ||
+    any(!is.finite(x$value)) || any(x$value < 0)) {
     .translation_abort(paste(label, "rows need finite, non-negative values and whole years and ages."))
   }
   x
@@ -75,14 +81,16 @@
   if (any(static)) {
     static_rows <- x[static, , drop = FALSE]
     if (any(!is.na(static_rows$year_basis) & nzchar(as.character(static_rows$year_basis))) ||
-        anyNA(static_rows$age) || any(!is.finite(static_rows$age)) ||
-        any(static_rows$age != as.integer(static_rows$age)) || anyNA(static_rows$value) ||
-        any(!is.finite(static_rows$value)) || any(static_rows$value < 0)) {
+      anyNA(static_rows$age) || any(!is.finite(static_rows$age)) ||
+      any(static_rows$age != as.integer(static_rows$age)) || anyNA(static_rows$value) ||
+      any(!is.finite(static_rows$value)) || any(static_rows$value < 0)) {
       .translation_abort(paste(label, "time-invariant rows need finite, non-negative values for whole ages and a blank year basis."))
     }
     if (any(!static)) {
-      x <- rbind(.translation_calendar_rows(x[!static, , drop = FALSE], label),
-                 static_rows)
+      x <- rbind(
+        .translation_calendar_rows(x[!static, , drop = FALSE], label),
+        static_rows
+      )
     } else {
       x <- static_rows
     }
@@ -99,13 +107,15 @@
 .translation_source_provenance <- function(x, component, method) {
   collapse <- function(column) {
     values <- unique(as.character(x[[column]][!is.na(x[[column]]) &
-                                                  nzchar(as.character(x[[column]]))]))
+      nzchar(as.character(x[[column]]))]))
     paste(values, collapse = "; ")
   }
-  data.frame(component = component, survey = NA_character_,
-             source_type = collapse("source_type"), method = method,
-             source_reference = collapse("source_reference"),
-             notes = collapse("notes"), stringsAsFactors = FALSE)
+  data.frame(
+    component = component, survey = NA_character_,
+    source_type = collapse("source_type"), method = method,
+    source_reference = collapse("source_reference"),
+    notes = collapse("notes"), stringsAsFactors = FALSE
+  )
 }
 
 .translation_surface <- function(x, years, ages, label) {
@@ -114,8 +124,10 @@
     .translation_abort(paste(label, "has multiple values for a year-age row."))
   }
   grid <- .translation_grid(years, ages)
-  i <- match(.translation_key(grid, c("year", "age")),
-             .translation_key(x, c("year", "age")))
+  i <- match(
+    .translation_key(grid, c("year", "age")),
+    .translation_key(x, c("year", "age"))
+  )
   if (anyNA(i)) {
     .translation_abort(paste(label, "does not cover the requested year-age grid."))
   }
@@ -125,13 +137,14 @@
 .translation_start_surface <- function(outputs, type, measure, years, ages,
                                        multiplier = 1) {
   rows <- outputs[outputs$type == type & outputs$measure == measure, , drop = FALSE]
-  rows <- .translation_surface(rows, years, ages, paste('Accepted', measure))
+  rows <- .translation_surface(rows, years, ages, paste("Accepted", measure))
   value <- as.numeric(rows$obs) * multiplier
   if (any(!is.finite(value)) || any(value <= 0)) {
-    .translation_abort(paste('Accepted', measure, 'starting values must be finite and positive.'))
+    .translation_abort(paste("Accepted", measure, "starting values must be finite and positive."))
   }
   surface <- matrix(NA_real_, length(years), length(ages),
-                    dimnames = list(as.character(years), as.character(ages)))
+    dimnames = list(as.character(years), as.character(ages))
+  )
   surface[cbind(match(rows$year, years), match(rows$age, ages))] <- value
   surface
 }
@@ -161,9 +174,11 @@
     x <- do.call(rbind, c(list(annual), expanded))
     rownames(x) <- NULL
   }
-  if (is.null(reference_year)) return(x)
+  if (is.null(reference_year)) {
+    return(x)
+  }
   if (length(reference_year) != 1L || !is.finite(reference_year) ||
-      reference_year != as.integer(reference_year)) {
+    reference_year != as.integer(reference_year)) {
     .translation_abort(paste(label, "reference year must be one whole year."))
   }
   x <- x[x$year == reference_year, , drop = FALSE]
@@ -196,7 +211,7 @@
   }
 
   if (grepl("tonne", unit, fixed = TRUE) ||
-      grepl("(^|[^a-z])t($|[^a-z])", unit)) {
+    grepl("(^|[^a-z])t($|[^a-z])", unit)) {
     return(value * 1000)
   }
 
@@ -205,8 +220,12 @@
 
 .translation_weight_to_kg <- function(value, unit) {
   unit <- tolower(trimws(as.character(unit)))
-  if (grepl("^kg($|[/ _])", unit)) return(value)
-  if (grepl("^g($|[/ _])", unit)) return(value / 1000)
+  if (grepl("^kg($|[/ _])", unit)) {
+    return(value)
+  }
+  if (grepl("^g($|[/ _])", unit)) {
+    return(value / 1000)
+  }
   .translation_abort(paste("Cannot convert weight-at-age unit to kg per fish:", unit))
 }
 
@@ -214,7 +233,7 @@
   weights <- .translation_measure(x, "catch_weight", "weight_at_age")
   columns <- c("year", "fleet", "sex", "region", "season")
   weights <- weights[.translation_key(weights, columns) %in%
-                       .translation_key(composition, columns), , drop = FALSE]
+    .translation_key(composition, columns), , drop = FALSE]
   columns <- c(columns, "age")
   if (anyDuplicated(.translation_key(weights, columns))) {
     .translation_abort("Catch weights contain duplicate year-age rows for the catch stream.")
@@ -236,16 +255,26 @@
   unit <- gsub("_", " ", unit, fixed = TRUE)
   unit <- gsub("\\s+", " ", unit)
   count_unit <- "(fish|individuals?|numbers?|counts?)"
-  if (grepl(paste0("(million|10\\^?6|1,?000,?000)\\s*", count_unit), unit)) return(1e6)
-  if (grepl(paste0("(billion|10\\^?9|1,?000,?000,?000)\\s*", count_unit), unit)) return(1e9)
-  if (grepl(paste0("(thousand|10\\^?3|1,?000)\\s*", count_unit), unit)) return(1e3)
-  if (grepl(count_unit, unit)) return(1)
+  if (grepl(paste0("(million|10\\^?6|1,?000,?000)\\s*", count_unit), unit)) {
+    return(1e6)
+  }
+  if (grepl(paste0("(billion|10\\^?9|1,?000,?000,?000)\\s*", count_unit), unit)) {
+    return(1e9)
+  }
+  if (grepl(paste0("(thousand|10\\^?3|1,?000)\\s*", count_unit), unit)) {
+    return(1e3)
+  }
+  if (grepl(count_unit, unit)) {
+    return(1)
+  }
   .translation_abort(paste("Cannot convert number unit to individual fish:", unit))
 }
 
 .translation_index_multiplier <- function(unit) {
   unit <- tolower(trimws(as.character(unit)))
-  if (grepl("^(native[ _-]+)?survey[ _-]?index( \\(unit unresolved\\)| units?)?$", unit)) return(1)
+  if (grepl("^(native[ _-]+)?survey[ _-]?index( \\(unit unresolved\\)| units?)?$", unit)) {
+    return(1)
+  }
   .translation_number_multiplier(unit)
 }
 
@@ -259,8 +288,10 @@
   if (nrow(direct)) direct <- .translation_calendar_rows(direct, "catch numbers-at-age")
   if (nrow(composition)) composition <- .translation_calendar_rows(composition, "catch age composition")
   source_rows <- rbind(direct, composition)
-  .translation_one_group(source_rows, c("fleet", "sex", "region", "season"),
-                         "Catch-at-age input")
+  .translation_one_group(
+    source_rows, c("fleet", "sex", "region", "season"),
+    "Catch-at-age input"
+  )
   direct <- direct[direct$year %in% years & direct$age >= min(ages), , drop = FALSE]
   composition <- composition[composition$year %in% years, , drop = FALSE]
   totals <- totals[totals$year %in% years, , drop = FALSE]
@@ -284,7 +315,8 @@
     k <- k + 1L
     provenance[[k]] <- .translation_source_provenance(
       direct, "catch",
-      "Source numbers-at-age retained and converted to individual fish; ages above the selected maximum summed into the plus age.")
+      "Source numbers-at-age retained and converted to individual fish; ages above the selected maximum summed into the plus age."
+    )
   }
 
   if (nrow(composition)) {
@@ -302,9 +334,9 @@
     totals$year <- suppressWarnings(as.numeric(as.character(totals$year)))
     totals$value <- suppressWarnings(as.numeric(as.character(totals$value)))
     if (!nrow(totals) || anyNA(totals$year) || anyNA(totals$value) ||
-        any(!is.finite(totals$year)) || any(!is.finite(totals$value)) ||
-        any(totals$year != as.integer(totals$year)) || any(totals$value < 0) ||
-        any(!is.na(totals$age))) {
+      any(!is.finite(totals$year)) || any(!is.finite(totals$value)) ||
+      any(totals$year != as.integer(totals$year)) || any(totals$value < 0) ||
+      any(!is.na(totals$age))) {
       .translation_abort("Catch totals need finite calendar years, non-negative values, and no age dimension.")
     }
     group_columns <- c("year", "fleet", "sex", "region", "season")
@@ -370,8 +402,11 @@
     if (length(weight_sources)) source <- rbind(source, do.call(rbind, weight_sources))
     provenance[[k]] <- .translation_source_provenance(
       source, "catch",
-      paste(paste(unique(methods), collapse = "; "),
-            "Reconstruction uses all source composition ages before selecting model ages and summing older ages into the plus age."))
+      paste(
+        paste(unique(methods), collapse = "; "),
+        "Reconstruction uses all source composition ages before selecting model ages and summing older ages into the plus age."
+      )
+    )
   }
 
   catch_source <- if (length(converted)) {
@@ -390,17 +425,23 @@
   }
   if (!length(provenance)) {
     provenance[[1L]] <- .translation_source_provenance(
-      source_rows, "catch", "No catch observations in the requested grid; cells remain NA.")
+      source_rows, "catch", "No catch observations in the requested grid; cells remain NA."
+    )
   }
   grid <- .translation_grid(years, ages)
-  catch <- data.frame(year = grid$year, age = grid$age,
-                      obs = catch_source$value[match(
-                        .translation_key(grid, c("year", "age")),
-                        .translation_key(catch_source, c("year", "age")))])
+  catch <- data.frame(
+    year = grid$year, age = grid$age,
+    obs = catch_source$value[match(
+      .translation_key(grid, c("year", "age")),
+      .translation_key(catch_source, c("year", "age"))
+    )]
+  )
 
-  list(catch = catch,
-       units = unique(do.call(rbind, units)),
-       provenance = do.call(rbind, provenance))
+  list(
+    catch = catch,
+    units = unique(do.call(rbind, units)),
+    provenance = do.call(rbind, provenance)
+  )
 }
 
 .translation_sampling_time <- function(rows, survey, sampling_times) {
@@ -409,23 +450,29 @@
   if (length(values) > 1L) {
     .translation_abort(paste("Conflicting sampling_time values for survey:", survey))
   }
-  if (length(values)) return(values[[1]])
+  if (length(values)) {
+    return(values[[1]])
+  }
   if (!is.null(sampling_times) && survey %in% names(sampling_times)) {
     value <- as.numeric(sampling_times[[survey]])
     if (length(value) == 1L && is.finite(value) && value >= 0 && value <= 1) {
       return(value)
     }
   }
-  .translation_abort(paste("Survey timing is unknown for", survey,
-                           "; supply a named sampling_times value from 0 to 1."))
+  .translation_abort(paste(
+    "Survey timing is unknown for", survey,
+    "; supply a named sampling_times value from 0 to 1."
+  ))
 }
 
 .translation_weights_for_index <- function(survey, all_weights, stock_weights,
-                                            years, ages,
-                                            index_weight_source = "source") {
+                                           years, ages,
+                                           index_weight_source = "source") {
   matching <- all_weights[!is.na(all_weights$survey) &
-                            all_weights$survey == survey, , drop = FALSE]
-  if (index_weight_source == "source" && nrow(matching)) return(matching)
+    all_weights$survey == survey, , drop = FALSE]
+  if (index_weight_source == "source" && nrow(matching)) {
+    return(matching)
+  }
   stock_weights
 }
 
@@ -433,13 +480,17 @@
                                sampling_times, surveys = NULL,
                                exclude_index_years = NULL,
                                index_weight_source = "source") {
-  supported_measures <- c("numbers_at_age", "proportion_at_age",
-                          "total_numbers", "total_biomass", "log_index_sd",
-                          "index_sd", "relative_precision_weight",
-                          "relative_standard_error")
-  unsupported <- x[!is.na(x$type) & x$type == "index" &
-                     (is.na(x$measure) | !x$measure %in% supported_measures), ,
-                   drop = FALSE]
+  supported_measures <- c(
+    "numbers_at_age", "proportion_at_age",
+    "total_numbers", "total_biomass", "log_index_sd",
+    "index_sd", "relative_precision_weight",
+    "relative_standard_error"
+  )
+  unsupported <- x[
+    !is.na(x$type) & x$type == "index" &
+      (is.na(x$measure) | !x$measure %in% supported_measures), ,
+    drop = FALSE
+  ]
   if (!is.null(surveys)) unsupported <- unsupported[unsupported$survey %in% surveys, , drop = FALSE]
   if (nrow(unsupported)) {
     descriptions <- unique(paste0(unsupported$survey, " (", unsupported$measure, ")"))
@@ -452,13 +503,13 @@
 
   direct <- .translation_measure(x, "index", "numbers_at_age")
   composition <- x[!is.na(x$type) & x$type == "index" &
-                     !is.na(x$measure) & x$measure == "proportion_at_age", , drop = FALSE]
+    !is.na(x$measure) & x$measure == "proportion_at_age", , drop = FALSE]
   sampled_age <- direct[grepl("sampled", tolower(direct$unit)), , drop = FALSE]
   direct <- direct[!grepl("sampled", tolower(direct$unit)), , drop = FALSE]
   if (nrow(sampled_age)) composition <- rbind(composition, sampled_age)
 
   totals <- x[!is.na(x$type) & x$type == "index" &
-                !is.na(x$measure) & x$measure %in% c("total_numbers", "total_biomass"), , drop = FALSE]
+    !is.na(x$measure) & x$measure %in% c("total_numbers", "total_biomass"), , drop = FALSE]
   known_surveys <- unique(c(as.character(direct$survey), as.character(composition$survey)))
   known_surveys <- known_surveys[!is.na(known_surveys) & nzchar(known_surveys)]
   if (!is.null(surveys)) {
@@ -496,9 +547,11 @@
       .translation_abort("Every direct index row needs its original survey name.")
     }
     for (survey in unique(as.character(direct$survey))) {
-      .translation_one_group(direct[direct$survey == survey, , drop = FALSE],
-                             c("sex", "region", "season"),
-                             paste("Direct index for", survey))
+      .translation_one_group(
+        direct[direct$survey == survey, , drop = FALSE],
+        c("sex", "region", "season"),
+        paste("Direct index for", survey)
+      )
     }
     unit_counts <- vapply(split(direct$unit, direct$survey), function(z) length(unique(z)), integer(1))
     if (any(unit_counts > 1L)) {
@@ -520,8 +573,10 @@
       result[[length(result) + 1L]] <- direct[c("year", "age", "obs", "survey", "samp_time")]
       for (survey in unique(as.character(direct_source$survey))) {
         source <- direct_source[direct_source$survey == survey, , drop = FALSE]
-        method <- if (grepl("^(native[ _]+)?survey[ _]?index( \\(unit unresolved\\))?$",
-                            tolower(trimws(source$unit[[1]])))) {
+        method <- if (grepl(
+          "^(native[ _]+)?survey[ _]?index( \\(unit unresolved\\))?$",
+          tolower(trimws(source$unit[[1]]))
+        )) {
           "native survey index values retained on their source scale"
         } else {
           "source numbers-at-age converted to individual fish"
@@ -529,8 +584,10 @@
         k <- k + 1L
         provenance[[k]] <- data.frame(
           survey = survey,
-          method = paste(method,
-                         "ages above the selected maximum summed into the plus age"),
+          method = paste(
+            method,
+            "ages above the selected maximum summed into the plus age"
+          ),
           source_reference = paste(unique(source$source_reference), collapse = "; "),
           stringsAsFactors = FALSE
         )
@@ -542,15 +599,19 @@
     composition <- .translation_calendar_rows(composition, "index age-composition")
     for (survey in unique(as.character(composition$survey))) {
       comp <- composition[composition$survey == survey &
-                            composition$year %in% years, , drop = FALSE]
+        composition$year %in% years, , drop = FALSE]
       if (!nrow(comp)) next
-      .translation_one_group(comp, c("sex", "region", "season"),
-                             paste("Index composition for", survey))
+      .translation_one_group(
+        comp, c("sex", "region", "season"),
+        paste("Index composition for", survey)
+      )
       totals_survey <- totals[!is.na(totals$survey) & totals$survey == survey &
-                                totals$year %in% years, , drop = FALSE]
+        totals$year %in% years, , drop = FALSE]
       if (!nrow(totals_survey)) {
-        .translation_abort(paste("Index age composition for", survey,
-                                 "has no matching total index values."))
+        .translation_abort(paste(
+          "Index age composition for", survey,
+          "has no matching total index values."
+        ))
       }
       w <- .translation_weights_for_index(
         survey, all_weights, stock_weights, years, ages,
@@ -560,8 +621,10 @@
         cp <- comp[comp$year == year, , drop = FALSE]
         total <- totals_survey[totals_survey$year == year, , drop = FALSE]
         if (!nrow(total)) {
-          .translation_abort(paste("Index age composition for", survey, year,
-                                   "has no matching total index value."))
+          .translation_abort(paste(
+            "Index age composition for", survey, year,
+            "has no matching total index value."
+          ))
         }
         if (nrow(total) != 1L) .translation_abort(paste("Multiple aggregate index values for", survey, year))
         if (anyDuplicated(cp$age)) .translation_abort(paste("Duplicate composition ages for", survey, year))
@@ -570,7 +633,9 @@
         }
         basis <- if (grepl("sampled", tolower(paste(cp$unit, collapse = " ")))) {
           "proportion_numbers"
-        } else unique(as.character(cp$basis))
+        } else {
+          unique(as.character(cp$basis))
+        }
         p <- cp$value
         if (basis == "proportion_numbers" && grepl("sampled", tolower(paste(cp$unit, collapse = " ")))) {
           p <- p / sum(p)
@@ -584,13 +649,17 @@
         p <- p / sum(p)
         ww <- w[w$year == year & w$age %in% cp$age, , drop = FALSE]
         if (anyDuplicated(ww$age) || !setequal(ww$age, cp$age)) {
-          .translation_abort(paste("Weight-at-age is incomplete for", survey, year,
-                                   "age-composition conversion."))
+          .translation_abort(paste(
+            "Weight-at-age is incomplete for", survey, year,
+            "age-composition conversion."
+          ))
         }
         ww <- ww$value[match(cp$age, ww$age)]
         if (any(!is.finite(ww)) || any(ww <= 0)) {
-          .translation_abort(paste("Weights must be positive for", survey, year,
-                                   "age-composition conversion."))
+          .translation_abort(paste(
+            "Weights must be positive for", survey, year,
+            "age-composition conversion."
+          ))
         }
         total_value <- total$value[[1]]
         total_measure <- total$measure[[1]]
@@ -610,28 +679,37 @@
             age_numbers <- total_kg * p / ww
           }
         }
-        translated <- data.frame(year = year, age = cp$age, obs = age_numbers,
-                                 survey = survey,
-                                 samp_time = .translation_sampling_time(
-                                   rbind(cp, total), survey, sampling_times))
+        translated <- data.frame(
+          year = year, age = cp$age, obs = age_numbers,
+          survey = survey,
+          samp_time = .translation_sampling_time(
+            rbind(cp, total), survey, sampling_times
+          )
+        )
         translated <- translated[translated$age >= min(ages), , drop = FALSE]
         translated$age <- pmin(translated$age, max(ages))
-        translated <- stats::aggregate(obs ~ year + age + survey + samp_time,
-                                       translated, sum)
+        translated <- stats::aggregate(
+          obs ~ year + age + survey + samp_time,
+          translated, sum
+        )
         k <- k + 1L
         result[[length(result) + 1L]] <- translated
-      provenance[[k]] <- data.frame(
-        survey = survey,
-          method = paste0("age composition x aggregate index reconstructed as numbers-at-age using ",
-                          if (any(w$survey == survey, na.rm = TRUE)) {
-                            "survey-specific weights"
-                          } else if (any(!is.na(w$survey) & nzchar(w$survey))) {
-                            "selected survey weights as an approximation"
-                          } else {
-                            "stock weights as an approximation"
-                          }, "; ages above the selected maximum summed into the plus age"),
-          source_reference = paste(unique(c(cp$source_reference, total$source_reference,
-                                             w$source_reference)), collapse = "; "),
+        provenance[[k]] <- data.frame(
+          survey = survey,
+          method = paste0(
+            "age composition x aggregate index reconstructed as numbers-at-age using ",
+            if (any(w$survey == survey, na.rm = TRUE)) {
+              "survey-specific weights"
+            } else if (any(!is.na(w$survey) & nzchar(w$survey))) {
+              "selected survey weights as an approximation"
+            } else {
+              "stock weights as an approximation"
+            }, "; ages above the selected maximum summed into the plus age"
+          ),
+          source_reference = paste(unique(c(
+            cp$source_reference, total$source_reference,
+            w$source_reference
+          )), collapse = "; "),
           stringsAsFactors = FALSE
         )
       }
@@ -644,7 +722,7 @@
   key <- .translation_key(out, c("year", "age", "survey"))
   if (anyDuplicated(key)) .translation_abort("Translated index rows are duplicated by year, age, and survey.")
   if (any(!is.finite(out$obs)) || any(out$obs < 0) || anyNA(out$samp_time) ||
-      any(out$samp_time < 0 | out$samp_time > 1)) {
+    any(out$samp_time < 0 | out$samp_time > 1)) {
     .translation_abort("Translated index values or sampling times are invalid.")
   }
   attr(out, "translation") <- if (length(provenance)) unique(do.call(rbind, provenance)) else data.frame()
@@ -660,9 +738,9 @@
     rows$age <- suppressWarnings(as.numeric(as.character(rows$age)))
     rows$value <- suppressWarnings(as.numeric(as.character(rows$value)))
     if (anyNA(rows$year) || any(!is.finite(rows$year)) ||
-        any(rows$year != as.integer(rows$year)) || anyNA(rows$value) ||
-        any(!is.finite(rows$value)) || any(rows$value <= 0) ||
-        anyNA(rows$survey) || any(!nzchar(as.character(rows$survey)))) {
+      any(rows$year != as.integer(rows$year)) || anyNA(rows$value) ||
+      any(!is.finite(rows$value)) || any(rows$value <= 0) ||
+      anyNA(rows$survey) || any(!nzchar(as.character(rows$survey)))) {
       .translation_abort(paste(measure, "must contain positive finite values for calendar-year survey observations."))
     }
     if (anyNA(rows$age) && !all(is.na(rows$age))) {
@@ -732,31 +810,34 @@
 #' @return A `tinyAM` observation list with a `translation` attribute recording
 #'   catch/index reconstruction methods, unit conversions, and source references.
 database_to_tam_obs <- function(assessment_id, inputs, years = NULL, ages = NULL,
-                                 weight_survey = NULL,
-                                 index_weight_source = c("source", "stock"),
-                                 sampling_times = NULL,
-                                 surveys = NULL, exclude_index_years = NULL,
-                                 weight_reference_year = NULL,
-                                 maturity_reference_year = NULL,
-                                 maturity_multiplier = 1, assumptions = NULL) {
+                                weight_survey = NULL,
+                                index_weight_source = c("source", "stock"),
+                                sampling_times = NULL,
+                                surveys = NULL, exclude_index_years = NULL,
+                                weight_reference_year = NULL,
+                                maturity_reference_year = NULL,
+                                maturity_multiplier = 1, assumptions = NULL) {
   x <- .translation_rows(inputs, assessment_id)
   index_weight_source <- match.arg(index_weight_source)
   if (!is.null(sampling_times)) {
     if (is.null(names(sampling_times)) || any(!nzchar(names(sampling_times))) ||
-        any(!is.finite(as.numeric(sampling_times))) ||
-        any(as.numeric(sampling_times) < 0 | as.numeric(sampling_times) > 1)) {
+      any(!is.finite(as.numeric(sampling_times))) ||
+      any(as.numeric(sampling_times) < 0 | as.numeric(sampling_times) > 1)) {
       .translation_abort("sampling_times must be a named numeric vector with values in [0, 1].")
     }
   }
   if (length(maturity_multiplier) != 1L || !is.finite(maturity_multiplier) ||
-      maturity_multiplier < 0) {
+    maturity_multiplier < 0) {
     .translation_abort("maturity_multiplier must be one finite, non-negative number.")
   }
 
   source_weights <- .translation_biology_rows(
-    .translation_measure(x, "weight", "weight_at_age"), "weight-at-age")
-  source_weights$value <- mapply(.translation_weight_to_kg,
-                                source_weights$value, source_weights$unit)
+    .translation_measure(x, "weight", "weight_at_age"), "weight-at-age"
+  )
+  source_weights$value <- mapply(
+    .translation_weight_to_kg,
+    source_weights$value, source_weights$unit
+  )
   weight_series <- as.character(source_weights$survey)
   weight_series[is.na(weight_series) | !nzchar(weight_series)] <- ""
   if (is.null(weight_survey)) {
@@ -787,12 +868,14 @@ database_to_tam_obs <- function(assessment_id, inputs, years = NULL, ages = NULL
     }
   }
   selected_weight_label <- if (all(is.na(selected_weight_source$survey) |
-                                   !nzchar(as.character(selected_weight_source$survey)))) {
+    !nzchar(as.character(selected_weight_source$survey)))) {
     "unlabeled stock weights"
-  } else paste(unique(as.character(selected_weight_source$survey)), collapse = "; ")
+  } else {
+    paste(unique(as.character(selected_weight_source$survey)), collapse = "; ")
+  }
   maturity_source <- .translation_measure(x, "maturity", "maturity_at_age")
   if (any(!is.na(maturity_source$year_basis) & maturity_source$year_basis == "birth_cohort") &&
-      !any(!is.na(maturity_source$year_basis) & maturity_source$year_basis == "calendar_year")) {
+    !any(!is.na(maturity_source$year_basis) & maturity_source$year_basis == "calendar_year")) {
     .translation_abort("Cohort-specific maturity needs an explicit cohort-to-year mapping before tinyAM use.")
   }
   maturity_source <- .translation_biology_rows(maturity_source, "maturity-at-age")
@@ -817,13 +900,13 @@ database_to_tam_obs <- function(assessment_id, inputs, years = NULL, ages = NULL
   years <- as.numeric(years)
   ages <- as.numeric(ages)
   if (!length(years) || anyNA(years) || any(!is.finite(years)) ||
-      any(years != as.integer(years)) ||
-      !isTRUE(all.equal(years, as.numeric(seq.int(min(years), max(years)))))) {
+    any(years != as.integer(years)) ||
+    !isTRUE(all.equal(years, as.numeric(seq.int(min(years), max(years)))))) {
     .translation_abort("years must be a non-empty consecutive sequence of whole years.")
   }
   if (!length(ages) || anyNA(ages) || any(!is.finite(ages)) ||
-      any(ages != as.integer(ages)) ||
-      !isTRUE(all.equal(ages, as.numeric(seq.int(min(ages), max(ages)))))) {
+    any(ages != as.integer(ages)) ||
+    !isTRUE(all.equal(ages, as.numeric(seq.int(min(ages), max(ages)))))) {
     .translation_abort("ages must be a non-empty consecutive sequence of whole ages.")
   }
 
@@ -836,7 +919,8 @@ database_to_tam_obs <- function(assessment_id, inputs, years = NULL, ages = NULL
   weight <- .translation_surface(selected_weight_source, years, ages, "Weight-at-age")
   pop_covariates <- weight[c("year", "age")]
   m_translation <- database_to_tam_M(assessment_id, inputs, assumptions,
-                                     years = years, ages = ages)
+    years = years, ages = ages
+  )
   if (!is.null(m_translation$surface)) {
     m_key <- .translation_key(weight, c("year", "age"))
     m_surface_key <- .translation_key(m_translation$surface, c("year", "age"))
@@ -844,9 +928,12 @@ database_to_tam_obs <- function(assessment_id, inputs, years = NULL, ages = NULL
     if (anyNA(m_index)) .translation_abort("Numerical M does not match the translated year-age grid.")
     pop_covariates$M_assumption <- m_translation$surface$M_assumption[m_index]
   }
-  maturity <- .translation_surface(.translation_repeat_biology(
-    maturity_source, years, maturity_reference_year, "Maturity-at-age"),
-    years, ages, "Maturity-at-age")
+  maturity <- .translation_surface(
+    .translation_repeat_biology(
+      maturity_source, years, maturity_reference_year, "Maturity-at-age"
+    ),
+    years, ages, "Maturity-at-age"
+  )
   maturity$obs <- maturity$obs * maturity_multiplier
   if (any(maturity$obs > 1)) {
     .translation_abort("Scaled maturity values must remain in proportions between 0 and 1.")
@@ -854,37 +941,50 @@ database_to_tam_obs <- function(assessment_id, inputs, years = NULL, ages = NULL
   catch_translation <- .translation_catch_at_age(x, years, ages)
   catch <- catch_translation$catch
 
-  index <- .translation_index(x, index_weight_source_rows, selected_weight_source, years, ages,
-                              sampling_times, surveys, exclude_index_years,
-                              index_weight_source)
+  index <- .translation_index(
+    x, index_weight_source_rows, selected_weight_source, years, ages,
+    sampling_times, surveys, exclude_index_years,
+    index_weight_source
+  )
   index <- .translation_index_precision(index, x)
   index$q_block <- factor(index$age, levels = ages)
-  index$q_key <- interaction(index$survey, index$q_block, drop = TRUE,
-                             lex.order = TRUE)
-  obs <- list(catch = catch, index = index, weight = weight, maturity = maturity,
-              pop_covariates = pop_covariates)
+  index$q_key <- interaction(index$survey, index$q_block,
+    drop = TRUE,
+    lex.order = TRUE
+  )
+  obs <- list(
+    catch = catch, index = index, weight = weight, maturity = maturity,
+    pop_covariates = pop_covariates
+  )
   index_provenance <- attr(index, "translation")
   source_provenance <- rbind(
     catch_translation$provenance,
     do.call(rbind, lapply(seq_len(nrow(index_provenance)), function(i) {
       survey_rows <- x[!is.na(x$survey) &
-                         x$survey == index_provenance$survey[[i]] &
-                         x$type == "index", , drop = FALSE]
-      data.frame(component = "index", survey = index_provenance$survey[[i]],
-                 source_type = paste(unique(survey_rows$source_type), collapse = "; "),
-                 method = index_provenance$method[[i]],
-                 source_reference = index_provenance$source_reference[[i]],
-                 notes = "See translation decisions for survey-specific timing and weight choices.",
-                 stringsAsFactors = FALSE)
+        x$survey == index_provenance$survey[[i]] &
+        x$type == "index", , drop = FALSE]
+      data.frame(
+        component = "index", survey = index_provenance$survey[[i]],
+        source_type = paste(unique(survey_rows$source_type), collapse = "; "),
+        method = index_provenance$method[[i]],
+        source_reference = index_provenance$source_reference[[i]],
+        notes = "See translation decisions for survey-specific timing and weight choices.",
+        stringsAsFactors = FALSE
+      )
     })),
     .translation_source_provenance(
       selected_weight_source, "weight",
-      paste("Weight converted to kg per fish. Selected weight series:", selected_weight_label,
-            if (!is.null(weight_reference_year)) {
-              paste("Constant source vector from", weight_reference_year, "expanded across model years.")
-            } else if (all(is.na(selected_weight_source$year))) {
-              "Time-invariant source vector expanded across model years."
-            } else "Annual source values retained.")),
+      paste(
+        "Weight converted to kg per fish. Selected weight series:", selected_weight_label,
+        if (!is.null(weight_reference_year)) {
+          paste("Constant source vector from", weight_reference_year, "expanded across model years.")
+        } else if (all(is.na(selected_weight_source$year))) {
+          "Time-invariant source vector expanded across model years."
+        } else {
+          "Annual source values retained."
+        }
+      )
+    ),
     .translation_source_provenance(
       maturity_source, "maturity",
       paste(
@@ -894,13 +994,22 @@ database_to_tam_obs <- function(assessment_id, inputs, years = NULL, ages = NULL
           } else {
             "Calendar-year maturity retained on the requested year-age grid."
           }
-        } else paste("Constant source maturity vector from", maturity_reference_year,
-                     "expanded across model years."),
+        } else {
+          paste(
+            "Constant source maturity vector from", maturity_reference_year,
+            "expanded across model years."
+          )
+        },
         if (maturity_multiplier != 1) {
-          paste("Translated maturity multiplied by", maturity_multiplier,
-                "to match the source SSB convention.")
-        } else "No additional maturity scaling."
-      ))
+          paste(
+            "Translated maturity multiplied by", maturity_multiplier,
+            "to match the source SSB convention."
+          )
+        } else {
+          "No additional maturity scaling."
+        }
+      )
+    )
   )
   if (!is.null(m_translation$surface)) {
     source_provenance <- rbind(
@@ -923,17 +1032,24 @@ database_to_tam_obs <- function(assessment_id, inputs, years = NULL, ages = NULL
     sampling_times_override = sampling_times,
     selected_surveys = if (is.null(surveys)) {
       unique(na.omit(x$survey[x$type == "index"]))
-    } else surveys,
-    excluded_surveys = if (is.null(surveys)) character() else {
+    } else {
+      surveys
+    },
+    excluded_surveys = if (is.null(surveys)) {
+      character()
+    } else {
       setdiff(unique(na.omit(x$survey[x$type == "index"])), surveys)
     },
     excluded_index_years = exclude_index_years,
     catch_method = paste(unique(catch_translation$provenance$method),
-                         collapse = "; "),
+      collapse = "; "
+    ),
     catch_units = catch_translation$units,
     source_provenance = source_provenance,
-    M = list(status = m_translation$status, notes = m_translation$notes,
-             settings = m_translation$M_settings),
+    M = list(
+      status = m_translation$status, notes = m_translation$notes,
+      settings = m_translation$M_settings
+    ),
     index = attr(index, "translation")
   )
   attr(obs$index, "translation") <- NULL
@@ -960,15 +1076,15 @@ database_to_tam_obs <- function(assessment_id, inputs, years = NULL, ages = NULL
 #'   is available, a tinyAM `M_settings` template for fixed M, and explanatory
 #'   `notes`.
 database_to_tam_M <- function(assessment_id, inputs, assumptions = NULL,
-                               years = NULL, ages = NULL) {
+                              years = NULL, ages = NULL) {
   x <- .translation_rows(inputs, assessment_id)
   m <- .translation_measure(x, "M", "natural_mortality_at_age")
   if (!nrow(m)) {
     source_m <- ""
     if (!is.null(assumptions) && all(c("assessment_id", "component", "setting", "value") %in% names(assumptions))) {
       a <- assumptions[!is.na(assumptions$assessment_id) &
-                         assumptions$assessment_id == assessment_id &
-                         assumptions$component == "M", , drop = FALSE]
+        assumptions$assessment_id == assessment_id &
+        assumptions$component == "M", , drop = FALSE]
       source_m <- paste(a$setting, a$value, collapse = "; ")
     }
     status <- if (grepl("estimate|random walk|time series", source_m, ignore.case = TRUE)) {
@@ -995,11 +1111,11 @@ database_to_tam_M <- function(assessment_id, inputs, assumptions = NULL,
     .translation_abort("Numerical M inputs must be positive and finite.")
   }
   if (any(!is.na(m$year) & m$year != as.integer(m$year)) ||
-      any(!is.na(m$age) & m$age != as.integer(m$age))) {
+    any(!is.na(m$age) & m$age != as.integer(m$age))) {
     .translation_abort("M input years and ages must be whole numbers.")
   }
   if (length(unique(m$unit)) != 1L ||
-      !grepl("per.?year|yr.?-?1|year.?-?1", unique(m$unit), ignore.case = TRUE)) {
+    !grepl("per.?year|yr.?-?1|year.?-?1", unique(m$unit), ignore.case = TRUE)) {
     .translation_abort("M inputs must use one explicit per-year unit.")
   }
 
@@ -1020,11 +1136,11 @@ database_to_tam_M <- function(assessment_id, inputs, assumptions = NULL,
   years <- as.numeric(years)
   ages <- as.numeric(ages)
   if (!length(years) || anyNA(years) || any(years != as.integer(years)) ||
-      !isTRUE(all.equal(years, as.numeric(seq.int(min(years), max(years)))))) {
+    !isTRUE(all.equal(years, as.numeric(seq.int(min(years), max(years)))))) {
     .translation_abort("years must be consecutive whole years.")
   }
   if (!length(ages) || anyNA(ages) || any(ages != as.integer(ages)) ||
-      !isTRUE(all.equal(ages, as.numeric(seq.int(min(ages), max(ages)))))) {
+    !isTRUE(all.equal(ages, as.numeric(seq.int(min(ages), max(ages)))))) {
     .translation_abort("ages must be consecutive whole ages.")
   }
 
@@ -1067,8 +1183,10 @@ database_to_tam_M <- function(assessment_id, inputs, assumptions = NULL,
     assessment_id = assessment_id,
     status = "fixed_numerical_input",
     surface = surface,
-    M_settings = list(process = "off", mu_form = NULL,
-                      mu_supplied = ~ M_assumption),
+    M_settings = list(
+      process = "off", mu_form = NULL,
+      mu_supplied = ~M_assumption
+    ),
     notes = notes
   )
 }

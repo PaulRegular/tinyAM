@@ -36,32 +36,44 @@ cat("Haddock survey weights, SD pairing, age surfaces and forecast separation pa
 
 for (measure in c("fraction_F_before_spawning", "fraction_M_before_spawning")) {
   x <- inputs[inputs$measure == measure, ]
-  stopifnot(nrow(x) == 495, all(x$value == 0),
-            setequal(x$year, 1972:2026), setequal(x$age, 0:8))
-  native <- read.csv(file.path("analysis/comp_assessments/source_cache/ices_haddock_north_sea_2026",
-    if (measure == "fraction_F_before_spawning") "native_propF.csv" else "native_propM.csv"))
+  stopifnot(
+    nrow(x) == 495, all(x$value == 0),
+    setequal(x$year, 1972:2026), setequal(x$age, 0:8)
+  )
+  native <- read.csv(file.path(
+    "analysis/comp_assessments/source_cache/ices_haddock_north_sea_2026",
+    if (measure == "fraction_F_before_spawning") "native_propF.csv" else "native_propM.csv"
+  ))
   joined <- merge(x, native, by = c("year", "age"))
   stopifnot(nrow(joined) == 495, all(joined$value.x == joined$value.y))
 }
 cat("Both native spawning-fraction matrices verified.\n")
 
 q <- outputs[outputs$type == "catchability", ]
-stopifnot(nrow(q) == 20, all(is.na(q$year)), all(q$se > 0),
-          all(q$lwr < q$value), all(q$upr > q$value))
+stopifnot(
+  nrow(q) == 20, all(is.na(q$year)), all(q$se > 0),
+  all(q$lwr < q$value), all(q$upr > q$value)
+)
 power <- q[q$measure == "q_power", ]
-stopifnot(nrow(power) == 3,
-          setequal(paste(power$survey, power$age), c("delta-GAMNS-WCQ1 1", "delta-GAMNS-WCQ3+Q4 0", "delta-GAMNS-WCQ3+Q4 1")))
+stopifnot(
+  nrow(power) == 3,
+  setequal(paste(power$survey, power$age), c("delta-GAMNS-WCQ1 1", "delta-GAMNS-WCQ3+Q4 0", "delta-GAMNS-WCQ3+Q4 1"))
+)
 native_q <- read.csv("analysis/comp_assessments/source_cache/ices_haddock_north_sea_2026/native_catchability.csv")
 joined <- merge(q, native_q, by = c("measure", "survey", "age"))
-stopifnot(nrow(joined) == 20, all(abs(joined$value.x-exp(joined$log_estimate)) < 1e-10),
-          all(abs(joined$se.x-joined$value.x*joined$log_se) < 1e-10))
+stopifnot(
+  nrow(joined) == 20, all(abs(joined$value.x - exp(joined$log_estimate)) < 1e-10),
+  all(abs(joined$se.x - joined$value.x * joined$log_se) < 1e-10)
+)
 cat("Catchability power mapping and uncertainty scales verified.\n")
 
 model_env <- new.env()
 load("analysis/comp_assessments/source_cache/ices_haddock_north_sea_2026/run_model.RData", model_env)
-stopifnot(model_env$fit$conf$initState == 0,
-          length(model_env$fit$pl$initN) == 0, length(model_env$fit$pl$initF) == 0,
-          all(c("logN", "logF") %in% names(model_env$fit$sdrep$par.random)))
+stopifnot(
+  model_env$fit$conf$initState == 0,
+  length(model_env$fit$pl$initN) == 0, length(model_env$fit$pl$initF) == 0,
+  all(c("logN", "logF") %in% names(model_env$fit$sdrep$par.random))
+)
 cat("Native initial-state configuration verified.\n")
 
 fit <- model_env$fit
@@ -89,13 +101,13 @@ check_state_interval <- function(measure, type, expected) {
     nrow(joined) == nrow(expected),
     !anyNA(joined$se_actual),
     max(abs(joined$value_expected - joined$value_actual) /
-          pmax(1, joined$value_expected)) < 1e-10,
+      pmax(1, joined$value_expected)) < 1e-10,
     max(abs(joined$se_expected - joined$se_actual) /
-          pmax(1, joined$se_expected)) < 1e-10,
+      pmax(1, joined$se_expected)) < 1e-10,
     max(abs(joined$lwr_expected - joined$lwr_actual) /
-          pmax(1, joined$lwr_expected)) < 1e-10,
+      pmax(1, joined$lwr_expected)) < 1e-10,
     max(abs(joined$upr_expected - joined$upr_actual) /
-          pmax(1, joined$upr_expected)) < 1e-10,
+      pmax(1, joined$upr_expected)) < 1e-10,
     all(grepl("conditional on fitted fixed parameters", actual$notes, fixed = TRUE))
   )
 }
@@ -112,7 +124,7 @@ check_state_interval(
 cat("Conditional N/F state uncertainty and 95% intervals verified.\n")
 
 precision <- inputs[inputs$type == "index" &
-                      inputs$measure == "relative_precision_weight", ]
+  inputs$measure == "relative_precision_weight", ]
 stopifnot(
   nrow(precision) == 667L,
   setequal(key(precision), key(obs)),
@@ -162,7 +174,8 @@ names(precision_values)[4] <- "weight"
 sd_values <- sd[, c("survey", "year", "age", "value")]
 names(sd_values)[4] <- "relative_sd"
 paired <- merge(precision_values, sd_values,
-                by = c("survey", "year", "age"), all = TRUE)
+  by = c("survey", "year", "age"), all = TRUE
+)
 stopifnot(
   nrow(paired) == 667L,
   !anyNA(paired$relative_sd),

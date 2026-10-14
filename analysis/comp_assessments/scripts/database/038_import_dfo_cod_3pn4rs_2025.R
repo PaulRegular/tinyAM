@@ -1,7 +1,9 @@
 assessment_id <- "dfo_cod_3pn4rs_2025"
 database_dir <- file.path("analysis", "comp_assessments", "database")
-source_dir <- file.path("analysis", "comp_assessments", "source_cache",
-                        assessment_id)
+source_dir <- file.path(
+  "analysis", "comp_assessments", "source_cache",
+  assessment_id
+)
 source_file <- file.path(source_dir, "assessment.txt")
 assessment_url <- paste0(
   "https://publications.gc.ca/collections/collection_2026/mpo-dfo/",
@@ -141,15 +143,19 @@ table_inputs <- function(table, ages, type, measure, basis, unit, number, note) 
 
 weights <- table_inputs(
   catch_weight, 2:11, "catch_weight", "weight_at_age", "kg_per_fish", "kg", 24,
-  paste("Commercial catch weights, not beginning-of-year stock weights.",
-        "Printed zeros are retained; seven '-' cells are missing and omitted.")
+  paste(
+    "Commercial catch weights, not beginning-of-year stock weights.",
+    "Printed zeros are retained; seven '-' cells are missing and omitted."
+  )
 )
 index <- table_inputs(
   sentinel, 1:11, "index", "numbers_at_age", "numbers", "mean numbers per tow", 28,
-  paste("Published July Sentinel mobile index; tow geometry is standardized",
-        "to 54 ft horizontal opening and 1.25 nautical miles.",
-        "Age 1 is reported but the accepted model fits ages 2-11+.",
-        "Sampling time 0.54 is a mid-July approximation, not the recovered model setting.")
+  paste(
+    "Published July Sentinel mobile index; tow geometry is standardized",
+    "to 54 ft horizontal opening and 1.25 nautical miles.",
+    "Age 1 is reported but the accepted model fits ages 2-11+.",
+    "Sampling time 0.54 is a mid-July approximation, not the recovered model setting."
+  )
 )
 index$survey <- "Sentinel mobile"
 index$region <- "3Pn4RS"
@@ -243,31 +249,46 @@ outputs <- rbind(
     "mortality", "natural_mortality_at_age",
     rep(natural_mortality[natural_mortality[, 1] >= 1984, 1], each = 8),
     as.vector(t(natural_mortality[natural_mortality[, 1] >= 1984,
-                                  4:11, drop = FALSE])),
+      4:11,
+      drop = FALSE
+    ])),
     "per_year", 36, rep(4:11, times = 2024 - 1984 + 1),
     ifelse(rep(4:11, times = 2024 - 1984 + 1) == 11, "11+", ""),
     "Estimated M output; fixed ages 2-3 and pre-1984 values are stored as inputs."
   ),
   make_output("biomass", "SSB", biomass[, 1], biomass[, 13], "tonnes", 32,
-              notes = "Spawning stock biomass."),
+    notes = "Spawning stock biomass."
+  ),
   make_output("biomass", "total_biomass", biomass[, 1], biomass[, 12],
-              "tonnes", 32, age_group = "2+",
-              notes = "Beginning-of-year biomass for ages 2+."),
+    "tonnes", 32,
+    age_group = "2+",
+    notes = "Beginning-of-year biomass for ages 2+."
+  ),
   make_output("population", "total_numbers", abundance[, 1], abundance[, 12],
-              "thousand fish", 33, age_group = "2+",
-              notes = "Beginning-of-year abundance for ages 2+."),
+    "thousand fish", 33,
+    age_group = "2+",
+    notes = "Beginning-of-year abundance for ages 2+."
+  ),
   make_output("population", "total_numbers", abundance[, 1], abundance[, 13],
-              "thousand fish", 33, age_group = "5+",
-              notes = "Beginning-of-year abundance for ages 5+."),
+    "thousand fish", 33,
+    age_group = "5+",
+    notes = "Beginning-of-year abundance for ages 5+."
+  ),
   make_output("recruitment", "recruitment", abundance[, 1], abundance[, 2],
-              "thousand fish", 33, age = 2,
-              notes = "Recruitment is reported at model age 2; year is the year fish reach age 2."),
+    "thousand fish", 33,
+    age = 2,
+    notes = "Recruitment is reported at model age 2; year is the year fish reach age 2."
+  ),
   make_output("mortality", "Fbar", fishing_mortality[, 1],
-              fishing_mortality[, 12], "per_year", 35, age_group = "4-6",
-              notes = "Source-reported mean F for ages 4-6."),
+    fishing_mortality[, 12], "per_year", 35,
+    age_group = "4-6",
+    notes = "Source-reported mean F for ages 4-6."
+  ),
   make_output("mortality", "Fbar", fishing_mortality[, 1],
-              fishing_mortality[, 13], "per_year", 35, age_group = "6-9",
-              notes = "Source-reported mean F for ages 6-9.")
+    fishing_mortality[, 13], "per_year", 35,
+    age_group = "6-9",
+    notes = "Source-reported mean F for ages 6-9."
+  )
 )
 
 stock <- data.frame(
@@ -393,20 +414,28 @@ add_assumption <- function(component, survey, setting, value, reference, note = 
 }
 assumptions <- rbind(
   assumptions,
-  add_assumption("index", "Sentinel mobile", "standardization",
+  add_assumption(
+    "index", "Sentinel mobile", "standardization",
     "July survey; 54 ft horizontal trawl opening and 1.25 nautical mile tow distance.",
     paste(assessment_ref, "Section 2.1.3.3"),
-    "Reported indices already correct changing tow geometry; separate vessel q groups are not imposed on Table 28."),
-  add_assumption("index", "DFO August", "vessel_and_gear",
-    paste("Lady Hammond / Western IIA (1984-1990); Alfred Needler / URI (1990-2004);",
-          "Teleost / Campelen (2004-2022); John Cabot / modified Campelen",
-          "(comparative fishing 2021-2022; regular survey from 2023)."),
+    "Reported indices already correct changing tow geometry; separate vessel q groups are not imposed on Table 28."
+  ),
+  add_assumption(
+    "index", "DFO August", "vessel_and_gear",
+    paste(
+      "Lady Hammond / Western IIA (1984-1990); Alfred Needler / URI (1990-2004);",
+      "Teleost / Campelen (2004-2022); John Cabot / modified Campelen",
+      "(comparative fishing 2021-2022; regular survey from 2023)."
+    ),
     paste(assessment_ref, "Section 2.1.3.1"),
-    "Published accepted indices are calibrated to John Cabot equivalents. Uncalibrated alternatives would require separate vessel/gear q groups, survey design weighting and age-length expansion."),
-  add_assumption("biology", "", "catch_weights",
+    "Published accepted indices are calibrated to John Cabot equivalents. Uncalibrated alternatives would require separate vessel/gear q groups, survey design weighting and age-length expansion."
+  ),
+  add_assumption(
+    "biology", "", "catch_weights",
     "Commercial fishery weights at age 2-11+, 1974-2024, in kg per fish (Table 24).",
     paste(assessment_ref, "Table 24"),
-    "Not substituted for stock weights; seven missing cells remain missing, and printed zero weights are retained.")
+    "Not substituted for stock weights; seven missing cells remain missing, and printed zero weights are retained."
+  )
 )
 
 write_updated <- function(name, new_rows, key) {
@@ -421,7 +450,9 @@ write_updated <- function(name, new_rows, key) {
   existing <- lines[vapply(lines, starts_with_id, logical(1))]
 
   csv_field <- function(value) {
-    if (is.na(value)) return("")
+    if (is.na(value)) {
+      return("")
+    }
     value <- enc2utf8(as.character(value))
     if (grepl('[",\r\n]', value) || grepl("^\\s|\\s$", value)) {
       paste0('"', gsub('"', '""', value, fixed = TRUE), '"')
@@ -431,22 +462,27 @@ write_updated <- function(name, new_rows, key) {
   }
   new_lines <- vapply(seq_len(nrow(new_rows)), function(i) {
     paste(vapply(new_rows, function(column) csv_field(column[i]), character(1)),
-          collapse = ",")
+      collapse = ","
+    )
   }, character(1))
 
   if (length(existing)) {
-    if (identical(existing, new_lines)) return(invisible(NULL))
+    if (identical(existing, new_lines)) {
+      return(invisible(NULL))
+    }
     selected <- vapply(lines, starts_with_id, logical(1))
     insert_at <- which(selected)[1]
-    replacement <- c(lines[seq_len(insert_at - 1L)], new_lines,
-                     lines[seq_along(lines) > insert_at & !selected])
+    replacement <- c(
+      lines[seq_len(insert_at - 1L)], new_lines,
+      lines[seq_along(lines) > insert_at & !selected]
+    )
     writeLines(replacement, path, useBytes = TRUE)
     return(invisible(NULL))
   }
 
   original <- readBin(path, "raw", n = file.info(path)[["size"]])
   line_ending <- if (any(original[-1] == as.raw(10) &
-                         original[-length(original)] == as.raw(13))) {
+    original[-length(original)] == as.raw(13))) {
     "\r\n"
   } else {
     "\n"

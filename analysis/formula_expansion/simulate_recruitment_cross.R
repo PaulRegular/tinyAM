@@ -8,8 +8,10 @@ if (any(!is.finite(c(n_simple, n_full, workers))) || any(c(n_simple, n_full, wor
 pkgload::load_all(quiet = TRUE)
 root <- file.path("analysis", "formula_expansion")
 source(file.path(root, "recruitment_cross_validation.R"))
-signature <- tools::md5sum(c(file.path(root, c("recruitment_validation.R", "recruitment_cross_validation.R", "simulate_recruitment_cross.R")),
-  list.files("R", "[.]R$", full.names = TRUE)))
+signature <- tools::md5sum(c(
+  file.path(root, c("recruitment_validation.R", "recruitment_cross_validation.R", "simulate_recruitment_cross.R")),
+  list.files("R", "[.]R$", full.names = TRUE)
+))
 path <- file.path(root, "results", "recruitment_cross_recovery.rds")
 dir.create(dirname(path), recursive = TRUE, showWarnings = FALSE)
 attempts <- list()
@@ -20,20 +22,26 @@ if (file.exists(path)) {
   }
   attempts <- saved$results
 }
-checkpoint <- function(complete = FALSE) saveRDS(list(results = attempts, signature = signature,
-  n_simple = n_simple, n_full = n_full, complete = complete, session = sessionInfo()), path)
+checkpoint <- function(complete = FALSE) {
+  saveRDS(list(
+    results = attempts, signature = signature,
+    n_simple = n_simple, n_full = n_full, complete = complete, session = sessionInfo()
+  ), path)
+}
 if (workers == 1L) future::plan(future::sequential) else future::plan(future::multisession, workers = workers)
-for (stage in c("isolated", "full")) for (truth in rec_cross_cases) {
-  n <- if (stage == "isolated") n_simple else n_full
-  pending <- which(!paste(stage, truth, seq_len(n), sep = "_") %in% names(attempts))
-  for (batch in split(pending, ceiling(seq_along(pending) / workers))) {
-    results <- furrr::future_map(batch, function(i) {
-      if (workers > 1L) pkgload::load_all(quiet = TRUE)
-      rec_cross_dataset(stage, truth, i, save_fit = stage == "full" && i == 1L)
-    }, .options = furrr::furrr_options(seed = TRUE))
-    for (j in seq_along(batch)) attempts[[paste(stage, truth, batch[j], sep = "_")]] <- results[[j]]
-    checkpoint()
-    cli::cli_inform("Recruitment cross-tests: {stage}, {truth}, {max(batch)}/{n} datasets recorded.")
+for (stage in c("isolated", "full")) {
+  for (truth in rec_cross_cases) {
+    n <- if (stage == "isolated") n_simple else n_full
+    pending <- which(!paste(stage, truth, seq_len(n), sep = "_") %in% names(attempts))
+    for (batch in split(pending, ceiling(seq_along(pending) / workers))) {
+      results <- furrr::future_map(batch, function(i) {
+        if (workers > 1L) pkgload::load_all(quiet = TRUE)
+        rec_cross_dataset(stage, truth, i, save_fit = stage == "full" && i == 1L)
+      }, .options = furrr::furrr_options(seed = TRUE))
+      for (j in seq_along(batch)) attempts[[paste(stage, truth, batch[j], sep = "_")]] <- results[[j]]
+      checkpoint()
+      cli::cli_inform("Recruitment cross-tests: {stage}, {truth}, {max(batch)}/{n} datasets recorded.")
+    }
   }
 }
 future::plan(future::sequential)

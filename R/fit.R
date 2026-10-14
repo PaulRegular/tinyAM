@@ -1,4 +1,3 @@
-
 #' Merge user-supplied starting values into parameter list
 #'
 #' @description
@@ -46,13 +45,14 @@
 
     # Matrices: align by dimnames when possible, else recycle shape if equal
     if (is.matrix(x0)) {
-      rnm <- rownames(x0); cnm <- colnames(x0)
+      rnm <- rownames(x0)
+      cnm <- colnames(x0)
       if (!is.null(dimnames(x0)) && !is.null(dimnames(xs))) {
         rr <- intersect(rnm, rownames(xs))
         cc <- intersect(cnm, colnames(xs))
         if (length(rr) && length(cc)) x0[rr, cc] <- xs[rr, cc]
       } else if (all(dim(xs) == dim(x0))) {
-        x0[,] <- xs
+        x0[, ] <- xs
       }
       par0[[nm]] <- x0
       next
@@ -192,28 +192,29 @@
 #' @eval .settings_usage("fit_tam")
 #' @export
 fit_tam <- function(
-    data,
-    years = NULL,
-    ages = NULL,
-    N_settings = list(process = "iid", init = "exp", sd_form = ~ 1),
-    rec_settings = list(process = "rw", mu_form = NULL, sd = NULL, phi = NULL),
-    F_settings = list(process = "rw", mu_form = NULL, sd_form = ~ 1, mean_ages = NULL),
-    M_settings = list(process = "off", mu_form = NULL, mu_supplied = ~I(0.2), sd_form = ~ 1,
-                      age_breaks = NULL, first_dev_year = NULL, mean_ages = NULL),
-    catch_settings = list(sd_form = ~1, sd_supplied = NULL),
-    index_settings = list(sd_form = ~1, sd_supplied = NULL, q_form = ~q_block, q_link = "log"),
-    proj_settings = NULL,
-    interval = 0.95,
-    add_osa_res = FALSE,
-    silent = FALSE,
-    start_par = NULL,
-    grad_tol = 1e-2
+  data,
+  years = NULL,
+  ages = NULL,
+  N_settings = list(process = "iid", init = "exp", sd_form = ~1),
+  rec_settings = list(process = "rw", mu_form = NULL, sd = NULL, phi = NULL),
+  F_settings = list(process = "rw", mu_form = NULL, sd_form = ~1, mean_ages = NULL),
+  M_settings = list(
+    process = "off", mu_form = NULL, mu_supplied = ~ I(0.2), sd_form = ~1,
+    age_breaks = NULL, first_dev_year = NULL, mean_ages = NULL
+  ),
+  catch_settings = list(sd_form = ~1, sd_supplied = NULL),
+  index_settings = list(sd_form = ~1, sd_supplied = NULL, q_form = ~q_block, q_link = "log"),
+  proj_settings = NULL,
+  interval = 0.95,
+  add_osa_res = FALSE,
+  silent = FALSE,
+  start_par = NULL,
+  grad_tol = 1e-2
 ) {
-
   call <- match.call()
 
   if (!is.numeric(grad_tol) || length(grad_tol) != 1L ||
-      !is.finite(grad_tol) || grad_tol <= 0) {
+    !is.finite(grad_tol) || grad_tol <= 0) {
     cli::cli_abort("{.arg grad_tol} must be one positive finite number.")
   }
 
@@ -226,12 +227,16 @@ fit_tam <- function(
     proj_settings = proj_settings
   )
   par <- make_par(dat)
-  formula_advisories <- rbind(.mean_process_advisories(dat), .q_process_advisories(dat),
-                             .sd_process_advisories(dat), .rec_process_advisories(dat),
-                             .process_sd_advisories(dat))
+  formula_advisories <- rbind(
+    .mean_process_advisories(dat), .q_process_advisories(dat),
+    .sd_process_advisories(dat), .rec_process_advisories(dat),
+    .process_sd_advisories(dat)
+  )
   if (nrow(formula_advisories)) {
-    cli::cli_warn(c("Formula-effect caution.",
-      stats::setNames(formula_advisories$detail, rep("i", nrow(formula_advisories)))))
+    cli::cli_warn(c(
+      "Formula-effect caution.",
+      stats::setNames(formula_advisories$detail, rep("i", nrow(formula_advisories)))
+    ))
   }
   if (!is.null(start_par)) {
     par <- .merge_start_par(par, start_par)
@@ -239,8 +244,10 @@ fit_tam <- function(
       par <- .initialize_rec_curve(par, dat)
     }
   }
-  for (name in c("dq", "dmu_f")) if (!is.null(par[[name]]) && any(!is.finite(par[[name]]) | par[[name]] < 0)) {
-    cli::cli_abort("Starting {.arg {name}} increments must be finite and non-negative.")
+  for (name in c("dq", "dmu_f")) {
+    if (!is.null(par[[name]]) && any(!is.finite(par[[name]]) | par[[name]] < 0)) {
+      cli::cli_abort("Starting {.arg {name}} increments must be finite and non-negative.")
+    }
   }
 
   ran <- c("log_f", "log_r", .formula_random_parameters(dat))
@@ -268,13 +275,16 @@ fit_tam <- function(
     design <- dat[[paste0(toupper(process), "_modmat")]]
     fixed <- vapply(seq_len(ncol(design)), function(j) {
       surface <- matrix(design[, j], length(dat$years), length(dat$ages),
-                        dimnames = list(dat$years, dat$ages))
+        dimnames = list(dat$years, dat$ages)
+      )
       if (process == "f") {
         field <- surface[!dat$is_proj, , drop = FALSE]
       } else {
         field <- surface[rownames(states), settings$age_block_start, drop = FALSE]
         surface[rownames(states), names(settings$age_blocks)] <- 0
-        if (any(surface != 0)) return(FALSE) # Mean still controls M outside process states.
+        if (any(surface != 0)) {
+          return(FALSE)
+        } # Mean still controls M outside process states.
       }
       nrow(field) < 2L || all(field[-1, , drop = FALSE] == field[-nrow(field), , drop = FALSE])
     }, logical(1))
@@ -301,7 +311,8 @@ fit_tam <- function(
   structural <- .check_tam_structure(dat, map)
   if (any(structural$status == "fail")) {
     cli::cli_abort(c("Model formulas contain redundant fitted coefficients.",
-      "x" = paste(structural$check[structural$status == "fail"], collapse = ", ")))
+      "x" = paste(structural$check[structural$status == "fail"], collapse = ", ")
+    ))
   }
   obj <- RTMB::MakeADFun(
     make_nll_fun(nll_fun, dat),
@@ -324,12 +335,16 @@ fit_tam <- function(
   parameter_values <- obj$env$last.par
   rep <- obj$report(parameter_values)
   sdreport_error <- NULL
-  sdrep <- tryCatch(RTMB::sdreport(obj, par.fixed = opt$par,
-    getJointPrecision = TRUE, getReportCovariance = FALSE),
+  sdrep <- tryCatch(
+    RTMB::sdreport(obj,
+      par.fixed = opt$par,
+      getJointPrecision = TRUE, getReportCovariance = FALSE
+    ),
     error = function(e) {
       sdreport_error <<- conditionMessage(e)
       NULL
-    })
+    }
+  )
 
   out <- list(
     call = call,
@@ -363,17 +378,21 @@ fit_tam <- function(
     failed <- failed$detail[failed$status != "pass"]
     cli::cli_warn(c("Numerical convergence checks did not pass; inspect {.code check_tam(fit)}.",
       stats::setNames(failed, rep("x", length(failed))),
-      "i" = "Optimizer code zero alone is insufficient. A missed gradient tolerance alone does not establish a structural problem."))
+      "i" = "Optimizer code zero alone is insufficient. A missed gradient tolerance alone does not establish a structural problem."
+    ))
   }
-  formula_uncertainty <- rbind(.formula_uncertainty_advisories(out), .rec_fit_advisories(out),
-                               .cor_rw_advisories(out), .process_sd_fit_advisories(out))
+  formula_uncertainty <- rbind(
+    .formula_uncertainty_advisories(out), .rec_fit_advisories(out),
+    .cor_rw_advisories(out), .process_sd_fit_advisories(out)
+  )
   if (nrow(formula_uncertainty)) {
-    cli::cli_warn(c("Formula-effect uncertainty or support is limited.",
-      stats::setNames(formula_uncertainty$detail, rep("i", nrow(formula_uncertainty)))))
+    cli::cli_warn(c(
+      "Formula-effect uncertainty or support is limited.",
+      stats::setNames(formula_uncertainty$detail, rep("i", nrow(formula_uncertainty)))
+    ))
   }
 
   .new_tam_fit(out)
-
 }
 
 
@@ -405,8 +424,8 @@ update.tam_fit <- function(object, ..., evaluate = TRUE) {
   changes <- list(...)
 
   if (length(changes) &&
-      (is.null(names(changes)) || anyNA(names(changes)) ||
-       any(names(changes) == "") || anyDuplicated(names(changes)))) {
+    (is.null(names(changes)) || anyNA(names(changes)) ||
+      any(names(changes) == "") || anyDuplicated(names(changes)))) {
     cli::cli_abort("All arguments supplied to {.fn update} must have unique, nonempty names.")
   }
 
@@ -417,12 +436,16 @@ update.tam_fit <- function(object, ..., evaluate = TRUE) {
   for (name in names(changes)) {
     value <- if (name %in% .settings_names) {
       .merge_settings(args[[name]], changes[[name]], name)
-    } else changes[[name]]
+    } else {
+      changes[[name]]
+    }
     args[name] <- list(value)
     new_call[name] <- if (name %in% .settings_names) list(value) else change_expr[name]
   }
   new_call <- as.call(new_call)
-  if (!evaluate) return(new_call)
+  if (!evaluate) {
+    return(new_call)
+  }
 
   out <- do.call(fit_tam, args)
 
@@ -511,13 +534,13 @@ update.tam_fit <- function(object, ..., evaluate = TRUE) {
 #'
 #' @export
 fit_retro <- function(
-    fit,
-    folds = 2,
-    start_from_fit = FALSE,
-    hindcast = FALSE,
-    grad_tol = NULL,
-    progress = TRUE,
-    globals = NULL
+  fit,
+  folds = 2,
+  start_from_fit = FALSE,
+  hindcast = FALSE,
+  grad_tol = NULL,
+  progress = TRUE,
+  globals = NULL
 ) {
   .require_tam_fit(fit, arg = "fit")
 
@@ -535,57 +558,64 @@ fit_retro <- function(
   }
 
 
-  progressr::with_progress({
-    update_progress <- progressr::progressor(steps = length(retro_years))
-    retro <- furrr::future_map(seq_along(retro_years), function(i) {
-      if (retro_years[i] == max_year && !hindcast) {
-        r <- fit # need not re-run terminal year
-      } else {
-        r <- suppressWarnings(
-          try(
-            do.call(update, list(
-              object = fit,
-              years = min_year:retro_years[i],
-              ages = fit$dat$ages,
-              proj_settings = if (hindcast) {
-                list(n_proj = 1, n_mean = 1, F_mult = 1)
-              } else {
-                fit$dat$proj_settings
-              },
-              start_par = start_par,
+  progressr::with_progress(
+    {
+      update_progress <- progressr::progressor(steps = length(retro_years))
+      retro <- furrr::future_map(seq_along(retro_years), function(i) {
+        if (retro_years[i] == max_year && !hindcast) {
+          r <- fit # need not re-run terminal year
+        } else {
+          r <- suppressWarnings(
+            try(
+              do.call(update, list(
+                object = fit,
+                years = min_year:retro_years[i],
+                ages = fit$dat$ages,
+                proj_settings = if (hindcast) {
+                  list(n_proj = 1, n_mean = 1, F_mult = 1)
+                } else {
+                  fit$dat$proj_settings
+                },
+                start_par = start_par,
+                silent = TRUE
+              )),
               silent = TRUE
-            )),
-            silent = TRUE
+            )
           )
-        )
-      }
-      if (inherits(r, "try-error")) {
+        }
+        if (inherits(r, "try-error")) {
+          update_progress()
+          return(r)
+        }
+        r$grad_tol <- grad_tol
+        r$diagnostics <- check_tam(r, grad_tol = grad_tol)
+        r$is_converged <- r$diagnostics$is_converged
         update_progress()
-        return(r)
-      }
-      r$grad_tol <- grad_tol
-      r$diagnostics <- check_tam(r, grad_tol = grad_tol)
-      r$is_converged <- r$diagnostics$is_converged
-      update_progress()
-      r
-    }, .options = furrr::furrr_options(seed = 1, packages = "tinyAM", globals = globals))
-  }, enable = progress)
+        r
+      }, .options = furrr::furrr_options(seed = 1, packages = "tinyAM", globals = globals))
+    },
+    enable = progress
+  )
   names(retro) <- retro_years
 
   converged <- sapply(retro, function(x) !inherits(x, "try-error") && isTRUE(x$is_converged))
 
   if (any(!converged)) {
     cli::cli_warn(
-      paste0("Model may not have converged for the following folds: ",
-             paste(retro_years[!converged], collapse = ", "))
+      paste0(
+        "Model may not have converged for the following folds: ",
+        paste(retro_years[!converged], collapse = ", ")
+      )
     )
   }
 
   fits <- retro[converged]
   if (length(fits) == 0L) cli::cli_abort("All folds failed convergence checks")
 
-  out <- c(tidy_tam(model_list = fits, label = "fold"),
-           list(fits = fits))
+  out <- c(
+    tidy_tam(model_list = fits, label = "fold"),
+    list(fits = fits)
+  )
 
   rhos <- lapply(names(out$pop), function(nm) {
     d <- out$pop[[nm]]
@@ -634,7 +664,7 @@ fit_retro <- function(
 #' if (interactive()) {
 #'   # Choose your parallel plan (set once per session)
 #'   future::plan(future::multisession, workers = 4)
-#'   hc  <- fit_hindcast(fit, folds = 5, progress = TRUE)
+#'   hc <- fit_hindcast(fit, folds = 5, progress = TRUE)
 #'   hc$hindcast_rmse
 #'
 #'   vis_tam(hc$fits)

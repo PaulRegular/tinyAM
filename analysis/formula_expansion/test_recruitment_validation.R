@@ -7,8 +7,10 @@ testthat::test_that("simulated observations retain the prepared survey/year/age 
   obs <- rec_observations(generated, d)
   again <- do.call(prepare_tam, c(list(data = obs), rec_fit_settings(list(process = "rw", mu_form = NULL))))
   testthat::expect_equal(again$log_obs, generated$log_obs)
-  testthat::expect_equal(again$obs_map[c("type", "year", "age", "survey")],
-                         d$obs_map[c("type", "year", "age", "survey")])
+  testthat::expect_equal(
+    again$obs_map[c("type", "year", "age", "survey")],
+    d$obs_map[c("type", "year", "age", "survey")]
+  )
 })
 
 testthat::test_that("stock-recruit derivatives with respect to parent SSB are exact", {
@@ -16,7 +18,9 @@ testthat::test_that("stock-recruit derivatives with respect to parent SSB are ex
   p <- list(log_sr_alpha = log(4), log_sr_beta = log(.02))
   for (type in c("bh", "ricker")) {
     obj <- RTMB::MakeADFun(function(s) sum(exp(tinyAM:::.rec_log_curve(log(s$ssb), p, type))),
-                          list(ssb = S), silent = TRUE)
+      list(ssb = S),
+      silent = TRUE
+    )
     expected <- if (type == "bh") 4 / (1 + .02 * S)^2 else 4 * exp(-.02 * S) * (1 - .02 * S)
     testthat::expect_equal(unname(obj$gr(obj$par)), matrix(expected, 1L), tolerance = 1e-10)
   }

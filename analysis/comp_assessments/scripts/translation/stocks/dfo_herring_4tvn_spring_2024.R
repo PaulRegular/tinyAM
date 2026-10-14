@@ -5,8 +5,8 @@ inputs <- source$inputs
 
 catch <- inputs[
   inputs$type == "catch" & inputs$measure == "numbers_at_age" &
-    inputs$season == "spring",
-  , drop = FALSE
+    inputs$season == "spring", ,
+  drop = FALSE
 ]
 gear_catch <- catch[c("year", "age", "fleet", "value")]
 catch <- aggregate(value ~ year + age, catch, sum)
@@ -25,8 +25,8 @@ catch_rows <- data.frame(
 
 gear_weights <- inputs[
   inputs$type == "catch_weight" & inputs$measure == "weight_at_age" &
-    inputs$season == "spring" & inputs$value > 0,
-  , drop = FALSE
+    inputs$season == "spring" & inputs$value > 0, ,
+  drop = FALSE
 ]
 gear_weights <- merge(
   gear_weights[c("year", "age", "fleet", "value")], gear_catch,
@@ -35,7 +35,9 @@ gear_weights <- merge(
 combined_weights <- do.call(rbind, lapply(
   split(gear_weights, interaction(gear_weights$year, gear_weights$age)),
   function(x) {
-    if (!nrow(x)) return(NULL)
+    if (!nrow(x)) {
+      return(NULL)
+    }
     value <- if (sum(x$value_catch) > 0) {
       stats::weighted.mean(x$value_weight, x$value_catch)
     } else {
@@ -46,7 +48,8 @@ combined_weights <- do.call(rbind, lapply(
 ))
 weight_grid <- expand.grid(year = years, age = ages)
 weight_grid <- merge(weight_grid, combined_weights,
-                     by = c("year", "age"), all.x = TRUE, sort = FALSE)
+  by = c("year", "age"), all.x = TRUE, sort = FALSE
+)
 weight_grid <- weight_grid[order(weight_grid$year, weight_grid$age), ]
 for (age in ages) {
   rows <- weight_grid$age == age
@@ -56,8 +59,10 @@ for (age in ages) {
     xout = weight_grid$year[rows], rule = 2
   )$y
 }
-source_weight <- matrix(weight_grid$value, nrow = length(years), byrow = TRUE,
-                        dimnames = list(year = years, age = ages))
+source_weight <- matrix(weight_grid$value,
+  nrow = length(years), byrow = TRUE,
+  dimnames = list(year = years, age = ages)
+)
 stock_weight <- source_weight
 for (i in 2:length(years)) {
   for (j in 2:length(ages)) {
@@ -100,8 +105,8 @@ weight_rows <- add_composition_fields(weight_rows)
 
 fit_inputs <- inputs[
   !(inputs$type == "catch" & inputs$measure == "numbers_at_age") &
-    !(inputs$type == "weight" & inputs$measure == "weight_at_age"),
-  , drop = FALSE
+    !(inputs$type == "weight" & inputs$measure == "weight_at_age"), ,
+  drop = FALSE
 ]
 fit_inputs <- rbind(fit_inputs, catch_rows, weight_rows)
 obs <- database_to_tam_obs(
@@ -131,19 +136,27 @@ obs$index$cpue_period <- "baseline"
 obs$index$cpue_period[is_cpue] <- as.character(cut_years(obs$index$year[is_cpue], cpue_breaks))
 obs$index$cpue_period <- factor(obs$index$cpue_period) |> relevel(ref = "baseline")
 
-dat <- tinyAM::prepare_tam(data = obs, years = years, ages = ages, N_settings = list(process = "iid",
-    init = "exp"), F_settings = list(process = "ar1", mu_form = ~0 + age_blocks, mean_ages = 6:8), M_settings = list(process = "ar1",
-    mu_form = NULL, mu_supplied = ~M_process_center, age_breaks = c(2, 7, 11), first_dev_year = 1978L),
-    catch_settings = list(sd_form = ~1), index_settings = list(q_form = ~0 + mono(age,
-        by = survey) + cpue_period, q_link = "log", sd_form = ~0 + survey))
+dat <- tinyAM::prepare_tam(
+  data = obs, years = years, ages = ages, N_settings = list(
+    process = "iid",
+    init = "exp"
+  ), F_settings = list(process = "ar1", mu_form = ~ 0 + age_blocks, mean_ages = 6:8), M_settings = list(
+    process = "ar1",
+    mu_form = NULL, mu_supplied = ~M_process_center, age_breaks = c(2, 7, 11), first_dev_year = 1978L
+  ),
+  catch_settings = list(sd_form = ~1), index_settings = list(q_form = ~ 0 + mono(age,
+    by = survey
+  ) + cpue_period, q_link = "log", sd_form = ~ 0 + survey)
+)
 start_par <- tinyAM::make_par(dat)
 source_surface <- function(measure, type, scale = 1) {
   rows <- source$outputs[
-    source$outputs$measure == measure & source$outputs$type == type,
-    , drop = FALSE
+    source$outputs$measure == measure & source$outputs$type == type, ,
+    drop = FALSE
   ]
   surface <- matrix(NA_real_, length(years), length(ages),
-                    dimnames = list(year = years, age = ages))
+    dimnames = list(year = years, age = ages)
+  )
   surface[cbind(match(rows$year, years), match(rows$age, ages))] <-
     as.numeric(rows$value) * scale
   if (any(!is.finite(surface))) {
@@ -155,10 +168,12 @@ source_N <- source_surface("numbers_at_age", "population", 1000)
 source_F <- source_surface("fishing_mortality_at_age", "mortality")
 source_recruitment <- source$outputs[
   source$outputs$measure == "recruitment" &
-    source$outputs$type == "recruitment", , drop = FALSE
+    source$outputs$type == "recruitment", ,
+  drop = FALSE
 ]
 source_recruitment <- source_recruitment[
-  match(years, source_recruitment$year), , drop = FALSE
+  match(years, source_recruitment$year), ,
+  drop = FALSE
 ]
 start_par$log_r0 <- log(source_recruitment$value[[1]] * 1000)
 start_par$log_r <- setNames(
@@ -189,32 +204,42 @@ start_par$log_sd_index[] <- log(0.2)
 
 age_plus_group <- 11
 
-comparison_outputs <- source$outputs[source$outputs$measure %in% c("numbers_at_age", "fishing_mortality_at_age",
-    "biomass_at_age", "recruitment", "Fbar", "total_numbers", "total_biomass", "SSB", "mature_biomass_at_age") &
-    !(source$outputs$measure %in% c("total_numbers", "total_biomass") & !is.na(source$outputs$age_group)),
-    , drop = FALSE]
+comparison_outputs <- source$outputs[
+  source$outputs$measure %in% c(
+    "numbers_at_age", "fishing_mortality_at_age",
+    "biomass_at_age", "recruitment", "Fbar", "total_numbers", "total_biomass", "SSB", "mature_biomass_at_age"
+  ) &
+    !(source$outputs$measure %in% c("total_numbers", "total_biomass") & !is.na(source$outputs$age_group)), ,
+  drop = FALSE
+]
 
-comparison_scales <- c(N = 0.001, F = 1, recruitment = 0.001, abundance = 0.001, biomass = 0.001, biomass_at_age = 0.001,
-    ssb = 0.001, ssb_mat = 0.001, F_bar = 1)
+comparison_scales <- c(
+  N = 0.001, F = 1, recruitment = 0.001, abundance = 0.001, biomass = 0.001, biomass_at_age = 0.001,
+  ssb = 0.001, ssb_mat = 0.001, F_bar = 1
+)
 
-comparison_definitions <- list(ssb = list(status = "matched", definition = "January 1 mature biomass at ages 4-11+, derived from reported biomass-at-age and maturity",
-    reason = "This common-definition comparison is not the accepted assessment's April 1 SSB. Source uncertainty is unavailable."))
+comparison_definitions <- list(ssb = list(
+  status = "matched", definition = "January 1 mature biomass at ages 4-11+, derived from reported biomass-at-age and maturity",
+  reason = "This common-definition comparison is not the accepted assessment's April 1 SSB. Source uncertainty is unavailable."
+))
 
-background <- c("### Southern Gulf spring-spawning herring: detailed assessment to 2023", "", print_sources(source$assessment),
-    "", "The current database record is DFO's accepted 2024 assessment. The 2026 assessment is recorded separately as summary-only because its detailed methods and numerical tables are still in preparation. The 2022 report supplies model-method context where the 2024 support document is silent.",
-    "", "| Component | Accepted assessment | tinyAM representation | Reason for difference |", "|---|------|------|------|",
-    "| Years | The SCA reports 1978-2023 population estimates; CPUE is available for 1990-2021. | Fit 1978-2023 and retain the spring fixed-gear CPUE series at 1990-2021. | Catch and population outputs extend beyond the CPUE series. |",
-    "| Ages | Ages 2-11+, with age 11 as the plus group. | Ages 2-11, with age 11 as the plus group. | The reported age range is retained. |",
-    "| N | Age-2 recruitment varies annually, with initial-cohort deviations; older cohorts subsequently follow survival. | Exponential initial abundance, annual recruitment variation and IID process error for older ages. | The older-age N process is retained for a stable fit; it adds flexibility absent from the source survival model. Recruitment variation is estimated rather than fixed. |",
-    "| F | Logistic fishery selectivity changes across three time blocks; the source estimates initial fishing mortality and observation/process terms. | Age- and year-correlated AR1 F states. | This is a compact approximation to changing selectivity; it is not the source's period-specific logistic model. |",
-    "| M | Log-M follows random walks for ages 2-6 and 7-11+, with 0.2 initial-M prior means and increment SD fixed at 0.075. | Two M age blocks follow an AR1 process centered on 0.2. | tinyAM's random walk leaves its first M state unpenalized; AR1 supplies a mean-reverting initial-state distribution, but changes the source process and estimates its variation. |",
-    "| Catch | Fixed- and mobile-gear catch-at-age are reported separately in thousand fish. The accepted SCA uses total catch and age-composition likelihoods. | Sum gear catches into one age-specific stream and convert to fish. Zeros and missing observations are excluded rather than filled. | tinyAM cannot reproduce the source total-plus-composition likelihood. |",
-    "| Index | Spring fixed-gear CPUE and the acoustic survey use age compositions and age-aggregated biomass indices; the acoustic biomass likelihood was weighted by 3 in the 2022 method report. | Use CPUE ages 4-11 and acoustic ages 2-10 at approximate timings of 0.25 and 0.75, with separate non-decreasing age-q curves and separate observation SDs. CPUE q changes in three time blocks. | tinyAM fits age-specific lognormal indices rather than composition plus aggregate biomass. The 2022 biomass likelihoods use CPUE ages 4-10 and acoustic ages 4-8. CPUE time blocks approximate the source q random walk. |",
-    "| Index scale | Table 15 omits the unit; the same historical acoustic series is explicitly labeled thousands of fish in DFO 2016/060, Table 16. | Record the table values as thousand fish in the database; the shared converter multiplies by 1,000 to obtain fish. Keep the log-q link. | Unit clarification corrects the acoustic q scale without introducing a manual stock-script multiplier or changing process settings. |",
-    "| Weights and maturity | Maturity is knife-edge between ages 3 and 4. Beginning-year weights use combined fishery weights and a geometric mean across adjacent age-year cells. | Combine gear weights with a catch-number-weighted mean, then apply the adjacent-cell geometric mean and the same maturity schedule. | Gear weighting is inferred: its median difference from weights implied by published biomass/N is 0.073%. Missing cells, age 2 and 1978 still require the documented approximation. |",
-    "| Comparison | January 1 N, biomass-at-age and F-at-age, age-2 recruitment and Fbar are tabulated. | Also show total abundance, total biomass and January 1 mature biomass derived from the source age tables. | Derived source totals have no uncertainty. The SSB panel compares January 1 mature biomass, not the assessment's April 1 SSB. No numerical M surface is available. |",
-    "", "The comparison is a structural approximation, not a reproduction of the accepted likelihood. Acoustic values are converted from thousand fish to fish using the database units; the 2025 biomass download belongs to the separate 2026 record. Acoustic timing is approximated by 0.75 from the late September to early October survey window. The source's initial-M prior, fixed process SDs and acoustic likelihood weight are not reproduced.",
-    "", "Interpret remaining scale differences alongside the simplified observation likelihood and mortality assumptions.")
+background <- c(
+  "### Southern Gulf spring-spawning herring: detailed assessment to 2023", "", print_sources(source$assessment),
+  "", "The current database record is DFO's accepted 2024 assessment. The 2026 assessment is recorded separately as summary-only because its detailed methods and numerical tables are still in preparation. The 2022 report supplies model-method context where the 2024 support document is silent.",
+  "", "| Component | Accepted assessment | tinyAM representation | Reason for difference |", "|---|------|------|------|",
+  "| Years | The SCA reports 1978-2023 population estimates; CPUE is available for 1990-2021. | Fit 1978-2023 and retain the spring fixed-gear CPUE series at 1990-2021. | Catch and population outputs extend beyond the CPUE series. |",
+  "| Ages | Ages 2-11+, with age 11 as the plus group. | Ages 2-11, with age 11 as the plus group. | The reported age range is retained. |",
+  "| N | Age-2 recruitment varies annually, with initial-cohort deviations; older cohorts subsequently follow survival. | Exponential initial abundance, annual recruitment variation and IID process error for older ages. | The older-age N process is retained for a stable fit; it adds flexibility absent from the source survival model. Recruitment variation is estimated rather than fixed. |",
+  "| F | Logistic fishery selectivity changes across three time blocks; the source estimates initial fishing mortality and observation/process terms. | Age- and year-correlated AR1 F states. | This is a compact approximation to changing selectivity; it is not the source's period-specific logistic model. |",
+  "| M | Log-M follows random walks for ages 2-6 and 7-11+, with 0.2 initial-M prior means and increment SD fixed at 0.075. | Two M age blocks follow an AR1 process centered on 0.2. | tinyAM's random walk leaves its first M state unpenalized; AR1 supplies a mean-reverting initial-state distribution, but changes the source process and estimates its variation. |",
+  "| Catch | Fixed- and mobile-gear catch-at-age are reported separately in thousand fish. The accepted SCA uses total catch and age-composition likelihoods. | Sum gear catches into one age-specific stream and convert to fish. Zeros and missing observations are excluded rather than filled. | tinyAM cannot reproduce the source total-plus-composition likelihood. |",
+  "| Index | Spring fixed-gear CPUE and the acoustic survey use age compositions and age-aggregated biomass indices; the acoustic biomass likelihood was weighted by 3 in the 2022 method report. | Use CPUE ages 4-11 and acoustic ages 2-10 at approximate timings of 0.25 and 0.75, with separate non-decreasing age-q curves and separate observation SDs. CPUE q changes in three time blocks. | tinyAM fits age-specific lognormal indices rather than composition plus aggregate biomass. The 2022 biomass likelihoods use CPUE ages 4-10 and acoustic ages 4-8. CPUE time blocks approximate the source q random walk. |",
+  "| Index scale | Table 15 omits the unit; the same historical acoustic series is explicitly labeled thousands of fish in DFO 2016/060, Table 16. | Record the table values as thousand fish in the database; the shared converter multiplies by 1,000 to obtain fish. Keep the log-q link. | Unit clarification corrects the acoustic q scale without introducing a manual stock-script multiplier or changing process settings. |",
+  "| Weights and maturity | Maturity is knife-edge between ages 3 and 4. Beginning-year weights use combined fishery weights and a geometric mean across adjacent age-year cells. | Combine gear weights with a catch-number-weighted mean, then apply the adjacent-cell geometric mean and the same maturity schedule. | Gear weighting is inferred: its median difference from weights implied by published biomass/N is 0.073%. Missing cells, age 2 and 1978 still require the documented approximation. |",
+  "| Comparison | January 1 N, biomass-at-age and F-at-age, age-2 recruitment and Fbar are tabulated. | Also show total abundance, total biomass and January 1 mature biomass derived from the source age tables. | Derived source totals have no uncertainty. The SSB panel compares January 1 mature biomass, not the assessment's April 1 SSB. No numerical M surface is available. |",
+  "", "The comparison is a structural approximation, not a reproduction of the accepted likelihood. Acoustic values are converted from thousand fish to fish using the database units; the 2025 biomass download belongs to the separate 2026 record. Acoustic timing is approximated by 0.75 from the late September to early October survey window. The source's initial-M prior, fixed process SDs and acoustic likelihood weight are not reproduced.",
+  "", "Interpret remaining scale differences alongside the simplified observation likelihood and mortality assumptions."
+)
 
 ## Model ----
 fit <- NULL
@@ -226,12 +251,14 @@ if (do_fit) {
     years = years,
     ages = ages,
     N_settings = list(process = "iid", init = "exp"),
-    F_settings = list(process = "ar1", mu_form = ~0 + age_blocks, mean_ages = 6:8),
-    M_settings = list(process = "ar1", mu_form = NULL, mu_supplied = ~M_process_center, age_breaks = c(2,
-        7, 11), first_dev_year = 1978L),
+    F_settings = list(process = "ar1", mu_form = ~ 0 + age_blocks, mean_ages = 6:8),
+    M_settings = list(process = "ar1", mu_form = NULL, mu_supplied = ~M_process_center, age_breaks = c(
+      2,
+      7, 11
+    ), first_dev_year = 1978L),
     catch_settings = list(sd_form = ~1),
-    index_settings = list(q_form = ~0 + mono(age, by = survey) + cpue_period, q_link = "log", sd_form = ~0 +
-        survey),
+    index_settings = list(q_form = ~ 0 + mono(age, by = survey) + cpue_period, q_link = "log", sd_form = ~ 0 +
+      survey),
     silent = silent,
     start_par = start_par
   )

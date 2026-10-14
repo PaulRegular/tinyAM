@@ -1,4 +1,3 @@
-
 ## Globals ----
 
 suppressWarnings(
@@ -91,7 +90,7 @@ test_that("plot_obs_pred includes both observed (markers) and predicted (lines)"
 
   modes <- suppressWarnings(trace_modes(p))
   expect_true(any(grepl("markers", modes, fixed = TRUE)))
-  expect_true(any(grepl("lines",   modes, fixed = TRUE)))
+  expect_true(any(grepl("lines", modes, fixed = TRUE)))
 })
 
 test_that("empty observed ages retain prediction traces in every frame", {
@@ -104,8 +103,10 @@ test_that("empty observed ages retain prediction traces in every frame", {
   expect_equal(length(built$x$data), 2L)
   for (frame in built$x$frames) {
     expect_equal(frame$traces, 0:1)
-    expect_equal(vapply(frame$data, `[[`, character(1), "mode"),
-                 c("markers", "lines"))
+    expect_equal(
+      vapply(frame$data, `[[`, character(1), "mode"),
+      c("markers", "lines")
+    )
     expect_equal(as.numeric(frame$data[[2]]$y), rep(11, 3))
   }
 })
@@ -118,8 +119,10 @@ test_that("missing reference predictions retain model traces in catch frames", {
   expect_equal(length(built$x$data), 3L)
   for (frame in built$x$frames) {
     expect_equal(frame$traces, 0:2)
-    expect_equal(vapply(frame$data, `[[`, character(1), "mode"),
-                 c("markers", "lines", "lines"))
+    expect_equal(
+      vapply(frame$data, `[[`, character(1), "mode"),
+      c("markers", "lines", "lines")
+    )
   }
 })
 
@@ -179,6 +182,7 @@ test_that("plot_par produces a valid plotly object with segments and markers", {
   expect_true(any(grepl("markers", modes2, fixed = TRUE)))
 
   # expect at least one trace with line (segments)
-  expect_true(any(vapply(plotly_traces(p1), function(x)
-    !is.null(x$line), logical(1))))
+  expect_true(any(vapply(plotly_traces(p1), function(x) {
+    !is.null(x$line)
+  }, logical(1))))
 })

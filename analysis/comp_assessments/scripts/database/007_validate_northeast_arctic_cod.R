@@ -9,9 +9,11 @@ assessment <- read("assessments")
 stopifnot(nrow(inputs) == 8682, nrow(outputs) == 4843)
 stopifnot(assessment$terminal_year == 2026, assessment$estimate_terminal_year == 2026)
 index <- inputs[inputs$type == "index", ]
-timing <- c("FLT15_I:NorBarTrSur_I" = .137, "FLT15_II:NorBarTrSur_II" = .137,
-            "FLT16:NorBarLofAcSur" = .1725, "FLT18:RusSweptArea" = .95,
-            "FLT007:Ecosystem" = .7)
+timing <- c(
+  "FLT15_I:NorBarTrSur_I" = .137, "FLT15_II:NorBarTrSur_II" = .137,
+  "FLT16:NorBarLofAcSur" = .1725, "FLT18:RusSweptArea" = .95,
+  "FLT007:Ecosystem" = .7
+)
 stopifnot(setequal(unique(index$survey), names(timing)))
 stopifnot(all(index$sampling_time == timing[index$survey]))
 stopifnot(max(index$year[index$survey == "FLT15_I:NorBarTrSur_I"]) == 2013)
@@ -21,7 +23,8 @@ stopifnot(nrow(catch) == 1028, max(catch$year) == 2025)
 stopifnot(!any(catch$year == 2011 & catch$age == 15))
 f <- outputs[outputs$measure == "fishing_mortality_at_age", ]
 stopifnot(max(f$year) == 2025)
-f14 <- f[f$age == 14, ]; f15 <- f[f$age == 15, ]
+f14 <- f[f$age == 14, ]
+f15 <- f[f$age == 15, ]
 stopifnot(identical(f14$value, f15$value))
 fbar <- outputs[outputs$measure == "Fbar", ]
 mean_f <- aggregate(value ~ year, f[f$age %in% 5:10, ], mean)
@@ -39,25 +42,33 @@ cat("Northeast Arctic cod inventory, timing, exclusions, state mapping and repor
 
 for (measure in c("fraction_F_before_spawning", "fraction_M_before_spawning")) {
   x <- inputs[inputs$measure == measure, ]
-  stopifnot(nrow(x) == 1053, all(x$value == 0),
-            setequal(x$year, 1946:2026), setequal(x$age, 3:15))
+  stopifnot(
+    nrow(x) == 1053, all(x$value == 0),
+    setequal(x$year, 1946:2026), setequal(x$age, 3:15)
+  )
 }
 q <- outputs[outputs$measure == "q", ]
 stopifnot(nrow(q) == 50, all(is.na(q$year)), all(q$se > 0))
 for (survey in unique(q$survey)) {
   x <- q[q$survey == survey, ]
-  stopifnot(x$value[x$age == 11] == x$value[x$age == 12],
-            x$se[x$age == 11] == x$se[x$age == 12])
+  stopifnot(
+    x$value[x$age == 11] == x$value[x$age == 12],
+    x$se[x$age == 11] == x$se[x$age == 12]
+  )
 }
 native_q <- read.csv("analysis/comp_assessments/source_cache/ices_cod_northeast_arctic_2026/native_catchability.csv")
 joined <- merge(q, native_q, by = c("survey", "age"))
-stopifnot(nrow(joined) == 50, all(abs(joined$value.x-exp(joined$log_estimate)) < 1e-10),
-          all(abs(joined$se.x-joined$value.x*joined$log_se) < 1e-10))
+stopifnot(
+  nrow(joined) == 50, all(abs(joined$value.x - exp(joined$log_estimate)) < 1e-10),
+  all(abs(joined$se.x - joined$value.x * joined$log_se) < 1e-10)
+)
 cat("Spawning fractions and q sharing/uncertainty scales verified.\n")
 
 model_env <- new.env()
 load("analysis/comp_assessments/source_cache/ices_cod_northeast_arctic_2026/baserun_model.RData", model_env)
-stopifnot(model_env$fit$conf$initState == 0,
-          length(model_env$fit$pl$initN) == 0, length(model_env$fit$pl$initF) == 0,
-          all(c("logN", "logF") %in% names(model_env$fit$sdrep$par.random)))
+stopifnot(
+  model_env$fit$conf$initState == 0,
+  length(model_env$fit$pl$initN) == 0, length(model_env$fit$pl$initF) == 0,
+  all(c("logN", "logF") %in% names(model_env$fit$sdrep$par.random))
+)
 cat("Native initial-state configuration verified.\n")

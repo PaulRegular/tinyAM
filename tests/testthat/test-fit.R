@@ -1,4 +1,3 @@
-
 ## fit_tam ----
 
 testthat::skip_if_not_installed("RTMB")
@@ -15,9 +14,11 @@ test_that("fit_tam runs on a cod dataset and returns expected structure", {
   expect_s3_class(fit, "tam_fit")
   expect_named(
     fit,
-    c("call", "dat", "obj", "opt", "rep", "sdrep", "obs_pred", "pop", "rec", "is_converged",
+    c(
+      "call", "dat", "obj", "opt", "rep", "sdrep", "obs_pred", "pop", "rec", "is_converged",
       "fixed_par", "random_par", "refit_args", "grad_tol", "diagnostics",
-      "sdreport_error", "gradient", "parameter_values", "parameter_map", "bounds"),
+      "sdreport_error", "gradient", "parameter_values", "parameter_map", "bounds"
+    ),
     ignore.order = TRUE
   )
 
@@ -50,7 +51,7 @@ test_that("fit_tam works when an survey does not provide an index for all ages",
   fit <- update(
     default_fit,
     data = obs,
-    F_settings = list(process = "ar1", mu_form = ~ 1),
+    F_settings = list(process = "ar1", mu_form = ~1),
     silent = TRUE
   )
   expect_equal(range(fit$obs_pred$index$age), range(sub_ages))
@@ -99,7 +100,7 @@ test_that("fit_retro runs peels and returns stacked outputs", {
   fit <- default_fit
   retros <- fit_retro(fit, folds = 1, progress = FALSE)
   expect_true(is.list(retros))
-  expect_true(all(c("obs_pred","pop","fits") %in% names(retros)))
+  expect_true(all(c("obs_pred", "pop", "fits") %in% names(retros)))
   # At least one retro fit kept (may drop if non-converged)
   if (length(retros$fits) > 0) {
     rf <- retros$fits[[1]]
@@ -134,22 +135,29 @@ test_that("fit_retro falls back to default grad_tol when fit has none", {
   explicit <- fit_retro(fit, folds = 0, progress = FALSE, grad_tol = 1e-2)
 
   expect_identical(names(implicit$fits), names(explicit$fits))
-  expect_identical(lapply(implicit$fits, `[[`, "is_converged"),
-                   lapply(explicit$fits, `[[`, "is_converged"))
+  expect_identical(
+    lapply(implicit$fits, `[[`, "is_converged"),
+    lapply(explicit$fits, `[[`, "is_converged")
+  )
   expect_identical(names(implicit$obs_pred), names(explicit$obs_pred))
   expect_identical(names(implicit$pop), names(explicit$pop))
 })
 
+
 test_that("tam_fit summary and print methods provide structured output", {
   fit <- default_fit
   sum_fit <- summary(fit)
+
   expect_s3_class(sum_fit, "summary_tam_fit")
   expect_equal(sum_fit$convergence, check_tam(fit))
+
   expect_message(print(fit), "Numerical convergence: passed")
-  expect_message(print(sum_fit), "Structural checks:")
+  expect_message(print(sum_fit), "Model structure:")
+
   expect_output(print(fit), "Coefficients:")
   expect_output(print(sum_fit), "Terminal year")
 })
+
 
 test_that("fit_hindcasts runs peels with a one year projection", {
   fit <- default_fit

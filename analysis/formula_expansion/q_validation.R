@@ -7,12 +7,15 @@ q_formula <- function(spec) {
     ar1 = ~ survey + ar1(year, by = survey),
     intercept = ~ survey + (1 | q_group),
     numeric_by = ~ survey + rw(year, by = scaled_age),
-    logistic = ~ survey + logistic(age, by = survey))
+    logistic = ~ survey + logistic(age, by = survey)
+  )
 }
 
 q_grid <- function(sparse = FALSE, full = FALSE) {
-  d <- expand.grid(year = if (full) 2000:2029 else 2000:2039,
-    age = if (sparse) 1L else 1:8, survey = c("early", "late"))
+  d <- expand.grid(
+    year = if (full) 2000:2029 else 2000:2039,
+    age = if (sparse) 1L else 1:8, survey = c("early", "late")
+  )
   d$survey <- factor(d$survey)
   d$q_group <- interaction(d$year, d$survey, drop = TRUE)
   d$scaled_age <- d$age / 8
@@ -48,12 +51,13 @@ q_log_curve <- function(p, dat, effects = tinyAM:::.q_effects(p, dat)) {
 q_parameter_intervals <- function(estimates, errors, truth) {
   names <- grep("^(log_sd_q_|logit_phi_q_|q_a50_|log_q_slope_)", names(truth), value = TRUE)
   do.call(rbind, lapply(names, function(nm) {
-    transform <- if (startsWith(nm, "logit_")) plogis else
-      if (startsWith(nm, "log_")) exp else identity
-    data.frame(parameter = sub("^log(it)?_", "", nm), group = seq_along(truth[[nm]]),
+    transform <- if (startsWith(nm, "logit_")) plogis else if (startsWith(nm, "log_")) exp else identity
+    data.frame(
+      parameter = sub("^log(it)?_", "", nm), group = seq_along(truth[[nm]]),
       truth = transform(truth[[nm]]), estimate = transform(estimates[[nm]]),
       lower = transform(estimates[[nm]] - qnorm(.975) * errors[[nm]]),
-      upper = transform(estimates[[nm]] + qnorm(.975) * errors[[nm]]))
+      upper = transform(estimates[[nm]] + qnorm(.975) * errors[[nm]])
+    )
   }))
 }
 
@@ -74,8 +78,10 @@ q_isolated_recovery <- function(spec, link, sparse, seed) {
     d <- q_grid(FALSE)
     d <- d[d$age <= 3, ]
   }
-  dat <- c(list(obs = list(index = d), index_settings = list(q_link = link),
-    sd_index_modmat = model.matrix(~ 1, d)), tinyAM:::.parse_q_formula(q_formula(spec), d))
+  dat <- c(list(
+    obs = list(index = d), index_settings = list(q_link = link),
+    sd_index_modmat = model.matrix(~1, d)
+  ), tinyAM:::.parse_q_formula(q_formula(spec), d))
   tinyAM:::.check_q_terms(dat)
   p <- tinyAM:::.q_term_parameters(dat$q_terms)
   nm <- if (link == "log") "log_q" else "logit_q"
@@ -102,15 +108,21 @@ q_isolated_recovery <- function(spec, link, sparse, seed) {
   errors <- as.list(sdr, "Std. Error")
   curves <- as.numeric(as.list(sdr, "Estimate", report = TRUE)$log_q)
   curve_se <- as.numeric(as.list(sdr, "Std. Error", report = TRUE)$log_q)
-  list(parameters = q_parameter_intervals(estimates, errors, original),
-    diagnostics = data.frame(optimizer = opt$convergence, message = opt$message,
+  list(
+    parameters = q_parameter_intervals(estimates, errors, original),
+    diagnostics = data.frame(
+      optimizer = opt$convergence, message = opt$message,
       gradient = gradient, pdHess = isTRUE(sdr$pdHess),
       converged = opt$convergence == 0 && isTRUE(sdr$pdHess) && is.finite(gradient) && gradient <= .01,
       q_rmse = sqrt(mean((exp(curves) - exp(truth))^2)),
       q_coverage = mean(abs(curves - truth) <= qnorm(.975) * curve_se),
-      observation_sd = exp(estimates$log_observation_sd)),
-    curve = data.frame(d, truth = exp(truth), estimate = exp(curves),
-      lower = exp(curves - qnorm(.975) * curve_se), upper = exp(curves + qnorm(.975) * curve_se)))
+      observation_sd = exp(estimates$log_observation_sd)
+    ),
+    curve = data.frame(d,
+      truth = exp(truth), estimate = exp(curves),
+      lower = exp(curves - qnorm(.975) * curve_se), upper = exp(curves + qnorm(.975) * curve_se)
+    )
+  )
 }
 
 q_full_observations <- function(sparse = FALSE) {
@@ -118,13 +130,16 @@ q_full_observations <- function(sparse = FALSE) {
   index <- q_grid(sparse, full = TRUE)
   index$samp_time <- ifelse(index$survey == "early", .25, .75)
   index$relative_sd <- .05
-  list(catch = transform(grid, obs = 1, relative_sd = .08), index = index,
+  list(
+    catch = transform(grid, obs = 1, relative_sd = .08), index = index,
     weight = transform(grid, obs = .2 * age^1.5),
-    maturity = transform(grid, obs = plogis(age - 4)))
+    maturity = transform(grid, obs = plogis(age - 4))
+  )
 }
 
 q_full_settings <- function(spec, link) {
-  list(N_settings = list(process = "off", init = "exp"),
+  list(
+    N_settings = list(process = "off", init = "exp"),
     F_settings = list(process = "iid", mu_form = ~ factor(age)),
     M_settings = list(process = "off", mu_supplied = ~ I(.25)),
     catch_settings = list(sd_form = ~ 0, sd_supplied = ~ relative_sd),
@@ -154,17 +169,25 @@ q_full_recovery <- function(spec, link, seed, sparse = FALSE) {
   obs$index$obs <- values$index
   start <- p
   start[names(tinyAM:::.q_term_parameters(dat$q_terms))] <- tinyAM:::.q_term_parameters(dat$q_terms)
-  fit <- do.call(fit_tam, c(list(data = obs, start_par = start, silent = TRUE,
-    add_osa_res = FALSE, grad_tol = .01), settings))
+  fit <- do.call(fit_tam, c(list(
+    data = obs, start_par = start, silent = TRUE,
+    add_osa_res = FALSE, grad_tol = .01
+  ), settings))
   estimates <- tinyAM:::.tam_parameter_summary(fit, "Estimate")
   errors <- tinyAM:::.tam_parameter_summary(fit, "Std. Error")
   q <- fit$obs_pred$index
-  list(parameters = q_parameter_intervals(estimates, errors, p),
-    diagnostics = data.frame(optimizer = fit$opt$convergence, message = fit$opt$message,
+  list(
+    parameters = q_parameter_intervals(estimates, errors, p),
+    diagnostics = data.frame(
+      optimizer = fit$opt$convergence, message = fit$opt$message,
       gradient = fit$diagnostics$max_gradient, pdHess = isTRUE(fit$sdrep$pdHess),
       converged = fit$is_converged, q_rmse = sqrt(mean((q$q - actual_q)^2)),
       q_coverage = mean(q$q_lwr <= actual_q & q$q_upr >= actual_q),
-      observation_sd = exp(estimates$log_sd_index)),
-    curve = data.frame(q[, c("year", "age", "survey")], truth = actual_q,
-      estimate = q$q, lower = q$q_lwr, upper = q$q_upr), fit = fit)
+      observation_sd = exp(estimates$log_sd_index)
+    ),
+    curve = data.frame(q[, c("year", "age", "survey")],
+      truth = actual_q,
+      estimate = q$q, lower = q$q_lwr, upper = q$q_upr
+    ), fit = fit
+  )
 }

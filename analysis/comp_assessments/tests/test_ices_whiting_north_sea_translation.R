@@ -42,12 +42,14 @@ stopifnot(
   all(is.na(translated$obs$catch$obs[translated$obs$catch$year == 2026])),
   all(vapply(2023:2026, function(year) {
     m_year <- m_surface[m_surface$year == year, c("age", "M_assumption")]
-    identical(m_year$M_assumption[match(m_2022$age, m_year$age)],
-              m_2022$M_assumption)
+    identical(
+      m_year$M_assumption[match(m_2022$age, m_year$age)],
+      m_2022$M_assumption
+    )
   }, logical(1))),
-  identical(dat$N_settings$process, "rw"),
+  identical(dat$N_settings$process, "iid"),
   identical(dat$N_settings$init, "exp"),
-  identical(dat$F_settings$process, "rw"),
+  identical(dat$F_settings$process, "cor_rw"),
   identical(dat$F_settings$mean_ages, 2:5),
   identical(dat$M_settings$process, "off"),
   identical(dim(translated$start_par$log_f), c(49L, 9L)),
@@ -58,7 +60,7 @@ stopifnot(
   all(is.finite(translated$start_par$log_f)),
   all(is.finite(translated$start_par$log_n)),
   all(is.finite(translated$start_par$log_q)),
-  grepl("carried forward", paste(translated$background, collapse = " "))
+  grepl("extended through 2026", paste(translated$background, collapse = " "))
 )
 
 cat("North Sea whiting translation structure passed.\n")

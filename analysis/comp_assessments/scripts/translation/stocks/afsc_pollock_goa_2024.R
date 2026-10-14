@@ -10,15 +10,15 @@ surveys <- c(
 )
 
 catch_numbers <- source$inputs[
-  source$inputs$type == "catch" & source$inputs$measure == "numbers_at_age",
-  , drop = FALSE
+  source$inputs$type == "catch" & source$inputs$measure == "numbers_at_age", ,
+  drop = FALSE
 ]
 if (!nrow(catch_numbers) || !setequal(catch_numbers$age, 1:15)) {
   cli::cli_abort("GOA pollock needs the published catch numbers for ages 1-15.")
 }
 translation_inputs <- source$inputs[
-  !(source$inputs$type == "catch" & source$inputs$measure == "proportion_at_age"),
-  , drop = FALSE
+  !(source$inputs$type == "catch" & source$inputs$measure == "proportion_at_age"), ,
+  drop = FALSE
 ]
 
 obs <- database_to_tam_obs(
@@ -38,8 +38,8 @@ obs$index <- obs$index[!(shelikof & obs$index$age == 3), , drop = FALSE]
 
 environmental <- source$inputs[
   source$inputs$type == "covariate" &
-    source$inputs$measure == "environmental_covariate",
-  , drop = FALSE
+    source$inputs$measure == "environmental_covariate", ,
+  drop = FALSE
 ]
 environmental_years <- as.integer(environmental$year)
 environmental_values <- as.numeric(environmental$value)
@@ -68,16 +68,24 @@ obs$index$q_key <- interaction(
 )
 
 catch_weights <- source$inputs[source$inputs$type == "catch_weight" &
-                                source$inputs$measure == "weight_at_age", ]
+  source$inputs$measure == "weight_at_age", ]
 catch_totals <- source$inputs[source$inputs$type == "catch" &
-                               source$inputs$measure == "total_biomass", ]
+  source$inputs$measure == "total_biomass", ]
 catch_reporting <- list(
-  weights = data.frame(year = catch_weights$year, age = catch_weights$age,
-                      weight = mapply(.translation_weight_to_kg,
-                                      catch_weights$value, catch_weights$unit)),
-  totals = data.frame(year = catch_totals$year,
-                     yield = mapply(.translation_biomass_to_kg,
-                                    catch_totals$value, catch_totals$unit))
+  weights = data.frame(
+    year = catch_weights$year, age = catch_weights$age,
+    weight = mapply(
+      .translation_weight_to_kg,
+      catch_weights$value, catch_weights$unit
+    )
+  ),
+  totals = data.frame(
+    year = catch_totals$year,
+    yield = mapply(
+      .translation_biomass_to_kg,
+      catch_totals$value, catch_totals$unit
+    )
+  )
 )
 
 background <- c(
@@ -85,7 +93,6 @@ background <- c(
   "",
   print_sources(source$assessment),
   "",
-
   "| Component | Accepted assessment | tinyAM representation | Reason for difference |",
   "|---|------|------|------|",
   "| Years | Western/Central/West Yakutat stock, 1970-2024. | Same stock and period. | Retained. |",
@@ -110,8 +117,10 @@ background <- c(
 age_plus_group <- 10
 
 
-comparison_scales <- c(N = 1e-06, recruitment = 1e-06, abundance = 1e-06, ssb = 1e-06, biomass = 1e-06,
-    biomass_at_age = 1e-06)
+comparison_scales <- c(
+  N = 1e-06, recruitment = 1e-06, abundance = 1e-06, ssb = 1e-06, biomass = 1e-06,
+  biomass_at_age = 1e-06
+)
 
 
 ## Model ----
@@ -127,8 +136,8 @@ if (do_fit) {
     F_settings = list(process = "rw", mu_form = NULL, mean_ages = 3:10),
     M_settings = list(process = "off", mu_form = NULL, mu_supplied = ~M_assumption, mean_ages = 3:10),
     catch_settings = list(sd_form = ~1),
-    index_settings = list(q_form = ~0 + q_key + environmental_effect + adfg_year, q_link = "logit", sd_form = ~0 +
-        survey, sd_supplied = ~relative_sd),
+    index_settings = list(q_form = ~ 0 + q_key + environmental_effect + adfg_year, q_link = "logit", sd_form = ~ 0 +
+      survey, sd_supplied = ~relative_sd),
     silent = silent
   )
 }

@@ -15,8 +15,10 @@ expected <- data.frame(
     "log_slp1_srv2 ~ N(-1, 1.5); log_slp2_srv2 ~ N(-1, 1.5); inf1_srv2 ~ N(0, 3); inf2_srv2 ~ N(10, 3)",
     "log_slp1_srv3 ~ N(-1, 1.5); inf1_srv3 ~ N(0, 3)",
     "log_slp1_srv6 ~ N(-1, 1.5); log_slp2_srv6 ~ N(-1, 1.5); inf1_srv6 ~ N(0, 3); inf2_srv6 ~ N(10, 3)",
-    "Each of the five log_DM_pars parameters ~ N(0, 2)"),
-  stringsAsFactors = FALSE)
+    "Each of the five log_DM_pars parameters ~ N(0, 2)"
+  ),
+  stringsAsFactors = FALSE
+)
 for (i in seq_len(nrow(expected))) {
   hit <- rows[rows$component == expected$component[i] & rows$fleet == expected$fleet[i] & rows$survey == expected$survey[i] & rows$setting == expected$setting[i], ]
   stopifnot(nrow(hit) == 1L, hit$value == expected$value[i])

@@ -17,7 +17,7 @@ par <- tinyAM::make_par(dat)
 
 inputs <- source_data$inputs
 maturity <- inputs[inputs$type == "maturity" &
-                     inputs$measure == "maturity_at_age", ]
+  inputs$measure == "maturity_at_age", ]
 cohort_value <- maturity$value[
   as.integer(maturity$year) == 1986 & as.integer(maturity$age) == 2
 ]
@@ -25,15 +25,15 @@ translated_value <- translated$obs$maturity$obs[
   translated$obs$maturity$year == 1988 & translated$obs$maturity$age == 2
 ]
 catch <- inputs[inputs$assessment_id == assessment_id & inputs$type == "catch" &
-                  inputs$measure == "numbers_at_age" & inputs$year == "1988" &
-                  as.integer(inputs$age) >= 12, ]
+  inputs$measure == "numbers_at_age" & inputs$year == "1988" &
+  as.integer(inputs$age) >= 12, ]
 plus_catch <- translated$obs$catch$obs[
   translated$obs$catch$year == 1988 & translated$obs$catch$age == 12
 ]
 n_source <- source_data$outputs[source_data$outputs$type == "population" &
-                                  source_data$outputs$measure == "numbers_at_age" &
-                                  source_data$outputs$year == "1988" &
-                                  source_data$outputs$age == "2", ]
+  source_data$outputs$measure == "numbers_at_age" &
+  source_data$outputs$year == "1988" &
+  source_data$outputs$age == "2", ]
 
 stopifnot(
   tinyAM::check_obs(translated$obs),
@@ -52,12 +52,14 @@ stopifnot(
   identical(as.numeric(plus_catch), sum(as.numeric(catch$value) * 1000)),
   !"RFID" %in% unique(translated$obs$index$survey),
   !any(translated$obs$index$survey == "IESNS_Barents" &
-         translated$obs$index$year == 2008),
+    translated$obs$index$year == 2008),
   all(is.finite(par$log_f)),
   all(is.finite(translated$start_par$log_q)),
   identical(dim(translated$start_par$log_f), c(37L, 11L)),
-  isTRUE(all.equal(translated$start_par$log_r0,
-                   log(as.numeric(n_source$value) * 1e6))),
+  isTRUE(all.equal(
+    translated$start_par$log_r0,
+    log(as.numeric(n_source$value) * 1e6)
+  )),
   identical(dat$N_settings$process, "iid"),
   length(unique(translated$obs$index$survey)) == 5L
 )

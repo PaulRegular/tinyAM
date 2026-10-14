@@ -11,16 +11,20 @@ text <- readLines(text_file, warn = FALSE, encoding = "UTF-8")
 tables <- data.frame(
   number = 19:24,
   type = c("population", "biomass", "biomass", rep("mortality", 3)),
-  measure = c("numbers_at_age", "biomass_at_age", "mature_biomass_at_age",
-              "total_mortality_at_age", "natural_mortality_at_age",
-              "fishing_mortality_at_age"),
+  measure = c(
+    "numbers_at_age", "biomass_at_age", "mature_biomass_at_age",
+    "total_mortality_at_age", "natural_mortality_at_age",
+    "fishing_mortality_at_age"
+  ),
   unit = c("million fish", "kt", "kt", rep("yr-1", 3)),
   first_page = c(50, 52, 54, 56, 58, 60)
 )
 path <- file.path(root, "database", "outputs.csv")
 original <- readLines(path, warn = FALSE, encoding = "UTF-8")
-outputs <- read.csv(text = original, colClasses = "character", na.strings = "",
-                    check.names = FALSE)
+outputs <- read.csv(
+  text = original, colClasses = "character", na.strings = "",
+  check.names = FALSE
+)
 new <- lapply(seq_len(nrow(tables)), function(i) {
   tab <- tables[i, ]
   start <- grep(paste0("^Table ", tab$number, "\\."), text)
@@ -32,11 +36,15 @@ new <- lapply(seq_len(nrow(tables)), function(i) {
     as.numeric(gsub(",", "", strsplit(trimws(line), "\\s+")[[1L]]))
   })
   expected_years <- if (tab$number <= 21L) 1954:2025 else 1954:2024
-  stopifnot(length(values) == length(expected_years),
-            all(lengths(values) == 16L))
+  stopifnot(
+    length(values) == length(expected_years),
+    all(lengths(values) == 16L)
+  )
   values <- do.call(rbind, values)
-  stopifnot(identical(as.integer(values[, 1]), expected_years),
-            all(is.finite(values)), all(values[, -1] >= 0))
+  stopifnot(
+    identical(as.integer(values[, 1]), expected_years),
+    all(is.finite(values)), all(values[, -1] >= 0)
+  )
   rows <- outputs[rep(NA_integer_, length(expected_years) * 15L), ]
   rows$assessment_id <- "dfo_cod_2j3kl_2025"
   rows$type <- tab$type
@@ -46,9 +54,11 @@ new <- lapply(seq_len(nrow(tables)), function(i) {
   rows$value <- as.vector(t(values[, -1]))
   rows$unit <- tab$unit
   rows$source_type <- "official_table"
-  rows$source_reference <- paste0("DFO Research Document 2026/026, Table ",
-                                  tab$number, ", pp. ", tab$first_page, "-",
-                                  tab$first_page + 1L)
+  rows$source_reference <- paste0(
+    "DFO Research Document 2026/026, Table ",
+    tab$number, ", pp. ", tab$first_page, "-",
+    tab$first_page + 1L
+  )
   rows$notes <- "Reported rounded age-specific estimate; age-specific uncertainty is not tabulated."
   rows
 })
@@ -57,7 +67,9 @@ stopifnot(nrow(new) == 6435L)
 replace <- outputs$assessment_id == "dfo_cod_2j3kl_2025" &
   outputs$measure %in% tables$measure
 writeLines(original[c(TRUE, !replace)], path, useBytes = TRUE)
-write.table(new, path, sep = ",", quote = TRUE, row.names = FALSE,
-             col.names = FALSE, append = TRUE, na = "", fileEncoding = "UTF-8")
+write.table(new, path,
+  sep = ",", quote = TRUE, row.names = FALSE,
+  col.names = FALSE, append = TRUE, na = "", fileEncoding = "UTF-8"
+)
 
 cat("Imported Northern cod Tables 19-24: 6,435 reported age-specific values.\n")

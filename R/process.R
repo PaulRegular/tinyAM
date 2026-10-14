@@ -1,4 +1,3 @@
-
 #' Separable AR1 process: density and simulation
 #'
 #' @title Separable AR1 process error: density and simulation
@@ -51,33 +50,29 @@
 #' @rdname process_ar1
 #' @export
 dprocess_ar1 <- function(x, phi = c(0, 0), sd = 1) {
-
-  phi_age  <- phi[1]
+  phi_age <- phi[1]
   phi_year <- phi[2]
   fa <- function(z) dautoreg(z, phi = phi_age, log = TRUE)
   fy <- function(z) dautoreg(z, phi = phi_year, log = TRUE)
-  var <- sd ^ 2 / ((1 - phi_age ^ 2) * (1 - phi_year ^ 2))
+  var <- sd^2 / ((1 - phi_age^2) * (1 - phi_year^2))
   dseparable(fy, fa)(x, scale = sqrt(var))
-
 }
 
 #' @rdname process_ar1
 #' @export
 rprocess_ar1 <- function(ny, na, phi = c(0, 0), sd = 1) {
-
-  phi_age  <- phi[1]
+  phi_age <- phi[1]
   phi_year <- phi[2]
 
-  ar1_cor <- function(n, phi) stats::toeplitz(phi ^ (0:(n - 1L)))
-  C_age  <- ar1_cor(na, phi_age)    # columns
-  C_year <- ar1_cor(ny, phi_year)   # rows
+  ar1_cor <- function(n, phi) stats::toeplitz(phi^(0:(n - 1L)))
+  C_age <- ar1_cor(na, phi_age) # columns
+  C_year <- ar1_cor(ny, phi_year) # rows
 
   var <- sd^2 / ((1 - phi_age^2) * (1 - phi_year^2))
   Sigma <- var * kronecker(C_age, C_year)
 
   z <- MASS::mvrnorm(1L, mu = rep(0, ny * na), Sigma = Sigma)
   return(matrix(z, ny, na))
-
 }
 
 
@@ -109,7 +104,9 @@ rprocess_ar1 <- function(ny, na, phi = c(0, 0), sd = 1) {
 #' @rdname process_rw
 #' @export
 dprocess_rw <- function(x, sd = 1) {
-  if (nrow(x) < 2L) return(0)
+  if (nrow(x) < 2L) {
+    return(0)
+  }
   increments <- x[-1, , drop = FALSE] - x[-nrow(x), , drop = FALSE]
   sum(RTMB::dnorm(increments, 0, sd, log = TRUE))
 }
@@ -164,7 +161,9 @@ rprocess_rw <- function(x, sd = 1) {
 #' @rdname process_cor_rw
 #' @export
 dprocess_cor_rw <- function(x, sd = 1, rho = 0) {
-  if (nrow(x) < 2L) return(0)
+  if (nrow(x) < 2L) {
+    return(0)
+  }
   increment <- x[-1, , drop = FALSE] - x[-nrow(x), , drop = FALSE]
   sd <- rep(sd, length.out = ncol(x))
   standardized <- sweep(increment, 2, sd, "/")
@@ -175,12 +174,16 @@ dprocess_cor_rw <- function(x, sd = 1, rho = 0) {
 #' @rdname process_cor_rw
 #' @export
 rprocess_cor_rw <- function(x, sd = 1, rho = 0) {
-  if (nrow(x) < 2L) return(x)
+  if (nrow(x) < 2L) {
+    return(x)
+  }
   sd <- rep(sd, length.out = ncol(x))
   for (y in 2:nrow(x)) {
     z <- stats::rnorm(ncol(x))
-    if (ncol(x) > 1L) for (a in 2:ncol(x)) {
-      z[a] <- rho * z[a - 1L] + sqrt(1 - rho^2) * z[a]
+    if (ncol(x) > 1L) {
+      for (a in 2:ncol(x)) {
+        z[a] <- rho * z[a - 1L] + sqrt(1 - rho^2) * z[a]
+      }
     }
     x[y, ] <- x[y - 1L, ] + sd * z
   }
@@ -189,30 +192,40 @@ rprocess_cor_rw <- function(x, sd = 1, rho = 0) {
 
 .cor_rw_advisories <- function(fit) {
   out <- data.frame(issue = character(), detail = character())
-  if (!identical(fit$dat$F_settings$process, "cor_rw")) return(out)
+  if (!identical(fit$dat$F_settings$process, "cor_rw")) {
+    return(out)
+  }
   sdr <- fit[["sdrep"]]
-  if (!is.list(sdr)) return(out)
+  if (!is.list(sdr)) {
+    return(out)
+  }
   i <- match("atanh_rho_f", names(sdr$par.fixed))
-  if (is.na(i)) return(out)
+  if (is.na(i)) {
+    return(out)
+  }
   rho <- tanh(sdr$par.fixed[i])
-  if (is.finite(rho) && abs(rho) > .95) out <- rbind(out, data.frame(
-    issue = "F_increment_correlation_boundary",
-    detail = "F increment age correlation is within 0.05 of -1 or 1. Examine uncertainty and compare independent increments."))
+  if (is.finite(rho) && abs(rho) > .95) {
+    out <- rbind(out, data.frame(
+      issue = "F_increment_correlation_boundary",
+      detail = "F increment age correlation is within 0.05 of -1 or 1. Examine uncertainty and compare independent increments."
+    ))
+  }
   variance <- if (is.matrix(sdr$cov.fixed)) sdr$cov.fixed[i, i] else NA_real_
   if (is.finite(variance) && variance >= 0 &&
-      diff(tanh(sdr$par.fixed[i] + c(-1, 1) * stats::qnorm(.975) * sqrt(variance))) > .8) {
-    out <- rbind(out, data.frame(issue = "F_increment_correlation_uncertainty",
-                                 detail = "The 95% F increment age-correlation interval spans more than 0.8. Age dependence is imprecise; compare independent increments."))
+    diff(tanh(sdr$par.fixed[i] + c(-1, 1) * stats::qnorm(.975) * sqrt(variance))) > .8) {
+    out <- rbind(out, data.frame(
+      issue = "F_increment_correlation_uncertainty",
+      detail = "The 95% F increment age-correlation interval spans more than 0.8. Age dependence is imprecise; compare independent increments."
+    ))
   }
   out
 }
 
 
-
 .parse_process_sd <- function(dat, component) {
   settings <- dat[[paste0(component, "_settings")]]
   formula <- settings$sd_form
-  if (is.null(formula)) formula <- ~ 1
+  if (is.null(formula)) formula <- ~1
   label <- paste0(component, "_settings$sd_form")
   if (!inherits(formula, "formula") || length(formula) != 2L) {
     cli::cli_abort("{label} must be a one-sided formula.")
@@ -223,7 +236,9 @@ rprocess_cor_rw <- function(x, sd = 1, rho = 0) {
     return(NULL)
   }
   walk <- function(x) {
-    if (!is.call(x)) return(FALSE)
+    if (!is.call(x)) {
+      return(FALSE)
+    }
     .formula_call_name(x) %in% c("iid", "rw", "ar1", "mono", "logistic", "bh", "ricker", "|") ||
       any(vapply(as.list(x)[-1L], walk, logical(1)))
   }
@@ -232,9 +247,13 @@ rprocess_cor_rw <- function(x, sd = 1, rho = 0) {
   }
   d <- .population_data(dat, formula, label)
   d$is_proj <- dat$is_proj[match(d$year, dat$years)]
-  active <- if (component == "N") dat$ages[-1L] else if (component == "M") {
+  active <- if (component == "N") {
+    dat$ages[-1L]
+  } else if (component == "M") {
     as.numeric(names(settings$age_blocks))
-  } else dat$ages
+  } else {
+    dat$ages
+  }
   d <- d[d$age %in% active & !d$is_proj, , drop = FALSE]
   frame <- stats::model.frame(formula, d, na.action = stats::na.pass)
   if (anyNA(frame)) cli::cli_abort("{label} needs complete covariates at every active age and historical year.")
@@ -258,28 +277,35 @@ rprocess_cor_rw <- function(x, sd = 1, rho = 0) {
     design <- design[as.character(settings$age_block_start), , drop = FALSE]
   }
   if (qr(design)$rank < ncol(design)) cli::cli_abort("{label} is rank deficient on the active process states. Remove redundant terms.")
-  list(matrix = design, default = default,
-       parameter = if (default) paste0("log_sd_", tolower(component)) else paste0("sd_beta_", tolower(component)))
+  list(
+    matrix = design, default = default,
+    parameter = if (default) paste0("log_sd_", tolower(component)) else paste0("sd_beta_", tolower(component))
+  )
 }
 
 .process_sd <- function(par, dat, component) {
   design <- dat$process_sd[[component]]
-  if (design$default) return(exp(par[[design$parameter]]))
+  if (design$default) {
+    return(exp(par[[design$parameter]]))
+  }
   exp(drop(design$matrix %*% par[[design$parameter]]))
 }
 
 .process_sd_surface <- function(par, dat, component) {
   design <- dat$process_sd[[component]]
   matrix(rep(.process_sd(par, dat, component), each = length(dat$years)),
-         length(dat$years), nrow(design$matrix),
-         dimnames = list(year = dat$years, age = rownames(design$matrix)))
+    length(dat$years), nrow(design$matrix),
+    dimnames = list(year = dat$years, age = rownames(design$matrix))
+  )
 }
 
 # Standardization retains the existing AR1 innovation interpretation.
 .dprocess_scaled <- function(x, sd, process, phi = c(0, 0)) {
   if (length(sd) == 1L) sd <- rep(sd, ncol(x))
   if (process == "rw") {
-    if (nrow(x) < 2L) return(0)
+    if (nrow(x) < 2L) {
+      return(0)
+    }
     x <- x[-1L, , drop = FALSE] - x[-nrow(x), , drop = FALSE]
   }
   z <- sweep(x, 2, sd, "/")
@@ -292,8 +318,11 @@ rprocess_cor_rw <- function(x, sd = 1, rho = 0) {
     if (nrow(x) > 1L) for (y in 2:nrow(x)) x[y, ] <- x[y - 1L, ] + stats::rnorm(ncol(x), 0, sd)
     return(x)
   }
-  z <- if (process == "ar1") rprocess_ar1(nrow(x), ncol(x), phi = phi, sd = 1) else
+  z <- if (process == "ar1") {
+    rprocess_ar1(nrow(x), ncol(x), phi = phi, sd = 1)
+  } else {
     matrix(stats::rnorm(length(x)), nrow(x), ncol(x))
+  }
   out <- sweep(z, 2, sd, "*")
   dimnames(out) <- dimnames(x)
   out
@@ -308,8 +337,12 @@ rprocess_cor_rw <- function(x, sd = 1, rho = 0) {
     rows <- if (component == "M") length(settings$years) else sum(!dat$is_proj) - as.integer(component == "N")
     if (settings$process %in% c("rw", "cor_rw")) rows <- rows - 1L
     support <- colSums(design$matrix != 0) * rows
-    if (any(support < 5L)) out <- rbind(out, data.frame(issue = "process_SD_support",
-                                                        detail = paste0(component, " SD design has fewer than five historical process contributions supporting some coefficients. Share more ages or examine simulation recovery and uncertainty.")))
+    if (any(support < 5L)) {
+      out <- rbind(out, data.frame(
+        issue = "process_SD_support",
+        detail = paste0(component, " SD design has fewer than five historical process contributions supporting some coefficients. Share more ages or examine simulation recovery and uncertainty.")
+      ))
+    }
   }
   out
 }
@@ -320,10 +353,11 @@ rprocess_cor_rw <- function(x, sd = 1, rho = 0) {
     d <- fit$pop[[paste0("sd_", component)]]
     if (is.null(d)) next
     if (any(is.finite(d$lwr) & is.finite(d$upr) & d$lwr > 0 & d$upr / d$lwr > 10)) {
-      out <- rbind(out, data.frame(issue = "process_SD_uncertainty",
-                                   detail = paste0(component, " process SD intervals span more than tenfold at some ages. Examine simpler sharing groups before interpreting age differences.")))
+      out <- rbind(out, data.frame(
+        issue = "process_SD_uncertainty",
+        detail = paste0(component, " process SD intervals span more than tenfold at some ages. Examine simpler sharing groups before interpreting age differences.")
+      ))
     }
   }
   out
 }
-

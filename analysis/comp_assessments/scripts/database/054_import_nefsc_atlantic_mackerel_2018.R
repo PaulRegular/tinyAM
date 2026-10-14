@@ -11,8 +11,10 @@ if (!requireNamespace("pdftools", quietly = TRUE)) stop("Install pdftools to imp
 if (!file.exists(pdf_path)) stop("The cached 2018 assessment PDF is missing.", call. = FALSE)
 
 db <- file.path(root, "database")
-paths <- setNames(file.path(db, paste0(c("stocks", "assessments", "assumptions", "inputs", "outputs"), ".csv")),
-                  c("stocks", "assessments", "assumptions", "inputs", "outputs"))
+paths <- setNames(
+  file.path(db, paste0(c("stocks", "assessments", "assumptions", "inputs", "outputs"), ".csv")),
+  c("stocks", "assessments", "assumptions", "inputs", "outputs")
+)
 read_db <- function(name) read.csv(paths[[name]], stringsAsFactors = FALSE, check.names = FALSE)
 stocks <- read_db("stocks")
 assessments <- read_db("assessments")
@@ -42,7 +44,9 @@ year_rows <- function(lines, table_id, fields, years) {
   rows <- lapply(lines, function(line) {
     tokens <- strsplit(gsub(",", "", trimws(line)), "[[:space:]]+", perl = TRUE)[[1L]]
     values <- suppressWarnings(as.numeric(tokens))
-    if (!length(values) || is.na(values[[1L]]) || !values[[1L]] %in% years) return(NULL)
+    if (!length(values) || is.na(values[[1L]]) || !values[[1L]] %in% years) {
+      return(NULL)
+    }
     if (length(values) != fields || anyNA(values)) {
       stop("Unexpected row width in Table ", table_id, ": ", trimws(line), call. = FALSE)
     }
@@ -75,13 +79,19 @@ egg_lines <- page_text("A40", "(?m)^\\s*Table A40:")
 egg_lines <- egg_lines[grepl("^\\s*(19|20)[0-9]{2}\\s+", egg_lines, perl = TRUE)]
 egg_rows <- lapply(egg_lines, function(line) {
   starts <- gregexpr("[0-9][0-9,]*(\\.[0-9]+)?([Ee][+-]?[0-9]+)?", line, perl = TRUE)[[1L]]
-  if (starts[[1L]] < 0L) return(NULL)
+  if (starts[[1L]] < 0L) {
+    return(NULL)
+  }
   tokens <- regmatches(line, list(starts))[[1L]]
   year <- as.integer(tokens[[1L]])
-  if (!year %in% years) return(NULL)
+  if (!year %in% years) {
+    return(NULL)
+  }
   combined_ssb <- which(starts >= 37L & starts < 50L)
   if (length(combined_ssb) > 1L) stop("Ambiguous combined SSB cell in Table A40: ", trimws(line), call. = FALSE)
-  if (!length(combined_ssb)) return(NULL)
+  if (!length(combined_ssb)) {
+    return(NULL)
+  }
   c(year, as.numeric(gsub(",", "", tokens[[combined_ssb[[1L]]]])))
 })
 egg_rows <- Filter(Negate(is.null), egg_rows)
@@ -121,31 +131,37 @@ add_aggregate_input <- function(measure, basis, survey, input_years, values, uni
 }
 index_rows <- rbind(
   add_age_input("index", "numbers_at_age", "numbers", "", "NEFSC Albatross spring trawl",
-                1974:2008, ages, albatross, "fish per tow", paste(source_name, "Table A38, report pp. 112-113"),
-                notes = "The source tables provide ages 1-10; the accepted final model uses ages 3-10 in the Albatross series.",
-                transformation = "Retain the published spring survey numbers-per-tow at age.",
-                sampling_time = 95.7 / 365),
+    1974:2008, ages, albatross, "fish per tow", paste(source_name, "Table A38, report pp. 112-113"),
+    notes = "The source tables provide ages 1-10; the accepted final model uses ages 3-10 in the Albatross series.",
+    transformation = "Retain the published spring survey numbers-per-tow at age.",
+    sampling_time = 95.7 / 365
+  ),
   add_age_input("index", "numbers_at_age", "numbers", "", "NEFSC Bigelow spring trawl",
-                2009:2016, ages, bigelow, "fish per tow", paste(source_name, "Table A39, report p. 113"),
-                notes = "The source tables provide ages 1-10; the accepted final model uses ages 3-7 in the Bigelow series.",
-                transformation = "Retain the published spring survey numbers-per-tow at age.",
-                sampling_time = 95.7 / 365)
+    2009:2016, ages, bigelow, "fish per tow", paste(source_name, "Table A39, report p. 113"),
+    notes = "The source tables provide ages 1-10; the accepted final model uses ages 3-7 in the Bigelow series.",
+    transformation = "Retain the published spring survey numbers-per-tow at age.",
+    sampling_time = 95.7 / 365
+  )
 )
 input_rows <- list(
   add_age_input("catch", "numbers_at_age", "numbers", "Combined U.S. + Canadian fishery", "",
-                years, ages, catch, "thousand fish", paste(source_name, "Table A28, report pp. 96-97"),
-                notes = "Published combined commercial and other removals used as the accepted model's catch-at-age input; age 10 is the 10+ group."),
+    years, ages, catch, "thousand fish", paste(source_name, "Table A28, report pp. 96-97"),
+    notes = "Published combined commercial and other removals used as the accepted model's catch-at-age input; age 10 is the 10+ group."
+  ),
   add_age_input("weight", "weight_at_age", "kg_per_fish", "", "",
-                years, ages, weights, "kg per fish", paste(source_name, "Table A33, report pp. 105-106"),
-                notes = "Combined U.S.-Canadian catch/SSB weights at age. For 1968-1978 U.S. weights represent the whole stock; cells without catch use the 1992-2016 mean."),
+    years, ages, weights, "kg per fish", paste(source_name, "Table A33, report pp. 105-106"),
+    notes = "Combined U.S.-Canadian catch/SSB weights at age. For 1968-1978 U.S. weights represent the whole stock; cells without catch use the 1992-2016 mean."
+  ),
   add_age_input("maturity", "maturity_at_age", "proportion", "", "",
-                years, ages, maturity, "proportion mature", paste(source_name, "Table A4, report pp. 67-68"),
-                notes = "Annual maturity ogives from Canadian samples representing the northern spawning contingent; age 10 is the 10+ group."),
+    years, ages, maturity, "proportion mature", paste(source_name, "Table A4, report pp. 67-68"),
+    notes = "Annual maturity ogives from Canadian samples representing the northern spawning contingent; age 10 is the 10+ group."
+  ),
   index_rows,
   add_age_input("M", "natural_mortality_at_age", "per_year", "", "",
-                rep(NA_real_, 1L), ages, cbind(NA_real_, matrix(rep(0.2, length(ages)), nrow = 1L)),
-                "per year", paste(source_name, "final ASAP model description, report pp. 73-74"),
-                notes = "Fixed constant natural mortality, 0.2 per year for all ages and years.")
+    rep(NA_real_, 1L), ages, cbind(NA_real_, matrix(rep(0.2, length(ages)), nrow = 1L)),
+    "per year", paste(source_name, "final ASAP model description, report pp. 73-74"),
+    notes = "Fixed constant natural mortality, 0.2 per year for all ages and years."
+  )
 )
 input_rows[[length(input_rows) + 1L]] <- add_aggregate_input(
   "total_biomass", "biomass", "Range-wide egg/ichthyoplankton SSB index",
@@ -177,31 +193,42 @@ add_aggregate_output <- function(type, measure, values, unit, reference, age_gro
   )
 }
 outputs_add <- rbind(
-  add_age_output("population", "numbers_at_age", n_at_age, "million fish",
-                 paste(source_name, "Table A43, report pp. 118-119"),
-                 "Final ASAP Run 118 January 1 abundance estimates; age 10 is the 10+ group."),
-  add_age_output("mortality", "fishing_mortality_at_age", f_at_age, "per year",
-                 paste(source_name, "Table A45, report pp. 121-122"),
-                 "Final ASAP Run 118 fishing mortality estimates; ages 6-10+ are fully selected."),
-  add_age_output("mortality", "natural_mortality_at_age",
-                 cbind(years, matrix(rep(0.2, length(years) * length(ages)), nrow = length(years))),
-                 "per year", paste(source_name, "final ASAP model description, report pp. 73-74"),
-                 "Repeats the explicitly fixed model assumption as an age-year surface; M was not estimated."),
+  add_age_output(
+    "population", "numbers_at_age", n_at_age, "million fish",
+    paste(source_name, "Table A43, report pp. 118-119"),
+    "Final ASAP Run 118 January 1 abundance estimates; age 10 is the 10+ group."
+  ),
+  add_age_output(
+    "mortality", "fishing_mortality_at_age", f_at_age, "per year",
+    paste(source_name, "Table A45, report pp. 121-122"),
+    "Final ASAP Run 118 fishing mortality estimates; ages 6-10+ are fully selected."
+  ),
+  add_age_output(
+    "mortality", "natural_mortality_at_age",
+    cbind(years, matrix(rep(0.2, length(years) * length(ages)), nrow = length(years))),
+    "per year", paste(source_name, "final ASAP model description, report pp. 73-74"),
+    "Repeats the explicitly fixed model assumption as an age-year surface; M was not estimated."
+  ),
   add_aggregate_output("biomass", "SSB", summary[, 3L], "metric tons",
-                       paste(source_name, "Table A42, report pp. 116-117"),
-                       notes = "Final ASAP Run 118 spawning stock biomass."),
+    paste(source_name, "Table A42, report pp. 116-117"),
+    notes = "Final ASAP Run 118 spawning stock biomass."
+  ),
   add_aggregate_output("recruitment", "recruitment", n_at_age[, 2L], "million fish",
-                       paste(source_name, "Table A43, report pp. 118-119"),
-                       age_group = "age 1", notes = "Age-1 abundance from the published age table, used as recruitment at age 1.", age = 1),
+    paste(source_name, "Table A43, report pp. 118-119"),
+    age_group = "age 1", notes = "Age-1 abundance from the published age table, used as recruitment at age 1.", age = 1
+  ),
   add_aggregate_output("mortality", "Fbar", summary[, 5L], "per year",
-                       paste(source_name, "Table A42, report pp. 116-117"),
-                       age_group = "6-10", notes = "Published fully recruited fishing mortality; fishery selectivity is fixed at 1 for ages 6-10+."),
+    paste(source_name, "Table A42, report pp. 116-117"),
+    age_group = "6-10", notes = "Published fully recruited fishing mortality; fishery selectivity is fixed at 1 for ages 6-10+."
+  ),
   add_aggregate_output("biomass", "january_1_biomass", summary[, 2L], "metric tons",
-                       paste(source_name, "Table A42, report pp. 116-117"),
-                       notes = "Final ASAP Run 118 total biomass on January 1."),
+    paste(source_name, "Table A42, report pp. 116-117"),
+    notes = "Final ASAP Run 118 total biomass on January 1."
+  ),
   add_aggregate_output("biomass", "exploitable_biomass", summary[, 4L], "metric tons",
-                       paste(source_name, "Table A42, report pp. 116-117"),
-                       notes = "Final ASAP Run 118 exploitable biomass.")
+    paste(source_name, "Table A42, report pp. 116-117"),
+    notes = "Final ASAP Run 118 exploitable biomass."
+  )
 )
 summary_years <- 2015:2024
 summary_reference <- "2025 Atlantic Mackerel Management Track Assessment Report, Table 1, report p. 1"
@@ -219,20 +246,26 @@ add_summary_output <- function(type, measure, values, unit, age = NA_real_, age_
 }
 summary_outputs_add <- rbind(
   add_summary_output("biomass", "SSB",
-                     c(16453, 24166, 31315, 30375, 23894, 15876, 10942, 17193, 39458, 94702),
-                     "metric tons", lwr = c(rep(NA_real_, 9L), 52539),
-                     upr = c(rep(NA_real_, 9L), 170702),
-                     notes = "2025 management-track ASAP point estimates. Approximate 90% terminal-year interval is reported in the retrospective text; only 2024 has limits."),
+    c(16453, 24166, 31315, 30375, 23894, 15876, 10942, 17193, 39458, 94702),
+    "metric tons",
+    lwr = c(rep(NA_real_, 9L), 52539),
+    upr = c(rep(NA_real_, 9L), 170702),
+    notes = "2025 management-track ASAP point estimates. Approximate 90% terminal-year interval is reported in the retrospective text; only 2024 has limits."
+  ),
   add_summary_output("mortality", "Fbar",
-                     c(1.02, 0.78, 0.73, 0.74, 0.70, 1.19, 1.17, 0.20, 0.16, 0.04),
-                     "per year", age_group = "6+",
-                     lwr = c(rep(NA_real_, 9L), 0.021),
-                     upr = c(rep(NA_real_, 9L), 0.076),
-                     notes = "Fully selected F at ages 6+ from the 2025 management-track ASAP assessment. Approximate 90% terminal-year interval is reported in the retrospective text; only 2024 has limits."),
+    c(1.02, 0.78, 0.73, 0.74, 0.70, 1.19, 1.17, 0.20, 0.16, 0.04),
+    "per year",
+    age_group = "6+",
+    lwr = c(rep(NA_real_, 9L), 0.021),
+    upr = c(rep(NA_real_, 9L), 0.076),
+    notes = "Fully selected F at ages 6+ from the 2025 management-track ASAP assessment. Approximate 90% terminal-year interval is reported in the retrospective text; only 2024 has limits."
+  ),
   add_summary_output("recruitment", "recruitment",
-                     c(131658, 317190, 24301, 107612, 52170, 56500, 78015, 195186, 286681, 1292885),
-                     "thousand fish", age = 1,
-                     notes = "Annual age-1 recruitment from the 2025 management-track ASAP summary table; no numerical uncertainty interval is tabulated here.")
+    c(131658, 317190, 24301, 107612, 52170, 56500, 78015, 195186, 286681, 1292885),
+    "thousand fish",
+    age = 1,
+    notes = "Annual age-1 recruitment from the 2025 management-track ASAP summary table; no numerical uncertainty interval is tabulated here."
+  )
 )
 outputs_add <- rbind(outputs_add, summary_outputs_add)
 
@@ -251,8 +284,10 @@ assessment_add <- data.frame(
   estimate_terminal_year = c(2016, 2024),
   assessment_type = c("benchmark", "management_track_update"),
   model_family = c("ASAP", "ASAP"),
-  model_version = c("Final ASAP Run 118, 64th SAW accepted model",
-                    "2025 management-track assessment; detailed age-specific files unavailable"),
+  model_version = c(
+    "Final ASAP Run 118, 64th SAW accepted model",
+    "2025 management-track assessment; detailed age-specific files unavailable"
+  ),
   is_current = c("TRUE", "FALSE"), is_applied = c("TRUE", "TRUE"),
   framework_year = c(2018, 2018), assessment_url = c(report_url, summary_url),
   framework_url = c(report_url, ""), data_url = c("", ""), model_url = c("", ""),
@@ -320,22 +355,24 @@ append_rows <- function(name, rows) {
   path <- paths[[name]]
   columns <- names(read_db(name))
   if (!setequal(names(rows), columns)) stop("Column mismatch for ", name, ".csv.", call. = FALSE)
-  utils::write.table(rows[columns], path, sep = ",", quote = TRUE, row.names = FALSE,
-                     col.names = FALSE, append = TRUE, na = "")
+  utils::write.table(rows[columns], path,
+    sep = ",", quote = TRUE, row.names = FALSE,
+    col.names = FALSE, append = TRUE, na = ""
+  )
 }
 if (nrow(inputs_add) != 1910L + nrow(egg_ssb) || nrow(outputs_add) != 1745L ||
-    nrow(maturity) != 49L || nrow(catch) != 49L || nrow(weights) != 49L ||
-    nrow(index_rows) != 430L || nrow(egg_ssb) < 10L ||
-    any(!is.finite(inputs_add$value)) || any(!is.finite(outputs_add$value)) ||
-    any(maturity[, -1L] < 0 | maturity[, -1L] > 1) ||
-    any(weights[, -1L] <= 0) || any(catch[, -1L] < 0) ||
-    any(n_at_age[, -1L] <= 0) || any(f_at_age[, -1L] < 0) ||
-    any(summary[, 2:4] <= 0) || any(summary[, 5L] < 0) ||
-    any(egg_ssb[, 2L] <= 0)) {
+  nrow(maturity) != 49L || nrow(catch) != 49L || nrow(weights) != 49L ||
+  nrow(index_rows) != 430L || nrow(egg_ssb) < 10L ||
+  any(!is.finite(inputs_add$value)) || any(!is.finite(outputs_add$value)) ||
+  any(maturity[, -1L] < 0 | maturity[, -1L] > 1) ||
+  any(weights[, -1L] <= 0) || any(catch[, -1L] < 0) ||
+  any(n_at_age[, -1L] <= 0) || any(f_at_age[, -1L] < 0) ||
+  any(summary[, 2:4] <= 0) || any(summary[, 5L] < 0) ||
+  any(egg_ssb[, 2L] <= 0)) {
   stop("Atlantic mackerel records failed dimensions or value checks.", call. = FALSE)
 }
 if (summary[nrow(summary), 3L] != 43519 || n_at_age[nrow(n_at_age), 2L] != 455.43 ||
-    f_at_age[nrow(f_at_age), 7L] != 0.468 || summary[nrow(summary), 5L] != f_at_age[nrow(f_at_age), 7L]) {
+  f_at_age[nrow(f_at_age), 7L] != 0.468 || summary[nrow(summary), 5L] != f_at_age[nrow(f_at_age), 7L]) {
   stop("Terminal-year Run 118 values do not match Tables A42-A45.", call. = FALSE)
 }
 
@@ -345,4 +382,6 @@ append_rows("assumptions", assumptions_add)
 append_rows("inputs", inputs_add)
 append_rows("outputs", outputs_add)
 cat("Imported detailed SAW-64 Atlantic mackerel Run 118 and registered the 2025 summary-only update: ",
-    nrow(inputs_add), " inputs and ", nrow(outputs_add), " outputs (", nrow(egg_ssb), " aggregate egg-index years).\n", sep = "")
+  nrow(inputs_add), " inputs and ", nrow(outputs_add), " outputs (", nrow(egg_ssb), " aggregate egg-index years).\n",
+  sep = ""
+)

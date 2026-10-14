@@ -1,4 +1,3 @@
-
 #' TAM color palette helpers
 #'
 #' @description

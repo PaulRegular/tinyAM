@@ -67,7 +67,7 @@ check_tam <- function(fit, grad_tol = NULL, detailed = FALSE) {
   fit <- .require_tam_fit(fit, arg = "fit")
   if (is.null(grad_tol)) grad_tol <- if (is.null(fit$grad_tol)) 1e-2 else fit$grad_tol
   if (!is.numeric(grad_tol) || length(grad_tol) != 1L ||
-      !is.finite(grad_tol) || grad_tol <= 0) {
+    !is.finite(grad_tol) || grad_tol <= 0) {
     cli::cli_abort("{.arg grad_tol} must be one positive finite number.")
   }
   if (!is.logical(detailed) || length(detailed) != 1L || is.na(detailed)) {
@@ -86,8 +86,12 @@ check_tam <- function(fit, grad_tol = NULL, detailed = FALSE) {
   }
   projected <- .project_gradient(gradient, parameters, bounds)
   max_gradient <- function(x) {
-    if (is.null(x)) return(NA_real_)
-    if (any(!is.finite(x))) return(Inf)
+    if (is.null(x)) {
+      return(NA_real_)
+    }
+    if (any(!is.finite(x))) {
+      return(Inf)
+    }
     if (length(x)) max(abs(x)) else 0
   }
   raw_max <- max_gradient(gradient)
@@ -96,36 +100,70 @@ check_tam <- function(fit, grad_tol = NULL, detailed = FALSE) {
     if (length(value) != 1L || is.na(value)) "not_assessed" else if (value) "pass" else "fail"
   }
   row <- function(check, value, detail) {
-    data.frame(check = check, status = status(value), detail = detail,
-               stringsAsFactors = FALSE)
+    data.frame(
+      check = check, status = status(value), detail = detail,
+      stringsAsFactors = FALSE
+    )
   }
   finite_parameters <- if (is.null(parameters)) NA else all(is.finite(parameters))
-  if (!is.null(sdr$par.random)) finite_parameters <- isTRUE(finite_parameters) &&
-    all(is.finite(sdr$par.random))
+  if (!is.null(sdr$par.random)) {
+    finite_parameters <- isTRUE(finite_parameters) &&
+      all(is.finite(sdr$par.random))
+  }
   covariance <- sdr$cov.fixed
-  uncertainty_ok <- if (is.null(sdr)) NA else {
-    if (is.null(covariance)) NA else all(is.finite(covariance)) &&
-      all(diag(covariance) >= 0)
+  uncertainty_ok <- if (is.null(sdr)) {
+    NA
+  } else {
+    if (is.null(covariance)) {
+      NA
+    } else {
+      all(is.finite(covariance)) &&
+        all(diag(covariance) >= 0)
+    }
   }
   numerical <- rbind(
-    row("optimizer", if (is.null(opt$convergence)) NA else opt$convergence == 0,
-        if (is.null(opt)) "Optimizer result unavailable." else
-          paste0("Code ", opt$convergence, ": ", opt$message)),
-    row("objective", if (is.null(opt$objective)) NA else is.finite(opt$objective),
-        paste("Objective:", if (is.null(opt$objective)) "unavailable" else signif(opt$objective, 7))),
+    row(
+      "optimizer", if (is.null(opt$convergence)) NA else opt$convergence == 0,
+      if (is.null(opt)) {
+        "Optimizer result unavailable."
+      } else {
+        paste0("Code ", opt$convergence, ": ", opt$message)
+      }
+    ),
+    row(
+      "objective", if (is.null(opt$objective)) NA else is.finite(opt$objective),
+      paste("Objective:", if (is.null(opt$objective)) "unavailable" else signif(opt$objective, 7))
+    ),
     row("parameters", finite_parameters, "Fixed estimates and available random states must be finite."),
-    row("gradient", if (is.na(adjusted_max)) NA else
-          is.finite(adjusted_max) && adjusted_max <= grad_tol,
-        sprintf("Adjusted maximum %s; raw maximum %s; tolerance %s.",
-                signif(adjusted_max, 3), signif(raw_max, 3), grad_tol)),
-    row("uncertainty", uncertainty_ok, if (!is.null(fit$sdreport_error))
-          fit$sdreport_error else "Fixed-parameter covariance must be available and finite."),
-    row("hessian", if (is.null(sdr$pdHess)) NA else isTRUE(sdr$pdHess),
-        "The Hessian must be positive definite."),
-    row("predictions", if (is.null(fit$rep$log_pred) || is.null(fit$rep$sd_obs)) NA else
-          all(is.finite(fit$rep$log_pred)) &&
-          all(is.finite(fit$rep$sd_obs) & fit$rep$sd_obs > 0),
-        "Log predictions and positive observation SDs must be finite.")
+    row(
+      "gradient", if (is.na(adjusted_max)) {
+        NA
+      } else {
+        is.finite(adjusted_max) && adjusted_max <= grad_tol
+      },
+      sprintf(
+        "Adjusted maximum %s; raw maximum %s; tolerance %s.",
+        signif(adjusted_max, 3), signif(raw_max, 3), grad_tol
+      )
+    ),
+    row("uncertainty", uncertainty_ok, if (!is.null(fit$sdreport_error)) {
+      fit$sdreport_error
+    } else {
+      "Fixed-parameter covariance must be available and finite."
+    }),
+    row(
+      "hessian", if (is.null(sdr$pdHess)) NA else isTRUE(sdr$pdHess),
+      "The Hessian must be positive definite."
+    ),
+    row(
+      "predictions", if (is.null(fit$rep$log_pred) || is.null(fit$rep$sd_obs)) {
+        NA
+      } else {
+        all(is.finite(fit$rep$log_pred)) &&
+          all(is.finite(fit$rep$sd_obs) & fit$rep$sd_obs > 0)
+      },
+      "Log predictions and positive observation SDs must be finite."
+    )
   )
   structural <- .check_tam_structure(fit$dat, fit$parameter_map)
   structural_status <- if (!nrow(structural) || all(structural$status == "not_assessed")) {
@@ -149,7 +187,7 @@ check_tam <- function(fit, grad_tol = NULL, detailed = FALSE) {
 .project_gradient <- function(gradient, parameters, bounds) {
   active <- rep(FALSE, length(gradient))
   if (!is.null(gradient) && !is.null(parameters) &&
-      length(gradient) == length(parameters) && !is.null(bounds)) {
+    length(gradient) == length(parameters) && !is.null(bounds)) {
     at_lower <- is.finite(bounds$lower) & !is.na(parameters) & parameters == bounds$lower
     at_upper <- is.finite(bounds$upper) & !is.na(parameters) & parameters == bounds$upper
     active <- at_lower | at_upper
@@ -165,11 +203,15 @@ check_tam <- function(fit, grad_tol = NULL, detailed = FALSE) {
 
 .check_tam_structure <- function(dat, parameter_map = list()) {
   out <- data.frame(check = character(), status = character(), detail = character())
-  designs <- c(q_modmat = "index", sd_index_modmat = "index",
-               sd_catch_modmat = "catch", F_modmat = "population", M_modmat = "population")
-  parameters <- c(q_modmat = if (identical(dat$index_settings$q_link, "logit")) "logit_q" else "log_q",
-                  sd_index_modmat = "log_sd_index", sd_catch_modmat = "log_sd_catch",
-                  F_modmat = "log_mu_f", M_modmat = "mu_m")
+  designs <- c(
+    q_modmat = "index", sd_index_modmat = "index",
+    sd_catch_modmat = "catch", F_modmat = "population", M_modmat = "population"
+  )
+  parameters <- c(
+    q_modmat = if (identical(dat$index_settings$q_link, "logit")) "logit_q" else "log_q",
+    sd_index_modmat = "log_sd_index", sd_catch_modmat = "log_sd_catch",
+    F_modmat = "log_mu_f", M_modmat = "mu_m"
+  )
   for (nm in names(designs)) {
     x <- dat[[nm]]
     d <- if (designs[[nm]] == "population") dat$pop_data else dat$obs[[designs[[nm]]]]
@@ -193,23 +235,34 @@ check_tam <- function(fit, grad_tol = NULL, detailed = FALSE) {
       }, numeric((ny - 1L) * length(dat$ages)))
     }
     assessable <- nrow(x) > 0L && all(is.finite(x))
-    rank <- if (!ncol(x)) 0L else if (assessable) {
+    rank <- if (!ncol(x)) {
+      0L
+    } else if (assessable) {
       scale <- sqrt(colSums(x^2))
       scale[scale == 0] <- 1
       qr(sweep(x, 2, scale, "/"))$rank
-    } else NA_integer_
-    out <- rbind(out, data.frame(check = nm,
+    } else {
+      NA_integer_
+    }
+    out <- rbind(out, data.frame(
+      check = nm,
       status = if (!assessable) "not_assessed" else if (rank == ncol(x)) "pass" else "fail",
-      detail = if (!assessable) "No finite informative design available." else
-        sprintf("Rank %d of %d fitted columns.", rank, ncol(x))))
+      detail = if (!assessable) {
+        "No finite informative design available."
+      } else {
+        sprintf("Rank %d of %d fitted columns.", rank, ncol(x))
+      }
+    ))
   }
   out
 }
 
 .check_tam_residuals <- function(obs_pred) {
-  out <- data.frame(type = character(), survey = character(), age = numeric(),
-                    n = integer(), mean = numeric(), sd = numeric(),
-                    max_abs = numeric(), lag1 = numeric())
+  out <- data.frame(
+    type = character(), survey = character(), age = numeric(),
+    n = integer(), mean = numeric(), sd = numeric(),
+    max_abs = numeric(), lag1 = numeric()
+  )
   for (type in c("catch", "index")) {
     d <- obs_pred[[type]]
     if (is.null(d) || !all(c("std_res", "year", "age") %in% names(d))) next
@@ -223,22 +276,28 @@ check_tam <- function(fit, grad_tol = NULL, detailed = FALSE) {
       z <- z[order(z$year), , drop = FALSE]
       adjacent <- which(diff(z$year) == 1L)
       lag1 <- if (length(adjacent) >= 5L &&
-                   stats::sd(z$std_res[adjacent]) > 0 &&
-                   stats::sd(z$std_res[adjacent + 1L]) > 0) {
+        stats::sd(z$std_res[adjacent]) > 0 &&
+        stats::sd(z$std_res[adjacent + 1L]) > 0) {
         stats::cor(z$std_res[adjacent], z$std_res[adjacent + 1L])
-      } else NA_real_
-      out <- rbind(out, data.frame(type = type, survey = as.character(z$survey[1]),
+      } else {
+        NA_real_
+      }
+      out <- rbind(out, data.frame(
+        type = type, survey = as.character(z$survey[1]),
         age = z$age[1], n = nrow(z), mean = mean(z$std_res), sd = stats::sd(z$std_res),
-        max_abs = max(abs(z$std_res)), lag1 = lag1))
+        max_abs = max(abs(z$std_res)), lag1 = lag1
+      ))
     }
   }
   out
 }
 
 .check_tam_data_summary <- function(dat) {
-  out <- data.frame(type = character(), survey = character(), observed = integer(),
-                    zero = integer(), missing = integer(),
-                    years = integer())
+  out <- data.frame(
+    type = character(), survey = character(), observed = integer(),
+    zero = integer(), missing = integer(),
+    years = integer()
+  )
   for (type in c("catch", "index")) {
     d <- dat$obs[[type]]
     if (is.null(d) || !all(c("obs", "year") %in% names(d))) next
@@ -246,10 +305,12 @@ check_tam <- function(fit, grad_tol = NULL, detailed = FALSE) {
     if (is.null(d$survey)) d$survey <- ""
     for (z in split(d, d$survey)) {
       observed <- is.finite(z$obs) & z$obs > 0
-      out <- rbind(out, data.frame(type = type, survey = as.character(z$survey[1]),
+      out <- rbind(out, data.frame(
+        type = type, survey = as.character(z$survey[1]),
         observed = sum(observed), zero = sum(z$obs == 0, na.rm = TRUE),
         missing = sum(is.na(z$obs)),
-        years = length(unique(z$year[observed]))))
+        years = length(unique(z$year[observed]))
+      ))
     }
   }
   out
@@ -257,9 +318,13 @@ check_tam <- function(fit, grad_tol = NULL, detailed = FALSE) {
 
 .q_process_advisories <- function(dat) {
   out <- data.frame(issue = character(), detail = character())
-  if (!length(dat$q_terms)) return(out)
+  if (!length(dat$q_terms)) {
+    return(out)
+  }
   d <- dat$obs$index
-  if (!is.data.frame(d)) return(out)
+  if (!is.data.frame(d)) {
+    return(out)
+  }
   observed <- !d$is_proj & is.finite(d$obs) & d$obs > 0
   for (term in dat$q_terms) {
     if (term$type == "logistic") next
@@ -267,22 +332,32 @@ check_tam <- function(fit, grad_tol = NULL, detailed = FALSE) {
       for (group in term$groups) {
         rows <- group$rows[observed[group$rows] & term$multiplier[group$rows] != 0]
         levels <- length(unique(d[[term$variable]][rows]))
-        if (levels < 5L) out <- rbind(out, data.frame(issue = "q_effect_support",
-          detail = paste0(term$id, ", group ", group$group, ": ", length(rows),
-            " observations cover only ", levels, " effect levels. This group's effect has limited observed support; inspect its uncertainty or consider a simpler grouping/formula or an externally supported SD.")))
+        if (levels < 5L) {
+          out <- rbind(out, data.frame(
+            issue = "q_effect_support",
+            detail = paste0(
+              term$id, ", group ", group$group, ": ", length(rows),
+              " observations cover only ", levels, " effect levels. This group's effect has limited observed support; inspect its uncertainty or consider a simpler grouping/formula or an externally supported SD."
+            )
+          ))
+        }
       }
     }
     independent <- term$type == "iid" || (term$type == "ar1" && identical(term$phi, 0))
     if (!independent || is.null(term$sd_parameter) ||
-        !identical(dat$index_settings$q_link, "logit")) next
+      !identical(dat$index_settings$q_link, "logit")) {
+      next
+    }
     z <- .q_term_design(term, nrow(d))[observed, , drop = FALSE]
     z <- z[, colSums(abs(z)) > 0, drop = FALSE]
     s <- dat$sd_index_modmat[observed, , drop = FALSE]
     active <- rowSums(abs(z)) > 0
     if (ncol(z) && all(colSums(z != 0) == 1L) && ncol(s) &&
-        any(s[active, , drop = FALSE] != 0)) {
-      out <- rbind(out, data.frame(issue = "q_variance_separation",
-        detail = paste0(term$id, ": each effect level has only one informative observation, and observation SD is also estimated. The logit link does not guarantee that these sources of variation can be separated. Use replicated levels, simplify the effect or supply one SD.")))
+      any(s[active, , drop = FALSE] != 0)) {
+      out <- rbind(out, data.frame(
+        issue = "q_variance_separation",
+        detail = paste0(term$id, ": each effect level has only one informative observation, and observation SD is also estimated. The logit link does not guarantee that these sources of variation can be separated. Use replicated levels, simplify the effect or supply one SD.")
+      ))
     }
   }
   out
@@ -291,10 +366,14 @@ check_tam <- function(fit, grad_tol = NULL, detailed = FALSE) {
 .formula_uncertainty_advisories <- function(fit) {
   out <- data.frame(issue = character(), detail = character())
   sdr <- fit[["sdrep"]]
-  if (!length(.formula_terms(fit$dat)) || !is.list(sdr) || !isTRUE(sdr$pdHess)) return(out)
+  if (!length(.formula_terms(fit$dat)) || !is.list(sdr) || !isTRUE(sdr$pdHess)) {
+    return(out)
+  }
   p <- sdr$par.fixed
   covariance <- sdr$cov.fixed
-  if (!is.matrix(covariance) || nrow(covariance) != length(p)) return(out)
+  if (!is.matrix(covariance) || nrow(covariance) != length(p)) {
+    return(out)
+  }
   variance <- diag(covariance)
   variance[!is.finite(variance) | variance < 0] <- NA_real_
   half_width <- stats::qnorm(.975) * sqrt(variance)
@@ -302,25 +381,40 @@ check_tam <- function(fit, grad_tol = NULL, detailed = FALSE) {
   for (component in c("q", "F", "M", "sd_catch", "sd_index")) {
     terms <- fit$dat[[paste0(component, "_terms")]]
     if (!length(terms)) next
-    sd_names <- c(unlist(lapply(terms, `[[`, "sd_parameter")),
-      if (component %in% c("F", "M") && identical(fit$dat[[paste0(component, "_settings")]]$process, "iid"))
-        paste0("log_sd_", tolower(component)))
+    sd_names <- c(
+      unlist(lapply(terms, `[[`, "sd_parameter")),
+      if (component %in% c("F", "M") && identical(fit$dat[[paste0(component, "_settings")]]$process, "iid")) {
+        paste0("log_sd_", tolower(component))
+      }
+    )
     for (term in terms) {
       i <- match(term$phi_parameter, names(p))
       if (!length(i) || is.na(i) || !is.finite(half_width[i]) || !is.finite(p[i])) next
       width <- diff(stats::plogis(p[i] + c(-1, 1) * half_width[i]))
-      if (width > .5) out <- rbind(out, data.frame(issue = "formula_AR1_uncertainty",
-        detail = paste0(term$id, ": the 95% AR1 correlation interval spans more than 0.5. ",
-          "Persistence is weakly estimated; compare with IID/RW effects or a scientifically supported fixed phi before interpreting it.")))
+      if (width > .5) {
+        out <- rbind(out, data.frame(
+          issue = "formula_AR1_uncertainty",
+          detail = paste0(
+            term$id, ": the 95% AR1 correlation interval spans more than 0.5. ",
+            "Persistence is weakly estimated; compare with IID/RW effects or a scientifically supported fixed phi before interpreting it."
+          )
+        ))
+      }
     }
     i <- match(sd_names, names(p))
     i <- i[!is.na(i)]
     wide <- is.finite(half_width[i]) & is.finite(p[i]) & 2 * half_width[i] > log(10)
     wide_sd <- c(wide_sd, names(p)[i[wide]])
   }
-  if (length(wide_sd)) out <- rbind(out, data.frame(issue = "formula_SD_uncertainty",
-    detail = paste0("95% intervals span more than tenfold for ", paste(unique(wide_sd), collapse = ", "),
-      ". These variance components are weakly estimated; compare simpler formulas or use externally supported process SDs.")))
+  if (length(wide_sd)) {
+    out <- rbind(out, data.frame(
+      issue = "formula_SD_uncertainty",
+      detail = paste0(
+        "95% intervals span more than tenfold for ", paste(unique(wide_sd), collapse = ", "),
+        ". These variance components are weakly estimated; compare simpler formulas or use externally supported process SDs."
+      )
+    ))
+  }
   for (term in Filter(function(x) x$type == "logistic", c(fit$dat$q_terms, fit$dat$F_terms))) {
     is_F <- startsWith(term$id, "F_")
     d <- if (is_F) .mean_formula_data(fit$dat, "F") else fit$dat$obs$index
@@ -333,12 +427,16 @@ check_tam <- function(fit, grad_tol = NULL, detailed = FALSE) {
       support <- range(d[[term$variable]][rows])
       i <- indices[g]
       if (is.finite(p[i]) && is.finite(half_width[i]) &&
-          (p[i] < support[1] || p[i] > support[2]) && 2 * half_width[i] > diff(support)) {
-        out <- rbind(out, data.frame(issue = "logistic_support",
-          detail = paste0(term$id, ", group ", group$group,
+        (p[i] < support[1] || p[i] > support[2]) && 2 * half_width[i] > diff(support)) {
+        out <- rbind(out, data.frame(
+          issue = "logistic_support",
+          detail = paste0(
+            term$id, ", group ", group$group,
             ": the fitted midpoint lies outside the observed range (", paste(support, collapse = " to "),
             "), and its 95% interval is wider than that range. The data may not distinguish the baseline ",
-            if (is_F) "F" else "catchability", " from the age/size curve. Consider a simpler curve or observations covering its rising part and plateau.")))
+            if (is_F) "F" else "catchability", " from the age/size curve. Consider a simpler curve or observations covering its rising part and plateau."
+          )
+        ))
       }
     }
   }
@@ -346,16 +444,22 @@ check_tam <- function(fit, grad_tol = NULL, detailed = FALSE) {
 }
 
 .check_tam_advisories <- function(fit, active, residuals, data) {
-  out <- rbind(.mean_process_advisories(fit$dat), .q_process_advisories(fit$dat),
-               .sd_process_advisories(fit$dat),
-               .rec_process_advisories(fit$dat), .rec_fit_advisories(fit),
-               .formula_uncertainty_advisories(fit), .cor_rw_advisories(fit),
-               .process_sd_advisories(fit$dat), .process_sd_fit_advisories(fit))
+  out <- rbind(
+    .mean_process_advisories(fit$dat), .q_process_advisories(fit$dat),
+    .sd_process_advisories(fit$dat),
+    .rec_process_advisories(fit$dat), .rec_fit_advisories(fit),
+    .formula_uncertainty_advisories(fit), .cor_rw_advisories(fit),
+    .process_sd_advisories(fit$dat), .process_sd_fit_advisories(fit)
+  )
   add <- function(issue, detail) {
     out <<- rbind(out, data.frame(issue = issue, detail = detail))
   }
-  if (any(active)) add("active_bounds", paste(sum(active),
-    "parameter(s) at a bound; symmetric uncertainty intervals may be inappropriate."))
+  if (any(active)) {
+    add("active_bounds", paste(
+      sum(active),
+      "parameter(s) at a bound; symmetric uncertainty intervals may be inappropriate."
+    ))
+  }
   sdr <- fit[["sdrep"]]
   p <- if (is.list(sdr)) sdr$par.fixed else NULL
   if (!is.null(p)) {
@@ -366,14 +470,18 @@ check_tam <- function(fit, grad_tol = NULL, detailed = FALSE) {
   }
   covariance <- if (is.list(sdr)) sdr$cov.fixed else NULL
   if (is.matrix(covariance) && all(is.finite(covariance)) &&
-      all(diag(covariance) > 0) && nrow(covariance) > 1L) {
+    all(diag(covariance) > 0) && nrow(covariance) > 1L) {
     correlation <- stats::cov2cor(covariance)
     pairs <- which(upper.tri(correlation) & abs(correlation) > .95, arr.ind = TRUE)
-    if (nrow(pairs)) add("parameter_correlation", paste(nrow(pairs),
-      "fixed-parameter pair(s) have absolute correlation above 0.95; inspect detailed checks."))
+    if (nrow(pairs)) {
+      add("parameter_correlation", paste(
+        nrow(pairs),
+        "fixed-parameter pair(s) have absolute correlation above 0.95; inspect detailed checks."
+      ))
+    }
   }
   if (identical(fit$dat$index_settings$q_link, "logit") &&
-      any(fit$obs_pred$index$q > 1 - 1e-6, na.rm = TRUE)) {
+    any(fit$obs_pred$index$q > 1 - 1e-6, na.rm = TRUE)) {
     add("q_boundary", "Some q estimates are within 1e-6 of one; inspect their uncertainty and information at those ages.")
   }
   if (nrow(data) && any(data$years < 5L)) {
@@ -401,19 +509,26 @@ check_tam <- function(fit, grad_tol = NULL, detailed = FALSE) {
     return(list(status = "not_assessed"))
   }
   eig <- eigen(covariance, symmetric = TRUE)
-  if (any(eig$values <= 0)) return(list(status = "fail", covariance_eigenvalues = eig$values))
+  if (any(eig$values <= 0)) {
+    return(list(status = "fail", covariance_eigenvalues = eig$values))
+  }
   if (is.null(labels)) labels <- paste0("parameter_", seq_len(nrow(covariance)))
   labels <- make.unique(labels)
   correlation <- stats::cov2cor(covariance)
   pairs <- which(upper.tri(correlation) & abs(correlation) > .95, arr.ind = TRUE)
   combinations <- data.frame(parameter = labels, loading = eig$vectors[, 1])
   combinations <- combinations[order(abs(combinations$loading), decreasing = TRUE), , drop = FALSE]
-  list(status = "pass", hessian_condition = max(eig$values) / min(eig$values),
-       hessian_eigenvalues = 1 / eig$values,
-       weak_direction = utils::head(combinations, 5L),
-       correlations = data.frame(parameter1 = labels[pairs[, 1]],
-         parameter2 = labels[pairs[, 2]], correlation = correlation[pairs]))
+  list(
+    status = "pass", hessian_condition = max(eig$values) / min(eig$values),
+    hessian_eigenvalues = 1 / eig$values,
+    weak_direction = utils::head(combinations, 5L),
+    correlations = data.frame(
+      parameter1 = labels[pairs[, 1]],
+      parameter2 = labels[pairs[, 2]], correlation = correlation[pairs]
+    )
+  )
 }
+
 
 #' @rdname check_tam
 #' @param x A `tam_check` object.
@@ -423,23 +538,67 @@ print.tam_check <- function(x, ...) {
   inform <- function(text, symbol = "i") {
     cli::cli_inform(stats::setNames("{text}", symbol))
   }
-  inform(paste("Numerical convergence:", if (x$is_converged) "passed" else "not passed"),
-         if (x$is_converged) "v" else "x")
-  inform(paste0("Optimizer: ", if (is.null(x$optimizer_code)) "unavailable" else x$optimizer_code,
-                if (!is.null(x$optimizer_message)) paste0(" (", x$optimizer_message, ")")))
-  inform(sprintf("Max |gradient|: %s adjusted; %s raw (tolerance %s)",
-                 signif(x$max_gradient, 3), signif(x$raw_max_gradient, 3), x$grad_tol))
-  inform(paste("Positive-definite Hessian:", if (is.null(x$pd_hessian)) "not assessed" else
-    if (isTRUE(x$pd_hessian)) "yes" else "no"),
-    if (is.null(x$pd_hessian)) "i" else if (isTRUE(x$pd_hessian)) "v" else "x")
-  inform(paste("Structural checks:", switch(x$structural_status,
-    no_known_issues = "no known redundancies detected; biological identifiability is not established",
-    issues = "issues detected", not_assessed = "not assessed")),
-    if (x$structural_status == "issues") "x" else "i")
-  failures <- x$numerical[x$numerical$status != "pass", , drop = FALSE]
-  for (detail in failures$detail) inform(detail, "x")
+  symbol <- function(check) {
+    status <- x$numerical$status[x$numerical$check == check]
+    if (length(status) != 1L || is.na(status)) {
+      return("i")
+    }
+    if (status == "pass") "v" else if (status == "fail") "x" else "i"
+  }
+
+  objective <- x$numerical$detail[x$numerical$check == "objective"]
+  if (length(objective)) cat(objective, "\n")
+
+  inform(
+    paste("Numerical convergence:", if (x$is_converged) "passed" else "not passed"),
+    if (x$is_converged) "v" else "x"
+  )
+  inform(
+    paste0(
+      "Optimizer: ", if (is.null(x$optimizer_code)) "unavailable" else x$optimizer_code,
+      if (!is.null(x$optimizer_message)) paste0(" (", x$optimizer_message, ")")
+    ),
+    symbol("optimizer")
+  )
+  inform(
+    sprintf(
+      "Max |gradient|: %s adjusted; %s raw (tolerance %s)",
+      signif(x$max_gradient, 3), signif(x$raw_max_gradient, 3), x$grad_tol
+    ),
+    symbol("gradient")
+  )
+  inform(
+    paste("Positive-definite Hessian:", if (is.null(x$pd_hessian)) "not assessed" else if (isTRUE(x$pd_hessian)) "yes" else "no"),
+    symbol("hessian")
+  )
+  inform(
+    paste("Model structure:", switch(x$structural_status,
+      no_known_issues = "no redundant model terms detected",
+      issues = "issues detected",
+      not_assessed = "not assessed"
+    )),
+    if (x$structural_status == "no_known_issues") "v" else if (x$structural_status == "issues") "x" else "i"
+  )
+
+  failures <- x$numerical[
+    x$numerical$status != "pass" &
+      !x$numerical$check %in% c("objective", "optimizer", "gradient", "hessian"), ,
+    drop = FALSE
+  ]
+  for (i in seq_len(nrow(failures))) {
+    inform(
+      failures$detail[i],
+      if (failures$status[i] == "fail") "x" else "i"
+    )
+  }
   for (detail in x$structural$detail[x$structural$status == "fail"]) inform(detail, "x")
-  inform(paste("Advisory findings:", nrow(x$advisories)))
-  for (detail in x$advisories$detail) inform(detail)
+
+  cat(sprintf("\nAdvisory findings (%d):\n", nrow(x$advisories)))
+  if (nrow(x$advisories) == 0L) {
+    cat("None.\n")
+  } else {
+    for (detail in x$advisories$detail) inform(detail)
+  }
+
   invisible(x)
 }

@@ -5,10 +5,12 @@ ages <- 2:3
 source_grid <- expand.grid(year = 1999:2003, age = 0:4)
 source_grid$value <- source_grid$year * 10 + source_grid$age
 source_grid$value[source_grid$year == 2001 & source_grid$age == 4] <- NA
-output <- transform(source_grid, assessment_id = "aligned", type = "population",
+output <- transform(source_grid,
+  assessment_id = "aligned", type = "population",
   measure = "numbers_at_age", age_group = "", se = 2, lwr = value - 4,
   upr = value + 4, unit = "thousand fish", source_type = "official_table",
-  source_reference = "N table", notes = "Beginning of year")
+  source_reference = "N table", notes = "Beginning of year"
+)
 recruitment <- output[output$age == 0, ]
 recruitment$type <- "recruitment"
 recruitment$measure <- "recruitment"
@@ -22,8 +24,10 @@ annual <- data.frame(year = years, est = 1)
 fit <- list(
   dat = list(years = years, ages = ages, is_proj = rep(FALSE, 3)),
   pop = list(N = model_grid, recruitment = annual),
-  rep = list(N = matrix(NA_real_, 3, 2, dimnames = list(year = years, age = ages)),
-             recruitment = setNames(rep(NA_real_, 3), years)),
+  rep = list(
+    N = matrix(NA_real_, 3, 2, dimnames = list(year = years, age = ages)),
+    recruitment = setNames(rep(NA_real_, 3), years)
+  ),
   obs_pred = list(), fixed_par = data.frame(par = "fixture", est = 1), random_par = list()
 )
 ref <- database_to_tam_ref("aligned", outputs, template = fit, age_plus_group = 3)
@@ -46,10 +50,14 @@ stopifnot(
 )
 differences <- .assessment_percent_differences(ref)
 r <- differences[differences$metric == "recruitment", ]
-stopifnot(all(r$source == expected), all(r$year == years),
-          all(r$comparison_status == "matched"),
-          identical(tinyAM::tidy_tam(model_list = list(Accepted = ref))$pop$recruitment$est,
-                    ref$pop$recruitment$est))
+stopifnot(
+  all(r$source == expected), all(r$year == years),
+  all(r$comparison_status == "matched"),
+  identical(
+    tinyAM::tidy_tam(model_list = list(Accepted = ref))$pop$recruitment$est,
+    ref$pop$recruitment$est
+  )
+)
 
 singleton_labels <- outputs
 singleton_labels$age_group <- as.character(singleton_labels$age)
@@ -61,20 +69,30 @@ missing <- outputs[!(outputs$year == 2001 & outputs$age == 2), ]
 ref_missing <- database_to_tam_ref("aligned", missing, template = fit, age_plus_group = 3)
 missing_differences <- .assessment_percent_differences(ref_missing)
 missing_recruitment <- missing_differences[missing_differences$metric == "recruitment" &
-                                          missing_differences$year == 2001, ]
-stopifnot(is.na(ref_missing$pop$recruitment$est[ref_missing$pop$recruitment$year == 2001]),
-          is.na(missing_recruitment$source), is.na(missing_recruitment$percent_difference))
+  missing_differences$year == 2001, ]
+stopifnot(
+  is.na(ref_missing$pop$recruitment$est[ref_missing$pop$recruitment$year == 2001]),
+  is.na(missing_recruitment$source), is.na(missing_recruitment$percent_difference)
+)
 no_n <- outputs[outputs$type == "recruitment", ]
 ref_no_n <- database_to_tam_ref("aligned", no_n, template = fit)
-stopifnot(all(is.na(ref_no_n$pop$recruitment$est)),
-          all(attr(ref_no_n, "native_pop")$recruitment$est == 999))
+stopifnot(
+  all(is.na(ref_no_n$pop$recruitment$est)),
+  all(attr(ref_no_n, "native_pop")$recruitment$est == 999)
+)
 
 # Reference dimensions cannot silently differ from the fitted template.
-for (arguments in list(list(years = 1999:2002), list(ages = 1:3),
-                       list(years = c(2000, 2002)), list(ages = c(2, 2)))) {
-  error <- tryCatch(do.call(database_to_tam_ref,
-    c(list(assessment_id = "aligned", outputs = outputs, template = fit), arguments)),
-    error = identity)
+for (arguments in list(
+  list(years = 1999:2002), list(ages = 1:3),
+  list(years = c(2000, 2002)), list(ages = c(2, 2))
+)) {
+  error <- tryCatch(
+    do.call(
+      database_to_tam_ref,
+      c(list(assessment_id = "aligned", outputs = outputs, template = fit), arguments)
+    ),
+    error = identity
+  )
   stopifnot(inherits(error, "error"))
 }
 cat("Central reference alignment tests passed.\n")

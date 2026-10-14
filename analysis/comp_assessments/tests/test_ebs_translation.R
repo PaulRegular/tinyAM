@@ -8,10 +8,14 @@ source_data <- read_assessment("afsc_pollock_ebs_2024", database)
 translated <- .test_stock(source_data)
 obs <- translated$obs
 documentation <- print_sources(source_data$assessment)
-stopifnot(length(documentation) >= 2L,
-          all(documentation %in% translated$background),
-          any(grepl(source_data$assessment$assessment_url[[1L]],
-                    translated$background, fixed = TRUE)))
+stopifnot(
+  length(documentation) >= 2L,
+  all(documentation %in% translated$background),
+  any(grepl(source_data$assessment$assessment_url[[1L]],
+    translated$background,
+    fixed = TRUE
+  ))
+)
 settings <- translated$settings
 
 tinyAM::check_obs(obs)
@@ -22,8 +26,8 @@ dat <- do.call(tinyAM::prepare_tam, c(
 
 survey_names <- sort(unique(as.character(obs$index$survey)))
 age1_ats <- obs$index[
-  obs$index$survey == "NMFS acoustic-trawl" & obs$index$age == 1,
-  , drop = FALSE
+  obs$index$survey == "NMFS acoustic-trawl" & obs$index$age == 1, ,
+  drop = FALSE
 ]
 ats_old_age1 <- age1_ats[age1_ats$year < 2024, , drop = FALSE]
 high_age <- obs$index[obs$index$age >= 9, , drop = FALSE]
@@ -56,9 +60,13 @@ stopifnot(
   grepl("survey", paste(deparse(settings$index_settings$sd_form), collapse = "")),
   grepl("age", paste(deparse(settings$catch_settings$sd_form), collapse = ""), fixed = TRUE),
   grepl("I(age^2)",
-        paste(deparse(settings$catch_settings$sd_form), collapse = ""), fixed = TRUE),
-  identical(survey_names,
-           sort(c("NMFS bottom-trawl VAST", "NMFS acoustic-trawl"))),
+    paste(deparse(settings$catch_settings$sd_form), collapse = ""),
+    fixed = TRUE
+  ),
+  identical(
+    survey_names,
+    sort(c("NMFS bottom-trawl VAST", "NMFS acoustic-trawl"))
+  ),
   !"NMFS acoustic-trawl age-1 index" %in% survey_names,
   nrow(ats_old_age1) > 0L,
   !any(age1_ats$year == 2024),

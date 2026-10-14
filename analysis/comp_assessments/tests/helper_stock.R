@@ -4,13 +4,17 @@
   e$do_fit <- FALSE
   e$silent <- TRUE
   list2env(list(...), e)
-  path <- file.path('analysis/comp_assessments/scripts/translation/stocks',
-                    paste0(source_record$assessment$assessment_id[[1]], '.R'))
+  path <- file.path(
+    "analysis/comp_assessments/scripts/translation/stocks",
+    paste0(source_record$assessment$assessment_id[[1]], ".R")
+  )
   sys.source(path, e)
   calls <- list()
   walk <- function(x) {
-    if (missing(x) || !is.call(x)) return(invisible(NULL))
-    if (identical(x[[1]], quote(tinyAM::fit_tam))) calls[[length(calls)+1L]] <<- x
+    if (missing(x) || !is.call(x)) {
+      return(invisible(NULL))
+    }
+    if (identical(x[[1]], quote(tinyAM::fit_tam))) calls[[length(calls) + 1L]] <<- x
     for (z in as.list(x)[-1]) walk(z)
   }
   for (x in parse(path)) walk(x)
@@ -21,10 +25,10 @@
   out <- as.list(e)
   out$fit_call <- calls[[length(calls)]]
   out$warm_call <- if (length(calls) > 1L) calls[[1L]] else NULL
-  settings <- as.list(call)[intersect(names(call),
-    c('N_settings','rec_settings','F_settings','M_settings','catch_settings','index_settings'))]
+  settings <- as.list(call)[intersect(
+    names(call),
+    c("N_settings", "rec_settings", "F_settings", "M_settings", "catch_settings", "index_settings")
+  )]
   out$settings <- lapply(settings, eval, envir = e)
   out
 }
-
-

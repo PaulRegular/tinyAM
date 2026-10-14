@@ -1,4 +1,3 @@
-
 #' Northern cod example data for TAM
 #'
 #' @description
@@ -44,7 +43,6 @@
 "cod_obs"
 
 
-
 #' Check tinyAM input data
 #'
 #' @description
@@ -76,7 +74,7 @@
 #' @return `TRUE` (invisibly) if validation passes; otherwise aborts.
 #' @examples
 #' data(cod_obs)
-#' check_obs(cod_obs)  # returns TRUE (invisibly) if valid
+#' check_obs(cod_obs) # returns TRUE (invisibly) if valid
 #'
 #' @importFrom cli cli_abort cli_warn
 #' @export
@@ -94,7 +92,7 @@ check_tam_data <- function(data) {
   }
 
   required_tabs <- c("catch", "index", "weight", "maturity")
-  missing_tabs  <- setdiff(required_tabs, names(obs))
+  missing_tabs <- setdiff(required_tabs, names(obs))
   if (length(missing_tabs)) {
     cli::cli_abort(c(
       "{.strong Invalid obs list}",
@@ -127,15 +125,18 @@ check_tam_data <- function(data) {
     # type and NA checks
     if (!.is_integerish(x$year)) {
       cli::cli_abort(c("{.strong Invalid obs {nm}}",
-                       "x" = "`{nm}$year` must be numeric/integer with no NA and no fractional values."))
+        "x" = "`{nm}$year` must be numeric/integer with no NA and no fractional values."
+      ))
     }
     if (!.is_integerish(x$age)) {
       cli::cli_abort(c("{.strong Invalid obs {nm}}",
-                       "x" = "`{nm}$age` must be numeric/integer with no NA and no fractional values."))
+        "x" = "`{nm}$age` must be numeric/integer with no NA and no fractional values."
+      ))
     }
     if (!is.numeric(x$obs)) {
       cli::cli_abort(c("{.strong Invalid obs {nm}}",
-                       "x" = "`{nm}$obs` must be numeric (NA allowed in `catch`/`index`, not in `weight`/`maturity`)."))
+        "x" = "`{nm}$obs` must be numeric (NA allowed in `catch`/`index`, not in `weight`/`maturity`)."
+      ))
     }
 
     # table-specific NA policy for obs
@@ -175,7 +176,7 @@ check_tam_data <- function(data) {
       }
       ok_num <- is.numeric(x$samp_time)
       ok_rng <- all(x$samp_time >= 0 & x$samp_time <= 1, na.rm = TRUE)
-      ok_na  <- !any(is.na(x$samp_time))
+      ok_na <- !any(is.na(x$samp_time))
       if (!(ok_num && ok_rng && ok_na)) {
         cli::cli_abort(c(
           "{.strong Invalid `index$samp_time`}",
@@ -191,9 +192,9 @@ check_tam_data <- function(data) {
 
   # Covariates cannot change the range supplied by observations and biology.
   obs_years <- unlist(lapply(obs[required_tabs], function(d) d$year))
-  obs_ages  <- unlist(lapply(obs[required_tabs], function(d) d$age))
+  obs_ages <- unlist(lapply(obs[required_tabs], function(d) d$age))
   years <- seq.int(min(obs_years, na.rm = TRUE), max(obs_years, na.rm = TRUE))
-  ages  <- seq.int(min(obs_ages,  na.rm = TRUE), max(obs_ages,  na.rm = TRUE))
+  ages <- seq.int(min(obs_ages, na.rm = TRUE), max(obs_ages, na.rm = TRUE))
   grid_size <- length(years) * length(ages)
 
   if (!is.null(obs$pop_covariates)) {
@@ -208,8 +209,10 @@ check_tam_data <- function(data) {
       cli::cli_abort("pop_covariates must use the year-age range supplied by catch, index, weight and maturity.")
     }
   }
-  must_be_full <- c("catch", "weight", "maturity",
-                    if (!is.null(obs$pop_covariates)) "pop_covariates")
+  must_be_full <- c(
+    "catch", "weight", "maturity",
+    if (!is.null(obs$pop_covariates)) "pop_covariates"
+  )
   for (nm in must_be_full) {
     if (anyDuplicated(obs[[nm]][, c("year", "age")])) {
       cli::cli_abort("{.arg {nm}} must have exactly one row per year and age; duplicate rows would misalign the model surfaces.")
@@ -237,4 +240,3 @@ check_tam_data <- function(data) {
 #' check_tam_data(cod_obs)
 #' @export
 check_obs <- function(obs) check_tam_data(obs)
-

@@ -1,4 +1,3 @@
-
 testthat::skip_if_not_installed("RTMB")
 testthat::skip_if_not(exists("cod_obs"), "cod_obs not available")
 testthat::skip_if(is.null(default_fit), "default_fit unavailable")
@@ -34,7 +33,8 @@ test_that("tidy_array works with require_dimnames = FALSE and sets fallback name
 
 test_that("tidy_array respects value_name and converts numeric-like dimnames", {
   m <- matrix(
-    1:6, nrow = 2,
+    1:6,
+    nrow = 2,
     dimnames = list(age = c("2", "3"), year = c("2001", "2002", "2003"))
   )
   out <- tidy_array(m, value_name = "val")
@@ -49,7 +49,8 @@ test_that("tidy_array respects value_name and converts numeric-like dimnames", {
 
 test_that("tidy_mat is an alias of tidy_array", {
   m <- matrix(
-    1:6, nrow = 2,
+    1:6,
+    nrow = 2,
     dimnames = list(age = c("2", "3"), year = c("2001", "2002", "2003"))
   )
   a <- tidy_array(m)
@@ -78,7 +79,7 @@ test_that("trans_est applies transform and scale to est/lwr/upr", {
   d <- data.frame(est = log(100), lwr = log(80), upr = log(120))
   out <- trans_est(d, transform = exp, scale = 2)
   expect_equal(out$est, 100 / 2)
-  expect_equal(out$lwr,  80 / 2)
+  expect_equal(out$lwr, 80 / 2)
   expect_equal(out$upr, 120 / 2)
 })
 
@@ -94,7 +95,6 @@ test_that("trans_est respects transform = NULL", {
 ## tidy_obs_pred ----
 
 test_that("tidy_obs_pred builds residual diagnostics for catch and index", {
-
   out <- tidy_obs_pred(fit)
 
   # Structure
@@ -137,17 +137,17 @@ test_that("tidy_rep tidies matrices and vectors, and adds is_proj", {
   expect_true(length(tr) > 0)
 
   # Should include known report matrices and at least one vector (e.g., ssb)
-  expect_true(all(c("N","M","mu_M","F","mu_F","Z","ssb_mat") %in% names(tr)))
+  expect_true(all(c("N", "M", "mu_M", "F", "mu_F", "Z", "ssb_mat") %in% names(tr)))
   expect_true("ssb" %in% names(tr))
 
   # Matrices → data frames with (year, age, est, is_proj)
   expect_s3_class(tr$N, "data.frame")
-  expect_true(all(c("year","age","est","is_proj") %in% names(tr$N)))
-  expect_equal(nrow(tr$N), length(fit$rep$N))  # row count equals matrix length
+  expect_true(all(c("year", "age", "est", "is_proj") %in% names(tr$N)))
+  expect_equal(nrow(tr$N), length(fit$rep$N)) # row count equals matrix length
 
   # Vectors (length = #years) → data frames with (year, est, is_proj)
   expect_s3_class(tr$ssb, "data.frame")
-  expect_true(all(c("year","est","is_proj") %in% names(tr$ssb)))
+  expect_true(all(c("year", "est", "is_proj") %in% names(tr$ssb)))
   expect_false("age" %in% names(tr$ssb))
   expect_equal(nrow(tr$ssb), length(fit$dat$years))
 
@@ -205,12 +205,11 @@ test_that("tidy_rep validates list structure and metadata", {
 })
 
 
-
 ## tidy_sdrep ----
 
 test_that("tidy_sdrep extracts, transforms, and renames series", {
   trends <- tidy_sdrep(fit, interval = 0.95)
-  expect_true(all(c("ssb","recruitment","abundance") %in% names(trends)))
+  expect_true(all(c("ssb", "recruitment", "abundance") %in% names(trends)))
   population <- vals[setdiff(names(vals), c("q_link_prediction", "eta_q_increments"))]
   population <- population[!startsWith(names(population), "rec_")]
   expect_false(any(startsWith(names(trends), "rec_")))
@@ -221,9 +220,11 @@ test_that("tidy_sdrep extracts, transforms, and renames series", {
 
   # Check one series numerically
   z <- qnorm(0.975)
-  d <- data.frame(est = exp(vals$log_ssb),
-                  lwr = exp(vals$log_ssb - z * sds$log_ssb),
-                  upr = exp(vals$log_ssb + z * sds$log_ssb))
+  d <- data.frame(
+    est = exp(vals$log_ssb),
+    lwr = exp(vals$log_ssb - z * sds$log_ssb),
+    upr = exp(vals$log_ssb + z * sds$log_ssb)
+  )
   expect_equal(trends$ssb$year, fit$dat$years)
   expect_equal(trends$ssb$est, d$est)
   expect_equal(trends$ssb$lwr, d$lwr)
@@ -239,7 +240,7 @@ test_that("tidy_pop concatenates tidy_sdrep and tidy_rep without duplicates", {
   # Should include key names from rep and sdrep outputs
   expect_true(all(c("ssb", "N", "M", "mu_M", "F", "mu_F", "Z", "ssb_mat") %in% names(out)))
   expect_s3_class(out$N, "data.frame")
-  expect_true(all(c("year","age","est") %in% names(out$N)))
+  expect_true(all(c("year", "age", "est") %in% names(out$N)))
 
   # No duplicate names
   expect_equal(length(names(out)), length(unique(names(out))))
@@ -249,28 +250,26 @@ test_that("tidy_pop concatenates tidy_sdrep and tidy_rep without duplicates", {
 ## tidy_par ----
 
 test_that("tidy_par returns nested fixed/random with expected columns", {
-
   tp <- tidy_par(fit)
 
   # Top-level structure
   expect_type(tp, "list")
-  expect_true(all(c("fixed","random") %in% names(tp)))
+  expect_true(all(c("fixed", "random") %in% names(tp)))
 
   # Fixed table has core columns
   expect_s3_class(tp$fixed, "data.frame")
-  expect_true(all(c("par","est","se","lwr","upr") %in% names(tp$fixed)))
+  expect_true(all(c("par", "est", "se", "lwr", "upr") %in% names(tp$fixed)))
 
   # Random names match RTMB random blocks
   expect_setequal(names(tp$random), fit$obj$env$.random)
   # Each random entry is a data.frame with core columns
   for (nm in names(tp$random)) {
     expect_s3_class(tp$random[[nm]], "data.frame")
-    expect_true(all(c("par","est","se","lwr","upr") %in% names(tp$random[[nm]])))
+    expect_true(all(c("par", "est", "se", "lwr", "upr") %in% names(tp$random[[nm]])))
   }
 })
 
 test_that("tidy_par applies back-transforms for log_ and logit_ prefixes", {
-
   tp <- tidy_par(fit)
 
   # sd_* rows should be positive (exp back-transform from log_sd_*)
@@ -301,7 +300,7 @@ test_that("tidy_par preserves coefficient names for named vectors and dims for m
   # Matrix random effect (e.g., log_f) → expect year & age columns present
   if ("log_f" %in% names(tp$random)) {
     df <- tp$random$log_f
-    expect_true(all(c("year","age") %in% names(df)))
+    expect_true(all(c("year", "age") %in% names(df)))
     # row count equals number of cells in the reported F matrix
     expect_equal(nrow(df), length(fit$rep$F))
   }
@@ -311,8 +310,10 @@ test_that("tidy_par preserves coefficient names for named vectors and dims for m
 ## stack_list ----
 
 test_that("stack_list adds label column first and type.converts labels", {
-  x <- list(`2023` = data.frame(age = 2:4, rho = seq_len(3)),
-            `2024` = data.frame(age = 2:4, rho = seq_len(3) * 10))
+  x <- list(
+    `2023` = data.frame(age = 2:4, rho = seq_len(3)),
+    `2024` = data.frame(age = 2:4, rho = seq_len(3) * 10)
+  )
 
   out <- stack_list(x, label = "retro", label_type = "auto")
   expect_identical(names(out), c("retro", "age", "rho"))
@@ -353,17 +354,21 @@ test_that("stack_list fills missing columns with NA", {
 
 test_that("stack_nested adds id column first and type.converts labels (label_type = 'auto')", {
   x <- list(
-    `2023` = list(ssb = data.frame(year = 1:2, est = 1:2),
-                  N   = data.frame(year = 1:2, age = 2:3, est = 5:6)),
-    `2024` = list(ssb = data.frame(year = 1:2, est = 11:12),
-                  N   = data.frame(year = 1:2, age = 2:3, est = 15:16))
+    `2023` = list(
+      ssb = data.frame(year = 1:2, est = 1:2),
+      N = data.frame(year = 1:2, age = 2:3, est = 5:6)
+    ),
+    `2024` = list(
+      ssb = data.frame(year = 1:2, est = 11:12),
+      N = data.frame(year = 1:2, age = 2:3, est = 15:16)
+    )
   )
   out <- stack_nested(x, label = "retro_year", label_type = "auto")
 
   # id column exists, is first, and numeric (coerced)
   expect_true("retro_year" %in% names(out$ssb))
   expect_identical(names(out$ssb)[1], "retro_year")
-  expect_type(out$ssb$retro_year, "integer")  # type.convert made it numeric
+  expect_type(out$ssb$retro_year, "integer") # type.convert made it numeric
   expect_equal(sort(unique(out$ssb$retro_year)), c(2023, 2024))
 })
 
@@ -395,13 +400,15 @@ test_that("stack_nested label_type = 'numeric' coerces to numeric (with NA for n
 
 test_that("stack_nested stacks all subtables across outer list", {
   x <- list(
-    A = list(ssb = data.frame(year = 1:2, est = 1:2),
-             N   = data.frame(year = 1:2, age = 2:3, est = 5:6)),
+    A = list(
+      ssb = data.frame(year = 1:2, est = 1:2),
+      N = data.frame(year = 1:2, age = 2:3, est = 5:6)
+    ),
     B = list(ssb = data.frame(year = 1:2, est = 11:12)) # 'N' missing here
   )
   out <- stack_nested(x, label = "model")
   expect_true("ssb" %in% names(out))
-  expect_true("N" %in% names(out))  # retained for that model even if missing in others
+  expect_true("N" %in% names(out)) # retained for that model even if missing in others
 })
 
 
@@ -415,7 +422,7 @@ suppressWarnings({
 })
 
 test_that("tidy_tam: single model via ... adds no label column", {
-  out  <- tidy_tam(fit)  # default label = 'model'
+  out <- tidy_tam(fit) # default label = 'model'
   expect_null(attr(out, "label", exact = TRUE))
   expect_false("model" %in% names(out$obs_pred$catch))
   expect_false("model" %in% names(out$obs_pred$index))
@@ -424,7 +431,7 @@ test_that("tidy_tam: single model via ... adds no label column", {
 })
 
 test_that("tidy_tam: multiple models via ... use object names as labels (and label is first column)", {
-  out <- tidy_tam(fit_2023, fit_2024)  # label = 'model'
+  out <- tidy_tam(fit_2023, fit_2024) # label = 'model'
   expect_identical(attr(out, "label", exact = TRUE), "model")
   # obs_pred
   expect_true("model" %in% names(out$obs_pred$catch))
@@ -445,7 +452,7 @@ test_that("tidy_tam: model_list must be named; names are used as labels (even le
   expect_identical(attr(out1, "label", exact = TRUE), "model")
   expect_true("model" %in% names(out1$pop$N))
   expect_identical(names(out1$pop$N)[1], "model")
-  expect_type(out1$pop$N$model, "integer")   # type.convert coerced it
+  expect_type(out1$pop$N$model, "integer") # type.convert coerced it
   expect_equal(unique(out1$pop$N$model), 2024)
 
   # Named (length >1) -> labels in order of names
@@ -475,7 +482,7 @@ test_that("tidy_tam: outputs are lists of data.frames and preserve is_proj", {
   # structure
   expect_true(is.list(out$obs_pred) && is.list(out$pop))
   expect_true(all(vapply(out$obs_pred, is.data.frame, logical(1))))
-  expect_true(all(vapply(out$pop,      is.data.frame, logical(1))))
+  expect_true(all(vapply(out$pop, is.data.frame, logical(1))))
   # is_proj presence (comes from tidy_* internals)
   expect_true("is_proj" %in% names(out$obs_pred$catch))
   expect_true("is_proj" %in% names(out$pop$ssb))
@@ -527,7 +534,7 @@ test_that("tidy_tam: stacking uses intersection of components across models", {
   # Just a smoke check that all returned subtables are data.frames even if models differ
   out <- tidy_tam(fit_2022, fit_2023, fit_2024)
   expect_true(all(vapply(out$obs_pred, is.data.frame, logical(1))))
-  expect_true(all(vapply(out$pop,      is.data.frame, logical(1))))
+  expect_true(all(vapply(out$pop, is.data.frame, logical(1))))
 })
 
 test_that("tidy_tam: includes fixed_par and random_par with correct structure and labeling", {
@@ -601,9 +608,12 @@ test_that("tidy_tam accepts a tam_ref without an optimizer", {
 
   tabs <- tidy_tam(model_list = list(Assessment = reference, tinyAM = fit_2024))
 
-  expect_equal(tabs$pop$ssb$est[tabs$pop$ssb$model == "Assessment"],
-               reference$pop$ssb$est)
-  expect_equal(tabs$pop$ssb$est[tabs$pop$ssb$model == "tinyAM"],
-               tidy_pop(fit_2024)$ssb$est * 1e-3)
+  expect_equal(
+    tabs$pop$ssb$est[tabs$pop$ssb$model == "Assessment"],
+    reference$pop$ssb$est
+  )
+  expect_equal(
+    tabs$pop$ssb$est[tabs$pop$ssb$model == "tinyAM"],
+    tidy_pop(fit_2024)$ssb$est * 1e-3
+  )
 })
-

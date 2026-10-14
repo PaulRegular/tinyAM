@@ -6,8 +6,10 @@ output:
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE,
-  fig.width = 8, fig.height = 4.5, fig.path = "results/process_expansion/figures/")
+knitr::opts_chunk$set(
+  echo = FALSE, message = FALSE, warning = FALSE,
+  fig.width = 8, fig.height = 4.5, fig.path = "results/process_expansion/figures/"
+)
 attempts <- readRDS("results/process_expansion/recovery.rds")
 trials <- readRDS("results/process_expansion/assessments/trials.rds")
 ```
@@ -31,15 +33,19 @@ All attempts and warnings are retained; no failed fit is rescued.
 groups <- sub("_[0-9]+$", "", names(attempts))
 summary <- do.call(rbind, lapply(unique(groups), function(group) {
   a <- attempts[groups == group]
-  data.frame(Design = group, Attempts = length(a),
+  data.frame(
+    Design = group, Attempts = length(a),
     Passed = sum(vapply(a, function(x) isTRUE(x$numerical), logical(1))),
     Errors = sum(vapply(a, function(x) !is.null(x$error), logical(1))),
-    `Hessian passed` = sum(vapply(a, function(x) isTRUE(x$pdHess), logical(1))), check.names = FALSE)
+    `Hessian passed` = sum(vapply(a, function(x) isTRUE(x$pdHess), logical(1))), check.names = FALSE
+  )
 }))
 knitr::kable(summary)
 recovery <- do.call(rbind, lapply(names(attempts), function(name) {
   d <- attempts[[name]]$recovery
-  if (is.null(d)) return(NULL)
+  if (is.null(d)) {
+    return(NULL)
+  }
   d$design <- sub("_[0-9]+$", "", name)
   d
 }))
@@ -60,10 +66,13 @@ for (component in c("F", "N", "M")) {
   d$error <- d$estimate - d$truth
   d$parameter <- factor(d$parameter,
     levels = c("(Intercept)", "age_groupyoung", "rho_f"),
-    labels = c("Older log SD", "Young/older log SD", "Age correlation"))
-  boxplot(error ~ parameter, d, horizontal = TRUE, las = 1,
+    labels = c("Older log SD", "Young/older log SD", "Age correlation")
+  )
+  boxplot(error ~ parameter, d,
+    horizontal = TRUE, las = 1,
     main = paste(component, "process: parameter recovery"),
-    xlab = "Estimate minus generating value", ylab = "")
+    xlab = "Estimate minus generating value", ylab = ""
+  )
   abline(v = 0, col = "grey50", lty = 2)
 }
 ```
@@ -87,22 +96,28 @@ unchanged.
 ```{r}
 trial_summary <- do.call(rbind, lapply(names(trials), function(name) {
   fit <- trials[[name]]$fit
-  data.frame(Trial = name, Converged = !is.null(fit) && fit$is_converged,
+  data.frame(
+    Trial = name, Converged = !is.null(fit) && fit$is_converged,
     `Positive Hessian` = !is.null(fit$sdrep) && isTRUE(fit$sdrep$pdHess),
     Gradient = if (is.null(fit)) NA_real_ else max(abs(fit$gradient)),
-    Error = if (is.null(trials[[name]]$error)) "" else trials[[name]]$error, check.names = FALSE)
+    Error = if (is.null(trials[[name]]$error)) "" else trials[[name]]$error, check.names = FALSE
+  )
 }))
 knitr::kable(trial_summary, digits = 5)
 comparisons <- do.call(rbind, lapply(names(trials), function(name) {
   d <- trials[[name]]$comparison_summary
-  if (is.null(d)) return(NULL)
+  if (is.null(d)) {
+    return(NULL)
+  }
   d$trial <- sub("^.*/", "", name)
   d
 }))
 if (!is.null(comparisons)) {
   selected <- comparisons[comparisons$metric %in% c("ssb", "N", "recruitment", "F"), ]
-  knitr::kable(selected[c("assessment_id", "trial", "metric", "comparison_status",
-    "mean_absolute_percent_difference", "trend_correlation")], digits = 2)
+  knitr::kable(selected[c(
+    "assessment_id", "trial", "metric", "comparison_status",
+    "mean_absolute_percent_difference", "trend_correlation"
+  )], digits = 2)
 }
 ```
 
@@ -124,16 +139,21 @@ for (id in unique(sub("/.*$", "", names(trials)))) {
     d$est <- d$est * scale
     d
   })
-  title <- c(afsc_pollock_ebs_2024 = "Eastern Bering Sea pollock",
+  title <- c(
+    afsc_pollock_ebs_2024 = "Eastern Bering Sea pollock",
     ices_haddock_north_sea_2026 = "Northern Shelf haddock",
-    ices_plaice_north_sea_2026 = "North Sea plaice")[[id]]
-  plot(reference$year, reference$est, type = "l", lwd = 2,
+    ices_plaice_north_sea_2026 = "North Sea plaice"
+  )[[id]]
+  plot(reference$year, reference$est,
+    type = "l", lwd = 2,
     ylim = range(c(reference$est, unlist(lapply(series, `[[`, "est"))), na.rm = TRUE),
-    xlab = "Year", ylab = "Female SSB (source reporting units)", main = title)
+    xlab = "Year", ylab = "Female SSB (source reporting units)", main = title
+  )
   for (i in seq_along(series)) lines(series[[i]]$year, series[[i]]$est, col = i + 1, lwd = 2)
   labels <- gsub("_", " ", sub("^.*/", "", names(available)))
   legend("topleft", c("Accepted", labels),
-    col = seq_len(length(series) + 1), lwd = 2, bty = "n", cex = .8)
+    col = seq_len(length(series) + 1), lwd = 2, bty = "n", cex = .8
+  )
 }
 ```
 
@@ -154,12 +174,16 @@ the accepted stock recipes automatically.
 ```{r residual-summary}
 residuals <- do.call(rbind, lapply(names(trials), function(name) {
   fit <- trials[[name]]$fit
-  if (is.null(fit)) return(NULL)
+  if (is.null(fit)) {
+    return(NULL)
+  }
   do.call(rbind, lapply(c("catch", "index"), function(type) {
     d <- fit$obs_pred[[type]]
-    data.frame(Trial = name, Observation = type,
+    data.frame(
+      Trial = name, Observation = type,
       Mean = mean(d$std_res, na.rm = TRUE), SD = sd(d$std_res, na.rm = TRUE),
-      `Largest absolute residual` = max(abs(d$std_res), na.rm = TRUE), check.names = FALSE)
+      `Largest absolute residual` = max(abs(d$std_res), na.rm = TRUE), check.names = FALSE
+    )
   }))
 }))
 knitr::kable(residuals, digits = 2)

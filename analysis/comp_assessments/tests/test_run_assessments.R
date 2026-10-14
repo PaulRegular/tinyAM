@@ -14,16 +14,20 @@ stopifnot(
     "not_fitted"
 )
 comparison_example <- .assessment_comparison_summary(
-  data.frame(metric = "ssb", year = 2020:2021, age = NA_integer_,
-             source = c(100, 90), tinyAM = c(95, 92),
-             percent_difference = c(-5, 100 * 2 / 90)),
+  data.frame(
+    metric = "ssb", year = 2020:2021, age = NA_integer_,
+    source = c(100, 90), tinyAM = c(95, 92),
+    percent_difference = c(-5, 100 * 2 / 90)
+  ),
   "example_assessment"
 )
 stopifnot(comparison_example$assessment_id == "example_assessment")
 constant_comparison <- .assessment_comparison_summary(
-  data.frame(metric = "M", year = 2020:2021, age = 1L,
-             source = 0.2, tinyAM = 0.2,
-             percent_difference = c(0, 0)),
+  data.frame(
+    metric = "M", year = 2020:2021, age = 1L,
+    source = 0.2, tinyAM = 0.2,
+    percent_difference = c(0, 0)
+  ),
   "constant_assessment"
 )
 stopifnot(is.na(constant_comparison$trend_correlation))
@@ -44,13 +48,16 @@ shared_outputs <- file.path(root, "results", c(
 shared_outputs_existed <- file.exists(shared_outputs)
 cache_existed <- dir.exists(file.path(root, "results", "cache"))
 parallel <- run_assessments(
-  assessment_ids, database = database, parallel = TRUE, workers = 2,
+  assessment_ids,
+  database = database, parallel = TRUE, workers = 2,
   fit = FALSE
 )
 stopifnot(
   identical(names(parallel), assessment_ids),
-  identical(attr(future::plan("list")[[1L]], "call"),
-            attr(previous_plan, "call")),
+  identical(
+    attr(future::plan("list")[[1L]], "call"),
+    attr(previous_plan, "call")
+  ),
   future::nbrOfWorkers() == previous_workers,
   identical(file.exists(shared_outputs), shared_outputs_existed),
   identical(dir.exists(file.path(root, "results", "cache")), cache_existed),
@@ -61,13 +68,17 @@ stopifnot(
 bad_database <- database
 bad_database$inputs <- bad_database$inputs[
   !(bad_database$inputs$assessment_id == "dfo_cod_2j3kl_2025" &
-      bad_database$inputs$type == "maturity"), , drop = FALSE]
+    bad_database$inputs$type == "maturity"), ,
+  drop = FALSE
+]
 failed <- run_assessments(
   c("dfo_cod_2j3kl_2025", "ices_cod_north_sea_2025"),
   database = bad_database, parallel = TRUE, workers = 2, fit = FALSE
 )
-goa <- run_assessments("afsc_cod_goa_2026", database = database,
-                       fit = FALSE)
+goa <- run_assessments("afsc_cod_goa_2026",
+  database = database,
+  fit = FALSE
+)
 stopifnot(
   failed$dfo_cod_2j3kl_2025$diagnostics$status == "translation_failed",
   !is.null(failed$ices_cod_north_sea_2025$obs),

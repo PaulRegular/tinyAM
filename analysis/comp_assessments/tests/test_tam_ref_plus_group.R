@@ -28,13 +28,16 @@ outputs <- rbind(
   output_rows("mortality", "fishing_mortality_at_age", 2000, 1:3, c(0.1, 0.1, 0.2)),
   output_rows("mortality", "natural_mortality_at_age", 2000, 1:3, c(0.1, 0.3, 0.6)),
   output_rows("mortality", "fishing_mortality_at_age", 2001, 2, 0.3,
-              se = 0.03, lwr = 0.2, upr = 0.4),
+    se = 0.03, lwr = 0.2, upr = 0.4
+  ),
   output_rows("mortality", "natural_mortality_at_age", 2001, 2, 0.4,
-              se = 0.04, lwr = 0.3, upr = 0.5)
+    se = 0.04, lwr = 0.3, upr = 0.5
+  )
 )
 outputs$unit[outputs$measure == "numbers_at_age"] <- "fish"
 reference <- database_to_tam_ref(
-  "plus_group_fixture", outputs, obs = obs, years = years, ages = ages,
+  "plus_group_fixture", outputs,
+  obs = obs, years = years, ages = ages,
   terminal_year = 2002, age_plus_group = 2L
 )
 plus_n <- reference$pop$N[reference$pop$N$year == 2000 & reference$pop$N$age == 2, ]
@@ -62,7 +65,8 @@ attr(fixed_obs, "translation") <- list(M = list(status = "fixed_numerical_input"
 fixed_outputs <- output_rows("biomass", "SSB", 2000, NA_real_, 1)
 fixed_outputs$age_group <- NA_character_
 fixed_reference <- database_to_tam_ref(
-  "plus_group_fixture", fixed_outputs, obs = fixed_obs, years = years, ages = 1:2,
+  "plus_group_fixture", fixed_outputs,
+  obs = fixed_obs, years = years, ages = 1:2,
   terminal_year = 2002, age_plus_group = 2L
 )
 stopifnot(

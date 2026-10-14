@@ -1,9 +1,10 @@
-
 ## process_ar1 ---
 
 set.seed(1)
 
-ny <- 40; na <- 20; sd <- 0.5
+ny <- 40
+na <- 20
+sd <- 0.5
 
 test_that("rprocess_ar1 returns matrix with correct dimensions", {
   X <- rprocess_ar1(ny, na, sd = 0.3, phi = c(0.5, 0.7))
@@ -13,7 +14,7 @@ test_that("rprocess_ar1 returns matrix with correct dimensions", {
 })
 
 test_that("rprocess_ar1 gives approx iid entries with Var ~ sd^2 when phi = (0,0)", {
-  X  <- rprocess_ar1(ny, na, sd = sd, phi = c(0, 0))
+  X <- rprocess_ar1(ny, na, sd = sd, phi = c(0, 0))
 
   # Empirical variance of all entries
   v_all <- var(as.numeric(X))
@@ -27,7 +28,7 @@ test_that("rprocess_ar1 gives approx iid entries with Var ~ sd^2 when phi = (0,0
 })
 
 test_that("dprocess_ar1 AR1 density reduces to IID when phi = (0,0)", {
-  X  <- matrix(rnorm(ny * na, 0, sd), ny, na)
+  X <- matrix(rnorm(ny * na, 0, sd), ny, na)
 
   lp_iid <- dprocess_ar1(X, sd = sd, phi = c(0, 0))
   # Compare to the literal IID log-density
@@ -56,7 +57,7 @@ test_that("rprocess_ar1 self-consistency: sample from AR1 has higher density und
 
   X <- rprocess_ar1(ny, na, sd = sd, phi = phi)
   lp_match <- dprocess_ar1(X, sd = sd, phi = phi)
-  lp_iid   <- dprocess_ar1(X, sd = sd, phi = c(0, 0))
+  lp_iid <- dprocess_ar1(X, sd = sd, phi = c(0, 0))
 
   expect_gt(lp_match, lp_iid)
 })
@@ -123,7 +124,7 @@ test_that("nll_fun returns finite JNLL and simulates when requested", {
   expect_true(is.finite(opt$objective))
 
   rep <- obj$report()
-  expect_true(all(c("N","F","M","mu_F","mu_M","Z","ssb","log_pred","log_q_obs") %in% names(rep)))
+  expect_true(all(c("N", "F", "M", "mu_F", "mu_M", "Z", "ssb", "log_pred", "log_q_obs") %in% names(rep)))
 
   # Mean-structure checks
   expect_true(all(rep$mu_F == 1))
@@ -157,7 +158,7 @@ test_that("nll_fun handles AR1 settings and produces finite JNLL", {
   )
   par <- make_par(dat)
 
-  expect_true(all(c("logit_phi_n","logit_phi_f","logit_phi_m") %in% names(par)))
+  expect_true(all(c("logit_phi_n", "logit_phi_f", "logit_phi_m") %in% names(par)))
 
   jnll <- nll_fun(par, dat, simulate = FALSE)
   expect_true(is.finite(jnll))
@@ -168,13 +169,13 @@ test_that("nll_fun handles AR1 settings and produces finite JNLL", {
   opt <- nlminb(obj$par, obj$fn, obj$gr, control = list(iter.max = 20, eval.max = 20))
   expect_true(is.finite(opt$objective))
   rep <- obj$report()
-  expect_true(all(c("N","F","M","Z","ssb") %in% names(rep)))
+  expect_true(all(c("N", "F", "M", "Z", "ssb") %in% names(rep)))
 })
 
 test_that("nll_fun yields finite log_pred for non-missing obs", {
   dat <- make_test_dat(
     N_settings = list(process = "iid", init = "exp"),
-    F_settings = list(process = "iid", mu_form = ~ 1),
+    F_settings = list(process = "iid", mu_form = ~1),
     M_settings = list(process = "off", mu_form = NULL, mu_supplied = ~ I(0.3))
   )
   par <- make_par(dat)

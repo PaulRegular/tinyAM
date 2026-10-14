@@ -10,7 +10,8 @@ options requiring source-definition checks, rather than absent features. See
 This review covers **23 current detailed assessment records: 21 stock recipes
 and two blocked translations**. Counts below are confirmed minimums, once per
 assessment, not fleet or database-row counts. The explicit membership sets are
-in `scripts/translation/review_translations.R`; source reviews link the reports,
+in the [historical review script](https://github.com/PaulRegular/tinyAM/blob/782034b/analysis/comp_assessments/scripts/translation/review_translations.R);
+source reviews link the reports,
 frameworks and pinned code used to verify them. Unrecorded or unresolved
 specifications are not counted as absence. Norwegian herring's exact process
 configuration, Icelandic haddock's native sharing settings, and some published

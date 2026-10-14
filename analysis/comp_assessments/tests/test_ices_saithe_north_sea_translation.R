@@ -51,7 +51,7 @@ stopifnot(
   all(translated$obs$index$samp_time == .75),
   setequal(unique(translated$obs$index$survey), "NS-IBTS Q3-Q4"),
   sum(inputs$type == "index" &
-        inputs$measure == "relative_biomass_index") == 26L,
+    inputs$measure == "relative_biomass_index") == 26L,
   !any(translated$obs$index$survey == "Combined commercial trawl CPUE"),
   isTRUE(all.equal(m_actual, m_expected)),
   identical(dat$N_settings$process, "iid"),
@@ -73,37 +73,54 @@ stopifnot(
 catch <- translated$obs$catch
 expected_plus_catch <- tapply(catch$obs[catch$age >= 8], catch$year[catch$age >= 8], sum)
 prepared_plus_catch <- dat$obs$catch[dat$obs$catch$age == 8, ]
-accepted_N <- .translation_start_surface(outputs, "population", "numbers_at_age",
-                                        translated$years, 3:10, 1000)
-accepted_F <- .translation_start_surface(translated$comparison_outputs, "mortality",
-                                        "fishing_mortality_at_age", translated$years, 3:10)
+accepted_N <- .translation_start_surface(
+  outputs, "population", "numbers_at_age",
+  translated$years, 3:10, 1000
+)
+accepted_F <- .translation_start_surface(
+  translated$comparison_outputs, "mortality",
+  "fishing_mortality_at_age", translated$years, 3:10
+)
 expected_plus_N <- rowSums(accepted_N[, c("8", "9", "10")])
 expected_plus_F <- rowSums(accepted_F[, c("8", "9", "10")] *
-                          accepted_N[, c("8", "9", "10")]) / expected_plus_N
+  accepted_N[, c("8", "9", "10")]) / expected_plus_N
 stopifnot(
   nrow(dat$obs$catch) == 59L * 6L,
   setequal(dat$plus_ages, 8:10),
-  isTRUE(all.equal(unname(prepared_plus_catch$obs),
-                  as.numeric(expected_plus_catch[as.character(prepared_plus_catch$year)]))),
-  isTRUE(all.equal(unname(exp(translated$start_par$log_n[, "8"])),
-                  unname(expected_plus_N[-1L]))),
-  isTRUE(all.equal(unname(exp(translated$start_par$log_f[, "8"])),
-                  unname(expected_plus_F)))
+  isTRUE(all.equal(
+    unname(prepared_plus_catch$obs),
+    as.numeric(expected_plus_catch[as.character(prepared_plus_catch$year)])
+  )),
+  isTRUE(all.equal(
+    unname(exp(translated$start_par$log_n[, "8"])),
+    unname(expected_plus_N[-1L])
+  )),
+  isTRUE(all.equal(
+    unname(exp(translated$start_par$log_f[, "8"])),
+    unname(expected_plus_F)
+  ))
 )
 
 cat("North Sea saithe translation structure passed.\n")
 
 ref <- database_to_tam_ref(assessment_id, translated$comparison_outputs,
   obs = translated$obs, years = translated$years, ages = translated$ages,
-  age_plus_group = translated$age_plus_group, assumptions = source_data$assumptions)
+  age_plus_group = translated$age_plus_group, assumptions = source_data$assumptions
+)
 tiny <- expand.grid(year = translated$years, age = translated$ages)
 tiny$est <- 1
 cells <- .assessment_age_comparison_cells(ref$pop$F, tiny, translated$ages)
-stopifnot(nrow(cells$rows) == 59L * 6L,
-          sum(cells$rows$age == '8') == 59L,
-          !any(cells$rows$age %in% c('9', '10')),
-          isTRUE(all.equal(unname(ref$pop$F$est[ref$pop$F$age == 8]),
-                           unname(expected_plus_F))),
-          isTRUE(all.equal(unname(ref$pop$N$est[ref$pop$N$age == 8]),
-                           unname(expected_plus_N / 1000))))
-cat('Catch, initial states and reference F consistently use the age-8 plus group.\n')
+stopifnot(
+  nrow(cells$rows) == 59L * 6L,
+  sum(cells$rows$age == "8") == 59L,
+  !any(cells$rows$age %in% c("9", "10")),
+  isTRUE(all.equal(
+    unname(ref$pop$F$est[ref$pop$F$age == 8]),
+    unname(expected_plus_F)
+  )),
+  isTRUE(all.equal(
+    unname(ref$pop$N$est[ref$pop$N$age == 8]),
+    unname(expected_plus_N / 1000)
+  ))
+)
+cat("Catch, initial states and reference F consistently use the age-8 plus group.\n")

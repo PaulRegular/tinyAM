@@ -27,12 +27,16 @@ stopifnot(
   all(obs$index$age %in% 0:8),
   !any(obs$index$survey %in% c("LAI-SNS", "LAI-CNS", "LAI-BUN", "LAI-ORSH")),
   all(obs$pop_covariates$M_assumption > 0),
-  all(obs$index$samp_time == c(HERAS = 0.5, `IBTS-Q1` = 0.125,
-                              IBTS0 = 0.125, `IBTS-Q3` = 0.625)[obs$index$survey]),
-  setequal(levels(obs$index$q_key), c("HERAS_1_2", "HERAS_3_8", "IBTS-Q1",
-                                      "IBTS-Q3_0", "IBTS-Q3_1", "IBTS-Q3_2",
-                                      "IBTS-Q3_3", "IBTS-Q3_4", "IBTS-Q3_5",
-                                      "IBTS0")),
+  all(obs$index$samp_time == c(
+    HERAS = 0.5, `IBTS-Q1` = 0.125,
+    IBTS0 = 0.125, `IBTS-Q3` = 0.625
+  )[obs$index$survey]),
+  setequal(levels(obs$index$q_key), c(
+    "HERAS_1_2", "HERAS_3_8", "IBTS-Q1",
+    "IBTS-Q3_0", "IBTS-Q3_1", "IBTS-Q3_2",
+    "IBTS-Q3_3", "IBTS-Q3_4", "IBTS-Q3_5",
+    "IBTS0"
+  )),
   dat$N_settings$init == "free",
   dat$F_settings$process == "rw",
   dat$M_settings$process == "off",
@@ -46,7 +50,8 @@ stopifnot(
 
 m_source <- source_data$inputs[
   source_data$inputs$type == "M" &
-    source_data$inputs$measure == "natural_mortality_at_age", , drop = FALSE
+    source_data$inputs$measure == "natural_mortality_at_age", ,
+  drop = FALSE
 ]
 m_key <- paste(obs$weight$year, obs$weight$age)
 source_key <- paste(m_source$year, m_source$age)

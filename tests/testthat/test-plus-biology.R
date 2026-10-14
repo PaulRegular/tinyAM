@@ -11,9 +11,10 @@ plus_biology_obs <- function() {
 }
 
 plus_biology_dat <- function(process = "iid", ages = 2:4, proj = NULL, init = "exp") {
-  suppressWarnings(prepare_tam(plus_biology_obs(), ages = ages,
+  suppressWarnings(prepare_tam(plus_biology_obs(),
+    ages = ages,
     N_settings = list(process = process, init = init),
-    F_settings = list(process = "iid", mu_form = ~ 1),
+    F_settings = list(process = "iid", mu_form = ~1),
     M_settings = list(process = "off", mu_supplied = ~ I(.2)),
     index_settings = list(q_form = ~ 1, sd_form = ~ 1),
     proj_settings = proj))
@@ -71,8 +72,10 @@ test_that("hidden age composition conserves N, biomass and mature biomass", {
     expected_shares <- c((1 - survival) * survival^(0:2), survival^3)
     expect_equal(unname(rep$N_plus[1, ] / total[1]), expected_shares, tolerance = 1e-12)
     for (y in 2:nrow(rep$N)) {
-      pred <- c(rep$N[y - 1, "3"] * exp(-rep$Z[y - 1, "3"]),
-                rep$N_plus[y - 1, 1:3] * exp(-rep$Z[y - 1, "4"]))
+      pred <- c(
+        rep$N[y - 1, "3"] * exp(-rep$Z[y - 1, "3"]),
+        rep$N_plus[y - 1, 1:3] * exp(-rep$Z[y - 1, "4"])
+      )
       pred[4] <- pred[4] + rep$N_plus[y - 1, 4] * exp(-rep$Z[y - 1, "4"])
       ordinary_prediction <- sum(rep$N[y - 1, c("3", "4")] * exp(-rep$Z[y - 1, c("3", "4")]))
       expect_equal(sum(pred), ordinary_prediction, tolerance = 1e-12)

@@ -5,8 +5,10 @@ test_that("q_link defaults to log and rejects invalid links", {
   expect_identical(dat$index_settings$q_link, "log")
   expect_identical(make_par(dat), make_par(explicit))
   expect_identical(nll_fun(make_par(dat), dat), nll_fun(make_par(explicit), explicit))
-  set.seed(182); a <- nll_fun(make_par(dat), dat, simulate = TRUE)
-  set.seed(182); b <- nll_fun(make_par(explicit), explicit, simulate = TRUE)
+  set.seed(182)
+  a <- nll_fun(make_par(dat), dat, simulate = TRUE)
+  set.seed(182)
+  b <- nll_fun(make_par(explicit), explicit, simulate = TRUE)
   expect_identical(a, b)
   for (link in list("identity", "logi", c("log", "logit"), NA_character_, 1)) {
     expect_error(make_test_dat(years = 2000:2005, ages = 2:6,
@@ -34,9 +36,11 @@ test_that("logit bounds the full formula predictor without changing its design",
   expect_true(is.finite(obj$fn(obj$par)))
   expect_true(all(is.finite(obj$gr(obj$par))))
   rows <- cbind(match(dat$obs$index$year, dat$years), match(dat$obs$index$age, dat$ages))
-  expect_equal(unname(report$log_pred[dat$obs_map$type == "index"]),
+  expect_equal(
+    unname(report$log_pred[dat$obs_map$type == "index"]),
     unname(log(expected) + log(report$N)[rows] -
-             report$Z[rows] * dat$obs$index$samp_time))
+      report$Z[rows] * dat$obs$index$samp_time)
+  )
 })
 
 test_that("logit log predictions and gradients stay finite at extreme predictors", {
@@ -48,8 +52,10 @@ test_that("logit log predictions and gradients stay finite at extreme predictors
     obj <- RTMB::MakeADFun(function(p) nll_fun(p, dat), par, silent = TRUE)
     expect_true(is.finite(obj$fn(obj$par)))
     expect_true(all(is.finite(obj$gr(obj$par))))
-    expect_equal(unname(obj$report()$log_q_obs),
-                 rep(plogis(eta, log.p = TRUE), nrow(dat$obs$index)))
+    expect_equal(
+      unname(obj$report()$log_q_obs),
+      rep(plogis(eta, log.p = TRUE), nrow(dat$obs$index))
+    )
   }
 })
 
@@ -70,7 +76,8 @@ test_that("mono retains non-decreasing q and exact plateaus with the logit link"
 })
 
 test_that("simulation and tidied observations use the same logit catchability", {
-  dat <- make_test_dat(years = 2000:2005, ages = 2:6,
+  dat <- make_test_dat(
+    years = 2000:2005, ages = 2:6,
     F_settings = list(process = "iid", mu_form = ~1),
     index_settings = list(q_form = ~q_block, sd_form = ~1, q_link = "logit"))
   par <- make_par(dat)
@@ -86,16 +93,21 @@ test_that("simulation and tidied observations use the same logit catchability", 
   report <- obj$report()
   expect_equal(tail(calls, 1)[[1]], report$log_pred[dat$is_observed])
   fit <- structure(list(dat = dat, rep = report), class = c("tam_fit", "list"))
-  expect_equal(tidy_obs_pred(fit)$index$q,
-               unname(plogis(drop(dat$q_modmat %*% par$logit_q))))
+  expect_equal(
+    tidy_obs_pred(fit)$index$q,
+    unname(plogis(drop(dat$q_modmat %*% par$logit_q)))
+  )
 })
 
 test_that("logit q coefficients and SEs are reported on their fitted scale", {
   par <- list(logit_q = c(baseline = -1, slope = 2))
   obj <- RTMB::MakeADFun(function(p) sum((p$logit_q - par$logit_q)^2) / .02,
-                         par, silent = TRUE)
+    par,
+    silent = TRUE
+  )
   fit <- structure(list(obj = obj, sdrep = RTMB::sdreport(obj)),
-                   class = c("tam_fit", "list"))
+    class = c("tam_fit", "list")
+  )
   tab <- tidy_par(fit)$fixed
   expect_identical(tab$par, rep("logit_q", 2))
   expect_equal(tab$est, unname(par$logit_q))

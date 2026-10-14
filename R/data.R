@@ -54,16 +54,21 @@ print.tam_data <- function(x, n = 5, ...) {
     cli::cli_h2("{nm}: {nrow(d)} rows, {ncol(d)} columns")
     if (nrow(d)) {
       cli::cli_text("Years {min(d$year)}\u2013{max(d$year)}; ages {min(d$age)}\u2013{max(d$age)}")
-      rows <- if (nrow(d) <= 2 * n) seq_len(nrow(d)) else
+      rows <- if (nrow(d) <= 2 * n) {
+        seq_len(nrow(d))
+      } else {
         c(seq_len(n), seq.int(nrow(d) - n + 1L, nrow(d)))
+      }
       preview <- d[rows, , drop = FALSE]
       if (nrow(d) > 2 * n) {
         preview <- format(as.data.frame(preview), ...)
         separator <- preview[1L, , drop = FALSE]
         separator[] <- "\u22ee"
         rownames(separator) <- "\u22ee"
-        preview <- rbind(preview[seq_len(n), , drop = FALSE], separator,
-                         preview[seq.int(n + 1L, nrow(preview)), , drop = FALSE])
+        preview <- rbind(
+          preview[seq_len(n), , drop = FALSE], separator,
+          preview[seq.int(n + 1L, nrow(preview)), , drop = FALSE]
+        )
       }
       print(preview, ...)
     }
@@ -76,7 +81,9 @@ print.tam_data <- function(x, n = 5, ...) {
   d <- dat$pop_data
   if (!is.null(formula)) {
     variables <- function(x) {
-      if (!is.call(x)) return(x)
+      if (!is.call(x)) {
+        return(x)
+      }
       parts <- as.list(x)
       if (.formula_call_name(x) %in% c("iid", "rw", "ar1")) {
         parts <- as.list(match.call(get(.formula_call_name(x), mode = "function"), x))

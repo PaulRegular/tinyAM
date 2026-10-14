@@ -1,7 +1,9 @@
 root <- file.path("analysis", "comp_assessments", "database")
 read_table <- function(name) {
-  read.csv(file.path(root, name), stringsAsFactors = FALSE,
-           na.strings = c("", "NA"), check.names = FALSE)
+  read.csv(file.path(root, name),
+    stringsAsFactors = FALSE,
+    na.strings = c("", "NA"), check.names = FALSE
+  )
 }
 
 stocks <- read_table("stocks.csv")
@@ -12,29 +14,45 @@ outputs <- read_table("outputs.csv")
 if (!"age_group" %in% names(outputs)) outputs$age_group <- ""
 
 schemas <- list(
-  stocks = c("stock_id", "charbonneau_id", "authority", "authority_stock_id",
-             "scientific_name", "common_name", "area", "region", "ocean", "notes"),
-  assessments = c("assessment_id", "stock_id", "assessment_year", "terminal_year",
-                  "estimate_terminal_year", "assessment_type", "model_family",
-                  "model_version", "is_current", "is_applied", "framework_year",
-                  "assessment_url", "framework_url", "data_url", "model_url",
-                  "repository_url", "assumptions_status", "inputs_status",
-                  "outputs_status", "notes"),
-  assumptions = c("assessment_id", "component", "fleet", "survey", "sex", "region",
-                  "season", "setting", "value", "source_reference", "notes"),
-  inputs = c("assessment_id", "type", "measure", "basis", "fleet", "survey", "sex",
-             "region", "season", "year", "year_basis", "age", "value", "unit",
-             "sampling_time", "source_type", "source_reference", "transformation", "notes"),
-  outputs = c("assessment_id", "type", "measure", "fleet", "survey", "sex", "region",
-              "season", "year", "age", "value", "se", "lwr", "upr", "unit",
-              "source_type", "source_reference", "notes")
+  stocks = c(
+    "stock_id", "charbonneau_id", "authority", "authority_stock_id",
+    "scientific_name", "common_name", "area", "region", "ocean", "notes"
+  ),
+  assessments = c(
+    "assessment_id", "stock_id", "assessment_year", "terminal_year",
+    "estimate_terminal_year", "assessment_type", "model_family",
+    "model_version", "is_current", "is_applied", "framework_year",
+    "assessment_url", "framework_url", "data_url", "model_url",
+    "repository_url", "assumptions_status", "inputs_status",
+    "outputs_status", "notes"
+  ),
+  assumptions = c(
+    "assessment_id", "component", "fleet", "survey", "sex", "region",
+    "season", "setting", "value", "source_reference", "notes"
+  ),
+  inputs = c(
+    "assessment_id", "type", "measure", "basis", "fleet", "survey", "sex",
+    "region", "season", "year", "year_basis", "age", "value", "unit",
+    "sampling_time", "source_type", "source_reference", "transformation", "notes"
+  ),
+  outputs = c(
+    "assessment_id", "type", "measure", "fleet", "survey", "sex", "region",
+    "season", "year", "age", "value", "se", "lwr", "upr", "unit",
+    "source_type", "source_reference", "notes"
+  )
 )
-tables <- list(stocks = stocks, assessments = assessments, assumptions = assumptions,
-               inputs = inputs, outputs = outputs)
+tables <- list(
+  stocks = stocks, assessments = assessments, assumptions = assumptions,
+  inputs = inputs, outputs = outputs
+)
 for (name in names(tables)) {
   missing <- setdiff(schemas[[name]], names(tables[[name]]))
-  if (length(missing)) stop(name, ".csv is missing columns: ",
-                            paste(missing, collapse = ", "), call. = FALSE)
+  if (length(missing)) {
+    stop(name, ".csv is missing columns: ",
+      paste(missing, collapse = ", "),
+      call. = FALSE
+    )
+  }
 }
 
 unique_id <- function(x, column, table) {
@@ -73,16 +91,22 @@ current <- logical_value(assessments$is_current)
 for (i in seq_len(nrow(assessments))) {
   row <- assessments[i, ]
   for (table_name in c("assumptions", "inputs", "outputs")) {
-    status <- row[[paste0(if (table_name == "assumptions") "assumptions" else table_name,
-                          "_status")]]
+    status <- row[[paste0(
+      if (table_name == "assumptions") "assumptions" else table_name,
+      "_status"
+    )]]
     has_rows <- any(tables[[table_name]]$assessment_id == row$assessment_id)
     if (status == "complete" && !has_rows) {
       stop(row$assessment_id, " is marked complete for ", table_name,
-           " but has no rows.", call. = FALSE)
+        " but has no rows.",
+        call. = FALSE
+      )
     }
     if (status == "not_applicable" && has_rows) {
       stop(row$assessment_id, " is marked not_applicable for ", table_name,
-           " but has rows.", call. = FALSE)
+        " but has rows.",
+        call. = FALSE
+      )
     }
   }
 }
@@ -99,11 +123,13 @@ whole_year <- function(x, field, table, allow_blank = FALSE) {
 assessment_year <- whole_year(assessments, "assessment_year", "assessments")
 terminal_year <- whole_year(assessments, "terminal_year", "assessments")
 estimate_year <- whole_year(assessments, "estimate_terminal_year", "assessments",
-                            allow_blank = TRUE)
+  allow_blank = TRUE
+)
 invisible(whole_year(assessments, "framework_year", "assessments", allow_blank = TRUE))
 if (any(terminal_year > assessment_year) || any(estimate_year < terminal_year, na.rm = TRUE)) {
   stop("Assessment years, data terminals, and estimate terminals are inconsistent.",
-       call. = FALSE)
+    call. = FALSE
+  )
 }
 current_stock <- assessments$stock_id[current]
 if (anyDuplicated(current_stock)) {
@@ -112,23 +138,35 @@ if (anyDuplicated(current_stock)) {
     rows <- assessments[assessments$stock_id == stock & current, , drop = FALSE]
     if (anyNA(rows$notes) || any(!nzchar(rows$notes))) {
       stop("Multiple current assessments for ", stock,
-           " need an explanation in notes.", call. = FALSE)
+        " need an explanation in notes.",
+        call. = FALSE
+      )
     }
   }
 }
 
 duplicates <- list(
-  assumptions = c("assessment_id", "component", "fleet", "survey", "sex", "region",
-                  "season", "setting"),
-  inputs = c("assessment_id", "type", "measure", "basis", "fleet", "survey", "sex",
-             "region", "season", "year", "year_basis", "age"),
-  outputs = c("assessment_id", "type", "measure", "fleet", "survey", "sex", "region",
-              "season", "year", "age", "age_group")
+  assumptions = c(
+    "assessment_id", "component", "fleet", "survey", "sex", "region",
+    "season", "setting"
+  ),
+  inputs = c(
+    "assessment_id", "type", "measure", "basis", "fleet", "survey", "sex",
+    "region", "season", "year", "year_basis", "age"
+  ),
+  outputs = c(
+    "assessment_id", "type", "measure", "fleet", "survey", "sex", "region",
+    "season", "year", "age", "age_group"
+  )
 )
-composition_dimensions <- c("observation_id", "length_bin", "length_bin_lower",
-                            "length_bin_upper", "sample_size", "age_error", "partition")
-duplicates$inputs <- c(duplicates$inputs,
-                      intersect(composition_dimensions, names(inputs)))
+composition_dimensions <- c(
+  "observation_id", "length_bin", "length_bin_lower",
+  "length_bin_upper", "sample_size", "age_error", "partition"
+)
+duplicates$inputs <- c(
+  duplicates$inputs,
+  intersect(composition_dimensions, names(inputs))
+)
 for (name in names(duplicates)) {
   x <- tables[[name]]
   key <- do.call(paste, c(lapply(x[duplicates[[name]]], function(z) {
@@ -138,25 +176,33 @@ for (name in names(duplicates)) {
   if (anyDuplicated(key)) stop(name, ".csv has duplicate canonical rows.", call. = FALSE)
 }
 
-allowed_sources <- c("native_model", "official_machine_readable", "official_table",
-                     "official_document",
-                     "digitized", "reconstructed_source_input", "derived_source_output",
-                     "charbonneau_seed")
+allowed_sources <- c(
+  "native_model", "official_machine_readable", "official_table",
+  "official_document",
+  "digitized", "reconstructed_source_input", "derived_source_output",
+  "charbonneau_seed"
+)
 allowed_input_types <- c("catch", "index", "weight", "catch_weight", "maturity", "M", "covariate", "biology")
-allowed_output_types <- c("population", "mortality", "biomass", "recruitment", "catch",
-                          "index", "catchability", "biology")
-allowed_input_measures <- c("numbers_at_age", "index_by_age_group",
-                            "biomass_at_age", "total_numbers",
-                            "total_biomass", "proportion_at_age", "proportion_at_length",
-                            "conditional_proportion_at_age", "weight_at_age", "spawning_weight_at_age",
-                            "maturity_at_age", "natural_mortality_at_age",
-                            "relative_biomass_index",
-                            "landings_proportion", "landings_numbers_at_age", "landings_fraction_at_age",
-                            "landings_weight_at_age", "discard_weight_at_age", "log_index_sd", "index_sd", "relative_precision_weight", "relative_standard_error", "larval_abundance_index", "environmental_covariate", "fraction_F_before_spawning",
-                            "fraction_M_before_spawning")
-allowed_bases <- c("numbers", "biomass", "proportion_numbers", "proportion_biomass",
-                   "kg_per_fish", "proportion", "per_year", "log_scale", "native_covariate",
-                   "relative_precision", "relative_scale", "index_scale")
+allowed_output_types <- c(
+  "population", "mortality", "biomass", "recruitment", "catch",
+  "index", "catchability", "biology"
+)
+allowed_input_measures <- c(
+  "numbers_at_age", "index_by_age_group",
+  "biomass_at_age", "total_numbers",
+  "total_biomass", "proportion_at_age", "proportion_at_length",
+  "conditional_proportion_at_age", "weight_at_age", "spawning_weight_at_age",
+  "maturity_at_age", "natural_mortality_at_age",
+  "relative_biomass_index",
+  "landings_proportion", "landings_numbers_at_age", "landings_fraction_at_age",
+  "landings_weight_at_age", "discard_weight_at_age", "log_index_sd", "index_sd", "relative_precision_weight", "relative_standard_error", "larval_abundance_index", "environmental_covariate", "fraction_F_before_spawning",
+  "fraction_M_before_spawning"
+)
+allowed_bases <- c(
+  "numbers", "biomass", "proportion_numbers", "proportion_biomass",
+  "kg_per_fish", "proportion", "per_year", "log_scale", "native_covariate",
+  "relative_precision", "relative_scale", "index_scale"
+)
 for (name in c("inputs", "outputs")) {
   x <- tables[[name]]
   if (anyNA(x$source_type) || any(!x$source_type %in% allowed_sources)) {
@@ -174,14 +220,14 @@ for (name in c("inputs", "outputs")) {
   }
   if (name == "inputs") {
     if (any(!x$measure %in% allowed_input_measures) || anyNA(x$basis) ||
-        any(!x$basis %in% allowed_bases)) {
+      any(!x$basis %in% allowed_bases)) {
       stop("inputs.csv has an undocumented measure or basis.", call. = FALSE)
     }
 
     has_year <- !is.na(x$year) & nzchar(as.character(x$year))
     has_year_basis <- !is.na(x$year_basis) & nzchar(as.character(x$year_basis))
     if (any(has_year & !x$year_basis %in% c("calendar_year", "birth_cohort")) ||
-        any(!has_year & has_year_basis)) {
+      any(!has_year & has_year_basis)) {
       stop("inputs$year_basis must identify a supplied year dimension.", call. = FALSE)
     }
   }
@@ -194,29 +240,37 @@ for (name in c("inputs", "outputs")) {
     stop("outputs$year may be blank only for time-invariant parameter estimates or SD estimates.", call. = FALSE)
   }
   age_required <- if (name == "inputs") {
-    x$measure %in% c("numbers_at_age", "index_by_age_group",
-                     "biomass_at_age", "proportion_at_age",
-                     "conditional_proportion_at_age", "fraction_F_before_spawning",
-                     "fraction_M_before_spawning", "weight_at_age", "spawning_weight_at_age", "maturity_at_age", "natural_mortality_at_age",
-                     "landings_numbers_at_age", "landings_fraction_at_age", "relative_standard_error",
-                     "landings_weight_at_age", "discard_weight_at_age", "relative_precision_weight")
+    x$measure %in% c(
+      "numbers_at_age", "index_by_age_group",
+      "biomass_at_age", "proportion_at_age",
+      "conditional_proportion_at_age", "fraction_F_before_spawning",
+      "fraction_M_before_spawning", "weight_at_age", "spawning_weight_at_age", "maturity_at_age", "natural_mortality_at_age",
+      "landings_numbers_at_age", "landings_fraction_at_age", "relative_standard_error",
+      "landings_weight_at_age", "discard_weight_at_age", "relative_precision_weight"
+    )
   } else {
     has_age_group <- if ("age_group" %in% names(x)) {
       !is.na(x$age_group) & nzchar(x$age_group)
     } else {
       rep(FALSE, nrow(x))
     }
-    x$measure %in% c("numbers_at_age", "biomass_at_age", "fishing_mortality_at_age",
-                     "natural_mortality_at_age", "mature_biomass_at_age",
-                     "total_mortality_at_age") & !has_age_group
+    x$measure %in% c(
+      "numbers_at_age", "biomass_at_age", "fishing_mortality_at_age",
+      "natural_mortality_at_age", "mature_biomass_at_age",
+      "total_mortality_at_age"
+    ) & !has_age_group
   }
   age <- suppressWarnings(as.numeric(x$age))
   if (any(age_required & (is.na(age) | !is.finite(age) | age != as.integer(age)))) {
     stop(name, "$age must contain whole ages for age-specific measures.", call. = FALSE)
   }
   value <- suppressWarnings(as.numeric(x$value))
-  signed <- if (name == "inputs") x$type == "covariate" &
-    x$measure == "environmental_covariate" & x$basis == "native_covariate" else rep(FALSE, nrow(x))
+  signed <- if (name == "inputs") {
+    x$type == "covariate" &
+      x$measure == "environmental_covariate" & x$basis == "native_covariate"
+  } else {
+    rep(FALSE, nrow(x))
+  }
   if (anyNA(value) || any(!is.finite(value)) || any(value < 0 & !signed)) {
     stop(name, "$value must contain finite numbers; negative values are allowed only for environmental covariates.", call. = FALSE)
   }
@@ -226,8 +280,8 @@ for (name in c("inputs", "outputs")) {
     }
     sampling_time <- suppressWarnings(as.numeric(x$sampling_time))
     if (any(!is.na(x$sampling_time) & is.na(sampling_time)) ||
-        any(!is.na(sampling_time) & (!is.finite(sampling_time) |
-                                     sampling_time < 0 | sampling_time > 1))) {
+      any(!is.na(sampling_time) & (!is.finite(sampling_time) |
+        sampling_time < 0 | sampling_time > 1))) {
       stop("inputs$sampling_time must be numeric in [0, 1] where present.", call. = FALSE)
     }
     proportion <- x$basis %in% c("proportion", "proportion_numbers", "proportion_biomass")
@@ -239,7 +293,7 @@ for (name in c("inputs", "outputs")) {
     }
   } else {
     if ("age_group" %in% names(x) && any(x$measure %in% c("Fbar", "Mbar") &
-        (is.na(x$age_group) | !nzchar(x$age_group)))) {
+      (is.na(x$age_group) | !nzchar(x$age_group)))) {
       stop("Grouped Fbar and Mbar outputs must identify their age_group.", call. = FALSE)
     }
     for (field in c("se", "lwr", "upr")) {
@@ -261,7 +315,7 @@ for (name in c("inputs", "outputs")) {
 composition <- inputs$measure %in% c("proportion_at_length", "conditional_proportion_at_age")
 if (any(composition)) {
   missing <- setdiff(composition_dimensions, names(inputs))
-  if (length(missing)) stop("Composition inputs lack dimensions: ", paste(missing, collapse=", "))
+  if (length(missing)) stop("Composition inputs lack dimensions: ", paste(missing, collapse = ", "))
   z <- inputs[composition, , drop = FALSE]
   for (field in setdiff(composition_dimensions, "observation_id")) {
     values <- suppressWarnings(as.numeric(z[[field]]))
@@ -276,7 +330,7 @@ if (any(composition)) {
     }
   }
   if (anyNA(z$observation_id) || any(!nzchar(z$observation_id)) ||
-      anyNA(z$sample_size) || any(z$sample_size <= 0)) {
+    anyNA(z$sample_size) || any(z$sample_size <= 0)) {
     stop("Composition inputs need observation IDs and positive supplied sample sizes.")
   }
   length_rows <- z$measure == "proportion_at_length"
@@ -285,24 +339,27 @@ if (any(composition)) {
   }
   age_rows <- z$measure == "conditional_proportion_at_age"
   if (any(age_rows & (is.na(z$length_bin_lower) | is.na(z$length_bin_upper) |
-                     z$length_bin_upper < z$length_bin_lower | is.na(z$age_error)))) {
+    z$length_bin_upper < z$length_bin_lower | is.na(z$age_error)))) {
     stop("Conditional age compositions need ordered conditioning bins and age-error codes.")
   }
 }
 
 cat("Database valid: ", nrow(stocks), " stocks, ", nrow(assessments),
-    " assessments, ", nrow(assumptions), " assumptions, ", nrow(inputs),
-    " inputs, and ", nrow(outputs), " outputs.\n", sep = "")
+  " assessments, ", nrow(assumptions), " assumptions, ", nrow(inputs),
+  " inputs, and ", nrow(outputs), " outputs.\n",
+  sep = ""
+)
 for (id in assessments$assessment_id) {
   x <- inputs[inputs$assessment_id == id, , drop = FALSE]
   surveys <- unique(x$survey[!is.na(x$survey) & nzchar(x$survey)])
   years <- suppressWarnings(as.numeric(x$year))
   ages <- suppressWarnings(as.numeric(x$age))
   cat(id, ": input rows by type: ",
-      paste(names(table(x$type)), as.integer(table(x$type)), collapse = "; "),
-      "; surveys: ", if (length(surveys)) paste(surveys, collapse = "; ") else "none",
-      "; years: ", if (any(is.finite(years))) paste(range(years[is.finite(years)]), collapse = "-") else "unknown",
-      "; ages: ", if (any(is.finite(ages))) paste(range(ages[is.finite(ages)]), collapse = "-") else "unknown",
-      "\n", sep = "")
+    paste(names(table(x$type)), as.integer(table(x$type)), collapse = "; "),
+    "; surveys: ", if (length(surveys)) paste(surveys, collapse = "; ") else "none",
+    "; years: ", if (any(is.finite(years))) paste(range(years[is.finite(years)]), collapse = "-") else "unknown",
+    "; ages: ", if (any(is.finite(ages))) paste(range(ages[is.finite(ages)]), collapse = "-") else "unknown",
+    "\n",
+    sep = ""
+  )
 }
-

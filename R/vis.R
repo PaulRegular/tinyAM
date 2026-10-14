@@ -1,4 +1,3 @@
-
 #' Make a flexdashboard for visualizing model fits
 #'
 #' @inheritParams tidy_tam
@@ -53,7 +52,6 @@
 #'   vis_tam(fits)
 #' }
 #'
-#'
 #' @importFrom utils browseURL
 #'
 #' @export
@@ -83,8 +81,10 @@ vis_tam <- function(..., model_list = NULL, interval = 0.95, output_file = NULL,
     if (!nzchar(trimws(background))) background <- NULL
   }
 
-  render_args <- .validate_named_list(render_args, arg = "render_args", allow_empty = TRUE,
-                                      require_unique = FALSE)
+  render_args <- .validate_named_list(render_args,
+    arg = "render_args", allow_empty = TRUE,
+    require_unique = FALSE
+  )
 
   dots <- list(...)
   dot_expr <- as.list(substitute(list(...)))[-1]
@@ -115,11 +115,12 @@ vis_tam <- function(..., model_list = NULL, interval = 0.95, output_file = NULL,
   do.call(rmarkdown::render, render_call)
 
   if (open_file) utils::browseURL(output_file)
-
 }
 
 .fixed_parameter_groups <- function(data) {
-  if (!is.data.frame(data) || !nrow(data)) return(list())
+  if (!is.data.frame(data) || !nrow(data)) {
+    return(list())
+  }
   par <- data$par
   category <- rep("Other", nrow(data))
   category[grepl("^sd_", par)] <- "Process SDs"
@@ -132,9 +133,11 @@ vis_tam <- function(..., model_list = NULL, interval = 0.95, output_file = NULL,
   category[grepl("^(phi_|rho_)", par)] <- "Correlations"
   category[par %in% c("rec_beta", "sr_alpha", "sr_beta")] <- "Recruitment"
   category[par %in% c("r0", "r_init", "n0")] <- "Initial abundance"
-  category <- factor(category, levels = c("Process SDs", "Process SD coefficients", "Observation SDs",
+  category <- factor(category, levels = c(
+    "Process SDs", "Process SD coefficients", "Observation SDs",
     "Catchability", "Catchability curves", "Mortality means", "Correlations",
-    "Recruitment", "Initial abundance", "Other"))
+    "Recruitment", "Initial abundance", "Other"
+  ))
   split(data, category, drop = TRUE)
 }
 
@@ -143,7 +146,11 @@ vis_tam <- function(..., model_list = NULL, interval = 0.95, output_file = NULL,
   if (component == "q") component <- "Catchability"
   if (component == "sd_catch") component <- "Catch SD"
   if (component == "sd_index") component <- "Survey SD"
-  process <- switch(unique(effect$process), rw = "random walk", ar1 = "AR1", iid = "IID")
+  process <- switch(unique(effect$process),
+    rw = "random walk",
+    ar1 = "AR1",
+    iid = "IID"
+  )
   variable <- unique(effect$variable)
   by <- unique(effect$by)
   if (!is.na(by)) variable <- paste(variable, "by", by)

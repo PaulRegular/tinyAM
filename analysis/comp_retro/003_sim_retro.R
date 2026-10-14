@@ -1,4 +1,3 @@
-
 # source("analysis/comp_retro/001_models.R")
 models <- readRDS("analysis/comp_retro/outputs/001_models.rds")
 
@@ -6,8 +5,10 @@ library(dplyr)
 
 fit <- models$M_ar1_F_rw
 
-fit <- update(fit, proj_settings = list(n_proj = 10, n_mean = 5, F_mult = 1),
-              start_par = as.list(fit$sdrep, "Estimate"))
+fit <- update(fit,
+  proj_settings = list(n_proj = 10, n_mean = 5, F_mult = 1),
+  start_par = as.list(fit$sdrep, "Estimate")
+)
 
 future::plan(future::multisession, workers = 2)
 sims <- sim_tam(fit, n = 100, par_uncertainty = "joint")
@@ -42,7 +43,3 @@ sims$ssb |>
 ## - Make a sim_test_tam function
 ## - Check effect of lower and higher obs errors
 ## - Check effect of projecting declining pop vs increasing pop
-
-
-
-
