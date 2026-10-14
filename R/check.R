@@ -419,6 +419,7 @@ check_tam <- function(fit, grad_tol = NULL, detailed = FALSE) {
          parameter2 = labels[pairs[, 2]], correlation = correlation[pairs]))
 }
 
+
 #' @rdname check_tam
 #' @param x A `tam_check` object.
 #' @param ... Unused.
@@ -427,23 +428,49 @@ print.tam_check <- function(x, ...) {
   inform <- function(text, symbol = "i") {
     cli::cli_inform(stats::setNames("{text}", symbol))
   }
+  symbol <- function(check) {
+    status <- x$numerical$status[x$numerical$check == check]
+    if (length(status) != 1L || is.na(status)) return("i")
+    if (status == "pass") "v" else if (status == "fail") "x" else "i"
+  }
+
+  objective <- x$numerical$detail[x$numerical$check == "objective"]
+  if (length(objective)) cat(objective, "\n")
+
   inform(paste("Numerical convergence:", if (x$is_converged) "passed" else "not passed"),
          if (x$is_converged) "v" else "x")
   inform(paste0("Optimizer: ", if (is.null(x$optimizer_code)) "unavailable" else x$optimizer_code,
-                if (!is.null(x$optimizer_message)) paste0(" (", x$optimizer_message, ")")))
+                if (!is.null(x$optimizer_message)) paste0(" (", x$optimizer_message, ")")),
+         symbol("optimizer"))
   inform(sprintf("Max |gradient|: %s adjusted; %s raw (tolerance %s)",
-                 signif(x$max_gradient, 3), signif(x$raw_max_gradient, 3), x$grad_tol))
+                 signif(x$max_gradient, 3), signif(x$raw_max_gradient, 3), x$grad_tol),
+         symbol("gradient"))
   inform(paste("Positive-definite Hessian:", if (is.null(x$pd_hessian)) "not assessed" else
     if (isTRUE(x$pd_hessian)) "yes" else "no"),
-    if (is.null(x$pd_hessian)) "i" else if (isTRUE(x$pd_hessian)) "v" else "x")
-  inform(paste("Structural checks:", switch(x$structural_status,
-    no_known_issues = "no known redundancies detected; biological identifiability is not established",
-    issues = "issues detected", not_assessed = "not assessed")),
-    if (x$structural_status == "issues") "x" else "i")
-  failures <- x$numerical[x$numerical$status != "pass", , drop = FALSE]
-  for (detail in failures$detail) inform(detail, "x")
+    symbol("hessian"))
+  inform(paste("Model structure:", switch(x$structural_status,
+                                          no_known_issues = "no redundant model terms detected",
+                                          issues = "issues detected", not_assessed = "not assessed")),
+         if (x$structural_status == "no_known_issues") "v" else
+           if (x$structural_status == "issues") "x" else "i")
+
+  failures <- x$numerical[
+    x$numerical$status != "pass" &
+      !x$numerical$check %in% c("objective", "optimizer", "gradient", "hessian"),
+    , drop = FALSE
+  ]
+  for (i in seq_len(nrow(failures))) {
+    inform(failures$detail[i],
+           if (failures$status[i] == "fail") "x" else "i")
+  }
   for (detail in x$structural$detail[x$structural$status == "fail"]) inform(detail, "x")
-  inform(paste("Advisory findings:", nrow(x$advisories)))
-  for (detail in x$advisories$detail) inform(detail)
+
+  cat(sprintf("\nAdvisory findings (%d):\n", nrow(x$advisories)))
+  if (nrow(x$advisories) == 0L) {
+    cat("None.\n")
+  } else {
+    for (detail in x$advisories$detail) inform(detail)
+  }
+
   invisible(x)
 }
