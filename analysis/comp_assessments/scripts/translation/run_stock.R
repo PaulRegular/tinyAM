@@ -4,7 +4,7 @@ root <- file.path("analysis", "comp_assessments")
 pkgload::load_all(".", quiet = TRUE)
 source(file.path(root, "R", "run_assessment.R"))
 
-assessment_id <- "dfo_herring_4tvn_spring_2024"
+assessment_id <- "ices_norway_pout_north_sea_2026_benchmark"
 database <- read_database()
 source <- read_assessment(assessment_id, database)
 do_fit <- TRUE

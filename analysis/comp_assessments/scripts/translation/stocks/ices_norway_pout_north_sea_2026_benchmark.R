@@ -139,6 +139,7 @@ sgfs_shared <- survey_name == surveys[[3]] & index$age %in% c(1L, 2L)
 index$sd_block[sgfs_shared] <- "sgfs_age1_2"
 obs$index <- index
 
+obs$pop_covariates$N_sd_key <- factor(ifelse(obs$pop_covariates$age == 3, "N_sd_3+", "N_sd_0-2"))
 
 quarter_cube <- function(rows, multiplier = 1) {
   out <- array(NA_real_, c(length(years), length(ages), 4L),
@@ -338,19 +339,47 @@ age_plus_group <- 3
 
 comparison_scales <- c(N = 1e-06, recruitment = 1e-06, ssb = 0.001, F = 1, M = 1, F_bar = 1)
 
+
 background <- c(
-  "### North Sea Norway pout: accepted 2026 SESAM benchmark", "", print_sources(source$assessment),
-  "", "| Component | Accepted assessment | tinyAM representation | Main simplification |", "|---|---|---|---|",
-  "| Years | Quarterly inputs and states cover 1984-2025, but the fitted catch series ends in Q3 2025. | Fit 1984-2024, the last complete catch year. | The partial 2025 catch total is not treated as an annual observation. |",
-  "| Ages | Ages 0-3+, with recruitment entering in Q3. | Annual ages 0-3, with age 0 represented at recruitment. | Recruitment timing is annualized; source Q3 timing is retained for survey predictions. |",
-  "| N | Quarterly age-specific abundance; process variance is shared for ages 0-2 and separate for age 3+. | IID annual abundance process with exponential initial abundance. | The quarterly process and its age-specific variance sharing are not reproduced. |",
-  "| F | Quarterly log-F random walk with AR(1) dependence across ages; Fbar is ages 1-2. | Annual AR(1) F process around estimated age-specific means and Fbar ages 1-2. | tinyAM applies AR(1) in both year and age and cannot combine the source random walk with its age correlation; quarterly variation and the big-jump adjustment are approximated. |",
-  "| M | Fixed quarterly age-specific M from North Sea SMS; the 2022 pattern is carried through 2025. | Supply annual-equivalent M as fixed mortality. | Older ages use all four quarters; age 0 uses Q3-Q4 exposure after recruitment. |",
-  "| Catch | Quarterly catch-at-age in millions of fish, with separate age-0, ages 1-2, and age-3+ error groups. | Sum quarterly catches to annual numbers and retain the same three error groups. | The joint quarterly catch likelihood is not represented. |",
-  "| Index | Five fleet series sampled in Q1 or Q3, with fleet-age q and SD sharing. | Keep direct age-specific observations and use q blocks that follow the reported sharing. | The grouped age-2-3+ IBTS observation is retained in the database but omitted because tinyAM has no grouped-age index likelihood. |",
-  "| Weights and maturity | Stock weights are quarter-specific; maturity is 0, 0.2, 1, 1 at ages 0-3+. | Use Q1 stock weights for ages 1-3, Q3 weight for age 0, and the accepted maturity vector. | This matches the annual state boundary; maturity at age 0 is zero. |",
-  "| SSB | Quarterly SSB is calculated at the start of each quarter. | Compare Q1 SSB using the same start-of-year N, weight, and maturity. | The source and tinyAM SSB definitions then match for the selected common years. |",
-  "", "Survey timing uses the midpoint of each quarter: 0.125 for Q1 and 0.625 for Q3. Annual-equivalent F and M sum the quarterly rate over the time each age group is present; age-0 fish enter in Q3. The assessment's Q1 age-0 N precedes current-year recruitment, so that age-specific N row is omitted from the like-for-like N comparison. Recruitment at age 0 is compared separately. The grouped IBTS age-2-3+ index and the reported 2025 IBTS other-countries Q3 observations are unresolved in the cached fitted object; neither is fabricated or inferred."
+  "### North Sea Norway pout: accepted 2026 SESAM benchmark",
+  "",
+  print_sources(source$assessment),
+  "",
+  "| Component | Accepted assessment | tinyAM representation | Main simplification |",
+  "|---|---|---|---|",
+
+  "| Years | Quarterly inputs and population states span 1984–2025, but fitted catch observations end in Q3 2025. | Fit 1984–2024, the last complete catch year. | The partial 2025 catch total is not treated as a complete annual observation. |",
+
+  "| Ages | Ages 0–3+, with recruitment entering in Q3 and age 3 as the plus group. | Annual ages 0–3+, with recruitment represented at age 0. | The quarterly population dynamics and Q3 recruitment timing are annualized. |",
+
+  "| N | Quarterly abundance process with variance shared across ages 0–2 and separate for age 3+. | IID annual cohort-survival deviations, free initial abundance and age-grouped SDs through N_sd_key. | The source variance grouping is approximated for older ages, but recruitment has its own process and quarterly survival variation is not represented. |",
+
+  "| F | Quarterly log-F random walk with AR(1) correlation across ages. Process variance is shared over ages 0–1 and 2–3+, with large-increment adjustments. Fbar uses ages 1–2. | Annual correlated F random walks (cor_rw), with AR(1) correlation across ages in annual log-F increments and Fbar ages 1–2. | The principal temporal and cross-age process structure is represented, but quarterly variation, variance groups and large-increment adjustments are not. |",
+
+  "| M | Fixed quarterly age-specific M from North Sea SMS, with the 2022 pattern carried through 2025. | Supply annual-equivalent M-at-age as fixed mortality. | Older ages use four quarterly exposures; age 0 uses Q3–Q4 exposure after recruitment. |",
+
+  "| Catch | Quarterly catch-at-age in millions of fish, with separate observation-error groups for age 0, ages 1–2 and age 3+. | Aggregate quarterly catches to annual numbers and estimate catch SDs using the source-derived sd_block groups. | The age-specific error sharing is approximated, but the joint quarterly catch likelihood is not reproduced. |",
+
+  "| Indices | Five survey fleets sampled in Q1 or Q3, with source-specific catchability and observation-SD sharing. | Retain direct age-specific observations, with estimated q and SD parameters following the translated q_key and sd_block groups. | The grouped age-2–3+ IBTS observation is omitted because tinyAM does not fit grouped-age indices. |",
+
+  "| Weights and maturity | Stock weights are quarter-specific; maturity is 0, 0.2, 1 and 1 for ages 0–3+. | Use Q1 stock weights for ages 1–3+, Q3 weights for age 0 and the accepted maturity vector. | The annual weight surface approximates the quarterly inputs; age-0 maturity is zero. |",
+
+  "| SSB | Quarterly spawning-stock biomass is calculated at the beginning of each quarter. | Compare Q1 SSB using beginning-of-year N, stock weights and maturity. | The SSB definition is aligned for the selected common years. |",
+
+  "",
+  "The revised translation uses IID cohort-survival deviations with age-grouped process SDs and freely estimated initial abundance. This more closely approximates the accepted SESAM survival-process structure than the previous single-SD, exponential-initialization model. Recruitment retains its separate process, and the quarterly population dynamics are annualized.",
+  "",
+  "Fishing mortality now follows correlated random walks rather than stationary AR1 deviations around age-specific means. The new process captures persistent annual F changes and AR(1) correlation between neighbouring ages, as in the accepted SESAM model. The source's two F-innovation variance groups, quarterly increments and large-jump adjustments remain unrepresented.",
+  "",
+  "Catch and survey observation-error parameters use source-derived sharing groups. Catch SDs distinguish age 0, ages 1–2 and age 3+, while survey q and SD groups follow the recovered native configuration.",
+  "",
+  "Survey timing uses quarter midpoints: 0.125 for Q1 and 0.625 for Q3. Annual-equivalent mortality inputs account for the quarters during which each age group is present, with age-0 recruitment entering in Q3. The annualized age-0 population state remains an approximation to the quarterly SESAM timing.",
+  "",
+  "The accepted Q1 age-0 abundance precedes current-year recruitment, so that N-at-age observation is excluded from the like-for-like population comparison. Recruitment at age 0 is compared separately.",
+  "",
+  "The grouped IBTS age-2–3+ observation remains in the canonical database but is omitted from the tinyAM likelihood. Reported 2025 IBTS other-countries Q3 observations are unresolved in the cached fitted object and are not inferred.",
+  "",
+  "The revised translation retains the accepted stock's annualized inputs and comparison definitions while more closely approximating its main N and F process structures. It remains a simplified annual assessment rather than an exact reproduction of the quarterly SESAM model."
 )
 
 ## Model ----
@@ -362,8 +391,8 @@ if (do_fit) {
     data = obs,
     years = years,
     ages = ages,
-    N_settings = list(process = "iid", init = "exp"),
-    F_settings = list(process = "ar1", mu_form = ~ factor(age), mean_ages = 1:2),
+    N_settings = list(process = "iid", init = "free", sd_form = ~ 0 + N_sd_key),
+    F_settings = list(process = "cor_rw", mu_form = NULL, mean_ages = 1:2),
     M_settings = list(process = "off", mu_form = NULL, mu_supplied = ~M_assumption),
     catch_settings = list(sd_form = ~ 0 + sd_block),
     index_settings = list(q_form = ~ 0 + q_key, sd_form = ~ 0 + sd_block),
