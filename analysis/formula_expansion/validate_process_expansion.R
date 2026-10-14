@@ -26,13 +26,13 @@ isolated <- function(component, grouped, seed) {
   x <- matrix(0, 81, 8)
   rho <- .6
   process <- if (component == "F") "cor_rw" else "iid"
-  x <- if (process == "cor_rw") tinyAM:::.rprocess_cor_rw(x, sd, rho) else
+  x <- if (process == "cor_rw") tinyAM::rprocess_cor_rw(x, sd, rho) else
     tinyAM:::.rprocess_scaled(x, sd, "iid")
   p <- list(beta = rep(log(.12), ncol(design)))
   if (component == "F") p$atanh_rho <- 0
   obj <- RTMB::MakeADFun(function(p) {
     scale <- exp(drop(design %*% p$beta))
-    if (process == "cor_rw") -tinyAM:::.dprocess_cor_rw(x, scale, tanh(p$atanh_rho)) else
+    if (process == "cor_rw") -tinyAM::dprocess_cor_rw(x, scale, tanh(p$atanh_rho)) else
       -tinyAM:::.dprocess_scaled(x, scale, "iid")
   }, p, silent = TRUE)
   opt <- stats::nlminb(obj$par, obj$fn, obj$gr)

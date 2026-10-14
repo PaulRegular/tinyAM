@@ -7,14 +7,14 @@ test_that("correlated RW uses marginal increment SDs and the full Gaussian densi
     expected <- sum(apply(increments, 1, function(z) -.5 * (
       3 * log(2 * pi) + as.numeric(determinant(covariance)$modulus) +
         sum(z * solve(covariance, z)))))
-    expect_equal(tinyAM:::.dprocess_cor_rw(x, sd, rho), expected, tolerance = 1e-10)
-    obj <- RTMB::MakeADFun(function(p) -tinyAM:::.dprocess_cor_rw(p$x, exp(p$sd), tanh(p$rho)),
+    expect_equal(tinyAM::dprocess_cor_rw(x, sd, rho), expected, tolerance = 1e-10)
+    obj <- RTMB::MakeADFun(function(p) -tinyAM::dprocess_cor_rw(p$x, exp(p$sd), tanh(p$rho)),
       list(x = x, sd = log(sd), rho = atanh(rho)), silent = TRUE)
     expect_equal(obj$fn(), -expected, tolerance = 1e-10)
     expect_true(all(is.finite(obj$gr())))
   }
-  expect_equal(tinyAM:::.dprocess_cor_rw(x, .3, 0), dprocess_rw(x, .3))
-  expect_equal(tinyAM:::.dprocess_cor_rw(x[1, , drop = FALSE], sd, .6), 0)
+  expect_equal(tinyAM::dprocess_cor_rw(x, .3, 0), dprocess_rw(x, .3))
+  expect_equal(tinyAM::dprocess_cor_rw(x[1, , drop = FALSE], sd, .6), 0)
 })
 
 test_that("correlated RW simulation preserves starts and increment covariance", {
@@ -23,11 +23,14 @@ test_that("correlated RW simulation preserves starts and increment covariance", 
   sd <- c(.2, .4, .7)
   rho <- -.5
   set.seed(162)
-  draw <- tinyAM:::.rprocess_cor_rw(x, sd, rho)
+  draw <- tinyAM::rprocess_cor_rw(x, sd, rho)
   expect_identical(draw[1, ], x[1, ])
   expect_identical(dimnames(draw), dimnames(x))
   covariance <- outer(sd, sd) * rho^abs(outer(1:3, 1:3, "-"))
   expect_lt(max(abs(cov(draw[-1, ] - draw[-nrow(draw), ]) - covariance)), .015)
+  expect_identical(tinyAM::rprocess_cor_rw(x[1, , drop = FALSE], sd, rho),
+                   x[1, , drop = FALSE])
+  expect_identical(x[1, ], c(`2` = -1, `3` = 2, `4` = 3))
 })
 
 test_that("correlated F RW is generative and retains the independent limit", {

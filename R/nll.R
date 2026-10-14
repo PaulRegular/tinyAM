@@ -129,7 +129,7 @@ nll_fun <- function(par, dat, simulate = FALSE) {
     } else if (F_settings$process == "rw") {
       rprocess_rw(log_f - mu_f, sd = sd_f)
     } else if (F_settings$process == "cor_rw") {
-      .rprocess_cor_rw(log_f - mu_f, sd = sd_f, rho = tanh(atanh_rho_f))
+      rprocess_cor_rw(log_f - mu_f, sd = sd_f, rho = tanh(atanh_rho_f))
     } else if (F_settings$process == "iid") {
       matrix(stats::rnorm(length(log_f), 0, sd_f), nrow(log_f), ncol(log_f))
     } else {
@@ -260,7 +260,7 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   } else if (F_settings$process == "rw") {
     dprocess_rw(eta_log_f, sd = sd_f)
   } else if (F_settings$process == "cor_rw") {
-    .dprocess_cor_rw(eta_log_f, sd = sd_f, rho = tanh(atanh_rho_f))
+    dprocess_cor_rw(eta_log_f, sd = sd_f, rho = tanh(atanh_rho_f))
   } else if (F_settings$process == "iid") {
     sum(RTMB::dnorm(eta_log_f, 0, sd_f, log = TRUE))
   } else {

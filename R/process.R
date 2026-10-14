@@ -126,8 +126,44 @@ rprocess_rw <- function(x, sd = 1) {
 }
 
 
-# Annual F increments have age correlation, without temporal stationarity.
-.dprocess_cor_rw <- function(x, sd = 1, rho = 0) {
+#' Random walk with age-correlated increments: density and simulation
+#'
+#' @description
+#' A random walk whose annual changes are correlated between neighbouring ages.
+#' Changes are independent between years, with no tendency to return to a mean.
+#' tinyAM uses this process for `F_settings$process = "cor_rw"`.
+#'
+#' @details
+#' For a year by age matrix `x`, each vector of annual increments
+#' \eqn{x_{t,a}-x_{t-1,a}} has a multivariate Normal distribution with mean zero
+#' and covariance \eqn{\Sigma_{ab}=\sigma_a\sigma_b\rho^{|a-b|}}.
+#' Distance is measured by column position, not by numerical age labels.
+#' Each `sd` is a marginal increment SD; correlation does not inflate it.
+#' At `rho = 0`, increments are independent between ages, as in [dprocess_rw()].
+#'
+#' The first row has no density contribution. [rprocess_cor_rw()] retains it
+#' and simulates later rows conditionally. In tinyAM, `x` contains deviations
+#' from the log-F mean, rather than the absolute latent log-F states.
+#' [dprocess_cor_rw()] supports RTMB automatic differentiation.
+#'
+#' @param x Numeric matrix with years in rows and ordered ages in columns.
+#'   For simulation, only the first row supplies starting values.
+#' @param sd Positive marginal SD of annual increments: a scalar shared by all
+#'   ages, or a vector with one value per column of `x`.
+#' @param rho Correlation between adjacent columns, strictly between -1 and 1.
+#'   Negative values allow alternating changes between neighbouring ages.
+#' @return [dprocess_cor_rw()] returns the summed log density of annual
+#'   increment vectors (zero for one row). [rprocess_cor_rw()] returns a matrix
+#'   with the dimensions and names of `x`, leaving its first row unchanged.
+#' @examples
+#' x <- matrix(0, 6, 3, dimnames = list(2000:2005, 2:4))
+#' set.seed(1)
+#' draw <- rprocess_cor_rw(x, sd = c(0.2, 0.3, 0.4), rho = 0.6)
+#' dprocess_cor_rw(draw, sd = c(0.2, 0.3, 0.4), rho = 0.6)
+#' @seealso [dprocess_rw()], [dprocess_ar1()], [tinyAM-model]
+#' @rdname process_cor_rw
+#' @export
+dprocess_cor_rw <- function(x, sd = 1, rho = 0) {
   if (nrow(x) < 2L) return(0)
   increment <- x[-1, , drop = FALSE] - x[-nrow(x), , drop = FALSE]
   sd <- rep(sd, length.out = ncol(x))
@@ -136,7 +172,9 @@ rprocess_rw <- function(x, sd = 1) {
     nrow(increment) * sum(log(sd))
 }
 
-.rprocess_cor_rw <- function(x, sd = 1, rho = 0) {
+#' @rdname process_cor_rw
+#' @export
+rprocess_cor_rw <- function(x, sd = 1, rho = 0) {
   if (nrow(x) < 2L) return(x)
   sd <- rep(sd, length.out = ncol(x))
   for (y in 2:nrow(x)) {
