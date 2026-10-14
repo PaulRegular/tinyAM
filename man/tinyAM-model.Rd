@@ -17,6 +17,20 @@ returning to a mean. These choices make different assumptions, even when
 they produce similar fitted curves. N and M can also have their process
 switched \code{"off"}. Recruitment defaults to a temporal random walk;
 \code{rec_settings$mu_form} can describe stock-recruit relationships and covariates.
+
+Neighbouring ages can experience similar annual changes in fishing mortality.
+\code{F_settings$process = "cor_rw"} models those changes together; \code{"rw"}
+retains independent changes between ages.
+
+\code{sd_form} in N, F and M settings describes process variation at each age.
+For example, \code{~ age_group} estimates shared SDs for groups supplied in
+\code{data$pop_covariates}; it does not pool abundance or mortality states.
+Start with few groups and examine their uncertainty.
+
+Supply \code{data$maturity$spawn_time} to calculate SSB after a fraction of annual
+mortality, also used by stock-recruit relationships. Omit it for start-of-year
+SSB. Timing may vary by year and age; projections retain terminal timing at
+each age. Supplied weight and maturity do not change seasonally.
 }
 \details{
 \subsection{Indices, units, and states}{
@@ -204,6 +218,20 @@ Correlation between age blocks uses their index distance, not block widths.
 Scalar SDs use \verb{exp(log_sd_*)}.
 Ordinary age-based \code{sd_form} formulas replace scalar SDs with
 \eqn{\sigma_a=\exp(X_a\beta)}. Sharing an SD does not share states.
+Designs must be finite, identifiable and constant across years at each
+active age. Numeric and categorical terms are supported; temporal variation
+and structured random-effect terms are not. N SDs use destination ages
+after recruitment, keeping recruitment and initial-abundance SDs separate.
+M SD designs must be constant within each fitted state block.
+
+Default \code{~ 1} retains scalar \verb{log_sd_*} parameters. Other formulas estimate
+\verb{sd_beta_*} coefficients on the log-SD predictor scale: these may be negative
+and are not individually SDs. \code{fit$pop$sd_F}, \code{sd_N} and \code{sd_M} contain
+derived positive SD profiles and RTMB confidence intervals for nondefault
+formulas. Reported M ages identify state-block starts. Numerical convergence
+does not establish support for every SD group; inspect \code{\link[=check_tam]{check_tam()}},
+uncertainty and simpler sharing structures, especially when estimating M.
+
 For stationary AR1, standardize each age by its innovation SD before
 evaluating the same separable correlation density, including the scale
 Jacobian. Its marginal SD remains
@@ -330,7 +358,12 @@ and yield totals.
 Abundance is \eqn{\sum_a N_{t,a}}, biomass is \eqn{\sum_a W_{t,a}N_{t,a}},
 and SSB is \eqn{\sum_a W_{t,a}P_{t,a}N_{t,a}e^{-\tau_{t,a} Z_{t,a}}}, where
 \eqn{\tau_{t,a}} is \code{data$maturity$spawn_time}, zero if absent. Each supplied
-fraction applies to both F and M and may vary by year and age. This same
+fraction applies to both F and M and may vary by year and age. The timing
+column must contain finite values in \verb{[0, 1]} at every supplied biological
+age. Hidden ages contribute with their own timing before aggregation;
+spawning times are not averaged. With age-specific timing, SSB sums
+contributions at different spawning dates rather than one common date.
+Mortality is constant within each year. This same
 quantity supplies parent
 SSB for recruitment. Weight and maturity retain their supplied definitions;
 seasonal growth, maturation and an additional sex-ratio adjustment are not
@@ -349,7 +382,18 @@ confidence interval when uncertainty is large. Zero derived totals cannot
 have finite log-scale intervals. See \code{\link[=tidy_par]{tidy_par()}} and \code{\link[=tidy_sdrep]{tidy_sdrep()}}.
 }
 }
+\examples{
+data <- cod_obs
+data$maturity$spawn_time <- 0.25
+data$pop_covariates$age_group <- factor(
+  ifelse(data$pop_covariates$age < 6, "young", "older"))
+dat <- prepare_tam(data,
+  F_settings = list(process = "cor_rw", sd_form = ~ age_group),
+  N_settings = list(process = "iid", sd_form = ~ 1))
+make_par(dat)$sd_beta_f
+
+}
 \seealso{
 \code{\link[=prepare_tam]{prepare_tam()}}, \code{\link[=make_par]{make_par()}}, \code{\link[=nll_fun]{nll_fun()}}, \code{\link[=fit_tam]{fit_tam()}}, \code{\link[=sim_tam]{sim_tam()}},
-\code{\link[=dprocess_ar1]{dprocess_ar1()}}, \code{\link[=dprocess_rw]{dprocess_rw()}}, \code{\link[=mono]{mono()}}
+\code{\link[=dprocess_ar1]{dprocess_ar1()}}, \code{\link[=dprocess_rw]{dprocess_rw()}}, \code{\link[=dprocess_cor_rw]{dprocess_cor_rw()}}, \code{\link[=mono]{mono()}}
 }

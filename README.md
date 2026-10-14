@@ -58,7 +58,7 @@ Their default `~ 1` retains a common SD.
 `data$maturity$spawn_time <- 0.25` accounts for survival to spawning at
 one quarter of the year. The same SSB supplies stock–recruit relationships.
 Omit the column for start-of-year SSB. Timing can vary by year and age;
-projections retain terminal values at each age. See `?process_variation` for equations,
+projections retain terminal values at each age. See `?"tinyAM-model"` for equations,
 SD interpretations and examples.
 
 Settings lists can be partial. Initial fits inherit package defaults; updates
