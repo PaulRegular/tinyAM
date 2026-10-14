@@ -29,6 +29,16 @@ plot_trend(pop$ssb, color = ~model, legendgroup = ~model, colors = cols, ylab = 
 plot_age_year(pop$N, color = ~model, legendgroup = ~model, colors = cols, frame = ~age, ylab = "N")
 ```
 
+### Population patterns
+
+```{r}
+patterns <- tabs$patterns$population
+patterns$model <- factor(patterns$model, levels = c(
+  names(fits)[vapply(fits, inherits, logical(1), "tam_fit")],
+  names(fits)[!vapply(fits, inherits, logical(1), "tam_fit")]))
+plot_matrix(patterns, metric = ~metric, frame = ~model)
+```
+
 
 <!-- ### Stock-Recruit -->
 
@@ -73,6 +83,16 @@ plot_trend(pop$M_bar, color = ~model, legendgroup = ~model, colors = cols, ylab 
 M <- mortality_plot_data(pop$M, pop$mu_M, fits, "M")
 plot_age_year(M, plot = plot_mortality,
   color = ~model, legendgroup = ~model, colors = cols, frame = ~age, ylab = "M")
+```
+
+### Mortality patterns
+
+```{r}
+patterns <- tabs$patterns$mortality
+patterns$model <- factor(patterns$model, levels = c(
+  names(fits)[vapply(fits, inherits, logical(1), "tam_fit")],
+  names(fits)[!vapply(fits, inherits, logical(1), "tam_fit")]))
+plot_matrix(patterns, metric = ~metric, frame = ~model)
 ```
 
 

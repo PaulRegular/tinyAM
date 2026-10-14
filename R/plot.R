@@ -539,3 +539,105 @@ plot_age_year <- function(data, plot = plot_trend, x = ~year, xlab = "Year",
   p$x$layout$updatemenus <- c(menus, list(menu))
   p
 }
+
+#' Explore age-year patterns
+#'
+#' Display a complete or sparse age-year table as a heatmap, surface or contour.
+#' Buttons change the metric, display type and value scale; an optional model
+#' selector compares models using the same ranges within each metric.
+#'
+#' @param data A data frame with numeric `year`, `age` and `est` columns.
+#'   Optional `unit`, `definition`, `notes` and `is_proj` columns enrich hover text.
+#' @param metric Optional one-sided formula selecting a metric column.
+#' @param frame Optional one-sided formula selecting a model column. Factor
+#'   levels determine the initial model and selector order.
+#' @param type Initial display: `"heatmap"`, `"surface"` or `"contour"`.
+#' @details Linear shows original estimates, including zero. Log displays
+#'   log10 estimates; nonpositive values are gaps. Hover text always shows
+#'   original values and units. Ranges are shared across models separately for
+#'   each metric. All models of a metric must use the same units.
+#'   Missing cells remain missing. Surface and contour rendering interpolates
+#'   only for display and does not create additional source estimates.
+#' @return A Plotly object with independent controls for each widget.
+#' @examples
+#' d <- expand.grid(year = 2000:2005, age = 1:5)
+#' d$est <- exp(.1 * (d$year - 2000) - .3 * d$age)
+#' plot_matrix(d)
+#' @seealso [plot_heatmap()], [vis_tam()]
+#' @export
+plot_matrix <- function(data, metric = NULL, frame = NULL,
+                        type = c("heatmap", "surface", "contour")) {
+  type <- match.arg(type)
+  if (!is.data.frame(data) || !all(c("year", "age", "est") %in% names(data)) ||
+      !nrow(data)) cli::cli_abort("{.arg data} must contain year, age and est rows.")
+  if (!all(vapply(data[c("year", "age", "est")], is.numeric, logical(1))) ||
+      any(!is.finite(data$year)) || any(!is.finite(data$age))) {
+    cli::cli_abort("year, age and est must be numeric; year and age must be finite.")
+  }
+  column <- function(form, default) {
+    if (is.null(form)) return(rep(default, nrow(data)))
+    if (!inherits(form, "formula") || length(form) != 2L ||
+        length(all.vars(form)) != 1L || !is.symbol(form[[2L]]) ||
+        !all.vars(form) %in% names(data)) {
+      cli::cli_abort("metric and frame must each select one existing column.")
+    }
+    data[[all.vars(form)]]
+  }
+  metrics <- column(metric, "Estimate")
+  models <- column(frame, "Model")
+  if (anyNA(metrics) || anyNA(models)) cli::cli_abort("Metric and model labels cannot be missing.")
+  labels <- function(x) if (is.factor(x)) levels(droplevels(x)) else unique(as.character(x))
+  metric_names <- labels(metrics)
+  model_names <- labels(models)
+  keys <- data.frame(year = data$year, age = data$age, metric = metrics, model = models)
+  if (anyDuplicated(keys)) cli::cli_abort("Duplicate year-age cells within a metric and model.")
+  rows <- function(x) unname(lapply(seq_len(nrow(x)), function(i) unname(x[i, ])))
+  span <- function(x) {
+    x <- x[is.finite(x)]
+    if (!length(x)) return(c(0, 1))
+    r <- range(x)
+    if (diff(r) == 0) r <- r + c(-1, 1) * max(abs(r[1]) * .01, .01)
+    unname(r)
+  }
+  spec <- lapply(metric_names, function(name) {
+    d <- data[as.character(metrics) == name, , drop = FALSE]
+    units <- if ("unit" %in% names(d)) unique(as.character(d$unit[is.finite(d$est) &
+      !is.na(d$unit) & nzchar(d$unit)])) else character()
+    if (length(units) > 1L) cli::cli_abort("Metric {.val {name}} has different units; convert them before plotting.")
+    unit <- if (length(units)) units[1L] else ""
+    years <- sort(unique(d$year))
+    ages <- sort(unique(d$age))
+    grid <- expand.grid(age = ages, year = years)
+    cells <- lapply(model_names, function(model) {
+      z <- d[as.character(models[as.character(metrics) == name]) == model, , drop = FALSE]
+      index <- match(paste(grid$year, grid$age), paste(z$year, z$age))
+      values <- z$est[index]
+      values[!is.finite(values)] <- NA_real_
+      text <- paste0("Model: ", model, "<br>", name, ": ", format(values, trim = TRUE),
+        if (nzchar(unit)) paste0(" ", unit) else "", "<br>Year: ", grid$year,
+        if ("is_proj" %in% names(z)) ifelse(!is.na(z$is_proj[index]) & z$is_proj[index], " (projection)", "") else "",
+        "<br>Age: ", grid$age)
+      for (field in intersect(c("definition", "notes"), names(z))) {
+        value <- as.character(z[[field]][index])
+        text <- paste0(text, ifelse(is.na(value) | !nzchar(value), "", paste0("<br>", value)))
+      }
+      natural <- matrix(values, nrow = length(ages))
+      logged <- natural
+      logged[logged <= 0] <- NA_real_
+      logged <- log10(logged)
+      list(linear = rows(natural), log = rows(logged),
+           text = rows(matrix(text, nrow = length(ages))))
+    })
+    list(name = name, unit = unit, years = years, ages = ages, cells = cells,
+      linear = span(d$est), log = span(log10(d$est[is.finite(d$est) & d$est > 0])))
+  })
+  config <- list(metrics = spec, models = model_names, type = type)
+  script <- paste(readLines(system.file("js", "matrix.js", package = "tinyAM"),
+                           warn = FALSE), collapse = "\n")
+  first <- spec[[1L]]
+  p <- plotly::plotly_build(plotly::plot_ly(x = first$years, y = first$ages,
+    z = matrix(0, nrow = length(first$ages), ncol = length(first$years)),
+    type = type))
+  p$x$data[[1L]]$z <- first$cells[[1L]]$linear
+  htmlwidgets::onRender(p, script, data = config)
+}

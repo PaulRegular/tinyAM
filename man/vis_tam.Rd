@@ -67,6 +67,11 @@ Reproduce ordinary dashboard plots with \code{\link[=plot_trend]{plot_trend()}} 
 \code{\link[=plot_obs_pred]{plot_obs_pred()}}, or use \code{\link[=plot_age_year]{plot_age_year()}} for the two orientations.
 The small F/M mean-overlay helpers and their line styling live in
 \code{inst/rmd/vis_tam.Rmd}.
+Population patterns and Mortality patterns use \code{\link[=plot_matrix]{plot_matrix()}} to
+explore age-year heatmaps, surfaces and contours, with shared ranges
+across models for each metric. Log changes values, not year or age.
+Hover text retains natural units, spawning definitions and projection
+labels. Unknown reference units and unavailable cells remain missing.
 }
 \examples{
 

@@ -25,6 +25,7 @@ Imports:
     progressr,
     cli,
     htmltools,
+    htmlwidgets,
     plotly
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)

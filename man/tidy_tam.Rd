@@ -34,6 +34,9 @@ A named list of stacked tables, with \code{formula_effects} when present:
 \itemize{
 \item \strong{obs_pred} — a named list of stacked data frames (e.g., \code{catch}, \code{index});
 \item \strong{pop} — a named list of stacked data frames (e.g., \code{ssb}, \code{N}, \code{M}, \code{mu_M}, \code{F}, \code{mu_F}, \code{Z}, …);
+\item \strong{patterns} — population and mortality age-year tables for \code{\link[=plot_matrix]{plot_matrix()}}.
+These use fish, kg and per-year units independently of aggregate comparison
+scales. Reference tables with unknown units remain missing;
 \item \strong{recruitment} — predictions, residuals and optional stock-recruit curves;
 see \code{\link[=tidy_recruitment]{tidy_recruitment()}};
 \item \strong{fixed_par} — a single stacked data frame of fixed-effect parameters with columns like \code{par}, \code{est}, \code{se}, \code{lwr}, \code{upr}, plus indices (e.g., \code{coef}, \code{year}, \code{age}) and the label column when applicable;

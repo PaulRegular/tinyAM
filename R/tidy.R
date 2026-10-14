@@ -751,6 +751,9 @@ stack_nested <- function(x, label = "model",
 #'
 #' - **obs_pred** — a named list of stacked data frames (e.g., `catch`, `index`);
 #' - **pop** — a named list of stacked data frames (e.g., `ssb`, `N`, `M`, `mu_M`, `F`, `mu_F`, `Z`, …);
+#' - **patterns** — population and mortality age-year tables for [plot_matrix()].
+#'   These use fish, kg and per-year units independently of aggregate comparison
+#'   scales. Reference tables with unknown units remain missing;
 #' - **recruitment** — predictions, residuals and optional stock-recruit curves;
 #'   see [tidy_recruitment()];
 #' - **fixed_par** — a single stacked data frame of fixed-effect parameters with columns like `par`, `est`, `se`, `lwr`, `upr`, plus indices (e.g., `coef`, `year`, `age`) and the label column when applicable;
@@ -839,6 +842,12 @@ tidy_tam <- function(..., model_list = NULL, interval = 0.95, label = "model", l
       tidy_pop(fit, interval = interval)
     }
   })
+  patterns <- lapply(seq_along(model_list), function(i) {
+    fit <- model_list[[i]]
+    .tidy_patterns(pop_list[[i]], reference = inherits(fit, "tam_ref"),
+      ssb_definition = if (inherits(fit, "tam_fit")) .ssb_timing_label(fit$dat) else NULL)
+  })
+  names(patterns) <- names(model_list)
   references <- Filter(function(fit) inherits(fit, "tam_ref"), model_list)
   comparison_scales <- lapply(references, `[[`, "comparison_scales")
   comparison_scales <- Filter(function(x) length(x) > 0L, comparison_scales)
@@ -905,6 +914,7 @@ tidy_tam <- function(..., model_list = NULL, interval = 0.95, label = "model", l
   out <- list(
     obs_pred   = obs_pred,
     pop        = pop,
+    patterns   = stack_nested(patterns, label = id_col, label_type = label_type),
     fixed_par  = fixed_tbl,
     random_par = random_tbls
   )
@@ -931,6 +941,53 @@ tidy_tam <- function(..., model_list = NULL, interval = 0.95, label = "model", l
   attr(out, "label_type") <- label_type
 
   out
+}
+
+# Matrix views use each age-specific table's units, independently of aggregate
+# comparison scales. Unknown reference units remain unavailable.
+.tidy_patterns <- function(pop, reference = FALSE, ssb_definition = NULL) {
+  sources <- c(Abundance = "N", Biomass = "biomass_mat", SSB = "ssb_mat",
+               F = "F", M = "M", Z = "Z")
+  tables <- lapply(names(sources), function(metric) {
+    name <- sources[[metric]]
+    d <- pop[[name]]
+    if (reference && name == "biomass_mat" && is.data.frame(pop$biomass_at_age)) {
+      d <- pop$biomass_at_age
+    }
+    if (!is.data.frame(d) || !all(c("year", "age", "est") %in% names(d))) return(NULL)
+    d$age <- suppressWarnings(as.numeric(as.character(d$age)))
+    d <- d[is.finite(d$age) & is.finite(d$year), , drop = FALSE]
+    if (!nrow(d)) return(NULL)
+    d <- d[intersect(c("year", "age", "est", "is_proj", "unit", "definition", "notes"), names(d))]
+    unit <- if (metric == "Abundance") "fish" else if (metric %in% c("Biomass", "SSB")) "kg" else "per year"
+    if (reference) {
+      units <- if ("unit" %in% names(d)) tolower(trimws(d$unit)) else rep(NA_character_, nrow(d))
+      multipliers <- if (metric == "Abundance") {
+        c(fish = 1, number = 1, numbers = 1, "thousand fish" = 1e3,
+          thousand_fish = 1e3, "million fish" = 1e6, "billion fish" = 1e9)
+      } else if (metric %in% c("Biomass", "SSB")) {
+        c(kg = 1, t = 1e3, tonnes = 1e3, tonne = 1e3, mt = 1e3, kt = 1e6)
+      } else c("per year" = 1, per_year = 1, "yr-1" = 1, "year^-1" = 1)
+      multiplier <- unname(multipliers[units])
+      d$est <- d$est * multiplier
+    }
+    d$unit <- unit
+    d$metric <- metric
+    if (metric == "SSB" && !is.null(ssb_definition)) d$definition <- ssb_definition
+    d
+  })
+  names(tables) <- names(sources)
+  bind <- function(names) {
+    selected <- Filter(Negate(is.null), tables[names])
+    if (!length(selected)) return(NULL)
+    columns <- unique(unlist(lapply(selected, names)))
+    selected <- lapply(selected, function(d) {
+      for (name in setdiff(columns, names(d))) d[[name]] <- NA
+      d[columns]
+    })
+    do.call(rbind, unname(selected))
+  }
+  list(population = bind(c("Abundance", "Biomass", "SSB")), mortality = bind(c("F", "M", "Z")))
 }
 
 
