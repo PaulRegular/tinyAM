@@ -28,10 +28,14 @@ tables <- list(
   natural_mortality = read_table(36, 37, 10)
 )
 database <- file.path(root, "database")
-inputs <- read.csv(file.path(database, "inputs.csv"), stringsAsFactors = FALSE,
-                   check.names = FALSE)
-outputs <- read.csv(file.path(database, "outputs.csv"), stringsAsFactors = FALSE,
-                    check.names = FALSE)
+inputs <- read.csv(file.path(database, "inputs.csv"),
+  stringsAsFactors = FALSE,
+  check.names = FALSE
+)
+outputs <- read.csv(file.path(database, "outputs.csv"),
+  stringsAsFactors = FALSE,
+  check.names = FALSE
+)
 inputs <- inputs[inputs$assessment_id == assessment_id, , drop = FALSE]
 outputs <- outputs[outputs$assessment_id == assessment_id, , drop = FALSE]
 
@@ -47,8 +51,9 @@ check_age_surface <- function(measure, source, columns) {
 }
 
 check_annual <- function(measure, source, column, age_group = "") {
-  actual <- outputs[outputs$measure == measure & outputs$age_group == age_group,
-                    , drop = FALSE]
+  actual <- outputs[outputs$measure == measure & outputs$age_group == age_group, ,
+    drop = FALSE
+  ]
   actual <- actual[order(actual$year), , drop = FALSE]
   nrow(actual) == nrow(source) &&
     same_values(actual$value, source[, column])
@@ -64,7 +69,9 @@ index <- index[order(index$year, index$age), , drop = FALSE]
 fixed_m <- inputs[inputs$type == "M", , drop = FALSE]
 m_estimated <- outputs[outputs$measure == "natural_mortality_at_age", , drop = FALSE]
 m_source <- tables$natural_mortality[tables$natural_mortality[, 1] >= 1984,
-                                      c(1, 4:11), drop = FALSE]
+  c(1, 4:11),
+  drop = FALSE
+]
 m_estimated <- m_estimated[order(m_estimated$year, m_estimated$age), , drop = FALSE]
 
 stopifnot(

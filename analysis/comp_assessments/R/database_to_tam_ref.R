@@ -1,8 +1,10 @@
 .tam_template_na <- function(x) {
   if (is.data.frame(x)) {
-    keys <- c("year", "age", "age_group", "age_block", "fleet", "survey",
-              "sex", "region", "season", "samp_time", "q_block", "q_key",
-              "par", "coef", "is_proj")
+    keys <- c(
+      "year", "age", "age_group", "age_block", "fleet", "survey",
+      "sex", "region", "season", "samp_time", "q_block", "q_key",
+      "par", "coef", "is_proj"
+    )
     for (name in setdiff(names(x), keys)) x[[name]][] <- NA
     return(x)
   }
@@ -26,14 +28,20 @@
 }
 
 .fill_tam_table <- function(template, source) {
-  if (!nrow(template) || !nrow(source)) return(template)
-  keys <- intersect(c("year", "age", "age_group", "age_block", "fleet", "survey",
-                      "sex", "region", "season", "samp_time", "q_block", "q_key",
-                      "is_proj"), intersect(names(template), names(source)))
+  if (!nrow(template) || !nrow(source)) {
+    return(template)
+  }
+  keys <- intersect(c(
+    "year", "age", "age_group", "age_block", "fleet", "survey",
+    "sex", "region", "season", "samp_time", "q_block", "q_key",
+    "is_proj"
+  ), intersect(names(template), names(source)))
   for (name in setdiff(names(source), names(template))) {
     template[[name]] <- source[[name]][rep(NA_integer_, nrow(template))]
   }
-  if (!length(keys)) return(template)
+  if (!length(keys)) {
+    return(template)
+  }
   source_key <- .tam_table_key(source, keys)
   if (anyDuplicated(source_key)) {
     cli::cli_abort("Assessment output rows do not map uniquely to the fitted template groups.")
@@ -47,16 +55,22 @@
 }
 
 .fill_tam_report_array <- function(x, table, years, ages) {
-  if (!is.data.frame(table) || !all(c("year", "est") %in% names(table))) return(x)
+  if (!is.data.frame(table) || !all(c("year", "est") %in% names(table))) {
+    return(x)
+  }
   dimensions <- dim(x)
   if (length(dimensions) == 2L) {
-    if (!"age" %in% names(table)) return(x)
+    if (!"age" %in% names(table)) {
+      return(x)
+    }
     dim_names <- dimnames(x)
     year_dim <- match("year", names(dim_names))
     age_dim <- match("age", names(dim_names))
     if (is.na(year_dim)) year_dim <- which(dimensions == length(years))[1L]
     if (is.na(age_dim)) age_dim <- which(dimensions == length(ages))[1L]
-    if (is.na(year_dim) || is.na(age_dim) || year_dim == age_dim) return(x)
+    if (is.na(year_dim) || is.na(age_dim) || year_dim == age_dim) {
+      return(x)
+    }
     year_names <- dim_names[[year_dim]]
     age_names <- dim_names[[age_dim]]
     if (is.null(year_names)) year_names <- as.character(years)
@@ -83,15 +97,17 @@
 }
 
 database_to_tam_ref <- function(assessment_id, outputs, obs = NULL, years = NULL,
-                                  ages = NULL, terminal_year = NULL,
-                                  age_plus_group = NULL,
-                                  comparison_scales = NULL, template = NULL,
-                                  assumptions = NULL,
-                                  comparison_aggregates = character(),
-                                  comparison_age_groups = list(),
-                                  comparison_definitions = list()) {
-  required <- c("assessment_id", "type", "measure", "year", "age", "age_group",
-                "value", "se", "lwr", "upr", "unit")
+                                ages = NULL, terminal_year = NULL,
+                                age_plus_group = NULL,
+                                comparison_scales = NULL, template = NULL,
+                                assumptions = NULL,
+                                comparison_aggregates = character(),
+                                comparison_age_groups = list(),
+                                comparison_definitions = list()) {
+  required <- c(
+    "assessment_id", "type", "measure", "year", "age", "age_group",
+    "value", "se", "lwr", "upr", "unit"
+  )
   missing <- setdiff(required, names(outputs))
   if (length(missing)) {
     cli::cli_abort("outputs is missing required columns: {paste(missing, collapse = ', ')}")
@@ -100,13 +116,13 @@ database_to_tam_ref <- function(assessment_id, outputs, obs = NULL, years = NULL
     cli::cli_abort("assessment_id must be one non-empty value.")
   }
   if (!is.null(template) &&
-      (!is.list(template) ||
-       !all(c("dat", "pop", "rep", "obs_pred", "fixed_par", "random_par") %in% names(template)))) {
+    (!is.list(template) ||
+      !all(c("dat", "pop", "rep", "obs_pred", "fixed_par", "random_par") %in% names(template)))) {
     cli::cli_abort("template must be a fitted tinyAM object with its reporting components.")
   }
 
   source <- outputs[!is.na(outputs$assessment_id) &
-                      outputs$assessment_id == assessment_id, , drop = FALSE]
+    outputs$assessment_id == assessment_id, , drop = FALSE]
   if (!nrow(source)) cli::cli_abort("No output rows found for assessment_id {.val {assessment_id}}.")
   source$year <- suppressWarnings(as.integer(as.character(source$year)))
   source$age <- suppressWarnings(as.integer(as.character(source$age)))
@@ -125,29 +141,29 @@ database_to_tam_ref <- function(assessment_id, outputs, obs = NULL, years = NULL
   for (name in c("years", "ages")) {
     value <- get(name)
     if (!is.numeric(value) || anyNA(value) || any(!is.finite(value)) ||
-        any(value != as.integer(value)) || anyDuplicated(value) ||
-        (length(value) > 1L && any(diff(value) != 1L))) {
+      any(value != as.integer(value)) || anyDuplicated(value) ||
+      (length(value) > 1L && any(diff(value) != 1L))) {
       cli::cli_abort("{name} must be a consecutive sequence of whole numbers.")
     }
   }
   years <- as.integer(years)
   ages <- as.integer(ages)
   if (!is.null(template) &&
-      (!identical(years, as.integer(template$dat$years)) ||
-       !identical(ages, as.integer(template$dat$ages)))) {
+    (!identical(years, as.integer(template$dat$years)) ||
+      !identical(ages, as.integer(template$dat$ages)))) {
     cli::cli_abort("Requested years and ages must match the fitted template.")
   }
   if (!is.null(age_plus_group) &&
-      (length(age_plus_group) != 1L || !is.numeric(age_plus_group) ||
-       !is.finite(age_plus_group) || age_plus_group != as.integer(age_plus_group) ||
-       !age_plus_group %in% ages)) {
+    (length(age_plus_group) != 1L || !is.numeric(age_plus_group) ||
+      !is.finite(age_plus_group) || age_plus_group != as.integer(age_plus_group) ||
+      !age_plus_group %in% ages)) {
     cli::cli_abort("age_plus_group must be one of the requested model ages.")
   }
   if (is.null(terminal_year)) terminal_year <- if (length(years)) max(years) else NA_integer_
   if (!is.null(comparison_scales)) {
     if (!is.numeric(comparison_scales) || is.null(names(comparison_scales)) ||
-        any(!nzchar(names(comparison_scales))) || anyDuplicated(names(comparison_scales)) ||
-        any(!is.finite(comparison_scales)) || any(comparison_scales <= 0)) {
+      any(!nzchar(names(comparison_scales))) || anyDuplicated(names(comparison_scales)) ||
+      any(!is.finite(comparison_scales)) || any(comparison_scales <= 0)) {
       cli::cli_abort("comparison_scales must be NULL or a named vector of positive finite numbers.")
     }
   }
@@ -164,7 +180,9 @@ database_to_tam_ref <- function(assessment_id, outputs, obs = NULL, years = NULL
     }
   }
   reporting_table <- function(rows) {
-    if (!nrow(rows)) return(NULL)
+    if (!nrow(rows)) {
+      return(NULL)
+    }
     out <- data.frame(
       year = rows$year,
       age = age_label(rows),
@@ -224,7 +242,7 @@ database_to_tam_ref <- function(assessment_id, outputs, obs = NULL, years = NULL
   pop <- list()
   for (measure in names(measure_map)) {
     rows <- source[source$measure == measure &
-                      source$type == unname(type_map[[measure]]), , drop = FALSE]
+      source$type == unname(type_map[[measure]]), , drop = FALSE]
     if (nrow(rows)) pop[[unname(measure_map[[measure]])]] <- reporting_table(rows)
   }
   native_pop <- pop
@@ -248,8 +266,10 @@ database_to_tam_ref <- function(assessment_id, outputs, obs = NULL, years = NULL
         n <- n[which(at_age), , drop = FALSE]
       }
       if (!is.null(n) && nrow(n)) {
-        n$notes <- paste(n$notes, "Comparable recruitment: accepted beginning-of-year N at age",
-                         min(ages), "in the same calendar year; native recruitment is retained separately.")
+        n$notes <- paste(
+          n$notes, "Comparable recruitment: accepted beginning-of-year N at age",
+          min(ages), "in the same calendar year; native recruitment is retained separately."
+        )
         pop$recruitment <- n
         units <- unique(n$unit)
         if (length(units) == 1L) {
@@ -265,7 +285,7 @@ database_to_tam_ref <- function(assessment_id, outputs, obs = NULL, years = NULL
 
   source_m_status <- attr(obs, "translation")$M$status
   if (is.null(pop$M) && !is.null(obs$pop_covariates$M_assumption) &&
-      identical(source_m_status, "fixed_numerical_input")) {
+    identical(source_m_status, "fixed_numerical_input")) {
     m <- unique(obs$pop_covariates[c("year", "age", "M_assumption")])
     names(m)[[3L]] <- "est"
     m$year <- as.integer(m$year)
@@ -276,12 +296,17 @@ database_to_tam_ref <- function(assessment_id, outputs, obs = NULL, years = NULL
     m$unit <- "per year"
     m$source_type <- "translated_source_input"
     provenance <- attr(obs, "translation")$source_provenance
-    m$source_reference <- if (is.null(provenance)) NA_character_ else
+    m$source_reference <- if (is.null(provenance)) {
+      NA_character_
+    } else {
       paste(unique(provenance$source_reference[provenance$component == "M"]), collapse = "; ")
+    }
     m$notes <- "Fixed natural mortality input; not an estimated output."
     m$is_proj <- FALSE
-    pop$M <- m[c("year", "age", "est", "se", "se_scale", "lwr", "upr",
-                 "unit", "source_type", "source_reference", "notes", "is_proj")]
+    pop$M <- m[c(
+      "year", "age", "est", "se", "se_scale", "lwr", "upr",
+      "unit", "source_type", "source_reference", "notes", "is_proj"
+    )]
   }
 
   if (!is.null(age_plus_group)) {
@@ -312,7 +337,7 @@ database_to_tam_ref <- function(assessment_id, outputs, obs = NULL, years = NULL
           )]
           weights <- suppressWarnings(as.numeric(weights))
           if (length(weights) != length(values) || any(!is.finite(weights)) ||
-              any(weights < 0) || sum(weights) <= 0) {
+            any(weights < 0) || sum(weights) <= 0) {
             row$est <- NA_real_
           } else {
             row$est <- stats::weighted.mean(values, weights)
@@ -330,18 +355,27 @@ database_to_tam_ref <- function(assessment_id, outputs, obs = NULL, years = NULL
         }
         source_notes <- if ("notes" %in% names(group)) {
           unique(group$notes[!is.na(group$notes) & nzchar(group$notes)])
-        } else character()
-        transformation_note <- if (collapsed) {
-          paste0("Collapsed ", nrow(group), " source ages for comparison with the tinyAM plus age; ",
-                 if (metric %in% c("F", "M", "Z")) {
-                   "Mortality is N-weighted and uncertainty is not combined."
-                 } else {
-                   "values are summed and uncertainty is not combined."
-                 })
         } else {
-          if (complete) paste0("One source row at age ", age_plus_group,
-                               " was retained without aggregation.") else
+          character()
+        }
+        transformation_note <- if (collapsed) {
+          paste0(
+            "Collapsed ", nrow(group), " source ages for comparison with the tinyAM plus age; ",
+            if (metric %in% c("F", "M", "Z")) {
+              "Mortality is N-weighted and uncertainty is not combined."
+            } else {
+              "values are summed and uncertainty is not combined."
+            }
+          )
+        } else {
+          if (complete) {
+            paste0(
+              "One source row at age ", age_plus_group,
+              " was retained without aggregation."
+            )
+          } else {
             "Incomplete source ages or values; the plus-group estimate is unavailable."
+          }
         }
         if ("notes" %in% names(row)) {
           row$notes <- paste(c(source_notes, transformation_note), collapse = " ")
@@ -383,7 +417,9 @@ database_to_tam_ref <- function(assessment_id, outputs, obs = NULL, years = NULL
 
   if (is.null(template)) {
     obs_pred <- lapply(obs[c("catch", "index")], function(x) {
-      if (is.null(x)) return(NULL)
+      if (is.null(x)) {
+        return(NULL)
+      }
       x$pred <- NA_real_
       x$sd <- NA_real_
       x$std_res <- NA_real_
@@ -391,13 +427,17 @@ database_to_tam_ref <- function(assessment_id, outputs, obs = NULL, years = NULL
       if ("survey" %in% names(x)) x$q <- NA_real_
       x
     })
-    fixed_par <- data.frame(par = character(), coef = character(), est = numeric(),
-                            se = numeric(), se_scale = character(), lwr = numeric(),
-                            upr = numeric(), stringsAsFactors = FALSE)
+    fixed_par <- data.frame(
+      par = character(), coef = character(), est = numeric(),
+      se = numeric(), se_scale = character(), lwr = numeric(),
+      upr = numeric(), stringsAsFactors = FALSE
+    )
     out <- list(
       call = match.call(),
-      dat = list(obs = obs, years = years, ages = ages,
-                 is_proj = rep(FALSE, length(years))),
+      dat = list(
+        obs = obs, years = years, ages = ages,
+        is_proj = rep(FALSE, length(years))
+      ),
       pop = pop, obs_pred = obs_pred, fixed_par = fixed_par, random_par = list()
     )
   } else {
@@ -412,8 +452,10 @@ database_to_tam_ref <- function(assessment_id, outputs, obs = NULL, years = NULL
       input <- template$obs_pred[[name]]
       target <- out$obs_pred[[name]]
       if (!is.data.frame(input) || !is.data.frame(target)) next
-      copy <- intersect(c("year", "age", "fleet", "survey", "samp_time", "q_block",
-                          "q_key", "is_proj", "obs"), names(input))
+      copy <- intersect(c(
+        "year", "age", "fleet", "survey", "samp_time", "q_block",
+        "q_key", "is_proj", "obs"
+      ), names(input))
       target[copy] <- input[copy]
       out$obs_pred[[name]] <- target
     }
@@ -436,7 +478,8 @@ database_to_tam_ref <- function(assessment_id, outputs, obs = NULL, years = NULL
     }
     for (name in intersect(names(out$rep), names(out$pop))) {
       out$rep[[name]] <- .fill_tam_report_array(
-        out$rep[[name]], out$pop[[name]], years = template$dat$years,
+        out$rep[[name]], out$pop[[name]],
+        years = template$dat$years,
         ages = template$dat$ages
       )
     }
@@ -447,15 +490,18 @@ database_to_tam_ref <- function(assessment_id, outputs, obs = NULL, years = NULL
   attr(out, "source_pop") <- source_pop
   if (!is.null(template)) {
     common <- .tam_reference_comparisons(
-      template, out, assumptions = assumptions,
+      template, out,
+      assumptions = assumptions,
       comparison_aggregates = comparison_aggregates,
       comparison_age_groups = comparison_age_groups,
       comparison_definitions = comparison_definitions
     )
     out$comparisons <- common
     out$comparison_scales <- attr(common, "scales")
-    for (metric in intersect(c("abundance", "biomass", "ssb", "F_bar", "M_bar"),
-                             names(out$pop))) {
+    for (metric in intersect(
+      c("abundance", "biomass", "ssb", "F_bar", "M_bar"),
+      names(out$pop)
+    )) {
       rows <- common[common$metric == metric & !is.na(common$year), , drop = FALSE]
       tab <- out$pop[[metric]]
       if (!is.data.frame(tab) || !"year" %in% names(tab)) next

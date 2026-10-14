@@ -1,22 +1,29 @@
 test_that("tidy uncertainty keeps SE scales explicit without changing estimates or CIs", {
-  par <- list(log_q = c(baseline = log(2)), logit_phi_f = c(age = qlogis(.7)),
-              mu_m = c(effect = -.2), dq = c(step = .3))
+  par <- list(
+    log_q = c(baseline = log(2)), logit_phi_f = c(age = qlogis(.7)),
+    mu_m = c(effect = -.2), dq = c(step = .3)
+  )
   obj <- RTMB::MakeADFun(function(p) {
     sum((p$log_q - par$log_q)^2 + (p$logit_phi_f - par$logit_phi_f)^2 +
-        (p$mu_m - par$mu_m)^2 + (p$dq - par$dq)^2) / (2 * .1^2)
+      (p$mu_m - par$mu_m)^2 + (p$dq - par$dq)^2) / (2 * .1^2)
   }, par, silent = TRUE)
   fit <- structure(list(obj = obj, sdrep = RTMB::sdreport(obj), dat = list()),
-                   class = "tam_fit")
+    class = "tam_fit"
+  )
   tab <- tidy_par(fit)$fixed
   expect_identical(tail(names(tab), 5), c("est", "lwr", "upr", "se", "se_scale"))
   expect_equal(tab$se, rep(.1, 4))
   expect_identical(tab$se_scale, c("log", "logit", "reported", "reported"))
   expect_equal(tab$est, c(2, .7, -.2, .3))
   z <- qnorm(.975)
-  expect_equal(tab$lwr, c(exp(log(2) - z * .1), plogis(qlogis(.7) - z * .1),
-                          -.2 - z * .1, .3 - z * .1))
-  expect_equal(tab$upr, c(exp(log(2) + z * .1), plogis(qlogis(.7) + z * .1),
-                          -.2 + z * .1, .3 + z * .1))
+  expect_equal(tab$lwr, c(
+    exp(log(2) - z * .1), plogis(qlogis(.7) - z * .1),
+    -.2 - z * .1, .3 - z * .1
+  ))
+  expect_equal(tab$upr, c(
+    exp(log(2) + z * .1), plogis(qlogis(.7) + z * .1),
+    -.2 + z * .1, .3 + z * .1
+  ))
 
   table <- tinyAM:::.coef_table(tab)
   expect_s3_class(table, "data.frame")
@@ -33,9 +40,11 @@ test_that("tidy uncertainty keeps SE scales explicit without changing estimates 
 })
 
 test_that("terminal tables show confidence limits before log-scale SEs", {
-  pop <- list(abundance = data.frame(year = c(2024, 2025), est = c(10000, 20000),
+  pop <- list(abundance = data.frame(
+    year = c(2024, 2025), est = c(10000, 20000),
     lwr = c(8000, 15000), upr = c(13000, 25000), se = c(.1, .2),
-    se_scale = "log", is_proj = c(FALSE, TRUE)))
+    se_scale = "log", is_proj = c(FALSE, TRUE)
+  ))
   attr(pop, "interval") <- .9
   tab <- tinyAM:::.terminal_table(pop, 2024)
   expect_identical(names(tab), c("Estimate", "Lower 90%", "Upper 90%", "Std. Error", "SE scale"))

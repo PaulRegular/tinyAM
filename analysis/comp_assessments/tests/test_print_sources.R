@@ -31,9 +31,13 @@ sparse_sources <- data.frame(
   stringsAsFactors = FALSE
 )
 sparse_lines <- print_sources(sparse_sources)
-stopifnot(length(sparse_lines) == 2L,
-          identical(sparse_lines[[2L]],
-                    "- [Native model / fitted run](https://example.test/only)"))
+stopifnot(
+  length(sparse_lines) == 2L,
+  identical(
+    sparse_lines[[2L]],
+    "- [Native model / fitted run](https://example.test/only)"
+  )
+)
 
 duplicate_sources <- data.frame(
   assessment_url = "https://example.test/shared",
@@ -44,10 +48,14 @@ duplicate_sources <- data.frame(
   stringsAsFactors = FALSE
 )
 duplicate_lines <- print_sources(duplicate_sources)
-stopifnot(length(duplicate_lines) == 3L,
-          identical(duplicate_lines[[2L]],
-                    "- [Assessment report / Framework / methodology](https://example.test/shared)"),
-          sum(grepl("https://example.test/shared", duplicate_lines, fixed = TRUE)) == 1L)
+stopifnot(
+  length(duplicate_lines) == 3L,
+  identical(
+    duplicate_lines[[2L]],
+    "- [Assessment report / Framework / methodology](https://example.test/shared)"
+  ),
+  sum(grepl("https://example.test/shared", duplicate_lines, fixed = TRUE)) == 1L
+)
 
 no_sources <- data.frame(
   assessment_url = NA_character_,
@@ -57,8 +65,12 @@ no_sources <- data.frame(
   repository_url = "",
   stringsAsFactors = FALSE
 )
-stopifnot(identical(print_sources(no_sources), character()),
-          identical(print_sources(data.frame(other = "value")),
-                    character()))
+stopifnot(
+  identical(print_sources(no_sources), character()),
+  identical(
+    print_sources(data.frame(other = "value")),
+    character()
+  )
+)
 
 cat("Assessment source-link tests passed.\n")

@@ -4,11 +4,15 @@ mono_values <- function(design, beta, dq) {
 
 test_that("monotonic q uses cumulative non-negative log-q steps", {
   d <- data.frame(x = 1:4)
-  design <- tinyAM:::.parse_q_formula(~mono(x), d)
-  expect_equal(unname(mono_values(design, -2, c(.1, .2, .3))),
-               c(-2, -1.9, -1.7, -1.4))
-  expect_equal(unname(mono_values(design, -2, c(0, .2, 0))),
-               c(-2, -2, -1.8, -1.8))
+  design <- tinyAM:::.parse_q_formula(~ mono(x), d)
+  expect_equal(
+    unname(mono_values(design, -2, c(.1, .2, .3))),
+    c(-2, -1.9, -1.7, -1.4)
+  )
+  expect_equal(
+    unname(mono_values(design, -2, c(0, .2, 0))),
+    c(-2, -2, -1.8, -1.8)
+  )
   set.seed(823)
   for (i in 1:10) {
     log_q <- mono_values(design, -2, runif(3, 0, 1))
@@ -18,9 +22,11 @@ test_that("monotonic q uses cumulative non-negative log-q steps", {
 })
 
 test_that("a fitted plateau has finite direct-scale increments and SEs", {
-  design <- tinyAM:::.parse_q_formula(~mono(x), data.frame(x = 1:4))
-  par <- list(log_q = c("(Intercept)" = -2),
-              dq = setNames(rep(.05, 3), colnames(design$q_mono_modmat)))
+  design <- tinyAM:::.parse_q_formula(~ mono(x), data.frame(x = 1:4))
+  par <- list(
+    log_q = c("(Intercept)" = -2),
+    dq = setNames(rep(.05, 3), colnames(design$q_mono_modmat))
+  )
   # Decreasing observations put the constrained optimum exactly on all bounds.
   y <- c(-1.7, -1.9, -2.1, -2.3)
   obj <- RTMB::MakeADFun(function(p) {
@@ -33,10 +39,14 @@ test_that("a fitted plateau has finite direct-scale increments and SEs", {
   estimates <- as.list(sdrep, "Estimate")
   expect_equal(unname(estimates$dq), rep(0, 3))
   expect_equal(unname(exp(mono_values(design, estimates$log_q, estimates$dq))),
-               rep(exp(-2), 4), tolerance = 1e-6)
-  fit <- structure(list(obj = obj, dat = list(), sdrep = sdrep, opt = opt,
+    rep(exp(-2), 4),
+    tolerance = 1e-6
+  )
+  fit <- structure(list(
+    obj = obj, dat = list(), sdrep = sdrep, opt = opt,
     rep = list(log_pred = drop(design$q_modmat %*% estimates$log_q +
-      design$q_mono_modmat %*% estimates$dq), sd_obs = rep(.1, 4))), class = "tam_fit")
+      design$q_mono_modmat %*% estimates$dq), sd_obs = rep(.1, 4))
+  ), class = "tam_fit")
   steps <- subset(tidy_par(fit)$fixed, par == "dq")
   expect_equal(steps$est, rep(0, 3))
   expect_equal(steps$se, unname(as.list(sdrep, "Std. Error")$dq))
@@ -45,11 +55,17 @@ test_that("a fitted plateau has finite direct-scale increments and SEs", {
 })
 
 test_that("convergence diagnostics respect only valid active-bound gradients", {
-  fit <- structure(list(opt = list(par = c(dq = 0), convergence = 0,
-    objective = 1, message = "OK"), dat = list(),
+  fit <- structure(list(
+    opt = list(
+      par = c(dq = 0), convergence = 0,
+      objective = 1, message = "OK"
+    ), dat = list(),
     rep = list(log_pred = 0, sd_obs = 1),
-    sdrep = list(par.fixed = c(dq = 0), gradient.fixed = 2,
-                 pdHess = TRUE, cov.fixed = matrix(1))), class = "tam_fit")
+    sdrep = list(
+      par.fixed = c(dq = 0), gradient.fixed = 2,
+      pdHess = TRUE, cov.fixed = matrix(1)
+    )
+  ), class = "tam_fit")
   expect_true(check_tam(fit)$is_converged)
   expect_identical(fit$sdrep$gradient.fixed, 2)
   fit$sdrep$gradient.fixed <- Inf
@@ -63,18 +79,24 @@ test_that("convergence diagnostics respect only valid active-bound gradients", {
 })
 
 test_that("numeric order, declared factor order and pooled plateaus are retained", {
-  for (x in list(c(10, 2, 5, 5), factor(c("old", "young", "mid", "mid"),
-                  levels = c("young", "mid", "old")),
-                ordered(c("old", "young", "mid", "mid"),
-                  levels = c("young", "mid", "old")))) {
+  for (x in list(
+    c(10, 2, 5, 5), factor(c("old", "young", "mid", "mid"),
+      levels = c("young", "mid", "old")
+    ),
+    ordered(c("old", "young", "mid", "mid"),
+      levels = c("young", "mid", "old")
+    )
+  )) {
     design <- tinyAM:::.parse_q_formula(~ mono(x), data.frame(x = x))
     expect_equal(unname(mono_values(design, -2, c(.1, .2))), c(-1.7, -2, -1.9, -1.9))
   }
 })
 
 test_that("surveys have separate baselines and steps with different level counts", {
-  d <- data.frame(survey = factor(c("B", "A", "A", "B", "A", "B", "A")),
-                  x = factor(c(4, 2, 4, 1, 1, 3, 3), levels = 1:4))
+  d <- data.frame(
+    survey = factor(c("B", "A", "A", "B", "A", "B", "A")),
+    x = factor(c(4, 2, 4, 1, 1, 3, 3), levels = 1:4)
+  )
   design <- tinyAM:::.parse_q_formula(~ survey + mono(x, by = survey), d)
   expect_equal(ncol(design$q_modmat), 2L)
   expect_equal(ncol(design$q_mono_modmat), 5L)
@@ -95,23 +117,23 @@ test_that("surveys have separate baselines and steps with different level counts
 
 test_that("malformed or ambiguous monotonic formulas fail clearly", {
   d <- data.frame(x = 1:4, survey = c("A", "A", "B", "B"))
-  for (f in list(~mono(), ~mono(missing), ~mono(x, by = missing), ~mono(log(x)))) {
+  for (f in list(~ mono(), ~ mono(missing), ~ mono(x, by = missing), ~ mono(log(x)))) {
     expect_error(tinyAM:::.parse_q_formula(f, d), "existing index column")
   }
-  expect_error(tinyAM:::.parse_q_formula(~mono(x, direction = "increasing"), d), "Invalid mono")
-  expect_error(tinyAM:::.parse_q_formula(~mono(x, extra = 1), d), "Invalid mono")
-  for (f in list(~x + mono(x), ~I(x^2) + mono(x), ~mono(x) + mono(x, by = survey))) {
+  expect_error(tinyAM:::.parse_q_formula(~ mono(x, direction = "increasing"), d), "Invalid mono")
+  expect_error(tinyAM:::.parse_q_formula(~ mono(x, extra = 1), d), "Invalid mono")
+  for (f in list(~ x + mono(x), ~ I(x^2) + mono(x), ~ mono(x) + mono(x, by = survey))) {
     expect_error(tinyAM:::.parse_q_formula(f, d), "ordinary, duplicate")
   }
-  for (f in list(~survey * mono(x), ~I(mono(x)), ~mono(x):survey, ~1 - mono(x))) {
+  for (f in list(~ survey * mono(x), ~ I(mono(x)), ~ mono(x):survey, ~ 1 - mono(x))) {
     expect_error(tinyAM:::.parse_q_formula(f, d), "additive term")
   }
-  expect_error(tinyAM:::.parse_q_formula(~mono(x), data.frame(x = 1)), "at least two")
+  expect_error(tinyAM:::.parse_q_formula(~ mono(x), data.frame(x = 1)), "at least two")
   d$survey[2] <- "B"
-  expect_error(tinyAM:::.parse_q_formula(~mono(x, by = survey), d), "at least two")
-  expect_error(tinyAM:::.parse_q_formula(~mono(survey), d), "numeric or a factor")
+  expect_error(tinyAM:::.parse_q_formula(~ mono(x, by = survey), d), "at least two")
+  expect_error(tinyAM:::.parse_q_formula(~ mono(survey), d), "numeric or a factor")
   d$x[1] <- NA
-  expect_error(tinyAM:::.parse_q_formula(~mono(x), d), "missing")
+  expect_error(tinyAM:::.parse_q_formula(~ mono(x), d), "missing")
   expect_error(mono(1:4), "only supported")
 })
 
@@ -124,9 +146,13 @@ test_that("multiple surveys map independent monotonic curves into the likelihood
   b$q_block <- pmin(b$age, 4)
   obs$index <- rbind(a, b)
   obs$index$survey <- factor(obs$index$survey)
-  dat <- prepare_tam(data = obs, years = 2000:2005, ages = 2:6,
-    index_settings = list(q_form = ~survey + mono(q_block, by = survey),
-                          sd_form = ~1, fill_missing = TRUE))
+  dat <- prepare_tam(
+    data = obs, years = 2000:2005, ages = 2:6,
+    index_settings = list(
+      q_form = ~ survey + mono(q_block, by = survey),
+      sd_form = ~1, fill_missing = TRUE
+    )
+  )
   par <- make_par(dat)
   par$log_q[] <- c(-2, 1)
   par$dq[] <- c(.1, .2, .3, .4, .5)
@@ -135,19 +161,24 @@ test_that("multiple surveys map independent monotonic curves into the likelihood
   expect_true(all(is.finite(obj$gr(obj$par))))
   index <- dat$obs$index
   expected <- ifelse(index$survey == "A", c(-2, -1.9, -1.7, -1.4)[index$q_block - 1],
-                     c(-1, -.6, -.1)[index$q_block - 1])
+    c(-1, -.6, -.1)[index$q_block - 1]
+  )
   expect_equal(unname(obj$report()$log_q_obs), expected)
 })
 
 test_that("ordinary q matrices, parameters, predictions and simulation remain unchanged", {
   ordinary <- data.frame(mono = 1:4, x = 4:1)
   for (f in list(~mono, x ~ mono)) {
-    expect_identical(tinyAM:::.parse_q_formula(f, ordinary)$q_modmat,
-                     stats::model.matrix(f, ordinary))
+    expect_identical(
+      tinyAM:::.parse_q_formula(f, ordinary)$q_modmat,
+      stats::model.matrix(f, ordinary)
+    )
   }
   for (f in list(~q_block, ~1)) {
-    dat <- make_test_dat(years = 2000:2005, ages = 2:6,
-                         index_settings = list(q_form = f, sd_form = ~1, fill_missing = TRUE))
+    dat <- make_test_dat(
+      years = 2000:2005, ages = 2:6,
+      index_settings = list(q_form = f, sd_form = ~1, fill_missing = TRUE)
+    )
     old <- dat
     old$q_modmat <- stats::model.matrix(f, data = dat$obs$index)
     expect_identical(dat$q_modmat, old$q_modmat)
@@ -158,16 +189,20 @@ test_that("ordinary q matrices, parameters, predictions and simulation remain un
     obj <- RTMB::MakeADFun(function(p) nll_fun(p, dat), par, silent = TRUE)
     expect_equal(obj$report()$log_q_obs, drop(old$q_modmat %*% par$log_q), ignore_attr = TRUE)
     expect_identical(nll_fun(par, dat), nll_fun(par, old))
-    set.seed(412); actual <- nll_fun(par, dat, simulate = TRUE)
-    set.seed(412); expected <- nll_fun(par, old, simulate = TRUE)
+    set.seed(412)
+    actual <- nll_fun(par, dat, simulate = TRUE)
+    set.seed(412)
+    expected <- nll_fun(par, old, simulate = TRUE)
     expect_identical(actual, expected)
   }
 })
 
 test_that("monotonic q integrates with RTMB, simulation and observation predictions", {
-  dat <- make_test_dat(years = 2000:2005, ages = 2:6,
-                       F_settings = list(process = "iid", mu_form = ~1),
-                       index_settings = list(q_form = ~mono(q_block), sd_form = ~1, fill_missing = TRUE))
+  dat <- make_test_dat(
+    years = 2000:2005, ages = 2:6,
+    F_settings = list(process = "iid", mu_form = ~1),
+    index_settings = list(q_form = ~ mono(q_block), sd_form = ~1, fill_missing = TRUE)
+  )
   par <- make_par(dat)
   expect_equal(unname(par$dq), rep(.05, ncol(dat$q_mono_modmat)))
   expect_identical(names(par$dq), dat$q_mono_steps$coef)
@@ -194,12 +229,14 @@ test_that("monotonic q integrates with RTMB, simulation and observation predicti
   ii <- dat$obs_map$type == "index"
   rows <- cbind(match(dat$obs$index$year, dat$years), match(dat$obs$index$age, dat$ages))
   expect_equal(unname(report$log_pred[ii]), unname(expected_q + log(report$N)[rows] -
-                 report$Z[rows] * dat$obs$index$samp_time))
+    report$Z[rows] * dat$obs$index$samp_time))
 })
 
 test_that("simulation projects negative uncertainty draws onto feasible dq", {
-  dat <- make_test_dat(years = 2000:2005, ages = 2:6,
-    index_settings = list(q_form = ~mono(q_block), sd_form = ~1, fill_missing = TRUE))
+  dat <- make_test_dat(
+    years = 2000:2005, ages = 2:6,
+    index_settings = list(q_form = ~ mono(q_block), sd_form = ~1, fill_missing = TRUE)
+  )
   par <- make_par(dat)
   par$dq[] <- rep_len(c(-.2, .3, 0), length(par$dq))
   feasible <- par
@@ -216,19 +253,25 @@ test_that("simulation projects negative uncertainty draws onto feasible dq", {
 })
 
 test_that("negative monotonic warm starts fail clearly", {
-  dat <- make_test_dat(years = 2000:2005, ages = 2:6,
-    index_settings = list(q_form = ~mono(q_block), sd_form = ~1, fill_missing = TRUE))
+  dat <- make_test_dat(
+    years = 2000:2005, ages = 2:6,
+    index_settings = list(q_form = ~ mono(q_block), sd_form = ~1, fill_missing = TRUE)
+  )
   par <- make_par(dat)
   par$dq[1] <- -.1
-  expect_error(fit_tam(data = cod_obs, years = 2000:2005, ages = 2:6,
-    index_settings = list(q_form = ~mono(q_block), sd_form = ~1, fill_missing = TRUE),
-    start_par = par, silent = TRUE), "finite and non-negative")
+  expect_error(fit_tam(
+    data = cod_obs, years = 2000:2005, ages = 2:6,
+    index_settings = list(q_form = ~ mono(q_block), sd_form = ~1, fill_missing = TRUE),
+    start_par = par, silent = TRUE
+  ), "finite and non-negative")
 })
 
 test_that("constant and monotonic q fit and retain useful tidy outputs", {
-  for (f in list(~1, ~mono(q_block))) {
-    fit <- update(default_fit, index_settings = list(q_form = f, sd_form = ~1, fill_missing = TRUE),
-                  start_par = as.list(default_fit$sdrep, "Estimate"), silent = TRUE)
+  for (f in list(~1, ~ mono(q_block))) {
+    fit <- update(default_fit,
+      index_settings = list(q_form = f, sd_form = ~1, fill_missing = TRUE),
+      start_par = as.list(default_fit$sdrep, "Estimate"), silent = TRUE
+    )
     expect_true(is.finite(fit$opt$objective))
     expect_true(all(is.finite(fit$obj$gr(fit$opt$par))))
     expect_equal(fit$obs_pred$index$q, unname(exp(fit$rep$log_q_obs)))

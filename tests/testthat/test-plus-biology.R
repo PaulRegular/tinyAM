@@ -11,12 +11,14 @@ plus_biology_obs <- function() {
 }
 
 plus_biology_dat <- function(process = "iid", ages = 2:4, proj = NULL, init = "exp") {
-  suppressWarnings(prepare_tam(plus_biology_obs(), ages = ages,
+  suppressWarnings(prepare_tam(plus_biology_obs(),
+    ages = ages,
     N_settings = list(process = process, init = init),
-    F_settings = list(process = "iid", mu_form = ~ 1),
+    F_settings = list(process = "iid", mu_form = ~1),
     M_settings = list(process = "off", mu_supplied = ~ I(.2)),
-    index_settings = list(q_form = ~ 1, sd_form = ~ 1, fill_missing = TRUE),
-    proj_settings = proj))
+    index_settings = list(q_form = ~1, sd_form = ~1, fill_missing = TRUE),
+    proj_settings = proj
+  ))
 }
 
 plus_biology_par <- function(dat) {
@@ -53,9 +55,11 @@ test_that("biological inputs retain all hidden ages and project each age separat
   # Retained biological ages must not introduce unused M formula coefficients.
   obs$pop_covariates <- obs$weight[c("year", "age")]
   obs$pop_covariates$bio_age <- factor(obs$pop_covariates$age)
-  modeled <- prepare_tam(obs, ages = 2:4,
-    M_settings = list(process = "off", mu_form = ~ bio_age, mu_supplied = NULL),
-    index_settings = list(q_form = ~ 1, sd_form = ~ 1, fill_missing = TRUE))
+  modeled <- prepare_tam(obs,
+    ages = 2:4,
+    M_settings = list(process = "off", mu_form = ~bio_age, mu_supplied = NULL),
+    index_settings = list(q_form = ~1, sd_form = ~1, fill_missing = TRUE)
+  )
   expect_equal(levels(modeled$obs$pop_covariates$bio_age), as.character(2:4))
   expect_equal(ncol(modeled$M_modmat), 3)
   expect_equal(length(make_par(modeled)$mu_m), 3)
@@ -71,8 +75,10 @@ test_that("hidden age composition conserves N, biomass and mature biomass", {
     expected_shares <- c((1 - survival) * survival^(0:2), survival^3)
     expect_equal(unname(rep$N_plus[1, ] / total[1]), expected_shares, tolerance = 1e-12)
     for (y in 2:nrow(rep$N)) {
-      pred <- c(rep$N[y - 1, "3"] * exp(-rep$Z[y - 1, "3"]),
-                rep$N_plus[y - 1, 1:3] * exp(-rep$Z[y - 1, "4"]))
+      pred <- c(
+        rep$N[y - 1, "3"] * exp(-rep$Z[y - 1, "3"]),
+        rep$N_plus[y - 1, 1:3] * exp(-rep$Z[y - 1, "4"])
+      )
       pred[4] <- pred[4] + rep$N_plus[y - 1, 4] * exp(-rep$Z[y - 1, "4"])
       ordinary_prediction <- sum(rep$N[y - 1, c("3", "4")] * exp(-rep$Z[y - 1, c("3", "4")]))
       expect_equal(sum(pred), ordinary_prediction, tolerance = 1e-12)

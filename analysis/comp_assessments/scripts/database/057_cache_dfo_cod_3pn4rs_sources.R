@@ -1,5 +1,7 @@
-root <- file.path("analysis", "comp_assessments", "source_cache",
-                  "dfo_cod_3pn4rs_2025")
+root <- file.path(
+  "analysis", "comp_assessments", "source_cache",
+  "dfo_cod_3pn4rs_2025"
+)
 dir.create(root, recursive = TRUE, showWarnings = FALSE)
 
 catalogues <- c(
@@ -27,40 +29,58 @@ cache <- function(filename, url, type, notes) {
 }
 
 for (name in names(catalogues)) {
-  url <- paste0("https://open.canada.ca/data/en/api/3/action/package_show?id=",
-                catalogues[[name]])
-  path <- cache(paste0(name, "_catalogue.json"), url, "survey_catalogue",
-                "Public DFO source survey metadata; not the fitted assessment inputs.")
+  url <- paste0(
+    "https://open.canada.ca/data/en/api/3/action/package_show?id=",
+    catalogues[[name]]
+  )
+  path <- cache(
+    paste0(name, "_catalogue.json"), url, "survey_catalogue",
+    "Public DFO source survey metadata; not the fitted assessment inputs."
+  )
   resources <- jsonlite::fromJSON(path)$result$resources
   dictionary <- resources$url[grepl("dictionary", resources$url, ignore.case = TRUE)]
-  cache(paste0(name, "_dictionary.csv"), dictionary[[1]], "survey_dictionary",
-        "Raw sample weights are grams, not the kg-per-fish assessment weight surface.")
+  cache(
+    paste0(name, "_dictionary.csv"), dictionary[[1]], "survey_dictionary",
+    "Raw sample weights are grams, not the kg-per-fish assessment weight surface."
+  )
   archives <- resources$url[grepl("\\.zip$", resources$url)]
   if (name == "sentinel") {
     archives <- archives[grepl("(estival_summer|CRP)\\.zip$", archives)]
   }
   for (archive in archives) {
-    cache(paste0(name, "_", basename(archive)), archive, "raw_survey_data",
-          paste("Tow catches, biological samples and available length frequencies.",
-                "Not annual assessment indices, stock weights or fitted maturity ogives."))
+    cache(
+      paste0(name, "_", basename(archive)), archive, "raw_survey_data",
+      paste(
+        "Tow catches, biological samples and available length frequencies.",
+        "Not annual assessment indices, stock weights or fitted maturity ogives."
+      )
+    )
   }
 }
-path <- cache("rv-survey-2024.pdf",
+path <- cache(
+  "rv-survey-2024.pdf",
   "https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/41297039.pdf",
   "survey_methods_pdf",
-  paste("Research Document 2025/032, cited by the production assessment.",
-        "Cod results in Figures 31-33; no numerical annual age-specific",
-        "index, stock-weight or maturity matrix."))
+  paste(
+    "Research Document 2025/032, cited by the production assessment.",
+    "Cod results in Figures 31-33; no numerical annual age-specific",
+    "index, stock-weight or maturity matrix."
+  )
+)
 if (!startsWith(readChar(path, 4, useBytes = TRUE), "%PDF")) {
   cli::cli_abort("The August survey download is not a PDF.")
 }
 writeLines(pdftools::pdf_text(path), file.path(root, "rv-survey-2024.txt"))
-path <- cache("maturity.pdf",
+path <- cache(
+  "maturity.pdf",
   "https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/41287332.pdf",
   "maturity_methods_pdf",
-  paste("Technical Report 3671 (2025), DOI 10.60825/z5m6-hx38.",
-        "Catalogue full-text alternative to the redirected publications.gc.ca URL.",
-        "Annual fitted ogives are figures, not numerical tables."))
+  paste(
+    "Technical Report 3671 (2025), DOI 10.60825/z5m6-hx38.",
+    "Catalogue full-text alternative to the redirected publications.gc.ca URL.",
+    "Annual fitted ogives are figures, not numerical tables."
+  )
+)
 if (!startsWith(readChar(path, 4, useBytes = TRUE), "%PDF")) {
   cli::cli_abort("The maturity download is not a PDF.")
 }

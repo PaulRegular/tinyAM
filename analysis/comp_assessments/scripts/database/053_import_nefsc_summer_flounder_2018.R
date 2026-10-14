@@ -27,8 +27,10 @@ if (stock_id %in% stocks$stock_id || any(assessments$assessment_id %in% c(assess
 pages <- pdftools::pdf_text(pdf_path)
 page_text <- function(id, caption) {
   base <- which(grepl(caption, pages, perl = TRUE))
-  continued <- which(grepl(paste0("(?m)^\\s*Table ", id,
-                                 " (continued|contd)[.]"), pages, perl = TRUE))
+  continued <- which(grepl(paste0(
+    "(?m)^\\s*Table ", id,
+    " (continued|contd)[.]"
+  ), pages, perl = TRUE))
   selected <- sort(unique(c(base, continued)))
   if (!length(base) || !length(selected)) {
     stop("Could not locate Table ", id, " in the cached report.", call. = FALSE)
@@ -36,7 +38,9 @@ page_text <- function(id, caption) {
   selected_lines <- lapply(selected, function(page) {
     lines <- strsplit(pages[[page]], "\\n", perl = TRUE)[[1L]]
     start <- grep(paste0("^\\s*Table ", id, "([.]| (continued|contd)[.])"),
-                  lines, perl = TRUE)
+      lines,
+      perl = TRUE
+    )
     if (!length(start)) stop("Could not locate Table ", id, " caption on PDF page ", page, ".")
     start <- start[[1L]]
     following <- grep("^\\s*Table A[0-9]+[.]", lines, perl = TRUE)
@@ -50,12 +54,16 @@ year_rows <- function(lines, table_id, fields, years) {
   lines <- lines[grepl("^\\s*(19|20)[0-9]{2}\\s+", lines, perl = TRUE)]
   rows <- lapply(lines, function(line) {
     fields_in_row <- strsplit(gsub(",", "", trimws(line)), "[[:space:]]+",
-                              perl = TRUE)[[1L]]
+      perl = TRUE
+    )[[1L]]
     values <- suppressWarnings(as.numeric(fields_in_row))
-    if (!length(values) || is.na(values[[1L]]) || !values[[1L]] %in% years) return(NULL)
+    if (!length(values) || is.na(values[[1L]]) || !values[[1L]] %in% years) {
+      return(NULL)
+    }
     if (length(values) != fields || anyNA(values)) {
       stop("Unexpected row width in Table ", table_id, ": ", trimws(line),
-           call. = FALSE)
+        call. = FALSE
+      )
     }
     values
   })
@@ -79,7 +87,9 @@ age_index_table <- function(id, caption, years) {
   rows <- lapply(headers, function(i) {
     header <- strsplit(trimws(lines[[i]]), "[[:space:]]+", perl = TRUE)[[1L]]
     year <- as.integer(header[[1L]])
-    if (!year %in% years) return(NULL)
+    if (!year %in% years) {
+      return(NULL)
+    }
     following <- seq.int(i + 1L, min(length(lines), i + 3L))
     big <- following[grepl("^\\s*BIG\\s+", lines[following], perl = TRUE)]
     if (length(big) != 1L) stop("Could not find the Bigelow row for ", year, " in Table ", id, ".", call. = FALSE)
@@ -145,7 +155,8 @@ for (fleet in names(catch_by_fleet)) {
     "Commercial landings" = "Tables A3 and A6, report pp. 124-125 and 129-130",
     "Commercial discards" = "Table A10, report pp. 137-138",
     "Recreational landings" = "Table A23, report pp. 156-157",
-    "Recreational discards" = "Table A28, report pp. 163-164")
+    "Recreational discards" = "Table A28, report pp. 163-164"
+  )
   input_rows[[length(input_rows) + 1L]] <- add_age_input(
     "catch", "numbers_at_age", "numbers", fleet, "", years, model_ages,
     catch_by_fleet[[fleet]], "thousand fish", paste0("66th SAW 2018 assessment, ", table_ref),
@@ -175,8 +186,10 @@ add_survey_index <- function(x, survey, times, table_id, report_pages) {
   rows$value <- as.vector(t(x[, 2:9, drop = FALSE]))
   rows$sampling_time <- times
   rows$survey <- survey
-  rows$source_reference <- paste0("66th SAW 2018 assessment, Table ", table_id,
-                                  ", report pp. ", report_pages)
+  rows$source_reference <- paste0(
+    "66th SAW 2018 assessment, Table ", table_id,
+    ", report pp. ", report_pages
+  )
   rows
 }
 survey_rows <- rbind(
@@ -290,7 +303,8 @@ output_rows[[4L]] <- data.frame(
 )
 outputs_add <- do.call(rbind, output_rows)
 largest_catch_difference <- which(abs(catch_age_difference) == max_catch_age_difference,
-                                  arr.ind = TRUE)[1L, ]
+  arr.ind = TRUE
+)[1L, ]
 catch_difference_note <- paste0(
   "The largest absolute difference is ", format(max_catch_age_difference, trim = TRUE),
   " thousand fish at year ", years[largest_catch_difference[[1L]]],
@@ -381,18 +395,20 @@ read_db <- function(path) read.csv(path, stringsAsFactors = FALSE, check.names =
 append_rows <- function(path, rows) {
   columns <- names(read_db(path))
   if (!setequal(names(rows), columns)) stop("Column mismatch for ", basename(path), call. = FALSE)
-  utils::write.table(rows[columns], path, sep = ",", quote = TRUE, row.names = FALSE,
-                     col.names = FALSE, append = TRUE, na = "")
+  utils::write.table(rows[columns], path,
+    sep = ",", quote = TRUE, row.names = FALSE,
+    col.names = FALSE, append = TRUE, na = ""
+  )
 }
 if (nrow(inputs_add) != 1872L || nrow(outputs_add) != 648L ||
-    any(!is.finite(inputs_add$value)) || any(!is.finite(outputs_add$value)) ||
-    any(inputs_add$value < 0) || any(outputs_add$value < 0) ||
-    !isTRUE(all.equal(as.numeric(M_rows$value), M_at_age)) ||
-    !isTRUE(all.equal(as.numeric(ssb_weight_rows$value), ssb_weights))) {
+  any(!is.finite(inputs_add$value)) || any(!is.finite(outputs_add$value)) ||
+  any(inputs_add$value < 0) || any(outputs_add$value < 0) ||
+  !isTRUE(all.equal(as.numeric(M_rows$value), M_at_age)) ||
+  !isTRUE(all.equal(as.numeric(ssb_weight_rows$value), ssb_weights))) {
   stop("Summer flounder records failed dimensional or value checks.", call. = FALSE)
 }
 if (tail(ssb[, 2L], 1L) != 44552 || tail(ssb[, 3L], 1L) != 42415 ||
-    tail(ssb[, 4L], 1L) != 0.334) {
+  tail(ssb[, 4L], 1L) != 0.334) {
   stop("Terminal-year F2018_BASE_V2 values do not match Table A87.", call. = FALSE)
 }
 
@@ -402,4 +418,6 @@ append_rows(assumptions_path, assumptions_add)
 append_rows(inputs_path, inputs_add)
 append_rows(outputs_path, outputs_add)
 cat("Imported the detailed 2018 summer flounder record and registered the 2025 summary-only update: ",
-    nrow(inputs_add), " inputs and ", nrow(outputs_add), " outputs.\n", sep = "")
+  nrow(inputs_add), " inputs and ", nrow(outputs_add), " outputs.\n",
+  sep = ""
+)

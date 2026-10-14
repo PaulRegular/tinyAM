@@ -23,10 +23,12 @@ test_that("spawning-time survival uses the supplied fraction of F and M", {
 
 test_that("simulated BH/Ricker parents use the same spawning-time population", {
   for (curve in c("bh", "ricker")) {
-    dat <- make_test_dat(years = 1983:1995, ages = 2:8,
+    dat <- make_test_dat(
+      years = 1983:1995, ages = 2:8,
       N_settings = list(process = "iid"), rec_settings = list(process = "iid", sd = .2, mu_form = as.formula(paste0("~ ", curve, "(ssb)"))),
       data = timed_obs(.25),
-      proj_settings = list(n_proj = 2, n_mean = 2, F_mult = 1))
+      proj_settings = list(n_proj = 2, n_mean = 2, F_mult = 1)
+    )
     par <- make_par(dat)
     set.seed(731)
     simulated <- nll_fun(par, dat, simulate = TRUE)
@@ -43,16 +45,20 @@ test_that("simulated BH/Ricker parents use the same spawning-time population", {
 })
 
 test_that("curve initialization anchors the configured spawning-time SSB", {
-  for (curve in c("bh", "ricker")) for (time in c(0, .25, 1)) {
-    dat <- make_test_dat(years = 1983:1995, ages = 2:8,
-      N_settings = list(process = "off"), rec_settings = list(process = "iid", mu_form = as.formula(paste0("~ ", curve, "(ssb)"))),
-      data = timed_obs(time))
-    par <- make_par(dat)
-    report <- RTMB::MakeADFun(function(p) nll_fun(p, dat), par, silent = TRUE)$report()
-    parent <- dat$rec$eligible[1L] - dat$rec$curve$lag
-    S <- report$ssb[parent]
-    expect_equal(unname(exp(par$log_sr_beta)), unname(1 / S))
-    expect_equal(unname(exp(tinyAM:::.rec_log_curve(log(S), par, curve))), exp(par$log_r0))
+  for (curve in c("bh", "ricker")) {
+    for (time in c(0, .25, 1)) {
+      dat <- make_test_dat(
+        years = 1983:1995, ages = 2:8,
+        N_settings = list(process = "off"), rec_settings = list(process = "iid", mu_form = as.formula(paste0("~ ", curve, "(ssb)"))),
+        data = timed_obs(time)
+      )
+      par <- make_par(dat)
+      report <- RTMB::MakeADFun(function(p) nll_fun(p, dat), par, silent = TRUE)$report()
+      parent <- dat$rec$eligible[1L] - dat$rec$curve$lag
+      S <- report$ssb[parent]
+      expect_equal(unname(exp(par$log_sr_beta)), unname(1 / S))
+      expect_equal(unname(exp(tinyAM:::.rec_log_curve(log(S), par, curve))), exp(par$log_r0))
+    }
   }
 })
 
@@ -60,8 +66,10 @@ test_that("spawning timing survives updates and retrospective/hindcast folds", {
   fit <- suppressWarnings(update(default_fit, data = timed_obs(.25), silent = TRUE))
   expect_true(all(fit$pop$ssb$spawn_time == .25))
   expect_true(all(is.finite(fit$pop$ssb$se)))
-  refit <- suppressWarnings(update(fit, years = head(YEARS, -1), silent = TRUE,
-    start_par = as.list(fit$sdrep, "Estimate"), proj_settings = list(n_proj = 1, n_mean = 1, F_mult = 1)))
+  refit <- suppressWarnings(update(fit,
+    years = head(YEARS, -1), silent = TRUE,
+    start_par = as.list(fit$sdrep, "Estimate"), proj_settings = list(n_proj = 1, n_mean = 1, F_mult = 1)
+  ))
   expect_identical(unique(as.vector(refit$dat$spawn_time)), .25)
   expect_true(all(refit$pop$ssb$spawn_time == .25))
   retro <- fit_retro(fit, folds = 1, start_from_fit = TRUE, progress = FALSE)
@@ -96,8 +104,10 @@ test_that("age/year timing is aligned and contributes exact survival", {
 test_that("hidden ages retain their own timing and project terminal values", {
   data <- timed_obs()
   data$maturity$spawn_time <- .01 * data$maturity$age + .001 * (data$maturity$year - 1954)
-  dat <- make_test_dat(data = data, years = 1983:1990, ages = 2:8,
-    proj_settings = list(n_proj = 2))
+  dat <- make_test_dat(
+    data = data, years = 1983:1990, ages = 2:8,
+    proj_settings = list(n_proj = 2)
+  )
   par <- make_par(dat)
   report <- RTMB::MakeADFun(function(p) nll_fun(p, dat), par, silent = TRUE)$report()
   expected <- rowSums(report$N_plus * dat$W_plus_input * dat$P_plus_input *
@@ -129,8 +139,10 @@ test_that("zero-lag parent SSB uses age-specific timing without circularity", {
   data <- timed_obs()
   data$maturity$obs[data$maturity$age == 2] <- 0
   data$maturity$spawn_time <- data$maturity$age / 20
-  dat <- make_test_dat(data = data, years = 1983:1995, ages = 2:8,
-    N_settings = list(process = "off"), rec_settings = list(process = "iid", mu_form = ~ bh(ssb, lag = 0)))
+  dat <- make_test_dat(
+    data = data, years = 1983:1995, ages = 2:8,
+    N_settings = list(process = "off"), rec_settings = list(process = "iid", mu_form = ~ bh(ssb, lag = 0))
+  )
   par <- make_par(dat)
   report <- RTMB::MakeADFun(function(p) nll_fun(p, dat), par, silent = TRUE)$report()
   expect_equal(report$rec_log_parent, log(report$ssb[dat$rec$eligible]), ignore_attr = TRUE)
@@ -141,16 +153,20 @@ test_that("zero-lag parent SSB uses age-specific timing without circularity", {
 test_that("variable timing is reported honestly and retains derived uncertainty", {
   data <- timed_obs()
   data$maturity$spawn_time <- data$maturity$age / 30
-  fit <- suppressWarnings(update(default_fit, data = data, silent = TRUE,
-    start_par = as.list(default_fit$sdrep, "Estimate")))
+  fit <- suppressWarnings(update(default_fit,
+    data = data, silent = TRUE,
+    start_par = as.list(default_fit$sdrep, "Estimate")
+  ))
   expect_true(all(is.na(fit$pop$ssb$spawn_time)))
   expect_true(all(is.finite(fit$pop$ssb$se)))
   expect_true(all(grepl("Age-specific", fit$pop$ssb$timing)))
   timing <- tinyAM:::.ssb_timing_table(fit$dat)
   expect_equal(timing$spawn_time, timing$age / 30)
   for (curve in c("bh", "ricker")) {
-    dat <- make_test_dat(data = data, years = 1983:1995, ages = 2:8,
-      rec_settings = list(process = "iid", sd = .2, mu_form = as.formula(paste0("~ ", curve, "(ssb)"))))
+    dat <- make_test_dat(
+      data = data, years = 1983:1995, ages = 2:8,
+      rec_settings = list(process = "iid", sd = .2, mu_form = as.formula(paste0("~ ", curve, "(ssb)")))
+    )
     par <- make_par(dat)
     set.seed(897)
     simulated <- nll_fun(par, dat, simulate = TRUE)

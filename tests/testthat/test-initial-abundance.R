@@ -19,8 +19,10 @@ test_that("recruitment has a fixed first-year anchor and subsequent RW states", 
   no_obs$any_fill_missing <- FALSE
   constant <- par
   constant$log_r[] <- constant$log_r0
-  expect_equal(nll_fun(par, no_obs) - nll_fun(constant, no_obs),
-               -sum(dnorm(increments, 0, 1, log = TRUE) - dnorm(0, 0, 1, log = TRUE)))
+  expect_equal(
+    nll_fun(par, no_obs) - nll_fun(constant, no_obs),
+    -sum(dnorm(increments, 0, 1, log = TRUE) - dnorm(0, 0, 1, log = TRUE))
+  )
   constant$log_r0 <- constant$log_r0 + 10
   constant$log_r[] <- constant$log_r0
   expect_equal(nll_fun(constant, no_obs), nll_fun(par, no_obs) - sum(increments^2) / 2)
@@ -41,8 +43,10 @@ test_that("each initializer is independent of the subsequent N process", {
   for (init in c("exp", "free", "random")) {
     initial <- list()
     for (process in c("off", "iid", "rw", "ar1")) {
-      dat <- make_test_dat(years = 2000:2003,
-        N_settings = list(process = process, init = init))
+      dat <- make_test_dat(
+        years = 2000:2003,
+        N_settings = list(process = process, init = init)
+      )
       par <- make_par(dat)
       par$log_r0 <- log(80)
       par$log_f[1, ] <- log(seq(0.1, 0.4, length.out = length(dat$ages)))
@@ -66,8 +70,10 @@ test_that("each initializer is independent of the subsequent N process", {
 })
 
 test_that("free initialization spans arbitrary initial older-age abundance without a penalty", {
-  dat <- make_test_dat(years = 2000:2003,
-                      N_settings = list(process = "off", init = "free"))
+  dat <- make_test_dat(
+    years = 2000:2003,
+    N_settings = list(process = "off", init = "free")
+  )
   par <- make_par(dat)
   target <- log(c(100, 400, 50, 250, 80, 30, 90, 12, 17, 5, 10, 3))
   par$log_n0[] <- target
@@ -86,8 +92,10 @@ test_that("free initialization spans arbitrary initial older-age abundance witho
 })
 
 test_that("random initialization adds exactly its own IID normal likelihood", {
-  dat <- make_test_dat(years = 2000:2003,
-                      N_settings = list(process = "iid", init = "random"))
+  dat <- make_test_dat(
+    years = 2000:2003,
+    N_settings = list(process = "iid", init = "random")
+  )
   par <- make_par(dat)
   par$log_n0[] <- seq(-0.4, 0.7, length.out = length(par$log_n0))
   par$log_sd_n0 <- log(0.3)
@@ -103,10 +111,12 @@ test_that("random initialization adds exactly its own IID normal likelihood", {
 })
 
 test_that("simulated N0 uses simulated mortality and IID initial-age increments", {
-  dat <- make_test_dat(years = 2000:2003,
+  dat <- make_test_dat(
+    years = 2000:2003,
     N_settings = list(process = "iid", init = "random"),
-    F_settings = list(process = "iid", mu_form = ~ 1),
-    M_settings = list(process = "iid", mu_supplied = ~I(0.3), first_dev_year = 2000))
+    F_settings = list(process = "iid", mu_form = ~1),
+    M_settings = list(process = "iid", mu_supplied = ~ I(0.3), first_dev_year = 2000)
+  )
   par <- make_par(dat)
   par$log_r0 <- log(200)
   par$log_sd_f <- par$log_sd_m <- par$log_sd_n <- par$log_sd_r <- log(0.1)
@@ -139,11 +149,14 @@ test_that("N states represent only genuine cohort transitions with a plus group"
   par$log_n[] <- log(baseline$N[-1, -1])
   par$log_sd_n <- log(0.3)
   expect_equal(n0_report(par, dat)$N, baseline$N)
-  expect_equal(nll_fun(par, dat) - nll_fun(par, deterministic),
-               -length(par$log_n) * dnorm(0, 0, 0.3, log = TRUE))
+  expect_equal(
+    nll_fun(par, dat) - nll_fun(par, deterministic),
+    -length(par$log_n) * dnorm(0, 0, 0.3, log = TRUE)
+  )
   testthat::local_mocked_bindings(
     rnorm = function(n, mean = 0, sd = 1) rep_len(mean, n) + 0.2,
-    .package = "stats")
+    .package = "stats"
+  )
   sims <- nll_fun(par, dat, simulate = TRUE)
   par[intersect(names(sims), names(par))] <- sims[intersect(names(sims), names(par))]
   rep <- n0_report(par, dat)
@@ -157,27 +170,41 @@ test_that("N states represent only genuine cohort transitions with a plus group"
 })
 
 test_that("random initialization diagnoses the available age margin", {
-  expect_error(make_test_dat(ages = 2, N_settings = list(process = "off", init = "random")),
-               "at least two modeled ages")
-  expect_warning(dat <- make_test_dat(ages = 2:10,
-    N_settings = list(process = "off", init = "random")),
-    "8 initial age-to-age[[:space:]]+deviations.*9 modeled ages")
+  expect_error(
+    make_test_dat(ages = 2, N_settings = list(process = "off", init = "random")),
+    "at least two modeled ages"
+  )
+  expect_warning(
+    dat <- make_test_dat(
+      ages = 2:10,
+      N_settings = list(process = "off", init = "random")
+    ),
+    "8 initial age-to-age[[:space:]]+deviations.*9 modeled ages"
+  )
   expect_identical(dat$N_settings$init, "random")
   expect_no_warning(make_test_dat(ages = 2:11, N_settings = list(process = "off", init = "random")))
-  expect_warning(two_ages <- make_test_dat(ages = 2:3, years = 2000:2003,
-    N_settings = list(process = "off", init = "random")),
-    "1 initial age-to-age[[:space:]]+deviations.*2 modeled ages")
+  expect_warning(
+    two_ages <- make_test_dat(
+      ages = 2:3, years = 2000:2003,
+      N_settings = list(process = "off", init = "random")
+    ),
+    "1 initial age-to-age[[:space:]]+deviations.*2 modeled ages"
+  )
   expect_length(make_par(two_ages)$log_n0, 1L)
   expect_true(is.finite(nll_fun(make_par(two_ages), two_ages)))
   expect_error(make_test_dat(N_settings = list(process = "iid", init = "invalid")), "arg")
   for (init in c("exp", "free")) {
-    dat <- make_test_dat(ages = 2:3, years = 2000:2003,
-                         N_settings = list(process = "off", init = init))
+    dat <- make_test_dat(
+      ages = 2:3, years = 2000:2003,
+      N_settings = list(process = "off", init = init)
+    )
     par <- make_par(dat)
     expect_length(par$log_n0, if (init == "exp") 0L else 1L)
     rep <- n0_report(par, dat)
-    expect_equal(unname(log(rep$N[1, 2])),
-                 if (init == "exp") par$log_r0 - unname(rep$Z[1, 1]) else unname(par$log_n0))
+    expect_equal(
+      unname(log(rep$N[1, 2])),
+      if (init == "exp") par$log_r0 - unname(rep$Z[1, 1]) else unname(par$log_n0)
+    )
   }
 })
 
@@ -203,11 +230,16 @@ test_that("fits, summaries, updates and conditional simulations honor N0 roles",
       set.seed(18)
       sim <- tinyAM:::.sim_obs(fit, function(fit) par, redraw_random = redraw)
       n0 <- subset(sim$N, year == min(fit$dat$years))$est
-      if (!redraw || init == "free") expect_equal(log(n0[-1]), unname(par$log_n0))
-      else expect_false(isTRUE(all.equal(log(n0[-1]), unname(par$log_n0))))
+      if (!redraw || init == "free") {
+        expect_equal(log(n0[-1]), unname(par$log_n0))
+      } else {
+        expect_false(isTRUE(all.equal(log(n0[-1]), unname(par$log_n0))))
+      }
     }
-    dat <- make_test_dat(years = 1990:2020, ages = 2:20,
-      N_settings = list(process = "iid", init = init))
+    dat <- make_test_dat(
+      years = 1990:2020, ages = 2:20,
+      N_settings = list(process = "iid", init = init)
+    )
     start <- tinyAM:::.merge_start_par(make_par(dat), par)
     expect_equal(names(start$log_r), as.character(dat$years[-1]))
     expect_equal(rownames(start$log_n), as.character(dat$years[-1]))

@@ -24,12 +24,16 @@ stopifnot(
   identical(source_data$assessment$estimate_terminal_year, 2026L),
   nrow(translated$obs$catch) == 690L,
   nrow(translated$obs$index) == 870L,
-  identical(as.integer(table(translated$obs$index$survey)),
-           c(300L, 88L, 152L, 180L, 150L)),
-  setequal(unique(translated$obs$index$survey),
-           c("BTS-IBTS Q3", "BTS-Isis", "IBTS Q1", "SNS1", "SNS2")),
+  identical(
+    as.integer(table(translated$obs$index$survey)),
+    c(300L, 88L, 152L, 180L, 150L)
+  ),
+  setequal(
+    unique(translated$obs$index$survey),
+    c("BTS-IBTS Q3", "BTS-Isis", "IBTS Q1", "SNS1", "SNS2")
+  ),
   !any(translated$obs$index$survey == "SNS2" &
-         translated$obs$index$year == 2003L),
+    translated$obs$index$year == 2003L),
   all(translated$obs$index$samp_time[translated$obs$index$survey == "IBTS Q1"] == .125),
   all(translated$obs$index$samp_time[translated$obs$index$survey != "IBTS Q1"] == .75),
   all(is.finite(translated$obs$pop_covariates$M_assumption)),
@@ -47,7 +51,7 @@ stopifnot(
   sum(outputs$measure == "numbers_at_age") == 690L,
   sum(outputs$measure == "fishing_mortality_at_age") == 690L,
   all(outputs$lwr[outputs$year <= 2025 &
-                    outputs$measure %in% c("recruitment", "SSB", "Fbar")] > 0)
+    outputs$measure %in% c("recruitment", "SSB", "Fbar")] > 0)
 )
 
 cat("North Sea plaice translation structure passed.\n")

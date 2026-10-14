@@ -20,7 +20,8 @@ new_rows <- data.frame(
     "log_slp1_srv2 ~ N(-1, 1.5); log_slp2_srv2 ~ N(-1, 1.5); inf1_srv2 ~ N(0, 3); inf2_srv2 ~ N(10, 3)",
     "log_slp1_srv3 ~ N(-1, 1.5); inf1_srv3 ~ N(0, 3)",
     "log_slp1_srv6 ~ N(-1, 1.5); log_slp2_srv6 ~ N(-1, 1.5); inf1_srv6 ~ N(0, 3); inf2_srv6 ~ N(10, 3)",
-    "Each of the five log_DM_pars parameters ~ N(0, 2)"),
+    "Each of the five log_DM_pars parameters ~ N(0, 2)"
+  ),
   source_reference = c(rep(paste0(source_reference, "; loglik(22), lines 1155-1174"), 5), paste0(source_reference, "; parameter transform and loglik(22), lines 391-400 and 1175")),
   notes = c(
     "Normal prior means and SDs apply on the named parameter scales. These active terms regularize the fishery selectivity means.",
@@ -28,13 +29,17 @@ new_rows <- data.frame(
     "Normal prior means and SDs apply on the named parameter scales. All four terms are active for this survey.",
     "Only the ascending slope and inflection priors are active for this survey; the descending terms are commented out in the accepted source.",
     "Normal prior means and SDs apply on the named parameter scales. All four terms are active for this survey.",
-    "The five parameters enter the linear Dirichlet-multinomial composition likelihood. The source uses exp(log_DM_pars) for concentration and invlogit(log_DM_pars) in its derived effective-sample-size calculation."),
-  stringsAsFactors = FALSE, check.names = FALSE)
+    "The five parameters enter the linear Dirichlet-multinomial composition likelihood. The source uses exp(log_DM_pars) for concentration and invlogit(log_DM_pars) in its derived effective-sample-size calculation."
+  ),
+  stringsAsFactors = FALSE, check.names = FALSE
+)
 assumptions <- read.csv(assumption_file, stringsAsFactors = FALSE, check.names = FALSE, na.strings = character())
 new_rows <- new_rows[, names(assumptions), drop = FALSE]
 key_columns <- c("assessment_id", "component", "fleet", "survey", "setting")
 row_key <- function(x) apply(x[, key_columns, drop = FALSE], 1, paste, collapse = "\034")
-existing_keys <- row_key(assumptions); new_keys <- row_key(new_rows); append_rows <- new_rows[FALSE, , drop = FALSE]
+existing_keys <- row_key(assumptions)
+new_keys <- row_key(new_rows)
+append_rows <- new_rows[FALSE, , drop = FALSE]
 for (i in seq_len(nrow(new_rows))) {
   match_row <- which(existing_keys == new_keys[i])
   if (length(match_row)) {
@@ -44,7 +49,9 @@ for (i in seq_len(nrow(new_rows))) {
     expected_values[is.na(expected_values)] <- ""
     same <- identical(unname(existing_values), unname(expected_values))
     if (!same) stop("Existing GOA pollock assumption conflicts with the verified source row.")
-  } else append_rows <- rbind(append_rows, new_rows[i, , drop = FALSE])
+  } else {
+    append_rows <- rbind(append_rows, new_rows[i, , drop = FALSE])
+  }
 }
 if (nrow(append_rows)) write.table(append_rows, file = assumption_file, sep = ",", quote = TRUE, row.names = FALSE, col.names = FALSE, append = TRUE, na = "")
 cat("Added", nrow(append_rows), "verified GOA pollock prior assumptions.\n")

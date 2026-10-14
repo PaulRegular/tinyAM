@@ -10,8 +10,10 @@ framework_url <- "https://doi.org/10.17895/ices.pub.28444499.v1"
 source_name <- "MFRI 2025 Icelandic haddock assessment tables and technical report"
 
 db <- file.path(root, "database")
-paths <- setNames(file.path(db, paste0(c("stocks", "assessments", "assumptions", "inputs", "outputs"), ".csv")),
-                  c("stocks", "assessments", "assumptions", "inputs", "outputs"))
+paths <- setNames(
+  file.path(db, paste0(c("stocks", "assessments", "assumptions", "inputs", "outputs"), ".csv")),
+  c("stocks", "assessments", "assumptions", "inputs", "outputs")
+)
 read_db <- function(name) read.csv(paths[[name]], stringsAsFactors = FALSE, check.names = FALSE)
 read_source <- function(name) {
   path <- file.path(cache_dir, paste0(name, ".csv"))
@@ -21,7 +23,7 @@ read_source <- function(name) {
 stocks <- read_db("stocks")
 assessments <- read_db("assessments")
 if (stock_id %in% stocks$stock_id ||
-    any(assessments$assessment_id %in% c(assessment_id, summary_id))) {
+  any(assessments$assessment_id %in% c(assessment_id, summary_id))) {
   stop("Icelandic haddock records already exist in the database.", call. = FALSE)
 }
 
@@ -55,15 +57,15 @@ summary$year <- as.integer(summary$year)
 summary <- summary[summary$year %in% 1979:2025, , drop = FALSE]
 summary <- summary[order(summary$year), , drop = FALSE]
 if (!identical(summary$year, 1979:2025) ||
-    !identical(dim(catch), c(46L, 12L)) ||
-    !identical(dim(smb), c(40L, 12L)) ||
-    !identical(dim(smh), c(30L, 12L)) ||
-    !identical(dim(n_at_age), c(47L, 12L)) ||
-    !identical(dim(f_at_age), c(46L, 12L)) ||
-    any(catch < 0) || any(catch_weight <= 0) || any(stock_weight <= 0) ||
-    any(maturity < 0 | maturity > 1) ||
-    any(n_at_age < 0) || any(f_at_age < 0) ||
-    any(!is.finite(summary$ssb)) || any(!is.finite(summary$recruitment))) {
+  !identical(dim(catch), c(46L, 12L)) ||
+  !identical(dim(smb), c(40L, 12L)) ||
+  !identical(dim(smh), c(30L, 12L)) ||
+  !identical(dim(n_at_age), c(47L, 12L)) ||
+  !identical(dim(f_at_age), c(46L, 12L)) ||
+  any(catch < 0) || any(catch_weight <= 0) || any(stock_weight <= 0) ||
+  any(maturity < 0 | maturity > 1) ||
+  any(n_at_age < 0) || any(f_at_age < 0) ||
+  any(!is.finite(summary$ssb)) || any(!is.finite(summary$recruitment))) {
   stop("Icelandic haddock source tables failed coverage or value checks.", call. = FALSE)
 }
 
@@ -91,7 +93,8 @@ age_inputs <- function(type, measure, basis, years, values, unit,
   grid$value <- as.vector(values)
   grid <- grid[!is.na(grid$value), , drop = FALSE]
   rows <- input_row(
-    type, measure, basis, survey = survey, year = grid$year, age = grid$age,
+    type, measure, basis,
+    survey = survey, year = grid$year, age = grid$age,
     value = grid$value, unit = unit, source_reference = source_reference,
     notes = notes, transformation = transformation, sampling_time = sampling_time
   )
@@ -107,26 +110,32 @@ static_M <- input_row(
 )
 inputs_add <- rbind(
   age_inputs("catch", "numbers_at_age", "numbers", input_years, catch,
-             "thousand fish", paste(source_name, "Catch numbers-at-age"),
-             notes = "Reported catch-at-age for 1979-2024; age 12 is the 12+ group.",
-             transformation = "Retain the official values in thousands of fish."),
+    "thousand fish", paste(source_name, "Catch numbers-at-age"),
+    notes = "Reported catch-at-age for 1979-2024; age 12 is the 12+ group.",
+    transformation = "Retain the official values in thousands of fish."
+  ),
   age_inputs("catch_weight", "weight_at_age", "kg_per_fish", input_years, catch_weight,
-             "g per fish", paste(source_name, "Catch weights-at-age"),
-             notes = "Catch weight-at-age from commercial samples; age 12 is the 12+ group."),
+    "g per fish", paste(source_name, "Catch weights-at-age"),
+    notes = "Catch weight-at-age from commercial samples; age 12 is the 12+ group."
+  ),
   age_inputs("weight", "weight_at_age", "kg_per_fish", input_years, stock_weight,
-             "g per fish", paste(source_name, "Stock weights-at-age"),
-             notes = "Stock weights from the March survey; the source reports pre-1985 values as the 1985 age vector."),
+    "g per fish", paste(source_name, "Stock weights-at-age"),
+    notes = "Stock weights from the March survey; the source reports pre-1985 values as the 1985 age vector."
+  ),
   age_inputs("maturity", "maturity_at_age", "proportion", input_years, maturity,
-             "proportion mature", paste(source_name, "Maturity-at-age"),
-             notes = "Maturity-at-age from the March survey; the source reports pre-1985 values as the 1985 age vector."),
+    "proportion mature", paste(source_name, "Maturity-at-age"),
+    notes = "Maturity-at-age from the March survey; the source reports pre-1985 values as the 1985 age vector."
+  ),
   age_inputs("index", "numbers_at_age", "index_scale", 1985:2024, smb,
-             "survey index (unit unresolved)", paste(source_name, "IS-SMB spring survey indices-at-age"),
-             notes = "Official age-specific spring survey series. The source labels these values as numbers but does not identify a physical unit in the table; sampling_time 0.20 is a month-midpoint approximation, not the exact accepted-model timing.",
-             survey = "IS-SMB", season = "spring", sampling_time = 0.20),
+    "survey index (unit unresolved)", paste(source_name, "IS-SMB spring survey indices-at-age"),
+    notes = "Official age-specific spring survey series. The source labels these values as numbers but does not identify a physical unit in the table; sampling_time 0.20 is a month-midpoint approximation, not the exact accepted-model timing.",
+    survey = "IS-SMB", season = "spring", sampling_time = 0.20
+  ),
   age_inputs("index", "numbers_at_age", "index_scale", 1995:2024, smh,
-             "survey index (unit unresolved)", paste(source_name, "IS-SMH autumn survey indices-at-age"),
-             notes = "Official age-specific autumn survey series. The source labels these values as numbers but does not identify a physical unit in the table; sampling_time 0.80 is a month-midpoint approximation, not the exact accepted-model timing.",
-             survey = "IS-SMH", season = "autumn", sampling_time = 0.80),
+    "survey index (unit unresolved)", paste(source_name, "IS-SMH autumn survey indices-at-age"),
+    notes = "Official age-specific autumn survey series. The source labels these values as numbers but does not identify a physical unit in the table; sampling_time 0.80 is a month-midpoint approximation, not the exact accepted-model timing.",
+    survey = "IS-SMH", season = "autumn", sampling_time = 0.80
+  ),
   static_M
 )
 
@@ -151,47 +160,63 @@ age_outputs <- function(measure, years, values, unit, source_reference, notes) {
   )
 }
 outputs_add <- rbind(
-  age_outputs("numbers_at_age", 1979:2025, n_at_age, "thousand fish",
-              paste(source_name, "Stock numbers-at-age"),
-              "Accepted assessment abundance estimates; age 12 is the 12+ group."),
-  age_outputs("fishing_mortality_at_age", input_years, f_at_age, "per year",
-              paste(source_name, "Fishing mortality-at-age"),
-              "Accepted assessment fishing mortality estimates; age 12 is the 12+ group."),
-  output_row("biomass", "SSB", summary$year, value = summary$ssb,
-             unit = "tonnes", source_reference = paste(source_name, "Assessment summary"),
-             notes = "Published aggregate spawning biomass. Low/high values are retained as published; interval coverage is not specified in the table. The source uses pre-spawning mortality fractions; tinyAM comparisons derive a separately labelled common-definition mature biomass from N and shared biology.",
-             lwr = summary$low_ssb, upr = summary$high_ssb),
-  output_row("biomass", "reference_biomass", summary$year, value = summary$refbio,
-             unit = "tonnes", source_reference = paste(source_name, "Assessment summary"),
-             notes = "Published biomass of fish at least 45 cm; low/high values are retained as published, with interval coverage unspecified. No equivalent length-based tinyAM quantity is available.",
-             lwr = summary$low_refbio, upr = summary$high_refbio),
-  output_row("recruitment", "recruitment", summary$year, age = 1,
-             value = summary$recruitment, unit = "thousand fish",
-             source_reference = paste(source_name, "Assessment summary"),
-             notes = "Age-1 recruitment as reported in the assessment summary; low/high interval coverage is unspecified in the table.",
-             lwr = summary$low_recruitment, upr = summary$high_recruitment)
+  age_outputs(
+    "numbers_at_age", 1979:2025, n_at_age, "thousand fish",
+    paste(source_name, "Stock numbers-at-age"),
+    "Accepted assessment abundance estimates; age 12 is the 12+ group."
+  ),
+  age_outputs(
+    "fishing_mortality_at_age", input_years, f_at_age, "per year",
+    paste(source_name, "Fishing mortality-at-age"),
+    "Accepted assessment fishing mortality estimates; age 12 is the 12+ group."
+  ),
+  output_row("biomass", "SSB", summary$year,
+    value = summary$ssb,
+    unit = "tonnes", source_reference = paste(source_name, "Assessment summary"),
+    notes = "Published aggregate spawning biomass. Low/high values are retained as published; interval coverage is not specified in the table. The source uses pre-spawning mortality fractions; tinyAM comparisons derive a separately labelled common-definition mature biomass from N and shared biology.",
+    lwr = summary$low_ssb, upr = summary$high_ssb
+  ),
+  output_row("biomass", "reference_biomass", summary$year,
+    value = summary$refbio,
+    unit = "tonnes", source_reference = paste(source_name, "Assessment summary"),
+    notes = "Published biomass of fish at least 45 cm; low/high values are retained as published, with interval coverage unspecified. No equivalent length-based tinyAM quantity is available.",
+    lwr = summary$low_refbio, upr = summary$high_refbio
+  ),
+  output_row("recruitment", "recruitment", summary$year,
+    age = 1,
+    value = summary$recruitment, unit = "thousand fish",
+    source_reference = paste(source_name, "Assessment summary"),
+    notes = "Age-1 recruitment as reported in the assessment summary; low/high interval coverage is unspecified in the table.",
+    lwr = summary$low_recruitment, upr = summary$high_recruitment
+  )
 )
 
 assumption_rows <- function(id, reference, notes) {
-  component <- c("assessment", "population", "recruitment", "F", "M",
-                 "catch", "index", "index", "spawning", "weight",
-                 "maturity", "selectivity")
-  setting <- c("model_family", "age_structure", "recruitment_age", "process",
-               "natural_mortality", "catch_data", "spring_survey",
-               "autumn_survey", "pre_spawn_mortality", "weight_schedule",
-               "maturity_schedule", "selectivity")
-  value <- c("SAM state-space statistical catch-at-age model",
-             "Ages 1-12+, age 12 is the plus group; model starts in 1979",
-             "Recruitment at age 1",
-             "Fishing mortality and selectivity vary over time",
-             "Fixed M=0.2 per year for all ages",
-             "Commercial catch-at-age and catch weights",
-             "IS-SMB age-specific spring survey",
-             "IS-SMH age-specific autumn survey",
-             "F fraction before spawning 0.4; M fraction before spawning 0.3",
-             "March survey stock weights; pre-1985 vector held at 1985 values",
-             "March survey maturity; pre-1985 vector held at 1985 values",
-             "Selectivity allowed to vary over time")
+  component <- c(
+    "assessment", "population", "recruitment", "F", "M",
+    "catch", "index", "index", "spawning", "weight",
+    "maturity", "selectivity"
+  )
+  setting <- c(
+    "model_family", "age_structure", "recruitment_age", "process",
+    "natural_mortality", "catch_data", "spring_survey",
+    "autumn_survey", "pre_spawn_mortality", "weight_schedule",
+    "maturity_schedule", "selectivity"
+  )
+  value <- c(
+    "SAM state-space statistical catch-at-age model",
+    "Ages 1-12+, age 12 is the plus group; model starts in 1979",
+    "Recruitment at age 1",
+    "Fishing mortality and selectivity vary over time",
+    "Fixed M=0.2 per year for all ages",
+    "Commercial catch-at-age and catch weights",
+    "IS-SMB age-specific spring survey",
+    "IS-SMH age-specific autumn survey",
+    "F fraction before spawning 0.4; M fraction before spawning 0.3",
+    "March survey stock weights; pre-1985 vector held at 1985 values",
+    "March survey maturity; pre-1985 vector held at 1985 values",
+    "Selectivity allowed to vary over time"
+  )
   rows <- data.frame(
     assessment_id = id, component = component, fleet = "", survey = "",
     sex = "combined", region = "ICES 5.a", season = "",
@@ -202,8 +227,10 @@ assumption_rows <- function(id, reference, notes) {
     assessment_id = id, component = "survey_timing", fleet = "",
     survey = c("IS-SMB", "IS-SMH"), sex = "combined", region = "ICES 5.a",
     season = c("spring", "autumn"), setting = "sampling_time",
-    value = c("0.20 month-midpoint approximation for March",
-              "0.80 month-midpoint approximation for October"),
+    value = c(
+      "0.20 month-midpoint approximation for March",
+      "0.80 month-midpoint approximation for October"
+    ),
     source_reference = reference, notes = notes, stringsAsFactors = FALSE
   )
   rbind(rows, timing_rows)
@@ -235,8 +262,10 @@ assessment_add <- data.frame(
   estimate_terminal_year = c(2025, 2026),
   assessment_type = c("benchmark_assessment", "assessment_update"),
   model_family = "SAM",
-  model_version = c("WKICEGAD 2025 benchmark assessment",
-                    "2026 annual assessment using the benchmark model"),
+  model_version = c(
+    "WKICEGAD 2025 benchmark assessment",
+    "2026 annual assessment using the benchmark model"
+  ),
   is_current = c("TRUE", "FALSE"), is_applied = c("TRUE", "TRUE"),
   framework_year = 2025,
   assessment_url = c(report_url, summary_url),
@@ -256,13 +285,15 @@ append_rows <- function(name, rows) {
   path <- paths[[name]]
   columns <- names(read_db(name))
   if (!setequal(names(rows), columns)) stop("Column mismatch for ", name, ".csv.", call. = FALSE)
-  utils::write.table(rows[columns], path, sep = ",", quote = TRUE,
-                     row.names = FALSE, col.names = FALSE, append = TRUE, na = "")
+  utils::write.table(rows[columns], path,
+    sep = ",", quote = TRUE,
+    row.names = FALSE, col.names = FALSE, append = TRUE, na = ""
+  )
 }
 if (nrow(inputs_add) < 2500L || nrow(outputs_add) < 1100L ||
-    any(!is.finite(inputs_add$value)) || any(!is.finite(outputs_add$value)) ||
-    any(inputs_add$value[inputs_add$type == "maturity"] > 1) ||
-    any(inputs_add$value[inputs_add$type == "M"] != 0.2)) {
+  any(!is.finite(inputs_add$value)) || any(!is.finite(outputs_add$value)) ||
+  any(inputs_add$value[inputs_add$type == "maturity"] > 1) ||
+  any(inputs_add$value[inputs_add$type == "M"] != 0.2)) {
   stop("Icelandic haddock records failed final validation.", call. = FALSE)
 }
 
@@ -272,4 +303,6 @@ append_rows("assumptions", assumptions_add)
 append_rows("inputs", inputs_add)
 append_rows("outputs", outputs_add)
 cat("Imported detailed 2025 Icelandic haddock records and registered the 2026 summary-only update: ",
-    nrow(inputs_add), " inputs and ", nrow(outputs_add), " outputs.\n", sep = "")
+  nrow(inputs_add), " inputs and ", nrow(outputs_add), " outputs.\n",
+  sep = ""
+)

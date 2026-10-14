@@ -86,7 +86,8 @@ obs_rows <- lapply(seq_along(fleet_names), function(fleet_id) {
   if (fleet_id == 1L) {
     input_rows(
       "catch", "numbers_at_age", "numbers", aux$year[take], aux$age[take],
-      exp(dat$logobs[take]), "thousand fish", fleet = "Total catch",
+      exp(dat$logobs[take]), "thousand fish",
+      fleet = "Total catch",
       source_reference = paste0(model_url, "; fit$data$logobs and fit$data$aux"),
       transformation = "Exponentiated native log catch observation.",
       notes = "The accepted total catch-at-age observation used in SAM."
@@ -103,40 +104,59 @@ obs_rows <- lapply(seq_along(fleet_names), function(fleet_id) {
   }
 })
 inputs <- do.call(rbind, c(obs_rows, list(
-  matrix_input(dat$stockMeanWeight, "weight", "weight_at_age", "kg_per_fish",
-               "kg per fish", "stockMeanWeight",
-               "Known annual stock weight; ages 6-8 repeat the source 6+ group."),
-  matrix_input(dat$catchMeanWeight, "catch_weight", "weight_at_age", "kg_per_fish",
-               "kg per fish", "catchMeanWeight",
-               "Known total-catch weight-at-age; age 8 is the model plus group."),
-  matrix_input(dat$propMat, "maturity", "maturity_at_age", "proportion",
-               "proportion", "propMat",
-               "Known smoothed maturity surface; ages 6+ are grouped in the source."),
-  matrix_input(dat$natMor, "M", "natural_mortality_at_age", "per_year",
-               "per year", "natMor",
-               "Time-varying M observations supplied to the SAM mortality process; values after 2022 are missing and estimated by SAM."),
-  matrix_input(dat$landFrac, "catch", "landings_fraction_at_age", "proportion",
-               "proportion", "landFrac",
-               "Native landings fraction used with catch-component weight inputs."),
-  matrix_input(dat$landMeanWeight, "catch_weight", "landings_weight_at_age", "kg_per_fish",
-               "kg per fish", "landMeanWeight",
-               "Native landings mean weight-at-age retained from the SAM input object."),
-  matrix_input(dat$disMeanWeight, "catch_weight", "discard_weight_at_age", "kg_per_fish",
-               "kg per fish", "disMeanWeight",
-               "Native discard mean weight-at-age retained from the SAM input object."),
-  matrix_input(dat$propF, "biology", "fraction_F_before_spawning", "proportion",
-               "proportion", "propF",
-               "Native mortality fraction used in the spawning-biomass calculation."),
-  matrix_input(dat$propM, "biology", "fraction_M_before_spawning", "proportion",
-               "proportion", "propM",
-               "Native mortality fraction used in the spawning-biomass calculation.")
+  matrix_input(
+    dat$stockMeanWeight, "weight", "weight_at_age", "kg_per_fish",
+    "kg per fish", "stockMeanWeight",
+    "Known annual stock weight; ages 6-8 repeat the source 6+ group."
+  ),
+  matrix_input(
+    dat$catchMeanWeight, "catch_weight", "weight_at_age", "kg_per_fish",
+    "kg per fish", "catchMeanWeight",
+    "Known total-catch weight-at-age; age 8 is the model plus group."
+  ),
+  matrix_input(
+    dat$propMat, "maturity", "maturity_at_age", "proportion",
+    "proportion", "propMat",
+    "Known smoothed maturity surface; ages 6+ are grouped in the source."
+  ),
+  matrix_input(
+    dat$natMor, "M", "natural_mortality_at_age", "per_year",
+    "per year", "natMor",
+    "Time-varying M observations supplied to the SAM mortality process; values after 2022 are missing and estimated by SAM."
+  ),
+  matrix_input(
+    dat$landFrac, "catch", "landings_fraction_at_age", "proportion",
+    "proportion", "landFrac",
+    "Native landings fraction used with catch-component weight inputs."
+  ),
+  matrix_input(
+    dat$landMeanWeight, "catch_weight", "landings_weight_at_age", "kg_per_fish",
+    "kg per fish", "landMeanWeight",
+    "Native landings mean weight-at-age retained from the SAM input object."
+  ),
+  matrix_input(
+    dat$disMeanWeight, "catch_weight", "discard_weight_at_age", "kg_per_fish",
+    "kg per fish", "disMeanWeight",
+    "Native discard mean weight-at-age retained from the SAM input object."
+  ),
+  matrix_input(
+    dat$propF, "biology", "fraction_F_before_spawning", "proportion",
+    "proportion", "propF",
+    "Native mortality fraction used in the spawning-biomass calculation."
+  ),
+  matrix_input(
+    dat$propM, "biology", "fraction_M_before_spawning", "proportion",
+    "proportion", "propM",
+    "Native mortality fraction used in the spawning-biomass calculation."
+  )
 )))
 
 survey_obs <- which(aux$fleet %in% 2:3)
 precision <- dat$weight[survey_obs]
 stopifnot(all(is.finite(precision)), all(precision > 0))
 precision_rows <- input_rows(
-  "index", "relative_precision_weight", "relative_precision", year = aux$year[survey_obs],
+  "index", "relative_precision_weight", "relative_precision",
+  year = aux$year[survey_obs],
   age = aux$age[survey_obs], value = precision,
   unit = "relative precision weight", survey = fleet_names[aux$fleet[survey_obs]],
   sampling_time = sample_times[aux$fleet[survey_obs]],
@@ -145,7 +165,8 @@ precision_rows <- input_rows(
   notes = "Native survey likelihood weight used by the accepted fit. SAM reads the first declared number of columns from the supplied CV matrix."
 )
 log_sd_rows <- input_rows(
-  "index", "log_index_sd", "log_scale", year = aux$year[survey_obs],
+  "index", "log_index_sd", "log_scale",
+  year = aux$year[survey_obs],
   age = aux$age[survey_obs], value = 1 / sqrt(precision),
   unit = "relative log-scale SD factor", survey = fleet_names[aux$fleet[survey_obs]],
   sampling_time = sample_times[aux$fleet[survey_obs]],
@@ -196,27 +217,36 @@ q3_cv <- read_cv_matrix(
 )
 read_report_cv <- function(page_range, year_range, ages) {
   lines <- unlist(strsplit(pages[page_range], "\n", fixed = TRUE),
-                  use.names = FALSE)
+    use.names = FALSE
+  )
   candidates <- lines[grepl("^[[:space:]]*(19|20)[0-9]{2}[[:space:]]+",
-                            lines, perl = TRUE)]
+    lines,
+    perl = TRUE
+  )]
   rows <- lapply(candidates, function(line) {
     values <- suppressWarnings(as.numeric(strsplit(trimws(line),
-      "[[:space:]]+", perl = TRUE)[[1L]]))
+      "[[:space:]]+",
+      perl = TRUE
+    )[[1L]]))
     if (length(values) != length(ages) + 1L ||
-        values[[1L]] < min(year_range) || values[[1L]] > max(year_range) ||
-        anyNA(values[-1L]) || any(values[-1L] <= 0 | values[-1L] >= 1)) {
+      values[[1L]] < min(year_range) || values[[1L]] > max(year_range) ||
+      anyNA(values[-1L]) || any(values[-1L] <= 0 | values[-1L] >= 1)) {
       return(NULL)
     }
-    data.frame(year = as.integer(values[[1L]]), age = ages,
-               value = values[-1L])
+    data.frame(
+      year = as.integer(values[[1L]]), age = ages,
+      value = values[-1L]
+    )
   })
   do.call(rbind, Filter(Negate(is.null), rows))
 }
 reported_q1_cv <- read_report_cv(908:910, 1983:2026, 1:6)
 reported_q3_cv <- read_report_cv(911:912, 1991:2025, 0:6)
 cv_match <- function(file_values, report_values) {
-  i <- match(paste(report_values$year, report_values$age),
-             paste(file_values$year, file_values$age))
+  i <- match(
+    paste(report_values$year, report_values$age),
+    paste(file_values$year, file_values$age)
+  )
   !anyNA(i) && max(abs(file_values$value[i] - report_values$value)) <= 0.00051
 }
 stopifnot(
@@ -226,19 +256,21 @@ stopifnot(
 
 reported_cv <- rbind(
   input_rows("index", "relative_standard_error", "relative_scale",
-             q1_cv$year, q1_cv$age, q1_cv$value, "coefficient of variation",
-             survey = fleet_names[[2L]], sampling_time = sample_times[[2L]],
-             source_type = "native_model",
-             source_reference = paste0("stockassessment.org NSwhiting_2026n/data/Q1_Mod10_CV.dat; WGNSSK 2026 Table 22.17, PDF pp. 908-909"),
-             transformation = "Read the six age-labelled CV fields after the leading marker in each source row.",
-             notes = "The native fitted precision weights follow stockassessment::read.ices() and therefore use the first six fields, including the leading 1; the published age-labelled CVs are retained separately."),
+    q1_cv$year, q1_cv$age, q1_cv$value, "coefficient of variation",
+    survey = fleet_names[[2L]], sampling_time = sample_times[[2L]],
+    source_type = "native_model",
+    source_reference = paste0("stockassessment.org NSwhiting_2026n/data/Q1_Mod10_CV.dat; WGNSSK 2026 Table 22.17, PDF pp. 908-909"),
+    transformation = "Read the six age-labelled CV fields after the leading marker in each source row.",
+    notes = "The native fitted precision weights follow stockassessment::read.ices() and therefore use the first six fields, including the leading 1; the published age-labelled CVs are retained separately."
+  ),
   input_rows("index", "relative_standard_error", "relative_scale",
-             q3_cv$year, q3_cv$age, q3_cv$value, "coefficient of variation",
-             survey = fleet_names[[3L]], sampling_time = sample_times[[3L]],
-             source_type = "native_model",
-             source_reference = paste0("stockassessment.org NSwhiting_2026n/data/Q3_Mod9_CV.dat; WGNSSK 2026 Table 22.19, PDF pp. 911-912"),
-             transformation = "Read the seven age-labelled CV fields after the leading marker in each source row.",
-             notes = "The native fitted precision weights follow stockassessment::read.ices() and therefore use the first seven fields, including the leading 1; the published age-labelled CVs are retained separately.")
+    q3_cv$year, q3_cv$age, q3_cv$value, "coefficient of variation",
+    survey = fleet_names[[3L]], sampling_time = sample_times[[3L]],
+    source_type = "native_model",
+    source_reference = paste0("stockassessment.org NSwhiting_2026n/data/Q3_Mod9_CV.dat; WGNSSK 2026 Table 22.19, PDF pp. 911-912"),
+    transformation = "Read the seven age-labelled CV fields after the leading marker in each source row.",
+    notes = "The native fitted precision weights follow stockassessment::read.ices() and therefore use the first seven fields, including the leading 1; the published age-labelled CVs are retained separately."
+  )
 )
 inputs <- rbind(inputs, precision_rows, log_sd_rows, reported_cv)
 
@@ -277,23 +309,35 @@ m_surface <- exp(fit$pl$logNM[seq_along(years), , drop = FALSE])
 dimnames(n_surface) <- dimnames(f_surface) <- dimnames(m_surface) <-
   list(as.character(years), as.character(ages))
 outputs <- rbind(
-  surface_output(n_surface, "population", "numbers_at_age", "thousand fish",
-                 "logN", years, ages),
-  surface_output(f_surface, "mortality", "fishing_mortality_at_age", "per year",
-                 "logF", years, ages),
+  surface_output(
+    n_surface, "population", "numbers_at_age", "thousand fish",
+    "logN", years, ages
+  ),
+  surface_output(
+    f_surface, "mortality", "fishing_mortality_at_age", "per year",
+    "logF", years, ages
+  ),
   surface_output(m_surface, "mortality", "natural_mortality_at_age", "per year",
-                 "logNM", years, ages,
-                 notes = "Native SAM-estimated M surface; input M observations end in 2022, with later years estimated by the SAM mortality process.")
+    "logNM", years, ages,
+    notes = "Native SAM-estimated M surface; input M observations end in 2022, with later years estimated by the SAM mortality process."
+  )
 )
 
 summary_lines <- unlist(strsplit(pages[917:920], "\n", fixed = TRUE),
-                        use.names = FALSE)
+  use.names = FALSE
+)
 summary_lines <- summary_lines[grepl("^[[:space:]]*(19|20)[0-9]{2}[[:space:]]+",
-                                     summary_lines, perl = TRUE)]
+  summary_lines,
+  perl = TRUE
+)]
 summary_rows <- lapply(summary_lines, function(line) {
   values <- suppressWarnings(as.numeric(strsplit(trimws(line),
-    "[[:space:]]+", perl = TRUE)[[1L]]))
-  if (anyNA(values)) return(NULL)
+    "[[:space:]]+",
+    perl = TRUE
+  )[[1L]]))
+  if (anyNA(values)) {
+    return(NULL)
+  }
   if (length(values) == 13L) {
     return(data.frame(
       year = as.integer(values[[1L]]), recruitment = values[[2L]],
@@ -315,7 +359,7 @@ summary_rows <- lapply(summary_lines, function(line) {
 })
 summary <- do.call(rbind, Filter(Negate(is.null), summary_rows))
 if (nrow(summary) != length(years) || !setequal(summary$year, years) ||
-    anyDuplicated(summary$year)) {
+  anyDuplicated(summary$year)) {
   stop("Could not recover all annual summary rows from WGNSSK 2026 Table 22.22.", call. = FALSE)
 }
 
@@ -334,28 +378,36 @@ stopifnot(
   max(abs(comparison$TSB_report - comparison$TSB_native), na.rm = TRUE) < 1
 )
 summary_outputs <- rbind(
-  output_rows("recruitment", "recruitment", summary$year[!is.na(summary$recruitment)], age = 0L,
-              age_group = "age 0", value = summary$recruitment[!is.na(summary$recruitment)],
-              unit = "thousand fish", lwr = summary$rec_lwr[!is.na(summary$recruitment)],
-              upr = summary$rec_upr[!is.na(summary$recruitment)], source_type = "official_table",
-              source_reference = paste0(report_url, "; Table 22.22, PDF pp. 917-919"),
-              notes = "Recruitment at age 0; report-published 95% confidence limits."),
-  output_rows("biomass", "SSB", summary$year, value = summary$SSB,
-              unit = "tonnes", lwr = summary$ssb_lwr, upr = summary$ssb_upr,
-              source_type = "official_table",
-              source_reference = paste0(report_url, "; Table 22.22, PDF pp. 917-919"),
-              notes = "Report-published SSB and 95% confidence limits."),
-  output_rows("mortality", "Fbar", summary$year[!is.na(summary$Fbar)], age_group = "2-5",
-              value = summary$Fbar[!is.na(summary$Fbar)], unit = "per year",
-              lwr = summary$fbar_lwr[!is.na(summary$Fbar)], upr = summary$fbar_upr[!is.na(summary$Fbar)],
-              source_type = "official_table",
-              source_reference = paste0(report_url, "; Table 22.22, PDF pp. 917-919"),
-              notes = "Mean fishing mortality over ages 2-5 with report-published 95% confidence limits."),
-  output_rows("biomass", "total_biomass", summary$year[!is.na(summary$TSB)], value = summary$TSB[!is.na(summary$TSB)],
-              unit = "tonnes", lwr = summary$tsb_lwr[!is.na(summary$TSB)], upr = summary$tsb_upr[!is.na(summary$TSB)],
-              source_type = "official_table",
-              source_reference = paste0(report_url, "; Table 22.22, PDF pp. 917-919"),
-              notes = "Total stock biomass and report-published 95% confidence limits.")
+  output_rows("recruitment", "recruitment", summary$year[!is.na(summary$recruitment)],
+    age = 0L,
+    age_group = "age 0", value = summary$recruitment[!is.na(summary$recruitment)],
+    unit = "thousand fish", lwr = summary$rec_lwr[!is.na(summary$recruitment)],
+    upr = summary$rec_upr[!is.na(summary$recruitment)], source_type = "official_table",
+    source_reference = paste0(report_url, "; Table 22.22, PDF pp. 917-919"),
+    notes = "Recruitment at age 0; report-published 95% confidence limits."
+  ),
+  output_rows("biomass", "SSB", summary$year,
+    value = summary$SSB,
+    unit = "tonnes", lwr = summary$ssb_lwr, upr = summary$ssb_upr,
+    source_type = "official_table",
+    source_reference = paste0(report_url, "; Table 22.22, PDF pp. 917-919"),
+    notes = "Report-published SSB and 95% confidence limits."
+  ),
+  output_rows("mortality", "Fbar", summary$year[!is.na(summary$Fbar)],
+    age_group = "2-5",
+    value = summary$Fbar[!is.na(summary$Fbar)], unit = "per year",
+    lwr = summary$fbar_lwr[!is.na(summary$Fbar)], upr = summary$fbar_upr[!is.na(summary$Fbar)],
+    source_type = "official_table",
+    source_reference = paste0(report_url, "; Table 22.22, PDF pp. 917-919"),
+    notes = "Mean fishing mortality over ages 2-5 with report-published 95% confidence limits."
+  ),
+  output_rows("biomass", "total_biomass", summary$year[!is.na(summary$TSB)],
+    value = summary$TSB[!is.na(summary$TSB)],
+    unit = "tonnes", lwr = summary$tsb_lwr[!is.na(summary$TSB)], upr = summary$tsb_upr[!is.na(summary$TSB)],
+    source_type = "official_table",
+    source_reference = paste0(report_url, "; Table 22.22, PDF pp. 917-919"),
+    notes = "Total stock biomass and report-published 95% confidence limits."
+  )
 )
 outputs <- rbind(outputs, summary_outputs)
 
@@ -373,37 +425,65 @@ model_cfg_ref <- paste0(model_url, "; fit$conf and conf/model.cfg")
 assumptions <- do.call(rbind, list(
   assumption("model", "model_age_range", "ages 0-8+, recruitment at age 0", report_ref),
   assumption("model", "terminal_year", "2025 fitted catch year; 2026 intermediate year", report_ref),
-  assumption("N", "process", "random walk with age-specific variance sharing", model_cfg_ref,
-             "stockRecruitmentModelCode=0; keyVarLogN groups ages 0, 1-7 and 8+"),
-  assumption("N", "logN_mean", "median", model_cfg_ref,
-             "logNMeanAssumption is 0 for recruitment and older ages"),
-  assumption("F", "process", "random-walk increments with AR(1) correlation across ages", model_cfg_ref,
-             "corFlag=2; one shared F-process variance; age-specific F states"),
+  assumption(
+    "N", "process", "random walk with age-specific variance sharing", model_cfg_ref,
+    "stockRecruitmentModelCode=0; keyVarLogN groups ages 0, 1-7 and 8+"
+  ),
+  assumption(
+    "N", "logN_mean", "median", model_cfg_ref,
+    "logNMeanAssumption is 0 for recruitment and older ages"
+  ),
+  assumption(
+    "F", "process", "random-walk increments with AR(1) correlation across ages", model_cfg_ref,
+    "corFlag=2; one shared F-process variance; age-specific F states"
+  ),
   assumption("F", "Fbar_ages", "2-5", model_cfg_ref),
-  assumption("M", "process", "GMRF estimated from WGSAM M observations", report_ref,
-             "Observed M inputs end in 2022; SAM estimates the later-year M surface."),
+  assumption(
+    "M", "process", "GMRF estimated from WGSAM M observations", report_ref,
+    "Observed M inputs end in 2022; SAM estimates the later-year M surface."
+  ),
   assumption("M", "mean_age_groups", "ages 0-5 separate; ages 6-8 share the 6+ group", model_cfg_ref),
-  assumption("catch", "likelihood", "lognormal; independent age residuals", model_cfg_ref,
-             "Observation variance is shared across the configured catch-age groups."),
-  assumption("index", "catchability", "separate q by survey and age; no q-power parameters", model_cfg_ref,
-             "Native survey scale is retained; no physical abundance unit is assigned.", fleet_names[[2L]]),
-  assumption("index", "observation_process", "lognormal with AR(1) age residual correlation", model_cfg_ref,
-             "Native relative precision weights are preserved.", fleet_names[[2L]]),
-  assumption("index", "sampling_time", as.character(sample_times[[2L]]), model_cfg_ref,
-             "Native sampleTimes entry.", fleet_names[[2L]]),
-  assumption("index", "age_range", "ages 1-6+", report_ref,
-             "Q1 survey series from 1983 through 2026.", fleet_names[[2L]]),
-  assumption("index", "observation_process", "lognormal with AR(1) age residual correlation", model_cfg_ref,
-             "Native relative precision weights are preserved.", fleet_names[[3L]]),
-  assumption("index", "sampling_time", as.character(sample_times[[3L]]), model_cfg_ref,
-             "Native sampleTimes entry.", fleet_names[[3L]]),
-  assumption("index", "age_range", "ages 0-6+", report_ref,
-             "Q3 survey series from 1991 through 2025.", fleet_names[[3L]]),
+  assumption(
+    "catch", "likelihood", "lognormal; independent age residuals", model_cfg_ref,
+    "Observation variance is shared across the configured catch-age groups."
+  ),
+  assumption(
+    "index", "catchability", "separate q by survey and age; no q-power parameters", model_cfg_ref,
+    "Native survey scale is retained; no physical abundance unit is assigned.", fleet_names[[2L]]
+  ),
+  assumption(
+    "index", "observation_process", "lognormal with AR(1) age residual correlation", model_cfg_ref,
+    "Native relative precision weights are preserved.", fleet_names[[2L]]
+  ),
+  assumption(
+    "index", "sampling_time", as.character(sample_times[[2L]]), model_cfg_ref,
+    "Native sampleTimes entry.", fleet_names[[2L]]
+  ),
+  assumption(
+    "index", "age_range", "ages 1-6+", report_ref,
+    "Q1 survey series from 1983 through 2026.", fleet_names[[2L]]
+  ),
+  assumption(
+    "index", "observation_process", "lognormal with AR(1) age residual correlation", model_cfg_ref,
+    "Native relative precision weights are preserved.", fleet_names[[3L]]
+  ),
+  assumption(
+    "index", "sampling_time", as.character(sample_times[[3L]]), model_cfg_ref,
+    "Native sampleTimes entry.", fleet_names[[3L]]
+  ),
+  assumption(
+    "index", "age_range", "ages 0-6+", report_ref,
+    "Q3 survey series from 1991 through 2025.", fleet_names[[3L]]
+  ),
   assumption("biology", "weights_and_maturity", "stock weight, catch weight and smoothed maturity are known", model_cfg_ref),
-  assumption("biology", "spawning_time", "propF=0 and propM=0", model_cfg_ref,
-             "The native data object supplies zero mortality fractions before spawning."),
-  assumption("fit", "optimizer", fit$opt$message, model_url,
-             paste0("Convergence code ", fit$opt$convergence, "; objective ", signif(fit$opt$objective, 8), "."))
+  assumption(
+    "biology", "spawning_time", "propF=0 and propM=0", model_cfg_ref,
+    "The native data object supplies zero mortality fractions before spawning."
+  ),
+  assumption(
+    "fit", "optimizer", fit$opt$message, model_url,
+    paste0("Convergence code ", fit$opt$convergence, "; objective ", signif(fit$opt$objective, 8), ".")
+  )
 ))
 
 stock <- data.frame(
@@ -434,8 +514,10 @@ assessment <- data.frame(
 
 database <- file.path(base, "database")
 read_db <- function(name) {
-  read.csv(file.path(database, name), colClasses = "character", na.strings = "",
-           check.names = FALSE)
+  read.csv(file.path(database, name),
+    colClasses = "character", na.strings = "",
+    check.names = FALSE
+  )
 }
 append_rows <- function(path, rows, current) {
   if (!identical(names(current), names(rows))) {
@@ -444,8 +526,10 @@ append_rows <- function(path, rows, current) {
   if (any(current$assessment_id == assessment_id, na.rm = TRUE)) {
     stop("North Sea whiting is already present in ", basename(path), ".", call. = FALSE)
   }
-  utils::write.table(rows, path, sep = ",", quote = TRUE,
-                     row.names = FALSE, col.names = FALSE, append = TRUE, na = "")
+  utils::write.table(rows, path,
+    sep = ",", quote = TRUE,
+    row.names = FALSE, col.names = FALSE, append = TRUE, na = ""
+  )
 }
 
 stocks_path <- file.path(database, "stocks.csv")
@@ -453,15 +537,22 @@ stocks <- read_db("stocks.csv")
 if (!identical(names(stocks), names(stock)) || any(stocks$stock_id == stock_id)) {
   stop("Unexpected stock schema or North Sea whiting already exists.", call. = FALSE)
 }
-append_rows(file.path(database, "assessments.csv"), assessment,
-            read_db("assessments.csv"))
-append_rows(file.path(database, "assumptions.csv"), assumptions,
-            read_db("assumptions.csv"))
+append_rows(
+  file.path(database, "assessments.csv"), assessment,
+  read_db("assessments.csv")
+)
+append_rows(
+  file.path(database, "assumptions.csv"), assumptions,
+  read_db("assumptions.csv")
+)
 append_rows(file.path(database, "inputs.csv"), inputs, read_db("inputs.csv"))
 append_rows(file.path(database, "outputs.csv"), outputs, read_db("outputs.csv"))
-utils::write.table(stock, stocks_path, sep = ",", quote = TRUE,
-                   row.names = FALSE, col.names = FALSE, append = TRUE, na = "")
+utils::write.table(stock, stocks_path,
+  sep = ",", quote = TRUE,
+  row.names = FALSE, col.names = FALSE, append = TRUE, na = ""
+)
 
 cat("Added North Sea whiting: ", nrow(inputs), " inputs, ",
-    nrow(assumptions), " assumptions, and ", nrow(outputs), " outputs.\n",
-    sep = "")
+  nrow(assumptions), " assumptions, and ", nrow(outputs), " outputs.\n",
+  sep = ""
+)

@@ -372,10 +372,12 @@
 #' data <- cod_obs
 #' data$maturity$spawn_time <- 0.25
 #' data$pop_covariates$age_group <- factor(
-#'   ifelse(data$pop_covariates$age < 6, "young", "older"))
+#'   ifelse(data$pop_covariates$age < 6, "young", "older")
+#' )
 #' dat <- prepare_tam(data,
-#'   F_settings = list(process = "cor_rw", sd_form = ~ age_group),
-#'   N_settings = list(process = "iid", sd_form = ~ 1))
+#'   F_settings = list(process = "cor_rw", sd_form = ~age_group),
+#'   N_settings = list(process = "iid", sd_form = ~1)
+#' )
 #' make_par(dat)$sd_beta_f
 #'
 #' @seealso [prepare_tam()], [make_par()], [nll_fun()], [fit_tam()], [sim_tam()],

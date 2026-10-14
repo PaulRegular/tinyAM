@@ -1,8 +1,10 @@
 make_check_fit <- function() {
   structure(list(
     opt = list(par = c(beta = 1), objective = 12, convergence = 0, message = "OK"),
-    sdrep = list(par.fixed = c(beta = 1), gradient.fixed = 1e-5,
-                 cov.fixed = matrix(.1), pdHess = TRUE),
+    sdrep = list(
+      par.fixed = c(beta = 1), gradient.fixed = 1e-5,
+      cov.fixed = matrix(.1), pdHess = TRUE
+    ),
     dat = list(), rep = list(log_pred = c(0, 1), sd_obs = c(.1, .2)),
     obs_pred = list(), grad_tol = 1e-2
   ), class = "tam_fit")
@@ -88,8 +90,10 @@ test_that("bound-adjusted gradients retain raw and non-finite derivatives", {
 
 test_that("structural checks distinguish redundancies from convergence", {
   fit <- make_check_fit()
-  fit$dat <- list(obs = list(index = data.frame(obs = 1:3, year = 2000:2002)),
-    index_settings = list(q_link = "log"), q_modmat = matrix(1, 3, 2))
+  fit$dat <- list(
+    obs = list(index = data.frame(obs = 1:3, year = 2000:2002)),
+    index_settings = list(q_link = "log"), q_modmat = matrix(1, 3, 2)
+  )
   checks <- check_tam(fit)
   expect_true(checks$is_converged)
   expect_identical(checks$structural_status, "issues")
@@ -107,9 +111,11 @@ test_that("structural checks distinguish redundancies from convergence", {
 
 test_that("residual summaries exclude projections, zero and missing observations", {
   fit <- make_check_fit()
-  fit$obs_pred$index <- data.frame(survey = "A", age = 2, year = 2000:2014,
+  fit$obs_pred$index <- data.frame(
+    survey = "A", age = 2, year = 2000:2014,
     obs = c(rep(1, 12), 0, NA, 1), std_res = c(rep(1, 12), 9, 9, 9),
-    is_proj = c(rep(FALSE, 14), TRUE))
+    is_proj = c(rep(FALSE, 14), TRUE)
+  )
   checks <- check_tam(fit)
   expect_equal(checks$residuals$n, 12)
   expect_equal(checks$residuals$mean, 1)
@@ -167,10 +173,14 @@ test_that("uncertainty failures preserve estimates without inventing SEs", {
 })
 
 test_that("fit_tam retains a usable fit when sdreport fails", {
-  local_mocked_bindings(sdreport = function(...) stop("Deliberate uncertainty failure"),
-                        .package = "RTMB")
-  expect_warning(fit <- update(default_fit, silent = TRUE,
-    start_par = as.list(default_fit$sdrep, "Estimate")), "Numerical convergence")
+  local_mocked_bindings(
+    sdreport = function(...) stop("Deliberate uncertainty failure"),
+    .package = "RTMB"
+  )
+  expect_warning(fit <- update(default_fit,
+    silent = TRUE,
+    start_par = as.list(default_fit$sdrep, "Estimate")
+  ), "Numerical convergence")
   expect_s3_class(fit, "tam_fit")
   expect_null(fit[["sdrep"]])
   expect_match(fit$sdreport_error, "Deliberate uncertainty failure")
@@ -182,22 +192,30 @@ test_that("fit_tam retains a usable fit when sdreport fails", {
 
 test_that("mortality uncertainty advisories do not change numerical convergence", {
   fit <- make_check_fit()
-  p <- c(log_sd_mu_M_ar1_year = log(.12), log_sd_m = log(.06),
-         logit_phi_mu_M_ar1_year = qlogis(.65))
+  p <- c(
+    log_sd_mu_M_ar1_year = log(.12), log_sd_m = log(.06),
+    logit_phi_mu_M_ar1_year = qlogis(.65)
+  )
   fit$opt$par <- fit$sdrep$par.fixed <- p
   fit$sdrep$gradient.fixed <- rep(0, 3)
   fit$sdrep$cov.fixed <- diag(c(.1, 1, 1)^2)
   fit$dat$M_settings <- list(process = "iid")
-  fit$dat$M_terms <- list(list(id = "M_ar1_year", sd_parameter = names(p)[1],
-    phi_parameter = names(p)[3]))
+  fit$dat$M_terms <- list(list(
+    id = "M_ar1_year", sd_parameter = names(p)[1],
+    phi_parameter = names(p)[3]
+  ))
   original <- fit
   expect_silent(checks <- check_tam(fit))
   expect_identical(fit, original)
   expect_true(checks$is_converged)
-  expect_true(all(c("M_variance_separation", "formula_AR1_uncertainty",
-                    "formula_SD_uncertainty") %in% checks$advisories$issue))
-  expect_match(checks$advisories$detail[checks$advisories$issue == "formula_SD_uncertainty"],
-               "log_sd_m")
+  expect_true(all(c(
+    "M_variance_separation", "formula_AR1_uncertainty",
+    "formula_SD_uncertainty"
+  ) %in% checks$advisories$issue))
+  expect_match(
+    checks$advisories$detail[checks$advisories$issue == "formula_SD_uncertainty"],
+    "log_sd_m"
+  )
   expect_message(print(checks), "Persistence is weakly estimated")
   fit$sdrep$cov.fixed <- diag(rep(.01, 3))
   checks <- check_tam(fit)
@@ -216,8 +234,10 @@ test_that("q process uncertainty uses the same thresholds without changing conve
   fit$opt$par <- fit$sdrep$par.fixed <- p
   fit$sdrep$gradient.fixed <- c(0, 0)
   fit$sdrep$cov.fixed <- diag(c(1, 1)^2)
-  fit$dat$q_terms <- list(list(id = "ar1_year", type = "ar1",
-    sd_parameter = names(p)[1], phi_parameter = names(p)[2]))
+  fit$dat$q_terms <- list(list(
+    id = "ar1_year", type = "ar1",
+    sd_parameter = names(p)[1], phi_parameter = names(p)[2]
+  ))
   original <- fit
   expect_silent(checks <- check_tam(fit))
   expect_true(checks$is_converged)
@@ -255,9 +275,11 @@ test_that("logistic support uses observed ranges, group-specific midpoints and u
   expect_equal(nrow(tinyAM:::.formula_uncertainty_advisories(fit)), 0)
   fit$sdrep$cov.fixed <- diag(c(3, 3)^2)
   # Outlying unobserved/projection rows cannot make the midpoint look supported.
-  fit$dat$obs$index <- rbind(d, transform(d[1, ], age = 20, survey = "B", obs = NA),
+  fit$dat$obs$index <- rbind(
+    d, transform(d[1, ], age = 20, survey = "B", obs = NA),
     transform(d[1, ], age = 20, survey = "B", obs = 0),
-    transform(d[1, ], age = 20, survey = "B", is_proj = TRUE))
+    transform(d[1, ], age = 20, survey = "B", is_proj = TRUE)
+  )
   fit$dat$q_terms[[1]]$groups[[2]]$rows <- c(6:10, 11:13)
   expect_equal(nrow(tinyAM:::.formula_uncertainty_advisories(fit)), 1)
   fit$sdrep$pdHess <- FALSE

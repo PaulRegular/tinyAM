@@ -1,24 +1,23 @@
-
 test_that("make_par builds shapes and zeros consistent with dat", {
   dat <- make_test_dat(
     N_settings = list(process = "iid", init = "exp"),
     F_settings = list(process = "ar1", mu_form = ~ F_a_block + F_y_block),
-    M_settings = list(process = "iid", mu_form = ~ 1, mu_supplied = NULL, age_breaks = seq(2, 14, 2))
+    M_settings = list(process = "iid", mu_form = ~1, mu_supplied = NULL, age_breaks = seq(2, 14, 2))
   )
   par <- make_par(dat)
 
   # basic presence
-  expect_true(all(c("log_sd_r","log_sd_f","log_q","log_sd_catch", "log_sd_index","log_r","log_f") %in% names(par)))
+  expect_true(all(c("log_sd_r", "log_sd_f", "log_q", "log_sd_catch", "log_sd_index", "log_r", "log_f") %in% names(par)))
 
   # shapes match the design matrices / grids
-  expect_length(par$log_q,      ncol(dat$q_modmat))
+  expect_length(par$log_q, ncol(dat$q_modmat))
   expect_length(par$log_sd_catch, ncol(dat$sd_catch_modmat))
   expect_length(par$log_sd_index, ncol(dat$sd_index_modmat))
   expect_equal(length(par$log_r), length(dat$years) - 1L)
 
   # log_f rows are for historical years only (no projections here)
   expect_equal(dim(par$log_f), c(sum(!dat$is_proj), length(dat$ages)))
-  expect_equal(sum(!dat$is_proj), length(dat$years))  # sanity
+  expect_equal(sum(!dat$is_proj), length(dat$years)) # sanity
 
   # N process = iid -> log_n + log_sd_n
   expect_true("log_sd_n" %in% names(par))
@@ -58,12 +57,11 @@ test_that("make_par shapes adapt when projections are enabled", {
 
   expect_equal(length(par$log_r), length(dat$years) - 1L)
   expect_equal(dim(par$log_n), c(length(dat$years) - 1L, length(dat$ages) - 1))
-
 })
 
 test_that("make_par includes/excludes mean-structure parameters appropriately", {
   # F mu_form present -> log_mu_f created
-  datF  <- make_test_dat(
+  datF <- make_test_dat(
     F_settings = list(process = "iid", mu_form = ~ F_a_block + F_y_block),
     M_settings = list(process = "off", mu_form = NULL, mu_supplied = ~ I(0.3))
   )
@@ -80,9 +78,9 @@ test_that("make_par includes/excludes mean-structure parameters appropriately", 
   expect_false("log_mu_f" %in% names(parF0))
 
   # M mu_form present -> mu_m created
-  datM  <- make_test_dat(
-    F_settings = list(process = "iid", mu_form = ~ 1),
-    M_settings = list(process = "iid", mu_form = ~ 1, mu_supplied = NULL, age_breaks = seq(2, 14, 2))
+  datM <- make_test_dat(
+    F_settings = list(process = "iid", mu_form = ~1),
+    M_settings = list(process = "iid", mu_form = ~1, mu_supplied = NULL, age_breaks = seq(2, 14, 2))
   )
   parM <- make_par(datM)
   expect_true("mu_m" %in% names(parM))
@@ -90,7 +88,7 @@ test_that("make_par includes/excludes mean-structure parameters appropriately", 
 
   # Only M mu_supplied -> mu_m absent
   datM0 <- make_test_dat(
-    F_settings = list(process = "iid", mu_form = ~ 1),
+    F_settings = list(process = "iid", mu_form = ~1),
     M_settings = list(process = "iid", mu_form = NULL, mu_supplied = ~ I(0.3), age_breaks = seq(2, 14, 2))
   )
   parM0 <- make_par(datM0)
@@ -100,7 +98,7 @@ test_that("make_par includes/excludes mean-structure parameters appropriately", 
 test_that("make_par adds AR1 parameters only for processes set to ar1", {
   dat <- make_test_dat(
     N_settings = list(process = "ar1", init = "exp"),
-    F_settings = list(process = "iid", mu_form = ~ 1),
+    F_settings = list(process = "iid", mu_form = ~1),
     M_settings = list(process = "off", mu_form = NULL, mu_supplied = ~ I(0.3))
   )
   par <- make_par(dat)
@@ -115,9 +113,9 @@ test_that("make_par enforces M mu_form constancy within age_blocks (when provide
   dat_bad <- make_test_dat(
     M_settings = list(
       process = "iid",
-      mu_form = ~ factor(age),  # varies by age
+      mu_form = ~ factor(age), # varies by age
       mu_supplied = NULL,
-      age_breaks = c(2, 3, 5, 7, 9, 11, 12, 14)  # some blocks with >1 age
+      age_breaks = c(2, 3, 5, 7, 9, 11, 12, 14) # some blocks with >1 age
     )
   )
   expect_error(

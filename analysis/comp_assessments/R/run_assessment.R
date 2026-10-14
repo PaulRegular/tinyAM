@@ -4,19 +4,22 @@ for (.assessment_helper in c(
   "audit_assumptions.R", "compare_assessment.R"
 )) {
   sys.source(file.path(.assessment_root, "R", .assessment_helper),
-             envir = environment())
+    envir = environment()
+  )
 }
 rm(.assessment_helper)
 
 
 .assessment_catch_reporting <- function(fit, reporting) {
-  if (is.null(reporting)) return(fit)
+  if (is.null(reporting)) {
+    return(fit)
+  }
   catch <- fit$obs_pred$catch
   weights <- reporting$weights
   key <- function(x) paste(x$year, x$age)
   index <- match(key(catch), key(weights))
   if (anyDuplicated(key(weights)) || anyNA(index) ||
-      any(!is.finite(weights$weight) | weights$weight <= 0)) {
+    any(!is.finite(weights$weight) | weights$weight <= 0)) {
     cli::cli_abort("Catch reporting requires one positive catch weight for every predicted year and age.")
   }
   predicted <- tapply(catch$pred * weights$weight[index], catch$year, sum)
@@ -63,7 +66,9 @@ rm(.assessment_helper)
 
 
 .assessment_comparison_summary <- function(differences, assessment_id) {
-  if (!nrow(differences)) return(data.frame())
+  if (!nrow(differences)) {
+    return(data.frame())
+  }
   summary <- do.call(rbind, lapply(split(differences, differences$metric), function(x) {
     valid <- x[is.finite(x$source) & is.finite(x$tinyAM), , drop = FALSE]
     percent <- valid$percent_difference[is.finite(valid$percent_difference)]
@@ -74,11 +79,17 @@ rm(.assessment_helper)
       diff(range(value)) > sqrt(.Machine$double.eps) * max(1, max(abs(value)))
     }
     correlations <- vapply(trends, function(z) {
-      if (nrow(z) > 1L && has_variation(z$source) && has_variation(z$tinyAM))
-        stats::cor(z$source, z$tinyAM) else NA_real_
+      if (nrow(z) > 1L && has_variation(z$source) && has_variation(z$tinyAM)) {
+        stats::cor(z$source, z$tinyAM)
+      } else {
+        NA_real_
+      }
     }, numeric(1))
-    trend_correlation <- if (any(is.finite(correlations)))
-      mean(correlations[is.finite(correlations)]) else NA_real_
+    trend_correlation <- if (any(is.finite(correlations))) {
+      mean(correlations[is.finite(correlations)])
+    } else {
+      NA_real_
+    }
     data.frame(
       assessment_id = assessment_id,
       metric = x$metric[[1]],
@@ -91,8 +102,11 @@ rm(.assessment_helper)
       mean_absolute_percent_difference = if (length(percent)) mean(abs(percent)) else NA_real_,
       median_absolute_percent_difference = if (length(percent)) stats::median(abs(percent)) else NA_real_,
       terminal_year = terminal_year,
-      terminal_mean_percent_difference = if (any(is.finite(terminal$percent_difference)))
-        mean(terminal$percent_difference[is.finite(terminal$percent_difference)]) else NA_real_,
+      terminal_mean_percent_difference = if (any(is.finite(terminal$percent_difference))) {
+        mean(terminal$percent_difference[is.finite(terminal$percent_difference)])
+      } else {
+        NA_real_
+      },
       trend_correlation = trend_correlation
     )
   }))
@@ -109,20 +123,26 @@ print_sources <- function(assessment) {
     model_url = "Native model / fitted run",
     repository_url = "Assessment repository"
   )
-  if (is.null(assessment) || is.null(names(assessment))) return(character())
+  if (is.null(assessment) || is.null(names(assessment))) {
+    return(character())
+  }
 
   urls <- vapply(names(fields), function(field) {
     if (!field %in% names(assessment) ||
-        length(assessment[[field]]) != 1L) {
+      length(assessment[[field]]) != 1L) {
       return(NA_character_)
     }
     value <- assessment[[field]][[1L]]
-    if (length(value) != 1L || is.na(value)) return(NA_character_)
+    if (length(value) != 1L || is.na(value)) {
+      return(NA_character_)
+    }
     as.character(value)
   }, character(1))
 
   keep <- !is.na(urls) & nzchar(trimws(urls))
-  if (!any(keep)) return(character())
+  if (!any(keep)) {
+    return(character())
+  }
 
   available_urls <- urls[keep]
   available_labels <- unname(fields[keep])
@@ -142,39 +162,55 @@ print_sources <- function(assessment) {
   stock_env$silent <- silent
   stock_env$fit_stage <- "translation"
   stock_env$fit_started <- Sys.time()
-  script <- file.path(.assessment_root, "scripts", "translation", "stocks",
-                      paste0(source$assessment$assessment_id[[1]], ".R"))
-  error <- tryCatch({ sys.source(script, envir = stock_env); NULL }, error = identity)
+  script <- file.path(
+    .assessment_root, "scripts", "translation", "stocks",
+    paste0(source$assessment$assessment_id[[1]], ".R")
+  )
+  error <- tryCatch(
+    {
+      sys.source(script, envir = stock_env)
+      NULL
+    },
+    error = identity
+  )
   list(env = stock_env, error = error)
 }
 
 .assessment_context <- function(source, translated) {
-  keys <- c("age_plus_group", "comparison_scales", "comparison_outputs",
-            "comparison_aggregates", "comparison_age_groups", "comparison_definitions",
-            "catch_reporting")
-  list(assessment_id = source$assessment$assessment_id[[1]], source = source,
-       background = translated$background,
-       comparison = stats::setNames(lapply(keys, function(key) translated[[key]]), keys))
+  keys <- c(
+    "age_plus_group", "comparison_scales", "comparison_outputs",
+    "comparison_aggregates", "comparison_age_groups", "comparison_definitions",
+    "catch_reporting"
+  )
+  list(
+    assessment_id = source$assessment$assessment_id[[1]], source = source,
+    background = translated$background,
+    comparison = stats::setNames(lapply(keys, function(key) translated[[key]]), keys)
+  )
 }
 
 .assessment_comparison <- function(fit, assessment) {
   if (!inherits(fit, "tam_fit")) cli::cli_abort("Supply a fitted tinyAM model as {.arg fit}.")
   if (!is.list(assessment) || is.null(assessment$source$assessment) ||
-      !is.list(assessment$comparison)) {
+    !is.list(assessment$comparison)) {
     cli::cli_abort("Load the assessment context with {.file run_stock.R} or {.fn run_assessment}.")
   }
   if (!all(c("dat", "pop", "rep", "obs_pred", "fixed_par", "random_par") %in% names(fit)) ||
-      !any(vapply(fit$obs_pred, function(x) is.data.frame(x) &&
-                  "pred" %in% names(x) && any(is.finite(x$pred)), logical(1)))) {
+    !any(vapply(fit$obs_pred, function(x) {
+      is.data.frame(x) &&
+        "pred" %in% names(x) && any(is.finite(x$pred))
+    }, logical(1)))) {
     cli::cli_abort("This fit has no usable reporting predictions. Inspect {.code check_tam(fit)} and refit before previewing.")
   }
   comparison <- assessment$comparison
   plus <- comparison$age_plus_group
-  source_ages <- suppressWarnings(as.numeric(c(assessment$source$inputs$age,
-                                               assessment$source$outputs$age)))
+  source_ages <- suppressWarnings(as.numeric(c(
+    assessment$source$inputs$age,
+    assessment$source$outputs$age
+  )))
   if (!is.null(plus)) {
     if (!is.numeric(plus) || length(plus) != 1L || !is.finite(plus) ||
-        plus != trunc(plus) || !plus %in% c(source_ages, fit$dat$ages)) {
+      plus != trunc(plus) || !plus %in% c(source_ages, fit$dat$ages)) {
       cli::cli_abort("The comparison plus age must be a recorded source age or the fitted plus age.")
     }
     # The supplied fit determines the terminal group, including for age subsets.
@@ -182,31 +218,37 @@ print_sources <- function(assessment) {
   }
   mappings <- comparison$comparison_age_groups
   if (!is.null(mappings) && (!is.list(mappings) || (length(mappings) &&
-      (is.null(names(mappings)) || anyNA(names(mappings)) || any(!nzchar(names(mappings))) ||
-       anyDuplicated(names(mappings)))))) {
+    (is.null(names(mappings)) || anyNA(names(mappings)) || any(!nzchar(names(mappings))) ||
+      anyDuplicated(names(mappings)))))) {
     cli::cli_abort("{.code assessment$comparison$comparison_age_groups} must be a uniquely named list of metrics.")
   }
   for (metric in names(mappings)) {
     groups <- comparison$comparison_age_groups[[metric]]
     if (!is.list(groups) || (length(groups) &&
-        (is.null(names(groups)) || anyNA(names(groups)) || any(!nzchar(names(groups))) ||
-         anyDuplicated(names(groups))))) {
+      (is.null(names(groups)) || anyNA(names(groups)) || any(!nzchar(names(groups))) ||
+        anyDuplicated(names(groups))))) {
       cli::cli_abort("Comparison age groups for {metric} must be a uniquely named list.")
     }
-    valid <- vapply(groups, function(ages) is.numeric(ages) && length(ages) > 0L &&
-      all(is.finite(ages)) && all(ages == trunc(ages)) &&
-      all(ages %in% c(source_ages, fit$dat$ages)) &&
-      !anyDuplicated(ages), logical(1))
+    valid <- vapply(groups, function(ages) {
+      is.numeric(ages) && length(ages) > 0L &&
+        all(is.finite(ages)) && all(ages == trunc(ages)) &&
+        all(ages %in% c(source_ages, fit$dat$ages)) &&
+        !anyDuplicated(ages)
+    }, logical(1))
     if (!all(valid) || anyDuplicated(unlist(groups, use.names = FALSE))) {
       cli::cli_abort("Comparison age groups for {metric} must map to distinct fitted ages. Update {.code assessment$comparison$comparison_age_groups} for this age range.")
     }
   }
   fit <- .assessment_catch_reporting(fit, comparison$catch_reporting)
-  outputs <- if (is.null(comparison$comparison_outputs)) assessment$source$outputs else
+  outputs <- if (is.null(comparison$comparison_outputs)) {
+    assessment$source$outputs
+  } else {
     comparison$comparison_outputs
+  }
   obs <- if (is.null(fit$refit_args$data)) fit$dat$obs else fit$refit_args$data
   ref <- database_to_tam_ref(
-    assessment$assessment_id, outputs, obs = obs,
+    assessment$assessment_id, outputs,
+    obs = obs,
     years = fit$dat$years, ages = fit$dat$ages,
     terminal_year = assessment$source$assessment$terminal_year[[1]],
     age_plus_group = plus, comparison_scales = comparison$comparison_scales,
@@ -217,8 +259,10 @@ print_sources <- function(assessment) {
   )
   differences <- .assessment_percent_differences(ref)
   historical <- is.na(differences$year) | differences$year %in% fit$dat$years[!fit$dat$is_proj]
-  list(fit = fit, ref = ref, differences = differences,
-       summary = .assessment_comparison_summary(differences[historical, ], assessment$assessment_id))
+  list(
+    fit = fit, ref = ref, differences = differences,
+    summary = .assessment_comparison_summary(differences[historical, ], assessment$assessment_id)
+  )
 }
 
 # Preview a supplied fit without re-running its stock script or exporting results.
@@ -227,31 +271,41 @@ view_assessment <- function(fit, assessment, output_file = NULL, open_file = TRU
     cli::cli_abort("{.arg open_file} must be TRUE or FALSE.")
   }
   if (!is.null(output_file) && (!is.character(output_file) || length(output_file) != 1L ||
-      is.na(output_file) || !nzchar(output_file))) {
+    is.na(output_file) || !nzchar(output_file))) {
     cli::cli_abort("{.arg output_file} must be NULL or one HTML file path.")
   }
   result <- .assessment_comparison(fit, assessment)
   result$diagnostics <- .assessment_diagnostics(assessment$assessment_id,
-    assessment$source, "preview", fit = result$fit)
-  result$diagnostics$status <- if (isTRUE(result$diagnostics$is_converged)) "converged" else
+    assessment$source, "preview",
+    fit = result$fit
+  )
+  result$diagnostics$status <- if (isTRUE(result$diagnostics$is_converged)) {
+    "converged"
+  } else {
     "not_converged"
+  }
   if (!isTRUE(result$diagnostics$is_converged)) {
     cli::cli_warn("This fit has not passed numerical convergence checks. The dashboard is exploratory; inspect {.code check_tam(fit)} before interpreting estimates or uncertainty.")
   }
-  result$dashboard_file <- if (is.null(output_file)) tempfile("assessment_preview_", fileext = ".html") else
+  result$dashboard_file <- if (is.null(output_file)) {
+    tempfile("assessment_preview_", fileext = ".html")
+  } else {
     output_file
-  tinyAM::vis_tam(model_list = list(Accepted = result$ref, tinyAM = result$fit),
+  }
+  tinyAM::vis_tam(
+    model_list = list(Accepted = result$ref, tinyAM = result$fit),
     background = assessment$background, output_file = result$dashboard_file,
-    open_file = open_file)
+    open_file = open_file
+  )
   invisible(result)
 }
 
 run_assessment <- function(assessment_id, database = NULL, fit = TRUE,
-                            dashboard = FALSE, cache = FALSE, silent = TRUE) {
+                           dashboard = FALSE, cache = FALSE, silent = TRUE) {
   if (is.null(database)) database <- read_database()
   if (length(fit) != 1L || is.na(fit) || !is.logical(fit) ||
-      length(dashboard) != 1L || is.na(dashboard) || !is.logical(dashboard) ||
-      length(cache) != 1L || is.na(cache) || !is.logical(cache)) {
+    length(dashboard) != 1L || is.na(dashboard) || !is.logical(dashboard) ||
+    length(cache) != 1L || is.na(cache) || !is.logical(cache)) {
     stop("fit, dashboard, and cache must each be one TRUE/FALSE value.", call. = FALSE)
   }
 
@@ -271,8 +325,10 @@ run_assessment <- function(assessment_id, database = NULL, fit = TRUE,
     dashboard_file = NULL
   )
 
-  script <- file.path(.assessment_root, "scripts", "translation", "stocks",
-                      paste0(assessment_id, ".R"))
+  script <- file.path(
+    .assessment_root, "scripts", "translation", "stocks",
+    paste0(assessment_id, ".R")
+  )
   if (!file.exists(script)) {
     result$diagnostics <- .assessment_diagnostics(
       assessment_id, database, "blocked_no_stock_spec",
@@ -299,7 +355,8 @@ run_assessment <- function(assessment_id, database = NULL, fit = TRUE,
   }
   if (!fit) {
     result$diagnostics <- .assessment_diagnostics(
-      assessment_id, database, "not_fitted", reason = "fit = FALSE."
+      assessment_id, database, "not_fitted",
+      reason = "fit = FALSE."
     )
     return(result)
   }
@@ -316,7 +373,9 @@ run_assessment <- function(assessment_id, database = NULL, fit = TRUE,
     dir.create(cache_dir, recursive = TRUE, showWarnings = FALSE)
     saveRDS(fitted, file.path(cache_dir, "fit.rds"))
   }
-  if (!isTRUE(fitted$is_converged)) return(result)
+  if (!isTRUE(fitted$is_converged)) {
+    return(result)
+  }
 
   comparison <- tryCatch(.assessment_comparison(fitted, result), error = identity)
   if (inherits(comparison, "error")) {
@@ -370,10 +429,13 @@ run_assessment <- function(assessment_id, database = NULL, fit = TRUE,
       setwd(repo_root)
       pkgload::load_all(repo_root, quiet = TRUE)
       runner_env <- new.env(parent = globalenv())
-      sys.source(file.path(repo_root, "analysis", "comp_assessments", "R",
-                           "run_assessment.R"), envir = runner_env)
+      sys.source(file.path(
+        repo_root, "analysis", "comp_assessments", "R",
+        "run_assessment.R"
+      ), envir = runner_env)
       runner_env$run_assessment(
-        assessment_id, database = database, fit = fit,
+        assessment_id,
+        database = database, fit = fit,
         dashboard = FALSE, cache = FALSE
       )
     },
@@ -387,15 +449,16 @@ run_assessments <- function(assessment_ids = NULL, database = NULL,
                             save_results = FALSE) {
   if (is.null(database)) database <- read_database()
   if (!is.logical(parallel) || length(parallel) != 1L || is.na(parallel) ||
-      !is.logical(fit) || length(fit) != 1L || is.na(fit) ||
-      !is.logical(dashboard) || length(dashboard) != 1L || is.na(dashboard) ||
-      !is.logical(cache) || length(cache) != 1L || is.na(cache) ||
-      !is.logical(save_results) || length(save_results) != 1L || is.na(save_results)) {
+    !is.logical(fit) || length(fit) != 1L || is.na(fit) ||
+    !is.logical(dashboard) || length(dashboard) != 1L || is.na(dashboard) ||
+    !is.logical(cache) || length(cache) != 1L || is.na(cache) ||
+    !is.logical(save_results) || length(save_results) != 1L || is.na(save_results)) {
     stop("parallel, fit, dashboard, cache, and save_results must each be one TRUE/FALSE value.",
-         call. = FALSE)
+      call. = FALSE
+    )
   }
   if (length(workers) != 1L || is.na(workers) || !is.numeric(workers) ||
-      !is.finite(workers) || workers < 1 || workers != as.integer(workers)) {
+    !is.finite(workers) || workers < 1 || workers != as.integer(workers)) {
     stop("workers must be one positive integer.", call. = FALSE)
   }
 
@@ -406,10 +469,11 @@ run_assessments <- function(assessment_ids = NULL, database = NULL,
     assessment_ids <- eligible
   } else {
     if (!is.character(assessment_ids) || !length(assessment_ids) ||
-        anyNA(assessment_ids) || any(!nzchar(assessment_ids)) ||
-        anyDuplicated(assessment_ids)) {
+      anyNA(assessment_ids) || any(!nzchar(assessment_ids)) ||
+      anyDuplicated(assessment_ids)) {
       stop("assessment_ids must be a non-empty character vector without missing or duplicate values.",
-           call. = FALSE)
+        call. = FALSE
+      )
     }
     unknown <- setdiff(assessment_ids, database$assessments$assessment_id)
     if (length(unknown)) {
@@ -419,15 +483,18 @@ run_assessments <- function(assessment_ids = NULL, database = NULL,
 
   safe_run <- function(id) {
     tryCatch(
-      run_assessment(id, database = database, fit = fit,
-                     dashboard = FALSE, cache = FALSE),
+      run_assessment(id,
+        database = database, fit = fit,
+        dashboard = FALSE, cache = FALSE
+      ),
       error = function(e) .failed_assessment_run(id, database, e)
     )
   }
   if (parallel) {
     if (!requireNamespace("pkgload", quietly = TRUE)) {
       stop("Install pkgload to run parallel workers from the current tinyAM checkout.",
-           call. = FALSE)
+        call. = FALSE
+      )
     }
     repo_root <- normalizePath(getwd(), winslash = "/", mustWork = TRUE)
     old_plan <- future::plan()
@@ -451,7 +518,7 @@ run_assessments <- function(assessment_ids = NULL, database = NULL,
       saveRDS(result$fit, file.path(cache_dir, "fit.rds"))
     }
     if (dashboard && !is.null(result$fit) && isTRUE(result$fit$is_converged) &&
-        !is.null(result$ref)) {
+      !is.null(result$ref)) {
       result$dashboard_file <- if (cache) {
         file.path(.assessment_root, "results", "cache", id, "dashboard.html")
       } else {
@@ -472,18 +539,22 @@ run_assessments <- function(assessment_ids = NULL, database = NULL,
   } else {
     data.frame()
   }
-  summaries <- Filter(function(x) is.data.frame(x) && nrow(x),
-                      lapply(runs, `[[`, "summary"))
+  summaries <- Filter(
+    function(x) is.data.frame(x) && nrow(x),
+    lapply(runs, `[[`, "summary")
+  )
   comparison_summary <- if (length(summaries)) {
     do.call(rbind, summaries)
   } else {
-    data.frame(assessment_id = character(), metric = character(), unit = character(),
-               comparison_status = character(), definition = character(), reason = character(),
-               n = integer(), mean_absolute_difference = numeric(),
-               mean_absolute_percent_difference = numeric(),
-               median_absolute_percent_difference = numeric(),
-               terminal_year = integer(), terminal_mean_percent_difference = numeric(),
-               trend_correlation = numeric())
+    data.frame(
+      assessment_id = character(), metric = character(), unit = character(),
+      comparison_status = character(), definition = character(), reason = character(),
+      n = integer(), mean_absolute_difference = numeric(),
+      mean_absolute_percent_difference = numeric(),
+      median_absolute_percent_difference = numeric(),
+      terminal_year = integer(), terminal_mean_percent_difference = numeric(),
+      trend_correlation = numeric()
+    )
   }
   rownames(diagnostics) <- NULL
   rownames(comparison_summary) <- NULL
@@ -491,10 +562,12 @@ run_assessments <- function(assessment_ids = NULL, database = NULL,
     results_dir <- file.path(.assessment_root, "results")
     dir.create(results_dir, recursive = TRUE, showWarnings = FALSE)
     write.csv(diagnostics, file.path(results_dir, "fit_diagnostics.csv"),
-              row.names = FALSE, na = "")
+      row.names = FALSE, na = ""
+    )
     write.csv(comparison_summary,
-              file.path(results_dir, "comparison_summary.csv"),
-              row.names = FALSE, na = "")
+      file.path(results_dir, "comparison_summary.csv"),
+      row.names = FALSE, na = ""
+    )
   }
   attr(runs, "diagnostics") <- diagnostics
   attr(runs, "comparison_summary") <- comparison_summary

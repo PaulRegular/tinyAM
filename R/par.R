@@ -1,4 +1,3 @@
-
 #' Initialize parameter list for TAM
 #'
 #' @description
@@ -141,7 +140,6 @@
 #' @seealso [prepare_tam()], [fit_tam()], [tinyAM-model]
 #' @export
 make_par <- function(dat) {
-
   par <- list()
   par$log_r0 <- 0
   if (dat$N_settings$init != "exp") {
@@ -192,8 +190,10 @@ make_par <- function(dat) {
   par[[q_par]] <- setNames(numeric(ncol(dat$q_modmat)), colnames(dat$q_modmat))
   if (!is.null(dat$q_mono_modmat)) {
     # Small positive link-scale steps start the monotonic curve close to flat.
-    par$dq <- setNames(rep(0.05, ncol(dat$q_mono_modmat)),
-                       colnames(dat$q_mono_modmat))
+    par$dq <- setNames(
+      rep(0.05, ncol(dat$q_mono_modmat)),
+      colnames(dat$q_mono_modmat)
+    )
   }
   par <- c(par, .q_term_parameters(.formula_terms(dat)))
   if (!is.null(dat$F_mono_modmat)) {
@@ -212,26 +212,35 @@ make_par <- function(dat) {
     par$log_sr_alpha <- par$log_sr_beta <- 0
   }
   if (dat$N_settings$process != "off") {
-    par$log_n <- matrix(0, nrow = length(dat$years) - 1L, ncol = length(dat$ages) - 1,
-                        dimnames = list(year = dat$years[-1], age = dat$ages[-1]))
+    par$log_n <- matrix(0,
+      nrow = length(dat$years) - 1L, ncol = length(dat$ages) - 1,
+      dimnames = list(year = dat$years[-1], age = dat$ages[-1])
+    )
   }
   if (dat$M_settings$process != "off") {
-    par$log_m <- matrix(0, nrow = length(dat$M_settings$years), ncol = nlevels(dat$M_settings$age_blocks),
-                        dimnames = list(year = dat$M_settings$years, age_block = levels(dat$M_settings$age_blocks)))
+    par$log_m <- matrix(0,
+      nrow = length(dat$M_settings$years), ncol = nlevels(dat$M_settings$age_blocks),
+      dimnames = list(year = dat$M_settings$years, age_block = levels(dat$M_settings$age_blocks))
+    )
   }
-  par$log_f <- matrix(0, nrow = sum(!dat$is_proj), ncol = length(dat$ages),
-                      dimnames = list(year = dat$years[!dat$is_proj], age = dat$ages))
+  par$log_f <- matrix(0,
+    nrow = sum(!dat$is_proj), ncol = length(dat$ages),
+    dimnames = list(year = dat$years[!dat$is_proj], age = dat$ages)
+  )
   if (!is.null(dat$F_mono_modmat) || any(vapply(dat$F_terms, function(x) x$type == "logistic", logical(1)))) {
-    surface <- matrix(drop(dat$F_modmat %*% par$log_mu_f) +
-                        .mean_effects(par, dat, "F")$contribution,
-                      length(dat$years), length(dat$ages))
+    surface <- matrix(
+      drop(dat$F_modmat %*% par$log_mu_f) +
+        .mean_effects(par, dat, "F")$contribution,
+      length(dat$years), length(dat$ages)
+    )
     par$log_f[] <- surface[!dat$is_proj, , drop = FALSE]
   }
 
   if (dat$M_settings$process != "off") {
     mu_m_init <- if (is.null(par$mu_m)) dat$mu_m else par$mu_m
     log_mu_M <- matrix(NA, length(dat$years), length(dat$ages),
-                       dimnames = list(year = dat$years, age = dat$ages))
+      dimnames = list(year = dat$years, age = dat$ages)
+    )
     log_mu_M[] <- dat$log_mu_supplied_m + drop(dat$M_modmat %*% mu_m_init)
     par$log_m[] <- log_mu_M[rownames(par$log_m), dat$M_settings$age_block_start, drop = FALSE]
   }
@@ -244,18 +253,20 @@ make_par <- function(dat) {
     for (term in dat$M_terms) {
       mean_parts <- cbind(mean_parts, .q_term_design(term, nrow(dat$pop_data)))
     }
-    for(b in levels(M_settings$age_blocks)) {
+    for (b in levels(M_settings$age_blocks)) {
       if (sum(M_settings$age_blocks == b) > 1) {
         ia <- names(M_settings$age_blocks)[M_settings$age_blocks == b]
         varies <- vapply(seq_len(ncol(mean_parts)), function(j) {
           surface <- matrix(mean_parts[, j], length(years), length(ages),
-                            dimnames = list(year = years, age = ages))
+            dimnames = list(year = years, age = ages)
+          )
           bmu <- surface[, ia, drop = FALSE]
           any(bmu != bmu[, 1])
         }, logical(1))
         if (any(varies)) {
           cli::cli_abort(c("M mean structure varies within M age_blocks. ",
-                           "x" = "mu_form and mu_supplied must be constant within each M process age block. Use finer age_breaks for age-varying M."))
+            "x" = "mu_form and mu_supplied must be constant within each M process age block. Use finer age_breaks for age-varying M."
+          ))
         }
       }
     }
@@ -265,7 +276,4 @@ make_par <- function(dat) {
     par <- .initialize_rec_curve(par, dat, initialize_states = TRUE)
   }
   par
-
 }
-
-

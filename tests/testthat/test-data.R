@@ -41,10 +41,12 @@ test_that("population keys are complete and cannot extend the model range", {
 
 test_that("all population formulas use keyed covariates and active ages", {
   x <- population_fixture()
-  args <- list(data = x, years = 1983:1990, ages = 2:6,
-    N_settings = list(sd_form = ~ group), rec_settings = list(process = "iid", mu_form = ~ temp),
-    F_settings = list(process = "iid", mu_form = ~ group, sd_form = ~ group),
-    M_settings = list(mu_supplied = ~ M_assumption))
+  args <- list(
+    data = x, years = 1983:1990, ages = 2:6,
+    N_settings = list(sd_form = ~group), rec_settings = list(process = "iid", mu_form = ~temp),
+    F_settings = list(process = "iid", mu_form = ~group, sd_form = ~group),
+    M_settings = list(mu_supplied = ~M_assumption)
+  )
   a <- do.call(prepare_tam, args)
   args$data$pop_covariates <- x$pop_covariates[rev(seq_len(nrow(x$pop_covariates))), ]
   b <- do.call(prepare_tam, args)
@@ -53,18 +55,22 @@ test_that("all population formulas use keyed covariates and active ages", {
   expect_identical(a$process_sd, b$process_sd)
   expect_equal(nll_fun(make_par(a), a), nll_fun(make_par(b), b))
   x$weight$missing_variable <- 1
-  expect_error(make_test_dat(data = x, M_settings = list(mu_supplied = ~ missing_variable)),
-    "M_settings\\$mu_supplied.*data\\$pop_covariates")
-  expect_error(make_test_dat(data = x, F_settings = list(process = "iid", mu_form = ~ missing_variable)), "F_settings")
-  expect_error(make_test_dat(data = x, rec_settings = list(process = "iid", mu_form = ~ missing_variable)), "rec_settings")
+  expect_error(
+    make_test_dat(data = x, M_settings = list(mu_supplied = ~missing_variable)),
+    "M_settings\\$mu_supplied.*data\\$pop_covariates"
+  )
+  expect_error(make_test_dat(data = x, F_settings = list(process = "iid", mu_form = ~missing_variable)), "F_settings")
+  expect_error(make_test_dat(data = x, rec_settings = list(process = "iid", mu_form = ~missing_variable)), "rec_settings")
 })
 
 test_that("plus ages use explicit covariates and projections hold terminal rows", {
   x <- population_fixture()
   x$pop_covariates$M_assumption <- .1 + x$pop_covariates$age / 100
   before <- x
-  dat <- make_test_dat(data = x, years = 1983:1990, ages = 2:6,
-    M_settings = list(mu_supplied = ~ M_assumption), proj_settings = list(n_proj = 2))
+  dat <- make_test_dat(
+    data = x, years = 1983:1990, ages = 2:6,
+    M_settings = list(mu_supplied = ~M_assumption), proj_settings = list(n_proj = 2)
+  )
   expect_equal(exp(matrix(dat$log_mu_supplied_m, 10, 5)[, 5]), rep(.16, 10))
   expect_false("obs" %in% names(dat$obs$pop_covariates))
   terminal <- subset(dat$pop_data, year == 1990)
@@ -91,13 +97,17 @@ test_that("printing shows compact table previews", {
 test_that("prepared and projected inputs preserve class and provenance", {
   x <- as_tam_data(population_fixture())
   attr(x, "translation") <- list(source = "fixture")
-  dat <- make_test_dat(data = x, years = 1983:1990, ages = 2:6,
-    proj_settings = list(n_proj = 1))
+  dat <- make_test_dat(
+    data = x, years = 1983:1990, ages = 2:6,
+    proj_settings = list(n_proj = 1)
+  )
   expect_s3_class(dat$obs, "tam_data")
   expect_identical(attr(dat$obs, "translation"), attr(x, "translation"))
   sd <- .2
-  positional <- make_test_dat(data = x, years = 1983:1990, ages = 2:6,
-    F_settings = list(process = "iid", mu_form = ~ factor(age) + rw(year, NULL, sd)))
+  positional <- make_test_dat(
+    data = x, years = 1983:1990, ages = 2:6,
+    F_settings = list(process = "iid", mu_form = ~ factor(age) + rw(year, NULL, sd))
+  )
   expect_identical(positional$F_terms[[1]]$sd, sd)
 })
 

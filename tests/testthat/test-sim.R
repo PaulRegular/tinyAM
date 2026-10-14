@@ -1,4 +1,3 @@
-
 suppressWarnings(
   source(system.file("examples/example_fits.R", package = "tinyAM"))
 )
@@ -8,9 +7,10 @@ fit <- N_dev
 
 test_that("sim_tam: structure and labeling for redraw_random = FALSE (obs-only)", {
   sims <- sim_tam(
-    fit, n = 3,
+    fit,
+    n = 3,
     par_uncertainty = "fixed",
-    redraw_random   = FALSE,
+    redraw_random = FALSE,
     progress = FALSE, seed = 1
   )
 
@@ -23,7 +23,7 @@ test_that("sim_tam: structure and labeling for redraw_random = FALSE (obs-only)"
   expect_true("sim" %in% names(sims$catch))
   expect_true("sim" %in% names(sims$index))
   expect_equal(sort(unique(sims$catch$sim)), 1:3)
-  expect_equal(sort(unique(sims$ssb$sim)),   1:3)
+  expect_equal(sort(unique(sims$ssb$sim)), 1:3)
 
   # Simulated obs are finite where not missing
   expect_true(all(is.finite(sims$catch$obs[!is.na(sims$catch$obs)])))
@@ -37,9 +37,10 @@ test_that("sim_tam: structure and labeling for redraw_random = FALSE (obs-only)"
 
 test_that("sim_tam: schema is same for redraw_random = TRUE, and values look sensible", {
   sims <- sim_tam(
-    fit, n = 2,
+    fit,
+    n = 2,
     par_uncertainty = "fixed",
-    redraw_random   = TRUE,
+    redraw_random = TRUE,
     progress = FALSE, seed = 1
   )
 
@@ -57,30 +58,33 @@ test_that("sim_tam: schema is same for redraw_random = TRUE, and values look sen
 
 test_that("sim_tam: n controls the number of stacked simulations", {
   sims5 <- sim_tam(
-    fit, n = 5,
+    fit,
+    n = 5,
     par_uncertainty = "fixed",
-    redraw_random   = FALSE,
+    redraw_random = FALSE,
     progress = FALSE, seed = 1
   )
   expect_equal(sort(unique(sims5$catch$sim)), 1:5)
-  expect_equal(sort(unique(sims5$ssb$sim)),   1:5)
+  expect_equal(sort(unique(sims5$ssb$sim)), 1:5)
 })
 
 test_that("sim_tam works when projecting (is_proj propagated)", {
   ## N process
   proj_sim <- sim_tam(
-    N_dev, n = 5,
+    N_dev,
+    n = 5,
     par_uncertainty = "fixed",
-    redraw_random   = FALSE,
+    redraw_random = FALSE,
     progress = FALSE, seed = 1
   )
   expect_true(any(proj_sim$index$is_proj))
 
   ## Also check that it works with an active M process
   proj_sim <- sim_tam(
-    M_dev, n = 5,
+    M_dev,
+    n = 5,
     par_uncertainty = "fixed",
-    redraw_random   = FALSE,
+    redraw_random = FALSE,
     progress = FALSE, seed = 1
   )
   expect_true(any(proj_sim$index$is_proj))
@@ -89,47 +93,52 @@ test_that("sim_tam works when projecting (is_proj propagated)", {
 test_that("sim_tam: seed makes results deterministic for a given mode", {
   # obs-only, point estimates (no parameter uncertainty)
   sims_a1 <- sim_tam(
-    fit, n = 3,
+    fit,
+    n = 3,
     par_uncertainty = "none",
-    redraw_random   = FALSE,
+    redraw_random = FALSE,
     progress = FALSE, seed = 42
   )
   sims_a2 <- sim_tam(
-    fit, n = 3,
+    fit,
+    n = 3,
     par_uncertainty = "none",
-    redraw_random   = FALSE,
+    redraw_random = FALSE,
     progress = FALSE, seed = 42
   )
 
   # identical structure and values
   expect_identical(sims_a1$catch$obs, sims_a2$catch$obs)
   expect_identical(sims_a1$index$obs, sims_a2$index$obs)
-  expect_identical(sims_a1$ssb$est,   sims_a2$ssb$est)
+  expect_identical(sims_a1$ssb$est, sims_a2$ssb$est)
 
   # projections with parameter uncertainty + new REs, same seed => same results
   sims_b1 <- sim_tam(
-    fit, n = 3,
+    fit,
+    n = 3,
     par_uncertainty = "fixed",
-    redraw_random   = TRUE,
+    redraw_random = TRUE,
     progress = FALSE, seed = 99
   )
   sims_b2 <- sim_tam(
-    fit, n = 3,
+    fit,
+    n = 3,
     par_uncertainty = "fixed",
-    redraw_random   = TRUE,
+    redraw_random = TRUE,
     progress = FALSE, seed = 99
   )
 
   expect_identical(sims_b1$catch$obs, sims_b2$catch$obs)
   expect_identical(sims_b1$index$obs, sims_b2$index$obs)
-  expect_identical(sims_b1$ssb$est,   sims_b2$ssb$est)
+  expect_identical(sims_b1$ssb$est, sims_b2$ssb$est)
 })
 
 test_that("sim_tam: joint + keep behaves (posterior predictive)", {
   sims <- sim_tam(
-    fit, n = 2,
+    fit,
+    n = 2,
     par_uncertainty = "joint",
-    redraw_random   = FALSE,   # keep sampled (u,θ), simulate obs only
+    redraw_random = FALSE, # keep sampled (u,θ), simulate obs only
     progress = FALSE, seed = 7
   )
   expect_true(all(c("catch", "index", "ssb") %in% names(sims)))
@@ -142,8 +151,10 @@ test_that("sim_tam: joint + keep behaves (posterior predictive)", {
 
 test_that("sim_tam: par_uncertainty must be one of 'none','fixed','joint'", {
   expect_error(
-    sim_tam(fit, n = 1, par_uncertainty = "nope", redraw_random = FALSE,
-            progress = FALSE, seed = 1),
+    sim_tam(fit,
+      n = 1, par_uncertainty = "nope", redraw_random = FALSE,
+      progress = FALSE, seed = 1
+    ),
     regexp = "arg"
   )
 })

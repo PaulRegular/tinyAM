@@ -1,7 +1,9 @@
 root <- file.path("analysis", "comp_assessments")
 read_table <- function(name) {
-  read.csv(file.path(root, "database", name), stringsAsFactors = FALSE,
-           na.strings = c("", "NA"), check.names = FALSE)
+  read.csv(file.path(root, "database", name),
+    stringsAsFactors = FALSE,
+    na.strings = c("", "NA"), check.names = FALSE
+  )
 }
 
 assessments <- read_table("assessments.csv")
@@ -17,13 +19,17 @@ setting <- function(x, component, name, default = NA_character_) {
 }
 
 model_ages <- function(text) {
-  if (length(text) != 1L || is.na(text) || !nzchar(text)) return(integer())
+  if (length(text) != 1L || is.na(text) || !nzchar(text)) {
+    return(integer())
+  }
   ages <- as.integer(unlist(regmatches(text, gregexpr("[0-9]+", text))))
   if (length(ages) >= 2L) seq(min(ages), max(ages)) else integer()
 }
 
 year_bounds <- function(text) {
-  if (length(text) != 1L || is.na(text) || !nzchar(text)) return(integer())
+  if (length(text) != 1L || is.na(text) || !nzchar(text)) {
+    return(integer())
+  }
   years <- as.integer(unlist(regmatches(text, gregexpr("[0-9]{4}", text))))
   if (length(years) >= 2L) range(years) else integer()
 }
@@ -44,12 +50,16 @@ source_converter <- function() {
 }
 source_stock_translation <- function(id, assessment, inputs, outputs, assumptions) {
   script <- file.path(root, "scripts", "translation", "stocks", paste0(id, ".R"))
-  if (!file.exists(script)) return(NULL)
+  if (!file.exists(script)) {
+    return(NULL)
+  }
 
   env <- new.env(parent = globalenv())
   sys.source(file.path(root, "R", "run_assessment.R"), envir = env)
-  env$source <- list(assessment = assessment, inputs = inputs,
-                     outputs = outputs, assumptions = assumptions)
+  env$source <- list(
+    assessment = assessment, inputs = inputs,
+    outputs = outputs, assumptions = assumptions
+  )
   env$do_fit <- FALSE
   env$silent <- TRUE
   sys.source(script, envir = env)
@@ -72,9 +82,13 @@ readiness <- lapply(seq_len(nrow(assessments)), function(i) {
   }
   if (is.na(year_start)) year_start <- suppressWarnings(as.integer(min(x$year, na.rm = TRUE)))
   if (is.na(year_end)) year_end <- assessments$terminal_year[i]
-  age_text <- setting(a, "population", "age_range",
-                      setting(a, "population", "modeled_ages",
-                              setting(a, "population", "ages")))
+  age_text <- setting(
+    a, "population", "age_range",
+    setting(
+      a, "population", "modeled_ages",
+      setting(a, "population", "ages")
+    )
+  )
   ages <- model_ages(age_text)
   years <- if (!is.na(year_start) && !is.na(year_end)) seq(year_start, year_end) else integer()
 
@@ -82,16 +96,20 @@ readiness <- lapply(seq_len(nrow(assessments)), function(i) {
   catch_proportion <- x[x$type == "catch" & x$measure == "proportion_at_age", , drop = FALSE]
   catch_age <- rbind(catch_direct, catch_proportion)
   if (!length(ages) && nrow(catch_age) &&
-      all(is.finite(catch_age$age)) && !anyNA(catch_age$age)) {
+    all(is.finite(catch_age$age)) && !anyNA(catch_age$age)) {
     ages <- seq.int(min(catch_age$age), max(catch_age$age))
   }
   index <- x[x$type == "index", , drop = FALSE]
-  index_age_rows <- index[index$measure %in% c("numbers_at_age", "biomass_at_age",
-                                                "proportion_at_age"), , drop = FALSE]
-  unsupported_index <- index[!index$measure %in% c("numbers_at_age", "biomass_at_age",
-                                                    "proportion_at_age", "total_numbers",
-                                                    "total_biomass", "log_index_sd",
-                                                    "relative_precision_weight"), , drop = FALSE]
+  index_age_rows <- index[index$measure %in% c(
+    "numbers_at_age", "biomass_at_age",
+    "proportion_at_age"
+  ), , drop = FALSE]
+  unsupported_index <- index[!index$measure %in% c(
+    "numbers_at_age", "biomass_at_age",
+    "proportion_at_age", "total_numbers",
+    "total_biomass", "log_index_sd",
+    "relative_precision_weight"
+  ), , drop = FALSE]
   weight <- x[x$type == "weight" & x$measure == "weight_at_age", , drop = FALSE]
   weight_series <- as.character(weight$survey)
   stock_weight <- weight[is.na(weight_series) | !nzchar(weight_series), , drop = FALSE]
@@ -99,23 +117,29 @@ readiness <- lapply(seq_len(nrow(assessments)), function(i) {
   model_weight <- if (nrow(stock_weight)) stock_weight else if (length(survey_weight_series) == 1L) weight else weight[0, , drop = FALSE]
   catch_weight <- x[x$type == "catch_weight" & x$measure == "weight_at_age", , drop = FALSE]
   maturity <- x[!is.na(x$type) & x$type == "maturity" & !is.na(x$measure) &
-                  x$measure == "maturity_at_age" & !is.na(x$year_basis) & x$year_basis == "calendar_year", , drop = FALSE]
+    x$measure == "maturity_at_age" & !is.na(x$year_basis) & x$year_basis == "calendar_year", , drop = FALSE]
   maturity_static <- x[!is.na(x$type) & x$type == "maturity" & !is.na(x$measure) &
-                    x$measure == "maturity_at_age" & is.na(x$year) & is.na(x$year_basis), , drop = FALSE]
+    x$measure == "maturity_at_age" & is.na(x$year) & is.na(x$year_basis), , drop = FALSE]
   m_input <- x[x$type == "M", , drop = FALSE]
   m_output <- y[y$measure == "natural_mortality_at_age" & !is.na(y$age), , drop = FALSE]
   documented_surveys <- a$survey[!is.na(a$survey) & nzchar(a$survey)]
-  index_surveys <- unique(c(index$survey[!is.na(index$survey) & nzchar(index$survey)],
-                            documented_surveys))
+  index_surveys <- unique(c(
+    index$survey[!is.na(index$survey) & nzchar(index$survey)],
+    documented_surveys
+  ))
   input_times <- if (nrow(index)) {
     paste0(index$survey, "=", ifelse(is.na(index$sampling_time), "unknown", index$sampling_time))
-  } else character()
+  } else {
+    character()
+  }
   timing_rows <- a[a$setting %in% c("sampling_time", "rv_sampling_time"), , drop = FALSE]
   input_survey_names <- unique(index$survey[!is.na(index$survey) & nzchar(index$survey)])
   timing_rows <- timing_rows[!timing_rows$survey %in% input_survey_names, , drop = FALSE]
   assumed_times <- if (nrow(timing_rows)) {
     paste0(timing_rows$survey, "=", timing_rows$value)
-  } else character()
+  } else {
+    character()
+  }
   index_times <- unique(c(input_times, assumed_times))
   sampling_time <- suppressWarnings(as.numeric(index$sampling_time))
   timing_recorded <- nrow(index) > 0L && all(is.finite(sampling_time) & sampling_time >= 0 & sampling_time <= 1)
@@ -124,37 +148,50 @@ readiness <- lapply(seq_len(nrow(assessments)), function(i) {
   catch_grid <- grid_complete(catch_age, years, ages)
   catch_age_grid <- grid_complete(catch_age, years, ages)
   catch_age_source_grid <- if (nrow(catch_age)) {
-    grid_complete(catch_age, seq(min(catch_age$year), max(catch_age$year)),
-                  seq(min(catch_age$age), max(catch_age$age)))
-  } else FALSE
+    grid_complete(
+      catch_age, seq(min(catch_age$year), max(catch_age$year)),
+      seq(min(catch_age$age), max(catch_age$age))
+    )
+  } else {
+    FALSE
+  }
   weight_grid <- grid_complete(model_weight, years, ages)
   catch_weight_grid <- grid_complete(catch_weight, years, ages)
   maturity_static_grid <- nrow(maturity_static) > 0L && !anyNA(maturity_static$age) && !anyDuplicated(maturity_static$age) && setequal(maturity_static$age, ages)
   maturity_grid <- grid_complete(maturity, years, ages) || maturity_static_grid
   m_grid <- grid_complete(m_input, years, ages)
   m_estimated <- any(grepl("estimate|random walk|time series",
-                           setting(a, "M", "process", ""), ignore.case = TRUE)) ||
+    setting(a, "M", "process", ""),
+    ignore.case = TRUE
+  )) ||
     any(grepl("estimate|random walk|time series",
-              a$value[a$component == "M"], ignore.case = TRUE))
+      a$value[a$component == "M"],
+      ignore.case = TRUE
+    ))
   m_represented <- m_grid || (nrow(m_input) > 0L && anyNA(m_input$year)) || m_estimated
-  has_expected_obs <- all(c(nrow(catch_age) > 0L, nrow(index_age_rows) > 0L,
-                            nrow(model_weight) > 0L, nrow(maturity) + nrow(maturity_static) > 0L))
+  has_expected_obs <- all(c(
+    nrow(catch_age) > 0L, nrow(index_age_rows) > 0L,
+    nrow(model_weight) > 0L, nrow(maturity) + nrow(maturity_static) > 0L
+  ))
   conversion_ok <- FALSE
   check_obs_ok <- FALSE
   conversion_error <- "Required catch, index, weight, and maturity rows are not all present."
   stock_script <- file.path(root, "scripts", "translation", "stocks", paste0(id, ".R"))
   if (has_expected_obs || file.exists(stock_script)) {
-    conversion <- tryCatch({
-      translated <- source_stock_translation(
-        id, assessments[i, , drop = FALSE], x, y, a
-      )
-      if (is.null(translated)) {
-        source_converter()(id, inputs, years = years, ages = ages,
-                           assumptions = assumptions)
-      } else {
-        translated$obs
-      }
-    }, error = identity)
+    conversion <- tryCatch(
+      {
+        translated <- source_stock_translation(
+          id, assessments[i, , drop = FALSE], x, y, a
+        )
+        if (is.null(translated)) {
+          source_converter()(id, inputs, years = years, ages = ages,
+            assumptions = assumptions)
+        } else {
+          translated$obs
+        }
+      },
+      error = identity
+    )
     conversion_ok <- !inherits(conversion, "error")
     if (conversion_ok) {
       conversion_error <- ""
@@ -168,11 +205,15 @@ readiness <- lapply(seq_len(nrow(assessments)), function(i) {
   }
   missing <- c(
     if (!nrow(catch_age)) "numerical catch-at-age inputs",
-    if (nrow(unsupported_index)) paste0(
-      "index measures need a documented tinyAM mapping: ",
-      paste(unique(paste0(unsupported_index$survey, " (",
-                          unsupported_index$measure, ")")), collapse = "; ")
-    ),
+    if (nrow(unsupported_index)) {
+      paste0(
+        "index measures need a documented tinyAM mapping: ",
+        paste(unique(paste0(
+          unsupported_index$survey, " (",
+          unsupported_index$measure, ")"
+        )), collapse = "; ")
+      )
+    },
     if (!index_age) "age-structured survey indices",
     if (!length(index_surveys)) "survey identities" else if (!nrow(index)) "numerical observations from the documented survey series are not transcribed" else if (length(index_surveys) < 2L && grepl("survey|index", setting(a, "data", "assessment_inputs", ""), ignore.case = TRUE)) "other model survey series are not transcribed",
     if (!timing_exact) "exact survey sampling times (recorded times may be season-level approximations)",
@@ -203,9 +244,9 @@ readiness <- lapply(seq_len(nrow(assessments)), function(i) {
     catch_at_age_source_years = if (nrow(catch_age)) paste(range(catch_age$year), collapse = "-") else "unknown",
     catch_at_age_source_ages = if (nrow(catch_age)) paste(range(catch_age$age), collapse = "-") else "unknown",
     landings_rows = sum(x$type == "catch" &
-                          x$measure %in% c("total_numbers", "total_biomass")),
+      x$measure %in% c("total_numbers", "total_biomass")),
     landings_at_age_rows = sum(x$type == "catch" &
-                                 x$measure == "landings_numbers_at_age"),
+      x$measure == "landings_numbers_at_age"),
     index_rows = count("index"),
     weight_rows = count("weight"),
     catch_weight_rows = count("catch_weight"),
@@ -238,9 +279,13 @@ readiness <- lapply(seq_len(nrow(assessments)), function(i) {
 readiness <- do.call(rbind, readiness)
 dir.create(file.path(root, "results"), showWarnings = FALSE, recursive = TRUE)
 write.csv(readiness, file.path(root, "results", "observation_readiness.csv"), row.names = FALSE, na = "")
-print(readiness[, c("assessment_id", "modeled_first_year", "modeled_terminal_year",
-                    "minimum_age", "maximum_age", "catch_rows", "catch_at_age_rows",
-                    "index_rows", "weight_rows", "catch_weight_rows", "maturity_rows",
-                    "M_rows",
-                    "database_to_tam_obs_succeeds", "tinyAM_check_obs_passes", "missing_items")],
-      row.names = FALSE)
+print(
+  readiness[, c(
+    "assessment_id", "modeled_first_year", "modeled_terminal_year",
+    "minimum_age", "maximum_age", "catch_rows", "catch_at_age_rows",
+    "index_rows", "weight_rows", "catch_weight_rows", "maturity_rows",
+    "M_rows",
+    "database_to_tam_obs_succeeds", "tinyAM_check_obs_passes", "missing_items"
+  )],
+  row.names = FALSE
+)

@@ -6,15 +6,19 @@ test_that("M states start at their mean, including age blocks and delayed deviat
   for (process in c("iid", "ar1")) {
     dat <- make_test_dat(
       years = 2000:2005, ages = 2:6,
-      M_settings = list(process = process, mu_form = ~ 0 + I(year - 2000),
-                        mu_supplied = ~ I(0.2 + 0.1 * (age >= 4)),
-                        age_breaks = c(2, 4, 6), first_dev_year = 2002)
+      M_settings = list(
+        process = process, mu_form = ~ 0 + I(year - 2000),
+        mu_supplied = ~ I(0.2 + 0.1 * (age >= 4)),
+        age_breaks = c(2, 4, 6), first_dev_year = 2002
+      )
     )
     par <- make_par(dat)
     rep <- core_report(par, dat)
     expect_equal(rep$M, rep$mu_M)
-    expect_equal(unname(par$log_m),
-                 unname(log(rep$mu_M[rownames(par$log_m), dat$M_settings$age_block_start])))
+    expect_equal(
+      unname(par$log_m),
+      unname(log(rep$mu_M[rownames(par$log_m), dat$M_settings$age_block_start]))
+    )
     expect_true(is.finite(nll_fun(par, dat)))
 
     par$mu_m[] <- 0.1
@@ -26,10 +30,14 @@ test_that("M states start at their mean, including age blocks and delayed deviat
 
 test_that("simulated F and M states share the log-mean and zero-deviation convention", {
   for (process in c("iid", "ar1")) {
-    dat <- make_test_dat(years = 2000:2005, ages = 2:6,
+    dat <- make_test_dat(
+      years = 2000:2005, ages = 2:6,
       F_settings = list(process = process, mu_form = ~ 1 + I(year - 2000)),
-      M_settings = list(process = process, mu_form = ~ 0 + I(year - 2000),
-                        mu_supplied = ~ I(0.3), age_breaks = c(3, 6)))
+      M_settings = list(
+        process = process, mu_form = ~ 0 + I(year - 2000),
+        mu_supplied = ~ I(0.3), age_breaks = c(3, 6)
+      )
+    )
     par <- make_par(dat)
     par$log_mu_f[] <- c(log(0.4), 0.05)
     par$mu_m[] <- 0.1
@@ -40,7 +48,9 @@ test_that("simulated F and M states share the log-mean and zero-deviation conven
     report <- core_report(par, dat)
     log_mu_F <- log(report$mu_F[!dat$is_proj, , drop = FALSE])
     log_mu_M <- log(report$mu_M[rownames(par$log_m),
-                               dat$M_settings$age_block_start, drop = FALSE])
+      dat$M_settings$age_block_start,
+      drop = FALSE
+    ])
     set.seed(704)
     draws <- replicate(200, nll_fun(par, dat, simulate = TRUE), simplify = FALSE)
     mean_log_f <- Reduce(`+`, lapply(draws, `[[`, "log_f")) / length(draws)
@@ -61,17 +71,21 @@ test_that("simulation uses returned states, recursive cohorts and matching obser
     rnorm = function(n, mean = 0, sd = 1) {
       calls[[length(calls) + 1L]] <<- list(n = n, mean = mean, sd = sd)
       rep_len(mean, n) + rep_len(sd, n)
-    }, .package = "stats")
+    }, .package = "stats"
+  )
   testthat::local_mocked_bindings(
     rprocess_ar1 = function(ny, na, phi = c(0, 0), sd = 1) matrix(0.1, ny, na),
-    .package = "tinyAM")
+    .package = "tinyAM"
+  )
 
   for (n_process in c("off", "iid", "ar1")) {
-    dat <- make_test_dat(years = 2000:2005, ages = 2:6,
+    dat <- make_test_dat(
+      years = 2000:2005, ages = 2:6,
       N_settings = list(process = n_process, init = "exp"),
-      F_settings = list(process = "iid", mu_form = ~ 1),
+      F_settings = list(process = "iid", mu_form = ~1),
       M_settings = list(process = "iid", mu_supplied = ~ I(0.3)),
-      proj_settings = list(n_proj = 2, n_mean = 1, F_mult = c(0.8, 1.2)))
+      proj_settings = list(n_proj = 2, n_mean = 1, F_mult = c(0.8, 1.2))
+    )
     # Missing rows precede observed rows; every row has a distinct SD.
     dat$log_sd_catch_supplied <- log(seq_len(nrow(dat$obs$catch)) / 100)
     dat$log_sd_index_supplied <- log(seq_len(nrow(dat$obs$index)) / 50)
@@ -88,10 +102,14 @@ test_that("simulation uses returned states, recursive cohorts and matching obser
     expect_false(isTRUE(all.equal(rep$log_pred, before$log_pred)))
     expect_equal(obs_calls[[1]]$mean, rep$log_pred[dat$is_observed])
     expect_equal(obs_calls[[1]]$sd, rep$sd_obs[dat$is_observed])
-    expect_equal(sims$log_obs[dat$is_observed],
-                 unname(rep$log_pred[dat$is_observed] + rep$sd_obs[dat$is_observed]))
-    expect_equal(sims$missing,
-                 unname(rep$log_pred[dat$fill_missing_map] + rep$sd_obs[dat$fill_missing_map]))
+    expect_equal(
+      sims$log_obs[dat$is_observed],
+      unname(rep$log_pred[dat$is_observed] + rep$sd_obs[dat$is_observed])
+    )
+    expect_equal(
+      sims$missing,
+      unname(rep$log_pred[dat$fill_missing_map] + rep$sd_obs[dat$fill_missing_map])
+    )
     for (y in 2:nrow(rep$N)) {
       survivors <- rep$N[y - 1, ] * exp(-rep$Z[y - 1, ])
       expected <- survivors[-length(survivors)]
@@ -107,19 +125,24 @@ test_that("IID and AR1 M models fit with absolute mortality states", {
     fit <- update(default_fit,
       N_settings = list(process = "off", init = "exp"),
       M_settings = list(process = process, mu_supplied = ~ I(0.3), age_breaks = c(3, 14)),
-      silent = TRUE)
+      silent = TRUE
+    )
     expect_true(is.finite(fit$opt$objective))
     expect_true(fit$is_converged)
     par <- as.list(fit$sdrep, "Estimate")
-    expect_equal(unname(fit$rep$M[rownames(par$log_m), "3"]),
-                 unname(exp(par$log_m[, 1])))
+    expect_equal(
+      unname(fit$rep$M[rownames(par$log_m), "3"]),
+      unname(exp(par$log_m[, 1]))
+    )
   }
 })
 
 test_that("generative predictions remain finite when abundance underflows", {
-  dat <- make_test_dat(years = 2000:2005, ages = 2:6,
+  dat <- make_test_dat(
+    years = 2000:2005, ages = 2:6,
     N_settings = list(process = "off", init = "exp"),
-    F_settings = list(process = "iid", mu_form = ~ 1))
+    F_settings = list(process = "iid", mu_form = ~1)
+  )
   par <- make_par(dat)
   par$log_mu_f[] <- log(2000)
   par$log_sd_f <- log(0.01)
@@ -135,14 +158,17 @@ test_that("generative predictions remain finite when abundance underflows", {
 test_that("retros and every hindcast fold use observed terminal years", {
   fit <- update(default_fit,
     proj_settings = list(n_proj = 3, n_mean = 3, F_mult = c(0.5, 0.7, 0.9)),
-    silent = TRUE)
+    silent = TRUE
+  )
   original <- fit
   original_par <- fit$obj$env$last.par.best
   terminal <- max(fit$dat$years[!fit$dat$is_proj])
   retro <- fit_retro(fit, folds = 1, progress = FALSE, start_from_fit = TRUE)
   expect_equal(as.integer(names(retro$fits)), (terminal - 1):terminal)
-  expect_equal(vapply(retro$fits, tinyAM:::.terminal_year, numeric(1)),
-               setNames(as.numeric((terminal - 1):terminal), names(retro$fits)))
+  expect_equal(
+    vapply(retro$fits, tinyAM:::.terminal_year, numeric(1)),
+    setNames(as.numeric((terminal - 1):terminal), names(retro$fits))
+  )
   hindcast <- fit_hindcast(fit, folds = 1, progress = FALSE, start_from_fit = TRUE)
   expect_equal(names(hindcast$fits), names(retro$fits))
   for (nm in names(hindcast$fits)) {
@@ -151,8 +177,10 @@ test_that("retros and every hindcast fold use observed terminal years", {
     expect_equal(max(fold$dat$years), as.numeric(nm) + 1)
     expect_equal(fold$dat$proj_settings$n_mean, 1)
     expect_equal(unname(fold$dat$proj_settings$F_mult), 1)
-    expect_equal(unname(fold$rep$F[fold$dat$is_proj, ]),
-                 unname(fold$rep$F[as.character(nm), ]))
+    expect_equal(
+      unname(fold$rep$F[fold$dat$is_proj, ]),
+      unname(fold$rep$F[as.character(nm), ])
+    )
   }
   expect_identical(fit, original)
   expect_identical(fit$obj$env$last.par.best, original_par)

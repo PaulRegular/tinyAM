@@ -1,7 +1,9 @@
 test_that("partial preparation uses complete defaults without changing mathematics", {
   partial <- make_test_dat(N_settings = list(init = "free"), F_settings = list(mean_ages = 3:8))
-  explicit <- make_test_dat(N_settings = list(process = "iid", init = "free", sd_form = ~ 1), rec_settings = list(process = "rw", mu_form = NULL),
-    F_settings = list(process = "rw", mu_form = NULL, sd_form = ~ 1, mean_ages = 3:8))
+  explicit <- make_test_dat(
+    N_settings = list(process = "iid", init = "free", sd_form = ~1), rec_settings = list(process = "rw", mu_form = NULL),
+    F_settings = list(process = "rw", mu_form = NULL, sd_form = ~1, mean_ages = 3:8)
+  )
   expect_identical(partial$N_settings$process, explicit$N_settings$process)
   expect_identical(partial$N_settings$init, explicit$N_settings$init)
   expect_equal(partial$rec$matrix, explicit$rec$matrix)
@@ -48,19 +50,19 @@ test_that("updates merge stored inputs and return complete effective calls", {
   expect_identical(result$refit_args$index_settings$q_link, "logit")
   expect_identical(result$call$N_settings, result$refit_args$N_settings)
   class(result) <- c("tam_fit", "list")
-  next_fit <- update(result, rec_settings = list(process = "iid", mu_form = ~ 1))
+  next_fit <- update(result, rec_settings = list(process = "iid", mu_form = ~1))
   expect_identical(next_fit$refit_args$N_settings$init, "free")
-  expect_identical(next_fit$refit_args$rec_settings$mu_form, ~ 1)
+  expect_identical(next_fit$refit_args$rec_settings$mu_form, ~1)
   expect_identical(default_fit$refit_args, before)
 })
 
 test_that("updates retain requested formulas rather than preparation-adjusted formulas", {
   object <- default_fit
-  object$refit_args$index_settings$sd_form <- ~ 1
+  object$refit_args$index_settings$sd_form <- ~1
   object$refit_args$index_settings$sd_supplied <- ~ I(.2)
-  object$dat$index_settings$sd_form <- ~ 0
+  object$dat$index_settings$sd_form <- ~0
   cl <- update(object, index_settings = list(fill_missing = FALSE), evaluate = FALSE)
-  expect_identical(cl$index_settings$sd_form, ~ 1)
+  expect_identical(cl$index_settings$sd_form, ~1)
   expect_identical(cl$index_settings$sd_supplied, ~ I(.2))
 })
 
@@ -85,7 +87,8 @@ test_that("Usage shows every supported settings entry and optional projections",
     F_settings = c("process", "mu_form", "sd_form", "mean_ages"),
     M_settings = c("process", "mu_form", "mu_supplied", "sd_form", "age_breaks", "first_dev_year", "mean_ages"),
     catch_settings = c("sd_form", "sd_supplied", "fill_missing"),
-    index_settings = c("sd_form", "sd_supplied", "q_form", "q_link", "fill_missing"))
+    index_settings = c("sd_form", "sd_supplied", "q_form", "q_link", "fill_missing")
+  )
   for (fun in c("fit_tam", "prepare_tam")) {
     usage <- tinyAM:::.settings_usage(fun)
     call <- parse(text = sub("^@usage\n", "", usage))[[1L]]
@@ -107,15 +110,17 @@ test_that("recruitment settings validate and merge independently of survival", {
   expect_error(make_test_dat(rec_settings = list(sd = 0)), "positive")
   expect_error(make_test_dat(rec_settings = list(sd = NA_real_)), "finite")
   expect_error(make_test_dat(rec_settings = list(phi = .5)), "only used")
-  expect_error(make_test_dat(rec_settings = list(process = "ar1", mu_form = ~ 1, phi = 1)), "below")
+  expect_error(make_test_dat(rec_settings = list(process = "ar1", mu_form = ~1, phi = 1)), "below")
   expect_error(make_test_dat(rec_settings = list(mu_form = ~ iid(year))), "residual process terms")
   before <- default_fit$refit_args
-  call <- update(default_fit, rec_settings = list(process = "iid", mu_form = ~ 1), evaluate = FALSE)
-  expect_identical(call$rec_settings, list(process = "iid", mu_form = ~ 1, sd = NULL, phi = NULL))
+  call <- update(default_fit, rec_settings = list(process = "iid", mu_form = ~1), evaluate = FALSE)
+  expect_identical(call$rec_settings, list(process = "iid", mu_form = ~1, sd = NULL, phi = NULL))
   expect_identical(default_fit$refit_args, before)
-  expect_identical(make_test_dat(rec_settings = list())$rec_settings,
-                   tinyAM:::.settings_defaults("rec_settings"))
+  expect_identical(
+    make_test_dat(rec_settings = list())$rec_settings,
+    tinyAM:::.settings_defaults("rec_settings")
+  )
   base <- list(process = "ar1", mu_form = ~ bh(ssb), sd = .2, phi = .5)
-  changed <- tinyAM:::.merge_settings(base, list(mu_form = ~ 1, sd = NULL), "rec_settings")
-  expect_identical(changed, list(process = "ar1", mu_form = ~ 1, sd = NULL, phi = .5))
+  changed <- tinyAM:::.merge_settings(base, list(mu_form = ~1, sd = NULL), "rec_settings")
+  expect_identical(changed, list(process = "ar1", mu_form = ~1, sd = NULL, phi = .5))
 })

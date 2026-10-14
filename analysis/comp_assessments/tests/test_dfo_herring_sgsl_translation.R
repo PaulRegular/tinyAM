@@ -19,8 +19,10 @@ stopifnot(
   nrow(obs$index) == 526L,
   nrow(obs$weight) == 460L,
   nrow(obs$maturity) == 460L,
-  setequal(unique(obs$index$survey),
-           c("Spring fixed-gear CPUE", "4Tmno acoustic survey")),
+  setequal(
+    unique(obs$index$survey),
+    c("Spring fixed-gear CPUE", "4Tmno acoustic survey")
+  ),
   all(obs$index$samp_time[obs$index$survey == "Spring fixed-gear CPUE"] == 0.25),
   all(obs$index$samp_time[obs$index$survey == "4Tmno acoustic survey"] == 0.75),
   all(obs$maturity$obs[obs$maturity$age %in% 2:3] == 0),
@@ -31,7 +33,7 @@ stopifnot(
   identical(source_data, original),
   !any(translated$comparison_outputs$measure == "natural_mortality_at_age"),
   all(c("total_numbers", "total_biomass", "SSB", "mature_biomass_at_age") %in%
-        translated$comparison_outputs$measure),
+    translated$comparison_outputs$measure),
   all(is.na(translated$comparison_outputs$age_group[
     translated$comparison_outputs$measure %in% c("total_numbers", "total_biomass")
   ]))
@@ -40,14 +42,17 @@ stopifnot(
 acoustic_source <- source_data$inputs[
   source_data$inputs$type == "index" &
     source_data$inputs$measure == "numbers_at_age" &
-    source_data$inputs$survey == "4Tmno acoustic survey", , drop = FALSE
+    source_data$inputs$survey == "4Tmno acoustic survey", ,
+  drop = FALSE
 ]
 acoustic_observed <- obs$index[
-  obs$index$survey == "4Tmno acoustic survey", , drop = FALSE
+  obs$index$survey == "4Tmno acoustic survey", ,
+  drop = FALSE
 ]
 acoustic_match <- merge(
   acoustic_observed[c("year", "age", "obs")],
-  acoustic_source[c("year", "age", "value")], by = c("year", "age")
+  acoustic_source[c("year", "age", "value")],
+  by = c("year", "age")
 )
 stopifnot(
   nrow(acoustic_source) == 270L,
@@ -58,10 +63,14 @@ stopifnot(
   all(acoustic_source$basis == "numbers"),
   all(acoustic_source$source_type == "official_table"),
   all(grepl("DFO Research Document 2024/058 Table 15",
-            acoustic_source$source_reference, fixed = TRUE)),
+    acoustic_source$source_reference,
+    fixed = TRUE
+  )),
   all(grepl("2016/060 Table 16", acoustic_source$source_reference, fixed = TRUE)),
   all(grepl("retained the 2024 Table 15 numerical values",
-            acoustic_source$transformation, fixed = TRUE)),
+    acoustic_source$transformation,
+    fixed = TRUE
+  )),
   acoustic_source$value[acoustic_source$year == 1994 & acoustic_source$age == 3] == 231932,
   acoustic_source$value[acoustic_source$year == 2023 & acoustic_source$age == 10] == 140,
   nrow(acoustic_observed) == 270L,
@@ -78,7 +87,8 @@ latest <- read_assessment("dfo_herring_4tvn_spring_2026", read_database())
 latest_biomass <- latest$inputs[
   latest$inputs$type == "index" &
     latest$inputs$measure == "total_biomass" &
-    latest$inputs$survey == "4Tmno acoustic survey", , drop = FALSE
+    latest$inputs$survey == "4Tmno acoustic survey", ,
+  drop = FALSE
 ]
 stopifnot(
   nrow(latest_biomass) == 32L,
@@ -86,17 +96,20 @@ stopifnot(
   all(latest_biomass$unit == "tonnes"),
   all(latest_biomass$source_type == "official_machine_readable"),
   all(grepl("herring_historic_biomass_2025.csv",
-            latest_biomass$source_reference, fixed = TRUE)),
+    latest_biomass$source_reference,
+    fixed = TRUE
+  )),
   latest_biomass$value[latest_biomass$year == 2023] == 7358,
   latest_biomass$value[latest_biomass$year == 2025] == 25607,
   !any(source_data$inputs$measure == "total_biomass" &
-         source_data$inputs$survey == "4Tmno acoustic survey")
+    source_data$inputs$survey == "4Tmno acoustic survey")
 )
 
 source_catch <- source_data$inputs[
   source_data$inputs$type == "catch" &
     source_data$inputs$measure == "numbers_at_age" &
-    source_data$inputs$season == "spring", , drop = FALSE
+    source_data$inputs$season == "spring", ,
+  drop = FALSE
 ]
 source_catch <- aggregate(value ~ year + age, source_catch, sum)
 observed_catch <- obs$catch[c("year", "age", "obs")]
@@ -147,16 +160,22 @@ stopifnot(
   all(is.na(reference$pop$ssb$upr)),
   all(grepl("January 1", reference$pop$ssb$notes, fixed = TRUE)),
   grepl("not the accepted assessment's April 1 SSB",
-        translated$comparison_definitions$ssb$reason, fixed = TRUE)
+    translated$comparison_definitions$ssb$reason,
+    fixed = TRUE
+  )
 )
 
 annual_numbers <- aggregate(est ~ year, reference$pop$N, sum)
 annual_mature <- aggregate(est ~ year, reference$pop$ssb_mat, sum)
 stopifnot(
-  isTRUE(all.equal(reference$pop$abundance$est,
-                   annual_numbers$est[match(reference$pop$abundance$year, annual_numbers$year)])),
-  isTRUE(all.equal(reference$pop$ssb$est,
-                   annual_mature$est[match(reference$pop$ssb$year, annual_mature$year)]))
+  isTRUE(all.equal(
+    reference$pop$abundance$est,
+    annual_numbers$est[match(reference$pop$abundance$year, annual_numbers$year)]
+  )),
+  isTRUE(all.equal(
+    reference$pop$ssb$est,
+    annual_mature$est[match(reference$pop$ssb$year, annual_mature$year)]
+  ))
 )
 
 matched_fit <- list(
@@ -172,31 +191,37 @@ matched_reference <- database_to_tam_ref(
 )
 differences <- .assessment_percent_differences(matched_reference)
 matched <- differences[differences$metric == "ssb_mat", ]
-stopifnot(nrow(matched) == 460L, all(matched$comparison_status == "matched"),
-          all(matched$unit == "t"),
-          all(matched$source == matched$tinyAM),
-          all(matched$percent_difference[!is.na(matched$percent_difference)] == 0))
+stopifnot(
+  nrow(matched) == 460L, all(matched$comparison_status == "matched"),
+  all(matched$unit == "t"),
+  all(matched$source == matched$tinyAM),
+  all(matched$percent_difference[!is.na(matched$percent_difference)] == 0)
+)
 
 # Verify the gear mixture separately from the adjacent age/year geometric mean.
 gear_weights <- source_data$inputs[source_data$inputs$type == "catch_weight" &
-                                    source_data$inputs$value > 0, ]
+  source_data$inputs$value > 0, ]
 gear_catch <- source_data$inputs[source_data$inputs$type == "catch" &
-                                  source_data$inputs$measure == "numbers_at_age", ]
+  source_data$inputs$measure == "numbers_at_age", ]
 cell_weight <- function(year, age) {
   w <- gear_weights[gear_weights$year == year & gear_weights$age == age, ]
-  n <- gear_catch$value[match(paste(w$year, w$age, w$fleet),
-                             paste(gear_catch$year, gear_catch$age, gear_catch$fleet))]
+  n <- gear_catch$value[match(
+    paste(w$year, w$age, w$fleet),
+    paste(gear_catch$year, gear_catch$age, gear_catch$fleet)
+  )]
   stats::weighted.mean(w$value, n)
 }
 expected_weight <- sqrt(cell_weight(1978, 4) * cell_weight(1979, 5))
 stopifnot(abs(obs$weight$obs[obs$weight$year == 1979 & obs$weight$age == 5] -
-               expected_weight) < 1e-12)
+  expected_weight) < 1e-12)
 implicit <- merge(reference$pop$N[c("year", "age", "est")],
-                  reference$pop$biomass_at_age[c("year", "age", "est")],
-                  by = c("year", "age"), suffixes = c("_N", "_B"))
+  reference$pop$biomass_at_age[c("year", "age", "est")],
+  by = c("year", "age"), suffixes = c("_N", "_B")
+)
 implicit <- merge(implicit, obs$weight[c("year", "age", "obs")],
-                  by = c("year", "age"))
+  by = c("year", "age")
+)
 stopifnot(stats::median(abs(100 * (implicit$obs - implicit$est_B / implicit$est_N) /
-                             (implicit$est_B / implicit$est_N))) < 0.1)
+  (implicit$est_B / implicit$est_N))) < 0.1)
 
 cat("Southern Gulf spring herring translation tests passed.\n")

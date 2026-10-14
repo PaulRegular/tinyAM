@@ -26,19 +26,33 @@
 
 .ssb_timing_label <- function(dat) {
   time <- c(dat$spawn_time, dat$spawn_time_plus)
-  if (all(time == 0)) return("Start of year")
-  if (length(unique(time)) == 1L) return(paste("Spawning at year fraction", time[1L]))
-  surface <- if (is.null(dat$spawn_time_plus)) dat$spawn_time else
+  if (all(time == 0)) {
+    return("Start of year")
+  }
+  if (length(unique(time)) == 1L) {
+    return(paste("Spawning at year fraction", time[1L]))
+  }
+  surface <- if (is.null(dat$spawn_time_plus)) {
+    dat$spawn_time
+  } else {
     cbind(dat$spawn_time[, -ncol(dat$spawn_time), drop = FALSE], dat$spawn_time_plus)
+  }
   if (all(apply(surface, 1L, function(x) length(unique(x)) == 1L))) {
     "Year-specific spawning times"
-  } else "Age-specific spawning times (may vary by year)"
+  } else {
+    "Age-specific spawning times (may vary by year)"
+  }
 }
 
 .ssb_timing_table <- function(dat) {
-  surface <- if (is.null(dat$spawn_time_plus)) dat$spawn_time else
+  surface <- if (is.null(dat$spawn_time_plus)) {
+    dat$spawn_time
+  } else {
     cbind(dat$spawn_time[, -ncol(dat$spawn_time), drop = FALSE], dat$spawn_time_plus)
-  data.frame(year = rep(dat$years, ncol(surface)),
+  }
+  data.frame(
+    year = rep(dat$years, ncol(surface)),
     age = rep(as.numeric(colnames(surface)), each = nrow(surface)),
-    spawn_time = as.vector(surface), is_proj = rep(dat$is_proj, ncol(surface)))
+    spawn_time = as.vector(surface), is_proj = rep(dat$is_proj, ncol(surface))
+  )
 }

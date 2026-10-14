@@ -1,4 +1,3 @@
-
 #' Draw MLE parameter list (no uncertainty)
 #'
 #' @keywords internal
@@ -21,7 +20,7 @@
   .require_tam_uncertainty(fit)
   sdr <- fit[["sdrep"]]
   mu <- sdr$par.fixed
-  V  <- sdr$cov.fixed
+  V <- sdr$cov.fixed
   fixed <- as.numeric(MASS::mvrnorm(1L, mu = mu, Sigma = V))
   par <- fit$obj$env$last.par.best
   fit$obj$env$parList(x = fixed, par = par)
@@ -44,17 +43,17 @@
   if (is.null(sdr$jointPrecision)) {
     sdr <- RTMB::sdreport(fit$obj, getJointPrecision = TRUE)
   }
-  Q  <- sdr$jointPrecision
+  Q <- sdr$jointPrecision
   mu <- fit$obj$env$last.par.best
 
   CH <- Matrix::Cholesky(Q, LDL = FALSE)
-  A  <- Matrix::expand(CH)  # contains $L and permutation matrix $P
+  A <- Matrix::expand(CH) # contains $L and permutation matrix $P
 
   function(fit) {
     z <- rnorm(nrow(Q))
-    y <- Matrix::solve(Matrix::t(A$L), z)     # L' y = z
-    y <- Matrix::crossprod(A$P, y)            # P' y
-    par_full <- as.numeric(mu + y)            # N(mu, Q^{-1})
+    y <- Matrix::solve(Matrix::t(A$L), z) # L' y = z
+    y <- Matrix::crossprod(A$P, y) # P' y
+    par_full <- as.numeric(mu + y) # N(mu, Q^{-1})
     fit$obj$env$parList(par = par_full)
   }
 }
@@ -112,8 +111,8 @@
   # Tidy observations (catch/index) using the simulated log_obs split
   obs <- fit$dat$obs[c("catch", "index")]
   split_obs <- split(exp(sims$log_obs), fit$dat$obs_map$type)
-  obs$catch$obs  <- split_obs$catch
-  obs$index$obs  <- split_obs$index
+  obs$catch$obs <- split_obs$catch
+  obs$index$obs <- split_obs$index
 
   # Return a flat list of data.frames
   c(obs, pop)
@@ -204,40 +203,42 @@
 #' @seealso [fit_tam()], [tidy_rep()], [stack_nested()]
 #' @export
 sim_tam <- function(
-    fit,
-    n = 10,
-    par_uncertainty = c("joint", "fixed", "none"),
-    redraw_random = FALSE,
-    progress = TRUE,
-    globals = NULL,
-    seed = TRUE
+  fit,
+  n = 10,
+  par_uncertainty = c("joint", "fixed", "none"),
+  redraw_random = FALSE,
+  progress = TRUE,
+  globals = NULL,
+  seed = TRUE
 ) {
   fit <- .require_tam_fit(fit, arg = "fit")
   par_uncertainty <- match.arg(par_uncertainty)
 
-  draw_par <- switch(
-    par_uncertainty,
+  draw_par <- switch(par_uncertainty,
     none  = .draw_none,
     fixed = .draw_fixed,
     joint = .make_draw_joint(fit)
   )
 
-  sims <- progressr::with_progress({
-    update_progress <- progressr::progressor(steps = n)
-    furrr::future_map(
-      seq_len(n),
-      function(i) {
-        res <- .sim_obs(fit, par_fun = draw_par, redraw_random = redraw_random)
-        update_progress()
-        res
-      },
-      .options = furrr::furrr_options(
-        seed = seed,
-        packages = "tinyAM",
-        globals = globals
+  sims <- progressr::with_progress(
+    {
+      update_progress <- progressr::progressor(steps = n)
+      furrr::future_map(
+        seq_len(n),
+        function(i) {
+          res <- .sim_obs(fit, par_fun = draw_par, redraw_random = redraw_random)
+          update_progress()
+          res
+        },
+        .options = furrr::furrr_options(
+          seed = seed,
+          packages = "tinyAM",
+          globals = globals
+        )
       )
-    )
-  }, enable = progress)
+    },
+    enable = progress
+  )
   names(sims) <- as.character(seq_len(n))
   stack_nested(sims, label = "sim")
 }

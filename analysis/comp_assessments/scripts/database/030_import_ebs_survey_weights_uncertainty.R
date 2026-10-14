@@ -4,8 +4,10 @@ data_file <- file.path(cache, "pm_24.dat")
 inputs_file <- file.path(root, "database/inputs.csv")
 assessment_id <- "afsc_pollock_ebs_2024"
 revision <- "44e0cb0ac8698e1d3954273e8aaf760d7c76cba5"
-source_url <- paste0("https://github.com/noaa-afsc/EBS_pollock/blob/",
-                     revision, "/runs/data/pm_24.dat; ")
+source_url <- paste0(
+  "https://github.com/noaa-afsc/EBS_pollock/blob/",
+  revision, "/runs/data/pm_24.dat; "
+)
 
 data_lines <- trimws(readLines(data_file, warn = FALSE))
 read_block <- function(name) {
@@ -46,12 +48,12 @@ stopifnot(
 
 inputs <- read.csv(inputs_file, stringsAsFactors = FALSE, check.names = FALSE)
 inputs <- inputs[!(inputs$assessment_id == assessment_id &
-                     ((inputs$type == "weight" &
-                         inputs$measure == "weight_at_age" &
-                         !is.na(inputs$survey) & nzchar(inputs$survey)) |
-                        inputs$measure == "index_sd" |
-                        inputs$measure == "proportion_at_length" |
-                        inputs$measure == "environmental_covariate")), ]
+  ((inputs$type == "weight" &
+    inputs$measure == "weight_at_age" &
+    !is.na(inputs$survey) & nzchar(inputs$survey)) |
+    inputs$measure == "index_sd" |
+    inputs$measure == "proportion_at_length" |
+    inputs$measure == "environmental_covariate")), ]
 empty_row <- as.list(setNames(rep("", ncol(inputs)), names(inputs)))
 rows <- list()
 add_row <- function(...) {
@@ -86,14 +88,22 @@ for (series in names(weights)) {
 }
 
 index_series <- list(
-  cpue = list(name = "Historical fishery CPUE", unit = "native biomass-proportional index",
-              note = "Native-scale SD used in the CPUE residual likelihood."),
-  avo = list(name = "Acoustic vessels of opportunity", unit = "native biomass-proportional index",
-             note = "Native-scale SD used in the AVO residual likelihood."),
-  bts = list(name = survey_names[["bts"]], unit = "thousand t",
-             note = "Supplied native-scale SD vector; the accepted DoCovBTS=1 likelihood instead uses the full supplied covariance matrix."),
-  ats = list(name = survey_names[["ats"]], unit = "thousand t",
-             note = "Supplied native-scale SD converted by the source model to log-scale variance for its biomass-index likelihood.")
+  cpue = list(
+    name = "Historical fishery CPUE", unit = "native biomass-proportional index",
+    note = "Native-scale SD used in the CPUE residual likelihood."
+  ),
+  avo = list(
+    name = "Acoustic vessels of opportunity", unit = "native biomass-proportional index",
+    note = "Native-scale SD used in the AVO residual likelihood."
+  ),
+  bts = list(
+    name = survey_names[["bts"]], unit = "thousand t",
+    note = "Supplied native-scale SD vector; the accepted DoCovBTS=1 likelihood instead uses the full supplied covariance matrix."
+  ),
+  ats = list(
+    name = survey_names[["ats"]], unit = "thousand t",
+    note = "Supplied native-scale SD converted by the source model to log-scale variance for its biomass-index likelihood."
+  )
 )
 for (series in names(sds)) {
   stopifnot(length(sds[[series]]) == length(years[[series]]))
@@ -106,8 +116,11 @@ for (series in names(sds)) {
       sampling_time = if (series %in% c("bts", "ats")) 0.5 else "",
       source_type = "native_model",
       source_reference = paste0(source_url, switch(series,
-        cpue = "obs_cpue_std", avo = "ob_avo_std",
-        bts = "ob_bts_std", ats = "ob_ats_std")),
+        cpue = "obs_cpue_std",
+        avo = "ob_avo_std",
+        bts = "ob_bts_std",
+        ats = "ob_ats_std"
+      )),
       notes = index_series[[series]]$note
     )
   }
@@ -154,7 +167,8 @@ old_note <- "M, covariance/sample-size/SD export, detailed statistical assumptio
 assessments$notes[assessment_row] <- gsub(
   old_note,
   "F-at-age, output uncertainty, and some statistical assumptions remain incomplete; inputs status remains partial pending the item-by-item native-input review.",
-  assessments$notes[assessment_row], fixed = TRUE
+  assessments$notes[assessment_row],
+  fixed = TRUE
 )
 write.csv(assessments, assessments_file, row.names = FALSE, na = "")
 message("Imported ", nrow(new_inputs), " EBS survey-weight, index-SD, temperature, and length-composition rows.")

@@ -8,26 +8,34 @@ output:
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE,
-  fig.width = 9, fig.height = 5, dpi = 120, fig.path = "results/recruitment_figures/")
+knitr::opts_chunk$set(
+  echo = FALSE, warning = FALSE, message = FALSE,
+  fig.width = 9, fig.height = 5, dpi = 120, fig.path = "results/recruitment_figures/"
+)
 study <- readRDS("results/recruitment_recovery.rds")
 stopifnot(isTRUE(study$complete))
 results <- study$results
 attempts <- do.call(rbind, lapply(results, `[[`, "attempt"))
-stopifnot(nrow(attempts) == 14L * study$n_simple + 6L * study$n_full,
-  !anyDuplicated(with(attempts, paste(stage, case, design, replicate))))
+stopifnot(
+  nrow(attempts) == 14L * study$n_simple + 6L * study$n_full,
+  !anyDuplicated(with(attempts, paste(stage, case, design, replicate)))
+)
 library(ggplot2)
 library(dplyr)
 parameters <- do.call(rbind, lapply(results, function(x) {
-  if (is.null(x$parameters)) return(NULL)
+  if (is.null(x$parameters)) {
+    return(NULL)
+  }
   cbind(x$attempt[rep(1L, nrow(x$parameters)), c("stage", "case", "design", "replicate", "success")], x$parameters)
 }))
 parameters$covered <- with(parameters, lower <= truth & truth <= upper)
 summary <- attempts |>
   group_by(stage, case, design) |>
-  summarise(attempts = n(), passed = sum(success),
+  summarise(
+    attempts = n(), passed = sum(success),
     success_percent = round(100 * mean(success), 1),
-    median_log_curve_error = round(median(curve_rmse, na.rm = TRUE), 3), .groups = "drop")
+    median_log_curve_error = round(median(curve_rmse, na.rm = TRUE), 3), .groups = "drop"
+  )
 ```
 
 ## Main findings
@@ -116,11 +124,13 @@ knitr::kable(summary, digits = 3)
 
 ```{r numerical-figure}
 ggplot(summary, aes(case, success_percent, fill = design)) +
-  geom_col(position = "dodge") + facet_wrap(~ stage) +
+  geom_col(position = "dodge") +
+  facet_wrap(~stage) +
   geom_hline(yintercept = 90, linetype = 2) +
   scale_y_continuous(limits = c(0, 100)) +
   labs(x = NULL, y = "Numerical success (%)", fill = NULL) +
-  theme_minimal() + theme(axis.text.x = element_text(angle = 30, hjust = 1))
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 30, hjust = 1))
 ```
 
 The dashed line is the prespecified 90% target in well-informed cases. Stress
@@ -130,8 +140,10 @@ cases can converge while providing little information about curve shape.
 <summary>Recorded numerical failures</summary>
 
 ```{r failures}
-knitr::kable(attempts[!attempts$success,
-  c("stage", "case", "replicate", "optimizer", "gradient", "pdHess", "message")], digits = 4)
+knitr::kable(attempts[
+  !attempts$success,
+  c("stage", "case", "replicate", "optimizer", "gradient", "pdHess", "message")
+], digits = 4)
 ```
 
 </details>
@@ -141,7 +153,9 @@ knitr::kable(attempts[!attempts$success,
 ```{r curve-data, include=FALSE}
 curves <- do.call(rbind, lapply(results, function(x) {
   if (is.null(x$curve) || x$attempt$stage != "full" || x$attempt$replicate != 1L ||
-      startsWith(x$attempt$case, "cov")) return(NULL)
+    startsWith(x$attempt$case, "cov")) {
+    return(NULL)
+  }
   cbind(case = x$attempt$case, x$curve)
 }))
 ```
@@ -151,8 +165,9 @@ ggplot(curves, aes(ssb, truth)) +
   geom_line(colour = "grey30", linewidth = .8) +
   geom_ribbon(aes(ymin = lower, ymax = upper), fill = "steelblue", alpha = .15) +
   geom_line(aes(y = estimate), colour = "steelblue", linewidth = .8) +
-  facet_wrap(~ case, scales = "free") +
-  labs(x = "Parent SSB", y = "Median recruitment") + theme_minimal()
+  facet_wrap(~case, scales = "free") +
+  labs(x = "Parent SSB", y = "Median recruitment") +
+  theme_minimal()
 ```
 
 Grey is the generating curve; blue is the first recorded fitted curve with its
@@ -161,24 +176,32 @@ not the spread of future recruitment or uncertainty in parent SSB.
 
 ```{r curve-coverage}
 curve_intervals <- do.call(rbind, lapply(results, function(x) {
-  if (!isTRUE(x$attempt$success) || is.null(x$curve$lower)) return(NULL)
+  if (!isTRUE(x$attempt$success) || is.null(x$curve$lower)) {
+    return(NULL)
+  }
   d <- x$curve
   usable <- is.finite(d$lower) & is.finite(d$upper)
-  in_range <- if (is.null(x$recruitment)) rep(TRUE, nrow(d)) else
+  in_range <- if (is.null(x$recruitment)) {
+    rep(TRUE, nrow(d))
+  } else {
     d$ssb >= min(x$recruitment$ssb) & d$ssb <= max(x$recruitment$ssb)
+  }
   covered <- d$lower <= d$truth & d$truth <= d$upper
   cbind(x$attempt[, c("stage", "case", "design", "replicate")],
     available = mean(usable),
     coverage_in_range = mean(covered[usable & in_range]),
-    coverage_beyond_range = mean(covered[usable & !in_range]))
+    coverage_beyond_range = mean(covered[usable & !in_range])
+  )
 }))
 curve_coverage <- curve_intervals |>
   filter(stage == "full") |>
   group_by(case) |>
-  summarise(fits = n(), finite_intervals_percent = round(100 * mean(available), 1),
+  summarise(
+    fits = n(), finite_intervals_percent = round(100 * mean(available), 1),
     coverage_in_range_percent = round(100 * mean(coverage_in_range), 1),
     coverage_beyond_range_percent = round(100 * mean(coverage_beyond_range), 1),
-    .groups = "drop")
+    .groups = "drop"
+  )
 knitr::kable(curve_coverage)
 ```
 
@@ -198,21 +221,27 @@ especially beyond observed SSB. Do not treat them as reliable extrapolation.
 coverage <- parameters |>
   filter(success, is.finite(lower), is.finite(upper)) |>
   group_by(stage, case, design, parameter) |>
-  summarise(intervals = n(), coverage_percent = round(100 * mean(covered), 1),
+  summarise(
+    intervals = n(), coverage_percent = round(100 * mean(covered), 1),
     median_error = round(median(estimate - truth), 3),
-    median_interval_width = round(median(upper - lower), 3), .groups = "drop")
+    median_interval_width = round(median(upper - lower), 3), .groups = "drop"
+  )
 knitr::kable(coverage)
 ```
 
 </details>
 
 ```{r parameter-errors}
-ggplot(subset(parameters, stage == "full" & success),
-  aes(case, estimate - truth)) +
-  geom_hline(yintercept = 0, colour = "grey60") + geom_boxplot() +
-  facet_wrap(~ parameter, scales = "free_y") +
+ggplot(
+  subset(parameters, stage == "full" & success),
+  aes(case, estimate - truth)
+) +
+  geom_hline(yintercept = 0, colour = "grey60") +
+  geom_boxplot() +
+  facet_wrap(~parameter, scales = "free_y") +
   labs(x = NULL, y = "Error on optimized parameter scale") +
-  theme_minimal() + theme(axis.text.x = element_text(angle = 30, hjust = 1))
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 30, hjust = 1))
 ```
 
 High coverage with very wide intervals is not precise recovery. Narrow parent

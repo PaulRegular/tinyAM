@@ -19,14 +19,18 @@ input <- source_data$inputs
 outputs <- source_data$outputs
 source_surface <- function(type, measure, scale = 1) {
   rows <- outputs[outputs$type == type & outputs$measure == measure &
-                    !is.na(outputs$year) & !is.na(outputs$age), ]
+    !is.na(outputs$year) & !is.na(outputs$age), ]
   surface <- matrix(
     NA_real_, length(translated$years), length(translated$ages),
-    dimnames = list(as.character(translated$years),
-                    as.character(translated$ages))
+    dimnames = list(
+      as.character(translated$years),
+      as.character(translated$ages)
+    )
   )
-  index <- cbind(match(as.integer(rows$year), translated$years),
-                 match(as.integer(rows$age), translated$ages))
+  index <- cbind(
+    match(as.integer(rows$year), translated$years),
+    match(as.integer(rows$age), translated$ages)
+  )
   surface[index] <- as.numeric(rows$value) * scale
   surface
 }
@@ -35,11 +39,15 @@ source_F <- source_surface("mortality", "fishing_mortality_at_age")
 source_M <- source_surface("mortality", "natural_mortality_at_age")
 
 catch_source <- input[input$type == "catch" &
-                        input$measure == "numbers_at_age", ]
-catch_source_key <- paste(as.integer(catch_source$year),
-                         as.integer(catch_source$age))
-catch_obs_key <- paste(translated$obs$catch$year,
-                       translated$obs$catch$age)
+  input$measure == "numbers_at_age", ]
+catch_source_key <- paste(
+  as.integer(catch_source$year),
+  as.integer(catch_source$age)
+)
+catch_obs_key <- paste(
+  translated$obs$catch$year,
+  translated$obs$catch$age
+)
 precision <- input[input$measure == "relative_precision_weight", ]
 precision$year <- as.integer(precision$year)
 precision$age <- as.integer(precision$age)
@@ -68,7 +76,7 @@ stopifnot(
   length(unique(translated$obs$index$sd_block)) == 4L,
   length(unique(translated$obs$catch$sd_block)) == 3L,
   !any(translated$obs$index$survey == "HERAS" &
-         translated$obs$index$year == 1999),
+    translated$obs$index$year == 1999),
   all(translated$obs$index$relative_sd[
     translated$obs$index$survey != "IBTS/BITSQ1"
   ] == 1),
@@ -114,7 +122,8 @@ stopifnot(
   identical(dat$F_settings$mean_ages, 2:5),
   identical(dat$M_settings$process, "off"),
   grepl("AR(1)", paste(translated$background, collapse = " "),
-        fixed = TRUE)
+    fixed = TRUE
+  )
 )
 
 cat("Western Baltic herring translation structure passed.\n")

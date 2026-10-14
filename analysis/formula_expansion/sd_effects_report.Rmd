@@ -8,13 +8,17 @@ output:
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE,
-  fig.width = 9, fig.height = 5, dpi = 120, fig.path = "results/sd_figures/")
+knitr::opts_chunk$set(
+  echo = FALSE, warning = FALSE, message = FALSE,
+  fig.width = 9, fig.height = 5, dpi = 120, fig.path = "results/sd_figures/"
+)
 results <- readRDS("results/sd_effects_recovery.rds")
 stopifnot(isTRUE(results$complete))
 attempts <- results$attempts
-stopifnot(nrow(attempts) == 14L * results$n_simple + 6L * results$n_full,
-  !anyDuplicated(with(attempts, paste(stage, type, design, replicate))))
+stopifnot(
+  nrow(attempts) == 14L * results$n_simple + 6L * results$n_full,
+  !anyDuplicated(with(attempts, paste(stage, type, design, replicate)))
+)
 parameters <- results$parameters
 library(ggplot2)
 success <- aggregate(success ~ stage + type + design, attempts, mean)
@@ -119,10 +123,12 @@ does not establish structural identifiability or reliable intervals.
 
 ```{r numerical}
 ggplot(success, aes(type, 100 * success, fill = design)) +
-  geom_col(position = "dodge") + facet_wrap(~ stage, scales = "free_x", nrow = 1) +
+  geom_col(position = "dodge") +
+  facet_wrap(~stage, scales = "free_x", nrow = 1) +
   geom_hline(yintercept = 90, linetype = 2, colour = "grey40") +
   scale_y_continuous(limits = c(0, 100)) +
-  labs(x = NULL, y = "Numerically successful fits (%)", fill = NULL) + theme_bw()
+  labs(x = NULL, y = "Numerically successful fits (%)", fill = NULL) +
+  theme_bw()
 ```
 
 ```{r success-table}
@@ -141,12 +147,17 @@ non-finite estimates are not interpreted as successful recovery.
 ```{r parameters, fig.height=9}
 ggplot(parameters[is.finite(parameters$estimate), ], aes(type, estimate)) +
   geom_boxplot(outlier.shape = NA) +
-  geom_point(data = parameters[!parameters$success & is.finite(parameters$estimate), ],
-    colour = "firebrick", shape = 1, position = position_jitter(width = .1)) +
-  geom_hline(aes(yintercept = truth), data = unique(parameters[, c("stage", "design", "parameter", "truth")]),
-    colour = "steelblue", linetype = 2) +
+  geom_point(
+    data = parameters[!parameters$success & is.finite(parameters$estimate), ],
+    colour = "firebrick", shape = 1, position = position_jitter(width = .1)
+  ) +
+  geom_hline(aes(yintercept = truth),
+    data = unique(parameters[, c("stage", "design", "parameter", "truth")]),
+    colour = "steelblue", linetype = 2
+  ) +
   facet_wrap(~ stage + design + parameter, scales = "free", ncol = 3) +
-  labs(x = NULL, y = "Estimated parameter; blue line = truth") + theme_bw()
+  labs(x = NULL, y = "Estimated parameter; blue line = truth") +
+  theme_bw()
 ```
 
 ```{r coverage}
@@ -171,16 +182,20 @@ replicate, using the same observations for each formula.
 
 ```{r tails}
 tail_curves <- subset(curves, stage == "tails")
-ggplot(tail_curves, aes(age)) + geom_line(aes(y = truth), colour = "grey35", linewidth = 1) +
+ggplot(tail_curves, aes(age)) +
+  geom_line(aes(y = truth), colour = "grey35", linewidth = 1) +
   geom_line(aes(y = estimate, colour = type)) +
-  labs(x = "Age", y = "Observation SD", colour = "Formula") + theme_bw()
+  labs(x = "Age", y = "Observation SD", colour = "Formula") +
+  theme_bw()
 ```
 
 ```{r curve-errors}
 rmse <- attempts[is.finite(attempts$log_sd_rmse), ]
 ggplot(rmse, aes(type, log_sd_rmse, fill = design)) +
-  geom_boxplot(outlier.shape = NA) + facet_wrap(~ stage, scales = "free_y", nrow = 1) +
-  labs(x = NULL, y = "Error in the fitted log-SD curve (RMSE)", fill = NULL) + theme_bw()
+  geom_boxplot(outlier.shape = NA) +
+  facet_wrap(~stage, scales = "free_y", nrow = 1) +
+  labs(x = NULL, y = "Error in the fitted log-SD curve (RMSE)", fill = NULL) +
+  theme_bw()
 ```
 
 ## Full-model examples
@@ -195,16 +210,20 @@ full <- subset(curves, stage == "full")
 full <- merge(full, attempts[, c("stage", "type", "design", "replicate", "success")])
 full$panel <- paste(full$design, full$type, ifelse(full$success, "passed", "did not pass"))
 ggplot(full, aes(age, colour = group)) +
-  geom_line(aes(y = truth), linetype = 2) + geom_line(aes(y = estimate)) +
-  facet_wrap(~ panel, scales = "free_y", ncol = 3) +
-  labs(x = "Age", y = "Observation SD; dashed = simulated truth", colour = NULL) + theme_bw()
+  geom_line(aes(y = truth), linetype = 2) +
+  geom_line(aes(y = estimate)) +
+  facet_wrap(~panel, scales = "free_y", ncol = 3) +
+  labs(x = "Age", y = "Observation SD; dashed = simulated truth", colour = NULL) +
+  theme_bw()
 ```
 
 <details><summary>Warnings and failed fits</summary>
 
 ```{r failures}
-fail <- attempts[!attempts$success, c("stage", "type", "design", "replicate", "seed",
-  "optimizer", "gradient", "pdHess", "message")]
+fail <- attempts[!attempts$success, c(
+  "stage", "type", "design", "replicate", "seed",
+  "optimizer", "gradient", "pdHess", "message"
+)]
 knitr::kable(fail, row.names = FALSE)
 warnings <- unique(attempts[nzchar(attempts$warnings), c("stage", "type", "design", "warnings")])
 knitr::kable(warnings, row.names = FALSE)

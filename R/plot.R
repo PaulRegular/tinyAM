@@ -1,11 +1,10 @@
-
 .log_linear_buttons <- list(
   list(
     type = "buttons",
     y = 1, x = 0, pad = list(r = 60), xanchor = "right", yanchor = "top",
     buttons = list(
       list(method = "relayout", args = list("yaxis.type", "linear"), label = "Linear"),
-      list(method = "relayout", args = list("yaxis.type", "log"),    label = "Log")
+      list(method = "relayout", args = list("yaxis.type", "log"), label = "Log")
     )
   )
 )
@@ -64,7 +63,7 @@
 #'
 #' N_dev$pop$N |>
 #'   subset(age %in% 2:8) |>
-#'   plot_trend(ylab = "N", color = ~as.character(age))
+#'   plot_trend(ylab = "N", color = ~ as.character(age))
 #'
 #' ## Age-Year Heatmap ----
 #' plot_heatmap(N_dev$pop$F, zlab = "F")
@@ -73,8 +72,9 @@
 #' ## Observed vs Predicted ----
 #' plot_obs_pred(N_dev$obs_pred$catch, frame = ~age, ylab = "Catch")
 #' plot_obs_pred(tabs$obs_pred$index,
-#'               color = ~model, legendgroup = ~model,
-#'               frame = ~age, ylab = "Index")
+#'   color = ~model, legendgroup = ~model,
+#'   frame = ~age, ylab = "Index"
+#' )
 #'
 #' ## Residual Bubbles ----
 #' plot_bubbles(N_dev$obs_pred$catch)
@@ -82,8 +82,10 @@
 #'
 #' ## Residual Scatter ----
 #' plot_resid(N_dev$obs_pred$catch, x = ~age, xlab = "Age")
-#' plot_resid(tabs$obs_pred$index, frame = ~model,
-#'             x = ~year, xlab = "Year", showlegend = FALSE)
+#' plot_resid(tabs$obs_pred$index,
+#'   frame = ~model,
+#'   x = ~year, xlab = "Year", showlegend = FALSE
+#' )
 #'
 #' ## Parameter Estimates ----
 #' plot_par(N_dev$fixed_par)
@@ -93,22 +95,22 @@
 #' @import plotly
 #' @export
 plot_trend <- function(
-    data,
-    x = ~year,
-    y = ~est,
-    xlab = "Year",
-    ylab = "",
-    title = "",
-    add_intervals = TRUE,
-    add_buttons = TRUE,
-    ...
+  data,
+  x = ~year,
+  y = ~est,
+  xlab = "Year",
+  ylab = "",
+  title = "",
+  add_intervals = TRUE,
+  add_buttons = TRUE,
+  ...
 ) {
   if (!is.data.frame(data) || !nrow(data)) {
     return(plotly::plot_ly(x = numeric(), y = numeric(), type = "scatter", mode = "lines"))
   }
   args <- list(...)
   if (!"color" %in% names(args)) {
-    args$color <- I('#1f77b4')
+    args$color <- I("#1f77b4")
     args$showlegend <- FALSE
   }
 
@@ -139,10 +141,10 @@ plot_trend <- function(
     max_obs_year <- suppressWarnings(max(data$year[!data$is_proj], na.rm = TRUE))
     if (is.finite(max_obs_year)) {
       shapes <- list(list(
-        type  = "line",
-        x0    = max_obs_year, x1 = max_obs_year,
-        y0    = 0, y1 = 1, yref = "paper",
-        line  = list(dash = "dot", width = 1, color = "black")
+        type = "line",
+        x0 = max_obs_year, x1 = max_obs_year,
+        y0 = 0, y1 = 1, yref = "paper",
+        line = list(dash = "dot", width = 1, color = "black")
       ))
     }
   }
@@ -163,49 +165,49 @@ plot_trend <- function(
 #' @rdname plot_tam
 #' @export
 add_plot_buttons <- function(p) {
-    pb <- plotly::plotly_build(p)
-    data_traces <- pb$x$data
-    if (is.null(data_traces)) {
-      data_traces <- list()
-    }
+  pb <- plotly::plotly_build(p)
+  data_traces <- pb$x$data
+  if (is.null(data_traces)) {
+    data_traces <- list()
+  }
 
-    # find ribbon traces (CI)
-    rib_idx <- which(vapply(
-      data_traces,
-      function(tr) identical(tr$type, "scatter") && !is.null(tr$fill) && nzchar(tr$fill),
-      logical(1)
-    ))
+  # find ribbon traces (CI)
+  rib_idx <- which(vapply(
+    data_traces,
+    function(tr) identical(tr$type, "scatter") && !is.null(tr$fill) && nzchar(tr$fill),
+    logical(1)
+  ))
 
-    menus <- .log_linear_buttons
+  menus <- .log_linear_buttons
 
-    if (length(rib_idx)) {
-      idx0 <- as.integer(rib_idx - 1L)
-      ci_menu <- list(
-        type = "buttons",
-        y = 1, x = 0, pad = list(r = 60, t = 75), xanchor = "right", yanchor = "top",
-        buttons = list(
-          list(
-            label = "Show CI",
-            method = "restyle",
-            args = list(list(visible = rep(TRUE, length(idx0))), idx0)
-          ),
-          list(
-            label = "Hide CI",
-            method = "restyle",
-            args = list(list(visible = rep(FALSE, length(idx0))), idx0)
-          )
+  if (length(rib_idx)) {
+    idx0 <- as.integer(rib_idx - 1L)
+    ci_menu <- list(
+      type = "buttons",
+      y = 1, x = 0, pad = list(r = 60, t = 75), xanchor = "right", yanchor = "top",
+      buttons = list(
+        list(
+          label = "Show CI",
+          method = "restyle",
+          args = list(list(visible = rep(TRUE, length(idx0))), idx0)
+        ),
+        list(
+          label = "Hide CI",
+          method = "restyle",
+          args = list(list(visible = rep(FALSE, length(idx0))), idx0)
         )
       )
-      menus <- c(menus, list(ci_menu))
-    }
+    )
+    menus <- c(menus, list(ci_menu))
+  }
 
-    if (is.null(p$x$layout)) {
-      p$x$layout <- list()
-    }
-    p$x$layout$updatemenus <- menus
-    if (!is.null(pb$x$frames)) {
-      p$x$frames <- pb$x$frames
-    }
+  if (is.null(p$x$layout)) {
+    p$x$layout <- list()
+  }
+  p$x$layout$updatemenus <- menus
+  if (!is.null(pb$x$frames)) {
+    p$x$frames <- pb$x$frames
+  }
   p
 }
 
@@ -213,10 +215,10 @@ add_plot_buttons <- function(p) {
 #' @rdname plot_tam
 #' @export
 plot_heatmap <- function(
-    data,
-    zlab = "Estimate",
-    title = "",
-    ...
+  data,
+  zlab = "Estimate",
+  title = "",
+  ...
 ) {
   args <- list(...)
   if ("frame" %in% names(args) && !is.null(args$frame)) {
@@ -227,33 +229,37 @@ plot_heatmap <- function(
     )
   }
 
-  plot_ly(data, x = ~year, y = ~age, z = ~est,
-          colorbar = list(title = zlab), ...) |>
+  plot_ly(data,
+    x = ~year, y = ~age, z = ~est,
+    colorbar = list(title = zlab), ...
+  ) |>
     add_heatmap() |>
-    layout(title = title,
-           xaxis = list(title = "Year"),
-           yaxis = list(title = "Age"))
+    layout(
+      title = title,
+      xaxis = list(title = "Year"),
+      yaxis = list(title = "Age")
+    )
 }
 
 
 #' @rdname plot_tam
 #' @export
 plot_obs_pred <- function(
-    data,
-    ylab = "",
-    title = "",
-    add_buttons = TRUE,
-    x = ~year,
-    xlab = "Year",
-    ...
+  data,
+  ylab = "",
+  title = "",
+  add_buttons = TRUE,
+  x = ~year,
+  xlab = "Year",
+  ...
 ) {
   if (!is.data.frame(data) || !nrow(data) ||
-      !any(is.finite(c(data$obs, data$pred)))) {
+    !any(is.finite(c(data$obs, data$pred)))) {
     return(plotly::plot_ly(x = numeric(), y = numeric(), type = "scatter", mode = "lines"))
   }
   args <- list(...)
   if (!"color" %in% names(args)) {
-    args$color <- I('#1f77b4')
+    args$color <- I("#1f77b4")
     args$showlegend <- FALSE
     args$name <- "Predicted"
   }
@@ -289,7 +295,7 @@ plot_obs_pred <- function(
   p |>
     add_markers(
       y = ~obs,
-      color = ~I("grey40"),
+      color = ~ I("grey40"),
       name = "Observed",
       showlegend = FALSE,
       opacity = 0.5
@@ -328,9 +334,9 @@ plot_bubbles <- function(data, ...) {
     plotly::plot_ly,
     c(
       list(
-        data  = data,
-        x     = ~year,
-        y     = ~age,
+        data = data,
+        x = ~year,
+        y = ~age,
         marker = list(
           size     = ~abs_res,
           sizemin  = 1,
@@ -338,7 +344,7 @@ plot_bubbles <- function(data, ...) {
           sizemode = "area"
         ),
         color = ~sign,
-        text  = ~round(res, 2)
+        text = ~ round(res, 2)
       ),
       args
     )
@@ -357,10 +363,10 @@ plot_bubbles <- function(data, ...) {
 #' @rdname plot_tam
 #' @export
 plot_resid <- function(
-    data,
-    x = ~year,
-    xlab = "Year",
-    ...
+  data,
+  x = ~year,
+  xlab = "Year",
+  ...
 ) {
   if ("osa_res" %in% names(data)) {
     title <- "OSA residuals"
@@ -373,9 +379,10 @@ plot_resid <- function(
 
   plot_ly(data, x = x, y = ~res, ...) |>
     add_markers(alpha = 0.8) |>
-    layout(xaxis = list(title = xlab),
-           yaxis = list(title = title))
-
+    layout(
+      xaxis = list(title = xlab),
+      yaxis = list(title = title)
+    )
 }
 
 #' @rdname plot_tam
@@ -389,12 +396,14 @@ plot_par <- function(data, ...) {
   }
   p <- do.call(plot_ly, c(list(data = data, x = ~est, y = ~coef), args))
 
-  if (any(is.finite(data$lwr) & is.finite(data$upr))) p <- p |>
-    add_segments(
-      x = ~lwr, xend = ~upr,
-      y = ~coef, yend = ~coef,
-      showlegend = FALSE
-    )
+  if (any(is.finite(data$lwr) & is.finite(data$upr))) {
+    p <- p |>
+      add_segments(
+        x = ~lwr, xend = ~upr,
+        y = ~coef, yend = ~coef,
+        showlegend = FALSE
+      )
+  }
   p |>
     add_markers(showlegend = TRUE) |>
     layout(
@@ -410,31 +419,55 @@ plot_par <- function(data, ...) {
 # Signed formula effects use a linear axis and a zero reference. Keep the
 # existing trend/ribbon implementation for temporal effects.
 .plot_formula_effect <- function(data, points = FALSE, frame = NULL, ...) {
-  if (!nrow(data)) return(plotly::plot_ly())
+  if (!nrow(data)) {
+    return(plotly::plot_ly())
+  }
   limits <- range(c(0, data$est, data$lwr, data$upr), finite = TRUE)
   pad <- max(diff(limits) * .05, .01)
   if (points) {
-    p <- plotly::plot_ly(data, x = ~coordinate, y = ~est, frame = frame,
-      error_y = list(type = "data", array = ~upr - est,
-                     arrayminus = ~est - lwr, symmetric = FALSE), ...) |>
+    p <- plotly::plot_ly(data,
+      x = ~coordinate, y = ~est, frame = frame,
+      error_y = list(
+        type = "data", array = ~ upr - est,
+        arrayminus = ~ est - lwr, symmetric = FALSE
+      ), ...
+    ) |>
       plotly::add_markers()
   } else {
-    p <- plot_trend(data, x = ~coordinate, xlab = unique(data$variable)[1L],
-      frame = frame, add_buttons = FALSE, ...)
+    p <- plot_trend(data,
+      x = ~coordinate, xlab = unique(data$variable)[1L],
+      frame = frame, add_buttons = FALSE, ...
+    )
   }
-  shapes <- list(list(type = "line", x0 = 0, x1 = 1, xref = "paper", y0 = 0, y1 = 0,
-                      line = list(color = "grey", width = 1)))
+  shapes <- list(list(
+    type = "line", x0 = 0, x1 = 1, xref = "paper", y0 = 0, y1 = 0,
+    line = list(color = "grey", width = 1)
+  ))
   if (any(data$is_proj)) {
     boundary <- max(data$coordinate[!data$is_proj])
-    shapes <- c(shapes, list(list(type = "line", x0 = boundary, x1 = boundary,
-      y0 = 0, y1 = 1, yref = "paper", line = list(color = "black", dash = "dot", width = 1))))
+    shapes <- c(shapes, list(list(
+      type = "line", x0 = boundary, x1 = boundary,
+      y0 = 0, y1 = 1, yref = "paper", line = list(color = "black", dash = "dot", width = 1)
+    )))
   }
-  plotly::layout(p, xaxis = list(title = unique(data$variable)[1L],
-    tickvals = unique(data$coordinate), ticktext = unique(data$level)),
-    yaxis = list(title = if ("component" %in% names(data) && unique(data$component) != "q")
-      if (startsWith(unique(data$component), "sd_")) "Effect on log SD" else
-        paste("Effect on log", unique(data$component)) else "Effect on catchability's link scale", type = "linear",
-                 range = limits + c(-pad, pad)), shapes = shapes)
+  plotly::layout(p,
+    xaxis = list(
+      title = unique(data$variable)[1L],
+      tickvals = unique(data$coordinate), ticktext = unique(data$level)
+    ),
+    yaxis = list(
+      title = if ("component" %in% names(data) && unique(data$component) != "q") {
+        if (startsWith(unique(data$component), "sd_")) {
+          "Effect on log SD"
+        } else {
+          paste("Effect on log", unique(data$component))
+        }
+      } else {
+        "Effect on catchability's link scale"
+      }, type = "linear",
+      range = limits + c(-pad, pad)
+    ), shapes = shapes
+  )
 }
 
 #' Switch between annual trends and age profiles
@@ -468,7 +501,7 @@ plot_par <- function(data, ...) {
 #' d <- expand.grid(year = 2000:2004, age = 1:3)
 #' d$est <- exp(0.1 * (d$year - 2000) + 0.2 * d$age)
 #' plot_age_year(d, ylab = "Abundance")
-#' plot_age_year(d, x = ~ age, xlab = "Age", frame = ~ year)
+#' plot_age_year(d, x = ~age, xlab = "Age", frame = ~year)
 #' d$pred <- d$est
 #' d$obs <- d$est * 1.1
 #' plot_age_year(d, plot = plot_obs_pred, ylab = "Catch")
@@ -479,7 +512,7 @@ plot_age_year <- function(data, plot = plot_trend, x = ~year, xlab = "Year",
   args <- list(...)
   eligible <- all(c("year", "age") %in% names(data)) &&
     ((identical(all.vars(x), "year") && identical(all.vars(frame), "age")) ||
-       (identical(all.vars(x), "age") && identical(all.vars(frame), "year")))
+      (identical(all.vars(x), "age") && identical(all.vars(frame), "year")))
   if (!eligible || !nrow(data)) {
     return(do.call(plot, c(list(data = data, x = x, xlab = xlab, frame = frame), args)))
   }
@@ -493,8 +526,10 @@ plot_age_year <- function(data, plot = plot_trend, x = ~year, xlab = "Year",
   year_labels <- paste0(data$year, suffix[match(data$year, years)])
   data$.view_year <- factor(year_labels, levels = unique(year_labels))
   if (is.null(args$text)) {
-    data$.view_hover <- paste0("Year: ", data$year,
-      ifelse(projection, " (projection)", ""), "<br>Age: ", data$age)
+    data$.view_hover <- paste0(
+      "Year: ", data$year,
+      ifelse(projection, " (projection)", ""), "<br>Age: ", data$age
+    )
     args$text <- ~.view_hover
   }
   make_view <- function(x, xlab, frame, prefix, view) {
@@ -502,8 +537,11 @@ plot_age_year <- function(data, plot = plot_trend, x = ~year, xlab = "Year",
     if (!animated) frame <- NULL
     p <- do.call(plot, c(list(data = data, x = x, xlab = xlab, frame = frame), args))
     p <- .age_year_menu(p, view)
-    if (animated && length(p$x$frames)) p <- plotly::animation_slider(p,
-      currentvalue = list(prefix = prefix), pad = list(t = 45))
+    if (animated && length(p$x$frames)) {
+      p <- plotly::animation_slider(p,
+        currentvalue = list(prefix = prefix), pad = list(t = 45)
+      )
+    }
     p$width <- "100%"
     p$height <- "100%"
     p
@@ -511,30 +549,38 @@ plot_age_year <- function(data, plot = plot_trend, x = ~year, xlab = "Year",
   annual <- make_view(~year, "Year", ~age, "Age: ", "annual")
   profile <- make_view(~age, "Age", ~.view_year, "Year: ", "profile")
   initial <- if (identical(all.vars(frame), "age")) "annual" else "profile"
-  panel <- function(view, widget) htmltools::tags$div(
-    class = "tam-age-year-panel", `data-view` = view,
-    style = paste0("flex:1;min-height:0;", if (view != initial) "display:none;"), widget)
+  panel <- function(view, widget) {
+    htmltools::tags$div(
+      class = "tam-age-year-panel", `data-view` = view,
+      style = paste0("flex:1;min-height:0;", if (view != initial) "display:none;"), widget
+    )
+  }
   script <- paste(readLines(system.file("js", "age-year.js", package = "tinyAM"),
-                           warn = FALSE), collapse = "\n")
+    warn = FALSE
+  ), collapse = "\n")
   htmltools::browsable(htmltools::tags$div(
     class = "tam-age-year", `data-default-view` = initial,
     style = "display:flex;flex-direction:column;width:100%;height:100%;min-height:400px;",
     panel("annual", annual), panel("profile", profile),
-    htmltools::tags$script(htmltools::HTML(script))))
+    htmltools::tags$script(htmltools::HTML(script))
+  ))
 }
 
 .age_year_menu <- function(p, view) {
   p <- plotly::plotly_build(p)
   menus <- p$x$layout$updatemenus
-  controls <- Filter(function(menu) any(unlist(lapply(menu$buttons, `[[`, "label")) %in%
-    c("Linear", "Log", "Show CI", "Hide CI")), menus)
+  controls <- Filter(function(menu) {
+    any(unlist(lapply(menu$buttons, `[[`, "label")) %in%
+      c("Linear", "Log", "Show CI", "Hide CI"))
+  }, menus)
   menu <- if (length(controls)) controls[[length(controls)]] else .log_linear_buttons[[1L]]
   menu$name <- "tam-age-year-view"
   menu$pad$t <- if (is.null(menu$pad$t)) 75 else menu$pad$t + 75
   menu$active <- match(view, c("annual", "profile")) - 1L
   menu$buttons <- list(
     list(method = "skip", execute = FALSE, args = list("annual"), label = "Annual trends"),
-    list(method = "skip", execute = FALSE, args = list("profile"), label = "Age profiles"))
+    list(method = "skip", execute = FALSE, args = list("profile"), label = "Age profiles")
+  )
   if (is.null(p$x$layout)) p$x$layout <- list()
   p$x$layout$updatemenus <- c(menus, list(menu))
   p

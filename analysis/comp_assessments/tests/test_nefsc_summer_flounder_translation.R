@@ -35,8 +35,10 @@ stopifnot(
   nrow(translated$obs$maturity) == 35L * 8L,
   nrow(translated$obs$index) == 16L * 8L,
   isTRUE(all.equal(translated$obs$catch$obs, expected_catch)),
-  setequal(unique(translated$obs$index$survey),
-           c("NEFSC Bigelow spring trawl", "NEFSC Bigelow fall trawl")),
+  setequal(
+    unique(translated$obs$index$survey),
+    c("NEFSC Bigelow spring trawl", "NEFSC Bigelow fall trawl")
+  ),
   setequal(unique(translated$obs$index$samp_time), c(.25, .75)),
   identical(dat$N_settings$process, "iid"),
   identical(dat$F_settings$process, "ar1"),

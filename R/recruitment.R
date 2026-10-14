@@ -3,13 +3,15 @@
   settings <- dat$rec_settings
   type <- settings$process
   if (!is.character(type) || length(type) != 1L || is.na(type) ||
-      !type %in% c("rw", "iid", "ar1")) {
+    !type %in% c("rw", "iid", "ar1")) {
     cli::cli_abort("rec_settings$process must be 'rw', 'iid', or 'ar1'.")
   }
   fixed <- function(value, name, upper = Inf, zero = FALSE) {
-    if (is.null(value)) return(NULL)
+    if (is.null(value)) {
+      return(NULL)
+    }
     if (!is.numeric(value) || length(value) != 1L || !is.finite(value) ||
-        value < 0 || (!zero && value == 0) || value >= upper) {
+      value < 0 || (!zero && value == 0) || value >= upper) {
       cli::cli_abort("rec_settings${name} must be one finite {if (zero) 'non-negative' else 'positive'} number below {upper}.")
     }
     value
@@ -17,32 +19,40 @@
   if (type != "ar1" && !is.null(settings$phi)) {
     cli::cli_abort("rec_settings$phi is only used with process = 'ar1'; set phi = NULL.")
   }
-  rec <- list(type = type, sd = fixed(settings$sd, "sd"),
-              phi = fixed(settings$phi, "phi", 1, TRUE))
+  rec <- list(
+    type = type, sd = fixed(settings$sd, "sd"),
+    phi = fixed(settings$phi, "phi", 1, TRUE)
+  )
   form <- settings$mu_form
   if (is.null(form)) {
     if (type != "rw") cli::cli_abort("rec_settings$mu_form is required for IID/AR1 recruitment. Use ~ 1 for a constant mean.")
-    form <- ~ 1
+    form <- ~1
   }
   if (!inherits(form, "formula") || length(form) != 2L) {
     cli::cli_abort("rec_settings$mu_form must be a one-sided formula.")
   }
   curves <- list()
   strip <- function(x) {
-    if (!is.call(x)) return(x)
+    if (!is.call(x)) {
+      return(x)
+    }
     type <- .formula_call_name(x)
     if (type %in% c("iid", "rw", "ar1")) {
       cli::cli_abort("Recruitment residual process terms belong in rec_settings$process, not mu_form. Use process = '{type}'.")
     }
     if (type %in% c("bh", "ricker")) {
       x[[1L]] <- as.name(type)
-      args <- tryCatch(as.list(match.call(bh, x))[-1L], error = function(e)
-        cli::cli_abort("Invalid {type}() arguments."))
+      args <- tryCatch(as.list(match.call(bh, x))[-1L], error = function(e) {
+        cli::cli_abort("Invalid {type}() arguments.")
+      })
       if (!identical(args$ssb, quote(ssb))) cli::cli_abort("{type}() must use the model's ssb.")
-      lag <- if (is.null(args$lag) || identical(args$lag, quote(NULL))) min(dat$ages) else
+      lag <- if (is.null(args$lag) || identical(args$lag, quote(NULL))) {
+        min(dat$ages)
+      } else {
         tryCatch(eval(args$lag, environment(form)), error = function(e) NULL)
+      }
       if (!is.numeric(lag) || length(lag) != 1L || !is.finite(lag) || lag < 0 ||
-          lag != floor(lag) || lag > .Machine$integer.max) {
+        lag != floor(lag) || lag > .Machine$integer.max) {
         cli::cli_abort("Stock-recruit lag must be one non-negative integer.")
       }
       curves[[length(curves) + 1L]] <<- list(type = type, lag = as.integer(lag))
@@ -51,13 +61,19 @@
     if (type %in% c("mono", "logistic", "|")) {
       cli::cli_abort("Unsupported recruitment formula term: {type}().")
     }
-    if (type == "(") return(strip(x[[2L]]))
-    contains <- function(z) is.call(z) &&
-      (.formula_call_name(z) %in% c("iid", "rw", "ar1", "bh", "ricker") ||
-       any(vapply(as.list(z)[-1L], contains, logical(1))))
+    if (type == "(") {
+      return(strip(x[[2L]]))
+    }
+    contains <- function(z) {
+      is.call(z) &&
+        (.formula_call_name(z) %in% c("iid", "rw", "ar1", "bh", "ricker") ||
+          any(vapply(as.list(z)[-1L], contains, logical(1))))
+    }
     if (type == "+") {
       parts <- Filter(Negate(is.null), lapply(as.list(x)[-1L], strip))
-      if (!length(parts)) return(NULL)
+      if (!length(parts)) {
+        return(NULL)
+      }
       return(Reduce(function(a, b) call("+", a, b), parts))
     }
     if (type == "-" && length(x) == 3L && !contains(x[[3L]])) {
@@ -122,16 +138,18 @@
   }
   fixed_parameters <- ncol(design) + if (is.null(curve)) 0L else 2L
   if ((ncol(design) && qr(design)$rank < ncol(design)) ||
-      fixed_parameters > n ||
-      (is.null(rec$sd) && fixed_parameters >= n)) {
+    fixed_parameters > n ||
+    (is.null(rec$sd) && fixed_parameters >= n)) {
     cli::cli_abort("Recruitment fixed effects are redundant or saturated; simplify rec_settings$mu_form.")
   }
   held <- setdiff(variables, "year")
   if (any(dat$is_proj) && length(held)) cli::cli_inform("Recruitment projections hold terminal covariate values: {paste(held, collapse = ', ')}.")
-  dat$rec <- c(rec, list(matrix = matrix, eligible = eligible, historical = historical,
-                       boundary = seq_len(first - 1L), data = data, covariates = held,
-                       curve = curve, fixed_form = fixed_form,
-                       terms = terms, contrasts = contrasts, xlevels = xlevels))
+  dat$rec <- c(rec, list(
+    matrix = matrix, eligible = eligible, historical = historical,
+    boundary = seq_len(first - 1L), data = data, covariates = held,
+    curve = curve, fixed_form = fixed_form,
+    terms = terms, contrasts = contrasts, xlevels = xlevels
+  ))
   dat
 }
 
@@ -197,7 +215,7 @@
 #' @return Formula markers; direct calls raise an error.
 #' @examples
 #' list(process = "rw", mu_form = NULL)
-#' list(process = "iid", mu_form = ~ 1)
+#' list(process = "iid", mu_form = ~1)
 #' list(process = "iid", mu_form = ~ bh(ssb))
 #' list(process = "ar1", mu_form = ~ ricker(ssb, lag = 2))
 #' # Add temperature to data$pop_covariates at the youngest modeled age, then use:
@@ -222,23 +240,33 @@ ricker <- function(ssb, lag = NULL) {
 }
 
 .rec_mean <- function(par, dat) {
-  if (!ncol(dat$rec$matrix)) return(rep(0, length(dat$years)))
+  if (!ncol(dat$rec$matrix)) {
+    return(rep(0, length(dat$years)))
+  }
   drop(dat$rec$matrix %*% par$rec_beta)
 }
 
 .rec_scale <- function(par, dat) {
-  list(sd = if (is.null(dat$rec$sd)) exp(par$log_sd_r) else dat$rec$sd,
-       phi = if (dat$rec$type == "ar1") {
-         if (is.null(dat$rec$phi)) plogis(par$logit_phi_r) else dat$rec$phi
-       } else 0)
+  list(
+    sd = if (is.null(dat$rec$sd)) exp(par$log_sd_r) else dat$rec$sd,
+    phi = if (dat$rec$type == "ar1") {
+      if (is.null(dat$rec$phi)) plogis(par$logit_phi_r) else dat$rec$phi
+    } else {
+      0
+    }
+  )
 }
 
 .rec_nll <- function(log_r, mean, par, dat) {
   i <- dat$rec$eligible
   scale <- .rec_scale(par, dat)
   u <- log_r - mean
-  if (dat$rec$type == "rw") return(-sum(RTMB::dnorm(u[i] - u[i - 1L], 0, scale$sd, log = TRUE)))
-  if (dat$rec$type == "iid") return(-sum(RTMB::dnorm(u[i], 0, scale$sd, log = TRUE)))
+  if (dat$rec$type == "rw") {
+    return(-sum(RTMB::dnorm(u[i] - u[i - 1L], 0, scale$sd, log = TRUE)))
+  }
+  if (dat$rec$type == "iid") {
+    return(-sum(RTMB::dnorm(u[i], 0, scale$sd, log = TRUE)))
+  }
   nll <- -RTMB::dnorm(u[i[1L]], 0, scale$sd / sqrt(1 - scale$phi^2), log = TRUE)
   if (length(i) > 1L) nll <- nll - sum(RTMB::dnorm(u[i[-1L]], scale$phi * u[i[-length(i)]], scale$sd, log = TRUE))
   nll
@@ -250,8 +278,11 @@ ricker <- function(ssb, lag = NULL) {
   u <- numeric(length(dat$years))
   u[1L] <- par$log_r0 - mean[1L]
   for (i in dat$rec$eligible) {
-    expected <- switch(dat$rec$type, rw = u[i - 1L], iid = 0,
-      ar1 = if (i == dat$rec$eligible[1L]) 0 else scale$phi * u[i - 1L])
+    expected <- switch(dat$rec$type,
+      rw = u[i - 1L],
+      iid = 0,
+      ar1 = if (i == dat$rec$eligible[1L]) 0 else scale$phi * u[i - 1L]
+    )
     sd <- if (dat$rec$type == "ar1" && i == dat$rec$eligible[1L]) scale$sd / sqrt(1 - scale$phi^2) else scale$sd
     u[i] <- stats::rnorm(1L, expected, sd)
   }
@@ -277,13 +308,16 @@ ricker <- function(ssb, lag = NULL) {
     pred_log_N[1L, a] <- log_N[1L, a - 1L] - Z[1L, a - 1L]
     log_N[1L, a] <- if (dat$N_settings$init == "exp" || (simulate && dat$N_settings$init == "random")) {
       pred_log_N[1L, a] + initial_error[a - 1L]
-    } else par$log_n0[a - 1L]
+    } else {
+      par$log_n0[a - 1L]
+    }
   }
   eta_log_n0 <- log_N[1L, -1L] - pred_log_N[1L, -1L]
   eta_log_N <- matrix(0, T - 1L, A - 1L)
   if (simulate && dat$N_settings$process != "off" && !dat$process_sd$N$default && dat$N_settings$process != "rw") {
     eta_log_N <- .rprocess_scaled(eta_log_N, .process_sd(par, dat, "N"), dat$N_settings$process,
-      phi = if (dat$N_settings$process == "ar1") stats::plogis(par$logit_phi_n) else c(0, 0))
+      phi = if (dat$N_settings$process == "ar1") stats::plogis(par$logit_phi_n) else c(0, 0)
+    )
   } else {
     if (simulate && dat$N_settings$process == "iid") eta_log_N[] <- stats::rnorm(length(eta_log_N), 0, exp(par$log_sd_n))
     if (simulate && dat$N_settings$process == "ar1") eta_log_N <- rprocess_ar1(T - 1L, A - 1L, sd = exp(par$log_sd_n), phi = stats::plogis(par$logit_phi_n))
@@ -306,8 +340,11 @@ ricker <- function(ssb, lag = NULL) {
       pred_log_N[y, A] <- RTMB::logspace_add(pred_log_N[y, A], log_N[y - 1L, A] - Z[y - 1L, A])
       if (simulate && dat$N_settings$process == "rw" && y == 2L) {
         eta_log_N[1L, ] <- par$log_n[1L, ] - pred_log_N[y, older]
-        eta_log_N <- if (dat$process_sd$N$default) rprocess_rw(eta_log_N, sd = exp(par$log_sd_n)) else
+        eta_log_N <- if (dat$process_sd$N$default) {
+          rprocess_rw(eta_log_N, sd = exp(par$log_sd_n))
+        } else {
           .rprocess_scaled(eta_log_N, .process_sd(par, dat, "N"), "rw")
+        }
       }
       if (dat$N_settings$process == "off" || simulate) log_N[y, older] <- pred_log_N[y, older] + eta_log_N[y - 1L, ]
     }
@@ -322,8 +359,11 @@ ricker <- function(ssb, lag = NULL) {
       shares <- components - Reduce(RTMB::logspace_add, components)
       log_N_plus[y, ] <- log_N[y, A] + shares
       W[y, A] <- sum(exp(shares) * dat$W_plus_input[y, ])
-      P[y, A] <- if (all(dat$W_plus_input[y, ] == 0)) 0 else
+      P[y, A] <- if (all(dat$W_plus_input[y, ] == 0)) {
+        0
+      } else {
         sum(exp(shares) * dat$W_plus_input[y, ] * dat$P_plus_input[y, ]) / W[y, A]
+      }
     }
     if (y %in% dat$rec$eligible) {
       if (!is.null(dat$rec$curve)) {
@@ -331,14 +371,19 @@ ricker <- function(ssb, lag = NULL) {
         parent_ssb <- if (parent == y) {
           # Zero-lag validation guarantees no mature biomass in recruitment age.
           log(sum(.ssb_contributions(exp(log_N[y, ]), W[y, ], P[y, ], Z[y, ], dat,
-            if (!is.null(dat$plus_ages)) exp(log_N_plus[y, ]) else NULL, year = y)))
-        } else log_ssb[parent]
+            if (!is.null(dat$plus_ages)) exp(log_N_plus[y, ]) else NULL,
+            year = y
+          )))
+        } else {
+          log_ssb[parent]
+        }
         log_mu_R[y] <- mean[y] + .rec_log_curve(parent_ssb, par, dat$rec$curve$type)
       }
       log_pred_R[y] <- switch(dat$rec$type,
         rw = log_recruitment[y - 1L] + mean[y] - mean[y - 1L],
         iid = log_mu_R[y],
-        ar1 = log_mu_R[y] + if (y == dat$rec$eligible[1L]) 0 else scale$phi * u[y - 1L])
+        ar1 = log_mu_R[y] + if (y == dat$rec$eligible[1L]) 0 else scale$phi * u[y - 1L]
+      )
       if (simulate || initialize) {
         sd <- if (dat$rec$type == "ar1" && y == dat$rec$eligible[1L]) scale$sd / sqrt(1 - scale$phi^2) else scale$sd
         log_recruitment[y] <- if (simulate) stats::rnorm(1L, log_pred_R[y], sd) else log_pred_R[y]
@@ -347,39 +392,54 @@ ricker <- function(ssb, lag = NULL) {
       u[y] <- log_recruitment[y] - log_mu_R[y]
     }
     ssb_mat[y, ] <- .ssb_contributions(exp(log_N[y, ]), W[y, ], P[y, ], Z[y, ], dat,
-      if (!is.null(dat$plus_ages)) exp(log_N_plus[y, ]) else NULL, year = y)
+      if (!is.null(dat$plus_ages)) exp(log_N_plus[y, ]) else NULL,
+      year = y
+    )
     log_ssb[y] <- log(sum(ssb_mat[y, ]))
   }
   names(log_recruitment) <- dat$years
-  list(log_N = log_N, pred_log_N = pred_log_N, log_recruitment = log_recruitment,
+  list(
+    log_N = log_N, pred_log_N = pred_log_N, log_recruitment = log_recruitment,
     log_mu_R = log_mu_R, log_pred_R = log_pred_R,
     eta_R = log_recruitment - log_pred_R, eta_R_state = u,
     eta_log_n0 = eta_log_n0, W = W, P = P, ssb_mat = ssb_mat,
-    N_plus = if (!is.null(dat$plus_ages)) exp(log_N_plus) else NULL)
+    N_plus = if (!is.null(dat$plus_ages)) exp(log_N_plus) else NULL
+  )
 }
 
 .rec_process_advisories <- function(dat) {
   out <- data.frame(issue = character(), detail = character())
   rec <- dat$rec
   if (!is.null(rec) && (rec$type != "rw" || ncol(rec$matrix) || !is.null(rec$curve)) &&
-      length(rec$historical) < 5L && (is.null(rec$sd) || (rec$type == "ar1" && is.null(rec$phi)))) {
-    out <- rbind(out, data.frame(issue = "recruitment_support", detail =
-      "Fewer than five historical recruitment process years inform estimated SD/correlation. Consider a simpler formula or externally supported sd/phi."))
+    length(rec$historical) < 5L && (is.null(rec$sd) || (rec$type == "ar1" && is.null(rec$phi)))) {
+    out <- rbind(out, data.frame(
+      issue = "recruitment_support", detail =
+        "Fewer than five historical recruitment process years inform estimated SD/correlation. Consider a simpler formula or externally supported sd/phi."
+    ))
   }
   out
 }
 
 .initialize_rec_curve <- function(par, dat, initialize_states = FALSE) {
-  mean_M <- matrix(dat$log_mu_supplied_m + drop(dat$M_modmat %*% if (is.null(par$mu_m)) dat$mu_m else par$mu_m) +
-                     .mean_effects(par, dat, "M")$contribution,
-                   length(dat$years), length(dat$ages), dimnames = list(dat$years, dat$ages))
+  mean_M <- matrix(
+    dat$log_mu_supplied_m + drop(dat$M_modmat %*% if (is.null(par$mu_m)) dat$mu_m else par$mu_m) +
+      .mean_effects(par, dat, "M")$contribution,
+    length(dat$years), length(dat$ages),
+    dimnames = list(dat$years, dat$ages)
+  )
   M <- exp(mean_M)
-  if (!is.null(par[["log_m"]])) M[rownames(par[["log_m"]]), names(dat$M_settings$age_blocks)] <-
-    exp(par[["log_m"]][, dat$M_settings$age_blocks, drop = FALSE])
+  if (!is.null(par[["log_m"]])) {
+    M[rownames(par[["log_m"]]), names(dat$M_settings$age_blocks)] <-
+      exp(par[["log_m"]][, dat$M_settings$age_blocks, drop = FALSE])
+  }
   F <- matrix(0, length(dat$years), length(dat$ages))
   F[!dat$is_proj, ] <- exp(par$log_f)
-  if (any(dat$is_proj)) F[dat$is_proj, ] <- sweep(exp(par$log_f[rep(nrow(par$log_f), sum(dat$is_proj)), , drop = FALSE]),
-                                                  1L, dat$proj_settings$F_mult, `*`)
+  if (any(dat$is_proj)) {
+    F[dat$is_proj, ] <- sweep(
+      exp(par$log_f[rep(nrow(par$log_f), sum(dat$is_proj)), , drop = FALSE]),
+      1L, dat$proj_settings$F_mult, `*`
+    )
+  }
   initial <- .population_states(par, dat, F + M)
   i <- dat$rec$eligible[1L] - dat$rec$curve$lag
   S <- sum(initial$ssb_mat[i, ])
@@ -393,36 +453,48 @@ ricker <- function(ssb, lag = NULL) {
 .rec_fit_advisories <- function(fit) {
   out <- data.frame(issue = character(), detail = character())
   rec <- fit$dat$rec
-  if (is.null(rec)) return(out)
+  if (is.null(rec)) {
+    return(out)
+  }
   if (!is.null(rec$curve)) {
     S <- exp(fit$rep$rec_log_parent[!fit$dat$is_proj[rec$eligible]])
     if (length(S) && all(is.finite(S)) && max(S) / min(S) < 2) {
-      out <- rbind(out, data.frame(issue = "stock_recruit_support", detail =
-        "Fitted parent SSB varies by less than a factor of two. Stock-recruit curve shape may be weakly supported; examine uncertainty and covariate sensitivity."))
+      out <- rbind(out, data.frame(
+        issue = "stock_recruit_support", detail =
+          "Fitted parent SSB varies by less than a factor of two. Stock-recruit curve shape may be weakly supported; examine uncertainty and covariate sensitivity."
+      ))
     }
     e <- fit$rep$rec_innovation[!fit$dat$is_proj[rec$eligible]]
     if (rec$type == "ar1") e <- e[-1L]
     if (length(e) >= 15L && all(is.finite(e)) && stats::sd(e) > 0 &&
-        abs(stats::cor(e[-length(e)], e[-1L])) > .5) {
-      out <- rbind(out, data.frame(issue = "recruitment_innovation_correlation", detail =
-        "Adjacent recruitment innovations remain strongly correlated. Inspect recruitment residuals and compare the residual process before interpreting the stock-recruit curve."))
+      abs(stats::cor(e[-length(e)], e[-1L])) > .5) {
+      out <- rbind(out, data.frame(
+        issue = "recruitment_innovation_correlation", detail =
+          "Adjacent recruitment innovations remain strongly correlated. Inspect recruitment residuals and compare the residual process before interpreting the stock-recruit curve."
+      ))
     }
   }
   sdr <- fit[["sdrep"]]
-  if (!is.list(sdr) || !isTRUE(sdr$pdHess)) return(out)
+  if (!is.list(sdr) || !isTRUE(sdr$pdHess)) {
+    return(out)
+  }
   p <- sdr$par.fixed
   se <- sqrt(pmax(0, diag(sdr$cov.fixed)))
   if (!is.null(rec$curve)) {
     i <- which(names(p) %in% c("log_sr_alpha", "log_sr_beta"))
     if (any(2 * stats::qnorm(.975) * se[i] > log(10), na.rm = TRUE)) {
-      out <- rbind(out, data.frame(issue = "stock_recruit_uncertainty", detail =
-        "A stock-recruit parameter's 95% interval spans more than tenfold. Curve shape is weakly estimated; compare simpler recruitment models before interpreting density dependence."))
+      out <- rbind(out, data.frame(
+        issue = "stock_recruit_uncertainty", detail =
+          "A stock-recruit parameter's 95% interval spans more than tenfold. Curve shape is weakly estimated; compare simpler recruitment models before interpreting density dependence."
+      ))
     }
   }
   i <- which(names(p) == "logit_phi_r")
   if (length(i) && is.finite(se[i]) && diff(stats::plogis(p[i] + c(-1, 1) * stats::qnorm(.975) * se[i])) > .5) {
-    out <- rbind(out, data.frame(issue = "recruitment_AR1_uncertainty", detail =
-      "The recruitment AR1 correlation interval spans more than 0.5. Persistence is imprecise; compare IID recruitment or an externally supported phi."))
+    out <- rbind(out, data.frame(
+      issue = "recruitment_AR1_uncertainty", detail =
+        "The recruitment AR1 correlation interval spans more than 0.5. Persistence is imprecise; compare IID recruitment or an externally supported phi."
+    ))
   }
   out
 }

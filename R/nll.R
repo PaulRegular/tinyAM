@@ -1,4 +1,3 @@
-
 #' Evaluate or simulate the tinyAM model
 #'
 #' @description
@@ -91,7 +90,6 @@ nll_fun <- function(f, d) function(p) f(p, d)
 #' [dprocess_ar1()], [rprocess_ar1()]
 #' @export
 nll_fun <- function(par, dat, simulate = FALSE) {
-
   "[<-" <- ADoverload("[<-")
 
   getAll(par, dat)
@@ -109,10 +107,11 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   sd_f <- .process_sd(par, dat, "F")
 
   empty_mat <- matrix(NA, n_years, n_ages,
-                      dimnames = list(year = years, age = ages))
+    dimnames = list(year = years, age = ages)
+  )
   log_F <- log_mu_F <- S <- empty_mat
   N <- log_N <- pred_log_N <- empty_mat
-  M <- log_mu_M  <- empty_mat
+  M <- log_mu_M <- empty_mat
   Z <- empty_mat
 
   ## Mean structures and process draws ----
@@ -125,7 +124,8 @@ nll_fun <- function(par, dat, simulate = FALSE) {
     mu_f <- log_mu_F[!is_proj, , drop = FALSE]
     log_f[] <- mu_f + if (!dat$process_sd$F$default && F_settings$process != "cor_rw") {
       .rprocess_scaled(log_f - mu_f, sd_f, F_settings$process,
-        phi = if (F_settings$process == "ar1") plogis(logit_phi_f) else c(0, 0))
+        phi = if (F_settings$process == "ar1") plogis(logit_phi_f) else c(0, 0)
+      )
     } else if (F_settings$process == "rw") {
       rprocess_rw(log_f - mu_f, sd = sd_f)
     } else if (F_settings$process == "cor_rw") {
@@ -141,7 +141,8 @@ nll_fun <- function(par, dat, simulate = FALSE) {
       mu_m_process <- log_mu_M[iy, ia, drop = FALSE]
       log_m[] <- mu_m_process + if (!dat$process_sd$M$default) {
         .rprocess_scaled(log_m - mu_m_process, .process_sd(par, dat, "M"), M_settings$process,
-          phi = if (M_settings$process == "ar1") plogis(logit_phi_m) else c(0, 0))
+          phi = if (M_settings$process == "ar1") plogis(logit_phi_m) else c(0, 0)
+        )
       } else if (M_settings$process == "rw") {
         rprocess_rw(log_m - mu_m_process, sd = exp(log_sd_m))
       } else if (M_settings$process == "iid") {
@@ -222,7 +223,8 @@ nll_fun <- function(par, dat, simulate = FALSE) {
     sd_n <- .process_sd(par, dat, "N")
     jnll <- jnll - if (!dat$process_sd$N$default) {
       .dprocess_scaled(eta_log_N, sd_n, N_settings$process,
-        phi = if (N_settings$process == "ar1") plogis(logit_phi_n) else c(0, 0))
+        phi = if (N_settings$process == "ar1") plogis(logit_phi_n) else c(0, 0)
+      )
     } else if (N_settings$process == "rw") {
       dprocess_rw(eta_log_N, sd = sd_n)
     } else if (N_settings$process == "iid") {
@@ -236,12 +238,13 @@ nll_fun <- function(par, dat, simulate = FALSE) {
 
   if (M_settings$process != "off") {
     iy <- rownames(log_m)
-    ia  <- dat$M_settings$age_block_start
+    ia <- dat$M_settings$age_block_start
     eta_log_m <- log_m - log_mu_M[iy, ia, drop = FALSE]
     sd_m <- .process_sd(par, dat, "M")
     jnll <- jnll - if (!dat$process_sd$M$default) {
       .dprocess_scaled(eta_log_m, sd_m, M_settings$process,
-        phi = if (M_settings$process == "ar1") plogis(logit_phi_m) else c(0, 0))
+        phi = if (M_settings$process == "ar1") plogis(logit_phi_m) else c(0, 0)
+      )
     } else if (M_settings$process == "rw") {
       dprocess_rw(eta_log_m, sd = sd_m)
     } else if (M_settings$process == "iid") {
@@ -256,7 +259,8 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   eta_log_f <- log_F[!is_proj, ] - log_mu_F[!is_proj, ]
   jnll <- jnll - if (!dat$process_sd$F$default && F_settings$process != "cor_rw") {
     .dprocess_scaled(eta_log_f, sd_f, F_settings$process,
-      phi = if (F_settings$process == "ar1") plogis(logit_phi_f) else c(0, 0))
+      phi = if (F_settings$process == "ar1") plogis(logit_phi_f) else c(0, 0)
+    )
   } else if (F_settings$process == "rw") {
     dprocess_rw(eta_log_f, sd = sd_f)
   } else if (F_settings$process == "cor_rw") {
@@ -304,7 +308,9 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   # Compute log(q) directly to remain stable near the logit boundaries.
   log_q_obs <- if (identical(index_settings$q_link, "logit")) {
     -RTMB::logspace_add(0, -q_predictor)
-  } else q_predictor
+  } else {
+    q_predictor
+  }
   log_q_obs <- log_q_obs + q_effects$log_selectivity
   samp_time <- obs_map$samp_time
 
@@ -430,8 +436,12 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   q_link_prediction <- if (identical(index_settings$q_link, "logit")) {
     if (any(vapply(dat$q_terms, function(term) term$type == "logistic", logical(1)))) {
       log_q_obs - log(-expm1(log_q_obs))
-    } else q_predictor
-  } else log_q_obs
+    } else {
+      q_predictor
+    }
+  } else {
+    log_q_obs
+  }
   ADREPORT(q_link_prediction)
   eta_q_increments <- q_effects$rw_increments
   REPORT(eta_q_increments)
@@ -457,9 +467,11 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   ADREPORT(log_M_bar)
 
   if (simulate) {
-    sims <- list(log_f = log_f,
-                 log_r = log_r,
-                 log_obs = log_obs)
+    sims <- list(
+      log_f = log_f,
+      log_r = log_r,
+      log_obs = log_obs
+    )
     if (!is.null(par$log_r_init)) sims$log_r_init <- par$log_r_init
     if (N_settings$init != "exp") {
       sims$log_n0 <- log_n0
@@ -473,10 +485,11 @@ nll_fun <- function(par, dat, simulate = FALSE) {
     if (M_settings$process != "off") {
       sims$log_m <- log_m
     }
-    return(c(sims, q_effects$parameters, F_effects$parameters, M_effects$parameters,
-             sd_catch_effects$parameters, sd_index_effects$parameters))
+    return(c(
+      sims, q_effects$parameters, F_effects$parameters, M_effects$parameters,
+      sd_catch_effects$parameters, sd_index_effects$parameters
+    ))
   }
 
   jnll
-
 }

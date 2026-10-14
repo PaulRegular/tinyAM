@@ -3,14 +3,17 @@ cache <- "analysis/comp_assessments/source_cache/dfo_cod_4t4vn"
 database <- "analysis/comp_assessments/database"
 data_file <- "NAFO-4T4VN-Atlantic-Cod-spawning-stock-biomass-estimates-1950-2023.csv"
 
-source <- read.csv(file.path(cache, data_file), colClasses = "character",
-                   na.strings = character(), check.names = FALSE,
-                   encoding = "UTF-8")
+source <- read.csv(file.path(cache, data_file),
+  colClasses = "character",
+  na.strings = character(), check.names = FALSE,
+  encoding = "UTF-8"
+)
 outputs <- read.csv(file.path(database, "outputs.csv"),
-                    colClasses = "character", na.strings = "",
-                    check.names = FALSE, encoding = "UTF-8")
+  colClasses = "character", na.strings = "",
+  check.names = FALSE, encoding = "UTF-8"
+)
 ssb <- outputs[outputs$assessment_id == assessment_id &
-                 outputs$measure == "SSB", ]
+  outputs$measure == "SSB", ]
 percentiles <- do.call(cbind, unname(lapply(source[2:6], as.numeric)))
 
 stopifnot(

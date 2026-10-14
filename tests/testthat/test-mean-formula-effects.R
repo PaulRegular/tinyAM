@@ -1,10 +1,18 @@
 mean_test_dat <- function(component, type, ...) {
-  formula <- switch(type, iid = ~ iid(year, sd = .2), rw = ~ rw(year, sd = .2),
-                    ar1 = ~ ar1(year, sd = .2, phi = .6))
-  data <- lapply(cod_obs, function(d) { d$age_group <- factor(d$age); d })
-  args <- list(data = data, years = 1983:1989, ages = 2:6,
+  formula <- switch(type,
+    iid = ~ iid(year, sd = .2),
+    rw = ~ rw(year, sd = .2),
+    ar1 = ~ ar1(year, sd = .2, phi = .6)
+  )
+  data <- lapply(cod_obs, function(d) {
+    d$age_group <- factor(d$age)
+    d
+  })
+  args <- list(
+    data = data, years = 1983:1989, ages = 2:6,
     F_settings = list(process = "iid", mu_form = ~ factor(age)),
-    M_settings = list(process = "off", mu_supplied = ~ I(.3)))
+    M_settings = list(process = "off", mu_supplied = ~ I(.3))
+  )
   args[[paste0(component, "_settings")]]$mu_form <- formula
   if (component == "M") args$M_settings$mu_form <- update(formula, ~ 0 + .)
   args <- utils::modifyList(args, list(...))
@@ -12,32 +20,42 @@ mean_test_dat <- function(component, type, ...) {
 }
 
 test_that("F/M formulas reuse unique densities and keep absolute latent states", {
-  for (component in c("F", "M")) for (type in c("iid", "rw", "ar1")) {
-    dat <- mean_test_dat(component, type)
-    p <- make_par(dat)
-    term <- dat[[paste0(component, "_terms")]][[1]]
-    expect_true(term$parameter %in% names(p))
-    expect_true(term$parameter %in% tinyAM:::.formula_random_parameters(dat))
-    expect_length(p[[term$parameter]], length(dat$years) - as.integer(type == "rw"))
-    baseline <- dat
-    baseline[[paste0(component, "_terms")]] <- list()
-    expected <- tinyAM:::.mean_effects(p, dat, component)$nll
-    expect_equal(as.numeric(nll_fun(p, dat) - nll_fun(p, baseline)),
-                 as.numeric(expected), tolerance = 1e-9)
-    p[[term$parameter]][] <- .1
-    obj <- RTMB::MakeADFun(function(p) nll_fun(p, dat), p, silent = TRUE)
-    expect_true(all(is.finite(obj$gr(obj$par))))
-    report <- obj$report()
-    contribution <- matrix(tinyAM:::.mean_effects(p, dat, component)$contribution,
-                           length(dat$years), length(dat$ages))
-    expect_equal(as.numeric(log(report[[paste0("mu_", component)]])),
-      as.numeric(contribution + if (component == "M") log(.3) else 0))
+  for (component in c("F", "M")) {
+    for (type in c("iid", "rw", "ar1")) {
+      dat <- mean_test_dat(component, type)
+      p <- make_par(dat)
+      term <- dat[[paste0(component, "_terms")]][[1]]
+      expect_true(term$parameter %in% names(p))
+      expect_true(term$parameter %in% tinyAM:::.formula_random_parameters(dat))
+      expect_length(p[[term$parameter]], length(dat$years) - as.integer(type == "rw"))
+      baseline <- dat
+      baseline[[paste0(component, "_terms")]] <- list()
+      expected <- tinyAM:::.mean_effects(p, dat, component)$nll
+      expect_equal(as.numeric(nll_fun(p, dat) - nll_fun(p, baseline)),
+        as.numeric(expected),
+        tolerance = 1e-9
+      )
+      p[[term$parameter]][] <- .1
+      obj <- RTMB::MakeADFun(function(p) nll_fun(p, dat), p, silent = TRUE)
+      expect_true(all(is.finite(obj$gr(obj$par))))
+      report <- obj$report()
+      contribution <- matrix(
+        tinyAM:::.mean_effects(p, dat, component)$contribution,
+        length(dat$years), length(dat$ages)
+      )
+      expect_equal(
+        as.numeric(log(report[[paste0("mu_", component)]])),
+        as.numeric(contribution + if (component == "M") log(.3) else 0)
+      )
+    }
   }
 })
 
 test_that("mean by terms distinguish multiplied and independent group effects", {
-  dat <- mean_test_dat("F", "rw", F_settings = list(mu_form =
-    ~ factor(age) + rw(year, by = age, sd = .2)))
+  dat <- mean_test_dat("F", "rw", F_settings = list(
+    mu_form =
+      ~ factor(age) + rw(year, by = age, sd = .2)
+  ))
   p <- make_par(dat)
   term <- dat$F_terms[[1]]
   expect_length(term$groups, 1L)
@@ -45,8 +63,10 @@ test_that("mean by terms distinguish multiplied and independent group effects", 
   effect <- tinyAM:::.mean_effects(p, dat, "F")
   d <- dat$obs$catch
   expect_equal(effect$contribution, ifelse(d$year == min(d$year), 0, -.1 * d$age))
-  dat <- mean_test_dat("F", "ar1", F_settings = list(mu_form =
-    ~ factor(age) + ar1(year, by = age_group)))
+  dat <- mean_test_dat("F", "ar1", F_settings = list(
+    mu_form =
+      ~ factor(age) + ar1(year, by = age_group)
+  ))
   expect_length(dat$F_terms[[1]]$groups, length(dat$ages))
   p <- make_par(dat)
   expect_length(p$log_sd_mu_F_ar1_year_age_group, 1L)
@@ -57,25 +77,35 @@ test_that("mean/residual variance aliases and temporal overlaps are rejected", {
   expect_error(mean_test_dat("F", "rw", F_settings = list(process = "rw")), "IID residuals")
   expect_error(mean_test_dat("M", "ar1", M_settings = list(process = "ar1")), "IID residuals")
   expect_error(mean_test_dat("F", "rw", F_settings = list(
-    mu_form = ~ rw(year) + ar1(year))), "one temporal")
+    mu_form = ~ rw(year) + ar1(year)
+  )), "one temporal")
   expect_error(mean_test_dat("F", "iid", F_settings = list(
-    mu_form = ~ iid(year, by = factor_age))), "pop_covariates")
+    mu_form = ~ iid(year, by = factor_age)
+  )), "pop_covariates")
   expect_error(mean_test_dat("F", "iid", F_settings = list(
-    mu_form = ~ iid(year, by = age_group))), "IID F residual variance")
-  expect_error(mean_test_dat("M", "iid", M_settings = list(process = "iid",
+    mu_form = ~ iid(year, by = age_group)
+  )), "IID F residual variance")
+  expect_error(mean_test_dat("M", "iid", M_settings = list(
+    process = "iid",
     age_breaks = 2:6, first_dev_year = 1983,
-    mu_form = ~ 0 + iid(year, by = age_group))), "Unreplicated IID M")
+    mu_form = ~ 0 + iid(year, by = age_group)
+  )), "Unreplicated IID M")
   expect_error(mean_test_dat("F", "iid", F_settings = list(
-    mu_form = ~ factor(age) + iid(age))), "saturated")
+    mu_form = ~ factor(age) + iid(age)
+  )), "saturated")
   expect_error(mean_test_dat("M", "iid", M_settings = list(mu_form = ~ mono(age))), "catchability curves")
-  dat <- mean_test_dat("M", "rw", M_settings = list(process = "iid",
-    mu_form = ~ 0 + rw(year, by = age), age_breaks = c(3, 6)))
+  dat <- mean_test_dat("M", "rw", M_settings = list(
+    process = "iid",
+    mu_form = ~ 0 + rw(year, by = age), age_breaks = c(3, 6)
+  ))
   expect_error(make_par(dat), "within M age_blocks")
 })
 
 test_that("simulation constructs observations from the returned mean and residual states", {
-  dat <- mean_test_dat("F", "ar1", M_settings = list(process = "iid",
-    mu_form = ~ 0 + rw(year, sd = .1), mu_supplied = ~ I(.3), age_breaks = 3:6))
+  dat <- mean_test_dat("F", "ar1", M_settings = list(
+    process = "iid",
+    mu_form = ~ 0 + rw(year, sd = .1), mu_supplied = ~ I(.3), age_breaks = 3:6
+  ))
   p <- make_par(dat)
   p$log_r0 <- log(1e5)
   p$log_sd_r <- log(.1)
@@ -93,8 +123,10 @@ test_that("simulation constructs observations from the returned mean and residua
   obj <- RTMB::MakeADFun(function(p) nll_fun(p, dat), p, silent = TRUE)
   report <- obj$report()
   expect_equal(report$F, exp(p$log_f), ignore_attr = TRUE)
-  mu <- matrix(tinyAM:::.mean_effects(p, dat, "F")$contribution,
-               length(dat$years), length(dat$ages)) + log(.2)
+  mu <- matrix(
+    tinyAM:::.mean_effects(p, dat, "F")$contribution,
+    length(dat$years), length(dat$ages)
+  ) + log(.2)
   expect_equal(report$mu_F, exp(mu), ignore_attr = TRUE)
   standardized <- (simulated$log_obs[dat$is_observed] - report$log_pred[dat$is_observed]) /
     report$sd_obs[dat$is_observed]
@@ -117,7 +149,9 @@ test_that("mean states align by names and forecast densities integrate out", {
     RTMB::MakeADFun(function(p) {
       e <- tinyAM:::.mean_effects(p, dat, "F")
       e$nll - sum(RTMB::dnorm(rep(.1, sum(!dat$is_proj)),
-        e$contribution[which(!dat$is_proj)], .1, log = TRUE))
+        e$contribution[which(!dat$is_proj)], .1,
+        log = TRUE
+      ))
     }, p[term$parameter], random = term$parameter, silent = TRUE)
   }
   future <- objective(dat)
@@ -137,7 +171,8 @@ test_that("integrated mean likelihood equals the exact Gaussian covariance calcu
     covariance <- switch(type,
       iid = .2^2 * outer(year, year, `==`),
       rw = .2^2 * outer(year, year, pmin),
-      ar1 = .2^2 / (1 - .6^2) * .6^abs(outer(year, year, `-`)))
+      ar1 = .2^2 / (1 - .6^2) * .6^abs(outer(year, year, `-`))
+    )
     diag(covariance) <- diag(covariance) + .1^2
     y <- seq(-.1, .1, length.out = length(year))
     L <- chol(covariance)
@@ -152,10 +187,14 @@ test_that("integrated mean likelihood equals the exact Gaussian covariance calcu
 })
 
 test_that("F/M mean effects fit, report signed effects and retain empty fixed designs", {
-  fit <- update(default_fit, silent = TRUE, years = 1983:2000,
+  fit <- update(default_fit,
+    silent = TRUE, years = 1983:2000,
     F_settings = list(process = "iid", mu_form = ~ factor(age) + rw(year, sd = .1)),
-    M_settings = list(process = "off", mu_supplied = ~ I(.3),
-                      mu_form = ~ 0 + ar1(year, sd = .05, phi = .6)))
+    M_settings = list(
+      process = "off", mu_supplied = ~ I(.3),
+      mu_form = ~ 0 + ar1(year, sd = .05, phi = .6)
+    )
+  )
   expect_true(is.finite(fit$opt$objective))
   expect_true(all(c("eta_mu_F_rw_year", "eta_mu_M_ar1_year") %in% fit$obj$env$.random))
   expect_true(all(c("F_rw_year", "M_ar1_year") %in% names(fit$formula_effects$levels)))
@@ -171,8 +210,10 @@ test_that("F/M mean effects fit, report signed effects and retain empty fixed de
 })
 
 test_that("mortality design cautions apply only to the estimated components", {
-  dat <- mean_test_dat("M", "rw", M_settings = list(process = "iid",
-    age_breaks = 2:6, mu_form = ~ 0 + rw(year)))
+  dat <- mean_test_dat("M", "rw", M_settings = list(
+    process = "iid",
+    age_breaks = 2:6, mu_form = ~ 0 + rw(year)
+  ))
   caution <- tinyAM:::.mean_process_advisories(dat)
   expect_identical(caution$issue, "M_variance_separation")
   expect_match(caution$detail, "process = 'off'")
@@ -182,8 +223,10 @@ test_that("mortality design cautions apply only to the estimated components", {
   dat$M_settings$process <- "iid"
   dat$M_terms[[1]]$sd_parameter <- NULL
   expect_equal(nrow(tinyAM:::.mean_process_advisories(dat)), 0)
-  dat <- mean_test_dat("F", "rw", F_settings = list(mu_form = ~ factor(age) + rw(year)),
-    M_settings = list(process = "off", mu_supplied = ~ I(.3), mu_form = ~ 0 + ar1(year)))
+  dat <- mean_test_dat("F", "rw",
+    F_settings = list(mu_form = ~ factor(age) + rw(year)),
+    M_settings = list(process = "off", mu_supplied = ~ I(.3), mu_form = ~ 0 + ar1(year))
+  )
   caution <- tinyAM:::.mean_process_advisories(dat)
   expect_identical(caution$issue, "joint_mortality_means")
   expect_match(caution$detail, "one mortality mean at a time")
@@ -193,9 +236,15 @@ test_that("mortality design cautions apply only to the estimated components", {
 
 test_that("fitting warns about M variance separation before optimizing", {
   local_mocked_bindings(nlminb = function(...) stop("stop before optimizer"), .package = "stats")
-  expect_warning(expect_error(fit_tam(data = cod_obs, years = 1983:1995, ages = 2:6,
-    F_settings = list(process = "iid", mu_form = ~ factor(age)),
-    M_settings = list(process = "iid", mu_form = ~ 0 + rw(year),
-      mu_supplied = ~ I(.3), age_breaks = 2:6), silent = TRUE), "stop before optimizer"),
-    "Formula-effect caution")
+  expect_warning(
+    expect_error(fit_tam(
+      data = cod_obs, years = 1983:1995, ages = 2:6,
+      F_settings = list(process = "iid", mu_form = ~ factor(age)),
+      M_settings = list(
+        process = "iid", mu_form = ~ 0 + rw(year),
+        mu_supplied = ~ I(.3), age_breaks = 2:6
+      ), silent = TRUE
+    ), "stop before optimizer"),
+    "Formula-effect caution"
+  )
 })

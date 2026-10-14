@@ -1,6 +1,7 @@
 root <- file.path("analysis", "comp_assessments")
 inputs <- read.csv(file.path(root, "database", "inputs.csv"),
-                   stringsAsFactors = FALSE)
+  stringsAsFactors = FALSE
+)
 inputs <- inputs[inputs$assessment_id == "dfo_cod_3pn4rs_2025", ]
 index <- inputs[inputs$type == "index", ]
 weights <- inputs[inputs$type == "catch_weight", ]
@@ -34,12 +35,15 @@ source(file.path(root, "R", "run_assessment.R"))
 source_data <- read_assessment("dfo_cod_3pn4rs_2025", read_database())
 before <- source_data
 error <- tryCatch(database_to_tam_obs(
-  "dfo_cod_3pn4rs_2025", source_data$inputs, years = 1995:2024, ages = 2:11
+  "dfo_cod_3pn4rs_2025", source_data$inputs,
+  years = 1995:2024, ages = 2:11
 ), error = identity)
-stopifnot(inherits(error, "error"),
-          grepl("weight|maturity", conditionMessage(error)),
-          identical(source_data, before),
-          source_data$assessment$inputs_status == "partial")
+stopifnot(
+  inherits(error, "error"),
+  grepl("weight|maturity", conditionMessage(error)),
+  identical(source_data, before),
+  source_data$assessment$inputs_status == "partial"
+)
 # Isolate maturity readiness with test-only complete weights, never source data.
 weight_fixture <- source_data$inputs[rep(1L, 30L * 10L), ]
 weight_fixture$type <- "weight"
@@ -54,7 +58,9 @@ error <- tryCatch(database_to_tam_obs(
   "dfo_cod_3pn4rs_2025", rbind(source_data$inputs, weight_fixture),
   years = 1995:2024, ages = 2:11
 ), error = identity)
-stopifnot(inherits(error, "error"),
-          grepl("maturity", conditionMessage(error)),
-          identical(source_data, before))
+stopifnot(
+  inherits(error, "error"),
+  grepl("maturity", conditionMessage(error)),
+  identical(source_data, before)
+)
 cat("3Pn4RS source-input tests passed.\n")

@@ -15,10 +15,14 @@ if (length(args) != 2L) {
   stop("Supply the curated metadata path and one stock_id from candidate_stocks.", call. = FALSE)
 }
 
-metadata <- read.csv(args[1], encoding = "latin1", check.names = FALSE,
-                     stringsAsFactors = FALSE)
-needed <- c("Stock", "Management", "Area", "Genus", "Species", "Model",
-            "Meeting_or_reference", "Start Year", "End Year")
+metadata <- read.csv(args[1],
+  encoding = "latin1", check.names = FALSE,
+  stringsAsFactors = FALSE
+)
+needed <- c(
+  "Stock", "Management", "Area", "Genus", "Species", "Model",
+  "Meeting_or_reference", "Start Year", "End Year"
+)
 missing <- setdiff(needed, names(metadata))
 if (length(missing)) stop("Curated file is missing: ", paste(missing, collapse = ", "), call. = FALSE)
 if (anyDuplicated(metadata$Stock)) stop("Curated Stock identifiers must be unique.", call. = FALSE)

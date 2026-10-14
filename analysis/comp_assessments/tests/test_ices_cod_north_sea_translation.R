@@ -18,14 +18,14 @@ dat <- do.call(tinyAM::prepare_tam, c(
 ))
 
 weights <- source_inputs[source_inputs$type == "weight" &
-                           source_inputs$measure == "weight_at_age" &
-                           source_inputs$year %in% translated$years &
-                           source_inputs$age %in% translated$ages, ]
+  source_inputs$measure == "weight_at_age" &
+  source_inputs$year %in% translated$years &
+  source_inputs$age %in% translated$ages, ]
 weight_average <- stats::aggregate(as.numeric(value) ~ year + age, weights, mean)
 maturity <- source_inputs[source_inputs$type == "maturity" &
-                            source_inputs$measure == "maturity_at_age" &
-                            source_inputs$year %in% translated$years &
-                            source_inputs$age %in% translated$ages, ]
+  source_inputs$measure == "maturity_at_age" &
+  source_inputs$year %in% translated$years &
+  source_inputs$age %in% translated$ages, ]
 maturity_average <- stats::aggregate(as.numeric(value) ~ year + age, maturity, mean)
 comparison <- translated$comparison_outputs
 source_n <- source_data$outputs[source_data$outputs$measure == "numbers_at_age", ]
@@ -33,7 +33,8 @@ sum_n <- stats::aggregate(value ~ year + age, source_n, sum)
 source_ssb <- source_data$outputs[source_data$outputs$measure == "SSB", ]
 sum_ssb <- stats::aggregate(value ~ year, source_ssb, sum)
 source_f <- source_data$outputs[
-  source_data$outputs$measure == "fishing_mortality_at_age", ]
+  source_data$outputs$measure == "fishing_mortality_at_age",
+]
 source_f_n <- source_n[match(
   paste(source_f$year, source_f$age, source_f$region),
   paste(source_n$year, source_n$age, source_n$region)
@@ -47,9 +48,9 @@ sum_f_weighted <- stats::aggregate(value ~ year + age, source_f_weighted, sum)
 sum_f_weights <- stats::aggregate(value ~ year + age, source_f_n, sum)
 mean_f <- sum_f_weighted$value / sum_f_weights$value
 source_catch <- source_inputs[source_inputs$type == "catch" &
-                                source_inputs$measure == "numbers_at_age" &
-                                source_inputs$year %in% translated$years &
-                                source_inputs$age %in% translated$ages, ]
+  source_inputs$measure == "numbers_at_age" &
+  source_inputs$year %in% translated$years &
+  source_inputs$age %in% translated$ages, ]
 
 stopifnot(
   identical(translated$years, 1983:2022),
@@ -66,32 +67,46 @@ stopifnot(
   )),
   setequal(unique(obs$index$survey), "Survey_Q34"),
   all(obs$index$samp_time == 0.75),
-  isTRUE(all.equal(obs$weight$obs,
-    weight_average$`as.numeric(value)`[match(paste(obs$weight$year, obs$weight$age),
-                                             paste(weight_average$year, weight_average$age))])),
-  isTRUE(all.equal(obs$maturity$obs,
-    maturity_average$`as.numeric(value)`[match(paste(obs$maturity$year, obs$maturity$age),
-                                                paste(maturity_average$year, maturity_average$age))])),
+  isTRUE(all.equal(
+    obs$weight$obs,
+    weight_average$`as.numeric(value)`[match(
+      paste(obs$weight$year, obs$weight$age),
+      paste(weight_average$year, weight_average$age)
+    )]
+  )),
+  isTRUE(all.equal(
+    obs$maturity$obs,
+    maturity_average$`as.numeric(value)`[match(
+      paste(obs$maturity$year, obs$maturity$age),
+      paste(maturity_average$year, maturity_average$age)
+    )]
+  )),
   identical(source_data$inputs, source_inputs),
   all(is.na(comparison$region)),
   isTRUE(all.equal(
     comparison$value[comparison$measure == "numbers_at_age"],
     sum_n$value[match(
-      paste(comparison$year[comparison$measure == "numbers_at_age"],
-            comparison$age[comparison$measure == "numbers_at_age"]),
+      paste(
+        comparison$year[comparison$measure == "numbers_at_age"],
+        comparison$age[comparison$measure == "numbers_at_age"]
+      ),
       paste(sum_n$year, sum_n$age)
     )]
   )),
   isTRUE(all.equal(
     comparison$value[comparison$measure == "SSB"],
-    sum_ssb$value[match(comparison$year[comparison$measure == "SSB"],
-                        sum_ssb$year)]
+    sum_ssb$value[match(
+      comparison$year[comparison$measure == "SSB"],
+      sum_ssb$year
+    )]
   )),
   isTRUE(all.equal(
     comparison$value[comparison$measure == "fishing_mortality_at_age"],
     mean_f[match(
-      paste(comparison$year[comparison$measure == "fishing_mortality_at_age"],
-            comparison$age[comparison$measure == "fishing_mortality_at_age"]),
+      paste(
+        comparison$year[comparison$measure == "fishing_mortality_at_age"],
+        comparison$age[comparison$measure == "fishing_mortality_at_age"]
+      ),
       paste(sum_f_weighted$year, sum_f_weighted$age)
     )]
   )),

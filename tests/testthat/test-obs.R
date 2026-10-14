@@ -1,4 +1,3 @@
-
 # ---- check_obs ----
 
 test_that("check_obs passes on valid input and returns TRUE invisibly", {
@@ -88,4 +87,3 @@ test_that("check_obs checks that catch/weight/maturity covers full modeled (year
   obs$index <- obs$index[-seq_len(drop_n), , drop = FALSE]
   expect_invisible(expect_true(check_obs(obs)))
 })
-

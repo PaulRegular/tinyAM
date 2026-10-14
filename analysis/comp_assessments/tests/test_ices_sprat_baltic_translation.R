@@ -18,7 +18,7 @@ inputs <- source_data$inputs
 outputs <- source_data$outputs
 catch_1974 <- subset(inputs, type == "catch" & year == 1974 & age == 1)
 bass_2001 <- subset(inputs, type == "index" & survey == "BASS_May_SD24_26_28" &
-                      year == 2001 & age == 1)
+  year == 2001 & age == 1)
 m_1974 <- subset(inputs, type == "M" & year == 1974 & age == 1)
 ssb_2025 <- subset(outputs, measure == "SSB" & year == 2025)
 recruitment_2026 <- subset(outputs, measure == "recruitment" & year == 2026)

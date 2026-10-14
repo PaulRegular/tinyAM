@@ -54,8 +54,10 @@
   ci_names <- c(sprintf("Lower %s%%", ci_level), sprintf("Upper %s%%", ci_level))
 
   if (is.null(fixed_par) || !nrow(fixed_par)) {
-    out <- data.frame(Estimate = numeric(), lower = numeric(), upper = numeric(),
-                      `Std. Error` = numeric(), `SE scale` = character(), check.names = FALSE)
+    out <- data.frame(
+      Estimate = numeric(), lower = numeric(), upper = numeric(),
+      `Std. Error` = numeric(), `SE scale` = character(), check.names = FALSE
+    )
     names(out)[2:3] <- ci_names
     return(out)
   }
@@ -72,17 +74,18 @@
   }
 
   est <- fixed_par$est
-  se  <- fixed_par$se
+  se <- fixed_par$se
   lower <- if ("lwr" %in% names(fixed_par)) fixed_par$lwr else rep(NA_real_, length(est))
   upper <- if ("upr" %in% names(fixed_par)) fixed_par$upr else rep(NA_real_, length(est))
 
-  out <- data.frame(Estimate = est, lower, upper, `Std. Error` = se,
-                    `SE scale` = fixed_par$se_scale, check.names = FALSE)
+  out <- data.frame(
+    Estimate = est, lower, upper, `Std. Error` = se,
+    `SE scale` = fixed_par$se_scale, check.names = FALSE
+  )
   names(out)[2:3] <- ci_names
   rownames(out) <- make.unique(labels)
   out
 }
-
 
 
 .terminal_table <- function(pop, terminal_year) {
@@ -92,11 +95,15 @@
   }
 
   default_ci_level <- formatC(default_interval * 100, format = "fg")
-  default_ci_names <- c(sprintf("Lower %s%%", default_ci_level),
-                        sprintf("Upper %s%%", default_ci_level))
+  default_ci_names <- c(
+    sprintf("Lower %s%%", default_ci_level),
+    sprintf("Upper %s%%", default_ci_level)
+  )
 
-  empty <- data.frame(Estimate = numeric(), lower = numeric(), upper = numeric(),
-                      `Std. Error` = numeric(), `SE scale` = character(), check.names = FALSE)
+  empty <- data.frame(
+    Estimate = numeric(), lower = numeric(), upper = numeric(),
+    `Std. Error` = numeric(), `SE scale` = character(), check.names = FALSE
+  )
   names(empty)[2:3] <- default_ci_names
 
   if (is.null(pop)) {
@@ -142,8 +149,10 @@
     lower <- if ("lwr" %in% names(tab)) tab$lwr else NA_real_
     upper <- if ("upr" %in% names(tab)) tab$upr else NA_real_
 
-    out <- data.frame(Estimate = tab$est, lower, upper, `Std. Error` = tab$se,
-                      `SE scale` = tab$se_scale, row.names = nm, check.names = FALSE)
+    out <- data.frame(
+      Estimate = tab$est, lower, upper, `Std. Error` = tab$se,
+      `SE scale` = tab$se_scale, row.names = nm, check.names = FALSE
+    )
     names(out)[2:3] <- ci_names
     out
   })
@@ -213,8 +222,10 @@
   numeric_cols <- col_names != "SE scale"
   is_sd_col <- col_names[numeric_cols] == "Std. Error"
 
-  formatted <- matrix(NA_character_, nrow = nrow(tab), ncol = ncol(tab),
-                      dimnames = dimnames(tab))
+  formatted <- matrix(NA_character_,
+    nrow = nrow(tab), ncol = ncol(tab),
+    dimnames = dimnames(tab)
+  )
 
   for (i in seq_len(nrow(tab))) {
     row_nm <- row_names[i]
@@ -242,8 +253,10 @@
   numeric_cols <- col_names != "SE scale"
   is_sd_col <- col_names[numeric_cols] == "Std. Error"
 
-  formatted <- matrix(NA_character_, nrow = nrow(tab), ncol = ncol(tab),
-                      dimnames = dimnames(tab))
+  formatted <- matrix(NA_character_,
+    nrow = nrow(tab), ncol = ncol(tab),
+    dimnames = dimnames(tab)
+  )
 
   for (i in seq_len(nrow(tab))) {
     row_nm <- row_names[i]
@@ -334,7 +347,7 @@ summary.tam_fit <- function(object, ...) {
   object <- .require_tam_fit(object, arg = "object")
 
   years <- object$dat$years
-  ages  <- object$dat$ages
+  ages <- object$dat$ages
   obs_n <- sum(object$dat$obs_map$is_observed)
 
   terminal_year <- .terminal_year(object)
@@ -380,10 +393,12 @@ print.summary_tam_fit <- function(x, ...) {
   cat(sprintf("\nObjective: %s\n", format(x$objective, digits = 6)))
   print(x$convergence)
 
-  cat(sprintf("\nObservations: %d  Years: %s-%s  Ages: %s-%s\n",
-              x$data$n_observations,
-              x$data$years[1], x$data$years[2],
-              x$data$ages[1], x$data$ages[2]))
+  cat(sprintf(
+    "\nObservations: %d  Years: %s-%s  Ages: %s-%s\n",
+    x$data$n_observations,
+    x$data$years[1], x$data$years[2],
+    x$data$ages[1], x$data$ages[2]
+  ))
 
   if (nrow(x$coefficients)) {
     cat("\nCoefficients:\n")
@@ -405,7 +420,7 @@ print.summary_tam_fit <- function(x, ...) {
 
 .print_se_note <- function() {
   cat("\nSE scale: reported = same scale as estimate; logit = log-odds.\n",
-      "A small log-scale SE approximates CV (0.10 is about 10%); use CIs for large SEs.\n",
-      sep = "")
+    "A small log-scale SE approximates CV (0.10 is about 10%); use CIs for large SEs.\n",
+    sep = ""
+  )
 }
-

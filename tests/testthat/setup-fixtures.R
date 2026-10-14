@@ -1,7 +1,7 @@
 ## Common fixtures shared across testthat files
 
 YEARS <- 1983:2024
-AGES  <- 2:14
+AGES <- 2:14
 
 if (!exists("cod_obs", inherits = TRUE)) {
   cod_obs <- tinyAM::cod_obs

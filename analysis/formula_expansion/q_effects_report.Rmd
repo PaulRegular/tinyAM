@@ -7,8 +7,10 @@ output:
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE,
-  fig.width = 9, fig.height = 5, dpi = 120, fig.path = "results/q_figures/")
+knitr::opts_chunk$set(
+  echo = FALSE, warning = FALSE, message = FALSE,
+  fig.width = 9, fig.height = 5, dpi = 120, fig.path = "results/q_figures/"
+)
 library(ggplot2)
 study <- readRDS("results/q_recovery.rds")
 stopifnot(isTRUE(study$complete))
@@ -18,19 +20,25 @@ d <- study$diagnostics
 p <- study$parameters
 p$kind <- ifelse(grepl("^sd_", p$parameter), "Process SD",
   ifelse(grepl("^phi_", p$parameter), "AR1 correlation",
-    ifelse(grepl("^q_a50_", p$parameter), "Logistic midpoint", "Logistic slope")))
-labels <- c(iid = "IID by survey", rw = "RW by survey", ar1 = "AR1 by survey",
-  intercept = "Random intercept", numeric_by = "RW multiplied by age", logistic = "Logistic curve")
+    ifelse(grepl("^q_a50_", p$parameter), "Logistic midpoint", "Logistic slope")
+  )
+)
+labels <- c(
+  iid = "IID by survey", rw = "RW by survey", ar1 = "AR1 by survey",
+  intercept = "Random intercept", numeric_by = "RW multiplied by age", logistic = "Logistic curve"
+)
 summarize <- function(data, fields, fun) {
   keys <- interaction(data[fields], drop = TRUE, lex.order = TRUE)
   do.call(rbind, lapply(split(data, keys), function(x) cbind(x[1, fields, drop = FALSE], fun(x))))
 }
 numerical <- summarize(d, c("scope", "spec", "link", "design"), function(x) {
   fitted <- is.finite(x$gradient)
-  data.frame(attempts = nrow(x), fitted = sum(fitted), passed = sum(x$converged),
+  data.frame(
+    attempts = nrow(x), fitted = sum(fitted), passed = sum(x$converged),
     pass_percent = round(100 * mean(x$converged), 1),
     curve_RMSE = round(mean(x$q_rmse[x$converged], na.rm = TRUE), 3),
-    curve_coverage = round(100 * mean(x$q_coverage[x$converged], na.rm = TRUE), 1))
+    curve_coverage = round(100 * mean(x$q_coverage[x$converged], na.rm = TRUE), 1)
+  )
 })
 dense <- subset(numerical, design == "replicated")
 full <- subset(dense, scope == "full")
@@ -95,9 +103,12 @@ cells are not independent experimental replicates.
 
 ```{r numerical-figure}
 ggplot(numerical, aes(labels[spec], pass_percent, fill = design)) +
-  geom_col(position = "dodge") + geom_hline(yintercept = 90, linetype = 2) +
-  facet_grid(scope ~ link) + coord_flip() +
-  labs(x = NULL, y = "Numerical passes (%)", fill = "Support") + theme_bw()
+  geom_col(position = "dodge") +
+  geom_hline(yintercept = 90, linetype = 2) +
+  facet_grid(scope ~ link) +
+  coord_flip() +
+  labs(x = NULL, y = "Numerical passes (%)", fill = "Support") +
+  theme_bw()
 ```
 
 Sparse full-assessment trials cover only IID and AR1. Other blank sparse bars
@@ -109,12 +120,16 @@ knitr::kable(numerical, row.names = FALSE)
 
 ```{r recovery-figure, fig.height=8}
 pd <- merge(p, d[, c("scope", "spec", "link", "design", "replicate", "converged")],
-  by = c("scope", "spec", "link", "design", "replicate"))
+  by = c("scope", "spec", "link", "design", "replicate")
+)
 sd_data <- subset(pd, design == "replicated" & kind == "Process SD" & converged)
 ggplot(sd_data, aes(labels[spec], estimate, fill = scope)) +
-  geom_boxplot(outlier.shape = NA) + geom_hline(yintercept = .18, linetype = 2) +
-  facet_wrap(~ link, ncol = 1) + coord_flip() +
-  labs(x = NULL, y = "Estimated process SD", fill = "Experiment") + theme_bw()
+  geom_boxplot(outlier.shape = NA) +
+  geom_hline(yintercept = .18, linetype = 2) +
+  facet_wrap(~link, ncol = 1) +
+  coord_flip() +
+  labs(x = NULL, y = "Estimated process SD", fill = "Experiment") +
+  theme_bw()
 ```
 
 <details>
@@ -123,12 +138,19 @@ ggplot(sd_data, aes(labels[spec], estimate, fill = scope)) +
 ```{r recovery-table}
 recovery <- summarize(pd, c("scope", "spec", "link", "design", "kind"), function(x) {
   x <- x[x$converged & is.finite(x$estimate) & is.finite(x$lower) & is.finite(x$upper), ]
-  if (!nrow(x)) return(data.frame(replicates = 0, bias = NA, coverage_percent = NA, MC_SE = NA))
-  within <- summarize(x, "replicate", function(z) data.frame(
-    bias = mean(z$estimate - z$truth), coverage = mean(z$lower <= z$truth & z$upper >= z$truth)))
-  data.frame(replicates = nrow(within), bias = round(mean(within$bias), 3),
+  if (!nrow(x)) {
+    return(data.frame(replicates = 0, bias = NA, coverage_percent = NA, MC_SE = NA))
+  }
+  within <- summarize(x, "replicate", function(z) {
+    data.frame(
+      bias = mean(z$estimate - z$truth), coverage = mean(z$lower <= z$truth & z$upper >= z$truth)
+    )
+  })
+  data.frame(
+    replicates = nrow(within), bias = round(mean(within$bias), 3),
     coverage_percent = round(100 * mean(within$coverage), 1),
-    MC_SE = round(100 * sd(within$coverage) / sqrt(nrow(within)), 1))
+    MC_SE = round(100 * sd(within$coverage) / sqrt(nrow(within)), 1)
+  )
 })
 knitr::kable(recovery, row.names = FALSE)
 ```
@@ -147,7 +169,9 @@ ggplot(curves, aes(year)) +
   geom_ribbon(aes(ymin = lower, ymax = upper), fill = "#93C25C", alpha = .35) +
   geom_line(aes(y = truth), color = "#003E56") +
   geom_line(aes(y = estimate), color = "#F05C28") +
-  facet_grid(spec ~ link, scales = "free_y") + labs(y = "q", x = "Year") + theme_bw()
+  facet_grid(spec ~ link, scales = "free_y") +
+  labs(y = "q", x = "Year") +
+  theme_bw()
 ```
 
 Dark lines show generating q; orange lines are fitted q and ribbons are fitted
@@ -158,7 +182,9 @@ ggplot(logistic_curves, aes(age)) +
   geom_ribbon(aes(ymin = lower, ymax = upper), fill = "#93C25C", alpha = .35) +
   geom_line(aes(y = truth), color = "#003E56") +
   geom_line(aes(y = estimate), color = "#F05C28") +
-  facet_grid(survey ~ link) + labs(y = "q", x = "Age") + theme_bw()
+  facet_grid(survey ~ link) +
+  labs(y = "q", x = "Age") +
+  theme_bw()
 ```
 
 Logistic effects change the age curve rather than adding a temporal trajectory.
@@ -167,8 +193,12 @@ Logistic effects change the age curve rather than adding a temporal trajectory.
 
 ```{r sparse-errors}
 errors <- subset(d, !is.finite(gradient))
-if (nrow(errors)) knitr::kable(summarize(errors,
-  c("scope", "spec", "link", "design", "message"), function(x) data.frame(attempts = nrow(x))))
+if (nrow(errors)) {
+  knitr::kable(summarize(
+    errors,
+    c("scope", "spec", "link", "design", "message"), function(x) data.frame(attempts = nrow(x))
+  ))
+}
 ```
 
 One observation per IID level is an exact process/observation-variance alias
@@ -191,8 +221,10 @@ gradient but a non-positive-definite Hessian. GOA cod, GOA pollock, Southern Gul
 AR1 and herring RW/AR1 passed numerical checks. None replaces its settled baseline.
 
 ```{r stock-table}
-knitr::kable(stocks$diagnostics[, c("assessment_id", "model", "is_converged",
-  "optimizer_code", "max_abs_gradient", "positive_definite_hessian", "objective")], digits = 4)
+knitr::kable(stocks$diagnostics[, c(
+  "assessment_id", "model", "is_converged",
+  "optimizer_code", "max_abs_gradient", "positive_definite_hessian", "objective"
+)], digits = 4)
 ```
 
 <details>
@@ -202,17 +234,22 @@ knitr::kable(stocks$diagnostics[, c("assessment_id", "model", "is_converged",
 stock_parameters <- do.call(rbind, stocks$parameters)
 stock_parameters <- merge(stock_parameters,
   stocks$diagnostics[, c("assessment_id", "model", "is_converged")],
-  by = c("assessment_id", "model"))
-knitr::kable(stock_parameters[, c("assessment_id", "model", "is_converged",
-  "par", "coef", "est", "lwr", "upr")], digits = 3, row.names = FALSE)
+  by = c("assessment_id", "model")
+)
+knitr::kable(stock_parameters[, c(
+  "assessment_id", "model", "is_converged",
+  "par", "coef", "est", "lwr", "upr"
+)], digits = 3, row.names = FALSE)
 ```
 
 </details>
 
 ```{r stock-comparison}
 s <- subset(stocks$summaries, metric %in% c("ssb", "recruitment"))
-knitr::kable(s[, c("assessment_id", "model", "metric", "comparison_status",
-  "median_absolute_percent_difference", "trend_correlation")], digits = 3)
+knitr::kable(s[, c(
+  "assessment_id", "model", "metric", "comparison_status",
+  "median_absolute_percent_difference", "trend_correlation"
+)], digits = 3)
 ```
 
 Percent differences describe scale agreement; trend correlation describes

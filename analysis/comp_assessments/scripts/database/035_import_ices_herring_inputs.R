@@ -10,12 +10,13 @@ assumptions <- read.csv(assumptions_path, colClasses = "character", na.strings =
 raw <- read.csv(file.path(cache, "report_tables_raw.csv"), stringsAsFactors = FALSE)
 m <- raw[raw$table == "2.6.1.3", , drop = FALSE]
 if (nrow(m) != 711L || !identical(sort(unique(m$year)), 1947:2025) ||
-    !identical(sort(unique(as.integer(m$native_column))), 0:8)) {
+  !identical(sort(unique(as.integer(m$native_column))), 0:8)) {
   stop("The published M table did not have the expected year/age coverage.")
 }
 
 new_m <- as.data.frame(matrix(NA_character_, nrow = nrow(m), ncol = ncol(inputs)),
-                       stringsAsFactors = FALSE)
+  stringsAsFactors = FALSE
+)
 names(new_m) <- names(inputs)
 new_m$assessment_id <- assessment_id
 new_m$type <- "M"
@@ -35,7 +36,7 @@ new_m$notes <- paste(
 )
 key <- function(x) paste(x$assessment_id, x$type, x$measure, x$year, x$age, sep = "|")
 existing <- inputs[inputs$assessment_id == assessment_id & inputs$type == "M" &
-                     inputs$measure == "natural_mortality_at_age", , drop = FALSE]
+  inputs$measure == "natural_mortality_at_age", , drop = FALSE]
 new_m <- new_m[!key(new_m) %in% key(existing), , drop = FALSE]
 
 sampling_time <- c(HERAS = "0.5", `IBTS-Q1` = "0.125", IBTS0 = "0.125", `IBTS-Q3` = "0.625")
@@ -44,8 +45,8 @@ timed <- inputs$assessment_id == assessment_id & inputs$type == "index" &
   inputs$survey %in% names(sampling_time)
 timing_note <- "Approximate seasonal midpoint; the accepted fleet.txt timing was unavailable."
 needs_update <- timed & (inputs$sampling_time != sampling_time[inputs$survey] |
-                           inputs$season != season[inputs$survey] | is.na(inputs$notes) |
-                           !grepl(timing_note, inputs$notes, fixed = TRUE))
+  inputs$season != season[inputs$survey] | is.na(inputs$notes) |
+  !grepl(timing_note, inputs$notes, fixed = TRUE))
 inputs$sampling_time[timed] <- unname(sampling_time[inputs$survey[timed]])
 inputs$season[timed] <- unname(season[inputs$survey[timed]])
 inputs$notes[timed & (is.na(inputs$notes) | !grepl(timing_note, inputs$notes, fixed = TRUE))] <-
@@ -54,16 +55,22 @@ if (nrow(new_m)) inputs <- rbind(inputs, new_m)
 
 if (nrow(new_m) || any(needs_update)) {
   csv_field <- function(value) {
-    if (is.na(value)) return("")
+    if (is.na(value)) {
+      return("")
+    }
     value <- enc2utf8(value)
-    if (grepl('[,"\r\n]', value) || grepl('^[[:space:]]|[[:space:]]$', value)) {
+    if (grepl('[,"\r\n]', value) || grepl("^[[:space:]]|[[:space:]]$", value)) {
       paste0('"', gsub('"', '""', value, fixed = TRUE), '"')
-    } else value
+    } else {
+      value
+    }
   }
-  rows <- c(paste(vapply(names(inputs), csv_field, character(1)), collapse = ","),
+  rows <- c(
+    paste(vapply(names(inputs), csv_field, character(1)), collapse = ","),
     vapply(seq_len(nrow(inputs)), function(i) {
       paste(vapply(seq_len(ncol(inputs)), function(j) csv_field(inputs[[j]][i]), character(1)), collapse = ",")
-    }, character(1)))
+    }, character(1))
+  )
   con <- file(inputs_path, open = "wb")
   writeLines(enc2utf8(rows), con, sep = "\r\n", useBytes = TRUE)
   close(con)
@@ -71,12 +78,12 @@ if (nrow(new_m) || any(needs_update)) {
 
 check <- read.csv(inputs_path, colClasses = "character", na.strings = "", encoding = "UTF-8", check.names = FALSE)
 check_m <- check[check$assessment_id == assessment_id & check$type == "M" &
-                   check$measure == "natural_mortality_at_age", , drop = FALSE]
+  check$measure == "natural_mortality_at_age", , drop = FALSE]
 check_timed <- check[check$assessment_id == assessment_id & check$type == "index" &
-                       check$survey %in% names(sampling_time), , drop = FALSE]
+  check$survey %in% names(sampling_time), , drop = FALSE]
 if (nrow(check_m) != 711L || anyDuplicated(key(check_m)) || nrow(check_timed) != 534L ||
-    any(check_timed$sampling_time != sampling_time[check_timed$survey]) ||
-    any(check_timed$season != season[check_timed$survey])) {
+  any(check_timed$sampling_time != sampling_time[check_timed$survey]) ||
+  any(check_timed$season != season[check_timed$survey])) {
   stop("Herring M or survey-timing rows did not validate after import.")
 }
 cat("Herring M rows present:", nrow(check_m), "(new:", nrow(new_m), "); approximate survey timings recorded for", nrow(check_timed), "rows.\n")

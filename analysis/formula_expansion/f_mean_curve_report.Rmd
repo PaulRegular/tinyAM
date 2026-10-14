@@ -6,8 +6,10 @@ output:
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE,
-  fig.width = 8, fig.height = 4.5, fig.path = "results/f_mean_curves/figures/")
+knitr::opts_chunk$set(
+  echo = FALSE, warning = FALSE, message = FALSE,
+  fig.width = 8, fig.height = 4.5, fig.path = "results/f_mean_curves/figures/"
+)
 attempts <- readRDS("results/f_mean_curves/recovery.rds")
 groups <- vapply(attempts, function(a) paste(a$kind, a$curve, a$process, a$stress), character(1))
 ```
@@ -32,10 +34,12 @@ are retained. Fits are not retried or simplified.
 ```{r}
 summary <- do.call(rbind, lapply(unique(groups), function(group) {
   a <- attempts[groups == group]
-  data.frame(Design = group, Attempts = length(a),
+  data.frame(
+    Design = group, Attempts = length(a),
     Passed = sum(vapply(a, function(x) isTRUE(x$numerical), logical(1))),
     Errors = sum(vapply(a, function(x) !is.null(x$error), logical(1))),
-    `Positive Hessian` = sum(vapply(a, function(x) isTRUE(x$pdHess), logical(1))), check.names = FALSE)
+    `Positive Hessian` = sum(vapply(a, function(x) isTRUE(x$pdHess), logical(1))), check.names = FALSE
+  )
 }))
 knitr::kable(summary)
 ```
@@ -49,7 +53,9 @@ zero bounds. These checks do not establish statistical support for the curve.
 ```{r}
 recovery <- do.call(rbind, lapply(names(attempts), function(name) {
   a <- attempts[[name]]
-  if (is.null(a$recovery)) return(NULL)
+  if (is.null(a$recovery)) {
+    return(NULL)
+  }
   transform(a$recovery, design = groups[[name]], numerical = isTRUE(a$numerical))
 }))
 recovery$bias <- recovery$estimate - recovery$truth
@@ -83,13 +89,19 @@ if (length(paths)) {
     fit <- readRDS(path)
     curve <- if (grepl("mono", path)) "mono" else "logistic"
     profile <- subset(tinyAM::tidy_pop(fit)$mu_F, year == min(fit$dat$years))
-    truth <- if (curve == "mono") .08 * exp(c(0, cumsum(c(.7, .5, .3, .15, .1, .05, .05)))) else
+    truth <- if (curve == "mono") {
+      .08 * exp(c(0, cumsum(c(.7, .5, .3, .15, .1, .05, .05))))
+    } else {
       .5 * plogis(1.1 * (profile$age - 4.5))
-    plot(profile$age, profile$est, type = "l", xlab = "Age", ylab = "Mean F",
-         ylim = range(c(truth, profile$lwr, profile$upr), finite = TRUE),
-         main = paste(curve, fit$dat$F_settings$process))
+    }
+    plot(profile$age, profile$est,
+      type = "l", xlab = "Age", ylab = "Mean F",
+      ylim = range(c(truth, profile$lwr, profile$upr), finite = TRUE),
+      main = paste(curve, fit$dat$F_settings$process)
+    )
     polygon(c(profile$age, rev(profile$age)), c(profile$lwr, rev(profile$upr)),
-            col = adjustcolor("steelblue", .2), border = NA)
+      col = adjustcolor("steelblue", .2), border = NA
+    )
     lines(profile$age, profile$est, col = "steelblue", lwd = 2)
     lines(profile$age, truth, col = "black", lwd = 2)
   }

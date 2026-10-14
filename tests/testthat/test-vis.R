@@ -1,4 +1,3 @@
-
 ## vis_tam ----
 
 suppressWarnings(
@@ -11,7 +10,8 @@ dashboard_plots <- function(file) {
   on.exit(close(con))
   html <- paste(readLines(con, warn = FALSE, encoding = "UTF-8"), collapse = "\n")
   scripts <- regmatches(html, gregexpr(
-    '(?s)<script type="application/json"[^>]*>.*?</script>', html, perl = TRUE
+    '(?s)<script type="application/json"[^>]*>.*?</script>', html,
+    perl = TRUE
   ))[[1L]]
   widgets <- lapply(scripts, function(script) {
     json <- sub("^<script[^>]*>", "", script)
@@ -33,8 +33,10 @@ test_that("vis_tam renders cleanly and produces an HTML output", {
   tmpfile <- tempfile(fileext = ".html")
 
   expect_no_error({
-    vis_tam(fits, output_file = tmpfile, open_file = FALSE,
-            render_args = list(quiet = TRUE))
+    vis_tam(fits,
+      output_file = tmpfile, open_file = FALSE,
+      render_args = list(quiet = TRUE)
+    )
   })
 
   expect_true(file.exists(tmpfile))
@@ -54,12 +56,15 @@ test_that("vis_tam renders cleanly and produces an HTML output", {
   expect_match(html, 'data-default-view="profile"', fixed = TRUE)
   expect_match(html, "<h3>Average F</h3>", fixed = TRUE)
   expect_false(grepl("<h3>Mean F</h3>", html, fixed = TRUE))
-  age_year_plots <- Filter(function(p) any(unlist(p$layout$yaxis$title) %in% c("N", "F", "M", "Selectivity", "Catch", "Index")),
-                           dashboard_plots(tmpfile))
+  age_year_plots <- Filter(
+    function(p) any(unlist(p$layout$yaxis$title) %in% c("N", "F", "M", "Selectivity", "Catch", "Index")),
+    dashboard_plots(tmpfile)
+  )
   for (metric in c("N", "F", "M", "Selectivity", "Catch", "Index")) {
     views <- Filter(function(p) identical(unlist(p$layout$yaxis$title), metric), age_year_plots)
-    expect_true(all(c("Year", "Age") %in% vapply(views, function(p)
-      unlist(p$layout$xaxis$title), character(1))))
+    expect_true(all(c("Year", "Age") %in% vapply(views, function(p) {
+      unlist(p$layout$xaxis$title)
+    }, character(1))))
   }
   expect_match(html, "Adjusted maximum", fixed = TRUE)
   expect_match(html, 'data-navmenu="Parameters"', fixed = TRUE)
@@ -68,10 +73,14 @@ test_that("vis_tam renders cleanly and produces an HTML output", {
   expect_match(html, "<h3>Process SDs</h3>", fixed = TRUE)
   expect_match(html, "<h3>Observation SDs</h3>", fixed = TRUE)
   expect_match(html, "<h3>Initial abundance</h3>", fixed = TRUE)
-  parameter_plots <- Filter(function(p) identical(unlist(p$layout$xaxis$title), "Estimate"),
-                            dashboard_plots(tmpfile))
-  initial <- Filter(function(p) any(grepl("r0", unlist(lapply(p$data, `[[`, "y")), fixed = TRUE)),
-                    parameter_plots)
+  parameter_plots <- Filter(
+    function(p) identical(unlist(p$layout$xaxis$title), "Estimate"),
+    dashboard_plots(tmpfile)
+  )
+  initial <- Filter(
+    function(p) any(grepl("r0", unlist(lapply(p$data, `[[`, "y")), fixed = TRUE)),
+    parameter_plots
+  )
   expect_length(initial, 1L)
   expect_false(any(grepl("sd_|phi_|q", unlist(lapply(initial[[1]]$data, `[[`, "y")))))
 
@@ -82,8 +91,10 @@ test_that("vis_tam renders cleanly and produces an HTML output", {
     expect_true(any(is.finite(unlist(lapply(plot$data, `[[`, "y")))))
     frame_names <- vapply(plot$frames, `[[`, character(1), "name")
     expect_setequal(frame_names, names(fits))
-    expect_true(all(vapply(plot$frames, function(frame) length(frame$traces) > 0L,
-                           logical(1))))
+    expect_true(all(vapply(
+      plot$frames, function(frame) length(frame$traces) > 0L,
+      logical(1)
+    )))
   }
 
   # --- Skip interactive browser behavior on CI / non-interactive sessions ---
@@ -92,23 +103,33 @@ test_that("vis_tam renders cleanly and produces an HTML output", {
   skip_on_ci()
 
   expect_no_error({
-    vis_tam(fits, output_file = NULL, open_file = TRUE,
-            render_args = list(quiet = TRUE))
+    vis_tam(fits,
+      output_file = NULL, open_file = TRUE,
+      render_args = list(quiet = TRUE)
+    )
   })
 })
 
 test_that("formula-effect dashboards show only signed trends and framed ribbons", {
-  process <- update(default_fit, silent = TRUE,
-    index_settings = list(q_form = ~ q_block + rw(year, by = age, sd = .1) +
-      ar1(year, by = q_block, sd = .1, phi = .6) + iid(age, sd = .1), sd_form = ~1,
-      fill_missing = FALSE), start_par = as.list(default_fit$sdrep, "Estimate"))
+  process <- update(default_fit,
+    silent = TRUE,
+    index_settings = list(
+      q_form = ~ q_block + rw(year, by = age, sd = .1) +
+        ar1(year, by = q_block, sd = .1, phi = .6) + iid(age, sd = .1), sd_form = ~1,
+      fill_missing = FALSE
+    ), start_par = as.list(default_fit$sdrep, "Estimate")
+  )
   reference <- default_fit
   reference$obs_pred$index$q <- NA_real_
   class(reference) <- c("tam_ref", "list")
   file <- tempfile(fileext = ".html")
-  expect_no_error(vis_tam(model_list = list(Accepted = reference, ordinary = default_fit,
-    process = process), output_file = file, open_file = FALSE,
-    render_args = list(quiet = TRUE)))
+  expect_no_error(vis_tam(
+    model_list = list(
+      Accepted = reference, ordinary = default_fit,
+      process = process
+    ), output_file = file, open_file = FALSE,
+    render_args = list(quiet = TRUE)
+  ))
   con <- file(file, "rb")
   html <- paste(readLines(con, warn = FALSE), collapse = "\n")
   close(con)
@@ -126,8 +147,12 @@ test_that("formula-effect dashboards show only signed trends and framed ribbons"
   }
   framed <- Filter(function(p) length(p$frames) > 1L, effects)
   expect_gt(length(framed), 0)
-  expect_true(any(vapply(framed, function(p) any(vapply(p$data,
-    function(trace) !is.null(trace$fill) && grepl("^to", trace$fill), logical(1))), logical(1))))
+  expect_true(any(vapply(framed, function(p) {
+    any(vapply(
+      p$data,
+      function(trace) !is.null(trace$fill) && grepl("^to", trace$fill), logical(1)
+    ))
+  }, logical(1))))
 })
 
 test_that("formula-effect labels describe the component and process plainly", {
@@ -145,9 +170,11 @@ test_that("formula-effect labels describe the component and process plainly", {
 })
 
 test_that("fixed parameter groups isolate abundance and preserve every coefficient", {
-  par <- c("r0", "n0", "sd_f", "sd_mu_M_rw_year", "sd_q_iid_year",
+  par <- c(
+    "r0", "n0", "sd_f", "sd_mu_M_rw_year", "sd_q_iid_year",
     "sd_catch", "sd_index", "q", "logit_q", "dq", "q_a50_logistic_age",
-    "q_slope_logistic_age", "mu_f", "mu_m", "phi_mu_F_ar1_year", "future_parameter", NA)
+    "q_slope_logistic_age", "mu_f", "mu_m", "phi_mu_F_ar1_year", "future_parameter", NA
+  )
   d <- data.frame(par = par, est = c(1e6, 5e5, rep(.1, length(par) - 2)))
   groups <- tinyAM:::.fixed_parameter_groups(d)
   expect_equal(sum(lengths(lapply(groups, `[[`, "par"))), nrow(d))
@@ -155,24 +182,32 @@ test_that("fixed parameter groups isolate abundance and preserve every coefficie
   expect_setequal(groups[["Process SDs"]]$par, c("sd_f", "sd_mu_M_rw_year", "sd_q_iid_year"))
   expect_setequal(groups[["Observation SDs"]]$par, c("sd_catch", "sd_index"))
   expect_setequal(groups[["Catchability"]]$par, c("q", "logit_q"))
-  expect_setequal(groups[["Catchability curves"]]$par,
-                  c("dq", "q_a50_logistic_age", "q_slope_logistic_age"))
-  expect_true(all(vapply(groups[names(groups) != "Initial abundance"],
-                        function(x) all(x$est < 1), logical(1))))
+  expect_setequal(
+    groups[["Catchability curves"]]$par,
+    c("dq", "q_a50_logistic_age", "q_slope_logistic_age")
+  )
+  expect_true(all(vapply(
+    groups[names(groups) != "Initial abundance"],
+    function(x) all(x$est < 1), logical(1)
+  )))
   expect_equal(nrow(groups[["Other"]]), 2L)
   expect_length(tinyAM:::.fixed_parameter_groups(d[0, ]), 0L)
 })
 
 test_that("render_args must be a named list", {
   expect_error(
-    vis_tam(fits, output_file = tempfile(fileext = ".html"), open_file = FALSE,
-            render_args = TRUE),
+    vis_tam(fits,
+      output_file = tempfile(fileext = ".html"), open_file = FALSE,
+      render_args = TRUE
+    ),
     "must be a list"
   )
 
   expect_error(
-    vis_tam(fits, output_file = tempfile(fileext = ".html"), open_file = FALSE,
-            render_args = list(TRUE)),
+    vis_tam(fits,
+      output_file = tempfile(fileext = ".html"), open_file = FALSE,
+      render_args = list(TRUE)
+    ),
     "named list"
   )
 })
@@ -181,8 +216,10 @@ test_that("vis_tam accepts models provided via dots", {
   tmpfile <- tempfile(fileext = ".html")
 
   expect_no_error({
-    vis_tam(N_dev, M_dev, output_file = tmpfile, open_file = FALSE,
-            render_args = list(quiet = TRUE))
+    vis_tam(N_dev, M_dev,
+      output_file = tmpfile, open_file = FALSE,
+      render_args = list(quiet = TRUE)
+    )
   })
 
   expect_true(file.exists(tmpfile))
@@ -193,8 +230,9 @@ test_that("vis_tam accepts list input supplied through dots", {
 
   expect_no_error({
     vis_tam(list(N_dev = N_dev, M_dev = M_dev),
-            output_file = tmpfile, open_file = FALSE,
-            render_args = list(quiet = TRUE))
+      output_file = tmpfile, open_file = FALSE,
+      render_args = list(quiet = TRUE)
+    )
   })
 
   expect_true(file.exists(tmpfile))
@@ -205,23 +243,29 @@ test_that("vis_tam rejects unnamed or duplicated model lists", {
   duped <- structure(list(N_dev, M_dev), names = c("N_dev", "N_dev"))
 
   expect_error(
-    vis_tam(model_list = unnamed, output_file = tempfile(fileext = ".html"),
-            open_file = FALSE, render_args = list(quiet = TRUE)),
+    vis_tam(
+      model_list = unnamed, output_file = tempfile(fileext = ".html"),
+      open_file = FALSE, render_args = list(quiet = TRUE)
+    ),
     "named list"
   )
 
   expect_error(
-    vis_tam(model_list = duped, output_file = tempfile(fileext = ".html"),
-            open_file = FALSE, render_args = list(quiet = TRUE)),
+    vis_tam(
+      model_list = duped, output_file = tempfile(fileext = ".html"),
+      open_file = FALSE, render_args = list(quiet = TRUE)
+    ),
     "unique"
   )
 })
 
 test_that("vis_tam rejects mixed model inputs", {
   expect_error(
-    vis_tam(N_dev, model_list = fits,
-            output_file = tempfile(fileext = ".html"), open_file = FALSE,
-            render_args = list(quiet = TRUE)),
+    vis_tam(N_dev,
+      model_list = fits,
+      output_file = tempfile(fileext = ".html"), open_file = FALSE,
+      render_args = list(quiet = TRUE)
+    ),
     "Supply models either"
   )
 })
@@ -229,9 +273,11 @@ test_that("vis_tam rejects mixed model inputs", {
 test_that("vis_tam errors when supplied objects are not TAM fits", {
   fake <- list(bad = list(not = "a fit"))
   expect_error(
-    vis_tam(model_list = fake,
-            output_file = tempfile(fileext = ".html"), open_file = FALSE,
-            render_args = list(quiet = TRUE)),
+    vis_tam(
+      model_list = fake,
+      output_file = tempfile(fileext = ".html"), open_file = FALSE,
+      render_args = list(quiet = TRUE)
+    ),
     "All supplied models must be"
   )
 })
@@ -243,28 +289,41 @@ test_that("tam_ref objects accept a Background page", {
     x
   }
   source_pop <- lapply(N_dev$pop, blank_values,
-                       keys = c("year", "age", "is_proj"))
+    keys = c("year", "age", "is_proj")
+  )
   source_pop$ssb$est <- N_dev$pop$ssb$est + 1
   source_pop$N$est <- N_dev$pop$N$est + 1
   source_pop$F$est <- N_dev$pop$F$est + 0.1
   source_pop$ssb$unit <- "t"
   source_pop$N$unit <- "thousand fish"
   source_pop$recruitment$unit <- "thousand fish"
-  source_pop$recruitment$notes <- rep("Recruitment ages 3\u20138",
-                                      nrow(source_pop$recruitment))
+  source_pop$recruitment$notes <- rep(
+    "Recruitment ages 3\u20138",
+    nrow(source_pop$recruitment)
+  )
   source_obs_pred <- N_dev$obs_pred
   source_obs_pred <- lapply(source_obs_pred, blank_values,
-                            keys = c("year", "age", "survey", "fleet", "samp_time",
-                                     "q_block", "q_key", "is_proj", "obs"))
-  source_obs_pred <- lapply(source_obs_pred, function(x) { x$osa_res <- NA_real_; x })
+    keys = c(
+      "year", "age", "survey", "fleet", "samp_time",
+      "q_block", "q_key", "is_proj", "obs"
+    )
+  )
+  source_obs_pred <- lapply(source_obs_pred, function(x) {
+    x$osa_res <- NA_real_
+    x
+  })
   source <- N_dev
   source$call <- quote(database_to_tam_ref("fixture"))
   source$pop <- source_pop
   source$obs_pred <- source_obs_pred
   source$fixed_par <- blank_values(N_dev$fixed_par, c("par", "coef", "age"))
   source$random_par <- lapply(N_dev$random_par, blank_values,
-                             keys = c("par", "coef", "age", "year", "is_proj"))
-  source$rep <- lapply(N_dev$rep, function(x) { x[] <- NA; x })
+    keys = c("par", "coef", "age", "year", "is_proj")
+  )
+  source$rep <- lapply(N_dev$rep, function(x) {
+    x[] <- NA
+    x
+  })
   source$is_converged <- NA
   source$grad_tol <- NA_real_
   source$comparison_scales <- c(ssb = 1e-3, N = 1e-3, recruitment = 1e-3)
@@ -275,21 +334,29 @@ test_that("tam_ref objects accept a Background page", {
   expect_equal(names(source$obs_pred), names(N_dev$obs_pred))
   expect_equal(source$random_par$log_f$year, N_dev$random_par$log_f$year)
   expect_true(all(is.na(source$random_par$log_f$est)))
-  expect_equal(source$pop$N[c("year", "age", "is_proj")],
-               N_dev$pop$N[c("year", "age", "is_proj")])
+  expect_equal(
+    source$pop$N[c("year", "age", "is_proj")],
+    N_dev$pop$N[c("year", "age", "is_proj")]
+  )
   expect_true(all(is.finite(source$pop$N$est)))
 
   tabs <- tidy_tam(model_list = list(Assessment = source, tinyAM = N_dev))
   expect_true(all(c("Assessment", "tinyAM") %in% tabs$pop$ssb$model))
   expect_equal(tabs$pop$ssb$est[tabs$pop$ssb$model == "Assessment"], source_pop$ssb$est)
-  expect_equal(tabs$pop$ssb$est[tabs$pop$ssb$model == "tinyAM"],
-               N_dev$pop$ssb$est * 1e-3)
+  expect_equal(
+    tabs$pop$ssb$est[tabs$pop$ssb$model == "tinyAM"],
+    N_dev$pop$ssb$est * 1e-3
+  )
   expect_equal(unique(tabs$pop$ssb$unit), "t")
   ssb_plot <- plot_trend(tabs$pop$ssb, color = ~model, add_buttons = FALSE)
   ssb_traces <- plotly::plotly_build(ssb_plot)$x$data
-  accepted_ssb <- Filter(function(trace) identical(trace$mode, "lines") &&
-                           identical(trace$name, "Assessment") && is.null(trace$fill),
-                         ssb_traces)
+  accepted_ssb <- Filter(
+    function(trace) {
+      identical(trace$mode, "lines") &&
+        identical(trace$name, "Assessment") && is.null(trace$fill)
+    },
+    ssb_traces
+  )
   expect_length(accepted_ssb, 1L)
   expect_equal(as.numeric(accepted_ssb[[1L]]$y), source_pop$ssb$est)
 
@@ -304,10 +371,12 @@ test_that("tam_ref objects accept a Background page", {
     "", "All assessment assumptions are included."
   )
   Encoding(background) <- "unknown"
-  vis_tam(model_list = list(Assessment = source, tinyAM = N_dev),
-          background = background,
-          output_file = file, open_file = FALSE,
-          render_args = list(quiet = TRUE))
+  vis_tam(
+    model_list = list(Assessment = source, tinyAM = N_dev),
+    background = background,
+    output_file = file, open_file = FALSE,
+    render_args = list(quiet = TRUE)
+  )
   con <- file(file, "rb")
   html <- readLines(con, warn = FALSE, encoding = "UTF-8")
   close(con)
@@ -339,14 +408,16 @@ test_that("tam_ref objects accept a Background page", {
   expect_false(any(grepl("Comparing SAM and tinyAM", html, fixed = TRUE)))
   visible_html <- paste(html, collapse = "\n")
   visible_html <- gsub("(?is)<(script|style)\\b.*?</\\1>", "", visible_html,
-                        perl = TRUE)
+    perl = TRUE
+  )
   expect_false(grepl("unavailable", tolower(visible_html), fixed = TRUE))
   expect_false(grepl("database_to_tam_ref", visible_html, fixed = TRUE))
   call_start <- regexpr('<div id="function-calls"', visible_html, fixed = TRUE)[[1L]]
   expect_gt(call_start, 0L)
   call_html <- regmatches(visible_html, regexpr(
     '(?s)<div id="function-calls".*?(?=<div id="output")',
-    visible_html, perl = TRUE
+    visible_html,
+    perl = TRUE
   ))
   expect_true(grepl("<td\\b[^>]*>\\s*tinyAM\\s*</td>", call_html, perl = TRUE))
   expect_true(grepl("fit_tam(", call_html, fixed = TRUE))
@@ -367,8 +438,10 @@ test_that("tam_ref objects accept a Background page", {
     expect_gt(length(comparisons), 0L)
     for (plot in comparisons) {
       traces <- c(plot$data, unlist(lapply(plot$frames, `[[`, "data"), recursive = FALSE))
-      reference <- Filter(function(trace) identical(trace$name, "Assessment") &&
-                            identical(trace$mode, "lines"), traces)
+      reference <- Filter(function(trace) {
+        identical(trace$name, "Assessment") &&
+          identical(trace$mode, "lines")
+      }, traces)
       expect_gt(length(reference), 0L)
       expect_true(any(is.finite(unlist(lapply(reference, `[[`, "y")))))
     }

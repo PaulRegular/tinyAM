@@ -1,4 +1,3 @@
-
 ## Largely variable names captured by RTMB::get_all()
 utils::globalVariables(c(
   # data-frame column names

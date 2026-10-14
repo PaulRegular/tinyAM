@@ -42,8 +42,10 @@ stopifnot(
   all(is.na(translated$obs$catch$obs[translated$obs$catch$year == 2026])),
   all(vapply(2023:2026, function(year) {
     m_year <- m_surface[m_surface$year == year, c("age", "M_assumption")]
-    identical(m_year$M_assumption[match(m_2022$age, m_year$age)],
-              m_2022$M_assumption)
+    identical(
+      m_year$M_assumption[match(m_2022$age, m_year$age)],
+      m_2022$M_assumption
+    )
   }, logical(1))),
   identical(dat$N_settings$process, "rw"),
   identical(dat$N_settings$init, "exp"),

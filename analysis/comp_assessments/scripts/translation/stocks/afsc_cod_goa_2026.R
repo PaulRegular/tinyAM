@@ -2,8 +2,7 @@
   age <- inputs[
     inputs$type %in% c("catch", "index") &
       inputs$measure == "conditional_proportion_at_age" &
-      inputs$year %in% years,
-    ,
+      inputs$year %in% years, ,
     drop = FALSE
   ]
 
@@ -66,16 +65,14 @@
       inputs$measure == "proportion_at_length" &
       inputs$fleet == fleet &
       inputs$survey == survey &
-      inputs$year %in% years,
-    ,
+      inputs$year %in% years, ,
     drop = FALSE
   ]
 
   keys <- key[
     key$type == type &
       key$fleet == fleet &
-      key$survey == survey,
-    ,
+      key$survey == survey, ,
     drop = FALSE
   ]
 
@@ -148,13 +145,11 @@ ages <- 1:10
 survey <- "NMFS bottom-trawl survey"
 
 inputs <- source$inputs[
-  source$inputs$assessment_id == assessment_id,
-  ,
+  source$inputs$assessment_id == assessment_id, ,
   drop = FALSE
 ]
 outputs <- source$outputs[
-  source$outputs$assessment_id == assessment_id,
-  ,
+  source$outputs$assessment_id == assessment_id, ,
   drop = FALSE
 ]
 
@@ -199,8 +194,7 @@ index_shares <- .goa_age_shares(
 growth <- outputs[
   outputs$type == "biology" &
     outputs$measure %in%
-    c("growth_length_at_age", "growth_rate"),
-  ,
+      c("growth_length_at_age", "growth_rate"), ,
   drop = FALSE
 ]
 
@@ -220,8 +214,8 @@ growth_rate <- growth$value[
 
 if (
   length(length_at_age_1) != 1L ||
-  length(length_at_age_10) != 1L ||
-  length(growth_rate) != 1L
+    length(length_at_age_10) != 1L ||
+    length(growth_rate) != 1L
 ) {
   stop(
     "GOA growth estimates are incomplete in outputs.csv.",
@@ -234,16 +228,15 @@ growth_factor <-
 
 length_infinity <-
   (length_at_age_10 - length_at_age_1 * growth_factor) /
-  (1 - growth_factor)
+    (1 - growth_factor)
 
 length <-
   length_infinity -
   (length_infinity - length_at_age_1) *
-  exp(-growth_rate * (ages - min(ages)))
+    exp(-growth_rate * (ages - min(ages)))
 
 assumptions <- source$assumptions[
-  source$assumptions$assessment_id == assessment_id,
-  ,
+  source$assumptions$assessment_id == assessment_id, ,
   drop = FALSE
 ]
 
@@ -268,7 +261,7 @@ parameter <- function(setting) {
 
 weight <-
   parameter("weight_length_coefficient") *
-  length^parameter("weight_length_exponent")
+    length^parameter("weight_length_exponent")
 
 maturity <-
   plogis(
@@ -284,8 +277,7 @@ maturity <-
 catch_totals <- inputs[
   inputs$type == "catch" &
     inputs$measure == "total_biomass" &
-    inputs$year %in% years,
-  ,
+    inputs$year %in% years, ,
   drop = FALSE
 ]
 
@@ -307,8 +299,7 @@ catch_rows <- do.call(
 
     share <- catch_shares[
       catch_shares$year == total$year &
-        catch_shares$fleet == total$fleet,
-      ,
+        catch_shares$fleet == total$fleet, ,
       drop = FALSE
     ]
 
@@ -346,9 +337,9 @@ catch_rows <- do.call(
       age = ages,
       numbers =
         total$value *
-        tonnes_to_kg /
-        mean_weight *
-        share$proportion[match(ages, share$age)],
+          tonnes_to_kg /
+          mean_weight *
+          share$proportion[match(ages, share$age)],
       fleet = total$fleet
     )
   })
@@ -366,8 +357,7 @@ index_totals <- inputs[
   inputs$type == "index" &
     inputs$survey == survey &
     inputs$measure == "total_numbers" &
-    inputs$year %in% years,
-  ,
+    inputs$year %in% years, ,
   drop = FALSE
 ]
 
@@ -409,14 +399,13 @@ index_rows <- do.call(
     total <- index_totals[i, , drop = FALSE]
 
     share <- index_shares[
-      index_shares$year == total$year,
-      ,
+      index_shares$year == total$year, ,
       drop = FALSE
     ]
 
     if (
       nrow(share) != length(ages) ||
-      !setequal(share$age, ages)
+        !setequal(share$age, ages)
     ) {
       stop(
         "GOA bottom-trawl age shares do not match an index year.",
@@ -429,8 +418,8 @@ index_rows <- do.call(
       age = ages,
       numbers =
         total$value *
-        index_multiplier[[i]] *
-        share$proportion[match(ages, share$age)]
+          index_multiplier[[i]] *
+          share$proportion[match(ages, share$age)]
     )
   })
 )
@@ -439,8 +428,7 @@ index_rows <- do.call(
 
 m_outputs <- outputs[
   outputs$type == "mortality" &
-    outputs$measure == "natural_mortality_at_age",
-  ,
+    outputs$measure == "natural_mortality_at_age", ,
   drop = FALSE
 ]
 
@@ -504,8 +492,7 @@ row <- function(
 
 pad <- function(rows) {
   out <- inputs[
-    rep(NA_integer_, nrow(rows)),
-    ,
+    rep(NA_integer_, nrow(rows)), ,
     drop = FALSE
   ]
   rownames(out) <- NULL
@@ -527,12 +514,11 @@ references <- function(rows) {
 catch_source <- inputs[
   inputs$type == "catch" &
     inputs$measure %in%
-    c(
-      "total_biomass",
-      "proportion_at_length",
-      "conditional_proportion_at_age"
-    ),
-  ,
+      c(
+        "total_biomass",
+        "proportion_at_length",
+        "conditional_proportion_at_age"
+      ), ,
   drop = FALSE
 ]
 
@@ -540,28 +526,25 @@ index_source <- inputs[
   inputs$type == "index" &
     inputs$survey == survey &
     inputs$measure %in%
-    c(
-      "total_numbers",
-      "log_index_sd",
-      "proportion_at_length",
-      "conditional_proportion_at_age"
-    ),
-  ,
+      c(
+        "total_numbers",
+        "log_index_sd",
+        "proportion_at_length",
+        "conditional_proportion_at_age"
+      ), ,
   drop = FALSE
 ]
 
 growth_source <- outputs[
   outputs$measure %in%
-    c("growth_length_at_age", "growth_rate"),
-  ,
+    c("growth_length_at_age", "growth_rate"), ,
   drop = FALSE
 ]
 
 biology_reference <-
   references(
     assumptions[
-      assumptions$component == "biology",
-      ,
+      assumptions$component == "biology", ,
       drop = FALSE
     ]
   )
@@ -580,7 +563,6 @@ reconstructed <- list(
     notes =
       "Fleet catches are aggregated after applying fleet-specific pooled age-length keys; 2025 uses the key pooled from observed ages 2007-2024."
   ),
-
   row(
     "catch",
     "proportion_at_age",
@@ -589,12 +571,12 @@ reconstructed <- list(
     age = catch_rows$age,
     value =
       catch_rows$numbers /
-      catch_totals_by_year$numbers[
-        match(
-          catch_rows$year,
-          catch_totals_by_year$year
-        )
-      ],
+        catch_totals_by_year$numbers[
+          match(
+            catch_rows$year,
+            catch_totals_by_year$year
+          )
+        ],
     unit = "proportion",
     source_reference = references(catch_source),
     transformation =
@@ -602,7 +584,6 @@ reconstructed <- list(
     notes =
       "Native bin labels are matched as categories. Original catch and composition rows remain unchanged."
   ),
-
   row(
     "index",
     "total_numbers",
@@ -618,7 +599,6 @@ reconstructed <- list(
     notes =
       "Only the age-sampled NMFS bottom-trawl survey is translated."
   ),
-
   row(
     "index",
     "proportion_at_age",
@@ -628,20 +608,20 @@ reconstructed <- list(
     age = index_rows$age,
     value =
       index_rows$numbers /
-      (
-        index_totals$value[
-          match(
-            index_rows$year,
-            index_totals$year
-          )
-        ] *
-          index_multiplier[
+        (
+          index_totals$value[
             match(
               index_rows$year,
               index_totals$year
             )
-          ]
-      ),
+          ] *
+            index_multiplier[
+              match(
+                index_rows$year,
+                index_totals$year
+              )
+            ]
+        ),
     unit = "proportion",
     sampling_time = 0.5,
     source_reference = references(index_source),
@@ -650,7 +630,6 @@ reconstructed <- list(
     notes =
       "Original SS3 composition likelihoods, ageing-error likelihood and covariance are not reproduced."
   ),
-
   row(
     "index",
     "log_index_sd",
@@ -670,7 +649,6 @@ reconstructed <- list(
     notes =
       "The same aggregate-index SD is applied to each reconstructed age row."
   ),
-
   row(
     "weight",
     "weight_at_age",
@@ -684,7 +662,6 @@ reconstructed <- list(
     notes =
       "The reported length-at-age SD is not integrated; age 10 is the plus group."
   ),
-
   row(
     "maturity",
     "maturity_at_age",
@@ -698,7 +675,6 @@ reconstructed <- list(
     notes =
       "The female SSB convention applies a 0.5 multiplier in the tinyAM translation."
   ),
-
   row(
     "M",
     "natural_mortality_at_age",
@@ -718,8 +694,7 @@ reconstructed <- list(
         outputs[
           outputs$type == "mortality" &
             outputs$measure ==
-            "natural_mortality_at_age",
-          ,
+              "natural_mortality_at_age", ,
           drop = FALSE
         ]
       ),
@@ -775,8 +750,7 @@ obs <- database_to_tam_obs(
 
 comparison_outputs <- outputs[
   outputs$measure %in% c("SSB", "total_biomass", "recruitment") &
-    outputs$year %in% years,
-  ,
+    outputs$year %in% years, ,
   drop = FALSE
 ]
 
@@ -789,9 +763,9 @@ if (!any(comparison_outputs$measure == "SSB")) {
 
 biomass_rows <- comparison_outputs$measure %in% c("SSB", "total_biomass")
 if (any(tolower(trimws(comparison_outputs$unit[biomass_rows])) != "t") ||
-    any(tolower(trimws(comparison_outputs$unit[
-      comparison_outputs$measure == "recruitment"
-    ])) != "billion fish")) {
+  any(tolower(trimws(comparison_outputs$unit[
+    comparison_outputs$measure == "recruitment"
+  ])) != "billion fish")) {
   stop(
     "GOA aggregate biomass and recruitment outputs have unexpected units.",
     call. = FALSE
@@ -825,28 +799,36 @@ comparison_scales <- c(ssb = 0.001, biomass = 0.001, recruitment = 1e-09)
 
 comparison_aggregates <- "ssb"
 
-comparison_definitions <- list(ssb = list(status = "approximate", definition = "Aggregate female SSB: accepted ages 0+ versus tinyAM ages 1-10+",
-    reason = "The accepted age-0 contribution cannot be removed from the available aggregate output."),
-    biomass = list(status = "non_equivalent", definition = "Accepted total biomass ages 0+ versus tinyAM ages 1-10+",
-        reason = "The accepted age-0 biomass cannot be removed from the reported aggregate total."))
+comparison_definitions <- list(
+  ssb = list(
+    status = "approximate", definition = "Aggregate female SSB: accepted ages 0+ versus tinyAM ages 1-10+",
+    reason = "The accepted age-0 contribution cannot be removed from the available aggregate output."
+  ),
+  biomass = list(
+    status = "non_equivalent", definition = "Accepted total biomass ages 0+ versus tinyAM ages 1-10+",
+    reason = "The accepted age-0 biomass cannot be removed from the reported aggregate total."
+  )
+)
 
-background <- c("### Gulf of Alaska Pacific cod: accepted 2026 update, Model 24.0", "", print_sources(source$assessment),
-    "", "| Component | Accepted assessment | tinyAM representation | Reason for difference |", "|---|---|---|---|",
-    "| Years | Model 24.0 covers 1977-2025. | Fit 2007-2025. | Fishery age-at-length samples begin in 2007; the shorter window avoids extrapolating the reconstructed age-length relationship across earlier decades. |",
-    "| Ages | The population includes ages 0-10+, with recruitment at age 0; fishery and survey age compositions use ages 1-10. | Model ages 1-10, with age 10 as the plus group and recruitment entering at age 1. | Age 0 is not represented in the translated observations, so recruitment and age-0+ population quantities are not directly comparable. |",
-    "| Recruitment | Recruitment enters at age 0 under a Beverton-Holt stock-recruitment model with annual recruitment deviations. | Recruitment enters at age 1 and follows tinyAM's temporal recruitment process. | Recruitment age and process differ, so recruitment is not directly compared. |",
-    "| N | Stock Synthesis propagates cohorts through fishing and natural mortality from a population initialized before the assessment period. | Cohort abundance after recruitment follows deterministic survival. Initial abundance-at-age is generated by exponential survivorship from the first recruitment state. | The tinyAM fit begins in 2007 rather than 1977 and cannot reproduce the full SS3 initialization. Freely estimating initial abundance was tested but did not converge reliably, so the exponential initialization is retained. |",
-    "| F | Three fisheries have distinct size-based selectivity, temporal selectivity blocks and annual fishing mortality. | Fit an age-specific mean F with independent age-year deviations around those means. | The age-specific mean provides a simple analogue of persistent fishery selectivity and substantially improves the translated fit. Fleet-specific and time-varying selectivity are not reproduced, and the three fisheries are combined. |",
-    "| M | Age-constant M is estimated, with a higher 2014-2016 block. | Supply the accepted M estimates as fixed values across modeled ages, including the 2014-2016 block. | This conditions on accepted-assessment M rather than estimating it independently and does not propagate its uncertainty. |",
-    "| Catch | Three fishery biomass series are fitted with length compositions and age proportions conditional on length. | Fleet-specific pooled age-length keys reconstruct annual age proportions; reconstructed weight-at-age converts biomass to numbers before fisheries are combined and fitted as aggregate catch-at-age. | tinyAM does not reproduce the native conditional-composition likelihood, ageing error, fleet-specific selectivity or covariance structure. |",
-    "| Index | Bottom-trawl and longline surveys have their own catchability and size-dependent selectivity; the source model fits aggregate indices together with composition information. | Use the bottom-trawl survey only. Allocate its aggregate index across age using the pooled age-length key and estimate separate catchability by age. | Age-specific q provides a simple representation of survey selectivity and markedly improves the fit. A monotonic age-q constraint produced a very similar assessment, so the less restrictive age-specific formulation is retained. The longline survey and native conditional-composition likelihood are omitted. |",
-    "| Index error | The accepted model fits an aggregate survey index and separate length and conditional age-composition likelihoods. | Apply the supplied aggregate log-scale survey SD to each reconstructed age-specific index observation, with one additional observation-error structure. | Splitting an aggregate index into age-specific observations does not reproduce the source covariance or composition uncertainty, so residual diagnostics should be interpreted accordingly. |",
-    "| Weights and maturity | The model uses a combined-sex growth pattern, weight-length relationship and length-logistic maturity; published female SSB is one-half of the native spawning output. | Reconstruct mean length-at-age from reported growth parameters, calculate weight-at-age from the accepted weight-length relationship, and evaluate maturity at mean length. Maturity is multiplied by 0.5 for female SSB. | Length-at-age variation is not integrated, but the accepted biological functions and female-SSB convention are retained. |",
-    "| SSB | Published female spawning biomass is age 0+ and reported in tonnes. | Calculate female SSB over ages 1-10+ and convert tinyAM biomass from kg to tonnes for comparison. | Source age-specific SSB contributions are unavailable, so the age-0 component cannot currently be removed. The aggregate comparison is therefore approximate rather than exactly age-matched. |",
-    "| Total biomass | The published aggregate covers ages 0+ and is reported in tonnes. | tinyAM reports population biomass over ages 1-10+. | Both totals are shown in tonnes for context, but the age-0 contribution cannot be removed, so no like-for-like percent difference is calculated. |",
-    "| Recruitment | Recruitment enters at age 0 and is reported in billions of fish. | tinyAM recruitment enters at age 1 and is shown in billions of fish. | The age definitions differ, so the dashboard can show both trajectories but the comparison is marked non-equivalent. |",
-    "", "The pooled age-length keys use native bin labels and source observations from 2007 onward. They cover at least 95% of each selected annual length composition; uncovered length-bin mass is renormalized. The 2025 catch uses the key pooled from age samples through 2024.",
-    "", "The translation is intentionally simpler than Model 24.0. In particular, adding persistent age structure to both fishing mortality and survey catchability substantially improves the fit while preserving deterministic cohort survival. An IID abundance process is therefore not required for the current representation. Accepted recruitment is age 0 whereas tinyAM recruitment enters at age 1, and accepted N-at-age and F-at-age surfaces are not yet included in the comparison database.")
+background <- c(
+  "### Gulf of Alaska Pacific cod: accepted 2026 update, Model 24.0", "", print_sources(source$assessment),
+  "", "| Component | Accepted assessment | tinyAM representation | Reason for difference |", "|---|---|---|---|",
+  "| Years | Model 24.0 covers 1977-2025. | Fit 2007-2025. | Fishery age-at-length samples begin in 2007; the shorter window avoids extrapolating the reconstructed age-length relationship across earlier decades. |",
+  "| Ages | The population includes ages 0-10+, with recruitment at age 0; fishery and survey age compositions use ages 1-10. | Model ages 1-10, with age 10 as the plus group and recruitment entering at age 1. | Age 0 is not represented in the translated observations, so recruitment and age-0+ population quantities are not directly comparable. |",
+  "| Recruitment | Recruitment enters at age 0 under a Beverton-Holt stock-recruitment model with annual recruitment deviations. | Recruitment enters at age 1 and follows tinyAM's temporal recruitment process. | Recruitment age and process differ, so recruitment is not directly compared. |",
+  "| N | Stock Synthesis propagates cohorts through fishing and natural mortality from a population initialized before the assessment period. | Cohort abundance after recruitment follows deterministic survival. Initial abundance-at-age is generated by exponential survivorship from the first recruitment state. | The tinyAM fit begins in 2007 rather than 1977 and cannot reproduce the full SS3 initialization. Freely estimating initial abundance was tested but did not converge reliably, so the exponential initialization is retained. |",
+  "| F | Three fisheries have distinct size-based selectivity, temporal selectivity blocks and annual fishing mortality. | Fit an age-specific mean F with independent age-year deviations around those means. | The age-specific mean provides a simple analogue of persistent fishery selectivity and substantially improves the translated fit. Fleet-specific and time-varying selectivity are not reproduced, and the three fisheries are combined. |",
+  "| M | Age-constant M is estimated, with a higher 2014-2016 block. | Supply the accepted M estimates as fixed values across modeled ages, including the 2014-2016 block. | This conditions on accepted-assessment M rather than estimating it independently and does not propagate its uncertainty. |",
+  "| Catch | Three fishery biomass series are fitted with length compositions and age proportions conditional on length. | Fleet-specific pooled age-length keys reconstruct annual age proportions; reconstructed weight-at-age converts biomass to numbers before fisheries are combined and fitted as aggregate catch-at-age. | tinyAM does not reproduce the native conditional-composition likelihood, ageing error, fleet-specific selectivity or covariance structure. |",
+  "| Index | Bottom-trawl and longline surveys have their own catchability and size-dependent selectivity; the source model fits aggregate indices together with composition information. | Use the bottom-trawl survey only. Allocate its aggregate index across age using the pooled age-length key and estimate separate catchability by age. | Age-specific q provides a simple representation of survey selectivity and markedly improves the fit. A monotonic age-q constraint produced a very similar assessment, so the less restrictive age-specific formulation is retained. The longline survey and native conditional-composition likelihood are omitted. |",
+  "| Index error | The accepted model fits an aggregate survey index and separate length and conditional age-composition likelihoods. | Apply the supplied aggregate log-scale survey SD to each reconstructed age-specific index observation, with one additional observation-error structure. | Splitting an aggregate index into age-specific observations does not reproduce the source covariance or composition uncertainty, so residual diagnostics should be interpreted accordingly. |",
+  "| Weights and maturity | The model uses a combined-sex growth pattern, weight-length relationship and length-logistic maturity; published female SSB is one-half of the native spawning output. | Reconstruct mean length-at-age from reported growth parameters, calculate weight-at-age from the accepted weight-length relationship, and evaluate maturity at mean length. Maturity is multiplied by 0.5 for female SSB. | Length-at-age variation is not integrated, but the accepted biological functions and female-SSB convention are retained. |",
+  "| SSB | Published female spawning biomass is age 0+ and reported in tonnes. | Calculate female SSB over ages 1-10+ and convert tinyAM biomass from kg to tonnes for comparison. | Source age-specific SSB contributions are unavailable, so the age-0 component cannot currently be removed. The aggregate comparison is therefore approximate rather than exactly age-matched. |",
+  "| Total biomass | The published aggregate covers ages 0+ and is reported in tonnes. | tinyAM reports population biomass over ages 1-10+. | Both totals are shown in tonnes for context, but the age-0 contribution cannot be removed, so no like-for-like percent difference is calculated. |",
+  "| Recruitment | Recruitment enters at age 0 and is reported in billions of fish. | tinyAM recruitment enters at age 1 and is shown in billions of fish. | The age definitions differ, so the dashboard can show both trajectories but the comparison is marked non-equivalent. |",
+  "", "The pooled age-length keys use native bin labels and source observations from 2007 onward. They cover at least 95% of each selected annual length composition; uncovered length-bin mass is renormalized. The 2025 catch uses the key pooled from age samples through 2024.",
+  "", "The translation is intentionally simpler than Model 24.0. In particular, adding persistent age structure to both fishing mortality and survey catchability substantially improves the fit while preserving deterministic cohort survival. An IID abundance process is therefore not required for the current representation. Accepted recruitment is age 0 whereas tinyAM recruitment enters at age 1, and accepted N-at-age and F-at-age surfaces are not yet included in the comparison database."
+)
 
 ## Model ----
 fit <- NULL
@@ -858,7 +840,7 @@ if (do_fit) {
     years = years,
     ages = ages,
     N_settings = list(process = "off", init = "exp"),
-    F_settings = list(process = "iid", mu_form = ~factor(age)),
+    F_settings = list(process = "iid", mu_form = ~ factor(age)),
     M_settings = list(process = "off", mu_form = NULL, mu_supplied = ~M_assumption),
     catch_settings = list(sd_form = ~1, fill_missing = FALSE),
     index_settings = list(q_form = ~q_block, sd_form = ~1, sd_supplied = ~relative_sd, fill_missing = FALSE),

@@ -1,4 +1,3 @@
-
 #' Compute Mohn's rho for retrospective analyses
 #'
 #' @description
@@ -37,8 +36,10 @@
 #' df <- data.frame(
 #'   year = rep(2010:2015, each = 3),
 #'   fold = rep(c(2013, 2014, 2015), times = 6),
-#'   est = c(100, 105, 110, 90, 95, 100, 85, 92, 98,
-#'           80, 90, 95, 78, 88, 93, 76, 86, 91),
+#'   est = c(
+#'     100, 105, 110, 90, 95, 100, 85, 92, 98,
+#'     80, 90, 95, 78, 88, 93, 76, 86, 91
+#'   ),
 #'   is_proj = FALSE
 #' )
 #' compute_mohns_rho(df)
@@ -51,11 +52,13 @@
 #' @export
 compute_mohns_rho <- function(data) {
   d <- data[!data$is_proj, ]
-  td <- d[d$fold == max(d$fold), c("year", "est")]   # terminal data
-  rd <- d[d$fold != max(d$fold) &
-            d$year == d$fold,
-          c("year", "est", "fold")]                         # retrospective data
-  cd <- merge(rd, td, by = "year", suffixes = c("_r", "_t"))      # combined data (r = retro, t = terminal)
+  td <- d[d$fold == max(d$fold), c("year", "est")] # terminal data
+  rd <- d[
+    d$fold != max(d$fold) &
+      d$year == d$fold,
+    c("year", "est", "fold")
+  ] # retrospective data
+  cd <- merge(rd, td, by = "year", suffixes = c("_r", "_t")) # combined data (r = retro, t = terminal)
   cd$pdiff <- (cd$est_r - cd$est_t) / cd$est_t
   mean(cd$pdiff, na.rm = TRUE)
 }
@@ -129,8 +132,6 @@ compute_hindcast_rmse <- function(data, log = TRUE) {
     d$obs <- log(d$obs)
     d$pred <- log(d$pred)
   }
-  d$sq_error <- (d$obs - d$pred) ^ 2
+  d$sq_error <- (d$obs - d$pred)^2
   sqrt(mean(d$sq_error, na.rm = TRUE))
 }
-
-

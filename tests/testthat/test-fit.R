@@ -1,4 +1,3 @@
-
 ## fit_tam ----
 
 testthat::skip_if_not_installed("RTMB")
@@ -15,9 +14,11 @@ test_that("fit_tam runs on a cod dataset and returns expected structure", {
   expect_s3_class(fit, "tam_fit")
   expect_named(
     fit,
-    c("call", "dat", "obj", "opt", "rep", "sdrep", "obs_pred", "pop", "rec", "is_converged",
+    c(
+      "call", "dat", "obj", "opt", "rep", "sdrep", "obs_pred", "pop", "rec", "is_converged",
       "fixed_par", "random_par", "refit_args", "grad_tol", "diagnostics",
-      "sdreport_error", "gradient", "parameter_values", "parameter_map", "bounds"),
+      "sdreport_error", "gradient", "parameter_values", "parameter_map", "bounds"
+    ),
     ignore.order = TRUE
   )
 
@@ -50,7 +51,7 @@ test_that("fit_tam works when an survey does not provide an index for all ages",
   fit <- update(
     default_fit,
     data = obs,
-    F_settings = list(process = "ar1", mu_form = ~ 1),
+    F_settings = list(process = "ar1", mu_form = ~1),
     silent = TRUE
   )
   expect_equal(range(fit$obs_pred$index$age), range(sub_ages))
@@ -75,7 +76,7 @@ test_that("fit_tam does not estimate missing values when fill_missing = FALSE", 
   fit <- update(
     default_fit,
     catch_settings = list(sd_form = ~1, fill_missing = FALSE),
-    index_settings = list(sd_form = ~1, q_form = ~ q_block, fill_missing = FALSE),
+    index_settings = list(sd_form = ~1, q_form = ~q_block, fill_missing = FALSE),
     silent = TRUE
   )
   expect_false("missing" %in% fit$obj$env$.random)
@@ -110,7 +111,7 @@ test_that("fit_retro runs peels and returns stacked outputs", {
   fit <- default_fit
   retros <- fit_retro(fit, folds = 1, progress = FALSE)
   expect_true(is.list(retros))
-  expect_true(all(c("obs_pred","pop","fits") %in% names(retros)))
+  expect_true(all(c("obs_pred", "pop", "fits") %in% names(retros)))
   # At least one retro fit kept (may drop if non-converged)
   if (length(retros$fits) > 0) {
     rf <- retros$fits[[1]]
@@ -145,8 +146,10 @@ test_that("fit_retro falls back to default grad_tol when fit has none", {
   explicit <- fit_retro(fit, folds = 0, progress = FALSE, grad_tol = 1e-2)
 
   expect_identical(names(implicit$fits), names(explicit$fits))
-  expect_identical(lapply(implicit$fits, `[[`, "is_converged"),
-                   lapply(explicit$fits, `[[`, "is_converged"))
+  expect_identical(
+    lapply(implicit$fits, `[[`, "is_converged"),
+    lapply(explicit$fits, `[[`, "is_converged")
+  )
   expect_identical(names(implicit$obs_pred), names(explicit$obs_pred))
   expect_identical(names(implicit$pop), names(explicit$pop))
 })

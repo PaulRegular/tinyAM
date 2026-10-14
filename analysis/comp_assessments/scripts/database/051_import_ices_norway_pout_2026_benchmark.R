@@ -27,16 +27,17 @@ survey_names <- c(
 )
 
 if (!identical(ages, 0:3) || length(times) != 168L ||
-    !isTRUE(all.equal(times, seq(1984, 2025.75, by = 0.25))) ||
-    fit$opt$convergence != 0L ||
-    !isTRUE(all.equal(as.numeric(dat$fbarrange), c(1, 2))) ||
-    !identical(as.integer(dat$keyVarLogN), c(0L, 0L, 0L, 1L)) ||
-    !identical(as.integer(dat$keyLogFsta), 0:3) ||
-    !identical(as.integer(dat$keyVarLogF), c(0L, 0L, 1L, 1L)) ||
-    !isTRUE(all.equal(as.numeric(dim(fit$pl$logN)), c(4, 168))) ||
-    !isTRUE(all.equal(as.numeric(dim(fit$pl$logF)), c(4, 168)))) {
+  !isTRUE(all.equal(times, seq(1984, 2025.75, by = 0.25))) ||
+  fit$opt$convergence != 0L ||
+  !isTRUE(all.equal(as.numeric(dat$fbarrange), c(1, 2))) ||
+  !identical(as.integer(dat$keyVarLogN), c(0L, 0L, 0L, 1L)) ||
+  !identical(as.integer(dat$keyLogFsta), 0:3) ||
+  !identical(as.integer(dat$keyVarLogF), c(0L, 0L, 1L, 1L)) ||
+  !isTRUE(all.equal(as.numeric(dim(fit$pl$logN)), c(4, 168))) ||
+  !isTRUE(all.equal(as.numeric(dim(fit$pl$logF)), c(4, 168)))) {
   stop("The cached fitted object does not match the reviewed final run.",
-       call. = FALSE)
+    call. = FALSE
+  )
 }
 
 observations <- data.frame(
@@ -48,13 +49,13 @@ observations <- data.frame(
   value = as.numeric(dat$obs)
 )
 if (any(observations$age_to < observations$age) ||
-    any(!is.finite(observations$value)) ||
-    any(!observations$fleet %in% 1:6) ||
-    sum(observations$age_to != observations$age) != 26L ||
-    any(observations$age_to != observations$age &
-          (observations$fleet != 5L | observations$age != 2L |
-             observations$age_to != 3L)) ||
-    !identical(as.integer(table(observations$fleet)), c(668L, 126L, 108L, 99L, 78L, 13L))) {
+  any(!is.finite(observations$value)) ||
+  any(!observations$fleet %in% 1:6) ||
+  sum(observations$age_to != observations$age) != 26L ||
+  any(observations$age_to != observations$age &
+    (observations$fleet != 5L | observations$age != 2L |
+      observations$age_to != 3L)) ||
+  !identical(as.integer(table(observations$fleet)), c(668L, 126L, 108L, 99L, 78L, 13L))) {
   stop("Unexpected observation rows in the cached fitted object.", call. = FALSE)
 }
 
@@ -90,7 +91,8 @@ obs_rows <- lapply(sort(unique(observations$fleet)), function(fleet_id) {
     }
     input_rows(
       "catch", "numbers_at_age", "numbers", z$year, z$age, z$value,
-      "million fish", fleet = "Total catch", season = season,
+      "million fish",
+      fleet = "Total catch", season = season,
       source_reference = paste0(model_url, "; fit$data$obs, t1, ageFrom, fleet"),
       transformation = "Copied raw quarterly catch-at-age observations from the processed final-run object.",
       notes = "Age 3 is the 3+ group; zero catches are retained. The fitted run contains catch through 2025 Q3."
@@ -102,7 +104,8 @@ obs_rows <- lapply(sort(unique(observations$fleet)), function(fleet_id) {
     direct_rows <- input_rows(
       "index", "numbers_at_age", "index_scale",
       direct$year, direct$age, direct$value,
-      "native survey-index units", survey = survey_names[[survey_id]],
+      "native survey-index units",
+      survey = survey_names[[survey_id]],
       season = paste0("Q", direct$quarter),
       sampling_time = ifelse(direct$quarter == 1L, 0.125, 0.625),
       source_reference = paste0(model_url, "; fit$data$obs, t1, ageFrom, fleet"),
@@ -113,7 +116,8 @@ obs_rows <- lapply(sort(unique(observations$fleet)), function(fleet_id) {
       group_rows <- input_rows(
         "index", "index_by_age_group", "index_scale",
         grouped$year, grouped$age, grouped$value,
-        "native survey-index units", survey = survey_names[[survey_id]],
+        "native survey-index units",
+        survey = survey_names[[survey_id]],
         season = paste0("Q", grouped$quarter),
         sampling_time = ifelse(grouped$quarter == 1L, 0.125, 0.625),
         source_reference = paste0(model_url, "; fit$data$obs, ageFrom, ageTo, fleet"),
@@ -138,8 +142,8 @@ aux <- data.frame(
   DW = as.numeric(dat$auxDW)
 )
 if (nrow(aux) != 668L || any(!is.finite(as.matrix(aux[c("M", "PM", "SW", "CW")]))) ||
-    any(!is.finite(aux$DW)) || any(aux$M <= 0) ||
-    any(aux$PM < 0 | aux$PM > 1) || any(aux$CW != aux$DW)) {
+  any(!is.finite(aux$DW)) || any(aux$M <= 0) ||
+  any(aux$PM < 0 | aux$PM > 1) || any(aux$CW != aux$DW)) {
   stop("Unexpected auxiliary inputs in the cached fitted object.", call. = FALSE)
 }
 
@@ -155,12 +159,15 @@ aux_rows <- function(type, measure, basis, value, unit, slot, notes) {
 
 weight_profile <- unique(aux[c("quarter", "age", "SW")])
 if (anyDuplicated(aux[c("quarter", "age", "year")]) ||
-    nrow(weight_profile) != 16L ||
-    anyDuplicated(weight_profile[c("quarter", "age")]) ||
-    any(vapply(split(aux$SW, interaction(aux$quarter, aux$age, drop = TRUE)),
-               function(x) length(unique(x)) != 1L, logical(1)))) {
+  nrow(weight_profile) != 16L ||
+  anyDuplicated(weight_profile[c("quarter", "age")]) ||
+  any(vapply(
+    split(aux$SW, interaction(aux$quarter, aux$age, drop = TRUE)),
+    function(x) length(unique(x)) != 1L, logical(1)
+  ))) {
   stop("The stock weight-at-age input is not constant by quarter and age.",
-       call. = FALSE)
+    call. = FALSE
+  )
 }
 
 inputs <- do.call(rbind, c(obs_rows, list(
@@ -191,7 +198,8 @@ inputs <- do.call(rbind, c(obs_rows, list(
     "maturity", "maturity_at_age", "proportion",
     rep(NA_integer_, length(ages)), ages,
     vapply(ages, function(age) unique(aux$PM[aux$age == age])[[1L]], numeric(1)),
-    "proportion", source_reference = paste0(model_url, "; fit$data$auxPM"),
+    "proportion",
+    source_reference = paste0(model_url, "; fit$data$auxPM"),
     transformation = "Copied the time-invariant maturity ogive from the accepted model object.",
     notes = "0% at age 0, 20% at age 1, and 100% at ages 2 and 3+."
   )
@@ -234,14 +242,19 @@ output_time <- data.frame(
 )
 if (abs(fit$SSB[which(times == 2012.75)] - 30766.76) > 1) {
   stop("The cached fit does not match the benchmark's reported Blim check.",
-       call. = FALSE)
+    call. = FALSE
+  )
 }
 
 outputs <- rbind(
-  surface_output(exp(fit$pl$logN), "population", "numbers_at_age",
-                 "million fish", "logN"),
-  surface_output(exp(fit$pl$logF), "mortality", "fishing_mortality_at_age",
-                 "per year", "logF"),
+  surface_output(
+    exp(fit$pl$logN), "population", "numbers_at_age",
+    "million fish", "logN"
+  ),
+  surface_output(
+    exp(fit$pl$logF), "mortality", "fishing_mortality_at_age",
+    "per year", "logF"
+  ),
   output_rows(
     "biomass", "SSB", output_time$year, as.numeric(fit$SSB), "tonnes",
     season = output_time$season, lwr = as.numeric(fit$SSB.lo),
@@ -280,27 +293,43 @@ assumptions <- do.call(rbind, list(
   assumption("model", "model_age_range", "ages 0-3+, recruitment at age 0", report_ref),
   assumption("model", "fitted_years", "1984-2025, quarterly state times", model_ref),
   assumption("model", "quarter_length", "0.25 year", model_ref),
-  assumption("recruitment", "recruitment_timing", "Q3", model_ref,
-             "Recruitment enters the quarterly population process in the third quarter."),
-  assumption("N", "process_variance_sharing", "ages 0-2 share; age 3+ separate", model_ref,
-             "Copied from keyVarLogN."),
+  assumption(
+    "recruitment", "recruitment_timing", "Q3", model_ref,
+    "Recruitment enters the quarterly population process in the third quarter."
+  ),
+  assumption(
+    "N", "process_variance_sharing", "ages 0-2 share; age 3+ separate", model_ref,
+    "Copied from keyVarLogN."
+  ),
   assumption("F", "process", "quarterly random walk in log F", report_ref),
-  assumption("F", "age_state_sharing", "separate F state for ages 0, 1, 2, and 3+", model_ref,
-             "keyLogFsta is 0, 1, 2, 3."),
-  assumption("F", "process_variance_sharing", "ages 0-1 share; ages 2-3+ share", model_ref,
-             "Copied from keyVarLogF."),
+  assumption(
+    "F", "age_state_sharing", "separate F state for ages 0, 1, 2, and 3+", model_ref,
+    "keyLogFsta is 0, 1, 2, 3."
+  ),
+  assumption(
+    "F", "process_variance_sharing", "ages 0-1 share; ages 2-3+ share", model_ref,
+    "Copied from keyVarLogF."
+  ),
   assumption("F", "age_correlation", "AR(1) across ages", report_ref),
   assumption("F", "Fbar_ages", "1-2", model_ref),
-  assumption("F", "big_jump_rule", "multiply selected log-F increment SDs by 100", report_ref,
-             "A time step is selected when the absolute change in log(catch + 1) exceeds 2.9."),
-  assumption("M", "process", "externally supplied, time-varying M by age and quarter", report_ref,
-             "M is not estimated by SESAM; the accepted M-0 input is based on North Sea SMS."),
+  assumption(
+    "F", "big_jump_rule", "multiply selected log-F increment SDs by 100", report_ref,
+    "A time step is selected when the absolute change in log(catch + 1) exceeds 2.9."
+  ),
+  assumption(
+    "M", "process", "externally supplied, time-varying M by age and quarter", report_ref,
+    "M is not estimated by SESAM; the accepted M-0 input is based on North Sea SMS."
+  ),
   assumption("M", "time_coverage", "1984-2022 SMS series; 2022 values carried through 2025", report_ref),
-  assumption("catch", "input_period", "1984-2025 Q1-Q3", model_ref,
-             "The 2025 Q4 catch observation is not present."),
+  assumption(
+    "catch", "input_period", "1984-2025 Q1-Q3", model_ref,
+    "The 2025 Q4 catch observation is not present."
+  ),
   assumption("catch", "age_range", "ages 0-3+, with age 3 as the plus group", model_ref),
-  assumption("catch", "observation_variance_sharing", "age 0 separate; ages 1-2 share; age 3+ separate", model_ref,
-             "Copied from keyVarObs."),
+  assumption(
+    "catch", "observation_variance_sharing", "age 0 separate; ages 1-2 share; age 3+ separate", model_ref,
+    "Copied from keyVarObs."
+  ),
   assumption("index", "q_sharing", paste(
     "IBTS Q1 ages 1/2/3+ separate; EGFS Q3 age 0, age 1, and ages 2-3+ shared;",
     "SGFS Q3 age 0, age 1, and ages 2-3+ shared; IBTS other countries Q3 ages 0, 1, and grouped 2-3+ separate;",
@@ -311,12 +340,16 @@ assumptions <- do.call(rbind, list(
     "SGFS Q3 age 0/1-2/3+ groups; IBTS other countries Q3 ages 0, 1, and grouped 2-3+ separate;",
     "later SGFS age 0 shares the earlier SGFS age-0 variance."
   ), model_ref, "Exact keyVarObs mapping is preserved in the cached object."),
-  assumption("index", "unresolved_coverage", "IBTS other countries Q3 ends in 2024 in the fitted object", report_ref,
-             "WKBWNG Section 2.5 lists this index through 2025; the cached fit and obs.dat stop at 2024."),
+  assumption(
+    "index", "unresolved_coverage", "IBTS other countries Q3 ends in 2024 in the fitted object", report_ref,
+    "WKBWNG Section 2.5 lists this index through 2025; the cached fit and obs.dat stop at 2024."
+  ),
   assumption("biology", "maturity", "0, 0.2, 1, 1 at ages 0-3+", report_ref),
   assumption("biology", "stock_weight", "year-invariant; age- and quarter-specific", model_ref),
-  assumption("fit", "optimizer", "convergence 0; objective 1547.746", model_ref,
-             "Optimizer message: relative convergence (4).")
+  assumption(
+    "fit", "optimizer", "convergence 0; objective 1547.746", model_ref,
+    "Optimizer message: relative convergence (4)."
+  )
 ))
 for (i in seq_along(survey_names)) {
   fleet_id <- i + 1L
@@ -362,8 +395,10 @@ assessment <- data.frame(
 
 database <- file.path(base, "database")
 read_db <- function(name) {
-  read.csv(file.path(database, name), colClasses = "character",
-           na.strings = "", check.names = FALSE)
+  read.csv(file.path(database, name),
+    colClasses = "character",
+    na.strings = "", check.names = FALSE
+  )
 }
 append_rows <- function(path, rows, current, key) {
   if (!identical(names(current), names(rows))) {
@@ -372,25 +407,37 @@ append_rows <- function(path, rows, current, key) {
   if (any(current[[key]] == assessment_id, na.rm = TRUE)) {
     stop("This assessment already occurs in ", basename(path), ".", call. = FALSE)
   }
-  utils::write.table(rows, path, sep = ",", quote = TRUE,
-                     row.names = FALSE, col.names = FALSE, append = TRUE, na = "")
+  utils::write.table(rows, path,
+    sep = ",", quote = TRUE,
+    row.names = FALSE, col.names = FALSE, append = TRUE, na = ""
+  )
 }
 
 stocks <- read_db("stocks.csv")
 if (!identical(names(stocks), names(stock)) || any(stocks$stock_id == stock_id)) {
   stop("Unexpected stock schema or this stock already exists.", call. = FALSE)
 }
-append_rows(file.path(database, "assessments.csv"), assessment,
-            read_db("assessments.csv"), "assessment_id")
-append_rows(file.path(database, "assumptions.csv"), assumptions,
-            read_db("assumptions.csv"), "assessment_id")
-append_rows(file.path(database, "inputs.csv"), inputs,
-            read_db("inputs.csv"), "assessment_id")
-append_rows(file.path(database, "outputs.csv"), outputs,
-            read_db("outputs.csv"), "assessment_id")
-utils::write.table(stock, file.path(database, "stocks.csv"), sep = ",",
-                   quote = TRUE, row.names = FALSE, col.names = FALSE,
-                   append = TRUE, na = "")
+append_rows(
+  file.path(database, "assessments.csv"), assessment,
+  read_db("assessments.csv"), "assessment_id"
+)
+append_rows(
+  file.path(database, "assumptions.csv"), assumptions,
+  read_db("assumptions.csv"), "assessment_id"
+)
+append_rows(
+  file.path(database, "inputs.csv"), inputs,
+  read_db("inputs.csv"), "assessment_id"
+)
+append_rows(
+  file.path(database, "outputs.csv"), outputs,
+  read_db("outputs.csv"), "assessment_id"
+)
+utils::write.table(stock, file.path(database, "stocks.csv"),
+  sep = ",",
+  quote = TRUE, row.names = FALSE, col.names = FALSE,
+  append = TRUE, na = ""
+)
 message(
   "Added ", nrow(inputs), " inputs, ", nrow(assumptions),
   " assumptions, and ", nrow(outputs), " outputs for ", assessment_id,

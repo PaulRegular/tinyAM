@@ -1,4 +1,3 @@
-
 ## cut_* ----
 
 test_that("cut_ages makes singleton labels when breaks are consecutive", {
@@ -13,25 +12,25 @@ test_that("cut_ages makes singleton labels when breaks are consecutive", {
 test_that("cut_ages builds hyphen ranges and closes at max(x)", {
   x <- 2:14
   f <- cut_ages(x, seq(2, 14, by = 2))
-  expect_equal(levels(f), c("2-3","4-5","6-7","8-9","10-11","12-14"))
+  expect_equal(levels(f), c("2-3", "4-5", "6-7", "8-9", "10-11", "12-14"))
   # spot-check a few assignments
-  expect_equal(as.character(f[1:2]), c("2-3","2-3"))
-  expect_equal(as.character(f[12:13]), c("12-14","12-14"))
+  expect_equal(as.character(f[1:2]), c("2-3", "2-3"))
+  expect_equal(as.character(f[12:13]), c("12-14", "12-14"))
 })
 
 test_that("cut_years creates management-era blocks", {
   yrs <- 1983:2025
   f <- cut_years(yrs, c(1983, 1992, 1997, 2003, 2025))
-  expect_equal(levels(f), c("1983-1991","1992-1996","1997-2002","2003-2025"))
+  expect_equal(levels(f), c("1983-1991", "1992-1996", "1997-2002", "2003-2025"))
   # first few should be first block; last few should be last block
   expect_true(all(f[1:3] == "1983-1991"))
   expect_true(all(tail(f, 3) == "2003-2025"))
 })
 
 test_that("cut_int respects ordered = TRUE", {
-  f <- cut_int(2:10, c(2,5,8,10), ordered = TRUE)
+  f <- cut_int(2:10, c(2, 5, 8, 10), ordered = TRUE)
   expect_true(is.ordered(f))
-  expect_equal(levels(f), c("2-4","5-7","8-10"))
+  expect_equal(levels(f), c("2-4", "5-7", "8-10"))
 })
 
 test_that("cut_int input validation errors are informative", {
@@ -43,28 +42,30 @@ test_that("cut_int input validation errors are informative", {
 })
 
 
-
 ## prepare_tam ----
 
 test_that("prepare_tam infers years/ages when NULL and builds expected pieces", {
   dat <- prepare_tam(
     data = cod_obs,
     years = NULL,
-    ages  = NULL,
+    ages = NULL,
     N_settings = list(process = "iid", init = "exp"),
-    F_settings = list(process = "rw",  mu_form = NULL),
+    F_settings = list(process = "rw", mu_form = NULL),
     M_settings = list(process = "off", mu_form = NULL, mu_supplied = ~ I(0.3)),
     catch_settings = list(sd_form = ~1, fill_missing = TRUE),
-    index_settings = list(sd_form = ~1, q_form = ~ q_block, fill_missing = TRUE)
+    index_settings = list(sd_form = ~1, q_form = ~q_block, fill_missing = TRUE)
   )
 
   expect_type(dat, "list")
-  expect_true(all(c("years","ages","obs","W","P","obs_map","log_obs",
-                    "sd_catch_modmat", "sd_index_modmat","q_modmat",
-                    "F_settings","M_settings","N_settings","catch_settings","index_settings") %in% names(dat)))
+  expect_true(all(c(
+    "years", "ages", "obs", "W", "P", "obs_map", "log_obs",
+    "sd_catch_modmat", "sd_index_modmat", "q_modmat",
+    "F_settings", "M_settings", "N_settings", "catch_settings", "index_settings"
+  ) %in% names(dat)))
 
   # dims line up
-  ny <- length(dat$years); na <- length(dat$ages)
+  ny <- length(dat$years)
+  na <- length(dat$ages)
   expect_equal(dim(dat$W), c(ny, na))
   expect_equal(dim(dat$P), c(ny, na))
 
@@ -78,7 +79,7 @@ test_that("prepare_tam infers years/ages when NULL and builds expected pieces", 
 })
 
 test_that("prepare_tam aggregates data for ages beyond max(ages) into a plus group", {
-  dat <- prepare_tam(data = cod_obs, ages  = 2:10)
+  dat <- prepare_tam(data = cod_obs, ages = 2:10)
   for (nm in c("catch", "index")) {
     fun_out <- dat$obs[[nm]] |> subset(!is.na(obs) & age == 10, select = c("year", "obs"))
     sub_obs <- cod_obs[[nm]] |> subset(!is.na(obs) & age >= 10)
@@ -93,7 +94,6 @@ test_that("prepare_tam aggregates data for ages beyond max(ages) into a plus gro
 })
 
 test_that("prepare_tam builds M age_blocks, respects defaults, and handles supplied surfaces/mu_form correctly", {
-
   # ---- Default behaviour: all ages except the youngest have deviations ----
   dat_default <- prepare_tam(
     data = cod_obs,
@@ -109,8 +109,10 @@ test_that("prepare_tam builds M age_blocks, respects defaults, and handles suppl
   dat_agebreaks <- prepare_tam(
     data = cod_obs,
     ages = 2:14,
-    M_settings = list(process = "iid", mu_form = NULL, mu_supplied = ~ I(0.3),
-                      age_breaks = seq(4, 10, 2))
+    M_settings = list(
+      process = "iid", mu_form = NULL, mu_supplied = ~ I(0.3),
+      age_breaks = seq(4, 10, 2)
+    )
   )
   # Deviations only estimated within the 4–10 range
   age_levels <- as.integer(names(dat_agebreaks$M_settings$age_blocks))
@@ -121,8 +123,10 @@ test_that("prepare_tam builds M age_blocks, respects defaults, and handles suppl
     data = cod_obs,
     ages = 2:14,
     years = 1980:2000,
-    M_settings = list(process = "iid", mu_form = NULL, mu_supplied = ~ I(0.3),
-                      first_dev_year = 1985)
+    M_settings = list(
+      process = "iid", mu_form = NULL, mu_supplied = ~ I(0.3),
+      first_dev_year = 1985
+    )
   )
   expect_true(all(dat_firstdev$M_settings$years >= 1985))
   expect_equal(dat_firstdev$M_settings$first_dev_year, 1985)
@@ -131,7 +135,7 @@ test_that("prepare_tam builds M age_blocks, respects defaults, and handles suppl
   expect_warning(
     dat_intercept <- prepare_tam(
       data = cod_obs,
-      M_settings = list(process = "off", mu_form = ~ age, mu_supplied = ~ I(0.2))
+      M_settings = list(process = "off", mu_form = ~age, mu_supplied = ~ I(0.2))
     ),
     "Dropping intercept term.*supplied levels"
   )
@@ -150,8 +154,10 @@ test_that("prepare_tam stops if neither M mu_supplied nor mu_form is provided", 
 })
 
 test_that("prepare_tam rejects the retired initialization setting", {
-  expect_error(make_test_dat(N_settings = list(process = "off", init_N0 = FALSE)),
-               "has been retired")
+  expect_error(
+    make_test_dat(N_settings = list(process = "off", init_N0 = FALSE)),
+    "has been retired"
+  )
 })
 
 test_that("prepare_tam appends projection years and shapes obs correctly with proj_settings (F_mult API)", {
@@ -177,8 +183,8 @@ test_that("prepare_tam appends projection years and shapes obs correctly with pr
   }
 
   # catch/index obs are NA in projection years
-  expect_true(all(is.na(subset(dat$obs$catch,  is_proj)$obs)))
-  expect_true(all(is.na(subset(dat$obs$index,  is_proj)$obs)))
+  expect_true(all(is.na(subset(dat$obs$catch, is_proj)$obs)))
+  expect_true(all(is.na(subset(dat$obs$index, is_proj)$obs)))
 
   # weight/maturity obs in proj years equal the mean of last n_mean years by age
   n_mean <- 3L
@@ -231,7 +237,7 @@ test_that("prepare_tam recycles, validates, names proj_settings$F_mult", {
     "Zero F not supported; replacing 0 with 1e-12"
   )
   expect_true(any(abs(dat3$proj_settings$F_mult - 1e-12) < 1e-18))
-  expect_true(any(abs(dat3$proj_settings$F_mult - 0.5)   < 1e-18))
+  expect_true(any(abs(dat3$proj_settings$F_mult - 0.5) < 1e-18))
 })
 
 test_that("prepare_tam handles mean_ages correctly", {
@@ -239,8 +245,8 @@ test_that("prepare_tam handles mean_ages correctly", {
   dat1 <- prepare_tam(
     data = cod_obs,
     ages = 2:5,
-    F_settings = list(process = "iid", mu_form = ~ 1, mean_ages = NULL),
-    M_settings = list(process = "iid", mean_ages = NULL, mu_supplied = ~I(0.2))
+    F_settings = list(process = "iid", mu_form = ~1, mean_ages = NULL),
+    M_settings = list(process = "iid", mean_ages = NULL, mu_supplied = ~ I(0.2))
   )
   expect_equal(dat1$F_settings$mean_ages, 2:5)
   expect_equal(dat1$M_settings$mean_ages, 2:5)
@@ -249,8 +255,8 @@ test_that("prepare_tam handles mean_ages correctly", {
   dat2 <- prepare_tam(
     data = cod_obs,
     ages = 2:5,
-    F_settings = list(process = "iid", mu_form = ~ 1, mean_ages = c(2, 4)),
-    M_settings = list(process = "iid", mean_ages = c(3, 5), mu_supplied = ~I(0.2))
+    F_settings = list(process = "iid", mu_form = ~1, mean_ages = c(2, 4)),
+    M_settings = list(process = "iid", mean_ages = c(3, 5), mu_supplied = ~ I(0.2))
   )
   expect_equal(dat2$F_settings$mean_ages, c(2, 4))
   expect_equal(dat2$M_settings$mean_ages, c(3, 5))
@@ -260,7 +266,7 @@ test_that("prepare_tam handles mean_ages correctly", {
     prepare_tam(
       data = cod_obs,
       ages = 2:5,
-      F_settings = list(process = "iid", mu_form = ~ 1, mean_ages = c(6, 7))
+      F_settings = list(process = "iid", mu_form = ~1, mean_ages = c(6, 7))
     ),
     "F_settings\\$mean_ages"
   )

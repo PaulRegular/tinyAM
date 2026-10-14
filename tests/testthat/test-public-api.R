@@ -1,6 +1,8 @@
 test_that("prepare_tam and fit_tam expose the same data and model arguments", {
-  settings <- c("data", "years", "ages", "N_settings", "rec_settings", "F_settings",
-                "M_settings", "catch_settings", "index_settings", "proj_settings")
+  settings <- c(
+    "data", "years", "ages", "N_settings", "rec_settings", "F_settings",
+    "M_settings", "catch_settings", "index_settings", "proj_settings"
+  )
   expect_identical(names(formals(prepare_tam)), settings)
   expect_true(all(settings %in% names(formals(fit_tam))))
   expect_false(any(c("obs", "...") %in% names(formals(fit_tam))))
@@ -32,8 +34,10 @@ test_that("update stores evaluated data under the public argument name", {
   expect_identical(call$data, quote(new_data))
   expect_false("obs" %in% names(as.list(call)))
   local_mocked_bindings(fit_tam = function(...) list(refit_args = list(...)))
-  fit <- update(default_fit, data = new_data, years = 2000:2005,
-                ages = 2:6, silent = TRUE)
+  fit <- update(default_fit,
+    data = new_data, years = 2000:2005,
+    ages = 2:6, silent = TRUE
+  )
   expect_identical(fit$refit_args$data, new_data)
   expect_equal(fit$refit_args$years, 2000:2005)
   expect_equal(fit$refit_args$ages, 2:6)

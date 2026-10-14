@@ -4,8 +4,10 @@ outputs <- read.csv(file.path(root, "outputs.csv"), na.strings = c("", "NA"))
 inputs <- subset(inputs, assessment_id == "ices_cod_north_sea_2025")
 outputs <- subset(outputs, assessment_id == "ices_cod_north_sea_2025")
 
-surveys <- c("Survey_Q1_NW", "Survey_Q1_SO", "Survey_Q1_VI", "Survey_Q34",
-             "Survey_Rec_NW", "Survey_Rec_SO", "Survey_Rec_VI")
+surveys <- c(
+  "Survey_Q1_NW", "Survey_Q1_SO", "Survey_Q1_VI", "Survey_Q34",
+  "Survey_Rec_NW", "Survey_Rec_SO", "Survey_Rec_VI"
+)
 stopifnot(setequal(na.omit(inputs$survey), surveys))
 obs <- subset(inputs, type == "index" & measure == "numbers_at_age")
 sds <- subset(inputs, type == "index" & measure == "log_index_sd")
@@ -24,19 +26,25 @@ stopifnot(nrow(subset(inputs, type == "weight")) == 894L)
 catch <- subset(inputs, type == "catch" & measure == "numbers_at_age")
 stopifnot(nrow(catch) == 42L * 7L, setequal(catch$year, 1983:2024))
 fraction <- subset(inputs, measure == "landings_fraction_at_age")
-stopifnot(nrow(fraction) == nrow(catch), all(fraction$value >= 0 & fraction$value <= 1),
-          all(fraction$source_type == "reconstructed_source_input"))
+stopifnot(
+  nrow(fraction) == nrow(catch), all(fraction$value >= 0 & fraction$value <= 1),
+  all(fraction$source_type == "reconstructed_source_input")
+)
 
 composition <- subset(inputs, measure == "landings_proportion")
 stopifnot(nrow(composition) == 30L * 7L, setequal(composition$year, 1995:2024))
-stopifnot(nrow(subset(composition, !is.na(region))) == 90L,
-          nrow(subset(composition, is.na(region))) == 120L)
+stopifnot(
+  nrow(subset(composition, !is.na(region))) == 90L,
+  nrow(subset(composition, is.na(region))) == 120L
+)
 
 for (region in c("Northwestern", "Southern", "Viking")) {
   x <- outputs[outputs$region == region, ]
-  stopifnot(nrow(subset(x, measure == "numbers_at_age")) == 43L * 7L,
-            nrow(subset(x, measure == "fishing_mortality_at_age")) == 42L * 7L,
-            nrow(subset(x, measure == "natural_mortality_at_age")) == 43L * 7L)
+  stopifnot(
+    nrow(subset(x, measure == "numbers_at_age")) == 43L * 7L,
+    nrow(subset(x, measure == "fishing_mortality_at_age")) == 42L * 7L,
+    nrow(subset(x, measure == "natural_mortality_at_age")) == 43L * 7L
+  )
   n <- subset(x, measure == "numbers_at_age" & age == 1)
   r <- subset(x, measure == "recruitment")
   both <- merge(n, r, by = "year", suffixes = c("_N", "_R"))

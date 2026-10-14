@@ -1,4 +1,3 @@
-
 library(tinyAM)
 library(furrr)
 
@@ -40,8 +39,10 @@ age_metrics <- names(which(counts == max(counts)))
 
 rhos |>
   subset(metric %in% age_metrics) |>
-  plot_ly(x = ~age, y = ~rho, color = ~model, colors = cols,
-          frame = ~metric) |>
+  plot_ly(
+    x = ~age, y = ~rho, color = ~model, colors = cols,
+    frame = ~metric
+  ) |>
   add_bars()
 
 rhos |>
