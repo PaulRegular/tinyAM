@@ -95,18 +95,44 @@ age_plus_group <- 7
 comparison_scales <- c(N = 0.001, recruitment = 0.001, ssb = 0.001, F_bar = 1, abundance = 0.001, biomass = 0.001,
     biomass_at_age = 0.001)
 
-background <- c("### Northern Shelf cod: accepted 2025 three-substock SAM assessment", "", print_sources(source$assessment),
-    "", "| Component | Accepted assessment | tinyAM representation | Reason for difference |", "|---|------|------|------|",
-    "| Years | The accepted population model spans 1983–2025; catch ends in 2024 and supplied M observations end in 2022. | Fit 1983–2022. | This uses only years with a complete supplied M surface and compares outputs over that common period. |",
-    "| Ages | Three substocks are modeled at ages 1–7+, with age 7 as the plus group. | Fit one combined population at ages 1–7, retaining age 7 as the plus group. | tinyAM has no substock population structure. |",
-    "| N | Recruitment follows a random walk and each substock has its own abundance process. | One random-walk cohort process with free initial abundance. | Substock-specific processes and their covariance are not represented. |",
-    "| F | Substock F uses scaled selectivity and age-correlated random-walk increments. | One age-specific random-walk F process. | tinyAM cannot share selectivity or correlate F increments across ages. |",
-    "| M | M is estimated as a GMRF process from supplied M observations. | Treat the supplied year-age M values as fixed. | tinyAM does not fit the source biological GMRF. |",
-    "| Catch | Combined commercial catch-at-age is used with additional substock and quarterly compositions. | Use combined catch-at-age with independent lognormal errors. | tinyAM does not include the auxiliary composition likelihoods or age-correlated catch errors. |",
-    "| Index | Seven age-structured streams include three substock Q1 surveys, one mixed Q3+Q4 survey and three substock recruitment indices. | Use the mixed Q3+Q4 survey only, retaining its supplied relative SDs and 0.75 timing. | This is the only selected index representing the combined population; substock and recruitment indices are omitted. |",
-    "| Weights and maturity | Annual weight and maturity inputs are specific to each substock. | Use the arithmetic mean of available substock inputs for each year and age. | No all-year population composition weights are available to form a combined surface. |",
-    "| Comparison outputs | The database stores accepted outputs separately for all three substocks. | Sum abundance, recruitment and biomass; calculate N-weighted F and M by age and N-weighted Fbar over ages 2–4. | The single-stock comparison is approximate, and uncertainty is not combined. |",
-    "", "This fit tests whether tinyAM can describe a simplified combined stock. Its biological inputs are unweighted across substocks, so the resulting SSB, abundance and mortality should not be interpreted as a like-for-like replication of the accepted multistock assessment.")
+
+background <- c(
+  "### Northern Shelf cod: accepted 2025 three-substock SAM assessment",
+  "",
+  print_sources(source$assessment),
+  "",
+  "| Component | Accepted assessment | tinyAM representation | Reason for difference |",
+  "|---|---|---|---|",
+
+  "| Years | Population model spans 1983–2025; catch ends in 2024 and supplied M observations end in 2022. | Fit 1983–2022. | Restrict the translation to years with a complete supplied M surface. |",
+
+  "| Ages | Northwestern, Southern and Viking substocks are modelled at ages 1–7+, with recruitment at age 1. | One combined population at ages 1–7+, retaining the age-7 plus group. | Substock population structure is omitted. |",
+
+  "| N | Recruitment follows a random walk, with separate abundance processes for the three substocks. | Random-walk recruitment, IID cohort-survival deviations with one shared SD, and freely estimated initial abundance. | Independent survival deviations replace the source's more elaborate population processes; substock-specific variation is omitted. |",
+
+  "| F | Substock fishing mortality is linked through shared, scaled selectivity and temporally varying fishing pressure, with age-correlated F-process variation. | One age-specific correlated random-walk F process (cor_rw). | Cross-age correlation of annual F increments is approximated, but substock selectivity sharing and the complete source F structure are omitted. |",
+
+  "| M | Natural mortality is estimated using a GMRF informed by supplied M observations. | Use the supplied year-age M values as fixed inputs. | The mortality GMRF and uncertainty in M are not estimated. |",
+
+  "| Catch | Combined commercial catch-at-age is fitted alongside substock and quarterly composition observations. | Use combined catch-at-age with independent lognormal errors and one shared SD. | Auxiliary composition likelihoods, source catch-error correlation and variance structure are omitted. |",
+
+  "| Survey indices | Seven fitted age-structured index streams include three substock Q1 indices, one mixed Q3+Q4 index and three substock recruitment indices. | Fit the mixed Q3+Q4 survey only, retaining its sampling time of 0.75 and supplied relative SDs. | Substock-specific abundance and recruitment indices are omitted because the translation uses one combined population. |",
+
+  "| Survey catchability | Catchability is estimated within the accepted multistock observation model; numerical q estimates have not been independently recovered. | Use mono(q_key) to estimate non-decreasing catchability across ordered survey age groups, allowing plateaus. | A monotone age pattern is imposed to avoid estimating dome-shaped catchability from the reduced data inputs. This is a translation assumption, not a recovered SAM constraint. |",
+
+  "| Weights and maturity | Annual weight and maturity inputs are specific to each substock. | Use arithmetic means of available substock inputs for each year and age. | Population-weighted combined biological inputs are unavailable. |",
+
+  "| Comparison outputs | Accepted outputs are reported separately for Northwestern, Southern and Viking substocks. | Sum numbers, recruitment and biomass; calculate abundance-weighted F and M by age and abundance-weighted substock Fbar over ages 2–4. | Comparison quantities are approximate and their uncertainty is not combined. |",
+
+  "",
+  "This translation tests whether tinyAM can reproduce broad Northern Shelf cod dynamics using a single combined population and the mixed Q3+Q4 survey.",
+  "",
+  "The survey catchability formula mono(q_key) constrains q to be non-decreasing across the ordered age groups. It permits flat sections but prevents a dome-shaped catchability curve. This is an intentional simplifying assumption, not a constraint attributed to the accepted SAM assessment.",
+  "",
+  "The revised fit also uses IID cohort-survival deviations and correlated F random walks. The accepted assessment's substock structure, auxiliary composition likelihoods and biological GMRFs are not reproduced.",
+  "",
+  "Biological inputs are averaged across substocks without abundance weighting. Accepted outputs are aggregated or abundance-weighted for comparison, so resulting differences should not be interpreted as errors in a like-for-like reproduction of the accepted multistock model."
+)
 
 ## Model ----
 fit <- NULL
@@ -117,11 +143,11 @@ if (do_fit) {
     data = obs,
     years = years,
     ages = ages,
-    N_settings = list(process = "rw", init = "free"),
-    F_settings = list(process = "rw", mu_form = NULL),
+    N_settings = list(process = "iid", init = "free"),
+    F_settings = list(process = "cor_rw", mu_form = NULL),
     M_settings = list(process = "off", mu_form = NULL, mu_supplied = ~M_assumption),
     catch_settings = list(sd_form = ~1, fill_missing = FALSE),
-    index_settings = list(q_form = ~0 + q_key, sd_form = ~1, sd_supplied = ~relative_sd, fill_missing = FALSE),
+    index_settings = list(q_form = ~mono(q_key), sd_form = ~1, sd_supplied = ~relative_sd, fill_missing = FALSE),
     silent = silent
   )
 }
