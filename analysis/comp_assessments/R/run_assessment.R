@@ -558,6 +558,40 @@ run_assessments <- function(assessment_ids = NULL, database = NULL,
   }
   rownames(diagnostics) <- NULL
   rownames(comparison_summary) <- NULL
+
+  # Assemble annual population comparisons across stocks.
+  population_metrics <- c("ssb", "recruitment", "abundance", "F_bar")
+  series <- Filter(Negate(is.null), lapply(runs, function(x) {
+    if (!is.data.frame(x$differences)) return(NULL)
+    historical_years <- x$fit$dat$years[!x$fit$dat$is_proj]
+    d <- subset(
+      x$differences,
+      metric %in% population_metrics & year %in% historical_years
+    )
+    if (!nrow(d)) return(NULL)
+    data.frame(assessment_id = x$assessment_id, d)
+  }))
+
+  population_timeseries <- if (length(series)) {
+    do.call(rbind, series)
+  } else {
+    data.frame(
+      assessment_id = character(),
+      metric = character(),
+      year = integer(),
+      age = character(),
+      source = numeric(),
+      tinyAM = numeric(),
+      absolute_difference = numeric(),
+      percent_difference = numeric(),
+      unit = character(),
+      comparison_status = character(),
+      definition = character(),
+      reason = character()
+    )
+  }
+  rownames(population_timeseries) <- NULL
+
   if (save_results) {
     results_dir <- file.path(.assessment_root, "results")
     dir.create(results_dir, recursive = TRUE, showWarnings = FALSE)
@@ -568,8 +602,15 @@ run_assessments <- function(assessment_ids = NULL, database = NULL,
       file.path(results_dir, "comparison_summary.csv"),
       row.names = FALSE, na = ""
     )
+    write.csv(
+      population_timeseries,
+      file.path(results_dir, "population_timeseries.csv"),
+      row.names = FALSE,
+      na = ""
+    )
   }
   attr(runs, "diagnostics") <- diagnostics
   attr(runs, "comparison_summary") <- comparison_summary
+  attr(runs, "population_timeseries") <- population_timeseries
   runs
 }
