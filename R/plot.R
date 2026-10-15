@@ -327,7 +327,7 @@ plot_bubbles <- function(data, ...) {
 
   args <- list(...)
   if (is.null(args$colors)) {
-    args$colors <- c("#377EB8", "#E41A1C")
+    args$colors <- c(head(tam_cols(), 1), tail(tam_cols(), 1))
   }
 
   p <- do.call(
