@@ -30,7 +30,7 @@ function(el, x, config) {
     });
     return {type: state.type, x: metric.years, y: metric.ages,
       z: values, visible: available, text: cell.text, hovertemplate: '%{text}<extra></extra>',
-      colorscale: 'Viridis', zmin: limits[0], zmax: limits[1],
+      colorscale: config.colorscale, zmin: limits[0], zmax: limits[1],
       cmin: limits[0], cmax: limits[1], connectgaps: false,
       colorbar: {title: {text: (state.scale === 'log' ? 'log10 ' : '') +
         metric.name + (metric.unit ? ' (' + metric.unit + ')' : '')}},

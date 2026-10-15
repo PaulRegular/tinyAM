@@ -35,6 +35,7 @@ Linear shows original estimates, including zero. Log displays
 log10 estimates; nonpositive values are gaps. Hover text always shows
 original values and units. Ranges are shared across models separately for
 each metric. All models of a metric must use the same units.
+Colours use the built-in \code{\link[=tam_cols]{tam_cols()}} ramp from low to high values.
 Missing cells remain missing. Surface and contour rendering interpolates
 only for display and does not create additional source estimates.
 }

@@ -18,6 +18,9 @@ test_that("matrix coordinates, ranges and metadata preserve sparse inputs", {
   expect_s3_class(p, "plotly")
   expect_identical(d, original)
   spec <- matrix_spec(p)
+  expect_identical(vapply(spec$colorscale, `[[`, "", 2L), tam_cols())
+  expect_equal(vapply(spec$colorscale, `[[`, 0, 1L), seq(0, 1, length.out = length(tam_cols())))
+  expect_identical(p$x$data[[1L]]$colorscale, spec$colorscale)
   expect_identical(spec$models, c("tinyAM", "Accepted"))
   for (m in spec$metrics) {
     expect_identical(m$years, sort(unique(d$year)))
@@ -114,6 +117,27 @@ test_that("tidy patterns retain model labels separately from aggregate scales", 
   }
   expect_identical(fit, original$tinyAM)
   expect_identical(reference, original$Accepted)
+})
+
+test_that("mortality patterns retain reported Z and missing reference values", {
+  fit <- N_dev
+  reference <- fit
+  class(reference) <- c("tam_ref", "list")
+  for (metric in c("F", "M", "Z")) reference$pop[[metric]]$unit <- "per year"
+  reference$pop$Z$est <- NA_real_
+  tabs <- tidy_tam(model_list = list(tinyAM = fit, Accepted = reference))
+  d <- tabs$patterns$mortality
+  expect_setequal(unique(d$metric), c("F", "M", "Z"))
+  z <- d[d$metric == "Z" & d$model == "tinyAM", ]
+  expect_equal(z$est, as.vector(fit$rep$F + fit$rep$M))
+  expect_true(all(is.finite(z$est)))
+  expect_true(any(z$is_proj))
+  expect_true(all(is.na(d$est[d$metric == "Z" & d$model == "Accepted"])))
+  p <- plot_matrix(d, metric = ~metric, frame = ~model)
+  spec <- matrix_spec(p)
+  total <- spec$metrics[[match("Z", vapply(spec$metrics, `[[`, "", "name"))]]
+  expect_true(all(is.finite(unlist(total$cells[[1L]]$linear))))
+  expect_true(all(is.na(unlist(total$cells[[2L]]$linear))))
 })
 
 test_that("matrix widget controls coordinate every selection independently", {

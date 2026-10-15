@@ -14,8 +14,9 @@ function widget() {
   return {on: (event, fn) => { handlers[event] = fn; }, handlers};
 }
 const config = {type: 'heatmap', models: ['tinyAM', 'Accepted'],
-  metrics: ['Abundance', 'Biomass', 'SSB'].map((name, i) => ({
-    name, unit: i ? 'kg' : 'fish', years: [2000, 2001], ages: [1, 2],
+  colorscale: [[0, '#003e56'], [1, '#f05c28']],
+  metrics: ['Abundance', 'Biomass', 'SSB', 'F', 'M', 'Z'].map((name, i) => ({
+    name, unit: i > 2 ? 'per year' : i ? 'kg' : 'fish', years: [2000, 2001], ages: [1, 2],
     linear: [0, 100], log: [0, 2], cells: [0, 1].map(model => ({
       linear: [[0, 1 + model], [null, 100]], log: [[null, model], [null, 2]],
       text: [['zero', 'natural value'], ['missing', '100 kg']]
@@ -25,20 +26,23 @@ const flush = () => new Promise(resolve => setImmediate(resolve));
 (async () => {
   config.metrics[2].cells[1].linear = [[null, null], [null, null]];
   config.metrics[2].cells[1].log = [[null, null], [null, null]];
+  config.metrics[5].cells[1].linear = [[null, null], [null, null]];
+  config.metrics[5].cells[1].log = [[null, null], [null, null]];
   const a = widget(), b = widget();
   draw(a, {}, config); draw(b, {}, config); await flush();
   a.handlers.plotly_animatingframe({name: 'Accepted'});
   const camera = {eye: {x: 1, y: 2, z: 3}};
   a.handlers.plotly_relayout({'scene.camera': camera});
-  for (let metric = 0; metric < 3; metric++) {
+  for (let metric = 0; metric < config.metrics.length; metric++) {
     for (const scale of ['linear', 'log']) for (const type of ['heatmap', 'surface', 'contour']) {
       for (const [key, value] of Object.entries({metric, scale, type})) {
         a.handlers.plotly_buttonclicked({button: {args: [key, value]}});
         await flush();
       }
       assert.equal(a.data[0].type, type);
+      assert.deepEqual(a.data[0].colorscale, config.colorscale);
       assert.deepEqual(a.data[0].z, config.metrics[metric].cells[1][scale]);
-      assert.equal(a.data[0].visible, metric !== 2);
+      assert.equal(a.data[0].visible, metric !== 2 && metric !== 5);
       assert.deepEqual(a.layout.xaxis.range, [1999.5, 2001.5]);
       assert.deepEqual(a.layout.yaxis.range, [.5, 2.5]);
       assert.equal(a.layout.sliders[0].active, 1);
@@ -47,6 +51,7 @@ const flush = () => new Promise(resolve => setImmediate(resolve));
       assert.equal(a._transitionData._frames.length, 2);
       assert.deepEqual(a._transitionData._frames[0].data[0].z,
         config.metrics[metric].cells[0][scale]);
+      assert.deepEqual(a._transitionData._frames[0].data[0].colorscale, config.colorscale);
       assert.equal(b.data[0].type, 'heatmap');
       assert.equal(b.layout.sliders[0].active, 0);
     }

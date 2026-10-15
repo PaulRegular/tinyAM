@@ -602,6 +602,7 @@ plot_age_year <- function(data, plot = plot_trend, x = ~year, xlab = "Year",
 #'   log10 estimates; nonpositive values are gaps. Hover text always shows
 #'   original values and units. Ranges are shared across models separately for
 #'   each metric. All models of a metric must use the same units.
+#'   Colours use the built-in [tam_cols()] ramp from low to high values.
 #'   Missing cells remain missing. Surface and contour rendering interpolates
 #'   only for display and does not create additional source estimates.
 #' @return A Plotly object with independent controls for each widget.
@@ -677,7 +678,9 @@ plot_matrix <- function(data, metric = NULL, frame = NULL,
     list(name = name, unit = unit, years = years, ages = ages, cells = cells,
       linear = span(d$est), log = span(log10(d$est[is.finite(d$est) & d$est > 0])))
   })
-  config <- list(metrics = spec, models = model_names, type = type)
+  colours <- tam_cols()
+  colorscale <- unname(Map(list, seq(0, 1, length.out = length(colours)), colours))
+  config <- list(metrics = spec, models = model_names, type = type, colorscale = colorscale)
   script <- paste(readLines(system.file("js", "matrix.js", package = "tinyAM"),
                            warn = FALSE), collapse = "\n")
   first <- spec[[1L]]
@@ -685,5 +688,6 @@ plot_matrix <- function(data, metric = NULL, frame = NULL,
     z = matrix(0, nrow = length(first$ages), ncol = length(first$years)),
     type = type))
   p$x$data[[1L]]$z <- first$cells[[1L]]$linear
+  p$x$data[[1L]]$colorscale <- colorscale
   htmlwidgets::onRender(p, script, data = config)
 }
