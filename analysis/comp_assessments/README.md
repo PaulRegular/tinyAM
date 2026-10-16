@@ -125,6 +125,9 @@ pooled female translation, with weakly identified M and an unresolved native
 spawning-output definition flagged for review.
 [Aleutian Islands Pacific cod](source_reviews/afsc_cod_ai.md) remains blocked
 pending native inputs matching the final production assessment.
+[BSAI arrowtooth flounder](source_reviews/afsc_arrowtooth_flounder_bsai.md)
+has recovered sex-specific states and biology, but missing likelihood
+compositions, an age–length key and timing block a defensible fit.
 
 `results/` retains `observation_readiness.csv`, `fit_diagnostics.csv`, `comparison_summary.csv`, a compact `sensitivity_summary.csv`, and `northern_cod_indices.csv` for the Northern cod integration trials. Fitted objects and dashboards are generated on request and may be saved under the gitignored `results/cache/<assessment_id>/` directory with `cache = TRUE`. They are not committed by the normal workflows.
 
