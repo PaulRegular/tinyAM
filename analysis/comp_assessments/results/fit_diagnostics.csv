@@ -79,3 +79,4 @@ i Optimizer code zero alone is insufficient. A missed gradient tolerance alone
 x Fixed-parameter covariance must be available and finite.
 i Optimizer code zero alone is insufficient. A missed gradient tolerance alone
   does not establish a structural problem. Source starts unavailable: Official numbers_at_age starting values must be finite and positive. | source_start: converged; gradient=0.000694; "
+"afsc_cod_ebs_2024","7bbb252689b3ccabc7a74fbaecb96ccb02c34890","converged",TRUE,0,"relative convergence (4)",372.259146795476,0.00135769859915683,0.00135769859915683,TRUE,TRUE,28,311,6.46921801567078," | default: converged; gradient=0.00136; "

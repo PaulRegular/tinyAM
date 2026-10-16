@@ -54,7 +54,7 @@ SD or manufactures intervals. Tests check the factor of two in point estimates
 across all overlapping historical years. Age-0 recruitment in 2024 is 621,430
 thousand fish, with worksheet natural-scale SD 27,663.3.
 
-## Translation under review
+## Translation
 
 The original likelihood uses catch-at-length. A tinyAM approximation needs an
 explicit allocation from length to age. The native inactive fishery age samples
@@ -69,3 +69,28 @@ Original maturity-at-age and empirical stock weights were not supplied to SS.
 Do not label a weight-derived maturity proxy as the official maturity curve.
 Canonical completeness remains partial; source preservation and numerical
 model readiness are separate claims.
+
+The retained recipe fits 2000–2023, ages 1–12+, using the pooled fishery key,
+original VAST numbers and active survey ages. Catch total numbers use the
+fixed weight–length equation at five-cm bin midpoints. Population weights are
+plug-in official outputs; the maturity proxy applies the original length
+ogive to weight-equivalent length. Pool ages 12–20+ with official N weights
+for biological reporting. This is not the source's length-integrated maturity.
+SSB comparisons therefore use a labelled common proxy; native female SSB and
+its reported SD remain separate. Neither fitted q nor fitted N changes an
+observation. Zero source proportions remain zero; tinyAM's lognormal
+observations treat these zero entries as missing.
+
+N survival is deterministic with free initial ages; recruitment is IID around
+a constant mean with log SD 0.6908, F has independent age-specific random walks,
+M stays fixed at 0.3866 and q is free by age. The default-start fit converged:
+optimizer code 0, objective 372.2591, maximum gradient 0.0013577, positive-definite
+Hessian and finite covariance, about 6.45 seconds. No starting-value retry was
+used. The cached Official–tinyAM dashboard renders successfully.
+
+Numerical convergence does not establish agreement. N-at-age has 42.1% mean
+absolute difference, −43.7% terminal difference and mean within-age correlation
+0.681. Recovered F-at-age has 70.1%, +107.0% and −0.200 respectively. Common
+proxy SSB has 21.7% mean absolute difference. The empirical pooled key,
+unconstrained age-specific F, omitted ageing error and simplified survey
+precision are material differences. Fixed-M equality only checks inputs.
