@@ -20,6 +20,7 @@
   for (x in parse(path)) walk(x)
   call <- calls[[length(calls)]]
   call[[1]] <- quote(tinyAM::prepare_tam)
+  call <- as.call(Filter(function(x) !identical(x, quote(...)), as.list(call)))
   call$silent <- call$start_par <- NULL
   e$dat <- eval(call, e)
   out <- as.list(e)

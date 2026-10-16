@@ -77,3 +77,23 @@ and are not substituted for either input.
 Completeness remains partial: full ungrouped N at ages 40–46+, age-state
 uncertainty, and some initialization/control semantics are not exported. The
 source review distinguishes these gaps from confirmed inactive likelihoods.
+
+## tinyAM translation
+
+The recipe uses 1960–2024 and ages 3–40+, the observed/exported terminal age
+group. It reconstructs age-specific catch and survey indices from the original
+biomass, compositions and weights. Source length samples, ageing error,
+composition likelihoods, spline penalties and priors are omitted. Survey time
+0.5 approximates the source's annual-average survival. Recruitment has separate
+mean periods before/after 1990, with estimated IID variation; survival is
+deterministic, initial abundance is free, F has independent temporal random
+walks, and M is an estimated constant without the source prior. Maturity is
+held at the official fitted logistic curve, with a female fraction of 0.5
+and spawning time 0.25. These choices are explicit in the dashboard background.
+
+Preparation and the default-first/retry, plus-group, reference-alignment and
+comparison-definition regression tests pass. The full default-initialization
+fit was launched at the translation checkpoint and is still pending; this is
+not yet a numerical convergence or agreement result. Its eventual diagnostics,
+and a conditional source-start retry only if numerical checks fail, are retained
+for the final cross-case review.

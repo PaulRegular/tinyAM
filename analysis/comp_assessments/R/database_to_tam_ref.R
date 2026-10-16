@@ -331,12 +331,16 @@ database_to_tam_ref <- function(assessment_id, outputs, obs = NULL, years = NULL
         } else if (!collapsed) {
           row$est <- values[[1L]]
         } else if (metric %in% c("F", "M", "Z")) {
+          # A shared rate is unchanged by aggregation, even when older N is
+          # reported only as a plus group (as in the BSAI POP reference).
           weights <- source_n$est[match(
             paste(group$year, as.integer(as.character(group$age))),
             paste(source_n$year, source_n$age)
           )]
           weights <- suppressWarnings(as.numeric(weights))
-          if (length(weights) != length(values) || any(!is.finite(weights)) ||
+          if (length(unique(values)) == 1L) {
+            row$est <- values[[1L]]
+          } else if (length(weights) != length(values) || any(!is.finite(weights)) ||
             any(weights < 0) || sum(weights) <= 0) {
             row$est <- NA_real_
           } else {
@@ -362,7 +366,11 @@ database_to_tam_ref <- function(assessment_id, outputs, obs = NULL, years = NULL
           paste0(
             "Collapsed ", nrow(group), " source ages for comparison with the tinyAM plus age; ",
             if (metric %in% c("F", "M", "Z")) {
-              "Mortality is N-weighted and uncertainty is not combined."
+              if (length(unique(values)) == 1L && complete) {
+                "The rate is constant across these ages; it is retained without N weights. Uncertainty is not combined."
+              } else {
+                "Mortality is N-weighted and uncertainty is not combined."
+              }
             } else {
               "values are summed and uncertainty is not combined."
             }

@@ -44,6 +44,13 @@ rm(.assessment_helper)
     reason <- paste("Optimizer did not return a result:", paste(as.character(fit$opt), collapse = " "))
   }
   checks <- if (inherits(fit, "tam_fit")) tinyAM::check_tam(fit) else NULL
+  attempts <- attr(fit, "initialization_attempts")
+  if (!is.null(attempts)) {
+    reason <- paste(c(reason, paste0(attempts$initialization, ": ",
+      ifelse(attempts$is_converged, "converged", "failed numerical checks"),
+      "; gradient=", signif(attempts$max_abs_gradient, 3),
+      "; ", attempts$notes)), collapse = " | ")
+  }
   data.frame(
     assessment_id = assessment_id,
     database_revision = if (length(database$commit)) database$commit[[1]] else NA_character_,
