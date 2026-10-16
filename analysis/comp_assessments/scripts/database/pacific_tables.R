@@ -1,7 +1,8 @@
 pacific_database_row <- function(table, ..., n = NULL) {
-  columns <- names(utils::read.csv(file.path(
+  header <- readLines(file.path(
     "analysis/comp_assessments/database", paste0(table, ".csv")
-  ), nrows = 0L, check.names = FALSE))
+  ), n = 1L)
+  columns <- names(utils::read.csv(text = header, nrows = 0L, check.names = FALSE))
   values <- list(...)
   if (is.null(n)) n <- max(lengths(values))
   out <- as.data.frame(setNames(rep(list(rep(NA, n)), length(columns)), columns))
