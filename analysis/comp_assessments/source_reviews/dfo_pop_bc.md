@@ -93,3 +93,13 @@ defaults. Data, formulas and assumptions are identical between attempts.
 M is the only recovered historical comparable core output. Native 90% limits
 remain canonical and are omitted from the common 95%-interval dashboard path.
 Unavailable series and unresolved SSB are not agreement passes.
+
+The default-start fit passed numerical checks: optimizer code 0, objective
+2199.5445, maximum gradient 0.0014052, positive-definite Hessian and finite
+covariance, 12.78 seconds. The dashboard renders. No initialization retry was
+allowed or needed by those checks. However, female M is about **2.87e-9** versus
+the official median 0.05229, almost −100%. Its log-M coefficient is −19.6677
+with SE **1924.9**, a practically unidentified mortality estimate. A numerical
+pass does not make this biologically usable. Omission of the informative M
+prior and pooling nonmixing areas are important limitations; this is flagged
+separately from numerical convergence, without tuning or another fit.

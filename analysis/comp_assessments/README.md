@@ -120,6 +120,9 @@ Pacific expansion source reviews: [BSAI Pacific ocean perch](source_reviews/afsc
 [Strait of Georgia Pacific herring](source_reviews/dfo_herring_sog.md) is curated,
 but translation is blocked by its aggregate spawning-biomass survey without
 survey ages; it has not received a tinyAM fitting attempt.
+[British Columbia Pacific ocean perch](source_reviews/dfo_pop_bc.md) has a
+pooled female translation, with weakly identified M and an unresolved native
+spawning-output definition flagged for review.
 
 `results/` retains `observation_readiness.csv`, `fit_diagnostics.csv`, `comparison_summary.csv`, a compact `sensitivity_summary.csv`, and `northern_cod_indices.csv` for the Northern cod integration trials. Fitted objects and dashboards are generated on request and may be saved under the gitignored `results/cache/<assessment_id>/` directory with `cache = TRUE`. They are not committed by the normal workflows.
 
