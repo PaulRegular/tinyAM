@@ -354,9 +354,16 @@ run_assessment <- function(assessment_id, database = NULL, fit = TRUE,
   result$comparison <- context$comparison
   elapsed <- as.numeric(difftime(Sys.time(), stock_env$fit_started, units = "secs"))
   if (inherits(sourced, "error")) {
+    attempts <- sourced$initialization_attempts
+    result$initialization_attempts <- attempts
+    failure_reason <- conditionMessage(sourced)
+    if (!is.null(attempts)) {
+      failure_reason <- paste(failure_reason, paste(attempts$initialization,
+        attempts$optimizer_message, attempts$notes, sep = ": ", collapse = " | "))
+    }
     result$diagnostics <- .assessment_diagnostics(
       assessment_id, database, paste0(stock_env$fit_stage, "_failed"),
-      elapsed = elapsed, reason = conditionMessage(sourced)
+      elapsed = elapsed, reason = failure_reason
     )
     return(result)
   }

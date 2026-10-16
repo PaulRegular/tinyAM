@@ -22,3 +22,12 @@
 "nefsc_summer_flounder_2018","4830fb11efe56abc21d839cc53a5385810c9ef3e","not_converged",FALSE,1,"false convergence (8)",745.642008179355,0.00417476937529782,0.00417476937529782,TRUE,FALSE,32,552,6.73296999931335,""
 "nefsc_atlantic_mackerel_2018","4830fb11efe56abc21d839cc53a5385810c9ef3e","converged",TRUE,0,"relative convergence (4)",974.17819533262,0.000656137970308834,0.000656137970308834,TRUE,TRUE,31,970,2.46077084541321,""
 "ices_haddock_iceland_2025","4830fb11efe56abc21d839cc53a5385810c9ef3e","converged",TRUE,0,"relative convergence (4)",1036.90468065887,0.00147336657823566,0.00147336657823566,TRUE,TRUE,43,1092,4.34460997581482,""
+"afsc_atka_mackerel_bsai_2024","72729bfffaf7ec3dc1d1510c5823a3611c9e4356","converged",TRUE,0,"relative convergence (4)",511.564627566503,0.000267399703109877,0.000267399703109877,TRUE,TRUE,24,373,19.1963450908661," | default: failed numerical checks; gradient=0.934; Dropping intercept term in index sd_form since supplied SDs are provided. Set
+sd_supplied to NULL to estimate the intercept. | NA/NaN function evaluation | Numerical convergence checks did not pass; inspect `check_tam(fit)`.
+x Code 1: false convergence (8)
+x Adjusted maximum 0.934; raw maximum 0.934; tolerance 0.01.
+x The Hessian must be positive definite.
+i Optimizer code zero alone is insufficient. A missed gradient tolerance alone
+  does not establish a structural problem. | source_start: converged; gradient=0.000267; Dropping intercept term in index sd_form since supplied SDs are provided. Set
+sd_supplied to NULL to estimate the intercept."
+"afsc_pop_bsai_2024","77be1fdfd189cda3a053a2c1fc1f3e2922a0ba5e","execution_failed",,,"",,,,,,,,,"Fitting pipeline terminated after more than seven hours of CPU time without returning a fit. Active initialization stage and intermediate diagnostics unavailable from the original helper; no further retry to avoid exceeding the single-retry policy. Convergence, objective, gradient and uncertainty remain unknown."

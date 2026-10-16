@@ -1,6 +1,12 @@
 # Used only by the new Pacific recipes. Existing recipes retain their starts.
-fit_default_first <- function(fit_model, retry_start) {
+fit_default_first <- function(fit_model, retry_start, attempt_file = NULL) {
   attempts <- list()
+  save_attempts <- function() {
+    if (!is.null(attempt_file)) {
+      dir.create(dirname(attempt_file), recursive = TRUE, showWarnings = FALSE)
+      saveRDS(do.call(rbind, attempts), attempt_file)
+    }
+  }
   attempt <- function(strategy, start = NULL) {
     cli::cli_inform(if (strategy == "default") {
       "Fitting with package starting values."
@@ -9,12 +15,19 @@ fit_default_first <- function(fit_model, retry_start) {
     })
     warnings <- character()
     begun <- Sys.time()
+    number <- length(attempts) + 1L
+    attempts[[number]] <<- data.frame(initialization = strategy,
+      is_converged = NA, optimizer_code = NA_integer_, optimizer_message = "",
+      objective = NA_real_, max_abs_gradient = NA_real_,
+      sdreport_success = NA, positive_definite_hessian = NA,
+      elapsed_seconds = NA_real_, notes = "Attempt started; no result returned yet.")
+    save_attempts()
     fit <- tryCatch(withCallingHandlers(
       if (strategy == "default") fit_model() else fit_model(start_par = start),
       warning = function(w) warnings <<- c(warnings, conditionMessage(w))
     ), error = identity)
     checks <- if (inherits(fit, "tam_fit")) tinyAM::check_tam(fit) else NULL
-    attempts[[length(attempts) + 1L]] <<- data.frame(
+    attempts[[number]] <<- data.frame(
       initialization = strategy,
       is_converged = !is.null(checks) && isTRUE(checks$is_converged),
       optimizer_code = if (is.list(fit$opt)) fit$opt$convergence else NA_integer_,
@@ -27,6 +40,7 @@ fit_default_first <- function(fit_model, retry_start) {
       notes = paste(c(if (inherits(fit, "error")) conditionMessage(fit), warnings),
                     collapse = " | ")
     )
+    save_attempts()
     fit
   }
   fit <- attempt("default")
@@ -41,7 +55,8 @@ fit_default_first <- function(fit_model, retry_start) {
     }
   }
   if (!inherits(fit, "tam_fit")) {
-    cli::cli_abort(paste(vapply(attempts, function(x) x$notes, character(1)), collapse = " | "))
+    cli::cli_abort(paste(vapply(attempts, function(x) x$notes, character(1)), collapse = " | "),
+      initialization_attempts = do.call(rbind, attempts))
   }
   attr(fit, "initialization_attempts") <- do.call(rbind, attempts)
   fit

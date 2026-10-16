@@ -201,3 +201,13 @@
 "ices_haddock_iceland_2025","N","thousand fish","matched","Reported age 1 compared with tinyAM age 1","",552,2936.27908284519,16.7507507215668,10.2621343554844,2024,-7.04721018607156,0.983170474856158
 "ices_haddock_iceland_2025","recruitment","thousand fish","matched","Recruitment at age 1","",46,12444.6628303255,17.2526252567163,9.40623159507446,2024,12.9554829892968,0.978830394091463
 "ices_haddock_iceland_2025","ssb","t","matched","Official N with shared translated weights and maturity over ages 1-12","",46,6539.99167131406,6.20187639074015,4.82737856648276,2024,-4.97630289631513,0.974821607576407
+"afsc_atka_mackerel_bsai_2024","F","per year","matched","Reported age 2 compared with tinyAM age 2","",340,0.147713708242187,265.556292136051,37.8028857224147,2023,33.7714333653172,0.646944335280561
+"afsc_atka_mackerel_bsai_2024","F_bar","per year","matched","N-weighted F over ages 2,3,4,5,6,7,8,9,10,11","",34,0.0175424060536915,22.7823023017663,23.6510545396207,2023,3.40833945444757,0.920754022962466
+"afsc_atka_mackerel_bsai_2024","M","per year","matched","Reported age 2 compared with tinyAM age 2","",340,0,0,0,2023,0,
+"afsc_atka_mackerel_bsai_2024","M_bar","per year","matched","N-weighted M over ages 2,3,4,5,6,7,8,9,10,11","",34,2.28575328599297e-17,7.61917761997657e-15,0,2023,1.85037170770859e-14,
+"afsc_atka_mackerel_bsai_2024","N","thousand fish","matched","Reported age 2 compared with tinyAM age 2","",340,26185.5906635916,30.496167372936,23.2714852419357,2023,-22.2013755768997,0.87405548552437
+"afsc_atka_mackerel_bsai_2024","abundance","thousand fish","matched","Total abundance across modeled ages 2-11; explicit reported age groups are matched to sums of tinyAM ages.","",34,254108.099861424,19.106293037976,19.4733580547274,2023,-12.8397860186013,0.98474678616042
+"afsc_atka_mackerel_bsai_2024","biomass","t","matched","Official N with shared translated weights  over ages 2-11","",34,135091.307535292,21.2263229739851,21.6159214355307,2023,-20.8762832926871,0.980526437392952
+"afsc_atka_mackerel_bsai_2024","biomass_at_age","t","unavailable","Matching annual age-specific states","No numerical output is available on the matching definition.",0,,,,,,
+"afsc_atka_mackerel_bsai_2024","recruitment","million fish","matched","Recruitment at age 2","",34,70.4324686380263,16.0514521974698,16.9981522900583,2023,8.33092016101378,0.973252974439724
+"afsc_atka_mackerel_bsai_2024","ssb","t","approximate","August 1 female SSB at modeled ages from rounded official N/F and recorded biology","Calculated at report precision; native age-1+ SSB and its intervals remain separate.",34,40590.2087903385,25.6865345725854,25.8435404402834,2023,-23.6300556245709,0.966282156912437

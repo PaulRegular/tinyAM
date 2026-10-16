@@ -61,3 +61,31 @@ the adjacent 2022 comparison columns are excluded.
 Completeness remains partial because original unrounded inputs, full composition
 weights and state covariance were not recovered. This is distinct from the
 confirmed absence of a fitted length likelihood or a stochastic N process.
+
+## tinyAM translation and numerical result
+
+The first translation uses 1990–2023 and ages 2–11+, avoiding incomplete early
+catch cells and absent age-1 catch. The 2024 total catch and survey biomass have
+no matching age compositions, so cannot enter this age-index approximation.
+It retains recorded catch/survey weights, fixed M, female maturity and source
+timing. It uses deterministic survival, free initial ages, independent F random
+walks and constant-mean IID age-2 recruitment. The native age-1 Beverton–Holt
+relationship, F penalties, q prior, ageing error and separate composition
+likelihood are omitted. Rounded survey CVs supply log SD; their additional
+composition uncertainty is not represented. Source observations are not adjusted.
+
+Default initialization failed (optimizer code 1, false convergence; maximum
+gradient 0.934; non-positive-definite Hessian). One retry using aligned official
+N and F converged (code 0, objective 511.565, maximum gradient 0.000267,
+positive-definite Hessian and successful SD report). Data and assumptions were
+identical between attempts. Both diagnostic rows are retained in the cached fit.
+
+The dashboard retains native age-1+ SSB and also compares modeled-age August 1
+female SSB calculated from rounded official N/F, fixed M and recorded biology,
+without uncertainty. This approximate SSB comparison has MAPD 25.7%, terminal
+difference −23.6% and correlation 0.966. N-at-age has MAPD 30.5%, terminal
+difference −22.2% and mean within-age correlation 0.874. F-at-age has MAPD 265.6%,
+terminal difference +33.8% and correlation 0.647; near-zero official juvenile F
+makes relative differences especially large. These are flagged for review.
+Age-2 recruitment (16.1%, +8.3%, 0.973) and total abundance (19.1%, −12.8%, 0.985)
+do not cross the requested thresholds. Fixed-M agreement is input consistency.

@@ -69,5 +69,6 @@ if (do_fit) {
                                      years, ages)
     list(log_r0 = log(n[1, 1]), log_r = log(n[-1, 1]),
          log_n0 = log(n[1, -1]), log_f = log(f))
-  })
+  }, attempt_file = file.path("analysis/comp_assessments/results/cache",
+    source$assessment$assessment_id, "initialization_attempts.rds"))
 }

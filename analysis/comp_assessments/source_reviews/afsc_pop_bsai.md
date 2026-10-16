@@ -93,7 +93,13 @@ and spawning time 0.25. These choices are explicit in the dashboard background.
 
 Preparation and the default-first/retry, plus-group, reference-alignment and
 comparison-definition regression tests pass. The full default-initialization
-fit was launched at the translation checkpoint and is still pending; this is
-not yet a numerical convergence or agreement result. Its eventual diagnostics,
-and a conditional source-start retry only if numerical checks fail, are retained
-for the final cross-case review.
+pipeline was launched at the translation checkpoint but had not returned a fit
+after more than seven hours of CPU time. It was terminated as an execution
+failure. Objective, gradients, uncertainty and convergence are unknown; no
+agreement statistics or dashboard are claimed. The helper then in use retained
+attempts only when the complete pipeline returned, so its active initialization
+stage and any earlier completed-attempt diagnostics could not be recovered.
+No additional retry was launched because that could exceed the single-retry
+policy. The helper now saves each attempt before and after execution so later
+interruptions cannot lose this history. No data or model assumptions were
+changed to rescue this case.
