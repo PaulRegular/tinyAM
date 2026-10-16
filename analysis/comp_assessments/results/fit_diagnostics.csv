@@ -75,3 +75,7 @@ x Fixed-parameter covariance must be available and finite.
 x The Hessian must be positive definite.
 i Optimizer code zero alone is insufficient. A missed gradient tolerance alone
   does not establish a structural problem."
+"joint_hake_coastal_2025","c5e626f6783de370f03d7fea8991ed6995006e9f","converged",TRUE,0,"relative convergence (4)",1176.54340748747,0.000693548894260765,0.000693548894260765,TRUE,TRUE,24,749,111.535304069519," | default: failed numerical checks; gradient=0.000105; Numerical convergence checks did not pass; inspect `check_tam(fit)`.
+x Fixed-parameter covariance must be available and finite.
+i Optimizer code zero alone is insufficient. A missed gradient tolerance alone
+  does not establish a structural problem. Source starts unavailable: Official numbers_at_age starting values must be finite and positive. | source_start: converged; gradient=0.000694; "

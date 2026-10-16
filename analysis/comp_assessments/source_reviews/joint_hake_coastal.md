@@ -90,3 +90,46 @@ Completeness is partial: joint posterior draws, age-specific uncertainty and
 the full 52-key ageing-error inventory are not yet exported. All recovered
 quantities refer to the 2025 production base, not a FIMS demonstration or the
 2026 projection update.
+
+## tinyAM translation and numerical result
+
+The translation uses 1975–2024 and ages 2–15+. Native percentages are
+normalized outside the database, as in the source, and converted using
+original totals and weights before age restriction. All supplied weights
+and fecundity products are identical across ages 15–20+, so the observed
+15+ grouping does not require an invented biological tail. The supplied
+fecundity product divided by population weight gives maturity; first mature
+age 2, female fraction 0.5 and January 1 timing are applied separately.
+
+The model retains deterministic survival, free initial ages, fixed recruitment
+log SD 1.4, an estimated constant M and q sharing at ages 6+. Independent
+F random walks, constant-mean age-2 recruitment and independent lognormal
+age observations approximate the source selectivity, age-0 Beverton–Holt
+relationship and joint Dirichlet-multinomial likelihoods. Source M bounds
+and prior, recruitment bias/terminal rules, ageing error and the additional
+survey-variance formulation are not reproduced. No observation is adjusted
+using an estimated q, M or population state.
+
+Default starts returned optimizer code 0, objective 1176.543 and maximum
+gradient 0.000105, but fixed-parameter covariance was non-finite. The single
+permitted source-based retry used positive available N starts and the source
+M median; unavailable F/q starts and any rounded-zero states retain package
+defaults through named alignment. It converged with code 0, the same objective,
+maximum gradient 0.000694 and finite covariance/positive-definite Hessian.
+The default was not optimized again when completing that retry. Both actual
+attempts are retained (about 69 and 43 seconds).
+
+**Numerical convergence is not scientific agreement here.** M approaches zero
+(about 3.1e-7, versus official median 0.233454), indicating a serious boundary
+and identification concern despite the numerical checks. All comparable core
+metrics are flagged: SSB MAPD 69.9%, terminal difference −64.3%, correlation
+0.619; modeled-age abundance 71.6%, −66.0%, 0.785; N-at-age 100.6%, +26.7%,
+0.883; age-2 entry 92.0%, +82.4%, 0.959; M differs by essentially −100%.
+The omitted source prior and other approximation differences are plausible
+contributors, but these two attempts do not isolate the cause. No tuning or
+extra retry was made to improve agreement.
+
+The local dashboard retains native posterior SSB and explicitly approximate
+common-age sums of marginal medians. F-at-age and Fbar comparisons remain
+unavailable. Available credible intervals are retained only on their native
+quantities; no uncertainty is attached to sums or pooled posterior medians.
