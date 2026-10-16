@@ -193,7 +193,7 @@ Long-format representation of numerical inputs supplied to the official assessme
 | `region` | Spatial region used by the fitted model |
 | `season` | Season |
 | `year` | Calendar/model year, or cohort identifier when year_basis says so; blank for time-invariant inputs |
-| `year_basis` | Optional meaning of `year`; use `calendar_year` or `birth_cohort` |
+| `year_basis` | Meaning of `year`: `calendar_year`, `model_year` (document the native annual period), or `birth_cohort` |
 | `age` | Age |
 | `value` | Numerical value |
 | `unit` | Explicit unit |

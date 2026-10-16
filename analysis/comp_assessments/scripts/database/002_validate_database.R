@@ -235,7 +235,7 @@ for (name in c("inputs", "outputs")) {
 
     has_year <- !is.na(x$year) & nzchar(as.character(x$year))
     has_year_basis <- !is.na(x$year_basis) & nzchar(as.character(x$year_basis))
-    if (any(has_year & !x$year_basis %in% c("calendar_year", "birth_cohort")) ||
+    if (any(has_year & !x$year_basis %in% c("calendar_year", "model_year", "birth_cohort")) ||
       any(!has_year & has_year_basis)) {
       stop("inputs$year_basis must identify a supplied year dimension.", call. = FALSE)
     }
