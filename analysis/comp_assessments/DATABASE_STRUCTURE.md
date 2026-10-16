@@ -569,3 +569,23 @@ Time-invariant `q_power` outputs may have a blank year, like `q`. Record the
 power separately from the catchability coefficient and document the observation
 equation; a coefficient in a power relationship is not a simple catch fraction.
 Natural-scale SEs obtained by the delta method must be identified as such.
+
+## Native age frequencies and fecundity weights
+
+`frequency_at_age` uses `basis = native_frequency` to retain source age
+compositions supplied as counts or percentages rather than unit-sum proportions.
+Keep the original units (for example `percent`), row totals, sample sizes and
+age-error codes, and describe the source normalization. Normalization for a
+tinyAM translation belongs outside the canonical tables.
+
+`maturity_fecundity_at_age` uses `type = biology`, `basis = kg_per_fish` and
+the original weight units to retain supplied maturity-times-fecundity weights.
+It is not a maturity proportion. Record the source sex fraction, minimum mature
+age and SSB equation separately. Deriving a maturity proportion for tinyAM by
+dividing this product by population weight is an analysis transformation.
+
+`fishing_mortality_intensity` is an annual mortality output parameter before
+age selectivity. It is neither F-at-age nor an age-averaged Fbar; do not substitute
+it for either comparison. `exploitation_fraction_at_age` retains the source
+removal fraction and its original unit (such as percent), which likewise is
+not an instantaneous F. Record the source definitions and estimate conventions.
