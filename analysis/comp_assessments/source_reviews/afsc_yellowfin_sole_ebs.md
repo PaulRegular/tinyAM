@@ -71,3 +71,27 @@ Completeness remains partial: the full ageing-error and control inventory,
 all biological sampling support and state covariance have not been exported.
 This does not imply that absent stochastic survival or inactive growth effects
 are unknown.
+
+## tinyAM translation
+
+The recipe represents female ages 2–20+ over 1982–2023. Joint-sex original
+age samples and sex-specific weights convert the total biomass observations
+to female numbers before filtering ages. Male observations are omitted from
+the fit; both sexes remain in the canonical tables. This avoids imposing an
+equal adult sex ratio on spawning biomass or averaging fixed female M with
+estimated male M. Comparisons of N, total abundance and recruitment are
+explicitly female quantities, not combined-sex stock totals.
+
+The recipe retains original female biology, May 1 spawning, fixed female M,
+the three centered q covariates and supplied biomass log SDs. Its independent
+F random walks, constant-mean age-2 recruitment, rising logistic survey curve
+and age-specific lognormal observations approximate the source selectivity,
+Ricker and composition likelihoods. The source's different times for biomass
+and age proportions remain a limitation. Full native outputs are retained;
+modeled-age female SSB is derived without uncertainty and checked against
+native SSB using a bound for printed N/F/SSB rounding.
+
+Default initialization is currently being evaluated. Its attempt record is
+saved before optimization; no convergence result or comparison statistic is
+claimed until that attempt returns. Only a failed numerical check permits
+one aligned female N/F starting-value retry, with unchanged data and settings.

@@ -50,3 +50,4 @@ x Fixed-parameter covariance must be available and finite.
 x The Hessian must be positive definite.
 i Optimizer code zero alone is insufficient. A missed gradient tolerance alone
   does not establish a structural problem. | source_start: converged; gradient=0.000904; "
+"afsc_yellowfin_sole_ebs_2024","4cab130a326c2540c99c3ba5dd4dfd064dfe364e","fitting",,,"",,,,,,,,,"Default initialization is running; no optimizer or uncertainty result returned yet. Attempt status is saved locally before optimization. This row is not a convergence result."
