@@ -47,30 +47,20 @@ plot_agreement_heatmap <- function(root) {
     select(assessment_id, stock_id) |>
     left_join(
       stocks |>
-        select(stock_id, common_name, ocean, authority),
+        select(stock_id, common_name, ocean),
       by = "stock_id"
     ) |>
     mutate(
       stock = coalesce(common_name, assessment_id),
       stock = str_remove(stock, " \\(formerly.*\\)$"),
-      basin = case_when(
-        ocean == "Northwest Atlantic" ~ "Northwest Atlantic",
-        ocean == "Northeast Atlantic" ~ "Northeast Atlantic",
-        ocean %in% c("Northeast Pacific", "North Pacific") ~
-          "North Pacific",
-        authority %in% c("DFO", "NOAA-NEFSC") ~
-          "Northwest Atlantic",
-        authority %in% c("ICES", "JRN-AFWG", "MFRI/ICES") ~
-          "Northeast Atlantic",
-        authority == "NOAA-AFSC" ~ "North Pacific",
-        TRUE ~ NA_character_
-      ),
+      basin = ocean,
       basin = factor(
         basin,
         levels = c(
           "Northwest Atlantic",
           "Northeast Atlantic",
-          "North Pacific"
+          "Northeast Pacific",
+          "Northwest Pacific"
         )
       )
     ) |>

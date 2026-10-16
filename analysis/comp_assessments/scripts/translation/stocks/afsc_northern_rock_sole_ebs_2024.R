@@ -52,6 +52,7 @@ comparison_outputs <- rbind(comparison_outputs,ssb_age)
 comparison_definitions <- list(
   N=list(status="matched",definition="Female begin-year abundance at age",reason="Male states remain canonical, outside this translation."),
   F=list(status="approximate",definition="Female F at age from reported curve parameters",reason="Source F reconstructed from rounded parameters and deviations, with no joint covariance."),
+  F_bar=list(status="approximate",definition="N-weighted mean of reconstructed female F",reason="Source F comes from rounded curve parameters and deviations, not an exact native F surface."),
   abundance=list(status="matched",definition="Total female abundance at modeled ages",reason="Not combined-sex stock abundance."),
   recruitment=list(status="matched",definition="Female age-5 entry in the same calendar year",reason="Comparison uses official female N at age 5, not combined-sex age-1 recruitment."),
   ssb=list(status="approximate",definition="Female February 1 SSB at modeled ages",reason="Calculated from rounded official states and parameters without covariance."))

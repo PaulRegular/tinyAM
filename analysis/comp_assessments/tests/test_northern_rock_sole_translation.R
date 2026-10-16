@@ -9,7 +9,8 @@ stopifnot(identical(x,original),is.null(s$fit),identical(s$years,1982:2023),
   all(s$observations$sex=="female"),all(s$comparison_outputs$sex=="female"),
   all(is.finite(s$obs$index$log_sd)),all(s$obs$index$log_sd>0),
   is.null(s$settings$M_settings$mu_supplied),
-  identical(as.character(s$settings$M_settings$mu_form),c("~","1")))
+  identical(as.character(s$settings$M_settings$mu_form),c("~","1")),
+  s$comparison_definitions$F_bar$status=="approximate")
 ref <- database_to_tam_ref(x$assessment$assessment_id,s$comparison_outputs,
   obs=s$obs,years=s$years,ages=s$ages,age_plus_group=20,assumptions=x$assumptions,
   comparison_definitions=s$comparison_definitions)

@@ -5,6 +5,6 @@ background <- c(
   "Numerical fishery length compositions and their original age–length key, survey age arrays and timing fractions are not verified. Fitted N/F are not used to manufacture observations."
 )
 cli::cli_abort(c(
-  "Arrowtooth translation is blocked: numerical likelihood compositions, an observed age–length key and survey timing are missing.",
+  "Arrowtooth translation is blocked: numerical likelihood compositions, an observed age-length key and survey timing are missing.",
   "i"="Recovered fitted N/F are assessment outputs, not catch/survey data. See source_reviews/afsc_arrowtooth_flounder_bsai.md."
 ))

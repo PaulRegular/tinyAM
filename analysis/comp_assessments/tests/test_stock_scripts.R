@@ -2,10 +2,20 @@ source("analysis/comp_assessments/R/run_assessment.R")
 source("analysis/comp_assessments/tests/helper_stock.R")
 database <- read_database()
 paths <- list.files("analysis/comp_assessments/scripts/translation/stocks", full.names = TRUE)
+blocked <- c("dfo_herring_sog_2025", "afsc_cod_ai_2024", "afsc_arrowtooth_flounder_bsai_2022")
 for (path in paths) {
   id <- sub("[.]R$", "", basename(path))
   record <- read_assessment(id, database)
   original <- record
+  if (id %in% blocked) {
+    spec <- .assessment_stock(record, do_fit = FALSE, silent = TRUE)
+    result <- run_assessment(id, database, fit = FALSE)
+    stopifnot(inherits(spec$error, "error"), grepl("blocked", conditionMessage(spec$error)),
+      identical(record, original), is.null(spec$env$obs), is.null(spec$env$fit),
+      is.null(spec$env$fit_model), result$diagnostics$status == "translation_failed",
+      is.null(result$fit), is.null(result$obs))
+    next
+  }
   stock <- .test_stock(record)
   stopifnot(
     identical(record, original), is.null(stock$fit), inherits(stock$obs, "tam_data"),

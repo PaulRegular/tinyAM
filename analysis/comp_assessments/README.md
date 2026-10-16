@@ -139,14 +139,23 @@ See `TINYAM_TRANSLATION.md` for the matching rules and their limitations.
 
 ## Reviewing model choices
 
-`results/translation_review.csv` retains the historical candidate review and
-its pinned baseline revision. The retired review script remains in Git history;
+The historical candidate review and its pinned baseline revision remain in Git
+history (the parent of cleanup commit `4830fb1`, at
+`analysis/comp_assessments/results/translation_review.csv`). The retired review script also remains in Git history;
 current model choices are visible in each stock script's `fit_tam()` call.
-The review includes all current detailed assessments and records blockers for
-those without recipes. Baselines remain when changes weaken diagnostics or
+That historical review covered the 23 then-current detailed assessments,
+including blockers for those without recipes. The expanded-library review is
+in [PACIFIC_REVIEW.md](PACIFIC_REVIEW.md), with delivery and validation details
+in [PACIFIC_EXPANSION.md](PACIFIC_EXPANSION.md). Baselines remain when changes weaken diagnostics or
 trade one comparison improvement for another loss. Numerical convergence and
 statistical support are reviewed separately; fixed-M agreement is not evidence
 of improvement. See `CAPABILITY_GAPS.md` for the remaining limitations.
+
+The agreement heatmap includes exploratory, non-converged fits where reporting
+is available. Check the numerical outcomes and comparison definitions in
+`PACIFIC_REVIEW.md` before interpreting its colours; blank or grey cells do not
+indicate agreement. Its median differences complement the mean and terminal
+differences used for review flags.
 
 The review table has one row per attempted model. `*_percent` is the mean
 absolute percent difference; `*_terminal_percent` is the signed terminal-year

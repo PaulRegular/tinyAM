@@ -90,6 +90,6 @@ and biological weights.
 i Public September M24_1 output differs from the final November assessment. See
   source_reviews/afsc_cod_ai.md."
 "afsc_arrowtooth_flounder_bsai_2022","e438c4b37c019e34f1bfc81f20cbb461e4fee3f3","translation_failed",,,"",,,,,,,,0.00911498069763184,"Arrowtooth translation is blocked: numerical likelihood compositions, an
-observed ageb
+observed age-length key and survey timing are missing.
 i Recovered fitted N/F are assessment outputs, not catch/survey data. See
   source_reviews/afsc_arrowtooth_flounder_bsai.md."
