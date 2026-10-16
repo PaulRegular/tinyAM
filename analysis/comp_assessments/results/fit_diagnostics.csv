@@ -31,3 +31,15 @@ i Optimizer code zero alone is insufficient. A missed gradient tolerance alone
   does not establish a structural problem. | source_start: converged; gradient=0.000267; Dropping intercept term in index sd_form since supplied SDs are provided. Set
 sd_supplied to NULL to estimate the intercept."
 "afsc_pop_bsai_2024","77be1fdfd189cda3a053a2c1fc1f3e2922a0ba5e","execution_failed",,,"",,,,,,,,,"Fitting pipeline terminated after more than seven hours of CPU time without returning a fit. Active initialization stage and intermediate diagnostics unavailable from the original helper; no further retry to avoid exceeding the single-retry policy. Convergence, objective, gradient and uncertainty remain unknown."
+"afsc_pollock_ai_2024","2bb0885409131a7f39a4386336bf4c1274bb200a","not_converged",FALSE,1,"singular convergence (7)",625.738242137313,2.18380776984585e-05,2.18380776984585e-05,TRUE,FALSE,30,655,145.586208105087," | default: failed numerical checks; gradient=0.000419; Numerical convergence checks did not pass; inspect `check_tam(fit)`.
+x Code 1: singular convergence (7)
+i Optimizer code zero alone is insufficient. A missed gradient tolerance alone
+  does not establish a structural problem. | Formula-effect uncertainty or support is limited.
+i A stock-recruit parameter's 95% interval spans more than tenfold. Curve shape
+  is weakly estimated; compare simpler recruitment models before interpreting
+  density dependence. | source_start: failed numerical checks; gradient=2.18e-05; NaNs produced | NaNs produced | NaNs produced | NaNs produced | NaNs produced | NaNs produced | Numerical convergence checks did not pass; inspect `check_tam(fit)`.
+x Code 1: singular convergence (7)
+x Fixed-parameter covariance must be available and finite.
+x The Hessian must be positive definite.
+i Optimizer code zero alone is insufficient. A missed gradient tolerance alone
+  does not establish a structural problem."
