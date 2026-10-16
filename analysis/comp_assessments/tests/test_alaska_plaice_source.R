@@ -20,6 +20,9 @@ w <- o[o$measure == "weight_at_age", ]
 mat <- i[i$type == "maturity", ]
 stopifnot(nrow(n) == 50 * 26 * 2, nrow(f) == nrow(n), nrow(w) == 52,
   all(w$year == 2024), all(n$unit == "million fish"),
+  all(o$sex[o$measure == "SSB"] == "female"),
+  all(o$sex[o$measure == "recruitment"] == "combined"),
+  all(is.finite(o$se[o$measure %in% c("SSB","recruitment")])),
   all(is.na(f$se)), all(is.na(w$se)))
 for (year in 1975:2024) {
   z <- n[n$year == year, ]

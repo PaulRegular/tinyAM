@@ -50,9 +50,9 @@ inputs <- rbind(
     age = ages, sex = "female", notes = "Supplied empirical female age-maturity vector, control maturity option 3. Spawning month 1.")
 )
 output <- function(type, measure, value, unit, year = NA_integer_, age = NA_integer_,
-                   sex = "combined", ...) {
+                   sex = "combined", se = NA_real_, ...) {
   pacific_database_row("outputs", assessment_id = id, type = type, measure = measure,
-    value = value, unit = unit, year = year, age = age, sex = sex, region = "BSAI",
+    value = value, unit = unit, year = year, age = age, sex = sex, se = se, region = "BSAI",
     source_type = "native_model", source_reference = reference, ...)
 }
 surface <- function(x, type, measure, unit, notes) {
@@ -72,7 +72,7 @@ outputs <- rbind(
   output("biomass", "biomass_by_age_group", times$Bio_smry, "t", times$Yr,
     age_group = "3+", notes = "Native Bio_smry; retain separately from Bio_all."),
   output("biomass", "SSB", times$SpawnBio, "t", times$Yr,
-    se = std("SSB",times$Yr), notes = "Female January 1 MPD spawning biomass; natural-scale marginal ADMB SE; no intervals invented."),
+    sex = "female", se = std("SSB",times$Yr), notes = "Female January 1 MPD spawning biomass; natural-scale marginal ADMB SE; no intervals invented."),
   output("recruitment", "recruitment", times$Recruit_0, "million fish", times$Yr, 0,
     se = std("Recr",times$Yr), notes = "Age-0 MPD recruitment; natural-scale SE when reported. Main recruitment deviations end in 2019; later years follow source forecast/bias rules.")
 )
@@ -95,7 +95,7 @@ assumptions <- do.call(rbind,list(
   assume("population","dimensions","1975-2024, ages 0-25+, female/male, one BSAI area; fixed recruitment sex ratio 0.5"),
   assume("N","process","Deterministic survival; initial abundance informed by early recruitment deviations back to 1950; equilibrium historical F=0"),
   assume("recruitment","process","Beverton-Holt steepness fixed at 1 (constant recruitment mean); sigmaR fixed 0.4243 after tuning; IID log deviations 1975-2019; later forecast/bias-adjustment rules"),
-  assume("F","process","Unpenalized annual F intensity; sex-specific age selectivity, time-invariant logistic family; no F random-walk likelihood"),
+  assume("F","process","Unpenalized annual F intensity; sex-specific age selectivity, time-invariant ascending double-normal family; no F random-walk likelihood"),
   assume("M","process","Fixed 0.13 for both sexes; phase -3"),
   assume("q","process","Fixed ln q=0.182322 (q approximately 1.2), phase -2; no time variation",survey="Survey"),
   assume("catch","observation_model","Annual biomass lognormal likelihood; separate joint-sex length and age multinomial compositions",fleet="Fishery"),
