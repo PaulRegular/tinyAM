@@ -10,6 +10,7 @@ x <- dget(file.path(cache, "m_24_2_reweighted.rdat"))
 dat <- readLines(file.path(cache, "pop24.dat"))
 ctl <- readLines(file.path(cache, "pop24.ctl"))
 std <- read.table(file.path(cache, "m_24_2_reweighted.std"), header = TRUE)
+composition_multipliers <- scan(file.path(cache, "compweights.ctl"), quiet = TRUE)
 after <- function(pattern, n, lines = dat) {
   at <- grep(pattern, lines)
   if (length(at) != 1L) cli::cli_abort("Source label is not unique: {pattern}.")
@@ -46,30 +47,38 @@ inputs <- list(
         notes = "Separate supplied catch-weight vector; equal to population weights in this run.")
 )
 composition <- function(matrix, type, measure, fleet = "", survey = "",
-                        label, size, bins) {
+                        label, size, raw_count, bins) {
   raw <- matrix(after(label, length(matrix)), nrow = nrow(matrix), byrow = TRUE,
                 dimnames = dimnames(matrix))
   stopifnot(max(abs(raw / rowSums(raw) - matrix)) < 1e-6)
   z <- pacific_matrix_long(raw)
   if (measure == "proportion_at_length") z$age <- NA_integer_
   is_length <- measure == "proportion_at_length"
-  input(type, if (is_length) "frequency_at_length" else measure,
+  proportions <- input(type, if (is_length) "frequency_at_length" else measure,
     if (is_length) "native_frequency" else "proportion_numbers", z$value,
     if (is_length) "source frequency" else "proportion", z$year, z$age,
     fleet = fleet, survey = survey,
     length_bin = if (measure == "proportion_at_length") rep(bins, each = nrow(raw)) else NA_real_,
     observation_id = paste(type, if (nzchar(fleet)) fleet else survey, measure, z$year, sep = ":"),
     sample_size = rep(size, times = ncol(raw)),
-    notes = "Original number compositions, not abundance indices. Length frequencies retain their native row totals (some rows are counts); source code normalizes each row. Age 40 and length 39 are terminal observation groups. Sample size is the supplied raw count; likelihood scaling is recorded separately.")
+    notes = "Original number compositions, not abundance indices. Length frequencies retain their native row totals (some rows are counts); source code normalizes each row. Age 40 and length 39 are terminal observation groups. sample_size is the supplied square-root count times the native composition multiplier, not an estimated effective sample size.")
+  counts <- input("biology", "composition_sample_count", "numbers", raw_count,
+    "fish", as.integer(rownames(raw)), fleet = fleet, survey = survey,
+    observation_id = paste(type, if (nzchar(fleet)) fleet else survey, measure,
+                           rownames(raw), sep = ":"),
+    notes = "Raw measured or aged fish count; separate from the transformed, reweighted likelihood sample_size on composition cells.")
+  rbind(proportions, counts)
 }
 inputs[[length(inputs) + 1L]] <- composition(x$oac.f.unbiased, "catch",
   "proportion_at_age", fleet = "Combined fishery",
   label = "^#[[:space:]]+unbiased fishery age compositions",
-  size = x$fac_sample_size$sampsize, bins = comp_ages)
+  size = after("^## sqrt of read otoliths \\(#stg1_fish", 22, ctl) * composition_multipliers[1],
+  raw_count = after("^## number of otoliths read \\(#nsamples_fish", 22, ctl), bins = comp_ages)
 inputs[[length(inputs) + 1L]] <- composition(x$olc.fish, "catch",
   "proportion_at_length", fleet = "Combined fishery",
   label = "^#[[:space:]]+fishery length compositions",
-  size = x$flc_sample_size$sampsize, bins = 15:39)
+  size = after("^## sqrt of fished lengthed", 32, ctl) * composition_multipliers[2],
+  raw_count = after("^## number of fishery lengths \\(#nsamples_fish", 32, ctl), bins = 15:39)
 
 for (survey in c("AI_survey", "EBS_survey")) {
   z <- x[[paste0(survey, "_obs_bio_abun")]]
@@ -91,13 +100,17 @@ for (survey in c("AI_survey", "EBS_survey")) {
   inputs[[length(inputs) + 1L]] <- composition(m, "index", "proportion_at_age",
     survey = survey, label = paste0("^# survey age comps \\(",
       if (survey_number == 1L) "AI" else "EBS", " survey\\)"),
-    size = x[[paste0("sac_sample_size.", survey)]]$sampsize, bins = comp_ages)
+    size = after("^## sqrt of read otoliths \\(#stg1_srv", 19, ctl)[
+      if (survey_number == 1L) 1:13 else 14:19] * composition_multipliers[2 + survey_number],
+    raw_count = after("^## number of otoliths read \\(#nsamples_srv", 19, ctl)[
+      if (survey_number == 1L) 1:13 else 14:19], bins = comp_ages)
   m <- x[[paste0("olc.", survey)]]
   if (!is.null(m) && nrow(m)) inputs[[length(inputs) + 1L]] <- composition(m, "index",
     "proportion_at_length", survey = survey,
     label = paste0("^#[[:space:]]+survey[[:space:]]+length[[:space:]]+compositions \\(",
                    if (survey_number == 1L) "AI" else "EBS", "\\)"),
-    size = x[[paste0("slc_sample_size.", survey)]]$sampsize, bins = 15:39)
+    size = after("^## sqrt of fish lengthed", 1, ctl) * composition_multipliers[4 + survey_number],
+    raw_count = after("^## number of fishery lengths \\(#nsamples_srv", 1, ctl), bins = 15:39)
 }
 mat_ages <- after("^# ages \\(first row TenBrink", 44)
 for (measure in c("maturity_sample_size", "mature_sample_count")) {
@@ -109,7 +122,7 @@ for (measure in c("maturity_sample_size", "mature_sample_count")) {
     notes = "Female maturity sampling data fitted by the source binomial maturity likelihood.")
 }
 inputs <- do.call(rbind, inputs)
-inputs$sex[inputs$type == "biology"] <- "female"
+inputs$sex[inputs$measure %in% c("maturity_sample_size", "mature_sample_count")] <- "female"
 
 output <- function(type, measure, value, unit, year = NA_integer_, age = NA_integer_,
                    se = NA_real_, notes = "", ...) {
@@ -175,7 +188,7 @@ for (spec in list(c("age_error", "^#[[:space:]]+matrix for unbiased", 44, 44),
       notes = if (spec[1] == "age_error") "Rows observed age, columns true age; model ages 3-46+." else "Rows length bins 15-39+, columns model ages 3-46+.")
 }
 assumptions[[length(assumptions) + 1L]] <- assume("observation", "composition_multipliers",
-  paste(scan(file.path(cache, "compweights.ctl"), quiet = TRUE), collapse = " "),
+  paste(composition_multipliers, collapse = " "),
   notes = "Order: fish age, fish length, AI age, EBS age, AI length, EBS length. Multiply supplied square-root counts; raw counts remain in inputs.")
 assumptions <- do.call(rbind, assumptions)
 

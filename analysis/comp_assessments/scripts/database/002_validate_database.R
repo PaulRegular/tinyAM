@@ -195,7 +195,7 @@ allowed_output_types <- c(
   "index", "catchability", "biology"
 )
 allowed_input_measures <- c(
-  "frequency_at_length", "maturity_sample_size", "mature_sample_count",
+  "frequency_at_length", "maturity_sample_size", "mature_sample_count", "composition_sample_count",
   "numbers_at_age", "index_by_age_group",
   "biomass_at_age", "total_numbers",
   "total_biomass", "proportion_at_age", "proportion_at_length",

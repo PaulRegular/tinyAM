@@ -66,6 +66,14 @@ ADMB SSB SEs are retained without inventing intervals; coefficient SEs remain
 on the coefficient scale. No covariance-based intervals are constructed for N
 or derived F.
 
+Composition cells retain the exact supplied square-root sample counts multiplied
+by `compweights.ctl`. Raw measured/aged fish counts are separate
+`composition_sample_count` rows. The `.rdat` column called `sampsize` contains
+the transformed/reweighted count (132.03 for the 1981 fishery), not the original
+510 otoliths. The importer checks the control-file values rather than inferring
+their meaning from that column name. Fitted effective sample sizes are distinct
+and are not substituted for either input.
+
 Completeness remains partial: full ungrouped N at ages 40–46+, age-state
 uncertainty, and some initialization/control semantics are not exported. The
 source review distinguishes these gaps from confirmed inactive likelihoods.

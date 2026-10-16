@@ -12,6 +12,10 @@ stopifnot(x$stocks$ocean == "Northeast Pacific", x$stocks$charbonneau_id == "AFS
   all(i$unit[i$type == "weight"] == "g/fish"),
   !any(i$type == "M"), !any(i$type == "maturity"),
   sum(i$measure == "maturity_sample_size") == 44L,
+  all(i$sample_size[i$type == "catch" & i$measure == "proportion_at_age" &
+                      i$year == 1981] == 23 * 5.74044),
+  i$value[i$measure == "composition_sample_count" & i$fleet == "Combined fishery" &
+            i$year == 1981 & grepl("proportion_at_age", i$observation_id)] == 510,
   o$value[o$measure == "SSB" & o$year == 2024] == 359278,
   o$value[o$measure == "total_biomass" & o$year == 2024] == 864800,
   all(o$value[o$measure == "natural_mortality_at_age"] == 0.0505762),

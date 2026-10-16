@@ -525,6 +525,11 @@ normalization rule; these are composition samples, not removal or abundance
 counts. `maturity_sample_size` and `mature_sample_count` retain female biological
 sampling counts used by an estimated maturity likelihood (`type = biology`,
 `basis = numbers`, `unit = fish`), with `observation_id` identifying the dataset.
+`composition_sample_count` likewise preserves the raw number of sampled fish
+when a model supplies a transformed/reweighted count to its composition
+likelihood. Keep the actual supplied likelihood count in `sample_size` on the
+composition cells and describe its transformation; neither quantity is the
+model's estimated effective sample size.
 
 `proportion_at_length` and `conditional_proportion_at_age` retain the composition
 representation consumed by an assessment. Use `basis = proportion_numbers` and
