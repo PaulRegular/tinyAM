@@ -132,13 +132,13 @@ add_aggregate_input <- function(measure, basis, survey, input_years, values, uni
 index_rows <- rbind(
   add_age_input("index", "numbers_at_age", "numbers", "", "NEFSC Albatross spring trawl",
     1974:2008, ages, albatross, "fish per tow", paste(source_name, "Table A38, report pp. 112-113"),
-    notes = "The source tables provide ages 1-10; the accepted final model uses ages 3-10 in the Albatross series.",
+    notes = "The source tables provide ages 1-10; the official final model uses ages 3-10 in the Albatross series.",
     transformation = "Retain the published spring survey numbers-per-tow at age.",
     sampling_time = 95.7 / 365
   ),
   add_age_input("index", "numbers_at_age", "numbers", "", "NEFSC Bigelow spring trawl",
     2009:2016, ages, bigelow, "fish per tow", paste(source_name, "Table A39, report p. 113"),
-    notes = "The source tables provide ages 1-10; the accepted final model uses ages 3-7 in the Bigelow series.",
+    notes = "The source tables provide ages 1-10; the official final model uses ages 3-7 in the Bigelow series.",
     transformation = "Retain the published spring survey numbers-per-tow at age.",
     sampling_time = 95.7 / 365
   )
@@ -146,7 +146,7 @@ index_rows <- rbind(
 input_rows <- list(
   add_age_input("catch", "numbers_at_age", "numbers", "Combined U.S. + Canadian fishery", "",
     years, ages, catch, "thousand fish", paste(source_name, "Table A28, report pp. 96-97"),
-    notes = "Published combined commercial and other removals used as the accepted model's catch-at-age input; age 10 is the 10+ group."
+    notes = "Published combined commercial and other removals used as the official model's catch-at-age input; age 10 is the 10+ group."
   ),
   add_age_input("weight", "weight_at_age", "kg_per_fish", "", "",
     years, ages, weights, "kg per fish", paste(source_name, "Table A33, report pp. 105-106"),
@@ -274,8 +274,8 @@ stock_add <- data.frame(
   authority_stock_id = "Northwest Atlantic mackerel stock",
   scientific_name = "Scomber scombrus", common_name = "Atlantic mackerel",
   area = "Northwest Atlantic, U.S. and Canada", region = "Northwest Atlantic",
-  ocean = "North Atlantic",
-  notes = "The latest 2025 management-track assessment updates advice through 2024, but the 2018 SAW-64 report remains the latest accepted detailed source with recoverable age-specific inputs and outputs.",
+  ocean = "Northwest Atlantic",
+  notes = "The latest 2025 management-track assessment updates advice through 2024, but the 2018 SAW-64 report remains the latest official detailed source with recoverable age-specific inputs and outputs.",
   stringsAsFactors = FALSE
 )
 assessment_add <- data.frame(
@@ -285,7 +285,7 @@ assessment_add <- data.frame(
   assessment_type = c("benchmark", "management_track_update"),
   model_family = c("ASAP", "ASAP"),
   model_version = c(
-    "Final ASAP Run 118, 64th SAW accepted model",
+    "Final ASAP Run 118, 64th SAW official model",
     "2025 management-track assessment; detailed age-specific files unavailable"
   ),
   is_current = c("TRUE", "FALSE"), is_applied = c("TRUE", "TRUE"),
@@ -294,8 +294,8 @@ assessment_add <- data.frame(
   repository_url = c("", ""), assumptions_status = c("partial", "partial"),
   inputs_status = c("partial", "partial"), outputs_status = c("partial", "partial"),
   notes = c(
-    "Most recent accepted assessment with recoverable age-specific numerical inputs and fitted outputs; final ASAP Run 118 covers 1968-2016. The 2025 update is recorded separately and its outputs are not substituted for this detailed record.",
-    "Most recent accepted management-track assessment and basis for current advice through 2024. Aggregate SSB, fully selected F, and age-1 recruitment summaries are recorded for 2015-2024, but the full age-specific input tables and fitted age surfaces are unavailable."
+    "Most recent official assessment with recoverable age-specific numerical inputs and fitted outputs; final ASAP Run 118 covers 1968-2016. The 2025 update is recorded separately and its outputs are not substituted for this detailed record.",
+    "Most recent official management-track assessment and basis for current advice through 2024. Aggregate SSB, fully selected F, and age-1 recruitment summaries are recorded for 2015-2024, but the full age-specific input tables and fitted age surfaces are unavailable."
   ), stringsAsFactors = FALSE
 )
 assumptions_add <- data.frame(
@@ -307,7 +307,7 @@ assumptions_add <- data.frame(
   season = c(rep("", 10L), "spring spawning surveys", "spring", "", ""),
   setting = c("selected_model", "age_structure", "recruitment_age", "fleet_structure", "fully_recruited_age", "selectivity", "natural_mortality", "maturity_schedule", "weight_schedule", "index_set", "aggregate_index_coverage", "survey_timing", "recruitment_definition", "uncertainty"),
   value = c(
-    "Final ASAP Run 118, accepted at the 64th Northeast Regional Stock Assessment Workshop",
+    "Final ASAP Run 118, adopted at the 64th Northeast Regional Stock Assessment Workshop",
     "Combined sexes; ages 1-10+, with age 10 as the plus group",
     "Recruitment at age 1",
     "One combined U.S.-Canadian fishery; catch-at-age is reported directly as total removals",
@@ -319,7 +319,7 @@ assumptions_add <- data.frame(
     "Range-wide egg/ichthyoplankton SSB index and NEFSC spring trawl indices-at-age",
     "Combined egg SSB index has intermittent years; only reported values are stored",
     "NEFSC spring survey runs March-May, with average mean day 95.7; a single timing of 95.7/365 is used for age indices",
-    "Age-1 abundance from the accepted model is reported as recruitment for age-matched comparisons",
+    "Age-1 abundance from the official model is reported as recruitment for age-matched comparisons",
     "Point estimates are tabulated for age-specific N and F; no matched uncertainty table was recovered"
   ),
   source_reference = c(
@@ -335,15 +335,15 @@ assumptions_add <- data.frame(
   ),
   notes = c(
     "Current detailed assessment in the canonical database; the newer 2025 assessment is retained separately as summary-only.",
-    "Age 10 is treated as 10+ as specified by the accepted model.",
+    "Age 10 is treated as 10+ as specified by the official model.",
     "The assessment did not identify a stock-recruitment relationship for projections; its annual assessment recruitment series is the age-1 population estimate.",
     "tinyAM uses the published combined catch-at-age once; the original model's catch likelihood and age-composition treatment are simplified.",
     "The table's fully recruited F is the common value at ages 6-10+.",
-    "tinyAM estimates an age-time F surface with an AR1 process instead of the accepted single time-invariant selectivity curve.",
+    "tinyAM estimates an age-time F surface with an AR1 process instead of the official single time-invariant selectivity curve.",
     "This fixed value is retained as an input and repeated in outputs only as the explicit fixed model surface; it was not estimated.",
-    "The accepted model uses the Canadian maturity surface; tinyAM applies it directly to all combined-stock ages.",
+    "The official model uses the Canadian maturity surface; tinyAM applies it directly to all combined-stock ages.",
     "The reported combined catch/SSB weights are used for tinyAM SSB; these are not January-1 weight-at-age.",
-    "Albatross ages 3-10 and Bigelow ages 3-7 are retained in the translation; age rows outside the accepted series are kept in the database.",
+    "Albatross ages 3-10 and Bigelow ages 3-7 are retained in the translation; age rows outside the official series are kept in the database.",
     "The aggregate SSB index cannot be translated into age-specific indices without inventing an age composition, so the fit excludes it.",
     "This is a constant approximation from the report's time-series average, not annual sampling-date information.",
     "Age-1 abundance is the available numerical recruitment definition; no separate recruitment table is used.",

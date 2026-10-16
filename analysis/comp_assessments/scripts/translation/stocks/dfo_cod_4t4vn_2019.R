@@ -1,6 +1,6 @@
 ## Observations ----
 years <- 1971:2018
-ages <- 3:12 # Accepted model starts at age 2, but lack data on catch numbers for age 2; starting at age 3
+ages <- 3:12 # Official model starts at age 2, but lack data on catch numbers for age 2; starting at age 3
 rv <- "DFO September RV survey"
 mobile <- "Mobile Sentinel August survey"
 
@@ -54,7 +54,7 @@ catch_proxy$transformation <- paste(
   "composition was not tabulated."
 )
 catch_proxy$notes <- paste(
-  "This is not the accepted model's catch-at-age input. The source",
+  "This is not the official model's catch-at-age input. The source",
   "model fits total catch biomass and age proportions separately."
 )
 inputs <- rbind(
@@ -120,10 +120,10 @@ age_plus_group <- 12
 comparison_scales <- c(N = 0.001, recruitment = 0.001, ssb = 0.001)
 
 background <- c(
-  "### Southern Gulf cod: accepted detailed assessment to 2018", "", print_sources(source$assessment),
-  "", "| Component | Accepted assessment | tinyAM representation | Reason for difference |", "|---|------|------|------|",
-  "| Ages | The accepted model uses ages 2-12+, with recruitment at age 2. | Fit ages 3-12+, with recruitment at age 3. | Age-2 catch numbers are unavailable in the main published landings series, so age 2 is excluded rather than fitted without catch observations. |",
-  "| N | Recruitment enters at age 2 and depends on spawning biomass two years earlier, with autocorrelated variation. | Recruitment enters at age 3, with deterministic cohort survival and a recruitment random walk. | The recruitment age and underlying recruitment dynamics differ from the accepted model. |",
+  "### Southern Gulf cod: official detailed assessment to 2018", "", print_sources(source$assessment),
+  "", "| Component | Official assessment | tinyAM representation | Reason for difference |", "|---|------|------|------|",
+  "| Ages | The official model uses ages 2-12+, with recruitment at age 2. | Fit ages 3-12+, with recruitment at age 3. | Age-2 catch numbers are unavailable in the main published landings series, so age 2 is excluded rather than fitted without catch observations. |",
+  "| N | Recruitment enters at age 2 and depends on spawning biomass two years earlier, with autocorrelated variation. | Recruitment enters at age 3, with deterministic cohort survival and a recruitment random walk. | The recruitment age and underlying recruitment dynamics differ from the official model. |",
   "| F | The source estimates fully recruited F and period-specific logistic selectivity. | Use a year- and age-correlated AR1 F process with separate mean log F for age blocks 3-4, 5-6, 7-8, and 9-12+. | The blockwise mean and correlated deviations approximate changing fishing mortality without reproducing the source selectivity model. |",
   "| M | The source estimates log-M random walks for ages 2-4, 5-8, and 9+, with priors on initial M and fixed increment SD 0.075. | Use random walks for ages 3-4, 5-8, and 9-12+, with initial states informed by supplied M values and a warm-start fit. | Age 2 is excluded; tinyAM does not reproduce the source initial-M priors or fixed increment SD. |",
   "| Catch | The source fits annual catch biomass and proportions-at-age for ages 2-12+. Published landings numbers-at-age cover ages 3-12+. | Fit published landings numbers-at-age for ages 3-12+ as a proxy for catch-at-age. | The fitted source catch compositions are unavailable, and the tinyAM likelihood differs from the source biomass-plus-composition likelihood. |",

@@ -36,7 +36,7 @@ series (1973–1976, ages 3–11+).
 
 Table 28 **does** provide numerical Sentinel mobile mean numbers-at-age for
 1995–2024, ages 1–11+. All 330 values are now stored, including the reported
-age-1 zero in 1997. The accepted assessment uses only ages 2–11+. These are
+age-1 zero in 1997. The official assessment uses only ages 2–11+. These are
 relative indices in mean fish per standardized tow, not total stock abundance.
 Section 2.1.3.3 describes the July survey and standardization to a 54-foot
 horizontal opening and 1.25-nautical-mile tow. The database records 0.54 as a
@@ -50,7 +50,7 @@ are retained. These weights describe fish in the commercial catch and are
 stored as `catch_weight`, not as beginning-of-year stock weights. No interpolation
 or conversion from fitted population outputs has been applied.
 
-The numerical annual indices for the other five accepted streams remain
+The numerical annual indices for the other five official streams remain
 unrecovered. DFO's public [Teleost
 survey](https://open.canada.ca/data/en/dataset/40381c35-4849-4f17-a8f3-707aa6a53a9d),
 [Cabot survey](https://open.canada.ca/data/en/dataset/7001783a-4dc0-41bc-8932-1dae1e699d91),
@@ -67,7 +67,7 @@ catch numbers-at-age.
 For an **uncalibrated alternative**, logical survey labels would distinguish
 Lady Hammond/Western IIA, Alfred Needler/URI, Teleost/Campelen and John
 Cabot/modified Campelen. Section 2.1.3.1 describes their overlapping calibration
-years; accepted published RV indices are on the John Cabot equivalent scale.
+years; official published RV indices are on the John Cabot equivalent scale.
 Separate age-specific q groups can handle vessel efficiency differences, but
 cannot replace age-length expansion, tow-distance standardization or
 area-weighted survey estimation. The August stock indices cover 4RS; 3Pn was

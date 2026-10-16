@@ -78,7 +78,7 @@ stopifnot(
   all(timed_comparison$comparison_status[timed_comparison$metric == "ssb"] == "non_equivalent"),
   all(is.na(timed_comparison$percent_difference[timed_comparison$metric == "ssb"]))
 )
-# Accepted N without accepted mortality cannot supply spawning-time survival.
+# Official N without official mortality cannot supply spawning-time survival.
 reference$pop$recruitment$age <- 2L
 reference$pop$recruitment$est <- 10
 x <- .compare_fixture(fit, reference)
@@ -119,7 +119,7 @@ stopifnot(
   x$comparison_status[x$metric == "F_bar"] == "non_equivalent"
 )
 
-# Zero accepted values still contribute to absolute differences, not percentages.
+# Zero official values still contribute to absolute differences, not percentages.
 example <- data.frame(
   metric = "N", year = rep(years, 2), age = rep(2:3, each = 3),
   source = c(0, 1, 2, 100, 101, 102),
@@ -152,7 +152,7 @@ stopifnot(
   grepl("NA/NaN", failed$reason)
 )
 
-# A tinyAM plug-in M baseline must not become an invented accepted M surface.
+# A tinyAM plug-in M baseline must not become an invented official M surface.
 db <- read_database()
 output <- db$outputs[db$outputs$assessment_id == "dfo_cod_2j3kl_2025" &
   db$outputs$measure == "SSB", ][1, ]

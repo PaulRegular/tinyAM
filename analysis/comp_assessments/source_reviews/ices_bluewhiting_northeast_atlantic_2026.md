@@ -5,7 +5,7 @@
 The current assessment is ICES stock `whb.27.1-91214`, blue whiting
 (*Micromesistius poutassou*) in Subareas 1–9, 12, and 14. The 2026 assessment
 was applied to advice published on 30 September 2026. The numerical source is
-the accepted SAM fit `BW-2026`, retrieved with
+the official SAM fit `BW-2026`, retrieved with
 `stockassessment::fitfromweb()`. It covers 1981–2026 and ages 1–10+, with
 recruitment at age 1 and Fbar over ages 3–7.
 
@@ -30,7 +30,7 @@ The IBWSS timing is 0.245 of the year. The model also supplies annual stock
 weight and catch-weight surfaces, a time-invariant maturity ogive, and fixed
 natural mortality of 0.2 per year at all modeled ages.
 
-The accepted SAM fit uses a random-walk F process with age-correlated
+The official SAM fit uses a random-walk F process with age-correlated
 increments and one shared F process variance. Fishing states are represented
 separately for ages 1–9; the 10+ state shares age 9. N-process variance is
 separate for age 1 and shared across ages 2–10. Catch and IBWSS observations
@@ -59,5 +59,5 @@ format, the 2026 advice page, and the 2025 WGWIDE chapter. The 2026 technical
 report is publicly listed and referenced above, but its large embedded HTML
 page could not be downloaded in this environment because the local TLS
 connection failed. Numerical inputs and configuration in the database are
-therefore taken from the native accepted model object; the report is not used
+therefore taken from the native official model object; the report is not used
 as a substitute for those values.

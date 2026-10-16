@@ -25,11 +25,11 @@ output_rows <- data.frame(
   source_type = "official_table",
   source_reference = paste(report, "Table 2.6", sep = "; "),
   notes = c(
-    "Rounded accepted-model estimate and reported SD from Table 2.6; SD is on the natural parameter scale. No confidence interval reconstructed. Age 10 is the terminal plus group.",
-    "Rounded accepted-model estimate and reported SD from Table 2.6; SD is on the natural parameter scale. No confidence interval reconstructed. Age 10 is the terminal plus group.",
-    "Rounded accepted-model estimate and reported SD from Table 2.6; SD is on the natural parameter scale. No confidence interval reconstructed.",
-    "Rounded accepted-model estimate and reported SD from Table 2.6; SD is on the natural parameter scale. No confidence interval reconstructed. Age 10 is the terminal plus group.",
-    "Rounded accepted-model estimate and reported SD from Table 2.6; SD is on the natural parameter scale. No confidence interval reconstructed. Age 10 is the terminal plus group."
+    "Rounded official-model estimate and reported SD from Table 2.6; SD is on the natural parameter scale. No confidence interval reconstructed. Age 10 is the terminal plus group.",
+    "Rounded official-model estimate and reported SD from Table 2.6; SD is on the natural parameter scale. No confidence interval reconstructed. Age 10 is the terminal plus group.",
+    "Rounded official-model estimate and reported SD from Table 2.6; SD is on the natural parameter scale. No confidence interval reconstructed.",
+    "Rounded official-model estimate and reported SD from Table 2.6; SD is on the natural parameter scale. No confidence interval reconstructed. Age 10 is the terminal plus group.",
+    "Rounded official-model estimate and reported SD from Table 2.6; SD is on the natural parameter scale. No confidence interval reconstructed. Age 10 is the terminal plus group."
   ),
   stringsAsFactors = FALSE
 )

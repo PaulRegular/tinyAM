@@ -153,7 +153,7 @@ index <- table_inputs(
   paste(
     "Published July Sentinel mobile index; tow geometry is standardized",
     "to 54 ft horizontal opening and 1.25 nautical miles.",
-    "Age 1 is reported but the accepted model fits ages 2-11+.",
+    "Age 1 is reported but the official model fits ages 2-11+.",
     "Sampling time 0.54 is a mid-July approximation, not the recovered model setting."
   )
 )
@@ -312,7 +312,7 @@ assessment <- data.frame(
   estimate_terminal_year = 2024,
   assessment_type = "full_assessment",
   model_family = "state-space statistical catch-at-age",
-  model_version = "2025 accepted assessment; RTMB model with 16 mean-F blocks",
+  model_version = "2025 official assessment; RTMB model with 16 mean-F blocks",
   is_current = TRUE,
   is_applied = TRUE,
   framework_year = 2022,
@@ -396,11 +396,11 @@ assumptions <- data.frame(
 assumptions$source_reference[assumptions$survey == "Sentinel mobile"] <-
   paste(assessment_ref, "Sections 2.1.3.3 and 2.4.1, Table 28")
 assumptions$notes[assumptions$survey == "Sentinel mobile"] <-
-  "Table 28 also reports age 1; the accepted model uses ages 2-11+. The standardized series is retained as one survey."
+  "Table 28 also reports age 1; the official model uses ages 2-11+. The standardized series is retained as one survey."
 assumptions$notes[assumptions$setting == "maturity"] <- paste(
   "The revised annual ogives are fitted using a cohort-effect beta-binomial model.",
   "Technical Report 3671 (2025), Figures 5 and 7, provides no numeric annual matrix;",
-  "raw maturity-stage samples are not the accepted fitted ogives."
+  "raw maturity-stage samples are not the official fitted ogives."
 )
 add_assumption <- function(component, survey, setting, value, reference, note = "") {
   row <- assumptions[1, , drop = FALSE]
@@ -428,7 +428,7 @@ assumptions <- rbind(
       "(comparative fishing 2021-2022; regular survey from 2023)."
     ),
     paste(assessment_ref, "Section 2.1.3.1"),
-    "Published accepted indices are calibrated to John Cabot equivalents. Uncalibrated alternatives would require separate vessel/gear q groups, survey design weighting and age-length expansion."
+    "Published official indices are calibrated to John Cabot equivalents. Uncalibrated alternatives would require separate vessel/gear q groups, survey design weighting and age-length expansion."
   ),
   add_assumption(
     "biology", "", "catch_weights",

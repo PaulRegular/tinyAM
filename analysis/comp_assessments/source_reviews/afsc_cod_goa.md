@@ -1,4 +1,4 @@
-# Gulf of Alaska Pacific cod: accepted-assessment source review
+# Gulf of Alaska Pacific cod: official-assessment source review
 
 ## Formula review (2026-10-10)
 
@@ -15,16 +15,16 @@ No matched N/F or recruitment comparisons are available to support changing
 that decision. M agreement remains supplied by construction. All attempts and
 warnings are recorded in the local review cache and translation-review table.
 
-Status: canonical partial record afsc_cod_goa_2026 imported. Inputs and reported summary outputs are transcribed; numerical N-at-age and F-at-age surfaces from the current accepted run have not been recovered.
+Status: canonical partial record afsc_cod_goa_2026 imported. Inputs and reported summary outputs are transcribed; numerical N-at-age and F-at-age surfaces from the current official run have not been recovered.
 Charbonneau identifier: AFSC_GOA_Gadus_macrocephalus.
 
 ## January 2026 assessment
 
-The January 2026 update (presented February 2026) uses Model 24.0 accepted in 2024, updated through 2025. The 54-page detailed update and 2024 full model-defining chapter are cached under source_cache/afsc_cod_goa_2026/.
+The January 2026 update (presented February 2026) uses Model 24.0 official in 2024, updated through 2025. The 54-page detailed update and 2024 full model-defining chapter are cached under source_cache/afsc_cod_goa_2026/.
 Current detailed source: https://meetings.npfmc.org/CommentReview/DownloadFile?fileName=C1+GOA+Pcod+Assessment.pdf&p=f00593eb-12f5-458c-842e-a5cdd45306bb.pdf
 Framework/full 2024 source: https://files.npfmc.org/SAFE/2024/GOApcod.pdf
 
-The Council's February 6, 2026 announcement confirms that the updated assessment was reviewed by the Plan Team and SSC and superseded December 2025 specifications. Thus the 2025 shutdown catch-only rollover is not the current accepted assessment for this stock.
+The Council's February 6, 2026 announcement confirms that the updated assessment was reviewed by the Plan Team and SSC and superseded December 2025 specifications. Thus the 2025 shutdown catch-only rollover is not the current official assessment for this stock.
 Acceptance source: https://www.npfmc.org/council-recommends-substantial-increase-to-gulf-of-alaska-pacific-cod-catch-limits-for-2026-27/
 
 The report states 2026 ABC 41,520 t and OFL 49,782 t, projected total age-0+ biomass 182,156 t, and female SSB 52,772 t. These are projection values, not historical 2025 estimates. Historical values must be extracted from their own tables without mixing columns or assessments.
@@ -42,7 +42,7 @@ Native inputs include length compositions and conditional age-at-length observat
 
 The control uses estimated natural mortality with a temporal block including 2014. Its parameter starting values are not estimated M outputs and must not be exported as fixed M inputs. Maturity is length-logistic in the control; do not substitute a guessed age-maturity vector. Detailed parameter, temperature-covariate, biology, survey timing and uncertainty interpretation remains pending.
 
-An older author repository, https://github.com/pete-hulson/goa_pcod at facf41573f9a0b609d0096611bc9302aaab43abe, was inspected initially; the current report's directly linked repository is preferred. Earlier 2024 numerical files are context only, not substitutes for the current accepted run.
+An older author repository, https://github.com/pete-hulson/goa_pcod at facf41573f9a0b609d0096611bc9302aaab43abe, was inspected initially; the current report's directly linked repository is preferred. Earlier 2024 numerical files are context only, not substitutes for the current official run.
 
 ## Native observation inventory
 
@@ -60,7 +60,7 @@ stage_historical_summaries.py cached 147 current-run values (49 years each for f
 
 Recruitment units need resolution before canonical import: Table 2.8 labels values such as 0.48 as millions, whereas Table 2.6 reports log(mean recruitment)=13.09 and Stock Synthesis normally represents numbers in thousands. exp(13.09) is approximately 484,000 model units, or 484 million fish; this suggests the printed table may actually be in billions, but it is not yet direct evidence of each reported recruitment's scaling. Obtain native time-series outputs or verify the table-generation scale before changing the unit or importing a guessed correction. Preserve the original printed values in the source staging table.
 
-## Recruitment scale resolved and accepted output verified
+## Recruitment scale resolved and official output verified
 
 The author repository DOES contain the current management run under 2025/mgmt/24.0. Its data and control numeric contents match the report-linked January archive exactly after removing comments/whitespace; byte hashes differ because formatting/comments differ. The cached ss3.rep is a compact fitted report, not a full Report.sso, and contains historical spawning output/recruitment and selectivity information.
 
@@ -102,7 +102,7 @@ Coverage is now 12,689 input cells, 688 outputs and 34 assumptions. Source valid
 
 ## Active-survey catchability controls
 
-The accepted native control estimates baseline log q for both active surveys (phase 1). Bottom-trawl q has no environmental term; longline q also estimates the environmental coefficient (phase 5, env-var/link 101). Neither baseline uses annual deviations or time blocks. These parameter controls are now explicit assumptions, verified by scripts/database/023_review_goa_cod_catchability.R. Parameter starting values are not exported as estimates. This source-review script supplements the initial importer; it belongs to curation, not routine database-to-model translation. Structural validation passes. The published baseline q estimates are summarized below; selectivity details remain unresolved.
+The official native control estimates baseline log q for both active surveys (phase 1). Bottom-trawl q has no environmental term; longline q also estimates the environmental coefficient (phase 5, env-var/link 101). Neither baseline uses annual deviations or time blocks. These parameter controls are now explicit assumptions, verified by scripts/database/023_review_goa_cod_catchability.R. Parameter starting values are not exported as estimates. This source-review script supplements the initial importer; it belongs to curation, not routine database-to-model translation. Structural validation passes. The published baseline q estimates are summarized below; selectivity details remain unresolved.
 
 ## Published baseline catchability estimates
 
@@ -112,42 +112,42 @@ The current report explicitly states that CFSR was discontinued and no 2025 valu
 
 ## Published growth parameters
 
-Table 2.6 of the January 2026 assessment reports estimates and standard deviations for beginning-year length at ages 1 and 10, the von Bertalanffy growth rate, and length-at-age standard deviation at ages 1 and 10. These five estimates are now recorded in `outputs.csv` with their reported natural-scale standard deviations. The accepted control specifies one von Bertalanffy growth pattern and length-at-age standard deviation as a function of mean length. These parameters support an explicit translation-time reconstruction of biological surfaces; they are not direct annual weight-at-age or maturity-at-age input tables. The record remains partial because fitted abundance-at-age and a complete output inventory are unavailable.
+Table 2.6 of the January 2026 assessment reports estimates and standard deviations for beginning-year length at ages 1 and 10, the von Bertalanffy growth rate, and length-at-age standard deviation at ages 1 and 10. These five estimates are now recorded in `outputs.csv` with their reported natural-scale standard deviations. The official control specifies one von Bertalanffy growth pattern and length-at-age standard deviation as a function of mean length. These parameters support an explicit translation-time reconstruction of biological surfaces; they are not direct annual weight-at-age or maturity-at-age input tables. The record remains partial because fitted abundance-at-age and a complete output inventory are unavailable.
 
 ## tinyAM translation and fit
 
 The translation fits 2007–2025, when the fishery length-composition series and conditional age-at-length samples overlap. For each fishery, it pools conditional age proportions across the available 2007–2024 age samples, weighted by supplied sample size, then combines that key with annual length proportions. This reconstructs age proportions for the 2025 catch without presenting them as published age-specific catches. Annual fishery biomass is converted to numbers with reconstructed weight-at-age, then the three fishery catches are combined. Native bins are matched by their stored labels. Each annual length composition has at least 95% key coverage; uncovered length-bin mass is omitted and the resulting age shares are renormalized.
 
-Only the age-sampled NMFS bottom-trawl survey is translated. Its every-other-year aggregate numbers index is allocated across ages with the pooled key. The supplied aggregate log SD is repeated across reconstructed age rows, so the accepted conditional-composition and covariance likelihoods are not reproduced. Source observations specify month 7 but not a within-month date; the translation uses timing 0.5 (midyear). The longline survey is omitted because its age composition is unavailable.
+Only the age-sampled NMFS bottom-trawl survey is translated. Its every-other-year aggregate numbers index is allocated across ages with the pooled key. The supplied aggregate log SD is repeated across reconstructed age rows, so the official conditional-composition and covariance likelihoods are not reproduced. Source observations specify month 7 but not a within-month date; the translation uses timing 0.5 (midyear). The longline survey is omitted because its age composition is unavailable.
 
-Weight-at-age and maturity-at-age are reconstructed from the reported mean-length growth curve and the accepted weight-length and length-logistic parameters. Length variation is not integrated over. A 0.5 female multiplier is used to match the published female SSB convention. The accepted M estimates are supplied as fixed M, including the higher 2014–2016 block; its reported uncertainty is not fitted. The finalized tinyAM model uses exponential N initialization with N process off, IID F deviations around an age-specific mean, supplied fixed M, and age-specific q. Age-specific F means and q materially improved the source fishery/survey representation. An unconstrained q block was retained after a monotone-q alternative gave a similar result. A free initial-abundance fit was tested but did not converge reliably. The source fleet selectivity, accepted N/F surfaces and composition likelihood are not represented.
+Weight-at-age and maturity-at-age are reconstructed from the reported mean-length growth curve and the official weight-length and length-logistic parameters. Length variation is not integrated over. A 0.5 female multiplier is used to match the published female SSB convention. The official M estimates are supplied as fixed M, including the higher 2014–2016 block; its reported uncertainty is not fitted. The finalized tinyAM model uses exponential N initialization with N process off, IID F deviations around an age-specific mean, supplied fixed M, and age-specific q. Age-specific F means and q materially improved the source fishery/survey representation. An unconstrained q block was retained after a monotone-q alternative gave a similar result. A free initial-abundance fit was tested but did not converge reliably. The source fleet selectivity, official N/F surfaces and composition likelihood are not represented.
 
 The finalized fit converged (optimizer code 0, relative convergence (4), objective 274.38, maximum absolute gradient 0.000411, positive-definite Hessian, 25 fixed and 208 random effects). The approximate aggregate SSB comparison over 2007–2025 used source tonnes and tinyAM kilograms scaled by 1e-3: mean absolute difference 24,893 t (32.10%), terminal-year difference +7.73%, and trend correlation 0.945. The M comparison contains 190 age-year cells and is equal by construction. The source age-specific SSB contributions are unavailable, so this is explicitly an aggregate comparison.
 
 
 
-Recruitment is not compared because accepted recruitment is age 0 and tinyAM recruitment is age 1. Accepted N-at-age and F-at-age were not recovered. The M comparison is identical by construction because accepted numerical M was supplied as fixed M; it is not an independent validation of the M translation.
+Recruitment is not compared because official recruitment is age 0 and tinyAM recruitment is age 1. Official N-at-age and F-at-age were not recovered. The M comparison is identical by construction because official numerical M was supplied as fixed M; it is not an independent validation of the M translation.
 
 ## Cached fitted-object check
 
 The cached goapcod_obj.RDS at
 https://github.com/pete-hulson/goa_pcod/blob/facf41573f9a0b609d0096611bc9302aaab43abe/2025/rsch/SPoRC/goapcod_mod_files/goapcod_obj.RDS
-was inspected rather than assumed to be the accepted 2026 fit. Its fitted
+was inspected rather than assumed to be the official 2026 fit. Its fitted
 years end in 2024, and its aggregate SSB does not reproduce the current Model
 24.0 report series (for example, 78,050 t versus 81,532 t in 1977 and 62,366
-t versus 72,336 t in 2007). It therefore is not used to populate accepted
-outputs. The current accepted source remains the pinned 2025/mgmt/24.0/ss3.rep
+t versus 72,336 t in 2007). It therefore is not used to populate official
+outputs. The current official source remains the pinned 2025/mgmt/24.0/ss3.rep
 and the official report. The compact report supports historical aggregate
 female SSB, age-0 recruitment and the published M blocks, but does not provide
-accepted N-at-age or F-at-age surfaces. Do not derive them from plots or from
+official N-at-age or F-at-age surfaces. Do not derive them from plots or from
 this mismatched cached fit object.
 
-The comparison keeps accepted SSB in tonnes and scales tinyAM kilograms to
+The comparison keeps official SSB in tonnes and scales tinyAM kilograms to
 tonnes by 1e-3. It is approximate because the source aggregate covers ages
-0+ while tinyAM starts at age 1. The dashboard also retains accepted total
+0+ while tinyAM starts at age 1. The dashboard also retains official total
 biomass in tonnes and recruitment in billions, but reports no percent
 difference: age-0 biomass cannot be removed from the aggregate total, and
-source recruitment is age 0 while tinyAM recruitment is age 1. Accepted M is
+source recruitment is age 0 while tinyAM recruitment is age 1. Official M is
 numerically available and matches tinyAM by construction because the reported
 M blocks are supplied as fixed M; it is not an independent model validation.
 N-at-age, F-at-age and definition-matched F summaries remain unavailable. The

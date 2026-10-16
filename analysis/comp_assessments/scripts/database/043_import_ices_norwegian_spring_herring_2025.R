@@ -118,7 +118,7 @@ new_input <- function(type, measure, basis, year = NA_integer_, age = NA_integer
                       season = NA_character_, sampling_time = NA_real_,
                       year_basis = ifelse(is.na(year), NA_character_, "calendar_year"),
                       source_type = "official_table", source_reference,
-                      transformation = "Transcribed from the accepted assessment report.",
+                      transformation = "Transcribed from the official assessment report.",
                       notes = "") {
   n <- length(value)
   out <- as.data.frame(matrix(NA_character_, nrow = n, ncol = length(input_header)),
@@ -310,7 +310,7 @@ inputs[[length(inputs) + 1L]] <- add_rse("4.4.8.5", c(3:11, 12L),
 )
 
 assumptions <- do.call(rbind, list(
-  new_assumption("assessment", "assessment_type", "Annual accepted assessment", report_url),
+  new_assumption("assessment", "assessment_type", "Annual official assessment", report_url),
   new_assumption(
     "assessment", "model_family", "SAM", report_url,
     "WGWIDE 2025 says the assessment uses the SAM platform with the WKBMACNSSH 2025 configuration."
@@ -318,11 +318,11 @@ assumptions <- do.call(rbind, list(
   new_assumption("assessment", "framework_year", "2025", benchmark_url),
   new_assumption(
     "population", "model_years", "1988-2024", report_url,
-    "Catch-at-age precision and accepted output summaries support this fitted historical period."
+    "Catch-at-age precision and official output summaries support this fitted historical period."
   ),
   new_assumption(
     "population", "model_ages", "2-12+", report_url,
-    "The accepted N and F output tables report ages 2-11 and 12+; source catch/biology tables retain age groups through 15+."
+    "The official N and F output tables report ages 2-11 and 12+; source catch/biology tables retain age groups through 15+."
   ),
   new_assumption("population", "recruitment_age", "2", report_url),
   new_assumption("population", "plus_group_age", "12", report_url),
@@ -333,12 +333,12 @@ assumptions <- do.call(rbind, list(
   ),
   new_assumption(
     "F", "process", "SAM state-space F process; exact transition keys unresolved", benchmark_url,
-    "The accepted native SAM configuration was not recovered."
+    "The official native SAM configuration was not recovered."
   ),
   new_assumption("F", "Fbar_ages", "5-12+", report_url),
   new_assumption(
     "N", "process", "SAM state-space abundance process; exact transition keys unresolved", benchmark_url,
-    "The accepted native SAM configuration was not recovered."
+    "The official native SAM configuration was not recovered."
   ),
   new_assumption(
     "M", "natural_mortality", "0.9 at age 2; 0.15 at ages 3+", report_url,
@@ -360,11 +360,11 @@ assumptions <- do.call(rbind, list(
   ),
   new_assumption(
     "index", "IESNS_Barents_model_age", "2", report_url,
-    "The abundance table lists ages 1-5, but the relative-standard-error table used by SAM provides a value only for age 2; only age 2 is recorded as an accepted-model index input."
+    "The abundance table lists ages 1-5, but the relative-standard-error table used by SAM provides a value only for age 2; only age 2 is recorded as an official-model index input."
   ),
   new_assumption(
     "index", "survey_timing", "Approximate seasonal midpoints", report_url,
-    "NASF 0.13; IESNS Barents 0.42; IESNS Norwegian Sea 0.38; BESS 0.75. Exact accepted fleet settings were not recovered."
+    "NASF 0.13; IESNS Barents 0.42; IESNS Norwegian Sea 0.38; BESS 0.75. Exact official fleet settings were not recovered."
   ),
   new_assumption(
     "index", "external_precision", "Relative standard errors", report_url,
@@ -372,11 +372,11 @@ assumptions <- do.call(rbind, list(
   ),
   new_assumption(
     "index", "catchability_structure", "Unknown", benchmark_url,
-    "Native q-sharing keys were not recoverable without the accepted configuration."
+    "Native q-sharing keys were not recoverable without the official configuration."
   ),
   new_assumption(
     "assessment", "newer_summary_only_assessment", "2026", "https://doi.org/10.17895/ices.advice.30932075",
-    "The 2026 advice has summary output available via ICES Stock Assessment Graphs; detailed accepted inputs and native fit were not recovered."
+    "The 2026 advice has summary output available via ICES Stock Assessment Graphs; detailed official inputs and native fit were not recovered."
   )
 ))
 
@@ -417,8 +417,8 @@ assessment_rows <- data.frame(
   inputs_status = c("partial", "partial"),
   outputs_status = c("partial", "partial"),
   notes = c(
-    "Most recent accepted assessment with detailed source material. Fitted catch terminal is 2024; reported age-specific N/F and summary outputs extend through 2025. Missing numerical RFID index values, full stock-annex M adjustments, exact fitted model settings, and complete native uncertainty remain unresolved.",
-    "Newer accepted assessment is represented by published summary time series only. Its values remain attached only to the 2026 assessment and are not used to fill or overwrite the 2025 detailed record."
+    "Most recent official assessment with detailed source material. Fitted catch terminal is 2024; reported age-specific N/F and summary outputs extend through 2025. Missing numerical RFID index values, full stock-annex M adjustments, exact fitted model settings, and complete native uncertainty remain unresolved.",
+    "Newer official assessment is represented by published summary time series only. Its values remain attached only to the 2026 assessment and are not used to fill or overwrite the 2025 detailed record."
   ),
   stringsAsFactors = FALSE
 )
@@ -429,7 +429,7 @@ n_surface <- n_surface[n_surface$year %in% 1988:2025, ]
 f_surface <- f_surface[f_surface$year %in% 1988:2025, ]
 summary <- read_report_table("4.5.1.4", 10L)
 if (!identical(as.integer(summary$year), 1988:2025)) {
-  stop("The accepted summary table does not cover 1988-2025.", call. = FALSE)
+  stop("The official summary table does not cover 1988-2025.", call. = FALSE)
 }
 names(summary)[2:11] <- c(
   "recruitment", "recruitment_high", "recruitment_low",
@@ -444,14 +444,14 @@ outputs <- list(
     age = n_surface$age,
     age_group = ifelse(n_surface$age == 12, "12+", NA_character_),
     source_reference = paste(report_url, "Table 4.5.1.2"),
-    notes = "Point estimates from the accepted SAM report table; no age-specific uncertainty was tabulated."
+    notes = "Point estimates from the official SAM report table; no age-specific uncertainty was tabulated."
   ),
   new_output(assessment_id, "mortality", "fishing_mortality_at_age", f_surface$year,
     f_surface$value, "per year",
     age = f_surface$age,
     age_group = ifelse(f_surface$age == 12, "12+", NA_character_),
     source_reference = paste(report_url, "Table 4.5.1.3"),
-    notes = "Point estimates from the accepted SAM report table; no age-specific uncertainty was tabulated."
+    notes = "Point estimates from the official SAM report table; no age-specific uncertainty was tabulated."
   ),
   new_output(assessment_id, "recruitment", "recruitment", summary$year,
     summary$recruitment, "million fish",
@@ -507,7 +507,7 @@ outputs[[length(outputs) + 1L]] <- new_output(
   lwr = summary_xml$Low_Recruitment, upr = summary_xml$High_Recruitment,
   source_type = "official_machine_readable",
   source_reference = "ICES Stock Assessment Graphs, assessment key 25912",
-  notes = "2026 accepted assessment summary only; not combined with 2025 detailed outputs."
+  notes = "2026 official assessment summary only; not combined with 2025 detailed outputs."
 )
 outputs[[length(outputs) + 1L]] <- new_output(
   summary_id, "biomass", "total_biomass", summary_xml$Year,
@@ -523,7 +523,7 @@ outputs[[length(outputs) + 1L]] <- new_output(
   lwr = summary_xml$Low_StockSize,
   upr = summary_xml$High_StockSize, source_type = "official_machine_readable",
   source_reference = "ICES Stock Assessment Graphs, assessment key 25912",
-  notes = "2026 accepted assessment summary only; not combined with 2025 detailed outputs."
+  notes = "2026 official assessment summary only; not combined with 2025 detailed outputs."
 )
 outputs[[length(outputs) + 1L]] <- new_output(
   summary_id, "catch", "total_biomass", summary_xml$Year,

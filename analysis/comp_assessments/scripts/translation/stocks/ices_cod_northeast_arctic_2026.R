@@ -27,8 +27,8 @@ comparison_scales <- c(
 )
 
 background <- c(
-  "### Northeast Arctic cod: accepted 2026 SAM assessment", "", print_sources(source$assessment),
-  "", "| Component | Accepted assessment | tinyAM representation | Reason for difference |", "|---|------|------|------|",
+  "### Northeast Arctic cod: official 2026 SAM assessment", "", print_sources(source$assessment),
+  "", "| Component | Official assessment | tinyAM representation | Reason for difference |", "|---|------|------|------|",
   "| Years | Population and survey series span 1946–2026; catch ends in 2025. | Fit years 1946–2026. | Retains the final survey year; the 2026 catch row is missing. |",
   "| Ages | Population model ages 3–15, with survey observations reported as ages 3–12+. | Fit ages 3–12 with source biology retained through age 15; tinyAM's age-12 plus group uses hidden ages 12–15. | The grouped survey values remain 12+ observations and are compared with the corresponding grouped predictions. |",
   "| N | Stochastic recruitment, age-structured process variation, and no first-state process density. | Random-walk recruitment, IID abundance process, and free initial abundance. | These are the closest available settings; process variance sharing differs from SAM. |",
@@ -37,8 +37,8 @@ background <- c(
   "| Catch | Residual-catch numbers-at-age with missing observations retained. | Source values are kept; missing observations are excluded from the likelihood, with predictions still available. | tinyAM uses independent lognormal catch errors. |",
   "| Index | Five age-specific series; ages 11–12 share catchability within each series; errors are correlated across age in SAM. | Time-invariant survey-by-age q, with ages 11–12 shared, and independent survey-specific lognormal errors. | tinyAM has no matching cross-age observation correlation. |",
   "| Weights and maturity | Original annual age-specific inputs through age 15; spawning fractions are zero. | Original annual values retained through age 15. | tinyAM uses hidden-age biology to form the age-12+ group. |",
-  "", "Source: accepted 2026 JRN-AFWG assessment and its saved SAM fit. SAM's short-term recruitment forecast is not treated as a fitted recruitment estimate.",
-  "", "Comparison units: tinyAM numbers, recruitment and biomass are converted to the accepted assessment's reported units in the dashboard and comparison tables."
+  "", "Source: official 2026 JRN-AFWG assessment and its saved SAM fit. SAM's short-term recruitment forecast is not treated as a fitted recruitment estimate.",
+  "", "Comparison units: tinyAM numbers, recruitment and biomass are converted to the official assessment's reported units in the dashboard and comparison tables."
 )
 
 ## Model ----

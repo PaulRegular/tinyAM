@@ -58,11 +58,11 @@ age_plus_group <- 12
 comparison_scales <- c(N = 1e-06, recruitment = 1e-06, ssb = 1e-06, F_bar = 1)
 
 background <- c(
-  "### Norwegian spring-spawning herring: accepted 2025 SAM assessment", "", print_sources(source$assessment),
-  "", "| Component | Accepted assessment | tinyAM representation | Reason for difference |", "|---|------|------|------|",
-  "| Years | Catch-at-age is fitted through 2024; reported N and F estimates extend through 2025. | Fit 1988–2024. | This uses the accepted fitted period with catch data and compares the common historical years. |",
+  "### Norwegian spring-spawning herring: official 2025 SAM assessment", "", print_sources(source$assessment),
+  "", "| Component | Official assessment | tinyAM representation | Reason for difference |", "|---|------|------|------|",
+  "| Years | Catch-at-age is fitted through 2024; reported N and F estimates extend through 2025. | Fit 1988–2024. | This uses the official fitted period with catch data and compares the common historical years. |",
   "| Ages | Ages 2–12+, with recruitment at age 2. Source catch and biological tables retain detail through 15+. | Ages 2–12, with age 12 as the plus group. | Catch and index numbers older than 12 are summed; age-12 weight and maturity represent the plus group. |",
-  "| N | The accepted assessment uses SAM's age-structured population process; the full configuration was not recovered. | IID abundance process with freely estimated initial abundance. | The exact SAM process and initial-state treatment are unavailable. |",
+  "| N | The official assessment uses SAM's age-structured population process; the full configuration was not recovered. | IID abundance process with freely estimated initial abundance. | The exact SAM process and initial-state treatment are unavailable. |",
   "| F | SAM estimates age-specific fishing mortality; reported Fbar covers ages 5–12+. | Random-walk F with age-specific states and Fbar ages 5–12. | The native SAM transition and age-sharing settings were not recovered. |",
   "| M | Standard M is 0.9 per year at age 2 and 0.15 at ages 3+; the report notes additional annual deviations. | Supply the standard age pattern as fixed M. | The annual stock-annex deviations were not recovered. |",
   "| Catch | One aggregate catch-at-age series in thousand fish, with age-specific sampling errors. | Convert to fish and fit a lognormal likelihood with one shared observation SD. | tinyAM estimates its own error rather than applying SAM's external relative errors. |",

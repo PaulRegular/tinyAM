@@ -30,7 +30,7 @@ new_m$unit <- "per year"
 new_m$source_type <- "official_table"
 new_m$source_reference <- paste(report, "Table 2.6.1.3")
 new_m$notes <- paste(
-  "Published natural-mortality input matrix used by the accepted model; age 8 is the plus group.",
+  "Published natural-mortality input matrix used by the official model; age 8 is the plus group.",
   "The pinned model script adds 0.02 to the constructed M surface before fitting.",
   "Values are copied as published without recalculation. The report describes three-year outer-year averaging, while the pinned construction script specifies five years. No 2026 M row is published."
 )
@@ -43,7 +43,7 @@ sampling_time <- c(HERAS = "0.5", `IBTS-Q1` = "0.125", IBTS0 = "0.125", `IBTS-Q3
 season <- c(HERAS = "June-July", `IBTS-Q1` = "Q1", IBTS0 = "Q1", `IBTS-Q3` = "Q3")
 timed <- inputs$assessment_id == assessment_id & inputs$type == "index" &
   inputs$survey %in% names(sampling_time)
-timing_note <- "Approximate seasonal midpoint; the accepted fleet.txt timing was unavailable."
+timing_note <- "Approximate seasonal midpoint; the official fleet.txt timing was unavailable."
 needs_update <- timed & (inputs$sampling_time != sampling_time[inputs$survey] |
   inputs$season != season[inputs$survey] | is.na(inputs$notes) |
   !grepl(timing_note, inputs$notes, fixed = TRUE))
@@ -93,6 +93,6 @@ m_assumption <- assumptions$assessment_id == assessment_id &
 if (sum(m_assumption) != 1L) stop("Expected one Herring M structure assumption.")
 assumptions$notes[m_assumption] <- paste(
   "The canonical database contains the published SMS-2023 age-year surface for 1947-2025.",
-  "The accepted model adds 0.02 to this surface; the 2026 M input is unavailable."
+  "The official model adds 0.02 to this surface; the 2026 M input is unavailable."
 )
 write.csv(assumptions, assumptions_path, row.names = FALSE, na = "", fileEncoding = "UTF-8")

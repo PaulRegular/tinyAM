@@ -13,7 +13,7 @@ observations or biological assumptions were added for this trial.
 ## Assessment represented
 
 The canonical database represents the 2018 64th Northeast Regional Stock
-Assessment Workshop (SAW-64) final ASAP Run 118 as the latest accepted detailed
+Assessment Workshop (SAW-64) final ASAP Run 118 as the latest official detailed
 assessment with recoverable age-specific inputs and outputs. It covers
 1968-2016. The September 2025 management-track update is recorded separately:
 its published summary gives aggregate SSB, fully selected F, and age-1
@@ -45,7 +45,7 @@ The 2018 assessment PDF and extracted text are cached under
   stored as aggregate biomass-index data. They are omitted from the tinyAM fit
   because tinyAM requires an age-specific index and no age composition is
   available to allocate these values.
-- Tables A42-A45 provide accepted SSB, January-1 and exploitable biomass,
+- Tables A42-A45 provide official SSB, January-1 and exploitable biomass,
   numbers-at-age, F-at-age, Fbar, and the time-constant selectivity schedule.
   M=0.2 per year is fixed in the assessment, not estimated; the database stores
   that explicit assumption and its implied age-year surface separately from
@@ -55,7 +55,7 @@ The 2018 assessment PDF and extracted text are cached under
 
 The stock recipe fits 1968-2016, ages 1-10+, with an IID N process, AR1 F
 deviations around an age-specific mean, fixed M=0.2, one lognormal catch
-observation error, and separate catchability by survey-age. The accepted model's
+observation error, and separate catchability by survey-age. The official model's
 time-constant fishery selectivity and its catch and age-composition likelihoods
 are not represented directly. The aggregate egg SSB index is also omitted.
 Accordingly this is a simplified comparison model, not a reproduction of ASAP.

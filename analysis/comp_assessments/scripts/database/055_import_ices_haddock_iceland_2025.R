@@ -128,12 +128,12 @@ inputs_add <- rbind(
   ),
   age_inputs("index", "numbers_at_age", "index_scale", 1985:2024, smb,
     "survey index (unit unresolved)", paste(source_name, "IS-SMB spring survey indices-at-age"),
-    notes = "Official age-specific spring survey series. The source labels these values as numbers but does not identify a physical unit in the table; sampling_time 0.20 is a month-midpoint approximation, not the exact accepted-model timing.",
+    notes = "Official age-specific spring survey series. The source labels these values as numbers but does not identify a physical unit in the table; sampling_time 0.20 is a month-midpoint approximation, not the exact official-model timing.",
     survey = "IS-SMB", season = "spring", sampling_time = 0.20
   ),
   age_inputs("index", "numbers_at_age", "index_scale", 1995:2024, smh,
     "survey index (unit unresolved)", paste(source_name, "IS-SMH autumn survey indices-at-age"),
-    notes = "Official age-specific autumn survey series. The source labels these values as numbers but does not identify a physical unit in the table; sampling_time 0.80 is a month-midpoint approximation, not the exact accepted-model timing.",
+    notes = "Official age-specific autumn survey series. The source labels these values as numbers but does not identify a physical unit in the table; sampling_time 0.80 is a month-midpoint approximation, not the exact official-model timing.",
     survey = "IS-SMH", season = "autumn", sampling_time = 0.80
   ),
   static_M
@@ -163,12 +163,12 @@ outputs_add <- rbind(
   age_outputs(
     "numbers_at_age", 1979:2025, n_at_age, "thousand fish",
     paste(source_name, "Stock numbers-at-age"),
-    "Accepted assessment abundance estimates; age 12 is the 12+ group."
+    "Official assessment abundance estimates; age 12 is the 12+ group."
   ),
   age_outputs(
     "fishing_mortality_at_age", input_years, f_at_age, "per year",
     paste(source_name, "Fishing mortality-at-age"),
-    "Accepted assessment fishing mortality estimates; age 12 is the 12+ group."
+    "Official assessment fishing mortality estimates; age 12 is the 12+ group."
   ),
   output_row("biomass", "SSB", summary$year,
     value = summary$ssb,
@@ -252,7 +252,7 @@ stock_add <- data.frame(
   scientific_name = "Melanogrammus aeglefinus",
   common_name = "Icelandic haddock",
   area = "ICES Division 5.a", region = "Icelandic waters",
-  ocean = "North Atlantic",
+  ocean = "Northeast Atlantic",
   notes = "Icelandic haddock assessed in ICES Division 5.a.",
   stringsAsFactors = FALSE
 )
@@ -277,7 +277,7 @@ assessment_add <- data.frame(
   outputs_status = c("partial", "partial"),
   notes = c(
     "Most recent detailed assessment with recoverable numerical age inputs and outputs. Catch and biological input tables end in 2024; population estimates extend to 2025. Survey-index units and exact within-year survey timing are not specified in the tables.",
-    "Newer 2026 accepted assessment represented by its technical report only. The public 2026 data-table endpoint was unavailable when reviewed; no 2025 age matrices are substituted for 2026 values."
+    "Newer 2026 official assessment represented by its technical report only. The public 2026 data-table endpoint was unavailable when reviewed; no 2025 age matrices are substituted for 2026 values."
   ), stringsAsFactors = FALSE
 )
 

@@ -81,10 +81,10 @@ Aim for at least 90% numerical success in well-informed experiments; interpret
 bias and interval coverage against Monte Carlo uncertainty. Sparse/confounded
 cases must be rejected or clearly flagged without convergence rescue hacks.
 
-Evaluate candidates separately from the accepted models for GOA cod, EBS and
+Evaluate candidates separately from the official models for GOA cod, EBS and
 GOA pollock, Southern Gulf cod and spring herring. Change one assumption at a
-time and preserve their data and accepted baseline settings. Agreement with
-accepted trajectories alone is not evidence of statistical correctness.
+time and preserve their data and official baseline settings. Agreement with
+official trajectories alone is not evidence of statistical correctness.
 
 ## Catchability validation
 
@@ -120,8 +120,8 @@ CSV files are not overwritten. All fits, diagnostic tables, dashboards and repor
 figures go under ignored `results/`; retain only code, tests and report text in Git.
 
 The recovery report distinguishes mathematical correctness, numerical success,
-parameter/curve recovery, and agreement with accepted assessment outputs. Neither
-good numerical checks nor closer accepted trajectories establish identifiability.
+parameter/curve recovery, and agreement with official assessment outputs. Neither
+good numerical checks nor closer official trajectories establish identifiability.
 Retrospective tests report failed folds and never treat projection years as
 assessment terminal years. Stock decisions need review before replacing baselines.
 

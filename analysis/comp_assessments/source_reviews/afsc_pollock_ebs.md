@@ -1,4 +1,4 @@
-# Eastern Bering Sea pollock: accepted-assessment source review
+# Eastern Bering Sea pollock: official-assessment source review
 
 ## Formula review (2026-10-10)
 
@@ -20,13 +20,13 @@ The official 2025 SAFE catch report states that no new assessment was conducted 
 
 2025 notice: https://meetings.npfmc.org/CommentReview/DownloadFile?fileName=1.+Pollock+.pdf&p=edbdecfa-ca53-4fc2-a7a2-7caeed6ec8f8.pdf
 2024 detailed chapter: https://www.npfmc.org/wp-content/PDFdocuments/SAFE/2024/EBSpollock.pdf
-Both PDFs are cached in source_cache/afsc_pollock_ebs_2024/. The detailed chapter has 212 pages and identifies Model 23.0, with methodology unchanged from 2023. The 2025 rollover ABC/OFL values match its Tier 3 recommendations (2026 ABC 2,036,000 t, OFL 2,496,000 t), providing a production-use crosscheck. The detailed chapter itself is labeled draft for December Council review; verify accepted model configuration against final SSC/Council decisions before importing numerical records.
+Both PDFs are cached in source_cache/afsc_pollock_ebs_2024/. The detailed chapter has 212 pages and identifies Model 23.0, with methodology unchanged from 2023. The 2025 rollover ABC/OFL values match its Tier 3 recommendations (2026 ABC 2,036,000 t, OFL 2,496,000 t), providing a production-use crosscheck. The detailed chapter itself is labeled draft for December Council review; verify official model configuration against final SSC/Council decisions before importing numerical records.
 
 ## Native source trail
 
 Official repository: https://github.com/noaa-afsc/EBS_pollock
 Inspected revision: 44e0cb0ac8698e1d3954273e8aaf760d7c76cba5.
-The cached recursive tree is complete. runs/lastyr/README.md explicitly describes main model runs for the 2024 assessment. Its pm.dat starter labels pm_2024_Starter and references pm_24.dat, selvar24.dat, control.dat, pm_fmsy_alt.dat, cov_2024.dat, wtage2024.dat, surveycpue.dat, temp_paul23.dat and q_bts.dat. All referenced files, pm.tpl and compweights.ctl are cached at the pinned revision. The starter and data agree on terminal year 2024, start year 1964, recruitment age 1 and 15 modeled ages. These are candidate accepted-model inputs, pending numerical verification against the detailed report. Do not use the SAM/Stock Synthesis/RTMB alternative runs or current 2026 sensitivity outputs as production sources solely because they are available.
+The cached recursive tree is complete. runs/lastyr/README.md explicitly describes main model runs for the 2024 assessment. Its pm.dat starter labels pm_2024_Starter and references pm_24.dat, selvar24.dat, control.dat, pm_fmsy_alt.dat, cov_2024.dat, wtage2024.dat, surveycpue.dat, temp_paul23.dat and q_bts.dat. All referenced files, pm.tpl and compweights.ctl are cached at the pinned revision. The starter and data agree on terminal year 2024, start year 1964, recruitment age 1 and 15 modeled ages. These are candidate official-model inputs, pending numerical verification against the detailed report. Do not use the SAM/Stock Synthesis/RTMB alternative runs or current 2026 sensitivity outputs as production sources solely because they are available.
 
 The native control fixes the age-specific M vector (0.9, 0.45, then 0.3) at phase -6, and SAFE section 5.3.1 confirms constant natural mortality. The canonical database records the vector once. Preserve native total-catch plus composition structure rather than deriving a replacement catch-at-age likelihood input. Survey timing, likelihood weights, covariance and biological transformations are reviewed below; unresolved details remain explicit.
 
@@ -36,17 +36,17 @@ The source-specific staging reader validated 53 named blocks in pm_24.dat and sa
 
 The runs/lastyr/pm.tpl file is a symlink text pointing to ../../source/pm.tpl; the actual source implementation is separately cached as source_pm.tpl at the same pinned revision. It normalizes fishery and BTS age observations, splits ATS age 1 into a separate recruitment index when use_age1_ats=1, and normalizes ATS compositions over the retained older ages. Therefore ATS total/age-1/composition streams cannot be replaced indiscriminately with a single abundance-at-age series. Their model-ready transformations and sample-size weights require separate representation.
 
-The source multiplies p_mature by 0.5 for female spawning biomass. Keep the source maturity vector and document the female fraction rather than mistaking this for a different maturity-at-age observation. Spawning occurs at fraction (4-1)/12 = 0.25 in this implementation. The starter control uses use_popwts_ssb=1 and phase_natmort=-6; these are implementation evidence requiring final-run verification, not assumptions inferred from names. Current source code may have evolved since the 2024 fit, so matching inputs and outputs to the accepted report remains necessary before canonical import.
+The source multiplies p_mature by 0.5 for female spawning biomass. Keep the source maturity vector and document the female fraction rather than mistaking this for a different maturity-at-age observation. Spawning occurs at fraction (4-1)/12 = 0.25 in this implementation. The starter control uses use_popwts_ssb=1 and phase_natmort=-6; these are implementation evidence requiring final-run verification, not assumptions inferred from names. Current source code may have evolved since the 2024 fit, so matching inputs and outputs to the official report remains necessary before canonical import.
 
 ## Report crosscheck
 
-All 510 fishery weight-at-age values overlapping 1991–2024 match SAFE Table 20 within 0.00051 kg (maximum difference 0.000505 kg). This tolerance accommodates the three-decimal report and intermediate five-decimal rounding; report values were not substituted into the higher-precision native inputs. The verification script and result are cached. This verifies the weight input stream, not the entire accepted run.
+All 510 fishery weight-at-age values overlapping 1991–2024 match SAFE Table 20 within 0.00051 kg (maximum difference 0.000505 kg). This tolerance accommodates the three-decimal report and intermediate five-decimal rounding; report values were not substituted into the higher-precision native inputs. The verification script and result are cached. This verifies the weight input stream, not the entire official run.
 
 SAFE Table 24 reports N with a displayed 10+ group although the native model represents ages 1–15. The displayed output grouping must be identified separately from the actual model plus group. SAFE Table 5 reports observer catch numbers in millions, whereas native fishery oac_fsh_data contains number compositions normalized for its likelihood; native total catch is a separate biomass input. Do not substitute the report observer-number series or its displayed terminal-age grouping for the actual fitted total-plus-composition representation.
 
 ## Acceptance and historical output verification
 
-The final December 2024 SSC report, pp. 21–22, explicitly endorses Model 23.0, confirms the listed 2024 data updates and supports Tier 3a classification. This resolves accepted-model identity; the numerical native-run crosscheck remains separate. The report is cached as SSC_December_2024_final.pdf from https://meetings.npfmc.org/CommentReview/DownloadFile?fileName=SSC+Report+Dec+2024_FINAL.pdf&p=2587e1ac-2a37-4a80-b68b-7a8c7e7a02ca.pdf.
+The final December 2024 SSC report, pp. 21–22, explicitly endorses Model 23.0, confirms the listed 2024 data updates and supports Tier 3a classification. This resolves official-model identity; the numerical native-run crosscheck remains separate. The report is cached as SSC_December_2024_final.pdf from https://meetings.npfmc.org/CommentReview/DownloadFile?fileName=SSC+Report+Dec+2024_FINAL.pdf&p=2587e1ac-2a37-4a80-b68b-7a8c7e7a02ca.pdf.
 
 Tables 24 and 26 have been staged as report_historical_outputs_raw.csv: 793 historical N-at-age, female SSB, age-1 recruitment and age-3+ biomass estimates for all 61 years 1964–2024. Displayed N ages 1–9 and 10+ remain explicit. Advice projections are excluded from this staging file. Printed CV columns are retained as source fields, not interpreted as absolute standard errors or invented intervals; Table 26 prints zero CV for many SSB/recruitment rows, which must not be treated as evidence of zero estimation uncertainty without checking the reporting implementation/native fit.
 
@@ -66,11 +66,11 @@ The additional mean-initial-abundance constraint is optimization-phase condition
 
 ## Bottom-trawl covariance recovered
 
-All 1,764 cells of the 42-by-42 supplied covariance matrix are now preserved as year-labeled numerical assumption rows, with explicit column years 1982–2019 and 2021–2024. Native-source checks confirm symmetry, positive definiteness and exact numerical round-trip. The likelihood uses unlogged biomass residuals after q normalization, not log-index errors. This matrix must not be replaced by independent observation SDs when describing the accepted assessment.
+All 1,764 cells of the 42-by-42 supplied covariance matrix are now preserved as year-labeled numerical assumption rows, with explicit column years 1982–2019 and 2021–2024. Native-source checks confirm symmetry, positive definiteness and exact numerical round-trip. The likelihood uses unlogged biomass residuals after q normalization, not log-index errors. This matrix must not be replaced by independent observation SDs when describing the official assessment.
 
 ## Composition weights and active observation likelihoods
 
-The 60 fishery, 42 BTS and 19 ATS sam values have been captured by year as native composition likelihood weights. These are the values passed to robust_p and remain distinct from raw age frequencies. Control flags also verify BTS full-covariance biomass likelihood, ATS biomass likelihood and separate ATS age-1 treatment. Numerical BTS covariance is independently stored by calendar-year rows. The no-age-error switch is zero, so the accepted fit uses an identity ageing-error treatment.
+The 60 fishery, 42 BTS and 19 ATS sam values have been captured by year as native composition likelihood weights. These are the values passed to robust_p and remain distinct from raw age frequencies. Control flags also verify BTS full-covariance biomass likelihood, ATS biomass likelihood and separate ATS age-1 treatment. Numerical BTS covariance is independently stored by calendar-year rows. The no-age-error switch is zero, so the official fit uses an identity ageing-error treatment.
 
 ## Remaining native observation inputs
 
@@ -80,23 +80,23 @@ The native temperature vector is recorded by BTS year. Its unit is not stated in
 
 ## Recovered outputs and comparison definitions
 
-The accepted report's historical outputs are retained in their native units:
+The official report's historical outputs are retained in their native units:
 N-at-age (ages 1–9 and a reported 10+ group), age-1 recruitment, female SSB,
 and one age-3+ biomass total for each year from 1964–2024. The 10+ report row
 is not age 10. In comparisons it maps to the sum of tinyAM ages 10–15, while
 the tinyAM model plus group remains age 15. Total abundance is calculated
-from all accepted N groups and compared with tinyAM abundance across ages
+from all official N groups and compared with tinyAM abundance across ages
 1–15. Recruitment is matched at age 1.
 
 SAFE Table 26's age-3+ biomass is stored as biomass_by_age_group, with age
 blank and age_group set to 3+. It is compared with tinyAM biomass summed over
 ages 3–15. Female SSB is available for both fits over ages 1–15, but the
-accepted value is calculated at the source spawning time and tinyAM reports
+official value is calculated at the source spawning time and tinyAM reports
 beginning-year SSB. Its comparison is therefore labelled approximate. Printed
 CV fields are not converted to standard errors; uncertainty is unavailable
 for these source outputs.
 
-Annual accepted F-at-age was reconstructed from the fitted parameter file
+Annual official F-at-age was reconstructed from the fitted parameter file
 runs/lastyr/pm_or.parxx, the selectivity-change table runs/data/selvar24.dat,
 and source/pm.tpl, all at pinned repository revision
 44e0cb0ac8698e1d3954273e8aaf760d7c76cba5. The reconstruction uses
@@ -106,10 +106,10 @@ time-varying deviations are applied in their flagged years, and exp(log_sel)
 is re-normalized to arithmetic mean one across ages for each year. All 915
 year-age values pass the source normalization check: their annual age mean
 equals exp(log_avg_F + log_F_devs[y]). This is a deterministic reconstruction
-from the accepted fitted object and its implementation, not values digitized
+from the official fitted object and its implementation, not values digitized
 from figures. F uncertainty is unavailable. No Fbar comparison is reported
 because a common age range and weighting definition have not been established.
-The record remains partial because other accepted inputs, assumptions and
+The record remains partial because other official inputs, assumptions and
 uncertainty are not fully represented.
 
 ## Finalized tinyAM translation
@@ -122,12 +122,12 @@ Catch log-SD has linear and quadratic age terms. Survey q is separate by
 survey-age block, with ages 9+ pooled within each survey, and one estimated
 observation SD is used per survey.
 
-In the accepted assessment ATS age 1 is a separate recruitment index and ATS
+In the official assessment ATS age 1 is a separate recruitment index and ATS
 age composition covers ages 2–15; the 2024 ATS age-1 observation is excluded
 by the source uncertainty rule. The tinyAM recipe imports the separate source
 age-1 stream, relabels it as the common acoustic-trawl survey, and fits all
 available ATS ages as one age-specific index. This preserves age-1 information
-while simplifying the source likelihood. The accepted fishery uses total
+while simplifying the source likelihood. The official fishery uses total
 biomass plus age composition, BTS uses its full biomass covariance, and
 fishery/survey selectivity is structured and time-varying. tinyAM's direct
 age-specific catch likelihood, independent survey errors, and process forms

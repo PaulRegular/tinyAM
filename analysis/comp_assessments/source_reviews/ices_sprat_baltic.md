@@ -1,8 +1,8 @@
 # Baltic sprat source review
 
-## Accepted assessment
+## Official assessment
 
-The current detailed accepted assessment is the 2026 ICES assessment of sprat in subdivisions 22–32, stock `spr.27.22-32`. The WGBFAS 2026 report presents the complete SAM input tables, configuration, and numerical population outputs in Chapter 7. The full report is cached locally under `source_cache/ices_sprat_baltic_2026/`.
+The current detailed official assessment is the 2026 ICES assessment of sprat in subdivisions 22–32, stock `spr.27.22-32`. The WGBFAS 2026 report presents the complete SAM input tables, configuration, and numerical population outputs in Chapter 7. The full report is cached locally under `source_cache/ices_sprat_baltic_2026/`.
 
 Sources:
 
@@ -11,7 +11,7 @@ Sources:
 
 ## Inputs and model structure
 
-| Component | Accepted assessment |
+| Component | Official assessment |
 |---|---|
 | Years and ages | Catch-at-age, weights, and natural mortality cover 1974–2025. The model uses ages 1–8, with age 8 as the plus group. Recruitment is at age 1. Reported population outputs extend into the 2026 intermediate year. |
 | N | Recruitment follows a random walk. SAM has a separate log-N process variance for age 1 and a shared variance for ages 2–8. |

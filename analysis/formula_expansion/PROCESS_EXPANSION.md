@@ -22,8 +22,8 @@ figures, detailed tables and dashboards remain in ignored
 Coefficients and derived SDs have distinct reporting scales. SD profiles and
 SSB retain RTMB uncertainty; correlation and weak-SD advisories are separate
 from numerical convergence. The dashboard shows SD age profiles and SSB timing.
-Accepted N and biology alone no longer generate a purported spawning-time
-reference SSB without accepted mortality.
+Official N and biology alone no longer generate a purported spawning-time
+reference SSB without official mortality.
 
 ## Recovery evidence
 

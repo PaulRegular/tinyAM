@@ -93,7 +93,7 @@ new_input <- function(type, measure, basis, year, age, value, unit,
                       fleet = NA_character_, survey = NA_character_,
                       region = NA_character_, season = NA_character_,
                       sampling_time = NA_real_, year_basis = "calendar_year",
-                      source_reference, transformation = "Transcribed from the accepted assessment report.",
+                      source_reference, transformation = "Transcribed from the official assessment report.",
                       notes = "") {
   n <- length(value)
   data.frame(
@@ -184,7 +184,7 @@ inputs <- list(
   new_input("weight", "weight_at_age", "kg_per_fish", weights$year,
     weights$age, weights$value, "g per fish",
     source_reference = paste(report_url, "Table 7.7"),
-    transformation = "The accepted assessment assumes stock weights equal catch weights.",
+    transformation = "The official assessment assumes stock weights equal catch weights.",
     notes = "Annual stock weights are the same source values as catch weights; age 8 is 8+."
   ),
   new_input("M", "natural_mortality_at_age", "per_year",
@@ -202,12 +202,12 @@ inputs <- list(
   new_input("biology", "fraction_M_before_spawning", "proportion",
     NA_integer_, 1:8, rep(0.4, 8), "proportion",
     year_basis = NA_character_, source_reference = paste(report_url, "Table 7.10"),
-    notes = "The accepted assessment assigns 40% of M to the period before spawning."
+    notes = "The official assessment assigns 40% of M to the period before spawning."
   ),
   new_input("biology", "fraction_F_before_spawning", "proportion",
     NA_integer_, 1:8, rep(0.4, 8), "proportion",
     year_basis = NA_character_, source_reference = paste(report_url, "Table 7.11"),
-    notes = "The accepted assessment assigns 40% of F to the period before spawning."
+    notes = "The official assessment assigns 40% of F to the period before spawning."
   )
 )
 
@@ -368,7 +368,7 @@ assessment <- data.frame(
   assessment_id = assessment_id, stock_id = stock_id,
   assessment_year = 2026L, terminal_year = 2025L,
   estimate_terminal_year = 2026L, assessment_type = "annual_assessment",
-  model_family = "SAM", model_version = "Accepted 2026 WGBFAS assessment",
+  model_family = "SAM", model_version = "Official 2026 WGBFAS assessment",
   is_current = TRUE, is_applied = TRUE, framework_year = 2023L,
   assessment_url = report_url,
   framework_url = NA_character_,
@@ -377,7 +377,7 @@ assessment <- data.frame(
   assumptions_status = "complete", inputs_status = "complete",
   outputs_status = "partial",
   notes = paste(
-    "Accepted 2026 assessment; catch and full input series are through 2025.",
+    "Official 2026 assessment; catch and full input series are through 2025.",
     "The reported 2026 values are intermediate-year estimates, with recruitment informed by the shifted age-0 acoustic series.",
     "Age-specific N/F and summary intervals are transcribed from the report; fitted q estimates, predictions, and age-specific uncertainty are not tabulated."
   ), stringsAsFactors = FALSE

@@ -67,8 +67,8 @@ comparison_scales <- c(
 )
 
 background <- c(
-  "### Northeast Atlantic blue whiting: accepted 2026 SAM assessment", "", print_sources(source$assessment),
-  "", "| Component | Accepted assessment | tinyAM representation | Reason for difference |", "|---|------|------|------|",
+  "### Northeast Atlantic blue whiting: official 2026 SAM assessment", "", print_sources(source$assessment),
+  "", "| Component | Official assessment | tinyAM representation | Reason for difference |", "|---|------|------|------|",
   "| Years | Catch covers 1981–2026; IBWSS covers 2004–2026 except 2010 and 2020. | Fit 1981–2026. | All native model years are retained. |",
   "| Ages | Ages 1–10+, with recruitment at age 1 and age 10 as the plus group. | Ages 1–10, with age 10 as the plus group. | The source age range is retained. |",
   "| N | Age-1 recruitment follows a random walk; age-specific abundance deviations have separate age-1 and shared ages 2–10 variances. | Random-walk recruitment and free first-year abundance by age, followed by deterministic cohort survival. | The fuller N-process fit did not converge; initial abundance is not integrated as in SAM. |",
@@ -77,7 +77,7 @@ background <- c(
   "| Catch | One commercial catch-at-age series in thousands of fish; lognormal errors are age-correlated and use four age groups. | Native catch converted to fish; independent lognormal errors share SDs over the same four age groups. | tinyAM does not model age-correlated observation errors. |",
   "| Index | IBWSS ages 1–8, in millions of fish, sampled at 0.245 of the year. Catchability uses age groups 1, 2, 3, 4, and 5–8; observation SD uses 1, 2, 3, 4–6, and 7–8. | Values are converted to fish, with the source catchability and observation-SD groupings preserved separately. | tinyAM omits age correlation in observation errors. |",
   "| Weights and maturity | Annual stock and catch weights; time-invariant maturity-at-age. | Native biological surfaces are retained. | No biological inputs are substituted. |",
-  "", "Initial N, F, and q values are taken from the accepted SAM fit only as starting values; tinyAM re-estimates them. tinyAM converts the native catch and survey count units to fish internally. Comparison outputs are scaled back to the source units: thousands of fish and tonnes. The 2026 advice replaces the fitted recruitment estimate with a forecast assumption; the comparison reference keeps the native fitted estimate."
+  "", "Initial N, F, and q values are taken from the official SAM fit only as starting values; tinyAM re-estimates them. tinyAM converts the native catch and survey count units to fish internally. Comparison outputs are scaled back to the source units: thousands of fish and tonnes. The 2026 advice replaces the fitted recruitment estimate with a forecast assumption; the comparison reference keeps the native fitted estimate."
 )
 
 ## Model ----

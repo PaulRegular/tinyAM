@@ -5,7 +5,7 @@ source_file <- file.path(root, "analysis/comp_assessments/source_cache/afsc_poll
 source <- readLines(source_file, warn = FALSE, encoding = "UTF-8")
 active_source <- source[!grepl("^\\s*//", source)]
 required_terms <- c("dnorm(log_slp1_fsh_mean, Type(-1.0),Type(1.5), true)", "dnorm(log_slp2_fsh_mean, Type(-1.0),Type(1.5), true)", "dnorm(inf1_fsh_mean, Type(0.0),Type(3.0), true)", "dnorm(inf2_fsh_mean, Type(10.0),Type(3.0), true)", "dnorm(log_DM_pars, Type(0.0), Type(2.0),true).sum()")
-if (!all(vapply(required_terms, function(term) any(grepl(term, active_source, fixed = TRUE)), logical(1)))) stop("Cached accepted-model source does not match the expected prior terms.")
+if (!all(vapply(required_terms, function(term) any(grepl(term, active_source, fixed = TRUE)), logical(1)))) stop("Cached official-model source does not match the expected prior terms.")
 source_reference <- "https://github.com/afsc-assessments/GOApollock/blob/aefe1692520510d55fd25db60121b292a53840a3/data/2024/goa_pk.cpp"
 new_rows <- data.frame(
   assessment_id = id,
@@ -25,9 +25,9 @@ new_rows <- data.frame(
   source_reference = c(rep(paste0(source_reference, "; loglik(22), lines 1155-1174"), 5), paste0(source_reference, "; parameter transform and loglik(22), lines 391-400 and 1175")),
   notes = c(
     "Normal prior means and SDs apply on the named parameter scales. These active terms regularize the fishery selectivity means.",
-    "Only the descending slope and inflection priors are active for this survey; the ascending terms are commented out in the accepted source.",
+    "Only the descending slope and inflection priors are active for this survey; the ascending terms are commented out in the official source.",
     "Normal prior means and SDs apply on the named parameter scales. All four terms are active for this survey.",
-    "Only the ascending slope and inflection priors are active for this survey; the descending terms are commented out in the accepted source.",
+    "Only the ascending slope and inflection priors are active for this survey; the descending terms are commented out in the official source.",
     "Normal prior means and SDs apply on the named parameter scales. All four terms are active for this survey.",
     "The five parameters enter the linear Dirichlet-multinomial composition likelihood. The source uses exp(log_DM_pars) for concentration and invlogit(log_DM_pars) in its derived effective-sample-size calculation."
   ),

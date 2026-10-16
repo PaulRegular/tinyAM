@@ -479,14 +479,14 @@ assessment <- data.frame(
   assessment_year = 2026L, terminal_year = 2025L,
   estimate_terminal_year = 2026L, assessment_type = "annual_assessment",
   model_family = "SAM",
-  model_version = "WGNSSK 2026 accepted assessment; configuration table timestamped 2024-03-12",
+  model_version = "WGNSSK 2026 official assessment; configuration table timestamped 2024-03-12",
   is_current = TRUE, is_applied = TRUE, framework_year = 2024L,
   assessment_url = report_url, framework_url = framework_url,
   data_url = graphs_url, model_url = NA_character_, repository_url = NA_character_,
   assumptions_status = "partial", inputs_status = "partial",
   outputs_status = "partial",
   notes = paste(
-    "The accepted 2026 assessment has report-published inputs, assumptions, and N/F-at-age surfaces.",
+    "The official 2026 assessment has report-published inputs, assumptions, and N/F-at-age surfaces.",
     "The report reproduces a SAM configuration timestamped 2024; the final native 2026 fit/data object was not located.",
     "Exact current-run sampling fractions and uncertainty for age-specific N/F are unavailable."
   ),

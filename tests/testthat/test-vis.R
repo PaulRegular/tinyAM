@@ -120,7 +120,7 @@ test_that("formula-effect dashboards show only signed trends and framed ribbons"
   file <- tempfile(fileext = ".html")
   expect_no_error(vis_tam(
     model_list = list(
-      Accepted = reference, ordinary = default_fit,
+      Official = reference, ordinary = default_fit,
       process = process
     ), output_file = file, open_file = FALSE,
     render_args = list(quiet = TRUE)
@@ -358,7 +358,7 @@ test_that("tam_ref objects accept a Background page", {
   file <- tempfile(fileext = ".html")
   background <- c(
     "## Assessment assumptions", "",
-    "| Component | Accepted assessment | tinyAM representation | Reason |",
+    "| Component | Official assessment | tinyAM representation | Reason |",
     "|---|---|---|---|",
     "| Years | 2000\u20132024 and ages are retained. | Same years | Common period |",
     "| Ages | 2\u201314 | Same ages | Retain the age range |",

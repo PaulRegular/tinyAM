@@ -44,7 +44,7 @@ f_index <- cbind(
 source_F[f_index] <- as.numeric(f_rows$value)
 source_F[, "10"] <- source_F[, "9"]
 if (any(!is.finite(source_F)) || any(source_F <= 0)) {
-  stop("The accepted F surface is incomplete or non-positive.")
+  stop("The official F surface is incomplete or non-positive.")
 }
 
 plus <- source_ages >= max(ages)
@@ -107,18 +107,18 @@ age_plus_group <- 8
 comparison_scales <- c(N = 0.001, recruitment = 0.001, ssb = 0.001, F = 1, M = 1, F_bar = 1)
 
 background <- c(
-  "### North Sea saithe: accepted 2026 SAM assessment", "", print_sources(source$assessment),
-  "", "| Component | Accepted assessment | tinyAM representation | Reason for difference |", "|---|------|------|------|",
+  "### North Sea saithe: official 2026 SAM assessment", "", print_sources(source$assessment),
+  "", "| Component | Official assessment | tinyAM representation | Reason for difference |", "|---|------|------|------|",
   "| Years | The fitted assessment covers 1967–2025. A separate 2026 short-term forecast is reported. | Fit 1967–2025. | The 2026 forecast is not a full historical assessment year. |",
-  "| Ages | Ages 3–10+, with recruitment at age 3. SAM shares the F state for ages 9 and 10+. | Ages 3–8+, with age 8 as the plus group. | Catch and accepted abundance at ages 8–10+ are summed; accepted F is abundance-weighted over those ages. |",
-  "| N | SAM estimates abundance at ages 3–10+, with separate process variance for recruitment and shared variance for older ages. | Random-walk recruitment with its own SD, exponential initial abundance and shared IID survival SD; accepted N-at-age initializes the fit only. | Recruitment-versus-survival variance sharing is retained; initial-state integration differs. |",
-  "| F | SAM estimates age-specific F with AR(1) age correlation, four innovation-SD groups and shared states at ages 9–10+. Fbar is ages 4–7. | Age-correlated F random walks, one innovation SD and Fbar ages 4–7; accepted F-at-age initializes the fit only. | The age-8 plus group replaces separate older-age F states; age-specific innovation SDs are not reproduced. |",
+  "| Ages | Ages 3–10+, with recruitment at age 3. SAM shares the F state for ages 9 and 10+. | Ages 3–8+, with age 8 as the plus group. | Catch and official abundance at ages 8–10+ are summed; official F is abundance-weighted over those ages. |",
+  "| N | SAM estimates abundance at ages 3–10+, with separate process variance for recruitment and shared variance for older ages. | Random-walk recruitment with its own SD, exponential initial abundance and shared IID survival SD; official N-at-age initializes the fit only. | Recruitment-versus-survival variance sharing is retained; initial-state integration differs. |",
+  "| F | SAM estimates age-specific F with AR(1) age correlation, four innovation-SD groups and shared states at ages 9–10+. Fbar is ages 4–7. | Age-correlated F random walks, one innovation SD and Fbar ages 4–7; official F-at-age initializes the fit only. | The age-8 plus group replaces separate older-age F states; age-specific innovation SDs are not reproduced. |",
   "| M | Fixed, age-specific natural mortality derived from mean stock weights under Lorenzen's relationship. | Use published M at modeled ages; age-8 M applies to the whole 8+ group. | Older fish share age-8 mortality in the reduced age structure. |",
   "| Catch | Combined catch numbers-at-age and catch weight-at-age, ages 3–10+. | Use both reported surfaces with three catch-SD age groups. | The fleet is combined and SAM's cross-age observation correlation is not reproduced. |",
   "| Index | Q3–Q4 research-vessel index at ages 3–8, plus annual commercial CPUE tuned to exploitable biomass. | Use `mono(q_age)` for non-decreasing survey catchability across age groups 3, 4, 5 and 6–8, with one shared q for ages 6–8. The age-8 index is linked to the modeled 8+ group. | The monotone constraint limits the trade-off between declining catchability and inflated abundance at older ages. The terminal survey age represents only age 8 in SAM. tinyAM does not represent the aggregate biomass-targeted CPUE observation; it is retained in the database but omitted from the fit. |",
   "| Weights and maturity | Annual stock weights, annual maturity-at-age, and annual catch weights are supplied to SAM as known. | Retain biological ages 3–10 for within-plus-group weight and maturity calculations. | Stock weights are kept distinct from catch weights. |",
-  "| SSB | SAM reports SSB with 95% confidence intervals; its exact spawning-time detail is unresolved. | Compare start-year SSB calculated from accepted N and tinyAM N using the same translated weights and maturity. | This common-definition calculation is separate from native reported SAM SSB and its intervals. |",
-  "", "The age-8 plus group and non-decreasing survey catchability improved agreement with the Accepted assessment and reduced excess biomass accumulation at older ages. These are tinyAM translation choices rather than assumptions imposed by SAM.",
+  "| SSB | SAM reports SSB with 95% confidence intervals; its exact spawning-time detail is unresolved. | Compare start-year SSB calculated from official N and tinyAM N using the same translated weights and maturity. | This common-definition calculation is separate from native reported SAM SSB and its intervals. |",
+  "", "The age-8 plus group and non-decreasing survey catchability improved agreement with the Official assessment and reduced excess biomass accumulation at older ages. These are tinyAM translation choices rather than assumptions imposed by SAM.",
   "", "The age-specific survey timing is approximated at 0.75, the midpoint of Q3–Q4. The report does not give the exact 2026 sampling fraction. The assessment configuration reproduced in the 2026 report is timestamped 2024."
 )
 

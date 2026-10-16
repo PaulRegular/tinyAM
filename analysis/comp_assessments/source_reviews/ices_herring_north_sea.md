@@ -15,7 +15,7 @@ Official detailed report: ICES 2026 HAWG, 8:16, DOI [10.17895/ices.pub.31424315]
 
 The complete 892-page final report is cached from its [DTU author repository](https://backend.orbit.dtu.dk/ws/portalfiles/portal/440308463/HAWG_2026_-_Full_Report.pdf).
 
-The report identifies 2025 SSB near 1.68 million tonnes and F ages 2–6 near 0.191. These provide accepted-run checks, not substitutes for native time series.
+The report identifies 2025 SSB near 1.68 million tonnes and F ages 2–6 near 0.191. These provide official-run checks, not substitutes for native time series.
 
 Current official reproducible repository: [ices-advice/2026_her.27.3a47d](https://github.com/ices-advice/2026_her.27.3a47d).
 
@@ -31,11 +31,11 @@ A direct lookup under stockassessment.org user3 returned HTTP 404. This does not
 
 The repository contains scripts but no native RData objects in its tracked tree. Its `DATA.bib` retains some older date ranges, whereas the model scripts reflect the current assessment. Native inputs and terminal years must therefore be verified independently of the bibliography.
 
-The accepted historical record is the single-fleet assessment. The multifleet model supports fleet-wise forecasts and is not substituted for the historical accepted assessment.
+The official historical record is the single-fleet assessment. The multifleet model supports fleet-wise forecasts and is not substituted for the historical official assessment.
 
 No native current fitted object or public TAF artifact was recovered. Report tables provide the numerical historical assessment record, with forecast values kept separate.
 
-## Accepted-model inventory
+## Official-model inventory
 
 The historical assessment is a single-fleet FLSAM model with one combined commercial catch fleet.
 
@@ -55,7 +55,7 @@ The four larval abundance indices have FLSAM fleet type 6, representing partial 
 
 All four LAI sampling fractions are explicitly 0.67 in `data_construct_input.R`.
 
-The accepted `fleet.txt` was unavailable. Approximate seasonal midpoints are recorded for HERAS, IBTS-Q1, IBTS0 and IBTS-Q3. LAI sampling times retain their configured value of 0.67.
+The official `fleet.txt` was unavailable. Approximate seasonal midpoints are recorded for HERAS, IBTS-Q1, IBTS0 and IBTS-Q3. LAI sampling times retain their configured value of 0.67.
 
 ### Observation coverage
 
@@ -69,25 +69,25 @@ Table 2.6.1.1 reports the following fitted coverage:
 
 The report contains numerical catch, natural mortality, maturity, weights, survey inputs, population and fishing-mortality outputs, and summary uncertainty in Tables 2.6.1.2–14 and 2.6.2.1–7.
 
-Some adjacent narrative paragraphs contain earlier-year values. Explicitly labelled final numerical tables are used for the accepted assessment record.
+Some adjacent narrative paragraphs contain earlier-year values. Explicitly labelled final numerical tables are used for the official assessment record.
 
 ### Population and fishing-mortality processes
 
 Recruitment is represented separately from survival of older cohorts.
 
-The accepted model has a distinct recruitment-process variance for age 0 and one shared older-age survival-process variance for ages 1–8.
+The official model has a distinct recruitment-process variance for age 0 and one shared older-age survival-process variance for ages 1–8.
 
 The F process uses random-walk dynamics with AR(1) correlation across ages in annual fishing-mortality increments (`cor.F = 2`).
 
-The accepted F configuration has separate states for ages 0–6 and a shared state for ages 7–8.
+The official F configuration has separate states for ages 0–6 and a shared state for ages 7–8.
 
 Innovation variances are grouped over ages 0–1, 2–5 and 6–8.
 
-These groupings describe distinct features of the accepted model: the oldest ages share a latent F state, while the variance groups determine how annual innovations are penalized.
+These groupings describe distinct features of the official model: the oldest ages share a latent F state, while the variance groups determine how annual innovations are penalized.
 
 ### Observation models
 
-The accepted assessment has age-specific catchability and observation-error sharing groups.
+The official assessment has age-specific catchability and observation-error sharing groups.
 
 HERAS catchability is shared over ages 1–2 and ages 3–8. The four larval indices share one catchability parameter.
 
@@ -99,19 +99,19 @@ No power-law catchability parameters are configured.
 
 ### Biological inputs
 
-The assessment imports natural mortality from the SMS-2023 construction, with an additional 0.02 applied in the accepted model script.
+The assessment imports natural mortality from the SMS-2023 construction, with an additional 0.02 applied in the official model script.
 
 The report's numerical M table covers 1947–2025. It is retained as published, without reconstructing values from the model scripts.
 
 The report describes three-year outer-year averaging, but the pinned construction script specifies a five-year window. This inconsistency is recorded rather than resolved through an inferred transformation.
 
-The final M convention used by the accepted model must be distinguished from the underlying SMS numerical surface to avoid applying the 0.02 adjustment twice.
+The final M convention used by the official model must be distinguished from the underlying SMS numerical surface to avoid applying the 0.02 adjustment twice.
 
 Annual stock and catch weights and maturity are available through 2025. The complete 2026 biological inputs are not available in the published tables.
 
 ## tinyAM translation revision (2026-10-14)
 
-The tinyAM translation was revised to more closely approximate the accepted assessment's population and fishing-mortality process structures.
+The tinyAM translation was revised to more closely approximate the official assessment's population and fishing-mortality process structures.
 
 The previous translation used random-walk cohort-survival deviations and independent age-specific F random walks. The revised translation uses independent cohort-survival deviations and correlated F random walks.
 
@@ -129,9 +129,9 @@ Recruitment retains the separate random-walk process specified by the default ti
 
 Initial abundance for older ages is freely estimated.
 
-The revised model uses one shared SD for older-cohort survival deviations. This broadly matches the separation between recruitment and older-age survival variation in the accepted assessment, but does not reproduce every aspect of FLSAM's state initialization or process specification.
+The revised model uses one shared SD for older-cohort survival deviations. This broadly matches the separation between recruitment and older-age survival variation in the official assessment, but does not reproduce every aspect of FLSAM's state initialization or process specification.
 
-The accepted N and F estimates are used as optimizer starting values only. They do not constrain the fitted tinyAM states.
+The official N and F estimates are used as optimizer starting values only. They do not constrain the fitted tinyAM states.
 
 ### Fishing-mortality process
 
@@ -141,16 +141,16 @@ The revised model specifies:
 
 This replaces independent F random walks with correlated random walks.
 
-The `cor_rw` process estimates annual changes in log fishing mortality with AR(1) correlation across neighbouring ages. It therefore captures a central feature of the accepted FLSAM fishing-mortality process that was missing from the previous translation.
+The `cor_rw` process estimates annual changes in log fishing mortality with AR(1) correlation across neighbouring ages. It therefore captures a central feature of the official FLSAM fishing-mortality process that was missing from the previous translation.
 
 The distinction is important: correlation applies to annual F increments across ages, not simply to the absolute F levels.
 
-The revised tinyAM model remains simpler than the accepted FLSAM configuration in two respects:
+The revised tinyAM model remains simpler than the official FLSAM configuration in two respects:
 
 - It uses one shared F-process SD rather than the source's three innovation-variance groups for ages 0–1, 2–5 and 6–8.
 - It retains separate F states at ages 7 and 8 rather than imposing the source's shared oldest-age F state.
 
-Fbar is calculated over ages 2–6, consistent with the accepted assessment.
+Fbar is calculated over ages 2–6, consistent with the official assessment.
 
 The revised specification improves structural agreement without reproducing the complete FLSAM covariance and age-sharing configuration.
 
@@ -162,7 +162,7 @@ The translation specifies:
 
 The translated numerical M surface is treated as fixed. The fitting period ends in 2025, when the published biological inputs remain available.
 
-The accepted SMS-2023 surface and additional 0.02 adjustment must be represented consistently with the imported numerical values. No separate mortality process is estimated in tinyAM.
+The official SMS-2023 surface and additional 0.02 adjustment must be represented consistently with the imported numerical values. No separate mortality process is estimated in tinyAM.
 
 ### Commercial catch
 
@@ -174,11 +174,11 @@ The catch observation model uses:
 
 This permits separate estimated observation SDs for the translated catch groups.
 
-The fishery closure in 1978–1979 is represented by missing catch observations, consistent with the accepted input construction.
+The fishery closure in 1978–1979 is represented by missing catch observations, consistent with the official input construction.
 
 Positive catch observations are fitted using a lognormal likelihood. Exact zeros are not fitted as positive lognormal observations.
 
-The translation does not claim to reproduce every feature of the accepted catch observation model.
+The translation does not claim to reproduce every feature of the official catch observation model.
 
 ### Survey indices
 
@@ -198,23 +198,23 @@ The source's cross-age observation-error correlation for IBTS-Q3 is not represen
 
 Survey observations retain their published numerical scales. Because their calibrated units have not been independently established, estimated catchability absorbs differences in index scale.
 
-Sampling times remain documented approximations based on survey seasons, because the accepted `fleet.txt` was unavailable.
+Sampling times remain documented approximations based on survey seasons, because the official `fleet.txt` was unavailable.
 
 ### Spawning-stock biomass
 
-The accepted assessment reports spawning-stock biomass under its native spawning-time convention.
+The official assessment reports spawning-stock biomass under its native spawning-time convention.
 
 tinyAM calculates SSB using the translated stock weights, maturity and fitted abundance under tinyAM's spawning-time convention.
 
-The accepted spawning fractions were not recovered. Consequently, native SSB and translated SSB definitions may not be exactly equivalent.
+The official spawning fractions were not recovered. Consequently, native SSB and translated SSB definitions may not be exactly equivalent.
 
 Comparisons should retain this caveat even when the estimated trajectories agree closely.
 
 ### Interpretation of the revision
 
-The revision makes the two principal population processes more consistent with the accepted FLSAM structure without adding stock-specific process complexity.
+The revision makes the two principal population processes more consistent with the official FLSAM structure without adding stock-specific process complexity.
 
-The improvement is attributable to scientifically motivated changes in the survival and fishing-mortality process assumptions, rather than changes to the accepted assessment data.
+The improvement is attributable to scientifically motivated changes in the survival and fishing-mortality process assumptions, rather than changes to the official assessment data.
 
 The translation remains an approximation. In particular, the four omitted larval indices, approximate survey timing, incomplete F age-sharing and variance groups, and differences in observation-error covariance may influence the fitted population states.
 
@@ -240,7 +240,7 @@ The pinned single-fleet configuration specifies `cor.F = 2` and an AR observatio
 
 HERAS q is shared over ages 1–2 and 3–8. The four larval streams share one q parameter.
 
-The accepted F and N surfaces extend into 2026, whereas catch and annual biological input tables end in 2025. Q1 and IBTS0 indices include 2026 observations.
+The official F and N surfaces extend into 2026, whereas catch and annual biological input tables end in 2025. Q1 and IBTS0 indices include 2026 observations.
 
 The final 2026 M input and biological-surface construction remain unresolved.
 
@@ -256,7 +256,7 @@ This is a limitation of the inspected public source trail, not proof that the na
 
 No credentials were requested or used. Portal responses and the source-specific extraction script remain cached.
 
-Report tables are retained as the numerical fallback. Earlier-run TAF artifacts are not substituted for current accepted estimates.
+Report tables are retained as the numerical fallback. Earlier-run TAF artifacts are not substituted for current official estimates.
 
 ### Summary-table verification
 
@@ -290,29 +290,29 @@ The native fitted object or FLSAM partial-index likelihood should be inspected b
 
 ## Remaining translation limitations
 
-The revised translation is closer to the accepted FLSAM process structure, but it is not an exact reproduction.
+The revised translation is closer to the official FLSAM process structure, but it is not an exact reproduction.
 
 The main remaining differences are:
 
 - **Observation coverage:** Four regional larval indices and their partial spawning-component likelihoods are omitted.
-- **Fishing mortality:** Correlated random-walk increments are represented, but the accepted age-specific variance sharing and common F state at ages 7–8 are not.
-- **Observation errors:** The accepted IBTS-Q3 cross-age correlation is omitted.
+- **Fishing mortality:** Correlated random-walk increments are represented, but the official age-specific variance sharing and common F state at ages 7–8 are not.
+- **Observation errors:** The official IBTS-Q3 cross-age correlation is omitted.
 - **Survey timing:** Sampling fractions for the four age-structured indices are approximations, not independently recovered native values.
-- **SSB definition:** Accepted spawning-time fractions remain unavailable.
+- **SSB definition:** Official spawning-time fractions remain unavailable.
 - **Native assessment recovery:** Complete current-run FLSAM inputs and fitted objects have not been recovered for a direct likelihood-level comparison.
 
-These are documented limitations of the simplified translation, not errors in the accepted assessment.
+These are documented limitations of the simplified translation, not errors in the official assessment.
 
 ## Record summary
 
-The canonical record represents the accepted 2026 North Sea autumn-spawning herring single-fleet FLSAM assessment.
+The canonical record represents the official 2026 North Sea autumn-spawning herring single-fleet FLSAM assessment.
 
-The source tables and documented model configuration support the historical 1947–2025 translation and comparisons, while accepted numerical outputs also extend into 2026.
+The source tables and documented model configuration support the historical 1947–2025 translation and comparisons, while official numerical outputs also extend into 2026.
 
 The revised tinyAM model uses IID cohort-survival deviations, free initial abundance, correlated F random walks, fixed supplied natural mortality, and translated observation-error groups.
 
-These settings more closely approximate the accepted assessment's core population dynamics than the previous translation.
+These settings more closely approximate the official assessment's core population dynamics than the previous translation.
 
-The case tests whether a comparatively simple age-structured state-space model can recover broad accepted stock dynamics without reproducing the complete FLSAM observation likelihood, state-sharing configuration or biological uncertainty.
+The case tests whether a comparatively simple age-structured state-space model can recover broad official stock dynamics without reproducing the complete FLSAM observation likelihood, state-sharing configuration or biological uncertainty.
 
 The source-review and completeness statuses remain partial pending recovery or verification of the unresolved native-model details.

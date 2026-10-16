@@ -92,10 +92,10 @@ scientifically negligible.
 
 ## Common definitions
 
-Compare N and mortality at matching ages. Sum accepted N, biomass and mature
-biomass only over the tinyAM ages; do not compare accepted age-0+ totals with
+Compare N and mortality at matching ages. Sum official N, biomass and mature
+biomass only over the tinyAM ages; do not compare official age-0+ totals with
 tinyAM age-2+ totals. Table 17's native age-0 recruitment is not compared with
-tinyAM recruitment. The accepted N-at-age surface supplies a separately
+tinyAM recruitment. The official N-at-age surface supplies a separately
 labelled age-2 abundance comparison with tinyAM recruitment. Common F/M means use the matching N and
 age-specific mortality surfaces with tinyAM's population weighting. Preserve
 the native Table 17/18 aggregates for dashboard context and label comparisons

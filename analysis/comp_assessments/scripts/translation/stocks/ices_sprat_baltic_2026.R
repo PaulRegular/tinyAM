@@ -59,8 +59,8 @@ age_plus_group <- 8
 comparison_scales <- c(N = 1e-06, recruitment = 1e-06, ssb = 0.001, F = 1, M = 1, F_bar = 1)
 
 background <- c(
-  "### Baltic sprat: accepted 2026 SAM assessment", "", print_sources(source$assessment),
-  "", "| Component | Accepted assessment | tinyAM representation | Reason for difference |", "|---|------|------|------|",
+  "### Baltic sprat: official 2026 SAM assessment", "", print_sources(source$assessment),
+  "", "| Component | Official assessment | tinyAM representation | Reason for difference |", "|---|------|------|------|",
   "| Years | Catch and full historical inputs cover 1974–2025; the report also gives an intermediate-year age-1 estimate for 2026. | Fit 1974–2025. | The 2026 age-0 acoustic observation is shifted to age 1 in 2026 and is not a full catch-data year. |",
   "| Ages | Ages 1–8+, with age 8 as the plus group. | Ages 1–8, with age 8 as the plus group. | The reported age range is retained. |",
   "| N | Recruitment follows a random walk; process variance differs between age 1 and ages 2–8. | Random-walk recruitment, shared IID cohort residuals, and exponential initial abundance. | This approximates the separate recruitment and older-age process variation; first-year older ages follow deterministic survivorship from recruitment. |",

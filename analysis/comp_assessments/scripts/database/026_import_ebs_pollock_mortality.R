@@ -41,8 +41,8 @@ rows <- lapply(seq_along(m), function(age) {
   x$value <- as.character(m[[age]])
   x$unit <- "per year"
   x$source_type <- "native_model"
-  x$source_reference <- "https://github.com/noaa-afsc/EBS_pollock; accepted 2024 control.dat, natmort_in; SAFE section 5.3.1"
-  x$notes <- "Time-invariant age vector (blank year dimension), valid throughout 1964-2024; age 15 is 15+. phase_natmort=-6 and switch_pred_mort=0. Accepted report explicitly confirms age-constant-through-time M; predation extensions are not active."
+  x$source_reference <- "https://github.com/noaa-afsc/EBS_pollock; official 2024 control.dat, natmort_in; SAFE section 5.3.1"
+  x$notes <- "Time-invariant age vector (blank year dimension), valid throughout 1964-2024; age 15 is 15+. phase_natmort=-6 and switch_pred_mort=0. Official report explicitly confirms age-constant-through-time M; predation extensions are not active."
   unlist(x, use.names = TRUE)
 })
 csv_field <- function(x) {
@@ -64,4 +64,4 @@ if (!any(trimws(review) == heading)) {
     file = review_path, append = TRUE, sep = ""
   )
 }
-message("Fixed 15-age EBS pollock mortality input verified from the accepted controls and report.")
+message("Fixed 15-age EBS pollock mortality input verified from the official controls and report.")

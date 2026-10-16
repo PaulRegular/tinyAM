@@ -4,7 +4,7 @@ Translation revision: 2026-10-14.
 
 ## Assessment record
 
-The canonical database represents the accepted 2025 benchmark assessment as the current detailed record. MFRI published a newer 2026 assessment report, which is recorded separately as summary-only. Its age-specific matrices are not copied from the 2025 assessment.
+The canonical database represents the official 2025 benchmark assessment as the current detailed record. MFRI published a newer 2026 assessment report, which is recorded separately as summary-only. Its age-specific matrices are not copied from the 2025 assessment.
 
 The 2025 benchmark replaced the previous assessment framework with the state-space assessment model (SAM). The assessment uses catch numbers-at-age, catch weights, stock weights, maturity, spring and autumn survey indices-at-age, and estimated abundance and fishing mortality-at-age.
 
@@ -24,10 +24,10 @@ The complete numerical 2026 age-specific input and output matrices were not reco
 - **Survey units:** Official tables label indices as numbers but do not establish calibrated physical units. Values are retained on their native scales.
 - **Survey timing:** The translation records 0.20 for March and 0.80 for October, based on survey months. These are approximations, not verified native SAM sampling fractions.
 - **Natural mortality:** Fixed at 0.2 per year for all ages.
-- **Spawning timing:** The accepted assessment uses pre-spawning mortality fractions of 0.4 for F and 0.3 for M.
+- **Spawning timing:** The official assessment uses pre-spawning mortality fractions of 0.4 for F and 0.3 for M.
 - **Outputs:** Summary tables provide recruitment, SSB and length-based reference biomass, with reported uncertainty. Age-specific output uncertainty was not recovered.
 
-The accepted reference biomass represents fish measuring at least 45 cm and is distinct from total age-structured biomass.
+The official reference biomass represents fish measuring at least 45 cm and is distinct from total age-structured biomass.
 
 ## tinyAM translation revision (2026-10-14)
 
@@ -47,7 +47,7 @@ This uses independent deviations from expected cohort survival, with freely esti
 
 Recruitment remains a separate random-walk process under tinyAM's default recruitment settings. Specifying `process = "iid"` for N does not imply IID recruitment.
 
-The accepted SAM model also estimates abundance and recruitment as latent states, but its precise process covariance, variance sharing and initial-state conventions have not been fully reconstructed in the canonical record.
+The official SAM model also estimates abundance and recruitment as latent states, but its precise process covariance, variance sharing and initial-state conventions have not been fully reconstructed in the canonical record.
 
 The translation therefore retains a simpler population-process specification.
 
@@ -67,9 +67,9 @@ The revised correlated random walk allows annual changes in log fishing mortalit
 
 This provides a flexible representation of changing fishing mortality and selectivity-at-age without requiring an estimated stationary mean F curve.
 
-The accepted 2025 benchmark SAM likewise allows fishing selectivity to vary over time. The revised tinyAM structure is therefore a plausible approximation of the accepted assessment's temporal flexibility.
+The official 2025 benchmark SAM likewise allows fishing selectivity to vary over time. The revised tinyAM structure is therefore a plausible approximation of the official assessment's temporal flexibility.
 
-However, the precise accepted SAM F-process covariance, variance-sharing keys and age-state sharing have not been independently verified for this translation. The use of `cor_rw` should not be described as an exact reconstruction of those settings.
+However, the precise official SAM F-process covariance, variance-sharing keys and age-state sharing have not been independently verified for this translation. The use of `cor_rw` should not be described as an exact reconstruction of those settings.
 
 ### Natural mortality
 
@@ -77,7 +77,7 @@ The translation retains:
 
 `M_settings = list(process = "off", mu_form = NULL, mu_supplied = ~M_assumption)`
 
-Natural mortality is supplied as a fixed value of 0.2 across ages and years, matching the accepted assumption.
+Natural mortality is supplied as a fixed value of 0.2 across ages and years, matching the official assumption.
 
 No additional M process is estimated.
 
@@ -91,7 +91,7 @@ Commercial catch numbers-at-age are retained and fitted with one estimated logno
 
 Missing catch observations are not filled.
 
-This is a simplified observation likelihood rather than a complete reproduction of the accepted SAM catch-error specification.
+This is a simplified observation likelihood rather than a complete reproduction of the official SAM catch-error specification.
 
 ### Survey observations and catchability
 
@@ -107,11 +107,11 @@ The model does not impose monotone catchability or density-dependent catchabilit
 
 The survey indices remain on their published native scales. Their calibrated physical units were not recovered, and differences in index scale are absorbed through the estimated catchability parameters.
 
-The translation uses approximate sampling fractions of 0.20 and 0.80. Exact timing and complete observation-error covariance equivalence with the accepted model remain unresolved.
+The translation uses approximate sampling fractions of 0.20 and 0.80. Exact timing and complete observation-error covariance equivalence with the official model remain unresolved.
 
 ### Biological inputs
 
-The accepted annual stock weights, catch weights and maturity-at-age inputs are retained.
+The official annual stock weights, catch weights and maturity-at-age inputs are retained.
 
 The source's early-year stock-weight and maturity substitutions are preserved.
 
@@ -119,17 +119,17 @@ No alternative biological surfaces are introduced as part of the revised model c
 
 ### Spawning-stock biomass comparison
 
-The accepted assessment calculates spawning-stock biomass after accounting for mortality before spawning.
+The official assessment calculates spawning-stock biomass after accounting for mortality before spawning.
 
 Its published definition uses fractions of 0.4 for fishing mortality and 0.3 for natural mortality.
 
 The current tinyAM translation does not apply those fractions when calculating mature biomass.
 
-Consequently, the comparison summary uses a common-definition mature biomass calculated from the accepted population numbers and the same translated stock weights and maturity inputs used by tinyAM.
+Consequently, the comparison summary uses a common-definition mature biomass calculated from the official population numbers and the same translated stock weights and maturity inputs used by tinyAM.
 
-This quantity supports comparisons of estimated mature stock abundance but is not identical to the accepted assessment's native spawning-time SSB.
+This quantity supports comparisons of estimated mature stock abundance but is not identical to the official assessment's native spawning-time SSB.
 
-The accepted length-based reference biomass for fish of at least 45 cm is retained as a native output. It is not directly compared with tinyAM's total age-based biomass.
+The official length-based reference biomass for fish of at least 45 cm is retained as a native output. It is not directly compared with tinyAM's total age-based biomass.
 
 ### Interpretation of the revision
 
@@ -139,20 +139,20 @@ The N process, biological assumptions, survey selection and observation-error sp
 
 The revised configuration improves the representation of temporally varying fishing mortality without adding stock-specific biological processes or extra observation streams.
 
-The numerical fix and any improved agreement with accepted outputs should be documented using the newly generated convergence diagnostics and comparison summaries. No new numerical performance statistics are asserted in this source review.
+The numerical fix and any improved agreement with official outputs should be documented using the newly generated convergence diagnostics and comparison summaries. No new numerical performance statistics are asserted in this source review.
 
 ## Remaining translation limitations
 
-The principal differences between the accepted assessment and the revised tinyAM translation are:
+The principal differences between the official assessment and the revised tinyAM translation are:
 
-- The exact accepted N and F process covariance and parameter-sharing structures have not been fully recovered.
+- The exact official N and F process covariance and parameter-sharing structures have not been fully recovered.
 - tinyAM uses a simplified catch and survey observation likelihood.
 - Exact survey sampling fractions and calibrated survey-index units remain unavailable.
 - Native spawning-time SSB differs from the common-definition mature biomass used for comparison.
-- The accepted length-based reference biomass cannot be reproduced exactly from age-specific inputs.
-- Full age-specific uncertainty from the accepted assessment was not recovered.
+- The official length-based reference biomass cannot be reproduced exactly from age-specific inputs.
+- Full age-specific uncertainty from the official assessment was not recovered.
 
-These differences describe the limits of the translation rather than problems with the accepted SAM assessment.
+These differences describe the limits of the translation rather than problems with the official SAM assessment.
 
 ## Sources reviewed
 
@@ -171,4 +171,4 @@ The revised tinyAM translation fits 1979–2024, ages 1–12+, with random-walk 
 
 Catch and survey observations retain the source age structure and biological inputs, with simplified observation-error models and approximate survey timing.
 
-The translation is intended to test whether a compact age-structured state-space model can reproduce broad accepted population dynamics without duplicating every feature of the accepted SAM configuration.
+The translation is intended to test whether a compact age-structured state-space model can reproduce broad official population dynamics without duplicating every feature of the official SAM configuration.

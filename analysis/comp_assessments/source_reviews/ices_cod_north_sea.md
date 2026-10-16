@@ -5,7 +5,7 @@ Translation revision: 2026-10-14.
 
 The source-reviewed record remains partial; this is not an input-completeness declaration.
 
-## Identity and accepted run
+## Identity and official run
 
 Charbonneau identifier: `ICES-WGNSSK_NS 4-7d,20_Gadus_morhua`.
 
@@ -15,15 +15,15 @@ As checked on 2026-10-03, the ICES Advice and Scenarios Database lists `cod.27.4
 
 The June 2026 WGNSSK report states that no cod advice was issued that spring. No later active cod assessment was listed in the ASD at the source-review date.
 
-Detailed accepted-run source: [WGNSSK 2025 autumn cod chapter](https://ndownloader.figshare.com/files/59358443), ICES Library article 29085995.
+Detailed official-run source: [WGNSSK 2025 autumn cod chapter](https://ndownloader.figshare.com/files/59358443), ICES Library article 29085995.
 
 Framework: [WKBCOD 2023](https://doi.org/10.17895/ices.pub.22591423).
 
 [Stock annex revised in 2024](https://ndownloader.figshare.com/files/47179495).
 
-## Accepted assessment: model structure and inputs
+## Official assessment: model structure and inputs
 
-The accepted assessment uses `stockassessment` 0.12.4 and `multiStockassessment` 0.4.0.
+The official assessment uses `stockassessment` 0.12.4 and `multiStockassessment` 0.4.0.
 
 The population model covers 1983–2025, ages 1–7+, for Northwestern, Southern, and Viking substocks. Commercial catch data end in 2024.
 
@@ -54,7 +54,7 @@ Recreational removals are excluded from the fitted assessment.
 
 The translation was revised to better represent the population and fishing-mortality processes while constraining survey catchability to a biologically plausible, non-decreasing age pattern.
 
-The translation remains a single-stock approximation of the accepted three-substock assessment.
+The translation remains a single-stock approximation of the official three-substock assessment.
 
 ### Population structure
 
@@ -68,7 +68,7 @@ This retains a separate random-walk recruitment process under the default recrui
 
 Initial abundance at older ages is freely estimated.
 
-Unlike the accepted assessment, tinyAM uses one combined population and one shared SD for older-cohort survival deviations. Substock-specific population processes and relationships among substocks are not represented.
+Unlike the official assessment, tinyAM uses one combined population and one shared SD for older-cohort survival deviations. Substock-specific population processes and relationships among substocks are not represented.
 
 ### Fishing mortality
 
@@ -78,9 +78,9 @@ The previous translation used independent fishing-mortality random walks. The re
 
 This allows AR(1) correlation across ages in annual log-F increments, rather than treating changes in F at neighbouring ages as independent.
 
-The revised process is closer to the correlated age structure of the accepted model. However, it does not reproduce the complete multistock F parameterization or the shared, scaled selectivity relationships among Northwestern, Southern, and Viking substocks.
+The revised process is closer to the correlated age structure of the official model. However, it does not reproduce the complete multistock F parameterization or the shared, scaled selectivity relationships among Northwestern, Southern, and Viking substocks.
 
-The accepted implementation's shared selectivity code 4 combines a cubic age effect with a scalar stationary AR1 temporal level. That structure should not be described as identical to tinyAM's `cor_rw` process.
+The official implementation's shared selectivity code 4 combines a cubic age effect with a scalar stationary AR1 temporal level. That structure should not be described as identical to tinyAM's `cor_rw` process.
 
 ### Survey selection
 
@@ -90,7 +90,7 @@ This index represents the combined population and is therefore more directly app
 
 Its sampling time of 0.75 and supplied relative observation SDs are retained.
 
-The other six fitted index streams are omitted. The resulting observation likelihood contains less information than the accepted assessment, particularly about recruitment and differences among substocks.
+The other six fitted index streams are omitted. The resulting observation likelihood contains less information than the official assessment, particularly about recruitment and differences among substocks.
 
 ### Monotone survey catchability
 
@@ -108,7 +108,7 @@ The constraint is intentional. With only the mixed Q3+Q4 survey and a combined p
 
 The monotone curve reduces this flexibility without requiring a specific logistic function or assuming that catchability must strictly increase with age.
 
-**This is a translation assumption, not a recovered constraint from the accepted assessment.** The accepted multistock model uses a different observation and population structure, and its numerical catchability estimates have not been independently recovered.
+**This is a translation assumption, not a recovered constraint from the official assessment.** The official multistock model uses a different observation and population structure, and its numerical catchability estimates have not been independently recovered.
 
 The ordering of `q_key` factor levels must correspond to increasing survey age groups, because `mono()` follows the declared factor-level order.
 
@@ -120,7 +120,7 @@ The translation specifies:
 
 The supplied year-age natural-mortality surface is treated as fixed. This motivates restricting the fit to 1983–2022, when the translated M surface is complete.
 
-The accepted model estimates M through a biological GMRF. That estimated variation and its uncertainty are not reproduced by tinyAM.
+The official model estimates M through a biological GMRF. That estimated variation and its uncertainty are not reproduced by tinyAM.
 
 ### Commercial catch
 
@@ -134,17 +134,17 @@ The source's age-correlated catch observation errors, substock landings composit
 
 ### Biological inputs
 
-Accepted weight and maturity observations are substock-specific.
+Official weight and maturity observations are substock-specific.
 
 The translation uses the arithmetic mean of the available Northwestern, Southern, and Viking values for each year and age.
 
 This provides one biological surface for the combined population, but the resulting weights and maturity proportions are not weighted by the relative abundances of the substocks.
 
-The method is therefore a practical approximation, rather than an exact aggregation of the accepted biological inputs.
+The method is therefore a practical approximation, rather than an exact aggregation of the official biological inputs.
 
 ### Comparison quantities
 
-The accepted assessment reports outputs separately for each substock. These are combined for comparison with the single-population tinyAM fit.
+The official assessment reports outputs separately for each substock. These are combined for comparison with the single-population tinyAM fit.
 
 Population numbers, recruitment, and biomass are summed across substocks.
 
@@ -158,7 +158,7 @@ These derived quantities allow comparisons of broad population dynamics but shou
 
 ## Numerical output source and verification
 
-The official [ICES technical service](https://doi.org/10.17895/ices.advice.32541738) releases FLStock objects from accepted assessments. The [updated archive](https://ndownloader.figshare.com/files/67087409) contains `Selectivity Indicators/FLStocks.RData`.
+The official [ICES technical service](https://doi.org/10.17895/ices.advice.32541738) releases FLStock objects from official assessments. The [updated archive](https://ndownloader.figshare.com/files/67087409) contains `Selectivity Indicators/FLStocks.RData`.
 
 The stock `cod.27.46a7d20` is represented as three FLStock objects, labelled Northwest, South, and Viking, covering 1983–2025 and ages 1–7+.
 
@@ -174,7 +174,7 @@ All 2,688 tabulated N/F/M values across the three substocks match the official F
 
 Zero mismatches were identified.
 
-These objects contain accepted assessment outputs. Their biological or catch slots must not be treated as original observations without independent verification.
+These objects contain official assessment outputs. Their biological or catch slots must not be treated as original observations without independent verification.
 
 Uncertainty should be obtained from the official SAG XML or Table 4.14 rather than inferred from rounded estimates.
 
@@ -190,13 +190,13 @@ It provides assessment and data-preparation scripts but not the complete raw inp
 
 The TAF catalogue, stockassessment.org directory, and stock-annex references were checked.
 
-The public user3 SAM archive contains the historical single-stock `WKCOD_combined_99` benchmark case, which is not the accepted multistock assessment.
+The public user3 SAM archive contains the historical single-stock `WKCOD_combined_99` benchmark case, which is not the official multistock assessment.
 
 Published input tables are retained with their report-rounding provenance. Auxiliary composition streams and supplied survey uncertainties are included in the canonical database.
 
 Unrounded auxiliary values could not be recovered from the public files. Missing values are not filled and rounded proportions are not renormalized.
 
-The accepted configuration's version 0.4.0 implementation, revision `0465d228884e0e1fe394276ef320e2d8f20ac16c` dated 2025-04-22, resolves `initN = 2` as separate recruitment-level parameters and initial age recursion under first-year F+M, with log SD 0.01.
+The official configuration's version 0.4.0 implementation, revision `0465d228884e0e1fe394276ef320e2d8f20ac16c` dated 2025-04-22, resolves `initN = 2` as separate recruitment-level parameters and initial age recursion under first-year F+M, with log SD 0.01.
 
 Shared selectivity code 4 combines a cubic age effect and a scalar stationary AR1 temporal level. Source comments describing that temporal level as a random walk do not match the implementation's likelihood equations.
 
@@ -210,7 +210,7 @@ Assessment ID: `ices_cod_north_sea_2025`.
 
 The last fitted input year is 2025, corresponding to the Q1 survey. Catch and reported F end in 2024; N and M estimates extend through 2025.
 
-The accepted record includes three substocks, one combined commercial catch fleet, seven fitted index streams, and two auxiliary composition likelihoods.
+The official record includes three substocks, one combined commercial catch fleet, seven fitted index streams, and two auxiliary composition likelihoods.
 
 The canonical database contains 6,515 inputs, 3,327 outputs, and 75 assumptions.
 
@@ -233,15 +233,15 @@ The statuses remain partial because the complete native inputs and fitted model 
 
 ## Record summary and reproduction
 
-The North Sea cod catalogue entry now represents the accepted three-substock Northern Shelf assessment following the 2023 benchmark.
+The North Sea cod catalogue entry now represents the official three-substock Northern Shelf assessment following the 2023 benchmark.
 
-The canonical database preserves the accepted substock inputs, fitted outputs, survey age structures, observation uncertainties, and biological-process information without substituting inputs from earlier assessment models.
+The canonical database preserves the official substock inputs, fitted outputs, survey age structures, observation uncertainties, and biological-process information without substituting inputs from earlier assessment models.
 
 The revised tinyAM translation fits one combined population over 1983–2022, with IID older-cohort survival deviations, correlated F random walks, fixed supplied M, and monotone non-decreasing survey catchability.
 
 The `mono(q_key)` constraint is particularly important: it prevents the reduced observation model from estimating declining catchability at older ages, while allowing flexible increases and plateaus.
 
-The comparison evaluates whether this simpler configuration can approximate broad accepted stock dynamics. It does not reproduce the accepted three-substock likelihood, selectivity model, or full uncertainty.
+The comparison evaluates whether this simpler configuration can approximate broad official stock dynamics. It does not reproduce the official three-substock likelihood, selectivity model, or full uncertainty.
 
 Cached sources remain gitignored. The source-specific importer requires Python with pdfplumber and base R:
 

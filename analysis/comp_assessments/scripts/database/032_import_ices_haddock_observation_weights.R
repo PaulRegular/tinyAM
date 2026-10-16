@@ -137,7 +137,7 @@ for (i in seq_len(nrow(rows))) {
   } else {
     for (column in names(rows)) {
       if (!same_value(existing[match_row, column], rows[i, column], column)) {
-        stop("Existing observation-weight record conflicts with the accepted SAM fit.")
+        stop("Existing observation-weight record conflicts with the official SAM fit.")
       }
     }
   }

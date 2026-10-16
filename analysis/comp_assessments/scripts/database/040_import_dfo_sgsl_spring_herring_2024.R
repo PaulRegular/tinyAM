@@ -195,7 +195,7 @@ acoustic_biomass_2026 <- data.frame(
   notes = paste(
     "Spring-spawner acoustic biomass from the 2025 data release.",
     "Kept with the separate 2026 summary assessment record; values are not",
-    "used as inputs to the accepted 2024 assessment."
+    "used as inputs to the official 2024 assessment."
   ),
   stringsAsFactors = FALSE
 )
@@ -458,19 +458,19 @@ assessment <- data.frame(
   assessment_url = assessment_url, framework_url = methods_url,
   data_url = "", model_url = "", repository_url = "",
   assumptions_status = "partial", inputs_status = "partial", outputs_status = "partial",
-  notes = "Most recent accepted assessment with recoverable detailed source. The 2024/058 document provides support tables and data changes, not a full mathematical model description; 2022/068 is used for method context. The 2026 full assessment is recorded separately because its detailed report is still in preparation.",
+  notes = "Most recent official assessment with recoverable detailed source. The 2024/058 document provides support tables and data changes, not a full mathematical model description; 2022/068 is used for method context. The 2026 full assessment is recorded separately because its detailed report is still in preparation.",
   stringsAsFactors = FALSE
 )
 summary_assessment <- data.frame(
   assessment_id = summary_id, stock_id = stock_id, assessment_year = 2026,
   terminal_year = 2025, estimate_terminal_year = 2025,
   assessment_type = "full_assessment", model_family = "state-space",
-  model_version = "2026 accepted assessment; detailed report in preparation",
+  model_version = "2026 official assessment; detailed report in preparation",
   is_current = FALSE, is_applied = TRUE, framework_year = "",
   assessment_url = summary_url, framework_url = "", data_url = acoustic_data_url,
   model_url = "", repository_url = "", assumptions_status = "partial",
   inputs_status = "partial", outputs_status = "partial",
-  notes = "Accepted at the March 2026 peer review and reported through 2025. Numerical input tables, full methods, and model outputs remain unavailable because the detailed DFO Research Document is in preparation. No 2026-run values are mixed into the 2024 detailed record.",
+  notes = "Official at the March 2026 peer review and reported through 2025. Numerical input tables, full methods, and model outputs remain unavailable because the detailed DFO Research Document is in preparation. No 2026-run values are mixed into the 2024 detailed record.",
   stringsAsFactors = FALSE
 )
 assumptions <- rbind(assumptions_2024, assumptions_2026)

@@ -56,7 +56,7 @@ stopifnot(
 input_rows <- function(type, measure, basis, year, age, value, unit,
                        fleet = "", survey = "", sampling_time = NA_real_,
                        source_type = "native_model", source_reference,
-                       transformation = "Copied from the accepted SAM fit.",
+                       transformation = "Copied from the official SAM fit.",
                        notes = "") {
   n <- length(value)
   yr <- rep_len(year, n)
@@ -110,7 +110,7 @@ observation_inputs <- lapply(seq_along(fleet_names), function(fleet_id) {
       fleet = "Total catch",
       source_reference = paste0(model_url, "; fit$data$logobs and fit$data$aux"),
       transformation = "Exponentiated the native log catch observations.",
-      notes = "Total catch-at-age supplied to the accepted assessment; age 8 is the plus group."
+      notes = "Total catch-at-age supplied to the official assessment; age 8 is the plus group."
     )
   } else {
     input_rows(
@@ -139,7 +139,7 @@ inputs <- do.call(rbind, c(observation_inputs, list(
   static_input(
     "maturity", "maturity_at_age", "proportion",
     dat$propMat[1, ], "proportion", "propMat",
-    "Time-invariant maturity ogive used by the accepted model.",
+    "Time-invariant maturity ogive used by the official model.",
     paste0(report_url, "; Table 3.6.5, PDF p. 247")
   ),
   static_input(
@@ -358,7 +358,7 @@ outputs <- rbind(
   surface_output(
     t(n_age_year), "population", "numbers_at_age",
     "thousand fish", "exp(fit$pl$logN)", years, ages,
-    "Accepted stock numbers at age; values are on the SAM model scale."
+    "Official stock numbers at age; values are on the SAM model scale."
   ),
   surface_output(
     t(f_age_year), "mortality", "fishing_mortality_at_age",
@@ -482,7 +482,7 @@ assessment <- data.frame(
   assumptions_status = "complete", inputs_status = "complete",
   outputs_status = "complete",
   notes = paste(
-    "Accepted HAWG 2026 single-fleet SAM assessment for 1991-2025.",
+    "Official HAWG 2026 single-fleet SAM assessment for 1991-2025.",
     "The cached fit converges and reproduces the report's annual recruitment, SSB, Fbar and TSB after applying keyLogFsta to expand the age-shared F state.",
     "Published F-at-age and stock-numbers-at-age are available in Tables 3.6.12 and 3.6.13; age-specific uncertainty is not tabulated."
   ),

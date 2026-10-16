@@ -8,25 +8,25 @@ Stock: Norway pout in ICES Subarea 4 and Division 3.a (`nop.27.3a4`).
 
 The selected record is the February 2026 WKBWNG benchmark assessment for Norway pout.
 
-The benchmark report identifies the accepted final SESAM run as `NP_Sep2025_bench_final`. The cached fitted summary is stored under the related archive name `NP_Sep2025_bench_final_Mfor`.
+The benchmark report identifies the official final SESAM run as `NP_Sep2025_bench_final`. The cached fitted summary is stored under the related archive name `NP_Sep2025_bench_final_Mfor`.
 
 The cached fitted run matches the reported final model settings and the 2012 Q4 B_lim calculation. Its SSB at 2012.75 is 30,766.56 tonnes, compared with 30,766.76 tonnes in the benchmark report.
 
 Quarterly fitted population states span 1984 Q1–2025 Q4. Catch and survey observations extend through 2025 Q3, although individual survey series have different terminal years.
 
-The accepted fitted summary reports optimizer convergence code 0, objective 1547.746 and the message "relative convergence (4)". These are native SESAM diagnostics, not diagnostics from the tinyAM translation.
+The official fitted summary reports optimizer convergence code 0, objective 1547.746 and the message "relative convergence (4)". These are native SESAM diagnostics, not diagnostics from the tinyAM translation.
 
 The benchmark is distinct from the 2025 production-advice assessment. WGNSSK 2026 states that no spring advice was issued for Norway pout. The benchmark is therefore retained as the current detailed assessment, with `is_applied = FALSE`.
 
 ### Natural-mortality scenario
 
-The accepted model uses the selected M-0 scenario: annually varying, age- and quarter-specific natural mortality from the North Sea SMS model for 1984–2022, with the 2022 mortality pattern carried through 2025.
+The official model uses the selected M-0 scenario: annually varying, age- and quarter-specific natural mortality from the North Sea SMS model for 1984–2022, with the 2022 mortality pattern carried through 2025.
 
 The benchmark selected this configuration after considering model fit, retrospective behaviour and diagnostic results.
 
 The native fitted object contains the quarterly natural-mortality values used over its historical input intervals.
 
-The separate `M_forecast.csv` includes forecast values, including 2026, and is not substituted for the accepted historical inputs.
+The separate `M_forecast.csv` includes forecast values, including 2026, and is not substituted for the official historical inputs.
 
 ## Data recovered
 
@@ -86,11 +86,11 @@ tinyAM does not currently implement a grouped-age index likelihood, so this obse
 
 These unresolved details keep the input completeness status partial.
 
-## Accepted SESAM model structure
+## Official SESAM model structure
 
 ### Population abundance and recruitment
 
-The accepted model represents population abundance at quarterly intervals.
+The official model represents population abundance at quarterly intervals.
 
 Recruitment enters at age 0 in Q3, rather than at the beginning of the calendar year.
 
@@ -102,7 +102,7 @@ This structure requires quarterly survival and recruitment accounting that is no
 
 ### Fishing mortality
 
-The accepted model uses quarterly random walks in log fishing mortality.
+The official model uses quarterly random walks in log fishing mortality.
 
 Annual changes are not the elementary process steps: F evolves between successive quarters.
 
@@ -117,7 +117,7 @@ F states remain distinct for each age.
 
 Fbar is calculated over ages 1–2.
 
-The accepted model also applies a large-increment adjustment. Selected F-process increments have their standard deviation multiplied by 100 when the corresponding change in `log(catch + 1)` exceeds 2.9.
+The official model also applies a large-increment adjustment. Selected F-process increments have their standard deviation multiplied by 100 when the corresponding change in `log(catch + 1)` exceeds 2.9.
 
 This reduces the process penalty for certain unusually large changes.
 
@@ -133,7 +133,7 @@ The fitted-history mortality surface and forecast mortality file are retained se
 
 ### Catch observation errors
 
-The accepted catch observation model has three variance groups:
+The official catch observation model has three variance groups:
 
 - Age 0.
 - Ages 1–2.
@@ -162,11 +162,11 @@ Maturity is constant across years:
 
 Stock weights are age- and quarter-specific but constant across years. Catch weights vary by age, year and quarter.
 
-The accepted input construction treats discard weights as catch weights, consistent with the benchmark's conclusion that discards and bycatch are negligible.
+The official input construction treats discard weights as catch weights, consistent with the benchmark's conclusion that discards and bycatch are negligible.
 
 ## tinyAM translation revision (2026-10-14)
 
-The revised translation retains the annualized observations and biological inputs while improving correspondence with the accepted population and fishing-mortality processes.
+The revised translation retains the annualized observations and biological inputs while improving correspondence with the official population and fishing-mortality processes.
 
 The principal changes are:
 
@@ -176,7 +176,7 @@ The principal changes are:
 - Catch observation SDs retain the translated native age groups.
 - Survey catchability and observation SDs retain the source-derived sharing groups.
 
-The revised configuration is reported to produce a working fit. Updated tinyAM convergence statistics and comparison metrics should be recorded separately from the accepted SESAM diagnostics.
+The revised configuration is reported to produce a working fit. Updated tinyAM convergence statistics and comparison metrics should be recorded separately from the official SESAM diagnostics.
 
 ### Model period and age structure
 
@@ -204,7 +204,7 @@ Recruitment at age 0 retains the separate tinyAM recruitment process. The source
 
 Consequently, the age-specific variance structure is approximated rather than reproduced exactly.
 
-The accepted quarterly process is represented through annual cohort survival.
+The official quarterly process is represented through annual cohort survival.
 
 ### Fishing-mortality process
 
@@ -224,9 +224,9 @@ The annual increment vector follows a multivariate Normal distribution with cova
 
 Here, `rho` describes AR(1) dependence between neighbouring ages, and `sigma_F` is the common annual increment SD.
 
-This reproduces the main temporal and cross-age features of the accepted SESAM F process more closely than the previous stationary AR1 model.
+This reproduces the main temporal and cross-age features of the official SESAM F process more closely than the previous stationary AR1 model.
 
-The accepted model's quarterly increments, separate age-grouped F innovation variances and large-increment adjustment are not reproduced.
+The official model's quarterly increments, separate age-grouped F innovation variances and large-increment adjustment are not reproduced.
 
 The annual translation uses one shared F-process SD rather than the source's two variance groups.
 
@@ -262,7 +262,7 @@ The groups distinguish age 0, ages 1–2 and age 3+.
 
 Observation SDs are estimated from the annualized data while preserving the source's age-group sharing.
 
-The accepted quarterly catch likelihood is not reproduced: aggregating four quarterly observations changes both their temporal resolution and their error structure.
+The official quarterly catch likelihood is not reproduced: aggregating four quarterly observations changes both their temporal resolution and their error structure.
 
 The translation also avoids treating incomplete 2025 catch as a complete annual observation.
 
@@ -291,7 +291,7 @@ No missing 2025 IBTS other-countries observations are inferred.
 
 ### Biological inputs
 
-The translation retains the accepted maturity schedule.
+The translation retains the official maturity schedule.
 
 Annualized stock weights use:
 
@@ -306,9 +306,9 @@ The retained biological inputs are therefore source-based annual equivalents, no
 
 ### Spawning-stock biomass comparison
 
-The accepted SESAM assessment calculates SSB at the beginning of each quarter.
+The official SESAM assessment calculates SSB at the beginning of each quarter.
 
-tinyAM's common-period comparison uses Q1 spawning biomass calculated from beginning-of-year abundance, the translated Q1 stock weights and the accepted maturity vector.
+tinyAM's common-period comparison uses Q1 spawning biomass calculated from beginning-of-year abundance, the translated Q1 stock weights and the official maturity vector.
 
 For ages contributing to SSB, these definitions align at the start of the year.
 
@@ -318,11 +318,11 @@ The common-period Q1 SSB comparison is therefore more directly comparable than o
 
 ### Abundance and recruitment comparisons
 
-The accepted assessment's Q1 age-0 abundance is measured before current-year age-0 recruitment enters the population in Q3.
+The official assessment's Q1 age-0 abundance is measured before current-year age-0 recruitment enters the population in Q3.
 
 Consequently, that source age-0 abundance state does not correspond directly to tinyAM's annual recruitment state.
 
-The accepted Q1 age-0 N row is excluded from the like-for-like age-specific abundance comparison.
+The official Q1 age-0 N row is excluded from the like-for-like age-specific abundance comparison.
 
 Age-0 recruitment is compared separately using the source's recruitment output.
 
@@ -336,15 +336,15 @@ The revised fit retains:
 
 These starting values assist numerical optimization of the annualized model.
 
-They do not fix the population or fishing-mortality states to the accepted SESAM estimates.
+They do not fix the population or fishing-mortality states to the official SESAM estimates.
 
-Any accepted N or F values supplied as initial parameter values are re-estimated freely during the tinyAM fit.
+Any official N or F values supplied as initial parameter values are re-estimated freely during the tinyAM fit.
 
 Retaining informed starting values is reasonable for this translation, given the substantial differences between quarterly SESAM dynamics and the annual tinyAM parameterization.
 
 ### Interpretation of the revision
 
-The revised model is a closer approximation to accepted SESAM in two important respects.
+The revised model is a closer approximation to official SESAM in two important respects.
 
 First, age-grouped IID survival-process SDs allow different survival variability between younger ages and the plus group.
 
@@ -354,11 +354,11 @@ These changes improve structural correspondence without reproducing the source m
 
 The model should therefore be assessed primarily as an annual approximation of population dynamics and stock-status trajectories rather than as an exact reproduction of the quarterly likelihood.
 
-Numerical success should be established using the current tinyAM convergence checks and comparison results, independently of the accepted benchmark fit.
+Numerical success should be established using the current tinyAM convergence checks and comparison results, independently of the official benchmark fit.
 
 ## Canonical outputs and validation
 
-The cached accepted SESAM fit provides:
+The cached official SESAM fit provides:
 
 - Quarterly abundance-at-age and fishing-mortality-at-age point estimates.
 - Quarterly SSB and Fbar with 95% intervals.
@@ -374,7 +374,7 @@ Annualized comparison definitions are documented separately so that differing re
 
 ## Remaining translation limitations
 
-The principal differences between the accepted SESAM benchmark and the revised tinyAM translation are:
+The principal differences between the official SESAM benchmark and the revised tinyAM translation are:
 
 - Quarterly SESAM population dynamics are reduced to annual transitions.
 - Recruitment enters in Q3 in the source but is represented in an annual age-0 state in tinyAM.
@@ -386,15 +386,15 @@ The principal differences between the accepted SESAM benchmark and the revised t
 - Annual-equivalent biological inputs depend on the documented quarterly exposure conventions.
 - The annual abundance comparison cannot include Q1 age-0 N on a like-for-like basis.
 
-These differences are limitations of the simplified model, not errors in the accepted assessment.
+These differences are limitations of the simplified model, not errors in the official assessment.
 
 ## Sources
 
 - [ICES WKBWNG 2026 benchmark report](https://doi.org/10.17895/ices.pub.32019630), particularly Sections 2.3–2.6, Tables 2.1–2.5 and Figures 2.1–2.2.
 - [Benchmark report PDF](https://ices-library.figshare.com/ndownloader/files/64519302)
 - [WKBWNG working documents](https://ices-library.figshare.com/articles/report/Benchmark_Workshop_on_Whiting_Norway_Pout_and_Golden_Redfish_WKBWNG_/32019630)
-- [Accepted fitted SESAM run](https://stockassessment.org/datadisk/stockassessment/userdirs/user3/NP_Sep2025_bench_final_Mfor/run/sum.RData)
-- [Accepted SESAM input directory](https://stockassessment.org/datadisk/stockassessment/userdirs/user3/NP_Sep2025_bench_final_Mfor/data/)
+- [Official fitted SESAM run](https://stockassessment.org/datadisk/stockassessment/userdirs/user3/NP_Sep2025_bench_final_Mfor/run/sum.RData)
+- [Official SESAM input directory](https://stockassessment.org/datadisk/stockassessment/userdirs/user3/NP_Sep2025_bench_final_Mfor/data/)
 - [2025 production advice](https://doi.org/10.17895/ices.advice.27202770)
 - [ICES Stock Assessment Graphs](https://standardgraphs.ices.dk/ViewSourceData.aspx?key=21230)
 
@@ -404,4 +404,4 @@ Earlier local Windows retrieval problems with the public benchmark PDF did not p
 
 ## Record summary
 
-The canonical record represents the accepted February 2026 SESAM benchmark for North Sea Norway pout, with quarterly fitted states extending from 1984 through 2025
+The canonical record represents the official February 2026 SESAM benchmark for North Sea Norway pout, with quarterly fitted states extending from 1984 through 2025

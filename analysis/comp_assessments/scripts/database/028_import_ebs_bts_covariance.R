@@ -21,7 +21,7 @@ for (j in seq_along(years)) {
   r$survey <- "NMFS bottom-trawl VAST"
   r$value <- paste(format(m[j, ], digits = 17, trim = TRUE, scientific = FALSE), collapse = ", ")
   r$notes <- paste0("Native cov_2024.dat row; columns in calendar-year order: ", paste(years, collapse = ", "), ". Covariance of unlogged biomass-index residuals on the native index scale squared; no rescaling. Objective uses 0.5*r^T*inverse(cov)*r with r=observed-predicted biomass after q normalization.")
-  r$source_reference <- "https://github.com/noaa-afsc/EBS_pollock; accepted data/cov_2024.dat, pm_24.dat yrs_bts_data; source/pm.tpl Survey_Likelihood"
+  r$source_reference <- "https://github.com/noaa-afsc/EBS_pollock; official data/cov_2024.dat, pm_24.dat yrs_bts_data; source/pm.tpl Survey_Likelihood"
   a <- rbind(a, as.data.frame(r, stringsAsFactors = FALSE))
 }
 i <- a$assessment_id == id & a$setting == "BTS_likelihood"
@@ -30,5 +30,5 @@ write.csv(a, p, row.names = FALSE, na = "")
 z <- a[a$assessment_id == id & startsWith(a$setting, prefix), ]
 recovered <- do.call(rbind, lapply(z$value, function(v) as.numeric(strsplit(v, ",", fixed = TRUE)[[1]])))
 stopifnot(identical(unname(recovered), unname(m)))
-cat("\n## Bottom-trawl covariance recovered\n\nAll 1,764 cells of the 42-by-42 supplied covariance matrix are now preserved as year-labeled numerical assumption rows, with explicit column years 1982–2019 and 2021–2024. Native-source checks confirm symmetry, positive definiteness and exact numerical round-trip. The likelihood uses unlogged biomass residuals after q normalization, not log-index errors. This matrix must not be replaced by independent observation SDs when describing the accepted assessment.\n", file = file.path(root, "source_reviews/afsc_pollock_ebs.md"), append = TRUE)
+cat("\n## Bottom-trawl covariance recovered\n\nAll 1,764 cells of the 42-by-42 supplied covariance matrix are now preserved as year-labeled numerical assumption rows, with explicit column years 1982–2019 and 2021–2024. Native-source checks confirm symmetry, positive definiteness and exact numerical round-trip. The likelihood uses unlogged biomass residuals after q normalization, not log-index errors. This matrix must not be replaced by independent observation SDs when describing the official assessment.\n", file = file.path(root, "source_reviews/afsc_pollock_ebs.md"), append = TRUE)
 message("Native 42x42 BTS covariance represented and exactly verified.")

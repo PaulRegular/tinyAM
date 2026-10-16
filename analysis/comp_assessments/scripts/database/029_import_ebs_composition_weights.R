@@ -32,7 +32,7 @@ for (fleet in names(series)) {
       fsh = ""
     )
     r$notes <- "Native sam vector likelihood weight for this composition year, as supplied to robust_p; stored separately from raw composition counts and the optional sample_size field."
-    r$source_reference <- "https://github.com/noaa-afsc/EBS_pollock; accepted data/pm_24.dat sam_fsh/sam_bts/sam_ats; source/pm.tpl robust_p"
+    r$source_reference <- "https://github.com/noaa-afsc/EBS_pollock; official data/pm_24.dat sam_fsh/sam_bts/sam_ats; source/pm.tpl robust_p"
     a <- rbind(a, as.data.frame(r, stringsAsFactors = FALSE))
   }
 }
@@ -49,5 +49,5 @@ for (k in prefix2) {
   i <- a$assessment_id == id & a$setting == k
   stopifnot(sum(i) == 1)
 }
-cat("\n## Composition weights and active observation likelihoods\n\nThe 60 fishery, 42 BTS and 19 ATS sam values have been captured by year as native composition likelihood weights. These are the values passed to robust_p and remain distinct from raw age frequencies. Control flags also verify BTS full-covariance biomass likelihood, ATS biomass likelihood and separate ATS age-1 treatment. Numerical BTS covariance is independently stored by calendar-year rows. The no-age-error switch is zero, so the accepted fit uses an identity ageing-error treatment.\n", file = file.path(root, "source_reviews/afsc_pollock_ebs.md"), append = TRUE)
+cat("\n## Composition weights and active observation likelihoods\n\nThe 60 fishery, 42 BTS and 19 ATS sam values have been captured by year as native composition likelihood weights. These are the values passed to robust_p and remain distinct from raw age frequencies. Control flags also verify BTS full-covariance biomass likelihood, ATS biomass likelihood and separate ATS age-1 treatment. Numerical BTS covariance is independently stored by calendar-year rows. The no-age-error switch is zero, so the official fit uses an identity ageing-error treatment.\n", file = file.path(root, "source_reviews/afsc_pollock_ebs.md"), append = TRUE)
 message("Recorded 121 annual composition weights and confirmed active observation likelihood controls.")

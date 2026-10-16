@@ -6,10 +6,10 @@ This document defines how a curated source assessment is transformed into data a
 Read the [scope and provenance statement](README.md#scope-and-provenance)
 before interpreting these illustrative model comparisons.
 
-The canonical assessment database is intentionally richer than tinyAM. It preserves the fleets, surveys, biological inputs, and statistical assumptions of the accepted source assessment.
+The canonical assessment database is intentionally richer than tinyAM. It preserves the fleets, surveys, biological inputs, and statistical assumptions of the official source assessment.
 
 Within an assessment, preserve the finest authoritative data available even
-when the accepted model pools ages or years in its likelihood. A translation
+when the official model pools ages or years in its likelihood. A translation
 may use a more detailed reported series when tinyAM can represent it, while
 keeping the source likelihood's pooling and any report rounding explicit.
 Aggregate reported ages only as required by tinyAM's model age grid; for
@@ -19,7 +19,7 @@ observations.
 
 The expected result for each selected assessment is a documented tinyAM model,
 a record of its convergence, and, when it converges, a comparison with the
-accepted assessment. Fits and dashboards can be cached locally when useful;
+official assessment. Fits and dashboards can be cached locally when useful;
 they are not routine committed outputs. Preparing observation tables alone does
 not complete a translation task.
 
@@ -41,7 +41,7 @@ translation, and analysis code.
 
 Use `run_stock.R` and `view_assessment()` for interactive model development,
 `run_assessment()` to rerun one stock recipe, and `run_assessments()` for a reproducible batch. Normally select the record marked
-`is_current`: the most recent accepted assessment for which detailed inputs,
+`is_current`: the most recent official assessment for which detailed inputs,
 assumptions, and outputs can be recovered for the canonical database. This is
 the current detailed assessment and may predate the newest advice, FSAR, or
 publication when later material is summary-only. Use another record only when
@@ -147,7 +147,7 @@ fit <- update(fit, catch_settings = list(sd_form = ~ age + I(age^2)))
 preview <- view_assessment(fit, assessment)
 ```
 
-`view_assessment()` never fits a model. It refreshes the Accepted reference using
+`view_assessment()` never fits a model. It refreshes the Official reference using
 the supplied fit's years, ages and biological inputs, applies the same catch
 reporting and unit/definition rules as the batch runner, and returns the fit,
 reference, diagnostics, detailed differences and summary invisibly. Summaries
@@ -155,7 +155,7 @@ use historical years; projection rows remain available in the dashboard. The
 comparison plus age follows the supplied fit's maximum age. For example,
 changing `ages` from `0:8` to `0:7` combines source ages 7 and 8+ into 7+ for
 catch, indices and age-specific output comparisons. Summed outputs have no
-combined uncertainty; mortality rates use accepted N as weights.
+combined uncertainty; mortality rates use official N as weights.
 
 Fixed M and biological inputs are selected on the requested age grid; missing
 or duplicated values on that grid remain errors. No extra M values are required
@@ -182,7 +182,7 @@ plan. Set `parallel = FALSE` when debugging.
 
 Each stock script supplies a short Markdown table aligned with `prepare_tam()`:
 
-| Component | Accepted assessment | tinyAM representation | Reason for difference |
+| Component | Official assessment | tinyAM representation | Reason for difference |
 |---|------|------|------|
 | Years | Fitted historical years | Years used in this fit | Explain any restricted period |
 | Ages | Recruitment age and terminal age group | Model ages and plus group | Explain any age restriction or grouping |
@@ -303,7 +303,7 @@ Model specification is different. It includes decisions such as:
 
 Do not hide model choices inside basic data-wrangling helpers.
 
-Use the accepted model's year and age range as the starting point. Do not
+Use the official model's year and age range as the starting point. Do not
 silently shorten the period, change the plus group, repeat an annual biological
 series, or drop a survey merely to make validation pass. First investigate
 whether the missing source information can be recovered. An explicitly chosen
@@ -401,14 +401,14 @@ The source database remains fleet-specific.
 The translation/audit should record that the tinyAM model is using an aggregate fishery.
 
 Do not add overlapping direct catch-at-age and reconstructed totals/compositions
-twice. Retain the source representation needed to understand the accepted
+twice. Retain the source representation needed to understand the official
 likelihood; follow the canonical catch rules in `DATABASE_STRUCTURE.md` and
 `PROTOCOL.md` when deciding whether a reconstructed series is a source input
 or a derived translation product.
 
 ## 4.7 Landings and discards
 
-If landings and discards are both true removals in the accepted assessment and can be converted to compatible numbers-at-age:
+If landings and discards are both true removals in the official assessment and can be converted to compatible numbers-at-age:
 
 $$C_{t,a}^{total}
 =
@@ -434,7 +434,7 @@ not add a total-catch likelihood or alter fitted predictions.
 
 # 5. Preparing survey/index-at-age data
 
-Every survey used in the accepted assessment should be considered.
+Every survey used in the official assessment should be considered.
 
 Unlike fishing fleets, distinct surveys should generally remain distinct because tinyAM supports multiple survey series with separate catchability structures.
 
@@ -538,9 +538,9 @@ the stock background; do not label it as a recovered source-model parameter.
 
 ## 5.8 Spatial scale
 
-Use the survey series corresponding to the spatial extent actually fitted by the accepted assessment.
+Use the survey series corresponding to the spatial extent actually fitted by the official assessment.
 
-Do not use finer-scale subarea series when the assessment fits a combined index unless the analysis explicitly intends to deviate from the accepted model.
+Do not use finer-scale subarea series when the assessment fits a combined index unless the analysis explicitly intends to deviate from the official model.
 
 The observation translator stops when a selected survey has a measure that
 cannot be interpreted as an age-specific abundance index. Do not force a
@@ -706,7 +706,7 @@ The current tinyAM validator requires exactly one row per modeled year × age co
 
 NA catch observations are allowed.
 
-Zero catch is structurally accepted but is treated as missing by the log-scale observation model.
+Zero catch is structurally official but is treated as missing by the log-scale observation model.
 
 ## `index`
 
@@ -930,8 +930,8 @@ and `check_tam()` advisories rather than equating convergence with support.
 Use `data$maturity$spawn_time` when a documented spawning fraction
 is recoverable. The same mortality-adjusted SSB is reported and used as the
 stock–recruit parent. Compare matching age ranges, biological inputs and timing;
-accepted N and biology alone cannot reconstruct spawning-time SSB without
-accepted mortality. An absent column retains start-of-year SSB. Supply complete age/year timing
+official N and biology alone cannot reconstruct spawning-time SSB without
+official mortality. An absent column retains start-of-year SSB. Supply complete age/year timing
 when documented; projections retain terminal values at each biological age.
 Age-specific timing sums spawning contributions rather than a common-date snapshot.
 
@@ -1044,7 +1044,7 @@ The same curated assessment may support at least two different tinyAM objectives
 
 Goal:
 
-> approximate the accepted assessment as closely as current tinyAM reasonably allows.
+> approximate the official assessment as closely as current tinyAM reasonably allows.
 
 This model may use source-specific q blocks, M assumptions, observation-error structures, and process choices.
 
@@ -1186,7 +1186,7 @@ below apply after the recipe and settings are available.
 - `tinyAM::check_obs(obs)` passes;
 - `prepare_tam()` succeeds with the proposed years, ages, and settings;
 - all retained observations have compatible age groups and prediction definitions;
-- the stock background explains the accepted assumptions and chosen differences.
+- the stock background explains the official assumptions and chosen differences.
 
 Passing these model-readiness checks does not imply source-assessment equivalence.
 
@@ -1218,6 +1218,17 @@ starting values, but must record what changed. Do not repeatedly change data,
 processes, or q structures merely to obtain convergence. Source estimates may
 provide starting values; they must not silently constrain tinyAM estimates.
 
+For the twelve new Pacific cases, first call `fit_tam()` without `start_par`,
+using normal package initialization. Only if numerical convergence checks fail,
+allow one documented retry with explicit starting values. Construct source-based
+starts only when needed, using the existing year/age alignment helpers; retain
+package defaults for unavailable components. Keep data, formulas and model
+assumptions identical between attempts. Poor agreement with the official
+assessment alone does not justify a retry. Preserve diagnostics from the default
+attempt and identify the final initialization strategy in the diagnostic notes
+and stock review. Preparation with fitting disabled must run neither attempt.
+Existing stock scripts retain their current starting-value workflows.
+
 For a converged fit, `run_assessment()` returns the fitted object, source
 reference, detailed differences, and summary in memory. The fit is cached only
 when `cache = TRUE`. A dashboard is rendered only when `dashboard = TRUE` and
@@ -1231,7 +1242,7 @@ outcomes, rather than counting them as successful models. Preparing a usable
 
 ------------------------------------------------------------------------
 
-# 21. Compare fitted outputs with the accepted assessment
+# 21. Compare fitted outputs with the official assessment
 
 ## Build the source reporting reference
 
@@ -1279,9 +1290,9 @@ are available. Do not present percent differences between incompatible
 definitions as a like-for-like comparison.
 
 Reference translation defines comparable recruitment at tinyAM's first modeled
-age. If the accepted recruitment age differs, it uses accepted beginning-of-year
+age. If the official recruitment age differs, it uses official beginning-of-year
 N at that age in the **same calendar year**. It never shifts years to match a
-cohort. Missing accepted N remains missing. Native recruitment, original units
+cohort. Missing official N remains missing. Native recruitment, original units
 and provenance are retained in the database and the reference's `native_pop`
 attribute. The aligned series supplies both the dashboard and numerical
 comparison.
@@ -1293,19 +1304,19 @@ Annual common-definition outputs appear in the reference's reporting tables,
 while native aggregates remain in `native_pop`. Derived aggregates have no
 invented uncertainty.
 
-It sums accepted N over exactly the modeled ages only when every required age is available in that
+It sums official N over exactly the modeled ages only when every required age is available in that
 year. Partial age coverage does not become a partial annual total. Mortality
-means are recalculated using matching ages and accepted N as weights; an
+means are recalculated using matching ages and official N as weights; an
 arithmetic source Fbar is not compared directly with tinyAM's population-weighted
 Fbar.
 
 For biomass and SSB, use matching reported biomass or mature-biomass-at-age
-tables when available. Otherwise, when accepted N is available, a labelled
+tables when available. Otherwise, when official N is available, a labelled
 common-definition calculation can use the same translated weights and maturity
 as tinyAM. This latter calculation compares population estimates under shared
 biology, not the source model's native biomass or spawning-time SSB. The native
 values stay in `native_pop` for separate source context. A tinyAM plug-in M baseline
-must not be presented as accepted M; only reported estimated M or a documented
+must not be presented as official M; only reported estimated M or a documented
 fixed numerical source input can fill that reference surface.
 
 Unreconciled definitions are marked `non_equivalent`; missing numerical outputs
@@ -1363,6 +1374,19 @@ trajectory agreement: annual metrics use correlation across common years;
 age-specific metrics use the mean of within-age correlations across years.
 Constant series have no defined correlation and are omitted from that mean.
 This avoids treating the age gradient itself as evidence of temporal agreement.
+
+For the Pacific expansion review, flag a comparable core metric when its mean
+absolute percent difference exceeds 20%, its absolute terminal mean percent
+difference exceeds 20%, or its trend correlation is below 0.90. Apply this to
+SSB, recruitment, total abundance, N-at-age, F-at-age and estimated M over common
+historical years. Use the existing annual and within-age correlation definitions
+above, not squared correlation. These are review prompts, not tuning targets or
+evidence of scientific equivalence. Identify new versus existing cases and
+matched versus approximate comparisons. List unavailable and non-equivalent
+comparisons separately; missing statistics are not passes. Check fixed M for
+input consistency rather than crediting it as successful estimation. Separately
+flag numerical non-convergence, failed uncertainty estimation and important
+identifiability warnings.
 
 Differences should be interpreted in light of documented translation choices, such as:
 

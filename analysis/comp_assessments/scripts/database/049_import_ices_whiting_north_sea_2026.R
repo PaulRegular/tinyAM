@@ -41,7 +41,7 @@ stopifnot(
 input_rows <- function(type, measure, basis, year, age, value, unit,
                        fleet = "", survey = "", sampling_time = NA_real_,
                        source_type = "native_model", source_reference,
-                       transformation = "Copied from the accepted native SAM fit.",
+                       transformation = "Copied from the official native SAM fit.",
                        notes = "") {
   n <- length(value)
   data.frame(
@@ -90,7 +90,7 @@ obs_rows <- lapply(seq_along(fleet_names), function(fleet_id) {
       fleet = "Total catch",
       source_reference = paste0(model_url, "; fit$data$logobs and fit$data$aux"),
       transformation = "Exponentiated native log catch observation.",
-      notes = "The accepted total catch-at-age observation used in SAM."
+      notes = "The official total catch-at-age observation used in SAM."
     )
   } else {
     input_rows(
@@ -162,7 +162,7 @@ precision_rows <- input_rows(
   sampling_time = sample_times[aux$fleet[survey_obs]],
   source_reference = paste0(model_url, "; fit$data$weight"),
   transformation = "Copied from the fitted SAM data object.",
-  notes = "Native survey likelihood weight used by the accepted fit. SAM reads the first declared number of columns from the supplied CV matrix."
+  notes = "Native survey likelihood weight used by the official fit. SAM reads the first declared number of columns from the supplied CV matrix."
 )
 log_sd_rows <- input_rows(
   "index", "log_index_sd", "log_scale",
@@ -498,7 +498,7 @@ assessment <- data.frame(
   assessment_id = assessment_id, stock_id = stock_id,
   assessment_year = 2026L, terminal_year = 2025L,
   estimate_terminal_year = 2026L, assessment_type = "annual_assessment",
-  model_family = "SAM", model_version = "WGNSSK 2026 accepted NSwhiting_2026n run",
+  model_family = "SAM", model_version = "WGNSSK 2026 official NSwhiting_2026n run",
   is_current = TRUE, is_applied = TRUE, framework_year = 2026L,
   assessment_url = report_url, framework_url = framework_url,
   data_url = graph_url, model_url = model_url, repository_url = "",
@@ -506,7 +506,7 @@ assessment <- data.frame(
   outputs_status = "partial",
   notes = paste(
     "The April NSwhiting_2026n run matches published summary estimates for 1978-2025 and the official 2026 SSB value.",
-    "A later June update exists but does not match the published 2026 summary series and is not treated as accepted.",
+    "A later June update exists but does not match the published 2026 summary series and is not treated as official.",
     "Age-specific state uncertainty and fitted observation predictions are not exported; aggregate intervals are available from the report. The native fit and documented input matrices are cached locally outside Git."
   ),
   stringsAsFactors = FALSE

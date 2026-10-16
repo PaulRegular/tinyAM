@@ -159,7 +159,7 @@ stopifnot(
   all(is.na(reference$pop$ssb$lwr)),
   all(is.na(reference$pop$ssb$upr)),
   all(grepl("January 1", reference$pop$ssb$notes, fixed = TRUE)),
-  grepl("not the accepted assessment's April 1 SSB",
+  grepl("not the official assessment's April 1 SSB",
     translated$comparison_definitions$ssb$reason,
     fixed = TRUE
   )

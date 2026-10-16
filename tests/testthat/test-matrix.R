@@ -1,5 +1,5 @@
 matrix_data <- function() {
-  d <- expand.grid(year = 2000:2002, age = 1:3, model = c("tinyAM", "Accepted"),
+  d <- expand.grid(year = 2000:2002, age = 1:3, model = c("tinyAM", "Official"),
                    metric = c("Abundance", "Biomass"))
   d$est <- seq_len(nrow(d))
   d$unit <- ifelse(d$metric == "Abundance", "fish", "kg")
@@ -21,7 +21,7 @@ test_that("matrix coordinates, ranges and metadata preserve sparse inputs", {
   expect_identical(vapply(spec$colorscale, `[[`, "", 2L), tam_cols())
   expect_equal(vapply(spec$colorscale, `[[`, 0, 1L), seq(0, 1, length.out = length(tam_cols())))
   expect_identical(p$x$data[[1L]]$colorscale, spec$colorscale)
-  expect_identical(spec$models, c("tinyAM", "Accepted"))
+  expect_identical(spec$models, c("tinyAM", "Official"))
   for (m in spec$metrics) {
     expect_identical(m$years, sort(unique(d$year)))
     expect_identical(m$ages, sort(unique(d$age)))
@@ -69,9 +69,9 @@ test_that("matrix plots handle constants, gaps, single cells and validation", {
   d$unit[2] <- "tonnes"
   expect_error(plot_matrix(d, metric = ~metric, frame = ~model), "different units")
   d <- matrix_data()
-  d$model <- factor(d$model, levels = c("Accepted", "tinyAM"))
+  d$model <- factor(d$model, levels = c("Official", "tinyAM"))
   expect_identical(matrix_spec(plot_matrix(d, metric = ~metric, frame = ~model))$models,
-                   c("Accepted", "tinyAM"))
+                   c("Official", "tinyAM"))
 })
 
 test_that("pattern tables align source aliases and independent matrix units", {
@@ -107,16 +107,16 @@ test_that("tidy patterns retain model labels separately from aggregate scales", 
   reference$pop$biomass_at_age$unit <- "tonnes"
   reference$pop$biomass_at_age$est <- reference$pop$biomass_at_age$est / 1000
   reference$pop$ssb_mat$unit <- "kg"
-  original <- list(Accepted = reference, tinyAM = fit)
+  original <- list(Official = reference, tinyAM = fit)
   tabs <- tidy_tam(model_list = original, label_type = "factor")
   expect_setequal(as.character(tabs$patterns$population$model), names(original))
   d <- tabs$patterns$population
   for (metric in c("Abundance", "Biomass", "SSB")) {
     expect_equal(d$est[d$model == "tinyAM" & d$metric == metric],
-                 d$est[d$model == "Accepted" & d$metric == metric])
+                 d$est[d$model == "Official" & d$metric == metric])
   }
   expect_identical(fit, original$tinyAM)
-  expect_identical(reference, original$Accepted)
+  expect_identical(reference, original$Official)
 })
 
 test_that("mortality patterns retain reported Z and missing reference values", {
@@ -125,14 +125,14 @@ test_that("mortality patterns retain reported Z and missing reference values", {
   class(reference) <- c("tam_ref", "list")
   for (metric in c("F", "M", "Z")) reference$pop[[metric]]$unit <- "per year"
   reference$pop$Z$est <- NA_real_
-  tabs <- tidy_tam(model_list = list(tinyAM = fit, Accepted = reference))
+  tabs <- tidy_tam(model_list = list(tinyAM = fit, Official = reference))
   d <- tabs$patterns$mortality
   expect_setequal(unique(d$metric), c("F", "M", "Z"))
   z <- d[d$metric == "Z" & d$model == "tinyAM", ]
   expect_equal(z$est, as.vector(fit$rep$F + fit$rep$M))
   expect_true(all(is.finite(z$est)))
   expect_true(any(z$is_proj))
-  expect_true(all(is.na(d$est[d$metric == "Z" & d$model == "Accepted"])))
+  expect_true(all(is.na(d$est[d$metric == "Z" & d$model == "Official"])))
   p <- plot_matrix(d, metric = ~metric, frame = ~model)
   spec <- matrix_spec(p)
   total <- spec$metrics[[match("Z", vapply(spec$metrics, `[[`, "", "name"))]]

@@ -113,11 +113,11 @@ comparison_scales <- c(
 
 
 background <- c(
-  "### Northern Shelf cod: accepted 2025 three-substock SAM assessment",
+  "### Northern Shelf cod: official 2025 three-substock SAM assessment",
   "",
   print_sources(source$assessment),
   "",
-  "| Component | Accepted assessment | tinyAM representation | Reason for difference |",
+  "| Component | Official assessment | tinyAM representation | Reason for difference |",
   "|---|---|---|---|",
   "| Years | Population model spans 1983–2025; catch ends in 2024 and supplied M observations end in 2022. | Fit 1983–2022. | Restrict the translation to years with a complete supplied M surface. |",
   "| Ages | Northwestern, Southern and Viking substocks are modelled at ages 1–7+, with recruitment at age 1. | One combined population at ages 1–7+, retaining the age-7 plus group. | Substock population structure is omitted. |",
@@ -126,17 +126,17 @@ background <- c(
   "| M | Natural mortality is estimated using a GMRF informed by supplied M observations. | Use the supplied year-age M values as fixed inputs. | The mortality GMRF and uncertainty in M are not estimated. |",
   "| Catch | Combined commercial catch-at-age is fitted alongside substock and quarterly composition observations. | Use combined catch-at-age with independent lognormal errors and one shared SD. | Auxiliary composition likelihoods, source catch-error correlation and variance structure are omitted. |",
   "| Survey indices | Seven fitted age-structured index streams include three substock Q1 indices, one mixed Q3+Q4 index and three substock recruitment indices. | Fit the mixed Q3+Q4 survey only, retaining its sampling time of 0.75 and supplied relative SDs. | Substock-specific abundance and recruitment indices are omitted because the translation uses one combined population. |",
-  "| Survey catchability | Catchability is estimated within the accepted multistock observation model; numerical q estimates have not been independently recovered. | Use mono(q_key) to estimate non-decreasing catchability across ordered survey age groups, allowing plateaus. | A monotone age pattern is imposed to avoid estimating dome-shaped catchability from the reduced data inputs. This is a translation assumption, not a recovered SAM constraint. |",
+  "| Survey catchability | Catchability is estimated within the official multistock observation model; numerical q estimates have not been independently recovered. | Use mono(q_key) to estimate non-decreasing catchability across ordered survey age groups, allowing plateaus. | A monotone age pattern is imposed to avoid estimating dome-shaped catchability from the reduced data inputs. This is a translation assumption, not a recovered SAM constraint. |",
   "| Weights and maturity | Annual weight and maturity inputs are specific to each substock. | Use arithmetic means of available substock inputs for each year and age. | Population-weighted combined biological inputs are unavailable. |",
-  "| Comparison outputs | Accepted outputs are reported separately for Northwestern, Southern and Viking substocks. | Sum numbers, recruitment and biomass; calculate abundance-weighted F and M by age and abundance-weighted substock Fbar over ages 2–4. | Comparison quantities are approximate and their uncertainty is not combined. |",
+  "| Comparison outputs | Official outputs are reported separately for Northwestern, Southern and Viking substocks. | Sum numbers, recruitment and biomass; calculate abundance-weighted F and M by age and abundance-weighted substock Fbar over ages 2–4. | Comparison quantities are approximate and their uncertainty is not combined. |",
   "",
   "This translation tests whether tinyAM can reproduce broad Northern Shelf cod dynamics using a single combined population and the mixed Q3+Q4 survey.",
   "",
-  "The survey catchability formula mono(q_key) constrains q to be non-decreasing across the ordered age groups. It permits flat sections but prevents a dome-shaped catchability curve. This is an intentional simplifying assumption, not a constraint attributed to the accepted SAM assessment.",
+  "The survey catchability formula mono(q_key) constrains q to be non-decreasing across the ordered age groups. It permits flat sections but prevents a dome-shaped catchability curve. This is an intentional simplifying assumption, not a constraint attributed to the official SAM assessment.",
   "",
-  "The revised fit also uses IID cohort-survival deviations and correlated F random walks. The accepted assessment's substock structure, auxiliary composition likelihoods and biological GMRFs are not reproduced.",
+  "The revised fit also uses IID cohort-survival deviations and correlated F random walks. The official assessment's substock structure, auxiliary composition likelihoods and biological GMRFs are not reproduced.",
   "",
-  "Biological inputs are averaged across substocks without abundance weighting. Accepted outputs are aggregated or abundance-weighted for comparison, so resulting differences should not be interpreted as errors in a like-for-like reproduction of the accepted multistock model."
+  "Biological inputs are averaged across substocks without abundance weighting. Official outputs are aggregated or abundance-weighted for comparison, so resulting differences should not be interpreted as errors in a like-for-like reproduction of the official multistock model."
 )
 
 ## Model ----

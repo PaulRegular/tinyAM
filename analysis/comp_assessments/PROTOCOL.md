@@ -6,7 +6,7 @@ This document defines the standing protocol for adding, reviewing, and revising 
 
 The governing question is:
 
-> **What data and assumptions entered the most recent accepted assessment with recoverable detail, and what did it estimate?**
+> **What data and assumptions entered the most recent official assessment with recoverable detail, and what did it estimate?**
 
 The objective is to represent that detailed assessment faithfully, while recording
 any newer summary-only advice separately, not to collect every table in every
@@ -47,8 +47,8 @@ For each candidate stock:
 1.  locate the stock in the Charbonneau–Keith repository;
 2.  record its Charbonneau identifier;
 3.  inspect the metadata, notes, source assessment, and cited documents;
-4.  identify the latest accepted assessment used for advice;
-5.  identify the most recent accepted assessment with recoverable detailed inputs, assumptions, and outputs for the canonical record;
+4.  identify the latest official assessment used for advice;
+5.  identify the most recent official assessment with recoverable detailed inputs, assumptions, and outputs for the canonical record;
 6.  retrieve authoritative inputs, outputs, and assumptions for that detailed assessment whenever possible.
 
 Charbonneau–Keith is the default place to **start**, but not automatically the preferred source for every numerical value.
@@ -64,7 +64,7 @@ Its contents may include:
 
 Do not assume a Charbonneau–Keith value is an original assessment input.
 
-When a stock has received a newer accepted assessment than the one represented in Charbonneau–Keith, retain the Charbonneau stock identity as the starting point. Curate the most recent accepted assessment with recoverable detailed inputs, assumptions, and outputs; if newer advice is summary-only, record it and its limitations separately. Use a different assessment only when the active task requests it.
+When a stock has received a newer official assessment than the one represented in Charbonneau–Keith, retain the Charbonneau stock identity as the starting point. Curate the most recent official assessment with recoverable detailed inputs, assumptions, and outputs; if newer advice is summary-only, record it and its limitations separately. Use a different assessment only when the active task requests it.
 
 If a requested stock is not represented in the curated Charbonneau–Keith set, document that fact before adding it from another authoritative source.
 
@@ -82,7 +82,7 @@ After identifying the stock, seek evidence approximately in this order:
 6. documented reconstruction from authoritative source information;
 7. Charbonneau–Keith extracted values when they are the best available source or a useful cross-check.
 
-Prefer the original input structure actually consumed by the accepted model.
+Prefer the original input structure actually consumed by the official model.
 
 When native model files or fitted objects are publicly available, inspect them before relying on transcribed report tables.
 
@@ -136,7 +136,7 @@ Check the following resources:
 
   Useful for confirming current advice, stock codes, assessment year, advice category, and links to published advice.
 
-Do not assume that the newest repository or stockassessment.org case is the accepted assessment. TAF and stockassessment.org may contain historical, test, benchmark, sensitivity, or development runs. Confirm the accepted assessment against ICES advice and working-group or benchmark documentation.
+Do not assume that the newest repository or stockassessment.org case is the official assessment. TAF and stockassessment.org may contain historical, test, benchmark, sensitivity, or development runs. Confirm the official assessment against ICES advice and working-group or benchmark documentation.
 
 ### Fisheries and Oceans Canada (DFO)
 
@@ -230,7 +230,7 @@ For each assessment, search combinations of:
 
 When a report cites a model repository, supplemental dataset, package, or file archive, follow that trail before transcribing tables manually.
 
-If multiple candidate model runs are found, determine which one corresponds to the accepted assessment by comparing:
+If multiple candidate model runs are found, determine which one corresponds to the official assessment by comparing:
 
 - terminal data year;
 - assessment year;
@@ -242,11 +242,11 @@ If multiple candidate model runs are found, determine which one corresponds to t
 
 Do not select a model object solely because it is the newest file or repository.
 
-The canonical database's current detailed record must be the most recent accepted assessment for which detailed inputs, assumptions, and outputs can be recovered from authoritative sources. Mark this record `is_current = TRUE`. It may predate the newest advice, FSAR, or publication. A current benchmark can have `is_applied = FALSE` when it has not yet been used in an advice cycle; `is_current` and `is_applied` record different facts.
+The canonical database's current detailed record must be the most recent official assessment for which detailed inputs, assumptions, and outputs can be recovered from authoritative sources. Mark this record `is_current = TRUE`. It may predate the newest advice, FSAR, or publication. A current benchmark can have `is_applied = FALSE` when it has not yet been used in an advice cycle; `is_current` and `is_applied` record different facts.
 
-If a newer accepted assessment is documented only in summary material, record it separately and explain which details were unavailable. Its published values belong to that assessment alone: they do not displace the most recent detailed assessment as current, and must not be substituted for or combined with another run's inputs or outputs. Keep unresolved gaps visible and completeness statuses partial where appropriate.
+If a newer official assessment is documented only in summary material, record it separately and explain which details were unavailable. Its published values belong to that assessment alone: they do not displace the most recent detailed assessment as current, and must not be substituted for or combined with another run's inputs or outputs. Keep unresolved gaps visible and completeness statuses partial where appropriate.
 
-A detailed Research Document may be published a year or more after its Science Advisory Report or other summary product, so publication year and assessment year must not be treated as the same thing. Check the model version, terminal data year, and accepted run described by the detailed source, and record the assessment year and data terminal year separately from the source's publication date.
+A detailed Research Document may be published a year or more after its Science Advisory Report or other summary product, so publication year and assessment year must not be treated as the same thing. Check the model version, terminal data year, and official run described by the detailed source, and record the assessment year and data terminal year separately from the source's publication date.
 
 ## 2.3 Source discipline
 
@@ -255,12 +255,12 @@ Do not:
 - reconstruct an input from fitted outputs when the original input is available;
 - manufacture missing values;
 - assume a prominently reported quantity is necessarily a fitted-model input;
-- assume that a public model object is the accepted assessment without verification;
+- assume that a public model object is the official assessment without verification;
 - mix inputs or outputs from different assessment runs.
 
 Within the same assessment, prioritize the most complete age and time detail supported by authoritative sources. Do not collapse or pool observations merely to imitate the coarser groups used by the model when more detailed source values are available. Preserve the model-ready grouped data and the more detailed table as distinct records when both are informative, and label each record's role and provenance.
 
-When translating an assessment, use the most detailed defensible source series that tinyAM can represent. Record any aggregation needed to map reported ages into tinyAM's model ages, such as summing ages into a terminal plus group. Keep the accepted model's actual likelihood grouping explicit so a detailed reporting table is not mistaken for the exact observation vector used by that likelihood. Retain rounding and unresolved precision limits in the notes. Do not count overlapping source and derived series twice in a fit.
+When translating an assessment, use the most detailed defensible source series that tinyAM can represent. Record any aggregation needed to map reported ages into tinyAM's model ages, such as summing ages into a terminal plus group. Keep the official model's actual likelihood grouping explicit so a detailed reporting table is not mistaken for the exact observation vector used by that likelihood. Retain rounding and unresolved precision limits in the notes. Do not count overlapping source and derived series twice in a fit.
 
 Keep raw observations, model inputs, transformed inputs, fitted values, outputs, and diagnostics conceptually distinct.
 
@@ -268,25 +268,25 @@ When the native assessment object or input files are found, preserve their prove
 
 ------------------------------------------------------------------------
 
-# 3. Identify the accepted assessment and inventory the model
+# 3. Identify the official assessment and inventory the model
 
 Before extracting numerical data, establish:
 
 - stock identity and assessment authority;
-- latest accepted assessment and data terminal year;
-- most recent accepted assessment with recoverable detailed inputs, assumptions, and outputs for the canonical current record;
+- latest official assessment and data terminal year;
+- most recent official assessment with recoverable detailed inputs, assumptions, and outputs for the canonical current record;
 - terminal fitted data year;
 - model family/version where known;
 - model-defining benchmark or framework when distinct;
-- accepted/base run when several runs are presented.
+- official/base run when several runs are presented.
 
-Do not infer accepted status from filenames alone.
+Do not infer official status from filenames alone.
 
-Avoid test, sensitivity, preliminary, forecast-only, development, experimental, clone, and alternate runs unless official documentation identifies one as accepted.
+Avoid test, sensitivity, preliminary, forecast-only, development, experimental, clone, and alternate runs unless official documentation identifies one as official.
 
 If an annual assessment continues to use a model defined at an earlier benchmark/framework, record both assessment and framework years.
 
-Then inventory the structure actually used by the accepted model:
+Then inventory the structure actually used by the official model:
 
 - modeled years;
 - modeled ages;
@@ -303,9 +303,9 @@ This inventory defines what must be curated.
 
 A source table is material when it is:
 
-1.  an input to the accepted model;
-2.  an output from the accepted model; or
-3.  needed to reconstruct an accepted-model input that is not directly available.
+1.  an input to the official model;
+2.  an output from the official model; or
+3.  needed to reconstruct an official-model input that is not directly available.
 
 ------------------------------------------------------------------------
 
@@ -332,12 +332,12 @@ If the model uses a total plus an age composition, retain both.
 Catch-at-age is the working quantity required for the tinyAM translation.
 If a report supplies proportions describing an underlying catch-at-age input,
 recover that input using matching totals and, when biomass is involved,
-compatible catch weights; document the calculation. If the accepted model
+compatible catch weights; document the calculation. If the official model
 instead fits totals and compositions separately, preserve those native inputs
 and derive tinyAM catch-at-age outside the canonical database. Do not count
 the native and reconstructed representations twice.
 
-Total landings are otherwise optional unless the accepted model uses them or
+Total landings are otherwise optional unless the official model uses them or
 they are needed for a documented conversion. Detailed gear splits are not
 required unless they correspond to separate fitted fleets.
 
@@ -359,7 +359,7 @@ Capture composition weighting or effective sample size when it is a material mod
 
 ## 4.2 Surveys and indices
 
-Capture **every survey/index used by the accepted model**.
+Capture **every survey/index used by the official model**.
 
 For each fitted survey, determine as applicable:
 
@@ -375,11 +375,11 @@ For each fitted survey, determine as applicable:
 
 If the model uses an aggregate index plus an age composition, retain both.
 
-Do not replace source totals/compositions with a derived age-specific abundance series unless that derived series was itself the accepted-model input.
+Do not replace source totals/compositions with a derived age-specific abundance series unless that derived series was itself the official-model input.
 
 Match the spatial scale used by the fitted model. If published material contains finer subareas than the model fits, do not treat them as separate fitted indices.
 
-If the accepted model uses a combined index and only component values are published, reconstruct the combined input only when the aggregation is documented or defensible from authoritative information, and record the transformation.
+If the official model uses a combined index and only component values are published, reconstruct the combined input only when the aggregation is documented or defensible from authoritative information, and record the transformation.
 
 For survey timing, prefer model configuration or documented timing. If only approximate timing can be recovered, document the limitation rather than inventing precision.
 
@@ -396,13 +396,13 @@ Capture as applicable:
 - fraction of fishing mortality before spawning;
 - fraction of natural mortality before spawning.
 
-Preserve annual variation when used by the accepted model.
+Preserve annual variation when used by the official model.
 
 If a model uses a constant vector, store the source vector rather than manufacturing repeated annual rows unless the source itself represents a complete matrix.
 
 Keep stock weight and catch weight distinct.
 
-For maturity, preserve the accepted sex convention rather than averaging sexes arbitrarily.
+For maturity, preserve the official sex convention rather than averaging sexes arbitrarily.
 
 For natural mortality, distinguish:
 
@@ -418,7 +418,7 @@ Capture numerical M whenever it is a fixed or externally supplied input. If M is
 
 # 5. Curate model assumptions
 
-Use `assumptions.csv` for the biological and statistical structure of the accepted model.
+Use `assumptions.csv` for the biological and statistical structure of the official model.
 
 Investigate at least:
 
@@ -467,7 +467,7 @@ Never infer statistical meaning from a field name, integer key, shorthand code, 
 
 # 6. Curate outputs
 
-Recover outputs needed to characterize the accepted assessment.
+Recover outputs needed to characterize the official assessment.
 
 ## High priority
 
@@ -521,7 +521,7 @@ Do not silently:
 - interpolate missing biological values;
 - replace total-plus-composition inputs with derived age-specific values.
 
-A scientific transformation is allowed only when needed to recover the **actual input used by the accepted assessment** and the model-ready input is not directly available.
+A scientific transformation is allowed only when needed to recover the **actual input used by the official assessment** and the model-ready input is not directly available.
 
 In that case:
 
@@ -531,7 +531,7 @@ In that case:
 - retain component source quantities when useful;
 - do not present the reconstructed value as directly published.
 
-This exception concerns reconstruction of the accepted assessment, not preparation for a downstream analysis.
+This exception concerns reconstruction of the official assessment, not preparation for a downstream analysis.
 
 These restrictions apply to canonical source records. Derived tinyAM
 observations, settings, comparisons, and fitted results belong in analysis
@@ -541,7 +541,7 @@ outputs, as described in `TINYAM_TRANSLATION.md`.
 
 # 8. Completeness and source cache
 
-An assessment is input-complete when all material input streams used by the accepted model have been represented or transparently reconstructed.
+An assessment is input-complete when all material input streams used by the official model have been represented or transparently reconstructed.
 
 This includes, where applicable:
 
@@ -553,14 +553,14 @@ This includes, where applicable:
 
 Do not declare an assessment input-complete merely because one usable catch series and one survey have been found.
 
-`outputs_status` and `assumptions_status` likewise refer to completeness relative to the accepted assessment.
+`outputs_status` and `assumptions_status` likewise refer to completeness relative to the official assessment.
 
 ## Stock source reviews
 
 When reviewing model specifications, verify the actual source equations and
 parameter activation, not only labels such as RW, AR1, BH or logistic. Record
 which curve, variance and correlation parameters are estimated, fixed,
-penalized or mapped out in the accepted run. Check recruitment age and parent
+penalized or mapped out in the official run. Check recruitment age and parent
 year, spawning-time survival, lognormal bias corrections, selectivity
 normalization and the scale on which covariates/processes act. Consult the
 framework/benchmark and pinned native code when the production report omits
@@ -571,7 +571,7 @@ their diagnostics belong in the translation review, not the database.
 
 Keep stock-specific review notes in one Markdown file per stock under
 `analysis/comp_assessments/source_reviews/`, named with the stable stock ID.
-Use that file for accepted-run verification, source trails, input and output
+Use that file for official-run verification, source trails, input and output
 coverage, transformations, validation findings, and unresolved gaps. When a
 stock has several assessment records, identify the assessment IDs and keep
 run-specific notes clearly separated within the stock's file.
@@ -616,17 +616,17 @@ Do not mix artifacts from different assessment runs without preserving provenanc
 For every assessment:
 
 1.  locate the stock in Charbonneau–Keith where applicable and record its identifier;
-2.  verify the latest accepted assessment used for advice and the accepted/base run selected for this database record under Section 2.2;
+2.  verify the latest official assessment used for advice and the official/base run selected for this database record under Section 2.2;
 3.  identify the model-defining benchmark/framework;
 4.  inventory modeled years, ages, fleets, surveys, sexes, regions, seasons, and plus group;
 5.  enumerate all material input streams before extraction;
 6.  curate catch/removal inputs for every fitted fleet;
-7.  curate every survey/index used by the accepted model;
+7.  curate every survey/index used by the official model;
 8.  curate biological and natural-mortality inputs;
 9.  curate source-model assumptions;
 10. curate high-priority outputs;
 11. run structural validation;
-12. compare represented fleets and surveys against the accepted-model inventory;
+12. compare represented fleets and surveys against the official-model inventory;
 13. assign completeness statuses and record missing items;
 14. commit the assessment as one coherent unit when the active task requires stock-by-stock commits.
 
@@ -707,7 +707,7 @@ Also verify that:
 
 - every expected fitted fleet is represented;
 - every expected fitted survey is represented;
-- spatial/sex/seasonal dimensions match the accepted model;
+- spatial/sex/seasonal dimensions match the official model;
 - outputs and assumptions are not being substituted for inputs;
 - reconstructed inputs are explicitly identified and documented.
 

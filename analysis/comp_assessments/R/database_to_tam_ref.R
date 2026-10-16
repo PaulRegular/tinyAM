@@ -267,7 +267,7 @@ database_to_tam_ref <- function(assessment_id, outputs, obs = NULL, years = NULL
       }
       if (!is.null(n) && nrow(n)) {
         n$notes <- paste(
-          n$notes, "Comparable recruitment: accepted beginning-of-year N at age",
+          n$notes, "Comparable recruitment: official beginning-of-year N at age",
           min(ages), "in the same calendar year; native recruitment is retained separately."
         )
         pop$recruitment <- n

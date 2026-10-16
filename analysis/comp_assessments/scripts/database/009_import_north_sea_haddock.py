@@ -65,7 +65,7 @@ for name, kind, measure, basis, unit in [
     ('landMeanWeight', 'catch_weight', 'landings_weight_at_age', 'kg_per_fish', 'kg'),
     ('disMeanWeight', 'catch_weight', 'discard_weight_at_age', 'kg_per_fish', 'kg')]:
     for row in rows(f'native_{name}.csv'):
-        note = 'Matrix consumed by the accepted fit; age 8 represents 8+.'
+        note = 'Matrix consumed by the official fit; age 8 represents 8+.'
         if name == 'natMor':
             note += ' Fixed externally supplied SMS mortality; plus-group aggregation performed before fitting.'
         input_row(kind, measure, basis, row, unit, fleet=row.get('fleet',''), notes=note)
@@ -146,7 +146,7 @@ record=dict(assessment_id=assessment,stock_id=stock_id,assessment_year=2026,term
             is_current='TRUE',is_applied='TRUE',framework_year=2022,assessment_url=report,
             framework_url='',data_url=run+'data/',model_url=source,repository_url='',
             inputs_status='partial',outputs_status='partial',assumptions_status='partial',
-            notes='Accepted final run verified against 648 summary estimates/interval endpoints and 981 N/F-at-age values. All catch and both survey streams plus supplied matrices and relative survey SD factors represented. Survey-unit clarification, benchmark/2025 review and detailed other framework semantics remain unresolved. Catchability coefficients and powers with transformed uncertainty are represented; state uncertainty remains pending. Baseline object in baserun is historical and not used. See source_reviews/ices_haddock_north_sea.md.')
+            notes='Official final run verified against 648 summary estimates/interval endpoints and 981 N/F-at-age values. All catch and both survey streams plus supplied matrices and relative survey SD factors represented. Survey-unit clarification, benchmark/2025 review and detailed other framework semantics remain unresolved. Catchability coefficients and powers with transformed uncertainty are represented; state uncertainty remains pending. Baseline object in baserun is historical and not used. See source_reviews/ices_haddock_north_sea.md.')
 for filename,new,key in [('stocks.csv',[stock],'stock_id'),('assessments.csv',[record],'assessment_id'),
                          ('inputs.csv',inputs,'assessment_id'),('outputs.csv',outputs,'assessment_id'),
                          ('assumptions.csv',assumptions,'assessment_id')]:

@@ -67,7 +67,7 @@ weight <- inputs[
 ]
 weight <- weight[weight$quarter == ifelse(weight$age == 0L, 3L, 1L), , drop = FALSE]
 if (!setequal(weight$age, ages) || anyDuplicated(weight$age)) {
-  stop("The accepted stock weights do not cover ages 0-3 once at the selected year boundary.")
+  stop("The official stock weights do not cover ages 0-3 once at the selected year boundary.")
 }
 weight$season <- ""
 weight$quarter <- NA_integer_
@@ -154,7 +154,7 @@ quarter_cube <- function(rows, multiplier = 1) {
   quarter <- as.integer(sub("^Q", "", rows$season))
   i <- cbind(match(rows$year, years), match(rows$age, ages), quarter)
   out[i] <- rows$value * multiplier
-  if (any(!is.finite(out))) stop("An accepted quarterly surface is incomplete.")
+  if (any(!is.finite(out))) stop("An official quarterly surface is incomplete.")
   out
 }
 
@@ -199,7 +199,7 @@ for (age in ages) {
 if (any(!is.finite(source_n)) || any(source_n <= 0) ||
   any(!is.finite(annual_f)) || any(annual_f <= 0) ||
   any(!is.finite(annual_m_surface)) || any(annual_m_surface <= 0)) {
-  stop("The annualized accepted population or mortality surface is invalid.")
+  stop("The annualized official population or mortality surface is invalid.")
 }
 
 dat <- tinyAM::prepare_tam(
@@ -321,7 +321,7 @@ for (measure in c("biomass_at_age", "mature_biomass_at_age")) {
       )), collapse = "; ")
       row$notes <- paste(
         "Common-definition", measure,
-        "from accepted age-specific abundance, stock weights, and maturity; age 0 N is Q3 and older ages are Q1."
+        "from official age-specific abundance, stock weights, and maturity; age 0 N is Q3 and older ages are Q1."
       )
       common_biology <- rbind(common_biology, row)
     }
@@ -341,11 +341,11 @@ comparison_scales <- c(N = 1e-06, recruitment = 1e-06, ssb = 0.001, F = 1, M = 1
 
 
 background <- c(
-  "### North Sea Norway pout: accepted 2026 SESAM benchmark",
+  "### North Sea Norway pout: official 2026 SESAM benchmark",
   "",
   print_sources(source$assessment),
   "",
-  "| Component | Accepted assessment | tinyAM representation | Main simplification |",
+  "| Component | Official assessment | tinyAM representation | Main simplification |",
   "|---|---|---|---|",
 
   "| Years | Quarterly inputs and population states span 1984–2025, but fitted catch observations end in Q3 2025. | Fit 1984–2024, the last complete catch year. | The partial 2025 catch total is not treated as a complete annual observation. |",
@@ -362,24 +362,24 @@ background <- c(
 
   "| Indices | Five survey fleets sampled in Q1 or Q3, with source-specific catchability and observation-SD sharing. | Retain direct age-specific observations, with estimated q and SD parameters following the translated q_key and sd_block groups. | The grouped age-2–3+ IBTS observation is omitted because tinyAM does not fit grouped-age indices. |",
 
-  "| Weights and maturity | Stock weights are quarter-specific; maturity is 0, 0.2, 1 and 1 for ages 0–3+. | Use Q1 stock weights for ages 1–3+, Q3 weights for age 0 and the accepted maturity vector. | The annual weight surface approximates the quarterly inputs; age-0 maturity is zero. |",
+  "| Weights and maturity | Stock weights are quarter-specific; maturity is 0, 0.2, 1 and 1 for ages 0–3+. | Use Q1 stock weights for ages 1–3+, Q3 weights for age 0 and the official maturity vector. | The annual weight surface approximates the quarterly inputs; age-0 maturity is zero. |",
 
   "| SSB | Quarterly spawning-stock biomass is calculated at the beginning of each quarter. | Compare Q1 SSB using beginning-of-year N, stock weights and maturity. | The SSB definition is aligned for the selected common years. |",
 
   "",
-  "The revised translation uses IID cohort-survival deviations with age-grouped process SDs and freely estimated initial abundance. This more closely approximates the accepted SESAM survival-process structure than the previous single-SD, exponential-initialization model. Recruitment retains its separate process, and the quarterly population dynamics are annualized.",
+  "The revised translation uses IID cohort-survival deviations with age-grouped process SDs and freely estimated initial abundance. This more closely approximates the official SESAM survival-process structure than the previous single-SD, exponential-initialization model. Recruitment retains its separate process, and the quarterly population dynamics are annualized.",
   "",
-  "Fishing mortality now follows correlated random walks rather than stationary AR1 deviations around age-specific means. The new process captures persistent annual F changes and AR(1) correlation between neighbouring ages, as in the accepted SESAM model. The source's two F-innovation variance groups, quarterly increments and large-jump adjustments remain unrepresented.",
+  "Fishing mortality now follows correlated random walks rather than stationary AR1 deviations around age-specific means. The new process captures persistent annual F changes and AR(1) correlation between neighbouring ages, as in the official SESAM model. The source's two F-innovation variance groups, quarterly increments and large-jump adjustments remain unrepresented.",
   "",
   "Catch and survey observation-error parameters use source-derived sharing groups. Catch SDs distinguish age 0, ages 1–2 and age 3+, while survey q and SD groups follow the recovered native configuration.",
   "",
   "Survey timing uses quarter midpoints: 0.125 for Q1 and 0.625 for Q3. Annual-equivalent mortality inputs account for the quarters during which each age group is present, with age-0 recruitment entering in Q3. The annualized age-0 population state remains an approximation to the quarterly SESAM timing.",
   "",
-  "The accepted Q1 age-0 abundance precedes current-year recruitment, so that N-at-age observation is excluded from the like-for-like population comparison. Recruitment at age 0 is compared separately.",
+  "The official Q1 age-0 abundance precedes current-year recruitment, so that N-at-age observation is excluded from the like-for-like population comparison. Recruitment at age 0 is compared separately.",
   "",
   "The grouped IBTS age-2–3+ observation remains in the canonical database but is omitted from the tinyAM likelihood. Reported 2025 IBTS other-countries Q3 observations are unresolved in the cached fitted object and are not inferred.",
   "",
-  "The revised translation retains the accepted stock's annualized inputs and comparison definitions while more closely approximating its main N and F process structures. It remains a simplified annual assessment rather than an exact reproduction of the quarterly SESAM model."
+  "The revised translation retains the official stock's annualized inputs and comparison definitions while more closely approximating its main N and F process structures. It remains a simplified annual assessment rather than an exact reproduction of the quarterly SESAM model."
 )
 
 ## Model ----

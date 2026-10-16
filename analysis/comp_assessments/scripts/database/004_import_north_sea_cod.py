@@ -1,4 +1,4 @@
-"""Import the accepted 2025 Northern Shelf cod assessment from cached ICES sources."""
+"""Import the official 2025 Northern Shelf cod assessment from cached ICES sources."""
 import argparse
 import csv
 import io
@@ -177,7 +177,7 @@ for row in surfaces:
     outputs.append(dict(assessment_id=assessment, type=kind, measure=measure, region=region,
                         year=year, age=age, value=value, unit=unit, source_type="native_model",
                         source_reference=f"https://ndownloader.figshare.com/files/67087409; Selectivity Indicators/FLStocks.RData; cod.27.46a7d20; {region}; {slot}",
-                        notes="Official accepted-model output; all N/F/M values cross-checked against Tables 4.8, 4.9 and 4.13 within report rounding. Age 7 is the plus group."))
+                        notes="Official official-model output; all N/F/M values cross-checked against Tables 4.8, 4.9 and 4.13 within report rounding. Age 7 is the plus group."))
 
 for region, key in zip(regions, [19661, 19662, 19663]):
     tree = ET.parse(cache / f"SAG_2025_{region.lower()}_{key}.xml").getroot()
@@ -280,7 +280,7 @@ assessment_row = dict(assessment_id=assessment, stock_id=stock["stock_id"], asse
                       framework_url="https://doi.org/10.17895/ices.pub.22591423",
                       data_url=workflow, model_url="https://ndownloader.figshare.com/files/67087409",
                       repository_url=repository, assumptions_status="partial", inputs_status="partial", outputs_status="partial",
-                      notes="Accepted autumn 2025 three-substock assessment. Terminal fitted input year is 2025 because Q1 indices extend to 2025; catch and reported F end in 2024. Report-rounded input tables and verified official N/F/M output objects. All material input streams are represented, including auxiliary substock/quarterly landings proportions, but exact unrounded values and native input files are absent from the public repository. Configuration keys, timing, abundance-process covariance and multistock initialization/selectivity semantics were checked against the report and cited version 0.4.0 implementation. Exact installed code revision and numerical catchability/prediction uncertainty remain unavailable; biology process mean/variance details are not fully extracted. Missing biological observations are not replaced with estimates. All seven fitted index streams are represented with their supplied log-scale SDs and documented model timing.")
+                      notes="Official autumn 2025 three-substock assessment. Terminal fitted input year is 2025 because Q1 indices extend to 2025; catch and reported F end in 2024. Report-rounded input tables and verified official N/F/M output objects. All material input streams are represented, including auxiliary substock/quarterly landings proportions, but exact unrounded values and native input files are absent from the public repository. Configuration keys, timing, abundance-process covariance and multistock initialization/selectivity semantics were checked against the report and cited version 0.4.0 implementation. Exact installed code revision and numerical catchability/prediction uncertainty remain unavailable; biology process mean/variance details are not fully extracted. Missing biological observations are not replaced with estimates. All seven fitted index streams are represented with their supplied log-scale SDs and documented model timing.")
 
 for filename, new, key in [("stocks.csv", [stock], "stock_id"), ("assessments.csv", [assessment_row], "assessment_id"),
                            ("inputs.csv", inputs, "assessment_id"), ("outputs.csv", outputs, "assessment_id"),

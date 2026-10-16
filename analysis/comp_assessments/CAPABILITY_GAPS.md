@@ -71,4 +71,4 @@ The remaining items are proposals, not authorized additions.
 Composition likelihoods and explicit fleets are useful but would substantially
 expand tinyAM. Additional recruitment curves have lower confirmed prevalence
 in this inventory. None of these recommendations assumes that a new feature
-would necessarily improve agreement with an accepted assessment.
+would necessarily improve agreement with an official assessment.

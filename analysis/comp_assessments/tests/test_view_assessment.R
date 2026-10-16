@@ -21,7 +21,7 @@ testthat::test_that("previews use the supplied fit, refresh comparisons and do n
   result <- withVisible(view_assessment(fit, assessment, open_file = FALSE))
   testthat::expect_false(result$visible)
   testthat::expect_false(captured$open_file)
-  testthat::expect_identical(names(captured$model_list), c("Accepted", "tinyAM"))
+  testthat::expect_identical(names(captured$model_list), c("Official", "tinyAM"))
   testthat::expect_identical(captured$background, assessment$background)
   testthat::expect_identical(captured$output_file, result$value$dashboard_file)
   testthat::expect_identical(dirname(captured$output_file), normalizePath(tempdir(), winslash = "/"))
@@ -111,7 +111,7 @@ testthat::test_that("unavailable metrics retain their status and explanation in 
   row$year <- NA_integer_
   row$source <- row$tinyAM <- NA_real_
   row$comparison_status <- "unavailable"
-  row$reason <- "No numerical accepted output is available."
+  row$reason <- "No numerical official output is available."
   reference$comparisons <- rbind(reference$comparisons, row)
   result <- testthat::with_mocked_bindings(.assessment_comparison(fit, assessment),
     database_to_tam_ref = function(...) reference,
@@ -147,7 +147,7 @@ testthat::test_that("missing uncertainty still permits a real temporary comparis
   html <- paste(readLines(connection, warn = FALSE), collapse = "\n")
   close(connection)
   testthat::expect_match(html, "Numerical checks", fixed = TRUE)
-  testthat::expect_match(html, "Accepted", fixed = TRUE)
+  testthat::expect_match(html, "Official", fixed = TRUE)
   unlink(result$dashboard_file)
 })
 

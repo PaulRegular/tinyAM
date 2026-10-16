@@ -63,7 +63,7 @@ for name, kind, measure, basis, unit in [
     ('propMat', 'maturity', 'maturity_at_age', 'proportion', 'proportion'),
     ('natMor', 'M', 'natural_mortality_at_age', 'per_year', 'per year')]:
     for row in rows(f'native_{name}.csv'):
-        note = 'Matrix consumed by the accepted fit; age 15 represents 15+.'
+        note = 'Matrix consumed by the official fit; age 15 represents 15+.'
         if name == 'natMor':
             note += ' Fixed within SAM; includes external iterative cannibalism mortality. Raw nm.dat alone is not the final input.'
         input_row(kind, measure, basis, row, unit, fleet=row.get('fleet',''), notes=note)
@@ -122,7 +122,7 @@ assumption('biology','pre_spawning_M_fraction','0 at every modeled year and age'
 assumption('catch','landings_fraction','1 at every catch year and age','No modeled discard component; supplied land/discard weights equal catch weights.',fleet='Residual catch')
 assumption('catch','excluded_observations','12 catch cells have missing log-observations','Source cn.dat contains some positive values excluded from fit$data; preserve the actual fitted exclusions.',fleet='Residual catch')
 assumption('catch','observation_likelihood','Lognormal, independent across age','obsLikelihoodFlag=LN; obsCorStruct=ID.',fleet='Residual catch')
-assumption('observation','prediction_variance_link','Enabled for four survey parameter groups','Introduced in accepted 2026 assessment; numerical keys retained in cached configuration.',reference=report+'; section 3.4.1; Table 3.14')
+assumption('observation','prediction_variance_link','Enabled for four survey parameter groups','Introduced in official 2026 assessment; numerical keys retained in cached configuration.',reference=report+'; section 3.4.1; Table 3.14')
 for fleet in range(2,7):
     group = [r for r in obs if int(r['fleet']) == fleet]
     label = group[0]['fleet_name']
@@ -135,14 +135,14 @@ assumption('assessment','forecast_distinction','RCT3 recruitment replaces fitted
 stock = dict(stock_id=stock_id,charbonneau_id='ICES-AFWG_NEA1-2_Gadus_morhua',authority='JRN-AFWG',
              authority_stock_id='cod.27.1-2',scientific_name='Gadus morhua',common_name='Northeast Arctic cod',
              area='ICES subareas 1 and 2',region='Barents Sea and Norwegian Sea',ocean='Northeast Atlantic',
-             notes='Historical ICES stock; accepted assessment has been conducted outside ICES since 2022 by JRN-AFWG.')
+             notes='Historical ICES stock; official assessment has been conducted outside ICES since 2022 by JRN-AFWG.')
 record = dict(assessment_id=assessment,stock_id=stock_id,assessment_year=2026,terminal_year=2026,
               estimate_terminal_year=2026,assessment_type='assessment_update',model_family='SAM',
               model_version='stockassessment 0.12.0; RemoteSha 1cc464b80f6f',is_current='TRUE',is_applied='TRUE',
               framework_year=2021,assessment_url=report,framework_url='https://doi.org/10.17895/ices.pub.7920',
               data_url=run+'data/',model_url=source,repository_url='',inputs_status='partial',
               outputs_status='partial',assumptions_status='partial',
-              notes='Verified accepted final run: 320 summary and 3120 age-specific report values match within rounding. All fitted catch and five survey streams, weights, maturity and final M input represented. Survey native units, external cannibalism auxiliary data and detailed statistical-key/initial-state semantics require further review. Catch ends 2025; fitted surveys extend 2026. Native estimates kept separate from short-term advice forecasts. Numerical q and age-state uncertainty not yet exported. See source_reviews/ices_cod_northeast_arctic.md.')
+              notes='Verified official final run: 320 summary and 3120 age-specific report values match within rounding. All fitted catch and five survey streams, weights, maturity and final M input represented. Survey native units, external cannibalism auxiliary data and detailed statistical-key/initial-state semantics require further review. Catch ends 2025; fitted surveys extend 2026. Native estimates kept separate from short-term advice forecasts. Numerical q and age-state uncertainty not yet exported. See source_reviews/ices_cod_northeast_arctic.md.')
 for filename,new,key in [('stocks.csv',[stock],'stock_id'),('assessments.csv',[record],'assessment_id'),
                          ('inputs.csv',inputs,'assessment_id'),('outputs.csv',outputs,'assessment_id'),
                          ('assumptions.csv',assumptions,'assessment_id')]:

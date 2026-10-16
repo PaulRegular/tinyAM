@@ -89,26 +89,26 @@ catch_reporting <- list(
 )
 
 background <- c(
-  "### Gulf of Alaska pollock: accepted 2024 Model 23d",
+  "### Gulf of Alaska pollock: official 2024 Model 23d",
   "",
   print_sources(source$assessment),
   "",
-  "| Component | Accepted assessment | tinyAM representation | Reason for difference |",
+  "| Component | Official assessment | tinyAM representation | Reason for difference |",
   "|---|------|------|------|",
   "| Years | Western/Central/West Yakutat stock, 1970-2024. | Same stock and period. | Retained. |",
   "| Ages | Ages 1-10+, with recruitment at age 1. | Ages 1-10, with age 10 as the plus group. | The terminal group is retained. |",
   "| N | Variable recruitment with fixed SD 1.3, deterministic older-age survival, and initial abundance based on recruitment and M. | Random-walk recruitment with estimated SD, deterministic older-age survival, and exponential initial abundance. | Recruitment and initialization differ. |",
   "| F | One fishery with double-logistic selectivity and penalized annual changes. | Independent temporal random walks in log F by age; summaries use ages 3-10. | Replaces the source selectivity model. |",
-  "| M | Fixed external age-specific M; the accepted model fixes its scalar at 1. | The same supplied M vector with the M process off. | The fixed mortality input is retained. |",
+  "| M | Fixed external age-specific M; the official model fixes its scalar at 1. | The same supplied M vector with the M process off. | The fixed mortality input is retained. |",
   "| Catch | Total biomass and age compositions, with ages 1-2 and 10+ pooled in the likelihood. | Detailed published numbers at ages 1-15, summed to 10+, with a common log-SD. | Uses the finer reporting table and a lognormal likelihood rather than the source composition likelihood. |",
   "| Index | Shelikof winter acoustic, NMFS bottom trawl, ADF&G trawl, and summer acoustic biomass indices with age compositions and survey selectivity curves. | Numbers-at-age reconstructed with matching survey weights and source timing. Each survey has paired-age q blocks (1-2, 3-4, 5-6, 7-8, 9-10) and a logit link. Shelikof environmental and ADF&G annual effects act on logit-q; SD combines supplied log-SDs with one estimated level per survey. | Simplifies selectivity and observation errors. Aggregate-only years and the pooled Shelikof ages 1-3 bin are omitted. Source age-reading error, latent environmental dynamics, q penalties and priors are not represented. |",
-  "| Weights and maturity | Annual stock, catch, survey and spawning weights; constant maturity and female fraction 0.5. | Stock weights, matching catch/survey weights, and maturity multiplied by 0.5. | tinyAM SSB uses start-year stock weights; accepted SSB uses spawning weights and survival to year fraction 0.21. |",
+  "| Weights and maturity | Annual stock, catch, survey and spawning weights; constant maturity and female fraction 0.5. | Stock weights, matching catch/survey weights, and maturity multiplied by 0.5. | tinyAM SSB uses start-year stock weights; official SSB uses spawning weights and survival to year fraction 0.21. |",
   "",
-  "tinyAM fits individual fish with weights in kg. Accepted N and recruitment remain in million fish, and accepted SSB and biomass in thousand tonnes; comparisons convert tinyAM outputs to these units.",
+  "tinyAM fits individual fish with weights in kg. Official N and recruitment remain in million fish, and official SSB and biomass in thousand tonnes; comparisons convert tinyAM outputs to these units.",
   "",
   "The logit link restricts q below one; it does not reproduce the source bottom-trawl q prior. Bottom-trawl q for ages 5-8 approaches this boundary and is weakly estimated.",
   "",
-  "Catch numbers for 1975-2023 are rounded to 0.01 million fish; printed zeros are treated as missing by the lognormal likelihood. The yield panel uses original catch biomass and predicted catches multiplied by catch weights. Predictions are conditional medians, without a lognormal mean correction. Accepted F-at-age is unavailable."
+  "Catch numbers for 1975-2023 are rounded to 0.01 million fish; printed zeros are treated as missing by the lognormal likelihood. The yield panel uses original catch biomass and predicted catches multiplied by catch weights. Predictions are conditional medians, without a lognormal mean correction. Official F-at-age is unavailable."
 )
 
 

@@ -11,7 +11,7 @@
 "dfo_cod_2j3kl_2025","ssb","kt","matched","Sum of reported ssb_mat over ages 2-14","",57,185.650468906886,36.8306948266232,29.3433665977302,2024,1.79776709726858,0.956486633466905
 "dfo_cod_2j3kl_2025","Z_bar","per year","unavailable","Matching annual age-specific states","No numerical output is available on the matching definition.",0,,,,,,
 "dfo_cod_4t4vn_2019","abundance","thousand fish","matched","Total abundance across modeled ages 3-12; explicit reported age groups are matched to sums of tinyAM ages.","",48,70104.7404654683,22.2338277030173,13.9941837160069,2018,3.00630010665648,0.947501582900896
-"dfo_cod_4t4vn_2019","biomass","t","matched","Accepted N with shared translated weights  over ages 3-12","",48,41456.2898911255,18.0206122787327,12.255716724379,2018,-12.8430229123139,0.959873543204318
+"dfo_cod_4t4vn_2019","biomass","t","matched","Official N with shared translated weights  over ages 3-12","",48,41456.2898911255,18.0206122787327,12.255716724379,2018,-12.8430229123139,0.959873543204318
 "dfo_cod_4t4vn_2019","biomass_at_age","t","unavailable","Matching annual age-specific states","No numerical output is available on the matching definition.",0,,,,,,
 "dfo_cod_4t4vn_2019","F","per year","matched","Reported age 3 compared with tinyAM age 3","",480,0.0420282391059633,43.8090445606746,27.1184424409159,2018,34.0544660876375,0.915401087950515
 "dfo_cod_4t4vn_2019","F_bar","per year","matched","N-weighted F over ages 3,4,5,6,7,8,9,10,11,12","",48,0.0116191748084112,19.8350722674679,19.2764493553051,2018,-17.9939121026757,0.954107262616781
@@ -19,9 +19,9 @@
 "dfo_cod_4t4vn_2019","M_bar","per year","unavailable","N-weighted M over ages 3,4,5,6,7,8,9,10,11,12","No numerical output is available on the matching definition.",0,,,,,,
 "dfo_cod_4t4vn_2019","N","thousand fish","matched","Reported age 3 compared with tinyAM age 3","",480,8516.91188446415,23.2304010538818,17.5063037639193,2018,-17.8889198725958,0.937389141599639
 "dfo_cod_4t4vn_2019","recruitment","thousand fish","matched","Recruitment at age 3","",48,33737.7451152147,36.2756421122144,21.4288372457627,2018,19.7205232503294,0.902825418715597
-"dfo_cod_4t4vn_2019","ssb","t","matched","Accepted N with shared translated weights and maturity over ages 3-12","",48,31191.5539410226,18.2739816787761,13.7845967230795,2018,-24.9181318110066,0.957621607419594
+"dfo_cod_4t4vn_2019","ssb","t","matched","Official N with shared translated weights and maturity over ages 3-12","",48,31191.5539410226,18.2739816787761,13.7845967230795,2018,-24.9181318110066,0.957621607419594
 "ices_cod_north_sea_2025","abundance","thousand fish","matched","Total abundance across modeled ages 1-7; explicit reported age groups are matched to sums of tinyAM ages.","",40,117059.078863677,13.5973909035365,9.09531624793471,2022,-9.47814983667642,0.937542758659987
-"ices_cod_north_sea_2025","biomass","t","matched","Accepted N with shared translated weights  over ages 1-7","",40,15879.9613279043,7.77010639494825,6.35825878703655,2022,-0.406161237449147,0.985359887558758
+"ices_cod_north_sea_2025","biomass","t","matched","Official N with shared translated weights  over ages 1-7","",40,15879.9613279043,7.77010639494825,6.35825878703655,2022,-0.406161237449147,0.985359887558758
 "ices_cod_north_sea_2025","biomass_at_age","t","unavailable","Matching annual age-specific states","No numerical output is available on the matching definition.",0,,,,,,
 "ices_cod_north_sea_2025","F","per year","matched","Reported age 1 compared with tinyAM age 1","",280,0.142546582751083,19.0360499770919,12.3392551298294,2022,-39.450692968063,0.798554077713578
 "ices_cod_north_sea_2025","F_bar","per year","matched","N-weighted F over ages 1,2,3,4,5,6,7","",40,0.0402837972792725,11.7143050942883,9.35045051780576,2022,-25.4890513773734,0.967923651200249
@@ -29,9 +29,9 @@
 "ices_cod_north_sea_2025","M_bar","per year","matched","N-weighted M over ages 1,2,3,4,5,6,7","",40,0.0234253115854217,2.35048979796044,1.99852154168654,2022,2.56916183984651,0.984196141868618
 "ices_cod_north_sea_2025","N","thousand fish","matched","Reported age 1 compared with tinyAM age 1","",280,19821.5252249056,21.5095515566991,11.071201893237,2022,22.9843238534244,0.958148850987513
 "ices_cod_north_sea_2025","recruitment","thousand fish","matched","Recruitment at age 1","",40,120683.344941401,18.6018906795899,12.4713842878517,2022,-10.1508310671594,0.93174977233534
-"ices_cod_north_sea_2025","ssb","t","matched","Accepted N with shared translated weights and maturity over ages 1-7","",40,9304.55291288724,12.913280919631,11.8245972657335,2022,6.16670520365104,0.930083856961599
+"ices_cod_north_sea_2025","ssb","t","matched","Official N with shared translated weights and maturity over ages 1-7","",40,9304.55291288724,12.913280919631,11.8245972657335,2022,6.16670520365104,0.930083856961599
 "ices_herring_north_sea_2026","abundance","thousand fish","matched","Total abundance across modeled ages 0-8; explicit reported age groups are matched to sums of tinyAM ages.","",79,1022711.72336991,2.18087733937604,1.56384664199028,2025,10.7733927302015,0.997909912304984
-"ices_herring_north_sea_2026","biomass","t","matched","Accepted N with shared translated weights  over ages 0-8","",79,54262.5752107934,1.66817408447682,1.24639657732148,2025,5.11005624139374,0.998920706864255
+"ices_herring_north_sea_2026","biomass","t","matched","Official N with shared translated weights  over ages 0-8","",79,54262.5752107934,1.66817408447682,1.24639657732148,2025,5.11005624139374,0.998920706864255
 "ices_herring_north_sea_2026","biomass_at_age","t","unavailable","Matching annual age-specific states","No numerical output is available on the matching definition.",0,,,,,,
 "ices_herring_north_sea_2026","F","per year","matched","Reported age 0 compared with tinyAM age 0","",711,0.0192078413687223,7.82732725149905,4.48502148719399,2025,-8.21205813907215,0.993401216890929
 "ices_herring_north_sea_2026","F_bar","per year","matched","N-weighted F over ages 2,3,4,5,6","",79,0.0103007082347675,3.23498718906903,2.70875265476662,2025,-7.34747510223102,0.997733449725479
@@ -39,9 +39,9 @@
 "ices_herring_north_sea_2026","M_bar","per year","matched","N-weighted M over ages 0,1,2,3,4,5,6,7,8","",79,0.00320171747112224,0.54856943468615,0.466447732927655,2025,2.51902058841361,0.997560326934203
 "ices_herring_north_sea_2026","N","thousand fish","matched","Reported age 0 compared with tinyAM age 0","",711,173206.999147742,4.0606802284424,2.63095067808608,2025,5.26026857350824,0.998110715533958
 "ices_herring_north_sea_2026","recruitment","thousand fish","matched","Recruitment at age 0","",79,751239.035112719,3.444816235851,2.49109916425966,2025,21.2852120847641,0.997342171478843
-"ices_herring_north_sea_2026","ssb","t","matched","Accepted N with shared translated weights and maturity over ages 0-8","",79,42611.5955054052,1.82213493847205,1.50937542150448,2025,4.19733873565352,0.999077262020555
+"ices_herring_north_sea_2026","ssb","t","matched","Official N with shared translated weights and maturity over ages 0-8","",79,42611.5955054052,1.82213493847205,1.50937542150448,2025,4.19733873565352,0.999077262020555
 "afsc_pollock_ebs_2024","abundance","thousand fish","matched","Total abundance across modeled ages 1-15; explicit reported age groups are matched to sums of tinyAM ages.","",61,10206483.291089,22.8527099081363,14.3387388243589,2024,20.7598244336962,0.648584279663127
-"afsc_pollock_ebs_2024","biomass","t","unavailable","Accepted N with shared translated weights  over ages 1-15","No numerical output is available on the matching definition.",0,,,,,,
+"afsc_pollock_ebs_2024","biomass","t","unavailable","Official N with shared translated weights  over ages 1-15","No numerical output is available on the matching definition.",0,,,,,,
 "afsc_pollock_ebs_2024","biomass_at_age","kt","matched","Reported age group 3+ compared with the sum of tinyAM ages 3-15","",61,1561.11041728124,22.9350074787065,20.9231966260707,2024,11.374851098618,0.87751982968045
 "afsc_pollock_ebs_2024","F","per year","matched","Reported age 1 compared with tinyAM age 1","",915,0.114833923822989,50.8964170006616,38.8970798185724,2024,-8.22956624929835,0.480535743514236
 "afsc_pollock_ebs_2024","F_bar","per year","unavailable","N-weighted F over ages 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15","No numerical output is available on the matching definition.",0,,,,,,
@@ -51,17 +51,17 @@
 "afsc_pollock_ebs_2024","recruitment","million fish","matched","Recruitment at age 1","",61,7334.80884941721,33.6599038916092,28.1566046997525,2024,21.5320665344775,0.637540016450244
 "afsc_pollock_ebs_2024","ssb","kt","approximate","Female SSB at source spawning time versus tinyAM begin-year SSB, ages 1-15","tinyAM does not reproduce the source spawning-time survival adjustment.",61,830.093172387703,39.6445089354343,34.5062542987098,2024,24.9592505714134,0.895531073756982
 "afsc_cod_goa_2026","abundance","thousand fish","non_equivalent","Matching annual age-specific states","An age-specific source or tinyAM surface is unavailable.",0,,,,,,
-"afsc_cod_goa_2026","biomass","t","non_equivalent","Accepted total biomass ages 0+ versus tinyAM ages 1-10+","The accepted age-0 biomass cannot be removed from the reported aggregate total.",0,,,,,,
+"afsc_cod_goa_2026","biomass","t","non_equivalent","Official total biomass ages 0+ versus tinyAM ages 1-10+","The official age-0 biomass cannot be removed from the reported aggregate total.",0,,,,,,
 "afsc_cod_goa_2026","biomass_at_age","t","unavailable","Matching annual age-specific states","No numerical output is available on the matching definition.",0,,,,,,
 "afsc_cod_goa_2026","F","per year","unavailable","Matching annual age-specific states","No numerical output is available on the matching definition.",0,,,,,,
 "afsc_cod_goa_2026","F_bar","per year","unavailable","N-weighted F over ages 1,2,3,4,5,6,7,8,9,10","No numerical output is available on the matching definition.",0,,,,,,
 "afsc_cod_goa_2026","M","per year","matched","Reported age 1 compared with tinyAM age 1","",190,0,0,0,2025,0,1
 "afsc_cod_goa_2026","M_bar","per year","unavailable","N-weighted M over ages 1,2,3,4,5,6,7,8,9,10","No numerical output is available on the matching definition.",0,,,,,,
 "afsc_cod_goa_2026","N","thousand fish","unavailable","Matching annual age-specific states","No numerical output is available on the matching definition.",0,,,,,,
-"afsc_cod_goa_2026","recruitment","billion fish","non_equivalent","Matching annual age-specific states","Recruitment ages differ or the accepted recruitment age is unresolved.",0,,,,,,
-"afsc_cod_goa_2026","ssb","t","approximate","Aggregate female SSB: accepted ages 0+ versus tinyAM ages 1-10+","The accepted age-0 contribution cannot be removed from the available aggregate output.",19,24892.9219580585,32.1017859910547,41.7459514962208,2025,7.7324420931255,0.944802273356457
+"afsc_cod_goa_2026","recruitment","billion fish","non_equivalent","Matching annual age-specific states","Recruitment ages differ or the official recruitment age is unresolved.",0,,,,,,
+"afsc_cod_goa_2026","ssb","t","approximate","Aggregate female SSB: official ages 0+ versus tinyAM ages 1-10+","The official age-0 contribution cannot be removed from the available aggregate output.",19,24892.9219580585,32.1017859910547,41.7459514962208,2025,7.7324420931255,0.944802273356457
 "ices_haddock_north_sea_2026","abundance","thousand fish","matched","Total abundance across modeled ages 0-8; explicit reported age groups are matched to sums of tinyAM ages.","",55,1580764.4589209,14.292570564532,12.2359084937939,2026,16.574872567153,0.976145396861275
-"ices_haddock_north_sea_2026","biomass","t","matched","Accepted N with shared translated weights  over ages 0-8","",55,29840.0565696888,5.76181060088772,4.71559555712363,2026,2.35643611763573,0.989528251416315
+"ices_haddock_north_sea_2026","biomass","t","matched","Official N with shared translated weights  over ages 0-8","",55,29840.0565696888,5.76181060088772,4.71559555712363,2026,2.35643611763573,0.989528251416315
 "ices_haddock_north_sea_2026","biomass_at_age","t","unavailable","Matching annual age-specific states","No numerical output is available on the matching definition.",0,,,,,,
 "ices_haddock_north_sea_2026","F","per year","matched","Reported age 0 compared with tinyAM age 0","",486,0.0206647717843481,11.1453905195224,6.71775127194613,2025,-2.00442442493395,0.979898122556912
 "ices_haddock_north_sea_2026","F_bar","per year","matched","N-weighted F over ages 0,1,2,3,4,5,6,7,8","",54,0.00770152446885335,11.1729117183493,9.83502666744636,2025,-9.45150853359138,0.986964601155392
@@ -69,9 +69,9 @@
 "ices_haddock_north_sea_2026","M_bar","per year","matched","N-weighted M over ages 0,1,2,3,4,5,6,7,8","",55,0.0168600294451141,1.94961479526167,1.04093854194142,2026,8.35526782136462,0.989696223043502
 "ices_haddock_north_sea_2026","N","thousand fish","matched","Reported age 0 compared with tinyAM age 0","",495,197331.246432634,9.59562530351969,6.24596098692764,2026,8.64900859971693,0.993621113088681
 "ices_haddock_north_sea_2026","recruitment","thousand fish","matched","Recruitment at age 0","",55,1457030.26870971,24.7693000365362,17.8102439982126,2026,34.2951670082463,0.967831592245992
-"ices_haddock_north_sea_2026","ssb","t","matched","Accepted N with shared translated weights and maturity over ages 0-8","",55,8191.42435569192,3.7562033655438,3.47141065576075,2026,0.710431507190253,0.998861648453874
+"ices_haddock_north_sea_2026","ssb","t","matched","Official N with shared translated weights and maturity over ages 0-8","",55,8191.42435569192,3.7562033655438,3.47141065576075,2026,0.710431507190253,0.998861648453874
 "ices_cod_northeast_arctic_2026","abundance","thousand fish","matched","Total abundance across modeled ages 3-12; explicit reported age groups are matched to sums of tinyAM ages.","",81,98036.0123663967,4.85924085999349,4.26042307044829,2026,8.18749953867929,0.99141527038364
-"ices_cod_northeast_arctic_2026","biomass","t","matched","Accepted N with shared translated weights  over ages 3-12","",81,114445.994348551,4.68782848503672,3.69242097545237,2026,15.4408889950277,0.992942678836639
+"ices_cod_northeast_arctic_2026","biomass","t","matched","Official N with shared translated weights  over ages 3-12","",81,114445.994348551,4.68782848503672,3.69242097545237,2026,15.4408889950277,0.992942678836639
 "ices_cod_northeast_arctic_2026","biomass_at_age","t","unavailable","Matching annual age-specific states","No numerical output is available on the matching definition.",0,,,,,,
 "ices_cod_northeast_arctic_2026","F","per year","matched","Reported age 3 compared with tinyAM age 3","",800,0.0585558084301054,9.62611535228739,4.60110405826928,2025,-13.0782961462359,0.890557495410512
 "ices_cod_northeast_arctic_2026","F_bar","per year","matched","N-weighted F over ages 3,4,5,6,7,8,9,10,11,12","",80,0.00966748274584133,5.0245129837397,4.17652427055935,2025,-6.40520786665966,0.989919625622215
@@ -79,9 +79,9 @@
 "ices_cod_northeast_arctic_2026","M_bar","per year","matched","N-weighted M over ages 3,4,5,6,7,8,9,10,11,12","",81,0.00267685735859459,0.804143917499089,0.438606649833856,2026,0.442615587291775,0.998527769457606
 "ices_cod_northeast_arctic_2026","N","thousand fish","matched","Reported age 3 compared with tinyAM age 3","",810,14949.1628073574,10.6590727396868,5.31838548416054,2026,25.9130607388292,0.98713463421999
 "ices_cod_northeast_arctic_2026","recruitment","thousand fish","matched","Recruitment at age 3","",81,70405.7974560887,9.28550513619209,8.07461759042802,2026,19.3603186608909,0.982864183227946
-"ices_cod_northeast_arctic_2026","ssb","t","matched","Accepted N with shared translated weights and maturity over ages 3-12","",81,78411.3049188324,12.2861565943449,7.14749137096911,2026,30.2429619278434,0.963480018496174
+"ices_cod_northeast_arctic_2026","ssb","t","matched","Official N with shared translated weights and maturity over ages 3-12","",81,78411.3049188324,12.2861565943449,7.14749137096911,2026,30.2429619278434,0.963480018496174
 "afsc_pollock_goa_2024","abundance","million fish","matched","Total abundance across modeled ages 1-10; explicit reported age groups are matched to sums of tinyAM ages.","",55,2856.46596330926,29.209373908734,26.1088398042018,2024,83.9302336988191,0.93663897067242
-"afsc_pollock_goa_2024","biomass","kt","matched","Accepted N with shared translated weights  over ages 1-10","",55,526.850880149873,26.1505073459353,30.678348613394,2024,48.8157496001152,0.911979374596204
+"afsc_pollock_goa_2024","biomass","kt","matched","Official N with shared translated weights  over ages 1-10","",55,526.850880149873,26.1505073459353,30.678348613394,2024,48.8157496001152,0.911979374596204
 "afsc_pollock_goa_2024","biomass_at_age","kt","unavailable","Matching annual age-specific states","No numerical output is available on the matching definition.",0,,,,,,
 "afsc_pollock_goa_2024","F","per year","unavailable","Matching annual age-specific states","No numerical output is available on the matching definition.",0,,,,,,
 "afsc_pollock_goa_2024","F_bar","per year","unavailable","N-weighted F over ages 3,4,5,6,7,8,9,10","No numerical output is available on the matching definition.",0,,,,,,
@@ -89,7 +89,7 @@
 "afsc_pollock_goa_2024","M_bar","per year","matched","N-weighted M over ages 3,4,5,6,7,8,9,10","",55,0.0108009621135624,2.94147655557788,2.36095049010335,2024,7.04639199825977,0.923895390805123
 "afsc_pollock_goa_2024","N","million fish","matched","Reported age 1 compared with tinyAM age 1","",550,345.725633033001,46.5523643973978,32.6411662246985,2024,104.078099482667,0.950064386398732
 "afsc_pollock_goa_2024","recruitment","million fish","matched","Recruitment at age 1","",55,2192.58421393393,50.4213395068453,25.9079719617084,2024,79.1611082745073,0.948870888973935
-"afsc_pollock_goa_2024","ssb","kt","matched","Accepted N with shared translated weights and maturity over ages 1-10","",55,128.030593377896,29.6725195417855,34.79918698164,2024,11.0474771364506,0.924322255164801
+"afsc_pollock_goa_2024","ssb","kt","matched","Official N with shared translated weights and maturity over ages 1-10","",55,128.030593377896,29.6725195417855,34.79918698164,2024,11.0474771364506,0.924322255164801
 "dfo_herring_4tvn_spring_2024","abundance","thousand fish","matched","Total abundance across modeled ages 2-11; explicit reported age groups are matched to sums of tinyAM ages.","",46,346573.432030567,44.9222183192006,52.8785751896597,2023,-72.3406387273021,0.792295493989843
 "dfo_herring_4tvn_spring_2024","biomass","t","matched","Sum of reported biomass_at_age over ages 2-11","",46,47760.7894565967,40.4633934174728,45.3202044675639,2023,-65.8964382710204,0.843339180798096
 "dfo_herring_4tvn_spring_2024","biomass_at_age","t","matched","Reported age 2 compared with tinyAM age 2","",460,6894.15514540056,53.131238842633,48.65029950811,2023,-55.8018534754452,0.82494757248784
@@ -99,10 +99,10 @@
 "dfo_herring_4tvn_spring_2024","M_bar","per year","unavailable","N-weighted M over ages 2,3,4,5,6,7,8,9,10,11","No numerical output is available on the matching definition.",0,,,,,,
 "dfo_herring_4tvn_spring_2024","N","thousand fish","matched","Reported age 2 compared with tinyAM age 2","",460,45316.3462473106,52.2632467444476,48.3352805874873,2023,-55.3817545367657,0.796652162242926
 "dfo_herring_4tvn_spring_2024","recruitment","thousand fish","matched","Recruitment at age 2","",46,213117.179813798,81.0583415323916,72.6274484415484,2023,-90.0287630531009,0.652575714486996
-"dfo_herring_4tvn_spring_2024","ssb","t","matched","January 1 mature biomass at ages 4-11+, derived from reported biomass-at-age and maturity","This common-definition comparison is not the accepted assessment's April 1 SSB. Source uncertainty is unavailable.",46,20027.1632942962,28.5830384402271,31.7081813162098,2023,-50.3998157809235,0.864330658640275
+"dfo_herring_4tvn_spring_2024","ssb","t","matched","January 1 mature biomass at ages 4-11+, derived from reported biomass-at-age and maturity","This common-definition comparison is not the official assessment's April 1 SSB. Source uncertainty is unavailable.",46,20027.1632942962,28.5830384402271,31.7081813162098,2023,-50.3998157809235,0.864330658640275
 "dfo_herring_4tvn_spring_2024","ssb_mat","t","matched","Reported age 2 compared with tinyAM age 2","",460,3024.04191889032,49.2337790893518,47.0180225237602,2023,-48.4283400359049,0.828968228422913
 "ices_bluewhiting_northeast_atlantic_2026","abundance","thousand fish","matched","Total abundance across modeled ages 1-10; explicit reported age groups are matched to sums of tinyAM ages.","",46,4172776.1546515,5.5382573547471,5.0497120495436,2026,-3.8022896561547,0.987978255515855
-"ices_bluewhiting_northeast_atlantic_2026","biomass","t","matched","Accepted N with shared translated weights  over ages 1-10","",46,311187.979837496,5.08915309401948,4.65184961882866,2026,-4.26607506290253,0.986994716802276
+"ices_bluewhiting_northeast_atlantic_2026","biomass","t","matched","Official N with shared translated weights  over ages 1-10","",46,311187.979837496,5.08915309401948,4.65184961882866,2026,-4.26607506290253,0.986994716802276
 "ices_bluewhiting_northeast_atlantic_2026","biomass_at_age","t","unavailable","Matching annual age-specific states","No numerical output is available on the matching definition.",0,,,,,,
 "ices_bluewhiting_northeast_atlantic_2026","F","per year","matched","Reported age 1 compared with tinyAM age 1","",460,0.0939450136016386,23.8120208385639,15.1397414908928,2026,22.7601311070353,0.746913780361053
 "ices_bluewhiting_northeast_atlantic_2026","F_bar","per year","matched","N-weighted F over ages 3,4,5,6,7","",46,0.0216551798648774,7.90987319184577,5.49200701481316,2026,-0.29778049347691,0.955123476617258
@@ -110,9 +110,9 @@
 "ices_bluewhiting_northeast_atlantic_2026","M_bar","per year","matched","N-weighted M over ages 1,2,3,4,5,6,7,8,9,10","",46,2.5945429379827e-17,1.29727146899135e-14,1.38777878078145e-14,2026,0,
 "ices_bluewhiting_northeast_atlantic_2026","N","thousand fish","matched","Reported age 1 compared with tinyAM age 1","",460,766574.490440484,18.476371821549,10.9464141551773,2026,-8.36722662337256,0.969926501133426
 "ices_bluewhiting_northeast_atlantic_2026","recruitment","thousand fish","matched","Recruitment at age 1","",46,2304420.61588996,11.6353658332672,9.0614180408117,2026,6.20323343730194,0.981739039187096
-"ices_bluewhiting_northeast_atlantic_2026","ssb","t","matched","Accepted N with shared translated weights and maturity over ages 1-10","",46,196198.44425827,5.2939795964303,4.3963432534156,2026,-4.00518431618369,0.985177004992824
+"ices_bluewhiting_northeast_atlantic_2026","ssb","t","matched","Official N with shared translated weights and maturity over ages 1-10","",46,196198.44425827,5.2939795964303,4.3963432534156,2026,-4.00518431618369,0.985177004992824
 "ices_herring_norwegian_spring_2025","abundance","thousand fish","matched","Total abundance across modeled ages 2-12; explicit reported age groups are matched to sums of tinyAM ages.","",37,7876706.8302183,19.9993193128132,13.3071388222362,2024,-8.93430828379334,0.790790326076995
-"ices_herring_norwegian_spring_2025","biomass","t","matched","Accepted N with shared translated weights  over ages 2-12","",37,694888.213083317,12.9215387675494,7.63615279901617,2024,-2.31695056399634,0.924466667189822
+"ices_herring_norwegian_spring_2025","biomass","t","matched","Official N with shared translated weights  over ages 2-12","",37,694888.213083317,12.9215387675494,7.63615279901617,2024,-2.31695056399634,0.924466667189822
 "ices_herring_norwegian_spring_2025","biomass_at_age","t","unavailable","Matching annual age-specific states","No numerical output is available on the matching definition.",0,,,,,,
 "ices_herring_norwegian_spring_2025","F","per year","matched","Reported age 2 compared with tinyAM age 2","",407,0.0330865357234597,28.9685145936089,17.0954710095888,2024,-11.2744329978611,0.817095690349867
 "ices_herring_norwegian_spring_2025","F_bar","per year","matched","N-weighted F over ages 5,6,7,8,9,10,11,12","",37,0.0184758346567588,14.0350666766109,9.43795099131967,2024,9.76437513205882,0.92175831363963
@@ -120,9 +120,9 @@
 "ices_herring_norwegian_spring_2025","M_bar","per year","matched","N-weighted M over ages 2,3,4,5,6,7,8,9,10,11,12","",37,0.0507622035062146,13.4335534762087,9.19564674703218,2024,-11.4304608180889,0.875077115343129
 "ices_herring_norwegian_spring_2025","N","million fish","matched","Reported age 2 compared with tinyAM age 2","",407,912.86215228344,21.465964461123,14.023161141365,2024,6.70590534475617,0.942928570155553
 "ices_herring_norwegian_spring_2025","recruitment","million fish","matched","Recruitment at age 2","",37,5184.02731161154,45.7086030551102,25.0045733110344,2024,-23.4470982860314,0.735143502384688
-"ices_herring_norwegian_spring_2025","ssb","kt","matched","Accepted N with shared translated weights and maturity over ages 2-12","",37,402.031767030445,10.6901985057064,6.62566817788579,2024,-2.86923905809107,0.96376377246561
+"ices_herring_norwegian_spring_2025","ssb","kt","matched","Official N with shared translated weights and maturity over ages 2-12","",37,402.031767030445,10.6901985057064,6.62566817788579,2024,-2.86923905809107,0.96376377246561
 "ices_sprat_baltic_2026","abundance","thousand fish","matched","Total abundance across modeled ages 1-8; explicit reported age groups are matched to sums of tinyAM ages.","",52,16846970.4950949,9.43980908508562,5.88425589865607,2025,-4.5107021252816,0.972106631292201
-"ices_sprat_baltic_2026","biomass","t","matched","Accepted N with shared translated weights  over ages 1-8","",52,141167.333722105,8.96337492858753,5.61313239639214,2025,-4.37603728774376,0.938246471695749
+"ices_sprat_baltic_2026","biomass","t","matched","Official N with shared translated weights  over ages 1-8","",52,141167.333722105,8.96337492858753,5.61313239639214,2025,-4.37603728774376,0.938246471695749
 "ices_sprat_baltic_2026","biomass_at_age","t","unavailable","Matching annual age-specific states","No numerical output is available on the matching definition.",0,,,,,,
 "ices_sprat_baltic_2026","F","per year","matched","Reported age 1 compared with tinyAM age 1","",416,0.0337590706827306,13.8501478446037,9.26233254035474,2025,11.2150680691784,0.923797966349594
 "ices_sprat_baltic_2026","F_bar","per year","matched","N-weighted F over ages 3,4,5","",52,0.0296697838518249,11.5593249191156,7.8989486453931,2025,10.9228666907242,0.924245772952651
@@ -130,9 +130,9 @@
 "ices_sprat_baltic_2026","M_bar","per year","matched","N-weighted M over ages 1,2,3,4,5,6,7,8","",52,0.0022441506232975,0.386638939237365,0.22726757522344,2025,-0.0191638574105063,0.999703101222552
 "ices_sprat_baltic_2026","N","million fish","matched","Reported age 1 compared with tinyAM age 1","",416,2290.37847455699,9.88644228868747,5.60081715346552,2025,-1.61984866261342,0.972734985329644
 "ices_sprat_baltic_2026","recruitment","million fish","matched","Recruitment at age 1","",52,10197.2110121918,12.4587322228167,7.94250822959657,2025,-4.49162571899536,0.969880463962053
-"ices_sprat_baltic_2026","ssb","t","matched","Accepted N with shared translated weights and maturity over ages 1-8","",52,88520.4686428873,8.27596851566888,5.87968909844383,2025,-4.15018175161649,0.965665513003555
+"ices_sprat_baltic_2026","ssb","t","matched","Official N with shared translated weights and maturity over ages 1-8","",52,88520.4686428873,8.27596851566888,5.87968909844383,2025,-4.15018175161649,0.965665513003555
 "ices_plaice_north_sea_2026","abundance","thousand fish","matched","Total abundance across modeled ages 1-10; explicit reported age groups are matched to sums of tinyAM ages.","",69,447220.085998195,5.70246558341323,4.79681369609884,2025,1.2312648219296,0.988242289799625
-"ices_plaice_north_sea_2026","biomass","t","matched","Accepted N with shared translated weights  over ages 1-10","",69,100430.941982957,9.20209666459884,7.38979556352227,2025,2.82679094574595,0.933546031598981
+"ices_plaice_north_sea_2026","biomass","t","matched","Official N with shared translated weights  over ages 1-10","",69,100430.941982957,9.20209666459884,7.38979556352227,2025,2.82679094574595,0.933546031598981
 "ices_plaice_north_sea_2026","biomass_at_age","t","unavailable","Matching annual age-specific states","No numerical output is available on the matching definition.",0,,,,,,
 "ices_plaice_north_sea_2026","F","per year","matched","Reported age 1 compared with tinyAM age 1","",690,0.0305967694439,22.8581181309599,9.28372390387353,2025,-0.208647303493381,0.9292455820104
 "ices_plaice_north_sea_2026","F_bar","per year","matched","N-weighted F over ages 2,3,4,5,6","",69,0.0127350367091242,6.04127716826797,5.84938988360804,2025,1.9907487555668,0.989806155272752
@@ -140,9 +140,9 @@
 "ices_plaice_north_sea_2026","M_bar","per year","matched","N-weighted M over ages 1,2,3,4,5,6,7,8,9,10","",69,0.00392646112468118,0.974195255379456,0.755061707748577,2025,0.13455320144392,0.961812087883741
 "ices_plaice_north_sea_2026","N","thousand fish","matched","Reported age 1 compared with tinyAM age 1","",690,58340.7457717672,12.7697844087924,6.99381582237028,2025,3.85156993610428,0.960025028222737
 "ices_plaice_north_sea_2026","recruitment","thousand fish","matched","Recruitment at age 1","",69,255196.416809285,7.38727873448496,5.38529976939707,2025,5.52479031687275,0.977750668375525
-"ices_plaice_north_sea_2026","ssb","t","matched","Accepted N with shared translated weights and maturity over ages 1-10","",69,89907.2933661931,11.2108415321098,7.84416073639312,2025,3.06759768446575,0.904652680842865
+"ices_plaice_north_sea_2026","ssb","t","matched","Official N with shared translated weights and maturity over ages 1-10","",69,89907.2933661931,11.2108415321098,7.84416073639312,2025,3.06759768446575,0.904652680842865
 "ices_saithe_north_sea_2026","abundance","thousand fish","matched","Total abundance across modeled ages 3-8; explicit reported age groups are matched to sums of tinyAM ages.","",59,45330.9391361503,12.195028857209,7.64775440993924,2025,45.6443633987636,0.911074400444025
-"ices_saithe_north_sea_2026","biomass","t","matched","Accepted N with shared translated weights  over ages 3-8","",59,39857.1126635243,10.3361353421553,8.35172703407149,2025,31.1826406330573,0.94393221798283
+"ices_saithe_north_sea_2026","biomass","t","matched","Official N with shared translated weights  over ages 3-8","",59,39857.1126635243,10.3361353421553,8.35172703407149,2025,31.1826406330573,0.94393221798283
 "ices_saithe_north_sea_2026","biomass_at_age","t","unavailable","Matching annual age-specific states","No numerical output is available on the matching definition.",0,,,,,,
 "ices_saithe_north_sea_2026","F","per year","matched","Reported age 3 compared with tinyAM age 3","",354,0.127631239131998,31.5597902680424,15.7220564989714,2025,9.60412066860533,0.80734703134859
 "ices_saithe_north_sea_2026","F_bar","per year","matched","N-weighted F over ages 4,5,6,7","",59,0.0544961773775488,13.4675251816059,11.0086937035369,2025,-27.9326918428773,0.935209177867646
@@ -150,9 +150,9 @@
 "ices_saithe_north_sea_2026","M_bar","per year","matched","N-weighted M over ages 3,4,5,6,7,8","",59,0.00418690122824925,1.24678996886633,0.99814196766721,2025,1.56869672652351,0.947212080815653
 "ices_saithe_north_sea_2026","N","thousand fish","matched","Reported age 3 compared with tinyAM age 3","",354,9655.54509791099,18.1706482648009,13.4086043979493,2025,13.2910584648207,0.937765816685864
 "ices_saithe_north_sea_2026","recruitment","thousand fish","matched","Recruitment at age 3","",59,29136.8812896678,16.4696877037057,11.2735194037356,2025,49.3952500068359,0.92552953723985
-"ices_saithe_north_sea_2026","ssb","t","matched","Accepted N with shared translated weights and maturity over ages 3-8","",59,23305.3656105924,11.4825253161594,10.7963454376737,2025,9.31798959615094,0.969870469754633
+"ices_saithe_north_sea_2026","ssb","t","matched","Official N with shared translated weights and maturity over ages 3-8","",59,23305.3656105924,11.4825253161594,10.7963454376737,2025,9.31798959615094,0.969870469754633
 "ices_whiting_north_sea_2026","abundance","thousand fish","matched","Total abundance across modeled ages 0-8; explicit reported age groups are matched to sums of tinyAM ages.","",49,2291217.90827098,13.9895439568908,12.7709093331945,2026,-15.8132680417024,0.908214095959451
-"ices_whiting_north_sea_2026","biomass","t","matched","Accepted N with shared translated weights  over ages 0-8","",49,43869.3899836799,10.9719870513596,10.0750473656769,2026,-10.5943572545551,0.932360927339081
+"ices_whiting_north_sea_2026","biomass","t","matched","Official N with shared translated weights  over ages 0-8","",49,43869.3899836799,10.9719870513596,10.0750473656769,2026,-10.5943572545551,0.932360927339081
 "ices_whiting_north_sea_2026","biomass_at_age","t","unavailable","Matching annual age-specific states","No numerical output is available on the matching definition.",0,,,,,,
 "ices_whiting_north_sea_2026","F","per year","matched","Reported age 0 compared with tinyAM age 0","",441,0.0513373895119964,24.3029968931656,15.5785495418063,2026,6.57204831750147,0.929246328506006
 "ices_whiting_north_sea_2026","F_bar","per year","matched","N-weighted F over ages 2,3,4,5","",49,0.0252563343847439,10.6756816549615,7.47236155295132,2026,-6.77278815679728,0.964907296419497
@@ -160,9 +160,9 @@
 "ices_whiting_north_sea_2026","M_bar","per year","matched","N-weighted M over ages 0,1,2,3,4,5,6,7,8","",49,0.123249526294495,8.69964953326843,7.35112651110685,2026,-5.94607675008286,0.924836083128768
 "ices_whiting_north_sea_2026","N","thousand fish","matched","Reported age 0 compared with tinyAM age 0","",441,275590.883711274,18.1257647600896,15.3145949943348,2026,-10.07068679132,0.951421053675708
 "ices_whiting_north_sea_2026","recruitment","thousand fish","matched","Recruitment at age 0","",48,1904468.47588326,15.8726505503547,14.9883965862486,2025,-17.8251010898306,0.867595101283599
-"ices_whiting_north_sea_2026","ssb","t","matched","Accepted N with shared translated weights and maturity over ages 0-8","",49,24499.1369184275,11.1337955140944,9.21331955167645,2026,-8.15418283596084,0.951235101652793
+"ices_whiting_north_sea_2026","ssb","t","matched","Official N with shared translated weights and maturity over ages 0-8","",49,24499.1369184275,11.1337955140944,9.21331955167645,2026,-8.15418283596084,0.951235101652793
 "ices_herring_western_baltic_2026","abundance","thousand fish","matched","Total abundance across modeled ages 0-5; explicit reported age groups are matched to sums of tinyAM ages.","",35,4170100.78996286,7.54112954246868,6.47974243714742,2025,10.0806131650834,0.994036274822109
-"ices_herring_western_baltic_2026","biomass","t","matched","Accepted N with shared translated weights  over ages 0-5","",35,63705.4564137237,9.89951715619462,7.00140414357799,2025,-6.00326589253018,0.990404477314369
+"ices_herring_western_baltic_2026","biomass","t","matched","Official N with shared translated weights  over ages 0-5","",35,63705.4564137237,9.89951715619462,7.00140414357799,2025,-6.00326589253018,0.990404477314369
 "ices_herring_western_baltic_2026","biomass_at_age","t","unavailable","Matching annual age-specific states","No numerical output is available on the matching definition.",0,,,,,,
 "ices_herring_western_baltic_2026","F","per year","matched","Reported age 0 compared with tinyAM age 0","",210,0.0197710855860776,10.1975697975583,8.18633166823434,2025,7.3609353087925,0.958552251892192
 "ices_herring_western_baltic_2026","F_bar","per year","matched","N-weighted F over ages 2,3,4,5","",35,0.0172293028455542,9.53451470350147,7.08804055096025,2025,5.30273222393792,0.975924335455427
@@ -170,8 +170,8 @@
 "ices_herring_western_baltic_2026","M_bar","per year","matched","N-weighted M over ages 0,1,2,3,4,5","",35,0.00859789835418829,0.581903141155469,0.47841108362687,2025,1.83392628832571,0.978588278718757
 "ices_herring_western_baltic_2026","N","thousand fish","matched","Reported age 0 compared with tinyAM age 0","",210,723729.887540608,11.2408187310432,7.9057383088104,2025,-2.06983617699072,0.982865512432828
 "ices_herring_western_baltic_2026","recruitment","thousand fish","matched","Recruitment at age 0","",35,3090628.48390377,7.75445263338416,6.75868480582254,2025,15.1883877147372,0.994359687086187
-"ices_herring_western_baltic_2026","ssb","t","matched","Accepted N with shared translated weights and maturity over ages 0-5","",35,39437.6692552608,12.8410797601325,10.4011767890546,2025,-5.77316354113088,0.982167531449535
-"ices_norway_pout_north_sea_2026_benchmark","abundance","thousand fish","non_equivalent","Matching annual age-specific states","Accepted age groups do not cover the modeled ages completely for total abundance.",0,,,,,,
+"ices_herring_western_baltic_2026","ssb","t","matched","Official N with shared translated weights and maturity over ages 0-5","",35,39437.6692552608,12.8410797601325,10.4011767890546,2025,-5.77316354113088,0.982167531449535
+"ices_norway_pout_north_sea_2026_benchmark","abundance","thousand fish","non_equivalent","Matching annual age-specific states","Official age groups do not cover the modeled ages completely for total abundance.",0,,,,,,
 "ices_norway_pout_north_sea_2026_benchmark","biomass","t","matched","Sum of reported biomass_at_age over ages 0-3","",41,159840.840626184,28.498577059234,29.6056853306259,2024,-43.2279086849625,0.985612073242566
 "ices_norway_pout_north_sea_2026_benchmark","biomass_at_age","t","matched","Reported age 0 compared with tinyAM age 0","",164,40663.3562820904,35.0068682725783,30.1806463589102,2024,-49.524400437513,0.893477629023627
 "ices_norway_pout_north_sea_2026_benchmark","F","per year","matched","Reported age 0 compared with tinyAM age 0","",164,0.386779985856144,87.8013363878651,32.1483602049785,2024,56.3872224729998,0.937061755297301
@@ -182,7 +182,7 @@
 "ices_norway_pout_north_sea_2026_benchmark","recruitment","million fish","matched","Recruitment at age 0","",41,18937.048953903,27.9914446024794,30.7950745082361,2024,-47.2807792380655,0.987103185630942
 "ices_norway_pout_north_sea_2026_benchmark","ssb","t","matched","Sum of reported ssb_mat over ages 0-3","",41,34639.3681235918,26.7255189536844,26.8686489537959,2024,-39.2590400227574,0.988903373198745
 "nefsc_atlantic_mackerel_2018","abundance","thousand fish","matched","Total abundance across modeled ages 1-10; explicit reported age groups are matched to sums of tinyAM ages.","",49,613082.142005584,25.9850984017727,21.7896394180898,2016,-38.8404037034638,0.877165592511162
-"nefsc_atlantic_mackerel_2018","biomass","t","matched","Accepted N with shared translated weights  over ages 1-10","",49,170443.556982832,26.6458778818671,21.638887447678,2016,-36.0284519354922,0.921273463676465
+"nefsc_atlantic_mackerel_2018","biomass","t","matched","Official N with shared translated weights  over ages 1-10","",49,170443.556982832,26.6458778818671,21.638887447678,2016,-36.0284519354922,0.921273463676465
 "nefsc_atlantic_mackerel_2018","biomass_at_age","t","unavailable","Matching annual age-specific states","No numerical output is available on the matching definition.",0,,,,,,
 "nefsc_atlantic_mackerel_2018","F","per year","matched","Reported age 1 compared with tinyAM age 1","",490,0.237462280782782,77.3606923874054,38.5153142769355,2016,35.1604155556804,0.829705179634494
 "nefsc_atlantic_mackerel_2018","F_bar","per year","matched","N-weighted F over ages 6,7,8,9,10","",49,0.267294897159526,78.3259467627223,41.4318746209167,2016,34.4672730588053,0.800442016136435
@@ -190,9 +190,9 @@
 "nefsc_atlantic_mackerel_2018","M_bar","per year","matched","N-weighted M over ages 1,2,3,4,5,6,7,8,9,10","",49,1.8692530516648e-17,9.34626525832402e-15,0,2016,-4.16333634234434e-14,
 "nefsc_atlantic_mackerel_2018","N","million fish","matched","Reported age 1 compared with tinyAM age 1","",490,69.9930496699097,41.6127582813538,35.8850522740763,2016,-28.1932006734833,0.886278880468351
 "nefsc_atlantic_mackerel_2018","recruitment","million fish","matched","Recruitment at age 1","",49,255.338071534279,36.932148088914,32.4205998553792,2016,-42.9184189771934,0.613808201966762
-"nefsc_atlantic_mackerel_2018","ssb","t","matched","Accepted N with shared translated weights and maturity over ages 1-10","",49,129904.489919673,26.438040987613,20.3870678723886,2016,-29.2389332514335,0.946014590673812
+"nefsc_atlantic_mackerel_2018","ssb","t","matched","Official N with shared translated weights and maturity over ages 1-10","",49,129904.489919673,26.438040987613,20.3870678723886,2016,-29.2389332514335,0.946014590673812
 "ices_haddock_iceland_2025","abundance","thousand fish","matched","Total abundance across modeled ages 1-12; explicit reported age groups are matched to sums of tinyAM ages.","",46,20733.1964044245,6.33336013775888,4.57301723992089,2024,-1.47501331712203,0.987639846623728
-"ices_haddock_iceland_2025","biomass","t","matched","Accepted N with shared translated weights  over ages 1-12","",46,10367.1694910334,5.80124831027693,4.31883086642648,2024,-5.02422844690559,0.980023469311403
+"ices_haddock_iceland_2025","biomass","t","matched","Official N with shared translated weights  over ages 1-12","",46,10367.1694910334,5.80124831027693,4.31883086642648,2024,-5.02422844690559,0.980023469311403
 "ices_haddock_iceland_2025","biomass_at_age","t","unavailable","Matching annual age-specific states","No numerical output is available on the matching definition.",0,,,,,,
 "ices_haddock_iceland_2025","F","per year","matched","Reported age 1 compared with tinyAM age 1","",552,0.14261635117877,29.1381645306008,11.8544744733776,2024,17.471593028713,0.717009403717666
 "ices_haddock_iceland_2025","F_bar","per year","matched","N-weighted F over ages 1,2,3,4,5,6,7,8,9,10,11,12","",46,0.011924734601376,7.03905723384486,5.34265900193728,2024,-6.03857883224308,0.971421767984039
@@ -200,4 +200,4 @@
 "ices_haddock_iceland_2025","M_bar","per year","matched","N-weighted M over ages 1,2,3,4,5,6,7,8,9,10,11,12","",46,1.68946982008176e-17,8.4473491004088e-15,0,2024,2.77555756156289e-14,
 "ices_haddock_iceland_2025","N","thousand fish","matched","Reported age 1 compared with tinyAM age 1","",552,2936.27908284519,16.7507507215668,10.2621343554844,2024,-7.04721018607156,0.983170474856158
 "ices_haddock_iceland_2025","recruitment","thousand fish","matched","Recruitment at age 1","",46,12444.6628303255,17.2526252567163,9.40623159507446,2024,12.9554829892968,0.978830394091463
-"ices_haddock_iceland_2025","ssb","t","matched","Accepted N with shared translated weights and maturity over ages 1-12","",46,6539.99167131406,6.20187639074015,4.82737856648276,2024,-4.97630289631513,0.974821607576407
+"ices_haddock_iceland_2025","ssb","t","matched","Official N with shared translated weights and maturity over ages 1-12","",46,6539.99167131406,6.20187639074015,4.82737856648276,2024,-4.97630289631513,0.974821607576407

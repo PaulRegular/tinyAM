@@ -258,7 +258,7 @@ as labelled by the canonical comparison workflow. Better agreement is not eviden
 that a candidate's extra process is identifiable or scientifically preferable.
 
 Dashboards for each stock are in `results/q_stocks/<assessment_id>/dashboard.html`.
-They show Accepted, the settled baseline and candidate fits, including clearly
+They show Official, the settled baseline and candidate fits, including clearly
 labelled numerical failures. Process intervals and standardized residuals should
 be reviewed alongside the diagnostics rather than selecting the closest trajectory.
 
@@ -280,7 +280,7 @@ Retain the formula options as experimental tools with the existing exact-alias
 checks. Routine permission to specify a formula is separate from evidence that a
 particular stock supports it. Use parsimonious q effects, inspect SD/correlation
 uncertainty, and test sensitivity against the settled baseline before interpreting
-time-varying q. This work does not authorize replacing any accepted stock recipe
+time-varying q. This work does not authorize replacing any official stock recipe
 or adding variance processes. The tables, warnings and dashboards are the review
 gate for stock-specific decisions.
 

@@ -1,4 +1,4 @@
-# Gulf of Alaska pollock: accepted-assessment source review
+# Gulf of Alaska pollock: official-assessment source review
 
 ## Formula review (2026-10-10)
 
@@ -16,7 +16,7 @@ table rather than combined into an untested model.
 Status: canonical record afsc_pollock_goa_2024 imported; inputs, outputs and assumptions remain partial.
 Charbonneau identifier: AFSC_GOA_Gadus_chalcogrammus.
 
-## Accepted assessment
+## Official assessment
 
 The November 2024 detailed SAFE chapter is cached as source_cache/afsc_pollock_goa_2024/2024_GOA_pollock_SAFE.pdf (118 pages).
 Source: https://meetings.npfmc.org/CommentReview/DownloadFile?fileName=GOA+Pollock+2024.pdf&p=bd9a9aa2-3a33-4841-9133-d9ccf593e051.pdf
@@ -24,7 +24,7 @@ Source: https://meetings.npfmc.org/CommentReview/DownloadFile?fileName=GOA+Pollo
 Final December 2024 SSC report, page 40, explicitly accepts Model 23d for the Western/Central/West Yakutat stock. It endorses revised survey CVs/sample sizes, a Shelikof catchability covariate, removal of Shelikof age-1/age-2 indices, and Dirichlet-multinomial composition likelihoods. The separate Southeast Outside Tier 5 assessment must not be combined with this age-structured stock.
 SSC source: https://meetings.npfmc.org/CommentReview/DownloadFile?fileName=SSC+Report+Dec+2024_FINAL.pdf&p=2587e1ac-2a37-4a80-b68b-7a8c7e7a02ca.pdf
 
-The 2025 catch-only notice is cached separately; its rollover was verified against the accepted 2024 run as described below.
+The 2025 catch-only notice is cached separately; its rollover was verified against the official 2024 run as described below.
 Source: https://meetings.npfmc.org/CommentReview/DownloadFile?fileName=1.+Pollock.pdf&p=b8e2f063-e4d4-4749-a5c3-ac04a7bbc612.pdf
 
 ## Native files
@@ -49,7 +49,7 @@ The source uses annual survey timing fractions directly in N * exp(-timing * Z),
 
 Natural mortality is coded as the age vector 1.39, 0.69, 0.48, 0.37, 0.34, 0.30, 0.30, 0.29, 0.28, 0.29, multiplied by natMscalar. The default parameter map fixes natMscalar at 1. The final report confirms externally supplied age-specific M rescaled to an older-age average of 0.3; the scalar is not a substitute for the vector.
 
-The default reader/preparation code fixes sigmaR at 1.3. Final report page 16 confirms this value; the September proposal of 1.0 was not retained. The accepted 2024 repository revision is pinned above.
+The default reader/preparation code fixes sigmaR at 1.3. Final report page 16 confirms this value; the September proposal of 1.0 was not retained. The official 2024 repository revision is pinned above.
 
 The 2025 rollover notice, fitted-stream and biology inventory, native/report cross-checks, historical outputs and uncertainty have since been reviewed below. Remaining source gaps are listed at the end.
 
@@ -71,25 +71,25 @@ Cached stage_report_outputs.py extracted 550 historical numbers-at-age values fr
 
 The canonical record contains 5,909 input values, 708 historical output values and 49 assumptions after the catch-table update. scripts/database/017_validate_goa_pollock.R passed, together with full database structural validation. Coverage includes one combined fishery, four active biomass/composition surveys, annual survey/fishery/population/spawning weights, and constant supplied maturity and M vectors. Model years are 1970–2024, ages 1–10+, recruitment age 1, combined-sex abundance with female SSB fraction 0.5. Spawning survival timing is 0.21, distinct from the winter acoustic observation timing 0.209.
 
-The accepted fishery likelihood accumulates ages 1–2 into its first fitted bin and ages 10+ into the terminal bin. The canonical database retains these native grouped proportions and separately stores the report's finer catch numbers at ages 1–15. tinyAM now uses the finer published catch table, summing reported ages 10–15 into its model age-10 plus group. Shelikof compositions accumulate ages 1–3; these model-ready aggregations are labeled reconstructed_source_input with explicit formulas. Remaining compositions preserve native numerical values, without silent renormalization. Survey total biomass units are million tonnes on the native scale. SD rows match the same observation years and sampling times, with blank fish age for aggregate indices. Supplied spawning weights use measure spawning_weight_at_age, distinct from population weight_at_age and survey-specific weights; biological purposes are not treated as spatial regions.
+The official fishery likelihood accumulates ages 1–2 into its first fitted bin and ages 10+ into the terminal bin. The canonical database retains these native grouped proportions and separately stores the report's finer catch numbers at ages 1–15. tinyAM now uses the finer published catch table, summing reported ages 10–15 into its model age-10 plus group. Shelikof compositions accumulate ages 1–3; these model-ready aggregations are labeled reconstructed_source_input with explicit formulas. Remaining compositions preserve native numerical values, without silent renormalization. Survey total biomass units are million tonnes on the native scale. SD rows match the same observation years and sampling times, with blank fish age for aggregate indices. Supplied spawning weights use measure spawning_weight_at_age, distinct from population weight_at_age and survey-specific weights; biological purposes are not treated as spatial regions.
 
 Remaining gaps are the physical environmental-covariate units and age-specific F outputs, which are not available in the cached report or model files. Active selectivity priors and the Dirichlet-multinomial parameter prior are now recorded from the pinned source, alongside the temporal penalty scales, environmental observations, observation SD, age-error matrix and composition sample sizes. Completeness statuses remain partial. No model fit or numerical substitutions were used.
 
 ## Native process and initial-state review
 
-The accepted 2024 script uses `prepare_pk_input()` and its default parameter map. Extra initial-age deviations are fixed at zero. Initial ages 2–10 are constructed from first-year recruitment and M, with the exact zero-based mortality indexing recorded in the assumptions table; subsequent survival is deterministic conditional on F and M. Fishery selectivity is double-logistic, normalized at age 7, with penalized annual ascending-limb changes and fixed descending-limb deviations.
+The official 2024 script uses `prepare_pk_input()` and its default parameter map. Extra initial-age deviations are fixed at zero. Initial ages 2–10 are constructed from first-year recruitment and M, with the exact zero-based mortality indexing recorded in the assumptions table; subsequent survival is deterministic conditional on F and M. Fishery selectivity is double-logistic, normalized at age 7, with penalized annual ascending-limb changes and fixed descending-limb deviations.
 
 Catchability differs by survey: Shelikof uses a baseline plus an integrated latent environmental effect, bottom trawl uses constant estimated q with a log-scale prior, ADF&G uses penalized annual log-q changes, and summer acoustic uses constant estimated q. Thus the implementation does not support treating all survey catchabilities as interchangeable random walks. Evidence is the cached, pinned `R/tmb_fns.R`, `data/2024/run_assessment.R`, and `data/2024/goa_pk.cpp`; the environmental observations and age-error matrix are now represented as described below.
 
-The 40 native environmental observations and their exact observation years are now canonical covariate inputs. Values are preserved without restandardization; physical units remain unresolved. The accepted map fixes their observation SD at 0.02 on the native scale. The fitted latent annual environmental process is distinct from these supplied observations. Validation compares all 40 values and years directly with the cached native export.
+The 40 native environmental observations and their exact observation years are now canonical covariate inputs. Values are preserved without restandardization; physical units remain unresolved. The official map fixes their observation SD at 0.02 on the native scale. The fitted latent annual environmental process is distinct from these supplied observations. Validation compares all 40 values and years directly with the cached native export.
 
-The supplied composition sample sizes are now explicit numeric fields, including the accepted script’s doubling for surveys 1, 3 and 6. They remain distinct from D-M effective sample sizes. The constant 10-by-10 `age_trans` matrix is preserved row by row in the biological assumptions record. Its orientation is verified from prediction code: true-age row compositions multiply the matrix to obtain observed-age compositions before bin accumulation. All four active surveys and the fishery use this matrix.
+The supplied composition sample sizes are now explicit numeric fields, including the official script’s doubling for surveys 1, 3 and 6. They remain distinct from D-M effective sample sizes. The constant 10-by-10 `age_trans` matrix is preserved row by row in the biological assumptions record. Its orientation is verified from prediction code: true-age row compositions multiply the matrix to obtain observed-age compositions before bin accumulation. All four active surveys and the fishery use this matrix.
 
 Native age-transition row sums differ from one by up to 0.0001 because of supplied numerical precision. Values are retained exactly, without renormalization; validation allows this source precision.
 
 Survey selectivity shapes and fixed/estimated limbs are now recorded separately for all four active surveys. All 54 fishery ascending log-slope increment SDs equal 0.05; ascending inflection SDs are 0.2. The 54 ADF&G log-q increment SDs are preserved in transition order and checked directly against native inputs. Supplied q1/q2 penalty arrays are not treated as active annual processes because their corresponding deviations are fixed at zero.
 
-Final Table 1.23 adds 48 accepted-run beginning-year age-3+ biomass estimates for 1977–2024, in thousand tonnes. The previous-assessment columns are excluded. SSB and recruitment in the same rows agree exactly with independently extracted Table 1.24. Harvest rate is catch divided by age-3+ biomass, not instantaneous F; it is not used to manufacture F-at-age.
+Final Table 1.23 adds 48 official-run beginning-year age-3+ biomass estimates for 1977–2024, in thousand tonnes. The previous-assessment columns are excluded. SSB and recruitment in the same rows agree exactly with independently extracted Table 1.24. Harvest rate is catch divided by age-3+ biomass, not instantaneous F; it is not used to manufacture F-at-age.
 
 ## Current tinyAM translation
 
@@ -114,14 +114,14 @@ weights in kg per fish. Its catch biomass equation, `1e6 * sum(C * wt_fsh)`,
 reports tonnes; its survey biomass equation reports million tonnes. Survey
 totals therefore become kg with a factor of 1e9 before reconstruction as
 `biomass_kg * p_age / sum(p_age * weight_kg)`. Published catch numbers become
-fish with a factor of 1e6. Accepted N/recruitment and SSB/biomass retain their
+fish with a factor of 1e6. Official N/recruitment and SSB/biomass retain their
 native million-fish and thousand-tonne units. Mass-balance tests cover all
 four surveys, with an independent rounded Table 1.11 check for Shelikof.
 
-Accepted SSB is `sum(N * exp(-0.21 * Z) * wt_spawn * 0.5 * mat)`;
+Official SSB is `sum(N * exp(-0.21 * Z) * wt_spawn * 0.5 * mat)`;
 tinyAM SSB is `sum(N * wt_pop * 0.5 * mat)` at the start of the year.
 The source preparation sets `wt_spawn = wt_srv1` and `wt_pop = wt_srv2`.
-Numerical common-definition summaries use accepted N with the same translated
+Numerical common-definition summaries use official N with the same translated
 stock weights and maturity as tinyAM; the dashboard retains native SSB.
 Yield reporting uses source catch totals and predictions multiplied by catch
 weights. Predictions are conditional medians, without a lognormal mean correction.
@@ -130,5 +130,5 @@ The logit restriction does not reproduce the source bottom-trawl q prior.
 Bottom-trawl q at ages 5-8 approaches one and is weakly estimated. Source
 selectivity, recruitment SD/initialization, latent environmental dynamics,
 q penalties, age-reading error and composition likelihoods remain differences;
-accepted F-at-age remains unavailable. Model-development history is retained
+official F-at-age remains unavailable. Model-development history is retained
 in Git rather than the stock background or local review artifacts.

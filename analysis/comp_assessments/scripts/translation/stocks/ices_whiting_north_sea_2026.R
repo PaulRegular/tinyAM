@@ -16,7 +16,7 @@ if (length(extra_years)) {
   extra_m$source_type <- "translation_assumption"
   extra_m$transformation <- "Held the final numerical M input through the remaining model years as a fixed tinyAM assumption."
   extra_m$notes <- paste(
-    "Translation-only baseline extension. The accepted SAM run estimates",
+    "Translation-only baseline extension. The official SAM run estimates",
     "later M values with its mortality GMRF."
   )
   inputs <- rbind(inputs, extra_m)
@@ -72,13 +72,13 @@ comparison_scales <- c(
 
 
 background <- c(
-  "### North Sea whiting: accepted 2026 SAM assessment",
+  "### North Sea whiting: official 2026 SAM assessment",
   "",
   print_sources(source$assessment),
   "",
-  "| Component | Accepted assessment | tinyAM representation | Reason for difference |",
+  "| Component | Official assessment | tinyAM representation | Reason for difference |",
   "|---|---|---|---|",
-  "| Years | Catch covers 1978–2025; IBTS Q1 covers 1983–2026 and Q3 covers 1991–2025. | Fit 1978–2026. | The accepted 2026 survey observation and native terminal states are retained. |",
+  "| Years | Catch covers 1978–2025; IBTS Q1 covers 1983–2026 and Q3 covers 1991–2025. | Fit 1978–2026. | The official 2026 survey observation and native terminal states are retained. |",
   "| Ages | Ages 0–8+, with recruitment at age 0. | Ages 0–8+, with age 8 as the population plus group. | The source population age range is retained. Survey plus groups begin at age 6 and are not yet represented exactly in the observation model. |",
   "| N | Random-walk recruitment and cohort-survival processes, with age-specific sharing of survival-process variances. | Random-walk recruitment, IID cohort-survival deviations with one shared SD, and exponential initial abundance. | The recruitment process is retained in simplified form, but older-cohort deviations are independent rather than temporally correlated; variance sharing and initial-state treatment also differ. |",
   "| F | Random-walk F with AR(1) correlation across ages in annual F increments; Fbar covers ages 2–5. | Correlated F random walks (cor_rw), with AR(1) correlation across ages in annual log-F increments and one shared process SD; Fbar covers ages 2–5. | Cross-age correlation is now represented, but SAM's precise F variance grouping and other process details are not necessarily reproduced. |",
@@ -89,13 +89,13 @@ background <- c(
   "",
   "The revised translation uses IID cohort-survival deviations and correlated F random walks, replacing the earlier random-walk N process and independent F random walks. The correlated F process more closely matches SAM's age correlation of annual fishing-mortality increments.",
   "",
-  "Accepted SAM N and F surfaces provide starting values only. Initial q values are derived from accepted N, F and M estimates together with observed survey indices; all states and catchability parameters are re-estimated by tinyAM.",
+  "Official SAM N and F surfaces provide starting values only. Initial q values are derived from official N, F and M estimates together with observed survey indices; all states and catchability parameters are re-estimated by tinyAM.",
   "",
   "The native number scale is thousands of fish, so catch and population counts are translated to individual fish. Biomass comparisons are scaled back to tonnes.",
   "",
   "The reported 2026 assessment table contains SSB but not the other population summaries for 2026; native fitted state surfaces are nevertheless available through that year.",
   "",
-  "The 2022 numerical M surface is extended through 2026 solely as a translation assumption. The canonical accepted-model inputs and outputs remain unchanged."
+  "The 2022 numerical M surface is extended through 2026 solely as a translation assumption. The canonical official-model inputs and outputs remain unchanged."
 )
 
 ## Model ----

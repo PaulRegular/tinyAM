@@ -293,7 +293,7 @@ view_assessment <- function(fit, assessment, output_file = NULL, open_file = TRU
     output_file
   }
   tinyAM::vis_tam(
-    model_list = list(Accepted = result$ref, tinyAM = result$fit),
+    model_list = list(Official = result$ref, tinyAM = result$fit),
     background = assessment$background, output_file = result$dashboard_file,
     open_file = open_file
   )
@@ -392,7 +392,7 @@ run_assessment <- function(assessment_id, database = NULL, fit = TRUE,
       tempfile(pattern = paste0(assessment_id, "_"), fileext = ".html")
     }
     tinyAM::vis_tam(
-      model_list = list(Accepted = result$ref, tinyAM = fitted),
+      model_list = list(Official = result$ref, tinyAM = fitted),
       background = result$background,
       output_file = result$dashboard_file,
       open_file = interactive()
@@ -525,7 +525,7 @@ run_assessments <- function(assessment_ids = NULL, database = NULL,
         tempfile(pattern = paste0(id, "_"), fileext = ".html")
       }
       tinyAM::vis_tam(
-        model_list = list(Accepted = result$ref, tinyAM = result$fit),
+        model_list = list(Official = result$ref, tinyAM = result$fit),
         background = result$background,
         output_file = result$dashboard_file,
         open_file = FALSE

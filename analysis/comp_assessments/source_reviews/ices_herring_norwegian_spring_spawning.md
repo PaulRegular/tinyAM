@@ -2,10 +2,10 @@
 
 ## Assessment represented
 
-The canonical record uses the accepted 2025 ICES assessment, configured at
-WKBMACNSSH 2025. It is the most recent accepted assessment with detailed inputs
+The canonical record uses the official 2025 ICES assessment, configured at
+WKBMACNSSH 2025. It is the most recent official assessment with detailed inputs
 and outputs recoverable for this database. Its fitted catch series ends in
-2024; estimated N, F, and summary series extend through 2025. The accepted 2026
+2024; estimated N, F, and summary series extend through 2025. The official 2026
 assessment is recorded separately because only its summary series was
 recovered. Its values do not replace the detailed 2025 record.
 
@@ -17,7 +17,7 @@ numbers-at-age, F-at-age, recruitment, SSB, catch, and Fbar.
 ## Inputs and assumptions
 
 The catch table reports numbers-at-age for 1950–2024 in thousand fish and
-source age groups 0–14 and 15+. The accepted fit uses 1988–2024. The database
+source age groups 0–14 and 15+. The official fit uses 1988–2024. The database
 retains ages 2–15+ as reported so later translations can combine ages 12 and
 older for tinyAM's 12+ group. Catch weights are retained separately.
 
@@ -43,7 +43,7 @@ The report includes relative standard errors for catch and the surveys.
 These are stored as source precision information; tinyAM will estimate its own
 observation errors and will not apply the SAM external weights. RFID relative
 errors are available, but the numeric index series is only shown in a figure,
-so no RFID observations are transcribed. The accepted native SAM object and
+so no RFID observations are transcribed. The official native SAM object and
 its exact process, q-sharing, and uncertainty settings were not recovered.
 
 For a tinyAM comparison, age-specific catch and index values above age 12 are

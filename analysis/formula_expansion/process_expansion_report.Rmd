@@ -151,7 +151,7 @@ for (id in unique(sub("/.*$", "", names(trials)))) {
   )
   for (i in seq_along(series)) lines(series[[i]]$year, series[[i]]$est, col = i + 1, lwd = 2)
   labels <- gsub("_", " ", sub("^.*/", "", names(available)))
-  legend("topleft", c("Accepted", labels),
+  legend("topleft", c("Official", labels),
     col = seq_len(length(series) + 1), lwd = 2, bty = "n", cex = .8
   )
 }
@@ -169,7 +169,7 @@ agreement; its largest survey residual also increases. Correlated F alone
 does not improve the overall comparison. Plaice has mixed metric changes:
 correlated F improves F agreement but worsens SSB, N and recruitment scale
 agreement. These results support keeping the options available, not replacing
-the accepted stock recipes automatically.
+the official stock recipes automatically.
 
 ```{r residual-summary}
 residuals <- do.call(rbind, lapply(names(trials), function(name) {

@@ -46,7 +46,7 @@ ages 3–12+, and retain the model's age-3–15 structure for the other inputs a
 outputs. The 12+ index cannot be split into ages 13–15 from this fit without
 inventing age-specific observations.
 
-## Accepted-run evidence and remaining checks
+## Official-run evidence and remaining checks
 
 The saved fit uses the prediction–observation-variance link added in 2026,
 matching section 3.4.1 of the report. Its 2025 Fbar is 0.548025 and 2026 SSB is
@@ -59,7 +59,7 @@ for fitted recruitment. The report's 2026 short-term-prediction biomass is
 1,069 kt whereas the native fitted TSB is 1,049.567 kt; verify the reporting
 definitions and input substitutions before comparing these quantities.
 
-All 320 recruitment, TSB, SSB and Fbar values for 1946–2025 match table 3.18 within published rounding. This establishes trajectory-level agreement with the accepted report, rather than relying on the run name or two terminal values.
+All 320 recruitment, TSB, SSB and Fbar values for 1946–2025 match table 3.18 within published rounding. This establishes trajectory-level agreement with the official report, rather than relying on the run name or two terminal values.
 
 The native N/F/M surfaces, benchmark configuration, source timing and missing-value conventions have now been checked. Source-level uncertainty and unit interpretations that remain unresolved are listed below.
 
@@ -73,16 +73,16 @@ Structural validation and scripts/database/007_validate_northeast_arctic_cod.R p
 
 ## Benchmark follow-up
 
-WKBARFAR 2021 sections 2.3.1–2.3.2 confirm survey terminal age 12+, the 2014 winter-trawl split with separate q and shared error parameters, independent F innovations, and deliberate exclusion of suspicious historical catch values of one. The 2026 report section 3.2 confirms that the Russian survey was discontinued after 2017; empty later slots are not observations. The prediction–variance link was tested but excluded at the 2021 benchmark, then adopted in 2026. These are distinct accepted configurations.
+WKBARFAR 2021 sections 2.3.1–2.3.2 confirm survey terminal age 12+, the 2014 winter-trawl split with separate q and shared error parameters, independent F innovations, and deliberate exclusion of suspicious historical catch values of one. The 2026 report section 3.2 confirms that the Russian survey was discontinued after 2017; empty later slots are not observations. The prediction–variance link was tested but excluded at the 2021 benchmark, then adopted in 2026. These are distinct official configurations.
 
 ## Spawning inputs and catchability uncertainty
 
-The accepted fit has no logQpow parameters and all keyQpow entries are -1, confirming no density-dependent power. Fifty survey-age q values now represent 45 unique logFpar parameters across the five index series; ages 11 and 12 share q within each series. Values come directly from native fixed effects. Reported SEs are natural-scale delta-method approximations and intervals are 95% log-Wald intervals; neither log SEs nor arbitrary units are substituted.
+The official fit has no logQpow parameters and all keyQpow entries are -1, confirming no density-dependent power. Fifty survey-age q values now represent 45 unique logFpar parameters across the five index series; ages 11 and 12 share q within each series. Values come directly from native fixed effects. Reported SEs are natural-scale delta-method approximations and intervals are 95% log-Wald intervals; neither log SEs nor arbitrary units are substituted.
 
 Both propF and propM full matrices (81 years by 13 ages) are now retained as biological inputs, adding 2,106 source cells. All are zero, consistent with the earlier assumption notes. The stock-specific validator confirms the zero spawning fractions, q age sharing and uncertainty transformation. Coverage is now 8,682 inputs, 4,843 outputs and 41 assumptions. Completeness remains partial because source units and remaining statistical-interpretation details are unresolved; initial-state semantics are documented below.
 ## Initial-state semantics resolved
 
-Both native initN/initF vectors are empty and initState=0. The accepted SAM revision's n.hpp and f.hpp evaluate ordinary process transitions from the second modeled year onward, with no explicit density for the first logN/logF state. Those first-year states remain latent random effects in the Laplace fit. A broad first-state normal prior is added only when calculating observation residuals; it must not be described as a regular assessment prior. The native configuration checks pass. This resolves the earlier initial-state gap without changing the fitted object or model mathematics.
+Both native initN/initF vectors are empty and initState=0. The official SAM revision's n.hpp and f.hpp evaluate ordinary process transitions from the second modeled year onward, with no explicit density for the first logN/logF state. Those first-year states remain latent random effects in the Laplace fit. A broad first-state normal prior is added only when calculating observation residuals; it must not be described as a regular assessment prior. The native configuration checks pass. This resolves the earlier initial-state gap without changing the fitted object or model mathematics.
 
 Exact source files:
 https://github.com/fishfollower/SAM/blob/1cc464b80f6f/stockassessment/inst/include/SAM/n.hpp

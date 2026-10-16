@@ -81,7 +81,7 @@ for (series in names(weights)) {
         sampling_time = if (is.na(survey_times[[series]])) "" else survey_times[[series]],
         source_type = "native_model",
         source_reference = paste0(source_url, "wt_", series),
-        notes = "Survey-specific weight-at-age matrix used in the accepted model; age 15 is 15+."
+        notes = "Survey-specific weight-at-age matrix used in the official model; age 15 is 15+."
       )
     }
   }
@@ -98,7 +98,7 @@ index_series <- list(
   ),
   bts = list(
     name = survey_names[["bts"]], unit = "thousand t",
-    note = "Supplied native-scale SD vector; the accepted DoCovBTS=1 likelihood instead uses the full supplied covariance matrix."
+    note = "Supplied native-scale SD vector; the official DoCovBTS=1 likelihood instead uses the full supplied covariance matrix."
   ),
   ats = list(
     name = survey_names[["ats"]], unit = "thousand t",

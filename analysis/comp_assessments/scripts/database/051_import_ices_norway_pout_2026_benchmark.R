@@ -62,7 +62,7 @@ if (any(observations$age_to < observations$age) ||
 input_rows <- function(type, measure, basis, year, age, value, unit,
                        fleet = "", survey = "", season = "",
                        sampling_time = NA_real_, source_reference,
-                       transformation = "Copied the value from the accepted fitted model object.",
+                       transformation = "Copied the value from the official fitted model object.",
                        notes = "") {
   n <- length(value)
   yr <- rep_len(year, n)
@@ -200,7 +200,7 @@ inputs <- do.call(rbind, c(obs_rows, list(
     vapply(ages, function(age) unique(aux$PM[aux$age == age])[[1L]], numeric(1)),
     "proportion",
     source_reference = paste0(model_url, "; fit$data$auxPM"),
-    transformation = "Copied the time-invariant maturity ogive from the accepted model object.",
+    transformation = "Copied the time-invariant maturity ogive from the official model object.",
     notes = "0% at age 0, 20% at age 1, and 100% at ages 2 and 3+."
   )
 )))
@@ -318,7 +318,7 @@ assumptions <- do.call(rbind, list(
   ),
   assumption(
     "M", "process", "externally supplied, time-varying M by age and quarter", report_ref,
-    "M is not estimated by SESAM; the accepted M-0 input is based on North Sea SMS."
+    "M is not estimated by SESAM; the official M-0 input is based on North Sea SMS."
   ),
   assumption("M", "time_coverage", "1984-2022 SMS series; 2022 values carried through 2025", report_ref),
   assumption(
@@ -385,9 +385,9 @@ assessment <- data.frame(
   assumptions_status = "partial", inputs_status = "partial",
   outputs_status = "partial",
   notes = paste(
-    "Accepted February 2026 WKBWNG benchmark run, distinct from the 2025 production-advice assessment.",
+    "Official February 2026 WKBWNG benchmark run, distinct from the 2025 production-advice assessment.",
     "WGNSSK 2026 states that no spring advice was issued for Norway pout, so this current detailed benchmark is not marked applied for advice.",
-    "The fitted object and Table 2.5 settings match the accepted report; SSB at 2012.75 matches the reported Blim (30,766.76 t).",
+    "The fitted object and Table 2.5 settings match the official report; SSB at 2012.75 matches the reported Blim (30,766.76 t).",
     "The report lists IBTS other-countries Q3 through 2025, but the cached fit and obs.dat contain this fleet only through 2024."
   ),
   stringsAsFactors = FALSE

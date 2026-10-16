@@ -119,13 +119,13 @@ for (id in names(candidates)) {
   ), file.path(out, "results.rds"))
   labels <- vapply(fits, function(fit) if (isTRUE(fit$is_converged)) "" else " (not converged)", character(1))
   names(fits) <- paste0(names(fits), labels)
-  models <- if (inherits(baseline$ref, "tam_ref")) c(list(Accepted = baseline$ref), fits) else fits
+  models <- if (inherits(baseline$ref, "tam_ref")) c(list(Official = baseline$ref), fits) else fits
   vis_tam(
     model_list = models, output_file = file.path(out, id, "dashboard.html"),
     open_file = FALSE, background = c(
       translated$background, "",
       "#### Catchability experiment", "",
-      "These candidates change only the catchability formula. Baseline is the settled tinyAM translation. Candidates labelled not converged are diagnostic examples, not supported fitted assessments. Agreement with Accepted trajectories is not a model-selection rule."
+      "These candidates change only the catchability formula. Baseline is the settled tinyAM translation. Candidates labelled not converged are diagnostic examples, not supported fitted assessments. Agreement with Official trajectories is not a model-selection rule."
     ),
     render_args = list(quiet = TRUE)
   )

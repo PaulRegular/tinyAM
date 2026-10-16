@@ -292,7 +292,7 @@
       if (length(source_age) != 1L || source_age != min(ages)) {
         source <- NULL
         status <- "non_equivalent"
-        reason <- "Recruitment ages differ or the accepted recruitment age is unresolved."
+        reason <- "Recruitment ages differ or the official recruitment age is unresolved."
       } else {
         definition <- paste("Recruitment at age", source_age)
       }
@@ -320,7 +320,7 @@
           reason <- if (!is.null(cells$reason) && nzchar(cells$reason)) {
             cells$reason
           } else {
-            "Accepted age groups do not cover the modeled ages completely for total abundance."
+            "Official age groups do not cover the modeled ages completely for total abundance."
           }
         }
       } else {
@@ -340,7 +340,7 @@
           n$est <- n$est * biology
           source <- .assessment_age_summary(n, ages, model_ages = fit$dat$ages)
           definition <- paste(
-            "Accepted N with shared translated weights",
+            "Official N with shared translated weights",
             if (metric == "ssb") "and maturity" else "",
             "over ages", paste(range(ages), collapse = "-")
           )
@@ -440,7 +440,7 @@
 .assessment_percent_differences <- function(reference) {
   common <- reference$comparisons
   if (is.null(common)) {
-    cli::cli_abort("Translate the accepted reference with a fitted template before calculating differences.")
+    cli::cli_abort("Translate the official reference with a fitted template before calculating differences.")
   }
   common$absolute_difference <- abs(common$tinyAM - common$source)
   common$percent_difference <- ifelse(is.finite(common$source) & common$source != 0,

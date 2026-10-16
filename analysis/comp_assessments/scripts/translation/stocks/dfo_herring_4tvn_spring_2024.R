@@ -95,7 +95,7 @@ weight_rows <- data.frame(
     "mean of age a-1 in year t-1 and age a in year t; age 2 and 1978 use",
     "same-year weights because earlier ages/years are unavailable."
   ),
-  notes = "Fit-only stock-weight approximation; the accepted fitted weight surface and gear-combination rule are not published.",
+  notes = "Fit-only stock-weight approximation; the official fitted weight surface and gear-combination rule are not published.",
   stringsAsFactors = FALSE
 )
 
@@ -180,7 +180,7 @@ comparison_definitions <- list(
   ssb = list(
     status = "matched",
     definition = "January 1 mature biomass at ages 4-11+, derived from reported biomass-at-age and maturity",
-    reason = "This common-definition comparison is not the accepted assessment's April 1 SSB. Source uncertainty is unavailable."
+    reason = "This common-definition comparison is not the official assessment's April 1 SSB. Source uncertainty is unavailable."
   )
 )
 
@@ -190,14 +190,14 @@ background <- c(
   "",
   print_sources(source$assessment),
   "",
-  "The canonical record represents DFO's accepted 2024 assessment. The 2026 assessment is recorded separately as summary-only because its detailed methods and numerical tables have not been recovered. The 2022 methods report provides model context where the 2024 supporting document is silent.",
+  "The canonical record represents DFO's official 2024 assessment. The 2026 assessment is recorded separately as summary-only because its detailed methods and numerical tables have not been recovered. The 2022 methods report provides model context where the 2024 supporting document is silent.",
   "",
-  "| Component | Accepted assessment | tinyAM representation | Reason for difference |",
+  "| Component | Official assessment | tinyAM representation | Reason for difference |",
   "|---|---|---|---|",
 
   "| Years | Population estimates cover 1978–2023; spring fixed-gear CPUE is available for 1990–2021. | Fit 1978–2023 using the available catch, CPUE and acoustic observations. | The fitted population period extends beyond the CPUE series. |",
 
-  "| Ages | Ages 2–11+, with age 11 as the plus group. | Retain ages 2–11+, including the plus group. | The accepted population age structure is preserved. |",
+  "| Ages | Ages 2–11+, with age 11 as the plus group. | Retain ages 2–11+, including the plus group. | The official population age structure is preserved. |",
 
   "| N | Age-2 recruitment varies annually; older cohorts follow survival with initial-cohort deviations. | Random-walk recruitment, IID older-cohort survival deviations and exponential initial abundance. | The IID survival process adds flexibility absent from the documented SCA survival model; initial states also differ. |",
 
@@ -205,7 +205,7 @@ background <- c(
 
   "| M | Log-M follows separate random walks for ages 2–6 and 7–11+, with initial-M prior means of 0.2 and fixed increment SD of 0.075. | Two age-blocked AR1 M processes centered on 0.2, with estimated process variation. | Stationary AR1 dynamics provide a mortality anchor but do not reproduce the source random walks, initial-state priors or fixed increment SD. |",
 
-  "| Catch | Fixed- and mobile-gear catch-at-age are reported separately in thousand fish. The accepted SCA uses total catch and age-composition likelihoods. | Sum both gears into one age-specific catch stream, convert to fish and estimate one lognormal catch-error SD. | The total-plus-composition observation likelihood is not reproduced. |",
+  "| Catch | Fixed- and mobile-gear catch-at-age are reported separately in thousand fish. The official SCA uses total catch and age-composition likelihoods. | Sum both gears into one age-specific catch stream, convert to fish and estimate one lognormal catch-error SD. | The total-plus-composition observation likelihood is not reproduced. |",
 
   "| CPUE catchability | The 2022 methods describe annual random-walk variation in log catchability, beginning in 1990, with fixed increment SD of 0.1. | Estimate a CPUE baseline and annual log-q random walk with an estimated increment SD. The initial random-walk deviation is zero. | The temporal structure is similar, but its process SD is estimated because the fixed 0.1 specification did not converge in the translation. |",
 
@@ -217,7 +217,7 @@ background <- c(
 
   "| Weights and maturity | Maturity is knife-edge between ages 3 and 4. Beginning-year weights combine gear-specific weights and use adjacent age-year geometric means. | Combine fixed/mobile weights using catch-number weighting, interpolate gaps and apply the adjacent-cell geometric mean and maturity schedule. | Gear weighting is inferred; its median difference from weights implied by published biomass/N is 0.073%. Boundary cells remain approximate. |",
 
-  "| Comparison | January 1 N, biomass-at-age, F-at-age, recruitment and Fbar are reported. | Compare age-specific estimates and derived total abundance, total biomass and January 1 mature biomass. | The SSB comparison is January 1 mature biomass, not accepted April 1 SSB. Source age-specific M and uncertainty are unavailable. |",
+  "| Comparison | January 1 N, biomass-at-age, F-at-age, recruitment and Fbar are reported. | Compare age-specific estimates and derived total abundance, total biomass and January 1 mature biomass. | The SSB comparison is January 1 mature biomass, not official April 1 SSB. Source age-specific M and uncertainty are unavailable. |",
 
   "",
   "The revised translation uses correlated F random walks rather than stationary AR1 F around age-blocked means. Period-specific logistic fishery selectivity was explored but is not retained; the final model does not use fishery_period in its F specification.",
@@ -226,9 +226,9 @@ background <- c(
   "",
   "The acoustic survey has a separate baseline and monotone age-q curve but no temporal catchability random walk. Both surveys retain their published observations and separate estimated observation SDs.",
   "",
-  "The translation is a structural approximation, not a reproduction of the accepted likelihood. The main remaining differences concern aggregate-biomass and age-composition observations, logistic selectivity, M initial-state priors and process penalties.",
+  "The translation is a structural approximation, not a reproduction of the official likelihood. The main remaining differences concern aggregate-biomass and age-composition observations, logistic selectivity, M initial-state priors and process penalties.",
   "",
-  "Acoustic values are converted using canonical units. The January 1 mature-biomass comparison is distinct from accepted April 1 SSB, and the 2026 assessment's updated biomass data are not mixed into the 2024 record."
+  "Acoustic values are converted using canonical units. The January 1 mature-biomass comparison is distinct from official April 1 SSB, and the 2026 assessment's updated biomass data are not mixed into the 2024 record."
 )
 
 

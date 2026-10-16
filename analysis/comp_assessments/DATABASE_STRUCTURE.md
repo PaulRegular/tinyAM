@@ -4,7 +4,7 @@
 
 This document defines the schema for the stock-assessment database in `analysis/comp_assessments/database/`.
 
-The database preserves, in a tidy and auditable form, the inputs, assumptions, and outputs of accepted age-structured stock assessments.
+The database preserves, in a tidy and auditable form, the inputs, assumptions, and outputs of official age-structured stock assessments.
 
 The canonical database contains five CSV files:
 
@@ -28,7 +28,7 @@ database records while keeping analysis-specific choices separate.
 
 ## Core principles
 
-1.  **Represent the accepted assessment faithfully.** Preserve the dimensions and meaning of the accepted model, including fleets, surveys, sexes, regions, and seasons where applicable.
+1.  **Represent the official assessment faithfully.** Preserve the dimensions and meaning of the official model, including fleets, surveys, sexes, regions, and seasons where applicable.
 2.  **Preserve provenance.** Material data and assumptions should be traceable to an authoritative file, object, table, document, or documented reconstruction.
 3.  **Keep the canonical database source-focused.** Tidy reshaping is allowed, but downstream-analysis transformations and settings do not belong in the canonical tables.
 
@@ -52,7 +52,7 @@ stocks.csv
 
 `stock_id` identifies the biological or management stock.
 
-`assessment_id` identifies a particular assessment event or accepted assessment run.
+`assessment_id` identifies a particular assessment event or official assessment run.
 
 ------------------------------------------------------------------------
 
@@ -72,7 +72,7 @@ One row per biological or management stock.
 | `common_name` | Common name |
 | `area` | Assessment or management area |
 | `region` | Broader geographic region |
-| `ocean` | Ocean basin |
+| `ocean` | Regional basin: Northwest Atlantic, Northeast Atlantic, Northeast Pacific, or Northwest Pacific |
 | `notes` | Stock-identity, boundary, split/merge, or other notes |
 
 ## Identifier rules
@@ -107,7 +107,7 @@ One row per assessment event or model run represented in the database.
 | `assessment_type` | Annual, update, benchmark, framework, etc. |
 | `model_family` | SAM, Stock Synthesis, WHAM, NCAM, VPA/ADAPT, etc. |
 | `model_version` | Model/package/version identifier where known |
-| `is_current` | Whether this is the most recent accepted assessment with detailed inputs, assumptions, and outputs recoverable for the canonical database. A newer summary-only assessment is recorded separately and does not displace it; see `PROTOCOL.md`. |
+| `is_current` | Whether this is the most recent official assessment with detailed inputs, assumptions, and outputs recoverable for the canonical database. A newer summary-only assessment is recorded separately and does not displace it; see `PROTOCOL.md`. |
 | `is_applied` | Whether this assessment was applied for advice in its assessment cycle. A current detailed benchmark can be `FALSE` if it has not yet been used for advice; more than one historical assessment can be `TRUE`. |
 | `framework_year` | Benchmark/framework year defining the current model, if distinct |
 | `assessment_url` | Main authoritative assessment/report URL |
@@ -116,8 +116,8 @@ One row per assessment event or model run represented in the database.
 | `model_url` | Native model object/run URL where distinct |
 | `repository_url` | Reproducible assessment repository where available |
 | `assumptions_status` | Completeness of assumptions extraction |
-| `inputs_status` | Completeness of accepted-model input extraction |
-| `outputs_status` | Completeness of accepted-model output extraction |
+| `inputs_status` | Completeness of official-model input extraction |
+| `outputs_status` | Completeness of official-model output extraction |
 | `notes` | Assessment-level caveats or provenance notes |
 
 ## Status values
@@ -133,7 +133,7 @@ not_applicable
 
 Use `not_applicable` sparingly.
 
-Status fields describe completeness relative to the accepted assessment, not relative to a downstream analysis.
+Status fields describe completeness relative to the official assessment, not relative to a downstream analysis.
 
 Keep translation readiness, fitting failures, convergence results, and
 comparison completion in analysis diagnostics. A partial source record can
@@ -177,7 +177,7 @@ and explain the unresolved issue in `notes`.
 
 # 4. `inputs.csv`
 
-Long-format representation of numerical inputs supplied to the accepted assessment.
+Long-format representation of numerical inputs supplied to the official assessment.
 
 ## Required columns
 
@@ -200,7 +200,7 @@ Long-format representation of numerical inputs supplied to the accepted assessme
 | `sampling_time` | Timing within year as a fraction from 0 to 1 when part of the source/model definition |
 | `source_type` | Provenance category |
 | `source_reference` | Specific file/table/object/page |
-| `transformation` | Transformation used only to recover the accepted-model input |
+| `transformation` | Transformation used only to recover the official-model input |
 | `notes` | Additional clarification |
 
 ## Initial `type` vocabulary
@@ -352,7 +352,7 @@ Use `official_document` for values stated in an official report's prose when
 they are not presented in a numerical table. Use `official_table` for values
 transcribed from tables and `digitized` for values recovered from figures.
 
-`reconstructed_source_input` means that the actual accepted-model input was not directly available but was reconstructed from authoritative source quantities. Record the reconstruction in `transformation`.
+`reconstructed_source_input` means that the actual official-model input was not directly available but was reconstructed from authoritative source quantities. Record the reconstruction in `transformation`.
 
 Do not use `reconstructed_source_input` for values derived solely for a downstream analysis.
 
@@ -360,7 +360,7 @@ Do not use `reconstructed_source_input` for values derived solely for a downstre
 
 Changing a source table from wide to long form is allowed when scientific meaning is unchanged.
 
-Preserve the quantities and dimensions actually used by the accepted model.
+Preserve the quantities and dimensions actually used by the official model.
 When a source input must be reconstructed from other authoritative source
 quantities, record the calculation, source references, and units in
 `transformation`, with `source_type = reconstructed_source_input`. If the model
@@ -369,7 +369,7 @@ source inputs rather than presenting a derived quantity as a native input.
 Do not place values derived only for a downstream analysis in the canonical
 tables. Keep source quantities needed to reproduce a documented reconstruction,
 and do not sum overlapping direct and reconstructed values. Include other
-removal details when they are part of the accepted model or needed to document
+removal details when they are part of the official model or needed to document
 the source inputs.
 
 Example:
@@ -388,7 +388,7 @@ year | age | value
 
 # 5. `outputs.csv`
 
-Long-format outputs from the accepted assessment.
+Long-format outputs from the official assessment.
 
 ## Required columns
 
@@ -443,7 +443,7 @@ Bmsy
 msy
 ```
 
-Use measures defined by the accepted assessment. `derived_source_output` may
+Use measures defined by the official assessment. `derived_source_output` may
 also record an explicitly requested summary calculated from that assessment's
 reported outputs and documented biology. Preserve the native values, identify
 the formula and age range in notes, and leave uncertainty missing when the
@@ -452,7 +452,7 @@ sum of January 1 mature biomass is not an April 1 SSB estimate.
 
 biomass_by_age_group stores a reported aggregate biomass for a named age group, such as 3+. Put the group label in age_group and leave age blank; it is not an age-specific biomass surface.
 
-Retain uncertainty where readily available. Parameter estimates reported by the accepted assessment may be stored as `type = biology`, with `measure` naming the exact parameter and `age` or `year` set only when that dimension applies.
+Retain uncertainty where readily available. Parameter estimates reported by the official assessment may be stored as `type = biology`, with `measure` naming the exact parameter and `age` or `year` set only when that dimension applies.
 
 ## Uncertainty and estimate definitions
 

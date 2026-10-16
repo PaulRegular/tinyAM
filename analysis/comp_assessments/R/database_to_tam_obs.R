@@ -137,10 +137,10 @@
 .translation_start_surface <- function(outputs, type, measure, years, ages,
                                        multiplier = 1) {
   rows <- outputs[outputs$type == type & outputs$measure == measure, , drop = FALSE]
-  rows <- .translation_surface(rows, years, ages, paste("Accepted", measure))
+  rows <- .translation_surface(rows, years, ages, paste("Official", measure))
   value <- as.numeric(rows$obs) * multiplier
   if (any(!is.finite(value)) || any(value <= 0)) {
-    .translation_abort(paste("Accepted", measure, "starting values must be finite and positive."))
+    .translation_abort(paste("Official", measure, "starting values must be finite and positive."))
   }
   surface <- matrix(NA_real_, length(years), length(ages),
     dimnames = list(as.character(years), as.character(ages))
@@ -796,7 +796,7 @@
 #' @param surveys Optional survey names to include. Omitting a source survey is
 #'   an analysis choice and should be recorded in the assumption audit.
 #' @param exclude_index_years Optional named list of years excluded by the
-#'   accepted source assessment, one vector per survey.
+#'   official source assessment, one vector per survey.
 #' @param weight_reference_year,maturity_reference_year Optional source year
 #'   whose age vector is explicitly assumed constant over the requested years.
 #'   Use only when this constant-vector treatment is documented; these arguments
@@ -1061,7 +1061,7 @@ database_to_tam_obs <- function(assessment_id, inputs, years = NULL, ages = NULL
 #' Translate a numerical natural-mortality input for tinyAM
 #'
 #' A fixed numerical M surface can be supplied to tinyAM after joining the
-#' returned `surface` to `obs$pop_covariates`. When the accepted assessment estimates M,
+#' returned `surface` to `obs$pop_covariates`. When the official assessment estimates M,
 #' this helper reports that structure but does not substitute fitted M outputs
 #' or choose a simplified M process.
 #'

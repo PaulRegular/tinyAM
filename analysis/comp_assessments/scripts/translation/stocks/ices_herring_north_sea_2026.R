@@ -62,11 +62,11 @@ comparison_scales <- c(N = 0.001, recruitment = 0.001, ssb = 0.001, F_bar = 1)
 
 
 background <- c(
-  "### North Sea autumn-spawning herring: accepted 2026 single-fleet assessment",
+  "### North Sea autumn-spawning herring: official 2026 single-fleet assessment",
   "",
   print_sources(source$assessment),
   "",
-  "| Component | Accepted assessment | tinyAM representation | Reason for difference |",
+  "| Component | Official assessment | tinyAM representation | Reason for difference |",
   "|---|---|---|---|",
 
   "| Years | The population model spans 1947–2026. Catch, weights, maturity and published M inputs end in 2025. | Fit 1947–2025 and compare over those common years. | Complete biological input tables are unavailable for 2026. |",
@@ -77,7 +77,7 @@ background <- c(
 
   "| F | Random-walk F with AR(1) correlation across ages in annual increments. Ages 0–6 have separate F states, ages 7–8 share one state, and innovation variances are grouped over ages 0–1, 2–5 and 6–8. Fbar uses ages 2–6. | Correlated F random walks (cor_rw), with AR(1) correlation between age-specific annual log-F increments, one shared process SD and Fbar ages 2–6. | Cross-age correlation is now represented, but the source variance groups and shared oldest-age F state are not. |",
 
-  "| M | Fixed annual SMS-2023 age surface with an additional 0.02 in the accepted model configuration. | Supply the translated 1947–2025 M surface as fixed numerical values. | No M process is estimated; the accepted final-M convention must be preserved without applying the offset twice. |",
+  "| M | Fixed annual SMS-2023 age surface with an additional 0.02 in the official model configuration. | Supply the translated 1947–2025 M surface as fixed numerical values. | No M process is estimated; the official final-M convention must be preserved without applying the offset twice. |",
 
   "| Catch | Direct catch-at-age in thousand fish; fishery-closure years 1978–1979 have missing observations. | Convert to individual fish and fit positive catch observations with independent lognormal errors and SD groups defined by sd_block. | Source catch-error structure may differ; zero observations cannot enter the standard lognormal likelihood directly. |",
 
@@ -85,18 +85,18 @@ background <- c(
 
   "| Weights and maturity | Annual stock and catch weights and annual maturity are tabulated through 2025. | Retain the source annual biological surfaces for 1947–2025. | No alternative biological surfaces are substituted. |",
 
-  "| SSB | The accepted assessment uses its spawning-time biomass convention. | Calculate SSB from translated stock weights, maturity and fitted abundance using tinyAM's timing convention. | The source spawning fractions remain unavailable, so native SSB definitions may differ. |",
+  "| SSB | The official assessment uses its spawning-time biomass convention. | Calculate SSB from translated stock weights, maturity and fitted abundance using tinyAM's timing convention. | The source spawning fractions remain unavailable, so native SSB definitions may differ. |",
 
   "",
-  "The revised translation uses IID cohort-survival deviations and correlated F random walks in place of the previous random-walk N process and independent age-specific F random walks. This more closely approximates the accepted assessment's broad process structure while retaining a simpler parameterization.",
+  "The revised translation uses IID cohort-survival deviations and correlated F random walks in place of the previous random-walk N process and independent age-specific F random walks. This more closely approximates the official assessment's broad process structure while retaining a simpler parameterization.",
   "",
-  "The accepted FLSAM shares its oldest F state and estimates three groups of F-process variances; tinyAM retains separate age-specific F states and uses one shared increment SD. Recruitment remains a separate random-walk process.",
+  "The official FLSAM shares its oldest F state and estimates three groups of F-process variances; tinyAM retains separate age-specific F states and uses one shared increment SD. Recruitment remains a separate random-walk process.",
   "",
-  "Accepted N and F surfaces provide optimizer starting values only; tinyAM re-estimates the population and mortality states. The historical fit is restricted to 1947–2025, although accepted N and F estimates extend through 2026.",
+  "Official N and F surfaces provide optimizer starting values only; tinyAM re-estimates the population and mortality states. The historical fit is restricted to 1947–2025, although official N and F estimates extend through 2026.",
   "",
-  "Survey sampling times are approximate seasonal midpoints because the accepted fleet.txt was unavailable. Survey indices retain their published native scales, with estimated catchability absorbing unresolved units.",
+  "Survey sampling times are approximate seasonal midpoints because the official fleet.txt was unavailable. Survey indices retain their published native scales, with estimated catchability absorbing unresolved units.",
   "",
-  "The four larval abundance indices and their partial spawning-component likelihoods are omitted. Comparisons therefore assess whether the simplified age-structured model can approximate the accepted historical stock dynamics without reproducing the full observation likelihood."
+  "The four larval abundance indices and their partial spawning-component likelihoods are omitted. Comparisons therefore assess whether the simplified age-structured model can approximate the official historical stock dynamics without reproducing the full observation likelihood."
 )
 
 

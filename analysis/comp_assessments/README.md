@@ -28,7 +28,7 @@ assessments or management advice.
 
 The five CSVs in `database/` are canonical. Source PDFs, data files, and model objects are cached locally under the gitignored `source_cache/` directory when available. Do not place tinyAM settings or derived run outputs in the canonical tables.
 
-The assessment marked `is_current` is the latest accepted assessment with
+The assessment marked `is_current` is the latest official assessment with
 detailed inputs, assumptions, and outputs recoverable for the database. It may
 predate newer summary-only advice or an FSAR.
 
@@ -51,7 +51,7 @@ ready observation object does not guarantee model convergence.
 
 Open `scripts/translation/run_stock.R`, set `assessment_id`, then source it. It
 loads the working-tree database, fits the selected stock script and opens a
-temporary dashboard comparing tinyAM with the Accepted assessment. Observations,
+temporary dashboard comparing tinyAM with the Official assessment. Observations,
 years, ages, fit, background and the `assessment` comparison context remain in
 your workspace. Each stock script retains its visible `fit_tam()` call. Observations are a
 `tam_data` list; population formula columns belong in `obs$pop_covariates`.
@@ -67,7 +67,7 @@ preview <- view_assessment(fit, assessment)
 preview$summary
 ```
 
-The preview uses the supplied fit without fitting again, rebuilds the Accepted
+The preview uses the supplied fit without fitting again, rebuilds the Official
 reference on its grid, and saves nothing into the repository. Its temporary HTML
 opens in the browser. Use `open_file = FALSE` to render without opening, or
 `output_file = "experiment.html"` to retain a dashboard. A non-converged fit with
@@ -92,7 +92,7 @@ check_tam(x$fit)
 Source `scripts/translation/run_all.R` for the reproducible batch. It reads the committed database snapshot, uses `future::multisession` through `furrr`, and writes aggregate results once in the parent process. The script currently uses one worker; increase `workers` when memory permits. Assessments without stock recipes and individual fit failures remain visible in the returned diagnostics. Use `parallel = FALSE` when debugging.
 
 The batch includes every assessment marked `is_current`, including a current
-accepted benchmark that has not yet been applied for advice.
+official benchmark that has not yet been applied for advice.
 
 ```r
 pkgload::load_all(".", quiet = TRUE)

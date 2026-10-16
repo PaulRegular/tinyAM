@@ -1,4 +1,4 @@
-# Accepted-run biomass from final GOA pollock Table 1.23
+# Official-run biomass from final GOA pollock Table 1.23
 args <- commandArgs(trailingOnly = TRUE)
 root <- if (length(args)) args[1] else "."
 cache <- file.path(root, "analysis/comp_assessments/source_cache/afsc_pollock_goa_2024")
@@ -24,4 +24,4 @@ rows <- do.call(rbind, lapply(cells, function(x) {
 }))
 stopifnot(identical(rows$year, 1977:2024), tail(rows$value, 1) == 1005)
 write.csv(rows, file.path(cache, "report_age3plus_biomass.csv"), row.names = FALSE)
-message("Staged 48 accepted 2024 biomass values; prior-assessment columns excluded.")
+message("Staged 48 official 2024 biomass values; prior-assessment columns excluded.")

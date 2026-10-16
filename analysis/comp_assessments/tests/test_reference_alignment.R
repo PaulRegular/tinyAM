@@ -54,7 +54,7 @@ stopifnot(
   all(r$source == expected), all(r$year == years),
   all(r$comparison_status == "matched"),
   identical(
-    tinyAM::tidy_tam(model_list = list(Accepted = ref))$pop$recruitment$est,
+    tinyAM::tidy_tam(model_list = list(Official = ref))$pop$recruitment$est,
     ref$pop$recruitment$est
   )
 )
@@ -64,7 +64,7 @@ singleton_labels$age_group <- as.character(singleton_labels$age)
 labelled_ref <- database_to_tam_ref("aligned", singleton_labels, template = fit)
 stopifnot(all(labelled_ref$pop$recruitment$est == expected))
 
-# Missing accepted N at the requested recruitment age stays missing, never shifted.
+# Missing official N at the requested recruitment age stays missing, never shifted.
 missing <- outputs[!(outputs$year == 2001 & outputs$age == 2), ]
 ref_missing <- database_to_tam_ref("aligned", missing, template = fit, age_plus_group = 3)
 missing_differences <- .assessment_percent_differences(ref_missing)

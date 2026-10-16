@@ -112,7 +112,7 @@ test_that("empty observed ages retain prediction traces in every frame", {
 })
 
 test_that("missing reference predictions retain model traces in catch frames", {
-  d <- expand.grid(year = 2000:2002, age = 1:3, model = c("Accepted", "tinyAM"))
+  d <- expand.grid(year = 2000:2002, age = 1:3, model = c("Official", "tinyAM"))
   d$obs <- ifelse(d$age < 3, NA_real_, 10)
   d$pred <- ifelse(d$model == "tinyAM", 11, NA_real_)
   built <- plotly::plotly_build(plot_obs_pred(d, frame = ~age, color = ~model))

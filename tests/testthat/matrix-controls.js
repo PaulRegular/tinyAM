@@ -13,7 +13,7 @@ function widget() {
   const handlers = {};
   return {on: (event, fn) => { handlers[event] = fn; }, handlers};
 }
-const config = {type: 'heatmap', models: ['tinyAM', 'Accepted'],
+const config = {type: 'heatmap', models: ['tinyAM', 'Official'],
   colorscale: [[0, '#003e56'], [1, '#f05c28']],
   metrics: ['Abundance', 'Biomass', 'SSB', 'F', 'M', 'Z'].map((name, i) => ({
     name, unit: i > 2 ? 'per year' : i ? 'kg' : 'fish', years: [2000, 2001], ages: [1, 2],
@@ -30,7 +30,7 @@ const flush = () => new Promise(resolve => setImmediate(resolve));
   config.metrics[5].cells[1].log = [[null, null], [null, null]];
   const a = widget(), b = widget();
   draw(a, {}, config); draw(b, {}, config); await flush();
-  a.handlers.plotly_animatingframe({name: 'Accepted'});
+  a.handlers.plotly_animatingframe({name: 'Official'});
   const camera = {eye: {x: 1, y: 2, z: 3}};
   a.handlers.plotly_relayout({'scene.camera': camera});
   for (let metric = 0; metric < config.metrics.length; metric++) {

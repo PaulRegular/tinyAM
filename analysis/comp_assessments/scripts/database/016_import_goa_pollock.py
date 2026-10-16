@@ -1,4 +1,4 @@
-"""Import accepted 2024 GOA pollock native inputs and final-report outputs."""
+"""Import official 2024 GOA pollock native inputs and final-report outputs."""
 import csv
 import io
 import sys
@@ -49,7 +49,7 @@ for age, value in enumerate(vector('mat'), 1):
         notes='Constant female maturity vector, 1983–2024 average, valid in all model years; stored once. Female fraction 0.5 is applied separately in SSB.')
 for age, value in enumerate([1.39, .69, .48, .37, .34, .30, .30, .29, .28, .29], 1):
     add('M', 'natural_mortality_at_age', 'per_year', None, value, 'per year', age, source=code, field='M',
-        notes='Fixed external age-specific vector, valid 1970–2024, stored once. natMscalar fixed at 1 by accepted preparation map.')
+        notes='Fixed external age-specific vector, valid 1970–2024, stored once. natMscalar fixed at 1 by official preparation map.')
 
 for year, value in zip(vector('Ecov_obs_year'), vector('Ecov_obs')):
     add('covariate', 'environmental_covariate', 'native_covariate', year, value, 'native covariate scale',
@@ -76,7 +76,7 @@ for number, label in streams:
                 survey=label, field=f'wt_srv{number}', notes='Annual supplied survey prediction weights, including filled model years; 10+.')
     assume('index', 'sampling_time', f'yrfrct_srv{number}', 'Timing supplied annually on each index row.', survey=label, source=native)
     assume('index', 'observation_likelihood', 'Lognormal, supplied log SD, mean bias correction', survey=label, source=code)
-    assume('index', 'composition_likelihood', 'Linear Dirichlet-multinomial', 'Accepted Model 23d; separate from biomass index.', survey=label, source=code)
+    assume('index', 'composition_likelihood', 'Linear Dirichlet-multinomial', 'Official Model 23d; separate from biomass index.', survey=label, source=code)
 
 for number, label in [(0, 'Combined fishery')] + streams:
     years = vector('fshyrs' if number == 0 else f'srv_acyrs{number}')
@@ -98,7 +98,7 @@ for number, label in [(0, 'Combined fishery')] + streams:
                 values[age-1], 'proportion', age, fleet=label if number==0 else '', survey='' if number==0 else label,
                 timing=timing, field=key, sample_size=sizes[i-1]*multiplier,
                 transformation=f'Accumulate ages 1–{lower} in first fitted bin' if lower>1 else '',
-                notes=f'Number composition as fitted, without renormalization. First bin includes ages 1–{lower}; final age 10 is 10+. Input sample size {sizes[i-1]*multiplier:g}; accepted script multiplier {multiplier}. Supplied sample size is recorded separately; it is not the estimated effective sample size.')
+                notes=f'Number composition as fitted, without renormalization. First bin includes ages 1–{lower}; final age 10 is 10+. Input sample size {sizes[i-1]*multiplier:g}; official script multiplier {multiplier}. Supplied sample size is recorded separately; it is not the estimated effective sample size.')
     assume('index' if number else 'catch', 'composition_input_sample_sizes', size_key + f' * {multiplier}',
            'Native values and post-read multiplier retained in per-composition notes; estimated D-M overdispersion is not a supplied ESS.',
            survey='' if number==0 else label, fleet=label if number==0 else '', source=native+'; data/2024/run_assessment.R')
@@ -110,13 +110,13 @@ for row in csv.DictReader((cache/'report_historical_outputs_raw.csv').open()):
                         age_group='10+' if row['age']=='10' else '', value=row['value'], lwr=row['lower'], upr=row['upper'],
                         unit='million fish' if row['unit']=='million_fish' else 'thousand t', source_type='official_table',
                         source_reference=report+'; Table '+row['table'],
-                        notes='Accepted historical estimate. Published 95% interval retained where available; printed CV not converted to SE. SSB is female; recruitment age 1; N terminal age is 10+.'))
+                        notes='Official historical estimate. Published 95% interval retained where available; printed CV not converted to SE. SSB is female; recruitment age 1; N terminal age is 10+.'))
 for row in csv.DictReader((cache/'report_age3plus_biomass.csv').open(encoding='utf-8')):
     outputs.append(dict(assessment_id=assessment, type='biomass', measure='total_biomass',
                         year=row['year'], age_group='3+', value=row['value'], unit='thousand t',
                         source_type='official_table', source_reference=report+'; Table 1.23, 2024 assessment columns',
-                        notes='Beginning-year biomass of ages 3–10+, not all-age biomass. Historical accepted-run estimate; no uncertainty published in this table. Harvest rate is not fishing mortality.'))
-assume('assessment', 'accepted_model', 'Model 23d: 2024 final', 'Accepted by final December 2024 SSC, page 40; 2025 catch-only rollover.')
+                        notes='Beginning-year biomass of ages 3–10+, not all-age biomass. Historical official-run estimate; no uncertainty published in this table. Harvest rate is not fishing mortality.'))
+assume('assessment', 'accepted_model', 'Model 23d: 2024 final', 'Adopted by final December 2024 SSC, page 40; 2025 catch-only rollover.')
 assume('population', 'modeled_years', '1970–2024', source=native)
 assume('population', 'ages', '1–10; plus group 10+', source=native)
 assume('population', 'recruitment_age', '1', source=native)
@@ -148,7 +148,7 @@ assume('N', 'initial_state_treatment', 'Initial ages 2–10 tied to first-year r
        'Implementation: initN[0]=exp(mean_log_recruit+dev_log_recruit[0]-M[0]); initN[j]=initN[j-1]*exp(-M[j+1]) for j=1..8; final age divided by 1-exp(-M[9]). These zero-based indices are preserved exactly. Subsequent cohort survival uses total mortality, without additional survival deviations.',
        source=code+'; R/tmb_fns.R: prepare_par and prepare_map')
 assume('q', 'catchability_structure', 'Constant baseline plus latent environmental effect on log q',
-       'log_q1=log_q1_mean+Ecov_beta*Ecov_exp; log_q1_dev fixed at zero. Ecov_exp is integrated as a random effect; annual catchability is not an independent q random walk in this accepted run.',
+       'log_q1=log_q1_mean+Ecov_beta*Ecov_exp; log_q1_dev fixed at zero. Ecov_exp is integrated as a random effect; annual catchability is not an independent q random walk in this official run.',
        survey='Shelikof winter acoustic', source=code+'; R/tmb_fns.R: prepare_pk_input and prepare_map')
 assume('q', 'catchability_structure', 'Constant estimated log catchability with normal prior',
        'log_q2_dev fixed at zero; log_q2_mean prior mean log(0.85), SD 0.1.',
@@ -165,12 +165,12 @@ assume('biology', 'age_error_matrix', str(age_transition),
 stock = dict(stock_id=stock_id, charbonneau_id='AFSC_GOA_Gadus_chalcogrammus', authority='NOAA-AFSC',
              authority_stock_id='GOA pollock W/C/WYK', scientific_name='Gadus chalcogrammus',
              common_name='Gulf of Alaska walleye pollock', area='Western/Central/West Yakutat, west of 140 W',
-             region='Alaska', ocean='North Pacific', notes='Age-structured Tier 3 stock; excludes separate Southeast Outside Tier 5 assessment.')
+             region='Alaska', ocean='Northeast Pacific', notes='Age-structured Tier 3 stock; excludes separate Southeast Outside Tier 5 assessment.')
 record = dict(assessment_id=assessment, stock_id=stock_id, assessment_year=2024, terminal_year=2024,
               estimate_terminal_year=2024, assessment_type='annual', model_family='Statistical catch-at-age (TMB)',
               model_version='23d', framework_year=2024, is_current='TRUE', is_applied='TRUE', assessment_url=report,
               data_url=native, repository_url=repo, assumptions_status='partial', inputs_status='partial', outputs_status='partial',
-              notes='Accepted Model 23d; 2025 catch-only rollover verified after separating Southeast Outside allowances. All four active biomass/composition surveys, supplied annual weights, maturity and fixed M represented. Age-error matrix and supplied composition sample sizes preserved; remaining statistical assumptions pending; environmental observations preserved on native scale; F-at-age and further outputs missing. See source_reviews/afsc_pollock_goa.md.')
+              notes='Official Model 23d; 2025 catch-only rollover verified after separating Southeast Outside allowances. All four active biomass/composition surveys, supplied annual weights, maturity and fixed M represented. Age-error matrix and supplied composition sample sizes preserved; remaining statistical assumptions pending; environmental observations preserved on native scale; F-at-age and further outputs missing. See source_reviews/afsc_pollock_goa.md.')
 for filename, new, key in [('stocks.csv',[stock],'stock_id'), ('assessments.csv',[record],'assessment_id'),
                           ('inputs.csv',inputs,'assessment_id'), ('outputs.csv',outputs,'assessment_id'), ('assumptions.csv',assumptions,'assessment_id')]:
     path = root/'database'/filename

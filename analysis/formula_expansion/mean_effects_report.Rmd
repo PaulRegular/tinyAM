@@ -239,7 +239,7 @@ for (d in examples) {
 Black lines show the generating mean effect; blue lines and bands show the
 estimate and its local 95% interval. Examples are the **first replicate**, not
 selected for a good fit. The report evaluates mean components, not agreement
-with an accepted stock assessment.
+with an official stock assessment.
 
 Zero means no change from the baseline mortality. A log effect of 0.2 raises
 the rate by about 22%; an effect of -0.2 lowers it by about 18%.

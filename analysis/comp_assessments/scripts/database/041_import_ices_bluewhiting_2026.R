@@ -37,7 +37,7 @@ append_rows <- function(path, rows, id_column = "assessment_id",
 input_rows <- function(type, measure, basis, year, age, value, unit,
                        survey = NA_character_, fleet = NA_character_,
                        season = NA_character_, sampling_time = NA_real_,
-                       transformation = "Copied from the accepted native SAM model object.",
+                       transformation = "Copied from the official native SAM model object.",
                        notes = "") {
   n <- length(value)
   data.frame(
@@ -99,7 +99,7 @@ inputs <- rbind(
     "catch", "numbers_at_age", "numbers", catch$year, catch$age,
     catch$value, "thousand fish",
     fleet = "Commercial catch",
-    transformation = "Exponentiated natural-log catch observations from the accepted SAM data object.",
+    transformation = "Exponentiated natural-log catch observations from the official SAM data object.",
     notes = "SAM fleet 1 is the single aggregate commercial catch stream."
   ),
   input_rows(
@@ -107,17 +107,17 @@ inputs <- rbind(
     index$value, "million fish",
     survey = "IBWSS", season = "spring",
     sampling_time = sam_data$sampleTimes[[2L]],
-    transformation = "Exponentiated natural-log IBWSS observations from the accepted SAM data object.",
+    transformation = "Exponentiated natural-log IBWSS observations from the official SAM data object.",
     notes = "SAM fleet 2; the source table reports abundance in millions. No survey observations are present in 2010 or 2020."
   ),
   surface_inputs(
     sam_data$stockMeanWeight, "weight", "weight_at_age",
-    "kg_per_fish", "kg", "Annual stock weights from the accepted fit."
+    "kg_per_fish", "kg", "Annual stock weights from the official fit."
   ),
   surface_inputs(
     sam_data$catchMeanWeight[, , 1L], "catch_weight",
     "weight_at_age", "kg_per_fish", "kg",
-    "Annual commercial catch weights from the accepted fit."
+    "Annual commercial catch weights from the official fit."
   ),
   surface_inputs(
     sam_data$propMat, "maturity", "maturity_at_age",
@@ -175,7 +175,7 @@ assumptions <- do.call(rbind, list(
   ),
   assumption(
     "F", "process_correlation", "Age-correlated increments",
-    "The accepted SAM fit has corFlag = 2."
+    "The official SAM fit has corFlag = 2."
   ),
   assumption(
     "N", "process_variance_sharing", "Age 1 separate; ages 2-10 shared",
@@ -183,7 +183,7 @@ assumptions <- do.call(rbind, list(
   ),
   assumption(
     "M", "natural_mortality", "0.2 per year at all ages",
-    "Fixed, time-invariant natural mortality from the accepted fit."
+    "Fixed, time-invariant natural mortality from the official fit."
   ),
   assumption("maturity", "maturity_at_age",
     "0.11, 0.40, 0.82, 0.86, 0.91, 0.94, then 1.00 at ages 7-10",
@@ -193,7 +193,7 @@ assumptions <- do.call(rbind, list(
   assumption(
     "weight", "stock_and_catch_weights",
     "Annual age-specific stock and catch weights",
-    "The accepted SAM object supplies both surfaces."
+    "The official SAM object supplies both surfaces."
   ),
   assumption("catch", "observation_likelihood", "Lognormal"),
   assumption("index", "observation_likelihood", "Lognormal",
@@ -375,7 +375,7 @@ outputs <- rbind(
   ),
   summary_output(
     stockassessment::tsbtable(sam), "biomass", "total_biomass", "tonnes",
-    "Estimate and 95% confidence interval from the accepted assessment."
+    "Estimate and 95% confidence interval from the official assessment."
   ),
   summary_output(
     stockassessment::rectable(sam), "recruitment", "recruitment",
@@ -409,7 +409,7 @@ stocks <- data.frame(
   common_name = "Northeast Atlantic blue whiting",
   area = "ICES Subareas 1-9, 12, and 14",
   region = "Northeast Atlantic",
-  ocean = "Atlantic",
+  ocean = "Northeast Atlantic",
   notes = "Current stock code whb.27.1-91214; age-structured SAM assessment.",
   stringsAsFactors = FALSE
 )
@@ -422,7 +422,7 @@ assessments <- data.frame(
   estimate_terminal_year = max(years),
   assessment_type = "full_assessment",
   model_family = "SAM",
-  model_version = "Accepted 2026 SAM run, BW-2026",
+  model_version = "Official 2026 SAM run, BW-2026",
   is_current = TRUE,
   is_applied = TRUE,
   framework_year = 2026L,
@@ -435,7 +435,7 @@ assessments <- data.frame(
   inputs_status = "complete",
   outputs_status = "complete",
   notes = paste(
-    "Accepted 2026 assessment; the 2026 advice was published 30 September 2026.",
+    "Official 2026 assessment; the 2026 advice was published 30 September 2026.",
     "The native BW-2026 SAM object supplies fitted observations, biological inputs, configuration, and output surfaces.",
     "For advice, 2026 model recruitment was replaced by a management forecast assumption; this is recorded separately and does not alter the native fit outputs."
   ),

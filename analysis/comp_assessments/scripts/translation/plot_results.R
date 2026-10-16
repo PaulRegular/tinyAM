@@ -31,17 +31,11 @@ stock_names <- assessments |>
   select(assessment_id, stock_id) |>
   left_join(
     stocks |>
-      select(stock_id, common_name, scientific_name),
+      select(stock_id, common_name, scientific_name, ocean),
     by = "stock_id"
   ) |>
   mutate(
-    basin = case_when(
-      startsWith(assessment_id, "afsc_") ~ "North Pacific",
-      startsWith(assessment_id, "dfo_") ~ "NW Atlantic",
-      startsWith(assessment_id, "nefsc_") ~ "NW Atlantic",
-      startsWith(assessment_id, "ices_") ~ "NE Atlantic",
-      TRUE ~ "Other"
-    )
+    basin = ocean
   )
 
 ts <- ts |>
@@ -57,7 +51,7 @@ stock_order <- ts |>
 
 # Colours from the tinyAM palette.
 cols <- c(
-  Accepted = tam_cols()[1],
+  Official = tam_cols()[1],
   tinyAM = tail(tam_cols(), 1)
 )
 
@@ -175,12 +169,12 @@ plot_comparison <- function(metric_name) {
     mutate(
       model = recode(
         model,
-        source = "Accepted",
+        source = "Official",
         tinyAM = "tinyAM"
       ),
       model = factor(
         model,
-        levels = c("Accepted", "tinyAM")
+        levels = c("Official", "tinyAM")
       )
     )
 
@@ -202,7 +196,7 @@ plot_comparison <- function(metric_name) {
           "ices_norway_pout_north_sea_2026_benchmark" ~
           "Different\nreference timing",
 
-        TRUE ~ "Accepted estimates\nunavailable"
+        TRUE ~ "Official estimates\nunavailable"
       )
     )
 
@@ -340,7 +334,7 @@ plot_comparison <- function(metric_name) {
     scale_colour_manual(values = cols, drop = FALSE) +
     scale_linetype_manual(
       values = c(
-        Accepted = "solid",
+        Official = "solid",
         tinyAM = "11"
       ),
       drop = FALSE

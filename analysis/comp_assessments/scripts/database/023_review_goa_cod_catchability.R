@@ -1,4 +1,4 @@
-# Record verified catchability controls from the accepted native configuration.
+# Record verified catchability controls from the official native configuration.
 root <- "analysis/comp_assessments"
 cache <- file.path(root, "source_cache/afsc_cod_goa_2026")
 control <- readLines(file.path(cache, "2025_mgmt_24.0_Model24_0.ctl"), warn = FALSE)

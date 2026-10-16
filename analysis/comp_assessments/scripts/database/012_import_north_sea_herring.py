@@ -87,7 +87,7 @@ assumption('F','innovation_variance_sharing','Ages 0–1 / 2–5 / 6–8',fleet=
 assumption('F','age_correlation','AR1','Pinned single-fleet configuration sets cor.F=2.',fleet='Combined catch',reference='utilities_model_config.R: config_sf_IBPNSherring2021')
 assumption('catch','excluded_years','1978–1979','Closure catch observations deliberately set to NA.',fleet='Combined catch',reference='data_construct_input.R; Table 2.6.1.6')
 assumption('M','structure','Externally supplied SMS-2023 age-year mortality plus 0.02','Not internally estimated. Report M table remains cached but omitted from canonical inputs until offset inclusion is verified.',reference='Section 2.4.3; model_sf.R')
-assumption('biology','terminal_year_inputs','unknown','Published annual biology tables end in 2025; accepted 2026 construction not yet verified.')
+assumption('biology','terminal_year_inputs','unknown','Published annual biology tables end in 2025; official 2026 construction not yet verified.')
 assumption('biology','spawning_mortality_fractions','unknown','fprop.txt and mprop.txt are cited but current native files not recovered.')
 assumption('population','initial_state_treatment','unknown','Requires verified FLSAM implementation or benchmark documentation.')
 for survey in ['HERAS','IBTS0','IBTS-Q1','IBTS-Q3']+[v[0] for v in larvae.values()]:

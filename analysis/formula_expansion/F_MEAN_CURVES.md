@@ -57,7 +57,7 @@ Retain both curves as source-supported options with the existing diagnostics.
 The tested equations and simulations are consistent, and curve recovery was
 useful in these informative settings. Numerical success was imperfect, so
 inspect `check_tam()` and uncertainty rather than assuming every specification
-will fit reliably. Do not use either curve to force agreement with an accepted
+will fit reliably. Do not use either curve to force agreement with an official
 assessment or infer an unobserved selectivity limb without supporting data.
 
 ## Validation

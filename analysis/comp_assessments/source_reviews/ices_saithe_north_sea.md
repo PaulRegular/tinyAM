@@ -14,11 +14,11 @@ not a pooled-rate average; canonical source rows are unchanged.
 
 ## Assessment and source
 
-The current detailed accepted assessment is the 2026 ICES assessment of
+The current detailed official assessment is the 2026 ICES assessment of
 saithe (*Pollachius virens*) in subareas 4 and 6 and Division 3.a, stock code
 `pok.27.3a46`, assessment key 22504. The working group's 2026 report is
 published as [ICES Scientific Reports 8:43](https://doi.org/10.17895/ices.pub.32676345).
-The accepted assessment is also represented in the [ICES advice database](https://doi.org/10.17895/ices.advice.30932291)
+The official assessment is also represented in the [ICES advice database](https://doi.org/10.17895/ices.advice.30932291)
 and [Stock Assessment Graphs, key 22504](https://standardgraphs.ices.dk/ViewSourceData.aspx?key=22504).
 The [2024 WKBGAD benchmark](https://doi.org/10.17895/ices.pub.25002470)
 documents the model framework and revisions to biological inputs.
@@ -31,7 +31,7 @@ The cache is gitignored. Numerical values imported into the canonical database
 are transcribed from this report's tables by
 `scripts/database/048_import_ices_saithe_north_sea_2026.R`.
 
-## Accepted assessment recovered
+## Official assessment recovered
 
 The assessment is a SAM age-structured model over 1967–2025 and ages 3–10+.
 The report supplies total catch numbers-at-age, total catch weight-at-age,
@@ -44,7 +44,7 @@ Stock weight is the scientifically appropriate weight for biomass and SSB
 calculations. The report states that 2003–2025 stock weights are model-based
 estimates using survey data only, because catch weights overestimate stock
 weights through about age 6. The 1967–2002 stock-weight series is derived by
-scaling catch weights by ratios estimated over 2003–2022. The accepted annual
+scaling catch weights by ratios estimated over 2003–2022. The official annual
 stock-weight values are transcribed as reported; the earlier values are not
 reconstructed again from catch weights.
 
@@ -74,10 +74,10 @@ separate innovation SDs, with ages 6–10+ sharing one. tinyAM's retained F
 process has one SD. Separate recruitment and shared older-cohort SDs are
 already supported; that simpler N variance grouping is not itself a missing
 capability. The initial-state treatment and F density still differ. The common
-SSB comparison uses accepted N with the same translated biology as tinyAM;
+SSB comparison uses official N with the same translated biology as tinyAM;
 it does not imply identical native spawning-time SSB.
 
-The report gives accepted N-at-age for ages 3–10+ and F-at-age for ages 3–8
+The report gives official N-at-age for ages 3–10+ and F-at-age for ages 3–8
 and 9+ through 2025 (Tables 14.4.2–14.4.3). It explicitly says F at age 9 and
 10+ is coupled, so the F output surface uses a single 9+ value. Table 14.6.1
 provides recruitment-at-age-3, SSB, TSB, and Fbar 4–7 with 95% intervals

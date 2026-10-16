@@ -114,7 +114,7 @@ for (id in c("afsc_pollock_ebs_2024", "ices_haddock_north_sea_2026", "ices_plaic
     saveRDS(attempts, file.path(root, "trials.rds"))
   }
   available <- attempts[startsWith(names(attempts), paste0(id, "/"))]
-  fits <- c(list(Accepted = baseline$ref), lapply(available, `[[`, "fit"))
+  fits <- c(list(Official = baseline$ref), lapply(available, `[[`, "fit"))
   fits <- Filter(Negate(is.null), fits)
   names(fits) <- sub(paste0(id, "/"), "", names(fits), fixed = TRUE)
   rendered <- capture_trial(function() {

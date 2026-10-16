@@ -66,7 +66,7 @@ current_ssb <- outputs$assessment_id == assessment_id & outputs$measure == "SSB"
 if (sum(current_ssb) == 1L) {
   report_value <- as.numeric(outputs$value[current_ssb])
   if (round(report_value) != round(values[nrow(values), 1])) {
-    stop("The dataset's terminal SSB does not round to the accepted report value.")
+    stop("The dataset's terminal SSB does not round to the official report value.")
   }
 } else if (sum(current_ssb) != length(years)) {
   stop("Expected one report SSB row or a complete annual SSB series to replace.")

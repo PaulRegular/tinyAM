@@ -161,11 +161,11 @@ for (fleet in names(catch_by_fleet)) {
     "catch", "numbers_at_age", "numbers", fleet, "", years, model_ages,
     catch_by_fleet[[fleet]], "thousand fish", paste0("66th SAW 2018 assessment, ", table_ref),
     "reconstructed_source_input",
-    "The published fleet tables give ages 0-10; ages 7-10 are summed to the accepted model's 7+ group.",
+    "The published fleet tables give ages 0-10; ages 7-10 are summed to the official model's 7+ group.",
     if (fleet == "Commercial landings") {
       "Sum Maine-Virginia and North Carolina commercial landings within year and age; sum ages 7-10 to 7+."
     } else {
-      "Sum source ages 7-10 to the accepted model's 7+ group."
+      "Sum source ages 7-10 to the official model's 7+ group."
     }
   )
 }
@@ -204,7 +204,7 @@ input_rows[[length(input_rows) + 1L]] <- data.frame(
   value = survey_rows$value, unit = "fish per tow", sampling_time = survey_rows$sampling_time,
   source_type = "official_table", source_reference = survey_rows$source_reference,
   transformation = "Use published Bigelow index-at-age row; the table reports the 7+ group directly.",
-  notes = "The season midpoint is used as a timing approximation (0.25 spring; 0.75 fall). The accepted assessment also used additional indices not imported here.",
+  notes = "The season midpoint is used as a timing approximation (0.25 spring; 0.75 fall). The official assessment also used additional indices not imported here.",
   observation_id = "", length_bin = NA_real_, length_bin_lower = NA_real_,
   length_bin_upper = NA_real_, sample_size = NA_real_, age_error = NA_real_,
   partition = NA_real_, stringsAsFactors = FALSE
@@ -250,7 +250,7 @@ M_rows <- data.frame(
   year = NA_real_, year_basis = "", age = model_ages, value = M_at_age,
   unit = "per year", sampling_time = NA_real_, source_type = "official_table",
   source_reference = "66th SAW 2018 assessment, pp. 64-65 and Table A90, report pp. 240-241",
-  transformation = "", notes = "Fixed age-specific M schedule, ages 0-7+; the accepted-model schedule averages 0.25 per year.",
+  transformation = "", notes = "Fixed age-specific M schedule, ages 0-7+; the official-model schedule averages 0.25 per year.",
   observation_id = "", length_bin = NA_real_, length_bin_lower = NA_real_,
   length_bin_upper = NA_real_, sample_size = NA_real_, age_error = NA_real_,
   partition = NA_real_, stringsAsFactors = FALSE
@@ -316,8 +316,8 @@ stock_add <- data.frame(
   stock_id = stock_id, charbonneau_id = "", authority = "NOAA-NEFSC",
   authority_stock_id = "Summer flounder, Maine-North Carolina management unit",
   scientific_name = "Paralichthys dentatus", common_name = "Summer flounder",
-  area = "Maine to North Carolina", region = "Northwest Atlantic", ocean = "North Atlantic",
-  notes = "The accepted 2018 model covers the Maine-North Carolina stock unit; current advice uses a newer summary-only update.",
+  area = "Maine to North Carolina", region = "Northwest Atlantic", ocean = "Northwest Atlantic",
+  notes = "The official 2018 model covers the Maine-North Carolina stock unit; current advice uses a newer summary-only update.",
   stringsAsFactors = FALSE
 )
 assessment_add <- data.frame(
@@ -333,8 +333,8 @@ assessment_add <- data.frame(
   repository_url = c("", ""), assumptions_status = c("partial", "partial"),
   inputs_status = c("partial", "partial"), outputs_status = c("partial", "partial"),
   notes = c(
-    "Most recent accepted assessment with recoverable numerical age-specific input and output tables. Accepted model is ASAP F2018_BASE_V2 through 2017. The newer 2025 management-track update is recorded separately; no 2025-run ages or inputs are substituted.",
-    "Most recent accepted assessment and basis for current advice, using data through 2024. Public SASINF and assessment materials provide summary/diagnostic outputs but no age-specific source inputs or fitted age surfaces; this is not the current detailed database record."
+    "Most recent official assessment with recoverable numerical age-specific input and output tables. Official model is ASAP F2018_BASE_V2 through 2017. The newer 2025 management-track update is recorded separately; no 2025-run ages or inputs are substituted.",
+    "Most recent official assessment and basis for current advice, using data through 2024. Public SASINF and assessment materials provide summary/diagnostic outputs but no age-specific source inputs or fitted age surfaces; this is not the current detailed database record."
   ), stringsAsFactors = FALSE
 )
 assumptions_add <- data.frame(
@@ -348,9 +348,9 @@ assumptions_add <- data.frame(
   value = c(
     "F2018_BASE_V2", "Combined sexes; ages 0-7+; recruitment at true age 0",
     "Four fleets: commercial landings, commercial discards, recreational landings, recreational discards",
-    "The accepted model uses a 7+ terminal group; the report's fleet tables give ages 0-10",
+    "The official model uses a 7+ terminal group; the report's fleet tables give ages 0-10",
     paste0("Fleet and published aggregate catch-at-age are retained separately; maximum cell difference is ", format(max_catch_age_difference, trim = TRUE), " thousand fish"),
-    "The accepted run retained all available survey indices; only the NEFSC Bigelow spring/fall age series are transcribed here",
+    "The official run retained all available survey indices; only the NEFSC Bigelow spring/fall age series are transcribed here",
     "Fixed, age-specific, time-invariant M; ages 0-7+ are 0.26, 0.26, 0.26, 0.25, 0.25, 0.25, 0.25, 0.24 per year",
     "Sexes-combined, three-year moving-window ogive based on NEFSC fall survey data; updated through 2016",
     "Peak/fully recruited F is reported at true age 4",
@@ -369,10 +369,10 @@ assumptions_add <- data.frame(
     "66th SAW 2018 assessment, p. 90"
   ),
   notes = c(
-    "The assessment was accepted for management advice after SAW-66 review.",
-    "Age 7 represents the 7+ group in accepted model outputs.",
-    "The accepted model fits separate fleet totals and age compositions.",
-    "Ages 7-10 are summed to the accepted model's 7+ group; commercial Maine-Virginia and North Carolina landings are summed for the commercial-landings fleet.",
+    "The assessment was adopted for management advice after SAW-66 review.",
+    "Age 7 represents the 7+ group in official model outputs.",
+    "The official model fits separate fleet totals and age compositions.",
+    "Ages 7-10 are summed to the official model's 7+ group; commercial Maine-Virginia and North Carolina landings are summed for the commercial-landings fleet.",
     catch_difference_note,
     "The report includes many additional state, university, and NEFSC indices that are not included in the canonical rows extracted for this comparison.",
     "The age schedule averages 0.25 per year. It is fixed across time.",

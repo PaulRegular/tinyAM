@@ -70,7 +70,7 @@ for r in csv.DictReader((cache/'report_historical_outputs_raw.csv').open(encodin
     outputs.append(dict(assessment_id=assessment,type=kind,measure=r['measure'],year=r['year'],age=r['age'],
                         age_group=r['age_group'],value=r['value'],unit=r['unit'],source_type='official_table',
                         source_reference=report+'; Table '+r['table'],
-                        notes='Historical accepted-model estimate. Displayed N group 10+ is an output aggregation, not the native 15+ model boundary. SSB is female. Printed CV not converted to SE or interval; uncertainty interpretation remains unresolved.'))
+                        notes='Historical official-model estimate. Displayed N group 10+ is an output aggregation, not the native 15+ model boundary. SSB is female. Printed CV not converted to SE or interval; uncertainty interpretation remains unresolved.'))
 
 def assume(component,setting,value,notes='',survey='',fleet='',source=report):
     assumptions.append(dict(assessment_id=assessment,component=component,setting=setting,value=value,
@@ -91,13 +91,13 @@ for component,setting in [('F','selectivity_and_penalties'),('N','initial_state_
     assume(component,setting,'unknown','Native controls/auxiliary files cached; detailed extraction still incomplete.')
 
 stock=dict(stock_id=stock_id,charbonneau_id='AFSC_ESB_Gadus_chalcogrammus',authority='NOAA-AFSC',authority_stock_id='Eastern Bering Sea pollock',
-           scientific_name='Gadus chalcogrammus',common_name='Eastern Bering Sea walleye pollock',area='Eastern Bering Sea',region='Alaska',ocean='North Pacific',
+           scientific_name='Gadus chalcogrammus',common_name='Eastern Bering Sea walleye pollock',area='Eastern Bering Sea',region='Alaska',ocean='Northeast Pacific',
            notes='Separate from Aleutian Islands and Bogoslof pollock; historical catalogue identifier uses ESB spelling.')
 record=dict(assessment_id=assessment,stock_id=stock_id,assessment_year=2024,terminal_year=2024,estimate_terminal_year=2024,
             assessment_type='annual',model_family='Statistical catch-at-age (ADMB)',model_version='Model 23.0',is_current='TRUE',is_applied='TRUE',
             framework_year=2023,assessment_url=report,data_url=native,repository_url=repo,
             assumptions_status='partial',inputs_status='partial',outputs_status='partial',
-            notes='2024 accepted model retained; 2025 was catch-only rollover. Native totals/compositions and supplied biology retained, historical report N/SSB/recruitment/age3+ biomass exported. Native 2024 starter verified by year/ages, report fishery weights and SSC model acceptance. Earlier report VAST values differ slightly from native inputs; native preferred and discrepancy documented. M, covariance/sample-size/SD export, detailed statistical assumptions, F-at-age and uncertainty remain incomplete. See source_reviews/afsc_pollock_ebs.md.')
+            notes='2024 official model retained; 2025 was catch-only rollover. Native totals/compositions and supplied biology retained, historical report N/SSB/recruitment/age3+ biomass exported. Native 2024 starter verified by year/ages, report fishery weights and SSC model approval. Earlier report VAST values differ slightly from native inputs; native preferred and discrepancy documented. M, covariance/sample-size/SD export, detailed statistical assumptions, F-at-age and uncertainty remain incomplete. See source_reviews/afsc_pollock_ebs.md.')
 for filename,new,key in [('stocks.csv',[stock],'stock_id'),('assessments.csv',[record],'assessment_id'),('inputs.csv',inputs,'assessment_id'),('outputs.csv',outputs,'assessment_id'),('assumptions.csv',assumptions,'assessment_id')]:
     path=root/'database'/filename; content=path.read_bytes().decode('utf-8-sig')
     reader=csv.DictReader(io.StringIO(content)); fields=reader.fieldnames; old=list(reader)

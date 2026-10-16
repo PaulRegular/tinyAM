@@ -1,4 +1,4 @@
-"""Import the accepted January 2026 GOA Pacific cod run without deriving age catches."""
+"""Import the official January 2026 GOA Pacific cod run without deriving age catches."""
 import csv
 import io
 import sys
@@ -76,7 +76,7 @@ for row in csv.DictReader((cache/'historical_summary_verified.csv').open()):
                         measure=row['measure'],year=row['year'],age=0 if row['measure']=='recruitment' else '',
                         value=row['value'],se=row['reported_sd'],unit=row['unit'],source_type='official_table',
                         source_reference=report+'; Table '+row['table'],
-                        notes='Current accepted historical estimate. SSB is female. Recruitment unit corrected to billion fish using native outputs and reporting code; printed heading says millions. SD retained without inventing intervals.'))
+                        notes='Current official historical estimate. SSB is female. Recruitment unit corrected to billion fish using native outputs and reporting code; printed heading says millions. SD retained without inventing intervals.'))
 for year in range(1977,2026):
     elevated=2014<=year<=2016
     for age in range(11):
@@ -85,7 +85,7 @@ for year in range(1977,2026):
                             unit='per year',source_type='official_table',source_reference=report+'; Table 2.6; '+native+'; natM_type=0; block 4',
                             notes='Rounded published estimated M and SD expanded according to native age-constant model and 2014–2016 replacement block. All cells in each block share one parameter, not independent estimates. No intervals invented.'))
 for component,setting,value,notes in [
-    ('assessment','accepted_model','Model 24.0; January 2026 update','February 2026 Council/SSC accepted update; supersedes December rollover.'),
+    ('assessment','accepted_model','Model 24.0; January 2026 update','February 2026 Council/SSC adopted update; supersedes December rollover.'),
     ('population','modeled_years','1977–2025','Historical model years; forecasts excluded.'),
     ('population','ages','0–10; plus group 10+','Age composition bins are 1–10; recruitment is age 0.'),
     ('population','recruitment_age','0',''),
@@ -134,7 +134,7 @@ for setting,value in [('weight_length_coefficient','3.4297e-06'),('weight_length
                             notes='Fixed native parameter (negative estimation phase); not an estimated biological surface.'))
 specific=[r for r in assumptions if r['setting']=='unresolved_inputs'][0]
 specific['notes']='Equilibrium catches, ageing-error vectors and temperature covariate represented. Mean-size observations are disabled. Full fitted N/F surfaces and remaining statistical interpretation pending.'
-stock=dict(stock_id=stock_id,charbonneau_id='AFSC_GOA_Gadus_macrocephalus',authority='NOAA-AFSC',authority_stock_id='GOA Pacific cod',scientific_name='Gadus macrocephalus',common_name='Gulf of Alaska Pacific cod',area='Gulf of Alaska',region='Alaska',ocean='North Pacific',notes='Accepted January 2026 assessment update; combined-sex Stock Synthesis model.')
+stock=dict(stock_id=stock_id,charbonneau_id='AFSC_GOA_Gadus_macrocephalus',authority='NOAA-AFSC',authority_stock_id='GOA Pacific cod',scientific_name='Gadus macrocephalus',common_name='Gulf of Alaska Pacific cod',area='Gulf of Alaska',region='Alaska',ocean='Northeast Pacific',notes='Official January 2026 assessment update; combined-sex Stock Synthesis model.')
 record=dict(assessment_id=assessment,stock_id=stock_id,assessment_year=2026,terminal_year=2025,estimate_terminal_year=2025,assessment_type='annual',model_family='Stock Synthesis',model_version='24.0',framework_year=2024,is_current='TRUE',is_applied='TRUE',assessment_url=report,framework_url=framework,data_url=native,repository_url=repo,assumptions_status='partial',inputs_status='partial',outputs_status='partial',notes='Verified current native inputs and matching compact fitted outputs. Three catch fleets and two active surveys represented with native compositions. Further biological/covariate/equilibrium inputs, statistical inventory and N/F-at-age outputs pending; rounded M surface represented from reported parameters and native blocks. See source_reviews/afsc_cod_goa.md.')
 dimensions=['observation_id','length_bin','length_bin_lower','length_bin_upper','sample_size','age_error','partition']
 for filename,new,key in [('stocks.csv',[stock],'stock_id'),('assessments.csv',[record],'assessment_id'),('inputs.csv',inputs,'assessment_id'),('outputs.csv',outputs,'assessment_id'),('assumptions.csv',assumptions,'assessment_id')]:

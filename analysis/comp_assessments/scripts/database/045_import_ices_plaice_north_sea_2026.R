@@ -10,7 +10,7 @@ framework_url <- "https://doi.org/10.17895/ices.pub.21558681"
 graphs_url <- "https://standardgraphs.ices.dk/ViewSourceData.aspx?key=22489"
 
 if (!file.exists(report_path) || !file.exists(xml_path)) {
-  stop("Cache the accepted WGNSSK 2026 plaice chapter and ICES SAG XML first.",
+  stop("Cache the official WGNSSK 2026 plaice chapter and ICES SAG XML first.",
     call. = FALSE
   )
 }
@@ -252,13 +252,13 @@ inputs <- list(
     catch$value, "thousand fish",
     fleet = "Total catch",
     source_reference = paste(report_url, "Table 11.2.4"),
-    transformation = "Transcribed from the accepted catch-at-age input table.",
+    transformation = "Transcribed from the official catch-at-age input table.",
     notes = "Includes landings and discards, including 50% of mature plaice caught in Division 7.d in Q1. Age 10 is 10+."
   ),
   new_input("weight", "weight_at_age", "kg_per_fish", stock_weight$year,
     stock_weight$age, stock_weight$value, "kg per fish",
     source_reference = paste(report_url, "Table 11.2.6"),
-    transformation = "Transcribed from the accepted stock weight-at-age table.",
+    transformation = "Transcribed from the official stock weight-at-age table.",
     notes = "Age 10 is 10+."
   ),
   new_input("M", "natural_mortality_at_age", "per_year", NA_integer_, 1:10,
@@ -266,7 +266,7 @@ inputs <- list(
     year_basis = NA_character_,
     source_reference = paste(report_url, "Table 11.2.10"),
     transformation = "Transcribed from the fixed age-specific mortality assumption.",
-    notes = "Time-invariant M; the accepted SAM assessment fixes these values. Age 10 is 10+."
+    notes = "Time-invariant M; the official SAM assessment fixes these values. Age 10 is 10+."
   ),
   new_input("maturity", "maturity_at_age", "proportion", NA_integer_, 1:10,
     maturity, "proportion",
@@ -362,11 +362,11 @@ assumptions <- do.call(rbind, list(
   ),
   new_assumption(
     "source", "framework", "2022 WKNSCS benchmark", framework_url,
-    "The 2026 accepted assessment uses the SAM framework adopted at the 2022 benchmark."
+    "The 2026 official assessment uses the SAM framework adopted at the 2022 benchmark."
   ),
   new_assumption(
     "source", "native_model_files", "Not recovered", paste(report_url, "section 11.3.1"),
-    "The accepted report and ICES SAG outputs are available; a native fitted SAM object or complete input bundle was not found in the public archive search."
+    "The official report and ICES SAG outputs are available; a native fitted SAM object or complete input bundle was not found in the public archive search."
   )
 ))
 
@@ -429,21 +429,21 @@ stock <- data.frame(
   common_name = "North Sea plaice",
   area = "ICES Subarea 4 and Subdivision 20 (North Sea and Skagerrak)",
   region = "Greater North Sea", ocean = "Northeast Atlantic",
-  notes = "Added from the accepted ICES assessment; this stock is not represented in the current Charbonneau-Keith database seed.",
+  notes = "Added from the official ICES assessment; this stock is not represented in the current Charbonneau-Keith database seed.",
   stringsAsFactors = FALSE
 )
 assessment <- data.frame(
   assessment_id = assessment_id, stock_id = stock_id,
   assessment_year = 2026L, terminal_year = 2025L,
   estimate_terminal_year = 2026L, assessment_type = "annual_assessment",
-  model_family = "SAM", model_version = "Accepted WGNSSK 2026 assessment",
+  model_family = "SAM", model_version = "Official WGNSSK 2026 assessment",
   is_current = TRUE, is_applied = TRUE, framework_year = 2022L,
   assessment_url = report_url, framework_url = framework_url,
   data_url = graphs_url, model_url = NA_character_, repository_url = NA_character_,
   assumptions_status = "partial", inputs_status = "partial",
   outputs_status = "partial",
   notes = paste(
-    "The accepted detailed assessment uses catch, biological inputs, and age-specific outputs through 2025.",
+    "The official detailed assessment uses catch, biological inputs, and age-specific outputs through 2025.",
     "The 2026 ICES SAG values are advice forecasts and are stored separately from the fitted historical period.",
     "Survey index units and exact sampling fractions are not reported; quarter midpoints are used for timing."
   ), stringsAsFactors = FALSE

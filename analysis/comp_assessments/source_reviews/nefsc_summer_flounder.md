@@ -2,16 +2,16 @@
 
 ## Assessment represented
 
-The 2025 management-track assessment is the latest accepted assessment and
+The 2025 management-track assessment is the latest official assessment and
 supports current advice, using data through 2024. Its public materials provide
 summary and diagnostic outputs, but the SASINF package available for this
 review did not include age-specific input tables or fitted age surfaces. The
-canonical database therefore represents the latest accepted assessment with
-recoverable detailed age data: the 2018 SAW-66 accepted ASAP run
+canonical database therefore represents the latest official assessment with
+recoverable detailed age data: the 2018 SAW-66 official ASAP run
 `F2018_BASE_V2`, through 2017. The 2025 summary is recorded separately and is
 not used to fill gaps in the 2018 record.
 
-The accepted 2018 model combines sexes, uses true ages 0-7+, and estimates
+The official 2018 model combines sexes, uses true ages 0-7+, and estimates
 recruitment at true age 0. It has four catch fleets: commercial landings,
 commercial discards, recreational landings, and recreational discards. It
 retains a large set of fishery-independent indices. The database currently
@@ -20,7 +20,7 @@ contains only the NEFSC Bigelow spring and fall age indices.
 ## Data and translation decisions
 
 - Catch-at-age values are transcribed from Tables A3, A6, A10, A23, A28, and
-  A32. Fleet tables report ages 0-10; ages 7-10 are summed to the accepted
+  A32. Fleet tables report ages 0-10; ages 7-10 are summed to the official
   model's 7+ group, and Maine-Virginia and North Carolina commercial landings
   are summed for the commercial-landings fleet. Table A32's published total is
   preserved as a separate aggregate series, not as a fifth fleet. The fleet
@@ -34,13 +34,13 @@ contains only the NEFSC Bigelow spring and fall age indices.
   0.75 are seasonal midpoint approximations; the source report does not give
   within-season timing for these series. The other indices used by
   `F2018_BASE_V2` are not yet represented.
-- M is fixed at age in the accepted model. The age 0-7+ values are 0.26, 0.26,
+- M is fixed at age in the official model. The age 0-7+ values are 0.26, 0.26,
   0.26, 0.25, 0.25, 0.25, 0.25, and 0.24 per year (Table A90). These values
   are stored as source inputs, not as estimated M outputs.
 - Table A90 reports mean November SSB weights at age for 2013-2017. Those
   published values are stored as the source schedule; using them as a
   time-invariant weight series across a tinyAM historical fit is an explicit
-  approximation, not an annual accepted weight surface.
+  approximation, not an annual official weight surface.
 - Table A86 reports the combined-sex, three-year moving-window maturity ogive
   through 2016. No 2017 row is reported because 2017 fall maturity data were
   unavailable. A fit that extends through 2017 must state how it handles that
@@ -63,7 +63,7 @@ standard-error calculation returned, but it is not treated as a successful
 fit. No model-comparison dashboard was generated. No alternate settings were
 tried to force convergence.
 
-The accepted run retained more observations and assessment detail than this
+The official run retained more observations and assessment detail than this
 tinyAM translation can represent. Any later comparison should be limited to
 definitions and years that can be matched; in particular, the available
 maturity schedule ends in 2016.

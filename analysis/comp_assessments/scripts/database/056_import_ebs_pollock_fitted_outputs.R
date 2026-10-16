@@ -108,14 +108,14 @@ output_source <- data.frame(
   source_reference = paste0(report_url, "; Table ", native_report$table),
   notes = ifelse(
     native_report$measure == "numbers_at_age",
-    "Historical accepted-model estimate. SAFE Table 24 reports ages 1-9 individually and ages 10-15 as 10+; this is a reporting group, not the native age-15 model plus group. Printed CV is retained in source staging and is not an absolute SE.",
+    "Historical official-model estimate. SAFE Table 24 reports ages 1-9 individually and ages 10-15 as 10+; this is a reporting group, not the native age-15 model plus group. Printed CV is retained in source staging and is not an absolute SE.",
     ifelse(
       native_report$measure == "biomass_by_age_group",
-      "Historical accepted-model beginning-year biomass summed over ages 3+. This is one reported age group, not age-specific biomass-at-age. Printed CV is not converted to an absolute SE.",
+      "Historical official-model beginning-year biomass summed over ages 3+. This is one reported age group, not age-specific biomass-at-age. Printed CV is not converted to an absolute SE.",
       ifelse(
         native_report$measure == "SSB",
-        "Historical accepted-model female SSB at the source spawning time; unit is thousand tonnes. Printed CV is not converted to an absolute SE.",
-        "Historical accepted-model age-1 recruitment; unit is million fish. Printed CV is not converted to an absolute SE."
+        "Historical official-model female SSB at the source spawning time; unit is thousand tonnes. Printed CV is not converted to an absolute SE.",
+        "Historical official-model age-1 recruitment; unit is million fish. Printed CV is not converted to an absolute SE."
       )
     )
   ),
@@ -133,7 +133,7 @@ f_reference <- paste0(
   "/source/pm.tpl"
 )
 f_note <- paste(
-  "Annual fishery F-at-age reconstructed from the pinned accepted fitted parameters and source implementation.",
+  "Annual fishery F-at-age reconstructed from the pinned official fitted parameters and source implementation.",
   "The source defines F(y,a)=exp(log_avg_F+log_F_devs[y])*exp(log_sel[y,a]);",
   "selectivity coefficients are extended through age 15 and annual deviations are applied in the flagged years.",
   "The source re-normalizes exp(log_sel) to arithmetic mean one across ages each year.",
@@ -177,7 +177,7 @@ if (length(assessment_row) != 1L) {
   stop("Expected one EBS assessment metadata row.")
 }
 old_note <- "F-at-age is reconstructed from pinned fitted parameters and source code without reported uncertainty; other output uncertainty and some statistical assumptions remain incomplete;"
-new_note <- "The accepted F-at-age surface is reconstructed from pinned fitted parameters and source code, but uncertainty remains unavailable. Other statistical assumptions and output uncertainty remain incomplete;"
+new_note <- "The official F-at-age surface is reconstructed from pinned fitted parameters and source code, but uncertainty remains unavailable. Other statistical assumptions and output uncertainty remain incomplete;"
 if (grepl(old_note, assessment_lines[assessment_row], fixed = TRUE)) {
   assessment_lines[assessment_row] <- sub(
     old_note, new_note, assessment_lines[assessment_row],
