@@ -195,6 +195,7 @@ allowed_output_types <- c(
   "index", "catchability", "biology"
 )
 allowed_input_measures <- c(
+  "frequency_at_length", "maturity_sample_size", "mature_sample_count",
   "numbers_at_age", "index_by_age_group",
   "biomass_at_age", "total_numbers",
   "total_biomass", "proportion_at_age", "proportion_at_length",
@@ -206,6 +207,7 @@ allowed_input_measures <- c(
   "fraction_M_before_spawning"
 )
 allowed_bases <- c(
+  "native_frequency",
   "numbers", "biomass", "proportion_numbers", "proportion_biomass",
   "kg_per_fish", "proportion", "per_year", "log_scale", "native_covariate",
   "relative_precision", "relative_scale", "index_scale"
@@ -241,7 +243,7 @@ for (name in c("inputs", "outputs")) {
   year <- whole_year(x, "year", name, allow_blank = name %in% c("inputs", "outputs"))
   blank_year <- is.na(x$year) | !nzchar(as.character(x$year))
   if (name == "outputs" && any(blank_year & !x$measure %in% c(
-    "q", "q_power", "process_sd", "observation_sd",
+    "q", "q_power", "process_sd", "observation_sd", "mat_beta1", "mat_beta2",
     "growth_length_at_age", "growth_rate", "growth_sd_length_at_age"
   ))) {
     stop("outputs$year may be blank only for time-invariant parameter estimates or SD estimates.", call. = FALSE)
@@ -276,10 +278,10 @@ for (name in c("inputs", "outputs")) {
     x$type == "covariate" &
       x$measure == "environmental_covariate" & x$basis == "native_covariate"
   } else {
-    rep(FALSE, nrow(x))
+    x$type == "biology" & x$measure %in% c("mat_beta1", "mat_beta2")
   }
   if (anyNA(value) || any(!is.finite(value)) || any(value < 0 & !signed)) {
-    stop(name, "$value must contain finite numbers; negative values are allowed only for environmental covariates.", call. = FALSE)
+    stop(name, "$value must contain finite numbers; negative values are allowed only for environmental covariates and documented signed biology coefficients.", call. = FALSE)
   }
   if (name == "inputs") {
     if (any(x$type == "maturity" & (value < 0 | value > 1))) {

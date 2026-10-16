@@ -513,6 +513,19 @@ population weights when the source uses different biological surfaces. Use
 
 ## Native length and conditional age compositions
 
+`mat_beta1` and `mat_beta2` are signed coefficients of a documented fitted
+logistic maturity curve (`type = biology` in outputs). Their SEs are on the
+coefficient scale. These time-invariant estimates may have blank years; they
+are outputs, not a supplied maturity-at-age input vector.
+
+`frequency_at_length` with `basis = native_frequency` and `unit = source
+frequency` preserves supplied length-frequency vectors when the native files
+mix counts and proportions. Preserve the row totals and record the source's
+normalization rule; these are composition samples, not removal or abundance
+counts. `maturity_sample_size` and `mature_sample_count` retain female biological
+sampling counts used by an estimated maturity likelihood (`type = biology`,
+`basis = numbers`, `unit = fish`), with `observation_id` identifying the dataset.
+
 `proportion_at_length` and `conditional_proportion_at_age` retain the composition
 representation consumed by an assessment. Use `basis = proportion_numbers` and
 `unit = proportion`. Do not replace these with an unconditional age distribution.

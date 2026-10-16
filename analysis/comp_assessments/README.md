@@ -109,6 +109,8 @@ runs <- run_assessments(
 
 ## Committed results and local cache
 
+Pacific expansion source reviews: [BSAI Pacific ocean perch](source_reviews/afsc_pop_bsai.md).
+
 `results/` retains `observation_readiness.csv`, `fit_diagnostics.csv`, `comparison_summary.csv`, a compact `sensitivity_summary.csv`, and `northern_cod_indices.csv` for the Northern cod integration trials. Fitted objects and dashboards are generated on request and may be saved under the gitignored `results/cache/<assessment_id>/` directory with `cache = TRUE`. They are not committed by the normal workflows.
 
 Comparison summaries separate scale agreement (absolute and percent differences)
