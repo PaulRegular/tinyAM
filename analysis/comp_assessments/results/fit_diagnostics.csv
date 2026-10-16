@@ -43,3 +43,10 @@ x Fixed-parameter covariance must be available and finite.
 x The Hessian must be positive definite.
 i Optimizer code zero alone is insufficient. A missed gradient tolerance alone
   does not establish a structural problem."
+"afsc_alaska_plaice_bsai_2024","f9148e2c7338832c1642a66b6c0b19e992f480fa","converged",TRUE,0,"relative convergence (4)",296.488823139797,0.000904179485555545,0.000904179485555545,TRUE,TRUE,28,527,20.6346840858459," | default: failed numerical checks; gradient=203000; NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | Numerical convergence checks did not pass; inspect `check_tam(fit)`.
+x Code 1: false convergence (8)
+x Adjusted maximum 203000; raw maximum 203000; tolerance 0.01.
+x Fixed-parameter covariance must be available and finite.
+x The Hessian must be positive definite.
+i Optimizer code zero alone is insufficient. A missed gradient tolerance alone
+  does not establish a structural problem. | source_start: converged; gradient=0.000904; "

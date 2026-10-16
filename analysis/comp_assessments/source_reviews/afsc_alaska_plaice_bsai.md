@@ -56,3 +56,33 @@ their natural-scale marginal ADMB standard errors; no state uncertainty or
 combined-sex confidence intervals are invented. Completeness remains partial
 because the full covariance and some model-control details are not exported
 to the canonical tables.
+
+## tinyAM translation and numerical result
+
+The translation uses 2000–2023 and ages 5–25+. Biomass and joint-sex age
+proportions are converted to numbers using sex-specific computed mid-year
+weights before pooling sexes or restricting ages. Only three fishery age
+samples are available; length samples are omitted. Stock biology uses an
+equal-sex approximation, holding source growth estimates fixed. M remains
+0.13. Survey observations are divided by the source's **fixed** calibration
+exp(0.182322), with a logistic q curve constrained to asymptote 1; no fitted
+q or fitted population state is used to adjust observations. Source
+sex-specific selectivity, ageing error, length likelihood and composition
+weights are not reproduced. Initial ages are free, F follows independent
+random walks, and age-5 recruitment has an estimated constant mean and SD.
+
+Default initialization failed (code 1, false convergence; maximum gradient
+about 203000; non-positive-definite Hessian). The one permitted retry from
+aligned pooled N and N-weighted F converged: code 0, objective 296.489,
+maximum gradient 0.000904, positive-definite Hessian and successful SD report.
+Both attempts are saved; data and model settings were unchanged.
+
+The local dashboard compares native outputs and explicitly labelled common
+definitions. Modeled-age female SSB is approximate because tinyAM pools sexes:
+MAPD 3.73%, terminal difference −13.38%, correlation 0.981. This does not mean
+the other states agree. N-at-age is 29.71%, +10.23%, 0.816; total abundance
+45.22%, +77.25%, 0.277; age-5 recruitment 110.75%, +18.18%, 0.698; and
+N-weighted F-at-age 587.46%, +1201.45%, −0.177. Very small juvenile F makes
+relative differences especially large. These metrics require review. Fixed
+M is checked only for input consistency. Native age-0 recruitment and all-age
+SSB are retained separately; no combined uncertainty is invented.
