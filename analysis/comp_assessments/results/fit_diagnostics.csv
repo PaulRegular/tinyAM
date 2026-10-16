@@ -63,3 +63,15 @@ x Fixed-parameter covariance must be available and finite.
 x The Hessian must be positive definite.
 i Optimizer code zero alone is insufficient. A missed gradient tolerance alone
   does not establish a structural problem."
+"afsc_northern_rock_sole_ebs_2024","7692714df3f087dfcc98289cc8a4776df5747614","not_converged",FALSE,0,"relative convergence (4)",3963.45303073719,0.0788067278917879,0.0788067278917879,TRUE,FALSE,24,713,340.912665843964," | default: failed numerical checks; gradient=1.2; NA/NaN function evaluation | Numerical convergence checks did not pass; inspect `check_tam(fit)`.
+x Code 1: singular convergence (7)
+x Adjusted maximum 1.2; raw maximum 1.2; tolerance 0.01.
+x Fixed-parameter covariance must be available and finite.
+x The Hessian must be positive definite.
+i Optimizer code zero alone is insufficient. A missed gradient tolerance alone
+  does not establish a structural problem. | source_start: failed numerical checks; gradient=0.0788; Numerical convergence checks did not pass; inspect `check_tam(fit)`.
+x Adjusted maximum 0.0788; raw maximum 0.0788; tolerance 0.01.
+x Fixed-parameter covariance must be available and finite.
+x The Hessian must be positive definite.
+i Optimizer code zero alone is insufficient. A missed gradient tolerance alone
+  does not establish a structural problem."
