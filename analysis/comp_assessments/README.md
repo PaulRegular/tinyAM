@@ -117,6 +117,9 @@ Pacific expansion source reviews: [BSAI Pacific ocean perch](source_reviews/afsc
 [Eastern Bering Sea northern rock sole](source_reviews/afsc_northern_rock_sole_ebs.md).
 [Joint coastal Pacific hake](source_reviews/joint_hake_coastal.md).
 [Eastern Bering Sea Pacific cod](source_reviews/afsc_cod_ebs.md).
+[Strait of Georgia Pacific herring](source_reviews/dfo_herring_sog.md) is curated,
+but translation is blocked by its aggregate spawning-biomass survey without
+survey ages; it has not received a tinyAM fitting attempt.
 
 `results/` retains `observation_readiness.csv`, `fit_diagnostics.csv`, `comparison_summary.csv`, a compact `sensitivity_summary.csv`, and `northern_cod_indices.csv` for the Northern cod integration trials. Fitted objects and dashboards are generated on request and may be saved under the gitignored `results/cache/<assessment_id>/` directory with `cache = TRUE`. They are not committed by the normal workflows.
 
