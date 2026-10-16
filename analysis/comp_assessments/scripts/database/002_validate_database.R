@@ -270,6 +270,23 @@ for (name in c("inputs", "outputs")) {
     ) & !has_age_group
   }
   age <- suppressWarnings(as.numeric(x$age))
+  if (name == "inputs") {
+    aggregate_precision <- x$type == "index" &
+      x$measure == "relative_standard_error" & is.na(age)
+    if (any(aggregate_precision)) {
+      columns <- c("assessment_id", "survey", "sex", "region", "season", "year")
+      key <- function(z) do.call(paste, c(lapply(z[columns], function(v) {
+        v[is.na(v)] <- ""
+        v
+      }), sep = "\r"))
+      totals <- x[x$type == "index" & x$measure %in%
+        c("total_biomass", "total_numbers", "relative_biomass_index"), ]
+      if (any(!key(x[aggregate_precision, ]) %in% key(totals))) {
+        stop("Aggregate index precision requires a matching total index.", call. = FALSE)
+      }
+      age_required[aggregate_precision] <- FALSE
+    }
+  }
   if (any(age_required & (is.na(age) | !is.finite(age) | age != as.integer(age)))) {
     stop(name, "$age must contain whole ages for age-specific measures.", call. = FALSE)
   }

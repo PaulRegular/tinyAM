@@ -283,6 +283,10 @@ the estimate for an age-specific catch or index observation. Use basis =
 assessment used it as an observation weight. It is a source precision measure,
 not an observation or a tinyAM-estimated standard error.
 
+For an aggregate index CV, leave `age` blank and match the same survey, year,
+sex, region and season as its recorded total index. This preserves a published
+aggregate precision measure without duplicating it across ages.
+
 `relative_biomass_index` stores an aggregate relative index, such as standardized
 CPUE tuned to exploitable biomass. It is not an absolute biomass observation;
 use `basis = index_scale` and document the scale and model interpretation.

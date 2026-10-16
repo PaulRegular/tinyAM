@@ -12,7 +12,17 @@ cache_pacific_source <- function(stock_id, url, name, revision = "") {
                md5 = character(), revision = character(), status = character())
   }
   existing <- manifest$file == name & manifest$url == url
-  if (any(existing) && file.exists(path) &&
+  valid_format <- function(path) {
+    if (!file.exists(path)) return(FALSE)
+    signature <- readBin(path, "raw", n = 5L)
+    extension <- tolower(tools::file_ext(path))
+    if (extension == "pdf") return(identical(signature, charToRaw("%PDF-")))
+    if (extension == "zip") return(length(signature) >= 2L &&
+                                    identical(signature[1:2], charToRaw("PK")))
+    TRUE
+  }
+  if (any(existing) && file.exists(path) && valid_format(path) &&
+      manifest$status[which(existing)[1L]] == "downloaded" &&
       identical(unname(tools::md5sum(path)), manifest$md5[which(existing)[1L]])) {
     return(path)
   }
@@ -20,6 +30,9 @@ cache_pacific_source <- function(stock_id, url, name, revision = "") {
     utils::download.file(url, path, mode = "wb", quiet = TRUE)
     "downloaded"
   }, error = function(e) conditionMessage(e))
+  if (status == "downloaded" && !valid_format(path)) {
+    status <- "invalid file format (possibly an HTML error page)"
+  }
   checksum <- if (status == "downloaded") unname(tools::md5sum(path)) else ""
   manifest <- rbind(manifest[!existing, ], data.frame(
     file = name, url = url, retrieved = format(Sys.Date(), "%Y-%m-%d"),
