@@ -91,7 +91,19 @@ and age proportions remain a limitation. Full native outputs are retained;
 modeled-age female SSB is derived without uncertainty and checked against
 native SSB using a bound for printed N/F/SSB rounding.
 
-Default initialization is currently being evaluated. Its attempt record is
-saved before optimization; no convergence result or comparison statistic is
-claimed until that attempt returns. Only a failed numerical check permits
-one aligned female N/F starting-value retry, with unchanged data and settings.
+Both permitted initialization attempts failed. Default starts returned code 1
+(false convergence), objective 7723.736 and maximum gradient 9.75e11 after
+625 seconds. One aligned female N/F retry returned code 1, objective 10453.269
+and maximum gradient 1.49e11 after 277 seconds. Both Hessians were not positive
+definite and fixed-parameter uncertainty was non-finite. An SD-report object
+exists, but that is not successful uncertainty estimation. Initial age-2
+abundance inflated to about 1.3e13 fish and recruitment log SD to about 19 in
+the returned retry; these estimates are not interpretable as a successful
+assessment. No further retries or model changes were made.
+
+An exploratory local dashboard and comparison summaries are retained to expose
+the failure. They must be read with the failed numerical diagnostics; even
+apparently close metrics do not establish agreement from this fit. Potential
+limitations include the initial abundance/F boundary, independent F states,
+the source's inconsistent composition/index timing and the omitted joint
+composition likelihood. These results do not isolate a single cause.

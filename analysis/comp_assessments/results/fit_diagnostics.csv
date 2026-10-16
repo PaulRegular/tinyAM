@@ -50,4 +50,16 @@ x Fixed-parameter covariance must be available and finite.
 x The Hessian must be positive definite.
 i Optimizer code zero alone is insufficient. A missed gradient tolerance alone
   does not establish a structural problem. | source_start: converged; gradient=0.000904; "
-"afsc_yellowfin_sole_ebs_2024","4cab130a326c2540c99c3ba5dd4dfd064dfe364e","fitting",,,"",,,,,,,,,"Default initialization is running; no optimizer or uncertainty result returned yet. Attempt status is saved locally before optimization. This row is not a convergence result."
+"afsc_yellowfin_sole_ebs_2024","4cab130a326c2540c99c3ba5dd4dfd064dfe364e","not_converged",FALSE,1,"false convergence (8)",10453.2688122185,148585979981.86,148585979981.86,TRUE,FALSE,29,839,901.887941122055," | default: failed numerical checks; gradient=9.75e+11; NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | Numerical convergence checks did not pass; inspect `check_tam(fit)`.
+x Code 1: false convergence (8)
+x Adjusted maximum 9.75e+11; raw maximum 9.75e+11; tolerance 0.01.
+x Fixed-parameter covariance must be available and finite.
+x The Hessian must be positive definite.
+i Optimizer code zero alone is insufficient. A missed gradient tolerance alone
+  does not establish a structural problem. | source_start: failed numerical checks; gradient=1.49e+11; NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | Numerical convergence checks did not pass; inspect `check_tam(fit)`.
+x Code 1: false convergence (8)
+x Adjusted maximum 1.49e+11; raw maximum 1.49e+11; tolerance 0.01.
+x Fixed-parameter covariance must be available and finite.
+x The Hessian must be positive definite.
+i Optimizer code zero alone is insufficient. A missed gradient tolerance alone
+  does not establish a structural problem."
