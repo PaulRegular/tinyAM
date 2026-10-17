@@ -6,6 +6,16 @@ The initial expansion retained existing stock specifications. The subsequent sou
 
 Review thresholds are mean absolute percent difference >20, absolute terminal mean percent difference >20, or trend correlation <0.90. Annual aggregate correlation and mean within-age temporal correlation are retained, not squared. Missing statistics are not passes. These are review prompts, not tuning targets or scientific-equivalence tests.
 
+## Source and model review
+
+The twelve new cases were reviewed against their cached source inputs, native prior equations and translation code. Per-stock source reviews retain the unit, timing, sex/area, likelihood and completeness findings. Canonical numerical inputs and official outputs were not changed.
+
+Hake's restored source log-M penalty improves median absolute SSB difference from 69.6% to 44.8% (r 0.619 to 0.751), total abundance from 71.8% to 42.8% (r 0.785 to 0.904), and age-2 recruitment from 77.8% to 55.2% (r 0.959 to 0.969). Hake M differs by 21.5%; BC POP M differs by 22.5% after a positive moment approximation to its source normal prior. Both retain finite shared log-M effect SEs. Native bounds and integration conventions remain different.
+
+EBS cod, Atka and Alaska plaice retain their baselines because alternatives fail checks or worsen other core comparisons. Northern rock sole still fails with verified M/q penalties restored; a random-N initializer passes numerical checks but yields implausible states and is rejected. AI pollock and yellowfin sole remain non-converged; later expensive yellowfin/POP trials are incomplete. The three source-blocked cases remain blocked.
+
+The related saithe free-initial-abundance change improves all five comparable core metrics; sprat now applies the source 40% pre-spawning fraction. Sprat's revised SSB definition is not a like-for-like agreement improvement. The full one-off trial log and table are retained in [the review checkpoint](https://github.com/PaulRegular/tinyAM/blob/e7b2ac6/analysis/comp_assessments/PACIFIC_MODEL_REVIEW.md); trial fits and initialization histories remain in the local gitignored cache. The experimental runners and duplicate table are retired from the routine workflow.
+
 ## All flagged core comparisons
 
 | Case | Metric | Mean absolute % | Terminal % | r | Status | Limitation |

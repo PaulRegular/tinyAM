@@ -75,7 +75,7 @@ x Fixed-parameter covariance must be available and finite.
 x The Hessian must be positive definite.
 i Optimizer code zero alone is insufficient. A missed gradient tolerance alone
   does not establish a structural problem."
-"joint_hake_coastal_2025","86e44bf","converged",TRUE,0,"relative convergence (4)",1185.7296626786,0.000867803813952683,0.000867803813952683,TRUE,TRUE,23,750,140.309386968613,"Retained after source/translation review: source_M_prior ; see PACIFIC_MODEL_REVIEW.md. | default: failed numerical checks; gradient=0.00115; NaNs produced | NaNs produced | NaNs produced | NaNs produced | NaNs produced | NaNs produced | NaNs produced | NaNs produced | Numerical convergence checks did not pass; inspect `check_tam(fit)`.
+"joint_hake_coastal_2025","86e44bf","converged",TRUE,0,"relative convergence (4)",1185.7296626786,0.000867803813952683,0.000867803813952683,TRUE,TRUE,23,750,140.309386968613,"Retained after source/translation review: source_M_prior ; see PACIFIC_REVIEW.md#source-and-model-review. | default: failed numerical checks; gradient=0.00115; NaNs produced | NaNs produced | NaNs produced | NaNs produced | NaNs produced | NaNs produced | NaNs produced | NaNs produced | Numerical convergence checks did not pass; inspect `check_tam(fit)`.
 x Fixed-parameter covariance must be available and finite.
 x The Hessian must be positive definite.
 i Optimizer code zero alone is insufficient. A missed gradient tolerance alone
@@ -85,7 +85,7 @@ i Optimizer code zero alone is insufficient. A missed gradient tolerance alone
 biomass with no observed survey ages.
 i tinyAM's current age-specific index likelihood cannot represent this
   observation. See source_reviews/dfo_herring_sog.md."
-"dfo_pop_bc_2023","86e44bf","converged",TRUE,0,"relative convergence (4)",2206.60832416025,0.00164015881651292,0.00164015881651292,TRUE,TRUE,77,1140,17.4868650436401,"Retained after source/translation review: source_M_prior ; see PACIFIC_MODEL_REVIEW.md. | default: converged; gradient=0.00164; "
+"dfo_pop_bc_2023","86e44bf","converged",TRUE,0,"relative convergence (4)",2206.60832416025,0.00164015881651292,0.00164015881651292,TRUE,TRUE,77,1140,17.4868650436401,"Retained after source/translation review: source_M_prior ; see PACIFIC_REVIEW.md#source-and-model-review. | default: converged; gradient=0.00164; "
 "afsc_cod_ai_2024","bde6c5ebca6be50595ce05c825a5ae8bd446e32d","translation_failed",,,"",,,,,,,,0.00944805145263672,"AI cod translation is blocked pending matching final production inputs
 and biological weights.
 i Public September M24_1 output differs from the final November assessment. See

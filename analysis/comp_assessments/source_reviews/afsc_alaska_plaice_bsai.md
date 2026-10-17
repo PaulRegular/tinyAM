@@ -91,4 +91,4 @@ SSB are retained separately; no combined uncertainty is invented.
 
 Rechecked joint-sex conversion, fixed M and fixed source q calibration. Correlated/shared-level F and age-dependent catch-SD alternatives fail checks or worsen comparisons; retain the current source-start fit. Sparse fishery ages and omitted lengths remain limitations.
 
-See [the complete twelve-case review](../PACIFIC_MODEL_REVIEW.md) for paired median differences, correlations, diagnostics and rejected trials. Canonical numerical inputs and outputs are unchanged.
+See [the complete twelve-case review](../PACIFIC_REVIEW.md#source-and-model-review) for paired median differences, correlations, diagnostics and rejected trials. Canonical numerical inputs and outputs are unchanged.

@@ -94,4 +94,4 @@ do not cross the requested thresholds. Fixed-M agreement is input consistency.
 
 Checked kg weights, joint composition conversion, source CVs and active observations. F/precision alternatives weakened important comparisons; retain the documented baseline and its conditional source-start fit. Whole-million official N rounding limits precision.
 
-See [the complete twelve-case review](../PACIFIC_MODEL_REVIEW.md) for paired median differences, correlations, diagnostics and rejected trials. Canonical numerical inputs and outputs are unchanged.
+See [the complete twelve-case review](../PACIFIC_REVIEW.md#source-and-model-review) for paired median differences, correlations, diagnostics and rejected trials. Canonical numerical inputs and outputs are unchanged.

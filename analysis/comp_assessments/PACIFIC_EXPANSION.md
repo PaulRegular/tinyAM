@@ -71,7 +71,7 @@ fixed-M checks and numerical outcomes are in [PACIFIC_REVIEW.md](PACIFIC_REVIEW.
 The review covers the updated library, distinguishing new from existing cases.
 It can be refreshed without fitting by sourcing
 `scripts/translation/review_pacific_expansion.R` from the repository root.
-The expansion initially retained existing model specifications. The subsequent [model review](PACIFIC_MODEL_REVIEW.md) documents the selected mortality, initialization and spawning-time changes and rejected alternatives. No core model mathematics changed.
+The expansion initially retained existing model specifications. The subsequent [model review](PACIFIC_REVIEW.md#source-and-model-review) documents the selected mortality, initialization and spawning-time changes and rejected alternatives. No core model mathematics changed.
 
 ## Final validation
 
@@ -100,7 +100,7 @@ no model fitting was repeated to improve agreement.
 
 ## Model-review validation — 2026-10-17
 
-The [case-by-case review](PACIFIC_MODEL_REVIEW.md) records the subsequent
+The [case-by-case review](PACIFIC_REVIEW.md#source-and-model-review) records the subsequent
 source-informed model trials and selected changes. The original expansion
 outcomes above remain historical where superseded by that review.
 

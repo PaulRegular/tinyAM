@@ -30,7 +30,7 @@ the requested twelve, not twelve successful replications.
   case; all source distinctions remain canonical. Complete-area catch pooling
   leaves missing-area years missing, rather than creating partial totals.
 - **Priors and identification:** initial hake and BC POP fits drove M near zero.
-  The [model review](PACIFIC_MODEL_REVIEW.md) uses an existing fixed-SD Gaussian
+  The [model review](PACIFIC_REVIEW.md#source-and-model-review) uses an existing fixed-SD Gaussian
   mean effect for one shared log-M level, without a free intercept that could
   cancel its penalty. Hake retains the native log-M penalty; BC POP uses a
   positive moment approximation to the native natural-scale normal prior.

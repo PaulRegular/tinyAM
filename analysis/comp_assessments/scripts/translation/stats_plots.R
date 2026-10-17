@@ -2,13 +2,13 @@
 library(dplyr)
 library(tidyr)
 library(readr)
-library(stringr)
 library(ggplot2)
 library(patchwork)
 
 pkgload::load_all(".", quiet = TRUE)
 
 root <- "analysis/comp_assessments"
+source(file.path(root, "R", "plot_stock_order.R"))
 
 plot_agreement_heatmap <- function(root) {
 
@@ -42,33 +42,7 @@ plot_agreement_heatmap <- function(root) {
     filter(metric %in% metrics)
 
   # Stock names and ocean-basin classification.
-  stock_info <- assessments |>
-    filter(assessment_id %in% comparison$assessment_id) |>
-    select(assessment_id, stock_id) |>
-    left_join(
-      stocks |>
-        select(stock_id, common_name, ocean),
-      by = "stock_id"
-    ) |>
-    mutate(
-      stock = coalesce(common_name, assessment_id),
-      stock = str_remove(stock, " \\(formerly.*\\)$"),
-      basin = ocean,
-      basin = factor(
-        basin,
-        levels = c(
-          "Northwest Atlantic",
-          "Northeast Atlantic",
-          "Northeast Pacific",
-          "Northwest Pacific"
-        )
-      )
-    ) |>
-    arrange(basin, stock, assessment_id)
-
-  if (anyNA(stock_info$basin)) {
-    stop("One or more stocks have an unclassified ocean basin.")
-  }
+  stock_info <- assessment_plot_stocks(assessments, stocks, comparison$assessment_id)
 
   stock_order <- stock_info$assessment_id
 
@@ -129,14 +103,6 @@ plot_agreement_heatmap <- function(root) {
   # Common colour palette: green indicates better agreement.
   green <- tam_cols()[3]
   missing_colour <- "#D9D9D9"
-
-  diff_max <- ceiling(
-    max(plot_data$difference, na.rm = TRUE) / 10
-  ) * 10
-
-  corr_min <- floor(
-    min(plot_data$correlation, na.rm = TRUE) * 10
-  ) / 10
 
   # Shared plot theme.
   heatmap_theme <- theme_minimal(

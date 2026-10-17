@@ -145,9 +145,9 @@ history (the parent of cleanup commit `4830fb1`, at
 current model choices are visible in each stock script's `fit_tam()` call.
 That historical review covered the 23 then-current detailed assessments,
 including blockers for those without recipes. The expanded-library review is
-in [PACIFIC_REVIEW.md](PACIFIC_REVIEW.md). The
-[new-case model review](PACIFIC_MODEL_REVIEW.md) records source and processing
-checks, trial outcomes, and before/after median differences and correlations.
+in [PACIFIC_REVIEW.md](PACIFIC_REVIEW.md), including the source/model findings
+and a link to the archived one-off trials. Experimental trial runners and
+duplicate review tables are retained in Git history rather than the routine workflow.
 Delivery and validation details are in [PACIFIC_EXPANSION.md](PACIFIC_EXPANSION.md).
 Baselines remain when changes weaken diagnostics or
 trade one comparison improvement for another loss. Numerical convergence and
@@ -160,11 +160,17 @@ is available. Check the numerical outcomes and comparison definitions in
 indicate agreement. Its median differences complement the mean and terminal
 differences used for review flags.
 
-The review table has one row per attempted model. `*_percent` is the mean
-absolute percent difference; `*_terminal_percent` is the signed terminal-year
-difference; `*_trend` is trajectory correlation. The matching status is retained
-alongside each metric. Detailed definitions and units are in the aggregate
-comparison summary and cached reference objects. Diagnostic failures remain
-visible; their comparison values are not grounds for selecting that model.
-Pinned baseline models and candidates use the same current comparison
-definitions, including corrections to reported age-group interpretation.
+Both figure scripts share `R/plot_stock_order.R`: ocean first, then
+phylogenetic groups, scientific species names and stock labels. Higher groups
+follow [Betancur-R. et al. (2017)](https://doi.org/10.1186/s12862-017-0958-3);
+alphabetical ties within groups do not imply a fully resolved species tree.
+Trend facets follow the heatmap from top to bottom, reading facets left to
+right and top to bottom. Add new genera to the shared ordering before plotting.
+Facet labels use ordinary plot text; no `ggtext` dependency is required.
+
+Current comparison tables retain matching status, definitions, units and
+mean/median/terminal differences. Annual trajectories in
+`results/population_timeseries.csv` must agree with those summaries. Diagnostic
+failures remain visible; their comparison values are not grounds for selecting
+a model. Cached exploratory fits are retained without inventing missing
+official estimates.

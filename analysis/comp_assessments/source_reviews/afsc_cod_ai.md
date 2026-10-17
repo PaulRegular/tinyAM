@@ -75,4 +75,4 @@ not agreement passes. No starting-value or model rescue was attempted.
 
 Rechecked the production-run mismatch and missing final likelihood inputs. The source guard remains: no mixing preliminary fitted states with final November observations or inventing age data.
 
-See [the complete twelve-case review](../PACIFIC_MODEL_REVIEW.md) for paired median differences, correlations, diagnostics and rejected trials. Canonical numerical inputs and outputs are unchanged.
+See [the complete twelve-case review](../PACIFIC_REVIEW.md#source-and-model-review) for paired median differences, correlations, diagnostics and rejected trials. Canonical numerical inputs and outputs are unchanged.

@@ -108,4 +108,4 @@ changed to rescue this case.
 
 Confirmed original grams, active surveys, plug-in maturity and the bias-adjusted source M log-penalty center. Time-limited correlated/shared-level F and M-prior trials did not return a completed usable fit. The original interruption remains explicit; no result is inferred from incomplete optimization.
 
-See [the complete twelve-case review](../PACIFIC_MODEL_REVIEW.md) for paired median differences, correlations, diagnostics and rejected trials. Canonical numerical inputs and outputs are unchanged.
+See [the complete twelve-case review](../PACIFIC_REVIEW.md#source-and-model-review) for paired median differences, correlations, diagnostics and rejected trials. Canonical numerical inputs and outputs are unchanged.
