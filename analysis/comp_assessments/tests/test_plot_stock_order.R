@@ -19,7 +19,8 @@ stopifnot(max(which(atlantic$scientific_name == "Clupea harengus")) <
   min(which(atlantic$scientific_name == "Gadus morhua")))
 pacific <- info[info$basin == "Northeast Pacific", ]
 stopifnot(all(pacific$stock[grepl("^dfo_", pacific$stock_id)] %in% c(
-  "Strait of Georgia Pacific herring", "British Columbia Pacific ocean perch")))
+  "Strait of Georgia Pacific herring", "British Columbia Pacific ocean perch",
+  "British Columbia Canary Rockfish")))
 
 missing <- stocks
 missing$scientific_name[1] <- "Unclassified fish"

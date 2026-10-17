@@ -16,7 +16,7 @@ source_estimated_m <- c("dfo_cod_2j3kl_2025","dfo_cod_4t4vn_2019","ices_cod_nort
   "afsc_cod_goa_2026","dfo_cod_3pn4rs_2025","dfo_herring_4tvn_spring_2024",
   "ices_whiting_north_sea_2026","afsc_pop_bsai_2024","afsc_pollock_ai_2024",
   "afsc_northern_rock_sole_ebs_2024","joint_hake_coastal_2025","dfo_herring_sog_2025",
-  "dfo_pop_bc_2023","afsc_cod_ai_2024")
+  "dfo_pop_bc_2023","afsc_cod_ai_2024","dfo_canary_bc_2022")
 m_mode <- setNames(rep("unresolved",nrow(current)),current$assessment_id)
 for(id in names(m_mode)) {
   path <- file.path("analysis/comp_assessments/scripts/translation/stocks",paste0(id,".R"))
@@ -62,11 +62,13 @@ limitations <- c(
   afsc_northern_rock_sole_ebs_2024="Non-convergence; female subset and joint composition likelihood differ",
   joint_hake_coastal_2025="Source M penalty restored; recruitment/selectivity and likelihood differ",
   afsc_cod_ebs_2024="Pooled empirical catch-age key and selectivity simplification",
-  dfo_pop_bc_2023="Source-output blocked; historical population outputs not recovered")
+  dfo_pop_bc_2023="Source-output blocked; historical population outputs not recovered",
+  dfo_canary_bc_2022="Female approximation; joint likelihood, aggregate-only inputs and source recruitment differ")
 case_name <- function(ids) {
   stock <- current$stock_id[match(ids,current$assessment_id)]
   label <- database$stocks$common_name[match(stock,database$stocks$stock_id)]
-  paste0(ifelse(ids %in% new,"New: ","Existing: "),label)
+  paste0(ifelse(ids == "dfo_canary_bc_2022", "Additional: ",
+    ifelse(ids %in% new,"New: ","Existing: ")),label)
 }
 metric_name <- c(ssb="SSB",recruitment="Recruitment",abundance="Total N",N="N-at-age",F="F-at-age",M="M")
 number <- function(v)ifelse(is.finite(v),formatC(v,digits=3,format="g"),"—")
@@ -80,7 +82,8 @@ markdown_table <- function(x) {
 
 ## Review report ----
 out <- c("# Pacific expansion review","",
-  "The database has 35 current detailed stock records, including twelve additional Pacific cases. Nine new cases historically received actual optimization attempts. BC POP is now source-output blocked despite a numerical pass. The current status is four numerical passes, three non-converged fits, one interrupted run and four source blockers. Seven active new-case dashboards and the historical BC trial are cached locally. This falls short of twelve runnable translations; blocked guards are not counted as fitted recipes.","",
+  paste0("The database has ", nrow(current), " current detailed stock records. The original twelve-case Pacific expansion has four numerical passes, three non-converged fits, one interrupted run and four source blockers. Nine of those cases historically received optimization attempts; BC POP is now source-output blocked despite a numerical pass. Seven active expansion dashboards and the historical BC trial are cached locally. This falls short of twelve runnable translations; blocked guards are not counted as fitted recipes."),"",
+  "The subsequent BC Canary Rockfish case is labelled Additional below and does not replace or complete an original expansion case. Its female translation passes after one source-informed initialization retry, but SSB has mean absolute difference 27.9%, terminal difference -59.1% and correlation 0.295; estimated M is 36.5% lower. Its source review and dashboard document the approximations and unavailable N/F/recruitment comparisons. No observations were adjusted to improve agreement.","",
   "The initial expansion retained existing stock specifications. The subsequent source/model review updates hake and BC POP mortality treatment, North Sea saithe initial abundance and Baltic sprat spawning time; other existing comparisons remain retained results. New diagnostics and comparisons come from the documented default-first attempts. Source additions were committed before their translation/readiness records and pushed separately. No core model mathematics changed.","",
   "Review thresholds are mean absolute percent difference >20, absolute terminal mean percent difference >20, or trend correlation <0.90. Annual aggregate correlation and mean within-age temporal correlation are retained, not squared. Missing statistics are not passes. These are review prompts, not tuning targets or scientific-equivalence tests.","",
   "## Source and model review","",

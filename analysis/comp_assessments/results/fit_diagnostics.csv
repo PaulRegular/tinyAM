@@ -104,3 +104,10 @@ i Weight, maturity, timing and the model age grid must be verified before
   insufficient.
 i See source_reviews/dfo_petrale_bc.md for public-source coverage and the
   missing-input inventory."
+"dfo_canary_bc_2022","442d89ec5bbe98ba22480fd89e11f92765d3a0bb","converged",TRUE,0,"relative convergence (4)",1726.628946913,0.000332907251297199,0.000332907251297199,TRUE,TRUE,79,2853,452.970015048981," | default: failed numerical checks; gradient=2150; NA/NaN function evaluation | Numerical convergence checks did not pass; inspect `check_tam(fit)`.
+x Code 1: false convergence (8)
+x Adjusted maximum 2150; raw maximum 2150; tolerance 0.01.
+x Fixed-parameter covariance must be available and finite.
+x The Hessian must be positive definite.
+i Optimizer code zero alone is insufficient. A missed gradient tolerance alone
+  does not establish a structural problem. | source_start: converged; gradient=0.000333; "

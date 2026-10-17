@@ -170,3 +170,35 @@ with `--no-manual --no-tests` has zero errors, zero warnings and the existing
 locale after an initial inherited-locale failure. No core package code or
 model specification changed, and all pre-existing canonical values and
 comparison/fit diagnostics remain unchanged.
+
+## BC Canary import and translation — 2026-10-17
+
+`dfo_canary_bc_2022` adds the official coastwide Run24 inputs and available
+outputs, bringing the database to 37 stocks, 43 assessment records and 36
+current detailed cases. Source files, matching fixed-biology evaluation and
+SSB posterior draws are cached with provenance. All prior canonical records
+are unchanged. Completeness remains partial: official numerical N/F-at-age,
+annual recruitment and full posterior draws were not recovered.
+
+The female 1977–2022, ages 1–60+ translation preserves joint-sex denominators
+when converting sampled catch/survey biomass to female numbers. Missing ages
+are not filled; aggregate-only indices are omitted. Its background and
+[source review](source_reviews/dfo_canary_bc.md) describe the simplified
+likelihood, recruitment, selectivity, M prior and initialization.
+
+Default starts failed; the one permitted source-informed retry converged
+(maximum gradient 0.000333; successful SD report, positive-definite Hessian).
+SSB mean absolute difference is 27.91%, terminal difference -59.09% and
+correlation 0.295. Female M is 36.51% lower, with no defined temporal
+correlation for the constant source series. These are flagged limitations,
+not a successful reproduction of the assessment. Other population comparisons
+remain missing or non-equivalent. The dashboard and initialization histories
+are cached, and compact result tables retain existing stocks' results.
+
+Both new-case tests and database validation pass. All 67 assessment-analysis
+files were run: 61 pass, with the same six baseline failures. The full package
+suite passes with one interactive-only skip; package checking with
+`--no-manual --no-tests` has zero errors, zero warnings and the existing
+`plot_bubbles`/`head` NOTE. Tests ran separately. Dashboard and plot exports
+were verified, retaining ocean/species order, seven columns, four rows and
+the smaller grey ocean labels. No core model mathematics changed.

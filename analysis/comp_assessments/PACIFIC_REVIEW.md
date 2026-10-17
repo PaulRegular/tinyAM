@@ -1,6 +1,8 @@
 # Pacific expansion review
 
-The database has 35 current detailed stock records, including twelve additional Pacific cases. Nine new cases historically received actual optimization attempts. BC POP is now source-output blocked despite a numerical pass. The current status is four numerical passes, three non-converged fits, one interrupted run and four source blockers. Seven active new-case dashboards and the historical BC trial are cached locally. This falls short of twelve runnable translations; blocked guards are not counted as fitted recipes.
+The database has 36 current detailed stock records. The original twelve-case Pacific expansion has four numerical passes, three non-converged fits, one interrupted run and four source blockers. Nine of those cases historically received optimization attempts; BC POP is now source-output blocked despite a numerical pass. Seven active expansion dashboards and the historical BC trial are cached locally. This falls short of twelve runnable translations; blocked guards are not counted as fitted recipes.
+
+The subsequent BC Canary Rockfish case is labelled Additional below and does not replace or complete an original expansion case. Its female translation passes after one source-informed initialization retry, but SSB has mean absolute difference 27.9%, terminal difference -59.1% and correlation 0.295; estimated M is 36.5% lower. Its source review and dashboard document the approximations and unavailable N/F/recruitment comparisons. No observations were adjusted to improve agreement.
 
 The initial expansion retained existing stock specifications. The subsequent source/model review updates hake and BC POP mortality treatment, North Sea saithe initial abundance and Baltic sprat spawning time; other existing comparisons remain retained results. New diagnostics and comparisons come from the documented default-first attempts. Source additions were committed before their translation/readiness records and pushed separately. No core model mathematics changed.
 
@@ -109,6 +111,8 @@ The related saithe free-initial-abundance change improves all five comparable co
 | New: Eastern Bering Sea Pacific cod | Total N |   19 | -28.8 | 0.861 | matched | Pooled empirical catch-age key and selectivity simplification |
 | New: Eastern Bering Sea Pacific cod | Recruitment | 35.6 | 20.9 | 0.697 | matched | Pooled empirical catch-age key and selectivity simplification |
 | New: Eastern Bering Sea Pacific cod | SSB | 21.7 | -56.7 | 0.581 | approximate | Pooled empirical catch-age key and selectivity simplification |
+| Additional: British Columbia Canary Rockfish | M | 36.5 | -36.5 | — | matched; estimated | Female approximation; joint likelihood, aggregate-only inputs and source recruitment differ |
+| Additional: British Columbia Canary Rockfish | SSB | 27.9 | -59.1 | 0.295 | approximate | Female approximation; joint likelihood, aggregate-only inputs and source recruitment differ |
 
 Constant M series have no defined temporal correlation. A fixed approximation to source-estimated M is labelled explicitly; equality is not evidence that tinyAM estimated M successfully.
 
@@ -162,6 +166,7 @@ Each entry below lists missing or incompatible core comparisons. Constant-series
 | New: British Columbia Pacific ocean perch | SSB: no fitted statistics; Recruitment: no fitted statistics; Total N: no fitted statistics; N-at-age: no fitted statistics; F-at-age: no fitted statistics; M: no fitted statistics |
 | New: Aleutian Islands Pacific cod | SSB: no fitted statistics; Recruitment: no fitted statistics; Total N: no fitted statistics; N-at-age: no fitted statistics; F-at-age: no fitted statistics; M: no fitted statistics |
 | New: Bering Sea and Aleutian Islands arrowtooth flounder | SSB: no fitted statistics; Recruitment: no fitted statistics; Total N: no fitted statistics; N-at-age: no fitted statistics; F-at-age: no fitted statistics; M: no fitted statistics |
+| Additional: British Columbia Canary Rockfish | F-at-age: unavailable; N-at-age: unavailable; Total N: non_equivalent; Recruitment: non_equivalent |
 
 ## Fixed-M input checks
 

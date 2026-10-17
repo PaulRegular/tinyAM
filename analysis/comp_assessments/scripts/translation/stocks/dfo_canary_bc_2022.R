@@ -36,7 +36,7 @@ background <- c(
   "|---|------|------|------|",
   "| Years and ages | 1935-2022; age-0 recruitment and 60+; sampled ages 1-60+. | 1977-2022, ages 1-60+. | Begin at the first commercial age sample, retaining the full sampled age range. Earlier history is represented by free initial ages. Beginning-2023 source SSB is boundary context, outside historical agreement summaries. |",
   "| Population | Separate female and male states; deterministic cohort survival; unfished equilibrium with early recruitment deviations. | Female abundance with deterministic survival and free initial ages. | Sex-specific numbers are reconstructed jointly before selecting female observations. No assumed adult female fraction or second factor of 0.5 is applied to SSB. |",
-  "| Recruitment | Age-0 Beverton-Holt, estimated steepness with beta prior, log SD 0.9, sum-constrained deviations and varying bias adjustment. | Age-1 Beverton-Holt with IID log residuals, SD 0.9, parent SSB lag one year. | Age-1 entry includes juvenile survival. The steepness prior, early deviations, sum constraint, terminal treatment and source bias adjustment are not reproduced. |",
+  "| Recruitment | Age-0 Beverton-Holt, estimated steepness with beta prior, log SD 0.9, sum-constrained deviations and varying bias adjustment. | Age-1 IID log recruitment around an estimated constant mean, SD 0.9. | Age-1 entry includes juvenile survival. The stock-recruit relationship, steepness prior, early deviations, sum constraint, terminal treatment and source bias adjustment are omitted. |",
   "| F | Annual intensity in two fleets, Pope catch approximation, static asymptotic double-normal age selectivity; non-trawl shape fixed. | One F surface with a rising logistic age mean, shared annual random walk and IID residuals; Baranov catches. | Approximate the static ascending shape and common annual intensity. Source curve, fleet separation and catch equation differ. |",
   "| M | Separate constant female and male M, natural-normal prior mean 0.06, SD 0.018, bounds 0.02-0.2. | One female log-M effect centered on log(0.06), fixed log SD 0.3. | Lognormal penalty approximates the source prior CV; bounds and Bayesian integration differ. The source-estimated M is not fixed as an input or used to tune observations. |",
   "| Catch | Two biomass streams; joint-sex trawl age samples in 36 years, 1977-2017; no non-trawl ages. | Pooled biomass allocated using each sampled year's trawl joint-sex age profile and both sexes' catch weights, retaining female numbers. | Assumes the unsampled non-trawl catch shares the trawl profile. Non-trawl removals are about 4% of biomass over 1977-2022. No ages are filled for missing years or 2018-2022, and totals alone do not enter the tinyAM likelihood. Independent lognormal age errors replace the Dirichlet-multinomial and ageing error. |",
@@ -50,7 +50,7 @@ background <- c(
 fit_model <- function(...) tinyAM::fit_tam(
   data = obs, years = years, ages = ages,
   N_settings = list(process = "off", init = "free"),
-  rec_settings = list(process = "iid", mu_form = ~ bh(ssb), sd = .9),
+  rec_settings = list(process = "iid", mu_form = ~ 1, sd = .9),
   F_settings = list(process = "iid", mu_form = ~ logistic(age) + rw(year)),
   M_settings = list(process = "off", mu_form = ~ 0 + iid(M_prior_group, sd = .3),
                     mu_supplied = ~ I(.06)),
