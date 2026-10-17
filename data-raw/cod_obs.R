@@ -17,7 +17,7 @@ index <- inputs$index |>
 names(index)[names(index) == "index"] <- "obs"
 index$survey <- "Fall 2J3KL"
 index$samp_time <- 0.8
-index$q_block <- cut(index$age, c(min(index$age):6, max(index$age) + 1), right = FALSE)
+index$q_block <- cut_ages(index$age, c(min(index$age):6, max(index$age)))
 index$obs <- index$obs * 12048556 / 1000 # use number of trawl units to bump up to total abundance
 
 weight <- inputs$pwts[, c("year", "age", "weight")]
@@ -54,12 +54,24 @@ pop_covariates$allometric_M_assumption <-
   )]
 plot(pop_covariates$age, pop_covariates$allometric_M_assumption, log = "y", xlab = "age", ylab = "Allometric M")
 
-cod_obs <- as_tam_data(list(
-  catch = catch,
-  index = index,
-  weight = weight,
-  maturity = maturity,
-  pop_covariates = pop_covariates
-))
+## Impose consistent year range
+pop_covariates <- pop_covariates[pop_covariates$year >= min(catch$year) &
+                                   pop_covariates$year <= max(catch$year), ]
+maturity <- maturity[maturity$year >= min(catch$year) &
+                       maturity$year <= max(catch$year), ]
+weight <- weight[weight$year >= min(catch$year) &
+                   weight$year <= max(catch$year), ]
+index <- index[index$year >= min(catch$year) &
+                 index$year <= max(catch$year), ]
+
+cod_obs <- as_tam_data(
+  list(
+    catch = catch,
+    index = index,
+    weight = weight,
+    maturity = maturity,
+    pop_covariates = pop_covariates
+  )
+)
 
 usethis::use_data(cod_obs, overwrite = TRUE)
