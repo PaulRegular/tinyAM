@@ -129,6 +129,9 @@ constant M and boundary biomass alone do not support the intended comparison.
 official 2024 summary/output record, including annual SSB posterior summaries.
 Original observations and biology remain missing; it is not a current detailed
 record or a completed translation.
+[British Columbia Canary Rockfish](source_reviews/dfo_canary_bc.md) has verified
+native 2022 inputs, fixed biological functions and annual female SSB posterior
+summaries; official N/F-at-age and annual recruitment remain unavailable.
 [Aleutian Islands Pacific cod](source_reviews/afsc_cod_ai.md) remains blocked
 pending native inputs matching the final production assessment.
 [BSAI arrowtooth flounder](source_reviews/afsc_arrowtooth_flounder_bsai.md)
