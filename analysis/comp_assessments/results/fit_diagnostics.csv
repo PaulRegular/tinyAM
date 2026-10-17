@@ -97,3 +97,10 @@ i Public September M24_1 output differs from the final November assessment. See
 observed age-length key and survey timing are missing.
 i Recovered fitted N/F are assessment outputs, not catch/survey data. See
   source_reviews/afsc_arrowtooth_flounder_bsai.md."
+"dfo_petrale_bc_2024","2a66fcfa6d9a6141b4b41cfbced2051b8017da2d","translation_failed",,,"",,,,,,,,0.0544970035552979,"BC petrale translation is blocked: original catch/survey age
+compositions and biological inputs have not been recovered.
+i Weight, maturity, timing and the model age grid must be verified before
+  preparing a fit. Available SSB output and component M scalars are
+  insufficient.
+i See source_reviews/dfo_petrale_bc.md for public-source coverage and the
+  missing-input inventory."

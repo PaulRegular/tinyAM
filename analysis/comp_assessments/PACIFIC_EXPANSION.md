@@ -146,3 +146,27 @@ unchanged. The agreement heatmap and four trend plots now contain the same
 The full package suite passes with its one interactive-only skip. The full
 assessment-analysis suite and `R CMD check` were not repeated for this
 source-readiness/reporting change; package code and canonical tables are unchanged.
+
+## BC petrale import — 2026-10-17
+
+`dfo_petrale_bc_2024` is an additional partial summary/output record, not a
+completed replacement for BC POP. The import retains 87 annual female SSB
+medians with 95% credible limits, separate published terminal/reference values,
+three reported component M scalars and 33 assumptions. The database now has
+36 stocks and 42 assessment records; the 35 current detailed records are
+unchanged. This official applied assessment is not marked current detailed
+because original observations, biology and configuration remain missing.
+
+The explicit stock entry point stops before model preparation or optimization.
+No fitted object, uncertainty estimate, dashboard or agreement statistic was
+invented. See the [source review](source_reviews/dfo_petrale_bc.md) for the
+public-source search, exact coverage and conditions for resuming translation.
+
+Both new-case tests and database validation pass. All 65 assessment-analysis
+files were run: 59 pass and the six pre-existing failures listed above remain.
+The full package suite passes with one interactive-only skip. Package checking
+with `--no-manual --no-tests` has zero errors, zero warnings and the existing
+`plot_bubbles`/`head` NOTE; tests ran separately. The check process used a valid
+locale after an initial inherited-locale failure. No core package code or
+model specification changed, and all pre-existing canonical values and
+comparison/fit diagnostics remain unchanged.

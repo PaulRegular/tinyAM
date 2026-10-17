@@ -140,6 +140,7 @@ Initial expansion fits drove M near zero (hake log-M SE 298.1; BC POP 1924.9). R
 | nefsc_haddock_georges_bank_2026 | blocked_no_stock_spec | NA | NA |
 | dfo_cod_3pn4rs_2025 | blocked_no_stock_spec | NA | NA |
 | nefsc_summer_flounder_2018 | not_converged | 0.004174769 | FALSE |
+| dfo_petrale_bc_2024 | translation_failed | NA | NA |
 
 ## Unavailable or non-equivalent comparisons
 
@@ -192,7 +193,8 @@ This checks aligned values only; it does not credit fixed M as successful estima
 - SoG herring: aggregate spawning-biomass survey with no observed survey ages; density-dependent M and discrete fleets also differ. No artificial age allocation or catch-only substitute.
 - AI cod: public September native fit differs from final November production run; final composition/weight inputs and SSB scaling unresolved.
 - Arrowtooth: no verified numerical likelihood compositions/age–length key or survey timing; recovered fitted N/F are not observations.
-- BC POP: a follow-up recovered regional biomass draws for 3CD and 5DE, but the public 5ABC object ends in 2017. They cannot form the matching coastwide comparison. N/F/recruitment and the native reproductive-output/mature-biomass definition remain unresolved; the case stays blocked. BC petrale sole is a promising Canadian alternative with recovered 1938–2024 SSB draws, pending original inputs and ensemble verification. The source review also records the U.S. West Coast petrale alternative. No replacement was fitted.
+- BC POP: a follow-up recovered regional biomass draws for 3CD and 5DE, but the public 5ABC object ends in 2017. They cannot form the matching coastwide comparison. N/F/recruitment and the native reproductive-output/mature-biomass definition remain unresolved; the case stays blocked. The source review also records the U.S. West Coast petrale alternative.
+- BC petrale: an additional partial 2024 summary/output record preserves 1938–2024 SSB posterior summaries, separate published terminal/reference values, three M scalars and 33 assumptions. Original observations, biology and configuration remain missing. It is an applied but non-current summary record, excluded from the detailed-case batch and blocked before optimization. No replacement was fitted and no agreement statistics are available. Mixture intent is documented; component membership of the 2000-draw subset remains unresolved.
 - Other new fits omit source composition covariance, ageing error, normalized/sex/fleet selectivity constraints, and in some cases informative M/q priors. Zero composition categories retain source zero values but tinyAM lognormal observations treat them as missing.
 - Every new source file is cached with provenance. Completeness remains partial where likelihood arrays, activation, point conventions, biological inputs or joint posterior outputs are unresolved.
 

@@ -13,6 +13,14 @@ source blockers. Seven active new-case dashboards and the historical BC trial
 are cached locally. Neither twelve runnable translations nor twelve successful
 replications have been achieved.
 
+The subsequent BC petrale import adds a **partial 2024 summary/output record**:
+36 stocks and 42 assessment records in total, still 35 current detailed cases.
+It preserves annual SSB subset summaries, published reference values and three
+reported M scalars. Original observations, biology and configuration remain
+missing, so it is non-current and source-blocked, not a completed replacement
+or an additional fitted case. This is a data-availability limitation; the
+recovered summary alone does not establish a new unsupported model feature.
+
 - **Original likelihoods:** the new assessments generally fit total biomass and
   multinomial, Dirichlet-multinomial or correlated age/length compositions.
   tinyAM uses separate lognormal age observations. Conversion changes their
@@ -63,8 +71,9 @@ replications have been achieved.
   these cannot form the matching coastwide comparison. N/F/recruitment remain
   unrecovered. Its source records remain canonical; a prior M-only trial is not
   retained as a population comparison. [BC petrale sole](source_reviews/dfo_petrale_bc.md)
-  is a promising Canadian alternative with recovered 1938–2024 SSB posterior
-  draws; original inputs, other outputs and ensemble weights still need verification.
+  now has a partial canonical summary/output record with 1938–2024 SSB posterior
+  summaries. Mixture intent is documented, but original inputs, other outputs
+  and component membership of the downsampled public draws remain unresolved.
   U.S. West Coast petrale sole 2023
   is a proposed alternative with verified public fitted outputs; its native
   spawning output is eggs, not biomass (see the [source review](source_reviews/dfo_pop_bc.md)).
