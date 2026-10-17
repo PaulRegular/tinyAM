@@ -1,0 +1,2 @@
+hind <- lapply(fits, fit_hindcast, folds = 5)
+rmse <- lapply(hind, `[[`, "hindcast_rmse")
