@@ -38,7 +38,10 @@ composition weighting and the source multinomial offsets are not equivalent
 to independent age-specific lognormal observations.
 
 Female M is estimated at 0.192 (SE 0.003), male M at 0.226 (SE 0.004), rounded
-in Table 8.14. Both have a lognormal prior with mean 0.15 and log width 0.2.
+in Table 8.14. The report describes lognormal M priors with center 0.15 and
+log width 0.2. The pinned framework explicitly adds this penalty for female M;
+the corresponding male penalty could not be corroborated. Male-prior activation
+in the production executable remains unresolved, rather than confirmed absent.
 Scalar survey q is estimated at 1.633 (SE 0.050), with prior mean 1.5 and log
 width 0.2. Its sex-specific logistic selectivity remains separate. Temperature
 arrays exist in the data file, but q and growth temperature effects are

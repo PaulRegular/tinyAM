@@ -2,6 +2,10 @@ source("analysis/comp_assessments/R/read_database.R")
 x <- read_assessment("afsc_northern_rock_sole_ebs_2024")
 i <- x$inputs
 o <- x$outputs
+m <- x$assumptions[x$assumptions$component=="M" & x$assumptions$setting=="process",]
+stopifnot(nrow(m)==1L,grepl("female penalty corroborated",m$value,fixed=TRUE),
+  grepl("male penalty activation unresolved",m$value,fixed=TRUE),
+  grepl("9709548fafc7d69a2e3f88f80f60c74b7d3cfb0e",m$source_reference,fixed=TRUE))
 stopifnot(identical(x$stocks$ocean,"Northeast Pacific"),
   identical(x$assessment$model_version,"Model 24.2"),
   identical(i$value[i$type=="catch" & i$measure=="total_biomass" & i$year==2024],27.339),

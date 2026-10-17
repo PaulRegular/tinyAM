@@ -103,15 +103,16 @@ for(name in c("ssb","biomass","recruitment")) {
 }
 outputs[[length(outputs)+1]] <- output("catchability","q",1.633,"index multiplier",survey="EBS_bottom_trawl",se=.050,
   notes="Estimated scalar survey q with prior mean 1.5 and log width .2; age selectivity remains separate.")
-assume <- function(component,setting,value) pacific_database_row("assumptions",assessment_id=id,
-  component=component,setting=setting,value=value,source_reference=reference)
+assume <- function(component,setting,value,ref=reference) pacific_database_row("assumptions",assessment_id=id,
+  component=component,setting=setting,value=value,source_reference=ref)
 assumptions <- do.call(rbind,list(
   assume("assessment","official_model","2024 SSC-selected Model 24.2, ADMB flatfish model; both female and male M estimated"),
   assume("population","dimensions","1975-2024, ages 1-20+, female/male; one fishery and one EBS shelf bottom-trawl biomass index"),
   assume("N","process","Deterministic sex-specific survival; equal recruitment sex ratio and independent initial-age parameters"),
   assume("recruitment","process","Estimated Ricker relationship, lag 1, 1978-2018; fixed recruitment log SD .6; additional IID log deviations"),
   assume("F","process","Annual intensity times sex-specific logistic selectivity; annual log deviations in slope and a50; ages 17+ shared; estimated male multiplicative offset"),
-  assume("M","process","Female and male constants estimated in phases 5 and 6; lognormal prior mean .15, log width .2 for each sex"),
+  assume("M","process","Female and male constants estimated in phases 5 and 6; report describes lognormal M prior mean .15, log width .2; female penalty corroborated in pinned framework; male penalty activation unresolved",
+    paste(reference,"https://github.com/noaa-afsc/flatfish_assessment_code/blob/9709548fafc7d69a2e3f88f80f60c74b7d3cfb0e/src/fm.tpl",sep="; ")),
   assume("q","process","Estimated scalar with lognormal prior mean 1.5, log width .2; sex-specific logistic age selectivity; temperature q effects inactive (negative phases)"),
   assume("index","observation_model","Lognormal biomass at .5 with supplied SE; joint-sex multinomial age proportions use begin-year N; Francis weights from supplied native sample sizes"),
   assume("catch","observation_model","Annual log-biomass residual sum of squares with lambda 300; separate joint-sex age multinomial and supplied input sample sizes"),
