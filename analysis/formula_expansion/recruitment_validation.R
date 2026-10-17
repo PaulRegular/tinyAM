@@ -8,12 +8,13 @@ rec_spec <- function(case) {
 
 rec_inputs <- function(years = 2000:2049) {
   d <- expand.grid(year = years, age = 1:8)
-  catch <- transform(d, obs = 100)
+  catch <- transform(d, obs = 100, unit = "fish")
   index <- rbind(
     transform(d, obs = 100, survey = "A", samp_time = .3),
     transform(d, obs = 100, survey = "B", samp_time = .8)
   )
-  weight <- transform(d, obs = age^2 / 10)
+  index$unit <- "fish"
+  weight <- transform(d, obs = age^2 / 10, unit = "kg/fish")
   maturity <- transform(d, obs = .5 * plogis(2 * (age - 3)))
   pop_covariates <- transform(d, temperature = sin((year - min(year)) / 4))
   pop_covariates$temperature[pop_covariates$age != 1L] <- NA

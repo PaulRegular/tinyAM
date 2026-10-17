@@ -33,7 +33,7 @@ background <- c(
 
   "| Ages | Ages 0–8+, with age 8 as the plus group. | Retain ages 0–8+, including the age-8 plus group. | The official population age structure is preserved. |",
 
-  "| N | Recruitment follows a random walk. Older-cohort survival has separate process-SD groups for ages 1–7 and the 8+ group; the initial states have no ordinary process density. | Random-walk recruitment, IID cohort-survival deviations, free initial abundance, and age-grouped process SDs through N_sd_key. | The process variance grouping is approximated more closely, but initial-state treatment and the full SAM process specification may differ. |",
+  "| N | Recruitment follows a random walk. Older-cohort survival has separate process-SD groups for ages 1–7 and the 8+ group; the initial states have no ordinary process density. | Random-walk recruitment, IID cohort-survival deviations, integrated older initial abundance with fixed r0, and age-grouped process SDs through N_sd_key. | The process variance grouping is approximated more closely, but initial-state treatment and the full SAM process specification may differ. |",
 
   "| F | Random-walk F with AR(1) correlation across ages in annual increments, separate F states by age, and one shared innovation variance. | Correlated F random walks (cor_rw), with age-correlated annual log-F increments and one shared process SD. | The principal temporal and cross-age covariance structure is now represented; exact SAM initial-state and covariance conventions may differ. |",
 
@@ -67,7 +67,7 @@ if (do_fit) {
     data = obs,
     years = years,
     ages = ages,
-    N_settings = list(process = "iid", init = "free", sd_form = ~N_sd_key),
+    N_settings = list(process = "iid", init = "latent", sd_form = ~N_sd_key),
     F_settings = list(process = "cor_rw", mu_form = NULL),
     M_settings = list(process = "off", mu_form = NULL, mu_supplied = ~M_assumption),
     catch_settings = list(sd_form = ~1),

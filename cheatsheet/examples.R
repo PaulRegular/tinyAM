@@ -42,6 +42,8 @@ library(tinyAM)
 catch_data <- tidyr::pivot_longer(catch_wide,
   cols = starts_with("age_"), names_to = "age", names_prefix = "age_",
   names_transform = list(age = as.integer), values_to = "obs")
+catch_data$unit <- "thousand fish"
+catch_data$unit <- "thousand fish"
 # ---- end ----
 catch_data <- as.data.frame(catch_data)
 stopifnot(identical(unname(as.matrix(catch_data)),

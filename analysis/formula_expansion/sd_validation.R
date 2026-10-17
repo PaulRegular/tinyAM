@@ -112,9 +112,10 @@ sd_observations <- function() {
     transform(grid, survey = "late", samp_time = .75, obs = 1)
   )
   index$survey <- factor(index$survey)
+  index$unit <- "fish"
   list(
-    catch = transform(grid, obs = 1), index = index,
-    weight = transform(grid, obs = .2 * age^1.5), maturity = transform(grid, obs = plogis(age - 4))
+    catch = transform(grid, obs = 1, unit = "fish"), index = index,
+    weight = transform(grid, obs = .2 * age^1.5, unit = "kg/fish"), maturity = transform(grid, obs = plogis(age - 4))
   )
 }
 

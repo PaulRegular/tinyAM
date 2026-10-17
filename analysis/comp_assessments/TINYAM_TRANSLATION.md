@@ -330,6 +330,14 @@ The translation step should first reconstruct a numbers-at-age series for each s
 
 If the source database contains direct catch numbers-at-age, harmonize units only as needed.
 
+The converter labels translated catch in `fish`, weight in `kg/fish`, and
+indices in fish or their retained native survey units. These optional `unit`
+columns describe the values; tinyAM never converts fitting inputs from labels.
+Keep labels consistent when adding or rescaling observations. Derived abundance,
+biomass and SSB tables carry units into dashboard axes. Explicit comparison
+scales remain separate; log-scale SEs are relative uncertainty and are not
+multiplied by count or biomass conversion factors.
+
 ## 4.2 Total numbers + number proportions
 
 If total catch in numbers $C_{f,t}$ and number proportions $p^N_{f,t,a}$ are available:
@@ -857,8 +865,16 @@ Initialization options:
 ``` text
 exp
 free
-random
+latent
+mono
+capped
 ```
+
+`latent` integrates older first-year log-abundances without an initial density;
+r0 remains fixed, so this is not exact SAM equivalence. Check the source's
+initial-state configuration before choosing it. `mono` requires non-increasing
+initial abundance from r0; `capped` only bounds each older age by r0. Both
+include the plus group and allow ties. All options work with the N process off.
 
 Do not assume a source model's process is equivalent merely because both use the words "random walk" or "AR1".
 
@@ -924,7 +940,7 @@ marginal increment SDs. Use it only when that covariance matches the source
 assumption. N, F and M can have ordinary age-based `sd_form` terms, with sharing
 covariates in `pop_covariates`. Designs must be constant across years at each
 active age; M sharing must also be constant within fitted M state blocks.
-Recruitment and initial-abundance SDs remain separate. Inspect group uncertainty
+Recruitment SD remains separate; no initial-abundance SD is estimated. Inspect group uncertainty
 and `check_tam()` advisories rather than equating convergence with support.
 
 Use `data$maturity$spawn_time` when a documented spawning fraction

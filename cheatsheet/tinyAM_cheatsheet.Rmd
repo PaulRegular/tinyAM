@@ -204,7 +204,7 @@ N_settings = list(
 \log N_{t,a}&=\log\widehat N_{t,a}+\eta^N_{t,a}.
 \end{aligned}
 \]
-\micro{For $t\ge2$, non-plus ages use the first survival equation. Initial older ages use \texttt{"exp"} survivorship, \texttt{"free"} fixed states, or \texttt{"random"} IID survivorship errors.}
+\micro{For $t\ge2$, non-plus ages use the first survival equation. Initial older ages use \texttt{"exp"} survivorship, \texttt{"free"} fixed states, \texttt{"latent"} integrated states, \texttt{"mono"} decline, or \texttt{"capped"} by first recruitment.}
 \end{mathbox}\vspace{2mm}
 \begin{mathbox}{Recruitment}
 \begin{rcode}

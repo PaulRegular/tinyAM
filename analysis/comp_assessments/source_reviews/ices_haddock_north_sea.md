@@ -88,7 +88,7 @@ These changes bring the core process assumptions considerably closer to the offi
 
 The revised translation specifies:
 
-`N_settings = list(process = "iid", init = "free", sd_form = ~N_sd_key)`
+`N_settings = list(process = "iid", init = "latent", sd_form = ~N_sd_key)`
 
 Recruitment continues to follow a separate random-walk process under the default tinyAM recruitment settings.
 
@@ -98,7 +98,7 @@ The `N_sd_key` formula allows different process SDs across defined age groups. T
 
 This represents a closer approximation to the official model than the previous translation's single older-cohort survival SD.
 
-Initial older-age abundance is freely estimated.
+Initial older-age abundance is integrated without an initial density; r0 is an estimated fixed effect.
 
 The official model's initial-state treatment remains distinct, as documented below.
 
@@ -330,7 +330,8 @@ A broad first-state normal prior is added only when calculating observation resi
 
 The native configuration checks pass.
 
-This distinction remains relevant when comparing tinyAM's freely estimated initial abundance with the official model's latent first-year states.
+tinyAM now integrates the older first-year states without an initial density;
+its estimated fixed-effect r0 anchor remains distinct from SAM's first-year vector.
 
 Implementation references:
 
@@ -360,3 +361,13 @@ These changes substantially narrow the difference between the two models' core p
 The principal remaining observation-model simplification is the omission of density-dependent catchability powers at the youngest survey ages, alongside differences in the exact variance parameterization.
 
 The official assessment inputs, outputs and canonical source-review findings remain unchanged.
+
+
+## Initial-abundance update
+
+The cached official SAM fit has `initState = 0` and no `initN` parameters.
+The translation now uses `init = "latent"`: older first-year log-abundances
+are integrated without an initial density. Recruitment r0 remains fixed, so
+this is not complete SAM initial-state equivalence. The isolated initialization
+trial passed numerical checks without changing other model assumptions.
+See [initialization trials](../INITIALIZATION_REVIEW.md) for comparisons and limitations.

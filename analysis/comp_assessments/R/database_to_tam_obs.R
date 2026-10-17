@@ -278,6 +278,14 @@
   .translation_number_multiplier(unit)
 }
 
+.translation_index_unit <- function(unit, biomass = FALSE) {
+  scale <- if (biomass) .translation_biomass_to_kg(1, unit) else .translation_index_multiplier(unit)
+  counts <- grepl("^((thousand|million|billion) )?(fish|individuals?|numbers?|counts?)$", unit, ignore.case = TRUE)
+  if (!biomass && !counts && scale == 1) return(unit)
+  denominator <- regmatches(unit, regexpr("( per .+|/.+)$", unit))
+  paste0("fish", if (length(denominator)) denominator else "")
+}
+
 .translation_catch_at_age <- function(x, years, ages) {
   direct <- .translation_measure(x, "catch", "numbers_at_age")
   composition <- .translation_measure(x, "catch", "proportion_at_age")
@@ -570,7 +578,10 @@
         .translation_sampling_time(rows, s, sampling_times)
       }, numeric(1))
       direct$obs <- direct$value
-      result[[length(result) + 1L]] <- direct[c("year", "age", "obs", "survey", "samp_time")]
+      original_units <- setNames(direct_source$unit, direct_source$survey)
+      original_units <- original_units[match(direct$survey, names(original_units))]
+      direct$unit <- vapply(unname(original_units), .translation_index_unit, character(1))
+      result[[length(result) + 1L]] <- direct[c("year", "age", "obs", "survey", "samp_time", "unit")]
       for (survey in unique(as.character(direct_source$survey))) {
         source <- direct_source[direct_source$survey == survey, , drop = FALSE]
         method <- if (grepl(
@@ -692,6 +703,7 @@
           obs ~ year + age + survey + samp_time,
           translated, sum
         )
+        translated$unit <- .translation_index_unit(total$unit[[1]], biomass = total_measure != "total_numbers")
         k <- k + 1L
         result[[length(result) + 1L]] <- translated
         provenance[[k]] <- data.frame(
@@ -1054,6 +1066,8 @@ database_to_tam_obs <- function(assessment_id, inputs, years = NULL, ages = NULL
   )
   attr(obs$index, "translation") <- NULL
 
+  obs$catch$unit <- "fish"
+  obs$weight$unit <- "kg/fish"
   tinyAM::as_tam_data(obs)
 }
 

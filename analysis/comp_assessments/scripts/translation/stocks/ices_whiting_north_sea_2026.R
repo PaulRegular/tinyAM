@@ -54,6 +54,7 @@ names(q_start) <- colnames(q_design)
 
 start_par <- list(
   log_r0 = log(source_N[1, "0"]),
+  log_n0 = setNames(log(source_N[1, as.character(ages[-1])]), as.character(ages[-1])),
   log_r = setNames(log(source_N[-1, "0"]), as.character(years[-1])),
   log_n = log(source_N[-1, as.character(ages[-1]), drop = FALSE]),
   log_f = log(source_F),
@@ -80,7 +81,7 @@ background <- c(
   "|---|---|---|---|",
   "| Years | Catch covers 1978–2025; IBTS Q1 covers 1983–2026 and Q3 covers 1991–2025. | Fit 1978–2026. | The official 2026 survey observation and native terminal states are retained. |",
   "| Ages | Ages 0–8+, with recruitment at age 0. | Ages 0–8+, with age 8 as the population plus group. | The source population age range is retained. Survey plus groups begin at age 6 and are not yet represented exactly in the observation model. |",
-  "| N | Random-walk recruitment and cohort-survival processes, with age-specific sharing of survival-process variances. | Random-walk recruitment, IID cohort-survival deviations with one shared SD, and exponential initial abundance. | The recruitment process is retained in simplified form, but older-cohort deviations are independent rather than temporally correlated; variance sharing and initial-state treatment also differ. |",
+  "| N | Random-walk recruitment and cohort-survival processes, with age-specific sharing of survival-process variances. | Random-walk recruitment, IID cohort-survival deviations with one shared SD, and integrated older initial abundance with fixed r0. | The recruitment process is retained in simplified form, but older-cohort deviations are independent rather than temporally correlated; variance sharing and the fixed r0 anchor also differs. |",
   "| F | Random-walk F with AR(1) correlation across ages in annual F increments; Fbar covers ages 2–5. | Correlated F random walks (cor_rw), with AR(1) correlation across ages in annual log-F increments and one shared process SD; Fbar covers ages 2–5. | Cross-age correlation is now represented, but SAM's precise F variance grouping and other process details are not necessarily reproduced. |",
   "| M | WGSAM numerical M observations are available through 2022; SAM uses a mortality GMRF to estimate M, including later years. | Use the numerical M surface through 2022 and hold its final-year values fixed through 2026. No M process is estimated. | The fixed extension replaces SAM's estimated later-year M variation; an estimated tinyAM M process did not yield a usable fit. |",
   "| Catch | Total catch-at-age in thousands of fish, with independent lognormal observation errors and source-specific age variance groups. | Convert catch numbers to individual fish and fit independent lognormal errors with one shared SD. | SAM's catch observation-SD age groups are simplified to a single parameter. |",
@@ -107,7 +108,7 @@ if (do_fit) {
     data = obs,
     years = years,
     ages = ages,
-    N_settings = list(process = "iid", init = "exp"),
+    N_settings = list(process = "iid", init = "latent"),
     F_settings = list(process = "cor_rw", mu_form = NULL, mean_ages = 2:5),
     M_settings = list(process = "off", mu_form = NULL, mu_supplied = ~M_assumption),
     catch_settings = list(sd_form = ~1),

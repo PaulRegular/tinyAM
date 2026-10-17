@@ -6,6 +6,7 @@ inputs <- NCAM::inputs
 catch <- as.data.frame.table(inputs$catch.num, responseName = "obs", stringsAsFactors = FALSE)
 catch$age <- as.numeric(catch$age)
 catch$year <- as.numeric(catch$year)
+catch$unit <- "thousand fish"
 
 # Label pre-moratorium, limited fishing gear + rec, closed, stewardship + rec / post-moratorium blocks
 pop_covariates <- catch[c("year", "age")]
@@ -19,9 +20,11 @@ index$survey <- "Fall 2J3KL"
 index$samp_time <- 0.8
 index$q_block <- cut_ages(index$age, c(min(index$age):6, max(index$age)))
 index$obs <- index$obs * 12048556 / 1000 # use number of trawl units to bump up to total abundance
+index$unit <- "thousand fish"
 
 weight <- inputs$pwts[, c("year", "age", "weight")]
 names(weight)[names(weight) == "weight"] <- "obs"
+weight$unit <- "kg/fish"
 
 maturity <- inputs$mats[
   inputs$mats$year <= max(catch$year),

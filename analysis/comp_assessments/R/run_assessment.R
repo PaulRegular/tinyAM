@@ -30,6 +30,7 @@ rm(.assessment_helper)
   # Reporting only: source total biomass and all-age predictions use catch weights.
   fit$pop$total_yield$est <- totals$yield[match(fit$pop$total_yield$year, totals$year)]
   fit$pop$total_yield_pred$est <- as.numeric(predicted[as.character(fit$pop$total_yield_pred$year)])
+  fit$pop$total_yield$unit <- fit$pop$total_yield_pred$unit <- "kg"
   fit$rep$total_yield <- fit$pop$total_yield$est
   fit$rep$total_yield_pred <- fit$pop$total_yield_pred$est
   fit

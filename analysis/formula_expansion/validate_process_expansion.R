@@ -67,9 +67,10 @@ observations <- function() {
   index$survey <- factor(index$survey)
   index$obs <- 1
   index$relative_sd <- .08
+  index$unit <- "fish"
   list(
-    catch = transform(grid, obs = 1, relative_sd = .08), index = index,
-    weight = transform(grid, obs = .2 * age^1.5),
+    catch = transform(grid, obs = 1, relative_sd = .08, unit = "fish"), index = index,
+    weight = transform(grid, obs = .2 * age^1.5, unit = "kg/fish"),
     maturity = transform(grid, obs = plogis(age - 4), spawn_time = .25),
     pop_covariates = transform(grid, age_group = factor(ifelse(age <= 4, "young", "old")))
   )

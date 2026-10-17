@@ -61,3 +61,13 @@ page could not be downloaded in this environment because the local TLS
 connection failed. Numerical inputs and configuration in the database are
 therefore taken from the native official model object; the report is not used
 as a substitute for those values.
+
+
+## Initial-abundance update
+
+The cached official SAM fit has `initState = 0` and no `initN` parameters.
+The translation now uses `init = "latent"`: older first-year log-abundances
+are integrated without an initial density. Recruitment r0 remains fixed, so
+this is not complete SAM initial-state equivalence. The isolated initialization
+trial passed numerical checks without changing other model assumptions.
+See [initialization trials](../INITIALIZATION_REVIEW.md) for comparisons and limitations.

@@ -60,7 +60,8 @@ The previous configuration used random-walk cohort-survival deviations and indep
 
 The recruitment process remains a random walk under the default tinyAM recruitment settings, separate from the `N_settings` process. The `iid` N process describes independent deviations from expected cohort survival rather than a random walk in survival deviations.
 
-The `exp` initial-abundance setting constructs older-age initial abundance from exponential survivorship, rather than freely estimating every initial age.
+The `latent` setting integrates older initial abundances without an initial
+density. First-year recruitment remains an estimated fixed effect.
 
 The F process now uses `cor_rw`, allowing AR(1) correlation across ages in annual log-F increments. This represents an important component of the official SAM fishing-mortality process that was absent from the earlier independent-RW translation.
 
@@ -94,7 +95,8 @@ Despite the closer alignment of fishing-mortality dynamics, several differences 
 
 **Survey plus groups:** Both IBTS surveys report age 6 as a 6+ group, whereas the population model has an 8+ terminal group. The current translation treats these observations at age 6 rather than explicitly predicting the sum of survey-vulnerable abundance over ages 6–8+. This remains an observation-definition approximation that should be resolved or tested separately.
 
-**Initial abundance:** The translation uses exponential initial survivorship, which differs from the official SAM's initial-state treatment.
+**Initial abundance:** Older initial ages now use latent states without an
+initial density. The estimated fixed r0 anchor still differs from SAM.
 
 These differences are documented limitations of an illustrative tinyAM translation, not corrections to the official SAM assessment.
 
@@ -109,3 +111,13 @@ The age-specific output surfaces do not have report-published uncertainty interv
 The official numerical inputs and fitted outputs remain unchanged in the canonical database. The carried-forward M assumption and process-model choices belong exclusively to the tinyAM translation.
 
 The revised translation remains a proof-of-concept approximation of the official model. Numerical convergence and improved agreement do not establish equivalence of the underlying likelihoods or assessment uncertainty.
+
+
+## Initial-abundance update
+
+The cached official SAM fit has `initState = 0` and no `initN` parameters.
+The translation now uses `init = "latent"`: older first-year log-abundances
+are integrated without an initial density. Recruitment r0 remains fixed, so
+this is not complete SAM initial-state equivalence. The isolated initialization
+trial passed numerical checks without changing other model assumptions.
+See [initialization trials](../INITIALIZATION_REVIEW.md) for comparisons and limitations.

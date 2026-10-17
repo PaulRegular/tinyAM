@@ -130,9 +130,10 @@ q_full_observations <- function(sparse = FALSE) {
   index <- q_grid(sparse, full = TRUE)
   index$samp_time <- ifelse(index$survey == "early", .25, .75)
   index$relative_sd <- .05
+  index$unit <- "fish"
   list(
-    catch = transform(grid, obs = 1, relative_sd = .08), index = index,
-    weight = transform(grid, obs = .2 * age^1.5),
+    catch = transform(grid, obs = 1, relative_sd = .08, unit = "fish"), index = index,
+    weight = transform(grid, obs = .2 * age^1.5, unit = "kg/fish"),
     maturity = transform(grid, obs = plogis(age - 4))
   )
 }

@@ -61,7 +61,7 @@ inputs <- do.call(rbind, list(
   ),
   row("index", "total_biomass", "biomass",
     survey = "RV",
-    year = 2000, age = NA_real_, value = 1, unit = "t per tow",
+    year = 2000, age = NA_real_, value = 1, unit = "t",
     sampling_time = 0.75
   ),
   row("index", "proportion_at_age", "proportion_numbers",
@@ -74,7 +74,7 @@ inputs <- do.call(rbind, list(
   ),
   row("index", "numbers_at_age", "numbers",
     survey = "RV",
-    year = 2001, age = 1:2, value = c(4, 0), unit = "fish per 1,000 hooks",
+    year = 2001, age = 1:2, value = c(4, 0), unit = "fish",
     sampling_time = 0.75
   ),
   row("index", "numbers_at_age", "numbers",
@@ -663,7 +663,9 @@ ebs_obs <- database_to_tam_obs(
   index_weight_source = "stock",
   assumptions = ebs$assumptions
 )
-expect_equal(dim(ebs_obs$catch), c(915L, 3L))
+expect_equal(dim(ebs_obs$catch), c(915L, 4L))
+expect_true(all(ebs_obs$catch$unit == "fish"))
+expect_true(all(ebs_obs$weight$unit == "kg/fish"))
 expect_equal(sum(is.na(ebs_obs$catch$obs)), 15L)
 expect_equal(dim(ebs_obs$maturity), c(915L, 3L))
 expect_equal(

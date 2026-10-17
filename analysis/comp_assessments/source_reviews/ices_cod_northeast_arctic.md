@@ -87,3 +87,14 @@ Both native initN/initF vectors are empty and initState=0. The official SAM revi
 Exact source files:
 https://github.com/fishfollower/SAM/blob/1cc464b80f6f/stockassessment/inst/include/SAM/n.hpp
 https://github.com/fishfollower/SAM/blob/1cc464b80f6f/stockassessment/inst/include/SAM/f.hpp
+
+
+## Initial-abundance update
+
+The cached official SAM fit has `initState = 0` and no `initN` parameters.
+The `init = "latent"` trial integrates older first-year log-abundances without
+an initial density; recruitment r0 remains fixed. It passed from the baseline's
+fitted starting values, but failed from the stock script's ordinary starts
+(very large gradient and failed Hessian). The stable `init = "free"` recipe
+is retained. No optimizer rescue or other model changes were used.
+See [initialization trials](../INITIALIZATION_REVIEW.md) for comparisons and limitations.

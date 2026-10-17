@@ -76,7 +76,7 @@ simple_recovery <- function(type, sparse = FALSE, seed) {
 
 make_observations <- function() {
   grid <- expand.grid(year = 2000:2029, age = 1:8)
-  catch <- transform(grid, obs = 1, relative_sd = .08)
+  catch <- transform(grid, obs = 1, relative_sd = .08, unit = "fish")
   index <- rbind(
     transform(grid, survey = "early", samp_time = .25),
     transform(grid, survey = "late", samp_time = .75)
@@ -84,7 +84,8 @@ make_observations <- function() {
   index$survey <- factor(index$survey)
   index$obs <- 1
   index$relative_sd <- .08
-  weight <- transform(grid, obs = .2 * age^1.5)
+  index$unit <- "fish"
+  weight <- transform(grid, obs = .2 * age^1.5, unit = "kg/fish")
   maturity <- transform(grid, obs = plogis(age - 4))
   list(catch = catch, index = index, weight = weight, maturity = maturity)
 }
