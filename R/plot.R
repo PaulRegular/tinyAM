@@ -105,6 +105,8 @@ plot_trend <- function(
   add_buttons = TRUE,
   ...
 ) {
+  unit_label <- .unit_label(data, "Estimate")
+  if (missing(ylab)) ylab <- unit_label
   if (!is.data.frame(data) || !nrow(data)) {
     return(plotly::plot_ly(x = numeric(), y = numeric(), type = "scatter", mode = "lines"))
   }
@@ -258,6 +260,8 @@ plot_obs_pred <- function(
   xlab = "Year",
   ...
 ) {
+  unit_label <- .unit_label(data, "Observation")
+  if (missing(ylab)) ylab <- unit_label
   if (!is.data.frame(data) || !nrow(data) ||
     !any(is.finite(c(data$obs, data$pred)))) {
     return(plotly::plot_ly(x = numeric(), y = numeric(), type = "scatter", mode = "lines"))

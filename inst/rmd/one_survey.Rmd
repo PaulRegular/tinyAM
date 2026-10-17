@@ -19,6 +19,7 @@ d |>
   summarise(
     obs = if (any(is.finite(obs))) sum(obs, na.rm = TRUE) else NA_real_,
     pred = if (any(is.finite(pred))) sum(pred, na.rm = TRUE) else NA_real_,
+    unit = if ("unit" %in% names(d)) unique(unit) else NA_character_,
     is_proj = unique(is_proj),
     .groups = "drop"
   ) |> 
@@ -28,7 +29,7 @@ d |>
   plot_obs_pred(
     color = ~model,
     colors = cols,
-    ylab = "Aggregate index"
+    ylab = tinyAM:::.unit_label(d, "Aggregate index")
   )
 ```
 
@@ -36,7 +37,7 @@ d |>
 
 ```{r}
 plot_age_year(d, plot = plot_obs_pred, frame = ~age, color = ~model,
-                     colors = cols, ylab = "Index")
+                     colors = cols, ylab = tinyAM:::.unit_label(d, "Index"))
 ```
 
 ### Catchability
@@ -50,13 +51,14 @@ qest$est <- qest$q
 qest$lwr <- qest$q_lwr
 qest$upr <- qest$q_upr
 qest$supported <- is.finite(qest$obs) & qest$obs > 0
-u_qest <- unique(qest[, c("model", "age", "est", "lwr", "upr")])
+qest$unit <- qest$q_unit
+u_qest <- unique(qest[, c("model", "age", "est", "lwr", "upr", "unit")])
 if (any(duplicated(u_qest[, c("model", "age")]))) {
-  u_qest <- unique(qest[, c("model", "age", "year", "est", "lwr", "upr", "is_proj", "supported")])
-  if (nrow(u_qest)) plot_age_year(u_qest, x = ~age, xlab = "Age", color = ~model, colors = cols, frame = ~year,
+  u_qest <- unique(qest[, c("model", "age", "year", "est", "lwr", "upr", "is_proj", "supported", "unit")])
+  if (nrow(u_qest)) plot_age_year(u_qest, x = ~age, xlab = "Age", ylab = tinyAM:::.unit_label(u_qest, "Catchability"), color = ~model, colors = cols, frame = ~year,
     text = ~paste("Year:", year, "<br>Observed index:", supported, "<br>Projection:", is_proj)) else plotly::plot_ly()
 } else {
-  if (nrow(u_qest)) plot_trend(u_qest, x = ~age, xlab = "Age", color = ~model, colors = cols) else plotly::plot_ly()
+  if (nrow(u_qest)) plot_trend(u_qest, x = ~age, xlab = "Age", ylab = tinyAM:::.unit_label(u_qest, "Catchability"), color = ~model, colors = cols) else plotly::plot_ly()
 }
 ```
 

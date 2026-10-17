@@ -227,6 +227,7 @@ check_tam_data <- function(data) {
     }
   }
 
+  .data_units(obs)
   invisible(TRUE)
 }
 

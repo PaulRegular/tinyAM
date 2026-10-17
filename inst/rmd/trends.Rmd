@@ -8,25 +8,25 @@ Row {.tabset}
 ### Abundance
 
 ```{r}
-plot_trend(pop$abundance, color = ~model, legendgroup = ~model, colors = cols, ylab = "Abundance")
+plot_trend(pop$abundance, color = ~model, legendgroup = ~model, colors = cols, ylab = tinyAM:::.unit_label(pop$abundance, "Abundance"))
 ```
 
 ### Recruitment
 
 ```{r}
-plot_trend(pop$recruitment, color = ~model, legendgroup = ~model, colors = cols, ylab = "Recruitment")
+plot_trend(pop$recruitment, color = ~model, legendgroup = ~model, colors = cols, ylab = tinyAM:::.unit_label(pop$recruitment, "Recruitment"))
 ```
 
 ### SSB
 
 ```{r}
-plot_trend(pop$ssb, color = ~model, legendgroup = ~model, colors = cols, ylab = ssb_label)
+plot_trend(pop$ssb, color = ~model, legendgroup = ~model, colors = cols, ylab = tinyAM:::.unit_label(pop$ssb, ssb_label))
 ```
 
 ### Abundance-at-age
 
 ```{r}
-plot_age_year(pop$N, color = ~model, legendgroup = ~model, colors = cols, frame = ~age, ylab = "N")
+plot_age_year(pop$N, color = ~model, legendgroup = ~model, colors = cols, frame = ~age, ylab = tinyAM:::.unit_label(pop$N, "N"))
 ```
 
 ### Population patterns

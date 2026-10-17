@@ -123,6 +123,10 @@ tidy_obs_pred <- function(fit, add_osa_res = FALSE, interval = .95, ...) {
   obs_pred$index$pred <- pred$index
   obs_pred$index$sd <- sd$index
   obs_pred$index$q <- exp(fit$rep$log_q_obs)
+  units <- .data_units(fit$dat$obs)
+  index_units <- unname(units$index[as.character(obs_pred$index$survey)])
+  obs_pred$index$q_unit <- ifelse(is.na(index_units) | is.na(units$numbers), NA_character_,
+    ifelse(index_units == units$numbers, "dimensionless", paste0("(", index_units, ") / (", units$numbers, ")")))
   obs_pred$index$q_lwr <- obs_pred$index$q_upr <- obs_pred$index$q_se <- NA_real_
   obs_pred$index$q_se_scale <- fit$dat$index_settings$q_link
   if (!is.null(fit[["sdrep"]])) {
@@ -228,6 +232,7 @@ tidy_rep <- function(fit) {
     )
   })
 
+  for (nm in names(trends)) trends[[nm]]$unit <- .population_unit(dat, nm)
   trends
 }
 
@@ -350,6 +355,7 @@ tidy_sdrep <- function(fit, interval = 0.95) {
       trans_est(transform = exp)
   })
   names(df) <- gsub("log_", "", names(vals))
+  for (nm in names(df)) df[[nm]]$unit <- .population_unit(fit$dat, nm)
   df
 }
 
@@ -911,8 +917,12 @@ tidy_tam <- function(..., model_list = NULL, interval = 0.95, label = "model", l
       for (metric in intersect(names(comparison_scales), names(pop_list[[i]]))) {
         tab <- pop_list[[i]][[metric]]
         scale <- comparison_scales[[metric]]
-        for (field in intersect(c("est", "se", "lwr", "upr"), names(tab))) {
+        for (field in intersect(c("est", "lwr", "upr"), names(tab))) {
           tab[[field]] <- tab[[field]] * scale
+        }
+        if ("se" %in% names(tab)) {
+          natural <- if ("se_scale" %in% names(tab)) tab$se_scale == "reported" else rep(TRUE, nrow(tab))
+          tab$se[which(natural)] <- tab$se[which(natural)] * scale
         }
         reference <- reference_pop[[metric]]
         if (is.data.frame(reference) && "unit" %in% names(reference)) {
@@ -939,6 +949,11 @@ tidy_tam <- function(..., model_list = NULL, interval = 0.95, label = "model", l
 
   obs_pred <- stack_nested(obs_list, label = id_col, label_type = label_type)
   pop <- stack_nested(pop_list, label = id_col, label_type = label_type)
+  for (tab in pop) .unit_label(tab, "")
+  .unit_label(obs_pred$catch, "")
+  if (is.data.frame(obs_pred$index)) {
+    for (tab in split(obs_pred$index, obs_pred$index$survey)) .unit_label(tab, "")
+  }
   fixed_par <- stack_nested(lapply(par_list, `[`, "fixed"), label = id_col, label_type = label_type)
   random_par <- stack_nested(lapply(par_list, `[[`, "random"), label = id_col, label_type = label_type)
 
@@ -1005,19 +1020,15 @@ tidy_tam <- function(..., model_list = NULL, interval = 0.95, label = "model", l
     d <- d[is.finite(d$age) & is.finite(d$year), , drop = FALSE]
     if (!nrow(d)) return(NULL)
     d <- d[intersect(c("year", "age", "est", "is_proj", "unit", "definition", "notes"), names(d))]
-    unit <- if (metric == "Abundance") "fish" else if (metric %in% c("Biomass", "SSB")) "kg" else "per year"
-    if (reference) {
-      units <- if ("unit" %in% names(d)) tolower(trimws(d$unit)) else rep(NA_character_, nrow(d))
-      multipliers <- if (metric == "Abundance") {
-        c(fish = 1, number = 1, numbers = 1, "thousand fish" = 1e3,
-          thousand_fish = 1e3, "million fish" = 1e6, "billion fish" = 1e9)
-      } else if (metric %in% c("Biomass", "SSB")) {
-        c(kg = 1, t = 1e3, tonnes = 1e3, tonne = 1e3, mt = 1e3, kt = 1e6)
-      } else c("per year" = 1, per_year = 1, "yr-1" = 1, "year^-1" = 1)
-      multiplier <- unname(multipliers[units])
-      d$est <- d$est * multiplier
-    }
-    d$unit <- unit
+    # Matrix comparisons use a common scale only when the supplied unit is known.
+    kind <- if (metric == "Abundance") "numbers" else if (metric %in% c("Biomass", "SSB")) "mass" else "rate"
+    unit <- switch(kind, numbers = "fish", mass = "kg", rate = "per year")
+    units <- if ("unit" %in% names(d)) d$unit else rep(NA_character_, nrow(d))
+    multiplier <- .unit_scale(units, kind)
+    known <- is.finite(multiplier)
+    d$est[known] <- d$est[known] * multiplier[known]
+    if (reference) d$est[!known] <- NA_real_
+    d$unit <- ifelse(known, unit, units)
     d$metric <- metric
     if (metric == "SSB" && !is.null(ssb_definition)) d$definition <- ssb_definition
     d

@@ -24,6 +24,16 @@
 #' stay in the biological tables. Validation does not add the class, and inputs
 #' are checked again during preparation after any edits.
 #'
+#' Optional `unit` columns label catch numbers, stock weight per fish and each
+#' survey index. Use one unit throughout catch and weight, and one per survey.
+#' Values are never converted during fitting. For example, `"thousand fish"`
+#' catch and `"kg/fish"` weight give abundance in thousands and biomass/SSB in
+#' tonnes. Unknown units are left unlabeled; descriptive index units such as
+#' `"fish per tow"` are retained. Reported tables and default plot labels carry
+#' these units. Explicit plot labels take precedence. Matrix views convert
+#' recognized abundance/mass units to fish/kg for comparisons, independently
+#' of aggregate comparison scales; missing reference units remain unavailable.
+#'
 #' @param data A named list of input data.frames; see [check_tam_data()].
 #' @return The same list with class `tam_data` added.
 #' @examples
