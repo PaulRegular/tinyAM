@@ -54,10 +54,11 @@
 #'
 #' - **Initial older-age abundance (independent of the N process)**
 #'   - `log_n0`: realized log abundance at initial ages `ages[-1]`, named by age;
-#'     absent for `init = "exp"`, fixed for `"free"`, random for `"random"`
-#'   - `log_sd_n0`: separate IID initial-age residual SD, only for `init = "random"`
-#'   - `eta_log_n0` is calculated internally from adjacent initial log states
-#'     and first-year mortality; `log_n0` itself is not a deviation.
+#'     fixed for `"free"`, integrated without an initial density for `"latent"`.
+#'   - `d_n0`: nonnegative log-decrements, named by destination age, for
+#'     `"mono"` (cumulative) and `"capped"` (relative to r0). Derived initial
+#'     abundances and their uncertainty are reported separately. Exact ties
+#'     occur at zero; symmetric Wald intervals can cross the boundary.
 #'   - The default `"exp"` initializer is parsimonious survivorship from
 #'     `log_r0`, using first-year Z without an equilibrium plus group.
 #'     See [prepare_tam()] for the choices and weak-identification warning.
@@ -140,11 +141,13 @@
 make_par <- function(dat) {
   par <- list()
   par$log_r0 <- 0
-  if (dat$N_settings$init != "exp") {
+  if (dat$N_settings$init %in% c("free", "latent")) {
     par$log_n0 <- setNames(numeric(length(dat$ages) - 1L), as.character(dat$ages[-1]))
   }
-  if (dat$N_settings$init == "random") {
-    par$log_sd_n0 <- 0
+  if (dat$N_settings$init %in% c("mono", "capped")) {
+    drops <- rep(.2, length(dat$ages) - 1L)
+    if (dat$N_settings$init == "capped") drops <- cumsum(drops)
+    par$d_n0 <- setNames(drops, as.character(dat$ages[-1]))
   }
   if (is.null(dat$rec$sd)) par$log_sd_r <- 0
   if (ncol(dat$rec$matrix)) par$rec_beta <- setNames(numeric(ncol(dat$rec$matrix)), colnames(dat$rec$matrix))

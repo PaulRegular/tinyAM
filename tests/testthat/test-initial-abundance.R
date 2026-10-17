@@ -39,7 +39,7 @@ test_that("recruitment has a fixed first-year anchor and subsequent RW states", 
 })
 
 test_that("each initializer is independent of the subsequent N process", {
-  for (init in c("exp", "free", "random")) {
+  for (init in c("exp", "free", "latent")) {
     initial <- list()
     for (process in c("off", "iid", "rw", "ar1")) {
       dat <- make_test_dat(
@@ -88,54 +88,32 @@ test_that("free initialization spans arbitrary initial older-age abundance witho
   expect_equal(nll_fun(par, dat), nll)
 })
 
-test_that("random initialization adds exactly its own IID normal likelihood", {
-  dat <- make_test_dat(
-    years = 2000:2003,
-    N_settings = list(process = "iid", init = "random")
-  )
+test_that("latent initialization has the free joint likelihood without an initial density", {
+  dat <- make_test_dat(years = 2000:2003, N_settings = list(process = "iid", init = "latent"))
   par <- make_par(dat)
-  par$log_n0[] <- seq(-0.4, 0.7, length.out = length(par$log_n0))
-  par$log_sd_n0 <- log(0.3)
-  free_dat <- dat
-  free_dat$N_settings$init <- "free"
-  free_par <- par
-  free_par$log_sd_n0 <- NULL
-  rep <- n0_report(par, dat)
-  eta_log_n0 <- diff(log(rep$N[1, ])) + rep$Z[1, -ncol(rep$Z)]
-  penalty <- -sum(dnorm(eta_log_n0, 0, 0.3, log = TRUE))
-  expect_equal(nll_fun(par, dat) - nll_fun(free_par, free_dat), penalty)
-  expect_equal(n0_report(par, dat)$N, n0_report(free_par, free_dat)$N)
+  par$log_n0[] <- seq(-.4, .7, length.out = length(par$log_n0))
+  free <- dat
+  free$N_settings$init <- "free"
+  expect_equal(nll_fun(par, dat), nll_fun(par, free))
+  expect_equal(n0_report(par, dat)$N, n0_report(par, free)$N)
+  expect_false("log_sd_n0" %in% names(par))
 })
 
-test_that("simulated N0 uses simulated mortality and IID initial-age increments", {
-  dat <- make_test_dat(
-    years = 2000:2003,
-    N_settings = list(process = "iid", init = "random"),
-    F_settings = list(process = "iid", mu_form = ~1),
-    M_settings = list(process = "iid", mu_supplied = ~ I(0.3), first_dev_year = 2000)
-  )
+
+test_that("latent initial abundance is retained under process simulation", {
+  dat <- make_test_dat(years = 2000:2003,
+    N_settings = list(process = "iid", init = "latent"),
+    F_settings = list(process = "iid", mu_form = ~1))
   par <- make_par(dat)
-  par$log_r0 <- log(200)
-  par$log_sd_f <- par$log_sd_m <- par$log_sd_n <- par$log_sd_r <- log(0.1)
-  par$log_sd_n0 <- log(0.4)
+  par$log_n0[] <- log(seq(100, 20, length.out = length(par$log_n0)))
   set.seed(734)
-  draws <- replicate(200, nll_fun(par, dat, simulate = TRUE), simplify = FALSE)
-  residuals <- function(sim) {
-    z <- exp(sim$log_f[1, ]) + c(0.3, rep(exp(sim$log_m[1, ]), length(dat$ages) - 1))
-    diff(c(par$log_r0, sim$log_n0)) + z[-length(z)]
-  }
-  deviations <- unlist(lapply(draws, residuals), use.names = FALSE)
-  expect_lt(abs(mean(deviations)), 0.03)
-  expect_lt(abs(sd(deviations) - 0.4), 0.03)
-  sim <- draws[[1]]
-  expect_equal(names(sim$log_n0), as.character(dat$ages[-1]))
-  expect_equal(dimnames(sim$log_n), dimnames(par$log_n))
+  sim <- nll_fun(par, dat, simulate = TRUE)
+  expect_identical(sim$log_n0, par$log_n0)
+  expect_false(isTRUE(all.equal(sim$log_f, par$log_f)))
   par[intersect(names(sim), names(par))] <- sim[intersect(names(sim), names(par))]
-  rep <- n0_report(par, dat)
-  expect_equal(unname(log(rep$N[1, ])), unname(c(par$log_r0, sim$log_n0)))
-  expect_equal(unname(diff(log(rep$N[1, ])) + rep$Z[1, -ncol(rep$Z)]), unname(residuals(sim)))
-  expect_equal(unname(rep$Z[1, -1]), unname(exp(sim$log_f[1, -1]) + exp(sim$log_m[1, ])))
+  expect_equal(unname(log(n0_report(par, dat)$N[1, -1])), unname(par$log_n0))
 })
+
 
 test_that("N states represent only genuine cohort transitions with a plus group", {
   dat <- make_test_dat(years = 2000:2003, N_settings = list(process = "iid", init = "exp"))
@@ -166,58 +144,32 @@ test_that("N states represent only genuine cohort transitions with a plus group"
   }
 })
 
-test_that("random initialization diagnoses the available age margin", {
-  expect_error(
-    make_test_dat(ages = 2, N_settings = list(process = "off", init = "random")),
-    "at least two modeled ages"
-  )
-  expect_warning(
-    dat <- make_test_dat(
-      ages = 2:10,
-      N_settings = list(process = "off", init = "random")
-    ),
-    "8 initial age-to-age[[:space:]]+deviations.*9 modeled ages"
-  )
-  expect_identical(dat$N_settings$init, "random")
-  expect_no_warning(make_test_dat(ages = 2:11, N_settings = list(process = "off", init = "random")))
-  expect_warning(
-    two_ages <- make_test_dat(
-      ages = 2:3, years = 2000:2003,
-      N_settings = list(process = "off", init = "random")
-    ),
-    "1 initial age-to-age[[:space:]]+deviations.*2 modeled ages"
-  )
-  expect_length(make_par(two_ages)$log_n0, 1L)
-  expect_true(is.finite(nll_fun(make_par(two_ages), two_ages)))
-  expect_error(make_test_dat(N_settings = list(process = "iid", init = "invalid")), "arg")
-  for (init in c("exp", "free")) {
-    dat <- make_test_dat(
-      ages = 2:3, years = 2000:2003,
-      N_settings = list(process = "off", init = init)
-    )
+test_that("initialization validates options and supports two ages", {
+  expect_error(make_test_dat(ages = 2, N_settings = list(init = "latent")), "at least two modeled ages")
+  expect_error(make_test_dat(N_settings = list(init = "random")), "arg")
+  for (init in c("exp", "free", "latent", "mono", "capped")) {
+    dat <- make_test_dat(ages = 2:3, years = 2000:2003, N_settings = list(process = "off", init = init))
     par <- make_par(dat)
-    expect_length(par$log_n0, if (init == "exp") 0L else 1L)
-    rep <- n0_report(par, dat)
-    expect_equal(
-      unname(log(rep$N[1, 2])),
-      if (init == "exp") par$log_r0 - unname(rep$Z[1, 1]) else unname(par$log_n0)
-    )
+    expect_true(is.finite(nll_fun(par, dat)))
+    expect_equal(unname(n0_report(par, dat)$N[1, 1]), exp(par$log_r0))
+    expect_false("log_sd_n0" %in% names(par))
   }
 })
 
+
 test_that("fits, summaries, updates and conditional simulations honor N0 roles", {
-  for (init in c("free", "random")) {
+  for (init in c("free", "latent")) {
     fit <- update(default_fit, N_settings = list(process = "iid", init = init), silent = TRUE)
     par <- as.list(fit$sdrep, "Estimate")
     expect_true(is.finite(fit$opt$objective))
-    expect_identical("log_n0" %in% fit$obj$env$.random, init == "random")
+    expect_identical("log_n0" %in% fit$obj$env$.random, init == "latent")
     expect_false(any(c("log_r0", "log_sd_n0") %in% fit$obj$env$.random))
     expect_equal(fit$random_par$log_r$year, fit$dat$years[-1])
     expect_equal(fit$pop$recruitment$year, fit$dat$years)
-    tab <- if (init == "random") fit$random_par$log_n0 else subset(fit$fixed_par, par == "n0")
+    tab <- if (init == "latent") fit$random_par$log_n0 else subset(fit$fixed_par, par == "n0")
     expect_equal(tab$age, fit$dat$ages[-1])
     expect_equal(unname(tab$est), unname(exp(par$log_n0)))
-    for (nm in c("r0", if (init == "random") "sd_n0")) {
+    for (nm in "r0") {
       expect_equal(fit$fixed_par$est[fit$fixed_par$par == nm], exp(par[[paste0("log_", nm)]]))
     }
     # A controlled random draw isolates the redraw switch without refitting.
@@ -227,11 +179,7 @@ test_that("fits, summaries, updates and conditional simulations honor N0 roles",
       set.seed(18)
       sim <- tinyAM:::.sim_obs(fit, function(fit) par, redraw_random = redraw)
       n0 <- subset(sim$N, year == min(fit$dat$years))$est
-      if (!redraw || init == "free") {
-        expect_equal(log(n0[-1]), unname(par$log_n0))
-      } else {
-        expect_false(isTRUE(all.equal(log(n0[-1]), unname(par$log_n0))))
-      }
+      expect_equal(log(n0[-1]), unname(par$log_n0))
     }
     dat <- make_test_dat(
       years = 1990:2020, ages = 2:20,

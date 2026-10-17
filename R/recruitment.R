@@ -302,17 +302,19 @@ ricker <- function(ssb, lag = NULL) {
   log_recruitment[dat$rec$eligible] <- par$log_r
   log_N[, 1L] <- log_recruitment
   if (dat$N_settings$process != "off") log_N[-1L, -1L] <- par$log_n
-  initial_error <- numeric(A - 1L)
-  if (simulate && dat$N_settings$init == "random") initial_error[] <- stats::rnorm(A - 1L, 0, exp(par$log_sd_n0))
+  initial <- switch(dat$N_settings$init,
+    free = par$log_n0, latent = par$log_n0,
+    mono = par$log_r0 - cumsum(par$d_n0),
+    capped = par$log_r0 - par$d_n0
+  )
   for (a in older) {
     pred_log_N[1L, a] <- log_N[1L, a - 1L] - Z[1L, a - 1L]
-    log_N[1L, a] <- if (dat$N_settings$init == "exp" || (simulate && dat$N_settings$init == "random")) {
-      pred_log_N[1L, a] + initial_error[a - 1L]
+    log_N[1L, a] <- if (dat$N_settings$init == "exp") {
+      pred_log_N[1L, a]
     } else {
-      par$log_n0[a - 1L]
+      initial[a - 1L]
     }
   }
-  eta_log_n0 <- log_N[1L, -1L] - pred_log_N[1L, -1L]
   eta_log_N <- matrix(0, T - 1L, A - 1L)
   if (simulate && dat$N_settings$process != "off" && !dat$process_sd$N$default && dat$N_settings$process != "rw") {
     eta_log_N <- .rprocess_scaled(eta_log_N, .process_sd(par, dat, "N"), dat$N_settings$process,
@@ -402,7 +404,7 @@ ricker <- function(ssb, lag = NULL) {
     log_N = log_N, pred_log_N = pred_log_N, log_recruitment = log_recruitment,
     log_mu_R = log_mu_R, log_pred_R = log_pred_R,
     eta_R = log_recruitment - log_pred_R, eta_R_state = u,
-    eta_log_n0 = eta_log_n0, W = W, P = P, ssb_mat = ssb_mat,
+    W = W, P = P, ssb_mat = ssb_mat,
     N_plus = if (!is.null(dat$plus_ages)) exp(log_N_plus) else NULL
   )
 }

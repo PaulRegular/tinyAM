@@ -72,9 +72,11 @@
 #' process. Write \eqn{b_a=\log N_{1,a-1}-Z_{1,a-1}}, for \eqn{a=2,\ldots,A}.
 #' With `init = "exp"`, \eqn{\log N_{1,a}=b_a}. With `"free"`, these log
 #' abundances (`log_n0`) are separate unpenalized fixed parameters. With
-#' `"random"`, \eqn{\log N_{1,a}=b_a+\eta^0_a}, where the
-#' \eqn{\eta^0_a} are independent \eqn{N(0,\sigma_0^2)} residuals and
-#' \eqn{\sigma_0} is estimated separately from recruitment and N process SDs.
+#' `"latent"`, the same older-age states are integrated without an initial
+#' density, while r0 remains fixed. For `"mono"`,
+#' \eqn{\log N_{1,a}=\log r_0-\sum_{j=2}^a d_j}; for `"capped"`,
+#' \eqn{\log N_{1,a}=\log r_0-d_a}, with \eqn{d_j\ge0}.
+#' These fixed constraints include the terminal plus group and allow ties.
 #' The baseline always uses the realized preceding initial-age state.
 #' No equilibrium plus-group correction is applied in this first year.
 #' This is an initial-state assumption, not a reconstruction of past cohorts.
@@ -295,7 +297,7 @@
 #' their residual transformations have unit triangular Jacobians.
 #'
 #' [fit_tam()] integrates `log_r`, active `log_n`, `log_f`, active `log_m`,
-#' and random `log_n0` using RTMB's Laplace approximation.
+#' and `log_n0` for `init = "latent"` using RTMB's Laplace approximation.
 #' All remaining estimated parameters, including free `log_n0`, are fixed
 #' effects optimized by `nlminb`; `dq` has a zero lower bound. Uncertainty is a
 #' local Gaussian approximation from curvature, with delta-method uncertainty

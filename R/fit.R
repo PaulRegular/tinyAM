@@ -95,7 +95,7 @@
 #'
 #' - Always includes `log_f` and eligible `log_r` states. Early recruitment
 #'   anchors are fixed; see [recruitment_formulas].
-#' - Includes `log_n0` only if `N_settings$init == "random"`.
+#' - Includes `log_n0` only if `N_settings$init == "latent"`.
 #' - Includes `log_n` if `N_settings$process != "off"`.
 #' - Includes `log_m` if `M_settings$process != "off"`.
 #' - Includes the unique `eta_q_*` states of Gaussian catchability formula terms.
@@ -244,14 +244,14 @@ fit_tam <- function(
       par <- .initialize_rec_curve(par, dat)
     }
   }
-  for (name in c("dq", "dmu_f")) {
+  for (name in c("dq", "dmu_f", "d_n0")) {
     if (!is.null(par[[name]]) && any(!is.finite(par[[name]]) | par[[name]] < 0)) {
       cli::cli_abort("Starting {.arg {name}} increments must be finite and non-negative.")
     }
   }
 
   ran <- c("log_f", "log_r", .formula_random_parameters(dat))
-  if (dat$N_settings$init == "random") {
+  if (dat$N_settings$init == "latent") {
     ran <- c(ran, "log_n0")
   }
   if (dat$N_settings$process != "off") {
@@ -323,7 +323,7 @@ fit_tam <- function(
   )
 
   lower <- rep(-Inf, length(obj$par))
-  lower[names(obj$par) %in% c("dq", "dmu_f")] <- 0
+  lower[names(obj$par) %in% c("dq", "dmu_f", "d_n0")] <- 0
   opt <- tryCatch(stats::nlminb(
     obj$par, obj$fn, obj$gr,
     lower = lower,

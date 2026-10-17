@@ -328,17 +328,20 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #'   plus-group correction.
 #' - `"exp"` is the default: a parsimonious, comparatively stable nuisance-state
 #'   initialization. More flexible choices are available when first-year data
-#'   support them. `"free"` estimates unpenalized fixed `log_n0` states;
-#'   `"random"` estimates random `log_n0` states whose survivorship residuals
-#'   `eta_log_n0` are IID normal with separately estimated `sd_n0`.
-#' - `sd_r` describes temporal recruitment variation; `sd_n0` describes
-#'   variation across historical cohorts on the initial age margin (potentially
-#'   including mortality-history variation); `sd_n` describes subsequent
-#'   cohort-process deviations. These SDs are estimated separately.
-#' - Random initialization requires at least two ages. Fewer than ten ages
-#'   triggers a heuristic weak-identification warning for `sd_n0`, not a
-#'   prohibition or automatic fallback. The threshold may be revised after
-#'   simulation testing; inspect convergence and sensitivity carefully.
+#'   support them. `"free"` estimates unpenalized fixed `log_n0` states.
+#'   `"latent"` integrates those states without an initial density, including
+#'   when the subsequent N process is off. It resembles SAM's unpenalized
+#'   older-age boundary but retains tinyAM's fixed first-year recruitment r0.
+#' - `"mono"` estimates non-increasing initial abundance from r0, including
+#'   the plus group: log N0[a] = log r0 - cumsum(d_n0)[a-1]. `"capped"`
+#'   only requires each older abundance to be no greater than r0:
+#'   log N0[a] = log r0 - d_n0[a-1]. Both use nonnegative log-decrements,
+#'   allow exact ties, and require no N process or separate initial SD.
+#'   The pooled plus group can naturally exceed a single age; constraining it
+#'   is a deliberate biological assumption. Boundary Wald intervals need care.
+#' - All choices retain fixed r0. Simulations condition on initial states;
+#'   joint uncertainty draws can vary fitted latent initial states. No
+#'   mortality-history distribution is imposed on initial abundances.
 #' - `M_settings$age_breaks` (vector of break points on ages)
 #'   defines `M_settings$age_blocks` via [cut_ages()], used
 #'   to share absolute latent \eqn{M} states across ages. All mean components
@@ -376,8 +379,9 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #' - `init`: `"exp"` (default), `"free"`, or `"random"`, independently of
 #'   `process`. All use fixed first-year recruitment `log_r0` as the starting
 #'   anchor. `"exp"` uses deterministic survivorship; `"free"` estimates fixed
-#'   older-age `log_n0` states; `"random"` estimates random `log_n0` states with
-#'   IID survivorship residuals and separate SD `sd_n0`. See **Details**.
+#'   older-age `log_n0` states; `"latent"` integrates them without an initial
+#'   density. `"mono"` constrains abundance to decline from r0; `"capped"`
+#'   bounds each older age by r0 without imposing age ordering. See **Details**.
 #' - `sd_form`: ordinary formula for log SD of older-age survival residuals,
 #'   default `~ 1`. Use `~ factor(age)` or a supplied age-sharing column in
 #'   `data$pop_covariates`. Its design must be constant across years. Recruitment and
@@ -660,18 +664,9 @@ prepare_tam <- function(
     dat$obs$pop_covariates
   }
 
-  dat$N_settings$init <- match.arg(dat$N_settings$init, c("exp", "free", "random"))
+  dat$N_settings$init <- match.arg(dat$N_settings$init, c("exp", "free", "latent", "mono", "capped"))
   if (length(dat$ages) < 2L) {
     cli::cli_abort("N0 initialization requires at least two modeled ages.")
-  }
-  if (dat$N_settings$init == "random") {
-    n_init_dev <- length(dat$ages) - 1L
-    if (n_init_dev < 1L) {
-      cli::cli_abort("Random N0 initialization requires at least one initial age-to-age deviation (two modeled ages).")
-    }
-    if (length(dat$ages) < 10L) {
-      cli::cli_warn('"random" N0 initialization estimates sd_n0 from only {n_init_dev} initial age-to-age deviations ({length(dat$ages)} modeled ages). sd_n0 may be weakly identified. Consider N_settings$init = "exp", or inspect convergence and sensitivity carefully.')
-    }
   }
   if (!is.null(M_settings$age_breaks)) {
     m_age_range <- range(dat$M_settings$age_breaks)

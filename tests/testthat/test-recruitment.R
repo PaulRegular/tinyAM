@@ -317,7 +317,7 @@ test_that("recruitment age and N0 choices preserve boundary semantics", {
   p <- make_par(d)
   report <- RTMB::MakeADFun(function(p) nll_fun(p, d), p, silent = TRUE)$report()
   expect_equal(unname(report$rec_log_parent), unname(log(report$ssb[-1L])))
-  for (init in c("exp", "free", "random")) {
+  for (init in c("exp", "free", "latent", "mono", "capped")) {
     d <- make_test_dat(
       years = 1983:1995, ages = 2:14,
       N_settings = list(process = "iid", init = init), rec_settings = list(process = "iid", mu_form = ~ ricker(ssb, lag = 4))

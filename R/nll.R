@@ -183,14 +183,12 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   log_pred_R <- population$log_pred_R
   eta_R <- population$eta_R
   eta_R_state <- population$eta_R_state
-  eta_log_n0 <- population$eta_log_n0
   W <- population$W
   P <- population$P
   N <- exp(log_N)
   recruitment <- exp(log_recruitment)
   if (simulate) {
     log_r[] <- log_recruitment[dat$rec$eligible]
-    if (N_settings$init == "random") log_n0[] <- log_N[1, -1]
     if (N_settings$process != "off") log_n[] <- log_N[-1, -1, drop = FALSE]
   }
   if (!is.null(dat$plus_ages)) {
@@ -200,13 +198,10 @@ nll_fun <- function(par, dat, simulate = FALSE) {
     REPORT(P)
   }
 
-  ## Initial age process ----
+  ## Likelihood ----
 
   jnll <- 0
 
-  if (N_settings$init == "random") {
-    jnll <- jnll - sum(RTMB::dnorm(eta_log_n0, 0, exp(log_sd_n0), log = TRUE))
-  }
 
   ## Recruitment process ----
 
@@ -456,6 +451,11 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   ADREPORT(log_ssb)
   ADREPORT(log_F_bar)
   ADREPORT(log_M_bar)
+  if (N_settings$init %in% c("mono", "capped")) {
+    initial_log_N <- log_N[1, -1]
+    REPORT(initial_log_N)
+    ADREPORT(initial_log_N)
+  }
 
   if (simulate) {
     sims <- list(
@@ -464,7 +464,7 @@ nll_fun <- function(par, dat, simulate = FALSE) {
       log_obs = log_obs
     )
     if (!is.null(par$log_r_init)) sims$log_r_init <- par$log_r_init
-    if (N_settings$init != "exp") {
+    if (N_settings$init %in% c("free", "latent")) {
       sims$log_n0 <- log_n0
     }
     if (N_settings$process != "off") {

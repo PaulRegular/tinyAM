@@ -80,7 +80,7 @@
   dat <- fit$dat
   par <- par_fun(fit)
   # Gaussian uncertainty draws can cross monotonic-increment lower bounds.
-  for (name in c("dq", "dmu_f")) if (!is.null(par[[name]])) par[[name]][] <- pmax(par[[name]], 0)
+  for (name in c("dq", "dmu_f", "d_n0")) if (!is.null(par[[name]])) par[[name]][] <- pmax(par[[name]], 0)
 
   if (redraw_random) {
     sims <- nll_fun(par, dat, simulate = TRUE)
@@ -151,9 +151,9 @@
 #'     Recruitment follows `rec_settings`. Stock-recruit draws use
 #'     parent SSB from the same simulated population; fixed early recruitment
 #'     boundary states are retained. See [recruitment_formulas].
-#'     This includes `log_n0` only for `N_settings$init = "random"`, generated
-#'     by survivorship and IID residuals from the supplied `log_r0` anchor.
-#'     Free initial-age states are retained.
+#'     Initial-age states are retained: latent initial states have no proper
+#'     distribution to redraw. Joint parameter draws can vary them through
+#'     their fitted uncertainty. Fixed r0 is retained in process redraws.
 #'     Temporal RW fields retain their supplied first process row and draw
 #'     subsequent deviations conditionally; see [nll_fun()] for the N cohort
 #'     construction. No distribution is imposed on the RW starting row.

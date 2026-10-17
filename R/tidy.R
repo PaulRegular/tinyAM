@@ -215,6 +215,7 @@ tidy_rep <- function(fit) {
   )
   keep[grepl("^eta_(q|mu_[FM]|sd_catch|sd_index)_increments$", names(keep))] <- FALSE
   keep[startsWith(names(keep), "rec_")] <- FALSE
+  keep[names(keep) == "initial_log_N"] <- FALSE
   rep_items <- rep[keep]
 
   trends <- lapply(rep_items, function(x) {
@@ -331,6 +332,7 @@ tidy_sdrep <- function(fit, interval = 0.95) {
   ses <- as.list(fit[["sdrep"]], "Std. Error", report = TRUE)
   vals <- vals[!grepl("^(q_link_prediction|eta_(q|mu_[FM]|sd_catch|sd_index)_increments)$", names(vals))]
   vals <- vals[!startsWith(names(vals), "rec_")]
+  vals$initial_log_N <- NULL
   ses <- ses[names(vals)]
   df <- lapply(seq_along(vals), function(i) {
     if (is.matrix(vals[[i]])) {
@@ -463,8 +465,9 @@ tidy_pop <- function(fit, interval = 0.95) {
 #'   Full recruitment is in [tidy_pop()]; parent pairs and process diagnostics
 #'   are in [tidy_recruitment()].
 #' - For `log_n0`, an `age` column identifies the initial older-age state.
-#'   `log_r0` and `log_n0` are exponentiated to abundance levels; `log_sd_n0`
-#'   is exponentiated to the initial-age residual SD.
+#'   `log_r0` and `log_n0` are exponentiated to abundance levels. `d_n0`
+#'   remains a log-decrement with an SE on that same scale. For constrained
+#'   initialization, derived `n0` estimates use joint RTMB uncertainty.
 #' - For matrices (e.g., `log_f`, `log_n`), `year` and/or `age` columns are added
 #'   via [tidy_mat()].
 #'
@@ -517,7 +520,7 @@ tidy_par <- function(fit, interval = 0.95) {
           yr <- as.integer(names(e))
           df <- data.frame(year = yr, est = e, se = s, is_proj = yr %in% fit$dat$years[fit$dat$is_proj])
           if (nm == "log_r_init") df$coef <- as.character(yr)
-        } else if (nm == "log_n0") {
+        } else if (nm %in% c("log_n0", "d_n0")) {
           df <- data.frame(coef = names(e), age = as.integer(names(e)), est = e, se = s)
         } else {
           df <- data.frame(coef = names(e), est = e, se = s)
@@ -568,6 +571,15 @@ tidy_par <- function(fit, interval = 0.95) {
       par = character(), est = numeric(), lwr = numeric(), upr = numeric(),
       se = numeric(), se_scale = character(), check.names = FALSE
     )
+  }
+  if (fit$dat$N_settings$init %in% c("mono", "capped")) {
+    e <- fit$rep$initial_log_N
+    s <- if (is.null(fit[["sdrep"]])) rep(NA_real_, length(e)) else
+      as.list(fit[["sdrep"]], "Std. Error", report = TRUE)$initial_log_N
+    initial <- data.frame(par = "n0", coef = as.character(fit$dat$ages[-1]),
+      age = fit$dat$ages[-1], est = exp(e), lwr = exp(e - z * s),
+      upr = exp(e + z * s), se = s, se_scale = "log")
+    fixed <- stack_list(list(fixed, initial), label = NULL)
   }
   rownames(fixed) <- NULL
   values <- c("est", "lwr", "upr", "se", "se_scale")
