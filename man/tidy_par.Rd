@@ -83,8 +83,9 @@ years 2:Y). Fixed early \code{log_r_init} states also carry year labels.
 Full recruitment is in \code{\link[=tidy_pop]{tidy_pop()}}; parent pairs and process diagnostics
 are in \code{\link[=tidy_recruitment]{tidy_recruitment()}}.
 \item For \code{log_n0}, an \code{age} column identifies the initial older-age state.
-\code{log_r0} and \code{log_n0} are exponentiated to abundance levels; \code{log_sd_n0}
-is exponentiated to the initial-age residual SD.
+\code{log_r0} and \code{log_n0} are exponentiated to abundance levels. \code{d_n0}
+remains a log-decrement with an SE on that same scale. For constrained
+initialization, derived \code{n0} estimates use joint RTMB uncertainty.
 \item For matrices (e.g., \code{log_f}, \code{log_n}), \code{year} and/or \code{age} columns are added
 via \code{\link[=tidy_mat]{tidy_mat()}}.
 }

@@ -53,7 +53,7 @@ Row {.tabset}
 ### Average F
 
 ```{r}
-plot_trend(pop$F_bar, color = ~model, legendgroup = ~model, colors = cols, ylab = "Average F")
+plot_trend(pop$F_bar, color = ~model, legendgroup = ~model, colors = cols, ylab = tinyAM:::.unit_label(pop$F_bar, "Average F"))
 ```
 
 ### F-at-age
@@ -61,7 +61,7 @@ plot_trend(pop$F_bar, color = ~model, legendgroup = ~model, colors = cols, ylab 
 ```{r}
 F <- mortality_plot_data(pop$F, pop$mu_F, fits, "F")
 plot_age_year(F, plot = plot_mortality,
-  color = ~model, legendgroup = ~model, colors = cols, frame = ~age, ylab = "F")
+  color = ~model, legendgroup = ~model, colors = cols, frame = ~age, ylab = tinyAM:::.unit_label(F, "F"))
 ```
 
 ### Selectivity
@@ -74,7 +74,7 @@ plot_age_year(pop$S, x = ~age, xlab = "Age", ylab = "Selectivity", frame = ~year
 ### Average M
 
 ```{r}
-plot_trend(pop$M_bar, color = ~model, legendgroup = ~model, colors = cols, ylab = "Average M")
+plot_trend(pop$M_bar, color = ~model, legendgroup = ~model, colors = cols, ylab = tinyAM:::.unit_label(pop$M_bar, "Average M"))
 ```
 
 ### M-at-age
@@ -82,7 +82,7 @@ plot_trend(pop$M_bar, color = ~model, legendgroup = ~model, colors = cols, ylab 
 ```{r}
 M <- mortality_plot_data(pop$M, pop$mu_M, fits, "M")
 plot_age_year(M, plot = plot_mortality,
-  color = ~model, legendgroup = ~model, colors = cols, frame = ~age, ylab = "M")
+  color = ~model, legendgroup = ~model, colors = cols, frame = ~age, ylab = tinyAM:::.unit_label(M, "M"))
 ```
 
 ### Mortality patterns

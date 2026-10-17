@@ -41,6 +41,9 @@
 
 .population_unit <- function(dat, metric) {
   units <- .data_units(dat$obs)
+  if (metric == "W") return(units$weight)
+  if (metric == "P") return("proportion")
+  if (metric == "S") return("dimensionless")
   if (metric %in% c("N", "N_plus", "abundance", "recruitment", "total_catch", "total_catch_pred", "n0")) return(units$numbers)
   if (metric %in% c("biomass", "biomass_mat", "ssb", "ssb_mat", "total_yield", "total_yield_pred")) return(units$mass)
   if (metric %in% c("F", "M", "Z", "mu_F", "mu_M", "F_bar", "M_bar", "F_full")) return("per year")
@@ -60,7 +63,23 @@
     u
   }, character(1))
   if (length(unique(signatures)) > 1L) cli::cli_abort("Plot data contain incompatible units: {paste(units, collapse = ', ')}. Convert them explicitly before overlaying models.")
-  units <- head(units, 1L)
+  units <- utils::head(units, 1L)
   if (length(units)) paste0(label, if (nzchar(label)) " (" else "", units,
     if (nzchar(label)) ")" else "") else label
+}
+
+.check_unit_conversion <- function(from, to, scale) {
+  kinds <- c("numbers", "mass", "rate")
+  a <- vapply(kinds, function(kind) .unit_scale(from, kind), numeric(1))
+  b <- vapply(kinds, function(kind) .unit_scale(to, kind), numeric(1))
+  common <- is.finite(a) & is.finite(b)
+  if (any(common)) {
+    expected <- unname((a / b)[common])
+    if (!isTRUE(all.equal(scale, expected, tolerance = 1e-10))) {
+      cli::cli_abort("comparison_scales uses {scale} for {.val {from}} to {.val {to}}; these units require {expected}. Correct the scale explicitly.")
+    }
+  } else if (any(is.finite(a)) && any(is.finite(b))) {
+    cli::cli_abort("Cannot compare incompatible units {.val {from}} and {.val {to}}.")
+  }
+  invisible(TRUE)
 }

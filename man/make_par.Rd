@@ -50,7 +50,8 @@ it initializes a 2-vector \code{logit_phi_f}; if \code{dat$F_settings$mu_form} i
 \code{ncol(dat$F_modmat)}, and so on.
 
 Most numeric parameters start at \code{0}. Monotonic increments \code{dq} and \code{dmu_f}
-start at \code{0.05}; logistic curves start from the coordinate range. \code{log_m}
+start at \code{0.05}; \code{d_n0} starts at 0.2 per age step for \code{mono}, or cumulative
+0.2 steps from r0 for \code{capped}. Logistic curves start from the coordinate range. \code{log_m}
 and F curve states start at their log means so initial process residuals
 are zero. Stock-recruit parameters use the anchor and initial SSB;
 their recruitment states start on the expected path with zero deviations.
@@ -77,10 +78,11 @@ the curve using their population states; see \link{recruitment_formulas}.
 \item \strong{Initial older-age abundance (independent of the N process)}
 \itemize{
 \item \code{log_n0}: realized log abundance at initial ages \code{ages[-1]}, named by age;
-absent for \code{init = "exp"}, fixed for \code{"free"}, random for \code{"random"}
-\item \code{log_sd_n0}: separate IID initial-age residual SD, only for \code{init = "random"}
-\item \code{eta_log_n0} is calculated internally from adjacent initial log states
-and first-year mortality; \code{log_n0} itself is not a deviation.
+fixed for \code{"free"}, integrated without an initial density for \code{"latent"}.
+\item \code{d_n0}: nonnegative log-decrements, named by destination age, for
+\code{"mono"} (cumulative) and \code{"capped"} (relative to r0). Derived initial
+abundances and their uncertainty are reported separately. Exact ties
+occur at zero; symmetric Wald intervals can cross the boundary.
 \item The default \code{"exp"} initializer is parsimonious survivorship from
 \code{log_r0}, using first-year Z without an equilibrium plus group.
 See \code{\link[=prepare_tam]{prepare_tam()}} for the choices and weak-identification warning.

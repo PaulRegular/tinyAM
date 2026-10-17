@@ -96,6 +96,8 @@ obs <- database_to_tam_obs(
   weight_survey = "RV", sampling_times = sampling_times
 )
 expected_age_numbers <- 1000 * c(0.25, 0.75) / sum(c(0.25, 0.75) * c(1, 2))
+expect_equal(unique(obs$index$unit[obs$index$survey == "RV"]), "fish")
+expect_equal(unique(obs$index$unit[obs$index$survey == "Longline"]), "fish per tow")
 
 # Equivalent biomass and weight units must give identical numbers of fish.
 for (unit in c("kg", "t", "thousand t", "million t", "million tonnes")) {

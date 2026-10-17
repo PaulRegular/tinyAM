@@ -95,7 +95,7 @@ test_that("hidden age composition conserves N, biomass and mature biomass", {
 })
 
 test_that("hidden biology uses realized initial and simulated states through projections", {
-  for (init in c("exp", "free", "latent")) {
+  for (init in c("exp", "free", "latent", "mono", "capped")) {
     dat <- plus_biology_dat(init = init, proj = list(n_proj = 2, n_mean = 2, F_mult = 1))
     par <- plus_biology_par(dat)
     set.seed(204)

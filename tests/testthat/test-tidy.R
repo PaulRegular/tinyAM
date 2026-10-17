@@ -606,6 +606,8 @@ test_that("tidy_tam accepts a tam_ref without an optimizer", {
   )
   class(reference) <- c("tam_ref", "list")
 
+    reference$pop$ssb$unit <- "thousand tonnes"
+
   tabs <- tidy_tam(model_list = list(Assessment = reference, tinyAM = fit_2024))
 
   expect_equal(
@@ -616,4 +618,6 @@ test_that("tidy_tam accepts a tam_ref without an optimizer", {
     tabs$pop$ssb$est[tabs$pop$ssb$model == "tinyAM"],
     tidy_pop(fit_2024)$ssb$est * 1e-3
   )
+    expect_equal(tabs$pop$ssb$se[tabs$pop$ssb$model == "tinyAM"],
+      tidy_pop(fit_2024)$ssb$se)
 })

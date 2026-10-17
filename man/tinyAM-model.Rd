@@ -43,6 +43,11 @@ age is a plus group. At least two years and two ages are required.
 \eqn{M_{t,a}} are annual instantaneous mortality rates, and
 \eqn{Z_{t,a}=F_{t,a}+M_{t,a}}. Supplied weight \eqn{W_{t,a}} and mature
 proportion \eqn{P_{t,a}} are treated as known without uncertainty.
+Optional table \code{unit} columns label the numerical scale. Catch units also
+describe N and recruitment; weight is mass per fish. Their product sets
+biomass and SSB units (thousand fish times kg/fish gives tonnes). F, M and Z
+are per year. Survey units can differ, and q need not be dimensionless.
+The model never converts inputs automatically; see \code{\link[=as_tam_data]{as_tam_data()}}.
 
 \code{log_r}, \code{log_n0}, \code{log_n}, \code{log_f}, and \code{log_m} are absolute latent log
 states. Full surfaces \code{log_N}, \code{log_F}, and \code{log_M} are constructed from
@@ -76,9 +81,11 @@ Initial older-age abundance is chosen independently of the subsequent N
 process. Write \eqn{b_a=\log N_{1,a-1}-Z_{1,a-1}}, for \eqn{a=2,\ldots,A}.
 With \code{init = "exp"}, \eqn{\log N_{1,a}=b_a}. With \code{"free"}, these log
 abundances (\code{log_n0}) are separate unpenalized fixed parameters. With
-\code{"random"}, \eqn{\log N_{1,a}=b_a+\eta^0_a}, where the
-\eqn{\eta^0_a} are independent \eqn{N(0,\sigma_0^2)} residuals and
-\eqn{\sigma_0} is estimated separately from recruitment and N process SDs.
+\code{"latent"}, the same older-age states are integrated without an initial
+density, while r0 remains fixed. For \code{"mono"},
+\eqn{\log N_{1,a}=\log r_0-\sum_{j=2}^a d_j}; for \code{"capped"},
+\eqn{\log N_{1,a}=\log r_0-d_a}, with \eqn{d_j\ge0}.
+These fixed constraints include the terminal plus group and allow ties.
 The baseline always uses the realized preceding initial-age state.
 No equilibrium plus-group correction is applied in this first year.
 This is an initial-state assumption, not a reconstruction of past cohorts.
@@ -306,7 +313,7 @@ for the same observed data. Latent parameters are defined in log coordinates;
 their residual transformations have unit triangular Jacobians.
 
 \code{\link[=fit_tam]{fit_tam()}} integrates \code{log_r}, active \code{log_n}, \code{log_f}, active \code{log_m},
-and random \code{log_n0} using RTMB's Laplace approximation.
+and \code{log_n0} for \code{init = "latent"} using RTMB's Laplace approximation.
 All remaining estimated parameters, including free \code{log_n0}, are fixed
 effects optimized by \code{nlminb}; \code{dq} has a zero lower bound. Uncertainty is a
 local Gaussian approximation from curvature, with delta-method uncertainty
@@ -384,10 +391,12 @@ have finite log-scale intervals. See \code{\link[=tidy_par]{tidy_par()}} and \co
 data <- cod_obs
 data$maturity$spawn_time <- 0.25
 data$pop_covariates$age_group <- factor(
-  ifelse(data$pop_covariates$age < 6, "young", "older"))
+  ifelse(data$pop_covariates$age < 6, "young", "older")
+)
 dat <- prepare_tam(data,
-  F_settings = list(process = "cor_rw", sd_form = ~ age_group),
-  N_settings = list(process = "iid", sd_form = ~ 1))
+  F_settings = list(process = "cor_rw", sd_form = ~age_group),
+  N_settings = list(process = "iid", sd_form = ~1)
+)
 make_par(dat)$sd_beta_f
 
 }

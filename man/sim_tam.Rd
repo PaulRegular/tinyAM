@@ -73,9 +73,9 @@ across the entire modeled history, including historical years.
 Recruitment follows \code{rec_settings}. Stock-recruit draws use
 parent SSB from the same simulated population; fixed early recruitment
 boundary states are retained. See \link{recruitment_formulas}.
-This includes \code{log_n0} only for \code{N_settings$init = "random"}, generated
-by survivorship and IID residuals from the supplied \code{log_r0} anchor.
-Free initial-age states are retained.
+Initial-age states are retained: latent initial states have no proper
+distribution to redraw. Joint parameter draws can vary them through
+their fitted uncertainty. Fixed r0 is retained in process redraws.
 Temporal RW fields retain their supplied first process row and draw
 subsequent deviations conditionally; see \code{\link[=nll_fun]{nll_fun()}} for the N cohort
 construction. No distribution is imposed on the RW starting row.

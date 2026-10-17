@@ -35,7 +35,8 @@ Other frame/axis combinations produce a single ordinary plot.}
 \value{
 A browsable HTML container holding two Plotly widgets for age-year
 views. Other frame/axis combinations return the supplied plotting function's
-Plotly object. Modify individual plots through \code{plot} before assembly.
+Plotly object, as do single-age tables. Modify individual plots through
+\code{plot} before assembly.
 }
 \description{
 Display an age-year table with Annual trends and Age profiles buttons, using
@@ -47,6 +48,8 @@ The two views use separate widgets, without refitting or changing the input
 table. Projection boundaries appear only on year axes; projection years are
 identified in the age-profile selector and default hover text. Multiple
 displays can be embedded in the same HTML document independently.
+A single-age table instead returns an annual Plotly trend labeled with its
+age, without animation or view buttons.
 Use \code{\link[=plot_trend]{plot_trend()}} or \code{\link[=plot_obs_pred]{plot_obs_pred()}} directly for a single view; their
 returned Plotly objects remain available for adding layers or changing layout.
 }
@@ -54,7 +57,7 @@ returned Plotly objects remain available for adding layers or changing layout.
 d <- expand.grid(year = 2000:2004, age = 1:3)
 d$est <- exp(0.1 * (d$year - 2000) + 0.2 * d$age)
 plot_age_year(d, ylab = "Abundance")
-plot_age_year(d, x = ~ age, xlab = "Age", frame = ~ year)
+plot_age_year(d, x = ~age, xlab = "Age", frame = ~year)
 d$pred <- d$est
 d$obs <- d$est * 1.1
 plot_age_year(d, plot = plot_obs_pred, ylab = "Catch")

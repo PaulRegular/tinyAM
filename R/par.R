@@ -29,7 +29,8 @@
 #' `ncol(dat$F_modmat)`, and so on.
 #'
 #' Most numeric parameters start at `0`. Monotonic increments `dq` and `dmu_f`
-#' start at `0.05`; logistic curves start from the coordinate range. `log_m`
+#' start at `0.05`; `d_n0` starts at 0.2 per age step for `mono`, or cumulative
+#' 0.2 steps from r0 for `capped`. Logistic curves start from the coordinate range. `log_m`
 #' and F curve states start at their log means so initial process residuals
 #' are zero. Stock-recruit parameters use the anchor and initial SSB;
 #' their recruitment states start on the expected path with zero deviations.

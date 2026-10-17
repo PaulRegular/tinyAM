@@ -557,6 +557,9 @@ tidy_par <- function(fit, interval = 0.95) {
     } else {
       df <- trans_est(df, transform = NULL, scale = 1)
     }
+    df$unit <- if (nm %in% c("log_r0", "log_r_init", "log_r", "log_n0", "log_n")) {
+      .population_unit(fit$dat, "N")
+    } else if (nm == "d_n0") "log abundance difference" else NA_character_
     values <- c("est", "lwr", "upr", "se", "se_scale")
     df[, c(
       setdiff(names(df), c(values, "is_proj")), values,
@@ -572,13 +575,14 @@ tidy_par <- function(fit, interval = 0.95) {
       se = numeric(), se_scale = character(), check.names = FALSE
     )
   }
-  if (fit$dat$N_settings$init %in% c("mono", "capped")) {
+  if (isTRUE(fit$dat$N_settings$init %in% c("mono", "capped"))) {
     e <- fit$rep$initial_log_N
     s <- if (is.null(fit[["sdrep"]])) rep(NA_real_, length(e)) else
       as.list(fit[["sdrep"]], "Std. Error", report = TRUE)$initial_log_N
     initial <- data.frame(par = "n0", coef = as.character(fit$dat$ages[-1]),
       age = fit$dat$ages[-1], est = exp(e), lwr = exp(e - z * s),
       upr = exp(e + z * s), se = s, se_scale = "log")
+    initial$unit <- .population_unit(fit$dat, "N")
     fixed <- stack_list(list(fixed, initial), label = NULL)
   }
   rownames(fixed) <- NULL
@@ -804,8 +808,9 @@ stack_nested <- function(x, label = "model",
 #' - **obs_pred** — a named list of stacked data frames (e.g., `catch`, `index`);
 #' - **pop** — a named list of stacked data frames (e.g., `ssb`, `N`, `M`, `mu_M`, `F`, `mu_F`, `Z`, …);
 #' - **patterns** — population and mortality age-year tables for [plot_matrix()].
-#'   These use fish, kg and per-year units independently of aggregate comparison
-#'   scales. Reference tables with unknown units remain missing;
+#'   Recognized units are converted to fish, kg and per year independently of
+#'   aggregate comparison scales. Unspecified fitted units remain unspecified;
+#'   reference tables with unknown units remain missing;
 #' - **recruitment** — predictions, residuals and optional stock-recruit curves;
 #'   see [tidy_recruitment()];
 #' - **fixed_par** — a single stacked data frame of fixed-effect parameters with columns like `par`, `est`, `se`, `lwr`, `upr`, plus indices (e.g., `coef`, `year`, `age`) and the label column when applicable;
@@ -929,6 +934,10 @@ tidy_tam <- function(..., model_list = NULL, interval = 0.95, label = "model", l
       for (metric in intersect(names(comparison_scales), names(pop_list[[i]]))) {
         tab <- pop_list[[i]][[metric]]
         scale <- comparison_scales[[metric]]
+        reference <- reference_pop[[metric]]
+        from <- unique(tab$unit[!is.na(tab$unit)])
+        to <- unique(reference$unit[!is.na(reference$unit)])
+        if (length(from) == 1L && length(to) == 1L) .check_unit_conversion(from, to, scale)
         for (field in intersect(c("est", "lwr", "upr"), names(tab))) {
           tab[[field]] <- tab[[field]] * scale
         }
@@ -936,7 +945,6 @@ tidy_tam <- function(..., model_list = NULL, interval = 0.95, label = "model", l
           natural <- if ("se_scale" %in% names(tab)) tab$se_scale == "reported" else rep(TRUE, nrow(tab))
           tab$se[which(natural)] <- tab$se[which(natural)] * scale
         }
-        reference <- reference_pop[[metric]]
         if (is.data.frame(reference) && "unit" %in% names(reference)) {
           units <- unique(as.character(reference$unit[!is.na(reference$unit) &
             nzchar(as.character(reference$unit))]))
@@ -961,7 +969,6 @@ tidy_tam <- function(..., model_list = NULL, interval = 0.95, label = "model", l
 
   obs_pred <- stack_nested(obs_list, label = id_col, label_type = label_type)
   pop <- stack_nested(pop_list, label = id_col, label_type = label_type)
-  for (tab in pop) .unit_label(tab, "")
   .unit_label(obs_pred$catch, "")
   if (is.data.frame(obs_pred$index)) {
     for (tab in split(obs_pred$index, obs_pred$index$survey)) .unit_label(tab, "")
@@ -1080,6 +1087,8 @@ tidy_tam <- function(..., model_list = NULL, interval = 0.95, label = "model", l
 #' exact curve derivatives and RTMB's fixed-parameter covariance (the delta
 #' method); pair/prediction/residual uncertainty comes from ADREPORT. Missing
 #' uncertainty remains `NA`. Curve intervals do not include new process noise.
+#' Recruitment predictions and curves carry abundance `unit` labels when
+#' supplied. Pair/curve `parent_unit` identifies the SSB scale separately.
 #' @examples
 #' \dontrun{
 #' fit <- fit_tam(cod_obs,
@@ -1117,6 +1126,7 @@ tidy_recruitment <- function(fit, interval = .95) {
     prediction = table("rec_log_prediction", TRUE),
     residual = table("rec_residual"), innovation = table("rec_innovation")
   )
+  out$mean$unit <- out$prediction$unit <- .population_unit(fit$dat, "N")
   if (!is.null(rec$curve)) {
     parent <- table("rec_log_parent", TRUE)
     R <- tidy_pop(fit, interval)$recruitment
@@ -1131,6 +1141,10 @@ tidy_recruitment <- function(fit, interval = .95) {
     )
     curve <- .rec_curve_table(fit, interval)
     out$curve <- curve$curve
+    out$curve$unit <- .population_unit(fit$dat, "N")
+    out$curve$parent_unit <- .population_unit(fit$dat, "ssb")
+    out$pairs$unit <- .population_unit(fit$dat, "N")
+    out$pairs$parent_unit <- .population_unit(fit$dat, "ssb")
     out$reference <- curve$reference
   }
   attr(out, "interval") <- interval

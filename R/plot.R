@@ -36,6 +36,11 @@
 #' For custom overlays, call `plot_trend(add_buttons = FALSE)`, add the layers
 #' with Plotly, then call `add_plot_buttons()` so CI controls include all ribbons.
 #' See [tinyAM-model] for definitions and units of population quantities.
+#' Optional `unit` columns supply default y-axis labels and hover units for
+#' natural estimates; an explicit `ylab` or `hovertemplate` takes precedence.
+#' Known inconsistent units must be converted explicitly
+#' before overlaying models. Single-coordinate trends show a point and a
+#' vertical confidence interval instead of an invisible line segment.
 #'
 #' @param data A data frame of observations or estimates.
 #' @param x Formula specifying x variable
@@ -105,12 +110,17 @@ plot_trend <- function(
   add_buttons = TRUE,
   ...
 ) {
-  unit_label <- .unit_label(data, "Estimate")
+  unit <- if (identical(y[[2L]], quote(est))) .unit_label(data, "") else ""
+  unit_label <- if (nzchar(unit)) paste0("Estimate (", unit, ")") else ""
   if (missing(ylab)) ylab <- unit_label
   if (!is.data.frame(data) || !nrow(data)) {
     return(plotly::plot_ly(x = numeric(), y = numeric(), type = "scatter", mode = "lines"))
   }
   args <- list(...)
+  if (nzchar(unit) && is.null(args$hovertemplate)) {
+    args$hovertemplate <- paste0("%{x}<br>%{y} ", unit,
+      if (!is.null(args$text)) "<br>%{text}" else "", "<extra>%{fullData.name}</extra>")
+  }
   if (!"color" %in% names(args)) {
     args$color <- I("#1f77b4")
     args$showlegend <- FALSE
@@ -181,7 +191,7 @@ add_plot_buttons <- function(p) {
   rib_idx <- which(vapply(
     data_traces,
     function(tr) identical(tr$type, "scatter") &&
-      ((!is.null(tr$fill) && nzchar(tr$fill)) || isTRUE(tr$meta$tam_ci)),
+      ((!is.null(tr$fill) && nzchar(tr$fill)) || (is.list(tr$meta) && isTRUE(tr$meta$tam_ci))),
     logical(1)
   ))
 
@@ -227,6 +237,8 @@ plot_heatmap <- function(
   title = "",
   ...
 ) {
+  unit_label <- .unit_label(data, "Estimate")
+  if (missing(zlab)) zlab <- unit_label
   args <- list(...)
   if ("frame" %in% names(args) && !is.null(args$frame)) {
     cli::cli_abort(
@@ -260,13 +272,18 @@ plot_obs_pred <- function(
   xlab = "Year",
   ...
 ) {
-  unit_label <- .unit_label(data, "Observation")
+  unit <- .unit_label(data, "")
+  unit_label <- if (nzchar(unit)) paste0("Observation (", unit, ")") else ""
   if (missing(ylab)) ylab <- unit_label
   if (!is.data.frame(data) || !nrow(data) ||
     !any(is.finite(c(data$obs, data$pred)))) {
     return(plotly::plot_ly(x = numeric(), y = numeric(), type = "scatter", mode = "lines"))
   }
   args <- list(...)
+  if (nzchar(unit) && is.null(args$hovertemplate)) {
+    args$hovertemplate <- paste0("%{x}<br>%{y} ", unit,
+      if (!is.null(args$text)) "<br>%{text}" else "", "<extra>%{fullData.name}</extra>")
+  }
   if (!"color" %in% names(args)) {
     args$color <- I("#1f77b4")
     args$showlegend <- FALSE
@@ -336,7 +353,7 @@ plot_bubbles <- function(data, ...) {
 
   args <- list(...)
   if (is.null(args$colors)) {
-    args$colors <- c(head(tam_cols(), 1), tail(tam_cols(), 1))
+    args$colors <- c(utils::head(tam_cols(), 1), tail(tam_cols(), 1))
   }
 
   p <- do.call(
@@ -501,11 +518,14 @@ plot_par <- function(data, ...) {
 #' table. Projection boundaries appear only on year axes; projection years are
 #' identified in the age-profile selector and default hover text. Multiple
 #' displays can be embedded in the same HTML document independently.
+#' A single-age table instead returns an annual Plotly trend labeled with its
+#' age, without animation or view buttons.
 #' Use [plot_trend()] or [plot_obs_pred()] directly for a single view; their
 #' returned Plotly objects remain available for adding layers or changing layout.
 #' @return A browsable HTML container holding two Plotly widgets for age-year
 #'   views. Other frame/axis combinations return the supplied plotting function's
-#'   Plotly object. Modify individual plots through `plot` before assembly.
+#'   Plotly object, as do single-age tables. Modify individual plots through
+#'   `plot` before assembly.
 #' @examples
 #' d <- expand.grid(year = 2000:2004, age = 1:3)
 #' d$est <- exp(0.1 * (d$year - 2000) + 0.2 * d$age)

@@ -83,7 +83,7 @@
 #' Builds data with [prepare_tam()] and initial parameters with [make_par()].
 #' RTMB integrates random effects using the Laplace approximation; `nlminb`
 #' optimizes the remaining fixed effects. [mono()] increments `dq` and `dmu_f` have a zero
-#' lower bound. Their SEs remain on the increment scale, but symmetric Wald
+#' lower bound, as do initial-abundance decrements `d_n0`. Their SEs remain on the increment scale, but symmetric Wald
 #' intervals are only local approximations at a boundary.
 #' Set `index_settings$q_link = "logit"` to restrict the full catchability
 #' prediction to between zero and one; the default `"log"` allows q above one.

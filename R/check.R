@@ -487,7 +487,7 @@ check_tam <- function(fit, grad_tol = NULL, detailed = FALSE) {
   if (nrow(data) && any(data$years < 5L)) {
     add("sparse_series", "Some observation series have fewer than five observed years.")
   }
-  if (fit$dat$N_settings$init %in% c("mono", "capped") &&
+  if (isTRUE(fit$dat$N_settings$init %in% c("mono", "capped")) &&
     any(.tam_parameter_summary(fit, "Estimate")$d_n0 < 1e-6)) {
     add("initial_abundance_boundary", "Some initial-abundance decrements are at zero. Wald intervals use local curvature and may be unreliable at this constraint boundary.")
   }

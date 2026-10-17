@@ -33,6 +33,10 @@ treated as missing by \code{\link[=prepare_tam]{prepare_tam()}}, because the obs
 \verb{(year, age)} combination over the global modeled range
 (from min to max year and age across all tables).
 \item Survey tables may omit year-age combinations.
+\item Optional character \code{unit} columns must be consistent throughout catch and
+weight, and within each survey. Missing columns are valid; a supplied column
+requires nonempty labels on every row. Units never change input values.
+See \code{\link[=as_tam_data]{as_tam_data()}} for units of derived quantities.
 }
 
 On failure the function aborts with a \code{cli} error. On success, it returns
@@ -40,6 +44,6 @@ On failure the function aborts with a \code{cli} error. On success, it returns
 }
 \examples{
 data(cod_obs)
-check_obs(cod_obs)  # returns TRUE (invisibly) if valid
+check_obs(cod_obs) # returns TRUE (invisibly) if valid
 
 }

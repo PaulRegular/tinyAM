@@ -89,9 +89,9 @@ test_that("pattern tables align source aliases and independent matrix units", {
   pop$ssb_mat$unit <- "unknown"
   d <- tinyAM:::.tidy_patterns(pop, reference = TRUE)
   expect_true(all(is.na(d$population$est[d$population$metric == "SSB"])))
-  pop <- list(N = tab, biomass_mat = tab, ssb_mat = tab)
+  pop <- list(N = tab, biomass_mat = transform(tab, unit = "kg"), ssb_mat = transform(tab, unit = "kg"))
   d <- tinyAM:::.tidy_patterns(pop, ssb_definition = "Age/year-specific spawning times")
-  expect_equal(d$population$est, rep(c(2, 3), 3))
+  expect_equal(d$population$est, c(2000, 3000, 2, 3, 2, 3))
   expect_equal(d$population$definition[d$population$metric == "SSB"],
                rep("Age/year-specific spawning times", 2))
 })
@@ -100,13 +100,14 @@ test_that("tidy patterns retain model labels separately from aggregate scales", 
   fit <- default_fit
   reference <- fit
   class(reference) <- c("tam_ref", "list")
-  reference$comparison_scales <- c(ssb = 1e-3, N = 1e-3)
-  reference$pop$N$unit <- "thousand fish"
-  reference$pop$N$est <- reference$pop$N$est / 1000
+  reference$comparison_scales <- c(ssb = 1, N = 1000)
+  reference$pop$N$unit <- "fish"
+  reference$pop$N$est <- reference$pop$N$est * 1000
   reference$pop$biomass_at_age <- reference$pop$biomass_mat
-  reference$pop$biomass_at_age$unit <- "tonnes"
-  reference$pop$biomass_at_age$est <- reference$pop$biomass_at_age$est / 1000
+  reference$pop$biomass_at_age$unit <- "kg"
+  reference$pop$biomass_at_age$est <- reference$pop$biomass_at_age$est * 1000
   reference$pop$ssb_mat$unit <- "kg"
+  reference$pop$ssb_mat$est <- reference$pop$ssb_mat$est * 1000
   original <- list(Official = reference, tinyAM = fit)
   tabs <- tidy_tam(model_list = original, label_type = "factor")
   expect_setequal(as.character(tabs$patterns$population$model), names(original))

@@ -40,11 +40,12 @@ weight and maturity are retained for abundance-based aggregation inside
 \item \code{process}: \code{"off"} for deterministic cohort survival, \code{"iid"} for independent
 cohort residuals, \code{"rw"} for residuals that accumulate through time, or
 \code{"ar1"} for residuals correlated between years and ages. See \link{tinyAM-model}.
-\item \code{init}: \code{"exp"} (default), \code{"free"}, or \code{"random"}, independently of
+\item \code{init}: \code{"exp"} (default), \code{"free"}, \code{"latent"}, \code{"mono"} or \code{"capped"}, independently of
 \code{process}. All use fixed first-year recruitment \code{log_r0} as the starting
 anchor. \code{"exp"} uses deterministic survivorship; \code{"free"} estimates fixed
-older-age \code{log_n0} states; \code{"random"} estimates random \code{log_n0} states with
-IID survivorship residuals and separate SD \code{sd_n0}. See \strong{Details}.
+older-age \code{log_n0} states; \code{"latent"} integrates them without an initial
+density. \code{"mono"} constrains abundance to decline from r0; \code{"capped"}
+bounds each older age by r0 without imposing age ordering. See \strong{Details}.
 \item \code{sd_form}: ordinary formula for log SD of older-age survival residuals,
 default \code{~ 1}. Use \code{~ factor(age)} or a supplied age-sharing column in
 \code{data$pop_covariates}. Its design must be constant across years. Recruitment and
@@ -289,22 +290,24 @@ surface or a mean structure.
 \itemize{
 \item Initial abundance is controlled by \code{N_settings$init}, independently of
 the subsequent N process. First-year recruitment is the fixed state
-\code{log_r0}. All older initial ages use survivorship from recruitment under
-first-year total mortality Z as their baseline, with no equilibrium
-plus-group correction.
+\code{log_r0}. The default uses survivorship from recruitment under first-year
+total mortality Z, with no equilibrium plus-group correction.
 \item \code{"exp"} is the default: a parsimonious, comparatively stable nuisance-state
 initialization. More flexible choices are available when first-year data
-support them. \code{"free"} estimates unpenalized fixed \code{log_n0} states;
-\code{"random"} estimates random \code{log_n0} states whose survivorship residuals
-\code{eta_log_n0} are IID normal with separately estimated \code{sd_n0}.
-\item \code{sd_r} describes temporal recruitment variation; \code{sd_n0} describes
-variation across historical cohorts on the initial age margin (potentially
-including mortality-history variation); \code{sd_n} describes subsequent
-cohort-process deviations. These SDs are estimated separately.
-\item Random initialization requires at least two ages. Fewer than ten ages
-triggers a heuristic weak-identification warning for \code{sd_n0}, not a
-prohibition or automatic fallback. The threshold may be revised after
-simulation testing; inspect convergence and sensitivity carefully.
+support them. \code{"free"} estimates unpenalized fixed \code{log_n0} states.
+\code{"latent"} integrates those states without an initial density, including
+when the subsequent N process is off. It resembles SAM's unpenalized
+older-age boundary but retains tinyAM's fixed first-year recruitment r0.
+\item \code{"mono"} estimates non-increasing initial abundance from r0, including
+the plus group: \verb{log N0[a] = log r0 - cumsum(d_n0)[a-1]}. \code{"capped"}
+only requires each older abundance to be no greater than r0:
+\verb{log N0[a] = log r0 - d_n0[a-1]}. Both use nonnegative log-decrements,
+allow exact ties, and require no N process or separate initial SD.
+The pooled plus group can naturally exceed a single age; constraining it
+is a deliberate biological assumption. Boundary Wald intervals need care.
+\item All choices estimate r0 as a fixed effect. Simulations condition on initial states;
+joint uncertainty draws can vary fitted latent initial states. No
+mortality-history distribution is imposed on initial abundances.
 \item \code{M_settings$age_breaks} (vector of break points on ages)
 defines \code{M_settings$age_blocks} via \code{\link[=cut_ages]{cut_ages()}}, used
 to share absolute latent \eqn{M} states across ages. All mean components
@@ -348,8 +351,8 @@ dat <- prepare_tam(
   N_settings = list(process = "iid", init = "exp"),
   F_settings = list(process = "rw", mu_form = NULL),
   M_settings = list(process = "off", mu_supplied = ~ I(0.3)),
-  catch_settings = list(sd_form = ~ 1),
-  index_settings = list(sd_form = ~ 1, q_form = ~ q_block),
+  catch_settings = list(sd_form = ~1),
+  index_settings = list(sd_form = ~1, q_form = ~q_block),
   proj_settings = list(n_proj = 3, n_mean = 3, F_mult = 1)
 )
 

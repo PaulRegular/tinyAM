@@ -39,6 +39,8 @@ test_that("units preserve designs, parameters, likelihoods and derivatives", {
   expect_true(all(pop$N$unit == "thousand fish"))
   expect_true(all(pop$ssb$unit == "tonnes"))
   expect_true(all(pop$F$unit == "per year"))
+  expect_true(all(pop$W$unit == "kg/fish"))
+  expect_true(all(pop$P$unit == "proportion"))
   patterns <- tinyAM:::.tidy_patterns(pop)
   expect_equal(subset(patterns$population, metric == "Abundance")$est, pop$N$est * 1000)
   expect_equal(subset(patterns$population, metric == "SSB")$est, pop$ssb_mat$est * 1000)
@@ -48,7 +50,16 @@ test_that("units preserve designs, parameters, likelihoods and derivatives", {
 test_that("default plot labels include units and explicit labels win", {
   d <- data.frame(year = 2000:2002, est = 1:3, unit = "tonnes")
   expect_equal(plotly::plotly_build(plot_trend(d))$x$layout$yaxis$title, "Estimate (tonnes)")
+  expect_match(plotly::plotly_build(plot_trend(d))$x$data[[1]]$hovertemplate, "tonnes")
+  expect_true(all(plotly::plotly_build(plot_trend(d, hovertemplate = "Custom"))$x$data[[1]]$hovertemplate == "Custom"))
   expect_equal(plotly::plotly_build(plot_trend(d, ylab = "My label"))$x$layout$yaxis$title, "My label")
   d$unit[1] <- "kg"
   expect_error(plot_trend(d), "incompatible units")
+})
+
+test_that("explicit comparison scales cannot disguise incompatible known units", {
+  expect_true(tinyAM:::.check_unit_conversion("kg", "tonnes", .001))
+  expect_true(tinyAM:::.check_unit_conversion("thousand fish", "fish", 1000))
+  expect_error(tinyAM:::.check_unit_conversion("tonnes", "tonnes", .001), "require 1")
+  expect_error(tinyAM:::.check_unit_conversion("fish", "kg", 1), "incompatible")
 })

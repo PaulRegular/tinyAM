@@ -45,6 +45,8 @@ test_that("constrained initial abundances have derived uncertainty and fixed dec
     expect_equal(tab$se_scale, rep("log", nrow(tab)))
     expect_true(all(is.finite(tab$se)))
     drops <- subset(fit$fixed_par, par == "d_n0")
+    groups <- tinyAM:::.fixed_parameter_groups(fit$fixed_par)
+    expect_equal(unique(groups$`Initial steps`$par), "d_n0")
     expect_true(all(drops$est >= 0))
     expect_equal(drops$se_scale, rep("reported", nrow(drops)))
   }

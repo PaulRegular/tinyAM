@@ -590,7 +590,7 @@
         )) {
           "native survey index values retained on their source scale"
         } else {
-          "source numbers-at-age converted to individual fish"
+          paste0("source numbers-at-age expressed as ", unique(direct$unit[direct$survey == survey]))
         }
         k <- k + 1L
         provenance[[k]] <- data.frame(

@@ -9,8 +9,9 @@ Row {.tabset}
 ```{r}
 curves <- tabs$recruitment$curve
 pairs <- tabs$recruitment$pairs
-plot <- plot_trend(curves, x = ~ssb, xlab = "Parent spawning biomass",
-                    ylab = "Recruitment", color = ~model, colors = cols)
+plot <- plot_trend(curves, x = ~ssb,
+  xlab = tinyAM:::.unit_label(transform(curves, unit = parent_unit), "Parent spawning biomass"),
+  ylab = tinyAM:::.unit_label(curves, "Recruitment"), color = ~model, colors = cols)
 plotly::add_markers(plot, data = pairs[!pairs$is_proj, ], x = ~ssb,
                    y = ~recruitment, color = ~model, colors = cols,
                    text = ~paste("Parent year:", parent_year, "Recruitment year:", year),
@@ -21,7 +22,7 @@ plotly::add_markers(plot, data = pairs[!pairs$is_proj, ], x = ~ssb,
 
 ```{r}
 plot_trend(tabs$recruitment$prediction, color = ~model, colors = cols,
-            ylab = "Conditional recruitment")
+            ylab = tinyAM:::.unit_label(tabs$recruitment$prediction, "Conditional recruitment"))
 ```
 
 ### Reference values
@@ -34,4 +35,4 @@ if (is.data.frame(tabs$recruitment$reference)) {
 
 Curves show median recruitment at the listed covariate values. Shading shows
 uncertainty in the curve, excluding variation in future recruitment. Parent
-SSB is start-of-year biomass; parent and recruitment years are shown on hover.
+SSB uses the model's supplied spawning timing; parent and recruitment years are shown on hover.

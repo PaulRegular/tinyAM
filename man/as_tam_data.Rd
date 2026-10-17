@@ -46,6 +46,16 @@ Catch/index observation-SD covariates and survey catchability covariates stay
 in their respective observation tables. Weight, maturity and spawning timing
 stay in the biological tables. Validation does not add the class, and inputs
 are checked again during preparation after any edits.
+
+Optional \code{unit} columns label catch numbers, stock weight per fish and each
+survey index. Use one unit throughout catch and weight, and one per survey.
+Values are never converted during fitting. For example, \code{"thousand fish"}
+catch and \code{"kg/fish"} weight give abundance in thousands and biomass/SSB in
+tonnes. Unknown units are left unlabeled; descriptive index units such as
+\code{"fish per tow"} are retained. Reported tables and default plot labels carry
+these units. Explicit plot labels take precedence. Matrix views convert
+recognized abundance/mass units to fish/kg for comparisons, independently
+of aggregate comparison scales; missing reference units remain unavailable.
 }
 \examples{
 data <- as_tam_data(cod_obs)

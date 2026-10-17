@@ -323,9 +323,8 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #'
 #' - Initial abundance is controlled by `N_settings$init`, independently of
 #'   the subsequent N process. First-year recruitment is the fixed state
-#'   `log_r0`. All older initial ages use survivorship from recruitment under
-#'   first-year total mortality Z as their baseline, with no equilibrium
-#'   plus-group correction.
+#'   `log_r0`. The default uses survivorship from recruitment under first-year
+#'   total mortality Z, with no equilibrium plus-group correction.
 #' - `"exp"` is the default: a parsimonious, comparatively stable nuisance-state
 #'   initialization. More flexible choices are available when first-year data
 #'   support them. `"free"` estimates unpenalized fixed `log_n0` states.
@@ -333,13 +332,13 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #'   when the subsequent N process is off. It resembles SAM's unpenalized
 #'   older-age boundary but retains tinyAM's fixed first-year recruitment r0.
 #' - `"mono"` estimates non-increasing initial abundance from r0, including
-#'   the plus group: log N0[a] = log r0 - cumsum(d_n0)[a-1]. `"capped"`
+#'   the plus group: `log N0[a] = log r0 - cumsum(d_n0)[a-1]`. `"capped"`
 #'   only requires each older abundance to be no greater than r0:
-#'   log N0[a] = log r0 - d_n0[a-1]. Both use nonnegative log-decrements,
+#'   `log N0[a] = log r0 - d_n0[a-1]`. Both use nonnegative log-decrements,
 #'   allow exact ties, and require no N process or separate initial SD.
 #'   The pooled plus group can naturally exceed a single age; constraining it
 #'   is a deliberate biological assumption. Boundary Wald intervals need care.
-#' - All choices retain fixed r0. Simulations condition on initial states;
+#' - All choices estimate r0 as a fixed effect. Simulations condition on initial states;
 #'   joint uncertainty draws can vary fitted latent initial states. No
 #'   mortality-history distribution is imposed on initial abundances.
 #' - `M_settings$age_breaks` (vector of break points on ages)
@@ -376,7 +375,7 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #' - `process`: `"off"` for deterministic cohort survival, `"iid"` for independent
 #'   cohort residuals, `"rw"` for residuals that accumulate through time, or
 #'   `"ar1"` for residuals correlated between years and ages. See [tinyAM-model].
-#' - `init`: `"exp"` (default), `"free"`, or `"random"`, independently of
+#' - `init`: `"exp"` (default), `"free"`, `"latent"`, `"mono"` or `"capped"`, independently of
 #'   `process`. All use fixed first-year recruitment `log_r0` as the starting
 #'   anchor. `"exp"` uses deterministic survivorship; `"free"` estimates fixed
 #'   older-age `log_n0` states; `"latent"` integrates them without an initial

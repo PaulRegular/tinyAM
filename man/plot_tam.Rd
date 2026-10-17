@@ -98,6 +98,11 @@ The historical/projection separator is shown only on a year axis.
 For custom overlays, call \code{plot_trend(add_buttons = FALSE)}, add the layers
 with Plotly, then call \code{add_plot_buttons()} so CI controls include all ribbons.
 See \link{tinyAM-model} for definitions and units of population quantities.
+Optional \code{unit} columns supply default y-axis labels and hover units for
+natural estimates; an explicit \code{ylab} or \code{hovertemplate} takes precedence.
+Known inconsistent units must be converted explicitly
+before overlaying models. Single-coordinate trends show a point and a
+vertical confidence interval instead of an invisible line segment.
 }
 \examples{
 
@@ -132,7 +137,7 @@ plot_trend(tabs$pop$biomass, color = ~model, ylab = "Biomass")
 
 N_dev$pop$N |>
   subset(age \%in\% 2:8) |>
-  plot_trend(ylab = "N", color = ~as.character(age))
+  plot_trend(ylab = "N", color = ~ as.character(age))
 
 ## Age-Year Heatmap ----
 plot_heatmap(N_dev$pop$F, zlab = "F")
@@ -141,8 +146,9 @@ plot_heatmap(M_dev$pop$F, zlab = "F")
 ## Observed vs Predicted ----
 plot_obs_pred(N_dev$obs_pred$catch, frame = ~age, ylab = "Catch")
 plot_obs_pred(tabs$obs_pred$index,
-              color = ~model, legendgroup = ~model,
-              frame = ~age, ylab = "Index")
+  color = ~model, legendgroup = ~model,
+  frame = ~age, ylab = "Index"
+)
 
 ## Residual Bubbles ----
 plot_bubbles(N_dev$obs_pred$catch)
@@ -150,8 +156,10 @@ plot_bubbles(tabs$obs_pred$index, frame = ~model)
 
 ## Residual Scatter ----
 plot_resid(N_dev$obs_pred$catch, x = ~age, xlab = "Age")
-plot_resid(tabs$obs_pred$index, frame = ~model,
-            x = ~year, xlab = "Year", showlegend = FALSE)
+plot_resid(tabs$obs_pred$index,
+  frame = ~model,
+  x = ~year, xlab = "Year", showlegend = FALSE
+)
 
 ## Parameter Estimates ----
 plot_par(N_dev$fixed_par)

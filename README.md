@@ -61,6 +61,13 @@ Omit the column for start-of-year SSB. Timing can vary by year and age;
 projections retain terminal values at each age. See `?"tinyAM-model"` for equations,
 SD interpretations and examples.
 
+Optional `unit` columns make plot labels explicit without changing input values:
+use `"thousand fish"` for catch and comparable indices, and `"kg/fish"` for
+weight. This combination produces biomass and SSB in tonnes. Survey units may
+differ by survey; native labels such as `"fish per tow"` are retained. Keep
+units consistent within each series and call `check_tam_data()` after editing.
+The included `cod_obs` carries these labels. See `?as_tam_data` for details.
+
 Settings lists can be partial. Initial fits inherit package defaults; updates
 retain the original settings. For example,
 `update(fit, N_settings = list(init = "free"))` changes only initialization.
@@ -69,7 +76,7 @@ A random walk has no penalty on its starting level. Its SD describes annual incr
 
 Mean structures for quantities such as fishing mortality, natural mortality, catchability, and observation error can be specified using familiar R formulas and design matrices.
 
-Initial abundance is specified independently of the subsequent N process through `N_settings$init`: `"exp"` (default) uses parsimonious survivorship from fixed first-year recruitment (`log_r0`), `"free"` estimates fixed older-age `log_n0` states, and `"random"` estimates random states with IID survivorship residuals (`eta_log_n0`) and a separate SD. N process states begin in year 2. Recruitment starts there by default; stock–recruit models retain additional free early recruitment states when parent SSB precedes the modeled period. Random initialization requires at least two ages and warns below ten ages because its SD may be weakly identified.
+Initial abundance is specified independently of the subsequent N process through `N_settings$init`: `"exp"` (default) uses parsimonious survivorship from fixed first-year recruitment (`log_r0`), `"free"` estimates fixed older-age `log_n0` states, `"latent"` integrates older initial states without a density, `"mono"` constrains abundance to decline from r0, and `"capped"` bounds older ages by r0 without age ordering. All retain fixed r0; both constraints include the plus group and allow ties. N process states begin in year 2. Recruitment starts there by default; stock–recruit models retain additional free early recruitment states when parent SSB precedes the modeled period. All initializers require at least two ages. Latent initialization is closer to SAM’s usual older-age boundary, but r0 remains fixed. Process simulations condition on initial states; joint uncertainty draws can vary latent initial abundance.
 
 For an active M process, the default normally shares one state across all ages except the youngest, starting in year 2 (see `?prepare_tam` for very short age ranges). Earlier M and excluded ages retain their supplied or mean values. F is estimated in every historical year. These boundary assumptions can affect initial abundance and catchability estimates; they are not guarantees of identifiability. The full equations and conventions are in `help("tinyAM-model", package = "tinyAM")`.
 

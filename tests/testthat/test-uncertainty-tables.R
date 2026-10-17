@@ -57,7 +57,7 @@ test_that("terminal tables show confidence limits before log-scale SEs", {
 
 test_that("tidy population and random parameters use the same uncertainty order", {
   pop <- tidy_sdrep(default_fit)
-  expect_identical(names(pop$ssb), c("year", "est", "lwr", "upr", "se", "se_scale", "is_proj"))
+  expect_identical(names(pop$ssb), c("year", "est", "lwr", "upr", "se", "se_scale", "is_proj", "unit"))
   expect_true(all(pop$ssb$se_scale == "log"))
   expected <- as.list(default_fit$sdrep, "Std. Error", report = TRUE)$log_ssb
   expect_equal(pop$ssb$se, as.numeric(expected))

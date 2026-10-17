@@ -208,7 +208,8 @@ test_that("F curve fits retain tidy scales, uncertainty and update paths", {
         simplifyVector = FALSE
       )
     })
-    F_plots <- Filter(function(widget) any(unlist(widget$x$layout$yaxis$title) == "F"), widgets)
+    F_plots <- Filter(function(widget) any(sub(" \\(.*\\)$", "",
+      unlist(widget$x$layout$yaxis$title)) == "F"), widgets)
     expect_length(F_plots, 2L)
     expect_setequal(vapply(
       F_plots, function(widget) unlist(widget$x$layout$xaxis$title),

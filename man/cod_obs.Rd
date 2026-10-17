@@ -11,6 +11,8 @@ A \code{tam_data} list containing five data frames:
 \item \strong{index}: \code{year}, \code{age}, survey abundance \code{obs} (thousands), \code{survey},
 sampling fraction \code{samp_time}, and catchability age group \code{q_block}.
 \item \strong{weight}: \code{year}, \code{age}, and stock weight \code{obs} (kg per fish).
+Catch/index include \code{unit = "thousand fish"}; weight includes
+\code{unit = "kg/fish"}. Their product gives tonnes for biomass and SSB.
 \item \strong{maturity}: \code{year}, \code{age}, and proportion mature \code{obs} (0-1).
 Optional spawning timing is not supplied in this example.
 \item \strong{pop_covariates}: \code{year}, \code{age}, fishing-mortality mean blocks

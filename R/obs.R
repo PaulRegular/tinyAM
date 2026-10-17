@@ -12,6 +12,8 @@
 #' - **index**: `year`, `age`, survey abundance `obs` (thousands), `survey`,
 #'   sampling fraction `samp_time`, and catchability age group `q_block`.
 #' - **weight**: `year`, `age`, and stock weight `obs` (kg per fish).
+#'   Catch/index include `unit = "thousand fish"`; weight includes
+#'   `unit = "kg/fish"`. Their product gives tonnes for biomass and SSB.
 #' - **maturity**: `year`, `age`, and proportion mature `obs` (0-1).
 #'   Optional spawning timing is not supplied in this example.
 #' - **pop_covariates**: `year`, `age`, fishing-mortality mean blocks
@@ -64,6 +66,10 @@
 #'   `(year, age)` combination over the global modeled range
 #'   (from min to max year and age across all tables).
 #' - Survey tables may omit year-age combinations.
+#' - Optional character `unit` columns must be consistent throughout catch and
+#'   weight, and within each survey. Missing columns are valid; a supplied column
+#'   requires nonempty labels on every row. Units never change input values.
+#'   See [as_tam_data()] for units of derived quantities.
 #'
 #' On failure the function aborts with a `cli` error. On success, it returns
 #' `TRUE` (invisibly).

@@ -46,11 +46,12 @@ weight and maturity are retained for abundance-based aggregation inside
 \item \code{process}: \code{"off"} for deterministic cohort survival, \code{"iid"} for independent
 cohort residuals, \code{"rw"} for residuals that accumulate through time, or
 \code{"ar1"} for residuals correlated between years and ages. See \link{tinyAM-model}.
-\item \code{init}: \code{"exp"} (default), \code{"free"}, or \code{"random"}, independently of
+\item \code{init}: \code{"exp"} (default), \code{"free"}, \code{"latent"}, \code{"mono"} or \code{"capped"}, independently of
 \code{process}. All use fixed first-year recruitment \code{log_r0} as the starting
 anchor. \code{"exp"} uses deterministic survivorship; \code{"free"} estimates fixed
-older-age \code{log_n0} states; \code{"random"} estimates random \code{log_n0} states with
-IID survivorship residuals and separate SD \code{sd_n0}. See \strong{Details}.
+older-age \code{log_n0} states; \code{"latent"} integrates them without an initial
+density. \code{"mono"} constrains abundance to decline from r0; \code{"capped"}
+bounds each older age by r0 without imposing age ordering. See \strong{Details}.
 \item \code{sd_form}: ordinary formula for log SD of older-age survival residuals,
 default \code{~ 1}. Use \code{~ factor(age)} or a supplied age-sharing column in
 \code{data$pop_covariates}. Its design must be constant across years. Recruitment and
@@ -236,7 +237,7 @@ See \code{\link[=prepare_tam]{prepare_tam()}} for options and \link{tinyAM-model
 Builds data with \code{\link[=prepare_tam]{prepare_tam()}} and initial parameters with \code{\link[=make_par]{make_par()}}.
 RTMB integrates random effects using the Laplace approximation; \code{nlminb}
 optimizes the remaining fixed effects. \code{\link[=mono]{mono()}} increments \code{dq} and \code{dmu_f} have a zero
-lower bound. Their SEs remain on the increment scale, but symmetric Wald
+lower bound, as do initial-abundance decrements \code{d_n0}. Their SEs remain on the increment scale, but symmetric Wald
 intervals are only local approximations at a boundary.
 Set \code{index_settings$q_link = "logit"} to restrict the full catchability
 prediction to between zero and one; the default \code{"log"} allows q above one.
@@ -248,7 +249,7 @@ Random-effect blocks are chosen automatically from the model settings:
 \itemize{
 \item Always includes \code{log_f} and eligible \code{log_r} states. Early recruitment
 anchors are fixed; see \link{recruitment_formulas}.
-\item Includes \code{log_n0} only if \code{N_settings$init == "random"}.
+\item Includes \code{log_n0} only if \code{N_settings$init == "latent"}.
 \item Includes \code{log_n} if \code{N_settings$process != "off"}.
 \item Includes \code{log_m} if \code{M_settings$process != "off"}.
 \item Includes the unique \verb{eta_q_*} states of Gaussian catchability formula terms.

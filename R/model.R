@@ -40,6 +40,11 @@
 #' \eqn{M_{t,a}} are annual instantaneous mortality rates, and
 #' \eqn{Z_{t,a}=F_{t,a}+M_{t,a}}. Supplied weight \eqn{W_{t,a}} and mature
 #' proportion \eqn{P_{t,a}} are treated as known without uncertainty.
+#' Optional table `unit` columns label the numerical scale. Catch units also
+#' describe N and recruitment; weight is mass per fish. Their product sets
+#' biomass and SSB units (thousand fish times kg/fish gives tonnes). F, M and Z
+#' are per year. Survey units can differ, and q need not be dimensionless.
+#' The model never converts inputs automatically; see [as_tam_data()].
 #'
 #' `log_r`, `log_n0`, `log_n`, `log_f`, and `log_m` are absolute latent log
 #' states. Full surfaces `log_N`, `log_F`, and `log_M` are constructed from

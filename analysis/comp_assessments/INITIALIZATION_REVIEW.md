@@ -59,3 +59,36 @@ from a matching cached native fit in these trials. The database is unchanged.
 Detailed differences, every warning and failure, fitted objects and dashboards
 remain ignored under `results/cache/initialization_trials/`. Aggregate result
 CSVs are not refreshed from these targeted runs.
+
+## Validation
+
+- Final package suite: **2,661 assertions passed**, no test warnings or failures,
+  and one interactive-only skip. **R CMD check --no-manual: Status OK**.
+
+- Unit labels leave prepared designs, parameter layouts, objectives, gradients
+  and population reports unchanged. Tests cover descriptive survey units,
+  explicit comparison conversions, matrix labels, single-age plots, constrained
+  initial states and their uncertainty. Process simulations condition on N0.
+- All 35 stock scripts were exercised with fitting disabled: 30 prepared;
+  five retained their existing source/translation blockers. The general database
+  validator and affected translation tests passed. Canonical database values
+  were not changed.
+- The three retained latent recipes passed numerical checks and generated
+  fresh local dashboards. A one-fold blue-whiting hindcast, including its
+  terminal fit and one retrospective fold, converged and produced forecast
+  scores. Formula-study smoke tests also passed.
+- The full comparative-assessment test run still has failures in six existing
+  files: `test_age_subsets.R`, `test_bc_petrale_source.R`,
+  `test_dfo_herring_sgsl_translation.R`, `test_f_process_translations.R`,
+  `test_herring_translation.R` and `test_ices_norway_pout_translation.R`.
+  These were checked against the starting revision: they concern pre-existing
+  age selections/optimization, cached source validation, starting-parameter
+  names or expectations that disagree with current recipes. They were not
+  repaired by changing scientific specifications.
+- NCAM is unavailable on this computer. The construction script was updated,
+  while packaged `cod_obs` was annotated from its existing values with exact
+  preservation checks. Full regeneration from NCAM could not be tested.
+
+Dashboards and fits are local under `results/cache/initialization_trials/`;
+the retained dashboards end in `_retained.html`. Browser interaction was not
+manually exercised; rendering and Plotly structure were tested.

@@ -28,6 +28,10 @@ dashboard_residuals <- function(plots) {
   }, plots)
 }
 
+dashboard_metric <- function(plot) {
+  sub(" \\(.*\\)$", "", unname(unlist(plot$layout$yaxis$title)))
+}
+
 test_that("vis_tam renders cleanly and produces an HTML output", {
   # --- Test: render to temporary file quietly ---
   tmpfile <- tempfile(fileext = ".html")
@@ -57,11 +61,11 @@ test_that("vis_tam renders cleanly and produces an HTML output", {
   expect_match(html, "<h3>Average F</h3>", fixed = TRUE)
   expect_false(grepl("<h3>Mean F</h3>", html, fixed = TRUE))
   age_year_plots <- Filter(
-    function(p) any(unlist(p$layout$yaxis$title) %in% c("N", "F", "M", "Selectivity", "Catch", "Index")),
+    function(p) any(dashboard_metric(p) %in% c("N", "F", "M", "Selectivity", "Catch", "Index")),
     dashboard_plots(tmpfile)
   )
   for (metric in c("N", "F", "M", "Selectivity", "Catch", "Index")) {
-    views <- Filter(function(p) identical(unlist(p$layout$yaxis$title), metric), age_year_plots)
+    views <- Filter(function(p) identical(dashboard_metric(p), metric), age_year_plots)
     expect_true(all(c("Year", "Age") %in% vapply(views, function(p) {
       unlist(p$layout$xaxis$title)
     }, character(1))))
@@ -286,12 +290,12 @@ test_that("tam_ref objects accept a Background page", {
   source_pop <- lapply(N_dev$pop, blank_values,
     keys = c("year", "age", "is_proj")
   )
-  source_pop$ssb$est <- N_dev$pop$ssb$est + 1
-  source_pop$N$est <- N_dev$pop$N$est + 1
+  source_pop$ssb$est <- N_dev$pop$ssb$est * 1e-3 + 1
+  source_pop$N$est <- N_dev$pop$N$est * 1e-3 + 1
   source_pop$F$est <- N_dev$pop$F$est + 0.1
-  source_pop$ssb$unit <- "t"
-  source_pop$N$unit <- "thousand fish"
-  source_pop$recruitment$unit <- "thousand fish"
+  source_pop$ssb$unit <- "thousand tonnes"
+  source_pop$N$unit <- "million fish"
+  source_pop$recruitment$unit <- "million fish"
   source_pop$recruitment$notes <- rep(
     "Recruitment ages 3\u20138",
     nrow(source_pop$recruitment)
@@ -342,7 +346,7 @@ test_that("tam_ref objects accept a Background page", {
     tabs$pop$ssb$est[tabs$pop$ssb$model == "tinyAM"],
     N_dev$pop$ssb$est * 1e-3
   )
-  expect_equal(unique(tabs$pop$ssb$unit), "t")
+  expect_equal(unique(tabs$pop$ssb$unit), "thousand tonnes")
   ssb_plot <- plot_trend(tabs$pop$ssb, color = ~model, add_buttons = FALSE)
   ssb_traces <- plotly::plotly_build(ssb_plot)$x$data
   accepted_ssb <- Filter(
@@ -428,7 +432,7 @@ test_that("tam_ref objects accept a Background page", {
   }
   for (metric in c("N", "F")) {
     comparisons <- Filter(function(plot) {
-      identical(unname(unlist(plot$layout$yaxis$title)), metric)
+      identical(dashboard_metric(plot), metric)
     }, plots)
     expect_gt(length(comparisons), 0L)
     for (plot in comparisons) {

@@ -30,11 +30,15 @@ factor levels. \code{reference} identifies those values. Curve intervals use the
 exact curve derivatives and RTMB's fixed-parameter covariance (the delta
 method); pair/prediction/residual uncertainty comes from ADREPORT. Missing
 uncertainty remains \code{NA}. Curve intervals do not include new process noise.
+Recruitment predictions and curves carry abundance \code{unit} labels when
+supplied. Pair/curve \code{parent_unit} identifies the SSB scale separately.
 }
 \examples{
 \dontrun{
-fit <- fit_tam(cod_obs, N_settings = list(process = "off"),
-  rec_settings = list(process = "iid", mu_form = ~ bh(ssb)))
+fit <- fit_tam(cod_obs,
+  N_settings = list(process = "off"),
+  rec_settings = list(process = "iid", mu_form = ~ bh(ssb))
+)
 tidy_recruitment(fit)$pairs
 }
 }
