@@ -56,15 +56,15 @@ committed separately and pushed to `comp-assessments`.
 | BSAI Pacific ocean perch | Interrupted after more than seven CPU hours | No completed attempt history, usable fit or dashboard |
 | Coastal Pacific hake | Passed after one source-start retry | Source M penalty restored in review; M 0.18335, finite effect SE; core comparisons improve but remain approximate |
 | SoG herring | Blocked before fitting | Aggregate spawning-biomass survey has no observed survey-age composition |
-| BC Pacific ocean perch | Passed from defaults | Source M prior approximated in review; M 0.04053, finite effect SE; other historical comparisons remain unavailable |
+| BC Pacific ocean perch | Source-output blocked after historical trial | Numerical checks passed, but matching historical N/F/recruitment/SSB outputs have not been recovered |
 
-Nine cases received actual optimization attempts: five numerical passes,
-three non-converged fits and one interrupted run. Eight dashboards are cached
-under `results/cache/<assessment_id>/dashboard.html`. The three blocked cases
-have explicit readiness guards, not invented observations or fitted recipes.
-This leaves a **shortfall of three actually attempted translations** against
-the twelve-case target. Numerical passes are not scientific agreement or
-evidence of useful uncertainty.
+Nine cases historically received actual optimization attempts, including the
+now-blocked BC POP trial. The current status is four numerical passes, three
+non-converged fits, one interrupted run and four source blockers. Seven active
+new-case dashboards and the historical BC trial are cached under
+`results/cache/<assessment_id>/dashboard.html`. Readiness guards prevent fitting
+blocked cases. The twelve-runnable-translation target remains unmet. Numerical
+passes are not scientific agreement or evidence of useful uncertainty.
 
 The complete cross-case flags, unavailable/non-equivalent comparisons,
 fixed-M checks and numerical outcomes are in [PACIFIC_REVIEW.md](PACIFIC_REVIEW.md).
@@ -120,5 +120,23 @@ outcomes above remain historical where superseded by that review.
   repeated for this analysis-only review; core package sources, tests and
   generated documentation are unchanged.
 - Selected dashboards and the agreement heatmap were refreshed. The revised
-  hake fit passes after one conditional N-start retry; BC POP passes from
-  defaults. Rejected, failed and time-limited trials remain cached separately.
+  hake fit passes after one conditional N-start retry; the historical BC POP
+  trial passed from defaults but is now retired from comparison. Rejected,
+  failed and time-limited trials remain cached separately.
+
+## BC POP output revisit — 2026-10-17
+
+The matching production repository, report tables and related public PBS
+repositories did not yield numerical historical N/F/recruitment/SSB outputs.
+BC POP is now blocked from fitting and excluded from the comparison summaries
+and plots; canonical inputs and official summaries are unchanged. See the
+[source review](source_reviews/dfo_pop_bc.md) for cached search evidence and the
+proposed U.S. West Coast petrale sole alternative. No replacement was fitted.
+
+The six targeted source, readiness, prior and reporting test files pass, as
+does database validation. Other stocks' diagnostic and comparison rows are
+unchanged. The agreement heatmap and four trend plots now contain the same
+27 cases; the 7-column, 4-row trend layout and grey ocean labels are retained.
+The full package suite passes with its one interactive-only skip. The full
+assessment-analysis suite and `R CMD check` were not repeated for this
+source-readiness/reporting change; package code and canonical tables are unchanged.

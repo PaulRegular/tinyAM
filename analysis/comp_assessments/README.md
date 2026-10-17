@@ -120,9 +120,10 @@ Pacific expansion source reviews: [BSAI Pacific ocean perch](source_reviews/afsc
 [Strait of Georgia Pacific herring](source_reviews/dfo_herring_sog.md) is curated,
 but translation is blocked by its aggregate spawning-biomass survey without
 survey ages; it has not received a tinyAM fitting attempt.
-[British Columbia Pacific ocean perch](source_reviews/dfo_pop_bc.md) has a
-pooled female translation, with weakly identified M and an unresolved native
-spawning-output definition flagged for review.
+[British Columbia Pacific ocean perch](source_reviews/dfo_pop_bc.md) remains
+curated but is blocked from fitting and comparison: matching numerical historical
+population outputs have not been recovered. Earlier exploratory fits are archived;
+constant M and boundary biomass alone do not support the intended comparison.
 [Aleutian Islands Pacific cod](source_reviews/afsc_cod_ai.md) remains blocked
 pending native inputs matching the final production assessment.
 [BSAI arrowtooth flounder](source_reviews/afsc_arrowtooth_flounder_bsai.md)

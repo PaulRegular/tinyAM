@@ -1,6 +1,6 @@
 # Pacific expansion review
 
-The database now has 35 current detailed stock records, including twelve additional Pacific cases. Nine new cases received actual optimization attempts: five passed numerical checks, three returned non-converged fits and one was interrupted without usable reporting. Three cases are blocked before fitting. Eight new dashboards are cached locally. This falls short of twelve runnable, actually fitted translations; blocked guards are not counted as fitted recipes.
+The database has 35 current detailed stock records, including twelve additional Pacific cases. Nine new cases historically received actual optimization attempts. BC POP is now source-output blocked despite a numerical pass. The current status is four numerical passes, three non-converged fits, one interrupted run and four source blockers. Seven active new-case dashboards and the historical BC trial are cached locally. This falls short of twelve runnable translations; blocked guards are not counted as fitted recipes.
 
 The initial expansion retained existing stock specifications. The subsequent source/model review updates hake and BC POP mortality treatment, North Sea saithe initial abundance and Baltic sprat spawning time; other existing comparisons remain retained results. New diagnostics and comparisons come from the documented default-first attempts. Source additions were committed before their translation/readiness records and pushed separately. No core model mathematics changed.
 
@@ -10,9 +10,9 @@ Review thresholds are mean absolute percent difference >20, absolute terminal me
 
 The twelve new cases were reviewed against their cached source inputs, native prior equations and translation code. Per-stock source reviews retain the unit, timing, sex/area, likelihood and completeness findings. Canonical numerical inputs and official outputs were not changed.
 
-Hake's restored source log-M penalty improves median absolute SSB difference from 69.6% to 44.8% (r 0.619 to 0.751), total abundance from 71.8% to 42.8% (r 0.785 to 0.904), and age-2 recruitment from 77.8% to 55.2% (r 0.959 to 0.969). Hake M differs by 21.5%; BC POP M differs by 22.5% after a positive moment approximation to its source normal prior. Both retain finite shared log-M effect SEs. Native bounds and integration conventions remain different.
+Hake's restored source log-M penalty improves median absolute SSB difference from 69.6% to 44.8% (r 0.619 to 0.751), total abundance from 71.8% to 42.8% (r 0.785 to 0.904), and age-2 recruitment from 77.8% to 55.2% (r 0.959 to 0.969). Hake M differs by 21.5%, with finite shared log-M effect uncertainty. The historical BC POP M-prior trial also had finite uncertainty, but is now retired from comparison because annual population outputs have not been recovered. Native bounds and integration conventions remain different.
 
-EBS cod, Atka and Alaska plaice retain their baselines because alternatives fail checks or worsen other core comparisons. Northern rock sole still fails with verified M/q penalties restored; a random-N initializer passes numerical checks but yields implausible states and is rejected. AI pollock and yellowfin sole remain non-converged; later expensive yellowfin/POP trials are incomplete. The three source-blocked cases remain blocked.
+EBS cod, Atka and Alaska plaice retain their baselines because alternatives fail checks or worsen other core comparisons. Northern rock sole still fails with verified M/q penalties restored; a random-N initializer passes numerical checks but yields implausible states and is rejected. AI pollock and yellowfin sole remain non-converged; later expensive yellowfin/POP trials are incomplete. The original three source-blocked cases remain blocked, and BC POP is now a fourth.
 
 The related saithe free-initial-abundance change improves all five comparable core metrics; sprat now applies the source 40% pre-spawning fraction. Sprat's revised SSB definition is not a like-for-like agreement improvement. The full one-off trial log and table are retained in [the review checkpoint](https://github.com/PaulRegular/tinyAM/blob/e7b2ac6/analysis/comp_assessments/PACIFIC_MODEL_REVIEW.md); trial fits and initialization histories remain in the local gitignored cache. The experimental runners and duplicate table are retired from the routine workflow.
 
@@ -109,13 +109,12 @@ The related saithe free-initial-abundance change improves all five comparable co
 | New: Eastern Bering Sea Pacific cod | Total N |   19 | -28.8 | 0.861 | matched | Pooled empirical catch-age key and selectivity simplification |
 | New: Eastern Bering Sea Pacific cod | Recruitment | 35.6 | 20.9 | 0.697 | matched | Pooled empirical catch-age key and selectivity simplification |
 | New: Eastern Bering Sea Pacific cod | SSB | 21.7 | -56.7 | 0.581 | approximate | Pooled empirical catch-age key and selectivity simplification |
-| New: British Columbia Pacific ocean perch | M | 22.5 | -22.5 | — | matched; estimated | Approximate source M prior; pooled areas and missing historical outputs |
 
 Constant M series have no defined temporal correlation. A fixed approximation to source-estimated M is labelled explicitly; equality is not evidence that tinyAM estimated M successfully.
 
 ## New-case numerical outcomes
 
-SD-report creation is separate from usable uncertainty. In particular AI pollock, yellowfin sole and northern rock sole have failed curvature/covariance checks. The review restored source mortality information in hake and BC POP. Both pass numerical checks with finite shared log-M effect uncertainty; a numerical pass still does not establish scientific agreement.
+SD-report creation is separate from usable uncertainty. AI pollock, yellowfin sole and northern rock sole have failed curvature/covariance checks. Hake passes numerical checks with its restored source mortality information. BC POP's historical trial passed too, but its current diagnostic is a source-output blocker, not an optimizer failure. A numerical pass does not establish scientific agreement.
 
 | Case | Status | Code | Objective | Max gradient | SD report created | PD Hessian |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -130,9 +129,9 @@ SD-report creation is separate from usable uncertainty. In particular AI pollock
 | New: Bering Sea/Aleutian Islands Pacific ocean perch | execution_failed | NA | — | — | NA | NA |
 | New: Joint U.S.-Canada coastal Pacific hake | converged |  0 | 1.19e+03 | 0.000868 | TRUE | TRUE |
 | New: Strait of Georgia Pacific herring | translation_failed | NA | — | — | NA | NA |
-| New: British Columbia Pacific ocean perch | converged |  0 | 2.21e+03 | 0.00164 | TRUE | TRUE |
+| New: British Columbia Pacific ocean perch | translation_failed | NA | — | — | NA | NA |
 
-Initial expansion fits drove M near zero (hake log-M SE 298.1; BC POP 1924.9). Restoring a shared source log-M penalty gives hake M 0.18335 with effect SE 0.09591. A positive moment approximation to the source normal prior gives BC POP M 0.04053 with effect SE 0.22890. Native hard bounds and integration conventions remain different. Each model specification uses normal starts first and at most one retry after numerical failure; poor agreement alone never triggers an initialization retry. Atka, Alaska plaice and hake used one conditional source-start optimization; EBS cod and BC POP passed from defaults. Both allowed attempts failed numerical checks for AI pollock, yellowfin sole and northern rock sole. The interrupted BSAI POP run lacks a completed attempt history; its stage is not guessed.
+Initial expansion fits drove M near zero (hake log-M SE 298.1; BC POP 1924.9). Restoring a shared source log-M penalty gives hake M 0.18335 with effect SE 0.09591. The retired BC POP trial used a positive moment approximation to the source normal prior, giving M 0.04053 with effect SE 0.22890. Native hard bounds and integration conventions remain different. Each model specification uses normal starts first and at most one retry after numerical failure; poor agreement alone never triggers an initialization retry. Atka, Alaska plaice and hake used one conditional source-start optimization; EBS cod and the historical BC POP trial passed from defaults. Both allowed attempts failed numerical checks for AI pollock, yellowfin sole and northern rock sole. The interrupted BSAI POP run lacks a completed attempt history; its stage is not guessed.
 
 ## Existing numerical or source blockers
 
@@ -159,7 +158,7 @@ Each entry below lists missing or incompatible core comparisons. Constant-series
 | New: Aleutian Islands walleye pollock | F-at-age: unavailable |
 | New: Joint U.S.-Canada coastal Pacific hake | F-at-age: unavailable |
 | New: Strait of Georgia Pacific herring | SSB: no fitted statistics; Recruitment: no fitted statistics; Total N: no fitted statistics; N-at-age: no fitted statistics; F-at-age: no fitted statistics; M: no fitted statistics |
-| New: British Columbia Pacific ocean perch | F-at-age: unavailable; N-at-age: unavailable; Total N: non_equivalent; Recruitment: non_equivalent; SSB: non_equivalent |
+| New: British Columbia Pacific ocean perch | SSB: no fitted statistics; Recruitment: no fitted statistics; Total N: no fitted statistics; N-at-age: no fitted statistics; F-at-age: no fitted statistics; M: no fitted statistics |
 | New: Aleutian Islands Pacific cod | SSB: no fitted statistics; Recruitment: no fitted statistics; Total N: no fitted statistics; N-at-age: no fitted statistics; F-at-age: no fitted statistics; M: no fitted statistics |
 | New: Bering Sea and Aleutian Islands arrowtooth flounder | SSB: no fitted statistics; Recruitment: no fitted statistics; Total N: no fitted statistics; N-at-age: no fitted statistics; F-at-age: no fitted statistics; M: no fitted statistics |
 
@@ -193,8 +192,8 @@ This checks aligned values only; it does not credit fixed M as successful estima
 - SoG herring: aggregate spawning-biomass survey with no observed survey ages; density-dependent M and discrete fleets also differ. No artificial age allocation or catch-only substitute.
 - AI cod: public September native fit differs from final November production run; final composition/weight inputs and SSB scaling unresolved.
 - Arrowtooth: no verified numerical likelihood compositions/age–length key or survey timing; recovered fitted N/F are not observations.
-- BC POP: female area pooling; only M is a recovered historical core comparison. The native reproductive-output/mature-biomass definition needs confirmation. Native intervals are 90%, not 95%.
+- BC POP: matching public inputs, constant M and terminal/reference summaries were recovered, but numerical historical N/F/recruitment/SSB were not. The case is blocked and excluded from comparison; the native reproductive-output/mature-biomass definition also needs confirmation. The source review documents the search and proposes U.S. West Coast petrale sole 2023, whose official model archive includes fitted historical outputs. Its native spawning output is eggs, not biomass; no replacement was fitted.
 - Other new fits omit source composition covariance, ageing error, normalized/sex/fleet selectivity constraints, and in some cases informative M/q priors. Zero composition categories retain source zero values but tinyAM lognormal observations treat them as missing.
 - Every new source file is cached with provenance. Completeness remains partial where likelihood arrays, activation, point conventions, biological inputs or joint posterior outputs are unresolved.
 
-See the per-stock source reviews, compact result CSVs and gitignored results/cache/<assessment_id>/dashboard.html for diagnostics and visual comparisons. Source-blocked records have no dashboard or invented optimizer. CAPABILITY_GAPS.md distinguishes supported features, approximations and source-data blockers.
+See the per-stock source reviews, compact result CSVs and gitignored results/cache/<assessment_id>/dashboard.html for diagnostics and visual comparisons. Source-blocked records have no current comparison dashboard or invented optimizer; the prior BC trial remains archived as historical work. CAPABILITY_GAPS.md distinguishes supported features, approximations and source-data blockers.
