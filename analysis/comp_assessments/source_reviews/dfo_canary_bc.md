@@ -113,3 +113,34 @@ Routine fitting reads canonical records and never invokes either script.
 Source tests check fleet and survey coverage, composition normalization, sex
 dimensions, timing, units, the effective maturity cutoff, provisional catches,
 subset/published uncertainty and absence of fabricated population outputs.
+
+## Translation checkpoint
+
+The stock recipe models female abundance directly for 1977–2022 at ages
+1–60+, with a one-year reporting projection. Biological weights and January
+spawning match the effective source definition; age 0 is immature. Female
+catch and survey numbers use the joint-sex weighted denominator before
+selecting female cells, not a fixed adult female fraction.
+
+Pooled catch biomass is allocated using each sampled year's trawl joint-sex
+age profile. This assumes the unsampled non-trawl fleet shares that profile;
+its native biomass is about 4% of removals during the modeled period. No
+missing age samples are filled. Consequently total catches alone, including
+2018–2022, do not enter the tinyAM age-specific likelihood. QCS, WCVI and NMFS
+are retained; aggregate-only CPUE, HS, WCHG and GIG are omitted from fitting
+but preserved canonically. The code and background identify these limitations.
+
+The initial candidate used deterministic survival, free initial ages,
+Beverton–Holt age-1 recruitment, a shared temporal F mean with a rising age
+curve and IID residuals, logistic survey q and a source-centered log-M penalty.
+The natural-normal M prior and source selectivity, composition, catch and
+integration mathematics are approximated, not reproduced.
+
+The default-start Beverton–Holt attempt was stopped after about 283 seconds
+for computational cost before the outer optimizer returned. Its inner solver
+had completed two logged iterations. This is **an incomplete execution, not
+evidence of numerical non-convergence or scientific disagreement**. No source
+start or SD report was obtained. The attempt record and transcript remain
+local; this checkpoint preserves the candidate code in Git. A practical
+constant-recruitment-mean alternative will be evaluated separately with normal
+package starts, keeping observations and all other settings identical.
