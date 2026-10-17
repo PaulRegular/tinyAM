@@ -13,9 +13,9 @@
 "dfo_herring_4tvn_spring_2024","4830fb11efe56abc21d839cc53a5385810c9ef3e","converged",TRUE,0,"relative convergence (4)",1171.11035896813,0.000310509564737771,20.6009492718426,TRUE,TRUE,29,1033,4.5126690864563,""
 "ices_bluewhiting_northeast_atlantic_2026","4830fb11efe56abc21d839cc53a5385810c9ef3e","converged",TRUE,0,"relative convergence (4)",537.908732690383,0.000492897291027916,0.000492897291027916,TRUE,TRUE,26,505,10.9126279354095,""
 "ices_herring_norwegian_spring_2025","4830fb11efe56abc21d839cc53a5385810c9ef3e","converged",TRUE,0,"relative convergence (4)",1026.99322854688,0.00048834524019814,0.00048834524019814,TRUE,TRUE,53,803,2.0652391910553,""
-"ices_sprat_baltic_2026","4830fb11efe56abc21d839cc53a5385810c9ef3e","converged",TRUE,0,"relative convergence (4)",474.004128783679,0.000355668135185061,0.000355668135185061,TRUE,TRUE,28,824,2.1306300163269,""
+"ices_sprat_baltic_2026","4a3d9a508831c2b0b561dfa9d69a4883e8d2eb4a","converged",TRUE,0,"relative convergence (4)",474.004128783678,0.000355768053276417,0.000355768053276417,TRUE,TRUE,28,824,2.54590487480164,"Source 40% pre-spawning fraction restored; existing aligned N/F initialization retained. See source review."
 "ices_plaice_north_sea_2026","4830fb11efe56abc21d839cc53a5385810c9ef3e","converged",TRUE,0,"relative convergence (4)",766.522956872277,0.00044980666095773,0.00044980666095773,TRUE,TRUE,48,1370,3.04679799079895,""
-"ices_saithe_north_sea_2026","4830fb11efe56abc21d839cc53a5385810c9ef3e","converged",TRUE,0,"relative convergence (4)",339.525576974149,0.000657682910846447,51.6430217393281,TRUE,TRUE,13,702,1.95637583732605,""
+"ices_saithe_north_sea_2026","86e44bf96845af5510f1a702b1c1fa12db2421ad","converged",TRUE,0,"relative convergence (4)",319.491409574555,3.82048341052155e-06,51.6382361171188,TRUE,TRUE,18,702,5.71967601776123,"Retained after translation review: free_initial_abundance ; see source review. | default: converged; gradient=3.82e-06; "
 "ices_whiting_north_sea_2026","4830fb11efe56abc21d839cc53a5385810c9ef3e","converged",TRUE,0,"relative convergence (4)",631.757900163831,0.00136463746631188,0.00136463746631188,TRUE,TRUE,21,873,1.98905301094055,""
 "ices_herring_western_baltic_2026","4830fb11efe56abc21d839cc53a5385810c9ef3e","converged",TRUE,0,"relative convergence (4)",425.023234290339,0.000436425099272109,0.000436425099272109,TRUE,TRUE,25,414,1.72671604156494,""
 "ices_norway_pout_north_sea_2026_benchmark","4830fb11efe56abc21d839cc53a5385810c9ef3e","converged",TRUE,0,"relative convergence (4)",638.21617090778,0.000463093193395841,0.000463093193395841,TRUE,TRUE,36,324,1.54876899719238,""
@@ -75,16 +75,17 @@ x Fixed-parameter covariance must be available and finite.
 x The Hessian must be positive definite.
 i Optimizer code zero alone is insufficient. A missed gradient tolerance alone
   does not establish a structural problem."
-"joint_hake_coastal_2025","c5e626f6783de370f03d7fea8991ed6995006e9f","converged",TRUE,0,"relative convergence (4)",1176.54340748747,0.000693548894260765,0.000693548894260765,TRUE,TRUE,24,749,111.535304069519," | default: failed numerical checks; gradient=0.000105; Numerical convergence checks did not pass; inspect `check_tam(fit)`.
+"joint_hake_coastal_2025","86e44bf","converged",TRUE,0,"relative convergence (4)",1185.7296626786,0.000867803813952683,0.000867803813952683,TRUE,TRUE,23,750,140.309386968613,"Retained after source/translation review: source_M_prior ; see PACIFIC_MODEL_REVIEW.md. | default: failed numerical checks; gradient=0.00115; NaNs produced | NaNs produced | NaNs produced | NaNs produced | NaNs produced | NaNs produced | NaNs produced | NaNs produced | Numerical convergence checks did not pass; inspect `check_tam(fit)`.
 x Fixed-parameter covariance must be available and finite.
+x The Hessian must be positive definite.
 i Optimizer code zero alone is insufficient. A missed gradient tolerance alone
-  does not establish a structural problem. Source starts unavailable: Official numbers_at_age starting values must be finite and positive. | source_start: converged; gradient=0.000694; "
+  does not establish a structural problem. | source_start: converged; gradient=0.000868; "
 "afsc_cod_ebs_2024","7bbb252689b3ccabc7a74fbaecb96ccb02c34890","converged",TRUE,0,"relative convergence (4)",372.259146795476,0.00135769859915683,0.00135769859915683,TRUE,TRUE,28,311,6.46921801567078," | default: converged; gradient=0.00136; "
 "dfo_herring_sog_2025","d9d66c931e5fe2cf75c1169b1896d087f2ac6bd2","translation_failed",,,"",,,,,,,,0.00912714004516602,"SoG herring translation is blocked: the survey is aggregate spawning
 biomass with no observed survey ages.
 i tinyAM's current age-specific index likelihood cannot represent this
   observation. See source_reviews/dfo_herring_sog.md."
-"dfo_pop_bc_2023","124e62ccc77c1b1808ebf9704f4e2f9dd79d8d51","converged",TRUE,0,"relative convergence (4)",2199.54453659878,0.00140523109183022,0.00140523109183022,TRUE,TRUE,78,1139,12.8009421825409," | default: converged; gradient=0.00141;  Practical identification warning: estimated M 2.87e-9 versus official female .05229; log-M SE 1924.9. Numerical convergence retained; no agreement-driven retry."
+"dfo_pop_bc_2023","86e44bf","converged",TRUE,0,"relative convergence (4)",2206.60832416025,0.00164015881651292,0.00164015881651292,TRUE,TRUE,77,1140,17.4868650436401,"Retained after source/translation review: source_M_prior ; see PACIFIC_MODEL_REVIEW.md. | default: converged; gradient=0.00164; "
 "afsc_cod_ai_2024","bde6c5ebca6be50595ce05c825a5ae8bd446e32d","translation_failed",,,"",,,,,,,,0.00944805145263672,"AI cod translation is blocked pending matching final production inputs
 and biological weights.
 i Public September M24_1 output differs from the final November assessment. See

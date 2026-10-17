@@ -103,3 +103,9 @@ No additional retry was launched because that could exceed the single-retry
 policy. The helper now saves each attempt before and after execution so later
 interruptions cannot lose this history. No data or model assumptions were
 changed to rescue this case.
+
+## Source and model review — 2026-10-17
+
+Confirmed original grams, active surveys, plug-in maturity and the bias-adjusted source M log-penalty center. Time-limited correlated/shared-level F and M-prior trials did not return a completed usable fit. The original interruption remains explicit; no result is inferred from incomplete optimization.
+
+See [the complete twelve-case review](../PACIFIC_MODEL_REVIEW.md) for paired median differences, correlations, diagnostics and rejected trials. Canonical numerical inputs and outputs are unchanged.

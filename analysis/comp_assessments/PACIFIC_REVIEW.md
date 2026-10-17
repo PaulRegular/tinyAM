@@ -2,7 +2,7 @@
 
 The database now has 35 current detailed stock records, including twelve additional Pacific cases. Nine new cases received actual optimization attempts: five passed numerical checks, three returned non-converged fits and one was interrupted without usable reporting. Three cases are blocked before fitting. Eight new dashboards are cached locally. This falls short of twelve runnable, actually fitted translations; blocked guards are not counted as fitted recipes.
 
-Existing stock model specifications were retained. Existing comparison rows are retained results, not new fitting attempts. New diagnostics and comparisons come from the documented default-first attempts. Source additions were committed before their translation/readiness records and pushed separately. No core model mathematics changed.
+The initial expansion retained existing stock specifications. The subsequent source/model review updates hake and BC POP mortality treatment, North Sea saithe initial abundance and Baltic sprat spawning time; other existing comparisons remain retained results. New diagnostics and comparisons come from the documented default-first attempts. Source additions were committed before their translation/readiness records and pushed separately. No core model mathematics changed.
 
 Review thresholds are mean absolute percent difference >20, absolute terminal mean percent difference >20, or trend correlation <0.90. Annual aggregate correlation and mean within-age temporal correlation are retained, not squared. Missing statistics are not passes. These are review prompts, not tuning targets or scientific-equivalence tests.
 
@@ -50,9 +50,9 @@ Review thresholds are mean absolute percent difference >20, absolute terminal me
 | Existing: Norwegian spring-spawning herring | N-at-age | 21.5 | 6.71 | 0.943 | matched | Native process/sharing configuration unresolved |
 | Existing: Norwegian spring-spawning herring | Recruitment | 45.7 | -23.4 | 0.735 | matched | Native process/sharing configuration unresolved |
 | Existing: North Sea plaice | F-at-age | 22.9 | -0.209 | 0.929 | matched | Fleet aggregation and F sharing/correlation differ |
-| Existing: North Sea saithe | Total N | 12.2 | 45.6 | 0.911 | matched | Source sharing and observation covariance differ |
-| Existing: North Sea saithe | F-at-age | 31.6 |  9.6 | 0.807 | matched | Source sharing and observation covariance differ |
-| Existing: North Sea saithe | Recruitment | 16.5 | 49.4 | 0.926 | matched | Source sharing and observation covariance differ |
+| Existing: North Sea saithe | Total N | 11.1 | 46.1 | 0.935 | matched | Source sharing and observation covariance differ |
+| Existing: North Sea saithe | F-at-age | 30.4 |  8.2 | 0.841 | matched | Source sharing and observation covariance differ |
+| Existing: North Sea saithe | Recruitment | 15.6 | 48.8 | 0.94 | matched | Source sharing and observation covariance differ |
 | Existing: North Sea whiting | F-at-age | 24.3 | 6.57 | 0.929 | matched | Source GMRF M replaced by supplied inputs |
 | Existing: North Sea whiting | M | 5.44 | -2.4 | 0.889 | matched; fixed approximation | Source GMRF M replaced by supplied inputs |
 | Existing: North Sea whiting | Recruitment | 15.9 | -17.8 | 0.868 | matched | Source GMRF M replaced by supplied inputs |
@@ -83,29 +83,29 @@ Review thresholds are mean absolute percent difference >20, absolute terminal me
 | New: Eastern Bering Sea yellowfin sole | Total N | 6.8e+03 | 6.76e+03 | 0.139 | matched; exploratory not_converged | Non-convergence; female subset and source timing differ |
 | New: Eastern Bering Sea yellowfin sole | Recruitment | 6.41e+04 | 3.67e+04 | -0.0786 | matched; exploratory not_converged | Non-convergence; female subset and source timing differ |
 | New: Eastern Bering Sea yellowfin sole | SSB | 47.9 | -63.9 | 0.67 | approximate; exploratory not_converged | Non-convergence; female subset and source timing differ |
-| New: Eastern Bering Sea northern rock sole | F-at-age | 1.65e+04 | 4.32e+03 | 0.0623 | approximate; exploratory not_converged | Non-convergence; female subset and missing M prior |
-| New: Eastern Bering Sea northern rock sole | M |  100 | -100 | — | matched; estimated; exploratory not_converged | Non-convergence; female subset and missing M prior |
-| New: Eastern Bering Sea northern rock sole | N-at-age | 2.02e+04 | 2.79e+04 | 0.784 | matched; exploratory not_converged | Non-convergence; female subset and missing M prior |
-| New: Eastern Bering Sea northern rock sole | Total N | 6.12e+04 | 9.13e+04 | 0.308 | matched; exploratory not_converged | Non-convergence; female subset and missing M prior |
-| New: Eastern Bering Sea northern rock sole | Recruitment | 1.66e+05 | 1.68e+05 | 0.505 | matched; exploratory not_converged | Non-convergence; female subset and missing M prior |
-| New: Eastern Bering Sea northern rock sole | SSB |  720 | 1.28e+03 | -0.274 | approximate; exploratory not_converged | Non-convergence; female subset and missing M prior |
-| New: Joint U.S.-Canada coastal Pacific hake | M |  100 | -100 | — | matched; estimated | Near-zero poorly identified M; source prior omitted |
-| New: Joint U.S.-Canada coastal Pacific hake | N-at-age |  101 | 26.7 | 0.883 | approximate | Near-zero poorly identified M; source prior omitted |
-| New: Joint U.S.-Canada coastal Pacific hake | Total N | 71.6 |  -66 | 0.785 | approximate | Near-zero poorly identified M; source prior omitted |
-| New: Joint U.S.-Canada coastal Pacific hake | Recruitment |   92 | 82.4 | 0.959 | matched | Near-zero poorly identified M; source prior omitted |
-| New: Joint U.S.-Canada coastal Pacific hake | SSB | 69.9 | -64.3 | 0.619 | approximate | Near-zero poorly identified M; source prior omitted |
+| New: Eastern Bering Sea northern rock sole | F-at-age | 1.65e+04 | 4.32e+03 | 0.0623 | approximate; exploratory not_converged | Non-convergence; female subset and joint composition likelihood differ |
+| New: Eastern Bering Sea northern rock sole | M |  100 | -100 | — | matched; estimated; exploratory not_converged | Non-convergence; female subset and joint composition likelihood differ |
+| New: Eastern Bering Sea northern rock sole | N-at-age | 2.02e+04 | 2.79e+04 | 0.784 | matched; exploratory not_converged | Non-convergence; female subset and joint composition likelihood differ |
+| New: Eastern Bering Sea northern rock sole | Total N | 6.12e+04 | 9.13e+04 | 0.308 | matched; exploratory not_converged | Non-convergence; female subset and joint composition likelihood differ |
+| New: Eastern Bering Sea northern rock sole | Recruitment | 1.66e+05 | 1.68e+05 | 0.505 | matched; exploratory not_converged | Non-convergence; female subset and joint composition likelihood differ |
+| New: Eastern Bering Sea northern rock sole | SSB |  720 | 1.28e+03 | -0.274 | approximate; exploratory not_converged | Non-convergence; female subset and joint composition likelihood differ |
+| New: Joint U.S.-Canada coastal Pacific hake | M | 21.5 | -21.5 | — | matched; estimated | Source M penalty restored; recruitment/selectivity and likelihood differ |
+| New: Joint U.S.-Canada coastal Pacific hake | N-at-age |  134 |  128 | 0.886 | approximate | Source M penalty restored; recruitment/selectivity and likelihood differ |
+| New: Joint U.S.-Canada coastal Pacific hake | Total N | 41.7 | -30.8 | 0.904 | approximate | Source M penalty restored; recruitment/selectivity and likelihood differ |
+| New: Joint U.S.-Canada coastal Pacific hake | Recruitment |  137 |  346 | 0.969 | matched | Source M penalty restored; recruitment/selectivity and likelihood differ |
+| New: Joint U.S.-Canada coastal Pacific hake | SSB | 42.2 | -30.1 | 0.751 | approximate | Source M penalty restored; recruitment/selectivity and likelihood differ |
 | New: Eastern Bering Sea Pacific cod | F-at-age | 70.1 |  107 | -0.2 | approximate | Pooled empirical catch-age key and selectivity simplification |
 | New: Eastern Bering Sea Pacific cod | N-at-age | 42.1 | -43.7 | 0.681 | matched | Pooled empirical catch-age key and selectivity simplification |
 | New: Eastern Bering Sea Pacific cod | Total N |   19 | -28.8 | 0.861 | matched | Pooled empirical catch-age key and selectivity simplification |
 | New: Eastern Bering Sea Pacific cod | Recruitment | 35.6 | 20.9 | 0.697 | matched | Pooled empirical catch-age key and selectivity simplification |
 | New: Eastern Bering Sea Pacific cod | SSB | 21.7 | -56.7 | 0.581 | approximate | Pooled empirical catch-age key and selectivity simplification |
-| New: British Columbia Pacific ocean perch | M |  100 | -100 | — | matched; estimated | Near-zero poorly identified M; pooled areas |
+| New: British Columbia Pacific ocean perch | M | 22.5 | -22.5 | — | matched; estimated | Approximate source M prior; pooled areas and missing historical outputs |
 
 Constant M series have no defined temporal correlation. A fixed approximation to source-estimated M is labelled explicitly; equality is not evidence that tinyAM estimated M successfully.
 
 ## New-case numerical outcomes
 
-SD-report creation is separate from usable uncertainty. In particular AI pollock, yellowfin sole and northern rock sole have failed curvature/covariance checks. Hake and BC POP have numerical passes but practically unidentified M; their very wide log-M intervals are not useful uncertainty estimates.
+SD-report creation is separate from usable uncertainty. In particular AI pollock, yellowfin sole and northern rock sole have failed curvature/covariance checks. The review restored source mortality information in hake and BC POP. Both pass numerical checks with finite shared log-M effect uncertainty; a numerical pass still does not establish scientific agreement.
 
 | Case | Status | Code | Objective | Max gradient | SD report created | PD Hessian |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -118,11 +118,11 @@ SD-report creation is separate from usable uncertainty. In particular AI pollock
 | New: Bering Sea/Aleutian Islands Alaska plaice | converged |  0 |  296 | 0.000904 | TRUE | TRUE |
 | New: Bering Sea and Aleutian Islands arrowtooth flounder | translation_failed | NA | — | — | NA | NA |
 | New: Bering Sea/Aleutian Islands Pacific ocean perch | execution_failed | NA | — | — | NA | NA |
-| New: Joint U.S.-Canada coastal Pacific hake | converged |  0 | 1.18e+03 | 0.000694 | TRUE | TRUE |
+| New: Joint U.S.-Canada coastal Pacific hake | converged |  0 | 1.19e+03 | 0.000868 | TRUE | TRUE |
 | New: Strait of Georgia Pacific herring | translation_failed | NA | — | — | NA | NA |
-| New: British Columbia Pacific ocean perch | converged |  0 | 2.2e+03 | 0.00141 | TRUE | TRUE |
+| New: British Columbia Pacific ocean perch | converged |  0 | 2.21e+03 | 0.00164 | TRUE | TRUE |
 
-Hake: M about 3.11e-7, log-M SE 298.1. BC POP: M about 2.87e-9, log-M SE 1924.9. Neither case received an agreement-driven retry. Source M priors/bounds are omitted in these translations. Atka, Alaska plaice and hake used one conditional source-start optimization; EBS cod and BC POP passed from defaults. Both allowed attempts failed numerical checks for AI pollock, yellowfin sole and northern rock sole. The interrupted BSAI POP run lacks a completed attempt history; its stage is not guessed.
+Initial expansion fits drove M near zero (hake log-M SE 298.1; BC POP 1924.9). Restoring a shared source log-M penalty gives hake M 0.18335 with effect SE 0.09591. A positive moment approximation to the source normal prior gives BC POP M 0.04053 with effect SE 0.22890. Native hard bounds and integration conventions remain different. Each model specification uses normal starts first and at most one retry after numerical failure; poor agreement alone never triggers an initialization retry. Atka, Alaska plaice and hake used one conditional source-start optimization; EBS cod and BC POP passed from defaults. Both allowed attempts failed numerical checks for AI pollock, yellowfin sole and northern rock sole. The interrupted BSAI POP run lacks a completed attempt history; its stage is not guessed.
 
 ## Existing numerical or source blockers
 

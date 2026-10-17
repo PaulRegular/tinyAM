@@ -70,3 +70,9 @@ conversion. Preliminary fitted surfaces are not a substitute. This is one
 partial curated case, **not a completed runnable translation or actual fitting
 attempt**. Missing data and unresolved definitions are explicit shortfalls,
 not agreement passes. No starting-value or model rescue was attempted.
+
+## Source and model review — 2026-10-17
+
+Rechecked the production-run mismatch and missing final likelihood inputs. The source guard remains: no mixing preliminary fitted states with final November observations or inventing age data.
+
+See [the complete twelve-case review](../PACIFIC_MODEL_REVIEW.md) for paired median differences, correlations, diagnostics and rejected trials. Canonical numerical inputs and outputs are unchanged.

@@ -79,3 +79,9 @@ This is one curated source case, **not a completed runnable translation or
 actual fitting attempt**. No starting values or model adjustments were tried.
 The source and observation-model limitations are explicit shortfalls against
 the twelve-translation target; no tinyAM mathematics is changed to hide them.
+
+## Source and model review — 2026-10-17
+
+Rechecked original aggregate spawning-biomass survey inputs, missing survey-age compositions and distinct DDM/interim DIM years. No faithful age-specific survey input is recoverable from the cached files. Keep the explicit observation-model guard rather than fit a catch-only substitute.
+
+See [the complete twelve-case review](../PACIFIC_MODEL_REVIEW.md) for paired median differences, correlations, diagnostics and rejected trials. Canonical numerical inputs and outputs are unchanged.

@@ -86,3 +86,9 @@ This is one partial curated case, **not a completed runnable translation or
 actual fitting attempt**. No starting-value retry or model rescue was tried.
 The missing inputs remain an explicit shortfall against the twelve-translation
 target; they are separate from tinyAM's unsupported catch-length likelihood.
+
+## Source and model review — 2026-10-17
+
+Rechecked the ATF-only source identity and missing numerical likelihood compositions, observed age-length key and survey times. Keep the source guard; fitted N/F cannot be used to manufacture observations.
+
+See [the complete twelve-case review](../PACIFIC_MODEL_REVIEW.md) for paired median differences, correlations, diagnostics and rejected trials. Canonical numerical inputs and outputs are unchanged.

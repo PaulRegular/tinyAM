@@ -24,7 +24,8 @@ for(id in names(m_mode)) {
   stock <- .assessment_stock(read_assessment(id,database),FALSE,TRUE)
   if(!is.null(stock$error))next
   spec <- .test_stock(read_assessment(id,database))
-  estimated <- isTRUE(ncol(spec$dat$M_modmat)>0) || spec$dat$M_settings$process!="off"
+  estimated <- isTRUE(ncol(spec$dat$M_modmat)>0) || length(spec$dat$M_terms)>0L ||
+    spec$dat$M_settings$process!="off"
   m_mode[id] <- if(estimated)"estimated" else if(id %in% source_estimated_m)"fixed approximation" else "fixed input"
 }
 flags <- assessment_review_flags(summary,m_mode)
@@ -58,10 +59,10 @@ limitations <- c(
   afsc_pollock_ai_2024="Non-convergence and extreme N/q scale trade-off",
   afsc_alaska_plaice_bsai_2024="Sex pooling and selectivity constraints omitted",
   afsc_yellowfin_sole_ebs_2024="Non-convergence; female subset and source timing differ",
-  afsc_northern_rock_sole_ebs_2024="Non-convergence; female subset and missing M prior",
-  joint_hake_coastal_2025="Near-zero poorly identified M; source prior omitted",
+  afsc_northern_rock_sole_ebs_2024="Non-convergence; female subset and joint composition likelihood differ",
+  joint_hake_coastal_2025="Source M penalty restored; recruitment/selectivity and likelihood differ",
   afsc_cod_ebs_2024="Pooled empirical catch-age key and selectivity simplification",
-  dfo_pop_bc_2023="Near-zero poorly identified M; pooled areas")
+  dfo_pop_bc_2023="Approximate source M prior; pooled areas and missing historical outputs")
 case_name <- function(ids) {
   stock <- current$stock_id[match(ids,current$assessment_id)]
   label <- database$stocks$common_name[match(stock,database$stocks$stock_id)]
@@ -80,7 +81,7 @@ markdown_table <- function(x) {
 ## Review report ----
 out <- c("# Pacific expansion review","",
   "The database now has 35 current detailed stock records, including twelve additional Pacific cases. Nine new cases received actual optimization attempts: five passed numerical checks, three returned non-converged fits and one was interrupted without usable reporting. Three cases are blocked before fitting. Eight new dashboards are cached locally. This falls short of twelve runnable, actually fitted translations; blocked guards are not counted as fitted recipes.","",
-  "Existing stock model specifications were retained. Existing comparison rows are retained results, not new fitting attempts. New diagnostics and comparisons come from the documented default-first attempts. Source additions were committed before their translation/readiness records and pushed separately. No core model mathematics changed.","",
+  "The initial expansion retained existing stock specifications. The subsequent source/model review updates hake and BC POP mortality treatment, North Sea saithe initial abundance and Baltic sprat spawning time; other existing comparisons remain retained results. New diagnostics and comparisons come from the documented default-first attempts. Source additions were committed before their translation/readiness records and pushed separately. No core model mathematics changed.","",
   "Review thresholds are mean absolute percent difference >20, absolute terminal mean percent difference >20, or trend correlation <0.90. Annual aggregate correlation and mean within-age temporal correlation are retained, not squared. Missing statistics are not passes. These are review prompts, not tuning targets or scientific-equivalence tests.","",
   "## All flagged core comparisons","",
   markdown_table(data.frame(Case=case_name(flags$assessment_id),Metric=metric_name[flags$metric],
@@ -91,12 +92,12 @@ out <- c("# Pacific expansion review","",
     check.names=FALSE)),"",
   "Constant M series have no defined temporal correlation. A fixed approximation to source-estimated M is labelled explicitly; equality is not evidence that tinyAM estimated M successfully.","",
   "## New-case numerical outcomes","",
-  "SD-report creation is separate from usable uncertainty. In particular AI pollock, yellowfin sole and northern rock sole have failed curvature/covariance checks. Hake and BC POP have numerical passes but practically unidentified M; their very wide log-M intervals are not useful uncertainty estimates.","")
+  "SD-report creation is separate from usable uncertainty. In particular AI pollock, yellowfin sole and northern rock sole have failed curvature/covariance checks. The review restored source mortality information in hake and BC POP. Both pass numerical checks with finite shared log-M effect uncertainty; a numerical pass still does not establish scientific agreement.","")
 z <- diagnostics[match(new,diagnostics$assessment_id),]
 out <- c(out,markdown_table(data.frame(Case=case_name(new),Status=z$status,Code=z$optimizer_code,
   Objective=number(z$objective),`Max gradient`=number(z$max_abs_gradient),
   `SD report created`=z$sdreport_success,`PD Hessian`=z$positive_definite_hessian,check.names=FALSE)),"",
-  "Hake: M about 3.11e-7, log-M SE 298.1. BC POP: M about 2.87e-9, log-M SE 1924.9. Neither case received an agreement-driven retry. Source M priors/bounds are omitted in these translations. Atka, Alaska plaice and hake used one conditional source-start optimization; EBS cod and BC POP passed from defaults. Both allowed attempts failed numerical checks for AI pollock, yellowfin sole and northern rock sole. The interrupted BSAI POP run lacks a completed attempt history; its stage is not guessed.","",
+  "Initial expansion fits drove M near zero (hake log-M SE 298.1; BC POP 1924.9). Restoring a shared source log-M penalty gives hake M 0.18335 with effect SE 0.09591. A positive moment approximation to the source normal prior gives BC POP M 0.04053 with effect SE 0.22890. Native hard bounds and integration conventions remain different. Each model specification uses normal starts first and at most one retry after numerical failure; poor agreement alone never triggers an initialization retry. Atka, Alaska plaice and hake used one conditional source-start optimization; EBS cod and BC POP passed from defaults. Both allowed attempts failed numerical checks for AI pollock, yellowfin sole and northern rock sole. The interrupted BSAI POP run lacks a completed attempt history; its stage is not guessed.","",
   "## Existing numerical or source blockers","",
   markdown_table(diagnostics[!diagnostics$assessment_id %in% new &
     (!diagnostics$is_converged %in% TRUE | !diagnostics$positive_definite_hessian %in% TRUE),

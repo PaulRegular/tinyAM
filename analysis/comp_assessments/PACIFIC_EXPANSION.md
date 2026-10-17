@@ -54,9 +54,9 @@ committed separately and pushed to `comp-assessments`.
 | BSAI Alaska plaice | Passed after one source-start retry | Sex pooling and source selectivity constraints differ |
 | BSAI arrowtooth | Blocked before fitting | Likelihood compositions, age-length key and survey timing unverified |
 | BSAI Pacific ocean perch | Interrupted after more than seven CPU hours | No completed attempt history, usable fit or dashboard |
-| Coastal Pacific hake | Passed after one source-start retry | M practically unidentified near zero despite numerical pass |
+| Coastal Pacific hake | Passed after one source-start retry | Source M penalty restored in review; M 0.18335, finite effect SE; core comparisons improve but remain approximate |
 | SoG herring | Blocked before fitting | Aggregate spawning-biomass survey has no observed survey-age composition |
-| BC Pacific ocean perch | Passed from defaults | M practically unidentified near zero; historical comparison outputs limited |
+| BC Pacific ocean perch | Passed from defaults | Source M prior approximated in review; M 0.04053, finite effect SE; other historical comparisons remain unavailable |
 
 Nine cases received actual optimization attempts: five numerical passes,
 three non-converged fits and one interrupted run. Eight dashboards are cached
@@ -71,7 +71,7 @@ fixed-M checks and numerical outcomes are in [PACIFIC_REVIEW.md](PACIFIC_REVIEW.
 The review covers the updated library, distinguishing new from existing cases.
 It can be refreshed without fitting by sourcing
 `scripts/translation/review_pacific_expansion.R` from the repository root.
-Existing model specifications were retained; no core model mathematics changed.
+The expansion initially retained existing model specifications. The subsequent [model review](PACIFIC_MODEL_REVIEW.md) documents the selected mortality, initialization and spawning-time changes and rejected alternatives. No core model mathematics changed.
 
 ## Final validation
 
@@ -97,3 +97,28 @@ Existing model specifications were retained; no core model mathematics changed.
 Local validation logs are retained outside the tracked repository. The final
 cross-case reporting changes were checked separately after the full tests;
 no model fitting was repeated to improve agreement.
+
+## Model-review validation — 2026-10-17
+
+The [case-by-case review](PACIFIC_MODEL_REVIEW.md) records the subsequent
+source-informed model trials and selected changes. The original expansion
+outcomes above remain historical where superseded by that review.
+
+- Canonical numerical inputs and official outputs are unchanged from `86e44bf`.
+  The northern rock sole assumption note now distinguishes the verified female
+  M penalty from unresolved male-prior activation. Database validation passes.
+- All nine targeted test files passed, including shared M density/scale,
+  unchanged observations, stock recipes and comparison definitions. The EBS
+  alternative's projection mapping also passed a final targeted rerun.
+- The full package suite passed with its one interactive-only skip.
+- All 62 assessment-analysis files were run: 56 pass after a separate dashboard
+  test rerun; the same six pre-existing fixture/settings failures listed above
+  remain. The dashboard test initially collided with a concurrent render and
+  passes when rendered alone. No assertions were weakened.
+- The last complete `R CMD check --no-manual` at the expansion baseline had
+  zero errors, zero warnings and the existing `plot_bubbles` NOTE. It was not
+  repeated for this analysis-only review; core package sources, tests and
+  generated documentation are unchanged.
+- Selected dashboards and the agreement heatmap were refreshed. The revised
+  hake fit passes after one conditional N-start retry; BC POP passes from
+  defaults. Rejected, failed and time-limited trials remain cached separately.

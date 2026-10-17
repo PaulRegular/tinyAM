@@ -145,8 +145,11 @@ history (the parent of cleanup commit `4830fb1`, at
 current model choices are visible in each stock script's `fit_tam()` call.
 That historical review covered the 23 then-current detailed assessments,
 including blockers for those without recipes. The expanded-library review is
-in [PACIFIC_REVIEW.md](PACIFIC_REVIEW.md), with delivery and validation details
-in [PACIFIC_EXPANSION.md](PACIFIC_EXPANSION.md). Baselines remain when changes weaken diagnostics or
+in [PACIFIC_REVIEW.md](PACIFIC_REVIEW.md). The
+[new-case model review](PACIFIC_MODEL_REVIEW.md) records source and processing
+checks, trial outcomes, and before/after median differences and correlations.
+Delivery and validation details are in [PACIFIC_EXPANSION.md](PACIFIC_EXPANSION.md).
+Baselines remain when changes weaken diagnostics or
 trade one comparison improvement for another loss. Numerical convergence and
 statistical support are reviewed separately; fixed-M agreement is not evidence
 of improvement. See `CAPABILITY_GAPS.md` for the remaining limitations.

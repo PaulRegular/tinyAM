@@ -29,11 +29,17 @@ the requested twelve, not twelve successful replications.
   spatial recruitment or normalized fleet selectivity. BC POP is one three-area
   case; all source distinctions remain canonical. Complete-area catch pooling
   leaves missing-area years missing, rather than creating partial totals.
-- **Priors and identification:** unconstrained M approaches zero in the numerically
-  converged hake and BC POP translations, with log-M SEs about 298 and 1925.
-  These are practical identification failures despite finite numerical
-  covariance. The informative source M priors/bounds are omitted. Starting
-  values are not priors, and agreement alone did not trigger another fit.
+- **Priors and identification:** initial hake and BC POP fits drove M near zero.
+  The [model review](PACIFIC_MODEL_REVIEW.md) uses an existing fixed-SD Gaussian
+  mean effect for one shared log-M level, without a free intercept that could
+  cancel its penalty. Hake retains the native log-M penalty; BC POP uses a
+  positive moment approximation to the native natural-scale normal prior.
+  Both now have finite shared-effect SEs and improved M comparisons, though
+  M still differs by more than 20%. Native bounds and posterior integration
+  remain different. Restoring verified M/q penalties did not resolve northern
+  rock sole convergence; random initial N produced implausible states despite
+  a numerical pass. Initial temporal-process priors, arbitrary q normalization
+  and joint composition likelihoods remain separate limitations.
 - **Biological definitions:** original fixed SS3 growth/CV/allometry can recover
   BC POP weights without fitting source states. EBS cod weights are estimated
   outputs used as labelled plug-in biology. Its worksheet combined mature
