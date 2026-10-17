@@ -1,2 +1,3 @@
-hind <- lapply(fits, fit_hindcast, folds = 5)
-rmse <- lapply(hind, `[[`, "hindcast_rmse")
+check_tam(fit)
+hind <- fit_hindcast(fit, folds = 20)
+hind$hindcast_rmse
