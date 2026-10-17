@@ -126,14 +126,19 @@ plot_trend <- function(
   p <- do.call(plotly::plot_ly, c(list(data = data, x = x), args))
 
   has_ci <- add_intervals && all(c("lwr", "upr") %in% names(data)) && any(is.finite(data$upr))
+  single_x <- length(unique(unlist(stats::model.frame(x, data = data)))) == 1L
   if (has_ci) {
     max_y <- max(c(max_y, data$upr[is.finite(data$upr)] * 1.05))
-    p <- p |>
+    if (!single_x) p <- p |>
       plotly::add_ribbons(
         ymin = ~lwr, ymax = ~upr,
         opacity = 0.3, line = list(width = 0),
         showlegend = FALSE
       )
+    if (single_x) p <- p |> plotly::add_segments(
+      y = ~lwr, yend = ~upr, xend = x, showlegend = FALSE,
+      meta = list(tam_ci = TRUE), hoverinfo = "skip"
+    )
   }
 
   shapes <- NULL
@@ -149,9 +154,8 @@ plot_trend <- function(
     }
   }
 
-  p <- p |>
-    plotly::add_lines(y = y) |>
-    plotly::layout(
+  p <- if (single_x) plotly::add_markers(p, y = y) else plotly::add_lines(p, y = y)
+  p <- p |> plotly::layout(
       title = title,
       xaxis = list(title = xlab),
       yaxis = list(title = ylab, range = c(0, max_y)),
@@ -174,7 +178,8 @@ add_plot_buttons <- function(p) {
   # find ribbon traces (CI)
   rib_idx <- which(vapply(
     data_traces,
-    function(tr) identical(tr$type, "scatter") && !is.null(tr$fill) && nzchar(tr$fill),
+    function(tr) identical(tr$type, "scatter") &&
+      ((!is.null(tr$fill) && nzchar(tr$fill)) || isTRUE(tr$meta$tam_ci)),
     logical(1)
   ))
 
@@ -517,6 +522,11 @@ plot_age_year <- function(data, plot = plot_trend, x = ~year, xlab = "Year",
     return(do.call(plot, c(list(data = data, x = x, xlab = xlab, frame = frame), args)))
   }
   data <- data[order(data$year, data$age), , drop = FALSE]
+  if (length(unique(data$age)) == 1L) {
+    if (is.null(args$title)) args$title <- paste("Age", unique(data$age))
+    if (is.null(args$text)) args$text <- ~paste("Year:", year, "<br>Age:", age)
+    return(do.call(plot, c(list(data = data, x = ~year, xlab = "Year", frame = NULL), args)))
+  }
   projection <- if ("is_proj" %in% names(data)) data$is_proj else rep(FALSE, nrow(data))
   years <- unique(data$year)
   suffix <- vapply(years, function(year) {
