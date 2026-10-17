@@ -166,7 +166,8 @@ follow [Betancur-R. et al. (2017)](https://doi.org/10.1186/s12862-017-0958-3);
 alphabetical ties within groups do not imply a fully resolved species tree.
 Trend facets follow the heatmap from top to bottom, reading facets left to
 right and top to bottom. Add new genera to the shared ordering before plotting.
-Facet labels use ordinary plot text; no `ggtext` dependency is required.
+Trend figures use a seven-column, four-row layout. The stock name appears
+above a smaller grey ocean label, rendered with `ggtext`.
 
 Current comparison tables retain matching status, definitions, units and
 mean/median/terminal differences. Annual trajectories in

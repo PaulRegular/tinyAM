@@ -109,7 +109,11 @@ plot_comparison <- function(metric_name) {
     mutate(
       has_pairs = coalesce(has_pairs, FALSE),
       panel = factor(assessment_id, levels = assessment_id),
-      strip = paste(str_wrap(stock, width = 22), basin, sep = "\n")
+      strip = paste0(
+        gsub("\n", "<br>", str_wrap(stock, width = 22)),
+        "<br><span style='color:#888888; font-size:7pt;'>",
+        basin, "</span>"
+      )
     )
 
   panel_labels <- setNames(
@@ -291,7 +295,8 @@ plot_comparison <- function(metric_name) {
     ) +
     facet_wrap(
       ~panel,
-      ncol = 5,
+      ncol = 7,
+      nrow = 4,
       scales = "free",
       drop = FALSE,
       labeller = labeller(
@@ -338,7 +343,7 @@ plot_comparison <- function(metric_name) {
       ),
       panel.spacing.x = grid::unit(0.4, "lines"),
       panel.spacing.y = grid::unit(0.45, "lines"),
-      strip.text.x = element_text(
+      strip.text.x = ggtext::element_markdown(
         size = 8,
         face = "plain",
         hjust = 0,
@@ -387,8 +392,8 @@ for (metric in names(plots)) {
   ggsave(
     filename = file.path(root, "results", "figures", paste0(metric, ".png")),
     plot = plots[[metric]],
-    width = 10,
-    height = max(8, 2 * ceiling(nrow(stock_info) / 5)),
+    width = 14,
+    height = 8,
     dpi = 300,
     bg = "white"
   )
