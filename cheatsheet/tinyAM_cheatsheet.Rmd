@@ -1,0 +1,282 @@
+---
+title: ""
+documentclass: extarticle
+classoption: [9pt, landscape]
+geometry: [a4paper, margin=8mm]
+output:
+  pdf_document:
+    latex_engine: xelatex
+    includes:
+      in_header: header.tex
+    keep_tex: true
+format:
+  pdf:
+    pdf-engine: xelatex
+    documentclass: extarticle
+    classoption: [9pt, landscape]
+    papersize: a4
+    geometry: [a4paper, margin=8mm]
+    include-in-header: header.tex
+    keep-tex: true
+execute:
+  echo: false
+  warning: false
+  message: false
+---
+
+```{r setup, include=FALSE}
+# Optional API audit: never fit the example models while rendering the PDF.
+# Set TINYAM_REPO to a local comp-assessments checkout for development rendering.
+repo <- Sys.getenv("TINYAM_REPO", unset = "")
+if (nzchar(repo) && dir.exists(repo) && requireNamespace("pkgload", quietly = TRUE)) {
+  pkgload::load_all(repo, quiet = TRUE)
+}
+
+is_loaded <- requireNamespace("tinyAM", quietly = TRUE)
+required <- c("as_tam_data", "check_tam_data", "fit_tam", "update", "vis_tam",
+              "tidy_tam", "check_tam", "fit_retro", "fit_hindcast")
+# update() is an S3 generic from base R, not an exported tinyAM function.
+required_exports <- setdiff(required, "update")
+
+if (is_loaded) {
+  namespace <- asNamespace("tinyAM")
+  exports <- getNamespaceExports("tinyAM")
+  missing_exports <- setdiff(required_exports, exports)
+  if (length(missing_exports)) {
+    warning("tinyAM API changed; review examples: ",
+            paste(missing_exports, collapse = ", "))
+  }
+  api_groups <- grep("_settings$", names(formals(get("fit_tam", namespace))),
+                     value = TRUE)
+  expected_groups <- c("N_settings", "rec_settings", "F_settings", "M_settings",
+                       "catch_settings", "index_settings", "proj_settings")
+  if (!identical(api_groups, expected_groups)) {
+    warning("fit_tam() settings signature changed; review Step 2 examples.")
+  }
+  version_label <- as.character(utils::packageVersion("tinyAM"))
+} else {
+  warning("tinyAM not installed; showing the curated comp-assessments examples.")
+  api_groups <- c("N_settings", "rec_settings", "F_settings", "M_settings",
+                  "catch_settings", "index_settings", "proj_settings")
+  version_label <- "not installed"
+}
+api_groups_short <- paste(c("N", "rec", "F", "M", "catch", "index", "proj"),
+                          collapse = " / ")
+
+rsvg::rsvg_pdf(
+  svg = "../man/figures/logo.svg",
+  file = "logo.pdf"
+)
+```
+
+
+```{=latex}
+\pageheader{tinyAM :: CHEATSHEET}{01 / DATA + MODEL HYPOTHESES + DIAGNOSTICS\hspace{2em} | \hspace{.5em} Formula-driven age-structured assessment}
+\sectitle{1}{TIDY THE INPUT}{tamnavy}\vspace{1mm}
+\begin{minipage}[t]{.37\linewidth}\vspace{0pt}
+\smallkey{Prepare a validated named list}
+\begin{rcode}
+library(tinyAM)
+dat <- as_tam_data(cod_obs)
+check_tam_data(dat)
+names(dat)
+\end{rcode}
+\end{minipage}\hfill
+\begin{minipage}[t]{.60\linewidth}\vspace{0pt}
+\smallkey{Tidy schema: one record per year and age}
+\begin{rcode}
+head(dat$catch[,    c("year", "age", "obs")])
+head(dat$index[,    c("year", "age", "survey", "samp_time", "obs")])
+head(dat$weight[,   c("year", "age", "obs")])
+head(dat$maturity[, c("year", "age", "obs")])
+\end{rcode}
+\end{minipage}\par\vspace{1mm}
+\panelnote{Input tables: \textbf{catch} · \textbf{index} · \textbf{weight} · \textbf{maturity} · optional \textbf{pop\_covariates}. Catchability/observation covariates live in catch or index. Biology and spawning time live in weight/maturity.}
+
+\vspace{2.5mm}
+\sectitle{2}{SPECIFY COMPETING MODEL HYPOTHESES}{tamteal}\vspace{1mm}
+\begin{minipage}[t]{.405\linewidth}\vspace{0pt}
+\smallkey{Start with a deliberately simple baseline}
+\begin{rcode}
+base <- fit_tam(
+  dat, years = 1983:2024, ages = 2:14,
+  N_settings   = list(process = "off", init = "exp"),
+  rec_settings = list(process = "iid", mu_form = ~ 1),
+  F_settings   = list(process = "iid", mu_form = ~ 1),
+  M_settings   = list(process = "off",
+                      mu_supplied = ~ I(0.3)),
+  catch_settings = list(sd_form = ~ 1),
+  index_settings = list(sd_form = ~ 1,
+                        q_form = ~ q_block),
+  silent = TRUE
+)
+\end{rcode}
+\vspace{1mm}
+\panelnote{\textbf{Formula controls:} \texttt{mu\_form} for recruitment and mortality means; \texttt{q\_form} for survey catchability; \texttt{sd\_form} for observation/process SDs. For temporal processes use \texttt{process = "iid"}, \texttt{"rw"} or \texttt{"ar1"} as supported by the component.}
+\end{minipage}\hfill
+\begin{minipage}[t]{.57\linewidth}\vspace{0pt}
+\smallkey{Change one assumption, refit, and compare}\par\vspace{.8mm}
+\begin{minipage}[t]{.49\linewidth}\vspace{0pt}
+\begin{rcode}
+F_mono <- update(base,
+  F_settings = list(mu_form = ~ mono(age))
+)
+rec_bh <- update(base,
+  rec_settings = list(mu_form = ~ bh(ssb))
+)
+\end{rcode}
+\end{minipage}\hfill
+\begin{minipage}[t]{.49\linewidth}\vspace{0pt}
+\begin{rcode}
+q_mono <- update(base,
+  index_settings = list(
+    q_form = ~ mono(q_block))
+)
+N_iid <- update(base,
+  N_settings = list(process = "iid")
+)
+\end{rcode}
+\end{minipage}\par\vspace{1mm}
+\begin{rcode}[colback=tamgoldpale]
+fits <- list(Base = base, F_curve = F_mono,
+             BH = rec_bh, Mono_q = q_mono,
+             N_process = N_iid)
+\end{rcode}
+\vspace{1mm}
+\panelnote{Model structures are hypotheses, not automatically interchangeable. Keep all other settings and inputs fixed where possible; inspect fit quality and identifiability. Ordinary formula examples: \texttt{\string~ 1}, \texttt{\string~ bh(ssb)}, \texttt{\string~ ricker(ssb)}, \texttt{\string~ mono(age)}.}
+\end{minipage}
+
+\vspace{2.5mm}
+\sectitle{3}{VISUALIZE, CHALLENGE AND COMPARE}{tamnavy}\vspace{1mm}
+\begin{minipage}[t]{.34\linewidth}\vspace{0pt}
+\smallkey{Compare in an HTML diagnostics dashboard}
+\begin{rcode}
+vis_tam(model_list = fits,
+        output_file = "models.html",
+        open_file = FALSE)
+tables <- tidy_tam(model_list = fits)
+checks <- lapply(fits, check_tam)
+\end{rcode}
+\end{minipage}\hfill
+\begin{minipage}[t]{.32\linewidth}\vspace{0pt}
+\smallkey{Retrospectives: stability of history}
+\begin{rcode}
+retro <- lapply(fits, fit_retro, folds = 5)
+rho <- lapply(retro, `[[`, "mohns_rho")
+\end{rcode}
+\panelnote{Compare changes in historical population estimates as recent data are successively removed.}
+\end{minipage}\hfill
+\begin{minipage}[t]{.32\linewidth}\vspace{0pt}
+\smallkey{Hindcasts: predictive performance}
+\begin{rcode}
+hind <- lapply(fits, fit_hindcast, folds = 5)
+rmse <- lapply(hind, `[[`, "hindcast_rmse")
+\end{rcode}
+\panelnote{Compare one-year-ahead observation predictions. Each function returns the metric; no manual recalculation needed.}
+\end{minipage}
+
+\pagefooter{Experimental methodological software · R code is shown, not executed during rendering · Workflow help: \texttt{?fit\_tam}, \texttt{?vis\_tam} · github.com/PaulRegular/tinyAM}
+\clearpage
+\pageheader{tinyAM :: MODEL MATHEMATICS}{02 / STATES + PROCESSES + OBSERVATIONS\hspace{2em} | \hspace{.5em} Compact mathematical reference for the model core}
+\begin{minipage}[t]{.325\linewidth}\vspace{0pt}
+\begin{mathbox}{Age-structured states}\micro{Years $t=1,\ldots,T$; ages $a=1,\ldots,A$; $A$ is the terminal plus group. $N_{t,a}$ is start-of-year abundance; $F$ and $M$ are annual instantaneous mortalities.}
+\[
+Z_{t,a}=F_{t,a}+M_{t,a}, \qquad R_t=N_{t,1}.
+\]
+\end{mathbox}\vspace{2mm}
+\begin{mathbox}{Cohort survival}\micro{Expected survivors advance to the next age:}
+\[
+\widehat N_{t,a}=N_{t-1,a-1}\exp(-Z_{t-1,a-1}),\quad 2\le a<A.
+\]
+\micro{The plus group also retains surviving fish already at age $A$:}
+\[
+\begin{aligned}
+\widehat N_{t,A}={}&N_{t-1,A-1}e^{-Z_{t-1,A-1}}\\
+ &+N_{t-1,A}e^{-Z_{t-1,A}}.
+\end{aligned}
+\]
+\micro{With an active abundance process:}
+\[
+\log N_{t,a}=\log\widehat N_{t,a}+\eta^N_{t,a}.
+\]
+\end{mathbox}\vspace{2mm}
+\begin{mathbox}{Spawning-stock biomass}\micro{$W$: weight; $P$: mature proportion; $s^{\mathrm{spawn}}$: fraction of the year to spawning. Defaults to zero.}
+\[
+SSB_t=\sum_a N_{t,a}W_{t,a}P_{t,a}\,
+ e^{-s^{\mathrm{spawn}}_{t,a}Z_{t,a}}.
+\]
+\micro{Shortened plus groups may retain older input biology through effective $W$ and $P$. Units are not converted automatically.}
+\end{mathbox}\vspace{2mm}
+\begin{mathbox}{Initial older-age abundance}\micro{\texttt{N\_settings\$init}: \texttt{"exp"} uses first-year cohort survivorship, \texttt{"free"} estimates older-age states, \texttt{"random"} adds IID survivorship deviations. Recruitment at $t=1$ is a free fixed anchor.}
+\end{mathbox}
+\end{minipage}\hfill
+\begin{minipage}[t]{.325\linewidth}\vspace{0pt}
+\begin{mathbox}{Recruitment dynamics}\micro{Default temporal recruitment random walk:}
+\[
+\log R_t=\log R_{t-1}+\epsilon^R_t,\quad
+\epsilon^R_t\sim\mathcal N(0,\sigma_R^2).
+\]
+\micro{Formula-based means allow environmental covariates and stock--recruitment relationships:}
+\[
+\log R_t=\log g(SSB_{t-L})+X_t\gamma+u_t.
+\]
+\[
+\begin{aligned}
+g_{BH}(S)&=\frac{\alpha S}{1+\beta S},\\
+g_{Ricker}(S)&=\alpha S e^{-\beta S}.
+\end{aligned}
+\]
+\micro{The BH/Ricker curves require IID or AR1 recruitment residuals; RW + curve is not supported.}
+\end{mathbox}\vspace{2mm}
+\begin{mathbox}{Process variation}\micro{For $\eta$ in N, F or M, process choices encode different hypotheses. Component-specific ages/blocks and SD parameters apply.}
+\[
+\begin{aligned}
+\mathrm{IID:}\quad &\eta_{t,a}\sim\mathcal N(0,\sigma_a^2),\\
+\mathrm{RW:}\quad &\eta_{t,a}-\eta_{t-1,a}\sim\mathcal N(0,\sigma_a^2),\\
+\mathrm{AR1:}\quad &\operatorname{Cov}(\eta_{t,a},\eta_{s,b})\\
+ &=\frac{\sigma^2\,\phi_t^{|t-s|}\phi_a^{|a-b|}}
+ {(1-\phi_t^2)(1-\phi_a^2)}.
+\end{aligned}
+\]
+\micro{F also offers correlated age-specific RW increments with $\Sigma_{ab}=\sigma_a\sigma_b\rho^{|a-b|}$. The RW starting level is unpenalized.}
+\end{mathbox}\vspace{2mm}
+\begin{mathbox}{Mortality mean structure}\[
+\log\mu^F=X_F\beta_F,\qquad
+\log\mu^M=\log M^{\mathrm{supplied}}+X_M\beta_M.
+\]
+\micro{Where fitted, realized log-F/M states depart from these mean surfaces; \texttt{mono()} or \texttt{logistic()} can describe rising F mean curves under IID/AR1 residuals.}
+\end{mathbox}
+\end{minipage}\hfill
+\begin{minipage}[t]{.325\linewidth}\vspace{0pt}
+\begin{mathbox}{Catch and survey predictions}\micro{Baranov catch equation (numbers at age):}
+\[
+\widetilde C_{t,a}=N_{t,a}\frac{F_{t,a}}{Z_{t,a}}
+ (1-e^{-Z_{t,a}}).
+\]
+\micro{Survey index at within-year sampling time $s_i\in[0,1]$:}
+\[
+\widetilde I_i=q_i N_{t_i,a_i}e^{-s_iZ_{t_i,a_i}}.
+\]
+\micro{Default catchability link: $q_i=\exp(\eta_{q,i})$; optional logit link confines $q_i$ to $(0,1)$. With \texttt{mono(q\_block)}, successive increments in $\eta_q$ are nonnegative.}
+\end{mathbox}\vspace{2mm}
+\begin{mathbox}{Observation distributions}\micro{Observed positive catch and index values have lognormal likelihood contributions:}
+\[
+\log Y_i\sim\mathcal N(\log\widetilde Y_i,\tau_i^2),
+\]
+\[
+\tau_i=\tau_i^{\mathrm{supplied}}\exp(X_{sd,i}\beta_{sd}).
+\]
+\micro{$\widetilde Y$ is a conditional median. Zero/NA observations are treated as missing. Observation SD is distinct from estimation SE.}
+\end{mathbox}\vspace{2mm}
+\begin{mathbox}{Likelihood and inference}\micro{The joint likelihood combines recruitment, active N/F/M processes, random initial abundance and observation densities:}
+\[
+\ell(\theta,\eta)=\ell_R+\ell_N+\ell_F+
+\ell_M+\ell_{N_0}+\ell_{\mathrm{obs}}.
+\]
+\micro{\texttt{fit\_tam()} fits by RTMB Laplace integration of random effects and \texttt{nlminb()} optimization. Reported uncertainty is a local curvature/delta-method approximation.}
+\end{mathbox}\vspace{2mm}
+\begin{mathbox}{Assess predictive skill}\micro{Retrospective peels assess stability (Mohn's $\rho$). Hindcasts hold out terminal observations and use one-step-ahead projection errors; \texttt{fit\_retro()} and \texttt{fit\_hindcast()} return summary statistics.}
+\end{mathbox}
+\end{minipage}
+\pagefooter{Equations summarized from \texttt{help("tinyAM-model", package="tinyAM")} and \texttt{?recruitment\_formulas} · Review this curated page after scientific model changes · github.com/PaulRegular/tinyAM}
+```

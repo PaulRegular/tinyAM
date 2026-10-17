@@ -4,5 +4,6 @@
 ^data-raw$
 ^\.github$
 ^analysis$
+^cheatsheet$
 ^\.positai$
 ^\.claude$
