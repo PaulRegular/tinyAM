@@ -305,6 +305,14 @@ model transforms this SD for its likelihood, document that transformation in
 
 Additional measures may be added when necessary, but should remain explicit and biologically interpretable.
 
+`fixed_mortality_medium`, `fixed_mortality_low` and `fixed_mortality_high`
+retain the reported scalar M settings for the three BC petrale ensemble
+components (`type = M`, `basis = per_year`). Leave year and age blank: these
+are distinct component parameters, not a recovered age-specific input surface
+or a single averaged ensemble M. Component weights and unresolved sex/age
+application belong in assumptions and notes. Observation translation does not
+use these records as `natural_mortality_at_age` inputs.
+
 ## Initial `basis` vocabulary
 
 ``` text

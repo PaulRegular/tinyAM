@@ -125,6 +125,10 @@ curated but is blocked from fitting and comparison: matching numerical historica
 coastwide population outputs have not been recovered. Partial regional biomass
 draws are now documented in its source review. Earlier exploratory fits are archived;
 constant M and boundary biomass alone do not support the intended comparison.
+[British Columbia petrale sole](source_reviews/dfo_petrale_bc.md) has a partial
+official 2024 summary/output record, including annual SSB posterior summaries.
+Original observations and biology remain missing; it is not a current detailed
+record or a completed translation.
 [Aleutian Islands Pacific cod](source_reviews/afsc_cod_ai.md) remains blocked
 pending native inputs matching the final production assessment.
 [BSAI arrowtooth flounder](source_reviews/afsc_arrowtooth_flounder_bsai.md)
