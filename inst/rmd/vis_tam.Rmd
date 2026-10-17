@@ -51,9 +51,7 @@ ssb_timing <- data.frame(Model = names(fits), Timing = vapply(fits, function(fit
   if (!inherits(fit, "tam_fit")) return("Reference definition; see Background")
   tinyAM:::.ssb_timing_label(fit$dat)
 }, character(1)))
-ssb_label <- if (length(unique(ssb_timing$Timing)) == 1L) {
-  paste0("SSB (", unique(ssb_timing$Timing), ")")
-} else "SSB (timing shown in Settings)"
+ssb_label <- "SSB"
 
 ```
 

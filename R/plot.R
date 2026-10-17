@@ -130,7 +130,7 @@ plot_trend <- function(
   if (!any(is.finite(values))) {
     return(plotly::plot_ly(x = numeric(), y = numeric(), type = "scatter", mode = "lines"))
   }
-  max_y <- max(c(0, values[is.finite(values)])) * 1.05
+  limits <- values[is.finite(values)]
   if (!is.null(args$frame) && identical(all.vars(y), "est")) {
     # Retain empty model traces in every animation frame.
     data$est[is.na(data$est)] <- Inf
@@ -140,13 +140,28 @@ plot_trend <- function(
   has_ci <- add_intervals && all(c("lwr", "upr") %in% names(data)) && any(is.finite(data$upr))
   single_x <- length(unique(unlist(stats::model.frame(x, data = data)))) == 1L
   if (has_ci) {
-    max_y <- max(c(max_y, data$upr[is.finite(data$upr)] * 1.05))
-    if (!single_x) p <- p |>
-      plotly::add_ribbons(
+    limits <- c(limits, data$lwr[is.finite(data$lwr)], data$upr[is.finite(data$upr)])
+    if (!single_x) {
+      # Split before making polygons: NA vertices at the closing edge create
+      # diagonal fills, while dropping interior gaps would invent intervals.
+      groups <- unique(unlist(lapply(args[intersect(names(args),
+        c("color", "split", "group", "legendgroup", "frame"))], function(z) {
+          if (inherits(z, "formula")) all.vars(z) else character()
+        })))
+      groups <- intersect(groups, names(data))
+      coordinate <- all.vars(x)
+      ci <- data[do.call(order, data[c(groups, coordinate)]), , drop = FALSE]
+      key <- if (length(groups)) interaction(ci[groups], drop = TRUE) else rep(1L, nrow(ci))
+      valid <- is.finite(ci$lwr) & is.finite(ci$upr)
+      ci$.ci_run <- interaction(key, ave(!valid, key, FUN = cumsum), drop = TRUE)
+      ci <- ci[valid, , drop = FALSE]
+      if (nrow(ci)) p <- p |> plotly::add_ribbons(
+        data = ci, split = ~.ci_run,
         ymin = ~lwr, ymax = ~upr,
         opacity = 0.3, line = list(width = 0),
-        showlegend = FALSE
+        showlegend = FALSE, hoverinfo = "skip"
       )
+    }
     if (single_x) p <- p |> plotly::add_segments(
       y = ~lwr, yend = ~upr, xend = x, showlegend = FALSE,
       meta = list(tam_ci = TRUE), hoverinfo = "skip"
@@ -166,11 +181,14 @@ plot_trend <- function(
     }
   }
 
+  limits <- range(c(0, limits))
+  padding <- max(diff(limits), abs(limits), 1e-8) * .05
+  limits <- c(if (limits[1] < 0) limits[1] - padding else 0, limits[2] + padding)
   p <- if (single_x) plotly::add_markers(p, y = y) else plotly::add_lines(p, y = y)
   p <- p |> plotly::layout(
       title = title,
       xaxis = list(title = xlab),
-      yaxis = list(title = ylab, range = c(0, max_y)),
+      yaxis = list(title = ylab, range = limits),
       shapes = shapes
     )
 
