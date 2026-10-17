@@ -91,7 +91,7 @@ the full 52-key ageing-error inventory are not yet exported. All recovered
 quantities refer to the 2025 production base, not a FIMS demonstration or the
 2026 projection update.
 
-## tinyAM translation and numerical result
+## tinyAM translation and numerical result — initial expansion (historical)
 
 The translation uses 1975–2024 and ages 2–15+. Native percentages are
 normalized outside the database, as in the source, and converted using
@@ -133,3 +133,9 @@ The local dashboard retains native posterior SSB and explicitly approximate
 common-age sums of marginal medians. F-at-age and Fbar comparisons remain
 unavailable. Available credible intervals are retained only on their native
 quantities; no uncertainty is attached to sums or pooled posterior medians.
+
+## Source and model review — 2026-10-17
+
+Restored the native quadratic log-M penalty (center -1.60944, SD 0.1) using one shared fixed-SD Gaussian mean effect, with one density contribution and no free M intercept. M is 0.18335 and the effect SE is 0.09591, replacing the near-zero baseline. After default covariance failure, one aligned N-start retry passes (code 0, gradient 0.000868, PD Hessian). Median absolute SSB difference improves 69.6% to 44.8% and correlation 0.619 to 0.751; modeled-age total N improves 71.8% to 42.8% and 0.785 to 0.904. A BH trial gives essentially the same comparisons and weak curve shape, so constant recruitment is retained. Source bounds, full Bayesian integration, juvenile recruitment definitions and composition likelihood remain different. Full M-surface intervals are not automatically propagated; uncertainty is available for the shared log-M effect.
+
+See [the complete twelve-case review](../PACIFIC_MODEL_REVIEW.md) for paired median differences, correlations, diagnostics and rejected trials. Canonical numerical inputs and outputs are unchanged.

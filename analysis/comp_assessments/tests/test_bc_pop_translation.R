@@ -5,7 +5,9 @@ original <- x
 s <- .test_stock(x)
 stopifnot(identical(x,original),is.null(s$fit),identical(s$years,2003:2022),identical(s$ages,5:60),
   !"start_par" %in% names(s$fit_call),s$settings$rec_settings$sd==.9,
-  is.null(s$settings$M_settings$mu_supplied),length(unique(s$obs$index$survey))==3,
+  length(s$dat$M_terms)==1L,ncol(s$dat$M_modmat)==0L,
+  abs(exp(unique(s$dat$log_mu_supplied_m))-.06/sqrt(1+.3^2))<1e-12,
+  length(unique(s$obs$index$survey))==3,
   all(abs(s$obs$index$samp_time-5/12)<1e-12),all(s$obs$maturity$spawn_time==0),
   all(is.finite(s$obs$weight$obs)),all(s$obs$maturity$obs>=0 & s$obs$maturity$obs<=1),
   s$comparison_definitions$ssb$status=="non_equivalent",

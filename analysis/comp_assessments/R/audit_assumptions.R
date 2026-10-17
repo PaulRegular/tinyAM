@@ -98,7 +98,7 @@ audit_assumptions <- function(assessment_id, assumptions) {
   )
   mark(
     key == "M|initial_priors", "unsupported",
-    "tinyAM has no matching prior distribution for the starting M levels; reported source means may only be used as starting values."
+    "A shared log-M level can have a fixed-SD Gaussian mean effect when no free baseline or residual start cancels it. This does not automatically reproduce priors on the initial states of a temporal M process; compare that boundary density separately."
   )
   mark(
     key == "M|natural_mortality", "partially_supported",

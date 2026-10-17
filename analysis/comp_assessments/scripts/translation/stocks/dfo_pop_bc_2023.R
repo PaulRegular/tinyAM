@@ -34,6 +34,7 @@ obs <- database_to_tam_obs(source$assessment$assessment_id,
   rbind(catch_rows,observations[observations$type=="index",],biology),
   years=years,ages=ages,assumptions=source$assumptions)
 obs$maturity$spawn_time <- 0
+obs$pop_covariates$M_prior_group <- factor("stock")
 
 ## Comparisons and background ----
 age_plus_group <- 60
@@ -50,7 +51,7 @@ background <- c(
   "| Catch | Separate area catch biomass and joint-sex age compositions, supplied N, Francis weights and ageing error. | Convert each area separately with fixed source sex weights, retain females, then sum only complete three-area years. | No missing area is treated as zero or a coastwide total. Composition precision/covariance and ageing error are omitted. |",
   "| Survey | Area-specific biomass and joint-sex age samples; different age selectivity curves. | Female numbers from original totals/compositions at native time 5/12. Free survey intercepts and survey-specific natural cubic age splines (4 df). | A pooled population assumes constant area shares within each survey's q. Source spatial recruitment/selectivity constraints and priors are not reproduced. |",
   "| N and recruitment | Deterministic sex/area survival, early deviations, Beverton–Holt with estimated steepness, fixed log SD 0.9 and spatial recruitment allocation. | Deterministic female survival, free initial ages, constant-mean IID age-5 recruitment with log SD 0.9. | Spatial allocation, stock–recruit feedback and bias adjustments differ. |",
-  "| F and M | Area-specific F/selectivity and separate estimated constant M by sex, M prior mean 0.06 SD 0.018. | Independent female F random walks and one estimated female M without source prior/bounds. | Male M is outside the fitted population. Source-estimated M is not a fixed input. |",
+  "| F and M | Area-specific F/selectivity and separate estimated constant M by sex; natural-scale normal M prior, mean 0.06 SD 0.018, bounds 0.02–0.2. | Independent female F random walks and one shared Gaussian log-M effect. Its positive lognormal distribution matches that prior's mean and variance. | This approximates the source normal density; bounds and male M are omitted. M is estimated with Laplace integration, not fixed to an official estimate. |",
   "| Biology | Fixed sex-specific growth, length variation/allometry and female maturity; no empirical weight matrix. | Recover fixed weights with matching SS3 at zero optimization evaluations; use female beginning-year population weights and original maturity at January 1. | Generated native N/F/M are never reference estimates or observation adjustments. No additional half-sex multiplier. |",
   "| Reference | Bayesian medians with 90% intervals; reported 2024 boundary SSB, sex-specific M, no recovered annual posterior N/F/R/SSB files. | Compare female M; show unavailable metrics clearly. Native reported SSB stays as context and is non-equivalent. | Public control uses fecundity option 2, coefficients 1/0 and first mature age read as 9; reproductive output differs from mature biomass. This source-definition issue remains unresolved. Native 90% limits are not relabelled 95%. |",
   "", "Default package starts first. Only a numerical failure permits one retry initialized at the official female M median; unavailable N/F starts remain defaults. Zero source age proportions remain zero and are treated as missing by the tinyAM lognormal observation likelihood."
@@ -62,13 +63,15 @@ fit_model <- function(...) tinyAM::fit_tam(
   N_settings=list(process="off",init="free"),
   rec_settings=list(process="iid",mu_form=~1,sd=.9),
   F_settings=list(process="rw"),
-  M_settings=list(process="off",mu_form=~1,mu_supplied=NULL),
+  M_settings=list(process="off",mu_form=~0+iid(M_prior_group,sd=sqrt(log1p(.3^2))),
+    mu_supplied=~I(.06/sqrt(1+.3^2))),
   catch_settings=list(sd_form=~1),
   index_settings=list(q_form=~survey*splines::ns(age,df=4),sd_form=~survey),silent=silent,...
 )
 fit <- NULL
 if(do_fit) {
   fit_stage <- "fit";fit_started <- Sys.time()
-  fit <- fit_default_first(fit_model,retry_start=function()list(mu_m=log(.05229)),
+  fit <- fit_default_first(fit_model,retry_start=function()
+    list(eta_mu_M_iid_M_prior_group=log(.05229/(.06/sqrt(1+.3^2)))),
     attempt_file=file.path("analysis/comp_assessments/results/cache",source$assessment$assessment_id,"initialization_attempts.rds"))
 }

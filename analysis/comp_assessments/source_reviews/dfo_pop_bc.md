@@ -68,7 +68,7 @@ tonnes. Without the final posterior extraction, do not silently equate those
 quantities or "repair" the official assessment. Published values are retained
 as reported and SSB comparison is marked non-equivalent.
 
-## Translation
+## Translation — initial expansion (historical)
 
 The recipe uses female ages 5–60+, 2003–2022. Each source area is converted
 from biomass and joint-sex proportions using both sexes and all observed ages
@@ -103,3 +103,9 @@ with SE **1924.9**, a practically unidentified mortality estimate. A numerical
 pass does not make this biologically usable. Omission of the informative M
 prior and pooling nonmixing areas are important limitations; this is flagged
 separately from numerical convergence, without tuning or another fit.
+
+## Source and model review — 2026-10-17
+
+Replaced the omitted M prior with a positive lognormal approximation matching the native natural-scale normal mean 0.06 and SD 0.018. One shared log-M effect is estimated, not fixed to an official value; its density contributes once. Default starts pass (code 0, gradient 0.00164, PD Hessian); M is 0.04053 with effect SE 0.22890, versus official median 0.05229. The M difference is 22.5%, still flagged. Native bounds, exact normal density, posterior integration and sex/area structure differ. Historical N/F/R/SSB remain unavailable or non-equivalent; no agreement is claimed for them. Full M-surface intervals are not automatically propagated. Canonical observations and native 90% limits are unchanged.
+
+See [the complete twelve-case review](../PACIFIC_MODEL_REVIEW.md) for paired median differences, correlations, diagnostics and rejected trials. Canonical numerical inputs and outputs are unchanged.
