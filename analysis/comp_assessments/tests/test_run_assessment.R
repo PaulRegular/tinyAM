@@ -29,7 +29,7 @@ cat("Single-assessment runner tests passed.\n")
 mock <- list(
   obs_pred = list(catch = data.frame(
     year = c(2000, 2000, 2001, 2001),
-    age = c(1, 2, 1, 2), pred = c(10, 20, 30, 40)
+    age = c(1, 2, 1, 2), pred = c(10, 20, 30, 40), unit = "fish"
   )),
   pop = list(
     total_yield = data.frame(year = 2000:2001, est = 0),
@@ -46,8 +46,8 @@ reporting <- list(
 )
 reported <- .assessment_catch_reporting(mock, reporting)
 stopifnot(
-  identical(reported$pop$total_yield$est, c(6, 26)),
-  identical(reported$pop$total_yield_pred$est, c(5, 25)),
+  identical(reported$pop$total_yield$est, c(.006, .026)),
+  isTRUE(all.equal(reported$pop$total_yield_pred$est, c(.005, .025))),
   identical(reported$rep$total_yield, reported$pop$total_yield$est),
   identical(reported$rep$total_yield_pred, reported$pop$total_yield_pred$est),
   identical(reported$opt, mock$opt),

@@ -13,7 +13,7 @@
 #'   sampling fraction `samp_time`, and catchability age group `q_block`.
 #' - **weight**: `year`, `age`, and stock weight `obs` (kg per fish).
 #'   Catch/index include `unit = "thousand fish"`; weight includes
-#'   `unit = "kg/fish"`. Their product gives tonnes for biomass and SSB.
+#'   `unit = "kg"`. Their product gives tonnes for biomass and SSB.
 #' - **maturity**: `year`, `age`, and proportion mature `obs` (0-1).
 #'   Optional spawning timing is not supplied in this example.
 #' - **pop_covariates**: `year`, `age`, fishing-mortality mean blocks

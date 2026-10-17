@@ -8,8 +8,8 @@ testthat::test_that("translation units describe converted values and preserve so
     original <- source
     translated <- .test_stock(source)
     testthat::expect_identical(source, original)
-    testthat::expect_true(all(translated$obs$catch$unit == "fish"))
-    testthat::expect_true(all(translated$obs$weight$unit == "kg/fish"))
+    testthat::expect_true(all(translated$obs$catch$unit == "thousand fish"))
+    testthat::expect_true(all(translated$obs$weight$unit == "kg"))
     testthat::expect_true(all(vapply(split(translated$obs$index$unit,
       translated$obs$index$survey), function(u) length(unique(u)) == 1L, logical(1))))
     testthat::expect_true(tinyAM::check_tam_data(translated$obs))
@@ -20,7 +20,7 @@ testthat::test_that("translation units describe converted values and preserve so
     source$inputs$measure == "numbers_at_age" & source$inputs$unit == "mean numbers per tow", ]
   for (survey in unique(native$survey)) {
     rows <- stock$obs$index$survey == survey
-    if (any(rows)) testthat::expect_true(all(stock$obs$index$unit[rows] == "mean numbers per tow"))
+    if (any(rows)) testthat::expect_true(all(stock$obs$index$unit[rows] == "thousand fish per tow"))
   }
 })
 

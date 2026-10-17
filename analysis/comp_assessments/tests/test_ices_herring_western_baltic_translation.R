@@ -22,7 +22,7 @@ stopifnot(
   translated$age_plus_group == 5,
   nrow(obs$catch) == 35L * 6L,
   nrow(obs$weight) == 35L * 6L,
-  isTRUE(all.equal(obs$catch$obs, expected$value[match(key(obs$catch), key(expected))] * 1000)),
+  isTRUE(all.equal(obs$catch$obs, expected$value[match(key(obs$catch), key(expected))])),
   setequal(obs$index$survey, c("HERAS", "GERAS", "N20", "IBTS/BITSQ1")),
   max(obs$index$age) == 5,
   length(unique(obs$index$sd_block)) == 4L,

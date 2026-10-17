@@ -194,7 +194,7 @@
       "1e-06" = "million fish", "1e-09" = "billion fish"
     )
   } else {
-    c("1" = "kg", "0.001" = "t", "1e-06" = "kt")
+    c("1" = "kg", "0.001" = "tonnes", "1e-06" = "kt")
   }
   unit <- unname(units[as.character(scale)])
   if (is.na(unit)) paste(if (numbers) "fish" else "kg", "x", scale) else unit
@@ -218,6 +218,15 @@
   }
   native <- attr(reference, "source_pop")
   if (is.null(native)) native <- reference$pop
+  # Definition matching below uses fish/kg internally, then reports thousands/tonnes.
+  # Never assume the fitted tables already use those internal scales.
+  for (name in names(fit$pop)) {
+    if (name %in% c("N", "recruitment", "abundance")) {
+      fit$pop[[name]] <- tinyAM:::.convert_report_units(fit$pop[[name]], "fish", "numbers")
+    } else if (name %in% c("biomass", "biomass_at_age", "biomass_mat", "ssb", "ssb_mat")) {
+      fit$pop[[name]] <- tinyAM:::.convert_report_units(fit$pop[[name]], "kg", "mass")
+    }
+  }
   for (name in names(native)) {
     x <- native[[name]]
     if (is.null(x$unit)) next

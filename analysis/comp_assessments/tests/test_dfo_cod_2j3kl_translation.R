@@ -98,7 +98,7 @@ for (year in unique(smith$year)) {
   biomass <- source_data$inputs$value[source_data$inputs$survey %in% "Smith Sound acoustic survey" &
     source_data$inputs$year == year &
     source_data$inputs$measure == "total_biomass"]
-  expected <- biomass * 1000 * cp$value / sum(cp$value * w)
+  expected <- biomass * cp$value / sum(cp$value * w)
   fitted_rows <- smith[smith$year == year, ]
   stopifnot(isTRUE(all.equal(fitted_rows$obs, expected[match(fitted_rows$age, cp$age)])))
 }

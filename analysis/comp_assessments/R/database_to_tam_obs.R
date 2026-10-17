@@ -1066,8 +1066,23 @@ database_to_tam_obs <- function(assessment_id, inputs, years = NULL, ages = NULL
   )
   attr(obs$index, "translation") <- NULL
 
-  obs$catch$unit <- "fish"
-  obs$weight$unit <- "kg/fish"
+  obs$catch$obs <- obs$catch$obs / 1000
+  obs$catch$unit <- "thousand fish"
+  obs$weight$unit <- "kg"
+  for (survey in unique(obs$index$survey)) {
+    i <- obs$index$survey == survey
+    unit <- unique(obs$index$unit[i])
+    count <- tinyAM:::.count_unit(unit)
+    if (is.finite(count$scale)) {
+      obs$index$obs[i] <- obs$index$obs[i] * count$scale / 1000
+      obs$index$unit[i] <- paste0("thousand fish",
+        if (nzchar(count$effort)) paste(" per", count$effort) else "")
+    }
+  }
+  metadata <- attr(obs, "translation")
+  metadata$model_units <- list(catch = "thousand fish", weight = "kg", biomass = "tonnes",
+    index = unique(obs$index[c("survey", "unit")]))
+  attr(obs, "translation") <- metadata
   tinyAM::as_tam_data(obs)
 }
 

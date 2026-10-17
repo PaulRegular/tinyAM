@@ -49,7 +49,7 @@ stopifnot(
     translated$obs$weight$age > 2
   ] == 0.15),
   identical(as.numeric(translated_value), as.numeric(cohort_value)),
-  identical(as.numeric(plus_catch), sum(as.numeric(catch$value) * 1000)),
+  identical(as.numeric(plus_catch), sum(as.numeric(catch$value))),
   !"RFID" %in% unique(translated$obs$index$survey),
   !any(translated$obs$index$survey == "IESNS_Barents" &
     translated$obs$index$year == 2008),
@@ -58,7 +58,7 @@ stopifnot(
   identical(dim(translated$start_par$log_f), c(37L, 11L)),
   isTRUE(all.equal(
     translated$start_par$log_r0,
-    log(as.numeric(n_source$value) * 1e6)
+    log(as.numeric(n_source$value) * 1000)
   )),
   identical(dat$N_settings$process, "iid"),
   length(unique(translated$obs$index$survey)) == 5L

@@ -19,7 +19,7 @@ obs$index$q_key <- interaction(obs$index$survey, q_group,
 )
 
 
-source_N <- .translation_start_surface(source$outputs, "population", "numbers_at_age", years, ages, 1000)
+source_N <- .translation_start_surface(source$outputs, "population", "numbers_at_age", years, ages, 1)
 source_F <- .translation_start_surface(source$outputs, "mortality", "fishing_mortality_at_age", years, ages)
 names(dimnames(source_N)) <- names(dimnames(source_F)) <- c("year", "age")
 q_rows <- source$outputs[source$outputs$measure == "q" &
@@ -61,10 +61,6 @@ start_par <- list(
 
 age_plus_group <- 10
 
-comparison_scales <- c(
-  N = 0.001, recruitment = 0.001, ssb = 0.001, biomass = 0.001, biomass_at_age = 0.001,
-  F_bar = 1
-)
 
 background <- c(
   "### Northeast Atlantic blue whiting: official 2026 SAM assessment", "", print_sources(source$assessment),

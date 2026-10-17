@@ -140,6 +140,14 @@ compositions, an age–length key and timing block a defensible fit.
 
 `results/` retains `observation_readiness.csv`, `fit_diagnostics.csv`, `comparison_summary.csv`, a compact `sensitivity_summary.csv`, and `northern_cod_indices.csv` for the Northern cod integration trials. Fitted objects and dashboards are generated on request and may be saved under the gitignored `results/cache/<assessment_id>/` directory with `cache = TRUE`. They are not committed by the normal workflows.
 
+Translations and comparison displays use thousand fish, average weight in kg,
+and biomass in tonnes. Count-rate surveys retain their effort denominator;
+relative indices retain their source scale. See [the unit review](UNIT_REVIEW.md).
+The complete `run_all.R` workflow saves returned fits before making dashboards,
+including exploratory previews of usable non-converged fits. Rendering failures
+are recorded locally. Figure fallbacks use this complete batch rather than
+older stock caches; aggregate comparison eligibility is unchanged.
+
 Comparison summaries separate scale agreement (absolute and percent differences)
 from trajectory agreement (`trend_correlation`). Each row records its unit,
 definition and matching status. Native aggregates are retained for dashboard

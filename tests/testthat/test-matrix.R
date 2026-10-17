@@ -81,8 +81,8 @@ test_that("pattern tables align source aliases and independent matrix units", {
   source <- pop
   d <- tinyAM:::.tidy_patterns(pop, reference = TRUE)
   expect_identical(pop, source)
-  expect_equal(d$population$est, c(2000, 3000, 2000, 3000, 2e6, 3e6))
-  expect_equal(d$population$unit, c("fish", "fish", rep("kg", 4)))
+  expect_equal(d$population$est, rep(c(2, 3), 3))
+  expect_equal(d$population$unit, rep(c("thousand fish", "tonnes", "kt"), each = 2))
   expect_equal(d$mortality$est, c(2, 3))
   expect_false("se" %in% names(d$population))
   expect_null(tinyAM:::.tidy_patterns(list(N = tab), reference = TRUE)$mortality)
@@ -91,7 +91,7 @@ test_that("pattern tables align source aliases and independent matrix units", {
   expect_true(all(is.na(d$population$est[d$population$metric == "SSB"])))
   pop <- list(N = tab, biomass_mat = transform(tab, unit = "kg"), ssb_mat = transform(tab, unit = "kg"))
   d <- tinyAM:::.tidy_patterns(pop, ssb_definition = "Age/year-specific spawning times")
-  expect_equal(d$population$est, c(2000, 3000, 2, 3, 2, 3))
+  expect_equal(d$population$est, rep(c(2, 3), 3))
   expect_equal(d$population$definition[d$population$metric == "SSB"],
                rep("Age/year-specific spawning times", 2))
 })

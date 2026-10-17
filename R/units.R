@@ -12,7 +12,8 @@
       kg = 1, "kg/fish" = 1, "kg per fish" = 1,
       t = 1e3, "t/fish" = 1e3, "tonnes per fish" = 1e3),
     mass = c(g = 1e-3, kg = 1, t = 1e3, tonne = 1e3, tonnes = 1e3,
-      mt = 1e3, kt = 1e6, "thousand tonnes" = 1e6, "million tonnes" = 1e9),
+      mt = 1e3, kt = 1e6, "thousand tonnes" = 1e6, "thousand t" = 1e6,
+      "million tonnes" = 1e9, "million t" = 1e9),
     rate = c("per year" = 1, "per_year" = 1, "yr-1" = 1, "year^-1" = 1)
   )
   unname(scales[key])
@@ -26,6 +27,44 @@
   values <- unique(d$unit)
   if (length(values) > 1L) cli::cli_abort("{label} has inconsistent units. Convert values explicitly before combining them.")
   if (length(values)) values else NA_character_
+}
+
+# Count rates retain their effort denominator; they are not area-expanded totals.
+.count_unit <- function(unit) {
+  key <- tolower(trimws(unit))
+  key <- gsub("_", " ", key, fixed = TRUE)
+  key <- sub("^mean (numbers?|counts?)", "fish", key)
+  parts <- strsplit(key, "\\s+per\\s+|\\s*/\\s*")[[1L]]
+  scale <- .unit_scale(parts[1L], "numbers")
+  list(scale = scale, effort = if (length(parts) == 2L) parts[2L] else "")
+}
+
+.q_unit <- function(index, numbers) {
+  if (is.na(index) || is.na(numbers)) return(NA_character_)
+  a <- .count_unit(index)
+  b <- .count_unit(numbers)
+  if (!is.finite(a$scale) || !is.finite(b$scale)) return(NA_character_)
+  if (a$scale != b$scale) return(paste0("(", index, ") / (", numbers, ")"))
+  if (nzchar(a$effort)) paste("per", a$effort) else "unitless"
+}
+
+.convert_report_units <- function(data, to, kind) {
+  if (!is.data.frame(data) || is.null(data$unit)) return(data)
+  factor <- .unit_scale(data$unit, kind) / .unit_scale(to, kind)
+  known <- is.finite(factor)
+  for (nm in intersect(c("est", "lwr", "upr", "obs", "pred"), names(data))) {
+    data[[nm]][known] <- data[[nm]][known] * factor[known]
+  }
+  if ("se" %in% names(data)) {
+    natural <- if ("se_scale" %in% names(data)) data$se_scale == "reported" else rep(TRUE, nrow(data))
+    i <- which(known & natural)
+    data$se[i] <- data$se[i] * factor[i]
+    if ("se_scale" %in% names(data)) {
+      data$se[which(known & factor != 1 & is.na(data$se_scale))] <- NA_real_
+    }
+  }
+  data$unit[known] <- to
+  data
 }
 
 .data_units <- function(data) {
@@ -64,7 +103,8 @@
   }, character(1))
   if (length(unique(signatures)) > 1L) cli::cli_abort("Plot data contain incompatible units: {paste(units, collapse = ', ')}. Convert them explicitly before overlaying models.")
   units <- utils::head(units, 1L)
-  if (length(units)) paste0(label, if (nzchar(label)) " (" else "", units,
+  if (length(units) && grepl("native|unresolved|survey[ _-]*index|relative index", units, ignore.case = TRUE)) return(label)
+  if (length(units)) paste0(label, if (nzchar(label)) "<br>(" else "", units,
     if (nzchar(label)) ")" else "") else label
 }
 

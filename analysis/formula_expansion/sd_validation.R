@@ -115,7 +115,7 @@ sd_observations <- function() {
   index$unit <- "fish"
   list(
     catch = transform(grid, obs = 1, unit = "fish"), index = index,
-    weight = transform(grid, obs = .2 * age^1.5, unit = "kg/fish"), maturity = transform(grid, obs = plogis(age - 4))
+    weight = transform(grid, obs = .2 * age^1.5, unit = "kg"), maturity = transform(grid, obs = plogis(age - 4))
   )
 }
 

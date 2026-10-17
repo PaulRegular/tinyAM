@@ -8,6 +8,7 @@ test_that("ribbons close within valid interval runs", {
   p <- plotly::plotly_build(plot_trend(d[nrow(d):1, ], color = ~model))
   ribbons <- Filter(function(z) identical(z$fill, "toself"), p$x$data)
   expect_length(ribbons, 3L)
+  expect_true(all(vapply(ribbons, function(z) z$legendgroup %in% levels(d$model), logical(1))))
   expect_true(all(vapply(ribbons, function(z) all(is.finite(z$x) & is.finite(z$y)), logical(1))))
   expect_true(all(vapply(ribbons, function(z) !all(c(2002, 2004) %in% z$x) ||
     min(z$y) > 7, logical(1))))

@@ -64,7 +64,7 @@ if (do_fit) {
   fit_started <- Sys.time()
   fit <- fit_default_first(fit_model, retry_start = function() {
     n <- .translation_start_surface(source$outputs, "population", "numbers_at_age",
-                                     years, ages, 1e6)
+                                     years, ages, 1000)
     f <- .translation_start_surface(source$outputs, "mortality", "fishing_mortality_at_age",
                                      years, ages)
     list(log_r0 = log(n[1, 1]), log_r = log(n[-1, 1]),

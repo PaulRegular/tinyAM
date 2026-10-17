@@ -87,10 +87,10 @@ retry_start <- function() {
   # Named partial vectors let the package retain defaults for rounded zeros.
   r <- n[n$age==min(ages) & n$year>min(years), ]
   n0 <- n[n$year==min(years) & n$age>min(ages), ]
-  start <- list(log_r=setNames(log(r$value*1e6),as.character(r$year)),
-    log_n0=setNames(log(n0$value*1e6),as.character(n0$age)))
+  start <- list(log_r=setNames(log(r$value*1e3),as.character(r$year)),
+    log_n0=setNames(log(n0$value*1e3),as.character(n0$age)))
   r0 <- n$value[n$year==min(years) & n$age==min(ages)]
-  if(length(r0)) start$log_r0 <- log(r0*1e6)
+  if(length(r0)) start$log_r0 <- log(r0*1e3)
   start
 }
 fit <- NULL

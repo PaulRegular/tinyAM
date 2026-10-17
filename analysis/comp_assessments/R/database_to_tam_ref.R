@@ -271,10 +271,6 @@ database_to_tam_ref <- function(assessment_id, outputs, obs = NULL, years = NULL
           min(ages), "in the same calendar year; native recruitment is retained separately."
         )
         pop$recruitment <- n
-        units <- unique(n$unit)
-        if (length(units) == 1L) {
-          comparison_scales["recruitment"] <- 1 / .translation_number_multiplier(units)
-        }
       } else {
         pop$recruitment <- NULL
       }
@@ -522,6 +518,28 @@ database_to_tam_ref <- function(assessment_id, outputs, obs = NULL, years = NULL
       tab$notes <- rows$reason[index]
       tab$source_type <- "common_definition_comparison"
       out$pop[[metric]] <- tab
+    }
+    for (name in intersect(names(out$rep), names(out$pop))) {
+      out$rep[[name]] <- .fill_tam_report_array(out$rep[[name]], out$pop[[name]], years, ages)
+    }
+  }
+  if (!is.null(template)) {
+    # Keep native outputs in attributes; all displayed comparisons use the
+    # same thousands-of-fish / tonnes convention as translated inputs.
+    out$comparison_scales <- numeric()
+    for (name in names(out$pop)) {
+      kind <- if (name %in% c("N", "N_plus", "recruitment", "abundance", "total_catch", "total_catch_pred")) {
+        "numbers"
+      } else if (name %in% c("biomass", "biomass_mat", "biomass_at_age", "ssb", "ssb_mat", "total_yield", "total_yield_pred")) {
+        "mass"
+      } else next
+      target <- if (kind == "numbers") "thousand fish" else "tonnes"
+      out$pop[[name]] <- tinyAM:::.convert_report_units(out$pop[[name]], target, kind)
+      current <- template$pop[[name]]
+      if (is.null(current) && name == "biomass_at_age") current <- template$pop$biomass_mat
+      unit <- unique(current$unit[!is.na(current$unit)])
+      if (length(unit) == 1L) out$comparison_scales[name] <-
+        tinyAM:::.unit_scale(unit, kind) / tinyAM:::.unit_scale(target, kind)
     }
     for (name in intersect(names(out$rep), names(out$pop))) {
       out$rep[[name]] <- .fill_tam_report_array(out$rep[[name]], out$pop[[name]], years, ages)

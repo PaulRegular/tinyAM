@@ -35,8 +35,8 @@ A named list of stacked tables, with \code{formula_effects} when present:
 \item \strong{obs_pred} — a named list of stacked data frames (e.g., \code{catch}, \code{index});
 \item \strong{pop} — a named list of stacked data frames (e.g., \code{ssb}, \code{N}, \code{M}, \code{mu_M}, \code{F}, \code{mu_F}, \code{Z}, …);
 \item \strong{patterns} — population and mortality age-year tables for \code{\link[=plot_matrix]{plot_matrix()}}.
-Recognized units are converted to fish, kg and per year independently of
-aggregate comparison scales. Unspecified fitted units remain unspecified;
+Compatible units follow the first fitted model's displayed metric units,
+including explicit reference conversions. Unspecified fitted units remain unspecified;
 reference tables with unknown units remain missing;
 \item \strong{recruitment} — predictions, residuals and optional stock-recruit curves;
 see \code{\link[=tidy_recruitment]{tidy_recruitment()}};

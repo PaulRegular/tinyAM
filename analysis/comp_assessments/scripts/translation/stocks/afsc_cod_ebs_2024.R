@@ -109,7 +109,7 @@ if(do_fit) {
     states <- n;states$age <- pmin(states$age,12)
     n_sum <- aggregate(value~year+age,states,sum)
     nn <- .translation_start_surface(transform(n_sum,type="population",measure="numbers_at_age"),
-      "population","numbers_at_age",years,ages,1000)
+      "population","numbers_at_age",years,ages,1)
     f <- outputs[outputs$measure=="fishing_mortality_at_age" & outputs$year %in% years & outputs$age>=1,]
     f$value <- f$value*n$value[match(state_key(f),state_key(n))]
     f$age <- pmin(f$age,12);f <- aggregate(value~year+age,f,sum)

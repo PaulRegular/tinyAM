@@ -42,7 +42,7 @@
 #' proportion \eqn{P_{t,a}} are treated as known without uncertainty.
 #' Optional table `unit` columns label the numerical scale. Catch units also
 #' describe N and recruitment; weight is mass per fish. Their product sets
-#' biomass and SSB units (thousand fish times kg/fish gives tonnes). F, M and Z
+#' biomass and SSB units (thousand fish times kg gives tonnes). F, M and Z
 #' are per year. Survey units can differ, and q need not be dimensionless.
 #' The model never converts inputs automatically; see [as_tam_data()].
 #'

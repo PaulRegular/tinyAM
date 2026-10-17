@@ -33,7 +33,7 @@ function(el, x, config) {
       colorscale: config.colorscale, zmin: limits[0], zmax: limits[1],
       cmin: limits[0], cmax: limits[1], connectgaps: false,
       colorbar: {title: {text: (state.scale === 'log' ? 'log10 ' : '') +
-        metric.name + (metric.unit ? ' (' + metric.unit + ')' : '')}},
+        metric.name + (metric.unit ? '<br>(' + metric.unit + ')' : '')}},
       contours: state.type === 'contour' ? {coloring: 'heatmap'} : undefined,
       showscale: true};
   }
@@ -58,7 +58,8 @@ function(el, x, config) {
       uirevision: 'matrix', updatemenus: menus, xaxis: {title: 'Year', range: yearRange},
       yaxis: {title: 'Age', range: ageRange},
       scene: {xaxis: {title: 'Year', range: yearRange}, yaxis: {title: 'Age', range: ageRange},
-        zaxis: {title: (state.scale === 'log' ? 'log10 ' : '') + metric.name,
+        zaxis: {title: (state.scale === 'log' ? 'log10 ' : '') + metric.name +
+            (metric.unit ? '<br>(' + metric.unit + ')' : ''),
           range: limits}, camera: camera, uirevision: 'matrix-camera'},
       sliders: config.models.length > 1 ? [{active: state.model,
         currentvalue: {prefix: 'Model: '}, pad: {t: 45},

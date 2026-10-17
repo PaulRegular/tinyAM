@@ -27,7 +27,7 @@
 #' Optional `unit` columns label catch numbers, stock weight per fish and each
 #' survey index. Use one unit throughout catch and weight, and one per survey.
 #' Values are never converted during fitting. For example, `"thousand fish"`
-#' catch and `"kg/fish"` weight give abundance in thousands and biomass/SSB in
+#' catch and `"kg"` weight give abundance in thousands and biomass/SSB in
 #' tonnes. Unknown units are left unlabeled; descriptive index units such as
 #' `"fish per tow"` are retained. Reported tables and default plot labels carry
 #' these units. Explicit plot labels take precedence. Matrix views convert

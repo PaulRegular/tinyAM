@@ -25,7 +25,7 @@ raw_catch <- inputs[
   inputs$type == "catch" & inputs$measure == "numbers_at_age" &
     inputs$year %in% translated$years,
 ]
-raw_catch$fish <- raw_catch$value * 1e6
+raw_catch$fish <- raw_catch$value * 1000
 expected_catch <- stats::aggregate(
   fish ~ year + age, raw_catch, sum
 )
@@ -124,7 +124,7 @@ stopifnot(
   isTRUE(all.equal(translated$obs$weight$obs, expected_weight)),
   isTRUE(all.equal(
     translated$start_par$log_r0,
-    log(as.numeric(source_n_q3_age0$value[1]) * 1e6)
+    log(as.numeric(source_n_q3_age0$value[1]) * 1000)
   )),
   max(abs(exp(translated$start_par$log_f) -
     as.matrix(xtabs(F ~ year + age, expected_f)))) < 1e-12,

@@ -117,7 +117,6 @@ obs$pop_covariates$age_blocks <- cut_ages(
 age_plus_group <- 12
 
 
-comparison_scales <- c(N = 0.001, recruitment = 0.001, ssb = 0.001)
 
 background <- c(
   "### Southern Gulf cod: official detailed assessment to 2018", "", print_sources(source$assessment),

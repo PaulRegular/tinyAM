@@ -38,7 +38,7 @@ stopifnot(
   length(unique(translated$obs$index$q_key)) == 13L,
   translated$obs$catch$obs[
     translated$obs$catch$year == 1978 & translated$obs$catch$age == 0
-  ] == catch_1978$value[catch_1978$age == 0] * 1000,
+  ] == catch_1978$value[catch_1978$age == 0],
   all(is.na(translated$obs$catch$obs[translated$obs$catch$year == 2026])),
   all(vapply(2023:2026, function(year) {
     m_year <- m_surface[m_surface$year == year, c("age", "M_assumption")]

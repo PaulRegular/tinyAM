@@ -54,7 +54,7 @@ stopifnot(
   is.null(par$log_n0),
   all(is.finite(par$log_f)),
   all(is.finite(par$log_q)),
-  isTRUE(all.equal(par$log_r0, log(76636 * 1e6)))
+  isTRUE(all.equal(par$log_r0, log(76636 * 1000)))
 )
 
 cat("Baltic sprat translation structure passed.\n")

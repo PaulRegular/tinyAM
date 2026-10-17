@@ -20,7 +20,8 @@ outputs <- rbind(output, recruitment)
 before <- outputs
 model_grid <- expand.grid(year = years, age = ages)
 model_grid$est <- 1
-annual <- data.frame(year = years, est = 1)
+model_grid$unit <- "fish"
+annual <- data.frame(year = years, est = 1, unit = "fish")
 fit <- list(
   dat = list(years = years, ages = ages, is_proj = rep(FALSE, 3)),
   pop = list(N = model_grid, recruitment = annual),

@@ -63,10 +63,8 @@ obs$index$smith_sound_year <- as.integer(
 
 ## Background and comparisons ----
 
-comparison_scales <- c(
-  N = 1e-06, recruitment = 1e-06, ssb = 1e-06, abundance = 1e-06, biomass = 1e-06,
-  F_bar = 1, M_bar = 1, Z_bar = 1
-)
+comparison_scales <- c(Z_bar = 1)
+
 
 background <- c(
   "### Northern cod (2J3KL): official 2025 xteNCAM assessment", "", print_sources(source$assessment),

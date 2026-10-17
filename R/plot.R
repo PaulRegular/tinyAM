@@ -41,6 +41,9 @@
 #' Known inconsistent units must be converted explicitly
 #' before overlaying models. Single-coordinate trends show a point and a
 #' vertical confidence interval instead of an invisible line segment.
+#' Missing intervals split confidence ribbons into separate runs. Signed values
+#' and intervals expand the default axis below zero; nonnegative trends retain
+#' a zero baseline. Unit labels use a second line below the quantity name.
 #'
 #' @param data A data frame of observations or estimates.
 #' @param x Formula specifying x variable
@@ -111,7 +114,7 @@ plot_trend <- function(
   ...
 ) {
   unit <- if (identical(y[[2L]], quote(est))) .unit_label(data, "") else ""
-  unit_label <- if (nzchar(unit)) paste0("Estimate (", unit, ")") else ""
+  unit_label <- if (nzchar(unit)) paste0("Estimate<br>(", unit, ")") else ""
   if (missing(ylab)) ylab <- unit_label
   if (!is.data.frame(data) || !nrow(data)) {
     return(plotly::plot_ly(x = numeric(), y = numeric(), type = "scatter", mode = "lines"))
@@ -125,6 +128,7 @@ plot_trend <- function(
     args$color <- I("#1f77b4")
     args$showlegend <- FALSE
   }
+  if (inherits(args$color, "formula") && is.null(args$legendgroup)) args$legendgroup <- args$color
 
   values <- unlist(model.frame(y, data = data), use.names = FALSE)
   if (!any(is.finite(values))) {
@@ -153,7 +157,7 @@ plot_trend <- function(
       ci <- data[do.call(order, data[c(groups, coordinate)]), , drop = FALSE]
       key <- if (length(groups)) interaction(ci[groups], drop = TRUE) else rep(1L, nrow(ci))
       valid <- is.finite(ci$lwr) & is.finite(ci$upr)
-      ci$.ci_run <- interaction(key, ave(!valid, key, FUN = cumsum), drop = TRUE)
+      ci$.ci_run <- interaction(key, stats::ave(!valid, key, FUN = cumsum), drop = TRUE)
       ci <- ci[valid, , drop = FALSE]
       if (nrow(ci)) p <- p |> plotly::add_ribbons(
         data = ci, split = ~.ci_run,
@@ -291,7 +295,7 @@ plot_obs_pred <- function(
   ...
 ) {
   unit <- .unit_label(data, "")
-  unit_label <- if (nzchar(unit)) paste0("Observation (", unit, ")") else ""
+  unit_label <- if (nzchar(unit)) paste0("Observation<br>(", unit, ")") else ""
   if (missing(ylab)) ylab <- unit_label
   if (!is.data.frame(data) || !nrow(data) ||
     !any(is.finite(c(data$obs, data$pred)))) {

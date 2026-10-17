@@ -125,8 +125,7 @@ tidy_obs_pred <- function(fit, add_osa_res = FALSE, interval = .95, ...) {
   obs_pred$index$q <- exp(fit$rep$log_q_obs)
   units <- .data_units(fit$dat$obs)
   index_units <- unname(units$index[as.character(obs_pred$index$survey)])
-  obs_pred$index$q_unit <- ifelse(is.na(index_units) | is.na(units$numbers), NA_character_,
-    ifelse(index_units == units$numbers, "dimensionless", paste0("(", index_units, ") / (", units$numbers, ")")))
+  obs_pred$index$q_unit <- vapply(index_units, .q_unit, character(1), numbers = units$numbers)
   obs_pred$index$q_lwr <- obs_pred$index$q_upr <- obs_pred$index$q_se <- NA_real_
   obs_pred$index$q_se_scale <- fit$dat$index_settings$q_link
   if (!is.null(fit[["sdrep"]])) {
@@ -808,8 +807,8 @@ stack_nested <- function(x, label = "model",
 #' - **obs_pred** — a named list of stacked data frames (e.g., `catch`, `index`);
 #' - **pop** — a named list of stacked data frames (e.g., `ssb`, `N`, `M`, `mu_M`, `F`, `mu_F`, `Z`, …);
 #' - **patterns** — population and mortality age-year tables for [plot_matrix()].
-#'   Recognized units are converted to fish, kg and per year independently of
-#'   aggregate comparison scales. Unspecified fitted units remain unspecified;
+#'   Compatible units follow the first fitted model's displayed metric units,
+#'   including explicit reference conversions. Unspecified fitted units remain unspecified;
 #'   reference tables with unknown units remain missing;
 #' - **recruitment** — predictions, residuals and optional stock-recruit curves;
 #'   see [tidy_recruitment()];
@@ -905,12 +904,6 @@ tidy_tam <- function(..., model_list = NULL, interval = 0.95, label = "model", l
       tidy_pop(fit, interval = interval)
     }
   })
-  patterns <- lapply(seq_along(model_list), function(i) {
-    fit <- model_list[[i]]
-    .tidy_patterns(pop_list[[i]], reference = inherits(fit, "tam_ref"),
-      ssb_definition = if (inherits(fit, "tam_fit")) .ssb_timing_label(fit$dat) else NULL)
-  })
-  names(patterns) <- names(model_list)
   references <- Filter(function(fit) inherits(fit, "tam_ref"), model_list)
   comparison_scales <- lapply(references, `[[`, "comparison_scales")
   comparison_scales <- Filter(function(x) length(x) > 0L, comparison_scales)
@@ -954,6 +947,19 @@ tidy_tam <- function(..., model_list = NULL, interval = 0.95, label = "model", l
       }
     }
   }
+  fitted <- which(vapply(model_list, inherits, logical(1), "tam_fit"))
+  pattern_units <- if (length(fitted)) {
+    displayed <- pop_list[[fitted[1L]]]
+    first_unit <- function(d) utils::head(d$unit[!is.na(d$unit)], 1L)
+    list(numbers = first_unit(displayed$N), mass = first_unit(displayed$ssb))
+  } else NULL
+  patterns <- lapply(seq_along(model_list), function(i) {
+    fit <- model_list[[i]]
+    .tidy_patterns(pop_list[[i]], reference = inherits(fit, "tam_ref"),
+      ssb_definition = if (inherits(fit, "tam_fit")) .ssb_timing_label(fit$dat) else NULL,
+      target_units = pattern_units)
+  })
+  names(patterns) <- names(model_list)
   par_list <- lapply(model_list, function(fit) {
     if (inherits(fit, "tam_ref")) {
       return(list(fixed = fit$fixed_par, random = fit$random_par))
@@ -1025,7 +1031,7 @@ tidy_tam <- function(..., model_list = NULL, interval = 0.95, label = "model", l
 
 # Matrix views use each age-specific table's units, independently of aggregate
 # comparison scales. Unknown reference units remain unavailable.
-.tidy_patterns <- function(pop, reference = FALSE, ssb_definition = NULL) {
+.tidy_patterns <- function(pop, reference = FALSE, ssb_definition = NULL, target_units = NULL) {
   sources <- c(Abundance = "N", Biomass = "biomass_mat", SSB = "ssb_mat",
                F = "F", M = "M", Z = "Z")
   tables <- lapply(names(sources), function(metric) {
@@ -1041,9 +1047,10 @@ tidy_tam <- function(..., model_list = NULL, interval = 0.95, label = "model", l
     d <- d[intersect(c("year", "age", "est", "is_proj", "unit", "definition", "notes"), names(d))]
     # Matrix comparisons use a common scale only when the supplied unit is known.
     kind <- if (metric == "Abundance") "numbers" else if (metric %in% c("Biomass", "SSB")) "mass" else "rate"
-    unit <- switch(kind, numbers = "fish", mass = "kg", rate = "per year")
+    unit <- switch(kind, numbers = target_units$numbers, mass = target_units$mass, rate = "per year")
     units <- if ("unit" %in% names(d)) d$unit else rep(NA_character_, nrow(d))
-    multiplier <- .unit_scale(units, kind)
+    if (!length(unit) || is.na(unit)) unit <- units[which(!is.na(units))[1L]]
+    multiplier <- .unit_scale(units, kind) / .unit_scale(unit, kind)
     known <- is.finite(multiplier)
     d$est[known] <- d$est[known] * multiplier[known]
     if (reference) d$est[!known] <- NA_real_

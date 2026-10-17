@@ -24,7 +24,7 @@ index$unit <- "thousand fish"
 
 weight <- inputs$pwts[, c("year", "age", "weight")]
 names(weight)[names(weight) == "weight"] <- "obs"
-weight$unit <- "kg/fish"
+weight$unit <- "kg"
 
 maturity <- inputs$mats[
   inputs$mats$year <= max(catch$year),

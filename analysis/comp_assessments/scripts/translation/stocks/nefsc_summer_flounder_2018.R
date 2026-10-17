@@ -20,7 +20,6 @@ obs <- database_to_tam_obs(
 
 age_plus_group <- 7
 
-comparison_scales <- c(N = 0.001, recruitment = 0.001, ssb = 0.001, F = 1, M = 1, F_bar = 1)
 
 background <- c(
   "### Summer flounder: official 2018 ASAP assessment", "", print_sources(source$assessment),

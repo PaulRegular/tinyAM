@@ -330,13 +330,27 @@ The translation step should first reconstruct a numbers-at-age series for each s
 
 If the source database contains direct catch numbers-at-age, harmonize units only as needed.
 
-The converter labels translated catch in `fish`, weight in `kg/fish`, and
-indices in fish or their retained native survey units. These optional `unit`
-columns describe the values; tinyAM never converts fitting inputs from labels.
-Keep labels consistent when adding or rescaling observations. Derived abundance,
-biomass and SSB tables carry units into dashboard axes. Explicit comparison
-scales remain separate; log-scale SEs are relative uncertainty and are not
-multiplied by count or biomass conversion factors.
+The converter explicitly expresses catch in **thousand fish** and average weight
+in **kg**. Abundance and recruitment therefore use thousand fish, while their
+product with average weight gives biomass, SSB and catch biomass in **tonnes**.
+Count-based survey indices use thousand fish too. Count rates retain their effort
+denominator, for example thousand fish per tow; relative indices retain their
+documented native scale. Do not expand rates to population totals without
+defensible sampling-area information.
+
+These optional `unit` columns describe values; tinyAM never converts fitting
+inputs from labels. The converter performs the numerical conversions explicitly.
+Keep units consistent when editing observations, source-based starts or reports.
+Native database values remain unchanged. Shared comparison code converts official
+outputs to the same thousands/tonnes convention, replacing stock-specific
+fish/kg multipliers. Matrix views use the corresponding trend units. Log-scale
+SEs are relative uncertainty and are not multiplied by count or mass factors.
+
+For matching count scales, q is unitless. A count-rate index gives q inverse-effort
+units (such as per tow), not the fraction of a population surveyed. A q of one
+means 1:1 numerical correspondence only for comparable total-abundance units.
+Unknown survey and q units are omitted from plot labels, with source descriptions
+retained in provenance. Known units appear below the axis title.
 
 ## 4.2 Total numbers + number proportions
 
@@ -431,8 +445,10 @@ Do not combine removal streams without understanding how the source assessment t
 ## 4.8 Reporting total catch biomass
 
 Stock recipes may optionally provide `catch_reporting`, with `weights`
-(`year`, `age`, `weight` in kg/fish) and `totals` (`year`, `yield` in kg).
-The runner then reports the original total catch biomass and sums predicted
+(`year`, `age`, average `weight` in kg) and `totals` (`year`, `yield` in kg,
+as an explicitly documented intermediate conversion). The runner reports
+both observed and predicted catch biomass in tonnes, using the fitted count
+units, and sums predicted
 catch numbers times catch weights over all model ages. This avoids comparing
 an incomplete composition with an all-age prediction, or substituting stock
 weights for catch weights. It changes the yield reporting tables only; it does

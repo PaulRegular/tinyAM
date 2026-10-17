@@ -24,7 +24,7 @@ published_catch <- source_data$inputs[
 expected_catch <- published_catch$value[match(
   paste(translated$obs$catch$year, translated$obs$catch$age),
   paste(published_catch$year, published_catch$age)
-)] * 1000
+)]
 
 stopifnot(
   tinyAM::check_obs(translated$obs),

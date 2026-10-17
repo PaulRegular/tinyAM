@@ -15,10 +15,6 @@ obs$pop_covariates$N_sd_key <- factor(ifelse(obs$pop_covariates$age == 8, "sd_8+
 
 age_plus_group <- 8
 
-comparison_scales <- c(
-  ssb = 0.001, recruitment = 0.001, N = 0.001, abundance = 0.001, biomass = 0.001,
-  biomass_at_age = 0.001
-)
 
 
 background <- c(

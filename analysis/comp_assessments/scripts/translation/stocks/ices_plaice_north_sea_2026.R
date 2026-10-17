@@ -29,7 +29,7 @@ dat <- tinyAM::prepare_tam(
 start_par <- tinyAM::make_par(dat)
 
 
-source_N <- .translation_start_surface(source$outputs, "population", "numbers_at_age", years, ages, 1000)
+source_N <- .translation_start_surface(source$outputs, "population", "numbers_at_age", years, ages, 1)
 source_F <- .translation_start_surface(source$outputs, "mortality", "fishing_mortality_at_age", years, ages)
 start_par$log_r0 <- log(source_N[1L, 1L])
 start_par$log_r <- log(source_N[-1L, 1L])
@@ -56,7 +56,6 @@ start_par$log_q[names(q_start)] <- log(q_start)
 
 age_plus_group <- 10
 
-comparison_scales <- c(N = 0.001, recruitment = 0.001, ssb = 0.001, F = 1, M = 1, F_bar = 1)
 
 background <- c(
   "### North Sea plaice: official 2026 SAM assessment", "", print_sources(source$assessment),

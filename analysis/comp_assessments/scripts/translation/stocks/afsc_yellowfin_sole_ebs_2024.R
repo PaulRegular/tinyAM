@@ -91,7 +91,7 @@ if(do_fit) {
   fit_stage <- "fit"
   fit_started <- Sys.time()
   fit <- fit_default_first(fit_model,retry_start=function() {
-    n <- .translation_start_surface(comparison_outputs,"population","numbers_at_age",years,ages,1e9)
+    n <- .translation_start_surface(comparison_outputs,"population","numbers_at_age",years,ages,1e6)
     f <- .translation_start_surface(comparison_outputs,"mortality","fishing_mortality_at_age",years,ages)
     list(log_r0=log(n[1,1]),log_r=log(n[-1,1]),log_n0=log(n[1,-1]),log_f=log(f))
   },attempt_file=file.path("analysis/comp_assessments/results/cache",source$assessment$assessment_id,"initialization_attempts.rds"))

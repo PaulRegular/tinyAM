@@ -62,5 +62,5 @@ total <- sum(record$inputs$value[record$inputs$type == "catch" &
   record$inputs$measure == "total_biomass" & record$inputs$year == 1977]) * 1000
 female <- sample[sample$sex == "female", ]
 observed <- x$obs$catch[x$obs$catch$year == 1977, ]
-stopifnot(max(abs(observed$obs - total*female$value[match(observed$age, female$age)]/denominator)) < 1e-8)
+stopifnot(max(abs(observed$obs - total/1000*female$value[match(observed$age, female$age)]/denominator)) < 1e-8)
 cat("Canary preparation, joint-sex conversion, missing years, comparison limits and no-fit checks passed.\n")

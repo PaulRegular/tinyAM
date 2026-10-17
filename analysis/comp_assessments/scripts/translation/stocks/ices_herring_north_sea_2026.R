@@ -45,7 +45,7 @@ model_dat <- tinyAM::prepare_tam(
   index_settings = list(q_form = ~ 0 + q_key, sd_form = ~ 0 + sd_block)
 )
 start_par <- tinyAM::make_par(model_dat)
-source_N <- .translation_start_surface(source$outputs, "population", "numbers_at_age", years, ages, 1000)
+source_N <- .translation_start_surface(source$outputs, "population", "numbers_at_age", years, ages, 1)
 source_F <- .translation_start_surface(source$outputs, "mortality", "fishing_mortality_at_age", years, ages)
 start_par$log_r0 <- log(source_N[1, 1])
 start_par$log_n0 <- log(source_N[1, -1])
@@ -58,7 +58,6 @@ start_par$log_f <- log(source_F)
 
 age_plus_group <- 8
 
-comparison_scales <- c(N = 0.001, recruitment = 0.001, ssb = 0.001, F_bar = 1)
 
 
 background <- c(
@@ -79,7 +78,7 @@ background <- c(
 
   "| M | Fixed annual SMS-2023 age surface with an additional 0.02 in the official model configuration. | Supply the translated 1947–2025 M surface as fixed numerical values. | No M process is estimated; the official final-M convention must be preserved without applying the offset twice. |",
 
-  "| Catch | Direct catch-at-age in thousand fish; fishery-closure years 1978–1979 have missing observations. | Convert to individual fish and fit positive catch observations with independent lognormal errors and SD groups defined by sd_block. | Source catch-error structure may differ; zero observations cannot enter the standard lognormal likelihood directly. |",
+  "| Catch | Direct catch-at-age in thousand fish; fishery-closure years 1978–1979 have missing observations. | Retain thousand fish and fit positive catch observations with independent lognormal errors and SD groups defined by sd_block. | Source catch-error structure may differ; zero observations cannot enter the standard lognormal likelihood directly. |",
 
   "| Indices | HERAS, IBTS-Q1, IBTS0 and IBTS-Q3 are age-structured. Four larval indices use partial spawning-component likelihoods. | Retain the four age-structured surveys, with source-derived q and observation-SD groups. Omit the larval indices. | Partial spawning-component indices are not abundance-at-age observations. IBTS-Q3 cross-age observation correlation is omitted, and timing remains approximate. |",
 

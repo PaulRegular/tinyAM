@@ -100,7 +100,7 @@ for (survey in unique(full$index$survey)) {
     !is.na(source_data$inputs$survey) &
     source_data$inputs$survey == survey, ]
   stopifnot(all(totals$unit == "million t"))
-  expected <- totals$value[match(as.integer(names(reconstructed)), totals$year)] * 1e9
+  expected <- totals$value[match(as.integer(names(reconstructed)), totals$year)] * 1e6
   stopifnot(all(abs(reconstructed / expected - 1) < 1e-12))
   retained <- z[!(survey == "Shelikof winter acoustic" & z$age == 3), ]
   actual <- obs$index[obs$index$survey == survey, ]
@@ -111,7 +111,7 @@ for (survey in unique(full$index$survey)) {
 # Independent rounded SAFE Table 1.11 check (millions of fish, not billions).
 rows <- full$index$survey == "Shelikof winter acoustic" &
   full$index$year == 1992 & full$index$age %in% 4:9
-stopifnot(all(abs(full$index$obs[rows] / 1e6 -
+stopifnot(all(abs(full$index$obs[rows] / 1e3 -
   c(188.1, 368.0, 84.1, 85.0, 171.2, 32.7)) < 0.05))
 
 catch_numbers <- source_data$inputs[source_data$inputs$type == "catch" &
@@ -123,9 +123,9 @@ stopifnot(
   all(catch_numbers$source_type == "official_table"),
   catch_numbers$value[catch_numbers$year == 2023 & catch_numbers$age == 1] == 0.43,
   catch_numbers$value[catch_numbers$year == 2023 & catch_numbers$age == 2] == 8.57,
-  obs$catch$obs[obs$catch$year == 2023 & obs$catch$age == 1] == 430000,
-  obs$catch$obs[obs$catch$year == 2023 & obs$catch$age == 2] == 8570000,
-  obs$catch$obs[obs$catch$year == 2023 & obs$catch$age == 10] == 8890000
+  obs$catch$obs[obs$catch$year == 2023 & obs$catch$age == 1] == 430,
+  obs$catch$obs[obs$catch$year == 2023 & obs$catch$age == 2] == 8570,
+  obs$catch$obs[obs$catch$year == 2023 & obs$catch$age == 10] == 8890
 )
 
 totals <- source_data$inputs[source_data$inputs$type == "catch" &

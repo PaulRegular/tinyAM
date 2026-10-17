@@ -31,7 +31,6 @@ obs$pop_covariates$age_factor <- factor(obs$pop_covariates$age, levels = ages)
 
 age_plus_group <- 10
 
-comparison_scales <- c(N = 1e-06, recruitment = 1e-06, ssb = 0.001, biomass = 0.001, F = 1, M = 1, F_bar = 1)
 
 background <- c(
   "### Atlantic mackerel: official 2018 ASAP assessment", "", print_sources(source$assessment),

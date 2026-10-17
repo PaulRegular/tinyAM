@@ -170,11 +170,9 @@ comparison_outputs <- source$outputs[
   drop = FALSE
 ]
 
-comparison_scales <- c(
-  N = 0.001, F = 1, recruitment = 0.001, abundance = 0.001,
-  biomass = 0.001, biomass_at_age = 0.001,
-  ssb = 0.001, ssb_mat = 0.001, F_bar = 1
-)
+
+# Request the additional age-specific SSB comparison in the shared fish/kg calculation.
+comparison_scales <- c(ssb_mat = .001)
 
 comparison_definitions <- list(
   ssb = list(

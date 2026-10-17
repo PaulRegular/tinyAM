@@ -48,9 +48,7 @@ stopifnot(
   all(translated$comparison_outputs$unit[
     translated$comparison_outputs$measure == "recruitment"
   ] == "billion fish"),
-  identical(unname(translated$comparison_scales[["ssb"]]), 1e-3),
-  identical(unname(translated$comparison_scales[["biomass"]]), 1e-3),
-  identical(unname(translated$comparison_scales[["recruitment"]]), 1e-9),
+  is.null(translated$comparison_scales),
   identical(sort(unique(translated$comparison_outputs$year)), 2007:2025),
   identical(translated$comparison_definitions$ssb$status, "approximate")
 )
@@ -63,7 +61,7 @@ index_totals <- source_data$inputs[
   drop = FALSE
 ]
 index_sum <- aggregate(obs ~ year, obs$index, sum)
-expected_index <- index_totals$value * 1000
+expected_index <- index_totals$value
 stopifnot(isTRUE(all.equal(
   index_sum$obs[match(index_totals$year, index_sum$year)],
   expected_index,

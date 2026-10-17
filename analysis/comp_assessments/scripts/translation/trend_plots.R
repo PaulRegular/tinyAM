@@ -16,6 +16,8 @@ ts <- read_csv(
   file.path(root, "results/population_timeseries.csv"),
   show_col_types = FALSE
 )
+batch_file <- file.path(root, "results", "cache", "assessment_runs.rds")
+batch_runs <- if (file.exists(batch_file)) readRDS(batch_file) else NULL
 
 assessments <- read_csv(
   file.path(root, "database/assessments.csv"),
@@ -45,26 +47,26 @@ plot_comparison <- function(metric_name) {
 
   # Common units for each metric.
   unit_factors <- list(
-    ssb = c("kg" = 1e-6, "t" = 1e-3, "kt" = 1),
+    ssb = c("kg" = 1e-3, "t" = 1, "tonnes" = 1, "kt" = 1000),
     recruitment = c(
-      "fish" = 1e-6,
-      "thousand fish" = 1e-3,
-      "million fish" = 1,
-      "billion fish" = 1e3
+      "fish" = 1e-3,
+      "thousand fish" = 1,
+      "million fish" = 1000,
+      "billion fish" = 1e6
     ),
     abundance = c(
-      "fish" = 1e-6,
-      "thousand fish" = 1e-3,
-      "million fish" = 1,
-      "billion fish" = 1e3
+      "fish" = 1e-3,
+      "thousand fish" = 1,
+      "million fish" = 1000,
+      "billion fish" = 1e6
     ),
     F_bar = c("per year" = 1)
   )
 
   axis_labels <- c(
-    ssb = "Spawning-stock biomass (kt)",
-    recruitment = "Recruitment (million fish)",
-    abundance = "Total abundance (million fish)",
+    ssb = "SSB\n(tonnes)",
+    recruitment = "Recruitment\n(thousand fish)",
+    abundance = "Total abundance\n(thousand fish)",
     F_bar = "Average fishing mortality (yr\u207b\u00b9)"
   )
 
@@ -173,13 +175,8 @@ plot_comparison <- function(metric_name) {
     )
 
   # Extract tinyAM trajectories for unavailable comparisons.
-  # Model output units are kg, fish, fish and per year.
-  model_scale <- c(
-    ssb = 1e-6,
-    recruitment = 1e-6,
-    abundance = 1e-6,
-    F_bar = 1
-  )[[metric_name]]
+  target_unit <- if (metric_name == "ssb") "tonnes" else if (metric_name == "F_bar") "per year" else "thousand fish"
+  kind <- if (metric_name == "ssb") "mass" else if (metric_name == "F_bar") "rate" else "numbers"
 
   model_rows <- lapply(unavailable$assessment_id, function(id) {
 
@@ -187,15 +184,16 @@ plot_comparison <- function(metric_name) {
       root, "results", "cache", id, "fit.rds"
     )
 
-    if (!file.exists(file)) return(NULL)
-
-    fit <- readRDS(file)
+    fit <- if (!is.null(batch_runs)) batch_runs[[id]]$fit else if (file.exists(file)) readRDS(file) else NULL
+    if (!inherits(fit, "tam_fit")) return(NULL)
     pop <- fit$pop[[metric_name]]
 
     if (!is.data.frame(pop) ||
         !all(c("year", "est") %in% names(pop))) {
       return(NULL)
     }
+    if (is.null(pop$unit) || !any(is.finite(tinyAM:::.unit_scale(pop$unit, kind)))) return(NULL)
+    pop <- tinyAM:::.convert_report_units(pop, target_unit, kind)
 
     historical <- fit$dat$years[!fit$dat$is_proj]
 
@@ -208,7 +206,7 @@ plot_comparison <- function(metric_name) {
       transmute(
         assessment_id = id,
         year,
-        estimate = est * model_scale
+        estimate = est
       )
   })
 
@@ -246,7 +244,7 @@ plot_comparison <- function(metric_name) {
     mutate(
       year = median(ts$year[is.finite(ts$year)]),
       estimate = 0,
-      label = paste0(label, "\n(tinyAM fit not cached)")
+      label = paste0(label, "\n(no current tinyAM fit)")
     ) |>
     select(assessment_id, panel, year, estimate, label)
 

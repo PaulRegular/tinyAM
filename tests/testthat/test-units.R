@@ -1,7 +1,7 @@
 test_that("unit metadata validates without changing observations", {
   d <- cod_obs
   d$catch$unit <- "thousand fish"
-  d$weight$unit <- "kg/fish"
+  d$weight$unit <- "kg"
   d$index$unit <- "fish per tow"
   original <- d
   expect_true(check_tam_data(d))
@@ -23,7 +23,7 @@ test_that("units preserve designs, parameters, likelihoods and derivatives", {
   for (nm in names(plain)) plain[[nm]]$unit <- NULL
   labeled <- plain
   labeled$catch$unit <- "thousand fish"
-  labeled$weight$unit <- "kg/fish"
+  labeled$weight$unit <- "kg"
   labeled$index$unit <- "thousand fish"
   a <- prepare_tam(plain, years = 2000:2005, ages = 2:6)
   b <- prepare_tam(labeled, years = 2000:2005, ages = 2:6)
@@ -39,17 +39,17 @@ test_that("units preserve designs, parameters, likelihoods and derivatives", {
   expect_true(all(pop$N$unit == "thousand fish"))
   expect_true(all(pop$ssb$unit == "tonnes"))
   expect_true(all(pop$F$unit == "per year"))
-  expect_true(all(pop$W$unit == "kg/fish"))
+  expect_true(all(pop$W$unit == "kg"))
   expect_true(all(pop$P$unit == "proportion"))
   patterns <- tinyAM:::.tidy_patterns(pop)
-  expect_equal(subset(patterns$population, metric == "Abundance")$est, pop$N$est * 1000)
-  expect_equal(subset(patterns$population, metric == "SSB")$est, pop$ssb_mat$est * 1000)
+  expect_equal(subset(patterns$population, metric == "Abundance")$est, pop$N$est)
+  expect_equal(subset(patterns$population, metric == "SSB")$est, pop$ssb_mat$est)
   expect_identical(labeled$catch$obs, plain$catch$obs)
 })
 
 test_that("default plot labels include units and explicit labels win", {
   d <- data.frame(year = 2000:2002, est = 1:3, unit = "tonnes")
-  expect_equal(plotly::plotly_build(plot_trend(d))$x$layout$yaxis$title, "Estimate (tonnes)")
+  expect_equal(plotly::plotly_build(plot_trend(d))$x$layout$yaxis$title, "Estimate<br>(tonnes)")
   expect_match(plotly::plotly_build(plot_trend(d))$x$data[[1]]$hovertemplate, "tonnes")
   expect_true(all(plotly::plotly_build(plot_trend(d, hovertemplate = "Custom"))$x$data[[1]]$hovertemplate == "Custom"))
   expect_equal(plotly::plotly_build(plot_trend(d, ylab = "My label"))$x$layout$yaxis$title, "My label")

@@ -104,7 +104,7 @@ background <- c(
   "| Index | Shelikof winter acoustic, NMFS bottom trawl, ADF&G trawl, and summer acoustic biomass indices with age compositions and survey selectivity curves. | Numbers-at-age reconstructed with matching survey weights and source timing. Each survey has paired-age q blocks (1-2, 3-4, 5-6, 7-8, 9-10) and a logit link. Shelikof environmental and ADF&G annual effects act on logit-q; SD combines supplied log-SDs with one estimated level per survey. | Simplifies selectivity and observation errors. Aggregate-only years and the pooled Shelikof ages 1-3 bin are omitted. Source age-reading error, latent environmental dynamics, q penalties and priors are not represented. |",
   "| Weights and maturity | Annual stock, catch, survey and spawning weights; constant maturity and female fraction 0.5. | Stock weights, matching catch/survey weights, and maturity multiplied by 0.5. | tinyAM SSB uses start-year stock weights; official SSB uses spawning weights and survival to year fraction 0.21. |",
   "",
-  "tinyAM fits individual fish with weights in kg. Official N and recruitment remain in million fish, and official SSB and biomass in thousand tonnes; comparisons convert tinyAM outputs to these units.",
+  "The translation uses thousand fish, average weights in kg, and biomass in tonnes. Official outputs are converted to these common display units; native values remain in the source database.",
   "",
   "The logit link restricts q below one; it does not reproduce the source bottom-trawl q prior. Bottom-trawl q for ages 5-8 approaches this boundary and is weakly estimated.",
   "",
@@ -117,10 +117,6 @@ background <- c(
 age_plus_group <- 10
 
 
-comparison_scales <- c(
-  N = 1e-06, recruitment = 1e-06, abundance = 1e-06, ssb = 1e-06, biomass = 1e-06,
-  biomass_at_age = 1e-06
-)
 
 
 ## Model ----

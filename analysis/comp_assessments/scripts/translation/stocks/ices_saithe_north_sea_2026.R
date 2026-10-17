@@ -46,7 +46,6 @@ comparison_outputs$notes[shared_f] <- paste(
 age_plus_group <- 8
 
 
-comparison_scales <- c(N = 0.001, recruitment = 0.001, ssb = 0.001, F = 1, M = 1, F_bar = 1)
 
 background <- c(
   "### North Sea saithe: official 2026 SAM assessment", "", print_sources(source$assessment),

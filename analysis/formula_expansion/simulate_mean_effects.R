@@ -85,7 +85,7 @@ make_observations <- function() {
   index$obs <- 1
   index$relative_sd <- .08
   index$unit <- "fish"
-  weight <- transform(grid, obs = .2 * age^1.5, unit = "kg/fish")
+  weight <- transform(grid, obs = .2 * age^1.5, unit = "kg")
   maturity <- transform(grid, obs = plogis(age - 4))
   list(catch = catch, index = index, weight = weight, maturity = maturity)
 }

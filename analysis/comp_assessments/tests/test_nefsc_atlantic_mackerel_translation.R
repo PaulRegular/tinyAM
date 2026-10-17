@@ -20,7 +20,7 @@ egg_ssb <- database$inputs[database$inputs$assessment_id == assessment_id & data
 expected_catch <- inputs$value[
   inputs$type == "catch" & inputs$measure == "numbers_at_age" &
     inputs$year == 1968 & inputs$age == 1
-] * 1000
+]
 expected_index <- inputs$value[
   inputs$type == "index" & inputs$measure == "numbers_at_age" &
     inputs$survey == "NEFSC Albatross spring trawl" &
@@ -57,7 +57,7 @@ stopifnot(
   isTRUE(all.equal(translated$obs$index$obs[
     translated$obs$index$survey == "NEFSC Albatross spring trawl" &
       translated$obs$index$year == 1974 & translated$obs$index$age == 3
-  ], expected_index)),
+  ], expected_index / 1000)),
   all(translated$obs$pop_covariates$M_assumption == 0.2),
   all(abs(translated$obs$index$samp_time - 95.7 / 365) < 1e-12),
   identical(dat$N_settings$process, "iid"),

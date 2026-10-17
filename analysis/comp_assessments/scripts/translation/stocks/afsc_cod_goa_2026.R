@@ -745,7 +745,7 @@ obs <- database_to_tam_obs(
 ## Official outputs used for comparison ----
 ##
 ## Retain source SSB in its native unit (tonnes). tinyAM produces
-## biomass in kg, so comparison_scales converts tinyAM kg -> tonnes.
+## biomass in tonnes, matching the common comparison display.
 ## Do not convert the source values here.
 
 comparison_outputs <- outputs[
@@ -795,7 +795,6 @@ comparison_outputs$notes[ssb_rows] <- ifelse(
 age_plus_group <- 10
 
 
-comparison_scales <- c(ssb = 0.001, biomass = 0.001, recruitment = 1e-09)
 
 comparison_aggregates <- "ssb"
 

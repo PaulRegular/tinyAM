@@ -28,7 +28,7 @@ catch_key <- paste(observed_catch$year, observed_catch$age, sep = ":")
 expected_rows <- match(catch_key, expected_key)
 stopifnot(!anyNA(expected_rows))
 stopifnot(nrow(observed_catch) == 480L)
-stopifnot(all(observed_catch$obs == landings_at_age$value[expected_rows] * 1000))
+stopifnot(all(observed_catch$obs == landings_at_age$value[expected_rows]))
 stopifnot(setequal(unique(obs$index$survey), c(
   "DFO September RV survey", "Mobile Sentinel August survey"
 )))

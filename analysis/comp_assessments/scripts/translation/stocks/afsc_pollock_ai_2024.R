@@ -50,7 +50,7 @@ if (do_fit) {
   fit_started <- Sys.time()
   fit <- fit_default_first(fit_model, retry_start = function() {
     n <- .translation_start_surface(source$outputs, "population", "numbers_at_age",
-                                     years, ages, 1e9)
+                                     years, ages, 1e6)
     list(log_r0 = log(n[1, 1]), log_r = log(n[-1, 1]),
          log_n0 = log(n[1, -1]), mu_m = log(.206))
   }, attempt_file = file.path("analysis/comp_assessments/results/cache",

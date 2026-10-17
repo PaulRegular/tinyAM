@@ -213,15 +213,15 @@ dat <- tinyAM::prepare_tam(
   index_settings = list(q_form = ~ 0 + q_key, sd_form = ~ 0 + sd_block)
 )
 start_par <- tinyAM::make_par(dat)
-start_par$log_r0 <- log(source_n[1L, "0"])
-start_par$log_r <- setNames(log(source_n[-1L, "0"]), as.character(years[-1L]))
-start_par$log_n <- log(source_n[-1L, as.character(ages[-1L]), drop = FALSE])
+start_par$log_r0 <- log(source_n[1L, "0"] / 1000)
+start_par$log_r <- setNames(log(source_n[-1L, "0"] / 1000), as.character(years[-1L]))
+start_par$log_n <- log(source_n[-1L, as.character(ages[-1L]), drop = FALSE] / 1000)
 start_par$log_f <- log(annual_f)
 
 index <- obs$index
 quarter <- ifelse(index$samp_time < 0.5, 1L, 3L)
 at <- cbind(match(index$year, years), match(index$age, ages), quarter)
-n_at_survey <- n_cube[at] * exp(-(f_cube[at] + m_cube[at]) * 0.125)
+n_at_survey <- n_cube[at] / 1000 * exp(-(f_cube[at] + m_cube[at]) * 0.125)
 q_design <- stats::model.matrix(~ 0 + q_key, data = index)
 q_start <- vapply(seq_len(ncol(q_design)), function(j) {
   selected <- q_design[, j] == 1
@@ -337,7 +337,6 @@ comparison_outputs <- rbind(
 age_plus_group <- 3
 
 
-comparison_scales <- c(N = 1e-06, recruitment = 1e-06, ssb = 0.001, F = 1, M = 1, F_bar = 1)
 
 
 background <- c(

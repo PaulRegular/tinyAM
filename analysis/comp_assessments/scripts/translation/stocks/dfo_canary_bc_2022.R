@@ -67,7 +67,7 @@ if (do_fit) {
   fit <- fit_default_first(fit_model, retry_start = function() {
     m <- unique(comparison_outputs$value[comparison_outputs$measure == "natural_mortality_at_age"])
     b <- comparison_outputs$value[comparison_outputs$measure == "SSB" &
-      comparison_outputs$year == min(years)] * 1000
+      comparison_outputs$year == min(years)]
     survival <- exp(-m * (ages - min(ages)))
     survival[length(ages)] <- tail(survival, 1) / (1 - exp(-m))
     w <- obs$weight$obs[obs$weight$year == min(years)]

@@ -29,7 +29,7 @@ d |>
   plot_obs_pred(
     color = ~model,
     colors = cols,
-    ylab = tinyAM:::.unit_label(d, "Aggregate index")
+    ylab = tinyAM:::.unit_label(d, "Abundance index")
   )
 ```
 
@@ -37,7 +37,7 @@ d |>
 
 ```{r}
 plot_age_year(d, plot = plot_obs_pred, frame = ~age, color = ~model,
-                     colors = cols, ylab = tinyAM:::.unit_label(d, "Index"))
+                     colors = cols, ylab = tinyAM:::.unit_label(d, "Abundance index"))
 ```
 
 ### Catchability

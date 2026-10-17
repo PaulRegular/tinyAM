@@ -50,7 +50,7 @@ are checked again during preparation after any edits.
 Optional \code{unit} columns label catch numbers, stock weight per fish and each
 survey index. Use one unit throughout catch and weight, and one per survey.
 Values are never converted during fitting. For example, \code{"thousand fish"}
-catch and \code{"kg/fish"} weight give abundance in thousands and biomass/SSB in
+catch and \code{"kg"} weight give abundance in thousands and biomass/SSB in
 tonnes. Unknown units are left unlabeled; descriptive index units such as
 \code{"fish per tow"} are retained. Reported tables and default plot labels carry
 these units. Explicit plot labels take precedence. Matrix views convert

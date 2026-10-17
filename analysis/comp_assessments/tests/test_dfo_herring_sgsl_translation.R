@@ -75,9 +75,9 @@ stopifnot(
   acoustic_source$value[acoustic_source$year == 2023 & acoustic_source$age == 10] == 140,
   nrow(acoustic_observed) == 270L,
   nrow(acoustic_match) == 270L,
-  isTRUE(all.equal(acoustic_match$obs, acoustic_match$value * 1000)),
-  acoustic_observed$obs[acoustic_observed$year == 1994 & acoustic_observed$age == 3] == 231932000,
-  acoustic_observed$obs[acoustic_observed$year == 2023 & acoustic_observed$age == 10] == 140000,
+  isTRUE(all.equal(acoustic_match$obs, acoustic_match$value)),
+  acoustic_observed$obs[acoustic_observed$year == 1994 & acoustic_observed$age == 3] == 231932,
+  acoustic_observed$obs[acoustic_observed$year == 2023 & acoustic_observed$age == 10] == 140,
   !anyNA(obs$index$cpue_period),
   all(as.character(acoustic_observed$cpue_period) == "baseline"),
   identical(translated$settings$index_settings$q_link, "log")
@@ -116,7 +116,7 @@ observed_catch <- obs$catch[c("year", "age", "obs")]
 catch_comparison <- merge(observed_catch, source_catch, by = c("year", "age"))
 stopifnot(
   nrow(catch_comparison) == nrow(source_catch),
-  isTRUE(all.equal(catch_comparison$obs, catch_comparison$value * 1000))
+  isTRUE(all.equal(catch_comparison$obs, catch_comparison$value))
 )
 
 dat <- do.call(tinyAM::prepare_tam, c(

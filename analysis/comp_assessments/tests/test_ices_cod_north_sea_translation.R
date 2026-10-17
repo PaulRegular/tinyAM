@@ -63,7 +63,7 @@ stopifnot(
     as.numeric(source_catch$value)[match(
       paste(obs$catch$year, obs$catch$age),
       paste(source_catch$year, source_catch$age)
-    )] * 1000
+    )]
   )),
   setequal(unique(obs$index$survey), "Survey_Q34"),
   all(obs$index$samp_time == 0.75),

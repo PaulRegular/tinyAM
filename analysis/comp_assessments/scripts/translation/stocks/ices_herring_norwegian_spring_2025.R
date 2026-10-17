@@ -35,7 +35,7 @@ dat <- tinyAM::prepare_tam(
   index_settings = list(q_form = ~ 0 + q_key, sd_form = ~ 0 + survey)
 )
 start_par <- tinyAM::make_par(dat)
-source_N <- .translation_start_surface(source$outputs, "population", "numbers_at_age", years, ages, 1e+06)
+source_N <- .translation_start_surface(source$outputs, "population", "numbers_at_age", years, ages, 1000)
 source_F <- .translation_start_surface(source$outputs, "mortality", "fishing_mortality_at_age", years, ages)
 start_par$log_r0 <- log(source_N[1L, 1L])
 start_par$log_n0 <- log(source_N[1L, -1L])
@@ -55,7 +55,6 @@ start_par$log_q[paste0("q_key", names(q_start))] <- log(q_start)
 
 age_plus_group <- 12
 
-comparison_scales <- c(N = 1e-06, recruitment = 1e-06, ssb = 1e-06, F_bar = 1)
 
 background <- c(
   "### Norwegian spring-spawning herring: official 2025 SAM assessment", "", print_sources(source$assessment),

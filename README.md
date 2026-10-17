@@ -62,7 +62,7 @@ projections retain terminal values at each age. See `?"tinyAM-model"` for equati
 SD interpretations and examples.
 
 Optional `unit` columns make plot labels explicit without changing input values:
-use `"thousand fish"` for catch and comparable indices, and `"kg/fish"` for
+use `"thousand fish"` for catch and comparable indices, and `"kg"` for
 weight. This combination produces biomass and SSB in tonnes. Survey units may
 differ by survey; native labels such as `"fish per tow"` are retained. Keep
 units consistent within each series and call `check_tam_data()` after editing.

@@ -106,10 +106,6 @@ comparison_outputs <- do.call(rbind, comparison_outputs)
 age_plus_group <- 7
 
 
-comparison_scales <- c(
-  N = 0.001, recruitment = 0.001, ssb = 0.001, F_bar = 1, abundance = 0.001, biomass = 0.001,
-  biomass_at_age = 0.001
-)
 
 
 background <- c(

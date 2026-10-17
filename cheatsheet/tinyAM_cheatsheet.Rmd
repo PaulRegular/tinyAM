@@ -146,7 +146,7 @@ if (file.info("../man/figures/logo.svg")$mtime > file.info("logo.pdf")$mtime) {
 \end{minipage}
 \end{minipage}\par\vspace{1mm}
 \panelnote{\textbf{Keys:} year + age; add survey for indices. Use complete catch/biology and population-covariate grids. Weight/maturity cannot be missing; catch/index observations may be \texttt{NA}.}\par
-\panelnote{\textbf{Example units:} thousands of fish; kg/fish for weight; proportions for maturity. Sampling/spawning times are year fractions. Older biological ages can be retained above the model plus group.}
+\panelnote{\textbf{Example units:} thousands of fish; kg for weight; proportions for maturity. Sampling/spawning times are year fractions. Older biological ages can be retained above the model plus group.}
 
 \vspace{2mm}
 \sectitle{2}{Specify competing model hypotheses}{tamteal}

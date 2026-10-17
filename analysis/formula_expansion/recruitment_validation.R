@@ -14,7 +14,7 @@ rec_inputs <- function(years = 2000:2049) {
     transform(d, obs = 100, survey = "B", samp_time = .8)
   )
   index$unit <- "fish"
-  weight <- transform(d, obs = age^2 / 10, unit = "kg/fish")
+  weight <- transform(d, obs = age^2 / 10, unit = "kg")
   maturity <- transform(d, obs = .5 * plogis(2 * (age - 3)))
   pop_covariates <- transform(d, temperature = sin((year - min(year)) / 4))
   pop_covariates$temperature[pop_covariates$age != 1L] <- NA

@@ -95,9 +95,9 @@ obs <- database_to_tam_obs(
   years = 2000:2001, ages = 1:2,
   weight_survey = "RV", sampling_times = sampling_times
 )
-expected_age_numbers <- 1000 * c(0.25, 0.75) / sum(c(0.25, 0.75) * c(1, 2))
-expect_equal(unique(obs$index$unit[obs$index$survey == "RV"]), "fish")
-expect_equal(unique(obs$index$unit[obs$index$survey == "Longline"]), "fish per tow")
+expected_age_numbers <- c(0.25, 0.75) / sum(c(0.25, 0.75) * c(1, 2))
+expect_equal(unique(obs$index$unit[obs$index$survey == "RV"]), "thousand fish")
+expect_equal(unique(obs$index$unit[obs$index$survey == "Longline"]), "thousand fish per tow")
 
 # Equivalent biomass and weight units must give identical numbers of fish.
 for (unit in c("kg", "t", "thousand t", "million t", "million tonnes")) {
@@ -153,7 +153,7 @@ expect_equal(grepl(
     provenance$survey == "Relative"]
 ), TRUE)
 expect_equal(obs$catch$obs[obs$catch$year == 2001 & obs$catch$age == 2], NA_real_)
-expect_equal(obs$index$obs[obs$index$year == 2001], c(4, 0))
+expect_equal(obs$index$obs[obs$index$year == 2001], c(.004, 0))
 constant_biology <- database_to_tam_obs(
   "translation_fixture", inputs,
   years = 2000:2001, ages = 1:2,
@@ -222,7 +222,7 @@ expect_equal(
 expect_equal(stock_weight_obs$index$obs[
   stock_weight_obs$index$survey == "RV" & stock_weight_obs$index$year == 2000
 ], expected_age_numbers)
-expected_longline <- 1000 * c(0.25, 0.75) / sum(c(0.25, 0.75) * c(10, 20))
+expected_longline <- c(0.25, 0.75) / sum(c(0.25, 0.75) * c(10, 20))
 expect_equal(stock_weight_obs$index$obs[
   stock_weight_obs$index$survey == "Longline" & stock_weight_obs$index$year == 2000
 ], expected_longline)
@@ -284,7 +284,7 @@ plus_obs <- database_to_tam_obs(
   years = 2000:2001, ages = 1,
   weight_survey = "RV", sampling_times = sampling_times
 )
-expect_equal(plus_obs$catch$obs[plus_obs$catch$year == 2000], 30)
+expect_equal(plus_obs$catch$obs[plus_obs$catch$year == 2000], .03)
 expect_equal(
   plus_obs$index$obs[plus_obs$index$year == 2000 &
     plus_obs$index$survey == "RV"],
@@ -292,7 +292,7 @@ expect_equal(
 )
 expect_equal(plus_obs$index$obs[plus_obs$index$survey == "Acoustic"], 90)
 expect_equal(plus_obs$index$obs[plus_obs$index$survey == "Relative"], 5)
-expect_equal(plus_obs$index$obs[plus_obs$index$year == 2001], 4)
+expect_equal(plus_obs$index$obs[plus_obs$index$year == 2001], .004)
 
 inputs_before <- inputs
 subset_obs <- database_to_tam_obs(
@@ -329,7 +329,7 @@ catch_proportion_obs <- database_to_tam_obs(
 )
 expect_equal(
   catch_proportion_obs$catch$obs[catch_proportion_obs$catch$year == 2000],
-  c(80000, 280000)
+  c(80, 280)
 )
 expect_equal(all(is.na(catch_proportion_obs$catch$obs[
   catch_proportion_obs$catch$year == 2001
@@ -408,7 +408,7 @@ thousand_obs <- database_to_tam_obs(
 )
 expect_equal(
   thousand_obs$catch$obs[thousand_obs$catch$year == 2000],
-  c(10000, 20000)
+  c(10, 20)
 )
 expect_equal(
   attr(thousand_obs, "translation")$catch_units$multiplier_to_fish,
@@ -530,7 +530,7 @@ nea_catch_match <- match(
 )
 expect_equal(
   nea_obs$catch$obs[nea_catch_match],
-  as.numeric(nea_catch$value) * 1000
+  as.numeric(nea_catch$value)
 )
 nea_direct <- inputs_db[inputs_db$assessment_id == nea_id &
   inputs_db$type == "index" &
@@ -666,8 +666,8 @@ ebs_obs <- database_to_tam_obs(
   assumptions = ebs$assumptions
 )
 expect_equal(dim(ebs_obs$catch), c(915L, 4L))
-expect_true(all(ebs_obs$catch$unit == "fish"))
-expect_true(all(ebs_obs$weight$unit == "kg/fish"))
+expect_true(all(ebs_obs$catch$unit == "thousand fish"))
+expect_true(all(ebs_obs$weight$unit == "kg"))
 expect_equal(sum(is.na(ebs_obs$catch$obs)), 15L)
 expect_equal(dim(ebs_obs$maturity), c(915L, 3L))
 expect_equal(
@@ -721,7 +721,7 @@ expect_equal(
   as.numeric(catch_biomass),
   as.numeric(total_biomass$value[
     match(names(catch_biomass), total_biomass$year)
-  ] * 1e6)
+  ] * 1000)
 )
 
 source(file.path(root, "R", "database_to_tam_ref.R"))
@@ -780,6 +780,8 @@ template_pop <- list(
     is_proj = FALSE
   )
 )
+template_pop$N$unit <- template_pop$recruitment$unit <- "fish"
+template_pop$ssb$unit <- "kg"
 template_obs <- list(
   catch = data.frame(
     year = rep(template_years, each = 2),
@@ -878,7 +880,7 @@ expect_equal(
 )
 expect_equal(all(is.na(template_reference$random_par$log_f$est)), TRUE)
 expect_equal(template_reference$pop$N$est[template_reference$pop$N$year == 2000 &
-  template_reference$pop$N$age == 1], 100)
+  template_reference$pop$N$age == 1], .1)
 expect_equal(template_reference$pop$F$est[template_reference$pop$F$year == 2000 &
   template_reference$pop$F$age == 1], 0.1)
 expect_equal(template_reference$pop$F$est[template_reference$pop$F$year == 2000 &
@@ -892,7 +894,7 @@ expect_equal(all(is.na(template_reference$pop$N$est[
 expect_equal(template_reference$pop$M$est, rep(0.2, 6))
 expect_equal(all(is.na(template_reference$rep$ssb)), TRUE)
 expect_equal(attr(template_reference, "native_pop")$ssb$est, 900)
-expect_equal(template_reference$rep$N["2000", "1"], 100)
+expect_equal(template_reference$rep$N["2000", "1"], .1)
 expect_equal(template_reference$rep$N["2001", "1"], NA_real_)
 expect_equal(
   template_reference$rep$M[, "2"],
@@ -903,5 +905,5 @@ expect_equal(template_reference$obs_pred$catch$pred, rep(NA_real_, 6))
 expect_equal(template_reference$fixed_par$est, NA_real_)
 expect_equal(template_fit$fixed_par$est, 1)
 expect_equal(template_reference$comparison_scales[["ssb"]], 1e-3)
-expect_equal(template_reference$comparison_scales[["recruitment"]], 1)
+expect_equal(template_reference$comparison_scales[["recruitment"]], .001)
 cat("Translation helper tests passed.\n")

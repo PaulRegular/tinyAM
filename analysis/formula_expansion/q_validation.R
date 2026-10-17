@@ -133,7 +133,7 @@ q_full_observations <- function(sparse = FALSE) {
   index$unit <- "fish"
   list(
     catch = transform(grid, obs = 1, relative_sd = .08, unit = "fish"), index = index,
-    weight = transform(grid, obs = .2 * age^1.5, unit = "kg/fish"),
+    weight = transform(grid, obs = .2 * age^1.5, unit = "kg"),
     maturity = transform(grid, obs = plogis(age - 4))
   )
 }

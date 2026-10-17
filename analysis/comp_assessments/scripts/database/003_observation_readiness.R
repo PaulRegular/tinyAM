@@ -1,3 +1,4 @@
+pkgload::load_all(".", quiet = TRUE)
 root <- file.path("analysis", "comp_assessments")
 read_table <- function(name) {
   read.csv(file.path(root, "database", name),

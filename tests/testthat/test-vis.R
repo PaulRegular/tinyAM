@@ -29,7 +29,7 @@ dashboard_residuals <- function(plots) {
 }
 
 dashboard_metric <- function(plot) {
-  sub(" \\(.*\\)$", "", unname(unlist(plot$layout$yaxis$title)))
+  sub("( |<br>)\\(.*\\)$", "", unname(unlist(plot$layout$yaxis$title)))
 }
 
 test_that("vis_tam renders cleanly and produces an HTML output", {

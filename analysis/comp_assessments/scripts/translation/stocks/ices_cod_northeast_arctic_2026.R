@@ -21,10 +21,6 @@ obs$index$q_key <- interaction(
 
 age_plus_group <- 12
 
-comparison_scales <- c(
-  ssb = 0.001, recruitment = 0.001, N = 0.001, abundance = 0.001, biomass = 0.001,
-  biomass_at_age = 0.001
-)
 
 background <- c(
   "### Northeast Arctic cod: official 2026 SAM assessment", "", print_sources(source$assessment),

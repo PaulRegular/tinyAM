@@ -22,15 +22,19 @@ rm(.assessment_helper)
     any(!is.finite(weights$weight) | weights$weight <= 0)) {
     cli::cli_abort("Catch reporting requires one positive catch weight for every predicted year and age.")
   }
-  predicted <- tapply(catch$pred * weights$weight[index], catch$year, sum)
+  kg_per_count <- tinyAM:::.unit_scale(unique(catch$unit), "numbers")
+  if (length(kg_per_count) != 1L || !is.finite(kg_per_count)) {
+    cli::cli_abort("Catch reporting requires known, consistent abundance units in the fitted catch table.")
+  }
+  predicted <- tapply(catch$pred * kg_per_count * weights$weight[index] / 1000, catch$year, sum)
   totals <- reporting$totals
   if (anyDuplicated(totals$year) || any(!is.finite(totals$yield) | totals$yield < 0)) {
     cli::cli_abort("Catch reporting requires unique years and non-negative total yields in kg.")
   }
   # Reporting only: source total biomass and all-age predictions use catch weights.
-  fit$pop$total_yield$est <- totals$yield[match(fit$pop$total_yield$year, totals$year)]
+  fit$pop$total_yield$est <- totals$yield[match(fit$pop$total_yield$year, totals$year)] / 1000
   fit$pop$total_yield_pred$est <- as.numeric(predicted[as.character(fit$pop$total_yield_pred$year)])
-  fit$pop$total_yield$unit <- fit$pop$total_yield_pred$unit <- "kg"
+  fit$pop$total_yield$unit <- fit$pop$total_yield_pred$unit <- "tonnes"
   fit$rep$total_yield <- fit$pop$total_yield$est
   fit$rep$total_yield_pred <- fit$pop$total_yield_pred$est
   fit
@@ -549,6 +553,11 @@ run_assessments <- function(assessment_ids = NULL, database = NULL,
     }
   }
 
+  .assessment_result_tables(runs, save_results)
+}
+
+# Rebuild complete-run tables without fitting or changing comparison eligibility.
+.assessment_result_tables <- function(runs, save_results = FALSE) {
   diagnostics <- if (length(runs)) {
     do.call(rbind, lapply(runs, `[[`, "diagnostics"))
   } else {

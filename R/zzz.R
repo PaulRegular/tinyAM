@@ -1,7 +1,7 @@
 ## Largely variable names captured by RTMB::get_all()
 utils::globalVariables(c(
   # data-frame column names
-  "year", "age", "is_proj",
+  "year", "age", "is_proj", ".ci_run",
   # captured-from-dat/pars in nll_fun / make_par
   "years", "ages", "proj_settings", "N_settings", "F_settings", "M_settings",
   "catch_settings", "index_settings", "log_sd_r", "log_sd_f", "log_sd_n", "log_sd_m", "log_sd_catch", "log_sd_index",

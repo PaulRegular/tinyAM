@@ -36,7 +36,7 @@ dat <- tinyAM::prepare_tam(
 start_par <- tinyAM::make_par(dat)
 
 
-source_N <- .translation_start_surface(source$outputs, "population", "numbers_at_age", years, ages, 1e+06)
+source_N <- .translation_start_surface(source$outputs, "population", "numbers_at_age", years, ages, 1000)
 source_F <- .translation_start_surface(source$outputs, "mortality", "fishing_mortality_at_age", years, ages)
 start_par$log_r0 <- log(source_N[1L, 1L])
 start_par$log_r <- log(source_N[-1L, 1L])
@@ -57,7 +57,6 @@ start_par$log_q[names(q_start)] <- log(q_start)
 
 age_plus_group <- 8
 
-comparison_scales <- c(N = 1e-06, recruitment = 1e-06, ssb = 0.001, F = 1, M = 1, F_bar = 1)
 
 background <- c(
   "### Baltic sprat: official 2026 SAM assessment", "", print_sources(source$assessment),

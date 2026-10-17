@@ -51,7 +51,6 @@ obs$index$q_key <- interaction(
 
 age_plus_group <- 15
 
-comparison_scales <- c(N = 1e-09, recruitment = 1e-06, ssb = 1e-06, biomass_at_age = 1e-06)
 
 comparison_age_groups <- list(N = list(`10+` = 10:15), biomass_at_age = list(`3+` = 3:15))
 
