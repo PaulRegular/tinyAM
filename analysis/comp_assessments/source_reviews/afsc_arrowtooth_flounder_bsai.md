@@ -91,4 +91,4 @@ target; they are separate from tinyAM's unsupported catch-length likelihood.
 
 Rechecked the ATF-only source identity and missing numerical likelihood compositions, observed age-length key and survey times. Keep the source guard; fitted N/F cannot be used to manufacture observations.
 
-See [the complete twelve-case review](../PACIFIC_MODEL_REVIEW.md) for paired median differences, correlations, diagnostics and rejected trials. Canonical numerical inputs and outputs are unchanged.
+See [the complete twelve-case review](../PACIFIC_REVIEW.md#source-and-model-review) for paired median differences, correlations, diagnostics and rejected trials. Canonical numerical inputs and outputs are unchanged.

@@ -1,7 +1,7 @@
 source("analysis/comp_assessments/R/run_assessment.R")
 source("analysis/comp_assessments/tests/helper_stock.R")
 database <- read_database()
-for (id in c("joint_hake_coastal_2025", "dfo_pop_bc_2023")) {
+for (id in "joint_hake_coastal_2025") {
   record <- read_assessment(id, database)
   original <- record
   spec <- .test_stock(record)
@@ -30,15 +30,8 @@ for (id in c("joint_hake_coastal_2025", "dfo_pop_bc_2023")) {
       abs(m$nll + stats::dnorm(effect, 0, term$sd, log = TRUE)) < 1e-12)
   }
   center <- exp(unique(dat$log_mu_supplied_m))
-  if (id == "joint_hake_coastal_2025") {
-    stopifnot(abs(log(center) + 1.60944) < 1e-12, term$sd == .1,
-      !"mu_m" %in% names(spec$retry_start()))
-  } else {
-    # Match the natural-scale normal prior's moments, not its exact density.
-    mean <- center * exp(term$sd^2 / 2)
-    variance <- center^2 * exp(term$sd^2) * expm1(term$sd^2)
-    stopifnot(abs(mean - .06) < 1e-14, abs(variance - .018^2) < 1e-14)
-  }
+  stopifnot(abs(log(center) + 1.60944) < 1e-12, term$sd == .1,
+    !"mu_m" %in% names(spec$retry_start()))
 }
 cat("One shared M level receives one fixed-SD Gaussian penalty; source prior scales and input preservation passed.\n")
 

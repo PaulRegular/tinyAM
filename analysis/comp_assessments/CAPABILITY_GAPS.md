@@ -2,14 +2,43 @@
 
 ## Pacific expansion: current coverage and findings
 
-The database now contains **35 current detailed stock records**, including the
+The database now contains **36 current detailed stock records**, including the
 twelve Pacific additions documented in [PACIFIC_REVIEW.md](PACIFIC_REVIEW.md).
 Completeness remains partial where source information is unresolved. Nine new
-cases received optimization attempts: five passed numerical checks, three did
-not converge and one was interrupted without usable reporting. Three additional
-cases are blocked before fitting. Eight new dashboards are cached locally.
-This is an explicit shortfall of three actually attempted translations against
-the requested twelve, not twelve successful replications.
+cases received optimization attempts. BC POP subsequently became source-output
+blocked despite passing numerical checks: constant M and boundary summaries do
+not provide a historical population comparison. The original twelve-case status
+is four numerical passes, three non-converged fits, one interrupted run and four
+source blockers. Seven active new-case dashboards and the historical BC trial
+are cached locally. Neither twelve runnable translations nor twelve successful
+replications have been achieved.
+
+The subsequent BC petrale import adds a **partial 2024 summary/output record**:
+At that checkpoint there were 36 stocks and 42 assessment records in total,
+still 35 current detailed cases.
+It preserves annual SSB subset summaries, published reference values and three
+reported M scalars. Original observations, biology and configuration remain
+missing, so it is non-current and source-blocked, not a completed replacement
+or an additional fitted case. This is a data-availability limitation; the
+recovered summary alone does not establish a new unsupported model feature.
+
+The subsequent **BC Canary Rockfish 2022** import brings coverage to 37 stocks,
+43 assessment records and 36 current detailed cases. It recovers native
+two-sex inputs, fixed biology, annual female SSB posterior-subset summaries
+and published sex-specific M. The practical female translation converges
+after one documented source-informed initialization retry, but SSB agreement
+is poor (mean absolute difference 27.9%, terminal difference -59.1%, correlation
+0.295), and M is 36.5% lower. This additional case does not resolve the original
+twelve-case shortfalls. See the [source review](source_reviews/dfo_canary_bc.md).
+
+Canary reinforces the limits of replacing joint-sex age compositions and biomass
+totals with independent female age observations. Four aggregate-only indices
+and catches without age samples cannot enter the current age-specific
+likelihood. Fixed biology can be recovered without refitting source states;
+the executable's effective first-mature-age cutoff must also be preserved.
+Native N/F-at-age and recruitment are still missing. An initial 60-age
+Beverton–Holt candidate was stopped for runtime before an optimizer result;
+this is an incomplete experiment, not a demonstrated mathematical defect.
 
 - **Original likelihoods:** the new assessments generally fit total biomass and
   multinomial, Dirichlet-multinomial or correlated age/length compositions.
@@ -30,12 +59,13 @@ the requested twelve, not twelve successful replications.
   case; all source distinctions remain canonical. Complete-area catch pooling
   leaves missing-area years missing, rather than creating partial totals.
 - **Priors and identification:** initial hake and BC POP fits drove M near zero.
-  The [model review](PACIFIC_MODEL_REVIEW.md) uses an existing fixed-SD Gaussian
+  The [model review](PACIFIC_REVIEW.md#source-and-model-review) uses an existing fixed-SD Gaussian
   mean effect for one shared log-M level, without a free intercept that could
-  cancel its penalty. Hake retains the native log-M penalty; BC POP uses a
-  positive moment approximation to the native natural-scale normal prior.
-  Both now have finite shared-effect SEs and improved M comparisons, though
-  M still differs by more than 20%. Native bounds and posterior integration
+  cancel its penalty. Hake retains the native log-M penalty. The historical BC
+  POP trial used a positive moment approximation to the native natural-scale
+  normal prior, but is now excluded from comparisons because population outputs
+  are missing. Both trials had finite shared-effect SEs, though M still differed
+  by more than 20%. Native bounds and posterior integration
   remain different. Restoring verified M/q penalties did not resolve northern
   rock sole convergence; random initial N produced implausible states despite
   a numerical pass. Initial temporal-process priors, arbitrary q normalization
@@ -54,7 +84,19 @@ the requested twelve, not twelve successful replications.
 - **Source gaps:** AI cod's public September native run differs from its final
   November fit. Arrowtooth lacks matching likelihood arrays/keys and timing.
   SoG's public DDM ensemble ends in 2023, distinct from the interim 2025 DIM;
-  the two are not combined. Unverified activation/sharing/point conventions
+  the two are not combined. BC POP's matching public production files contain
+  inputs and terminal/reference summaries. A follow-up found historical regional
+  biomass draws for 3CD and 5DE, but the public 5ABC object still ends in 2017;
+  these cannot form the matching coastwide comparison. N/F/recruitment remain
+  unrecovered. Its source records remain canonical; a prior M-only trial is not
+  retained as a population comparison. [BC petrale sole](source_reviews/dfo_petrale_bc.md)
+  now has a partial canonical summary/output record with 1938–2024 SSB posterior
+  summaries. Mixture intent is documented, but original inputs, other outputs
+  and component membership of the downsampled public draws remain unresolved.
+  U.S. West Coast petrale sole 2023
+  is a proposed alternative with verified public fitted outputs; its native
+  spawning output is eggs, not biomass (see the [source review](source_reviews/dfo_pop_bc.md)).
+  Unverified activation/sharing/point conventions
   remain unresolved, rather than being described as absent features.
 
 Full-library review flags use >20% mean absolute or terminal differences and

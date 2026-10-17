@@ -9,274 +9,317 @@ output:
     includes:
       in_header: header.tex
     keep_tex: true
-format:
-  pdf:
-    pdf-engine: xelatex
-    documentclass: extarticle
-    classoption: [9pt, landscape]
-    papersize: a4
-    geometry: [a4paper, margin=8mm]
-    include-in-header: header.tex
-    keep-tex: true
-execute:
-  echo: false
-  warning: false
-  message: false
 ---
 
 ```{r setup, include=FALSE}
-# Optional API audit: never fit the example models while rendering the PDF.
-# Set TINYAM_REPO to a local comp-assessments checkout for development rendering.
-repo <- Sys.getenv("TINYAM_REPO", unset = "")
-if (nzchar(repo) && dir.exists(repo) && requireNamespace("pkgload", quietly = TRUE)) {
-  pkgload::load_all(repo, quiet = TRUE)
+# Run examples.R explicitly before rendering; rendering never fits models.
+needed <- c("cache/examples.rds", "cache/hindcast_ssb.pdf",
+            "tinyAM_dashboard.html")
+if (!all(file.exists(needed))) {
+  cli::cli_abort("Run cheatsheet/examples.R before rendering this cheatsheet.")
 }
-
-is_loaded <- requireNamespace("tinyAM", quietly = TRUE)
-required <- c("as_tam_data", "check_tam_data", "fit_tam", "update", "vis_tam",
-              "tidy_tam", "check_tam", "fit_retro", "fit_hindcast")
-# update() is an S3 generic from base R, not an exported tinyAM function.
-required_exports <- setdiff(required, "update")
-
-if (is_loaded) {
-  namespace <- asNamespace("tinyAM")
-  exports <- getNamespaceExports("tinyAM")
-  missing_exports <- setdiff(required_exports, exports)
-  if (length(missing_exports)) {
-    warning("tinyAM API changed; review examples: ",
-            paste(missing_exports, collapse = ", "))
-  }
-  api_groups <- grep("_settings$", names(formals(get("fit_tam", namespace))),
-                     value = TRUE)
-  expected_groups <- c("N_settings", "rec_settings", "F_settings", "M_settings",
-                       "catch_settings", "index_settings", "proj_settings")
-  if (!identical(api_groups, expected_groups)) {
-    warning("fit_tam() settings signature changed; review Step 2 examples.")
-  }
-  version_label <- as.character(utils::packageVersion("tinyAM"))
-} else {
-  warning("tinyAM not installed; showing the curated comp-assessments examples.")
-  api_groups <- c("N_settings", "rec_settings", "F_settings", "M_settings",
-                  "catch_settings", "index_settings", "proj_settings")
-  version_label <- "not installed"
+example <- readRDS("cache/examples.rds")
+if (is.null(example$scores)) {
+  cli::cli_abort("The example run is incomplete. Finish cheatsheet/examples.R first.")
 }
-api_groups_short <- paste(c("N", "rec", "F", "M", "catch", "index", "proj"),
-                          collapse = " / ")
+revision <- system2("git", c("-C", "..", "rev-parse", "HEAD"), stdout = TRUE)
+if (!identical(revision, example$provenance$revision)) {
+  cli::cli_abort("The package revision changed. Rerun cheatsheet/examples.R first.")
+}
+dat <- example$dat
+script <- readLines("examples.R", warn = FALSE)
+excerpt <- function(name) {
+  first <- match(paste0("# ---- ", name, " ----"), script)
+  if (is.na(first)) cli::cli_abort("Missing example excerpt: {name}.")
+  following <- grep("^# ---- .* ----$", script)
+  last <- min(following[following > first]) - 1L
+  code <- script[seq.int(first + 1L, last)]
+  if (name == "hindcast") code <- sub("^# ", "", code[1L])
+  code
+}
+fingerprint <- tempfile()
+writeLines(unlist(lapply(c("wrangle", "inputs", "baseline", "F_mono", "rec_bh",
+                           "q_mono", "N_iid"), excerpt)), fingerprint)
+current_md5 <- unname(tools::md5sum(fingerprint))
+unlink(fingerprint)
+if (!identical(current_md5, example$provenance$example_md5)) {
+  cli::cli_abort("The examples changed. Rerun cheatsheet/examples.R before rendering.")
+}
+write_code <- function(file, names) {
+  code <- unlist(lapply(names, excerpt), use.names = FALSE)
+  writeLines(c("\\begin{rcode}", code, "\\end{rcode}"),
+             paste0("cache/code_", file, ".tex"))
+}
+write_code("data", c("wrangle", "inputs"))
+for (name in c("baseline", "models", "dashboard", "hindcast")) {
+  write_code(name, name)
+}
+write_code("updates_left", c("F_mono", "rec_bh"))
+write_code("updates_right", c("q_mono", "N_iid"))
 
-rsvg::rsvg_pdf(
-  svg = "../man/figures/logo.svg",
-  file = "logo.pdf"
-)
+escape_tex <- function(x) {
+  gsub("([#$%&_{}])", "\\\\\\1", x, perl = TRUE)
+}
+display <- function(x) {
+  if (is.numeric(x)) {
+    out <- ifelse(x == trunc(x), format(x, trim = TRUE, scientific = FALSE),
+                  formatC(x, digits = 3, format = "fg"))
+  } else {
+    out <- as.character(x)
+  }
+  out[is.na(x)] <- "NA"
+  escape_tex(trimws(out))
+}
+input_table <- function(name, columns) {
+  x <- dat[[name]][, columns, drop = FALSE]
+  indices <- c(1L, 2L, nrow(x) - 1L, nrow(x))
+  cells <- lapply(x[indices, , drop = FALSE], display)
+  rows <- vapply(seq_len(4L), function(i) {
+    paste(vapply(cells, function(column) column[i], character(1)), collapse = " & ")
+  }, character(1))
+  gap <- paste(rep("\\tablegap", length(columns)), collapse = " & ")
+  header <- paste0("\\textbf{", escape_tex(columns), "}")
+  header[columns %in% c("year", "age")] <- paste0(
+    "\\textcolor{tamnavy}{", header[columns %in% c("year", "age")], "}")
+  writeLines(c(
+    paste0("\\begin{inputtable}{", paste(rep("r", length(columns)), collapse = ""), "}"),
+    paste0(paste(header, collapse = " & "), " \\\\ \\hline"),
+    paste0(c(rows[1:2], gap, rows[3:4]), " \\\\"),
+    "\\end{inputtable}"
+  ), paste0("cache/table_", name, ".tex"))
+}
+input_table("catch", c("year", "age", "obs"))
+input_table("index", c("year", "age", "survey", "samp_time", "obs", "q_block"))
+input_table("weight", c("year", "age", "obs"))
+input_table("maturity", c("year", "age", "obs"))
+input_table("pop_covariates", c("year", "age", "NCAM_M_assumption"))
+
+scores <- example$scores
+labels <- c(Base = "Base", F_curve = "F curve", BH = "BH",
+            Mono_q = "Mono q", N_process = "N process")
+score_rows <- vapply(seq_len(nrow(scores)), function(i) {
+  x <- scores[i, ]
+  label <- labels[x$model]
+  if (!x$fit_converged) label <- paste0(label, "\\textsuperscript{*}")
+  paste(label,
+        if (is.finite(x$log_rmse)) sprintf("%.3f", x$log_rmse) else "--",
+        paste0(x$n_scored_folds, "/20"),
+        if (is.na(x$rank)) "--" else x$rank, sep = " & ")
+}, character(1))
+writeLines(c("\\begin{inputtable}{lrrr}",
+             "\\textbf{Model} & \\textbf{RMSE} & \\textbf{Folds} & \\textbf{Rank} \\\\ \\hline",
+             paste0(score_rows, " \\\\"), "\\end{inputtable}"),
+           "cache/table_scores.tex")
+if (file.info("../man/figures/logo.svg")$mtime > file.info("logo.pdf")$mtime) {
+  rsvg::rsvg_pdf("../man/figures/logo.svg", "logo.pdf")
+}
 ```
 
-
 ```{=latex}
-\pageheader{tinyAM :: CHEATSHEET}{01 / DATA + MODEL HYPOTHESES + DIAGNOSTICS\hspace{2em} | \hspace{.5em} Formula-driven age-structured assessment}
-\sectitle{1}{TIDY THE INPUT}{tamnavy}\vspace{1mm}
-\begin{minipage}[t]{.37\linewidth}\vspace{0pt}
-\smallkey{Prepare a validated named list}
-\begin{rcode}
-library(tinyAM)
-dat <- as_tam_data(cod_obs)
-check_tam_data(dat)
-names(dat)
-\end{rcode}
+\newcommand{\inputcode}[1]{\input{cache/code_#1.tex}}
+\pageheader{tinyAM :: CHEATSHEET}{Formula-driven age-structured assessment}
+\sectitle{1}{Setup tidy inputs}{tamnavy}
+\begin{minipage}[t]{.40\linewidth}\vspace{0pt}
+\smallkey{Wrangle your tables, then build a list}\par\vspace{.6mm}
+\inputcode{data}
 \end{minipage}\hfill
-\begin{minipage}[t]{.60\linewidth}\vspace{0pt}
-\smallkey{Tidy schema: one record per year and age}
-\begin{rcode}
-head(dat$catch[,    c("year", "age", "obs")])
-head(dat$index[,    c("year", "age", "survey", "samp_time", "obs")])
-head(dat$weight[,   c("year", "age", "obs")])
-head(dat$maturity[, c("year", "age", "obs")])
-\end{rcode}
-\end{minipage}\par\vspace{1mm}
-\panelnote{Input tables: \textbf{catch} · \textbf{index} · \textbf{weight} · \textbf{maturity} · optional \textbf{pop\_covariates}. Catchability/observation covariates live in catch or index. Biology and spawning time live in weight/maturity.}
-
-\vspace{2.5mm}
-\sectitle{2}{SPECIFY COMPETING MODEL HYPOTHESES}{tamteal}\vspace{1mm}
-\begin{minipage}[t]{.405\linewidth}\vspace{0pt}
-\smallkey{Start with a deliberately simple baseline}
-\begin{rcode}
-base <- fit_tam(
-  dat, years = 1983:2024, ages = 2:14,
-  N_settings   = list(process = "off", init = "exp"),
-  rec_settings = list(process = "iid", mu_form = ~ 1),
-  F_settings   = list(process = "iid", mu_form = ~ 1),
-  M_settings   = list(process = "off",
-                      mu_supplied = ~ I(0.3)),
-  catch_settings = list(sd_form = ~ 1),
-  index_settings = list(sd_form = ~ 1,
-                        q_form = ~ q_block),
-  silent = TRUE
-)
-\end{rcode}
-\vspace{1mm}
-\panelnote{\textbf{Formula controls:} \texttt{mu\_form} for recruitment and mortality means; \texttt{q\_form} for survey catchability; \texttt{sd\_form} for observation/process SDs. For temporal processes use \texttt{process = "iid"}, \texttt{"rw"} or \texttt{"ar1"} as supported by the component.}
+\begin{minipage}[t]{.58\linewidth}\vspace{0pt}
+\begin{minipage}[t]{.31\linewidth}\vspace{0pt}
+\tablelabel{catch}\par\vspace{.5mm}
+\input{cache/table_catch.tex}
 \end{minipage}\hfill
-\begin{minipage}[t]{.57\linewidth}\vspace{0pt}
-\smallkey{Change one assumption, refit, and compare}\par\vspace{.8mm}
-\begin{minipage}[t]{.49\linewidth}\vspace{0pt}
-\begin{rcode}
-F_mono <- update(base,
-  F_settings = list(mu_form = ~ mono(age))
-)
-rec_bh <- update(base,
-  rec_settings = list(mu_form = ~ bh(ssb))
-)
-\end{rcode}
+\begin{minipage}[t]{.31\linewidth}\vspace{0pt}
+\tablelabel{weight}\par\vspace{.5mm}
+\input{cache/table_weight.tex}
 \end{minipage}\hfill
-\begin{minipage}[t]{.49\linewidth}\vspace{0pt}
-\begin{rcode}
-q_mono <- update(base,
-  index_settings = list(
-    q_form = ~ mono(q_block))
-)
-N_iid <- update(base,
-  N_settings = list(process = "iid")
-)
-\end{rcode}
-\end{minipage}\par\vspace{1mm}
-\begin{rcode}[colback=tamgoldpale]
-fits <- list(Base = base, F_curve = F_mono,
-             BH = rec_bh, Mono_q = q_mono,
-             N_process = N_iid)
-\end{rcode}
-\vspace{1mm}
-\panelnote{Model structures are hypotheses, not automatically interchangeable. Keep all other settings and inputs fixed where possible; inspect fit quality and identifiability. Ordinary formula examples: \texttt{\string~ 1}, \texttt{\string~ bh(ssb)}, \texttt{\string~ ricker(ssb)}, \texttt{\string~ mono(age)}.}
-\end{minipage}
-
-\vspace{2.5mm}
-\sectitle{3}{VISUALIZE, CHALLENGE AND COMPARE}{tamnavy}\vspace{1mm}
+\begin{minipage}[t]{.31\linewidth}\vspace{0pt}
+\tablelabel{maturity}\par\vspace{.5mm}
+\input{cache/table_maturity.tex}
+\end{minipage}\par\vspace{2mm}
+\begin{minipage}[t]{.64\linewidth}\vspace{0pt}
+\tablelabel{index}\par\vspace{.5mm}
+\input{cache/table_index.tex}
+\end{minipage}\hfill
 \begin{minipage}[t]{.34\linewidth}\vspace{0pt}
-\smallkey{Compare in an HTML diagnostics dashboard}
-\begin{rcode}
-vis_tam(model_list = fits,
-        output_file = "models.html",
-        open_file = FALSE)
-tables <- tidy_tam(model_list = fits)
-checks <- lapply(fits, check_tam)
-\end{rcode}
+\tablelabel{pop\_covariates (optional)}\par\vspace{.5mm}
+\input{cache/table_pop_covariates.tex}
+\end{minipage}
+\end{minipage}\par\vspace{1mm}
+\panelnote{\textbf{Keys:} year + age; add survey for indices. Use complete catch/biology and population-covariate grids. Weight/maturity cannot be missing; catch/index observations may be \texttt{NA}.}\par
+\panelnote{\textbf{Example units:} thousands of fish; kg/fish for weight; proportions for maturity. Sampling/spawning times are year fractions. Older biological ages can be retained above the model plus group.}
+
+\vspace{2mm}
+\sectitle{2}{Specify competing model hypotheses}{tamteal}
+\begin{minipage}[t]{.43\linewidth}\vspace{0pt}
+\smallkey{An example baseline, not the package defaults}\par\vspace{.6mm}
+\inputcode{baseline}
 \end{minipage}\hfill
-\begin{minipage}[t]{.32\linewidth}\vspace{0pt}
-\smallkey{Retrospectives: stability of history}
-\begin{rcode}
-retro <- lapply(fits, fit_retro, folds = 5)
-rho <- lapply(retro, `[[`, "mohns_rho")
-\end{rcode}
-\panelnote{Compare changes in historical population estimates as recent data are successively removed.}
+\begin{minipage}[t]{.55\linewidth}\vspace{0pt}
+\smallkey{Change one assumption at a time}\par\vspace{.6mm}
+\begin{minipage}[t]{.49\linewidth}\vspace{-2mm}
+\inputcode{updates_left}
 \end{minipage}\hfill
-\begin{minipage}[t]{.32\linewidth}\vspace{0pt}
-\smallkey{Hindcasts: predictive performance}
-\begin{rcode}
-hind <- lapply(fits, fit_hindcast, folds = 5)
-rmse <- lapply(hind, `[[`, "hindcast_rmse")
-\end{rcode}
-\panelnote{Compare one-year-ahead observation predictions. Each function returns the metric; no manual recalculation needed.}
+\begin{minipage}[t]{.49\linewidth}\vspace{-2mm}
+\inputcode{updates_right}
+\end{minipage}\par\vspace{.5mm}
+\inputcode{models}\par\vspace{1mm}
+\panelnote{Partial updates retain other settings. \texttt{mu\_form}: means; \texttt{q\_form}: catchability; \texttt{sd\_form}: SDs. Use \texttt{check\_tam()} before comparing fits; convergence does not establish identifiability.}
 \end{minipage}
 
-\pagefooter{Experimental methodological software · R code is shown, not executed during rendering · Workflow help: \texttt{?fit\_tam}, \texttt{?vis\_tam} · github.com/PaulRegular/tinyAM}
+\vspace{2mm}
+\sectitle{3}{Visualize and compare}{tamorange}
+\begin{minipage}[t]{.37\linewidth}\vspace{0pt}
+\smallkey{Explore fits and test forecasting skill}\par\vspace{.6mm}
+\inputcode{dashboard}\par\vspace{.8mm}
+\inputcode{hindcast}\par\vspace{.7mm}
+\panelnote{\href{tinyAM_dashboard.html}{\textbf{Open the example dashboard}}: Fishery $\rightarrow$ Numbers-at-age, then Residuals. Keep the companion HTML beside this PDF.}
+\end{minipage}\hfill
+\begin{minipage}[t]{.255\linewidth}\vspace{0pt}
+\smallkey{One-year forecast log-RMSE}\par\vspace{1mm}
+\input{cache/table_scores.tex}\par\vspace{1mm}
+{\RaggedRight\panelnote{Lower is better on the same observations. Only complete, converged runs are ranked. Folds count scored years. * Main fit did not converge.}\par}
+\end{minipage}\hfill
+\begin{minipage}[t]{.35\linewidth}\vspace{0pt}
+\smallkey{SSB stability across historical peels}\par\vspace{.4mm}
+\includegraphics[width=\linewidth,height=25mm,keepaspectratio]{cache/hindcast_ssb.pdf}\par
+\panelnote{Base-model SSB across historical peels. Forecast RMSE scores catch/survey observations, not SSB.}
+\end{minipage}
+\pagefooter{Experimental software; check assumptions and diagnostics before interpretation. Reproduce these examples with \texttt{cheatsheet/examples.R}. github.com/PaulRegular/tinyAM}
 \clearpage
-\pageheader{tinyAM :: MODEL MATHEMATICS}{02 / STATES + PROCESSES + OBSERVATIONS\hspace{2em} | \hspace{.5em} Compact mathematical reference for the model core}
+```
+```{=latex}
+\pageheader{tinyAM :: MODEL REFERENCE}{R specifications and the population assumptions they represent}
 \begin{minipage}[t]{.325\linewidth}\vspace{0pt}
-\begin{mathbox}{Age-structured states}\micro{Years $t=1,\ldots,T$; ages $a=1,\ldots,A$; $A$ is the terminal plus group. $N_{t,a}$ is start-of-year abundance; $F$ and $M$ are annual instantaneous mortalities.}
-\[
-Z_{t,a}=F_{t,a}+M_{t,a}, \qquad R_t=N_{t,1}.
-\]
-\end{mathbox}\vspace{2mm}
-\begin{mathbox}{Cohort survival}\micro{Expected survivors advance to the next age:}
-\[
-\widehat N_{t,a}=N_{t-1,a-1}\exp(-Z_{t-1,a-1}),\quad 2\le a<A.
-\]
-\micro{The plus group also retains surviving fish already at age $A$:}
+\begin{mathbox}{Abundance and cohort survival}
+\begin{rcode}
+N_settings = list(
+  process = "iid", init = "exp")
+\end{rcode}
+\micro{$Z=F+M$; recruitment $R_t=N_{t,1}$. Age indices $1,\ldots,A$ run from the youngest modeled age to the plus group; N is start-of-year abundance.}
 \[
 \begin{aligned}
-\widehat N_{t,A}={}&N_{t-1,A-1}e^{-Z_{t-1,A-1}}\\
- &+N_{t-1,A}e^{-Z_{t-1,A}}.
+\widehat N_{t,a}&=N_{t-1,a-1}e^{-Z_{t-1,a-1}},\\[-1mm]
+\widehat N_{t,A}&=N_{t-1,A-1}e^{-Z_{t-1,A-1}}\\[-1mm]
+&\quad+N_{t-1,A}e^{-Z_{t-1,A}},\\
+\log N_{t,a}&=\log\widehat N_{t,a}+\eta^N_{t,a}.
 \end{aligned}
 \]
-\micro{With an active abundance process:}
-\[
-\log N_{t,a}=\log\widehat N_{t,a}+\eta^N_{t,a}.
-\]
+\micro{For $t\ge2$, non-plus ages use the first survival equation. Initial older ages use \texttt{"exp"} survivorship, \texttt{"free"} fixed states, or \texttt{"random"} IID survivorship errors.}
 \end{mathbox}\vspace{2mm}
-\begin{mathbox}{Spawning-stock biomass}\micro{$W$: weight; $P$: mature proportion; $s^{\mathrm{spawn}}$: fraction of the year to spawning. Defaults to zero.}
-\[
-SSB_t=\sum_a N_{t,a}W_{t,a}P_{t,a}\,
- e^{-s^{\mathrm{spawn}}_{t,a}Z_{t,a}}.
-\]
-\micro{Shortened plus groups may retain older input biology through effective $W$ and $P$. Units are not converted automatically.}
-\end{mathbox}\vspace{2mm}
-\begin{mathbox}{Initial older-age abundance}\micro{\texttt{N\_settings\$init}: \texttt{"exp"} uses first-year cohort survivorship, \texttt{"free"} estimates older-age states, \texttt{"random"} adds IID survivorship deviations. Recruitment at $t=1$ is a free fixed anchor.}
-\end{mathbox}
-\end{minipage}\hfill
-\begin{minipage}[t]{.325\linewidth}\vspace{0pt}
-\begin{mathbox}{Recruitment dynamics}\micro{Default temporal recruitment random walk:}
-\[
-\log R_t=\log R_{t-1}+\epsilon^R_t,\quad
-\epsilon^R_t\sim\mathcal N(0,\sigma_R^2).
-\]
-\micro{Formula-based means allow environmental covariates and stock--recruitment relationships:}
-\[
-\log R_t=\log g(SSB_{t-L})+X_t\gamma+u_t.
-\]
+\begin{mathbox}{Recruitment}
+\begin{rcode}
+rec_settings = list(process = "rw")
+# Or a stock-recruit curve:
+rec_settings = list(process="iid", mu_form=~bh(ssb))
+\end{rcode}
 \[
 \begin{aligned}
-g_{BH}(S)&=\frac{\alpha S}{1+\beta S},\\
+\text{RW: }\log R_t-\log R_{t-1}&=\epsilon_t,\\
+\log R_t&=\log g(SSB_{t-L})+u_t,\\
+g_{BH}(S)&=\alpha S/(1+\beta S),\\
 g_{Ricker}(S)&=\alpha S e^{-\beta S}.
 \end{aligned}
 \]
-\micro{The BH/Ricker curves require IID or AR1 recruitment residuals; RW + curve is not supported.}
+\micro{$\alpha,\beta>0$; $\epsilon_t\sim\mathcal N(0,\sigma_R^2)$. IID has $u_t=\epsilon_t$; AR1 has $u_t=\phi_Ru_{t-1}+\epsilon_t$ and a stationary start. Curves describe medians. Lag $L$ defaults to the youngest biological age; early boundary R is free. No RW + curve.}
 \end{mathbox}\vspace{2mm}
-\begin{mathbox}{Process variation}\micro{For $\eta$ in N, F or M, process choices encode different hypotheses. Component-specific ages/blocks and SD parameters apply.}
+\begin{mathbox}{Biomass and spawning biomass}
+\begin{rcode}
+dat$maturity$spawn_time <- 0.25
+\end{rcode}
 \[
-\begin{aligned}
-\mathrm{IID:}\quad &\eta_{t,a}\sim\mathcal N(0,\sigma_a^2),\\
-\mathrm{RW:}\quad &\eta_{t,a}-\eta_{t-1,a}\sim\mathcal N(0,\sigma_a^2),\\
-\mathrm{AR1:}\quad &\operatorname{Cov}(\eta_{t,a},\eta_{s,b})\\
- &=\frac{\sigma^2\,\phi_t^{|t-s|}\phi_a^{|a-b|}}
- {(1-\phi_t^2)(1-\phi_a^2)}.
-\end{aligned}
+SSB_t=\sum_b n_{t,b}w_{t,b}p_{t,b}e^{-\tau_{t,b}Z_{t,b}}.
 \]
-\micro{F also offers correlated age-specific RW increments with $\Sigma_{ab}=\sigma_a\sigma_b\rho^{|a-b|}$. The RW starting level is unpenalized.}
-\end{mathbox}\vspace{2mm}
-\begin{mathbox}{Mortality mean structure}\[
-\log\mu^F=X_F\beta_F,\qquad
-\log\mu^M=\log M^{\mathrm{supplied}}+X_M\beta_M.
-\]
-\micro{Where fitted, realized log-F/M states depart from these mean surfaces; \texttt{mono()} or \texttt{logistic()} can describe rising F mean curves under IID/AR1 residuals.}
+\micro{Biomass is $\sum_b n_{t,b}w_{t,b}$. $b$: retained biological age; $n$: its abundance; $w$: weight; $p$: mature fraction; $\tau$: year fraction (default 0). Hidden ages retain biology/timing and share plus-age mortality.}
 \end{mathbox}
 \end{minipage}\hfill
 \begin{minipage}[t]{.325\linewidth}\vspace{0pt}
-\begin{mathbox}{Catch and survey predictions}\micro{Baranov catch equation (numbers at age):}
+\begin{mathbox}{Mean fishing mortality}
+\begin{rcode}
+F_settings = list(process = "iid",
+  mu_form = ~ logistic(age))
+\end{rcode}
 \[
-\widetilde C_{t,a}=N_{t,a}\frac{F_{t,a}}{Z_{t,a}}
- (1-e^{-Z_{t,a}}).
+\begin{aligned}
+S(a)&=\{1+e^{-k(a-a_{50})}\}^{-1},\quad k>0,\\
+\log F_{t,a}&=\beta_F+\log S(a)+\eta^F_{t,a}.
+\end{aligned}
 \]
-\micro{Survey index at within-year sampling time $s_i\in[0,1]$:}
-\[
-\widetilde I_i=q_i N_{t_i,a_i}e^{-s_iZ_{t_i,a_i}}.
-\]
-\micro{Default catchability link: $q_i=\exp(\eta_{q,i})$; optional logit link confines $q_i$ to $(0,1)$. With \texttt{mono(q\_block)}, successive increments in $\eta_q$ are nonnegative.}
+\micro{\texttt{mu\_form = \string~ mono(age)} instead adds cumulative nonnegative log-mean steps. Both curves require IID/AR1; annual F can depart from the rising mean.}
 \end{mathbox}\vspace{2mm}
-\begin{mathbox}{Observation distributions}\micro{Observed positive catch and index values have lognormal likelihood contributions:}
+\begin{mathbox}{Natural mortality}
+\begin{rcode}
+M_settings = list(process = "iid",
+  mu_supplied = ~ M0)
+\end{rcode}
 \[
-\log Y_i\sim\mathcal N(\log\widetilde Y_i,\tau_i^2),
+\log M_{t,a}=\log M^0_{t,a}+\eta^M_{t,a}.
 \]
-\[
-\tau_i=\tau_i^{\mathrm{supplied}}\exp(X_{sd,i}\beta_{sd}).
-\]
-\micro{$\widetilde Y$ is a conditional median. Zero/NA observations are treated as missing. Observation SD is distinct from estimation SE.}
+\micro{\texttt{M0} comes from \texttt{pop\_covariates}. M states share age blocks and start in year 2 by default; other cells retain the mean. \texttt{"off"} fixes M to its mean; \texttt{mu\_form} adds log-mean effects.}
 \end{mathbox}\vspace{2mm}
-\begin{mathbox}{Likelihood and inference}\micro{The joint likelihood combines recruitment, active N/F/M processes, random initial abundance and observation densities:}
+\begin{mathbox}{Variation in N, F and M}
+\begin{rcode}
+F_settings = list(process = "cor_rw",
+  sd_form = ~ factor(age))
+\end{rcode}
+\micro{Ordinary age-based SD formulas give $\sigma_a=\exp(X_a\beta_\sigma)$. N, F and M have separate parameters; shared SDs do not share states.}
 \[
-\ell(\theta,\eta)=\ell_R+\ell_N+\ell_F+
-\ell_M+\ell_{N_0}+\ell_{\mathrm{obs}}.
+\begin{aligned}
+\text{IID: }&\eta_{t,a}\sim\mathcal N(0,\sigma_a^2),\\
+\text{RW: }&\eta_{t,a}-\eta_{t-1,a}\sim\mathcal N(0,\sigma_a^2).
+\end{aligned}
 \]
-\micro{\texttt{fit\_tam()} fits by RTMB Laplace integration of random effects and \texttt{nlminb()} optimization. Reported uncertainty is a local curvature/delta-method approximation.}
-\end{mathbox}\vspace{2mm}
-\begin{mathbox}{Assess predictive skill}\micro{Retrospective peels assess stability (Mohn's $\rho$). Hindcasts hold out terminal observations and use one-step-ahead projection errors; \texttt{fit\_retro()} and \texttt{fit\_hindcast()} return summary statistics.}
+\micro{AR1 stationary covariance (state/block distances):}
+\[
+\operatorname{Cov}(\eta_{t,a},\eta_{s,b})=
+\frac{\sigma_a\sigma_b\phi_t^{|t-s|}\phi_a^{|a-b|}}
+{(1-\phi_t^2)(1-\phi_a^2)}.
+\]
+\micro{F \texttt{"cor\_rw"}: independent annual increment vectors with}
+\[
+\Sigma_{ab}=\sigma_a\sigma_b\rho^{|a-b|},\quad-1<\rho<1.
+\]
+\micro{RW starts are unpenalized. N/M \texttt{"off"} gives $\eta=0$.}
 \end{mathbox}
+\end{minipage}\hfill
+\begin{minipage}[t]{.325\linewidth}\vspace{0pt}
+\begin{mathbox}{Survey catchability}
+\begin{rcode}
+index_settings = list(
+  q_form = ~ mono(q_block), q_link = "log")
+\end{rcode}
+\[
+\eta_{q,k}=\beta_q+\sum_{j<k}d_j,\quad d_j\ge0,
+\qquad q_k=e^{\eta_{q,k}}.
+\]
+\micro{Zero steps give exact plateaus; \texttt{\string~ q\_block} leaves age patterns unrestricted. With \texttt{q\_link = "logit"}:}
+\[
+q_k=\{1+e^{-\eta_{q,k}}\}^{-1}.
+\]
+\micro{\texttt{\string~ logistic(age)} multiplies inverse-link q by $S(a)$. \texttt{iid()}, \texttt{rw()} and \texttt{ar1()} can add Gaussian variation. q covariates come from \texttt{index}.}
+\end{mathbox}\vspace{2mm}
+\begin{mathbox}{Catch and survey observations}
+\begin{rcode}
+catch_settings = list(sd_form = ~ 1)
+index_settings = list(sd_form = ~ survey)
+\end{rcode}
+\[
+\begin{aligned}
+\widetilde C_{t,a}&=N_{t,a}\frac{F_{t,a}}{Z_{t,a}}(1-e^{-Z_{t,a}}),\\
+\widetilde I_i&=q_iN_{t_i,a_i}e^{-s_iZ_{t_i,a_i}},\\
+\log Y_i&\sim\mathcal N(\log\widetilde Y_i,\sigma_i^2),\\
+\sigma_i&=\sigma_i^0\exp(X_{sd,i}\beta_{sd}).
+\end{aligned}
+\]
+\micro{$s_i$: survey sampling fraction. $\sigma_i^0=1$ unless a baseline SD is provided. Gaussian formula effects can also modify log SD. Predictions are medians; zero/NA observations are excluded, with complete predictions.}
+\end{mathbox}\vspace{2mm}
+\smallkey{Check fit, uncertainty and predictive skill}\par\vspace{1mm}
+\begin{rcode}
+check_tam(fit)
+hind <- fit_hindcast(fit, folds = 20)
+hind$hindcast_rmse
+\end{rcode}
+\micro{The joint likelihood includes active process, formula-effect and observation densities. RTMB integrates random effects by Laplace approximation; intervals use local curvature. Standardized residuals $(\log Y_i-\log\widetilde Y_i)/\sigma_i$ depend on fitted, shrunken states. Convergence does not establish identifiability. Hindcasts return log RMSE and retrospective Mohn's $\rho$.}
 \end{minipage}
-\pagefooter{Equations summarized from \texttt{help("tinyAM-model", package="tinyAM")} and \texttt{?recruitment\_formulas} · Review this curated page after scientific model changes · github.com/PaulRegular/tinyAM}
+\pagefooter{Equation details: \texttt{?\string"tinyAM-model\string"}, \texttt{?recruitment\_formulas}, \texttt{?catchability\_curves} · github.com/PaulRegular/tinyAM}
+
 ```

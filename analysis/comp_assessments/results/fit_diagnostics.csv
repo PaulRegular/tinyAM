@@ -75,7 +75,7 @@ x Fixed-parameter covariance must be available and finite.
 x The Hessian must be positive definite.
 i Optimizer code zero alone is insufficient. A missed gradient tolerance alone
   does not establish a structural problem."
-"joint_hake_coastal_2025","86e44bf","converged",TRUE,0,"relative convergence (4)",1185.7296626786,0.000867803813952683,0.000867803813952683,TRUE,TRUE,23,750,140.309386968613,"Retained after source/translation review: source_M_prior ; see PACIFIC_MODEL_REVIEW.md. | default: failed numerical checks; gradient=0.00115; NaNs produced | NaNs produced | NaNs produced | NaNs produced | NaNs produced | NaNs produced | NaNs produced | NaNs produced | Numerical convergence checks did not pass; inspect `check_tam(fit)`.
+"joint_hake_coastal_2025","86e44bf","converged",TRUE,0,"relative convergence (4)",1185.7296626786,0.000867803813952683,0.000867803813952683,TRUE,TRUE,23,750,140.309386968613,"Retained after source/translation review: source_M_prior ; see PACIFIC_REVIEW.md#source-and-model-review. | default: failed numerical checks; gradient=0.00115; NaNs produced | NaNs produced | NaNs produced | NaNs produced | NaNs produced | NaNs produced | NaNs produced | NaNs produced | Numerical convergence checks did not pass; inspect `check_tam(fit)`.
 x Fixed-parameter covariance must be available and finite.
 x The Hessian must be positive definite.
 i Optimizer code zero alone is insufficient. A missed gradient tolerance alone
@@ -85,7 +85,10 @@ i Optimizer code zero alone is insufficient. A missed gradient tolerance alone
 biomass with no observed survey ages.
 i tinyAM's current age-specific index likelihood cannot represent this
   observation. See source_reviews/dfo_herring_sog.md."
-"dfo_pop_bc_2023","86e44bf","converged",TRUE,0,"relative convergence (4)",2206.60832416025,0.00164015881651292,0.00164015881651292,TRUE,TRUE,77,1140,17.4868650436401,"Retained after source/translation review: source_M_prior ; see PACIFIC_MODEL_REVIEW.md. | default: converged; gradient=0.00164; "
+"dfo_pop_bc_2023","6f935ecdf418c5f6da08d8a98ef31a814a521e0f","translation_failed",,,"",,,,,,,,0.042417049407959,"BC Pacific ocean perch comparison is blocked: matching coastwide
+historical official population outputs have not been recovered.
+i Partial regional biomass, constant M and boundary summaries are insufficient.
+  See source_reviews/dfo_pop_bc.md."
 "afsc_cod_ai_2024","bde6c5ebca6be50595ce05c825a5ae8bd446e32d","translation_failed",,,"",,,,,,,,0.00944805145263672,"AI cod translation is blocked pending matching final production inputs
 and biological weights.
 i Public September M24_1 output differs from the final November assessment. See
@@ -94,3 +97,17 @@ i Public September M24_1 output differs from the final November assessment. See
 observed age-length key and survey timing are missing.
 i Recovered fitted N/F are assessment outputs, not catch/survey data. See
   source_reviews/afsc_arrowtooth_flounder_bsai.md."
+"dfo_petrale_bc_2024","2a66fcfa6d9a6141b4b41cfbced2051b8017da2d","translation_failed",,,"",,,,,,,,0.0544970035552979,"BC petrale translation is blocked: original catch/survey age
+compositions and biological inputs have not been recovered.
+i Weight, maturity, timing and the model age grid must be verified before
+  preparing a fit. Available SSB output and component M scalars are
+  insufficient.
+i See source_reviews/dfo_petrale_bc.md for public-source coverage and the
+  missing-input inventory."
+"dfo_canary_bc_2022","442d89ec5bbe98ba22480fd89e11f92765d3a0bb","converged",TRUE,0,"relative convergence (4)",1726.628946913,0.000332907251297199,0.000332907251297199,TRUE,TRUE,79,2853,452.970015048981," | default: failed numerical checks; gradient=2150; NA/NaN function evaluation | Numerical convergence checks did not pass; inspect `check_tam(fit)`.
+x Code 1: false convergence (8)
+x Adjusted maximum 2150; raw maximum 2150; tolerance 0.01.
+x Fixed-parameter covariance must be available and finite.
+x The Hessian must be positive definite.
+i Optimizer code zero alone is insufficient. A missed gradient tolerance alone
+  does not establish a structural problem. | source_start: converged; gradient=0.000333; "

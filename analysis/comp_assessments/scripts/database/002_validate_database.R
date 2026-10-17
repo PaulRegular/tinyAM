@@ -201,6 +201,7 @@ allowed_input_measures <- c(
   "total_biomass", "proportion_at_age", "proportion_at_length",
   "conditional_proportion_at_age", "weight_at_age", "spawning_weight_at_age",
   "maturity_at_age", "natural_mortality_at_age",
+  "fixed_mortality_medium", "fixed_mortality_low", "fixed_mortality_high",
   "relative_biomass_index",
   "landings_proportion", "landings_numbers_at_age", "landings_fraction_at_age",
   "landings_weight_at_age", "discard_weight_at_age", "log_index_sd", "index_sd", "relative_precision_weight", "relative_standard_error", "larval_abundance_index", "environmental_covariate", "fraction_F_before_spawning",

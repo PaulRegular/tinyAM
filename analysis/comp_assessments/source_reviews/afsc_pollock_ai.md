@@ -102,4 +102,4 @@ estimated M are flagged for review; missing F comparisons are not passes.
 
 Correlated/shared-level F and the verified M log-penalty did not produce a usable fit. The M-prior trial still has non-finite fixed-effect covariance and extreme N/q scaling despite a small gradient. Native q normalization, recruitment and joint likelihood differences remain unresolved.
 
-See [the complete twelve-case review](../PACIFIC_MODEL_REVIEW.md) for paired median differences, correlations, diagnostics and rejected trials. Canonical numerical inputs and outputs are unchanged.
+See [the complete twelve-case review](../PACIFIC_REVIEW.md#source-and-model-review) for paired median differences, correlations, diagnostics and rejected trials. Canonical numerical inputs and outputs are unchanged.

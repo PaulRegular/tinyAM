@@ -99,4 +99,4 @@ precision are material differences. Fixed-M equality only checks inputs.
 
 Verified the VAST number-index units, empirical observed age-length allocation and plug-in biology. Correlated F, catch-SD and shared annual-F alternatives were evaluated. The last improves F/SSB but weakens N/recruitment trends, so the existing recipe is retained; its alternative dashboard is cached separately.
 
-See [the complete twelve-case review](../PACIFIC_MODEL_REVIEW.md) for paired median differences, correlations, diagnostics and rejected trials. Canonical numerical inputs and outputs are unchanged.
+See [the complete twelve-case review](../PACIFIC_REVIEW.md#source-and-model-review) for paired median differences, correlations, diagnostics and rejected trials. Canonical numerical inputs and outputs are unchanged.

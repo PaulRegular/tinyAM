@@ -56,22 +56,22 @@ committed separately and pushed to `comp-assessments`.
 | BSAI Pacific ocean perch | Interrupted after more than seven CPU hours | No completed attempt history, usable fit or dashboard |
 | Coastal Pacific hake | Passed after one source-start retry | Source M penalty restored in review; M 0.18335, finite effect SE; core comparisons improve but remain approximate |
 | SoG herring | Blocked before fitting | Aggregate spawning-biomass survey has no observed survey-age composition |
-| BC Pacific ocean perch | Passed from defaults | Source M prior approximated in review; M 0.04053, finite effect SE; other historical comparisons remain unavailable |
+| BC Pacific ocean perch | Source-output blocked after historical trial | Numerical checks passed, but matching historical N/F/recruitment/SSB outputs have not been recovered |
 
-Nine cases received actual optimization attempts: five numerical passes,
-three non-converged fits and one interrupted run. Eight dashboards are cached
-under `results/cache/<assessment_id>/dashboard.html`. The three blocked cases
-have explicit readiness guards, not invented observations or fitted recipes.
-This leaves a **shortfall of three actually attempted translations** against
-the twelve-case target. Numerical passes are not scientific agreement or
-evidence of useful uncertainty.
+Nine cases historically received actual optimization attempts, including the
+now-blocked BC POP trial. The current status is four numerical passes, three
+non-converged fits, one interrupted run and four source blockers. Seven active
+new-case dashboards and the historical BC trial are cached under
+`results/cache/<assessment_id>/dashboard.html`. Readiness guards prevent fitting
+blocked cases. The twelve-runnable-translation target remains unmet. Numerical
+passes are not scientific agreement or evidence of useful uncertainty.
 
 The complete cross-case flags, unavailable/non-equivalent comparisons,
 fixed-M checks and numerical outcomes are in [PACIFIC_REVIEW.md](PACIFIC_REVIEW.md).
 The review covers the updated library, distinguishing new from existing cases.
 It can be refreshed without fitting by sourcing
 `scripts/translation/review_pacific_expansion.R` from the repository root.
-The expansion initially retained existing model specifications. The subsequent [model review](PACIFIC_MODEL_REVIEW.md) documents the selected mortality, initialization and spawning-time changes and rejected alternatives. No core model mathematics changed.
+The expansion initially retained existing model specifications. The subsequent [model review](PACIFIC_REVIEW.md#source-and-model-review) documents the selected mortality, initialization and spawning-time changes and rejected alternatives. No core model mathematics changed.
 
 ## Final validation
 
@@ -100,7 +100,7 @@ no model fitting was repeated to improve agreement.
 
 ## Model-review validation — 2026-10-17
 
-The [case-by-case review](PACIFIC_MODEL_REVIEW.md) records the subsequent
+The [case-by-case review](PACIFIC_REVIEW.md#source-and-model-review) records the subsequent
 source-informed model trials and selected changes. The original expansion
 outcomes above remain historical where superseded by that review.
 
@@ -120,5 +120,85 @@ outcomes above remain historical where superseded by that review.
   repeated for this analysis-only review; core package sources, tests and
   generated documentation are unchanged.
 - Selected dashboards and the agreement heatmap were refreshed. The revised
-  hake fit passes after one conditional N-start retry; BC POP passes from
-  defaults. Rejected, failed and time-limited trials remain cached separately.
+  hake fit passes after one conditional N-start retry; the historical BC POP
+  trial passed from defaults but is now retired from comparison. Rejected,
+  failed and time-limited trials remain cached separately.
+
+## BC POP output revisit — 2026-10-17
+
+The matching production repository, report tables and related public PBS
+repositories did not yield numerical historical N/F/recruitment/SSB outputs.
+BC POP is now blocked from fitting and excluded from the comparison summaries
+and plots; canonical inputs and official summaries are unchanged. See the
+[source review](source_reviews/dfo_pop_bc.md) for cached search evidence and the
+proposed U.S. West Coast petrale sole alternative. No replacement was fitted.
+
+A subsequent Canadian-petrale search recovered regional POP biomass draws for
+3CD and 5DE. The 5ABC file ends in 2017, so it cannot complete the matching
+coastwide comparison. The [BC petrale preflight](source_reviews/dfo_petrale_bc.md)
+identifies a Canadian replacement candidate with 1938–2024 numerical SSB
+posterior output; native inputs and ensemble details remain to be verified.
+
+The six targeted source, readiness, prior and reporting test files pass, as
+does database validation. Other stocks' diagnostic and comparison rows are
+unchanged. The agreement heatmap and four trend plots now contain the same
+27 cases; the 7-column, 4-row trend layout and grey ocean labels are retained.
+The full package suite passes with its one interactive-only skip. The full
+assessment-analysis suite and `R CMD check` were not repeated for this
+source-readiness/reporting change; package code and canonical tables are unchanged.
+
+## BC petrale import — 2026-10-17
+
+`dfo_petrale_bc_2024` is an additional partial summary/output record, not a
+completed replacement for BC POP. The import retains 87 annual female SSB
+medians with 95% credible limits, separate published terminal/reference values,
+three reported component M scalars and 33 assumptions. The database now has
+36 stocks and 42 assessment records; the 35 current detailed records are
+unchanged. This official applied assessment is not marked current detailed
+because original observations, biology and configuration remain missing.
+
+The explicit stock entry point stops before model preparation or optimization.
+No fitted object, uncertainty estimate, dashboard or agreement statistic was
+invented. See the [source review](source_reviews/dfo_petrale_bc.md) for the
+public-source search, exact coverage and conditions for resuming translation.
+
+Both new-case tests and database validation pass. All 65 assessment-analysis
+files were run: 59 pass and the six pre-existing failures listed above remain.
+The full package suite passes with one interactive-only skip. Package checking
+with `--no-manual --no-tests` has zero errors, zero warnings and the existing
+`plot_bubbles`/`head` NOTE; tests ran separately. The check process used a valid
+locale after an initial inherited-locale failure. No core package code or
+model specification changed, and all pre-existing canonical values and
+comparison/fit diagnostics remain unchanged.
+
+## BC Canary import and translation — 2026-10-17
+
+`dfo_canary_bc_2022` adds the official coastwide Run24 inputs and available
+outputs, bringing the database to 37 stocks, 43 assessment records and 36
+current detailed cases. Source files, matching fixed-biology evaluation and
+SSB posterior draws are cached with provenance. All prior canonical records
+are unchanged. Completeness remains partial: official numerical N/F-at-age,
+annual recruitment and full posterior draws were not recovered.
+
+The female 1977–2022, ages 1–60+ translation preserves joint-sex denominators
+when converting sampled catch/survey biomass to female numbers. Missing ages
+are not filled; aggregate-only indices are omitted. Its background and
+[source review](source_reviews/dfo_canary_bc.md) describe the simplified
+likelihood, recruitment, selectivity, M prior and initialization.
+
+Default starts failed; the one permitted source-informed retry converged
+(maximum gradient 0.000333; successful SD report, positive-definite Hessian).
+SSB mean absolute difference is 27.91%, terminal difference -59.09% and
+correlation 0.295. Female M is 36.51% lower, with no defined temporal
+correlation for the constant source series. These are flagged limitations,
+not a successful reproduction of the assessment. Other population comparisons
+remain missing or non-equivalent. The dashboard and initialization histories
+are cached, and compact result tables retain existing stocks' results.
+
+Both new-case tests and database validation pass. All 67 assessment-analysis
+files were run: 61 pass, with the same six baseline failures. The full package
+suite passes with one interactive-only skip; package checking with
+`--no-manual --no-tests` has zero errors, zero warnings and the existing
+`plot_bubbles`/`head` NOTE. Tests ran separately. Dashboard and plot exports
+were verified, retaining ocean/species order, seven columns, four rows and
+the smaller grey ocean labels. No core model mathematics changed.

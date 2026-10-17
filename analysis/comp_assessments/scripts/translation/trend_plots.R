@@ -9,6 +9,7 @@ library(ggplot2)
 pkgload::load_all(".", quiet = TRUE)
 
 root <- "analysis/comp_assessments"
+source(file.path(root, "R", "plot_stock_order.R"))
 
 # Read annual comparisons and stock metadata.
 ts <- read_csv(
@@ -26,44 +27,19 @@ stocks <- read_csv(
   show_col_types = FALSE
 )
 
-# Attach readable stock names.
-stock_names <- assessments |>
-  select(assessment_id, stock_id) |>
-  left_join(
-    stocks |>
-      select(stock_id, common_name, scientific_name, ocean),
-    by = "stock_id"
-  ) |>
-  mutate(
-    basin = ocean
-  )
-
-ts <- ts |>
-  left_join(stock_names, by = "assessment_id") |>
-  mutate(stock = coalesce(common_name, assessment_id))
-
-
-# Keep identical stock ordering in all four figures.
-stock_order <- ts |>
-  distinct(assessment_id, stock) |>
-  arrange(stock, assessment_id) |>
-  pull(assessment_id)
+# Match the heatmap: ocean, phylogenetic group, species and stock.
+comparison <- read_csv(
+  file.path(root, "results/comparison_summary.csv"),
+  show_col_types = FALSE
+)
+stock_info <- assessment_plot_stocks(assessments, stocks,
+  comparison$assessment_id[comparison$metric %in% c("ssb", "recruitment", "abundance", "F_bar")])
 
 # Colours from the tinyAM palette.
 cols <- c(
   Official = tam_cols()[1],
   tinyAM = tail(tam_cols(), 1)
 )
-
-metric_titles <- c(
-  ssb = "Spawning-stock biomass",
-  recruitment = "Recruitment",
-  abundance = "Total abundance",
-  F_bar = "Average fishing mortality"
-)
-
-
-
 
 plot_comparison <- function(metric_name) {
 
@@ -116,9 +92,7 @@ plot_comparison <- function(metric_name) {
     )
 
   # Retain all stocks in a consistent order.
-  panels <- ts |>
-    distinct(assessment_id, stock, basin, scientific_name) |>
-    arrange(stock, assessment_id)
+  panels <- stock_info
 
   status <- x |>
     group_by(assessment_id) |>
@@ -136,11 +110,9 @@ plot_comparison <- function(metric_name) {
       has_pairs = coalesce(has_pairs, FALSE),
       panel = factor(assessment_id, levels = assessment_id),
       strip = paste0(
-        gsub("\n", "<br>", str_wrap(stock, width = 26)),
-        "<br>",
-        "<span style='color:#888888; font-size:7pt;'>",
-        basin,
-        "</span>"
+        gsub("\n", "<br>", str_wrap(stock, width = 22)),
+        "<br><span style='color:#888888; font-size:7pt;'>",
+        basin, "</span>"
       )
     )
 
@@ -323,8 +295,8 @@ plot_comparison <- function(metric_name) {
     ) +
     facet_wrap(
       ~panel,
+      ncol = 7,
       nrow = 4,
-      ncol = 5,
       scales = "free",
       drop = FALSE,
       labeller = labeller(
@@ -420,7 +392,7 @@ for (metric in names(plots)) {
   ggsave(
     filename = file.path(root, "results", "figures", paste0(metric, ".png")),
     plot = plots[[metric]],
-    width = 10,
+    width = 14,
     height = 8,
     dpi = 300,
     bg = "white"

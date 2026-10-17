@@ -1,27 +1,20 @@
 source("analysis/comp_assessments/R/run_assessment.R")
-source("analysis/comp_assessments/tests/helper_stock.R")
-x <- read_assessment("dfo_pop_bc_2023")
-original <- x
-s <- .test_stock(x)
-stopifnot(identical(x,original),is.null(s$fit),identical(s$years,2003:2022),identical(s$ages,5:60),
-  !"start_par" %in% names(s$fit_call),s$settings$rec_settings$sd==.9,
-  length(s$dat$M_terms)==1L,ncol(s$dat$M_modmat)==0L,
-  abs(exp(unique(s$dat$log_mu_supplied_m))-.06/sqrt(1+.3^2))<1e-12,
-  length(unique(s$obs$index$survey))==3,
-  all(abs(s$obs$index$samp_time-5/12)<1e-12),all(s$obs$maturity$spawn_time==0),
-  all(is.finite(s$obs$weight$obs)),all(s$obs$maturity$obs>=0 & s$obs$maturity$obs<=1),
-  s$comparison_definitions$ssb$status=="non_equivalent",
-  all(is.na(s$comparison_outputs$lwr)),all(is.na(s$comparison_outputs$upr)))
-for(year in s$years) {
-  raw <- s$observations[s$observations$type=="catch" & s$observations$year==year,]
-  pooled <- s$obs$catch[s$obs$catch$year==year,]
-  if(length(unique(raw$fleet))==3) {
-    expected <- tapply(raw$value,raw$age,sum)[as.character(s$ages)]
-    stopifnot(max(abs(pooled$obs-expected))<1e-7)
-  } else stopifnot(all(is.na(pooled$obs)))
+record <- read_assessment("dfo_pop_bc_2023")
+original <- record
+for (fit in c(FALSE, TRUE)) {
+  x <- .assessment_stock(record, do_fit = fit, silent = TRUE)
+  stopifnot(inherits(x$error, "error"),
+    grepl("historical official population outputs",
+      gsub("[[:space:]]+", " ", conditionMessage(x$error)), fixed = TRUE),
+    x$env$fit_stage == "translation", is.null(x$env$fit), is.null(x$env$obs),
+    is.null(x$env$fit_model), is.null(x$env$retry_start), identical(record, original))
+  result <- run_assessment("dfo_pop_bc_2023", fit = fit, dashboard = TRUE, cache = FALSE)
+  stopifnot(result$diagnostics$status == "translation_failed",
+    is.null(result$fit), is.null(result$ref), is.null(result$summary),
+    is.null(result$dashboard_file), identical(record, original))
 }
-ref <- database_to_tam_ref(x$assessment$assessment_id,s$comparison_outputs,
-  obs=s$obs,years=s$years,ages=s$ages,age_plus_group=60,assumptions=x$assumptions,
-  comparison_definitions=s$comparison_definitions)
-stopifnot(all(ref$pop$M$est==.05229),all(is.na(ref$pop$N$est)))
-cat("BC POP female conversion, complete-area pooling, missing-area traps, native timing and disabled-fit preparation passed.\n")
+summary <- read.csv("analysis/comp_assessments/results/comparison_summary.csv")
+series <- read.csv("analysis/comp_assessments/results/population_timeseries.csv")
+stopifnot(!"dfo_pop_bc_2023" %in% summary$assessment_id,
+          !"dfo_pop_bc_2023" %in% series$assessment_id)
+cat("BC POP is blocked before fitting/comparison; source records remain intact and no stale comparison rows remain.\n")
