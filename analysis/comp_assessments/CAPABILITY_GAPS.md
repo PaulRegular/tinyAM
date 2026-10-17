@@ -1,5 +1,71 @@
 # Remaining assessment capabilities
 
+## Pacific expansion: current coverage and findings
+
+The database now contains **35 current detailed stock records**, including the
+twelve Pacific additions documented in [PACIFIC_REVIEW.md](PACIFIC_REVIEW.md).
+Completeness remains partial where source information is unresolved. Nine new
+cases received optimization attempts: five passed numerical checks, three did
+not converge and one was interrupted without usable reporting. Three additional
+cases are blocked before fitting. Eight new dashboards are cached locally.
+This is an explicit shortfall of three actually attempted translations against
+the requested twelve, not twelve successful replications.
+
+- **Original likelihoods:** the new assessments generally fit total biomass and
+  multinomial, Dirichlet-multinomial or correlated age/length compositions.
+  tinyAM uses separate lognormal age observations. Conversion changes their
+  covariance and precision. Source zero categories remain canonical, but zeros
+  are treated as missing by tinyAM's lognormal likelihood; no epsilon was added.
+- **Catch-length data:** EBS cod permits a documented pooled empirical fishery
+  age–length allocation covering more than 99.4% of observed length mass; the
+  uncovered fraction is left unallocated. Arrowtooth lacks verified numerical
+  compositions/age–length keys. Fitted N/F cannot manufacture observations.
+- **Aggregate surveys:** SoG herring's observed spawning-biomass index has no
+  survey age compositions. The age-specific index equation cannot represent it
+  directly. This is a confirmed observation-model limitation, distinct from
+  the source's density-dependent M and discrete fishery timings.
+- **Sex, area and fleet structure:** female subsets or explicit sex/area pooling
+  support some approximations, but do not reproduce sex-specific survival,
+  spatial recruitment or normalized fleet selectivity. BC POP is one three-area
+  case; all source distinctions remain canonical. Complete-area catch pooling
+  leaves missing-area years missing, rather than creating partial totals.
+- **Priors and identification:** initial hake and BC POP fits drove M near zero.
+  The [model review](PACIFIC_MODEL_REVIEW.md) uses an existing fixed-SD Gaussian
+  mean effect for one shared log-M level, without a free intercept that could
+  cancel its penalty. Hake retains the native log-M penalty; BC POP uses a
+  positive moment approximation to the native natural-scale normal prior.
+  Both now have finite shared-effect SEs and improved M comparisons, though
+  M still differs by more than 20%. Native bounds and posterior integration
+  remain different. Restoring verified M/q penalties did not resolve northern
+  rock sole convergence; random initial N produced implausible states despite
+  a numerical pass. Initial temporal-process priors, arbitrary q normalization
+  and joint composition likelihoods remain separate limitations.
+- **Biological definitions:** original fixed SS3 growth/CV/allometry can recover
+  BC POP weights without fitting source states. EBS cod weights are estimated
+  outputs used as labelled plug-in biology. Its worksheet combined mature
+  biomass differs by a factor of two from reported female SSB. BC POP's public
+  reproductive-output configuration and reported biomass need further source
+  confirmation; AI cod also has unresolved single-sex SSB scaling. These are
+  definition cautions, not proof of an error in tinyAM mathematics.
+- **Reference uncertainty:** native MCMC medians/means and 90% or 95% credible
+  limits remain labelled. Marginal age/sex medians and component modes do not
+  determine posterior means/intervals of a pooled state. SoG component MPD N is
+  not ensemble posterior N; no such series or uncertainty was invented.
+- **Source gaps:** AI cod's public September native run differs from its final
+  November fit. Arrowtooth lacks matching likelihood arrays/keys and timing.
+  SoG's public DDM ensemble ends in 2023, distinct from the interim 2025 DIM;
+  the two are not combined. Unverified activation/sharing/point conventions
+  remain unresolved, rather than being described as absent features.
+
+Full-library review flags use >20% mean absolute or terminal differences and
+correlation <0.90. Fixed M is checked as an input, unavailable comparisons are
+listed separately, and failed numerical/uncertainty checks are not hidden by
+good individual trends. No new core model feature was implemented for this
+expansion. The earlier prevalence inventory below is historical, not a recount
+over the enlarged library.
+
+## Historical 23-assessment capability inventory
+
 **Process-expansion follow-up:** F now supports AR1 age-correlated RW increments
 (`cor_rw`), and N/F/M support ordinary age-based log-SD sharing formulas.
 Stock-wide spawning-time SSB is also available. The prevalence counts below
@@ -7,7 +73,7 @@ remain those of the source review; these three rows now describe supported
 options requiring source-definition checks, rather than absent features. See
 [the process study](../formula_expansion/PROCESS_EXPANSION.md) for recovery and application evidence.
 
-This review covers **23 current detailed assessment records: 21 stock recipes
+The original review covered **23 then-current detailed assessment records: 21 stock recipes
 and two blocked translations**. Counts below are confirmed minimums, once per
 assessment, not fleet or database-row counts. The explicit membership sets are
 in the [historical review script](https://github.com/PaulRegular/tinyAM/blob/782034b/analysis/comp_assessments/scripts/translation/review_translations.R);

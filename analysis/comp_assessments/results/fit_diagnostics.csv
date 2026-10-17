@@ -13,12 +13,84 @@
 "dfo_herring_4tvn_spring_2024","4830fb11efe56abc21d839cc53a5385810c9ef3e","converged",TRUE,0,"relative convergence (4)",1171.11035896813,0.000310509564737771,20.6009492718426,TRUE,TRUE,29,1033,4.5126690864563,""
 "ices_bluewhiting_northeast_atlantic_2026","4830fb11efe56abc21d839cc53a5385810c9ef3e","converged",TRUE,0,"relative convergence (4)",537.908732690383,0.000492897291027916,0.000492897291027916,TRUE,TRUE,26,505,10.9126279354095,""
 "ices_herring_norwegian_spring_2025","4830fb11efe56abc21d839cc53a5385810c9ef3e","converged",TRUE,0,"relative convergence (4)",1026.99322854688,0.00048834524019814,0.00048834524019814,TRUE,TRUE,53,803,2.0652391910553,""
-"ices_sprat_baltic_2026","4830fb11efe56abc21d839cc53a5385810c9ef3e","converged",TRUE,0,"relative convergence (4)",474.004128783679,0.000355668135185061,0.000355668135185061,TRUE,TRUE,28,824,2.1306300163269,""
+"ices_sprat_baltic_2026","4a3d9a508831c2b0b561dfa9d69a4883e8d2eb4a","converged",TRUE,0,"relative convergence (4)",474.004128783678,0.000355768053276417,0.000355768053276417,TRUE,TRUE,28,824,2.54590487480164,"Source 40% pre-spawning fraction restored; existing aligned N/F initialization retained. See source review."
 "ices_plaice_north_sea_2026","4830fb11efe56abc21d839cc53a5385810c9ef3e","converged",TRUE,0,"relative convergence (4)",766.522956872277,0.00044980666095773,0.00044980666095773,TRUE,TRUE,48,1370,3.04679799079895,""
-"ices_saithe_north_sea_2026","4830fb11efe56abc21d839cc53a5385810c9ef3e","converged",TRUE,0,"relative convergence (4)",339.525576974149,0.000657682910846447,51.6430217393281,TRUE,TRUE,13,702,1.95637583732605,""
+"ices_saithe_north_sea_2026","86e44bf96845af5510f1a702b1c1fa12db2421ad","converged",TRUE,0,"relative convergence (4)",319.491409574555,3.82048341052155e-06,51.6382361171188,TRUE,TRUE,18,702,5.71967601776123,"Retained after translation review: free_initial_abundance ; see source review. | default: converged; gradient=3.82e-06; "
 "ices_whiting_north_sea_2026","4830fb11efe56abc21d839cc53a5385810c9ef3e","converged",TRUE,0,"relative convergence (4)",631.757900163831,0.00136463746631188,0.00136463746631188,TRUE,TRUE,21,873,1.98905301094055,""
 "ices_herring_western_baltic_2026","4830fb11efe56abc21d839cc53a5385810c9ef3e","converged",TRUE,0,"relative convergence (4)",425.023234290339,0.000436425099272109,0.000436425099272109,TRUE,TRUE,25,414,1.72671604156494,""
 "ices_norway_pout_north_sea_2026_benchmark","4830fb11efe56abc21d839cc53a5385810c9ef3e","converged",TRUE,0,"relative convergence (4)",638.21617090778,0.000463093193395841,0.000463093193395841,TRUE,TRUE,36,324,1.54876899719238,""
 "nefsc_summer_flounder_2018","4830fb11efe56abc21d839cc53a5385810c9ef3e","not_converged",FALSE,1,"false convergence (8)",745.642008179355,0.00417476937529782,0.00417476937529782,TRUE,FALSE,32,552,6.73296999931335,""
 "nefsc_atlantic_mackerel_2018","4830fb11efe56abc21d839cc53a5385810c9ef3e","converged",TRUE,0,"relative convergence (4)",974.17819533262,0.000656137970308834,0.000656137970308834,TRUE,TRUE,31,970,2.46077084541321,""
 "ices_haddock_iceland_2025","4830fb11efe56abc21d839cc53a5385810c9ef3e","converged",TRUE,0,"relative convergence (4)",1036.90468065887,0.00147336657823566,0.00147336657823566,TRUE,TRUE,43,1092,4.34460997581482,""
+"afsc_atka_mackerel_bsai_2024","72729bfffaf7ec3dc1d1510c5823a3611c9e4356","converged",TRUE,0,"relative convergence (4)",511.564627566503,0.000267399703109877,0.000267399703109877,TRUE,TRUE,24,373,19.1963450908661," | default: failed numerical checks; gradient=0.934; Dropping intercept term in index sd_form since supplied SDs are provided. Set
+sd_supplied to NULL to estimate the intercept. | NA/NaN function evaluation | Numerical convergence checks did not pass; inspect `check_tam(fit)`.
+x Code 1: false convergence (8)
+x Adjusted maximum 0.934; raw maximum 0.934; tolerance 0.01.
+x The Hessian must be positive definite.
+i Optimizer code zero alone is insufficient. A missed gradient tolerance alone
+  does not establish a structural problem. | source_start: converged; gradient=0.000267; Dropping intercept term in index sd_form since supplied SDs are provided. Set
+sd_supplied to NULL to estimate the intercept."
+"afsc_pop_bsai_2024","77be1fdfd189cda3a053a2c1fc1f3e2922a0ba5e","execution_failed",,,"",,,,,,,,,"Fitting pipeline terminated after more than seven hours of CPU time without returning a fit. Active initialization stage and intermediate diagnostics unavailable from the original helper; no further retry to avoid exceeding the single-retry policy. Convergence, objective, gradient and uncertainty remain unknown."
+"afsc_pollock_ai_2024","2bb0885409131a7f39a4386336bf4c1274bb200a","not_converged",FALSE,1,"singular convergence (7)",625.738242137313,2.18380776984585e-05,2.18380776984585e-05,TRUE,FALSE,30,655,145.586208105087," | default: failed numerical checks; gradient=0.000419; Numerical convergence checks did not pass; inspect `check_tam(fit)`.
+x Code 1: singular convergence (7)
+i Optimizer code zero alone is insufficient. A missed gradient tolerance alone
+  does not establish a structural problem. | Formula-effect uncertainty or support is limited.
+i A stock-recruit parameter's 95% interval spans more than tenfold. Curve shape
+  is weakly estimated; compare simpler recruitment models before interpreting
+  density dependence. | source_start: failed numerical checks; gradient=2.18e-05; NaNs produced | NaNs produced | NaNs produced | NaNs produced | NaNs produced | NaNs produced | Numerical convergence checks did not pass; inspect `check_tam(fit)`.
+x Code 1: singular convergence (7)
+x Fixed-parameter covariance must be available and finite.
+x The Hessian must be positive definite.
+i Optimizer code zero alone is insufficient. A missed gradient tolerance alone
+  does not establish a structural problem."
+"afsc_alaska_plaice_bsai_2024","f9148e2c7338832c1642a66b6c0b19e992f480fa","converged",TRUE,0,"relative convergence (4)",296.488823139797,0.000904179485555545,0.000904179485555545,TRUE,TRUE,28,527,20.6346840858459," | default: failed numerical checks; gradient=203000; NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | Numerical convergence checks did not pass; inspect `check_tam(fit)`.
+x Code 1: false convergence (8)
+x Adjusted maximum 203000; raw maximum 203000; tolerance 0.01.
+x Fixed-parameter covariance must be available and finite.
+x The Hessian must be positive definite.
+i Optimizer code zero alone is insufficient. A missed gradient tolerance alone
+  does not establish a structural problem. | source_start: converged; gradient=0.000904; "
+"afsc_yellowfin_sole_ebs_2024","4cab130a326c2540c99c3ba5dd4dfd064dfe364e","not_converged",FALSE,1,"false convergence (8)",10453.2688122185,148585979981.86,148585979981.86,TRUE,FALSE,29,839,901.887941122055," | default: failed numerical checks; gradient=9.75e+11; NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | Numerical convergence checks did not pass; inspect `check_tam(fit)`.
+x Code 1: false convergence (8)
+x Adjusted maximum 9.75e+11; raw maximum 9.75e+11; tolerance 0.01.
+x Fixed-parameter covariance must be available and finite.
+x The Hessian must be positive definite.
+i Optimizer code zero alone is insufficient. A missed gradient tolerance alone
+  does not establish a structural problem. | source_start: failed numerical checks; gradient=1.49e+11; NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | Numerical convergence checks did not pass; inspect `check_tam(fit)`.
+x Code 1: false convergence (8)
+x Adjusted maximum 1.49e+11; raw maximum 1.49e+11; tolerance 0.01.
+x Fixed-parameter covariance must be available and finite.
+x The Hessian must be positive definite.
+i Optimizer code zero alone is insufficient. A missed gradient tolerance alone
+  does not establish a structural problem."
+"afsc_northern_rock_sole_ebs_2024","7692714df3f087dfcc98289cc8a4776df5747614","not_converged",FALSE,0,"relative convergence (4)",3963.45303073719,0.0788067278917879,0.0788067278917879,TRUE,FALSE,24,713,340.912665843964," | default: failed numerical checks; gradient=1.2; NA/NaN function evaluation | Numerical convergence checks did not pass; inspect `check_tam(fit)`.
+x Code 1: singular convergence (7)
+x Adjusted maximum 1.2; raw maximum 1.2; tolerance 0.01.
+x Fixed-parameter covariance must be available and finite.
+x The Hessian must be positive definite.
+i Optimizer code zero alone is insufficient. A missed gradient tolerance alone
+  does not establish a structural problem. | source_start: failed numerical checks; gradient=0.0788; Numerical convergence checks did not pass; inspect `check_tam(fit)`.
+x Adjusted maximum 0.0788; raw maximum 0.0788; tolerance 0.01.
+x Fixed-parameter covariance must be available and finite.
+x The Hessian must be positive definite.
+i Optimizer code zero alone is insufficient. A missed gradient tolerance alone
+  does not establish a structural problem."
+"joint_hake_coastal_2025","86e44bf","converged",TRUE,0,"relative convergence (4)",1185.7296626786,0.000867803813952683,0.000867803813952683,TRUE,TRUE,23,750,140.309386968613,"Retained after source/translation review: source_M_prior ; see PACIFIC_MODEL_REVIEW.md. | default: failed numerical checks; gradient=0.00115; NaNs produced | NaNs produced | NaNs produced | NaNs produced | NaNs produced | NaNs produced | NaNs produced | NaNs produced | Numerical convergence checks did not pass; inspect `check_tam(fit)`.
+x Fixed-parameter covariance must be available and finite.
+x The Hessian must be positive definite.
+i Optimizer code zero alone is insufficient. A missed gradient tolerance alone
+  does not establish a structural problem. | source_start: converged; gradient=0.000868; "
+"afsc_cod_ebs_2024","7bbb252689b3ccabc7a74fbaecb96ccb02c34890","converged",TRUE,0,"relative convergence (4)",372.259146795476,0.00135769859915683,0.00135769859915683,TRUE,TRUE,28,311,6.46921801567078," | default: converged; gradient=0.00136; "
+"dfo_herring_sog_2025","d9d66c931e5fe2cf75c1169b1896d087f2ac6bd2","translation_failed",,,"",,,,,,,,0.00912714004516602,"SoG herring translation is blocked: the survey is aggregate spawning
+biomass with no observed survey ages.
+i tinyAM's current age-specific index likelihood cannot represent this
+  observation. See source_reviews/dfo_herring_sog.md."
+"dfo_pop_bc_2023","86e44bf","converged",TRUE,0,"relative convergence (4)",2206.60832416025,0.00164015881651292,0.00164015881651292,TRUE,TRUE,77,1140,17.4868650436401,"Retained after source/translation review: source_M_prior ; see PACIFIC_MODEL_REVIEW.md. | default: converged; gradient=0.00164; "
+"afsc_cod_ai_2024","bde6c5ebca6be50595ce05c825a5ae8bd446e32d","translation_failed",,,"",,,,,,,,0.00944805145263672,"AI cod translation is blocked pending matching final production inputs
+and biological weights.
+i Public September M24_1 output differs from the final November assessment. See
+  source_reviews/afsc_cod_ai.md."
+"afsc_arrowtooth_flounder_bsai_2022","e438c4b37c019e34f1bfc81f20cbb461e4fee3f3","translation_failed",,,"",,,,,,,,0.00911498069763184,"Arrowtooth translation is blocked: numerical likelihood compositions, an
+observed age-length key and survey timing are missing.
+i Recovered fitted N/F are assessment outputs, not catch/survey data. See
+  source_reviews/afsc_arrowtooth_flounder_bsai.md."

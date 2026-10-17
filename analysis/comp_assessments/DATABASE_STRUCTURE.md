@@ -193,7 +193,7 @@ Long-format representation of numerical inputs supplied to the official assessme
 | `region` | Spatial region used by the fitted model |
 | `season` | Season |
 | `year` | Calendar/model year, or cohort identifier when year_basis says so; blank for time-invariant inputs |
-| `year_basis` | Optional meaning of `year`; use `calendar_year` or `birth_cohort` |
+| `year_basis` | Meaning of `year`: `calendar_year`, `model_year` (document the native annual period), or `birth_cohort` |
 | `age` | Age |
 | `value` | Numerical value |
 | `unit` | Explicit unit |
@@ -282,6 +282,10 @@ the estimate for an age-specific catch or index observation. Use basis =
 `relative_scale`, retain the reported value and unit, and record whether the
 assessment used it as an observation weight. It is a source precision measure,
 not an observation or a tinyAM-estimated standard error.
+
+For an aggregate index CV, leave `age` blank and match the same survey, year,
+sex, region and season as its recorded total index. This preserves a published
+aggregate precision measure without duplicating it across ages.
 
 `relative_biomass_index` stores an aggregate relative index, such as standardized
 CPUE tuned to exploitable biomass. It is not an absolute biomass observation;
@@ -565,3 +569,23 @@ Time-invariant `q_power` outputs may have a blank year, like `q`. Record the
 power separately from the catchability coefficient and document the observation
 equation; a coefficient in a power relationship is not a simple catch fraction.
 Natural-scale SEs obtained by the delta method must be identified as such.
+
+## Native age frequencies and fecundity weights
+
+`frequency_at_age` uses `basis = native_frequency` to retain source age
+compositions supplied as counts or percentages rather than unit-sum proportions.
+Keep the original units (for example `percent`), row totals, sample sizes and
+age-error codes, and describe the source normalization. Normalization for a
+tinyAM translation belongs outside the canonical tables.
+
+`maturity_fecundity_at_age` uses `type = biology`, `basis = kg_per_fish` and
+the original weight units to retain supplied maturity-times-fecundity weights.
+It is not a maturity proportion. Record the source sex fraction, minimum mature
+age and SSB equation separately. Deriving a maturity proportion for tinyAM by
+dividing this product by population weight is an analysis transformation.
+
+`fishing_mortality_intensity` is an annual mortality output parameter before
+age selectivity. It is neither F-at-age nor an age-averaged Fbar; do not substitute
+it for either comparison. `exploitation_fraction_at_age` retains the source
+removal fraction and its original unit (such as percent), which likewise is
+not an instantaneous F. Record the source definitions and estimate conventions.

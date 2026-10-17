@@ -55,13 +55,15 @@ stopifnot(
   !any(translated$obs$index$survey == "Combined commercial trawl CPUE"),
   isTRUE(all.equal(m_actual, m_expected)),
   identical(dat$N_settings$process, "iid"),
+  identical(dat$N_settings$init, "free"),
   identical(dat$F_settings$process, "cor_rw"),
   identical(dat$F_settings$mean_ages, 4:7),
   identical(dat$M_settings$process, "off"),
-  identical(dim(translated$start_par$log_f), c(59L, 6L)),
-  identical(dim(translated$start_par$log_f), dim(par$log_f)),
-  all(is.finite(translated$start_par$log_f)),
-  all(is.finite(translated$start_par$log_n)),
+  is.null(translated$start_par),
+  identical(dim(par$log_f), c(59L, 6L)),
+  length(par$log_n0) == 5L,
+  all(is.finite(par$log_f)),
+  all(is.finite(par$log_n0)),
   nrow(accepted_f_9plus) == 59L,
   nrow(comparison_f_10plus) == 59L,
   identical(accepted_f_9plus$year, comparison_f_10plus$year),
@@ -90,14 +92,6 @@ stopifnot(
   isTRUE(all.equal(
     unname(prepared_plus_catch$obs),
     as.numeric(expected_plus_catch[as.character(prepared_plus_catch$year)])
-  )),
-  isTRUE(all.equal(
-    unname(exp(translated$start_par$log_n[, "8"])),
-    unname(expected_plus_N[-1L])
-  )),
-  isTRUE(all.equal(
-    unname(exp(translated$start_par$log_f[, "8"])),
-    unname(expected_plus_F)
   ))
 )
 
@@ -123,4 +117,4 @@ stopifnot(
     unname(expected_plus_N / 1000)
   ))
 )
-cat("Catch, initial states and reference F consistently use the age-8 plus group.\n")
+cat("Catch and reference F consistently use the age-8 plus group; initial states use package defaults.\n")

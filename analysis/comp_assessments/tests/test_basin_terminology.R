@@ -12,8 +12,11 @@ stopifnot(all(db$stocks$ocean[grepl("^nefsc_", db$stocks$stock_id)] ==
 
 # These figures use geography, not authority, so Canadian Pacific stocks
 # cannot be assigned to the Atlantic by their identifier prefix.
-plot_code <- readLines("analysis/comp_assessments/scripts/translation/plot_results.R")
+plot_code <- readLines("analysis/comp_assessments/scripts/translation/trend_plots.R")
 stopifnot(any(grepl("basin = ocean", plot_code, fixed = TRUE)))
+heatmap_code <- readLines("analysis/comp_assessments/scripts/translation/stats_plots.R")
+stopifnot(any(grepl("basin = ocean", heatmap_code, fixed = TRUE)))
+stopifnot(!any(grepl('"North Pacific"', heatmap_code, fixed = TRUE)))
 stopifnot(!any(grepl("list(Accepted", readLines(
   "analysis/comp_assessments/R/run_assessment.R"
 ), fixed = TRUE)))

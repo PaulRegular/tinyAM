@@ -1,4 +1,4 @@
-.test_stock <- function(source_record, ...) {
+.test_stock <- function(source_record, ..., script = NULL) {
   e <- new.env(parent = globalenv())
   e$source <- source_record
   e$do_fit <- FALSE
@@ -8,6 +8,7 @@
     "analysis/comp_assessments/scripts/translation/stocks",
     paste0(source_record$assessment$assessment_id[[1]], ".R")
   )
+  if (!is.null(script)) path <- script
   sys.source(path, e)
   calls <- list()
   walk <- function(x) {

@@ -3,11 +3,23 @@ source("analysis/comp_assessments/R/run_assessment.R")
 
 db <- read_database()
 current <- db$assessments$assessment_id[db$assessments$is_current %in% TRUE]
-record <- read.csv("analysis/comp_assessments/results/translation_review.csv",
-  na.strings = c("", "NA")
-)
+historical_table <- function(revision, path) {
+  file <- tempfile(fileext = ".csv")
+  on.exit(unlink(file))
+  status <- system2("git", c("show", shQuote(paste0(
+    revision, ":analysis/comp_assessments/", path
+  ))), stdout = file)
+  stopifnot(status == 0)
+  read.csv(file, na.strings = c("", "NA"))
+}
+record <- historical_table("4830fb1^", "results/translation_review.csv")
+baseline <- unique(record$baseline_revision)
+stopifnot(length(baseline) == 1L, !is.na(baseline))
+historical <- historical_table(baseline, "database/assessments.csv")
+historical_ids <- historical$assessment_id[historical$is_current %in% TRUE]
 stopifnot(
-  setequal(record$assessment_id, current),
+  setequal(record$assessment_id, historical_ids),
+  all(record$assessment_id %in% current),
   !anyDuplicated(record[c("assessment_id", "candidate")]),
   !any(record$decision == "pending_review"),
   length(unique(record$baseline_revision)) == 1L,

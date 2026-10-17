@@ -195,7 +195,7 @@ allowed_output_types <- c(
   "index", "catchability", "biology"
 )
 allowed_input_measures <- c(
-  "frequency_at_length", "maturity_sample_size", "mature_sample_count", "composition_sample_count",
+  "frequency_at_length", "frequency_at_age", "maturity_fecundity_at_age", "maturity_sample_size", "mature_sample_count", "composition_sample_count",
   "numbers_at_age", "index_by_age_group",
   "biomass_at_age", "total_numbers",
   "total_biomass", "proportion_at_age", "proportion_at_length",
@@ -235,7 +235,7 @@ for (name in c("inputs", "outputs")) {
 
     has_year <- !is.na(x$year) & nzchar(as.character(x$year))
     has_year_basis <- !is.na(x$year_basis) & nzchar(as.character(x$year_basis))
-    if (any(has_year & !x$year_basis %in% c("calendar_year", "birth_cohort")) ||
+    if (any(has_year & !x$year_basis %in% c("calendar_year", "model_year", "birth_cohort")) ||
       any(!has_year & has_year_basis)) {
       stop("inputs$year_basis must identify a supplied year dimension.", call. = FALSE)
     }
@@ -251,7 +251,7 @@ for (name in c("inputs", "outputs")) {
   age_required <- if (name == "inputs") {
     x$measure %in% c(
       "numbers_at_age", "index_by_age_group",
-      "biomass_at_age", "proportion_at_age",
+      "biomass_at_age", "proportion_at_age", "frequency_at_age", "maturity_fecundity_at_age",
       "conditional_proportion_at_age", "fraction_F_before_spawning",
       "fraction_M_before_spawning", "weight_at_age", "spawning_weight_at_age", "maturity_at_age", "natural_mortality_at_age",
       "landings_numbers_at_age", "landings_fraction_at_age", "relative_standard_error",
@@ -270,6 +270,23 @@ for (name in c("inputs", "outputs")) {
     ) & !has_age_group
   }
   age <- suppressWarnings(as.numeric(x$age))
+  if (name == "inputs") {
+    aggregate_precision <- x$type == "index" &
+      x$measure == "relative_standard_error" & is.na(age)
+    if (any(aggregate_precision)) {
+      columns <- c("assessment_id", "survey", "sex", "region", "season", "year")
+      key <- function(z) do.call(paste, c(lapply(z[columns], function(v) {
+        v[is.na(v)] <- ""
+        v
+      }), sep = "\r"))
+      totals <- x[x$type == "index" & x$measure %in%
+        c("total_biomass", "total_numbers", "relative_biomass_index"), ]
+      if (any(!key(x[aggregate_precision, ]) %in% key(totals))) {
+        stop("Aggregate index precision requires a matching total index.", call. = FALSE)
+      }
+      age_required[aggregate_precision] <- FALSE
+    }
+  }
   if (any(age_required & (is.na(age) | !is.finite(age) | age != as.integer(age)))) {
     stop(name, "$age must contain whole ages for age-specific measures.", call. = FALSE)
   }

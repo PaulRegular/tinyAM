@@ -79,6 +79,23 @@ stopifnot(
   all(is.na(timed_comparison$percent_difference[timed_comparison$metric == "ssb"]))
 )
 # Official N without official mortality cannot supply spawning-time survival.
+timed_reference <- reference
+timed_reference$pop$M <- f
+timed_reference$pop$M$est <- .2
+timed_reference$comparison_scales <- reference$comparison_scales
+timed_reference$comparison_scales["M"] <- 1
+timed_source <- .compare_fixture(timed_fit, timed_reference)
+expected_ssb <- 10 * exp(-(.1 + .2) * .25) + 20 * exp(-(.4 + .2) * .25)
+stopifnot(all(abs(timed_source$source[timed_source$metric == "ssb"] - expected_ssb) < 1e-12),
+  all(timed_source$comparison_status[timed_source$metric == "ssb"] == "matched"))
+incomplete <- timed_reference
+incomplete$pop$M <- incomplete$pop$M[!(incomplete$pop$M$year == 2001 & incomplete$pop$M$age == 3), ]
+partial <- .compare_fixture(timed_fit, incomplete)
+stopifnot(!2001 %in% partial$year[partial$metric == "ssb"])
+hidden <- timed_fit
+hidden$dat$plus_ages <- 3:4
+hidden_comparison <- .compare_fixture(hidden, timed_reference)
+stopifnot(all(hidden_comparison$comparison_status[hidden_comparison$metric == "ssb"] == "non_equivalent"))
 reference$pop$recruitment$age <- 2L
 reference$pop$recruitment$est <- 10
 x <- .compare_fixture(fit, reference)
