@@ -331,17 +331,34 @@
         definition <- paste("Sum of reported", age_metric, "over ages", paste(range(ages), collapse = "-"))
         start_of_year <- all(c(fit$dat$spawn_time, fit$dat$spawn_time_plus) == 0)
         if (is.null(source) && metric %in% c("biomass", "ssb") &&
-          (metric != "ssb" || start_of_year) &&
           !is.null(native$N) && !is.null(fit$dat$W)) {
           n <- native$N
           index <- cbind(match(n$year, fit$dat$years), match(n$age, ages))
           biology <- fit$dat$W[index]
-          if (metric == "ssb") biology <- biology * fit$dat$P[index]
+          if (metric == "ssb") {
+            biology <- biology * fit$dat$P[index]
+            if (!start_of_year) {
+              # Spawning survival needs official F and M, never fitted tinyAM rates.
+              rates <- lapply(native[c("F", "M")], function(rate) {
+                if (is.null(rate) || !all(c("year", "age", "est") %in% names(rate)) ||
+                  anyDuplicated(paste(rate$year, rate$age))) return(rep(NA_real_, nrow(n)))
+                rate$est[match(paste(n$year, n$age), paste(rate$year, rate$age))]
+              })
+              time <- fit$dat$spawn_time[index]
+              if (length(fit$dat$plus_ages) > 1L) {
+                # A pooled terminal N does not identify survival at hidden ages.
+                time[n$age == max(ages)] <- NA_real_
+              }
+              biology <- biology * exp(-(rates[[1]] + rates[[2]]) * time)
+            }
+          }
           n$est <- n$est * biology
           source <- .assessment_age_summary(n, ages, model_ages = fit$dat$ages)
           definition <- paste(
             "Official N with shared translated weights",
-            if (metric == "ssb") "and maturity" else "",
+            if (metric == "ssb") {
+              if (start_of_year) "and maturity" else "and maturity, with official F/M survival to spawning"
+            } else "",
             "over ages", paste(range(ages), collapse = "-")
           )
         }

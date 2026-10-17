@@ -25,6 +25,7 @@ recruitment_2026 <- subset(outputs, measure == "recruitment" & year == 2026)
 
 stopifnot(
   tinyAM::check_obs(translated$obs),
+  all(translated$obs$maturity$spawn_time == .4),
   identical(translated$years, 1974:2025),
   identical(translated$ages, 1:8),
   source_data$assessment$terminal_year == 2025,

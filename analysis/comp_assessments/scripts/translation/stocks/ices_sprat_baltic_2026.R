@@ -16,6 +16,7 @@ obs <- database_to_tam_obs(
 )
 
 obs$index$sd_block <- factor(obs$index$survey)
+obs$maturity$spawn_time <- .4
 q_age <- as.character(cut_ages(obs$index$age, c(1:6, 8)))
 obs$index$q_key <- interaction(obs$index$survey, q_age,
   drop = TRUE, sep = "."
@@ -69,7 +70,7 @@ background <- c(
   "| Catch | One aggregate catch-at-age series in thousands of fish. | Source values are converted to fish and fitted with one catch-error SD. | The catch series is retained; the source's observation error covariance is simplified. |",
   "| Index | Four tuning fleets: three age-specific acoustic series and one age-0 series shifted to age 1 in the following year. SAM uses fleet-specific q by age and a year-class effect at age 1. | Retain four survey identities, share q over ages 6–8, and use one observation SD per survey. | The shifted age-0 series is aligned to the report's age-1 year label; q's year-class effect and source observation covariance are not represented. |",
   "| Weights and maturity | Catch and stock weights are equal and annual. Maturity is constant at 0.17, 0.93, then 1.0 for ages 3–8. | Use the reported weight and maturity inputs. | No biological surface is substituted. |",
-  "| SSB | SAM reports SSB and Fbar estimates with lower and upper bounds. | tinyAM calculates SSB from the supplied biology and its spawning-time convention. | The source's 40% pre-spawning fractions for F and M are documented, but tinyAM uses its own timing convention. |",
+  "| SSB | SAM reports SSB and Fbar estimates with lower and upper bounds. | Both models apply 40% of F and M before spawning. The common-definition comparison uses official N/F/M and the same supplied weights/maturity. | Native reported SSB and intervals remain separate from this derived comparison; no uncertainty is invented for the derived sum. |",
   "", "SAM estimates for N and F initialize the fit only; tinyAM re-estimates them. The 2026 intermediate-year recruitment represents the 2025 year class and is excluded from this fit and common-period comparison. Survey timing is approximated as 0.8 for October and 0.375 for May."
 )
 

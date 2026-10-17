@@ -107,3 +107,7 @@ because the current native run object and exact sampling fractions are
 unavailable, and the published age-specific surfaces lack reported
 uncertainty. No plot-derived values or fitted estimates are being substituted
 for inputs.
+
+## Translation review — 2026-10-17
+
+Free initial older-age abundance improves all five comparable core median differences and trends, with normal starts passing. SSB median absolute difference is 9.4% (previously 10.8%), r 0.981 (0.970). Source F/N start construction is removed; observation conversion, plus groups and source definitions are unchanged.
