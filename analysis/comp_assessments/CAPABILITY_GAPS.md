@@ -58,9 +58,14 @@ replications have been achieved.
   November fit. Arrowtooth lacks matching likelihood arrays/keys and timing.
   SoG's public DDM ensemble ends in 2023, distinct from the interim 2025 DIM;
   the two are not combined. BC POP's matching public production files contain
-  inputs and terminal/reference summaries, but no recovered numerical historical
-  N/F/recruitment/SSB. Its source records remain canonical; a prior M-only trial
-  is not retained as a population comparison. U.S. West Coast petrale sole 2023
+  inputs and terminal/reference summaries. A follow-up found historical regional
+  biomass draws for 3CD and 5DE, but the public 5ABC object still ends in 2017;
+  these cannot form the matching coastwide comparison. N/F/recruitment remain
+  unrecovered. Its source records remain canonical; a prior M-only trial is not
+  retained as a population comparison. [BC petrale sole](source_reviews/dfo_petrale_bc.md)
+  is a promising Canadian alternative with recovered 1938–2024 SSB posterior
+  draws; original inputs, other outputs and ensemble weights still need verification.
+  U.S. West Coast petrale sole 2023
   is a proposed alternative with verified public fitted outputs; its native
   spawning output is eggs, not biomass (see the [source review](source_reviews/dfo_pop_bc.md)).
   Unverified activation/sharing/point conventions

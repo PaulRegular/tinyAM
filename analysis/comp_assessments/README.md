@@ -122,7 +122,8 @@ but translation is blocked by its aggregate spawning-biomass survey without
 survey ages; it has not received a tinyAM fitting attempt.
 [British Columbia Pacific ocean perch](source_reviews/dfo_pop_bc.md) remains
 curated but is blocked from fitting and comparison: matching numerical historical
-population outputs have not been recovered. Earlier exploratory fits are archived;
+coastwide population outputs have not been recovered. Partial regional biomass
+draws are now documented in its source review. Earlier exploratory fits are archived;
 constant M and boundary biomass alone do not support the intended comparison.
 [Aleutian Islands Pacific cod](source_reviews/afsc_cod_ai.md) remains blocked
 pending native inputs matching the final production assessment.

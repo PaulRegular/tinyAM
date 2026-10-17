@@ -133,6 +133,12 @@ and plots; canonical inputs and official summaries are unchanged. See the
 [source review](source_reviews/dfo_pop_bc.md) for cached search evidence and the
 proposed U.S. West Coast petrale sole alternative. No replacement was fitted.
 
+A subsequent Canadian-petrale search recovered regional POP biomass draws for
+3CD and 5DE. The 5ABC file ends in 2017, so it cannot complete the matching
+coastwide comparison. The [BC petrale preflight](source_reviews/dfo_petrale_bc.md)
+identifies a Canadian replacement candidate with 1938–2024 numerical SSB
+posterior output; native inputs and ensemble details remain to be verified.
+
 The six targeted source, readiness, prior and reporting test files pass, as
 does database validation. Other stocks' diagnostic and comparison rows are
 unchanged. The agreement heatmap and four trend plots now contain the same

@@ -2,8 +2,10 @@
 
 ## Production source
 
-**Current comparison status: blocked (2026-10-17).** Historical official
-population outputs were not recovered in the public-source revisit below.
+**Current comparison status: blocked (2026-10-17).** A complete matching
+historical population comparison has not been recovered. A subsequent search
+found regional biomass draws for 3CD and 5DE, but not the matching 5ABC series
+(see the follow-up below).
 The source record stays in the database; it is excluded from comparison
 tables and figures. Earlier fitting results below are historical experiments.
 
@@ -147,6 +149,24 @@ resolve that gap. Reopening this case needs matching numerical historical
 outputs from the assessment authors or a public release, plus confirmation of
 the native spawning-output definition. No claim is made that the authors do
 not hold those outputs. No correspondence was sent.
+
+### Follow-up through the Canadian petrale search — 2026-10-17
+
+The [gftrends repository](https://github.com/pbs-assess/gftrends/tree/7f1c59b8cc3895a3477204ac16da6cf15e2466c6)
+provides regional POP biomass posterior objects. The 3CD and 5DE files each
+contain 1,965 draws for 1935–2024. Their processing code identifies exports
+from the 2023 SS3 assessment, so this is a meaningful recovery of historical
+output beyond the original production-directory search. The 5ABC object,
+however, contains 1,000 draws for 1940–2017, despite metadata naming the newer
+assessment. It must not be combined with the other areas as the 2023 result.
+
+Thus the earlier finding of no numerical historical population outputs was
+too broad. Partial regional biomass is available; a complete matching
+coastwide comparison remains blocked. N/F/recruitment, the native biomass
+definition and joint area-pooling conventions remain unresolved. The files,
+processing code and revisions are cached with the
+[BC petrale preflight](dfo_petrale_bc.md); no canonical outputs or fitted model
+have been changed in this follow-up.
 
 ## Suggested alternative: U.S. West Coast petrale sole
 
