@@ -128,6 +128,25 @@ objects are especially likely to depend on parameter structure.
 - Do not silently change multiple scientific assumptions in the same model
   comparison.
 
+## Generated files and experimental work
+
+- Prefer stable output names and existing entrypoints to new scripts for each run.
+- Keep generated fits, dashboards, figures and build intermediates in ignored
+  output/cache directories. Track only designated deliverables, such as the
+  canonical cheatsheet PDF; generate other assets from their existing sources.
+- Use temporary directories for disposable probes and render intermediates;
+  clean them on completion. Retain one useful failure log rather than numbered
+  copies of every build.
+- Record substantive model trials, failed approaches and their outcomes in
+  commits before removing their development files. Git history is the archive;
+  do not leave retired experiments in the current checkout solely for history.
+- Keep current-run warnings, failures and provenance with cached results.
+  Preserve useful history before pruning obsolete caches.
+- Promote a scratch check to a permanent test only when it protects meaningful
+  package behavior that existing tests do not cover.
+- Finish each milestone by removing stale scratch files. Preserve user edits
+  and report open/locked files rather than closing applications forcibly.
+
 ## Before finishing a task
 
 Report:

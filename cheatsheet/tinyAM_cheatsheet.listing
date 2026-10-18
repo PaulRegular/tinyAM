@@ -1,3 +1,0 @@
-check_tam(fit)
-hind <- fit_hindcast(fit, folds = 20)
-hind$hindcast_rmse

@@ -1,4 +1,0 @@
-"model","log_rmse","n_scored_folds","n_scored_observations","complete","fit_converged","notes","rank"
-"Base",0.767415110497081,18,211,TRUE,TRUE,"Same observations and 20 held-out years",1
-"M_ar1",0.86005112799994,18,211,TRUE,TRUE,"Same observations and 20 held-out years",2
-"N_iid",0.769721201474255,2,26,FALSE,FALSE,"Experimental main fit failed; not ranked",NA

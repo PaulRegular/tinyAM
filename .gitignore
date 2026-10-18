@@ -61,5 +61,6 @@ analysis/formula_expansion/results/
 
 # Reproducible cheatsheet examples and rendering assets
 cheatsheet/cache/
+cheatsheet/output/
 
 .positai
