@@ -1,0 +1,4 @@
+"model","method","log_rmse","retained_fits","M_projection"
+"Base","previous_status_quo_index",0.767415110507472,21,"Existing conditional AR1 states; no reset-to-mean bug"
+"N_iid","previous_status_quo_index",0.572994185161525,4,"Existing conditional AR1 states; no reset-to-mean bug"
+"M_ar1","previous_status_quo_index",0.86005113739638,21,"Existing conditional AR1 states; no reset-to-mean bug"

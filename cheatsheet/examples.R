@@ -31,6 +31,12 @@ writeLines(paste(basename(package_files), unname(tools::md5sum(package_files))),
            file.path(cache, "package-source.txt"))
 provenance$package_md5 <- unname(tools::md5sum(file.path(cache, "package-source.txt")))
 provenance$script_md5 <- unname(tools::md5sum(script))
+hindcast_code <- lines[seq.int(match('if (stage %in% c("all", "scores")) {', lines),
+                              match("# ---- hindcast ----", lines) - 1L)]
+fingerprint <- tempfile()
+writeLines(hindcast_code, fingerprint)
+provenance$hindcast_md5 <- unname(tools::md5sum(fingerprint))
+unlink(fingerprint)
 run_cache <- file.path(cache, paste0("run-", substr(provenance$package_md5, 1, 10), "-", substr(provenance$example_md5, 1, 10)))
 dir.create(run_cache, showWarnings = FALSE)
 stage <- Sys.getenv("TINYAM_CHEATSHEET_STAGE", "all")
@@ -64,12 +70,12 @@ if (control == "observed") saveRDS(list(dat = dat, provenance = provenance), fil
 
 records <- list()
 cached <- function(name, code) {
-  digest <- if (startsWith(name, "hind_")) provenance$script_md5 else provenance$example_md5
+  digest <- if (startsWith(name, "hind_")) provenance$hindcast_md5 else provenance$example_md5
   file <- file.path(run_cache, paste0(name, "-", substr(digest, 1, 10), ".rds"))
   if (file.exists(file)) {
     record <- readRDS(file)
-    same <- identical(record$provenance[c("package_md5", "example_md5", "data_md5", if (startsWith(name, "hind_")) "script_md5")],
-                      provenance[c("package_md5", "example_md5", "data_md5", if (startsWith(name, "hind_")) "script_md5")])
+    same <- identical(record$provenance[c("package_md5", "example_md5", "data_md5", if (startsWith(name, "hind_")) "hindcast_md5")],
+                      provenance[c("package_md5", "example_md5", "data_md5", if (startsWith(name, "hind_")) "hindcast_md5")])
     if (same) {
       records[[name]] <<- record
       cli::cli_inform("{name}: reused cached result")
@@ -121,7 +127,8 @@ N_iid <- update(base,
   M_ar1 <- cached("fit_M_ar1", function() {
 # ---- M_ar1 ----
 M_ar1 <- update(base,
-  M_settings = list(process = "ar1"))
+  M_settings = list(process = "ar1",
+    age_breaks = c(2, 4, 6, 8, 14)))
 # ---- end ----
     M_ar1
   })
@@ -221,20 +228,22 @@ if (stage %in% c("all", "scores")) {
 # ---- end ----
 
   if (control == "observed") {
-  if (is.null(hind[["Base"]]$pop$ssb)) {
-    cli::cli_abort("The baseline hindcast retained no usable SSB estimates; inspect the cached warnings before rendering the cheatsheet.")
+  stability_model <- scores$model[which(scores$rank == 1L)[1L]]
+  if (is.na(stability_model) || is.null(hind[[stability_model]]$pop$ssb)) {
+    cli::cli_abort("No ranked hindcast retained usable SSB estimates; inspect the cached warnings before rendering the cheatsheet.")
   }
-  if (!is.null(hind[["Base"]]$pop$ssb)) {
-    d <- hind[["Base"]]$pop$ssb
+  writeLines(gsub("_", " ", stability_model), file.path(cache, "stability_model.tex"))
+  if (!is.null(hind[[stability_model]]$pop$ssb)) {
+    d <- hind[[stability_model]]$pop$ssb
     terminal <- max(base$dat$years[!base$dat$is_proj])
     d <- d[!d$is_proj & d$year >= terminal - 19 & d$year <= terminal, ]
     folds <- sort(unique(d$fold))
     colours <- tam_pal(length(folds))
     if (capabilities("cairo")) {
       grDevices::cairo_pdf(file.path(cache, "hindcast_ssb.pdf"), width = 90 / 25.4,
-                           height = 28 / 25.4, family = "Bahnschrift")
+                           height = 53 / 25.4, family = "Bahnschrift")
     } else {
-      grDevices::pdf(file.path(cache, "hindcast_ssb.pdf"), width = 90 / 25.4, height = 28 / 25.4,
+      grDevices::pdf(file.path(cache, "hindcast_ssb.pdf"), width = 90 / 25.4, height = 53 / 25.4,
                      family = "Helvetica", useDingbats = FALSE)
     }
     graphics::par(mar = c(2.5, 3.3, .5, .4), mgp = c(1.6, .5, 0),

@@ -1,0 +1,7 @@
+"model","log_rmse","n_scored_folds","n_scored_observations","complete","fit_converged","notes","method","baseline_revision","rank"
+"Base",0.767415110507472,18,211,TRUE,TRUE,"Same observations and 20 held-out years","previous_status_quo_index","01a71d89cca2f70f724d691777e64476f3115fa7",NA
+"N_iid",0.572994185161525,3,37,FALSE,FALSE,"Experimental main fit failed; not ranked","previous_status_quo_index","01a71d89cca2f70f724d691777e64476f3115fa7",NA
+"M_ar1",0.86005113739638,18,211,TRUE,TRUE,"Same observations and 20 held-out years","previous_status_quo_index","01a71d89cca2f70f724d691777e64476f3115fa7",NA
+"M_ar1",0.76540286665146,18,211,TRUE,TRUE,"Same observations and 20 held-out years","observed_catch_index","fdae9a37aab703d61bede51d7e7379a3c1978c4a",1
+"Base",0.773851135199803,18,211,TRUE,TRUE,"Same observations and 20 held-out years","observed_catch_index","fdae9a37aab703d61bede51d7e7379a3c1978c4a",2
+"N_iid",0.783704938571428,2,26,FALSE,FALSE,"Experimental main fit failed; not ranked","observed_catch_index","fdae9a37aab703d61bede51d7e7379a3c1978c4a",NA

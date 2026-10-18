@@ -1,0 +1,129 @@
+"attempt","revision","is_converged","optimizer","message","objective","pdHess","elapsed_seconds","warnings","error"
+"cheatsheet/cache/control_baseline_F_ar1.rds",NA,TRUE,0,"relative convergence (4)",1075.38112136492,TRUE,18.31,"",NA
+"cheatsheet/cache/control_no_N_rw.rds",NA,TRUE,0,"relative convergence (4)",1214.59042444182,TRUE,19.77,"",NA
+"cheatsheet/cache/control_package_default.rds",NA,TRUE,0,"relative convergence (4)",1138.32698996404,TRUE,2.62,"",NA
+"cheatsheet/cache/full_rec_start_baseline.rds",NA,FALSE,1,"false convergence (8)",1682.88049256586,FALSE,28.83,"NA/NaN function evaluation
+NA/NaN function evaluation
+NA/NaN function evaluation
+NA/NaN function evaluation
+NA/NaN function evaluation
+NA/NaN function evaluation
+NA/NaN function evaluation
+NA/NaN function evaluation
+NA/NaN function evaluation
+NA/NaN function evaluation
+NA/NaN function evaluation
+NA/NaN function evaluation
+NA/NaN function evaluation
+NaNs produced
+NaNs produced
+NaNs produced
+NaNs produced
+NaNs produced
+Numerical convergence checks did not pass; inspect `check_tam(fit)`.
+x Code 1: false convergence (8)
+x Adjusted maximum 1.02e+09; raw maximum 1.02e+09; tolerance 0.01.
+x Fixed-parameter covariance must be available and finite.
+x The Hessian must be positive definite.
+i Optimizer code zero alone is insufficient. A missed gradient tolerance alone
+  does not establish a structural problem.",NA
+"cheatsheet/cache/original_cod_baseline.rds",NA,FALSE,1,"false convergence (8)",1761.08627039189,FALSE,25.52,"NA/NaN function evaluation
+Numerical convergence checks did not pass; inspect `check_tam(fit)`.
+x Code 1: false convergence (8)
+x Adjusted maximum 2.67e+08; raw maximum 2.67e+08; tolerance 0.01.
+x The Hessian must be positive definite.
+i Optimizer code zero alone is insufficient. A missed gradient tolerance alone
+  does not establish a structural problem.",NA
+"cheatsheet/cache/scaled_start_baseline.rds",NA,FALSE,1,"false convergence (8)",1772.57933666728,FALSE,24.09,"NA/NaN function evaluation
+NA/NaN function evaluation
+NA/NaN function evaluation
+NA/NaN function evaluation
+NA/NaN function evaluation
+NA/NaN function evaluation
+NA/NaN function evaluation
+Numerical convergence checks did not pass; inspect `check_tam(fit)`.
+x Code 1: false convergence (8)
+x Adjusted maximum 5.23e+08; raw maximum 5.23e+08; tolerance 0.01.
+x Fixed-parameter covariance must be available and finite.
+x The Hessian must be positive definite.
+i Optimizer code zero alone is insufficient. A missed gradient tolerance alone
+  does not establish a structural problem.",NA
+"cheatsheet/cache/initial_attempts/fit_BH.rds","ef70415553194d794c26b3438e993a509bebb650",FALSE,1,"false convergence (8)",1676.98241729033,FALSE,64.96,"NA/NaN function evaluation
+NA/NaN function evaluation
+NA/NaN function evaluation
+NA/NaN function evaluation
+NA/NaN function evaluation
+NA/NaN function evaluation
+NA/NaN function evaluation
+NA/NaN function evaluation
+NA/NaN function evaluation
+NA/NaN function evaluation
+NA/NaN function evaluation
+NA/NaN function evaluation
+NA/NaN function evaluation
+NA/NaN function evaluation
+Numerical convergence checks did not pass; inspect `check_tam(fit)`.
+x Code 1: false convergence (8)
+x Adjusted maximum 7.31e+09; raw maximum 7.31e+09; tolerance 0.01.
+x Fixed-parameter covariance must be available and finite.
+x The Hessian must be positive definite.
+i Optimizer code zero alone is insufficient. A missed gradient tolerance alone
+  does not establish a structural problem.
+Formula-effect uncertainty or support is limited.
+i Adjacent recruitment innovations remain strongly correlated. Inspect
+  recruitment residuals and compare the residual process before interpreting
+  the stock-recruit curve.",NA
+"cheatsheet/cache/initial_attempts/fit_Base.rds","ef70415553194d794c26b3438e993a509bebb650",FALSE,1,"false convergence (8)",1761.08627039189,FALSE,25.86,"NA/NaN function evaluation
+Numerical convergence checks did not pass; inspect `check_tam(fit)`.
+x Code 1: false convergence (8)
+x Adjusted maximum 2.67e+08; raw maximum 2.67e+08; tolerance 0.01.
+x The Hessian must be positive definite.
+i Optimizer code zero alone is insufficient. A missed gradient tolerance alone
+  does not establish a structural problem.",NA
+"cheatsheet/cache/initial_attempts/fit_F_curve.rds","ef70415553194d794c26b3438e993a509bebb650",FALSE,1,"false convergence (8)",1488.02377673837,FALSE,76.91,"NA/NaN function evaluation
+NA/NaN function evaluation
+NA/NaN function evaluation
+NA/NaN function evaluation
+NA/NaN function evaluation
+NA/NaN function evaluation
+NA/NaN function evaluation
+NA/NaN function evaluation
+Numerical convergence checks did not pass; inspect `check_tam(fit)`.
+x Code 1: false convergence (8)
+x Adjusted maximum 1.32e+08; raw maximum 1.32e+08; tolerance 0.01.
+x Fixed-parameter covariance must be available and finite.
+x The Hessian must be positive definite.
+i Optimizer code zero alone is insufficient. A missed gradient tolerance alone
+  does not establish a structural problem.",NA
+"cheatsheet/cache/initial_attempts/fit_Mono_q.rds","ef70415553194d794c26b3438e993a509bebb650",FALSE,1,"false convergence (8)",1767.77412453726,FALSE,28.46,"NA/NaN function evaluation
+NA/NaN function evaluation
+NA/NaN function evaluation
+NA/NaN function evaluation
+NA/NaN function evaluation
+NA/NaN function evaluation
+NA/NaN function evaluation
+NA/NaN function evaluation
+NA/NaN function evaluation
+NA/NaN function evaluation
+NA/NaN function evaluation
+NA/NaN function evaluation
+NA/NaN function evaluation
+Numerical convergence checks did not pass; inspect `check_tam(fit)`.
+x Code 1: false convergence (8)
+x Adjusted maximum 6.57e+09; raw maximum 6.57e+09; tolerance 0.01.
+x Fixed-parameter covariance must be available and finite.
+x The Hessian must be positive definite.
+i Optimizer code zero alone is insufficient. A missed gradient tolerance alone
+  does not establish a structural problem.",NA
+"cheatsheet/cache/initial_attempts/fit_N_process.rds","ef70415553194d794c26b3438e993a509bebb650",FALSE,1,"false convergence (8)",1710.10685114479,FALSE,1.65000000000001,"NaNs produced
+NaNs produced
+NaNs produced
+NaNs produced
+NaNs produced
+Numerical convergence checks did not pass; inspect `check_tam(fit)`.
+x Code 1: false convergence (8)
+x Adjusted maximum 37300000; raw maximum 37300000; tolerance 0.01.
+x Fixed-parameter covariance must be available and finite.
+x The Hessian must be positive definite.
+i Optimizer code zero alone is insufficient. A missed gradient tolerance alone
+  does not establish a structural problem.",NA
