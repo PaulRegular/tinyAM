@@ -1,5 +1,5 @@
 ---
-title: "Catchability formula effects: recovery and stock experiments"
+title: "Catchability formula effects: recovery and workflow validation"
 output:
   html_document:
     self_contained: true
@@ -14,7 +14,6 @@ knitr::opts_chunk$set(
 library(ggplot2)
 study <- readRDS("results/q_recovery.rds")
 stopifnot(isTRUE(study$complete))
-stocks <- readRDS("results/q_stocks/results.rds")
 workflow <- readRDS("results/q_workflow.rds")
 d <- study$diagnostics
 p <- study$parameters
@@ -212,56 +211,6 @@ isolated numerical success. A small multiplier can leave the shared trajectory
 weakly measured. The sparse trials therefore provide a counterexample to using
 convergence alone as the acceptance criterion.
 
-## Stock applications
-
-All five settled baselines converged. Ten of fourteen candidates converged.
-EBS pollock RW/AR1 failed the gradient check; Southern Gulf cod RW had a very
-large gradient and failed uncertainty estimation. Herring logistic had a small
-gradient but a non-positive-definite Hessian. GOA cod, GOA pollock, Southern Gulf
-AR1 and herring RW/AR1 passed numerical checks. None replaces its settled baseline.
-
-```{r stock-table}
-knitr::kable(stocks$diagnostics[, c(
-  "assessment_id", "model", "is_converged",
-  "optimizer_code", "max_abs_gradient", "positive_definite_hessian", "objective"
-)], digits = 4)
-```
-
-<details>
-<summary>Candidate process and selectivity parameter intervals</summary>
-
-```{r stock-parameters}
-stock_parameters <- do.call(rbind, stocks$parameters)
-stock_parameters <- merge(stock_parameters,
-  stocks$diagnostics[, c("assessment_id", "model", "is_converged")],
-  by = c("assessment_id", "model")
-)
-knitr::kable(stock_parameters[, c(
-  "assessment_id", "model", "is_converged",
-  "par", "coef", "est", "lwr", "upr"
-)], digits = 3, row.names = FALSE)
-```
-
-</details>
-
-```{r stock-comparison}
-s <- subset(stocks$summaries, metric %in% c("ssb", "recruitment"))
-knitr::kable(s[, c(
-  "assessment_id", "model", "metric", "comparison_status",
-  "median_absolute_percent_difference", "trend_correlation"
-)], digits = 3)
-```
-
-Percent differences describe scale agreement; trend correlation describes
-trajectory agreement. Source timing, age and biomass-definition differences remain
-as labelled by the canonical comparison workflow. Better agreement is not evidence
-that a candidate's extra process is identifiable or scientifically preferable.
-
-Dashboards for each stock are in `results/q_stocks/<assessment_id>/dashboard.html`.
-They show Official, the settled baseline and candidate fits, including clearly
-labelled numerical failures. Process intervals and standardized residuals should
-be reviewed alongside the diagnostics rather than selecting the closest trajectory.
-
 ## Updates, projections, retrospectives and simulation
 
 ```{r workflow-table}
@@ -280,9 +229,8 @@ Retain the formula options as experimental tools with the existing exact-alias
 checks. Routine permission to specify a formula is separate from evidence that a
 particular stock supports it. Use parsimonious q effects, inspect SD/correlation
 uncertainty, and test sensitivity against the settled baseline before interpreting
-time-varying q. This work does not authorize replacing any official stock recipe
-or adding variance processes. The tables, warnings and dashboards are the review
-gate for stock-specific decisions.
+time-varying q. These recovery studies do not establish support in any particular stock or
+validate additional variance processes. Stock-specific evidence remains necessary.
 
 An observation-SD derivative bug found by the study was fixed: concatenating fixed
 catch SDs before estimated survey SDs had discarded their differentiation type.
