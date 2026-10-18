@@ -15,7 +15,7 @@ revision <- system2("git", c("-C", shQuote(repo), "rev-parse", "HEAD"), stdout =
 lines <- readLines(script, warn = FALSE)
 markers <- grep("^# ---- .* ----$", lines)
 names(markers) <- sub("^# ---- (.*) ----$", "\\1", lines[markers])
-fitting_chunks <- c("wrangle", "inputs", "baseline", "F_mono", "rec_bh", "q_mono", "N_iid")
+fitting_chunks <- c("inputs", "baseline", "N_iid", "M_ar1")
 model_code <- unlist(lapply(fitting_chunks, function(name) {
   from <- markers[[name]]
   to <- markers[which(markers > from)[1]]
@@ -34,32 +34,20 @@ source <- lapply(cod_obs, function(x) {
   keys <- intersect(c("year", "age", "survey"), names(x))
   x[do.call(order, x[keys]), , drop = FALSE]
 })
-catch_wide <- tidyr::pivot_wider(source$catch, id_cols = "year",
-  names_from = "age", names_prefix = "age_", values_from = "obs")
-
-# ---- wrangle ----
-library(tinyAM)
-catch_data <- tidyr::pivot_longer(catch_wide,
-  cols = starts_with("age_"), names_to = "age", names_prefix = "age_",
-  names_transform = list(age = as.integer), values_to = "obs")
-catch_data$unit <- "thousand fish"
-# ---- end ----
-catch_data <- as.data.frame(catch_data)
-stopifnot(identical(unname(as.matrix(catch_data)),
-                    unname(as.matrix(source$catch))))
+catch_data <- source$catch
 index_data <- source$index
 weight_data <- source$weight
 maturity_data <- source$maturity
 population_data <- source$pop_covariates
 
 # ---- inputs ----
-dat <- list(
+dat <- make_tam_data(
   catch = catch_data, index = index_data,
   weight = weight_data, maturity = maturity_data,
   pop_covariates = population_data
 )
-check_tam_data(dat)
-# Optional: dat <- as_tam_data(dat)
+# A plain list also works: check_tam_data(dat)
+# Optional class conversion: as_tam_data(dat)
 # ---- end ----
 saveRDS(dat, file.path(cache, "data.rds"))
 provenance$data_md5 <- unname(tools::md5sum(file.path(cache, "data.rds")))
@@ -104,48 +92,31 @@ if (stage != "data") {
 base <- fit_tam(
   dat, years = 1983:2024, ages = 2:14,
   N_settings = list(process = "off", init = "exp"),
-  rec_settings = list(process = "iid", mu_form = ~ 1),
+  rec_settings = list(process = "rw"),
   F_settings = list(process = "ar1", mu_form = ~ 1),
   M_settings = list(process = "off", mu_supplied = ~ I(0.3)),
   catch_settings = list(sd_form = ~ 1),
-  index_settings = list(sd_form = ~ 1, q_form = ~ q_block),
-  silent = TRUE
+  index_settings = list(sd_form = ~ 1, q_form = ~ mono(q_block))
 )
 # ---- end ----
     base
   })
-  F_mono <- cached("fit_F_curve", function() {
-# ---- F_mono ----
-F_mono <- update(base,
-  F_settings = list(mu_form = ~ mono(age)))
-# ---- end ----
-    F_mono
-  })
-  rec_bh <- cached("fit_BH", function() {
-# ---- rec_bh ----
-rec_bh <- update(base,
-  rec_settings = list(mu_form = ~ bh(ssb)))
-# ---- end ----
-    rec_bh
-  })
-  q_mono <- cached("fit_Mono_q", function() {
-# ---- q_mono ----
-q_mono <- update(base,
-  index_settings = list(q_form = ~ mono(q_block)))
-# ---- end ----
-    q_mono
-  })
-  N_iid <- cached("fit_N_process", function() {
+  N_iid <- cached("fit_N_iid", function() {
 # ---- N_iid ----
 N_iid <- update(base,
   N_settings = list(process = "iid"))
 # ---- end ----
     N_iid
   })
+  M_ar1 <- cached("fit_M_ar1", function() {
+# ---- M_ar1 ----
+M_ar1 <- update(base,
+  M_settings = list(process = "ar1"))
+# ---- end ----
+    M_ar1
+  })
 # ---- models ----
-fits <- list(Base = base, F_curve = F_mono,
-             BH = rec_bh, Mono_q = q_mono,
-             N_process = N_iid)
+fits <- list(Base = base, N_iid = N_iid, M_ar1 = M_ar1)
 # ---- end ----
   model_names <- names(fits)
   usable <- vapply(fits, inherits, logical(1), "tam_fit")
@@ -219,6 +190,8 @@ if (stage == "all") {
   }
   if (!is.null(hind[["Base"]]$pop$ssb)) {
     d <- hind[["Base"]]$pop$ssb
+    terminal <- max(base$dat$years[!base$dat$is_proj])
+    d <- d[!d$is_proj & d$year >= terminal - 19 & d$year <= terminal, ]
     folds <- sort(unique(d$fold))
     colours <- tam_pal(length(folds))
     if (capabilities("cairo")) {
@@ -237,16 +210,16 @@ if (stage == "all") {
       x <- x[order(x$year), , drop = FALSE]
       graphics::lines(x$year[!x$is_proj], x$est[!x$is_proj], col = colours[i],
                        lwd = if (i == length(folds)) 1.5 else .65)
-      forecast <- tail(x, 2)
-      graphics::lines(forecast$year, forecast$est, col = colours[i], lty = 2, lwd = .9)
     }
     grDevices::dev.off()
   }
 
   dashboard <- file.path(repo, "cheatsheet", "tinyAM_dashboard.html")
+  dashboard_files <- c(dashboard, file.path(repo, "cheatsheet",
+    paste0("tinyAM_", names(fits), ".html")))
   manifest <- file.path(cache, "dashboard-source.rds")
   dashboard_key <- provenance[c("revision", "example_md5", "data_md5")]
-  if (!file.exists(dashboard) || !file.exists(manifest) ||
+  if (!all(file.exists(dashboard_files)) || !file.exists(manifest) ||
       !identical(readRDS(manifest), dashboard_key)) {
     local({
       old <- setwd(file.path(repo, "cheatsheet"))
@@ -256,6 +229,11 @@ vis_tam(model_list = fits, output_file = "tinyAM_dashboard.html",
         open_file = FALSE)
 # ---- end ----
     })
+    for (name in names(fits)) {
+      vis_tam(model_list = fits[name],
+              output_file = file.path(repo, "cheatsheet", paste0("tinyAM_", name, ".html")),
+              open_file = FALSE)
+    }
     saveRDS(dashboard_key, manifest)
   }
   attempts <- lapply(records, function(x) x[setdiff(names(x), "value")])

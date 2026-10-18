@@ -9,6 +9,7 @@
 \usepackage{enumitem}
 \usepackage{xcolor}
 \usepackage{array}
+\usepackage{colortbl}
 \usepackage{ragged2e}
 \AtBeginDocument{\hypersetup{hidelinks}}
 % Explicit file loading avoids invalid named-instance indices in Windows XeTeX.
@@ -58,39 +59,38 @@
     morekeywords={check_tam_data},keywordstyle=\color{black}\bfseries,
     commentstyle=\color{tamgrey},
     stringstyle=\color{black}},#1}
-\newtcolorbox{mathbox}[2][]{enhanced,boxsep=0pt,colback=white,colframe=tamrule,arc=.7mm,boxrule=.35pt,
-  colbacktitle=tamcode,coltitle=black,fonttitle=\bfseries\normalsize,
-  title={#2},top=1.2mm,bottom=1.2mm,left=2mm,right=2mm,#1}
+\newtcolorbox{mathbox}[2][]{enhanced,boxsep=0pt,colback=white,colframe=white,
+  sharp corners,boxrule=0pt,borderline north={.6pt}{0pt}{tamnavy},
+  colbacktitle=white,coltitle=tamnavy,fonttitle=\bfseries\fontsize{15}{17}\selectfont,
+  title={#2},toptitle=1.5mm,bottomtitle=1mm,
+  top=1.2mm,bottom=1.2mm,left=0mm,right=0mm,#1}
 \newcommand{\smallkey}[1]{{\color{black}\bfseries #1}}
 \newcommand{\panelnote}[1]{{\color{tamgrey}\fontsize{7.0}{9.3}\selectfont #1}}
 \newcommand{\micro}[1]{{\fontsize{7.0}{9.0}\selectfont #1}}
 \newcommand{\pageheader}[2]{%
   \noindent\begin{minipage}[c]{.83\linewidth}
   {\color{tamnavy}\fontsize{24}{27}\selectfont\bfseries #1}\\[.5mm]
-  {\color{tamgrey}\fontsize{8.5}{10}\selectfont #2}
+  {\color{tamgrey}\fontsize{11}{13}\selectfont #2}
   \end{minipage}\hfill
   \begin{minipage}[c]{.145\linewidth}\raggedleft
-  \raisebox{0pt}[18.5mm][0pt]{\includegraphics[height=22.5mm]{logo.pdf}}
+  \raisebox{-1.5mm}[21.5mm][0pt]{\includegraphics[height=30mm]{logo.pdf}}
   \end{minipage}\par\vspace{1mm}
 }
 
 % Small printed input schematics: data stay in their original column order.
 \newenvironment{inputtable}[1]{%
   \begingroup\fontsize{6.5}{8.3}\selectfont
-  \renewcommand{\arraystretch}{.95}\begin{tabular}{#1}%
+  \renewcommand{\arraystretch}{1.08}\arrayrulecolor{white}\rowcolors{2}{tampale}{tampale}\begin{tabular}{#1}%
 }{\end{tabular}\endgroup}
-\newcommand{\tablelabel}[1]{{\color{black}\bfseries\fontsize{8}{9}\selectfont #1}}
+\newcommand{\tablelabel}[1]{{\color{black}\ttfamily\fontsize{8}{9}\selectfont #1}}
 \newcommand{\tablegap}{\tikz[baseline=-.3ex]{%
   \foreach \y in {0,.6,1.2} {\fill (0,\y mm) circle[radius=.12mm];}}}
 \newcommand{\pagefooter}[1]{%
-  \par\vspace{1mm}\noindent
+  \par\vfill\noindent{\color{tamnavy}\rule{\linewidth}{.5pt}}\par\vspace{1mm}
   {\color{tamgrey}\fontsize{6.8}{8}\selectfont #1}\par
 }
 
 \newcommand{\sectitle}[3]{%
-  \noindent\begingroup
-  \setlength{\fboxsep}{1.5mm}%
-  \colorbox{#3}{\parbox{\dimexpr\linewidth-2\fboxsep\relax}{%
-    \color{white}\bfseries\fontsize{13}{15}\selectfont #1\quad #2}}%
-  \endgroup\par\vspace{1.2mm}
+  \noindent{\color{tamnavy}\rule{\linewidth}{.6pt}}\par\vspace{1.5mm}
+  {\color{tamnavy}\bfseries\fontsize{15}{17}\selectfont #1\ #2}\par\vspace{2mm}
 }
