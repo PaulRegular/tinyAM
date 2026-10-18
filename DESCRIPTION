@@ -13,6 +13,7 @@ Depends:
     R (>= 4.1.0)
 License: GPL (>= 3)
 URL: 
+    https://paulregular.github.io/tinyAM/,
     https://github.com/PaulRegular/tinyAM
 BugReports: 
     https://github.com/PaulRegular/tinyAM/issues
@@ -40,3 +41,4 @@ Suggests:
     flexdashboard,
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
+Config/Needs/website: pkgdown, pkgload, rmarkdown, flexdashboard

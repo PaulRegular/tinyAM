@@ -1,0 +1,81 @@
+url: https://paulregular.github.io/tinyAM/
+destination: docs
+development:
+  mode: unreleased
+template:
+  bootstrap: 5
+  bslib:
+    primary: '#003e56'
+    secondary: '#028f8d'
+    danger: '#f05c28'
+    base_font: 'Arial, sans-serif'
+    heading_font: 'Arial, sans-serif'
+navbar:
+  structure:
+    left: [intro, reference, cheatsheet, dashboard]
+    right: [search, github]
+  components:
+    intro:
+      text: Home
+      href: index.html
+    cheatsheet:
+      text: Cheatsheet
+      href: cheatsheet/tinyAM_cheatsheet.pdf
+    dashboard:
+      text: Dashboard
+      href: cheatsheet/index.html
+reference:
+- title: Model overview and example data
+- contents:
+  - tinyAM-model
+  - cod_obs
+- title: Prepare inputs
+- contents:
+  - make_tam_data
+  - as_tam_data
+  - check_tam_data
+  - check_obs
+  - cut_int
+  - prepare_tam
+  - make_par
+- title: Specify model formulas
+- contents:
+  - recruitment_formulas
+  - catchability_curves
+  - formula_effects
+- title: Fit, diagnose and forecast
+- contents:
+  - fit_tam
+  - update.tam_fit
+  - check_tam
+  - tam_fit_summary
+  - fit_retro
+  - compute_hindcast_rmse
+  - compute_mohns_rho
+  - sim_tam
+- title: Visualize and compare
+- contents:
+  - vis_tam
+  - plot_tam
+  - plot_age_year
+  - plot_matrix
+  - tam_cols
+- title: Tidy model results
+- contents:
+  - tidy_tam
+  - tidy_obs_pred
+  - tidy_pop
+  - tidy_par
+  - tidy_recruitment
+  - tidy_sdrep
+  - tidy_rep
+  - tidy_array
+  - stack_list
+  - stack_nested
+  - trans_est
+- title: Process mathematics
+- contents:
+  - nll_fun
+  - dprocess_rw
+  - dprocess_ar1
+  - dprocess_cor_rw

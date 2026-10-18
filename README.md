@@ -13,6 +13,40 @@ The package is designed to be **flexible, modular, and lightweight**, with an em
 
 Rather than providing a collection of predefined assessment models, tinyAM uses a common age-structured state-space framework whose components can be modified to represent different hypotheses about population and fishery dynamics.
 
+## Documentation and examples
+
+The [package website](https://paulregular.github.io/tinyAM/) provides the function
+reference, [cheatsheet](https://paulregular.github.io/tinyAM/cheatsheet/tinyAM_cheatsheet.pdf)
+and [example dashboard](https://paulregular.github.io/tinyAM/cheatsheet/).
+These web links become available after the first Pages deployment.
+
+To reproduce the cheatsheet locally:
+
+```sh
+Rscript cheatsheet/examples.R prepare
+Rscript cheatsheet/examples.R render
+```
+
+The first command reuses valid fits and hindcasts, then writes a combined
+main-fit dashboard and individual hindcast dashboards to `cheatsheet/output/`.
+The individual dashboards share one local `output/assets/` directory; keep it
+with their HTML files. The combined dashboard is self-contained.
+The second command renders the PDF without fitting. Current results live in ignored
+`cheatsheet/cache/`; temporary rendering files are removed automatically.
+Use `Rscript cheatsheet/examples.R dashboard` to build just the combined dashboard.
+
+To preview the package site, run
+`withr::with_envvar(c(CI = "true"), pkgdown::build_site(preview = FALSE))`.
+This skips pkgdown's optional external favicon service.
+The manually triggered **Package website** workflow also adds the PDF and combined
+dashboard. Once the workflow is available on the default branch, enable **GitHub
+Actions** under **Settings > Pages > Build and deployment**, allow the selected
+branch in the `github-pages` environment, then run the workflow from Actions.
+The workflow deploys generated artifacts; site files and HTML are not committed.
+
+Historical cheatsheet trials are recorded in Git, including archival commit
+`9920c9a`; retired experiments are absent from the current checkout.
+
 ## Philosophy
 
 tinyAM is intended primarily as a **model-development and experimentation tool**.
@@ -122,7 +156,7 @@ Limited SSB variation can leave curve shape poorly estimated even in a
 converged fit. `tidy_recruitment()` provides parent pairs, predictions and
 residuals; `vis_tam()` adds a stock–recruitment page when a curve is fitted.
 See `?recruitment_formulas` for equations and safeguards, and
-[runnable examples](inst/examples/example_recruitment.R).
+[runnable examples](https://github.com/PaulRegular/tinyAM/blob/HEAD/inst/examples/example_recruitment.R).
 
 ## Rising mean F curves
 
@@ -139,7 +173,7 @@ Ordinary terms supply baseline F. `mono()` fits non-negative log-F increments
 selectivity. Annual realized F can depart from these means. RW residuals do
 not identify static age curves, so these combinations are rejected. See
 `?catchability_curves` for equations, grouping and uncertainty limitations, and
-[fitting examples](inst/examples/example_f_mean_curves.R).
+[fitting examples](https://github.com/PaulRegular/tinyAM/blob/HEAD/inst/examples/example_f_mean_curves.R).
 
 ## Monotonic survey catchability
 

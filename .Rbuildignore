@@ -7,3 +7,6 @@
 ^cheatsheet$
 ^\.positai$
 ^\.claude$
+^_pkgdown\.yml$
+^docs$
+^AGENTS\.md$

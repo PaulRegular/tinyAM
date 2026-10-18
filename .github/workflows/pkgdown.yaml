@@ -1,0 +1,62 @@
+name: Package website
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: read
+    steps:
+      - uses: actions/checkout@v6
+      - uses: r-lib/actions/setup-pandoc@v2
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          dependencies: '"hard"'
+          needs: website
+          extra-packages: local::.
+      - uses: actions/configure-pages@v5
+      - name: Build package documentation
+        shell: Rscript {0}
+        run: pkgdown::build_site(preview = FALSE)
+      - name: Build combined dashboard
+        run: Rscript cheatsheet/examples.R dashboard
+      - name: Add cheatsheet and dashboard
+        shell: Rscript {0}
+        run: |
+          unlink("docs/AGENTS.html")
+          sitemap <- xml2::read_xml("docs/sitemap.xml")
+          xml2::xml_remove(xml2::xml_find_all(sitemap, "//*[local-name()='url'][*[local-name()='loc' and contains(., '/AGENTS.html')]]"))
+          xml2::write_xml(sitemap, "docs/sitemap.xml")
+          dir.create("docs/cheatsheet/output", recursive = TRUE, showWarnings = FALSE)
+          stopifnot(file.copy("cheatsheet/output/tinyAM_dashboard.html", "docs/cheatsheet/index.html", overwrite = TRUE))
+          stopifnot(file.copy("cheatsheet/tinyAM_cheatsheet.pdf", "docs/cheatsheet/tinyAM_cheatsheet.pdf", overwrite = TRUE))
+          writeLines('<!doctype html><meta charset="utf-8"><meta http-equiv="refresh" content="0; url=../index.html"><a href="../index.html">Open dashboard</a>', "docs/cheatsheet/output/tinyAM_dashboard.html")
+          stopifnot(all(file.exists(c("docs/index.html", "docs/reference/index.html", "docs/cheatsheet/index.html", "docs/cheatsheet/tinyAM_cheatsheet.pdf"))))
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: docs
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/deploy-pages@v4
+        id: deployment
