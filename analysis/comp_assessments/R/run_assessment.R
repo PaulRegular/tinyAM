@@ -22,11 +22,11 @@ rm(.assessment_helper)
     any(!is.finite(weights$weight) | weights$weight <= 0)) {
     cli::cli_abort("Catch reporting requires one positive catch weight for every predicted year and age.")
   }
-  kg_per_count <- tinyAM:::.unit_scale(unique(catch$unit), "numbers")
-  if (length(kg_per_count) != 1L || !is.finite(kg_per_count)) {
+  count_scale <- tinyAM:::.unit_scale(unique(catch$unit), "numbers")
+  if (length(count_scale) != 1L || !is.finite(count_scale)) {
     cli::cli_abort("Catch reporting requires known, consistent abundance units in the fitted catch table.")
   }
-  predicted <- tapply(catch$pred * kg_per_count * weights$weight[index] / 1000, catch$year, sum)
+  predicted <- tapply(catch$pred * count_scale * weights$weight[index] / 1000, catch$year, sum)
   totals <- reporting$totals
   if (anyDuplicated(totals$year) || any(!is.finite(totals$yield) | totals$yield < 0)) {
     cli::cli_abort("Catch reporting requires unique years and non-negative total yields in kg.")
