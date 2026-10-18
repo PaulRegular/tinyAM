@@ -17,7 +17,7 @@ URL:
 BugReports: 
     https://github.com/PaulRegular/tinyAM/issues
 Imports:
-    RTMB,
+    RTMB (>= 2.0),
     MASS,
     Matrix,
     future,

@@ -331,6 +331,22 @@ relative to terminal historical F, not compounded across years. There are
 no projected F process states. Recruitment, N, and active M processes extend
 forward under the same equations. A zero F multiplier is replaced by
 \code{1e-12} with a warning because the catch equation is evaluated on the log scale.
+Alternatively, \code{proj_settings$catch} fixes annual catch biomass, and an
+AD-aware root solver chooses the nonnegative multiplier to satisfy
+\deqn{C_t=\sum_a N_{t,a}W_{t,a}\frac{k_tF_{H,a}}{k_tF_{H,a}+M_{t,a}}
+(1-e^{-(k_tF_{H,a}+M_{t,a})}).}
+Catch targets use native abundance-times-weight units. They constrain modeled
+removals, not noisy simulated observation totals. Biology is updated within
+the plus group before solving each year. Zero catch gives exactly zero F;
+unattainable targets are errors, not reduced quotas. Fixed zero F has zero
+uncertainty on its reported scale. Catch control with zero-lag recruitment
+and spawning-time SSB is rejected because F and recruitment depend on each other.
+
+Active AR1 M states already extend into projection years. Their conditional
+log-scale forecast is \eqn{\log\mu_{M,H+h,b}+\phi_y^h\eta^M_{H,b}};
+simulation includes conditional innovations with the existing age covariance
+and innovation SD normalization. This is not an immediate reset to mean M.
+
 Weight and maturity use age-specific arithmetic
 means over the requested recent historical years; other covariates are copied
 from the last available table year. Future catch and index observations are

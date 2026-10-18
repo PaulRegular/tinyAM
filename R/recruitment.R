@@ -127,6 +127,11 @@
     if (curve$lag == 0L && any(dat$W[, 1L] * dat$P[, 1L] != 0)) {
       cli::cli_abort("Same-year SSB is circular when recruits contribute mature biomass. Use a positive lag.")
     }
+    if (curve$lag == 0L && !is.null(dat$proj_settings$catch) &&
+        (any(dat$spawn_time * dat$W * dat$P > 0) ||
+         (!is.null(dat$plus_ages) && any(dat$spawn_time_plus * dat$W_plus_input * dat$P_plus_input > 0)))) {
+      cli::cli_abort("Catch-controlled projections with spawning-time SSB and a zero-lag recruitment curve are circular. Use a positive recruitment lag.")
+    }
     parent <- eligible - curve$lag
     possible <- rowSums(dat$W * dat$P) > 0
     if (!is.null(dat$plus_ages)) possible <- possible | rowSums(dat$W_plus_input * dat$P_plus_input) > 0
@@ -290,7 +295,7 @@ ricker <- function(ssb, lag = NULL) {
 }
 
 # One chronological population construction for estimation and simulation.
-.population_states <- function(par, dat, Z, simulate = FALSE, initialize = FALSE) {
+.population_states <- function(par, dat, Z, simulate = FALSE, initialize = FALSE, F = NULL, M = NULL) {
   "[<-" <- RTMB::ADoverload("[<-")
   T <- length(dat$years)
   A <- length(dat$ages)
@@ -393,6 +398,13 @@ ricker <- function(ssb, lag = NULL) {
       }
       u[y] <- log_recruitment[y] - log_mu_R[y]
     }
+    if (dat$is_proj[y] && !is.null(dat$proj_settings$catch) && !is.null(F)) {
+      terminal <- max(which(!dat$is_proj))
+      k <- .solve_catch(dat$proj_settings$catch[as.character(dat$years[y])],
+        exp(log_N[y, ]), W[y, ], F[terminal, ], M[y, ], dat$years[y])
+      F[y, ] <- k * F[terminal, ]
+      Z[y, ] <- F[y, ] + M[y, ]
+    }
     ssb_mat[y, ] <- .ssb_contributions(exp(log_N[y, ]), W[y, ], P[y, ], Z[y, ], dat,
       if (!is.null(dat$plus_ages)) exp(log_N_plus[y, ]) else NULL,
       year = y
@@ -405,7 +417,8 @@ ricker <- function(ssb, lag = NULL) {
     log_mu_R = log_mu_R, log_pred_R = log_pred_R,
     eta_R = log_recruitment - log_pred_R, eta_R_state = u,
     W = W, P = P, ssb_mat = ssb_mat,
-    N_plus = if (!is.null(dat$plus_ages)) exp(log_N_plus) else NULL
+    N_plus = if (!is.null(dat$plus_ages)) exp(log_N_plus) else NULL,
+    F = F, Z = Z
   )
 }
 
@@ -439,7 +452,7 @@ ricker <- function(ssb, lag = NULL) {
   if (any(dat$is_proj)) {
     F[dat$is_proj, ] <- sweep(
       exp(par$log_f[rep(nrow(par$log_f), sum(dat$is_proj)), , drop = FALSE]),
-      1L, dat$proj_settings$F_mult, `*`
+      1L, if (is.null(dat$proj_settings$F_mult)) rep(1, sum(dat$is_proj)) else dat$proj_settings$F_mult, `*`
     )
   }
   initial <- .population_states(par, dat, F + M)

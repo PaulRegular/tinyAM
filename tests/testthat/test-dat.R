@@ -234,7 +234,7 @@ test_that("prepare_tam recycles, validates, names proj_settings$F_mult", {
       data = cod_obs,
       proj_settings = list(n_proj = 2, n_mean = 3, F_mult = c(0, 0.5))
     ),
-    "Zero F not supported; replacing 0 with 1e-12"
+    "Zero F multiplier is approximated by 1e-12"
   )
   expect_true(any(abs(dat3$proj_settings$F_mult - 1e-12) < 1e-18))
   expect_true(any(abs(dat3$proj_settings$F_mult - 0.5) < 1e-18))

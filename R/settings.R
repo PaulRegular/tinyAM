@@ -6,7 +6,7 @@
 
 .settings_defaults <- function(name) {
   if (name == "proj_settings") {
-    return(list(n_proj = NULL, n_mean = 3, F_mult = 1))
+    return(list(n_proj = NULL, n_mean = 3, F_mult = 1, catch = NULL))
   }
   eval(formals(prepare_tam)[[name]], envir = environment(prepare_tam))
 }
@@ -33,7 +33,14 @@
   unknown <- setdiff(keys, allowed)
   if (length(unknown)) cli::cli_abort("Unknown {.arg {name}} setting(s): {paste(unknown, collapse = ', ')}.")
   if (is.null(base)) base <- .settings_defaults(name)
+  if (name == "proj_settings") {
+    controls <- intersect(keys, c("catch", "F_mult"))
+    active <- controls[!vapply(changes[controls], is.null, logical(1))]
+    if (length(active) > 1L) cli::cli_abort("Specify catch or F_mult, not both, in proj_settings.")
+    if (length(active)) base[setdiff(c("catch", "F_mult"), active)] <- list(NULL)
+  }
   base[keys] <- changes
+  if (name == "proj_settings" && is.null(base$catch) && is.null(base$F_mult)) base$F_mult <- 1
   required <- switch(name,
     N_settings = c("process", "init"),
     rec_settings = "process",
@@ -41,7 +48,7 @@
     M_settings = "process",
     catch_settings = c("sd_form"),
     index_settings = c("sd_form", "q_form", "q_link"),
-    proj_settings = c("n_proj", "n_mean", "F_mult")
+    proj_settings = c("n_proj", "n_mean")
   )
   missing <- required[vapply(base[required], is.null, logical(1))]
   if (length(missing)) cli::cli_abort("{.arg {name}} requires non-NULL {paste(missing, collapse = ', ')}.")
@@ -81,6 +88,6 @@
     "@usage", paste0(name, "("),
     paste0("  ", entries, c(rep(",", length(entries) - 1L), "")), ")", "",
     "# Optional projections:",
-    "# proj_settings = list(n_proj = 3, n_mean = 3, F_mult = 1)"
+    "# proj_settings = list(n_proj = 3, n_mean = 3, F_mult = 1, catch = NULL)"
   ), collapse = "\n")
 }

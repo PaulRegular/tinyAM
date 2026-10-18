@@ -356,6 +356,11 @@ tidy_sdrep <- function(fit, interval = 0.95) {
       trans_est(transform = exp)
   })
   names(df) <- gsub("log_", "", names(vals))
+  if (!is.null(fit$dat$proj_settings$catch) && !is.null(df$F_bar)) {
+    zero <- df$F_bar$year %in% as.numeric(names(fit$dat$proj_settings$catch)[fit$dat$proj_settings$catch == 0])
+    df$F_bar[zero, c("est", "lwr", "upr", "se")] <- 0
+    df$F_bar$se_scale[zero] <- "reported"
+  }
   for (nm in names(df)) df[[nm]]$unit <- .population_unit(fit$dat, nm)
   df
 }

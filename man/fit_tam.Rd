@@ -24,7 +24,7 @@ fit_tam(
 )
 
 # Optional projections:
-# proj_settings = list(n_proj = 3, n_mean = 3, F_mult = 1)
+# proj_settings = list(n_proj = 3, n_mean = 3, F_mult = 1, catch = NULL)
 }
 \arguments{
 \item{data}{A named list of tidy observation tables (e.g., \code{catch}, \code{index},
@@ -178,10 +178,18 @@ near one. q can approach a boundary with large coefficients and SEs.
 \item \code{n_mean}: number of recent historical years (default \code{3}) used to average weight and
 maturity by age. Catch/index observations in projection years are missing.
 Other columns are copied from the last available year in each table.
-\item \code{F_mult}: multiplier to apply to terminal F to set a level to carry forward in the projection years
-(default \code{1}, status quo F). Can be a value of length 1 or
+\item \code{F_mult}: multiplier of terminal historical F (default \code{1}, status quo).
+Can be a value of length 1 or
 length = \code{n_proj}. When it is a vector of length one, that multiplier is recycled across all
 projection years.
+\item \code{catch}: optional projected catch biomass in native abundance-times-weight
+units. Solve one multiplier of terminal F-at-age each year to attain these
+removals. Use one value repeated across years or one per projection year;
+named vectors must identify every projection year. No unit conversion occurs.
+Supplying catch clears inherited F_mult, and vice versa. Explicitly supplying
+both non-NULL controls is an error. Clearing both restores status-quo F.
+Targets must be below available vulnerable biomass; failures do not cap catch.
+Zero catch gives exactly zero F. See \link{tinyAM-model} for equations and timing.
 }}
 
 \item{interval}{Level in \verb{(0, 1)} to use to generate confidence intervals,

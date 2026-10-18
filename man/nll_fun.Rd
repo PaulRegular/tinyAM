@@ -71,7 +71,9 @@ RW processes retain their starting state because it has no process density.
 For N, the first \code{log_n} row is retained and its starting residual is computed
 against the newly simulated cohort prediction. Subsequent residuals follow
 the temporal walk. No new F states are drawn for projection years: projected
-F is terminal historical F times the specified multiplier.
+F scales terminal historical F by a supplied multiplier or a multiplier solved
+from projected catch biomass. Both paths use the same chronological population.
+Active M states already extend into projected years under their process density.
 }
 \section{Simulate from fitted parameters}{
 p_hat <- as.list(sdrep, "Estimate")

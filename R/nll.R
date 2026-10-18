@@ -46,7 +46,9 @@
 #' For N, the first `log_n` row is retained and its starting residual is computed
 #' against the newly simulated cohort prediction. Subsequent residuals follow
 #' the temporal walk. No new F states are drawn for projection years: projected
-#' F is terminal historical F times the specified multiplier.
+#' F scales terminal historical F by a supplied multiplier or a multiplier solved
+#' from projected catch biomass. Both paths use the same chronological population.
+#' Active M states already extend into projected years under their process density.
 #'
 #' @param par Parameter list with the structure produced by [make_par()].
 #' @param dat Data and settings returned by [prepare_tam()].
@@ -154,7 +156,7 @@ nll_fun <- function(par, dat, simulate = FALSE) {
 
   log_F[!is_proj, ] <- log_f
   if (n_proj > 0) {
-    log_k <- log(proj_settings$F_mult)
+    log_k <- if (is.null(proj_settings$F_mult)) rep(0, n_proj) else log(proj_settings$F_mult)
     log_f_last <- log_f[rep(nrow(log_f), n_proj), , drop = FALSE]
     proj_log_F <- sweep(log_f_last, 1, log_k, `+`)
     log_F[is_proj, ] <- proj_log_F
@@ -175,7 +177,11 @@ nll_fun <- function(par, dat, simulate = FALSE) {
 
   ## Population states and recruitment ----
 
-  population <- .population_states(par, dat, Z, simulate)
+  population <- .population_states(par, dat, Z, simulate, F = F, M = M)
+  F <- population$F
+  Z <- population$Z
+  log_F <- log(F)
+  log_Z <- log(Z)
   log_N <- population$log_N
   pred_log_N <- population$pred_log_N
   log_recruitment <- population$log_recruitment
@@ -322,12 +328,18 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   obs <- exp(log_obs)
   obs[is_missing] <- NA
 
+  zero_F <- if (is.null(proj_settings$catch)) rep(FALSE, n_years) else c(rep(FALSE, sum(!is_proj)), proj_settings$catch == 0)
   F_full <- apply(F, 1, max)
-  S <- sweep(F, 1, F_full, "/")
+  S <- sweep(F, 1, F_full + zero_F, "/")
+  if (!is.null(proj_settings$catch)) {
+    zero <- which(zero_F)
+    if (length(zero)) S[zero, ] <- S[rep(max(which(!is_proj)), length(zero)), , drop = FALSE]
+  }
 
   ia <- as.character(F_settings$mean_ages)
   F_bar <- rowSums(F[, ia, drop = FALSE] * N[, ia, drop = FALSE]) / rowSums(N[, ia, drop = FALSE])
-  log_F_bar <- log(F_bar)
+  # Fixed zero catches imply exactly zero F; avoid log(0) in ADREPORT.
+  log_F_bar <- log(F_bar + zero_F)
   ia <- as.character(M_settings$mean_ages)
   M_bar <- rowSums(M[, ia, drop = FALSE] * N[, ia, drop = FALSE]) / rowSums(N[, ia, drop = FALSE])
   log_M_bar <- log(M_bar)

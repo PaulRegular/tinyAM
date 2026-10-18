@@ -68,11 +68,11 @@ test_that("updates retain requested formulas rather than preparation-adjusted fo
 
 test_that("projection settings can be enabled, partially changed and disabled", {
   cl <- update(default_fit, proj_settings = list(n_proj = 2), evaluate = FALSE)
-  expect_identical(cl$proj_settings, list(n_proj = 2, n_mean = 3, F_mult = 1))
+  expect_identical(cl$proj_settings, list(n_proj = 2, n_mean = 3, F_mult = 1, catch = NULL))
   object <- default_fit
-  object$refit_args$proj_settings <- list(n_proj = 4, n_mean = 2, F_mult = .8)
+  object$refit_args$proj_settings <- list(n_proj = 4, n_mean = 2, F_mult = .8, catch = NULL)
   cl <- update(object, proj_settings = list(n_proj = 1), evaluate = FALSE)
-  expect_identical(cl$proj_settings, list(n_proj = 1, n_mean = 2, F_mult = .8))
+  expect_identical(cl$proj_settings, list(n_proj = 1, n_mean = 2, F_mult = .8, catch = NULL))
   expect_null(update(object, proj_settings = NULL, evaluate = FALSE)$proj_settings)
   expect_equal(make_test_dat(proj_settings = list())$proj_settings$n_proj, 0)
   expect_equal(sum(make_test_dat(proj_settings = list(n_proj = 2))$is_proj), 2)
@@ -97,7 +97,7 @@ test_that("Usage shows every supported settings entry and optional projections",
       expect_equal(entries, tinyAM:::.settings_defaults(name))
     }
     expect_null(call$proj_settings)
-    expect_match(usage, "# proj_settings = list(n_proj = 3, n_mean = 3, F_mult = 1)", fixed = TRUE)
+    expect_match(usage, "# proj_settings = list(n_proj = 3, n_mean = 3, F_mult = 1, catch = NULL)", fixed = TRUE)
   }
 })
 

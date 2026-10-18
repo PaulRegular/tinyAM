@@ -489,10 +489,18 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #' - `n_mean`: number of recent historical years (default `3`) used to average weight and
 #'   maturity by age. Catch/index observations in projection years are missing.
 #'   Other columns are copied from the last available year in each table.
-#' - `F_mult`: multiplier to apply to terminal F to set a level to carry forward in the projection years
-#'   (default `1`, status quo F). Can be a value of length 1 or
+#' - `F_mult`: multiplier of terminal historical F (default `1`, status quo).
+#'   Can be a value of length 1 or
 #'   length = `n_proj`. When it is a vector of length one, that multiplier is recycled across all
 #'   projection years.
+#' - `catch`: optional projected catch biomass in native abundance-times-weight
+#'   units. Solve one multiplier of terminal F-at-age each year to attain these
+#'   removals. Use one value repeated across years or one per projection year;
+#'   named vectors must identify every projection year. No unit conversion occurs.
+#'   Supplying catch clears inherited F_mult, and vice versa. Explicitly supplying
+#'   both non-NULL controls is an error. Clearing both restores status-quo F.
+#'   Targets must be below available vulnerable biomass; failures do not cap catch.
+#'   Zero catch gives exactly zero F. See [tinyAM-model] for equations and timing.
 #'
 #' @return
 #' A named list `dat` containing:
@@ -630,26 +638,13 @@ prepare_tam <- function(
     dat$proj_years <- setdiff(years_plus, dat$years)
     dat$is_proj <- years_plus %in% dat$proj_years
     dat$years <- years_plus # update years vec to include proj_years
-    if (is.null(proj_settings$F_mult) || any(is.na(proj_settings$F_mult))) {
-      cli::cli_abort("{.strong Please specify proj_settings$F_mult (non-NA).}")
+    control <- if (is.null(proj_settings$catch)) "F_mult" else "catch"
+    values <- .projection_vector(proj_settings[[control]], dat$proj_years, control)
+    if (control == "F_mult" && any(values == 0)) {
+      cli::cli_warn("Zero F multiplier is approximated by 1e-12; use catch = 0 for exactly zero projected removals.")
+      values[values == 0] <- 1e-12
     }
-    if (!is.numeric(proj_settings$F_mult) || any(!is.finite(proj_settings$F_mult)) ||
-      any(proj_settings$F_mult < 0)) {
-      cli::cli_abort("proj_settings$F_mult must contain finite, non-negative multipliers.")
-    }
-    if (length(proj_settings$F_mult) == 1L) {
-      dat$proj_settings$F_mult <- rep(proj_settings$F_mult, proj_settings$n_proj)
-    } else {
-      dat$proj_settings$F_mult <- proj_settings$F_mult
-    }
-    if (length(dat$proj_settings$F_mult) != dat$proj_settings$n_proj) {
-      cli::cli_abort("{.strong length(proj_settings$F_mult) must equal proj_settings$n_proj}")
-    }
-    if (any(dat$proj_settings$F_mult == 0)) {
-      cli::cli_warn("Zero F not supported; replacing 0 with 1e-12.")
-      dat$proj_settings$F_mult[dat$proj_settings$F_mult == 0] <- 1e-12
-    }
-    names(dat$proj_settings$F_mult) <- dat$proj_years
+    dat$proj_settings[[control]] <- values
   } else {
     dat$proj_settings <- list(n_proj = 0)
     for (nm in names(dat$obs)) {
