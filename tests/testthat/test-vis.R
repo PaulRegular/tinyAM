@@ -9,13 +9,11 @@ dashboard_plots <- function(file) {
   con <- file(file, "rb")
   on.exit(close(con))
   html <- paste(readLines(con, warn = FALSE, encoding = "UTF-8"), collapse = "\n")
-  scripts <- regmatches(html, gregexpr(
-    '(?s)<script type="application/json"[^>]*>.*?</script>', html,
-    perl = TRUE
-  ))[[1L]]
+  scripts <- strsplit(html, '<script type="application/json"', fixed = TRUE)[[1L]][-1L]
   widgets <- lapply(scripts, function(script) {
-    json <- sub("^<script[^>]*>", "", script)
-    json <- sub("</script>$", "", json)
+    start <- regexpr(">", script, fixed = TRUE)[1L] + 1L
+    end <- regexpr("</script>", script, fixed = TRUE)[1L] - 1L
+    json <- substr(script, start, end)
     jsonlite::fromJSON(json, simplifyVector = FALSE)
   })
   lapply(Filter(function(widget) !is.null(widget$x$layout), widgets), `[[`, "x")
@@ -61,10 +59,10 @@ test_that("vis_tam renders cleanly and produces an HTML output", {
   expect_match(html, "<h3>Average F</h3>", fixed = TRUE)
   expect_false(grepl("<h3>Mean F</h3>", html, fixed = TRUE))
   age_year_plots <- Filter(
-    function(p) any(dashboard_metric(p) %in% c("N", "F", "M", "Selectivity", "Catch", "Index")),
+    function(p) any(dashboard_metric(p) %in% c("N", "F", "M", "Selectivity", "Catch", "Abundance index")),
     dashboard_plots(tmpfile)
   )
-  for (metric in c("N", "F", "M", "Selectivity", "Catch", "Index")) {
+  for (metric in c("N", "F", "M", "Selectivity", "Catch", "Abundance index")) {
     views <- Filter(function(p) identical(dashboard_metric(p), metric), age_year_plots)
     expect_true(all(c("Year", "Age") %in% vapply(views, function(p) {
       unlist(p$layout$xaxis$title)

@@ -23,3 +23,16 @@ test_that("signed trends include estimates and both interval endpoints", {
   d[c("est", "lwr", "upr")] <- lapply(d[c("est", "lwr", "upr")], abs)
   expect_equal(plotly::plotly_build(plot_trend(d))$x$layout$yaxis$range[1], 0)
 })
+
+test_that("missing reference intervals do not remove its estimated line", {
+  d <- expand.grid(year = 2000:2003, model = c("Official", "tinyAM"))
+  d$est <- seq_len(nrow(d))
+  d$lwr <- d$est - .5
+  d$upr <- d$est + .5
+  d[d$model == "Official", c("lwr", "upr")] <- NA_real_
+  p <- plotly::plotly_build(plot_trend(d, color = ~model, add_buttons = FALSE))
+  lines <- Filter(function(x) identical(x$mode, "lines") && is.null(x$fill), p$x$data)
+  expect_setequal(vapply(lines, `[[`, character(1), "name"), c("Official", "tinyAM"))
+  official <- Filter(function(x) identical(x$name, "Official"), lines)[[1L]]
+  expect_equal(as.numeric(official$y), d$est[d$model == "Official"])
+})

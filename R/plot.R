@@ -188,7 +188,7 @@ plot_trend <- function(
   limits <- range(c(0, limits))
   padding <- max(diff(limits), abs(limits), 1e-8) * .05
   limits <- c(if (limits[1] < 0) limits[1] - padding else 0, limits[2] + padding)
-  p <- if (single_x) plotly::add_markers(p, y = y) else plotly::add_lines(p, y = y)
+  p <- if (single_x) plotly::add_markers(p, data = data, y = y) else plotly::add_lines(p, data = data, y = y)
   p <- p |> plotly::layout(
       title = title,
       xaxis = list(title = xlab),
