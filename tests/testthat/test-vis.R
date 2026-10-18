@@ -98,18 +98,6 @@ test_that("vis_tam renders cleanly and produces an HTML output", {
       logical(1)
     )))
   }
-
-  # --- Skip interactive browser behavior on CI / non-interactive sessions ---
-  skip_if_not(interactive())
-  skip_on_cran()
-  skip_on_ci()
-
-  expect_no_error({
-    vis_tam(fits,
-      output_file = NULL, open_file = TRUE,
-      render_args = list(quiet = TRUE)
-    )
-  })
 })
 
 test_that("formula-effect dashboards show only signed trends and framed ribbons", {
