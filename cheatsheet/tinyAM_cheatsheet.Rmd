@@ -22,10 +22,16 @@ example <- readRDS("cache/examples.rds")
 if (is.null(example$scores)) {
   cli::cli_abort("The example run is incomplete. Finish cheatsheet/examples.R first.")
 }
-revision <- system2("git", c("-C", "..", "rev-parse", "HEAD"), stdout = TRUE)
-if (!identical(revision, example$provenance$revision)) {
-  cli::cli_abort("The package revision changed. Rerun cheatsheet/examples.R first.")
+package_files <- c(list.files("../R", pattern = "[.]R$", full.names = TRUE), "../DESCRIPTION", "../NAMESPACE")
+fingerprint <- tempfile()
+writeLines(paste(basename(package_files), unname(tools::md5sum(package_files))), fingerprint)
+package_md5 <- unname(tools::md5sum(fingerprint))
+unlink(fingerprint)
+if (!identical(package_md5, example$provenance$package_md5) ||
+    !identical(unname(tools::md5sum("examples.R")), example$provenance$script_md5)) {
+  cli::cli_abort("The package or generator changed. Rerun cheatsheet/examples.R first.")
 }
+
 dat <- example$dat
 script <- readLines("examples.R", warn = FALSE)
 excerpt <- function(name) {
@@ -147,15 +153,15 @@ if (file.info("../man/figures/logo.svg")$mtime > file.info("logo.pdf")$mtime) {
 \smallkey{Explore model fits}\par\vspace{1mm}
 \inputcode{dashboard}\par\vspace{2mm}
 \panelnote{\href{tinyAM_dashboard.html}{\textbf{Open the comparison dashboard}}. Fishery $\rightarrow$ Numbers-at-age, then Residuals. Keep HTML beside this PDF.}\par\vspace{3mm}
-\smallkey{Test observation forecast skill}\par\vspace{1mm}
+\smallkey{Test survey forecast skill}\par\vspace{1mm}
 \inputcode{hindcast}\par\vspace{2mm}
-\panelnote{Returns retrospective summaries and one-year-ahead observation forecast scores.}\par\vspace{2mm}
-\smallkey{Forecast log-RMSE}\par\vspace{1mm}
+\panelnote{Returns retrospective summaries and one-year-ahead survey forecast scores, conditional on observed catch biomass.}\par\vspace{2mm}
+\smallkey{Survey forecast log-RMSE}\par\vspace{1mm}
 \input{cache/table_scores.tex}\par\vspace{1mm}
 \panelnote{Lower is better. Rank only complete, numerically acceptable runs with identical forecast observations. Folds count scored years. * Main fit did not converge.}\par\vspace{4mm}
 \smallkey{SSB stability: latest 20 years}\par\vspace{1mm}
 \includegraphics[width=\linewidth]{cache/hindcast_ssb.pdf}\par\vspace{1mm}
-\panelnote{Base-model historical peels illustrate stability. Forecast RMSE scores catch/survey observations, not SSB.}
+\panelnote{Base-model historical peels illustrate stability. RMSE scores survey observations given actual removals; it does not score SSB.}
 \end{minipage}
 \pagefooter{Experimental software; check assumptions and diagnostics. Reproduce with \texttt{cheatsheet/examples.R}. github.com/PaulRegular/tinyAM}
 \clearpage
@@ -262,7 +268,7 @@ q_k=\{1+e^{-\eta_{q,k}}\}^{-1}.
 \micro{$s_i$: survey sampling fraction. $\sigma_i^0=1$ unless a baseline SD is provided. Gaussian formula effects can also modify log SD. Predictions are medians; zero/NA observations are excluded, with complete predictions.}
 \end{mathbox}\vspace{2mm}
 \smallkey{Check fit, uncertainty and predictive skill}\par\vspace{1mm}
-\micro{\texttt{check\_tam()} checks numerical and statistical diagnostics; \texttt{fit\_hindcast()} evaluates observation forecasts and retrospective stability.}
+\micro{\texttt{check\_tam()} checks numerical and statistical diagnostics; \texttt{fit\_hindcast()} evaluates survey forecasts given observed removals and retrospective stability.}
 \micro{The joint likelihood includes active process, formula-effect and observation densities. RTMB integrates random effects by Laplace approximation; intervals use local curvature. Standardized residuals $(\log Y_i-\log\widetilde Y_i)/\sigma_i$ depend on fitted, shrunken states. Convergence does not establish identifiability. Hindcasts return log RMSE and retrospective Mohn's $\rho$.}
 \end{minipage}
 \pagefooter{Equation details: \texttt{?\string"tinyAM-model\string"}, \texttt{?recruitment\_formulas}, \texttt{?catchability\_curves} · github.com/PaulRegular/tinyAM}

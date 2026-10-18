@@ -7,7 +7,7 @@ script <- grep("^--file=", commandArgs(), value = TRUE)
 script <- if (length(script)) sub("^--file=", "", script[1]) else sys.frame(1)$ofile
 script <- normalizePath(script, winslash = "/", mustWork = TRUE)
 repo <- normalizePath(dirname(dirname(script)), winslash = "/", mustWork = TRUE)
-pkgload::load_all(repo, quiet = TRUE)
+pkgload::load_all(repo, quiet = TRUE, helpers = FALSE)
 
 cache <- file.path(repo, "cheatsheet", "cache")
 dir.create(cache, recursive = TRUE, showWarnings = FALSE)
@@ -25,7 +25,16 @@ writeLines(model_code, file.path(cache, "model-code.txt"))
 provenance <- list(revision = revision, version = as.character(packageVersion("tinyAM")),
                    example_md5 = unname(tools::md5sum(file.path(cache, "model-code.txt"))),
                    generated = Sys.time())
+package_files <- c(list.files(file.path(repo, "R"), pattern = "[.]R$", full.names = TRUE),
+                   file.path(repo, c("DESCRIPTION", "NAMESPACE")))
+writeLines(paste(basename(package_files), unname(tools::md5sum(package_files))),
+           file.path(cache, "package-source.txt"))
+provenance$package_md5 <- unname(tools::md5sum(file.path(cache, "package-source.txt")))
+provenance$script_md5 <- unname(tools::md5sum(script))
+run_cache <- file.path(cache, paste0("run-", substr(provenance$package_md5, 1, 10), "-", substr(provenance$example_md5, 1, 10)))
+dir.create(run_cache, showWarnings = FALSE)
 stage <- Sys.getenv("TINYAM_CHEATSHEET_STAGE", "all")
+control <- match.arg(Sys.getenv("TINYAM_CHEATSHEET_CONTROL", "observed"), c("observed", "status_quo"))
 
 # Replace these source tables with your own data. The included cod data make
 # this complete example reproducible without external assessment files.
@@ -51,15 +60,16 @@ dat <- make_tam_data(
 # ---- end ----
 saveRDS(dat, file.path(cache, "data.rds"))
 provenance$data_md5 <- unname(tools::md5sum(file.path(cache, "data.rds")))
-saveRDS(list(dat = dat, provenance = provenance), file.path(cache, "examples.rds"))
+if (control == "observed") saveRDS(list(dat = dat, provenance = provenance), file.path(cache, "examples.rds"))
 
 records <- list()
 cached <- function(name, code) {
-  file <- file.path(cache, paste0(name, ".rds"))
+  digest <- if (startsWith(name, "hind_")) provenance$script_md5 else provenance$example_md5
+  file <- file.path(run_cache, paste0(name, "-", substr(digest, 1, 10), ".rds"))
   if (file.exists(file)) {
     record <- readRDS(file)
-    same <- identical(record$provenance[c("revision", "example_md5", "data_md5")],
-                      provenance[c("revision", "example_md5", "data_md5")])
+    same <- identical(record$provenance[c("package_md5", "example_md5", "data_md5", if (startsWith(name, "hind_")) "script_md5")],
+                      provenance[c("package_md5", "example_md5", "data_md5", if (startsWith(name, "hind_")) "script_md5")])
     if (same) {
       records[[name]] <<- record
       cli::cli_inform("{name}: reused cached result")
@@ -78,7 +88,7 @@ cached <- function(name, code) {
       invokeRestart("muffleWarning")
     }))[["elapsed"]]
   record <- list(value = value, warnings = warnings, error = error,
-                 elapsed_seconds = elapsed, provenance = provenance)
+                 elapsed_seconds = elapsed, provenance = provenance, file = basename(file))
   saveRDS(record, file)
   records[[name]] <<- record
   suffix <- if (is.null(error)) "" else paste0("; error: ", error)
@@ -123,17 +133,19 @@ fits <- list(Base = base, N_iid = N_iid, M_ar1 = M_ar1)
   fits <- fits[usable]
   checks <- lapply(fits, check_tam)
   attempts <- lapply(records, function(x) x[setdiff(names(x), "value")])
-  saveRDS(list(dat = dat, fits = fits, checks = checks, records = attempts,
+  if (control == "observed") saveRDS(list(dat = dat, fits = fits, checks = checks, records = attempts,
                provenance = provenance), file.path(cache, "examples.rds"))
 }
 
-if (stage == "all") {
+if (stage %in% c("all", "scores")) {
   # Cache each model separately so a long validation run can be resumed.
   future::plan(future::sequential)
   hind <- lapply(model_names, function(name) {
     if (is.null(fits[[name]])) return(NULL)
-    cached(paste0("hind_", name), function() {
-      fit_hindcast(fits[[name]], folds = 20, progress = FALSE)
+    cached(paste0("hind_", control, "_", name), function() {
+      if (control == "observed") fit_hindcast(fits[[name]], folds = 20, progress = FALSE) else {
+        fit_hindcast(fits[[name]], folds = 20, F_mult = 1, progress = FALSE)
+      }
     })
   })
   names(hind) <- model_names
@@ -142,22 +154,19 @@ if (stage == "all") {
 # rmse <- vapply(hind, `[[`, numeric(1), "hindcast_rmse")
 # ---- end ----
 
-  observations <- stack_list(base$obs_pred[c("catch", "index")], label = "type")
-  if (!"survey" %in% names(observations)) observations$survey <- NA_character_
-  keys <- c("type", "survey", "year", "age")
+  observations <- base$obs_pred$index
+  keys <- c("survey", "year", "age")
   key <- function(x) do.call(paste, c(x[keys], sep = "\r"))
   observed <- observations[observations$year %in% 2005:2024 &
                             is.finite(observations$obs) & observations$obs > 0, , drop = FALSE]
   observed$is_proj <- FALSE
   expected <- key(observed)
-  scores <- lapply(names(hind), function(name) {
-    result <- hind[[name]]
+  score_result <- function(result, name) {
     fit_converged <- isTRUE(checks[[name]]$is_converged)
     forecasts <- if (is.null(result)) NULL else {
-      d <- stack_list(result$obs_pred[c("catch", "index")], label = "type")
-      history <- unique(d[!d$is_proj & is.finite(d$obs) & d$obs > 0, keys, drop = FALSE])
+      d <- result$obs_pred$index
       x <- d[d$is_proj & d$year %in% 2005:2024 & is.finite(d$pred) & d$pred > 0, , drop = FALSE]
-      x[key(x) %in% key(history), , drop = FALSE]
+      x[key(x) %in% expected, , drop = FALSE]
     }
     if (is.null(forecasts) || !nrow(forecasts)) {
       return(data.frame(model = name, log_rmse = NA_real_, n_scored_folds = 0L,
@@ -173,18 +182,45 @@ if (stage == "all") {
       notes = if (!fit_converged) "Experimental main fit failed; not ranked" else {
         if (complete) "Same observations and 20 held-out years" else "Incomplete; not ranked"
       })
-  })
+  }
+  scores <- lapply(names(hind), function(name) score_result(hind[[name]], name))
   scores <- do.call(rbind, scores)
   scores$rank <- NA_integer_
   ranked <- scores$complete & scores$fit_converged
   scores$rank[ranked] <- rank(scores$log_rmse[ranked], ties.method = "min")
   scores <- scores[order(scores$rank, scores$model, na.last = TRUE), , drop = FALSE]
-  utils::write.csv(scores, file.path(cache, "forecast_scores.csv"), row.names = FALSE)
+  score_file <- if (control == "observed") "forecast_scores.csv" else "forecast_scores_status_quo.csv"
+  utils::write.csv(scores, file.path(cache, score_file), row.names = FALSE)
+  # Legacy runs already had conditional AR1 M; retain their index-only scores.
+  legacy <- lapply(model_names, function(name) {
+    file <- file.path(cache, paste0("hind_", name, ".rds"))
+    if (!file.exists(file)) return(NULL)
+    record <- readRDS(file)
+    if (is.null(record$value)) return(NULL)
+    result <- record$value
+    result$hindcast_rmse <- compute_hindcast_rmse(result$obs_pred$index)
+    score <- score_result(result, name)
+    score$method <- "previous_status_quo_index"
+    score$baseline_revision <- record$provenance$revision
+    score$rank <- NA_integer_
+    score
+  })
+  comparison <- Filter(Negate(is.null), legacy)
+  for (entry in c(observed = "forecast_scores.csv", status_quo = "forecast_scores_status_quo.csv")) {
+    file <- file.path(cache, entry)
+    if (!file.exists(file)) next
+    score <- utils::read.csv(file, stringsAsFactors = FALSE)
+    score$method <- if (entry == "forecast_scores.csv") "observed_catch_index" else "verified_AR1_status_quo_index"
+    score$baseline_revision <- provenance$revision
+    comparison[[length(comparison) + 1L]] <- score
+  }
+  utils::write.csv(do.call(rbind, comparison), file.path(cache, "forecast_method_comparison.csv"), row.names = FALSE)
 # ---- scores ----
 # Lower log-RMSE is better; rank only models scoring the same observations.
 # See cache/forecast_scores.csv for coverage and numerical failures.
 # ---- end ----
 
+  if (control == "observed") {
   if (is.null(hind[["Base"]]$pop$ssb)) {
     cli::cli_abort("The baseline hindcast retained no usable SSB estimates; inspect the cached warnings before rendering the cheatsheet.")
   }
@@ -218,9 +254,9 @@ if (stage == "all") {
   dashboard_files <- c(dashboard, file.path(repo, "cheatsheet",
     paste0("tinyAM_", names(fits), ".html")))
   manifest <- file.path(cache, "dashboard-source.rds")
-  dashboard_key <- provenance[c("revision", "example_md5", "data_md5")]
-  if (!all(file.exists(dashboard_files)) || !file.exists(manifest) ||
-      !identical(readRDS(manifest), dashboard_key)) {
+  dashboard_key <- provenance[c("package_md5", "example_md5", "data_md5")]
+  if (stage == "all" && (!all(file.exists(dashboard_files)) || !file.exists(manifest) ||
+      !identical(readRDS(manifest), dashboard_key))) {
     local({
       old <- setwd(file.path(repo, "cheatsheet"))
       on.exit(setwd(old))
@@ -238,8 +274,9 @@ vis_tam(model_list = fits, output_file = "tinyAM_dashboard.html",
   }
   attempts <- lapply(records, function(x) x[setdiff(names(x), "value")])
   # Keep the render index small; individual cache files retain every fitted object.
-  files <- setNames(file.path("cache", paste0(names(records), ".rds")), names(records))
+  files <- setNames(file.path("cache", basename(run_cache), vapply(records, `[[`, character(1), "file")), names(records))
   saveRDS(list(dat = dat, scores = scores, checks = checks, files = files,
                records = attempts, provenance = provenance, dashboard = dashboard),
           file.path(cache, "examples.rds"))
 }
+  }
