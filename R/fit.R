@@ -458,34 +458,55 @@ update.tam_fit <- function(object, ..., evaluate = TRUE) {
 
 #' Run a retrospective (peel) analysis
 #'
-#' @title Retrospective fits for TAM
+#' @title Retrospective fits and catch-conditioned hindcasts
 #'
 #' @description
 #' Creates a sequence of terminal-year peels and refits the model on each
 #' truncated year range.
 #'
 #' @details
-#' Peel years are `(max_year - folds) : max_year`, where `max_year` is the
-#' final historical year (`is_proj == FALSE`). Existing projection years
-#' never become terminal assessment years. This produces `folds + 1` fits,
-#' including the full historical assessment. The original fit is reused for
-#' that assessment unless hindcasts are requested.
-#' Each refit is attempted with `try()` so individual failures do not stop the sequence.
-#' Refits are generated via `update(fit, years = ...)`. This function uses
-#' [furrr::future_map()] to run the retros in parallel. Remember to plan your session (e.g.,
-#' `future::plan(multisession, workers = 4)`).
-#' Every hindcast replaces any input projection settings with one status-quo-F
-#' year without changing the supplied fit. Failed or non-converged fits are
-#' omitted from the returned tables and fits. Summary scores therefore describe
-#' the retained folds, not necessarily every requested fold.
+#' Ordinary retrospectives fit historical years only, removing inherited projections.
+#' `folds` peels plus the full historical reference are returned. Existing
+#' projection years never become terminal assessment years.
+#'
+#' [fit_hindcast()] additionally projects each peeled fit one year ahead and
+#' scores survey indices on the log scale. The default conditions on observed
+#' aggregate catch biomass in that held-out year. This is a conditional assessment
+#' of survey forecast skill, not a prediction of future removals or a forecast
+#' made with only information available at the original assessment date.
+#'
+#' Catch biomass is derived from complete raw catch-at-age times supplied weights,
+#' including retained ages within the model plus group. Stock weights may differ
+#' from fishery weights: supply authoritative annual catch totals when appropriate.
+#' Missing catch cells are not zero. Only the aggregate target is used; held-out
+#' catch composition, survey observations and biological inputs do not enter the
+#' fit. Forecast biology is based on training data, with `n_mean = 1`.
+#'
+#' The full historical reference has no forecast, so unknown catch beyond the
+#' observed period is not required. Failed fits and unavailable targets are
+#' excluded from stacked predictions but retained in `fold_diagnostics`.
+#' Mohn's rho is unavailable if the full historical reference failed.
+#' Scores describe retained observations; compare models only over identical
+#' forecast observations. Each survey observation receives equal weight.
+#'
+#' Refits use [furrr::future_map()]; set your own [future::plan()] for parallel
+#' execution. The supplied fit is unchanged.
 #'
 #' @param fit A fitted TAM object as returned by [fit_tam()].
 #' @param folds Integer; number of terminal peels (default `2`).
 #' @param start_from_fit Logical; use terminal parameter estimates as starting
 #'    values for retrospective fits?
-#' @param hindcast Logical; fit one-step-ahead projections? If `TRUE`,
-#'    `proj_settings` will be set to `list(n_proj = 1, n_mean = 1, F_mult = 1)`
-#'    to generate a one year status-quo F projection.
+#' @param hindcast Logical; add one-year projections to peeled fits? Prefer
+#'   [fit_hindcast()] for this workflow.
+#' @param catch Hindcast catch control: `"observed"` (default), a nonnegative
+#'   scalar applied to all forecast years, a numeric vector named by forecast
+#'   year, or `NULL` for status-quo F. Named values override observed catches;
+#'   remaining years use derived observed catches. Values use native biomass
+#'   units (catch numbers times individual weight), without automatic conversion.
+#' @param F_mult Optional hindcast multiplier, scalar or named by forecast year.
+#'   An explicitly supplied multiplier replaces the implicit observed-catch
+#'   default. Explicit non-NULL `catch` and `F_mult` together are an error.
+#'   These controls apply only when `hindcast = TRUE`.
 #' @param grad_tol Numeric tolerance for `max|grad|`. If `NULL` (default),
 #'   the tolerance stored on `fit` (from [fit_tam()]) is used; otherwise the
 #'   supplied value is passed to [check_tam()]. Folds failing numerical checks
@@ -503,9 +524,11 @@ update.tam_fit <- function(object, ..., evaluate = TRUE) {
 #'     function);
 #'   - `hindcast_rmse` (when `hindcast = TRUE`) - root mean squared error for
 #'     use as an overall measure of the forecast skill of the model (calculated
-#'     from catch and index observations using the [compute_hindcast_rmse()]
+#'     from survey index observations only using the [compute_hindcast_rmse()]
 #'     function); and,
-#'   - `fits` - refitted objects for each peel (named by terminal year).
+#'   - `fits` - retained fitted objects, named by terminal year; and
+#'   - `fold_diagnostics` - controls, targets, convergence, warnings, failure
+#'     reasons and scored-index counts for every requested fold.
 #' The `obs_pred` and `pop` objects are created using [tidy_tam()]. A `fold` column
 #' is added to each data.frame within these objects which specifies the terminal
 #' year.
@@ -521,6 +544,13 @@ update.tam_fit <- function(object, ..., evaluate = TRUE) {
 #'   head(retros$mohns_rho)
 #'
 #'   vis_tam(retros$fits)
+#'   hc <- fit_hindcast(fit, folds = 5, progress = TRUE)
+#'   hc$hindcast_rmse  # survey index forecasts conditional on observed removals
+#'   hc$fold_diagnostics
+#'   # Compare with a forecast of status-quo fishing:
+#'   hc_F <- fit_hindcast(fit, folds = 5, F_mult = 1, progress = TRUE)
+#'   # A named annual catch vector overrides derived catches for those years.
+#'   # fit_hindcast(fit, folds = 5, catch = c(`2020` = 1000))
 #' }
 #' }
 #'
@@ -540,141 +570,106 @@ fit_retro <- function(
   hindcast = FALSE,
   grad_tol = NULL,
   progress = TRUE,
-  globals = NULL
+  globals = NULL,
+  catch = "observed",
+  F_mult = NULL
 ) {
   .require_tam_fit(fit, arg = "fit")
-
-  if (is.null(grad_tol)) {
-    grad_tol <- if (!is.null(fit$grad_tol)) fit$grad_tol else 1e-2
+  if (missing(catch) && !is.null(F_mult)) catch <- NULL
+  if (hindcast && !is.null(catch) && !is.null(F_mult)) cli::cli_abort("Specify catch or F_mult, not both, for hindcasts.")
+  if (!hindcast && (!missing(catch) || !is.null(F_mult))) {
+    cli::cli_abort("catch and F_mult controls apply only to hindcasts; use proj_settings for ordinary model projections.")
   }
-
+  if (is.null(grad_tol)) grad_tol <- if (!is.null(fit$grad_tol)) fit$grad_tol else 1e-2
   min_year <- min(fit$dat$years[!fit$dat$is_proj])
   max_year <- .terminal_year(fit)
-  retro_years <- seq(max_year - folds, max_year)
-  if (start_from_fit) {
-    start_par <- as.list(fit$sdrep, "Estimate")
-  } else {
-    start_par <- NULL
+  if (!is.numeric(folds) || length(folds) != 1L || !is.finite(folds) ||
+      folds != trunc(folds) || folds < 0 || folds > max_year - min_year - 1) {
+    cli::cli_abort("folds must be a non-negative integer leaving at least two historical years in every fit.")
   }
-
-
-  progressr::with_progress(
-    {
-      update_progress <- progressr::progressor(steps = length(retro_years))
-      retro <- furrr::future_map(seq_along(retro_years), function(i) {
-        if (retro_years[i] == max_year && !hindcast) {
-          r <- fit # need not re-run terminal year
+  retro_years <- seq.int(max_year - folds, max_year)
+  controls <- if (hindcast && folds > 0) .hindcast_controls(fit, retro_years[-length(retro_years)] + 1, catch, F_mult) else NULL
+  start_par <- if (start_from_fit) as.list(fit$sdrep, "Estimate") else NULL
+  actual <- fit$obs_pred$index
+  results <- progressr::with_progress({
+    tick <- progressr::progressor(steps = length(retro_years))
+    furrr::future_map(seq_along(retro_years), function(i) {
+      reference <- retro_years[i] == max_year
+      control <- if (hindcast && !reference) controls[i, ] else NULL
+      diagnostic <- data.frame(fold = retro_years[i],
+        forecast_year = if (hindcast && !reference) retro_years[i] + 1 else NA_real_,
+        is_reference = reference, control = if (is.null(control)) "none" else control$control,
+        target = if (is.null(control)) NA_real_ else control$target,
+        target_source = if (is.null(control)) NA_character_ else control$target_source,
+        target_unit = if (is.null(control)) NA_character_ else if (control$control == "catch") .population_unit(fit$dat, "total_yield") else "multiplier",
+        is_converged = FALSE, n_scored_index = 0L, error = NA_character_, warnings = "")
+      warnings <- character()
+      r <- withCallingHandlers(tryCatch({
+        if (!is.null(control) && !is.na(control$error)) cli::cli_abort(control$error)
+        if (reference && !any(fit$dat$is_proj)) {
+          r <- fit
         } else {
-          r <- suppressWarnings(
-            try(
-              do.call(update, list(
-                object = fit,
-                years = min_year:retro_years[i],
-                ages = fit$dat$ages,
-                proj_settings = if (hindcast) {
-                  list(n_proj = 1, n_mean = 1, F_mult = 1)
-                } else {
-                  fit$dat$proj_settings
-                },
-                start_par = start_par,
-                silent = TRUE
-              )),
-              silent = TRUE
-            )
-          )
-        }
-        if (inherits(r, "try-error")) {
-          update_progress()
-          return(r)
+          projection <- if (is.null(control)) NULL else {
+            x <- list(n_proj = 1, n_mean = 1)
+            x[[control$control]] <- control$target
+            x
+          }
+          r <- update(fit, years = min_year:retro_years[i], ages = fit$dat$ages,
+            proj_settings = projection, start_par = start_par, silent = TRUE)
         }
         r$grad_tol <- grad_tol
         r$diagnostics <- check_tam(r, grad_tol = grad_tol)
         r$is_converged <- r$diagnostics$is_converged
-        update_progress()
+        diagnostic$is_converged <- isTRUE(r$is_converged)
+        if (!diagnostic$is_converged) diagnostic$error <- "Numerical convergence checks did not pass."
+        if (hindcast && !reference && diagnostic$is_converged) {
+          d <- r$obs_pred$index
+          pairs <- merge(d[d$is_proj, c("year", "age", "survey", "pred")],
+            actual[!actual$is_proj, c("year", "age", "survey", "obs")], by = c("year", "age", "survey"))
+          diagnostic$n_scored_index <- sum(is.finite(pairs$pred) & pairs$pred > 0 & is.finite(pairs$obs) & pairs$obs > 0)
+        }
         r
-      }, .options = furrr::furrr_options(seed = 1, packages = "tinyAM", globals = globals))
-    },
-    enable = progress
-  )
-  names(retro) <- retro_years
-
-  converged <- sapply(retro, function(x) !inherits(x, "try-error") && isTRUE(x$is_converged))
-
-  if (any(!converged)) {
-    cli::cli_warn(
-      paste0(
-        "Model may not have converged for the following folds: ",
-        paste(retro_years[!converged], collapse = ", ")
-      )
-    )
+      }, error = function(e) {
+        diagnostic$error <<- conditionMessage(e)
+        NULL
+      }), warning = function(w) {
+        warnings <<- c(warnings, conditionMessage(w))
+        invokeRestart("muffleWarning")
+      })
+      diagnostic$warnings <- paste(unique(warnings), collapse = "\n")
+      tick()
+      list(fit = r, diagnostic = diagnostic)
+    }, .options = furrr::furrr_options(seed = 1, packages = "tinyAM", globals = globals))
+  }, enable = progress)
+  diagnostics <- do.call(rbind, lapply(results, `[[`, "diagnostic"))
+  if (any(!diagnostics$is_converged)) {
+    cli::cli_warn("Model may not have converged or a projection was unavailable for folds: {paste(diagnostics$fold[!diagnostics$is_converged], collapse = ', ')}. See fold_diagnostics.")
   }
-
-  fits <- retro[converged]
-  if (length(fits) == 0L) cli::cli_abort("All folds failed convergence checks")
-
-  out <- c(
-    tidy_tam(model_list = fits, label = "fold"),
-    list(fits = fits)
-  )
-
+  fits <- lapply(results[diagnostics$is_converged], `[[`, "fit")
+  names(fits) <- retro_years[diagnostics$is_converged]
+  if (!length(fits)) cli::cli_abort("All folds failed convergence checks or projection validation.")
+  out <- c(tidy_tam(model_list = fits, label = "fold"), list(fits = fits, fold_diagnostics = diagnostics))
   rhos <- lapply(names(out$pop), function(nm) {
     d <- out$pop[[nm]]
     if ("age" %in% names(d)) {
-      split_d <- split(d, d$age)
-      rhos <- sapply(split_d, compute_mohns_rho)
-      data.frame(metric = nm, age = as.numeric(names(rhos)), rho = rhos)
+      values <- sapply(split(d, d$age), compute_mohns_rho)
+      data.frame(metric = nm, age = as.numeric(names(values)), rho = values)
     } else {
-      rho <- compute_mohns_rho(d)
-      data.frame(metric = nm, age = NA, rho = rho)
+      data.frame(metric = nm, age = NA_real_, rho = compute_mohns_rho(d))
     }
   })
-  rhos <- do.call(rbind, rhos)
-
-  out$mohns_rho <- rhos
-
-  if (hindcast) {
-    d <- stack_list(out$obs_pred[c("catch", "index")], label = "type")
-    out$hindcast_rmse <- compute_hindcast_rmse(d)
-  }
-
+  out$mohns_rho <- do.call(rbind, rhos)
+  if (!as.character(max_year) %in% names(fits)) out$mohns_rho$rho <- NA_real_
+  if (hindcast) out$hindcast_rmse <- compute_hindcast_rmse(.hindcast_index_data(out$obs_pred$index, actual))
   out
 }
 
-
-#' Run one-step-ahead hindcasts (convenience wrapper)
-#'
-#' @description
-#' Convenience alias for [fit_retro()] with `hindcast = TRUE`. This performs
-#' retrospective peels and, for each peel, fits a **one-step-ahead projection**
-#' (status-quo F: `n_proj = 1`, `n_mean = 1`, `F_mult = 1`), and returns the
-#' same structure as [fit_retro()] including `hindcast_rmse`.
-#'
-#' @param fit A fitted TAM object as returned by [fit_tam()].
-#' @param ... Passed through to [fit_retro()] (e.g., `folds`, `grad_tol`,
-#'   `progress`, `globals`).
-#'
-#' @return
-#' Exactly the return value of [fit_retro()] with `hindcast = TRUE`—i.e.,
-#' a list containing `obs_pred`, `pop`, optional `mohns_rho`, `hindcast_rmse`,
-#' and `fits` (see [fit_retro()] for full details).
-#'
-#' @example inst/examples/example_fit_default.R
-#' @examples
-#' \donttest{
-#' if (interactive()) {
-#'   # Choose your parallel plan (set once per session)
-#'   future::plan(future::multisession, workers = 4)
-#'   hc <- fit_hindcast(fit, folds = 5, progress = TRUE)
-#'   hc$hindcast_rmse
-#'
-#'   vis_tam(hc$fits)
-#' }
-#' }
-#'
-#' @seealso [fit_retro()]
+#' @rdname fit_retro
+#' @param ... Further arguments to [fit_retro()], including `folds`,
+#'   `start_from_fit`, `grad_tol`, `progress` and `globals`.
 #' @export
-fit_hindcast <- function(fit, ...) {
+fit_hindcast <- function(fit, ..., catch = "observed", F_mult = NULL) {
   .require_tam_fit(fit, arg = "fit")
-
-  fit_retro(fit, hindcast = TRUE, ...)
+  if (missing(catch) && !is.null(F_mult)) catch <- NULL
+  fit_retro(fit, hindcast = TRUE, catch = catch, F_mult = F_mult, ...)
 }
