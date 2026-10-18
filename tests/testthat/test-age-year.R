@@ -53,7 +53,7 @@ test_that("both views preserve ribbons, model groups, and projection semantics",
     plots[[length(plots) + 1L]] <<- plotly::plotly_build(p)
     p
   }
-  tinyAM::plot_age_year(age_year_data(),
+  views <- tinyAM::plot_age_year(age_year_data(),
     plot = plot, frame = ~age,
     color = ~model, legendgroup = ~model
   )
@@ -173,7 +173,7 @@ test_that("sparse reference surfaces retain model traces in both orientations", 
     plots[[length(plots) + 1L]] <<- plotly::plotly_build(p)
     p
   }
-  tinyAM::plot_age_year(d, plot = plot, frame = ~age, color = ~model, legendgroup = ~model)
+  views <- tinyAM::plot_age_year(d, plot = plot, frame = ~age, color = ~model, legendgroup = ~model)
   expect_identical(d, original)
   for (p in plots) {
     expect_length(p$x$data, 2L)
@@ -192,7 +192,7 @@ test_that("different projection horizons do not split a common year into frames"
     views[[length(views) + 1L]] <<- data
     plot_trend(data, ...)
   }
-  tinyAM::plot_age_year(d, plot = plot, frame = ~age, color = ~model)
+  display <- tinyAM::plot_age_year(d, plot = plot, frame = ~age, color = ~model)
   expect_equal(levels(views[[2]]$.view_year), c("2000", "2001", "2002 (includes projections)"))
   expect_equal(length(unique(views[[2]]$.view_year[views[[2]]$year == 2002])), 1L)
   expect_match(views[[2]]$.view_hover[views[[2]]$is_proj][1], "(projection)", fixed = TRUE)
@@ -232,4 +232,23 @@ test_that("view buttons inherit native Plotly styling and control spacing", {
   menus <- plotly::plotly_build(tinyAM:::.age_year_menu(plot_obs_pred(d), "annual"))$x$layout$updatemenus
   expect_length(menus, 2L)
   expect_equal(menus[[2]]$pad$t, 75)
+})
+
+test_that("observed-predicted views save HTML without opening a browser", {
+  withr::local_options(
+    browser = function(...) testthat::fail("A browser must not open during this test"),
+    viewer = function(...) testthat::fail("A viewer must not open during this test")
+  )
+  d <- age_year_data()
+  d$obs <- d$est
+  d$pred <- d$est + .1
+  views <- plot_age_year(d, plot = plot_obs_pred, color = ~model)
+  directory <- tempfile("age-year-html-")
+  dir.create(directory)
+  output <- file.path(directory, "views.html")
+  expect_no_error(htmltools::save_html(views, file = output))
+  expect_true(file.exists(output))
+  html <- paste(readLines(output, warn = FALSE), collapse = "\n")
+  expect_match(html, "Annual trends", fixed = TRUE)
+  expect_match(html, "Age profiles", fixed = TRUE)
 })

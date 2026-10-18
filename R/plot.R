@@ -157,8 +157,27 @@ plot_trend <- function(
       ci <- data[do.call(order, data[c(groups, coordinate)]), , drop = FALSE]
       key <- if (length(groups)) interaction(ci[groups], drop = TRUE) else rep(1L, nrow(ci))
       valid <- is.finite(ci$lwr) & is.finite(ci$upr)
-      ci$.ci_run <- interaction(key, stats::ave(!valid, key, FUN = cumsum), drop = TRUE)
+      frame_columns <- if (inherits(args$frame, "formula")) all.vars(args$frame) else character()
+      series <- setdiff(groups, frame_columns)
+      series <- if (length(series)) interaction(ci[series], drop = TRUE) else rep(1L, nrow(ci))
+      runs <- stats::ave(valid, key, FUN = function(v) cumsum(v & !c(FALSE, utils::head(v, -1L))))
+      ci$.ci_run <- interaction(series, runs, drop = TRUE)
       ci <- ci[valid, , drop = FALSE]
+      if (nrow(ci) && length(frame_columns)) {
+        series_columns <- setdiff(groups, frame_columns)
+        slots <- merge(unique(data[c(series_columns, frame_columns)]),
+          unique(ci[c(series_columns, ".ci_run")]), by = series_columns, sort = FALSE)
+        key_columns <- c(frame_columns, ".ci_run")
+        row_key <- function(x) do.call(paste, c(x[key_columns], sep = "\r"))
+        absent <- slots[!row_key(slots) %in% row_key(ci), , drop = FALSE]
+        if (nrow(absent)) {
+          # Preserve empty ribbon traces across frames without drawing intervals.
+          empty <- ci[match(absent$.ci_run, ci$.ci_run), , drop = FALSE]
+          empty[frame_columns] <- absent[frame_columns]
+          empty$lwr <- empty$upr <- Inf
+          ci <- rbind(ci, empty)
+        }
+      }
       if (nrow(ci)) p <- p |> plotly::add_ribbons(
         data = ci, split = ~.ci_run,
         ymin = ~lwr, ymax = ~upr,
@@ -551,11 +570,12 @@ plot_par <- function(data, ...) {
 #' @examples
 #' d <- expand.grid(year = 2000:2004, age = 1:3)
 #' d$est <- exp(0.1 * (d$year - 2000) + 0.2 * d$age)
-#' plot_age_year(d, ylab = "Abundance")
-#' plot_age_year(d, x = ~age, xlab = "Age", frame = ~year)
+#' annual <- plot_age_year(d, ylab = "Abundance")
+#' profiles <- plot_age_year(d, x = ~age, xlab = "Age", frame = ~year)
 #' d$pred <- d$est
 #' d$obs <- d$est * 1.1
-#' plot_age_year(d, plot = plot_obs_pred, ylab = "Catch")
+#' catch_views <- plot_age_year(d, plot = plot_obs_pred, ylab = "Catch")
+#' # Print a view to display it, or save it with htmltools::save_html().
 #' @seealso [plot_trend()], [plot_obs_pred()], [add_plot_buttons()], [vis_tam()]
 #' @export
 plot_age_year <- function(data, plot = plot_trend, x = ~year, xlab = "Year",

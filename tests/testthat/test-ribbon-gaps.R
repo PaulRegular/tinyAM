@@ -36,3 +36,19 @@ test_that("missing reference intervals do not remove its estimated line", {
   official <- Filter(function(x) identical(x$name, "Official"), lines)[[1L]]
   expect_equal(as.numeric(official$y), d$est[d$model == "Official"])
 })
+
+test_that("ribbon identities remain stable across age frames", {
+  d <- expand.grid(year = 2000:2003, age = 1:3, model = c("Official", "tinyAM"))
+  d$est <- seq_len(nrow(d))
+  d$lwr <- d$est - .5
+  d$upr <- d$est + .5
+  expect_no_warning(p <- plotly::plotly_build(plot_trend(d, color = ~model, frame = ~age)))
+  expect_length(p$x$data, 4L)
+  for (frame in p$x$frames) expect_equal(frame$traces, 0:3)
+  d[d$model == "Official" & d$age == 2 & d$year == 2001, c("lwr", "upr")] <- NA_real_
+  expect_no_warning(p <- plotly::plotly_build(plot_trend(d, color = ~model, frame = ~age)))
+  for (frame in p$x$frames) {
+    lines <- Filter(function(x) identical(x$mode, "lines") && is.null(x$fill), frame$data)
+    expect_length(lines, 2L)
+  }
+})

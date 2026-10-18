@@ -56,11 +56,12 @@ returned Plotly objects remain available for adding layers or changing layout.
 \examples{
 d <- expand.grid(year = 2000:2004, age = 1:3)
 d$est <- exp(0.1 * (d$year - 2000) + 0.2 * d$age)
-plot_age_year(d, ylab = "Abundance")
-plot_age_year(d, x = ~age, xlab = "Age", frame = ~year)
+annual <- plot_age_year(d, ylab = "Abundance")
+profiles <- plot_age_year(d, x = ~age, xlab = "Age", frame = ~year)
 d$pred <- d$est
 d$obs <- d$est * 1.1
-plot_age_year(d, plot = plot_obs_pred, ylab = "Catch")
+catch_views <- plot_age_year(d, plot = plot_obs_pred, ylab = "Catch")
+# Print a view to display it, or save it with htmltools::save_html().
 }
 \seealso{
 \code{\link[=plot_trend]{plot_trend()}}, \code{\link[=plot_obs_pred]{plot_obs_pred()}}, \code{\link[=add_plot_buttons]{add_plot_buttons()}}, \code{\link[=vis_tam]{vis_tam()}}
