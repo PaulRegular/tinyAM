@@ -18,7 +18,7 @@ Rather than providing a collection of predefined assessment models, tinyAM uses 
 The [package website](https://paulregular.github.io/tinyAM/) provides the function
 reference, [cheatsheet](https://paulregular.github.io/tinyAM/cheatsheet/tinyAM_cheatsheet.pdf)
 and [example dashboard](https://paulregular.github.io/tinyAM/cheatsheet/).
-These web links become available after the first Pages deployment.
+The website is published from `main` by GitHub Actions.
 
 To reproduce the cheatsheet locally:
 
@@ -38,10 +38,11 @@ Use `Rscript cheatsheet/examples.R dashboard` to build just the combined dashboa
 To preview the package site, run
 `withr::with_envvar(c(CI = "true"), pkgdown::build_site(preview = FALSE))`.
 This skips pkgdown's optional external favicon service.
-The manually triggered **Package website** workflow also adds the PDF and combined
-dashboard. Once the workflow is available on the default branch, enable **GitHub
-Actions** under **Settings > Pages > Build and deployment**, allow the selected
-branch in the `github-pages` environment, then run the workflow from Actions.
+The **Package website** workflow builds the PDF link and combined dashboard
+on pushes to `main`, with a manual rebuild option under Actions. GitHub Pages
+uses **GitHub Actions** as its publishing source; the `github-pages` environment
+permits deployment from `main`. The PDF itself is the reviewed tracked copy;
+website builds do not rerun hindcasts or compile LaTeX.
 The workflow deploys generated artifacts; site files and HTML are not committed.
 
 Historical cheatsheet trials are recorded in Git, including archival commit
@@ -336,3 +337,11 @@ Many useful assessment questions involve changing something relatively small:
 tinyAM is intended to make questions like these relatively inexpensive to translate into fitted models.
 
 The emphasis is therefore less on providing a single preferred assessment formulation and more on providing a transparent framework in which alternative assumptions can be expressed and tested.
+
+## Next priorities
+
+- Review the latest Pacific assessment examples: diagnostics, comparison
+  definitions, scientific approximations and remaining source blockers.
+- Plan and implement conditional AIC separately, beginning with its statistical
+  specification and validation. No conditional-AIC work is included in the
+  repository cleanup or website publication.
