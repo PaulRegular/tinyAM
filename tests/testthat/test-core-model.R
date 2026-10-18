@@ -165,10 +165,16 @@ test_that("retros and every hindcast fold use observed terminal years", {
     vapply(retro$fits, tinyAM:::.terminal_year, numeric(1)),
     setNames(as.numeric((terminal - 1):terminal), names(retro$fits))
   )
-  hindcast <- fit_hindcast(fit, folds = 1, progress = FALSE, start_from_fit = TRUE)
+  hindcast <- fit_hindcast(fit, folds = 1, F_mult = 1,
+    progress = FALSE, start_from_fit = TRUE)
   expect_equal(names(hindcast$fits), names(retro$fits))
   for (nm in names(hindcast$fits)) {
     fold <- hindcast$fits[[nm]]
+    if (as.numeric(nm) == terminal) {
+      expect_false(any(fold$dat$is_proj))
+      expect_equal(fold$dat$proj_settings$n_proj, 0)
+      next
+    }
     expect_equal(sum(fold$dat$is_proj), 1)
     expect_equal(max(fold$dat$years), as.numeric(nm) + 1)
     expect_equal(fold$dat$proj_settings$n_mean, 1)
