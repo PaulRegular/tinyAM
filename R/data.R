@@ -48,6 +48,27 @@ as_tam_data <- function(data) {
   data
 }
 
+#' Construct tinyAM input data from tables
+#'
+#' Assemble prepared input tables and validate them. The returned `tam_data`
+#' list prints compact table previews. Plain lists remain valid model inputs;
+#' use [check_tam_data()] to validate them or [as_tam_data()] to add the class.
+#'
+#' @param catch,index,weight,maturity Required input tables; see [check_tam_data()].
+#' @param pop_covariates Optional year-by-age population covariates.
+#' @return A validated `tam_data` list, with table values and attributes unchanged.
+#' @examples
+#' dat <- make_tam_data(cod_obs$catch, cod_obs$index,
+#'                      cod_obs$weight, cod_obs$maturity,
+#'                      cod_obs$pop_covariates)
+#' check_tam_data(dat)
+#' @export
+make_tam_data <- function(catch, index, weight, maturity, pop_covariates = NULL) {
+  data <- list(catch = catch, index = index, weight = weight, maturity = maturity)
+  if (!is.null(pop_covariates)) data$pop_covariates <- pop_covariates
+  as_tam_data(data)
+}
+
 #' @rdname as_tam_data
 #' @param x A `tam_data` object.
 #' @param n Number of first and last rows to show per table (default five).

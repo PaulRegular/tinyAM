@@ -136,3 +136,25 @@ test_that("data previews separate head and tail with vertical dots in every colu
   text <- capture.output(print(x, n = 3))
   expect_false(any(grepl(pattern, text)))
 })
+
+test_that("make_tam_data preserves tables and agrees with plain lists", {
+  plain <- unclass(population_fixture())
+  attr(plain$weight, "source") <- "unchanged"
+  original <- plain
+  x <- do.call(make_tam_data, plain)
+  expect_s3_class(x, "tam_data")
+  expect_identical(unclass(x), plain)
+  expect_identical(plain, original)
+  without <- plain[c("catch", "index", "weight", "maturity")]
+  expect_identical(names(do.call(make_tam_data, without)), names(without))
+  a <- make_test_dat(data = plain, years = 1983:1990, ages = 2:6)
+  b <- make_test_dat(data = x, years = 1983:1990, ages = 2:6)
+  expect_identical(make_par(a), make_par(b))
+  expect_equal(nll_fun(make_par(a), a), nll_fun(make_par(b), b))
+  bad <- plain
+  bad$maturity$obs[1] <- 2
+  expect_error(do.call(make_tam_data, bad), "maturity")
+  bad <- plain
+  bad$pop_covariates <- bad$pop_covariates[-1, ]
+  expect_error(do.call(make_tam_data, bad), "coverage is incomplete")
+})
