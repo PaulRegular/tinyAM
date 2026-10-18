@@ -43,7 +43,7 @@
 #' vertical confidence interval instead of an invisible line segment.
 #' Missing intervals split confidence ribbons into separate runs. Signed values
 #' and intervals expand the default axis below zero; nonnegative trends retain
-#' a zero baseline. Unit labels use a second line below the quantity name.
+#' a zero baseline.
 #'
 #' @param data A data frame of observations or estimates.
 #' @param x Formula specifying x variable
@@ -114,7 +114,7 @@ plot_trend <- function(
   ...
 ) {
   unit <- if (identical(y[[2L]], quote(est))) .unit_label(data, "") else ""
-  unit_label <- if (nzchar(unit)) paste0("Estimate<br>(", unit, ")") else ""
+  unit_label <- if (nzchar(unit)) paste0("Estimate (", unit, ")") else ""
   if (missing(ylab)) ylab <- unit_label
   if (!is.data.frame(data) || !nrow(data)) {
     return(plotly::plot_ly(x = numeric(), y = numeric(), type = "scatter", mode = "lines"))
@@ -295,7 +295,7 @@ plot_obs_pred <- function(
   ...
 ) {
   unit <- .unit_label(data, "")
-  unit_label <- if (nzchar(unit)) paste0("Observation<br>(", unit, ")") else ""
+  unit_label <- if (nzchar(unit)) paste0("Observation (", unit, ")") else ""
   if (missing(ylab)) ylab <- unit_label
   if (!is.data.frame(data) || !nrow(data) ||
     !any(is.finite(c(data$obs, data$pred)))) {
@@ -659,6 +659,7 @@ plot_age_year <- function(data, plot = plot_trend, x = ~year, xlab = "Year",
 #'   original values and units. Ranges are shared across models separately for
 #'   each metric. All models of a metric must use the same units.
 #'   Colours use the built-in [tam_cols()] ramp from low to high values.
+#'   Colour-ramp titles place units on a second line; axis labels remain on one line.
 #'   Missing cells remain missing. Surface and contour rendering interpolates
 #'   only for display and does not create additional source estimates.
 #' @return A Plotly object with independent controls for each widget.

@@ -104,7 +104,7 @@
   if (length(unique(signatures)) > 1L) cli::cli_abort("Plot data contain incompatible units: {paste(units, collapse = ', ')}. Convert them explicitly before overlaying models.")
   units <- utils::head(units, 1L)
   if (length(units) && grepl("native|unresolved|survey[ _-]*index|relative index", units, ignore.case = TRUE)) return(label)
-  if (length(units)) paste0(label, if (nzchar(label)) "<br>(" else "", units,
+  if (length(units)) paste0(label, if (nzchar(label)) " (" else "", units,
     if (nzchar(label)) ")" else "") else label
 }
 

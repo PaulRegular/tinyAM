@@ -49,7 +49,7 @@ test_that("units preserve designs, parameters, likelihoods and derivatives", {
 
 test_that("default plot labels include units and explicit labels win", {
   d <- data.frame(year = 2000:2002, est = 1:3, unit = "tonnes")
-  expect_equal(plotly::plotly_build(plot_trend(d))$x$layout$yaxis$title, "Estimate<br>(tonnes)")
+  expect_equal(plotly::plotly_build(plot_trend(d))$x$layout$yaxis$title, "Estimate (tonnes)")
   expect_match(plotly::plotly_build(plot_trend(d))$x$data[[1]]$hovertemplate, "tonnes")
   expect_true(all(plotly::plotly_build(plot_trend(d, hovertemplate = "Custom"))$x$data[[1]]$hovertemplate == "Custom"))
   expect_equal(plotly::plotly_build(plot_trend(d, ylab = "My label"))$x$layout$yaxis$title, "My label")

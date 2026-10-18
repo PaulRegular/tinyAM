@@ -59,7 +59,7 @@ function(el, x, config) {
       yaxis: {title: 'Age', range: ageRange},
       scene: {xaxis: {title: 'Year', range: yearRange}, yaxis: {title: 'Age', range: ageRange},
         zaxis: {title: (state.scale === 'log' ? 'log10 ' : '') + metric.name +
-            (metric.unit ? '<br>(' + metric.unit + ')' : ''),
+            (metric.unit ? ' (' + metric.unit + ')' : ''),
           range: limits}, camera: camera, uirevision: 'matrix-camera'},
       sliders: config.models.length > 1 ? [{active: state.model,
         currentvalue: {prefix: 'Model: '}, pad: {t: 45},

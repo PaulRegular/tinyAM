@@ -4,7 +4,7 @@ test_that("survey and catchability units are concise without inventing dimension
   expect_equal(tinyAM:::.q_unit("thousand fish / net", "thousand fish"), "per net")
   expect_true(is.na(tinyAM:::.q_unit("native survey-index units", "thousand fish")))
   expect_equal(tinyAM:::.unit_label(data.frame(est = 1, unit = "thousand fish"), "Abundance"),
-    "Abundance<br>(thousand fish)")
+    "Abundance (thousand fish)")
   expect_equal(tinyAM:::.unit_label(data.frame(est = 1, unit = "native survey-index units"), "Abundance index"),
     "Abundance index")
   expect_equal(tinyAM:::.count_unit("mean numbers per tow"), list(scale = 1, effort = "tow"))

@@ -105,7 +105,7 @@ before overlaying models. Single-coordinate trends show a point and a
 vertical confidence interval instead of an invisible line segment.
 Missing intervals split confidence ribbons into separate runs. Signed values
 and intervals expand the default axis below zero; nonnegative trends retain
-a zero baseline. Unit labels use a second line below the quantity name.
+a zero baseline.
 }
 \examples{
 

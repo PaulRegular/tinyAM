@@ -25,6 +25,9 @@ scale were known; its original value remains available in the native output.
 Spawning-time definitions remain in Settings and comparison metadata, while
 the axis title is simply SSB.
 
+Only the Population patterns and Mortality patterns colour-ramp titles place
+units on a second line. Other plot axes use a single-line label.
+
 The recruitment ribbon defect was caused by missing terminal reference
 intervals leaving invalid vertices at the polygon's closing edge. Ribbons now
 close separately within valid runs, including interior gaps. Signed trend axes

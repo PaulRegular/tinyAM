@@ -64,9 +64,9 @@ plot_comparison <- function(metric_name) {
   )
 
   axis_labels <- c(
-    ssb = "SSB\n(tonnes)",
-    recruitment = "Recruitment\n(thousand fish)",
-    abundance = "Total abundance\n(thousand fish)",
+    ssb = "SSB (tonnes)",
+    recruitment = "Recruitment (thousand fish)",
+    abundance = "Total abundance (thousand fish)",
     F_bar = "Average fishing mortality (yr\u207b\u00b9)"
   )
 

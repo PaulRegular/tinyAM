@@ -48,6 +48,11 @@ const flush = () => new Promise(resolve => setImmediate(resolve));
       assert.equal(a.layout.sliders[0].active, 1);
       assert.deepEqual(a.layout.scene.camera, camera);
       assert.deepEqual(a.layout.scene.zaxis.range, config.metrics[metric][scale]);
+      const prefix = scale === 'log' ? 'log10 ' : '';
+      const label = prefix + config.metrics[metric].name;
+      const unit = config.metrics[metric].unit;
+      assert.equal(a.data[0].colorbar.title.text, label + '<br>(' + unit + ')');
+      assert.equal(a.layout.scene.zaxis.title, label + ' (' + unit + ')');
       assert.equal(a._transitionData._frames.length, 2);
       assert.deepEqual(a._transitionData._frames[0].data[0].z,
         config.metrics[metric].cells[0][scale]);
