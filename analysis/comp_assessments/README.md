@@ -89,7 +89,7 @@ check_tam(x$fit)
 
 ## Fit all applicable assessments
 
-Source `scripts/translation/run_all.R` for the reproducible batch. It reads the committed database snapshot, uses `future::multisession` through `furrr`, and writes aggregate results once in the parent process. The script currently uses one worker; increase `workers` when memory permits. Assessments without stock recipes and individual fit failures remain visible in the returned diagnostics. Use `parallel = FALSE` when debugging.
+Source `scripts/translation/run_all.R` for the reproducible batch. It reads the committed database snapshot, uses `future::multisession` through `furrr`, and writes aggregate results once in the parent process. The script currently uses four workers; reduce `workers` when memory is limited. Assessments without stock recipes and individual fit failures remain visible in the returned diagnostics. Use `parallel = FALSE` when debugging.
 
 The batch includes every assessment marked `is_current`, including a current
 official benchmark that has not yet been applied for advice.
@@ -100,49 +100,30 @@ source("analysis/comp_assessments/R/run_assessment.R")
 runs <- run_assessments(
   database = read_committed_database(),
   parallel = TRUE,
-  workers = 1,
+  workers = 4,
   save_results = TRUE,
   cache = TRUE,
-  dashboard = TRUE
+  dashboard = FALSE
 )
 ```
 
 ## Committed results and local cache
 
-Pacific expansion source reviews: [BSAI Pacific ocean perch](source_reviews/afsc_pop_bsai.md),
-[BSAI Atka mackerel](source_reviews/afsc_atka_mackerel_bsai.md).
-[Aleutian Islands pollock](source_reviews/afsc_pollock_ai.md).
-[Alaska plaice](source_reviews/afsc_alaska_plaice_bsai.md).
-[Eastern Bering Sea yellowfin sole](source_reviews/afsc_yellowfin_sole_ebs.md).
-[Eastern Bering Sea northern rock sole](source_reviews/afsc_northern_rock_sole_ebs.md).
-[Joint coastal Pacific hake](source_reviews/joint_hake_coastal.md).
-[Eastern Bering Sea Pacific cod](source_reviews/afsc_cod_ebs.md).
-[Strait of Georgia Pacific herring](source_reviews/dfo_herring_sog.md) is curated,
-but translation is blocked by its aggregate spawning-biomass survey without
-survey ages; it has not received a tinyAM fitting attempt.
-[British Columbia Pacific ocean perch](source_reviews/dfo_pop_bc.md) remains
-curated but is blocked from fitting and comparison: matching numerical historical
-coastwide population outputs have not been recovered. Partial regional biomass
-draws are now documented in its source review. Earlier exploratory fits are archived;
-constant M and boundary biomass alone do not support the intended comparison.
-[British Columbia petrale sole](source_reviews/dfo_petrale_bc.md) has a partial
-official 2024 summary/output record, including annual SSB posterior summaries.
-Original observations and biology remain missing; it is not a current detailed
-record or a completed translation.
-[British Columbia Canary Rockfish](source_reviews/dfo_canary_bc.md) has verified
-native 2022 inputs, fixed biological functions and annual female SSB posterior
-summaries; official N/F-at-age and annual recruitment remain unavailable.
-[Aleutian Islands Pacific cod](source_reviews/afsc_cod_ai.md) remains blocked
-pending native inputs matching the final production assessment.
-[BSAI arrowtooth flounder](source_reviews/afsc_arrowtooth_flounder_bsai.md)
-has recovered sex-specific states and biology, but missing likelihood
-compositions, an age–length key and timing block a defensible fit.
+`results/` retains observation readiness, fit diagnostics, comparison summaries,
+annual population comparisons and five overview figures. These are compact
+snapshots of the complete batch; individual stock trials do not overwrite them.
+Fitted objects, dashboards, warnings and failures stay in the gitignored
+`results/cache/` directory. Authoritative downloaded sources stay in
+`source_cache/`. Neither directory is pruned by routine repository tidying.
 
-`results/` retains `observation_readiness.csv`, `fit_diagnostics.csv`, `comparison_summary.csv`, a compact `sensitivity_summary.csv`, and `northern_cod_indices.csv` for the Northern cod integration trials. Fitted objects and dashboards are generated on request and may be saved under the gitignored `results/cache/<assessment_id>/` directory with `cache = TRUE`. They are not committed by the normal workflows.
+Current source availability and translation blockers are recorded in each
+stock's `source_reviews/` note. A stock recipe may deliberately reject fitting
+when the necessary source data or comparison definitions remain unavailable.
 
 Translations and comparison displays use thousand fish, average weight in kg,
 and biomass in tonnes. Count-rate surveys retain their effort denominator;
-relative indices retain their source scale. See [the unit review](UNIT_REVIEW.md).
+relative indices retain their source scale. See the units section of
+[TINYAM_TRANSLATION.md](TINYAM_TRANSLATION.md#translation-units).
 The complete `run_all.R` workflow saves returned fits before making dashboards,
 including exploratory previews of usable non-converged fits. Rendering failures
 are recorded locally. Figure fallbacks use this complete batch rather than
@@ -156,26 +137,19 @@ See `TINYAM_TRANSLATION.md` for the matching rules and their limitations.
 
 ## Reviewing model choices
 
-The historical candidate review and its pinned baseline revision remain in Git
-history (the parent of cleanup commit `4830fb1`, at
-`analysis/comp_assessments/results/translation_review.csv`). The retired review script also remains in Git history;
-current model choices are visible in each stock script's `fit_tam()` call.
-That historical review covered the 23 then-current detailed assessments,
-including blockers for those without recipes. The expanded-library review is
-in [PACIFIC_REVIEW.md](PACIFIC_REVIEW.md), including the source/model findings
-and a link to the archived one-off trials. Experimental trial runners and
-duplicate review tables are retained in Git history rather than the routine workflow.
-Delivery and validation details are in [PACIFIC_EXPANSION.md](PACIFIC_EXPANSION.md).
-Baselines remain when changes weaken diagnostics or
-trade one comparison improvement for another loss. Numerical convergence and
-statistical support are reviewed separately; fixed-M agreement is not evidence
-of improvement. See `CAPABILITY_GAPS.md` for the remaining limitations.
+Current model choices are visible in each stock script's `fit_tam()` call.
+Superseded trials and review reports remain in Git history. Source notes retain
+current rationale, extraction definitions and limitations rather than a model
+development diary. See `CAPABILITY_GAPS.md` for supported approximations and
+remaining capabilities.
+
+Retain the baseline when a candidate weakens diagnostics or produces unclear
+comparison trade-offs. Numerical convergence and statistical support are
+separate; fixed-M agreement is not evidence of successful estimation.
 
 The agreement heatmap includes exploratory, non-converged fits where reporting
-is available. Check the numerical outcomes and comparison definitions in
-`PACIFIC_REVIEW.md` before interpreting its colours; blank or grey cells do not
-indicate agreement. Its median differences complement the mean and terminal
-differences used for review flags.
+is available. Check `results/fit_diagnostics.csv` and the comparison definitions
+before interpreting its colours. Blank or grey cells do not indicate agreement.
 
 Both figure scripts share `R/plot_stock_order.R`: ocean first, then
 phylogenetic groups, scientific species names and stock labels. Higher groups

@@ -112,12 +112,9 @@ The official numerical inputs and fitted outputs remain unchanged in the canonic
 
 The revised translation remains a proof-of-concept approximation of the official model. Numerical convergence and improved agreement do not establish equivalence of the underlying likelihoods or assessment uncertainty.
 
-
-## Initial-abundance update
+## Initial abundance
 
 The cached official SAM fit has `initState = 0` and no `initN` parameters.
-The translation now uses `init = "latent"`: older first-year log-abundances
-are integrated without an initial density. Recruitment r0 remains fixed, so
-this is not complete SAM initial-state equivalence. The isolated initialization
-trial passed numerical checks without changing other model assumptions.
-See [initialization trials](../INITIALIZATION_REVIEW.md) for comparisons and limitations.
+The translation uses `init = "latent"`: older first-year log-abundances are
+integrated without an initial density. First-year recruitment remains an
+estimated fixed effect, so this is not complete SAM initial-state equivalence.

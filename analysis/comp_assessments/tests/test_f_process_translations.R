@@ -16,9 +16,11 @@ for (id in c(
     translated$settings
   ))
   par <- tinyAM::make_par(dat)
+  stationary <- id == "nefsc_summer_flounder_2018"
   stopifnot(
-    dat$F_settings$process == "ar1",
-    length(par$log_mu_f) == length(translated$ages),
+    dat$F_settings$process == if (stationary) "ar1" else "cor_rw",
+    if (stationary) length(par$log_mu_f) == length(translated$ages) else is.null(par$log_mu_f),
+    if (stationary) length(par$logit_phi_f) == 2L else length(par$atanh_rho_f) == 1L,
     is.finite(tinyAM::nll_fun(par, dat))
   )
 }
@@ -31,4 +33,4 @@ stopifnot(
   dat$F_settings$process == "cor_rw", is.null(par$log_mu_f),
   is.finite(tinyAM::nll_fun(par, dat))
 )
-cat("Stationary F translation mean tests passed.\n")
+cat("Retained F-process parameterization tests passed.\n")

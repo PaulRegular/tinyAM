@@ -166,11 +166,11 @@ The official SMS-2023 surface and additional 0.02 adjustment must be represented
 
 ### Commercial catch
 
-The translation retains direct commercial catch-at-age observations for the common fitted period, converting counts from thousands of fish into individual fish.
+The translation retains direct commercial catch-at-age observations for the common fitted period, retaining counts in thousand fish.
 
 The catch observation model uses:
 
-`catch_settings = list(sd_form = ~0 + sd_block, fill_missing = FALSE)`
+`catch_settings = list(sd_form = ~0 + sd_block)`
 
 This permits separate estimated observation SDs for the translated catch groups.
 
@@ -188,7 +188,7 @@ The four larval abundance indices are omitted because their partial spawning-com
 
 The revised survey model specifies:
 
-`index_settings = list(q_form = ~0 + q_key, sd_form = ~0 + sd_block, fill_missing = FALSE)`
+`index_settings = list(q_form = ~0 + q_key, sd_form = ~0 + sd_block)`
 
 This retains the translated survey-age catchability-sharing groups and observation-SD groups.
 

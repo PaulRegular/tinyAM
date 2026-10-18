@@ -1,24 +1,5 @@
 # Southern Gulf cod (4T–4VN) source review
 
-## Formula review (2026-10-10)
-
-The source uses age-2 recruitment equal to lagged SSB times an AR1 recruitment
-rate. A fixed-SD (`sd = 0.5`) AR1 recruitment candidate at the translation's
-age three was tested as a partial approximation, not that source equation.
-It converged and slightly improved F scale, but recruitment error increased
-from 36.3% to 86.8% and N error from 23.2% to 29.9%; recruitment and N trends
-weakened. Retain RW recruitment and the existing explicit IID-M warm start
-followed by RW M. A separate age-blocked M mean RW with the source fixed
-increment SD of 0.075 initially failed when combined with IID M in the
-preliminary fit. Reusing the unchanged baseline preliminary fit instead
-allowed the standalone mean-RW model to converge (gradient 0.000164,
-positive-definite Hessian). All four trajectory correlations improved; mean
-SSB error fell from 18.3% to 15.3% and N error from 23.2% to 20.6%. However,
-F error rose from 43.8% to 50.8%, and terminal recruitment changed from +19.7%
-to -50.1%. Retain the baseline and flag this alternative for review. Fixed
-increment SDs are expressible through mean effects, but source initial-M
-priors remain unsupported. Starting values are not treated as priors.
-
 For Southern Gulf cod, the 2024 Science Advisory Report is the latest official
 assessment used for advice, applying the SCA model through 2023. DFO identifies
 the 2019 run as the last full assessment and says the same population model was
@@ -90,14 +71,10 @@ penalized change is from 1971 to 1972. The prior means are used only to
 initialize the tinyAM states: tinyAM cannot apply the source's initial-M prior
 or fix the innovation SD, so it estimates that SD and leaves the first M state
 unpenalized. Because the direct random-walk fit was numerically unstable from
-default starting values, the runner first fits an IID-M approximation and uses
+default starting values, the stock script first fits an IID-M approximation and uses
 its estimates only to initialize the random-walk fit. The official assessment
-reports terminal M of 0.81 for ages 5-8 and 0.85 for ages 9+. The corrected
-tinyAM random-walk fit converged (optimizer code 0, maximum absolute gradient
-0.0027, positive-definite Hessian). Its 2018 M estimates are 0.62 and 0.60 for
-ages 5-8 and 9-12+, respectively. Across the eight age values used for
-comparison (the two reported source groups are expanded across their ages),
-the mean and median absolute percent difference are both 26.2%. Mean absolute
-differences are 34.7% for SSB, 40.3% for abundance-at-age, and 138.4% for
-recruitment. The fit converged, but these differences show that the simplified
-model is not a close reproduction of the official assessment.
+reports terminal M of 0.81 for ages 5-8 and 0.85 for ages 9+.
+
+The source models age-2 recruitment as lagged SSB times an AR1 recruitment
+rate. The retained tinyAM age-3 entry follows a RW; it is not the same
+stock–recruit relationship.

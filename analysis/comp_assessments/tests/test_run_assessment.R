@@ -1,3 +1,4 @@
+pkgload::load_all(".", quiet = TRUE, helpers = FALSE)
 root <- file.path("analysis", "comp_assessments")
 source(file.path(root, "R", "run_assessment.R"))
 

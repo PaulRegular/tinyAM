@@ -114,7 +114,7 @@ Source tests check fleet and survey coverage, composition normalization, sex
 dimensions, timing, units, the effective maturity cutoff, provisional catches,
 subset/published uncertainty and absence of fabricated population outputs.
 
-## Translation checkpoint
+## Observation translation
 
 The stock recipe models female abundance directly for 1977–2022 at ages
 1–60+, with a one-year reporting projection. Biological weights and January
@@ -130,29 +130,13 @@ missing age samples are filled. Consequently total catches alone, including
 are retained; aggregate-only CPUE, HS, WCHG and GIG are omitted from fitting
 but preserved canonically. The code and background identify these limitations.
 
-The initial candidate used deterministic survival, free initial ages,
-Beverton–Holt age-1 recruitment, a shared temporal F mean with a rising age
-curve and IID residuals, logistic survey q and a source-centered log-M penalty.
-The natural-normal M prior and source selectivity, composition, catch and
-integration mathematics are approximated, not reproduced.
-
-The default-start Beverton–Holt attempt was stopped after about 283 seconds
-for computational cost before the outer optimizer returned. Its inner solver
-had completed two logged iterations. This is **an incomplete execution, not
-evidence of numerical non-convergence or scientific disagreement**. No source
-start or SD report was obtained. The attempt record and transcript remain
-local; this checkpoint preserves the candidate code in Git. A practical
-constant-recruitment-mean alternative was evaluated separately with normal
-package starts, keeping observations and all other settings identical.
-
-## Retained practical translation — 2026-10-17
+## Current tinyAM translation
 
 The retained recipe uses age-1 IID recruitment around a constant log mean,
 with fixed SD 0.9. It does not reproduce the source stock–recruit relationship,
 steepness prior, recruitment sum constraint or varying bias adjustment. This
 is a computationally practical approximation, not evidence that constant
-recruitment is preferable scientifically. The earlier candidate remains in
-commit `442d89e`; its incomplete execution is recorded separately.
+recruitment is preferable scientifically. Superseded candidates are retained in Git history.
 
 Normal package starts failed numerical checks (optimizer code 1, false
 convergence, maximum gradient 2,148 and non-positive-definite Hessian).
@@ -170,7 +154,7 @@ Numerical convergence does **not** imply agreement with the assessment:
 | Female SSB | Approximate, 1977–2022 | 27.91 | 23.98 | -59.09 | 0.295 |
 | Female M | Matching constant instantaneous M | 36.51 | 36.51 | -36.51 | Undefined: constant |
 
-Both comparisons trigger the review flags. Repeated age/year M values represent
+Both comparisons show substantial disagreement. Repeated age/year M values represent
 one shared parameter; their large row count is not additional validation.
 N/F-at-age, annual recruitment and total abundance comparisons remain unavailable
 or non-equivalent; missing statistics are not passes. Beginning-2023 SSB is
@@ -186,22 +170,3 @@ rescaled to improve agreement and no core model mathematics changed.
 The dashboard and fitted object are in the gitignored
 `results/cache/dfo_canary_bc_2022/` directory. The three compact shared result
 tables include this case while retaining other stocks' results.
-
-## Final validation
-
-Source and translation tests pass, including joint-sex biomass conversion,
-effective maturity, source uncertainty, missing observations and preparation
-without fitting. Database validation passes, and all pre-existing canonical
-records and compact fit/comparison rows are unchanged. The Official–tinyAM
-dashboard renders; the heatmap and four trend figures include the new case.
-
-All 67 assessment-analysis test files were run: 61 pass and the same six
-baseline failures remain (age subsets, Southern Gulf herring translation,
-F-process translations, herring translation, Norway-pout translation and the
-general translation fixture). The worker test passes outside the sandbox;
-its initial local connection failure was environmental. The full package
-suite passes with one interactive-only skip. `R CMD check --no-manual
---no-tests` finishes with zero errors, zero warnings and the existing
-`plot_bubbles`/`head` NOTE; tests ran separately. The successful check used
-installed libraries outside the sandbox after the initial check could not
-see those dependencies. No core package sources changed.

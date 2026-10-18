@@ -50,30 +50,32 @@ testthat::test_that("fixed M permits subsets and still requires complete selecte
 
 testthat::test_that("observations select biology and retain older catch in the new plus age", {
   obs <- database_to_tam_obs(id, source_data$inputs,
-    years = full$years, ages = 0:7,
+    years = full$years, ages = 0:4,
     surveys = c("HERAS", "GERAS", "N20", "IBTS/BITSQ1"), assumptions = source_data$assumptions
   )
   testthat::expect_true(tinyAM::check_obs(obs))
-  for (component in names(obs)) testthat::expect_true(all(obs[[component]]$age %in% 0:7))
-  testthat::expect_equal(nrow(obs$weight), 35L * 8L)
-  old_plus <- subset(full$obs$catch, age >= 7)
+  for (component in names(obs)) testthat::expect_true(all(obs[[component]]$age %in% 0:4))
+  testthat::expect_equal(nrow(obs$weight), 35L * 5L)
+  old_plus <- subset(full$obs$catch, age >= 4)
   expected <- aggregate(obs ~ year, old_plus, sum)
-  new_plus <- subset(obs$catch, age == 7)
+  new_plus <- subset(obs$catch, age == 4)
   testthat::expect_equal(new_plus$obs, expected$obs[match(new_plus$year, expected$year)])
   testthat::expect_equal(sum(obs$catch$obs), sum(full$obs$catch$obs))
-  testthat::expect_equal(obs$index$obs, full$obs$index$obs)
+  testthat::expect_equal(aggregate(obs ~ year + survey, obs$index, sum),
+    aggregate(obs ~ year + survey, full$obs$index, sum))
   older <- subset(source_data$inputs, type == "index" & measure == "numbers_at_age" & survey == "HERAS")[1:2, ]
   older$year <- 1991
-  older$age <- 7:8
+  older$age <- 4:5
   older$value <- c(10, 20)
   with_older <- database_to_tam_obs(id, rbind(source_data$inputs, older),
-    years = full$years, ages = 0:7, surveys = c("HERAS", "GERAS", "N20", "IBTS/BITSQ1"),
+    years = full$years, ages = 0:4, surveys = c("HERAS", "GERAS", "N20", "IBTS/BITSQ1"),
     assumptions = source_data$assumptions
   )
-  plus_index <- subset(with_older$index, year == 1991 & age == 7 & survey == "HERAS")
+  plus_index <- subset(with_older$index, year == 1991 & age == 4 & survey == "HERAS")
   testthat::expect_equal(
     plus_index$obs,
-    sum(older$value * vapply(older$unit, .translation_index_multiplier, numeric(1)))
+    subset(obs$index, year == 1991 & age == 4 & survey == "HERAS")$obs +
+      sum(older$value * vapply(older$unit, .translation_index_multiplier, numeric(1)))
   )
   testthat::expect_error(database_to_tam_obs(id, source_data$inputs,
     years = full$years, ages = c(0, 2, 3)
@@ -81,7 +83,9 @@ testthat::test_that("observations select biology and retain older catch in the n
   testthat::expect_identical(source_data, before)
 })
 
-# Evaluate the stock recipe exactly as when its ages line is edited to 0:7.
+# Exercise an age subset of the retained 0:5 recipe; keep F averaging ages inside the selected grid.
+subset_settings <- full$settings
+subset_settings$F_settings$mean_ages <- intersect(full$settings$F_settings$mean_ages, 0:4)
 e <- new.env(parent = globalenv())
 e$source <- source_data
 e$do_fit <- FALSE
@@ -89,44 +93,44 @@ e$silent <- TRUE
 script <- file.path(.assessment_root, "scripts/translation/stocks", paste0(id, ".R"))
 for (expr in parse(script)) {
   if (is.call(expr) && identical(expr[[1]], quote(`<-`)) && identical(expr[[2]], quote(ages))) {
-    expr[[3]] <- quote(0:7)
+    expr[[3]] <- quote(0:4)
   }
   eval(expr, e)
 }
 fit <- do.call(tinyAM::fit_tam, c(list(
   data = e$obs, years = e$years, ages = e$ages,
   start_par = e$start_par, silent = TRUE
-), full$settings))
+), subset_settings))
 
 testthat::test_that("a reduced-age recipe fits and previews against the original assessment", {
-  testthat::expect_identical(e$ages, 0:7)
-  testthat::expect_equal(e$age_plus_group, 7)
+  testthat::expect_identical(e$ages, 0:4)
+  testthat::expect_equal(e$age_plus_group, 4)
   testthat::expect_true(isTRUE(fit$is_converged))
   testthat::expect_true(isTRUE(fit$sdrep$pdHess))
   fit_before <- fit
   context_before <- assessment
   result <- .assessment_comparison(fit, assessment)
-  testthat::expect_identical(result$ref$dat$ages, 0:7)
+  testthat::expect_identical(result$ref$dat$ages, 0:4)
   for (metric in c("N", "F", "M")) {
-    testthat::expect_equal(nrow(result$ref$pop[[metric]]), 35L * 8L)
-    testthat::expect_true(all(result$ref$pop[[metric]]$age %in% 0:7))
+    testthat::expect_equal(nrow(result$ref$pop[[metric]]), 35L * 5L)
+    testthat::expect_true(all(result$ref$pop[[metric]]$age %in% 0:4))
   }
-  n_source <- subset(source_data$outputs, type == "population" & measure == "numbers_at_age" & age >= 7)
+  n_source <- subset(source_data$outputs, type == "population" & measure == "numbers_at_age" & age >= 4)
   expected_n <- aggregate(value ~ year, n_source, sum)
-  plus <- subset(result$ref$pop$N, age == 7)
+  plus <- subset(result$ref$pop$N, age == 4)
   testthat::expect_equal(plus$est, expected_n$value[match(plus$year, expected_n$year)])
   testthat::expect_true(all(is.na(plus$se)))
   testthat::expect_true(all(is.na(plus$lwr)))
   testthat::expect_true(all(is.na(plus$upr)))
   for (metric in c("F", "M")) {
     wanted_measure <- if (metric == "F") "fishing_mortality_at_age" else "natural_mortality_at_age"
-    mortality <- subset(source_data$outputs, type == "mortality" & measure == wanted_measure & age >= 7)
+    mortality <- subset(source_data$outputs, type == "mortality" & measure == wanted_measure & age >= 4)
     n <- n_source$value[match(paste(mortality$year, mortality$age), paste(n_source$year, n_source$age))]
     expected <- tapply(
       seq_len(nrow(mortality)), mortality$year,
       function(i) weighted.mean(mortality$value[i], n[i])
     )
-    plus <- subset(result$ref$pop[[metric]], age == 7)
+    plus <- subset(result$ref$pop[[metric]], age == 4)
     testthat::expect_equal(plus$est, as.numeric(expected[as.character(plus$year)]))
   }
   testthat::expect_true(all(is.finite(result$ref$pop$abundance$est)))
@@ -145,26 +149,26 @@ testthat::test_that("a reduced-age recipe fits and previews against the original
 
 testthat::test_that("a reported group outside the fit is unavailable rather than partly compared", {
   grouped <- assessment
-  grouped$comparison$comparison_age_groups <- list(N = list(`7+` = 7:8))
+  grouped$comparison$comparison_age_groups <- list(N = list(`4+` = 4:5))
   result <- .assessment_comparison(fit, grouped)
   rows <- subset(result$differences, metric == "N")
   testthat::expect_true(all(rows$comparison_status == "unavailable"))
   testthat::expect_true(all(is.na(rows$percent_difference)))
   testthat::expect_true(all(grepl("outside the fitted age range", rows$reason)))
   duplicate <- grouped
-  duplicate$comparison$comparison_age_groups <- list(N = list(`6+` = 6:7, `7+` = 7:8))
+  duplicate$comparison$comparison_age_groups <- list(N = list(`3+` = 3:4, `4+` = 4:5))
   testthat::expect_error(.assessment_comparison(fit, duplicate), "distinct fitted ages")
 })
 
 testthat::test_that("a direct reduced-age fit can reuse the original full-age observations", {
   direct <- do.call(tinyAM::fit_tam, c(list(
     data = full$obs, years = full$years,
-    ages = 0:7, start_par = e$start_par, silent = TRUE
-  ), full$settings))
+    ages = 0:4, start_par = e$start_par, silent = TRUE
+  ), subset_settings))
   testthat::expect_true(isTRUE(direct$is_converged))
   comparison <- .assessment_comparison(direct, assessment)
-  testthat::expect_identical(comparison$ref$dat$ages, 0:7)
-  testthat::expect_true(all(comparison$ref$pop$N$age %in% 0:7))
+  testthat::expect_identical(comparison$ref$dat$ages, 0:4)
+  testthat::expect_true(all(comparison$ref$pop$N$age %in% 0:4))
   testthat::expect_true(all(is.finite(comparison$ref$pop$abundance$est)))
   testthat::expect_identical(direct$refit_args$data, full$obs)
   testthat::expect_identical(source_data, before)

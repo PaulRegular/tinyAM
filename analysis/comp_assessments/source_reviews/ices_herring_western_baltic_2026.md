@@ -35,18 +35,6 @@ Comparisons involving abundance, SSB, and Fbar require particular care. Official
 
 The revised translation is intended as a simpler, internally consistent approximation of the official assessment, not an exact reproduction of its age structure or likelihood.
 
-## Earlier formula review (2026-10-10)
-
-An earlier IID older-cohort survival candidate was evaluated under the previous translation configuration.
-
-That candidate failed numerical convergence checks, with optimizer code 1, maximum gradient 0.042, a non-positive-definite Hessian, and a near-zero variance component. Scale disagreement also increased.
-
-The candidate was not retained at that time.
-
-This result should not be interpreted as evidence against IID survival deviations in the revised translation because the later changes to the population age structure, F process, and initial-state treatment alter the model being fitted.
-
-No Beverton–Holt or Ricker recruitment relationship was substituted for the official hockey-stick relationship.
-
 ## Assessment represented
 
 The canonical record represents the official 2026 ICES HAWG assessment, fitted for 1991–2025.
@@ -113,4 +101,4 @@ The source report does not provide complete age-specific uncertainty for the pop
 
 Official model states may be used to initialize the tinyAM fit, but any starting values for the translated 5+ state should represent the aggregated older ages rather than the official model's individual age-5 values.
 
-The numerical convergence and agreement of this revised translation should be documented separately from the earlier full-age baseline and IID sensitivity experiment.
+Inspect the current diagnostics and comparison definitions before interpreting this translation.

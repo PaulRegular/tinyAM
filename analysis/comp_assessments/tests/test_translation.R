@@ -1,3 +1,4 @@
+pkgload::load_all(".", quiet = TRUE)
 root <- file.path("analysis", "comp_assessments")
 source(file.path(root, "R", "database_to_tam_obs.R"))
 check_obs <- tinyAM::check_obs
@@ -666,8 +667,8 @@ ebs_obs <- database_to_tam_obs(
   assumptions = ebs$assumptions
 )
 expect_equal(dim(ebs_obs$catch), c(915L, 4L))
-expect_true(all(ebs_obs$catch$unit == "thousand fish"))
-expect_true(all(ebs_obs$weight$unit == "kg"))
+testthat::expect_true(all(ebs_obs$catch$unit == "thousand fish"))
+testthat::expect_true(all(ebs_obs$weight$unit == "kg"))
 expect_equal(sum(is.na(ebs_obs$catch$obs)), 15L)
 expect_equal(dim(ebs_obs$maturity), c(915L, 3L))
 expect_equal(

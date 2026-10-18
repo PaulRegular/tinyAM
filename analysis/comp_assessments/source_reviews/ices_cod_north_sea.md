@@ -50,111 +50,34 @@ Substock and quarterly composition observations use additive logistic-normal lik
 
 Recreational removals are excluded from the fitted assessment.
 
-## tinyAM translation revision (2026-10-14)
+## Current tinyAM translation
 
-The translation was revised to better represent the population and fishing-mortality processes while constraining survey catchability to a biologically plausible, non-decreasing age pattern.
+The recipe fits 1983–2022 and ages 1–7+ as one population. Recruitment is a
+separate RW; older-cohort survival departures are IID with a common SD and
+free initial abundances. Source substock relationships are not represented.
+F follows age-correlated random walks, rather than the source's complete
+shared/scaled substock selectivity model. Its shared-selectivity code 4 combines
+a cubic age effect with a stationary AR1 temporal level and is not identical
+to `cor_rw`.
 
-The translation remains a single-stock approximation of the official three-substock assessment.
+Only the mixed Q3+Q4 survey is fitted, retaining timing 0.75 and supplied
+relative SDs. The six substock/recruitment index streams are omitted. Ordered
+`mono(q_key)` imposes non-decreasing age catchability; this is a translation
+assumption, not a recovered source constraint. Ordering must follow increasing
+survey ages. The constraint reduces age-q flexibility without imposing a
+specific logistic curve.
 
-### Population structure
+The supplied estimated M surface is treated as fixed, motivating the restricted
+period with complete M. Weight and maturity are arithmetic means across available
+Northwestern, Southern and Viking values, not abundance-weighted substock
+aggregates. Biological GMRF uncertainty is omitted. Combined commercial catch
+uses one independent lognormal SD; correlated catch errors, substock landings
+and quarterly composition likelihoods are not reproduced.
 
-The model fits years 1983–2022 and ages 1–7+, preserving the source population age range.
-
-The earlier translation used random-walk cohort-survival deviations. The revised translation specifies:
-
-`N_settings = list(process = "iid", init = "free")`
-
-This retains a separate random-walk recruitment process under the default recruitment settings while using independent cohort-survival deviations for older ages.
-
-Initial abundance at older ages is freely estimated.
-
-Unlike the official assessment, tinyAM uses one combined population and one shared SD for older-cohort survival deviations. Substock-specific population processes and relationships among substocks are not represented.
-
-### Fishing mortality
-
-The previous translation used independent fishing-mortality random walks. The revised configuration is:
-
-`F_settings = list(process = "cor_rw", mu_form = NULL)`
-
-This allows AR(1) correlation across ages in annual log-F increments, rather than treating changes in F at neighbouring ages as independent.
-
-The revised process is closer to the correlated age structure of the official model. However, it does not reproduce the complete multistock F parameterization or the shared, scaled selectivity relationships among Northwestern, Southern, and Viking substocks.
-
-The official implementation's shared selectivity code 4 combines a cubic age effect with a scalar stationary AR1 temporal level. That structure should not be described as identical to tinyAM's `cor_rw` process.
-
-### Survey selection
-
-Only the mixed Q3+Q4 survey (`Survey_Q34`) is fitted in tinyAM.
-
-This index represents the combined population and is therefore more directly applicable to the single-stock approximation than the substock-specific Q1 and recruitment indices.
-
-Its sampling time of 0.75 and supplied relative observation SDs are retained.
-
-The other six fitted index streams are omitted. The resulting observation likelihood contains less information than the official assessment, particularly about recruitment and differences among substocks.
-
-### Monotone survey catchability
-
-The revised survey catchability specification is:
-
-`index_settings = list(q_form = ~mono(q_key), sd_form = ~1, sd_supplied = ~relative_sd)`
-
-The `mono(q_key)` term imposes **non-decreasing catchability across ordered survey age groups**.
-
-tinyAM estimates a baseline catchability and cumulative non-negative increments between successive age groups on the log-catchability scale. Increments can equal zero, allowing adjacent ages to share catchability.
-
-This specification permits increasing or flat catchability but excludes dome-shaped relationships in which catchability declines at older ages.
-
-The constraint is intentional. With only the mixed Q3+Q4 survey and a combined population, unconstrained age-specific catchability may be weakly identified and could produce a dome-shaped pattern that is difficult to distinguish from changes in estimated abundance-at-age.
-
-The monotone curve reduces this flexibility without requiring a specific logistic function or assuming that catchability must strictly increase with age.
-
-**This is a translation assumption, not a recovered constraint from the official assessment.** The official multistock model uses a different observation and population structure, and its numerical catchability estimates have not been independently recovered.
-
-The ordering of `q_key` factor levels must correspond to increasing survey age groups, because `mono()` follows the declared factor-level order.
-
-### Natural mortality
-
-The translation specifies:
-
-`M_settings = list(process = "off", mu_form = NULL, mu_supplied = ~M_assumption)`
-
-The supplied year-age natural-mortality surface is treated as fixed. This motivates restricting the fit to 1983–2022, when the translated M surface is complete.
-
-The official model estimates M through a biological GMRF. That estimated variation and its uncertainty are not reproduced by tinyAM.
-
-### Commercial catch
-
-The combined commercial catch numbers-at-age are retained.
-
-The translation uses independent lognormal catch errors with a single estimated observation SD:
-
-`catch_settings = list(sd_form = ~1)`
-
-The source's age-correlated catch observation errors, substock landings compositions, and quarterly composition likelihoods are omitted.
-
-### Biological inputs
-
-Official weight and maturity observations are substock-specific.
-
-The translation uses the arithmetic mean of the available Northwestern, Southern, and Viking values for each year and age.
-
-This provides one biological surface for the combined population, but the resulting weights and maturity proportions are not weighted by the relative abundances of the substocks.
-
-The method is therefore a practical approximation, rather than an exact aggregation of the official biological inputs.
-
-### Comparison quantities
-
-The official assessment reports outputs separately for each substock. These are combined for comparison with the single-population tinyAM fit.
-
-Population numbers, recruitment, and biomass are summed across substocks.
-
-Age-specific fishing and natural mortality are averaged across substocks using estimated abundance-at-age as weights.
-
-Substock Fbar estimates are combined using their relative abundance over ages 2–4.
-
-Uncertainty intervals are not combined.
-
-These derived quantities allow comparisons of broad population dynamics but should not be interpreted as exact equivalents of the quantities estimated within the original three-substock model.
+For comparisons, source N, recruitment and biomass are summed across substocks;
+F/M-at-age are N-weighted. Substock Fbar uses relative abundance at ages 2–4.
+Intervals are not combined. These derived quantities support broad comparisons,
+not exact equivalence with the original multistock model.
 
 ## Numerical output source and verification
 

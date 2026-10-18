@@ -102,7 +102,7 @@ scripts should not duplicate converters or parse native source files. Keep
 source-import scripts separate; they are used when repairing the database,
 not on every model run. Keep these database-specific helpers analysis-local.
 
-Do not return a settings list from `translate_stock()`. Keep years, ages,
+Keep years, ages,
 survey selections, formulas, processes and initialization visible in the stock
 script. Guard all fitting with `if (do_fit)`, including any explicit warm-start
 call. The runner supplies `source`, `do_fit` and `silent` in an isolated
@@ -131,7 +131,8 @@ analysis/comp_assessments/
 │   ├── observation_readiness.csv
 │   ├── fit_diagnostics.csv
 │   ├── comparison_summary.csv
-│   ├── sensitivity_summary.csv
+│   ├── population_timeseries.csv
+│   ├── figures/
 │   └── cache/                    # gitignored local fits and dashboards
 └── source_cache/                 # gitignored authoritative source files
 ```
@@ -177,6 +178,26 @@ uses `future::multisession` through `furrr`; workers load tinyAM from the curren
 repository checkout. Workers return objects only. The parent process writes
 aggregate CSV files after all workers finish, and restores the previous future
 plan. Set `parallel = FALSE` when debugging.
+
+## Translation units
+
+Translated catch, abundance and recruitment use **thousand fish**; individual
+weights use **kg**; biomass, SSB and catch biomass therefore use **tonnes**.
+Canonical inputs and native source reconstructions retain their source units.
+Count-based surveys follow the translated count scale. Count-rate indices
+retain their effort denominator; relative indices retain their source scale.
+No area expansion or implicit unit conversion is invented.
+
+For a matching total-abundance index, q is unitless. For a count-rate index,
+q retains inverse-effort units such as per tow. A q of one implies numerical
+correspondence only when abundance definitions, ages and sampling times match;
+a relative index does not become an absolute population estimate.
+
+Reference trends and matrix views use the same metric-specific display units.
+Convert known natural-scale estimates and intervals together. Log-scale SEs
+are unchanged; do not rescale an SE whose original scale is unresolved.
+Keep unresolved unit descriptions in provenance rather than inventing labels.
+Spawning-time definitions remain explicit in settings and comparison metadata.
 
 ## Stock background
 
@@ -1105,7 +1126,8 @@ active, fixed or penalized. Specify a small candidate set, test individual
 changes first, and combine them only when those results support it. Keep
 observations, historical periods, ages, units and comparison definitions
 unchanged. Retain every warning, failure and attempted model in the local
-review cache; track reproducible candidate code and one compact results table.
+review cache. Commit substantive candidate code and outcomes before retiring
+them; the maintained checkout contains the retained model, not its trial history.
 
 Use `check_tam()` for optimizer status, gradients, Hessian and numerical checks.
 Review structural checks and statistical-support advisories separately.
@@ -1118,7 +1140,7 @@ trade-off for review. Raw objectives across different process formulations
 and likelihood equality are not model-selection criteria.
 
 Stock backgrounds describe only the retained model. Detailed development
-history stays in review code/results and Git. Refresh aggregate diagnostics
+history stays in Git and local review caches. Refresh aggregate diagnostics
 and comparisons only with a complete final batch, not a subset of stocks.
 
 ------------------------------------------------------------------------
@@ -1406,19 +1428,6 @@ trajectory agreement: annual metrics use correlation across common years;
 age-specific metrics use the mean of within-age correlations across years.
 Constant series have no defined correlation and are omitted from that mean.
 This avoids treating the age gradient itself as evidence of temporal agreement.
-
-For the Pacific expansion review, flag a comparable core metric when its mean
-absolute percent difference exceeds 20%, its absolute terminal mean percent
-difference exceeds 20%, or its trend correlation is below 0.90. Apply this to
-SSB, recruitment, total abundance, N-at-age, F-at-age and estimated M over common
-historical years. Use the existing annual and within-age correlation definitions
-above, not squared correlation. These are review prompts, not tuning targets or
-evidence of scientific equivalence. Identify new versus existing cases and
-matched versus approximate comparisons. List unavailable and non-equivalent
-comparisons separately; missing statistics are not passes. Check fixed M for
-input consistency rather than crediting it as successful estimation. Separately
-flag numerical non-convergence, failed uncertainty estimation and important
-identifiability warnings.
 
 Differences should be interpreted in light of documented translation choices, such as:
 

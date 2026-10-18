@@ -74,130 +74,25 @@ An independent reviewer recommended the SAM settings subsequently adopted in the
 
 The standardized survey indices are retained on their native numerical scales because the publications do not specify calibrated physical abundance units.
 
-## tinyAM translation revision (2026-10-14)
+## Current tinyAM translation
 
-The tinyAM translation was revised to better match the official assessment's population and fishing-mortality process structures.
+The recipe retains 1972–2026 and ages 0–8+, RW recruitment, IID survival
+residuals, and integrated older initial abundance. `N_sd_key` in population
+covariates shares survival SD over destination ages 1–7, with a separate 8+
+SD. First-year recruitment remains an estimated fixed effect; SAM initial-state
+integration is not claimed to be identical.
 
-The earlier translation used IID older-cohort survival deviations with one shared SD and a stationary AR1 fishing-mortality process around age-specific mean F.
+F follows `cor_rw` with one shared SD. Supplied annual M, stock weights,
+maturity and zero pre-spawning mortality fractions are retained. The shared
+age-correlation structure approximates SAM; first-state and integration
+conventions may still differ.
 
-The revised model retains IID survival deviations but introduces age-specific process-SD sharing through `N_sd_key`. It also replaces the stationary F process with correlated random walks.
-
-These changes bring the core process assumptions considerably closer to the official SAM configuration while retaining a simpler observation likelihood.
-
-### Population process
-
-The revised translation specifies:
-
-`N_settings = list(process = "iid", init = "latent", sd_form = ~N_sd_key)`
-
-Recruitment continues to follow a separate random-walk process under the default tinyAM recruitment settings.
-
-Older-cohort survival deviations are independently distributed rather than accumulating as a random walk.
-
-The `N_sd_key` formula allows different process SDs across defined age groups. The intended grouping follows the official assessment: a shared SD for ages 1–7 and a separate SD for age 8+.
-
-This represents a closer approximation to the official model than the previous translation's single older-cohort survival SD.
-
-Initial older-age abundance is integrated without an initial density; r0 is an estimated fixed effect.
-
-The official model's initial-state treatment remains distinct, as documented below.
-
-The translation should explicitly verify that `N_sd_key` is defined in the population covariates with the intended age-group mapping before treating the variance structures as equivalent.
-
-### Fishing-mortality process
-
-The revised translation specifies:
-
-`F_settings = list(process = "cor_rw", mu_form = NULL)`
-
-This replaces the previous specification:
-
-`F_settings = list(process = "ar1", mu_form = ~factor(age))`
-
-The previous model described stationary fishing-mortality fluctuations around estimated age-specific means. The revised model instead allows changes in log F to accumulate through time, with AR(1) correlation between annual increments at neighbouring ages.
-
-This is an important structural improvement because the official SAM likewise uses age-correlated random-walk F increments.
-
-Both the official model and revised tinyAM translation retain separate fishing-mortality states by age and a shared increment-variance structure.
-
-The revised process therefore captures the principal temporal and cross-age features of official F more directly than the earlier stationary AR1 approximation.
-
-Exact covariance parameterization, first-state treatment and random-effect integration need not be identical between implementations.
-
-### Natural mortality
-
-The translation specifies:
-
-`M_settings = list(process = "off", mu_form = NULL, mu_supplied = ~M_assumption)`
-
-Annual age-specific M values from the official assessment are supplied as fixed inputs.
-
-No natural-mortality process is estimated. This retains the official numerical surface without introducing an additional source of population-model flexibility.
-
-### Commercial catch
-
-The translation retains the official total-catch numbers-at-age series.
-
-It uses:
-
-`catch_settings = list(sd_form = ~1, fill_missing = TRUE)`
-
-Catch observations follow an independent lognormal likelihood with one estimated observation SD.
-
-Missing catch cells are eligible for model-based filling rather than being treated as observed positive catches.
-
-The translation retains the source catch series but does not claim exact equivalence to the native catch observation configuration.
-
-### Survey observation model
-
-The translation retains both official delta-GAM standardized survey indices, their age ranges and their sampling fractions.
-
-The revised settings are:
-
-`index_settings = list(q_form = ~0 + q_key, sd_form = ~0 + survey, sd_supplied = ~relative_sd, fill_missing = TRUE)`
-
-Survey catchability remains independently estimated for the translated survey-by-age groups.
-
-Separate baseline observation SDs are estimated for Q1 and Q3+Q4. The native relative precision information is retained through equivalent multiplicative SD factors.
-
-This reproduces the source's independent observation-error assumption while simplifying its exact variance-sharing specification.
-
-Missing survey observations may be filled within the model but are not treated as newly observed data.
-
-**The principal remaining observation-model difference is density-dependent catchability.**
-
-The official model predicts an index at selected young ages using a power relationship:
-
-`I = q × (N at survey time)^power`
-
-The relevant powers are estimated for Q1 age 1 and Q3+Q4 ages 0–1.
-
-The tinyAM translation currently uses ordinary survey-by-age catchability, equivalent to setting these powers to one.
-
-Consequently, the fitted q coefficients and abundance estimates at those ages should not be assumed directly equivalent to the official model's parameters.
-
-This difference remains despite improved agreement in the population and F processes.
-
-### Biology and spawning biomass
-
-The source annual stock-weight and maturity surfaces are retained without substitution.
-
-The official model's fishing and natural-mortality fractions before spawning are both zero.
-
-tinyAM retains the corresponding beginning-of-year spawning-biomass convention.
-
-Unlike translations with unresolved spawning timing, this case does not require an approximation to the official spawning fractions.
-
-### Interpretation
-
-The revised process configuration is closer to official SAM in two important respects:
-
-1. Older-cohort survival variation can be grouped across ages rather than requiring one common variance.
-2. Fishing mortality now follows age-correlated random walks rather than stationary AR1 deviations around age-specific means.
-
-The resulting model remains simpler because the native catchability powers, precise observation variance structure and initial-state treatment are not all reproduced.
-
-Improved agreement with official outputs is consistent with these process changes, but agreement statistics should be documented separately rather than attributed to a single modification without additional sensitivity tests.
+Catch uses one lognormal SD. Both delta-GAM survey series retain native scales,
+ages, timing and relative precision factors, with survey-by-age q and one
+estimated SD level per survey. Missing observations are excluded from the
+likelihood. Source density-dependent q powers at Q1 age 1 and Q3+Q4 ages 0–1
+are omitted, and exact observation-variance sharing differs. Ordinary q does
+not reproduce a power relationship between abundance and an index.
 
 ## Forecast distinction
 
@@ -362,12 +257,9 @@ The principal remaining observation-model simplification is the omission of dens
 
 The official assessment inputs, outputs and canonical source-review findings remain unchanged.
 
-
-## Initial-abundance update
+## Initial abundance
 
 The cached official SAM fit has `initState = 0` and no `initN` parameters.
-The translation now uses `init = "latent"`: older first-year log-abundances
-are integrated without an initial density. Recruitment r0 remains fixed, so
-this is not complete SAM initial-state equivalence. The isolated initialization
-trial passed numerical checks without changing other model assumptions.
-See [initialization trials](../INITIALIZATION_REVIEW.md) for comparisons and limitations.
+The translation uses `init = "latent"`: older first-year log-abundances are
+integrated without an initial density. First-year recruitment remains an
+estimated fixed effect, so this is not complete SAM initial-state equivalence.

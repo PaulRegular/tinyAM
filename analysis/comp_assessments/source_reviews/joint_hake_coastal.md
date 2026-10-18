@@ -91,7 +91,7 @@ the full 52-key ageing-error inventory are not yet exported. All recovered
 quantities refer to the 2025 production base, not a FIMS demonstration or the
 2026 projection update.
 
-## tinyAM translation and numerical result — initial expansion (historical)
+## Observation and comparison definitions
 
 The translation uses 1975–2024 and ages 2–15+. Native percentages are
 normalized outside the database, as in the source, and converted using
@@ -101,41 +101,16 @@ and fecundity products are identical across ages 15–20+, so the observed
 fecundity product divided by population weight gives maturity; first mature
 age 2, female fraction 0.5 and January 1 timing are applied separately.
 
-The model retains deterministic survival, free initial ages, fixed recruitment
-log SD 1.4, an estimated constant M and q sharing at ages 6+. Independent
-F random walks, constant-mean age-2 recruitment and independent lognormal
-age observations approximate the source selectivity, age-0 Beverton–Holt
-relationship and joint Dirichlet-multinomial likelihoods. Source M bounds
-and prior, recruitment bias/terminal rules, ageing error and the additional
-survey-variance formulation are not reproduced. No observation is adjusted
-using an estimated q, M or population state.
-
-Default starts returned optimizer code 0, objective 1176.543 and maximum
-gradient 0.000105, but fixed-parameter covariance was non-finite. The single
-permitted source-based retry used positive available N starts and the source
-M median; unavailable F/q starts and any rounded-zero states retain package
-defaults through named alignment. It converged with code 0, the same objective,
-maximum gradient 0.000694 and finite covariance/positive-definite Hessian.
-The default was not optimized again when completing that retry. Both actual
-attempts are retained (about 69 and 43 seconds).
-
-**Numerical convergence is not scientific agreement here.** M approaches zero
-(about 3.1e-7, versus official median 0.233454), indicating a serious boundary
-and identification concern despite the numerical checks. All comparable core
-metrics are flagged: SSB MAPD 69.9%, terminal difference −64.3%, correlation
-0.619; modeled-age abundance 71.6%, −66.0%, 0.785; N-at-age 100.6%, +26.7%,
-0.883; age-2 entry 92.0%, +82.4%, 0.959; M differs by essentially −100%.
-The omitted source prior and other approximation differences are plausible
-contributors, but these two attempts do not isolate the cause. No tuning or
-extra retry was made to improve agreement.
-
 The local dashboard retains native posterior SSB and explicitly approximate
 common-age sums of marginal medians. F-at-age and Fbar comparisons remain
 unavailable. Available credible intervals are retained only on their native
 quantities; no uncertainty is attached to sums or pooled posterior medians.
 
-## Source and model review — 2026-10-17
+## Current mortality representation
 
-Restored the native quadratic log-M penalty (center -1.60944, SD 0.1) using one shared fixed-SD Gaussian mean effect, with one density contribution and no free M intercept. M is 0.18335 and the effect SE is 0.09591, replacing the near-zero baseline. After default covariance failure, one aligned N-start retry passes (code 0, gradient 0.000868, PD Hessian). Median absolute SSB difference improves 69.6% to 44.8% and correlation 0.619 to 0.751; modeled-age total N improves 71.8% to 42.8% and 0.785 to 0.904. A BH trial gives essentially the same comparisons and weak curve shape, so constant recruitment is retained. Source bounds, full Bayesian integration, juvenile recruitment definitions and composition likelihood remain different. Full M-surface intervals are not automatically propagated; uncertainty is available for the shared log-M effect.
-
-See [the complete twelve-case review](../PACIFIC_REVIEW.md#source-and-model-review) for paired median differences, correlations, diagnostics and rejected trials. Canonical numerical inputs and outputs are unchanged.
+The recipe represents the native quadratic log-M penalty (center -1.60944, SD 0.1)
+with one shared fixed-SD Gaussian mean effect and no free M intercept. Source
+bounds and full Bayesian integration remain different. Uncertainty is available
+for the shared log-M effect, rather than automatically propagated over the full
+M surface. Constant-mean recruitment approximates the source age-zero relationship;
+composition likelihoods and juvenile recruitment definitions also differ.

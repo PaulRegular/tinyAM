@@ -89,9 +89,3 @@ terminal difference +33.8% and correlation 0.647; near-zero official juvenile F
 makes relative differences especially large. These are flagged for review.
 Age-2 recruitment (16.1%, +8.3%, 0.973) and total abundance (19.1%, −12.8%, 0.985)
 do not cross the requested thresholds. Fixed-M agreement is input consistency.
-
-## Source and model review — 2026-10-17
-
-Checked kg weights, joint composition conversion, source CVs and active observations. F/precision alternatives weakened important comparisons; retain the documented baseline and its conditional source-start fit. Whole-million official N rounding limits precision.
-
-See [the complete twelve-case review](../PACIFIC_REVIEW.md#source-and-model-review) for paired median differences, correlations, diagnostics and rejected trials. Canonical numerical inputs and outputs are unchanged.

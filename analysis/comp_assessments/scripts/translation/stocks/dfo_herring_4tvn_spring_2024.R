@@ -203,7 +203,7 @@ background <- c(
 
   "| M | Log-M follows separate random walks for ages 2–6 and 7–11+, with initial-M prior means of 0.2 and fixed increment SD of 0.075. | Two age-blocked AR1 M processes centered on 0.2, with estimated process variation. | Stationary AR1 dynamics provide a mortality anchor but do not reproduce the source random walks, initial-state priors or fixed increment SD. |",
 
-  "| Catch | Fixed- and mobile-gear catch-at-age are reported separately in thousand fish. The official SCA uses total catch and age-composition likelihoods. | Sum both gears into one age-specific catch stream, convert to fish and estimate one lognormal catch-error SD. | The total-plus-composition observation likelihood is not reproduced. |",
+  "| Catch | Fixed- and mobile-gear catch-at-age are reported separately in thousand fish. The official SCA uses total catch and age-composition likelihoods. | Sum both gears into one age-specific catch stream in thousand fish and estimate one lognormal catch-error SD. | The total-plus-composition observation likelihood is not reproduced. |",
 
   "| CPUE catchability | The 2022 methods describe annual random-walk variation in log catchability, beginning in 1990, with fixed increment SD of 0.1. | Estimate a CPUE baseline and annual log-q random walk with an estimated increment SD. The initial random-walk deviation is zero. | The temporal structure is similar, but its process SD is estimated because the fixed 0.1 specification did not converge in the translation. |",
 
@@ -211,7 +211,7 @@ background <- c(
 
   "| Indices | Spring fixed-gear CPUE and acoustic observations enter age-composition and aggregate-biomass likelihoods. The documented acoustic biomass likelihood has weight 3. | Fit CPUE ages 4–11 and acoustic ages 2–10 as age-specific lognormal indices, with separate survey SDs and approximate timings of 0.25 and 0.75. | Composition, aggregate-biomass likelihoods and the acoustic likelihood weight are not reproduced. |",
 
-  "| Index scale | The acoustic age-index series is documented in thousand fish in DFO 2016/060, Table 16. | Convert acoustic observations to fish through canonical database units and retain a log-q link. | The documented numerical scale is retained without a manual multiplier. |",
+  "| Index scale | The acoustic age-index series is documented in thousand fish in DFO 2016/060, Table 16. | Retain the translated thousand-fish scale through canonical database units and retain a log-q link. | The documented numerical scale is retained without a manual multiplier. |",
 
   "| Weights and maturity | Maturity is knife-edge between ages 3 and 4. Beginning-year weights combine gear-specific weights and use adjacent age-year geometric means. | Combine fixed/mobile weights using catch-number weighting, interpolate gaps and apply the adjacent-cell geometric mean and maturity schedule. | Gear weighting is inferred; its median difference from weights implied by published biomass/N is 0.073%. Boundary cells remain approximate. |",
 

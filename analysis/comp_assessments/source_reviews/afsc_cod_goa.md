@@ -1,22 +1,10 @@
 # Gulf of Alaska Pacific cod: official-assessment source review
 
-## Formula review (2026-10-10)
-
-The active control fixes BH steepness at one and recruitment SD at 0.44;
-this is not evidence for a free BH curve. Fixed-SD IID recruitment, a rising
-logistic survey-q curve, and a quadratic catch log-SD were tested separately.
-IID reduced approximate SSB average error from 32.1% to 29.4%, but terminal
-error rose from 7.7% to 18.2% and trend correlation decreased. Logistic q gave
-only a small average change (31.5%) and left age-patterned survey residuals;
-the native selectivity is length-based, not this age curve. Quadratic catch SD
-failed Hessian checks and the abundance scale diverged. Retain the finalized
-age-specific mean F and q, IID F, deterministic survival and exp initializer.
-No matched N/F or recruitment comparisons are available to support changing
-that decision. M agreement remains supplied by construction. All attempts and
-warnings are recorded in the local review cache and translation-review table.
-
 Status: canonical partial record afsc_cod_goa_2026 imported. Inputs and reported summary outputs are transcribed; numerical N-at-age and F-at-age surfaces from the current official run have not been recovered.
 Charbonneau identifier: AFSC_GOA_Gadus_macrocephalus.
+
+The active control fixes BH steepness at one and recruitment SD at 0.44;
+a freely estimated BH curve would change that source assumption.
 
 ## January 2026 assessment
 
@@ -52,7 +40,6 @@ Length compositions have 182 positive year/fleet rows: trawl 48, longline/jig 46
 
 The official Stock Synthesis manual explains that a negative fleet code excludes a composition observation's likelihood contribution, even though predictions and diagnostics may still be calculated. It also confirms that the observation's month determines survey timing; the fleet-definition timing field is not sufficient.
 Manual: https://nmfs-ost.github.io/ss3-doc/SS330_User_Manual_release.html
-
 
 ## Historical summary staging
 
@@ -123,8 +110,6 @@ Only the age-sampled NMFS bottom-trawl survey is translated. Its every-other-yea
 Weight-at-age and maturity-at-age are reconstructed from the reported mean-length growth curve and the official weight-length and length-logistic parameters. Length variation is not integrated over. A 0.5 female multiplier is used to match the published female SSB convention. The official M estimates are supplied as fixed M, including the higher 2014–2016 block; its reported uncertainty is not fitted. The finalized tinyAM model uses exponential N initialization with N process off, IID F deviations around an age-specific mean, supplied fixed M, and age-specific q. Age-specific F means and q materially improved the source fishery/survey representation. An unconstrained q block was retained after a monotone-q alternative gave a similar result. A free initial-abundance fit was tested but did not converge reliably. The source fleet selectivity, official N/F surfaces and composition likelihood are not represented.
 
 The finalized fit converged (optimizer code 0, relative convergence (4), objective 274.38, maximum absolute gradient 0.000411, positive-definite Hessian, 25 fixed and 208 random effects). The approximate aggregate SSB comparison over 2007–2025 used source tonnes and tinyAM kilograms scaled by 1e-3: mean absolute difference 24,893 t (32.10%), terminal-year difference +7.73%, and trend correlation 0.945. The M comparison contains 190 age-year cells and is equal by construction. The source age-specific SSB contributions are unavailable, so this is explicitly an aggregate comparison.
-
-
 
 Recruitment is not compared because official recruitment is age 0 and tinyAM recruitment is age 1. Official N-at-age and F-at-age were not recovered. The M comparison is identical by construction because official numerical M was supplied as fixed M; it is not an independent validation of the M translation.
 

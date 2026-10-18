@@ -107,9 +107,3 @@ apparently close metrics do not establish agreement from this fit. Potential
 limitations include the initial abundance/F boundary, independent F states,
 the source's inconsistent composition/index timing and the omitted joint
 composition likelihood. These results do not isolate a single cause.
-
-## Source and model review — 2026-10-17
-
-Checked grams-to-tonnes conversion, female restriction after joint-sex number conversion and native covariate centering. F/precision alternatives did not resolve numerical problems; later shared-F/random-N trials hit the ten-minute trial limit. Different source biomass/composition times and joint likelihood remain limitations.
-
-See [the complete twelve-case review](../PACIFIC_REVIEW.md#source-and-model-review) for paired median differences, correlations, diagnostics and rejected trials. Canonical numerical inputs and outputs are unchanged.

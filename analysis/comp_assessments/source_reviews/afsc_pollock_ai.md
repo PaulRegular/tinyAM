@@ -97,9 +97,3 @@ interpreted as a successful reproduction. Native SSB is labelled approximate
 because population weights differ; historical F-at-age is unavailable and
 arithmetic Fbar is non-equivalent. All available abundance/SSB comparisons and
 estimated M are flagged for review; missing F comparisons are not passes.
-
-## Source and model review — 2026-10-17
-
-Correlated/shared-level F and the verified M log-penalty did not produce a usable fit. The M-prior trial still has non-finite fixed-effect covariance and extreme N/q scaling despite a small gradient. Native q normalization, recruitment and joint likelihood differences remain unresolved.
-
-See [the complete twelve-case review](../PACIFIC_REVIEW.md#source-and-model-review) for paired median differences, correlations, diagnostics and rejected trials. Canonical numerical inputs and outputs are unchanged.

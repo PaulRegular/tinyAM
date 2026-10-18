@@ -174,202 +174,35 @@ The source's published biomass-at-age represents January 1 biomass.
 
 The common-definition SSB comparison therefore uses January 1 mature biomass. It is not the official assessment's April 1 SSB, which would require pre-spawning survival calculated from the unavailable fitted M surface.
 
-## tinyAM translation revision (2026-10-14)
-
-The latest translation retains the documented observations and fit-only biological transformations but revises the F and CPUE catchability processes.
-
-The principal changes relative to the earlier baseline are:
-
-- Correlated random-walk fishing mortality replaces stationary AR1 F around age-blocked means.
-- CPUE catchability uses an annual random walk rather than three fixed temporal levels.
-- A separate survey baseline is estimated so the first CPUE year has an identifiable absolute catchability.
-- The CPUE random-walk increment SD is estimated rather than fixed at the documented value of 0.1.
-- The acoustic survey is excluded from the CPUE random walk.
-
-No source-derived population or fishing-mortality estimates are used as optimizer starting values in the latest script.
-
-### Model period and population ages
-
-The translated model fits 1978–2023 and ages 2–11+, retaining age 11 as the plus group.
-
-The two commercial fishing gears are combined into one catch stream. Both CPUE and acoustic survey observations are retained on their respective published age ranges.
-
-### Recruitment and abundance
-
-The translation specifies:
-
-`N_settings = list(process = "iid", init = "exp")`
-
-Age-2 recruitment follows tinyAM's default random-walk recruitment process.
-
-Initial older-age abundance is obtained through the exponential survivorship initializer.
-
-Older-cohort survival deviations are estimated as independent process errors.
-
-This is a more flexible population model than the official SCA's documented deterministic cohort-survival structure. The additional survival process is retained as part of the numerically workable approximation.
-
-### Fishing mortality
-
-The current translation specifies:
-
-`F_settings = list(process = "cor_rw", mu_form = NULL, mean_ages = 6:8)`
-
-Fishing mortality follows age-correlated random walks on the log scale.
-
-For age a and year t, annual changes are:
-
-`log(F[a,t]) - log(F[a,t-1]) = eta[a,t]`
-
-with correlation across ages described by an AR1 covariance for the annual increments.
-
-The process permits persistent temporal changes in age-specific fishing mortality while encouraging related ages to change together.
-
-Unlike the official SCA, it does not impose period-specific logistic fishery selectivity or a common annual fully selected fishing-mortality coefficient.
-
-Period-specific logistic F mean curves with AR1 deviations were explored but did not produce a satisfactory converged fit. They are not retained in the latest translation.
-
-The script still constructs `fishery_period` using the documented 1978, 1990 and 2005 boundaries, but the final `F_settings` does not reference that covariate. It has no effect on the fitted F process.
-
-The previous age-blocked mean-F covariate is likewise not used in the final `F_settings`.
-
-Fbar is calculated over ages 6–8.
-
-### Natural mortality
-
-The current translation specifies:
-
-`M_settings = list(process = "ar1", mu_form = NULL, mu_supplied = ~M_process_center, age_breaks = c(2, 7, 11), first_dev_year = 1978L)`
-
-The supplied mortality centre is 0.2.
-
-Natural mortality is represented by two age-blocked, stationary AR1 processes on the log scale, corresponding to ages 2–6 and 7–11+.
-
-The processes fluctuate around the supplied mortality centre rather than following unrestricted random walks.
-
-The temporal and age-block correlation parameters and process variation are estimated.
-
-This differs from the documented SCA in three important ways:
-
-- The source uses random walks rather than stationary AR1 processes.
-- The source fixes the M increment SD at 0.075.
-- The source has explicit initial-M priors that are not reproduced by the translation.
-
-The AR1 process is retained because it provides a stationary mortality reference and has been more numerically manageable in this translation.
-
-Source M estimates are not used as fixed inputs or comparison observations.
-
-### CPUE catchability
-
-The current translation uses a separate baseline and age-selectivity curve for each survey, with an annual random walk restricted to CPUE.
-
-Its catchability formula is:
-
-`q_form = ~0 + survey + mono(age, by = survey) + rw(cpue_year, by = cpue_active)`
-
-The link is logarithmic.
-
-The ordinary survey terms estimate separate absolute catchability levels for the CPUE and acoustic series.
-
-The `mono(age, by = survey)` term estimates a non-decreasing age-catchability curve for each survey. These flexible age curves can plateau but do not enforce the logistic shape described in the SCA methods.
-
-The CPUE random-walk term allows a single annual catchability multiplier shared across CPUE ages.
-
-For CPUE, the fitted log-catchability structure is:
-
-`log(q[a,t]) = alpha_CPUE + g_CPUE(a) + u[t]`
-
-where the first CPUE random-walk deviation is zero and subsequent deviations follow:
-
-`u[t] - u[t-1] ~ N(0, sigma_q^2)`
-
-The random-walk increment SD, `sigma_q`, is estimated rather than fixed.
-
-A fixed SD of 0.1, as documented in the 2022 methods, was tested but did not produce a converged translation fit. Estimating the SD was more numerically successful and is retained.
-
-This is a deliberate simplification and departure from the last documented source penalty, not confirmation that the official SCA estimates the same parameter.
-
-The first CPUE year defines the random-walk baseline. Its absolute catchability is estimated through the survey intercept and age curve; it does not depend on a separately estimated first-year random-walk deviation.
-
-The implementation uses a numeric CPUE indicator. The indicator equals one for CPUE observations and zero for acoustic observations, so the annual random walk does not affect acoustic catchability.
-
-The acoustic survey retains its separate baseline and non-decreasing age curve, constant through time.
-
-The previously fitted three-period CPUE catchability terms are not retained.
-
-### Survey observation likelihoods
-
-The translation uses:
-
-`index_settings = list(q_form = ~0 + survey + mono(age, by = survey) + rw(cpue_year, by = cpue_active), q_link = "log", sd_form = ~0 + survey)`
-
-Separate observation SD parameters are estimated for CPUE and acoustic observations.
-
-The acoustic index is fitted using its documented thousand-fish scale converted to fish through the canonical data converter.
-
-The CPUE and acoustic age-index observations are fitted using independent age-specific lognormal errors.
-
-This differs substantially from the documented SCA age-composition and aggregate-biomass likelihoods. In particular, the official acoustic biomass weighting is not reproduced.
-
-CPUE timing is approximated at 0.25 of the year and the acoustic survey at 0.75. The latter reflects the late September to early October survey window.
-
-Neither survey timing is claimed to reproduce the exact native SCA timing convention.
-
-In the supplied latest script, `fill_missing` is omitted from the catch and index settings. Under the current tinyAM defaults, this activates missing-observation filling for both components. The earlier translation explicitly used `fill_missing = FALSE`.
-
-This implementation choice should be made explicit after verifying that the default was intended. Filled observations are latent model quantities, not additional measured data.
-
-### Catch observations
-
-The translated catch model retains summed fixed- and mobile-gear catch numbers-at-age, converted from thousand fish to individual fish.
-
-One estimated catch observation SD is used:
-
-`catch_settings = list(sd_form = ~1)`
-
-The source's combined total-catch and age-composition likelihood is not reproduced.
-
-### Model interpretation
-
-The revised model is a relatively flexible age-structured state-space approximation to the official SCA.
-
-Its key structural features are random-walk recruitment, independent older-cohort survival deviations, age-correlated random-walk F, stationary two-block AR1 M, and an estimated CPUE catchability random walk.
-
-These processes can compensate for one another, especially because the translation does not reproduce the original aggregate survey biomass and age-composition likelihoods.
-
-Consequently, numerical convergence and agreement with official population estimates should be evaluated separately from exact structural equivalence.
-
-The latest model is retained as a workable approximation rather than characterized as a complete reproduction of the official assessment.
-
-## Earlier refinement trials (historical results)
-
-The following experiments were documented on 2026-10-10 using earlier translation configurations. Their results provide development history and should not be interpreted as current-model performance.
-
-| Trial | Converged / positive Hessian | Median absolute % difference: total N | January 1 mature biomass |
-|---|---|---:|---:|
-| Earlier revised-input baseline | Yes / yes | 42.2 | 17.0 |
-| Earlier log-q and unresolved-scale configuration | Yes / yes | 42.2 | 17.0 |
-| Restrict CPUE to ages 4–10 and acoustic to 4–8 | Yes / yes | 32.8 | 22.6 |
-| M random walk | Yes / yes | 49.7 | 27.5 |
-| AR1 rather than IID older-age N | Yes / yes | 53.6 | 27.1 |
-| Three-degree-of-freedom spline for CPUE year | Yes / yes | 50.5 | 31.8 |
-| No older-age N process | No / no | — | — |
-| Free initial abundance | No / no | — | — |
-| Random initial abundance | No / no | — | — |
-| Earlier final fit with revised gear-weight construction | Yes / yes | 42.2 | 19.0 |
-
-The former three-period CPUE baseline also underwent an annual CPUE catchability RW sensitivity test. That earlier candidate converged and improved some trajectory correlations, but mean January 1 mature-biomass error increased from 24.9% to 67.1%, and fishing-mortality error increased from 62.8% to 192.3%.
-
-Those results were obtained before the current survey-baseline parameterization and other model revisions. They should not be used as estimates of the present configuration's performance.
-
-The earlier final model had optimizer code 0, objective 1173.766 and a positive-definite reported Hessian. Its maximum projected gradient after the acoustic unit correction was 0.0000538.
-
-The earlier model's mean absolute percentage difference in January 1 mature biomass was 24.9%, with a terminal-year difference of −33.8%.
-
-Its terminal abundance and recruitment remained substantially below the official source estimates.
-
-These values are retained as historical benchmarks only. The latest CPUE-RW and correlated-F configuration requires its own numerical convergence and comparison results before updated performance claims can be recorded.
-
-The earlier M and initial-state sensitivity tests do not establish that alternative biological assumptions are scientifically inappropriate; they describe the outcomes of the tested translation configurations and starting conditions.
+## Current tinyAM translation
+
+The recipe models 1978–2023 and ages 2–11+, pooling the two commercial gears.
+RW age-2 recruitment and IID older-cohort survival departures with exponential
+initialization approximate the source's deterministic survival. F follows
+age-correlated log random walks; Fbar uses ages 6–8. Period-specific logistic
+fishery selectivity is not imposed.
+
+M follows stationary AR1 processes for ages 2–6 and 7–11+ around a supplied
+centre of 0.2, beginning in 1978. This differs from the source M random walks,
+fixed increment SD 0.075 and initial-M priors. Source M estimates are not fixed
+inputs or comparison observations.
+
+CPUE and acoustic surveys have separate baselines and non-decreasing age-q
+curves. Only CPUE has an annual log-q random walk: a numeric indicator is one
+for CPUE and zero for acoustic observations. The first temporal effect is zero;
+the survey intercept identifies its absolute baseline. The increment SD is
+estimated, rather than fixed at the source value 0.1. Acoustic q is constant
+through time. Source-derived population/F estimates are not optimizer starts.
+
+Catch and indices use independent age-specific lognormal errors, with one catch
+SD and separate survey SDs. This replaces the source total-plus-composition
+likelihoods and acoustic biomass weighting. Model catch and count-based indices
+use the converter's thousand-fish scale; missing or zero observations remain
+excluded, with complete predictions available. CPUE timing 0.25 and acoustic
+timing 0.75 are explicit approximations. The acoustic survey's documented unit
+and the distinction between January 1 mature biomass and official April 1 SSB
+are retained in the definitions above. Population processes and q can compensate
+for one another; convergence does not establish source-model equivalence.
 
 ## Remaining translation limitations
 

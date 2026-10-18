@@ -1,17 +1,5 @@
 # North Sea saithe source review
 
-## Formula review (2026-10-10)
-
-Replacing stationary AR1 F with independent temporal F RWs reduced scale
-errors for SSB (723% to 401%), N (830% to 430%), recruitment (103% to 63%)
-and F (75% to 65%). It converged, but SSB and F trajectory correlations
-weakened; substantial disagreement remains. Retain the baseline and flag the
-alternative for review rather than select it from scale improvements alone.
-Source age-correlated innovations, four F SD groups and aggregate CPUE remain
-different. For comparison only, the reported shared 9+ F state is displayed
-separately at ages 9 and 10+. This is the source's explicit equality constraint,
-not a pooled-rate average; canonical source rows are unchanged.
-
 ## Assessment and source
 
 The current detailed official assessment is the 2026 ICES assessment of
@@ -98,9 +86,9 @@ the historical fitted period.
   translation therefore fits the Q3–Q4 age-specific index and records the
   CPUE series as omitted from the fit. It does not divide aggregate CPUE among
   ages or treat its relative scale as absolute biomass.
-- tinyAM cannot exactly reproduce SAM's age-correlated F states and residuals,
-  shared F state at ages 9–10+, or N-process variance sharing. These are
-  documented simplifications for the proof-of-concept fit.
+- The chosen F process, shared source F state and correlated observation errors
+  differ from SAM. tinyAM supports age-correlated F RW increments and process-SD
+  sharing, but their availability does not make the retained density identical.
 
 The database status remains partial for assumptions, inputs, and outputs
 because the current native run object and exact sampling fractions are
@@ -108,6 +96,8 @@ unavailable, and the published age-specific surfaces lack reported
 uncertainty. No plot-derived values or fitted estimates are being substituted
 for inputs.
 
-## Translation review — 2026-10-17
+## Current initial abundance
 
-Free initial older-age abundance improves all five comparable core median differences and trends, with normal starts passing. SSB median absolute difference is 9.4% (previously 10.8%), r 0.981 (0.970). Source F/N start construction is removed; observation conversion, plus groups and source definitions are unchanged.
+The retained translation estimates older first-year abundance freely. It does
+not use source N/F estimates to construct starting values. Current age pooling,
+catchability and other scientific settings are defined in the stock script.

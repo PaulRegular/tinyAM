@@ -86,9 +86,3 @@ N-weighted F-at-age 587.46%, +1201.45%, −0.177. Very small juvenile F makes
 relative differences especially large. These metrics require review. Fixed
 M is checked only for input consistency. Native age-0 recruitment and all-age
 SSB are retained separately; no combined uncertainty is invented.
-
-## Source and model review — 2026-10-17
-
-Rechecked joint-sex conversion, fixed M and fixed source q calibration. Correlated/shared-level F and age-dependent catch-SD alternatives fail checks or worsen comparisons; retain the current source-start fit. Sparse fishery ages and omitted lengths remain limitations.
-
-See [the complete twelve-case review](../PACIFIC_REVIEW.md#source-and-model-review) for paired median differences, correlations, diagnostics and rejected trials. Canonical numerical inputs and outputs are unchanged.

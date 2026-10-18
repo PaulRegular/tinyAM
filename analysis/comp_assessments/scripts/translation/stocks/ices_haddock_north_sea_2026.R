@@ -35,7 +35,7 @@ background <- c(
 
   "| M | Fixed annual age-specific natural mortality from the official assessment. | Retain the supplied fixed M-at-age surface. | The official numerical M inputs are preserved; no mortality process is estimated. |",
 
-  "| Catch | One total-catch fleet, with commercial catch numbers-at-age through 2025. | Retain source catch-at-age with one estimated lognormal observation SD; missing values are eligible for model-based filling. | tinyAM uses a simplified independent lognormal catch likelihood rather than the complete native observation configuration. |",
+  "| Catch | One total-catch fleet, with commercial catch numbers-at-age through 2025. | Retain source catch-at-age with one estimated lognormal observation SD; missing values remain excluded from the observation likelihood. | tinyAM uses a simplified independent lognormal catch likelihood rather than the complete native observation configuration. |",
 
   "| Indices | Delta-GAM standardized Q1 ages 1–8+ and Q3+Q4 ages 0–8+, sampled at fractions 0.125 and 0.75. Catchability varies by survey and age; selected young ages have estimated density-dependent q powers. Observation errors are independent. | Retain both survey indices, their sampling times, survey-by-age q parameters, survey-specific observation SDs, and supplied relative SD factors. | The official density-dependent q powers are not represented; observation variance sharing may differ, but both models use independent observation errors. |",
 

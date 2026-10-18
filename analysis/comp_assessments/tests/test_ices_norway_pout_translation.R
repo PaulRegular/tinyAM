@@ -129,8 +129,8 @@ stopifnot(
   max(abs(exp(translated$start_par$log_f) -
     as.matrix(xtabs(F ~ year + age, expected_f)))) < 1e-12,
   identical(dat$N_settings$process, "iid"),
-  identical(dat$N_settings$init, "exp"),
-  identical(dat$F_settings$process, "ar1"),
+  identical(dat$N_settings$init, "free"),
+  identical(dat$F_settings$process, "cor_rw"),
   identical(dat$F_settings$mean_ages, 1:2),
   identical(dat$M_settings$process, "off"),
   identical(dim(translated$start_par$log_f), c(41L, 4L)),

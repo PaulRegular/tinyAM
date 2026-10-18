@@ -85,7 +85,7 @@ No additional M process is estimated.
 
 The translation uses:
 
-`catch_settings = list(sd_form = ~1, fill_missing = FALSE)`
+`catch_settings = list(sd_form = ~1)`
 
 Commercial catch numbers-at-age are retained and fitted with one estimated lognormal observation SD.
 
@@ -99,7 +99,7 @@ The translation retains both the spring IS-SMB and autumn IS-SMH age-specific su
 
 The observation settings are:
 
-`index_settings = list(q_form = ~0 + q_key, sd_form = ~0 + survey, fill_missing = FALSE)`
+`index_settings = list(q_form = ~0 + q_key, sd_form = ~0 + survey)`
 
 Catchability is estimated separately for the translated survey-age groups, while observation SDs are estimated separately for the spring and autumn surveys.
 

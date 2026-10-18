@@ -50,9 +50,9 @@ stopifnot(identical(s$value, c(2.5, 5)),
 testthat::expect_error(summarize_bc_petrale_posterior(draws[-1, ], 2000:2001), "complete year grid")
 testthat::expect_error(summarize_bc_petrale_posterior(rbind(draws, draws[1, ]), 2000:2001), "complete year grid")
 bad <- draws; bad$b[1] <- NA_real_
-testthat::expect_error(summarize_bc_petrale_posterior(bad, 2000:2001), "positive biomass")
+testthat::expect_error(summarize_bc_petrale_posterior(bad, 2000:2001), "positive[[:space:]]+biomass")
 bad <- draws; bad$b[1] <- -1
-testthat::expect_error(summarize_bc_petrale_posterior(bad, 2000:2001), "positive biomass")
+testthat::expect_error(summarize_bc_petrale_posterior(bad, 2000:2001), "positive[[:space:]]+biomass")
 bad <- draws; bad$bmsy[1] <- 10
 testthat::expect_error(summarize_bc_petrale_posterior(bad, 2000:2001), "constant across years")
 testthat::expect_error(summarize_bc_petrale_posterior(draws[, -1], 2000:2001), "require iter")

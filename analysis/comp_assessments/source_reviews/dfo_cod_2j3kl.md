@@ -102,39 +102,11 @@ the native Table 17/18 aggregates for dashboard context and label comparisons
 derived from rounded age-specific tables separately. No plot digitization or
 invented SEs are used.
 
-## Integration check (2026-10-06)
-
-`check_northern_cod_indices.R` compares RV-only, RV plus reconstructed Smith
-Sound, RV plus Fleming/Newman juvenile indices, and RV/Smith plus the juvenile
-indices using the same other settings. RV alone and RV plus Smith converge,
-with optimizer code 0, maximum absolute gradients below 0.001, positive-
-definite Hessians and successful uncertainty estimation. The main recipe
-retains Smith Sound.
-
-Both the combined Smith/juvenile trial and the separate juvenile-only trial
-fail. The combined trial stops at an NA/NaN gradient evaluation; the juvenile-
-only attempt also reports NA/NaN gradients and then fails because the covariance
-matrix is computationally singular (minimum/maximum diagonal ratio
-1.3e-19). This shows the failure does not require Smith Sound, although it does
-not isolate the cause among the juvenile series and their model representation.
-Neither trial has a usable optimizer result or gradient, and neither is
-selected. No undocumented starting-value adjustments or extra model
-constraints are used to force convergence. The source's zero F at ages 0-1 and
-approximate annual juvenile timing remain limitations. See
-`results/northern_cod_indices.csv` for diagnostics and each run's database
-revision.
-
-## Recruitment-formula review (2026-10-10)
+## Recruitment and juvenile limitations
 
 Framework 2025/034, equation 2.26, relates age-zero recruitment to same-year
-SSB. The age-2+ translation cannot apply that equation exactly. BH + IID and
-BH + AR1 at age two with a two-year parent lag were tested as survivor
-approximations, using the same observations, biology and mortality settings.
-Both failed positive-definite Hessian checks (gradients 0.0021 and 0.0016).
-Their SSB average absolute percent differences were 59.5% and 40.1%, versus
-36.8% for the RW baseline; slightly higher trajectory correlations do not
-resolve the failed uncertainty calculation or worse scale agreement. The IID
-candidate also flagged correlated recruitment innovations. Retain the
-baseline. No juvenile timing, young-age F constraint or mortality assumption
-was changed to rescue the curves. Attempts and warnings are retained in the
-local review cache and `results/translation_review.csv`.
+SSB. The age-2+ translation retains RW recruitment rather than treating a
+survivor approximation as the same stock–recruit relationship. Fleming and
+Newman observations remain canonical but are omitted from the retained fit.
+Their timing approximations and the source zero-F constraint at ages 0–1
+prevent a direct translation with the current age structure.

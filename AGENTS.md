@@ -144,6 +144,17 @@ objects are especially likely to depend on parameter structure.
   Preserve useful history before pruning obsolete caches.
 - Promote a scratch check to a permanent test only when it protects meaningful
   package behavior that existing tests do not cover.
+- Retain the current scientific workflow, canonical imports/validators, final
+  stock recipes, concise source provenance and meaningful regression tests.
+  Keep compact recovery studies and their current report sources; retire
+  stock-specific experiment runners and duplicate delivery reports.
+- Judge files by behavior rather than names: a review script that populates
+  canonical assumptions is provenance and must remain reproducible.
+- Before deleting a report, move lasting definitions or current limitations
+  into maintained guidance/source notes and repair its consumers and links.
+  Remove tests of retired review artifacts without weakening scientific checks.
+- Ask about genuinely ambiguous material. Preserve local source/review caches
+  and explicitly designated summary figures/tables unless authorized otherwise.
 - Finish each milestone by removing stale scratch files. Preserve user edits
   and report open/locked files rather than closing applications forcibly.
 

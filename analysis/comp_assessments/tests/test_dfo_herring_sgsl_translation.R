@@ -131,11 +131,12 @@ stopifnot(
   identical(dim(par$log_m), c(46L, 2L)),
   !"missing" %in% names(par),
   isTRUE(all.equal(rownames(par$log_m), as.character(translated$years))),
-  all(is.finite(translated$start_par$log_r)),
-  all(is.finite(translated$start_par$log_f)),
-  all(is.finite(translated$start_par$log_n)),
-  identical(names(translated$start_par), names(par)),
-  all(is.finite(translated$start_par$log_q)),
+  is.null(translated$start_par),
+  all(is.finite(par$log_r)),
+  all(is.finite(par$log_f)),
+  all(is.finite(par$log_n)),
+  dat$F_settings$process == "cor_rw",
+  length(par$atanh_rho_f) == 1L,
   identical(translated$settings$N_settings$process, "iid"),
   identical(translated$settings$N_settings$init, "exp"),
   identical(translated$settings$M_settings$process, "ar1"),
@@ -180,7 +181,7 @@ stopifnot(
 
 matched_fit <- list(
   dat = list(years = translated$years, ages = translated$ages),
-  pop = list(ssb_mat = transform(reference$pop$ssb_mat, est = est * 1000))
+  pop = list(ssb_mat = reference$pop$ssb_mat)
 )
 matched_fit$rep <- matched_fit$obs_pred <- matched_fit$random_par <- list()
 matched_fit$fixed_par <- data.frame()
@@ -193,7 +194,7 @@ differences <- .assessment_percent_differences(matched_reference)
 matched <- differences[differences$metric == "ssb_mat", ]
 stopifnot(
   nrow(matched) == 460L, all(matched$comparison_status == "matched"),
-  all(matched$unit == "t"),
+  all(matched$unit == "tonnes"),
   all(matched$source == matched$tinyAM),
   all(matched$percent_difference[!is.na(matched$percent_difference)] == 0)
 )

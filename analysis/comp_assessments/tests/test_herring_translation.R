@@ -38,7 +38,7 @@ stopifnot(
     "IBTS0"
   )),
   dat$N_settings$init == "free",
-  dat$F_settings$process == "rw",
+  dat$F_settings$process == "cor_rw",
   dat$M_settings$process == "off",
   max(dat$years) == 2025,
   translated$comparison_scales[["F_bar"]] == 1,

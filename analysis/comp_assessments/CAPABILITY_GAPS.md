@@ -1,119 +1,13 @@
-# Remaining assessment capabilities
-
-## Pacific expansion: current coverage and findings
-
-The database now contains **36 current detailed stock records**, including the
-twelve Pacific additions documented in [PACIFIC_REVIEW.md](PACIFIC_REVIEW.md).
-Completeness remains partial where source information is unresolved. Nine new
-cases received optimization attempts. BC POP subsequently became source-output
-blocked despite passing numerical checks: constant M and boundary summaries do
-not provide a historical population comparison. The original twelve-case status
-is four numerical passes, three non-converged fits, one interrupted run and four
-source blockers. Seven active new-case dashboards and the historical BC trial
-are cached locally. Neither twelve runnable translations nor twelve successful
-replications have been achieved.
-
-The subsequent BC petrale import adds a **partial 2024 summary/output record**:
-At that checkpoint there were 36 stocks and 42 assessment records in total,
-still 35 current detailed cases.
-It preserves annual SSB subset summaries, published reference values and three
-reported M scalars. Original observations, biology and configuration remain
-missing, so it is non-current and source-blocked, not a completed replacement
-or an additional fitted case. This is a data-availability limitation; the
-recovered summary alone does not establish a new unsupported model feature.
-
-The subsequent **BC Canary Rockfish 2022** import brings coverage to 37 stocks,
-43 assessment records and 36 current detailed cases. It recovers native
-two-sex inputs, fixed biology, annual female SSB posterior-subset summaries
-and published sex-specific M. The practical female translation converges
-after one documented source-informed initialization retry, but SSB agreement
-is poor (mean absolute difference 27.9%, terminal difference -59.1%, correlation
-0.295), and M is 36.5% lower. This additional case does not resolve the original
-twelve-case shortfalls. See the [source review](source_reviews/dfo_canary_bc.md).
-
-Canary reinforces the limits of replacing joint-sex age compositions and biomass
-totals with independent female age observations. Four aggregate-only indices
-and catches without age samples cannot enter the current age-specific
-likelihood. Fixed biology can be recovered without refitting source states;
-the executable's effective first-mature-age cutoff must also be preserved.
-Native N/F-at-age and recruitment are still missing. An initial 60-age
-Beverton–Holt candidate was stopped for runtime before an optimizer result;
-this is an incomplete experiment, not a demonstrated mathematical defect.
-
-- **Original likelihoods:** the new assessments generally fit total biomass and
-  multinomial, Dirichlet-multinomial or correlated age/length compositions.
-  tinyAM uses separate lognormal age observations. Conversion changes their
-  covariance and precision. Source zero categories remain canonical, but zeros
-  are treated as missing by tinyAM's lognormal likelihood; no epsilon was added.
-- **Catch-length data:** EBS cod permits a documented pooled empirical fishery
-  age–length allocation covering more than 99.4% of observed length mass; the
-  uncovered fraction is left unallocated. Arrowtooth lacks verified numerical
-  compositions/age–length keys. Fitted N/F cannot manufacture observations.
-- **Aggregate surveys:** SoG herring's observed spawning-biomass index has no
-  survey age compositions. The age-specific index equation cannot represent it
-  directly. This is a confirmed observation-model limitation, distinct from
-  the source's density-dependent M and discrete fishery timings.
-- **Sex, area and fleet structure:** female subsets or explicit sex/area pooling
-  support some approximations, but do not reproduce sex-specific survival,
-  spatial recruitment or normalized fleet selectivity. BC POP is one three-area
-  case; all source distinctions remain canonical. Complete-area catch pooling
-  leaves missing-area years missing, rather than creating partial totals.
-- **Priors and identification:** initial hake and BC POP fits drove M near zero.
-  The [model review](PACIFIC_REVIEW.md#source-and-model-review) uses an existing fixed-SD Gaussian
-  mean effect for one shared log-M level, without a free intercept that could
-  cancel its penalty. Hake retains the native log-M penalty. The historical BC
-  POP trial used a positive moment approximation to the native natural-scale
-  normal prior, but is now excluded from comparisons because population outputs
-  are missing. Both trials had finite shared-effect SEs, though M still differed
-  by more than 20%. Native bounds and posterior integration
-  remain different. Restoring verified M/q penalties did not resolve northern
-  rock sole convergence; random initial N produced implausible states despite
-  a numerical pass. Initial temporal-process priors, arbitrary q normalization
-  and joint composition likelihoods remain separate limitations.
-- **Biological definitions:** original fixed SS3 growth/CV/allometry can recover
-  BC POP weights without fitting source states. EBS cod weights are estimated
-  outputs used as labelled plug-in biology. Its worksheet combined mature
-  biomass differs by a factor of two from reported female SSB. BC POP's public
-  reproductive-output configuration and reported biomass need further source
-  confirmation; AI cod also has unresolved single-sex SSB scaling. These are
-  definition cautions, not proof of an error in tinyAM mathematics.
-- **Reference uncertainty:** native MCMC medians/means and 90% or 95% credible
-  limits remain labelled. Marginal age/sex medians and component modes do not
-  determine posterior means/intervals of a pooled state. SoG component MPD N is
-  not ensemble posterior N; no such series or uncertainty was invented.
-- **Source gaps:** AI cod's public September native run differs from its final
-  November fit. Arrowtooth lacks matching likelihood arrays/keys and timing.
-  SoG's public DDM ensemble ends in 2023, distinct from the interim 2025 DIM;
-  the two are not combined. BC POP's matching public production files contain
-  inputs and terminal/reference summaries. A follow-up found historical regional
-  biomass draws for 3CD and 5DE, but the public 5ABC object still ends in 2017;
-  these cannot form the matching coastwide comparison. N/F/recruitment remain
-  unrecovered. Its source records remain canonical; a prior M-only trial is not
-  retained as a population comparison. [BC petrale sole](source_reviews/dfo_petrale_bc.md)
-  now has a partial canonical summary/output record with 1938–2024 SSB posterior
-  summaries. Mixture intent is documented, but original inputs, other outputs
-  and component membership of the downsampled public draws remain unresolved.
-  U.S. West Coast petrale sole 2023
-  is a proposed alternative with verified public fitted outputs; its native
-  spawning output is eggs, not biomass (see the [source review](source_reviews/dfo_pop_bc.md)).
-  Unverified activation/sharing/point conventions
-  remain unresolved, rather than being described as absent features.
-
-Full-library review flags use >20% mean absolute or terminal differences and
-correlation <0.90. Fixed M is checked as an input, unavailable comparisons are
-listed separately, and failed numerical/uncertainty checks are not hidden by
-good individual trends. No new core model feature was implemented for this
-expansion. The earlier prevalence inventory below is historical, not a recount
-over the enlarged library.
+# Assessment capabilities and remaining gaps
 
 ## Historical 23-assessment capability inventory
 
 **Process-expansion follow-up:** F now supports AR1 age-correlated RW increments
 (`cor_rw`), and N/F/M support ordinary age-based log-SD sharing formulas.
-Stock-wide spawning-time SSB is also available. The prevalence counts below
+Age/year-specific spawning-time SSB is also available. The prevalence counts below
 remain those of the source review; these three rows now describe supported
 options requiring source-definition checks, rather than absent features. See
-[the process study](../formula_expansion/PROCESS_EXPANSION.md) for recovery and application evidence.
+[the validation studies](../formula_expansion/README.md) for recovery and application evidence.
 
 The original review covered **23 then-current detailed assessment records: 21 stock recipes
 and two blocked translations**. Counts below are confirmed minimums, once per
@@ -156,9 +50,8 @@ categorical/numeric grouping and observation-SD effects are available. Many
 SAM baselines already use their supported recruitment and sharing structures.
 GOA cod fixes BH steepness at one: a free BH curve is not a faithful upgrade.
 The Northern cod curve describes age-zero recruitment, while the present
-translation starts at age two. Its BH candidates are survivor approximations,
-not exact source relationships. See the review table for actual attempts and
-retention decisions; fitting an available feature is not itself an improvement.
+translation starts at age two. A BH curve at age two would be a survivor approximation,
+not the source relationship. Fitting an available feature is not itself an improvement.
 
 ## Priorities from the source review
 

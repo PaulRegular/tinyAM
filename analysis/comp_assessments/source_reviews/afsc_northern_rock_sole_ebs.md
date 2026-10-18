@@ -105,9 +105,3 @@ agreement. The source priors and joint observation structure differ, but the
 two attempts do not isolate the cause. An exploratory dashboard and numerical
 comparisons are retained with the failure diagnostics; female-only comparisons
 and rounded-derived F/SSB are labelled explicitly.
-
-## Source and model review — 2026-10-17
-
-Verified the female M and scalar q log-penalties directly in fm.tpl; male-prior activation remains unresolved. Restoring both penalties still fails (code 1, gradient 3.22e10, non-PD Hessian). Random initial N with the M penalty passes numerical checks but gives implausible abundance/q and is rejected. No failed candidate replaces the baseline. The q trial uses a documented fixed change of index units relative to prior center 1.5; canonical observations are unchanged.
-
-See [the complete twelve-case review](../PACIFIC_REVIEW.md#source-and-model-review) for paired median differences, correlations, diagnostics and rejected trials. Canonical numerical inputs and outputs are unchanged.

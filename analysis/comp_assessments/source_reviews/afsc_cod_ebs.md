@@ -94,9 +94,3 @@ absolute difference, −43.7% terminal difference and mean within-age correlatio
 proxy SSB has 21.7% mean absolute difference. The empirical pooled key,
 unconstrained age-specific F, omitted ageing error and simplified survey
 precision are material differences. Fixed-M equality only checks inputs.
-
-## Source and model review — 2026-10-17
-
-Verified the VAST number-index units, empirical observed age-length allocation and plug-in biology. Correlated F, catch-SD and shared annual-F alternatives were evaluated. The last improves F/SSB but weakens N/recruitment trends, so the existing recipe is retained; its alternative dashboard is cached separately.
-
-See [the complete twelve-case review](../PACIFIC_REVIEW.md#source-and-model-review) for paired median differences, correlations, diagnostics and rejected trials. Canonical numerical inputs and outputs are unchanged.

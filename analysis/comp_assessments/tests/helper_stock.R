@@ -1,3 +1,5 @@
+pkgload::load_all(".", quiet = TRUE, helpers = FALSE)
+
 .test_stock <- function(source_record, ..., script = NULL) {
   e <- new.env(parent = globalenv())
   e$source <- source_record
