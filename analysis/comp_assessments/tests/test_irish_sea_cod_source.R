@@ -73,8 +73,9 @@ stopifnot(
 
 review <- readLines(file.path(root, "source_reviews/ices_cod_irish_sea.md"), warn = FALSE)
 stopifnot(
-  any(grepl("age-1+ fit converged", review, fixed = TRUE)),
-  any(grepl("2019 age 0", review, fixed = TRUE))
+  any(grepl("2019 age 0", review, fixed = TRUE)),
+  any(grepl("over 1968–2018", review, fixed = TRUE)),
+  any(grepl("mean absolute percent difference 36.5%", review, fixed = TRUE))
 )
 
-cat("Irish Sea cod source coverage, provenance and age-1+ readiness passed.\n")
+cat("Irish Sea cod source coverage, provenance and 1968-2018 readiness passed.\n")
