@@ -1,0 +1,24 @@
+# ICES Rockall haddock, 2026 assessment
+
+The stock is ICES haddock in Division 6.b (`had.27.6b`), represented by the existing metadata record `ck_ices_wgcse_aeglefinus_rock6b`. The 2026 WGCSE assessment is the current applied assessment represented here. It uses data through 2025; the report's stochastic 2026 projection row is not mixed into fitted historical outputs.
+
+The local ignored source cache is `source_cache/ck_ices_wgcse_aeglefinus_rock6b/`. Its manifest records the 2026 WGCSE report, the 2024 WKBGAD benchmark report, and the 2025 SAM fit object with retrieval dates, URLs, revisions and SHA-256 checksums. The 2025 object is not the 2026 fit. It was used only to check overlapping observations and to recover Q3 sample-time fractions that the 2026 report identifies only as quarter 3.
+
+## Inputs and assumptions
+
+The importer `scripts/database/088_import_ices_haddock_rockall_2026.R` transcribes the current report's input and output tables into the canonical database. The local `source_cache/.../extracted_tables/` files are table-shaped extracts from the cached report PDF used by that importer; they are not separate official source data.
+
+- Table 8.7 gives total catch numbers-at-age, including landings, discards and BMS, for 1991–2025, ages 1–8+, in thousands of fish. Table 8.8 gives the landing fraction by age. Table 8.11 gives catch weights-at-age in kg per fish. These are retained as separate catch, fraction and catch-weight inputs.
+- Table 8.12 gives the Rockall pt1 Q3 index for 1991–1997, ages 1–8+ used by the assessment. The printed `-1` for age 8 in 1995 is a missing-value sentinel, not an index; it is omitted and recorded as missing. The table does not specify a physical index unit, so values remain on their native relative scale.
+- Table 8.13 gives Modelled Q3 index means and CVs for 1999–2025, ages 1–8+. Years 2000, 2004 and 2010 are missing for every age. Means remain on their native scale. CVs are retained on their published scale in the database; a tinyAM translation can derive the relative log-SD factor as `sqrt(log(1 + CV^2))`, consistent with the SAM observation-weight convention verified in the overlapping 2025 fit.
+- Both survey series are Q3. The exact fractions `0.725` for Rockall pt1 and `0.75` for Modelled Q3 come from the 2025 SAM object and are carried forward as documented timing approximations; they are not separately stated as 2026 settings in the report.
+- The 2026 report specifies fixed, time-invariant Lorenzen-scaled M at ages 1–8+ (`0.3559, 0.2998, 0.2755, 0.2574, 0.2386, 0.2280, 0.2114, 0.2`) and fixed maturity (`0.24, 0.84, 0.99, 1, 1, 1, 1, 1`). These are transcribed directly from the report.
+- SAM estimates the stock-weight surface from catch-weight observations using a process with cohort and within-year correlation. The full estimated stock-weight surface is not tabulated in the report and is not fabricated as a canonical input. A tinyAM recipe may use the catch weights as a clearly labelled analysis-only proxy where a complete stock-weight surface is required.
+
+Table 8.14 documents the SAM structure: ages 1–8 with age 8 as a plus group; age-1 recruitment random walk; AR(1) cross-age correlation for F; F states keyed separately through age 6, with ages 7–8 shared; F process variance shared across ages; N process variance separated for age 1 and shared among ages 2–8; independent observation errors; catch observation variance shared across ages; and observation variances shared within each survey but separate between surveys. Modelled Q3 age CVs enter as relative observation weights. The source also estimates additional catch observation uncertainty for specified ages from 2011 onward. The report's exact settings are recorded in the database assumptions; tinyAM cannot reproduce all of these likelihood details.
+
+## Outputs and limits
+
+Tables 8.16 and 8.17 provide final SAM numbers-at-age (thousands of fish) and F-at-age (per year) for 1991–2025, ages 1–8+. They do not give age-specific uncertainty. Table 8.18 provides annual recruitment, SSB, Fbar ages 2–5 and estimated catch through 2025, with `Low`, `Value` and `High` columns. The report does not state the coverage represented by those bounds, so the database retains them as published lower and upper values without calling them 95% intervals. The 2026 forecast row is excluded.
+
+The database has partial input, assumption and output completeness: the stock-weight surface and exact 2026 survey timing are not recoverable from the current report, and uncertainty is not given for age-specific N and F or defined for the summary bounds. The translation can compare SSB, recruitment and age-specific N/F over the common 1991–2025 period, but the stock-weight proxy and simplified tinyAM likelihood must be clearly identified in its dashboard.
