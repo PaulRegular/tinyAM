@@ -198,9 +198,9 @@ allowed_input_measures <- c(
   "frequency_at_length", "frequency_at_age", "maturity_fecundity_at_age", "maturity_sample_size", "mature_sample_count", "composition_sample_count",
   "numbers_at_age", "index_by_age_group",
   "biomass_at_age", "total_numbers",
-  "total_biomass", "proportion_at_age", "proportion_at_length",
+  "total_biomass", "landings_lower_bound", "landings_upper_bound", "proportion_at_age", "proportion_at_length",
   "conditional_proportion_at_age", "weight_at_age", "spawning_weight_at_age",
-  "maturity_at_age", "natural_mortality_at_age",
+  "maturity_at_age", "natural_mortality_at_age", "condition_index_for_mortality",
   "fixed_mortality_medium", "fixed_mortality_low", "fixed_mortality_high",
   "relative_biomass_index",
   "landings_proportion", "landings_numbers_at_age", "discard_numbers_at_age", "landings_fraction_at_age",
@@ -294,7 +294,11 @@ for (name in c("inputs", "outputs")) {
   value <- suppressWarnings(as.numeric(x$value))
   signed <- if (name == "inputs") {
     x$type == "covariate" &
-      x$measure == "environmental_covariate" & x$basis == "native_covariate"
+      x$measure == "environmental_covariate" & x$basis == "native_covariate" |
+      x$type == "M" & x$measure == "condition_index_for_mortality" &
+      x$basis == "index_scale" |
+      x$type == "M" & x$measure == "condition_index_for_mortality" &
+      x$basis == "index_scale"
   } else {
     x$type == "biology" & x$measure %in% c("mat_beta1", "mat_beta2")
   }

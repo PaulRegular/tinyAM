@@ -226,6 +226,8 @@ index_by_age_group
 biomass_at_age
 total_numbers
 total_biomass
+landings_lower_bound
+landings_upper_bound
 proportion_at_age
 relative_biomass_index
 relative_precision_weight
@@ -253,6 +255,7 @@ likelihood.
 weight_at_age
 maturity_at_age
 natural_mortality_at_age
+condition_index_for_mortality
 landings_numbers_at_age
 discard_numbers_at_age
 landings_fraction_at_age
@@ -292,6 +295,14 @@ aggregate precision measure without duplicating it across ages.
 `relative_biomass_index` stores an aggregate relative index, such as standardized
 CPUE tuned to exploitable biomass. It is not an absolute biomass observation;
 use `basis = index_scale` and document the scale and model interpretation.
+
+`landings_lower_bound` and `landings_upper_bound` preserve source bounds for a
+censored total-landings likelihood. Store each bound separately using the same
+year, fleet, unit and basis as its landings observation.
+
+`condition_index_for_mortality` stores a covariate used to inform a time-varying
+M process. Use `type = M`, retain the source scale and timing, and do not treat
+the index itself as a natural-mortality estimate.
 
 `larval_abundance_index` represents an index tied to a spawning component. Use
 `type = index`, `basis = numbers`, blank fish age, and record the spawning
