@@ -73,7 +73,7 @@ stopifnot(
 
 review <- readLines(file.path(root, "source_reviews/ices_cod_irish_sea.md"), warn = FALSE)
 stopifnot(
-  any(grepl("age-1+ translation", review, fixed = TRUE)),
+  any(grepl("age-1+ fit converged", review, fixed = TRUE)),
   any(grepl("2019 age 0", review, fixed = TRUE))
 )
 
