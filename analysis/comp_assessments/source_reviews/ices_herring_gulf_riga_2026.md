@@ -52,8 +52,10 @@ object reports `stockassessment` version 0.12.0 and RemoteSha
   recruitment and survival-process variance groups, an age-correlated F
   process, and a lognormal likelihood for both catch and acoustic index.
   Ages 7 and 8+ share the F state; acoustic catchability shares one parameter
-  across ages 3–8. Catch residuals are independent across ages, while acoustic
-  residuals use age-correlated AR(1) groups. Fbar is ages 2–6.
+  across ages 3–8. Catch observation SD is separate for age 0 and shared over
+  ages 1–8. Acoustic observation SD uses age 1, ages 2–7, and age 8+ groups.
+  Catch residuals are independent across ages, while acoustic residuals use
+  age-correlated AR(1) groups. Fbar is ages 2–6.
 - The exact annual pre-spawning fractions from the model object are retained:
   F is 0.10 through 1998 and 0.20 in 1999–2025; M is 0.30 throughout. The
   2026 forecast inputs are outside the fitted historical assessment and are

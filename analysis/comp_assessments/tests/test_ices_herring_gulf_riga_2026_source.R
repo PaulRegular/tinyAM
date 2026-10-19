@@ -16,6 +16,7 @@ fbar <- o[o$measure == "Fbar", ]
 total_n <- o[o$measure == "total_numbers", ]
 predicted_catch <- o[o$measure == "predicted_catch", ]
 predicted_index <- o[o$measure == "predicted_index", ]
+a <- x$assumptions
 
 stopifnot(
   x$stocks$common_name == "Gulf of Riga herring",
@@ -48,6 +49,10 @@ stopifnot(
   all(prop_f$value[prop_f$year <= 1998] == 0.10),
   all(prop_f$value[prop_f$year >= 1999] == 0.20),
   all(prop_m$value == 0.30),
+  any(a$component == "catch" & a$setting == "observation_variance_sharing" &
+    a$value == "Age 0 separate; ages 1-8 share"),
+  any(a$component == "index" & a$setting == "observation_variance_sharing" &
+    a$value == "Age 1; ages 2-7; age 8+"),
   nrow(n) == 49L * 9L,
   nrow(f) == 49L * 9L,
   identical(sort(unique(n$age)), 0:8),

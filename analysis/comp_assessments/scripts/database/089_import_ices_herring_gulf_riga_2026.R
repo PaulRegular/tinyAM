@@ -161,6 +161,8 @@ assumptions_add <- do.call(rbind, list(
   assumption("index", "catchability_age_groups", "Age 1; age 2; ages 3-8", "Recorded from keyLogFpar for the acoustic fleet; ages 3-8 share a catchability parameter.", survey = "GRAHS"),
   assumption("catch", "observation_likelihood", "Lognormal", "obsLikelihoodFlag=LN for the catch fleet.", fleet = fleet_names[[1L]]),
   assumption("index", "observation_likelihood", "Lognormal", "obsLikelihoodFlag=LN for the acoustic fleet.", survey = "GRAHS"),
+  assumption("catch", "observation_variance_sharing", "Age 0 separate; ages 1-8 share", "Recorded from keyVarObs for the residual-catch fleet." , fleet = fleet_names[[1L]]),
+  assumption("index", "observation_variance_sharing", "Age 1; ages 2-7; age 8+", "Recorded from keyVarObs for the acoustic fleet.", survey = "GRAHS"),
   assumption("catch", "observation_correlation", "Independent across ages", "obsCorStruct=ID for the catch fleet.", fleet = fleet_names[[1L]]),
   assumption("index", "observation_correlation", "AR(1) across ages in two groups", "obsCorStruct=AR; keyCorObs leaves age 1 uncorrelated, groups ages 2-5, and groups ages 6-8.", survey = "GRAHS"),
   assumption("M", "natural_mortality", "Fixed 0.20 per year, except 0.25 in 1979-1983", "The 1979-1983 increase is attributed to cod presence.", report_url),
