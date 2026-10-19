@@ -5,7 +5,7 @@ cod_obs <- tinyAM::cod_obs
 
 dir.create("analysis/case_study/outputs", recursive = TRUE, showWarnings = FALSE)
 
-## Accounting for Smith Sound effect via covariate
+## Include Smith Sound data to account for testing its effect on RV survey catchability
 ss <- NCAM::inputs$SS.bms[, c("Year", "Biomass")]
 names(ss) <- c("year", "smith_sound_biomass")
 ss <- merge(data.frame(year = seq(min(ss$year), max(ss$year))), ss, by = "year", all = TRUE)
@@ -15,6 +15,13 @@ ss$smith_sound_biomass[ind] <- interp$y[ind] # fill two missing values using lin
 ss$smith_sound_biomass <- ss$smith_sound_biomass / 1000
 cod_obs$index <- merge(cod_obs$index, ss, by = "year", all = TRUE)
 cod_obs$index$smith_sound_biomass[is.na(cod_obs$index$smith_sound_biomass)] <- 0 # assumed to be zero outside the Smith Sound survey years
+
+## Include data on capelin for testing the effect of prey availability on survival
+cap_per_cod <- NCAM::inputs$covariates[, c("year", "cap_per_cod")]
+cap_per_cod <- rbind(data.frame(year = 1983, cap_per_cod = cap_per_cod$cap_per_cod[1]), cap_per_cod)
+cod_obs$pop_covariates <- merge(cod_obs$pop_covariates, cap_per_cod, by = "year", all.x = TRUE)
+cod_obs$pop_covariates$log_cap_per_cod <- log(cod_obs$pop_covariates$cap_per_cod)
+cod_obs$pop_covariates$age_group <- cut_ages(cod_obs$pop_covariates$age, c(0, 2, 4, 6, 8, 20))
 
 base <- fit_tam(
   cod_obs,
@@ -49,9 +56,21 @@ ss_q <- update(
 )
 ss_q
 
+cap_M <- update(
+  ss_q,
+  M_settings = list(
+    mu_form = ~ 0 + log_cap_per_cod
+  )
+)
+cap_M
+
+
+
+
 model_names <- c(
   "Base" = "base",
-  "Smith Sound q" = "ss_q"
+  "RV q ~ Smith Sound B" = "ss_q",
+  "M ~ Capelin" = "cap_M"
 )
 models <- mget(model_names)
 names(models) <- names(model_names)
