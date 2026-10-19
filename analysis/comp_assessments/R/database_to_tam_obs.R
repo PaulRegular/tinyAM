@@ -1161,7 +1161,7 @@ database_to_tam_M <- function(assessment_id, inputs, assumptions = NULL,
     .translation_abort("M input years and ages must be whole numbers.")
   }
   if (length(unique(m$unit)) != 1L ||
-    !grepl("per.?year|yr.?-?1|year.?-?1", unique(m$unit), ignore.case = TRUE)) {
+    !grepl("per.?year|1\\s*/\\s*year|yr.?-?1|year.?-?1", unique(m$unit), ignore.case = TRUE)) {
     .translation_abort("M inputs must use one explicit per-year unit.")
   }
 

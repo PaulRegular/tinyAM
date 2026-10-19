@@ -648,7 +648,7 @@ prepare_tam <- function(
   } else {
     dat$proj_settings <- list(n_proj = 0)
     for (nm in names(dat$obs)) {
-      dat$obs[[nm]]$is_proj <- FALSE
+      dat$obs[[nm]]$is_proj <- rep(FALSE, nrow(dat$obs[[nm]]))
     }
   }
 
@@ -717,8 +717,8 @@ prepare_tam <- function(
   index <- dat$obs$index
   catch[setdiff(names(index), names(catch))] <- NA
   index[setdiff(names(catch), names(index))] <- NA
-  catch$type <- "catch"
-  index$type <- "index"
+  catch$type <- rep("catch", nrow(catch))
+  index$type <- rep("index", nrow(index))
   obs_fit <- rbind(catch, index)
   obs_fit$log_obs <- log(obs_fit$obs)
   obs_fit$log_obs[is.infinite(obs_fit$log_obs)] <- NA # zero observations are treated as missing

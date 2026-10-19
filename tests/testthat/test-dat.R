@@ -78,6 +78,25 @@ test_that("prepare_tam infers years/ages when NULL and builds expected pieces", 
   expect_gt(ncol(dat$q_modmat), 0)
 })
 
+test_that("prepare_tam accepts catch-only data with no index rows", {
+  catch_only <- cod_obs
+  catch_only$index <- catch_only$index[0, , drop = FALSE]
+  dat <- prepare_tam(
+    data = catch_only,
+    years = YEARS,
+    ages = AGES,
+    N_settings = list(process = "iid", init = "exp"),
+    F_settings = list(process = "cor_rw", mu_form = NULL, mean_ages = 5:14),
+    M_settings = list(process = "off", mu_form = NULL, mu_supplied = ~ I(0.3)),
+    catch_settings = list(sd_form = ~1),
+    index_settings = list(sd_form = ~0, q_form = ~0)
+  )
+
+  expect_equal(nrow(dat$obs$index), 0L)
+  expect_equal(nrow(dat$sd_index_modmat), 0L)
+  expect_equal(nrow(dat$q_modmat), 0L)
+})
+
 test_that("prepare_tam aggregates data for ages beyond max(ages) into a plus group", {
   dat <- prepare_tam(data = cod_obs, ages = 2:10)
   for (nm in c("catch", "index")) {

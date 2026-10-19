@@ -120,14 +120,17 @@ tidy_obs_pred <- function(fit, add_osa_res = FALSE, interval = .95, ...) {
   obs_pred$catch$sd <- sd$catch
   obs_pred$catch$std_res <- with(obs_pred$catch, ifelse(obs == 0, NA, (log(obs) - log(pred)) / sd))
 
-  obs_pred$index$pred <- pred$index
-  obs_pred$index$sd <- sd$index
-  obs_pred$index$q <- exp(fit$rep$log_q_obs)
+  n_index <- nrow(obs_pred$index)
+  obs_pred$index$pred <- if (is.null(pred$index)) rep(NA_real_, n_index) else pred$index
+  obs_pred$index$sd <- if (is.null(sd$index)) rep(NA_real_, n_index) else sd$index
+  q <- exp(fit$rep$log_q_obs)
+  obs_pred$index$q <- if (is.null(q)) rep(NA_real_, n_index) else q
   units <- .data_units(fit$dat$obs)
   index_units <- unname(units$index[as.character(obs_pred$index$survey)])
   obs_pred$index$q_unit <- vapply(index_units, .q_unit, character(1), numbers = units$numbers)
-  obs_pred$index$q_lwr <- obs_pred$index$q_upr <- obs_pred$index$q_se <- NA_real_
-  obs_pred$index$q_se_scale <- fit$dat$index_settings$q_link
+  obs_pred$index$q_lwr <- obs_pred$index$q_upr <- obs_pred$index$q_se <-
+    rep(NA_real_, nrow(obs_pred$index))
+  obs_pred$index$q_se_scale <- rep(fit$dat$index_settings$q_link, nrow(obs_pred$index))
   if (!is.null(fit[["sdrep"]])) {
     estimate <- as.list(fit[["sdrep"]], "Estimate", report = TRUE)$q_link_prediction
     error <- as.list(fit[["sdrep"]], "Std. Error", report = TRUE)$q_link_prediction
@@ -155,7 +158,8 @@ tidy_obs_pred <- function(fit, add_osa_res = FALSE, interval = .95, ...) {
     )
     split_osa_res <- split(osa_res$residual, fit$dat$obs_map$type[fit$dat$obs_map$is_observed])
     split_is_observed <- split(fit$dat$obs_map$is_observed, fit$dat$obs_map$type)
-    obs_pred$catch$osa_res <- obs_pred$index$osa_res <- NA
+    obs_pred$catch$osa_res <- rep(NA_real_, nrow(obs_pred$catch))
+    obs_pred$index$osa_res <- rep(NA_real_, nrow(obs_pred$index))
     obs_pred$catch$osa_res[split_is_observed$catch] <- split_osa_res$catch
     obs_pred$index$osa_res[split_is_observed$index] <- split_osa_res$index
   }
@@ -761,7 +765,38 @@ stack_nested <- function(x, label = "model",
       out[[nm]] <- NULL
       next
     }
-    out[[nm]] <- stack_list(pieces, label = label, label_type = label_type)
+    nonempty <- vapply(pieces, function(piece) {
+      is.data.frame(piece) && nrow(piece) > 0L
+    }, logical(1))
+    if (any(nonempty)) {
+      out[[nm]] <- stack_list(pieces, label = label, label_type = label_type)
+      next
+    }
+
+    templates <- pieces[vapply(pieces, is.data.frame, logical(1))]
+    if (!length(templates)) {
+      out[[nm]] <- NULL
+      next
+    }
+    columns <- Reduce(union, lapply(templates, names))
+    empty <- templates[[1L]][0, , drop = FALSE]
+    for (column in setdiff(columns, names(empty))) {
+      template <- templates[[which(vapply(templates, function(piece) {
+        column %in% names(piece)
+      }, logical(1)))[1L]]][[column]]
+      empty[[column]] <- template[0]
+    }
+    empty <- empty[, columns, drop = FALSE]
+    if (!is.null(label)) {
+      empty[[label]] <- switch(label_type,
+        auto = utils::type.convert(character(), as.is = TRUE),
+        numeric = numeric(),
+        character = character(),
+        factor = factor(character(), levels = names(pieces))
+      )
+      empty <- empty[, c(label, setdiff(names(empty), label)), drop = FALSE]
+    }
+    out[[nm]] <- empty
   }
   out
 }

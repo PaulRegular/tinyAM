@@ -1,3 +1,4 @@
+source("analysis/comp_assessments/R/run_assessment.R")
 source("analysis/comp_assessments/tests/helper_stock.R")
 
 root <- "analysis/comp_assessments"

@@ -407,6 +407,20 @@ test_that("stack_nested stacks all subtables across outer list", {
   expect_true("N" %in% names(out)) # retained for that model even if missing in others
 })
 
+test_that("stack_nested preserves a subtable when every model has zero rows", {
+  x <- list(
+    Official = list(index = data.frame(year = integer(), survey = character())),
+    tinyAM = list(index = data.frame(year = integer(), survey = character(), pred = numeric()))
+  )
+
+  out <- stack_nested(x, label = "model", label_type = "factor")
+
+  expect_equal(nrow(out$index), 0L)
+  expect_setequal(names(out$index), c("model", "year", "survey", "pred"))
+  expect_true(is.factor(out$index$model))
+  expect_identical(levels(out$index$model), c("Official", "tinyAM"))
+})
+
 
 ## tidy_tam ----
 

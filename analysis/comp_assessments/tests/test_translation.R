@@ -436,6 +436,13 @@ expect_equal(m$status, "fixed_numerical_input")
 expect_equal(m$surface$M_assumption, c(0.2, 0.2, 0.3, 0.3))
 expect_equal(m$M_settings$process, "off")
 
+m_slash_year <- m_inputs
+m_slash_year$unit <- "1/year"
+m_slash_year_result <- database_to_tam_M(
+  "translation_fixture", m_slash_year, years = 2000:2001, ages = 1:2
+)
+expect_equal(m_slash_year_result$surface$M_assumption, c(0.2, 0.2, 0.3, 0.3))
+
 fixed_m_inputs <- rbind(
   inputs,
   row("M", "natural_mortality_at_age", "per_year",
