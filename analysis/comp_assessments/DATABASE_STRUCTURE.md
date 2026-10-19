@@ -212,6 +212,7 @@ weight
 catch_weight
 maturity
 M
+covariate
 ```
 
 Add new types only when a real assessment requires them.
@@ -255,7 +256,6 @@ likelihood.
 weight_at_age
 maturity_at_age
 natural_mortality_at_age
-condition_index_for_mortality
 landings_numbers_at_age
 discard_numbers_at_age
 landings_fraction_at_age
@@ -299,10 +299,6 @@ use `basis = index_scale` and document the scale and model interpretation.
 `landings_lower_bound` and `landings_upper_bound` preserve source bounds for a
 censored total-landings likelihood. Store each bound separately using the same
 year, fleet, unit and basis as its landings observation.
-
-`condition_index_for_mortality` stores a covariate used to inform a time-varying
-M process. Use `type = M`, retain the source scale and timing, and do not treat
-the index itself as a natural-mortality estimate.
 
 `larval_abundance_index` represents an index tied to a spawning component. Use
 `type = index`, `basis = numbers`, blank fish age, and record the spawning
@@ -573,13 +569,19 @@ Optional input columns preserve their dimensions:
 These columns are blank for inputs to which they do not apply. Preserve the
 source month in notes and record survey timing separately as a fraction of year.
 
-## Environmental covariates
+## Covariates
 
-Use `type = covariate`, `measure = environmental_covariate` and
-`basis = native_covariate` for supplied environmental series used by the model.
-Signed finite values are permitted. Preserve the native scale and identify the
-variable and consuming model component in provenance/notes; do not standardize
-it again or treat it as an abundance index.
+``` text
+environmental_covariate
+condition_index_for_mortality
+```
+
+Use `type = covariate` and `basis = native_covariate` for supplied covariates
+used by the model. `environmental_covariate` records environmental series;
+`condition_index_for_mortality` records a fish-condition index used to inform a
+time-varying natural-mortality process. Retain the source scale and timing.
+Signed finite values are permitted. Do not treat either covariate as an
+abundance index or, for the condition index, as a natural-mortality estimate.
 
 `type = biology` with `fraction_F_before_spawning` or
 `fraction_M_before_spawning` records supplied year-age mortality fractions used

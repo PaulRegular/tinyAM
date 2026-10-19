@@ -1202,21 +1202,21 @@ ices_cod_irish_sea_2026,index,,UK FSP (B7897),,,,FSP_year_coverage,The assessmen
 ices_cod_irish_sea_2026,index,,NIGFS-WIBTS-Q1 CPUE (G7144),,,,aggregate_Q1_CPUE,Aggregate CPUE and its native-scale SD are reported; tinyAM's age-specific index likelihood does not directly represent this aggregate series.,https://ndownloader.figshare.com/files/66387206; Table 6.13,
 ices_cod_irish_sea_2026,assessment,,,,,,source_file_availability,"Detailed report tables and the current stock annex are available, but native 2026 SS3 data/control files were not recovered; exact likelihood weights and fitted model configurations remain unresolved.",https://doi.org/10.17895/ices.pub.32625759,
 ices_cod_irish_sea_2026,assessment,,,,,,output_coverage,"Annual SSB, age-0 recruitment and Fbar 2-4 with 95% confidence limits are tabulated; age-specific N/F and estimated M outputs are not available in the recovered sources.",https://ndownloader.figshare.com/files/66387206; Table 6.14,
-"dfo_cod_3ps_2024","population",,,,,,"model_years","1959-2024; projected SSB reported for 2025","pp. 9-11; Figure 56",
-"dfo_cod_3ps_2024","population",,,,,,"modeled_ages","2-14+","p. 10; Table A-2",
-"dfo_cod_3ps_2024","recruitment",,,,,,"process","Age-2 recruitment follows a random walk","p. 10",
-"dfo_cod_3ps_2024","F",,,,,,"process","Multivariate-normal random walk; age 2 is separate from the correlated age 3+ process","p. 10",
-"dfo_cod_3ps_2024","F",,,,,,"process_break","A discontinuity is included at the 1993 moratorium","p. 10",
-"dfo_cod_3ps_2024","catch",,,,,,"landings_likelihood","Censored likelihood using annual lower and upper landings bounds","p. 10; Table A-1",
-"dfo_cod_3ps_2024","catch",,,,,,"age_composition_likelihood","Continuation-ratio logits for catch-at-age","p. 10; Table A-2",
-"dfo_cod_3ps_2024","M",,,,,,"time_varying_mortality","M is a function of the scaled fish-condition mortality index","p. 10; Table A-3",
-"dfo_cod_3ps_2024","M",,,,,,"condition_index_early_years","Average of 1978-1982 index used for 1959-1977","p. 10; Table A-3",
-"dfo_cod_3ps_2024","index",,,,,,"survey_series","DFO RV Spring 1983-2024; ERHAPS 1978-1991; GEAC 1998-2005; Sentinel Gillnet and Line-trawl 1995-2023","pp. 10-11; Tables A-4-A-8",
-"dfo_cod_3ps_2024","index",,,,,,"zero_observations","Censored survey likelihood retains zero catches as information on low abundance","p. 10; Tables A-4-A-8",
-"dfo_cod_3ps_2024","index",,,,,,"rv_catchability","Ages 2-7 have separate offshore and inshore-offshore catchabilities; ages 8+ use an inshore-offshore offset","p. 10",
-"dfo_cod_3ps_2024","index",,,,,,"timing","Exact annual survey timing fractions used by HYBRID were not recoverable from the published report","pp. 9-10","The report provides seasonal descriptions only; do not treat downstream timing approximations as source inputs."
-"dfo_cod_3ps_2024","biology",,,,,,"maturity","Annual maturity-at-age from RV sampling","Table A-9",
-"dfo_cod_3ps_2024","biology",,,,,,"stock_weight","Beginning-of-year stock weights estimated from bias-corrected RV weights","pp. 9-10; Table A-10",
-"dfo_cod_3ps_2024","biology",,,,,,"catch_weight","Catch weights-at-age from commercial sampling","p. 10; Table A-11",
-"dfo_cod_3ps_2024","model_availability",,,,,,"native_run","unknown","Source search through 2026-10-19","No public applied HYBRID executable, parameter file, or full machine-readable fit object was found; figures and selected summary statistics are available."
-"dfo_cod_3ps_2024","model_availability",,,,,,"estimated_output_coverage","partial","Figures 56-72 and pp. 11-12","Full numerical N/F/M age-by-year trajectories and uncertainty are not tabulated in the detailed report."
+"dfo_cod_3ps_2024","population","","","","","","model_years","1959-2024; projected SSB reported for 2025","pp. 9-11; Figure 56",""
+"dfo_cod_3ps_2024","population","","","","","","modeled_ages","2-14+","p. 10; Table A-2",""
+"dfo_cod_3ps_2024","recruitment","","","","","","process","Age-2 recruitment follows a random walk","p. 10",""
+"dfo_cod_3ps_2024","F","","","","","","process","Multivariate-normal random walk; age 2 is separate from the correlated age 3+ process","p. 10",""
+"dfo_cod_3ps_2024","F","","","","","","process_break","A discontinuity is included at the 1993 moratorium","p. 10",""
+"dfo_cod_3ps_2024","catch","","","","","","landings_likelihood","Censored likelihood using annual lower and upper landings bounds","p. 10; Table A-1",""
+"dfo_cod_3ps_2024","catch","","","","","","age_composition_likelihood","Continuation-ratio logits for catch-at-age","p. 10; Table A-2",""
+"dfo_cod_3ps_2024","M","","","","","","time_varying_mortality","M is a function of the scaled fish-condition mortality index","p. 10; Table A-3",""
+"dfo_cod_3ps_2024","M","","","","","","condition_index_early_years","Average of 1978-1982 index used for 1959-1977","p. 10; Table A-3",""
+"dfo_cod_3ps_2024","index","","","","","","survey_series","DFO RV Spring 1983-2024; ERHAPS 1978-1991; GEAC 1998-2005; Sentinel Gillnet and Line-trawl 1995-2023","pp. 10-11; Tables A-4-A-8",""
+"dfo_cod_3ps_2024","index","","","","","","zero_observations","Censored survey likelihood retains zero catches as information on low abundance","p. 10; Tables A-4-A-8",""
+"dfo_cod_3ps_2024","index","","","","","","rv_catchability","Ages 2-7 have separate offshore and inshore-offshore catchabilities; ages 8+ use an inshore-offshore offset","p. 10",""
+"dfo_cod_3ps_2024","index","","","","","","timing","Exact annual survey timing fractions used by HYBRID were not recoverable from the published report","pp. 9-10","The report provides seasonal descriptions only; do not treat downstream timing approximations as source inputs."
+"dfo_cod_3ps_2024","biology","","","","","","maturity","Annual maturity-at-age from RV sampling","Table A-9",""
+"dfo_cod_3ps_2024","biology","","","","","","stock_weight","Beginning-of-year stock weights estimated from bias-corrected RV weights","pp. 9-10; Table A-10",""
+"dfo_cod_3ps_2024","biology","","","","","","catch_weight","Catch weights-at-age from commercial sampling","p. 10; Table A-11",""
+"dfo_cod_3ps_2024","model_availability","","","","","","native_run","unknown","Source search through 2026-10-19","No public applied HYBRID executable, parameter file, or full machine-readable fit object was found; figures and selected summary statistics are available."
+"dfo_cod_3ps_2024","model_availability","","","","","","estimated_output_coverage","partial","DFO Science Advisory Report 2025/007, Table 1; DFO Research Document 2026/051, pp. 11-12","Annual aggregate SSB, age-2 recruitment, and mean F/M for ages 5-8 are available for 2020-2024. The 2024 intervals and 2025 SSB projection are reported in 2026/051. Full numerical N/F/M age-by-year trajectories and uncertainty are not tabulated."

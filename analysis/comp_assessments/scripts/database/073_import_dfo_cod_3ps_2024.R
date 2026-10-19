@@ -9,6 +9,7 @@ assessment_id <- "dfo_cod_3ps_2024"
 abort <- function(...) stop(paste0(...), call. = FALSE)
 assessment_url <- "https://publications.gc.ca/collections/collection_2026/mpo-dfo/fs70-5/Fs70-5-2026-051-eng.pdf"
 framework_url <- "https://waves-vagues.dfo-mpo.gc.ca/Library/4105829x.pdf"
+summary_url <- "https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/41290355.pdf"
 
 if (!file.exists(source_file)) {
   abort("The cached 2024 3Ps assessment report is missing: ", source_file)
@@ -197,8 +198,8 @@ landing_rows <- lapply(seq_len(3), function(j) {
 })
 condition_rows <- long_scalar(
   data.frame(year = m_condition$year, v1 = m_condition$v1),
-  "M", "condition_index_for_mortality", "index_scale", "standardized condition-index scale",
-  "Table A-3", "One annual fish-condition index for modeled ages 2-14+; the 1959-1977 values use the average of 1978-1982."
+  "covariate", "condition_index_for_mortality", "native_covariate", "standardized condition-index scale",
+  "Table A-3", "One annual fish-condition index used to inform M across modeled ages; the 1959-1977 values use the average of 1978-1982."
 )
 inputs <- rbind(inputs, do.call(rbind, landing_rows), condition_rows)
 inputs <- inputs[is.finite(inputs$value), , drop = FALSE]
@@ -213,10 +214,11 @@ new_assessment <- data.frame(
   data_url = "", model_url = "", repository_url = "",
   assumptions_status = "partial", inputs_status = "partial", outputs_status = "partial",
   notes = paste(
-    "The 2024 production assessment remains the latest full assessment identified in the DFO 2025 stock summary.",
+    "The 2024 assessment under the 2019 HYBRID framework is the latest annual assessment represented here.",
     "Detailed applied-model report 2026/051 was published in August 2026.",
+    "The associated 2025/007 Science Advisory Report provides annual aggregate SSB, recruitment, and grouped F/M for 2020-2024.",
     "The 2025 catch/survey update (2026/047) is not mixed into this assessment.",
-    "Published appendix tables provide the principal inputs, but executable HYBRID files, full model controls and complete numerical fitted trajectories were not located."
+    "Published appendix tables provide the principal inputs, but executable HYBRID files, full model controls, complete numerical fitted trajectories, and N/F/M age surfaces were not located."
   ), stringsAsFactors = FALSE
 )
 
@@ -251,38 +253,87 @@ assumption_rows <- do.call(rbind, list(
   add_assumption("biology", "stock_weight", "Beginning-of-year stock weights estimated from bias-corrected RV weights", "pp. 9-10; Table A-10"),
   add_assumption("biology", "catch_weight", "Catch weights-at-age from commercial sampling", "p. 10; Table A-11"),
   add_assumption("model_availability", "native_run", "unknown", "Source search through 2026-10-19", "No public applied HYBRID executable, parameter file, or full machine-readable fit object was found; figures and selected summary statistics are available."),
-  add_assumption("model_availability", "estimated_output_coverage", "partial", "Figures 56-72 and pp. 11-12", "Full numerical N/F/M age-by-year trajectories and uncertainty are not tabulated in the detailed report.")
+  add_assumption("model_availability", "estimated_output_coverage", "partial", "DFO Science Advisory Report 2025/007, Table 1; DFO Research Document 2026/051, pp. 11-12", "Annual aggregate SSB, age-2 recruitment, and mean F/M for ages 5-8 are available for 2020-2024. The 2024 intervals and 2025 SSB projection are reported in 2026/051. Full numerical N/F/M age-by-year trajectories and uncertainty are not tabulated.")
 ))
 
-output_rows <- data.frame(
-  assessment_id = assessment_id,
-  type = c("biomass", "biomass", "population", "mortality", "mortality"),
-  measure = c("SSB", "SSB", "recruitment", "Fbar", "Mbar"),
-  fleet = "", survey = "", sex = "", region = "", season = "",
-  year = c(2024, 2025, 2024, 2024, 2024), age = c(NA_real_, NA_real_, 2, NA_real_, NA_real_), age_group = c("", "", "", "5-8", "5-8"),
-  value = c(29.9, 33.2, 36.6, 0.04, 0.32),
-  se = NA_real_, lwr = c(24, 26.4, 14.3, 0.03, 0.31),
-  upr = c(37.3, 41.8, 93.3, 0.06, 0.34),
-  unit = c("kt", "kt", "million fish", "per year", "per year"),
-  source_type = "official_document",
-  source_reference = c(
-    "DFO Research Document 2026/051, p. 11",
-    "DFO Research Document 2026/051, p. 11",
-    "DFO Research Document 2026/051, p. 11",
-    "DFO Research Document 2026/051, p. 11",
-    "DFO Research Document 2026/051, p. 11"
+summary_years <- 2020:2024
+summary_outputs <- function(type, measure, values, lower = rep(NA_real_, 5),
+                            upper = rep(NA_real_, 5), age = NA_real_,
+                            age_group = "", unit, notes) {
+  data.frame(
+    assessment_id = assessment_id, type = type, measure = measure,
+    fleet = "", survey = "", sex = "", region = "", season = "",
+    year = summary_years, age = age, age_group = age_group,
+    value = values, se = NA_real_, lwr = lower, upr = upper, unit = unit,
+    source_type = "official_document",
+    source_reference = paste0("DFO Science Advisory Report 2025/007, Table 1; ", summary_url),
+    notes = notes, stringsAsFactors = FALSE
+  )
+}
+output_rows <- rbind(
+  summary_outputs(
+    "biomass", "SSB", c(27.6, 26.7, 27.4, 27.7, 29.9),
+    c(22.7, 22.6, 23.2, 23.1, 24.0), c(33.5, 31.6, 32.4, 33.3, 37.3),
+    unit = "kt", notes = "Annual SSB estimate and reported 95% confidence interval. 2024 also reported in Research Document 2026/051, p. 11."
   ),
-  notes = c(
-    "Beginning-of-year 2024 SSB; reported 95% confidence interval.",
-    "Beginning-of-year 2025 projected SSB under the stated 1,550 t catch; reported 95% confidence interval.",
-    "Age-2 recruitment in 2024; reported 95% confidence interval.",
-    "Arithmetic mean F for ages 5-8, not age-specific F; reported 95% confidence interval.",
-    "Arithmetic mean M for ages 5-8, not age-specific M; reported 95% confidence interval."
-  ), stringsAsFactors = FALSE
+  summary_outputs(
+    "population", "recruitment", c(17.4, 20.0, 34.3, 36.8, 36.6),
+    c(10.9, 12.3, 19.4, 17.0, 14.3), c(27.9, 32.4, 60.6, 79.8, 93.3),
+    age = 2, unit = "million fish",
+    notes = "Age-2 recruitment estimate and reported 95% confidence interval. 2024 also reported in Research Document 2026/051, p. 11."
+  ),
+  summary_outputs(
+    "mortality", "Fbar", c(0.04, 0.02, 0.03, 0.03, 0.04),
+    lower = c(NA, NA, NA, NA, 0.03), upper = c(NA, NA, NA, NA, 0.06),
+    unit = "per year", age_group = "5-8",
+    notes = "Arithmetic mean F for ages 5-8; not age-specific. The 2024 estimate and 95% confidence interval are reported in Research Document 2026/051, p. 11."
+  ),
+  summary_outputs(
+    "mortality", "Mbar", c(0.37, 0.35, 0.35, 0.35, 0.32),
+    lower = c(NA, NA, NA, NA, 0.31), upper = c(NA, NA, NA, NA, 0.34),
+    unit = "per year", age_group = "5-8",
+    notes = "Arithmetic mean M for ages 5-8; not age-specific. The 2024 estimate and 95% confidence interval are reported in Research Document 2026/051, p. 11."
+  ),
+  data.frame(
+    assessment_id = assessment_id, type = "biomass", measure = "SSB",
+    fleet = "", survey = "", sex = "", region = "", season = "",
+    year = 2025, age = NA_real_, age_group = "", value = 33.2, se = NA_real_,
+    lwr = 26.4, upr = 41.8, unit = "kt", source_type = "official_document",
+    source_reference = "DFO Research Document 2026/051, p. 11",
+    notes = "Beginning-of-year 2025 projected SSB under the stated 1,550 t catch; reported 95% confidence interval.",
+    stringsAsFactors = FALSE
+  )
 )
+output_rows$lwr[output_rows$year < 2024 & output_rows$measure %in% c("Fbar", "Mbar")] <- NA_real_
+output_rows$upr[output_rows$year < 2024 & output_rows$measure %in% c("Fbar", "Mbar")] <- NA_real_
 
 read_csv <- function(name) read.csv(file.path(db, name), stringsAsFactors = FALSE, check.names = FALSE)
-write_csv <- function(x, name) write.csv(x, file.path(db, name), row.names = FALSE, na = "")
+write_csv <- function(x, name) {
+  path <- file.path(db, name)
+  lines <- readLines(path, warn = FALSE, encoding = "UTF-8")
+  if (name == "stocks.csv") {
+    id <- "ck_dfo_morhua_3ps"
+    row <- x[x$stock_id == id, , drop = FALSE]
+    if (nrow(row) != 1L) abort("Expected one stock row for ", id, ".")
+    pattern <- paste0('^"?', id, '"?,')
+    index <- grep(pattern, lines)
+    if (length(index) != 1L) abort("Expected one existing stock row for ", id, ".")
+    temp <- tempfile(fileext = ".csv")
+    on.exit(unlink(temp), add = TRUE)
+    write.csv(row, temp, row.names = FALSE, na = "")
+    lines[[index]] <- readLines(temp, warn = FALSE, encoding = "UTF-8")[[2L]]
+  } else {
+    rows <- x[x$assessment_id == assessment_id, , drop = FALSE]
+    if (!nrow(rows)) abort("No rows to write for ", assessment_id, " in ", name, ".")
+    pattern <- paste0('^"?', assessment_id, '"?,')
+    lines <- c(lines[1L], lines[-1L][!grepl(pattern, lines[-1L])])
+    temp <- tempfile(fileext = ".csv")
+    on.exit(unlink(temp), add = TRUE)
+    write.csv(rows, temp, row.names = FALSE, na = "")
+    lines <- c(lines, readLines(temp, warn = FALSE, encoding = "UTF-8")[-1L])
+  }
+  writeLines(lines, path, useBytes = TRUE)
+}
 
 stocks <- read_csv("stocks.csv")
 stock_index <- which(stocks$stock_id == "ck_dfo_morhua_3ps")

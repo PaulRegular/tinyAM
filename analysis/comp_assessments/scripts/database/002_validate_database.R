@@ -294,16 +294,13 @@ for (name in c("inputs", "outputs")) {
   value <- suppressWarnings(as.numeric(x$value))
   signed <- if (name == "inputs") {
     x$type == "covariate" &
-      x$measure == "environmental_covariate" & x$basis == "native_covariate" |
-      x$type == "M" & x$measure == "condition_index_for_mortality" &
-      x$basis == "index_scale" |
-      x$type == "M" & x$measure == "condition_index_for_mortality" &
-      x$basis == "index_scale"
+      x$measure %in% c("environmental_covariate", "condition_index_for_mortality") &
+      x$basis == "native_covariate"
   } else {
     x$type == "biology" & x$measure %in% c("mat_beta1", "mat_beta2")
   }
   if (anyNA(value) || any(!is.finite(value)) || any(value < 0 & !signed)) {
-    stop(name, "$value must contain finite numbers; negative values are allowed only for environmental covariates and documented signed biology coefficients.", call. = FALSE)
+    stop(name, "$value must contain finite numbers; negative values are allowed only for signed covariates and documented signed biology coefficients.", call. = FALSE)
   }
   if (name == "inputs") {
     if (any(x$type == "maturity" & (value < 0 | value > 1))) {
