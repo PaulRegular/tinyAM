@@ -198,9 +198,11 @@ allowed_input_measures <- c(
   "frequency_at_length", "frequency_at_age", "maturity_fecundity_at_age", "maturity_sample_size", "mature_sample_count", "composition_sample_count",
   "numbers_at_age", "index_by_age_group",
   "biomass_at_age", "total_numbers",
-  "total_biomass", "landings_lower_bound", "landings_upper_bound", "proportion_at_age", "proportion_at_length",
-  "conditional_proportion_at_age", "weight_at_age", "spawning_weight_at_age",
+  "total_biomass", "total_egg_production", "landings_lower_bound", "landings_upper_bound",
+  "catch_lower_bound", "catch_upper_bound", "proportion_at_age", "proportion_at_length",
+  "conditional_proportion_at_age", "weight_at_age", "spawning_weight_at_age", "start_weight_at_age",
   "maturity_at_age", "natural_mortality_at_age", "condition_index_for_mortality",
+  "fecundity_at_age", "proportion_female_at_age",
   "fixed_mortality_medium", "fixed_mortality_low", "fixed_mortality_high",
   "relative_biomass_index",
   "landings_proportion", "landings_numbers_at_age", "discard_numbers_at_age", "landings_fraction_at_age",
@@ -211,7 +213,7 @@ allowed_bases <- c(
   "native_frequency",
   "numbers", "biomass", "proportion_numbers", "proportion_biomass",
   "kg_per_fish", "proportion", "per_year", "log_scale", "native_covariate",
-  "relative_precision", "relative_scale", "index_scale"
+  "relative_precision", "relative_scale", "index_scale", "egg_count"
 )
 for (name in c("inputs", "outputs")) {
   x <- tables[[name]]
@@ -254,7 +256,8 @@ for (name in c("inputs", "outputs")) {
       "numbers_at_age", "index_by_age_group",
       "biomass_at_age", "proportion_at_age", "frequency_at_age", "maturity_fecundity_at_age",
       "conditional_proportion_at_age", "fraction_F_before_spawning",
-      "fraction_M_before_spawning", "weight_at_age", "spawning_weight_at_age", "maturity_at_age", "natural_mortality_at_age",
+      "fraction_M_before_spawning", "weight_at_age", "spawning_weight_at_age", "start_weight_at_age",
+      "maturity_at_age", "natural_mortality_at_age", "fecundity_at_age", "proportion_female_at_age",
       "landings_numbers_at_age", "discard_numbers_at_age", "landings_fraction_at_age", "relative_standard_error",
       "landings_weight_at_age", "discard_weight_at_age", "relative_precision_weight"
     )

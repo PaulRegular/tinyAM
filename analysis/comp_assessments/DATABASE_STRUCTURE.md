@@ -213,6 +213,7 @@ catch_weight
 maturity
 M
 covariate
+biology
 ```
 
 Add new types only when a real assessment requires them.
@@ -227,8 +228,11 @@ index_by_age_group
 biomass_at_age
 total_numbers
 total_biomass
+total_egg_production
 landings_lower_bound
 landings_upper_bound
+catch_lower_bound
+catch_upper_bound
 proportion_at_age
 relative_biomass_index
 relative_precision_weight
@@ -254,8 +258,13 @@ likelihood.
 
 ``` text
 weight_at_age
+start_weight_at_age
 maturity_at_age
 natural_mortality_at_age
+fecundity_at_age
+proportion_female_at_age
+fraction_F_before_spawning
+fraction_M_before_spawning
 landings_numbers_at_age
 discard_numbers_at_age
 landings_fraction_at_age
@@ -314,6 +323,15 @@ model transforms this SD for its likelihood, document that transformation in
 
 Additional measures may be added when necessary, but should remain explicit and biologically interpretable.
 
+`catch_lower_bound` and `catch_upper_bound` preserve bounds used by a censored
+total-catch likelihood; they are distinct from landings bounds. `start_weight_at_age`
+is a source model's January 1 weight surface when it differs in meaning from the
+annual stock-weight surface. `total_egg_production` stores an aggregate egg
+count index; it is not a biomass index or age-specific fish-abundance index.
+`fecundity_at_age` and `proportion_female_at_age` retain the biological inputs
+used to calculate egg production. Use type `biology` for these biological
+surfaces when no existing type represents their meaning.
+
 `fixed_mortality_medium`, `fixed_mortality_low` and `fixed_mortality_high`
 retain the reported scalar M settings for the three BC petrale ensemble
 components (`type = M`, `basis = per_year`). Leave year and age blank: these
@@ -336,7 +354,12 @@ log_scale
 relative_precision
 relative_scale
 index_scale
+egg_count
 ```
+
+Use `basis = egg_count` for egg-production observations and document the scale
+in `unit`, such as `trillion eggs`. It must not be converted to fish numbers
+without a source-supported model relationship.
 
 For example:
 
