@@ -1,0 +1,282 @@
+---
+title: "M covariate slopes with AR1 residuals"
+output:
+  html_document:
+    self_contained: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE,
+  fig.width = 10, fig.height = 6, dpi = 120,
+  fig.path = "results/m_random_slopes/figures/")
+result <- readRDS("results/m_random_slopes/recovery.rds")
+runs <- result$runs
+parameters <- result$parameters
+label <- c(informative = "Eight groups", four_groups = "Four groups",
+  persistent = "Persistent covariate/residuals")
+performance <- do.call(rbind, lapply(split(runs, interaction(runs$scenario, runs$kind)), function(x) {
+  data.frame(Scenario = label[x$scenario[1]], Experiment = x$kind[1],
+    Attempts = nrow(x), Converged = sum(x$is_converged),
+    `Positive Hessian` = sum(x$pdHess), Errors = sum(nzchar(x$error)),
+    `Median gradient` = median(x$gradient, na.rm = TRUE), check.names = FALSE)
+}))
+summary <- do.call(rbind, lapply(split(parameters,
+  interaction(parameters$scenario, parameters$kind, parameters$parameter)), function(x) {
+    available <- x$pdHess & is.finite(x$lower) & is.finite(x$upper)
+    data.frame(scenario = x$scenario[1], kind = x$kind[1], parameter = x$parameter[1],
+      truth = x$truth[1], median = median(x$estimate, na.rm = TRUE),
+      bias = median(x$estimate - x$truth, na.rm = TRUE),
+      intervals = sum(available),
+      coverage = if (any(available)) mean(x$lower[available] <= x$truth[available] &
+        x$upper[available] >= x$truth[available]) else NA_real_)
+}))
+```
+
+## What is being enabled?
+
+An age group can have its own response to a supplied food or environmental
+covariate, with differences between groups partially pooled toward a common
+slope. AR1 deviations describe the remaining mortality variation.
+
+```{r specification, echo=TRUE, eval=FALSE}
+M_settings = list(process = "ar1", mu_supplied = ~ I(.3),
+  mu_form = ~ 0 + capelin + iid(M_age_group, by = capelin))
+```
+
+This is a narrow extension. M blocks still share **actual mortality**, so
+every mean component must agree within each block. Separate slope groups
+cannot split a shared state. A coarser slope grouping may span several M
+blocks. `mean_ages` changes reported averages, not the ages receiving a slope.
+
+The model is
+
+\[
+\log M_{t,b}=\log(0.3)+(\beta+u_{g(b)})x_{t,b}+\eta_{t,b},
+\qquad u_g\sim N(0,\tau^2).
+\]
+
+The common slope is present only when the ordinary covariate term is included.
+Otherwise the slopes are centred on zero. Positive and negative slopes are
+both allowed. The residual matrix retains tinyAM's stationary age/year AR1:
+
+\[
+\operatorname{Cov}(\eta_{t,b},\eta_{s,c})=
+\frac{\sigma_M^2\phi_A^{|b-c|}\phi_T^{|t-s|}}
+     {(1-\phi_A^2)(1-\phi_T^2)}.
+\]
+
+Here \(\sigma_M\) is the existing innovation-scale SD. One slope is drawn per
+group, independently of this residual process, and reused across all years.
+The integrated log-mortality covariance is
+\(\tau^2ZZ^\mathsf{T}+C_{\mathrm{AR1}}\), where each row of \(Z\) places that
+year's covariate in its slope group's column. Repeating a biological age in
+a shared M block does not add another process-density contribution.
+
+## Study design
+
+The tracked `m_random_slopes.R` script generates 40 years with eight groups,
+four groups, or four groups with persistent covariates and residuals.
+There are `r result$n_isolated` isolated and `r result$n_full` full-assessment
+replicates per scenario. Seeds, configurations, warnings, errors and every
+completed attempt are retained in the ignored results folder.
+The reported run used R 4.4.1 and RTMB 2.0; numerical stopping behaviour can
+vary between runtime versions.
+
+True values are a common slope of −0.25, slope SD 0.15, M innovation SD 0.06,
+age correlation 0.25 and year correlation 0.6 (0.9 in the persistent case).
+Independent Normal covariates are used in the first two scenarios; the stress
+case uses an AR1 covariate with correlation 0.95. Study covariates are explicitly
+centred and standardized. The package never transforms user covariates this way.
+
+The isolated study draws log mortality using an independently constructed
+multivariate Normal covariance. It integrates the group slopes in RTMB and
+estimates all five parameters. Deterministic tests independently verify the
+Gaussian likelihood and derivatives.
+
+The full assessments simulate recruitment, F, M, catch and two surveys at
+different times of year. N has no additional cohort error; F has IID deviations
+around age-specific means. Both observation log-SDs are supplied as 0.08.
+Catch, recruitment, F, M, q and the mean/process parameters are then fitted.
+Initial population and mortality states use the simulated states as favourable
+starts. The common slope and slope effects start at zero, estimated process SDs
+at 0.1, and M correlations at 0.3/0.5. This tests recovery with favourable starts,
+not robustness to arbitrary starting values. No failed model is rescued or
+retuned. Eight-group models contain 17 biological ages; four-group models
+contain nine, demonstrating genuine within-block age sharing.
+The study explicitly estimates M states from the first modeled year. The
+package's default second-year M start is unchanged and tested separately.
+
+## Numerical reliability
+
+```{r numerical-table}
+knitr::kable(performance, digits = 3, row.names = FALSE)
+```
+
+Numerical success requires optimizer code zero, a positive-definite Hessian
+and maximum absolute gradient at most 0.01. A missed gradient threshold is
+reported separately from failures of uncertainty estimation. Every scheduled
+replicate remains in the success-rate denominator, including errors.
+The 90% benchmark applies to the well-informed eight-group scenario; it is a
+reason to investigate failures, not a reason to change starts or tolerances.
+
+The completed study had 100/100 numerical successes in each isolated scenario.
+Full-assessment success was 12/30 with eight groups, 27/30 with four groups,
+and 27/30 in the persistent scenario. Every full fit returned optimizer code
+zero and a positive-definite Hessian. All 24 unsuccessful full fits missed the
+gradient threshold; none were removed or rescued. The eight-group scenario
+therefore **did not meet the 90% benchmark**, despite the exact Gaussian tests
+and reliable isolated fits.
+
+The first eight-group fit was examined without refitting. Its largest gradient
+was 0.01870, on a catchability coefficient. Multiplying the gradient by the
+estimated fixed-parameter covariance gave a maximum local displacement of
+0.000133 standard errors. This suggests that optimizer stopping precision can
+matter for this large model, but this one-fit check does not establish that
+all missed thresholds are harmless. The fit remains classified as unsuccessful;
+neither tolerances nor starting values were changed.
+
+```{r success-figure}
+groups <- split(runs, interaction(runs$scenario, runs$kind))
+rates <- vapply(groups, function(x) mean(x$is_converged), numeric(1))
+names(rates) <- vapply(groups, function(x) paste(label[x$scenario[1]], x$kind[1], sep = "\n"), character(1))
+barplot(100 * rates, ylim = c(0, 100), las = 1, ylab = "Numerical success (%)",
+  col = rep(c("#00475D", "#FF6B35"), each = 3), cex.names = .7)
+abline(h = 90, lty = 2, col = "grey45")
+```
+
+## Parameter and mortality recovery
+
+```{r recovery-table}
+shown <- do.call(rbind, lapply(split(summary, interaction(summary$scenario, summary$kind)), function(x) {
+  values <- setNames(sprintf("%.3f (%.0f%%)", x$median, 100 * x$coverage), x$parameter)
+  data.frame(Scenario = unname(label[x$scenario[1]]), Experiment = x$kind[1],
+    Intervals = paste(range(x$intervals), collapse = "–"),
+    `Common slope` = values["beta"], `Slope SD` = values["slope_sd"],
+    `M innovation SD` = values["residual_sd"], `Age correlation` = values["phi_age"],
+    `Year correlation` = values["phi_year"], check.names = FALSE)
+}))
+knitr::kable(shown, row.names = FALSE)
+```
+
+Cells show the median estimate and, in parentheses, interval coverage.
+Coverage is the proportion of available 95% intervals containing the generating
+value; interval counts are shown explicitly. These intervals require a
+positive-definite uncertainty calculation, but the table does not otherwise
+filter out numerically unsuccessful fits. Point estimates use all finite
+returned values. With only 30 full replicates, coverage estimates are imprecise.
+Group-SD recovery is also limited by the number of groups, regardless of how
+many ages are pooled within each one.
+
+The full-assessment median slope SD was about 0.12 with eight groups and 0.11
+with four groups (truth 0.15). Common-slope interval coverage was about 80%,
+83% and 87% across the three scenarios. Isolated common-slope coverage was
+88%, 77% and 83%, respectively. Thus numerically successful Gaussian fits do
+not guarantee well-calibrated uncertainty with so few independent groups.
+
+```{r parameter-figure}
+par(mfrow = c(2, 3), mar = c(5, 4, 2, 1))
+for (parameter in c("beta", "slope_sd", "residual_sd", "phi_age", "phi_year")) {
+  d <- parameters[parameters$kind == "full" & parameters$parameter == parameter &
+    is.finite(parameters$estimate), ]
+  d$scenario <- factor(d$scenario, levels = names(label), labels = c("Eight\ngroups", "Four\ngroups", "Persistent"))
+  title <- c(beta = "Common slope", slope_sd = "Slope SD", residual_sd = "M innovation SD",
+    phi_age = "Age-block correlation", phi_year = "Year correlation")
+  boxplot(estimate ~ scenario, d, main = title[parameter], xlab = "", ylab = "Estimate",
+    log = if (parameter %in% c("slope_sd", "residual_sd")) "y" else "",
+    col = "#8CC9C5", cex.axis = .8)
+  if (parameter == "phi_year") points(1:3, c(.6, .6, .9), pch = 4, cex = 1.3)
+  else abline(h = d$truth[1], lty = 2)
+}
+plot.new()
+text(.5, .6, "Dashed lines / crosses: truth\nAll finite estimates retained\nSD panels use logarithmic axes", cex = .9)
+```
+
+```{r state-recovery}
+state_summary <- do.call(rbind, lapply(result$results, function(x) {
+  if (x$run$kind != "full" || is.null(x$slopes)) return(NULL)
+  intervals <- is.finite(x$slopes$lower) & is.finite(x$slopes$upper) & isTRUE(x$diagnostics$pdHess)
+  data.frame(scenario = x$run$scenario,
+    slope_rmse = sqrt(mean((x$slopes$estimate - x$slopes$truth)^2)),
+    log_M_rmse = sqrt(mean((x$mortality$estimate - x$mortality$truth)^2)),
+    group_intervals = sum(intervals),
+    group_covered = sum(x$slopes$lower[intervals] <= x$slopes$truth[intervals] &
+      x$slopes$upper[intervals] >= x$slopes$truth[intervals]))
+}))
+state_table <- do.call(rbind, lapply(split(state_summary, state_summary$scenario), function(x) {
+  data.frame(Scenario = unname(label[x$scenario[1]]),
+    `Median slope RMSE` = median(x$slope_rmse, na.rm = TRUE),
+    `Median log-M RMSE` = median(x$log_M_rmse, na.rm = TRUE),
+    `Group intervals` = sum(x$group_intervals),
+    `Group coverage` = if (sum(x$group_intervals)) sum(x$group_covered) / sum(x$group_intervals) else NA_real_,
+    check.names = FALSE)
+}))
+knitr::kable(state_table, digits = 3, row.names = FALSE)
+```
+
+Group-slope intervals describe the random deviations, not the sum of the
+common and group slopes. Realized M recovery is evaluated on the log scale
+using only unique fitted block states. No unsupported intervals are invented
+for the combined M mean surface.
+
+## Workflow validation
+
+The first four-group replicate is used without selecting a better-fitting
+example. Updates, forecast covariate handling, warm-start alignment,
+retrospective/hindcast folds, signed effect intervals and a browser-free
+dashboard are checked separately from recovery performance.
+
+The one-year hindcast fold missed the gradient threshold (0.0142 versus 0.01).
+Its forecast score was left unavailable.
+This exposed an existing empty-forecast table error, now covered by a regression
+test: missing forecasts return an unavailable score rather than a table-size
+error. The projection update and historical retrospective fold completed.
+
+```{r workflow-checks}
+workflow_file <- "results/m_random_slopes/workflow_checks.csv"
+if (file.exists(workflow_file)) {
+  workflow <- read.csv(workflow_file)
+  knitr::kable(workflow[c("check", "passed", "error")], row.names = FALSE)
+} else cat("Workflow validation has not been run.\n")
+```
+
+## Interpretation and limits
+
+This extension permits a valid model specification; it does not establish that
+an age-specific food response is supported by a particular assessment. A common
+fixed slope is the useful first comparison. Four groups provide little
+information about the distribution of slopes. Persistent covariates and AR1
+deviations can produce similar trajectories, and good mortality recovery does
+not guarantee that their separate contributions have been recovered.
+The full study uses known observation SDs and IID F deviations; it does not
+establish recovery with additional N error, AR1 F deviations or time-varying q.
+
+Retain this option for targeted sensitivity analyses, not routine interpretation
+of food-response differences between four age groups. Check a common fixed
+slope first, examine slope-SD and persistence intervals, and keep numerical
+failures separate from evidence about the ecological hypothesis. No automatic
+model simplification or rescue fitting is performed.
+
+## Implementation checks
+
+The focused tests passed 48 random-slope assertions and 32 hindcast-control
+assertions. They cover block conflicts, the optional common slope, independently
+calculated Gaussian densities and derivatives, unobserved forecast states,
+simulation, warm-start alignment and uncertainty advisories. Existing mean and
+process-SD regression tests also passed. The full package suite passed under
+R 4.4.1 and R 4.6.1. Dashboard validation renders files without opening a browser.
+`R CMD check --no-manual` passed with no errors, warnings or notes. The clean
+source check used Pandoc explicitly; an earlier check could not find Pandoc,
+and its dashboard-test failures were environmental rather than model failures.
+
+The real Northern cod trial was **not run**: the local packaged data do not
+contain `log_cap_per_cod`. `inst/examples/example_m_random_slopes.R` shows the
+proposed comparison and stops until an actual covariate is supplied. It uses
+that column as an external predictor; it does not recreate an official food
+relationship by recomputing capelin per modeled cod.
+
+Run the study from the repository root, then render this report. The rendered
+HTML, figures, example fits, attempt tables and checkpoints belong under
+`results/m_random_slopes/`, which is ignored. Scheduler interruptions, if any,
+are logged separately from completed optimizer outcomes. Existing successes
+and failures are reused when resuming the same study; use a fresh output folder
+when changing the generating design.

@@ -118,6 +118,11 @@ dropped (warning) so supplied levels act as fixed offsets.
 \code{\link[=iid]{iid()}}, \code{\link[=rw]{rw()}} and \code{\link[=ar1]{ar1()}} support random mean effects with IID residuals
 or the residual process off. Use \code{~ 0 + rw(year)} to vary supplied M through
 time. All mean components must be constant within fitted M age blocks.
+With AR1 residuals, one age-defined IID random slope is also supported,
+e.g. \code{~ 0 + capelin + iid(M_age_group, by = capelin)}. The grouping column
+must be constant across years at each age and the \code{by} column numeric.
+This experimental combination retains shared actual M within blocks;
+see \link{formula_effects} for the model and statistical cautions.
 \item \code{mu_supplied}: optional one-sided formula giving supplied (non-estimated)
 \eqn{M}, e.g. \code{~ I(0.2)} or a column reference such as
 \code{~ M_assumption} stored in the \code{data$pop_covariates} data.frame.

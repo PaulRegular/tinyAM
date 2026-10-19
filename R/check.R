@@ -29,7 +29,9 @@
 #' Mortality-mean advisories highlight jointly estimated M mean/residual
 #' variation and F/M mean variation. Formula-effect advisories flag 95% AR1
 #' correlation intervals wider than 0.5 and process-SD intervals spanning more
-#' than a factor of ten, including catchability effects. Catchability groups
+#' than a factor of ten, including catchability effects. With M random slopes,
+#' these interval checks also cover the residual M SD and age-block/year AR1
+#' correlations. Catchability groups
 #' with fewer than five observed effect levels are flagged when process SD or
 #' correlation is estimated. Observation-specific IID effects with estimated
 #' observation SD receive a caution under the logit link; exact log-link
@@ -381,9 +383,11 @@ check_tam <- function(fit, grad_tol = NULL, detailed = FALSE) {
   for (component in c("q", "F", "M", "sd_catch", "sd_index")) {
     terms <- fit$dat[[paste0(component, "_terms")]]
     if (!length(terms)) next
+    M_slopes <- component == "M" && .M_ar1_random_slope(fit$dat)
     sd_names <- c(
       unlist(lapply(terms, `[[`, "sd_parameter")),
-      if (component %in% c("F", "M") && identical(fit$dat[[paste0(component, "_settings")]]$process, "iid")) {
+      if (component %in% c("F", "M") &&
+        (identical(fit$dat[[paste0(component, "_settings")]]$process, "iid") || M_slopes)) {
         paste0("log_sd_", tolower(component))
       }
     )
@@ -399,6 +403,21 @@ check_tam <- function(fit, grad_tol = NULL, detailed = FALSE) {
             "Persistence is weakly estimated; compare with IID/RW effects or a scientifically supported fixed phi before interpreting it."
           )
         ))
+      }
+    }
+    if (M_slopes) {
+      indices <- which(names(p) == "logit_phi_m")
+      axes <- c("age-block", "year")
+      map <- fit$parameter_map$logit_phi_m
+      if (!is.null(map)) axes <- axes[!is.na(map)]
+      for (j in seq_along(indices)) {
+        i <- indices[j]
+        if (!is.finite(half_width[i]) || !is.finite(p[i])) next
+        width <- diff(stats::plogis(p[i] + c(-1, 1) * half_width[i]))
+        if (width > .5) out <- rbind(out, data.frame(
+          issue = "formula_AR1_uncertainty", detail = paste0(
+            "M residual ", axes[j], ": the 95% AR1 correlation interval spans more than 0.5. ",
+            "Persistence is weakly estimated; compare a simpler M model before interpreting it.")))
       }
     }
     i <- match(sd_names, names(p))

@@ -48,7 +48,7 @@
   keys <- c("year", "age", "survey")
   p <- predictions[predictions$is_proj, c(keys, "pred"), drop = FALSE]
   o <- observations[!observations$is_proj, c(keys, "obs"), drop = FALSE]
-  p$obs <- NA_real_; p$is_proj <- TRUE
-  o$pred <- NA_real_; o$is_proj <- FALSE
+  p$obs <- rep(NA_real_, nrow(p)); p$is_proj <- rep(TRUE, nrow(p))
+  o$pred <- rep(NA_real_, nrow(o)); o$is_proj <- rep(FALSE, nrow(o))
   rbind(p, o[, names(p), drop = FALSE])
 }
