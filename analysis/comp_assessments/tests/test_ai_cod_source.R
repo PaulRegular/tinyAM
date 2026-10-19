@@ -1,7 +1,8 @@
 source("analysis/comp_assessments/R/read_database.R")
 x <- read_assessment("afsc_cod_ai_2024")
 i<-x$inputs;o<-x$outputs
-stopifnot(x$stocks$charbonneau_id=="AFSC_AI_Gadus_macrocephalus",x$stocks$ocean=="Northeast Pacific",
+stopifnot(x$stocks$charbonneau_id=="AFSC_macrocephalus_AL to (AI)",x$stocks$ocean=="Northeast Pacific",
+  grepl("Previous Charbonneau identifier retained as alias: AFSC_AI_Gadus_macrocephalus",x$stocks$notes,fixed=TRUE),
   x$assessment$terminal_year==2024,all(i$source_type=="official_table"),all(o$source_type=="official_table"),
   all(o$year>=1991,na.rm=TRUE),all(o$measure[is.na(o$year)]=="q"),
   !any(o$measure=="numbers_at_age"),!any(o$measure=="fishing_mortality_at_age"),

@@ -94,3 +94,46 @@ missing_crosswalk_error <- tryCatch({
 stopifnot(missing_crosswalk_error)
 
 cat("Charbonneau-Keith catalogue mapping, metadata safeguards and idempotency passed.\n")
+
+master_path <- file.path(
+  "analysis", "comp_assessments", "source_cache", "charbonneau_keith", "Master.csv"
+)
+if (file.exists(master_path)) {
+  source_stocks <- read.csv(
+    "analysis/comp_assessments/database/stocks.csv",
+    stringsAsFactors = FALSE, check.names = FALSE, na.strings = c("", "NA")
+  )
+  master_ids <- read.csv(master_path, stringsAsFactors = FALSE)$unique_ID
+  if (all(master_ids %in% source_stocks$charbonneau_id)) {
+    db_dir <- "analysis/comp_assessments/database"
+    files <- c("stocks.csv", "assessments.csv", "assumptions.csv", "inputs.csv", "outputs.csv")
+    temp_dir <- tempfile("ck-master-import-")
+    dir.create(temp_dir)
+    for (file in files) file.copy(file.path(db_dir, file), temp_dir)
+    original_other_tables <- tools::md5sum(file.path(
+      temp_dir, c("assessments.csv", "assumptions.csv", "inputs.csv", "outputs.csv")
+    ))
+    temp_stocks <- file.path(temp_dir, "stocks.csv")
+    seed_stocks <- source_stocks[!source_stocks$stock_id %in% ck_master_slug(master_ids), ]
+    utils::write.csv(seed_stocks, temp_stocks, row.names = FALSE, na = "")
+    first_import <- ck_import_master(master_path, temp_stocks)
+    imported_stocks <- read.csv(temp_stocks, stringsAsFactors = FALSE, na.strings = c("", "NA"))
+    after_other_tables <- tools::md5sum(file.path(
+      temp_dir, c("assessments.csv", "assumptions.csv", "inputs.csv", "outputs.csv")
+    ))
+    second_import <- ck_import_master(master_path, temp_stocks)
+    second_stocks <- read.csv(temp_stocks, stringsAsFactors = FALSE, na.strings = c("", "NA"))
+    stopifnot(
+      nrow(imported_stocks) == 112L,
+      first_import$matched == 27L,
+      first_import$added == 75L,
+      second_import$matched == 102L,
+      second_import$added == 0L,
+      identical(imported_stocks, second_stocks),
+      identical(original_other_tables, after_other_tables)
+    )
+    unlink(temp_dir, recursive = TRUE)
+  }
+}
+
+cat("Charbonneau-Keith catalogue database integration checks passed when the local cache is available.\n")

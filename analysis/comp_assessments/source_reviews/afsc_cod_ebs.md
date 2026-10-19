@@ -2,7 +2,8 @@
 
 ## Production source
 
-Charbonneau–Keith identity `AFSC_BSAI_Gadus_macrocephalus`. The December 2024
+Charbonneau–Keith Master `unique_ID` `AFSC_ macrocephalus_BSAI`; the prior catalogue identifier `AFSC_BSAI_Gadus_macrocephalus` remains recorded as an alias. The Master area suffix conflicts with the existing Eastern Bering Sea boundary and is flagged in `stocks.csv`.
+The December 2024
 SSC selected Model 24.1. The 2024 SAFE report, Appendix 2.3 native files and
 Appendix 2.4 workbook describe that run, rather than a newer development model.
 The NOAA review of 2026 harvest specifications explains the retention of the

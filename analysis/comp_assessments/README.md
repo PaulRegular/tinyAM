@@ -20,6 +20,7 @@ assessments or management advice.
 | Source selection, extraction, and validation rules | `PROTOCOL.md` |
 | Translation, fitting, and comparison workflow | `TINYAM_TRANSLATION.md` |
 | Stock-specific source checks and unresolved gaps | `source_reviews/` |
+| Charbonneau–Keith Master catalogue crosswalk | `source_reviews/charbonneau_keith_master_catalogue.md` |
 | Shared readers, converters, audits, and runners | `R/` |
 | Source imports and validators | `scripts/database/` |
 | Visible stock model calls and run drivers | `scripts/translation/` |

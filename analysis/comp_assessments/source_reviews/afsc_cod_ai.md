@@ -2,7 +2,8 @@
 
 ## Production source and run identity
 
-Charbonneau–Keith identity `AFSC_AI_Gadus_macrocephalus`. The December 2024
+Charbonneau–Keith Master `unique_ID` `AFSC_macrocephalus_AL to (AI)`; the prior catalogue identifier `AFSC_AI_Gadus_macrocephalus` remains recorded as an alias in `stocks.csv`.
+The December 2024
 SSC selected age-structured Tier 3 Model 24.1. The historical catalogue's Tier 5
 label is not a reason to exclude this case. The final November 15 SAFE report
 is cached in `source_cache/afsc_cod_ai/`, along with the public native files

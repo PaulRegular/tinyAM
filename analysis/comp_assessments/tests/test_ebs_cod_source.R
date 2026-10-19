@@ -2,8 +2,9 @@ source("analysis/comp_assessments/R/read_database.R")
 x <- read_assessment("afsc_cod_ebs_2024")
 i <- x$inputs; o <- x$outputs
 active <- i$measure=="proportion_at_age" & grepl("^Active",i$notes)
-stopifnot(x$stocks$charbonneau_id=="AFSC_BSAI_Gadus_macrocephalus",
-  x$stocks$ocean=="Northeast Pacific",x$assessment$terminal_year==2024,
+stopifnot(x$stocks$charbonneau_id=="AFSC_ macrocephalus_BSAI",
+  x$stocks$ocean=="Northeast Pacific",
+  grepl("Previous Charbonneau identifier retained as alias: AFSC_BSAI_Gadus_macrocephalus",x$stocks$notes,fixed=TRUE),x$assessment$terminal_year==2024,
   identical(as.integer(sort(unique(i$year[active]))),setdiff(2000:2023,2020)),
   all(i$type[active]=="index"),sum(active)==23*13,
   all(i$value[i$type=="M"]==.3866),!any(i$type=="weight"),!any(i$type=="maturity"),
