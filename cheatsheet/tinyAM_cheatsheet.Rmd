@@ -169,7 +169,7 @@ rsvg::rsvg_pdf(file.path(repo, "man/figures/logo.svg"), "logo.pdf")
 \includegraphics[width=\linewidth]{cache/hindcast_ssb.pdf}\par\vspace{1mm}
 \panelnote{\input{cache/stability_model.tex} historical peels illustrate stability. RMSE scores survey observations given actual removals; it does not score SSB.}
 \end{minipage}
-\pagefooter{Experimental software; check assumptions and diagnostics. Build: \texttt{examples.R prepare}, then \texttt{examples.R render}. github.com/PaulRegular/tinyAM}
+\pagefooter{Check assumptions and diagnostics. Build: \texttt{examples.R prepare}, then \texttt{examples.R render}. github.com/PaulRegular/tinyAM}
 \clearpage
 ```
 ```{=latex}

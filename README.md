@@ -7,7 +7,7 @@
 
 # tinyAM <img src="man/figures/logo.png" align="right" height="138"/>
 
-**tinyAM** (*tiny assessment model*; aka TAM) is an experimental R package for fitting age-structured stock assessment models using [RTMB](https://github.com/kaskr/RTMB).
+**tinyAM** (*tiny assessment model*; aka TAM) is an R package for fitting age-structured stock assessment models using [RTMB](https://github.com/kaskr/RTMB).
 
 The package is designed to be **flexible, modular, and lightweight**, with an emphasis on making alternative model structures and process assumptions easy to specify, inspect, simulate, and compare.
 
@@ -302,14 +302,10 @@ Catch and survey predictions are conditional medians of lognormal observations. 
 
 For practical help, start with `?fit_tam`, `?prepare_tam`, and `?mono`. For mathematical details, use `help("tinyAM-model", package = "tinyAM")`, `?dprocess_ar1`, and `?dprocess_rw`.
 
-## Current status
+## Scope
 
-tinyAM is under active development and should currently be considered **highly experimental**.
-
-- It has **not been validated for operational stock assessment**.
-- It is intended primarily for **testing model structures, assumptions, and ideas**.
-- Model formulations and the user interface may change substantially.
-- Breaking changes should be expected while the package develops.
+tinyAM has not been validated for operational stock assessment. Review the data,
+assumptions, and diagnostics before interpreting model results.
 
 The package currently uses Northern cod data as an example and development test case, but the modelling framework is not intended to be specific to that stock.
 

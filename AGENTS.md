@@ -1,7 +1,7 @@
 
 # tinyAM development conventions
 
-tinyAM is an experimental R package built with RTMB. Keep changes small,
+tinyAM is an R package built with RTMB. Keep changes small,
 transparent, and consistent with existing package structure.
 
 ## General package conventions
