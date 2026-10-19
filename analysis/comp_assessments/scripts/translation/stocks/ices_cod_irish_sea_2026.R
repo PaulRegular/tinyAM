@@ -31,6 +31,10 @@ obs <- database_to_tam_obs(
 )
 
 obs$maturity$spawn_time <- 0
+obs$pop_covariates$recruitment_block <- factor(
+  ifelse(obs$pop_covariates$year < 2002, "pre_2002", "2002_plus"),
+  levels = c("pre_2002", "2002_plus")
+)
 obs$pop_covariates$f_age_group <- factor(
   ifelse(obs$pop_covariates$age >= 3, "age3_plus", paste0("age", obs$pop_covariates$age)),
   levels = c("age0", "age1", "age2", "age3_plus")
@@ -82,7 +86,10 @@ if (do_fit) {
     years = years,
     ages = ages,
     N_settings = list(process = "iid", init = "exp"),
-    rec_settings = list(process = "rw"),
+    rec_settings = list(
+      process = "iid",
+      mu_form = ~ bh(ssb, lag = 1) + recruitment_block
+    ),
     F_settings = list(
       process = "ar1",
       mu_form = ~ 0 + f_age_group,

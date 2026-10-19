@@ -36,9 +36,12 @@ stopifnot(
   all(index$samp_time[index$survey == "NIGFS-WIBTS-Q4 (G7655)"] == 0.875),
   nlevels(index$q_key) == 10L,
   all(obs$maturity$spawn_time == 0),
+  setequal(unique(obs$pop_covariates$recruitment_block), c("pre_2002", "2002_plus")),
   identical(translated$dat$N_settings$process, "iid"),
   identical(translated$dat$N_settings$init, "exp"),
-  identical(translated$dat$rec_settings$process, "rw"),
+  identical(translated$dat$rec_settings$process, "iid"),
+  identical(translated$dat$rec$curve$type, "bh"),
+  identical(translated$dat$rec$curve$lag, 1L),
   identical(translated$dat$F_settings$process, "ar1"),
   identical(translated$dat$F_settings$mean_ages, 2:4),
   identical(translated$dat$M_settings$process, "off"),
@@ -48,4 +51,4 @@ stopifnot(
   !"start_par" %in% names(translated$fit_call)
 )
 
-cat("Irish Sea cod 1968-2018 translation structure passed.\n")
+cat("Irish Sea cod 1968-2018 source-aligned translation structure passed.\n")
