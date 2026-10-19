@@ -206,6 +206,170 @@ inputs <- rbind(inputs, data.frame(
   stringsAsFactors = FALSE
 ))
 
+assessment_pdf <- file.path(source_dir, "assessment.pdf")
+if (!file.exists(assessment_pdf)) stop("Cached assessment PDF is missing.")
+rendered_figures <- list(
+  maturity = pdftools::pdf_render_page(
+    assessment_pdf, page = 156, dpi = 220, numeric = TRUE
+  )[221:2059, 279:1592, 1:3],
+  weight = pdftools::pdf_render_page(
+    assessment_pdf, page = 176, dpi = 300, numeric = TRUE
+  )[301:2100, 301:2250, 1:3]
+)
+
+maturity_image <- rendered_figures$maturity
+maturity_dark <- maturity_image[, , 1] < 0.35 &
+  maturity_image[, , 2] < 0.35 &
+  maturity_image[, , 3] < 0.35 &
+  (pmax(maturity_image[, , 1], pmax(maturity_image[, , 2], maturity_image[, , 3])) -
+    pmin(maturity_image[, , 1], pmin(maturity_image[, , 2], maturity_image[, , 3]))) < 0.12
+
+digitize_maturity <- function(dark, year, age) {
+  year_index <- year - 1983L
+  column <- year_index %% 7L
+  row <- year_index %/% 7L
+  x <- round(153 + column * 135 + age * 6.95)
+  top <- round(82 + row * 287)
+  bottom <- round(286 + row * 287)
+  zero_y <- 278 + row * 287
+  y <- which(rowSums(
+    dark[(top + 4):(bottom - 4), (x - 2):(x + 2), drop = FALSE]
+  ) > 0) + top + 3L
+  if (!length(y)) {
+    y <- which(rowSums(
+      dark[(top + 4):(bottom - 4), (x - 4):(x + 4), drop = FALSE]
+    ) > 0) + top + 3L
+  }
+  if (!length(y)) return(NA_real_)
+  pmin(1, pmax(0, (zero_y - stats::median(y)) / 186))
+}
+
+maturity_grid <- expand.grid(
+  year = 1983:2024, age = 0:15, KEEP.OUT.ATTRS = FALSE
+)
+maturity_grid <- maturity_grid[order(maturity_grid$year, maturity_grid$age), ]
+maturity_grid$value <- mapply(
+  digitize_maturity, MoreArgs = list(dark = maturity_dark),
+  maturity_grid$year, maturity_grid$age
+)
+maturity_grid <- do.call(rbind, lapply(split(maturity_grid, maturity_grid$year), function(curve) {
+  curve <- curve[order(curve$age), ]
+  observed <- curve[is.finite(curve$value), ]
+  if (nrow(observed) < 3L) stop("Too few fitted maturity-curve points were digitized.")
+  curve$value <- stats::approx(
+    observed$age, observed$value, xout = curve$age, rule = 2
+  )$y
+  if (max(observed$age) < max(curve$age) &&
+    tail(observed$value, 1) > 0.75 && nrow(observed) > 1L) {
+    slope <- max(0, diff(tail(observed$value, 2)) / diff(tail(observed$age, 2)))
+    after <- curve$age > max(observed$age)
+    curve$value[after] <- pmin(
+      1, tail(observed$value, 1) + slope * (curve$age[after] - max(observed$age))
+    )
+  }
+  curve$value <- round(pmin(1, pmax(0, cummax(curve$value))), 3)
+  curve
+}))
+
+weight_blue <- rendered_figures$weight[, , 3] > 0.85 &
+  rendered_figures$weight[, , 3] - rendered_figures$weight[, , 1] > 0.35 &
+  rendered_figures$weight[, , 3] - rendered_figures$weight[, , 2] > 0.25
+weight_panels <- list(
+    `2` = list(row = 0L, column = 0L, y = c(216, 376, 536), value = c(.08, .06, .04)),
+    `3` = list(row = 0L, column = 1L, y = c(72, 166, 260, 354, 448, 542), value = c(.25, .225, .20, .175, .15, .125)),
+    `4` = list(row = 0L, column = 2L, y = c(58, 176, 296, 414, 534), value = c(.50, .45, .40, .35, .30)),
+    `5` = list(row = 0L, column = 3L, y = c(130, 258, 386, 516), value = c(.80, .70, .60, .50)),
+    `6` = list(row = 1L, column = 0L, y = c(632, 720, 810, 898, 988, 1078), value = c(1.2, 1.1, 1.0, .9, .8, .7)),
+    `7` = list(row = 1L, column = 1L, y = c(612, 768, 922, 1078), value = c(1.6, 1.4, 1.2, 1.0)),
+    `8` = list(row = 1L, column = 2L, y = c(614, 732, 848, 966, 1082), value = c(2.0, 1.8, 1.6, 1.4, 1.2)),
+    `9` = list(row = 1L, column = 3L, y = c(634, 734, 832, 930, 1028), value = c(2.50, 2.25, 2.0, 1.75, 1.50)),
+    `10` = list(row = 2L, column = 0L, y = c(1286, 1418, 1550), value = c(3.0, 2.5, 2.0)),
+    `11` = list(row = 2L, column = 1L, y = c(1282, 1442, 1602), value = c(4.0, 3.0, 2.0))
+  )
+
+digitize_weight <- function(blue, year, age) {
+  panel <- weight_panels[[as.character(age)]]
+  x_start <- c(200, 683, 1144, 1605)[panel$column + 1L]
+  x <- round(x_start + (year - 1985) * 7.85)
+  top <- c(56L, 608L, 1160L)[panel$row + 1L]
+  y <- which(blue[(top + 5):(top + 490), (x - 2):(x + 2), drop = FALSE],
+    arr.ind = TRUE
+  )
+  if (!nrow(y)) return(NA_real_)
+  plot_y <- stats::median(y[, 1] + top + 4)
+  stats::approx(panel$y, panel$value, xout = plot_y, rule = 2)$y
+}
+
+weight_grid <- expand.grid(
+  year = 1985:2024, age = 2:11, KEEP.OUT.ATTRS = FALSE
+)
+weight_grid <- weight_grid[order(weight_grid$year, weight_grid$age), ]
+weight_grid$value <- mapply(
+  digitize_weight, MoreArgs = list(blue = weight_blue),
+  weight_grid$year, weight_grid$age
+)
+weight_grid <- do.call(rbind, lapply(split(weight_grid, weight_grid$age), function(series) {
+  series <- series[order(series$year), ]
+  observed <- series[is.finite(series$value), ]
+  if (nrow(observed) < 30L) stop(
+    "Too few stock-weight-curve points were digitized for age ",
+    unique(series$age), ": ", nrow(observed), "."
+  )
+  series$value <- round(stats::approx(
+    observed$year, observed$value, xout = series$year, rule = 2
+  )$y, 3)
+  series
+}))
+
+make_biology_input <- function(type, measure, data, unit, basis, reference,
+                               note, source_type = "digitized") {
+  rows <- inputs[rep(1L, nrow(data)), , drop = FALSE]
+  rows$type <- type
+  rows$measure <- measure
+  rows$basis <- basis
+  rows$year <- data$year
+  rows$year_basis <- "calendar_year"
+  rows$age <- data$age
+  rows$value <- data$value
+  rows$unit <- unit
+  rows$source_type <- source_type
+  rows$source_reference <- reference
+  rows$notes <- note
+  rows
+}
+
+stock_weights <- make_biology_input(
+  "weight", "weight_at_age", weight_grid, "kg", "kg_per_fish",
+  paste(assessment_ref, "Figure 90"),
+  paste(
+    "Digitized blue fitted stock-weight curve from the upstream weight model.",
+    "Black empirical points are excluded. Values between annual curve pixels",
+    "are interpolated. Age 11 represents 11+."
+  )
+)
+female_maturity <- make_biology_input(
+  "maturity", "maturity_at_age", maturity_grid, "proportion", "proportion",
+  paste(assessment_ref, "Figure 70"),
+  paste(
+    "Digitized black annual female maturity ogive from the upstream maturity model.",
+    "Colored survey observations are excluded. Gaps between curve pixels are",
+    "linearly interpolated and bounded to [0, 1]."
+  )
+)
+inputs <- rbind(inputs, stock_weights, female_maturity)
+
+baseline_M <- expand.grid(year = 1984:2024, age = 4:11)
+baseline_M$value <- ifelse(baseline_M$age == 4, 0.45, 0.15)
+inputs <- rbind(inputs, make_biology_input(
+  "M", "natural_mortality_at_age", baseline_M, "per_year", "per_year",
+  "DFO Research Document 2025/074, pp. 4-5",
+  paste(
+    "Source-assumed age-specific baseline m_a in log(M[a,y]) = log(m_a) + delta[a,y].",
+    "These values are process means, not estimated M surfaces; age 11 represents 11+."
+  ),
+  source_type = "official_document"
+))
+
 make_output <- function(type, measure, year, value, unit, source_table,
                         age = NA_real_, age_group = "", notes = "") {
   data.frame(
@@ -301,7 +465,12 @@ stock <- data.frame(
   area = "NAFO Subdivision 3Pn and Divisions 4RS",
   region = "Quebec Region",
   ocean = "Northwest Atlantic",
-  notes = "Charbonneau-Keith identifier is DFO-GSL_morhua_3Pn, 4RS."
+  notes = paste(
+    "Charbonneau-Keith identifier is DFO-GSL_morhua_3Pn, 4RS. Matched to",
+    "Charbonneau-Keith Master unique_ID DFO-GSL_morhua_3Pn, 4RS by scientific",
+    "name and stock area 3Pn/4RS; source revision 7e4daca3cbfc14ce7fa0b28ed824eebe7113249b.",
+    "This catalogue match does not establish current official assessment status."
+  )
 )
 
 assessment <- data.frame(
@@ -328,8 +497,9 @@ assessment <- data.frame(
     "Peer-reviewed February 18-19, 2025; detailed report published February 2026.",
     "English title says stock in 2025, while the model data terminal is 2024.",
     "The French title and body also identify 2024. Table 28 Sentinel mobile indices",
-    "and Table 24 commercial catch weights are recovered. Other processed survey",
-    "indices, annual stock weights and revised maturity ogives remain unavailable."
+    "and Table 24 commercial catch weights are recovered, along with digitized",
+    "stock-weight and female-maturity surfaces and documented baseline M means.",
+    "Other processed survey indices and the exact fitted likelihood weights remain unavailable."
   ),
   stringsAsFactors = FALSE
 )
@@ -371,8 +541,8 @@ assumptions <- data.frame(
     "Sentinel summer longline (LLS1); 1995-2024, ages 3-11+.",
     "Sentinel fall longline (LLS2); 1995-2020, ages 3-11+.",
     "Minet bottom-trawl survey; 1973-1976, ages 3-11+.",
-    "Beginning-of-year stock weights are estimated annually; numerical age-year values were not found in the cached report tables.",
-    "Female maturity ogives are used for SSB; numerical age-year values were not found in the cached report tables.",
+    "Beginning-of-year stock weights are digitized annually from the upstream model's fitted curves, ages 2-11+, 1985-2024.",
+    "Female maturity ogives are digitized annually from the upstream maturity model, ages 0-15, 1983-2024.",
     "The 11+ mature proportion is an equilibrium-abundance-weighted average of ages 11-15."
   ),
   source_reference = c(
@@ -386,8 +556,8 @@ assumptions <- data.frame(
     paste(assessment_ref, "Table 30"),
     paste(assessment_ref, "Table 34"),
     rep(paste(assessment_ref, "Section 2.4.1"), 6),
-    paste(assessment_ref, "Section 2.3"),
-    paste(assessment_ref, "Section 2.2.3.1"),
+    paste(assessment_ref, "Figure 90"),
+    paste(assessment_ref, "Figure 70"),
     paste(assessment_ref, "Section 2.2.3.1")
   ),
   notes = rep("", 21)
@@ -397,10 +567,13 @@ assumptions$source_reference[assumptions$survey == "Sentinel mobile"] <-
   paste(assessment_ref, "Sections 2.1.3.3 and 2.4.1, Table 28")
 assumptions$notes[assumptions$survey == "Sentinel mobile"] <-
   "Table 28 also reports age 1; the official model uses ages 2-11+. The standardized series is retained as one survey."
+assumptions$notes[assumptions$setting == "stock_weights"] <- paste(
+  "Digitized from the blue fitted stock-weight curve; empirical black points are excluded.",
+  "The upstream stock-weight model is separate from the population assessment."
+)
 assumptions$notes[assumptions$setting == "maturity"] <- paste(
-  "The revised annual ogives are fitted using a cohort-effect beta-binomial model.",
-  "Technical Report 3671 (2025), Figures 5 and 7, provides no numeric annual matrix;",
-  "raw maturity-stage samples are not the official fitted ogives."
+  "Digitized from the black annual female ogive; colored survey observations are excluded.",
+  "The upstream maturity model is separate from the population assessment."
 )
 add_assumption <- function(component, survey, setting, value, reference, note = "") {
   row <- assumptions[1, , drop = FALSE]
@@ -435,6 +608,12 @@ assumptions <- rbind(
     "Commercial fishery weights at age 2-11+, 1974-2024, in kg per fish (Table 24).",
     paste(assessment_ref, "Table 24"),
     "Not substituted for stock weights; seven missing cells remain missing, and printed zero weights are retained."
+  ),
+  add_assumption(
+    "M", "", "baseline_mean",
+    "m_age2=1.0, m_age3=0.65, m_age4=0.45, m_age5+=0.15 per year.",
+    "DFO Research Document 2025/074, pp. 4-5",
+    "These age-specific means are used in log(M[a,y]) = log(m_a) + delta[a,y]; source-estimated M is stored separately as output."
   )
 )
 
@@ -504,4 +683,4 @@ write_updated("assumptions.csv", assumptions, "assessment_id")
 write_updated("inputs.csv", inputs, "assessment_id")
 write_updated("outputs.csv", outputs, "assessment_id")
 
-cat("Imported 3Pn4RS catch-at-age, catch weights, Sentinel indices, fixed M, and available model outputs.\n")
+cat("Imported 3Pn4RS catch-at-age, indices, digitized biological surfaces, M inputs, and model outputs.\n")

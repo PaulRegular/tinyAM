@@ -32,7 +32,7 @@ ages 2–11+), Sentinel mobile (1995–2024, ages 2–11+), Sentinel gillnet
 Sentinel fall longline (1995–2020, ages 3–11+), and the Minet bottom-trawl
 series (1973–1976, ages 3–11+).
 
-## Recovered survey and weight inputs
+## Recovered survey and biological inputs
 
 Table 28 **does** provide numerical Sentinel mobile mean numbers-at-age for
 1995–2024, ages 1–11+. All 330 values are now stored, including the reported
@@ -49,6 +49,20 @@ Table 24 supplies 503 commercial catch-weight values in kg per fish for
 are retained. These weights describe fish in the commercial catch and are
 stored as `catch_weight`, not as beginning-of-year stock weights. No interpolation
 or conversion from fitted population outputs has been applied.
+
+The assessment report's Figure 90 provides annual beginning-of-year stock
+weights. The blue fitted curve is digitized for ages 2–11+ in 1985–2024; black
+empirical observations are excluded. Figure 70 similarly provides annual female
+maturity ogives from the upstream maturity model, digitized for ages 0–15 in
+1983–2024; colored survey observations are excluded. Both are biological inputs
+from models upstream of the population assessment, not population-model outputs.
+Pixels between annual curve points are interpolated, and the values are labeled
+`digitized` because the plotted curves do not provide table-level precision.
+
+The framework specifies `m[2]=1.0`, `m[3]=0.65`, `m[4]=0.45`, and
+`m[5+]=0.15` per year in `log(M[a,y]) = log(m[a]) + delta[a,y]`. These
+age-specific means are stored separately from estimated M outputs. The fixed
+M values reported for years before 1984 remain in the database as reported.
 
 The numerical annual indices for the other five official streams remain
 unrecovered. DFO's public [Teleost
@@ -92,20 +106,20 @@ survey tows must be distinguished before constructing annual indices. The
 published Sentinel mobile series already standardizes tow geometry, so it
 retains its existing label rather than being split artificially.
 
-## Biological limitation and translation decision
+## Biological source details and translation decision
 
-Annual beginning-of-year stock weights and female maturity ogives are also
-required for the assessment's biomass calculations. The report describes the
-weight and maturity models but does not publish their full numeric age-year
-matrices. The revised maturity model has cohort effects in a beta-binomial
-likelihood; it is not simply the proportion mature among sampled fish.
+The source report describes the weight and maturity models but does not publish
+their numeric age-year matrices as tables. The plotted curves make a limited
+translation possible. Figure 70 is the fitted annual maturity ogive, not simply
+the proportion mature among sampled fish; the revised maturity model has cohort
+effects in a beta-binomial likelihood.
 The [2025 maturity technical report](https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/41287332.pdf)
 (Technical Report 3671; [DOI](https://doi.org/10.60825/z5m6-hx38)) is now cached
 through the catalogue's working full-text link. Figures 5 and 7 show the annual
 fitted ogives; Tables B1–B6 document changing maturity codes. Table 4 points to
 older published maturity estimates, which are not the revised inputs used in
-this assessment. No values have been digitized from figures or substituted
-from an older assessment.
+this assessment. The population-assessment Figure 70 is used for digitization;
+no older assessment estimates or raw biological samples are substituted.
 
 The public RV samples contain ages, individual weights and maturity stages.
 Within the stock's 4RS survey region, aged Needler samples cover 1990–2003,
@@ -118,32 +132,27 @@ not complete annual stock-weight or fitted maturity surfaces. Pooling them or
 averaging length-stratified samples without the sampling weights would create
 new biological assumptions, not recover authoritative assessment inputs.
 
-A Sentinel-only simplified fit could omit the other surveys, but still needs
-complete stock weights and maturity for its chosen year/age grid. Conversion
-for 1995–2024, ages 2–11, is explicitly checked and stops at the missing stock
-weights. No model fit or dashboard is generated until these biology inputs
-are recovered or a defensible alternative is explicitly specified. The main
-report, framework and supporting biology/survey reports have all been checked;
-this is a remaining data gap, not a catchability restriction. No output
-estimates have been reused as observations or biological inputs.
+A Sentinel-only simplified fit is prepared for 1995–2024, ages 2–11+, using
+published catch-at-age, the Sentinel mobile index, digitized Figure 90 stock
+weights and Figure 70 maturity, and the documented baseline M means. It excludes
+the other five official survey streams and simplifies their combined observation
+structure, the source's initial-state integration, and the source likelihoods.
+Sentinel timing remains a mid-July approximation. These choices are explicit
+in the translation script; no fitted population values are used as observations
+or biological inputs.
 
-The revisit found no additional numerical assessment-input surfaces in these
-sources. The recoverable inputs remain the 330 Sentinel mobile index cells
-and 503 commercial catch-weight cells, alongside catch-at-age and fixed M.
-Catch weights do not supply the missing stock-weight surface. The readiness
-test now checks the maturity gap independently using complete test-only
-weights; these fixtures are never written to the database or used in a fit.
-To proceed without inventing biology, the needed source products are annual
-beginning-of-year stock weights and the revised female maturity proportions
-for the selected model years and ages. Additional survey indices would be
-useful but are not required for a clearly labelled Sentinel-only model.
+The source record remains partial: numerical inputs for five official surveys,
+exact configured timing, and some likelihood details are unresolved. The plotted
+biological surfaces and framework M means are now stored with provenance and
+digitization notes, allowing the limited Sentinel-only translation to be fit
+and compared without inventing data.
 
 The cached source files and checksums are listed in
 `source_cache/dfo_cod_3pn4rs_2025/manifest.csv`.
-`scripts/database/038_import_dfo_cod_3pn4rs_2025.R` reproduces the canonical
-table imports; `039_validate_dfo_cod_3pn4rs_2025.R` checks every imported value
-against the cached tables. `057_cache_dfo_cod_3pn4rs_sources.R` retrieves the
+`scripts/database/038_import_dfo_cod_3pn4rs_2025.R` reproduces table imports and
+digitizes the fitted biological curves from the cached assessment PDF;
+`039_validate_dfo_cod_3pn4rs_2025.R` checks coverage, units, provenance, values,
+and biological constraints. `057_cache_dfo_cod_3pn4rs_sources.R` retrieves the
 additional public survey archives and maturity report and records their URLs
-and checksums. The source-input test also prevents catch weights from being
-mistaken for sufficient stock biology. This stock remains partial and is not
-counted as a completed database-to-tinyAM analysis.
+and checksums. The source record remains partial because most official indices
+and some exact likelihood settings have not been recovered.
