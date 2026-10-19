@@ -142,7 +142,8 @@ source_ref <- "DFO Research Document 2024/058"
 input_rows <- function(x, ages, type, measure, basis, unit,
                        fleet = "", survey = "", season = "fall",
                        table_number, note = "",
-                       region_column = TRUE) {
+                       region_column = TRUE,
+                       source_type = "official_table") {
   result <- data.frame(
     assessment_id = assessment_id, type = type, measure = measure,
     basis = basis, fleet = fleet, survey = survey, sex = "",
