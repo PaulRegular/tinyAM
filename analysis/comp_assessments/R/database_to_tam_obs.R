@@ -728,7 +728,21 @@
     }
   }
 
-  if (!length(result)) .translation_abort("No translatable age-structured index rows were found.")
+  if (!length(result)) {
+    if (identical(surveys, character())) {
+      out <- data.frame(
+        year = numeric(), age = numeric(), obs = numeric(),
+        survey = character(), samp_time = numeric(), unit = character(),
+        stringsAsFactors = FALSE
+      )
+      attr(out, "translation") <- data.frame(
+        survey = character(), method = character(),
+        source_reference = character(), stringsAsFactors = FALSE
+      )
+      return(out)
+    }
+    .translation_abort("No translatable age-structured index rows were found.")
+  }
   out <- do.call(rbind, result)
   out <- out[out$year %in% years & out$age %in% ages, , drop = FALSE]
   key <- .translation_key(out, c("year", "age", "survey"))
@@ -806,7 +820,10 @@
 #' @param sampling_times Optional named numeric vector supplying timing for
 #'   surveys whose source rows do not contain a value. Values must be in [0, 1].
 #' @param surveys Optional survey names to include. Omitting a source survey is
-#'   an analysis choice and should be recorded in the assumption audit.
+#'   an analysis choice and should be recorded in the assumption audit. Use
+#'   `character()` to explicitly fit without an index; this returns a valid
+#'   empty index table when the source index has no faithful age-structured
+#'   translation.
 #' @param exclude_index_years Optional named list of years excluded by the
 #'   official source assessment, one vector per survey.
 #' @param weight_reference_year,maturity_reference_year Optional source year
