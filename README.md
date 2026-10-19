@@ -298,7 +298,7 @@ The underlying model components remain accessible so that unusual or experimenta
 
 Uncertainty tables put `est`, `lwr`, and `upr` first, then `se` and `se_scale`. Estimates and confidence limits are on the reported scale; SEs stay on the estimation scale. A small log-scale SE, such as 0.10, approximates 10% relative uncertainty (CV). This approximation is poor for large SEs, so use the confidence limits to communicate uncertainty. Observation `sd` describes variation in log measurements and is a different quantity from the SE of an estimate.
 
-Catch and survey predictions are conditional medians of lognormal observations. Their arithmetic means are higher. Zero observations are treated as missing, not as observations from a count or censoring model. SSB is calculated at the start of the year without an extra spawning-time mortality correction.
+Catch and survey predictions are conditional medians of lognormal observations. Their arithmetic means are higher. Zero observations are treated as missing, not as observations from a count or censoring model. SSB uses the spawning times supplied in `maturity$spawn_time`, accounting for survival to spawning; omitting that column gives start-of-year SSB.
 
 For practical help, start with `?fit_tam`, `?prepare_tam`, and `?mono`. For mathematical details, use `help("tinyAM-model", package = "tinyAM")`, `?dprocess_ar1`, and `?dprocess_rw`.
 
