@@ -286,13 +286,13 @@ output_rows <- rbind(
     "mortality", "Fbar", c(0.04, 0.02, 0.03, 0.03, 0.04),
     lower = c(NA, NA, NA, NA, 0.03), upper = c(NA, NA, NA, NA, 0.06),
     unit = "per year", age_group = "5-8",
-    notes = "Arithmetic mean F for ages 5-8; not age-specific. The 2024 estimate and 95% confidence interval are reported in Research Document 2026/051, p. 11."
+    notes = "Reported average F for ages 5-8; not age-specific. The 2024 estimate and 95% confidence interval are reported in Research Document 2026/051, p. 11."
   ),
   summary_outputs(
     "mortality", "Mbar", c(0.37, 0.35, 0.35, 0.35, 0.32),
     lower = c(NA, NA, NA, NA, 0.31), upper = c(NA, NA, NA, NA, 0.34),
     unit = "per year", age_group = "5-8",
-    notes = "Arithmetic mean M for ages 5-8; not age-specific. The 2024 estimate and 95% confidence interval are reported in Research Document 2026/051, p. 11."
+    notes = "Reported population-weighted average M for ages 5-8; not age-specific. The 2024 estimate and 95% confidence interval are reported in Research Document 2026/051, p. 11."
   ),
   data.frame(
     assessment_id = assessment_id, type = "biomass", measure = "SSB",

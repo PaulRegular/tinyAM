@@ -69,7 +69,10 @@ stopifnot(
   o$age[o$measure == "recruitment" & o$year == 2024] == 2,
   o$value[o$measure == "Fbar" & o$year == 2024] == 0.04,
   o$age_group[o$measure == "Fbar"] == "5-8",
+  all(grepl("Reported average F", o$notes[o$measure == "Fbar"], fixed = TRUE)),
+  !any(grepl("Arithmetic mean", o$notes[o$measure %in% c("Fbar", "Mbar")], fixed = TRUE)),
   o$value[o$measure == "Mbar" & o$year == 2024] == 0.32,
+  all(grepl("population-weighted average M", o$notes[o$measure == "Mbar"], fixed = TRUE)),
   !any(o$measure %in% c("numbers_at_age", "fishing_mortality_at_age", "natural_mortality_at_age"))
 )
 
