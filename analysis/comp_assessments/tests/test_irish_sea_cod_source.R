@@ -43,6 +43,8 @@ stopifnot(
   !any(discards$year == 2023 & discards$age == 0),
   nrow(weights) == 405L,
   !any(weights$year == 2019 & weights$age == 0),
+  nrow(weights[weights$age %in% 1:6, ]) == 58L * 6L,
+  !anyNA(weights$value[weights$age %in% 1:6]),
   nrow(maturity) == 58L * 7L,
   maturity$value[maturity$year == 1995 & maturity$age == 2] == 0.27,
   maturity$value[maturity$year == 1996 & maturity$age == 2] == 0.292,
@@ -71,8 +73,8 @@ stopifnot(
 
 review <- readLines(file.path(root, "source_reviews/ices_cod_irish_sea.md"), warn = FALSE)
 stopifnot(
-  any(grepl("not fit-ready", review, fixed = TRUE)),
+  any(grepl("age-1+ translation", review, fixed = TRUE)),
   any(grepl("2019 age 0", review, fixed = TRUE))
 )
 
-cat("Irish Sea cod source coverage, provenance and unresolved gaps passed.\n")
+cat("Irish Sea cod source coverage, provenance and age-1+ readiness passed.\n")
