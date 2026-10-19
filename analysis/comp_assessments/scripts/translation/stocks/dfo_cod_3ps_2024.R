@@ -35,6 +35,16 @@ if (!identical(sort(condition$year), years) || anyDuplicated(condition$year)) {
 obs$pop_covariates$M_condition <- condition$value[
   match(obs$pop_covariates$year, condition$year)
 ]
+obs$pop_covariates$M_condition_age_2_5 <- ifelse(
+  obs$pop_covariates$age <= 5,
+  obs$pop_covariates$M_condition,
+  0
+)
+obs$pop_covariates$M_condition_age_6_plus <- ifelse(
+  obs$pop_covariates$age >= 6,
+  obs$pop_covariates$M_condition,
+  0
+)
 
 comparison_outputs <- source$outputs[
   source$outputs$year %in% 2020:2024, , drop = FALSE
@@ -63,9 +73,9 @@ background <- c(
   "| Component | Official assessment | tinyAM representation | Reason for difference |",
   "|---|---|---|---|",
   "| Years and ages | 1959-2024, ages 2-14+; catch-at-age ends in 2023. | 1959-2024, ages 2-14+. | Retain the full population and biology span; the final year has no catch-at-age observation. |",
-  "| Recruitment and N | Age-2 recruitment follows a random walk; abundance and survival have additional state-space structure. | Age-2 recruitment random walk, deterministic cohort survival, exponential initial abundance. | Survival-process deviations and the source initial-state integration are omitted. |",
+  "| Recruitment and N | Age-2 recruitment follows a random walk; abundance and survival have additional state-space structure. | Age-2 recruitment random walk, IID cohort-survival deviations, exponential initial abundance. | The source survival process is simplified to independent cohort deviations; initial-state integration is omitted. |",
   "| F | Age-correlated random walk for ages 3+, separate age-2 F, with a break at the 1993 moratorium. | Correlated random walk across all modeled ages with one uninterrupted history. | The age-2 separation and moratorium break are not supported by the compact tinyAM F structure used here. |",
-  "| M | Time-varying M is informed by the annual fish-condition index. | Estimate age-specific log-M levels and a shared log-M response to the condition index; no additional M process. | This linear log-scale relationship approximates the source condition-based M equation, which was not fully recovered. |",
+  "| M | Time-varying M is informed by the annual fish-condition index, with condition-response coefficients shared across ages 2–5 and 6+. | Estimate age-specific log-M levels and separate log-M responses to condition for ages 2–5 and 6+; no additional M process. | The two age-group slopes approximate the source condition-based M equation, which was not fully recovered. |",
   "| Catch | Censored annual landings with bounds and continuation-ratio catch-at-age composition. | Direct reported catch-at-age observations with lognormal error. | The censored landings and composition likelihoods are not reproduced; source catch-age values are not altered. |",
   "| Indices and q | Five index series; RV q sharing includes offshore/inshore adjustments; zero observations are censored. | Five direct age-specific index series, with separate q by age and survey. Zero values are treated as missing by the log observation likelihood. | Survey units are unresolved, so each survey has its own q. The source q sharing, spatial adjustment and zero-censoring are omitted. |",
   "| Timing and biology | Timing varies among years and surveys; stock weights, catch weights and maturity are reported by year and age. | Original annual stock weights and maturity; RV April, ERHAPS late winter, GEAC late fall, and sentinel midyear timing approximations. | The exact model timing fractions are unavailable; seasonal midpoints are analysis choices, not source inputs. |",
@@ -75,6 +85,13 @@ background <- c(
 )
 
 fit <- NULL
+N_settings <- list(process = "iid", init = "exp")
+M_settings <- list(
+  process = "off",
+  mu_form = ~ 0 + factor(age) + M_condition_age_2_5 + M_condition_age_6_plus,
+  mu_supplied = NULL,
+  mean_ages = 5:8
+)
 if (do_fit) {
   fit_stage <- "fit"
   fit_started <- Sys.time()
@@ -82,15 +99,10 @@ if (do_fit) {
     data = obs,
     years = years,
     ages = ages,
-    N_settings = list(process = "off", init = "exp"),
+    N_settings = N_settings,
     rec_settings = list(process = "rw", mu_form = NULL),
     F_settings = list(process = "cor_rw", mu_form = NULL, mean_ages = 5:8),
-    M_settings = list(
-      process = "off",
-      mu_form = ~ 0 + factor(age) + M_condition,
-      mu_supplied = NULL,
-      mean_ages = 5:8
-    ),
+    M_settings = M_settings,
     catch_settings = list(sd_form = ~1),
     index_settings = list(q_form = ~ 0 + q_key, sd_form = ~ 0 + survey),
     silent = silent

@@ -20,7 +20,8 @@ stopifnot(
   any(grepl("if (do_fit)", script_lines, fixed = TRUE)),
   !any(grepl("start_par", script_lines, fixed = TRUE)),
   any(grepl("cor_rw", script_lines, fixed = TRUE)),
-  any(grepl("M_condition", script_lines, fixed = TRUE))
+  any(grepl("M_condition", script_lines, fixed = TRUE)),
+  any(grepl('process = "iid"', script_lines, fixed = TRUE))
 )
 
 source_record <- list(
@@ -54,9 +55,34 @@ stopifnot(
   identical(env$converter_call$sampling_times, expected_times),
   nrow(env$obs$pop_covariates) == 66L * 13L,
   all(is.finite(env$obs$pop_covariates$M_condition)),
+  identical(env$N_settings$process, "iid"),
+  all(env$obs$pop_covariates$M_condition_age_2_5[
+    env$obs$pop_covariates$age >= 6
+  ] == 0),
+  all(env$obs$pop_covariates$M_condition_age_6_plus[
+    env$obs$pop_covariates$age <= 5
+  ] == 0),
+  all(env$obs$pop_covariates$M_condition_age_2_5[
+    env$obs$pop_covariates$age <= 5
+  ] == env$obs$pop_covariates$M_condition[
+    env$obs$pop_covariates$age <= 5
+  ]),
+  all(env$obs$pop_covariates$M_condition_age_6_plus[
+    env$obs$pop_covariates$age >= 6
+  ] == env$obs$pop_covariates$M_condition[
+    env$obs$pop_covariates$age >= 6
+  ]),
   setequal(unique(env$comparison_outputs$year), 2020:2024),
   !any(env$comparison_outputs$year == 2025),
   identical(env$comparison_aggregates, "ssb"),
   is.null(env$fit)
 )
-cat("3Ps translation recipe years, ages, timing, condition mapping, comparison window, and fit guard passed.\n")
+condition_design <- stats::model.matrix(
+  env$M_settings$mu_form,
+  data = env$obs$pop_covariates
+)
+stopifnot(identical(
+  grep("^M_condition_age_", colnames(condition_design), value = TRUE),
+  c("M_condition_age_2_5", "M_condition_age_6_plus")
+))
+cat("3Ps translation recipe years, ages, IID N process, grouped condition effects, comparison window, and fit guard passed.\n")
