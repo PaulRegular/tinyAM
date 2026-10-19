@@ -164,7 +164,7 @@ assumptions_add <- do.call(rbind, list(
   assumption("catch", "observation_variance_sharing", "Age 0 separate; ages 1-8 share", "Recorded from keyVarObs for the residual-catch fleet." , fleet = fleet_names[[1L]]),
   assumption("index", "observation_variance_sharing", "Age 1; ages 2-7; age 8+", "Recorded from keyVarObs for the acoustic fleet.", survey = "GRAHS"),
   assumption("catch", "observation_correlation", "Independent across ages", "obsCorStruct=ID for the catch fleet.", fleet = fleet_names[[1L]]),
-  assumption("index", "observation_correlation", "AR(1) across ages in two groups", "obsCorStruct=AR; keyCorObs leaves age 1 uncorrelated, groups ages 2-5, and groups ages 6-8.", survey = "GRAHS"),
+  assumption("index", "observation_correlation", "AR(1) across ages with two shared transition groups", "keyCorObs shares the age-correlation increment for transitions 1-2 through 4-5 and a second increment for transitions 5-6 through 7-8.", survey = "GRAHS"),
   assumption("M", "natural_mortality", "Fixed 0.20 per year, except 0.25 in 1979-1983", "The 1979-1983 increase is attributed to cod presence.", report_url),
   assumption("biology", "maturity_at_age", "Fixed values for 1977-1994; GAM-smoothed annual values from 1995-2025", "Maturity estimates use commercial landings samples collected January-April.", report_url),
   assumption("weight", "stock_weight", "Stock weights assumed equal to catch weights", "Historical spawning-time weights were unavailable; source says catch gears are not selective.", report_url),

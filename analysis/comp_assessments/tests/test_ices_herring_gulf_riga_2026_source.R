@@ -53,6 +53,8 @@ stopifnot(
     a$value == "Age 0 separate; ages 1-8 share"),
   any(a$component == "index" & a$setting == "observation_variance_sharing" &
     a$value == "Age 1; ages 2-7; age 8+"),
+  any(a$component == "index" & a$setting == "observation_correlation" &
+    grepl("transitions 1-2 through 4-5", a$notes)),
   nrow(n) == 49L * 9L,
   nrow(f) == 49L * 9L,
   identical(sort(unique(n$age)), 0:8),
