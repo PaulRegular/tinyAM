@@ -96,3 +96,15 @@ test_that("missing targets and failed folds retain informative diagnostics", {
   retro <- fit_retro(f, folds = 1, progress = FALSE)
   expect_false(any(retro$fits[["2005"]]$dat$is_proj))
 })
+
+test_that("hindcast scoring retains unavailable forecasts without an empty-table error", {
+  data <- data.frame(year = 2001L, age = 2L, survey = "survey", pred = 10,
+    obs = 11, is_proj = FALSE)
+  paired <- tinyAM:::.hindcast_index_data(data, data)
+  expect_equal(nrow(paired), 1L)
+  expect_false(any(paired$is_proj))
+  expect_true(is.nan(compute_hindcast_rmse(paired)))
+  empty <- tinyAM:::.hindcast_index_data(data[FALSE, ], data[FALSE, ])
+  expect_equal(nrow(empty), 0L)
+  expect_true(is.nan(compute_hindcast_rmse(empty)))
+})

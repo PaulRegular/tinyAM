@@ -55,7 +55,8 @@
 #'
 #' Initially, one temporal mean term is permitted per F/M surface, with IID
 #' residuals or M residuals off. Structured means with RW/AR1 residuals are
-#' rejected pending evidence that both temporal components can be separated.
+#' rejected pending evidence that both temporal components can be separated,
+#' except for the age-group M random slopes described below.
 #' Two estimated IID variances on the same states are also rejected.
 #' Known design redundancies are checked, but sparse observations and the
 #' trade-off between F, M, recruitment and catchability can still make a
@@ -67,6 +68,39 @@
 #' mean-only M and add residual variation only when supported by the data.
 #' [check_tam()] retains these cautions and flags wide SD/correlation intervals.
 #' Warnings do not change the fitted model or establish non-identifiability.
+#'
+#' ## M covariate slopes with AR1 residuals
+#'
+#' `M_settings$process = "ar1"` also permits one
+#' `iid(age_group, by = covariate)` mean term. Each age-defined group receives
+#' one slope, reused across years; the numeric covariate multiplies it.
+#' Store both columns in `data$pop_covariates`. Group membership must be constant
+#' through time at each age. Supplied M, ordinary terms and random slopes must
+#' all agree within each M state block: `age_breaks` still pools actual M,
+#' not just its unexplained deviations. Use finer breaks for distinct age slopes.
+#'
+#' For example, `~ 0 + capelin + iid(M_age_group, by = capelin)` gives
+#' \deqn{\log M_{t,b} = \log M^{supplied}_{t,b}
+#'       + (\beta + u_{g(b)})x_{t,b} + \eta_{t,b},
+#'       \qquad u_g \sim N(0,\tau^2).}
+#' The residual matrix \eqn{\eta} retains the existing stationary age/year AR1
+#' distribution and innovation-scale SD. Random slopes are independent of it.
+#' The ordinary covariate term estimates the common slope \eqn{\beta}; omit
+#' that term to centre slopes on zero. No common slope, covariate centring,
+#' sign restriction or covariate transformation is added automatically.
+#' Supplied covariates remain external inputs, not functions recalculated from
+#' the fitted population. Simulation draws one slope per group before drawing
+#' the M states. Forecast covariates retain the existing terminal-value rule.
+#'
+#' This combination is experimental. Persistent covariates may be difficult to
+#' distinguish from persistent M deviations. Fitting and [check_tam()] flag it,
+#' and flag fewer than five informative slope groups when estimating their SD.
+#' Several ages sharing one M state do not increase the number of independent
+#' groups. Inspect uncertainty and compare a common fixed-slope model.
+#' With a positive-definite uncertainty calculation, [check_tam()] also applies
+#' the existing wide-SD and AR1-interval cautions to these M residual parameters.
+#' Other Gaussian means with AR1 residuals, multiple random-slope terms and the
+#' corresponding F extension remain unsupported.
 #'
 #' In observation SD formulas, Gaussian effects modify log SD:
 #' \eqn{\log \sigma_i = \log \sigma_{supplied,i} + X_i\beta + z_i}.
@@ -109,6 +143,8 @@
 #' # F_settings = list(process = "iid", mu_form = ~ factor(age) + rw(year))
 #' # M_settings = list(process = "off", mu_supplied = ~ I(0.2),
 #' #                   mu_form = ~ 0 + ar1(year))
+#' # M_settings = list(process = "ar1", mu_supplied = ~ I(0.3),
+#' #   mu_form = ~ 0 + capelin + iid(M_age_group, by = capelin))
 #' # catch_settings = list(sd_form = ~ iid(age))
 #' # index_settings = list(q_form = ~ survey,
 #' #                       sd_form = ~ survey + ar1(age, by = survey))
