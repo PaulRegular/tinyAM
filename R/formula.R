@@ -878,6 +878,17 @@ mono <- function(x, by = NULL) {
   )
 }
 
+# A slope has one age-defined coefficient reused across all modeled years.
+.M_ar1_random_slope <- function(dat) {
+  terms <- dat$M_terms
+  if (!identical(dat$M_settings$process, "ar1") || length(terms) != 1L) return(FALSE)
+  term <- terms[[1L]]
+  if (term$type != "iid" || is.null(term$by)) return(FALSE)
+  d <- .mean_formula_data(dat, "M")
+  is.numeric(d[[term$by]]) && all(vapply(split(d[[term$variable]], d$age),
+    function(x) length(unique(x)) == 1L, logical(1)))
+}
+
 .check_mean_terms <- function(dat, component) {
   terms <- dat[[paste0(component, "_terms")]]
   if (!length(terms)) {
@@ -891,11 +902,13 @@ mono <- function(x, by = NULL) {
     ))
   }
   gaussian <- Filter(function(x) x$type != "logistic", terms)
-  if (length(gaussian) && !settings$process %in% c("iid", "off")) {
+  random_slope <- component == "M" && .M_ar1_random_slope(dat)
+  if (length(gaussian) && !settings$process %in% c("iid", "off") && !random_slope) {
     alternative <- if (component == "M") ", or use process = 'off' to vary only the M mean" else ""
     cli::cli_abort(c("Structured {component} means currently require IID residuals{if (component == 'M') ' or process = off' else ''}.",
       "i" = "Structured means and temporal residual processes may explain overlapping mortality variation; this combination has not been validated.",
-      "i" = "Set process = 'iid'{alternative}."
+      "i" = "Set process = 'iid'{alternative}.",
+      if (component == "M") c("i" = "With AR1 M residuals, one iid(age_group, by = numeric_covariate) term is also supported. Its groups must be constant across years and respect M age blocks.")
     ))
   }
   d <- .mean_formula_data(dat, component)
@@ -936,6 +949,25 @@ mono <- function(x, by = NULL) {
   out <- data.frame(issue = character(), detail = character())
   estimated <- function(terms) {
     any(vapply(terms, function(term) !is.null(term$sd_parameter), logical(1)))
+  }
+  if (.M_ar1_random_slope(dat)) {
+    out <- rbind(out, data.frame(issue = "M_random_slopes_AR1", detail = paste(
+      "Age-group random slopes with AR1 M residuals are an experimental combination.",
+      "Persistent covariates and persistent residuals may explain similar changes in M; check slope and variance uncertainty and compare a fixed-slope model."
+    )))
+    term <- dat$M_terms[[1L]]
+    if (!is.null(term$sd_parameter)) {
+      d <- .mean_formula_data(dat, "M")
+      rows <- !d$is_proj & d$year %in% dat$M_settings$years &
+        d$age %in% dat$M_settings$age_block_start
+      groups <- sum(colSums(abs(.q_term_design(term, nrow(d))[rows, , drop = FALSE])) > 0)
+      if (groups < 5L) {
+        out <- rbind(out, data.frame(issue = "M_random_slope_groups", detail = paste(
+          "Only", groups, "independent slope groups are represented in fitted M states.",
+          "Their slope SD may be weakly estimated; ages sharing an M state do not provide additional independent groups."
+        )))
+      }
+    }
   }
   if (identical(dat$M_settings$process, "iid") && estimated(dat$M_terms)) {
     out <- rbind(out, data.frame(issue = "M_variance_separation", detail = paste(
