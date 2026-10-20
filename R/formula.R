@@ -55,7 +55,8 @@
 #'
 #' Initially, one temporal mean term is permitted per F/M surface, with IID
 #' residuals or M residuals off. Structured means with RW/AR1 residuals are
-#' rejected pending evidence that both temporal components can be separated.
+#' rejected pending evidence that both temporal components can be separated,
+#' except for the age-group M random slopes described below.
 #' Two estimated IID variances on the same states are also rejected.
 #' Known design redundancies are checked, but sparse observations and the
 #' trade-off between F, M, recruitment and catchability can still make a
@@ -67,6 +68,39 @@
 #' mean-only M and add residual variation only when supported by the data.
 #' [check_tam()] retains these cautions and flags wide SD/correlation intervals.
 #' Warnings do not change the fitted model or establish non-identifiability.
+#'
+#' ## M covariate slopes with AR1 residuals
+#'
+#' `M_settings$process = "ar1"` also permits one
+#' `iid(age_group, by = covariate)` mean term. Each age-defined group receives
+#' one slope, reused across years; the numeric covariate multiplies it.
+#' Store both columns in `data$pop_covariates`. Group membership must be constant
+#' through time at each age. Supplied M, ordinary terms and random slopes must
+#' all agree within each M state block: `age_breaks` still pools actual M,
+#' not just its unexplained deviations. Use finer breaks for distinct age slopes.
+#'
+#' For example, `~ 0 + capelin + iid(M_age_group, by = capelin)` gives
+#' \deqn{\log M_{t,b} = \log M^{supplied}_{t,b}
+#'       + (\beta + u_{g(b)})x_{t,b} + \eta_{t,b},
+#'       \qquad u_g \sim N(0,\tau^2).}
+#' The residual matrix \eqn{\eta} retains the existing stationary age/year AR1
+#' distribution and innovation-scale SD. Random slopes are independent of it.
+#' The ordinary covariate term estimates the common slope \eqn{\beta}; omit
+#' that term to centre slopes on zero. No common slope, covariate centring,
+#' sign restriction or covariate transformation is added automatically.
+#' Supplied covariates remain external inputs, not functions recalculated from
+#' the fitted population. Simulation draws one slope per group before drawing
+#' the M states. Forecast covariates retain the existing terminal-value rule.
+#'
+#' This combination is experimental. Persistent covariates may be difficult to
+#' distinguish from persistent M deviations. Fitting and [check_tam()] flag it,
+#' and flag fewer than five informative slope groups when estimating their SD.
+#' Several ages sharing one M state do not increase the number of independent
+#' groups. Inspect uncertainty and compare a common fixed-slope model.
+#' With a positive-definite uncertainty calculation, [check_tam()] also applies
+#' the existing wide-SD and AR1-interval cautions to these M residual parameters.
+#' Other Gaussian means with AR1 residuals, multiple random-slope terms and the
+#' corresponding F extension remain unsupported.
 #'
 #' In observation SD formulas, Gaussian effects modify log SD:
 #' \eqn{\log \sigma_i = \log \sigma_{supplied,i} + X_i\beta + z_i}.
@@ -109,6 +143,8 @@
 #' # F_settings = list(process = "iid", mu_form = ~ factor(age) + rw(year))
 #' # M_settings = list(process = "off", mu_supplied = ~ I(0.2),
 #' #                   mu_form = ~ 0 + ar1(year))
+#' # M_settings = list(process = "ar1", mu_supplied = ~ I(0.3),
+#' #   mu_form = ~ 0 + capelin + iid(M_age_group, by = capelin))
 #' # catch_settings = list(sd_form = ~ iid(age))
 #' # index_settings = list(q_form = ~ survey,
 #' #                       sd_form = ~ survey + ar1(age, by = survey))
@@ -878,6 +914,17 @@ mono <- function(x, by = NULL) {
   )
 }
 
+# A slope has one age-defined coefficient reused across all modeled years.
+.M_ar1_random_slope <- function(dat) {
+  terms <- dat$M_terms
+  if (!identical(dat$M_settings$process, "ar1") || length(terms) != 1L) return(FALSE)
+  term <- terms[[1L]]
+  if (term$type != "iid" || is.null(term$by)) return(FALSE)
+  d <- .mean_formula_data(dat, "M")
+  is.numeric(d[[term$by]]) && all(vapply(split(d[[term$variable]], d$age),
+    function(x) length(unique(x)) == 1L, logical(1)))
+}
+
 .check_mean_terms <- function(dat, component) {
   terms <- dat[[paste0(component, "_terms")]]
   if (!length(terms)) {
@@ -891,11 +938,13 @@ mono <- function(x, by = NULL) {
     ))
   }
   gaussian <- Filter(function(x) x$type != "logistic", terms)
-  if (length(gaussian) && !settings$process %in% c("iid", "off")) {
+  random_slope <- component == "M" && .M_ar1_random_slope(dat)
+  if (length(gaussian) && !settings$process %in% c("iid", "off") && !random_slope) {
     alternative <- if (component == "M") ", or use process = 'off' to vary only the M mean" else ""
     cli::cli_abort(c("Structured {component} means currently require IID residuals{if (component == 'M') ' or process = off' else ''}.",
       "i" = "Structured means and temporal residual processes may explain overlapping mortality variation; this combination has not been validated.",
-      "i" = "Set process = 'iid'{alternative}."
+      "i" = "Set process = 'iid'{alternative}.",
+      if (component == "M") c("i" = "With AR1 M residuals, one iid(age_group, by = numeric_covariate) term is also supported. Its groups must be constant across years and respect M age blocks.")
     ))
   }
   d <- .mean_formula_data(dat, component)
@@ -936,6 +985,25 @@ mono <- function(x, by = NULL) {
   out <- data.frame(issue = character(), detail = character())
   estimated <- function(terms) {
     any(vapply(terms, function(term) !is.null(term$sd_parameter), logical(1)))
+  }
+  if (.M_ar1_random_slope(dat)) {
+    out <- rbind(out, data.frame(issue = "M_random_slopes_AR1", detail = paste(
+      "Age-group random slopes with AR1 M residuals are an experimental combination.",
+      "Persistent covariates and persistent residuals may explain similar changes in M; check slope and variance uncertainty and compare a fixed-slope model."
+    )))
+    term <- dat$M_terms[[1L]]
+    if (!is.null(term$sd_parameter)) {
+      d <- .mean_formula_data(dat, "M")
+      rows <- !d$is_proj & d$year %in% dat$M_settings$years &
+        d$age %in% dat$M_settings$age_block_start
+      groups <- sum(colSums(abs(.q_term_design(term, nrow(d))[rows, , drop = FALSE])) > 0)
+      if (groups < 5L) {
+        out <- rbind(out, data.frame(issue = "M_random_slope_groups", detail = paste(
+          "Only", groups, "independent slope groups are represented in fitted M states.",
+          "Their slope SD may be weakly estimated; ages sharing an M state do not provide additional independent groups."
+        )))
+      }
+    }
   }
   if (identical(dat$M_settings$process, "iid") && estimated(dat$M_terms)) {
     out <- rbind(out, data.frame(issue = "M_variance_separation", detail = paste(

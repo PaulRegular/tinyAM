@@ -155,6 +155,12 @@
 #' (then contributes zero on the log scale), but at least one is required.
 #' The M formula intercept is removed when supplied M is also present.
 #' Design rows use the aligned population-covariate frame for F and M.
+#' With AR1 M residuals, one age-defined IID random-slope mean term may be
+#' added. Its group slopes are drawn once and multiplied by a supplied numeric
+#' covariate each year, independently of the AR1 residual matrix. All mean
+#' contributions remain constant within M state blocks, which continue to share
+#' actual M. Ordinary terms supply any common slope; without them the slopes
+#' are centred on zero. See [formula_effects] for the equations and cautions.
 #'
 #' F mean curves with IID/AR1 residuals add cumulative non-negative log-F
 #' increments for [mono()], or \eqn{\log S(a)} for [logistic()], so the latter

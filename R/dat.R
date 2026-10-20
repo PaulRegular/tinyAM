@@ -438,6 +438,11 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #'   [iid()], [rw()] and [ar1()] support random mean effects with IID residuals
 #'   or the residual process off. Use `~ 0 + rw(year)` to vary supplied M through
 #'   time. All mean components must be constant within fitted M age blocks.
+#'   With AR1 residuals, one age-defined IID random slope is also supported,
+#'   e.g. `~ 0 + capelin + iid(M_age_group, by = capelin)`. The grouping column
+#'   must be constant across years at each age and the `by` column numeric.
+#'   This experimental combination retains shared actual M within blocks;
+#'   see [formula_effects] for the model and statistical cautions.
 #' - `mu_supplied`: optional one-sided formula giving supplied (non-estimated)
 #'   \eqn{M}, e.g. `~ I(0.2)` or a column reference such as
 #'   `~ M_assumption` stored in the `data$pop_covariates` data.frame.

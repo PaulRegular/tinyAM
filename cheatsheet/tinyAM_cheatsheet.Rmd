@@ -16,6 +16,7 @@ output:
 ```{r setup, include=FALSE}
 # Render through examples.R render; all intermediates are temporary.
 repo <- normalizePath(params$repo, winslash = "/", mustWork = TRUE)
+package_version <- read.dcf(file.path(repo, "DESCRIPTION"), fields = "Version")[1L, 1L]
 needed <- c("cache/examples.rds", "cache/hindcast_ssb.pdf",
             file.path(repo, "cheatsheet/output/tinyAM_dashboard.html"))
 if (!all(file.exists(needed))) {
@@ -52,7 +53,11 @@ if (!identical(current_md5, example$provenance$example_md5)) {
 }
 write_code <- function(file, names) {
   code <- unlist(lapply(names, excerpt), use.names = FALSE)
-  if (file == "data") code <- code[!grepl("^#", code)]
+  if (file == "data") {
+    code <- code[!grepl("^#", code)]
+    check <- match("check_tam_data(dat)", code)
+    if (!is.na(check)) code <- append(code, "", after = check - 1L)
+  }
   if (file == "plain_list") code <- sub("^# ?", "", code)
   writeLines(c("\\begin{rcode}", code, "\\end{rcode}"),
              paste0("cache/code_", file, ".tex"))
@@ -63,6 +68,7 @@ for (name in c("baseline", "models", "dashboard", "hindcast")) {
   write_code(name, name)
 }
 write_code("updates", c("N_iid", "M_ar1"))
+writeLines(package_version, "cache/package_version.tex")
 
 escape_tex <- function(x) {
   gsub("([#$%&_{}])", "\\\\\\1", x, perl = TRUE)
@@ -174,7 +180,7 @@ rsvg::rsvg_pdf(file.path(repo, "man/figures/logo.svg"), "logo.pdf")
 \includegraphics[width=\linewidth]{cache/hindcast_ssb.pdf}\par\vspace{1mm}
 \panelnote{\input{cache/stability_model.tex} historical peels show stability, not forecast accuracy. RMSE scores survey observations given actual removals.}
 \end{minipage}
-\par\vfill\noindent{\color{tamnavy}\rule{\linewidth}{.5pt}}\par
+\pagefooter{\sitefooter}
 \clearpage
 ```
 ```{=latex}
@@ -252,6 +258,7 @@ S(a)&=\{1+e^{-k(a-a_{50})}\}^{-1},\quad k>0,\\
 \Sigma_{ab}=\sigma_a\sigma_b\rho^{|a-b|},\quad-1<\rho<1.
 \]
 \micro{RW starts are unpenalized. N/M \texttt{"off"} gives $\eta=0$.}
+\micro{N and M support \texttt{"off"}, \texttt{"iid"}, \texttt{"rw"}, and \texttt{"ar1"}; F supports \texttt{"iid"}, \texttt{"rw"}, \texttt{"ar1"}, and \texttt{"cor\_rw"}.}
 \end{mathbox}
 \end{minipage}\hfill
 \begin{minipage}[t][164mm][s]{.325\linewidth}\vspace{0pt}
@@ -283,6 +290,6 @@ q_k=\{1+e^{-\eta_{q,k}}\}^{-1}.
 \micro{\texttt{check\_tam()} checks numerical and statistical diagnostics; \texttt{fit\_hindcast()} evaluates survey forecasts given observed removals and retrospective stability.}
 \micro{The joint likelihood includes active process, formula-effect and observation densities. RTMB integrates random effects by Laplace approximation; intervals use local curvature. Standardized residuals $(\log Y_i-\log\widetilde Y_i)/\sigma_i$ depend on fitted, shrunken states. Convergence does not establish identifiability. Hindcasts return log RMSE and retrospective Mohn's $\rho$.}
 \end{minipage}
-\pagefooter{Equation details: \texttt{?\string"tinyAM-model\string"}, \texttt{?recruitment\_formulas}, \texttt{?catchability\_curves} · github.com/PaulRegular/tinyAM}
+\pagefooter{Equation details: \texttt{?\string"tinyAM-model\string"}, \texttt{?recruitment\_formulas}, \texttt{?catchability\_curves} \hfill \sitefooter}
 
 ```

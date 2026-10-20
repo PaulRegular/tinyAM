@@ -48,6 +48,7 @@ reference:
   - fit_tam
   - update.tam_fit
   - check_tam
+  - information_criteria
   - tam_fit_summary
   - fit_retro
   - compute_hindcast_rmse

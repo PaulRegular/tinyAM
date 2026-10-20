@@ -248,8 +248,12 @@ make_par <- function(dat) {
     getAll(par, dat)
     # Every mean component must be constant within a shared absolute M state.
     mean_parts <- cbind(log_mu_supplied_m, M_modmat)
+    mean_labels <- c("mu_supplied", rep("mu_form", ncol(mean_parts) - 1L))
+    if (!is.null(colnames(M_modmat))) mean_labels[-1L] <- paste("mu_form", colnames(M_modmat))
     for (term in dat$M_terms) {
-      mean_parts <- cbind(mean_parts, .q_term_design(term, nrow(dat$pop_data)))
+      design <- .q_term_design(term, nrow(dat$pop_data))
+      mean_parts <- cbind(mean_parts, design)
+      mean_labels <- c(mean_labels, rep(paste("mu_form", term$id), ncol(design)))
     }
     for (b in levels(M_settings$age_blocks)) {
       if (sum(M_settings$age_blocks == b) > 1) {
@@ -262,8 +266,17 @@ make_par <- function(dat) {
           any(bmu != bmu[, 1])
         }, logical(1))
         if (any(varies)) {
+          j <- which(varies)[1L]
+          surface <- matrix(mean_parts[, j], length(years), length(ages),
+            dimnames = list(year = years, age = ages))
+          block <- surface[, ia, drop = FALSE]
+          difference <- which(block != block[, 1L], arr.ind = TRUE)[1L, ]
+          year <- rownames(block)[difference[1L]]
+          age <- colnames(block)[difference[2L]]
           cli::cli_abort(c("M mean structure varies within M age_blocks. ",
-            "x" = "mu_form and mu_supplied must be constant within each M process age block. Use finer age_breaks for age-varying M."
+            "x" = "Block {.val {b}} shares actual M across ages {paste(ia, collapse = ', ')}.",
+            "i" = "{mean_labels[j]} differs between ages {ia[1L]} and {age} in year {year}.",
+            "i" = "Align mean-effect groups and covariates with M blocks, or use finer age_breaks for age-varying M."
           ))
         }
       }
