@@ -26,20 +26,6 @@ cod_obs$pop_covariates$log_cap_per_cod <- ifelse(
   log(cod_obs$pop_covariates$cap_per_cod)
 )
 
-shrimp <- read.csv("analysis/case_study/data/SSAR_northern_shrimp_fishable_biomass_index_1995_2025.csv")
-shrimp <- shrimp[, c("year", "fishable_biomass_index_t")]
-names(shrimp) <- c("year", "shrimp")
-cod <- NCAM::inputs$covariates[, c("year", "cod_B")]
-shrimp_per_cod <- merge(cod, shrimp, by ="year", all.y = TRUE)
-shrimp_per_cod$shrimp_per_cod <- shrimp_per_cod$shrimp / shrimp_per_cod$cod_B
-shrimp_per_cod <- shrimp_per_cod[, c("year", "shrimp_per_cod")]
-
-cod_obs$pop_covariates <- merge(cod_obs$pop_covariates, shrimp_per_cod, by = "year", all.x = TRUE)
-cod_obs$pop_covariates$log_shrimp_per_cod <- ifelse(
-  is.na(cod_obs$pop_covariates$shrimp_per_cod),
-  0,
-  log(cod_obs$pop_covariates$shrimp_per_cod)
-)
 
 base <- fit_tam(
   cod_obs,
@@ -82,23 +68,13 @@ cap_M <- update(
 )
 cap_M
 
-shrimp_M <- update(
-  ss_q,
-  M_settings = list(
-    mu_form = ~ 0 + age_group:log_shrimp_per_cod
-  )
-)
-shrimp_M
-
-
-cAIC(base, ss_q, cap_M, shrimp_M, details = TRUE)
+cAIC(base, ss_q, cap_M, details = TRUE)
 
 
 model_names <- c(
   "Base" = "base",
   "RV q ~ Smith Sound B" = "ss_q",
-  "M ~ Capelin" = "cap_M",
-  "M ~ Shrimp" = "shrimp_M"
+  "M ~ Capelin" = "cap_M"
 )
 models <- mget(model_names)
 names(models) <- names(model_names)
@@ -118,6 +94,5 @@ lapply(hind, `[[`, "hindcast_rmse")
 
 ## Smith Sound improves cAIC but does little to improve forecast skill (makes sense).
 ## The capelin covariate improve forecast still, though cAIC is slightly poorer.
-## The shrimp covariate does not help as much as the capelin one, though it's cAIC is better.
 
 
