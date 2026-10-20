@@ -16,8 +16,9 @@ source_values <- function(label) {
   values
 }
 stopifnot(
-  nrow(x) == 17, nrow(y) == 24, nrow(a) == 1,
-  a$terminal_year == 2025, a$assessment_year == 2026,
+  nrow(x) == 17, nrow(y) == 42, nrow(a) == 1,
+  a$terminal_year == 2025, a$estimate_terminal_year == 2031,
+  a$assessment_year == 2026,
   a$model_family == "WHAM", a$framework_year == 2022,
   a$inputs_status == "partial", a$outputs_status == "partial", a$assumptions_status == "partial"
 )
@@ -28,18 +29,42 @@ stopifnot(
   all(catch$measure == "total_biomass"), all(catch$unit == "t")
 )
 for (measure in c("SSB", "recruitment")) {
-  z <- y[y$measure == measure, ]
+  z <- y[y$measure == measure & y$year <= a$terminal_year, ]
   label <- if (measure == "SSB") "Spawning Stock Biomass" else "Recruits (age 1)"
   stopifnot(identical(z$year, 2018:2025), identical(z$value, source_values(label)))
 }
-f <- y[y$measure == "Fbar", ]
+f <- y[y$measure == "Fbar" & y$year <= a$terminal_year, ]
 line <- text[grepl("^F", text) & grepl("0.24 0.33 0.42", text, fixed = TRUE)]
 stopifnot(length(line) == 1)
 values <- as.numeric(regmatches(line, gregexpr("0\\.[0-9]+", line))[[1]])
 stopifnot(
   identical(f$value, values), all(f$age_group == "5–7"),
-  all(y$age[y$measure == "recruitment"] == 1), all(y$year <= a$terminal_year),
+  all(y$age[y$measure == "recruitment"] == 1),
   grepl("29,037", review, fixed = TRUE), grepl("2DAR1", review, fixed = TRUE)
+)
+
+projection <- y[y$year %in% 2026:2031, ]
+ssb_projection <- projection[projection$measure == "SSB", ]
+f_projection <- projection[projection$measure == "Fbar", ]
+catch_projection <- projection[projection$measure == "predicted_catch", ]
+stopifnot(
+  nrow(projection) == 18L,
+  identical(ssb_projection$year, 2026:2031),
+  identical(ssb_projection$value, c(25281, 21828, 19804, 19818, 20956, 22157)),
+  identical(ssb_projection$lwr, c(9775, 6359, 5174, 4053, 3246, 2772)),
+  identical(ssb_projection$upr, c(65382, 74926, 75810, 96904, 135301, 177110)),
+  identical(f_projection$year, 2026:2031),
+  all(f_projection$age_group == "5–7"),
+  identical(f_projection$value, c(.247, rep(.27, 5))),
+  f_projection$lwr[1L] == .09, f_projection$upr[1L] == .675,
+  all(is.na(f_projection$lwr[-1L])), all(is.na(f_projection$upr[-1L])),
+  identical(catch_projection$year, 2026:2031),
+  identical(catch_projection$value, c(5768, 5277, 4640, 4498, 4659, 4888)),
+  is.na(catch_projection$lwr[1L]), is.na(catch_projection$upr[1L]),
+  identical(catch_projection$lwr[-1L], c(1524, 1230, 973, 769, 645)),
+  identical(catch_projection$upr[-1L], c(18271, 17511, 20785, 28245, 37014)),
+  all(projection$source_type == "official_table"),
+  !anyDuplicated(paste(projection$measure, projection$year, sep = "\034"))
 )
 m <- x[x$type == "M", ]
 stopifnot(
@@ -47,4 +72,4 @@ stopifnot(
   !any(x$type == "index"), !any(x$measure == "numbers_at_age"),
   all(is.na(y$se))
 )
-message("Georges Bank haddock published catch, SSB, recruitment, Fbar and constant M verified; missing streams remain explicit.")
+message("Georges Bank haddock historical summaries, projections, and constant M verified; missing age-structured streams remain explicit.")
