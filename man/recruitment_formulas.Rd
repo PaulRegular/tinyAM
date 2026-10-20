@@ -75,7 +75,7 @@ can obscure the relationship. Inspect \code{\link[=check_tam]{check_tam()}} and 
 }
 \examples{
 list(process = "rw", mu_form = NULL)
-list(process = "iid", mu_form = ~ 1)
+list(process = "iid", mu_form = ~1)
 list(process = "iid", mu_form = ~ bh(ssb))
 list(process = "ar1", mu_form = ~ ricker(ssb, lag = 2))
 # Add temperature to data$pop_covariates at the youngest modeled age, then use:

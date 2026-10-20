@@ -36,12 +36,16 @@ Stack identically named subtables from a nested list
 }
 \examples{
 res <- list(
-  sim1 = list(ssb = data.frame(year=1:3, est=1:3),
-              N   = data.frame(year=1:2, age=2:3, est=5:6)),
-  sim2 = list(ssb = data.frame(year=1:3, est=11:13),
-              N   = data.frame(year=1:2, age=2:3, est=15:16))
+  sim1 = list(
+    ssb = data.frame(year = 1:3, est = 1:3),
+    N = data.frame(year = 1:2, age = 2:3, est = 5:6)
+  ),
+  sim2 = list(
+    ssb = data.frame(year = 1:3, est = 11:13),
+    N = data.frame(year = 1:2, age = 2:3, est = 15:16)
+  )
 )
 stacked <- stack_nested(res, label = "sim")
-str(stacked$ssb)  # has column 'sim'
+str(stacked$ssb) # has column 'sim'
 
 }

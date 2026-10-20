@@ -102,5 +102,4 @@ if (interactive()) {
   vis_tam(fits)
 }
 
-
 }

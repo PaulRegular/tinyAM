@@ -27,17 +27,18 @@ one column per dimension (using the dimension names if available), and a
 value column.
 }
 \details{
-Internally uses \code{\link[base:table]{base::as.data.frame.table()}} to reshape \code{x}. After reshaping,
+Internally uses \code{\link[base:as.data.frame.table]{base::as.data.frame.table()}} to reshape \code{x}. After reshaping,
 all \strong{dimension columns} are passed through \code{\link[utils:type.convert]{utils::type.convert()}} with
 \code{as.is = TRUE}, so numeric-like labels (e.g., \code{"1"}, \code{"2.5"}) become numeric.
 }
 \examples{
-m <- matrix(1:6, nrow = 2, dimnames = list(age = c("2","3"), year = c("2001","2002","2003")))
+m <- matrix(1:6, nrow = 2, dimnames = list(age = c("2", "3"), year = c("2001", "2002", "2003")))
 tidy_array(m)
 
 a <- array(1:8,
-           dim = c(2,2,2),
-           dimnames = list(age = c("2","3"), year = c("2001","2002"), area = c("N","S")))
+  dim = c(2, 2, 2),
+  dimnames = list(age = c("2", "3"), year = c("2001", "2002"), area = c("N", "S"))
+)
 tidy_array(a, value_name = "val")
 
 # Permissive mode if dimnames are missing:

@@ -8,7 +8,7 @@ tidy_par(fit, interval = 0.95)
 }
 \arguments{
 \item{fit}{A fitted TAM object (from \code{\link[=fit_tam]{fit_tam()}}) containing an \code{sdrep}
-(an \code{\link[RTMB:TMB-interface]{RTMB::sdreport()}} object) and \code{obj$env$.random} (names of random effects).}
+(an \code{\link[RTMB:sdreport]{RTMB::sdreport()}} object) and \code{obj$env$.random} (names of random effects).}
 
 \item{interval}{Confidence level for Wald intervals; default \code{0.95}.}
 }

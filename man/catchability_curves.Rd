@@ -100,7 +100,7 @@ existing IID-residual restriction, including when combined with a curve.
 }
 }
 \examples{
-~ q_block # ordinary unconstrained q
+~q_block # ordinary unconstrained q
 ~ mono(q_block)
 ~ survey + mono(q_block, by = survey)
 ~ survey + logistic(age, by = survey)

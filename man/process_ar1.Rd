@@ -61,5 +61,5 @@ dprocess_ar1(X_ar1, sd = 0.3, phi = c(0.5, 0.9))
 
 }
 \seealso{
-\code{\link[RTMB:MVgauss]{RTMB::dseparable()}}, \code{\link[RTMB:MVgauss]{RTMB::dautoreg()}}, \code{\link[MASS:mvrnorm]{MASS::mvrnorm()}}
+\code{\link[RTMB:dseparable]{RTMB::dseparable()}}, \code{\link[RTMB:dautoreg]{RTMB::dautoreg()}}, \code{\link[MASS:mvrnorm]{MASS::mvrnorm()}}
 }

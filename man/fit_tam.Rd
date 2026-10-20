@@ -201,7 +201,7 @@ Zero catch gives exactly zero F. See \link{tinyAM-model} for equations and timin
 where applicable; default \verb{0.95.}}
 
 \item{add_osa_res}{Logical; add one-step-ahead residuals? Hard wired to
-apply the \code{"oneStepGaussianOffMode"} method. See \code{\link[RTMB:OSA-residuals]{RTMB::oneStepPredict()}}
+apply the \code{"oneStepGaussianOffMode"} method. See \code{\link[RTMB:oneStepPredict]{RTMB::oneStepPredict()}}
 for details.}
 
 \item{silent}{Logical; if \code{TRUE}, disables tracing information.}
@@ -222,7 +222,7 @@ A \code{tam_fit} list with components:
 \item \strong{obj}: RTMB \code{ADFun} object.
 \item \strong{opt}: \verb{[stats::nlminb()]} optimization result.
 \item \strong{rep}: list from \code{obj$report()}.
-\item \strong{sdrep}: \code{\link[RTMB:TMB-interface]{RTMB::sdreport()}} result.
+\item \strong{sdrep}: \code{\link[RTMB:sdreport]{RTMB::sdreport()}} result.
 \item \strong{fixed_par}: fixed parameter estimates in a tidy format (see \code{\link[=tidy_par]{tidy_par()}}).
 \item \strong{random_par}: list of random parameter estimates in a tidy format (see
 \code{\link[=tidy_par]{tidy_par()}}).
@@ -323,5 +323,5 @@ if (interactive()) {
 }
 \seealso{
 \code{\link[=prepare_tam]{prepare_tam()}}, \code{\link[=make_par]{make_par()}}, \code{\link[=sim_tam]{sim_tam()}}, \code{\link[=fit_retro]{fit_retro()}},
-\code{\link[RTMB:TMB-interface]{RTMB::MakeADFun()}}, \code{\link[RTMB:TMB-interface]{RTMB::sdreport()}}
+\code{\link[RTMB:MakeADFun]{RTMB::MakeADFun()}}, \code{\link[RTMB:sdreport]{RTMB::sdreport()}}
 }

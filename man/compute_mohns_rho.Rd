@@ -45,8 +45,10 @@ or undefined differences.
 df <- data.frame(
   year = rep(2010:2015, each = 3),
   fold = rep(c(2013, 2014, 2015), times = 6),
-  est = c(100, 105, 110, 90, 95, 100, 85, 92, 98,
-          80, 90, 95, 78, 88, 93, 76, 86, 91),
+  est = c(
+    100, 105, 110, 90, 95, 100, 85, 92, 98,
+    80, 90, 95, 78, 88, 93, 76, 86, 91
+  ),
   is_proj = FALSE
 )
 compute_mohns_rho(df)

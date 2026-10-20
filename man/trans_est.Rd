@@ -26,8 +26,8 @@ calculate transformed standard errors.
 }
 \examples{
 d <- data.frame(est = log(100), lwr = log(80), upr = log(120))
-trans_est(d)                # exp + no rescale
-trans_est(d, transform = NULL, scale = 1000)  # no transform, rescale
+trans_est(d) # exp + no rescale
+trans_est(d, transform = NULL, scale = 1000) # no transform, rescale
 
 }
 \keyword{internal}
