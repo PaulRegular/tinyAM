@@ -21,7 +21,7 @@ cap_per_cod <- NCAM::inputs$covariates[, c("year", "cap_per_cod")]
 cap_per_cod <- rbind(data.frame(year = 1983, cap_per_cod = cap_per_cod$cap_per_cod[1]), cap_per_cod)
 cod_obs$pop_covariates <- merge(cod_obs$pop_covariates, cap_per_cod, by = "year", all.x = TRUE)
 cod_obs$pop_covariates$log_cap_per_cod <- log(cod_obs$pop_covariates$cap_per_cod)
-cod_obs$pop_covariates$age_group <- cut_ages(cod_obs$pop_covariates$age, c(0, 2, 4, 6, 8, 20))
+cod_obs$pop_covariates$age_group <- cut_ages(cod_obs$pop_covariates$age, c(0, 2, 5, 8, 20)) # c(0, 2, 4, 6, 8, 20))
 
 base <- fit_tam(
   cod_obs,
@@ -38,7 +38,7 @@ base <- fit_tam(
   M_settings = list(
     process = "ar1",
     mu_supplied = ~ I(0.3),
-    age_breaks = c(2, 4, 6, 8, 14),
+    age_breaks = c(2, 5, 8, 14), # c(2, 4, 6, 8, 14),
     mean_ages = 5:14
   ),
   index_settings = list(
@@ -59,12 +59,12 @@ ss_q
 cap_M <- update(
   ss_q,
   M_settings = list(
-    mu_form = ~ 0 + log_cap_per_cod
+    mu_form = ~ 0 + age_group:log_cap_per_cod
   )
 )
 cap_M
 
-
+cAIC(base, ss_q, cap_M, details = TRUE)
 
 
 model_names <- c(
@@ -82,3 +82,13 @@ vis_tam(
   output_file = "analysis/case_study/outputs/001_models.html",
   open_file = FALSE
 )
+
+future::plan(future::multisession, workers = 10)
+hind <- lapply(models, fit_hindcast)
+
+lapply(hind, `[[`, "hindcast_rmse")
+
+## Smith Sound improves cAIC but does little to improve forecast skill (makes sense).
+## The capelin covariate improve forecast still, though cAIC is slightly poorer.
+
+
