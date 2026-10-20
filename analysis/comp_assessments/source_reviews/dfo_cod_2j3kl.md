@@ -29,10 +29,14 @@ proportion-to-count conversion was needed. Fall timing is represented by a
 months. Sentinel effective timing remains unresolved. Juvenile seasons are
 recoverable, but exact annual model timing is not (see below).
 
-The assessment remains partial. The spring Capelin acoustic series is shown in
-the detailed 2025 Capelin report but not tabulated; its exact spatial match to the
-model's 3L covariate is unresolved. Detailed tagging observations and
-reporting-rate likelihood data are not represented. Smith Sound sample ages
+The assessment remains partial. The 3L spring Capelin acoustic series is
+digitized from Figure 32 of DFO Research Document 2025/061, which confirms the
+spatial match to the cod model's Capelin covariate. The 31 years used in the cod
+model are retained; plotted values were read from the log-kilotonnes axis,
+rounded to 0.01 log units, and exponentiated to kilotonnes. They are approximate
+figure-derived values, not the original unrounded acoustic estimates, and no
+uncertainty is assigned. Detailed tagging observations and reporting-rate
+likelihood data are not represented. Smith Sound sample ages
 14-16 are zero in every reported sample year, so there is no positive older-age
 count needing an age-14 mapping. Tables 19-24 provide numerical abundance,
 biomass, mature biomass, Z, M and F at ages 0-14. The earlier review overlooked
@@ -99,8 +103,8 @@ tinyAM recruitment. The official N-at-age surface supplies a separately
 labelled age-2 abundance comparison with tinyAM recruitment. Common F/M means use the matching N and
 age-specific mortality surfaces with tinyAM's population weighting. Preserve
 the native Table 17/18 aggregates for dashboard context and label comparisons
-derived from rounded age-specific tables separately. No plot digitization or
-invented SEs are used.
+derived from rounded age-specific tables separately. No official output time
+series are digitized, and no standard errors are invented.
 
 ## Recruitment and juvenile limitations
 

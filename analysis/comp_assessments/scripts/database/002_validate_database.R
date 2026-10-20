@@ -207,7 +207,7 @@ allowed_input_measures <- c(
   "relative_biomass_index",
   "landings_proportion", "landings_numbers_at_age", "discard_numbers_at_age", "landings_fraction_at_age",
   "landings_weight_at_age", "discard_weight_at_age", "log_index_sd", "index_sd", "relative_precision_weight", "relative_standard_error", "larval_abundance_index", "environmental_covariate", "fraction_F_before_spawning",
-  "fraction_M_before_spawning"
+  "fraction_M_before_spawning", "capelin_biomass_index"
 )
 allowed_bases <- c(
   "native_frequency",

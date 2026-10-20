@@ -603,6 +603,7 @@ source month in notes and record survey timing separately as a fraction of year.
 ``` text
 environmental_covariate
 condition_index_for_mortality
+capelin_biomass_index
 ```
 
 Use `type = covariate` and `basis = native_covariate` for supplied covariates
@@ -611,6 +612,9 @@ used by the model. `environmental_covariate` records environmental series;
 time-varying natural-mortality process. Retain the source scale and timing.
 Signed finite values are permitted. Do not treat either covariate as an
 abundance index or, for the condition index, as a natural-mortality estimate.
+`capelin_biomass_index` preserves a source Capelin biomass index used to form
+a prey-to-cod biomass ratio for a mortality model. Record its spatial coverage
+and units; it is not a cod abundance index or a direct M estimate.
 
 `type = biology` with `fraction_F_before_spawning` or
 `fraction_M_before_spawning` records supplied year-age mortality fractions used
