@@ -100,14 +100,6 @@ check_tam_data(dat)
 # A plain list plus check_tam_data() also works
 # Optional class conversion: as_tam_data(dat)
 # ---- end ----
-# ---- plain_list ----
-# dat <- list(
-#   catch = catch_data, index = index_data,
-#   weight = weight_data, maturity = maturity_data,
-#   pop_covariates = population_data
-# )
-# check_tam_data(dat)
-# ---- end ----
   fit_key <- list(sources = sources, example = provenance$example_md5,
                   data = fingerprint(dat), runtime = provenance$runtime)
   hind_key <- c(fit_key, list(call = deparse(body(hindcast))))

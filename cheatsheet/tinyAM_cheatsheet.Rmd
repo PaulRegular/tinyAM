@@ -53,13 +53,15 @@ if (!identical(current_md5, example$provenance$example_md5)) {
 }
 write_code <- function(file, names) {
   code <- unlist(lapply(names, excerpt), use.names = FALSE)
-  if (file == "data") code <- code[!grepl("^#", code)]
-  if (file == "plain_list") code <- sub("^# ?", "", code)
+  if (file == "data") {
+    code <- code[!grepl("^#", code)]
+    check <- match("check_tam_data(dat)", code)
+    if (!is.na(check)) code <- append(code, "", after = check - 1L)
+  }
   writeLines(c("\\begin{rcode}", code, "\\end{rcode}"),
              paste0("cache/code_", file, ".tex"))
 }
 write_code("data", "inputs")
-write_code("plain_list", "plain_list")
 for (name in c("baseline", "models", "dashboard", "hindcast")) {
   write_code(name, name)
 }
@@ -123,9 +125,9 @@ rsvg::rsvg_pdf(file.path(repo, "man/figures/logo.svg"), "logo.pdf")
 ```{=latex}
 \newcommand{\inputcode}[1]{\input{cache/code_#1.tex}}
 \pageheader{tinyAM :: \textbf{CHEATSHEET}}{Formula-driven age-structured assessment}
-\begin{minipage}[t][164mm][s]{.38\linewidth}\vspace{0pt}
+\begin{minipage}[t][164mm][s]{.41\linewidth}\vspace{0pt}
 \sectitle{1}{Setup tidy inputs}{}
-\panelnote{Four tidy tables are required: \texttt{catch}, \texttt{index}, \texttt{weight}, and \texttt{maturity}; \texttt{pop\_covariates} is optional. Each column is one variable; each row represents a year and age, with survey rows also identifying the survey. Catch, biology, and population covariates need complete year-age grids; survey data may be sparse. \texttt{NA} observations are allowed in catch and index, not in weight or maturity.}\par\vspace{2mm}
+\panelnote{Four tidy data frames are required: \texttt{catch}, \texttt{index}, \texttt{weight}, and \texttt{maturity}. A fifth, \texttt{pop\_covariates}, is optional. Each variable occupies a column, and each row represents a year and age; survey observations also identify the survey. Complete year-age grids are required for catch, biology, and population covariates, whereas survey data may be sparse. Missing observations (\texttt{NA}) are permitted in catch and index, but not in weight or maturity.}\par\vspace{2mm}
 \begin{minipage}[t]{.32\linewidth}\vspace{0pt}
 \tablelabel{catch}\par\vspace{.5mm}\input{cache/table_catch.tex}
 \end{minipage}\hfill
@@ -134,16 +136,14 @@ rsvg::rsvg_pdf(file.path(repo, "man/figures/logo.svg"), "logo.pdf")
 \end{minipage}\par\vspace{2mm}
 \begin{minipage}[t]{.28\linewidth}\vspace{0pt}
 \tablelabel{weight}\par\vspace{.5mm}\input{cache/table_weight.tex}
-\end{minipage}\hfill
+\end{minipage}\hspace{4mm}
 \begin{minipage}[t]{.23\linewidth}\vspace{0pt}
 \tablelabel{maturity}\par\vspace{.5mm}\input{cache/table_maturity.tex}
-\end{minipage}\hfill
-\begin{minipage}[t]{.46\linewidth}\vspace{0pt}
+\end{minipage}\par\vspace{2mm}
+\begin{minipage}[t]{.99\linewidth}\centering\vspace{0pt}
 \tablelabel{pop\_covariates [optional]}\par\vspace{.5mm}\input{cache/table_pop_covariates.tex}
 \end{minipage}\par\vspace{1mm}
 \inputcode{data}\par\vspace{1mm}
-\smallkey{Or use a plain list}\par\vspace{.5mm}
-\inputcode{plain_list}\par\vspace{.5mm}
 \end{minipage}\hfill
 \begin{minipage}[t][164mm][s]{.31\linewidth}\vspace{0pt}
 \sectitle{2}{Specify model hypotheses}{}
@@ -157,7 +157,7 @@ rsvg::rsvg_pdf(file.path(repo, "man/figures/logo.svg"), "logo.pdf")
 \inputcode{models}\par\vspace{2mm}
 \panelnote{Use \texttt{check\_tam()} to inspect numerical diagnostics and statistical support before interpreting results.}
 \end{minipage}\hfill
-\begin{minipage}[t][164mm][s]{.28\linewidth}\vspace{0pt}
+\begin{minipage}[t][164mm][s]{.25\linewidth}\vspace{0pt}
 \begin{minipage}[t]{.53\linewidth}\sectitle{3}{Visualize\\and compare}{}\end{minipage}\par\vspace{1mm}
 \smallkey{Explore model fits}\par\vspace{1mm}
 \inputcode{dashboard}\par\vspace{2mm}
@@ -167,10 +167,10 @@ rsvg::rsvg_pdf(file.path(repo, "man/figures/logo.svg"), "logo.pdf")
 \panelnote{Retrospective summaries plus one-year-ahead survey scores, conditional on observed catches.}\par\vspace{1.5mm}
 \smallkey{Survey forecast log-RMSE}\par\vspace{1mm}
 \input{cache/table_scores.tex}\par\vspace{1mm}
-\panelnote{Lower log-RMSE means survey forecasts were closer to observations. Folds show scored years; incomplete or non-converged fits are not ranked (* marks non-convergence).}\par\vspace{2mm}
+\panelnote{Lower log-RMSE indicates better survey forecast skill. Fold counts show scored years; incomplete results are unranked, and * marks non-convergence.}\par\vspace{1mm}
 \smallkey{SSB stability: latest 20 years}\par\vspace{1mm}
-\includegraphics[width=\linewidth]{cache/hindcast_ssb.pdf}\par\vspace{1mm}
-\panelnote{Each line shows the SSB history from a fit ending in a different year. Overlapping lines mean past estimates stayed similar as new years were added.}
+\includegraphics[width=\linewidth,height=36mm,keepaspectratio]{cache/hindcast_ssb.pdf}\par\vspace{.5mm}
+\panelnote{Lines show SSB histories from fits ending in different years. Similar paths mean past estimates changed little as new years were added.}
 \end{minipage}
 \pagefooter{\sitefooter}
 \clearpage
@@ -179,7 +179,7 @@ rsvg::rsvg_pdf(file.path(repo, "man/figures/logo.svg"), "logo.pdf")
 \renewcommand{\texttt}[1]{\inlinecode{#1}}
 \pageheader{tinyAM :: MODEL REFERENCE}{Settings, equations and the population assumptions they represent}
 \begin{minipage}[t][164mm][s]{.325\linewidth}\vspace{0pt}
-\begin{mathbox}{Abundance and cohort survival}
+\begin{mathbox}{Abundance and survival}
 \micro{N is start-of-year abundance. Each year, survivors move forward one age; survivors in the terminal age remain in the plus group. Let $Z=F+M$; recruitment is $R_t=N_{t,1}$.}
 \[
 \begin{aligned}
@@ -189,7 +189,7 @@ rsvg::rsvg_pdf(file.path(repo, "man/figures/logo.svg"), "logo.pdf")
 \log N_{t,a}&=\log\widehat N_{t,a}+\eta^N_{t,a}.
 \end{aligned}
 \]
-\micro{\texttt{N\_settings}: \texttt{process = "iid"} estimates log-scale cohort-survival deviations. \texttt{init = "exp"} initializes older ages from exponential survivorship; other choices are \texttt{"free"}, \texttt{"latent"}, \texttt{"mono"}, and \texttt{"capped"}. Age indices $1,\ldots,A$ run from the youngest modeled age to the plus group.}
+\micro{$\eta^N_{t,a}$ is the abundance deviation; see Variation in N, F and M for process choices. \texttt{init = "exp"} initializes older ages from exponential survivorship; other choices are \texttt{"free"}, \texttt{"latent"}, \texttt{"mono"}, and \texttt{"capped"}. Age indices $1,\ldots,A$ run from the youngest modeled age to the plus group; $N$ is start-of-year abundance.}
 \micro{For $t\ge2$, non-plus ages use the first survival equation.}
 \end{mathbox}\vfill
 \begin{mathbox}{Recruitment}
@@ -209,31 +209,29 @@ g_{Ricker}(S)&=\alpha S e^{-\beta S}.
 \[
 SSB_t=\sum_b n_{t,b}w_{t,b}p_{t,b}e^{-\tau_{t,b}Z_{t,b}}.
 \]
-\micro{(Set \texttt{maturity\$spawn\_time} to specify age/year-specific spawning fractions; omit it for the default $\tau=0$.)}
-\micro{Biomass is $\sum_b n_{t,b}w_{t,b}$. $b$: retained biological age; $n$: its abundance; $w$: weight; $p$: mature fraction; $\tau$: year fraction (default 0). Hidden ages retain biology/timing and share plus-age mortality.}
+\micro{Biomass is $\sum_b n_{t,b}w_{t,b}$. $b$: retained biological age; $n$: its abundance; $w$: weight; $p$: mature fraction; $\tau$: year fraction from year start to spawning (default 0; set \texttt{maturity\$spawn\_time} for age/year-specific values). Hidden ages retain biology/timing and share plus-age mortality.}
 \end{mathbox}
 \end{minipage}\hfill
 \begin{minipage}[t][164mm][s]{.325\linewidth}\vspace{0pt}
 \begin{mathbox}{Mean fishing mortality}
-\micro{For example, \texttt{F\_settings} with IID/AR1 and \texttt{mu\_form = \string~ logistic(age)} gives a rising long-term mean.}
+\micro{Mean fishing mortality parameters can be estimated as an age pattern. \texttt{F\_settings} with \texttt{mu\_form = \string~ logistic(age)} gives a rising long-term mean.}
 \[
 \begin{aligned}
 S(a)&=\{1+e^{-k(a-a_{50})}\}^{-1},\quad k>0,\\
 \log F_{t,a}&=\beta_F+\log S(a)+\eta^F_{t,a}.
 \end{aligned}
 \]
-\micro{\texttt{mu\_form = \string~ mono(age)} instead adds cumulative nonnegative log-mean steps. Both curves require IID/AR1; annual F can depart from the rising mean.}
+\micro{With IID or AR1 process deviations, \texttt{mu\_form = \string~ mono(age)} instead adds cumulative nonnegative log-mean steps. Annual F can depart from the mean through $\eta^F$ (see Variation in N, F and M).}
 \end{mathbox}\vfill
 \begin{mathbox}{Natural mortality}
-\micro{\texttt{M\_settings}: \texttt{mu\_supplied = \string~ M0} gives the baseline; \texttt{process = "iid"} adds departures.}
+\micro{\texttt{M\_settings}: \texttt{mu\_supplied = \string~ M0} supplies the baseline mortality surface.}
 \[
 \log M_{t,a}=\log M^0_{t,a}+\eta^M_{t,a}.
 \]
-\micro{\texttt{M0} comes from \texttt{pop\_covariates}. M states share age blocks and start in year 2 by default; other cells retain the mean. \texttt{"off"} fixes M to its mean; \texttt{mu\_form} adds log-mean effects.}
+\micro{\texttt{M0} comes from \texttt{pop\_covariates}. M states share age blocks and start in year 2 by default; other cells retain the mean. $\eta^M$ denotes process deviations (see Variation in N, F and M); \texttt{mu\_form} adds log-mean effects.}
 \end{mathbox}\vfill
 \begin{mathbox}{Variation in N, F and M}
-\micro{\texttt{sd\_form = \string~ factor(age)} estimates age-specific process SDs. F \texttt{process = "cor\_rw"} correlates increments across age.}
-\micro{Ordinary age-based SD formulas give $\sigma_a=\exp(X_a\beta_\sigma)$. N, F and M have separate parameters; shared SDs do not share states.}
+\micro{N and M support \texttt{"off"}, \texttt{"iid"}, \texttt{"rw"}, and \texttt{"ar1"}; F supports \texttt{"iid"}, \texttt{"rw"}, \texttt{"ar1"}, and \texttt{"cor\_rw"}. The equations above use $\eta^N$, $\eta^F$, and $\eta^M$ for these deviations.}
 \[
 \begin{aligned}
 \text{IID: }&\eta_{t,a}\sim\mathcal N(0,\sigma_a^2),\\
@@ -250,26 +248,28 @@ S(a)&=\{1+e^{-k(a-a_{50})}\}^{-1},\quad k>0,\\
 \[
 \Sigma_{ab}=\sigma_a\sigma_b\rho^{|a-b|},\quad-1<\rho<1.
 \]
-\micro{RW starts are unpenalized. N/M \texttt{"off"} gives $\eta=0$.}
+\micro{RW starts are unpenalized. N/M \texttt{"off"} sets the deviations to zero.}
+\micro{Each component has its own process parameters. \texttt{sd\_form = \string~ 1} shares SDs across ages; \texttt{\string~ factor(age)} estimates age-specific SDs. \texttt{iid()}, \texttt{rw()} and \texttt{ar1()} terms add structure to log SD; ordinary age formulas give $\sigma_a=\exp(X_a\beta_\sigma)$. Shared SDs do not share states.}
 \end{mathbox}
 \end{minipage}\hfill
 \begin{minipage}[t][164mm][s]{.325\linewidth}\vspace{0pt}
-\begin{minipage}[t]{.60\linewidth}\sectitle{}{Survey catchability}{}\end{minipage}\par\vspace{1mm}
-\begin{minipage}[t]{.60\linewidth}\vspace{0pt}
-\micro{\texttt{index\_settings}: \texttt{q\_form = \string~ mono(q\_block)} gives non-decreasing q under the default log link.}
+\sectitle{}{Survey catchability}{}\par\vspace{.5mm}
+\begin{minipage}[t]{.78\linewidth}\vspace{0pt}
+\micro{\texttt{q\_block}: unrestricted age blocks; \texttt{mono(q\_block)}\\
+imposes non-decreasing catchability under the default log link.}
 \end{minipage}\par\vspace{1mm}
 \[
 \eta_{q,k}=\beta_q+\sum_{j<k}d_j,\quad d_j\ge0,
 \qquad q_k=e^{\eta_{q,k}}.
 \]
-\micro{Zero steps give exact plateaus; \texttt{\string~ q\_block} leaves age patterns unrestricted. With \texttt{q\_link = "logit"}:}
+\micro{Zero steps give exact plateaus. With \texttt{q\_link = "logit"}:}
 \[
 q_k=\{1+e^{-\eta_{q,k}}\}^{-1}.
 \]
-\micro{\texttt{\string~ logistic(age)} multiplies inverse-link q by $S(a)$. \texttt{iid()}, \texttt{rw()} and \texttt{ar1()} can add Gaussian variation. q covariates come from \texttt{index}.}
+\micro{\texttt{\string~ logistic(age)} gives a logistic age pattern. Terms \texttt{iid()}, \texttt{rw()} and \texttt{ar1()} add Gaussian variation; q covariates come from \texttt{index}.}
 \vfill
 \begin{mathbox}{Catch and survey observations}
-\micro{Catch/index \texttt{sd\_form = \string~ 1} shares an observation SD; \texttt{\string~ survey} allows survey differences.}
+\micro{Catch and survey observations are linked to population quantities by the predictions below; observed log values have Gaussian errors.}
 \[
 \begin{aligned}
 \widetilde C_{t,a}&=N_{t,a}\frac{F_{t,a}}{Z_{t,a}}(1-e^{-Z_{t,a}}),\\
@@ -278,9 +278,9 @@ q_k=\{1+e^{-\eta_{q,k}}\}^{-1}.
 \sigma_i&=\sigma_i^0\exp(X_{sd,i}\beta_{sd}).
 \end{aligned}
 \]
-\micro{$s_i$: survey sampling fraction. $\sigma_i^0=1$ unless a baseline SD is provided. Gaussian formula effects can also modify log SD. Predictions are medians; zero/NA observations are excluded, with complete predictions.}
+\micro{$s_i$: survey sampling fraction. Catch/index \texttt{sd\_form = \string~ 1} shares an observation SD; \texttt{\string~ survey} allows survey differences. Baseline SDs and Gaussian formula effects can modify log SD. Predictions are medians; zero/NA observations are excluded, with complete predictions.}
 \end{mathbox}\vfill
-\begin{mathbox}{Check fit, uncertainty and predictive skill}
+\begin{mathbox}{Fit and prediction checks}
 \micro{\texttt{check\_tam()} checks numerical and statistical diagnostics; \texttt{fit\_hindcast()} evaluates survey forecasts given observed removals and retrospective stability.}
 \micro{The joint likelihood includes active process, formula-effect and observation densities. RTMB integrates random effects by Laplace approximation; intervals use local curvature. Standardized residuals $(\log Y_i-\log\widetilde Y_i)/\sigma_i$ depend on fitted, shrunken states. Convergence does not establish identifiability. Hindcasts return log RMSE and retrospective Mohn's $\rho$.}
 \end{mathbox}
