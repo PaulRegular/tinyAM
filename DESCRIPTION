@@ -1,6 +1,6 @@
 Package: tinyAM
 Title: Tiny Assessment Model
-Version: 0.1.0
+Version: 0.1.1
 Authors@R: 
     person("Paul", "Regular", , "Paul.Regular@dfo-mpo.gc.ca", role = c("aut", "cre"))
 Description: tinyAM (tiny assessment model; aka TAM) is an R package for fitting
