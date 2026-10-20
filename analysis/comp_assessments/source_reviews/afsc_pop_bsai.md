@@ -92,14 +92,12 @@ held at the official fitted logistic curve, with a female fraction of 0.5
 and spawning time 0.25. These choices are explicit in the dashboard background.
 
 Preparation and the default-first/retry, plus-group, reference-alignment and
-comparison-definition regression tests pass. The full default-initialization
-pipeline was launched at the translation checkpoint but had not returned a fit
-after more than seven hours of CPU time. It was terminated as an execution
-failure. Objective, gradients, uncertainty and convergence are unknown; no
-agreement statistics or dashboard are claimed. The helper then in use retained
-attempts only when the complete pipeline returned, so its active initialization
-stage and any earlier completed-attempt diagnostics could not be recovered.
-No additional retry was launched because that could exceed the single-retry
-policy. The helper now saves each attempt before and after execution so later
-interruptions cannot lose this history. No data or model assumptions were
-changed to rescue this case.
+comparison-definition regression tests pass. The first default-initialization
+attempt was manually stopped after more than seven hours without a returned fit;
+numerical checks were unavailable. The single permitted source-start retry began
+at 17:36 local and used aligned official N and F values. The attempt cache
+recorded no returned result by 18:52 local on 2026-10-20, when no R/Rscript
+process remained. Exact termination time and cause are unknown, so the objective,
+gradient, standard errors, Hessian and convergence are unavailable. No agreement
+statistics or dashboard are claimed. The retry allowance is exhausted; no
+further attempt was made, and no data or model assumptions were changed.
