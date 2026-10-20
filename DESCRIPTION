@@ -21,6 +21,7 @@ Imports:
     RTMB (>= 2.0),
     MASS,
     Matrix,
+    methods,
     future,
     furrr,
     progressr,

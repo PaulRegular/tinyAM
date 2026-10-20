@@ -318,7 +318,14 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   ii <- obs_map$type == "index"
   log_pred[ii] <- log_q_obs + log_N_obs[ii] - Z_obs[ii] * samp_time[ii]
 
-  jnll <- jnll - sum(RTMB::dnorm(observed, log_pred[is_observed], sd = sd_obs[is_observed], log = TRUE))
+  # Internal reporting modes share the fitted population and observation equations.
+  if (identical(dat$.likelihood_component, "design")) {
+    return(c(log_pred[is_observed], sd_obs[is_observed]))
+  }
+  observation_nll <- -sum(RTMB::dnorm(observed, log_pred[is_observed], sd = sd_obs[is_observed], log = TRUE))
+  if (identical(dat$.likelihood_component, "observation")) return(observation_nll)
+  if (identical(dat$.likelihood_component, "process")) return(jnll)
+  jnll <- jnll + observation_nll
   if (simulate) {
     log_obs[is_observed] <- stats::rnorm(sum(is_observed), mean = log_pred[is_observed], sd = sd_obs[is_observed])
   }
