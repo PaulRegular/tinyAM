@@ -224,6 +224,7 @@ Add new types only when a real assessment requires them.
 
 ``` text
 numbers_at_age
+numbers_at_age_for_M_reconstruction
 index_by_age_group
 biomass_at_age
 total_numbers
@@ -244,6 +245,11 @@ multiple age classes and cannot be represented as a single-age observation.
 Store the lower age in age and record the full source age interval, including
 any plus group, in notes. This measure is kept for provenance and is not
 passed to tinyAM's single-age index likelihood.
+
+`numbers_at_age_for_M_reconstruction` preserves an age-specific total catch
+series used to reconstruct a separate natural-mortality input. It is distinct
+from the residual catch series fitted in the assessment. Do not treat both
+series as separate catch observations in a downstream model.
 
 For `type = index`, `measure = numbers_at_age` normally uses `basis = numbers`
 and a documented count unit. When the source reports age-specific index values
