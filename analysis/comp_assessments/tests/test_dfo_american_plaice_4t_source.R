@@ -52,6 +52,8 @@ n <- o[o$measure == "numbers_at_age", , drop = FALSE]
 total <- o[o$measure == "total_numbers", , drop = FALSE]
 recruitment <- o[o$measure == "recruitment", , drop = FALSE]
 ssb <- o[o$measure == "SSB", , drop = FALSE]
+F <- o[o$measure == "fishing_mortality_at_age", , drop = FALSE]
+M <- o[o$measure == "natural_mortality_at_age", , drop = FALSE]
 stopifnot(
   nrow(n) == 40L * 13L,
   n$value[n$year == 2015 & n$age == 16] == 804,
@@ -61,10 +63,32 @@ stopifnot(
   recruitment$value[recruitment$year == 2015] == 528392,
   total$value[total$year == 2015] == sum(n$value[n$year == 2015]),
   all(is.na(total$se)), all(is.na(recruitment$se)),
-  nrow(ssb) == 1L,
-  ssb$year == 2015,
-  ssb$value == 55023,
-  all(!o$measure %in% c("fishing_mortality_at_age", "natural_mortality_at_age"))
+  nrow(ssb) == 40L,
+  identical(sort(ssb$year), 1976:2015),
+  all(ssb$source_type == "digitized"),
+  ssb$value[ssb$year == 1976] > 420000,
+  ssb$value[ssb$year == 1976] < 440000,
+  ssb$value[ssb$year == 2015] == 55023,
+  all(is.finite(ssb$lwr) & is.finite(ssb$upr)),
+  all(ssb$lwr <= ssb$value & ssb$value <= ssb$upr),
+  nrow(F[F$age_group == "4-9", , drop = FALSE]) == 40L,
+  nrow(F[F$age_group == "10+", , drop = FALSE]) == 33L,
+  max(F$year[F$age_group == "10+"]) == 2008L,
+  nrow(M[M$age_group == "4-9", , drop = FALSE]) >= 35L,
+  nrow(M[M$age_group == "10+", , drop = FALSE]) == 40L,
+  all(is.na(c(F$age, M$age))),
+  all(c(F$age_group, M$age_group) %in% c("4-9", "10+")),
+  all(F$source_type == "digitized"),
+  all(M$source_type == "digitized"),
+  all(F$value >= 0 & F$value <= 1),
+  all(M$value >= 0 & M$value <= 1),
+  all(is.finite(M$lwr) & is.finite(M$upr)),
+  all(M$lwr <= M$value & M$value <= M$upr),
+  all(is.na(F$lwr) & is.na(F$upr)),
+  M$value[M$age_group == "4-9" & M$year == 1976] > 0.64,
+  M$value[M$age_group == "4-9" & M$year == 1976] < 0.71,
+  M$value[M$age_group == "10+" & M$year == 2015] > 0.70,
+  M$value[M$age_group == "10+" & M$year == 2015] < 0.80
 )
 
 indicator <- read_assessment("dfo_american_plaice_4t_2024_indicators")

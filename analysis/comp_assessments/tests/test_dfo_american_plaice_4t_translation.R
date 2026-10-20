@@ -25,7 +25,11 @@ stopifnot(
     x$obs$pop_covariates$age == 10
   ][1] == 0.3,
   x$obs$weight$obs[x$obs$weight$year == 2003 & x$obs$weight$age == 16] == 0,
-  x$comparison$comparison_definitions$ssb$status == "matched"
+  x$comparison$comparison_definitions$ssb$status == "matched",
+  identical(x$comparison$comparison_age_groups$F[["4-9"]], 4:9),
+  identical(x$comparison$comparison_age_groups$F[["10+"]], 10:16),
+  identical(x$comparison$comparison_age_groups$M[["4-9"]], 4:9),
+  identical(x$comparison$comparison_age_groups$M[["10+"]], 10:16)
 )
 
 cat("4T American plaice translation prepares both survey series and M blocks without fitting.\n")

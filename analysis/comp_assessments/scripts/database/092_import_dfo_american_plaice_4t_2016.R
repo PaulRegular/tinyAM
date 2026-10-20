@@ -236,9 +236,9 @@ assumptions <- do.call(rbind, list(
   assumption("outputs", "point_estimate", "Median of 5,000 retained MCMC samples",
     "DFO Research Document 2016/057, p. 7",
     "The run used 201,000 iterations, discarded 1,000 burn-in iterations, and retained every 40th subsequent sample."),
-  assumption("outputs", "annual_output_availability", "N-at-age is tabulated; annual F, M, and SSB are shown only in figures",
+  assumption("outputs", "annual_output_availability", "N-at-age is tabulated; annual F, M, and SSB are digitized from figures",
     "DFO Research Document 2016/057, Tables 7 and Figures 21-24",
-    "No native fitted object or tabulated annual F/M/SSB output series was located in the sources reviewed."),
+    "The report has no native fitted object or tabulated annual F/M/SSB series. Figure-digitized estimates are approximate; age-group F is not separable from overlapping lines in all years."),
   assumption("model_availability", "native_run", "No public native fitted object or input files located",
     "DFO Research Document 2016/057; source review 2026-10-20",
     "The report identifies an ADMB implementation but does not link to a production run archive."),
@@ -284,6 +284,161 @@ add_annual_output <- function(assessment, type, measure, years, values, unit,
   out
 }
 
+digitize_rate_figure <- function() {
+  figure <- pdftools::pdf_render_page(
+    assessment_file, page = 48L, dpi = 150, numeric = TRUE
+  )
+  if (!identical(dim(figure)[1:2], c(1650L, 1275L))) {
+    abort("Unexpected raster dimensions for Figure 21; review the digitization coordinates.")
+  }
+  figure <- figure[, , 1:3, drop = FALSE]
+  rate_axis_y <- c(180, 295, 410, 525, 640, 754)
+  rate_axis_values <- seq(1, 0, by = -0.2)
+  rate_value <- function(y) stats::approx(
+    rate_axis_y, rate_axis_values, xout = y, rule = 2
+  )$y
+  colour_mask <- function(colour, tolerance) {
+    target <- as.numeric(grDevices::col2rgb(colour)[, 1])
+    rgb <- figure[, , 1:3] * 255
+    sqrt((rgb[, , 1] - target[1])^2 +
+         (rgb[, , 2] - target[2])^2 +
+         (rgb[, , 3] - target[3])^2) <= tolerance
+  }
+  digitize_line <- function(colour, y_range, max_year = 2015L) {
+    mask <- colour_mask(colour, tolerance = 60)
+    vapply(years, function(year) {
+      if (year > max_year) return(NA_real_)
+      x <- round(329.5 + (year - 1976) * 15.75)
+      rows <- seq(y_range[1], y_range[2])
+      columns <- (x - 4):(x + 4)
+      profile <- rowSums(mask[rows, columns, drop = FALSE])
+      if (max(profile) < 3L) return(NA_real_)
+      center <- rows[profile >= max(3L, ceiling(max(profile) * 0.5))]
+      rate_value(stats::median(center))
+    }, numeric(1))
+  }
+  digitize_interval <- function(colours, y_range) {
+    masks <- lapply(colours, colour_mask, tolerance = 5)
+    mask <- Reduce(`|`, masks)
+    t(vapply(years, function(year) {
+      x <- round(329.5 + (year - 1976) * 15.75)
+      rows <- seq(y_range[1], y_range[2])
+      hits <- which(mask[rows, (x - 3):(x + 3), drop = FALSE], arr.ind = TRUE)
+      if (nrow(hits) < 5L) return(c(lwr = NA_real_, upr = NA_real_))
+      bounds <- range(hits[, 1] + rows[1] - 1L)
+      values <- rate_value(bounds)
+      c(lwr = min(values), upr = max(values))
+    }, c(lwr = 0, upr = 0)))
+  }
+  add_rate_group <- function(measure, age_group, colour, y_range,
+                             interval_colours = NULL, max_year = 2015L) {
+    value <- digitize_line(colour, y_range, max_year)
+    keep <- is.finite(value)
+    out <- empty_outputs(sum(keep))
+    out$type <- "mortality"
+    out$measure <- measure
+    out$age_group <- age_group
+    out$year <- years[keep]
+    out$value <- value[keep]
+    out$unit <- "per year"
+    out$source_type <- "digitized"
+    out$source_reference <- "DFO Research Document 2016/057, Figure 21, p. 39"
+    out$notes <- paste(
+      "Annual median instantaneous mortality rate digitized from the plotted",
+      "line and symbols using the figure's axis ticks. Values are approximate.",
+      "Age group is the source's grouped estimate."
+    )
+    if (!is.null(interval_colours)) {
+      intervals <- digitize_interval(interval_colours, y_range)
+      out$lwr <- pmin(intervals[keep, "lwr"], value[keep])
+      out$upr <- pmax(intervals[keep, "upr"], value[keep])
+      out$notes <- paste(
+        out$notes,
+        "The source shows 95% credible intervals; visible band limits were",
+        "digitized and expanded by raster precision when needed to include the",
+        "separately digitized median."
+      )
+    } else {
+      out$notes <- paste(
+        out$notes,
+        "No separate 95% credible interval band is visible for this series."
+      )
+    }
+    out
+  }
+  rbind(
+    add_rate_group("natural_mortality_at_age", "4-9", "#FD8D3C", c(270, 550),
+      interval_colours = "#FEC981"),
+    add_rate_group("natural_mortality_at_age", "10+", "#B10026", c(300, 660),
+      interval_colours = c("#EB5E60", "#EB4E3A")),
+    add_rate_group("fishing_mortality_at_age", "10+", "#08519C", c(520, 760),
+      max_year = 2008L),
+    add_rate_group("fishing_mortality_at_age", "4-9", "#6BAED6", c(725, 760))
+  )
+}
+
+digitize_ssb_figure <- function() {
+  figure <- pdftools::pdf_render_page(
+    assessment_file, page = 50L, dpi = 150, numeric = TRUE
+  )
+  if (!identical(dim(figure)[1:2], c(1650L, 1275L))) {
+    abort("Unexpected raster dimensions for Figure 23; review the digitization coordinates.")
+  }
+  figure <- figure[, , 1:3, drop = FALSE]
+  black <- figure[, , 1] < 0.18 & figure[, , 2] < 0.18 & figure[, , 3] < 0.18
+  rgb <- figure[, , 1:3] * 255
+  target <- c(204, 204, 204)
+  band <- sqrt((rgb[, , 1] - target[1])^2 +
+               (rgb[, , 2] - target[2])^2 +
+               (rgb[, , 3] - target[3])^2) <= 5
+  band[556:563, ] <- FALSE
+  band[530:552, 680:820] <- FALSE
+  band[556:563, ] <- FALSE
+  band[530:552, 680:820] <- FALSE
+  ssb_axis_y <- c(182, 264, 346, 428, 510, 592, 674)
+  ssb_axis_values <- seq(600, 0, by = -100)
+  ssb_value <- function(y) stats::approx(
+    ssb_axis_y, ssb_axis_values, xout = y, rule = 2
+  )$y
+  digitized <- t(vapply(years, function(year) {
+    predicted_x <- round(295 + (year - 1975) * 18.15)
+    candidate_x <- (predicted_x - 7):(predicted_x + 7)
+    rows <- 190:672
+    support <- colSums(black[rows, candidate_x, drop = FALSE])
+    center_x <- candidate_x[which.max(support)]
+    columns <- (center_x - 5):(center_x + 5)
+    median_profile <- rowSums(black[rows, columns, drop = FALSE])
+    median_y <- which.max(median_profile) + rows[1] - 1L
+    hits <- which(band[rows, columns, drop = FALSE], arr.ind = TRUE)
+    if (!nrow(hits)) return(c(value = NA_real_, lwr = NA_real_, upr = NA_real_))
+    limits <- range(hits[, 1] + rows[1] - 1L)
+    limits <- ssb_value(limits)
+    c(value = ssb_value(median_y), lwr = min(limits), upr = max(limits))
+  }, c(value = 0, lwr = 0, upr = 0)))
+  rownames(digitized) <- as.character(years)
+  colnames(digitized) <- c("value", "lwr", "upr")
+  if (any(!is.finite(digitized))) {
+    abort("A yearly median or credible interval could not be digitized from Figure 23.")
+  }
+  if (abs(digitized["2015", "value"] - 55) > 5) {
+    abort("The digitized 2015 SSB does not agree with the report's 55,023 t estimate.")
+  }
+  out <- add_annual_output(
+    assessment_id, "biomass", "SSB", years, digitized[, "value"] * 1000,
+    "t", "digitized", "DFO Research Document 2016/057, Figure 23, p. 41",
+    paste(
+      "Annual SSB median and visible 95% credible interval digitized from the",
+      "figure; kilotonnes converted to tonnes. Values are approximate at the",
+      "raster resolution. The 2015 median uses the exact 55,023 t value reported",
+      "in the text; its interval is digitized from the figure."
+    )
+  )
+  out$lwr <- pmin(digitized[, "lwr"] * 1000, out$value)
+  out$upr <- pmax(digitized[, "upr"] * 1000, out$value)
+  out$value[out$year == 2015L] <- 55023
+  out
+}
+
 n_at_age <- n_table$value[, seq_along(ages), drop = FALSE]
 outputs <- list(
   add_age_outputs(n_table, years, ages, "population", "numbers_at_age",
@@ -297,10 +452,10 @@ outputs <- list(
     n_at_age[, "4"], "thousand fish", "derived_source_output",
     "DFO Research Document 2016/057, Table 7, p. 18",
     "Recruitment represented by January 1 abundance at age 4 in the same calendar year; no uncertainty is available."),
-  add_annual_output(assessment_id, "biomass", "SSB", 2015L, 55023,
-    "t", "official_document", "DFO Research Document 2016/057, p. 7",
-    "2015 beginning-of-year spawning stock biomass, reported as the MCMC median. The source shows uncertainty only as a figure, not a numeric interval.")
+  NULL
 )
+outputs[[4]] <- digitize_ssb_figure()
+outputs <- c(outputs, list(digitize_rate_figure()))
 outputs <- do.call(rbind, outputs)
 
 indicator_output <- add_annual_output(
@@ -327,7 +482,7 @@ assessments <- data.frame(
   inputs_status = c("complete", "partial"),
   outputs_status = c("partial", "partial"),
   notes = c(
-    "Most recent detailed production assessment recovered. Official model inputs are represented, but annual F, M and SSB values and the ADMB production files are unavailable as machine-readable outputs.",
+    "Most recent detailed production assessment recovered. Annual F, M and SSB series are digitized from Figures 21 and 23, but some fishing-mortality points are obscured by overlapping age groups. Catchability and survey-error estimates and ADMB production files remain unavailable as machine-readable outputs.",
     "The 2024 interim indicator update was published in 2025. The year fields identify the indicator endpoint, not a fitted population-model terminal year. It reports a survey-derived three-year biomass-index average and is recorded separately from the 2016 VPA."),
   stringsAsFactors = FALSE
 )

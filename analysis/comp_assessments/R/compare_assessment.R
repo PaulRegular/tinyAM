@@ -48,13 +48,25 @@
   if (length(rows)) do.call(rbind, rows) else NULL
 }
 
-.assessment_age_comparison_cells <- function(source, tiny, ages, groups = NULL) {
+.assessment_age_comparison_cells <- function(source, tiny, ages, groups = NULL,
+                                             group_weights = NULL,
+                                             group_aggregation = "sum") {
   if (is.null(source) || is.null(tiny) ||
     !all(c("year", "est") %in% names(source)) ||
     !all(c("year", "age", "est") %in% names(tiny))) {
     return(list(rows = NULL, reason = "An age-specific source or tinyAM surface is unavailable."))
   }
   if (is.null(groups)) groups <- list()
+  if (!group_aggregation %in% c("sum", "n_weighted_mean")) {
+    stop("group_aggregation must be 'sum' or 'n_weighted_mean'.")
+  }
+  if (length(groups) && group_aggregation == "n_weighted_mean" &&
+    (is.null(group_weights) ||
+      !all(c("year", "age", "est") %in% names(group_weights)))) {
+    return(list(rows = NULL, reason = paste(
+      "Official N-at-age weights are required to compare a grouped mortality rate."
+    )))
+  }
   if (!is.list(groups) || (length(groups) &&
     (is.null(names(groups)) || anyNA(names(groups)) || any(!nzchar(names(groups))) ||
       anyDuplicated(names(groups))))) {
@@ -141,6 +153,18 @@
         !setequal(tiny_group$age, groups[[label]]) || any(!is.finite(tiny_group$est))) {
         next
       }
+      tiny_value <- sum(tiny_group$est)
+      if (group_aggregation == "n_weighted_mean") {
+        weights <- group_weights$est[match(
+          paste(year, tiny_group$age),
+          paste(group_weights$year, group_weights$age)
+        )]
+        if (length(weights) != nrow(tiny_group) || any(!is.finite(weights)) ||
+          any(weights < 0) || sum(weights) <= 0) {
+          next
+        }
+        tiny_value <- stats::weighted.mean(tiny_group$est, weights)
+      }
       age_text <- if (length(groups[[label]]) > 1L &&
         all(diff(sort(groups[[label]])) == 1L)) {
         paste(range(groups[[label]]), collapse = "-")
@@ -149,12 +173,15 @@
       }
       rows[[length(rows) + 1L]] <- data.frame(
         year = year, age = label, source = source$est[selected],
-        tinyAM = sum(tiny_group$est),
-        definition = paste0(
-          "Reported age group ", label,
-          " compared with the sum of tinyAM ages ",
-          age_text
-        ),
+        tinyAM = tiny_value,
+        definition = if (group_aggregation == "n_weighted_mean") {
+          paste0("Reported age group ", label,
+            " compared with the official-N-weighted mean of tinyAM ages ",
+            age_text)
+        } else {
+          paste0("Reported age group ", label,
+            " compared with the sum of tinyAM ages ", age_text)
+        },
         stringsAsFactors = FALSE
       )
     }
@@ -254,8 +281,15 @@
     comparison_definition <- comparison_definitions[[metric]]
     if (metric %in% c("N", "F", "M", "biomass_at_age", "ssb_mat") &&
       !is.null(source) && !is.null(tiny)) {
+      group_aggregation <- if (metric %in% c("F", "M")) {
+        "n_weighted_mean"
+      } else {
+        "sum"
+      }
       cells <- .assessment_age_comparison_cells(
-        source, tiny, ages, comparison_age_groups[[metric]]
+        source, tiny, ages, comparison_age_groups[[metric]],
+        group_weights = if (group_aggregation == "n_weighted_mean") native$N else NULL,
+        group_aggregation = group_aggregation
       )
       if (!is.null(cells$rows) && nrow(cells$rows)) {
         common <- cells$rows
