@@ -247,9 +247,10 @@ for (name in c("inputs", "outputs")) {
   blank_year <- is.na(x$year) | !nzchar(as.character(x$year))
   if (name == "outputs" && any(blank_year & !x$measure %in% c(
     "q", "q_power", "process_sd", "observation_sd", "mat_beta1", "mat_beta2",
-    "growth_length_at_age", "growth_rate", "growth_sd_length_at_age"
+    "growth_length_at_age", "growth_rate", "growth_sd_length_at_age",
+    "Fmsy", "Bmsy", "msy"
   ))) {
-    stop("outputs$year may be blank only for time-invariant parameter estimates or SD estimates.", call. = FALSE)
+    stop("outputs$year may be blank only for time-invariant estimates or SD estimates.", call. = FALSE)
   }
   age_required <- if (name == "inputs") {
     x$measure %in% c(
