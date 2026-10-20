@@ -68,3 +68,12 @@ the raw results; they were not retried, tuned or silently discarded. All
 nonlinear calls produced the intended applicability warning, and failed
 numerical checks produced an additional warning. A computable criterion does
 not make a failed fit suitable for model selection.
+
+## Package verification
+
+The targeted criterion tests passed 64 assertions. The final package check
+passed all 2,922 assertions, with no failures, warnings or skips;
+`R CMD check --no-manual` returned `Status: OK` on R 4.6.1.
+Comparing the likelihood against `main` at `8b4730c` gave exactly zero
+differences in objectives, gradients and N/F/M/SSB/observation reports for
+representative N-IID/F-RW and M-AR1/F-IID configurations.
