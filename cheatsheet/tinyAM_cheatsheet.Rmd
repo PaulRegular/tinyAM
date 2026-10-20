@@ -53,10 +53,12 @@ if (!identical(current_md5, example$provenance$example_md5)) {
 write_code <- function(file, names) {
   code <- unlist(lapply(names, excerpt), use.names = FALSE)
   if (file == "data") code <- code[!grepl("^#", code)]
+  if (file == "plain_list") code <- sub("^# ?", "", code)
   writeLines(c("\\begin{rcode}", code, "\\end{rcode}"),
              paste0("cache/code_", file, ".tex"))
 }
 write_code("data", "inputs")
+write_code("plain_list", "plain_list")
 for (name in c("baseline", "models", "dashboard", "hindcast")) {
   write_code(name, name)
 }
@@ -125,9 +127,9 @@ rsvg::rsvg_pdf(file.path(repo, "man/figures/logo.svg"), "logo.pdf")
 \begin{minipage}[t]{.32\linewidth}\vspace{0pt}
 \tablelabel{catch}\par\vspace{.5mm}\input{cache/table_catch.tex}
 \end{minipage}\hfill
-\begin{minipage}[t]{.66\linewidth}\vspace{0pt}
+\begin{minipage}[t]{.67\linewidth}\vspace{0pt}
 \tablelabel{index}\par\vspace{.5mm}\input{cache/table_index.tex}
-\end{minipage}\par\vfill
+\end{minipage}\par\vspace{2mm}
 \begin{minipage}[t]{.28\linewidth}\vspace{0pt}
 \tablelabel{weight}\par\vspace{.5mm}\input{cache/table_weight.tex}
 \end{minipage}\hfill
@@ -137,39 +139,42 @@ rsvg::rsvg_pdf(file.path(repo, "man/figures/logo.svg"), "logo.pdf")
 \begin{minipage}[t]{.46\linewidth}\vspace{0pt}
 \tablelabel{pop\_covariates}\par\vspace{.5mm}\input{cache/table_pop_covariates.tex}
 \end{minipage}\par\vspace{1mm}
-\panelnote{\texttt{pop\_covariates} is optional.}\par\vfill
-\inputcode{data}\par\vfill
-\panelnote{The helper validates the tables. Plain lists also work: use \textbf{\texttt{check\_tam\_data(dat)}}; \texttt{as\_tam\_data(dat)} adds compact printing.}\par\vspace{1mm}
-\panelnote{Label catch/index/weight units. Maturity is a proportion; sampling and spawning times are year fractions. Catch/index may contain \texttt{NA}; weight/maturity cannot. Population covariates need no \texttt{obs} column.}
+\panelnote{\texttt{pop\_covariates} is optional.}\par\vspace{1mm}
+\inputcode{data}\par\vspace{1mm}
+\smallkey{Or use a plain list}\par\vspace{.5mm}
+\inputcode{plain_list}\par\vspace{.5mm}
+\panelnote{Plain lists work; \texttt{as\_tam\_data()} adds compact printing.}\par\vspace{1mm}
+\panelnote{Units are stated. Maturity is a proportion; times are year fractions. Catch/index may be \texttt{NA}; biology must be complete. Covariates need year/age keys, no \texttt{obs}.}
 \end{minipage}\hfill
-\begin{minipage}[t][164mm][s]{.34\linewidth}\vspace{0pt}
+\begin{minipage}[t][164mm][s]{.31\linewidth}\vspace{0pt}
 \sectitle{2}{Specify model hypotheses}{}
 \smallkey{Base: constant natural mortality}\par\vspace{1mm}
 \panelnote{Fishing varies; natural mortality is constant. These are example settings, not package defaults.}\par\vspace{1mm}
-\inputcode{baseline}\par\vfill
+\inputcode{baseline}\par\vspace{2mm}
 \smallkey{Alternative survival assumptions}\par\vspace{1mm}
 \inputcode{updates}\par\vspace{2mm}
 \panelnote{\textbf{N IID:} apparent survival varies. Unexplained cohort changes may reflect mortality or migration; their causes are not separately estimated.}\par\vspace{2mm}
 \panelnote{\textbf{M AR1:} fishing and natural mortality vary; M departures are shared within age blocks. Migration is considered negligible.}\par\vspace{2mm}
-\inputcode{models}\par\vfill
+\inputcode{models}\par\vspace{2mm}
 \panelnote{Partial updates retain other settings. Use \texttt{check\_tam()} to inspect numerical diagnostics and statistical support before interpreting results.}
 \end{minipage}\hfill
-\begin{minipage}[t][164mm][s]{.25\linewidth}\vspace{0pt}
+\begin{minipage}[t][164mm][s]{.28\linewidth}\vspace{0pt}
 \begin{minipage}[t]{.53\linewidth}\sectitle{3}{Visualize\\and compare}{}\end{minipage}\par\vspace{1mm}
 \smallkey{Explore model fits}\par\vspace{1mm}
 \inputcode{dashboard}\par\vspace{2mm}
-\panelnote{\href{https://paulregular.github.io/tinyAM/cheatsheet/}{\textbf{Online dashboard}} $\cdot$ \href{output/tinyAM_dashboard.html}{Local dashboard}. Fishery $\rightarrow$ Numbers-at-age and Residuals.}\par\vspace{3mm}
+\href{https://paulregular.github.io/tinyAM/cheatsheet/}{\textcolor{tamnavy}{\underline{\textbf{Open the online dashboard}}}}\par\vspace{.5mm}
+\panelnote{Interactive views of model fits, population patterns and residuals.}\par\vspace{2mm}
 \smallkey{Test survey forecast skill}\par\vspace{1mm}
 \inputcode{hindcast}\par\vspace{2mm}
-\panelnote{Returns retrospective summaries and one-year-ahead survey forecast scores, conditional on observed catch biomass.}\par\vspace{2mm}
+\panelnote{Retrospective summaries plus one-year-ahead survey scores, conditional on observed catches.}\par\vspace{1.5mm}
 \smallkey{Survey forecast log-RMSE}\par\vspace{1mm}
 \input{cache/table_scores.tex}\par\vspace{1mm}
-\panelnote{Lower is better. Rank only complete, numerically acceptable runs with identical forecast observations. Folds count scored years. * Main fit did not converge.}\par\vspace{4mm}
+\panelnote{Lower is better. Rank complete, converged fits scored on identical observations. Folds are scored years; * did not converge.}\par\vspace{2mm}
 \smallkey{SSB stability: latest 20 years}\par\vspace{1mm}
 \includegraphics[width=\linewidth]{cache/hindcast_ssb.pdf}\par\vspace{1mm}
-\panelnote{\input{cache/stability_model.tex} historical peels illustrate stability. RMSE scores survey observations given actual removals; it does not score SSB.}
+\panelnote{\input{cache/stability_model.tex} historical peels show stability, not forecast accuracy. RMSE scores survey observations given actual removals.}
 \end{minipage}
-\pagefooter{Check assumptions and diagnostics. Build: \texttt{examples.R prepare}, then \texttt{examples.R render}. github.com/PaulRegular/tinyAM}
+\par\vfill\noindent{\color{tamnavy}\rule{\linewidth}{.5pt}}\par
 \clearpage
 ```
 ```{=latex}

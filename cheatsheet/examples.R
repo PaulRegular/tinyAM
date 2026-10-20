@@ -90,12 +90,23 @@ main <- function(mode = "prepare") {
   population_data <- source$pop_covariates
 # ---- inputs ----
 dat <- make_tam_data(
-  catch = catch_data, index = index_data,
-  weight = weight_data, maturity = maturity_data,
+  catch = catch_data,
+  index = index_data,
+  weight = weight_data,
+  maturity = maturity_data,
   pop_covariates = population_data
 )
-# A plain list also works: check_tam_data(dat)
+check_tam_data(dat)
+# A plain list plus check_tam_data() also works
 # Optional class conversion: as_tam_data(dat)
+# ---- end ----
+# ---- plain_list ----
+# dat <- list(
+#   catch = catch_data, index = index_data,
+#   weight = weight_data, maturity = maturity_data,
+#   pop_covariates = population_data
+# )
+# check_tam_data(dat)
 # ---- end ----
   fit_key <- list(sources = sources, example = provenance$example_md5,
                   data = fingerprint(dat), runtime = provenance$runtime)
@@ -126,13 +137,18 @@ dat <- make_tam_data(
   base <- cached("fit_Base", fit_key, function() {
 # ---- baseline ----
 base <- fit_tam(
-  dat, years = 1983:2024, ages = 2:14,
+  dat,
+  years = 1983:2024,
+  ages = 2:14,
   N_settings = list(process = "off", init = "exp"),
   rec_settings = list(process = "rw"),
   F_settings = list(process = "ar1", mu_form = ~ 1),
   M_settings = list(process = "off", mu_supplied = ~ I(0.3)),
   catch_settings = list(sd_form = ~ 1),
-  index_settings = list(sd_form = ~ 1, q_form = ~ mono(q_block))
+  index_settings = list(
+    sd_form = ~ 1,
+    q_form = ~ mono(q_block)
+  )
 )
 # ---- end ----
     base
@@ -140,16 +156,22 @@ base <- fit_tam(
   if (is.null(base)) cli::cli_abort("The baseline could not be fitted; inspect cache/fit_Base.rds.")
   N_iid <- cached("fit_N_iid", fit_key, function() {
 # ---- N_iid ----
-N_iid <- update(base,
-  N_settings = list(process = "iid"))
+N_iid <- update(
+  base,
+  N_settings = list(process = "iid")
+)
 # ---- end ----
     N_iid
   })
   M_ar1 <- cached("fit_M_ar1", fit_key, function() {
 # ---- M_ar1 ----
-M_ar1 <- update(base,
-  M_settings = list(process = "ar1",
-    age_breaks = c(2, 4, 6, 8, 14)))
+M_ar1 <- update(
+  base,
+  M_settings = list(
+    process = "ar1",
+    age_breaks = c(2, 4, 6, 8, 14)
+  )
+)
 # ---- end ----
     M_ar1
   })
