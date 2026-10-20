@@ -39,6 +39,17 @@ The checked PLOS_2026_analysis/metadata_no_age_corection.csv has one NEFSC haddo
 ## Detailed framework source
 
 The NOAA portal's 2022 Research Track search (species 5, stock 1, review type 5) provides the full assessment text and GBHaddock_Benchmark21_WHAM_BASE_Rcode.zip, both cached. The framework script reads BASE2_FORWHAM_DROPY41_2019.DAT and configures NAA_re=list(cor='2dar1', sigma='rec+1') in the base run. This establishes a framework source trail, but neither its 2019 numerical data nor its example fitted RDS references replace the 2026 official inputs. The current annual control settings still require verification.
+
+## Separate 2022 Management Track source bundle
+
+The 2022 Management Track is a separate run from the 2022 Research Track framework. NOAA's SASI portal identifies it with `review_type_id=2`; the framework search is `review_type_id=5`. The Management Track bundle [`2022_HAD_GB.zip`](https://apps-nefsc.fisheries.noaa.gov/saw/sasi_files.php?year=2022&species_id=5&stock_id=1&review_type_id=2&filename=2022_HAD_GB.zip) was downloaded on 2026-10-20 (SHA-256 `7519E03B78AD5F2D3E1A6577B5C98FA9D2407D2DFF289067FC99AF77300C4004`). It contains the 2022 update report, a 14-page input-figure PDF, an 18-page results-figure PDF, survey figures, and diagnostics. No native fitted object, input data table, WHAM data file, or machine-readable age-specific result table was found in the archive.
+
+The input figures show total catch and catch age composition; three rescaled survey indices and their age-composition plots; annual weight-at-age for spawning biomass, January 1 biomass, catch, the fishery, and the indices; and maturity curves for selected years. These are useful checks on the model's streams and coverage, but they are not the original numerical series. In particular, the age-composition bubble plots provide only reference bubble sizes, and the index series are explicitly rescaled without a recoverable conversion back to the fitted input values. Digitizing them would introduce unquantified measurement and scale error, so they are not imported as exact official inputs.
+
+The results PDF provides plotted historical trends and model diagnostics, not a fitted object or full numerical N-at-age and F-at-age matrices suitable for a complete comparison. It therefore does not supply a source-complete historical assessment for a tinyAM translation. The figure PDFs, report, original bundle, and portal search response are retained in the gitignored source cache with provenance in its local manifest.
+
+The six multipart files `2022_HAD_GB_1.zip` through `_6.zip` are the distinct 2022 Research Track archive. Its code and outputs end in 2019 and do not represent the 2022 Management Track production run. Neither 2022 track is mixed into the 2026 record. The 2026 assessment remains the latest official run; its missing age-structured inputs and outputs continue to prevent a faithful tinyAM fit.
+
 ## Initial canonical import
 
 The 2026 assessment record now contains eight published Catch for Assessment totals (2018–2025), the constant nine-age M vector stored once, 24 historical outputs (SSB, Fbar and age-1 recruitment for 2018–2025), and 16 documented assumptions. Terminal SSB/F match the final peer-review report. Published terminal 95% intervals are retained; missing SEs and other intervals are not invented. The official process is 2DAR1 and M is fixed at 0.2, according to final TOR 3.
