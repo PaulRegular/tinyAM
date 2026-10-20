@@ -36,7 +36,7 @@
 \pagestyle{empty}
 \setlength{\parindent}{0pt}
 \setlength{\parskip}{0pt}
-\setlength{\tabcolsep}{2pt}
+\setlength{\tabcolsep}{1.6pt}
 \setlength{\fboxsep}{1pt}
 \setlist[itemize]{leftmargin=*,nosep,topsep=1pt}
 \setlength{\abovedisplayskip}{2.5pt}
@@ -75,15 +75,15 @@
       {\includegraphics[height=38mm]{logo.pdf}};
   \end{tikzpicture}%
   \noindent\begin{minipage}[c]{.83\linewidth}
-  {\color{tamnavy}\fontsize{24}{27}\selectfont\bfseries #1}\\[.5mm]
+  {\fontsize{24}{27}\selectfont\bfseries\textcolor{tamnavy}{#1}}\\[.5mm]
   {\color{tamgrey}\fontsize{11}{13}\selectfont #2}
   \end{minipage}\par\vspace{6mm}
 }
 
 % Small printed input schematics: data stay in their original column order.
 \newenvironment{inputtable}[1]{%
-  \begingroup\fontsize{6.3}{8.3}\selectfont
-  \renewcommand{\arraystretch}{1.08}\arrayrulecolor{white}\rowcolors{2}{tampale}{tampale}\begin{tabular}{#1}%
+  \begingroup\fontsize{7.0}{9.0}\selectfont
+  \renewcommand{\arraystretch}{1.30}\arrayrulecolor{white}\rowcolors{2}{tampale}{tampale}\begin{tabular}{#1}%
 }{\end{tabular}\endgroup}
 \newcommand{\tablelabel}[1]{{\color{black}\ttfamily\fontsize{8}{9}\selectfont #1}}
 \newcommand{\tablegap}{\tikz[baseline=-.3ex]{%
