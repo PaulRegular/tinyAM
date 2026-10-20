@@ -21,6 +21,7 @@ assessments or management advice.
 | Translation, fitting, and comparison workflow | `TINYAM_TRANSLATION.md` |
 | Stock-specific source checks and unresolved gaps | `source_reviews/` |
 | Charbonneau–Keith Master catalogue crosswalk | `source_reviews/charbonneau_keith_master_catalogue.md` |
+| Gulf of Maine haddock source review | [source_reviews/nefsc_haddock_gulf_of_maine.md](source_reviews/nefsc_haddock_gulf_of_maine.md) |
 | Shared readers, converters, audits, and runners | `R/` |
 | Source imports and validators | `scripts/database/` |
 | Visible stock model calls and run drivers | `scripts/translation/` |
