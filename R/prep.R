@@ -1,3 +1,4 @@
+
 #' Cut integer sequences into labeled blocks (ages or years)
 #'
 #' @description
@@ -220,8 +221,8 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
       template <- template[!duplicated(template[groups]), , drop = FALSE]
       template$age <- plus_age
       plus_rows <- merge(template[, setdiff(names(template), "obs"), drop = FALSE],
-        plus_group,
-        by = groups
+                         plus_group,
+                         by = groups
       )
       df_out <- rbind(df[df$age < plus_age, , drop = FALSE], plus_rows[, names(df), drop = FALSE])
       return(df_out[order(df_out$age, df_out$year), ])
@@ -551,19 +552,19 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #' @eval .settings_usage("prepare_tam")
 #' @export
 prepare_tam <- function(
-  data,
-  years = NULL,
-  ages = NULL,
-  N_settings = list(process = "iid", init = "exp", sd_form = ~1),
-  rec_settings = list(process = "rw", mu_form = NULL, sd = NULL, phi = NULL),
-  F_settings = list(process = "rw", mu_form = NULL, sd_form = ~1, mean_ages = NULL),
-  M_settings = list(
-    process = "off", mu_form = NULL, mu_supplied = ~ I(0.2), sd_form = ~1,
-    age_breaks = NULL, first_dev_year = NULL, mean_ages = NULL
-  ),
-  catch_settings = list(sd_form = ~1, sd_supplied = NULL),
-  index_settings = list(sd_form = ~1, sd_supplied = NULL, q_form = ~q_block, q_link = "log"),
-  proj_settings = NULL
+    data,
+    years = NULL,
+    ages = NULL,
+    N_settings = list(process = "iid", init = "exp", sd_form = ~1),
+    rec_settings = list(process = "rw", mu_form = NULL, sd = NULL, phi = NULL),
+    F_settings = list(process = "rw", mu_form = NULL, sd_form = ~1, mean_ages = NULL),
+    M_settings = list(
+      process = "off", mu_form = NULL, mu_supplied = ~ I(0.2), sd_form = ~1,
+      age_breaks = NULL, first_dev_year = NULL, mean_ages = NULL
+    ),
+    catch_settings = list(sd_form = ~1, sd_supplied = NULL),
+    index_settings = list(sd_form = ~1, sd_supplied = NULL, q_form = ~q_block, q_link = "log"),
+    proj_settings = NULL
 ) {
   settings <- .complete_settings(mget(.settings_names))
   list2env(settings, envir = environment())
@@ -587,7 +588,7 @@ prepare_tam <- function(
   for (nm in c("years", "ages")) {
     x <- get(nm)
     if (!is.null(x) && (!is.numeric(x) || !length(x) ||
-      any(!is.finite(x)) || any(x != trunc(x)))) {
+                        any(!is.finite(x)) || any(x != trunc(x)))) {
       cli::cli_abort("{.arg {nm}} must be a nonempty vector of integer values.")
     }
   }
@@ -598,7 +599,7 @@ prepare_tam <- function(
   dat$years <- if (is.null(years)) seq(min(all_obs_years), max(all_obs_years)) else as.integer(years)
   dat$ages <- if (is.null(ages)) seq(min(all_obs_ages), max(all_obs_ages)) else as.integer(ages)
   if (min(dat$years) < min(all_obs_years) ||
-    max(dat$years) > max(all_obs_years)) {
+      max(dat$years) > max(all_obs_years)) {
     cli::cli_abort(c(
       "{.arg years} must fall within the years available in {.arg data}.",
       "x" = "Requested years: {min(dat$years)}-{max(dat$years)}.",
@@ -607,7 +608,7 @@ prepare_tam <- function(
     ))
   }
   if (min(dat$ages) < min(all_obs_ages) ||
-    max(dat$ages) > max(all_obs_ages)) {
+      max(dat$ages) > max(all_obs_ages)) {
     cli::cli_abort(c(
       "{.arg ages} must fall within the ages available in {.arg data}.",
       "x" = "Requested ages: {min(dat$ages)}-{max(dat$ages)}.",
@@ -681,7 +682,7 @@ prepare_tam <- function(
   if (dat$M_settings$process != "off") {
     start <- dat$M_settings$first_dev_year
     if (length(start) != 1L || !is.numeric(start) || !is.finite(start) ||
-      start != as.integer(start) || !start %in% dat$years[!dat$is_proj]) {
+        start != as.integer(start) || !start %in% dat$years[!dat$is_proj]) {
       cli::cli_abort("M_settings$first_dev_year must be a single historical modeled year.")
     }
   }
@@ -690,23 +691,23 @@ prepare_tam <- function(
 
   if (!"spawn_time" %in% names(dat$obs$maturity)) dat$obs$maturity$spawn_time <- 0
   empty_mat <- matrix(NA,
-    nrow = length(dat$years), ncol = length(dat$ages),
-    dimnames = list(year = dat$years, age = dat$ages)
+                      nrow = length(dat$years), ncol = length(dat$ages),
+                      dimnames = list(year = dat$years, age = dat$ages)
   )
   if (max(dat$obs$weight$age) > max(dat$ages)) {
     dat$plus_ages <- seq.int(max(dat$ages), max(dat$obs$weight$age))
     plus_dimnames <- list(year = dat$years, age = dat$plus_ages)
     dat$W_plus_input <- matrix(dat$obs$weight$obs[dat$obs$weight$age %in% dat$plus_ages],
-      length(dat$years), length(dat$plus_ages),
-      dimnames = plus_dimnames
+                               length(dat$years), length(dat$plus_ages),
+                               dimnames = plus_dimnames
     )
     dat$P_plus_input <- matrix(dat$obs$maturity$obs[dat$obs$maturity$age %in% dat$plus_ages],
-      length(dat$years), length(dat$plus_ages),
-      dimnames = plus_dimnames
+                               length(dat$years), length(dat$plus_ages),
+                               dimnames = plus_dimnames
     )
     dat$spawn_time_plus <- matrix(dat$obs$maturity$spawn_time[dat$obs$maturity$age %in% dat$plus_ages],
-      length(dat$years), length(dat$plus_ages),
-      dimnames = plus_dimnames
+                                  length(dat$years), length(dat$plus_ages),
+                                  dimnames = plus_dimnames
     )
     for (nm in c("weight", "maturity")) {
       dat$obs[[nm]] <- droplevels(dat$obs[[nm]][dat$obs[[nm]]$age %in% dat$ages, ])
@@ -733,9 +734,9 @@ prepare_tam <- function(
   dat$catch_settings <- catch_settings
   dat$index_settings <- index_settings
   if (!is.character(dat$index_settings$q_link) ||
-    length(dat$index_settings$q_link) != 1L ||
-    is.na(dat$index_settings$q_link) ||
-    !dat$index_settings$q_link %in% c("log", "logit")) {
+      length(dat$index_settings$q_link) != 1L ||
+      is.na(dat$index_settings$q_link) ||
+      !dat$index_settings$q_link %in% c("log", "logit")) {
     cli::cli_abort("index_settings$q_link must be either {.val log} or {.val logit}.")
   }
 
@@ -787,7 +788,7 @@ prepare_tam <- function(
     dat$F_mono_steps <- mean_design$mono_steps
     .check_mean_terms(dat, "F")
     if (nrow(dat$F_modmat) != nrow(dat$pop_data) ||
-      any(!is.finite(dat$F_modmat)) || !ncol(dat$F_modmat)) {
+        any(!is.finite(dat$F_modmat)) || !ncol(dat$F_modmat)) {
       cli::cli_abort("F_settings$mu_form must produce a finite, non-empty design for every modeled year and age.")
     }
     historical <- dat$F_modmat[!dat$is_proj[match(dat$pop_data$year, dat$years)], , drop = FALSE]
@@ -848,7 +849,7 @@ prepare_tam <- function(
   for (nm in names(design_tables)) {
     x <- dat[[nm]]
     if (is.matrix(x) && (nrow(x) != nrow(if (design_tables[[nm]] == "population") dat$pop_data else dat$obs[[design_tables[[nm]]]]) ||
-      any(!is.finite(x)))) {
+                         any(!is.finite(x)))) {
       cli::cli_abort("{nm} must have one finite row per observation. Check for missing or non-finite formula covariates.")
     }
   }
@@ -891,9 +892,10 @@ prepare_tam <- function(
 .log_supplied <- function(formula, data, label) {
   x <- stats::model.frame(formula, data = data, na.action = stats::na.pass)
   if (ncol(x) != 1L || !is.numeric(x[[1L]]) ||
-    !nrow(x) %in% c(1L, nrow(data)) || any(!is.finite(x[[1L]])) ||
-    any(x[[1L]] <= 0)) {
+      !nrow(x) %in% c(1L, nrow(data)) || any(!is.finite(x[[1L]])) ||
+      any(x[[1L]] <= 0)) {
     cli::cli_abort("{label} must supply one positive finite value, or one per observation row.")
   }
   log(x[[1L]])
 }
+
