@@ -3,6 +3,7 @@ id <- "nefsc_haddock_georges_bank_2026"
 x <- inputs[inputs$assessment_id == id, ]
 y <- outputs[outputs$assessment_id == id, ]
 a <- assessments[assessments$assessment_id == id, ]
+settings <- assumptions[assumptions$assessment_id == id, ]
 cache <- "analysis/comp_assessments/source_cache/nefsc_haddock_georges_bank_2026"
 text <- readLines(file.path(cache, "2026_assessment_text.txt"), encoding = "UTF-8", warn = FALSE)
 review <- paste(readLines(file.path(cache, "2026_peer_review_text.txt"), encoding = "UTF-8", warn = FALSE), collapse = "\n")
@@ -21,6 +22,20 @@ stopifnot(
   a$assessment_year == 2026,
   a$model_family == "WHAM", a$framework_year == 2022,
   a$inputs_status == "partial", a$outputs_status == "partial", a$assumptions_status == "partial"
+)
+setting_value <- function(component, setting) {
+  value <- settings$value[settings$component == component & settings$setting == setting]
+  stopifnot(length(value) == 1)
+  value
+}
+stopifnot(
+  setting_value("assessment", "diagnostic_run") == "mt26_redo.no.fall2025_osa",
+  setting_value("catch", "composition_likelihood") == "Logistic-normal; zero proportions treated as missing",
+  setting_value("index", "composition_likelihood") == "Logistic-normal; zero proportions treated as missing",
+  setting_value("recruitment", "model") == "Random about mean",
+  setting_value("environment", "covariates") == "None",
+  setting_value("F", "selectivity_structure") == "Five blocks: fleet 1 uses logistic blocks 1–2; indices 1–3 use age-specific blocks 3–5",
+  all(grepl("summary_text.png", settings$source_reference[settings$setting %in% c("diagnostic_run", "composition_likelihood", "model", "covariates", "selectivity_structure")], fixed = TRUE))
 )
 catch <- x[x$type == "catch", ]
 stopifnot(
@@ -72,4 +87,4 @@ stopifnot(
   !any(x$type == "index"), !any(x$measure == "numbers_at_age"),
   all(is.na(y$se))
 )
-message("Georges Bank haddock historical summaries, projections, and constant M verified; missing age-structured streams remain explicit.")
+message("Georges Bank haddock summaries, projections, fixed M, and diagnostic run settings verified; missing numerical age-structured streams remain explicit.")
