@@ -23,7 +23,7 @@ assessments or management advice.
 | Charbonneau–Keith Master catalogue crosswalk | `source_reviews/charbonneau_keith_master_catalogue.md` |
 | Gulf of Maine haddock source review | [source_reviews/nefsc_haddock_gulf_of_maine.md](source_reviews/nefsc_haddock_gulf_of_maine.md) |
 | Scup source review | [source_reviews/ck_nefsc_saw_chrysops_usatl.md](source_reviews/ck_nefsc_saw_chrysops_usatl.md) |
-| Central Baltic herring source review | [source_reviews/ck_ices_wgbfas_harengus_bs_25_29_32.md](source_reviews/ck_ices_wgbfas_harengus_bs_25_29_32.md) |
+| Central Baltic herring | [source review](source_reviews/ck_ices_wgbfas_harengus_bs_25_29_32.md) · [tinyAM translation](scripts/translation/stocks/ices_herring_central_baltic_2026.R) |
 | Shared readers, converters, audits, and runners | `R/` |
 | Source imports and validators | `scripts/database/` |
 | Visible stock model calls and run drivers | `scripts/translation/` |
