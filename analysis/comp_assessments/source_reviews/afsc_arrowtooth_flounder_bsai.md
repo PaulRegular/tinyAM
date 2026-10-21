@@ -5,18 +5,29 @@
 Charbonneau–Keith identity `AFSC_BSAI_Atheresthes_stomais` retains the
 catalogue's spelling; the species is *Atheresthes stomias*. This is not
 Kamchatka flounder, a Gulf of Alaska stock, or the CEATTLE multispecies model.
-The December 2022 SSC selected **Model 18.9 (2022)**. The 2024 document explicitly
-updates catches/projections without rerunning the assessment; it points to
-the detailed 2022 model and schedules the next full assessment for 2026.
-Do not substitute its later projection outputs for the historical 2022 fit.
+The December 2022 SSC selected **Model 18.9 (2022)**. The 2024 document updates
+catches/projections without rerunning the assessment and scheduled the next
+full assessment for 2026 at that time. The newer 2026 off-cycle report now
+lists 2027; neither projection report replaces the detailed 2022 fit.
 
-The 2022 and 2024 reports, SSC confirmation and public author-repository
-inventories are cached under `source_cache/afsc_arrowtooth_flounder_bsai/` with
-URLs, retrieval dates and checksums. Searches covered AFSC assessment/code
-repositories, the cited NOAA/NPFMC portals and the authors' public repositories.
-No matching production native input/object was recovered. The old framework
-archive URLs returned 404; the retained 2022 detailed methods describe the
-unchanged 2018 generalized model. Unresolved settings are not called absent.
+The detailed 2022 SAFE and the 2024 off-cycle projection report are cached
+under `source_cache/afsc_arrowtooth_flounder_bsai_2022/` with URLs, retrieval
+dates and SHA-256 checksums. Searches covered AFSC assessment/code repositories,
+the cited NOAA/NPFMC portals and the authors' public repositories. No matching
+production native input/object was recovered. The old framework archive URLs
+returned 404; the retained 2022 detailed methods describe the unchanged 2018
+generalized model. Unresolved settings are not called absent.
+
+The September 2026 [off-cycle projection report](https://meetings.npfmc.org/CommentReview/DownloadFile?fileName=6.+BSAI+Arrowtooth+Flounder.pdf&p=41b6de60-46cb-436c-a828-e5cfb4e47ffd.pdf)
+is also cached locally with its retrieval details and checksum. It is explicitly
+labelled as pre-dissemination peer review and not formally disseminated. The
+report says the off-cycle update did not rerun the assessment or change its
+inputs: it uses the 2018 Model 18.9 as updated in the 2022 full assessment and
+updates catch information for projections. It schedules the next full
+assessment for 2027; the 2024 report's earlier schedule of 2026 has therefore
+been superseded. This draft does not replace the 2022 detailed production run
+or resolve the missing numerical likelihood inputs, so none of its projected
+values are imported into the canonical assessment record.
 
 ## Inputs and activation
 
