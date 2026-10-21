@@ -194,11 +194,11 @@
 .translation_biomass_to_kg <- function(value, unit) {
   unit <- tolower(trimws(as.character(unit)))
 
-  if (grepl("^(million|1,000,000) (t|tonnes?)( |$)", unit)) {
+  if (grepl("^(million|1,000,000) (metric )?(t|tons?|tonnes?)( |$)", unit)) {
     return(value * 1e9)
   }
 
-  if (grepl("^(thousand|1000|1,000) (t|tonnes?)( |$)", unit)) {
+  if (grepl("^(thousand|1000|1,000) (metric )?(t|tons?|tonnes?)( |$)", unit)) {
     return(value * 1e6)
   }
 
@@ -211,6 +211,7 @@
   }
 
   if (grepl("tonne", unit, fixed = TRUE) ||
+    grepl("^metric tons?($| )", unit) ||
     grepl("(^|[^a-z])t($|[^a-z])", unit)) {
     return(value * 1000)
   }

@@ -1,4 +1,9 @@
 source("analysis/comp_assessments/R/run_assessment.R")
+stopifnot(
+  .translation_biomass_to_kg(12, "metric tons") == 12000,
+  .translation_biomass_to_kg(12, "metric tonnes") == 12000,
+  .translation_biomass_to_kg(12, "million metric tons") == 12e9
+)
 .compare_fixture <- function(fit, reference, ...) {
   measures <- c(
     N = "numbers_at_age", F = "fishing_mortality_at_age",
