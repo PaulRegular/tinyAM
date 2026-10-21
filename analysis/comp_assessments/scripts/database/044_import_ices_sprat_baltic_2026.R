@@ -126,7 +126,8 @@ new_assumption <- function(component, setting, value, source_reference,
 
 new_output <- function(type, measure, year, value, unit, age = NA_integer_,
                        age_group = NA_character_, lwr = NA_real_, upr = NA_real_,
-                       source_reference, notes = "") {
+                       source_reference, notes = "",
+                       source_type = "official_table") {
   n <- length(value)
   data.frame(
     assessment_id = assessment_id, type = type, measure = measure,
@@ -135,7 +136,7 @@ new_output <- function(type, measure, year, value, unit, age = NA_integer_,
     age = rep(age, length.out = n), age_group = rep(age_group, length.out = n),
     value = value, se = NA_real_, lwr = rep(lwr, length.out = n),
     upr = rep(upr, length.out = n), unit = unit,
-    source_type = "official_table", source_reference = source_reference,
+    source_type = source_type, source_reference = source_reference,
     notes = notes, stringsAsFactors = FALSE
   )
 }
@@ -311,6 +312,7 @@ assumptions <- do.call(rbind, list(
 summary <- summary_table()
 n_surface <- age_table("7.18", years = 1974:2026)
 f_surface <- age_table("7.19", years = 1974:2025)
+total_numbers <- aggregate(value ~ year, n_surface, sum)
 output_reference <- function(table) paste(report_url, "Table", table)
 outputs <- rbind(
   new_output("mortality", "natural_mortality_at_age",
@@ -326,6 +328,15 @@ outputs <- rbind(
     age_group = ifelse(n_surface$age == 8L, "8+", NA_character_),
     source_reference = output_reference("7.18"),
     notes = "SAM point estimates; age 8 is the 8+ group, and 2026 is the intermediate-year estimate."
+  ),
+  new_output("population", "total_numbers", total_numbers$year,
+    total_numbers$value, "million fish",
+    source_reference = output_reference("7.18"),
+    notes = paste(
+      "Derived by summing reported numbers-at-age for ages 1-8; age 8 is the 8+ group.",
+      "Values inherit report rounding; 2026 is an intermediate-year estimate."
+    ),
+    source_type = "derived_source_output"
   ),
   new_output("mortality", "fishing_mortality_at_age", f_surface$year,
     f_surface$value, "per year",

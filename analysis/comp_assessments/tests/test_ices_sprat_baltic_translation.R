@@ -22,6 +22,11 @@ bass_2001 <- subset(inputs, type == "index" & survey == "BASS_May_SD24_26_28" &
 m_1974 <- subset(inputs, type == "M" & year == 1974 & age == 1)
 ssb_2025 <- subset(outputs, measure == "SSB" & year == 2025)
 recruitment_2026 <- subset(outputs, measure == "recruitment" & year == 2026)
+total_numbers <- subset(outputs, measure == "total_numbers")
+n_at_age <- subset(outputs, measure == "numbers_at_age")
+expected_total_numbers <- tapply(
+  as.numeric(n_at_age$value), n_at_age$year, sum
+)
 
 stopifnot(
   tinyAM::check_obs(translated$obs),
@@ -46,6 +51,17 @@ stopifnot(
   identical(as.numeric(m_1974$value), 0.75),
   identical(as.numeric(ssb_2025$value), 620553),
   identical(as.numeric(recruitment_2026$value), 123196),
+  nrow(total_numbers) == 53L,
+  identical(as.integer(total_numbers$year), 1974:2026),
+  identical(total_numbers$source_type,
+    rep("derived_source_output", 53L)),
+  all(total_numbers$unit == "million fish"),
+  all(is.na(total_numbers$age)),
+  isTRUE(all.equal(
+    as.numeric(total_numbers$value),
+    as.numeric(expected_total_numbers[as.character(total_numbers$year)])
+  )),
+  any(grepl("2026 is an intermediate-year estimate", total_numbers$notes)),
   identical(dat$N_settings$process, "iid"),
   identical(dat$N_settings$init, "exp"),
   identical(dat$F_settings$process, "rw"),
