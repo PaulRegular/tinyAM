@@ -247,6 +247,26 @@ outputs <- rbind(
   )
 )
 
+biomass_surface <- n_surface * dat$stockMeanWeight
+biomass_grid <- expand.grid(year = years, age = ages)
+biomass_value <- as.vector(biomass_surface)
+biomass_log_sd <- as.vector(t(fit$plsd$logN))
+outputs <- rbind(outputs, output_rows(
+  "biomass", "biomass_at_age", biomass_grid$year, biomass_value,
+  "tonnes", biomass_grid$age,
+  ifelse(biomass_grid$age == max(ages), paste0(max(ages), "+"), ""),
+  se = biomass_value * biomass_log_sd,
+  lwr = exp(log(biomass_value) - stats::qnorm(0.975) * biomass_log_sd),
+  upr = exp(log(biomass_value) + stats::qnorm(0.975) * biomass_log_sd),
+  source_type = "derived_source_output",
+  source_reference = paste0(model_url,
+    "/run/model.RData; fit$pl$logN and fit$data$stockMeanWeight"),
+  notes = paste(
+    "Derived as fitted N (thousand fish) times fixed stock weight (kg/fish);",
+    "the numerical product is tonnes. SE and 95% limits reflect N uncertainty",
+    "only and treat stock weights as fixed."
+  )
+))
 summary_table <- function(fun, measure, type, unit, age_group = "") {
   tab <- fun(fit)
   years_tab <- as.integer(rownames(tab))

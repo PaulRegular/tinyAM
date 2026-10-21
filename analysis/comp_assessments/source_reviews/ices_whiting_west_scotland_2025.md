@@ -36,7 +36,7 @@ Catch observation errors are lognormal with the source age-variance groups: age 
 
 ## Outputs and validation
 
-The database records fitted N and F at age, fixed M at age, recruitment, SSB, Fbar, total stock biomass, q, and fitted catch and index predictions. It also includes total abundance derived by summing the fitted age-specific N estimates; no uncertainty is assigned to this derived sum. N and F state SEs are on the natural scale using the delta method, with 95% log-scale Wald limits. q is similarly converted from the native log-q estimate and its SD. Aggregate summary-table confidence limits are retained as reported by the native summary functions.
+The database records fitted N and F at age, fixed M at age, recruitment, SSB, Fbar, total stock biomass, q, and fitted catch and index predictions. It also includes total abundance derived by summing the fitted age-specific N estimates, and biomass at age derived from fitted N and fixed stock weights. Total abundance has no uncertainty; biomass-at-age uncertainty reflects N alone and treats weights as fixed. N and F state SEs are on the natural scale using the delta method, with 95% log-scale Wald limits. q is similarly converted from the native log-q estimate and its SD. Aggregate summary-table confidence limits are retained as reported by the native summary functions.
 
 The 2025 fitted SAM age-0 abundance and recruitment are about 385,197 thousand fish, SSB is about 19,372 tonnes, and Fbar over ages 1–3 is about 0.0302 per year. These agree with the native fitted tables and the assessment report age and summary tables. The advice summary’s resampled 2025 recruitment forecast is a distinct quantity and is not substituted for fitted age-0 abundance.
 

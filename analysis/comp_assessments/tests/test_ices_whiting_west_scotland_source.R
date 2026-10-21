@@ -34,6 +34,7 @@ m_age <- series(outputs, "mortality", "natural_mortality_at_age")
 pred_catch <- series(outputs, "catch", "predicted_catch")
 pred_index <- series(outputs, "index", "predicted_index")
 q <- series(outputs, "catchability", "q")
+biomass_at_age <- series(outputs, "biomass", "biomass_at_age")
 
 stopifnot(
   nrow(assessment) == 1L,
@@ -65,6 +66,11 @@ stopifnot(
   nrow(pred_catch) == 327L,
   nrow(pred_index) == 472L,
   nrow(q) == 20L,
+  nrow(biomass_at_age) == 360L,
+  all(biomass_at_age$unit == "tonnes"),
+  all(is.finite(biomass_at_age$value)),
+  all(is.finite(biomass_at_age$se)),
+  all(biomass_at_age$source_type == "derived_source_output"),
   !anyDuplicated(key(outputs)),
   isTRUE(all.equal(
     n_age$value[n_age$year == 2025L & n_age$age == 0L],
