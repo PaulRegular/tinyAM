@@ -1,4 +1,4 @@
-# Used only by the new Pacific recipes. Existing recipes retain their starts.
+# Try package defaults first, then permit one documented source-based retry.
 fit_default_first <- function(fit_model, retry_start, attempt_file = NULL) {
   attempts <- list()
   save_attempts <- function() {
