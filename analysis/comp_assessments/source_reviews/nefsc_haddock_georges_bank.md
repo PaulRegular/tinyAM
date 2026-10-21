@@ -80,3 +80,7 @@ Public candidate source inspected at the pinned WHAM repository revision:
 
 - [`BASE_3.DAT`](https://github.com/timjmiller/wham/blob/de8c92ce016e33d6b8b35a9205248f7a0e08cf14/inst/extdata/BASE_3/BASE_3.DAT)
 - [WHAM Example 8 source and its preliminary-data qualification](https://github.com/timjmiller/wham/blob/de8c92ce016e33d6b8b35a9205248f7a0e08cf14/vignettes/ex08_compare.Rmd)
+
+## Public Haddock processing code is for Gulf of Maine, not Georges Bank
+
+A GitHub lead from the NEFSC recruitment dashboard was checked against stock identity and model vintage. Its [`NAA_haddock.Rmd`](https://github.com/NEFSC/READ-SSB-recdashboard/blob/adc8b835b1a5d70616ff022f1406a483af34ade3/docs/NAA_haddock.Rmd) explicitly describes Gulf of Maine haddock and identifies the 2024 Management Track assessment. The linked [`groundfishRDM` processing script](https://github.com/kimberly-bastille/groundfishRDM/blob/1f7334a1f2c34fcea85642cc308b2c1e2e040d4a/Code/pre_sim/process_haddock_assessment_data.R) reads `mod_nola_dcpe_blls2.rds`, described as the accepted GOM WHAM model with terminal year 2023, and a projected weight-at-age workbook from the private "NMFS NEC READ SSB" Google Drive. It then runs management projections and extracts recent/projected numbers-at-age. This is a separate stock, and the referenced model and workbook are not public source inputs for the Georges Bank 2026 run. Neither the GOM files nor its projected N-at-age series are imported into this record.
