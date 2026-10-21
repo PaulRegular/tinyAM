@@ -52,7 +52,7 @@ stopifnot(
   sum(index$survey == "SCO.Q1") == 84L,
   sum(index$survey == "SWC.Q4") == 232L,
   identical(sort(unique(index$survey)), c("SCO.Q1", "SWC.Q4", "WCIBTS.Q1")),
-  all(index$unit == "native survey-index units per effort unit"),
+  all(index$unit == "native survey index units"),
   all(is.finite(index$sampling_time)),
   all(weights$value > 0),
   nrow(weights) == 316L,

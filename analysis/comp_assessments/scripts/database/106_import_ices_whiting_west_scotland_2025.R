@@ -114,7 +114,7 @@ observations <- lapply(sort(unique(obs_aux$fleet)), function(fleet_id) {
   } else {
     input_rows(
       "index", "numbers_at_age", "index_scale", obs_aux$year[i], obs_aux$age[i],
-      exp(dat$logobs[j]), "native survey-index units per effort unit",
+      exp(dat$logobs[j]), "native survey index units",
       survey = survey_names[[fleet_id]], sampling_time = sample_times[[fleet_id]],
       source_reference = paste0(model_url, "/run/model.RData; fit$data$logobs and fit$data$aux"),
       transformation = "Exponentiated fitted log index after native SAM input processing; the source reader divides the raw series by its effort value.",
@@ -304,7 +304,7 @@ outputs <- rbind(
   ),
   output_rows(
     "index", "predicted_index", pred_aux$year[!pred_is_catch],
-    predicted[!pred_is_catch], "native survey-index units per effort unit",
+    predicted[!pred_is_catch], "native survey index units",
     pred_aux$age[!pred_is_catch],
     ifelse(pred_aux$age[!pred_is_catch] == max(ages), paste0(max(ages), "+"), ""),
     survey = survey_names[pred_aux$fleet[!pred_is_catch]],

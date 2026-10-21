@@ -18,11 +18,11 @@ The native fit contains 830 year-fleet-age rows, of which 799 have finite observ
 | Series | Years | Ages | Rows | Scale and timing |
 |---|---:|---:|---:|---|
 | Total catch-at-age | 1981–2024 | 0–7+ | 327 | Thousands of fish |
-| WCIBTS.Q1 | 1985–2010 | 1–6+ | 156 | Native survey index per effort unit; 0.125 of year |
-| SCO.Q1 | 2011–2025, excluding 2022 | 1–6+ | 84 | Native survey index per effort unit; 0.125 of year |
-| SWC.Q4 | 1996–2024 | 0–7+ | 232 | Native survey index per effort unit; 0.8530996 of year |
+| WCIBTS.Q1 | 1985–2010 | 1–6+ | 156 | Native survey index; 0.125 of year |
+| SCO.Q1 | 2011–2025, excluding 2022 | 1–6+ | 84 | Native survey index; 0.125 of year |
+| SWC.Q4 | 1996–2024 | 0–7+ | 232 | Native survey index; 0.8530996 of year |
 
-The two Q1 series are distinct survey fleets and remain separate. The source model uses age 7 as the plus group. Survey observations remain on the scale consumed by SAM; no abundance multiplier or physical-unit conversion is applied in the database.
+The two Q1 series are distinct survey fleets and remain separate. The source model uses age 7 as the plus group. The native SAM reader divides the raw series by its effort value. The database keeps the resulting fitted index scale; no abundance multiplier or physical-unit conversion is applied.
 
 The fitted precision vector has finite relative weights for 316 survey observations. The database stores those weights on their native rows. SAM scales log-index observation SD by 1/sqrt(weight) where a weight is provided. Other observations have no supplied relative weight. The source bundle also contains survey_variance.txt; the fit-aligned weights, rather than a reconstructed reordering of that file, are stored as the likelihood inputs.
 
