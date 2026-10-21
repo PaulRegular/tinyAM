@@ -68,7 +68,23 @@ outputs <- source$outputs
 population <- outputs[outputs$measure == "numbers_at_age" &
   outputs$type == "population", , drop = FALSE]
 population_age <- suppressWarnings(as.integer(as.character(population$age)))
-comparison_outputs <- list(aggregate_rows(population, c("year", "age")))
+total_numbers <- aggregate_rows(population, "year")
+total_numbers$measure <- "total_numbers"
+total_numbers$age <- NA_integer_
+total_numbers$age_group <- NA_character_
+total_numbers$source_type <- "derived_source_output"
+total_numbers$source_reference <- paste(
+  "https://ndownloader.figshare.com/files/67087409;",
+  "Selectivity Indicators/FLStocks.RData; cod.27.46a7d20; all three substocks"
+)
+total_numbers$notes <- paste(
+  "Derived by summing official N-at-age over ages 1-7+ and all three substocks.",
+  "Age 7 is the plus group; uncertainty is not combined."
+)
+comparison_outputs <- list(
+  aggregate_rows(population, c("year", "age")),
+  total_numbers
+)
 for (measure in c("SSB", "recruitment", "total_biomass", "predicted_catch")) {
   comparison_outputs[[length(comparison_outputs) + 1L]] <- aggregate_rows(
     outputs[outputs$measure == measure, , drop = FALSE], "year"
@@ -124,7 +140,7 @@ background <- c(
   "| Survey indices | Seven fitted age-structured index streams include three substock Q1 indices, one mixed Q3+Q4 index and three substock recruitment indices. | Fit the mixed Q3+Q4 survey only, retaining its sampling time of 0.75 and supplied relative SDs. | Substock-specific abundance and recruitment indices are omitted because the translation uses one combined population. |",
   "| Survey catchability | Catchability is estimated within the official multistock observation model; numerical q estimates have not been independently recovered. | Use mono(q_key) to estimate non-decreasing catchability across ordered survey age groups, allowing plateaus. | A monotone age pattern is imposed to avoid estimating dome-shaped catchability from the reduced data inputs. This is a translation assumption, not a recovered SAM constraint. |",
   "| Weights and maturity | Annual weight and maturity inputs are specific to each substock. | Use arithmetic means of available substock inputs for each year and age. | Population-weighted combined biological inputs are unavailable. |",
-  "| Comparison outputs | Official outputs are reported separately for Northwestern, Southern and Viking substocks. | Sum numbers, recruitment and biomass; calculate abundance-weighted F and M by age and abundance-weighted substock Fbar over ages 2–4. | Comparison quantities are approximate and their uncertainty is not combined. |",
+  "| Comparison outputs | Official outputs are reported separately for Northwestern, Southern and Viking substocks. | Sum N-at-age, total abundance, recruitment and biomass; calculate abundance-weighted F and M by age and abundance-weighted substock Fbar over ages 2–4. | Comparison quantities are approximate and their uncertainty is not combined. |",
   "",
   "This translation tests whether tinyAM can reproduce broad Northern Shelf cod dynamics using a single combined population and the mixed Q3+Q4 survey.",
   "",

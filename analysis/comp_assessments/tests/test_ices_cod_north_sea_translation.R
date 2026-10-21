@@ -28,6 +28,7 @@ maturity <- source_inputs[source_inputs$type == "maturity" &
   source_inputs$age %in% translated$ages, ]
 maturity_average <- stats::aggregate(as.numeric(value) ~ year + age, maturity, mean)
 comparison <- translated$comparison_outputs
+comparison_total <- comparison[comparison$measure == "total_numbers", ]
 source_n <- source_data$outputs[source_data$outputs$measure == "numbers_at_age", ]
 sum_n <- stats::aggregate(value ~ year + age, source_n, sum)
 source_total <- source_data$outputs[
@@ -93,6 +94,14 @@ stopifnot(
   isTRUE(all.equal(
     as.numeric(source_total$value),
     sum_total$value[match(source_total$year, sum_total$year)]
+  )),
+  nrow(comparison_total) == 43L,
+  identical(as.integer(comparison_total$year), 1983:2025),
+  all(comparison_total$source_type == "derived_source_output"),
+  all(is.na(comparison_total$age)),
+  isTRUE(all.equal(
+    as.numeric(comparison_total$value),
+    sum_total$value[match(comparison_total$year, sum_total$year)]
   )),
   all(is.na(comparison$region)),
   isTRUE(all.equal(
