@@ -80,7 +80,41 @@ read_committed_database <- function() {
         !file.exists(tempfile_path) || file.info(tempfile_path)$size == 0) {
         stop("Could not read committed database table: ", name, call. = FALSE)
       }
-      read.csv(tempfile_path,
+      read_path <- tempfile_path
+      first_line <- readLines(tempfile_path, n = 1L, warn = FALSE)
+      if (length(first_line) && grepl(
+        "^version https://git-lfs.github.com/spec/v1$", first_line
+      )) {
+        hydrated_path <- tempfile(
+          pattern = "tinyAM_committed_database_lfs_",
+          fileext = ".csv"
+        )
+        on.exit(unlink(hydrated_path), add = TRUE)
+        hydrated <- system2(
+          "git",
+          c("-c", paste0("safe.directory=", repo), "lfs", "smudge", "--", path),
+          stdin = tempfile_path, stdout = hydrated_path, stderr = TRUE
+        )
+        hydrated_status <- if (is.numeric(hydrated) && length(hydrated) == 1L) {
+          hydrated
+        } else {
+          attr(hydrated, "status")
+        }
+        hydrated_first_line <- if (file.exists(hydrated_path)) {
+          readLines(hydrated_path, n = 1L, warn = FALSE)
+        } else {
+          character()
+        }
+        if ((!is.null(hydrated_status) && hydrated_status != 0L) ||
+          !length(hydrated_first_line) || grepl(
+            "^version https://git-lfs.github.com/spec/v1$",
+            hydrated_first_line
+          )) {
+          stop("Could not hydrate committed Git LFS table: ", name, call. = FALSE)
+        }
+        read_path <- hydrated_path
+      }
+      read.csv(read_path,
         stringsAsFactors = FALSE,
         na.strings = c("", "NA"), check.names = FALSE
       )

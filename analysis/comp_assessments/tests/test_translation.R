@@ -861,6 +861,7 @@ source_outputs <- data.frame(
   ),
   year = c(2000, 2000, 2000, 2000), age = c(NA, 1, 1, 2), age_group = NA_character_,
   fleet = c(NA_character_, NA_character_, "Residual catch", "Residual catch"),
+  survey = c(NA_character_, NA_character_, NA_character_, NA_character_),
   value = c(900, 100, 0.1, 0.2), se = NA_real_, lwr = NA_real_, upr = NA_real_,
   unit = c("t", "fish", "per year", "per year"), source_type = "official_table",
   source_reference = "fixture", notes = NA_character_
@@ -914,4 +915,89 @@ expect_equal(template_reference$fixed_par$est, NA_real_)
 expect_equal(template_fit$fixed_par$est, 1)
 expect_equal(template_reference$comparison_scales[["ssb"]], 1e-3)
 expect_equal(template_reference$comparison_scales[["recruitment"]], .001)
+
+observation_outputs <- data.frame(
+  assessment_id = "translation_fixture",
+  type = c("catch", "index", "catchability"),
+  measure = c("predicted_catch", "predicted_index", "q"),
+  year = c(2000, 2001, NA), age = c(1, 2, 2),
+  age_group = "", fleet = c("fishery", "", ""),
+  survey = c("", "RV", "RV"),
+  value = c(20, 25, .2), se = c(NA, NA, .04),
+  lwr = c(NA, NA, .16), upr = c(NA, NA, .24),
+  unit = c("fish", "index units", "index units per fish"),
+  source_type = "native_model", source_reference = "fixture",
+  notes = "fixture", stringsAsFactors = FALSE
+)
+observation_template <- template_fit
+observation_template$obs_pred$index$q_se <- NA_real_
+observation_template$obs_pred$index$q_se_scale <- "log"
+observation_template$obs_pred$index$q_lwr <- NA_real_
+observation_template$obs_pred$index$q_upr <- NA_real_
+observation_template$obs_pred$index$q_unit <- NA_character_
+observation_reference <- database_to_tam_ref(
+  "translation_fixture", rbind(source_outputs, observation_outputs),
+  obs = template_obs, years = template_years, ages = template_ages,
+  terminal_year = 2002, comparison_scales = c(ssb = 1e-3),
+  template = observation_template
+)
+expect_equal(
+  observation_reference$obs_pred$catch$pred[
+    observation_reference$obs_pred$catch$year == 2000 &
+      observation_reference$obs_pred$catch$age == 1
+  ], 20
+)
+expect_equal(sum(is.finite(observation_reference$obs_pred$catch$pred)), 1L)
+expect_equal(
+  observation_reference$obs_pred$index$pred[
+    observation_reference$obs_pred$index$year == 2001 &
+      observation_reference$obs_pred$index$age == 2
+  ], 25
+)
+expect_equal(sum(is.finite(observation_reference$obs_pred$index$pred)), 1L)
+q_rows <- observation_reference$obs_pred$index$age == 2
+expect_equal(observation_reference$obs_pred$index$q[q_rows], rep(.2, 3))
+expect_equal(observation_reference$obs_pred$index$q_se[q_rows], rep(.2, 3))
+expect_equal(observation_reference$obs_pred$index$q_lwr[q_rows], rep(.16, 3))
+expect_equal(observation_reference$obs_pred$index$q_upr[q_rows], rep(.24, 3))
+expect_equal(
+  observation_reference$obs_pred$index$q_unit[q_rows],
+  rep("index units per fish", 3)
+)
+group_q <- observation_outputs[observation_outputs$measure == "q", , drop = FALSE]
+group_q$age <- 1
+group_q$age_group <- "1-2"
+group_q$value <- .3
+group_q$se <- .06
+group_q$lwr <- .2
+group_q$upr <- .4
+group_outputs <- rbind(
+  source_outputs,
+  observation_outputs[observation_outputs$measure != "q", , drop = FALSE],
+  group_q
+)
+group_reference <- database_to_tam_ref(
+  "translation_fixture", group_outputs,
+  obs = template_obs, years = template_years, ages = template_ages,
+  terminal_year = 2002, comparison_scales = c(ssb = 1e-3),
+  template = observation_template
+)
+expect_equal(group_reference$obs_pred$index$q, rep(.3, 6))
+expect_equal(group_reference$obs_pred$index$q_se, rep(.2, 6))
+expect_equal(group_reference$obs_pred$index$q_lwr, rep(.2, 6))
+expect_equal(group_reference$obs_pred$index$q_upr, rep(.4, 6))
+collapsed_template <- observation_template
+collapsed_template$obs_pred$catch$fleet[] <- NA_character_
+collapsed_reference <- database_to_tam_ref(
+  "translation_fixture", rbind(source_outputs, observation_outputs),
+  obs = template_obs, years = template_years, ages = template_ages,
+  terminal_year = 2002, comparison_scales = c(ssb = 1e-3),
+  template = collapsed_template
+)
+expect_equal(
+  collapsed_reference$obs_pred$catch$pred[
+    collapsed_reference$obs_pred$catch$year == 2000 &
+      collapsed_reference$obs_pred$catch$age == 1
+  ], 20
+)
 cat("Translation helper tests passed.\n")

@@ -102,13 +102,15 @@ These differences are documented limitations of an illustrative tinyAM translati
 
 ## Comparison limits
 
-The report publishes recruitment, SSB, Fbar, and total stock biomass point estimates and 95% intervals through 2025, with SSB alone reported for 2026.
+The report publishes recruitment, SSB, Fbar, and total stock biomass point estimates and 95% intervals through 2025, with SSB alone reported for 2026. The remaining 2026 summary estimates and intervals below come from the official native fit, not from the report table.
 
-The native fitted object contains 2026 age-specific state surfaces, which are retained as `native_model` outputs. The summary table leaves unreported 2026 recruitment, Fbar, and TSB values unavailable.
+The native fitted object contains 2026 age-specific state surfaces, which are retained as `native_model` outputs.
 
-The age-specific output surfaces do not have report-published uncertainty intervals.
+The native fitted object also supplies fitted catch and survey observations, age-specific q estimates, and covariance information for the N, F, and M state surfaces. These were added to the canonical outputs from the April model object. State SEs use the conditional random-effect covariance diagonal; the stored natural-scale SEs use the delta method, and the 95% limits are Wald intervals on the log scale. They are derived from the fit rather than transcribed from the report.
 
-The official numerical inputs and fitted outputs remain unchanged in the canonical database. The carried-forward M assumption and process-model choices belong exclusively to the tinyAM translation.
+The 2026 intermediate-year recruitment, Fbar and total-biomass estimates and intervals are available from the native SAM summary tables. They are stored as native-model outputs, separately from the report-published SSB row.
+
+The official numerical inputs remain unchanged in the canonical database. The added fitted outputs come directly from the April model object. The carried-forward M assumption and process-model choices belong exclusively to the tinyAM translation.
 
 The revised translation remains a proof-of-concept approximation of the official model. Numerical convergence and improved agreement do not establish equivalence of the underlying likelihoods or assessment uncertainty.
 
