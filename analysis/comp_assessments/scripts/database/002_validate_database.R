@@ -276,21 +276,42 @@ for (name in c("inputs", "outputs")) {
   }
   age <- suppressWarnings(as.numeric(x$age))
   if (name == "inputs") {
-    aggregate_precision <- x$type == "index" &
-      x$measure == "relative_standard_error" & is.na(age)
-    if (any(aggregate_precision)) {
+    aggregate_precision <- x$measure == "relative_standard_error" & is.na(age)
+    index_precision <- aggregate_precision & x$type == "index"
+    catch_precision <- aggregate_precision & x$type == "catch"
+    if (any(aggregate_precision & !index_precision & !catch_precision)) {
+      stop("Unaged relative standard errors must describe aggregate catch or index observations.",
+        call. = FALSE
+      )
+    }
+    if (any(index_precision)) {
       columns <- c("assessment_id", "survey", "sex", "region", "season", "year")
-      key <- function(z) do.call(paste, c(lapply(z[columns], function(v) {
+      key <- function(z, columns) do.call(paste, c(lapply(z[columns], function(v) {
         v[is.na(v)] <- ""
         v
       }), sep = "\r"))
       totals <- x[x$type == "index" & x$measure %in%
         c("total_biomass", "total_numbers", "relative_biomass_index"), ]
-      if (any(!key(x[aggregate_precision, ]) %in% key(totals))) {
+      if (any(!key(x[index_precision, ], columns) %in% key(totals, columns))) {
         stop("Aggregate index precision requires a matching total index.", call. = FALSE)
       }
-      age_required[aggregate_precision] <- FALSE
     }
+    if (any(catch_precision)) {
+      columns <- c("assessment_id", "fleet", "sex", "region", "season", "year")
+      if ("partition" %in% names(x)) columns <- c(columns, "partition")
+      key <- function(z, columns) do.call(paste, c(lapply(z[columns], function(v) {
+        v[is.na(v)] <- ""
+        v
+      }), sep = "\r"))
+      totals <- x[x$type == "catch" & x$measure %in%
+        c("total_biomass", "total_numbers"), ]
+      if (any(!key(x[catch_precision, ], columns) %in% key(totals, columns))) {
+        stop("Aggregate catch precision requires a matching total catch observation.",
+          call. = FALSE
+        )
+      }
+    }
+    age_required[aggregate_precision] <- FALSE
   }
   if (any(age_required & (is.na(age) | !is.finite(age) | age != as.integer(age)))) {
     stop(name, "$age must contain whole ages for age-specific measures.", call. = FALSE)
