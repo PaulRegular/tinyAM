@@ -89,6 +89,8 @@ Provenance check: Northwestern 1983 N-at-age begins 485859.551, 122291.133, and 
 
 The complete N, F, and M surfaces have been checked against Tables 4.8, 4.9, and 4.13 before importing.
 
+Total abundance is derived for each year by summing the official N-at-age estimates across ages 1–7+ and the Northwestern, Southern, and Viking substocks. The derived value uses the unrounded native `stock.n` values and has no separately combined uncertainty.
+
 All 2,688 tabulated N/F/M values across the three substocks match the official FLStock objects within report rounding:
 
 - 882 F values for 1983–2024.
