@@ -23,6 +23,9 @@ stopifnot(
   a$assessment_year == 2025, a$terminal_year == 2025,
   a$is_current, a$is_applied,
   a$model_family == "CCAM",
+  grepl("fit CCAM RemoteSha 1d1cc18416b2", a$model_version, fixed = TRUE),
+  grepl("available CCAM source snapshot 1bcb06473343c13ebeebecdb54acd905220aeb61",
+    a$model_version, fixed = TRUE),
   a$inputs_status == "complete",
   a$assumptions_status == "partial",
   a$outputs_status == "partial",
@@ -115,6 +118,27 @@ ssb <- o[o$measure == "SSB", ]
 rec <- o[o$measure == "recruitment", ]
 total_n <- o[o$measure == "total_numbers", ]
 fbar <- o[o$measure == "Fbar", ]
+fit_env <- new.env(parent = baseenv())
+load(file.path(repo, "Rdata", "2025", "fit.Rdata"), envir = fit_env)
+fit <- fit_env$fit
+key_sel <- fit$conf$keySel
+selectivity <- matrix(1, nrow = 57L, ncol = 10L)
+for (j in seq_len(ncol(selectivity))) {
+  keys <- as.integer(key_sel[, j])
+  estimated <- keys != max(key_sel)
+  selectivity[estimated, j] <- plogis(fit$pl$logitSel[keys[estimated] + 1L])
+}
+log_f <- outer(fit$pl$logFy, rep(1, 10L)) + log(selectivity)
+native_f <- exp(log_f)
+log_f_se <- matrix(fit$plsd$logFy, nrow = 57L, ncol = 10L)
+native_se <- native_f * log_f_se
+native_lwr <- exp(log_f - 2 * log_f_se)
+native_upr <- exp(log_f + 2 * log_f_se)
+f_grid <- expand.grid(age = 1:10, year = 1969:2025)
+f_row <- match(paste(f$year, f$age), paste(f_grid$year, f_grid$age))
+f_export <- read.csv(file.path(repo, "csv", "2025", "f.csv"),
+  stringsAsFactors = FALSE, check.names = FALSE
+)
 stopifnot(
   nrow(n) == 570L, setequal(n$year, 1969:2025), setequal(n$age, 1:10),
   nrow(f) == 570L, setequal(f$year, 1969:2025), setequal(f$age, 1:10),
@@ -122,7 +146,21 @@ stopifnot(
   all(n$lwr > 0 & n$lwr < n$value & n$value < n$upr),
   all(ssb$lwr > 0 & ssb$lwr < ssb$value & ssb$value < ssb$upr),
   all(rec$lwr > 0 & rec$lwr < rec$value & rec$value < rec$upr),
-  all(is.na(f$se) & is.na(f$lwr) & is.na(f$upr)),
+  all(is.finite(f$se) & f$se > 0 & f$lwr > 0 & f$lwr < f$value & f$value < f$upr),
+  max(abs(round(native_f, 2) - as.matrix(f_export[as.character(1:10)]))) < 1e-12,
+  isTRUE(all.equal(as.numeric(f$value), as.vector(t(native_f))[f_row],
+    tolerance = 1e-10)),
+  isTRUE(all.equal(as.numeric(f$se), as.vector(t(native_se))[f_row],
+    tolerance = 1e-10)),
+  isTRUE(all.equal(as.numeric(f$lwr), as.vector(t(native_lwr))[f_row],
+    tolerance = 1e-10)),
+  isTRUE(all.equal(as.numeric(f$upr), as.vector(t(native_upr))[f_row],
+    tolerance = 1e-10)),
+  all(grepl("conditional on fitted fixed parameters", f$notes, fixed = TRUE)),
+  identical(attr(fit, "RemoteSha"), "1d1cc18416b2"),
+  all(abs(sqrt(fit$sdrep$diag.cov.random[
+    which(names(fit$sdrep$par.random) == "logFy")
+  ]) - fit$plsd$logFy) < 1e-10),
   !any(o$measure == "natural_mortality_at_age"),
   fbar$age_group[1] == "5-10+",
   all(rec$age == 1),
