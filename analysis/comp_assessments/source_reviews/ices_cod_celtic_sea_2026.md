@@ -26,7 +26,7 @@ inputs and fitted configuration used here.
 
 - The SAM object contains total catch-at-age, including landings and discards,
   for ages 1-7+ from 1980-2025. Catch at ages 1 and 2 is missing through 2003;
-  those cells remain missing in the database.
+  those unavailable cells are omitted from the input table, not treated as zero.
 - The model fits two tuning series. The French OTDEF Q2+3+4 commercial LPUE
   index is aggregate, with one observation per year from 2002-2025. It is
   retained as a relative biomass index on its native kg/hour scale, but is not
@@ -35,10 +35,11 @@ inputs and fitted configuration used here.
   ages 1-3 over 2003-2025. Its model timing is 0.855. Table 7.6 also displays
   age 4, but the final SAM object uses only ages 1-3. The report shows 0.000
   for age 3 in 2025; SAM represents that log-scale observation as missing, so
-  it is retained as `NA` and omitted from the tinyAM fit.
+  it is omitted from the input table and from the tinyAM fit.
 - The SAM object supplies annual stock weights, catch weights, landings
   weights, discard weights and maturity. The report identifies the numerical
-  input tables as Tables 7.2-7.4. Missing discard weights remain missing.
+  input tables as Tables 7.2-7.4. Missing discard-weight cells are omitted;
+  reported zero values remain zero.
 - Natural mortality is fixed at 0.501, 0.330, 0.264, 0.233, 0.211, 0.211 and
   0.211 per year at ages 1-7+. The assessment does not estimate M. Maturity is
   0, 0.54, 0.93 and then 1 at ages 1-7+, and is constant across years. The

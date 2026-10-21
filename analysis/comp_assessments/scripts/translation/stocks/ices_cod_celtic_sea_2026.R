@@ -86,7 +86,7 @@ background <- c(
   "| Component | Official assessment | tinyAM representation | Reason for difference |",
   "|---|---|---|---|",
   "| Years and ages | 1980-2025, ages 1-7+; age 7 is the plus group. | Fit the full 1980-2025 and 1-7+ grid. | The full fitted historical grid is retained. |",
-  "| Catch | Total catch-at-age, including landings and discards; ages 1 and 2 are missing through 2003. | Retain the same catch series, ages and missing cells. | No catch rows are filled or reconstructed. |",
+  "| Catch | Total catch-at-age, including landings and discards; ages 1 and 2 are missing through 2003. | Retain the same available catch observations and ages. | Unavailable source cells are omitted, not filled or set to zero. |",
   "| Indices | The final SAM run uses French OTDEF Q2+3+4 aggregate LPUE and the combined Irish IGFS/French EVHOE Q4 VAST index at ages 1-3. | Use the age-specific VAST index only. | The aggregate commercial LPUE likelihood is not supported by tinyAM's age-specific index model. The report's VAST age-4 series is not used by the fitted SAM object. |",
   "| N and recruitment | SAM uses age-1 recruitment and a shared age-2+ survival process. | Use an exponential initial state, IID N deviations and a random-walk recruitment process. | tinyAM does not reproduce the source variance groups or complete initial-state treatment. |",
   "| F | The source has six age-specific F states, AR(1)-correlated process increments across ages, and a shared age-6/7+ state; Fbar is ages 2-5. | Use a correlated-random-walk F process across ages 1-7, with mean level aligned to ages 2-5. | The exact source state sharing, selectivity and covariance structure are simplified. |",

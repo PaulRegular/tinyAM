@@ -77,7 +77,7 @@ input_rows <- function(type, measure, basis, year, age, value, unit,
                        notes = "") {
   n <- length(value)
   year <- rep_len(year, n)
-  data.frame(
+  rows <- data.frame(
     assessment_id = assessment_id, type = type, measure = measure,
     basis = basis, fleet = rep_len(fleet, n), survey = rep_len(survey, n),
     sex = "combined", region = region, season = "", year = year,
@@ -90,6 +90,10 @@ input_rows <- function(type, measure, basis, year, age, value, unit,
     sample_size = NA_real_, age_error = "", partition = "",
     stringsAsFactors = FALSE, check.names = FALSE
   )
+  if (any(is.infinite(rows$value))) {
+    stop("Source input values cannot be infinite.", call. = FALSE)
+  }
+  rows[!is.na(rows$value), , drop = FALSE]
 }
 
 observation_input <- function(fleet, type, measure, basis, unit, source_reference,
@@ -103,7 +107,7 @@ observation_input <- function(fleet, type, measure, basis, unit, source_referenc
     fleet = fleet_names[[fleet]], survey = survey,
     sampling_time = sam_data$sampleTimes[[fleet]],
     source_reference = paste(report, source_reference, ";", model_reference),
-    transformation = "Exponentiated the log observations stored by the official SAM fit; no scale conversion was applied. NA rows were not included in its log-scale likelihood.",
+    transformation = "Exponentiated the log observations stored by the official SAM fit; no scale conversion was applied. Source NA cells are omitted because they are not observations in the fitted likelihood.",
     notes = notes
   )
 }
@@ -158,7 +162,7 @@ inputs_add <- do.call(rbind, list(
   surface_input(sam_data$landMeanWeight, "catch_weight", "landings_weight_at_age", "kg_per_fish", "kg per fish",
     "Official SAM input object", "Annual landings weight-at-age supplied to the fitted model."),
   surface_input(sam_data$disMeanWeight, "catch_weight", "discard_weight_at_age", "kg_per_fish", "kg per fish",
-    "Official SAM input object", "Annual discard weight-at-age supplied to the fitted model; source NA and zero entries are preserved."),
+    "Official SAM input object", "Annual discard weight-at-age supplied to the fitted model; missing source cells are omitted and zero entries are preserved."),
   surface_input(sam_data$propMat, "maturity", "maturity_at_age", "proportion", "proportion mature",
     "Official SAM input object", "Maturity-at-age used by the final fitted model; the report refers to the updated WKCELTIC 2020 biology."),
   matrix_input(sam_data$natMor, "M", "natural_mortality_at_age", "per_year", "per year",
@@ -334,9 +338,9 @@ input_key <- paste(inputs_add$type, inputs_add$measure, inputs_add$fleet,
 output_key <- paste(output_add$measure, output_add$year, output_add$age,
   output_add$survey, sep = "\034")
 if (anyDuplicated(input_key) || anyDuplicated(output_key) ||
-  any(!is.finite(inputs_add$value) & !is.na(inputs_add$value)) ||
+  any(!is.finite(inputs_add$value)) ||
   any(!is.finite(output_add$value)) || any(!is.finite(output_add$se) & !is.na(output_add$se))) {
-  stop("The generated source rows have duplicate keys or invalid non-missing values.", call. = FALSE)
+  stop("The generated source rows have duplicate keys or invalid values.", call. = FALSE)
 }
 
 stock_lines <- readLines(paths[["stocks"]], warn = FALSE, encoding = "UTF-8")
