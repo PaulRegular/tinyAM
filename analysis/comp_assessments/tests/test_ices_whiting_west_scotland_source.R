@@ -36,6 +36,11 @@ pred_index <- series(outputs, "index", "predicted_index")
 q <- series(outputs, "catchability", "q")
 biomass_at_age <- series(outputs, "biomass", "biomass_at_age")
 
+stock_weight <- series(inputs, "weight", "weight_at_age")
+weight_match <- match(
+  paste(n_age$year, n_age$age),
+  paste(stock_weight$year, stock_weight$age)
+)
 stopifnot(
   nrow(assessment) == 1L,
   isTRUE(as.logical(assessment$is_current)),
@@ -71,6 +76,15 @@ stopifnot(
   all(is.finite(biomass_at_age$value)),
   all(is.finite(biomass_at_age$se)),
   all(biomass_at_age$source_type == "derived_source_output"),
+  !anyNA(weight_match),
+  isTRUE(all.equal(
+    as.numeric(biomass_at_age$value),
+    as.numeric(n_age$value) * as.numeric(stock_weight$value[weight_match])
+  )),
+  isTRUE(all.equal(
+    as.numeric(biomass_at_age$se),
+    as.numeric(n_age$se) * as.numeric(stock_weight$value[weight_match])
+  )),
   !anyDuplicated(key(outputs)),
   isTRUE(all.equal(
     n_age$value[n_age$year == 2025L & n_age$age == 0L],
