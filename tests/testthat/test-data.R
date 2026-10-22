@@ -117,7 +117,7 @@ test_that("updates retain population covariates", {
   expect_identical(changed$refit_args$data, default_fit$refit_args$data)
   expect_identical(default_fit, before)
   expect_true(all(changed$dat$pop_data$year %in% 1983:2020))
-  expect_true("NCAM_M_assumption" %in% names(changed$dat$pop_data))
+  expect_true(all(names(default_fit$dat$pop_data) %in% names(changed$dat$pop_data)))
   projected <- update(changed, proj_settings = list(n_proj = 1), silent = TRUE)
   expect_equal(unique(subset(projected$dat$pop_data, is_proj)$year), 2021)
   expect_identical(levels(projected$dat$pop_data$F_a_block), levels(changed$dat$pop_data$F_a_block))
