@@ -317,6 +317,7 @@ for (name in c("inputs", "outputs")) {
     stop(name, "$age must contain whole ages for age-specific measures.", call. = FALSE)
   }
   value <- suppressWarnings(as.numeric(x$value))
+  missing_value <- is.na(value)
   signed <- if (name == "inputs") {
     x$type == "covariate" &
       x$measure %in% c("environmental_covariate", "condition_index_for_mortality") &
@@ -324,8 +325,16 @@ for (name in c("inputs", "outputs")) {
   } else {
     x$type == "biology" & x$measure %in% c("mat_beta1", "mat_beta2")
   }
-  if (anyNA(value) || any(!is.finite(value)) || any(value < 0 & !signed)) {
-    stop(name, "$value must contain finite numbers; negative values are allowed only for signed covariates and documented signed biology coefficients.", call. = FALSE)
+  missing_observation <- name == "inputs" &
+    x$type %in% c("catch", "index") &
+    x$measure %in% c(
+      "numbers_at_age", "index_by_age_group", "biomass_at_age",
+      "total_numbers", "total_biomass"
+    )
+  if (any(missing_value & !missing_observation) ||
+    any(!is.finite(value[!missing_value])) ||
+    any(value < 0 & !signed, na.rm = TRUE)) {
+    stop(name, "$value must contain finite numbers except for documented missing catch or index observations; negative values are allowed only for signed covariates and documented signed biology coefficients.", call. = FALSE)
   }
   if (name == "inputs") {
     if (any(x$type == "maturity" & (value < 0 | value > 1))) {
