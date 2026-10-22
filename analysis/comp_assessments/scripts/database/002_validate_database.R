@@ -197,6 +197,7 @@ allowed_output_types <- c(
 allowed_input_measures <- c(
   "frequency_at_length", "frequency_at_age", "maturity_fecundity_at_age", "maturity_sample_size", "mature_sample_count", "composition_sample_count",
   "numbers_at_age", "numbers_at_age_for_M_reconstruction", "index_by_age_group",
+  "index_catch_numbers_at_age", "effort",
   "biomass_at_age", "total_numbers",
   "total_biomass", "total_egg_production", "landings_lower_bound", "landings_upper_bound",
   "catch_lower_bound", "catch_upper_bound", "proportion_at_age", "proportion_at_length",
@@ -255,6 +256,7 @@ for (name in c("inputs", "outputs")) {
   age_required <- if (name == "inputs") {
     x$measure %in% c(
       "numbers_at_age", "numbers_at_age_for_M_reconstruction", "index_by_age_group",
+      "index_catch_numbers_at_age",
       "biomass_at_age", "proportion_at_age", "frequency_at_age", "maturity_fecundity_at_age",
       "conditional_proportion_at_age", "fraction_F_before_spawning",
       "fraction_M_before_spawning", "weight_at_age", "spawning_weight_at_age", "start_weight_at_age",

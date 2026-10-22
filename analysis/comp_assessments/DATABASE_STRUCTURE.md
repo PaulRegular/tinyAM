@@ -226,6 +226,8 @@ Add new types only when a real assessment requires them.
 numbers_at_age
 numbers_at_age_for_M_reconstruction
 index_by_age_group
+index_catch_numbers_at_age
+effort
 biomass_at_age
 total_numbers
 total_biomass
@@ -240,7 +242,9 @@ relative_precision_weight
 relative_standard_error
 ```
 
-An index_by_age_group row preserves a native index value that combines
+`index_catch_numbers_at_age` preserves the numerator in a source index stored as catch numbers-at-age and effort. Use `type = index`, `basis = numbers`, and document that these numerator rows are not a second observation series. Pair them with `effort` rows (`type = covariate`, `basis = native_covariate`) when needed to reproduce a per-effort index. `effort` has no age dimension; preserve its native units and do not treat it as a tinyAM observation.
+
+An `index_by_age_group` row preserves a native index value that combines
 multiple age classes and cannot be represented as a single-age observation.
 Store the lower age in age and record the full source age interval, including
 any plus group, in notes. This measure is kept for provenance and is not

@@ -274,7 +274,8 @@
 
 .translation_index_multiplier <- function(unit) {
   unit <- tolower(trimws(as.character(unit)))
-  if (grepl("^(native[ _-]+)?survey[ _-]?index( \\(unit unresolved\\)| units?)?$", unit)) {
+  if (grepl("^source index scale per effort unit", unit) ||
+    grepl("^(native[ _-]+)?survey[ _-]?index( \\(unit unresolved\\)| units?)?$", unit)) {
     return(1)
   }
   .translation_number_multiplier(unit)
@@ -495,7 +496,7 @@
   supported_measures <- c(
     "numbers_at_age", "proportion_at_age",
     "total_numbers", "total_biomass", "log_index_sd",
-    "index_sd", "relative_precision_weight",
+    "index_sd", "relative_precision_weight", "index_catch_numbers_at_age",
     "relative_standard_error"
   )
   unsupported <- x[
@@ -804,6 +805,8 @@
 #' timing is never replaced silently.
 #' Index measures without an age-abundance translation are reported as errors
 #' unless their surveys are explicitly excluded with `surveys`.
+#' Source-only index_catch_numbers_at_age rows remain in the database to
+#' reproduce per-effort indices and are not passed as separate observations.
 #' The translated index also carries `q_block` (age) and `q_key`
 #' (survey-by-age) factors so the fit can state catchability sharing explicitly.
 #'
