@@ -3,143 +3,100 @@
 \name{fit_retro}
 \alias{fit_retro}
 \alias{fit_hindcast}
-\title{Retrospective fits and catch-conditioned hindcasts}
+\alias{print.tam_retro}
+\title{Retrospective fits and observation hindcasts}
 \usage{
 fit_retro(
   fit,
+  ...,
   folds = 2,
   start_from_fit = FALSE,
   hindcast = FALSE,
+  proj_settings = NULL,
   grad_tol = NULL,
   progress = TRUE,
-  globals = NULL,
-  catch = "observed",
-  F_mult = NULL
+  globals = NULL
 )
 
-fit_hindcast(fit, ..., catch = "observed", F_mult = NULL)
+fit_hindcast(
+  fit,
+  ...,
+  folds = 2,
+  start_from_fit = FALSE,
+  hindcast = TRUE,
+  proj_settings = NULL,
+  grad_tol = NULL,
+  progress = TRUE,
+  globals = NULL
+)
+
+\method{print}{tam_retro}(x, ...)
 }
 \arguments{
-\item{fit}{A fitted TAM object as returned by \code{\link[=fit_tam]{fit_tam()}}.}
+\item{fit, ...}{One or more \code{tam_fit} objects. Name additional models for distinct
+labels. All other controls must be named.}
 
-\item{folds}{Integer; number of terminal peels (default \code{2}).}
+\item{folds}{Number of peels, leaving at least two historical years per fit.}
 
-\item{start_from_fit}{Logical; use terminal parameter estimates as starting
-values for retrospective fits?}
+\item{start_from_fit}{Use each supplied fit to initialize its peels?}
 
-\item{hindcast}{Logical; add one-year projections to peeled fits? Prefer
-\code{\link[=fit_hindcast]{fit_hindcast()}} for this workflow.}
+\item{hindcast}{Project peeled fits? The only default difference between functions.}
 
-\item{grad_tol}{Numeric tolerance for \verb{max|grad|}. If \code{NULL} (default),
-the tolerance stored on \code{fit} (from \code{\link[=fit_tam]{fit_tam()}}) is used; otherwise the
-supplied value is passed to \code{\link[=check_tam]{check_tam()}}. Folds failing numerical checks
-are dropped; structural and advisory findings remain separate.}
+\item{proj_settings}{Hindcast settings: \code{n_proj} (default 1), \code{n_mean} (default 1),
+and either \code{catch} (default \code{"observed"}) or \code{F_mult}. Numeric controls are one
+value recycled, or \code{n_proj} values ordered by forecast horizon. Observed catch
+is complete raw catch numbers times supplied weights. Forecasts are shortened
+to available validation years. Ordinary retrospectives reject this argument.}
 
-\item{progress}{Logical; show progress bar using \code{\link[progressr:with_progress]{progressr::with_progress()}}.}
+\item{grad_tol}{Numerical check tolerance; defaults to each fit's stored value.}
 
-\item{globals}{Character vector naming global objects to supply to the workers.}
+\item{progress}{Show progress using progressr?}
 
-\item{catch}{Hindcast catch control: \code{"observed"} (default), a nonnegative
-scalar applied to all forecast years, a numeric vector named by forecast
-year, or \code{NULL} for status-quo F. Named values override observed catches;
-remaining years use derived observed catches. Values use native biomass
-units (catch numbers times individual weight), without automatic conversion.}
+\item{globals}{Global names passed to furrr workers. Configure your own future plan.}
 
-\item{F_mult}{Optional hindcast multiplier, scalar or named by forecast year.
-An explicitly supplied multiplier replaces the implicit observed-catch
-default. Explicit non-NULL \code{catch} and \code{F_mult} together are an error.
-These controls apply only when \code{hindcast = TRUE}.}
-
-\item{...}{Further arguments to \code{\link[=fit_retro]{fit_retro()}}, including \code{folds},
-\code{start_from_fit}, \code{grad_tol}, \code{progress} and \code{globals}.}
+\item{x}{A \code{tam_retro} object.}
 }
 \value{
-A list whose elements are:
-\itemize{
-\item \code{obs_pred} — a named list of stacked data frames (e.g., \code{catch}, \code{index});
-\item \code{pop} — a named list of stacked data frames (e.g., \code{ssb}, \code{N}, \code{M},
-\code{mu_M}, \code{F}, \code{mu_F}, \code{Z}, \code{ssb_mat});
-\item \code{mohns_rho} - data frame of Mohn's rho (measure of retrospective bias) values
-for each data frame within \code{pop} (calculated using \code{\link[=compute_mohns_rho]{compute_mohns_rho()}}
-function);
-\item \code{hindcast_rmse} (when \code{hindcast = TRUE}) - root mean squared error for
-use as an overall measure of the forecast skill of the model (calculated
-from survey index observations only using the \code{\link[=compute_hindcast_rmse]{compute_hindcast_rmse()}}
-function); and,
-\item \code{fits} - retained fitted objects, named by terminal year; and
-\item \code{fold_diagnostics} - controls, targets, convergence, warnings, failure
-reasons and scored-index counts for every requested fold.
-The \code{obs_pred} and \code{pop} objects are created using \code{\link[=tidy_tam]{tidy_tam()}}. A \code{fold} column
-is added to each data.frame within these objects which specifies the terminal
-year.
-}
+A \code{tam_retro} list with \code{fits} nested by model and terminal year;
+stacked \code{pop} and \code{obs_pred} with model, fold and horizon (zero historically);
+\code{mohns_rho}; detailed \code{scores}; matched \code{forecast_pairs}; \code{fold_diagnostics};
+and resolved \code{projection_controls}. Failed references make rho unavailable.
+All-failed runs still return diagnostics.
 }
 \description{
-Creates a sequence of terminal-year peels and refits the model on each
-truncated year range.
+Refit models after peeling terminal years. Hindcasts additionally forecast
+held-out observations, conditional on observed removals by default.
 }
 \details{
-Run a retrospective (peel) analysis
+Only observed years determine folds. Historical references have no
+forecasts. Held-out indices and catch compositions do not enter fitting;
+observed-catch conditioning uses only aggregate removals. Forecast biology
+uses training years and \code{n_mean}.
 
-Ordinary retrospectives fit historical years only, removing inherited projections.
-\code{folds} peels plus the full historical reference are returned. Existing
-projection years never become terminal assessment years.
+Survey log-RMSE pools observation errors. MASE compares absolute log errors
+with persistence on identical cases; see \code{\link[=compute_hindcast_mase]{compute_hindcast_mase()}}. Overall
+MASE averages ages within survey, surveys within horizon, then horizons.
+Aggregate indices require complete, consistent age coverage. Catch proportions
+and mean modeled age (plus age coded by its lower bound) are scored separately
+on their natural scale; genuine zeros are retained. Overlapping forecasts are
+distinct origin/horizon cases, not independent observations. These are
+conditional point-forecast diagnostics, not probability scores.
 
-\code{\link[=fit_hindcast]{fit_hindcast()}} additionally projects each peeled fit one year ahead and
-scores survey indices on the log scale. The default conditions on observed
-aggregate catch biomass in that held-out year. This is a conditional assessment
-of survey forecast skill, not a prediction of future removals or a forecast
-made with only information available at the original assessment date.
-
-Catch biomass is derived from complete raw catch-at-age times supplied weights,
-including retained ages within the model plus group. Stock weights may differ
-from fishery weights: supply authoritative annual catch totals when appropriate.
-Missing catch cells are not zero. Only the aggregate target is used; held-out
-catch composition, survey observations and biological inputs do not enter the
-fit. Forecast biology is based on training data, with \code{n_mean = 1}.
-
-The full historical reference has no forecast, so unknown catch beyond the
-observed period is not required. Failed fits and unavailable targets are
-excluded from stacked predictions but retained in \code{fold_diagnostics}.
-Mohn's rho is unavailable if the full historical reference failed.
-Scores describe retained observations; compare models only over identical
-forecast observations. Each survey observation receives equal weight.
-
-Refits use \code{\link[furrr:future_map]{furrr::future_map()}}; set your own \code{\link[future:plan]{future::plan()}} for parallel
-execution. The supplied fit is unchanged.
+Compare equivalent observations and age definitions. No ranking is produced.
+Missing baselines or zero persistence error make MASE unavailable. Failed
+numerical fits remain in \code{fits}, but not in stacked results or scores.
+Supplied fits and fitted objectives are unchanged.
 }
 \examples{
-fit <- fit_tam(
-  cod_obs,
-  years = 1983:2024,
-  ages = 2:14,
-  N_settings = list(process = "iid", init = "exp"),
-  F_settings = list(process = "rw", mu_form = NULL),
-  M_settings = list(process = "off", mu_supplied = ~ I(0.3)),
-  catch_settings = list(sd_form = ~ 1),
-  index_settings = list(sd_form = ~ 1, q_form = ~ q_block),
-  silent = TRUE
-)
-\donttest{
-if (interactive()) {
-  # Choose your parallel plan (set once per session)
-  future::plan(future::multisession, workers = 4)
-  retros <- fit_retro(fit, folds = 5, progress = TRUE)
-  head(retros$pop$ssb)
-  head(retros$mohns_rho)
-
-  vis_tam(retros$fits)
-  hc <- fit_hindcast(fit, folds = 5, progress = TRUE)
-  hc$hindcast_rmse  # survey index forecasts conditional on observed removals
-  hc$fold_diagnostics
-  # Compare with a forecast of status-quo fishing:
-  hc_F <- fit_hindcast(fit, folds = 5, F_mult = 1, progress = TRUE)
-  # A named annual catch vector overrides derived catches for those years.
-  # fit_hindcast(fit, folds = 5, catch = c(`2020` = 1000))
+\dontrun{
+retro <- fit_retro(fit, alternative = other_fit, folds = 5)
+hind <- fit_hindcast(fit, folds = 10,
+  proj_settings = list(n_proj = 3, n_mean = 3, catch = "observed"))
+print(hind)
+hind$scores
+vis_tam(hind$fits[[1]])
 }
-}
-
 }
 \seealso{
-\code{\link[=fit_tam]{fit_tam()}}, \code{\link[=sim_tam]{sim_tam()}}
+\code{\link[=fit_tam]{fit_tam()}}, \code{\link[=compute_mohns_rho]{compute_mohns_rho()}}
 }

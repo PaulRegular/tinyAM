@@ -98,6 +98,13 @@ For \eqn{t\ge2}, define expected log abundance for non-plus older ages by
 For the plus group,
 \deqn{g_{t,A}=\log\{N_{t-1,A-1}e^{-Z_{t-1,A-1}}+
 N_{t-1,A}e^{-Z_{t-1,A}}\}.}
+An optional \code{N_settings$mu_form} adds \eqn{X_{t,a}\beta_N} to these
+log survivor predictions, using destination-year/age population covariates.
+This multiplies survivor abundance by \eqn{\exp(X_{t,a}\beta_N)} after
+the plus-group survivor sum. It represents apparent gains or losses, not
+separately identified migration. It does not alter recruitment or N0.
+Covariates can confound mortality, catchability and survival deviations;
+source support and sensitivity analysis are needed.
 With the N process off, \eqn{\log N_{t,a}=g_{t,a}}. Otherwise \code{log_n}
 contains the realized states and \eqn{\eta^N_{t,a}=\log N_{t,a}-g_{t,a}}
 follows the selected process below. Its matrix is \eqn{(T-1)\times(A-1)}.
@@ -118,7 +125,7 @@ In the first year, let \eqn{s=\exp(-Z_{1,A})}. Geometric survivor shares are
 hidden plus-group tail. Normalize these shares and set
 \eqn{n_{1,j}=N_{1,A}p_j/\sum_k p_k}. This assumes constant plus-group
 mortality for the initial internal composition, without changing the
-chosen initial total abundance (\code{exp}, \code{free}, or \code{random}).
+chosen initial total abundance (\code{exp}, \code{free}, \code{latent}, \code{mono}, or \code{capped}).
 
 Subsequent predicted components are
 \deqn{v_{t,0}=N_{t-1,A-1}e^{-Z_{t-1,A-1}},}
@@ -169,13 +176,16 @@ contributions remain constant within M state blocks, which continue to share
 actual M. Ordinary terms supply any common slope; without them the slopes
 are centred on zero. See \link{formula_effects} for the equations and cautions.
 
-F mean curves with IID/AR1 residuals add cumulative non-negative log-F
+F mean curves with no residual process or with IID/AR1 residuals add cumulative non-negative log-F
 increments for \code{\link[=mono]{mono()}}, or \eqn{\log S(a)} for \code{\link[=logistic]{logistic()}}, so the latter
 multiplies the ordinary mean F by rising selectivity. These are fixed curve
 parameters, separate from Gaussian mean effects and latent F states. Static
 curves cancel from RW increments and are not supported there.
 
-Historical F has one \code{log_f} state per year and age:
+With \code{F_settings$process = "off"}, historical \eqn{F=\mu^F}.
+No F latent states, process SD or correlations are created. Projection
+controls still scale terminal historical F or solve for total catch.
+With an active F process, historical F has one \code{log_f} state per year and age:
 \deqn{\log F_{t,a}=\log\mu^F_{t,a}+\eta^F_{t,a},\quad t\le H.}
 \code{log_f} is the left-hand side; \code{eta_log_f} is the deviation on the right.
 For an active M process, \code{log_m} has one state per selected year and age

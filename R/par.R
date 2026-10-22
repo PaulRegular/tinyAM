@@ -65,12 +65,13 @@
 #'     See [prepare_tam()] for the choices and weak-identification warning.
 #'
 #' - **Abundance states and process variability (N)**
+#'   - `mu_n`: signed log-cohort mean coefficients when `N_settings$mu_form` is supplied.
 #'   - `log_sd_n` (if `dat$N_settings$process != "off"`)
 #'   - `logit_phi_n` length 2 (if `process == "ar1"`)
 #'   - `log_n` matrix (`year[-1]` × `age[-1]`) if `process != "off"`
 #'
 #' - **Fishing mortality (F)**
-#'   - `log_sd_f`
+#'   - `log_sd_f` (only when the F process is active)
 #'   - `logit_phi_f` length 2 (if `process == "ar1"`)
 #'   - `atanh_rho_f`: signed age correlation of annual F increments
 #'     (if `process == "cor_rw"`), reported as `rho_f` through `tanh()`.
@@ -78,7 +79,7 @@
 #'   - `dmu_f`: directly fitted non-negative log-mean-F increments for [mono()]
 #'   - `F_a50_*`, `log_F_slope_*`: midpoint and log positive slope for [logistic()]
 #'     mean curves. F states start at their complete mean curve, giving zero residuals.
-#'   - `log_f` matrix (historical `year` × `age`; no projection rows)
+#'   - `log_f` matrix (only with an active F process; historical `year` × `age`; no projection rows)
 #'
 #' - **Natural mortality (M)**
 #'   - `log_sd_m` (if `dat$M_settings$process != "off"`)
@@ -153,7 +154,8 @@ make_par <- function(dat) {
   if (is.null(dat$rec$sd)) par$log_sd_r <- 0
   if (ncol(dat$rec$matrix)) par$rec_beta <- setNames(numeric(ncol(dat$rec$matrix)), colnames(dat$rec$matrix))
   if (dat$rec$type == "ar1" && is.null(dat$rec$phi)) par$logit_phi_r <- c(year = 0)
-  par$log_sd_f <- 0
+  if (ncol(dat$N_modmat)) par$mu_n <- setNames(numeric(ncol(dat$N_modmat)), colnames(dat$N_modmat))
+  if (dat$F_settings$process != "off") par$log_sd_f <- 0
   if (dat$F_settings$process == "cor_rw") par$atanh_rho_f <- 0
   if (!is.null(dat$F_settings$mu_form)) {
     par$log_mu_f <- numeric(ncol(dat$F_modmat))
@@ -221,11 +223,11 @@ make_par <- function(dat) {
       dimnames = list(year = dat$M_settings$years, age_block = levels(dat$M_settings$age_blocks))
     )
   }
-  par$log_f <- matrix(0,
+  if (dat$F_settings$process != "off") par$log_f <- matrix(0,
     nrow = sum(!dat$is_proj), ncol = length(dat$ages),
     dimnames = list(year = dat$years[!dat$is_proj], age = dat$ages)
   )
-  if (!is.null(dat$F_mono_modmat) || any(vapply(dat$F_terms, function(x) x$type == "logistic", logical(1)))) {
+  if (dat$F_settings$process != "off" && (!is.null(dat$F_mono_modmat) || any(vapply(dat$F_terms, function(x) x$type == "logistic", logical(1))))) {
     surface <- matrix(
       drop(dat$F_modmat %*% par$log_mu_f) +
         .mean_effects(par, dat, "F")$contribution,

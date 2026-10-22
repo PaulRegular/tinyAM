@@ -111,3 +111,15 @@ Recovery reports retain equations, figures, support warnings and interval
 calculations. The package help documents the current interfaces and safeguards.
 No validation finding automatically promotes an assessment candidate or changes
 its retained scientific assumptions.
+
+## Cohort covariates
+
+See [cohort_report.md](cohort_report.md) and `cohort_recovery.R` for the focused
+cohort-mean pilot, including mortality/catchability overlap. Generated attempts
+remain under ignored `results/`.
+
+## Formula-driven F
+
+`deterministic_f_recovery.R` and [deterministic_f_report.md](deterministic_f_report.md)
+cover F means without a separate residual process, including projection and
+uncertainty checks. Settled assessment recipes are unchanged.

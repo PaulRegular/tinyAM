@@ -69,6 +69,29 @@
   par0
 }
 
+# Read the stored conditional mode without reevaluating or changing its objective.
+.start_parameters <- function(start, dat) {
+  if (inherits(start, "tam_fit")) {
+    source <- start
+    if (!is.null(source$parameter_values) && !is.null(source$obj)) {
+      start <- source$obj$env$parList(par = source$parameter_values)
+    } else if (!is.null(source$sdrep)) {
+      start <- as.list(source$sdrep, "Estimate")
+    } else {
+      cli::cli_abort("Starting fit has no stored parameter estimates.")
+    }
+    if (!identical(source$dat$index_settings$q_link, dat$index_settings$q_link)) {
+      start <- start[!grepl("^(log_q|logit_q$|dq$|eta_q_|log_sd_q_|logit_phi_q_|q_a50_|log_q_slope_)", names(start))]
+      cli::cli_inform("Catchability starts were omitted because q_link changed.")
+    }
+  }
+  if (!is.list(start) || (length(start) && (is.null(names(start)) ||
+    anyNA(names(start)) || any(!nzchar(names(start))) || anyDuplicated(names(start))))) {
+    cli::cli_abort("{.arg start_par} must be a named parameter list or a {.cls tam_fit} object.")
+  }
+  start
+}
+
 
 #' Fit a Tiny Assessment Model (TAM)
 #'
@@ -93,7 +116,7 @@
 #'
 #' Random-effect blocks are chosen automatically from the model settings:
 #'
-#' - Always includes `log_f` and eligible `log_r` states. Early recruitment
+#' - Includes `log_f` when the F process is active, and eligible `log_r` states. Early recruitment
 #'   anchors are fixed; see [recruitment_formulas].
 #' - Includes `log_n0` only if `N_settings$init == "latent"`.
 #' - Includes `log_n` if `N_settings$process != "off"`.
@@ -136,7 +159,7 @@
 #' @param add_osa_res Logical; add one-step-ahead residuals? Hard wired to
 #'   apply the `"oneStepGaussianOffMode"` method. See [RTMB::oneStepPredict()]
 #'   for details.
-#' @param start_par Optional list of starting parameter values, matching the
+#' @param start_par Optional fitted `tam_fit` or list of starting parameter values, matching the
 #'   structure returned by [make_par()]. Useful for warm starts or retrospective
 #'   runs where parameter estimates from a previous fit are reused to improve
 #'   convergence and speed. Non-matching or missing entries are ignored.
@@ -195,7 +218,7 @@ fit_tam <- function(
   data,
   years = NULL,
   ages = NULL,
-  N_settings = list(process = "iid", init = "exp", sd_form = ~1),
+  N_settings = list(process = "iid", init = "exp", mu_form = NULL, sd_form = ~1),
   rec_settings = list(process = "rw", mu_form = NULL, sd = NULL, phi = NULL),
   F_settings = list(process = "rw", mu_form = NULL, sd_form = ~1, mean_ages = NULL),
   M_settings = list(
@@ -239,6 +262,8 @@ fit_tam <- function(
     ))
   }
   if (!is.null(start_par)) {
+    start_par <- .start_parameters(start_par, dat)
+    refit_args$start_par <- start_par
     par <- .merge_start_par(par, start_par)
     if (!is.null(dat$rec$curve) && !any(c("log_sr_alpha", "log_sr_beta") %in% names(start_par))) {
       par <- .initialize_rec_curve(par, dat)
@@ -250,7 +275,7 @@ fit_tam <- function(
     }
   }
 
-  ran <- c("log_f", "log_r", .formula_random_parameters(dat))
+  ran <- c(if (dat$F_settings$process != "off") "log_f", "log_r", .formula_random_parameters(dat))
   if (dat$N_settings$init == "latent") {
     ran <- c(ran, "log_n0")
   }

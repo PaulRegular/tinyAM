@@ -34,6 +34,9 @@ A named list of stacked tables, with \code{formula_effects} when present:
 \itemize{
 \item \strong{obs_pred} — a named list of stacked data frames (e.g., \code{catch}, \code{index});
 \item \strong{pop} — a named list of stacked data frames (e.g., \code{ssb}, \code{N}, \code{M}, \code{mu_M}, \code{F}, \code{mu_F}, \code{Z}, …);
+\item \strong{deviations} — signed N/F/M process tables, using annual increments for
+RW processes and mean deviations for IID/AR1. M rows represent unique state
+blocks. These point estimates exclude unpenalized RW boundary rows.
 \item \strong{patterns} — population and mortality age-year tables for \code{\link[=plot_matrix]{plot_matrix()}}.
 Compatible units follow the first fitted model's displayed metric units,
 including explicit reference conversions. Unspecified fitted units remain unspecified;

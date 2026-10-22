@@ -691,7 +691,7 @@ logistic <- function(x, by = NULL) .formula_marker_error("logistic")
 #'
 #' ## Mean fishing mortality
 #'
-#' With `F_settings$process = "iid"` or `"ar1"`, use `~ mono(age)` or
+#' With `F_settings$process = "off"`, `"iid"` or `"ar1"`, use `~ mono(age)` or
 #' `~ logistic(age)`. Ordinary terms provide the baseline F. One curve is allowed;
 #' its numeric coordinate must be age or an age-derived `pop_covariates` column
 #' constant across years at each age. Categorical `by` groups may have separate
@@ -702,12 +702,13 @@ logistic <- function(x, by = NULL) .formula_marker_error("logistic")
 #' For logistic, \eqn{\log\mu_F = X\beta + \log S(x)}. The baseline therefore
 #' gives the asymptotic F when other covariates are held constant. Midpoint
 #' `F_a50_*` and positive slope `log_F_slope_*` are fitted separately from q
-#' curves. Realized F fluctuates around this log mean and need not be monotonic.
+#' curves. With the residual process off, F equals this mean. Otherwise realized
+#' F fluctuates around it and need not be monotonic.
 #' `mu_F` is the exponential of expected log F, rather than an arithmetic
 #' average over lognormal process draws.
 #' Static curves are rejected with RW/correlated-RW residuals because they
 #' cancel from the increments. Gaussian structured mean terms retain their
-#' existing IID-residual restriction, including when combined with a curve.
+#' existing IID-residual or no-residual-process restriction, including with a curve.
 #' `dmu_f` has the same zero bounds and boundary-inference limitations as `dq`.
 #' [tidy_pop()] reports mean-F profiles with joint RTMB-derived uncertainty.
 #'
@@ -875,8 +876,8 @@ mono <- function(x, by = NULL) {
   if (has_curve) {
     if (component != "F") cli::cli_abort("M_settings$mu_form does not support catchability curves: mono() and logistic() are enabled for F only.")
     if (n_mono + length(logistic) != 1L) cli::cli_abort("Use one mono() or logistic() curve in F_settings$mu_form.")
-    if (!dat$F_settings$process %in% c("iid", "ar1")) {
-      cli::cli_abort("F mean curves require process = 'iid' or 'ar1'. Static age curves cancel from RW increments.")
+    if (!dat$F_settings$process %in% c("off", "iid", "ar1")) {
+      cli::cli_abort("F mean curves require process = 'off', 'iid' or 'ar1'. Static age curves cancel from RW increments.")
     }
     variable <- if (n_mono) mono$variable[1L] else logistic[[1L]]$variable
     x <- d[[variable]]
@@ -940,8 +941,8 @@ mono <- function(x, by = NULL) {
   gaussian <- Filter(function(x) x$type != "logistic", terms)
   random_slope <- component == "M" && .M_ar1_random_slope(dat)
   if (length(gaussian) && !settings$process %in% c("iid", "off") && !random_slope) {
-    alternative <- if (component == "M") ", or use process = 'off' to vary only the M mean" else ""
-    cli::cli_abort(c("Structured {component} means currently require IID residuals{if (component == 'M') ' or process = off' else ''}.",
+    alternative <- paste0(", or use process = 'off' to vary only the ", component, " mean")
+    cli::cli_abort(c("Structured {component} means currently require IID residuals or process = off.",
       "i" = "Structured means and temporal residual processes may explain overlapping mortality variation; this combination has not been validated.",
       "i" = "Set process = 'iid'{alternative}.",
       if (component == "M") c("i" = "With AR1 M residuals, one iid(age_group, by = numeric_covariate) term is also supported. Its groups must be constant across years and respect M age blocks.")

@@ -158,6 +158,16 @@ objects are especially likely to depend on parameter structure.
 - Finish each milestone by removing stale scratch files. Preserve user edits
   and report open/locked files rather than closing applications forcibly.
 
+## Versioning and releases
+
+- Increment versions for releases, not individual commits or pushes.
+- Use patch releases for fixes without intentional API or model changes;
+  use minor releases for new capabilities or substantial pre-1.0 API changes.
+- Use a development suffix (e.g. `0.1.1.9000`) for unreleased work.
+- Maintain concise `NEWS.md` entries and identify breaking changes.
+- The evaluation and fleet expansion targets a future `0.2.0`; do not tag,
+  release, or merge a branch without the user's request.
+
 ## Before finishing a task
 
 Report:

@@ -254,18 +254,19 @@ validate_workflows <- function(example_file, output) {
   })
   retro <- step("retrospective fold", {
     r <- fit_retro(fit, folds = 1, start_from_fit = TRUE, progress = FALSE)
-    parameters <- as.list(r$fits[["2038"]]$sdrep, "Estimate")
-    stopifnot(length(r$fits) == 2L,
+    parameters <- as.list(r$fits[[1]][["2038"]]$sdrep, "Estimate")
+    stopifnot(length(r$fits[[1]]) == 2L,
       nrow(parameters$log_m) == 39L,
       length(parameters[[fit$dat$M_terms[[1L]]$parameter]]) == 4L)
     r
   })
   hindcast <- step("hindcast fold", {
-    h <- fit_hindcast(fit, folds = 1, start_from_fit = TRUE, F_mult = 1, progress = FALSE)
-    stopifnot(nrow(h$fold_diagnostics) == 2L, length(h$hindcast_rmse) == 1L)
-    if ("2038" %in% names(h$fits)) {
-      stopifnot(sum(h$fits[["2038"]]$dat$is_proj) == 1L, is.finite(h$hindcast_rmse))
-    } else stopifnot(is.nan(h$hindcast_rmse))
+    h <- fit_hindcast(fit, folds = 1, start_from_fit = TRUE, proj_settings = list(F_mult = 1), progress = FALSE)
+    stopifnot(nrow(h$fold_diagnostics) == 2L)
+    scores <- subset(h$scores, type == "index" & level == "overall" & is.na(horizon))
+    if (isTRUE(h$fits[[1]][["2038"]]$is_converged)) {
+      stopifnot(sum(h$fits[[1]][["2038"]]$dat$is_proj) == 1L, is.finite(scores$RMSE))
+    }
     h
   })
   if (!is.null(hindcast)) step("hindcast numerical convergence", {

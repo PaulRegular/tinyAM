@@ -102,28 +102,30 @@ test_that("fit_retro runs peels and returns stacked outputs", {
   expect_true(is.list(retros))
   expect_true(all(c("obs_pred", "pop", "fits") %in% names(retros)))
   # At least one retro fit kept (may drop if non-converged)
-  if (length(retros$fits) > 0) {
-    rf <- retros$fits[[1]]
+  if (length(retros$fits[[1]]) > 0) {
+    rf <- retros$fits[[1]][[1]]
     expect_true(is.list(rf$rep))
     expect_s3_class(rf$sdrep, "sdreport")
     expect_s3_class(rf, "tam_fit")
     expect_identical(rf$refit_args$data, fit$refit_args$data)
     expect_true(all(rf$dat$pop_data$year %in% rf$dat$years))
-    expect_true("NCAM_M_assumption" %in% names(rf$dat$pop_data))
+    expect_true(all(names(fit$dat$pop_data) %in% names(rf$dat$pop_data)))
   }
 })
 
-test_that("fit_retro returns error when no fits converge", {
+test_that("fit_retro retains diagnostics when no fits converge", {
   fit <- default_fit
-  suppressWarnings(fit_retro(fit, folds = 1, progress = FALSE, grad_tol = 1e-16)) |>
-    expect_error("All folds failed convergence checks")
+  out <- suppressWarnings(fit_retro(fit, folds = 1, progress = FALSE, grad_tol = 1e-16))
+  expect_s3_class(out, "tam_retro")
+  expect_false(any(out$fold_diagnostics$is_converged))
+  expect_length(out$pop, 0L)
 })
 
 test_that("fit_retro inherits grad_tol stored on the fit when omitted", {
   fit <- default_fit
   fit$grad_tol <- 1e-16
-  suppressWarnings(fit_retro(fit, folds = 1, progress = FALSE)) |>
-    expect_error("All folds failed convergence checks")
+  out <- suppressWarnings(fit_retro(fit, folds = 1, progress = FALSE))
+  expect_false(any(out$fold_diagnostics$is_converged))
 })
 
 test_that("fit_retro falls back to default grad_tol when fit has none", {
@@ -134,10 +136,10 @@ test_that("fit_retro falls back to default grad_tol when fit has none", {
   implicit <- fit_retro(fit, folds = 0, progress = FALSE)
   explicit <- fit_retro(fit, folds = 0, progress = FALSE, grad_tol = 1e-2)
 
-  expect_identical(names(implicit$fits), names(explicit$fits))
+  expect_identical(names(implicit$fits[[1]]), names(explicit$fits[[1]]))
   expect_identical(
-    lapply(implicit$fits, `[[`, "is_converged"),
-    lapply(explicit$fits, `[[`, "is_converged")
+    lapply(implicit$fits[[1]], `[[`, "is_converged"),
+    lapply(explicit$fits[[1]], `[[`, "is_converged")
   )
   expect_identical(names(implicit$obs_pred), names(explicit$obs_pred))
   expect_identical(names(implicit$pop), names(explicit$pop))
@@ -163,9 +165,9 @@ test_that("fit_hindcasts runs peels with a one year projection", {
   fit <- default_fit
   hindcasts <- suppressWarnings(fit_hindcast(fit, folds = 4, progress = FALSE))
   # At least one hindcast fit kept (may drop if non-converged)
-  if (length(hindcasts$fits) > 1) {
-    hindcast_year <- as.numeric(names(hindcasts$fits[1]))
-    modeled_years <- hindcasts$fits[[1]]$dat$years
+  if (length(hindcasts$fits[[1]]) > 1) {
+    hindcast_year <- as.numeric(names(hindcasts$fits[[1]][1]))
+    modeled_years <- hindcasts$fits[[1]][[1]]$dat$years
     expect_equal(hindcast_year + 1, max(modeled_years))
   }
 })

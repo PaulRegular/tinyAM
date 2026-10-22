@@ -93,6 +93,7 @@ compute_mohns_rho <- function(data) {
 #' combining surveys. Conflicting observations for the same key cause an error.
 #' Repeated copies of the same observation across folds count only once per
 #' prediction. Each matched forecast receives equal weight.
+#' Matched rows from `result$forecast_pairs$index` are also accepted directly.
 #'
 #' On the natural scale,
 #' \deqn{\mathrm{RMSE}=\sqrt{\frac{1}{K}\sum_i(Y_i-\widetilde Y_i)^2}.}
@@ -119,7 +120,11 @@ compute_mohns_rho <- function(data) {
 #'
 #' @export
 compute_hindcast_rmse <- function(data, log = TRUE) {
-  keys <- c("year", "age", intersect(c("type", "survey"), names(data)))
+  if (!"is_proj" %in% names(data) || "baseline" %in% names(data)) {
+    if (!"baseline" %in% names(data)) data$baseline <- rep(NA_real_, nrow(data))
+    return(.score_forecasts(data, log)$RMSE)
+  }
+  keys <- c("year", "age", intersect(c("model", "type", "survey", "fleet"), names(data)))
   proj_d <- data[data$is_proj, c(keys, "pred"), drop = FALSE]
   obs_d <- unique(data[!data$is_proj & !is.na(data$obs), c(keys, "obs"), drop = FALSE])
   if (anyDuplicated(obs_d[keys])) {

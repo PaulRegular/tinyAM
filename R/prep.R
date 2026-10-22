@@ -382,6 +382,13 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #'   older-age `log_n0` states; `"latent"` integrates them without an initial
 #'   density. `"mono"` constrains abundance to decline from r0; `"capped"`
 #'   bounds each older age by r0 without imposing age ordering. See **Details**.
+#' - `mu_form`: ordinary fixed formula for proportional cohort gains/losses,
+#'   default `NULL`. Covariates come from `pop_covariates` at the destination
+#'   year and older age, after survivors are combined (including the plus group).
+#'   Recruitment and initialization are unaffected. These effects do not
+#'   identify immigration separately from mortality or observation changes.
+#'   RW residuals require independent temporal mean contrasts; constant
+#'   directions cancel and are rejected. See [tinyAM-model].
 #' - `sd_form`: ordinary formula for log SD of older-age survival residuals,
 #'   default `~ 1`. Use `~ factor(age)` or a supplied age-sharing column in
 #'   `data$pop_covariates`. Its design must be constant across years. Recruitment and
@@ -399,7 +406,9 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #' - `phi`: fixed AR1 correlation in `[0, 1)`, or `NULL` to estimate it.
 #'   Must be `NULL` for other processes. Estimated correlations are positive.
 #' @param F_settings A list with elements:
-#' - `process`: `"iid"` for independent departures from the mean log F,
+#' - `process`: `"off"` makes historical F equal its explicit mean formula,
+#'   without F latent states, residual SDs or correlations. `"iid"` gives
+#'   independent departures from the mean log F,
 #'   `"rw"` for departures that accumulate over time, or `"ar1"` for departures
 #'   correlated between years and ages.
 #'   `"cor_rw"` accumulates changes over time with AR1 correlation between
@@ -410,7 +419,7 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #'   IID SDs describe residuals; RW/correlated-RW SDs describe annual increments;
 #'   stationary AR1 retains its innovation-scale convention.
 #' - `mu_form`: an optional formula for mean-\eqn{F} (coefficients estimated as
-#'   **log-scale** parameters `log_mu_f`), evaluated on `data$pop_covariates`. Required for `"iid"` and `"ar1"`;
+#'   **log-scale** parameters `log_mu_f`), evaluated on `data$pop_covariates`. Required for `"off"`, `"iid"` and `"ar1"`;
 #'   use `~ 1` for one estimated mean level or `~ factor(age)` for age-specific
 #'   means. For `"rw"`, `NULL` is allowed. Mean columns constant through time
 #'   cancel from RW increments and are removed with a warning. Remaining
@@ -419,7 +428,7 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #'   e.g. `~ factor(age) + rw(year)`. Only one temporal mean term is supported;
 #'   structured means with temporal residual processes are not yet enabled.
 #'   [mono()] and [logistic()] can instead describe a rising mean age curve
-#'   with IID or AR1 residuals, e.g. `~ logistic(age)`. Ordinary terms supply
+#'   with no residual process or with IID/AR1 residuals, e.g. `~ logistic(age)`. Ordinary terms supply
 #'   baseline F; realized F can depart from the rising mean. Static curves are
 #'   not identifiable with RW/correlated-RW residuals. See [catchability_curves].
 #' - `mean_ages`: optional vector of ages to include in population weighted
@@ -499,14 +508,10 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #'   Can be a value of length 1 or
 #'   length = `n_proj`. When it is a vector of length one, that multiplier is recycled across all
 #'   projection years.
-#' - `catch`: optional projected catch biomass in native abundance-times-weight
-#'   units. Solve one multiplier of terminal F-at-age each year to attain these
-#'   removals. Use one value repeated across years or one per projection year;
-#'   named vectors must identify every projection year. No unit conversion occurs.
-#'   Supplying catch clears inherited F_mult, and vice versa. Explicitly supplying
-#'   both non-NULL controls is an error. Clearing both restores status-quo F.
-#'   Targets must be below available vulnerable biomass; failures do not cap catch.
-#'   Zero catch gives exactly zero F. See [tinyAM-model] for equations and timing.
+#' - `catch`: total annual catch weight, in catch-number times mean-weight units
+#'   (e.g. tonnes for thousand fish and kg). Supply one value recycled across
+#'   years, or `n_proj` values. Specify either `catch` or `F_mult`, not both.
+#'   See [tinyAM-model] for the catch solver and feasibility safeguards.
 #'
 #' @return
 #' A named list `dat` containing:
@@ -555,7 +560,7 @@ prepare_tam <- function(
     data,
     years = NULL,
     ages = NULL,
-    N_settings = list(process = "iid", init = "exp", sd_form = ~1),
+    N_settings = list(process = "iid", init = "exp", mu_form = NULL, sd_form = ~1),
     rec_settings = list(process = "rw", mu_form = NULL, sd = NULL, phi = NULL),
     F_settings = list(process = "rw", mu_form = NULL, sd_form = ~1, mean_ages = NULL),
     M_settings = list(
@@ -573,7 +578,7 @@ prepare_tam <- function(
   dat$obs <- obs
 
   dat$N_settings$process <- match.arg(dat$N_settings$process, c("off", "iid", "rw", "ar1"))
-  dat$F_settings$process <- match.arg(dat$F_settings$process, c("iid", "rw", "cor_rw", "ar1"))
+  dat$F_settings$process <- match.arg(dat$F_settings$process, c("off", "iid", "rw", "cor_rw", "ar1"))
   dat$M_settings$process <- match.arg(dat$M_settings$process, c("off", "iid", "rw", "ar1"))
 
   if (!dat$F_settings$process %in% c("rw", "cor_rw") && is.null(dat$F_settings$mu_form)) {
@@ -779,6 +784,7 @@ prepare_tam <- function(
   q_design <- .parse_q_formula(dat$index_settings$q_form, dat$obs$index)
   dat[names(q_design)] <- q_design
   .check_q_terms(dat)
+  dat$N_modmat <- .parse_cohort_mean(dat)
   dat$F_terms <- dat$M_terms <- list()
   if (!is.null(dat$F_settings$mu_form)) {
     mean_design <- .parse_mean_formula(dat$F_settings$mu_form, dat, "F")
@@ -844,7 +850,7 @@ prepare_tam <- function(
   # model.matrix() can silently omit rows with missing covariates.
   design_tables <- c(
     sd_catch_modmat = "catch", sd_index_modmat = "index",
-    q_modmat = "index", F_modmat = "population", M_modmat = "population"
+    q_modmat = "index", N_modmat = "population", F_modmat = "population", M_modmat = "population"
   )
   for (nm in names(design_tables)) {
     x <- dat[[nm]]

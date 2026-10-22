@@ -320,6 +320,7 @@ ricker <- function(ssb, lag = NULL) {
       initial[a - 1L]
     }
   }
+  cohort_mean <- if (!is.null(par[["mu_n"]])) matrix(drop(dat$N_modmat %*% par[["mu_n"]]), T, A) else NULL
   eta_log_N <- matrix(0, T - 1L, A - 1L)
   if (simulate && dat$N_settings$process != "off" && !dat$process_sd$N$default && dat$N_settings$process != "rw") {
     eta_log_N <- .rprocess_scaled(eta_log_N, .process_sd(par, dat, "N"), dat$N_settings$process,
@@ -345,6 +346,7 @@ ricker <- function(ssb, lag = NULL) {
     if (y > 1L) {
       pred_log_N[y, older] <- log_N[y - 1L, older - 1L] - Z[y - 1L, older - 1L]
       pred_log_N[y, A] <- RTMB::logspace_add(pred_log_N[y, A], log_N[y - 1L, A] - Z[y - 1L, A])
+      if (!is.null(cohort_mean)) pred_log_N[y, older] <- pred_log_N[y, older] + cohort_mean[y, older]
       if (simulate && dat$N_settings$process == "rw" && y == 2L) {
         eta_log_N[1L, ] <- par$log_n[1L, ] - pred_log_N[y, older]
         eta_log_N <- if (dat$process_sd$N$default) {
@@ -448,10 +450,15 @@ ricker <- function(ssb, lag = NULL) {
       exp(par[["log_m"]][, dat$M_settings$age_blocks, drop = FALSE])
   }
   F <- matrix(0, length(dat$years), length(dat$ages))
-  F[!dat$is_proj, ] <- exp(par$log_f)
+  if (dat$F_settings$process == "off") {
+    mean <- matrix(drop(dat$F_modmat %*% par$log_mu_f) + .mean_effects(par, dat, "F")$contribution, length(dat$years), length(dat$ages))
+    F[!dat$is_proj, ] <- exp(mean[!dat$is_proj, , drop = FALSE])
+  } else {
+    F[!dat$is_proj, ] <- exp(par$log_f)
+  }
   if (any(dat$is_proj)) {
     F[dat$is_proj, ] <- sweep(
-      exp(par$log_f[rep(nrow(par$log_f), sum(dat$is_proj)), , drop = FALSE]),
+      F[rep(max(which(!dat$is_proj)), sum(dat$is_proj)), , drop = FALSE],
       1L, if (is.null(dat$proj_settings$F_mult)) rep(1, sum(dat$is_proj)) else dat$proj_settings$F_mult, `*`
     )
   }

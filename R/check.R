@@ -161,10 +161,17 @@ check_tam <- function(fit, grad_tol = NULL, detailed = FALSE) {
       "predictions", if (is.null(fit$rep$log_pred) || is.null(fit$rep$sd_obs)) {
         NA
       } else {
-        all(is.finite(fit$rep$log_pred)) &&
-          all(is.finite(fit$rep$sd_obs) & fit$rep$sd_obs > 0)
+        valid <- is.finite(fit$rep$log_pred)
+        catch <- fit$dat$proj_settings$catch
+        map <- fit$dat$obs_map
+        if (!is.null(catch) && !is.null(map) && nrow(map) == length(valid)) {
+          zero_years <- as.numeric(names(catch)[catch == 0])
+          zero <- map$type == "catch" & map$year %in% zero_years
+          valid <- valid | (zero & is.infinite(fit$rep$log_pred) & fit$rep$log_pred < 0)
+        }
+        all(valid) && all(is.finite(fit$rep$sd_obs) & fit$rep$sd_obs > 0)
       },
-      "Log predictions and positive observation SDs must be finite."
+      "Log predictions and positive observation SDs must be finite, except deliberately zero projected catches."
     )
   )
   structural <- .check_tam_structure(fit$dat, fit$parameter_map)
@@ -207,12 +214,12 @@ check_tam <- function(fit, grad_tol = NULL, detailed = FALSE) {
   out <- data.frame(check = character(), status = character(), detail = character())
   designs <- c(
     q_modmat = "index", sd_index_modmat = "index",
-    sd_catch_modmat = "catch", F_modmat = "population", M_modmat = "population"
+    sd_catch_modmat = "catch", N_modmat = "population", F_modmat = "population", M_modmat = "population"
   )
   parameters <- c(
     q_modmat = if (identical(dat$index_settings$q_link, "logit")) "logit_q" else "log_q",
     sd_index_modmat = "log_sd_index", sd_catch_modmat = "log_sd_catch",
-    F_modmat = "log_mu_f", M_modmat = "mu_m"
+    N_modmat = "mu_n", F_modmat = "log_mu_f", M_modmat = "mu_m"
   )
   for (nm in names(designs)) {
     x <- dat[[nm]]
@@ -235,6 +242,14 @@ check_tam <- function(fit, grad_tol = NULL, detailed = FALSE) {
         z <- matrix(x[, j], ny, length(dat$ages))
         as.vector(z[-1, , drop = FALSE] - z[-ny, , drop = FALSE])
       }, numeric((ny - 1L) * length(dat$ages)))
+    }
+    if (nm == "N_modmat" && ncol(x)) {
+      ny <- sum(!dat$is_proj)
+      x <- vapply(seq_len(ncol(x)), function(j) {
+        z <- matrix(x[, j], ny, length(dat$ages))[-1L, -1L, drop = FALSE]
+        if (dat$N_settings$process == "rw") z <- z[-1L, , drop = FALSE] - z[-nrow(z), , drop = FALSE]
+        as.vector(z)
+      }, numeric((ny - 1L - (dat$N_settings$process == "rw")) * (length(dat$ages) - 1L)))
     }
     assessable <- nrow(x) > 0L && all(is.finite(x))
     rank <- if (!ncol(x)) {

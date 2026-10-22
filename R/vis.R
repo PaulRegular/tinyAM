@@ -26,7 +26,10 @@
 #'          Stock-recruit models add a relationship page with parent-year pairs,
 #'          median curves at declared reference covariates and conditional
 #'          recruitment predictions. Random parameters also show signed
-#'          recruitment residuals. See [tidy_recruitment()].
+#'          recruitment deviations. See [tidy_recruitment()].
+#'          N/F/M deviations use signed bubbles; RW values are annual increments,
+#'          while IID/AR1 values are deviations from their mean. Shared M blocks
+#'          are not treated as separate biological ages.
 #'          Random plots include latent states and formula-effect trends.
 #'          Age-year plots offer Annual trends (year axis, age selector) and
 #'          Age profiles (age axis, year selector). Each plot starts in its
@@ -129,6 +132,7 @@ vis_tam <- function(..., model_list = NULL, interval = 0.95, output_file = NULL,
   category[par %in% c("q", "logit_q")] <- "Catchability"
   category[par %in% "dq" | grepl("^q_(a50|slope)_", par)] <- "Catchability curves"
   category[grepl("^mu_", par)] <- "Mortality means"
+  category[par == "mu_n"] <- "Cohort means"
   category[par == "dmu_f" | grepl("^F_(a50|slope)_", par)] <- "Mortality means"
   category[grepl("^(phi_|rho_)", par)] <- "Correlations"
   category[par %in% c("rec_beta", "sr_alpha", "sr_beta")] <- "Recruitment"
@@ -136,7 +140,7 @@ vis_tam <- function(..., model_list = NULL, interval = 0.95, output_file = NULL,
   category[par == "d_n0"] <- "Initial steps"
   category <- factor(category, levels = c(
     "Process SDs", "Process SD coefficients", "Observation SDs",
-    "Catchability", "Catchability curves", "Mortality means", "Correlations",
+    "Catchability", "Catchability curves", "Mortality means", "Cohort means", "Correlations",
     "Recruitment", "Initial abundance", "Initial steps", "Other"
   ))
   split(data, category, drop = TRUE)
