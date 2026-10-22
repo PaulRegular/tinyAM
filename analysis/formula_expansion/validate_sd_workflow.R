@@ -15,8 +15,8 @@ for (case in cases) {
       stopifnot(sum(projection$dat$is_proj) == 3L, identical(before, serialize(fit$dat, NULL)))
       retro <- fit_retro(projection, folds = 1, start_from_fit = TRUE, progress = FALSE)
       terminal <- max(fit$dat$years[!fit$dat$is_proj])
-      stopifnot(all(as.integer(names(retro$fits)) <= terminal))
-      for (fold in retro$fits) {
+      stopifnot(all(as.integer(names(retro$fits[[1]])) <= terminal))
+      for (fold in retro$fits[[1]]) {
         for (term in tinyAM:::.formula_terms(fold$dat)) {
           actual <- names(tinyAM:::.tam_parameter_summary(fold, "Estimate")[[term$parameter]])
           expected <- unlist(lapply(term$groups, `[[`, "states"), use.names = FALSE)
@@ -24,7 +24,7 @@ for (case in cases) {
         }
       }
       hindcast <- fit_hindcast(projection, folds = 1, start_from_fit = TRUE, progress = FALSE)
-      stopifnot(all(vapply(hindcast$fits, function(fold) sum(fold$dat$is_proj) == 1L, logical(1))))
+      stopifnot(all(vapply(hindcast$fits[[1]], function(fold) sum(fold$dat$is_proj) == as.integer(max(fold$dat$years) > tinyAM:::.terminal_year(fold)), logical(1))))
       simulated <- sim_tam(projection,
         n = 2, par_uncertainty = "none", redraw_random = TRUE,
         seed = 640001 + match(case, cases), progress = FALSE
@@ -43,7 +43,7 @@ for (case in cases) {
         output_file = normalizePath(file.path(root, paste0("sd_", case, "_dashboard.html")), mustWork = FALSE),
         open_file = FALSE, render_args = list(quiet = TRUE)
       )
-      list(projection = projection$is_converged, retro = length(retro$fits), hindcast = length(hindcast$fits))
+      list(projection = projection$is_converged, retro = length(retro$fits[[1]]), hindcast = length(hindcast$fits[[1]]))
     },
     warning = function(w) {
       warnings <<- c(warnings, conditionMessage(w))

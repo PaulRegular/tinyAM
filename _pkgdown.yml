@@ -52,6 +52,7 @@ reference:
   - tam_fit_summary
   - fit_retro
   - compute_hindcast_rmse
+  - compute_hindcast_mase
   - compute_mohns_rho
   - sim_tam
 - title: Visualize and compare
