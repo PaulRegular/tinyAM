@@ -2,11 +2,14 @@
 
 ## Historical 23-assessment capability inventory
 
-**Process-expansion follow-up:** F now supports AR1 age-correlated RW increments
+**Implementation follow-up:** F now supports AR1 age-correlated RW increments
 (`cor_rw`), and N/F/M support ordinary age-based log-SD sharing formulas.
-Age/year-specific spawning-time SSB is also available. The prevalence counts below
-remain those of the source review; these three rows now describe supported
-options requiring source-definition checks, rather than absent features. See
+Age/year-specific spawning-time SSB is also available. Cohort covariates, formula-driven F and labeled fleets are now also supported;
+shared catch weights can be supplied separately from stock weights. These options
+do not automatically change the retained translations. The prevalence counts below
+remain those of the source review; implemented and partial entries describe
+current support requiring source-definition checks, rather than wholly absent
+features. See
 [the validation studies](../formula_expansion/README.md) for recovery and application evidence.
 
 The original review covered **23 then-current detailed assessment records: 21 stock recipes
@@ -26,7 +29,7 @@ source inputs to fit; their limited known specifications remain in the inventory
 | Correlated observation errors, including full biomass covariance | 9 | [NE Arctic cod](source_reviews/ices_cod_northeast_arctic.md), [EBS pollock](source_reviews/afsc_pollock_ebs.md) | Independent lognormal observations; mean/SD random effects are not equivalent. | Represent joint information and uncertainty more faithfully. | Moderate–high |
 | Multiple age-sharing groups for latent F/N process SDs | 9 | [Plaice](source_reviews/ices_plaice_north_sea.md), [Northern Gulf cod](source_reviews/dfo_cod_3pn4rs.md) | Ordinary age-based `sd_form` is now supported for N/F/M, with M designs constant within fitted state blocks. Recruitment remains separate. | Different process variability for young ages or plus groups without extra observation noise. | Implemented |
 | Totals plus age/length composition likelihoods | 9 | [GOA cod](source_reviews/afsc_cod_goa.md), [Northern Shelf cod](source_reviews/ices_cod_north_sea.md) | Convert recoverable totals/compositions to age observations, or omit unsupported components. Multinomial, Dirichlet-multinomial and logistic-normal source likelihoods differ. | Use original observation units and sample-size information. | High |
-| Fleet, substock and normalized selectivity structures | 8 | [GOA pollock](source_reviews/afsc_pollock_goa.md), [summer flounder](source_reviews/nefsc_summer_flounder.md) | Aggregate removals and flexible F-at-age. Rising mono/logistic F means are supported with IID/AR1 residuals; they do not reproduce fleet-specific, normalized or double-logistic selectivity processes. | Preserve fishery distinctions, selectivity normalization and associated observations. | High |
+| Fleet, substock and normalized selectivity structures | 8 | [GOA pollock](source_reviews/afsc_pollock_goa.md), [summer flounder](source_reviews/nefsc_summer_flounder.md) | Optional fleet labels now give separate F surfaces with a shared specification, correlation parameters and population. Ordinary/mono/logistic means and fleet SD sharing are supported; fleet-specific model types, substocks, normalized/double-logistic source processes and fleet-specific weights remain distinct. | Preserve fishery distinctions, selectivity normalization and associated observations. | Partial support; remaining structures high |
 | Survival to spawning time in SSB | 6 | [Baltic sprat](source_reviews/ices_sprat_baltic.md), [EBS pollock](source_reviews/afsc_pollock_ebs.md) | `data$maturity$spawn_time` supports age/year timing, shared by F/M. Separate F/M fractions and seasonal biology remain unsupported. | Match parent SSB and reported biomass timing. | Implemented for supplied age/year fractions |
 | Priors on starting mortality, q or selectivity | 3 | [Southern Gulf cod](source_reviews/dfo_cod_4t4vn.md), [GOA pollock](source_reviews/afsc_pollock_goa.md) | Starting values or q logit restriction are not priors. Fixed Gaussian effect SDs are supported, including a standalone M mean RW; the source starting-level priors remain different. | Reproduce external information and stabilize genuinely weak boundaries. | Moderate |
 | Recruitment curves beyond BH/Ricker | 2 | [Western Baltic herring](source_reviews/ices_herring_western_baltic_2026.md), [Southern Gulf cod](source_reviews/dfo_cod_4t4vn.md) | RW or stationary recruitment; hockey-stick and SSB times an AR1 recruitment rate remain distinct. | Match those recruitment equations without substituting another curve. | Moderate |
@@ -69,7 +72,7 @@ The remaining items are proposals, not authorized additions.
    mean effects; a dedicated residual-SD interface would mainly ease that
    specification. Avoid a general prior language initially.
 
-Composition likelihoods and explicit fleets are useful but would substantially
-expand tinyAM. Additional recruitment curves have lower confirmed prevalence
+Composition likelihoods remain a substantial expansion. Labeled fleets are now
+supported within the shared-specification limits above. Additional recruitment curves have lower confirmed prevalence
 in this inventory. None of these recommendations assumes that a new feature
 would necessarily improve agreement with an official assessment.

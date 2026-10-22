@@ -123,3 +123,9 @@ remain under ignored `results/`.
 `deterministic_f_recovery.R` and [deterministic_f_report.md](deterministic_f_report.md)
 cover F means without a separate residual process, including projection and
 uncertainty checks. Settled assessment recipes are unchanged.
+
+## Fleets and catch weights
+
+See `fleet_validation.R` and [fleet_report.md](fleet_report.md) for independent
+fleet-process checks, a two-fleet recovery pilot and an unsuccessful but retained
+four-fleet summer flounder trial. No settled recipe is changed.

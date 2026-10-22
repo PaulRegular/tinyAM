@@ -348,3 +348,28 @@ The emphasis is therefore less on providing a single preferred assessment formul
 - Plan and implement conditional AIC separately, beginning with its statistical
   specification and validation. No conditional-AIC work is included in the
   repository cleanup or website publication.
+
+
+### Multiple fisheries
+
+An optional `catch$fleet` column separates catch observations by fishery while
+retaining one population. Supply a complete year-age grid per fleet, using
+`NA` for unobserved cells. F formulas can use intrinsic `fleet`:
+
+```r
+F_settings = list(
+  process = "iid",
+  mu_form = ~ fleet + logistic(age, by = fleet),
+  sd_form = ~ fleet
+)
+```
+
+F processes run independently within fleet, sharing process type and correlations.
+Total mortality uses the sum of fleet F. `process = "off"` is also available
+with an explicit F mean. Projection controls remain stock-wide.
+
+Optional `weight$catch_weight` supplies common catch weights in the same units
+as `weight$obs`. Catch biomass and catch targets use them; biomass and SSB use
+stock weights. An absent catch-weight column uses stock weights. Projection
+weights average recent years at each retained biological age. The dashboard
+adds fleet-specific catch and F views; total F remains available.
