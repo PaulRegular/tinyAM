@@ -32,7 +32,11 @@ stopifnot(
   min(i$age[i$type == "catch" & i$measure == "numbers_at_age"], na.rm = TRUE) == 1L,
   max(i$age[i$type == "catch" & i$measure == "numbers_at_age"], na.rm = TRUE) == 8L,
   setequal(unique(i$survey[i$type == "index"]), c("BTS+COAST", "BSAS")),
+  sum(i$type == "weight" & i$measure == "weight_at_age") == 242L,
+  !any(i$measure == "spawning_weight_at_age"),
   all(i$sampling_time[i$type == "index"] == 0.705),
+  all(i$basis[i$type == "index"] == "index_scale"),
+  all(i$unit[i$type == "index"] == "native survey index (unit unresolved)"),
   max(i$age[i$survey == "BTS+COAST"], na.rm = TRUE) == 7L,
   max(i$age[i$survey == "BSAS"], na.rm = TRUE) == 8L,
   sum(i$type == "M" & i$measure == "natural_mortality_at_age") == 8L,
@@ -49,9 +53,15 @@ stopifnot(abs(catch_biomass_t - 4755) < 10)
 
 n <- o[o$assessment_id == benchmark_id & o$measure == "numbers_at_age", ]
 f <- o[o$assessment_id == benchmark_id & o$measure == "fishing_mortality_at_age", ]
+w <- o[o$assessment_id == benchmark_id & o$type == "biology" & o$measure == "weight_at_age", ]
 stopifnot(
   nrow(n) == 43L * 8L, nrow(f) == 43L * 8L,
+  nrow(w) == 43L * 8L,
   all(n$year %in% 1981:2023), all(f$year %in% 1981:2023),
+  all(w$year %in% 1981:2023), all(w$age %in% 1:8),
+  all(w$value > 0), all(w$se > 0),
+  all(w$source_type == "derived_source_output"),
+  all(grepl("exp\\(logSW\\)", w$notes)),
   all(n$se > 0), all(f$se > 0),
   all(n$unit == "thousand fish"), all(f$unit == "per year"),
   all(grepl("SE is on the log scale", n$notes)), all(grepl("SE is on the log scale", f$notes)),

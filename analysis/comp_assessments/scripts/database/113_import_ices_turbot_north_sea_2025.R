@@ -109,8 +109,8 @@ for (fleet_id in 2:3) {
   survey_obs <- obs[obs$fleet == fleet_id, , drop = FALSE]
   survey_name <- survey_names[[fleet_id - 1L]]
   input_rows[[length(input_rows) + 1L]] <- make_input(
-    "index", "numbers_at_age", "numbers", survey_obs$value,
-    "relative index (native scale; multiplier unspecified)",
+    "index", "numbers_at_age", "index_scale", survey_obs$value,
+    "native survey index (unit unresolved)",
     year = survey_obs$year, age = survey_obs$age, survey = survey_name,
     sampling_time = survey_obs$sample_time,
     source_reference = "tur4.m9/data/survey.dat; tur4.m9/run/model.RData; WKBNSCS 2025, Tables 2.5-2.6",
@@ -125,9 +125,9 @@ input_rows[[length(input_rows) + 1L]] <- finite_matrix_input(
   "Annual catch weights used as observations by the internal SAM GMRF weight model; age 8 is 8+."
 )
 input_rows[[length(input_rows) + 1L]] <- finite_matrix_input(
-  fit$data$stockMeanWeight, "weight", "spawning_weight_at_age", "kg_per_fish", "kg per fish",
+  fit$data$stockMeanWeight, "weight", "weight_at_age", "kg_per_fish", "kg per fish",
   "tur4.m9/data/sw.dat; WKBNSCS 2025, Section 2.4.2.2",
-  "Annual stock weights used by the internal SAM GMRF weight model and for SSB; age 8 is 8+."
+  "Annual stock weights used by the internal SAM GMRF weight model and population biomass calculations; age 8 is 8+."
 )
 
 prop_mat <- fit$data$propMat
