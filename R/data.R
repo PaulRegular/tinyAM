@@ -1,44 +1,142 @@
-
-#' Northern cod example data for TAM
+#' Northern cod assessment example data
 #'
 #' @description
-#' Example catch, survey, weight, and maturity tables for the Tiny Assessment Model (TAM),
-#' derived from data used in the assessment of Northern cod, NAFO Divisions 2J3KL.
-#' This is intended for vignettes, examples, and tests.
+#' Age-structured fishery, survey, biological, and covariate data for Northern
+#' cod (*Gadus morhua*) in Northwest Atlantic Fisheries Organization (NAFO)
+#' Divisions 2J3KL. The data are adapted from Northern cod assessment inputs
+#' and arranged for use with [fit_tam()]. They provide a reproducible example
+#' for fitting and comparing alternative observation and population-process
+#' models; they are not a reproduction of the full official assessment.
 #'
 #' @format
-#' A `tam_data` list containing five data frames:
+#' A `tam_data` object containing five data frames:
 #'
-#' - **catch**: `year`, `age`, and catch numbers `obs` (thousands; may be missing).
-#' - **index**: `year`, `age`, survey abundance `obs` (thousands), `survey`,
-#'   sampling fraction `samp_time`, and catchability age group `q_block`.
-#' - **weight**: `year`, `age`, and stock weight `obs` (kg per fish).
-#'   Catch/index include `unit = "thousand fish"`; weight includes
-#'   `unit = "kg"`. Their product gives tonnes for biomass and SSB.
-#' - **maturity**: `year`, `age`, and proportion mature `obs` (0-1).
-#'   Optional spawning timing is not supplied in this example.
-#' - **pop_covariates**: `year`, `age`, fishing-mortality mean blocks
-#'   `F_y_block` and `F_a_block`, `NCAM_M_assumption`, and
-#'   `allometric_M_assumption` (natural mortality rates per year).
+#' - **`catch`**: Commercial catch numbers at age (`year`, `age`, `obs`), in
+#'   thousands of fish; observations can be missing.
+#' - **`index`**: DFO autumn research-vessel (RV) abundance index at age
+#'   (`year`, `age`, `obs`), with `survey`, survey timing `samp_time = 0.8`,
+#'   catchability age group `q_block`, and the optional annual predictor
+#'   `smith_sound_effect`. Survey observations have been expanded using
+#'   12,048,556 trawl units and expressed in thousands of fish.
+#' - **`weight`**: Annual stock weight at age (`obs`, kg).
+#' - **`maturity`**: Annual proportion mature at age (`obs`, from 0 to 1).
+#' - **`pop_covariates`**: A complete year-age table with `F_y_block` and
+#'   `F_a_block` (candidate fishing-mortality mean groups), `M_a_block`
+#'   (candidate natural-mortality age groups), `allometric_M_assumption`
+#'   (a weight-based baseline M, per year), and `log_capelin_per_cod`
+#'   (log prey-availability index; see Details).
+#'
+#' Catch and RV indices have `unit = "thousand fish"`; individual weights have
+#' `unit = "kg"`. Multiplying thousands of fish by kg per fish yields tonnes.
+#' The additional columns are candidate explanatory variables, not fitted
+#' effects unless referenced in the corresponding model formulas.
 #'
 #' @details
-#' NCAM inputs are converted to year-age tables. Population blocks and mortality
-#' assumptions are kept separately from observations and supplied biology.
-#' The allometric assumption follows the weight exponent in Lorenzen (1996),
-#' scaled to mean M of 0.30 across ages 5-14. See `data-raw/cod_obs.R` for
-#' construction and [as_tam_data()] for the table roles.
+#' **Assessment provenance.** The data originate from inputs to the Northern
+#' cod assessment model (NCAM), used in the extended framework (xteNCAM).
+#' The stock's 2026 assessment, based on observations available through 2025,
+#' is documented by Regular et al. (in press) and summarized in DFO (2026).
+#' The framework methods and additional data sources are documented by
+#' DFO (2024) and Regular et al. (2025a, 2025b). Only a subset of the assessment
+#' inputs is included here: for example, tagging observations, juvenile and
+#' Sentinel surveys, and the full Smith Sound likelihood are not supplied as
+#' separate observations. Differences between results from tinyAM and the
+#' official assessment should therefore not be interpreted as discrepancies in
+#' the published stock assessment.
+#'
+#' **Smith Sound biomass predictor.** `index$smith_sound_effect` is based on
+#' acoustic estimates of cod biomass in Smith Sound, Trinity Bay, during
+#' 1995-2009. Source biomass estimates in tonnes are divided by 1,000 to
+#' express the predictor in thousand tonnes. Missing values for 1996 and 2005
+#' are filled by linear interpolation between adjacent observed years. The
+#' predictor is set to zero outside 1995-2009 to represent the absence of an
+#' included Smith Sound effect in those years; **zero does not represent an
+#' observed absence of cod**. The annual value is repeated across RV index ages
+#' so it can be used in `index_settings$q_form` as a simplified hypothesis about
+#' variation in offshore survey catchability. This is not equivalent to
+#' xteNCAM's joint treatment of Smith Sound biomass, sampled age composition,
+#' and the age-specific fraction of cod occurring inshore. No Smith Sound
+#' observation error or interpolation uncertainty is propagated into a tinyAM fit.
+#'
+#' **Capelin availability predictor.** `pop_covariates$log_capelin_per_cod`
+#' is the natural logarithm of an annual ratio of Capelin biomass to cod
+#' biomass indices. In the xteNCAM formulation, Capelin biomass is indexed
+#' by the spring acoustic survey and cod biomass by the previous autumn RV
+#' survey. The indices are fitted using log-scale random-walk processes with
+#' observation error, permitting estimation in years with missing surveys
+#' (Regular et al. 2025b, Section 2.1). The supplied annual ratio is derived
+#' from that modelling approach and imported as a prepared covariate; tinyAM
+#' does **not** refit the Capelin and cod index processes or propagate their
+#' estimation uncertainty. The covariate can be used in `M_settings$mu_form`
+#' to explore prey-availability hypotheses, but associated coefficient
+#' uncertainty is conditional on the supplied predictor values. Values may
+#' be unavailable outside the years supported by the source indices.
+#'
+#' **Natural mortality assumptions.** `allometric_M_assumption` uses
+#' `M = M0 * weight^(-0.305)`, following the weight-scaling approach of
+#' Lorenzen (1996). The multiplier `M0` is calibrated so that the arithmetic
+#' mean of this schedule over available years and ages 5-14 is 0.30 per year.
+#' This is a constructed example baseline, not an independently estimated
+#' natural-mortality series.
+#'
+#' **Mortality blocks.** `M_a_block` defines broad age groups that can be used
+#' to allow natural mortality responses to differ among younger and older fish.
+#' The fishing-mortality variables `F_y_block` and `F_a_block` provide analogous
+#' options for modelling fishing mortality. `F_y_block` divides the time series
+#' into periods broadly reflecting changes in the Northern cod fishery, including
+#' the 1992 moratorium, subsequent limited fishing and closures, the
+#' establishment of the stewardship fishery in 2006, and the return to
+#' commercial fishing in 2024. `F_a_block` distinguishes individual ages,
+#' allowing age-specific fishing mortality or selectivity to be modelled.
+#' These groupings are illustrative model-design variables, not observations
+#' or assumptions imposed by the accepted assessment. They have no effect
+#' unless explicitly included in the corresponding model settings, and
+#' alternative groupings may be defined to explore competing hypotheses.
 #'
 #' @source
-#' Derived from the \pkg{NCAM} example inputs
-#' (`NCAM::inputs`). See the NCAM package for provenance and licensing.
+#' Derived from `NCAM::inputs`, with covariate preparation in
+#' `data-raw/cod_obs.R`. See the cited assessment and framework publications
+#' for the underlying surveys, fishery data, model structure, and provenance.
+#'
+#' @references
+#' DFO. 2024. Northern (2J3KL) Atlantic Cod Assessment Framework.
+#' DFO Can. Sci. Advis. Sec. Sci. Advis. Rep. 2024/046.
+#' \url{https://publications.gc.ca/collections/collection_2025/mpo-dfo/fs70-6/Fs70-6-2024-046-eng.pdf}
+#'
+#' DFO. 2026. NAFO Divisions 2J3KL Northern Cod
+#' (*Gadus morhua*) Stock Assessment to 2026.
+#' DFO Can. Sci. Advis. Sec. Sci. Advis. Rep. 2026/030.
+#' \url{https://csas-scas.dfo-mpo.gc.ca/publications-publications/f7f156a8-b0ef-4840-b2e0-4573fb325faa}
+#'
+#' Regular, P.M., Robertson, G.J., Kumar, R., Varkey, D.A., Gregory, R.S.,
+#' Lewis, R.S., Skanes, K., Gullage, N., Koen-Alonso, M., and Dwyer, K.S.
+#' 2025a. Extending the Northern Cod Assessment Model - Part I: Bridging
+#' Gaps with Additional Data and Model Variations. DFO Can. Sci. Advis.
+#' Sec. Res. Doc. 2025/034.
+#' \url{https://publications.gc.ca/collections/collection_2025/mpo-dfo/fs70-5/Fs70-5-2025-034-eng.pdf}
+#'
+#' Regular, P.M., Kumar, R., Varkey, D.A., Koen-Alonso, M., and Stenson,
+#' G.B. 2025b. Extending the Northern Cod Assessment Model - Part II:
+#' Quantifying the Impact of Capelin and Seals. DFO Can. Sci. Advis.
+#' Sec. Res. Doc. 2025/035.
+#' \url{https://publications.gc.ca/collections/collection_2025/mpo-dfo/fs70-5/Fs70-5-2025-035-eng.pdf}
+#'
+#' Regular, P.M., Skanes, K., Novaczek, E., Robertson, G.J., Rideout, R.M.,
+#' Trueman, S., Kumar, R., Gregory, R.S., Koen-Alonso, M., and Munro, H.
+#' In press. Assessment of the Northern Cod (*Gadus morhua*) Stock in NAFO
+#' Divisions 2J3KL in 2026. DFO Can. Sci. Advis. Sec. Res. Doc.
+#'
+#' Lorenzen, K. 1996. The relationship between body weight and natural
+#' mortality in juvenile and adult fish: a comparison of natural
+#' ecosystems and aquaculture. J. Fish Biol. 49: 627-642.
+#' \doi{10.1111/j.1095-8649.1996.tb00060.x}
 #'
 #' @examples
 #' data(cod_obs)
 #' names(cod_obs)
+#' print(cod_obs)
 #'
-#' cod_obs
-#' head(cod_obs$pop_covariates)
-#'
+#' @seealso [as_tam_data()], [fit_tam()], [fit_hindcast()]
 #' @docType data
 #' @keywords datasets
 #' @name cod_obs
