@@ -220,7 +220,7 @@
 #' hind$scores
 #' vis_tam(hind$fits[[1]])
 #' }
-#' @seealso [fit_tam()], [compute_mohns_rho()]
+#' @seealso [fit_tam()], [compute_mohns_rho()], [compute_hindcast_mase()], [compute_hindcast_rmse()]
 #' @importFrom future plan multisession
 #' @importFrom furrr future_map furrr_options
 #' @importFrom progressr with_progress progressor

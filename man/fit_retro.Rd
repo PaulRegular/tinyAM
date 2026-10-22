@@ -98,5 +98,5 @@ vis_tam(hind$fits[[1]])
 }
 }
 \seealso{
-\code{\link[=fit_tam]{fit_tam()}}, \code{\link[=compute_mohns_rho]{compute_mohns_rho()}}
+\code{\link[=fit_tam]{fit_tam()}}, \code{\link[=compute_mohns_rho]{compute_mohns_rho()}}, \code{\link[=compute_hindcast_mase]{compute_hindcast_mase()}}, \code{\link[=compute_hindcast_rmse]{compute_hindcast_rmse()}}
 }
