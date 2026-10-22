@@ -2,6 +2,10 @@
 
 ## Evaluation refinements
 
+* `residuals(fit, type = "osa")` calculates missing OSA residuals on request,
+  reusing cached results when present. Calculations use a temporary fitted
+  objective without refitting or changing the supplied fit.
+
 * Hindcasts expose their one-year, observed-catch default in Usage. They accept
   actual removals or one F multiplier; numeric catch scenarios and horizon vectors
   remain available only in ordinary projections. Printed statistics and forecast
@@ -25,13 +29,10 @@
   Scores are in `$scores`, replacing the former single `$hindcast_rmse` value.
 * `start_par` accepts a fitted model, including when uncertainty estimation failed.
 
-The case study and cheatsheet need user-led migration to the new hindcast
-interface and nested results. They are intentionally unchanged in this work.
-
 ## Diagnostic displays
 
-* `residuals()` extracts keyed observation residuals without refitting or
-  implicitly calculating OSA residuals.
+* `residuals()` extracts keyed observation residuals without refitting.
+  OSA calculation is requested explicitly with `type = "osa"`.
 * Random parameters distinguish latent N/F/M states from their deviations.
   Recruitment deviations retain signed annual trends; N/F/M use bubbles.
   The same point tables are available in `tidy_tam()$deviations`.

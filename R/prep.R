@@ -429,6 +429,8 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #'   means. For `"rw"`, `NULL` is allowed. Mean columns constant through time
 #'   cancel from RW increments and are removed with a warning. Remaining
 #'   columns must be identifiable from historical year-to-year differences.
+#'   Ordinary F mean designs use historical support only; projection rows carry
+#'   the terminal historical design by age. No future-year coefficients are fitted.
 #'   With IID residuals, [iid()], [rw()] and [ar1()] can add random mean effects,
 #'   e.g. `~ factor(age) + rw(year)`. Only one temporal mean term is supported;
 #'   structured means with temporal residual processes are not yet enabled.

@@ -12,7 +12,10 @@
 \item{type}{\code{"standardized"} (default), \code{"log"} (log observation minus log
 prediction), \code{"response"} (observation minus prediction), or \code{"osa"}.}
 
-\item{...}{Reserved for future arguments; none are currently used.}
+\item{...}{Computation controls passed to \code{\link[=tidy_obs_pred]{tidy_obs_pred()}} and
+\code{\link[RTMB:OSA-residuals]{RTMB::oneStepPredict()}} when uncached OSA residuals are requested, such as
+\code{trace = FALSE} or \code{parallel = FALSE}. Not used for cached OSA values;
+other residual types reject these arguments.}
 }
 \value{
 A data frame with year, age, type (catch/index), survey, observations,
@@ -25,15 +28,20 @@ convenience extractor: standardized residuals are the existing fitted-state
 residuals, affected by shrinkage, not independent prediction errors.
 }
 \details{
-OSA residuals must already have been computed, for example with
-\code{fit$obs_pred <- tidy_obs_pred(fit, add_osa_res = TRUE)}. This method never
-refits the model or computes OSA residuals implicitly. Excluded observations,
-including zeros, retain rows with missing residuals.
+\code{type = "osa"} reuses cached OSA columns, or explicitly requests
+their calculation at fitted parameter values when absent. It can be expensive,
+but does not rerun \code{\link[=fit_tam]{fit_tam()}} or re-estimate fixed parameters. Temporary
+objectives protect the fitted object's state. Other residual types remain
+simple extractors. Excluded observations, including zeros, retain rows with
+missing residuals. The supplied fit is not modified or implicitly cached.
+To retain OSA results for later extraction and dashboard use, assign
+\code{fit$obs_pred <- tidy_obs_pred(fit, add_osa_res = TRUE, trace = FALSE)}.
 }
 \examples{
 \dontrun{
 residuals(fit)
 residuals(fit, type = "log")
+residuals(fit, type = "osa", trace = FALSE)
 }
 }
 \seealso{

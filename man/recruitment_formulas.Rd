@@ -27,7 +27,7 @@ default \verb{process = "rw", mu_form = NULL} retains the original random walk.
 }
 \details{
 Choose \code{"iid"}, \code{"rw"}, or \code{"ar1"} in \code{process}; process markers and grouping
-are not supported in recruitment mean formulas. IID/AR1 require \code{mu_form},
+are not supported in recruitment mean formulas. Off/IID/AR1 require \code{mu_form},
 with \code{~ 1} for a constant baseline. Ordinary covariates are read from
 \code{data$pop_covariates} at the youngest
 modeled age; their values at older ages may be \code{NA}. Covariates refer to the

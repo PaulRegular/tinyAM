@@ -84,6 +84,8 @@ tidy_mat <- tidy_array
 #' have missing residuals. These standardized residuals do not account for the
 #' uncertainty in fitted states. Optional one-step-ahead residuals use a
 #' different predictive calculation. See [tinyAM-model] for the observation equations.
+#' OSA calculation rebuilds a temporary objective at stored fitted parameters;
+#' it does not refit fixed parameters or modify the fitted objective.
 #' When stockassessment is loaded, one-step residuals run sequentially: the
 #' upstream TMB parallel helper cannot select between SAM and RTMB libraries.
 #'
@@ -107,6 +109,7 @@ tidy_mat <- tidy_array
 
 tidy_obs_pred <- function(fit, add_osa_res = FALSE, interval = .95, ...) {
   fit <- .require_tam_fit(fit, arg = "fit")
+  osa_obj <- if (add_osa_res) .fitted_objective(fit) else NULL
   if (!is.numeric(interval) || length(interval) != 1L || !is.finite(interval) ||
     interval <= 0 || interval >= 1) {
     cli::cli_abort("{.arg interval} must be one number strictly between zero and one.")
@@ -151,7 +154,7 @@ tidy_obs_pred <- function(fit, add_osa_res = FALSE, interval = .95, ...) {
     }
     osa_res <- do.call(
       RTMB::oneStepPredict,
-      c(list(obj = fit$obj, method = "oneStepGaussianOffMode"), args)
+      c(list(obj = osa_obj, method = "oneStepGaussianOffMode"), args)
     )
     split_osa_res <- split(osa_res$residual, fit$dat$obs_map$type[fit$dat$obs_map$is_observed])
     split_is_observed <- split(fit$dat$obs_map$is_observed, fit$dat$obs_map$type)

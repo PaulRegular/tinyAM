@@ -275,7 +275,7 @@ fit_retro <- function(fit, ..., folds = 2, start_from_fit = FALSE, hindcast = FA
 fit_hindcast <- function(fit, ..., folds = 2, start_from_fit = FALSE, hindcast = TRUE,
                          proj_settings = list(n_proj = 1, n_mean = 1, catch = "observed"),
                          grad_tol = NULL, progress = TRUE, globals = NULL) {
-  if (!hindcast && missing(proj_settings)) proj_settings <- NULL
+  if (identical(hindcast, FALSE) && missing(proj_settings)) proj_settings <- NULL
   models <- list(fit, ...)
   names(models) <- .retro_labels(models, as.list(substitute(list(fit, ...)))[-1])
   .run_retros(models, folds, start_from_fit, hindcast, proj_settings, grad_tol, progress, globals)

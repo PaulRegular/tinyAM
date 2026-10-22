@@ -203,13 +203,6 @@ AIC.tam_fit <- function(object, ..., k = 2) {
   })
 }
 
-.aic_component <- function(object, component) {
-  dat <- object$dat
-  dat$.likelihood_component <- component
-  parameters <- object$obj$env$parList(par = object$parameter_values)
-  RTMB::MakeADFun(function(p) nll_fun(p, dat), parameters,
-    random = object$obj$env$.random, map = object$parameter_map, silent = TRUE)
-}
 
 .aic_conditional_count <- function(object, component, random) {
   dat <- object$dat
@@ -235,8 +228,8 @@ AIC.tam_fit <- function(object, ..., k = 2) {
   if (length(mode) != length(random) || any(!is.finite(mode))) {
     cli::cli_abort("Stored fitted parameters are unavailable or inconsistent. Refit the model before calculating cAIC.")
   }
-  process <- .aic_component(object, "process")
-  observation <- .aic_component(object, "observation")
+  process <- .fitted_objective(object, "process")
+  observation <- .fitted_objective(object, "observation")
   if (!isTRUE(all.equal(process$env$last.par, mode, check.attributes = FALSE)) ||
       !identical(names(process$env$last.par), names(mode))) {
     cli::cli_abort("Mapped parameter ordering differs from the fitted objective; cAIC cannot align the random effects.")

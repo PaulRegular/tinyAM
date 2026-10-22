@@ -181,7 +181,7 @@
 #'
 #' @details
 #' Choose `"iid"`, `"rw"`, or `"ar1"` in `process`; process markers and grouping
-#' are not supported in recruitment mean formulas. IID/AR1 require `mu_form`,
+#' are not supported in recruitment mean formulas. Off/IID/AR1 require `mu_form`,
 #' with `~ 1` for a constant baseline. Ordinary covariates are read from
 #' `data$pop_covariates` at the youngest
 #' modeled age; their values at older ages may be `NA`. Covariates refer to the

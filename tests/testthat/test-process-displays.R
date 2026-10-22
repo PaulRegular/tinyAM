@@ -10,10 +10,10 @@ test_that("residual extraction preserves rows, masks and fitted objects", {
   expect_setequal(x$type, c("catch", "index"))
   expect_equal(residuals(fit, type = "response")$residual[1], 1)
   expect_equal(residuals(fit, type = "log")$residual[1], log(2))
-  expect_error(residuals(fit, type = "osa"), "not been computed")
-  fit$obs_pred$catch$osa_res <- rep(.3, 4)
+  expect_error(residuals(fit, type = "osa"), "fitted objective")
+  fit$obs_pred$catch$osa_res <- fit$obs_pred$index$osa_res <- rep(.3, 4)
   expect_equal(residuals(fit, type = "osa")$residual[1], .3)
-  fit$obs_pred$catch$osa_res <- NULL
+  fit$obs_pred$catch$osa_res <- fit$obs_pred$index$osa_res <- NULL
   expect_identical(fit, original)
 })
 

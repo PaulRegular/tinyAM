@@ -506,3 +506,16 @@ update.tam_fit <- function(object, ..., evaluate = TRUE) {
   out
 }
 
+
+# Rebuild at the stored mode without modifying the fitted objective or optimizing fixed parameters.
+.fitted_objective <- function(object, component = NULL) {
+  if (is.null(object$obj) || is.null(object$parameter_values)) {
+    cli::cli_abort("This calculation requires the fitted objective and stored parameter values.")
+  }
+  dat <- object$dat
+  dat$.likelihood_component <- component
+  parameters <- object$obj$env$parList(par = object$parameter_values)
+  RTMB::MakeADFun(function(p) nll_fun(p, dat), parameters,
+    random = object$obj$env$.random, map = object$parameter_map, silent = TRUE)
+}
+
