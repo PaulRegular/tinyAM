@@ -338,7 +338,14 @@ for (name in c("inputs", "outputs")) {
       stop("inputs$sampling_time must be numeric in [0, 1] where present.", call. = FALSE)
     }
     proportion <- x$basis %in% c("proportion", "proportion_numbers", "proportion_biomass")
-    if (any(proportion & value > 1)) {
+    above_one_landings_fraction <- proportion &
+      x$measure == "landings_fraction_at_age" & value > 1
+    documented_landings_fraction <- !is.na(x$notes) &
+      grepl("above one|exceed", x$notes, ignore.case = TRUE)
+    if (any(above_one_landings_fraction & !documented_landings_fraction)) {
+      stop("Landings fractions above one must be documented as unmodified source values.", call. = FALSE)
+    }
+    if (any(proportion & value > 1 & !above_one_landings_fraction)) {
       stop("Input proportions must lie in [0, 1].", call. = FALSE)
     }
     if (any(x$measure %in% c("log_index_sd", "index_sd", "relative_precision_weight") & value <= 0)) {

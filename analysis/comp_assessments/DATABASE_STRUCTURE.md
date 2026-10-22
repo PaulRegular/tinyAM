@@ -291,6 +291,11 @@ the same survey identity as the corresponding observation; use `type = index`,
 weight. `landings_proportion` retains a source landings-weight composition by substock
 or quarter (`basis = proportion_biomass`); these records have no age. Reference
 components are retained, and report rounding is not silently renormalized.
+Landings fractions should normally lie in `[0, 1]`. If an official model input
+contains values slightly above one, preserve them without clipping and explain
+the source-specific exception in `notes`; the validator accepts only documented
+`landings_fraction_at_age` exceptions. Other input proportions must remain in
+`[0, 1]`.
 
 relative_precision_weight stores a native relative index-precision weight
 for each survey, year and age. Use type = index and basis =
