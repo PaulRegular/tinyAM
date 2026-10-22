@@ -1,5 +1,11 @@
 # tinyAM 0.1.1.9000
 
+## Evaluation refinements
+
+* F mean formulas are trained on historical support and carry terminal design
+  rows into projections, fixing SCAA hindcasts with `factor(year)`. Cohort
+  means share the mean-formula compiler while retaining destination-age checks.
+
 ## Evaluation workflows
 
 * `fit_retro()` and `fit_hindcast()` accept multiple fits and return `tam_retro`

@@ -84,6 +84,28 @@
       start <- start[!grepl("^(log_q|logit_q$|dq$|eta_q_|log_sd_q_|logit_phi_q_|q_a50_|log_q_slope_)", names(start))]
       cli::cli_inform("Catchability starts were omitted because q_link changed.")
     }
+    for (component in c("N", "F", "M")) {
+      name <- switch(component, N = "mu_n", F = "log_mu_f", M = "mu_m")
+      if (is.null(start[[name]])) next
+      old <- source$dat[[paste0(component, "_modmat")]]
+      new <- dat[[paste0(component, "_modmat")]]
+      if (!is.matrix(new) || !ncol(new)) next
+      before <- source$dat$pop_data
+      after <- dat$pop_data
+      key <- function(d) paste(d$year, d$age)
+      rows <- match(key(after), key(before))
+      retained <- !is.na(rows) & !dat$is_proj[match(after$year, dat$years)]
+      columns <- intersect(colnames(old), colnames(new))
+      omitted <- setdiff(colnames(old), columns)
+      same <- identical(deparse(source$dat[[paste0(component, "_settings")]]$mu_form),
+        deparse(dat[[paste0(component, "_settings")]]$mu_form)) &&
+        isTRUE(all.equal(old[rows[retained], columns, drop = FALSE], new[retained, columns, drop = FALSE],
+          check.attributes = FALSE)) && !any(old[rows[retained], omitted, drop = FALSE] != 0)
+      if (!same) {
+        start[[name]] <- NULL
+        cli::cli_inform("{component} mean starts were omitted because the formula basis changed.")
+      }
+    }
   }
   if (!is.list(start) || (length(start) && (is.null(names(start)) ||
     anyNA(names(start)) || any(!nzchar(names(start))) || anyDuplicated(names(start))))) {

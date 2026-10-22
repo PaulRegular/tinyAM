@@ -784,7 +784,7 @@ prepare_tam <- function(
   q_design <- .parse_q_formula(dat$index_settings$q_form, dat$obs$index)
   dat[names(q_design)] <- q_design
   .check_q_terms(dat)
-  dat$N_modmat <- .parse_cohort_mean(dat)
+  dat$N_modmat <- .parse_mean_formula(dat$N_settings$mu_form, dat, "N")$matrix
   dat$F_terms <- dat$M_terms <- list()
   if (!is.null(dat$F_settings$mu_form)) {
     mean_design <- .parse_mean_formula(dat$F_settings$mu_form, dat, "F")
