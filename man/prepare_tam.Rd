@@ -195,6 +195,8 @@ projection years.
 \item \code{catch}: total annual catch weight, in catch-number times mean-weight units
 (e.g. tonnes for thousand fish and kg). Supply one value recycled across
 years, or \code{n_proj} values. Specify either \code{catch} or \code{F_mult}, not both.
+\code{catch = "observed"} is restricted to \code{\link[=fit_hindcast]{fit_hindcast()}} evaluation; it is
+not a forecast input for an ordinary fit.
 See \link{tinyAM-model} for the catch solver and feasibility safeguards.
 }}
 }

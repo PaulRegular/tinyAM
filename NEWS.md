@@ -2,6 +2,11 @@
 
 ## Evaluation refinements
 
+* Hindcasts expose their one-year, observed-catch default in Usage. They accept
+  actual removals or one F multiplier; numeric catch scenarios and horizon vectors
+  remain available only in ordinary projections. Printed statistics and forecast
+  conditioning assumptions are documented explicitly.
+
 * `rec_settings$process = "off"` supports deterministic recruitment formulas
   and BH/Ricker curves, retaining free recruitment boundary states and derived
   uncertainty without extra annual states or process parameters.
@@ -16,8 +21,7 @@
   objects with a concise print method, detailed fold diagnostics and retained failures.
 * Hindcasts support multiple forecast horizons, biological averaging settings,
   persistence-relative MASE, survey age/aggregate scores and catch-composition scores.
-* **Breaking:** forecast controls now belong in `proj_settings`; numeric vectors
-  are ordered by horizon. Fitted folds are nested by model and terminal year.
+* **Breaking:** forecast controls now belong in `proj_settings`. Fitted folds are nested by model and terminal year.
   Scores are in `$scores`, replacing the former single `$hindcast_rmse` value.
 * `start_par` accepts a fitted model, including when uncertainty estimation failed.
 

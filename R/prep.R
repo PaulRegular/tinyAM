@@ -513,6 +513,8 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #' - `catch`: total annual catch weight, in catch-number times mean-weight units
 #'   (e.g. tonnes for thousand fish and kg). Supply one value recycled across
 #'   years, or `n_proj` values. Specify either `catch` or `F_mult`, not both.
+#'   `catch = "observed"` is restricted to [fit_hindcast()] evaluation; it is
+#'   not a forecast input for an ordinary fit.
 #'   See [tinyAM-model] for the catch solver and feasibility safeguards.
 #'
 #' @return

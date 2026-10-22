@@ -45,11 +45,16 @@ test_that("hindcast controls preserve raw plus ages and recycle by horizon", {
   expect_identical(f, before)
   f$refit_args$data$catch$obs[1] <- NA
   expect_match(.hindcast_controls(f, 2000:2001, .retro_projection(NULL))$error[1], "incomplete")
-  s <- .retro_projection(list(n_proj = 2, catch = c(10, 20)))
-  expect_equal(.hindcast_controls(f, 2000:2001, s)$target, c(10, 20))
-  expect_equal(.retro_projection(list(n_proj = 2, F_mult = .8))$F_mult, c(.8, .8))
+  s <- .retro_projection(list(n_proj = 2, F_mult = .8))
+  expect_equal(.hindcast_controls(f, 2000:2001, s)$target, c(.8, .8))
+  expect_equal(s$F_mult, .8)
+  expect_null(s$catch)
   expect_error(.retro_projection(list(catch = 10, F_mult = 1)), "not both")
-  expect_error(.retro_projection(list(n_proj = 3, catch = c(1, 2))), "n_proj")
+  expect_error(.retro_projection(list(n_proj = 3, catch = c(1, 2))), "numeric catch")
+  for (x in list(c(.8,1),-1,Inf,NA_real_,numeric())) {
+    expect_error(.retro_projection(list(F_mult=x)), "one finite")
+  }
+  expect_equal(.retro_projection(list(n_mean=3))$catch,"observed")
 })
 
 test_that("single and multiple model hindcasts retain forecasts and diagnostics", {
@@ -69,18 +74,22 @@ test_that("single and multiple model hindcasts retain forecasts and diagnostics"
   expect_equal(h$fits$f[["2003"]]$used_projection, list(n_proj = 1, n_mean = 1, catch = 18))
   expect_output(print(h), "log_RMSE")
   multi <- fit_hindcast(f, same = f, folds = 2, progress = FALSE,
-    proj_settings = list(n_proj = 3, n_mean = 3, F_mult = c(.8, 1, 1.2)))
+    proj_settings = list(n_proj = 3, n_mean = 3, F_mult = .8))
   expect_equal(names(multi$fits), c("f", "same"))
   expect_true(multi$comparable)
   expect_equal(multi$fold_diagnostics$available_n_proj, rep(c(2, 1, 0), 2))
   expect_equal(multi$fits$f[["2003"]]$used_projection,
-    list(n_proj = 2, n_mean = 3, F_mult = c(.8, 1)))
+    list(n_proj = 2, n_mean = 3, F_mult = c(.8, .8)))
   expect_true(all(c(1, 2) %in% multi$forecast_pairs$index$horizon))
   expect_true(all(c("model", "fold", "horizon") %in% names(multi$pop$ssb)))
   expect_true(all(multi$forecast_pairs$index$baseline_year <= multi$forecast_pairs$index$fold))
   retro <- fit_retro(f, folds = 1, progress = FALSE)
   expect_true(all(vapply(retro$fits$f, function(x) !any(x$dat$is_proj), logical(1))))
   expect_equal(nrow(retro$scores), 0L)
+  expect_equal(fit_hindcast(f,hindcast=FALSE,folds=1,progress=FALSE),retro)
+  expect_error(fit_hindcast(f,hindcast=FALSE,proj_settings=list(n_proj=1)),"only when")
+  expect_equal(fit_retro(f,hindcast=TRUE,folds=2,progress=FALSE)$scores,h$scores)
+  expect_identical(eval(formals(fit_hindcast)$proj_settings),list(n_proj=1,n_mean=1,catch="observed"))
   expect_error(fit_retro(f, proj_settings = list(n_mean = 3)), "only when")
   expect_error(fit_hindcast(f, F_mult = 1), "tam_fit")
 })
@@ -115,6 +124,7 @@ test_that("validation cases are compared without ranking", {
   expect_false("rank" %in% names(h$scores))
   a <- formals(fit_retro); b <- formals(fit_hindcast)
   a$hindcast <- b$hindcast <- NULL
+  a$proj_settings <- b$proj_settings <- NULL
   expect_identical(a, b)
 })
 

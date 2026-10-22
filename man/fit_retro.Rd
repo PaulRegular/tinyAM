@@ -24,7 +24,7 @@ fit_hindcast(
   folds = 2,
   start_from_fit = FALSE,
   hindcast = TRUE,
-  proj_settings = NULL,
+  proj_settings = list(n_proj = 1, n_mean = 1, catch = "observed"),
   grad_tol = NULL,
   progress = TRUE,
   globals = NULL
@@ -40,13 +40,17 @@ labels. All other controls must be named.}
 
 \item{start_from_fit}{Use each supplied fit to initialize its peels?}
 
-\item{hindcast}{Project peeled fits? The only default difference between functions.}
+\item{hindcast}{Project peeled fits? Defaults to \code{FALSE} for \code{fit_retro()}
+and \code{TRUE} for \code{fit_hindcast()}.}
 
 \item{proj_settings}{Hindcast settings: \code{n_proj} (default 1), \code{n_mean} (default 1),
-and either \code{catch} (default \code{"observed"}) or \code{F_mult}. Numeric controls are one
-value recycled, or \code{n_proj} values ordered by forecast horizon. Observed catch
-is complete raw catch numbers times supplied weights. Forecasts are shortened
-to available validation years. Ordinary retrospectives reject this argument.}
+and either \code{catch = "observed"} (default) or one non-negative \code{F_mult}.
+Partial lists inherit these defaults; supplying \code{F_mult} clears \code{catch}.
+Numeric catch targets and control vectors are not accepted in hindcasts.
+Forecasts are shortened to available validation years. Ordinary
+retrospectives reject projection settings. \code{NULL} uses hindcast defaults
+when \code{hindcast = TRUE}. Ordinary model projections retain scalar/vector
+numeric catch and F controls; see \code{\link[=prepare_tam]{prepare_tam()}}.}
 
 \item{grad_tol}{Numerical check tolerance; defaults to each fit's stored value.}
 
@@ -72,6 +76,32 @@ Only observed years determine folds. Historical references have no
 forecasts. Held-out indices and catch compositions do not enter fitting;
 observed-catch conditioning uses only aggregate removals. Forecast biology
 uses training years and \code{n_mean}.
+
+\strong{Forecast assumptions.} \code{catch = "observed"} is available only in hindcast
+evaluation (\code{fit_hindcast()} or \code{fit_retro(hindcast = TRUE)}), not ordinary
+\code{\link[=fit_tam]{fit_tam()}} projections. It uses actual total catch weight in each held-out
+year, calculated from complete raw catch-at-age and supplied weights. This
+conditions prediction on removals that actually occurred; held-out surveys
+and catch compositions do not enter fitting. Agreement with the conditioning
+catch total is not forecast skill. Missing catch/weight coverage fails that
+fold; it is not imputed. Results do not represent forecasts of future removals.
+An alternative is \code{proj_settings = list(F_mult = 1)}, retaining the F-at-age
+estimated at each fold's terminal year. Any scalar multiplier applies to
+that terminal profile at every available horizon, rather than compounding
+annually. Controls therefore follow each fold's shifting calendar window.
+
+\strong{Printed summary.} One row per model shows Mohn's rho for SSB, recruitment
+and average F, relative to the unpeeled reference fit. Hindcasts also show
+\code{log_RMSE} (pooled survey-age log prediction errors), \code{MASE} (persistence-relative
+absolute log error, averaged across ages within survey, surveys within horizon,
+then horizons), and \code{n} (survey observation-forecast pairs used for log-RMSE).
+\code{scored_folds} counts folds with eligible survey predictions; \code{failed_folds}
+counts failed numerical/projection attempts, including a failed reference.
+The unpeeled reference does not contribute forecast scores. A failed reference
+makes rho unavailable; missing forecast pairs or persistence baselines make
+the corresponding scores unavailable. Catch-composition and detailed survey,
+age and horizon scores remain in \code{scores}. Unequal validation coverage is
+flagged and no automatic ranking is produced.
 
 Survey log-RMSE pools observation errors. MASE compares absolute log errors
 with persistence on identical cases; see \code{\link[=compute_hindcast_mase]{compute_hindcast_mase()}}. Overall
