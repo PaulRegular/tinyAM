@@ -886,7 +886,7 @@ mono <- function(x, by = NULL) {
   if (nrow(full) != sum(active) || any(!is.finite(full))) {
     cli::cli_abort("{label} needs finite covariates at every active year and age, including projections.")
   }
-  list(matrix = full, historical = design)
+  list(matrix = full, historical = design, frame = frame)
 }
 
 .parse_mean_formula <- function(formula, dat, component) {

@@ -67,15 +67,17 @@ initial-abundance SDs remain separate. Random-effect SD terms are not enabled.
 
 \item{rec_settings}{A list controlling recruitment separately from cohort survival:
 \itemize{
-\item \code{process}: \code{"rw"} (default), \code{"iid"}, or \code{"ar1"} for annual log-recruitment
+\item \code{process}: \code{"off"} for recruitment exactly following its mean formula,
+or \code{"rw"} (default), \code{"iid"}, or \code{"ar1"} for annual log-recruitment
 residuals. First-year recruitment remains a freely estimated fixed anchor.
 \item \code{mu_form}: one-sided formula for the expected log recruitment. \code{NULL} is
-allowed for RW; IID/AR1 require an explicit formula, such as \code{~ 1} for a
+allowed for RW; off/IID/AR1 require an explicit formula, such as \code{~ 1} for a
 constant mean. Use \code{\link[=bh]{bh()}} or \code{\link[=ricker]{ricker()}} for a median stock-recruit curve
-with IID/AR1 residuals. Ordinary covariates come from \code{data$pop_covariates}
+with no residuals or IID/AR1 residuals. Ordinary covariates come from \code{data$pop_covariates}
 at the youngest modeled age. See \link{recruitment_formulas}.
 \item \code{sd}: positive fixed recruitment SD, or \code{NULL} to estimate it. This is
-an innovation SD for RW/AR1 and a marginal SD for IID.
+an innovation SD for RW/AR1 and a marginal SD for IID. Must be \code{NULL}
+when process is off.
 \item \code{phi}: fixed AR1 correlation in \verb{[0, 1)}, or \code{NULL} to estimate it.
 Must be \code{NULL} for other processes. Estimated correlations are positive.
 }}
@@ -206,7 +208,7 @@ See \link{tinyAM-model} for the catch solver and feasibility safeguards.
 where applicable; default \verb{0.95.}}
 
 \item{add_osa_res}{Logical; add one-step-ahead residuals? Hard wired to
-apply the \code{"oneStepGaussianOffMode"} method. See \code{\link[RTMB:oneStepPredict]{RTMB::oneStepPredict()}}
+apply the \code{"oneStepGaussianOffMode"} method. See \code{\link[RTMB:OSA-residuals]{RTMB::oneStepPredict()}}
 for details.}
 
 \item{silent}{Logical; if \code{TRUE}, disables tracing information.}
@@ -227,7 +229,7 @@ A \code{tam_fit} list with components:
 \item \strong{obj}: RTMB \code{ADFun} object.
 \item \strong{opt}: \verb{[stats::nlminb()]} optimization result.
 \item \strong{rep}: list from \code{obj$report()}.
-\item \strong{sdrep}: \code{\link[RTMB:sdreport]{RTMB::sdreport()}} result.
+\item \strong{sdrep}: \code{\link[RTMB:TMB-interface]{RTMB::sdreport()}} result.
 \item \strong{fixed_par}: fixed parameter estimates in a tidy format (see \code{\link[=tidy_par]{tidy_par()}}).
 \item \strong{random_par}: list of random parameter estimates in a tidy format (see
 \code{\link[=tidy_par]{tidy_par()}}).
@@ -265,7 +267,7 @@ old \code{log_q} starts are not reused as \code{logit_q}. See \code{\link[=prepa
 
 Random-effect blocks are chosen automatically from the model settings:
 \itemize{
-\item Includes \code{log_f} when the F process is active, and eligible \code{log_r} states. Early recruitment
+\item Includes \code{log_f} when the F process is active, and eligible \code{log_r} states when recruitment is stochastic. Early recruitment
 anchors are fixed; see \link{recruitment_formulas}.
 \item Includes \code{log_n0} only if \code{N_settings$init == "latent"}.
 \item Includes \code{log_n} if \code{N_settings$process != "off"}.
@@ -328,5 +330,5 @@ if (interactive()) {
 }
 \seealso{
 \code{\link[=prepare_tam]{prepare_tam()}}, \code{\link[=make_par]{make_par()}}, \code{\link[=sim_tam]{sim_tam()}}, \code{\link[=fit_retro]{fit_retro()}},
-\code{\link[RTMB:MakeADFun]{RTMB::MakeADFun()}}, \code{\link[RTMB:sdreport]{RTMB::sdreport()}}
+\code{\link[RTMB:TMB-interface]{RTMB::MakeADFun()}}, \code{\link[RTMB:TMB-interface]{RTMB::sdreport()}}
 }

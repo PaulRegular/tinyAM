@@ -1143,6 +1143,8 @@ tidy_tam <- function(..., model_list = NULL, interval = 0.95, label = "model", l
 #' Residuals are signed log-scale deviations with SEs on their reported scale.
 #' RW residuals are increments; AR1 residuals are deviations from the baseline,
 #' while innovations remove the preceding residual's predicted contribution.
+#' Deterministic recruitment has no residual/innovation tables; stock-recruit
+#' pairs retain missing residual values and available derived uncertainty.
 #' The curve is evaluated at median historical numeric covariates and reference
 #' factor levels. `reference` identifies those values. Curve intervals use the
 #' exact curve derivatives and RTMB's fixed-parameter covariance (the delta
@@ -1184,9 +1186,12 @@ tidy_recruitment <- function(fit, interval = .95) {
   }
   out <- list(
     mean = table("rec_log_mean", TRUE),
-    prediction = table("rec_log_prediction", TRUE),
-    residual = table("rec_residual"), innovation = table("rec_innovation")
+    prediction = table("rec_log_prediction", TRUE)
   )
+  if (rec$type != "off") {
+    out$residual <- table("rec_residual")
+    out$innovation <- table("rec_innovation")
+  }
   out$mean$unit <- out$prediction$unit <- .population_unit(fit$dat, "N")
   if (!is.null(rec$curve)) {
     parent <- table("rec_log_parent", TRUE)
@@ -1198,7 +1203,7 @@ tidy_recruitment <- function(fit, interval = .95) {
       ssb = parent$est, ssb_lwr = parent$lwr, ssb_upr = parent$upr,
       recruitment = R$est, recruitment_lwr = R$lwr, recruitment_upr = R$upr,
       mean = out$mean$est, prediction = out$prediction$est,
-      residual = out$residual$est, is_proj = parent$is_proj
+      residual = if (rec$type == "off") NA_real_ else out$residual$est, is_proj = parent$is_proj
     )
     curve <- .rec_curve_table(fit, interval)
     out$curve <- curve$curve

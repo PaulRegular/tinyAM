@@ -198,7 +198,7 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   N <- exp(log_N)
   recruitment <- exp(log_recruitment)
   if (simulate) {
-    log_r[] <- log_recruitment[dat$rec$eligible]
+    if (dat$rec$type != "off") log_r[] <- log_recruitment[dat$rec$eligible]
     if (N_settings$process != "off") log_n[] <- log_N[-1, -1, drop = FALSE]
   }
   if (!is.null(dat$plus_ages)) {
@@ -427,12 +427,14 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   rec_innovation <- eta_R[dat$rec$eligible]
   REPORT(rec_log_mean)
   REPORT(rec_log_prediction)
-  REPORT(rec_residual)
-  REPORT(rec_innovation)
   ADREPORT(rec_log_mean)
   ADREPORT(rec_log_prediction)
-  ADREPORT(rec_residual)
-  ADREPORT(rec_innovation)
+  if (dat$rec$type != "off") {
+    REPORT(rec_residual)
+    REPORT(rec_innovation)
+    ADREPORT(rec_residual)
+    ADREPORT(rec_innovation)
+  }
   if (!is.null(dat$rec$curve)) {
     rec_log_parent <- log_ssb[dat$rec$eligible - dat$rec$curve$lag]
     REPORT(rec_log_parent)
@@ -488,7 +490,7 @@ nll_fun <- function(par, dat, simulate = FALSE) {
 
   if (simulate) {
     sims <- c(if (F_settings$process != "off") list(log_f = log_f), list(
-      log_r = log_r,
+      log_r = if (dat$rec$type == "off") setNames(log_recruitment[dat$rec$eligible], dat$years[dat$rec$eligible]) else log_r,
       log_obs = log_obs
     ))
     if (!is.null(par$log_r_init)) sims$log_r_init <- par$log_r_init

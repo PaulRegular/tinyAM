@@ -394,15 +394,17 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #'   `data$pop_covariates`. Its design must be constant across years. Recruitment and
 #'   initial-abundance SDs remain separate. Random-effect SD terms are not enabled.
 #' @param rec_settings A list controlling recruitment separately from cohort survival:
-#' - `process`: `"rw"` (default), `"iid"`, or `"ar1"` for annual log-recruitment
+#' - `process`: `"off"` for recruitment exactly following its mean formula,
+#'   or `"rw"` (default), `"iid"`, or `"ar1"` for annual log-recruitment
 #'   residuals. First-year recruitment remains a freely estimated fixed anchor.
 #' - `mu_form`: one-sided formula for the expected log recruitment. `NULL` is
-#'   allowed for RW; IID/AR1 require an explicit formula, such as `~ 1` for a
+#'   allowed for RW; off/IID/AR1 require an explicit formula, such as `~ 1` for a
 #'   constant mean. Use [bh()] or [ricker()] for a median stock-recruit curve
-#'   with IID/AR1 residuals. Ordinary covariates come from `data$pop_covariates`
+#'   with no residuals or IID/AR1 residuals. Ordinary covariates come from `data$pop_covariates`
 #'   at the youngest modeled age. See [recruitment_formulas].
 #' - `sd`: positive fixed recruitment SD, or `NULL` to estimate it. This is
-#'   an innovation SD for RW/AR1 and a marginal SD for IID.
+#'   an innovation SD for RW/AR1 and a marginal SD for IID. Must be `NULL`
+#'   when process is off.
 #' - `phi`: fixed AR1 correlation in `[0, 1)`, or `NULL` to estimate it.
 #'   Must be `NULL` for other processes. Estimated correlations are positive.
 #' @param F_settings A list with elements:

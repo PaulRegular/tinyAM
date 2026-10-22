@@ -61,15 +61,17 @@ initial-abundance SDs remain separate. Random-effect SD terms are not enabled.
 
 \item{rec_settings}{A list controlling recruitment separately from cohort survival:
 \itemize{
-\item \code{process}: \code{"rw"} (default), \code{"iid"}, or \code{"ar1"} for annual log-recruitment
+\item \code{process}: \code{"off"} for recruitment exactly following its mean formula,
+or \code{"rw"} (default), \code{"iid"}, or \code{"ar1"} for annual log-recruitment
 residuals. First-year recruitment remains a freely estimated fixed anchor.
 \item \code{mu_form}: one-sided formula for the expected log recruitment. \code{NULL} is
-allowed for RW; IID/AR1 require an explicit formula, such as \code{~ 1} for a
+allowed for RW; off/IID/AR1 require an explicit formula, such as \code{~ 1} for a
 constant mean. Use \code{\link[=bh]{bh()}} or \code{\link[=ricker]{ricker()}} for a median stock-recruit curve
-with IID/AR1 residuals. Ordinary covariates come from \code{data$pop_covariates}
+with no residuals or IID/AR1 residuals. Ordinary covariates come from \code{data$pop_covariates}
 at the youngest modeled age. See \link{recruitment_formulas}.
 \item \code{sd}: positive fixed recruitment SD, or \code{NULL} to estimate it. This is
-an innovation SD for RW/AR1 and a marginal SD for IID.
+an innovation SD for RW/AR1 and a marginal SD for IID. Must be \code{NULL}
+when process is off.
 \item \code{phi}: fixed AR1 correlation in \verb{[0, 1)}, or \code{NULL} to estimate it.
 Must be \code{NULL} for other processes. Estimated correlations are positive.
 }}

@@ -80,6 +80,10 @@
     } else {
       cli::cli_abort("Starting fit has no stored parameter estimates.")
     }
+    if (source$dat$rec$type == "off" && !is.null(source$rep$recruitment)) {
+      years <- source$dat$rec$eligible
+      start$log_r <- setNames(log(source$rep$recruitment[years]), source$dat$years[years])
+    }
     if (!identical(source$dat$index_settings$q_link, dat$index_settings$q_link)) {
       start <- start[!grepl("^(log_q|logit_q$|dq$|eta_q_|log_sd_q_|logit_phi_q_|q_a50_|log_q_slope_)", names(start))]
       cli::cli_inform("Catchability starts were omitted because q_link changed.")
@@ -138,7 +142,7 @@
 #'
 #' Random-effect blocks are chosen automatically from the model settings:
 #'
-#' - Includes `log_f` when the F process is active, and eligible `log_r` states. Early recruitment
+#' - Includes `log_f` when the F process is active, and eligible `log_r` states when recruitment is stochastic. Early recruitment
 #'   anchors are fixed; see [recruitment_formulas].
 #' - Includes `log_n0` only if `N_settings$init == "latent"`.
 #' - Includes `log_n` if `N_settings$process != "off"`.
@@ -297,7 +301,7 @@ fit_tam <- function(
     }
   }
 
-  ran <- c(if (dat$F_settings$process != "off") "log_f", "log_r", .formula_random_parameters(dat))
+  ran <- c(if (dat$F_settings$process != "off") "log_f", if (dat$rec$type != "off") "log_r", .formula_random_parameters(dat))
   if (dat$N_settings$init == "latent") {
     ran <- c(ran, "log_n0")
   }

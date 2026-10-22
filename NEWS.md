@@ -2,6 +2,10 @@
 
 ## Evaluation refinements
 
+* `rec_settings$process = "off"` supports deterministic recruitment formulas
+  and BH/Ricker curves, retaining free recruitment boundary states and derived
+  uncertainty without extra annual states or process parameters.
+
 * F mean formulas are trained on historical support and carry terminal design
   rows into projections, fixing SCAA hindcasts with `factor(year)`. Cohort
   means share the mean-formula compiler while retaining destination-age checks.

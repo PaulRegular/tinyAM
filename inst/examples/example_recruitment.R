@@ -7,6 +7,8 @@ base <- fit_tam(cod_obs, years = 1983:2024, ages = 2:14,
   M_settings = list(process = "off", mu_supplied = ~ I(.3)), silent = TRUE)
 start <- as.list(base$sdrep, "Estimate")
 start$rec_beta <- c("(Intercept)" = mean(log(base$rep$recruitment)))
+deterministic <- update(base, rec_settings = list(process = "off", mu_form = ~ 1),
+                        start_par = base)
 independent <- update(base, N_settings = list(process = "off"), rec_settings = list(process = "iid", mu_form = ~ 1),
                       start_par = start)
 beverton_holt <- update(base, N_settings = list(process = "off"), rec_settings = list(process = "iid", mu_form = ~ bh(ssb)),
@@ -24,7 +26,7 @@ covariate <- update(base, data = data,
   N_settings = list(process = "off"), rec_settings = list(process = "iid", mu_form = ~ temperature), start_par = start)
 
 ## Inspect support, not just fitted curves ----
-fits <- list(RW = base, IID = independent, BH = beverton_holt,
+fits <- list(RW = base, Deterministic = deterministic, IID = independent, BH = beverton_holt,
              Ricker = ricker_ar1, Covariate = covariate)
 lapply(fits, check_tam)
 tidy_recruitment(beverton_holt)$pairs

@@ -41,11 +41,13 @@
 #'
 #' - **Recruitment & variability**
 #'   - `log_r0` (fixed first-year log recruitment, always present)
-#'   - `log_r`: absolute random log recruitment in eligible process years;
+#'   - `log_r`: absolute random log recruitment in eligible process years
+#'     when the recruitment process is enabled;
 #'     by default these are `dat$years[-1]`, named by year.
 #'   - `log_r_init`: additional free fixed boundary states when parent SSB lies
 #'     before the modeled period, named by year.
-#'   - `log_sd_r`: estimated recruitment SD unless supplied in `rec_settings$sd`.
+#'   - `log_sd_r`: estimated recruitment SD unless supplied in `rec_settings$sd`
+#'     or recruitment is deterministic (`process = "off"`).
 #'   - `rec_beta`: fixed log-scale covariate coefficients when present.
 #'   - `log_sr_alpha`, `log_sr_beta`: positive curve parameters on the log scale.
 #'   - `logit_phi_r`: estimated recruitment AR1 correlation when not supplied.
@@ -151,7 +153,7 @@ make_par <- function(dat) {
     if (dat$N_settings$init == "capped") drops <- cumsum(drops)
     par$d_n0 <- setNames(drops, as.character(dat$ages[-1]))
   }
-  if (is.null(dat$rec$sd)) par$log_sd_r <- 0
+  if (dat$rec$type != "off" && is.null(dat$rec$sd)) par$log_sd_r <- 0
   if (ncol(dat$rec$matrix)) par$rec_beta <- setNames(numeric(ncol(dat$rec$matrix)), colnames(dat$rec$matrix))
   if (dat$rec$type == "ar1" && is.null(dat$rec$phi)) par$logit_phi_r <- c(year = 0)
   if (ncol(dat$N_modmat)) par$mu_n <- setNames(numeric(ncol(dat$N_modmat)), colnames(dat$N_modmat))
@@ -204,7 +206,7 @@ make_par <- function(dat) {
     par$dmu_f <- setNames(rep(.05, ncol(dat$F_mono_modmat)), colnames(dat$F_mono_modmat))
   }
 
-  par$log_r <- setNames(numeric(length(dat$rec$eligible)), as.character(dat$years[dat$rec$eligible]))
+  if (dat$rec$type != "off") par$log_r <- setNames(numeric(length(dat$rec$eligible)), as.character(dat$years[dat$rec$eligible]))
   if (length(dat$rec$boundary) > 1L) {
     par$log_r_init <- setNames(numeric(length(dat$rec$boundary) - 1L), as.character(dat$years[dat$rec$boundary[-1L]]))
   }
