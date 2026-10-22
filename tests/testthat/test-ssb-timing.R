@@ -74,7 +74,7 @@ test_that("spawning timing survives updates and retrospective/hindcast folds", {
   expect_true(all(refit$pop$ssb$spawn_time == .25))
   retro <- fit_retro(fit, folds = 1, start_from_fit = TRUE, progress = FALSE)
   hind <- fit_hindcast(fit, folds = 1, start_from_fit = TRUE, progress = FALSE)
-  expect_true(all(vapply(retro$fits, function(x) all(x$dat$spawn_time == .25), logical(1))))
+  expect_true(all(vapply(retro$fits[[1]], function(x) all(x$dat$spawn_time == .25), logical(1))))
   expect_true(all(vapply(hind$fits, function(x) all(x$dat$spawn_time == .25), logical(1))))
 })
 

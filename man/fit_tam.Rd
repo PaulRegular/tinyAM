@@ -187,26 +187,22 @@ Other columns are copied from the last available year in each table.
 Can be a value of length 1 or
 length = \code{n_proj}. When it is a vector of length one, that multiplier is recycled across all
 projection years.
-\item \code{catch}: optional projected catch biomass in native abundance-times-weight
-units. Solve one multiplier of terminal F-at-age each year to attain these
-removals. Use one value repeated across years or one per projection year;
-named vectors must identify every projection year. No unit conversion occurs.
-Supplying catch clears inherited F_mult, and vice versa. Explicitly supplying
-both non-NULL controls is an error. Clearing both restores status-quo F.
-Targets must be below available vulnerable biomass; failures do not cap catch.
-Zero catch gives exactly zero F. See \link{tinyAM-model} for equations and timing.
+\item \code{catch}: total annual catch weight, in catch-number times mean-weight units
+(e.g. tonnes for thousand fish and kg). Supply one value recycled across
+years, or \code{n_proj} values. Specify either \code{catch} or \code{F_mult}, not both.
+See \link{tinyAM-model} for the catch solver and feasibility safeguards.
 }}
 
 \item{interval}{Level in \verb{(0, 1)} to use to generate confidence intervals,
 where applicable; default \verb{0.95.}}
 
 \item{add_osa_res}{Logical; add one-step-ahead residuals? Hard wired to
-apply the \code{"oneStepGaussianOffMode"} method. See \code{\link[RTMB:oneStepPredict]{RTMB::oneStepPredict()}}
+apply the \code{"oneStepGaussianOffMode"} method. See \code{\link[RTMB:OSA-residuals]{RTMB::oneStepPredict()}}
 for details.}
 
 \item{silent}{Logical; if \code{TRUE}, disables tracing information.}
 
-\item{start_par}{Optional list of starting parameter values, matching the
+\item{start_par}{Optional fitted \code{tam_fit} or list of starting parameter values, matching the
 structure returned by \code{\link[=make_par]{make_par()}}. Useful for warm starts or retrospective
 runs where parameter estimates from a previous fit are reused to improve
 convergence and speed. Non-matching or missing entries are ignored.}
@@ -222,7 +218,7 @@ A \code{tam_fit} list with components:
 \item \strong{obj}: RTMB \code{ADFun} object.
 \item \strong{opt}: \verb{[stats::nlminb()]} optimization result.
 \item \strong{rep}: list from \code{obj$report()}.
-\item \strong{sdrep}: \code{\link[RTMB:sdreport]{RTMB::sdreport()}} result.
+\item \strong{sdrep}: \code{\link[RTMB:TMB-interface]{RTMB::sdreport()}} result.
 \item \strong{fixed_par}: fixed parameter estimates in a tidy format (see \code{\link[=tidy_par]{tidy_par()}}).
 \item \strong{random_par}: list of random parameter estimates in a tidy format (see
 \code{\link[=tidy_par]{tidy_par()}}).
@@ -323,5 +319,5 @@ if (interactive()) {
 }
 \seealso{
 \code{\link[=prepare_tam]{prepare_tam()}}, \code{\link[=make_par]{make_par()}}, \code{\link[=sim_tam]{sim_tam()}}, \code{\link[=fit_retro]{fit_retro()}},
-\code{\link[RTMB:MakeADFun]{RTMB::MakeADFun()}}, \code{\link[RTMB:sdreport]{RTMB::sdreport()}}
+\code{\link[RTMB:TMB-interface]{RTMB::MakeADFun()}}, \code{\link[RTMB:TMB-interface]{RTMB::sdreport()}}
 }

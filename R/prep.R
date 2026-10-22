@@ -499,14 +499,10 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #'   Can be a value of length 1 or
 #'   length = `n_proj`. When it is a vector of length one, that multiplier is recycled across all
 #'   projection years.
-#' - `catch`: optional projected catch biomass in native abundance-times-weight
-#'   units. Solve one multiplier of terminal F-at-age each year to attain these
-#'   removals. Use one value repeated across years or one per projection year;
-#'   named vectors must identify every projection year. No unit conversion occurs.
-#'   Supplying catch clears inherited F_mult, and vice versa. Explicitly supplying
-#'   both non-NULL controls is an error. Clearing both restores status-quo F.
-#'   Targets must be below available vulnerable biomass; failures do not cap catch.
-#'   Zero catch gives exactly zero F. See [tinyAM-model] for equations and timing.
+#' - `catch`: total annual catch weight, in catch-number times mean-weight units
+#'   (e.g. tonnes for thousand fish and kg). Supply one value recycled across
+#'   years, or `n_proj` values. Specify either `catch` or `F_mult`, not both.
+#'   See [tinyAM-model] for the catch solver and feasibility safeguards.
 #'
 #' @return
 #' A named list `dat` containing:
