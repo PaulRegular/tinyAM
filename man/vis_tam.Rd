@@ -56,7 +56,10 @@ group similar quantities, with initial abundance shown separately.
 Stock-recruit models add a relationship page with parent-year pairs,
 median curves at declared reference covariates and conditional
 recruitment predictions. Random parameters also show signed
-recruitment residuals. See \code{\link[=tidy_recruitment]{tidy_recruitment()}}.
+recruitment deviations. See \code{\link[=tidy_recruitment]{tidy_recruitment()}}.
+N/F/M deviations use signed bubbles; RW values are annual increments,
+while IID/AR1 values are deviations from their mean. Shared M blocks
+are not treated as separate biological ages.
 Random plots include latent states and formula-effect trends.
 Age-year plots offer Annual trends (year axis, age selector) and
 Age profiles (age axis, year selector). Each plot starts in its

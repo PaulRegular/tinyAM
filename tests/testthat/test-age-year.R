@@ -18,6 +18,42 @@ age_year_data <- function() {
   d
 }
 
+test_that("blocked logistic F surfaces retain single-model mean traces", {
+  d <- prepare_tam(cod_obs, years = 1983:2000, ages = 2:14,
+    F_settings = list(process = "ar1", mu_form = ~logistic(age, by = F_y_block), mean_ages = 5:14))
+  p <- make_par(d)
+  p$log_f[] <- p$log_f + sin(seq_along(p$log_f)) / 10
+  o <- RTMB::MakeADFun(function(p) nll_fun(p, d), p, silent = TRUE)
+  r <- o$report(o$par)
+  state <- tidy_array(r$F, "est"); mean <- tidy_array(r$mu_F, "est")
+  state$is_proj <- mean$is_proj <- FALSE
+  state$model <- mean$model <- "A"
+  state$lwr <- state$upr <- NA_real_
+  mean$lwr <- .8 * mean$est; mean$upr <- 1.2 * mean$est
+  for (models in 1:2) {
+    x <- state; m <- mean
+    if (models == 2) { x <- rbind(x, transform(state, model = "B")); m <- rbind(m, transform(mean, model = "B")) }
+    fits <- stats::setNames(rep(list(structure(list(dat = d), class = "tam_fit")), models), c("A", "B")[seq_len(models)])
+    joined <- dashboard_helpers$mortality_plot_data(x, m, fits, "F")
+    expect_true(all(is.finite(joined$mean_est)))
+    plots <- list()
+    draw <- function(...) {
+      w <- dashboard_helpers$plot_mortality(...)
+      plots[[length(plots) + 1L]] <<- plotly::plotly_build(w)
+      w
+    }
+    views <- plot_age_year(joined, plot = draw, frame = ~age, color = ~model,
+      legendgroup = ~model, colors = tam_pal(models))
+    expect_length(plots, 2L)
+    for (w in plots) {
+      expect_true(any(vapply(w$x$data, function(z) identical(z$line$dash, "dot"), logical(1))))
+      expect_true(all(vapply(w$x$frames, function(z) length(z$data) == length(w$x$data), logical(1))))
+      expect_true(any(is.finite(unlist(lapply(w$x$data, `[[`, "y")))))
+    }
+    expect_s3_class(views, "shiny.tag")
+  }
+})
+
 test_that("age-year views honor the requested frame and preserve inputs", {
   d <- age_year_data()[18:1, ]
   original <- d

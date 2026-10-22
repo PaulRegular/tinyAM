@@ -811,6 +811,9 @@ stack_nested <- function(x, label = "model",
 #'
 #' - **obs_pred** — a named list of stacked data frames (e.g., `catch`, `index`);
 #' - **pop** — a named list of stacked data frames (e.g., `ssb`, `N`, `M`, `mu_M`, `F`, `mu_F`, `Z`, …);
+#' - **deviations** — signed N/F/M process tables, using annual increments for
+#'   RW processes and mean deviations for IID/AR1. M rows represent unique state
+#'   blocks. These point estimates exclude unpenalized RW boundary rows.
 #' - **patterns** — population and mortality age-year tables for [plot_matrix()].
 #'   Compatible units follow the first fitted model's displayed metric units,
 #'   including explicit reference conversions. Unspecified fitted units remain unspecified;
@@ -1010,6 +1013,10 @@ tidy_tam <- function(..., model_list = NULL, interval = 0.95, label = "model", l
     Filter(function(x) is.data.frame(x) && nrow(x) > 0L, tidy_recruitment(fit, interval))
   })
   out$recruitment <- stack_nested(recruitment, label = id_col, label_type = label_type)
+  deviations <- lapply(model_list, function(fit) {
+    if (inherits(fit, "tam_ref")) list() else .tidy_process_deviations(fit)
+  })
+  out$deviations <- stack_nested(deviations, label = id_col, label_type = label_type)
   effects <- lapply(model_list, function(fit) {
     if (inherits(fit, "tam_ref")) {
       return(list())

@@ -66,6 +66,7 @@ reference:
 - contents:
   - tidy_tam
   - tidy_obs_pred
+  - residuals.tam_fit
   - tidy_pop
   - tidy_par
   - tidy_recruitment

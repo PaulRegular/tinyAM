@@ -13,3 +13,11 @@
 
 The case study and cheatsheet need user-led migration to the new hindcast
 interface and nested results. They are intentionally unchanged in this work.
+
+## Diagnostic displays
+
+* `residuals()` extracts keyed observation residuals without refitting or
+  implicitly calculating OSA residuals.
+* Random parameters distinguish latent N/F/M states from their deviations.
+  Recruitment deviations retain signed annual trends; N/F/M use bubbles.
+  The same point tables are available in `tidy_tam()$deviations`.

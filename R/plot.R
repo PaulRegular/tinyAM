@@ -48,6 +48,9 @@
 #' @param data A data frame of observations or estimates.
 #' @param x Formula specifying x variable
 #' @param y Formula specifying y variable
+#' @param res Optional one-column formula for signed bubble values, e.g.
+#'   `~est` for process deviations. Omitted values use OSA or standardized
+#'   observation residuals. Use `y = ~age_block` for shared M state blocks.
 #' @param ylab Label for the y-axis.
 #' @param xlab Label for the x-axis.
 #' @param zlab Label for the colorbar in heatmaps.
@@ -380,17 +383,25 @@ plot_obs_pred <- function(
 
 #' @rdname plot_tam
 #' @export
-plot_bubbles <- function(data, ...) {
-  if ("osa_res" %in% names(data)) {
-    title <- "OSA residuals"
+plot_bubbles <- function(data, res = NULL, y = ~age, ylab = "Age", title = NULL, ...) {
+  if (!is.null(res)) {
+    if (!inherits(res, "formula") || length(res) != 2L) cli::cli_abort("res must be a one-sided formula selecting a numeric column.")
+    values <- stats::model.frame(res, data, na.action = stats::na.pass)
+    if (ncol(values) != 1L) cli::cli_abort("res must select one signed numeric column.")
+    data$res <- values[[1L]]
+    if (!is.numeric(data$res)) cli::cli_abort("res must select a signed numeric column.")
+    if (is.null(title)) title <- "Process deviations"
+  } else if ("osa_res" %in% names(data)) {
+    if (is.null(title)) title <- "OSA residuals"
     data$res <- data$osa_res
   } else {
-    title <- "Standardized residuals"
+    if (is.null(title)) title <- "Standardized residuals"
     data$res <- data$std_res
   }
   data$sign <- ifelse(data$res > 0, "+", "-")
   data$abs_res <- jitter(abs(data$res), factor = 1e-12) # tiny jitter to avoid identical-size rendering issues
   data <- data[!is.na(data$res), ]
+  data$.bubble_text <- if ("kind" %in% names(data)) paste0(data$kind, ": ", round(data$res, 2)) else as.character(round(data$res, 2))
 
   args <- list(...)
   if (is.null(args$colors)) {
@@ -403,7 +414,7 @@ plot_bubbles <- function(data, ...) {
       list(
         data = data,
         x = ~year,
-        y = ~age,
+        y = y,
         marker = list(
           size     = ~abs_res,
           sizemin  = 1,
@@ -411,7 +422,7 @@ plot_bubbles <- function(data, ...) {
           sizemode = "area"
         ),
         color = ~sign,
-        text = ~ round(res, 2)
+        text = ~.bubble_text
       ),
       args
     )
@@ -422,7 +433,7 @@ plot_bubbles <- function(data, ...) {
     plotly::layout(
       title = title,
       xaxis = list(title = "Year"),
-      yaxis = list(title = "Age")
+      yaxis = list(title = ylab)
     )
 }
 
