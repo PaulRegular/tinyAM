@@ -87,7 +87,7 @@ test_that("projection settings can be enabled, partially changed and disabled", 
 
 test_that("Usage shows every supported settings entry and optional projections", {
   expected <- list(
-    N_settings = c("process", "init", "sd_form"),
+    N_settings = c("process", "init", "mu_form", "sd_form"),
     rec_settings = c("process", "mu_form", "sd", "phi"),
     F_settings = c("process", "mu_form", "sd_form", "mean_ages"),
     M_settings = c("process", "mu_form", "mu_supplied", "sd_form", "age_breaks", "first_dev_year", "mean_ages"),

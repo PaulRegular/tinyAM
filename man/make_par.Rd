@@ -89,6 +89,7 @@ See \code{\link[=prepare_tam]{prepare_tam()}} for the choices and weak-identific
 }
 \item \strong{Abundance states and process variability (N)}
 \itemize{
+\item \code{mu_n}: signed log-cohort mean coefficients when \code{N_settings$mu_form} is supplied.
 \item \code{log_sd_n} (if \code{dat$N_settings$process != "off"})
 \item \code{logit_phi_n} length 2 (if \code{process == "ar1"})
 \item \code{log_n} matrix (\code{year[-1]} × \code{age[-1]}) if \code{process != "off"}

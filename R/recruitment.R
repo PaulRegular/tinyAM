@@ -320,6 +320,7 @@ ricker <- function(ssb, lag = NULL) {
       initial[a - 1L]
     }
   }
+  cohort_mean <- if (!is.null(par[["mu_n"]])) matrix(drop(dat$N_modmat %*% par[["mu_n"]]), T, A) else NULL
   eta_log_N <- matrix(0, T - 1L, A - 1L)
   if (simulate && dat$N_settings$process != "off" && !dat$process_sd$N$default && dat$N_settings$process != "rw") {
     eta_log_N <- .rprocess_scaled(eta_log_N, .process_sd(par, dat, "N"), dat$N_settings$process,
@@ -345,6 +346,7 @@ ricker <- function(ssb, lag = NULL) {
     if (y > 1L) {
       pred_log_N[y, older] <- log_N[y - 1L, older - 1L] - Z[y - 1L, older - 1L]
       pred_log_N[y, A] <- RTMB::logspace_add(pred_log_N[y, A], log_N[y - 1L, A] - Z[y - 1L, A])
+      if (!is.null(cohort_mean)) pred_log_N[y, older] <- pred_log_N[y, older] + cohort_mean[y, older]
       if (simulate && dat$N_settings$process == "rw" && y == 2L) {
         eta_log_N[1L, ] <- par$log_n[1L, ] - pred_log_N[y, older]
         eta_log_N <- if (dat$process_sd$N$default) {

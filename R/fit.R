@@ -218,7 +218,7 @@ fit_tam <- function(
   data,
   years = NULL,
   ages = NULL,
-  N_settings = list(process = "iid", init = "exp", sd_form = ~1),
+  N_settings = list(process = "iid", init = "exp", mu_form = NULL, sd_form = ~1),
   rec_settings = list(process = "rw", mu_form = NULL, sd = NULL, phi = NULL),
   F_settings = list(process = "rw", mu_form = NULL, sd_form = ~1, mean_ages = NULL),
   M_settings = list(

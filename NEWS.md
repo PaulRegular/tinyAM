@@ -21,3 +21,10 @@ interface and nested results. They are intentionally unchanged in this work.
 * Random parameters distinguish latent N/F/M states from their deviations.
   Recruitment deviations retain signed annual trends; N/F/M use bubbles.
   The same point tables are available in `tidy_tam()$deviations`.
+
+## Cohort covariates
+
+* `N_settings$mu_form` accepts ordinary fixed covariates for proportional
+  apparent cohort gains/losses after survival, indexed by destination year/age.
+  Recruitment and initial abundance remain separate. Constant directions under
+  an intrinsic N random walk are rejected rather than silently estimated.

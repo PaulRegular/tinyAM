@@ -8,7 +8,7 @@ fit_tam(
   data,
   years = NULL,
   ages = NULL,
-  N_settings = list(process = "iid", init = "exp", sd_form = ~1),
+  N_settings = list(process = "iid", init = "exp", mu_form = NULL, sd_form = ~1),
   rec_settings = list(process = "rw", mu_form = NULL, sd = NULL, phi = NULL),
   F_settings = list(process = "rw", mu_form = NULL, sd_form = ~1, mean_ages = NULL),
   M_settings = list(process = "off", mu_form = NULL, mu_supplied = ~I(0.2), sd_form = ~1,
@@ -52,6 +52,13 @@ anchor. \code{"exp"} uses deterministic survivorship; \code{"free"} estimates fi
 older-age \code{log_n0} states; \code{"latent"} integrates them without an initial
 density. \code{"mono"} constrains abundance to decline from r0; \code{"capped"}
 bounds each older age by r0 without imposing age ordering. See \strong{Details}.
+\item \code{mu_form}: ordinary fixed formula for proportional cohort gains/losses,
+default \code{NULL}. Covariates come from \code{pop_covariates} at the destination
+year and older age, after survivors are combined (including the plus group).
+Recruitment and initialization are unaffected. These effects do not
+identify immigration separately from mortality or observation changes.
+RW residuals require independent temporal mean contrasts; constant
+directions cancel and are rejected. See \link{tinyAM-model}.
 \item \code{sd_form}: ordinary formula for log SD of older-age survival residuals,
 default \code{~ 1}. Use \code{~ factor(age)} or a supplied age-sharing column in
 \code{data$pop_covariates}. Its design must be constant across years. Recruitment and

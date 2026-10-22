@@ -382,6 +382,13 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #'   older-age `log_n0` states; `"latent"` integrates them without an initial
 #'   density. `"mono"` constrains abundance to decline from r0; `"capped"`
 #'   bounds each older age by r0 without imposing age ordering. See **Details**.
+#' - `mu_form`: ordinary fixed formula for proportional cohort gains/losses,
+#'   default `NULL`. Covariates come from `pop_covariates` at the destination
+#'   year and older age, after survivors are combined (including the plus group).
+#'   Recruitment and initialization are unaffected. These effects do not
+#'   identify immigration separately from mortality or observation changes.
+#'   RW residuals require independent temporal mean contrasts; constant
+#'   directions cancel and are rejected. See [tinyAM-model].
 #' - `sd_form`: ordinary formula for log SD of older-age survival residuals,
 #'   default `~ 1`. Use `~ factor(age)` or a supplied age-sharing column in
 #'   `data$pop_covariates`. Its design must be constant across years. Recruitment and
@@ -551,7 +558,7 @@ prepare_tam <- function(
     data,
     years = NULL,
     ages = NULL,
-    N_settings = list(process = "iid", init = "exp", sd_form = ~1),
+    N_settings = list(process = "iid", init = "exp", mu_form = NULL, sd_form = ~1),
     rec_settings = list(process = "rw", mu_form = NULL, sd = NULL, phi = NULL),
     F_settings = list(process = "rw", mu_form = NULL, sd_form = ~1, mean_ages = NULL),
     M_settings = list(
@@ -775,6 +782,7 @@ prepare_tam <- function(
   q_design <- .parse_q_formula(dat$index_settings$q_form, dat$obs$index)
   dat[names(q_design)] <- q_design
   .check_q_terms(dat)
+  dat$N_modmat <- .parse_cohort_mean(dat)
   dat$F_terms <- dat$M_terms <- list()
   if (!is.null(dat$F_settings$mu_form)) {
     mean_design <- .parse_mean_formula(dat$F_settings$mu_form, dat, "F")
@@ -840,7 +848,7 @@ prepare_tam <- function(
   # model.matrix() can silently omit rows with missing covariates.
   design_tables <- c(
     sd_catch_modmat = "catch", sd_index_modmat = "index",
-    q_modmat = "index", F_modmat = "population", M_modmat = "population"
+    q_modmat = "index", N_modmat = "population", F_modmat = "population", M_modmat = "population"
   )
   for (nm in names(design_tables)) {
     x <- dat[[nm]]
