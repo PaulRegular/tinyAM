@@ -87,3 +87,22 @@ The source PDF, extracted text, raw `.dat` inputs, configuration, selected TAF
 revision and fitted SAM object are cached under the gitignored
 `source_cache/ices_cod_western_baltic_2025/` directory. The local manifest
 records retrieval dates, checksums and source URLs.
+
+## tinyAM fit result
+
+The default-initialized tinyAM fit passed numerical checks: optimizer code 0,
+objective 671.63, maximum absolute gradient 0.000356, successful uncertainty
+report, and a positive-definite Hessian (29 fixed and 648 random effects). The
+fit did not use source-based starting values.
+
+Over common years, mean absolute percent differences were 16.9% for matched
+SSB, 15.5% for derived total abundance, 16.1% for total biomass, and 18.4% for
+N-at-age. Their annual trend correlations were 0.98, 0.98, 0.98, and 0.96,
+respectively. However, at the terminal comparison year 2024, tinyAM was 70.5%
+lower for SSB, 31.1% lower for total abundance, and 58.1% lower for total
+biomass. Same-year age-0 recruitment is an approximate comparison and was
+26.1% lower in 2024. Fixed M matches by construction; F and Fbar are not
+like-for-like with the SAM age-state definitions. Convergence therefore does
+not imply close terminal agreement. The exploratory comparison is available
+in the local cached dashboard at
+`results/cache/ices_cod_western_baltic_2025/dashboard.html`.
