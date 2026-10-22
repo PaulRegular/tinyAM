@@ -117,3 +117,15 @@ test_that("validation cases are compared without ranking", {
   a$hindcast <- b$hindcast <- NULL
   expect_identical(a, b)
 })
+
+test_that("comparability follows the positive-value mask used by log scores", {
+  local_mocked_bindings(update = function(object, ...) {
+    r <- mock_hindcast_update(object, ...)
+    if (isTRUE(object$zero_forecast)) r$obs_pred$index$pred[r$obs_pred$index$is_proj] <- 0
+    r
+  }, tidy_tam = mock_hindcast_tidy, check_tam = function(...) list(is_converged = TRUE))
+  future::plan(future::sequential)
+  f <- hindcast_fixture(); zero <- f; zero$zero_forecast <- TRUE
+  expect_warning(h <- fit_hindcast(f, zero = zero, folds = 1, progress = FALSE), "not directly comparable")
+  expect_false(h$comparable)
+})

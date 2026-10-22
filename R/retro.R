@@ -154,14 +154,15 @@
       if (nrow(d)) d$model <- label
       out$forecast_pairs[[type]] <- .bind_rows(list(out$forecast_pairs[[type]], d))
     }
-    signatures[[label]] <- lapply(pairs, function(d) {
+    signatures[[label]] <- Map(function(d, type) {
       if (!nrow(d)) return(data.frame())
       valid <- is.finite(d$obs) & is.finite(d$pred)
+      if (type %in% c("index", "aggregate_index")) valid <- valid & d$obs > 0 & d$pred > 0
       fields <- intersect(c("fold", "horizon", "year", "age", "survey", "fleet", "obs", "baseline", "baseline_year", "unit"), names(d))
       signature <- d[valid, fields, drop = FALSE]
       if (nrow(signature)) signature <- signature[do.call(order, signature), , drop = FALSE]
       rownames(signature) <- NULL; signature
-    })
+    }, pairs, names(pairs))
   }
   for (section in names(stacks)) out[[section]] <- lapply(stacks[[section]], .bind_rows)
   out$comparable <- length(models) == 1 || all(vapply(signatures[-1], identical, logical(1), signatures[[1]]))
