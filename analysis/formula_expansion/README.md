@@ -111,3 +111,9 @@ Recovery reports retain equations, figures, support warnings and interval
 calculations. The package help documents the current interfaces and safeguards.
 No validation finding automatically promotes an assessment candidate or changes
 its retained scientific assumptions.
+
+## Cohort covariates
+
+See [cohort_report.md](cohort_report.md) and `cohort_recovery.R` for the focused
+cohort-mean pilot, including mortality/catchability overlap. Generated attempts
+remain under ignored `results/`.

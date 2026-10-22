@@ -144,9 +144,16 @@ rec_settings = list(process = "ar1", mu_form = ~ ricker(ssb))
 rec_settings = list(process = "rw", mu_form = ~ temperature)
 ```
 
-`N_settings$process` separately controls survival deviations in older cohorts.
-Annual covariates belong in `data$pop_covariates` at the youngest modeled age; older-age entries
-may be missing. IID/AR1 require an explicit mean, such as `mu_form = ~ 1`.
+`N_settings$process` separately controls survival deviations in older cohorts. An optional
+`N_settings$mu_form = ~ 0 + temperature` multiplies the survivor prediction by
+`exp(X beta)`, using `pop_covariates` at the destination year and older age.
+It can express apparent proportional gains/losses, including with the N process
+off, but cannot distinguish migration from mortality or observation changes.
+Recruitment and initial abundance are separate. Constant mean directions cancel
+under N random-walk residuals and are rejected.
+Recruitment covariates belong in `data$pop_covariates` at the youngest modeled age;
+older-age entries may be missing if no other formula uses them. IID/AR1
+recruitment requires an explicit mean, such as `mu_form = ~ 1`.
 Supply `sd` or AR1 `phi` in the settings list to fix them; otherwise they are
 estimated. Curves describe median recruitment from parent SSB at the supplied
 spawning time (zero by default). The lag defaults to recruitment age, and early years without modeled
