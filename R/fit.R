@@ -69,6 +69,15 @@
   par0
 }
 
+# Factor references/contrasts can change while coefficient names stay the same.
+.factor_basis <- function(design, data) {
+  contrasts <- attr(design, "contrasts")
+  lapply(stats::setNames(names(contrasts), names(contrasts)), function(term) {
+    x <- tryCatch(eval(str2lang(term), data, enclos = globalenv()), error = function(e) NULL)
+    list(contrast = contrasts[[term]], levels = if (is.null(x)) NULL else levels(as.factor(x)))
+  })
+}
+
 # Read the stored conditional mode without reevaluating or changing its objective.
 .start_parameters <- function(start, dat) {
   if (inherits(start, "tam_fit")) {
@@ -79,6 +88,27 @@
       start <- as.list(source$sdrep, "Estimate")
     } else {
       cli::cli_abort("Starting fit has no stored parameter estimates.")
+    }
+    bindings <- list(
+      log_q = c("q_modmat", "index"), logit_q = c("q_modmat", "index"),
+      log_sd_catch = c("sd_catch_modmat", "catch"), log_sd_index = c("sd_index_modmat", "index"),
+      log_mu_f = c("F_modmat", "F_data"), mu_m = c("M_modmat", "pop_data"),
+      mu_n = c("N_modmat", "pop_data"))
+    omitted <- character()
+    for (name in intersect(names(bindings), names(start))) {
+      binding <- bindings[[name]]
+      frame <- function(d) if (binding[2] %in% c("index", "catch")) d$obs[[binding[2]]] else d[[binding[2]]]
+      if (!identical(.factor_basis(source$dat[[binding[1]]], frame(source$dat)),
+                     .factor_basis(dat[[binding[1]]], frame(dat)))) {
+        start[[name]] <- NULL
+        omitted <- c(omitted, name)
+      }
+    }
+    if (length(omitted)) cli::cli_inform("Starting coefficients omitted for changed factor bases: {paste(omitted, collapse = ', ')}.")
+    source_fleets <- if (is.null(source$dat$fleets)) "Fishery" else source$dat$fleets
+    if (!identical(source_fleets, dat$fleets)) {
+      start <- start[!grepl("^(sd_beta_f$|log_mu_f$|dmu_f$|F_a50_|log_F_slope_|eta_mu_F_|log_sd_mu_F_|logit_phi_mu_F_)", names(start))]
+      cli::cli_inform("F mean/group-SD starts were omitted because the fleet definition changed; named F states still align where possible.")
     }
     if (!identical(source$dat$index_settings$q_link, dat$index_settings$q_link)) {
       start <- start[!grepl("^(log_q|logit_q$|dq$|eta_q_|log_sd_q_|logit_phi_q_|q_a50_|log_q_slope_)", names(start))]
@@ -299,9 +329,7 @@ fit_tam <- function(
     if (is.null(par[[coef_name]])) next
     design <- dat[[paste0(toupper(process), "_modmat")]]
     fixed <- vapply(seq_len(ncol(design)), function(j) {
-      surface <- matrix(design[, j], length(dat$years), length(dat$ages),
-        dimnames = list(dat$years, dat$ages)
-      )
+      surface <- if (process == "f") .F_matrix(design[, j], dat) else matrix(design[, j], length(dat$years), length(dat$ages), dimnames = list(dat$years, dat$ages))
       if (process == "f") {
         field <- surface[!dat$is_proj, , drop = FALSE]
       } else {

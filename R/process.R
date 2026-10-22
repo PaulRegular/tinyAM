@@ -260,13 +260,21 @@ rprocess_cor_rw <- function(x, sd = 1, rho = 0) {
   design <- stats::model.matrix(formula, frame)
   if (!ncol(design) || any(!is.finite(design))) cli::cli_abort("{label} must produce a nonempty finite design.")
   for (a in active) {
-    rows <- design[d$age == a, , drop = FALSE]
-    if (any(rows != rep(rows[1L, ], each = nrow(rows)))) {
+    rows <- which(d$age == a)
+    groups <- if (component == "F" && dat$has_fleet) split(rows, d$fleet[rows]) else list(rows)
+    if (any(vapply(groups, function(i) any(design[i, , drop = FALSE] != rep(design[i[1L], ], each = length(i))), logical(1)))) {
       cli::cli_abort("{label} varies across years at age {a}. Temporal process SDs are not enabled.")
     }
   }
-  design <- design[match(active, d$age), , drop = FALSE]
-  rownames(design) <- as.character(active)
+  if (component == "F") {
+    keys <- if (dat$has_fleet) paste(d$fleet, d$age) else as.character(d$age)
+    wanted <- if (dat$has_fleet) paste(dat$F_columns$fleet, dat$F_columns$age) else as.character(active)
+    design <- design[match(wanted, keys), , drop = FALSE]
+    rownames(design) <- dat$F_columns$key
+  } else {
+    design <- design[match(active, d$age), , drop = FALSE]
+    rownames(design) <- as.character(active)
+  }
   if (component == "M") {
     for (block in levels(settings$age_blocks)) {
       rows <- design[settings$age_blocks == block, , drop = FALSE]
@@ -293,10 +301,10 @@ rprocess_cor_rw <- function(x, sd = 1, rho = 0) {
 
 .process_sd_surface <- function(par, dat, component) {
   design <- dat$process_sd[[component]]
-  matrix(rep(.process_sd(par, dat, component), each = length(dat$years)),
+  result <- matrix(rep(.process_sd(par, dat, component), each = length(dat$years)),
     length(dat$years), nrow(design$matrix),
-    dimnames = list(year = dat$years, age = rownames(design$matrix))
-  )
+    dimnames = list(year = dat$years, age = rownames(design$matrix)))
+  if (component == "F" && dat$has_fleet) .F_array(result, dat) else result
 }
 
 # Standardization retains the existing AR1 innovation interpretation.

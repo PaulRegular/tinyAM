@@ -91,7 +91,8 @@ correlated between years and ages.
 annual increments at neighbouring ages. It estimates one signed age
 correlation; its SD is the marginal SD of annual log-F increments.
 \item \code{sd_form}: ordinary age-based formula for log process SD, default \code{~ 1},
-evaluated on \code{data$pop_covariates}. Sharing an SD does not share latent F states.
+evaluated on \code{data$pop_covariates} with intrinsic \code{fleet} when labeled
+catches are supplied. Sharing an SD does not share latent F states.
 IID SDs describe residuals; RW/correlated-RW SDs describe annual increments;
 stationary AR1 retains its innovation-scale convention.
 \item \code{mu_form}: an optional formula for mean-\eqn{F} (coefficients estimated as

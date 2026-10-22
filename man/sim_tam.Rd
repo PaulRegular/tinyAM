@@ -60,7 +60,7 @@ The simulation has two orthogonal controls:
 \item \strong{Parameter uncertainty} via \code{par_uncertainty}:
 \itemize{
 \item \code{"none"}  — use point estimates \verb{(û, θ̂)}.
-\item \code{"fixed"} — sample \strong{fixed effects} \code{θ ~ MVN(sdrep$par.fixed, sdrep$cov.fixed)}.
+\item \code{"fixed"} — sample \strong{fixed effects} \verb{θ ~ MVN(sdrep$par.fixed, sdrep$cov.fixed)}.
 \item \code{"joint"} — sample \strong{(random + fixed)} jointly from the Laplace
 Gaussian approximation using the \strong{joint precision} (sparse Cholesky).
 }
@@ -87,6 +87,10 @@ See \link{tinyAM-model} for the exact simulation and projection assumptions.
 
 Parallel execution is supported via \code{\link[furrr:future_map]{furrr::future_map()}}. Call
 \code{future::plan()} beforehand if you want parallel workers.
+
+Fleet F processes are drawn independently conditional on shared
+parameters and formula means. Catch biomass uses catch weights when supplied;
+stock biomass and SSB retain stock weights. Missing observations stay missing.
 }
 \examples{
 fit <- fit_tam(

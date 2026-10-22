@@ -35,7 +35,7 @@ compared with the reference estimate for that same year:
 {\widehat X^{(ref)}_{t_k}}.}
 Positive values mean the peeled fits tend to estimate higher values than
 the reference fit. Supply a single quantity and, for age-specific output,
-one age at a time. \code{fold} must already identify terminal historical years;
+one age and fleet at a time. \code{fold} must already identify terminal historical years;
 no year shifting or relabeling is performed. Each matched peel has equal weight.
 If failed fits were dropped, the reference is the latest retained fit.
 Missing differences are omitted; zero reference estimates can yield infinite

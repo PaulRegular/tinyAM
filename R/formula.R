@@ -858,7 +858,7 @@ mono <- function(x, by = NULL) {
 
 # Mean effects use the same unique-state compiler and densities as q effects.
 .mean_formula_data <- function(dat, component) {
-  d <- .population_data(dat)
+  d <- if (component == "F") dat$F_data else .population_data(dat)
   d$is_proj <- dat$is_proj[match(d$year, dat$years)]
   d$obs <- 1
   d

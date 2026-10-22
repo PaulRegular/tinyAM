@@ -45,7 +45,7 @@ labels. All other controls must be named.}
 \item{proj_settings}{Hindcast settings: \code{n_proj} (default 1), \code{n_mean} (default 1),
 and either \code{catch} (default \code{"observed"}) or \code{F_mult}. Numeric controls are one
 value recycled, or \code{n_proj} values ordered by forecast horizon. Observed catch
-is complete raw catch numbers times supplied weights. Forecasts are shortened
+is complete raw catch numbers times catch weights (stock weights if absent). Forecasts are shortened
 to available validation years. Ordinary retrospectives reject this argument.}
 
 \item{grad_tol}{Numerical check tolerance; defaults to each fit's stored value.}

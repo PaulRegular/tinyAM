@@ -256,7 +256,7 @@ print.tam_data <- function(x, n = 5, ...) {
 
 # One model-surface frame, ordered year within age, for every population formula.
 .population_data <- function(dat, formula = NULL, label = "Population formula") {
-  d <- dat$pop_data
+  d <- if (startsWith(label, "F_settings") && !is.null(dat$F_data)) dat$F_data else dat$pop_data
   if (!is.null(formula)) {
     variables <- function(x) {
       if (!is.call(x)) {
@@ -285,6 +285,13 @@ print.tam_data <- function(x, n = 5, ...) {
 #' `weight`, and `maturity`. Each table must include columns `year`, `age`,
 #' and `obs`. Types must be numeric (integerish allowed) for `year` and `age`,
 #' and numeric for `obs`.
+#'
+#' Catch may have a `fleet` column of nonempty labels. Supply one complete
+#' year-age grid per fleet, using `NA` for unobserved cells. Omitting `fleet`
+#' keeps the single-fishery model. All fleets share population abundance units.
+#' Optional `weight$catch_weight` supplies complete non-negative catch weights
+#' on the same grid and in the same mass units as stock weight (`weight$obs`).
+#' Without that column, stock weights are used for catches too.
 #'
 #' Additional requirements:
 #' - `index$samp_time` is **required**, numeric in **\[0, 1\]**, and **no NA**.
@@ -427,6 +434,17 @@ check_tam_data <- function(data) {
   }
 
   for (nm in required_tabs) check_one(obs[[nm]], nm)
+  if ("fleet" %in% names(obs$catch) &&
+      (!is.character(obs$catch$fleet) && !is.factor(obs$catch$fleet) ||
+       anyNA(obs$catch$fleet) || any(!nzchar(trimws(as.character(obs$catch$fleet)))))) {
+    cli::cli_abort("catch$fleet must contain nonempty fleet labels for every row, or omit the column for one fishery.")
+  }
+  if ("catch_weight" %in% names(obs$weight)) {
+    w <- obs$weight$catch_weight
+    if (!is.numeric(w) || any(!is.finite(w)) || any(w < 0)) {
+      cli::cli_abort("weight$catch_weight must contain complete finite non-negative weights in the same units as weight$obs.")
+    }
+  }
 
   # Covariates cannot change the range supplied by observations and biology.
   obs_years <- unlist(lapply(obs[required_tabs], function(d) d$year))
@@ -452,15 +470,18 @@ check_tam_data <- function(data) {
     if (!is.null(obs$pop_covariates)) "pop_covariates"
   )
   for (nm in must_be_full) {
-    if (anyDuplicated(obs[[nm]][, c("year", "age")])) {
-      cli::cli_abort("{.arg {nm}} must have exactly one row per year and age; duplicate rows would misalign the model surfaces.")
+    keys <- c("year", "age", if (nm == "catch" && "fleet" %in% names(obs$catch)) "fleet")
+    if (anyDuplicated(obs[[nm]][, keys])) {
+      key_label <- if ("fleet" %in% keys) "year, age and fleet" else "year and age"
+      cli::cli_abort("{.arg {nm}} must have exactly one row per {key_label}; duplicate rows would misalign the model surfaces.")
     }
-    xy <- unique(obs[[nm]][, c("year", "age")])
-    if (nrow(xy) != grid_size) {
+    xy <- unique(obs[[nm]][, keys, drop = FALSE])
+    expected <- grid_size * if ("fleet" %in% keys) length(unique(obs$catch$fleet)) else 1L
+    if (nrow(xy) != expected) {
       cli::cli_abort(c(
         "{.strong `{nm}` coverage is incomplete}",
         "x" = "`{nm}` must contain a row for every (year, age) in the modeled range: {years[1]}-{years[length(years)]} x {ages[1]}-{ages[length(ages)]}.",
-        "i" = "Current unique (year, age) rows in `{nm}`: {nrow(xy)} (expected {grid_size})."
+        "i" = "Current unique (year, age) rows in `{nm}`: {nrow(xy)} (expected {expected}, including every fleet when supplied)."
       ))
     }
   }

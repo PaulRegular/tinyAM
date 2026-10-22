@@ -80,12 +80,12 @@
 
 .population_unit <- function(dat, metric) {
   units <- .data_units(dat$obs)
-  if (metric == "W") return(units$weight)
+  if (metric %in% c("W", "W_catch")) return(units$weight)
   if (metric == "P") return("proportion")
   if (metric == "S") return("dimensionless")
-  if (metric %in% c("N", "N_plus", "abundance", "recruitment", "total_catch", "total_catch_pred", "n0")) return(units$numbers)
-  if (metric %in% c("biomass", "biomass_mat", "ssb", "ssb_mat", "total_yield", "total_yield_pred")) return(units$mass)
-  if (metric %in% c("F", "M", "Z", "mu_F", "mu_M", "F_bar", "M_bar", "F_full")) return("per year")
+  if (metric %in% c("N", "N_plus", "abundance", "recruitment", "total_catch", "total_catch_pred", "catch_fleet", "catch_fleet_pred", "n0")) return(units$numbers)
+  if (metric %in% c("biomass", "biomass_mat", "ssb", "ssb_mat", "total_yield", "total_yield_pred", "yield_fleet", "yield_fleet_pred")) return(units$mass)
+  if (metric %in% c("F", "M", "Z", "mu_F", "mu_M", "F_bar", "M_bar", "F_full", "F_fleet", "mu_F_fleet")) return("per year")
   NA_character_
 }
 

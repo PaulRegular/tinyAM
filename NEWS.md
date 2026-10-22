@@ -34,3 +34,14 @@ interface and nested results. They are intentionally unchanged in this work.
 * `F_settings$process = "off"` uses an explicit ordinary, monotonic or logistic
   mean without F latent states or residual variance/correlation parameters.
   Existing terminal-F and catch-conditioned projection controls remain available.
+
+## Multiple fleets and catch weights
+
+* Optional catch `fleet` labels define separate F surfaces, sharing one population.
+  F mean/SD formulas can use intrinsic `fleet`; process densities remain separate
+  within fleet, with shared process type and correlations. Total F remains reported.
+* Optional `weight$catch_weight` is shared across fleets and defaults to stock
+  weights. Catch biomass and catch-conditioned forecasts use these weights;
+  stock biomass and SSB retain stock weights, including hidden plus ages.
+* Fleet-specific reporting, residuals, scores, retrospectives and dashboard
+  views retain fleet identity. Information-criterion comparisons check it too.

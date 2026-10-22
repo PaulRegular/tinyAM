@@ -85,7 +85,8 @@ correlated between years and ages.
 annual increments at neighbouring ages. It estimates one signed age
 correlation; its SD is the marginal SD of annual log-F increments.
 \item \code{sd_form}: ordinary age-based formula for log process SD, default \code{~ 1},
-evaluated on \code{data$pop_covariates}. Sharing an SD does not share latent F states.
+evaluated on \code{data$pop_covariates} with intrinsic \code{fleet} when labeled
+catches are supplied. Sharing an SD does not share latent F states.
 IID SDs describe residuals; RW/correlated-RW SDs describe annual increments;
 stationary AR1 retains its innovation-scale convention.
 \item \code{mu_form}: an optional formula for mean-\eqn{F} (coefficients estimated as
@@ -272,6 +273,23 @@ proportion using its reconstructed hidden age composition. See \link{tinyAM-mode
 Formula covariates continue to use the input rows at modeled ages, not these
 effective biological values; this avoids circular mortality calculations.
 }
+
+\strong{Fleets and catch weights}
+
+Optional \code{catch$fleet} labels separate fisheries on one shared population.
+Every fleet needs a full year-age grid (\code{NA} for missing observations).
+Intrinsic \code{fleet} is available in F mean and process-SD formulas, e.g.
+\code{mu_form = ~ fleet + logistic(age, by = fleet)} and \code{sd_form = ~ fleet}.
+Other population covariates still belong in the year-age \code{pop_covariates}
+table; do not repeat that table by fleet. F processes are independent between
+fleets, with shared process type and correlations.
+
+\code{weight$catch_weight}, when supplied, is used for catch biomass and catch
+targets; absent values are not imputed. An absent column uses stock weights.
+Projection catch weights use the same recent-year averaging as stock weights,
+retaining older biological ages within a shortened plus group. Stock biomass
+and SSB continue to use stock weights. Catch targets are stock-wide; a common
+multiplier scales terminal F across all fleets, without TAC allocation.
 
 \strong{Design matrices}
 \itemize{

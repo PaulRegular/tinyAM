@@ -79,7 +79,10 @@
 #'   - `dmu_f`: directly fitted non-negative log-mean-F increments for [mono()]
 #'   - `F_a50_*`, `log_F_slope_*`: midpoint and log positive slope for [logistic()]
 #'     mean curves. F states start at their complete mean curve, giving zero residuals.
-#'   - `log_f` matrix (only with an active F process; historical `year` × `age`; no projection rows)
+#'   - `log_f` matrix (active F process only; historical years by age, or
+#'     named fleet-age columns for multiple fleets; no projection rows).
+#'     Process type and correlations are shared across fleets; SD formulas
+#'     control variance sharing. Reporting tables carry separate age/fleet keys.
 #'
 #' - **Natural mortality (M)**
 #'   - `log_sd_m` (if `dat$M_settings$process != "off"`)
@@ -223,16 +226,10 @@ make_par <- function(dat) {
       dimnames = list(year = dat$M_settings$years, age_block = levels(dat$M_settings$age_blocks))
     )
   }
-  if (dat$F_settings$process != "off") par$log_f <- matrix(0,
-    nrow = sum(!dat$is_proj), ncol = length(dat$ages),
-    dimnames = list(year = dat$years[!dat$is_proj], age = dat$ages)
-  )
+  if (dat$F_settings$process != "off") par$log_f <- .F_matrix(0, dat, historical = TRUE)
   if (dat$F_settings$process != "off" && (!is.null(dat$F_mono_modmat) || any(vapply(dat$F_terms, function(x) x$type == "logistic", logical(1))))) {
-    surface <- matrix(
-      drop(dat$F_modmat %*% par$log_mu_f) +
-        .mean_effects(par, dat, "F")$contribution,
-      length(dat$years), length(dat$ages)
-    )
+    surface <- .F_matrix(drop(dat$F_modmat %*% par$log_mu_f) +
+      .mean_effects(par, dat, "F")$contribution, dat)
     par$log_f[] <- surface[!dat$is_proj, , drop = FALSE]
   }
 

@@ -104,7 +104,10 @@ See \code{\link[=prepare_tam]{prepare_tam()}} for the choices and weak-identific
 \item \code{dmu_f}: directly fitted non-negative log-mean-F increments for \code{\link[=mono]{mono()}}
 \item \verb{F_a50_*}, \verb{log_F_slope_*}: midpoint and log positive slope for \code{\link[=logistic]{logistic()}}
 mean curves. F states start at their complete mean curve, giving zero residuals.
-\item \code{log_f} matrix (only with an active F process; historical \code{year} × \code{age}; no projection rows)
+\item \code{log_f} matrix (active F process only; historical years by age, or
+named fleet-age columns for multiple fleets; no projection rows).
+Process type and correlations are shared across fleets; SD formulas
+control variance sharing. Reporting tables carry separate age/fleet keys.
 }
 \item \strong{Natural mortality (M)}
 \itemize{

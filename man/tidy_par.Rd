@@ -8,7 +8,7 @@ tidy_par(fit, interval = 0.95)
 }
 \arguments{
 \item{fit}{A fitted TAM object (from \code{\link[=fit_tam]{fit_tam()}}) containing an \code{sdrep}
-(an \code{\link[RTMB:sdreport]{RTMB::sdreport()}} object) and \code{obj$env$.random} (names of random effects).}
+(an \code{\link[RTMB:TMB-interface]{RTMB::sdreport()}} object) and \code{obj$env$.random} (names of random effects).}
 
 \item{interval}{Confidence level for Wald intervals; default \code{0.95}.}
 }
@@ -87,7 +87,8 @@ are in \code{\link[=tidy_recruitment]{tidy_recruitment()}}.
 remains a log-decrement with an SE on that same scale. For constrained
 initialization, derived \code{n0} estimates use joint RTMB uncertainty.
 \item For matrices (e.g., \code{log_f}, \code{log_n}), \code{year} and/or \code{age} columns are added
-via \code{\link[=tidy_mat]{tidy_mat()}}.
+via \code{\link[=tidy_mat]{tidy_mat()}}. Labeled F states also carry the original fleet and
+biological-age keys rather than the combined internal column labels.
 }
 }
 \examples{

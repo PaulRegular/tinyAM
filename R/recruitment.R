@@ -331,6 +331,7 @@ ricker <- function(ssb, lag = NULL) {
     if (simulate && dat$N_settings$process == "ar1") eta_log_N <- rprocess_ar1(T - 1L, A - 1L, sd = exp(par$log_sd_n), phi = stats::plogis(par$logit_phi_n))
   }
   W <- dat$W
+  W_catch <- dat$W_catch
   P <- dat$P
   log_ssb <- numeric(T)
   ssb_mat <- matrix(0, T, A, dimnames = dimnames(log_N))
@@ -368,6 +369,7 @@ ricker <- function(ssb, lag = NULL) {
       shares <- components - Reduce(RTMB::logspace_add, components)
       log_N_plus[y, ] <- log_N[y, A] + shares
       W[y, A] <- sum(exp(shares) * dat$W_plus_input[y, ])
+      W_catch[y, A] <- if (dat$has_catch_weight) sum(exp(shares) * dat$W_catch_plus_input[y, ]) else W[y, A]
       P[y, A] <- if (all(dat$W_plus_input[y, ] == 0)) {
         0
       } else {
@@ -403,7 +405,7 @@ ricker <- function(ssb, lag = NULL) {
     if (dat$is_proj[y] && !is.null(dat$proj_settings$catch) && !is.null(F)) {
       terminal <- max(which(!dat$is_proj))
       k <- .solve_catch(dat$proj_settings$catch[as.character(dat$years[y])],
-        exp(log_N[y, ]), W[y, ], F[terminal, ], M[y, ], dat$years[y])
+        exp(log_N[y, ]), W_catch[y, ], F[terminal, ], M[y, ], dat$years[y])
       F[y, ] <- k * F[terminal, ]
       Z[y, ] <- F[y, ] + M[y, ]
     }
@@ -418,7 +420,7 @@ ricker <- function(ssb, lag = NULL) {
     log_N = log_N, pred_log_N = pred_log_N, log_recruitment = log_recruitment,
     log_mu_R = log_mu_R, log_pred_R = log_pred_R,
     eta_R = log_recruitment - log_pred_R, eta_R_state = u,
-    W = W, P = P, ssb_mat = ssb_mat,
+    W = W, W_catch = W_catch, P = P, ssb_mat = ssb_mat,
     N_plus = if (!is.null(dat$plus_ages)) exp(log_N_plus) else NULL,
     F = F, Z = Z
   )
@@ -449,19 +451,8 @@ ricker <- function(ssb, lag = NULL) {
     M[rownames(par[["log_m"]]), names(dat$M_settings$age_blocks)] <-
       exp(par[["log_m"]][, dat$M_settings$age_blocks, drop = FALSE])
   }
-  F <- matrix(0, length(dat$years), length(dat$ages))
-  if (dat$F_settings$process == "off") {
-    mean <- matrix(drop(dat$F_modmat %*% par$log_mu_f) + .mean_effects(par, dat, "F")$contribution, length(dat$years), length(dat$ages))
-    F[!dat$is_proj, ] <- exp(mean[!dat$is_proj, , drop = FALSE])
-  } else {
-    F[!dat$is_proj, ] <- exp(par$log_f)
-  }
-  if (any(dat$is_proj)) {
-    F[dat$is_proj, ] <- sweep(
-      F[rep(max(which(!dat$is_proj)), sum(dat$is_proj)), , drop = FALSE],
-      1L, if (is.null(dat$proj_settings$F_mult)) rep(1, sum(dat$is_proj)) else dat$proj_settings$F_mult, `*`
-    )
-  }
+  mean <- .F_matrix(drop(dat$F_modmat %*% if (is.null(par[["log_mu_f"]])) dat$log_mu_f else par$log_mu_f) + .mean_effects(par, dat, "F")$contribution, dat)
+  F <- .F_total(exp(.F_states(par, dat, mean)$full), dat)
   initial <- .population_states(par, dat, F + M)
   i <- dat$rec$eligible[1L] - dat$rec$curve$lag
   S <- sum(initial$ssb_mat[i, ])

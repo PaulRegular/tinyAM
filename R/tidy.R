@@ -53,7 +53,8 @@ tidy_array <- function(x, value_name = "x", require_dimnames = TRUE) {
 
   k <- length(dim(x))
   if (k > 0) {
-    df[seq_len(k)] <- lapply(df[seq_len(k)], type.convert, as.is = TRUE)
+    columns <- setdiff(seq_len(k), which(names(df)[seq_len(k)] == "fleet"))
+    df[columns] <- lapply(df[columns], type.convert, as.is = TRUE)
   }
 
   df
@@ -169,6 +170,9 @@ tidy_obs_pred <- function(fit, add_osa_res = FALSE, interval = .95, ...) {
 #'
 #' @description
 #' Converts year and age x year objects in `fit$rep` to long (tidy) data frames.
+#' Labeled fisheries also have `F_fleet`/`mu_F_fleet` tables with year, age and
+#' fleet, and `catch_fleet`/`yield_fleet` annual tables (plus predictions).
+#' Population F remains the sum across fleets.
 #'
 #' @param fit A fitted TAM object as returned by [fit_tam()].
 #'
@@ -209,7 +213,7 @@ tidy_rep <- function(fit) {
   }
 
   keep <- vapply(
-    rep, function(x) is.matrix(x) || length(x) == length(dat$years),
+    rep, function(x) length(dim(x)) >= 2L || length(x) == length(dat$years),
     logical(1)
   )
   keep[grepl("^eta_(q|mu_[FM]|sd_catch|sd_index)_increments$", names(keep))] <- FALSE
@@ -218,8 +222,8 @@ tidy_rep <- function(fit) {
   rep_items <- rep[keep]
 
   trends <- lapply(rep_items, function(x) {
-    if (is.matrix(x)) {
-      d <- tidy_mat(x, value_name = "est")
+    if (length(dim(x)) >= 2L) {
+      d <- tidy_array(x, value_name = "est")
       d$is_proj <- d$year %in% dat$years[dat$is_proj]
       return(d)
     }
@@ -334,7 +338,7 @@ tidy_sdrep <- function(fit, interval = 0.95) {
   vals$initial_log_N <- NULL
   ses <- ses[names(vals)]
   df <- lapply(seq_along(vals), function(i) {
-    if (is.matrix(vals[[i]])) {
+    if (length(dim(vals[[i]])) >= 2L) {
       dimnames(vals[[i]]) <- dimnames(fit$rep[[sub("^log_", "", names(vals)[i])]])
       d <- tidy_mat(vals[[i]], value_name = "est")
       d$se <- as.vector(ses[[i]])
@@ -361,10 +365,10 @@ tidy_sdrep <- function(fit, interval = 0.95) {
     df$F_bar[zero, c("est", "lwr", "upr", "se")] <- 0
     df$F_bar$se_scale[zero] <- "reported"
   }
-  if (!is.null(fit$dat$proj_settings$catch) && !is.null(df$F)) {
-    zero <- df$F$year %in% as.numeric(names(fit$dat$proj_settings$catch)[fit$dat$proj_settings$catch == 0])
-    df$F[zero, c("est", "lwr", "upr", "se")] <- 0
-    df$F$se_scale[zero] <- "reported"
+  if (!is.null(fit$dat$proj_settings$catch)) for (name in intersect(c("F", "F_fleet"), names(df))) {
+    zero <- df[[name]]$year %in% as.numeric(names(fit$dat$proj_settings$catch)[fit$dat$proj_settings$catch == 0])
+    df[[name]][zero, c("est", "lwr", "upr", "se")] <- 0
+    df[[name]]$se_scale[zero] <- "reported"
   }
   for (nm in names(df)) df[[nm]]$unit <- .population_unit(fit$dat, nm)
   df
@@ -478,7 +482,8 @@ tidy_pop <- function(fit, interval = 0.95) {
 #'   remains a log-decrement with an SE on that same scale. For constrained
 #'   initialization, derived `n0` estimates use joint RTMB uncertainty.
 #' - For matrices (e.g., `log_f`, `log_n`), `year` and/or `age` columns are added
-#'   via [tidy_mat()].
+#'   via [tidy_mat()]. Labeled F states also carry the original fleet and
+#'   biological-age keys rather than the combined internal column labels.
 #'
 #' @param fit A fitted TAM object (from [fit_tam()]) containing an `sdrep`
 #'   (an [RTMB::sdreport()] object) and `obj$env$.random` (names of random effects).
@@ -519,6 +524,11 @@ tidy_par <- function(fit, interval = 0.95) {
     s <- se[[nm]]
     if (is.matrix(e)) {
       df <- tidy_mat(e, value_name = "est")
+      if (nm == "log_f" && isTRUE(fit$dat$has_fleet)) {
+        i <- match(as.character(df$age), fit$dat$F_columns$key)
+        df$age <- fit$dat$F_columns$age[i]
+        df$fleet <- fit$dat$F_columns$fleet[i]
+      }
       df$is_proj <- df$year %in% fit$dat$years[fit$dat$is_proj]
       df$se <- as.vector(s)
     } else {

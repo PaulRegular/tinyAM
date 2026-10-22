@@ -16,6 +16,9 @@ a value column \code{est}, and an \code{is_proj} column.
 }
 \description{
 Converts year and age x year objects in \code{fit$rep} to long (tidy) data frames.
+Labeled fisheries also have \code{F_fleet}/\code{mu_F_fleet} tables with year, age and
+fleet, and \code{catch_fleet}/\code{yield_fleet} annual tables (plus predictions).
+Population F remains the sum across fleets.
 }
 \examples{
 fit <- fit_tam(

@@ -160,6 +160,26 @@ ages, \code{fit$rep$N_plus}, \code{fit$rep$W}, and \code{fit$rep$P} report the r
 abundance and effective biology; the inputs remain in \code{fit$dat}.
 }
 
+\subsection{Multiple fleets and catch weights}{
+
+With optional catch fleet labels, each fleet has its own F surface.
+\deqn{Z_{t,a}=M_{t,a}+\sum_f F_{t,a,f},\qquad
+C_{t,a,f}=N_{t,a}\frac{F_{t,a,f}}{Z_{t,a}}(1-e^{-Z_{t,a}}).}
+All fleets share one population. F residual processes are independent between
+fleets, conditional on their means and shared process parameters. Age
+correlation acts within each fleet only. F SD formulas can share or separate
+fleet SDs; process type and correlations are shared. Missing catch cells do
+not imply zero F. Total F is the sum of fleet F; its plotted mean surface is
+the sum of fleet baselines, not the arithmetic mean of lognormal draws.
+
+Catch biomass multiplies fleet catch numbers by \code{weight$catch_weight}, or
+stock weight when absent. These common catch weights are shared across fleets.
+Within a shortened plus group, abundance shares weight each hidden biological
+age's catch weight before summing. Stock biomass and SSB retain stock weights.
+A stock-wide projection multiplier scales all terminal fleet F equally; a
+catch target solves that multiplier using total catch biomass across fleets.
+}
+
 \subsection{Mortality means and latent states}{
 
 Formula design matrices define

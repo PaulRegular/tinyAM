@@ -42,5 +42,6 @@
   }
   out <- matrix(0, nrow(d), ncol(full), dimnames = list(NULL, colnames(full)))
   out[active, ] <- full
+  attr(out, "contrasts") <- attr(full, "contrasts")
   out
 }

@@ -44,7 +44,8 @@ skill.
 \strong{Likelihood scale.} Densities are evaluated on log observations, as in
 \code{\link[=nll_fun]{nll_fun()}}. No natural-scale lognormal Jacobian is added. Absolute values
 should not be compared with criteria calculated on a different response
-scale. Multiple-model calls require identical included observations and units.
+scale. Multiple-model calls require identical included observations, fleet
+identities and units.
 
 \strong{Marginal AIC.} \code{logLik()} returns the optimized Laplace approximation to
 the marginal log-likelihood. Its \code{df} counts all estimated outer parameters,

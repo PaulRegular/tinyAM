@@ -177,6 +177,9 @@
 #'   (forwarded to [furrr::furrr_options()]).
 #' @param seed Seed passed to [furrr::furrr_options()] for reproducibility.
 #'
+#' @details Fleet F processes are drawn independently conditional on shared
+#' parameters and formula means. Catch biomass uses catch weights when supplied;
+#' stock biomass and SSB retain stock weights. Missing observations stay missing.
 #' @return
 #' A **named list of data frames** (e.g., `catch`, `index`, `N`, `F`, `M`, `Z`, `ssb`, …),
 #' each stacked across `n` simulations with a `sim` column.

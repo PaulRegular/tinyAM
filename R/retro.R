@@ -23,10 +23,15 @@
   if (observed) for (i in seq_along(years)) {
     d <- source$catch[source$catch$year == years[i], ]
     w <- source$weight[source$weight$year == years[i], ]
-    counts <- d$obs[match(ages, d$age)]; weights <- w$obs[match(ages, w$age)]
-    if (any(!is.finite(counts) | counts < 0) || any(!is.finite(weights) | weights < 0)) {
-      out$error[i] <- "Observed catch biomass unavailable: incomplete catch-at-age or weights; supply catch targets or F_mult."
-    } else out$target[i] <- sum(counts * weights)
+    fleets <- if ("fleet" %in% names(d)) unique(as.character(d$fleet)) else "Fishery"
+    weights <- if ("catch_weight" %in% names(w)) w$catch_weight[match(ages, w$age)] else w$obs[match(ages, w$age)]
+    counts <- lapply(fleets, function(f) {
+      rows <- if ("fleet" %in% names(d)) d[as.character(d$fleet) == f, ] else d
+      rows$obs[match(ages, rows$age)]
+    })
+    if (!length(fleets) || any(!is.finite(unlist(counts))) || any(unlist(counts) < 0) || any(!is.finite(weights) | weights < 0)) {
+      out$error[i] <- "Observed catch conditioning is incomplete: supply non-negative catches for every fleet and catch/stock weights at all required ages."
+    } else out$target[i] <- sum(vapply(counts, function(x) sum(x * weights), numeric(1)))
   }
   out
 }
@@ -131,9 +136,11 @@
       d <- tidy$pop[[metric]]
       if (!nrow(d)) next
       d$fold <- as.numeric(as.character(d$fold))
-      groups <- if ("age" %in% names(d)) split(d, d$age) else list(d)
+      keys <- intersect(c("age", "fleet"), names(d))
+      groups <- if (length(keys)) split(d, interaction(d[keys], drop = TRUE)) else list(d)
       rows <- lapply(groups, function(x) data.frame(model = label, metric = metric,
         age = if ("age" %in% names(x)) x$age[1] else NA_real_,
+        fleet = if ("fleet" %in% names(x)) as.character(x$fleet[1]) else NA_character_,
         rho = if (as.character(.terminal_year(fit)) %in% names(retained)) compute_mohns_rho(x) else NA_real_))
       out$mohns_rho <- .bind_rows(c(list(out$mohns_rho), rows))
     }
@@ -183,7 +190,7 @@
 #' @param proj_settings Hindcast settings: `n_proj` (default 1), `n_mean` (default 1),
 #'   and either `catch` (default `"observed"`) or `F_mult`. Numeric controls are one
 #'   value recycled, or `n_proj` values ordered by forecast horizon. Observed catch
-#'   is complete raw catch numbers times supplied weights. Forecasts are shortened
+#'   is complete raw catch numbers times catch weights (stock weights if absent). Forecasts are shortened
 #'   to available validation years. Ordinary retrospectives reject this argument.
 #' @param grad_tol Numerical check tolerance; defaults to each fit's stored value.
 #' @param progress Show progress using progressr?

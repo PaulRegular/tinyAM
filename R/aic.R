@@ -17,7 +17,8 @@
 #' **Likelihood scale.** Densities are evaluated on log observations, as in
 #' [nll_fun()]. No natural-scale lognormal Jacobian is added. Absolute values
 #' should not be compared with criteria calculated on a different response
-#' scale. Multiple-model calls require identical included observations and units.
+#' scale. Multiple-model calls require identical included observations, fleet
+#' identities and units.
 #'
 #' **Marginal AIC.** `logLik()` returns the optimized Laplace approximation to
 #' the marginal log-likelihood. Its `df` counts all estimated outer parameters,
@@ -123,7 +124,7 @@ NULL
 
 .aic_observations <- function(object) {
   dat <- object$dat
-  cols <- c("type", "survey", "year", "age", "samp_time", "unit")
+  cols <- c("type", "survey", "fleet", "year", "age", "samp_time", "unit")
   d <- dat$obs_map[dat$is_observed, intersect(cols, names(dat$obs_map)), drop = FALSE]
   for (nm in setdiff(cols, names(d))) d[[nm]] <- NA_character_
   d <- d[, cols, drop = FALSE]

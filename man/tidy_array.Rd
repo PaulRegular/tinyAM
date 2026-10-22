@@ -27,7 +27,7 @@ one column per dimension (using the dimension names if available), and a
 value column.
 }
 \details{
-Internally uses \code{\link[base:as.data.frame.table]{base::as.data.frame.table()}} to reshape \code{x}. After reshaping,
+Internally uses \code{\link[base:table]{base::as.data.frame.table()}} to reshape \code{x}. After reshaping,
 all \strong{dimension columns} are passed through \code{\link[utils:type.convert]{utils::type.convert()}} with
 \code{as.is = TRUE}, so numeric-like labels (e.g., \code{"1"}, \code{"2.5"}) become numeric.
 }

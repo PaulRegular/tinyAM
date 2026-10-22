@@ -104,7 +104,6 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   n_ages <- length(ages)
   n_proj <- proj_settings$n_proj
 
-  if (F_settings$process != "off") sd_f <- .process_sd(par, dat, "F")
 
   empty_mat <- matrix(NA, n_years, n_ages,
     dimnames = list(year = years, age = ages)
@@ -118,25 +117,11 @@ nll_fun <- function(par, dat, simulate = FALSE) {
 
   F_effects <- .mean_effects(par, dat, "F", simulate)
   M_effects <- .mean_effects(par, dat, "M", simulate)
-  log_mu_F[] <- drop(F_modmat %*% log_mu_f) + F_effects$contribution
+  log_mu_F_states <- .F_matrix(drop(F_modmat %*% log_mu_f) + F_effects$contribution, dat)
   log_mu_M[] <- log_mu_supplied_m + drop(M_modmat %*% mu_m) + M_effects$contribution
+  F_states <- .F_states(par, dat, log_mu_F_states, simulate)
+  if (F_settings$process != "off") log_f <- F_states$states
   if (simulate) {
-    if (F_settings$process != "off") {
-      mu_f <- log_mu_F[!is_proj, , drop = FALSE]
-      log_f[] <- mu_f + if (!dat$process_sd$F$default && F_settings$process != "cor_rw") {
-        .rprocess_scaled(log_f - mu_f, sd_f, F_settings$process,
-          phi = if (F_settings$process == "ar1") plogis(logit_phi_f) else c(0, 0)
-        )
-      } else if (F_settings$process == "rw") {
-        rprocess_rw(log_f - mu_f, sd = sd_f)
-      } else if (F_settings$process == "cor_rw") {
-        rprocess_cor_rw(log_f - mu_f, sd = sd_f, rho = tanh(atanh_rho_f))
-      } else if (F_settings$process == "iid") {
-        matrix(stats::rnorm(length(log_f), 0, sd_f), nrow(log_f), ncol(log_f))
-      } else {
-        rprocess_ar1(nrow(log_f), ncol(log_f), sd = sd_f, phi = plogis(logit_phi_f))
-      }
-    }
     if (M_settings$process != "off") {
       iy <- rownames(log_m)
       ia <- M_settings$age_block_start
@@ -157,16 +142,11 @@ nll_fun <- function(par, dat, simulate = FALSE) {
 
   ## Vital rates ----
 
-  log_F[!is_proj, ] <- if (F_settings$process == "off") log_mu_F[!is_proj, , drop = FALSE] else log_f
-  if (n_proj > 0) {
-    log_k <- if (is.null(proj_settings$F_mult)) rep(0, n_proj) else log(proj_settings$F_mult)
-    terminal <- max(which(!is_proj))
-    log_f_last <- log_F[rep(terminal, n_proj), , drop = FALSE]
-    proj_log_F <- sweep(log_f_last, 1, log_k, `+`)
-    log_F[is_proj, ] <- proj_log_F
-  }
-  mu_F <- exp(log_mu_F)
-  F <- exp(log_F)
+  F_by_fleet <- exp(F_states$full)
+  F <- .F_total(F_by_fleet, dat)
+  mu_F <- .F_total(exp(log_mu_F_states), dat)
+  log_mu_F <- if (length(dat$fleets) == 1L) log_mu_F_states else log(mu_F)
+  dimnames(log_mu_F) <- dimnames(empty_mat)
 
   M <- mu_M <- exp(log_mu_M)
   if (M_settings$process != "off") {
@@ -183,6 +163,12 @@ nll_fun <- function(par, dat, simulate = FALSE) {
 
   population <- .population_states(par, dat, Z, simulate, F = F, M = M)
   F <- population$F
+  if (any(is_proj)) {
+    terminal <- max(which(!is_proj))
+    multiplier <- rowSums(F[is_proj, , drop = FALSE]) / sum(F[terminal, ])
+    F_by_fleet[is_proj, ] <- sweep(
+      F_by_fleet[rep(terminal, sum(is_proj)), , drop = FALSE], 1L, multiplier, "*")
+  }
   Z <- population$Z
   log_F <- log(F)
   log_Z <- log(Z)
@@ -194,6 +180,7 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   eta_R <- population$eta_R
   eta_R_state <- population$eta_R_state
   W <- population$W
+  W_catch <- population$W_catch
   P <- population$P
   N <- exp(log_N)
   recruitment <- exp(log_recruitment)
@@ -258,23 +245,7 @@ nll_fun <- function(par, dat, simulate = FALSE) {
 
   ## F process ----
 
-  if (F_settings$process != "off") {
-    eta_log_f <- log_F[!is_proj, ] - log_mu_F[!is_proj, ]
-    jnll <- jnll - if (!dat$process_sd$F$default && F_settings$process != "cor_rw") {
-      .dprocess_scaled(eta_log_f, sd_f, F_settings$process,
-        phi = if (F_settings$process == "ar1") plogis(logit_phi_f) else c(0, 0)
-      )
-    } else if (F_settings$process == "rw") {
-      dprocess_rw(eta_log_f, sd = sd_f)
-    } else if (F_settings$process == "cor_rw") {
-      dprocess_cor_rw(eta_log_f, sd = sd_f, rho = tanh(atanh_rho_f))
-    } else if (F_settings$process == "iid") {
-      sum(RTMB::dnorm(eta_log_f, 0, sd_f, log = TRUE))
-    } else {
-      dprocess_ar1(eta_log_f, sd = sd_f, phi = plogis(logit_phi_f))
-    }
-
-  }
+  if (F_settings$process != "off") jnll <- jnll - .F_density(log_f, log_mu_F_states, par, dat)
 
   ## Observations ----
 
@@ -283,6 +254,11 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   log_N_obs <- log_N[iya]
   Z_obs <- Z[iya]
   F_obs <- F[iya]
+  if (dat$has_fleet) {
+    rows <- which(obs_map$type == "catch")
+    cols <- match(paste(obs_map$fleet[rows], obs_map$age[rows]), paste(dat$F_columns$fleet, dat$F_columns$age))
+    F_obs[rows] <- F_by_fleet[cbind(match(obs_map$year[rows], years), cols)]
+  }
   if (ncol(sd_catch_modmat) > 0) {
     log_sd_catch_eff <- drop(sd_catch_modmat %*% log_sd_catch)
   } else {
@@ -368,13 +344,31 @@ nll_fun <- function(par, dat, simulate = FALSE) {
 
   pred <- exp(log_pred)
   C_obs <- C_pred <- empty_mat
-  C_obs[] <- obs[ic]
-  C_pred[] <- pred[ic]
+  if (!dat$has_fleet) {
+    C_obs[] <- obs[ic]
+    C_pred[] <- pred[ic]
+  } else {
+    catch_fleet <- catch_fleet_pred <- yield_fleet <- yield_fleet_pred <- matrix(0,
+      n_years, length(dat$fleets), dimnames = list(year = years, fleet = dat$fleets))
+    C_obs[] <- C_pred[] <- 0
+    for (f in seq_along(dat$fleets)) {
+      rows <- which(ic & as.character(obs_map$fleet) == dat$fleets[f])
+      counts <- predictions <- empty_mat
+      loc <- cbind(as.character(obs_map$year[rows]), as.character(obs_map$age[rows]))
+      counts[loc] <- obs[rows]
+      predictions[loc] <- pred[rows]
+      C_obs <- C_obs + replace(counts, is.na(counts), 0)
+      C_pred <- C_pred + predictions
+      catch_fleet[, f] <- rowSums(counts, na.rm = TRUE)
+      catch_fleet_pred[, f] <- rowSums(predictions)
+      yield_fleet[, f] <- rowSums(counts * W_catch, na.rm = TRUE)
+      yield_fleet_pred[, f] <- rowSums(predictions * W_catch)
+    }
+  }
   total_catch <- rowSums(C_obs, na.rm = TRUE)
   total_catch_pred <- rowSums(C_pred, na.rm = TRUE)
-  total_yield <- rowSums(C_obs * W, na.rm = TRUE)
-  total_yield_pred <- rowSums(C_pred * W, na.rm = TRUE)
-
+  total_yield <- rowSums(C_obs * W_catch, na.rm = TRUE)
+  total_yield_pred <- rowSums(C_pred * W_catch, na.rm = TRUE)
 
   ## Output ----
 
@@ -386,13 +380,30 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   REPORT(M_bar)
   REPORT(F)
   REPORT(mu_F)
-  if (F_settings$process == "off" || !is.null(dat$F_mono_modmat) || any(vapply(dat$F_terms, function(x) x$type == "logistic", logical(1)))) {
+  if (F_settings$process == "off" || (dat$has_fleet && !is.null(F_settings$mu_form)) || !is.null(dat$F_mono_modmat) || any(vapply(dat$F_terms, function(x) x$type == "logistic", logical(1)))) {
     ADREPORT(log_mu_F)
   }
-  if (F_settings$process == "off") {
+  if (F_settings$process == "off" || dat$has_fleet) {
     log_F <- log(F + zero_F)
     ADREPORT(log_F)
   }
+  if (dat$has_fleet) {
+    F_fleet <- .F_array(F_by_fleet, dat)
+    mu_F_fleet <- .F_array(exp(log_mu_F_states), dat)
+    REPORT(F_fleet)
+    REPORT(mu_F_fleet)
+    if (!is.null(F_settings$mu_form)) {
+      log_mu_F_fleet <- .F_array(log_mu_F_states, dat)
+      ADREPORT(log_mu_F_fleet)
+    }
+    REPORT(catch_fleet)
+    REPORT(catch_fleet_pred)
+    REPORT(yield_fleet)
+    REPORT(yield_fleet_pred)
+    log_F_fleet <- log(F_fleet + rep(zero_F, length(dat$ages) * length(dat$fleets)))
+    ADREPORT(log_F_fleet)
+  }
+  if (dat$has_catch_weight) REPORT(W_catch)
   REPORT(F_full)
   REPORT(F_bar)
   REPORT(S)

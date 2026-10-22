@@ -181,6 +181,18 @@ compute_hindcast_mase <- function(data, log = TRUE) {
     scores <- c(scores, lapply(split(p, p$age), function(z) cbind(data.frame(metric = "proportion", age = z$age[1], horizon = if (h == 0) NA_real_ else h), .score_forecasts(z, FALSE))))
   }
   scores <- .bind_rows(scores)
+  if ("fleet" %in% names(pairs)) {
+    scores$fleet <- NA_character_
+    by_fleet <- lapply(unique(as.character(pairs$fleet)), function(fleet) {
+      p <- pairs[as.character(pairs$fleet) == fleet, , drop = FALSE]
+      o <- observations[as.character(observations$fleet) == fleet, , drop = FALSE]
+      p$fleet <- o$fleet <- NULL
+      d <- .catch_compositions(p, o, ages)$scores
+      if (nrow(d)) d$fleet <- fleet
+      d
+    })
+    scores <- .bind_rows(c(list(scores), by_fleet))
+  }
   scores$scale <- ifelse(scores$metric == "mean_age", "years", "proportion")
   list(pairs = proportions, mean_age = mean_age, scores = scores)
 }

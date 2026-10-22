@@ -65,9 +65,13 @@ residuals.tam_fit <- function(object, type = c("standardized", "log", "response"
     d
   }
   if (!is.null(par[["log_f"]])) {
-    historical <- !dat$is_proj
-    out$F <- table(log(fit$rep$F[historical, , drop = FALSE]) -
-      log(fit$rep$mu_F[historical, , drop = FALSE]), dat$F_settings$process)
+    mean <- .F_matrix(drop(dat$F_modmat %*% if (is.null(par[["log_mu_f"]])) dat$log_mu_f else par$log_mu_f) + .mean_effects(par, dat, "F")$contribution, dat)
+    out$F <- table(par[["log_f"]] - mean[!dat$is_proj, , drop = FALSE], dat$F_settings$process)
+    if (dat$has_fleet && !is.null(out$F)) {
+      i <- match(as.character(out$F$age), dat$F_columns$key)
+      out$F$age <- dat$F_columns$age[i]
+      out$F$fleet <- dat$F_columns$fleet[i]
+    }
   }
   if (!is.null(par[["log_m"]])) {
     out$M <- table(par[["log_m"]] - log(fit$rep$mu_M[rownames(par[["log_m"]]),

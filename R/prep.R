@@ -169,6 +169,10 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
     if (nm %in% c("weight", "maturity")) {
       mean_obs <- stats::aggregate(obs ~ age, data = x[x$year %in% mean_years, ], FUN = mean)
       template$obs <- mean_obs$obs[match(template$age, mean_obs$age)]
+      if (nm == "weight" && "catch_weight" %in% names(x)) {
+        w <- stats::aggregate(catch_weight ~ age, x[x$year %in% mean_years, ], mean)
+        template$catch_weight <- w$catch_weight[match(template$age, w$age)]
+      }
     } else if (nm != "pop_covariates") {
       template$obs <- NA_real_
     }
@@ -229,7 +233,7 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
     }
   }
 
-  obs$catch <- .aggregate_one(obs$catch, plus_age, sum)
+  obs$catch <- .aggregate_one(obs$catch, plus_age, sum, c("year", if ("fleet" %in% names(obs$catch)) "fleet"))
   obs$index <- .aggregate_one(obs$index, plus_age, sum, groups = c("year", "survey"))
   obs
 }
@@ -288,6 +292,23 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #'   proportion using its reconstructed hidden age composition. See [tinyAM-model].
 #'   Formula covariates continue to use the input rows at modeled ages, not these
 #'   effective biological values; this avoids circular mortality calculations.
+#'
+#' **Fleets and catch weights**
+#'
+#' Optional `catch$fleet` labels separate fisheries on one shared population.
+#' Every fleet needs a full year-age grid (`NA` for missing observations).
+#' Intrinsic `fleet` is available in F mean and process-SD formulas, e.g.
+#' `mu_form = ~ fleet + logistic(age, by = fleet)` and `sd_form = ~ fleet`.
+#' Other population covariates still belong in the year-age `pop_covariates`
+#' table; do not repeat that table by fleet. F processes are independent between
+#' fleets, with shared process type and correlations.
+#'
+#' `weight$catch_weight`, when supplied, is used for catch biomass and catch
+#' targets; absent values are not imputed. An absent column uses stock weights.
+#' Projection catch weights use the same recent-year averaging as stock weights,
+#' retaining older biological ages within a shortened plus group. Stock biomass
+#' and SSB continue to use stock weights. Catch targets are stock-wide; a common
+#' multiplier scales terminal F across all fleets, without TAC allocation.
 #'
 #' **Design matrices**
 #'
@@ -415,7 +436,8 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #'   annual increments at neighbouring ages. It estimates one signed age
 #'   correlation; its SD is the marginal SD of annual log-F increments.
 #' - `sd_form`: ordinary age-based formula for log process SD, default `~ 1`,
-#'   evaluated on `data$pop_covariates`. Sharing an SD does not share latent F states.
+#'   evaluated on `data$pop_covariates` with intrinsic `fleet` when labeled
+#'   catches are supplied. Sharing an SD does not share latent F states.
 #'   IID SDs describe residuals; RW/correlated-RW SDs describe annual increments;
 #'   stationary AR1 retains its innovation-scale convention.
 #' - `mu_form`: an optional formula for mean-\eqn{F} (coefficients estimated as
@@ -633,8 +655,8 @@ prepare_tam <- function(
     d <- dat$obs[[nm]]
     keep_age <- if (nm %in% c("weight", "maturity")) d$age >= min(dat$ages) else d$age %in% dat$ages
     d_sub <- d[d$year %in% dat$years & keep_age, ]
-    d_sub[order(d_sub$age, d_sub$year), ] |>
-      droplevels()
+    ordered <- if (nm == "catch" && "fleet" %in% names(d_sub)) order(d_sub$fleet, d_sub$age, d_sub$year) else order(d_sub$age, d_sub$year)
+    d_sub[ordered, ] |> droplevels()
   }), names(dat$obs))
   attributes(dat$obs) <- attributes(obs)
   dat$is_proj <- rep(FALSE, length(dat$years))
@@ -668,6 +690,9 @@ prepare_tam <- function(
   } else {
     dat$obs$pop_covariates
   }
+
+  dat <- .prepare_fleets(dat)
+  dat$has_catch_weight <- "catch_weight" %in% names(dat$obs$weight)
 
   dat$N_settings$init <- match.arg(dat$N_settings$init, c("exp", "free", "latent", "mono", "capped"))
   if (length(dat$ages) < 2L) {
@@ -706,6 +731,9 @@ prepare_tam <- function(
                                length(dat$years), length(dat$plus_ages),
                                dimnames = plus_dimnames
     )
+    if (dat$has_catch_weight) dat$W_catch_plus_input <- matrix(
+      dat$obs$weight$catch_weight[dat$obs$weight$age %in% dat$plus_ages],
+      length(dat$years), length(dat$plus_ages), dimnames = plus_dimnames)
     dat$P_plus_input <- matrix(dat$obs$maturity$obs[dat$obs$maturity$age %in% dat$plus_ages],
                                length(dat$years), length(dat$plus_ages),
                                dimnames = plus_dimnames
@@ -722,6 +750,8 @@ prepare_tam <- function(
   dat$spawn_time[] <- dat$obs$maturity$spawn_time
   dat$W <- dat$P <- empty_mat
   dat$W[] <- dat$obs$weight$obs
+  dat$W_catch <- dat$W
+  if (dat$has_catch_weight) dat$W_catch[] <- dat$obs$weight$catch_weight
   dat$P[] <- dat$obs$maturity$obs
 
   catch <- dat$obs$catch
@@ -793,20 +823,20 @@ prepare_tam <- function(
     dat$F_mono_modmat <- mean_design$mono_matrix
     dat$F_mono_steps <- mean_design$mono_steps
     .check_mean_terms(dat, "F")
-    if (nrow(dat$F_modmat) != nrow(dat$pop_data) ||
+    if (nrow(dat$F_modmat) != nrow(dat$F_data) ||
         any(!is.finite(dat$F_modmat)) || !ncol(dat$F_modmat)) {
       cli::cli_abort("F_settings$mu_form must produce a finite, non-empty design for every modeled year and age.")
     }
-    historical <- dat$F_modmat[!dat$is_proj[match(dat$pop_data$year, dat$years)], , drop = FALSE]
+    historical <- dat$F_modmat[!dat$is_proj[match(dat$F_data$year, dat$years)], , drop = FALSE]
     if (qr(historical)$rank < ncol(historical)) {
       cli::cli_abort("F_settings$mu_form has a rank-deficient historical design. Remove redundant terms.")
     }
     if (dat$F_settings$process %in% c("rw", "cor_rw")) {
       n_historical <- sum(!dat$is_proj)
       increments <- vapply(seq_len(ncol(historical)), function(j) {
-        surface <- matrix(historical[, j], n_historical, length(dat$ages))
+        surface <- matrix(historical[, j], n_historical, nrow(dat$F_columns))
         as.vector(surface[-1, , drop = FALSE] - surface[-n_historical, , drop = FALSE])
-      }, numeric((n_historical - 1L) * length(dat$ages)))
+      }, numeric((n_historical - 1L) * nrow(dat$F_columns)))
       redundant <- colSums(abs(increments)) == 0
       if (any(redundant)) {
         dropped <- colnames(historical)[redundant]
@@ -850,11 +880,11 @@ prepare_tam <- function(
   # model.matrix() can silently omit rows with missing covariates.
   design_tables <- c(
     sd_catch_modmat = "catch", sd_index_modmat = "index",
-    q_modmat = "index", N_modmat = "population", F_modmat = "population", M_modmat = "population"
+    q_modmat = "index", N_modmat = "population", F_modmat = "F_data", M_modmat = "population"
   )
   for (nm in names(design_tables)) {
     x <- dat[[nm]]
-    if (is.matrix(x) && (nrow(x) != nrow(if (design_tables[[nm]] == "population") dat$pop_data else dat$obs[[design_tables[[nm]]]]) ||
+    if (is.matrix(x) && (nrow(x) != nrow(if (design_tables[[nm]] == "population") dat$pop_data else if (design_tables[[nm]] == "F_data") dat$F_data else dat$obs[[design_tables[[nm]]]]) ||
                          any(!is.finite(x)))) {
       cli::cli_abort("{nm} must have one finite row per observation. Check for missing or non-finite formula covariates.")
     }
