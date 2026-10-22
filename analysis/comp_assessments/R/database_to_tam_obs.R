@@ -58,15 +58,16 @@
   }), sep = "\r"))
 }
 
-.translation_calendar_rows <- function(x, label) {
+.translation_calendar_rows <- function(x, label, allow_missing_observations = FALSE) {
   if ("year_basis" %in% names(x)) {
     x <- x[!is.na(x$year_basis) & x$year_basis == "calendar_year", , drop = FALSE]
   }
   if (!nrow(x)) .translation_abort(paste("No calendar-year", label, "inputs are recorded."))
-  if (anyNA(x$year) || anyNA(x$age) || anyNA(x$value) ||
+  if (anyNA(x$year) || anyNA(x$age) ||
+    (!allow_missing_observations && anyNA(x$value)) ||
     any(!is.finite(x$year)) || any(!is.finite(x$age)) ||
     any(x$year != as.integer(x$year)) || any(x$age != as.integer(x$age)) ||
-    any(!is.finite(x$value)) || any(x$value < 0)) {
+    any(!is.finite(x$value[!is.na(x$value)])) || any(x$value < 0, na.rm = TRUE)) {
     .translation_abort(paste(label, "rows need finite, non-negative values and whole years and ages."))
   }
   x
@@ -294,7 +295,9 @@
   if (!nrow(direct) && !nrow(composition)) {
     .translation_abort("No source catch-at-age or number-proportion inputs are recorded.")
   }
-  if (nrow(direct)) direct <- .translation_calendar_rows(direct, "catch numbers-at-age")
+  if (nrow(direct)) direct <- .translation_calendar_rows(
+    direct, "catch numbers-at-age", allow_missing_observations = TRUE
+  )
   if (nrow(composition)) composition <- .translation_calendar_rows(composition, "catch age composition")
   source_rows <- rbind(direct, composition)
   .translation_one_group(
