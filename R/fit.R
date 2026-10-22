@@ -80,7 +80,7 @@
     } else {
       cli::cli_abort("Starting fit has no stored parameter estimates.")
     }
-    if (source$dat$rec$type == "off" && !is.null(source$rep$recruitment)) {
+    if (identical(source$dat$rec$type, "off") && !is.null(source$rep$recruitment)) {
       years <- source$dat$rec$eligible
       start$log_r <- setNames(log(source$rep$recruitment[years]), source$dat$years[years])
     }
@@ -88,17 +88,20 @@
       start <- start[!grepl("^(log_q|logit_q$|dq$|eta_q_|log_sd_q_|logit_phi_q_|q_a50_|log_q_slope_)", names(start))]
       cli::cli_inform("Catchability starts were omitted because q_link changed.")
     }
-    for (component in c("N", "F", "M")) {
-      name <- switch(component, N = "mu_n", F = "log_mu_f", M = "mu_m")
+    for (component in c("N", "F", "M", "rec")) {
+      name <- switch(component, N = "mu_n", F = "log_mu_f", M = "mu_m", rec = "rec_beta")
       if (is.null(start[[name]])) next
-      old <- source$dat[[paste0(component, "_modmat")]]
-      new <- dat[[paste0(component, "_modmat")]]
+      old <- if (component == "rec") source$dat$rec$matrix else source$dat[[paste0(component, "_modmat")]]
+      new <- if (component == "rec") dat$rec$matrix else dat[[paste0(component, "_modmat")]]
       if (!is.matrix(new) || !ncol(new)) next
-      before <- source$dat$pop_data
-      after <- dat$pop_data
+      before <- if (component == "rec") source$dat$rec$data else source$dat$pop_data
+      after <- if (component == "rec") dat$rec$data else dat$pop_data
       key <- function(d) paste(d$year, d$age)
       rows <- match(key(after), key(before))
       retained <- !is.na(rows) & !dat$is_proj[match(after$year, dat$years)]
+      if (component == "rec") retained <- retained &
+        after$year %in% dat$years[dat$rec$historical] &
+        before$year[rows] %in% source$dat$years[source$dat$rec$historical]
       columns <- intersect(colnames(old), colnames(new))
       omitted <- setdiff(colnames(old), columns)
       same <- identical(deparse(source$dat[[paste0(component, "_settings")]]$mu_form),
@@ -107,7 +110,8 @@
           check.attributes = FALSE)) && !any(old[rows[retained], omitted, drop = FALSE] != 0)
       if (!same) {
         start[[name]] <- NULL
-        cli::cli_inform("{component} mean starts were omitted because the formula basis changed.")
+        label <- if (component == "rec") "Recruitment" else component
+        cli::cli_inform("{label} mean starts were omitted because the formula basis changed.")
       }
     }
   }

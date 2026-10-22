@@ -14,6 +14,8 @@
 * `rec_settings$process = "off"` supports deterministic recruitment formulas
   and BH/Ricker curves, retaining free recruitment boundary states and derived
   uncertainty without extra annual states or process parameters.
+  Joint uncertainty simulation falls back to fixed-parameter draws when no
+  random effects remain. Recruitment warm starts respect changes in fitted bases.
 
 * F mean formulas are trained on historical support and carry terminal design
   rows into projections, fixing SCAA hindcasts with `factor(year)`. Cohort

@@ -85,4 +85,8 @@ test_that("deterministic fits retain uncertainty, updates and evaluation workflo
   expect_true(nrow(h$scores)>0)
   sim<-sim_tam(f,n=1,redraw_random=TRUE,par_uncertainty="none")
   expect_equal(sim$recruitment$est,f$pop$recruitment$est)
+  set.seed(68);fixed<-sim_tam(f,n=1,redraw_random=TRUE,par_uncertainty="fixed")
+  set.seed(68);joint<-sim_tam(f,n=1,redraw_random=TRUE,par_uncertainty="joint")
+  expect_identical(joint,fixed)
+  expect_true(all(is.finite(joint$recruitment$est)))
 })

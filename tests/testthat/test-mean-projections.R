@@ -46,3 +46,14 @@ test_that("historical mean designs retain explicit contrast reference levels", {
   expect_named(as.data.frame(d$F_modmat),c("(Intercept)","phasea"))
   expect_equal(unname(d$F_modmat[,"phasea"]),as.numeric(d$pop_data$year<1987))
 })
+
+test_that("recruitment starts do not transfer between different fitted polynomial bases", {
+  off<-prepare_tam(cod_obs,years=1983:1995,ages=2:6,rec_settings=list(process="off",mu_form=~poly(year,2)))
+  p<-make_par(off)
+  fake<-structure(list(dat=off,parameter_values=unlist(p),obj=list(env=list(parList=function(par)p)),
+    rep=list(recruitment=rep(100,length(off$years)))),class="tam_fit")
+  iid<-prepare_tam(cod_obs,years=1983:1995,ages=2:6,rec_settings=list(process="iid",mu_form=~poly(year,2)))
+  expect_message(start<-.start_parameters(fake,iid),"Recruitment mean starts.*basis changed")
+  expect_null(start$rec_beta)
+  expect_equal(start$log_r,setNames(rep(log(100),12),1984:1995))
+})
