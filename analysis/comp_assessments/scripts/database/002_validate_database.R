@@ -212,7 +212,7 @@ allowed_input_measures <- c(
 allowed_bases <- c(
   "native_frequency",
   "numbers", "biomass", "proportion_numbers", "proportion_biomass",
-  "kg_per_fish", "proportion", "per_year", "log_scale", "native_covariate",
+  "kg_per_fish", "g_per_fish", "proportion", "per_year", "log_scale", "native_covariate",
   "relative_precision", "relative_scale", "index_scale", "egg_count"
 )
 for (name in c("inputs", "outputs")) {

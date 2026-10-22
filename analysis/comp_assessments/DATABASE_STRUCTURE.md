@@ -360,6 +360,7 @@ biomass
 proportion_numbers
 proportion_biomass
 kg_per_fish
+g_per_fish
 proportion
 per_year
 log_scale
@@ -565,7 +566,8 @@ Downstream-analysis-specific transformations, settings, compatibility judgments,
 
 `spawning_weight_at_age` distinguishes supplied spawning-stock weights from
 population weights when the source uses different biological surfaces. Use
-`type = weight`, `basis = kg_per_fish`; do not label biological purposes as spatial regions.
+`type = weight`, with `basis = kg_per_fish` or `g_per_fish` matching the
+source unit; do not label biological purposes as spatial regions.
 
 ## Native length and conditional age compositions
 
