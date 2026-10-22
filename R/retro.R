@@ -32,7 +32,7 @@
     w <- source$weight[source$weight$year == years[i], ]
     counts <- d$obs[match(ages, d$age)]; weights <- w$obs[match(ages, w$age)]
     if (any(!is.finite(counts) | counts < 0) || any(!is.finite(weights) | weights < 0)) {
-      out$error[i] <- "Observed catch biomass unavailable: incomplete catch-at-age or weights; supply catch targets or F_mult."
+      out$error[i] <- "Observed catch biomass unavailable: incomplete catch-at-age or weights; supply complete inputs or use F_mult."
     } else out$target[i] <- sum(counts * weights)
   }
   out
