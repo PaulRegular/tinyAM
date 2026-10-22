@@ -1,54 +1,49 @@
 library(tinyAM)
-library(furrr)
 
-# source("analysis/comp_retro/001_models.R")
 models <- readRDS("analysis/comp_retro/outputs/001_models.rds")
-
 future::plan(future::multisession, workers = 2)
 
-retros <- lapply(names(models), function(nm) {
-  try(fit_retro(models[[nm]], folds = 20, hindcast = TRUE, start_from_fit = TRUE, grad_tol = 1e-2))
+retros <- lapply(models, function(fit) {
+  fit_hindcast(fit, folds = 20, start_from_fit = TRUE, grad_tol = 1e-2)
 })
-names(retros) <- names(models)
+saveRDS(retros, "analysis/comp_retro/outputs/002_retros.rds")
+for (model in names(retros)) {
+  cat("\n", model, "\n")
+  print(retros[[model]])
+}
+cli::cli_inform("Before comparing these separate runs, check forecast_pairs for matching validation cases and units.")
 
-saveRDS(retros, file = "analysis/comp_retro/outputs/002_retros.rds")
+for (model in names(retros)) {
+  fitted <- Filter(Negate(is.null), retros[[model]]$fits[[1L]])
+  if (length(fitted)) vis_tam(
+    model_list = fitted,
+    output_file = paste0("analysis/comp_retro/outputs/002_retro_", model, ".html"),
+    open_file = FALSE
+  )
+}
 
-lapply(names(retros), function(nm) {
-  if (!inherits(retros[[nm]], "try-error")) {
-    vis_tam(
-      retros[[nm]]$fits,
-      output_file = paste0("analysis/comp_retro/outputs/002_retro_", nm, ".html"),
-      open_file = FALSE
-    )
-  }
-})
-
-sapply(names(retros), function(nm) retros[[nm]]$hindcast_rmse) |>
-  sort()
-
-sapply(names(retros), function(nm) abs((retros[[nm]]$mohns_rho |> subset(metric == "ssb"))$rho)) |>
-  sort()
-
-rhos <- lapply(names(retros), function(nm) (retros[[nm]]$mohns_rho))
-names(rhos) <- names(retros)
-rhos <- stack_list(rhos, label_type = "factor")
+collect <- function(table) {
+  do.call(rbind, Map(function(result, model) {
+    d <- result[[table]]
+    if (nrow(d)) d$model <- model
+    d
+  }, retros, names(retros)))
+}
+scores <- collect("scores")
+subset(scores, type == "index" & level == "overall" & is.na(horizon))
+rhos <- collect("mohns_rho")
+subset(rhos, metric == "ssb")
 cols <- tam_pal(length(retros))
-
-counts <- table(rhos$metric)
-age_metrics <- names(which(counts == max(counts)))
+age_metrics <- unique(rhos$metric[is.finite(rhos$age)])
 
 rhos |>
   subset(metric %in% age_metrics) |>
-  plot_ly(
-    x = ~age, y = ~rho, color = ~model, colors = cols,
-    frame = ~metric
-  ) |>
-  add_bars()
+  plotly::plot_ly(x = ~age, y = ~rho, color = ~model, colors = cols, frame = ~metric) |>
+  plotly::add_bars()
 
 rhos |>
   subset(!metric %in% age_metrics) |>
-  plot_ly(x = ~metric, y = ~rho, color = ~model, colors = cols) |>
-  add_bars()
+  plotly::plot_ly(x = ~metric, y = ~rho, color = ~model, colors = cols) |>
+  plotly::add_bars()
 
-retros$N_iid_F_rw$mohns_rho |>
-  subset(metric %in% c("N", "F"))
+subset(rhos, model == "N_iid_F_rw" & metric %in% c("N", "F"))
