@@ -107,7 +107,8 @@
   if (type == "off") {
     active <- seq_along(dat$years) %in% eligible
     past <- seq_along(dat$years) %in% historical
-    fixed_design <- .fixed_mean_design(fixed_form, data, past, active, label = "rec_settings$mu_form")
+    fixed_design <- .fixed_mean_design(fixed_form, data, past, active,
+      carry_year_factors = TRUE, label = "rec_settings$mu_form")
     matrix <- matrix(0, length(dat$years), ncol(fixed_design$matrix),
       dimnames = list(NULL, colnames(fixed_design$matrix)))
     matrix[active, ] <- fixed_design$matrix
@@ -220,6 +221,10 @@
 #' `~ bh(ssb)` gives a deterministic stock-recruit curve. Supplied `sd` and
 #' `phi` must be `NULL`. Parameter uncertainty and stochastic parent SSB can
 #' still give uncertain recruitment; no direct recruitment noise is drawn.
+#' An annual `factor(year)` or `as.factor(year)` effect is fitted only to eligible
+#' historical years. Projections reuse its terminal historical coefficient rather
+#' than introducing future-year coefficients. Numeric year trends continue to be
+#' evaluated at the projected year; other covariates retain their terminal values.
 #'
 #' First-year `log_r0` is always a free fixed anchor. Any additional recruitment
 #' years whose parent SSB precedes the modeled period are also free fixed states
