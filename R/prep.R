@@ -180,6 +180,9 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
     proj_rows$is_proj <- TRUE
     x$is_proj <- FALSE
     x_with_proj <- rbind(x, proj_rows)
+    for (column in names(x)[vapply(x, is.factor, logical(1))]) {
+      attr(x_with_proj[[column]], "contrasts") <- attr(x[[column]], "contrasts")
+    }
     x_with_proj[order(x_with_proj$age, x_with_proj$year), ]
   }
   obs_with_proj <- lapply(names(obs), function(nm) .add_one(obs[[nm]], nm))
@@ -638,7 +641,7 @@ prepare_tam <- function(
     keep_age <- if (nm %in% c("weight", "maturity")) d$age >= min(dat$ages) else d$age %in% dat$ages
     d_sub <- d[d$year %in% dat$years & keep_age, ]
     d_sub[order(d_sub$age, d_sub$year), ] |>
-      droplevels()
+      .drop_unused_levels()
   }), names(dat$obs))
   attributes(dat$obs) <- attributes(obs)
   dat$is_proj <- rep(FALSE, length(dat$years))
@@ -719,7 +722,7 @@ prepare_tam <- function(
                                   dimnames = plus_dimnames
     )
     for (nm in c("weight", "maturity")) {
-      dat$obs[[nm]] <- droplevels(dat$obs[[nm]][dat$obs[[nm]]$age %in% dat$ages, ])
+      dat$obs[[nm]] <- .drop_unused_levels(dat$obs[[nm]][dat$obs[[nm]]$age %in% dat$ages, ])
     }
   }
   dat$spawn_time <- empty_mat

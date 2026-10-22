@@ -864,11 +864,32 @@ mono <- function(x, by = NULL) {
   d
 }
 
+# Preserve explicit contrast coding when removing unused factor levels.
+.drop_unused_levels <- function(data) {
+  out <- droplevels(data)
+  for (name in names(data)) {
+    x <- data[[name]]
+    if (!is.factor(x)) next
+    reduced <- out[[name]]
+    contrast <- attr(x, "contrasts")
+    if (is.matrix(contrast) && nlevels(reduced) > 1L) {
+      contrast <- contrast[match(levels(reduced), levels(x)), , drop = FALSE]
+      independent <- qr(cbind(1, contrast))
+      columns <- independent$pivot[seq_len(independent$rank)]
+      columns <- columns[columns > 1L] - 1L
+      attr(reduced, "contrasts") <- contrast[, columns, drop = FALSE]
+    } else if (!is.null(contrast)) attr(reduced, "contrasts") <- contrast
+    out[[name]] <- reduced
+  }
+  out
+}
+
 # Fit ordinary bases to historical support, then reuse their terms and contrasts.
 .fixed_mean_design <- function(formula, data, historical, active = rep(TRUE, nrow(data)),
                                carry_terminal = FALSE, label) {
   frame <- stats::model.frame(formula, data[historical, , drop = FALSE],
-    na.action = stats::na.pass, drop.unused.levels = TRUE)
+    na.action = stats::na.pass)
+  frame <- .drop_unused_levels(frame)
   terms <- attr(frame, "terms")
   design <- stats::model.matrix(terms, frame)
   if (nrow(design) != sum(historical) || any(!is.finite(design))) {
@@ -879,6 +900,8 @@ mono <- function(x, by = NULL) {
     terminal <- which(historical & data$year == max(data$year[historical]))
     data[future, ] <- data[terminal[match(data$age[future], data$age[terminal])], , drop = FALSE]
   }
+  # model.frame resets factor contrasts with xlev; supply training contrasts below.
+  for (name in names(data)[vapply(data, is.factor, logical(1))]) attr(data[[name]], "contrasts") <- NULL
   projected <- tryCatch(stats::model.frame(terms, data[active, , drop = FALSE],
     na.action = stats::na.pass, xlev = stats::.getXlevels(terms, frame)),
     error = function(e) cli::cli_abort("{label} cannot evaluate its projection design: {conditionMessage(e)}", parent = e))

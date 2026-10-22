@@ -37,3 +37,12 @@ test_that("warm mean coefficients align for peels but not changed reference codi
   expect_message(starts <- .start_parameters(fake,changed),"basis changed")
   expect_null(starts$log_mu_f)
 })
+
+test_that("historical mean designs retain explicit contrast reference levels", {
+  data<-cod_obs
+  data$pop_covariates$phase<-factor(ifelse(data$pop_covariates$year<1987,"a","b"),levels=c("a","b","unused"))
+  contrasts(data$pop_covariates$phase)<-contr.treatment(c("a","b","unused"),base=2)
+  d<-prepare_tam(data,years=1983:1990,ages=2:6,F_settings=list(process="off",mu_form=~phase),proj_settings=list(n_proj=1))
+  expect_named(as.data.frame(d$F_modmat),c("(Intercept)","phasea"))
+  expect_equal(unname(d$F_modmat[,"phasea"]),as.numeric(d$pop_data$year<1987))
+})
