@@ -13,7 +13,7 @@
 prediction), \code{"response"} (observation minus prediction), or \code{"osa"}.}
 
 \item{...}{Computation controls passed to \code{\link[=tidy_obs_pred]{tidy_obs_pred()}} and
-\code{\link[RTMB:OSA-residuals]{RTMB::oneStepPredict()}} when uncached OSA residuals are requested, such as
+\code{\link[RTMB:oneStepPredict]{RTMB::oneStepPredict()}} when uncached OSA residuals are requested, such as
 \code{trace = FALSE} or \code{parallel = FALSE}. Not used for cached OSA values;
 other residual types reject these arguments.}
 }

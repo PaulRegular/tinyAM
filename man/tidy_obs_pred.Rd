@@ -11,11 +11,11 @@ tidy_obs_pred(fit, add_osa_res = FALSE, interval = 0.95, ...)
 
 \item{add_osa_res}{Logical; add one-step-ahead residuals? Hard wired to
 apply the \code{"oneStepGaussianOffMode"} method.
-See \code{\link[RTMB:OSA-residuals]{RTMB::oneStepPredict()}} for details.}
+See \code{\link[RTMB:oneStepPredict]{RTMB::oneStepPredict()}} for details.}
 
 \item{interval}{Confidence level for combined catchability intervals.}
 
-\item{...}{Arguments to pass to \code{\link[RTMB:OSA-residuals]{RTMB::oneStepPredict()}}.}
+\item{...}{Arguments to pass to \code{\link[RTMB:oneStepPredict]{RTMB::oneStepPredict()}}.}
 }
 \value{
 A named list with two data frames:
