@@ -36,9 +36,11 @@ year_bounds <- function(text) {
 }
 
 grid_complete <- function(x, years, ages) {
-  if (!length(years) || !length(ages) || !nrow(x) || anyNA(x$year) || anyNA(x$age)) {
+  if (!length(years) || !length(ages) || !nrow(x)) {
     return(FALSE)
   }
+  x <- x[!is.na(x$year) & !is.na(x$age) &
+    x$year %in% years & x$age %in% ages, , drop = FALSE]
   expected <- expand.grid(year = years, age = ages)
   key <- function(d) paste(d$year, d$age, sep = "\r")
   !anyDuplicated(key(x)) && setequal(key(x), key(expected))
@@ -116,7 +118,7 @@ readiness <- lapply(seq_len(nrow(assessments)), function(i) {
   stock_weight <- weight[is.na(weight_series) | !nzchar(weight_series), , drop = FALSE]
   survey_weight_series <- unique(weight_series[!is.na(weight_series) & nzchar(weight_series)])
   model_weight <- if (nrow(stock_weight)) stock_weight else if (length(survey_weight_series) == 1L) weight else weight[0, , drop = FALSE]
-  catch_weight <- x[x$type == "catch_weight" & x$measure == "weight_at_age", , drop = FALSE]
+  catch_weight <- x[x$type == "catch_weight", , drop = FALSE]
   maturity <- x[!is.na(x$type) & x$type == "maturity" & !is.na(x$measure) &
     x$measure == "maturity_at_age" & !is.na(x$year_basis) & x$year_basis == "calendar_year", , drop = FALSE]
   maturity_static <- x[!is.na(x$type) & x$type == "maturity" & !is.na(x$measure) &
@@ -157,19 +159,29 @@ readiness <- lapply(seq_len(nrow(assessments)), function(i) {
     FALSE
   }
   weight_grid <- grid_complete(model_weight, years, ages)
-  catch_weight_grid <- grid_complete(catch_weight, years, ages)
-  maturity_static_grid <- nrow(maturity_static) > 0L && !anyNA(maturity_static$age) && !anyDuplicated(maturity_static$age) && setequal(maturity_static$age, ages)
+  catch_weight_groups <- split(catch_weight, catch_weight$fleet, drop = TRUE)
+  catch_weight_grid <- length(catch_weight_groups) > 0L && all(vapply(
+    catch_weight_groups, grid_complete, logical(1), years = years, ages = ages
+  ))
+  maturity_static_model <- maturity_static[
+    !is.na(maturity_static$age) & maturity_static$age %in% ages,
+    , drop = FALSE
+  ]
+  maturity_static_grid <- nrow(maturity_static_model) > 0L &&
+    !anyDuplicated(maturity_static_model$age) &&
+    setequal(maturity_static_model$age, ages)
   maturity_grid <- grid_complete(maturity, years, ages) || maturity_static_grid
   m_grid <- grid_complete(m_input, years, ages)
+  m_descriptions <- c(setting(a, "M", "process", ""),
+    a$value[a$component == "M"])
   m_estimated <- any(grepl("estimate|random walk|time series",
-    setting(a, "M", "process", ""),
-    ignore.case = TRUE
-  )) ||
-    any(grepl("estimate|random walk|time series",
-      a$value[a$component == "M"],
-      ignore.case = TRUE
-    ))
-  m_represented <- m_grid || (nrow(m_input) > 0L && anyNA(m_input$year)) || m_estimated
+    m_descriptions, ignore.case = TRUE
+  )) && !any(grepl("fixed|not estimated|not fitted|supplied",
+    m_descriptions, ignore.case = TRUE
+  ))
+  m_static <- nrow(m_input) > 0L && anyNA(m_input$year) &&
+    any(is.finite(m_input$value))
+  m_represented <- m_grid || m_static || m_estimated
   has_expected_obs <- all(c(
     nrow(catch_age) > 0L, nrow(index_age_rows) > 0L,
     nrow(model_weight) > 0L, nrow(maturity) + nrow(maturity_static) > 0L
@@ -265,7 +277,7 @@ readiness <- lapply(seq_len(nrow(assessments)), function(i) {
     weight_full_year_age_grid = weight_grid,
     catch_weight_full_year_age_grid = catch_weight_grid,
     maturity_full_year_age_grid = maturity_grid,
-    M_numerical_values_available = m_grid,
+    M_numerical_values_available = m_grid || m_static,
     M_estimated_in_source = m_estimated,
     database_to_tam_obs_succeeds = conversion_ok,
     tinyAM_check_obs_passes = check_obs_ok,

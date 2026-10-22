@@ -106,3 +106,4 @@ i Recovered fitted N/F are assessment outputs, not catch/survey data. See
 "nefsc_scup_2015","070c33a09dd1639333df64d0320d50a1210a782e","converged",TRUE,0,"relative convergence (4)",559.463070520346,0.000222035178464974,0.000222035178464974,TRUE,TRUE,24,278,,""
 
 "ices_horse_mackerel_9a_2024","3689ba8e34b0e2984baf6382abc8034904f063e5","not_converged",FALSE,0,"relative convergence (4)",831.0145,0.000082911,0.000082911,TRUE,FALSE,19,756,NA,"Default initialization; optimizer code 0 and small gradient, but positive-definite Hessian check failed."
+"ices_sole_north_sea_2025","9d03ca697cf569190c11291c8cffa1ba894f45e9","converged",TRUE,0,"relative convergence (4)",1073.22531338047,0.000999968665128109,0.000999968665128109,TRUE,TRUE,17,1350,3.04958701133728,""
