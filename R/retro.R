@@ -99,19 +99,12 @@
     }
     data.frame(model_index = i, fold = seq.int(final - folds, final), final = final)
   }))
-  source_path <- if (isNamespaceLoaded("pkgload") && pkgload::is_dev_package("tinyAM")) find.package("tinyAM") else NULL
-  parent_pid <- Sys.getpid()
   results <- progressr::with_progress({
     tick <- progressr::progressor(steps = nrow(jobs))
     furrr::future_map(seq_len(nrow(jobs)), function(i) {
-      # A development checkout and its installed copy can contain different code.
-      if (!is.null(source_path) && Sys.getpid() != parent_pid) {
-        pkgload::load_all(source_path, quiet = TRUE, helpers = FALSE, attach = FALSE)
-      }
       fit <- models[[jobs$model_index[i]]]
       tolerance <- if (!is.null(grad_tol)) grad_tol else if (!is.null(fit$grad_tol)) fit$grad_tol else .01
-      run_fold <- get(".retro_fold", envir = asNamespace("tinyAM"), inherits = FALSE)
-      result <- run_fold(fit, jobs$fold[i], jobs$final[i], settings, start_from_fit, tolerance)
+      result <- .retro_fold(fit, jobs$fold[i], jobs$final[i], settings, start_from_fit, tolerance)
       tick(); result
     }, .options = furrr::furrr_options(seed = 1, packages = "tinyAM", globals = globals))
   }, enable = progress)
@@ -245,11 +238,6 @@
 #' on their natural scale; genuine zeros are retained. Overlapping forecasts are
 #' distinct origin/horizon cases, not independent observations. These are
 #' conditional point-forecast diagnostics, not probability scores.
-#'
-#' Parallel workers normally use the installed package. When tinyAM is loaded
-#' from source with `pkgload::load_all()`, workers load that same source directory
-#' instead. It must be accessible to each worker. Restart existing workers after
-#' installing a new package version.
 #'
 #' Compare equivalent observations and age definitions. No ranking is produced.
 #' Missing baselines or zero persistence error make MASE unavailable. Failed
