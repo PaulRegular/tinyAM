@@ -406,7 +406,9 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #' - `phi`: fixed AR1 correlation in `[0, 1)`, or `NULL` to estimate it.
 #'   Must be `NULL` for other processes. Estimated correlations are positive.
 #' @param F_settings A list with elements:
-#' - `process`: `"iid"` for independent departures from the mean log F,
+#' - `process`: `"off"` makes historical F equal its explicit mean formula,
+#'   without F latent states, residual SDs or correlations. `"iid"` gives
+#'   independent departures from the mean log F,
 #'   `"rw"` for departures that accumulate over time, or `"ar1"` for departures
 #'   correlated between years and ages.
 #'   `"cor_rw"` accumulates changes over time with AR1 correlation between
@@ -417,7 +419,7 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #'   IID SDs describe residuals; RW/correlated-RW SDs describe annual increments;
 #'   stationary AR1 retains its innovation-scale convention.
 #' - `mu_form`: an optional formula for mean-\eqn{F} (coefficients estimated as
-#'   **log-scale** parameters `log_mu_f`), evaluated on `data$pop_covariates`. Required for `"iid"` and `"ar1"`;
+#'   **log-scale** parameters `log_mu_f`), evaluated on `data$pop_covariates`. Required for `"off"`, `"iid"` and `"ar1"`;
 #'   use `~ 1` for one estimated mean level or `~ factor(age)` for age-specific
 #'   means. For `"rw"`, `NULL` is allowed. Mean columns constant through time
 #'   cancel from RW increments and are removed with a warning. Remaining
@@ -426,7 +428,7 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #'   e.g. `~ factor(age) + rw(year)`. Only one temporal mean term is supported;
 #'   structured means with temporal residual processes are not yet enabled.
 #'   [mono()] and [logistic()] can instead describe a rising mean age curve
-#'   with IID or AR1 residuals, e.g. `~ logistic(age)`. Ordinary terms supply
+#'   with no residual process or with IID/AR1 residuals, e.g. `~ logistic(age)`. Ordinary terms supply
 #'   baseline F; realized F can depart from the rising mean. Static curves are
 #'   not identifiable with RW/correlated-RW residuals. See [catchability_curves].
 #' - `mean_ages`: optional vector of ages to include in population weighted
@@ -576,7 +578,7 @@ prepare_tam <- function(
   dat$obs <- obs
 
   dat$N_settings$process <- match.arg(dat$N_settings$process, c("off", "iid", "rw", "ar1"))
-  dat$F_settings$process <- match.arg(dat$F_settings$process, c("iid", "rw", "cor_rw", "ar1"))
+  dat$F_settings$process <- match.arg(dat$F_settings$process, c("off", "iid", "rw", "cor_rw", "ar1"))
   dat$M_settings$process <- match.arg(dat$M_settings$process, c("off", "iid", "rw", "ar1"))
 
   if (!dat$F_settings$process %in% c("rw", "cor_rw") && is.null(dat$F_settings$mu_form)) {

@@ -28,3 +28,9 @@ interface and nested results. They are intentionally unchanged in this work.
   apparent cohort gains/losses after survival, indexed by destination year/age.
   Recruitment and initial abundance remain separate. Constant directions under
   an intrinsic N random walk are rejected rather than silently estimated.
+
+## Formula-driven F
+
+* `F_settings$process = "off"` uses an explicit ordinary, monotonic or logistic
+  mean without F latent states or residual variance/correlation parameters.
+  Existing terminal-F and catch-conditioned projection controls remain available.

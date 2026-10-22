@@ -40,7 +40,7 @@
 #' terminal W and P preserve biomass and
 #' mature biomass; see [tinyAM-model]. No extra parameters or process penalties
 #' are introduced. `N_plus`, `W`, and `P` are then included in `report()`.
-#' Random N0 is redrawn; free N0, `log_r0`, and additional early recruitment
+#' Initial older-age abundance, `log_r0`, and additional early recruitment
 #' boundary states remain supplied fixed states. See [recruitment_formulas].
 #' RW processes retain their starting state because it has no process density.
 #' For N, the first `log_n` row is retained and its starting residual is computed
@@ -59,7 +59,8 @@
 #'   When used inside [RTMB::MakeADFun()], reported population and observation
 #'   quantities are available through the resulting object's `report()` method;
 #'   selected log population summaries also receive uncertainty via `sdreport()`.
-#'   With `TRUE`, a list containing `log_f`, `log_r`, `log_obs`, and applicable
+#'   With `TRUE`, a list containing `log_r`, `log_obs`, `log_f` when its process
+#'   is active, and applicable
 #'   `log_n0`, `log_n`, and `log_m` values. Missing observations remain `NA`;
 #'   predictions and population states are calculated for the full model grid.
 #'
@@ -103,7 +104,7 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   n_ages <- length(ages)
   n_proj <- proj_settings$n_proj
 
-  sd_f <- .process_sd(par, dat, "F")
+  if (F_settings$process != "off") sd_f <- .process_sd(par, dat, "F")
 
   empty_mat <- matrix(NA, n_years, n_ages,
     dimnames = list(year = years, age = ages)
@@ -120,19 +121,21 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   log_mu_F[] <- drop(F_modmat %*% log_mu_f) + F_effects$contribution
   log_mu_M[] <- log_mu_supplied_m + drop(M_modmat %*% mu_m) + M_effects$contribution
   if (simulate) {
-    mu_f <- log_mu_F[!is_proj, , drop = FALSE]
-    log_f[] <- mu_f + if (!dat$process_sd$F$default && F_settings$process != "cor_rw") {
-      .rprocess_scaled(log_f - mu_f, sd_f, F_settings$process,
-        phi = if (F_settings$process == "ar1") plogis(logit_phi_f) else c(0, 0)
-      )
-    } else if (F_settings$process == "rw") {
-      rprocess_rw(log_f - mu_f, sd = sd_f)
-    } else if (F_settings$process == "cor_rw") {
-      rprocess_cor_rw(log_f - mu_f, sd = sd_f, rho = tanh(atanh_rho_f))
-    } else if (F_settings$process == "iid") {
-      matrix(stats::rnorm(length(log_f), 0, sd_f), nrow(log_f), ncol(log_f))
-    } else {
-      rprocess_ar1(nrow(log_f), ncol(log_f), sd = sd_f, phi = plogis(logit_phi_f))
+    if (F_settings$process != "off") {
+      mu_f <- log_mu_F[!is_proj, , drop = FALSE]
+      log_f[] <- mu_f + if (!dat$process_sd$F$default && F_settings$process != "cor_rw") {
+        .rprocess_scaled(log_f - mu_f, sd_f, F_settings$process,
+          phi = if (F_settings$process == "ar1") plogis(logit_phi_f) else c(0, 0)
+        )
+      } else if (F_settings$process == "rw") {
+        rprocess_rw(log_f - mu_f, sd = sd_f)
+      } else if (F_settings$process == "cor_rw") {
+        rprocess_cor_rw(log_f - mu_f, sd = sd_f, rho = tanh(atanh_rho_f))
+      } else if (F_settings$process == "iid") {
+        matrix(stats::rnorm(length(log_f), 0, sd_f), nrow(log_f), ncol(log_f))
+      } else {
+        rprocess_ar1(nrow(log_f), ncol(log_f), sd = sd_f, phi = plogis(logit_phi_f))
+      }
     }
     if (M_settings$process != "off") {
       iy <- rownames(log_m)
@@ -154,10 +157,11 @@ nll_fun <- function(par, dat, simulate = FALSE) {
 
   ## Vital rates ----
 
-  log_F[!is_proj, ] <- log_f
+  log_F[!is_proj, ] <- if (F_settings$process == "off") log_mu_F[!is_proj, , drop = FALSE] else log_f
   if (n_proj > 0) {
     log_k <- if (is.null(proj_settings$F_mult)) rep(0, n_proj) else log(proj_settings$F_mult)
-    log_f_last <- log_f[rep(nrow(log_f), n_proj), , drop = FALSE]
+    terminal <- max(which(!is_proj))
+    log_f_last <- log_F[rep(terminal, n_proj), , drop = FALSE]
     proj_log_F <- sweep(log_f_last, 1, log_k, `+`)
     log_F[is_proj, ] <- proj_log_F
   }
@@ -254,21 +258,23 @@ nll_fun <- function(par, dat, simulate = FALSE) {
 
   ## F process ----
 
-  eta_log_f <- log_F[!is_proj, ] - log_mu_F[!is_proj, ]
-  jnll <- jnll - if (!dat$process_sd$F$default && F_settings$process != "cor_rw") {
-    .dprocess_scaled(eta_log_f, sd_f, F_settings$process,
-      phi = if (F_settings$process == "ar1") plogis(logit_phi_f) else c(0, 0)
-    )
-  } else if (F_settings$process == "rw") {
-    dprocess_rw(eta_log_f, sd = sd_f)
-  } else if (F_settings$process == "cor_rw") {
-    dprocess_cor_rw(eta_log_f, sd = sd_f, rho = tanh(atanh_rho_f))
-  } else if (F_settings$process == "iid") {
-    sum(RTMB::dnorm(eta_log_f, 0, sd_f, log = TRUE))
-  } else {
-    dprocess_ar1(eta_log_f, sd = sd_f, phi = plogis(logit_phi_f))
-  }
+  if (F_settings$process != "off") {
+    eta_log_f <- log_F[!is_proj, ] - log_mu_F[!is_proj, ]
+    jnll <- jnll - if (!dat$process_sd$F$default && F_settings$process != "cor_rw") {
+      .dprocess_scaled(eta_log_f, sd_f, F_settings$process,
+        phi = if (F_settings$process == "ar1") plogis(logit_phi_f) else c(0, 0)
+      )
+    } else if (F_settings$process == "rw") {
+      dprocess_rw(eta_log_f, sd = sd_f)
+    } else if (F_settings$process == "cor_rw") {
+      dprocess_cor_rw(eta_log_f, sd = sd_f, rho = tanh(atanh_rho_f))
+    } else if (F_settings$process == "iid") {
+      sum(RTMB::dnorm(eta_log_f, 0, sd_f, log = TRUE))
+    } else {
+      dprocess_ar1(eta_log_f, sd = sd_f, phi = plogis(logit_phi_f))
+    }
 
+  }
 
   ## Observations ----
 
@@ -380,8 +386,12 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   REPORT(M_bar)
   REPORT(F)
   REPORT(mu_F)
-  if (!is.null(dat$F_mono_modmat) || any(vapply(dat$F_terms, function(x) x$type == "logistic", logical(1)))) {
+  if (F_settings$process == "off" || !is.null(dat$F_mono_modmat) || any(vapply(dat$F_terms, function(x) x$type == "logistic", logical(1)))) {
     ADREPORT(log_mu_F)
+  }
+  if (F_settings$process == "off") {
+    log_F <- log(F + zero_F)
+    ADREPORT(log_F)
   }
   REPORT(F_full)
   REPORT(F_bar)
@@ -392,7 +402,7 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   REPORT(ssb_mat)
   REPORT(ssb)
 
-  if (!dat$process_sd$F$default) {
+  if (F_settings$process != "off" && !dat$process_sd$F$default) {
     sd_F <- .process_sd_surface(par, dat, "F")
     log_sd_F <- log(sd_F)
     REPORT(sd_F)
@@ -477,11 +487,10 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   }
 
   if (simulate) {
-    sims <- list(
-      log_f = log_f,
+    sims <- c(if (F_settings$process != "off") list(log_f = log_f), list(
       log_r = log_r,
       log_obs = log_obs
-    )
+    ))
     if (!is.null(par$log_r_init)) sims$log_r_init <- par$log_r_init
     if (N_settings$init %in% c("free", "latent")) {
       sims$log_n0 <- log_n0

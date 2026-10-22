@@ -116,7 +116,7 @@
 #'
 #' Random-effect blocks are chosen automatically from the model settings:
 #'
-#' - Always includes `log_f` and eligible `log_r` states. Early recruitment
+#' - Includes `log_f` when the F process is active, and eligible `log_r` states. Early recruitment
 #'   anchors are fixed; see [recruitment_formulas].
 #' - Includes `log_n0` only if `N_settings$init == "latent"`.
 #' - Includes `log_n` if `N_settings$process != "off"`.
@@ -275,7 +275,7 @@ fit_tam <- function(
     }
   }
 
-  ran <- c("log_f", "log_r", .formula_random_parameters(dat))
+  ran <- c(if (dat$F_settings$process != "off") "log_f", "log_r", .formula_random_parameters(dat))
   if (dat$N_settings$init == "latent") {
     ran <- c(ran, "log_n0")
   }

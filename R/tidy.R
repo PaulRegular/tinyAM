@@ -361,6 +361,11 @@ tidy_sdrep <- function(fit, interval = 0.95) {
     df$F_bar[zero, c("est", "lwr", "upr", "se")] <- 0
     df$F_bar$se_scale[zero] <- "reported"
   }
+  if (!is.null(fit$dat$proj_settings$catch) && !is.null(df$F)) {
+    zero <- df$F$year %in% as.numeric(names(fit$dat$proj_settings$catch)[fit$dat$proj_settings$catch == 0])
+    df$F[zero, c("est", "lwr", "upr", "se")] <- 0
+    df$F$se_scale[zero] <- "reported"
+  }
   for (nm in names(df)) df[[nm]]$unit <- .population_unit(fit$dat, nm)
   df
 }

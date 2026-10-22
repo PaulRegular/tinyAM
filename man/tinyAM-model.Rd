@@ -176,13 +176,16 @@ contributions remain constant within M state blocks, which continue to share
 actual M. Ordinary terms supply any common slope; without them the slopes
 are centred on zero. See \link{formula_effects} for the equations and cautions.
 
-F mean curves with IID/AR1 residuals add cumulative non-negative log-F
+F mean curves with no residual process or with IID/AR1 residuals add cumulative non-negative log-F
 increments for \code{\link[=mono]{mono()}}, or \eqn{\log S(a)} for \code{\link[=logistic]{logistic()}}, so the latter
 multiplies the ordinary mean F by rising selectivity. These are fixed curve
 parameters, separate from Gaussian mean effects and latent F states. Static
 curves cancel from RW increments and are not supported there.
 
-Historical F has one \code{log_f} state per year and age:
+With \code{F_settings$process = "off"}, historical \eqn{F=\mu^F}.
+No F latent states, process SD or correlations are created. Projection
+controls still scale terminal historical F or solve for total catch.
+With an active F process, historical F has one \code{log_f} state per year and age:
 \deqn{\log F_{t,a}=\log\mu^F_{t,a}+\eta^F_{t,a},\quad t\le H.}
 \code{log_f} is the left-hand side; \code{eta_log_f} is the deviation on the right.
 For an active M process, \code{log_m} has one state per selected year and age

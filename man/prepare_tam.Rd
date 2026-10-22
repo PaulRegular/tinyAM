@@ -76,7 +76,9 @@ Must be \code{NULL} for other processes. Estimated correlations are positive.
 
 \item{F_settings}{A list with elements:
 \itemize{
-\item \code{process}: \code{"iid"} for independent departures from the mean log F,
+\item \code{process}: \code{"off"} makes historical F equal its explicit mean formula,
+without F latent states, residual SDs or correlations. \code{"iid"} gives
+independent departures from the mean log F,
 \code{"rw"} for departures that accumulate over time, or \code{"ar1"} for departures
 correlated between years and ages.
 \code{"cor_rw"} accumulates changes over time with AR1 correlation between
@@ -87,7 +89,7 @@ evaluated on \code{data$pop_covariates}. Sharing an SD does not share latent F s
 IID SDs describe residuals; RW/correlated-RW SDs describe annual increments;
 stationary AR1 retains its innovation-scale convention.
 \item \code{mu_form}: an optional formula for mean-\eqn{F} (coefficients estimated as
-\strong{log-scale} parameters \code{log_mu_f}), evaluated on \code{data$pop_covariates}. Required for \code{"iid"} and \code{"ar1"};
+\strong{log-scale} parameters \code{log_mu_f}), evaluated on \code{data$pop_covariates}. Required for \code{"off"}, \code{"iid"} and \code{"ar1"};
 use \code{~ 1} for one estimated mean level or \code{~ factor(age)} for age-specific
 means. For \code{"rw"}, \code{NULL} is allowed. Mean columns constant through time
 cancel from RW increments and are removed with a warning. Remaining
@@ -96,7 +98,7 @@ With IID residuals, \code{\link[=iid]{iid()}}, \code{\link[=rw]{rw()}} and \code
 e.g. \code{~ factor(age) + rw(year)}. Only one temporal mean term is supported;
 structured means with temporal residual processes are not yet enabled.
 \code{\link[=mono]{mono()}} and \code{\link[=logistic]{logistic()}} can instead describe a rising mean age curve
-with IID or AR1 residuals, e.g. \code{~ logistic(age)}. Ordinary terms supply
+with no residual process or with IID/AR1 residuals, e.g. \code{~ logistic(age)}. Ordinary terms supply
 baseline F; realized F can depart from the rising mean. Static curves are
 not identifiable with RW/correlated-RW residuals. See \link{catchability_curves}.
 \item \code{mean_ages}: optional vector of ages to include in population weighted

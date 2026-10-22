@@ -450,10 +450,15 @@ ricker <- function(ssb, lag = NULL) {
       exp(par[["log_m"]][, dat$M_settings$age_blocks, drop = FALSE])
   }
   F <- matrix(0, length(dat$years), length(dat$ages))
-  F[!dat$is_proj, ] <- exp(par$log_f)
+  if (dat$F_settings$process == "off") {
+    mean <- matrix(drop(dat$F_modmat %*% par$log_mu_f) + .mean_effects(par, dat, "F")$contribution, length(dat$years), length(dat$ages))
+    F[!dat$is_proj, ] <- exp(mean[!dat$is_proj, , drop = FALSE])
+  } else {
+    F[!dat$is_proj, ] <- exp(par$log_f)
+  }
   if (any(dat$is_proj)) {
     F[dat$is_proj, ] <- sweep(
-      exp(par$log_f[rep(nrow(par$log_f), sum(dat$is_proj)), , drop = FALSE]),
+      F[rep(max(which(!dat$is_proj)), sum(dat$is_proj)), , drop = FALSE],
       1L, if (is.null(dat$proj_settings$F_mult)) rep(1, sum(dat$is_proj)) else dat$proj_settings$F_mult, `*`
     )
   }

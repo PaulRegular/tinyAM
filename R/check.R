@@ -161,10 +161,17 @@ check_tam <- function(fit, grad_tol = NULL, detailed = FALSE) {
       "predictions", if (is.null(fit$rep$log_pred) || is.null(fit$rep$sd_obs)) {
         NA
       } else {
-        all(is.finite(fit$rep$log_pred)) &&
-          all(is.finite(fit$rep$sd_obs) & fit$rep$sd_obs > 0)
+        valid <- is.finite(fit$rep$log_pred)
+        catch <- fit$dat$proj_settings$catch
+        map <- fit$dat$obs_map
+        if (!is.null(catch) && !is.null(map) && nrow(map) == length(valid)) {
+          zero_years <- as.numeric(names(catch)[catch == 0])
+          zero <- map$type == "catch" & map$year %in% zero_years
+          valid <- valid | (zero & is.infinite(fit$rep$log_pred) & fit$rep$log_pred < 0)
+        }
+        all(valid) && all(is.finite(fit$rep$sd_obs) & fit$rep$sd_obs > 0)
       },
-      "Log predictions and positive observation SDs must be finite."
+      "Log predictions and positive observation SDs must be finite, except deliberately zero projected catches."
     )
   )
   structural <- .check_tam_structure(fit$dat, fit$parameter_map)
