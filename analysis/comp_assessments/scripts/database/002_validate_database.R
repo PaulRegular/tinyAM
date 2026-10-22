@@ -206,7 +206,7 @@ allowed_input_measures <- c(
   "fixed_mortality_medium", "fixed_mortality_low", "fixed_mortality_high",
   "relative_biomass_index",
   "landings_proportion", "landings_numbers_at_age", "discard_numbers_at_age", "landings_fraction_at_age",
-  "landings_weight_at_age", "discard_weight_at_age", "log_index_sd", "index_sd", "relative_precision_weight", "relative_standard_error", "larval_abundance_index", "environmental_covariate", "fraction_F_before_spawning",
+  "landings_weight_at_age", "discard_weight_at_age", "log_index_sd", "index_sd", "relative_precision_weight", "observation_likelihood_weight", "relative_standard_error", "larval_abundance_index", "environmental_covariate", "fraction_F_before_spawning",
   "fraction_M_before_spawning", "capelin_biomass_index"
 )
 allowed_bases <- c(
@@ -260,7 +260,7 @@ for (name in c("inputs", "outputs")) {
       "fraction_M_before_spawning", "weight_at_age", "spawning_weight_at_age", "start_weight_at_age",
       "maturity_at_age", "natural_mortality_at_age", "fecundity_at_age", "proportion_female_at_age",
       "landings_numbers_at_age", "discard_numbers_at_age", "landings_fraction_at_age", "relative_standard_error",
-      "landings_weight_at_age", "discard_weight_at_age", "relative_precision_weight"
+      "landings_weight_at_age", "discard_weight_at_age", "relative_precision_weight", "observation_likelihood_weight"
     )
   } else {
     has_age_group <- if ("age_group" %in% names(x)) {
@@ -348,8 +348,8 @@ for (name in c("inputs", "outputs")) {
     if (any(proportion & value > 1 & !above_one_landings_fraction)) {
       stop("Input proportions must lie in [0, 1].", call. = FALSE)
     }
-    if (any(x$measure %in% c("log_index_sd", "index_sd", "relative_precision_weight") & value <= 0)) {
-      stop("Supplied index SDs and relative precision weights must be positive.", call. = FALSE)
+    if (any(x$measure %in% c("log_index_sd", "index_sd", "relative_precision_weight", "observation_likelihood_weight") & value <= 0)) {
+      stop("Supplied SDs, precision weights, and likelihood weights must be positive.", call. = FALSE)
     }
   } else {
     if ("age_group" %in% names(x) && any(x$measure %in% c("Fbar", "Mbar") &

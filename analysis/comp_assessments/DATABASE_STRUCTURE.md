@@ -297,10 +297,16 @@ the source-specific exception in `notes`; the validator accepts only documented
 `landings_fraction_at_age` exceptions. Other input proportions must remain in
 `[0, 1]`.
 
-relative_precision_weight stores a native relative index-precision weight
-for each survey, year and age. Use type = index and basis =
-relative_precision. Record the weight scale and any equivalent relative
-log-SD transformation in the notes.
+`relative_precision_weight` stores a native relative precision weight for an
+age-specific catch or index observation. Use the corresponding input type
+(`catch` or `index`) and basis = `relative_precision`. Record the weight scale
+and any equivalent relative log-SD transformation in the notes.
+
+`observation_likelihood_weight` preserves a source likelihood weight when its
+effect is not documented well enough to interpret as a precision or standard-
+deviation multiplier. Use the corresponding input type, `basis = relative_scale`,
+and retain the supplied value without transforming it. Explain the source
+field and whether tinyAM currently uses it.
 
 `relative_standard_error` stores the source-reported standard error divided by
 the estimate for an age-specific catch or index observation. Use basis =
