@@ -156,10 +156,13 @@ if (do_fit) {
       source_f <- f_matrix[index_rows]
       n_at_survey <- source_n * exp(-(source_f + 0.2) * index$samp_time)
       q_start <- vapply(seq_len(ncol(q_design)), function(j) {
-        selected <- q_design[, j] == 1
+        selected <- q_design[, j] == 1 & is.finite(index$obs) &
+          index$obs > 0 & is.finite(n_at_survey) & n_at_survey > 0
+        if (!any(selected)) return(NA_real_)
         stats::median(log(index$obs[selected] / n_at_survey[selected]))
       }, numeric(1))
       names(q_start) <- colnames(q_design)
+      q_start <- q_start[is.finite(q_start)]
       starts$log_q[names(q_start)] <- q_start
       starts
     },
