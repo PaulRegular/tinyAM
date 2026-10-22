@@ -2,6 +2,10 @@
 
 ## Evaluation refinements
 
+* Parallel retrospectives and hindcasts use the active development source when
+  tinyAM was loaded with `pkgload::load_all()`, avoiding stale installed code in
+  worker sessions.
+
 * `residuals(fit, type = "osa")` calculates missing OSA residuals on request,
   reusing cached results when present. Calculations use a temporary fitted
   objective without refitting or changing the supplied fit.

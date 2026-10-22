@@ -112,6 +112,11 @@ on their natural scale; genuine zeros are retained. Overlapping forecasts are
 distinct origin/horizon cases, not independent observations. These are
 conditional point-forecast diagnostics, not probability scores.
 
+Parallel workers normally use the installed package. When tinyAM is loaded
+from source with \code{pkgload::load_all()}, workers load that same source directory
+instead. It must be accessible to each worker. Restart existing workers after
+installing a new package version.
+
 Compare equivalent observations and age definitions. No ranking is produced.
 Missing baselines or zero persistence error make MASE unavailable. Failed
 numerical fits remain in \code{fits}, but not in stacked results or scores.
