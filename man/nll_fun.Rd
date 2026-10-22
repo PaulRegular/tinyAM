@@ -18,7 +18,7 @@ returning the likelihood? Defaults to \code{FALSE}.}
 }
 \value{
 With \code{simulate = FALSE}, a scalar joint negative log-likelihood.
-When used inside \code{\link[RTMB:TMB-interface]{RTMB::MakeADFun()}}, reported population and observation
+When used inside \code{\link[RTMB:MakeADFun]{RTMB::MakeADFun()}}, reported population and observation
 quantities are available through the resulting object's \code{report()} method;
 selected log population summaries also receive uncertainty via \code{sdreport()}.
 With \code{TRUE}, a list containing \code{log_r}, \code{log_obs}, \code{log_f} when its process
