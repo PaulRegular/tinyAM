@@ -4,15 +4,15 @@ Random {data-navmenu="Parameters"}
 Row {.tabset}
 --------------------------------------------------------------------------------
 
-### Recruitment
+`r if ("log_r" %in% names(random_par)) "### Recruitment"`
 
-```{r}
+```{r, eval = "log_r" %in% names(random_par)}
 plot_trend(random_par$log_r, color = ~model, legendgroup = ~model, colors = cols, ylab = "Recruitment (r)")
 ```
 
-### Recruitment deviations
+`r if (!is.null(tabs$recruitment$residual)) "### Recruitment deviations"`
 
-```{r}
+```{r, eval = !is.null(tabs$recruitment$residual)}
 plot_trend(tabs$recruitment$residual, color = ~model, colors = cols,
             ylab = "Log recruitment deviation")
 ```

@@ -80,9 +80,39 @@
     } else {
       cli::cli_abort("Starting fit has no stored parameter estimates.")
     }
+    if (identical(source$dat$rec$type, "off") && !is.null(source$rep$recruitment)) {
+      years <- source$dat$rec$eligible
+      start$log_r <- setNames(log(source$rep$recruitment[years]), source$dat$years[years])
+    }
     if (!identical(source$dat$index_settings$q_link, dat$index_settings$q_link)) {
       start <- start[!grepl("^(log_q|logit_q$|dq$|eta_q_|log_sd_q_|logit_phi_q_|q_a50_|log_q_slope_)", names(start))]
       cli::cli_inform("Catchability starts were omitted because q_link changed.")
+    }
+    for (component in c("N", "F", "M", "rec")) {
+      name <- switch(component, N = "mu_n", F = "log_mu_f", M = "mu_m", rec = "rec_beta")
+      if (is.null(start[[name]])) next
+      old <- if (component == "rec") source$dat$rec$matrix else source$dat[[paste0(component, "_modmat")]]
+      new <- if (component == "rec") dat$rec$matrix else dat[[paste0(component, "_modmat")]]
+      if (!is.matrix(new) || !ncol(new)) next
+      before <- if (component == "rec") source$dat$rec$data else source$dat$pop_data
+      after <- if (component == "rec") dat$rec$data else dat$pop_data
+      key <- function(d) paste(d$year, d$age)
+      rows <- match(key(after), key(before))
+      retained <- !is.na(rows) & !dat$is_proj[match(after$year, dat$years)]
+      if (component == "rec") retained <- retained &
+        after$year %in% dat$years[dat$rec$historical] &
+        before$year[rows] %in% source$dat$years[source$dat$rec$historical]
+      columns <- intersect(colnames(old), colnames(new))
+      omitted <- setdiff(colnames(old), columns)
+      same <- identical(deparse(source$dat[[paste0(component, "_settings")]]$mu_form),
+        deparse(dat[[paste0(component, "_settings")]]$mu_form)) &&
+        isTRUE(all.equal(old[rows[retained], columns, drop = FALSE], new[retained, columns, drop = FALSE],
+          check.attributes = FALSE)) && !any(old[rows[retained], omitted, drop = FALSE] != 0)
+      if (!same) {
+        start[[name]] <- NULL
+        label <- if (component == "rec") "Recruitment" else component
+        cli::cli_inform("{label} mean starts were omitted because the formula basis changed.")
+      }
     }
   }
   if (!is.list(start) || (length(start) && (is.null(names(start)) ||
@@ -116,7 +146,7 @@
 #'
 #' Random-effect blocks are chosen automatically from the model settings:
 #'
-#' - Includes `log_f` when the F process is active, and eligible `log_r` states. Early recruitment
+#' - Includes `log_f` when the F process is active, and eligible `log_r` states when recruitment is stochastic. Early recruitment
 #'   anchors are fixed; see [recruitment_formulas].
 #' - Includes `log_n0` only if `N_settings$init == "latent"`.
 #' - Includes `log_n` if `N_settings$process != "off"`.
@@ -275,7 +305,7 @@ fit_tam <- function(
     }
   }
 
-  ran <- c(if (dat$F_settings$process != "off") "log_f", "log_r", .formula_random_parameters(dat))
+  ran <- c(if (dat$F_settings$process != "off") "log_f", if (dat$rec$type != "off") "log_r", .formula_random_parameters(dat))
   if (dat$N_settings$init == "latent") {
     ran <- c(ran, "log_n0")
   }
@@ -478,5 +508,18 @@ update.tam_fit <- function(object, ..., evaluate = TRUE) {
   out$call <- new_call
 
   out
+}
+
+
+# Rebuild at the stored mode without modifying the fitted objective or optimizing fixed parameters.
+.fitted_objective <- function(object, component = NULL) {
+  if (is.null(object$obj) || is.null(object$parameter_values)) {
+    cli::cli_abort("This calculation requires the fitted objective and stored parameter values.")
+  }
+  dat <- object$dat
+  dat$.likelihood_component <- component
+  parameters <- object$obj$env$parList(par = object$parameter_values)
+  RTMB::MakeADFun(function(p) nll_fun(p, dat), parameters,
+    random = object$obj$env$.random, map = object$parameter_map, silent = TRUE)
 }
 

@@ -61,15 +61,17 @@ initial-abundance SDs remain separate. Random-effect SD terms are not enabled.
 
 \item{rec_settings}{A list controlling recruitment separately from cohort survival:
 \itemize{
-\item \code{process}: \code{"rw"} (default), \code{"iid"}, or \code{"ar1"} for annual log-recruitment
+\item \code{process}: \code{"off"} for recruitment exactly following its mean formula,
+or \code{"rw"} (default), \code{"iid"}, or \code{"ar1"} for annual log-recruitment
 residuals. First-year recruitment remains a freely estimated fixed anchor.
 \item \code{mu_form}: one-sided formula for the expected log recruitment. \code{NULL} is
-allowed for RW; IID/AR1 require an explicit formula, such as \code{~ 1} for a
+allowed for RW; off/IID/AR1 require an explicit formula, such as \code{~ 1} for a
 constant mean. Use \code{\link[=bh]{bh()}} or \code{\link[=ricker]{ricker()}} for a median stock-recruit curve
-with IID/AR1 residuals. Ordinary covariates come from \code{data$pop_covariates}
+with no residuals or IID/AR1 residuals. Ordinary covariates come from \code{data$pop_covariates}
 at the youngest modeled age. See \link{recruitment_formulas}.
 \item \code{sd}: positive fixed recruitment SD, or \code{NULL} to estimate it. This is
-an innovation SD for RW/AR1 and a marginal SD for IID.
+an innovation SD for RW/AR1 and a marginal SD for IID. Must be \code{NULL}
+when process is off.
 \item \code{phi}: fixed AR1 correlation in \verb{[0, 1)}, or \code{NULL} to estimate it.
 Must be \code{NULL} for other processes. Estimated correlations are positive.
 }}
@@ -94,6 +96,8 @@ use \code{~ 1} for one estimated mean level or \code{~ factor(age)} for age-spec
 means. For \code{"rw"}, \code{NULL} is allowed. Mean columns constant through time
 cancel from RW increments and are removed with a warning. Remaining
 columns must be identifiable from historical year-to-year differences.
+Ordinary F mean designs use historical support only; projection rows carry
+the terminal historical design by age. No future-year coefficients are fitted.
 With IID residuals, \code{\link[=iid]{iid()}}, \code{\link[=rw]{rw()}} and \code{\link[=ar1]{ar1()}} can add random mean effects,
 e.g. \code{~ factor(age) + rw(year)}. Only one temporal mean term is supported;
 structured means with temporal residual processes are not yet enabled.
@@ -193,6 +197,8 @@ projection years.
 \item \code{catch}: total annual catch weight, in catch-number times mean-weight units
 (e.g. tonnes for thousand fish and kg). Supply one value recycled across
 years, or \code{n_proj} values. Specify either \code{catch} or \code{F_mult}, not both.
+\code{catch = "observed"} is restricted to \code{\link[=fit_hindcast]{fit_hindcast()}} evaluation; it is
+not a forecast input for an ordinary fit.
 See \link{tinyAM-model} for the catch solver and feasibility safeguards.
 }}
 }

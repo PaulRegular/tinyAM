@@ -6,11 +6,18 @@
 #' @param object A fitted `tam_fit`.
 #' @param type `"standardized"` (default), `"log"` (log observation minus log
 #'   prediction), `"response"` (observation minus prediction), or `"osa"`.
-#' @param ... Reserved for future arguments; none are currently used.
-#' @details OSA residuals must already have been computed, for example with
-#'   `fit$obs_pred <- tidy_obs_pred(fit, add_osa_res = TRUE)`. This method never
-#'   refits the model or computes OSA residuals implicitly. Excluded observations,
-#'   including zeros, retain rows with missing residuals.
+#' @param ... Computation controls passed to [tidy_obs_pred()] and
+#'   [RTMB::oneStepPredict()] when uncached OSA residuals are requested, such as
+#'   `trace = FALSE` or `parallel = FALSE`. Not used for cached OSA values;
+#'   other residual types reject these arguments.
+#' @details `type = "osa"` reuses cached OSA columns, or explicitly requests
+#' their calculation at fitted parameter values when absent. It can be expensive,
+#' but does not rerun [fit_tam()] or re-estimate fixed parameters. Temporary
+#' objectives protect the fitted object's state. Other residual types remain
+#' simple extractors. Excluded observations, including zeros, retain rows with
+#' missing residuals. The supplied fit is not modified or implicitly cached.
+#' To retain OSA results for later extraction and dashboard use, assign
+#' `fit$obs_pred <- tidy_obs_pred(fit, add_osa_res = TRUE, trace = FALSE)`.
 #' @return A data frame with year, age, type (catch/index), survey, observations,
 #'   predictions, residuals, and available unit/fleet columns. The `residual_type`
 #'   attribute names the requested scale.
@@ -18,6 +25,7 @@
 #' \dontrun{
 #' residuals(fit)
 #' residuals(fit, type = "log")
+#' residuals(fit, type = "osa", trace = FALSE)
 #' }
 #' @seealso [tidy_obs_pred()], [plot_bubbles()]
 #' @importFrom stats residuals
@@ -26,9 +34,22 @@ residuals.tam_fit <- function(object, type = c("standardized", "log", "response"
   object <- .require_tam_fit(object, arg = "object")
   type <- match.arg(type)
   tables <- object$obs_pred[c("catch", "index")]
-  if (type == "osa" && !any(vapply(tables, function(x) "osa_res" %in% names(x), logical(1)))) {
-    cli::cli_abort("OSA residuals have not been computed. Use fit$obs_pred <- tidy_obs_pred(fit, add_osa_res = TRUE) explicitly.")
+  if (type != "osa" && length(list(...))) cli::cli_abort("Additional computation controls are only used with type = 'osa'.")
+  missing_osa <- vapply(tables, function(d) is.data.frame(d) && nrow(d) > 0L &&
+    !"osa_res" %in% names(d) && any(is.finite(d$obs) & d$obs > 0 & if (is.null(d$is_proj)) TRUE else !d$is_proj), logical(1))
+  if (type == "osa" && any(missing_osa)) {
+    computed <- tryCatch(tidy_obs_pred(object, add_osa_res = TRUE, ...),
+      error = function(e) cli::cli_abort("Could not calculate OSA residuals: {conditionMessage(e)}", parent = e))
+    for (name in names(tables)[missing_osa]) {
+      d <- tables[[name]]; full <- computed[[name]]
+      keys <- intersect(c("year", "age", "survey", "fleet"), names(d))
+      key <- function(x) do.call(paste, c(x[keys], sep = "\r"))
+      i <- match(key(d), key(full))
+      if (anyNA(i)) cli::cli_abort("OSA observation rows do not match the fitted inputs.")
+      tables[[name]]$osa_res <- full$osa_res[i]
+    }
   }
+
   out <- .bind_rows(lapply(names(tables), function(name) {
     d <- tables[[name]]
     if (!is.data.frame(d) || !nrow(d)) return(NULL)

@@ -1,11 +1,18 @@
 .retro_projection <- function(settings) {
-  defaults <- list(n_proj = 1, n_mean = 1, catch = "observed", F_mult = NULL)
-  if (is.null(settings)) return(defaults)
-  out <- .merge_settings(defaults, settings, "proj_settings")
+  defaults <- eval(formals(fit_hindcast)$proj_settings)
+  defaults["F_mult"] <- list(NULL)
+  out <- .merge_settings(defaults, if (is.null(settings)) list() else settings, "proj_settings")
   if (out$n_proj < 1) cli::cli_abort("Hindcasts require n_proj of at least one.")
-  key <- if (is.null(out$catch)) "F_mult" else "catch"
-  if (!identical(out[[key]], "observed") || key != "catch") {
-    out[[key]] <- unname(.projection_vector(unname(out[[key]]), seq_len(out$n_proj), key))
+  if (!is.null(out$catch)) {
+    if (!identical(out$catch, "observed")) {
+      cli::cli_abort("Hindcasts support catch = 'observed' or one F_mult, not numeric catch targets. Ordinary projections retain numeric catch controls.")
+    }
+  } else {
+    x <- out$F_mult
+    if (!is.numeric(x) || length(x) != 1L || !is.finite(x) || x < 0) {
+      cli::cli_abort("Hindcast F_mult must be one finite, non-negative multiplier, applied at every forecast horizon in each fold.")
+    }
+    out$F_mult <- unname(x)
   }
   out
 }
@@ -15,7 +22,7 @@
   kind <- if (is.null(settings$catch)) "F_mult" else "catch"
   observed <- identical(settings$catch, "observed")
   out <- data.frame(year = years, horizon = seq_along(years), control = kind,
-    target = if (observed) rep(NA_real_, length(years)) else settings[[kind]][seq_along(years)],
+    target = if (observed) rep(NA_real_, length(years)) else rep(settings[[kind]], length(years)),
     target_source = if (observed) "observed catch-at-age x supplied weight" else if (kind == "catch") "supplied catch" else "F multiplier",
     target_unit = if (kind == "catch") .population_unit(fit$dat, "total_yield") else "multiplier", error = NA_character_)
   source <- fit$refit_args$data
@@ -25,7 +32,7 @@
     w <- source$weight[source$weight$year == years[i], ]
     counts <- d$obs[match(ages, d$age)]; weights <- w$obs[match(ages, w$age)]
     if (any(!is.finite(counts) | counts < 0) || any(!is.finite(weights) | weights < 0)) {
-      out$error[i] <- "Observed catch biomass unavailable: incomplete catch-at-age or weights; supply catch targets or F_mult."
+      out$error[i] <- "Observed catch biomass unavailable: incomplete catch-at-age or weights; supply complete inputs or use F_mult."
     } else out$target[i] <- sum(counts * weights)
   }
   out
@@ -179,12 +186,16 @@
 #'   labels. All other controls must be named.
 #' @param folds Number of peels, leaving at least two historical years per fit.
 #' @param start_from_fit Use each supplied fit to initialize its peels?
-#' @param hindcast Project peeled fits? The only default difference between functions.
+#' @param hindcast Project peeled fits? Defaults to `FALSE` for `fit_retro()`
+#'   and `TRUE` for `fit_hindcast()`.
 #' @param proj_settings Hindcast settings: `n_proj` (default 1), `n_mean` (default 1),
-#'   and either `catch` (default `"observed"`) or `F_mult`. Numeric controls are one
-#'   value recycled, or `n_proj` values ordered by forecast horizon. Observed catch
-#'   is complete raw catch numbers times supplied weights. Forecasts are shortened
-#'   to available validation years. Ordinary retrospectives reject this argument.
+#'   and either `catch = "observed"` (default) or one non-negative `F_mult`.
+#'   Partial lists inherit these defaults; supplying `F_mult` clears `catch`.
+#'   Numeric catch targets and control vectors are not accepted in hindcasts.
+#'   Forecasts are shortened to available validation years. Ordinary
+#'   retrospectives reject projection settings. `NULL` uses hindcast defaults
+#'   when `hindcast = TRUE`. Ordinary model projections retain scalar/vector
+#'   numeric catch and F controls; see [prepare_tam()].
 #' @param grad_tol Numerical check tolerance; defaults to each fit's stored value.
 #' @param progress Show progress using progressr?
 #' @param globals Global names passed to furrr workers. Configure your own future plan.
@@ -192,6 +203,32 @@
 #'   forecasts. Held-out indices and catch compositions do not enter fitting;
 #'   observed-catch conditioning uses only aggregate removals. Forecast biology
 #'   uses training years and `n_mean`.
+#'
+#' **Forecast assumptions.** `catch = "observed"` is available only in hindcast
+#' evaluation (`fit_hindcast()` or `fit_retro(hindcast = TRUE)`), not ordinary
+#' [fit_tam()] projections. It uses actual total catch weight in each held-out
+#' year, calculated from complete raw catch-at-age and supplied weights. This
+#' conditions prediction on removals that actually occurred; held-out surveys
+#' and catch compositions do not enter fitting. Agreement with the conditioning
+#' catch total is not forecast skill. Missing catch/weight coverage fails that
+#' fold; it is not imputed. Results do not represent forecasts of future removals.
+#' An alternative is `proj_settings = list(F_mult = 1)`, retaining the F-at-age
+#' estimated at each fold's terminal year. Any scalar multiplier applies to
+#' that terminal profile at every available horizon, rather than compounding
+#' annually. Controls therefore follow each fold's shifting calendar window.
+#'
+#' **Printed summary.** One row per model shows Mohn's rho for SSB, recruitment
+#' and average F, relative to the unpeeled reference fit. Hindcasts also show
+#' `log_RMSE` (pooled survey-age log prediction errors), `MASE` (persistence-relative
+#' absolute log error, averaged across ages within survey, surveys within horizon,
+#' then horizons), and `n` (survey observation-forecast pairs used for log-RMSE).
+#' `scored_folds` counts folds with eligible survey predictions; `failed_folds`
+#' counts failed numerical/projection attempts, including a failed reference.
+#' The unpeeled reference does not contribute forecast scores. A failed reference
+#' makes rho unavailable; missing forecast pairs or persistence baselines make
+#' the corresponding scores unavailable. Catch-composition and detailed survey,
+#' age and horizon scores remain in `scores`. Unequal validation coverage is
+#' flagged and no automatic ranking is produced.
 #'
 #' Survey log-RMSE pools observation errors. MASE compares absolute log errors
 #' with persistence on identical cases; see [compute_hindcast_mase()]. Overall
@@ -236,7 +273,9 @@ fit_retro <- function(fit, ..., folds = 2, start_from_fit = FALSE, hindcast = FA
 #' @rdname fit_retro
 #' @export
 fit_hindcast <- function(fit, ..., folds = 2, start_from_fit = FALSE, hindcast = TRUE,
-                         proj_settings = NULL, grad_tol = NULL, progress = TRUE, globals = NULL) {
+                         proj_settings = list(n_proj = 1, n_mean = 1, catch = "observed"),
+                         grad_tol = NULL, progress = TRUE, globals = NULL) {
+  if (identical(hindcast, FALSE) && missing(proj_settings)) proj_settings <- NULL
   models <- list(fit, ...)
   names(models) <- .retro_labels(models, as.list(substitute(list(fit, ...)))[-1])
   .run_retros(models, folds, start_from_fit, hindcast, proj_settings, grad_tol, progress, globals)

@@ -27,7 +27,7 @@ default \verb{process = "rw", mu_form = NULL} retains the original random walk.
 }
 \details{
 Choose \code{"iid"}, \code{"rw"}, or \code{"ar1"} in \code{process}; process markers and grouping
-are not supported in recruitment mean formulas. IID/AR1 require \code{mu_form},
+are not supported in recruitment mean formulas. Off/IID/AR1 require \code{mu_form},
 with \code{~ 1} for a constant baseline. Ordinary covariates are read from
 \code{data$pop_covariates} at the youngest
 modeled age; their values at older ages may be \code{NA}. Covariates refer to the
@@ -36,7 +36,7 @@ Covariate coefficients are estimated; \code{offset()} terms are not supported.
 Projections hold their terminal values and announce that assumption.
 
 \code{bh(ssb)} rises toward a plateau; \code{ricker(ssb)} can decline at high spawning
-biomass. Either curve supports IID or AR1 residuals. These curves describe
+biomass. Either curve supports deterministic recruitment or IID/AR1 residuals. These curves describe
 median recruitment, not the arithmetic mean, and use the model's existing
 SSB at \code{data$maturity$spawn_time} (start-of-year by default) and supplied
 weight/maturity units. Spawning timing may vary by year and age, changes
@@ -60,10 +60,18 @@ Constant columns cancel and are removed. \code{sd} is estimated unless supplied;
 estimated AR1 correlation is positive, or a fixed \code{phi} in \verb{[0, 1)} can be
 supplied. See \link{formula_effects} for these process conventions.
 
+With \code{process = "off"}, an explicit \code{mu_form} determines eligible recruitment
+exactly, without an annual random state, process SD or residual density.
+For example, \code{~ 1} gives constant recruitment after the boundary years;
+\code{~ bh(ssb)} gives a deterministic stock-recruit curve. Supplied \code{sd} and
+\code{phi} must be \code{NULL}. Parameter uncertainty and stochastic parent SSB can
+still give uncertain recruitment; no direct recruitment noise is drawn.
+
 First-year \code{log_r0} is always a free fixed anchor. Any additional recruitment
 years whose parent SSB precedes the modeled period are also free fixed states
 (\code{log_r_init}), without process penalties. Later \code{log_r} values are absolute
-random log states; residuals are calculated internally, without an additional
+random log states when the process is enabled; residuals are calculated
+internally, without an additional
 annual random-effect block. The relationship does not reconstruct pre-model
 SSB. AR1 starts at the first eligible year with its stationary density.
 A zero lag is allowed only when recruits contribute no mature biomass.
@@ -75,6 +83,8 @@ can obscure the relationship. Inspect \code{\link[=check_tam]{check_tam()}} and 
 }
 \examples{
 list(process = "rw", mu_form = NULL)
+list(process = "off", mu_form = ~1)
+list(process = "off", mu_form = ~ bh(ssb))
 list(process = "iid", mu_form = ~1)
 list(process = "iid", mu_form = ~ bh(ssb))
 list(process = "ar1", mu_form = ~ ricker(ssb, lag = 2))

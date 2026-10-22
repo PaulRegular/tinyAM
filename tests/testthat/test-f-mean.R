@@ -32,7 +32,7 @@ test_that("F means must have complete, full-rank historical designs", {
     make_test_dat(
       F_settings = list(process = "iid", mu_form = ~ I(log(age - 2)))
     ),
-    "every modeled year and age"
+    "finite covariates at every active historical year and age"
   )
 })
 

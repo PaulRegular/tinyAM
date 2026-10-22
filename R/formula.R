@@ -184,7 +184,7 @@ logistic <- function(x, by = NULL) .formula_marker_error("logistic")
   ""
 }
 
-.parse_q_formula <- function(formula, data) {
+.parse_q_formula <- function(formula, data, fixed_design = stats::model.matrix) {
   if (!inherits(formula, "formula")) cli::cli_abort("{.arg q_form} must be a formula.")
   if (any(c("bh", "ricker") %in% all.names(formula))) {
     cli::cli_abort("bh() and ricker() are restricted to rec_settings$mu_form.")
@@ -195,7 +195,7 @@ logistic <- function(x, by = NULL) .formula_marker_error("logistic")
       any(vapply(as.list(x)[-1L], contains, logical(1))))
   }
   if (!contains(formula)) {
-    return(.parse_mono_q_formula(formula, data))
+    return(.parse_mono_q_formula(formula, data, fixed_design))
   }
   if (length(formula) != 2L) cli::cli_abort("Structured {.arg q_form} must be one-sided.")
   specs <- list()
@@ -272,7 +272,7 @@ logistic <- function(x, by = NULL) .formula_marker_error("logistic")
   ordinary <- formula
   rhs <- strip(formula[[2L]])
   ordinary[[2L]] <- if (is.null(rhs)) 1 else rhs
-  design <- .parse_mono_q_formula(ordinary, data)
+  design <- .parse_mono_q_formula(ordinary, data, fixed_design)
   terms <- lapply(specs, .make_q_term, data = data)
   ids <- vapply(terms, `[[`, character(1), "id")
   if (anyDuplicated(ids)) cli::cli_abort("Duplicate structured catchability terms are not identifiable.")
@@ -731,7 +731,7 @@ mono <- function(x, by = NULL) {
   cli::cli_abort("mono() is only supported as an additive term in index_settings$q_form or F_settings$mu_form.")
 }
 
-.parse_mono_q_formula <- function(formula, data) {
+.parse_mono_q_formula <- function(formula, data, fixed_design = stats::model.matrix) {
   if (!inherits(formula, "formula")) {
     cli::cli_abort("{.arg q_form} must be a formula.")
   }
@@ -750,7 +750,7 @@ mono <- function(x, by = NULL) {
   }
   # Preserve the original model.matrix path, including contrasts and attributes.
   if (!contains_mono(formula)) {
-    return(list(q_modmat = stats::model.matrix(formula, data = data)))
+    return(list(q_modmat = fixed_design(formula, data = data)))
   }
   if (length(formula) != 2L) cli::cli_abort("Monotonic {.arg q_form} must be one-sided.")
   specs <- list()
@@ -805,7 +805,7 @@ mono <- function(x, by = NULL) {
     cli::cli_abort("A mono() variable cannot also have ordinary, duplicate, or grouping effects in {.arg q_form}.")
   }
   design <- lapply(specs, .make_mono_q_design, data = data)
-  q_modmat <- stats::model.matrix(ordinary, data = data)
+  q_modmat <- fixed_design(ordinary, data = data)
   if (nrow(q_modmat) != nrow(data)) {
     cli::cli_abort("Missing ordinary q covariates would misalign mono() observation rows.")
   }
@@ -864,10 +864,97 @@ mono <- function(x, by = NULL) {
   d
 }
 
+# Preserve explicit contrast coding when removing unused factor levels.
+.drop_unused_levels <- function(data) {
+  out <- droplevels(data)
+  for (name in names(data)) {
+    x <- data[[name]]
+    if (!is.factor(x)) next
+    reduced <- out[[name]]
+    contrast <- attr(x, "contrasts")
+    if (is.matrix(contrast) && nlevels(reduced) > 1L) {
+      contrast <- contrast[match(levels(reduced), levels(x)), , drop = FALSE]
+      independent <- qr(cbind(1, contrast))
+      columns <- independent$pivot[seq_len(independent$rank)]
+      columns <- columns[columns > 1L] - 1L
+      attr(reduced, "contrasts") <- contrast[, columns, drop = FALSE]
+    } else if (!is.null(contrast)) attr(reduced, "contrasts") <- contrast
+    out[[name]] <- reduced
+  }
+  out
+}
+
+# Fit ordinary bases to historical support, then reuse their terms and contrasts.
+.fixed_mean_design <- function(formula, data, historical, active = rep(TRUE, nrow(data)),
+                               carry_terminal = FALSE, label) {
+  frame <- stats::model.frame(formula, data[historical, , drop = FALSE],
+    na.action = stats::na.pass)
+  frame <- .drop_unused_levels(frame)
+  terms <- attr(frame, "terms")
+  design <- stats::model.matrix(terms, frame)
+  if (nrow(design) != sum(historical) || any(!is.finite(design))) {
+    cli::cli_abort("{label} needs finite covariates at every active historical year and age.")
+  }
+  future <- active & !historical
+  if (carry_terminal && any(future)) {
+    terminal <- which(historical & data$year == max(data$year[historical]))
+    data[future, ] <- data[terminal[match(data$age[future], data$age[terminal])], , drop = FALSE]
+  }
+  # model.frame resets factor contrasts with xlev; supply training contrasts below.
+  for (name in names(data)[vapply(data, is.factor, logical(1))]) attr(data[[name]], "contrasts") <- NULL
+  projected <- tryCatch(stats::model.frame(terms, data[active, , drop = FALSE],
+    na.action = stats::na.pass, xlev = stats::.getXlevels(terms, frame)),
+    error = function(e) cli::cli_abort("{label} cannot evaluate its projection design: {conditionMessage(e)}", parent = e))
+  full <- stats::model.matrix(terms, projected, contrasts.arg = attr(design, "contrasts"))
+  if (nrow(full) != sum(active) || any(!is.finite(full))) {
+    cli::cli_abort("{label} needs finite covariates at every active year and age, including projections.")
+  }
+  list(matrix = full, historical = design, frame = frame)
+}
+
 .parse_mean_formula <- function(formula, dat, component) {
+  if (component == "N") {
+    if (is.null(formula)) return(list(matrix = matrix(numeric(), nrow(dat$pop_data), 0L), terms = list()))
+    if (!inherits(formula, "formula") || length(formula) != 2L) {
+      cli::cli_abort("N_settings$mu_form must be a one-sided formula or NULL.")
+    }
+    forbidden <- function(x) {
+      if (!is.call(x)) return(FALSE)
+      .formula_call_name(x) %in% c("iid", "rw", "ar1", "mono", "logistic", "bh", "ricker", "|", "offset") ||
+        any(vapply(as.list(x)[-1L], forbidden, logical(1)))
+    }
+    if (forbidden(formula[[2L]])) {
+      cli::cli_abort("N_settings$mu_form supports ordinary fixed covariates only; specify residual dependence with N_settings$process.")
+    }
+    d <- .population_data(dat, formula, "N_settings$mu_form")
+    active <- d$year > min(dat$years) & d$age > min(dat$ages)
+    historical <- active & !dat$is_proj[match(d$year, dat$years)]
+    fixed <- .fixed_mean_design(formula, d, historical, active, label = "N_settings$mu_form")
+    design <- fixed$historical
+    full <- fixed$matrix
+    informative <- design
+    if (dat$N_settings$process == "rw" && ncol(design)) {
+      ny <- sum(!dat$is_proj) - 1L
+      informative <- vapply(seq_len(ncol(design)), function(j) {
+        z <- matrix(design[, j], ny, length(dat$ages) - 1L)
+        as.vector(z[-1L, , drop = FALSE] - z[-ny, , drop = FALSE])
+      }, numeric((ny - 1L) * (length(dat$ages) - 1L)))
+    }
+    if (!ncol(design) || nrow(informative) < ncol(design) || qr(informative)$rank < ncol(design)) {
+      cli::cli_abort(c("N_settings$mu_form has redundant or unsupported mean directions.",
+        i = if (dat$N_settings$process == "rw") "Constant mean directions cancel under an intrinsic RW. Use ~ 0 + time-varying covariates with independent temporal contrasts." else "Remove redundant columns and provide variation over destination years and ages."))
+    }
+    out <- matrix(0, nrow(d), ncol(full), dimnames = list(NULL, colnames(full)))
+    out[active, ] <- full
+    return(list(matrix = out, terms = list(), mono_matrix = NULL, mono_steps = NULL))
+  }
   .population_data(dat, formula, paste0(component, "_settings$mu_form"))
   d <- .mean_formula_data(dat, component)
-  design <- .parse_q_formula(formula, d)
+  fixed_design <- if (component == "F") function(formula, data) {
+    .fixed_mean_design(formula, data, !data$is_proj, carry_terminal = TRUE,
+      label = "F_settings$mu_form")$matrix
+  } else stats::model.matrix
+  design <- .parse_q_formula(formula, d, fixed_design)
   terms <- design$q_terms
   logistic <- Filter(function(x) x$type == "logistic", terms)
   mono <- design$q_mono_steps

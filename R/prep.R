@@ -180,6 +180,9 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
     proj_rows$is_proj <- TRUE
     x$is_proj <- FALSE
     x_with_proj <- rbind(x, proj_rows)
+    for (column in names(x)[vapply(x, is.factor, logical(1))]) {
+      attr(x_with_proj[[column]], "contrasts") <- attr(x[[column]], "contrasts")
+    }
     x_with_proj[order(x_with_proj$age, x_with_proj$year), ]
   }
   obs_with_proj <- lapply(names(obs), function(nm) .add_one(obs[[nm]], nm))
@@ -394,15 +397,17 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #'   `data$pop_covariates`. Its design must be constant across years. Recruitment and
 #'   initial-abundance SDs remain separate. Random-effect SD terms are not enabled.
 #' @param rec_settings A list controlling recruitment separately from cohort survival:
-#' - `process`: `"rw"` (default), `"iid"`, or `"ar1"` for annual log-recruitment
+#' - `process`: `"off"` for recruitment exactly following its mean formula,
+#'   or `"rw"` (default), `"iid"`, or `"ar1"` for annual log-recruitment
 #'   residuals. First-year recruitment remains a freely estimated fixed anchor.
 #' - `mu_form`: one-sided formula for the expected log recruitment. `NULL` is
-#'   allowed for RW; IID/AR1 require an explicit formula, such as `~ 1` for a
+#'   allowed for RW; off/IID/AR1 require an explicit formula, such as `~ 1` for a
 #'   constant mean. Use [bh()] or [ricker()] for a median stock-recruit curve
-#'   with IID/AR1 residuals. Ordinary covariates come from `data$pop_covariates`
+#'   with no residuals or IID/AR1 residuals. Ordinary covariates come from `data$pop_covariates`
 #'   at the youngest modeled age. See [recruitment_formulas].
 #' - `sd`: positive fixed recruitment SD, or `NULL` to estimate it. This is
-#'   an innovation SD for RW/AR1 and a marginal SD for IID.
+#'   an innovation SD for RW/AR1 and a marginal SD for IID. Must be `NULL`
+#'   when process is off.
 #' - `phi`: fixed AR1 correlation in `[0, 1)`, or `NULL` to estimate it.
 #'   Must be `NULL` for other processes. Estimated correlations are positive.
 #' @param F_settings A list with elements:
@@ -424,6 +429,8 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #'   means. For `"rw"`, `NULL` is allowed. Mean columns constant through time
 #'   cancel from RW increments and are removed with a warning. Remaining
 #'   columns must be identifiable from historical year-to-year differences.
+#'   Ordinary F mean designs use historical support only; projection rows carry
+#'   the terminal historical design by age. No future-year coefficients are fitted.
 #'   With IID residuals, [iid()], [rw()] and [ar1()] can add random mean effects,
 #'   e.g. `~ factor(age) + rw(year)`. Only one temporal mean term is supported;
 #'   structured means with temporal residual processes are not yet enabled.
@@ -511,6 +518,8 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #' - `catch`: total annual catch weight, in catch-number times mean-weight units
 #'   (e.g. tonnes for thousand fish and kg). Supply one value recycled across
 #'   years, or `n_proj` values. Specify either `catch` or `F_mult`, not both.
+#'   `catch = "observed"` is restricted to [fit_hindcast()] evaluation; it is
+#'   not a forecast input for an ordinary fit.
 #'   See [tinyAM-model] for the catch solver and feasibility safeguards.
 #'
 #' @return
@@ -634,7 +643,7 @@ prepare_tam <- function(
     keep_age <- if (nm %in% c("weight", "maturity")) d$age >= min(dat$ages) else d$age %in% dat$ages
     d_sub <- d[d$year %in% dat$years & keep_age, ]
     d_sub[order(d_sub$age, d_sub$year), ] |>
-      droplevels()
+      .drop_unused_levels()
   }), names(dat$obs))
   attributes(dat$obs) <- attributes(obs)
   dat$is_proj <- rep(FALSE, length(dat$years))
@@ -715,7 +724,7 @@ prepare_tam <- function(
                                   dimnames = plus_dimnames
     )
     for (nm in c("weight", "maturity")) {
-      dat$obs[[nm]] <- droplevels(dat$obs[[nm]][dat$obs[[nm]]$age %in% dat$ages, ])
+      dat$obs[[nm]] <- .drop_unused_levels(dat$obs[[nm]][dat$obs[[nm]]$age %in% dat$ages, ])
     }
   }
   dat$spawn_time <- empty_mat
@@ -784,7 +793,7 @@ prepare_tam <- function(
   q_design <- .parse_q_formula(dat$index_settings$q_form, dat$obs$index)
   dat[names(q_design)] <- q_design
   .check_q_terms(dat)
-  dat$N_modmat <- .parse_cohort_mean(dat)
+  dat$N_modmat <- .parse_mean_formula(dat$N_settings$mu_form, dat, "N")$matrix
   dat$F_terms <- dat$M_terms <- list()
   if (!is.null(dat$F_settings$mu_form)) {
     mean_design <- .parse_mean_formula(dat$F_settings$mu_form, dat, "F")

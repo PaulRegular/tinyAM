@@ -62,7 +62,7 @@
 #' estimated fixed state with no process penalty. By default, subsequent `log_r` states obey
 #' \deqn{\log R_t=\log R_{t-1}+\epsilon^R_t,\qquad
 #' \epsilon^R_t\stackrel{ind}{\sim}N(0,\sigma_R^2),\quad t=2,\ldots,T.}
-#' Alternative [recruitment_formulas] allow IID/AR1 residuals, fixed covariates,
+#' Alternative [recruitment_formulas] allow deterministic recruitment, IID/AR1 residuals, fixed covariates,
 #' and Beverton-Holt or Ricker curves. For a curve,
 #' \deqn{\log R_t=\log g(SSB_{t-L})+X_t\gamma+u_t.}
 #' SSB is mature biomass at the configured spawning time, defined below.

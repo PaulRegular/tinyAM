@@ -3,8 +3,8 @@
   settings <- dat$rec_settings
   type <- settings$process
   if (!is.character(type) || length(type) != 1L || is.na(type) ||
-    !type %in% c("rw", "iid", "ar1")) {
-    cli::cli_abort("rec_settings$process must be 'rw', 'iid', or 'ar1'.")
+    !type %in% c("off", "rw", "iid", "ar1")) {
+    cli::cli_abort("rec_settings$process must be 'off', 'rw', 'iid', or 'ar1'.")
   }
   fixed <- function(value, name, upper = Inf, zero = FALSE) {
     if (is.null(value)) {
@@ -16,6 +16,9 @@
     }
     value
   }
+  if (type == "off" && (!is.null(settings$sd) || !is.null(settings$phi))) {
+    cli::cli_abort("Recruitment process = 'off' requires sd = NULL and phi = NULL; it has no residual process.")
+  }
   if (type != "ar1" && !is.null(settings$phi)) {
     cli::cli_abort("rec_settings$phi is only used with process = 'ar1'; set phi = NULL.")
   }
@@ -25,7 +28,7 @@
   )
   form <- settings$mu_form
   if (is.null(form)) {
-    if (type != "rw") cli::cli_abort("rec_settings$mu_form is required for IID/AR1 recruitment. Use ~ 1 for a constant mean.")
+    if (type != "rw") cli::cli_abort("rec_settings$mu_form is required for deterministic or IID/AR1 recruitment. Use ~ 1 for a constant mean.")
     form <- ~1
   }
   if (!inherits(form, "formula") || length(form) != 2L) {
@@ -97,15 +100,29 @@
   variables <- all.vars(fixed_form)
   if ("ssb" %in% variables) cli::cli_abort("Use modeled ssb only inside bh() or ricker(); supply other annual covariates explicitly.")
   if (any(!variables %in% names(data))) cli::cli_abort("Recruitment covariates must be columns of data$pop_covariates at the youngest modeled age.")
-  frame <- stats::model.frame(fixed_form, data, na.action = stats::na.pass)
+  first <- if (is.null(curve)) 2L else max(2L, curve$lag + 1)
+  if (first > sum(!dat$is_proj)) cli::cli_abort("No historical recruitment years with available parents remain; shorten lag or extend modeled years.")
+  eligible <- seq.int(first, length(dat$years))
+  historical <- eligible[!dat$is_proj[eligible]]
+  if (type == "off") {
+    active <- seq_along(dat$years) %in% eligible
+    past <- seq_along(dat$years) %in% historical
+    fixed_design <- .fixed_mean_design(fixed_form, data, past, active, label = "rec_settings$mu_form")
+    matrix <- matrix(0, length(dat$years), ncol(fixed_design$matrix),
+      dimnames = list(NULL, colnames(fixed_design$matrix)))
+    matrix[active, ] <- fixed_design$matrix
+    frame <- fixed_design$frame
+    contrasts <- attr(fixed_design$historical, "contrasts")
+  } else {
+    frame <- stats::model.frame(fixed_form, data, na.action = stats::na.pass)
+    matrix <- stats::model.matrix(fixed_form, frame)
+    contrasts <- attr(matrix, "contrasts")
+  }
   if (!is.null(stats::model.offset(frame))) {
     cli::cli_abort("Recruitment offset() terms are not supported; use an ordinary covariate term.")
   }
-  matrix <- stats::model.matrix(fixed_form, frame)
   terms <- attr(frame, "terms")
-  contrasts <- attr(matrix, "contrasts")
-  categorical <- vapply(frame, function(x) is.factor(x) || is.character(x), logical(1))
-  xlevels <- lapply(frame[categorical], function(x) if (is.factor(x)) levels(x) else levels(factor(x)))
+  xlevels <- stats::.getXlevels(terms, frame)
   if (nrow(matrix) != length(dat$years) || any(!is.finite(matrix))) {
     cli::cli_abort("rec_settings$mu_form needs finite covariate values in every modeled recruitment year.")
   }
@@ -116,10 +133,6 @@
     if (length(removed)) cli::cli_warn("Constant recruitment RW covariates cancel from increments and are removed: {paste(removed, collapse = ', ')}.")
     matrix <- matrix[, !constant, drop = FALSE]
   }
-  first <- if (is.null(curve)) 2L else max(2L, curve$lag + 1)
-  if (first > sum(!dat$is_proj)) cli::cli_abort("No historical parent-recruit pairs are available; shorten lag or extend modeled years.")
-  eligible <- seq.int(first, length(dat$years))
-  historical <- eligible[!dat$is_proj[eligible]]
   n <- length(historical)
   if (rec$type == "iid" && is.null(rec$sd) && n < 2L) cli::cli_abort("Estimating recruitment IID SD needs at least two process years.")
   if (rec$type == "ar1" && is.null(rec$phi) && n < 3L) cli::cli_abort("Estimating recruitment AR1 correlation needs at least three process years; supply phi.")
@@ -144,7 +157,7 @@
   fixed_parameters <- ncol(design) + if (is.null(curve)) 0L else 2L
   if ((ncol(design) && qr(design)$rank < ncol(design)) ||
     fixed_parameters > n ||
-    (is.null(rec$sd) && fixed_parameters >= n)) {
+    (type != "off" && is.null(rec$sd) && fixed_parameters >= n)) {
     cli::cli_abort("Recruitment fixed effects are redundant or saturated; simplify rec_settings$mu_form.")
   }
   held <- setdiff(variables, "year")
@@ -168,7 +181,7 @@
 #'
 #' @details
 #' Choose `"iid"`, `"rw"`, or `"ar1"` in `process`; process markers and grouping
-#' are not supported in recruitment mean formulas. IID/AR1 require `mu_form`,
+#' are not supported in recruitment mean formulas. Off/IID/AR1 require `mu_form`,
 #' with `~ 1` for a constant baseline. Ordinary covariates are read from
 #' `data$pop_covariates` at the youngest
 #' modeled age; their values at older ages may be `NA`. Covariates refer to the
@@ -177,7 +190,7 @@
 #' Projections hold their terminal values and announce that assumption.
 #'
 #' `bh(ssb)` rises toward a plateau; `ricker(ssb)` can decline at high spawning
-#' biomass. Either curve supports IID or AR1 residuals. These curves describe
+#' biomass. Either curve supports deterministic recruitment or IID/AR1 residuals. These curves describe
 #' median recruitment, not the arithmetic mean, and use the model's existing
 #' SSB at `data$maturity$spawn_time` (start-of-year by default) and supplied
 #' weight/maturity units. Spawning timing may vary by year and age, changes
@@ -201,10 +214,18 @@
 #' estimated AR1 correlation is positive, or a fixed `phi` in `[0, 1)` can be
 #' supplied. See [formula_effects] for these process conventions.
 #'
+#' With `process = "off"`, an explicit `mu_form` determines eligible recruitment
+#' exactly, without an annual random state, process SD or residual density.
+#' For example, `~ 1` gives constant recruitment after the boundary years;
+#' `~ bh(ssb)` gives a deterministic stock-recruit curve. Supplied `sd` and
+#' `phi` must be `NULL`. Parameter uncertainty and stochastic parent SSB can
+#' still give uncertain recruitment; no direct recruitment noise is drawn.
+#'
 #' First-year `log_r0` is always a free fixed anchor. Any additional recruitment
 #' years whose parent SSB precedes the modeled period are also free fixed states
 #' (`log_r_init`), without process penalties. Later `log_r` values are absolute
-#' random log states; residuals are calculated internally, without an additional
+#' random log states when the process is enabled; residuals are calculated
+#' internally, without an additional
 #' annual random-effect block. The relationship does not reconstruct pre-model
 #' SSB. AR1 starts at the first eligible year with its stationary density.
 #' A zero lag is allowed only when recruits contribute no mature biomass.
@@ -220,6 +241,8 @@
 #' @return Formula markers; direct calls raise an error.
 #' @examples
 #' list(process = "rw", mu_form = NULL)
+#' list(process = "off", mu_form = ~1)
+#' list(process = "off", mu_form = ~ bh(ssb))
 #' list(process = "iid", mu_form = ~1)
 #' list(process = "iid", mu_form = ~ bh(ssb))
 #' list(process = "ar1", mu_form = ~ ricker(ssb, lag = 2))
@@ -253,7 +276,7 @@ ricker <- function(ssb, lag = NULL) {
 
 .rec_scale <- function(par, dat) {
   list(
-    sd = if (is.null(dat$rec$sd)) exp(par$log_sd_r) else dat$rec$sd,
+    sd = if (dat$rec$type == "off") 0 else if (is.null(dat$rec$sd)) exp(par$log_sd_r) else dat$rec$sd,
     phi = if (dat$rec$type == "ar1") {
       if (is.null(dat$rec$phi)) plogis(par$logit_phi_r) else dat$rec$phi
     } else {
@@ -263,6 +286,7 @@ ricker <- function(ssb, lag = NULL) {
 }
 
 .rec_nll <- function(log_r, mean, par, dat) {
+  if (dat$rec$type == "off") return(0)
   i <- dat$rec$eligible
   scale <- .rec_scale(par, dat)
   u <- log_r - mean
@@ -279,6 +303,8 @@ ricker <- function(ssb, lag = NULL) {
 
 .simulate_rec <- function(par, dat) {
   mean <- .rec_mean(par, dat)
+  if (!is.null(dat$rec$curve)) cli::cli_abort("Recruitment curves must be simulated through the chronological population constructor.")
+  if (dat$rec$type == "off") return(mean[-1L])
   scale <- .rec_scale(par, dat)
   u <- numeric(length(dat$years))
   u[1L] <- par$log_r0 - mean[1L]
@@ -304,7 +330,7 @@ ricker <- function(ssb, lag = NULL) {
   log_recruitment <- numeric(T)
   log_recruitment[1L] <- par$log_r0
   if (length(dat$rec$boundary) > 1L) log_recruitment[dat$rec$boundary[-1L]] <- par$log_r_init
-  log_recruitment[dat$rec$eligible] <- par$log_r
+  if (dat$rec$type != "off") log_recruitment[dat$rec$eligible] <- par$log_r
   log_N[, 1L] <- log_recruitment
   if (dat$N_settings$process != "off") log_N[-1L, -1L] <- par$log_n
   initial <- switch(dat$N_settings$init,
@@ -389,13 +415,14 @@ ricker <- function(ssb, lag = NULL) {
         log_mu_R[y] <- mean[y] + .rec_log_curve(parent_ssb, par, dat$rec$curve$type)
       }
       log_pred_R[y] <- switch(dat$rec$type,
+        off = log_mu_R[y],
         rw = log_recruitment[y - 1L] + mean[y] - mean[y - 1L],
         iid = log_mu_R[y],
         ar1 = log_mu_R[y] + if (y == dat$rec$eligible[1L]) 0 else scale$phi * u[y - 1L]
       )
-      if (simulate || initialize) {
+      if (dat$rec$type == "off" || simulate || initialize) {
         sd <- if (dat$rec$type == "ar1" && y == dat$rec$eligible[1L]) scale$sd / sqrt(1 - scale$phi^2) else scale$sd
-        log_recruitment[y] <- if (simulate) stats::rnorm(1L, log_pred_R[y], sd) else log_pred_R[y]
+        log_recruitment[y] <- if (simulate && dat$rec$type != "off") stats::rnorm(1L, log_pred_R[y], sd) else log_pred_R[y]
         log_N[y, 1L] <- log_recruitment[y]
       }
       u[y] <- log_recruitment[y] - log_mu_R[y]
@@ -427,7 +454,7 @@ ricker <- function(ssb, lag = NULL) {
 .rec_process_advisories <- function(dat) {
   out <- data.frame(issue = character(), detail = character())
   rec <- dat$rec
-  if (!is.null(rec) && (rec$type != "rw" || ncol(rec$matrix) || !is.null(rec$curve)) &&
+  if (!is.null(rec) && rec$type != "off" && (rec$type != "rw" || ncol(rec$matrix) || !is.null(rec$curve)) &&
     length(rec$historical) < 5L && (is.null(rec$sd) || (rec$type == "ar1" && is.null(rec$phi)))) {
     out <- rbind(out, data.frame(
       issue = "recruitment_support", detail =
@@ -468,7 +495,7 @@ ricker <- function(ssb, lag = NULL) {
   par$log_sr_beta <- -log(S)
   par$log_sr_alpha <- par$log_r0 - .rec_mean(par, dat)[dat$rec$eligible[1L]] - log(S) +
     if (dat$rec$curve$type == "bh") log(2) else 1
-  if (initialize_states) par$log_r[] <- .population_states(par, dat, F + M, initialize = TRUE)$log_recruitment[dat$rec$eligible]
+  if (initialize_states && dat$rec$type != "off") par$log_r[] <- .population_states(par, dat, F + M, initialize = TRUE)$log_recruitment[dat$rec$eligible]
   par
 }
 

@@ -39,6 +39,7 @@
 #' @importFrom Matrix Cholesky expand solve
 .make_draw_joint <- function(fit) {
   .require_tam_uncertainty(fit)
+  if (!any(fit$obj$env$lrandom())) return(.draw_fixed)
   sdr <- fit[["sdrep"]]
   if (is.null(sdr$jointPrecision)) {
     sdr <- RTMB::sdreport(fit$obj, getJointPrecision = TRUE)
@@ -142,6 +143,7 @@
 #'   - `"fixed"` — sample **fixed effects** `θ ~ MVN(sdrep$par.fixed, sdrep$cov.fixed)`.
 #'   - `"joint"` — sample **(random + fixed)** jointly from the Laplace
 #'     Gaussian approximation using the **joint precision** (sparse Cholesky).
+#'     When no random effects are integrated, this is the same as `"fixed"`.
 #'
 #' - **Random-effect handling** via `redraw_random`:
 #'   - `FALSE` — keep the sampled/fitted random effects and simulate **observations only**
