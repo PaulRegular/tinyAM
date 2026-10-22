@@ -117,3 +117,9 @@ its retained scientific assumptions.
 See [cohort_report.md](cohort_report.md) and `cohort_recovery.R` for the focused
 cohort-mean pilot, including mortality/catchability overlap. Generated attempts
 remain under ignored `results/`.
+
+## Formula-driven F
+
+`deterministic_f_recovery.R` and [deterministic_f_report.md](deterministic_f_report.md)
+cover F means without a separate residual process, including projection and
+uncertainty checks. Settled assessment recipes are unchanged.
