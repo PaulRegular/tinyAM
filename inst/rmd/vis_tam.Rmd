@@ -77,7 +77,7 @@ mortality_plot_data <- function(data, mean, fits, component) {
     }, logical(1))]
     mean <- mean[!mean$model %in% no_mean, , drop = FALSE]
   }
-  keys <- c("model", "year", "age", "is_proj")
+  keys <- c("model", "year", "age", "is_proj", intersect("fleet", names(data)))
   key <- function(d) do.call(paste, c(d[keys], sep = "\r"))
   rows <- match(key(data), key(mean))
   for (nm in intersect(c("est", "lwr", "upr"), names(mean))) {
@@ -121,6 +121,7 @@ make_resid_plots <- function(d) {
                     c("bubbles", "year", "age", "cohort", "expected")))
   }
   frame <- if (length(unique(d$model)) > 1L) ~model else NULL
+  if ("series" %in% names(d)) frame <- ~series
   resid_cols <- cols[match(levels(d$model), names(fits))]
   list(bubbles = plot_bubbles(d, frame = frame, colors = tam_pal(2)),
        year = plot_resid(d, x = ~year, xlab = "Year", frame = frame, color = ~model, colors = resid_cols),
@@ -142,6 +143,9 @@ table_link <- function(x, table_name = NULL, download_text = "Download table") {
 ```
 
 ```{r fishery, child = "fishery.Rmd"}
+```
+
+```{r fleets, child = if (any(vapply(fits, function(x) inherits(x, "tam_fit") && length(x$dat$fleets) > 1L, logical(1)))) "fleets.Rmd" else NULL}
 ```
 
 ```{r surveys, child = "surveys.Rmd"}

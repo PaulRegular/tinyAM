@@ -1,0 +1,27 @@
+Fleets
+================================================================================
+
+Row {.tabset}
+--------------------------------------------------------------------------------
+
+```{r, results='asis'}
+fleet_names <- unique(as.character(obs_pred$catch$fleet))
+fleet_names <- fleet_names[!is.na(fleet_names)]
+for (fleet_name in fleet_names) {
+  catch_data <- obs_pred$catch[!is.na(obs_pred$catch$fleet) & obs_pred$catch$fleet == fleet_name, ]
+  F_data <- if (is.null(pop$F_fleet)) NULL else pop$F_fleet[pop$F_fleet$fleet == fleet_name, ]
+  mean_data <- if (is.null(pop$mu_F_fleet)) NULL else pop$mu_F_fleet[pop$mu_F_fleet$fleet == fleet_name, ]
+  rendered <- knitr::knit_child(text = c(
+    paste('###', fleet_name), '',
+    '#### Catch numbers at age', '', '```{r}',
+    'plot_age_year(catch_data, plot = plot_obs_pred, frame = ~age, color = ~model, colors = cols, ylab = tinyAM:::.unit_label(catch_data, "Catch"))', '```', '',
+    '#### F at age', '', '```{r}',
+    'if (!is.null(F_data) && nrow(F_data)) {',
+    '  d <- mortality_plot_data(F_data, mean_data, fits, "F")',
+    '  plot_age_year(d, plot = plot_mortality, frame = ~age, color = ~model, legendgroup = ~model, colors = cols, ylab = "F (per year)")',
+    '}', '```', '',
+    '#### Standardized residuals', '', '```{r}',
+    'make_resid_plots(catch_data)$bubbles', '```', ''), quiet = TRUE)
+  cat(rendered, sep='\n')
+}
+```

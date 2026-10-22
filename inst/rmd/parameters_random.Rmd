@@ -38,13 +38,20 @@ plot_trend(random_par$log_n0, x = ~age, xlab = "Age", color = ~model, legendgrou
 `r if ("log_f" %in% names(random_par)) "### F"`
 
 ```{r, eval = "log_f" %in% names(random_par)}
-plot_age_year(random_par$log_f, x = ~year, color = ~model, legendgroup = ~model, colors = cols, frame = ~age, ylab = "Latent F (f)")
+d <- random_par$log_f
+if ("fleet" %in% names(d)) {
+  d$state <- paste(d$fleet, "age", d$age)
+  d$state <- factor(d$state, levels = unique(d$state[order(d$fleet, d$age)]))
+  plot_trend(d, color = ~model, legendgroup = ~model, colors = cols, frame = ~state, ylab = "Latent F (f)")
+} else plot_age_year(d, color = ~model, legendgroup = ~model, colors = cols, frame = ~age, ylab = "Latent F (f)")
 ```
 
 `r if ("F" %in% names(tabs$deviations)) "### F deviations"`
 
 ```{r, eval = "F" %in% names(tabs$deviations)}
-plot_bubbles(tabs$deviations$F, res = ~est, frame = ~model, title = "F deviations")
+d <- tabs$deviations$F
+if ("fleet" %in% names(d)) d$series <- interaction(d$model, d$fleet, sep = " / ", drop = TRUE)
+plot_bubbles(d, res = ~est, frame = if ("series" %in% names(d)) ~series else ~model, title = "F deviations")
 ```
 
 `r if ("log_m" %in% names(random_par)) "### M"`

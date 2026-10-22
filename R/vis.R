@@ -16,6 +16,8 @@
 #'                     (even when a single model is supplied).
 #' @details Supply models via `...` or `model_list`, but not both. The models must
 #'          form a uniquely named list so they can be labeled in the dashboard.
+#'          Labeled fisheries add fleet-specific catch, F and residual views.
+#'          Total F and stock-wide yield remain available.
 #'          Additional arguments for [rmarkdown::render()] can be passed through
 #'          `render_args`, which must itself be a (named) list.
 #'          Precomputed assessment references may be mixed with tinyAM fits; they are

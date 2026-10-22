@@ -24,7 +24,16 @@ merge(obs_yield, pred_yield, by = c("year", "model")) |>
 ### Numbers-at-age
 
 ```{r}
-plot_age_year(obs_pred$catch, plot = plot_obs_pred, frame = ~age, color = ~model,
+catch_plot <- obs_pred$catch
+if ("fleet" %in% names(catch_plot)) {
+  keys <- intersect(c("model", "year", "age", "is_proj"), names(catch_plot))
+  catch_plot <- do.call(rbind, lapply(split(catch_plot, interaction(catch_plot[keys], drop = TRUE)), function(d) {
+    out <- d[1, c(keys, intersect("unit", names(d))), drop = FALSE]
+    for (name in c("obs", "pred")) out[[name]] <- if (anyNA(d[[name]])) NA_real_ else sum(d[[name]])
+    out
+  }))
+}
+plot_age_year(catch_plot, plot = plot_obs_pred, frame = ~age, color = ~model,
                      colors = cols, ylab = tinyAM:::.unit_label(obs_pred$catch, "Catch"))
 ```
 
@@ -33,7 +42,13 @@ Row {.tabset}
 --------------------------------------------------------------------------------
 
 ```{r}
-resid_plots <- make_resid_plots(obs_pred$catch)
+catch_residuals <- obs_pred$catch
+if ("fleet" %in% names(catch_residuals)) {
+  catch_residuals$fleet <- as.character(catch_residuals$fleet)
+  catch_residuals$fleet[is.na(catch_residuals$fleet)] <- "Fishery"
+  catch_residuals$series <- interaction(catch_residuals$model, catch_residuals$fleet, sep = " / ", drop = TRUE)
+}
+resid_plots <- make_resid_plots(catch_residuals)
 ```
 
 ### Residuals (age, year)

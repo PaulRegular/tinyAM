@@ -46,6 +46,8 @@ Make a flexdashboard for visualizing model fits
 \details{
 Supply models via \code{...} or \code{model_list}, but not both. The models must
 form a uniquely named list so they can be labeled in the dashboard.
+Labeled fisheries add fleet-specific catch, F and residual views.
+Total F and stock-wide yield remain available.
 Additional arguments for \code{\link[rmarkdown:render]{rmarkdown::render()}} can be passed through
 \code{render_args}, which must itself be a (named) list.
 Precomputed assessment references may be mixed with tinyAM fits; they are

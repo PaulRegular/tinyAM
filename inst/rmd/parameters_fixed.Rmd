@@ -22,11 +22,11 @@ for (category in names(groups)) {
 for (component in c("F", "N", "M")) {
   process_sd <- pop[[paste0("sd_", component)]]
   if (is.null(process_sd)) next
-  process_sd <- process_sd[!duplicated(process_sd[c("model", "age")]), ]
+  process_sd <- process_sd[!duplicated(process_sd[intersect(c("model", "age", "fleet"), names(process_sd))]), ]
   rendered <- knitr::knit_child(text = c(
     paste("###", component, "process SD"), "",
     "```{r}",
-    'plot_trend(plot_rows(process_sd, "est"), x = ~age, color = ~model, legendgroup = ~model, colors = cols, ylab = "Process SD")',
+    'plot_trend(plot_rows(process_sd, "est"), x = ~age, frame = if ("fleet" %in% names(process_sd)) ~fleet else NULL, color = ~model, legendgroup = ~model, colors = cols, ylab = "Process SD")',
     "```", ""), quiet = TRUE)
   cat(rendered, sep = "\n")
 }
