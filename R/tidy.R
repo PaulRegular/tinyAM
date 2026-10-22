@@ -370,6 +370,7 @@ tidy_sdrep <- function(fit, interval = 0.95) {
   df
 }
 
+
 #' Collect population trends and age-specific estimates
 #'
 #' @description
@@ -769,6 +770,42 @@ stack_nested <- function(x, label = "model",
     out[[nm]] <- stack_list(pieces, label = label, label_type = label_type)
   }
   out
+}
+
+
+# Use the chronological population constructor rather than duplicating survival
+# equations. No fitted objective or parameter mode is changed.
+.tidy_process_deviations <- function(fit) {
+  if (is.null(fit$rep$Z) || (is.null(fit$parameter_values) && is.null(fit$sdrep))) return(list())
+  dat <- fit$dat; par <- .start_parameters(fit, dat)
+  out <- list()
+  table <- function(x, process, block = FALSE) {
+    if (process %in% c("rw", "cor_rw")) {
+      if (nrow(x) < 2L) return(NULL)
+      x <- x[-1L, , drop = FALSE] - x[-nrow(x), , drop = FALSE]
+    }
+    names(dimnames(x)) <- c("year", if (block) "age_block" else "age")
+    d <- tidy_array(x, value_name = "est")
+    d$is_proj <- d$year %in% dat$years[dat$is_proj]
+    d$kind <- if (process %in% c("rw", "cor_rw")) "Annual log increment" else "Log deviation from mean"
+    d
+  }
+  if (!is.null(par[["log_f"]])) {
+    historical <- !dat$is_proj
+    out$F <- table(log(fit$rep$F[historical, , drop = FALSE]) -
+                     log(fit$rep$mu_F[historical, , drop = FALSE]), dat$F_settings$process)
+  }
+  if (!is.null(par[["log_m"]])) {
+    out$M <- table(par[["log_m"]] - log(fit$rep$mu_M[rownames(par[["log_m"]]),
+                                                     dat$M_settings$age_block_start, drop = FALSE]), dat$M_settings$process, TRUE)
+  }
+  if (!is.null(par[["log_n"]])) {
+    population <- .population_states(par, dat, fit$rep$Z, F = fit$rep$F, M = fit$rep$M)
+    out$N <- table(log(fit$rep$N[-1L, -1L, drop = FALSE]) -
+                     population$pred_log_N[-1L, -1L, drop = FALSE], dat$N_settings$process)
+    if (!is.null(out$N) && dat$N_settings$process != "rw") out$N$kind <- "Log deviation from cohort prediction"
+  }
+  Filter(function(x) is.data.frame(x) && nrow(x), out)
 }
 
 
