@@ -6,6 +6,10 @@
   `log_capelin_per_cod` predictors. Existing observations, mortality blocks,
   units, and the allometric natural-mortality baseline are retained.
 
+* The cheatsheet now demonstrates the case-study SCAA, SAM, and NCAM structures,
+  simple multi-model visualization and hindcasting, and tidy outputs for static
+  report figures. Its cached SSB comparison uses the package palette.
+
 ## Evaluation refinements
 
 * Deterministic recruitment with an annual `factor(year)` effect now carries its

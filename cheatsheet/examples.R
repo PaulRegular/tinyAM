@@ -1,8 +1,8 @@
-# Rscript cheatsheet/examples.R prepare   # examples, hindcasts and dashboards
+# Rscript cheatsheet/examples.R prepare   # fits, two-fold hindcast, report figure and dashboard
 # Rscript cheatsheet/examples.R render    # PDF only; never refits
 # Rscript cheatsheet/examples.R dashboard # main-fit dashboard only (website build)
 # Generated files live in cache/ and output/. PDF rendering needs XeLaTeX,
-# rsvg and Bahnschrift; the website uses the tracked PDF instead.
+# ggplot2, rsvg and Bahnschrift; the website uses the tracked PDF instead.
 
 fingerprint <- function(x) {
   file <- tempfile()
@@ -19,19 +19,16 @@ example_code <- function(path) {
   lines <- readLines(path, warn = FALSE)
   markers <- grep("^# ---- .* ----$", lines)
   names(markers) <- sub("^# ---- (.*) ----$", "\\1", lines[markers])
-  unlist(lapply(c("inputs", "baseline", "N_iid", "M_ar1"), function(name) {
+  unlist(lapply(c("inputs", "scaa", "sam", "ncam"), function(name) {
     first <- markers[[name]]
     last <- markers[which(markers > first)[1L]]
     lines[seq.int(first + 1L, last - 1L)]
   }), use.names = FALSE)
 }
-
-hindcast <- function(fit) fit_hindcast(fit, folds = 20, progress = FALSE)
-
 render_cheatsheet <- function(repo) {
   root <- file.path(repo, "cheatsheet")
   cache <- file.path(root, "cache")
-  required <- file.path(cache, c("examples.rds", "hindcast_ssb.pdf"))
+  required <- file.path(cache, c("examples.rds", "ssb_comparison.pdf"))
   if (!all(file.exists(required))) cli::cli_abort("Run examples.R prepare before rendering the cheatsheet.")
   workspace <- tempfile("render-", tmpdir = cache)
   dir.create(workspace)
@@ -59,8 +56,8 @@ render_cheatsheet <- function(repo) {
 
 main <- function(mode = "prepare") {
   if (length(mode) != 1L || !mode %in% c("prepare", "render", "dashboard")) cli::cli_abort("Use prepare, render, or dashboard.")
-  script <- sub("^--file=", "", grep("^--file=", commandArgs(), value = TRUE)[1L])
-  script <- normalizePath(script, winslash = "/", mustWork = TRUE)
+  script <- sub("^--file=", "", grep("^--file=", commandArgs(), value = TRUE))
+  script <- normalizePath(if (length(script)) script[1L] else "cheatsheet/examples.R", winslash = "/", mustWork = TRUE)
   repo <- dirname(dirname(script))
   if (mode == "render") return(render_cheatsheet(repo))
   pkgload::load_all(repo, quiet = TRUE, helpers = FALSE)
@@ -74,12 +71,10 @@ main <- function(mode = "prepare") {
   sources <- file_hashes(c(list.files(file.path(repo, "R"), "[.]R$", full.names = TRUE), file.path(repo, "NAMESPACE")))
   provenance <- list(revision = system2("git", c("-C", shQuote(repo), "rev-parse", "HEAD"), stdout = TRUE),
     sources = sources, example_md5 = fingerprint(example_code(script)),
-    runtime = c(R = as.character(getRversion()), RTMB = as.character(packageVersion("RTMB"))),
-    generated = Sys.time())
-
-  # Replace these tables with your own. The cod example is self-contained.
-  source <- lapply(cod_obs, function(x) {
-    x <- x[x$year %in% 1983:2024 & x$age %in% 2:20, , drop = FALSE]
+    case_study_md5 = unname(tools::md5sum(file.path(repo, "analysis/case_study/001_models.R"))),
+    runtime = c(R = as.character(getRversion()), RTMB = as.character(packageVersion("RTMB"))), generated = Sys.time())
+  source <- lapply(cod_obs[c("catch", "index", "weight", "maturity")], function(x) {
+    x <- x[x$year %in% 1983:2025 & x$age %in% 2:20, , drop = FALSE]
     keys <- intersect(c("year", "age", "survey"), names(x))
     x[do.call(order, x[keys]), , drop = FALSE]
   })
@@ -87,22 +82,16 @@ main <- function(mode = "prepare") {
   index_data <- source$index
   weight_data <- source$weight
   maturity_data <- source$maturity
-  population_data <- source$pop_covariates
 # ---- inputs ----
 dat <- make_tam_data(
   catch = catch_data,
   index = index_data,
   weight = weight_data,
-  maturity = maturity_data,
-  pop_covariates = population_data
+  maturity = maturity_data
 )
 check_tam_data(dat)
-# A plain list plus check_tam_data() also works
-# Optional class conversion: as_tam_data(dat)
 # ---- end ----
-  fit_key <- list(sources = sources, example = provenance$example_md5,
-                  data = fingerprint(dat), runtime = provenance$runtime)
-  hind_key <- c(fit_key, list(call = deparse(body(hindcast))))
+  fit_key <- list(sources = sources, example = provenance$example_md5, data = fingerprint(dat), runtime = provenance$runtime)
   records <- list()
   cached <- function(name, key, code) {
     file <- file.path(cache, paste0(name, ".rds"))
@@ -119,137 +108,103 @@ check_tam_data(dat)
       tryCatch(code(), error = function(e) { error <<- conditionMessage(e); NULL }),
       warning = function(w) { warnings <<- c(warnings, conditionMessage(w)); invokeRestart("muffleWarning") }
     ))[["elapsed"]]
-    record <- list(value = value, key = key, provenance = provenance, warnings = warnings,
-                   error = error, elapsed_seconds = elapsed)
+    record <- list(value = value, key = key, provenance = provenance, warnings = warnings, error = error, elapsed_seconds = elapsed)
     saveRDS(record, file)
     records[[name]] <<- record[setdiff(names(record), "value")]
     cli::cli_inform("{name}: finished in {round(elapsed, 1)} s{if (!is.null(error)) paste0('; ', error) else ''}")
     value
   }
-  base <- cached("fit_Base", fit_key, function() {
-# ---- baseline ----
-base <- fit_tam(
-  dat,
-  years = 1983:2024,
-  ages = 2:14,
+  scaa <- cached("fit_scaa", fit_key, function() {
+# ---- scaa ----
+scaa <- fit_tam(
+  dat, years = 1983:2025, ages = 2:14,
   N_settings = list(process = "off", init = "exp"),
-  rec_settings = list(process = "rw"),
-  F_settings = list(process = "ar1", mu_form = ~ 1),
-  M_settings = list(process = "off", mu_supplied = ~ I(0.3)),
+  rec_settings = list(process = "off", mu_form = ~ factor(year)),
+  F_settings = list(process = "off",
+    mu_form = ~ factor(year) + factor(age), mean_ages = 5:14),
+  M_settings = list(process = "off",
+    mu_supplied = ~ I(0.3), mean_ages = 5:14),
   catch_settings = list(sd_form = ~ 1),
-  index_settings = list(
-    sd_form = ~ 1,
-    q_form = ~ mono(q_block)
-  )
+  index_settings = list(sd_form = ~ 1, q_form = ~ mono(q_block))
 )
 # ---- end ----
-    base
+    scaa
   })
-  if (is.null(base)) cli::cli_abort("The baseline could not be fitted; inspect cache/fit_Base.rds.")
-  N_iid <- cached("fit_N_iid", fit_key, function() {
-# ---- N_iid ----
-N_iid <- update(
-  base,
-  N_settings = list(process = "iid")
+  if (!inherits(scaa, "tam_fit")) cli::cli_abort("SCAA could not be fitted; inspect cache/fit_scaa.rds.")
+  sam <- cached("fit_sam", fit_key, function() {
+# ---- sam ----
+sam <- update(scaa,
+  N_settings = list(process = "iid"),
+  rec_settings = list(process = "rw", mu_form = NULL),
+  F_settings = list(process = "cor_rw", mu_form = NULL)
 )
 # ---- end ----
-    N_iid
+    sam
   })
-  M_ar1 <- cached("fit_M_ar1", fit_key, function() {
-# ---- M_ar1 ----
-M_ar1 <- update(
-  base,
-  M_settings = list(
-    process = "ar1",
-    age_breaks = c(2, 4, 6, 8, 14)
-  )
+  ncam <- cached("fit_ncam", fit_key, function() {
+# ---- ncam ----
+ncam <- update(scaa,
+  rec_settings = list(process = "rw", mu_form = NULL),
+  F_settings = list(process = "ar1", mu_form = ~ 1),
+  M_settings = list(process = "ar1", age_breaks = c(2, 5, 8, 14))
 )
 # ---- end ----
-    M_ar1
+    ncam
   })
-# ---- models ----
-fits <- list(Base = base, N_iid = N_iid, M_ar1 = M_ar1)
-# ---- end ----
-  fits <- Filter(function(x) inherits(x, "tam_fit"), fits)
+  fits <- list(scaa = scaa, sam = sam, ncam = ncam)
+  if (!all(vapply(fits, inherits, logical(1), "tam_fit"))) cli::cli_abort("An example fit failed; inspect cache/fit_*.rds.")
   checks <- lapply(fits, check_tam)
+  failed <- names(checks)[!vapply(checks, function(x) isTRUE(x$is_converged), logical(1))]
+  if (length(failed)) cli::cli_warn("Numerical checks did not pass for: {paste(failed, collapse = ', ')}. Inspect cached diagnostics.")
   templates <- file_hashes(list.files(file.path(repo, "inst"), pattern = "[.](Rmd|js|css|svg|png)$", recursive = TRUE, full.names = TRUE))
-  dashboard_file <- file.path(cache, "dashboards.rds")
-  dashboards <- if (file.exists(dashboard_file)) readRDS(dashboard_file) else list()
+  dashboard_file <- file.path(cache, "dashboard.rds")
   dashboard_key <- list(fit = fit_key, templates = templates)
-  if (!file.exists(file.path(output, "tinyAM_dashboard.html")) || !identical(dashboards$combined, dashboard_key)) {
+  prior <- if (file.exists(dashboard_file)) readRDS(dashboard_file) else NULL
 # ---- dashboard ----
-vis_tam(model_list = fits,
-        output_file = "output/tinyAM_dashboard.html",
-        open_file = FALSE)
+# vis_tam(scaa, sam, ncam)
 # ---- end ----
-    dashboards$combined <- dashboard_key
-    saveRDS(dashboards, dashboard_file)
+  if (!file.exists(file.path(output, "tinyAM_dashboard.html")) || !identical(prior, dashboard_key)) {
+    vis_tam(scaa, sam, ncam, output_file = file.path(output, "tinyAM_dashboard.html"), open_file = FALSE)
+    saveRDS(dashboard_key, dashboard_file)
   }
   if (mode == "dashboard") return(invisible(fits))
-  future::plan(future::sequential)
-  hind <- lapply(names(fits), function(name) cached(paste0("hind_", name), hind_key, function() hindcast(fits[[name]])))
-  names(hind) <- names(fits)
-# ---- hindcast ----
-# hind <- lapply(fits, fit_hindcast, folds = 20)
+# ---- tidy ----
+out <- tidy_tam(scaa, sam, ncam)
+ssb <- out$pop$ssb
+index <- out$obs_pred$index
 # ---- end ----
-  observations <- base$obs_pred$index
-  keys <- c("survey", "year", "age")
-  key <- function(x) do.call(paste, c(x[keys], sep = "\r"))
-  expected <- key(observations[observations$year %in% 2005:2024 & is.finite(observations$obs) & observations$obs > 0, ])
-  scores <- do.call(rbind, lapply(names(hind), function(name) {
-    result <- hind[[name]]
-    d <- result$obs_pred$index
-    forecasts <- if (is.null(d)) NULL else d[d$is_proj & d$year %in% 2005:2024 & is.finite(d$pred) & d$pred > 0, ]
-    if (!is.null(forecasts)) forecasts <- forecasts[key(forecasts) %in% expected, ]
-    complete <- !is.null(forecasts) && setequal(key(forecasts), expected) && !anyDuplicated(key(forecasts))
-    data.frame(model = name, log_rmse = if (is.null(result)) NA_real_ else result$hindcast_rmse,
-      n_scored_folds = length(unique(forecasts$year)), n_scored_observations = if (is.null(forecasts)) 0L else nrow(forecasts),
-      complete = complete, fit_converged = isTRUE(checks[[name]]$is_converged))
-  }))
-  scores$rank <- NA_integer_
-  ranked <- scores$complete & scores$fit_converged
-  scores$rank[ranked] <- rank(scores$log_rmse[ranked], ties.method = "min")
-  scores <- scores[order(scores$rank, scores$model, na.last = TRUE), ]
-  utils::write.csv(scores, file.path(cache, "forecast_scores.csv"), row.names = FALSE)
-  best <- scores$model[which(scores$rank == 1L)[1L]]
-  if (is.na(best)) cli::cli_abort("No model has complete, numerically acceptable forecast coverage; inspect the cached diagnostics.")
-  d <- hind[[best]]$pop$ssb
-  terminal <- max(base$dat$years[!base$dat$is_proj])
-  d <- d[!d$is_proj & d$year >= terminal - 19 & d$year <= terminal, ]
-  local({
-    grDevices::cairo_pdf(file.path(cache, "hindcast_ssb.pdf"), width = 90 / 25.4, height = 53 / 25.4,
-                         family = if (.Platform$OS.type == "windows") "Bahnschrift" else "sans")
-    on.exit(grDevices::dev.off())
-    folds <- sort(unique(d$fold)); colours <- tam_pal(length(folds))
-    graphics::par(mar = c(2.5, 3.3, .5, .4), mgp = c(1.6, .5, 0), tcl = -.2, cex = .7, bty = "l")
-    graphics::plot(range(d$year), range(c(0, d$est), finite = TRUE), type = "n", xlab = "Year", ylab = "SSB (tonnes)", yaxs = "i")
-    for (i in seq_along(folds)) {
-      x <- d[d$fold == folds[i], ]; x <- x[order(x$year), ]
-      graphics::lines(x$year, x$est, col = colours[i], lwd = if (i == length(folds)) 1.5 else .65)
-    }
-  })
-  files <- stats::setNames(paste0("cache/", names(records), ".rds"), names(records))
-  saveRDS(list(dat = dat, scores = scores, checks = checks, files = files, records = records, provenance = provenance), file.path(cache, "examples.rds"))
-  for (name in names(hind)) {
-    models <- hind[[name]]$fits
-    file <- file.path(output, paste0("tinyAM_", name, ".html"))
-    html_key <- list(hind = hind_key, templates = templates, self_contained = FALSE)
-    if (!length(models)) { unlink(file); next }
-    if (!file.exists(file) || !identical(dashboards[[name]]$key, html_key)) {
-      diagnostics <- hind[[name]]$fold_diagnostics
-      background <- c(paste0("### ", name, " hindcast fits"),
-        paste(sum(diagnostics$is_converged), "of", nrow(diagnostics), "requested fits passed numerical checks. Only successful fits are shown; labels identify the terminal historical year."))
-      error <- NULL
-      tryCatch(vis_tam(model_list = models, output_file = file, open_file = FALSE,
-        background = background, render_args = list(output_options = list(self_contained = FALSE,
-          lib_dir = file.path(output, "assets")), intermediates_dir = tempdir())),
-        error = function(e) { error <<- conditionMessage(e); unlink(file) })
-      dashboards[[name]] <- list(key = if (is.null(error)) html_key else NULL, error = error)
-      saveRDS(dashboards, dashboard_file)
-      if (!is.null(error)) cli::cli_warn("The {name} hindcast dashboard failed: {error}")
-    }
-  }
-  invisible(scores)
+  ssb <- ssb[!ssb$is_proj, ]
+  ssb$model <- factor(ssb$model, levels = names(fits), labels = toupper(names(fits)))
+  ssb[c("est", "lwr", "upr")] <- lapply(ssb[c("est", "lwr", "upr")], function(x) x / 1000)
+  colours <- stats::setNames(tam_cols()[c(1, 2, 7)], toupper(names(fits)))
+  # ggplot2 is a cheatsheet-build prerequisite, not a package runtime dependency.
+  figure <- ggplot2::ggplot(ssb, ggplot2::aes(x = year, y = est, colour = model, fill = model)) +
+    ggplot2::geom_ribbon(ggplot2::aes(ymin = lwr, ymax = upr), alpha = .12, colour = NA) +
+    ggplot2::geom_line(ggplot2::aes(linetype = model), linewidth = .45) +
+    ggplot2::scale_colour_manual(values = colours) + ggplot2::scale_fill_manual(values = colours) +
+    ggplot2::scale_linetype_manual(values = c("solid", "dashed", "dotdash")) +
+    ggplot2::scale_y_continuous(limits = c(0, NA), expand = ggplot2::expansion(mult = c(0, .04))) +
+    ggplot2::labs(x = "Year", y = "SSB (kt)", colour = NULL, fill = NULL, linetype = NULL) +
+    ggplot2::theme_classic(base_size = 8.5, base_family = "sans") +
+    ggplot2::theme(legend.position = "top", legend.key.width = grid::unit(8, "mm"),
+      legend.margin = ggplot2::margin(0, 0, 0, 0), legend.spacing.x = grid::unit(1, "mm"),
+      axis.text = ggplot2::element_text(colour = "black"), plot.margin = ggplot2::margin(2, 2, 2, 2))
+  ggplot2::ggsave(file.path(cache, "ssb_comparison.pdf"), figure,
+    device = grDevices::cairo_pdf, width = 77, height = 61, units = "mm")
+  # Rendering needs only main-fit summaries; keep it independent of evaluation.
+  saveRDS(list(dat = dat, checks = checks, tidy = out, records = records,
+    provenance = provenance), file.path(cache, "examples.rds"))
+# ---- hindcast ----
+# hind <- fit_hindcast(scaa, sam, ncam)
+# ---- end ----
+  future::plan(future::sequential)
+  hind <- cached("hindcast", c(fit_key, list(folds = 2L, catch = "observed")),
+    function() fit_hindcast(scaa, sam, ncam, progress = FALSE))
+  if (is.null(hind)) cli::cli_abort("The two-fold hindcast failed; inspect cache/hindcast.rds.")
+  saveRDS(list(dat = dat, checks = checks, tidy = out, hindcast = hind,
+    records = records, provenance = provenance), file.path(cache, "examples.rds"))
+  print(hind)
+  invisible(fits)
 }
 
 if (sys.nframe() == 0L) main(if (length(commandArgs(TRUE))) commandArgs(TRUE)[1L] else "prepare")

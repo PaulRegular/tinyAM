@@ -53,7 +53,7 @@
 \newtcblisting{rcode}[1][]{listing only,listing engine=listings,
   boxsep=0pt,colback=tamcode,colframe=tamrule,boxrule=.3pt,arc=.7mm,
   left=1.3mm,right=.7mm,top=.8mm,bottom=.8mm,
-  listing options={language=R,basicstyle=\ttfamily\fontsize{7.3}{9.2}\selectfont,
+  listing options={language=R,basicstyle=\ttfamily\fontsize{7.7}{10.2}\selectfont,
     breaklines=true,breakatwhitespace=false,columns=fullflexible,
     keepspaces=true,showstringspaces=false,tabsize=2,
     morekeywords={check_tam_data},keywordstyle=\color{black}\bfseries,
@@ -65,7 +65,7 @@
   title={#2},toptitle=1.5mm,bottomtitle=1mm,
   top=1.2mm,bottom=1.2mm,left=0mm,right=0mm,#1}
 \newcommand{\smallkey}[1]{{\color{black}\bfseries #1}}
-\newcommand{\panelnote}[1]{{\color{tamgrey}\fontsize{8.0}{10.5}\selectfont #1}}
+\newcommand{\panelnote}[1]{{\color{tamgrey}\fontsize{8.3}{10.8}\selectfont #1}}
 \newcommand{\micro}[1]{{\fontsize{7.4}{9.7}\selectfont #1}}
 \newtcbox{\inlinecode}{on line,boxsep=0pt,colback=tamcode,colframe=tamcode,
   boxrule=0pt,arc=.6mm,left=.8pt,right=.8pt,top=.5pt,bottom=.5pt,fontupper=\ttfamily}
@@ -82,7 +82,7 @@
 
 % Small printed input schematics: data stay in their original column order.
 \newenvironment{inputtable}[1]{%
-  \begingroup\fontsize{7.2}{9.4}\selectfont
+  \begingroup\fontsize{7.4}{9.6}\selectfont
   \renewcommand{\arraystretch}{1.33}\arrayrulecolor{white}\rowcolors{2}{tampale}{tampale}\begin{tabular}{#1}%
 }{\end{tabular}\endgroup}
 \newcommand{\tablelabel}[1]{{\color{black}\ttfamily\fontsize{8}{9}\selectfont #1}}
