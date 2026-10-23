@@ -19,7 +19,6 @@
 "ices_norway_pout_north_sea_2026_benchmark","ba93f1110cf059c38a94217d88f2d57bae9b509f","converged",TRUE,0,"relative convergence (4)",638.216170901029,0.000276659871964569,0.000276659871964569,TRUE,TRUE,36,324,3.80858612060547,""
 "nefsc_summer_flounder_2018","ba93f1110cf059c38a94217d88f2d57bae9b509f","not_converged",FALSE,1,"false convergence (8)",745.64190308922,0.0027869072140542,0.0027869072140542,TRUE,FALSE,32,552,5.05008006095886,""
 "nefsc_atlantic_mackerel_2018","ba93f1110cf059c38a94217d88f2d57bae9b509f","not_converged",FALSE,1,"false convergence (8)",1111.57119359147,2213095498.58242,2213095498.58242,TRUE,FALSE,31,970,6.57805204391479,""
-"ices_haddock_iceland_2025","ba93f1110cf059c38a94217d88f2d57bae9b509f","converged",TRUE,0,"relative convergence (4)",1036.90468066569,0.000814327094206119,0.000814327094206119,TRUE,TRUE,43,1092,5.84732103347778,""
 "afsc_pop_bsai_2024","ba93f1110cf059c38a94217d88f2d57bae9b509f","runner_failed",,,"",,,,,,,,,"Earlier batch run exceeded 1200 seconds. A later default attempt was manually stopped after more than seven hours without a returned fit. The single aligned source-start retry began 2026-10-20 17:36 local; no result was available by 18:52 and no R process was running at that check. Exact termination time/cause and numerical diagnostics are unknown; see the stock review."
 "afsc_atka_mackerel_bsai_2024","ba93f1110cf059c38a94217d88f2d57bae9b509f","converged",TRUE,0,"relative convergence (4)",619.378793490305,0.00145642333453111,0.00145642333453111,TRUE,TRUE,23,373,31.0406839847565," | default: failed numerical checks; gradient=5.11e+08; NA/NaN function evaluation | NA/NaN function evaluation | Numerical convergence checks did not pass; inspect `check_tam(fit)`.
 x Code 1: false convergence (8)
@@ -210,3 +209,19 @@ i Optimizer code zero alone is insufficient. A missed gradient tolerance alone
 i F increment age correlation is within 0.05 of -1 or 1. Examine uncertainty
   and compare independent increments. | source_start: converged; gradient=0.00142; "
 "nefsc_winter_flounder_gb_2022_vpa","8405fa554f919ddbc968c50f83dd5836a7e8b5ae","not_converged",FALSE,1,"false convergence (8)",1618.30087099813,0.000214790581107793,0.000214790581107793,TRUE,TRUE,38,553,2.70734691619873,""
+"ices_saithe_faroe_2025","dc65adfb3974411de14c7f85842e29d9427e5c31","not_converged",FALSE,1,"false convergence (8)",2053.82603089796,0.000683721123617254,0.000683721123617254,TRUE,FALSE,36,1677,19.41948," | default: failed numerical checks; gradient=0.000482; NaNs produced | NaNs produced | NaNs produced | NaNs produced | NaNs produced | NaNs produced | NaNs produced | NaNs produced | NaNs produced | Numerical convergence checks did not pass; inspect `check_tam(fit)`.
+x Code 1: false convergence (8)
+x Fixed-parameter covariance must be available and finite.
+x The Hessian must be positive definite.
+i Optimizer code zero alone is insufficient. A missed gradient tolerance alone
+  does not establish a structural problem. | Formula-effect uncertainty or support is limited.
+i F increment age correlation is within 0.05 of -1 or 1. Examine uncertainty
+  and compare independent increments. | source_start: failed numerical checks; gradient=0.000684; NaNs produced | NaNs produced | NaNs produced | NaNs produced | NaNs produced | NaNs produced | NaNs produced | NaNs produced | NaNs produced | Numerical convergence checks did not pass; inspect `check_tam(fit)`.
+x Code 1: false convergence (8)
+x Fixed-parameter covariance must be available and finite.
+x The Hessian must be positive definite.
+i Optimizer code zero alone is insufficient. A missed gradient tolerance alone
+  does not establish a structural problem. | Formula-effect uncertainty or support is limited.
+i F increment age correlation is within 0.05 of -1 or 1. Examine uncertainty
+  and compare independent increments."
+"ices_cod_northern_coastal_2026","dc65adfb3974411de14c7f85842e29d9427e5c31","converged",TRUE,0,"relative convergence (4)",154.147824173013,0.000320354839941112,0.000320354839941112,TRUE,TRUE,11,488,1.200459,""
