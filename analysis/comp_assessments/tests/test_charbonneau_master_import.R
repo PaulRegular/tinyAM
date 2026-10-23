@@ -1,5 +1,9 @@
 source("analysis/comp_assessments/scripts/database/071_import_charbonneau_master.R")
 
+stock_path <- "analysis/comp_assessments/database/stocks.csv"
+stock_bytes <- readBin(stock_path, what = "raw", n = file.info(stock_path)$size)
+stopifnot(!any(stock_bytes == as.raw(0)))
+
 master <- data.frame(
   Genus = c("Gadus", "Clupea", "Atheresthes", "Merlangius"),
   Species = c("morhua", "harengus", "stomias", "merlangus"),
@@ -124,7 +128,7 @@ if (file.exists(master_path)) {
     second_import <- ck_import_master(master_path, temp_stocks)
     second_stocks <- read.csv(temp_stocks, stringsAsFactors = FALSE, na.strings = c("", "NA"))
     stopifnot(
-      nrow(imported_stocks) == 112L,
+      nrow(imported_stocks) == nrow(seed_stocks) + first_import$added,
       first_import$matched == 27L,
       first_import$added == 75L,
       second_import$matched == 102L,

@@ -1,4 +1,10 @@
 root <- file.path("analysis", "comp_assessments", "database")
+stock_path <- file.path(root, "stocks.csv")
+stock_bytes <- readBin(stock_path, what = "raw", n = file.info(stock_path)$size)
+if (any(stock_bytes == as.raw(0))) {
+  stop("stocks.csv contains an embedded NUL byte.", call. = FALSE)
+}
+
 read_table <- function(name) {
   read.csv(file.path(root, name),
     stringsAsFactors = FALSE,
