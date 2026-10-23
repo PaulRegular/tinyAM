@@ -4,7 +4,7 @@ Translation revision: 2026-10-14.
 
 ## Assessment record
 
-The canonical database represents the official 2025 benchmark assessment as the current detailed record. MFRI published a newer 2026 assessment report, which is recorded separately as summary-only. Its age-specific matrices are not copied from the 2025 assessment.
+The 2025 benchmark is retained as a historical assessment record. The 2026 official assessment is now the current detailed record; see [the 2026 source review](ices_haddock_iceland_2026.md). The two runs retain separate inputs and outputs.
 
 The 2025 benchmark replaced the previous assessment framework with the state-space assessment model (SAM). The assessment uses catch numbers-at-age, catch weights, stock weights, maturity, spring and autumn survey indices-at-age, and estimated abundance and fishing mortality-at-age.
 
@@ -12,7 +12,7 @@ The assessment covers ages 1–12+, with age 12 as the plus group. Detailed catc
 
 The 2026 MFRI report confirms that the assessment continues to use the 2025 benchmark framework, fixes natural mortality at 0.2, and allows selectivity-at-age to vary over time.
 
-The complete numerical 2026 age-specific input and output matrices were not recovered during the source review. No missing values were digitized from figures or substituted from earlier assessments.
+The 2026 age-specific input and output matrices are documented separately in the 2026 source review. No 2026 values are substituted into this 2025 record.
 
 ## Inputs and assumptions
 
@@ -165,7 +165,7 @@ The numerical MFRI table exports used for the 2025 record are cached under the g
 
 ## Record summary
 
-The canonical record represents the 2025 benchmark SAM assessment for Icelandic haddock, using the most recent detailed age-specific numerical inputs recovered for this assessment.
+This historical record represents the 2025 benchmark SAM assessment for Icelandic haddock. The current detailed assessment is the separate 2026 run.
 
 The revised tinyAM translation fits 1979–2024, ages 1–12+, with random-walk recruitment, IID cohort-survival deviations, free initial abundance, correlated F random walks and fixed natural mortality.
 
