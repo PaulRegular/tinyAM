@@ -2,6 +2,10 @@
 
 ## Evaluation refinements
 
+* Deterministic recruitment with an annual `factor(year)` effect now carries its
+  terminal historical effect into projections and hindcasts, without estimating
+  unsupported future-year coefficients. Numeric time trends are unchanged.
+
 * `residuals(fit, type = "osa")` calculates missing OSA residuals on request,
   reusing cached results when present. Calculations use a temporary fitted
   objective without refitting or changing the supplied fit.

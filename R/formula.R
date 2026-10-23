@@ -886,7 +886,7 @@ mono <- function(x, by = NULL) {
 
 # Fit ordinary bases to historical support, then reuse their terms and contrasts.
 .fixed_mean_design <- function(formula, data, historical, active = rep(TRUE, nrow(data)),
-                               carry_terminal = FALSE, label) {
+                               carry_terminal = FALSE, carry_year_factors = FALSE, label) {
   frame <- stats::model.frame(formula, data[historical, , drop = FALSE],
     na.action = stats::na.pass)
   frame <- .drop_unused_levels(frame)
@@ -896,6 +896,21 @@ mono <- function(x, by = NULL) {
     cli::cli_abort("{label} needs finite covariates at every active historical year and age.")
   }
   future <- active & !historical
+  if (carry_year_factors && any(future)) {
+    variables <- as.list(attr(terms, "variables"))[-1L]
+    annual <- vapply(seq_along(frame), function(j) {
+      term <- variables[[j]]
+      if (!is.factor(frame[[j]]) || !is.call(term) ||
+          nlevels(frame[[j]]) != length(unique(data$year[historical])) ||
+          !tail(as.character(term[[1L]]), 1L) %in% c("factor", "as.factor")) return(FALSE)
+      args <- as.list(term)[-1L]
+      identical(if ("x" %in% names(args)) args$x else args[[1L]], quote(year))
+    }, logical(1))
+    if (any(annual)) {
+      data$year[future] <- max(data$year[historical])
+      cli::cli_inform("{label} projections hold the terminal year-specific fixed effect.")
+    }
+  }
   if (carry_terminal && any(future)) {
     terminal <- which(historical & data$year == max(data$year[historical]))
     data[future, ] <- data[terminal[match(data$age[future], data$age[terminal])], , drop = FALSE]

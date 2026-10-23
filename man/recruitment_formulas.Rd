@@ -66,6 +66,10 @@ For example, \code{~ 1} gives constant recruitment after the boundary years;
 \code{~ bh(ssb)} gives a deterministic stock-recruit curve. Supplied \code{sd} and
 \code{phi} must be \code{NULL}. Parameter uncertainty and stochastic parent SSB can
 still give uncertain recruitment; no direct recruitment noise is drawn.
+An annual \code{factor(year)} or \code{as.factor(year)} effect is fitted only to eligible
+historical years. Projections reuse its terminal historical coefficient rather
+than introducing future-year coefficients. Numeric year trends continue to be
+evaluated at the projected year; other covariates retain their terminal values.
 
 First-year \code{log_r0} is always a free fixed anchor. Any additional recruitment
 years whose parent SSB precedes the modeled period are also free fixed states
