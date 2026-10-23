@@ -20,7 +20,7 @@
 "nefsc_summer_flounder_2018","ba93f1110cf059c38a94217d88f2d57bae9b509f","not_converged",FALSE,1,"false convergence (8)",745.64190308922,0.0027869072140542,0.0027869072140542,TRUE,FALSE,32,552,5.05008006095886,""
 "nefsc_atlantic_mackerel_2018","ba93f1110cf059c38a94217d88f2d57bae9b509f","not_converged",FALSE,1,"false convergence (8)",1111.57119359147,2213095498.58242,2213095498.58242,TRUE,FALSE,31,970,6.57805204391479,""
 "ices_haddock_iceland_2025","ba93f1110cf059c38a94217d88f2d57bae9b509f","converged",TRUE,0,"relative convergence (4)",1036.90468066569,0.000814327094206119,0.000814327094206119,TRUE,TRUE,43,1092,5.84732103347778,""
-"afsc_pop_bsai_2024","ba93f1110cf059c38a94217d88f2d57bae9b509f","runner_failed","","","","","","","","","","","","Earlier batch run exceeded 1200 seconds. A later default attempt was manually stopped after more than seven hours without a returned fit. The single aligned source-start retry began 2026-10-20 17:36 local; no result was available by 18:52 and no R process was running at that check. Exact termination time/cause and numerical diagnostics are unknown; see the stock review."
+"afsc_pop_bsai_2024","ba93f1110cf059c38a94217d88f2d57bae9b509f","runner_failed",,,"",,,,,,,,,"Earlier batch run exceeded 1200 seconds. A later default attempt was manually stopped after more than seven hours without a returned fit. The single aligned source-start retry began 2026-10-20 17:36 local; no result was available by 18:52 and no R process was running at that check. Exact termination time/cause and numerical diagnostics are unknown; see the stock review."
 "afsc_atka_mackerel_bsai_2024","ba93f1110cf059c38a94217d88f2d57bae9b509f","converged",TRUE,0,"relative convergence (4)",619.378793490305,0.00145642333453111,0.00145642333453111,TRUE,TRUE,23,373,31.0406839847565," | default: failed numerical checks; gradient=5.11e+08; NA/NaN function evaluation | NA/NaN function evaluation | Numerical convergence checks did not pass; inspect `check_tam(fit)`.
 x Code 1: false convergence (8)
 x Adjusted maximum 5.11e+08; raw maximum 5.11e+08; tolerance 0.01.
@@ -100,10 +100,113 @@ observed age-length key and survey timing are missing.
 i Recovered fitted N/F are assessment outputs, not catch/survey data. See
   source_reviews/afsc_arrowtooth_flounder_bsai.md."
 "dfo_canary_bc_2022","ba93f1110cf059c38a94217d88f2d57bae9b509f","converged",TRUE,0,"relative convergence (4)",1726.62894669063,0.000531421946384114,0.000531421946384114,TRUE,TRUE,79,2853,146.427752971649," | default: converged; gradient=0.000531; "
-"ices_herring_gulf_riga_2026","7de9308d37452e8579002a4cbd72a8f9b83cf9de","converged",TRUE,0,"relative convergence (4)",434.028182499451,6.63053479918185e-05,6.63053479918185e-05,TRUE,TRUE,13,873,,
+"ices_herring_gulf_riga_2026","7de9308d37452e8579002a4cbd72a8f9b83cf9de","converged",TRUE,0,"relative convergence (4)",434.028182499451,6.63053479918185e-05,6.63053479918185e-05,TRUE,TRUE,13,873,,""
 "dfo_cod_3pn4rs_2025","5693e8e9f61a599d7455fdc8d5515faa64b24dce","converged",TRUE,0,"relative convergence (4)",615.87630738594,0.000113142603110461,0.000113142603110461,TRUE,TRUE,40,509,31.3808588981628,""
 "ices_saithe_north_sea_2026","5693e8e9f61a599d7455fdc8d5515faa64b24dce","not_converged",FALSE,1,"false convergence (8)",319.491407969653,4.08263673516984e-05,51.6382496554551,TRUE,TRUE,18,702,3.06660008430481,""
 "nefsc_scup_2015","070c33a09dd1639333df64d0320d50a1210a782e","converged",TRUE,0,"relative convergence (4)",559.463070520346,0.000222035178464974,0.000222035178464974,TRUE,TRUE,24,278,,""
-
-"ices_horse_mackerel_9a_2024","3689ba8e34b0e2984baf6382abc8034904f063e5","not_converged",FALSE,0,"relative convergence (4)",831.0145,0.000082911,0.000082911,TRUE,FALSE,19,756,NA,"Default initialization; optimizer code 0 and small gradient, but positive-definite Hessian check failed."
+"ices_horse_mackerel_9a_2024","3689ba8e34b0e2984baf6382abc8034904f063e5","not_converged",FALSE,0,"relative convergence (4)",831.0145,8.2911e-05,8.2911e-05,TRUE,FALSE,19,756,,"Default initialization; optimizer code 0 and small gradient, but positive-definite Hessian check failed."
 "ices_sole_north_sea_2025","9d03ca697cf569190c11291c8cffa1ba894f45e9","converged",TRUE,0,"relative convergence (4)",1073.22531338047,0.000999968665128109,0.000999968665128109,TRUE,TRUE,17,1350,3.04958701133728,""
+"ices_haddock_iceland_2026","8405fa554f919ddbc968c50f83dd5836a7e8b5ae","converged",TRUE,0,"relative convergence (4)",1086.8892033447,0.000918210981424139,0.000918210981424139,TRUE,TRUE,43,1140,5.76438188552856,""
+"ices_cod_irish_sea_2026","8405fa554f919ddbc968c50f83dd5836a7e8b5ae","converged",TRUE,0,"relative convergence (4)",481.248460295283,0.000363573948556406,0.000363573948556406,TRUE,TRUE,24,707,2.94783902168274,""
+"dfo_cod_3ps_2024","8405fa554f919ddbc968c50f83dd5836a7e8b5ae","not_converged",FALSE,1,"singular convergence (7)",2119.21380604114,0.000753340213006659,0.000753340213006659,TRUE,TRUE,80,1703,19.6846978664398,""
+"dfo_northern_mackerel_2025","8405fa554f919ddbc968c50f83dd5836a7e8b5ae","converged",TRUE,0,"relative convergence (4)",823.392300705608,0.00058447720781088,0.00058447720781088,TRUE,TRUE,8,1130,2.77763390541077,""
+"dfo_herring_4tvn_fall_2024","8405fa554f919ddbc968c50f83dd5836a7e8b5ae","not_converged",FALSE,1,"function evaluation limit reached without convergence (9)",2583.89019613674,1.12005843762891,7.5864264497165,TRUE,FALSE,58,1037,20.4498591423035,""
+"ices_haddock_rockall_2026","8405fa554f919ddbc968c50f83dd5836a7e8b5ae","converged",TRUE,0,"relative convergence (4)",679.280953286435,0.00164685427181521,0.00164685427181521,TRUE,TRUE,18,552,1.39862298965454,""
+"jrn_afwg_haddock_northeast_arctic_2026","8405fa554f919ddbc968c50f83dd5836a7e8b5ae","converged",TRUE,0,"relative convergence (4)",1437.36542068139,0.000872047833001866,0.000872047833001866,TRUE,TRUE,22,1683,4.85127305984497,""
+"dfo_haddock_4x5y_2016","8405fa554f919ddbc968c50f83dd5836a7e8b5ae","converged",TRUE,0,"relative convergence (4)",562.381803469118,0.000906869851568626,0.000906869851568626,TRUE,TRUE,28,371,9.13214302062988,""
+"dfo_american_plaice_4t_2016","8405fa554f919ddbc968c50f83dd5836a7e8b5ae","converged",TRUE,0,"relative convergence (4)",835.133187852148,0.00139197986077733,0.00139197986077733,TRUE,TRUE,69,637,94.9717910289764,""
+"nefsc_pollock_5yz_2024","8405fa554f919ddbc968c50f83dd5836a7e8b5ae","not_converged",FALSE,1,"false convergence (8)",3140.93910464144,5568294318.9196,5568294318.9196,TRUE,FALSE,52,963,13.3915441036224," | default: failed numerical checks; gradient=169000; NaNs produced | NaNs produced | NaNs produced | NaNs produced | NaNs produced | NaNs produced | NaNs produced | NaNs produced | NaNs produced | Numerical convergence checks did not pass; inspect `check_tam(fit)`.
+x Code 1: false convergence (8)
+x Adjusted maximum 169000; raw maximum 169000; tolerance 0.01.
+x Fixed-parameter covariance must be available and finite.
+x The Hessian must be positive definite.
+i Optimizer code zero alone is insufficient. A missed gradient tolerance alone
+  does not establish a structural problem. | source_start: failed numerical checks; gradient=5.57e+09; NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | Numerical convergence checks did not pass; inspect `check_tam(fit)`.
+x Code 1: false convergence (8)
+x Adjusted maximum 5.57e+09; raw maximum 5.57e+09; tolerance 0.01.
+x Fixed-parameter covariance must be available and finite.
+x The Hessian must be positive definite.
+i Optimizer code zero alone is insufficient. A missed gradient tolerance alone
+  does not establish a structural problem."
+"ices_cod_celtic_sea_2026","8405fa554f919ddbc968c50f83dd5836a7e8b5ae","not_converged",FALSE,1,"false convergence (8)",308.922134590913,0.00297630308300528,0.00297630308300528,TRUE,TRUE,12,637,1.73011898994446," | default: failed numerical checks; gradient=NA; Optimization failed: NA/NaN gradient evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | source_start: failed numerical checks; gradient=0.00298; Numerical convergence checks did not pass; inspect `check_tam(fit)`.
+x Code 1: false convergence (8)
+i Optimizer code zero alone is insufficient. A missed gradient tolerance alone
+  does not establish a structural problem. | Formula-effect uncertainty or support is limited.
+i F increment age correlation is within 0.05 of -1 or 1. Examine uncertainty
+  and compare independent increments.
+i The 95% F increment age-correlation interval spans more than 0.8. Age
+  dependence is imprecise; compare independent increments."
+"ices_herring_central_baltic_2026","8405fa554f919ddbc968c50f83dd5836a7e8b5ae","converged",TRUE,0,"relative convergence (4)",157.390134033403,1.1848128602665e-06,1.1848128602665e-06,TRUE,TRUE,20,519,61.7210459709167,""
+"ices_saithe_northeast_arctic_2026","8405fa554f919ddbc968c50f83dd5836a7e8b5ae","converged",TRUE,0,"relative convergence (4)",616.913136127695,0.000999099980482754,0.000999099980482754,TRUE,TRUE,29,1308,7.37818098068237," | default: failed numerical checks; gradient=NA; Optimization failed: NA/NaN gradient evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | source_start: converged; gradient=0.000999; Formula-effect uncertainty or support is limited.
+i A stock-recruit parameter's 95% interval spans more than tenfold. Curve shape
+  is weakly estimated; compare simpler recruitment models before interpreting
+  density dependence."
+"nefsc_american_plaice_5yz_2022_run29f4","8405fa554f919ddbc968c50f83dd5836a7e8b5ae","converged",TRUE,0,"relative convergence (4)",3515.90978982753,0.00352942922147292,0.00352942922147292,TRUE,TRUE,65,869,16.0878200531006," | default: failed numerical checks; gradient=0.00197; NaNs produced | NaNs produced | NaNs produced | NaNs produced | Numerical convergence checks did not pass; inspect `check_tam(fit)`.
+x Fixed-parameter covariance must be available and finite.
+x The Hessian must be positive definite.
+i Optimizer code zero alone is insufficient. A missed gradient tolerance alone
+  does not establish a structural problem. | source_start: converged; gradient=0.00353; "
+"ices_whiting_west_scotland_2025","8405fa554f919ddbc968c50f83dd5836a7e8b5ae","converged",TRUE,0,"relative convergence (4)",874.482353240724,0.00119221797551883,0.00119221797551883,TRUE,TRUE,28,712,2.86784696578979,""
+"ices_whiting_irish_sea_2025_benchmark","8405fa554f919ddbc968c50f83dd5836a7e8b5ae","not_converged",FALSE,0,"relative convergence (4)",706.29595932354,0.000712458559144924,0.000712458559144924,TRUE,FALSE,18,609,4.76854515075684," | default: failed numerical checks; gradient=0.000552; NaNs produced | NaNs produced | NaNs produced | NaNs produced | Numerical convergence checks did not pass; inspect `check_tam(fit)`.
+x Fixed-parameter covariance must be available and finite.
+x The Hessian must be positive definite.
+i Optimizer code zero alone is insufficient. A missed gradient tolerance alone
+  does not establish a structural problem. | Formula-effect uncertainty or support is limited.
+i F increment age correlation is within 0.05 of -1 or 1. Examine uncertainty
+  and compare independent increments. | source_start: failed numerical checks; gradient=0.000712; NaNs produced | NaNs produced | NaNs produced | NaNs produced | Numerical convergence checks did not pass; inspect `check_tam(fit)`.
+x Fixed-parameter covariance must be available and finite.
+x The Hessian must be positive definite.
+i Optimizer code zero alone is insufficient. A missed gradient tolerance alone
+  does not establish a structural problem. | Formula-effect uncertainty or support is limited.
+i F increment age correlation is within 0.05 of -1 or 1. Examine uncertainty
+  and compare independent increments."
+"ices_cod_faroe_plateau_2025","8405fa554f919ddbc968c50f83dd5836a7e8b5ae","fit_failed",,,"",,,,,,,,1.57987403869629,"Optimization failed: NA/NaN gradient evaluation | NA/NaN function
+evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN
+function evaluation | NA/NaN function evaluation | NA/NaN function evaluation |
+NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function
+evaluation | Optimization failed: NA/NaN gradient evaluation | NA/NaN function
+evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN
+function evaluation | NA/NaN function evaluation | NA/NaN function evaluation |
+NA/NaN function evaluation default: : Optimization failed: NA/NaN gradient evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | source_start: : Optimization failed: NA/NaN gradient evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation"
+"ices_cod_iceland_2026","8405fa554f919ddbc968c50f83dd5836a7e8b5ae","converged",TRUE,0,"relative convergence (4)",1195.94007810275,0.00375362659542022,0.00375362659542022,TRUE,TRUE,29,935,223.649732112885,""
+"ices_cod_western_baltic_2025","8405fa554f919ddbc968c50f83dd5836a7e8b5ae","converged",TRUE,0,"relative convergence (4)",671.631740102416,0.000355720238888774,0.000355720238888774,TRUE,TRUE,29,648,1.41868901252747,""
+"ices_turbot_north_sea_2025_benchmark","8405fa554f919ddbc968c50f83dd5836a7e8b5ae","converged",TRUE,0,"relative convergence (4)",472.75000652618,0.000501594926851312,0.000501594926851312,TRUE,TRUE,29,680,2.03224802017212,""
+"ices_plaice_english_channel_7d_2026","8405fa554f919ddbc968c50f83dd5836a7e8b5ae","converged",TRUE,0,"relative convergence (4)",592.745011587688,0.000957685268522357,0.000957685268522357,TRUE,TRUE,18,637,3.28349590301514," | default: failed numerical checks; gradient=NA; Optimization failed: NA/NaN gradient evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | source_start: converged; gradient=0.000958; "
+"ices_plaice_irish_sea_7a_2026","8405fa554f919ddbc968c50f83dd5836a7e8b5ae","converged",TRUE,0,"relative convergence (4)",302.221031630547,0.000116937414350704,0.000116937414350704,TRUE,TRUE,14,712,2.56208992004395,""
+"ices_haddock_irish_sea_7a_2025","8405fa554f919ddbc968c50f83dd5836a7e8b5ae","converged",TRUE,0,"relative convergence (4)",893.41126511832,0.000868082694255257,0.000868082694255257,TRUE,TRUE,26,378,1.64052796363831," | default: converged; gradient=0.000868; "
+"ices_sole_celtic_7fg_2026","8405fa554f919ddbc968c50f83dd5836a7e8b5ae","converged",TRUE,0,"relative convergence (4)",429.110956000821,9.87488329340057e-05,9.87488329340057e-05,TRUE,TRUE,23,1090,26.2233839035034," | default: failed numerical checks; gradient=0.0025; NA/NaN function evaluation | NaNs produced | NaNs produced | NaNs produced | NaNs produced | NaNs produced | NaNs produced | NaNs produced | NaNs produced | NaNs produced | Numerical convergence checks did not pass; inspect `check_tam(fit)`.
+x Code 1: false convergence (8)
+x Fixed-parameter covariance must be available and finite.
+x The Hessian must be positive definite.
+i Optimizer code zero alone is insufficient. A missed gradient tolerance alone
+  does not establish a structural problem. | source_start: converged; gradient=9.87e-05; "
+"ices_sole_western_channel_7e_2026","8405fa554f919ddbc968c50f83dd5836a7e8b5ae","converged",TRUE,0,"relative convergence (4)",734.364590556568,0.00119938441917805,0.00119938441917805,TRUE,TRUE,44,1243,5.40574407577515,""
+"ices_sole_eastern_channel_7d_2026","8405fa554f919ddbc968c50f83dd5836a7e8b5ae","not_converged",FALSE,1,"false convergence (8)",1958.74904613471,31.6072607906977,31.6072607906977,TRUE,FALSE,19,957,1.71527695655823," | default: failed numerical checks; gradient=31.6; NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | Numerical convergence checks did not pass; inspect `check_tam(fit)`.
+x Code 1: false convergence (8)
+x Adjusted maximum 31.6; raw maximum 31.6; tolerance 0.01.
+x Fixed-parameter covariance must be available and finite.
+x The Hessian must be positive definite.
+i Optimizer code zero alone is insufficient. A missed gradient tolerance alone
+  does not establish a structural problem. | source_start: failed numerical checks; gradient=NA; Optimization failed: NA/NaN gradient evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation"
+"ices_herring_gulf_bothnia_2026","8405fa554f919ddbc968c50f83dd5836a7e8b5ae","converged",TRUE,0,"relative convergence (4)",561.301700377672,0.000285211041210598,0.000285211041210598,TRUE,TRUE,26,1365,5.234050989151,""
+"ices_sole_20_24_2025","8405fa554f919ddbc968c50f83dd5836a7e8b5ae","converged",TRUE,0,"relative convergence (4)",485.493351306448,0.000804517749942169,0.000804517749942169,TRUE,TRUE,23,729,4.07726216316223,""
+"ices_plaice_baltic_21_32_2026","8405fa554f919ddbc968c50f83dd5836a7e8b5ae","converged",TRUE,0,"relative convergence (4)",271.994897101262,0.000116699421248478,0.000116699421248478,TRUE,TRUE,22,329,2.06579113006592,""
+"ices_haddock_faroe_2025","8405fa554f919ddbc968c50f83dd5836a7e8b5ae","converged",TRUE,0,"relative convergence (4)",1240.32941916321,0.000307783710462584,0.000307783710462584,TRUE,TRUE,23,1370,3.71943283081055," | default: converged; gradient=0.000308; "
+"ices_herring_iceland_summer_2026","8405fa554f919ddbc968c50f83dd5836a7e8b5ae","converged",TRUE,0,"relative convergence (4)",1349.349507751,0.000712663305658445,0.000712663305658445,TRUE,TRUE,20,1218,3.34271597862244,""
+"ices_haddock_celtic_sea_7b_k_2026","8405fa554f919ddbc968c50f83dd5836a7e8b5ae","fit_failed",,,"",,,,,,,,0.981560945510864,"Optimization failed: NA/NaN gradient evaluation | NA/NaN function
+evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN
+function evaluation | NA/NaN function evaluation | NA/NaN function evaluation |
+NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function
+evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN
+function evaluation | Optimization failed: NA/NaN gradient evaluation | NA/NaN
+function evaluation | NA/NaN function evaluation | NA/NaN function evaluation |
+NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function
+evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN
+function evaluation default: : Optimization failed: NA/NaN gradient evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | source_start: : Optimization failed: NA/NaN gradient evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation"
+"ices_saithe_iceland_2026","8405fa554f919ddbc968c50f83dd5836a7e8b5ae","converged",TRUE,0,"relative convergence (4)",882.576568707314,0.00141851934206827,0.00141851934206827,TRUE,TRUE,30,1116,13.4403719902039," | default: failed numerical checks; gradient=0.00996; Numerical convergence checks did not pass; inspect `check_tam(fit)`.
+x Code 1: false convergence (8)
+i Optimizer code zero alone is insufficient. A missed gradient tolerance alone
+  does not establish a structural problem. | Formula-effect uncertainty or support is limited.
+i F increment age correlation is within 0.05 of -1 or 1. Examine uncertainty
+  and compare independent increments. | source_start: converged; gradient=0.00142; "
+"nefsc_winter_flounder_gb_2022_vpa","8405fa554f919ddbc968c50f83dd5836a7e8b5ae","not_converged",FALSE,1,"false convergence (8)",1618.30087099813,0.000214790581107793,0.000214790581107793,TRUE,TRUE,38,553,2.70734691619873,""
