@@ -4,7 +4,7 @@ x <- inputs[inputs$assessment_id == id, ]
 y <- outputs[outputs$assessment_id == id, ]
 a <- assessments[assessments$assessment_id == id, ]
 stopifnot(
-  nrow(x) == 4455L, nrow(y) == 1840L,
+  nrow(x) == 4455L, nrow(y) == 1860L,
   a$inputs_status == "partial", a$outputs_status == "partial",
   a$assumptions_status == "partial", a$terminal_year == 2026
 )
@@ -55,4 +55,5 @@ stopifnot(
   all(abs(means$value - fbar$value) < 0.0006),
   all(fbar$age_group == "2–6 winter rings")
 )
-message("Herring coverage, native dimensions, exclusions, recruitment and Fbar checks passed.")
+source("analysis/comp_assessments/tests/test_ices_herring_north_sea_outputs.R")
+message("Herring coverage, native dimensions, exclusions, recruitment, Fbar and q checks passed.")

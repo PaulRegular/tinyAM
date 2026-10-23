@@ -68,6 +68,7 @@ Table 2.6.1.1 reports the following fitted coverage:
 - IBTS0: 1992–2026.
 
 The report contains numerical catch, natural mortality, maturity, weights, survey inputs, population and fishing-mortality outputs, and summary uncertainty in Tables 2.6.1.2–14 and 2.6.2.1–7.
+Table 2.6.2.2 also reports fitted catchability by fleet and age, including CV and lower/upper bounds. All 20 fleet-age rows are now in outputs.csv, preserving the report's repeated values for shared q parameters. Natural-scale SE is calculated as q × reported CV. The bounds are retained as printed; the table does not state their confidence level or construction. The output completeness status remains partial because other source-output details are still unresolved.
 
 Some adjacent narrative paragraphs contain earlier-year values. Explicitly labelled final numerical tables are used for the official assessment record.
 
