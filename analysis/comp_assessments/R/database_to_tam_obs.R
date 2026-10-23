@@ -555,7 +555,9 @@
   provenance <- list()
   k <- 0L
   if (nrow(direct)) {
-    direct <- .translation_calendar_rows(direct, "direct index-at-age")
+    direct <- .translation_calendar_rows(
+      direct, "direct index-at-age", allow_missing_observations = TRUE
+    )
     if (anyNA(direct$survey) || any(!nzchar(as.character(direct$survey)))) {
       .translation_abort("Every direct index row needs its original survey name.")
     }
@@ -573,6 +575,9 @@
     direct <- direct[direct$year %in% years & direct$age >= min(ages), , drop = FALSE]
     if (nrow(direct)) {
       direct_source <- direct
+      direct <- direct[!is.na(direct$value), , drop = FALSE]
+    }
+    if (nrow(direct)) {
       direct_multiplier <- vapply(direct$unit, .translation_index_multiplier, numeric(1))
       direct$value <- direct$value * direct_multiplier
       direct$age <- pmin(direct$age, max(ages))
