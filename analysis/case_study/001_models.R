@@ -3,10 +3,6 @@ pkgload::load_all(".", quiet = TRUE)
 
 dir.create("analysis/case_study/outputs", recursive = TRUE, showWarnings = FALSE)
 
-
-## TODO: add deterministic recruitment (bh?)
-
-
 scaa <- fit_tam(
   cod_obs,
   years = 1983:2025,
@@ -45,7 +41,8 @@ sam <- update(
     process = "iid"
   ),
   rec_settings = list(
-    process = "rw"
+    process = "rw",
+    mu_form = NULL
   ),
   F_settings = list(
     process = "cor_rw",
@@ -58,7 +55,8 @@ sam
 ncam <- update(
   scaa,
   rec_settings = list(
-    process = "rw"
+    process = "rw",
+    mu_form = NULL
   ),
   F_settings = list(
     process = "ar1",
@@ -78,7 +76,7 @@ hind <- fit_hindcast(
   scaa,
   sam,
   ncam,
-  folds = 15,
+  folds = 20,
   proj_settings = list(
     n_proj = 1,
     n_mean = 1,
