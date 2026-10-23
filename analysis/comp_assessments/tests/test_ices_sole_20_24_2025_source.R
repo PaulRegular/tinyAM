@@ -17,9 +17,30 @@ detailed <- assessments[assessments$assessment_id == assessment_id, , drop = FAL
 summary <- assessments[assessments$assessment_id == summary_id, , drop = FALSE]
 source_inputs <- inputs[inputs$assessment_id == assessment_id, , drop = FALSE]
 source_outputs <- outputs[outputs$assessment_id == assessment_id, , drop = FALSE]
+fit_env <- new.env(parent = baseenv())
+load(file.path(root, "analysis", "comp_assessments", "source_cache",
+  assessment_id, "run", "model.RData"), envir = fit_env)
+fit <- fit_env$fit
 summary_outputs <- outputs[outputs$assessment_id == summary_id, , drop = FALSE]
 predicted_catch <- source_outputs[source_outputs$measure == "predicted_catch", , drop = FALSE]
 predicted_index <- source_outputs[source_outputs$measure == "predicted_index", , drop = FALSE]
+q_outputs <- source_outputs[
+  source_outputs$type == "catchability" & source_outputs$measure == "q", , drop = FALSE
+]
+q_survey_names <- c("Q4Solesurvey1-9+", "Gillnet", "Trawl")
+expected_q_keys <- rbind(
+  c(0L, 1L, 2L, 3L, 3L, 3L, 3L, 3L, 3L),
+  c(-1L, 4L, 5L, 6L, 7L, 7L, 7L, 7L, -1L),
+  c(-1L, 8L, 9L, 10L, 11L, 11L, -1L, -1L, -1L)
+)
+q_group_ages <- function(i) {
+  group <- q_outputs$age_group[i]
+  if (!is.na(group) && grepl("^[0-9]+-[0-9]+$", group)) {
+    bounds <- as.integer(strsplit(group, "-", fixed = TRUE)[[1L]])
+    return(seq.int(bounds[1L], bounds[2L]))
+  }
+  as.integer(q_outputs$age[i])
+}
 stock_file <- file.path(database_dir, "stocks.csv")
 stock_connection <- file(stock_file, "rb")
 stock_bytes <- readBin(stock_connection, "raw", n = file.info(stock_file)[["size"]])
@@ -110,5 +131,49 @@ stopifnot(
   summary_outputs$value[summary_outputs$measure == "SSB" & summary_outputs$year == 2024] == 1469,
   summary_outputs$value[summary_outputs$measure == "SSB" & summary_outputs$year == 2026] == 1491
 )
+
+stopifnot(
+  nrow(q_outputs) == 12L,
+  identical(
+    unname(expected_q_keys),
+    do.call(rbind, lapply(2:4, function(i) {
+      as.integer(fit$conf$keyLogFpar[i, ])
+    }))
+  ),
+  all(q_outputs$source_type == "native_model"),
+  all(is.na(q_outputs$year)),
+  all(q_outputs$unit == "native survey index units per thousand fish (physical index unit unresolved)"),
+  setequal(
+    paste(q_outputs$survey[!is.na(q_outputs$age_group)],
+      q_outputs$age_group[!is.na(q_outputs$age_group)], sep = ":"),
+    c("Q4Solesurvey1-9+:4-9", "Gillnet:5-8", "Trawl:5-6")
+  )
+)
+expected_q_ages <- list(
+  "Q4Solesurvey1-9+" = 1:9,
+  Gillnet = 2:8,
+  Trawl = 2:6
+)
+for (survey in names(expected_q_ages)) {
+  survey_rows <- which(q_outputs$survey == survey)
+  covered_ages <- sort(unlist(lapply(survey_rows, q_group_ages)))
+  stopifnot(identical(as.integer(covered_ages), expected_q_ages[[survey]]))
+}
+for (i in seq_len(nrow(q_outputs))) {
+  survey_row <- match(q_outputs$survey[i], q_survey_names) + 1L
+  mapped_ages <- q_group_ages(i)
+  parameter_key <- unique(as.integer(fit$conf$keyLogFpar[survey_row, mapped_ages]))
+  stopifnot(length(parameter_key) == 1L, parameter_key >= 0L)
+  parameter <- parameter_key + 1L
+  log_estimate <- fit$pl$logFpar[parameter]
+  log_se <- fit$plsd$logFpar[parameter]
+  estimate <- exp(log_estimate)
+  stopifnot(
+    abs(as.numeric(q_outputs$value[i]) - estimate) < 1e-12,
+    abs(as.numeric(q_outputs$se[i]) - estimate * log_se) < 1e-12,
+    abs(as.numeric(q_outputs$lwr[i]) - exp(log_estimate - qnorm(0.975) * log_se)) < 1e-12,
+    abs(as.numeric(q_outputs$upr[i]) - exp(log_estimate + qnorm(0.975) * log_se)) < 1e-12
+  )
+}
 
 cat("ICES sole 20–24 source records passed.\n")
