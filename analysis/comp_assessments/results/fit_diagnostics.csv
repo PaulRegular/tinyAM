@@ -225,3 +225,4 @@ i Optimizer code zero alone is insufficient. A missed gradient tolerance alone
 i F increment age correlation is within 0.05 of -1 or 1. Examine uncertainty
   and compare independent increments."
 "ices_cod_northern_coastal_2026","dc65adfb3974411de14c7f85842e29d9427e5c31","converged",TRUE,0,"relative convergence (4)",154.147824173013,0.000320354839941112,0.000320354839941112,TRUE,TRUE,11,488,1.200459,""
+"nefsc_white_hake_2025","ba93f1110cf059c38a94217d88f2d57bae9b509f","not_converged",FALSE,0,"relative convergence (4)",2127.349,0.003911347,0.003911347,TRUE,FALSE,67,29,158.5979,"Default attempt reached function evaluation limit; source-start retry reached optimizer relative convergence with small gradient, but fixed-parameter Hessian was not positive definite. Fit remains non-converged."
