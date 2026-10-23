@@ -98,6 +98,6 @@
 }
 
 \newcommand{\sectitle}[3]{%
-  \noindent{\color{tamnavy}\rule{\linewidth}{.6pt}}\par\vspace{1.5mm}
+  \noindent{\color{tamnavy}\if\relax\detokenize{#3}\relax\rule{\linewidth}{.6pt}\else\rule{#3}{.6pt}\fi}\par\vspace{1.5mm}
   {\color{tamnavy}\bfseries\fontsize{15}{17}\selectfont #1\ #2}\par\vspace{2mm}
 }

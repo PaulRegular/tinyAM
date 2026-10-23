@@ -92,7 +92,8 @@ rsvg::rsvg_pdf(file.path(repo, "man/figures/logo.svg"), "logo.pdf")
 \begin{minipage}[t]{.50\linewidth}\vspace{0pt}
 \tablelabel{catch}\par\vspace{.5mm}\input{cache/table_catch.tex}
 \end{minipage}\hfill
-\begin{minipage}[t]{.46\linewidth}\vspace{5mm}
+\begin{minipage}[t]{.46\linewidth}\vspace{0pt}
+\panelnote{Optional \texttt{pop\_covariates} table: year--age predictors on complete grids.}\par\vspace{1mm}
 \panelnote{Catch/index: thousand fish. Weight: kg. Maturity: a proportion. \texttt{samp\_time}: a fraction of the year.}
 \end{minipage}\par\vspace{2mm}
 \tablelabel{index}\par\vspace{.5mm}\input{cache/table_index.tex}\par\vspace{2mm}
@@ -119,7 +120,7 @@ rsvg::rsvg_pdf(file.path(repo, "man/figures/logo.svg"), "logo.pdf")
 \panelnote{Use \texttt{check\_tam()} to inspect numerical diagnostics before interpreting estimates.}
 \end{minipage}\hfill
 \begin{minipage}[t][164mm][s]{.27\linewidth}\vspace{0pt}
-\begin{minipage}[t]{.64\linewidth}\sectitle{3}{Visualize\\and compare}{}\end{minipage}\par\vspace{1mm}
+\begin{minipage}[t]{.64\linewidth}\sectitle{3}{Visualize\\and compare}{.84\linewidth}\end{minipage}\par\vspace{1mm}
 \smallkey{Explore model fits}\par\vspace{1mm}
 \inputcode{dashboard}\par\vspace{1mm}
 \panelnote{\href{https://paulregular.github.io/tinyAM/cheatsheet/}{\textcolor{tamnavy}{\underline{\textbf{Online dashboard}}}}: Interactive model fits, population patterns and residuals.}\par\vspace{2mm}
@@ -214,7 +215,7 @@ S(a)&=\{1+e^{-k(a-a_{50})}\}^{-1},\quad k>0,\\
 \end{mathbox}
 \end{minipage}\hfill
 \begin{minipage}[t][160mm][s]{.325\linewidth}\vspace{0pt}
-\sectitle{}{Survey catchability}{}\par\vspace{.5mm}
+\sectitle{}{Survey catchability}{.56\linewidth}\par\vspace{.5mm}
 \begin{minipage}[t]{.78\linewidth}\vspace{0pt}
 \micro{\texttt{q\_block}: unrestricted age blocks; \texttt{mono(q\_block)}\\
 imposes non-decreasing catchability under the default log link.}

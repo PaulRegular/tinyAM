@@ -89,7 +89,6 @@ dat <- make_tam_data(
   weight = weight_data,
   maturity = maturity_data
 )
-check_tam_data(dat)
 # ---- end ----
   fit_key <- list(sources = sources, example = provenance$example_md5, data = fingerprint(dat), runtime = provenance$runtime)
   records <- list()
@@ -176,15 +175,14 @@ index <- out$obs_pred$index
   ssb <- ssb[!ssb$is_proj, ]
   ssb$model <- factor(ssb$model, levels = names(fits), labels = toupper(names(fits)))
   ssb[c("est", "lwr", "upr")] <- lapply(ssb[c("est", "lwr", "upr")], function(x) x / 1000)
-  colours <- stats::setNames(tam_cols()[c(1, 2, 7)], toupper(names(fits)))
+  colours <- stats::setNames(tam_pal(length(fits)), toupper(names(fits)))
   # ggplot2 is a cheatsheet-build prerequisite, not a package runtime dependency.
   figure <- ggplot2::ggplot(ssb, ggplot2::aes(x = year, y = est, colour = model, fill = model)) +
     ggplot2::geom_ribbon(ggplot2::aes(ymin = lwr, ymax = upr), alpha = .12, colour = NA) +
-    ggplot2::geom_line(ggplot2::aes(linetype = model), linewidth = .45) +
+    ggplot2::geom_line(linewidth = .45) +
     ggplot2::scale_colour_manual(values = colours) + ggplot2::scale_fill_manual(values = colours) +
-    ggplot2::scale_linetype_manual(values = c("solid", "dashed", "dotdash")) +
     ggplot2::scale_y_continuous(limits = c(0, NA), expand = ggplot2::expansion(mult = c(0, .04))) +
-    ggplot2::labs(x = "Year", y = "SSB (kt)", colour = NULL, fill = NULL, linetype = NULL) +
+    ggplot2::labs(x = "Year", y = "SSB (kt)", colour = NULL, fill = NULL) +
     ggplot2::theme_classic(base_size = 8.5, base_family = "sans") +
     ggplot2::theme(legend.position = "top", legend.key.width = grid::unit(8, "mm"),
       legend.margin = ggplot2::margin(0, 0, 0, 0), legend.spacing.x = grid::unit(1, "mm"),
