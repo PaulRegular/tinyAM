@@ -138,6 +138,10 @@ These factors describe relative observation precision, not the final fitted obse
 
 Catch-fleet precision weights are missing by design.
 
+## Fitted observation predictions
+
+The final SAM fit contains 1,153 fitted catch and survey predictions in `fit$rep$predObs`, aligned to the 486 catch, 352 Q1 and 315 Q3+Q4 rows in `fit$data$aux`. These are now recorded in `outputs.csv` as `predicted_catch` and `predicted_index`, using the native thousand-fish catch scale and unspecified native survey-index scale. The predictions are exponentiated log-scale fitted values and have no reported prediction uncertainty.
+
 ## Resolved reader and plus-group construction
 
 The saved SAM revision's `read.ices()` selects the first declared number of age columns from each matrix without stripping a survey-effort column along this file path.
@@ -165,7 +169,7 @@ The original discard-number file cited by the official script is also cached.
 
 ## Canonical import and validation
 
-The canonical record includes 6,906 inputs, 2,373 outputs and 27 assumptions.
+The canonical record includes 6,906 inputs, 3,526 outputs and 27 assumptions.
 
 Imported components include catch, landings fractions, stock/catch/landings/discard weights, maturity, natural mortality, both surveys, 667 native precision weights and their corresponding relative log-scale SD factors.
 
