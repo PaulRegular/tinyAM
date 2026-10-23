@@ -1,4 +1,4 @@
-testthat::test_that("Northern cod Capelin covariate preserves the digitized 3L index", {
+testthat::test_that("Northern cod Capelin covariate uses reported values when available", {
   root <- normalizePath(getwd())
   while (!file.exists(file.path(root, "analysis", "comp_assessments", "database", "inputs.csv"))) {
     parent <- dirname(root)
@@ -20,19 +20,29 @@ testthat::test_that("Northern cod Capelin covariate preserves the digitized 3L i
     5.50, 5.52, 5.50, 3.08, 5.29, 5.15, 6.48, 6.64, 5.90,
     4.87, 5.64, 5.62, 5.55, 5.81, 6.46
   )
+  exact_values <- c("2013" = 668, "2014" = 779, "2024" = 647)
+  expected_values <- exp(log_biomass_kt)
+  exact_rows <- as.character(years) %in% names(exact_values)
+  expected_values[exact_rows] <- unname(exact_values[as.character(years[exact_rows])])
 
   testthat::expect_equal(nrow(capelin), length(years))
   testthat::expect_equal(as.integer(capelin$year), years)
   testthat::expect_true(all(is.finite(capelin$value) & capelin$value > 0))
-  testthat::expect_equal(log(capelin$value), log_biomass_kt, tolerance = 1e-8)
+  testthat::expect_equal(capelin$value, expected_values, tolerance = 1e-8)
   testthat::expect_true(all(capelin$type == "covariate"))
   testthat::expect_true(all(capelin$basis == "native_covariate"))
   testthat::expect_true(all(capelin$survey == "3L spring acoustic survey"))
   testthat::expect_true(all(capelin$region == "NAFO Division 3L"))
   testthat::expect_true(all(capelin$season == "spring"))
   testthat::expect_true(all(capelin$unit == "kt"))
-  testthat::expect_true(all(capelin$source_type == "digitized"))
-  testthat::expect_true(all(grepl("Figure 32", capelin$source_reference)))
-  testthat::expect_true(all(grepl("round the plotted log value to 0.01", capelin$transformation)))
-  testthat::expect_true(all(grepl("not the original", capelin$notes)))
+  testthat::expect_true(all(capelin$source_type[!exact_rows] == "digitized"))
+  testthat::expect_true(all(capelin$source_type[exact_rows] == "official_document"))
+  testthat::expect_true(all(grepl("Figure 32", capelin$source_reference[!exact_rows])))
+  testthat::expect_true(all(grepl("round the plotted log value to 0.01", capelin$transformation[!exact_rows])))
+  testthat::expect_true(all(grepl("not the original", capelin$notes[!exact_rows])))
+  testthat::expect_true(all(grepl("p. 8", capelin$source_reference[exact_rows])))
+  testthat::expect_equal(
+    capelin$value[match(as.integer(names(exact_values)), as.integer(capelin$year))],
+    unname(exact_values)
+  )
 })

@@ -31,12 +31,23 @@ recoverable, but exact annual model timing is not (see below).
 
 The assessment remains partial. The 3L spring Capelin acoustic series is
 digitized from Figure 32 of DFO Research Document 2025/061, which confirms the
-spatial match to the cod model's Capelin covariate. The 31 years used in the cod
-model are retained; plotted values were read from the log-kilotonnes axis,
-rounded to 0.01 log units, and exponentiated to kilotonnes. They are approximate
-figure-derived values, not the original unrounded acoustic estimates, and no
-uncertainty is assigned. Detailed tagging observations and reporting-rate
-likelihood data are not represented. Smith Sound sample ages
+spatial match to the cod model's Capelin covariate. The 31 years used in the
+cod model are retained. Most plotted values were read from the log-kilotonnes
+axis, rounded to 0.01 log units, and exponentiated to kilotonnes. The Capelin
+assessment report gives exact rounded values for 2013 (668 kt), 2014 (779 kt),
+and 2024 (647 kt); those three rows now use the report's stated values and are
+labelled `official_document`. Other years remain approximate figure-derived
+values, not the original unrounded acoustic estimates, and no uncertainty is
+assigned.
+
+A DFO Newfoundland and Labrador data release, [2J3KL Cod and Capelin Biomass
+Indices](https://doi.org/10.5281/zenodo.17515115), was also checked. Its
+`cap_acoustic.csv` series ends in 2019, omits the 2022–2024 cod-model years, and
+differs from the selected 2025 Capelin assessment for several years (for
+example, it lists 763 kt in 2013 and 1,060 kt in 2014). It is cached locally
+with its record metadata and checksum as a cross-check, but is not substituted
+for the current assessment series. Detailed tagging observations and
+reporting-rate likelihood data are not represented. Smith Sound sample ages
 14-16 are zero in every reported sample year, so there is no positive older-age
 count needing an age-14 mapping. Tables 19-24 provide numerical abundance,
 biomass, mature biomass, Z, M and F at ages 0-14. The earlier review overlooked

@@ -48,6 +48,23 @@ new$notes <- paste(
   "covariate inputs in DFO Research Document 2026/026, pp. 14-15."
 )
 
+reported_values_kt <- c("2013" = 668, "2014" = 779, "2024" = 647)
+reported_rows <- as.character(new$year) %in% names(reported_values_kt)
+new$value[reported_rows] <- unname(
+  reported_values_kt[as.character(new$year[reported_rows])]
+)
+new$source_type[reported_rows] <- "official_document"
+new$source_reference[reported_rows] <- paste(
+  "DFO Research Document 2025/061, p. 8, Spring acoustic survey abundance and biomass;",
+  "https://publications.gc.ca/collections/collection_2025/mpo-dfo/fs70-5/Fs70-5-2025-061-eng.pdf"
+)
+new$transformation[reported_rows] <-
+  "Reported in kt to the nearest kt; retained at the stated precision."
+new$notes[reported_rows] <- paste(
+  "Explicit rounded 3L spring acoustic biomass value from the Capelin assessment report;",
+  "replaces the approximate Figure 32 digitization for this year."
+)
+
 replace <- inputs$assessment_id == assessment_id &
   inputs$measure == "capelin_biomass_index"
 writeLines(original[c(TRUE, !replace)], path, useBytes = TRUE)
@@ -56,4 +73,4 @@ write.table(
   col.names = FALSE, append = TRUE, na = "", fileEncoding = "UTF-8"
 )
 
-cat("Imported", nrow(new), "digitized 3L Capelin index values for Northern cod.\n")
+cat("Imported", nrow(new), "3L Capelin covariate values for Northern cod; exact report values were used where available.\n")
