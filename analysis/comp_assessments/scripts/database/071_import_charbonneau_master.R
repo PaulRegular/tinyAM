@@ -98,6 +98,16 @@ ck_master_matches <- data.frame(
   stringsAsFactors = FALSE
 )
 
+ck_master_aliases <- data.frame(
+  master_id = "ICES-WGNSSK_aeglefinus_NS 4-3a20,6a",
+  stock_id = "ices_haddock_north_sea",
+  reason = paste(
+    "The 2016 and 2017 catalogue labels identify the same Northern Shelf",
+    "haddock assessment unit; the 2017 label is retained as canonical."
+  ),
+  stringsAsFactors = FALSE
+)
+
 ck_master_possible_overlaps <- data.frame(
   master_id = c(
     "NEFSC-GARMIII_dentatus_MA",
@@ -182,6 +192,13 @@ ck_master_slug <- function(x) {
   paste0("ck_", slug)
 }
 
+ck_master_taxon_key <- function(x) {
+  taxon <- tolower(trimws(as.character(x)))
+  taxon[taxon == "theragra chalcogramma"] <- "gadus chalcogrammus"
+  taxon[taxon == "scopthalmus maximus"] <- "scophthalmus maximus"
+  taxon
+}
+
 ck_master_note <- function(old_note, addition, key = addition) {
   old_note <- ifelse(is.na(old_note), "", old_note)
   already_present <- grepl(key, old_note, fixed = TRUE)
@@ -193,7 +210,8 @@ ck_prepare_master_import <- function(
   stocks,
   revision = ck_master_revision,
   matches = ck_master_matches,
-  overlaps = ck_master_possible_overlaps
+  overlaps = ck_master_possible_overlaps,
+  aliases = ck_master_aliases
 ) {
   required_master <- c("Genus", "Species", "Assessor_ID", "unique_ID", "PDF.file")
   missing <- setdiff(required_master, names(master))
@@ -221,11 +239,29 @@ ck_prepare_master_import <- function(
   if (length(absent_matches)) {
     ck_abort(paste0("Master crosswalk contains identifiers absent from Master.csv: ", paste(absent_matches, collapse = ", ")))
   }
+  absent_aliases <- setdiff(aliases$master_id, ids)
+  if (length(absent_aliases)) {
+    ck_abort(paste0("Master alias crosswalk contains identifiers absent from Master.csv: ", paste(absent_aliases, collapse = ", ")))
+  }
   if (anyDuplicated(matches$master_id) || anyDuplicated(matches$stock_id)) {
     ck_abort("Master crosswalk matches must be one-to-one.")
   }
+  if (anyDuplicated(aliases$master_id) || any(aliases$master_id %in% matches$master_id)) {
+    ck_abort("Master aliases must be unique and cannot also be direct matches.")
+  }
   if (any(!matches$stock_id %in% stocks$stock_id)) {
     ck_abort("Master crosswalk points to a missing existing stock_id.")
+  }
+  if (any(!aliases$stock_id %in% stocks$stock_id)) {
+    ck_abort("Master alias crosswalk points to a missing existing stock_id.")
+  }
+  alias_placeholder <- intersect(ck_master_slug(aliases$master_id), stocks$stock_id)
+  if (length(alias_placeholder)) {
+    ck_abort(paste0(
+      "A documented alias still has a separate generated stock row. Verify that",
+      " no assessment records reference it, then reconcile it with the target",
+      " stock before importing: ", paste(alias_placeholder, collapse = ", ")
+    ))
   }
 
   source_prefix <- sub("_.*$", "", ids)
@@ -242,7 +278,7 @@ ck_prepare_master_import <- function(
   source$region <- ifelse(source$ocean == "Northeast Pacific", "Alaska", source$ocean)
   source$prefix_mismatch <- trimws(source_prefix) != trimws(source$assessor_id)
 
-  manual_ids <- matches$master_id
+  manual_ids <- c(matches$master_id, aliases$master_id)
   direct_ids <- setdiff(ids, manual_ids)
   current_ids <- ifelse(is.na(stocks$charbonneau_id), "", stocks$charbonneau_id)
   direct_matches <- lapply(direct_ids, function(id) {
@@ -266,15 +302,23 @@ ck_prepare_master_import <- function(
 
   source_at <- match(all_matches$master_id, source$master_id)
   stock_at <- match(all_matches$stock_id, stocks$stock_id)
-  source_taxon <- tolower(source$scientific_name[source_at])
-  existing_taxon <- tolower(stocks$scientific_name[stock_at])
-  source_taxon[source_taxon == "theragra chalcogramma"] <- "gadus chalcogrammus"
-  existing_taxon[existing_taxon == "theragra chalcogramma"] <- "gadus chalcogrammus"
+  source_taxon <- ck_master_taxon_key(source$scientific_name[source_at])
+  existing_taxon <- ck_master_taxon_key(stocks$scientific_name[stock_at])
   if (any(source_taxon != existing_taxon)) {
     ck_abort("A crosswalk match has conflicting scientific names.")
   }
   if (any(source$ocean[source_at] != stocks$ocean[stock_at])) {
     ck_abort("A crosswalk match has conflicting regional basins.")
+  }
+
+  alias_source_at <- match(aliases$master_id, source$master_id)
+  alias_stock_at <- match(aliases$stock_id, stocks$stock_id)
+  alias_taxon <- ck_master_taxon_key(source$scientific_name[alias_source_at])
+  target_taxon <- ck_master_taxon_key(stocks$scientific_name[alias_stock_at])
+  if (any(alias_taxon != target_taxon) ||
+      any(source$ocean[alias_source_at] != stocks$ocean[alias_stock_at]) ||
+      any(source$authority[alias_source_at] != stocks$authority[alias_stock_at])) {
+    ck_abort("A Master alias conflicts with the target stock's species, authority, or regional basin.")
   }
 
   final <- stocks
@@ -302,7 +346,19 @@ ck_prepare_master_import <- function(
     }
   }
 
-  unmatched <- source[!source$master_id %in% all_matches$master_id, , drop = FALSE]
+  for (i in seq_len(nrow(aliases))) {
+    at <- match(aliases$stock_id[i], final$stock_id)
+    addition <- paste0(
+      "Additional Charbonneau-Keith Master alias: ", aliases$master_id[i],
+      "; ", aliases$reason[i], " Source revision ", revision, "."
+    )
+    final$notes[at] <- ck_master_note(
+      final$notes[at], addition,
+      key = paste0("Additional Charbonneau-Keith Master alias: ", aliases$master_id[i])
+    )
+  }
+
+  unmatched <- source[!source$master_id %in% c(all_matches$master_id, aliases$master_id), , drop = FALSE]
   if (nrow(unmatched)) {
     unmatched$stock_id <- ck_master_slug(unmatched$master_id)
     if (anyDuplicated(unmatched$stock_id) || any(unmatched$stock_id %in% final$stock_id)) {
@@ -361,9 +417,19 @@ ck_prepare_master_import <- function(
     final <- rbind(final, new_stocks)
   }
 
-  counts <- vapply(ids, function(id) sum(final$charbonneau_id == id, na.rm = TRUE), integer(1))
+  counts <- vapply(ids, function(id) {
+    canonical <- sum(final$charbonneau_id == id, na.rm = TRUE)
+    alias <- sum(grepl(
+      paste0("Additional Charbonneau-Keith Master alias: ", id),
+      final$notes, fixed = TRUE
+    ))
+    canonical + alias
+  }, integer(1))
   if (any(counts != 1L)) {
-    ck_abort("Every Master unique_ID must appear exactly once in stocks.csv.")
+    ck_abort(paste0(
+      "Every Master unique_ID must appear exactly once as a canonical identifier or documented alias. Invalid identifiers: ",
+      paste(ids[counts != 1L], collapse = ", ")
+    ))
   }
   if (anyDuplicated(final$stock_id)) {
     ck_abort("Imported stock_id values are not unique.")
@@ -376,17 +442,28 @@ ck_prepare_master_import <- function(
   }
 
   mapped <- match(ids, all_matches$master_id)
+  aliased <- match(ids, aliases$master_id)
+  stock_id <- rep(NA_character_, length(ids))
+  mapping <- rep("new metadata row", length(ids))
+  has_match <- !is.na(mapped)
+  has_alias <- !is.na(aliased)
+  stock_id[has_match] <- all_matches$stock_id[mapped[has_match]]
+  mapping[has_match] <- "matched existing stock"
+  stock_id[has_alias] <- aliases$stock_id[aliased[has_alias]]
+  mapping[has_alias] <- "documented alias"
+  stock_id[!has_match & !has_alias] <- ck_master_slug(ids[!has_match & !has_alias])
   map <- data.frame(
     master_id = ids,
-    stock_id = ifelse(is.na(mapped), ck_master_slug(ids), all_matches$stock_id[mapped]),
-    mapping = ifelse(is.na(mapped), "new metadata row", "matched existing stock"),
+    stock_id = stock_id,
+    mapping = mapping,
     stringsAsFactors = FALSE
   )
   list(
     stocks = final,
     mapping = map,
-    matched = sum(!is.na(mapped)),
-    added = sum(is.na(mapped))
+    matched = sum(has_match),
+    aliased = sum(has_alias),
+    added = sum(!has_match & !has_alias)
   )
 }
 
@@ -446,8 +523,8 @@ ck_import_master <- function(
   result <- ck_prepare_master_import(master, stocks)
   utils::write.csv(result$stocks, stocks_path, row.names = FALSE, na = "")
   message(sprintf(
-    "Imported %s Charbonneau-Keith Master entries: %s linked to existing stock rows and %s added as metadata-only stock rows.",
-    nrow(master), result$matched, result$added
+    "Imported %s Charbonneau-Keith Master entries: %s linked to existing stock rows, %s documented aliases, and %s added as metadata-only stock rows.",
+    nrow(master), result$matched, result$aliased, result$added
   ))
   invisible(result)
 }

@@ -5,30 +5,33 @@ stock_bytes <- readBin(stock_path, what = "raw", n = file.info(stock_path)$size)
 stopifnot(!any(stock_bytes == as.raw(0)))
 
 master <- data.frame(
-  Genus = c("Gadus", "Clupea", "Atheresthes", "Merlangius"),
-  Species = c("morhua", "harengus", "stomias", "merlangus"),
-  Assessor_ID = c("DFO", "DFO-GSL", "AFSC", "ICES-WGSCE"),
+  Genus = c("Gadus", "Clupea", "Atheresthes", "Merlangius", "Melanogrammus", "Melanogrammus", "Scopthalmus"),
+  Species = c("morhua", "harengus", "stomias", "merlangus", "aeglefinus", "aeglefinus", "maximus"),
+  Assessor_ID = c("DFO", "DFO-GSL", "AFSC", "ICES-WGSCE", "ICES-WGNSSK", "ICES-WGNSSK", "ICES-WGNSSK"),
   unique_ID = c(
     "DFO_morhua_2J3KL",
     "DFO-GSL_harengus_4T-Spring",
     "AFSC_stomias_BSAI-Females",
-    "ICES-WGCSE_merlangus_CS7a"
+    "ICES-WGCSE_merlangus_CS7a",
+    "ICES-WGNSSK_aeglefinus_NS 4-6a-20",
+    "ICES-WGNSSK_aeglefinus_NS 4-3a20,6a",
+    "ICES-WGNSSK_maximus_NS 4"
   ),
-  PDF.file = c("cod.pdf", "herring.pdf", "arrowtooth.pdf", "whiting.pdf"),
+  PDF.file = c("cod.pdf", "herring.pdf", "arrowtooth.pdf", "whiting.pdf", "haddock-2017.pdf", "haddock-2016.pdf", "turbot.pdf"),
   stringsAsFactors = FALSE
 )
 
 stocks <- data.frame(
-  stock_id = c("dfo_cod_2j3kl", "afsc_arrowtooth_flounder_bsai"),
-  charbonneau_id = c("DFO_2J3KL_Gadus_morhua", ""),
-  authority = c("DFO", "NOAA-AFSC"),
-  authority_stock_id = c("2J3KL", "BSAI arrowtooth"),
-  scientific_name = c("Gadus morhua", "Atheresthes stomias"),
-  common_name = c("Northern cod", "Arrowtooth flounder"),
-  area = c("2J3KL", "BSAI"),
-  region = c("Newfoundland and Labrador", "Alaska"),
-  ocean = c("Northwest Atlantic", "Northeast Pacific"),
-  notes = c("Existing stock record.", "Existing aggregate stock."),
+  stock_id = c("dfo_cod_2j3kl", "afsc_arrowtooth_flounder_bsai", "ices_haddock_north_sea", "ck_ices_wgnssk_maximus_ns_4"),
+  charbonneau_id = c("DFO_2J3KL_Gadus_morhua", "", "ICES-WGNSSK_aeglefinus_NS 4-6a-20", "ICES-WGNSSK_maximus_NS 4"),
+  authority = c("DFO", "NOAA-AFSC", "ICES", "ICES"),
+  authority_stock_id = c("2J3KL", "BSAI arrowtooth", "had.27.46a20", "tur.27.4"),
+  scientific_name = c("Gadus morhua", "Atheresthes stomias", "Melanogrammus aeglefinus", "Scophthalmus maximus"),
+  common_name = c("Northern cod", "Arrowtooth flounder", "Northern Shelf haddock", "Turbot"),
+  area = c("2J3KL", "BSAI", "Subarea 4, Division 6.a and Subdivision 20", "Subarea 4"),
+  region = c("Newfoundland and Labrador", "Alaska", "Northeast Atlantic", "Northeast Atlantic"),
+  ocean = c("Northwest Atlantic", "Northeast Pacific", "Northeast Atlantic", "Northeast Atlantic"),
+  notes = c("Existing stock record.", "Existing aggregate stock.", "Existing haddock stock.", "Corrected scientific name."),
   stringsAsFactors = FALSE
 )
 
@@ -48,10 +51,14 @@ overlaps <- data.frame(
 result <- ck_prepare_master_import(master, stocks, matches = matches, overlaps = overlaps)
 stopifnot(
   nrow(result$stocks) == nrow(stocks) + 3L,
-  result$matched == 1L,
+  result$matched == 3L,
+  result$aliased == 1L,
   result$added == 3L,
   all(vapply(master$unique_ID, function(id) {
-    sum(result$stocks$charbonneau_id == id, na.rm = TRUE) == 1L
+    canonical <- sum(result$stocks$charbonneau_id == id, na.rm = TRUE)
+    alias <- sum(grepl(paste0("Additional Charbonneau-Keith Master alias: ", id),
+      result$stocks$notes, fixed = TRUE))
+    canonical + alias == 1L
   }, logical(1))),
   result$stocks$charbonneau_id[result$stocks$stock_id == "dfo_cod_2j3kl"] ==
     "DFO_morhua_2J3KL",
@@ -73,6 +80,16 @@ stopifnot(
     result$stocks$notes[result$stocks$charbonneau_id == "ICES-WGCSE_merlangus_CS7a"], fixed = TRUE),
   grepl("Assessor_ID=ICES-WGSCE",
     result$stocks$notes[result$stocks$charbonneau_id == "ICES-WGCSE_merlangus_CS7a"], fixed = TRUE),
+  result$mapping$stock_id[result$mapping$master_id == "ICES-WGNSSK_aeglefinus_NS 4-3a20,6a"] ==
+    "ices_haddock_north_sea",
+  result$mapping$mapping[result$mapping$master_id == "ICES-WGNSSK_aeglefinus_NS 4-3a20,6a"] ==
+    "documented alias",
+  result$stocks$charbonneau_id[result$stocks$stock_id == "ices_haddock_north_sea"] ==
+    "ICES-WGNSSK_aeglefinus_NS 4-6a-20",
+  grepl("Additional Charbonneau-Keith Master alias: ICES-WGNSSK_aeglefinus_NS 4-3a20,6a",
+    result$stocks$notes[result$stocks$stock_id == "ices_haddock_north_sea"], fixed = TRUE),
+  result$stocks$scientific_name[result$stocks$stock_id == "ck_ices_wgnssk_maximus_ns_4"] ==
+    "Scophthalmus maximus",
   all(result$stocks$ocean %in% c(
     "Northwest Atlantic", "Northeast Atlantic", "Northeast Pacific", "Northwest Pacific"
   )),
@@ -85,7 +102,12 @@ stopifnot(
 rerun <- ck_prepare_master_import(
   master, result$stocks, matches = matches, overlaps = overlaps
 )
-stopifnot(identical(result$stocks, rerun$stocks), rerun$matched == nrow(master), rerun$added == 0L)
+stopifnot(
+  identical(result$stocks, rerun$stocks),
+  rerun$matched == nrow(master) - 1L,
+  rerun$aliased == 1L,
+  rerun$added == 0L
+)
 
 bad_matches <- rbind(matches, data.frame(
   master_id = "not_in_master", stock_id = "dfo_cod_2j3kl", reason = "stale",
@@ -96,6 +118,17 @@ missing_crosswalk_error <- tryCatch({
   FALSE
 }, error = function(e) grepl("absent from Master.csv", conditionMessage(e), fixed = TRUE))
 stopifnot(missing_crosswalk_error)
+
+alias_row <- stocks[stocks$stock_id == "ices_haddock_north_sea", , drop = FALSE]
+alias_row$stock_id <- ck_master_slug("ICES-WGNSSK_aeglefinus_NS 4-3a20,6a")
+alias_row$charbonneau_id <- "ICES-WGNSSK_aeglefinus_NS 4-3a20,6a"
+alias_placeholder_error <- tryCatch({
+  ck_prepare_master_import(
+    master, rbind(stocks, alias_row), matches = matches, overlaps = overlaps
+  )
+  FALSE
+}, error = function(e) grepl("separate generated stock row", conditionMessage(e), fixed = TRUE))
+stopifnot(alias_placeholder_error)
 
 cat("Charbonneau-Keith catalogue mapping, metadata safeguards and idempotency passed.\n")
 
@@ -108,7 +141,27 @@ if (file.exists(master_path)) {
     stringsAsFactors = FALSE, check.names = FALSE, na.strings = c("", "NA")
   )
   master_ids <- read.csv(master_path, stringsAsFactors = FALSE)$unique_ID
-  if (all(master_ids %in% source_stocks$charbonneau_id)) {
+  represented <- vapply(master_ids, function(id) {
+    canonical <- any(source_stocks$charbonneau_id == id, na.rm = TRUE)
+    alias <- any(grepl(
+      paste0("Additional Charbonneau-Keith Master alias: ", id),
+      source_stocks$notes, fixed = TRUE
+    ))
+    canonical || alias
+  }, logical(1))
+  if (all(represented)) {
+    alias_note <- paste0(
+      "Additional Charbonneau-Keith Master alias: ",
+      ck_master_aliases$master_id
+    )
+    northern_haddock <- source_stocks[
+      source_stocks$stock_id == "ices_haddock_north_sea", , drop = FALSE
+    ]
+    stopifnot(
+      !ck_master_slug(ck_master_aliases$master_id) %in% source_stocks$stock_id,
+      nrow(northern_haddock) == 1L,
+      grepl(alias_note, northern_haddock$notes, fixed = TRUE)
+    )
     db_dir <- "analysis/comp_assessments/database"
     files <- c("stocks.csv", "assessments.csv", "assumptions.csv", "inputs.csv", "outputs.csv")
     temp_dir <- tempfile("ck-master-import-")
@@ -130,8 +183,10 @@ if (file.exists(master_path)) {
     stopifnot(
       nrow(imported_stocks) == nrow(seed_stocks) + first_import$added,
       first_import$matched == 27L,
-      first_import$added == 75L,
-      second_import$matched == 102L,
+      first_import$aliased == 1L,
+      first_import$added == 74L,
+      second_import$matched == length(master_ids) - 1L,
+      second_import$aliased == 1L,
       second_import$added == 0L,
       identical(imported_stocks, second_stocks),
       identical(original_other_tables, after_other_tables)

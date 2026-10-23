@@ -5,7 +5,7 @@ Translation revision: 2026-10-14.
 
 Status: canonical record `ices_haddock_north_sea_2026` imported. Completeness remains partial because a calibrated physical unit for the survey indices has not been established and available state uncertainty is conditional rather than fully marginal.
 
-Charbonneau–Keith identifier: `ICES-WGNSSK_NS  4-6a-20_Melanogrammus_aeglefinus`.
+Charbonneau–Keith identifier: `ICES-WGNSSK_aeglefinus_NS 4-6a-20`. The 2016 catalogue identifier `ICES-WGNSSK_aeglefinus_NS 4-3a20,6a` is retained as an alias for this stock; its separate metadata-only row was removed after confirming that no assessment, input, assumption, or output records referenced it. The successive catalogue labels are consistent with the Northern Shelf haddock unit reported by WGNSSK and the current stock code `had.27.46a20` ([ICES WGNSSK 2017 report](https://www.vliz.be/imisdocs/publications/350299.pdf); [2026 assessment chapter](https://ndownloader.figshare.com/files/66104291)).
 
 The stock covers the North Sea, West of Scotland and Skagerrak (`had.27.46a20`).
 
