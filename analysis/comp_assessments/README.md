@@ -22,6 +22,7 @@ assessments or management advice.
 | Stock-specific source checks and unresolved gaps | `source_reviews/` |
 | Charbonneau–Keith Master catalogue crosswalk | `source_reviews/charbonneau_keith_master_catalogue.md` |
 | Gulf of Maine haddock source review | [source_reviews/nefsc_haddock_gulf_of_maine.md](source_reviews/nefsc_haddock_gulf_of_maine.md) |
+| Georges Bank winter flounder | [source review](source_reviews/nefsc_winter_flounder_georges_bank.md) · [tinyAM translation](scripts/translation/stocks/nefsc_winter_flounder_gb_2022_vpa.R) |
 | Eastern English Channel plaice | [source review](source_reviews/ices_plaice_english_channel_7d_2026.md) · [tinyAM translation](scripts/translation/stocks/ices_plaice_english_channel_7d_2026.R) |
 | Irish Sea plaice | [source review](source_reviews/ices_plaice_irish_sea_7a_2026.md) · [tinyAM translation](scripts/translation/stocks/ices_plaice_irish_sea_7a_2026.R) |
 | Scup source review | [source_reviews/ck_nefsc_saw_chrysops_usatl.md](source_reviews/ck_nefsc_saw_chrysops_usatl.md) |
