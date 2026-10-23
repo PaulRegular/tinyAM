@@ -139,6 +139,15 @@ output_matrix <- function(matrix, type, measure, unit, notes) {
 outputs <- list(
   output_matrix(x$natage, "population", "numbers_at_age", "million fish",
     "Beginning-year combined-sex numbers. Reported 40+ sums modeled ages 40-46+. No state uncertainty supplied."),
+  pacific_database_row("outputs", assessment_id = id, type = "population",
+    measure = "total_abundance", year = as.integer(rownames(x$natage)),
+    value = rowSums(x$natage),
+    unit = "million fish", source_type = "derived_source_output",
+    source_reference = paste0(native, "; m_24_2_reweighted.rdat$natage"),
+    notes = paste(
+      "Derived by summing reported population numbers at ages 3-39 and 40+ for each year.",
+      "Standard errors and intervals are unavailable because joint uncertainty for N-at-age is not supplied."
+    )),
   output_matrix(x$selfish * x$t.series$fmort, "mortality", "fishing_mortality_at_age",
     "per year", "F = reported annual F multiplier times reported selectivity. Tail selectivity is constant after age 40; no uncertainty reconstructed."),
   output("mortality", "natural_mortality_at_age", rep(x$t.series$M, length(ages)),

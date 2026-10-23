@@ -24,4 +24,14 @@ stopifnot(x$stocks$ocean == "Northeast Pacific", x$stocks$charbonneau_id == "AFS
 n <- o[o$measure == "numbers_at_age", ]
 stopifnot(identical(sort(unique(n$age)), 3:40),
           all(n$age_group[n$age == 40] == "40+"))
+abundance <- o[o$measure == "total_abundance", ]
+expected_abundance <- aggregate(value ~ year, n, sum)
+stopifnot(identical(sort(abundance$year), 1960:2024),
+          identical(abundance$source_type, rep("derived_source_output", 65L)),
+          all(abundance$unit == "million fish"),
+          all(is.na(abundance$se)), all(is.na(abundance$lwr)), all(is.na(abundance$upr)),
+          isTRUE(all.equal(
+            unname(abundance$value[match(expected_abundance$year, abundance$year)]),
+            unname(expected_abundance$value), tolerance = 1e-6
+          )))
 cat("BSAI POP source values, units, groups and active-input distinctions passed.\n")

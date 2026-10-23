@@ -9,11 +9,14 @@ review confirm that the 2024 fitted assessment remains the production basis.
 The newer catch reports do not supply replacement historical fitted states.
 
 The [2024 SAFE chapter](https://files.npfmc.org/SAFE/2024/BSAIpop.pdf) is checked
-against the pinned [native model repository](https://github.com/afsc-assessments/BSAI-POP).
-Local PDFs, native data/control/code, the `.rdat`, `.std`, `.rep` and composition
-exports are cached under `source_cache/afsc_pop_bsai/`, with retrieval dates,
-URLs, checksums and the repository revision in its manifest. Run
-`057_import_bsai_pop_2024.R` to reproduce the numerical import from that cache.
+against the pinned [native model repository](https://github.com/afsc-assessments/BSAI-POP)
+at revision `e4055266868ada8740fe95f0f27a10ee2825175f`. The SAFE PDF remains
+cached under `source_cache/afsc_pop_bsai_2024/`; native data/control/code, the
+`.rdat`, `.std`, `.rep` and composition exports are cached under
+`source_cache/afsc_pop_bsai/`. The native-file manifest records retrieval dates,
+URLs, Git blob IDs and SHA-256 checksums. Each native file was verified against
+the pinned repository tree. Run `057_import_bsai_pop_2024.R` to reproduce the
+numerical import from that cache.
 
 Native 2024 total biomass is 864,800 t, female SSB is 359,278 t (359,280 printed),
 and M is 0.0505762 (0.051 printed). Earlier checks include 1977 SSB 84,759.6 t
@@ -58,13 +61,15 @@ survival through one quarter of the year.
 
 ## Outputs and remaining limits
 
-The database retains historical N at ages 3–39/40+, F reconstructed from the
-reported intensity and normalized selectivity, estimated M, native SSB and
-biomass, age-3 recruitment, and estimated maturity coefficients. The tail of
-selectivity is held constant above age 40 in the native code. Natural-scale
-ADMB SSB SEs are retained without inventing intervals; coefficient SEs remain
-on the coefficient scale. No covariance-based intervals are constructed for N
-or derived F.
+The database retains historical N at ages 3–39/40+, annual total abundance
+derived by summing those age groups, F reconstructed from the reported
+intensity and normalized selectivity, estimated M, native SSB and biomass,
+age-3 recruitment, and estimated maturity coefficients. The derived total
+abundance agrees with the native total-number series within 0.0053 million
+fish. The tail of selectivity is held constant above age 40 in the native code.
+Natural-scale ADMB SSB SEs are retained without inventing intervals;
+coefficient SEs remain on the coefficient scale. No covariance-based intervals
+are constructed for N, total abundance, or derived F.
 
 Composition cells retain the exact supplied square-root sample counts multiplied
 by `compweights.ctl`. Raw measured/aged fish counts are separate
@@ -99,5 +104,8 @@ at 17:36 local and used aligned official N and F values. The attempt cache
 recorded no returned result by 18:52 local on 2026-10-20, when no R/Rscript
 process remained. Exact termination time and cause are unknown, so the objective,
 gradient, standard errors, Hessian and convergence are unavailable. No agreement
-statistics or dashboard are claimed. The retry allowance is exhausted; no
-further attempt was made, and no data or model assumptions were changed.
+statistics or dashboard are claimed. A later default-initialization attempt was
+started on 2026-10-23. Its current attempt record still says that it started
+without returning a result, so its objective, gradient, standard errors, Hessian
+and convergence remain unavailable. No further retry has been made while this
+attempt is pending, and no data or model assumptions were changed.
