@@ -33,6 +33,12 @@ WGBFAS 2026 Tables 5.2.5-5.2.7 provide annual recruitment, SSB, Fbar, N-at-age, 
 
 The downloaded SAM object gives different direct point estimates in recent years (for example, 2025 age-1 N is 14,910,084 thousand fish and direct Fbar is for ages 3-6). The precise reason for the difference from the report's published medians and Fbar definition is unresolved. Therefore, assessment inputs are complete for the pinned native run, but assumptions and outputs remain partial. The canonical comparison values use the WGBFAS tables; fitted observation predictions are separately labeled as coming from the downloaded SAM object. Do not interpret this record as a numerically exact reproduction of every official report value.
 
+## Native catchability outputs
+
+The cached fitted object also reports nine native q estimates. Q1 shares q across ages 3-5, while Q4 shares q across ages 4-7+, represented by model ages 4-7; Q1 ages 1, 2, 6, and 7+ and Q4 ages 1, 2, and 3 each have separate parameters. The last modeled age is 7+, as in the population outputs. The q values are exp(logFpar). Their natural-scale standard errors use the delta method, and the limits are 95% Wald intervals calculated on the log-q scale. The physical survey-index multiplier is unresolved, so the q unit is retained as native index scale per thousand fish with that limitation stated.
+
+These fitted q rows are now included in outputs.csv as native model outputs. They do not resolve the differences between recent fitted SAM population estimates and the WGBFAS report tables, so outputs_status remains partial.
+
 ## tinyAM translation
 
 The translation retains the 2002-2025, ages 1-7+ observation grid; Q1 and Q4 timing; source q and observation-variance sharing; fixed time-varying M; and source maturity and weight surfaces. It uses random-walk recruitment, IID N-process errors, an AR(1) F process, exponential initial abundance, and the official Fbar ages 3-5.
