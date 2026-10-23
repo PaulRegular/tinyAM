@@ -4,6 +4,8 @@
 
 The detailed record represents the ICES assessment of haddock in Division 7.a, fitted through 2024 and reported in WGCSE 2026. The assessment uses a single-fleet ASAP model with ages 0–5, Fbar ages 2–4, catch-at-age, and four abundance indices. The 2026 category-5 catch advice is stored as a separate summary event because it does not provide updated age-structured inputs or population estimates.
 
+The 2025 age-structured assessment is the current detailed record under the database convention. The 2026 category-5 advice is a newer advice event, but it is not an updated age-structured assessment and is not marked current for detailed-data translation.
+
 ## Sources and cached files
 
 - [WGCSE 2026 assessment report](https://doi.org/10.17895/ices.pub.32625759), especially Tables 9.2–9.8.

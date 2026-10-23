@@ -257,7 +257,7 @@ advice_rows$estimate_terminal_year <- ""
 advice_rows$assessment_type <- "assessment_update"
 advice_rows$model_family <- "ICES category 5 advice"
 advice_rows$model_version <- "Catch-only advice"
-advice_rows$is_current <- "TRUE"
+advice_rows$is_current <- "FALSE"
 advice_rows$is_applied <- "TRUE"
 advice_rows$assessment_url <- advice_ref
 advice_rows$assumptions_status <- "partial"
@@ -273,7 +273,7 @@ assessment_row <- data.frame(
   assessment_id = assessment_id, stock_id = stock_id, assessment_year = "2025",
   terminal_year = "2024", estimate_terminal_year = "2024", assessment_type = "full_assessment",
   model_family = "ASAP", model_version = "2025 assessment; detailed source report published as WGCSE 2026",
-  is_current = "FALSE", is_applied = "TRUE", framework_year = "2017",
+  is_current = "TRUE", is_applied = "TRUE", framework_year = "2017",
   assessment_url = report_ref, framework_url = framework_ref, data_url = sag_ref,
   model_url = "", repository_url = "", assumptions_status = "partial", inputs_status = "partial",
   outputs_status = "partial", notes = "Latest detailed age-structured assessment located; the 2026 advice is a separate category-5 catch-only update. Inputs include Tables 9.3-9.6 and report-documented settings. Native ASAP configuration was unavailable. M values are reconstructed from WKIrish2 2016 Lorenzen estimates and not verified against the final fit. Output tables provide aggregate recruitment, SSB and Fbar only; N-at-age, F-at-age and their uncertainty are unavailable.",

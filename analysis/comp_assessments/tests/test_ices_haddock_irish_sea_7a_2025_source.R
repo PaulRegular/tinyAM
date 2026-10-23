@@ -37,7 +37,8 @@ stopifnot(
   identical(o$value[o$measure == "Fbar" & o$year == 2024], 0.08),
   identical(o$age_group[o$measure == "Fbar"], rep("2-4", 32L)),
   !any(o$measure %in% c("numbers_at_age", "fishing_mortality_at_age")),
-  isTRUE(database$assessments$is_current[database$assessments$assessment_id == advice_id]),
+  isTRUE(database$assessments$is_current[database$assessments$assessment_id == assessment_id]),
+  identical(database$assessments$is_current[database$assessments$assessment_id == advice_id], FALSE),
   identical(database$outputs$value[database$outputs$assessment_id == advice_id], c(586, 586))
 )
 
