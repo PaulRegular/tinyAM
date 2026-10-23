@@ -517,6 +517,11 @@ the formula and age range in notes, and leave uncertainty missing when the
 required covariance is unavailable. State timing differences explicitly: a
 sum of January 1 mature biomass is not an April 1 SSB estimate.
 
+When total abundance is derived from official numbers-at-age, sum all reported
+age groups and any separately reported sexes, preserve other population
+dimensions, and state the derivation in `notes`. Leave its standard error and
+interval blank unless the required joint uncertainty is available.
+
 biomass_by_age_group stores a reported aggregate biomass for a named age group, such as 3+. Put the group label in age_group and leave age blank; it is not an age-specific biomass surface.
 
 Retain uncertainty where readily available. Parameter estimates reported by the official assessment may be stored as `type = biology`, with `measure` naming the exact parameter and `age` or `year` set only when that dimension applies.
