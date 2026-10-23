@@ -79,6 +79,52 @@ stopifnot(
   ))
 )
 
+q <- subset(outputs, type == "catchability" & measure == "q")
+q$age <- as.integer(q$age)
+q$value <- as.numeric(q$value)
+q$se <- as.numeric(q$se)
+q$lwr <- as.numeric(q$lwr)
+q$upr <- as.numeric(q$upr)
+uk_bts_q <- subset(q, survey == "UK BTS-Q3")
+nigfs_q <- subset(q, survey %in% c("NIGFS-WIBTS-Q1", "NIGFS-WIBTS-Q4"))
+stopifnot(
+  nrow(q) == 9L, nrow(uk_bts_q) == 7L, nrow(nigfs_q) == 2L,
+  setequal(uk_bts_q$age, 1:7), all(is.na(nigfs_q$age)),
+  all(is.finite(q$value)), all(is.finite(q$se)),
+  all(q$value > 0), all(q$se > 0), all(q$lwr > 0), all(q$upr > q$lwr),
+  all(uk_bts_q$unit == "native survey-index units per thousand fish"),
+  all(nigfs_q$unit == "native survey-index units per tonne SSB"),
+  isTRUE(all.equal(
+    q$lwr,
+    exp(log(q$value) - stats::qnorm(0.975) * q$se / q$value),
+    tolerance = 1e-10
+  )),
+  isTRUE(all.equal(
+    q$upr,
+    exp(log(q$value) + stats::qnorm(0.975) * q$se / q$value),
+    tolerance = 1e-10
+  ))
+)
+
+predicted_catch <- subset(outputs, measure == "predicted_catch")
+predicted_index <- subset(outputs, measure == "predicted_index")
+stopifnot(
+  nrow(predicted_catch) == 360L,
+  setequal(as.integer(predicted_catch$year), 1981:2025),
+  setequal(as.integer(predicted_catch$age), 1:8),
+  all(predicted_catch$unit == "thousand fish"),
+  nrow(subset(predicted_index, survey == "UK BTS-Q3")) == 231L,
+  nrow(subset(predicted_index, survey == "NIGFS-WIBTS-Q1")) == 34L,
+  nrow(subset(predicted_index, survey == "NIGFS-WIBTS-Q4")) == 34L,
+  setequal(as.integer(subset(predicted_index, survey == "UK BTS-Q3")$age), 1:7),
+  all(is.na(subset(predicted_index, survey != "UK BTS-Q3")$age)),
+  nrow(subset(predicted_index, survey == "UK BTS-Q3")) - nrow(uk_bts) == 7L,
+  nrow(subset(predicted_index, survey == "NIGFS-WIBTS-Q4")) - nrow(nigfs_q4) == 1L,
+  all(is.finite(as.numeric(c(predicted_catch$value, predicted_index$value)))),
+  !anyDuplicated(predicted_catch[c("year", "age")]),
+  !anyDuplicated(predicted_index[c("survey", "year", "age")])
+)
+
 f_age7 <- f_at_age[f_at_age$age == "7", ]
 f_age8 <- f_at_age[f_at_age$age == "8", ]
 stopifnot(isTRUE(all.equal(as.numeric(f_age7$value), as.numeric(f_age8$value))))
