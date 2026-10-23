@@ -166,6 +166,7 @@ row_key <- function(x) {
   )
   values <- lapply(x[fields], function(value) {
     value <- as.character(value)
+    Encoding(value) <- "UTF-8"
     value[is.na(value) | !nzchar(value)] <- "<NA>"
     value
   })
