@@ -13,40 +13,19 @@ The package is designed to be **flexible, modular, and lightweight**, with an em
 
 Rather than providing a collection of predefined assessment models, tinyAM uses a common age-structured state-space framework whose components can be modified to represent different hypotheses about population and fishery dynamics.
 
-## Documentation and examples
 
-The [package website](https://paulregular.github.io/tinyAM/) provides the function
-reference, [cheatsheet](https://paulregular.github.io/tinyAM/cheatsheet/tinyAM_cheatsheet.pdf)
-and [example dashboard](https://paulregular.github.io/tinyAM/cheatsheet/).
-The website is published from `main` by GitHub Actions.
+## Getting started
 
-To reproduce the cheatsheet locally:
+The development version can be installed from GitHub:
 
-```sh
-Rscript cheatsheet/examples.R prepare
-Rscript cheatsheet/examples.R render
+``` r
+# install.packages("pak")
+pak::pak("PaulRegular/tinyAM")
 ```
 
-The first command reuses valid fits and hindcasts, then writes a combined
-main-fit dashboard and individual hindcast dashboards to `cheatsheet/output/`.
-The individual dashboards share one local `output/assets/` directory; keep it
-with their HTML files. The combined dashboard is self-contained.
-The second command renders the PDF without fitting. Current results live in ignored
-`cheatsheet/cache/`; temporary rendering files are removed automatically.
-Use `Rscript cheatsheet/examples.R dashboard` to build just the combined dashboard.
+The [package website](https://paulregular.github.io/tinyAM/) provides the function
+reference and [cheatsheet](https://paulregular.github.io/tinyAM/cheatsheet/tinyAM_cheatsheet.pdf)
 
-To preview the package site, run
-`withr::with_envvar(c(CI = "true"), pkgdown::build_site(preview = FALSE))`.
-This skips pkgdown's optional external favicon service.
-The **Package website** workflow builds the PDF link and combined dashboard
-on pushes to `main`, with a manual rebuild option under Actions. GitHub Pages
-uses **GitHub Actions** as its publishing source; the `github-pages` environment
-permits deployment from `main`. The PDF itself is the reviewed tracked copy;
-website builds do not rerun hindcasts or compile LaTeX.
-The workflow deploys generated artifacts; site files and HTML are not committed.
-
-Historical cheatsheet trials are recorded in Git, including archival commit
-`9920c9a`; retired experiments are absent from the current checkout.
 
 ## Philosophy
 
@@ -311,19 +290,10 @@ For practical help, start with `?fit_tam`, `?prepare_tam`, and `?mono`. For math
 
 ## Scope
 
-tinyAM has not been validated for operational stock assessment. Review the data,
-assumptions, and diagnostics before interpreting model results.
+tinyAM has not been validated for operational stock assessment. Review the data, assumptions, and diagnostics before interpreting model results.
 
 The package currently uses Northern cod data as an example and development test case, but the modelling framework is not intended to be specific to that stock.
 
-## Installation
-
-The development version can be installed from GitHub:
-
-``` r
-# install.packages("pak")
-pak::pak("PaulRegular/tinyAM")
-```
 
 ## Why tinyAM?
 
@@ -337,14 +307,6 @@ Many useful assessment questions involve changing something relatively small:
 
 > Does a model that fits the historical data well also predict withheld observations well?
 
-tinyAM is intended to make questions like these relatively inexpensive to translate into fitted models.
+tinyAM is intended to make questions like these relatively straightforward to translate into fitted models.
 
 The emphasis is therefore less on providing a single preferred assessment formulation and more on providing a transparent framework in which alternative assumptions can be expressed and tested.
-
-## Next priorities
-
-- Review the latest Pacific assessment examples: diagnostics, comparison
-  definitions, scientific approximations and remaining source blockers.
-- Plan and implement conditional AIC separately, beginning with its statistical
-  specification and validation. No conditional-AIC work is included in the
-  repository cleanup or website publication.
