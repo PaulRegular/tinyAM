@@ -157,13 +157,16 @@ ncam <- update(scaa,
   if (length(failed)) cli::cli_warn("Numerical checks did not pass for: {paste(failed, collapse = ', ')}. Inspect cached diagnostics.")
   templates <- file_hashes(list.files(file.path(repo, "inst"), pattern = "[.](Rmd|js|css|svg|png)$", recursive = TRUE, full.names = TRUE))
   dashboard_file <- file.path(cache, "dashboard.rds")
-  dashboard_key <- list(fit = fit_key, templates = templates)
+  background_file <- file.path(root, "background.md")
+  background <- readLines(background_file, warn = FALSE, encoding = "UTF-8")
+  dashboard_key <- list(fit = fit_key, templates = templates, background = file_hashes(background_file))
   prior <- if (file.exists(dashboard_file)) readRDS(dashboard_file) else NULL
 # ---- dashboard ----
 # vis_tam(scaa, sam, ncam)
 # ---- end ----
   if (!file.exists(file.path(output, "tinyAM_dashboard.html")) || !identical(prior, dashboard_key)) {
-    vis_tam(scaa, sam, ncam, output_file = file.path(output, "tinyAM_dashboard.html"), open_file = FALSE)
+    vis_tam(scaa, sam, ncam, background = background,
+      output_file = file.path(output, "tinyAM_dashboard.html"), open_file = FALSE)
     saveRDS(dashboard_key, dashboard_file)
   }
   if (mode == "dashboard") return(invisible(fits))

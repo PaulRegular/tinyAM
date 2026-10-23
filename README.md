@@ -24,7 +24,8 @@ pak::pak("PaulRegular/tinyAM")
 ```
 
 The [package website](https://paulregular.github.io/tinyAM/) provides the function
-reference and [cheatsheet](https://paulregular.github.io/tinyAM/cheatsheet/tinyAM_cheatsheet.pdf)
+reference and [cheatsheet](https://paulregular.github.io/tinyAM/cheatsheet/tinyAM_cheatsheet.pdf).
+The cheatsheet links to a companion dashboard for its three example model fits.
 
 
 ## Philosophy

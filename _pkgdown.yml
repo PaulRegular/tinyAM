@@ -12,7 +12,7 @@ template:
     heading_font: 'Arial, sans-serif'
 navbar:
   structure:
-    left: [intro, reference, cheatsheet, dashboard]
+    left: [intro, reference, cheatsheet]
     right: [search, github]
   components:
     intro:
@@ -21,9 +21,6 @@ navbar:
     cheatsheet:
       text: Cheatsheet
       href: cheatsheet/tinyAM_cheatsheet.pdf
-    dashboard:
-      text: Dashboard
-      href: cheatsheet/index.html
 reference:
 - title: Model overview and example data
 - contents:
