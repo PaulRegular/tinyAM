@@ -268,6 +268,7 @@ for (name in names(list(
         "MFRI 2026 assessment tables, Table 15 (fishing mortality at age)"
       },
       age = long$age[[i]],
+      age_group = if (long$age[[i]] == 14L) "14+" else NA_character_,
       notes = paste(
         "Age 14 is the 14+ group.",
         if (is_n) "Point estimate; age-specific uncertainty is not reported."

@@ -57,6 +57,8 @@ stopifnot(
   setequal(unique(n_at_age$year), 1980:2026),
   nrow(f_at_age) == 46L * 12L,
   setequal(unique(f_at_age$year), 1980:2025),
+  all(n_at_age$age_group[n_at_age$age == 14L] == "14+"),
+  all(f_at_age$age_group[f_at_age$age == 14L] == "14+"),
   nrow(ssb) == 47L,
   nrow(reference_biomass) == 47L,
   nrow(recruitment) == 47L,
