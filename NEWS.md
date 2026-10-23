@@ -1,5 +1,11 @@
 # tinyAM 0.1.1.9000
 
+## Example data
+
+* Simplified `cod_obs` by removing the optional `smith_sound_effect` and
+  `log_capelin_per_cod` predictors. Existing observations, mortality blocks,
+  units, and the allometric natural-mortality baseline are retained.
+
 ## Evaluation refinements
 
 * Deterministic recruitment with an annual `factor(year)` effect now carries its

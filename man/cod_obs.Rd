@@ -11,16 +11,14 @@ A \code{tam_data} object containing five data frames:
 thousands of fish; observations can be missing.
 \item \strong{\code{index}}: DFO autumn research-vessel (RV) abundance index at age
 (\code{year}, \code{age}, \code{obs}), with \code{survey}, survey timing \code{samp_time = 0.8},
-catchability age group \code{q_block}, and the optional annual predictor
-\code{smith_sound_effect}. Survey observations have been expanded using
+and catchability age group \code{q_block}. Survey observations have been expanded using
 12,048,556 trawl units and expressed in thousands of fish.
 \item \strong{\code{weight}}: Annual stock weight at age (\code{obs}, kg).
 \item \strong{\code{maturity}}: Annual proportion mature at age (\code{obs}, from 0 to 1).
 \item \strong{\code{pop_covariates}}: A complete year-age table with \code{F_y_block} and
 \code{F_a_block} (candidate fishing-mortality mean groups), \code{M_a_block}
 (candidate natural-mortality age groups), \code{allometric_M_assumption}
-(a weight-based baseline M, per year), and \code{log_capelin_per_cod}
-(log prey-availability index; see Details).
+(a weight-based baseline M, per year).
 }
 
 Catch and RV indices have \code{unit = "thousand fish"}; individual weights have
@@ -57,38 +55,12 @@ separate observations. Differences between results from tinyAM and the
 official assessment should therefore not be interpreted as discrepancies in
 the published stock assessment.
 
-\strong{Smith Sound biomass predictor.} \code{index$smith_sound_effect} is based on
-acoustic estimates of cod biomass in Smith Sound, Trinity Bay, during
-1995-2009. Source biomass estimates in tonnes are divided by 1,000 to
-express the predictor in thousand tonnes. Missing values for 1996 and 2005
-are filled by linear interpolation between adjacent observed years. The
-predictor is set to zero outside 1995-2009 to represent the absence of an
-included Smith Sound effect in those years; \strong{zero does not represent an
-observed absence of cod}. The annual value is repeated across RV index ages
-so it can be used in \code{index_settings$q_form} as a simplified hypothesis about
-variation in offshore survey catchability. This is not equivalent to
-xteNCAM's joint treatment of Smith Sound biomass, sampled age composition,
-and the age-specific fraction of cod occurring inshore. No Smith Sound
-observation error or interpolation uncertainty is propagated into a tinyAM fit.
-
-\strong{Capelin availability predictor.} \code{pop_covariates$log_capelin_per_cod}
-is the natural logarithm of an annual ratio of Capelin biomass to cod
-biomass indices. In the xteNCAM formulation, Capelin biomass is indexed
-by the spring acoustic survey and cod biomass by the previous autumn RV
-survey. The indices are fitted using log-scale random-walk processes with
-observation error, permitting estimation in years with missing surveys
-(Regular et al. 2025b, Section 2.1). The supplied annual ratio is derived
-from that modelling approach and imported as a prepared covariate; tinyAM
-does \strong{not} refit the Capelin and cod index processes or propagate their
-estimation uncertainty. The covariate can be used in \code{M_settings$mu_form}
-to explore prey-availability hypotheses, but associated coefficient
-uncertainty is conditional on the supplied predictor values. Values may
-be unavailable outside the years supported by the source indices.
-
 \strong{Natural mortality assumptions.} \code{allometric_M_assumption} uses
 \code{M = M0 * weight^(-0.305)}, following the weight-scaling approach of
 Lorenzen (1996). The multiplier \code{M0} is calibrated so that the arithmetic
-mean of this schedule over available years and ages 5-14 is 0.30 per year.
+mean of this schedule over source weight records for ages 5-14 is 0.30 per
+year, before restricting the example to the catch years. The mean over the
+packaged subset can therefore differ from 0.30.
 This is a constructed example baseline, not an independently estimated
 natural-mortality series.
 
