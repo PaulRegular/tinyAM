@@ -61,7 +61,7 @@ definitions and input substitutions before comparing these quantities.
 
 All 320 recruitment, TSB, SSB and Fbar values for 1946–2025 match table 3.18 within published rounding. This establishes trajectory-level agreement with the official report, rather than relying on the run name or two terminal values.
 
-The native N/F/M surfaces, benchmark configuration, source timing and missing-value conventions have now been checked. Source-level uncertainty and unit interpretations that remain unresolved are listed below.
+The native N/F/M surfaces, benchmark configuration, source timing and missing-value conventions have now been checked. The fitted object supplies diagonal conditional covariance for its random N/F states; fixed-effect uncertainty and some survey-unit interpretations remain unresolved.
 
 ## Canonical extraction and validation
 
@@ -77,7 +77,9 @@ WKBARFAR 2021 sections 2.3.1–2.3.2 confirm survey terminal age 12+, the 2014 w
 
 The official fit has no logQpow parameters and all keyQpow entries are -1, confirming no density-dependent power. Fifty survey-age q values now represent 45 unique logFpar parameters across the five index series; ages 11 and 12 share q within each series. Values come directly from native fixed effects. Reported SEs are natural-scale delta-method approximations and intervals are 95% log-Wald intervals; neither log SEs nor arbitrary units are substituted.
 
-Both propF and propM full matrices (81 years by 13 ages) are now retained as biological inputs, adding 2,106 source cells. All are zero, consistent with the earlier assumption notes. The stock-specific validator confirms the zero spawning fractions, q age sharing and uncertainty transformation. Coverage is now 8,682 inputs, 4,843 outputs and 41 assumptions. Completeness remains partial because source units and remaining statistical-interpretation details are unresolved; initial-state semantics are documented below.
+Both propF and propM full matrices (81 years by 13 ages) are now retained as biological inputs, adding 2,106 source cells. All are zero, consistent with the earlier assumption notes. The stock-specific validator confirms the zero spawning fractions, q age sharing and uncertainty transformation. Coverage is 8,682 inputs, 4,843 outputs and 41 assumptions. Completeness remains partial because source units and remaining statistical-interpretation details are unresolved; initial-state semantics are documented below.
+
+Conditional uncertainty is now recorded for all 1,053 N-at-age and 1,040 F-at-age outputs. The fitted random-effect vector confirms the covariance ordering for `logN` and `logF`; variances come from the diagonal of `fit$sdrep$diag.cov.random`. Standard errors are converted to the natural state scale with the delta method, and limits are 95% log-Wald intervals. They condition on fitted fixed parameters and exclude fixed-effect and covariance uncertainty, so they are not fully marginal. F ages 14 and 15 share the same fitted state and therefore receive identical conditional intervals. The output-completeness status remains partial.
 ## Initial-state semantics resolved
 
 Both native initN/initF vectors are empty and initState=0. The official SAM revision's n.hpp and f.hpp evaluate ordinary process transitions from the second modeled year onward, with no explicit density for the first logN/logF state. Those first-year states remain latent random effects in the Laplace fit. A broad first-state normal prior is added only when calculating observation residuals; it must not be described as a regular assessment prior. The native configuration checks pass. This resolves the earlier initial-state gap without changing the fitted object or model mathematics.
