@@ -26,6 +26,7 @@ assessments or management advice.
 | Irish Sea plaice | [source review](source_reviews/ices_plaice_irish_sea_7a_2026.md) · [tinyAM translation](scripts/translation/stocks/ices_plaice_irish_sea_7a_2026.R) |
 | Scup source review | [source_reviews/ck_nefsc_saw_chrysops_usatl.md](source_reviews/ck_nefsc_saw_chrysops_usatl.md) |
 | Central Baltic herring | [source review](source_reviews/ck_ices_wgbfas_harengus_bs_25_29_32.md) · [tinyAM translation](scripts/translation/stocks/ices_herring_central_baltic_2026.R) |
+| Bay of Biscay sardine | [source review](source_reviews/ck_ices_wghansa_pilchardus_sp8abd.md) |
 | Shared readers, converters, audits, and runners | `R/` |
 | Source imports and validators | `scripts/database/` |
 | Visible stock model calls and run drivers | `scripts/translation/` |
