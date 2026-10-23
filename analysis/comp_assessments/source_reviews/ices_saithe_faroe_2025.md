@@ -24,6 +24,12 @@ The database stores native SAM N-at-age, F-at-age, q, fitted catch and survey pr
 
 SSB equals the sum of age-specific abundance times the fitted stock weight and maturity; total biomass uses abundance times fitted stock weight. Fbar is the arithmetic mean over ages 4–8, and recruitment equals age-3 N-at-age in the same calendar year. These definitions reproduce the native fitted surfaces over 1961–2025.
 
+## tinyAM translation
+
+The translation retains both surveys and their source timing, uses the package's normal initialization first, and makes one retry with year/age-aligned SAM estimates as starting values. Both attempts ended with optimizer code 1 (`false convergence (8)`). The default and source-start objectives were 2053.826, with maximum absolute gradients 0.000482 and 0.000684. The conditional SD report succeeded, but the fixed-effect covariance was unavailable and the Hessian was not positive definite; the F age-correlation estimate was within 0.05 of a boundary. The fit therefore fails numerical checks, so its estimates and uncertainty are not suitable for substantive comparison.
+
+An exploratory Official–tinyAM dashboard is available at `results/cache/ices_saithe_faroe_2025/dashboard.html`. For the dashboard only, official predicted indices and q estimates, including their intervals, are multiplied by 0.001 to match tinyAM's thousand-fish index scale; q is correspondingly reported per effort-hour. The canonical database retains the original official values and units. The translation test checks these conversions and verifies that the source outputs remain unchanged.
+
 ## Sources
 
 - [ICES NWWG 2025 report, Faroe saithe chapter](https://doi.org/10.17895/ices.pub.29086181.v2), particularly Tables 6.2.2.2, 6.2.3.1, 6.2.4.1, 6.2.5.1 and 6.5.3
