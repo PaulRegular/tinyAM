@@ -43,6 +43,8 @@ stopifnot(
   sum(o$measure == "recruitment") == 47L,
   sum(o$measure == "Fbar") == 47L,
   sum(o$measure == "harvest_rate") == 46L,
+  all(o$type %in% c("population", "recruitment", "mortality", "biomass")),
+  all(o$type[o$measure %in% c("Fbar", "harvest_rate")] == "mortality"),
   max(o$year[o$measure == "numbers_at_age"], na.rm = TRUE) == 2024,
   max(o$year[o$measure == "SSB"], na.rm = TRUE) == 2026,
   all(is.na(o$se)),
