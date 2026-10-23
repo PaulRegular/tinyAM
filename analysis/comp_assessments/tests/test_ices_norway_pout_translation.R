@@ -86,6 +86,12 @@ expected_f <- do.call(rbind, lapply(split(
 expected_f <- expected_f[order(expected_f$year, expected_f$age), ]
 
 comparison <- translated$comparison_outputs
+source_q <- outputs[
+  outputs$type == "catchability" & outputs$measure == "q", , drop = FALSE
+]
+comparison_q <- comparison[
+  comparison$type == "catchability" & comparison$measure == "q", , drop = FALSE
+]
 ssb_q1 <- outputs[outputs$measure == "SSB" & outputs$season == "Q1" &
   outputs$year %in% translated$years, ]
 translated_ssb <- comparison[comparison$measure == "SSB", ]
@@ -136,11 +142,16 @@ stopifnot(
   identical(dim(translated$start_par$log_f), c(41L, 4L)),
   identical(dim(translated$start_par$log_f), dim(tinyAM::make_par(dat)$log_f)),
   !any(comparison$measure == "numbers_at_age" & comparison$age == 0L),
-  !any(comparison$year == 2025L),
+  !any(comparison$year == 2025L, na.rm = TRUE),
   identical(translated_ssb$year, ssb_q1$year),
   isTRUE(all.equal(as.numeric(translated_ssb$value), as.numeric(ssb_q1$value))),
   isTRUE(all.equal(common_ssb$value, as.numeric(ssb_q1$value))),
   nrow(comparison[comparison$measure == "biomass_at_age", ]) == 41L * 4L,
+  nrow(source_q) == 13L,
+  nrow(comparison_q) == 13L,
+  isTRUE(all.equal(
+    sort(as.numeric(comparison_q$value)), sort(as.numeric(source_q$value))
+  )),
   all(is.na(comparison$se[comparison$source_type == "derived_common_definition"]))
 )
 

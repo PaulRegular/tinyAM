@@ -273,6 +273,10 @@ comparison_outputs$notes[comparison_outputs$measure == "SSB"] <- paste(
   comparison_outputs$notes[comparison_outputs$measure == "SSB"],
   "Q1 SSB uses the same start-of-year N, weight, and maturity definition as tinyAM."
 )
+comparison_q <- source_outputs[
+  source_outputs$type == "catchability" & source_outputs$measure == "q", ,
+  drop = FALSE
+]
 comparison_f <- f_rows[0, , drop = FALSE]
 for (year in years) {
   for (age in ages) {
@@ -328,7 +332,7 @@ for (measure in c("biomass_at_age", "mature_biomass_at_age")) {
   }
 }
 comparison_outputs <- rbind(
-  comparison_outputs, comparison_f, common_fbar, common_biology
+  comparison_outputs, comparison_q, comparison_f, common_fbar, common_biology
 )
 
 

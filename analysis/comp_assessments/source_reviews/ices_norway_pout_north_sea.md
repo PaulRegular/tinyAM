@@ -372,6 +372,8 @@ The canonical record preserves the quarterly source outputs.
 
 Annualized comparison definitions are documented separately so that differing reference times and age-0 recruitment conventions are not concealed.
 
+Thirteen native catchability point estimates are also recorded from `fit$pl$logQ`, expanded with `exp()` and mapped through the saved `fit$data$keyLogQ`. The rows preserve separate fleet keys and shared age groups; age 3 is the 3+ group. The saved object does not provide usable q uncertainty: `fit$plsd$logQ` duplicates the point estimates, so standard errors and intervals remain unavailable. The physical survey-index units are not specified.
+
 ## Remaining translation limitations
 
 The principal differences between the official SESAM benchmark and the revised tinyAM translation are:
