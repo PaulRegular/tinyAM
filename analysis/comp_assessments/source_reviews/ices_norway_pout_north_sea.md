@@ -16,6 +16,13 @@ Quarterly fitted population states span 1984 Q1–2025 Q4. Catch and survey obse
 
 The official fitted summary reports optimizer convergence code 0, objective 1547.746 and the message "relative convergence (4)". These are native SESAM diagnostics, not diagnostics from the tinyAM translation.
 
+The cached fit also contains 1,092 fitted observation predictions in
+`fit$rep$predObs`, aligned row-for-row with the 1,092 observations in
+`fit$data`. The importer exponentiates these log-scale values and stores 668
+catch and 424 survey predictions with the original quarter and age grouping.
+The 26 combined ages 2-3+ remain grouped. These are point predictions only;
+the database does not add intervals or a lognormal bias correction.
+
 The benchmark is distinct from the 2025 production-advice assessment. WGNSSK 2026 states that no spring advice was issued for Norway pout. The benchmark is therefore retained as the current detailed assessment, with `is_applied = FALSE`.
 
 ### Natural-mortality scenario
