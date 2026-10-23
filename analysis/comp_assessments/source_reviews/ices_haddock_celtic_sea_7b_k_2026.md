@@ -26,3 +26,9 @@ The configuration uses lognormal likelihoods for catch and survey observations, 
 The database contains start-of-year N-at-age and F-at-age from the fitted SAM object, annual recruitment, SSB, total stock biomass, and Fbar. Natural-scale N and F standard errors are delta-method conversions of the SAM log-state standard errors. Recruitment, SSB, total biomass, and Fbar retain the Low/High limits from the native SAM summary table; its interval confidence level is not specified. Total abundance is derived by summing official N-at-age over ages 0–8+ and has no uncertainty. M remains a fixed input rather than an estimated output.
 
 Input and assumption extraction are complete for the assessment run. Output coverage is marked partial because fitted catch and index predictions and the q parameter table are not copied into the canonical outputs. The point-estimate surfaces used for the tinyAM comparison are available and tied to the same SAM run.
+
+## tinyAM fit diagnostics
+
+The package-default initialization was attempted first and failed during optimization with repeated NA/NaN gradient and function evaluations. One retry kept the same observations, formulas, and model settings, using year- and age-aligned official N-at-age, F-at-age, and index-derived q values as starting values. It failed with the same numerical error; no optimizer status, objective, standard errors, or dashboard were produced. The attempt log is cached locally at `results/cache/ices_haddock_celtic_sea_7b_k_2026/initialization_attempts.rds`.
+
+The tinyAM process estimates F at age 0, whereas SAM fixes age-0 F to zero. This is a known model-structure difference for this translation; it was not changed after the failed fit.

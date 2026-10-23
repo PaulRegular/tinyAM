@@ -21,6 +21,10 @@ index <- inputs[inputs$type == "index" & inputs$measure == "numbers_at_age", , d
 n_at_age <- outputs[outputs$measure == "numbers_at_age", , drop = FALSE]
 f_at_age <- outputs[outputs$measure == "fishing_mortality_at_age", , drop = FALSE]
 total_numbers <- outputs[outputs$measure == "total_numbers", , drop = FALSE]
+output_key <- do.call(paste, c(lapply(
+  outputs[c("type", "measure", "fleet", "survey", "sex", "region", "season", "year", "age", "age_group")],
+  function(x) ifelse(is.na(x), "", as.character(x))
+), sep = "\r"))
 
 stopifnot(
   nrow(source_record$stock) == 1L,
@@ -40,6 +44,9 @@ stopifnot(
   nrow(n_at_age) == length(years) * length(ages),
   nrow(f_at_age) == length(years) * length(ages),
   nrow(total_numbers) == length(years),
+  all(outputs$type %in% c("population", "mortality", "biomass")),
+  all(outputs$source_type %in% c("native_model", "derived_source_output")),
+  !anyDuplicated(output_key),
   isTRUE(all.equal(as.numeric(total_numbers$value),
     as.numeric(colSums(exp(fit$pl$logN))), tolerance = 1e-10)),
   isTRUE(all.equal(as.numeric(n_at_age$value),
