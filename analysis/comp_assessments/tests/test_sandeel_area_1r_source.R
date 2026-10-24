@@ -7,6 +7,7 @@ stopifnot(source$stocks$stock_id == "ices_sandeel_area_1r",
   source$stocks$scientific_name == "Ammodytes spp.", source$stocks$ocean == "Northeast Atlantic",
   source$assessment$is_current, source$assessment$is_applied,
   source$assessment$terminal_year == 2025, source$assessment$estimate_terminal_year == 2026,
+  source$assessment$framework_year == 2023,
   all(unlist(source$assessment[c("assumptions_status", "inputs_status", "outputs_status")]) == "partial"))
 parent <- db$stocks[db$stocks$stock_id == "ck_ices_hawg_dubius_ns", ]
 stopifnot(parent$charbonneau_id == "ICES-HAWG_dubius_NS",

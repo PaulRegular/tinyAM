@@ -5,6 +5,7 @@ i <- s$inputs; o <- s$outputs
 stopifnot(s$stocks$authority_stock_id == "san.sa.2r", is.na(s$stocks$charbonneau_id),
   s$stocks$scientific_name == "Ammodytes spp.", s$stocks$ocean == "Northeast Atlantic",
   s$assessment$is_current, s$assessment$is_applied, s$assessment$terminal_year == 2025,
+  s$assessment$framework_year == 2023,
   all(unlist(s$assessment[c("assumptions_status", "inputs_status", "outputs_status")]) == "partial"),
   nrow(i) == 2192L, nrow(o) == 1032L, nrow(s$assumptions) == 17L,
   all(i$region == "Sandeel Area 2r"), all(o$region == "Sandeel Area 2r"),

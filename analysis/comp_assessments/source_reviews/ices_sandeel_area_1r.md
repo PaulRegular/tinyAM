@@ -19,7 +19,9 @@ the historical recruitment and SSB series. The repository is pinned at
 `8a556698db2c9c23321980c8fec368c80562b89f`. Its software bibliography specifies
 smsR `a097011f2fff959c9a263e5f6acb49795b9a53ad`. Downloaded R/C++ files were
 read as source, not executed. The older smsR package example describes a
-different assessment and is not substituted for 2026 data.
+different assessment and is not substituted for 2026 data. The framework
+workshop concluded in 2023 and its report was published in 2024;
+`framework_year` records 2023 rather than the publication year.
 
 ## Native model and recovered data
 

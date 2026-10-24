@@ -198,7 +198,7 @@ assessment <- blank("assessments.csv"); assessment$stock_id <- stock_id
 assessment$assessment_year <- 2026; assessment$terminal_year <- 2025; assessment$estimate_terminal_year <- 2026
 assessment$assessment_type <- "annual"; assessment$model_family <- "SMS-effort (smsR)"
 assessment$model_version <- paste("smsR 0.0.0.9000", software_revision)
-assessment$is_current <- assessment$is_applied <- "TRUE"; assessment$framework_year <- 2024
+assessment$is_current <- assessment$is_applied <- "TRUE"; assessment$framework_year <- 2023
 assessment$assessment_url <- report_url; assessment$framework_url <- "https://doi.org/10.17895/ices.pub.21581151.v2"
 assessment$data_url <- sag_url; assessment$model_url <- assessment$repository_url <- repo_url
 assessment$assumptions_status <- assessment$inputs_status <- assessment$outputs_status <- "partial"
@@ -234,4 +234,3 @@ for (file in c("assessments", "assumptions", "inputs", "outputs")) {
   write_rows(paste0(file, ".csv"), if (file == "assessments") assessment else get(file), assessment_id)
 }
 cat("Imported Area 2r 2026:", nrow(inputs), "inputs,", nrow(assumptions), "assumptions,", nrow(outputs), "outputs; all statuses partial.\n")
-
