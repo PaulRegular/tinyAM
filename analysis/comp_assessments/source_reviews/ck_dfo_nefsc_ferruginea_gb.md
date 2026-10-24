@@ -14,6 +14,25 @@ The public 2024 `GB_runs` archive contains directories for `Constant_M` and `Age
 
 Consequently, none of those constant-M inputs or outputs is imported as the official 2024 or 2025 model. In particular, they cannot supply a missing natural-mortality vector, official N/F surface or a replacement maturity schedule. The 2025 assessment explicitly updated the maturity ogive, so copying the earlier candidate's biology would mix runs even if some other data were unchanged. No tutorial WHAM data or re-fitted candidate estimates are substituted.
 
+The new research archive accompanying Kittel et al. (2026), DOI
+`10.1139/cjfas-2025-0289`, was checked on 2026-10-24. Its public Zenodo record
+`19443644` contains `GBK.DAT`, `WHAMcode.R`, `BT.csv` and a README. All four
+files were cached and checked against the archive's published MD5 values;
+the local manifest also records SHA256 checksums. The data header identifies
+an earlier research-track input: 50 years from 1973 through 2022, six ages,
+and all 300 supplied natural-mortality entries equal to 0.4. The visible WHAM
+preparation call supplies no M-model override. The paper describes a research
+comparison of environmental/recruitment formulations, not a verified copy of
+the selected revised age-based-M production run. Its methods text describes
+data through 2021, whereas the archived file extends through 2022; that
+discrepancy is retained rather than resolved by dropping a year. These files
+are useful source leads, but do not close the production-run gap and are not
+imported as official inputs or used to generate replacement official outputs.
+They are retained under `source_cache/ck_dfo_nefsc_ferruginea_gb/zenodo_19443644_research/`
+with the original record metadata and `manifest.csv`; the section check is
+recorded in `zenodo_research_review.log` in the stock cache. Downloaded scripts
+were inspected as text, not executed.
+
 ## Verified recovered values
 
 The importer extracts all ten annual columns from 2025 Table 1, covering 2015–2024:
@@ -35,7 +54,7 @@ All three completeness statuses remain partial. No tinyAM translation or compari
 
 The focused source test checks every Table 1 output, terminal intervals, adjusted/native separation, projection years, units, recruitment age, partial statuses and the absence of candidate-run provenance or invented age states. The source cache remains gitignored. `manifest.csv` records current URLs, retrieval times, SHA-256 checksums and the NOAA download restriction with its successful Council-hosted alternative. Earlier cached archives without original retrieval provenance are retained for investigation; their numerical candidates are not canonical sources for this production record.
 
-The source test, central reference-alignment test, plus-group reference test and canonical database validation pass. The validated database has 114 stocks, 101 assessments, 2057 assumptions, 350125 inputs and 185611 outputs. All records outside this stock/assessment are unchanged; rerunning the importer leaves all five canonical files byte-for-byte unchanged. No package or model-mathematics changes were made.
+The source test, central reference-alignment test, plus-group reference test and canonical database validation pass. At the original import checkpoint, the database had 114 stocks, 101 assessments, 2057 assumptions, 350125 inputs and 185611 outputs. All records outside this stock/assessment were unchanged; rerunning that importer left all five canonical files byte-for-byte unchanged. The later research-archive review changes no canonical values. No package or model-mathematics changes were made.
 
 ## Sources
 
@@ -43,3 +62,4 @@ The source test, central reference-alignment test, plus-group reference test and
 - [Final 2024 yellowtail research-track peer review](https://www.fisheries.noaa.gov/s3/2024-12/Panel-Summary-Report_Yellowtail-Flounder_508_final_12_12_2024.pdf), [accessible Council copy](https://d23h0vhsm26o6d.cloudfront.net/10b.-Panel-Summary-Report_Yellowtail-Flounder_508_final_12_12_2024.pdf)
 - [Framework 72 final submission, April 2026](https://d23h0vhsm26o6d.cloudfront.net/260423_Groundfish_FW72_SIR_FINAL-Submission.pdf), assessment adoption and status-determination sections
 - [NOAA assessment supplementary information portal](https://apps-nefsc.fisheries.noaa.gov/saw/sasi.php), public 2024 research-track and 2025 management-track materials
+- [Kittel et al. (2026) research paper](https://doi.org/10.1139/cjfas-2025-0289) and [associated research archive](https://zenodo.org/records/19443644); excluded as unverified production data.
