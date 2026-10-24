@@ -59,3 +59,21 @@ stopifnot(all(total$source_type == "derived_source_output"),
   o$value[o$measure == "predicted_catch" & o$year == 2025] == 29044,
   x$value[x$measure == "total_biomass" & x$year == 2025] == 67675.175772)
 cat("Sandeel Area 1r identity, seasonal hazards, observation roles, mixed state dates, source gaps and uncertainty passed.\n")
+
+validate_seasonal_fixture <- function(tables) {
+  env <- new.env(parent = globalenv())
+  env$read.csv <- function(file, ...) tables[[sub(".csv", "", basename(file), fixed = TRUE)]]
+  tryCatch({
+    invisible(capture.output(sys.source(
+      "analysis/comp_assessments/scripts/database/002_validate_database.R", envir = env)))
+    NULL
+  }, error = identity)
+}
+at <- which(db$inputs$assessment_id == source$assessment$assessment_id & db$inputs$type == "M")[1L]
+for (field in c("type", "season")) {
+  wrong <- db
+  wrong$inputs[[field]][at] <- if (field == "type") "weight" else NA_character_
+  error <- validate_seasonal_fixture(wrong)
+  stopifnot(inherits(error, "error"), grepl("M-at-age and a source season", conditionMessage(error), fixed = TRUE))
+}
+cat("Seasonal mortality validation rejects other input types and missing source seasons.\n")
