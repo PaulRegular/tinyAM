@@ -28,6 +28,6 @@ covariate <- update(base, data = data,
 ## Inspect support, not just fitted curves ----
 fits <- list(RW = base, Deterministic = deterministic, IID = independent, BH = beverton_holt,
              Ricker = ricker_ar1, Covariate = covariate)
-lapply(fits, check_tam)
+check_tam(model_list = fits)
 tidy_recruitment(beverton_holt)$pairs
 if (interactive()) vis_tam(model_list = fits)

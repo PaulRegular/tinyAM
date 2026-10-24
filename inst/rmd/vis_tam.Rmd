@@ -46,7 +46,8 @@ pop <- tabs$pop
 fixed_par <- tabs$fixed_par
 random_par <- tabs$random_par
 formula_effects <- tabs$formula_effects
-checks <- lapply(Filter(function(fit) inherits(fit, "tam_fit"), fits), check_tam)
+check_models <- Filter(function(fit) inherits(fit, "tam_fit"), fits)
+checks <- if (length(check_models)) check_tam(model_list = check_models) else list()
 ssb_timing <- data.frame(Model = names(fits), Timing = vapply(fits, function(fit) {
   if (!inherits(fit, "tam_fit")) return("Reference definition; see Background")
   tinyAM:::.ssb_timing_label(fit$dat)

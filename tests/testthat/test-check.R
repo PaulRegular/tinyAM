@@ -10,6 +10,100 @@ make_check_fit <- function() {
   ), class = "tam_fit")
 }
 
+test_that("multiple-model checks preserve individual diagnostics and inputs", {
+  base <- make_check_fit()
+  alternative <- make_check_fit()
+  alternative$opt$convergence <- 1L
+  originals <- list(base, alternative)
+
+  expect_silent(checks <- check_tam(base, alternative))
+  expect_s3_class(checks, "tam_checks")
+  expect_named(checks, c("base", "alternative"))
+  expect_identical(checks$base, check_tam(base))
+  expect_identical(checks$alternative, check_tam(alternative))
+  expect_true(checks$base$is_converged)
+  expect_false(checks$alternative$is_converged)
+  expect_identical(list(base, alternative), originals)
+
+  labeled <- check_tam(Base = base, Alternative = alternative)
+  expect_named(labeled, c("Base", "Alternative"))
+  expect_identical(labeled$Base, checks$base)
+  mixed <- check_tam(base, Other = alternative)
+  expect_named(mixed, c("base", "Other"))
+  expect_identical(check_tam(fit = base), checks$base)
+  expect_identical(check_tam(Base = base), checks$base)
+})
+
+test_that("explicit model lists keep a stable collection shape", {
+  base <- make_check_fit()
+  alternative <- make_check_fit()
+  models <- list(Base = base, Alternative = alternative)
+  checks <- check_tam(model_list = models)
+  expect_s3_class(checks, "tam_checks")
+  expect_named(checks, names(models))
+  expect_identical(unclass(checks), lapply(models, check_tam))
+  single <- check_tam(model_list = models[1L])
+  expect_s3_class(single, "tam_checks")
+  expect_length(single, 1L)
+  expect_identical(single$Base, check_tam(base))
+})
+
+test_that("multiple-model controls respect each fit and named overrides", {
+  base <- make_check_fit()
+  alternative <- make_check_fit()
+  base$sdrep$gradient.fixed <- alternative$sdrep$gradient.fixed <- .005
+  alternative$grad_tol <- .001
+  checks <- check_tam(base, alternative)
+  expect_true(checks$base$is_converged)
+  expect_false(checks$alternative$is_converged)
+  expect_equal(checks$base$grad_tol, .01)
+  expect_equal(checks$alternative$grad_tol, .001)
+
+  detailed <- check_tam(base, alternative, grad_tol = .01, detailed = TRUE)
+  expect_true(all(vapply(detailed, `[[`, logical(1), "is_converged")))
+  expect_identical(detailed$base, check_tam(base, grad_tol = .01, detailed = TRUE))
+  expect_identical(detailed$alternative, check_tam(alternative, grad_tol = .01, detailed = TRUE))
+  expect_false(is.null(detailed$base$curvature))
+  expect_false(is.null(detailed$alternative$curvature))
+})
+
+test_that("multiple-model input errors identify ambiguous or invalid calls", {
+  fit <- make_check_fit()
+  expect_error(check_tam(), "No models")
+  expect_error(check_tam(model_list = list()), "non-empty")
+  expect_error(check_tam(model_list = list(fit)), "named list")
+  expect_error(check_tam(fit, model_list = list(Base = fit)), "not both")
+  expect_error(check_tam(Base = fit, Base = fit), "unique")
+  expect_error(check_tam(fit, fit), "unique")
+  expect_error(check_tam(fit, Other = 1), "tam_fit")
+  reference <- structure(list(), class = "tam_ref")
+  expect_error(check_tam(fit, reference), "tam_fit")
+  expect_error(check_tam(fit, Other = fit, grad_tol = 0), "positive finite")
+  expect_error(check_tam(fit, Other = fit, detailed = NA), "TRUE or FALSE")
+})
+
+test_that("collection printing labels every model without changing results", {
+  base <- make_check_fit()
+  alternative <- make_check_fit()
+  alternative$opt$convergence <- 1L
+  checks <- check_tam(Base = base, Alternative = alternative)
+  messages <- character()
+  output <- capture.output(withCallingHandlers(
+    printed <- withVisible(print(checks)),
+    message = function(m) {
+      messages <<- c(messages, conditionMessage(m))
+      invokeRestart("muffleMessage")
+    }
+  ))
+  text <- paste(c(output, messages), collapse = "\n")
+  expect_match(text, "Base")
+  expect_match(text, "Alternative")
+  expect_match(text, "Numerical convergence: passed")
+  expect_match(text, "Numerical convergence: not passed")
+  expect_false(printed$visible)
+  expect_identical(printed$value, checks)
+})
+
 test_that("numerical diagnostics include optimizer status and use one tolerance", {
   fit <- make_check_fit()
   original <- fit

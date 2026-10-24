@@ -152,7 +152,7 @@ ncam <- update(scaa,
   })
   fits <- list(scaa = scaa, sam = sam, ncam = ncam)
   if (!all(vapply(fits, inherits, logical(1), "tam_fit"))) cli::cli_abort("An example fit failed; inspect cache/fit_*.rds.")
-  checks <- lapply(fits, check_tam)
+  checks <- check_tam(model_list = fits)
   failed <- names(checks)[!vapply(checks, function(x) isTRUE(x$is_converged), logical(1))]
   if (length(failed)) cli::cli_warn("Numerical checks did not pass for: {paste(failed, collapse = ', ')}. Inspect cached diagnostics.")
   templates <- file_hashes(list.files(file.path(repo, "inst"), pattern = "[.](Rmd|js|css|svg|png)$", recursive = TRUE, full.names = TRUE))

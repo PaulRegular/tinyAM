@@ -3,33 +3,44 @@
 \name{check_tam}
 \alias{check_tam}
 \alias{print.tam_check}
+\alias{print.tam_checks}
 \title{Check numerical convergence and model diagnostics}
 \usage{
-check_tam(fit, grad_tol = NULL, detailed = FALSE)
+check_tam(fit, ..., grad_tol = NULL, detailed = FALSE, model_list = NULL)
 
 \method{print}{tam_check}(x, ...)
+
+\method{print}{tam_checks}(x, ...)
 }
 \arguments{
-\item{fit}{A fitted \code{tam_fit} object.}
+\item{fit}{A fitted \code{tam_fit} object. May be omitted when supplying models
+through named \code{...} arguments or \code{model_list}.}
+
+\item{...}{Additional fitted \code{tam_fit} objects. Names label the models;
+unnamed models use their expression names. Unused by the print methods.}
 
 \item{grad_tol}{Positive gradient tolerance. \code{NULL} uses the tolerance stored
 in the fit, or \code{1e-2} if none is stored.}
 
 \item{detailed}{Examine covariance eigenvalues and weak parameter directions?}
 
-\item{x}{A \code{tam_check} object.}
+\item{model_list}{Optional named list of fitted \code{tam_fit} objects. Supply
+this or individual models, not both.}
 
-\item{...}{Unused.}
+\item{x}{A \code{tam_check} or \code{tam_checks} object.}
 }
 \value{
-A \code{tam_check} list with \code{is_converged}, \code{numerical}, \code{structural},
+For one individual model, a \code{tam_check} list with \code{is_converged}, \code{numerical}, \code{structural},
 \code{structural_status}, \code{advisories}, \code{residuals}, \code{data}, and \code{curvature}.
 \code{numerical} records pass, fail or not-assessed status for each check.
 Calling this function does not modify the fit or emit warnings; its print
 method displays the findings.
+Multiple models, or an explicit \code{model_list} (even with one model), return
+a \code{tam_checks} named list of these results. Its print method shows each
+model's findings under its name. Access a model with \code{checks[["Base"]]}.
 }
 \description{
-Reviews a fitted model's optimization, uncertainty, formula designs and
+Reviews one or more fitted models' optimization, uncertainty, formula designs and
 residual patterns. Numerical convergence, known structural problems and
 advisory findings are reported separately. A converged model can still have
 weakly estimated parameters or unsuitable biological assumptions.
@@ -74,6 +85,11 @@ this check can reveal an unsuitable residual process but does not establish
 or rule out a biological stock-recruit relationship.
 These descriptive thresholds identify imprecise estimates; they do not prove
 a structural problem or change the convergence criteria.
+
+Supply fitted models individually, as in \code{check_tam(base, alternative)}, or
+use a named \code{model_list}. Models are checked separately, without ranking or
+requiring matching observations. An omitted \code{grad_tol} uses each model's own
+stored tolerance. A supplied tolerance and \code{detailed} apply to every model.
 }
 \examples{
 \dontrun{
@@ -81,6 +97,9 @@ checks <- check_tam(fit)
 checks$is_converged
 checks$residuals
 check_tam(fit, detailed = TRUE)
+check_tam(fit, alternative)
+checks <- check_tam(model_list = list(Base = fit, Alternative = alternative))
+checks$Base$is_converged
 }
 }
 \seealso{
