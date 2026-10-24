@@ -30,6 +30,7 @@ assessments or management advice.
 | Bay of Biscay sardine | [source review](source_reviews/ck_ices_wghansa_pilchardus_sp8abd.md) |
 | Southern New England/Mid-Atlantic yellowtail flounder | [source review](source_reviews/ck_nefsc_garmiii_ferruginea_sne_ma.md) |
 | Georges Bank yellowtail flounder | [source review and production-data gap](source_reviews/ck_dfo_nefsc_ferruginea_gb.md) |
+| Northeast Arctic beaked redfish | [source review and remaining input gaps](source_reviews/ck_ices_afwg_mentella_deep_1_2.md) |
 | Shared readers, converters, audits, and runners | `R/` |
 | Source imports and validators | `scripts/database/` |
 | Visible stock model calls and run drivers | `scripts/translation/` |

@@ -61,6 +61,14 @@ archive, and the 2025 update revised maturity. This is a source-data blocker:
 candidate biology or age states must not fill the production record. The
 partial summary import is not a completed tinyAM translation.
 
+[Northeast Arctic beaked redfish](source_reviews/ck_ices_afwg_mentella_deep_1_2.md)
+now has published N, reconstructed rounded F and source biological vectors in
+the database. Its stock-specific SCAA uses two fleet selectivity processes,
+explicit older cohorts and a separate deep-pelagic composition likelihood.
+Missing young-age biology, numerical pelagic compositions and exact overlapping
+catch-series assembly still prevent translation. Those source gaps must not be
+treated as model capabilities or filled by borrowing another run's inputs.
+
 ## What the expanded formulas already cover
 
 IID/RW/AR1 recruitment and BH/Ricker median curves, fixed recruitment SDs,

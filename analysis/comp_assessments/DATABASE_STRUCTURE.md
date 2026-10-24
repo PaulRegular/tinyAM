@@ -526,6 +526,14 @@ biomass_by_age_group stores a reported aggregate biomass for a named age group, 
 
 Retain uncertainty where readily available. Parameter estimates reported by the official assessment may be stored as `type = biology`, with `measure` naming the exact parameter and `age` or `year` set only when that dimension applies.
 
+`fleet_selectivity_at_age` retains a reported normalized fleet selectivity
+proportion (`type = biology`, `unit = proportion`, with age and fleet). Leave
+year blank when the curve is time-invariant. `fleet_F_coefficient` stores the
+corresponding annual fleet mortality coefficient before selectivity; it is
+neither total F-at-age nor Fbar. A reconstructed total F surface must be
+labelled `derived_source_output` and retain the source equation and rounding
+limitations in notes.
+
 ## Uncertainty and estimate definitions
 
 The `se` column records a standard error, not a coefficient of variation (CV).

@@ -255,7 +255,7 @@ for (name in c("inputs", "outputs")) {
   if (name == "outputs" && any(blank_year & !x$measure %in% c(
     "q", "q_power", "process_sd", "observation_sd", "mat_beta1", "mat_beta2",
     "log_q_power", "growth_length_at_age", "growth_rate", "growth_sd_length_at_age",
-    "Fmsy", "Bmsy", "msy"
+    "Fmsy", "Bmsy", "msy", "fleet_selectivity_at_age"
   ))) {
     stop("outputs$year may be blank only for time-invariant estimates or SD estimates.", call. = FALSE)
   }
@@ -279,7 +279,7 @@ for (name in c("inputs", "outputs")) {
     x$measure %in% c(
       "numbers_at_age", "biomass_at_age", "fishing_mortality_at_age",
       "natural_mortality_at_age", "mature_biomass_at_age",
-      "total_mortality_at_age"
+      "total_mortality_at_age", "fleet_selectivity_at_age"
     ) & !has_age_group
   }
   age <- suppressWarnings(as.numeric(x$age))
@@ -325,6 +325,10 @@ for (name in c("inputs", "outputs")) {
     stop(name, "$age must contain whole ages for age-specific measures.", call. = FALSE)
   }
   value <- suppressWarnings(as.numeric(x$value))
+  if (name == "outputs" && any(x$measure == "fleet_selectivity_at_age" &
+    (is.na(value) | value < 0 | value > 1))) {
+    cli::cli_abort("Fleet selectivity proportions must lie in [0, 1].")
+  }
   missing_value <- is.na(value)
   signed <- if (name == "inputs") {
     x$type == "covariate" &
