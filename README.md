@@ -24,13 +24,13 @@ for guidance and examples.
 ## Philosophy
 
 Assessment models express hypotheses about where unexplained variation arises:
-recruitment, cohort survival, fishing mortality, natural mortality, catchability
+recruitment, abundance deviations, fishing mortality, natural mortality, catchability
 or observations. tinyAM lets you change one or more assumptions and examine
 their consequences using the same diagnostic, simulation and forecasting tools.
 
 “Tiny” refers to a small modelling vocabulary: complexity comes from combining
 understandable components, rather than choosing among many special-purpose
-models. The package is a model-development and experimentation tool.
+models.
 
 ## 1. Set up tidy inputs
 
@@ -120,8 +120,8 @@ can differ. Catch/index `NA` values and zeros are excluded from the lognormal
 likelihood; weights and maturities must be complete. No missing-observation
 imputation or zero-count model is provided.
 
-See the [input requirements](https://paulregular.github.io/tinyAM/reference/check_tam_data.html)
-for table rules and permitted missing values. See
+See [?check_tam_data](https://paulregular.github.io/tinyAM/reference/check_tam_data.html)
+for input requirements and
 [`?cod_obs`](https://paulregular.github.io/tinyAM/reference/cod_obs.html) for
 details on the sources and preparation of the supplied Northern cod data.
 
