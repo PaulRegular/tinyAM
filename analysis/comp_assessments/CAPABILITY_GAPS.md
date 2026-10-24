@@ -86,6 +86,14 @@ them. Female SSB requires the separate female fraction and maturity inputs.
 
 ## What the expanded formulas already cover
 
+The [White Hake Run_005 audit](source_reviews/ck_nefsc_garmiii_tenuis_gom_gb.md)
+likewise fixes BH steepness at one, but gives the recruitment penalty zero
+weight. A constant IID tinyAM mean preserves the flat expectation, not the
+source's unpenalized sum-to-zero fixed-effect recruitment vector. The source
+also penalizes initial abundance around first-year equilibrium survival and
+uses deterministic older-cohort survival. These distinctions require explicit
+translation notes; a supplied CV alone does not establish an active process.
+
 IID/RW/AR1 recruitment and BH/Ricker median curves, fixed recruitment SDs,
 Gaussian catchability and mean effects, monotone/logistic survey curves,
 categorical/numeric grouping and observation-SD effects are available. Many
