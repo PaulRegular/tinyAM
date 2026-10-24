@@ -69,6 +69,13 @@ Missing young-age biology, numerical pelagic compositions and exact overlapping
 catch-series assembly still prevent translation. Those source gaps must not be
 treated as model capabilities or filled by borrowing another run's inputs.
 
+For [4VWX herring](source_reviews/ck_dfo_mar_harengus_4vwx.md), the recovered
+native example inputs end in 2018, while the production reference operating
+models were conditioned through 2020. The 2025 component indicator update is
+recorded separately. Its acoustic spawning-biomass index is not a stock-wide
+fitted SSB series; a single tinyAM comparison would first need the production
+inputs, reference outputs and a justified component/ensemble definition.
+
 ## What the expanded formulas already cover
 
 IID/RW/AR1 recruitment and BH/Ricker median curves, fixed recruitment SDs,
