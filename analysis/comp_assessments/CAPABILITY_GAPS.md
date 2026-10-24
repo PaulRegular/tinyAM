@@ -53,6 +53,14 @@ parameter correlation. This is a flagged identifiability/approximation outcome,
 not evidence of successful replication or proof that any one omitted feature
 caused it. The historical prevalence counts above are unchanged.
 
+[Georges Bank yellowtail flounder](source_reviews/ck_dfo_nefsc_ferruginea_gb.md)
+has verified 2025 production summary outputs, but the recovered numerical
+2024 archive belongs to the superseded constant-M candidate. The selected
+age-based-M run lacks corresponding numerical input/output tables in that
+archive, and the 2025 update revised maturity. This is a source-data blocker:
+candidate biology or age states must not fill the production record. The
+partial summary import is not a completed tinyAM translation.
+
 ## What the expanded formulas already cover
 
 IID/RW/AR1 recruitment and BH/Ricker median curves, fixed recruitment SDs,

@@ -29,6 +29,7 @@ assessments or management advice.
 | Central Baltic herring | [source review](source_reviews/ck_ices_wgbfas_harengus_bs_25_29_32.md) · [tinyAM translation](scripts/translation/stocks/ices_herring_central_baltic_2026.R) |
 | Bay of Biscay sardine | [source review](source_reviews/ck_ices_wghansa_pilchardus_sp8abd.md) |
 | Southern New England/Mid-Atlantic yellowtail flounder | [source review](source_reviews/ck_nefsc_garmiii_ferruginea_sne_ma.md) |
+| Georges Bank yellowtail flounder | [source review and production-data gap](source_reviews/ck_dfo_nefsc_ferruginea_gb.md) |
 | Shared readers, converters, audits, and runners | `R/` |
 | Source imports and validators | `scripts/database/` |
 | Visible stock model calls and run drivers | `scripts/translation/` |
