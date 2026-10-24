@@ -149,7 +149,7 @@ rsvg::rsvg_pdf(file.path(repo, "man/figures/logo.svg"), "logo.pdf")
 \renewcommand{\micro}[1]{{\fontsize{7.4}{9.7}\selectfont #1\par}}
 \renewcommand{\texttt}[1]{\inlinecode{#1}}
 \pageheader{tinyAM :: MODEL REFERENCE}{Settings, equations and the population assumptions they represent}
-\begin{minipage}[t][160mm][s]{.325\linewidth}\vspace{0pt}
+\begin{minipage}[t][160mm][s]{.31\linewidth}\vspace{0pt}
 \begin{mathbox}{Abundance and survival}
 \micro{N is start-of-year abundance. Each year, survivors move forward one age; survivors in the terminal age remain in the plus group. Let $Z=F+M$; recruitment is $R_t=N_{t,1}$.}
 \[
@@ -183,9 +183,10 @@ SSB_t=\sum_b n_{t,b}w_{t,b}p_{t,b}e^{-\tau_{t,b}Z_{t,b}}.
 \micro{Biomass is $\sum_b n_{t,b}w_{t,b}$. $b$: retained biological age; $n$: its abundance; $w$: weight; $p$: mature fraction; $\tau$: year fraction from year start to spawning (default 0; set \texttt{maturity\$spawn\_time} for age/year-specific values). Hidden ages retain biology/timing and share plus-age mortality.}
 \end{mathbox}
 \end{minipage}\hfill
-\begin{minipage}[t][160mm][s]{.325\linewidth}\vspace{0pt}
+\begin{minipage}[t][160mm][s]{.33\linewidth}\vspace{0pt}
 \begin{mathbox}{Mean fishing mortality}
-\micro{\texttt{F\_settings}: \texttt{process = "off"} with \texttt{mu\_form = \string~ factor(year) + factor(age)} gives fixed separable year and age effects. \texttt{mu\_form = \string~ logistic(age)} gives a rising long-term mean.}
+\micro{\RaggedRight \texttt{F\_settings}: fixed separable effects use \texttt{process = "off"} and\\
+\texttt{mu\_form = \string~ factor(year) +} \texttt{factor(age)}. The alternative \texttt{\string~ logistic(age)} gives a rising long-term mean.}
 \[
 \begin{aligned}
 S(a)&=\{1+e^{-k(a-a_{50})}\}^{-1},\quad k>0,\\
@@ -223,12 +224,13 @@ S(a)&=\{1+e^{-k(a-a_{50})}\}^{-1},\quad k>0,\\
 \micro{N, F and M have separate process parameters. \texttt{sd\_form = \string~ 1} shares SDs; \texttt{\string~ factor(age)} gives age-specific SDs. \texttt{iid()}, \texttt{rw()} and \texttt{ar1()} terms structure log SD. Ordinary age formulas give $\sigma_a=\exp(X_a\beta_\sigma)$. Shared SDs do not share states.}
 \end{mathbox}
 \end{minipage}\hfill
-\begin{minipage}[t][160mm][s]{.325\linewidth}\vspace{0pt}
+\begin{minipage}[t][160mm][s]{.31\linewidth}\vspace{0pt}
 \sectitle{}{Survey catchability}{.56\linewidth}\par\vspace{.5mm}
-\begin{minipage}[t]{.78\linewidth}\vspace{0pt}
-\micro{\texttt{q\_block}: unrestricted age blocks; \texttt{mono(q\_block)}\\
-imposes non-decreasing catchability under the default log link.}
-\end{minipage}\par\vspace{1mm}
+{\parshape=3 0pt .59\linewidth 0pt .59\linewidth 0pt \linewidth
+\micro{\RaggedRight \texttt{q\_block} leaves age patterns unrestricted;\\
+\texttt{mono(q\_block)} imposes non-decreasing catchability\\
+under default log link.}}
+\vspace{1mm}
 \[
 \eta_{q,k}=\beta_q+\sum_{j<k}d_j,\quad d_j\ge0,
 \qquad q_k=e^{\eta_{q,k}}.
@@ -249,11 +251,10 @@ q_k=\{1+e^{-\eta_{q,k}}\}^{-1}.
 \sigma_i&=\sigma_i^0\exp(X_{sd,i}\beta_{sd}).
 \end{aligned}
 \]
-\micro{$s_i$: survey sampling fraction. Catch/index \texttt{sd\_form = \string~ 1} shares an observation SD; \texttt{\string~ survey} allows survey differences. Baseline SDs and Gaussian formula effects can modify log SD. Predictions are medians; zero/NA observations are excluded, with complete predictions.}
+\micro{where $\widetilde Y_i$ and $Y_i$ are predicted and observed catch or index values, respectively, and $s_i$ is the survey sampling fraction. Catch/index \texttt{sd\_form = \string~ 1} shares an observation SD; \texttt{\string~ survey} allows survey differences. Baseline SDs and Gaussian formula effects can modify log SD. Predictions are medians; zero/NA observations are excluded, with complete predictions.}
 \end{mathbox}\vfill
 \begin{mathbox}{Fit and prediction checks}
-\micro{\texttt{check\_tam()} checks numerical and statistical diagnostics; \texttt{fit\_hindcast()} evaluates survey forecasts given observed removals and retrospective stability.}
-\micro{The joint likelihood includes active process, formula-effect and observation densities. RTMB integrates random effects by Laplace approximation; intervals use local curvature. Standardized residuals $(\log Y_i-\log\widetilde Y_i)/\sigma_i$ depend on fitted, shrunken states. Convergence does not establish identifiability. Hindcasts return log RMSE and retrospective Mohn's $\rho$.}
+\micro{\texttt{check\_tam()} checks numerical and statistical diagnostics; \texttt{fit\_hindcast()} evaluates survey forecasts given observed removals and retrospective stability. The joint likelihood includes active process, formula-effect and observation densities. RTMB integrates random effects by Laplace approximation; intervals use local curvature. Standardized residuals $(\log Y_i-\log\widetilde Y_i)/\sigma_i$ depend on fitted, shrunken states. Convergence does not establish identifiability. Hindcasts report survey log-RMSE, MASE, scored/failed folds and Mohn's $\rho$.}
 \end{mathbox}
 \end{minipage}
 \pagefooter{\sitefooter}
