@@ -28,6 +28,27 @@ prepared$env$source$outputs$unit[
 ] <- "fish"
 testthat::expect_error(prepared$env$source_starts(), "thousand fish")
 
+reported_ssb <- subset(source_before$outputs, measure == "SSB")
+reported_ssb <- as.numeric(reported_ssb$value[match(1963:2024, reported_ssb$year)])
+template <- list(dat = dat,
+  pop = list(ssb = data.frame(year = 1963:2024, est = reported_ssb * 1.1,
+    unit = "tonnes")),
+  rep = list(ssb = setNames(reported_ssb * 1.1, 1963:2024)),
+  obs_pred = list(), fixed_par = data.frame(), random_par = list())
+ref <- database_to_tam_ref("nefsc_white_hake_2025", source_before$outputs,
+  template = template, age_plus_group = 9,
+  comparison_aggregates = prepared$env$comparison_aggregates,
+  comparison_definitions = prepared$env$comparison_definitions)
+ssb_comparison <- subset(.assessment_percent_differences(ref), metric == "ssb")
+stopifnot(
+  nrow(ssb_comparison) == 62L,
+  isTRUE(all.equal(ssb_comparison$source, reported_ssb)),
+  all(abs(ssb_comparison$percent_difference - 10) < 1e-8),
+  all(ssb_comparison$comparison_status == "matched"),
+  all(ref$pop$ssb$unit == "tonnes"),
+  all(is.finite(attr(ref, "native_pop")$ssb$se))
+)
+
 stopifnot(
   result$diagnostics$status == "not_fitted",
   inherits(obs, "list"),

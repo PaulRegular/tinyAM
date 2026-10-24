@@ -32,6 +32,7 @@ obs$index <- droplevels(obs$index[q_has_positive_obs, , drop = FALSE])
 ## Comparison and background ----
 age_plus_group <- 9
 comparison_outputs <- source$outputs
+comparison_aggregates <- "ssb"
 comparison_definitions <- list(
   ssb = list(
     status = "matched",
