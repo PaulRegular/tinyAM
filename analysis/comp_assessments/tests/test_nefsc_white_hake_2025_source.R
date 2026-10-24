@@ -7,6 +7,20 @@ source_data <- read_assessment(
 inputs <- source_data$inputs
 outputs <- source_data$outputs
 assessment <- source_data$assessment
+assumptions <- source_data$assumptions
+recruitment <- subset(assumptions, setting == "recruitment_and_initial_states")
+survival <- subset(assumptions, setting == "cohort_survival")
+initial <- subset(assumptions, setting == "initial_abundance")
+stopifnot(
+  nrow(recruitment) == 1L, nrow(survival) == 1L, nrow(initial) == 1L,
+  grepl("steepness fixed at 1", recruitment$value, fixed = TRUE),
+  grepl("lambda = 0", recruitment$notes, fixed = TRUE),
+  grepl("sum-to-zero fixed-effect", recruitment$notes, fixed = TRUE),
+  grepl("deterministic survival", survival$value, fixed = TRUE),
+  grepl("not an annual N process", survival$notes, fixed = TRUE),
+  grepl("Lambda is 1", initial$notes, fixed = TRUE),
+  grepl("CV is 0.2", initial$notes, fixed = TRUE)
+)
 catch_age <- subset(inputs, type == "catch" & measure == "numbers_at_age")
 catch_total <- subset(inputs, type == "catch" & measure == "total_biomass")
 catch_cv <- subset(inputs, type == "catch" & measure == "relative_standard_error")

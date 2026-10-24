@@ -78,6 +78,17 @@ if (!all(file.exists(c(input_file, table_file)))) {
 }
 
 input_lines <- readLines(input_file, warn = FALSE)
+stopifnot(
+  input_section(input_lines, "Phase for Recruitment Deviations") == 4,
+  input_section(input_lines, "Phase for Stock Recruitment Relationship") == 3,
+  input_section(input_lines, "Phase for Steepness") == -3,
+  input_section(input_lines, "Initial Steepness") == 1,
+  input_section(input_lines, "Lambda for Recruitment Deviations") == 0,
+  input_section(input_lines, "Phase for N in 1st Year") == 2,
+  input_section(input_lines, "NAA Deviations Flag") == 1,
+  input_section(input_lines, "Lambda for N in 1st Year Deviations") == 1,
+  input_section(input_lines, "CV for N in 1st Year Deviations") == 0.2
+)
 n_years <- input_section(input_lines, "Number of Years")[[1L]]
 year1 <- input_section(input_lines, "First Year")[[1L]]
 n_ages <- input_section(input_lines, "Number of Ages")[[1L]]
@@ -136,10 +147,10 @@ inputs <- read_table(file.path(database, "inputs.csv"))
 assumptions <- read_table(file.path(database, "assumptions.csv"))
 output_table <- read_table(file.path(database, "outputs.csv"))
 if (sum(stocks$stock_id == stock_id) != 1L) stop("Expected one White Hake stock row.", call. = FALSE)
-if (assessment_id %in% assessments$assessment_id ||
+if (!dry_run && (assessment_id %in% assessments$assessment_id ||
   assessment_id %in% inputs$assessment_id ||
   assessment_id %in% assumptions$assessment_id ||
-  assessment_id %in% output_table$assessment_id) {
+  assessment_id %in% output_table$assessment_id)) {
   stop("White Hake assessment rows already exist; inspect before importing.", call. = FALSE)
 }
 
@@ -360,9 +371,19 @@ add_assumption(assessment_id = assessment_id, component = "index",
   notes = "The q-deviation phase is -5; tinyAM's survey-by-age q structure is an approximation.")
 add_assumption(assessment_id = assessment_id, component = "recruitment",
   setting = "recruitment_and_initial_states",
-  value = "stock-recruit relationship and recruitment deviations estimated; initial numbers-at-age estimated",
-  source_reference = paste(input_ref, "Phase for Recruitment Deviations; Phase for N in 1st Year; Stock Recruitment Flag; NAA Deviations Flag"),
-  notes = "Recruitment CV is 0.5 for all years; tinyAM's N process and initial-state treatment do not reproduce ASAP integration.")
+  value = "constant expected age-1 recruitment; steepness fixed at 1; annual recruitment deviations estimated without a recruitment penalty",
+  source_reference = paste(input_ref, "Phase for Recruitment Deviations; Phase for Stock Recruitment Relationship; Phase for Steepness; Initial Steepness; Lambda for Recruitment Deviations; ASAP3 Technical Documentation pp. 3-4, 41-42"),
+  notes = "The recruitment scaler is estimated in phase 3 and log deviations in phase 4; steepness is fixed (phase -3) at 1, so BH beta is zero and expected recruitment is independent of SSB. Recruitment CV 0.5 is supplied but lambda = 0 removes its likelihood contribution. Log deviations are sum-to-zero fixed-effect parameters, not integrated random effects. No lognormal bias correction appears in the documented recruitment equation.")
+add_assumption(assessment_id = assessment_id, component = "N",
+  setting = "cohort_survival",
+  value = "deterministic survival after recruitment with terminal plus-group accumulation",
+  source_reference = paste(input_ref, "ASAP3 Technical Documentation p. 5 Eq. 13 and p. 31 get_numbers_at_age"),
+  notes = "For ages 2-8, N[t,a] = N[t-1,a-1] * exp(-Z[t-1,a-1]); age 9+ also retains survivors from age 9+. No older-cohort process deviations enter this recursion. NAA Deviations Flag controls the initial-age penalty, not an annual N process.")
+add_assumption(assessment_id = assessment_id, component = "N",
+  setting = "initial_abundance",
+  value = "initial older-age abundances estimated with a lognormal penalty around first-year equilibrium survival",
+  source_reference = paste(input_ref, "Phase for N in 1st Year; NAA Deviations Flag; Lambda for N in 1st Year Deviations; CV for N in 1st Year Deviations; ASAP3 Technical Documentation pp. 43-44"),
+  notes = "Phase 2 estimates initial older-age abundances. Flag 1 sets the penalty reference from expected first-year recruitment and cumulative first-year survival, with a plus-group divisor 1-exp(-Z[1,9]). Lambda is 1 and supplied CV is 0.2 (log SD sqrt(log(1+0.2^2))). The documented objective uses all initial ages in its norm; this is not tinyAM's unpenalized free or deterministic exp initialization.")
 add_assumption(assessment_id = assessment_id, component = "model",
   setting = "selected_run", value = "2025 Management Track Run_005; ASAP 3.0",
   source_reference = input_ref,

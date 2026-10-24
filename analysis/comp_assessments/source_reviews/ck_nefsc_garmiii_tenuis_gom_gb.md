@@ -14,7 +14,11 @@ The model fixes natural mortality at 0.20 yr-1 for ages 1–9+. Maturity is fixe
 
 All five model indices are included: NEFSC spring and fall bottom trawl, ASMFC shrimp trawl, and NEFSC spring and fall bottom longline. The native index and age-composition units are numbers. Survey timing is April (0.25), July (0.50), or October (0.75), as specified by the ASAP input month codes. Aggregate indices have separate CVs; age-composition effective sample sizes are retained on the age rows. Annual q deviations are inactive in Run_005. Exact index observations, age rows, weights, timing, and sample sizes are retained in the database.
 
-The input file also records estimated recruitment deviations, estimated initial numbers-at-age and a stock-recruit relationship. tinyAM's available initial-state and process options do not reproduce ASAP's exact integration and likelihood setup; those choices are described in the translation background rather than represented as equivalent.
+The production input fixes Beverton-Holt steepness at 1 (initial value 1, phase -3), estimates the recruitment scaler (phase 3) and annual log recruitment deviations (phase 4), and sets the recruitment-deviation likelihood weight to zero. Expected recruitment is therefore constant, independent of SSB. The supplied annual recruitment CV of 0.5 does not impose a recruitment penalty when its weight is zero. The ASAP3 technical documentation confirms the equation and the sum-to-zero fixed-effect deviation vector; these are not integrated random effects.
+
+Older cohorts follow deterministic survival under F + M, with accumulation into age 9+. Initial older-age abundances are estimated in phase 2. NAA Deviations Flag 1 selects a penalty reference formed from expected first-year recruitment and first-year survival, including the terminal plus-group divisor. Its likelihood weight is 1 and its CV is 0.2; the documented objective includes all initial ages in the log-residual norm. This flag does not activate annual older-cohort process error. Neither tinyAM's deterministic exponential initialization nor unpenalized free initialization reproduces this penalty exactly.
+
+These meanings were checked against the author's ASAP3 technical documentation (pp. 3-5, 31, 41-44, including the printed ADMB implementation) and user manual (phase conventions). Both are cached from `cmlegault/ASAPplots` revision `75adfd7cf889a5a2b66b6ef0a4dbe22b51aa2084`, with URLs and SHA256 checksums in `ASAP_manual_manifest.csv`. They establish method semantics; only Run_005 supplies the production settings. The NOAA toolbox archive contains an installer only, which was not executed. Its separate manifest records the inspected revision and checksum.
 
 ## Reported outputs and remaining gaps
 
@@ -36,5 +40,7 @@ The source combines total-index and age-composition likelihoods; tinyAM represen
 - [2025 White Hake run archive](https://apps-nefsc.fisheries.noaa.gov/saw/sasi_files.php?year=2025&species_id=8&stock_id=6&review_type_id=3&filename=2025_HKW_UNIT.zip)
 - [2022 Management Track assessment](https://repository.library.noaa.gov/view/noaa/55264/noaa_55264_DS1.pdf)
 - [2013 SAW56 White Hake assessment summary](https://repository.library.noaa.gov/view/noaa/4374/noaa_4374_DS1.pdf)
+- [ASAP3 technical documentation and printed implementation](https://raw.githubusercontent.com/cmlegault/ASAPplots/75adfd7cf889a5a2b66b6ef0a4dbe22b51aa2084/pdf/Technical_Documentation_for_ASAP3.pdf)
+- [ASAP3 user manual](https://raw.githubusercontent.com/cmlegault/ASAPplots/75adfd7cf889a5a2b66b6ef0a4dbe22b51aa2084/pdf/User_Manual_for_ASAP3.pdf)
 
 The local, gitignored source cache and checksums are recorded in source_cache/ck_nefsc_garmiii_tenuis_gom_gb/manifest.csv.
