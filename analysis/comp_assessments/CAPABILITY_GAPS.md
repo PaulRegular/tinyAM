@@ -42,6 +42,17 @@ capabilities: Northern Gulf cod lacks annual stock weights and fitted maturity;
 Georges Bank haddock lacks recoverable current model-grid observations/native
 files. New formulas do not solve those blockers.
 
+The [final standalone West of Scotland cod assessment](source_reviews/ices_cod_west_scotland_2022.md)
+also confirms an unsupported observation-mean feature: one fitted catch-scaling
+factor per year in 1995–2006. Changing observation SDs is not equivalent to that
+mean correction, and fitted source factors must not be applied to original
+observations. Its translation retains the observations and omits the correction.
+An actual fit with latent initial abundance passes numerical checks only after
+a source-start retry, but gives extreme abundance, near-zero F and extensive
+parameter correlation. This is a flagged identifiability/approximation outcome,
+not evidence of successful replication or proof that any one omitted feature
+caused it. The historical prevalence counts above are unchanged.
+
 ## What the expanded formulas already cover
 
 IID/RW/AR1 recruitment and BH/Ricker median curves, fixed recruitment SDs,

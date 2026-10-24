@@ -52,6 +52,14 @@ stopifnot(
   abs(N$value[N$year == 1981 & N$age == 2] - 19502) < 0.5,
   abs(N$value[N$year == 2021 & N$age == 3] - 878) < 0.5
 )
+sd <- select(inputs, "index", "index_sd")
+key <- function(x) paste(x$year, x$age, x$survey)
+at_index <- match(key(sd), key(index))
+at_weight <- match(key(sd), key(precision))
+valid <- is.finite(sd$value) & is.finite(index$value[at_index]) & index$value[at_index] > 0
+stopifnot(!anyNA(at_index), !anyNA(at_weight[valid]),
+  max(abs((index$value[at_index][valid] / sd$value[valid])^2 -
+    precision$value[at_weight][valid])) < 1e-10)
 surface <- function(x) {
   out <- matrix(NA_real_, 41, 7)
   out[cbind(match(x$year, 1981:2021), match(x$age, 1:7))] <- x$value

@@ -76,13 +76,15 @@ comparison_definitions <- list(
 
 background <- c(
   "### West of Scotland cod: final standalone 2022 assessment",
+  "",
+  "**Exploratory fit: severe scale and identifiability problems.** The source-start retry passes numerical checks but gives extremely large abundance, near-zero F and many highly correlated parameters. This dashboard is retained for diagnosis; it does not demonstrate a useful replication of the official assessment.",
   "", print_sources(source$assessment), "",
   "This is the historical Division 6.a assessment. It was merged into the broader Northern Shelf assessment in 2023 and is not an additional independent contemporary stock.",
   "",
   "| Component | Official assessment | tinyAM representation | Reason for difference |",
   "|---|---|---|---|",
   "| Years and ages | 1981-2021; ages 1-7+. No 2022 intermediate-year survey. | Same historical grid and plus group. | None. |",
-  "| N and recruitment | Random-walk age-1 recruitment; independent older-age survival errors share one SD. Separate initial latent N at every age. | Random-walk recruitment, IID N process and free initial abundance. | Initial abundance is fitted directly rather than integrated as SAM random effects. |",
+  "| N and recruitment | Random-walk age-1 recruitment; independent older-age survival errors share one SD. Separate initial latent N at every age. | Random-walk recruitment, IID N process and latent initial older-age abundance. | Both integrate initial older-age states without an initial process density; tinyAM fits first-year recruitment as a fixed parameter. |",
   "| F | Correlated temporal random-walk increments; ages 1, 2 and 3 distinct, ages 4-7 share one state. Age 1 has a separate process SD. | Correlated random-walk F at each age, separate age-1 SD; mean ages 2-5. | The shared older F state is approximated by separate correlated states. |",
   "| M | Fixed annual age-specific Lorenzen M, based on the source smoothed stock weights. | Supply the same complete M surface. | No estimated M process. |",
   "| Catch | Lognormal residual catch includes landings and discards; SD groups are age 1, ages 2-6 and age 7+. SD doubles from 2006. | Same observations, SD groups and relative precision. | SAM also estimates annual catch-scaling factors in 1995-2006; tinyAM omits that correction. |",
@@ -92,18 +94,19 @@ background <- c(
   "",
   "Catch and index observations are unchanged. In particular, the fitted SAM catch-scaling factors are never used to adjust the tinyAM observations. The source's missing 2021 catches at ages 1 and 2 remain missing, and zeros are omitted by the lognormal observation model.",
   "",
-  "The model uses normal package starting values. Numerical convergence and agreement with the official assessment are assessed separately."
+  "The model tries normal package starting values first. If numerical checks fail, one retry uses aligned official N, F and q estimates as starting values only. Data, formulas and model assumptions stay unchanged between those attempts. Numerical convergence and agreement with the official assessment are assessed separately."
 )
 
 ## Model ----
 
 fit <- NULL
 if (do_fit) {
+  source("analysis/comp_assessments/R/fit_default_first.R", local = TRUE)
   fit_stage <- "fit"
   fit_started <- Sys.time()
-  fit <- tinyAM::fit_tam(
+  fit_model <- function(start_par = NULL) tinyAM::fit_tam(
     data = obs, years = years, ages = ages,
-    N_settings = list(process = "iid", init = "free", sd_form = ~1),
+    N_settings = list(process = "iid", init = "latent", sd_form = ~1),
     rec_settings = list(process = "rw", mu_form = NULL),
     F_settings = list(process = "cor_rw", mu_form = NULL,
       sd_form = ~I(age == 1), mean_ages = 2:5),
@@ -111,6 +114,36 @@ if (do_fit) {
     catch_settings = list(sd_form = ~0 + sd_block, sd_supplied = ~relative_sd),
     index_settings = list(q_form = ~0 + q_key, sd_form = ~0 + survey,
       sd_supplied = ~relative_sd),
-    silent = silent
+    silent = silent, start_par = start_par
   )
+  fit <- fit_default_first(fit_model, retry_start = function() {
+    dat <- tinyAM::prepare_tam(
+      data = obs, years = years, ages = ages,
+      N_settings = list(process = "iid", init = "latent", sd_form = ~1),
+      rec_settings = list(process = "rw", mu_form = NULL),
+      F_settings = list(process = "cor_rw", mu_form = NULL,
+        sd_form = ~I(age == 1), mean_ages = 2:5),
+      M_settings = list(process = "off", mu_form = NULL, mu_supplied = ~M_assumption),
+      catch_settings = list(sd_form = ~0 + sd_block, sd_supplied = ~relative_sd),
+      index_settings = list(q_form = ~0 + q_key, sd_form = ~0 + survey,
+        sd_supplied = ~relative_sd)
+    )
+    starts <- tinyAM::make_par(dat)
+    n <- .translation_start_surface(source$outputs, "population", "numbers_at_age", years, ages)
+    f <- .translation_start_surface(source$outputs, "mortality", "fishing_mortality_at_age", years, ages)
+    starts$log_r0 <- log(n[1, 1])
+    starts$log_n0[] <- log(n[1, -1])
+    starts$log_r[] <- log(n[-1, 1])
+    starts$log_n[,] <- log(n[-1, -1])
+    starts$log_f[,] <- log(f)
+    q <- comparison_outputs[comparison_outputs$measure == "q", ]
+    at <- match(paste(obs$index$survey, obs$index$age), paste(q$survey, q$age))
+    q_log <- log(q$value[at])
+    design <- stats::model.matrix(~0 + q_key, data = obs$index)
+    for (j in seq_len(ncol(design))) {
+      starts$log_q[colnames(design)[j]] <- unique(q_log[design[, j] == 1])
+    }
+    starts
+  }, attempt_file = file.path("analysis", "comp_assessments", "results", "cache",
+    assessment_id, "initialization_attempts.rds"))
 }

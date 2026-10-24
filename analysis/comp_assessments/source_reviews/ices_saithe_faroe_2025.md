@@ -48,7 +48,7 @@ Biomass and SSB comparisons recompute official N with the same translated biolog
 
 For the dashboard only, official predicted indices and q estimates, including their intervals, are multiplied by 0.001 to match tinyAM's thousand-fish index scale; q is correspondingly reported per effort-hour. The canonical database retains the original official values and units. The translation test checks these conversions and verifies that the source outputs remain unchanged.
 
-Validation after the repair: the source and translation regression checks and full package test suite pass. Canonical validation reports 114 stocks, 99 assessments, 2022 assumptions, 346474 inputs and 184026 outputs. Re-running the importer leaves every canonical file byte-for-byte unchanged; records belonging to other assessments are unchanged by the repair.
+Validation after the repair: the source and translation regression checks and full package test suite pass, as does `R CMD check --no-manual --no-vignettes` (0 errors, 0 warnings, 0 notes). Canonical validation at the repair checkpoint reports 114 stocks, 99 assessments, 2022 assumptions, 346474 inputs and 184026 outputs. Re-running the importer leaves every canonical file byte-for-byte unchanged; records belonging to other assessments are unchanged by the repair.
 
 ## Sources
 

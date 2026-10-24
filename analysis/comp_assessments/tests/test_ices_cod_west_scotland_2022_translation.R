@@ -8,7 +8,7 @@ env <- stock$env
 obs <- env$obs
 dat <- tinyAM::prepare_tam(
   data = obs, years = env$years, ages = env$ages,
-  N_settings = list(process = "iid", init = "free", sd_form = ~1),
+  N_settings = list(process = "iid", init = "latent", sd_form = ~1),
   rec_settings = list(process = "rw", mu_form = NULL),
   F_settings = list(process = "cor_rw", mu_form = NULL,
     sd_form = ~I(age == 1), mean_ages = 2:5),
@@ -22,6 +22,7 @@ stopifnot(
   identical(env$years, 1981:2021), identical(env$ages, 1:7),
   identical(dim(par$log_f), c(41L, 7L)),
   identical(dim(par$log_n), c(40L, 6L)), length(par$log_n0) == 6,
+  dat$N_settings$init == "latent",
   ncol(dat$q_modmat) == 21, ncol(dat$sd_catch_modmat) == 3,
   ncol(dat$sd_index_modmat) == 5,
   all(obs$catch$relative_sd[obs$catch$year < 2006] == 1),

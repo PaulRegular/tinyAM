@@ -131,6 +131,15 @@ names(variances) <- trimws(names(variances))
 for (survey in names(variances)) {
   x <- variances[[survey]]
   g <- expand.grid(year = as.integer(rownames(x)), age = as.integer(colnames(x)), KEEP.OUT.ATTRS = FALSE)
+  expected_weight <- as.vector(surveys[[survey]]^2 / x)
+  at <- match(paste(g$year, g$age, survey),
+    paste(aux$year, aux$age, fleets[aux$fleet]))
+  actual_weight <- dat$weight[at]
+  finite <- is.finite(expected_weight)
+  if (anyNA(at) || !identical(finite, is.finite(actual_weight)) ||
+    !isTRUE(all.equal(expected_weight[finite], actual_weight[finite], tolerance = 1e-12))) {
+    cli::cli_abort("Supplied variances do not reproduce the native {survey} precision weights.")
+  }
   inputs <- rbind(inputs, input("index", "index_sd", "numbers", sqrt(as.vector(x)),
     "fish per hour", g$year, g$age, survey = survey,
     reference = paste0(run_url, "/data/cod6a_survey_variances.txt; src/datascript.R"),
