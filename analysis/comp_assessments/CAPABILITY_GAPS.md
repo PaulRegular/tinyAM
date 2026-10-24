@@ -95,6 +95,15 @@ separate fleets and aggregate/composition likelihoods would still require
 documented approximations after source recovery. Historical review counts
 above are unchanged.
 
+[Southern New England/Mid-Atlantic yellowtail flounder](source_reviews/ck_nefsc_garmiii_ferruginea_sne_ma.md)
+now has the published catch-age and three trawl-survey source tables, plus a
+separate 2025 official summary. Its selected framework uses age-specific M,
+not the original constant-M candidate; the update removes fleet-selectivity
+random effects and changes biology and GSI inputs. Exact production biology,
+M, GSI configuration and fitted age surfaces remain missing, so no translation
+is claimed. Aggregate/composition likelihoods and correlated older-cohort N
+would still require documented approximations. Historical counts are unchanged.
+
 ## What the expanded formulas already cover
 
 The [White Hake Run_005 audit](source_reviews/ck_nefsc_garmiii_tenuis_gom_gb.md)

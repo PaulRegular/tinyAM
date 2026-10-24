@@ -2,18 +2,125 @@
 
 ## Source identification
 
-The stock is `ck_nefsc_garmiii_ferruginea_sne_ma` (*Limanda ferruginea*), the SNE/MA component in the NOAA NEFSC assessment. The database currently contains only its Charbonneau–Keith catalogue metadata; there is no assessment event or numerical input/output record yet.
+Stock `ck_nefsc_garmiii_ferruginea_sne_ma` (*Limanda ferruginea*) preserves
+Charbonneau–Keith `NEFSC-GARMIII_ferruginea_SNE, MA` and its original source
+label `SNE MA Limada ferrugina.pdf`. It is distinct from Georges Bank and
+Cape Cod/Gulf of Maine yellowtail flounder.
 
-The 2024 Yellowtail Flounder Research Track Working Group report is the most detailed public source found for the SNE/MA model. Its numerical tables include total commercial catch-at-age in thousands of fish for 1973–2022 (Table 2.8.3) and age-specific abundance from the NEFSC spring, fall and winter surveys (Tables 3.6.2–3.6.4). The report also describes the final candidate model: ages 1–6+, a combined fleet, a 0.05 fleet CV, fixed M=0.5, and three NEFSC surveys. However, its SASI run bundle contains plots and PDFs rather than native numerical input arrays or a fitted object. The report does not provide all exact age-composition likelihood inputs, including sample sizes/weights, or complete annual weight and maturity matrices needed for the corresponding biomass calculations. Its fitted annual N/F/SSB surfaces are shown as figures; only terminal 2022 values are stated numerically (F=0.11, SSB=44 mt, recruitment=495,000). The published tables therefore support source data recovery, but not a complete verified reconstruction of the likelihood inputs or age-specific outputs.
+The database separates two partial records:
 
-The separate 2025 Management Track report updates the WHAM model through 2024, but the cached report is explicitly marked “draft working paper for peer review only.” It reports summary results and plots, not detailed age-structured fit files. The valid comparison workbook bundled with the 2025 archive compares model settings only; it does not contain fitted time series. A separately retrieved file bearing the same workbook name was an HTML response, not an Excel workbook, and is not treated as source data. Do not combine the 2025 update with the 2024 Research Track tables.
+- **`nefsc_yellowtail_snema_2024_framework`**: the detailed research-track
+  framework selected in November 2024, through 2022. It is current as the
+  latest recoverable detailed framework, selected for subsequent management
+  use rather than applied as 2024 advice.
+- **`nefsc_yellowtail_snema_2025`**: the applied management-track update through
+  2024. Its public updated report retains a draft watermark. The final April
+  2026 Framework 72 submission confirms adoption and terminal SSB of 38 tonnes
+  and fully selected F of 0.051. Its summary values are kept separate.
 
-## Coverage and next step
+The final panel selected the **revised age-specific-M model**, replacing the
+original candidate's constant M = 0.5. The previous stock review described
+that constant-M candidate as final; this import corrects the distinction.
+The panel reports other inputs and settings unchanged for the M comparison.
+Original candidate annual estimates are not imported as revised-run outputs.
 
-The source cache is under `source_cache/ck_nefsc_garmiii_ferruginea_sne_ma/`; its manifest records the NOAA SASI archives, retrieval date, checksums, and represented run. Available report tables could be added as clearly identified source observations with partial status, but they do not resolve the missing likelihood weights/sample sizes or complete biology. Full annual and age-specific fitted outputs are not available as numerical values in the public run bundle. The present decision is to keep this stock out of the translation queue until a complete verified input set and defensible official-output reference are available. Do not fill gaps with tutorial data, digitized figures, or unverified biological reconstructions.
+The framework uses one combined landings/dead-discards fleet, 1973–2022,
+ages 1–6+, combined sexes and three NEFSC trawl surveys: spring, fall and
+winter. Larval indices were considered and excluded. Older-cohort N has
+two-dimensional AR1 process error. Recruitment is decoupled, with temporal
+AR1 variation and a controlling effect of one-year-lagged Gulf Stream Index
+(GSI), itself modelled as AR1. It is not Beverton–Holt recruitment. Fleet
+selectivity is logistic with IID random effects; spring/winter survey
+selectivity is logistic and fall selectivity age-specific. Survey q has no
+random effects. Age compositions use logistic-normal AR1 `miss0`, which
+treats composition zeros as missing within that likelihood.
+
+The 2025 update **removed fleet-selectivity IID random effects** to address
+convergence problems, switched the WHAM lognormal adjustment off, and revised
+CAMS discards, maturity and GSI. Its terminal five years have no catch age
+composition information. Earlier arrays and settings are not attached to it.
+
+## Canonical coverage
+
+`scripts/database/148_import_nefsc_snema_yellowtail.R` adds 2,146 inputs,
+20 assumptions and 33 outputs across the two records. All three completeness
+statuses remain **partial** for both records.
+
+| Source | Recovered values | Qualification |
+|---|---|---|
+| 2024 Table 2.8.3 | Combined catch-at-age, 1973–2022, ages 1–6+, thousand fish | 2020–2022 dashes remain missing; source numbers support composition alongside a fleet total |
+| Tables 3.6.2a–b | Spring stratified means, 1968–2022 excluding 2020, ages 0–11, fish/tow | Preserve actual rows and fine ages; caption incorrectly starts at 1970 |
+| Table 3.6.3 | Fall stratified means, 1963–2022 excluding 2017/2020, ages 1–10, fish/tow | Retain incomplete-age-key flags on seven 2013 cells; caption understates coverage |
+| Table 3.6.4 | Winter stratified means, 1992–2007, ages 1–8, fish/tow | Retain source ages without pooling |
+| Table 3.6.1 | Spring/fall aggregate abundance and biomass, fish/tow and kg/tow, plus CVs | Alternative representations, not duplicate independent observations; exact fitted aggregate basis unresolved |
+| Final panel Table 5.5 | Revised-run F40%, SSB40% and equilibrium yield at F40%, with bounds | Reference points, not annual estimates; interval level/construction unspecified in that table |
+| 2025 Table 1 | Combined landings and dead-discard catch, 2015–2024, tonnes | Retain the reported total rather than inferring unrounded components |
+| 2025 Table 1 | Native SSB, age-1 recruitment and fully selected F, 2015–2024 | SSB in tonnes, R in thousand fish; Ffull ages 5–6+ is not population-weighted Fbar |
+
+No annual N, F-at-age or estimated M surfaces are invented from figures.
+Historical summary estimates have no tabulated SEs or intervals. Forecasts
+through 2028 are identified in metadata but are not imported as historical
+observations or estimates. Fixed source M is not an estimated M output.
+
+## Source consistency and missing values
+
+Four differences between age sums and published aggregate number indices
+exceed the bound from rounding every cell to three decimals: spring 2012,
+2015 and 2017 age sums are lower by 0.016, 0.007 and 0.012 fish/tow; fall 2013
+is lower by 0.008 fish/tow. The cause is unresolved. Both representations
+remain unchanged; no rescaling forces equality.
+
+Spring 2020 prints an aggregate zero without a CV, although coverage was
+incomplete and no age row is supplied. Retain it as printed, not as a
+certified fitted zero observation. Fall 2017/2020 are missing. Missing CVs,
+missing catch ages and source zeros remain distinct. CVs stay as ratios for
+their corresponding abundance/biomass indices; they are not SEs or silently
+supplied fixed likelihood SDs. Separate `abundance_index_cv` and
+`biomass_index_cv` measures distinguish these two precision records without
+inventing a second survey. Model sampling fractions were not recovered:
+seasons are retained and `sampling_time` stays blank.
+
+## Source cache and validation
+
+Sources remain under `source_cache/ck_nefsc_garmiii_ferruginea_sne_ma/`.
+Manifests retain SASI URLs, retrieval dates, checksums, represented run and
+verification date. Final peer-review and Framework 72 PDFs are cached locally.
+The importer pins PDF hashes; important table pages were visually checked.
+
+The nested 2024 `SNEMA_Runs.zip` has 259 entries: original/revised-model plot
+directories and self-test PDFs, without numerical production arrays or a fit.
+The valid 2025 comparison workbook documents settings, not fitted time series.
+An earlier HTML response bearing an Excel filename is not used as a workbook.
+WHAM tutorial and research-candidate data are not production substitutes.
+
+The focused test checks run separation, years/ages, off-diagonal values, units,
+missingness, flags, aggregate discrepancies, CV meaning, reference-point
+bounds, every historical summary value and absence of manufactured biology
+or fitted age surfaces. Reference conversion must not treat Ffull as Fbar.
+
+## Remaining requirements for translation
+
+1. Complete annual model weights, exact maturity and selected age-specific M,
+   including age-6+ treatment. Cadrin's paper explains lifetime-M scaling by
+   length; growth approximations do not recover annual model biology.
+2. Exact aggregate fleet/survey inputs, fitted age cells, composition weights,
+   survey sampling fractions and observation-variance settings.
+3. Selected GSI observations, scaling and recruitment configuration, initial
+   states, bias corrections and pinned WHAM version. Production parameter
+   activation remains unresolved.
+4. Numerical fitted N/F and available uncertainty for the selected run. The
+   2025 summary cannot be combined with the changed 2024 observations/settings.
+
+These are source-data gaps. Independent age-index likelihoods would also
+approximate aggregate/composition likelihoods. A GSI-linked recruitment
+translation needs a documented mapping after its inputs are recovered.
+The partial import is not a completed translation: no fit or dashboard is
+claimed, and preparation remains unavailable without the missing inputs.
 
 ## Sources
 
 - [2024 Yellowtail Flounder Research Track report and SASI files](https://apps-nefsc.fisheries.noaa.gov/saw/sasi.php?year=2024&species_id=13&stock_id=11&review_type_id=5)
 - [2025 SNE/MA Management Track SASI files](https://apps-nefsc.fisheries.noaa.gov/saw/sasi.php?year=2025&species_id=13&stock_id=5&review_type_id=2)
 - [2025 Management Track report](https://apps-st.fisheries.noaa.gov/sis/docServlet?fileAction=download&fileId=10439)
+- [Final November 2024 peer review](https://d23h0vhsm26o6d.cloudfront.net/10b.-Panel-Summary-Report_Yellowtail-Flounder_508_final_12_12_2024.pdf), pp. 17–24 and Table 5.5.
+- [Final Framework 72 submission, April 2026](https://d23h0vhsm26o6d.cloudfront.net/260423_Groundfish_FW72_SIR_FINAL-Submission.pdf), p. 27, confirms the applied 2025 update.

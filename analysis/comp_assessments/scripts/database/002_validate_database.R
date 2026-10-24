@@ -211,7 +211,7 @@ allowed_input_measures <- c(
   "maturity_at_age", "natural_mortality_at_age", "condition_index_for_mortality",
   "fecundity_at_age", "proportion_female_at_age",
   "fixed_mortality_medium", "fixed_mortality_low", "fixed_mortality_high",
-  "relative_biomass_index",
+  "relative_biomass_index", "abundance_index_cv", "biomass_index_cv",
   "landings_proportion", "landings_numbers_at_age", "discard_numbers_at_age", "landings_fraction_at_age",
   "landings_weight_at_age", "discard_weight_at_age", "log_index_sd", "index_sd", "relative_precision_weight", "observation_likelihood_weight", "relative_standard_error", "larval_abundance_index", "environmental_covariate", "fraction_F_before_spawning",
   "fraction_M_before_spawning", "capelin_biomass_index"
@@ -284,6 +284,18 @@ for (name in c("inputs", "outputs")) {
   }
   age <- suppressWarnings(as.numeric(x$age))
   if (name == "inputs") {
+    for (measure in c("abundance_index_cv", "biomass_index_cv")) {
+      selected <- x$measure == measure
+      if (!any(selected)) next
+      if (any(x$type[selected] != "index" | x$basis[selected] != "relative_scale" | !is.na(age[selected]))) {
+        cli::cli_abort("{measure} must describe an aggregate index CV on its relative scale, without an age.")
+      }
+      columns <- c("assessment_id", "survey", "sex", "region", "season", "year")
+      key <- function(z) do.call(paste, c(lapply(z[columns], function(v) ifelse(is.na(v), "", v)), sep = "\r"))
+      target <- if (measure == "abundance_index_cv") "total_numbers" else "total_biomass"
+      totals <- x[x$type == "index" & x$measure == target, ]
+      if (any(!key(x[selected, ]) %in% key(totals))) cli::cli_abort("{measure} requires the corresponding {target} index.")
+    }
     aggregate_precision <- x$measure == "relative_standard_error" & is.na(age)
     index_precision <- aggregate_precision & x$type == "index"
     catch_precision <- aggregate_precision & x$type == "catch"
@@ -341,7 +353,7 @@ for (name in c("inputs", "outputs")) {
     x$type %in% c("catch", "index") &
     x$measure %in% c(
       "numbers_at_age", "index_by_age_group", "biomass_at_age",
-      "total_numbers", "total_biomass"
+      "total_numbers", "total_biomass", "abundance_index_cv", "biomass_index_cv"
     )
   if (any(missing_value & !missing_observation) ||
     any(!is.finite(value[!missing_value])) ||

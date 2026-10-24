@@ -240,6 +240,8 @@ proportion_at_age
 relative_biomass_index
 relative_precision_weight
 relative_standard_error
+abundance_index_cv
+biomass_index_cv
 ```
 
 `index_catch_numbers_at_age` preserves the numerator in a source index stored as catch numbers-at-age and effort. Use `type = index`, `basis = numbers`, and document that these numerator rows are not a second observation series. Pair them with `effort` rows (`type = covariate`, `basis = native_covariate`) when needed to reproduce a per-effort index. `effort` has no age dimension; preserve its native units and do not treat it as a tinyAM observation.
@@ -322,6 +324,15 @@ For an aggregate catch or index CV, leave `age` blank and match the same total
 observation by year and its fleet or survey dimensions. Preserve catch
 `partition` when it distinguishes landings and discards. This records one
 aggregate precision value without repeating it over ages.
+
+When the source reports both aggregate number and biomass indices for the
+same survey and year, `abundance_index_cv` and `biomass_index_cv` distinguish
+their CVs without inventing separate surveys. Use `type = index`,
+`basis = relative_scale`, `unit = ratio`, and blank `age`. Each must match its
+corresponding `total_numbers` or `total_biomass` record. The two representations
+are not independent survey observations, and these reported CVs do not by
+themselves establish which index or variance was fitted. Preserve missing
+reported CVs as blank values with their source qualification.
 
 `relative_biomass_index` stores an aggregate relative index, such as standardized
 CPUE tuned to exploitable biomass. It is not an absolute biomass observation;
