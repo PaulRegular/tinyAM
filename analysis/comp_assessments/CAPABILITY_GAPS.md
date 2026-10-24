@@ -104,6 +104,20 @@ M, GSI configuration and fitted age surfaces remain missing, so no translation
 is claimed. Aggregate/composition likelihoods and correlated older-cohort N
 would still require documented approximations. Historical counts are unchanged.
 
+The [2026 Sandeel Area 1r assessment](source_reviews/ices_sandeel_area_1r.md)
+adds a verified seasonal example: July recruitment, half-year mortality and
+biology, effort-proportional F, and a survey prediction averaged over an
+interval. The retained annual ages-1–4+ approximation sums seasonal mortality
+hazards and catch counts, uses January biology and a survey midpoint, and
+substitutes IID recruitment/F around documented mean structures. Annual F
+means can share ages and periods, but shared mean coefficients do not force
+latent ages 3–4+ to be identical. Its default-start fit converges with usable
+uncertainty; recruitment and abundance remain flagged for disagreement.
+Exact catch flags and two seasonal effort rows remain source gaps. This
+limited translation does not establish support for native seasonal dynamics,
+integrated survey predictions or the downweighted hockey-stick likelihood.
+The historical inventory counts above are unchanged.
+
 ## What the expanded formulas already cover
 
 The [White Hake Run_005 audit](source_reviews/ck_nefsc_garmiii_tenuis_gom_gb.md)

@@ -9,6 +9,7 @@ assessment_plot_stocks <- function(assessments, stocks, assessment_ids) {
     Scombriformes = "Scomber",
     Cyclopsettidae = "Paralichthys",
     Pleuronectidae = c("Atheresthes", "Eopsetta", "Lepidopsetta", "Limanda", "Pleuronectes"),
+    Uranoscopiformes = "Ammodytes",
     Sebastidae = "Sebastes",
     Hexagrammidae = "Pleurogrammus"
   )
