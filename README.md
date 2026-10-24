@@ -1,4 +1,3 @@
-
 <!-- badges: start -->
 
 [![R-CMD-check](https://github.com/PaulRegular/tinyAM/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/PaulRegular/tinyAM/actions/workflows/R-CMD-check.yaml) [![Codecov test coverage](https://codecov.io/gh/PaulRegular/tinyAM/graph/badge.svg)](https://app.codecov.io/gh/PaulRegular/tinyAM)
@@ -11,303 +10,211 @@
 
 The package is designed to be **flexible, modular, and lightweight**, with an emphasis on making alternative model structures and process assumptions easy to specify, inspect, simulate, and compare.
 
-Rather than providing a collection of predefined assessment models, tinyAM uses a common age-structured state-space framework whose components can be modified to represent different hypotheses about population and fishery dynamics.
-
-
-## Getting started
-
 The development version can be installed from GitHub:
 
-``` r
+```r
 # install.packages("pak")
-pak::pak("PaulRegular/tinyAM")
+pak::pak(c("PaulRegular/tinyAM", "rmarkdown", "flexdashboard"))
 ```
 
-The [package website](https://paulregular.github.io/tinyAM/) provides the function
-reference and [cheatsheet](https://paulregular.github.io/tinyAM/cheatsheet/tinyAM_cheatsheet.pdf).
-The cheatsheet links to a companion dashboard for its three example model fits.
-
+See the [package website](https://paulregular.github.io/tinyAM/) and
+[cheatsheet](https://paulregular.github.io/tinyAM/cheatsheet/tinyAM_cheatsheet.pdf)
+for guidance and examples.
 
 ## Philosophy
 
-tinyAM is intended primarily as a **model-development and experimentation tool**.
+Assessment models express hypotheses about where unexplained variation arises:
+recruitment, cohort survival, fishing mortality, natural mortality, catchability
+or observations. tinyAM lets you change one or more assumptions and examine
+their consequences using the same diagnostic, simulation and forecasting tools.
 
-The general philosophy is that assessment models can be viewed as hypotheses about where variation and mismatch between population dynamics and observations arise. For example, unexplained variation might be represented through:
+“Tiny” refers to a small modelling vocabulary: complexity comes from combining
+understandable components, rather than choosing among many special-purpose
+models. The package is a model-development and experimentation tool.
 
-- abundance or cohort process error;
-- fishing mortality;
-- natural mortality;
-- recruitment;
-- survey catchability; or
-- observation error.
+## 1. Set up tidy inputs
 
-tinyAM makes many of these assumptions configurable while retaining a common model and output structure. This makes it possible to change one structural assumption at a time and evaluate its consequences using the same fitting, diagnostic, simulation, retrospective, and hindcast tools.
-
-The goal is not to make the underlying models statistically trivial. Instead, **“tiny” refers to keeping the modelling vocabulary small**: model complexity should arise from combining a limited number of understandable components rather than from maintaining many special-purpose model implementations.
-
-## Model structure
-
-The core model is an age-structured state-space model with:
-
-- recruitment varying through time;
-- cohort survival governed by total mortality;
-- a terminal plus group;
-- fishing mortality at age;
-- fixed or time-varying natural mortality;
-- Baranov catch-at-age predictions;
-- one or more survey indices with within-year sampling times; and
-- lognormal observation models for catch and survey indices.
-
-Departures from expected log abundance or mean log mortality can follow three processes:
-
-- `"iid"`: independent departures in each year and age or age block;
-- `"rw"`: departures accumulate from year to year, independently across ages;
-- `"ar1"`: departures are correlated across adjacent years and ages and return toward a mean.
-
-F also supports `"cor_rw"`: annual log-F changes are correlated between ages,
-while their effects accumulate over time. N, F and M settings accept ordinary
-age-based `sd_form` formulas, such as `~ age_group`, to share process SDs.
-These formulas use columns in `data$pop_covariates` and do not share latent states.
-Their default `~ 1` retains a common SD.
-
-`data$maturity$spawn_time <- 0.25` accounts for survival to spawning at
-one quarter of the year. The same SSB supplies stock–recruit relationships.
-Omit the column for start-of-year SSB. Timing can vary by year and age;
-projections retain terminal values at each age. See `?"tinyAM-model"` for equations,
-SD interpretations and examples.
-
-Optional `unit` columns make plot labels explicit without changing input values:
-use `"thousand fish"` for catch and comparable indices, and `"kg"` for
-weight. This combination produces biomass and SSB in tonnes. Survey units may
-differ by survey; native labels such as `"fish per tow"` are retained. Keep
-units consistent within each series and call `check_tam_data()` after editing.
-The included `cod_obs` carries these labels. See `?as_tam_data` for details.
-
-Settings lists can be partial. Initial fits inherit package defaults; updates
-retain the original settings. For example,
-`update(fit, N_settings = list(init = "free"))` changes only initialization.
-
-A random walk has no penalty on its starting level. Its SD describes annual increments; an AR1 SD is an innovation scale, not the marginal variability of the states. Recruitment defaults to a temporal random walk; `rec_settings` separates its process from mean formulas for covariates and Beverton–Holt or Ricker stock–recruit relationships.
-
-Mean structures for quantities such as fishing mortality, natural mortality, catchability, and observation error can be specified using familiar R formulas and design matrices.
-
-Initial abundance is specified independently of the subsequent N process through `N_settings$init`: `"exp"` (default) uses parsimonious survivorship from fixed first-year recruitment (`log_r0`), `"free"` estimates fixed older-age `log_n0` states, `"latent"` integrates older initial states without a density, `"mono"` constrains abundance to decline from r0, and `"capped"` bounds older ages by r0 without age ordering. All retain fixed r0; both constraints include the plus group and allow ties. N process states begin in year 2. Recruitment starts there by default; stock–recruit models retain additional free early recruitment states when parent SSB precedes the modeled period. All initializers require at least two ages. Latent initialization is closer to SAM’s usual older-age boundary, but r0 remains fixed. Process simulations condition on initial states; joint uncertainty draws can vary latent initial abundance.
-
-For an active M process, the default normally shares one state across all ages except the youngest, starting in year 2 (see `?prepare_tam` for very short age ranges). Earlier M and excluded ages retain their supplied or mean values. F is estimated in every historical year. These boundary assumptions can affect initial abundance and catchability estimates; they are not guarantees of identifiability. The full equations and conventions are in `help("tinyAM-model", package = "tinyAM")`.
-
-## Input data
-
-Use a named list of `catch`, `index`, `weight`, and `maturity` tables, with an
-optional `pop_covariates` table. Population covariates and supplied M assumptions
-belong in `pop_covariates`; observation-SD and q covariates stay in catch/index.
-Weight, maturity and spawning timing stay in the biological tables.
+The required tables are `catch`, `index`, `weight` and `maturity`;
+`pop_covariates` is optional. The Northern cod example shows all five:
 
 ```r
-data <- as_tam_data(cod_obs)
-data                              # compact previews of all tables
-check_tam_data(data)
-```
-
-The class is optional; plain lists also work. Population covariates have one
-row per input year and age. Missing values are allowed where unused, and
-projections carry terminal values forward by age. See `?as_tam_data`.
-
-## Recruitment formulas
-
-Use `rec_settings` to describe recruitment at the youngest modeled age:
-
-```r
-rec_settings = list(process = "rw", mu_form = NULL) # default
-rec_settings = list(process = "iid", mu_form = ~ 1)
-rec_settings = list(process = "iid", mu_form = ~ bh(ssb))
-rec_settings = list(process = "ar1", mu_form = ~ ricker(ssb))
-rec_settings = list(process = "rw", mu_form = ~ temperature)
-```
-
-`N_settings$process` separately controls survival deviations in older cohorts. An optional
-`N_settings$mu_form = ~ 0 + temperature` multiplies the survivor prediction by
-`exp(X beta)`, using `pop_covariates` at the destination year and older age.
-It can express apparent proportional gains/losses, including with the N process
-off, but cannot distinguish migration from mortality or observation changes.
-Recruitment and initial abundance are separate. Constant mean directions cancel
-under N random-walk residuals and are rejected.
-Recruitment covariates belong in `data$pop_covariates` at the youngest modeled age;
-older-age entries may be missing if no other formula uses them. IID/AR1
-recruitment requires an explicit mean, such as `mu_form = ~ 1`.
-Supply `sd` or AR1 `phi` in the settings list to fix them; otherwise they are
-estimated. Curves describe median recruitment from parent SSB at the supplied
-spawning time (zero by default). The lag defaults to recruitment age, and early years without modeled
-parent SSB remain free fixed states. Curve-plus-RW residuals are not supported.
-
-Use `check_tam()` to inspect uncertainty as well as numerical convergence.
-Limited SSB variation can leave curve shape poorly estimated even in a
-converged fit. `tidy_recruitment()` provides parent pairs, predictions and
-residuals; `vis_tam()` adds a stock–recruitment page when a curve is fitted.
-See `?recruitment_formulas` for equations and safeguards, and
-[runnable examples](https://github.com/PaulRegular/tinyAM/blob/HEAD/inst/examples/example_recruitment.R).
-
-## Rising mean F curves
-
-When fisheries progressively select older fish, the long-term mean F can be
-specified with a flexible rising curve or a smooth logistic curve:
-
-```r
-F_settings = list(process = "iid", mu_form = ~ mono(age))
-F_settings = list(process = "ar1", mu_form = ~ logistic(age))
-```
-
-Ordinary terms supply baseline F. `mono()` fits non-negative log-F increments
-`dmu_f`, including exact plateaus; `logistic()` multiplies baseline F by rising
-selectivity. Annual realized F can depart from these means. RW residuals do
-not identify static age curves, so these combinations are rejected. See
-`?catchability_curves` for equations, grouping and uncertainty limitations, and
-[fitting examples](https://github.com/PaulRegular/tinyAM/blob/HEAD/inst/examples/example_f_mean_curves.R).
-
-## Monotonic survey catchability
-
-Catchability formulas can retain an unconstrained shape or impose monotonic changes between ordered blocks:
-
-``` r
-~ q_block                                      # unconstrained
-~ mono(q_block)                                # non-decreasing
-~ survey + mono(q_block, by = survey)           # independent survey curves
-```
-
-Use these as `index_settings$q_form`. Numeric levels are sorted increasingly; factor levels follow their declared order. The first represented level is the baseline. Later levels add non-negative log-q increments `dq`, fitted directly with a zero lower bound and initialized at 0.05. Zero increments allow exact plateaus between separate levels; pooled blocks also give exact plateaus. Estimates and SEs for `dq` share the increment scale; Wald inference is only a local approximation at an active boundary. Each `by` group uses its own represented levels (at least two) and independent steps. Ordinary terms supply baselines: omitting `survey` in the last example shares one intercept across surveys. Other ordinary covariates are held constant when interpreting monotonicity.
-
-## Workflow
-
-A typical tinyAM workflow is:
-
-``` r
 library(tinyAM)
+print(cod_obs, n = 2)
+```
 
-fit <- fit_tam(
-  cod_obs,
-  years = 1983:2024,
-  ages = 2:14,
-  N_settings = list(
-    process = "iid",
-    init = "exp"
-  ),
-  F_settings = list(
-    process = "rw",
-    mu_form = NULL
-  ),
-  M_settings = list(
-    process = "off",
-    mu_supplied = ~ I(0.3)
-  ),
-  catch_settings = list(
-    sd_form = ~ 1
-  ),
-  index_settings = list(
-    sd_form = ~ 1,
-    q_form = ~ q_block
-  )
+```text
+
+── tinyAM data ───────────────────────────────────────────────────────────────────────────
+
+── catch: 1512 rows, 4 columns ──
+
+Years 1954–2025; ages 0–20
+     year age obs          unit
+1    1954   0  NA thousand fish
+2    1955   0  NA thousand fish
+⋮       ⋮   ⋮   ⋮             ⋮
+1511 2024  20   0 thousand fish
+1512 2025  20   0 thousand fish
+
+── index: 1512 rows, 7 columns ──
+
+Years 1954–2025; ages 0–20
+     year age obs     survey samp_time q_block          unit
+1    1954   0  NA Fall 2J3KL       0.8       0 thousand fish
+2    1954   1  NA Fall 2J3KL       0.8       1 thousand fish
+⋮       ⋮   ⋮   ⋮          ⋮         ⋮       ⋮             ⋮
+1511 2025  18   0 Fall 2J3KL       0.8    6-20 thousand fish
+1512 2025  19   0 Fall 2J3KL       0.8    6-20 thousand fish
+
+── weight: 1512 rows, 4 columns ──
+
+Years 1954–2025; ages 0–20
+     year age          obs unit
+1    1954   0 2.965967e-04   kg
+24   1955   0 2.965967e-04   kg
+⋮       ⋮   ⋮            ⋮    ⋮
+1631 2024  20 1.409146e+01   kg
+1654 2025  20 1.369174e+01   kg
+
+── maturity: 1512 rows, 3 columns ──
+
+Years 1954–2025; ages 0–20
+     year age obs
+1    1954   0   0
+2    1955   0   0
+⋮       ⋮   ⋮   ⋮
+1711 2024  20   1
+1712 2025  20   1
+
+── pop_covariates: 1512 rows, 6 columns ──
+
+Years 1954–2025; ages 0–20
+     year age F_y_block F_a_block allometric_M_assumption M_a_block
+1    1954   0 1954-1991       0-1               4.9990199       0-1
+2    1954  16 1954-1991     16-17               0.1793953      8-20
+⋮       ⋮   ⋮         ⋮         ⋮                       ⋮         ⋮
+1511 2025  10 2023-2025     10-11               0.2927334      8-20
+1512 2025  20 2023-2025     18-20               0.1889190      8-20
+```
+
+The four required tables have numeric `year`, `age` and `obs` columns.
+`obs` contains catch numbers, survey indices, individual weights or proportions
+mature. Index rows also identify `survey` and `samp_time`: `0.8` means sampling
+eight-tenths of the way through the year. `q_block` groups ages sharing
+catchability in the example.
+
+Keep q and observation-SD covariates in catch/index tables. The
+`pop_covariates` holds population predictors, process-SD groups and supplied M
+assumptions; it needs a complete year–age grid, without an `obs` column.
+Keep weights in `weight`, and maturity and optional `spawn_time` in `maturity`.
+
+```r
+dat <- cod_obs                    # replace with your own named list of tables
+check_tam_data(dat)               # validate before fitting
+# dat <- as_tam_data(dat)         # optional class for compact printing
+```
+
+Catch in **thousand fish** and weight in **kg** give biomass and SSB in **tonnes**.
+Optional `unit` columns label values; they do not convert them. Survey units
+can differ. Catch/index `NA` values and zeros are excluded from the lognormal
+likelihood; weights and maturities must be complete. No missing-observation
+imputation or zero-count model is provided.
+
+See the [input requirements](https://paulregular.github.io/tinyAM/reference/check_tam_data.html)
+for table rules and permitted missing values. See
+[`?cod_obs`](https://paulregular.github.io/tinyAM/reference/cod_obs.html) for
+details on the sources and preparation of the supplied Northern cod data.
+
+## 2. Specify competing models
+
+These are illustrative hypotheses, not package defaults or recommended stock
+settings. The baseline lets recruitment and fishing mortality vary while
+holding natural mortality at 0.3 per year:
+
+```r
+base <- fit_tam(
+  dat, years = 1983:2024, ages = 2:14,
+  N_settings = list(process = "off", init = "exp"),
+  rec_settings = list(process = "rw"),
+  F_settings = list(process = "ar1", mu_form = ~ 1),
+  M_settings = list(process = "off", mu_supplied = ~ I(0.3)),
+  catch_settings = list(sd_form = ~ 1),
+  index_settings = list(sd_form = ~ 1, q_form = ~ mono(q_block))
 )
 
-fit
+N_iid <- update(base, N_settings = list(process = "iid"))
+M_ar1 <- update(base, M_settings = list(
+  process = "ar1", age_breaks = c(2, 4, 6, 8, 14)
+))
 ```
 
-Alternative models can then be constructed by modifying the fitted call:
+Partial updates retain omitted settings. Here the alternatives add independent
+cohort-survival variation or temporally correlated M shared within age blocks.
+The age range `ages = 2:14` uses age 14 as the terminal plus group.
 
-``` r
-fit_ar1 <- update(
-  fit,
-  F_settings = list(
-    process = "ar1",
-    mu_form = ~ F_a_block + F_y_block
-  )
-)
+Other possibilities include:
+
+| Component | Example options | Guidance |
+|---|---|---|
+| Recruitment | `rec_settings`: `"rw"`; `"iid"` with `mu_form = ~ bh(ssb)`; `"off"` with `~ factor(year)` | [Recruitment](https://paulregular.github.io/tinyAM/reference/recruitment_formulas.html): Beverton–Holt/Ricker curves support IID/AR1 residuals or deterministic recruitment, not RW residuals. |
+| Cohort survival | `N_settings`: `"off"`, `"iid"`, `"rw"`, `"ar1"`; `mu_form = ~ temperature` | [Population model](https://paulregular.github.io/tinyAM/reference/tinyAM-model.html): apparent gains/losses cannot separate migration from mortality. |
+| Fishing mortality | `F_settings`: `"off"`, `"iid"`, `"rw"`, `"ar1"`, `"cor_rw"`; `sd_form = ~ age_group` | [Settings](https://paulregular.github.io/tinyAM/reference/prepare_tam.html): deterministic F requires an explicit mean; `"cor_rw"` correlates annual changes across ages. |
+| Natural mortality | `M_settings`: `"off"`, `"iid"`, `"rw"`, `"ar1"`; `sd_form = ~ age_group` | [Settings](https://paulregular.github.io/tinyAM/reference/prepare_tam.html): M can be supplied or estimated; age blocks share actual M. |
+| Mean F and catchability | `~ age_group`, `~ logistic(age)`, `~ mono(age)`; q also supports `iid()`, `rw()`, `ar1()` effects | [Curves](https://paulregular.github.io/tinyAM/reference/catchability_curves.html) and [formula effects](https://paulregular.github.io/tinyAM/reference/formula_effects.html): supported combinations have identifiability safeguards; `q_link = "logit"` bounds q between zero and one. |
+| Observation SD | `sd_form = ~ age_group` | [Formula effects](https://paulregular.github.io/tinyAM/reference/formula_effects.html): formulas modify log-SD, not observation covariance. |
+
+## 3. Diagnose, visualize and compare
+
+```r
+check_tam(base, N_iid, M_ar1)
+vis_tam(base, N_iid, M_ar1)
 ```
 
-Because fitted models share a common structure, they can be compared using the same downstream tools.
+`check_tam()` separates numerical checks from structural concerns and
+statistical advisories. Convergence alone does not establish that the data
+identify every component.
+Inspect each check before interpreting or ranking an alternative.
 
-``` r
-fits <- list(
-  "F random walk" = fit,
-  "F AR1" = fit_ar1
-)
+In the dashboard, start with **Fishery** and **Surveys** to inspect fits and
+standardized residuals. Review **Tables → Diagnostics** and **Parameters** for
+checks, uncertainty and process deviations before interpreting **Trends** for
+abundance and mortality. Residuals use fitted states and can be affected by
+shrinkage.
 
-tabs <- tidy_tam(model_list = fits)
-vis_tam(fits)
+Test forecasting skill by repeatedly withholding terminal years:
+
+```r
+hind <- fit_hindcast(base, N_iid, M_ar1, folds = 5)
+hind
 ```
 
-## Diagnostics and simulation
+The summary shows Mohn’s rho (retrospective change; ideally near zero), survey
+log-RMSE (lower is better), MASE (below one beats holding the last observation
+constant), and scored/failed-fold counts. Compare
+validation coverage before comparing scores; failed fits are retained in
+`hind$fold_diagnostics`, not scored.
 
-tinyAM includes tools for examining both model fit and model behaviour, including:
+By default, each one-year forecast conditions on actual aggregate catch.
+Held-out surveys and catch compositions test prediction; matching the imposed
+catch total is not forecast skill. Use `proj_settings = list(F_mult = 1)` for
+status-quo F instead. See [hindcast definitions](https://paulregular.github.io/tinyAM/reference/fit_retro.html).
 
-- standardized and one-step-ahead residual diagnostics;
-- observed-versus-predicted comparisons;
-- age-year process and population visualizations;
-- retrospective analyses and Mohn's rho;
-- one-step-ahead hindcasts and hindcast RMSE;
-- short-term projections;
-- simulation from fitted models; and
-- propagation of fixed-effect or joint fixed/random-effect uncertainty.
+`AIC()` and `cAIC()` complement predictive checks for numerically acceptable
+models fitted to the same observations. Intrinsic random walks and
+unpenalized initial states need particular care; read the
+[information-criterion assumptions](https://paulregular.github.io/tinyAM/reference/information_criteria.html)
+before interpreting rankings.
 
-The likelihood also serves as the model's simulation engine, helping to keep estimation and simulation assumptions consistent.
+## Further tools
 
-``` r
-check_tam(fit)
-fit$opt$message
-head(fit$pop$ssb)
-plot_trend(fit$pop$ssb, ylab = "Spawning stock biomass")
-plot_age_year(fit$pop$F, ylab = "F")
-plot_age_year(fit$obs_pred$catch, plot = plot_obs_pred, ylab = "Catch")
-
-# One-year forecasts refitted from historical terminal years
-# hindcasts <- fit_hindcast(fit, folds = 3)
-
-# Possible observations conditional on the fitted population history
-sims <- sim_tam(fit, n = 10, par_uncertainty = "none",
-                redraw_random = FALSE, seed = 1)
-```
-
-`redraw_random = TRUE` regenerates process states across the whole modeled period; it is not a future-only forecast conditional on the fitted history. Projections use terminal historical F times a chosen multiplier, recent mean weights and maturities, and continuing recruitment/N/M processes. Compare diagnostics and sensitivities before treating differences among model outputs as biological evidence.
-
-## Outputs
-
-Internally, tinyAM uses matrices and arrays where these naturally reflect the age-year structure of the model.
-
-For analysis, fitted quantities are converted to tidy data frames. A `tam_fit` object contains the underlying RTMB model and optimization objects as well as convenient summaries of:
-
-- fixed and random parameters;
-- population abundance and recruitment;
-- fishing and natural mortality;
-- biomass and spawning stock biomass;
-- observations and predictions;
-- residual diagnostics; and
-- uncertainty estimates.
-
-The underlying model components remain accessible so that unusual or experimental analyses are not hidden behind a high-level interface.
-
-Uncertainty tables put `est`, `lwr`, and `upr` first, then `se` and `se_scale`. Estimates and confidence limits are on the reported scale; SEs stay on the estimation scale. A small log-scale SE, such as 0.10, approximates 10% relative uncertainty (CV). This approximation is poor for large SEs, so use the confidence limits to communicate uncertainty. Observation `sd` describes variation in log measurements and is a different quantity from the SE of an estimate.
-
-Catch and survey predictions are conditional medians of lognormal observations. Their arithmetic means are higher. Zero observations are treated as missing, not as observations from a count or censoring model. SSB uses the spawning times supplied in `maturity$spawn_time`, accounting for survival to spawning; omitting that column gives start-of-year SSB.
-
-For practical help, start with `?fit_tam`, `?prepare_tam`, and `?mono`. For mathematical details, use `help("tinyAM-model", package = "tinyAM")`, `?dprocess_ar1`, and `?dprocess_rw`.
-
-## Scope
-
-tinyAM has not been validated for operational stock assessment. Review the data, assumptions, and diagnostics before interpreting model results.
-
-The package currently uses Northern cod data as an example and development test case, but the modelling framework is not intended to be specific to that stock.
-
-
-## Why tinyAM?
-
-Many useful assessment questions involve changing something relatively small:
-
-> What happens if process error is assigned to mortality rather than abundance?
-
-> Does allowing natural mortality to vary improve retrospective behaviour?
-
-> How sensitive are estimates to the assumed correlation structure of fishing mortality?
-
-> Does a model that fits the historical data well also predict withheld observations well?
-
-tinyAM is intended to make questions like these relatively straightforward to translate into fitted models.
-
-The emphasis is therefore less on providing a single preferred assessment formulation and more on providing a transparent framework in which alternative assumptions can be expressed and tested.
+- [Tidy results](https://paulregular.github.io/tinyAM/reference/tidy_tam.html):
+  `tidy_tam(base, N_iid, M_ar1)` collects population, parameter and observation tables.
+  Confidence limits use the reported scale; `se_scale` identifies the SE scale.
+- [Residuals](https://paulregular.github.io/tinyAM/reference/residuals.tam_fit.html):
+  `residuals(base)` extracts standardized residuals; `type = "osa"` explicitly
+  requests one-step-ahead calculations without refitting.
+- [Simulation](https://paulregular.github.io/tinyAM/reference/sim_tam.html) and
+  [projections](https://paulregular.github.io/tinyAM/reference/prepare_tam.html)
+  explore model behavior and future scenarios.
+- [Model equations](https://paulregular.github.io/tinyAM/reference/tinyAM-model.html)
+  explain initialization, process scales, boundaries and spawning-time SSB.
