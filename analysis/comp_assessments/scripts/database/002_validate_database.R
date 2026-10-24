@@ -219,7 +219,7 @@ allowed_input_measures <- c(
 allowed_bases <- c(
   "native_frequency",
   "numbers", "biomass", "proportion_numbers", "proportion_biomass",
-  "kg_per_fish", "g_per_fish", "proportion", "per_year", "log_scale", "native_covariate",
+  "kg_per_fish", "g_per_fish", "proportion", "per_year", "per_season", "log_scale", "native_covariate",
   "relative_precision", "relative_scale", "index_scale", "egg_count"
 )
 for (name in c("inputs", "outputs")) {
@@ -284,6 +284,11 @@ for (name in c("inputs", "outputs")) {
   }
   age <- suppressWarnings(as.numeric(x$age))
   if (name == "inputs") {
+    seasonal_mortality <- x$basis == "per_season"
+    if (any(seasonal_mortality & (x$type != "M" | x$measure != "natural_mortality_at_age" |
+      is.na(x$season) | !nzchar(x$season)))) {
+      cli::cli_abort("Seasonal mortality inputs must identify M-at-age and a source season.")
+    }
     for (measure in c("abundance_index_cv", "biomass_index_cv")) {
       selected <- x$measure == measure
       if (!any(selected)) next

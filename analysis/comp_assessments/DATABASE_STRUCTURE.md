@@ -384,6 +384,7 @@ kg_per_fish
 g_per_fish
 proportion
 per_year
+per_season
 log_scale
 relative_precision
 relative_scale
@@ -394,6 +395,12 @@ egg_count
 Use `basis = egg_count` for egg-production observations and document the scale
 in `unit`, such as `trillion eggs`. It must not be converted to fish numbers
 without a source-supported model relationship.
+
+`per_season` preserves a mortality hazard supplied for one source season.
+State the season duration in `unit` and retain `season`. For example, SMS
+sandeel uses integrated half-year M in `exp(-F_season-M_season)`; these values
+must not be treated as annual M repeated across seasons. Any annual sum is a
+documented downstream conversion, not a replacement of the source inputs.
 
 For example:
 
