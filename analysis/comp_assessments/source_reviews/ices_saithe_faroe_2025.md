@@ -26,9 +26,13 @@ SSB equals the sum of age-specific abundance times the fitted stock weight and m
 
 ## tinyAM translation
 
-The translation retains both surveys and their source timing, uses the package's normal initialization first, and makes one retry with year/age-aligned SAM estimates as starting values. Both attempts ended with optimizer code 1 (`false convergence (8)`). The default and source-start objectives were 2053.826, with maximum absolute gradients 0.000482 and 0.000684. The conditional SD report succeeded, but the fixed-effect covariance was unavailable and the Hessian was not positive definite; the F age-correlation estimate was within 0.05 of a boundary. The fit therefore fails numerical checks, so its estimates and uncertainty are not suitable for substantive comparison.
+The translation retains both surveys and their source timing, uses the package's normal initialization first, and permits one retry with year/age-aligned SAM estimates as starting values. It uses IID N survival deviations, random-walk recruitment, a correlated F random walk, and the official fixed M. Survey residual age correlation and shared oldest F states remain approximations.
 
-An exploratory Official–tinyAM dashboard is available at `results/cache/ices_saithe_faroe_2025/dashboard.html`. For the dashboard only, official predicted indices and q estimates, including their intervals, are multiplied by 0.001 to match tinyAM's thousand-fish index scale; q is correspondingly reported per effort-hour. The canonical database retains the original official values and units. The translation test checks these conversions and verifies that the source outputs remain unchanged.
+During the 2026-10-23 source audit, catch and survey observations were found to have been flattened in age-major order against year-major labels. The importer now matches every observation to the native SAM year, age and fleet map before writing; regression checks include off-diagonal source cells and preserve the source zero catches. Survey numerators are corrected with their matching indices; effort, biological inputs and official outputs retain their source values. The importer can replace this assessment's existing rows without changing other assessments.
+
+Earlier tinyAM results used the misaligned observations and are invalidated by this repair. Their local cache is retained for provenance; the corrected observations require a new fit and dashboard before interpretation.
+
+For the dashboard only, official predicted indices and q estimates, including their intervals, are multiplied by 0.001 to match tinyAM's thousand-fish index scale; q is correspondingly reported per effort-hour. The canonical database retains the original official values and units. The translation test checks these conversions and verifies that the source outputs remain unchanged.
 
 ## Sources
 

@@ -30,6 +30,8 @@ stopifnot(
   is.null(env$fit),
   nrow(env$obs$catch) == 845L,
   nrow(env$obs$index) == 496L,
+  env$obs$catch$obs[env$obs$catch$year == 1962 & env$obs$catch$age == 3] == 562,
+  env$obs$catch$obs[env$obs$catch$year == 1961 & env$obs$catch$age == 4] == 379,
   all(env$obs$catch$unit == "thousand fish"),
   sum(env$obs$catch$obs == 0) == 28L,
   all(env$obs$catch$relative_sd[env$obs$catch$year < 2025] == 1),
@@ -46,6 +48,10 @@ stopifnot(
     env$obs$index$year == 1996 & env$obs$index$age == 3] - 0.001425) < 1e-12,
   abs(env$obs$index$obs[env$obs$index$survey == "SpringSurvey" &
     env$obs$index$year == 1994 & env$obs$index$age == 3] - 0.00118) < 1e-12,
+  abs(env$obs$index$obs[env$obs$index$survey == "SummerSurvey" &
+    env$obs$index$year == 1997 & env$obs$index$age == 3] - 0.006105) < 1e-12,
+  abs(env$obs$index$obs[env$obs$index$survey == "SpringSurvey" &
+    env$obs$index$year == 1994 & env$obs$index$age == 4] - 0.0082) < 1e-12,
   all(env$obs$index$samp_time[env$obs$index$survey == "SummerSurvey"] == 0.65),
   all(env$obs$index$samp_time[env$obs$index$survey == "SpringSurvey"] == 0.225),
   all(env$obs$pop_covariates$M_assumption == 0.2),

@@ -115,6 +115,27 @@ stopifnot(
 
 years <- 1961:2025
 ages <- 3:15
+# Values from cn.dat and survey.dat, checked against fit$data$aux/logobs.
+# Off-diagonal cells distinguish year-major and age-major reshaping.
+source_cells <- data.frame(
+  type = c(rep("catch", 4), rep("index", 8)),
+  survey = c(rep("", 4), rep("SummerSurvey", 4), rep("SpringSurvey", 4)),
+  year = c(1962, 1961, 1984, 2025, 1997, 1996, 2005, 2025,
+    1995, 1994, 2005, 2025),
+  age = c(3, 4, 8, 15, 3, 4, 8, 10, 3, 4, 8, 10),
+  value = c(562, 379, 273, 0, 6.105, 4.065, 1.425, 0.405,
+    1.56, 8.2, 2.34, 0.73)
+)
+observation_rows <- inputs[inputs$measure == "numbers_at_age", , drop = FALSE]
+observation_rows$survey[is.na(observation_rows$survey)] <- ""
+observation_key <- function(x) paste(x$type, x$survey, x$year, x$age, sep = "/")
+source_match <- match(observation_key(source_cells), observation_key(observation_rows))
+stopifnot(
+  !anyNA(source_match),
+  isTRUE(all.equal(as.numeric(observation_rows$value[source_match]),
+    source_cells$value, tolerance = 1e-12))
+)
+
 n_surface <- surface(n)
 f_surface <- surface(f)
 stock_weight_surface <- surface(stock_weight)

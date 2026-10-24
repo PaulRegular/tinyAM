@@ -254,7 +254,7 @@ constant_age_input <- function(x, measure, basis, unit, slot, notes) {
 catch_grid <- expand.grid(year = years, age = ages, KEEP.OUT.ATTRS = FALSE)
 inputs <- input_rows(
   "catch", "numbers_at_age", "numbers", catch_grid$year, catch_grid$age,
-  as.vector(t(catch_at_age)), "thousand fish",
+  as.vector(catch_at_age), "thousand fish",
   fleet = "Residual catch", source_reference = catch_reference,
   transformation = "Removed the source age-0 column; retained model ages 3–15.",
   notes = "Total commercial catch-at-age in thousands of fish. Age 15 is the catch plus group. The 28 source zero catches are preserved and excluded from the lognormal likelihood."
@@ -274,8 +274,8 @@ for (fleet_id in 2:3) {
   sample_time <- dat$sampleTimes[fleet_id]
   grid <- expand.grid(year = block$years, age = block$ages,
     KEEP.OUT.ATTRS = FALSE)
-  index_measure <- as.vector(t(block$rate))
-  index_counts <- as.vector(t(block$numbers))
+  index_measure <- as.vector(block$rate)
+  index_counts <- as.vector(block$numbers)
   sampling_times <- rep(sample_time, length(index_measure))
   inputs <- rbind(inputs,
     input_rows("index", "numbers_at_age", "numbers", grid$year, grid$age,
@@ -315,6 +315,22 @@ inputs <- rbind(inputs,
   surface_input(pre_spawn_M_input, "biology", "fraction_M_before_spawning", "proportion",
     "proportion", "propM", "Fraction of annual M applied before spawning; source values are zero.")
 )
+
+imported_observations <- inputs[inputs$measure == "numbers_at_age", , drop = FALSE]
+imported_stream <- ifelse(imported_observations$type == "catch",
+  imported_observations$fleet, imported_observations$survey)
+native_key <- paste(aux$year, aux$age, fleet_names[aux$fleet], sep = "\r")
+imported_key <- paste(imported_observations$year, imported_observations$age,
+  imported_stream, sep = "\r")
+native_match <- match(imported_key, native_key)
+native_values <- exp(dat$logobs)
+native_values[catch_slots] <- source_catch
+if (anyNA(native_match) || !isTRUE(all.equal(
+  as.numeric(imported_observations$value), native_values[native_match],
+  tolerance = 1e-12, check.attributes = FALSE
+))) {
+  cli::cli_abort("Imported observations do not match the native SAM year, age, and fleet map.")
+}
 
 assumption_rows <- function(component, setting, value, source_reference,
                             notes = "", survey = "") {
@@ -576,8 +592,10 @@ if (length(stock_row) != 1L ||
   stop("The existing Charbonneau–Keith Faroe saithe stock match is ambiguous.", call. = FALSE)
 }
 assessments <- read_db("assessments.csv")
-if (assessment_id %in% assessments$assessment_id) {
-  stop("The Faroe saithe 2025 assessment is already registered.", call. = FALSE)
+existing_assessment <- assessments[assessments$assessment_id == assessment_id, , drop = FALSE]
+if (nrow(existing_assessment) > 1L ||
+  nrow(existing_assessment) == 1L && existing_assessment$stock_id != stock_id) {
+  cli::cli_abort("The existing Faroe saithe assessment does not identify the expected stock.")
 }
 stocks$authority_stock_id[stock_row] <- "pok.27.5b"
 stocks$common_name[stock_row] <- "Faroe saithe"
@@ -614,32 +632,49 @@ if (!identical(names(assessment), schemas$assessments) ||
   stop("Unexpected database schema.", call. = FALSE)
 }
 
-append_rows <- function(file, rows) {
+write_source_rows <- function(file, rows, id = assessment_id) {
   path <- file.path(database, file)
   if (!identical(names(read.csv(path, nrows = 0, check.names = FALSE)), names(rows))) {
     stop("Unexpected schema for ", file, ".", call. = FALSE)
   }
-  utils::write.table(rows, path, sep = ",", quote = TRUE,
-    row.names = FALSE, col.names = FALSE, append = TRUE, na = "")
+  contents <- rawToChar(readBin(path, "raw", n = file.info(path)$size))
+  lines <- strsplit(contents, "\n", fixed = TRUE)[[1L]]
+  selected <- which(startsWith(lines, paste0('"', id, '",')))
+  if (!length(selected)) {
+    utils::write.table(rows, path, sep = ",", quote = TRUE,
+      row.names = FALSE, col.names = FALSE, append = TRUE, na = "")
+    return(invisible(NULL))
+  }
+  if (length(selected) != nrow(rows)) {
+    cli::cli_abort("Existing {.file {file}} rows have unexpected coverage for this assessment.")
+  }
+  existing <- utils::read.csv(text = paste(lines[selected], collapse = "\n"),
+    header = FALSE, col.names = names(rows), colClasses = "character",
+    na.strings = "", check.names = FALSE)
+  normalized <- function(x) {
+    out <- vapply(x, as.character, character(nrow(x)))
+    out[is.na(out)] <- ""
+    unname(out)
+  }
+  if (identical(normalized(existing), normalized(rows))) return(invisible(NULL))
+  stage <- tempfile(tmpdir = dirname(path))
+  on.exit(unlink(stage), add = TRUE)
+  utils::write.table(rows, stage, sep = ",", quote = TRUE,
+    row.names = FALSE, col.names = FALSE, na = "", fileEncoding = "UTF-8")
+  replacement <- readLines(stage, warn = FALSE, encoding = "UTF-8")
+  lines[selected] <- paste0(enc2utf8(replacement),
+    ifelse(endsWith(lines[selected], "\r"), "\r", ""))
+  writeBin(charToRaw(paste0(paste(lines, collapse = "\n"),
+    if (endsWith(contents, "\n")) "\n" else "")), stage)
+  if (!file.copy(stage, path, overwrite = TRUE)) {
+    cli::cli_abort("Could not replace {.file {file}} with the verified assessment rows.")
+  }
 }
-stocks_path <- file.path(database, "stocks.csv")
-stock_lines <- readLines(stocks_path, warn = FALSE)
-stock_line <- which(startsWith(stock_lines, paste0('"', stock_id, '",')))
-if (length(stock_line) != 1L) {
-  stop("Could not locate the existing stock record for a line-preserving update.", call. = FALSE)
-}
-stock_values <- unlist(stocks[stock_row, , drop = FALSE], use.names = FALSE)
-stock_values[is.na(stock_values)] <- ""
-stock_record <- paste0('"', gsub('"', '""', stock_values, fixed = TRUE), '"',
-  collapse = ",")
-stock_lines[stock_line] <- stock_record
-line_bytes <- readBin(stocks_path, "raw", n = file.info(stocks_path)$size)
-line_sep <- if (any(line_bytes == as.raw(13))) "\r\n" else "\n"
-writeLines(stock_lines, stocks_path, sep = line_sep, useBytes = TRUE)
-append_rows("assessments.csv", assessment)
-append_rows("assumptions.csv", assumptions)
-append_rows("inputs.csv", inputs)
-append_rows("outputs.csv", outputs)
+write_source_rows("stocks.csv", stocks[stock_row, , drop = FALSE], id = stock_id)
+write_source_rows("assessments.csv", assessment)
+write_source_rows("assumptions.csv", assumptions)
+write_source_rows("inputs.csv", inputs)
+write_source_rows("outputs.csv", outputs)
 
 cat("Imported Faroe saithe 2025: ", nrow(inputs), " inputs, ",
   nrow(assumptions), " assumptions, and ", nrow(outputs), " outputs.\n", sep = "")
