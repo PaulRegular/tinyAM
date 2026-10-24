@@ -108,13 +108,13 @@ comparison_definitions <- list(
   ),
   biomass = list(
     status = "matched",
-    definition = "Total biomass over ages 3–15+ using the official fitted stock weights.",
-    reason = "Both quantities use the same age range and stock-weight surface, including the official SAM estimate for missing 2025 weights."
+    definition = "Common-definition total biomass over ages 3–15+ using shared translated stock weights.",
+    reason = "Official N and tinyAM N are evaluated with the original annual input weights and SAM-estimated 2025 weights. Native SAM biomass uses fitted weights and is retained separately."
   ),
   ssb = list(
     status = "matched",
-    definition = "Mature biomass over ages 3–15+ using official fitted stock weights and maturity.",
-    reason = "The source pre-spawning mortality fractions are zero; tinyAM uses the same weight, maturity, and spawning-time convention."
+    definition = "Common-definition mature biomass over ages 3–15+ using shared translated stock weights and maturity.",
+    reason = "Both N surfaces use the same translated biology and zero pre-spawning mortality fractions. Native SAM SSB uses fitted stock weights and is retained separately."
   ),
   recruitment = list(
     status = "matched",
@@ -128,8 +128,8 @@ comparison_definitions <- list(
   ),
   F_bar = list(
     status = "approximate",
-    definition = "Official arithmetic mean F over ages 4–8, compared with tinyAM's abundance-weighted F over those ages.",
-    reason = "The age range matches but the averaging definitions differ."
+    definition = "Population-weighted F over ages 4–8, recalculated from each model's N and F.",
+    reason = "The common-definition comparison uses matching ages and weighting; native SAM arithmetic Fbar is retained separately. The F-state representation remains an approximation."
   ),
   M = list(
     status = "matched",
@@ -151,7 +151,7 @@ background <- c(
   "| M and biology | M is fixed at 0.2 per year. Annual stock, catch, landings, and discard weights, maturity, landings fractions, and spawning fractions are supplied. | Use the same M, source biology, and fitted SAM 2025 stock/catch weights where the source files are missing. | The terminal weight estimates are fixed inputs in tinyAM; source values remain unchanged in the database. |",
   "| Catch | Catch numbers-at-age are in thousand fish; age 15 is the plus group. One observation variance is shared across ages. The 2025 relative precision weight is 0.5. | Retain catch-at-age and represent the relative precision by scaling the observation SD. | The source observation weighting is approximated by an SD multiplier. |",
   "| Surveys and q | SummerSurvey (1996–2025) and SpringSurvey (1994–2025) use ages 3–10 at times 0.65 and 0.225. Both have separate q at ages 3–8 and shared q at ages 9–10; survey residuals are AR(1) across ages. | Retain both age-specific indices, timing, q groups, and age-specific observation SDs. | tinyAM treats survey residuals as independent. |",
-  "| Outputs | SAM reports N, F, recruitment, SSB, total biomass, Fbar, q, and fitted observations. | Compare N/F at age and annual abundance, biomass, SSB, recruitment, and Fbar. | Fbar definitions differ; derived total abundance has no source uncertainty. |",
+  "| Outputs | SAM reports N, F, recruitment, SSB, total biomass, arithmetic Fbar, q, and fitted observations. | Compare N/F at age and annual abundance, recruitment, biomass and SSB under shared translated biology, and population-weighted F over ages 4–8. | Native SAM aggregates are retained separately; derived comparison aggregates have no source uncertainty. |",
   "",
   "The fit uses tinyAM's normal initialization first. If numerical checks fail, one retry initializes N, F, and q from official estimates; these are starting values only, and tinyAM estimates them freely."
 )

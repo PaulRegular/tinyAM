@@ -66,7 +66,9 @@ stopifnot(
   identical(env$comparison_aggregates,
     c("abundance", "biomass", "ssb", "recruitment", "F_bar")),
   env$comparison_definitions$F$status == "approximate",
-  env$comparison_definitions$F_bar$status == "approximate"
+  env$comparison_definitions$F_bar$status == "approximate",
+  grepl("shared translated", env$comparison_definitions$ssb$definition, fixed = TRUE),
+  grepl("Population-weighted", env$comparison_definitions$F_bar$definition, fixed = TRUE)
 )
 
 native_index <- source_data$outputs[
