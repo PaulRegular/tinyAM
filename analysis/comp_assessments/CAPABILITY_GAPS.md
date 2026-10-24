@@ -84,6 +84,17 @@ constrained recruitment deviations. Missing input arrays are a source-data
 blocker; published fitted states and unrelated simulated data cannot replace
 them. Female SSB requires the separate female fraction and maturity inputs.
 
+[Eastern Georges Bank cod](source_reviews/ck_nefsc_trac_cert_morhua_gb.md)
+uses a supplied Lorenzen M surface and decoupled older-cohort process error;
+its inferred apparent mortality is not a separately estimated M output.
+Recruitment is a random walk with correlated innovations, which is distinct
+from both independent RW increments and AR1 levels. The selected NTS catch-age
+data are not the CATCH age estimates printed in the input-review table.
+Missing selected observations and complete biology currently block fitting;
+separate fleets and aggregate/composition likelihoods would still require
+documented approximations after source recovery. Historical review counts
+above are unchanged.
+
 ## What the expanded formulas already cover
 
 The [White Hake Run_005 audit](source_reviews/ck_nefsc_garmiii_tenuis_gom_gb.md)
