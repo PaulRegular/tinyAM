@@ -59,6 +59,10 @@ stopifnot(all(total$source_type == "derived_source_output"),
   o$value[o$measure == "predicted_catch" & o$year == 2025] == 29044,
   x$value[x$measure == "total_biomass" & x$year == 2025] == 67675.175772)
 cat("Sandeel Area 1r identity, seasonal hazards, observation roles, mixed state dates, source gaps and uncertainty passed.\n")
+recruits <- o[o$measure == "recruitment", ]
+stopifnot(abs(exp(mean(log(recruits$value))) - 111219266) < 1,
+  abs(exp(mean(log(recruits$value[recruits$year <= 2024]))) - 112607331) < 1,
+  any(source$assumptions$setting == "recruitment_averaging_windows"))
 
 validate_seasonal_fixture <- function(tables) {
   env <- new.env(parent = globalenv())

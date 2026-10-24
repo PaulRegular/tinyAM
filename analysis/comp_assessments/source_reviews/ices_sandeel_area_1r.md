@@ -86,9 +86,14 @@ unresolved. These are source gaps, not grounds to alter reported observations.
 The public repository contains settings but its `DATA.bib` points to a local
 `1r` folder that is not included. Exact native input files, zero-catch flags,
 the fitted `sas.rds` and unrounded biological arrays were not recovered.
-All three completeness statuses therefore remain **partial**. The report's
-2026 bridge recruitment differs from its forecast-input table and SAG; these
-forecast-only values are documented separately from historical observations.
+All three completeness statuses therefore remain **partial**. The source
+summary appends the full-history geometric-mean recruitment for 2026
+(111,219,266 thousand fish). The configured forecast instead averages
+1983–2024 (112,607,331 thousand fish), explaining its different value in SAG
+and the forecast-input table. Pinned `getSummary()`, `getForecastTable()` and
+the production `report.R` distinguish these windows. The narrative says
+1983–2025, whereas the configuration excludes the final fitted year. Neither
+future assumption is imported as a historical observation.
 
 Sources and inspection logs are cached under
 `source_cache/ices_sandeel_area_1r_2026/`, with the broader catalogue/repository
