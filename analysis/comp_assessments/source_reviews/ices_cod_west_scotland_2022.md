@@ -36,6 +36,12 @@ One catch-scaling factor is estimated for each year 1995–2006, shared across a
 
 Recovered outputs include N, expanded F, q, fitted observations, SSB, total biomass, recruitment, Fbar and catch-scaling factors. Estimates exponentiate native log estimates; SEs are explicitly approximate natural-scale delta-method SEs, with 95% log-scale Wald confidence limits. Derived total abundance sums all ages and has no invented uncertainty. The importer verifies native aggregate definitions from N, F and biology. Offline checks protect source cells, age/year coverage, survey rates and timings, missing catches, fixed biology, F-state sharing and uncertainty scales.
 
+## Translation trial
+
+The initial translation retains the source grid, all five surveys, supplied M and biology, q sharing, observation-SD sharing and relative precision. It uses IID N process errors, RW recruitment and age-correlated RW F. Its F states at ages 4–7 remain separate rather than exactly shared, and it omits SAM's catch-scaling factors. These are explicit approximations; the original catches are unchanged.
+
+The first normal-start trial used fixed free initial abundance. It failed numerical checks: optimizer code 1 (`false convergence (8)`), objective 728.1359, maximum absolute gradient 0.0071505 and a non-positive-definite Hessian. An sdreport object was returned but its covariance contains non-finite entries, so usable uncertainty was not established. This trial is retained locally and in Git history. The next single-change candidate uses tinyAM's `latent` initial-abundance option, which more closely matches the separate integrated SAM initial states. No observations, formulas or other assumptions change for that candidate.
+
 ## Sources
 
 - [2022 ICES advice](https://doi.org/10.17895/ices.advice.19447889)
