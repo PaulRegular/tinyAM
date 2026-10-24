@@ -32,6 +32,7 @@ assessments or management advice.
 | Georges Bank yellowtail flounder | [source review and production-data gap](source_reviews/ck_dfo_nefsc_ferruginea_gb.md) |
 | Northeast Arctic beaked redfish | [source review and remaining input gaps](source_reviews/ck_ices_afwg_mentella_deep_1_2.md) |
 | 4VWX Atlantic herring | [component indicators and production-input gap](source_reviews/ck_dfo_mar_harengus_4vwx.md) |
+| Atlantic striped bass | [base-run outputs and missing production inputs](source_reviews/ck_nefsc_garmiii_saxatilis_gom_chatt.md) |
 | Shared readers, converters, audits, and runners | `R/` |
 | Source imports and validators | `scripts/database/` |
 | Visible stock model calls and run drivers | `scripts/translation/` |

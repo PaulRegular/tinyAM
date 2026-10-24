@@ -76,6 +76,14 @@ recorded separately. Its acoustic spawning-biomass index is not a stock-wide
 fitted SSB series; a single tinyAM comparison would first need the production
 inputs, reference outputs and a justified component/ensemble definition.
 
+[Atlantic striped bass](source_reviews/ck_nefsc_garmiii_saxatilis_gom_chatt.md)
+has verified 2024 base-run N, fleet/total F and female spawning biomass, but
+its production observation arrays and annual weights remain unrecovered.
+The source uses totals plus compositions, fleet selectivity blocks and
+constrained recruitment deviations. Missing input arrays are a source-data
+blocker; published fitted states and unrelated simulated data cannot replace
+them. Female SSB requires the separate female fraction and maturity inputs.
+
 ## What the expanded formulas already cover
 
 IID/RW/AR1 recruitment and BH/Ricker median curves, fixed recruitment SDs,
