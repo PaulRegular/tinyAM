@@ -1,7 +1,7 @@
 #' Check numerical convergence and model diagnostics
 #'
 #' @description
-#' Reviews a fitted model's optimization, uncertainty, formula designs and
+#' Reviews one or more fitted models' optimization, uncertainty, formula designs and
 #' residual patterns. Numerical convergence, known structural problems and
 #' advisory findings are reported separately. A converged model can still have
 #' weakly estimated parameters or unsuitable biological assumptions.
@@ -47,25 +47,57 @@
 #' These descriptive thresholds identify imprecise estimates; they do not prove
 #' a structural problem or change the convergence criteria.
 #'
-#' @param fit A fitted `tam_fit` object.
+#' Supply fitted models individually, as in `check_tam(base, alternative)`, or
+#' use a named `model_list`. Models are checked separately, without ranking or
+#' requiring matching observations. An omitted `grad_tol` uses each model's own
+#' stored tolerance. A supplied tolerance and `detailed` apply to every model.
+#'
+#' @param fit A fitted `tam_fit` object. May be omitted when supplying models
+#'   through named `...` arguments or `model_list`.
+#' @param ... Additional fitted `tam_fit` objects. Names label the models;
+#'   unnamed models use their expression names. Unused by the print methods.
+#' @param model_list Optional named list of fitted `tam_fit` objects. Supply
+#'   this or individual models, not both.
 #' @param grad_tol Positive gradient tolerance. `NULL` uses the tolerance stored
 #'   in the fit, or `1e-2` if none is stored.
 #' @param detailed Examine covariance eigenvalues and weak parameter directions?
-#' @return A `tam_check` list with `is_converged`, `numerical`, `structural`,
+#' @return For one individual model, a `tam_check` list with `is_converged`, `numerical`, `structural`,
 #'   `structural_status`, `advisories`, `residuals`, `data`, and `curvature`.
 #'   `numerical` records pass, fail or not-assessed status for each check.
 #'   Calling this function does not modify the fit or emit warnings; its print
 #'   method displays the findings.
+#'   Multiple models, or an explicit `model_list` (even with one model), return
+#'   a `tam_checks` named list of these results. Its print method shows each
+#'   model's findings under its name. Access a model with `checks[["Base"]]`.
 #' @examples
 #' \dontrun{
 #' checks <- check_tam(fit)
 #' checks$is_converged
 #' checks$residuals
 #' check_tam(fit, detailed = TRUE)
+#' check_tam(fit, alternative)
+#' checks <- check_tam(model_list = list(Base = fit, Alternative = alternative))
+#' checks$Base$is_converged
 #' }
 #' @seealso [fit_tam()], [sim_tam()], [fit_retro()], [tidy_obs_pred()]
 #' @export
-check_tam <- function(fit, grad_tol = NULL, detailed = FALSE) {
+check_tam <- function(fit, ..., grad_tol = NULL, detailed = FALSE, model_list = NULL) {
+  dots <- list(...)
+  if (!missing(fit) && !length(dots) && is.null(model_list)) {
+    return(.check_tam_fit(fit, grad_tol = grad_tol, detailed = detailed))
+  }
+  expressions <- as.list(substitute(list(...)))[-1L]
+  if (!missing(fit)) {
+    dots <- c(list(fit), dots)
+    expressions <- c(list(substitute(fit)), expressions)
+  }
+  models <- .dots_or_list(dots, expressions, model_list = model_list)$fits
+  checks <- lapply(models, .check_tam_fit, grad_tol = grad_tol, detailed = detailed)
+  if (is.null(model_list) && length(checks) == 1L) return(checks[[1L]])
+  structure(checks, class = c("tam_checks", "list"))
+}
+
+.check_tam_fit <- function(fit, grad_tol = NULL, detailed = FALSE) {
   fit <- .require_tam_fit(fit, arg = "fit")
   if (is.null(grad_tol)) grad_tol <- if (is.null(fit$grad_tol)) 1e-2 else fit$grad_tol
   if (!is.numeric(grad_tol) || length(grad_tol) != 1L ||
@@ -566,8 +598,7 @@ check_tam <- function(fit, grad_tol = NULL, detailed = FALSE) {
 
 
 #' @rdname check_tam
-#' @param x A `tam_check` object.
-#' @param ... Unused.
+#' @param x A `tam_check` or `tam_checks` object.
 #' @export
 print.tam_check <- function(x, ...) {
   inform <- function(text, symbol = "i") {
@@ -632,5 +663,15 @@ print.tam_check <- function(x, ...) {
     for (detail in x$advisories$detail) inform(detail)
   }
 
+  invisible(x)
+}
+
+#' @rdname check_tam
+#' @export
+print.tam_checks <- function(x, ...) {
+  for (name in names(x)) {
+    cli::cli_h1("{name}")
+    print(x[[name]], ...)
+  }
   invisible(x)
 }
