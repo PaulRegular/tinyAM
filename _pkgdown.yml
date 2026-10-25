@@ -4,6 +4,7 @@ development:
   mode: unreleased
 template:
   bootstrap: 5
+  math-rendering: mathjax
   bslib:
     primary: '#003e56'
     secondary: '#028f8d'
@@ -79,3 +80,4 @@ reference:
   - dprocess_rw
   - dprocess_ar1
   - dprocess_cor_rw
+
