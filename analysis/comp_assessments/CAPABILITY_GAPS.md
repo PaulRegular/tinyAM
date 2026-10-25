@@ -118,6 +118,19 @@ limited translation does not establish support for native seasonal dynamics,
 integrated survey predictions or the downweighted hockey-stick likelihood.
 The historical inventory counts above are unchanged.
 
+The corresponding [Area 2r translation](source_reviews/ices_sandeel_area_2r.md)
+also converges from defaults with usable uncertainty, retaining four F mean
+periods and one age-1 Dredge series. Its terminal SSB, recruitment and abundance
+differences remain above review thresholds. These two numerical successes
+support documented annual approximations; they do not establish support for
+the native seasonal likelihood. Source code also explains the different
+recruitment averaging windows in summary and forecast outputs; those future
+assumptions are not historical observations.
+The public configurations also use SD argument names absent from their
+declared pinned builder. That is an unresolved production-software provenance
+gap, distinct from a tinyAM capability gap or a demonstrated error in the
+official numerical outputs.
+
 ## What the expanded formulas already cover
 
 The [White Hake Run_005 audit](source_reviews/ck_nefsc_garmiii_tenuis_gom_gb.md)

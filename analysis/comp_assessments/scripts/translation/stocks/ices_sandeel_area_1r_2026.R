@@ -96,7 +96,7 @@ background <- c(
   "| Surveys | Dredge ages 0-1 averages abundance over annual times 0.875-1; RTM ages 1-3 uses configured time 0. | Dredge age 1 at midpoint 0.9375; RTM ages 1-3 at time 0. Separate survey-age q; RTM ages 2-3 share SD. | Midpoint timing approximates the Dredge integral. Original scaled index values are preserved; q is not restricted to one. |",
   "| Biology and reporting | Seasonal weights/maturity; January SSB. | First-half biology, spawning time zero; catch totals use observed-catch-weighted seasonal catch weights. | Catch reporting is ages 1-4+ only, rather than SAG all-age landings. No source estimates alter observations. |",
   "| Comparisons | Native N0 is July recruitment, older N is January; annual F sums both seasons. | Compare January ages 1-4+, same-year age-1 recruitment and common-definition aggregates. | Native July recruitment and native aggregates remain source context. Derived aggregates have no invented uncertainty. |",
-  "", "This is a limited annual approximation, not a reproduction of the seasonal model. Two seasonal effort rows, exact catch flags and unrounded native arrays are unavailable. The fit starts with package defaults; one aligned source-start retry is permitted only after numerical failure."
+  "", "This is a limited annual approximation, not a reproduction of the seasonal model. Two seasonal effort rows, exact catch flags and unrounded native arrays are unavailable. The precise production software version is also unverified. The fit starts with package defaults; one aligned source-start retry is permitted only after numerical failure."
 )
 
 ## Model ----
