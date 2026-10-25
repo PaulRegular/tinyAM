@@ -9,6 +9,31 @@
   )
 )
 
+.forecast_hover <- function(data) {
+  if (!all(c("fold", "year") %in% names(data))) return(rep("", nrow(data)))
+  horizon <- if ("horizon" %in% names(data)) data$horizon else pmax(0, data$year - data$fold)
+  paste0("<br>Origin: ", data$fold, "<br>",
+    ifelse(horizon > 0, paste0("Forecast; horizon: ", horizon), "Historical"))
+}
+
+.projection_boundary <- function(data) {
+  if (!"is_proj" %in% names(data) || !any(data$is_proj, na.rm = TRUE)) return(NA_real_)
+  if ("fold" %in% names(data)) {
+    origins <- unique(data$fold[!is.na(data$fold)])
+    if (length(origins) != 1L) return(NA_real_)
+    return(as.numeric(origins))
+  }
+  suppressWarnings(max(data$year[!data$is_proj], na.rm = TRUE))
+}
+
+.forecast_plot_args <- function(data, args) {
+  if ("fold" %in% names(data) && is.null(args$text) && is.null(args$hovertemplate)) {
+    args$text <- ~paste0("Origin: ", fold, "<br>",
+      ifelse(year > fold, paste0("Forecast; horizon: ", year - fold), "Historical"))
+  }
+  args
+}
+
 #' Plot utilities for `tidy_tam()` outputs
 #'
 #' These functions provide minimal, Plotly-based visualizations for outputs
@@ -32,6 +57,9 @@
 #' Both trend and observed/predicted plots accept an `x` formula and `xlab`;
 #' use `x = ~ age, xlab = "Age", frame = ~ year` for annual age profiles.
 #' The historical/projection separator is shown only on a year axis.
+#' Tables with `fold` (forecast origin) and `horizon` columns add forecast
+#' status to default hover text. Different origins suppress a shared separator.
+#' Explicit `text` or `hovertemplate` arguments override these hover defaults.
 #' [plot_age_year()] assembles both orientations with view-switching buttons.
 #' For custom overlays, call `plot_trend(add_buttons = FALSE)`, add the layers
 #' with Plotly, then call `add_plot_buttons()` so CI controls include all ribbons.
@@ -122,7 +150,7 @@ plot_trend <- function(
   if (!is.data.frame(data) || !nrow(data)) {
     return(plotly::plot_ly(x = numeric(), y = numeric(), type = "scatter", mode = "lines"))
   }
-  args <- list(...)
+  args <- .forecast_plot_args(data, list(...))
   if (nzchar(unit) && is.null(args$hovertemplate)) {
     args$hovertemplate <- paste0("%{x}<br>%{y} ", unit,
       if (!is.null(args$text)) "<br>%{text}" else "", "<extra>%{fullData.name}</extra>")
@@ -196,7 +224,7 @@ plot_trend <- function(
 
   shapes <- NULL
   if (identical(all.vars(x), "year") && "is_proj" %in% names(data) && any(data$is_proj)) {
-    max_obs_year <- suppressWarnings(max(data$year[!data$is_proj], na.rm = TRUE))
+    max_obs_year <- .projection_boundary(data)
     if (is.finite(max_obs_year)) {
       shapes <- list(list(
         type = "line",
@@ -323,7 +351,7 @@ plot_obs_pred <- function(
     !any(is.finite(c(data$obs, data$pred)))) {
     return(plotly::plot_ly(x = numeric(), y = numeric(), type = "scatter", mode = "lines"))
   }
-  args <- list(...)
+  args <- .forecast_plot_args(data, list(...))
   if (nzchar(unit) && is.null(args$hovertemplate)) {
     args$hovertemplate <- paste0("%{x}<br>%{y} ", unit,
       if (!is.null(args$text)) "<br>%{text}" else "", "<extra>%{fullData.name}</extra>")
@@ -344,7 +372,7 @@ plot_obs_pred <- function(
 
   shapes <- NULL
   if (identical(all.vars(x), "year") && "is_proj" %in% names(data) && any(data$is_proj)) {
-    max_obs_year <- suppressWarnings(max(data$year[!data$is_proj], na.rm = TRUE))
+    max_obs_year <- .projection_boundary(data)
     if (is.finite(max_obs_year)) {
       shapes <- list(list(
         type  = "line",
@@ -601,7 +629,10 @@ plot_age_year <- function(data, plot = plot_trend, x = ~year, xlab = "Year",
   data <- data[order(data$year, data$age), , drop = FALSE]
   if (length(unique(data$age)) == 1L) {
     if (is.null(args$title)) args$title <- paste("Age", unique(data$age))
-    if (is.null(args$text)) args$text <- ~paste("Year:", year, "<br>Age:", age)
+    if (is.null(args$text) && is.null(args$hovertemplate)) {
+      data$.view_hover <- paste0("Year: ", data$year, "<br>Age: ", data$age, .forecast_hover(data))
+      args$text <- ~.view_hover
+    }
     return(do.call(plot, c(list(data = data, x = ~year, xlab = "Year", frame = NULL), args)))
   }
   projection <- if ("is_proj" %in% names(data)) data$is_proj else rep(FALSE, nrow(data))
@@ -612,10 +643,11 @@ plot_age_year <- function(data, plot = plot_trend, x = ~year, xlab = "Year",
   }, character(1))
   year_labels <- paste0(data$year, suffix[match(data$year, years)])
   data$.view_year <- factor(year_labels, levels = unique(year_labels))
-  if (is.null(args$text)) {
+  if (is.null(args$text) && is.null(args$hovertemplate)) {
     data$.view_hover <- paste0(
       "Year: ", data$year,
-      ifelse(projection, " (projection)", ""), "<br>Age: ", data$age
+      ifelse(projection, " (projection)", ""), "<br>Age: ", data$age,
+      .forecast_hover(data)
     )
     args$text <- ~.view_hover
   }
@@ -751,7 +783,7 @@ plot_matrix <- function(data, metric = NULL, frame = NULL,
       text <- paste0("Model: ", model, "<br>", name, ": ", format(values, trim = TRUE),
         if (nzchar(unit)) paste0(" ", unit) else "", "<br>Year: ", grid$year,
         if ("is_proj" %in% names(z)) ifelse(!is.na(z$is_proj[index]) & z$is_proj[index], " (projection)", "") else "",
-        "<br>Age: ", grid$age)
+        "<br>Age: ", grid$age, .forecast_hover(z)[index])
       for (field in intersect(c("definition", "notes"), names(z))) {
         value <- as.character(z[[field]][index])
         text <- paste0(text, ifelse(is.na(value) | !nzchar(value), "", paste0("<br>", value)))

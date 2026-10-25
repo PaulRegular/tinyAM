@@ -1,0 +1,44 @@
+test_that("retrospective model selection, omissions and ordering are explicit", {
+  r <- structure(list(fits = list(base = list(`2022` = default_fit,
+    `2024` = default_fit, `2023` = NULL)), fold_diagnostics = data.frame(
+      model = "base", fold = 2022:2024, is_reference = c(FALSE, FALSE, TRUE),
+      is_converged = c(TRUE, FALSE, TRUE), error = c(NA, "failed fold", NA))), class = "tam_retro")
+  original <- r
+  view <- tinyAM:::.retro_dashboard(r)
+  expect_identical(names(view$fits), c("2024 (full data)", "2022 (peel)"))
+  expect_match(paste(view$background, collapse = " "), "2023: failed fold")
+  expect_identical(r, original)
+  r$fits$alternative <- r$fits$base
+  expect_error(tinyAM:::.retro_dashboard(r, is_interactive = FALSE), "base, alternative")
+  expect_null(suppressMessages(tinyAM:::.retro_dashboard(r, is_interactive = TRUE,
+    choose = function(...) "")))
+  expect_identical(suppressMessages(tinyAM:::.retro_dashboard(r, is_interactive = TRUE,
+    choose = function(...) "base"))$origins, view$origins)
+  expect_error(tinyAM:::.retro_dashboard(r, "absent"), "exact name")
+  expect_error(vis_tam(r, default_fit), "alone")
+  expect_error(vis_tam(default_fit, r), "alone")
+  expect_error(vis_tam(r, model_list = list(base = default_fit)), "alone")
+  r$fold_diagnostics$is_converged <- FALSE
+  expect_error(tinyAM:::.retro_dashboard(r, "base"), "fold_diagnostics")
+})
+
+test_that("forecast metadata are public plot defaults and mixed origins omit boundaries", {
+  d <- data.frame(year = rep(2020:2023, 2), fold = rep(c(2021, 2022), each = 4),
+    model = rep(c("a", "b"), each = 4), age = 2, est = 1:8, obs = 1:8, pred = 1:8)
+  d$horizon <- pmax(0, d$year - d$fold)
+  d$is_proj <- d$horizon > 0
+  original <- d
+  for (plot in list(plot_trend, plot_obs_pred)) {
+    p <- plotly::plotly_build(plot(d, color = ~model, add_buttons = FALSE))
+    expect_length(p$x$layout$shapes, 0)
+    expect_match(paste(unlist(lapply(p$x$data, `[[`, "text")), collapse = " "), "Origin: 2021")
+    expect_match(paste(unlist(lapply(p$x$data, `[[`, "text")), collapse = " "), "Forecast; horizon: 1")
+    p <- plotly::plotly_build(plot(d[d$model == "a", ], add_buttons = FALSE))
+    expect_equal(p$x$layout$shapes[[1]]$x0, 2021)
+    p <- plotly::plotly_build(plot(d, text = "custom", hovertemplate = "%{text}", add_buttons = FALSE))
+    expect_false(any(grepl("Origin", unlist(lapply(p$x$data, `[[`, "text")))))
+  }
+  expect_identical(d, original)
+  tabs <- tinyAM:::.retro_plot_metadata(list(N = d), c(a = 2021, b = 2022))
+  expect_equal(tabs$N$fold, d$fold)
+})

@@ -1,5 +1,9 @@
 # tinyAM 0.1.1.9000
 
+* `vis_tam()` now accepts retrospective and hindcast results directly. Select
+  one model's reference and successful peels; omitted attempts are explained
+  on Background. Forecast hover text identifies each peel's origin and horizon.
+
 * `check_tam()` accepts multiple fitted models or a named `model_list`, with
   labeled CLI output and separate diagnostics for each model. Single-model
   results and all diagnostic calculations are unchanged. Supply `grad_tol`

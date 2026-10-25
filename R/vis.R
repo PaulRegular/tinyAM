@@ -10,6 +10,9 @@
 #' @param background Optional Markdown text shown on a Background dashboard page.
 #' @param render_args  Named list of additional arguments passed to
 #'                     [rmarkdown::render()].
+#' @param model Exact model name in a `tam_retro` result. A single model is
+#'   selected automatically; interactive sessions offer a chooser for several
+#'   models. Scripts must specify a model when several are available.
 #' @param ...          One or more TAM fits or reporting references.
 #'                     Supply these or `model_list`, not both. When supplying models
 #'                     through `...`, their object names are used to label models
@@ -40,6 +43,11 @@
 #'          [plot_obs_pred()], or use [plot_age_year()] for the two orientations.
 #'          The small F/M mean-overlay helpers and their line styling live in
 #'          `inst/rmd/vis_tam.Rmd`.
+#'          A `tam_retro` dashboard compares the selected model's successful
+#'          peels with its unpeeled reference. Failed or missing attempts are
+#'          listed on Background. Hindcast forecasts remain visible, with origin
+#'          and horizon in hover text. A common projection separator is omitted
+#'          when origins differ. The result is never refitted or modified.
 #'          Population patterns and Mortality patterns use [plot_matrix()] to
 #'          explore age-year heatmaps, surfaces and contours, with shared ranges
 #'          across models for each metric. Log changes values, not year or age.
@@ -59,7 +67,95 @@
 #'
 #' @export
 vis_tam <- function(..., model_list = NULL, interval = 0.95, output_file = NULL,
-                    open_file = TRUE, background = NULL, render_args = list()) {
+                    open_file = TRUE, background = NULL, render_args = list(), model = NULL) {
+  first <- if (length(list(...))) list(...)[[1L]] else NULL
+  UseMethod("vis_tam", first)
+}
+
+#' @rdname vis_tam
+#' @export
+vis_tam.default <- function(..., model_list = NULL, interval = 0.95, output_file = NULL,
+                            open_file = TRUE, background = NULL, render_args = list(), model = NULL) {
+  dots <- list(...)
+  dot_expr <- as.list(substitute(list(...)))[-1]
+  if (any(vapply(c(dots, model_list), inherits, logical(1), "tam_retro"))) {
+    cli::cli_abort("Supply one tam_retro object alone, without additional fits or model_list.")
+  }
+  if (!is.null(model)) cli::cli_abort("model is only used with a tam_retro result.")
+  fits <- .dots_or_list(dots, dot_expr, model_list = model_list, list_arg_name = "model_list")$fits
+  .render_vis_tam(fits, interval, output_file, open_file, background, render_args)
+}
+
+.retro_dashboard <- function(retro, model = NULL, is_interactive = interactive(),
+                             choose = utils::select.list) {
+  models <- names(retro$fits)
+  if (is.null(model)) {
+    if (length(models) == 1L) {
+      model <- models
+    } else {
+      if (!is_interactive) cli::cli_abort(c(
+        "Specify model: retrospective dashboards display one model at a time.",
+        "i" = "Available models: {paste(models, collapse = ', ')}."
+      ))
+      cli::cli_inform("The dashboard displays one model at a time; select a model.")
+      model <- choose(models, title = "Retrospective model")
+      if (!length(model) || !nzchar(model)) return(NULL)
+    }
+  }
+  if (!is.character(model) || length(model) != 1L || is.na(model) || !model %in% models) {
+    cli::cli_abort("model must be one exact name: {paste(models, collapse = ', ')}.")
+  }
+  diagnostics <- retro$fold_diagnostics[retro$fold_diagnostics$model == model, , drop = FALSE]
+  diagnostics <- diagnostics[order(!diagnostics$is_reference, -diagnostics$fold), , drop = FALSE]
+  candidates <- retro$fits[[model]][as.character(diagnostics$fold)]
+  keep <- !is.na(diagnostics$is_converged) & diagnostics$is_converged &
+    vapply(candidates, inherits, logical(1), "tam_fit")
+  if (!any(keep)) cli::cli_abort(c(
+    "No successful fits are available for {model}.",
+    "i" = "Inspect fold_diagnostics for errors and numerical failures."
+  ))
+  labels <- paste0(diagnostics$fold[keep], ifelse(diagnostics$is_reference[keep], " (full data)", " (peel)"))
+  fits <- stats::setNames(candidates[keep], labels)
+  origins <- stats::setNames(diagnostics$fold[keep], labels)
+  omitted <- diagnostics[!keep, , drop = FALSE]
+  background <- c("## Retrospective comparison", "",
+    paste0("Model: **", model, "**. Traces show the full-data reference and successful peels."),
+    paste0("Omitted attempts: **", nrow(omitted), "**."))
+  if (!any(diagnostics$is_reference & keep)) background <- c(background, "The full-data reference is unavailable.")
+  if (nrow(omitted)) {
+    reason <- omitted$error
+    reason[is.na(reason) | !nzchar(reason)] <- "Missing fit or failed numerical checks; see fold_diagnostics."
+    background <- c(background, "", paste0("- ", omitted$fold, ": ", gsub("[\r\n]+", " ", reason)))
+  }
+  list(fits = fits, origins = origins, background = background)
+}
+
+#' @rdname vis_tam
+#' @export
+vis_tam.tam_retro <- function(..., model_list = NULL, interval = 0.95, output_file = NULL,
+                              open_file = TRUE, background = NULL, render_args = list(), model = NULL) {
+  dots <- list(...)
+  if (length(dots) != 1L || !is.null(model_list)) {
+    cli::cli_abort("Supply one tam_retro object alone, without additional fits or model_list.")
+  }
+  view <- .retro_dashboard(dots[[1L]], model)
+  if (is.null(view)) return(invisible(NULL))
+  .render_vis_tam(view$fits, interval, output_file, open_file,
+    c(view$background, "", background), render_args, view$origins)
+}
+
+.retro_plot_metadata <- function(x, origins) {
+  if (is.data.frame(x)) {
+    if (all(c("model", "year") %in% names(x))) {
+      x$fold <- unname(origins[as.character(x$model)])
+      x$horizon <- pmax(0, x$year - x$fold)
+    }
+  } else if (is.list(x)) x[] <- lapply(x, .retro_plot_metadata, origins = origins)
+  x
+}
+
+.render_vis_tam <- function(fits, interval, output_file, open_file, background,
+                            render_args, retro_origins = NULL) {
   pkg <- c("knitr", "rmarkdown", "flexdashboard")
   missing <- pkg[!vapply(pkg, requireNamespace, logical(1), quietly = TRUE)]
   if (length(missing)) {
@@ -89,17 +185,12 @@ vis_tam <- function(..., model_list = NULL, interval = 0.95, output_file = NULL,
     require_unique = FALSE
   )
 
-  dots <- list(...)
-  dot_expr <- as.list(substitute(list(...)))[-1]
-
-  fits_info <- .dots_or_list(dots, dot_expr, model_list = model_list, list_arg_name = "model_list")
-  fits <- fits_info$fits
-
   rmd_file <- system.file("rmd", "vis_tam.Rmd", package = "tinyAM")
   rmd_env <- new.env(parent = globalenv())
   rmd_env$fits <- fits
   rmd_env$interval <- interval
   rmd_env$background <- background
+  rmd_env$retro_origins <- retro_origins
 
   if (is.null(output_file)) {
     output_file <- tempfile(pattern = "vis_tam_", fileext = ".html")
