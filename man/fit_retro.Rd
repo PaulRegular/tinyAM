@@ -80,7 +80,9 @@ uses training years and \code{n_mean}.
 \strong{Forecast assumptions.} \code{catch = "observed"} is available only in hindcast
 evaluation (\code{fit_hindcast()} or \code{fit_retro(hindcast = TRUE)}), not ordinary
 \code{\link[=fit_tam]{fit_tam()}} projections. It uses actual total catch weight in each held-out
-year, calculated from complete raw catch-at-age and supplied weights. This
+year, calculated from complete raw catch-at-age and catch weights (stock
+weights if no catch schedule is supplied). Forecast stock and catch schedules
+are averaged separately using training years only. This
 conditions prediction on removals that actually occurred; held-out surveys
 and catch compositions do not enter fitting. Agreement with the conditioning
 catch total is not forecast skill. Missing catch/weight coverage fails that
@@ -124,7 +126,8 @@ hind <- fit_hindcast(fit, folds = 10,
   proj_settings = list(n_proj = 3, n_mean = 3, catch = "observed"))
 print(hind)
 hind$scores
-vis_tam(hind$fits[[1]])
+vis_tam(hind)
+vis_tam(retro, model = names(retro$fits)[1])
 }
 }
 \seealso{

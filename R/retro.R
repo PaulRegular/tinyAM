@@ -23,13 +23,13 @@
   observed <- identical(settings$catch, "observed")
   out <- data.frame(year = years, horizon = seq_along(years), control = kind,
     target = if (observed) rep(NA_real_, length(years)) else rep(settings[[kind]], length(years)),
-    target_source = if (observed) "observed catch-at-age x supplied weight" else if (kind == "catch") "supplied catch" else "F multiplier",
+    target_source = if (observed) "observed catch-at-age x catch weight (stock fallback)" else if (kind == "catch") "supplied catch" else "F multiplier",
     target_unit = if (kind == "catch") .population_unit(fit$dat, "total_yield") else "multiplier", error = NA_character_)
   source <- fit$refit_args$data
   ages <- sort(unique(c(fit$dat$ages, fit$dat$plus_ages)))
   if (observed) for (i in seq_along(years)) {
     d <- source$catch[source$catch$year == years[i], ]
-    w <- source$weight[source$weight$year == years[i], ]
+    w <- .weight_schedule(source$weight[source$weight$year == years[i], ], "catch")
     counts <- d$obs[match(ages, d$age)]; weights <- w$obs[match(ages, w$age)]
     if (any(!is.finite(counts) | counts < 0) || any(!is.finite(weights) | weights < 0)) {
       out$error[i] <- "Observed catch biomass unavailable: incomplete catch-at-age or weights; supply complete inputs or use F_mult."
@@ -207,7 +207,9 @@
 #' **Forecast assumptions.** `catch = "observed"` is available only in hindcast
 #' evaluation (`fit_hindcast()` or `fit_retro(hindcast = TRUE)`), not ordinary
 #' [fit_tam()] projections. It uses actual total catch weight in each held-out
-#' year, calculated from complete raw catch-at-age and supplied weights. This
+#' year, calculated from complete raw catch-at-age and catch weights (stock
+#' weights if no catch schedule is supplied). Forecast stock and catch schedules
+#' are averaged separately using training years only. This
 #' conditions prediction on removals that actually occurred; held-out surveys
 #' and catch compositions do not enter fitting. Agreement with the conditioning
 #' catch total is not forecast skill. Missing catch/weight coverage fails that
@@ -255,7 +257,8 @@
 #'   proj_settings = list(n_proj = 3, n_mean = 3, catch = "observed"))
 #' print(hind)
 #' hind$scores
-#' vis_tam(hind$fits[[1]])
+#' vis_tam(hind)
+#' vis_tam(retro, model = names(retro$fits)[1])
 #' }
 #' @seealso [fit_tam()], [compute_mohns_rho()], [compute_hindcast_mase()], [compute_hindcast_rmse()]
 #' @importFrom future plan multisession

@@ -149,7 +149,9 @@ in a year are zero, effective W and P are set to zero (biomass and mature
 biomass are both zero). Supplied biology at the oldest input age applies
 to all fish in its hidden plus group.
 
-These effective values are used for biomass, SSB, and weight-based yield
+Effective stock weights are used for biomass and SSB; effective catch
+weights use the same abundance shares for yield (stock fallback if absent).
+These effective values are used for their respective
 summaries in both estimation and simulation. Projection biological inputs
 are averaged over recent years separately at each retained age before this
 aggregation. Catch/index aggregation, the N/F/M/Z equations, process penalties,
@@ -349,7 +351,7 @@ forward under the same equations. A zero F multiplier is replaced by
 \code{1e-12} with a warning because the catch equation is evaluated on the log scale.
 Alternatively, \code{proj_settings$catch} fixes annual catch biomass, and an
 AD-aware root solver chooses the nonnegative multiplier to satisfy
-\deqn{C_t=\sum_a N_{t,a}W_{t,a}\frac{k_tF_{H,a}}{k_tF_{H,a}+M_{t,a}}
+\deqn{C_t=\sum_a N_{t,a}W^{catch}_{t,a}\frac{k_tF_{H,a}}{k_tF_{H,a}+M_{t,a}}
 (1-e^{-(k_tF_{H,a}+M_{t,a})}).}
 Catch targets use native abundance-times-weight units. They constrain modeled
 removals, not noisy simulated observation totals. Biology is updated within
@@ -407,9 +409,21 @@ seasonal growth, maturation and an additional sex-ratio adjustment are not
 introduced. Fully selected F
 is \eqn{\max_a F_{t,a}} and selectivity is F divided by that maximum.
 \code{F_bar} and \code{M_bar} are abundance-weighted means over their selected ages.
-Total catch sums numbers; yield uses the supplied stock weights, not a
-separate fishery weight series. Observed totals omit missing cells; predicted
+Total catch sums numbers; yield uses catch weights, falling back to stock
+weights when no catch schedule is supplied. Observed totals omit missing cells; predicted
 totals sum the conditional median predictions over all catch cells.
+
+Optional \code{weight$type} distinguishes complete \code{"stock"} and \code{"catch"}
+schedules on the same biological year-age grid. Untyped or stock-only inputs
+use one schedule for both purposes. In the equations above, W denotes stock
+weight. Yield is \eqn{Y_t=\sum_a C_{t,a}W^{catch}_{t,a}}; catch targets use
+this same schedule. Effective plus-group catch weights use the same
+abundance shares as stock weights, retaining all biological ages. Projection
+averages are calculated separately by age and type over training years.
+Both schedules share one optional mass-unit label, conventionally kg.
+They describe values without converting them. This adds no parameters and
+does not change the catch-number likelihood. \code{fit$rep$W} remains stock
+weight; \code{fit$rep$W_catch} reports the effective catch schedule.
 
 Tidied estimates and confidence limits are on reported scales. \code{se} stays on
 the estimation scale, identified by \code{se_scale}. For log quantities, limits are

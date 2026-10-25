@@ -167,8 +167,11 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
     mean_years <- seq.int(max_year - n_mean + 1L, max_year)
     template <- x[x$year == max(x$year), , drop = FALSE]
     if (nm %in% c("weight", "maturity")) {
-      mean_obs <- stats::aggregate(obs ~ age, data = x[x$year %in% mean_years, ], FUN = mean)
-      template$obs <- mean_obs$obs[match(template$age, mean_obs$age)]
+      keys <- c("age", if (nm == "weight" && "type" %in% names(x)) "type")
+      mean_obs <- stats::aggregate(x[x$year %in% mean_years, "obs", drop = FALSE],
+        x[x$year %in% mean_years, keys, drop = FALSE], FUN = mean)
+      key <- function(d) do.call(paste, c(d[keys], sep = "\r"))
+      template$obs <- mean_obs$obs[match(key(template), key(mean_obs))]
     } else if (nm != "pop_covariates") {
       template$obs <- NA_real_
     }
@@ -277,15 +280,18 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #'   named `obs`. Rename any differently named input columns before calling. See
 #'   [cod_obs] for an example of the required structure. The optional
 #'   `pop_covariates` table supplies population formula inputs; see [as_tam_data()].
-#' - Catch, weight, and maturity must already contain exactly one row per
+#' - Catch and maturity must already contain exactly one row per
 #'   year-age combination across the input range. Survey tables may be sparse.
+#'   Weight needs the same complete grid for every supplied `type`; see
+#'   [as_tam_data()] for stock/catch schedules and fallback rules.
 #' - A combined observation table is created for catch and index; `log(0)` is
-#'   treated as `NA` (to be handled via random effects).
+#'   excluded from the observation likelihood.
 #' - When biological inputs extend above the modeled plus age, the underlying
-#'   weight and maturity values are retained in `W_plus_input` and `P_plus_input`,
+#'   stock/catch weight and maturity values are retained in `W_plus_input`,
+#'   `W_catch_plus_input` and `P_plus_input`,
 #'   indexed by `years` and `plus_ages`. Their projection rows use the same
 #'   recent-year averages by biological age as other weight/maturity inputs.
-#'   `dat$W`, `dat$P`, and `dat$obs` retain the input values at modeled ages;
+#'   `dat$W`, `dat$W_catch`, `dat$P`, and `dat$obs` retain input values at modeled ages;
 #'   their terminal biological values are placeholders. [nll_fun()] replaces
 #'   terminal W by an abundance-weighted mean and terminal P by a biomass-weighted
 #'   proportion using its reconstructed hidden age composition. See [tinyAM-model].
@@ -508,7 +514,7 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #'   near one. q can approach a boundary with large coefficients and SEs.
 #' @param proj_settings Optional list with elements:
 #' - `n_proj`: number of years to project (default `NULL` disables projections).
-#' - `n_mean`: number of recent historical years (default `3`) used to average weight and
+#' - `n_mean`: number of recent historical years (default `3`) used to average each weight type and
 #'   maturity by age. Catch/index observations in projection years are missing.
 #'   Other columns are copied from the last available year in each table.
 #' - `F_mult`: multiplier of terminal historical F (default `1`, status quo).
@@ -531,7 +537,9 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #' - `obs` — per-type tables restricted to `years` x `ages` (including `proj_years`, if used)
 #' - `spawn_time`, `spawn_time_plus` — timing matrices on modeled ages and,
 #'   when retained, biological plus ages
-#' - `W`, `P` — mean weight-at-age, and proportion mature at age matrices (`year x age`)
+#' - `W`, `W_catch`, `P` — stock weight, catch weight and proportion mature
+#'   matrices (`year x age`). Optional `weight$type` distinguishes complete
+#'   `"stock"` and `"catch"` schedules; stock alone supplies both uses.
 #' - `plus_ages`, `W_plus_input`, `P_plus_input` — retained biological ages and
 #'   inputs, present only when biological data extend above `max(ages)`. The last
 #'   retained age represents a hidden plus group. Effective modeled W/P and hidden
@@ -711,10 +719,14 @@ prepare_tam <- function(
   if (max(dat$obs$weight$age) > max(dat$ages)) {
     dat$plus_ages <- seq.int(max(dat$ages), max(dat$obs$weight$age))
     plus_dimnames <- list(year = dat$years, age = dat$plus_ages)
-    dat$W_plus_input <- matrix(dat$obs$weight$obs[dat$obs$weight$age %in% dat$plus_ages],
+    stock_weight <- .weight_schedule(dat$obs$weight)
+    catch_weight <- .weight_schedule(dat$obs$weight, "catch")
+    dat$W_plus_input <- matrix(stock_weight$obs[stock_weight$age %in% dat$plus_ages],
                                length(dat$years), length(dat$plus_ages),
                                dimnames = plus_dimnames
     )
+    dat$W_catch_plus_input <- matrix(catch_weight$obs[catch_weight$age %in% dat$plus_ages],
+      length(dat$years), length(dat$plus_ages), dimnames = plus_dimnames)
     dat$P_plus_input <- matrix(dat$obs$maturity$obs[dat$obs$maturity$age %in% dat$plus_ages],
                                length(dat$years), length(dat$plus_ages),
                                dimnames = plus_dimnames
@@ -729,8 +741,9 @@ prepare_tam <- function(
   }
   dat$spawn_time <- empty_mat
   dat$spawn_time[] <- dat$obs$maturity$spawn_time
-  dat$W <- dat$P <- empty_mat
-  dat$W[] <- dat$obs$weight$obs
+  dat$W <- dat$W_catch <- dat$P <- empty_mat
+  dat$W[] <- .weight_schedule(dat$obs$weight)$obs
+  dat$W_catch[] <- .weight_schedule(dat$obs$weight, "catch")$obs
   dat$P[] <- dat$obs$maturity$obs
 
   catch <- dat$obs$catch

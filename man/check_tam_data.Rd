@@ -33,6 +33,10 @@ treated as missing by \code{\link[=prepare_tam]{prepare_tam()}}, because the obs
 \verb{(year, age)} combination over the global modeled range
 (from min to max year and age across all tables).
 \item Survey tables may omit year-age combinations.
+\item Optional \code{weight$type} contains \code{"stock"} or \code{"catch"}. Stock weights
+are required. With types, the unique key is \verb{(year, age, type)} and every
+supplied type must cover the complete same grid. Without types, or with
+stock alone, stock weights also supply yield and catch targets.
 \item Optional character \code{unit} columns must be consistent throughout catch and
 weight, and within each survey. Missing columns are valid; a supplied column
 requires nonempty labels on every row. Units never change input values.

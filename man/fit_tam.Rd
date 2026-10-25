@@ -29,7 +29,10 @@ fit_tam(
 \arguments{
 \item{data}{A named list of tidy observation tables (e.g., \code{catch}, \code{index},
 \code{weight}, \code{maturity}) and optional \code{pop_covariates}. A \link[=as_tam_data]{tam_data}
-object or plain list can be used. See \link{cod_obs} for an example.}
+object or plain list can be used. The weight table may distinguish complete
+stock/catch schedules with \code{type};
+stock weights supply both purposes when catch weights are absent.
+See \link{cod_obs} for an example.}
 
 \item{years}{Consecutive historical model years (at least two).
 Inferred from observed data (non-projection) if \code{NULL}.}
@@ -193,7 +196,7 @@ near one. q can approach a boundary with large coefficients and SEs.
 \item{proj_settings}{Optional list with elements:
 \itemize{
 \item \code{n_proj}: number of years to project (default \code{NULL} disables projections).
-\item \code{n_mean}: number of recent historical years (default \code{3}) used to average weight and
+\item \code{n_mean}: number of recent historical years (default \code{3}) used to average each weight type and
 maturity by age. Catch/index observations in projection years are missing.
 Other columns are copied from the last available year in each table.
 \item \code{F_mult}: multiplier of terminal historical F (default \code{1}, status quo).
@@ -212,7 +215,7 @@ See \link{tinyAM-model} for the catch solver and feasibility safeguards.
 where applicable; default \verb{0.95.}}
 
 \item{add_osa_res}{Logical; add one-step-ahead residuals? Hard wired to
-apply the \code{"oneStepGaussianOffMode"} method. See \code{\link[RTMB:oneStepPredict]{RTMB::oneStepPredict()}}
+apply the \code{"oneStepGaussianOffMode"} method. See \code{\link[RTMB:OSA-residuals]{RTMB::oneStepPredict()}}
 for details.}
 
 \item{silent}{Logical; if \code{TRUE}, disables tracing information.}
@@ -233,7 +236,7 @@ A \code{tam_fit} list with components:
 \item \strong{obj}: RTMB \code{ADFun} object.
 \item \strong{opt}: \verb{[stats::nlminb()]} optimization result.
 \item \strong{rep}: list from \code{obj$report()}.
-\item \strong{sdrep}: \code{\link[RTMB:sdreport]{RTMB::sdreport()}} result.
+\item \strong{sdrep}: \code{\link[RTMB:TMB-interface]{RTMB::sdreport()}} result.
 \item \strong{fixed_par}: fixed parameter estimates in a tidy format (see \code{\link[=tidy_par]{tidy_par()}}).
 \item \strong{random_par}: list of random parameter estimates in a tidy format (see
 \code{\link[=tidy_par]{tidy_par()}}).
@@ -334,5 +337,5 @@ if (interactive()) {
 }
 \seealso{
 \code{\link[=prepare_tam]{prepare_tam()}}, \code{\link[=make_par]{make_par()}}, \code{\link[=sim_tam]{sim_tam()}}, \code{\link[=fit_retro]{fit_retro()}},
-\code{\link[RTMB:MakeADFun]{RTMB::MakeADFun()}}, \code{\link[RTMB:sdreport]{RTMB::sdreport()}}
+\code{\link[RTMB:TMB-interface]{RTMB::MakeADFun()}}, \code{\link[RTMB:TMB-interface]{RTMB::sdreport()}}
 }
