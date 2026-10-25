@@ -39,7 +39,7 @@ excerpt <- function(name) {
   markers <- grep("^# ---- .* ----$", script)
   last <- min(markers[markers > first]) - 1L
   code <- script[seq.int(first + 1L, last)]
-  if (name %in% c("dashboard", "hindcast")) code <- sub("^# ?", "", code)
+  if (name %in% c("dashboard", "hindcast", "tidy")) code <- sub("^# ?", "", code)
   code
 }
 for (name in c("inputs", "scaa", "sam", "ncam", "dashboard", "hindcast", "tidy")) {

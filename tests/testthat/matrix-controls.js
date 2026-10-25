@@ -81,5 +81,23 @@ const flush = () => new Promise(resolve => setImmediate(resolve));
   single.handlers.plotly_buttonclicked({button: {args: ['scale', 'log']}});
   await flush();
   assert.equal(single.data[0].visible, false);
+  const signed = widget();
+  draw(signed, {}, {type:'heatmap', models:['A','B'], signed:true, categorical:true, ylab:'M state block',
+    colorscale:[[0,'orange'],[.5,'white'],[1,'navy']], metrics:[{
+      name:'M', unit:'', years:[2000,2001], ages:[1,2,3], linear:[-3,3], log:[0,1], cells:[
+        {ages:[1,2],ticktext:['2-4','5-8'],linear:[[-1,2],[1,-2]],log:[[null,0],[0,null]],text:[['a','b'],['c','d']]},
+        {ages:[1,2,3],ticktext:['2','3-5','6-8'],linear:[[-3,2],[1,-2],[0,3]],log:[[null,0],[0,null],[null,0]],text:[['a','b'],['c','d'],['e','f']]}
+      ]}]});
+  await flush();
+  assert(!signed.layout.updatemenus.some(menu => menu.name === 'scale'));
+  signed.handlers.plotly_animatingframe({name:'B'}); await flush();
+  for (const type of ['surface','contour','heatmap']) {
+    signed.handlers.plotly_buttonclicked({button:{args:['type',type]}}); await flush();
+    assert.deepEqual(signed.data[0].y,[1,2,3]);
+    assert.deepEqual(signed.layout.yaxis.ticktext,['2','3-5','6-8']);
+    assert.deepEqual(signed.layout.scene.zaxis.range,[-3,3]);
+  }
+  signed.handlers.plotly_buttonclicked({button:{args:['scale','log']}}); await flush();
+  assert.equal(signed.data[0].zmin,-3);
   console.log('All matrix control combinations passed');
 })().catch(error => { console.error(error); process.exit(1); });

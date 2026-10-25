@@ -9,7 +9,9 @@ tidy_tam(
   model_list = NULL,
   interval = 0.95,
   label = "model",
-  label_type = "auto"
+  label_type = "auto",
+  process_residuals = TRUE,
+  process_seed = 123456L
 )
 }
 \arguments{
@@ -28,6 +30,12 @@ tidy_tam(
 \item \code{"character"}: keep as character.
 \item \code{"factor"}: convert to factor.
 }}
+
+\item{process_residuals}{Calculate joint-sample process diagnostics? Use
+\code{FALSE} for lightweight consumers that need only existing fitted summaries.}
+
+\item{process_seed}{Non-negative integer seed for a reproducible local
+Gaussian joint sample. Default \code{123456L}; the caller's RNG state is restored.}
 }
 \value{
 A named list of stacked tables, with \code{formula_effects} when present:
@@ -37,6 +45,14 @@ A named list of stacked tables, with \code{formula_effects} when present:
 \item \strong{deviations} — signed N/F/M process tables, using annual increments for
 RW processes and mean deviations for IID/AR1. M rows represent unique state
 blocks. These point estimates exclude unpenalized RW boundary rows.
+\item \strong{process_residuals} — standardized joint-sample \code{recruitment}, \code{N}, \code{F}
+and \code{M} tables when available. \code{est} contains the diagnostic draw and
+\code{fitted} the standardized innovation at the fitted mode. A \code{status} table
+records each model's calculation status, explanation, seed and method.
+Disabled processes, projections and unpenalized boundaries have no rows.
+M coordinates represent unique state blocks, with \code{state_block} giving
+their order. Missing or invalid joint precision produces a warning and
+an unavailable status, retaining fitted deviations without fabricating draws.
 \item \strong{patterns} — population and mortality age-year tables for \code{\link[=plot_matrix]{plot_matrix()}}.
 Compatible units follow the first fitted model's displayed metric units,
 including explicit reference conversions. Unspecified fitted units remain unspecified;
@@ -83,6 +99,20 @@ stacked separately for \strong{fixed} and \strong{random} effects: fixed effects
 effects as a named list of data frames (one per random-effect block, e.g. \code{"log_f"}, \code{"log_r"},
 …).
 }
+\section{Process diagnostics}{
+
+Innovations are whitened using the fitted IID, RW, age-correlated RW or
+separable AR1 distribution, including stationary boundaries and age-specific
+SDs. All predictions are recomputed through the fitted population code.
+One Gaussian parameter perturbation from the stored joint precision is
+propagated through the automatic-differentiation Jacobian of those
+innovations. This SAM-style local Gaussian approximation retains covariance
+across components without constructing a dense residual covariance matrix.
+Results for a model do not depend on which other models are supplied or their
+order. See \code{\link[=plot_process_deviations]{plot_process_deviations()}} and \code{\link[=plot_process_residuals]{plot_process_residuals()}} for
+reusable viewers of the same tables.
+}
+
 \examples{
 fit <- fit_tam(
   cod_obs,

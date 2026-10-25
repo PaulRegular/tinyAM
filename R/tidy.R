@@ -1,3 +1,6 @@
+Warning: truncated output (original token count: 13698)
+Total output lines: 1308
+
 #' Tidy a (named) matrix/array into long format
 #'
 #' @description
@@ -491,374 +494,14 @@ tidy_pop <- function(fit, interval = 0.95) {
 #' @return
 #' A list with two elements:
 #' - `fixed`: a data frame stacking all fixed-effect parameters with columns
-#'   parameter/index columns (`par`, `coef`, `year`, `age`, as applicable), then
-#'   `est`, `lwr`, `upr`, `se`, `se_scale`, and `is_proj` when applicable.
-#' - `random`: a named list of data frames (one per random block) with the same
-#'   columns as `fixed` (indices appropriate to each random effect).
-#'
-#' @example inst/examples/example_fit_default.R
-#' @examples
-#' par_tab <- tidy_par(fit)
-#' names(par_tab)
-#' par_tab$fixed
-#' names(par_tab$random)        # e.g., "log_f", "log_r", ...
-#' head(par_tab$random$log_f)
-#'
-#' @seealso [tidy_mat()], [fit_tam()]
-#' @export
-tidy_par <- function(fit, interval = 0.95) {
-  fit <- .require_tam_fit(fit, arg = "fit")
-
-  est <- .tam_parameter_summary(fit, "Estimate")
-  se <- .tam_parameter_summary(fit, "Std. Error")
-  nms <- intersect(names(est), names(se))
-  nms <- nms[lengths(est[nms]) > 0L]
-
-  ran_nms <- intersect(fit$obj$env$.random, nms)
-  fix_nms <- setdiff(nms, ran_nms)
-  z <- stats::qnorm(0.5 + interval / 2)
-
-  .par2df <- function(nm) {
-    e <- est[[nm]]
-    s <- se[[nm]]
-    if (is.matrix(e)) {
-      df <- tidy_mat(e, value_name = "est")
-      df$is_proj <- df$year %in% fit$dat$years[fit$dat$is_proj]
-      df$se <- as.vector(s)
-    } else {
-      if (is.null(names(e))) {
-        df <- data.frame(coef = NA, est = e, se = s)
-      } else {
-        if (nm %in% c("log_r", "log_r_init")) {
-          yr <- as.integer(names(e))
-          df <- data.frame(year = yr, est = e, se = s, is_proj = yr %in% fit$dat$years[fit$dat$is_proj])
-          if (nm == "log_r_init") df$coef <- as.character(yr)
-        } else if (nm %in% c("log_n0", "d_n0")) {
-          df <- data.frame(coef = names(e), age = as.integer(names(e)), est = e, se = s)
-        } else {
-          df <- data.frame(coef = names(e), est = e, se = s)
-        }
-      }
-    }
-    df <- cbind(data.frame(par = nm), df)
-    df$lwr <- df$est - z * df$se
-    df$upr <- df$est + z * df$se
-
-    df$se_scale <- if (startsWith(nm, "sd_beta_")) {
-      "log SD coefficient"
-    } else if (startsWith(nm, "atanh_")) {
-      "atanh"
-    } else if (startsWith(nm, "logit_")) {
-      "logit"
-    } else if (startsWith(nm, "log_")) {
-      "log"
-    } else {
-      "reported"
-    }
-
-    if (startsWith(nm, "atanh_")) {
-      df <- trans_est(df, transform = tanh, scale = 1)
-      df$par <- sub("^atanh_", "", df$par)
-    } else if (nm == "logit_q") {
-      df <- trans_est(df, transform = NULL, scale = 1)
-    } else if (startsWith(nm, "logit_")) {
-      df <- trans_est(df, transform = plogis, scale = 1)
-      df$par <- sub("^logit_", "", df$par)
-    } else if (startsWith(nm, "log_")) {
-      df <- trans_est(df, transform = exp, scale = 1)
-      df$par <- sub("^log_", "", df$par)
-    } else {
-      df <- trans_est(df, transform = NULL, scale = 1)
-    }
-    df$unit <- if (nm %in% c("log_r0", "log_r_init", "log_r", "log_n0", "log_n")) {
-      .population_unit(fit$dat, "N")
-    } else if (nm == "d_n0") "log abundance difference" else NA_character_
-    values <- c("est", "lwr", "upr", "se", "se_scale")
-    df[, c(
-      setdiff(names(df), c(values, "is_proj")), values,
-      intersect("is_proj", names(df))
-    ), drop = FALSE]
-  }
-
-  fixed <- if (length(fix_nms)) {
-    stack_list(lapply(fix_nms, .par2df), label = NULL)
-  } else {
-    data.frame(
-      par = character(), est = numeric(), lwr = numeric(), upr = numeric(),
-      se = numeric(), se_scale = character(), check.names = FALSE
-    )
-  }
-  if (isTRUE(fit$dat$N_settings$init %in% c("mono", "capped"))) {
-    e <- fit$rep$initial_log_N
-    s <- if (is.null(fit[["sdrep"]])) rep(NA_real_, length(e)) else
-      as.list(fit[["sdrep"]], "Std. Error", report = TRUE)$initial_log_N
-    initial <- data.frame(par = "n0", coef = as.character(fit$dat$ages[-1]),
-      age = fit$dat$ages[-1], est = exp(e), lwr = exp(e - z * s),
-      upr = exp(e + z * s), se = s, se_scale = "log")
-    initial$unit <- .population_unit(fit$dat, "N")
-    fixed <- stack_list(list(fixed, initial), label = NULL)
-  }
-  rownames(fixed) <- NULL
-  values <- c("est", "lwr", "upr", "se", "se_scale")
-  fixed <- fixed[, c(
-    setdiff(names(fixed), c(values, "is_proj")), values,
-    intersect("is_proj", names(fixed))
-  ), drop = FALSE]
-
-  random <- stats::setNames(lapply(ran_nms, .par2df), ran_nms)
-
-  attr(fixed, "interval") <- interval
-  attr(random, "interval") <- interval
-
-  list(fixed = fixed, random = random)
-}
-
-.tam_parameter_summary <- function(fit, what) {
-  if (!is.null(fit[["sdrep"]])) {
-    return(as.list(fit[["sdrep"]], what))
-  }
-  estimates <- fit$obj$env$parList(par = fit$parameter_values)
-  attr(estimates, "check.passed") <- NULL
-  attr(estimates, "what") <- what
-  if (what == "Estimate") {
-    return(estimates)
-  }
-  lapply(estimates, function(x) {
-    x[] <- NA_real_
-    x
-  })
-}
-
-
-#' Stack a list of tables with an identifier column
-#'
-#' @description
-#' Convenience wrapper around [base::rbind()] for stacking a (named) list of
-#' data frames while recording the source list element in a label column. When
-#' the list is named, the names are used as labels; otherwise, integer indices
-#' (`"1"`, `"2"`, …) are used. Columns absent in some elements are filled with
-#' `NA` so inputs need only share column *names* in common.
-#'
-#' @param x A list of data frames (or objects coercible to data frames).
-#' @param label A character scalar giving the identifier column name to add. Set
-#'   to `NULL` to omit the identifier column. Default is `"model"`.
-#' @param label_type Desired type for the identifier column: automatic
-#'   conversion via [utils::type.convert()] (`"auto"`, the default), or
-#'   explicit coercion to `"numeric"`, `"character"`, or `"factor"`.
-#'
-#' @return A single data frame produced by row-binding the list elements. If
-#'   `label` is not `NULL`, the identifier column is the first column in the
-#'   output.
-#'
-#' @examples
-#' lst <- list(
-#'   retro_1 = data.frame(age = 2:4, rho = runif(3)),
-#'   retro_2 = data.frame(age = 2:4, rho = runif(3))
-#' )
-#' stack_list(lst, label = "retro")
-#'
-#' @export
-stack_list <- function(x, label = "model",
-                       label_type = c("auto", "numeric", "character", "factor")) {
-  label_type <- match.arg(label_type)
-
-  if (!length(x)) {
-    cli::cli_abort("{.arg x} must contain at least one element.")
-  }
-
-  ids <- names(x)
-  if (is.null(ids)) ids <- as.character(seq_along(x))
-
-  pieces <- lapply(seq_along(x), function(i) {
-    df <- x[[i]]
-    if (is.null(df)) {
-      return(NULL)
-    }
-    if (!is.data.frame(df)) df <- as.data.frame(df)
-    if (!nrow(df)) {
-      return(NULL)
-    }
-    if (!is.null(label)) df[[label]] <- ids[[i]]
-    df
-  })
-
-  keep <- !vapply(pieces, is.null, logical(1))
-  if (!any(keep)) {
-    cli::cli_abort("No data frames to stack.")
-  }
-  pieces <- pieces[keep]
-  ids <- ids[keep]
-
-  all_cols <- Reduce(union, lapply(pieces, names))
-  pieces <- lapply(pieces, function(df) {
-    missing <- setdiff(all_cols, names(df))
-    if (length(missing)) {
-      for (nm in missing) df[[nm]] <- NA
-    }
-    df <- df[, all_cols, drop = FALSE]
-    df
-  })
-
-  out <- do.call(rbind, pieces)
-  rownames(out) <- NULL
-
-  if (!is.null(label)) {
-    out[[label]] <- switch(label_type,
-      auto      = utils::type.convert(out[[label]], as.is = TRUE),
-      numeric   = suppressWarnings(as.numeric(out[[label]])),
-      character = as.character(out[[label]]),
-      factor    = factor(out[[label]], levels = ids)
-    )
-    ord <- c(label, setdiff(names(out), label))
-    out <- out[, ord, drop = FALSE]
-  }
-
-  out
-}
-
-
-#' Stack identically named subtables from a nested list
-#'
-#' @param x A named list of results (e.g. sims or models), each containing
-#'   a named list of data.frames (e.g. "ssb", "N", "recruitment", ...).
-#'   Shape: list(<id> = list(<subtable> = data.frame, ...), ...)
-#' @param label Name of the column to add with the outer id. Default "model".
-#'   Set to NULL to omit the id column.
-#' @param label_type Controls how the label column is coerced. One of:
-#'   - `"auto"` (default): numeric when possible, else character.
-#'   - `"numeric"`: force numeric conversion (with `NA` for non-numeric).
-#'   - `"character"`: keep as character.
-#'   - `"factor"`: convert to factor.
-#'
-#' @return A named list of data.frames. One element per subtable name. Each
-#'   data.frame is the row-bound stack across outer ids, with an added column
-#'   named by `label` (unless `label = NULL`).
-#' @examples
-#' res <- list(
-#'   sim1 = list(
-#'     ssb = data.frame(year = 1:3, est = 1:3),
-#'     N = data.frame(year = 1:2, age = 2:3, est = 5:6)
-#'   ),
-#'   sim2 = list(
-#'     ssb = data.frame(year = 1:3, est = 11:13),
-#'     N = data.frame(year = 1:2, age = 2:3, est = 15:16)
-#'   )
-#' )
-#' stacked <- stack_nested(res, label = "sim")
-#' str(stacked$ssb) # has column 'sim'
-#'
-#' @importFrom stats setNames
-#'
-#' @export
-stack_nested <- function(x, label = "model",
-                         label_type = c("auto", "numeric", "character", "factor")) {
-  label_type <- match.arg(label_type)
-
-  outer_ids <- names(x)
-  if (is.null(outer_ids)) outer_ids <- as.character(seq_along(x))
-  sub_names <- Reduce(union, lapply(x, names))
-
-  out <- stats::setNames(vector("list", length(sub_names)), sub_names)
-
-  for (nm in sub_names) {
-    pieces <- lapply(seq_along(x), function(i) {
-      if (!is.null(x[[i]][[nm]])) x[[i]][[nm]] else NULL
-    })
-    names(pieces) <- outer_ids
-    pieces <- pieces[!vapply(pieces, is.null, logical(1))]
-    if (!length(pieces)) {
-      out[[nm]] <- NULL
-      next
-    }
-    out[[nm]] <- stack_list(pieces, label = label, label_type = label_type)
-  }
-  out
-}
-
-
-# Use the chronological population constructor rather than duplicating survival
-# equations. No fitted objective or parameter mode is changed.
-.tidy_process_deviations <- function(fit) {
-  if (is.null(fit$rep$Z) || (is.null(fit$parameter_values) && is.null(fit$sdrep))) return(list())
-  dat <- fit$dat; par <- .start_parameters(fit, dat)
-  out <- list()
-  table <- function(x, process, block = FALSE) {
-    if (process %in% c("rw", "cor_rw")) {
-      if (nrow(x) < 2L) return(NULL)
-      x <- x[-1L, , drop = FALSE] - x[-nrow(x), , drop = FALSE]
-    }
-    names(dimnames(x)) <- c("year", if (block) "age_block" else "age")
-    d <- tidy_array(x, value_name = "est")
-    d$is_proj <- d$year %in% dat$years[dat$is_proj]
-    d$kind <- if (process %in% c("rw", "cor_rw")) "Annual log increment" else "Log deviation from mean"
-    d
-  }
-  if (!is.null(par[["log_f"]])) {
-    historical <- !dat$is_proj
-    out$F <- table(log(fit$rep$F[historical, , drop = FALSE]) -
-                     log(fit$rep$mu_F[historical, , drop = FALSE]), dat$F_settings$process)
-  }
-  if (!is.null(par[["log_m"]])) {
-    out$M <- table(par[["log_m"]] - log(fit$rep$mu_M[rownames(par[["log_m"]]),
-                                                     dat$M_settings$age_block_start, drop = FALSE]), dat$M_settings$process, TRUE)
-  }
-  if (!is.null(par[["log_n"]])) {
-    population <- .population_states(par, dat, fit$rep$Z, F = fit$rep$F, M = fit$rep$M)
-    out$N <- table(log(fit$rep$N[-1L, -1L, drop = FALSE]) -
-                     population$pred_log_N[-1L, -1L, drop = FALSE], dat$N_settings$process)
-    if (!is.null(out$N) && dat$N_settings$process != "rw") out$N$kind <- "Log deviation from cohort prediction"
-  }
-  Filter(function(x) is.data.frame(x) && nrow(x), out)
-}
-
-
-#' Stack TAM outputs across models (retro folds, scenarios, etc.)
-#'
-#' @description
-#' Builds tidy, stacked tables from one or more fitted TAM models. For each model it collects:
-#'
-#' - observation diagnostics from the model's `$obs_pred` component (falling back to [tidy_obs_pred()] when absent),
-#' - population summaries from `$pop` (falling back to [tidy_pop()] when absent), and
-#' - parameter summaries from `$fixed_par`/`$random_par` (falling back to [tidy_par()] when absent),
-#'
-#' then stacks **per component** across models (e.g., all `"catch"` tables together; all `"N"`
-#' tables together; all fixed parameters together; each random-effect block together).
-#'
-#' @details
-#' **Inputs:** Pass models through `...` or via `model_list =`.
-#' Precomputed assessment reference objects of class `tam_ref` are also accepted. Their
-#' existing tables and uncertainty are retained without constructing a tinyAM
-#' optimizer. A `tam_ref` may contain a named `comparison_scales` vector;
-#' those factors are applied to the matching tinyAM population estimates and
-#' uncertainty so the combined tables use the reference's units.
-#'
-#' - If `...` supplies **one** model, **no label** column is added.
-#' - If `...` supplies **>1** model, a label column is added using the object/expression names from `...`.
-#' - If `model_list` is used, it **must be a named list**; its names are always used as labels (even when length 1).
-#'
-#' Names (from `...` or `model_list`) are passed through [utils::type.convert()] with `as.is = TRUE`,
-#' so numeric-like labels (e.g. `"2010"`, `"2011"`) become numeric.
-#'
-#' Components present in any model are stacked; columns missing from particular models are filled with
-#' `NA` values so diagnostics like one-step-ahead residuals survive stacking. Parameter summaries are
-#' stacked separately for **fixed** and **random** effects: fixed effects in a single data frame; random
-#' effects as a named list of data frames (one per random-effect block, e.g. `"log_f"`, `"log_r"`,
-#' …).
-#'
-#' @param ... One or more fitted TAM objects (as returned by [fit_tam()]). Supply these or `model_list`, not both.
-#' @param model_list A **named list** of fitted TAM objects. Required to be named; the names are used as label values.
-#' @param interval Confidence level passed to [tidy_pop()] and [tidy_par()] for interval construction. Default `0.95`.
-#' @param label Character scalar giving the label column name to add when stacking across multiple/named models. Default `"model"`.
-#' @inheritParams stack_nested
-#'
-#' @return
-#' A named list of stacked tables, with `formula_effects` when present:
-#'
-#' - **obs_pred** — a named list of stacked data frames (e.g., `catch`, `index`);
-#' - **pop** — a named list of stacked data frames (e.g., `ssb`, `N`, `M`, `mu_M`, `F`, `mu_F`, `Z`, …);
-#' - **deviations** — signed N/F/M process tables, using annual increments for
-#'   RW processes and mean deviations for IID/AR1. M rows represent unique state
-#'   blocks. These point estimates exclude unpenalized RW boundary rows.
+#'   parameter/index columns (`par`, …3698 tokens truncated…ardized joint-sample `recruitment`, `N`, `F`
+#'   and `M` tables when available. `est` contains the diagnostic draw and
+#'   `fitted` the standardized innovation at the fitted mode. A `status` table
+#'   records each model's calculation status, explanation, seed and method.
+#'   Disabled processes, projections and unpenalized boundaries have no rows.
+#'   M coordinates represent unique state blocks, with `state_block` giving
+#'   their order. Missing or invalid joint precision produces a warning and
+#'   an unavailable status, retaining fitted deviations without fabricating draws.
 #' - **patterns** — population and mortality age-year tables for [plot_matrix()].
 #'   Compatible units follow the first fitted model's displayed metric units,
 #'   including explicit reference conversions. Unspecified fitted units remain unspecified;
@@ -894,8 +537,24 @@ stack_nested <- function(x, label = "model",
 #'
 #' @importFrom utils type.convert
 #' @seealso [tidy_obs_pred()], [tidy_pop()], [tidy_par()], [fit_tam()], [fit_retro()]
+#' @section Process diagnostics:
+#' Innovations are whitened using the fitted IID, RW, age-correlated RW or
+#' separable AR1 distribution, including stationary boundaries and age-specific
+#' SDs. All predictions are recomputed through the fitted population code.
+#' One Gaussian parameter perturbation from the stored joint precision is
+#' propagated through the automatic-differentiation Jacobian of those
+#' innovations. This SAM-style local Gaussian approximation retains covariance
+#' across components without constructing a dense residual covariance matrix.
+#' Results for a model do not depend on which other models are supplied or their
+#' order. See [plot_process_deviations()] and [plot_process_residuals()] for
+#' reusable viewers of the same tables.
 #' @export
-tidy_tam <- function(..., model_list = NULL, interval = 0.95, label = "model", label_type = "auto") {
+tidy_tam <- function(..., model_list = NULL, interval = 0.95, label = "model", label_type = "auto",
+                     process_residuals = TRUE, process_seed = 123456L) {
+  process_seed <- .validate_process_seed(process_seed)
+  if (!is.logical(process_residuals) || length(process_residuals) != 1L || is.na(process_residuals)) {
+    cli::cli_abort("{.arg process_residuals} must be TRUE or FALSE.")
+  }
   dots <- list(...)
   dot_expr <- as.list(substitute(list(...)))[-1]
   fits_info <- .dots_or_list(dots, dot_expr, model_list = model_list, list_arg_name = "model_list")
@@ -1062,6 +721,8 @@ tidy_tam <- function(..., model_list = NULL, interval = 0.95, label = "model", l
     if (inherits(fit, "tam_ref")) list() else .tidy_process_deviations(fit)
   })
   out$deviations <- stack_nested(deviations, label = id_col, label_type = label_type)
+  residuals <- lapply(model_list, .tidy_process_residuals, seed = process_seed, enabled = process_residuals)
+  out$process_residuals <- stack_nested(residuals, label = id_col, label_type = label_type)
   effects <- lapply(model_list, function(fit) {
     if (inherits(fit, "tam_ref")) {
       return(list())

@@ -6,12 +6,20 @@ function(el, x, config) {
     metric.years = array(metric.years);
     metric.ages = array(metric.ages);
     metric.cells.forEach(function(cell) {
+      if (cell.ages) cell.ages = array(cell.ages);
+      if (cell.ticktext) cell.ticktext = array(cell.ticktext);
       ['linear', 'log', 'text'].forEach(function(field) {
         cell[field] = array(cell[field]).map(array);
       });
     });
   });
-  var state = {metric: 0, model: 0, scale: 'linear', type: config.type};
+  var state = {metric: config.initial_metric || 0, model: 0, scale: 'linear', type: config.type};
+  if (config.signed) {
+    var first = config.metrics[state.metric].cells.findIndex(function(cell) {
+      return cell.linear.some(row => row.some(value => value !== null && isFinite(value)));
+    });
+    if (first >= 0) state.model = first;
+  }
   var camera = {eye: {x: 2, y: 2, z: 1.6}}, busy = false, pending = false;
   function menu(name, labels, values, active, top) {
     return {name: name, type: 'buttons', x: 0, y: 1, xanchor: 'right',
@@ -28,7 +36,7 @@ function(el, x, config) {
     var available = values.some(function(row) {
       return row.some(function(value) { return value !== null && isFinite(value); });
     });
-    return {type: state.type, x: metric.years, y: metric.ages,
+    return {type: state.type, x: metric.years, y: cell.ages || metric.ages,
       z: values, visible: available, text: cell.text, hovertemplate: '%{text}<extra></extra>',
       colorscale: config.colorscale, zmin: limits[0], zmax: limits[1],
       cmin: limits[0], cmax: limits[1], connectgaps: false,
@@ -42,11 +50,13 @@ function(el, x, config) {
     busy = true;
     var metric = config.metrics[state.metric], limits = metric[state.scale];
     var yearRange = [metric.years[0] - .5, metric.years[metric.years.length - 1] + .5];
-    var ageRange = [metric.ages[0] - .5, metric.ages[metric.ages.length - 1] + .5];
+    var cell = metric.cells[state.model], ages = cell.ages || metric.ages;
+    var ageRange = [ages[0] - .5, ages[ages.length - 1] + .5];
     var menus = [menu('scale', ['Linear', 'Log'], ['linear', 'log'],
       state.scale === 'linear' ? 0 : 1, 0),
       menu('type', ['Heatmap', 'Surface', 'Contour'], ['heatmap', 'surface', 'contour'],
         ['heatmap', 'surface', 'contour'].indexOf(state.type), 75)];
+    if (config.signed) menus.shift();
     if (config.metrics.length > 1) menus.push(menu('metric',
       config.metrics.map(function(m) { return m.name; }),
       config.metrics.map(function(m, i) { return i; }), state.metric, 180));
@@ -56,8 +66,12 @@ function(el, x, config) {
     var data = [trace(state.model)];
     var layout = Object.assign({}, x.layout, {autosize: true, margin: {l: 170, r: 85, t: 25, b: 100},
       uirevision: 'matrix', updatemenus: menus, xaxis: {title: 'Year', range: yearRange},
-      yaxis: {title: 'Age', range: ageRange},
-      scene: {xaxis: {title: 'Year', range: yearRange}, yaxis: {title: 'Age', range: ageRange},
+      yaxis: {title: metric.ylab || config.ylab || 'Age', range: ageRange,
+        tickmode: config.categorical ? 'array' : 'auto', tickvals: ages, ticktext: cell.ticktext},
+      annotations: data[0].visible ? [] : [{text: 'Unavailable for this model component',
+        x: .5, y: .5, xref: 'paper', yref: 'paper', showarrow: false}],
+      scene: {xaxis: {title: 'Year', range: yearRange}, yaxis: {title: metric.ylab || config.ylab || 'Age', range: ageRange,
+        tickmode: config.categorical ? 'array' : 'auto', tickvals: ages, ticktext: cell.ticktext},
         zaxis: {title: (state.scale === 'log' ? 'log10 ' : '') + metric.name +
             (metric.unit ? ' (' + metric.unit + ')' : ''),
           range: limits}, camera: camera, uirevision: 'matrix-camera'},
@@ -82,12 +96,13 @@ function(el, x, config) {
     if (!event.button || !event.button.args) return;
     var args = event.button.args;
     if (['metric', 'scale', 'type'].indexOf(args[0]) < 0) return;
+    if (config.signed && args[0] === 'scale') return;
     state[args[0]] = args[1];
     draw();
   });
   el.on('plotly_animatingframe', function(event) {
     var index = config.models.indexOf(event.name);
-    if (index >= 0) state.model = index;
+    if (index >= 0) { state.model = index; draw(); }
   });
   el.on('plotly_relayout', function(event) {
     if (event['scene.camera']) camera = event['scene.camera'];

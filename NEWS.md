@@ -1,5 +1,14 @@
 # tinyAM 0.1.1.9000
 
+* Add reproducible Gaussian joint-sample process residuals to `tidy_tam()`,
+  alongside fitted deviations, with explicit uncertainty status and a local seed.
+  New standalone process plots and the Random dashboard separate Recruitment,
+  N, F, M, fitted deviations and joint-sample residuals; signed matrices retain
+  unique M state blocks. Model likelihoods and fitting assumptions are unchanged.
+  Each process plotting helper returns one Plotly widget selected by `component`;
+  flexdashboard supplies the Recruitment/N/F/M dropdowns. Residual bubbles use
+  N/F/M buttons and a model animation slider, matching ordinary residual plots.
+
 * `check_tam()` accepts multiple fitted models or a named `model_list`, with
   labeled CLI output and separate diagnostics for each model. Single-model
   results and all diagnostic calculations are unchanged. Supply `grad_tol`

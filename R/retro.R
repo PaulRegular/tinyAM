@@ -126,7 +126,7 @@
     all_fits <- lapply(attempt, `[[`, "fit"); names(all_fits) <- terminals
     out$fits[[label]] <- all_fits
     retained <- all_fits[diagnostics$is_converged]
-    tidy <- if (length(retained)) tidy_tam(model_list = retained, label = "fold") else list(pop = list(), obs_pred = list())
+    tidy <- if (length(retained)) tidy_tam(model_list = retained, label = "fold", process_residuals = FALSE) else list(pop = list(), obs_pred = list())
     for (section in names(stacks)) for (metric in names(tidy[[section]])) {
       d <- tidy[[section]][[metric]]
       if (!nrow(d)) next

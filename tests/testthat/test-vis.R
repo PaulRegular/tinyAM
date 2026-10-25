@@ -72,6 +72,20 @@ test_that("vis_tam renders cleanly and produces an HTML output", {
   expect_match(html, 'data-navmenu="Parameters"', fixed = TRUE)
   expect_match(html, "<h1>Fixed</h1>", fixed = TRUE)
   expect_match(html, "<h1>Random</h1>", fixed = TRUE)
+  random_page <- strsplit(html, '<div id="random" class="section level1"', fixed = TRUE)[[1L]][2L]
+  random_page <- strsplit(random_page, '<div id="diagnostics"', fixed = TRUE)[[1L]][1L]
+  n_marker <- if (grepl('data-tab-group="N"', random_page, fixed = TRUE)) 'data-tab-group="N"' else "<h3>N</h3>"
+  primary <- c("<h3>Recruitment</h3>", n_marker, "<h3>F</h3>", "<h3>M</h3>",
+    'data-tab-group="Process deviations"', 'data-tab-group="Joint-sample residuals"')
+  positions <- vapply(primary, function(marker) regexpr(marker, random_page, fixed = TRUE)[1L], integer(1))
+  expect_true(all(positions > 0))
+  expect_true(all(diff(positions) > 0))
+  expect_false(grepl("<h3>[NFM] deviations</h3>", random_page))
+  expect_match(random_page, 'data-dropdown-tabs="true"', fixed = TRUE)
+  expect_false(grepl("data-process-tab", random_page, fixed = TRUE))
+  for (group in c("Process deviations", "Joint-sample residuals")) {
+    expect_length(gregexpr(paste0('data-tab-group="', group, '"'), random_page, fixed = TRUE)[[1]], 2L)
+  }
   expect_match(html, "<h3>Process SDs</h3>", fixed = TRUE)
   expect_match(html, "<h3>Observation SDs</h3>", fixed = TRUE)
   expect_match(html, "<h3>Initial abundance</h3>", fixed = TRUE)
@@ -395,6 +409,8 @@ test_that("tam_ref objects accept a Background page", {
   visible_html <- gsub("(?is)<(script|style)\\b.*?</\\1>", "", visible_html,
     perl = TRUE
   )
+  # Unavailable diagnostics are plot annotations, never prose above the plots.
+  expect_false(grepl('class="tam-process-unavailable"', visible_html, fixed = TRUE))
   expect_false(grepl("unavailable", tolower(visible_html), fixed = TRUE))
   expect_false(grepl("database_to_tam_ref", visible_html, fixed = TRUE))
   call_start <- regexpr('<div id="function-calls"', visible_html, fixed = TRUE)[[1L]]

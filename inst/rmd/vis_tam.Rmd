@@ -26,12 +26,21 @@ output:
 library(tinyAM)
 library(plotly)
 knitr::opts_chunk$set(cache = FALSE)
+htmltools::tagList(htmltools::tags$style(htmltools::HTML('
+  [data-dropdown-tabs] .dropdown-toggle { background: transparent; }
+  [data-dropdown-tabs] .nav-tabs .dropdown-toggle.dropdown-selected {
+    color: #4D4D4D; background-color: #fff; border-color: #B2B2B2 #B2B2B2 #fff;
+  }
+  [data-dropdown-tabs] .dropdown-item.dropdown-selected { color: white; background-color: #003e56; }
+')), htmltools::tags$script(htmltools::HTML(paste(readLines(
+  system.file("js", "dashboard-dropdowns.js", package = "tinyAM"), warn = FALSE), collapse = "\n"))))
 ```
 
 
 ```{r data, include=FALSE}
 
-tabs <- tidy_tam(model_list = fits, label = "model", label_type = "factor", interval = interval)
+tabs <- tidy_tam(model_list = fits, label = "model", label_type = "factor", interval = interval,
+  process_seed = process_seed)
 set_model_levels <- function(x, model_names) {
   if (is.data.frame(x) && "model" %in% names(x)) {
     x$model <- factor(as.character(x$model), levels = model_names)
