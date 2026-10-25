@@ -65,7 +65,7 @@ comparison_definitions <- list(
   N = list(status = "approximate", definition = "January abundance at ages 1-4+.",
     reason = "Annual dynamics approximate the seasonal model; July age-0 states are omitted."),
   F = list(status = "approximate", definition = "Annual integrated F at ages 1-4+.",
-    reason = "Correlated annual log-F changes approximate common fishing variation. Seasonal effort proportionality and exact zero F in 2025 are not enforced. Zero source F has no percent difference."),
+    reason = "Independent annual log-F changes replace effort-proportional F. Exact zero F in 2025 is not enforced. Zero source F has no percent difference."),
   F_bar = list(status = "approximate", definition = "January-N-weighted annual F over ages 1-2.",
     reason = "Recalculated from annual F and January N, rather than native arithmetic Fbar. Official F in 2025 is zero; terminal percent difference is unavailable."),
   M = list(status = "matched", definition = "Sum of supplied integrated half-year M hazards at each year and age.",
@@ -86,7 +86,7 @@ background <- c(
   "|---|---|---|---|",
   "| Years and ages | Active window 1987-2025, two half-years; July age 0 and January ages 1-4+. | Calendar years 1987-2025, ages 1-4+. | The loader also requests 1986, but the active start is 1987. July age-0 observations are outside this annual model. |",
   "| N and recruitment | Free initial January abundance; deterministic older-cohort survival; July hockey-stick recruitment, fixed SSB breakpoint 72,713 t, weight 0.05. | Free initial abundance, no older-age N process, IID age-1 recruitment about an estimated mean. | The different entry date and downweighted hockey-stick construction are not reproduced. |",
-  "| F and closure | F proportional to seasonal standardized effort; constant age/season coefficients, ages 3-4+ shared. Effort, catch and F are exactly zero in 2025. | Correlated random-walk changes in annual log F, without an effort covariate. | Finite log-F states cannot represent structural zero F. No pseudo-effort is added and 2025 is retained. Correlated changes approximate common annual fishing variation, not the exact effort relationship or shared age-3/4+ states. |",
+  "| F and closure | F proportional to seasonal standardized effort; constant age/season coefficients, ages 3-4+ shared. Effort, catch and F are exactly zero in 2025. | Independent random-walk changes in annual log F, without an effort covariate. | Finite log-F states cannot represent structural zero F. No pseudo-effort is added and 2025 is retained. This relaxes common effort variation and shared age-3/4+ states. An earlier correlated-increment approximation failed numerical checks near its correlation boundary. |",
   "| M | Fixed supplied, time-varying multispecies age/season hazards. | Sum both seasonal hazards at each year and age; no M process. | Annual mortality is preserved; within-year exposure is simplified. Matching M is an input check. |",
   "| Catch | Positive seasonal numbers at ages 1-4+, with season/age SD groups; zero-catch flags not recovered. | Sum seasonal counts, convert million to thousand fish; SD groups ages 1-2 and 3-4+. All 2025 zeros are retained. | The lognormal likelihood excludes zero catch, so the closure is not enforced by these observations. Published positive eligible cells number 240 versus 244 in the native diagnostic. |",
   "| Surveys | Dredge ages 0-1 over annual interval 0.875-1; Acoustic ages 1-4+ over 0.25-0.35. | Dredge age 1 at 0.9375 and Acoustic ages 1-4+ at 0.3, original scaled values. Acoustic q shared at ages 3/4+; one Acoustic SD. | Midpoints approximate the integrated predictions. Dredge age 0 is omitted; shared q does not pool acoustic observations. |",
@@ -100,7 +100,7 @@ fit_model <- function(...) tinyAM::fit_tam(
   data = obs, years = years, ages = ages,
   N_settings = list(process = "off", init = "free"),
   rec_settings = list(process = "iid", mu_form = ~1),
-  F_settings = list(process = "cor_rw", mu_form = NULL, mean_ages = 1:2),
+  F_settings = list(process = "rw", mu_form = NULL, mean_ages = 1:2),
   M_settings = list(process = "off", mu_form = NULL, mu_supplied = ~M_assumption),
   catch_settings = list(sd_form = ~0 + catch_sd_group),
   index_settings = list(q_form = ~0 + q_group, sd_form = ~0 + sd_group),
@@ -122,4 +122,9 @@ if (do_fit) {
       log_n0 = log(n[1L, -1L]), log_f = log_f)
   }, attempt_file = file.path("analysis/comp_assessments/results/cache", assessment_id,
     "initialization_attempts.rds"))
+  if (any(!is.finite(fit$pop$ssb$upr))) {
+    review_note <- "Exploratory result: SSB has non-finite upper uncertainty limits. The abundance scale is poorly resolved; numerical convergence alone does not make this a usable assessment comparison."
+    cli::cli_warn(review_note)
+    background <- c(paste0("**", review_note, "**"), "", background)
+  }
 }

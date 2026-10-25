@@ -140,6 +140,13 @@ with correlated F increments failed from both default and aligned source
 starts as the estimated age correlation approached its boundary. This is a
 documented numerical failure of that approximation, not evidence that the
 official seasonal assessment failed or that all annual alternatives fail.
+An independent-increment trial passes numerical checks from defaults but
+drifts toward essentially zero F, enormous abundance and unbounded SSB/q
+intervals. It is retained as exploratory, with all comparable core metrics
+flagged. Finite curvature alone is insufficient evidence of an identifiable
+abundance scale. This case is an unsuccessful annual replication; no
+pseudo-effort, altered catches, terminal-year deletion or agreement-driven
+starting-value retry is used to conceal that outcome.
 
 ## What the expanded formulas already cover
 

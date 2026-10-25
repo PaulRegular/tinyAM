@@ -153,6 +153,81 @@ dashboard are cached. This motivates testing independent annual F increments
 as the simpler existing alternative identified by the correlation diagnostic;
 it does not establish that the closure alone caused the failure.
 
+## Retained independent-increment trial
+
+Replacing correlated F increments with independent random-walk increments
+removes the weak correlation parameter, leaving observations, years, biology,
+q/SD sharing and all other assumptions unchanged. This trial passed numerical
+checks from package defaults in 3.63 seconds: optimizer code 0, objective
+373.6773, maximum absolute gradient 0.00000711 and a positive-definite
+Hessian (15 fixed, 194 random effects). No source-start retry is permitted
+merely because agreement is poor, and none was used.
+
+**The result is not scientifically usable.** Estimated F is only
+0.00000000093–0.000000031 per year over the entire fitted surface, while
+abundance is inflated by many orders of magnitude. Recruitment/SSB and q
+log-scale SEs are about 5,058, giving intervals from zero to infinity.
+There are 36 fixed-parameter correlations above 0.95 and residuals above
+three SDs. A positive-definite Hessian and small gradient do not establish
+that the abundance/q scale is adequately identified. The exact source effort
+relationship has been relaxed, and annual aggregation changes the seasonal
+survival/observation equations; these are plausible contributors, not a
+verified attribution of cause solely to the closure or process option.
+
+| Approximate metric | Mean absolute % difference | Terminal % difference | Trend correlation |
+|---|---:|---:|---:|
+| SSB | 5.365 billion | +3.832 billion | 0.574 |
+| January total abundance | 2.716 billion | +3.460 billion | 0.931 |
+| January age-1 recruitment | 2.202 billion | +3.501 billion | 0.939 |
+| N at age | 6.473 billion | +2.870 billion | 0.793 |
+| Annual F at age | approximately 100 | unavailable (official zero) | 0.793 |
+
+Every comparable core metric is flagged. Native July recruitment and January
+age-1 recruitment have different definitions; the table compares the latter
+under a common definition. Fixed supplied M matches every cell, an input
+check only. Official standalone biomass-at-age and joint uncertainty for
+derived aggregates are unavailable. No failed or missing comparison is
+treated as a pass.
+
+The reproducible recipe and **exploratory** dashboard are retained at
+`results/cache/ices_sandeel_area_3r_2026/dashboard.html`. The earlier failed
+correlated trial remains in `cor_rw_failed/`, with its dashboard at
+`dashboard_exploratory.html`. Current fit/initialization diagnostics and the
+review result are cached alongside the dashboard. A non-finite SSB interval
+produces a prominent dashboard warning without overriding the numerical
+convergence flag or triggering extra initialization trials.
+
+This case counts as verified source recovery and an actual translation/fit
+attempt, not a successful official–tinyAM replication. It should not be used
+as evidence of estimated abundance or mortality agreement. No source values,
+terminal years, tinyAM mathematics or aggregate library results were changed
+to conceal the problem.
+
+## Validation
+
+The full database validator passes: 117 stocks, 112 assessments, 2,186
+assumptions, 361,971 inputs and 194,299 outputs. Repeating the importer is
+byte-identical. All unrelated committed source rows remain unchanged, apart
+from the explicit regional link appended to the legacy catalogue notes.
+
+Nine targeted scripts pass: the three regional source and translation
+checks, reference alignment, plus groups and default-first initialization.
+They protect the original survey values, q/SD sharing, annual transformations,
+time-varying supplied M, mixed recruitment dates, terminal zeros and missing
+uncertainty. Dashboard metadata were refreshed from the cached fit only after
+checking that all five fitted data tables were unchanged. The rendered HTML
+contains the scientific-review warning and the structural-zero limitation.
+
+The full package suite passes **2,929 checks, zero failures, warnings or
+skips**. Its first attempt could not locate Pandoc; rerunning with the bundled
+renderer configured resolves those environment-only dashboard failures.
+`R CMD check --no-manual --no-tests` returns **Status: OK**; tests ran
+separately as above. Logs are retained beside the dashboard. The broader
+assessment-analysis sweep was not repeated for this milestone; its previously
+documented unrelated baseline failures are not claimed to be resolved.
+No tinyAM core mathematics/API, other stock specifications, shared aggregate
+tables or the user's readiness-table edits were changed.
+
 ## Sources
 
 - [HAWG 2026](https://doi.org/10.17895/ices.pub.31424315), section 10.4 and Tables 9.1.5–9.1.7, 9.4.1–9.4.12.
