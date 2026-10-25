@@ -16,8 +16,8 @@ North Sea area establishes a one-to-one link to any one regional run.
 
 The legacy stock ID and Charbonneau identifier are preserved. Regional
 records have their own verified stock codes, without invented catalogue IDs.
-[Area 1r](ices_sandeel_area_1r.md) and [Area 2r](ices_sandeel_area_2r.md) now
-have verified regional records; these do not complete every North Sea
+[Area 1r](ices_sandeel_area_1r.md), [Area 2r](ices_sandeel_area_2r.md) and
+[Area 3r](ices_sandeel_area_3r.md) now have verified regional records; these do not complete every North Sea
 sandeel assessment or silently resolve the legacy taxonomy.
 
 The official 2026 regional repositories were found under `ices-advice`, not

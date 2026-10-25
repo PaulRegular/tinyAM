@@ -34,7 +34,7 @@ assessments or management advice.
 | 4VWX Atlantic herring | [component indicators and production-input gap](source_reviews/ck_dfo_mar_harengus_4vwx.md) |
 | Atlantic striped bass | [base-run outputs and missing production inputs](source_reviews/ck_nefsc_garmiii_saxatilis_gom_chatt.md) |
 | Eastern Georges Bank cod | [selected framework, later summaries and missing age inputs](source_reviews/ck_nefsc_trac_cert_morhua_gb.md) |
-| North Sea sandeel | [catalogue identity](source_reviews/ck_ices_hawg_dubius_ns.md); [Area 1r](source_reviews/ices_sandeel_area_1r.md); [Area 2r](source_reviews/ices_sandeel_area_2r.md) production assessments |
+| North Sea sandeel | [catalogue identity](source_reviews/ck_ices_hawg_dubius_ns.md); [Area 1r](source_reviews/ices_sandeel_area_1r.md); [Area 2r](source_reviews/ices_sandeel_area_2r.md); [Area 3r](source_reviews/ices_sandeel_area_3r.md) production assessments |
 | Shared readers, converters, audits, and runners | `R/` |
 | Source imports and validators | `scripts/database/` |
 | Visible stock model calls and run drivers | `scripts/translation/` |
