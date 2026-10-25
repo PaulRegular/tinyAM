@@ -8,6 +8,7 @@ stopifnot(source$stocks$stock_id == "ices_sandeel_area_1r",
   source$assessment$is_current, source$assessment$is_applied,
   source$assessment$terminal_year == 2025, source$assessment$estimate_terminal_year == 2026,
   source$assessment$framework_year == 2023,
+  grepl("^Declared smsR", source$assessment$model_version),
   all(unlist(source$assessment[c("assumptions_status", "inputs_status", "outputs_status")]) == "partial"))
 parent <- db$stocks[db$stocks$stock_id == "ck_ices_hawg_dubius_ns", ]
 stopifnot(parent$charbonneau_id == "ICES-HAWG_dubius_NS",
@@ -64,6 +65,8 @@ recruits <- o[o$measure == "recruitment", ]
 stopifnot(abs(exp(mean(log(recruits$value))) - 111219266) < 1,
   abs(exp(mean(log(recruits$value[recruits$year <= 2024]))) - 112607331) < 1,
   any(source$assumptions$setting == "recruitment_averaging_windows"))
+stopifnot(grepl("surveySD/catchSD/estSD", source$assumptions$notes[
+  source$assumptions$setting == "remaining_sources"], fixed = TRUE))
 
 validate_seasonal_fixture <- function(tables) {
   env <- new.env(parent = globalenv())

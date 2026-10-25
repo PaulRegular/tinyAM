@@ -106,6 +106,15 @@ reported gaps and uncertainty. The limited annual translation must document
 its age-1 entry, seasonal aggregation, survey timing approximation and changed
 recruitment/effort likelihoods before a fit is interpreted.
 
+The published `data.R` supplies `surveySD`, `catchSD` and `estSD`, whereas
+the declared pinned builder accepts `surveyCV`, `catchCV` and `estCV`
+without those aliases. Read-only inspection confirms the interface mismatch.
+The exact production builder revision remains unverified; `model_version`
+therefore identifies a **declared** version. No downloaded code is rewritten
+or executed to conceal that gap. Report/SAG agreement and numerical equation
+checks anchor the official historical record independently of this
+reproducibility limitation.
+
 ## Retained annual tinyAM translation
 
 The stock recipe fits 1983–2025, January ages 1–4+, without changing the
@@ -140,6 +149,9 @@ objective 251.8868, maximum absolute gradient 0.0001363 and a positive-definite
 Hessian. Standard errors were obtained. There are 26 fixed and 214 random
 effects. No aligned source-start retry was needed. These numerical results
 do not remove the source gaps or establish equivalence to the seasonal model.
+tinyAM integrates recruitment/F states as random effects. That does not
+reproduce the native effort-coefficient construction or certify the source's
+exact likelihood integration from the incomplete public snapshot.
 
 Comparisons use the same calendar-year January N at age 1 as recruitment,
 not a shifted July age-0 series. Annual F is compared once, excluding duplicate

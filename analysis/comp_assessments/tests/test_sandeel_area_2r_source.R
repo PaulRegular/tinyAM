@@ -6,6 +6,7 @@ stopifnot(s$stocks$authority_stock_id == "san.sa.2r", is.na(s$stocks$charbonneau
   s$stocks$scientific_name == "Ammodytes spp.", s$stocks$ocean == "Northeast Atlantic",
   s$assessment$is_current, s$assessment$is_applied, s$assessment$terminal_year == 2025,
   s$assessment$framework_year == 2023,
+  grepl("^Declared smsR", s$assessment$model_version),
   all(unlist(s$assessment[c("assumptions_status", "inputs_status", "outputs_status")]) == "partial"),
   nrow(i) == 2192L, nrow(o) == 1032L, nrow(s$assumptions) == 17L,
   all(i$region == "Sandeel Area 2r"), all(o$region == "Sandeel Area 2r"),
@@ -44,6 +45,8 @@ r <- o[o$measure == "recruitment", ]
 stopifnot(abs(exp(mean(log(r$value))) - 22706561) < 1,
   abs(exp(mean(log(r$value[r$year %in% 2015:2024]))) - 12832432) < 1,
   any(s$assumptions$setting == "recruitment_averaging_windows"))
+stopifnot(grepl("surveySD/catchSD/estSD", s$assumptions$notes[
+  s$assumptions$setting == "remaining_sources"], fixed = TRUE))
 
 # The tabled Yield is consistent with seasonal model predictions, not observed C*W.
 g <- expand.grid(year = 1983:2025, age = 1:4)
