@@ -131,6 +131,16 @@ declared pinned builder. That is an unresolved production-software provenance
 gap, distinct from a tinyAM capability gap or a demonstrated error in the
 official numerical outputs.
 
+The [Area 3r source record](source_reviews/ices_sandeel_area_3r.md) adds an
+exact zero-effort/catch/F terminal year (2025). Finite log-F states cannot
+represent this structural closure; zero lognormal catch observations also
+do not enforce it. Source zeros must remain unchanged, and terminal F
+percent differences are unavailable rather than passes. An annual model
+with correlated F increments failed from both default and aligned source
+starts as the estimated age correlation approached its boundary. This is a
+documented numerical failure of that approximation, not evidence that the
+official seasonal assessment failed or that all annual alternatives fail.
+
 ## What the expanded formulas already cover
 
 The [White Hake Run_005 audit](source_reviews/ck_nefsc_garmiii_tenuis_gom_gb.md)

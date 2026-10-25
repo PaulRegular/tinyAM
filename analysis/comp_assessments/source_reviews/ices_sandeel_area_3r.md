@@ -118,6 +118,41 @@ limitation; adding small effort/catches would change source observations.
 The source's zero F also has no defined percent-difference denominator, so
 an unavailable terminal F statistic cannot be interpreted as agreement.
 
+The first annual translation retains 1987–2025, ages 1–4+, both surveys
+(Dredge age 1 and Acoustic ages 1–4+), the native q/SD sharing among retained
+observations, January biology and supplied annual M. Seasonal catch counts
+are summed and converted from million to thousand fish. July age-0 Dredge
+observations are omitted. Catch weights are observed-catch-weighted seasonal
+means; the four zero-catch cells in 2025 use equal-duration means for yield
+reporting only. The zeros themselves are unchanged.
+
+Free initial abundance, deterministic older-cohort survival and IID age-1
+recruitment approximate the source's January adults and weak July recruitment
+penalty. Correlated random-walk F increments were first used to approximate
+common annual fishing variation without taking the log of zero effort.
+This does not reproduce exact effort proportionality or shared F states.
+
+| Initialization | Optimizer code | Objective | Maximum absolute gradient | Positive-definite Hessian |
+|---|---:|---:|---:|---|
+| Package defaults | 1, false convergence | 362.1409 | 503,245 | No |
+| Aligned source starts | 1, false convergence | 361.8999 | 124,547,007 | No |
+
+Both failed numerical checks. An sdreport object was returned, but its
+covariance was not finite/usable. The estimated F increment age correlation
+was near its boundary; some residuals exceeded three SDs. A single
+source-start retry used positive official F cells and aligned N states;
+the unrepresentable zero-F cells retained package log-F starts of zero
+(F = 1), not an invented positive source observation. Settings/data were
+identical between attempts.
+
+The resulting exploratory comparison has large differences and must not be
+treated as a converged result. Terminal official F is zero in all four ages,
+so those percent differences remain unavailable while absolute differences
+remain visible. The failure diagnostics, source-start attempt and exploratory
+dashboard are cached. This motivates testing independent annual F increments
+as the simpler existing alternative identified by the correlation diagnostic;
+it does not establish that the closure alone caused the failure.
+
 ## Sources
 
 - [HAWG 2026](https://doi.org/10.17895/ices.pub.31424315), section 10.4 and Tables 9.1.5–9.1.7, 9.4.1–9.4.12.
