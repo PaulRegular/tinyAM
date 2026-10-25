@@ -182,6 +182,16 @@ recruitment have no invented uncertainty. The local dashboard is
 fit, comparison and validation records are cached alongside it. Shared
 aggregate results have not been refreshed from this single-stock run.
 
+## Yield reporting clarification
+
+The declared C++ `Catchtot` reporting loop sums predictions only where
+observed and predicted catch cells are positive. Tabled Yield is conditional
+predicted yield, not unrestricted all-age predicted yield or observed
+landings. Its exact mask is unresolved where printed zeros differ from native
+observation counts. Yield tests bound known positive-cell contributions below
+and all possible contributions above, allowing for source rounding. This
+clarification changes notes only; numerical values and fit inputs are unchanged.
+
 ## Sources
 
 - [HAWG 2026](https://doi.org/10.17895/ices.pub.31424315), section 10.3 and Tables 9.1.5–9.1.7, 9.3.1–9.3.12.

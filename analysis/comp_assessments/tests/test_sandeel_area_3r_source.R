@@ -52,7 +52,7 @@ stopifnot(abs(exp(mean(log(r$value))) - 75267201) < 1,
 stopifnot(grepl("surveySD/catchSD/estSD", s$assumptions$notes[
   s$assumptions$setting == "remaining_sources"], fixed = TRUE))
 
-# The tabled Yield is consistent with seasonal model predictions, not observed C*W.
+# Known positive cells must contribute; unresolved rounded-zero masks may contribute.
 g <- expand.grid(year = 1987:2025, age = 1:4)
 key <- function(z) paste(z$year, z$age)
 surface <- function(rows, season) {
@@ -65,10 +65,11 @@ m1 <- surface(m, "1"); m2 <- surface(m, "2")
 w <- i[i$type == "catch_weight", ]
 w1 <- surface(w, "1"); w2 <- surface(w, "2")
 N <- surface(n, "1")
+known1 <- surface(c, "1") > 0; known2 <- surface(c, "2") > 0
 fraction <- function(f, m) f / (f + m) * (-expm1(-f - m))
-lo1 <- (N - .5) * fraction(pmax(0, f1 - .0005), m1 + .005) * (w1 - .005)
+lo1 <- (N - .5) * fraction(pmax(0, f1 - .0005), m1 + .005) * (w1 - .005) * known1
 lo2 <- (N - .5) * exp(-f1 - .0005 - m1 - .005) *
-  fraction(pmax(0, f2 - .0005), m2 + .005) * (w2 - .005)
+  fraction(pmax(0, f2 - .0005), m2 + .005) * (w2 - .005) * known2
 hi1 <- (N + .5) * fraction(f1 + .0005, m1 - .005) * (w1 + .005)
 hi2 <- (N + .5) * exp(-pmax(0, f1 - .0005) - m1 + .005) *
   fraction(f2 + .0005, m2 - .005) * (w2 + .005)
@@ -76,5 +77,6 @@ lower <- tapply((lo1 + lo2) / 1000, g$year, sum)
 upper <- tapply((hi1 + hi2) / 1000, g$year, sum)
 yield <- o[o$measure == "predicted_catch", ]
 stopifnot(all(yield$value + .5 >= lower[as.character(yield$year)]),
-  all(yield$value - .5 <= upper[as.character(yield$year)]))
+  all(yield$value - .5 <= upper[as.character(yield$year)]),
+  all(grepl("conditional predicted Catchtot", yield$notes, fixed = TRUE)))
 cat("Area 3r identity, seasonal arrays, time-varying supplied M, survey coverage, exact 2025 zeros and yield/forecast checks passed.\n")

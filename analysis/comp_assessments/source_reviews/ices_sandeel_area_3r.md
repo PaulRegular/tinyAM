@@ -228,6 +228,16 @@ documented unrelated baseline failures are not claimed to be resolved.
 No tinyAM core mathematics/API, other stock specifications, shared aggregate
 tables or the user's readiness-table edits were changed.
 
+## Yield reporting clarification
+
+The declared C++ `Catchtot` reporting loop sums predictions only where
+observed and predicted catch cells are positive. Tabled Yield is conditional
+predicted yield, not unrestricted all-age predicted yield or observed
+landings. Its exact mask is unresolved where printed zeros differ from native
+observation counts. Yield tests bound known positive-cell contributions below
+and all possible contributions above, allowing for source rounding. This
+clarification changes notes only; numerical values and fit inputs are unchanged.
+
 ## Sources
 
 - [HAWG 2026](https://doi.org/10.17895/ices.pub.31424315), section 10.4 and Tables 9.1.5–9.1.7, 9.4.1–9.4.12.

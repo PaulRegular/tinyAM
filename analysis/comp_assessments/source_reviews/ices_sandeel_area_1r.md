@@ -181,6 +181,17 @@ The local dashboard is
 comparison and validation records are retained alongside it. Shared aggregate
 result tables and plots have not been refreshed from this single-stock run.
 
+## Yield reporting clarification
+
+The declared C++ `Catchtot` reporting loop sums predictions only where
+observed and predicted catch cells are positive. Tabled Yield is therefore
+conditional predicted yield, not unrestricted all-age predicted yield or
+observed landings. The source's rounded age-count/likelihood-count differences
+leave its exact positive-cell mask unresolved. This clarification changes
+notes only, not any source value, fit or comparison statistic; the Area 4
+audit independently verifies the same reporting rule with a fully matching
+positive-cell count.
+
 ## Sources
 
 - [HAWG 2026](https://doi.org/10.17895/ices.pub.31424315), section 10.2 and Tables 9.1.5–9.2.10.
