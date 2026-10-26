@@ -1,3 +1,15 @@
+test_that("S3 dispatch preserves legacy fit, reference and list labels", {
+  testthat::local_mocked_bindings(.render_vis_tam = function(fits, ...) names(fits),
+    .package = "tinyAM")
+  first <- second <- default_fit
+  reference <- default_fit; class(reference) <- c("tam_ref", "list")
+  expect_identical(vis_tam(first), "first")
+  expect_identical(vis_tam(first, other = second), c("first", "other"))
+  expect_identical(vis_tam(reference, first), c("reference", "first"))
+  expect_identical(vis_tam(list(a = first, b = second)), c("a", "b"))
+  expect_identical(vis_tam(model_list = list(a = first)), "a")
+})
+
 test_that("retrospective model selection, omissions and ordering are explicit", {
   r <- structure(list(fits = list(base = list(`2022` = default_fit,
     `2024` = default_fit, `2023` = NULL)), fold_diagnostics = data.frame(
@@ -8,6 +20,11 @@ test_that("retrospective model selection, omissions and ordering are explicit", 
   expect_identical(names(view$fits), c("2024 (full data)", "2022 (peel)"))
   expect_match(paste(view$background, collapse = " "), "2023: failed fold")
   expect_identical(r, original)
+  missing_reference <- r
+  missing_reference$fits$base$`2024` <- NULL
+  without_reference <- tinyAM:::.retro_dashboard(missing_reference)
+  expect_identical(names(without_reference$fits), "2022 (peel)")
+  expect_match(paste(without_reference$background, collapse = " "), "reference is unavailable")
   r$fits$alternative <- r$fits$base
   expect_error(tinyAM:::.retro_dashboard(r, is_interactive = FALSE), "base, alternative")
   expect_null(suppressMessages(tinyAM:::.retro_dashboard(r, is_interactive = TRUE,

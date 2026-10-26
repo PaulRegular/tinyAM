@@ -278,9 +278,10 @@ print.tam_data <- function(x, n = 5, ...) {
 #' - Non-missing observations must be finite and non-negative; maturity must
 #'   be a proportion in `[0, 1]`. Zero catch/index values are accepted here but
 #'   treated as missing by [prepare_tam()], because the observation model is on logs.
-#' - `catch`, `weight`, and `maturity` must contain exactly one row for **every**
+#' - `catch` and `maturity` must contain exactly one row for **every**
 #'   `(year, age)` combination over the global modeled range
 #'   (from min to max year and age across all tables).
+#'   Weight requires the same grid within each supplied type.
 #' - Survey tables may omit year-age combinations.
 #' - Optional `weight$type` contains `"stock"` or `"catch"`. Stock weights
 #'   are required. With types, the unique key is `(year, age, type)` and every
@@ -449,7 +450,7 @@ check_tam_data <- function(data) {
   for (nm in must_be_full) {
     keys <- c("year", "age", if (nm == "weight" && "type" %in% names(obs$weight)) "type")
     if (anyDuplicated(obs[[nm]][, keys])) {
-      cli::cli_abort("{.arg {nm}} must have exactly one row per {paste(keys, collapse = ', ')}; duplicate rows would misalign the model surfaces.")
+      cli::cli_abort("{.arg {nm}} must have exactly one row per {paste(keys, collapse = ' and ')}; duplicate rows would misalign the model surfaces.")
     }
     xy <- unique(obs[[nm]][, c("year", "age")])
     sizes <- if (nm == "weight" && "type" %in% names(obs$weight)) {

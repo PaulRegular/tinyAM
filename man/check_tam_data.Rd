@@ -29,9 +29,10 @@ Additional requirements:
 \item Non-missing observations must be finite and non-negative; maturity must
 be a proportion in \verb{[0, 1]}. Zero catch/index values are accepted here but
 treated as missing by \code{\link[=prepare_tam]{prepare_tam()}}, because the observation model is on logs.
-\item \code{catch}, \code{weight}, and \code{maturity} must contain exactly one row for \strong{every}
+\item \code{catch} and \code{maturity} must contain exactly one row for \strong{every}
 \verb{(year, age)} combination over the global modeled range
 (from min to max year and age across all tables).
+Weight requires the same grid within each supplied type.
 \item Survey tables may omit year-age combinations.
 \item Optional \code{weight$type} contains \code{"stock"} or \code{"catch"}. Stock weights
 are required. With types, the unique key is \verb{(year, age, type)} and every
