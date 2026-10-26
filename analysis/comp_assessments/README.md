@@ -38,6 +38,7 @@ assessments or management advice.
 | Celtic Sea and Bristol Channel plaice | [current indicator assessment and age-based translation gap](source_reviews/ices_plaice_celtic_sea_7fg.md) |
 | Northeast Arctic golden redfish | [2026 SPiCT states and age-based translation gap](source_reviews/ices_golden_redfish_northeast_arctic.md) |
 | Western English Channel plaice | [2025 chr rule, surviving discards and translation gap](source_reviews/ices_plaice_western_channel_7e.md) |
+| Gulf of Cadiz anchovy | [2025 seasonal assessment, recovered tables and remaining native-input gaps](source_reviews/ices_anchovy_gulf_cadiz.md) |
 | Shared readers, converters, audits, and runners | `R/` |
 | Source imports and validators | `scripts/database/` |
 | Visible stock model calls and run drivers | `scripts/translation/` |

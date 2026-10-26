@@ -200,6 +200,19 @@ so aggregate indices and MSE operating models do not establish a tinyAM
 comparison. The 2026 monitoring update issues no new advice and is kept
 separate from the 2025 production inputs.
 
+[Gulf of Cadiz anchovy](source_reviews/ices_anchovy_gulf_cadiz.md) has an
+age-based SS3 assessment despite category-3 advice. It settles age-0 recruits
+on 1 July and uses quarterly fishing fleets, high age-specific M, biomass
+indices and age compositions. These seasonal population and observation
+definitions require an explicit annual approximation before tinyAM can be
+compared. The immediate blocker is source data: the public 2025 TAF tree
+omits its empirical stock-weight and quarterly composition inputs. A public
+1989–2024 MSE reference differs from the current official estimates and is
+not a replacement. Published survey ages are expanded abundances, not sample
+counts; they must not be added as an independent likelihood alongside the
+same biomass/composition observations. No fit or numerical agreement is
+claimed for this source record.
+
 The [White Hake Run_005 audit](source_reviews/ck_nefsc_garmiii_tenuis_gom_gb.md)
 likewise fixes BH steepness at one, but gives the recruitment penalty zero
 weight. A constant IID tinyAM mean preserves the flat expectation, not the

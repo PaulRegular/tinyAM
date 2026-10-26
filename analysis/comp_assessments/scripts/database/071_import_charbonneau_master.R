@@ -304,7 +304,10 @@ ck_prepare_master_import <- function(
   stock_at <- match(all_matches$stock_id, stocks$stock_id)
   source_taxon <- ck_master_taxon_key(source$scientific_name[source_at])
   existing_taxon <- ck_master_taxon_key(stocks$scientific_name[stock_at])
-  if (any(source_taxon != existing_taxon)) {
+  # The Iberian catalogue row misnames European anchovy as Pacific E. mordax.
+  reviewed_anchovy <- source$master_id[source_at] == "ICES-WGHANSA_mordax_SP9a" &
+    source_taxon == "engraulis mordax" & existing_taxon == "engraulis encrasicolus"
+  if (any(source_taxon != existing_taxon & !reviewed_anchovy)) {
     ck_abort("A crosswalk match has conflicting scientific names.")
   }
   if (any(source$ocean[source_at] != stocks$ocean[stock_at])) {

@@ -132,6 +132,27 @@ stopifnot(alias_placeholder_error)
 
 cat("Charbonneau-Keith catalogue mapping, metadata safeguards and idempotency passed.\n")
 
+# One documented Iberian catalogue error does not make two anchovy species synonyms.
+anchovy_master <- master[1L, ]
+anchovy_master$Genus <- "Engraulis"; anchovy_master$Species <- "mordax"
+anchovy_master$Assessor_ID <- "ICES-WGHANSA"
+anchovy_master$unique_ID <- "ICES-WGHANSA_mordax_SP9a"
+anchovy_stock <- stocks[4L, ]
+anchovy_stock$stock_id <- "ck_ices_wghansa_mordax_sp9a"
+anchovy_stock$charbonneau_id <- anchovy_master$unique_ID
+anchovy_stock$scientific_name <- "Engraulis encrasicolus"
+anchovy_stock$area <- "SP9a"
+reviewed <- ck_prepare_master_import(rbind(master, anchovy_master), rbind(stocks, anchovy_stock),
+  matches = matches, overlaps = overlaps)
+stopifnot(reviewed$stocks$scientific_name[reviewed$stocks$stock_id == anchovy_stock$stock_id] ==
+  "Engraulis encrasicolus", ck_master_taxon_key("Engraulis mordax") != ck_master_taxon_key("Engraulis encrasicolus"))
+anchovy_master$unique_ID <- "ICES-WGHANSA_mordax_other_area"
+anchovy_stock$charbonneau_id <- anchovy_master$unique_ID
+stopifnot(tryCatch({
+  ck_prepare_master_import(rbind(master, anchovy_master), rbind(stocks, anchovy_stock),
+    matches = matches, overlaps = overlaps); FALSE
+}, error = function(e) grepl("conflicting scientific names", conditionMessage(e), fixed = TRUE)))
+
 master_path <- file.path(
   "analysis", "comp_assessments", "source_cache", "charbonneau_keith", "Master.csv"
 )
