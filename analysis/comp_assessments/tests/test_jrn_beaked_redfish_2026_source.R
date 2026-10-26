@@ -110,6 +110,10 @@ stopifnot(
   select_output("SSB")$value[select_output("SSB")$year == 2025] == 978795,
   select_output("total_biomass")$value[select_output("total_biomass")$year == 2025] == 1536941
 )
-blocked <- run_assessment(record$assessment$assessment_id, fit = FALSE)
-stopifnot(blocked$diagnostics$status == "blocked_no_stock_spec", is.null(blocked$fit))
+prepared <- run_assessment(record$assessment$assessment_id, fit = FALSE)
+stopifnot(
+  prepared$diagnostics$status == "not_fitted",
+  is.null(prepared$fit),
+  isTRUE(tinyAM::check_obs(prepared$obs))
+)
 cat("Beaked redfish source coverage, fixed biology, missing cells, year basis, units and rounded F passed.\n")
