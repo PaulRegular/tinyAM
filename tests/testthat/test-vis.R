@@ -293,6 +293,23 @@ test_that("reference-only dashboards permit unavailable yield comparisons", {
   expect_length(reference$random_par, 0L)
 })
 
+test_that("reference-only dashboards permit absent observation tables", {
+  reference <- list(dat = N_dev$dat, pop = N_dev$pop[c("ssb", "recruitment", "F")],
+    obs_pred = list(), fixed_par = N_dev$fixed_par[0, ], random_par = list())
+  class(reference) <- c("tam_ref", "list")
+  reference$dat$obs <- NULL
+  reference$pop$total_yield <- reference$pop$total_yield_pred <- NULL
+  file <- tempfile(fileext = ".html")
+  on.exit(unlink(file), add = TRUE)
+  expect_no_error(vis_tam(model_list = list(Official = reference),
+    background = "Official outputs only; original observations are unavailable.",
+    output_file = file, open_file = FALSE, render_args = list(quiet = TRUE)))
+  expect_true(file.exists(file))
+  expect_match(readLines(file, n = 1L), "<!DOCTYPE html>", fixed = TRUE)
+  expect_length(reference$obs_pred, 0L)
+  expect_null(reference$opt)
+})
+
 test_that("tam_ref objects accept a Background page", {
   blank_values <- function(x, keys) {
     for (name in setdiff(names(x), keys)) x[[name]][] <- NA

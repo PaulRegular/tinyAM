@@ -33,10 +33,14 @@ plot_age_year(pop$N, color = ~model, legendgroup = ~model, colors = cols, frame 
 
 ```{r}
 patterns <- tabs$patterns$population
-patterns$model <- factor(patterns$model, levels = c(
-  names(fits)[vapply(fits, inherits, logical(1), "tam_fit")],
-  names(fits)[!vapply(fits, inherits, logical(1), "tam_fit")]))
-plot_matrix(patterns, metric = ~metric, frame = ~model)
+if (is.data.frame(patterns) && nrow(patterns)) {
+  patterns$model <- factor(patterns$model, levels = c(
+    names(fits)[vapply(fits, inherits, logical(1), "tam_fit")],
+    names(fits)[!vapply(fits, inherits, logical(1), "tam_fit")]))
+  plot_matrix(patterns, metric = ~metric, frame = ~model)
+} else {
+  cat("Population patterns are unavailable for these reference outputs.")
+}
 ```
 
 

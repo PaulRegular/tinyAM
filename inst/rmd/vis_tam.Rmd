@@ -69,6 +69,7 @@ plot_rows <- function(d, columns) {
 }
 
 mortality_plot_data <- function(data, mean, fits, component) {
+  if (!is.data.frame(data) || !nrow(data)) return(data)
   for (nm in c("est", "lwr", "upr")) data[[paste0("mean_", nm)]] <- NA_real_
   if (is.null(mean) || !nrow(mean)) return(data)
   if (component == "F") {
@@ -109,6 +110,7 @@ plot_mortality <- function(data, mean_line = list(dash = "dot", width = .5), ...
 }
 
 make_resid_plots <- function(d) {
+  if (is.null(d)) d <- data.frame(model = factor())
   fitted_models <- names(fits)[vapply(fits, inherits, logical(1), "tam_fit")]
   d <- d[d$model %in% fitted_models, , drop = FALSE]
   if ("osa_res" %in% names(d) && !any(is.finite(d$osa_res))) {
