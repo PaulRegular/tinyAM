@@ -148,6 +148,27 @@ abundance scale. This case is an unsuccessful annual replication; no
 pseudo-effort, altered catches, terminal-year deletion or agreement-driven
 starting-value retry is used to conceal that outcome.
 
+The [detailed Area 4 case](source_reviews/ices_sandeel_area_4.md) recovers the
+same seasonal framework, with two Dredge eras and estimated survey log-SDs
+subject to a 0.3 lower bound. The annual recipe retains juvenile indices
+without changing their values: constant supplied age-0 M and zero age-0 F
+allow their prediction to be expressed against next January N1 with a
+redefined free q. Original observation dates remain in provenance; reference
+recruitment stays in the same calendar year. This conditional mapping is not
+a general solution for estimated/time-varying juvenile mortality.
+Both default and aligned-start fits fail with non-finite gradients, so no
+tinyAM comparison statistics are available. The precise numerical cause is
+unresolved; source differences are not proof of a particular cause. The
+Official-only dashboard is source context, not a completed replication.
+
+Area 4 also verifies that native `Catchtot` includes only predicted catch
+cells with positive observed catch. The source's conditional yield can be
+zero despite some positive F. It must not be treated as unrestricted
+predicted yield or observed total landings. Its second-half effort table has
+reversed Area 4/5r headers, reconciled against both independent annual totals
+and explicitly labelled as a source reconstruction. These are source-data
+interpretation issues, distinct from model capability or convergence.
+
 ## What the expanded formulas already cover
 
 The [White Hake Run_005 audit](source_reviews/ck_nefsc_garmiii_tenuis_gom_gb.md)
