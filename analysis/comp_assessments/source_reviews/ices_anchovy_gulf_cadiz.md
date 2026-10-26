@@ -126,3 +126,12 @@ on 1 January, or use the older MSE states to manufacture observations.
 No optimization or starting-value retry is justified before those input
 gaps are resolved. All three canonical source-completeness statuses remain
 partial.
+
+The stock recipe stops at source readiness for both preparation and fitting;
+it runs no optimizer and constructs no starting values. A standalone local
+dashboard at
+`results/cache/ices_anchovy_gulf_cadiz_2025/dashboard_official_only.html`
+shows the available official SSB, July recruitment and age-3 F with source
+uncertainty. Its Background states that no tinyAM fit or agreement comparison
+is available. Missing observations, population patterns and other states
+remain unavailable rather than being reconstructed from the older MSE run.

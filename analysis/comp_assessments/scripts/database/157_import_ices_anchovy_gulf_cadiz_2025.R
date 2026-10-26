@@ -152,7 +152,8 @@ output <- function(measure, value, lwr, upr, unit, cv, age = NA_integer_, season
   x <- blank("outputs.csv", 37L); x$measure <- measure; x$value <- value
   x$lwr <- lwr; x$upr <- upr; x$unit <- unit; x$year <- 1989:2025
   x$age <- age; x$sex <- "combined"; x$region <- "Southern Division 9.a"
-  x$season <- season; x$type <- if (measure == "fishing_mortality_at_age") "mortality" else "population"
+  x$season <- season; x$type <- switch(measure, SSB = "biomass",
+    recruitment = "recruitment", fishing_mortality_at_age = "mortality")
   x$source_type <- "official_machine_readable"; x$source_reference <- sag_url
   x$notes <- paste0("2025 assessment, SAG key 21266; source 95% limits retained without inventing SEs. Reported rounded CV in Table 4.6.1.2 = ", cv,
     ". 2025 includes assumed interim catch; it is part of this assessment, not the 2026 forecast. ",

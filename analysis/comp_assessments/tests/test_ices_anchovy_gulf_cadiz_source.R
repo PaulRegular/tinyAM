@@ -37,6 +37,7 @@ stopifnot(
   is.na(rec_index$value[rec_index$year == 2017]), all(rec_index$age == 0),
   all(rec_index$unit == "tonnes"), all(is.na(i$sampling_time)),
   identical(ssb$year,1989:2025), identical(rec$year,1989:2025),
+  all(ssb$type == "biomass"), all(rec$type == "recruitment"), all(f$type == "mortality"),
   ssb$value[ssb$year == 2025] == 18730, ssb$value[ssb$year == 2012] == 10584,
   ssb$lwr[ssb$year == 2025] == 11253, ssb$upr[ssb$year == 2025] == 26207,
   all(rec$age == 0), all(rec$season == "Q3"), rec$value[rec$year == 2025] == 11059600,
