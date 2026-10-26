@@ -27,6 +27,11 @@ The 2026 age-specific input and output matrices are documented separately in the
 - **Spawning timing:** The official assessment uses pre-spawning mortality fractions of 0.4 for F and 0.3 for M.
 - **Outputs:** Summary tables provide recruitment, SSB and length-based reference biomass, with reported uncertainty. Age-specific output uncertainty was not recovered.
 
+The 2025 record also includes total abundance derived by summing the reported
+numbers-at-age across ages 1–11 and the 12+ group for each year, 1979–2025.
+No uncertainty is calculated for this sum. The newer 2026 record remains
+separate and has its own reported age-specific population series.
+
 The official reference biomass represents fish measuring at least 45 cm and is distinct from total age-structured biomass.
 
 ## tinyAM translation revision (2026-10-14)

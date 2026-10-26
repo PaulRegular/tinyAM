@@ -140,14 +140,15 @@ inputs_add <- rbind(
 )
 
 output_row <- function(type, measure, year, age = NA_real_, value, unit,
-                       source_reference, notes = "", lwr = NA_real_, upr = NA_real_) {
+                       source_reference, notes = "", lwr = NA_real_, upr = NA_real_,
+                       source_type = "official_table") {
   data.frame(
     assessment_id = assessment_id, type = type, measure = measure, fleet = "",
     survey = "", sex = "combined", region = "ICES 5.a", season = "",
     year = year, age = age,
     age_group = ifelse(!is.na(age) & age == 12, "12+", ""),
     value = value, se = NA_real_, lwr = lwr, upr = upr, unit = unit,
-    source_type = "official_table", source_reference = source_reference,
+    source_type = source_type, source_reference = source_reference,
     notes = notes, stringsAsFactors = FALSE
   )
 }
@@ -164,6 +165,17 @@ outputs_add <- rbind(
     "numbers_at_age", 1979:2025, n_at_age, "thousand fish",
     paste(source_name, "Stock numbers-at-age"),
     "Official assessment abundance estimates; age 12 is the 12+ group."
+  ),
+  output_row(
+    "population", "total_numbers", 1979:2025,
+    value = rowSums(n_at_age), unit = "thousand fish",
+    source_reference = paste("Derived from", source_name, "Stock numbers-at-age"),
+    notes = paste0(
+      "Sum across all reported age groups (",
+      paste(c(paste0("age:", ages[ages < 12]), "group:12+"), collapse = ", "),
+      "). No standard error or interval was combined."
+    ),
+    source_type = "derived_source_output"
   ),
   age_outputs(
     "fishing_mortality_at_age", input_years, f_at_age, "per year",
@@ -290,7 +302,7 @@ append_rows <- function(name, rows) {
     row.names = FALSE, col.names = FALSE, append = TRUE, na = ""
   )
 }
-if (nrow(inputs_add) < 2500L || nrow(outputs_add) < 1100L ||
+if (nrow(inputs_add) < 2500L || nrow(outputs_add) != 1304L ||
   any(!is.finite(inputs_add$value)) || any(!is.finite(outputs_add$value)) ||
   any(inputs_add$value[inputs_add$type == "maturity"] > 1) ||
   any(inputs_add$value[inputs_add$type == "M"] != 0.2)) {
