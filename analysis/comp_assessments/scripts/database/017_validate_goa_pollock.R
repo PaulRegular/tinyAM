@@ -4,8 +4,9 @@ x <- inputs[inputs$assessment_id == id, ]
 y <- outputs[outputs$assessment_id == id, ]
 a <- assessments[assessments$assessment_id == id, ]
 stopifnot(
-  nrow(x) == 5909, nrow(y) == 708, a$model_version == "23d",
-  a$inputs_status == "partial", a$outputs_status == "partial"
+  nrow(x) == 5909, nrow(y) == 1134, a$model_version == "23d",
+  a$inputs_status == "partial", a$outputs_status == "partial",
+  grepl("Partial rounded-output F-at-age", a$notes, fixed = TRUE)
 )
 index <- x[x$type == "index", ]
 totals <- index[index$measure == "total_biomass", ]
@@ -65,14 +66,50 @@ stopifnot(
 n <- y[y$measure == "numbers_at_age", ]
 r <- y[y$measure == "recruitment", ]
 ssb <- y[y$measure == "SSB", ]
+total_n <- y[y$measure == "total_numbers", ]
 stopifnot(
   nrow(n) == 550, nrow(r) == 55, nrow(ssb) == 55,
+  nrow(total_n) == 55,
   identical(n$value[n$age == 1], r$value),
   all(n$age_group[n$age == 10] == "10+"),
   all(r$lwr <= r$value & r$value <= r$upr),
   all(ssb$lwr <= ssb$value & ssb$value <= ssb$upr), all(is.na(y$se))
 )
+for (year in 1970:2024) {
+  z <- n[n$year == year, ]
+  stopifnot(total_n$value[total_n$year == year] == sum(z$value))
+}
 message("GOA pollock survey coverage, detailed catch numbers, grouped compositions, biology and uncertainty checks passed.")
+
+f_at_age <- y[y$measure == "fishing_mortality_at_age" &
+  y$source_type == "derived_source_output", ]
+n_key <- paste(n$year, n$age, sep = ":")
+n_value <- setNames(n$value, n_key)
+m_value <- setNames(fixed_m$value, fixed_m$age)
+f_source <- n[n$age <= 8 & n$year < 2024, ]
+next_n <- unname(n_value[paste(f_source$year + 1, f_source$age + 1, sep = ":")])
+rounding_lower <- log((f_source$value - 0.5) / (next_n + 0.5)) -
+  unname(m_value[as.character(f_source$age)])
+f_source <- f_source[is.finite(rounding_lower) & rounding_lower > 0, ]
+expected_f <- log(
+  f_source$value / unname(n_value[paste(f_source$year + 1, f_source$age + 1, sep = ":")])
+) - unname(m_value[as.character(f_source$age)])
+f_at_age <- f_at_age[order(f_at_age$year, f_at_age$age), ]
+f_source <- f_source[order(f_source$year, f_source$age), ]
+stopifnot(
+  nrow(f_at_age) == 371L,
+  identical(f_at_age$year, f_source$year),
+  identical(f_at_age$age, f_source$age),
+  isTRUE(all.equal(f_at_age$value, expected_f, tolerance = 1e-12)),
+  all(f_at_age$value > 0),
+  all(f_at_age$year %in% 1970:2023),
+  all(f_at_age$age %in% 1:8),
+  all(f_at_age$unit == "per year"),
+  all(f_at_age$source_type == "derived_source_output"),
+  all(is.na(f_at_age$se)), all(is.na(f_at_age$lwr)), all(is.na(f_at_age$upr)),
+  all(grepl("rounded to the nearest million fish", f_at_age$notes, fixed = TRUE))
+)
+message("Partial GOA pollock F-at-age reconstruction matches the cohort equation and published rounding limits.")
 
 covariate <- x[x$type == "covariate", ]
 native <- read.csv("analysis/comp_assessments/source_cache/afsc_pollock_goa_2024/native_inputs_raw.csv")
