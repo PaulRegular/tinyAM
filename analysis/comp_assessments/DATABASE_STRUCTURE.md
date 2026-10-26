@@ -231,6 +231,8 @@ effort
 biomass_at_age
 total_numbers
 total_biomass
+landings_biomass
+discard_biomass
 total_egg_production
 landings_lower_bound
 landings_upper_bound
@@ -245,6 +247,15 @@ biomass_index_cv
 ```
 
 `index_catch_numbers_at_age` preserves the numerator in a source index stored as catch numbers-at-age and effort. Use `type = index`, `basis = numbers`, and document that these numerator rows are not a second observation series. Pair them with `effort` rows (`type = covariate`, `basis = native_covariate`) when needed to reproduce a per-effort index. `effort` has no age dimension; preserve its native units and do not treat it as a tinyAM observation.
+
+`landings_biomass` and `discard_biomass` distinguish the aggregate components
+of a fishery when both are material inputs. Use the same actual fleet identity,
+`type = catch` and `basis = biomass`; do not invent separate fleets for catch
+components. A matching `total_biomass` can include surviving discards and must
+not automatically be interpreted as dead removals. Preserve source survival
+assumptions and avoid counting component totals as independent observations.
+Unavailable component observations remain blank, rather than zero; finite
+non-missing observations must remain non-negative.
 
 An `index_by_age_group` row preserves a native index value that combines
 multiple age classes and cannot be represented as a single-age observation.
@@ -549,6 +560,11 @@ or instantaneous F and must not fill the corresponding population comparisons.
 states from a surplus-production assessment. Generic source columns labelled
 SSB or F do not make these absolute biomass or mortality. Keep any reported
 bounds on the ratio scale; do not infer absolute values or missing SEs.
+
+`relative_harvest_rate` preserves a reported dead-catch/biomass-index indicator
+in its composite units, rather than instantaneous F. `assumed_dead_catch`
+stores a source-reported catch summary under an explicit discard-survival
+assumption; it is not predicted catch or another observation likelihood.
 
 When total abundance is derived from official numbers-at-age, sum all reported
 age groups and any separately reported sexes, preserve other population

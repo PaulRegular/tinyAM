@@ -205,7 +205,7 @@ allowed_input_measures <- c(
   "numbers_at_age", "numbers_at_age_for_M_reconstruction", "index_by_age_group",
   "index_catch_numbers_at_age", "effort",
   "biomass_at_age", "total_numbers",
-  "total_biomass", "total_egg_production", "landings_lower_bound", "landings_upper_bound",
+  "total_biomass", "landings_biomass", "discard_biomass", "total_egg_production", "landings_lower_bound", "landings_upper_bound",
   "catch_lower_bound", "catch_upper_bound", "proportion_at_age", "proportion_at_length",
   "conditional_proportion_at_age", "weight_at_age", "spawning_weight_at_age", "start_weight_at_age",
   "maturity_at_age", "natural_mortality_at_age", "condition_index_for_mortality",
@@ -355,12 +355,13 @@ for (name in c("inputs", "outputs")) {
   } else {
     x$type == "biology" & x$measure %in% c("mat_beta1", "mat_beta2")
   }
-  missing_observation <- name == "inputs" &
-    x$type %in% c("catch", "index") &
-    x$measure %in% c(
+  missing_observation <- name == "inputs" & (
+    (x$type %in% c("catch", "index") & x$measure %in% c(
       "numbers_at_age", "index_by_age_group", "biomass_at_age",
       "total_numbers", "total_biomass", "abundance_index_cv", "biomass_index_cv"
-    )
+    )) |
+    (x$type == "catch" & x$measure %in% c("landings_biomass", "discard_biomass"))
+  )
   if (any(missing_value & !missing_observation) ||
     any(!is.finite(value[!missing_value])) ||
     any(value < 0 & !signed, na.rm = TRUE)) {

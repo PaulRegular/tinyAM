@@ -190,6 +190,16 @@ alternative high-biomass solution under jittering. This source and
 assessment-definition limitation must not be represented as successful
 tinyAM agreement or addressed by substituting older Gadget observations.
 
+[Western English Channel plaice](source_reviews/ices_plaice_western_channel_7e.md)
+uses an MSE-tuned chr rule, not annual population estimates. Its harvest
+indicator uses landings plus half of discards under a 50% discard-survival
+assumption; reported total catch includes surviving discards. This distinction
+must precede any future translation of removals. Stock-level catches also
+include migration into 7.d. Current catch-at-age/biology are not recovered,
+so aggregate indices and MSE operating models do not establish a tinyAM
+comparison. The 2026 monitoring update issues no new advice and is kept
+separate from the 2025 production inputs.
+
 The [White Hake Run_005 audit](source_reviews/ck_nefsc_garmiii_tenuis_gom_gb.md)
 likewise fixes BH steepness at one, but gives the recruitment penalty zero
 weight. A constant IID tinyAM mean preserves the flat expectation, not the
