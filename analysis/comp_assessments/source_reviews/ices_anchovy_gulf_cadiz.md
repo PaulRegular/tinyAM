@@ -36,6 +36,12 @@ Original PDFs, XML, source scripts and extracted review text are cached in
 `source_cache/ck_ices_wghansa_mordax_sp9a/`, with URL/date/checksum manifests.
 The public TAF tree contains code but no `LastYear` or `update2025` folders,
 and has no release assets. Its code is inspected as text, not executed.
+I rechecked the pinned repository on 2026-10-26: the same SHA is still the
+default-branch head, and the public tree still contains no data folders. The
+`icesTAF::get.artifacts()` documentation describes a TAF API lookup, but the
+documented anonymous `Artifacts` endpoint currently returns 404. This does
+not establish that access-controlled copies do not exist; no usable public
+download route was found.
 
 An [MSE project](https://github.com/mariazuba/Fcap_ane27.9aS/tree/a7a0024be8a80185eb2be7e3fcec50dce26853a1)
 contains original-looking SS3 inputs and an r4ss object spanning 1989–2024.
