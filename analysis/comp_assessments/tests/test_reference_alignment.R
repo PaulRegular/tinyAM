@@ -96,4 +96,14 @@ for (arguments in list(
   )
   stopifnot(inherits(error, "error"))
 }
-cat("Central reference alignment tests passed.\n")
+observations <- list(
+  catch = data.frame(year = 2000:2003, age = 2, obs = 1, unit = "thousand fish"),
+  index = data.frame(year = 2000:2003, age = 2, obs = 1, unit = "index", survey = "Survey", samp_time = .5)
+)
+standalone <- database_to_tam_ref("aligned", outputs, obs = observations,
+  years = 2000:2003, ages = 2:3, terminal_year = 2002)
+stopifnot(identical(standalone$dat$is_proj, c(FALSE, FALSE, FALSE, TRUE)),
+  all(vapply(standalone$obs_pred, function(z) identical(z$is_proj, z$year > 2002), logical(1))),
+  all(is.na(standalone$obs_pred$index$q)), all(is.na(standalone$obs_pred$index$q_unit)),
+  is.null(standalone$opt), is.null(standalone$obj), nrow(standalone$fixed_par) == 0L)
+cat("Central reference alignment and standalone reporting-schema tests passed.\n")

@@ -536,7 +536,11 @@ database_to_tam_ref <- function(assessment_id, outputs, obs = NULL, years = NULL
       x$sd <- NA_real_
       x$std_res <- NA_real_
       x$osa_res <- NA_real_
-      if ("survey" %in% names(x)) x$q <- NA_real_
+      x$is_proj <- !is.na(x$year) & !is.na(terminal_year) & x$year > terminal_year
+      if ("survey" %in% names(x)) {
+        x$q <- NA_real_
+        x$q_unit <- NA_character_
+      }
       x
     })
     fixed_par <- data.frame(
@@ -548,7 +552,7 @@ database_to_tam_ref <- function(assessment_id, outputs, obs = NULL, years = NULL
       call = match.call(),
       dat = list(
         obs = obs, years = years, ages = ages,
-        is_proj = rep(FALSE, length(years))
+        is_proj = !is.na(terminal_year) & years > terminal_year
       ),
       pop = pop, obs_pred = obs_pred, fixed_par = fixed_par, random_par = list()
     )

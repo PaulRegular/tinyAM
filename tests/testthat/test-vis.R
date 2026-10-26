@@ -268,6 +268,31 @@ test_that("vis_tam errors when supplied objects are not TAM fits", {
 })
 
 
+test_that("reference-only dashboards permit unavailable yield comparisons", {
+  reference <- list(dat = N_dev$dat, pop = N_dev$pop,
+    obs_pred = N_dev$obs_pred, fixed_par = N_dev$fixed_par[0, ], random_par = list())
+  class(reference) <- c("tam_ref", "list")
+  reference$pop$total_yield <- reference$pop$total_yield_pred <- NULL
+  reference$obs_pred <- lapply(reference$obs_pred, function(x) {
+    for (name in intersect(c("pred", "sd", "std_res", "osa_res", "q"), names(x))) x[[name]][] <- NA_real_
+    x
+  })
+  file <- tempfile(fileext = ".html")
+  on.exit(unlink(file), add = TRUE)
+  expect_no_error(vis_tam(model_list = list(Official = reference),
+    background = "Official outputs only; no tinyAM fit is available.",
+    output_file = file, open_file = FALSE, render_args = list(quiet = TRUE)))
+  expect_true(file.exists(file))
+  con <- file(file, "rb")
+  html <- paste(readLines(con, warn = FALSE), collapse = " ")
+  close(con)
+  expect_match(html, "Observed-predicted yield comparison is unavailable", fixed = TRUE)
+  expect_match(html, "Official outputs only", fixed = TRUE)
+  expect_null(reference$opt)
+  expect_equal(nrow(reference$fixed_par), 0L)
+  expect_length(reference$random_par, 0L)
+})
+
 test_that("tam_ref objects accept a Background page", {
   blank_values <- function(x, keys) {
     for (name in setdiff(names(x), keys)) x[[name]][] <- NA
