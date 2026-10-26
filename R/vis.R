@@ -114,7 +114,7 @@ vis_tam.default <- function(..., model_list = NULL, interval = 0.95, output_file
     "No successful fits are available for {model}.",
     "i" = "Inspect fold_diagnostics for errors and numerical failures."
   ))
-  labels <- paste0(diagnostics$fold[keep], ifelse(diagnostics$is_reference[keep], " (full data)", " (peel)"))
+  labels <- as.character(diagnostics$fold[keep])
   fits <- stats::setNames(candidates[keep], labels)
   origins <- stats::setNames(diagnostics$fold[keep], labels)
   omitted <- diagnostics[!keep, , drop = FALSE]
@@ -122,6 +122,8 @@ vis_tam.default <- function(..., model_list = NULL, interval = 0.95, output_file
     paste0("Model: **", model, "**. Traces show the full-data reference and successful peels."),
     paste0("Omitted attempts: **", nrow(omitted), "**."))
   if (!any(diagnostics$is_reference & keep)) background <- c(background, "The full-data reference is unavailable.")
+  if (any(diagnostics$is_reference & keep)) background <- c(background,
+    paste0("Full-data reference year: **", diagnostics$fold[diagnostics$is_reference & keep], "**."))
   if (nrow(omitted)) {
     reason <- omitted$error
     reason[is.na(reason) | !nzchar(reason)] <- "Missing fit or failed numerical checks; see fold_diagnostics."

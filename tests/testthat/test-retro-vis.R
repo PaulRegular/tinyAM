@@ -17,13 +17,14 @@ test_that("retrospective model selection, omissions and ordering are explicit", 
       is_converged = c(TRUE, FALSE, TRUE), error = c(NA, "failed fold", NA))), class = "tam_retro")
   original <- r
   view <- tinyAM:::.retro_dashboard(r)
-  expect_identical(names(view$fits), c("2024 (full data)", "2022 (peel)"))
+  expect_identical(names(view$fits), c("2024", "2022"))
+  expect_match(paste(view$background, collapse = " "), "Full-data reference year: \\*\\*2024")
   expect_match(paste(view$background, collapse = " "), "2023: failed fold")
   expect_identical(r, original)
   missing_reference <- r
   missing_reference$fits$base$`2024` <- NULL
   without_reference <- tinyAM:::.retro_dashboard(missing_reference)
-  expect_identical(names(without_reference$fits), "2022 (peel)")
+  expect_identical(names(without_reference$fits), "2022")
   expect_match(paste(without_reference$background, collapse = " "), "reference is unavailable")
   r$fits$alternative <- r$fits$base
   expect_error(tinyAM:::.retro_dashboard(r, is_interactive = FALSE), "base, alternative")

@@ -95,7 +95,7 @@ rsvg::rsvg_pdf(file.path(repo, "man/figures/logo.svg"), "logo.pdf")
 \pageheader{Tiny Assessment Model (tinyAM) :: \textbf{CHEATSHEET}}{Formula-driven age-structured stock assessment}
 \begin{minipage}[t][164mm][s]{.28\linewidth}\vspace{0pt}
 \sectitle{1}{Setup tidy inputs}{}
-\panelnote{Use four tidy tables: \texttt{catch}, \texttt{index}, \texttt{weight}, and \texttt{maturity}. Keys are year--age, plus survey for indices. Optional \texttt{weight\$type}: stock (biomass/SSB) or catch (yield). Stock is required and supplies both uses if catch is absent. Each type needs a complete grid. Survey rows may be sparse; \texttt{NA} is allowed only in catch/index.}\par\vspace{2mm}
+\panelnote{Use four tidy tables: \texttt{catch}, \texttt{index}, \texttt{weight}, and \texttt{maturity}. Keys are year--age, plus survey for indices. Optional \texttt{weight\$type}: stock (biomass/SSB) or catch (yield); stock is required and supplies both uses if catch is absent. Each type needs a complete grid. Survey rows may be sparse; \texttt{NA} is allowed only in catch/index.}\par\vspace{2mm}
 \tablelabel{catch}\par\vspace{.5mm}\nointerlineskip
 \begin{minipage}[t]{.54\linewidth}\vspace{0pt}
 \input{cache/table_catch.tex}
