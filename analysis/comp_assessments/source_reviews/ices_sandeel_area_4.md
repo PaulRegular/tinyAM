@@ -185,7 +185,11 @@ Verified zero-landings years 2009/2024 retain zero. Source conditional Yield
 is not compared as though it were unrestricted tinyAM yield.
 
 Both package-default and the single aligned source-start attempt failed
-with **NA/NaN gradient evaluation**, taking about 3.34 seconds together.
+with **NA/NaN gradient evaluation**, taking about 3.34 seconds together in the
+earlier attempt. A recheck on 2026-10-26 against database revision `b73231f`
+failed in both attempts again: 1.47 seconds from package defaults and 2.02
+seconds from the aligned source start. Both retained missing optimizer codes,
+objectives and gradients, and neither produced a successful `sdreport`.
 No optimizer result, final objective/gradient, usable sdreport or `tam_fit`
 object was returned. Source starts used aligned January N and positive
 annual F cells; unrepresentable zero F retained package log-F starts of zero
