@@ -1,5 +1,10 @@
 # tinyAM 0.1.1.9000
 
+* The assessment translation batch honours its dashboard switch, reports stock
+  progress, and saves per-stock checkpoints immediately. Its script applies a
+  configurable subprocess deadline, recording timeouts without changing model
+  assumptions or blocking the remaining assessments.
+
 * Add reproducible Gaussian joint-sample process residuals to `tidy_tam()`,
   alongside fitted deviations, with explicit uncertainty status and a local seed.
   New standalone process plots and the Random dashboard separate Recruitment,
