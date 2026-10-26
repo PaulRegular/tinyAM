@@ -207,7 +207,7 @@ allowed_input_measures <- c(
   "biomass_at_age", "total_numbers",
   "total_biomass", "landings_biomass", "discard_biomass", "total_egg_production", "landings_lower_bound", "landings_upper_bound",
   "catch_lower_bound", "catch_upper_bound", "proportion_at_age", "proportion_at_length",
-  "conditional_proportion_at_age", "weight_at_age", "spawning_weight_at_age", "start_weight_at_age",
+  "conditional_proportion_at_age", "weight_at_age", "catch_weight_at_age", "spawning_weight_at_age", "start_weight_at_age",
   "maturity_at_age", "natural_mortality_at_age", "condition_index_for_mortality",
   "fecundity_at_age", "proportion_female_at_age",
   "mean_catch_length", "length_at_first_capture", "MSY_proxy_length",
@@ -266,7 +266,7 @@ for (name in c("inputs", "outputs")) {
       "index_catch_numbers_at_age",
       "biomass_at_age", "proportion_at_age", "frequency_at_age", "maturity_fecundity_at_age",
       "conditional_proportion_at_age", "fraction_F_before_spawning",
-      "fraction_M_before_spawning", "weight_at_age", "spawning_weight_at_age", "start_weight_at_age",
+      "fraction_M_before_spawning", "weight_at_age", "catch_weight_at_age", "spawning_weight_at_age", "start_weight_at_age",
       "maturity_at_age", "natural_mortality_at_age", "fecundity_at_age", "proportion_female_at_age",
       "landings_numbers_at_age", "discard_numbers_at_age", "landings_fraction_at_age", "relative_standard_error",
       "landings_weight_at_age", "discard_weight_at_age", "relative_precision_weight", "observation_likelihood_weight"

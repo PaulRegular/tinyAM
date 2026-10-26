@@ -281,6 +281,7 @@ likelihood.
 
 ``` text
 weight_at_age
+catch_weight_at_age
 start_weight_at_age
 maturity_at_age
 natural_mortality_at_age
@@ -300,7 +301,10 @@ landings_proportion
 `landings_numbers_at_age`, `discard_numbers_at_age`, and
 `landings_fraction_at_age` retain removal components used by a source model
 alongside its combined catch. Landings and discard weights are distinct from
-combined catch weights. `log_index_sd` stores a supplied
+combined catch weights. `catch_weight_at_age` records a source fishery's catch
+weights when they differ in meaning from stock weights; use `type = catch_weight`
+and retain the source units. These values are not substituted for stock or
+spawning weights. `log_index_sd` stores a supplied
 standard deviation of the log survey index as a separate year record, with age
 when the index is age-specific, and
 the same survey identity as the corresponding observation; use `type = index`,
