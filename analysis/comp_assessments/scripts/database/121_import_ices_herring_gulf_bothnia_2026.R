@@ -11,7 +11,8 @@ sag_file <- file.path(source_dir, "ICES_SAG_2026_key_22377.xml")
 acoustic_file <- file.path(source_dir, "acoustic_index_transcription.csv")
 report_url <- "https://literatur.thuenen.de/digbib_extern/dn071152.pdf"
 benchmark_url <- "https://pub.epsilon.slu.se/22760/1/cardinale_m_et_al_210311.pdf"
-benchmark_cache_url <- "https://jukuri.luke.fi/bitstreams/c75c0f71-7815-48f7-8ccc-144ea0244bec/download"
+benchmark_cache_url <- "https://ndownloader.figshare.com/files/33482687"
+benchmark_file <- file.path(source_dir, "WKCLuB_2021.pdf")
 sag_url <- "https://sag.ices.dk/SAG_API/StockXmlDownload/22377"
 sag_source_url <- "https://sg.ices.dk/ViewSourceData.aspx?key=22377"
 framework_year <- 2021L
@@ -22,9 +23,11 @@ ages <- 1:15
 if (!requireNamespace("digest", quietly = TRUE)) {
   cli::cli_abort("Install digest before importing this ICES assessment.")
 }
-if (!all(file.exists(c(report_file, report_text_file, sag_file, acoustic_file)))) {
-  cli::cli_abort("Cache the WGBFAS report, ICES SAG XML, and acoustic-table transcription before importing.")
+if (!all(file.exists(c(report_file, report_text_file, sag_file, acoustic_file, benchmark_file)))) {
+  cli::cli_abort("Cache the WGBFAS and WKCLuB reports, ICES SAG XML, and acoustic-table transcription before importing.")
 }
+stopifnot(digest::digest(file = benchmark_file, algo = "sha256") ==
+  "c82d342198a182c4b93980a85e2805b1572ec1b8f334fa26bff583144f583ceb")
 
 read_table <- function(name, nrows = Inf) {
   utils::read.csv(
@@ -444,15 +447,12 @@ for (filename in names(url_for)) {
   ))
 }
 manifest <- rbind(manifest, data.frame(
-  assessment_id = assessment_id, cached_file = "",
-  original_filename = "WKCLuB_2021_benchmark.pdf",
-  source_url = benchmark_cache_url, retrieval_date = today,
-  verified_date = today, sha256 = "",
-  note = paste(
-    "Local download failed because the socket could not reach the remote host.",
-    "The earlier 66,826-byte response was HTML rather than a PDF and was removed.",
-    "The published version was verified through the official university repository's searchable copy; model M breakpoints were not inferred from the failed local file."
-  ), stringsAsFactors = FALSE
+  assessment_id = assessment_id, cached_file = basename(benchmark_file),
+  original_filename = "WKCLuB_2020_2021_final.pdf",
+  source_url = benchmark_cache_url, retrieval_date = "2026-10-26",
+  verified_date = today, sha256 = digest::digest(file = benchmark_file, algo = "sha256"),
+  note = "Official publisher PDF; DOI 10.17895/ices.pub.5989 resolves to Figshare article 18619238. Final settings table and working-document age coordinates give the same reconstructed M vector.",
+  stringsAsFactors = FALSE
 ))
 utils::write.csv(manifest, file.path(source_dir, "manifest.csv"), row.names = FALSE, na = "")
 

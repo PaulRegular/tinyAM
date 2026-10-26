@@ -22,11 +22,12 @@ source-page images, and tidy transcriptions of catch-at-age, catch weights,
 and maturity are in the gitignored
 `analysis/comp_assessments/source_cache/ices_herring_gulf_bothnia_2026/`.
 `manifest.csv` records each cached file's URL, checksum, and verification
-date. The WKCLuB PDF could not be cached from this shell because the remote
-socket was unreachable; an earlier response was HTML, not a PDF, and was
-removed. The failure and alternate source URL are recorded in the manifest.
-The reported M breakpoints were verified against the benchmark's searchable
-published report, but the local cache still lacks that PDF.
+date. The WKCLuB PDF was recovered from the [ICES publisher's attachment](https://ndownloader.figshare.com/files/33482687)
+on 2026-10-26 by resolving the benchmark DOI to its publisher record. The
+cached `WKCLuB_2021.pdf` has SHA-256
+`c82d342198a182c4b93980a85e2805b1572ec1b8f334fa26bff583144f583ceb`.
+Earlier failed mirror downloads remain documented in the manifest. Recovery
+of the benchmark does not supply the missing 2026 native model files.
 
 ## Recovered inputs and assumptions
 
@@ -47,6 +48,13 @@ published report, but the local cache still lacks that PDF.
   3.5, 5.5, 8.5, and 15.5. The database reconstructs ages 0–20 by linear
   interpolation and holds the terminal value above age 15.5. This is a fixed
   benchmark input, not an estimated M output from the 2026 assessment.
+  The final settings table (printed p. 10) labels the same values as age
+  classes 0.5, 1, 3, 5, 8 and 15; the supporting working document (printed
+  p. 43) uses midpoints. Evaluating the midpoint curve at modeled age + 0.5
+  gives the same ages 0–20 vector as interpolating the final table at integer
+  ages, with the endpoint values held constant. Both interpretations give
+  M = 0.472 at age 1 and 0.402 at age 2. This check confirms the existing
+  reconstruction; no input values or fitted results were changed.
 - Table 4.3.6 provides the BIAS acoustic abundance index for 2007–2025,
   ages 0–15+, in millions of fish. Published values are already area-corrected;
   the table's `AREA_CORR_FACTOR` is preserved in the local transcription and

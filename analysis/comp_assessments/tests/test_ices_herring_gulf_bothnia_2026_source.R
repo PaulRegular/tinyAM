@@ -16,6 +16,19 @@ fbar <- outputs[outputs$measure == "Fbar", ]
 
 proportion_sums <- aggregate(value ~ year, catch_prop, sum)
 
+# The final settings table uses age classes; the working document uses midpoints.
+break_m <- c(0.563, 0.472, 0.332, 0.290, 0.267, 0.257)
+class_m <- approx(c(0.5, 1, 3, 5, 8, 15), break_m, xout = 0:20, rule = 2)$y
+midpoint_m <- approx(c(0.5, 1.5, 3.5, 5.5, 8.5, 15.5), break_m,
+  xout = (0:20) + 0.5, rule = 2)$y
+stopifnot(
+  max(abs(class_m - midpoint_m)) < 1e-12,
+  identical(sort(m$age), 0:20),
+  max(abs(m$value[order(m$age)] - midpoint_m)) < 1e-12,
+  abs(m$value[m$age == 1] - 0.472) < 1e-12,
+  abs(m$value[m$age == 2] - 0.402) < 1e-12
+)
+
 stopifnot(
   source_data$stocks$stock_id == "ices_herring_gulf_bothnia",
   source_data$stocks$authority_stock_id == "her.27.3031",
