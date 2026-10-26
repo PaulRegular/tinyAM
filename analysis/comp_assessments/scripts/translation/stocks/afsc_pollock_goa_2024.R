@@ -113,15 +113,24 @@ background <- c(
   "",
   "Because q_link = 'logit', the age curves and temporal effects enter the logit-q predictor, unlike the official log-q parameterization. The older paired-age q blocks and separate ADF&G annual factor effects are no longer used in the fit. Weak q identification and sensitivity to the link should be checked after refitting.",
   "",
-  "The translation uses thousand fish, average weights in kg, and biomass in tonnes. Original catch totals are used for the yield panel; predicted catch numbers are multiplied by catch weights. The published 1975-2023 catch table is rounded to 0.01 million fish and printed zeros are missing under tinyAM's lognormal likelihood. Predictions are conditional medians without lognormal mean correction; official F-at-age is unavailable.",
+  "The translation uses thousand fish, average weights in kg, and biomass in tonnes. Original catch totals are used for the yield panel; predicted catch numbers are multiplied by catch weights. The published 1975-2023 catch table is rounded to 0.01 million fish and printed zeros are missing under tinyAM's lognormal likelihood. Predictions are conditional medians without lognormal mean correction. Direct official F-at-age estimates are unavailable; the database includes a clearly labeled, partial reconstruction from rounded N-at-age and fixed M for ages 1-8 in 1970-2023, without uncertainty.",
   "",
-  "SSB remains a definition-sensitive comparison: the official assessment uses spawning-time biomass at fraction 0.21 with spawning weights, whereas this candidate reports beginning-year SSB using stock weights. No updated fit diagnostics or numerical agreement statistics are attributed to this candidate without a separate run."
+  "SSB remains definition-sensitive: the official calculation uses spawning-time biomass at fraction 0.21 with spawning weights, while the shared-biology comparison uses source N with translated stock weights and maturity. The current package-default fit converged (optimizer code 0; objective 1356.997; maximum absolute gradient 0.000219; successful uncertainty estimation; positive-definite Hessian), although residual checks flag location, spread and outliers. For 1970-2024, mean absolute percentage differences are 27.7% for total abundance, 46.5% for N-at-age, 44.2% for recruitment, 37.1% for shared-biology SSB and 30.2% for biomass. Their terminal differences are +32.4%, +77.0%, -2.0%, +8.5% and +41.1%; trend correlations are 0.949, 0.943, 0.957, 0.881 and 0.905. The partial F-at-age comparison is approximate because it derives F from rounded N-at-age and fixed M; mean absolute percentage difference is 82.9%, terminal difference -21.6%, and trend correlation 0.625. Fixed M matches by construction, and official Fbar and age-specific biomass are unavailable. No source-start retry or assumption changes were needed."
 )
 
 
 ## Background and comparisons ----
 
 age_plus_group <- 10
+comparison_outputs <- source$outputs
+
+comparison_definitions <- list(
+  F = list(
+    status = "approximate",
+    definition = "Approximate total F-at-age derived for ages 1-8 from rounded official N-at-age and fixed M",
+    reason = "F is reconstructed from the official cohort equation using N-at-age rounded to the nearest million fish. Only rows remaining positive across the rounding bounds are retained; age 9, the age-10+ plus group, and near-zero cells are unavailable. No uncertainty is available."
+  )
+)
 
 
 

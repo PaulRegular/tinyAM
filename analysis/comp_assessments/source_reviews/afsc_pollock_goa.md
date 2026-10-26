@@ -161,14 +161,24 @@ dashboard retains the official native SSB. Yield reporting continues to use
 source total catches and predictions multiplied by source catch weights;
 these are conditional median predictions without a lognormal mean correction.
 
-The candidate is intended as a structurally informed approximation rather
-than an exact operational replication. In particular, the logistic age curves
-are grouped by survey type, the fitted q effects use a logit rather than log
-link, and the source's selectivity priors, environmental measurement process,
-ADF&G increment-specific penalties, age-reading error and composition
-likelihoods are not fitted directly. Official F-at-age is unavailable for
-direct comparison. The older custom paired-age q blocks and unpenalized
-ADF&G annual-factor construction are no longer used. No new numerical
-agreement measures, convergence codes or objective values are recorded here:
-those require the revised candidate fit and comparison outputs. Previous
-fitting results should not be attributed to this candidate.
+The candidate remains a structural approximation: logistic age curves are
+grouped by survey type, fitted q effects use a logit rather than log link, and
+the source selectivity priors, environmental measurement process, ADF&G
+increment-specific penalties, age-reading error, and composition likelihoods
+are not fitted directly. The current package-default fit converged with
+optimizer code 0 (`relative convergence (4)`), objective 1,356.997, maximum
+absolute gradient 0.000219, successful uncertainty estimation, and a
+positive-definite Hessian. Residual checks still flag group location, spread,
+and outliers.
+
+Over 1970-2024, the mean absolute percentage differences are 27.7% for total
+abundance, 46.5% for N-at-age, 44.2% for recruitment, 37.1% for SSB under the
+shared-biology definition, and 30.2% for biomass. Their terminal mean
+percentage differences are respectively +32.4%, +77.0%, -2.0%, +8.5%, and
++41.1%; trend correlations are 0.949, 0.943, 0.957, 0.881, and 0.905. The
+partial derived F-at-age comparison has mean absolute percentage difference
+82.9%, terminal difference -21.6%, and correlation 0.625; it uses rounded
+N-at-age and fixed M, so it is approximate and has no uncertainty. Fixed M
+matches by construction, while official Fbar and age-specific biomass remain
+unavailable. No source-start retry was needed, and no assumptions were changed
+after the converged fit.
