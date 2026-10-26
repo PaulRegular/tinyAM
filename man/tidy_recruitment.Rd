@@ -25,6 +25,8 @@ Recruitment and curve estimates are medians with log-scale SEs.
 Residuals are signed log-scale deviations with SEs on their reported scale.
 RW residuals are increments; AR1 residuals are deviations from the baseline,
 while innovations remove the preceding residual's predicted contribution.
+Deterministic recruitment has no residual/innovation tables; stock-recruit
+pairs retain missing residual values and available derived uncertainty.
 The curve is evaluated at median historical numeric covariates and reference
 factor levels. \code{reference} identifies those values. Curve intervals use the
 exact curve derivatives and RTMB's fixed-parameter covariance (the delta

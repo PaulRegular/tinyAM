@@ -87,7 +87,7 @@ test_that("projection settings can be enabled, partially changed and disabled", 
 
 test_that("Usage shows every supported settings entry and optional projections", {
   expected <- list(
-    N_settings = c("process", "init", "sd_form"),
+    N_settings = c("process", "init", "mu_form", "sd_form"),
     rec_settings = c("process", "mu_form", "sd", "phi"),
     F_settings = c("process", "mu_form", "sd_form", "mean_ages"),
     M_settings = c("process", "mu_form", "mu_supplied", "sd_form", "age_breaks", "first_dev_year", "mean_ages"),
@@ -110,7 +110,11 @@ test_that("recruitment settings validate and merge independently of survival", {
   expect_error(make_test_dat(N_settings = list(rec_form = ~ rw(year))), "has moved")
   expect_error(make_test_dat(rec_settings = list(process = "iid")), "mu_form is required")
   expect_error(make_test_dat(rec_settings = list(process = "ar1")), "mu_form is required")
-  expect_error(make_test_dat(rec_settings = list(process = "off")), "must be")
+  expect_error(make_test_dat(rec_settings = list(process = "off")), "mu_form is required")
+  expect_identical(
+    make_test_dat(rec_settings = list(process = "off", mu_form = ~1))$rec_settings$process,
+    "off"
+  )
   expect_error(make_test_dat(rec_settings = list(sd = 0)), "positive")
   expect_error(make_test_dat(rec_settings = list(sd = NA_real_)), "finite")
   expect_error(make_test_dat(rec_settings = list(phi = .5)), "only used")

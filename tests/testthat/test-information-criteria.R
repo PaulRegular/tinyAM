@@ -98,8 +98,8 @@ test_that("sparse trace agrees with independently calculated Gaussian EDF", {
 
 test_that("likelihood components preserve values and derivatives", {
   f <- ic_test_fit()
-  process <- tinyAM:::.aic_component(f, "process")
-  observation <- tinyAM:::.aic_component(f, "observation")
+  process <- tinyAM:::.fitted_objective(f, "process")
+  observation <- tinyAM:::.fitted_objective(f, "observation")
   p <- f$parameter_values
   expect_equal(f$obj$env$f(p), process$env$f(p) + observation$env$f(p))
   expect_equal(f$obj$env$f(p, order = 1),
@@ -174,10 +174,10 @@ test_that("latent initial abundance and fixed M outside process ages are counted
   expect_equal(table$n_random, sum(f$obj$env$lrandom()))
   partial <- ic_test_fit(M_settings = list(process = "iid", mu_form = ~0 + factor(age),
     age_breaks = 3:5, first_dev_year = 1983))
-  process <- tinyAM:::.aic_component(partial, "process")
+  process <- tinyAM:::.fitted_objective(partial, "process")
   count <- tinyAM:::.aic_conditional_count(partial, process, partial$obj$env$lrandom())
   plain <- ic_test_fit()
-  ordinary <- tinyAM:::.aic_conditional_count(plain, tinyAM:::.aic_component(plain, "process"), plain$obj$env$lrandom())
+  ordinary <- tinyAM:::.aic_conditional_count(plain, tinyAM:::.fitted_objective(plain, "process"), plain$obj$env$lrandom())
   expect_equal(count, ordinary + 1L) # M mean controls age 2, outside fitted blocks.
 })
 

@@ -62,7 +62,7 @@
 #' estimated fixed state with no process penalty. By default, subsequent `log_r` states obey
 #' \deqn{\log R_t=\log R_{t-1}+\epsilon^R_t,\qquad
 #' \epsilon^R_t\stackrel{ind}{\sim}N(0,\sigma_R^2),\quad t=2,\ldots,T.}
-#' Alternative [recruitment_formulas] allow IID/AR1 residuals, fixed covariates,
+#' Alternative [recruitment_formulas] allow deterministic recruitment, IID/AR1 residuals, fixed covariates,
 #' and Beverton-Holt or Ricker curves. For a curve,
 #' \deqn{\log R_t=\log g(SSB_{t-L})+X_t\gamma+u_t.}
 #' SSB is mature biomass at the configured spawning time, defined below.
@@ -93,6 +93,13 @@
 #' For the plus group,
 #' \deqn{g_{t,A}=\log\{N_{t-1,A-1}e^{-Z_{t-1,A-1}}+
 #' N_{t-1,A}e^{-Z_{t-1,A}}\}.}
+#' An optional `N_settings$mu_form` adds \eqn{X_{t,a}\beta_N} to these
+#' log survivor predictions, using destination-year/age population covariates.
+#' This multiplies survivor abundance by \eqn{\exp(X_{t,a}\beta_N)} after
+#' the plus-group survivor sum. It represents apparent gains or losses, not
+#' separately identified migration. It does not alter recruitment or N0.
+#' Covariates can confound mortality, catchability and survival deviations;
+#' source support and sensitivity analysis are needed.
 #' With the N process off, \eqn{\log N_{t,a}=g_{t,a}}. Otherwise `log_n`
 #' contains the realized states and \eqn{\eta^N_{t,a}=\log N_{t,a}-g_{t,a}}
 #' follows the selected process below. Its matrix is \eqn{(T-1)\times(A-1)}.
@@ -112,7 +119,7 @@
 #' hidden plus-group tail. Normalize these shares and set
 #' \eqn{n_{1,j}=N_{1,A}p_j/\sum_k p_k}. This assumes constant plus-group
 #' mortality for the initial internal composition, without changing the
-#' chosen initial total abundance (`exp`, `free`, or `random`).
+#' chosen initial total abundance (`exp`, `free`, `latent`, `mono`, or `capped`).
 #'
 #' Subsequent predicted components are
 #' \deqn{v_{t,0}=N_{t-1,A-1}e^{-Z_{t-1,A-1}},}
@@ -162,13 +169,16 @@
 #' actual M. Ordinary terms supply any common slope; without them the slopes
 #' are centred on zero. See [formula_effects] for the equations and cautions.
 #'
-#' F mean curves with IID/AR1 residuals add cumulative non-negative log-F
+#' F mean curves with no residual process or with IID/AR1 residuals add cumulative non-negative log-F
 #' increments for [mono()], or \eqn{\log S(a)} for [logistic()], so the latter
 #' multiplies the ordinary mean F by rising selectivity. These are fixed curve
 #' parameters, separate from Gaussian mean effects and latent F states. Static
 #' curves cancel from RW increments and are not supported there.
 #'
-#' Historical F has one `log_f` state per year and age:
+#' With `F_settings$process = "off"`, historical \eqn{F=\mu^F}.
+#' No F latent states, process SD or correlations are created. Projection
+#' controls still scale terminal historical F or solve for total catch.
+#' With an active F process, historical F has one `log_f` state per year and age:
 #' \deqn{\log F_{t,a}=\log\mu^F_{t,a}+\eta^F_{t,a},\quad t\le H.}
 #' `log_f` is the left-hand side; `eta_log_f` is the deviation on the right.
 #' For an active M process, `log_m` has one state per selected year and age

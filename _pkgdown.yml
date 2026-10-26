@@ -4,6 +4,7 @@ development:
   mode: unreleased
 template:
   bootstrap: 5
+  math-rendering: mathjax
   bslib:
     primary: '#003e56'
     secondary: '#028f8d'
@@ -12,7 +13,7 @@ template:
     heading_font: 'Arial, sans-serif'
 navbar:
   structure:
-    left: [intro, reference, cheatsheet, dashboard]
+    left: [intro, reference, cheatsheet]
     right: [search, github]
   components:
     intro:
@@ -21,9 +22,6 @@ navbar:
     cheatsheet:
       text: Cheatsheet
       href: cheatsheet/tinyAM_cheatsheet.pdf
-    dashboard:
-      text: Dashboard
-      href: cheatsheet/index.html
 reference:
 - title: Model overview and example data
 - contents:
@@ -52,6 +50,7 @@ reference:
   - tam_fit_summary
   - fit_retro
   - compute_hindcast_rmse
+  - compute_hindcast_mase
   - compute_mohns_rho
   - sim_tam
 - title: Visualize and compare
@@ -60,11 +59,13 @@ reference:
   - plot_tam
   - plot_age_year
   - plot_matrix
+  - plot_process_deviations
   - tam_cols
 - title: Tidy model results
 - contents:
   - tidy_tam
   - tidy_obs_pred
+  - residuals.tam_fit
   - tidy_pop
   - tidy_par
   - tidy_recruitment
@@ -80,3 +81,4 @@ reference:
   - dprocess_rw
   - dprocess_ar1
   - dprocess_cor_rw
+

@@ -26,7 +26,16 @@
 #'          Stock-recruit models add a relationship page with parent-year pairs,
 #'          median curves at declared reference covariates and conditional
 #'          recruitment predictions. Random parameters also show signed
-#'          recruitment residuals. See [tidy_recruitment()].
+#'          recruitment deviations. See [tidy_recruitment()].
+#'          The Random page separates Recruitment, N, F and M states from
+#'          Process deviations and Joint-sample residuals. Optional initial
+#'          abundance plots are inside N, followed by optional formula-effect tabs.
+#'          [plot_process_deviations()] and [plot_process_residuals()] reproduce
+#'          individual diagnostic plots from a single tidy result, selecting
+#'          `component = "Recruitment"` or `"NFM"`. The dashboard supplies dropdown
+#'          tabs for these views; N/F/M plots have component buttons and a model slider.
+#'          Shared M blocks are not treated as separate biological ages.
+#'          `process_seed` reproduces the same Gaussian joint draw as [tidy_tam()].
 #'          Random plots include latent states and formula-effect trends.
 #'          Age-year plots offer Annual trends (year axis, age selector) and
 #'          Age profiles (age axis, year selector). Each plot starts in its
@@ -56,7 +65,9 @@
 #'
 #' @export
 vis_tam <- function(..., model_list = NULL, interval = 0.95, output_file = NULL,
-                    open_file = TRUE, background = NULL, render_args = list()) {
+                    open_file = TRUE, background = NULL, render_args = list(),
+                    process_seed = 123456L) {
+  process_seed <- .validate_process_seed(process_seed)
   pkg <- c("knitr", "rmarkdown", "flexdashboard")
   missing <- pkg[!vapply(pkg, requireNamespace, logical(1), quietly = TRUE)]
   if (length(missing)) {
@@ -96,6 +107,7 @@ vis_tam <- function(..., model_list = NULL, interval = 0.95, output_file = NULL,
   rmd_env <- new.env(parent = globalenv())
   rmd_env$fits <- fits
   rmd_env$interval <- interval
+  rmd_env$process_seed <- process_seed
   rmd_env$background <- background
 
   if (is.null(output_file)) {
@@ -129,6 +141,7 @@ vis_tam <- function(..., model_list = NULL, interval = 0.95, output_file = NULL,
   category[par %in% c("q", "logit_q")] <- "Catchability"
   category[par %in% "dq" | grepl("^q_(a50|slope)_", par)] <- "Catchability curves"
   category[grepl("^mu_", par)] <- "Mortality means"
+  category[par == "mu_n"] <- "Cohort means"
   category[par == "dmu_f" | grepl("^F_(a50|slope)_", par)] <- "Mortality means"
   category[grepl("^(phi_|rho_)", par)] <- "Correlations"
   category[par %in% c("rec_beta", "sr_alpha", "sr_beta")] <- "Recruitment"
@@ -136,7 +149,7 @@ vis_tam <- function(..., model_list = NULL, interval = 0.95, output_file = NULL,
   category[par == "d_n0"] <- "Initial steps"
   category <- factor(category, levels = c(
     "Process SDs", "Process SD coefficients", "Observation SDs",
-    "Catchability", "Catchability curves", "Mortality means", "Correlations",
+    "Catchability", "Catchability curves", "Mortality means", "Cohort means", "Correlations",
     "Recruitment", "Initial abundance", "Initial steps", "Other"
   ))
   split(data, category, drop = TRUE)

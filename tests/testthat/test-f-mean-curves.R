@@ -175,10 +175,10 @@ test_that("F curve fits retain tidy scales, uncertainty and update paths", {
   expect_equal(projected$dat$F_mono_steps, d$F_mono_steps)
   expect_true(all(is.finite(sim_tam(projected, n = 1, par_uncertainty = "none", progress = FALSE)$F$est)))
   retro <- fit_retro(fit, folds = 1, start_from_fit = TRUE, progress = FALSE)
-  expect_true(all(vapply(retro$fits, inherits, logical(1), "tam_fit")))
-  expect_equal(nrow(retro$fits[[1]]$rep$F), 19L)
+  expect_true(all(vapply(retro$fits[[1]], inherits, logical(1), "tam_fit")))
+  expect_equal(nrow(retro$fits[[1]][[1]]$rep$F), 19L)
   hindcast <- fit_hindcast(fit, folds = 1, start_from_fit = TRUE, progress = FALSE)
-  expect_true(all(vapply(hindcast$fits, inherits, logical(1), "tam_fit")))
+  expect_true(all(vapply(hindcast$fits[[1]], inherits, logical(1), "tam_fit")))
   if (requireNamespace("rmarkdown", quietly = TRUE) && rmarkdown::pandoc_available()) {
     path <- tempfile(fileext = ".html")
     reference <- fit

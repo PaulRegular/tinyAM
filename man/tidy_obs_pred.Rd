@@ -11,11 +11,11 @@ tidy_obs_pred(fit, add_osa_res = FALSE, interval = 0.95, ...)
 
 \item{add_osa_res}{Logical; add one-step-ahead residuals? Hard wired to
 apply the \code{"oneStepGaussianOffMode"} method.
-See \code{\link[RTMB:OSA-residuals]{RTMB::oneStepPredict()}} for details.}
+See \code{\link[RTMB:oneStepPredict]{RTMB::oneStepPredict()}} for details.}
 
 \item{interval}{Confidence level for combined catchability intervals.}
 
-\item{...}{Arguments to pass to \code{\link[RTMB:OSA-residuals]{RTMB::oneStepPredict()}}.}
+\item{...}{Arguments to pass to \code{\link[RTMB:oneStepPredict]{RTMB::oneStepPredict()}}.}
 }
 \value{
 A named list with two data frames:
@@ -38,6 +38,8 @@ residuals are \code{(log(obs) - log(pred)) / sd}; zero and missing observations
 have missing residuals. These standardized residuals do not account for the
 uncertainty in fitted states. Optional one-step-ahead residuals use a
 different predictive calculation. See \link{tinyAM-model} for the observation equations.
+OSA calculation rebuilds a temporary objective at stored fitted parameters;
+it does not refit fixed parameters or modify the fitted objective.
 When stockassessment is loaded, one-step residuals run sequentially: the
 upstream TMB parallel helper cannot select between SAM and RTMB libraries.
 }

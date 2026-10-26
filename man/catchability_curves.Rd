@@ -78,7 +78,7 @@ separately by the numerical convergence checks.
 
 \subsection{Mean fishing mortality}{
 
-With \code{F_settings$process = "iid"} or \code{"ar1"}, use \code{~ mono(age)} or
+With \code{F_settings$process = "off"}, \code{"iid"} or \code{"ar1"}, use \code{~ mono(age)} or
 \code{~ logistic(age)}. Ordinary terms provide the baseline F. One curve is allowed;
 its numeric coordinate must be age or an age-derived \code{pop_covariates} column
 constant across years at each age. Categorical \code{by} groups may have separate
@@ -89,18 +89,19 @@ indicators and the directly fitted \code{dmu_f} increments satisfy \eqn{d\geq0}.
 For logistic, \eqn{\log\mu_F = X\beta + \log S(x)}. The baseline therefore
 gives the asymptotic F when other covariates are held constant. Midpoint
 \verb{F_a50_*} and positive slope \verb{log_F_slope_*} are fitted separately from q
-curves. Realized F fluctuates around this log mean and need not be monotonic.
+curves. With the residual process off, F equals this mean. Otherwise realized
+F fluctuates around it and need not be monotonic.
 \code{mu_F} is the exponential of expected log F, rather than an arithmetic
 average over lognormal process draws.
 Static curves are rejected with RW/correlated-RW residuals because they
 cancel from the increments. Gaussian structured mean terms retain their
-existing IID-residual restriction, including when combined with a curve.
+existing IID-residual or no-residual-process restriction, including with a curve.
 \code{dmu_f} has the same zero bounds and boundary-inference limitations as \code{dq}.
 \code{\link[=tidy_pop]{tidy_pop()}} reports mean-F profiles with joint RTMB-derived uncertainty.
 }
 }
 \examples{
-~ q_block # ordinary unconstrained q
+~q_block # ordinary unconstrained q
 ~ mono(q_block)
 ~ survey + mono(q_block, by = survey)
 ~ survey + logistic(age, by = survey)

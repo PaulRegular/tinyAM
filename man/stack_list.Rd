@@ -26,7 +26,7 @@ A single data frame produced by row-binding the list elements. If
 output.
 }
 \description{
-Convenience wrapper around \code{\link[base:cbind]{base::rbind()}} for stacking a (named) list of
+Convenience wrapper around \code{\link[base:rbind]{base::rbind()}} for stacking a (named) list of
 data frames while recording the source list element in a label column. When
 the list is named, the names are used as labels; otherwise, integer indices
 (\code{"1"}, \code{"2"}, …) are used. Columns absent in some elements are filled with

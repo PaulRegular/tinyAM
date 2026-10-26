@@ -26,12 +26,21 @@ output:
 library(tinyAM)
 library(plotly)
 knitr::opts_chunk$set(cache = FALSE)
+htmltools::tagList(htmltools::tags$style(htmltools::HTML('
+  [data-dropdown-tabs] .dropdown-toggle { background: transparent; }
+  [data-dropdown-tabs] .nav-tabs .dropdown-toggle.dropdown-selected {
+    color: #4D4D4D; background-color: #fff; border-color: #B2B2B2 #B2B2B2 #fff;
+  }
+  [data-dropdown-tabs] .dropdown-item.dropdown-selected { color: white; background-color: #003e56; }
+')), htmltools::tags$script(htmltools::HTML(paste(readLines(
+  system.file("js", "dashboard-dropdowns.js", package = "tinyAM"), warn = FALSE), collapse = "\n"))))
 ```
 
 
 ```{r data, include=FALSE}
 
-tabs <- tidy_tam(model_list = fits, label = "model", label_type = "factor", interval = interval)
+tabs <- tidy_tam(model_list = fits, label = "model", label_type = "factor", interval = interval,
+  process_seed = process_seed)
 set_model_levels <- function(x, model_names) {
   if (is.data.frame(x) && "model" %in% names(x)) {
     x$model <- factor(as.character(x$model), levels = model_names)
@@ -46,7 +55,8 @@ pop <- tabs$pop
 fixed_par <- tabs$fixed_par
 random_par <- tabs$random_par
 formula_effects <- tabs$formula_effects
-checks <- lapply(Filter(function(fit) inherits(fit, "tam_fit"), fits), check_tam)
+check_models <- Filter(function(fit) inherits(fit, "tam_fit"), fits)
+checks <- if (length(check_models)) check_tam(model_list = check_models) else list()
 ssb_timing <- data.frame(Model = names(fits), Timing = vapply(fits, function(fit) {
   if (!inherits(fit, "tam_fit")) return("Reference definition; see Background")
   tinyAM:::.ssb_timing_label(fit$dat)

@@ -18,7 +18,7 @@ for (case in cases) {
       )
       stopifnot(sum(projection$dat$is_proj) == 3L, identical(before, serialize(fit$dat, NULL)))
       retro <- fit_retro(projection, folds = 2, start_from_fit = TRUE, progress = FALSE)
-      for (fold in retro$fits) {
+      for (fold in retro$fits[[1]]) {
         p <- tinyAM:::.tam_parameter_summary(fold, "Estimate")
         stopifnot(identical(names(p$log_r), as.character(fold$dat$years[fold$dat$rec$eligible])))
         if (length(fold$dat$rec$boundary) > 1L) {
@@ -29,7 +29,7 @@ for (case in cases) {
         }
       }
       hindcast <- fit_hindcast(projection, folds = 2, start_from_fit = TRUE, progress = FALSE)
-      stopifnot(all(vapply(hindcast$fits, function(fold) sum(fold$dat$is_proj) == 1L, logical(1))))
+      stopifnot(all(vapply(hindcast$fits[[1]], function(fold) sum(fold$dat$is_proj) == as.integer(max(fold$dat$years) > tinyAM:::.terminal_year(fold)), logical(1))))
       simulated <- sim_tam(projection,
         n = 2, par_uncertainty = "none", redraw_random = TRUE,
         seed = 810001L + match(case, cases), progress = FALSE
@@ -60,8 +60,8 @@ for (case in cases) {
       )
       list(
         projection = projection$is_converged,
-        retro = vapply(retro$fits, function(fold) fold$is_converged, logical(1)),
-        hindcast = vapply(hindcast$fits, function(fold) fold$is_converged, logical(1))
+        retro = vapply(retro$fits[[1]], function(fold) fold$is_converged, logical(1)),
+        hindcast = vapply(hindcast$fits[[1]], function(fold) fold$is_converged, logical(1))
       )
     },
     warning = function(w) {

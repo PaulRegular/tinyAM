@@ -63,11 +63,13 @@ with appropriate \code{dimnames} (\verb{year × age} or \verb{year × age_block}
 \item \strong{Recruitment & variability}
 \itemize{
 \item \code{log_r0} (fixed first-year log recruitment, always present)
-\item \code{log_r}: absolute random log recruitment in eligible process years;
+\item \code{log_r}: absolute random log recruitment in eligible process years
+when the recruitment process is enabled;
 by default these are \code{dat$years[-1]}, named by year.
 \item \code{log_r_init}: additional free fixed boundary states when parent SSB lies
 before the modeled period, named by year.
-\item \code{log_sd_r}: estimated recruitment SD unless supplied in \code{rec_settings$sd}.
+\item \code{log_sd_r}: estimated recruitment SD unless supplied in \code{rec_settings$sd}
+or recruitment is deterministic (\code{process = "off"}).
 \item \code{rec_beta}: fixed log-scale covariate coefficients when present.
 \item \code{log_sr_alpha}, \code{log_sr_beta}: positive curve parameters on the log scale.
 \item \code{logit_phi_r}: estimated recruitment AR1 correlation when not supplied.
@@ -89,13 +91,14 @@ See \code{\link[=prepare_tam]{prepare_tam()}} for the choices and weak-identific
 }
 \item \strong{Abundance states and process variability (N)}
 \itemize{
+\item \code{mu_n}: signed log-cohort mean coefficients when \code{N_settings$mu_form} is supplied.
 \item \code{log_sd_n} (if \code{dat$N_settings$process != "off"})
 \item \code{logit_phi_n} length 2 (if \code{process == "ar1"})
 \item \code{log_n} matrix (\code{year[-1]} × \code{age[-1]}) if \code{process != "off"}
 }
 \item \strong{Fishing mortality (F)}
 \itemize{
-\item \code{log_sd_f}
+\item \code{log_sd_f} (only when the F process is active)
 \item \code{logit_phi_f} length 2 (if \code{process == "ar1"})
 \item \code{atanh_rho_f}: signed age correlation of annual F increments
 (if \code{process == "cor_rw"}), reported as \code{rho_f} through \code{tanh()}.
@@ -103,7 +106,7 @@ See \code{\link[=prepare_tam]{prepare_tam()}} for the choices and weak-identific
 \item \code{dmu_f}: directly fitted non-negative log-mean-F increments for \code{\link[=mono]{mono()}}
 \item \verb{F_a50_*}, \verb{log_F_slope_*}: midpoint and log positive slope for \code{\link[=logistic]{logistic()}}
 mean curves. F states start at their complete mean curve, giving zero residuals.
-\item \code{log_f} matrix (historical \code{year} × \code{age}; no projection rows)
+\item \code{log_f} matrix (only with an active F process; historical \code{year} × \code{age}; no projection rows)
 }
 \item \strong{Natural mortality (M)}
 \itemize{

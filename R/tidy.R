@@ -84,6 +84,8 @@ tidy_mat <- tidy_array
 #' have missing residuals. These standardized residuals do not account for the
 #' uncertainty in fitted states. Optional one-step-ahead residuals use a
 #' different predictive calculation. See [tinyAM-model] for the observation equations.
+#' OSA calculation rebuilds a temporary objective at stored fitted parameters;
+#' it does not refit fixed parameters or modify the fitted objective.
 #' When stockassessment is loaded, one-step residuals run sequentially: the
 #' upstream TMB parallel helper cannot select between SAM and RTMB libraries.
 #'
@@ -107,6 +109,7 @@ tidy_mat <- tidy_array
 
 tidy_obs_pred <- function(fit, add_osa_res = FALSE, interval = .95, ...) {
   fit <- .require_tam_fit(fit, arg = "fit")
+  osa_obj <- if (add_osa_res) .fitted_objective(fit) else NULL
   if (!is.numeric(interval) || length(interval) != 1L || !is.finite(interval) ||
     interval <= 0 || interval >= 1) {
     cli::cli_abort("{.arg interval} must be one number strictly between zero and one.")
@@ -154,7 +157,7 @@ tidy_obs_pred <- function(fit, add_osa_res = FALSE, interval = .95, ...) {
     }
     osa_res <- do.call(
       RTMB::oneStepPredict,
-      c(list(obj = fit$obj, method = "oneStepGaussianOffMode"), args)
+      c(list(obj = osa_obj, method = "oneStepGaussianOffMode"), args)
     )
     split_osa_res <- split(osa_res$residual, fit$dat$obs_map$type[fit$dat$obs_map$is_observed])
     split_is_observed <- split(fit$dat$obs_map$is_observed, fit$dat$obs_map$type)
@@ -365,9 +368,15 @@ tidy_sdrep <- function(fit, interval = 0.95) {
     df$F_bar[zero, c("est", "lwr", "upr", "se")] <- 0
     df$F_bar$se_scale[zero] <- "reported"
   }
+  if (!is.null(fit$dat$proj_settings$catch) && !is.null(df$F)) {
+    zero <- df$F$year %in% as.numeric(names(fit$dat$proj_settings$catch)[fit$dat$proj_settings$catch == 0])
+    df$F[zero, c("est", "lwr", "upr", "se")] <- 0
+    df$F$se_scale[zero] <- "reported"
+  }
   for (nm in names(df)) df[[nm]]$unit <- .population_unit(fit$dat, nm)
   df
 }
+
 
 #' Collect population trends and age-specific estimates
 #'
@@ -802,6 +811,44 @@ stack_nested <- function(x, label = "model",
 }
 
 
+# Use the chronological population constructor rather than duplicating survival
+# equations. No fitted objective or parameter mode is changed.
+.tidy_process_deviations <- function(fit) {
+  if (is.null(fit$rep$Z) || (is.null(fit$parameter_values) && is.null(fit$sdrep))) return(list())
+  dat <- fit$dat; par <- .start_parameters(fit, dat)
+  out <- list()
+  table <- function(x, process, block = FALSE) {
+    if (process %in% c("rw", "cor_rw")) {
+      if (nrow(x) < 2L) return(NULL)
+      x <- x[-1L, , drop = FALSE] - x[-nrow(x), , drop = FALSE]
+    }
+    names(dimnames(x)) <- c("year", if (block) "age_block" else "age")
+    d <- tidy_array(x, value_name = "est")
+    if (block) d$age_block <- as.character(d$age_block)
+    d$is_proj <- d$year %in% dat$years[dat$is_proj]
+    d <- d[!d$is_proj, , drop = FALSE]
+    d$kind <- if (process %in% c("rw", "cor_rw")) "Annual log increment" else "Log deviation from mean"
+    d
+  }
+  if (!is.null(par[["log_f"]])) {
+    historical <- !dat$is_proj
+    out$F <- table(log(fit$rep$F[historical, , drop = FALSE]) -
+                     log(fit$rep$mu_F[historical, , drop = FALSE]), dat$F_settings$process)
+  }
+  if (!is.null(par[["log_m"]])) {
+    out$M <- table(par[["log_m"]] - log(fit$rep$mu_M[rownames(par[["log_m"]]),
+                                                     dat$M_settings$age_block_start, drop = FALSE]), dat$M_settings$process, TRUE)
+  }
+  if (!is.null(par[["log_n"]])) {
+    population <- .population_states(par, dat, fit$rep$Z, F = fit$rep$F, M = fit$rep$M)
+    out$N <- table(log(fit$rep$N[-1L, -1L, drop = FALSE]) -
+                     population$pred_log_N[-1L, -1L, drop = FALSE], dat$N_settings$process)
+    if (!is.null(out$N) && dat$N_settings$process != "rw") out$N$kind <- "Log deviation from cohort prediction"
+  }
+  Filter(function(x) is.data.frame(x) && nrow(x), out)
+}
+
+
 #' Stack TAM outputs across models (retro folds, scenarios, etc.)
 #'
 #' @description
@@ -839,6 +886,10 @@ stack_nested <- function(x, label = "model",
 #' @param model_list A **named list** of fitted TAM objects. Required to be named; the names are used as label values.
 #' @param interval Confidence level passed to [tidy_pop()] and [tidy_par()] for interval construction. Default `0.95`.
 #' @param label Character scalar giving the label column name to add when stacking across multiple/named models. Default `"model"`.
+#' @param process_residuals Calculate joint-sample process diagnostics? Use
+#'   `FALSE` for lightweight consumers that need only existing fitted summaries.
+#' @param process_seed Non-negative integer seed for a reproducible local
+#'   Gaussian joint sample. Default `123456L`; the caller's RNG state is restored.
 #' @inheritParams stack_nested
 #'
 #' @return
@@ -846,6 +897,17 @@ stack_nested <- function(x, label = "model",
 #'
 #' - **obs_pred** — a named list of stacked data frames (e.g., `catch`, `index`);
 #' - **pop** — a named list of stacked data frames (e.g., `ssb`, `N`, `M`, `mu_M`, `F`, `mu_F`, `Z`, …);
+#' - **deviations** — signed N/F/M process tables, using annual increments for
+#'   RW processes and mean deviations for IID/AR1. M rows represent unique state
+#'   blocks. These point estimates exclude unpenalized RW boundary rows.
+#' - **process_residuals** — standardized joint-sample `recruitment`, `N`, `F`
+#'   and `M` tables when available. `est` contains the diagnostic draw and
+#'   `fitted` the standardized innovation at the fitted mode. A `status` table
+#'   records each model's calculation status, explanation, seed and method.
+#'   Disabled processes, projections and unpenalized boundaries have no rows.
+#'   M coordinates represent unique state blocks, with `state_block` giving
+#'   their order. Missing or invalid joint precision produces a warning and
+#'   an unavailable status, retaining fitted deviations without fabricating draws.
 #' - **patterns** — population and mortality age-year tables for [plot_matrix()].
 #'   Compatible units follow the first fitted model's displayed metric units,
 #'   including explicit reference conversions. Unspecified fitted units remain unspecified;
@@ -881,8 +943,24 @@ stack_nested <- function(x, label = "model",
 #'
 #' @importFrom utils type.convert
 #' @seealso [tidy_obs_pred()], [tidy_pop()], [tidy_par()], [fit_tam()], [fit_retro()]
+#' @section Process diagnostics:
+#' Innovations are whitened using the fitted IID, RW, age-correlated RW or
+#' separable AR1 distribution, including stationary boundaries and age-specific
+#' SDs. All predictions are recomputed through the fitted population code.
+#' One Gaussian parameter perturbation from the stored joint precision is
+#' propagated through the automatic-differentiation Jacobian of those
+#' innovations. This SAM-style local Gaussian approximation retains covariance
+#' across components without constructing a dense residual covariance matrix.
+#' Results for a model do not depend on which other models are supplied or their
+#' order. See [plot_process_deviations()] and [plot_process_residuals()] for
+#' reusable viewers of the same tables.
 #' @export
-tidy_tam <- function(..., model_list = NULL, interval = 0.95, label = "model", label_type = "auto") {
+tidy_tam <- function(..., model_list = NULL, interval = 0.95, label = "model", label_type = "auto",
+                     process_residuals = TRUE, process_seed = 123456L) {
+  process_seed <- .validate_process_seed(process_seed)
+  if (!is.logical(process_residuals) || length(process_residuals) != 1L || is.na(process_residuals)) {
+    cli::cli_abort("{.arg process_residuals} must be TRUE or FALSE.")
+  }
   dots <- list(...)
   dot_expr <- as.list(substitute(list(...)))[-1]
   fits_info <- .dots_or_list(dots, dot_expr, model_list = model_list, list_arg_name = "model_list")
@@ -1045,6 +1123,12 @@ tidy_tam <- function(..., model_list = NULL, interval = 0.95, label = "model", l
     Filter(function(x) is.data.frame(x) && nrow(x) > 0L, tidy_recruitment(fit, interval))
   })
   out$recruitment <- stack_nested(recruitment, label = id_col, label_type = label_type)
+  deviations <- lapply(model_list, function(fit) {
+    if (inherits(fit, "tam_ref")) list() else .tidy_process_deviations(fit)
+  })
+  out$deviations <- stack_nested(deviations, label = id_col, label_type = label_type)
+  residuals <- lapply(model_list, .tidy_process_residuals, seed = process_seed, enabled = process_residuals)
+  out$process_residuals <- stack_nested(residuals, label = id_col, label_type = label_type)
   effects <- lapply(model_list, function(fit) {
     if (inherits(fit, "tam_ref")) {
       return(list())
@@ -1129,6 +1213,8 @@ tidy_tam <- function(..., model_list = NULL, interval = 0.95, label = "model", l
 #' Residuals are signed log-scale deviations with SEs on their reported scale.
 #' RW residuals are increments; AR1 residuals are deviations from the baseline,
 #' while innovations remove the preceding residual's predicted contribution.
+#' Deterministic recruitment has no residual/innovation tables; stock-recruit
+#' pairs retain missing residual values and available derived uncertainty.
 #' The curve is evaluated at median historical numeric covariates and reference
 #' factor levels. `reference` identifies those values. Curve intervals use the
 #' exact curve derivatives and RTMB's fixed-parameter covariance (the delta
@@ -1170,9 +1256,12 @@ tidy_recruitment <- function(fit, interval = .95) {
   }
   out <- list(
     mean = table("rec_log_mean", TRUE),
-    prediction = table("rec_log_prediction", TRUE),
-    residual = table("rec_residual"), innovation = table("rec_innovation")
+    prediction = table("rec_log_prediction", TRUE)
   )
+  if (rec$type != "off") {
+    out$residual <- table("rec_residual")
+    out$innovation <- table("rec_innovation")
+  }
   out$mean$unit <- out$prediction$unit <- .population_unit(fit$dat, "N")
   if (!is.null(rec$curve)) {
     parent <- table("rec_log_parent", TRUE)
@@ -1184,7 +1273,7 @@ tidy_recruitment <- function(fit, interval = .95) {
       ssb = parent$est, ssb_lwr = parent$lwr, ssb_upr = parent$upr,
       recruitment = R$est, recruitment_lwr = R$lwr, recruitment_upr = R$upr,
       mean = out$mean$est, prediction = out$prediction$est,
-      residual = out$residual$est, is_proj = parent$is_proj
+      residual = if (rec$type == "off") NA_real_ else out$residual$est, is_proj = parent$is_proj
     )
     curve <- .rec_curve_table(fit, interval)
     out$curve <- curve$curve

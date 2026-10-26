@@ -39,6 +39,7 @@ Include \code{type} when combining catch and index tables, and \code{survey} whe
 combining surveys. Conflicting observations for the same key cause an error.
 Repeated copies of the same observation across folds count only once per
 prediction. Each matched forecast receives equal weight.
+Matched rows from \code{result$forecast_pairs$index} are also accepted directly.
 
 On the natural scale,
 \deqn{\mathrm{RMSE}=\sqrt{\frac{1}{K}\sum_i(Y_i-\widetilde Y_i)^2}.}

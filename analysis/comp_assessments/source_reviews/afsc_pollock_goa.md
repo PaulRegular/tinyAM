@@ -80,42 +80,95 @@ Final Table 1.23 adds 48 official-run beginning-year age-3+ biomass estimates fo
 
 ## Current tinyAM translation
 
-The translation fits 1970-2024 at ages 1-10+, with exponential initial
-abundance, deterministic older-age survival, estimated random-walk recruitment,
-independent temporal random walks in F by age, and the supplied fixed M vector.
-Catch numbers use a common log-SD. Survey catchability uses paired-age blocks
-(1-2, 3-4, 5-6, 7-8, 9-10) and a logit link, with the observed Shelikof
-environmental covariate and ADF&G annual effects. Survey SD combines supplied
-aggregate-index log-SDs with one estimated level per survey.
+The current candidate fits 1970–2024 at ages 1–10+, matching the official
+stock extent and retaining the fixed age-specific M vector. It uses
+deterministic survival of older cohorts (`N_settings$process = "off"`) with
+exponential initial abundance. Recruitment is IID around an estimated constant
+log mean, with its SD fixed at 1.3. This matches the official annual
+recruitment-deviation variance and lack of temporal correlation more closely
+than the previous tinyAM recruitment RW. The first recruitment state in
+tinyAM remains an unpenalized fixed anchor, and exact official initial-age
+construction is not reproduced.
 
-Final SAFE Table 1.6 supplies catch numbers separately for ages 1-15 in
-1975-2023; ages 10-15 are summed to the model plus group. The table is rounded
-to 0.01 million fish, and printed zeros are treated as missing by tinyAM's
-lognormal likelihood. The source likelihood instead pools ages 1-2 and 10+
-and applies age-reading error. Survey numbers are reconstructed from source
-biomass, number compositions and matching survey weights; aggregate-only years
-and the pooled Shelikof ages 1-3 bin are omitted.
+Fishing mortality now uses `F_settings$process = "ar1"` with a rising logistic
+mean-at-age (`mu_form = ~ logistic(age)`) and reporting ages 3–10. This
+regularizes an age/year log-F surface around a static smooth mean rather than
+using independent random walks at each age. It is an approximation to the
+official model's annual F intensity multiplied by double-logistic selectivity,
+whose ascending-limb parameters evolve under penalties; tinyAM does not
+reproduce that parameter evolution or a descending fishery-selectivity limb.
 
-The pinned C++ source uses population N and catch C in billions of fish, with
-weights in kg per fish. Its catch biomass equation, `1e6 * sum(C * wt_fsh)`,
-reports tonnes; its survey biomass equation reports million tonnes. Survey
-totals therefore become kg with a factor of 1e9 before reconstruction as
-`biomass_kg * p_age / sum(p_age * weight_kg)`. Published catch numbers become
-fish with a factor of 1e6. Official N/recruitment and SSB/biomass retain their
-native million-fish and thousand-tonne units. Mass-balance tests cover all
-four surveys, with an independent rounded Table 1.11 check for Shelikof.
+The four survey age patterns are represented parsimoniously by *two* shared
+logistic effects and four survey-specific intercepts. A reversed age coordinate
+(`sel_age = 11 - age`) gives descending age responses for the Shelikof winter
+and summer acoustic surveys; unmodified age gives rising responses for the
+NMFS bottom trawl and ADF&G crab/groundfish trawl surveys. The formula
+`~ 0 + survey + logistic(sel_age, by = survey_type)` therefore fits one
+logistic shape for the acoustic surveys and another for the trawl surveys,
+not a separate age curve for every survey. Both enter the **logit-q**
+linear predictor; they are not literal multiplicative selectivity curves on
+the original q scale. The source uses distinct age-selectivity curves: a
+descending logistic for Shelikof, double logistics for NMFS bottom trawl and
+summer acoustic, and a rising logistic for ADF&G. This shared two-curve
+approximation intentionally does not reproduce all those distinctions.
 
-Official SSB is `sum(N * exp(-0.21 * Z) * wt_spawn * 0.5 * mat)`;
-tinyAM SSB is `sum(N * wt_pop * 0.5 * mat)` at the start of the year.
-The source preparation sets `wt_spawn = wt_srv1` and `wt_pop = wt_srv2`.
-Numerical common-definition summaries use official N with the same translated
-stock weights and maturity as tinyAM; the dashboard retains native SSB.
-Yield reporting uses source catch totals and predictions multiplied by catch
-weights. Predictions are conditional medians, without a lognormal mean correction.
+Annual catchability now includes `rw(year, by = adfg_indicator)`, applied
+*only* to the ADF&G survey. This improves on the former independent annual
+ADF&G fixed effects by penalizing changes between years. The official model
+instead penalizes log-q changes using source-supplied, year-specific increment
+SDs; tinyAM's formula uses one estimated increment SD and operates on
+logit-q rather than log-q. Shelikof uses the observed environmental covariate
+as a logit-q predictor; the source fits a latent environmental AR1 process
+with observation error, which is not reconstructed here. Bottom-trawl and
+summer acoustic catchability have no annual random walk in the candidate,
+consistent with the absence of active q deviations in the official fit.
+The bottom-trawl prior is also omitted and all tinyAM catchabilities remain
+bounded by the logit link, unlike the official positive log-q formulation.
 
-The logit restriction does not reproduce the source bottom-trawl q prior.
-Bottom-trawl q at ages 5-8 approaches one and is weakly estimated. Source
-selectivity, recruitment SD/initialization, latent environmental dynamics,
-q penalties, age-reading error and composition likelihoods remain differences;
-official F-at-age remains unavailable. Model-development history is retained
-in Git rather than the stock background or local review artifacts.
+The candidate fits the published fishery catch numbers at ages 1–15
+(1975–2023), summing ages 10–15 into the modeled age-10 plus group. Because
+the published table is rounded to 0.01 million fish, printed zeros are treated
+as missing by tinyAM's lognormal catch-at-age observation likelihood. This
+uses one estimated catch log-SD rather than the source's separate total catch
+biomass and Dirichlet-multinomial composition likelihoods, including source
+age-bin accumulation and age-reading error. Survey numbers-at-age are
+reconstructed from native biomass, proportions-at-age and appropriate survey
+weights and timing; aggregate-only survey years and the reconstructed Shelikof
+pooled age-1–3 observation (represented as an age-3 row) are omitted. Survey
+observation SDs use supplied relative log-SDs multiplied by an estimated
+survey-specific factor. The source instead uses distinct biomass/composition
+likelihoods and composition weights.
+
+The pinned official C++ implementation expresses population N and catch C
+in billions of fish, with weights in kg per fish. Its total catch expression
+`1e6 * sum(C * wt_fsh)` gives tonnes; survey biomass is expressed in million
+tonnes. For survey reconstruction, source biomass is converted to kg and
+allocated across ages by the native composition and survey weights. The
+published catch numbers are converted from millions to fish, and official
+N/recruitment and SSB/biomass outputs retain their native million-fish and
+thousand-tonne reporting scales. The existing staged native data and unit
+checks are unchanged by this translation update.
+
+Female maturity is multiplied by 0.5 in tinyAM. **SSB definitions still
+differ:** the official calculation is
+`sum(N * exp(-0.21 * Z) * wt_spawn * 0.5 * mat)` using spawning weights,
+whereas the candidate's tinyAM SSB is
+`sum(N * wt_pop * 0.5 * mat)` at the beginning of the year because no
+`spawn_time` was supplied. The native preparation sets
+`wt_spawn = wt_srv1` and `wt_pop = wt_srv2`. Numerical common-definition
+summaries continue to use translated stock weights and maturity, while the
+dashboard retains the official native SSB. Yield reporting continues to use
+source total catches and predictions multiplied by source catch weights;
+these are conditional median predictions without a lognormal mean correction.
+
+The candidate is intended as a structurally informed approximation rather
+than an exact operational replication. In particular, the logistic age curves
+are grouped by survey type, the fitted q effects use a logit rather than log
+link, and the source's selectivity priors, environmental measurement process,
+ADF&G increment-specific penalties, age-reading error and composition
+likelihoods are not fitted directly. Official F-at-age is unavailable for
+direct comparison. The older custom paired-age q blocks and unpenalized
+ADF&G annual-factor construction are no longer used. No new numerical
+agreement measures, convergence codes or objective values are recorded here:
+those require the revised candidate fit and comparison outputs. Previous
+fitting results should not be attributed to this candidate.

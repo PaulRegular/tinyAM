@@ -1,3 +1,22 @@
+test_that("the cod example retains core observations and mortality covariates", {
+  expect_s3_class(cod_obs, "tam_data")
+  expect_invisible(check_tam_data(cod_obs))
+  expect_named(cod_obs, c("catch", "index", "weight", "maturity", "pop_covariates"))
+  expect_named(cod_obs$index, c("year", "age", "obs", "survey", "samp_time", "q_block", "unit"), ignore.order = TRUE)
+  expect_named(cod_obs$pop_covariates,
+    c("year", "age", "F_y_block", "F_a_block", "M_a_block", "allometric_M_assumption"),
+    ignore.order = TRUE)
+  expect_identical(unique(cod_obs$catch$unit), "thousand fish")
+  expect_identical(unique(cod_obs$index$unit), "thousand fish")
+  expect_identical(unique(cod_obs$weight$unit), "kg")
+  covariates <- cod_obs$pop_covariates
+  key <- function(x) paste(x$year, x$age)
+  weight <- cod_obs$weight$obs[match(key(covariates), key(cod_obs$weight))]
+  multiplier <- covariates$allometric_M_assumption / weight^(-0.305)
+  expect_true(all(is.finite(multiplier) & multiplier > 0))
+  expect_equal(multiplier, rep(multiplier[1], length(multiplier)), tolerance = 1e-10)
+})
+
 population_fixture <- function() {
   data <- cod_obs
   data$pop_covariates <- data$weight[c("year", "age")]
@@ -117,7 +136,7 @@ test_that("updates retain population covariates", {
   expect_identical(changed$refit_args$data, default_fit$refit_args$data)
   expect_identical(default_fit, before)
   expect_true(all(changed$dat$pop_data$year %in% 1983:2020))
-  expect_true("NCAM_M_assumption" %in% names(changed$dat$pop_data))
+  expect_true(all(names(default_fit$dat$pop_data) %in% names(changed$dat$pop_data)))
   projected <- update(changed, proj_settings = list(n_proj = 1), silent = TRUE)
   expect_equal(unique(subset(projected$dat$pop_data, is_proj)$year), 2021)
   expect_identical(levels(projected$dat$pop_data$F_a_block), levels(changed$dat$pop_data$F_a_block))

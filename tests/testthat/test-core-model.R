@@ -160,16 +160,16 @@ test_that("retros and every hindcast fold use observed terminal years", {
   original_par <- fit$obj$env$last.par.best
   terminal <- max(fit$dat$years[!fit$dat$is_proj])
   retro <- fit_retro(fit, folds = 1, progress = FALSE, start_from_fit = TRUE)
-  expect_equal(as.integer(names(retro$fits)), (terminal - 1):terminal)
+  expect_equal(as.integer(names(retro$fits[[1]])), (terminal - 1):terminal)
   expect_equal(
-    vapply(retro$fits, tinyAM:::.terminal_year, numeric(1)),
-    setNames(as.numeric((terminal - 1):terminal), names(retro$fits))
+    vapply(retro$fits[[1]], tinyAM:::.terminal_year, numeric(1)),
+    setNames(as.numeric((terminal - 1):terminal), names(retro$fits[[1]]))
   )
-  hindcast <- fit_hindcast(fit, folds = 1, F_mult = 1,
+  hindcast <- fit_hindcast(fit, folds = 1, proj_settings = list(F_mult = 1),
     progress = FALSE, start_from_fit = TRUE)
-  expect_equal(names(hindcast$fits), names(retro$fits))
-  for (nm in names(hindcast$fits)) {
-    fold <- hindcast$fits[[nm]]
+  expect_equal(names(hindcast$fits[[1]]), names(retro$fits[[1]]))
+  for (nm in names(hindcast$fits[[1]])) {
+    fold <- hindcast$fits[[1]][[nm]]
     if (as.numeric(nm) == terminal) {
       expect_false(any(fold$dat$is_proj))
       expect_equal(fold$dat$proj_settings$n_proj, 0)

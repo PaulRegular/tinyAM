@@ -1,3 +1,4 @@
+
 library(tinyAM) # for cut_years and cut_ages functions
 
 ## Re-work small sub-set of inputs for the Northern Cod Assessment Model into TAM structure
@@ -7,11 +8,6 @@ catch <- as.data.frame.table(inputs$catch.num, responseName = "obs", stringsAsFa
 catch$age <- as.numeric(catch$age)
 catch$year <- as.numeric(catch$year)
 catch$unit <- "thousand fish"
-
-# Label pre-moratorium, limited fishing gear + rec, closed, stewardship + rec / post-moratorium blocks
-pop_covariates <- catch[c("year", "age")]
-pop_covariates$F_y_block <- cut_years(catch$year, c(min(catch$year), 1992, 1998, 2002, 2006, 2023, max(catch$year)))
-pop_covariates$F_a_block <- cut_ages(catch$age, seq(min(catch$age), max(catch$age), 1))
 
 index <- inputs$index |>
   subset(select = c("year", "age", "index"))
@@ -32,11 +28,13 @@ maturity <- inputs$mats[
 ]
 names(maturity)[names(maturity) == "mat"] <- "obs"
 
-nm <- as.data.frame.table(inputs$nm, stringsAsFactors = FALSE)
-names(nm) <- c("age", "year", "NCAM_M_assumption")
-nm$age <- as.numeric(nm$age)
-nm$year <- as.numeric(nm$year)
-pop_covariates <- merge(pop_covariates, nm, by = c("year", "age"))
+
+# Label pre-moratorium, limited fishing gear + rec, closed, stewardship + rec / post-moratorium blocks
+pop_covariates <- catch[c("year", "age")]
+pop_covariates$F_y_block <- cut_years(catch$year, c(min(catch$year), 1992, 1998, 2002, 2006, 2023, max(catch$year)))
+pop_covariates$F_a_block <- cut_ages(catch$age, seq(min(catch$age), max(catch$age), 2))
+pop_covariates$M_a_block <- cut_ages(pop_covariates$age, c(0, 2, 5, 8, 20))
+
 
 ## Allometric M: sensu Cadigan, Rideout & Regular (2022), NAFO SCR 22/039
 ## Ocean-fish weight exponent from Lorenzen (1996).
@@ -55,7 +53,7 @@ pop_covariates$allometric_M_assumption <-
   (M0 * weight$obs^allometric_b)[match(
     paste(pop_covariates$year, pop_covariates$age), paste(weight$year, weight$age)
   )]
-plot(pop_covariates$age, pop_covariates$allometric_M_assumption, log = "y", xlab = "age", ylab = "Allometric M")
+# plot(pop_covariates$age, pop_covariates$allometric_M_assumption, log = "y", xlab = "age", ylab = "Allometric M")
 
 ## Impose consistent year range
 pop_covariates <- pop_covariates[pop_covariates$year >= min(catch$year) &

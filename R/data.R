@@ -1,3 +1,122 @@
+#' Northern cod assessment example data
+#'
+#' @description
+#' Age-structured fishery, survey, biological, and covariate data for Northern
+#' cod (*Gadus morhua*) in Northwest Atlantic Fisheries Organization (NAFO)
+#' Divisions 2J3KL. The data are adapted from Northern cod assessment inputs
+#' and arranged for use with [fit_tam()]. They provide a reproducible example
+#' for fitting and comparing alternative observation and population-process
+#' models; they are not a reproduction of the full official assessment.
+#'
+#' @format
+#' A `tam_data` object containing five data frames:
+#'
+#' - **`catch`**: Commercial catch numbers at age (`year`, `age`, `obs`), in
+#'   thousands of fish; observations can be missing.
+#' - **`index`**: DFO autumn research-vessel (RV) abundance index at age
+#'   (`year`, `age`, `obs`), with `survey`, survey timing `samp_time = 0.8`,
+#'   and catchability age group `q_block`. Survey observations have been expanded using
+#'   12,048,556 trawl units and expressed in thousands of fish.
+#' - **`weight`**: Annual stock weight at age (`obs`, kg).
+#' - **`maturity`**: Annual proportion mature at age (`obs`, from 0 to 1).
+#' - **`pop_covariates`**: A complete year-age table with `F_y_block` and
+#'   `F_a_block` (candidate fishing-mortality mean groups), `M_a_block`
+#'   (candidate natural-mortality age groups), `allometric_M_assumption`
+#'   (a weight-based baseline M, per year).
+#'
+#' Catch and RV indices have `unit = "thousand fish"`; individual weights have
+#' `unit = "kg"`. Multiplying thousands of fish by kg per fish yields tonnes.
+#' The additional columns are candidate explanatory variables, not fitted
+#' effects unless referenced in the corresponding model formulas.
+#'
+#' @details
+#' **Assessment provenance.** The data originate from inputs to the Northern
+#' cod assessment model (NCAM), used in the extended framework (xteNCAM).
+#' The stock's 2026 assessment, based on observations available through 2025,
+#' is documented by Regular et al. (in press) and summarized in DFO (2026).
+#' The framework methods and additional data sources are documented by
+#' DFO (2024) and Regular et al. (2025a, 2025b). Only a subset of the assessment
+#' inputs is included here: for example, tagging observations, juvenile and
+#' Sentinel surveys, and the full Smith Sound likelihood are not supplied as
+#' separate observations. Differences between results from tinyAM and the
+#' official assessment should therefore not be interpreted as discrepancies in
+#' the published stock assessment.
+#'
+#' **Natural mortality assumptions.** `allometric_M_assumption` uses
+#' `M = M0 * weight^(-0.305)`, following the weight-scaling approach of
+#' Lorenzen (1996). The multiplier `M0` is calibrated so that the arithmetic
+#' mean of this schedule over source weight records for ages 5-14 is 0.30 per
+#' year, before restricting the example to the catch years. The mean over the
+#' packaged subset can therefore differ from 0.30.
+#' This is a constructed example baseline, not an independently estimated
+#' natural-mortality series.
+#'
+#' **Mortality blocks.** `M_a_block` defines broad age groups that can be used
+#' to allow natural mortality responses to differ among younger and older fish.
+#' The fishing-mortality variables `F_y_block` and `F_a_block` provide analogous
+#' options for modelling fishing mortality. `F_y_block` divides the time series
+#' into periods broadly reflecting changes in the Northern cod fishery, including
+#' the 1992 moratorium, subsequent limited fishing and closures, the
+#' establishment of the stewardship fishery in 2006, and the return to
+#' commercial fishing in 2024. `F_a_block` distinguishes individual ages,
+#' allowing age-specific fishing mortality or selectivity to be modelled.
+#' These groupings are illustrative model-design variables, not observations
+#' or assumptions imposed by the accepted assessment. They have no effect
+#' unless explicitly included in the corresponding model settings, and
+#' alternative groupings may be defined to explore competing hypotheses.
+#'
+#' @source
+#' Derived from `NCAM::inputs`, with covariate preparation in
+#' `data-raw/cod_obs.R`. See the cited assessment and framework publications
+#' for the underlying surveys, fishery data, model structure, and provenance.
+#'
+#' @references
+#' DFO. 2024. Northern (2J3KL) Atlantic Cod Assessment Framework.
+#' DFO Can. Sci. Advis. Sec. Sci. Advis. Rep. 2024/046.
+#' \url{https://publications.gc.ca/collections/collection_2025/mpo-dfo/fs70-6/Fs70-6-2024-046-eng.pdf}
+#'
+#' DFO. 2026. NAFO Divisions 2J3KL Northern Cod
+#' (*Gadus morhua*) Stock Assessment to 2026.
+#' DFO Can. Sci. Advis. Sec. Sci. Advis. Rep. 2026/030.
+#' \url{https://csas-scas.dfo-mpo.gc.ca/publications-publications/f7f156a8-b0ef-4840-b2e0-4573fb325faa}
+#'
+#' Regular, P.M., Robertson, G.J., Kumar, R., Varkey, D.A., Gregory, R.S.,
+#' Lewis, R.S., Skanes, K., Gullage, N., Koen-Alonso, M., and Dwyer, K.S.
+#' 2025a. Extending the Northern Cod Assessment Model - Part I: Bridging
+#' Gaps with Additional Data and Model Variations. DFO Can. Sci. Advis.
+#' Sec. Res. Doc. 2025/034.
+#' \url{https://publications.gc.ca/collections/collection_2025/mpo-dfo/fs70-5/Fs70-5-2025-034-eng.pdf}
+#'
+#' Regular, P.M., Kumar, R., Varkey, D.A., Koen-Alonso, M., and Stenson,
+#' G.B. 2025b. Extending the Northern Cod Assessment Model - Part II:
+#' Quantifying the Impact of Capelin and Seals. DFO Can. Sci. Advis.
+#' Sec. Res. Doc. 2025/035.
+#' \url{https://publications.gc.ca/collections/collection_2025/mpo-dfo/fs70-5/Fs70-5-2025-035-eng.pdf}
+#'
+#' Regular, P.M., Skanes, K., Novaczek, E., Robertson, G.J., Rideout, R.M.,
+#' Trueman, S., Kumar, R., Gregory, R.S., Koen-Alonso, M., and Munro, H.
+#' In press. Assessment of the Northern Cod (*Gadus morhua*) Stock in NAFO
+#' Divisions 2J3KL in 2026. DFO Can. Sci. Advis. Sec. Res. Doc.
+#'
+#' Lorenzen, K. 1996. The relationship between body weight and natural
+#' mortality in juvenile and adult fish: a comparison of natural
+#' ecosystems and aquaculture. J. Fish Biol. 49: 627-642.
+#' \doi{10.1111/j.1095-8649.1996.tb00060.x}
+#'
+#' @examples
+#' data(cod_obs)
+#' names(cod_obs)
+#' print(cod_obs)
+#'
+#' @seealso [as_tam_data()], [fit_tam()], [fit_hindcast()]
+#' @docType data
+#' @keywords datasets
+#' @name cod_obs
+#' @usage data(cod_obs)
+"cod_obs"
+
+
+
 #' Organize tinyAM input data
 #'
 #' @description
@@ -129,3 +248,207 @@ print.tam_data <- function(x, n = 5, ...) {
   }
   d
 }
+
+#' Check tinyAM input data
+#'
+#' @description
+#' Validates the minimal structure required by [prepare_tam()] and [fit_tam()].
+#' The `obs` object must be a list containing data.frames `catch`, `index`,
+#' `weight`, and `maturity`. Each table must include columns `year`, `age`,
+#' and `obs`. Types must be numeric (integerish allowed) for `year` and `age`,
+#' and numeric for `obs`.
+#'
+#' Additional requirements:
+#' - `index$samp_time` is **required**, numeric in **\[0, 1\]**, and **no NA**.
+#' - `weight$obs` and `maturity$obs` must not contain `NA`.
+#' - Optional `maturity$spawn_time` must contain finite numeric fractions in
+#'   `[0, 1]` for every year and age. Absence means zero; see [prepare_tam()].
+#' - Non-missing observations must be finite and non-negative; maturity must
+#'   be a proportion in `[0, 1]`. Zero catch/index values are accepted here but
+#'   treated as missing by [prepare_tam()], because the observation model is on logs.
+#' - `catch`, `weight`, and `maturity` must contain exactly one row for **every**
+#'   `(year, age)` combination over the global modeled range
+#'   (from min to max year and age across all tables).
+#' - Survey tables may omit year-age combinations.
+#' - Optional character `unit` columns must be consistent throughout catch and
+#'   weight, and within each survey. Missing columns are valid; a supplied column
+#'   requires nonempty labels on every row. Units never change input values.
+#'   See [as_tam_data()] for units of derived quantities.
+#'
+#' On failure the function aborts with a `cli` error. On success, it returns
+#' `TRUE` (invisibly).
+#'
+#' @param data A named list expected to contain data.frames `catch`, `index`,
+#'   `weight`, and `maturity` with the columns described above.
+#'
+#' @return `TRUE` (invisibly) if validation passes; otherwise aborts.
+#' @examples
+#' data(cod_obs)
+#' check_obs(cod_obs) # returns TRUE (invisibly) if valid
+#'
+#' @importFrom cli cli_abort cli_warn
+#' @export
+check_tam_data <- function(data) {
+  obs <- data
+  if (!is.list(obs)) {
+    cli::cli_abort(c(
+      "{.strong Invalid input}",
+      "x" = "`obs` must be a list."
+    ))
+  }
+
+  if (is.null(names(obs)) || anyNA(names(obs)) || any(!nzchar(names(obs))) || anyDuplicated(names(obs))) {
+    cli::cli_abort("data must have unique, nonempty table names.")
+  }
+
+  required_tabs <- c("catch", "index", "weight", "maturity")
+  missing_tabs <- setdiff(required_tabs, names(obs))
+  if (length(missing_tabs)) {
+    cli::cli_abort(c(
+      "{.strong Invalid obs list}",
+      "x" = "Missing required tables: {paste(missing_tabs, collapse = \", \")}",
+      "i" = "Expected names: {paste(required_tabs, collapse = \", \")}"
+    ))
+  }
+
+  # helper: integerish (allow numeric with no fractional part)
+  .is_integerish <- function(x) is.numeric(x) && all(is.finite(x)) && all(x == as.integer(x))
+
+  # per-table checks
+  check_one <- function(x, nm) {
+    if (!is.data.frame(x)) {
+      cli::cli_abort(c(
+        "{.strong Invalid obs {nm}}",
+        "x" = "`{nm}` must be a data.frame (got {class(x)[1]})."
+      ))
+    }
+
+    need <- c("year", "age", "obs")
+    miss <- setdiff(need, names(x))
+    if (length(miss)) {
+      cli::cli_abort(c(
+        "{.strong Invalid obs {nm}}",
+        "x" = "`{nm}` is missing required column(s): {paste(miss, collapse = \", \")}"
+      ))
+    }
+
+    # type and NA checks
+    if (!.is_integerish(x$year)) {
+      cli::cli_abort(c("{.strong Invalid obs {nm}}",
+                       "x" = "`{nm}$year` must be numeric/integer with no NA and no fractional values."
+      ))
+    }
+    if (!.is_integerish(x$age)) {
+      cli::cli_abort(c("{.strong Invalid obs {nm}}",
+                       "x" = "`{nm}$age` must be numeric/integer with no NA and no fractional values."
+      ))
+    }
+    if (!is.numeric(x$obs)) {
+      cli::cli_abort(c("{.strong Invalid obs {nm}}",
+                       "x" = "`{nm}$obs` must be numeric (NA allowed in `catch`/`index`, not in `weight`/`maturity`)."
+      ))
+    }
+
+    # table-specific NA policy for obs
+    if (nm %in% c("weight", "maturity") && any(is.na(x$obs))) {
+      cli::cli_abort(c(
+        "{.strong Missing values in {nm}$obs}",
+        "x" = "`{nm}$obs` must be available for all years and ages (no NA)."
+      ))
+    }
+    if (any(!is.finite(x$obs[!is.na(x$obs)])) || any(x$obs < 0, na.rm = TRUE)) {
+      cli::cli_abort("{nm}$obs must contain finite, non-negative values (NA allowed for catch and index).")
+    }
+    if (nm == "maturity" && any(x$obs > 1)) {
+      cli::cli_abort("maturity$obs must contain proportions between 0 and 1.")
+    }
+
+    if (nm == "maturity" && "spawn_time" %in% names(x)) {
+      time <- x$spawn_time
+      if (!is.numeric(time) || any(!is.finite(time)) || any(time < 0 | time > 1)) {
+        cli::cli_abort("maturity$spawn_time must contain finite fractions between 0 and 1 for every year and age.")
+      }
+    }
+
+    # index survey and samp_time: required, numeric in [0,1], no NA
+    if (nm == "index") {
+      if (!("survey" %in% names(x))) {
+        cli::cli_abort(c(
+          "{.strong Missing `index$survey`}",
+          "x" = "Please supply survey name(s)."
+        ))
+      }
+      if (!("samp_time" %in% names(x))) {
+        cli::cli_abort(c(
+          "{.strong Missing `index$samp_time`}",
+          "x" = "Please supply survey timing as a fractional year in [0, 1] (no NA)."
+        ))
+      }
+      ok_num <- is.numeric(x$samp_time)
+      ok_rng <- all(x$samp_time >= 0 & x$samp_time <= 1, na.rm = TRUE)
+      ok_na <- !any(is.na(x$samp_time))
+      if (!(ok_num && ok_rng && ok_na)) {
+        cli::cli_abort(c(
+          "{.strong Invalid `index$samp_time`}",
+          "x" = "`index$samp_time` must be numeric in [0, 1] with no NA."
+        ))
+      }
+    }
+
+    invisible(TRUE)
+  }
+
+  for (nm in required_tabs) check_one(obs[[nm]], nm)
+
+  # Covariates cannot change the range supplied by observations and biology.
+  obs_years <- unlist(lapply(obs[required_tabs], function(d) d$year))
+  obs_ages <- unlist(lapply(obs[required_tabs], function(d) d$age))
+  years <- seq.int(min(obs_years, na.rm = TRUE), max(obs_years, na.rm = TRUE))
+  ages <- seq.int(min(obs_ages, na.rm = TRUE), max(obs_ages, na.rm = TRUE))
+  grid_size <- length(years) * length(ages)
+
+  if (!is.null(obs$pop_covariates)) {
+    d <- obs$pop_covariates
+    if (!is.data.frame(d) || !all(c("year", "age") %in% names(d))) {
+      cli::cli_abort("pop_covariates must be a data.frame with year and age columns.")
+    }
+    if (!.is_integerish(d$year) || !.is_integerish(d$age)) {
+      cli::cli_abort("pop_covariates year and age must be finite numeric integer values.")
+    }
+    if (any(!d$year %in% years) || any(!d$age %in% ages)) {
+      cli::cli_abort("pop_covariates must use the year-age range supplied by catch, index, weight and maturity.")
+    }
+  }
+  must_be_full <- c(
+    "catch", "weight", "maturity",
+    if (!is.null(obs$pop_covariates)) "pop_covariates"
+  )
+  for (nm in must_be_full) {
+    if (anyDuplicated(obs[[nm]][, c("year", "age")])) {
+      cli::cli_abort("{.arg {nm}} must have exactly one row per year and age; duplicate rows would misalign the model surfaces.")
+    }
+    xy <- unique(obs[[nm]][, c("year", "age")])
+    if (nrow(xy) != grid_size) {
+      cli::cli_abort(c(
+        "{.strong `{nm}` coverage is incomplete}",
+        "x" = "`{nm}` must contain a row for every (year, age) in the modeled range: {years[1]}-{years[length(years)]} x {ages[1]}-{ages[length(ages)]}.",
+        "i" = "Current unique (year, age) rows in `{nm}`: {nrow(xy)} (expected {grid_size})."
+      ))
+    }
+  }
+
+  .data_units(obs)
+  invisible(TRUE)
+}
+
+#' Check the structure of a TAM obs list
+#'
+#' A convenience wrapper for [check_tam_data()].
+#' @param obs A named list of tinyAM input tables.
+#' @inherit check_tam_data details
+#' @return `TRUE` (invisibly) if validation passes; otherwise aborts.
+#' @examples
+#' check_tam_data(cod_obs)
+#' @export
+check_obs <- function(obs) check_tam_data(obs)
+

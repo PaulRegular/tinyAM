@@ -15,7 +15,7 @@ hindcast_fixture <- function() {
 
 mock_hindcast_update <- function(object, years, proj_settings, ...) {
   r <- object
-  future <- if (is.null(proj_settings)) numeric() else max(years) + 1
+  future <- if (is.null(proj_settings)) numeric() else max(years) + seq_len(proj_settings$n_proj)
   r$dat$years <- c(years, future)
   r$dat$is_proj <- c(rep(FALSE, length(years)), rep(TRUE, length(future)))
   r$used_projection <- proj_settings
@@ -39,72 +39,103 @@ mock_hindcast_tidy <- function(model_list, ...) {
   list(obs_pred = list(index = stack("index"), catch = stack("catch")), pop = list(ssb = ssb))
 }
 
-test_that("hindcast targets preserve raw plus ages and allow explicit overrides", {
-  f <- hindcast_fixture()
-  before <- f
-  d <- .hindcast_controls(f, 2004:2005, "observed", NULL)
-  expect_equal(d$target, c(18, 18))
+test_that("hindcast controls preserve raw plus ages and recycle by horizon", {
+  f <- hindcast_fixture(); before <- f
+  expect_equal(.hindcast_controls(f, 2004:2005, .retro_projection(NULL))$target, c(18, 18))
   expect_identical(f, before)
   f$refit_args$data$catch$obs[1] <- NA
-  d <- .hindcast_controls(f, 2000:2001, "observed", NULL)
-  expect_match(d$error[1], "incomplete")
-  expect_true(is.na(d$target[1]))
-  expect_equal(.hindcast_controls(f, 2000:2001, c(`2000` = 12), NULL)$target, c(12, 18))
-  expect_equal(.hindcast_controls(f, 2000:2001, 10, NULL)$target, c(10, 10))
-  expect_equal(.hindcast_controls(f, 2000:2001, NULL, .8)$target, c(.8, .8))
-  expect_error(.hindcast_controls(f, 2000:2001, c(1, 2), NULL), "Name")
-  expect_error(.hindcast_controls(f, 2000:2001, "observed", 1), "not both")
+  expect_match(.hindcast_controls(f, 2000:2001, .retro_projection(NULL))$error[1], "incomplete")
+  s <- .retro_projection(list(n_proj = 2, F_mult = .8))
+  expect_equal(.hindcast_controls(f, 2000:2001, s)$target, c(.8, .8))
+  expect_equal(s$F_mult, .8)
+  expect_null(s$catch)
+  expect_error(.retro_projection(list(catch = 10, F_mult = 1)), "not both")
+  expect_error(.retro_projection(list(n_proj = 3, catch = c(1, 2))), "numeric catch")
+  for (x in list(c(.8,1),-1,Inf,NA_real_,numeric())) {
+    expect_error(.retro_projection(list(F_mult=x)), "one finite")
+  }
+  expect_equal(.retro_projection(list(n_mean=3))$catch,"observed")
 })
 
-test_that("hindcasts score indices, preserve inputs and retain the historical reference", {
+test_that("single and multiple model hindcasts retain forecasts and diagnostics", {
   local_mocked_bindings(update = mock_hindcast_update, tidy_tam = mock_hindcast_tidy,
     check_tam = function(...) list(is_converged = TRUE))
   future::plan(future::sequential)
   f <- hindcast_fixture(); before <- f
   h <- fit_hindcast(f, folds = 2, progress = FALSE)
+  expect_s3_class(h, "tam_retro")
   expect_identical(f, before)
-  expect_equal(h$hindcast_rmse, log(1.1))
+  overall <- subset(h$scores, type == "index" & level == "overall" & is.na(horizon))
+  expect_equal(overall$RMSE, log(1.1))
+  expect_equal(overall$MASE, log(1.1))
   expect_equal(h$fold_diagnostics$n_scored_index, c(2, 2, 0))
-  expect_equal(h$fold_diagnostics$target[1:2], c(18, 18))
-  expect_null(h$fits[["2005"]]$used_projection)
-  expect_false(any(h$fits[["2005"]]$dat$is_proj))
-  expect_equal(h$fits[["2003"]]$used_projection, list(n_proj = 1, n_mean = 1, catch = 18))
-  quo <- fit_hindcast(f, folds = 1, F_mult = .8, progress = FALSE)
-  expect_equal(quo$fits[["2004"]]$used_projection$F_mult, .8)
-  expect_error(fit_hindcast(f, folds = 0, catch = 10, F_mult = .8), "not both")
+  expect_equal(h$projection_controls$target, c(18, 18))
+  expect_null(h$fits$f[["2005"]]$used_projection)
+  expect_equal(h$fits$f[["2003"]]$used_projection, list(n_proj = 1, n_mean = 1, catch = 18))
+  expect_output(print(h), "log_RMSE")
+  multi <- fit_hindcast(f, same = f, folds = 2, progress = FALSE,
+    proj_settings = list(n_proj = 3, n_mean = 3, F_mult = .8))
+  expect_equal(names(multi$fits), c("f", "same"))
+  expect_true(multi$comparable)
+  expect_equal(multi$fold_diagnostics$available_n_proj, rep(c(2, 1, 0), 2))
+  expect_equal(multi$fits$f[["2003"]]$used_projection,
+    list(n_proj = 2, n_mean = 3, F_mult = c(.8, .8)))
+  expect_true(all(c(1, 2) %in% multi$forecast_pairs$index$horizon))
+  expect_true(all(c("model", "fold", "horizon") %in% names(multi$pop$ssb)))
+  expect_true(all(multi$forecast_pairs$index$baseline_year <= multi$forecast_pairs$index$fold))
   retro <- fit_retro(f, folds = 1, progress = FALSE)
-  expect_true(all(vapply(retro$fits, function(x) !any(x$dat$is_proj), logical(1))))
-  expect_null(retro$hindcast_rmse)
+  expect_true(all(vapply(retro$fits$f, function(x) !any(x$dat$is_proj), logical(1))))
+  expect_equal(nrow(retro$scores), 0L)
+  expect_equal(fit_hindcast(f,hindcast=FALSE,folds=1,progress=FALSE),retro)
+  expect_error(fit_hindcast(f,hindcast=FALSE,proj_settings=list(n_proj=1)),"only when")
+  expect_equal(fit_retro(f,hindcast=TRUE,folds=2,progress=FALSE)$scores,h$scores)
+  expect_identical(eval(formals(fit_hindcast)$proj_settings),list(n_proj=1,n_mean=1,catch="observed"))
+  expect_error(fit_retro(f, proj_settings = list(n_mean = 3)), "only when")
+  expect_error(fit_hindcast(f, F_mult = 1), "tam_fit")
 })
 
-test_that("missing targets and failed folds retain informative diagnostics", {
+test_that("missing targets and all-failed runs remain inspectable", {
   local_mocked_bindings(update = mock_hindcast_update, tidy_tam = mock_hindcast_tidy,
     check_tam = function(...) list(is_converged = TRUE))
   future::plan(future::sequential)
   f <- hindcast_fixture()
-  i <- which(f$refit_args$data$catch$year == 2004)[1]
-  f$refit_args$data$catch$obs[i] <- NA_real_
-  expect_warning(h <- fit_hindcast(f, folds = 2, progress = FALSE), "2003")
+  f$refit_args$data$catch$obs[which(f$refit_args$data$catch$year == 2004)[1]] <- NA_real_
+  expect_warning(h <- fit_hindcast(f, folds = 2, progress = FALSE), "failed")
   expect_match(h$fold_diagnostics$error[1], "incomplete")
-  expect_false(h$fold_diagnostics$is_converged[1])
-  expect_equal(names(h$fits), c("2004", "2005"))
-  supplied <- fit_hindcast(f, folds = 2, catch = c(`2004` = 18), progress = FALSE)
-  expect_true(all(supplied$fold_diagnostics$is_converged))
-  expect_equal(supplied$fold_diagnostics$target_source[1], "supplied catch")
-  # Historical-only retros strip even a reference fit's inherited projections.
-  f$dat$years <- 2000:2007; f$dat$is_proj <- c(rep(FALSE, 6), TRUE, TRUE)
-  retro <- fit_retro(f, folds = 1, progress = FALSE)
-  expect_false(any(retro$fits[["2005"]]$dat$is_proj))
+  expect_null(h$fits$f[["2003"]])
+  expect_true("2003" %in% names(h$fits$f))
+  local_mocked_bindings(check_tam = function(...) list(is_converged = FALSE))
+  expect_warning(h <- fit_hindcast(f, folds = 1, progress = FALSE), "failed")
+  expect_equal(nrow(h$scores), 0L)
+  expect_equal(nrow(h$fold_diagnostics), 2L)
+  expect_output(print(h), "NA")
 })
 
-test_that("hindcast scoring retains unavailable forecasts without an empty-table error", {
-  data <- data.frame(year = 2001L, age = 2L, survey = "survey", pred = 10,
-    obs = 11, is_proj = FALSE)
-  paired <- tinyAM:::.hindcast_index_data(data, data)
-  expect_equal(nrow(paired), 1L)
-  expect_false(any(paired$is_proj))
-  expect_true(is.nan(compute_hindcast_rmse(paired)))
-  empty <- tinyAM:::.hindcast_index_data(data[FALSE, ], data[FALSE, ])
-  expect_equal(nrow(empty), 0L)
-  expect_true(is.nan(compute_hindcast_rmse(empty)))
+test_that("validation cases are compared without ranking", {
+  local_mocked_bindings(update = mock_hindcast_update, tidy_tam = mock_hindcast_tidy,
+    check_tam = function(...) list(is_converged = TRUE))
+  future::plan(future::sequential)
+  f <- hindcast_fixture(); other <- f
+  other$obs_pred$index$obs[1] <- other$obs_pred$index$obs[1] * 2
+  # Change an actual validation observation, not an unused historical observation.
+  other$obs_pred$index$obs[other$obs_pred$index$year == 2005] <- 10
+  expect_warning(h <- fit_hindcast(f, other = other, folds = 1, progress = FALSE), "not directly comparable")
+  expect_false(h$comparable)
+  expect_false("rank" %in% names(h$scores))
+  a <- formals(fit_retro); b <- formals(fit_hindcast)
+  a$hindcast <- b$hindcast <- NULL
+  a$proj_settings <- b$proj_settings <- NULL
+  expect_identical(a, b)
+})
+
+test_that("comparability follows the positive-value mask used by log scores", {
+  local_mocked_bindings(update = function(object, ...) {
+    r <- mock_hindcast_update(object, ...)
+    if (isTRUE(object$zero_forecast)) r$obs_pred$index$pred[r$obs_pred$index$is_proj] <- 0
+    r
+  }, tidy_tam = mock_hindcast_tidy, check_tam = function(...) list(is_converged = TRUE))
+  future::plan(future::sequential)
+  f <- hindcast_fixture(); zero <- f; zero$zero_forecast <- TRUE
+  expect_warning(h <- fit_hindcast(f, zero = zero, folds = 1, progress = FALSE), "not directly comparable")
+  expect_false(h$comparable)
 })

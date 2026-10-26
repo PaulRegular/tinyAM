@@ -18,10 +18,11 @@ returning the likelihood? Defaults to \code{FALSE}.}
 }
 \value{
 With \code{simulate = FALSE}, a scalar joint negative log-likelihood.
-When used inside \code{\link[RTMB:TMB-interface]{RTMB::MakeADFun()}}, reported population and observation
+When used inside \code{\link[RTMB:MakeADFun]{RTMB::MakeADFun()}}, reported population and observation
 quantities are available through the resulting object's \code{report()} method;
 selected log population summaries also receive uncertainty via \code{sdreport()}.
-With \code{TRUE}, a list containing \code{log_f}, \code{log_r}, \code{log_obs}, and applicable
+With \code{TRUE}, a list containing \code{log_r}, \code{log_obs}, \code{log_f} when its process
+is active, and applicable
 \code{log_n0}, \code{log_n}, and \code{log_m} values. Missing observations remain \code{NA};
 predictions and population states are calculated for the full model grid.
 }
@@ -65,7 +66,7 @@ are reconstructed within each year before SSB is calculated. Effective
 terminal W and P preserve biomass and
 mature biomass; see \link{tinyAM-model}. No extra parameters or process penalties
 are introduced. \code{N_plus}, \code{W}, and \code{P} are then included in \code{report()}.
-Random N0 is redrawn; free N0, \code{log_r0}, and additional early recruitment
+Initial older-age abundance, \code{log_r0}, and additional early recruitment
 boundary states remain supplied fixed states. See \link{recruitment_formulas}.
 RW processes retain their starting state because it has no process density.
 For N, the first \code{log_n} row is retained and its starting residual is computed

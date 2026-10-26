@@ -143,10 +143,21 @@ Translations and comparison displays use thousand fish, average weight in kg,
 and biomass in tonnes. Count-rate surveys retain their effort denominator;
 relative indices retain their source scale. See the units section of
 [TINYAM_TRANSLATION.md](TINYAM_TRANSLATION.md#translation-units).
-The complete `run_all.R` workflow saves returned fits before making dashboards,
+The complete `run_all.R` workflow saves returned fits before optional dashboards,
 including exploratory previews of usable non-converged fits. Rendering failures
 are recorded locally. Figure fallbacks use this complete batch rather than
 older stock caches; aggregate comparison eligibility is unchanged.
+
+The script's `dashboard` switch controls every preview, and defaults to `FALSE`.
+Its `timeout` control defaults to 1200 seconds per assessment; `callr` supervises
+the individual R processes so native-code fitting cannot hold the entire batch
+indefinitely. Timeouts remain explicit failures, never successful comparisons.
+`run_assessments()` accepts the same deadline (default `Inf` for compatibility)
+and `progress = FALSE` to suppress stock progress messages. See
+[the runner controls and logs](scripts/README.md#translation-and-fitting) for
+checkpoint paths and troubleshooting. Some existing recipes take several
+minutes; the recorded ocean-perch timeout and numerical failures are not solved
+by adding workers or memory.
 
 Comparison summaries separate scale agreement (absolute and percent differences)
 from trajectory agreement (`trend_correlation`). Each row records its unit,

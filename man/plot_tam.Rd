@@ -37,7 +37,7 @@ plot_obs_pred(
   ...
 )
 
-plot_bubbles(data, ...)
+plot_bubbles(data, res = NULL, y = ~age, ylab = "Age", title = NULL, ...)
 
 plot_resid(data, x = ~year, xlab = "Year", ...)
 
@@ -66,6 +66,10 @@ applicable, Show CI / Hide CI.}
 \item{p}{A Plotly object, with all desired layers already added.}
 
 \item{zlab}{Label for the colorbar in heatmaps.}
+
+\item{res}{Optional one-column formula for signed bubble values, e.g.
+\code{~est} for process deviations. Omitted values use OSA or standardized
+observation residuals. Use \code{y = ~age_block} for shared M state blocks.}
 }
 \value{
 A Plotly object.
