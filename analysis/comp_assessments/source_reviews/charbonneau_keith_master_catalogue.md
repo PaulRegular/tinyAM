@@ -23,6 +23,13 @@ New `stock_id` values are stable slugs of the Master `unique_ID`, prefixed with 
 
 These exceptions are visible in `stocks.csv` and the importer crosswalk. They do not add assessments, assumptions, numerical inputs or outputs. Stock-specific production assessment curation remains governed by the corresponding stock source review.
 
+The [2024 Georges Bank cod review](nefsc_cod_georges_bank.md) also distinguishes
+`NEFSC-GARMIII_morhua_GB` from the revised 2023 GB unit. The latter excludes
+statistical areas 521 and 526 and is now `nefsc_cod_georges_bank`; the older
+Master ID remains on its historical wider unit. The US assessment combines
+US/Canadian catch information but is separate from the Canadian Eastern GB
+assessment. This boundary relationship does not copy data across stock rows.
+
 ## Reviewed historical and sex-specific relationships
 
 `scripts/database/156_review_catalogue_stock_relationships.R` records ten

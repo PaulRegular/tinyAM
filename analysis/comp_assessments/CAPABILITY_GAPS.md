@@ -213,6 +213,15 @@ counts; they must not be added as an independent likelihood alongside the
 same biomass/composition observations. No fit or numerical agreement is
 claimed for this source record.
 
+[US Georges Bank cod](source_reviews/nefsc_cod_georges_bank.md) illustrates
+why model assumptions must be checked against the selected update: the
+2024 run replaces historical IID survival errors with decoupled 2DAR1
+errors, estimates initial N freely, and turns off lognormal adjustments.
+It also fixes fall-survey selectivity to one at ages 1–3, an unusual pattern
+explicitly flagged by the official review. Current original age arrays and
+biology remain unrecovered, so no tinyAM agreement is claimed from its
+published aggregate catch/status table or fixed M alone.
+
 The [White Hake Run_005 audit](source_reviews/ck_nefsc_garmiii_tenuis_gom_gb.md)
 likewise fixes BH steepness at one, but gives the recruitment penalty zero
 weight. A constant IID tinyAM mean preserves the flat expectation, not the
