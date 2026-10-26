@@ -16,8 +16,43 @@ New `stock_id` values are stable slugs of the Master `unique_ID`, prefixed with 
 
 ## Identity limitations retained
 
-- Nine catalogue entries are marked as possible overlaps in their stock notes and remain separate because exact identity was not established: three non-sex-specific cases (NEFSC summer flounder area, NEFSC 5Y haddock variant and ICES western Baltic herring subdivisions 22–24) and six sex-specific entries for AFSC arrowtooth flounder, Alaska plaice and northern rock sole. The sex-specific rows remain separate catalogue metadata; they are not counted as additional assessment cases.
+- The initial import flagged nine possible overlaps. Three non-sex-specific cases remain unresolved: NEFSC summer flounder area, NEFSC 5Y haddock variant and ICES western Baltic herring subdivisions 22–24. The six Alaska sex-specific entries have since received the relationship review below. They retain separate catalogue identifiers but are not additional current assessment cases.
 - `ICES-WGCSE_merlangus_CS7a` has the source assessor code `ICES-WGSCE`. Both values are retained in its note rather than silently correcting the identifier.
 - `AFSC_ macrocephalus_BSAI` is linked to the existing Eastern Bering Sea cod record based on its legacy identifier and PDF label, although the Master area suffix says `BSAI`. This discrepancy is explicitly recorded in the stock note; confirm it against an assessment source before using the catalogue row as assessment identity.
 
 These exceptions are visible in `stocks.csv` and the importer crosswalk. They do not add assessments, assumptions, numerical inputs or outputs. Stock-specific production assessment curation remains governed by the corresponding stock source review.
+
+## Reviewed historical and sex-specific relationships
+
+`scripts/database/156_review_catalogue_stock_relationships.R` records ten
+catalogue relationships to five already curated stocks. It updates only
+stock names and explanatory notes, preserving original stock IDs, Master
+identifiers, scientific names, area suffixes and basin labels. It does not
+assign a combined stock's current authority code to a historical component,
+copy observations or outputs, or create an assessment event.
+
+| Master identifiers | Related current stock | Source evidence |
+|---|---|---|
+| `ICES-WGBFAS_harengus_BS 30`, `ICES-WGBFAS_harengus_BS 31` | `ices_herring_gulf_bothnia` | [WGBFAS 2026, section 4.3](https://literatur.thuenen.de/digbib_extern/dn071152.pdf) explicitly records the 2017 merger of the two herring assessment units. |
+| `ICES-WGBFAS_platessa_BS 21-23`, `ICES-WGBFAS_platessa_BS 24-32` | `ices_plaice_baltic_21_32` | [WKBPLAICE](https://doi.org/10.17895/ices.pub.28400255), held in October 2024 and published in 2025, merges the two assessment units into subdivisions 21–32. |
+| `AFSC_stomias_BSAI-Females`, `AFSC_stomias_BSAI-Males` | `afsc_arrowtooth_flounder_bsai` | [2022 SAFE](https://apps-afsc.fisheries.noaa.gov/Plan_Team/2022/BSAIatf.pdf), model description and Table 6.16: one BSAI stock with female/male states. |
+| `AFSC_quadrituberculatus_BSAI-Females`, `AFSC_quadrituberculatus_BSAI-males` | `afsc_alaska_plaice_bsai` | [2024 SAFE](https://files.npfmc.org/SAFE/2024/BSAIplaice.pdf), Model 24.1b: one BSAI management stock assessed in the Eastern Bering Sea, with both sexes. |
+| `AFSC_polyxystra_EEBSAI-Females`, `AFSC_polyxystra_EEBSAI-Males` | `afsc_northern_rock_sole_ebs` | [2024 SAFE](https://files.npfmc.org/SAFE/2024/BSAIrocksole.pdf), analytic approach and Tables 8.23–8.24: one BSAI management stock assessed in the Eastern Bering Sea, with both sexes. |
+
+These are relationships between catalogue entries and current stock coverage,
+not assertions that old and current model runs, boundaries or data are
+identical. In particular, the Alaska assessment-area qualifications remain
+explicit. The original catalogue rows still have no independently curated
+historical assessment data. The combined Baltic stocks retain blank Master
+IDs because neither is a one-to-one match to a single historical component.
+Original authoritative PDFs are cached with retrieval details and checksums
+under the corresponding current assessment directories; the plaice benchmark
+is also cached under `source_cache/ck_ices_wgcse_platessa_is7e/`.
+
+This review adds no completed translations or successful fits. Arrowtooth
+flounder remains source-blocked, northern rock sole's translation has failed
+numerical checks, and Alaska plaice's current translation remains an
+approximation. The herring and Baltic plaice source reviews retain their
+own limitations. Reviewed relationships prevent counting empty component
+rows as ten additional distinct current assessments while leaving genuine
+source gaps visible.
