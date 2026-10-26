@@ -181,6 +181,15 @@ not evidence that an additional tinyAM process is required. Its biomass
 index and length-based fishing-pressure ratio are kept distinct from SSB
 and instantaneous F. No fit or agreement statistics are claimed.
 
+[Northeast Arctic golden redfish](source_reviews/ices_golden_redfish_northeast_arctic.md)
+likewise moved away from an age-length assessment in 2026, to SPiCT using
+total landings and a compiled adult-biomass index. Its B/BMSY and F/FMSY
+states are recovered with reported bounds, but current age-based inputs
+and numerical survey data are not. The benchmark also documents an
+alternative high-biomass solution under jittering. This source and
+assessment-definition limitation must not be represented as successful
+tinyAM agreement or addressed by substituting older Gadget observations.
+
 The [White Hake Run_005 audit](source_reviews/ck_nefsc_garmiii_tenuis_gom_gb.md)
 likewise fixes BH steepness at one, but gives the recruitment penalty zero
 weight. A constant IID tinyAM mean preserves the flat expectation, not the

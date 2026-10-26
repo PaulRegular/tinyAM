@@ -545,6 +545,11 @@ sum of January 1 mature biomass is not an April 1 SSB estimate.
 reported category-3 assessment indicators. They are not absolute biomass/SSB
 or instantaneous F and must not fill the corresponding population comparisons.
 
+`B_over_Bmsy` and `F_over_Fmsy` preserve reported dimensionless relative
+states from a surplus-production assessment. Generic source columns labelled
+SSB or F do not make these absolute biomass or mortality. Keep any reported
+bounds on the ratio scale; do not infer absolute values or missing SEs.
+
 When total abundance is derived from official numbers-at-age, sum all reported
 age groups and any separately reported sexes, preserve other population
 dimensions, and state the derivation in `notes`. Leave its standard error and
