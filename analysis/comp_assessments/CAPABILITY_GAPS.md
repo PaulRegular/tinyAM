@@ -171,6 +171,16 @@ interpretation issues, distinct from model capability or convergence.
 
 ## What the expanded formulas already cover
 
+The [Celtic Sea plaice review](source_reviews/ices_plaice_celtic_sea_7fg.md)
+illustrates a different limit: the current production assessment is a
+category-3 biomass/length advice rule, despite its historical age-structured
+catalogue label. Verified survey-at-age tables are ancillary; current
+catch-at-age and biology are not recovered, and the official rule does not
+report fitted N/F/SSB states. This is a source and assessment-definition gap,
+not evidence that an additional tinyAM process is required. Its biomass
+index and length-based fishing-pressure ratio are kept distinct from SSB
+and instantaneous F. No fit or agreement statistics are claimed.
+
 The [White Hake Run_005 audit](source_reviews/ck_nefsc_garmiii_tenuis_gom_gb.md)
 likewise fixes BH steepness at one, but gives the recruitment penalty zero
 weight. A constant IID tinyAM mean preserves the flat expectation, not the

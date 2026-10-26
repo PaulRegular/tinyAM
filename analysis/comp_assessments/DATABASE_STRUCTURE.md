@@ -356,6 +356,12 @@ model transforms this SD for its likelihood, document that transformation in
 
 Additional measures may be added when necessary, but should remain explicit and biologically interpretable.
 
+`mean_catch_length`, `length_at_first_capture` and `MSY_proxy_length` retain
+reported length summaries used by a category-3 advice rule. Use `type = biology`,
+`basis = native_covariate`, source length units and a blank age. Document the
+cutoff used for mean length separately from any annually reported first-capture
+length. These summaries do not reconstruct catch-at-age or raw length frequencies.
+
 `catch_lower_bound` and `catch_upper_bound` preserve bounds used by a censored
 total-catch likelihood; they are distinct from landings bounds. `start_weight_at_age`
 is a source model's January 1 weight surface when it differs in meaning from the
@@ -534,6 +540,10 @@ reported outputs and documented biology. Preserve the native values, identify
 the formula and age range in notes, and leave uncertainty missing when the
 required covariance is unavailable. State timing differences explicitly: a
 sum of January 1 mature biomass is not an April 1 SSB estimate.
+
+`survey_biomass_index` and `length_based_fishing_pressure_proxy` preserve
+reported category-3 assessment indicators. They are not absolute biomass/SSB
+or instantaneous F and must not fill the corresponding population comparisons.
 
 When total abundance is derived from official numbers-at-age, sum all reported
 age groups and any separately reported sexes, preserve other population

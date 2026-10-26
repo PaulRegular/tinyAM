@@ -210,6 +210,7 @@ allowed_input_measures <- c(
   "conditional_proportion_at_age", "weight_at_age", "spawning_weight_at_age", "start_weight_at_age",
   "maturity_at_age", "natural_mortality_at_age", "condition_index_for_mortality",
   "fecundity_at_age", "proportion_female_at_age",
+  "mean_catch_length", "length_at_first_capture", "MSY_proxy_length",
   "fixed_mortality_medium", "fixed_mortality_low", "fixed_mortality_high",
   "relative_biomass_index", "abundance_index_cv", "biomass_index_cv",
   "landings_proportion", "landings_numbers_at_age", "discard_numbers_at_age", "landings_fraction_at_age",
