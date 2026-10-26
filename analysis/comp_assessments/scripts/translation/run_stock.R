@@ -4,7 +4,7 @@ root <- file.path("analysis", "comp_assessments")
 pkgload::load_all(".", quiet = TRUE)
 source(file.path(root, "R", "run_assessment.R"))
 
-assessment_id <- "afsc_pollock_ebs_2024"
+assessment_id <- "afsc_pollock_goa_2024"
 database <- read_database()
 source <- read_assessment(assessment_id, database)
 do_fit <- TRUE
@@ -21,3 +21,4 @@ fit
 
 ## Preview the current fit ----
 if (!is.null(fit)) preview <- view_assessment(fit, assessment)
+
