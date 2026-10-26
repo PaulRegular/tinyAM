@@ -12,6 +12,7 @@ test_that("retrospective and hindcast objects render without changing their fits
   expect_true(file.exists(file))
   con <- file(file, "rb"); html <- paste(readLines(con, warn = FALSE), collapse = "\n"); close(con)
   expect_match(html, "Retrospective comparison", fixed = TRUE)
+  expect_match(html, "<h3[^>]*>Retrospective comparison</h3>")
   expect_match(html, "User background retained.", fixed = TRUE)
   expect_match(html, "Full-data[[:space:]]+reference year:")
   expect_false(grepl("(full data)", html, fixed = TRUE))

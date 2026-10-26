@@ -8,7 +8,7 @@ typed_weights <- function(data, multiplier = 2) {
   data
 }
 
-test_that("typed weights require complete valid schedules and a common unit", {
+test_that("typed weights require complete valid weights and a common unit", {
   d <- typed_weights(cod_obs)
   expect_true(check_tam_data(d))
   d$weight <- d$weight[sample(nrow(d$weight)), ]
@@ -72,7 +72,7 @@ test_that("plus-group catch weights use the same abundance shares as stock weigh
   expect_equal(s$W_catch_plus_input, d$W_catch_plus_input)
 })
 
-test_that("projection averaging and held-out catch targets use separate schedules", {
+test_that("projection averaging and held-out catch targets use separate weights", {
   d <- typed_weights(cod_obs)
   d$weight$obs[d$weight$type == "catch"] <- d$weight$obs[d$weight$type == "catch"] *
     (d$weight$year[d$weight$type == "catch"] - min(d$weight$year) + 1)
@@ -80,7 +80,7 @@ test_that("projection averaging and held-out catch targets use separate schedule
   prep <- make_test_dat(data = d, years = years,
     proj_settings = list(n_proj = 2, n_mean = 3, F_mult = 1))
   for (type in c("stock", "catch")) {
-    w <- tinyAM:::.weight_schedule(d$weight, type)
+    w <- tinyAM:::.select_weights(d$weight, type)
     expected <- aggregate(obs ~ age, w[w$year %in% 2018:2020, ], mean)
     input <- if (type == "stock") prep$W else prep$W_catch
     expect_equal(as.numeric(input["2021", ]), expected$obs[match(AGES, expected$age)])
@@ -95,7 +95,7 @@ test_that("projection averaging and held-out catch targets use separate schedule
   }
 })
 
-test_that("catch targets, simulation and refits retain catch schedules", {
+test_that("catch targets, simulation and refits retain catch weights", {
   d <- make_test_dat(data = typed_weights(cod_obs), years = 2000:2005, ages = 2:6,
     N_settings = list(process = "off"),
     proj_settings = list(n_proj = 2, n_mean = 2, catch = c(100, 80)))

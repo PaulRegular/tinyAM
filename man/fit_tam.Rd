@@ -30,7 +30,7 @@ fit_tam(
 \item{data}{A named list of tidy observation tables (e.g., \code{catch}, \code{index},
 \code{weight}, \code{maturity}) and optional \code{pop_covariates}. A \link[=as_tam_data]{tam_data}
 object or plain list can be used. The weight table may distinguish complete
-stock/catch schedules with \code{type};
+stock and catch weights with \code{type};
 stock weights supply both purposes when catch weights are absent.
 See \link{cod_obs} for an example.}
 

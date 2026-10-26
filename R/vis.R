@@ -127,7 +127,7 @@ vis_tam.default <- function(..., model_list = NULL, interval = 0.95, output_file
   fits <- stats::setNames(candidates[keep], labels)
   origins <- stats::setNames(diagnostics$fold[keep], labels)
   omitted <- diagnostics[!keep, , drop = FALSE]
-  background <- c("## Retrospective comparison", "",
+  background <- c("### Retrospective comparison", "",
     paste0("Model: **", model, "**. Traces show the full-data reference and successful peels."),
     paste0("Omitted attempts: **", nrow(omitted), "**."))
   if (!any(diagnostics$is_reference & keep)) background <- c(background, "The full-data reference is unavailable.")

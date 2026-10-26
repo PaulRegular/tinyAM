@@ -33,6 +33,7 @@ test_that("retrospective model selection, omissions and ordering are explicit", 
       is_converged = c(TRUE, FALSE, TRUE), error = c(NA, "failed fold", NA))), class = "tam_retro")
   original <- r
   view <- tinyAM:::.retro_dashboard(r)
+  expect_identical(view$background[1], "### Retrospective comparison")
   expect_identical(names(view$fits), c("2024", "2022"))
   expect_match(paste(view$background, collapse = " "), "Full-data reference year: \\*\\*2024")
   expect_match(paste(view$background, collapse = " "), "2023: failed fold")

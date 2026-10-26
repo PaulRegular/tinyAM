@@ -45,7 +45,7 @@
 #' **Natural mortality assumptions.** `allometric_M_assumption` uses
 #' `M = M0 * weight^(-0.305)`, following the weight-scaling approach of
 #' Lorenzen (1996). The multiplier `M0` is calibrated so that the arithmetic
-#' mean of this schedule over source weight records for ages 5-14 is 0.30 per
+#' mean of these M values over source weight records for ages 5-14 is 0.30 per
 #' year, before restricting the example to the catch years. The mean over the
 #' packaged subset can therefore differ from 0.30.
 #' This is a constructed example baseline, not an independently estimated
@@ -470,8 +470,8 @@ check_tam_data <- function(data) {
   invisible(TRUE)
 }
 
-# Select one complete schedule; stock is the fallback only when catch is absent.
-.weight_schedule <- function(weight, type = "stock") {
+# Select stock or catch weights; stock is the fallback only when catch is absent.
+.select_weights <- function(weight, type = "stock") {
   if (!"type" %in% names(weight)) return(weight)
   if (type == "catch" && !any(weight$type == "catch")) type <- "stock"
   weight[weight$type == type, , drop = FALSE]

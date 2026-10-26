@@ -397,20 +397,20 @@
 #' is \eqn{\max_a F_{t,a}} and selectivity is F divided by that maximum.
 #' `F_bar` and `M_bar` are abundance-weighted means over their selected ages.
 #' Total catch sums numbers; yield uses catch weights, falling back to stock
-#' weights when no catch schedule is supplied. Observed totals omit missing cells; predicted
+#' weights when no catch weights are supplied. Observed totals omit missing cells; predicted
 #' totals sum the conditional median predictions over all catch cells.
 #'
-#' Optional `weight$type` distinguishes complete `"stock"` and `"catch"`
-#' schedules on the same biological year-age grid. Untyped or stock-only inputs
-#' use one schedule for both purposes. In the equations above, W denotes stock
+#' Optional `weight$type` distinguishes complete stock and catch weights
+#' on the same biological year-age grid. Untyped or stock-only inputs
+#' use stock weights for both purposes. In the equations above, W denotes stock
 #' weight. Yield is \eqn{Y_t=\sum_a C_{t,a}W^{catch}_{t,a}}; catch targets use
-#' this same schedule. Effective plus-group catch weights use the same
+#' these same catch weights. Effective plus-group catch weights use the same
 #' abundance shares as stock weights, retaining all biological ages. Projection
 #' averages are calculated separately by age and type over training years.
-#' Both schedules share one optional mass-unit label, conventionally kg.
+#' Stock and catch weights share one optional mass-unit label, conventionally kg.
 #' They describe values without converting them. This adds no parameters and
 #' does not change the catch-number likelihood. `fit$rep$W` remains stock
-#' weight; `fit$rep$W_catch` reports the effective catch schedule.
+#' weight; `fit$rep$W_catch` reports effective catch weights.
 #'
 #' Tidied estimates and confidence limits are on reported scales. `se` stays on
 #' the estimation scale, identified by `se_scale`. For log quantities, limits are

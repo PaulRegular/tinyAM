@@ -283,7 +283,7 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #' - Catch and maturity must already contain exactly one row per
 #'   year-age combination across the input range. Survey tables may be sparse.
 #'   Weight needs the same complete grid for every supplied `type`; see
-#'   [as_tam_data()] for stock/catch schedules and fallback rules.
+#'   [as_tam_data()] for stock and catch weights and fallback rules.
 #' - A combined observation table is created for catch and index; `log(0)` is
 #'   excluded from the observation likelihood.
 #' - When biological inputs extend above the modeled plus age, the underlying
@@ -539,7 +539,7 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #'   when retained, biological plus ages
 #' - `W`, `W_catch`, `P` — stock weight, catch weight and proportion mature
 #'   matrices (`year x age`). Optional `weight$type` distinguishes complete
-#'   `"stock"` and `"catch"` schedules; stock alone supplies both uses.
+#'   stock and catch weights; stock alone supplies both uses.
 #' - `plus_ages`, `W_plus_input`, `P_plus_input` — retained biological ages and
 #'   inputs, present only when biological data extend above `max(ages)`. The last
 #'   retained age represents a hidden plus group. Effective modeled W/P and hidden
@@ -719,8 +719,8 @@ prepare_tam <- function(
   if (max(dat$obs$weight$age) > max(dat$ages)) {
     dat$plus_ages <- seq.int(max(dat$ages), max(dat$obs$weight$age))
     plus_dimnames <- list(year = dat$years, age = dat$plus_ages)
-    stock_weight <- .weight_schedule(dat$obs$weight)
-    catch_weight <- .weight_schedule(dat$obs$weight, "catch")
+    stock_weight <- .select_weights(dat$obs$weight)
+    catch_weight <- .select_weights(dat$obs$weight, "catch")
     dat$W_plus_input <- matrix(stock_weight$obs[stock_weight$age %in% dat$plus_ages],
                                length(dat$years), length(dat$plus_ages),
                                dimnames = plus_dimnames
@@ -742,8 +742,8 @@ prepare_tam <- function(
   dat$spawn_time <- empty_mat
   dat$spawn_time[] <- dat$obs$maturity$spawn_time
   dat$W <- dat$W_catch <- dat$P <- empty_mat
-  dat$W[] <- .weight_schedule(dat$obs$weight)$obs
-  dat$W_catch[] <- .weight_schedule(dat$obs$weight, "catch")$obs
+  dat$W[] <- .select_weights(dat$obs$weight)$obs
+  dat$W_catch[] <- .select_weights(dat$obs$weight, "catch")$obs
   dat$P[] <- dat$obs$maturity$obs
 
   catch <- dat$obs$catch

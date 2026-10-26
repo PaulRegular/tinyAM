@@ -29,7 +29,7 @@
   ages <- sort(unique(c(fit$dat$ages, fit$dat$plus_ages)))
   if (observed) for (i in seq_along(years)) {
     d <- source$catch[source$catch$year == years[i], ]
-    w <- .weight_schedule(source$weight[source$weight$year == years[i], ], "catch")
+    w <- .select_weights(source$weight[source$weight$year == years[i], ], "catch")
     counts <- d$obs[match(ages, d$age)]; weights <- w$obs[match(ages, w$age)]
     if (any(!is.finite(counts) | counts < 0) || any(!is.finite(weights) | weights < 0)) {
       out$error[i] <- "Observed catch biomass unavailable: incomplete catch-at-age or weights; supply complete inputs or use F_mult."
@@ -208,7 +208,7 @@
 #' evaluation (`fit_hindcast()` or `fit_retro(hindcast = TRUE)`), not ordinary
 #' [fit_tam()] projections. It uses actual total catch weight in each held-out
 #' year, calculated from complete raw catch-at-age and catch weights (stock
-#' weights if no catch schedule is supplied). Forecast stock and catch schedules
+#' weights if no catch weights are supplied). Forecast stock and catch weights
 #' are averaged separately using training years only. This
 #' conditions prediction on removals that actually occurred; held-out surveys
 #' and catch compositions do not enter fitting. Agreement with the conditioning

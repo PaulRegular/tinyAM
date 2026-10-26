@@ -213,7 +213,7 @@ A named list \code{dat} containing:
 when retained, biological plus ages
 \item \code{W}, \code{W_catch}, \code{P} — stock weight, catch weight and proportion mature
 matrices (\verb{year x age}). Optional \code{weight$type} distinguishes complete
-\code{"stock"} and \code{"catch"} schedules; stock alone supplies both uses.
+stock and catch weights; stock alone supplies both uses.
 \item \code{plus_ages}, \code{W_plus_input}, \code{P_plus_input} — retained biological ages and
 inputs, present only when biological data extend above \code{max(ages)}. The last
 retained age represents a hidden plus group. Effective modeled W/P and hidden
@@ -268,7 +268,7 @@ named \code{obs}. Rename any differently named input columns before calling. See
 \item Catch and maturity must already contain exactly one row per
 year-age combination across the input range. Survey tables may be sparse.
 Weight needs the same complete grid for every supplied \code{type}; see
-\code{\link[=as_tam_data]{as_tam_data()}} for stock/catch schedules and fallback rules.
+\code{\link[=as_tam_data]{as_tam_data()}} for stock and catch weights and fallback rules.
 \item A combined observation table is created for catch and index; \code{log(0)} is
 excluded from the observation likelihood.
 \item When biological inputs extend above the modeled plus age, the underlying

@@ -107,8 +107,8 @@ Keep q and observation-SD covariates in catch/index tables. The
 `pop_covariates` holds population predictors, process-SD groups and supplied M
 assumptions; it needs a complete year–age grid, without an `obs` column.
 Keep weights in `weight`, and maturity and optional `spawn_time` in `maturity`.
-An optional `weight$type` column separates complete `"stock"` and `"catch"`
-schedules: stock weights determine biomass/SSB, catch weights determine yield
+An optional `weight$type` column separates complete stock and catch weights:
+stock weights determine biomass/SSB, catch weights determine yield
 and catch targets. Untyped or stock-only weights serve both purposes. Each
 type must cover the same biological year-age grid; see [input help](https://paulregular.github.io/tinyAM/reference/as_tam_data.html).
 
