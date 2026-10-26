@@ -120,6 +120,15 @@ with total F in its survival term. The corresponding non-migration production
 code is needed to verify the implementation. Neither the migration-model code
 in the framework nor a simulation study establishes what the 2024 run used.
 
+To check whether the pre-2022 inputs could be recovered from the prior update,
+the official 2022 appendices were also reviewed and cached. They define the
+catch, index, CV and age-composition inputs and report RMSEs, CV weights,
+effective sample sizes and likelihood summaries, but do not provide the annual
+observed catch, index or composition arrays. The 2024 report says its 2022
+input series were extended through 2023, but it likewise does not publish
+those arrays. The older update therefore cannot supply a verified input
+vector for the 2024 run, and its fitted values are not used to fill that gap.
+
 No tinyAM model, source-based starts or dashboard is claimed. Translation
 requires those original inputs and resolution of the remaining configuration
 and year-alignment questions; observations will not be inferred from fitted N/F.

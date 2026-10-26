@@ -77,12 +77,14 @@ fitted SSB series; a single tinyAM comparison would first need the production
 inputs, reference outputs and a justified component/ensemble definition.
 
 [Atlantic striped bass](source_reviews/ck_nefsc_garmiii_saxatilis_gom_chatt.md)
-has verified 2024 base-run N, fleet/total F and female spawning biomass, but
-its production observation arrays and annual weights remain unrecovered.
-The source uses totals plus compositions, fleet selectivity blocks and
-constrained recruitment deviations. Missing input arrays are a source-data
-blocker; published fitted states and unrelated simulated data cannot replace
-them. Female SSB requires the separate female fraction and maturity inputs.
+has a separate 2018 historical SCA translation using published inputs and
+outputs, but its 2024 production observation arrays and annual weights remain
+unrecovered. The 2018 approximation converges after source-based starts, but
+F agreement is poor; it does not stand in for the current 2024 update. The
+source uses totals plus compositions, fleet selectivity blocks and constrained
+recruitment deviations. Missing 2024 input arrays are a source-data blocker;
+published fitted states and unrelated simulated data cannot replace them.
+Female SSB requires the separate female fraction and maturity inputs.
 
 [Eastern Georges Bank cod](source_reviews/ck_nefsc_trac_cert_morhua_gb.md)
 uses a supplied Lorenzen M surface and decoupled older-cohort process error;
