@@ -101,17 +101,74 @@ The current report explicitly states that CFSR was discontinued and no 2025 valu
 
 Table 2.6 of the January 2026 assessment reports estimates and standard deviations for beginning-year length at ages 1 and 10, the von Bertalanffy growth rate, and length-at-age standard deviation at ages 1 and 10. These five estimates are now recorded in `outputs.csv` with their reported natural-scale standard deviations. The official control specifies one von Bertalanffy growth pattern and length-at-age standard deviation as a function of mean length. These parameters support an explicit translation-time reconstruction of biological surfaces; they are not direct annual weight-at-age or maturity-at-age input tables. The record remains partial because fitted abundance-at-age and a complete output inventory are unavailable.
 
-## tinyAM translation and fit
+## Current tinyAM candidate translation and fit
 
-The translation fits 2007–2025, when the fishery length-composition series and conditional age-at-length samples overlap. For each fishery, it pools conditional age proportions across the available 2007–2024 age samples, weighted by supplied sample size, then combines that key with annual length proportions. This reconstructs age proportions for the 2025 catch without presenting them as published age-specific catches. Annual fishery biomass is converted to numbers with reconstructed weight-at-age, then the three fishery catches are combined. Native bins are matched by their stored labels. Each annual length composition has at least 95% key coverage; uncovered length-bin mass is omitted and the resulting age shares are renormalized.
+The translation fits 2007–2025, when fishery length compositions and conditional
+age-at-length samples overlap. Separate fishery-specific pooled age–length keys
+are estimated from supplied samples (through 2024), used to convert annual length
+compositions and biomass catches into catch-at-age, and then the three fisheries
+are aggregated. Uncovered length-bin mass is omitted and reconstructed age shares
+are normalized. The official likelihood is based on fleet catches, length
+compositions and conditional ages, not these pseudo-observed catch numbers at age.
 
-Only the age-sampled NMFS bottom-trawl survey is translated. Its every-other-year aggregate numbers index is allocated across ages with the pooled key. The supplied aggregate log SD is repeated across reconstructed age rows, so the official conditional-composition and covariance likelihoods are not reproduced. Source observations specify month 7 but not a within-month date; the translation uses timing 0.5 (midyear). The longline survey is omitted because its age composition is unavailable.
+Only the age-sampled NMFS bottom-trawl survey is translated. Its aggregate index
+is allocated across ages with the pooled age–length key; the original aggregate
+log SD is repeated across reconstructed age rows. Month-7 observations use an
+approximate year fraction of 0.5. The longline survey is not fitted because
+age-composition coverage required by this translation is unavailable.
 
-Weight-at-age and maturity-at-age are reconstructed from the reported mean-length growth curve and the official weight-length and length-logistic parameters. Length variation is not integrated over. A 0.5 female multiplier is used to match the published female SSB convention. The official M estimates are supplied as fixed M, including the higher 2014–2016 block; its reported uncertainty is not fitted. The finalized tinyAM model uses exponential N initialization with N process off, IID F deviations around an age-specific mean, supplied fixed M, and age-specific q. Age-specific F means and q materially improved the source fishery/survey representation. An unconstrained q block was retained after a monotone-q alternative gave a similar result. A free initial-abundance fit was tested but did not converge reliably. The source fleet selectivity, official N/F surfaces and composition likelihood are not represented.
+Population weights/maturity are reconstructed from official fitted mean-growth
+parameters and the source weight–length and maturity functions. The approximation
+does not integrate length variability within age. The female maturity multiplier
+is 0.5. Source M estimates (including the 2014–2016 elevated M block) are supplied
+and held fixed. SSB in the original assessment includes age 0, whereas the tinyAM
+translation starts at age 1, so agreement is approximate by definition.
 
-The finalized fit converged (optimizer code 0, relative convergence (4), objective 274.38, maximum absolute gradient 0.000411, positive-definite Hessian, 25 fixed and 208 random effects). The approximate aggregate SSB comparison over 2007–2025 used source tonnes and tinyAM kilograms scaled by 1e-3: mean absolute difference 24,893 t (32.10%), terminal-year difference +7.73%, and trend correlation 0.945. The M comparison contains 190 age-year cells and is equal by construction. The source age-specific SSB contributions are unavailable, so this is explicitly an aggregate comparison.
+### Candidate specification (requires a new fit)
 
-Recruitment is not compared because official recruitment is age 0 and tinyAM recruitment is age 1. Official N-at-age and F-at-age were not recovered. The M comparison is identical by construction because official numerical M was supplied as fixed M; it is not an independent validation of the M translation.
+```r
+N_settings     = list(process = "off", init = "exp")
+# Default tinyAM recruitment RW retained (not source BH recruitment)
+F_settings     = list(process = "cor_rw", mu_form = NULL)
+M_settings     = list(process = "off", mu_form = NULL,
+                      mu_supplied = ~ M_assumption)
+catch_settings = list(sd_form = ~ 1)
+index_settings = list(
+  q_form = ~ logistic(age) + rw(year),
+  sd_form = ~ 1,
+  sd_supplied = ~ relative_sd
+)
+```
+
+This paired-specification experiment replaces the earlier **IID F deviations
+around age means** (`process = "iid", mu_form = ~ factor(age)`) with correlated
+annual F random walks. In contrast to a fixed logistic F-age curve, each age can
+evolve through time while annual changes are correlated across ages. The survey q
+model now combines a smooth ascending logistic age curve with a shared year random
+walk on log catchability. That RW affects the *survey level* and is **not**
+equivalent to the original length-based time-varying survey selectivity. Unlike the
+source, the small translation has one aggregated fishery and does not reproduce
+the conditional age-at-length likelihood.
+
+Earlier candidate exploration suggested that additional **F flexibility** was
+important for agreement, but did not establish that `cor_rw` outperforms IID F.
+This new candidate has not been fitted or diagnosed as part of this revision.
+The GOA translation retains exponential older-age initialization because the
+previous free-initial-state configuration was numerically unreliable.
+
+### Historical comparison from the preceding F-IID candidate
+
+The previously documented `F_settings = list(process = "iid", mu_form = ~ factor(age))`
+candidate reported optimizer code 0, relative convergence 4, objective 274.38,
+maximum absolute gradient 0.000411, positive-definite Hessian, 25 fixed and 208
+random effects. Its approximate 2007–2025 aggregate SSB comparison reported
+mean absolute difference 24,893 t (32.10%), terminal difference +7.73%, and
+trend correlation 0.945. Those results belong to that earlier fit and should
+**not** be used to describe the new `cor_rw` F / logistic-plus-year-RW q model.
+
+Official N-at-age and F-at-age surfaces remain unavailable. The M comparison
+is equal by construction because numerical official M was supplied; recruitment
+and total biomass remain definition-non-equivalent because of source age 0.
 
 ## Cached fitted-object check
 

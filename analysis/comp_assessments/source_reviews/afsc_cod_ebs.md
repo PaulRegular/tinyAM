@@ -81,16 +81,49 @@ its reported SD remain separate. Neither fitted q nor fitted N changes an
 observation. Zero source proportions remain zero; tinyAM's lognormal
 observations treat these zero entries as missing.
 
-N survival is deterministic with free initial ages; recruitment is IID around
-a constant mean with log SD 0.6908, F has independent age-specific random walks,
-M stays fixed at 0.3866 and q is free by age. The default-start fit converged:
-optimizer code 0, objective 372.2591, maximum gradient 0.0013577, positive-definite
-Hessian and finite covariance, about 6.45 seconds. No starting-value retry was
-used. The cached Official–tinyAM dashboard renders successfully.
+### Proposed paired-model candidate (not yet fitted)
 
-Numerical convergence does not establish agreement. N-at-age has 42.1% mean
-absolute difference, −43.7% terminal difference and mean within-age correlation
-0.681. Recovered F-at-age has 70.1%, +107.0% and −0.200 respectively. Common
-proxy SSB has 21.7% mean absolute difference. The empirical pooled key,
-unconstrained age-specific F, omitted ageing error and simplified survey
-precision are material differences. Fixed-M equality only checks inputs.
+The updated translation continues to use deterministic older-age survival (`N process = "off"`),
+free first-year older-age abundance (`init = "free"`), and IID log recruitment around
+an estimated constant mean. **The recruitment log SD is now estimated** (the
+`sd` setting was removed), whereas the accepted assessment fixes it at 0.6908.
+This deliberately adds flexibility and is not an exact match to the source
+recruitment penalty. Natural mortality remains fixed at 0.3866; January spawning
+timing and the existing proxy biology are unchanged.
+
+Relative to the earlier paired candidate, the new change is the estimated
+recruitment SD. The other two non-operational process approximations remain:
+F-at-age follows **correlated temporal random walks** (`F_settings = list(process = "cor_rw", mu_form = NULL)`), in which
+annual log-F innovations are correlated among ages. This is a simple proxy for
+collective changes in fishing intensity and selectivity, not an exact representation
+of length-based fishing or the official selectivity penalties. Second, the survey
+index uses **rising logistic age-specific catchability with an annual common log-q
+random walk** (`q_form = ~ logistic(age) + rw(year)`). The logistic component
+approximates the ascending survey selectivity curve. The RW permits the whole survey
+q level to change among years; it does **not** reproduce the official annual changes
+in length-selectivity width or the official scalar-q specification.
+
+The translation now ends in a single `if (do_fit)` block calling `tinyAM::fit_tam()`.
+The previous `fit_default_first()` helper, fitted-official-N/F retry starts and
+initialization-attempt cache have been removed. Original catch/survey reconstruction,
+source data, biological proxy and comparison definitions are retained.
+The estimated recruitment SD should be reported from the new fit rather than
+assumed to equal 0.6908. Its value and the new fit diagnostics have not been
+provided, so no numerical conclusions are attributed to this candidate.
+
+### Historical baseline results (not results for this candidate)
+
+The **superseded** independent age-specific F random walk / unrestricted age-q
+configuration converged with optimizer code 0, objective 372.2591, maximum gradient
+0.0013577, positive-definite Hessian and finite covariance (approximately 6.45 s).
+Its source comparisons reported 42.1% mean absolute N-at-age difference, -43.7%
+terminal N difference, within-age N correlation 0.681; 70.1% mean absolute F-at-age
+difference, +107.0% terminal F difference, within-age F correlation -0.200; and
+21.7% mean absolute proxy-SSB difference. None of these figures should be quoted
+as performance of the newly specified `cor_rw` F / logistic-plus-year-RW q candidate.
+
+Substantial limitations remain: fishery catch numbers are reconstructed with a
+pooled empirical age–length key; the source fits catch-at-length and age/length
+compositions; the source selectivity varies in length space; age error and survey
+precision are simplified; and age-0 recruitment/SSB definitions are not fully
+matched. Official fixed M is not an independent validation of M estimation.
