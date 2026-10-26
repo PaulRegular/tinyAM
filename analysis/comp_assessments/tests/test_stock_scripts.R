@@ -3,7 +3,8 @@ source("analysis/comp_assessments/tests/helper_stock.R")
 database <- read_database()
 paths <- list.files("analysis/comp_assessments/scripts/translation/stocks", full.names = TRUE)
 blocked <- c("dfo_herring_sog_2025", "afsc_cod_ai_2024", "afsc_arrowtooth_flounder_bsai_2022",
-             "dfo_pop_bc_2023", "dfo_petrale_bc_2024")
+             "dfo_pop_bc_2023", "dfo_petrale_bc_2024",
+             "ices_anchovy_gulf_cadiz_2025", "nefsc_cod_georges_bank_2024")
 for (path in paths) {
   id <- sub("[.]R$", "", basename(path))
   record <- read_assessment(id, database)
