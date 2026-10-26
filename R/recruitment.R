@@ -362,6 +362,7 @@ ricker <- function(ssb, lag = NULL) {
     if (simulate && dat$N_settings$process == "ar1") eta_log_N <- rprocess_ar1(T - 1L, A - 1L, sd = exp(par$log_sd_n), phi = stats::plogis(par$logit_phi_n))
   }
   W <- dat$W
+  W_catch <- if (is.null(dat$W_catch)) W else dat$W_catch
   P <- dat$P
   log_ssb <- numeric(T)
   ssb_mat <- matrix(0, T, A, dimnames = dimnames(log_N))
@@ -399,6 +400,8 @@ ricker <- function(ssb, lag = NULL) {
       shares <- components - Reduce(RTMB::logspace_add, components)
       log_N_plus[y, ] <- log_N[y, A] + shares
       W[y, A] <- sum(exp(shares) * dat$W_plus_input[y, ])
+      catch_input <- if (is.null(dat$W_catch_plus_input)) dat$W_plus_input else dat$W_catch_plus_input
+      W_catch[y, A] <- sum(exp(shares) * catch_input[y, ])
       P[y, A] <- if (all(dat$W_plus_input[y, ] == 0)) {
         0
       } else {
@@ -435,7 +438,7 @@ ricker <- function(ssb, lag = NULL) {
     if (dat$is_proj[y] && !is.null(dat$proj_settings$catch) && !is.null(F)) {
       terminal <- max(which(!dat$is_proj))
       k <- .solve_catch(dat$proj_settings$catch[as.character(dat$years[y])],
-        exp(log_N[y, ]), W[y, ], F[terminal, ], M[y, ], dat$years[y])
+        exp(log_N[y, ]), W_catch[y, ], F[terminal, ], M[y, ], dat$years[y])
       F[y, ] <- k * F[terminal, ]
       Z[y, ] <- F[y, ] + M[y, ]
     }
@@ -450,7 +453,7 @@ ricker <- function(ssb, lag = NULL) {
     log_N = log_N, pred_log_N = pred_log_N, log_recruitment = log_recruitment,
     log_mu_R = log_mu_R, log_pred_R = log_pred_R,
     eta_R = log_recruitment - log_pred_R, eta_R_state = u,
-    W = W, P = P, ssb_mat = ssb_mat,
+    W = W, W_catch = W_catch, P = P, ssb_mat = ssb_mat,
     N_plus = if (!is.null(dat$plus_ages)) exp(log_N_plus) else NULL,
     F = F, Z = Z
   )

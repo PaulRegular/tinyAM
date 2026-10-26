@@ -80,7 +80,7 @@
 
 .population_unit <- function(dat, metric) {
   units <- .data_units(dat$obs)
-  if (metric == "W") return(units$weight)
+  if (metric %in% c("W", "W_catch")) return(units$weight)
   if (metric == "P") return("proportion")
   if (metric == "S") return("dimensionless")
   if (metric %in% c("N", "N_plus", "abundance", "recruitment", "total_catch", "total_catch_pred", "n0")) return(units$numbers)

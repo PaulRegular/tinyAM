@@ -98,6 +98,9 @@ so distinct series are not connected. A log axis requires positive values.
 Both trend and observed/predicted plots accept an \code{x} formula and \code{xlab};
 use \verb{x = ~ age, xlab = "Age", frame = ~ year} for annual age profiles.
 The historical/projection separator is shown only on a year axis.
+Tables with \code{fold} (forecast origin) and \code{horizon} columns add forecast
+status to default hover text. Different origins suppress a shared separator.
+Explicit \code{text} or \code{hovertemplate} arguments override these hover defaults.
 \code{\link[=plot_age_year]{plot_age_year()}} assembles both orientations with view-switching buttons.
 For custom overlays, call \code{plot_trend(add_buttons = FALSE)}, add the layers
 with Plotly, then call \code{add_plot_buttons()} so CI controls include all ribbons.

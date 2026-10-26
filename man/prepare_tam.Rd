@@ -187,7 +187,7 @@ near one. q can approach a boundary with large coefficients and SEs.
 \item{proj_settings}{Optional list with elements:
 \itemize{
 \item \code{n_proj}: number of years to project (default \code{NULL} disables projections).
-\item \code{n_mean}: number of recent historical years (default \code{3}) used to average weight and
+\item \code{n_mean}: number of recent historical years (default \code{3}) used to average each weight type and
 maturity by age. Catch/index observations in projection years are missing.
 Other columns are copied from the last available year in each table.
 \item \code{F_mult}: multiplier of terminal historical F (default \code{1}, status quo).
@@ -211,7 +211,9 @@ A named list \code{dat} containing:
 \item \code{obs} — per-type tables restricted to \code{years} x \code{ages} (including \code{proj_years}, if used)
 \item \code{spawn_time}, \code{spawn_time_plus} — timing matrices on modeled ages and,
 when retained, biological plus ages
-\item \code{W}, \code{P} — mean weight-at-age, and proportion mature at age matrices (\verb{year x age})
+\item \code{W}, \code{W_catch}, \code{P} — stock weight, catch weight and proportion mature
+matrices (\verb{year x age}). Optional \code{weight$type} distinguishes complete
+stock and catch weights; stock alone supplies both uses.
 \item \code{plus_ages}, \code{W_plus_input}, \code{P_plus_input} — retained biological ages and
 inputs, present only when biological data extend above \code{max(ages)}. The last
 retained age represents a hidden plus group. Effective modeled W/P and hidden
@@ -263,15 +265,18 @@ and \code{maturity}. Each must include columns \code{year}, \code{age}, and a va
 named \code{obs}. Rename any differently named input columns before calling. See
 \link{cod_obs} for an example of the required structure. The optional
 \code{pop_covariates} table supplies population formula inputs; see \code{\link[=as_tam_data]{as_tam_data()}}.
-\item Catch, weight, and maturity must already contain exactly one row per
+\item Catch and maturity must already contain exactly one row per
 year-age combination across the input range. Survey tables may be sparse.
+Weight needs the same complete grid for every supplied \code{type}; see
+\code{\link[=as_tam_data]{as_tam_data()}} for stock and catch weights and fallback rules.
 \item A combined observation table is created for catch and index; \code{log(0)} is
-treated as \code{NA} (to be handled via random effects).
+excluded from the observation likelihood.
 \item When biological inputs extend above the modeled plus age, the underlying
-weight and maturity values are retained in \code{W_plus_input} and \code{P_plus_input},
+stock/catch weight and maturity values are retained in \code{W_plus_input},
+\code{W_catch_plus_input} and \code{P_plus_input},
 indexed by \code{years} and \code{plus_ages}. Their projection rows use the same
 recent-year averages by biological age as other weight/maturity inputs.
-\code{dat$W}, \code{dat$P}, and \code{dat$obs} retain the input values at modeled ages;
+\code{dat$W}, \code{dat$W_catch}, \code{dat$P}, and \code{dat$obs} retain input values at modeled ages;
 their terminal biological values are placeholders. \code{\link[=nll_fun]{nll_fun()}} replaces
 terminal W by an abundance-weighted mean and terminal P by a biomass-weighted
 proportion using its reconstructed hidden age composition. See \link{tinyAM-model}.

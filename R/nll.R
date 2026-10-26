@@ -194,6 +194,7 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   eta_R <- population$eta_R
   eta_R_state <- population$eta_R_state
   W <- population$W
+  W_catch <- population$W_catch
   P <- population$P
   N <- exp(log_N)
   recruitment <- exp(log_recruitment)
@@ -207,9 +208,10 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   if (!is.null(dat$plus_ages)) {
     N_plus <- population$N_plus
     REPORT(N_plus)
-    REPORT(W)
     REPORT(P)
   }
+  REPORT(W)
+  REPORT(W_catch)
 
   ## Likelihood ----
 
@@ -375,8 +377,8 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   C_pred[] <- pred[ic]
   total_catch <- rowSums(C_obs, na.rm = TRUE)
   total_catch_pred <- rowSums(C_pred, na.rm = TRUE)
-  total_yield <- rowSums(C_obs * W, na.rm = TRUE)
-  total_yield_pred <- rowSums(C_pred * W, na.rm = TRUE)
+  total_yield <- rowSums(C_obs * W_catch, na.rm = TRUE)
+  total_yield_pred <- rowSums(C_pred * W_catch, na.rm = TRUE)
 
 
   ## Output ----

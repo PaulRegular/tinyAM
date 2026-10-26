@@ -2,6 +2,8 @@
 % Please edit documentation in R/vis.R
 \name{vis_tam}
 \alias{vis_tam}
+\alias{vis_tam.default}
+\alias{vis_tam.tam_retro}
 \title{Make a flexdashboard for visualizing model fits}
 \usage{
 vis_tam(
@@ -12,6 +14,31 @@ vis_tam(
   open_file = TRUE,
   background = NULL,
   render_args = list(),
+  model = NULL,
+  process_seed = 123456L
+)
+
+\method{vis_tam}{default}(
+  ...,
+  model_list = NULL,
+  interval = 0.95,
+  output_file = NULL,
+  open_file = TRUE,
+  background = NULL,
+  render_args = list(),
+  model = NULL,
+  process_seed = 123456L
+)
+
+\method{vis_tam}{tam_retro}(
+  ...,
+  model_list = NULL,
+  interval = 0.95,
+  output_file = NULL,
+  open_file = TRUE,
+  background = NULL,
+  render_args = list(),
+  model = NULL,
   process_seed = 123456L
 )
 }
@@ -36,6 +63,10 @@ The file opens in your browser only when \code{open_file = TRUE}.}
 
 \item{render_args}{Named list of additional arguments passed to
 \code{\link[rmarkdown:render]{rmarkdown::render()}}.}
+
+\item{model}{Exact model name in a \code{tam_retro} result. A single model is
+selected automatically; interactive sessions offer a chooser for several
+models. Scripts must specify a model when several are available.}
 
 \item{process_seed}{Non-negative integer seed for a reproducible local
 Gaussian joint sample. Default \code{123456L}; the caller's RNG state is restored.}
@@ -80,6 +111,11 @@ Reproduce ordinary dashboard plots with \code{\link[=plot_trend]{plot_trend()}} 
 \code{\link[=plot_obs_pred]{plot_obs_pred()}}, or use \code{\link[=plot_age_year]{plot_age_year()}} for the two orientations.
 The small F/M mean-overlay helpers and their line styling live in
 \code{inst/rmd/vis_tam.Rmd}.
+A \code{tam_retro} dashboard compares the selected model's successful
+peels with its unpeeled reference. Failed or missing attempts are
+listed on Background. Hindcast forecasts remain visible, with origin
+and horizon in hover text. A common projection separator is omitted
+when origins differ. The result is never refitted or modified.
 Population patterns and Mortality patterns use \code{\link[=plot_matrix]{plot_matrix()}} to
 explore age-year heatmaps, surfaces and contours, with shared ranges
 across models for each metric. Log changes values, not year or age.
