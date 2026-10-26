@@ -47,7 +47,19 @@ in their respective observation tables. Weight, maturity and spawning timing
 stay in the biological tables. Validation does not add the class, and inputs
 are checked again during preparation after any edits.
 
-Optional \code{unit} columns label catch numbers, stock weight per fish and each
+The optional \code{weight$type} key distinguishes \code{"stock"} and \code{"catch"}
+average individual weights. Stock weights are required and determine biomass
+and SSB. Catch weights determine yield and catch targets; if absent, stock
+weights serve both purposes. Each supplied type needs the complete same
+year-age grid, including retained biological ages beyond a modeled plus age.
+Missing catch-weight cells never fall back individually to stock weights.
+For a prepared wide table with \code{stock} and \code{catch} columns, the tidy form is:
+
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{tidyr::pivot_longer(wide, c(stock, catch),
+  names_to = "type", values_to = "obs")
+}\if{html}{\out{</div>}}
+
+Optional \code{unit} columns label catch numbers, average individual weight and each
 survey index. Use one unit throughout catch and weight, and one per survey.
 Values are never converted during fitting. For example, \code{"thousand fish"}
 catch and \code{"kg"} weight give abundance in thousands and biomass/SSB in

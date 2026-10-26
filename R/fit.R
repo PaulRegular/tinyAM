@@ -182,7 +182,10 @@
 #'
 #' @param data A named list of tidy observation tables (e.g., `catch`, `index`,
 #'   `weight`, `maturity`) and optional `pop_covariates`. A [tam_data][as_tam_data]
-#'   object or plain list can be used. See [cod_obs] for an example.
+#'   object or plain list can be used. The weight table may distinguish complete
+#'   stock and catch weights with `type`;
+#'   stock weights supply both purposes when catch weights are absent.
+#'   See [cod_obs] for an example.
 #' @param interval Level in `(0, 1)` to use to generate confidence intervals,
 #'   where applicable; default `0.95.`
 #' @param silent Logical; if `TRUE`, disables tracing information.
