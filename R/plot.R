@@ -427,8 +427,12 @@ plot_bubbles <- function(data, res = NULL, y = ~age, ylab = "Age", title = NULL,
     data$res <- data$std_res
   }
   data$sign <- ifelse(data$res > 0, "+", "-")
-  data$abs_res <- jitter(abs(data$res), factor = 1e-12) # tiny jitter to avoid identical-size rendering issues
+  # Break size ties deterministically without advancing the caller's RNG.
+  data$abs_res <- abs(data$res) + seq_len(nrow(data)) * .Machine$double.eps
   data <- data[!is.na(data$res), ]
+  # Unused factor levels create empty Plotly animation frames and can leave
+  # the initial bubble chart blank when some models lack this process.
+  data <- droplevels(data)
   data$.bubble_text <- if ("kind" %in% names(data)) paste0(data$kind, ": ", round(data$res, 2)) else as.character(round(data$res, 2))
 
   args <- list(...)
@@ -717,6 +721,15 @@ plot_age_year <- function(data, plot = plot_trend, x = ~year, xlab = "Year",
 #' @param frame Optional one-sided formula selecting a model column. Factor
 #'   levels determine the initial model and selector order.
 #' @param type Initial display: `"heatmap"`, `"surface"` or `"contour"`.
+#' @param signed Use symmetric orange-white-navy ranges centred on zero and
+#'   disable the log control? Default `FALSE` preserves ordinary matrix plots.
+#' @param y One-sided formula selecting the vertical coordinate, default `~age`.
+#'   Character/factor coordinates use ordered positions with each model's own
+#'   labels, suitable for unique M state blocks.
+#' @param ylab Vertical-axis label, default `"Age"`. A named character vector
+#'   can supply a different label for each metric.
+#' @param y_labels Optional one-sided formula selecting display labels for the
+#'   vertical coordinates, useful for model-specific state blocks.
 #' @details Linear shows original estimates, including zero. Log displays
 #'   log10 estimates; nonpositive values are gaps. Hover text always shows
 #'   original values and units. Ranges are shared across models separately for
@@ -733,8 +746,23 @@ plot_age_year <- function(data, plot = plot_trend, x = ~year, xlab = "Year",
 #' @seealso [plot_heatmap()], [vis_tam()]
 #' @export
 plot_matrix <- function(data, metric = NULL, frame = NULL,
-                        type = c("heatmap", "surface", "contour")) {
+                        type = c("heatmap", "surface", "contour"),
+                        signed = FALSE, y = ~age, ylab = "Age", y_labels = NULL) {
   type <- match.arg(type)
+  if (!is.logical(signed) || length(signed) != 1L || is.na(signed)) cli::cli_abort("signed must be TRUE or FALSE.")
+  if (!inherits(y, "formula") || length(all.vars(y)) != 1L || !all.vars(y) %in% names(data)) {
+    cli::cli_abort("y must select one existing vertical-axis column.")
+  }
+  vertical <- data[[all.vars(y)]]
+  categorical <- !is.numeric(vertical)
+  if (anyNA(vertical)) cli::cli_abort("Vertical coordinates cannot be missing.")
+  data$.vertical_label <- as.character(vertical)
+  if (!is.null(y_labels)) {
+    if (!inherits(y_labels, "formula") || length(all.vars(y_labels)) != 1L ||
+        !all.vars(y_labels) %in% names(data)) cli::cli_abort("y_labels must select one existing label column.")
+    data$.vertical_label <- as.character(data[[all.vars(y_labels)]])
+  }
+  data$age <- if (categorical) match(vertical, unique(vertical)) else vertical
   if (!is.data.frame(data) || !all(c("year", "age", "est") %in% names(data)) ||
       !nrow(data)) cli::cli_abort("{.arg data} must contain year, age and est rows.")
   if (!all(vapply(data[c("year", "age", "est")], is.numeric, logical(1))) ||
@@ -768,6 +796,8 @@ plot_matrix <- function(data, metric = NULL, frame = NULL,
   }
   spec <- lapply(metric_names, function(name) {
     d <- data[as.character(metrics) == name, , drop = FALSE]
+    axis_label <- if (length(ylab) == 1L) unname(ylab) else unname(ylab[name])
+    if (length(axis_label) != 1L || is.na(axis_label)) cli::cli_abort("ylab must supply a label for each metric.")
     units <- if ("unit" %in% names(d)) unique(as.character(d$unit[is.finite(d$est) &
       !is.na(d$unit) & nzchar(d$unit)])) else character()
     if (length(units) > 1L) cli::cli_abort("Metric {.val {name}} has different units; convert them before plotting.")
@@ -777,37 +807,65 @@ plot_matrix <- function(data, metric = NULL, frame = NULL,
     grid <- expand.grid(age = ages, year = years)
     cells <- lapply(model_names, function(model) {
       z <- d[as.character(models[as.character(metrics) == name]) == model, , drop = FALSE]
+      cell_ages <- ages
+      ticktext <- as.character(ages)
+      if (categorical) {
+        ticks <- unique(z$.vertical_label)
+        # Retain each model's own ordered state blocks rather than a union of ages.
+        z$age <- match(z$.vertical_label, ticks)
+        cell_ages <- seq_along(ticks)
+        ticktext <- ticks
+        if (!length(cell_ages)) { cell_ages <- 1; ticktext <- "Unavailable" }
+      } else if (!is.null(y_labels)) {
+        cell_ages <- sort(unique(z$age))
+        ticktext <- z$.vertical_label[match(cell_ages, z$age)]
+        if (!length(cell_ages)) { cell_ages <- 1; ticktext <- "" }
+      }
+      grid <- expand.grid(age = cell_ages, year = years)
       index <- match(paste(grid$year, grid$age), paste(z$year, z$age))
       values <- z$est[index]
       values[!is.finite(values)] <- NA_real_
       text <- paste0("Model: ", model, "<br>", name, ": ", format(values, trim = TRUE),
         if (nzchar(unit)) paste0(" ", unit) else "", "<br>Year: ", grid$year,
         if ("is_proj" %in% names(z)) ifelse(!is.na(z$is_proj[index]) & z$is_proj[index], " (projection)", "") else "",
-        "<br>Age: ", grid$age, .forecast_hover(z)[index])
+        "<br>", axis_label, ": ",
+        if (categorical || !is.null(y_labels)) ticktext[match(grid$age, cell_ages)] else grid$age,
+        .forecast_hover(z)[index])
       for (field in intersect(c("definition", "notes"), names(z))) {
         value <- as.character(z[[field]][index])
         text <- paste0(text, ifelse(is.na(value) | !nzchar(value), "", paste0("<br>", value)))
       }
-      natural <- matrix(values, nrow = length(ages))
+      natural <- matrix(values, nrow = length(cell_ages))
       logged <- natural
       logged[logged <= 0] <- NA_real_
       logged <- log10(logged)
       list(linear = rows(natural), log = rows(logged),
-           text = rows(matrix(text, nrow = length(ages))))
+           ages = cell_ages, ticktext = ticktext,
+           text = rows(matrix(text, nrow = length(cell_ages))))
     })
-    list(name = name, unit = unit, years = years, ages = ages, cells = cells,
-      linear = span(d$est), log = span(log10(d$est[is.finite(d$est) & d$est > 0])))
+    list(name = name, unit = unit, years = years, ages = ages, cells = cells, ylab = axis_label,
+      linear = if (signed) c(-1, 1) * max(c(abs(d$est[is.finite(d$est)]), .01)) else span(d$est),
+      log = span(log10(d$est[is.finite(d$est) & d$est > 0])))
   })
   colours <- tam_cols()
   colorscale <- unname(Map(list, seq(0, 1, length.out = length(colours)), colours))
-  config <- list(metrics = spec, models = model_names, type = type, colorscale = colorscale)
+  if (signed) colorscale <- list(list(0, tail(tam_cols(), 1L)), list(.5, "#FFFFFF"), list(1, tam_cols()[1L]))
+  config <- list(metrics = spec, models = model_names, type = type, colorscale = colorscale,
+                 signed = signed, ylab = ylab, categorical = categorical || !is.null(y_labels))
   script <- paste(readLines(system.file("js", "matrix.js", package = "tinyAM"),
                            warn = FALSE), collapse = "\n")
-  first <- spec[[1L]]
-  p <- plotly::plotly_build(plotly::plot_ly(x = first$years, y = first$ages,
-    z = matrix(0, nrow = length(first$ages), ncol = length(first$years)),
+  initial_metric <- if (signed) which(vapply(spec, function(metric) any(vapply(metric$cells,
+    function(cell) any(is.finite(unlist(cell$linear))), logical(1))), logical(1)))[1L] else 1L
+  if (is.na(initial_metric)) initial_metric <- 1L
+  config$initial_metric <- initial_metric - 1L
+  first <- spec[[initial_metric]]
+  initial <- if (signed) which(vapply(first$cells, function(cell) any(is.finite(unlist(cell$linear))), logical(1)))[1L] else 1L
+  if (is.na(initial)) initial <- 1L
+  cell <- first$cells[[initial]]
+  p <- plotly::plotly_build(plotly::plot_ly(x = first$years, y = cell$ages,
+    z = matrix(0, nrow = length(cell$ages), ncol = length(first$years)),
     type = type))
-  p$x$data[[1L]]$z <- first$cells[[1L]]$linear
+  p$x$data[[1L]]$z <- cell$linear
   p$x$data[[1L]]$colorscale <- colorscale
   htmlwidgets::onRender(p, script, data = config)
 }

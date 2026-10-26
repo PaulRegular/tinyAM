@@ -789,7 +789,9 @@ stack_nested <- function(x, label = "model",
     }
     names(dimnames(x)) <- c("year", if (block) "age_block" else "age")
     d <- tidy_array(x, value_name = "est")
+    if (block) d$age_block <- as.character(d$age_block)
     d$is_proj <- d$year %in% dat$years[dat$is_proj]
+    d <- d[!d$is_proj, , drop = FALSE]
     d$kind <- if (process %in% c("rw", "cor_rw")) "Annual log increment" else "Log deviation from mean"
     d
   }
@@ -849,6 +851,10 @@ stack_nested <- function(x, label = "model",
 #' @param model_list A **named list** of fitted TAM objects. Required to be named; the names are used as label values.
 #' @param interval Confidence level passed to [tidy_pop()] and [tidy_par()] for interval construction. Default `0.95`.
 #' @param label Character scalar giving the label column name to add when stacking across multiple/named models. Default `"model"`.
+#' @param process_residuals Calculate joint-sample process diagnostics? Use
+#'   `FALSE` for lightweight consumers that need only existing fitted summaries.
+#' @param process_seed Non-negative integer seed for a reproducible local
+#'   Gaussian joint sample. Default `123456L`; the caller's RNG state is restored.
 #' @inheritParams stack_nested
 #'
 #' @return
@@ -859,6 +865,14 @@ stack_nested <- function(x, label = "model",
 #' - **deviations** — signed N/F/M process tables, using annual increments for
 #'   RW processes and mean deviations for IID/AR1. M rows represent unique state
 #'   blocks. These point estimates exclude unpenalized RW boundary rows.
+#' - **process_residuals** — standardized joint-sample `recruitment`, `N`, `F`
+#'   and `M` tables when available. `est` contains the diagnostic draw and
+#'   `fitted` the standardized innovation at the fitted mode. A `status` table
+#'   records each model's calculation status, explanation, seed and method.
+#'   Disabled processes, projections and unpenalized boundaries have no rows.
+#'   M coordinates represent unique state blocks, with `state_block` giving
+#'   their order. Missing or invalid joint precision produces a warning and
+#'   an unavailable status, retaining fitted deviations without fabricating draws.
 #' - **patterns** — population and mortality age-year tables for [plot_matrix()].
 #'   Compatible units follow the first fitted model's displayed metric units,
 #'   including explicit reference conversions. Unspecified fitted units remain unspecified;
@@ -894,8 +908,24 @@ stack_nested <- function(x, label = "model",
 #'
 #' @importFrom utils type.convert
 #' @seealso [tidy_obs_pred()], [tidy_pop()], [tidy_par()], [fit_tam()], [fit_retro()]
+#' @section Process diagnostics:
+#' Innovations are whitened using the fitted IID, RW, age-correlated RW or
+#' separable AR1 distribution, including stationary boundaries and age-specific
+#' SDs. All predictions are recomputed through the fitted population code.
+#' One Gaussian parameter perturbation from the stored joint precision is
+#' propagated through the automatic-differentiation Jacobian of those
+#' innovations. This SAM-style local Gaussian approximation retains covariance
+#' across components without constructing a dense residual covariance matrix.
+#' Results for a model do not depend on which other models are supplied or their
+#' order. See [plot_process_deviations()] and [plot_process_residuals()] for
+#' reusable viewers of the same tables.
 #' @export
-tidy_tam <- function(..., model_list = NULL, interval = 0.95, label = "model", label_type = "auto") {
+tidy_tam <- function(..., model_list = NULL, interval = 0.95, label = "model", label_type = "auto",
+                     process_residuals = TRUE, process_seed = 123456L) {
+  process_seed <- .validate_process_seed(process_seed)
+  if (!is.logical(process_residuals) || length(process_residuals) != 1L || is.na(process_residuals)) {
+    cli::cli_abort("{.arg process_residuals} must be TRUE or FALSE.")
+  }
   dots <- list(...)
   dot_expr <- as.list(substitute(list(...)))[-1]
   fits_info <- .dots_or_list(dots, dot_expr, model_list = model_list, list_arg_name = "model_list")
@@ -1062,6 +1092,8 @@ tidy_tam <- function(..., model_list = NULL, interval = 0.95, label = "model", l
     if (inherits(fit, "tam_ref")) list() else .tidy_process_deviations(fit)
   })
   out$deviations <- stack_nested(deviations, label = id_col, label_type = label_type)
+  residuals <- lapply(model_list, .tidy_process_residuals, seed = process_seed, enabled = process_residuals)
+  out$process_residuals <- stack_nested(residuals, label = id_col, label_type = label_type)
   effects <- lapply(model_list, function(fit) {
     if (inherits(fit, "tam_ref")) {
       return(list())

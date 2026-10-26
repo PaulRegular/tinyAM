@@ -8,7 +8,11 @@ plot_matrix(
   data,
   metric = NULL,
   frame = NULL,
-  type = c("heatmap", "surface", "contour")
+  type = c("heatmap", "surface", "contour"),
+  signed = FALSE,
+  y = ~age,
+  ylab = "Age",
+  y_labels = NULL
 )
 }
 \arguments{
@@ -21,6 +25,19 @@ Optional \code{unit}, \code{definition}, \code{notes} and \code{is_proj} columns
 levels determine the initial model and selector order.}
 
 \item{type}{Initial display: \code{"heatmap"}, \code{"surface"} or \code{"contour"}.}
+
+\item{signed}{Use symmetric orange-white-navy ranges centred on zero and
+disable the log control? Default \code{FALSE} preserves ordinary matrix plots.}
+
+\item{y}{One-sided formula selecting the vertical coordinate, default \code{~age}.
+Character/factor coordinates use ordered positions with each model's own
+labels, suitable for unique M state blocks.}
+
+\item{ylab}{Vertical-axis label, default \code{"Age"}. A named character vector
+can supply a different label for each metric.}
+
+\item{y_labels}{Optional one-sided formula selecting display labels for the
+vertical coordinates, useful for model-specific state blocks.}
 }
 \value{
 A Plotly object with independent controls for each widget.

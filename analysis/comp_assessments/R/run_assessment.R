@@ -312,8 +312,23 @@ view_assessment <- function(fit, assessment, output_file = NULL, open_file = TRU
   invisible(result)
 }
 
+.assessment_log <- function(path, text) {
+  if (!is.null(path)) cat(format(Sys.time(), "%Y-%m-%d %H:%M:%S"), text, "\n",
+    file = path, append = TRUE)
+}
+
+.assessment_save_rds <- function(object, file) {
+  # Keep the previous complete checkpoint if serialization is interrupted.
+  temporary <- tempfile(paste0(".", basename(file), "-"), tmpdir = dirname(file))
+  on.exit(unlink(temporary), add = TRUE)
+  saveRDS(object, temporary)
+  if (!file.rename(temporary, file)) cli::cli_abort("Could not replace checkpoint {.file {file}}.")
+  invisible(file)
+}
+
 run_assessment <- function(assessment_id, database = NULL, fit = TRUE,
-                           dashboard = FALSE, cache = FALSE, silent = TRUE) {
+                           dashboard = FALSE, cache = FALSE, silent = TRUE,
+                           log_file = NULL) {
   if (is.null(database)) database <- read_database()
   if (length(fit) != 1L || is.na(fit) || !is.logical(fit) ||
     length(dashboard) != 1L || is.na(dashboard) || !is.logical(dashboard) ||
@@ -349,6 +364,7 @@ run_assessment <- function(assessment_id, database = NULL, fit = TRUE,
     return(result)
   }
 
+  .assessment_log(log_file, if (fit) "Translating inputs and fitting model." else "Translating inputs.")
   stock <- .assessment_stock(source, do_fit = fit, silent = silent)
   stock_env <- stock$env
   sourced <- stock$error
@@ -380,6 +396,7 @@ run_assessment <- function(assessment_id, database = NULL, fit = TRUE,
     return(result)
   }
   fitted <- stock_env$fit
+  .assessment_log(log_file, "Model returned; checking diagnostics.")
   fitted <- .assessment_catch_reporting(fitted, translated$catch_reporting)
   result$fit <- fitted
   result$diagnostics <- .assessment_diagnostics(
@@ -390,12 +407,14 @@ run_assessment <- function(assessment_id, database = NULL, fit = TRUE,
   cache_dir <- file.path(.assessment_root, "results", "cache", assessment_id)
   if (cache) {
     dir.create(cache_dir, recursive = TRUE, showWarnings = FALSE)
-    saveRDS(fitted, file.path(cache_dir, "fit.rds"))
+    .assessment_log(log_file, "Saving fitted object.")
+    .assessment_save_rds(fitted, file.path(cache_dir, "fit.rds"))
   }
   if (!isTRUE(fitted$is_converged)) {
     return(result)
   }
 
+  .assessment_log(log_file, "Building reference comparisons.")
   comparison <- tryCatch(.assessment_comparison(fitted, result), error = identity)
   if (inherits(comparison, "error")) {
     result$diagnostics$status <- "reference_failed"
@@ -440,9 +459,38 @@ run_assessment <- function(assessment_id, database = NULL, fit = TRUE,
   result
 }
 
-.parallel_assessment_worker <- function(assessment_id, database, repo_root, fit) {
+.parallel_assessment_worker <- function(assessment_id, database, repo_root, fit,
+                                        cache = FALSE, timeout = Inf, log_file = NULL) {
   original_wd <- getwd()
   on.exit(setwd(original_wd), add = TRUE)
+  begun <- Sys.time()
+  # A subprocess deadline also covers native optimizer code that may not check
+  # R's elapsed-time interrupt. Only this assessment's process is terminated.
+  if (is.finite(timeout)) {
+    return(tryCatch(
+      callr::r(function(assessment_id, database, repo_root, fit, cache, log_file) {
+        pkgload::load_all(repo_root, quiet = TRUE)
+        runner_env <- new.env(parent = globalenv())
+        sys.source(file.path(repo_root, "analysis", "comp_assessments", "R",
+          "run_assessment.R"), envir = runner_env)
+        runner_env$run_assessment(assessment_id, database = database, fit = fit,
+          dashboard = FALSE, cache = cache, log_file = log_file)
+      }, args = list(assessment_id, database, repo_root, fit, cache, log_file),
+      wd = repo_root, libpath = .libPaths(), timeout = timeout,
+      stdout = if (is.null(log_file)) NULL else paste0(log_file, ".output"),
+      stderr = "2>&1"),
+      error = function(e) {
+        result <- .failed_assessment_run(assessment_id, database, e)
+        result$diagnostics$elapsed_seconds <- as.numeric(difftime(Sys.time(), begun, units = "secs"))
+        if (inherits(e, "callr_timeout_error")) {
+          result$diagnostics$status <- "timed_out"
+          result$diagnostics$reason <- paste("Time limit of", timeout,
+            "seconds exceeded; model settings were not changed.")
+        }
+        result
+      }
+    ))
+  }
   tryCatch(
     {
       setwd(repo_root)
@@ -455,7 +503,7 @@ run_assessment <- function(assessment_id, database = NULL, fit = TRUE,
       runner_env$run_assessment(
         assessment_id,
         database = database, fit = fit,
-        dashboard = FALSE, cache = FALSE
+        dashboard = FALSE, cache = cache, log_file = log_file
       )
     },
     error = function(e) .failed_assessment_run(assessment_id, database, e)
@@ -465,7 +513,7 @@ run_assessment <- function(assessment_id, database = NULL, fit = TRUE,
 run_assessments <- function(assessment_ids = NULL, database = NULL,
                             parallel = FALSE, workers = 4L, fit = TRUE,
                             dashboard = FALSE, cache = FALSE,
-                            save_results = FALSE) {
+                            save_results = FALSE, timeout = Inf, progress = TRUE) {
   if (is.null(database)) database <- read_database()
   if (!is.logical(parallel) || length(parallel) != 1L || is.na(parallel) ||
     !is.logical(fit) || length(fit) != 1L || is.na(fit) ||
@@ -479,6 +527,15 @@ run_assessments <- function(assessment_ids = NULL, database = NULL,
   if (length(workers) != 1L || is.na(workers) || !is.numeric(workers) ||
     !is.finite(workers) || workers < 1 || workers != as.integer(workers)) {
     stop("workers must be one positive integer.", call. = FALSE)
+  }
+  if (!is.numeric(timeout) || length(timeout) != 1L || is.na(timeout) || timeout <= 0) {
+    cli::cli_abort("{.arg timeout} must be positive seconds or Inf.")
+  }
+  if (!is.logical(progress) || length(progress) != 1L || is.na(progress)) {
+    cli::cli_abort("{.arg progress} must be TRUE or FALSE.")
+  }
+  if (is.finite(timeout) && !requireNamespace("callr", quietly = TRUE)) {
+    cli::cli_abort("Install callr to use an assessment time limit.")
   }
 
   eligible <- database$assessments$assessment_id[
@@ -500,42 +557,64 @@ run_assessments <- function(assessment_ids = NULL, database = NULL,
     }
   }
 
-  safe_run <- function(id) {
-    tryCatch(
-      run_assessment(id,
-        database = database, fit = fit,
-        dashboard = FALSE, cache = FALSE
-      ),
-      error = function(e) .failed_assessment_run(id, database, e)
-    )
-  }
+  if (!length(assessment_ids)) return(.assessment_result_tables(list(), save_results))
+  repo_root <- normalizePath(getwd(), winslash = "/", mustWork = TRUE)
   if (parallel) {
     if (!requireNamespace("pkgload", quietly = TRUE)) {
       stop("Install pkgload to run parallel workers from the current tinyAM checkout.",
         call. = FALSE
       )
     }
-    repo_root <- normalizePath(getwd(), winslash = "/", mustWork = TRUE)
     old_plan <- future::plan()
     on.exit(future::plan(old_plan), add = TRUE)
     future::plan(future::multisession, workers = as.integer(workers))
-    runs <- furrr::future_map(
-      assessment_ids, .parallel_assessment_worker,
-      database = database, repo_root = repo_root, fit = fit,
-      .options = furrr::furrr_options(seed = TRUE)
-    )
-  } else {
-    runs <- lapply(assessment_ids, safe_run)
   }
+  runs <- progressr::with_progress({
+    tick <- progressr::progressor(steps = length(assessment_ids))
+    safe_run <- function(id) {
+      tick(amount = 0, message = paste(id, "started"))
+      # Workers need only this stock's tables, not the entire source database.
+      stock_database <- read_assessment(id, database)
+      log_file <- NULL
+      if (cache) {
+        cache_dir <- file.path(.assessment_root, "results", "cache", id)
+        dir.create(cache_dir, recursive = TRUE, showWarnings = FALSE)
+        log_file <- file.path(cache_dir, "run.log")
+        writeLines(character(), log_file)
+      }
+      .assessment_log(log_file, paste(id, "started; timeout", timeout, "seconds."))
+      result <- if (parallel || is.finite(timeout)) {
+        .parallel_assessment_worker(id, stock_database, repo_root, fit,
+          cache = cache, timeout = timeout, log_file = log_file)
+      } else {
+        tryCatch(run_assessment(id, database = stock_database, fit = fit,
+          dashboard = FALSE, cache = cache, log_file = log_file),
+          error = function(e) .failed_assessment_run(id, stock_database, e))
+      }
+      if (cache) {
+        .assessment_log(log_file, "Saving completed assessment checkpoint.")
+        .assessment_save_rds(result, file.path(cache_dir, "result.rds"))
+      }
+      .assessment_log(log_file, paste(id, "finished:", result$diagnostics$status))
+      tick(message = paste(id, result$diagnostics$status))
+      result
+    }
+    if (parallel) {
+      furrr::future_map(assessment_ids, safe_run,
+        .options = furrr::furrr_options(seed = TRUE, scheduling = Inf))
+    } else {
+      lapply(assessment_ids, safe_run)
+    }
+  }, enable = progress, handlers = progressr::make_progression_handler(
+    "assessment", interval = 0, enable = progress,
+    reporter = list(update = function(config, state, progression, ...) {
+      if (length(progression$message)) cli::cli_inform("{progression$message}")
+    })
+  ))
   names(runs) <- assessment_ids
 
   for (id in assessment_ids) {
     result <- runs[[id]]
-    if (!is.null(result$fit) && cache) {
-      cache_dir <- file.path(.assessment_root, "results", "cache", id)
-      dir.create(cache_dir, recursive = TRUE, showWarnings = FALSE)
-      saveRDS(result$fit, file.path(cache_dir, "fit.rds"))
-    }
     if (dashboard && !is.null(result$fit) && isTRUE(result$fit$is_converged) &&
       !is.null(result$ref)) {
       result$dashboard_file <- if (cache) {

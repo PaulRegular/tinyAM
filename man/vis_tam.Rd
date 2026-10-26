@@ -14,7 +14,8 @@ vis_tam(
   open_file = TRUE,
   background = NULL,
   render_args = list(),
-  model = NULL
+  model = NULL,
+  process_seed = 123456L
 )
 
 \method{vis_tam}{default}(
@@ -25,7 +26,8 @@ vis_tam(
   open_file = TRUE,
   background = NULL,
   render_args = list(),
-  model = NULL
+  model = NULL,
+  process_seed = 123456L
 )
 
 \method{vis_tam}{tam_retro}(
@@ -36,7 +38,8 @@ vis_tam(
   open_file = TRUE,
   background = NULL,
   render_args = list(),
-  model = NULL
+  model = NULL,
+  process_seed = 123456L
 )
 }
 \arguments{
@@ -64,6 +67,9 @@ The file opens in your browser only when \code{open_file = TRUE}.}
 \item{model}{Exact model name in a \code{tam_retro} result. A single model is
 selected automatically; interactive sessions offer a chooser for several
 models. Scripts must specify a model when several are available.}
+
+\item{process_seed}{Non-negative integer seed for a reproducible local
+Gaussian joint sample. Default \code{123456L}; the caller's RNG state is restored.}
 }
 \value{
 Used for its side effects: writes an HTML dashboard and optionally
@@ -86,9 +92,15 @@ Stock-recruit models add a relationship page with parent-year pairs,
 median curves at declared reference covariates and conditional
 recruitment predictions. Random parameters also show signed
 recruitment deviations. See \code{\link[=tidy_recruitment]{tidy_recruitment()}}.
-N/F/M deviations use signed bubbles; RW values are annual increments,
-while IID/AR1 values are deviations from their mean. Shared M blocks
-are not treated as separate biological ages.
+The Random page separates Recruitment, N, F and M states from
+Process deviations and Joint-sample residuals. Optional initial
+abundance plots are inside N, followed by optional formula-effect tabs.
+\code{\link[=plot_process_deviations]{plot_process_deviations()}} and \code{\link[=plot_process_residuals]{plot_process_residuals()}} reproduce
+individual diagnostic plots from a single tidy result, selecting
+\code{component = "Recruitment"} or \code{"NFM"}. The dashboard supplies dropdown
+tabs for these views; N/F/M plots have component buttons and a model slider.
+Shared M blocks are not treated as separate biological ages.
+\code{process_seed} reproduces the same Gaussian joint draw as \code{\link[=tidy_tam]{tidy_tam()}}.
 Random plots include latent states and formula-effect trends.
 Age-year plots offer Annual trends (year axis, age selector) and
 Age profiles (age axis, year selector). Each plot starts in its

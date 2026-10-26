@@ -59,6 +59,7 @@ reference:
   - plot_tam
   - plot_age_year
   - plot_matrix
+  - plot_process_deviations
   - tam_cols
 - title: Tidy model results
 - contents:

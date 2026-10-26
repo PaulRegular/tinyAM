@@ -10,6 +10,22 @@ test_that("S3 dispatch preserves legacy fit, reference and list labels", {
   expect_identical(vis_tam(model_list = list(a = first)), "a")
 })
 
+test_that("dashboard dispatch retains reproducible process controls", {
+  testthat::local_mocked_bindings(.render_vis_tam = function(fits, ...,
+    process_seed = 123456L, retro_origins = NULL) {
+      list(seed = process_seed, origins = retro_origins)
+    }, .package = "tinyAM")
+  r <- structure(list(fits = list(base = list(`2024` = default_fit)),
+    fold_diagnostics = data.frame(model = "base", fold = 2024L,
+      is_reference = TRUE, is_converged = TRUE, error = NA_character_)),
+    class = "tam_retro")
+  expect_identical(vis_tam(default_fit, process_seed = 42L)$seed, 42L)
+  expect_identical(vis_tam(model_list = list(base = default_fit), process_seed = 43L)$seed, 43L)
+  view <- vis_tam(r, process_seed = 44L)
+  expect_identical(view$seed, 44L)
+  expect_identical(view$origins, c(`2024` = 2024L))
+})
+
 test_that("retrospective model selection, omissions and ordering are explicit", {
   r <- structure(list(fits = list(base = list(`2022` = default_fit,
     `2024` = default_fit, `2023` = NULL)), fold_diagnostics = data.frame(

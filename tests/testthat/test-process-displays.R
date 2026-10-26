@@ -55,6 +55,20 @@ test_that("process bubbles use signed values and explicit M block axes", {
   expect_true(any(grepl("-1", unlist(lapply(p$x$data, `[[`, "text")))))
 })
 
+test_that("bubble plots drop unused model frames so markers show on load", {
+  d <- data.frame(
+    year = 2000:2003,
+    age = c(2, 3, 2, 3),
+    est = c(-.4, .3, -.2, .5),
+    model = factor(rep("sam", 4), levels = c("scaa", "sam", "ncam"))
+  )
+  p <- plotly::plotly_build(plot_bubbles(d, res = ~est, frame = ~model, title = ""))
+
+  expect_length(p$x$frames, 0L)
+  expect_equal(sum(vapply(p$x$data, function(trace) length(trace$x), integer(1))), nrow(d))
+  expect_identical(p$x$layout$title, "")
+})
+
 test_that("mean F and initial N do not partially match absent process states", {
   d <- prepare_tam(cod_obs, years = 1983:1990, ages = 2:5,
     N_settings = list(process = "off", init = "free"),

@@ -9,6 +9,20 @@
   one model's reference and successful peels; omitted attempts are explained
   on Background. Forecast hover text identifies each peel's origin and horizon.
 
+* The assessment translation batch honours its dashboard switch, reports stock
+  progress, and saves per-stock checkpoints immediately. Its script applies a
+  configurable subprocess deadline, recording timeouts without changing model
+  assumptions or blocking the remaining assessments.
+
+* Add reproducible Gaussian joint-sample process residuals to `tidy_tam()`,
+  alongside fitted deviations, with explicit uncertainty status and a local seed.
+  New standalone process plots and the Random dashboard separate Recruitment,
+  N, F, M, fitted deviations and joint-sample residuals; signed matrices retain
+  unique M state blocks. Model likelihoods and fitting assumptions are unchanged.
+  Each process plotting helper returns one Plotly widget selected by `component`;
+  flexdashboard supplies the Recruitment/N/F/M dropdowns. Residual bubbles use
+  N/F/M buttons and a model animation slider, matching ordinary residual plots.
+
 * `check_tam()` accepts multiple fitted models or a named `model_list`, with
   labeled CLI output and separate diagnostics for each model. Single-model
   results and all diagnostic calculations are unchanged. Supply `grad_tol`

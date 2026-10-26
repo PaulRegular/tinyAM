@@ -54,13 +54,14 @@ render_cheatsheet <- function(repo) {
   invisible(final)
 }
 
-main <- function(mode = "prepare") {
+main <- function(mode = "prepare", process_seed = 123456L) {
   if (length(mode) != 1L || !mode %in% c("prepare", "render", "dashboard")) cli::cli_abort("Use prepare, render, or dashboard.")
   script <- sub("^--file=", "", grep("^--file=", commandArgs(), value = TRUE))
   script <- normalizePath(if (length(script)) script[1L] else "cheatsheet/examples.R", winslash = "/", mustWork = TRUE)
   repo <- dirname(dirname(script))
   if (mode == "render") return(render_cheatsheet(repo))
   pkgload::load_all(repo, quiet = TRUE, helpers = FALSE)
+  process_seed <- tinyAM:::.validate_process_seed(process_seed)
   root <- file.path(repo, "cheatsheet")
   cache <- file.path(root, "cache")
   output <- file.path(root, "output")
@@ -90,7 +91,10 @@ dat <- make_tam_data(
   maturity = maturity_data
 )
 # ---- end ----
-  fit_key <- list(sources = sources, example = provenance$example_md5, data = fingerprint(dat), runtime = provenance$runtime)
+  # Reporting/layout changes must not invalidate numerical model fits.
+  fit_sources <- sources[!names(sources) %in% c("plot.R", "plot-process.R", "palette.R",
+    "tidy.R", "vis.R", "process-diagnostics.R", "NAMESPACE")]
+  fit_key <- list(sources = fit_sources, example = provenance$example_md5, data = fingerprint(dat), runtime = provenance$runtime)
   records <- list()
   cached <- function(name, key, code) {
     file <- file.path(cache, paste0(name, ".rds"))
@@ -159,19 +163,24 @@ ncam <- update(scaa,
   dashboard_file <- file.path(cache, "dashboard.rds")
   background_file <- file.path(root, "background.md")
   background <- readLines(background_file, warn = FALSE, encoding = "UTF-8")
-  dashboard_key <- list(fit = fit_key, templates = templates, background = file_hashes(background_file))
+  diagnostics <- list(method = tinyAM:::.process_method(), seed = process_seed)
+  provenance$process_diagnostics <- diagnostics
+  tidy_key <- list(fit = fit_key, sources = sources[c("tidy.R", "process-diagnostics.R")], diagnostics = diagnostics)
+  out <- cached("tidy", tidy_key, function() tidy_tam(scaa, sam, ncam, process_seed = process_seed))
+  dashboard_key <- list(tidy = tidy_key, sources = sources[c("vis.R", "plot.R", "plot-process.R")],
+    layout = "random-dropdowns-v2", templates = templates, background = file_hashes(background_file))
   prior <- if (file.exists(dashboard_file)) readRDS(dashboard_file) else NULL
 # ---- dashboard ----
 # vis_tam(scaa, sam, ncam)
 # ---- end ----
   if (!file.exists(file.path(output, "tinyAM_dashboard.html")) || !identical(prior, dashboard_key)) {
-    vis_tam(scaa, sam, ncam, background = background,
+    vis_tam(scaa, sam, ncam, background = background, process_seed = process_seed,
       output_file = file.path(output, "tinyAM_dashboard.html"), open_file = FALSE)
     saveRDS(dashboard_key, dashboard_file)
   }
   if (mode == "dashboard") return(invisible(fits))
 # ---- tidy ----
-out <- tidy_tam(scaa, sam, ncam)
+# out <- tidy_tam(scaa, sam, ncam)
 ssb <- out$pop$ssb
 index <- out$obs_pred$index
 # ---- end ----

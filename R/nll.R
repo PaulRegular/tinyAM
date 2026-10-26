@@ -198,6 +198,9 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   P <- population$P
   N <- exp(log_N)
   recruitment <- exp(log_recruitment)
+  if (identical(dat$.likelihood_component, "process_innovations")) {
+    return(.process_innovations(par, dat, population, log_F, log_mu_F, log_mu_M))
+  }
   if (simulate) {
     if (dat$rec$type != "off") log_r[] <- log_recruitment[dat$rec$eligible]
     if (N_settings$process != "off") log_n[] <- log_N[-1, -1, drop = FALSE]
