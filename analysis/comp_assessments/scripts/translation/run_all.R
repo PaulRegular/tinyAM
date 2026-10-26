@@ -2,8 +2,8 @@ root <- file.path("analysis", "comp_assessments")
 
 # Batch controls. Dashboards are optional and are rendered only after saving fits.
 parallel <- TRUE
-workers <- 4L
-dashboard <- FALSE
+workers <- 12L
+dashboard <- TRUE
 timeout <- 20 * 60 # Seconds per assessment; Inf disables the subprocess deadline.
 
 pkgload::load_all(".", quiet = TRUE)
