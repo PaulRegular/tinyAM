@@ -123,3 +123,58 @@ in the framework nor a simulation study establishes what the 2024 run used.
 No tinyAM model, source-based starts or dashboard is claimed. Translation
 requires those original inputs and resolution of the remaining configuration
 and year-alignment questions; observations will not be inferred from fitted N/F.
+
+
+## Separate 2018 historical assessment
+
+The 2018 SAW-66 report recommends the single-stock non-migration SCA for
+management; its alternative two-stock migration model is not the accepted run.
+The historical record `asmfc_striped_bass_atlantic_2018` is separate from the
+2024 update, which remains the current assessment. The official assessment
+and its source tables are cached locally; the PDF URL, retrieval metadata and
+SHA-256 checksum are recorded in `source_cache/ck_nefsc_garmiii_saxatilis_gom_chatt/manifest.csv`.
+
+The 2018 importer records two-fleet total removals and age proportions for
+1982–2017, eight relative-abundance index series with annual CVs, recruitment
+indices, eight survey age compositions, age-specific fixed M, female maturity
+and female proportions, and catch, January-1 and spawning weights. Table B10
+reports age-1+ abundance, total F-at-age, age-1 recruitment, SSB-at-age and
+SSB; the reported SSB SE is retained on its natural tonne scale. The 2018
+record remains partial because complete native configuration and effective
+composition sample sizes are not available.
+
+The published index tables provide numerical values for 1982–2017. The model
+text also describes Maryland YOY and age-1 indices in 1970–1981, but those
+values are not tabulated in the available numerical appendix. They are not
+invented or used in the translation; the tinyAM fit is restricted to the
+1982–2017 overlap where catch, biology and reported population states are
+available. Appendix B10 links YOY indices to age 1 and age-1 indices to age 2.
+Its “VA Age 1” label conflicts with the “NY Age-1” label in Table B5.6 and
+assessment diagnostics. The translation retains the table label, links the
+series to age 2, and records the discrepancy.
+
+For analysis only, the two catch fleets are each converted from totals times
+age proportions and then pooled. Aggregate relative indices are combined
+with their available age compositions to create age-specific index values;
+composition proportions are normalized across available ages, and zero cells
+are omitted from tinyAM's lognormal likelihood. These transformed observations
+do not replace canonical totals or compositions. tinyAM uses a simpler
+age-specific lognormal likelihood and does not reproduce the source's
+multinomial compositions, time-varying CV weights, or fleet-specific
+selectivity. Female maturity is multiplied by the fixed female proportion for
+tinyAM's single maturity surface. Source SSB and derived January-1 biomass
+remain distinct comparisons; derived biomass has no uncertainty.
+
+The 1982–2017 tinyAM fit passed the numerical checks after the one permitted
+retry with source-based N/F starting values; the default-start attempt did not
+pass. The successful fit had optimizer code 0, maximum absolute gradient
+0.00283, a positive-definite Hessian and successful SD reporting (168 fixed
+and 575 random effects). The main disagreement is fishing mortality: its
+mean absolute percent difference is 157%, terminal-year difference is +49%,
+and trend correlation is 0.775. By comparison, total abundance has 12.0% mean
+absolute percent difference and 0.991 trend correlation; recruitment has
+11.5% and 0.986. SSB differs by 36.7% on average with a -27.4% terminal-year
+difference, while its trend correlation is 0.986; the source and tinyAM SSB
+definitions remain approximate. Fixed M matches because it is supplied as an
+input, not estimated. See the local dashboard for the year- and age-specific
+comparisons.
