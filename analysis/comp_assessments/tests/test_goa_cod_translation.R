@@ -9,6 +9,23 @@ inputs_before <- source_data$inputs
 translated <- .test_stock(source_data)
 obs <- translated$obs
 settings <- translated$settings
+stock <- .assessment_stock(source_data, do_fit = FALSE, silent = TRUE)$env
+
+annual_years <- sort(unique(stats::na.omit(stock$age_key$year)))
+pooled_key <- stock$age_key[is.na(stock$age_key$year), , drop = FALSE]
+pooled_catch <- stock$.goa_age_shares(
+  stock$inputs, pooled_key, "catch", "Trawl fishery", "",
+  stock$years, stock$ages
+)
+pooled_index <- stock$.goa_age_shares(
+  stock$inputs, pooled_key, "index", "", stock$survey,
+  stock$years, stock$ages
+)
+share_key <- function(x) paste(x$year, x$fleet, x$age)
+trawl_shares <- stock$catch_shares[
+  stock$catch_shares$fleet == "Trawl fishery", , drop = FALSE
+]
+pooled_catch_match <- match(share_key(trawl_shares), share_key(pooled_catch))
 
 tinyAM::check_obs(obs)
 stopifnot(
@@ -16,6 +33,18 @@ stopifnot(
   identical(translated$years, 2007:2025),
   identical(translated$ages, 1:10),
   translated$age_plus_group == 10,
+  identical(annual_years, 2007:2024),
+  nrow(pooled_key) > 0L,
+  !anyNA(pooled_catch_match),
+  any(abs(
+    trawl_shares$proportion -
+      pooled_catch$proportion[pooled_catch_match]
+  ) > 1e-6),
+  isTRUE(all.equal(
+    trawl_shares$proportion[trawl_shares$year == 2025],
+    pooled_catch$proportion[pooled_catch$year == 2025]
+  )),
+  isTRUE(all.equal(stock$index_shares, pooled_index)),
   nrow(obs$catch) == 19L * 10L,
   nrow(obs$index) == 10L * 10L,
   all(is.finite(obs$catch$obs)),
