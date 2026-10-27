@@ -64,31 +64,33 @@ confirmed absence of a fitted length likelihood or a stochastic N process.
 
 ## tinyAM translation and numerical result
 
-The first translation uses 1990–2023 and ages 2–11+, avoiding incomplete early
-catch cells and absent age-1 catch. The 2024 total catch and survey biomass have
-no matching age compositions, so cannot enter this age-index approximation.
-It retains recorded catch/survey weights, fixed M, female maturity and source
-timing. It uses deterministic survival, free initial ages, independent F random
-walks and constant-mean IID age-2 recruitment. The native age-1 Beverton–Holt
-relationship, F penalties, q prior, ageing error and separate composition
-likelihood are omitted. Rounded survey CVs supply log SD; their additional
-composition uncertainty is not represented. Source observations are not adjusted.
+The translation uses 1990–2023 and ages 2–11+, avoiding incomplete early catch
+cells and absent age-1 catch. The 2024 total catch and survey biomass have no
+matching age compositions, so cannot enter this age-index approximation. It
+retains recorded catch/survey weights, fixed M, female maturity and source
+timing. It uses deterministic survival, free initial ages, age-specific mean
+log-F with age/year AR1 residuals, and constant-mean IID age-2 recruitment.
+The native age-1 Beverton–Holt relationship, F penalties, q prior, ageing error
+and separate composition likelihood are omitted. Rounded survey CVs supply log
+SD; their additional composition uncertainty is not represented. Source
+observations are not adjusted.
 
-Default initialization failed (optimizer code 1, false convergence; maximum
-gradient 1.97e+08; non-finite objective evaluations). One retry using aligned
-official N and F converged (code 0, objective 619.379, maximum absolute
-gradient 0.001433, positive-definite Hessian and successful uncertainty
-estimation; 16.19 seconds). Data and assumptions were identical between
-attempts. Both diagnostic rows are retained in the cached fit.
+The age-specific F random-walk translation required a retry from aligned official
+N and F after default initialization failed numerical checks. The current AR1 F
+translation converges from package defaults (optimizer code 0, objective
+574.295, maximum absolute gradient 0.000834, positive-definite Hessian and
+successful uncertainty estimation; 13.27 seconds). This is a numerically
+usable, source-plausible alternative; it changes the F process structure, so
+the difference in fit cannot be attributed to initialization alone.
 
 The dashboard retains native age-1+ SSB and compares modeled-age August 1
 female SSB calculated from rounded official N/F, fixed M and recorded biology,
-without uncertainty. The current comparison summary gives this approximate
-SSB 24.5% mean absolute percentage difference, −26.5% terminal difference,
-and 0.948 correlation. N-at-age has 32.1%, −27.1%, and 0.858 mean within-age
-correlation. F-at-age has 299.0% mean absolute difference, +37.7% terminal
-difference, and 0.568 correlation; its median absolute percentage difference
-is 40.9%, so near-zero official juvenile F accounts for much of the large
-mean. Population-weighted F-bar has 28.7%, +17.1%, and 0.830. Age-2 recruitment
-has 19.5%, −15.1%, and 0.931; total abundance has 18.3%, −29.0%, and 0.947;
-biomass has 20.0%, −31.5%, and 0.953. Fixed-M agreement is input consistency.
+without uncertainty. The AR1 translation gives this approximate SSB 22.0% mean
+absolute percentage difference, −25.9% terminal difference, and 0.951
+correlation. N-at-age has 29.7%, −24.5%, and 0.851 mean within-age correlation.
+F-at-age has 189.8% mean absolute difference, +44.1% terminal difference,
+and 0.590 correlation; its median absolute percentage difference is 36.4%,
+so near-zero official juvenile F accounts for much of the large mean.
+Population-weighted F-bar has 23.5%, +32.0%, and 0.886. Age-2 recruitment has
+17.5%, −10.4%, and 0.934; total abundance has 16.2%, −26.1%, and 0.951;
+biomass has 17.7%, −29.3%, and 0.958. Fixed-M agreement is input consistency.

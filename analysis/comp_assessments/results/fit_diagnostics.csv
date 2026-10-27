@@ -20,13 +20,7 @@
 "nefsc_summer_flounder_2018","00cc998b493dea5d7d7bed645027155f0fbf2501","not_converged",FALSE,1,"false convergence (8)",745.64191006736,0.00153950515698309,0.00153950515698309,TRUE,FALSE,32,552,2.55311989784241,""
 "nefsc_atlantic_mackerel_2018","00cc998b493dea5d7d7bed645027155f0fbf2501","not_converged",FALSE,1,"false convergence (8)",1112.25241285141,145092102.099215,145092102.099215,TRUE,FALSE,31,970,3.20068001747131,""
 "afsc_pop_bsai_2024","ba93f1110cf059c38a94217d88f2d57bae9b509f","runner_failed",,,"",,,,,,,,,"Earlier batch run exceeded 1200 seconds. A later default attempt was manually stopped after more than seven hours without a returned fit. The single aligned source-start retry began 2026-10-20 17:36 local; no result was available by 18:52 and no R process was running at that check. Exact termination time/cause and numerical diagnostics are unknown; see the stock review."
-"afsc_atka_mackerel_bsai_2024","00cc998b493dea5d7d7bed645027155f0fbf2501","converged",TRUE,0,"relative convergence (4)",619.378793489961,0.00143324359794406,0.00143324359794406,TRUE,TRUE,23,373,16.1937220096588," | default: failed numerical checks; gradient=1.97e+08; NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | Numerical convergence checks did not pass; inspect `check_tam(fit)`.
-✖ Code 1: false convergence (8)
-✖ Adjusted maximum 1.97e+08; raw maximum 1.97e+08; tolerance 0.01.
-✖ Fixed-parameter covariance must be available and finite.
-✖ The Hessian must be positive definite.
-ℹ Optimizer code zero alone is insufficient. A missed gradient tolerance alone
-  does not establish a structural problem. | source_start: converged; gradient=0.00143; "
+"afsc_atka_mackerel_bsai_2024","f49f9f570b431c61ecf3a97bfc27938ebca0876f","converged",TRUE,0,"relative convergence (4)",574.295366809012,0.000834285459269779,0.000834285459269779,TRUE,TRUE,35,373,13.2701659202576," | default: converged; gradient=0.000834; "
 "afsc_pollock_ai_2024","00cc998b493dea5d7d7bed645027155f0fbf2501","not_converged",FALSE,1,"singular convergence (7)",625.738242137314,2.18382570603345e-05,2.18382570603345e-05,TRUE,TRUE,30,655,123.19425201416," | default: failed numerical checks; gradient=4.3e+08; NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | NA/NaN function evaluation | Numerical convergence checks did not pass; inspect `check_tam(fit)`.
 ✖ Code 1: false convergence (8)
 ✖ Adjusted maximum 4.3e+08; raw maximum 4.3e+08; tolerance 0.01.

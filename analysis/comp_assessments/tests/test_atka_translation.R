@@ -4,6 +4,8 @@ record <- read_assessment("afsc_atka_mackerel_bsai_2024")
 stock <- .test_stock(record)
 stopifnot(is.null(stock$fit), identical(stock$years, 1990:2023),
   identical(stock$ages, 2:11),
+  identical(stock$settings$F_settings$process, "ar1"),
+  identical(all.vars(stock$settings$F_settings$mu_form), "age"),
   all(stock$obs$maturity$spawn_time == 7 / 12),
   all(stock$obs$pop_covariates$M_assumption == .3),
   max(abs(stock$obs$index$samp_time - 6.5 / 12)) < 1e-12,
