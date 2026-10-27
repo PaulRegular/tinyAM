@@ -105,3 +105,12 @@ agreement. The source priors and joint observation structure differ, but the
 two attempts do not isolate the cause. An exploratory dashboard and numerical
 comparisons are retained with the failure diagnostics; female-only comparisons
 and rounded-derived F/SSB are labelled explicitly.
+
+An exponential initial-abundance sensitivity was also fit with package-default
+starts and the same remaining settings. It did not resolve the instability:
+optimizer code 1, gradient 0.217, non-positive-definite Hessian, and
+non-finite fixed-effect covariance. N-at-age and SSB median percent differences
+rose to about 100% and 864%, respectively, and abundance and recruitment
+differences became orders of magnitude larger. The free initial-age treatment
+is therefore retained as the closer source representation, although neither
+initialization has produced a numerically reliable fit.
