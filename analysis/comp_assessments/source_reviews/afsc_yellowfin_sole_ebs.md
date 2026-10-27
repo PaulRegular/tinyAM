@@ -107,3 +107,8 @@ apparently close metrics do not establish agreement from this fit. Potential
 limitations include the initial abundance/F boundary, independent F states,
 the source's inconsistent composition/index timing and the omitted joint
 composition likelihood. These results do not isolate a single cause.
+
+An exponential-initialization sensitivity with package-default starts and all
+other settings unchanged was stopped after more than four minutes without a
+returned fit. It produced no diagnostics and remains unevaluated; no conclusion
+about that initializer is drawn and no model change is retained.
