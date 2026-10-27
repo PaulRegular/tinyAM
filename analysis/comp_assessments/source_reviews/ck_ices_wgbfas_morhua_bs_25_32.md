@@ -43,3 +43,13 @@ This Charbonneau–Keith entry remains metadata-only. No partial catch or survey
 series was added to the canonical assessment tables, and no tinyAM fit or
 dashboard is produced. Reconsider if ICES returns to an age-structured method
 or if the comparison database is expanded to include survey-index assessments.
+
+The Master catalogue also contains a second Baltic cod row,
+`ck_ices_wgbfas_morhua_wbs_25_32`, with source label “BS gadus morhua.pdf” and
+area text `WBS,25-32`. That label does not identify a distinct current ICES
+assessment code or resolve the apparent mismatch between “western” and the
+25–32 area. The 2026 assessment assessed the eastern stock using subdivisions
+24–32, while the western stock is in subdivisions 22–24. No independent
+assessment identity or age-structured current model was verified for this
+second catalogue row, so it also remains metadata-only; no data are copied
+between the two entries.
