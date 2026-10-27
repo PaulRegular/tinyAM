@@ -13,7 +13,10 @@ from the most recent publicly accessible detailed official assessment, with
 preference for the latest stock unit. Record newer summary-only advice
 separately. The objective is faithful source representation, not collection of
 every table in every report. A tinyAM translation is a secondary, separate
-activity and is not a prerequisite for curating source data.
+activity and is not a prerequisite for curating source data. When working
+through a stock catalogue, prioritize stocks with neither curated inputs nor
+curated outputs;
+return to partial records when useful source material can be recovered.
 
 Follow the schema and controlled vocabularies in `DATABASE_STRUCTURE.md`.
 The [scope and provenance statement](README.md#scope-and-provenance) applies
@@ -250,6 +253,10 @@ Do not select a model object solely because it is the newest file or repository.
 First identify the latest official stock unit and its assessment history. Prefer
 the most recent publicly accessible detailed official assessment for that unit,
 using native files, research documents, tables and other authoritative sources.
+The newest advice or assessment year need not have the newest publicly available
+detailed documentation. Search earlier assessments of the same current unit
+before considering an earlier stock definition, and select the most recent
+detailed official assessment that can be supported by the available evidence.
 A partial source record is valuable: capture verified available inputs,
 assumptions and outputs and mark their completeness honestly. The assessment
 need not be age-structured or fit-ready for its source data to be curated.
@@ -266,6 +273,10 @@ to obtain a better tinyAM fit. There is no fixed numerical completeness threshol
 explain the available material and selection rationale in the stock review.
 Retain verified partial data and newer advice for the latest unit separately,
 even when an earlier unit supplies the detailed fallback.
+Explain which material inputs, assumptions and outputs are available for each
+candidate and why those details are insufficient for the current unit. A
+historical fallback is a separate assessment, not a replacement for the latest
+unit or proof that its results apply to the current boundaries.
 
 Keep distinct stock units and assessment runs identifiable under their own stock
 and assessment IDs. Record their relationship in stock notes and source reviews;
