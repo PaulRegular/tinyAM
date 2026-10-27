@@ -166,19 +166,30 @@ grouped by survey type, fitted q effects use a logit rather than log link, and
 the source selectivity priors, environmental measurement process, ADF&G
 increment-specific penalties, age-reading error, and composition likelihoods
 are not fitted directly. The current package-default fit converged with
-optimizer code 0 (`relative convergence (4)`), objective 1,356.997, maximum
-absolute gradient 0.000219, successful uncertainty estimation, and a
+optimizer code 0 (`relative convergence (4)`), objective 1,358.922, maximum
+absolute gradient 0.000196, successful uncertainty estimation, and a
 positive-definite Hessian. Residual checks still flag group location, spread,
 and outliers.
 
-Over 1970-2024, the mean absolute percentage differences are 27.7% for total
-abundance, 46.5% for N-at-age, 44.2% for recruitment, 37.1% for SSB under the
-shared-biology definition, and 30.2% for biomass. Their terminal mean
-percentage differences are respectively +32.4%, +77.0%, -2.0%, +8.5%, and
-+41.1%; trend correlations are 0.949, 0.943, 0.957, 0.881, and 0.905. The
-partial derived F-at-age comparison has mean absolute percentage difference
-82.9%, terminal difference -21.6%, and correlation 0.625; it uses rounded
-N-at-age and fixed M, so it is approximate and has no uncertainty. Fixed M
-matches by construction, while official Fbar and age-specific biomass remain
-unavailable. No source-start retry was needed, and no assumptions were changed
-after the converged fit.
+Over 1970-2024, the current comparison summary reports mean absolute
+percentage differences of 29.2% for total abundance, 46.6% for N-at-age,
+50.4% for recruitment, 29.7% for SSB under the shared-biology definition, and
+26.1% for biomass. Their terminal differences are +83.9%, +104.1%, +79.2%,
++11.1%, and +48.8%; trend correlations are 0.937, 0.950, 0.949, 0.924, and
+0.912. This SSB comparison uses official N with the translated stock weights
+and maturity at the start of year; it is not the official native SSB
+definition. A separate calculation using the candidate's fitted N/F/M with
+the source spawning weights and 0.21 spawning fraction gives 38.7% mean
+absolute percentage difference, +7.4% terminal difference, and 0.870 trend
+correlation against native official SSB. This derived series has no propagated
+uncertainty and is not currently part of the exported comparison summary.
+
+The database retains 371 approximate F-at-age cells derived from rounded
+N-at-age and fixed M, but they do not form a complete age-year surface; current
+F-at-age and Fbar comparisons are unavailable. Fixed M matches by construction.
+An otherwise identical fit using `N_settings$init = "free"` and default
+initialization failed numerical checks (optimizer code 1, false convergence,
+maximum absolute gradient 93,800, unavailable finite fixed-effect covariance,
+and non-positive-definite Hessian). The converged exponential initializer is
+therefore retained. No source-based starting values or other model changes
+were used.

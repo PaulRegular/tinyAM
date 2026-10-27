@@ -39,17 +39,22 @@ stopifnot(
   nrow(translated$catch_reporting$totals) == 55
 )
 
-# Retain paired-age q blocks, with deterministic survival and bounded q.
+# Use shared age-pattern curves, deterministic survival and bounded q.
 stopifnot(
   identical(translated$settings$N_settings$process, "off"),
   identical(translated$settings$N_settings$init, "exp"),
-  identical(translated$settings$F_settings$process, "rw"),
+  identical(translated$settings$F_settings$process, "ar1"),
   identical(translated$settings$index_settings$q_link, "logit"),
-  identical(
-    deparse(translated$settings$index_settings$q_form),
-    "~0 + q_key + environmental_effect + adfg_year"
-  ),
+  all(c("survey", "sel_age", "survey_type", "environmental_effect", "year", "adfg_indicator") %in%
+    all.vars(translated$settings$index_settings$q_form)),
   ncol(dat$q_mono_modmat) == 0L
+)
+q_form_text <- gsub(" ", "", paste(
+  deparse(translated$settings$index_settings$q_form), collapse = ""
+))
+stopifnot(
+  grepl("logistic(sel_age,by=survey_type)", q_form_text, fixed = TRUE),
+  grepl("rw(year,by=adfg_indicator)", q_form_text, fixed = TRUE)
 )
 par <- tinyAM::make_par(dat)
 stopifnot("logit_q" %in% names(par), !"log_n" %in% names(par))
@@ -58,19 +63,22 @@ reported <- RTMB::MakeADFun(function(p) tinyAM::nll_fun(p, dat), par,
 )$report()
 stopifnot(
   all(is.finite(reported$N)),
-  all(exp(reported$log_q_obs) == 0.5)
+  all(is.finite(exp(reported$log_q_obs))),
+  all(exp(reported$log_q_obs) > 0 & exp(reported$log_q_obs) < 1),
+  length(unique(round(exp(reported$log_q_obs), 8))) > 1L
 )
-for (survey in unique(obs$index$survey)) {
-  z <- obs$index[obs$index$survey == survey, ]
-  expected <- c("1-2", "3-4", "5-6", "7-8", "9-10")[ceiling(z$age / 2)]
-  stopifnot(
-    identical(as.character(z$q_age_block), expected),
-    all(vapply(
-      split(z$q_key, z$q_age_block, drop = TRUE),
-      function(x) length(unique(x)) == 1L, logical(1)
-    ))
-  )
-}
+acoustic <- obs$index$survey %in% c(
+  "Shelikof winter acoustic", "Summer acoustic"
+)
+adfg <- obs$index$survey == "ADF&G crab/groundfish trawl"
+stopifnot(
+  all(obs$index$sel_age[acoustic] == 11 - obs$index$age[acoustic]),
+  all(obs$index$sel_age[!acoustic] == obs$index$age[!acoustic]),
+  all(obs$index$survey_type[acoustic] == "acoustic"),
+  all(obs$index$survey_type[!acoustic] == "trawl"),
+  all(obs$index$adfg_indicator[adfg] == 1),
+  all(obs$index$adfg_indicator[!adfg] == 0)
+)
 
 # Audit the full reconstruction before the pooled Shelikof bin is omitted.
 translation_inputs <- source_data$inputs[
