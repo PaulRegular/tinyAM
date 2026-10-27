@@ -76,6 +76,10 @@ stopifnot(nrow(cv) == 240, all(is.na(cv$age)), all(cv$basis == "relative_scale")
   any(grepl("age-specific M", framework$assumptions$value, fixed = TRUE)),
   framework$assumptions$value[framework$assumptions$setting == "model" & framework$assumptions$component == "M"] ==
     "Fixed age-specific M, ages 1-6+: 0.97, 0.45, 0.37, 0.34, 0.33, 0.33 per year",
+  framework$assumptions$value[framework$assumptions$setting == "model_form" & framework$assumptions$component == "maturity"] ==
+    "Fixed female proportion-at-age using a time-series average for SNEMA",
+  grepl("seven-year moving-window", framework$assumptions$notes[framework$assumptions$setting == "model_form" & framework$assumptions$component == "maturity"], fixed = TRUE),
+  grepl("not digitized", framework$assumptions$notes[framework$assumptions$setting == "model_form" & framework$assumptions$component == "maturity"], fixed = TRUE),
   any(grepl("removed", update$assumptions$value)),
   any(grepl("represented BSIA", update$assumptions$value, fixed = TRUE)),
   nrow(framework$outputs) == 3,

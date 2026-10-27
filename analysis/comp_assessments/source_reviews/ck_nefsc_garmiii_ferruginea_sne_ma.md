@@ -48,16 +48,25 @@ retained, it does not restate the numeric vector; the 2024 values are not
 copied into the 2025 record without confirmation. Other earlier arrays and
 settings are not attached to it.
 
+For the 2024 framework, Alade and Hansell recommend using a time-series mean
+of female proportion-at-age for SNEMA because of limited sample sizes. Their
+Figure 7 displays seven-year moving-window values for 1970–2022; it is a
+descriptive analysis, not the fixed vector used by the selected model. The
+accessible source does not tabulate that numeric vector, so it is not
+digitized. The maturity form is now documented, while the exact vector and
+annual model weights remain missing.
+
 ## Canonical coverage
 
 `scripts/database/148_import_nefsc_snema_yellowtail.R` adds 2,152 inputs,
-20 assumptions and 37 outputs across the two records. All three completeness
+21 assumptions and 37 outputs across the two records. All three completeness
 statuses remain **partial** for both records.
 
 | Source | Recovered values | Qualification |
 |---|---|---|
 | 2024 Table 2.8.3 | Combined catch-at-age, 1973–2022, ages 1–6+, thousand fish | 2020–2022 dashes remain missing; source numbers support composition alongside a fleet total |
 | 2024 revised-candidate slide 59 and Cadrin Table 3 | Fixed M-at-age for ages 1–6+: 0.97, 0.45, 0.37, 0.34, 0.33, 0.33 per year | Slide 59 identifies the values as the selected age-based candidate and states lifetime M=0.5 for SNEMA. Cadrin Table 3's caption says 0.4, while its text says 0.5 for SNEMA; the contemporaneous slide resolves the stock-specific scalar and confirms the applied vector. Age 6 is the model's 6+ group; ages 6 and 7 share 0.33. |
+| Alade and Hansell maturity working paper, pp. 1–2, Figure 7 | Static time-series mean of female proportion-at-age recommended for SNEMA | The figure shows a seven-year moving window rather than the fixed model vector; exact numerical ages 1–6+ values are unavailable and are not reconstructed. |
 | Tables 3.6.2a–b | Spring stratified means, 1968–2022 excluding 2020, ages 0–11, fish/tow | Preserve actual rows and fine ages; caption incorrectly starts at 1970 |
 | Table 3.6.3 | Fall stratified means, 1963–2022 excluding 2017/2020, ages 1–10, fish/tow | Retain incomplete-age-key flags on seven 2013 cells; caption understates coverage |
 | Table 3.6.4 | Winter stratified means, 1992–2007, ages 1–8, fish/tow | Retain source ages without pooling |
@@ -115,9 +124,10 @@ or fitted age surfaces. Reference conversion must not treat Ffull as Fbar.
 
 ## Remaining requirements for translation
 
-1. Complete annual model weights and exact maturity. The fixed age-specific M
-   vector is now recovered, but it does not supply the missing annual model
-   biology.
+1. Complete annual model weights and the exact numeric fixed maturity vector.
+   The recommended static maturity form and fixed age-specific M vector are
+   now documented, but the maturity paper does not supply the selected numeric
+   vector or missing annual model biology.
 2. Exact aggregate fleet/survey inputs, fitted age cells, composition weights,
    survey sampling fractions and observation-variance settings.
 3. Selected GSI observations, scaling and recruitment configuration, initial
