@@ -112,5 +112,19 @@ The recipe represents the native quadratic log-M penalty (center -1.60944, SD 0.
 with one shared fixed-SD Gaussian mean effect and no free M intercept. Source
 bounds and full Bayesian integration remain different. Uncertainty is available
 for the shared log-M effect, rather than automatically propagated over the full
-M surface. Constant-mean recruitment approximates the source age-zero relationship;
-composition likelihoods and juvenile recruitment definitions also differ.
+M surface. Composition likelihoods and juvenile recruitment definitions also differ.
+
+A recruitment sensitivity replaced the constant mean with an IID process around
+a two-year-lagged Beverton–Holt curve, matching age-2 entry to the source age-0
+relationship and allowing for the two years of juvenile survival. The fit passed
+numerical checks after the same single source-based initialization retry: objective
+1183.769, maximum gradient 0.000111, positive-definite Hessian and successful
+uncertainty estimation (25 fixed and 749 random effects). SSB median absolute percent difference was effectively unchanged (44.78% to
+44.79%), its mean difference changed from 42.23% to 42.25%, and trend
+correlation from 0.751 to 0.750. Recruitment median difference stayed near 55.2%,
+with its terminal difference changing from +346.1% to +347.2%; abundance
+differences were effectively unchanged. The BH mean is retained because it better
+represents the documented source process, not because it materially improves
+agreement. The stock-recruit curve remains weakly identified. Age-2 recruitment
+is still an approximation to age-0 recruitment, and source posterior medians
+are not directly equivalent to tinyAM conditional modes.

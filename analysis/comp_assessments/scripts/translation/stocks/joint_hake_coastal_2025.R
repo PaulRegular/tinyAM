@@ -58,7 +58,7 @@ background <- c(
   "| Component | Official assessment | tinyAM representation | Reason for difference |",
   "|---|------|------|------|",
   "| Years and ages | 1966–2024, modeled ages 0–20+, observed ages 1–15+. | 1975–2024, ages 2–15+. | Begin with the first fishery age samples and the acoustic age-2+ definition. Totals are converted before filtering ages. Original weights and fecundity are identical at ages 15–20+, allowing the observation plus group. The 2026 update supplies newer projections, not a different historical fit. |",
-  "| N and recruitment | Deterministic survival; early cohort deviations; Beverton–Holt with estimated R0/steepness, fixed log SD 1.4 and terminal recruitment tied to the mean curve. | Deterministic survival, free initial ages, IID age-2 recruitment with an estimated constant mean and fixed log SD 1.4. | Age-2 entry includes juvenile survival. The age-0 stock–recruit relationship, early-cohort priors and terminal fixing are not reproduced. |",
+  "| N and recruitment | Deterministic survival; early cohort deviations; Beverton–Holt with estimated R0/steepness, fixed log SD 1.4 and terminal recruitment tied to the mean curve. | Deterministic survival, free initial ages, age-2 recruitment with a two-year-lagged Beverton–Holt mean and IID deviations at fixed log SD 1.4. | Age-2 entry includes juvenile survival; early-cohort priors and terminal fixing are not reproduced. |",
   "| F | Annual intensity and nonparametric fishery selectivity, with time variation at ages 2–6 and shared older increments. | Independent temporal F random walks at all ages. | The source selectivity normalization, age sharing and fixed deviation SD are not reproduced. |",
   "| M | One constant estimated with log-M penalty centered at -1.60944, SD 0.1, and bounds 0.05–0.4. | One shared Gaussian log-M effect with the same center and fixed SD. | The density contributes once per stock. M is estimated with Laplace integration; source bounds and full Bayesian posterior integration are not reproduced. |",
   "| Catch and index | Catch biomass plus percentage age compositions; acoustic age-2+ biomass at time 0.5; separate Dirichlet-multinomial likelihoods and estimated extra survey SD. | Numbers reconstructed from original totals, normalized native percentages and original fleet weights; estimated catch and survey log SDs. | Ageing error, composition covariance and the source precision model are omitted. No fitted parameter adjusts an observation. |",
@@ -71,7 +71,7 @@ background <- c(
 fit_model <- function(...) tinyAM::fit_tam(
   data=obs,years=years,ages=ages,
   N_settings=list(process="off",init="free"),
-  rec_settings=list(process="iid",mu_form=~1,sd=1.4),
+  rec_settings=list(process="iid",mu_form=~bh(ssb,lag=2),sd=1.4),
   F_settings=list(process="rw"),
   M_settings=list(process="off",mu_form=~0+iid(M_prior_group,sd=.1),
                   mu_supplied=~I(exp(-1.60944))),

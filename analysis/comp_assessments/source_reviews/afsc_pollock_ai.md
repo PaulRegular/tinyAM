@@ -79,13 +79,13 @@ walks and one estimated M. The source fixed steepness, M prior, q normalization,
 F penalties, composition likelihood and ageing error are not reproduced.
 Survey time 0.5 approximates summer; March spawning and GOA maturity are retained.
 
-Default initialization failed with singular convergence (code 1), objective
-625.738, gradient 0.000419 and weak stock–recruit shape support. The one permitted
-retry changed only starting N and M. It reached the same objective and also
-failed (code 1, gradient 0.0000218, non-positive-definite Hessian and non-finite
-fixed-parameter covariance). A returned SD-report object is not usable uncertainty
-in that situation. Both attempt records are retained; no further model tuning
-or initialization retry was conducted.
+Default initialization failed (code 1, objective 642.037, gradient 2.53e8 and
+a non-positive-definite Hessian). The one permitted retry changed only starting N
+and M. It reduced the objective to 625.738 and the gradient to 2.18e-5, but
+still failed with code 1, a non-positive-definite Hessian and unavailable
+fixed-parameter covariance. The SD-report object does not provide usable
+uncertainty in this case. Both attempt records are retained; no further model
+tuning or initialization retry was conducted.
 
 Usable predictions permit an **exploratory** dashboard with the numerical failure
 visible. N rises to roughly 10^12–10^16 fish, F falls to 10^-12–10^-8 and survey
