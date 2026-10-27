@@ -91,19 +91,22 @@ and age proportions remain a limitation. Full native outputs are retained;
 modeled-age female SSB is derived without uncertainty and checked against
 native SSB using a bound for printed N/F/SSB rounding.
 
-Both permitted initialization attempts failed. Default starts returned code 1
-(false convergence), objective 7723.736 and maximum gradient 9.75e11 after
-625 seconds. One aligned female N/F retry returned code 1, objective 10453.269
-and maximum gradient 1.49e11 after 277 seconds. Both Hessians were not positive
-definite and fixed-parameter uncertainty was non-finite. An SD-report object
-exists, but that is not successful uncertainty estimation. Initial age-2
-abundance inflated to about 1.3e13 fish and recruitment log SD to about 19 in
-the returned retry; these estimates are not interpretable as a successful
-assessment. No further retries or model changes were made.
+The latest tracked fit diagnostic uses database revision `00cc998` and records
+two failed attempts. Package starts failed the fixed-effect covariance and Hessian
+checks (gradient 8.06e11). The aligned female N/F source-start retry returned
+code 1, objective 9602.126, gradient 6.99e11 and a non-positive-definite
+Hessian. An SD-report object exists, but fixed-effect uncertainty is unavailable.
+The fit is not interpretable as a successful assessment.
 
-An exploratory local dashboard and comparison summaries are retained to expose
-the failure. They must be read with the failed numerical diagnostics; even
-apparently close metrics do not establish agreement from this fit. Potential
+The local cache contains different objectives (12255.88 and 10402.38) from the
+tracked diagnostic, and the source review previously cited yet another pair.
+Those fit and dashboard artifacts are not reconciled to the latest run and must
+not be used as current comparisons. The shared comparison summary and population
+series contain no valid yellowfin rows.
+
+A cached exploratory dashboard and historical comparison snapshot remain
+locally available for diagnosis only. They are not part of the current shared
+comparison tables and do not establish agreement. Potential
 limitations include the initial abundance/F boundary, independent F states,
 the source's inconsistent composition/index timing and the omitted joint
 composition likelihood. These results do not isolate a single cause.
