@@ -10,13 +10,18 @@ Cape Cod/Gulf of Maine yellowtail flounder.
 The database separates two partial records:
 
 - **`nefsc_yellowtail_snema_2024_framework`**: the detailed research-track
-  framework selected in November 2024, through 2022. It is current as the
-  latest recoverable detailed framework, selected for subsequent management
-  use rather than applied as 2024 advice.
+  framework selected in November 2024, through 2022. It remains the current
+  detailed record because the 2025 update does not expose the complete input
+  arrays, biological surfaces, or fitted age-specific outputs needed to
+  replace it. The 2024 framework was selected for subsequent management use;
+  it was not the advice run used in 2024.
 - **`nefsc_yellowtail_snema_2025`**: the applied management-track update through
-  2024. Its public updated report retains a draft watermark. The final April
-  2026 Framework 72 submission confirms adoption and terminal SSB of 38 tonnes
-  and fully selected F of 0.051. Its summary values are kept separate.
+  2024. The final September 2025 peer-review panel found that it met all TORs
+  and represented the best scientific information available (BSIA); the April
+  2026 Framework 72 submission also confirms its application. The updated
+  assessment report retains a draft watermark, so that provenance is noted.
+  Its summary values and reference points are kept separate from the 2024
+  framework.
 
 The final panel selected the **revised age-specific-M model**, replacing the
 original candidate's constant M = 0.5. The previous stock review described
@@ -46,7 +51,7 @@ settings are not attached to it.
 ## Canonical coverage
 
 `scripts/database/148_import_nefsc_snema_yellowtail.R` adds 2,152 inputs,
-20 assumptions and 33 outputs across the two records. All three completeness
+20 assumptions and 37 outputs across the two records. All three completeness
 statuses remain **partial** for both records.
 
 | Source | Recovered values | Qualification |
@@ -60,11 +65,16 @@ statuses remain **partial** for both records.
 | Final panel Table 5.5 | Revised-run F40%, SSB40% and equilibrium yield at F40%, with bounds | Reference points, not annual estimates; interval level/construction unspecified in that table |
 | 2025 Table 1 | Combined landings and dead-discard catch, 2015–2024, tonnes | Retain the reported total rather than inferring unrounded components |
 | 2025 Table 1 | Native SSB, age-1 recruitment and fully selected F, 2015–2024 | SSB in tonnes, R in thousand fish; Ffull ages 5–6+ is not population-weighted Fbar |
+| 2025 Table 2 | F40% proxy, SSBMSY proxy, MSY and mean age-1 recruitment | F, SSB and MSY have reported 95% lognormal confidence intervals; these are management-track reference points, not annual estimates |
 
 No annual N, F-at-age or estimated M surfaces are invented from figures.
-Historical summary estimates have no tabulated SEs or intervals. Forecasts
-through 2028 are identified in metadata but are not imported as historical
-observations or estimates. Fixed source M is not an estimated M output.
+Table 1 does not provide numerical SEs or marginal intervals for historical
+summary estimates. The report gives an approximate joint 90% confidence
+region for terminal SSB and fully selected F (19–78 tonnes and 0.026–0.099,
+respectively); because it is a joint region, those endpoints are documented
+but not entered as marginal output bounds. Forecasts through 2028 are
+identified in metadata but are not imported as historical observations or
+estimates. Fixed source M is not an estimated M output.
 
 ## Source consistency and missing values
 
@@ -88,9 +98,9 @@ seasons are retained and `sampling_time` stays blank.
 
 Sources remain under `source_cache/ck_nefsc_garmiii_ferruginea_sne_ma/`.
 Manifests retain SASI URLs, retrieval dates, checksums, represented run and
-verification date. Final peer-review, the SNEMA TOR presentation and Framework
-72 PDFs are cached locally. The importer pins PDF hashes; important table
-pages were visually checked.
+verification date. The 2024 and 2025 peer-review reports, SNEMA TOR
+presentation and Framework 72 PDFs are cached locally. The importer pins PDF
+hashes; important table pages were visually checked.
 
 The nested 2024 `SNEMA_Runs.zip` has 259 entries: original/revised-model plot
 directories and self-test PDFs, without numerical production arrays or a fit.
@@ -127,5 +137,6 @@ claimed, and preparation remains unavailable without the missing inputs.
 - [2024 Yellowtail Flounder Research Track report and SASI files](https://apps-nefsc.fisheries.noaa.gov/saw/sasi.php?year=2024&species_id=13&stock_id=11&review_type_id=5)
 - [2025 SNE/MA Management Track SASI files](https://apps-nefsc.fisheries.noaa.gov/saw/sasi.php?year=2025&species_id=13&stock_id=5&review_type_id=2)
 - [2025 Management Track report](https://apps-st.fisheries.noaa.gov/sis/docServlet?fileAction=download&fileId=10439)
+- [Final September 2025 Management Track peer-review panel report](https://www.fisheries.noaa.gov/s3/2025-11/September-2025-Management-Track-Peer-Review-Panel-Report_Final-508.pdf), pp. 12–13
 - [Final November 2024 peer review](https://d23h0vhsm26o6d.cloudfront.net/10b.-Panel-Summary-Report_Yellowtail-Flounder_508_final_12_12_2024.pdf), pp. 17–24 and Table 5.5.
 - [Final Framework 72 submission, April 2026](https://d23h0vhsm26o6d.cloudfront.net/260423_Groundfish_FW72_SIR_FINAL-Submission.pdf), p. 27, confirms the applied 2025 update.

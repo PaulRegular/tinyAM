@@ -5,8 +5,10 @@ cache <- file.path(base, "source_cache", stock_id)
 framework_id <- "nefsc_yellowtail_snema_2024_framework"
 update_id <- "nefsc_yellowtail_snema_2025"
 source_url <- "https://apps-nefsc.fisheries.noaa.gov/saw/sasi.php?year=2024&species_id=13&stock_id=11&review_type_id=5"
-update_url <- "https://apps-nefsc.fisheries.noaa.gov/saw/sasi.php?year=2025&species_id=13&stock_id=5&review_type_id=2"
+update_url <- "https://apps-st.fisheries.noaa.gov/sis/docServlet?fileAction=download&fileId=10439"
+update_data_url <- "https://apps-nefsc.fisheries.noaa.gov/saw/sasi_files.php?year=2025&species_id=13&stock_id=5&review_type_id=2&filename=2025_YEL_SNEMA.zip"
 panel_url <- "https://d23h0vhsm26o6d.cloudfront.net/10b.-Panel-Summary-Report_Yellowtail-Flounder_508_final_12_12_2024.pdf"
+review_url <- "https://www.fisheries.noaa.gov/s3/2025-11/September-2025-Management-Track-Peer-Review-Panel-Report_Final-508.pdf"
 adoption_url <- "https://d23h0vhsm26o6d.cloudfront.net/260423_Groundfish_FW72_SIR_FINAL-Submission.pdf"
 read_pdf <- function(file, hash) {
   path <- file.path(cache, file)
@@ -22,8 +24,11 @@ deck <- read_pdf("SNEMA ToR 456 Final with Extra Slides.pdf",
   "e0b2b5b75235e25e4d0aebad3114c6c349b7c90b03f9a4a16b7de78b6c3259b3")
 update <- read_pdf("2025_YEL_SNEMA/2025_Yellowtail_Flounder_SNEMA_REPORT_UPDATED.pdf",
   "5421a283dd3c50bfbe04d83c28b89ed3bcf6d20cb1fc0a1fc79a933109201f71")
+review <- read_pdf("2025_September_Management_Track_Peer_Review_Panel_Report.pdf",
+  "e6ca6dc67a281f926b416ae40350be03e2c9d7d8cf41bb938e61353d739bfb9b")
 adoption <- read_pdf("NEFMC_FW72_2026.pdf",
   "d961314f6fd146694956a50e8f128277314fe1d103aaa8a24c1236ccd1c72c9c")
+review_text <- gsub("[[:space:]]+", " ", paste(review, collapse = " "))
 stopifnot(grepl("age specific M values", panel[22], fixed = TRUE),
   grepl("All other settings and", panel[22], fixed = TRUE),
   grepl("Uses lifetime M = 0.5", deck[59], fixed = TRUE),
@@ -31,6 +36,7 @@ stopifnot(grepl("age specific M values", panel[22], fixed = TRUE),
   all(vapply(c("1: 0.97", "2: 0.45", "3: 0.37", "4: 0.34", "5: 0.33", "6: 0.33"),
     grepl, logical(1), x = deck[59], fixed = TRUE)),
   grepl("38 mt", adoption[27], fixed = TRUE), grepl("0.051", adoption[27], fixed = TRUE),
+  grepl("Southern New England/Mid-Atlantic (SNEMA) Yellowtail Flounder met all the TORs and represented the BSIA", review_text, fixed = TRUE),
   grepl("removing the IID random effects", update[4], fixed = TRUE))
 
 annual <- function(text, years, columns) {
@@ -147,7 +153,9 @@ inputs <- rbind(inputs, input(update_id, "catch", "total_biomass", "biomass", 20
   notes = "Source combined fleet catch total, including landings and dead discards. Values below 0.5 tonnes print as zero in the component columns; no unrounded component totals are reconstructed. This update revises catches and biology; no 2024 framework ages are attached to it."))
 output <- function(id, measure, value, unit, year = NA, age = NA, group = "", reference, notes) {
   n <- length(value); x <- blank("outputs.csv", id, n)
-  x$type <- switch(measure, SSB = "biomass", recruitment = "recruitment", "mortality")
+  x$type <- switch(measure, SSB = "biomass", Bmsy = "biomass", recruitment = "recruitment",
+    mean_recruitment = "recruitment",
+    Fmsy = "mortality", msy = "catch", "mortality")
   x$measure <- measure; x$year <- number(rep_len(year, n)); x$age <- number(rep_len(age, n))
   x$age_group <- group; x$value <- number(value); x$unit <- unit; x$source_type <- "official_table"
   x$source_reference <- reference; x$notes <- notes
@@ -156,13 +164,25 @@ output <- function(id, measure, value, unit, year = NA, age = NA, group = "", re
 outputs <- rbind(
   output(update_id, "SSB", series("Spawning Stock Biomass"), "tonnes", 2015:2024,
     reference = paste(update_url, "2025 updated assessment report, Table 1, p. 1;", adoption_url, "p. 27"),
-    notes = "Historical native WHAM SSB. The public report retains its draft watermark; the final Framework 72 submission confirms the applied update and terminal SSB of 38 tonnes. No numerical historical intervals or SEs are supplied in this table; none are inferred from plotted ribbons."),
+    notes = "Historical native WHAM SSB. The final peer-review panel confirms the 2025 update represented BSIA, and Framework 72 corroborates its application. Table 1 has no numerical intervals or SEs. The report separately gives an approximate joint 90% region for terminal SSB and F (SSB 19-78 tonnes; F 0.026-0.099); this is not a marginal interval and is not stored in lwr/upr."),
   output(update_id, "Ffull", series("FF ull"), "per year", 2015:2024, group = "5-6+",
     reference = paste(update_url, "2025 updated assessment report, Table 1, p. 1;", adoption_url, "p. 27"),
-    notes = "Fully selected fishing mortality for ages 5-6+, as labelled in Table 1; not population-weighted Fbar or a numerical F-at-age surface. Final Framework 72 confirms terminal F of 0.051. Uncertainty is not supplied numerically."),
+    notes = "Fully selected fishing mortality for ages 5-6+, as labelled in Table 1; not population-weighted Fbar or a numerical F-at-age surface. The final peer-review panel confirms the 2025 update represented BSIA, and Framework 72 corroborates its application. The report separately gives an approximate joint 90% region for terminal SSB and F (SSB 19-78 tonnes; F 0.026-0.099); this is not a marginal interval and is not stored in lwr/upr."),
   output(update_id, "recruitment", series("Recruits"), "thousand fish", 2015:2024, age = 1,
-    reference = paste(update_url, "2025 updated assessment report, Tables 1-2, p. 1"),
-    notes = "Age-1 WHAM recruitment from the 2025 update. No numerical uncertainty supplied; no shifting to another cohort year or mixing with the 2024 constant-M candidate."))
+    reference = paste(update_url, "2025 updated assessment report, Table 1, p. 1"),
+    notes = "Age-1 WHAM recruitment from the 2025 update. No numerical uncertainty supplied; no shifting to another cohort year or mixing with the 2024 constant-M candidate."),
+  output(update_id, "Fmsy", .374, "per year",
+    reference = paste(update_url, "Table 2, p. 1;", review_url, "pp. 12-13"),
+    notes = "2025 F40% proxy used as the overfishing threshold; 95% lognormal confidence interval. This is a reference point, not annual F or a direct comparison with the 2024 framework estimate."),
+  output(update_id, "Bmsy", 270, "tonnes",
+    reference = paste(update_url, "Table 2, p. 1;", review_url, "pp. 12-13"),
+    notes = "2025 SSBMSY proxy; 95% lognormal confidence interval. This is a reference point, not annual SSB or a direct comparison with the 2024 framework estimate."),
+  output(update_id, "msy", 94, "tonnes per year",
+    reference = paste(update_url, "Table 2, p. 1;", review_url, "pp. 12-13"),
+    notes = "2025 MSY estimate; 95% lognormal confidence interval. This is a reference point, not annual catch or a direct comparison with the 2024 framework estimate."),
+  output(update_id, "mean_recruitment", 25778, "thousand fish", age = 1,
+    reference = paste(update_url, "Table 2, p. 1"),
+    notes = "Mean age-1 recruitment from the 2025 management-track model; no numerical interval is supplied. This reference quantity is not an annual recruitment estimate."))
 for (i in 1:3) {
   x <- output(framework_id, c("Fmsy", "Bmsy", "msy")[i],
     c(.36, 191, 70)[i], c("per year", "tonnes", "tonnes per year")[i],
@@ -171,6 +191,14 @@ for (i in 1:3) {
   x$type <- c("mortality", "biomass", "catch")[i]
   x$lwr <- c(.30, 11, 4)[i]; x$upr <- c(.43, 3345, 1157)[i]
   outputs <- rbind(outputs, x)
+}
+ref_measures <- c("Fmsy", "Bmsy", "msy")
+ref_values <- rbind(c(.374, .346, .404), c(270, 42, 1720), c(94, 15, 595))
+for (i in seq_along(ref_measures)) {
+  at <- which(outputs$assessment_id == update_id & outputs$measure == ref_measures[i])
+  stopifnot(length(at) == 1L)
+  outputs$lwr[at] <- ref_values[i, 2]
+  outputs$upr[at] <- ref_values[i, 3]
 }
 assumption <- function(id, component, setting, value, reference, notes = "") {
   x <- blank("assumptions.csv", id); x$component <- component; x$setting <- setting
@@ -191,27 +219,28 @@ assumptions <- rbind(
   assumption(framework_id, "index", "published_total_discrepancies", "Age sums are below number indices by 0.016, 0.007 and 0.012 fish/tow in spring 2012, 2015 and 2017; by 0.008 in fall 2013", paste(source_url, "Tables 3.6.1-3.6.3, pp. 185-192"), "Beyond the bound from rounding each printed cell to three decimals. Both source representations are preserved; no explanation or correction is invented. Spring 2020 prints zero without a CV but has no age table row after incomplete coverage."),
   assumption(framework_id, "biology", "coverage_gap", "Annual model weights and exact fixed maturity vector not recovered", paste(source_url, "WG report pp. 307-309; Hodgdon working paper section 6"), "Plots and lifetime growth approximations do not recover annual model biology or the exact age-6+ weights."),
   assumption(framework_id, "population", "initial_state_and_bias", "unknown", paste(source_url, "WG report pp. 290-295"), "Native initial-state activation, priors, bias corrections and pinned WHAM version remain unresolved."),
-  assumption(update_id, "assessment", "production_verification", "2025 applied WHAM management-track update through 2024", paste(adoption_url, "p. 27;", update_url, "updated report Table 1"), "Report carries a draft watermark. Final Council submission corroborates use of this update, SSB 38 t, F 0.051 and reference points; no native fitted object recovered."),
+  assumption(update_id, "assessment", "production_verification", "2025 WHAM management-track update through 2024; final peer review found it met all TORs and represented BSIA", paste(review_url, "pp. 12-13;", adoption_url, "p. 27;", update_url, "Tables 1-2"), "The updated assessment report retains a draft watermark, but the final peer-review report confirms technical acceptance and Framework 72 corroborates application. The updated report provides historical summary estimates and reference points, not a native fitted object or full arrays."),
   assumption(update_id, "F", "selectivity_change", "Fleet IID selectivity random effects removed to address convergence", paste(update_url, "updated report, pp. 2-3"), "Do not carry the 2024 random-selectivity configuration into this update."),
   assumption(update_id, "population", "bias_adjustment", "WHAM lognormal adjustment switched off", paste(update_url, "updated report, p. 3"), "Exact option mapping needs the production files; this statement does not recover every likelihood bias convention."),
   assumption(update_id, "biology", "revised_inputs", "CAMS discards, maturity and GSI revised; no catch age composition in the terminal five years", paste(update_url, "updated report, pp. 2-3"), "2024 framework arrays must not be attached to this update. Complete revised observations and biology remain unavailable."),
   assumption(update_id, "M", "model", "Age-specific fixed M retained from revised research-track model; the 2025 report does not restate its numeric vector", paste(panel_url, "pp. 22-24;", update_url, "pp. 1-3"), "The 2024 selected-candidate vector is documented, but the 2025 report does not confirm it was carried forward unchanged."),
   assumption(update_id, "recruitment", "GSI", "Recruitment strongly informed by Gulf Stream Index", paste(update_url, "updated report, pp. 2-3"), "Future GSI assumptions and projection outputs are separate from fitted historical recruitment."))
-assessment <- function(id, year, terminal, estimate_terminal, current, applied, notes) {
+assessment <- function(id, year, terminal, estimate_terminal, current, applied, type, notes) {
   x <- blank("assessments.csv", id); x$stock_id <- stock_id
   x$assessment_year <- year; x$terminal_year <- terminal; x$estimate_terminal_year <- estimate_terminal
-  x$assessment_type <- if (current) "research_track_framework" else "management_track_summary"
+  x$assessment_type <- type
   x$model_family <- "WHAM"; x$model_version <- "Exact production revision unrecovered"
   x$is_current <- toupper(as.character(current)); x$is_applied <- toupper(as.character(applied))
   x$framework_year <- 2024; x$assessment_url <- if (current) source_url else update_url
-  x$framework_url <- panel_url; x$data_url <- if (current) source_url else ""
+  x$framework_url <- if (current) panel_url else review_url
+  x$data_url <- if (current) source_url else update_data_url
   x$assumptions_status <- x$inputs_status <- x$outputs_status <- "partial"; x$notes <- notes; x
 }
 assessments <- rbind(
-  assessment(framework_id, 2024, 2022, 2022, TRUE, FALSE,
+  assessment(framework_id, 2024, 2022, 2022, TRUE, FALSE, "research_track_framework",
     "Latest recoverable detailed approved framework: revised age-specific-M model selected in November 2024 for subsequent management-track use. Source catch-at-age, finer trawl indices, aggregates and the selected M-at-age vector recovered; annual biology/covariate arrays, likelihood settings and numerical fitted age surfaces remain missing. Original constant-M candidate outputs are not official revised-run values. This framework was not itself the 2024 management-track advice run."),
-  assessment(update_id, 2025, 2024, 2028, FALSE, TRUE,
-    "Applied 2025 update corroborated by final NEFMC Framework 72. Public updated report retains draft watermark; canonical values retain that provenance. Historical catch totals, SSB, age-1 R and fully selected F recovered. Native inputs, biology and fitted N/F-at-age unavailable; do not mix with 2024 framework. Projection estimates through 2028 are not imported as historical observations or population estimates."))
+  assessment(update_id, 2025, 2024, 2028, FALSE, TRUE, "management_track",
+    "Applied 2025 update; final peer-review panel found it met all TORs and represented BSIA, and Framework 72 corroborates application. The updated report retains a draft watermark. Historical catch totals, SSB, age-1 R, fully selected F and reference points are recovered. Native inputs, biology and fitted N/F-at-age remain unavailable; do not mix with 2024 framework. Projection estimates through 2028 are not imported as historical observations or population estimates."))
 stocks <- read.csv(file.path(database, "stocks.csv"), colClasses = "character", na.strings = "", check.names = FALSE)
 at <- which(stocks$stock_id == stock_id)
 stopifnot(length(at) == 1L, stocks$charbonneau_id[at] == "NEFSC-GARMIII_ferruginea_SNE, MA")
