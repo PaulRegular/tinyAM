@@ -9,6 +9,13 @@ assessment_id <- "ices_bluewhiting_northeast_atlantic_2026"
 database <- read_database()
 source_data <- read_assessment(assessment_id, database)
 translated <- .test_stock(source_data)
+source_q <- source_data$outputs[
+  source_data$outputs$type == "catchability" & source_data$outputs$measure == "q", , drop = FALSE
+]
+comparison_q <- translated$comparison_outputs[
+  translated$comparison_outputs$type == "catchability" &
+    translated$comparison_outputs$measure == "q", , drop = FALSE
+]
 dat <- do.call(tinyAM::prepare_tam, c(
   list(data = translated$obs, years = translated$years, ages = translated$ages),
   translated$settings
@@ -29,7 +36,10 @@ stopifnot(
   identical(names(translated$start_par$log_sd_catch), names(par$log_sd_catch)),
   identical(names(translated$start_par$log_sd_index), names(par$log_sd_index)),
   length(unique(translated$obs$index$q_key)) == 5L,
-  setequal(levels(translated$obs$index$sd_group), c("1", "2", "3", "4-6", "7-8"))
+  setequal(levels(translated$obs$index$sd_group), c("1", "2", "3", "4-6", "7-8")),
+  isTRUE(all.equal(comparison_q$value, source_q$value * 1000)),
+  all(comparison_q$unit == "unitless"),
+  all(grepl("Converted q by 1000", comparison_q$notes))
 )
 
 cat("Blue whiting translation structure passed.\n")

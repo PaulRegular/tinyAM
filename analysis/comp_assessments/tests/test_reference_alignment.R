@@ -49,6 +49,25 @@ stopifnot(
   is.na(ref$pop$N$est[ref$pop$N$year == 2001 & ref$pop$N$age == 3]),
   all(is.na(ref$pop$N$se[ref$pop$N$age == 3]))
 )
+
+# A derived common-definition series takes precedence over an aggregate native row
+# when both otherwise map to the same fitted grid cell.
+output$region <- NA_character_
+native_numbers <- output[output$year == 2000 & output$age == 2, , drop = FALSE]
+native_numbers$value <- 1234
+native_numbers$region <- "2J3KL"
+derived_numbers <- native_numbers
+derived_numbers$value <- 5678
+derived_numbers$source_type <- "derived_source_output"
+derived_numbers$region <- NA_character_
+duplicate_numbers <- rbind(output, native_numbers, derived_numbers)
+derived_ref <- database_to_tam_ref("aligned", duplicate_numbers, template = fit)
+stopifnot(
+  derived_ref$pop$N$est[derived_ref$pop$N$year == 2000 &
+    derived_ref$pop$N$age == 2] == 5678,
+  all(c(1234, 5678) %in% attr(derived_ref, "native_pop")$N$est),
+  all(c(1234, 5678) %in% attr(derived_ref, "source_pop")$N$est)
+)
 differences <- .assessment_percent_differences(ref)
 r <- differences[differences$metric == "recruitment", ]
 stopifnot(

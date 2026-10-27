@@ -971,10 +971,13 @@ group_q$value <- .3
 group_q$se <- .06
 group_q$lwr <- .2
 group_q$upr <- .4
+group_q_member <- group_q
+group_q_member$age <- 2
 group_outputs <- rbind(
   source_outputs,
   observation_outputs[observation_outputs$measure != "q", , drop = FALSE],
-  group_q
+  group_q,
+  group_q_member
 )
 group_reference <- database_to_tam_ref(
   "translation_fixture", group_outputs,

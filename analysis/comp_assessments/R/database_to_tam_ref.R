@@ -44,7 +44,27 @@
   }
   source_key <- .tam_table_key(source, keys)
   if (anyDuplicated(source_key)) {
-    cli::cli_abort("Assessment output rows do not map uniquely to the fitted template groups.")
+    duplicate_keys <- unique(source_key[duplicated(source_key)])
+    keep <- rep(TRUE, nrow(source))
+    for (key in duplicate_keys) {
+      rows <- which(source_key == key)
+      derived <- if ("source_type" %in% names(source)) {
+        rows[!is.na(source$source_type[rows]) &
+          source$source_type[rows] == "derived_source_output"]
+      } else {
+        integer()
+      }
+      if (length(derived) != 1L) {
+        cli::cli_abort("Assessment output rows do not map uniquely to the fitted template groups.")
+      }
+      keep[rows] <- FALSE
+      keep[derived] <- TRUE
+    }
+    source <- source[keep, , drop = FALSE]
+    source_key <- source_key[keep]
+    if (anyDuplicated(source_key)) {
+      cli::cli_abort("Assessment output rows do not map uniquely to the fitted template groups.")
+    }
   }
   index <- match(.tam_table_key(template, keys), source_key)
   matched <- which(!is.na(index))
@@ -169,7 +189,34 @@
       }
     }
     if (length(candidates) > 1L) {
-      cli::cli_abort("Assessment q rows do not map uniquely to observations.")
+      group <- if ("age_group" %in% names(rows)) {
+        unique(trimws(as.character(rows$age_group[candidates])))
+      } else {
+        character()
+      }
+      fields <- intersect(
+        c("value", "se", "lwr", "upr", "unit", "source_reference", "notes"),
+        names(rows)
+      )
+      same_estimate <- length(group) == 1L && !is.na(group) && nzchar(group) &&
+        all(vapply(fields, function(field) {
+          length(unique(rows[[field]][candidates])) == 1L
+        }, logical(1)))
+      bounds <- if (same_estimate) {
+        regmatches(group, regexec("^([0-9]+)-([0-9]+)$", group))[[1L]]
+      } else {
+        character()
+      }
+      if (length(bounds) == 3L) {
+        representative <- candidates[
+          suppressWarnings(as.integer(as.character(rows$age[candidates]))) ==
+            as.integer(bounds[[2L]])
+        ]
+        if (length(representative) == 1L) candidates <- representative
+      }
+      if (length(candidates) > 1L) {
+        cli::cli_abort("Assessment q rows do not map uniquely to observations.")
+      }
     }
     if (length(candidates) != 1L) next
 

@@ -18,6 +18,17 @@ obs$index$q_key <- interaction(obs$index$survey, q_group,
   drop = TRUE, sep = "."
 )
 
+comparison_outputs <- source$outputs
+q_rows <- comparison_outputs$type == "catchability" &
+  comparison_outputs$measure == "q"
+for (field in intersect(c("value", "se", "lwr", "upr"), names(comparison_outputs))) {
+  comparison_outputs[[field]][q_rows] <- comparison_outputs[[field]][q_rows] * 1000
+}
+comparison_outputs$unit[q_rows] <- "unitless"
+comparison_outputs$notes[q_rows] <- paste(
+  comparison_outputs$notes[q_rows],
+  "Converted q by 1000 for comparison with tinyAM's thousand-fish abundance scale."
+)
 
 source_N <- .translation_start_surface(source$outputs, "population", "numbers_at_age", years, ages, 1)
 source_F <- .translation_start_surface(source$outputs, "mortality", "fishing_mortality_at_age", years, ages)
@@ -71,7 +82,7 @@ background <- c(
   "| F | Annual random-walk F has age-correlated increments; age 10+ shares the age-9 state. Fbar is ages 3–7. | Random-walk F with separate age increments; Fbar is set to ages 3–7. | tinyAM does not reproduce the source correlation between age increments. |",
   "| M | Fixed natural mortality is 0.2 per year at all ages. | The same fixed M surface is supplied to tinyAM. | This assumption is retained. |",
   "| Catch | One commercial catch-at-age series in thousands of fish; lognormal errors are age-correlated and use four age groups. | Native catch retained in thousand fish; independent lognormal errors share SDs over the same four age groups. | tinyAM does not model age-correlated observation errors. |",
-  "| Index | IBWSS ages 1–8, in millions of fish, sampled at 0.245 of the year. Catchability uses age groups 1, 2, 3, 4, and 5–8; observation SD uses 1, 2, 3, 4–6, and 7–8. | Values are converted to thousand fish, with the source catchability and observation-SD groupings preserved separately. | tinyAM omits age correlation in observation errors. |",
+  "| Index | IBWSS ages 1–8, in millions of fish, sampled at 0.245 of the year. Catchability uses age groups 1, 2, 3, 4, and 5–8; observation SD uses 1, 2, 3, 4–6, and 7–8. | Values are converted to thousand fish, with the source catchability and observation-SD groupings preserved separately. Source q is multiplied by 1,000 for starting values and common-scale comparison. | tinyAM omits age correlation in observation errors. |",
   "| Weights and maturity | Annual stock and catch weights; time-invariant maturity-at-age. | Native biological surfaces are retained. | No biological inputs are substituted. |",
   "", "Initial N, F, and q values are taken from the official SAM fit only as starting values; tinyAM re-estimates them. tinyAM converts count units to thousand fish internally, with biomass in tonnes. Native source units and explicit comparison conversions remain documented. The 2026 advice replaces the fitted recruitment estimate with a forecast assumption; the comparison reference keeps the native fitted estimate."
 )
