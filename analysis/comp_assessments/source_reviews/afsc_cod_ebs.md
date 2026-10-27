@@ -84,14 +84,19 @@ observations treat these zero entries as missing.
 
 N survival is deterministic with free initial ages; recruitment is IID around
 a constant mean with log SD 0.6908, F has independent age-specific random walks,
-M stays fixed at 0.3866 and q is free by age. The default-start fit converged:
-optimizer code 0, objective 372.2591, maximum gradient 0.0013577, positive-definite
-Hessian and finite covariance, about 6.45 seconds. No starting-value retry was
-used. The cached Official–tinyAM dashboard renders successfully.
+M stays fixed at 0.3866 and q is free by age. The current default-start fit
+converged: optimizer code 0, objective 341.6977, maximum absolute gradient
+0.001222, positive-definite Hessian and finite covariance, about 6.21 seconds.
+No starting-value retry was used. The cached Official–tinyAM dashboard renders
+successfully.
 
-Numerical convergence does not establish agreement. N-at-age has 42.1% mean
-absolute difference, −43.7% terminal difference and mean within-age correlation
-0.681. Recovered F-at-age has 70.1%, +107.0% and −0.200 respectively. Common
-proxy SSB has 21.7% mean absolute difference. The empirical pooled key,
-unconstrained age-specific F, omitted ageing error and simplified survey
-precision are material differences. Fixed-M equality only checks inputs.
+The current comparison summary reports 43.8% mean absolute percentage
+difference, −16.4% terminal difference, and 0.647 mean within-age correlation
+for N-at-age. Recovered F-at-age has 52.7%, +83.4%, and 0.465; population-
+weighted F-bar has 20.5%, −14.8%, and 0.770. Recruitment has 43.0%, +108.6%,
+and 0.648. Common-proxy SSB has 17.0% mean absolute difference, −38.0%
+terminal difference, and 0.766 correlation. Total abundance has 13.1% mean
+absolute difference, −15.3% terminal difference, and 0.904 correlation;
+biomass has 14.2%, −27.8%, and 0.809. The empirical pooled key, unconstrained
+age-specific F, omitted ageing error, and simplified survey precision are
+material differences. Fixed-M equality only checks inputs.
