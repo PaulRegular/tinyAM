@@ -16,6 +16,26 @@ landings as its only input. The 2017 advice for the same stock code likewise
 states that no abundance or exploitation information was available and no
 assessment was performed.
 
+The detailed [2026 working-group report](https://doi.org/10.17895/ices.pub.32625759),
+section 4, confirms that commercial landings were the only data supplied to
+the group, that no abundance index or age-specific numbers were available,
+and that stock structure and mixing with neighbouring stocks remain uncertain.
+It marks 2024 and 2025 landings preliminary. Its Table 4.2 rounds the annual
+totals; the SAG export retains greater published precision. ICES applies a
+0.8 precautionary buffer to the previous 2-tonne landings advice, giving
+1.6 tonnes per year for 2027–2029. The report's prose also says “catches”,
+but its advice table and the published advice specify commercial landings.
+
+The database retains the 2000–2025 SAG landings as source context in tonnes,
+not as total catches or a fitted likelihood. It records the advice rule and
+source limitations separately. The report's 1996, 1997 and 1999 entries are
+stored as displayed zeros with a note that the table rounds to tonnes. The
+1995 and 1998 table entries are censored
+as less than 0.5 tonnes and are not replaced by invented point estimates.
+The 2026 terminal year denotes the latest reported landings, not a fitted
+model year. No population-state outputs are claimed. The stock-specific
+working-group report is cached locally alongside the SAG export and advice.
+
 ## Translation decision
 
 This is not an age-structured assessment that tinyAM can translate. The
@@ -23,12 +43,14 @@ published landings history and catch limit are useful management information,
 but they do not provide catch-at-age, abundance indices, biological matrices,
 or fitted population states. Do not convert the aggregate landings to
 age-specific catches or treat the advised landings limit as an estimated
-population output. The canonical inputs and outputs therefore remain empty,
-and no tinyAM fit or comparison dashboard is appropriate for this record.
+population output. The canonical record contains the available landings
+context but no population outputs; no tinyAM fit or comparison dashboard is
+appropriate for this record.
 
 ## Sources
 
 - [ICES 2026 advice, bss.27.6a7bj](https://asd.ices.dk/viewAdvice/7207)
+- [ICES 2026 Celtic Seas working-group report](https://doi.org/10.17895/ices.pub.32625759), section 4 and Table 4.2.
 - [ICES Stock Assessment Graphs, assessment key 22635](https://standardgraphs.ices.dk/ViewSourceData.aspx?key=22635)
 - [ICES 2023 advice, bss.27.6a7bj](https://asd.ices.dk/viewAdvice/3429)
 - [ICES 2017 advice, bss.27.6a7bj](https://www.nwwac.ie/_fileupload/Seabass/2019_Dublin/ICES_Seabass_2017_6a7bj.pdf)

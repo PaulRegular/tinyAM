@@ -43,6 +43,7 @@ assessments or management advice.
 | Georges Bank cod (US assessment) | [2024 WHAM run, revised stock boundary and missing age inputs](source_reviews/nefsc_cod_georges_bank.md) |
 | 6.a South and 7.b–c herring | [current category-3 rule; age-structured translation unavailable](source_reviews/ck_ices_hawg_harengus_cs6_a_s_7b_c.md) |
 | 6.a North herring | [current survey-based harvest-rule assessment](source_reviews/ck_ices_hawg_harengus_cs_6a_n.md) |
+| West of Scotland and Ireland seabass | [2026 landings-based advice and data limitations](source_reviews/ck_ices_wgsce_labrax_is6a_7b_7j.md) |
 | Celtic Sea South sole (catalogue boundary unresolved) | [current category-5 advice; no age-structured model](source_reviews/ck_ices_wgsce_solea_is7jk.md) |
 | Witch flounder 5Y | [current empirical assessment; no accepted age-structured model](source_reviews/ck_nefsc_garmiii_cynoglossus_5y.md) |
 | Eastern Baltic cod | [2026 survey-index assessment; age-structured translation unavailable](source_reviews/ck_ices_wgbfas_morhua_bs_25_32.md) |
