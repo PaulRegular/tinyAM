@@ -582,6 +582,11 @@ in its composite units, rather than instantaneous F. `assumed_dead_catch`
 stores a source-reported catch summary under an explicit discard-survival
 assumption; it is not predicted catch or another observation likelihood.
 
+`exploitable_biomass` and `exploitation_rate` preserve empirical assessment
+indicators with their source definitions. They are not SSB or instantaneous
+fishing mortality; describe the biomass construction and the numerator and
+denominator of the rate in the source notes.
+
 When total abundance is derived from official numbers-at-age, sum all reported
 age groups and any separately reported sexes, preserve other population
 dimensions, and state the derivation in `notes`. Leave its standard error and

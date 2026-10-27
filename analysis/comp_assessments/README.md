@@ -45,7 +45,7 @@ assessments or management advice.
 | 6.a North herring | [current survey-based harvest-rule assessment](source_reviews/ck_ices_hawg_harengus_cs_6a_n.md) |
 | West of Scotland and Ireland seabass | [2026 landings-based advice and data limitations](source_reviews/ck_ices_wgsce_labrax_is6a_7b_7j.md) |
 | Celtic Sea South sole (catalogue boundary unresolved) | [current category-5 advice; no age-structured model](source_reviews/ck_ices_wgsce_solea_is7jk.md) |
-| Witch flounder 5Y | [current empirical assessment; no accepted age-structured model](source_reviews/ck_nefsc_garmiii_cynoglossus_5y.md) |
+| Witch flounder | [5Y catalogue entry](source_reviews/ck_nefsc_garmiii_cynoglossus_5y.md) · [2024 US unit assessment and separate 2026 data update](source_reviews/nefsc_witch_flounder_unit.md) |
 | Eastern Baltic cod | [2026 survey-index assessment; age-structured translation unavailable](source_reviews/ck_ices_wgbfas_morhua_bs_25_32.md) |
 | NEFSC summer flounder catalogue entry (MA) | [identity unresolved; no separate assessment data](source_reviews/ck_nefsc_garmiii_dentatus_ma.md) |
 | Western Baltic herring catalogue component (22–24) | [covered by the current 20–24 assessment](source_reviews/ck_ices_hawg_harengus_wbs_22_24.md) |
