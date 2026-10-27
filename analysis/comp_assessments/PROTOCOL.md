@@ -16,7 +16,9 @@ every table in every report. A tinyAM translation is a secondary, separate
 activity and is not a prerequisite for curating source data. When working
 through a stock catalogue, prioritize stocks with neither curated inputs nor
 curated outputs;
-return to partial records when useful source material can be recovered.
+return to partial records when useful source material can be recovered. Source
+curation takes priority across stocks: do not postpone recoverable assessment
+data while trying to make a tinyAM translation converge or agree better.
 
 Follow the schema and controlled vocabularies in `DATABASE_STRUCTURE.md`.
 The [scope and provenance statement](README.md#scope-and-provenance) applies
@@ -257,9 +259,11 @@ The newest advice or assessment year need not have the newest publicly available
 detailed documentation. Search earlier assessments of the same current unit
 before considering an earlier stock definition, and select the most recent
 detailed official assessment that can be supported by the available evidence.
-A partial source record is valuable: capture verified available inputs,
-assumptions and outputs and mark their completeness honestly. The assessment
-need not be age-structured or fit-ready for its source data to be curated.
+Judge the available detail by what the sources actually provide about the
+official assessment, not by whether tinyAM can fit it. A partial source record
+is valuable: capture verified available inputs, assumptions and outputs and
+mark their completeness honestly. The assessment need not be age-structured
+or fit-ready for its source data to be curated.
 Preserve aggregate and index-based methods in their source units and dimensions;
 do not manufacture age-specific states. If a source requires a new schema
 measure, document it and update the relevant validation before importing it.
@@ -276,7 +280,8 @@ even when an earlier unit supplies the detailed fallback.
 Explain which material inputs, assumptions and outputs are available for each
 candidate and why those details are insufficient for the current unit. A
 historical fallback is a separate assessment, not a replacement for the latest
-unit or proof that its results apply to the current boundaries.
+unit or proof that its results apply to the current boundaries. Revisit the
+selection if detailed current-unit data become publicly available.
 
 Keep distinct stock units and assessment runs identifiable under their own stock
 and assessment IDs. Record their relationship in stock notes and source reviews;
@@ -745,7 +750,9 @@ fitted. After source curation, when translation is requested and the available
 data and assessment method support a defensible approximation, follow
 `TINYAM_TRANSLATION.md` through validation, fitting, diagnostics and comparison.
 Record missing source data, an unsupported method, or numerical failure as a
-separate translation outcome; continue curation of other stocks.
+separate translation outcome; continue curation of other stocks. Do not count
+a missing or unsuccessful translation as a failure to curate verified source
+data, or as grounds to exclude those data from the database.
 
 ------------------------------------------------------------------------
 
