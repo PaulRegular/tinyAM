@@ -32,7 +32,7 @@
 ✖ Fixed-parameter covariance must be available and finite.
 ℹ Optimizer code zero alone is insufficient. A missed gradient tolerance alone
   does not establish a structural problem."
-"afsc_alaska_plaice_bsai_2024","00cc998b493dea5d7d7bed645027155f0fbf2501","not_converged",FALSE,1,"false convergence (8)",354.757920929434,52503477.1869611,52503477.1869611,TRUE,FALSE,28,527,14.0099830627441," | default: failed numerical checks; gradient=0.182; NA/NaN function evaluation | Numerical convergence checks did not pass; inspect `check_tam(fit)`.
+"afsc_alaska_plaice_bsai_2024","96fae7cea69f21a090952da356a3602a4ce1ee97","not_converged",FALSE,1,"false convergence (8)",354.757920929434,52503477.1869611,52503477.1869611,TRUE,FALSE,28,527,14.0099830627441," | default: failed numerical checks; gradient=0.182; NA/NaN function evaluation | Numerical convergence checks did not pass; inspect `check_tam(fit)`.
 ✖ Code 1: false convergence (8)
 ✖ Adjusted maximum 0.182; raw maximum 0.182; tolerance 0.01.
 ✖ Fixed-parameter covariance must be available and finite.
