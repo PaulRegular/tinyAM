@@ -40,6 +40,7 @@ assessments or management advice.
 | Western English Channel plaice | [2025 chr rule, surviving discards and translation gap](source_reviews/ices_plaice_western_channel_7e.md) |
 | Gulf of Cadiz anchovy | [2025 seasonal assessment, recovered tables and remaining native-input gaps](source_reviews/ices_anchovy_gulf_cadiz.md) |
 | Georges Bank cod (US assessment) | [2024 WHAM run, revised stock boundary and missing age inputs](source_reviews/nefsc_cod_georges_bank.md) |
+| 6.a South and 7.b–c herring | [current category-3 rule; age-structured translation unavailable](source_reviews/ck_ices_hawg_harengus_cs6_a_s_7b_c.md) |
 | Shared readers, converters, audits, and runners | `R/` |
 | Source imports and validators | `scripts/database/` |
 | Visible stock model calls and run drivers | `scripts/translation/` |
