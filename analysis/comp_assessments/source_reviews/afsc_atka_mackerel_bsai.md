@@ -62,30 +62,121 @@ Completeness remains partial because original unrounded inputs, full composition
 weights and state covariance were not recovered. This is distinct from the
 confirmed absence of a fitted length likelihood or a stochastic N process.
 
-## tinyAM translation and numerical result
+## Current tinyAM translation (revised October 2026)
 
-The first translation uses 1990–2023 and ages 2–11+, avoiding incomplete early
-catch cells and absent age-1 catch. The 2024 total catch and survey biomass have
-no matching age compositions, so cannot enter this age-index approximation.
-It retains recorded catch/survey weights, fixed M, female maturity and source
-timing. It uses deterministic survival, free initial ages, independent F random
-walks and constant-mean IID age-2 recruitment. The native age-1 Beverton–Holt
-relationship, F penalties, q prior, ageing error and separate composition
-likelihood are omitted. Rounded survey CVs supply log SD; their additional
-composition uncertainty is not represented. Source observations are not adjusted.
+The working translation continues to cover **1990–2023 and ages 2–11+**. The
+original early catch-at-age rows are incomplete, and catch age 1 is not reported.
+Although the database retains the 2024 catch and survey biomass inputs, the
+age-index reconstruction cannot include those aggregate-only observations
+without additional assumptions about age composition. No missing ages are
+manufactured or sourced from official fitted population states.
 
-Default initialization failed (optimizer code 1, false convergence; maximum
-gradient 0.934; non-positive-definite Hessian). One retry using aligned official
-N and F converged (code 0, objective 511.565, maximum gradient 0.000267,
-positive-definite Hessian and successful SD report). Data and assumptions were
-identical between attempts. Both diagnostic rows are retained in the cached fit.
+Biological inputs and observational conversions are unchanged: original population,
+catch and survey weights; deterministic cohort survival; fixed M = 0.3;
+source survey time 6.5/12; female maturity multiplied by 0.5; and August 1
+spawning time 7/12. Initial abundances at older ages are free. Age-2
+recruitment is IID around a constant estimated mean with **estimated process SD**,
+not the source's age-1 Beverton–Holt relationship with fixed steepness 0.8.
 
-The dashboard retains native age-1+ SSB and also compares modeled-age August 1
-female SSB calculated from rounded official N/F, fixed M and recorded biology,
-without uncertainty. This approximate SSB comparison has MAPD 25.7%, terminal
-difference −23.6% and correlation 0.966. N-at-age has MAPD 30.5%, terminal
-difference −22.2% and mean within-age correlation 0.874. F-at-age has MAPD 265.6%,
-terminal difference +33.8% and correlation 0.647; near-zero official juvenile F
-makes relative differences especially large. These are flagged for review.
-Age-2 recruitment (16.1%, +8.3%, 0.973) and total abundance (19.1%, −12.8%, 0.985)
-do not cross the requested thresholds. Fixed-M agreement is input consistency.
+### Fishing mortality: logistic mean and separable AR1 residuals
+
+The current working fit uses:
+
+```r
+F_settings = list(process = "ar1", mu_form = ~ logistic(age))
+```
+
+This is **not** the previous `cor_rw` candidate and not a fixed
+`logistic(age) + factor(year)` model. The rising logistic function describes
+the **mean F-at-age on the log scale**. A stationary Gaussian AR1 residual
+surface, correlated across both ages and calendar years, permits realized F to
+depart from that mean, including shifting age-specific vulnerabilities.
+
+The accepted AMAK model instead uses annual fishery intensity and penalized,
+time-varying nonparametric selectivity, shared across ages 10+. The current
+tinyAM approximation does not separately normalize fishery intensity and
+selectivity, does not impose source age-10+ equality in F and does not recreate
+the accepted penalties. AR1 flexibility is a pragmatic representation of
+age/time variation; it is not evidence that any particular source selectivity
+change was recovered.
+
+### Survey q: monotone age curve shared from age 7
+
+The fitted survey observation setup is:
+
+```r
+obs$index$q_age <- pmin(obs$index$age, 7)   # Retained but not used in current q_form
+obs$index$q_block <- factor(pmin(obs$index$age, 7))
+
+index_settings = list(
+  q_form = ~ 1 + mono(q_block),
+  q_link = "log",
+  sd_form = ~ 0,
+  sd_supplied = ~ relative_sd
+)
+```
+
+`mono(q_block)` adds **non-negative successive increments on the log-q scale**.
+Consequently, effective survey q is **non-decreasing across ages 2–7** and is
+**identical at ages 7–11+**. This differs substantively from the previous
+`rw(q_age)` candidate: there is no age random-walk q process in the current
+fit, and the curve cannot turn downward. There is also **no calendar-year q
+effect**. The unused `q_age` column is retained in the current uploaded script
+but does not drive fitted q; `q_block` does.
+
+The earlier use of shared q at ages 10+ was closer to the accepted assessment's
+age-sharing convention but allowed extreme q estimates in this approximation.
+The decision to couple from **age 7** was made to stabilize high-age q; it is
+an explicit translation choice, **not** a statement that the accepted model
+assumes selectivity flattens at age 7. The source survey selectivity is
+nonparametric and can be dome-shaped; its scalar q has a prior and is
+normalized jointly with selectivity over ages 4–10. The tinyAM monotone
+curve cannot reproduce descending source selectivity or identify a directly
+comparable normalized scalar q. `q_link = "log"` does not bound q below 1.
+
+### Observation uncertainty and fitting
+
+Published rounded annual survey CVs are converted to lognormal observation SDs:
+`sqrt(log1p(CV^2))`. The `sd_supplied` offset is used **without estimating a
+common multiplier** (`sd_form = ~ 0`). The source CV describes the annual
+**aggregate survey biomass**, however, and is repeated across reconstructed
+age-specific indices. The independent lognormal age likelihood does not
+reproduce the source's separate aggregate survey/index and multinomial age
+composition likelihoods, their effective sample sizes, or within-year
+covariance. Catch-at-age uses an estimated common lognormal SD.
+
+The present R script calls **one** `tinyAM::fit_tam()` model directly. It has
+no fallback fit and does not initialize from official N-at-age or F-at-age.
+The fitted M = 0.3 is externally fixed, so agreement in M is an input check.
+
+### Performance and comparison boundaries
+
+The user reports that the current specification reaches a reasonable practical
+match and that coupling q at **age 7** prevents extremely high estimates.
+No optimizer diagnostic table, current parameter estimates or recalculated
+agreement statistics accompanied these two revised files, so this assessment
+of the current fit is **qualitative**, not a newly quantified validation.
+
+The previous fit's convergence (objective **511.565**, maximum gradient
+**0.000267**, positive-definite Hessian), and historical comparisons (modeled-age
+SSB MAPD **25.7%**, terminal difference **−23.6%**, correlation **0.966**)
+refer to a **superseded independent-F-RW / independent age-q translation with
+source-informed retry**. They do **not** describe the present AR1-F,
+monotone-q fit. Additional previously reported differences for N and F also
+belong only to that earlier translation.
+
+The dashboard retains native age-1+ SSB and a separate **approximate modeled-age
+August 1 female SSB** derived from rounded official N-at-age, F-at-age,
+fixed M and recorded biology, with no reconstructed uncertainty. Native
+SSB intervals must not be applied to these derived sums. The original
+source estimates of N and F are used for comparisons only, never as
+observations or as current-fit initialization.
+
+The key remaining structural limitations are the different catch/survey
+likelihood, unavailable historical and 2024 aggregate-only age information,
+missing native composition effective sample sizes and ageing error, lack of
+a separately normalized scalar survey q, the inability of monotone q to
+represent dome-shaped survey selectivity, and a simpler recruitment process.
+Further fine-tuning can be assessed case by case; the current translation is
+presented as a practical approximation rather than a reconstruction of the
+accepted AMAK likelihood.
