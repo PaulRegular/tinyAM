@@ -35,3 +35,16 @@ The translation fits 1993–2024 at ages 0–5, keeps all four index identities 
 The report contains zero catches and zero index values, which tinyAM treats as missing under its lognormal observation likelihood. Those source values remain in the database. The three missing-index groups (Q4 2024, NI-MIK 2020/2022 and UK-FSPW 2014) are omitted only from the analysis-side observation table; no values are imputed. Fitting uses package starting values first. Since official N-at-age and F-at-age are unavailable, a source-aligned population-start retry cannot be constructed from the published outputs.
 
 The package-default fit converged with optimizer code 0, maximum absolute gradient 0.00087 and a successful positive-definite sdreport. Agreement is still poor: mean absolute percent differences are 178.9% for recruitment and 523.5% for the approximate SSB comparison; terminal differences are +258.5% and +842.3%, respectively. Recruitment trend correlation is 0.695. Official Fbar is not directly compared because its age range matches but its weighting cannot be aligned without official N-at-age. The fixed M comparison checks only that the reconstructed 2016 input was passed through; it is not an official fitted M output.
+
+## Alternative process checks
+
+Turning the IID N process off, to approximate deterministic cohort survival,
+returned optimizer code 0 and a small gradient, but the fixed covariance was
+non-finite and the Hessian was not positive definite. Keeping IID N while
+replacing correlated F increments with independent temporal random walks did
+pass convergence checks (objective 903.142, gradient 0.001067 and a positive-
+definite Hessian), but worsened both reported comparisons: median percent
+differences rose from 178.6% to 208.7% for recruitment and from 562.9% to
+620.9% for SSB. Recruitment correlation increased only slightly (0.695 to
+0.701), while SSB correlation fell from 0.922 to 0.915. The original
+correlated-F translation is retained.

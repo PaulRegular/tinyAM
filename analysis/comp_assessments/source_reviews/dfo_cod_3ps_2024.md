@@ -51,3 +51,5 @@ The updated recipe first used package-default initialization. Numerical checks f
 
 A one-off sensitivity replaced the age-correlated F process with independent temporal random walks while keeping the IID N process, recruitment, M condition effects, data, and likelihood settings unchanged. It also returned singular convergence (code 1); the maximum gradient was 0.000381 and the Hessian was positive definite, but fixed-parameter covariance remained unavailable. Removing the estimated F-age correlation therefore did not resolve the numerical failure. No converged-fit dashboard is available.
 
+Two additional initial-state sensitivities used the same data, likelihood and process settings without supplied starts. `init = "latent"` failed (optimizer code 1, objective 2077.477, maximum gradient 2.84, and non-positive-definite Hessian). `init = "free"` reached optimizer code 0 (objective 2056.290, gradient 0.001215, positive-definite Hessian), but its fixed-parameter covariance remained non-finite, so it also failed the package convergence checks. Neither version supports a reliable comparison or dashboard; the original recipe is unchanged.
+

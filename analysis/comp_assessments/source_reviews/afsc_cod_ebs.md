@@ -100,3 +100,19 @@ absolute difference, −15.3% terminal difference, and 0.904 correlation;
 biomass has 14.2%, −27.8%, and 0.809. The empirical pooled key, unconstrained
 age-specific F, omitted ageing error, and simplified survey precision are
 material differences. Fixed-M equality only checks inputs.
+
+## Translation sensitivities checked
+
+An age/year-correlated F process around age-specific means converged from
+default starts (objective 206.601, maximum gradient 0.000780 and positive-
+definite Hessian), but agreement worsened sharply: median percent differences
+were 398% for N-at-age, 148% for total abundance, 236% for biomass, and 454%
+for the common-proxy SSB. It is rejected in favour of independent age-specific
+F random walks.
+
+A year-specific empirical age-length key was also tested for years with
+fishery age samples, using the pooled key for other years. This fit returned
+optimizer code 0 and a small gradient, but its fixed covariance was non-finite,
+the Hessian was not positive definite, and the objective rose from 341.698 to
+576.623. The pooled key remains the usable approximation; the annual-key result
+is not used for comparison or dashboard output.
