@@ -129,6 +129,14 @@ input series were extended through 2023, but it likewise does not publish
 those arrays. The older update therefore cannot supply a verified input
 vector for the 2024 run, and its fitted values are not used to fill that gap.
 
+The 2024 Appendix 4 projection code was checked separately. It reproduces
+the fitted age-1 recruitment series for 1982–2023, then reads `BAYALKS` and
+`CSTALKS` workbooks for 2020–2022 to construct alternative projection
+selectivities. The appendix names those files but does not include or link the
+workbooks on its download page. These projection materials do not provide the
+historical catch, index or composition likelihood arrays needed for a 2024
+tinyAM fit; the recruitment vector is a fitted state, not an observation.
+
 No tinyAM model, source-based starts or dashboard is claimed. Translation
 requires those original inputs and resolution of the remaining configuration
 and year-alignment questions; observations will not be inferred from fitted N/F.
