@@ -86,3 +86,13 @@ N-weighted F-at-age 587.46%, +1201.45%, −0.177. Very small juvenile F makes
 relative differences especially large. These metrics require review. Fixed
 M is checked only for input consistency. Native age-0 recruitment and all-age
 SSB are retained separately; no combined uncertainty is invented.
+
+An alternative with an age-logistic mean and AR1 temporal F process was tested
+with package defaults followed by the permitted aligned source-start retry.
+The retry still failed numerical checks (optimizer code 1, gradient 4,441 and
+non-positive-definite Hessian); its reported SSB median difference was 3.14%,
+but F median difference was 60.88%, abundance 39.61%, recruitment 104.11%, and
+abundance/recruitment trend correlations fell to 0.165/0.675. This candidate
+was not retained. The current independent-F-RW fit remains preferable among
+the tested translations, although its F, abundance, recruitment and total-
+abundance comparisons remain problematic.
