@@ -95,7 +95,7 @@ rsvg::rsvg_pdf(file.path(repo, "man/figures/logo.svg"), "logo.pdf")
 \pageheader{Tiny Assessment Model (tinyAM) :: \textbf{CHEATSHEET}}{Formula-driven age-structured stock assessment}
 \begin{minipage}[t][164mm][s]{.28\linewidth}\vspace{0pt}
 \sectitle{1}{Setup tidy inputs}{}
-\panelnote{Use four tidy tables: \texttt{catch}, \texttt{index}, \texttt{weight}, and \texttt{maturity}. Each column is a variable; each row identifies a year and age, plus the survey for indices. Catch and biology need complete grids; survey rows may be sparse. Missing observations (\texttt{NA}) are allowed only in catch and index.}\par\vspace{2mm}
+\panelnote{Use four tidy tables: \texttt{catch}, \texttt{index}, \texttt{weight}, and \texttt{maturity}. Keys are year--age, plus survey for indices. Optional \texttt{weight\$type}: stock (biomass/SSB) or catch (yield); stock is required and supplies both uses if catch is absent. Each type needs a complete grid. Survey rows may be sparse; \texttt{NA} is allowed only in catch/index.}\par\vspace{2mm}
 \tablelabel{catch}\par\vspace{.5mm}\nointerlineskip
 \begin{minipage}[t]{.54\linewidth}\vspace{0pt}
 \input{cache/table_catch.tex}
@@ -180,7 +180,7 @@ g_{Ricker}(S)&=\alpha S e^{-\beta S}.
 \[
 SSB_t=\sum_b n_{t,b}w_{t,b}p_{t,b}e^{-\tau_{t,b}Z_{t,b}}.
 \]
-\micro{Biomass is $\sum_b n_{t,b}w_{t,b}$. $b$: retained biological age; $n$: its abundance; $w$: weight; $p$: mature fraction; $\tau$: year fraction from year start to spawning (default 0; set \texttt{maturity\$spawn\_time} for age/year-specific values). Hidden ages retain biology/timing and share plus-age mortality.}
+\micro{Biomass is $\sum_b n_{t,b}w_{t,b}$. $b$: retained biological age; $n$: its abundance; $w$: stock weight; $p$: mature fraction; $\tau$: year fraction from year start to spawning (default 0; set \texttt{maturity\$spawn\_time} for age/year-specific values). Hidden ages retain biology/timing and share plus-age mortality.}
 \end{mathbox}
 \end{minipage}\hfill
 \begin{minipage}[t][160mm][s]{.33\linewidth}\vspace{0pt}

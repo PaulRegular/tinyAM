@@ -58,7 +58,7 @@ the published stock assessment.
 \strong{Natural mortality assumptions.} \code{allometric_M_assumption} uses
 \code{M = M0 * weight^(-0.305)}, following the weight-scaling approach of
 Lorenzen (1996). The multiplier \code{M0} is calibrated so that the arithmetic
-mean of this schedule over source weight records for ages 5-14 is 0.30 per
+mean of these M values over source weight records for ages 5-14 is 0.30 per
 year, before restricting the example to the catch years. The mean over the
 packaged subset can therefore differ from 0.30.
 This is a constructed example baseline, not an independently estimated

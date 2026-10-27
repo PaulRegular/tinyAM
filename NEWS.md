@@ -1,5 +1,14 @@
 # tinyAM 0.1.1.9000
 
+* Optional `weight$type` distinguishes complete stock and catch weights.
+  Stock weights determine biomass and SSB; catch weights determine yield,
+  catch targets and observed-catch hindcasts. Untyped and stock-only inputs
+  retain their existing behavior. `W_catch` reports effective catch weights.
+
+* `vis_tam()` now accepts retrospective and hindcast results directly. Select
+  one model's reference and successful peels; omitted attempts are explained
+  on Background. Forecast hover text identifies each peel's origin and horizon.
+
 * The assessment translation batch honours its dashboard switch, reports stock
   progress, and saves per-stock checkpoints immediately. Its script applies a
   configurable subprocess deadline, recording timeouts without changing model

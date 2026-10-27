@@ -45,7 +45,7 @@
 #' **Natural mortality assumptions.** `allometric_M_assumption` uses
 #' `M = M0 * weight^(-0.305)`, following the weight-scaling approach of
 #' Lorenzen (1996). The multiplier `M0` is calibrated so that the arithmetic
-#' mean of this schedule over source weight records for ages 5-14 is 0.30 per
+#' mean of these M values over source weight records for ages 5-14 is 0.30 per
 #' year, before restricting the example to the catch years. The mean over the
 #' packaged subset can therefore differ from 0.30.
 #' This is a constructed example baseline, not an independently estimated
@@ -143,7 +143,19 @@
 #' stay in the biological tables. Validation does not add the class, and inputs
 #' are checked again during preparation after any edits.
 #'
-#' Optional `unit` columns label catch numbers, stock weight per fish and each
+#' The optional `weight$type` key distinguishes `"stock"` and `"catch"`
+#' average individual weights. Stock weights are required and determine biomass
+#' and SSB. Catch weights determine yield and catch targets; if absent, stock
+#' weights serve both purposes. Each supplied type needs the complete same
+#' year-age grid, including retained biological ages beyond a modeled plus age.
+#' Missing catch-weight cells never fall back individually to stock weights.
+#' For a prepared wide table with `stock` and `catch` columns, the tidy form is:
+#' ```r
+#' tidyr::pivot_longer(wide, c(stock, catch),
+#'   names_to = "type", values_to = "obs")
+#' ```
+#'
+#' Optional `unit` columns label catch numbers, average individual weight and each
 #' survey index. Use one unit throughout catch and weight, and one per survey.
 #' Values are never converted during fitting. For example, `"thousand fish"`
 #' catch and `"kg"` weight give abundance in thousands and biomass/SSB in
@@ -266,10 +278,15 @@ print.tam_data <- function(x, n = 5, ...) {
 #' - Non-missing observations must be finite and non-negative; maturity must
 #'   be a proportion in `[0, 1]`. Zero catch/index values are accepted here but
 #'   treated as missing by [prepare_tam()], because the observation model is on logs.
-#' - `catch`, `weight`, and `maturity` must contain exactly one row for **every**
+#' - `catch` and `maturity` must contain exactly one row for **every**
 #'   `(year, age)` combination over the global modeled range
 #'   (from min to max year and age across all tables).
+#'   Weight requires the same grid within each supplied type.
 #' - Survey tables may omit year-age combinations.
+#' - Optional `weight$type` contains `"stock"` or `"catch"`. Stock weights
+#'   are required. With types, the unique key is `(year, age, type)` and every
+#'   supplied type must cover the complete same grid. Without types, or with
+#'   stock alone, stock weights also supply yield and catch targets.
 #' - Optional character `unit` columns must be consistent throughout catch and
 #'   weight, and within each survey. Missing columns are valid; a supplied column
 #'   requires nonempty labels on every row. Units never change input values.
@@ -399,6 +416,13 @@ check_tam_data <- function(data) {
   }
 
   for (nm in required_tabs) check_one(obs[[nm]], nm)
+  if ("type" %in% names(obs$weight)) {
+    type <- as.character(obs$weight$type)
+    if (anyNA(type) || any(!type %in% c("stock", "catch"))) {
+      cli::cli_abort("weight$type must contain only 'stock' or 'catch', without missing types.")
+    }
+    if (!"stock" %in% type) cli::cli_abort("Stock weights are required; catch-only weights are not supported.")
+  }
 
   # Covariates cannot change the range supplied by observations and biology.
   obs_years <- unlist(lapply(obs[required_tabs], function(d) d$year))
@@ -424,21 +448,33 @@ check_tam_data <- function(data) {
     if (!is.null(obs$pop_covariates)) "pop_covariates"
   )
   for (nm in must_be_full) {
-    if (anyDuplicated(obs[[nm]][, c("year", "age")])) {
-      cli::cli_abort("{.arg {nm}} must have exactly one row per year and age; duplicate rows would misalign the model surfaces.")
+    keys <- c("year", "age", if (nm == "weight" && "type" %in% names(obs$weight)) "type")
+    if (anyDuplicated(obs[[nm]][, keys])) {
+      cli::cli_abort("{.arg {nm}} must have exactly one row per {paste(keys, collapse = ' and ')}; duplicate rows would misalign the model surfaces.")
     }
     xy <- unique(obs[[nm]][, c("year", "age")])
-    if (nrow(xy) != grid_size) {
+    sizes <- if (nm == "weight" && "type" %in% names(obs$weight)) {
+      vapply(split(obs$weight, obs$weight$type, drop = TRUE), nrow, integer(1))
+    } else nrow(xy)
+    if (any(sizes != grid_size)) {
       cli::cli_abort(c(
         "{.strong `{nm}` coverage is incomplete}",
         "x" = "`{nm}` must contain a row for every (year, age) in the modeled range: {years[1]}-{years[length(years)]} x {ages[1]}-{ages[length(ages)]}.",
-        "i" = "Current unique (year, age) rows in `{nm}`: {nrow(xy)} (expected {grid_size})."
+        "i" = if (length(keys) == 3L) "Every weight type must cover the complete stock-weight grid, including retained plus ages." else
+          "Current unique (year, age) rows in `{nm}`: {nrow(xy)} (expected {grid_size})."
       ))
     }
   }
 
   .data_units(obs)
   invisible(TRUE)
+}
+
+# Select stock or catch weights; stock is the fallback only when catch is absent.
+.select_weights <- function(weight, type = "stock") {
+  if (!"type" %in% names(weight)) return(weight)
+  if (type == "catch" && !any(weight$type == "catch")) type <- "stock"
+  weight[weight$type == type, , drop = FALSE]
 }
 
 #' Check the structure of a TAM obs list

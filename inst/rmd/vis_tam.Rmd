@@ -50,6 +50,9 @@ set_model_levels <- function(x, model_names) {
   x
 }
 tabs <- set_model_levels(tabs, names(fits))
+if (exists("retro_origins") && !is.null(retro_origins)) {
+  tabs <- tinyAM:::.retro_plot_metadata(tabs, retro_origins)
+}
 obs_pred <- tabs$obs_pred
 pop <- tabs$pop
 fixed_par <- tabs$fixed_par
