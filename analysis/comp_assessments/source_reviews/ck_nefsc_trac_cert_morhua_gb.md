@@ -52,6 +52,11 @@ retaining CATCH weights. Consequently Table 5 is not imported as the EGB
 model's age observations. Its count-scale multiplier is also not inferred.
 US EGB age compositions are explicitly missing in 2020-2023. Published figures
 and fitted states are not used to fill either country's observation arrays.
+Figures 23 and 40 in the data-input review plot fishery and survey catch-at-age
+as bubbles, but provide no numeric labels or bubble-size scale. They establish
+the plotted fleets, years and age ranges, but do not permit reproducible
+recovery of the selected NTS catch observations, survey abundance, or survey
+proportions. No values are digitized from these figures.
 
 The framework fits separate aggregate-biomass and age-composition data for
 DFO winter, NMFS spring and NMFS fall RV surveys. Aggregate observations have
