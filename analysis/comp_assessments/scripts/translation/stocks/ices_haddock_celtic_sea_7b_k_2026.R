@@ -13,6 +13,8 @@ obs <- database_to_tam_obs(
   assumptions = source$assumptions
 )
 
+obs$catch$obs[obs$catch$obs == 0] <- NA_real_
+
 catch_weight <- source$inputs[
   source$inputs$assessment_id == assessment_id &
     source$inputs$type == "catch" &

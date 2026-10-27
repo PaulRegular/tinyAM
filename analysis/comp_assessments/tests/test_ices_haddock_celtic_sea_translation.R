@@ -14,6 +14,13 @@ catch_weights <- source_record$inputs[
 ]
 weight_key <- function(x) paste(x$year, x$age, sep = "\r")
 weight_index <- match(weight_key(obs$catch), weight_key(catch_weights))
+zero_source_catch <- source_record$inputs[
+  source_record$inputs$type == "catch" &
+    source_record$inputs$measure == "numbers_at_age" &
+    source_record$inputs$value == 0,
+  , drop = FALSE
+]
+zero_source_rows <- match(weight_key(zero_source_catch), weight_key(obs$catch))
 
 tinyAM::check_obs(obs)
 stopifnot(
@@ -21,7 +28,10 @@ stopifnot(
   identical(translated$ages, 0:8),
   as.integer(translated$age_plus_group) == 8L,
   nrow(obs$catch) == 33L * 9L,
-  sum(obs$catch$obs == 0, na.rm = TRUE) == 35L,
+  nrow(zero_source_catch) == 35L,
+  !anyNA(zero_source_rows),
+  all(is.na(obs$catch$obs[zero_source_rows])),
+  all(obs$catch$obs[!is.na(obs$catch$obs)] > 0),
   nrow(obs$index) == 23L * 8L - 1L,
   all(obs$index$samp_time == 0.875),
   !any(obs$index$year == 2005L & obs$index$age == 7L),
