@@ -13,8 +13,9 @@ southern stock only; it is not the old combined unit.
 
 Keep the historical combined entry metadata-only. Do not copy southern-stock
 values into it or combine them with western-stock data. The current southern
-stock has its own documented tinyAM translation; the western successor needs
-separate source curation before it can be compared.
+stock has a separate, partial source record; its missing inputs prevent a
+completed tinyAM fit. The western successor needs separate source curation
+before it can be compared.
 
 ## Sources
 
