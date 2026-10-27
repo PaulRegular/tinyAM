@@ -48,6 +48,13 @@ assessments or management advice.
 | Eastern Baltic cod | [2026 survey-index assessment; age-structured translation unavailable](source_reviews/ck_ices_wgbfas_morhua_bs_25_32.md) |
 | NEFSC summer flounder catalogue entry (MA) | [identity unresolved; no separate assessment data](source_reviews/ck_nefsc_garmiii_dentatus_ma.md) |
 | Western Baltic herring catalogue component (22–24) | [covered by the current 20–24 assessment](source_reviews/ck_ices_hawg_harengus_wbs_22_24.md) |
+| Northern rock sole sex-specific catalogue entries | [female](source_reviews/ck_afsc_polyxystra_eebsai_females.md) · [male](source_reviews/ck_afsc_polyxystra_eebsai_males.md) |
+| Alaska plaice sex-specific catalogue entries | [female](source_reviews/ck_afsc_quadrituberculatus_bsai_females.md) · [male](source_reviews/ck_afsc_quadrituberculatus_bsai_males.md) |
+| Arrowtooth flounder sex-specific catalogue entries | [female](source_reviews/ck_afsc_stomias_bsai_females.md) · [male](source_reviews/ck_afsc_stomias_bsai_males.md) |
+| Bothnian herring historical components | [Subdivision 30](source_reviews/ck_ices_wgbfas_harengus_bs_30.md) · [Subdivision 31](source_reviews/ck_ices_wgbfas_harengus_bs_31.md) |
+| Eastern Baltic cod ambiguous catalogue label | [WBS 25–32](source_reviews/ck_ices_wgbfas_morhua_wbs_25_32.md) |
+| Baltic plaice historical components | [Subdivisions 21–23](source_reviews/ck_ices_wgbfas_platessa_bs_21_23.md) · [Subdivisions 24–32](source_reviews/ck_ices_wgbfas_platessa_bs_24_32.md) |
+| Iberian anchovy historical combined unit | [Division 9.a](source_reviews/ck_ices_wghansa_mordax_sp9a.md) |
 | Shared readers, converters, audits, and runners | `R/` |
 | Source imports and validators | `scripts/database/` |
 | Visible stock model calls and run drivers | `scripts/translation/` |
