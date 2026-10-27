@@ -75,17 +75,20 @@ likelihood are omitted. Rounded survey CVs supply log SD; their additional
 composition uncertainty is not represented. Source observations are not adjusted.
 
 Default initialization failed (optimizer code 1, false convergence; maximum
-gradient 0.934; non-positive-definite Hessian). One retry using aligned official
-N and F converged (code 0, objective 511.565, maximum gradient 0.000267,
-positive-definite Hessian and successful SD report). Data and assumptions were
-identical between attempts. Both diagnostic rows are retained in the cached fit.
+gradient 1.97e+08; non-finite objective evaluations). One retry using aligned
+official N and F converged (code 0, objective 619.379, maximum absolute
+gradient 0.001433, positive-definite Hessian and successful uncertainty
+estimation; 16.19 seconds). Data and assumptions were identical between
+attempts. Both diagnostic rows are retained in the cached fit.
 
-The dashboard retains native age-1+ SSB and also compares modeled-age August 1
+The dashboard retains native age-1+ SSB and compares modeled-age August 1
 female SSB calculated from rounded official N/F, fixed M and recorded biology,
-without uncertainty. This approximate SSB comparison has MAPD 25.7%, terminal
-difference −23.6% and correlation 0.966. N-at-age has MAPD 30.5%, terminal
-difference −22.2% and mean within-age correlation 0.874. F-at-age has MAPD 265.6%,
-terminal difference +33.8% and correlation 0.647; near-zero official juvenile F
-makes relative differences especially large. These are flagged for review.
-Age-2 recruitment (16.1%, +8.3%, 0.973) and total abundance (19.1%, −12.8%, 0.985)
-do not cross the requested thresholds. Fixed-M agreement is input consistency.
+without uncertainty. The current comparison summary gives this approximate
+SSB 24.5% mean absolute percentage difference, −26.5% terminal difference,
+and 0.948 correlation. N-at-age has 32.1%, −27.1%, and 0.858 mean within-age
+correlation. F-at-age has 299.0% mean absolute difference, +37.7% terminal
+difference, and 0.568 correlation; its median absolute percentage difference
+is 40.9%, so near-zero official juvenile F accounts for much of the large
+mean. Population-weighted F-bar has 28.7%, +17.1%, and 0.830. Age-2 recruitment
+has 19.5%, −15.1%, and 0.931; total abundance has 18.3%, −29.0%, and 0.947;
+biomass has 20.0%, −31.5%, and 0.953. Fixed-M agreement is input consistency.
