@@ -141,7 +141,8 @@ profile; it does not copy official N estimates into the fit.
 ## Current fit status
 
 The latest tracked diagnostic uses database revision `00cc998` and is
-non-converged. Package starts failed covariance and Hessian checks. The aligned
+non-converged. Package starts failed the fixed-effect covariance check (reported
+gradient 0.000625). The aligned
 source-start retry returned code 1, objective 1934.708, maximum gradient
 3.79e11 and a non-positive-definite Hessian. An SD-report object exists, but it
 does not provide usable uncertainty. The current comparison summary contains no
