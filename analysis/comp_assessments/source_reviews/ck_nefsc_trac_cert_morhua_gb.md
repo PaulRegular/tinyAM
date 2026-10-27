@@ -77,18 +77,18 @@ configured sampling fractions. Those fractions, numerical annual CV arrays
 and age-composition observations remain unavailable.
 
 Recruitment is a log-scale random walk with AR1-correlated innovations,
-separate from the older-age two-dimensional AR1 deviations. This is not an
-AR1 recruitment level around a constant mean or a random walk with independent
-innovations. Initial N is estimated. M is an externally supplied, weight-based
-Lorenzen year-age matrix; apparent mortality inferred from N process error is
-not a directly estimated M surface. Figure 11 of Research Document 2026/039
-(printed p. 30) plots empirical annual M values by age and a smoother, but does
-not provide numeric values for every year-age cell or identify the smoother as
-the matrix supplied to WHAM. It is therefore insufficient to reconstruct the
-complete fixed-M input without an undocumented interpolation or substitution.
-The actual M matrix, full biological surfaces, spawning fraction, native model
-configuration, numerical process parameters and exact bias-adjustment settings
-remain unrecovered.
+separate from the older-age two-dimensional AR1 deviations. The report states
+that fixed Lorenzen M was calculated from weight-at-age and varied by year and
+age. Figure 11 prints black annual M points for ages 1-9 across 1978-2023;
+these 414 points have been digitized as approximate source inputs. The blue
+smoothers are excluded, no missing years are interpolated, age-1 values are
+rounded to 0.01, and ages 2-9 to 0.001. Age 9 is mapped to the model's 9+ group
+from the reported age grid. These are figure read-offs, not a verified copy of
+the native WHAM input array, and do not represent internally estimated M.
+Older-fish apparent mortality inferred from N process error is not a directly
+estimated M surface. The exact native M array, full biological surfaces,
+spawning fraction, native model configuration, numerical process parameters
+and exact bias-adjustment settings remain unrecovered.
 
 ## Outputs and later updates
 
@@ -96,7 +96,8 @@ Table 4 supplies three aggregate survey q coefficients for selected EGB
 Run 1: 0.434 (DFO winter), 0.223 (NMFS spring), and 0.109 (NMFS fall). These
 are separate from age selectivity and are not direct age-specific q. Their
 native unit multiplier is unresolved; no scale change, SE or CI is invented.
-Full historical N/F/SSB/recruitment surfaces are shown only as figures in the
+Approximate M inputs are digitized from the black points in Figure 11. Full
+historical N/F/SSB/recruitment surfaces are shown only as figures in the
 framework documents. The fitted WHAM object and numerical arrays were not
 recovered from the cited publications, DFO data/code links, NOAA resources or
 public model-repository searches. Generic WHAM examples, rejected TRAC models
@@ -133,10 +134,12 @@ their missing years, selected q, source output definitions, missing
 uncertainty, omitted averages and conflicting values, and the remaining
 unavailable age observations.
 
-There are 1,026 recovered inputs (996 for the framework), 21 assumptions and
-eight outputs across the three events. All completeness statuses remain
+There are 1,440 recovered inputs (1,410 for the framework, including 414
+approximate M points), 21 assumptions and eight outputs across the three
+events. All completeness statuses remain
 **partial**. Missing selected NTS catch-at-age, survey age compositions and
-annual CVs, complete biology/M and numerical population outputs prevent a
+annual CVs, complete biology, the exact native M input array and numerical
+population outputs prevent a
 source-faithful tinyAM fit and dashboard. No fit or completed translation is
 claimed. Future translation should first recover those arrays, then document
 how tinyAM approximates separate totals and compositions, fleets, correlated

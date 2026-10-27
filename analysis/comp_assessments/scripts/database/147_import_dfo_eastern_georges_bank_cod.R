@@ -68,8 +68,13 @@ stopifnot(length(q_line) == 1L)
 q <- as.numeric(strsplit(q_line, "[[:space:]]+")[[1L]][6:8])
 stopifnot(identical(q, c(.434, .223, .109)))
 
+table_files <- c("stocks.csv", "assessments.csv", "assumptions.csv", "inputs.csv", "outputs.csv")
+table_fields <- setNames(lapply(table_files, function(file) {
+  header <- readLines(file.path(database, file), n = 1L, warn = FALSE)
+  names(read.csv(text = header, nrows = 0L, check.names = FALSE))
+}), table_files)
 blank <- function(file, id, n = 1L) {
-  fields <- names(read.csv(file.path(database, file), nrows = 0, check.names = FALSE))
+  fields <- table_fields[[file]]
   out <- as.data.frame(matrix("", n, length(fields)), stringsAsFactors = FALSE)
   names(out) <- fields
   out$assessment_id <- id
@@ -126,6 +131,67 @@ weight_input$source_reference <- paste(urls[["data"]], "Table 6, printed pp. 34-
 weight_input$transformation <- "Wide-to-long reshape only; no age pooling or zero replacement."
 weight_input$notes <- "Selected Canadian CATCH weight data at original ages 1-16; source zeros and rounding retained, not treated as positive fitted biological weights. These are not stock weights or a recovered model age-9+ weight. Terminal 2023, plus-group construction and complete stock/other-fleet biology remain unavailable. The CATCH numbers-at-age in Table 5 are not the selected NTS age observations."
 inputs <- rbind(inputs, weight_input)
+## Figure 11 is rendered at 130 dpi; black annual point centers are digitized by panel.
+m_page <- pdftools::pdf_render_page(
+  file.path(cache, "5z_cod_modelling_2026_039.pdf"), page = 34, dpi = 130, numeric = TRUE
+)
+m_figure <- m_page[636:1176, 149:960, 1:3, drop = FALSE]
+m_dark <- m_figure[, , 1] < .25 & m_figure[, , 2] < .25 & m_figure[, , 3] < .25
+m_scale_x <- (728 - 203) / (666 - 63)
+m_offset_x <- (203 - 148) - m_scale_x * 63
+m_scale_y <- (976 - 641) / (390 - 7)
+m_offset_y <- (641 - 635) - m_scale_y * 7
+m_x_1980 <- c(85, 386, 687)
+m_x_2020 <- c(292, 593, 894)
+m_plot_rows <- list(c(35, 187), c(227, 379), c(418, 568))
+m_y_ticks <- list(
+  cbind(y = c(45,64,82,101,120,139,158,177), value = c(1.5,1.375,1.25,1.125,1,.875,.75,.625)),
+  cbind(y = c(49,76,103,129,156,182), value = c(.65,.60,.55,.50,.45,.40)),
+  cbind(y = c(33,50,67,84,101,118,134,151,168,185), value = c(.41,.40,.39,.38,.37,.36,.35,.34,.33,.32)),
+  cbind(y = c(220,240,260,280,301,321,341,361,381), value = c(.375,.3625,.35,.3375,.325,.3125,.300,.2875,.275)),
+  cbind(y = c(228,246,264,283,301,319,337,355,374), value = c(.35,.3375,.325,.3125,.300,.2875,.275,.2625,.25)),
+  cbind(y = c(218,234,250,266,283,299,315,332,348,364,380), value = c(.3375,.325,.3125,.300,.2875,.275,.2625,.250,.2375,.225,.2125)),
+  cbind(y = c(431,452,473,494,515,536,557,578), value = c(.315,.300,.285,.270,.255,.240,.225,.210)),
+  cbind(y = c(426,442,458,473,489,504,520,535,551,567), value = c(.3125,.300,.2875,.275,.2625,.250,.2375,.225,.2125,.200)),
+  cbind(y = c(416,436,455,475,495,514,534,553,573), value = c(.275,.2625,.250,.2375,.225,.2125,.200,.1875,.175))
+)
+linear_read <- function(y, ticks) {
+  xp <- ticks[, "y"]
+  fp <- ticks[, "value"]
+  if (y < xp[1]) return(fp[1] + (y - xp[1]) * (fp[2] - fp[1]) / (xp[2] - xp[1]))
+  if (y > tail(xp, 1)) return(tail(fp, 1) + (y - tail(xp, 1)) *
+    (tail(fp, 1) - fp[length(fp) - 1]) / (tail(xp, 1) - xp[length(xp) - 1]))
+  stats::approx(xp, fp, xout = y)$y
+}
+digitize_m <- function(age, year) {
+  column <- (age - 1L) %% 3L + 1L
+  panel_row <- (age - 1L) %/% 3L + 1L
+  x <- m_x_1980[column] + (year - 1980) * (m_x_2020[column] - m_x_1980[column]) / 40
+  x_index <- round(m_offset_x + m_scale_x * x) + 1L
+  x_indices <- seq.int(x_index - 2L, x_index + 2L)
+  panel <- m_plot_rows[[panel_row]]
+  y_indices <- seq.int(round(m_offset_y + m_scale_y * panel[1]) + 1L,
+    round(m_offset_y + m_scale_y * panel[2]) + 1L)
+  counts <- rowSums(m_dark[y_indices, x_indices, drop = FALSE])
+  if (max(counts) < 2L) return(NA_real_)
+  y <- (median(y_indices[counts == max(counts)]) - 1 - m_offset_y) / m_scale_y
+  linear_read(y, m_y_ticks[[age]])
+}
+m_grid <- expand.grid(year = 1978:2023, age = 1:9, KEEP.OUT.ATTRS = FALSE)
+m_grid <- m_grid[order(m_grid$age, m_grid$year), ]
+m_grid$value <- mapply(digitize_m, m_grid$age, m_grid$year)
+stopifnot(nrow(m_grid) == 414L, all(is.finite(m_grid$value)))
+m_grid$value <- round(m_grid$value, ifelse(m_grid$age == 1L, 2L, 3L))
+m_input <- blank("inputs.csv", framework_id, nrow(m_grid))
+m_input$type <- "M"; m_input$measure <- "natural_mortality_at_age"; m_input$basis <- "per_year"
+m_input$year <- m_grid$year; m_input$year_basis <- "calendar_year"
+m_input$age <- m_grid$age
+m_input$value <- m_grid$value; m_input$unit <- "per_year"
+m_input$region <- "Eastern Georges Bank"; m_input$source_type <- "digitized"
+m_input$source_reference <- paste(urls[["model"]], "Figure 11, printed p. 30; black annual points", sep = "; ")
+m_input$transformation <- "Black point centres digitized from Figure 11 using its 1980 and 2020 x-axis ticks and age-panel y-axis ticks. No smoother or interpolation used; rounded to 0.01 at age 1 and 0.001 at ages 2-9."
+m_input$notes <- "Approximate figure-derived fixed Lorenzen M values for 1978-2023, ages 1-9; age 9 is mapped to the model's 9+ group. These read-offs are not a verified copy of the native WHAM input matrix, which remains unavailable."
+inputs <- rbind(inputs, m_input)
 summary_values <- list(
   list(years = 2020:2024, Canada = c(377,431,326,329,327), US = c(67,41,38,32,51)),
   list(years = 2016:2025, Canada = c(440,488,517,396,377,431,326,329,327,297),
@@ -183,8 +249,8 @@ assumptions <- rbind(
     "This is not AR1 recruitment around a constant mean. The source equation includes a nonzero innovation centring term; native code and exact activation/variance parameterization remain unrecovered.", paste(urls[["model"]], "pp. 5-6 and 8-10")),
   assumption(framework_id, "N", "process", "Decoupled recruitment and older-age process error; 2D AR1 over year and age for ages 2+",
     "Process error can represent mortality and movement. Initial N is estimated. Numerical SDs, correlations and full native configuration are unavailable.", paste(urls[["model"]], "pp. 5-6 and 8-9;", urls[["projections"]], "pp. 1-2")),
-  assumption(framework_id, "M", "treatment", "Supplied fixed year-age Lorenzen weight-based M matrix",
-    "Not an internally estimated M surface. Older-fish apparent mortality also includes unexplained N process variation; do not label it estimated M. The actual input matrix is unavailable.", paste(urls[["model"]], "pp. 6 and 11-13")),
+  assumption(framework_id, "M", "treatment", "Supplied fixed year-age Lorenzen M matrix; approximate points digitized from Figure 11",
+    "The report says M was calculated empirically from weight-at-age and supplied as a fixed year-age matrix. All 414 black annual figure points were digitized at ages 1-9 for 1978-2023; age 9 is mapped to 9+. Values are rounded figure read-offs, not a verified copy of the native input array. Older-fish apparent mortality also includes unexplained N process variation; do not label it estimated M.", paste(urls[["model"]], "Figure 11, pp. 6 and 11-13")),
   assumption(framework_id, "F", "fleets_and_selectivity", "Three fleets; logistic selectivity in 1978-1993 and 1994-2023 blocks",
     "Canada reported, US reported, and US misattributed; misattributed selectivity equals US reported selectivity. Fleet totals stay separate.", paste(urls[["model"]], "pp. 3, 7-9")),
   assumption(framework_id, "catch", "observation_model", "Bias-adjusted lognormal total catch plus Dirichlet age compositions",
@@ -197,8 +263,8 @@ assumptions <- rbind(
     "Survey seasons and timing histories are described, but exact configured within-year fractions are not recovered. No default midpoints are invented.", paste(urls[["data"]], "pp. 16-18;", urls[["model"]], "p. 6")),
   assumption(framework_id, "biology", "input_coverage", "Canadian CATCH weights recovered at ages 1-16 for 1978-2022; complete model biology unavailable",
     "Published zeros are retained. The table is not a complete multi-fleet/stock biological surface or model age-9+ weight. Terminal-year weights, plus-group construction, maturity, spawning fraction and full native arrays remain unresolved.", paste(urls[["data"]], "Table 6;", urls[["projections"]], "p. 1")),
-  assumption(framework_id, "model", "output_availability", "Three numerical survey q coefficients; historical N/F/M/SSB/recruitment shown only in figures",
-    "No digitization, fitted-state substitution or confidence intervals reconstructed from plots. Newer annual-summary estimates remain separate."))
+  assumption(framework_id, "model", "output_availability", "Three numerical survey q coefficients and approximate digitized M points; historical N/F/SSB/recruitment shown only in figures",
+    "Only the annual black M points in Figure 11 are digitized; fitted-state substitution and confidence intervals are not reconstructed. Newer annual-summary estimates remain separate."))
 for (i in seq_along(summary_ids)) {
   reference <- urls[[paste0("summary_", 2024 + i)]]
   assumptions <- rbind(assumptions,
@@ -231,7 +297,7 @@ assessment <- function(id, year, terminal, type, current, reference, notes) {
 }
 assessments <- rbind(
   assessment(framework_id, 2025, 2023, "assessment_framework", TRUE, urls[["model"]],
-    "Latest recoverable detailed selected EGB framework, approved in 2025 and published in 2026; fitted through 2023. EGB Run 1 was chosen for operational access to US data, despite TGB being preferred biologically. Fleet totals, Canadian unpooled CATCH weights, three aggregate EGB survey-index series and three survey q coefficients are recovered. Selected NTS age observations, survey age compositions and CV arrays, complete model biology, M and fitted N/F/SSB/R surfaces remain unavailable. Do not use Part 1 Table 5 CATCH age estimates as selected NTS inputs. Newer annual advice is separate."),
+    "Latest recoverable detailed selected EGB framework, approved in 2025 and published in 2026; fitted through 2023. EGB Run 1 was chosen for operational access to US data, despite TGB being preferred biologically. Fleet totals, Canadian unpooled CATCH weights, three aggregate EGB survey-index series and three survey q coefficients are recovered. Selected NTS age observations, survey age compositions and CV arrays, complete model biology, the exact native M input array and fitted N/F/SSB/R surfaces remain unavailable; approximate M points are digitized from Figure 11. Do not use Part 1 Table 5 CATCH age estimates as selected NTS inputs. Newer annual advice is separate."),
   assessment(summary_ids[1], 2025, 2024, "annual_summary", FALSE, urls[["summary_2025"]],
     "June 2025 assessment with data through 2024, reported in SAR 2025/039. Summary-only values stay separate from framework and later revisions. Catches are labelled landings; no age arrays recovered."),
   assessment(summary_ids[2], 2026, 2025, "annual_summary", FALSE, urls[["summary_2026"]],
@@ -250,7 +316,7 @@ write_rows <- function(file, x, id) {
   contents <- rawToChar(readBin(path, "raw", n = file.info(path)$size))
   lines <- strsplit(contents, "\n", fixed = TRUE)[[1L]]
   selected <- which(startsWith(lines, paste0('"', id, '",')))
-  stopifnot(identical(names(x), names(read.csv(path, nrows = 0))))
+  stopifnot(identical(names(x), table_fields[[file]]))
   tmp <- tempfile(tmpdir = database); on.exit(unlink(tmp), add = TRUE)
   write.table(x, tmp, sep = ",", quote = TRUE, row.names = FALSE, col.names = FALSE,
     na = "", fileEncoding = "UTF-8")
@@ -273,4 +339,5 @@ for (id in c(framework_id, summary_ids)) {
   }
 }
 cat("Imported EGB cod framework and separate annual summaries:", nrow(inputs),
-  "inputs,", nrow(assumptions), "assumptions,", nrow(outputs), "outputs; all remain partial.\n")
+  "inputs, including 414 approximate Figure 11 M points;", nrow(assumptions),
+  "assumptions,", nrow(outputs), "outputs; all remain partial.\n")

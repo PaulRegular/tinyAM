@@ -7,11 +7,12 @@ records <- lapply(ids, read_assessment, database = db)
 framework <- records[[1L]]
 inputs <- framework$inputs
 totals <- subset(inputs, type == "catch")
+m <- subset(inputs, type == "M" & measure == "natural_mortality_at_age")
 weights <- subset(inputs, type == "catch_weight")
 survey_indices <- subset(inputs, type == "index" & measure == "total_biomass")
 q <- framework$outputs
 value <- function(x, year, fleet, age = NULL) {
-  rows <- x$year == year & x$fleet == fleet
+  rows <- x$year == year & if (nzchar(fleet)) x$fleet == fleet else is.na(x$fleet)
   if (!is.null(age)) rows <- rows & x$age == age
   as.numeric(x$value[rows])
 }
@@ -29,7 +30,14 @@ stopifnot(
   identical(vapply(records, function(x) x$assessment$terminal_year, integer(1)), c(2023L,2024L,2025L)),
   all(vapply(records, function(x) all(unlist(x$assessment[c("inputs_status","outputs_status","assumptions_status")]) == "partial"), logical(1))),
   !records[[2L]]$assessment$is_current, !records[[3L]]$assessment$is_current,
-  nrow(inputs) == 996L, nrow(totals) == 138L, nrow(weights) == 720L,
+  nrow(inputs) == 1410L, nrow(totals) == 138L, nrow(weights) == 720L,
+  nrow(m) == 414L, setequal(m$year, 1978:2023), setequal(m$age, 1:9),
+  all(table(m$age, m$year) == 1L), all(m$value > 0), all(m$unit == "per_year"),
+  all(m$source_type == "digitized"), all(grepl("Figure 11", m$source_reference)),
+  all(grepl("No smoother or interpolation", m$transformation)),
+  all(grepl("9+", m$notes[m$age == 9], fixed = TRUE)),
+  value(m, 1980, "", 1) == .61, value(m, 2001, "", 1) == 1.55,
+  value(m, 2019, "", 9) == .273, value(m, 2023, "", 9) == .255,
   setequal(unique(totals$year), 1978:2023),
   all(table(totals$fleet) == 46L), length(unique(totals$fleet)) == 3L,
   all(totals$unit == "metric tonnes"), all(is.na(totals$age)),
@@ -59,7 +67,6 @@ stopifnot(
   is.na(index_value(survey_indices, 2023, "NMFS spring RV")),
   is.na(index_value(survey_indices, 2023, "NMFS fall RV")),
   !any(inputs$measure == "numbers_at_age"),
-  !any(inputs$measure == "natural_mortality_at_age"),
   all(is.na(inputs$sampling_time)),
   nrow(q) == 3L, all(q$measure == "q"), all(is.na(q$year)), all(is.na(q$age)),
   identical(as.numeric(q$value), c(.434,.223,.109)),
@@ -94,4 +101,4 @@ before <- framework
 error <- tryCatch(database_to_tam_obs(ids[1], framework$inputs,
   years = 1978:2023, ages = 1:9, assumptions = framework$assumptions), error = identity)
 stopifnot(inherits(error,"error"), identical(framework,before))
-cat("EGB cod source identity, run separation, input selection, native units and unresolved translation gaps passed.\n")
+cat("EGB cod source identity, run separation, input selection, native units, digitized fixed M and unresolved translation gaps passed.\n")
