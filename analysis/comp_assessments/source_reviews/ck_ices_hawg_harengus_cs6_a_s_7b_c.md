@@ -21,7 +21,8 @@ These statuses must remain separate from the source values.
 
 The 2025 and 2026 HAWG reports include catch-at-age in thousands of fish,
 catch weights and spawning stock weights in kg/fish, and MSHAS survey
-numbers-at-age, weights, maturity, biomass and biomass-index CV. The source
+numbers-at-age, weights, maturity, biomass and a reported survey CV. The
+source does not explicitly identify the precise target of the CV. The source
 biological and catch-at-age tables provide useful context but are not a
 separate age-specific likelihood in the survey-index harvest-rate rule. The
 report also includes exploratory age-based assessments; their fitted states
@@ -33,6 +34,11 @@ advice uses a harvest-rate proxy of 0.13, index trigger 51,390 tonnes and a
 biomass safeguard of 0.151. The published 2025 advice instead uses proxy 0.26,
 2024 index 54,657 tonnes and a stability clause. Do not mix these separate
 assessment versions or interpret the index as a fitted absolute SSB state.
+HAWG 2026 section 5.3.1 gives the trigger as 51,340 tonnes, while the published
+advice gives 51,390 tonnes. HAWG Table 5.6.2.6 prints a biomass safeguard of 1,
+which cannot reproduce its stated 153-tonne advice; the published advice gives
+0.151. The canonical rule assumptions use the published advice values and retain
+these discrepancies for review rather than treating them as rounding.
 
 The 2026 HAWG report Table 5.2.1.1 wraps the final digit of the 1991 age-5
 catch cell onto the next line: visually it reads `10044` with a `4` below in
@@ -49,10 +55,32 @@ labels its genetically split survey rows `her-014`, whereas the 2025 report uses
 age labels and source units against the rendered pages rather than treating the
 row label as an independently verified stock code.
 
+## Canonical records
+
+`scripts/database/162_import_ices_herring_6a_s_7bc.R` imports separate 2025
+and 2026 records, with 1,903 and 1,960 input rows and 22 and 24 indicator
+outputs, respectively. Inputs include the reported catch-at-age series,
+catch and spawning-time weights, genetically split survey numbers-at-age,
+survey weight, maturity, reported survey CV, external SMS-derived M,
+historical length indicators, and aggregate catch and index.
+The CV is retained as source context without assuming its precise target or
+using it as a likelihood weight.
+The printed 1991 age-5 cell is joined as 100,444 thousand fish and marked as
+a source reconstruction. Missing survey ages and biological cells are omitted;
+no exact survey sampling fraction is inferred from June–July. Table 5.3.2.1
+also reports a dedicated winter acoustic survey as additional context; it is
+not an input to the chr rule and is not imported as a second fitted index.
+
+The 2026 selected record and the earlier 2025 record are both flagged as used
+for published ACOM advice. That flag does not establish current validity of
+the 2026 advice record or management application. All completeness statuses
+remain partial: the full source catch-length-frequency inputs, exact native
+rule files and underlying survey processing have not been recovered. Neither
+assessment provides fitted population N/F/M-at-age under the published rule.
+
 The 2025 and 2026 advice PDFs and SAG XML, 2026 HAWG report, and the relevant
 2025 report pages are cached locally with URLs and checksums. The 2025 full
-HAWG PDF is shared with the sandeel cache and identified in the manifest. The
-canonical database import and its validation are still pending.
+HAWG PDF is shared with the sandeel cache and identified in the manifest.
 
 ## Translation status
 
