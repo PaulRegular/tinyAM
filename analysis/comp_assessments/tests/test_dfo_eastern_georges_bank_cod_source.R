@@ -59,6 +59,7 @@ stopifnot(
   is.na(index_value(survey_indices, 2023, "NMFS spring RV")),
   is.na(index_value(survey_indices, 2023, "NMFS fall RV")),
   !any(inputs$measure == "numbers_at_age"),
+  !any(inputs$measure == "natural_mortality_at_age"),
   all(is.na(inputs$sampling_time)),
   nrow(q) == 3L, all(q$measure == "q"), all(is.na(q$year)), all(is.na(q$age)),
   identical(as.numeric(q$value), c(.434,.223,.109)),

@@ -81,9 +81,14 @@ separate from the older-age two-dimensional AR1 deviations. This is not an
 AR1 recruitment level around a constant mean or a random walk with independent
 innovations. Initial N is estimated. M is an externally supplied, weight-based
 Lorenzen year-age matrix; apparent mortality inferred from N process error is
-not a directly estimated M surface. The actual M matrix, full biological
-surfaces, spawning fraction, native model configuration, numerical process
-parameters and exact bias-adjustment settings remain unrecovered.
+not a directly estimated M surface. Figure 11 of Research Document 2026/039
+(printed p. 30) plots empirical annual M values by age and a smoother, but does
+not provide numeric values for every year-age cell or identify the smoother as
+the matrix supplied to WHAM. It is therefore insufficient to reconstruct the
+complete fixed-M input without an undocumented interpolation or substitution.
+The actual M matrix, full biological surfaces, spawning fraction, native model
+configuration, numerical process parameters and exact bias-adjustment settings
+remain unrecovered.
 
 ## Outputs and later updates
 
