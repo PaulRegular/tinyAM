@@ -17,11 +17,14 @@ example, a model plus group at age 10 receives the sum of reported ages 10 and
 older. Do not fit both overlapping detailed and pooled versions of the same
 observations.
 
-The expected result for each selected assessment is a documented tinyAM model,
-a record of its convergence, and, when it converges, a comparison with the
-official assessment. Fits and dashboards can be cached locally when useful;
-they are not routine committed outputs. Preparing observation tables alone does
-not complete a translation task.
+Source curation takes priority and does not depend on tinyAM readiness. For
+each selected assessment where source data and the official method support a
+defensible translation, the expected result is a documented tinyAM model, a
+record of its convergence, and, when it converges, a comparison with the
+official assessment. Document missing-data or method blockers separately. Fits
+and dashboards can be cached locally when useful; they are not routine
+committed outputs. Preparing observation tables alone does not complete a
+translation task.
 
 Data conversion and model specification are separate: the shared converters
 reshape recorded information, while the stock script makes the scientific
@@ -41,12 +44,13 @@ translation, and analysis code.
 
 Use `run_stock.R` and `view_assessment()` for interactive model development,
 `run_assessment()` to rerun one stock recipe, and `run_assessments()` for a reproducible batch. Normally select the record marked
-`is_current`: the most recent official assessment for which detailed inputs,
-assumptions, and outputs can be recovered for the canonical database. This is
-the current detailed assessment and may predate the newest advice, FSAR, or
-publication when later material is summary-only. Use another record only when
-that assessment is explicitly part of the task. Keep all inputs, assumptions,
-and outputs tied to the same `assessment_id`.
+`is_current`: the selected publicly accessible detailed assessment for that
+stock record, which may be partial or predate newer advice. As described in
+`PROTOCOL.md`, a selected record may be a documented fallback for an earlier
+stock unit; the flag alone does not establish the latest stock boundary or
+advice. Confirm the unit and source coverage before attempting translation.
+Use another record only when that assessment is explicitly part of the task.
+Keep all inputs, assumptions, and outputs tied to the same `assessment_id`.
 
 ``` text
 load canonical database

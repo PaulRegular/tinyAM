@@ -1,6 +1,6 @@
 # Comparing assessment fits
 
-This analysis translates selected production age-structured assessments into tinyAM models and compares their reported population estimates. The database preserves source values and assumptions; stock scripts make the tinyAM-specific choices. A close fit is an empirical comparison, not a claim that the models use identical likelihoods or assumptions.
+This analysis curates publicly accessible official assessment inputs, assumptions and outputs, and translates selected age-structured assessments into tinyAM models for comparison. The database preserves source values and assumptions; stock scripts make the tinyAM-specific choices. A close fit is an empirical comparison, not a claim that the models use identical likelihoods or assumptions.
 
 ## Scope and provenance
 
@@ -63,9 +63,10 @@ assessments or management advice.
 
 The five CSVs in `database/` are canonical. Source PDFs, data files, and model objects are cached locally under the gitignored `source_cache/` directory when available. Do not place tinyAM settings or derived run outputs in the canonical tables.
 
-The assessment marked `is_current` is the latest official assessment with
-detailed inputs, assumptions, and outputs recoverable for the database. It may
-predate newer summary-only advice or an FSAR.
+The assessment marked `is_current` is the selected publicly accessible
+detailed assessment for that stock record. It may be partial or predate newer
+summary-only advice or an FSAR. An earlier stock-unit fallback is identified
+in the notes; the flag alone does not mean that unit is the latest stock unit.
 
 ## Validate the database
 

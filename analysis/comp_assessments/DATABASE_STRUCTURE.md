@@ -4,7 +4,7 @@
 
 This document defines the schema for the stock-assessment database in `analysis/comp_assessments/database/`.
 
-The database preserves, in a tidy and auditable form, the inputs, assumptions, and outputs of official age-structured stock assessments.
+The database preserves, in a tidy and auditable form, the available inputs, assumptions, and outputs of official stock assessments. Age-structured assessments remain important for tinyAM comparisons; source curation also records other official assessment methods when supported by the schema.
 
 The canonical database contains five CSV files:
 
@@ -50,7 +50,9 @@ stocks.csv
                +----< outputs.csv
 ```
 
-`stock_id` identifies the biological or management stock.
+`stock_id` identifies the biological or management stock. Keep distinct stock
+units identifiable when boundaries split, merge or otherwise change, and record
+their relationship in notes.
 
 `assessment_id` identifies a particular assessment event or official assessment run.
 
@@ -107,7 +109,7 @@ One row per assessment event or model run represented in the database.
 | `assessment_type` | Annual, update, benchmark, framework, etc. |
 | `model_family` | SAM, Stock Synthesis, WHAM, NCAM, VPA/ADAPT, etc. |
 | `model_version` | Model/package/version identifier where known |
-| `is_current` | Whether this is the most recent official assessment with detailed inputs, assumptions, and outputs recoverable for the canonical database. A newer summary-only assessment is recorded separately and does not displace it; see `PROTOCOL.md`. |
+| `is_current` | The selected publicly accessible detailed official assessment for this stock record, following `PROTOCOL.md`. It may be partial or predate newer summary-only advice. A selected assessment for an earlier stock record does not mean that historical unit is the latest stock unit; document any boundary change and fallback in notes. |
 | `is_applied` | Whether this assessment was applied for advice in its assessment cycle. A current detailed benchmark can be `FALSE` if it has not yet been used for advice; more than one historical assessment can be `TRUE`. |
 | `framework_year` | Benchmark/framework year defining the current model, if distinct |
 | `assessment_url` | Main authoritative assessment/report URL |

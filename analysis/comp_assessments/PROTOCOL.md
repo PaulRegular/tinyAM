@@ -8,9 +8,12 @@ The governing question is:
 
 > **What data and assumptions entered the most recent official assessment with recoverable detail, and what did it estimate?**
 
-The objective is to represent that detailed assessment faithfully, while recording
-any newer summary-only advice separately, not to collect every table in every
-report.
+The first priority is to recover the available inputs, assumptions and outputs
+from the most recent publicly accessible detailed official assessment, with
+preference for the latest stock unit. Record newer summary-only advice
+separately. The objective is faithful source representation, not collection of
+every table in every report. A tinyAM translation is a secondary, separate
+activity and is not a prerequisite for curating source data.
 
 Follow the schema and controlled vocabularies in `DATABASE_STRUCTURE.md`.
 The [scope and provenance statement](README.md#scope-and-provenance) applies
@@ -47,9 +50,9 @@ For each candidate stock:
 1.  locate the stock in the Charbonneau–Keith repository;
 2.  record its Charbonneau identifier;
 3.  inspect the metadata, notes, source assessment, and cited documents;
-4.  identify the latest official assessment used for advice;
-5.  identify the most recent official assessment with recoverable detailed inputs, assumptions, and outputs for the canonical record;
-6.  retrieve authoritative inputs, outputs, and assumptions for that detailed assessment whenever possible.
+4.  establish the latest official stock unit, including any split, merger, or boundary change, and identify the latest assessment used for advice;
+5.  find the most recent publicly accessible detailed official assessment for that unit; if its detailed data are unavailable, investigate the earlier stock definition and assessment as described in Section 2.2;
+6.  recover the available authoritative inputs, outputs, and assumptions, preserving partial records and reporting what remains unavailable.
 
 Charbonneau–Keith is the default place to **start**, but not automatically the preferred source for every numerical value.
 
@@ -64,7 +67,7 @@ Its contents may include:
 
 Do not assume a Charbonneau–Keith value is an original assessment input.
 
-When a stock has received a newer official assessment than the one represented in Charbonneau–Keith, retain the Charbonneau stock identity as the starting point. Curate the most recent official assessment with recoverable detailed inputs, assumptions, and outputs; if newer advice is summary-only, record it and its limitations separately. Use a different assessment only when the active task requests it.
+When a stock has received a newer official assessment than the one represented in Charbonneau–Keith, use the catalogue identity as a starting point, not as proof that its stock boundaries still apply. Follow the current unit and fallback rules in Section 2.2. If newer advice is summary-only, record it and its limitations separately.
 
 If a requested stock is not represented in the curated Charbonneau–Keith set, document that fact before adding it from another authoritative source.
 
@@ -242,9 +245,45 @@ If multiple candidate model runs are found, determine which one corresponds to t
 
 Do not select a model object solely because it is the newest file or repository.
 
-The canonical database's current detailed record must be the most recent official assessment for which detailed inputs, assumptions, and outputs can be recovered from authoritative sources. Mark this record `is_current = TRUE`. It may predate the newest advice, FSAR, or publication. A current benchmark can have `is_applied = FALSE` when it has not yet been used in an advice cycle; `is_current` and `is_applied` record different facts.
+### Select the stock unit and detailed assessment
 
-If a newer official assessment is documented only in summary material, record it separately and explain which details were unavailable. Its published values belong to that assessment alone: they do not displace the most recent detailed assessment as current, and must not be substituted for or combined with another run's inputs or outputs. Keep unresolved gaps visible and completeness statuses partial where appropriate.
+First identify the latest official stock unit and its assessment history. Prefer
+the most recent publicly accessible detailed official assessment for that unit,
+using native files, research documents, tables and other authoritative sources.
+A partial source record is valuable: capture verified available inputs,
+assumptions and outputs and mark their completeness honestly. The assessment
+need not be age-structured or fit-ready for its source data to be curated.
+Preserve aggregate and index-based methods in their source units and dimensions;
+do not manufacture age-specific states. If a source requires a new schema
+measure, document it and update the relevant validation before importing it.
+
+If sufficiently detailed assessment data for the latest unit cannot be
+recovered after the source search, investigate the preceding stock definition
+and select its most recent publicly accessible detailed official assessment as
+a fallback. Document the search, what is missing, the earlier and latest stock
+boundaries and codes, and why the fallback was selected. Do not fall back merely
+to obtain a better tinyAM fit. There is no fixed numerical completeness threshold:
+explain the available material and selection rationale in the stock review.
+Retain verified partial data and newer advice for the latest unit separately,
+even when an earlier unit supplies the detailed fallback.
+
+Keep distinct stock units and assessment runs identifiable under their own stock
+and assessment IDs. Record their relationship in stock notes and source reviews;
+do not copy, pool or relabel data across changed boundaries or runs. Do not
+create duplicate assessments for sex-specific catalogue aliases or guess an
+unresolved stock identity. Mark the selected detailed assessment for each
+represented stock record `is_current = TRUE` under the existing schema. This
+flag describes the selected detailed assessment for that record; it does not
+establish that a historical stock unit is the latest unit or that its assessment
+is the latest advice. Record that distinction and any fallback explicitly in
+the stock and assessment notes. `is_applied` separately describes whether the
+assessment was used for advice in its cycle.
+
+If a newer official assessment is documented only in summary material, record
+it separately and explain which details were unavailable. Its published values
+belong to that assessment alone and must not be substituted for or combined
+with another run's inputs or outputs. Keep unresolved gaps visible and
+completeness statuses partial where appropriate.
 
 A detailed Research Document may be published a year or more after its Science Advisory Report or other summary product, so publication year and assessment year must not be treated as the same thing. Check the model version, terminal data year, and official run described by the detailed source, and record the assessment year and data terminal year separately from the source's publication date.
 
@@ -272,9 +311,9 @@ When the native assessment object or input files are found, preserve their prove
 
 Before extracting numerical data, establish:
 
-- stock identity and assessment authority;
+- latest stock unit, assessment authority, boundary changes, and related earlier units;
 - latest official assessment and data terminal year;
-- most recent official assessment with recoverable detailed inputs, assumptions, and outputs for the canonical current record;
+- selected publicly accessible detailed assessment and any earlier-unit fallback, with reasons and missing current-unit data;
 - terminal fitted data year;
 - model family/version where known;
 - model-defining benchmark or framework when distinct;
@@ -615,8 +654,8 @@ Do not mix artifacts from different assessment runs without preserving provenanc
 
 For every assessment:
 
-1.  locate the stock in Charbonneau–Keith where applicable and record its identifier;
-2.  verify the latest official assessment used for advice and the official/base run selected for this database record under Section 2.2;
+1.  locate the stock in Charbonneau–Keith where applicable, record its identifier, and verify the latest official stock unit;
+2.  verify the latest official assessment used for advice and select the accessible detailed official/base run, including any documented earlier-unit fallback under Section 2.2;
 3.  identify the model-defining benchmark/framework;
 4.  inventory modeled years, ages, fleets, surveys, sexes, regions, seasons, and plus group;
 5.  enumerate all material input streams before extraction;
@@ -670,7 +709,7 @@ Status:
   missing/unresolved items
 ```
 
-Do not move on merely because one or two useful data streams have been recovered.
+Do not treat one or two useful data streams as a complete assessment. Pursue the material source streams, document genuine gaps after searching the relevant sources, preserve verified partial records, and continue with other stocks when necessary.
 
 ## Gaps discovered during translation
 
@@ -690,10 +729,12 @@ an assessment that estimates M may have no fixed numerical M input to recover.
 Curate its actual assumptions and estimated outputs; choose any simplified
 tinyAM M treatment outside the canonical tables.
 
-Curation completion does not mean a tinyAM model has been fitted. When the
-active task includes translation, follow `TINYAM_TRANSLATION.md` through
-validation, a fitting attempt, convergence diagnostics, and comparison exports
-for converged fits.
+Curation is the first priority and does not depend on a tinyAM model being
+fitted. After source curation, when translation is requested and the available
+data and assessment method support a defensible approximation, follow
+`TINYAM_TRANSLATION.md` through validation, fitting, diagnostics and comparison.
+Record missing source data, an unsupported method, or numerical failure as a
+separate translation outcome; continue curation of other stocks.
 
 ------------------------------------------------------------------------
 
@@ -744,11 +785,13 @@ Reusable source-specific helpers may be added later when repeated real use justi
 
 The protocol does not define how many assessments to add or review. The active task does.
 
-For tasks that also require tinyAM translation, report curation progress and
-modeling progress separately: translated, blocked, fit failed or did not
-converge, and converged with comparison outputs. Keep these analysis statuses
-outside the canonical completeness fields. An exported observation table or
-settings template alone does not complete a requested fitting task.
+Report source curation and tinyAM modeling progress separately. For source
+curation, identify complete and partial records, the selected assessment and
+stock unit, any earlier-unit fallback, and unresolved source gaps. For
+translation, distinguish not yet attempted, source- or method-blocked, fit
+failed or not converged, and converged with comparison outputs. Keep modeling
+statuses outside the canonical completeness fields. An exported observation
+table or settings template alone does not complete a requested fitting task.
 
 If the goal says:
 
