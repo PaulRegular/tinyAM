@@ -81,30 +81,101 @@ background <- c(
   "| Timing and biology | Timing varies among years and surveys; stock weights, catch weights and maturity are reported by year and age. | Original annual stock weights and maturity; RV April, ERHAPS late winter, GEAC late fall, and sentinel midyear timing approximations. | The exact model timing fractions are unavailable; seasonal midpoints are analysis choices, not source inputs. |",
   "| Comparison outputs | Annual aggregate SSB, age-2 recruitment, and mean F/M for ages 5-8 are reported for 2020-2024. | Compare recent SSB and age-2 recruitment where definitions overlap. | Numerical age-specific N/F/M and older annual output trajectories are unavailable; grouped F/M cannot be reconciled to tinyAM's abundance-weighted definitions. |",
   "",
-  "The fit uses package-default starting values."
+  "The fit uses package defaults first. If numerical checks fail, one retry starts age-2 recruitment and ages 5-8 F from the published 2020-2024 summaries; these values initialize the fit and do not constrain estimates. Other parameters retain package defaults."
 )
 
 fit <- NULL
 N_settings <- list(process = "iid", init = "exp")
+rec_settings <- list(process = "rw", mu_form = NULL)
+F_settings <- list(process = "cor_rw", mu_form = NULL, mean_ages = 5:8)
 M_settings <- list(
   process = "off",
   mu_form = ~ 0 + factor(age) + M_condition_age_2_5 + M_condition_age_6_plus,
   mu_supplied = NULL,
   mean_ages = 5:8
 )
+catch_settings <- list(sd_form = ~1)
+index_settings <- list(q_form = ~ 0 + q_key, sd_form = ~ 0 + survey)
+
+source_start_par <- function(starts, outputs) {
+  start_years <- 2020:2024
+  recruitment <- outputs[
+    outputs$measure == "recruitment" &
+      as.integer(outputs$year) %in% start_years &
+      as.integer(outputs$age) == 2L,
+    , drop = FALSE
+  ]
+  fbar <- outputs[
+    outputs$measure == "Fbar" & as.integer(outputs$year) %in% start_years,
+    , drop = FALSE
+  ]
+  if (!setequal(as.integer(recruitment$year), start_years) ||
+      anyDuplicated(recruitment$year) ||
+      !all(recruitment$unit == "million fish") ||
+      any(!is.finite(recruitment$value) | recruitment$value <= 0)) {
+    cli::cli_abort("Published 3Ps age-2 recruitment does not cover 2020-2024 in million fish.")
+  }
+  if (!setequal(as.integer(fbar$year), start_years) ||
+      anyDuplicated(fbar$year) ||
+      !all(fbar$unit == "per year") ||
+      any(!is.finite(fbar$value) | fbar$value <= 0)) {
+    cli::cli_abort("Published 3Ps Fbar does not cover 2020-2024 in per-year units.")
+  }
+
+  recruitment <- recruitment[match(start_years, as.integer(recruitment$year)), ]
+  fbar <- fbar[match(start_years, as.integer(fbar$year)), ]
+  years_in_fit <- as.character(start_years)
+  if (!all(years_in_fit %in% names(starts$log_r)) ||
+      !all(years_in_fit %in% rownames(starts$log_f)) ||
+      !all(as.character(5:8) %in% colnames(starts$log_f))) {
+    cli::cli_abort("Published 3Ps starting values do not align with the fitted years and ages.")
+  }
+
+  starts$log_r[years_in_fit] <- log(recruitment$value * 1000)
+  starts$log_f[years_in_fit, as.character(5:8)] <- matrix(
+    log(fbar$value), nrow = length(start_years), ncol = 4L
+  )
+  starts
+}
+
 if (do_fit) {
   fit_stage <- "fit"
   fit_started <- Sys.time()
-  fit <- tinyAM::fit_tam(
-    data = obs,
-    years = years,
-    ages = ages,
-    N_settings = N_settings,
-    rec_settings = list(process = "rw", mu_form = NULL),
-    F_settings = list(process = "cor_rw", mu_form = NULL, mean_ages = 5:8),
-    M_settings = M_settings,
-    catch_settings = list(sd_form = ~1),
-    index_settings = list(q_form = ~ 0 + q_key, sd_form = ~ 0 + survey),
-    silent = silent
+  source("analysis/comp_assessments/R/fit_default_first.R", local = TRUE)
+  fit_model <- function(start_par = NULL) {
+    tinyAM::fit_tam(
+      data = obs,
+      years = years,
+      ages = ages,
+      N_settings = N_settings,
+      rec_settings = rec_settings,
+      F_settings = F_settings,
+      M_settings = M_settings,
+      catch_settings = catch_settings,
+      index_settings = index_settings,
+      silent = silent,
+      start_par = start_par
+    )
+  }
+  fit <- fit_default_first(
+    fit_model,
+    retry_start = function() {
+      model_dat <- tinyAM::prepare_tam(
+        data = obs,
+        years = years,
+        ages = ages,
+        N_settings = N_settings,
+        rec_settings = rec_settings,
+        F_settings = F_settings,
+        M_settings = M_settings,
+        catch_settings = catch_settings,
+        index_settings = index_settings
+      )
+      source_start_par(tinyAM::make_par(model_dat), source$outputs)
+    },
+    attempt_file = file.path(
+      "analysis", "comp_assessments", "results", "cache",
+      source$assessment$assessment_id[[1]], "initialization_attempts.rds"
+    )
   )
 }

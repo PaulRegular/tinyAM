@@ -18,7 +18,8 @@ invisible(parse(file = script_path))
 stopifnot(
   any(grepl("tinyAM::fit_tam", script_lines, fixed = TRUE)),
   any(grepl("if (do_fit)", script_lines, fixed = TRUE)),
-  !any(grepl("start_par", script_lines, fixed = TRUE)),
+  any(grepl("fit_default_first", script_lines, fixed = TRUE)),
+  any(grepl("start_par = start_par", script_lines, fixed = TRUE)),
   any(grepl("cor_rw", script_lines, fixed = TRUE)),
   any(grepl("M_condition", script_lines, fixed = TRUE)),
   any(grepl('process = "iid"', script_lines, fixed = TRUE))
@@ -85,4 +86,29 @@ stopifnot(identical(
   grep("^M_condition_age_", colnames(condition_design), value = TRUE),
   c("M_condition_age_2_5", "M_condition_age_6_plus")
 ))
+
+start_years <- 2020:2024
+starts <- list(
+  log_r = setNames(numeric(length(1960:2024)), as.character(1960:2024)),
+  log_f = matrix(0, length(1959:2024), length(2:14),
+    dimnames = list(as.character(1959:2024), as.character(2:14))
+  )
+)
+source_starts <- env$source_start_par(starts, data.frame(
+  measure = c(rep("recruitment", 5), rep("Fbar", 5)),
+  year = c(start_years, start_years),
+  age = c(rep(2, 5), rep(NA, 5)),
+  value = c(17.4, 20, 34.3, 36.8, 36.6, 0.04, 0.02, 0.03, 0.03, 0.04),
+  unit = c(rep("million fish", 5), rep("per year", 5))
+))
+stopifnot(
+  isTRUE(all.equal(
+    unname(source_starts$log_r[as.character(start_years)]),
+    log(c(17.4, 20, 34.3, 36.8, 36.6) * 1000)
+  )),
+  all(source_starts$log_r[as.character(1960:2019)] == 0),
+  all(source_starts$log_f[as.character(start_years), as.character(5:8)] ==
+    matrix(log(c(0.04, 0.02, 0.03, 0.03, 0.04)), 5L, 4L)),
+  all(source_starts$log_f[as.character(start_years), as.character(c(2:4, 9:14))] == 0)
+)
 cat("3Ps translation recipe years, ages, IID N process, grouped condition effects, comparison window, and fit guard passed.\n")

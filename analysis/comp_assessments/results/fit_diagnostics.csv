@@ -115,7 +115,18 @@ observed age-length key and survey timing are missing.
 "ices_sole_north_sea_2025","9d03ca697cf569190c11291c8cffa1ba894f45e9","converged",TRUE,0,"relative convergence (4)",1073.22531338047,0.000999968665128109,0.000999968665128109,TRUE,TRUE,17,1350,3.04958701133728,""
 "ices_haddock_iceland_2026","8405fa554f919ddbc968c50f83dd5836a7e8b5ae","converged",TRUE,0,"relative convergence (4)",1086.8892033447,0.000918210981424139,0.000918210981424139,TRUE,TRUE,43,1140,5.76438188552856,""
 "ices_cod_irish_sea_2026","8405fa554f919ddbc968c50f83dd5836a7e8b5ae","converged",TRUE,0,"relative convergence (4)",481.248460295283,0.000363573948556406,0.000363573948556406,TRUE,TRUE,24,707,2.94783902168274,""
-"dfo_cod_3ps_2024","8405fa554f919ddbc968c50f83dd5836a7e8b5ae","not_converged",FALSE,1,"singular convergence (7)",2119.21380604114,0.000753340213006659,0.000753340213006659,TRUE,TRUE,80,1703,19.6846978664398,""
+"dfo_cod_3ps_2024","1502cc38afb406fca6db59d8153019602d5925ae","not_converged",FALSE,0,"relative convergence (4)",2100.81738206715,0.000605899807728072,0.000605899807728072,TRUE,TRUE,80,1703,33.5055," | default: failed numerical checks; gradient=0.000753; Numerical convergence checks did not pass; inspect `check_tam(fit)`.
+x Code 1: singular convergence (7)
+x Fixed-parameter covariance must be available and finite.
+i Optimizer code zero alone is insufficient. A missed gradient tolerance alone
+  does not establish a structural problem. | Formula-effect uncertainty or support is limited.
+i F increment age correlation is within 0.05 of -1 or 1. Examine uncertainty
+  and compare independent increments. | source_start: failed numerical checks; gradient=0.000606; Numerical convergence checks did not pass; inspect `check_tam(fit)`.
+x Fixed-parameter covariance must be available and finite.
+i Optimizer code zero alone is insufficient. A missed gradient tolerance alone
+  does not establish a structural problem. | Formula-effect uncertainty or support is limited.
+i F increment age correlation is within 0.05 of -1 or 1. Examine uncertainty
+  and compare independent increments."
 "dfo_northern_mackerel_2025","8405fa554f919ddbc968c50f83dd5836a7e8b5ae","converged",TRUE,0,"relative convergence (4)",823.392300705608,0.00058447720781088,0.00058447720781088,TRUE,TRUE,8,1130,2.77763390541077,""
 "dfo_herring_4tvn_fall_2024","8405fa554f919ddbc968c50f83dd5836a7e8b5ae","not_converged",FALSE,1,"function evaluation limit reached without convergence (9)",2583.89019613674,1.12005843762891,7.5864264497165,TRUE,FALSE,58,1037,20.4498591423035,""
 "ices_haddock_rockall_2026","8405fa554f919ddbc968c50f83dd5836a7e8b5ae","converged",TRUE,0,"relative convergence (4)",679.280953286435,0.00164685427181521,0.00164685427181521,TRUE,TRUE,18,552,1.39862298965454,""
