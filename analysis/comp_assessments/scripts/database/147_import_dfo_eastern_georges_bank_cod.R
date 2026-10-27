@@ -41,6 +41,27 @@ tokens <- strsplit(rows, "[[:space:]]+")
 stopifnot(length(tokens) == 46L, all(lengths(tokens) == 5L))
 catches <- do.call(rbind, lapply(tokens, as.numeric))
 stopifnot(all(is.finite(catches)), identical(as.integer(catches[, 1]), 1978:2023))
+index_text <- strsplit(paste(data, collapse = "\n"),
+  "Table 10. Available aggregated survey indices", fixed = TRUE)[[1L]][2L]
+index_text <- strsplit(index_text, "Table 11. Area estimates", fixed = TRUE)[[1L]][1L]
+index_lines <- trimws(strsplit(index_text, "\n", fixed = TRUE)[[1L]])
+index_rows <- index_lines[grepl("^(19|20)[0-9]{2}", index_lines)]
+index_cells <- strsplit(index_rows, "[[:space:]]+")
+stopifnot(length(index_cells) == 54L, all(lengths(index_cells) == 7L))
+index_years <- as.integer(vapply(index_cells, function(x) as.numeric(x[1L]), 0))
+index_values <- do.call(rbind, lapply(index_cells, function(row) {
+  values <- gsub(",", "", row[-1L], fixed = TRUE)
+  values[values %in% c("—", "–", "-", "NA", "")] <- NA_character_
+  as.numeric(values)
+}))
+stopifnot(identical(index_years, 1970:2023), all(index_values[!is.na(index_values)] >= 0))
+model_index_rows <- index_years >= 1978
+index_years <- index_years[model_index_rows]
+index_values <- index_values[model_index_rows, 1:3, drop = FALSE]
+stopifnot(identical(index_years, 1978:2023),
+  identical(as.integer(colSums(!is.na(index_values))), c(37L, 44L, 44L)),
+  index_values[46L, 1L] == 1891,
+  all(is.na(index_values[46L, 2:3])))
 q_line <- trimws(strsplit(model[27], "\n")[[1L]])
 q_line <- q_line[grepl("^EGB\\s+Run 1", q_line)]
 stopifnot(length(q_line) == 1L)
@@ -72,6 +93,19 @@ inputs <- do.call(rbind, lapply(seq_along(fleets), function(i) {
         "These are supplied model inputs, not invented observed removals; reported US and misattributed fleets remain separate.") else
         "No catch-at-age, discard split or TGB catch is inferred. Do not substitute revised annual-assessment totals."))
 }))
+surveys <- c("DFO winter RV", "NMFS spring RV", "NMFS fall RV")
+survey_index <- do.call(rbind, lapply(seq_along(surveys), function(i) {
+  out <- blank("inputs.csv", framework_id, length(index_years))
+  out$type <- "index"; out$measure <- "total_biomass"; out$basis <- "biomass"
+  out$survey <- surveys[i]; out$year <- index_years; out$year_basis <- "calendar_year"
+  out$value <- index_values[, i]; out$unit <- "metric tonnes"
+  out$region <- "Eastern Georges Bank"; out$source_type <- "official_table"
+  out$source_reference <- paste(urls[["data"]], "Table 10, printed pp. 39-40", sep = "; ")
+  out$transformation <- "Table transcription, removal of thousands separators and wide-to-long reshape; source dashes and NA retained as missing. Restricted to the selected framework years 1978-2023."
+  out$notes <- "EGB swept-area biomass index for the selected model period 1978-2023. The EGB NMFS series include the source's length-based vessel and trawl-door conversion. These are not the adjacent TGB mean kg/tow indices. The modelling report identifies these three surveys in the selected EGB run; numerical annual CVs and configured survey timing remain unavailable."
+  out
+}))
+inputs <- rbind(inputs, survey_index)
 weight_text <- strsplit(paste(data[38:39], collapse = "\n"), "Table 6.", fixed = TRUE)[[1L]]
 stopifnot(length(weight_text) == 2L)
 weight_lines <- strsplit(weight_text[2L], "\n")[[1L]]
@@ -158,7 +192,7 @@ assumptions <- rbind(
   assumption(framework_id, "catch", "Canadian_age_data_selection", "NTS catch-at-age selected; CATCH weight-at-age retained",
     "Part 1 Table 5 contains CATCH catch-at-age, which is not the selected NTS input. Do not import it as the production age composition or infer its scale. US EGB age compositions are missing in 2020-2023.", paste(urls[["data"]], "pp. 9-11;", urls[["model"]], "p. 9")),
   assumption(framework_id, "index", "active_surveys", "DFO winter RV; NMFS spring RV; NMFS fall RV",
-    "Separate aggregate-biomass indices and age compositions; time-invariant q. Logistic DFO/spring selectivity; age-specific fall selectivity with ages 2 and 3 fixed at 0.8 and 1. Full observation arrays are unavailable.", paste(urls[["model"]], "pp. 6-9 and Table 4")),
+    "Table 10's aggregate EGB swept-area biomass indices are imported for 1978-2023: 37 DFO winter, 44 NMFS spring and 44 NMFS fall observations, with missing years retained. Numerical annual CVs and survey age-composition vectors remain unavailable. Time-invariant q; logistic DFO/spring selectivity; age-specific fall selectivity with ages 2 and 3 fixed at 0.8 and 1.", paste(urls[["model"]], "pp. 6-9 and Table 4;", urls[["data"]], "Table 10")),
   assumption(framework_id, "index", "sampling_time", "unknown",
     "Survey seasons and timing histories are described, but exact configured within-year fractions are not recovered. No default midpoints are invented.", paste(urls[["data"]], "pp. 16-18;", urls[["model"]], "p. 6")),
   assumption(framework_id, "biology", "input_coverage", "Canadian CATCH weights recovered at ages 1-16 for 1978-2022; complete model biology unavailable",
@@ -197,7 +231,7 @@ assessment <- function(id, year, terminal, type, current, reference, notes) {
 }
 assessments <- rbind(
   assessment(framework_id, 2025, 2023, "assessment_framework", TRUE, urls[["model"]],
-    "Latest recoverable detailed selected EGB framework, approved in 2025 and published in 2026; fitted through 2023. EGB Run 1 was chosen for operational access to US data, despite TGB being preferred biologically. Fleet totals, Canadian unpooled CATCH weights and three survey q coefficients are recovered. Selected NTS age observations, survey arrays, complete model biology, M and fitted N/F/SSB/R surfaces remain unavailable. Do not use Part 1 Table 5 CATCH age estimates as selected NTS inputs. Newer annual advice is separate."),
+    "Latest recoverable detailed selected EGB framework, approved in 2025 and published in 2026; fitted through 2023. EGB Run 1 was chosen for operational access to US data, despite TGB being preferred biologically. Fleet totals, Canadian unpooled CATCH weights, three aggregate EGB survey-index series and three survey q coefficients are recovered. Selected NTS age observations, survey age compositions and CV arrays, complete model biology, M and fitted N/F/SSB/R surfaces remain unavailable. Do not use Part 1 Table 5 CATCH age estimates as selected NTS inputs. Newer annual advice is separate."),
   assessment(summary_ids[1], 2025, 2024, "annual_summary", FALSE, urls[["summary_2025"]],
     "June 2025 assessment with data through 2024, reported in SAR 2025/039. Summary-only values stay separate from framework and later revisions. Catches are labelled landings; no age arrays recovered."),
   assessment(summary_ids[2], 2026, 2025, "annual_summary", FALSE, urls[["summary_2026"]],

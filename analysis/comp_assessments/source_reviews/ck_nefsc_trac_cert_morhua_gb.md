@@ -55,16 +55,26 @@ and fitted states are not used to fill either country's observation arrays.
 Figures 23 and 40 in the data-input review plot fishery and survey catch-at-age
 as bubbles, but provide no numeric labels or bubble-size scale. They establish
 the plotted fleets, years and age ranges, but do not permit reproducible
-recovery of the selected NTS catch observations, survey abundance, or survey
-proportions. No values are digitized from these figures.
+recovery of the selected NTS catch observations or survey age-composition
+observations. No values are digitized from these figures.
 
 The framework fits separate aggregate-biomass and age-composition data for
-DFO winter, NMFS spring and NMFS fall RV surveys. Aggregate observations have
-bias-adjusted lognormal errors; compositions use a Dirichlet likelihood that
-pools nil cells with adjacent ages. DFO winter and NMFS spring selectivity are
-logistic; fall selectivity is estimated by age, fixing ages 2 and 3 at 0.8 and
-1. Survey seasons do not establish exact configured sampling fractions:
-those fractions, numerical CV arrays and observation vectors remain missing.
+DFO winter, NMFS spring and NMFS fall RV surveys. Table 10 of the data-input
+report provides the three EGB swept-area biomass index series in metric tonnes.
+The selected model period, 1978-2023, is imported with one row for every year
+and survey: 37 finite DFO winter values, 44 NMFS spring values and 44 NMFS fall
+values. The winter series begins in 1986; both NMFS series are missing in 2020
+and 2023. Source dashes remain missing, not zero. The table also lists TGB
+mean kg/tow series, which are excluded. Its notes identify the NMFS EGB
+length-based corrections for vessel and trawl-door changes. The modelling
+report identifies these three surveys in the selected EGB run.
+
+Aggregate observations have bias-adjusted lognormal errors; compositions use
+a Dirichlet likelihood that pools nil cells with adjacent ages. DFO winter
+and NMFS spring selectivity are logistic; fall selectivity is estimated by
+age, fixing ages 2 and 3 at 0.8 and 1. Survey seasons do not establish exact
+configured sampling fractions. Those fractions, numerical annual CV arrays
+and age-composition observations remain unavailable.
 
 Recruitment is a log-scale random walk with AR1-correlated innovations,
 separate from the older-age two-dimensional AR1 deviations. This is not an
@@ -113,23 +123,24 @@ The importer is `scripts/database/147_import_dfo_eastern_georges_bank_cod.R`.
 It verifies cached source hashes and table dimensions, preserves original
 ages/years/units and changes only this stock and its three assessment records.
 The focused test checks current-versus-summary selection, all three fleet
-totals, weight coverage and zeros, selected q, source output definitions,
-missing uncertainty, omitted averages and conflicting values, and absence of
-invented catch-at-age or survey observations.
+totals, weight coverage and zeros, all three aggregate survey index series and
+their missing years, selected q, source output definitions, missing
+uncertainty, omitted averages and conflicting values, and the remaining
+unavailable age observations.
 
-There are 888 recovered inputs, 21 assumptions and eight outputs across the
-three events. All completeness statuses remain **partial**. Missing selected
-NTS catch age data, survey observations, complete biology/M and numerical
-population outputs prevent a source-faithful tinyAM fit and dashboard. No
-fit or completed translation is claimed. Future translation should first
-recover those arrays, then document how tinyAM approximates separate totals
-and compositions, fleets, correlated recruitment innovations, initial states
-and source bias corrections. It must start from package defaults and retain
-diagnostics for any permitted retry.
+There are 1,026 recovered inputs (996 for the framework), 21 assumptions and
+eight outputs across the three events. All completeness statuses remain
+**partial**. Missing selected NTS catch-at-age, survey age compositions and
+annual CVs, complete biology/M and numerical population outputs prevent a
+source-faithful tinyAM fit and dashboard. No fit or completed translation is
+claimed. Future translation should first recover those arrays, then document
+how tinyAM approximates separate totals and compositions, fleets, correlated
+recruitment innovations, initial states and source bias corrections. It must
+start from package defaults and retain diagnostics for any permitted retry.
 
 ## Sources and cache
 
-- [Data-input review, Research Document 2026/032](https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/41331539.pdf), especially pp. 9-11 and Table 6.
+- [Data-input review, Research Document 2026/032](https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/41331539.pdf), especially pp. 9-11, Table 6 and Table 10.
 - [Modelling review, Research Document 2026/039](https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/41331783.pdf), especially pp. 3, 5-10 and Tables 1, 3-4.
 - Research Document 2026/073, *5Z Cod Assessment Framework: Projections and Reference Points*, October 2026, pp. 1-2; the DFO download URL is in the local manifest.
 - [2025 assessment summary, SAR 2025/039](https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/41299206.pdf).

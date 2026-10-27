@@ -8,11 +8,15 @@ framework <- records[[1L]]
 inputs <- framework$inputs
 totals <- subset(inputs, type == "catch")
 weights <- subset(inputs, type == "catch_weight")
+survey_indices <- subset(inputs, type == "index" & measure == "total_biomass")
 q <- framework$outputs
 value <- function(x, year, fleet, age = NULL) {
   rows <- x$year == year & x$fleet == fleet
   if (!is.null(age)) rows <- rows & x$age == age
   as.numeric(x$value[rows])
+}
+index_value <- function(x, year, survey) {
+  as.numeric(x$value[x$year == year & x$survey == survey])
 }
 stopifnot(
   framework$stocks$authority_stock_id == "5Zejm (Eastern Georges Bank)",
@@ -25,7 +29,7 @@ stopifnot(
   identical(vapply(records, function(x) x$assessment$terminal_year, integer(1)), c(2023L,2024L,2025L)),
   all(vapply(records, function(x) all(unlist(x$assessment[c("inputs_status","outputs_status","assumptions_status")]) == "partial"), logical(1))),
   !records[[2L]]$assessment$is_current, !records[[3L]]$assessment$is_current,
-  nrow(inputs) == 858L, nrow(totals) == 138L, nrow(weights) == 720L,
+  nrow(inputs) == 996L, nrow(totals) == 138L, nrow(weights) == 720L,
   setequal(unique(totals$year), 1978:2023),
   all(table(totals$fleet) == 46L), length(unique(totals$fleet)) == 3L,
   all(totals$unit == "metric tonnes"), all(is.na(totals$age)),
@@ -40,7 +44,20 @@ stopifnot(
   value(weights,1978,"Canada reported",16) == 19.7,
   value(weights,1984,"Canada reported",1) == 0,
   value(weights,2022,"Canada reported",9) == 12.8,
-  !any(inputs$type %in% c("weight","maturity","M","index")),
+  nrow(survey_indices) == 138L,
+  setequal(survey_indices$survey, c("DFO winter RV", "NMFS spring RV", "NMFS fall RV")),
+  all(table(survey_indices$survey) == 46L),
+  all(vapply(split(survey_indices$year, survey_indices$survey), function(x) setequal(x, 1978:2023), logical(1))),
+  all(survey_indices$unit == "metric tonnes"), all(survey_indices$basis == "biomass"),
+  all(survey_indices$region == "Eastern Georges Bank"),
+  all(survey_indices$source_type == "official_table"), all(is.na(survey_indices$age)),
+  identical(as.integer(tapply(!is.na(survey_indices$value), survey_indices$survey, sum)), c(37L,44L,44L)),
+  index_value(survey_indices, 1986, "DFO winter RV") == 18633,
+  index_value(survey_indices, 1978, "NMFS spring RV") == 22731,
+  index_value(survey_indices, 1978, "NMFS fall RV") == 12213,
+  is.na(index_value(survey_indices, 2022, "DFO winter RV")),
+  is.na(index_value(survey_indices, 2023, "NMFS spring RV")),
+  is.na(index_value(survey_indices, 2023, "NMFS fall RV")),
   !any(inputs$measure == "numbers_at_age"),
   all(is.na(inputs$sampling_time)),
   nrow(q) == 3L, all(q$measure == "q"), all(is.na(q$year)), all(is.na(q$age)),
