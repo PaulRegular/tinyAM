@@ -193,3 +193,18 @@ maximum absolute gradient 93,800, unavailable finite fixed-effect covariance,
 and non-positive-definite Hessian). The converged exponential initializer is
 therefore retained. No source-based starting values or other model changes
 were used.
+
+## Catchability-link sensitivity
+
+Because the official model uses positive log-q, a default-start fit was tested
+with the same translated observations and formulas but `q_link = "log"` in
+place of the current `"logit"`. The optimizer stopped at code 0 with a small
+gradient (0.000055), but fixed-effect covariance was unavailable and the
+Hessian was not positive definite, so the fit failed tinyAM's numerical
+checks. Aggregate trend correlations were mostly high (0.90–0.96), but median
+absolute percent differences increased to 59.6% for SSB, 51.5% for biomass,
+44.1% for total abundance, 51.3% for N-at-age and 41.2% for recruitment.
+This candidate is not retained. The source's positive q scale is a real
+structural difference, but this test cannot establish that the bounded q link
+is preferable: the reconstructed age-specific observations and independent
+lognormal likelihood may leave q and absolute abundance weakly identified.
