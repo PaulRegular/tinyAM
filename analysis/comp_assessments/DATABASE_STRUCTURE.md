@@ -567,6 +567,11 @@ sum of January 1 mature biomass is not an April 1 SSB estimate.
 reported category-3 assessment indicators. They are not absolute biomass/SSB
 or instantaneous F and must not fill the corresponding population comparisons.
 
+`survey_biomass_index_working_group` preserves an alternative reported survey
+indicator from a working-group table when it conflicts with the published advice
+or SAG series. Retain its original units and source, explain the discrepancy,
+and do not count it as an additional independent survey observation.
+
 `B_over_Bmsy` and `F_over_Fmsy` preserve reported dimensionless relative
 states from a surplus-production assessment. Generic source columns labelled
 SSB or F do not make these absolute biomass or mortality. Keep any reported
