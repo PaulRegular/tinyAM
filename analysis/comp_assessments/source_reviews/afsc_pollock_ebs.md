@@ -189,17 +189,33 @@ models. Official F-at-age is reconstructed from the pinned native fit and
 source code; F uncertainty remains unavailable. The fixed source M vector
 matches by construction.
 
-**Updated numerical validation pending.** The numerical diagnostics and
-agreement statistics previously recorded here (including the objective
-1,917.084, 27 fixed parameters, 1,815 random effects, and the corresponding
-scale differences and correlations) describe an **older tinyAM configuration**
-with IID N deviations, independent F random walks, quadratic catch SD, and
-survey-by-age q blocks. They should **not** be attributed to this revised
-model. Once the updated fit and comparison tables are available, regenerate
-`fit_diagnostics.csv`, `comparison_summary.csv` and the relevant figures, and
-insert the current convergence, SSB-scale, abundance, recruitment and F-at-age
-comparison results here. No updated numerical performance claims have been
-introduced without those outputs.
+**Updated numerical validation.** The current default-start fit converged
+(optimizer code 0, objective 1,911.58, maximum absolute gradient 0.000831,
+positive-definite Hessian, successful standard-error estimation, 13 fixed
+parameters and 975 random effects). Over the common fitted period, median
+absolute percent differences were 10.72% for SSB, 19.45% for N-at-age,
+10.32% for total abundance, 8.42% for matched age-3+ biomass, 14.01% for
+recruitment and 28.32% for F-at-age. Their trend correlations were respectively
+0.958, 0.940, 0.911, 0.951, 0.917 and 0.696. SSB is a definition-matched
+comparison under the stated spawning-time and female-maturity conventions;
+the fixed-M comparison is identical by construction.
+
+F-at-age remains the clearest discrepancy: its mean absolute percent
+difference is 43.39%, terminal-year difference is +41.31%, and trend
+correlation is 0.696. Recruitment has a large terminal-year difference
+(+71.13%) despite a 14.01% median difference and 0.917 trend correlation;
+total abundance also has a +34.26% terminal difference. These metrics warrant
+review and are not hidden by the closer aggregate SSB result.
+
+An AR1 F process around age-specific means was tested as a source-plausible
+alternative. It converged (objective 1,900.75, gradient 0.00153, positive-
+definite Hessian and successful uncertainty estimation), but F-at-age trend
+correlation fell to 0.665 while its median percent difference improved only
+slightly (27.83% versus 28.32%). SSB median difference decreased to 9.72%, but
+its trend correlation also decreased to 0.954. The alternative does not resolve
+the F trend discrepancy and is not retained; the correlated random walk
+remains the current translation. These results supersede earlier diagnostic
+and comparison statistics for the older specification.
 
 The current candidate is a deliberately **simplified structural
 translation**, not a claim of likelihood-level equivalence to the operational

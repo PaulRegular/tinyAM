@@ -1,4 +1,14 @@
 "assessment_id","metric","unit","comparison_status","definition","reason","n","mean_absolute_difference","mean_absolute_percent_difference","median_absolute_percent_difference","terminal_year","terminal_mean_percent_difference","trend_correlation"
+"afsc_pollock_ebs_2024","F","per year","matched","Reported age 1 compared with tinyAM age 1","",915,0.100734354416747,43.3867872768212,28.316837954814,2024,41.3105055313648,0.69555607398421
+"afsc_pollock_ebs_2024","F_bar","per year","unavailable","N-weighted F over ages 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15","No numerical output is available on the matching definition.",0,,,,,,
+"afsc_pollock_ebs_2024","M","per year","matched","Reported age 1 compared with tinyAM age 1","",915,0,0,0,2024,0,
+"afsc_pollock_ebs_2024","M_bar","per year","unavailable","N-weighted M over ages 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15","No numerical output is available on the matching definition.",0,,,,,,
+"afsc_pollock_ebs_2024","N","thousand fish","matched","Reported age 1 compared with tinyAM age 1","",610,834138.808143887,29.2199024401697,19.4532083000125,2024,9.23167046433132,0.940490502456424
+"afsc_pollock_ebs_2024","abundance","thousand fish","matched","Total abundance across modeled ages 1-15; explicit reported age groups are matched to sums of tinyAM ages.","",61,5039937.6240066,11.0062894483821,10.3182276065095,2024,34.2584482961092,0.910699581901144
+"afsc_pollock_ebs_2024","biomass","tonnes","unavailable","Official N with shared translated weights  over ages 1-15","No numerical output is available on the matching definition.",0,,,,,,
+"afsc_pollock_ebs_2024","biomass_at_age","tonnes","matched","Reported age group 3+ compared with the sum of tinyAM ages 3-15","",61,700288.437492262,10.7843170885639,8.42316781226893,2024,-11.4092620652146,0.951186410755256
+"afsc_pollock_ebs_2024","recruitment","thousand fish","matched","Recruitment at age 1","",61,4025060.82270024,17.8837367522768,14.0102646205205,2024,71.1318387137567,0.917447517941023
+"afsc_pollock_ebs_2024","ssb","tonnes","matched","Female SSB at year fraction 0.25, ages 1-15, using stock weights and 0.5-scaled maturity","",61,242840.962163793,12.8334853152354,10.7157518183863,2024,-11.9723911080132,0.957739562405861
 "dfo_cod_2j3kl_2025","abundance","thousand fish","matched","Total abundance across modeled ages 2-14; explicit reported age groups are matched to sums of tinyAM ages.","",57,508507.665034203,27.5931556659612,19.4495734987982,2024,9.8789937515683,0.942756703057914
 "dfo_cod_2j3kl_2025","biomass","tonnes","matched","Sum of reported biomass_at_age over ages 2-14","",57,326577.243337285,29.1327958285036,21.2346554544394,2024,6.22896014304959,0.955466632812344
 "dfo_cod_2j3kl_2025","biomass_at_age","tonnes","matched","Reported age 2 compared with tinyAM age 2","",741,26911.7030515143,47.1590445121072,31.6657026952868,2024,6.67440213042602,0.934440346927412
