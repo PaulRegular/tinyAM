@@ -35,6 +35,7 @@ assessments or management advice.
 | Atlantic striped bass | [base-run outputs and missing production inputs](source_reviews/ck_nefsc_garmiii_saxatilis_gom_chatt.md) |
 | Eastern Georges Bank cod | [selected framework, later summaries and missing age inputs](source_reviews/ck_nefsc_trac_cert_morhua_gb.md) |
 | Historical Norwegian coastal cod (subareas 1–2) | [2018 index-based assessment and 2021 boundary split](source_reviews/ck_ices_afwg_morhua_coastnor_1_2.md) |
+| Southern Norwegian coastal cod | [2026 SPiCT assessment and source limitations](source_reviews/ices_cod_southern_coastal_2026.md) |
 | North Sea sandeel | [catalogue identity](source_reviews/ck_ices_hawg_dubius_ns.md); [Area 1r](source_reviews/ices_sandeel_area_1r.md); [Area 2r](source_reviews/ices_sandeel_area_2r.md); [Area 3r](source_reviews/ices_sandeel_area_3r.md); [Area 4](source_reviews/ices_sandeel_area_4.md) production assessments |
 | Celtic Sea and Bristol Channel plaice | [current indicator assessment and age-based translation gap](source_reviews/ices_plaice_celtic_sea_7fg.md) |
 | Northeast Arctic golden redfish | [2026 SPiCT states and age-based translation gap](source_reviews/ices_golden_redfish_northeast_arctic.md) |

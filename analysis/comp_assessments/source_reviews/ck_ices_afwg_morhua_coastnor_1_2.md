@@ -23,7 +23,9 @@ became the age-structured SAM assessment `cod.27.1-2.coastN`; the south initiall
 remained data-limited and now uses SPiCT. The current northern assessment is
 already represented by `ices_cod_northern_coastal_2026`, but it covers only the
 northern component. It cannot supply the former combined stock's missing
-inputs or outputs.
+inputs or outputs. The current southern stock is separately represented by
+`ices_cod_southern_coastal_2026`; see its
+[source review](ices_cod_southern_coastal_2026.md).
 
 No separate age-structured production assessment with recoverable inputs and
 population surfaces was found for the full historical 1–2 coastal unit. Keep
