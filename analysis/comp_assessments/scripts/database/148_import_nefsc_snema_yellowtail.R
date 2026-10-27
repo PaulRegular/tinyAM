@@ -18,12 +18,18 @@ report <- read_pdf("Yellowtail_Flounder_RT_WG_Report_2024.pdf",
   "805ba9617e2231bb000be98ea7a0982c8943cc0a6661034c8c256bc987857878")
 panel <- read_pdf("peer_review_2024.pdf",
   "be557aec7f5b8e5a823acbe6f8917a857ffd519a63b086a8b6ec5e995948e707")
+deck <- read_pdf("SNEMA ToR 456 Final with Extra Slides.pdf",
+  "e0b2b5b75235e25e4d0aebad3114c6c349b7c90b03f9a4a16b7de78b6c3259b3")
 update <- read_pdf("2025_YEL_SNEMA/2025_Yellowtail_Flounder_SNEMA_REPORT_UPDATED.pdf",
   "5421a283dd3c50bfbe04d83c28b89ed3bcf6d20cb1fc0a1fc79a933109201f71")
 adoption <- read_pdf("NEFMC_FW72_2026.pdf",
   "d961314f6fd146694956a50e8f128277314fe1d103aaa8a24c1236ccd1c72c9c")
 stopifnot(grepl("age specific M values", panel[22], fixed = TRUE),
   grepl("All other settings and", panel[22], fixed = TRUE),
+  grepl("Uses lifetime M = 0.5", deck[59], fixed = TRUE),
+  grepl("Uses M-at-age values from Cadrin WP", deck[59], fixed = TRUE),
+  all(vapply(c("1: 0.97", "2: 0.45", "3: 0.37", "4: 0.34", "5: 0.33", "6: 0.33"),
+    grepl, logical(1), x = deck[59], fixed = TRUE)),
   grepl("38 mt", adoption[27], fixed = TRUE), grepl("0.051", adoption[27], fixed = TRUE),
   grepl("removing the IID random effects", update[4], fixed = TRUE))
 
@@ -78,9 +84,19 @@ age_input <- function(table, ages, type, unit, reference, notes, survey = "", se
   input(framework_id, type, "numbers_at_age", "numbers", g$year, g$age,
     as.vector(table[, -1]), unit, fleet, survey, season, reference, notes)
 }
-inputs <- age_input(catch, 1:6, "catch", "thousand fish",
+m_values <- c(.97, .45, .37, .34, .33, .33)
+m_input <- input(framework_id, "M", "natural_mortality_at_age", "per_year",
+  year = NA, age = 1:6, value = m_values, unit = "per year",
+  reference = paste(source_url, "SNEMA ToR 456 Final with Extra Slides, p. 59;",
+    "Cadrin working paper, Table 3, p. 9"),
+  notes = paste("Fixed selected age-specific M supplied to the revised 2024 WHAM candidate.",
+    "The model grid is ages 1-6+, and the source gives 0.33 at both ages 6 and 7.",
+    "The Cadrin Table 3 caption says lifetime M=0.4, but its text specifies 0.5 for SNEMA.",
+    "The contemporaneous SNEMA model slide explicitly confirms lifetime M=0.5 and these values."))
+m_input$year_basis <- ""
+inputs <- rbind(m_input, age_input(catch, 1:6, "catch", "thousand fish",
   paste(source_url, "Yellowtail Flounder RT WG Report, Table 2.8.3, pp. 88-89; peer review pp. 17, 22"),
-  "Combined landings and discards; age 6 is 6+. Source numbers support the age composition, not a separate independent catch-at-age likelihood. The source fits an aggregate fleet total plus composition. Printed dashes in 2020-2022 remain missing; no ages are inferred from total catches.", fleet = "Combined commercial landings and dead discards")
+  "Combined landings and discards; age 6 is 6+. Source numbers support the age composition, not a separate independent catch-at-age likelihood. The source fits an aggregate fleet total plus composition. Printed dashes in 2020-2022 remain missing; no ages are inferred from total catches.", fleet = "Combined commercial landings and dead discards"))
 for (survey in c("spring", "fall", "winter")) {
   table <- get(survey); ages <- switch(survey, spring = 0:11, fall = 1:10, winter = 1:8)
   table_id <- switch(survey, spring = "3.6.2a-b, pp. 187-190", fall = "3.6.3, pp. 191-192", winter = "3.6.4, p. 193")
@@ -163,7 +179,7 @@ assumption <- function(id, component, setting, value, reference, notes = "") {
 assumptions <- rbind(
   assumption(framework_id, "assessment", "selected_run", "Revised Candidate Model with age-specific M; not the original constant-M candidate", paste(panel_url, "pp. 17-20, 22-24"), "Final panel selected the age-based-M revision, with other settings and input unchanged for that comparison. Original candidate point estimates are excluded."),
   assumption(framework_id, "population", "dimensions", "1973-2022; ages 1-6+; one combined commercial fleet; three NEFSC trawl surveys; combined sexes", paste(panel_url, "p. 17")),
-  assumption(framework_id, "M", "model", "Fixed age-specific M; higher at young ages, scaled from lifetime mortality using length-at-age", paste(panel_url, "pp. 22-24; Cadrin working paper pp. 2-3"), "Exact supplied production vector is unrecovered. The superseded constant M=0.5 is not imported as the revised model's M surface."),
+  assumption(framework_id, "M", "model", "Fixed age-specific M, ages 1-6+: 0.97, 0.45, 0.37, 0.34, 0.33, 0.33 per year", paste(source_url, "SNEMA ToR 456 Final with Extra Slides, p. 59; Cadrin working paper, Table 3, p. 9;", panel_url, "pp. 22-24"), "The selected revised candidate uses the age-specific values from Cadrin. Although Table 3's caption says lifetime M=0.4, the accompanying text specifies lifetime M=0.5 for SNEMA and the contemporaneous model slide confirms 0.5 and the listed vector. The original constant-M candidate is superseded."),
   assumption(framework_id, "N", "process", "2D AR1 older-cohort N process; recruitment decoupled from ages 2-6+", paste(source_url, "WG report pp. 294-295;", panel_url, "p. 17")),
   assumption(framework_id, "recruitment", "process", "Random about a mean, with AR1 temporal recruitment and a one-year-lagged GSI controlling effect; GSI modelled as AR1", paste(source_url, "WG report pp. 294-295;", panel_url, "p. 17"), "No Beverton-Holt curve in the selected SNEMA model. Exact native covariate observations, scaling, coupling and lognormal corrections need production configuration."),
   assumption(framework_id, "F", "selectivity", "Logistic fleet selectivity with IID random effects", paste(panel_url, "p. 17")),
@@ -179,7 +195,7 @@ assumptions <- rbind(
   assumption(update_id, "F", "selectivity_change", "Fleet IID selectivity random effects removed to address convergence", paste(update_url, "updated report, pp. 2-3"), "Do not carry the 2024 random-selectivity configuration into this update."),
   assumption(update_id, "population", "bias_adjustment", "WHAM lognormal adjustment switched off", paste(update_url, "updated report, p. 3"), "Exact option mapping needs the production files; this statement does not recover every likelihood bias convention."),
   assumption(update_id, "biology", "revised_inputs", "CAMS discards, maturity and GSI revised; no catch age composition in the terminal five years", paste(update_url, "updated report, pp. 2-3"), "2024 framework arrays must not be attached to this update. Complete revised observations and biology remain unavailable."),
-  assumption(update_id, "M", "model", "Age-specific fixed M retained from revised research-track model; numerical vector unrecovered", paste(panel_url, "pp. 22-24;", update_url, "pp. 1-3")),
+  assumption(update_id, "M", "model", "Age-specific fixed M retained from revised research-track model; the 2025 report does not restate its numeric vector", paste(panel_url, "pp. 22-24;", update_url, "pp. 1-3"), "The 2024 selected-candidate vector is documented, but the 2025 report does not confirm it was carried forward unchanged."),
   assumption(update_id, "recruitment", "GSI", "Recruitment strongly informed by Gulf Stream Index", paste(update_url, "updated report, pp. 2-3"), "Future GSI assumptions and projection outputs are separate from fitted historical recruitment."))
 assessment <- function(id, year, terminal, estimate_terminal, current, applied, notes) {
   x <- blank("assessments.csv", id); x$stock_id <- stock_id
@@ -193,7 +209,7 @@ assessment <- function(id, year, terminal, estimate_terminal, current, applied, 
 }
 assessments <- rbind(
   assessment(framework_id, 2024, 2022, 2022, TRUE, FALSE,
-    "Latest recoverable detailed approved framework: revised age-specific-M model selected in November 2024 for subsequent management-track use. Source catch-at-age, finer trawl indices and aggregates recovered; exact selected M/biology/covariate arrays, likelihood settings and numerical fitted age surfaces missing. Original constant-M candidate outputs are not official revised-run values. This framework was not itself the 2024 management-track advice run."),
+    "Latest recoverable detailed approved framework: revised age-specific-M model selected in November 2024 for subsequent management-track use. Source catch-at-age, finer trawl indices, aggregates and the selected M-at-age vector recovered; annual biology/covariate arrays, likelihood settings and numerical fitted age surfaces remain missing. Original constant-M candidate outputs are not official revised-run values. This framework was not itself the 2024 management-track advice run."),
   assessment(update_id, 2025, 2024, 2028, FALSE, TRUE,
     "Applied 2025 update corroborated by final NEFMC Framework 72. Public updated report retains draft watermark; canonical values retain that provenance. Historical catch totals, SSB, age-1 R and fully selected F recovered. Native inputs, biology and fitted N/F-at-age unavailable; do not mix with 2024 framework. Projection estimates through 2028 are not imported as historical observations or population estimates."))
 stocks <- read.csv(file.path(database, "stocks.csv"), colClasses = "character", na.strings = "", check.names = FALSE)
@@ -203,7 +219,7 @@ stocks$authority_stock_id[at] <- "Southern New England/Mid-Atlantic yellowtail f
 stocks$common_name[at] <- "Southern New England/Mid-Atlantic yellowtail flounder"
 stocks$area[at] <- "Southern New England/Mid-Atlantic"
 stocks$region[at] <- "Southern New England and Mid-Atlantic continental shelf"
-stocks$notes[at] <- "Charbonneau-Keith NEFSC-GARMIII_ferruginea_SNE, MA; original PDF label SNE MA Limada ferrugina.pdf retained here. The selected 2024 WHAM framework uses age-specific M, superseding the original constant-M candidate; the applied 2025 update has revised inputs and selectivity settings. Partial official source tables are imported; full production biology, covariate/configuration arrays and fitted age surfaces remain unrecovered."
+stocks$notes[at] <- "Charbonneau-Keith NEFSC-GARMIII_ferruginea_SNE, MA; original PDF label SNE MA Limada ferrugina.pdf retained here. The selected 2024 WHAM framework uses the documented age-specific M vector, superseding the original constant-M candidate; the applied 2025 update has revised inputs and selectivity settings. Partial official source tables are imported; full production biology, covariate/configuration arrays and fitted age surfaces remain unrecovered."
 
 write_rows <- function(file, x, id) {
   path <- file.path(database, file)

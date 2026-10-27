@@ -102,9 +102,12 @@ now has the published catch-age and three trawl-survey source tables, plus a
 separate 2025 official summary. Its selected framework uses age-specific M,
 not the original constant-M candidate; the update removes fleet-selectivity
 random effects and changes biology and GSI inputs. Exact production biology,
-M, GSI configuration and fitted age surfaces remain missing, so no translation
-is claimed. Aggregate/composition likelihoods and correlated older-cohort N
-would still require documented approximations. Historical counts are unchanged.
+GSI configuration and fitted age surfaces remain missing, so no translation
+is claimed. The selected 2024 age-specific M vector is now recorded from its
+supporting model slide. The 2025 update does not restate whether that vector
+was carried over unchanged. Aggregate/composition likelihoods and correlated
+older-cohort N would still require documented approximations. Historical
+counts are unchanged.
 
 The [2026 Sandeel Area 1r assessment](source_reviews/ices_sandeel_area_1r.md)
 adds a verified seasonal example: July recruitment, half-year mortality and
