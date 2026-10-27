@@ -16,12 +16,13 @@ not fitted abundance, recruitment, SSB, or fishing-mortality-at-age surfaces.
 
 ## Database and translation decision
 
-The current official material does not provide an age-structured assessment
-or age-specific fitted outputs for this catalogue entry. The stock boundary
-also remains unresolved between the historical catalogue label and the
-current 7.h–k advice unit. No inputs or outputs are added to the canonical
-age-structured assessment database, and no tinyAM recipe or dashboard is
-appropriate. Do not turn aggregate landings into age-specific observations.
+The historical catalogue label and the current 7.h–k advice unit have not
+been established as identical. The broader current unit is represented
+separately as `ices_sole_celtic_south_7hk`; see its
+[source review](ices_sole_celtic_south_7hk.md). No broader-unit values are
+relabeled as 7.j–k-only observations. The former XSA assessment used data
+from 7.j to represent the whole area and was replaced after the 2020
+benchmark; the historical run remains under review.
 
 The WGCSE 2026 report, advice page, and their checksums are cached under
 `source_cache/ck_ices_wgsce_solea_is7jk_2026/`.
