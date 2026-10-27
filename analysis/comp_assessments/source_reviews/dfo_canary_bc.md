@@ -132,41 +132,33 @@ but preserved canonically. The code and background identify these limitations.
 
 ## Current tinyAM translation
 
-The retained recipe uses age-1 IID recruitment around a constant log mean,
-with fixed SD 0.9. It does not reproduce the source stock–recruit relationship,
-steepness prior, recruitment sum constraint or varying bias adjustment. This
-is a computationally practical approximation, not evidence that constant
-recruitment is preferable scientifically. Superseded candidates are retained in Git history.
+The current recipe models age-1 IID recruitment around a constant log mean with
+fixed SD 0.9. This omits the official age-0 Beverton–Holt curve, steepness prior,
+sum-constrained deviations and changing bias adjustment. The survivorship-based
+initialization uses official first-year SSB and M only to construct a starting
+profile; it does not copy official N estimates into the fit.
 
-Normal package starts failed numerical checks (optimizer code 1, false
-convergence, maximum gradient 2,148 and non-positive-definite Hessian).
-The single permitted retry kept all data and formulas identical, using a
-survivorship profile scaled to first-year official SSB and female M for
-initialization only. This is not a recovered official N-at-age estimate.
-The retry converged: optimizer code 0, objective 1,726.629, maximum gradient
-0.000333, successful SD report and positive-definite Hessian. Default and
-retry took about 310 and 143 seconds respectively; both diagnostics are cached.
+## Current fit status
 
-Numerical convergence does **not** imply agreement with the assessment:
+The latest tracked diagnostic uses database revision `00cc998` and is
+non-converged. Package starts failed covariance and Hessian checks. The aligned
+source-start retry returned code 1, objective 1934.708, maximum gradient
+3.79e11 and a non-positive-definite Hessian. An SD-report object exists, but it
+does not provide usable uncertainty. The current comparison summary contains no
+valid canary rows.
 
-| Metric | Comparison | Mean absolute % difference | Median absolute % difference | Terminal % difference | Trend correlation |
-|---|---|---:|---:|---:|---:|
-| Female SSB | Approximate, 1977–2022 | 27.91 | 23.98 | -59.09 | 0.295 |
-| Female M | Matching constant instantaneous M | 36.51 | 36.51 | -36.51 | Undefined: constant |
+The cached fit, run result, initialization record and dashboard were created
+under earlier revision `442d89` with a Beverton–Holt recruitment formulation.
+They are not results for the current database and recipe. Their old SSB agreement
+statistics and dashboard should not be used as the current comparison.
 
-Both comparisons show substantial disagreement. Repeated age/year M values represent
-one shared parameter; their large row count is not additional validation.
-N/F-at-age, annual recruitment and total abundance comparisons remain unavailable
-or non-equivalent; missing statistics are not passes. Beginning-2023 SSB is
-displayed as boundary context and excluded from historical summary statistics.
+A sensitivity using the current inputs and the official Beverton–Holt recruitment
+mean did not return from its default attempt after more than seven minutes. I
+stopped it; there is no result to evaluate. No conclusion about its convergence
+or agreement is warranted. Accordingly, there is no current dashboard for this
+non-converged recipe.
 
-Important limitations are the joint-composition likelihood replacement,
-omission of aggregate-only indices and catches in years without ages,
-pooled-fleet age allocation, simplified selectivity, free initial ages and
-recruitment/M-prior approximations. These are plausible explanations to
-investigate, not demonstrated causes of disagreement. Observations were not
-rescaled to improve agreement and no core model mathematics changed.
-
-The dashboard and fitted object are in the gitignored
-`results/cache/dfo_canary_bc_2022/` directory. The three compact shared result
-tables include this case while retaining other stocks' results.
+The remaining gaps include source N/F-at-age and recruitment outputs, omitted
+aggregate-only index series and catches without matching age samples, and pooled
+age allocation for the small non-trawl fleet. These block a complete comparison
+regardless of optimizer behavior. The source observations were not altered.
