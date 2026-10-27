@@ -2,8 +2,7 @@
 
 ## Production source
 
-Charbonneau–Keith Master `unique_ID` `AFSC_ macrocephalus_BSAI`; the prior catalogue identifier `AFSC_BSAI_Gadus_macrocephalus` remains recorded as an alias. The Master area suffix conflicts with the existing Eastern Bering Sea boundary and is flagged in `stocks.csv`.
-The December 2024
+Charbonneau–Keith identity `AFSC_BSAI_Gadus_macrocephalus`. The December 2024
 SSC selected Model 24.1. The 2024 SAFE report, Appendix 2.3 native files and
 Appendix 2.4 workbook describe that run, rather than a newer development model.
 The NOAA review of 2026 harvest specifications explains the retention of the
@@ -82,37 +81,49 @@ its reported SD remain separate. Neither fitted q nor fitted N changes an
 observation. Zero source proportions remain zero; tinyAM's lognormal
 observations treat these zero entries as missing.
 
-N survival is deterministic with free initial ages; recruitment is IID around
-a constant mean with log SD 0.6908, F has independent age-specific random walks,
-M stays fixed at 0.3866 and q is free by age. The current default-start fit
-converged: optimizer code 0, objective 341.6977, maximum absolute gradient
-0.001222, positive-definite Hessian and finite covariance, about 6.21 seconds.
-No starting-value retry was used. The cached Official–tinyAM dashboard renders
-successfully.
+### Proposed paired-model candidate (not yet fitted)
 
-The current comparison summary reports 43.8% mean absolute percentage
-difference, −16.4% terminal difference, and 0.647 mean within-age correlation
-for N-at-age. Recovered F-at-age has 52.7%, +83.4%, and 0.465; population-
-weighted F-bar has 20.5%, −14.8%, and 0.770. Recruitment has 43.0%, +108.6%,
-and 0.648. Common-proxy SSB has 17.0% mean absolute difference, −38.0%
-terminal difference, and 0.766 correlation. Total abundance has 13.1% mean
-absolute difference, −15.3% terminal difference, and 0.904 correlation;
-biomass has 14.2%, −27.8%, and 0.809. The empirical pooled key, unconstrained
-age-specific F, omitted ageing error, and simplified survey precision are
-material differences. Fixed-M equality only checks inputs.
+The updated translation continues to use deterministic older-age survival (`N process = "off"`),
+free first-year older-age abundance (`init = "free"`), and IID log recruitment around
+an estimated constant mean. **The recruitment log SD is now estimated** (the
+`sd` setting was removed), whereas the accepted assessment fixes it at 0.6908.
+This deliberately adds flexibility and is not an exact match to the source
+recruitment penalty. Natural mortality remains fixed at 0.3866; January spawning
+timing and the existing proxy biology are unchanged.
 
-## Translation sensitivities checked
+Relative to the earlier paired candidate, the new change is the estimated
+recruitment SD. The other two non-operational process approximations remain:
+F-at-age follows **correlated temporal random walks** (`F_settings = list(process = "cor_rw", mu_form = NULL)`), in which
+annual log-F innovations are correlated among ages. This is a simple proxy for
+collective changes in fishing intensity and selectivity, not an exact representation
+of length-based fishing or the official selectivity penalties. Second, the survey
+index uses **rising logistic age-specific catchability with an annual common log-q
+random walk** (`q_form = ~ logistic(age) + rw(year)`). The logistic component
+approximates the ascending survey selectivity curve. The RW permits the whole survey
+q level to change among years; it does **not** reproduce the official annual changes
+in length-selectivity width or the official scalar-q specification.
 
-An age/year-correlated F process around age-specific means converged from
-default starts (objective 206.601, maximum gradient 0.000780 and positive-
-definite Hessian), but agreement worsened sharply: median percent differences
-were 398% for N-at-age, 148% for total abundance, 236% for biomass, and 454%
-for the common-proxy SSB. It is rejected in favour of independent age-specific
-F random walks.
+The translation now ends in a single `if (do_fit)` block calling `tinyAM::fit_tam()`.
+The previous `fit_default_first()` helper, fitted-official-N/F retry starts and
+initialization-attempt cache have been removed. Original catch/survey reconstruction,
+source data, biological proxy and comparison definitions are retained.
+The estimated recruitment SD should be reported from the new fit rather than
+assumed to equal 0.6908. Its value and the new fit diagnostics have not been
+provided, so no numerical conclusions are attributed to this candidate.
 
-A year-specific empirical age-length key was also tested for years with
-fishery age samples, using the pooled key for other years. This fit returned
-optimizer code 0 and a small gradient, but its fixed covariance was non-finite,
-the Hessian was not positive definite, and the objective rose from 341.698 to
-576.623. The pooled key remains the usable approximation; the annual-key result
-is not used for comparison or dashboard output.
+### Historical baseline results (not results for this candidate)
+
+The **superseded** independent age-specific F random walk / unrestricted age-q
+configuration converged with optimizer code 0, objective 372.2591, maximum gradient
+0.0013577, positive-definite Hessian and finite covariance (approximately 6.45 s).
+Its source comparisons reported 42.1% mean absolute N-at-age difference, -43.7%
+terminal N difference, within-age N correlation 0.681; 70.1% mean absolute F-at-age
+difference, +107.0% terminal F difference, within-age F correlation -0.200; and
+21.7% mean absolute proxy-SSB difference. None of these figures should be quoted
+as performance of the newly specified `cor_rw` F / logistic-plus-year-RW q candidate.
+
+Substantial limitations remain: fishery catch numbers are reconstructed with a
+pooled empirical age–length key; the source fits catch-at-length and age/length
+compositions; the source selectivity varies in length space; age error and survey
+precision are simplified; and age-0 recruitment/SSB definitions are not fully
+matched. Official fixed M is not an independent validation of M estimation.
