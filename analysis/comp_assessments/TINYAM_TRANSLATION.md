@@ -1267,21 +1267,20 @@ diagnostics for failed or non-converged attempts, identify the reason, and
 continue with other requested stocks. Report numerical convergence separately
 from biological plausibility and source-model agreement.
 
-An additional attempt may investigate a clear numerical issue, such as poor
-starting values, but must record what changed. Do not repeatedly change data,
-processes, or q structures merely to obtain convergence. Source estimates may
-provide starting values; they must not silently constrain tinyAM estimates.
+Initialize new or revised fits with tinyAM's package-default starting values.
+Use explicit source-based starts only after numerical checks fail, and make at
+most one documented retry when suitable official estimates are available. Align
+starts to the model's year and age grids with the existing helpers; leave
+unavailable components at package defaults. Keep observations, formulas, and
+model settings identical between attempts. Starting values must not constrain
+the estimates, and poor agreement with the official assessment alone is not a
+reason to retry. Do not keep changing data or model structure merely to obtain
+convergence.
 
-For the twelve new Pacific cases, first call `fit_tam()` without `start_par`,
-using normal package initialization. Only if numerical convergence checks fail,
-allow one documented retry with explicit starting values. Construct source-based
-starts only when needed, using the existing year/age alignment helpers; retain
-package defaults for unavailable components. Keep data, formulas and model
-assumptions identical between attempts. Poor agreement with the official
-assessment alone does not justify a retry. Preserve diagnostics from the default
-attempt and identify the final initialization strategy in the diagnostic notes
-and stock review. Preparation with fitting disabled must run neither attempt.
-Existing stock scripts retain their current starting-value workflows.
+For the twelve new Pacific cases, preserve diagnostics from the default attempt
+and identify the final initialization strategy in the diagnostic notes and
+stock review. Preparation with fitting disabled must run neither attempt.
+Existing stock scripts retain their documented starting-value workflows.
 
 For a converged fit, `run_assessment()` returns the fitted object, source
 reference, detailed differences, and summary in memory. The fit is cached only
