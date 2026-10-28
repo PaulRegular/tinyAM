@@ -40,3 +40,23 @@ The fit passed numerical convergence checks: optimizer code 0, adjusted and raw 
 The common-year comparison remains uneven. Mean absolute percent differences are 312.8% for F-at-age, 286.1% for Fbar, 51.1% for N-at-age, 43.3% for total abundance, and 38.6% for recruitment. Common-definition biomass and SSB comparisons are approximate and differ by 50.2% and 56.1%, respectively. Their terminal differences are -77.9% for biomass and -82.5% for SSB. Trend correlations range from 0.73 for recruitment to 0.95 for SSB; F-at-age correlation is 0.88. These results show a numerically usable but not close reproduction. Fixed M matches by construction because the same 0.20 input is supplied; it is not evidence of estimated agreement.
 
 For the dashboard's common-definition comparison, source biomass-at-age is derived from official N-at-age and translated annual weights. Source SSB-at-age is derived from official N, F, and M with the same translated weights and maturity, using the June midpoint at 0.5 of the year. The directly reported aggregate SSB and its available uncertainty remain in the canonical source record. These derived comparison values are analysis-only and carry no invented uncertainty. The five omitted surveys, other active survey series and CV adjustments, and complete ASAP control settings remain unresolved, so the 2015 record stays partial and the fit remains a one-survey approximation to S60_BASE_18.
+
+## Additional 2025 historical series
+
+NOAA Stock SMART assessment 13935 provides total catch, recruitment, SSB and
+fully selected F for 1984–2024. The 2015–2024 catch and recruitment values
+agree with the assessment report; 1984–2014 values are now in the database.
+Catch is an aggregate and must not be combined with overlapping fleet values.
+
+Stock SMART labels its biomass and F series retrospectively adjusted, yet
+2015–2023 values agree with the report's unadjusted table while its 2024 values
+match the adjusted terminal estimates. The 1984–2014 archive values are stored
+as `stocksmart_reported_SSB` and `stocksmart_reported_Ffull`, separate from
+the unadjusted assessment series, until their historical adjustment convention
+can be verified. F is rounded to three decimals to remove binary storage
+noise; no uncertainty is inferred. These values do not supply missing 2025
+age compositions or model controls.
+
+The [NOAA archive snapshot](https://github.com/NOAA-EDAB/stocksmart/tree/664c4237e26520b260a090e1821a2cee5d1cdf07)
+is cached in `source_cache/nefsc_scup_2025/` with its revision and checksum in
+`stocksmart_manifest.csv`.

@@ -4,9 +4,9 @@ stock_id <- "ck_nefsc_saw_chrysops_usatl"
 a15 <- assessments[assessments$assessment_id == "nefsc_scup_2015", , drop = FALSE]
 a25 <- assessments[assessments$assessment_id == "nefsc_scup_2025", , drop = FALSE]
 i15 <- inputs[inputs$assessment_id == "nefsc_scup_2015", , drop = FALSE]
-i25 <- inputs[inputs$assessment_id == "nefsc_scup_2025", , drop = FALSE]
+i25 <- inputs[inputs$assessment_id == "nefsc_scup_2025" & inputs$source_type != "official_machine_readable", , drop = FALSE]
 o15 <- outputs[outputs$assessment_id == "nefsc_scup_2015", , drop = FALSE]
-o25 <- outputs[outputs$assessment_id == "nefsc_scup_2025", , drop = FALSE]
+o25 <- outputs[outputs$assessment_id == "nefsc_scup_2025" & outputs$source_type != "official_machine_readable", , drop = FALSE]
 metric_value <- function(data, measure, year, field = "value", age = NULL, age_group = NULL) {
   keep <- !is.na(data$measure) & data$measure == measure &
     !is.na(data$year) & as.character(data$year) == as.character(year)
@@ -93,7 +93,7 @@ stopifnot(
 )
 
 stopifnot(
-  nrow(o15) == 31L * 18L,
+  nrow(o15) == 31L * 19L,
   nrow(o25) == 32L,
   metric_value(o15, "SSB", 2014) == 182915,
   metric_value(o15, "SSB", 2014, field = "lwr") == 153000,
