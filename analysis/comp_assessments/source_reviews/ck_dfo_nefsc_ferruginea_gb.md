@@ -63,3 +63,17 @@ The source test, central reference-alignment test, plus-group reference test and
 - [Framework 72 final submission, April 2026](https://d23h0vhsm26o6d.cloudfront.net/260423_Groundfish_FW72_SIR_FINAL-Submission.pdf), assessment adoption and status-determination sections
 - [NOAA assessment supplementary information portal](https://apps-nefsc.fisheries.noaa.gov/saw/sasi.php), public 2024 research-track and 2025 management-track materials
 - [Kittel et al. (2026) research paper](https://doi.org/10.1139/cjfas-2025-0289) and [associated research archive](https://zenodo.org/records/19443644); excluded as unverified production data.
+
+## Additional 2025 historical trajectories
+
+NOAA Stock SMART assessment 14076 supplies annual SSB, fully selected F and
+age-1 recruitment for 1973–2024 and total catch for 1935–2024. All 2015–2024
+values agree with the report table within its rounding; the report's values
+and confidence limits remain unchanged. The earlier values were added from
+the machine-readable source. Catch before the 1973 model start is historical
+context, not a fitted observation. F is rounded to three decimals to remove
+binary storage noise; uncertainty is not inferred. These aggregate series
+do not supply missing age compositions or change the translation blocker.
+
+The NOAA [Stock SMART snapshot](https://github.com/NOAA-EDAB/stocksmart/tree/664c4237e26520b260a090e1821a2cee5d1cdf07)
+is cached with its pinned revision and checksum in `stocksmart_manifest.csv`.

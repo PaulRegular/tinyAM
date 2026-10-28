@@ -1,8 +1,8 @@
 pkgload::load_all(".", quiet = TRUE)
 source("analysis/comp_assessments/R/run_assessment.R")
 record <- read_assessment("nefsc_yellowtail_georges_bank_2025", read_database())
-inputs <- record$inputs
-outputs <- record$outputs
+inputs <- subset(record$inputs, source_type == "official_table")
+outputs <- subset(record$outputs, source_type != "official_machine_readable")
 stopifnot(
   record$stocks$charbonneau_id == "DFO-NEFSC_ferruginea_GB",
   record$stocks$ocean == "Northwest Atlantic",
