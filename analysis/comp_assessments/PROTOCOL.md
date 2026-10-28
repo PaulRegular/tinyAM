@@ -33,10 +33,15 @@ stock, use this order:
    translation is useful and supportable. Fit-readiness or agreement must not
    decide which stock unit or assessment is curated.
 
-Do not start with an older, more complete assessment because it is easier to
-extract or fit. A fallback describes its own historical stock unit; it never
-substitutes for or gets combined with the latest unit. tinyAM fit-readiness and
-agreement do not determine which assessment is the source-curation target.
+Source availability, not completeness or translation readiness, controls the
+fallback decision. Keep curating the latest-unit assessment when detailed
+sources support a partial record; do not switch to an older, more complete run
+because it is easier to extract or fit. Only after a documented search finds
+the latest assessment's detailed data unavailable may you add the most recent
+detailed assessment for a preceding stock definition. Keep that fallback under
+its own stock and assessment IDs: it neither replaces the latest-unit record
+nor fills gaps in it. tinyAM fit-readiness and agreement do not determine the
+source-curation target.
 
 Select stocks for follow-up based on unresolved source-data gaps and
 actionable source leads. Having no curated input or output rows can help
