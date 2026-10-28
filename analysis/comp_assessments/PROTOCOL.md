@@ -63,14 +63,16 @@ unavailable for the latest assessment of the current unit.
 
 ### Selecting stocks for an active task
 
-Use the active goal to determine which records to work on and in what order.
-When the goal prioritizes unworked stocks with no input or output records, stay
-within that set; do not switch to partly populated stocks simply because they
-are easier to source or translate. Within the target set, prioritize actionable
-sources for the latest stock unit and assessment used for advice. After
-selecting a stock, follow the source hierarchy and latest-unit/fallback rules
-below. Source curation remains the priority; translation readiness does not
-affect stock selection.
+Treat the active goal's stock set as the scope boundary. If it targets unworked
+stocks with no input or output records, select only from that set; do not switch
+to partly populated stocks because they are easier to source or translate.
+Within the target set, prioritize stocks with actionable detailed sources for
+the latest official unit and its assessment used for advice. For each selected
+stock, follow Section 2.2: curate the latest-unit assessment first, retain its
+verified partial data, and add a preceding-unit assessment only when a
+documented search finds no recoverable run-specific detail for the latest
+assessment beyond summary advice. Translation readiness does not affect stock
+selection or the source-curation target.
 
 Do not postpone recoverable assessment data while trying to make a tinyAM
 translation converge or agree better.
