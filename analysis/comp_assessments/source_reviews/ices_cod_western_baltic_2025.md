@@ -1,5 +1,11 @@
 # Western Baltic cod, ICES 2025
 
+## Newer assessment identified: curation in progress
+
+The [2026 WGBFAS report](https://literatur.thuenen.de/digbib_extern/dn071152.pdf), section 2.3.5, identifies the current-unit SAM run `WBCod2026` and provides numerical catch-at-age (Table 2.3.15), survey indices (Tables 2.3.22a–c), stock summaries (Table 2.3.23), numbers-at-age (Table 2.3.24), total mortality (Table 2.3.25), and harvest rates (Table 2.3.26). ICES treats the assessment as category 3 and trusts relative trends because mortality is uncertain; the fitted absolute values should not be presented as reliable advice quantities. The table 2.3.23 caption identifies the mortality statistic as Z, while its column header says Fbar; resolve that inconsistency before importing the mortality series.
+
+The report names `WBCod2026` on stockassessment.org, but `fitfromweb()` and a direct request for its model object failed on 2026-10-27 because the connection failed. This does not prove that the model object is unavailable. The 2026 report and text are cached under `source_cache/ices_cod_western_baltic_2026/`; the PDF SHA-256 is `7e8a6ac51f72abf7d1f026e0997f764267f07690cb2b78e32e073e13fd658732`. The verified numerical tables are a viable source for a separate 2026 assessment record. Their extraction and validation remain outstanding; the 2025 data below must not be mixed into the 2026 run.
+
 ## Source selection
 
 The WGBFAS 2025 report documents the assessment run `WBCod2025`. The report and
