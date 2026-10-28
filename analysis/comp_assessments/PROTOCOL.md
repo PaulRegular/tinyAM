@@ -8,7 +8,8 @@ The governing question is:
 
 > **For the latest official stock unit, what inputs, assumptions, and outputs can be recovered from the most recent publicly accessible detailed sources for the assessment used for advice?**
 
-Use this order for source curation:
+Source recovery is the primary task; tinyAM translation is downstream. For each
+stock, use this order:
 
 1. Establish the latest official stock unit and the most recent assessment
    used for advice on that unit.
@@ -27,6 +28,10 @@ Use this order for source curation:
    recent detailed assessment for a preceding stock definition. Keep it as a
    separate, secondary stock and assessment record; preserve any verified
    latest-unit data and explain the boundary change and the fallback's limits.
+5. Once the latest-unit source record and any justified fallback are
+   documented, use `TINYAM_TRANSLATION.md` to assess whether a tinyAM
+   translation is useful and supportable. Fit-readiness or agreement must not
+   decide which stock unit or assessment is curated.
 
 Do not start with an older, more complete assessment because it is easier to
 extract or fit. A fallback describes its own historical stock unit; it never
@@ -41,9 +46,8 @@ for the latest unit, retain partial data, and document remaining gaps. A stock
 with data on only one side is a partial record; revisit it when a concrete
 source lead is available.
 
-A tinyAM translation is secondary and does not gate source curation. Do not
-postpone recoverable assessment data while trying to make a tinyAM translation
-converge or agree better.
+Do not postpone recoverable assessment data while trying to make a tinyAM
+translation converge or agree better.
 
 Follow the schema and controlled vocabularies in `DATABASE_STRUCTURE.md`.
 The [scope and provenance statement](README.md#scope-and-provenance) applies
