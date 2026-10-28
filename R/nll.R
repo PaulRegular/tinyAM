@@ -195,7 +195,7 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   projection_zero <- if (is.null(proj_settings$catch)) rep(FALSE, n_years) else
     c(rep(FALSE, sum(!is_proj)), proj_settings$catch == 0)
   structural_zero[projection_zero, ] <- TRUE
-  log_F <- log(F + structural_zero)
+  log_F <- if (.f_blocked(dat)) log(F + structural_zero) else log(F)
   log_Z <- log(Z)
   log_N <- population$log_N
   pred_log_N <- population$pred_log_N
@@ -275,7 +275,9 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   ## F process ----
 
   if (F_settings$process != "off") {
-    eta_log_f <- log_f - .f_state_mean(log_mu_F[!is_proj, , drop = FALSE], dat)
+    eta_log_f <- if (.f_blocked(dat)) {
+      log_f - .f_state_mean(log_mu_F[!is_proj, , drop = FALSE], dat)
+    } else log_F[!is_proj, ] - log_mu_F[!is_proj, ]
     jnll <- jnll - if (!dat$process_sd$F$default && F_settings$process != "cor_rw") {
       .dprocess_scaled(eta_log_f, sd_f, F_settings$process,
         phi = if (F_settings$process == "ar1") .f_phi(par) else c(0, 0)
