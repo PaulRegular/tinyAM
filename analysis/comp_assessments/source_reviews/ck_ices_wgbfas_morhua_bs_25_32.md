@@ -49,9 +49,9 @@ summary values are not treated as a separate at-age assessment output here.
 
 The latest advice record is from 2026 and uses a survey-index trend assessment
 (ICES category 3.2) based on standardized BITS Q1/Q4 indices, not an
-age-structured population model. It has no age-specific N/F/M estimates. This
-newer summary assessment is documented here but does not replace the 2024
-age-structured output record in the canonical database. The exploratory SPiCT
+age-structured population model. It has no age-specific N/F/M estimates. The current index-based assessment is recorded separately as
+`ices_cod_eastern_baltic_2026`; the 2024 age-structured outputs remain
+available as a distinct historical record. The exploratory SPiCT
 analysis in the 2026 report is not the method used for current advice.
 
 Sources:
@@ -80,3 +80,23 @@ assessment code or resolve its apparent mismatch between “western” and the
 25–32 area. The western Baltic stock is assessed in subdivisions 22–24; no
 independent assessment identity was verified for this catalogue row. It
 remains metadata-only, and no data are copied between the two entries.
+
+## Current 2026 index assessment
+
+The current assessment uses a GAM-standardized combined BITS Q1/Q4 biomass
+index in kg/hour from 1991–2025, including the eastern part of subdivision 24.
+The index combines numbers-at-length with annual weight-at-length. The SAG
+stock-size field is this survey index, not SSB. It is recorded as an input and
+as the same reported indicator; these are not independent series. The ICES SAG
+export also provides 1946–2025 landings and 1966–2025 discards, in tonnes.
+They are contextual catch series, with recent data incomplete: the working
+group reports Russian landings missing for 2022–2025 and limited discard
+sampling. No age-specific population states or separate seasonal survey series
+are available from the current method. No tinyAM fit or dashboard is supported
+by the current aggregate index alone.
+
+The 2026 record is now the selected current assessment for this stock; the
+2024 Stock Synthesis assessment remains a separate historical record. The
+2026 source files and their checksums are listed in the existing cache
+manifest. See [ICES source data](https://standardgraphs.ices.dk/ViewSourceData.aspx?key=22502)
+and [WGBFAS 2026](https://doi.org/10.17895/ices.pub.32455056), section 2.1.

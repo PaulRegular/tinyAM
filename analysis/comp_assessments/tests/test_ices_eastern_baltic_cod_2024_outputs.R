@@ -44,7 +44,7 @@ testthat::test_that("Eastern Baltic cod 2024 outputs match the published tables"
   testthat::expect_equal(assessment$stock_id, "ck_ices_wgbfas_morhua_bs_25_32")
   testthat::expect_equal(as.integer(assessment$assessment_year), 2024L)
   testthat::expect_equal(as.integer(assessment$terminal_year), 2024L)
-  testthat::expect_true(assessment$is_current)
+  testthat::expect_false(assessment$is_current)
   testthat::expect_true(assessment$is_applied)
   testthat::expect_equal(assessment$inputs_status, "not_started")
   testthat::expect_equal(assessment$outputs_status, "partial")
