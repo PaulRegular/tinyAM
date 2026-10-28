@@ -36,6 +36,13 @@ announcement anticipating a June 2026 update is not treated as a new fit.
 - [2023 research-track peer review](https://www.fisheries.noaa.gov/s3/2023-08/PanelSummaryReportoftheAtlanticCodRTPeerReviewAugust172023-mlt-508-8-23-23ajd-508gw.pdf),
   especially pp. 12–14 and 19; the current presentation confirms retained M.
 - [2027 management-track announcement](https://content.govdelivery.com/accounts/USNOAAFISHERIES/bulletins/40cd54f).
+- [NOAA Stock SMART](https://apps-st.fisheries.noaa.gov/stocksmart/) and the
+  [NOAA-EDAB stocksmart data package](https://noaa-edab.github.io/stocksmart/).
+  The cached stock_assessment_data.rda is pinned to commit
+  664c4237e26520b260a090e1821a2cee5d1cdf07; the package documents a 2026-10-03
+  data pull. It identifies the 2024 operational Georges Bank cod series as
+  stock 10509 / assessment 13596 and is a processed extraction from the portal,
+  not the native fitted WHAM object.
 
 Original PDFs and current portal results are cached under
 `source_cache/ck_nefsc_garmiii_morhua_gb_2024/`, with URLs, verification dates
@@ -98,9 +105,16 @@ The source applies no retrospective adjustment, so rho-adjusted points are
 not substituted. Forecasts for 2024–2027 and reference-point uncertainty
 are not mixed into the historical state series.
 
-Earlier historical states and the fitted N/full F surfaces were not recovered
-as numerical tables. No total abundance or common-definition SSB is derived
-without them. All three source-completeness statuses remain partial.
+NOAA Stock SMART supplies 1978-2023 series for SSB, age-1 recruitment and
+fully selected F. The 1978-2013 segment adds 36 historical annual values per
+metric; the source units are Metric Tons, Thousand Recruits and Fully-selected F.
+The 2014-2023 overlap matches Table 1 exactly for SSB and recruitment,
+and to its three-decimal precision for F. The reported F series is for ages
+9+, as specified in Table 1. Stock SMART provides no uncertainty for these
+series; they are published assessment time series, not fitted state arrays.
+No total abundance, N-at-age or age-specific F surface is available, and no
+common-definition SSB is derived. Input, assumption and output completeness
+remain partial.
 
 ## Translation status
 

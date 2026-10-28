@@ -2,8 +2,9 @@ source("analysis/comp_assessments/R/read_database.R")
 x <- read_assessment("nefsc_cod_georges_bank_2024")
 i <- x$inputs; o <- x$outputs
 catch <- i[i$type == "catch", ]; m <- i[i$type == "M", ]
-ssb <- o[o$measure == "SSB", ]; r <- o[o$measure == "recruitment", ]
-f <- o[o$measure == "fishing_mortality_at_age", ]
+ssb <- o[o$measure == "SSB" & o$source_type == "official_table", ]
+r <- o[o$measure == "recruitment" & o$source_type == "official_table", ]
+f <- o[o$measure == "fishing_mortality_at_age" & o$source_type == "official_table", ]
 stopifnot(
   x$stocks$stock_id == "nefsc_cod_georges_bank", is.na(x$stocks$charbonneau_id),
   x$stocks$authority == "NOAA-NEFSC", x$stocks$ocean == "Northwest Atlantic",
@@ -12,7 +13,7 @@ stopifnot(
   x$assessment$estimate_terminal_year == 2023, x$assessment$framework_year == 2023,
   x$assessment$is_current, x$assessment$is_applied, x$assessment$model_family == "WHAM",
   all(x$assessment[c("inputs_status", "outputs_status", "assumptions_status")] == "partial"),
-  nrow(i) == 19L, nrow(o) == 30L, nrow(x$assumptions) == 17L,
+  nrow(i) == 19L, nrow(o) == 138L, nrow(x$assumptions) == 17L,
   identical(catch$year, 2014:2023), all(catch$measure == "total_biomass"),
   all(catch$unit == "tonnes"), catch$value[catch$year == 2023] == 417,
   catch$value[catch$year == 2014] == 1310,
