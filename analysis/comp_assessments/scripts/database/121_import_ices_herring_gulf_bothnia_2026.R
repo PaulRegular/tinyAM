@@ -12,6 +12,7 @@ acoustic_file <- file.path(source_dir, "acoustic_index_transcription.csv")
 report_url <- "https://literatur.thuenen.de/digbib_extern/dn071152.pdf"
 benchmark_url <- "https://pub.epsilon.slu.se/22760/1/cardinale_m_et_al_210311.pdf"
 benchmark_cache_url <- "https://ndownloader.figshare.com/files/33482687"
+benchmark_doi <- "https://doi.org/10.17895/ices.pub.5989"
 benchmark_file <- file.path(source_dir, "WKCLuB_2021.pdf")
 sag_url <- "https://sag.ices.dk/SAG_API/StockXmlDownload/22377"
 sag_source_url <- "https://sg.ices.dk/ViewSourceData.aspx?key=22377"
@@ -166,6 +167,14 @@ write_source_table <- function(x, name) {
 write_source_table(catch_numbers, "catch_at_age_table.csv")
 write_source_table(catch_weights, "catch_weight_table.csv")
 write_source_table(maturity, "maturity_table.csv")
+trapnet_index <- data.frame(
+  year = 1990:2006,
+  value = c(
+    0.24, 0.29, 0.42, 0.32, 0.39, 0.28, 0.30, 0.24, 0.21,
+    0.18, 0.21, 0.27, 0.26, 0.22, 0.25, 0.41, 0.29
+  )
+)
+write_source_table(trapnet_index, "trapnet_index_digitization.csv")
 
 stocks <- read_table("stocks.csv")
 assessments <- read_table("assessments.csv")
@@ -269,6 +278,24 @@ input_data <- list(
     source_reference = paste(report_url, "Table 4.3.6"),
     transformation = "Visually transcribed from the area-corrected abundance table; values are stored as published and are not multiplied by AREA_CORR_FACTOR again.",
     notes = "Acoustic abundance index in millions of fish, 2007-2025, ages 0-15+. The survey covers most of subdivision 30 but does not survey subdivision 31; coverage was reduced in 2021-2025."
+  ),
+  input_rows(
+    "index", "relative_abundance_index", "index_scale",
+    trapnet_index$year, NA_integer_, trapnet_index$value,
+    "relative index units", survey = "Commercial trapnet CPUE",
+    region = "Bothnian Sea", source_type = "digitized",
+    source_reference = paste(benchmark_doi, "Figure 6, printed p. 14"),
+    transformation = paste(
+      "Digitized the annual observed trapnet-index points from Figure 6 and",
+      "rounded to the nearest 0.01 index units."
+    ),
+    notes = paste(
+      "Aggregate index for ages 3-9. The 2026 report confirms a trapnet CPUE",
+      "series for 1990-2006 but does not publish its numeric values in a table.",
+      "This approximate digitization is from the 2021 benchmark and is not",
+      "verified against the final 2026 production input array; digitization",
+      "error and likelihood weights are unavailable."
+    )
   )
 )
 inputs <- do.call(rbind, input_data)
@@ -335,6 +362,23 @@ assumption_values <- data.frame(
     "The assessment summary contains no fitted N-at-age, F-at-age, or estimated M-at-age time series."
   ), stringsAsFactors = FALSE
 )
+assumption_values <- rbind(
+  assumption_values,
+  data.frame(
+    component = "index", setting = "trapnet_index",
+    value = paste(
+      "1990-2006; aggregate index for ages 3-9; approximate digitization",
+      "from 2021 benchmark Figure 6; exact 2026 production series unresolved"
+    ),
+    source_reference = paste(benchmark_doi, "Figure 6, printed p. 14"),
+    notes = paste(
+      "Annual points rounded to 0.01 index units. The report confirms the",
+      "years and age range but does not publish the exact production values;",
+      "no digitization error or likelihood weights were inferred."
+    ),
+    stringsAsFactors = FALSE
+  )
+)
 assumptions <- as.data.frame(matrix("", nrow = nrow(assumption_values), ncol = length(assumption_header)), stringsAsFactors = FALSE)
 names(assumptions) <- assumption_header
 assumptions$assessment_id <- assessment_id
@@ -398,7 +442,7 @@ assessment_row <- data.frame(
     "Official 2026 ICES assessment for combined subdivisions 30 and 31; fitted catch data end in 2025.",
     "The 2026 forecast row is excluded from historical inputs and outputs.",
     "Catch biomass and age compositions, annual catch weights and maturity, benchmark-fixed M, and the acoustic index are recorded with source transformations.",
-    "Numerical 1990-2006 trapnet index inputs, composition likelihood weights, the source fitted model object, and age-specific N/F/M outputs were not recovered.",
+    "A 1990-2006 aggregate trapnet index for ages 3-9 is approximately digitized from the 2021 benchmark Figure 6; its exact identity with the 2026 production input array, digitization error, and likelihood weights are unresolved. Composition likelihood weights, the source fitted model object, and age-specific N/F/M outputs were not recovered.",
     "See source_reviews/ices_herring_gulf_bothnia_2026.md."
   ), stringsAsFactors = FALSE
 )
@@ -417,6 +461,7 @@ url_for <- c(
   "catch_at_age_table.csv" = report_url,
   "catch_weight_table.csv" = report_url,
   "maturity_table.csv" = report_url,
+  "trapnet_index_digitization.csv" = benchmark_doi,
   "page_329.png" = report_url,
   "table_left.png" = report_url,
   "table_right.png" = report_url
@@ -427,7 +472,11 @@ for (filename in names(url_for)) {
   manifest <- rbind(manifest, data.frame(
     assessment_id = assessment_id, cached_file = filename,
     original_filename = filename, source_url = unname(url_for[[filename]]),
-    retrieval_date = "pre-existing; original retrieval date not recorded",
+    retrieval_date = if (filename == "trapnet_index_digitization.csv") {
+      today
+    } else {
+      "pre-existing; original retrieval date not recorded"
+    },
     verified_date = today,
     sha256 = digest::digest(
       readBin(path, "raw", n = as.integer(file.info(path)$size)),
@@ -439,6 +488,8 @@ for (filename in names(url_for)) {
       "Text extracted from the cached official PDF for local table parsing."
     } else if (filename %in% c("catch_at_age_table.csv", "catch_weight_table.csv", "maturity_table.csv")) {
       "Tidy transcription from the specified official report table; the source PDF is also cached."
+    } else if (filename == "trapnet_index_digitization.csv") {
+      "Approximate digitization from Figure 6 of the 2021 WKCLuB benchmark; rounded to 0.01, not independently verified against the 2026 production array."
     } else if (grepl("\\.png$", filename)) {
       "Page image or crop used to inspect the source table."
     } else {

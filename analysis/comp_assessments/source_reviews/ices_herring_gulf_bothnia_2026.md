@@ -61,8 +61,15 @@ of the benchmark does not supply the missing 2026 native model files.
   is not applied a second time. The survey samples late September to early
   October, covers most of subdivision 30, and does not survey subdivision
   31. Coverage was reduced in 2021–2025. The report also describes a trapnet
-  index for 1990–2006, ages 3–9, but its numeric input series was not
-  recoverable from the report figures.
+  index for 1990–2006, ages 3–9. The annual aggregate points are approximately
+  digitized from Figure 6 (printed p. 14) of the 2021 WKCLuB benchmark report
+  and stored to the nearest 0.01 relative index unit. The 2026 report confirms
+  the period and age range, but does not publish the numeric series in a table;
+  exact identity with its production input array and digitization error cannot
+  be verified. The figure's uncertainty bars are not imported as observation
+  errors, and no likelihood weights are inferred. The aggregate series is
+  preserved in the database but is not used in the tinyAM likelihood, which
+  currently uses age-specific index observations.
 - The report describes hybrid F and an unweighted Fbar over ages 3–7. The
   ICES SAG provides annual recruitment at age 0, SSB, and Fbar for 1963–2025
   with a 90% central interval. It does not provide fitted N-at-age, F-at-age,

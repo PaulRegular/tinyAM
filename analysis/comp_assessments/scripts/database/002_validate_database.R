@@ -212,7 +212,7 @@ allowed_input_measures <- c(
   "fecundity_at_age", "proportion_female_at_age",
   "mean_catch_length", "length_at_first_capture", "MSY_proxy_length",
   "fixed_mortality_medium", "fixed_mortality_low", "fixed_mortality_high",
-  "relative_biomass_index", "abundance_index_cv", "biomass_index_cv",
+  "relative_biomass_index", "relative_abundance_index", "abundance_index_cv", "biomass_index_cv",
   "landings_proportion", "landings_numbers_at_age", "discard_numbers_at_age", "landings_fraction_at_age",
   "landings_weight_at_age", "discard_weight_at_age", "log_index_sd", "index_sd", "relative_precision_weight", "observation_likelihood_weight", "relative_standard_error", "larval_abundance_index", "environmental_covariate", "fraction_F_before_spawning",
   "fraction_M_before_spawning", "capelin_biomass_index"
@@ -359,7 +359,8 @@ for (name in c("inputs", "outputs")) {
   missing_observation <- name == "inputs" & (
     (x$type %in% c("catch", "index") & x$measure %in% c(
       "numbers_at_age", "index_by_age_group", "biomass_at_age",
-      "total_numbers", "total_biomass", "abundance_index_cv", "biomass_index_cv"
+      "total_numbers", "total_biomass", "relative_abundance_index",
+      "abundance_index_cv", "biomass_index_cv"
     )) |
     (x$type == "catch" & x$measure %in% c("landings_biomass", "discard_biomass"))
   )

@@ -242,6 +242,7 @@ catch_lower_bound
 catch_upper_bound
 proportion_at_age
 relative_biomass_index
+relative_abundance_index
 relative_precision_weight
 relative_standard_error
 abundance_index_cv
@@ -354,6 +355,13 @@ reported CVs as blank values with their source qualification.
 `relative_biomass_index` stores an aggregate relative index, such as standardized
 CPUE tuned to exploitable biomass. It is not an absolute biomass observation;
 use `basis = index_scale` and document the scale and model interpretation.
+
+`relative_abundance_index` stores an aggregate relative abundance index that
+does not have a physical count or biomass scale. Use `basis = index_scale`,
+preserve the reported or digitized index scale, and do not infer an unreported
+multiplier. Record any age range represented by the aggregate index in notes;
+leave `age` blank when the source reports one value for the age group as a
+whole.
 
 `landings_lower_bound` and `landings_upper_bound` preserve source bounds for a
 censored total-landings likelihood. Store each bound separately using the same

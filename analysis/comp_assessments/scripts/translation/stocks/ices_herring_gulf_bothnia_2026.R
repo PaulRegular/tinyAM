@@ -85,7 +85,7 @@ background <- c(
   "| Biology and SSB | Annual catch weights and maturity ogives are reported; source spawning settings are not available in the recovered outputs. | Use catch weights as the stock-weight proxy, annual maturity, and start-of-year SSB. | SSB is an approximate aggregate comparison. |",
   "| Outputs | Annual SSB, age-0 recruitment, and unweighted Fbar are available; age-specific N/F/M outputs were not recovered. | Compare aggregate SSB; show recruitment and Fbar as non-equivalent. | Total abundance and age-specific state comparisons remain unavailable. |",
   "",
-  "The BIAS survey occurs in late September to early October; 0.75 is an approximate within-year time. Table 4.3.6 values are already area-corrected and are not multiplied by AREA_CORR_FACTOR again. The assessment also uses a 1990-2006 trapnet index, but its numeric input series and likelihood details were not recoverable. The fit uses package-default starting values."
+  "The BIAS survey occurs in late September to early October; 0.75 is an approximate within-year time. Table 4.3.6 values are already area-corrected and are not multiplied by AREA_CORR_FACTOR again. The assessment also uses an aggregate trapnet CPUE index for ages 3-9 from 1990-2006. Its annual values are approximately digitized from Figure 6 of the 2021 WKCLuB benchmark and retained in the database; exact identity with the 2026 production input array, digitization error, and likelihood weights are unresolved. The existing tinyAM recipe does not use this aggregate series and continues to select the age-specific BIAS observations. The fit uses package-default starting values."
 )
 
 fit <- NULL
