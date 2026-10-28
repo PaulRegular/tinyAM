@@ -8,8 +8,13 @@ The governing question is:
 
 > **For the latest official stock unit, what inputs, assumptions, and outputs can be recovered from the most recent publicly accessible detailed sources for the assessment used for advice?**
 
-Source recovery is the primary task; tinyAM translation is secondary. For each
-stock, follow this order:
+Source recovery comes before translation. The latest assessment for the latest
+stock unit is primary whenever any run-specific detailed source material is
+recoverable, even if partial. A preceding stock definition is eligible only as
+a separate fallback when a documented search finds no run-specific detail for
+the latest current-unit assessment beyond summary advice. Never use that
+fallback to fill current-unit gaps. Assess tinyAM translation only after source
+coverage and limitations are recorded. For each stock, follow this order:
 
 1. Establish the latest official stock unit and the most recent assessment used
    for advice on that unit.
