@@ -3,6 +3,8 @@
 * `power(N, by = group)` in `q_form` estimates positive abundance exponents
   using abundance at survey time. Missing group labels retain p = 1 without
   removing observations. Effective and baseline catchability are reported separately.
+  A focused Northern Shelf haddock comparison reproduces the pinned 2026 SAM
+  likelihood and fit; see `analysis/sam_equivalence` for checks and limitations.
 
 * `rec_settings$init = "latent"` integrates unpenalized recruitment boundary
   states without an initial density or SD. The default `"free"` preserves
