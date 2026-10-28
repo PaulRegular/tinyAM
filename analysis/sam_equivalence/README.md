@@ -22,6 +22,13 @@ self-contained HTML dashboard. A failed run records its error and warnings.
 The script uses source parameters as starts for a numerical equivalence test;
 it does not claim a test of default-start convergence or tune failed models.
 
+To render both saved fits together without refitting, run
+`Rscript analysis/sam_equivalence/render_haddock.R`. This creates
+`results/haddock/haddock-comparison.html` and `SAM-reference.rds`. The SAM
+`tam_ref` uses native states, predictions, coefficients and available uncertainty;
+its Background page identifies aligned summary definitions and unavailable
+intervals. The curves overlap to numerical precision.
+
 Sources:
 
 - [Official 2026 assessment chapter](https://ndownloader.figshare.com/files/66104291).
