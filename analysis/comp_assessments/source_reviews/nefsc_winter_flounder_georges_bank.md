@@ -107,3 +107,17 @@ to improve agreement.
 The source files are cached locally under the gitignored
 analysis/comp_assessments/source_cache/ck_nefsc_americanus_5z/. The local
 manifest records retrieval date, source URLs, file contents and checksums.
+
+## Additional 2025 historical trajectories
+
+NOAA Stock SMART assessment 14074 provides annual total catch, SSB, fully
+selected F at ages 4–7 and age-1 recruitment for 1982–2024. All 2015–2024
+values agree with the report table within its rounding. The earlier values are
+now in the 2025 record; report values, projections and their uncertainty are
+unchanged. F is rounded to three decimal places to remove binary storage noise;
+no uncertainty is inferred. The 2025 age-specific inputs and fitted age
+surfaces remain unavailable, so the existing 2022 translation is unaffected.
+
+The [NOAA Stock SMART snapshot](https://github.com/NOAA-EDAB/stocksmart/tree/664c4237e26520b260a090e1821a2cee5d1cdf07)
+is cached locally under `source_cache/ck_nefsc_americanus_5z/` with revision
+and checksum in `stocksmart_manifest.csv`.

@@ -7,7 +7,7 @@ wham <- read_assessment("nefsc_winter_flounder_gb_2025_wham", database)
 vpa_inputs <- vpa$inputs
 vpa_index <- vpa_inputs[vpa_inputs$type == "index", , drop = FALSE]
 vpa_outputs <- vpa$outputs
-wham_inputs <- wham$inputs
+wham_inputs <- subset(wham$inputs, source_type == "official_table")
 
 stopifnot(
   nrow(vpa$stocks) == 1L,
