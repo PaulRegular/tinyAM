@@ -62,11 +62,12 @@ with appropriate \code{dimnames} (\verb{year × age} or \verb{year × age_block}
 \itemize{
 \item \strong{Recruitment & variability}
 \itemize{
-\item \code{log_r0} (fixed first-year log recruitment, always present)
+\item \code{log_r0} (first-year log recruitment, always present; fixed by default,
+integrated when \code{rec_settings$init = "latent"})
 \item \code{log_r}: absolute random log recruitment in eligible process years
 when the recruitment process is enabled;
 by default these are \code{dat$years[-1]}, named by year.
-\item \code{log_r_init}: additional free fixed boundary states when parent SSB lies
+\item \code{log_r_init}: additional unpenalized boundary states when parent SSB lies
 before the modeled period, named by year.
 \item \code{log_sd_r}: estimated recruitment SD unless supplied in \code{rec_settings$sd}
 or recruitment is deterministic (\code{process = "off"}).

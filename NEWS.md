@@ -1,5 +1,9 @@
 # tinyAM 0.1.1.9000
 
+* `rec_settings$init = "latent"` integrates unpenalized recruitment boundary
+  states without an initial density or SD. The default `"free"` preserves
+  fixed boundary parameters, independently of the subsequent process and N initialization.
+
 * Optional `weight$type` distinguishes complete stock and catch weights.
   Stock weights determine biomass and SSB; catch weights determine yield,
   catch targets and observed-catch hindcasts. Untyped and stock-only inputs

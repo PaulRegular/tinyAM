@@ -41,7 +41,8 @@
 #' mature biomass; see [tinyAM-model]. No extra parameters or process penalties
 #' are introduced. `N_plus`, `W`, and `P` are then included in `report()`.
 #' Initial older-age abundance, `log_r0`, and additional early recruitment
-#' boundary states remain supplied fixed states. See [recruitment_formulas].
+#' boundary states retain their supplied values during process simulation.
+#' See [recruitment_formulas] for fixed versus integrated initialization.
 #' RW processes retain their starting state because it has no process density.
 #' For N, the first `log_n` row is retained and its starting residual is computed
 #' against the newly simulated cohort prediction. Subsequent residuals follow
@@ -498,6 +499,7 @@ nll_fun <- function(par, dat, simulate = FALSE) {
       log_r = if (dat$rec$type == "off") setNames(log_recruitment[dat$rec$eligible], dat$years[dat$rec$eligible]) else log_r,
       log_obs = log_obs
     ))
+    sims$log_r0 <- par$log_r0
     if (!is.null(par$log_r_init)) sims$log_r_init <- par$log_r_init
     if (N_settings$init %in% c("free", "latent")) {
       sims$log_n0 <- log_n0

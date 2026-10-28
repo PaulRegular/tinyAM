@@ -521,7 +521,10 @@ tidy_par <- function(fit, interval = 0.95) {
   .par2df <- function(nm) {
     e <- est[[nm]]
     s <- se[[nm]]
-    if (is.matrix(e)) {
+    if (nm == "log_r0") {
+      df <- data.frame(coef = NA_character_, year = fit$dat$years[1L],
+        age = fit$dat$ages[1L], est = e, se = s, is_proj = FALSE)
+    } else if (is.matrix(e)) {
       df <- tidy_mat(e, value_name = "est")
       df$is_proj <- df$year %in% fit$dat$years[fit$dat$is_proj]
       df$se <- as.vector(s)

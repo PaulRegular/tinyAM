@@ -40,11 +40,12 @@
 #' **Created elements (when applicable) include:**
 #'
 #' - **Recruitment & variability**
-#'   - `log_r0` (fixed first-year log recruitment, always present)
+#'   - `log_r0` (first-year log recruitment, always present; fixed by default,
+#'     integrated when `rec_settings$init = "latent"`)
 #'   - `log_r`: absolute random log recruitment in eligible process years
 #'     when the recruitment process is enabled;
 #'     by default these are `dat$years[-1]`, named by year.
-#'   - `log_r_init`: additional free fixed boundary states when parent SSB lies
+#'   - `log_r_init`: additional unpenalized boundary states when parent SSB lies
 #'     before the modeled period, named by year.
 #'   - `log_sd_r`: estimated recruitment SD unless supplied in `rec_settings$sd`
 #'     or recruitment is deterministic (`process = "off"`).

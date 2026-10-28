@@ -9,7 +9,7 @@ prepare_tam(
   years = NULL,
   ages = NULL,
   N_settings = list(process = "iid", init = "exp", mu_form = NULL, sd_form = ~1),
-  rec_settings = list(process = "rw", mu_form = NULL, sd = NULL, phi = NULL),
+  rec_settings = list(process = "rw", init = "free", mu_form = NULL, sd = NULL, phi = NULL),
   F_settings = list(process = "rw", mu_form = NULL, sd_form = ~1, mean_ages = NULL),
   M_settings = list(process = "off", mu_form = NULL, mu_supplied = ~I(0.2), sd_form = ~1,
         age_breaks = NULL, first_dev_year = NULL, mean_ages = NULL),
@@ -41,7 +41,7 @@ weight and maturity are retained for abundance-based aggregation inside
 cohort residuals, \code{"rw"} for residuals that accumulate through time, or
 \code{"ar1"} for residuals correlated between years and ages. See \link{tinyAM-model}.
 \item \code{init}: \code{"exp"} (default), \code{"free"}, \code{"latent"}, \code{"mono"} or \code{"capped"}, independently of
-\code{process}. All use fixed first-year recruitment \code{log_r0} as the starting
+\code{process}. All use first-year recruitment \code{log_r0} as the starting
 anchor. \code{"exp"} uses deterministic survivorship; \code{"free"} estimates fixed
 older-age \code{log_n0} states; \code{"latent"} integrates them without an initial
 density. \code{"mono"} constrains abundance to decline from r0; \code{"capped"}
@@ -63,7 +63,12 @@ initial-abundance SDs remain separate. Random-effect SD terms are not enabled.
 \itemize{
 \item \code{process}: \code{"off"} for recruitment exactly following its mean formula,
 or \code{"rw"} (default), \code{"iid"}, or \code{"ar1"} for annual log-recruitment
-residuals. First-year recruitment remains a freely estimated fixed anchor.
+residuals. Boundary recruitment states are controlled by \code{init}.
+\item \code{init}: \code{"free"} (default) estimates first-year recruitment and additional
+pre-parent-SSB boundary states as fixed parameters; \code{"latent"} integrates
+them without an initial density or separate SD. Independent of \code{process},
+including \code{"off"}, and of older-age \code{N_settings$init}. Simulations condition
+on these states; joint uncertainty draws can vary them. See \link{recruitment_formulas}.
 \item \code{mu_form}: one-sided formula for the expected log recruitment. \code{NULL} is
 allowed for RW; off/IID/AR1 require an explicit formula, such as \code{~ 1} for a
 constant mean. Use \code{\link[=bh]{bh()}} or \code{\link[=ricker]{ricker()}} for a median stock-recruit curve
@@ -318,15 +323,15 @@ surface or a mean structure.
 \strong{Process options and guards}
 \itemize{
 \item Initial abundance is controlled by \code{N_settings$init}, independently of
-the subsequent N process. First-year recruitment is the fixed state
-\code{log_r0}. The default uses survivorship from recruitment under first-year
+the subsequent N process. First-year recruitment is the state
+\code{log_r0}, controlled separately by \code{rec_settings$init}. The default uses survivorship from recruitment under first-year
 total mortality Z, with no equilibrium plus-group correction.
 \item \code{"exp"} is the default: a parsimonious, comparatively stable nuisance-state
 initialization. More flexible choices are available when first-year data
 support them. \code{"free"} estimates unpenalized fixed \code{log_n0} states.
 \code{"latent"} integrates those states without an initial density, including
 when the subsequent N process is off. It resembles SAM's unpenalized
-older-age boundary but retains tinyAM's fixed first-year recruitment r0.
+older-age boundary; use \code{rec_settings$init = "latent"} to integrate first-year recruitment too.
 \item \code{"mono"} estimates non-increasing initial abundance from r0, including
 the plus group: \verb{log N0[a] = log r0 - cumsum(d_n0)[a-1]}. \code{"capped"}
 only requires each older abundance to be no greater than r0:
@@ -334,7 +339,7 @@ only requires each older abundance to be no greater than r0:
 allow exact ties, and require no N process or separate initial SD.
 The pooled plus group can naturally exceed a single age; constraining it
 is a deliberate biological assumption. Boundary Wald intervals need care.
-\item All choices estimate r0 as a fixed effect. Simulations condition on initial states;
+\item Recruitment initialization is independent of these choices. Simulations condition on initial states;
 joint uncertainty draws can vary fitted latent initial states. No
 mortality-history distribution is imposed on initial abundances.
 \item \code{M_settings$age_breaks} (vector of break points on ages)

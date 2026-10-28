@@ -1,6 +1,10 @@
 # Recruitment residuals act on absolute log recruitment, not additional states.
 .parse_recruitment <- function(dat) {
   settings <- dat$rec_settings
+  if (!is.character(settings$init) || length(settings$init) != 1L ||
+      is.na(settings$init) || !settings$init %in% c("free", "latent")) {
+    cli::cli_abort("rec_settings$init must be 'free' or 'latent'.")
+  }
   type <- settings$process
   if (!is.character(type) || length(type) != 1L || is.na(type) ||
     !type %in% c("off", "rw", "iid", "ar1")) {
@@ -226,9 +230,13 @@
 #' than introducing future-year coefficients. Numeric year trends continue to be
 #' evaluated at the projected year; other covariates retain their terminal values.
 #'
-#' First-year `log_r0` is always a free fixed anchor. Any additional recruitment
-#' years whose parent SSB precedes the modeled period are also free fixed states
-#' (`log_r_init`), without process penalties. Later `log_r` values are absolute
+#' First-year `log_r0` and additional recruitment years whose parent SSB precedes
+#' the modeled period (`log_r_init`) have no initial density. With
+#' `rec_settings$init = "free"` (default) they are fixed parameters; `"latent"`
+#' integrates them through the Laplace approximation, independently of the
+#' subsequent process, including `process = "off"`. There is no separate initial
+#' SD. Process simulations condition on these states; joint uncertainty draws
+#' can vary them. Later `log_r` values are absolute
 #' random log states when the process is enabled; residuals are calculated
 #' internally, without an additional
 #' annual random-effect block. The relationship does not reconstruct pre-model

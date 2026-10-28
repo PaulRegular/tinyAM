@@ -252,7 +252,7 @@ fit_tam <- function(
   years = NULL,
   ages = NULL,
   N_settings = list(process = "iid", init = "exp", mu_form = NULL, sd_form = ~1),
-  rec_settings = list(process = "rw", mu_form = NULL, sd = NULL, phi = NULL),
+  rec_settings = list(process = "rw", init = "free", mu_form = NULL, sd = NULL, phi = NULL),
   F_settings = list(process = "rw", mu_form = NULL, sd_form = ~1, mean_ages = NULL),
   M_settings = list(
     process = "off", mu_form = NULL, mu_supplied = ~ I(0.2), sd_form = ~1,
@@ -309,6 +309,9 @@ fit_tam <- function(
   }
 
   ran <- c(if (dat$F_settings$process != "off") "log_f", if (dat$rec$type != "off") "log_r", .formula_random_parameters(dat))
+  if (dat$rec_settings$init == "latent") {
+    ran <- c(ran, intersect(c("log_r0", "log_r_init"), names(par)))
+  }
   if (dat$N_settings$init == "latent") {
     ran <- c(ran, "log_n0")
   }

@@ -82,7 +82,9 @@ process. Write \eqn{b_a=\log N_{1,a-1}-Z_{1,a-1}}, for \eqn{a=2,\ldots,A}.
 With \code{init = "exp"}, \eqn{\log N_{1,a}=b_a}. With \code{"free"}, these log
 abundances (\code{log_n0}) are separate unpenalized fixed parameters. With
 \code{"latent"}, the same older-age states are integrated without an initial
-density, while r0 remains fixed. For \code{"mono"},
+density. Recruitment boundary states, including r0, are fixed by default;
+\code{rec_settings$init = "latent"} integrates them without an initial density.
+For \code{"mono"},
 \eqn{\log N_{1,a}=\log r_0-\sum_{j=2}^a d_j}; for \code{"capped"},
 \eqn{\log N_{1,a}=\log r_0-d_a}, with \eqn{d_j\ge0}.
 These fixed constraints include the terminal plus group and allow ties.

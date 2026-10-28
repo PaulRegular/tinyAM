@@ -78,7 +78,9 @@
 #' With `init = "exp"`, \eqn{\log N_{1,a}=b_a}. With `"free"`, these log
 #' abundances (`log_n0`) are separate unpenalized fixed parameters. With
 #' `"latent"`, the same older-age states are integrated without an initial
-#' density, while r0 remains fixed. For `"mono"`,
+#' density. Recruitment boundary states, including r0, are fixed by default;
+#' `rec_settings$init = "latent"` integrates them without an initial density.
+#' For `"mono"`,
 #' \eqn{\log N_{1,a}=\log r_0-\sum_{j=2}^a d_j}; for `"capped"`,
 #' \eqn{\log N_{1,a}=\log r_0-d_a}, with \eqn{d_j\ge0}.
 #' These fixed constraints include the terminal plus group and allow ties.
