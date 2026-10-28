@@ -11,6 +11,7 @@ stopifnot(utils::packageDescription("stockassessment")$RemoteSha == revision)
 root <- normalizePath("analysis/sam_equivalence/results", mustWork = TRUE)
 selection <- if (length(args) > 1L) match.arg(args[2L], c("baseline", "all")) else "all"
 cases <- if (selection == "baseline") "nscodbiopro" else c("nscodbiopro", "nscodXtraSd", "codIN3Ben")
+failed <- FALSE
 for (case in cases) {
   folder <- file.path(root, "fixtures", case)
   samjr_fixture(case, folder)
@@ -31,9 +32,11 @@ for (case in cases) {
   dir.create(out, recursive = TRUE, showWarnings = FALSE)
   if (inherits(native, "error")) {
     writeLines(c(warnings, conditionMessage(native)), file.path(out, "source-failure.txt"))
+    failed <- TRUE
     next
   }
   saveRDS(native, file.path(out, "native.rds"))
+  unlink(file.path(out, "source-failure.txt"))
   for (name in names(native)) {
     label <- paste(case, name, sep = "-")
     result <- tryCatch(withCallingHandlers(samjr_compare(native[[name]], label),
@@ -42,10 +45,14 @@ for (case in cases) {
     if (inherits(result, "error")) {
       writeLines(conditionMessage(result), file.path(out, paste0(name, "-failure.txt")))
       cat(label, "FAILED:", conditionMessage(result), "\n")
+      failed <- TRUE
     } else {
+      unlink(file.path(out, paste0(name, "-failure.txt")))
       write.csv(result$checks, file.path(out, paste0(name, "-checks.csv")), row.names = FALSE)
       print(result$checks)
+      failed <- failed || any(!result$checks$passed)
     }
   }
   writeLines(unique(warnings), file.path(out, "warnings.txt"))
 }
+if (failed) quit(status = 1)

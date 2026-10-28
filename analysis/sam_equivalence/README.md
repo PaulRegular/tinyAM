@@ -1,18 +1,95 @@
-# Northern Shelf haddock: SAM likelihood equivalence
+# SAM likelihood equivalence checks
 
 ## SAMjr fixture comparisons
 
-`compare_samjr.R SAM-library baseline` reproduces the supplied-biology `fit0`
-from SAMjr's `nscodbiopro` at revision
-`0384774a3f2f8ec3dc3330375998bd73ef6bbe7c`, using the pinned native SAM below.
-The first run matched joint objectives within 2.3e-13, scaled gradients within
-6.9e-13, scaled Hessians within 1.6e-12 and optimized objectives within 6.9e-13.
-It uses native fitted parameters as starts, not a default-start convergence test.
-Fixtures, input hashes, native fits, warnings and check tables are retained in
-the ignored `results/` directory. The survey-only last year's missing catch
-weights are padded solely for tinyAM's complete grid; that year's yield is not
-a source comparison. Source scripts are evaluated only through the relevant
-fit, without enabling later biological processes or changing specifications.
+Run from the repository root with R 4.4 and the pinned SAM library:
+
+```sh
+Rscript analysis/sam_equivalence/compare_samjr.R SAM-library all
+```
+
+Use `baseline` instead of `all` for only `nscodbiopro`'s supplied-biology `fit0`.
+Sources are pinned to SAMjr
+`0384774a3f2f8ec3dc3330375998bd73ef6bbe7c` and native SAM
+`1cc464b80f6f2a4a38b35cce276f13e521761da3` (stockassessment 0.12.0).
+`fixtures.csv` records Git blob identifiers and content hashes; the runner
+downloads missing files and checks hashes, normalizing line endings and trailing
+empty lines for portability. Fits, warnings, input provenance and check tables
+remain under the ignored `results/` directory. Every attempted fit is retained;
+failures and failed tolerances give a nonzero exit status.
+
+All four fitted specifications pass the 33 checks each (132 in total). No scientific settings
+or failed configurations were tuned. Native fitted values initialize the main
+comparison; one reproducible perturbation of 0.01 SD on the unconstrained
+coordinates and two calendar-year retrospective peels are also fitted by both
+packages. These are not tests of tinyAM's default starting values.
+
+| Specification | Maximum joint-objective difference | Optimized-objective difference | Largest scaled SE difference | Largest relative N difference across perturbed/peel fits |
+|---|---:|---:|---:|---:|
+| `nscodbiopro`: supplied-biology baseline | 2.28e-13 | 6.83e-13 | 4.50e-12 | 8.33e-6 |
+| `nscodXtraSd`: standard | 2.28e-13 | 6.83e-13 | 1.31e-12 | 2.50e-6 |
+| `nscodXtraSd`: extra SD | 5.69e-13 | 1.60e-12 | 2.29e-12 | 2.31e-6 |
+| `codIN3Ben`: unfished young ages | 6.83e-13 | 1.71e-12 | 1.15e-9 | 3.26e-5 |
+
+Checks cover joint objectives, gradients and Hessians at native and perturbed
+coordinates; Laplace objectives; estimated fixed/common random-coordinate
+counts; observed-row identities/counts; fitted parameters and their SEs; N/F
+surfaces; observation predictions; marginal AIC; and aligned recruitment, SSB,
+biomass, catch, catchability and abundance-weighted Fbar. Normal 0.975 quantiles align interval
+probabilities. Fbar is calculated using native N and F with tinyAM's weighting;
+SAM's native arithmetic Fbar intervals are not treated as comparable intervals.
+
+The preset limits are absolute joint-objective difference 1e-7, scaled derivative
+differences 1e-6, Laplace-objective difference 1e-5, and optimized objectives and
+appropriately scaled summaries 1e-4. Scaled differences divide by
+`1 + abs(native value)`; relative N differences divide by native N. Count
+differences must be exactly zero. These are numerical-tolerance checks, not
+claims of identical floating-point bits.
+
+Across the four fixtures, the largest scaled derivative difference was
+1.60e-12 and the largest Laplace-objective difference was 1.71e-12.
+The largest scaled difference among the aligned estimate/interval tables was
+6.51e-10 (recruitment intervals); catchability-table differences were at most
+1.34e-13. All fitted and perturbed-start attempts and both peels per fixture
+passed the numerical-success checks.
+
+`nscodXtraSd` binds actual F at ages 5--6. Its additional observation SD is an
+estimated multiplicative factor for catch observations in 1993--2005, exactly
+represented by a numeric indicator in `catch_settings$sd_form`. `codIN3Ben`
+fixes F at ages 1--2 to zero and shares F at ages 9--10. It also contains 115
+missing observations integrated as auxiliary Normal variables in native SAM.
+Their independent densities integrate to one. Joint comparisons subtract those
+auxiliary densities and their derivatives, comparing only the common states;
+the original native fit and full Laplace objective are unchanged. Native and
+tinyAM random counts therefore differ by those 115 auxiliary coordinates.
+
+Survey-only final years without native catch weights are padded solely for
+tinyAM's complete input grid; those years' yield is not a source comparison.
+Native retrospective calls use common calendar cutoffs across fleets, rather
+than removing each fleet's own final observations. Source scripts are evaluated
+only through the selected fits; later biological processes are not enabled.
+
+Render a saved two-model dashboard without refitting:
+
+```sh
+Rscript analysis/sam_equivalence/render_samjr.R analysis/sam_equivalence/results/samjr/nscodXtraSd/extra_sd.rds
+```
+
+It writes a standalone comparison HTML and native `tam_ref` beside the RDS.
+Neither includes newly calculated OSA residuals. OSA and seeded process-draw
+equivalence are deferred; matching Gaussian samples requires matching parameter
+ordering and factorization, not only matching seeds.
+
+An exploratory package-data trial combining unfished youngest ages, shared
+older F, latent initial abundance and a freely estimated catch SD drove catch
+SD to about 4e-5. Projection updates retained identical objectives/parameters
+but failed positive-definite uncertainty checks. That trial is not an official
+SAM fixture and was not rescued by tuning; its warnings remain with the ignored
+validation output. The routine integration test uses the established `exp`
+initialization. Likelihood equivalence does not establish identifiability, and
+intrinsic-process AIC/cAIC normalization warnings remain applicable.
+
+## Northern Shelf haddock
 
 This focused comparison tests whether tinyAM can reproduce the **2026 official
 Northern Shelf haddock SAM run**, `NShaddock_WGNSSK2026_Run1`, over 1972–2026,
@@ -111,10 +188,38 @@ definitions before comparing summaries; they do not change the likelihood.
 
 ## Package validation
 
-On R 4.6.1, the complete package suite passed all 3,807 expectations with no
+On R 4.6.1, the complete package suite passed all 3,867 expectations with no
 failures, warnings or skips. `R CMD check --no-manual` returned **Status: OK**,
-including examples and documentation checks. Focused regression tests cover
-latent recruitment boundaries, power-formula validation and derivatives,
-simulation, warm starts, projections, hindcasts, dashboard rendering and OSA
-row identities. These checks complement the pinned SAM comparison above;
-they do not remove its statistical advisories or default-start limitation.
+including examples and documentation checks. The focused F-block file passed
+60 expectations. Regression coverage includes singleton/default density and
+gradient parity, explicit versus legacy M boundaries, structural zeros, unique
+state densities, finite derivatives, single-block correlation removal, warm
+starts, simulations, catch targets, information criteria and dashboard rendering.
+The existing suite also exercises catch weights, plus-age biology, projections,
+retrospectives, hindcasts and OSA extraction.
+
+The 69 standalone comparative-assessment scripts were run without changing
+recipes: 59 passed and 10 failed. The failures were reproduced on unchanged
+`main` (`96c670d`):
+
+- `test_atka_translation.R`, `test_bc_canary_translation.R`,
+  `test_ebs_cod_translation.R`, `test_ebs_translation.R`,
+  `test_goa_cod_translation.R`, `test_goa_translation.R`,
+  `test_pacific_M_priors.R` and `test_recipe_blocks.R` have expectations that
+  differ from the current recipes or observation structure.
+- `test_coastal_hake_translation.R` fails with the local RTMB/R error
+  `attempt to set an attribute on NULL` while setting `environment(partial)`.
+- `test_age_subsets.R` fails its direct reduced-age fit's positive-definite
+  uncertainty requirement on both branches. Earlier reduced-age checks pass.
+  The original default F calculation was retained after an equivalent
+  simplification changed rounding enough to fail an earlier fit in this file.
+
+The dashboard preview script passed on direct rerun after the isolated runner
+hit its 180-second limit during concurrent validation. All automated renders use
+`open_file = FALSE`. The saved SAM comparison HTML contains both model traces
+and 56 widgets; static widget and reference-table checks passed. Interactive
+browser inspection could not be completed because the available browser tool
+rejects local-file URLs. Rotation and control interaction remain a manual check.
+
+These results complement the pinned SAM comparison; they do not remove its
+statistical advisories, exploratory uncertainty failure or default-start limitation.
