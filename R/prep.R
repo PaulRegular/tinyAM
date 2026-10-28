@@ -507,7 +507,10 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #'   blocks. See [mono()] for independent non-decreasing curves by survey.
 #'   Structured effects such as `~ survey + ar1(year, by = survey)` allow shared
 #'   annual changes across ages. `~ survey + logistic(age, by = survey)` fits rising
-#'   selectivity curves. See [formula_effects] for assumptions and constraints.
+#'   selectivity curves. `~ q_key + power(N, by = q_power_group)` allows
+#'   abundance-dependent catchability using internally calculated abundance at
+#'   survey time. Missing power-group labels mean p = 1, not missing observations.
+#'   Powers require the log q link. See [power()] and [formula_effects].
 #' - `q_link`: `"log"` (default) allows any positive catchability; `"logit"`
 #'   restricts catchability to between zero and one. Use the logit link only
 #'   when the survey index has an absolute abundance scale and this restriction
@@ -810,6 +813,9 @@ prepare_tam <- function(
   .check_sd_terms(dat, "index")
   q_design <- .parse_q_formula(dat$index_settings$q_form, dat$obs$index)
   dat[names(q_design)] <- q_design
+  if (!is.null(dat$q_power) && dat$index_settings$q_link != "log") {
+    cli::cli_abort("power() requires index_settings$q_link = 'log'.")
+  }
   .check_q_terms(dat)
   dat$N_modmat <- .parse_mean_formula(dat$N_settings$mu_form, dat, "N")$matrix
   dat$F_terms <- dat$M_terms <- list()

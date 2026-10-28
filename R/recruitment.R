@@ -31,6 +31,7 @@
     phi = fixed(settings$phi, "phi", 1, TRUE)
   )
   form <- settings$mu_form
+  if (.contains_power(form)) cli::cli_abort("power() is only supported in index_settings$q_form.")
   if (is.null(form)) {
     if (type != "rw") cli::cli_abort("rec_settings$mu_form is required for deterministic or IID/AR1 recruitment. Use ~ 1 for a constant mean.")
     form <- ~1

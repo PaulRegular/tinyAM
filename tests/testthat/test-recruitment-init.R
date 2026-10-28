@@ -53,4 +53,7 @@ test_that("fits classify initial recruitment correctly and preserve warm starts"
   explicit <- update(default_fit, rec_settings = list(init = "free"),
     start_par = default_fit, silent = TRUE)
   expect_equal(explicit$opt$objective, default_fit$opt$objective, tolerance = 1e-5)
+  projected <- update(f, proj_settings = list(n_proj = 1, F_mult = 1), start_par = f, silent = TRUE)
+  expect_true("log_r0" %in% projected$obj$env$.random)
+  expect_true(any(projected$pop$recruitment$is_proj))
 })

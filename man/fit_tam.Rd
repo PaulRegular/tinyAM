@@ -186,7 +186,10 @@ the intercept is removed from \code{sd_form} so supplied SDs act as offsets.
 blocks. See \code{\link[=mono]{mono()}} for independent non-decreasing curves by survey.
 Structured effects such as \code{~ survey + ar1(year, by = survey)} allow shared
 annual changes across ages. \code{~ survey + logistic(age, by = survey)} fits rising
-selectivity curves. See \link{formula_effects} for assumptions and constraints.
+selectivity curves. \code{~ q_key + power(N, by = q_power_group)} allows
+abundance-dependent catchability using internally calculated abundance at
+survey time. Missing power-group labels mean p = 1, not missing observations.
+Powers require the log q link. See \code{\link[=power]{power()}} and \link{formula_effects}.
 \item \code{q_link}: \code{"log"} (default) allows any positive catchability; \code{"logit"}
 restricts catchability to between zero and one. Use the logit link only
 when the survey index has an absolute abundance scale and this restriction

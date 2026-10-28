@@ -129,6 +129,8 @@ variation in log observation SD, not observation SD itself.
 \item \code{log_q} for \code{q_link = "log"}, or \code{logit_q} for \code{q_link = "logit"}
 (length \code{ncol(dat$q_modmat)}). Zero coefficients start q at 1 or 0.5,
 respectively, before any \code{\link[=mono]{mono()}} increments.
+\item \code{log_q_power}: log positive exponents for \code{\link[=power]{power()}}, named by group,
+initialized at zero (p = 1), estimated as fixed effects.
 \item \code{dq} only for \code{\link[=mono]{mono()}} terms (length \code{ncol(dat$q_mono_modmat)}):
 fixed non-negative increments on the selected q-link scale, initialized to \code{0.05}
 for a nearly flat curve and bounded below by zero in \code{\link[=fit_tam]{fit_tam()}}. Names

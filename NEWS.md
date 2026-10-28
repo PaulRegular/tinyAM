@@ -1,5 +1,9 @@
 # tinyAM 0.1.1.9000
 
+* `power(N, by = group)` in `q_form` estimates positive abundance exponents
+  using abundance at survey time. Missing group labels retain p = 1 without
+  removing observations. Effective and baseline catchability are reported separately.
+
 * `rec_settings$init = "latent"` integrates unpenalized recruitment boundary
   states without an initial density or SD. The default `"free"` preserves
   fixed boundary parameters, independently of the subsequent process and N initialization.

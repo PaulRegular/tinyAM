@@ -88,6 +88,9 @@
       start <- start[!grepl("^(log_q|logit_q$|dq$|eta_q_|log_sd_q_|logit_phi_q_|q_a50_|log_q_slope_)", names(start))]
       cli::cli_inform("Catchability starts were omitted because q_link changed.")
     }
+    if (!is.null(start$log_q_power)) {
+      start$log_q_power <- .q_power_starts(start$log_q_power, source$dat, dat)
+    }
     for (component in c("N", "F", "M", "rec")) {
       name <- switch(component, N = "mu_n", F = "log_mu_f", M = "mu_m", rec = "rec_beta")
       if (is.null(start[[name]])) next

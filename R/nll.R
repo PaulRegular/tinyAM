@@ -328,6 +328,11 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   log_pred[ic] <- log_N_obs[ic] - log(Z_obs[ic]) + log(-expm1(-Z_obs[ic])) + log(F_obs[ic])
 
   ii <- obs_map$type == "index"
+  if (!is.null(dat$q_power)) {
+    log_q_base <- log_q_obs
+    q_power <- .q_power_values(par, dat)
+    log_q_obs <- log_q_base + (q_power - 1) * (log_N_obs[ii] - Z_obs[ii] * samp_time[ii])
+  }
   log_pred[ii] <- log_q_obs + log_N_obs[ii] - Z_obs[ii] * samp_time[ii]
 
   # Internal reporting modes share the fitted population and observation equations.
@@ -456,6 +461,11 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   REPORT(log_obs)
   REPORT(sd_obs)
   REPORT(log_q_obs)
+  if (!is.null(dat$q_power)) {
+    REPORT(log_q_base)
+    REPORT(q_power)
+    ADREPORT(log_q_base)
+  }
   q_link_prediction <- if (identical(index_settings$q_link, "logit")) {
     if (any(vapply(dat$q_terms, function(term) term$type == "logistic", logical(1)))) {
       log_q_obs - log(-expm1(log_q_obs))

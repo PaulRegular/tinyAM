@@ -102,6 +102,8 @@
 #'   - `log_q` for `q_link = "log"`, or `logit_q` for `q_link = "logit"`
 #'     (length `ncol(dat$q_modmat)`). Zero coefficients start q at 1 or 0.5,
 #'     respectively, before any [mono()] increments.
+#'   - `log_q_power`: log positive exponents for [power()], named by group,
+#'     initialized at zero (p = 1), estimated as fixed effects.
 #'   - `dq` only for [mono()] terms (length `ncol(dat$q_mono_modmat)`):
 #'     fixed non-negative increments on the selected q-link scale, initialized to `0.05`
 #'     for a nearly flat curve and bounded below by zero in [fit_tam()]. Names
@@ -203,6 +205,9 @@ make_par <- function(dat) {
     )
   }
   par <- c(par, .q_term_parameters(.formula_terms(dat)))
+  if (length(dat$q_power$levels)) {
+    par$log_q_power <- stats::setNames(numeric(length(dat$q_power$levels)), dat$q_power$levels)
+  }
   if (!is.null(dat$F_mono_modmat)) {
     par$dmu_f <- setNames(rep(.05, ncol(dat$F_mono_modmat)), colnames(dat$F_mono_modmat))
   }

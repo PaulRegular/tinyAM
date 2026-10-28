@@ -292,6 +292,13 @@
 #' (1-e^{-Z_{t,a}}),\qquad
 #' \widetilde I_i=q_i N_{t_i,a_i}e^{-s_i Z_{t_i,a_i}},}
 #' where \eqn{s_i\in[0,1]} is survey sampling time within the year.
+#' With [power()] in `q_form`, write \eqn{A_i=N_{t_i,a_i}e^{-s_iZ_{t_i,a_i}}}.
+#' The log link then gives
+#' \deqn{q_i=q_{0,i}A_i^{p_i-1},\qquad \widetilde I_i=q_{0,i}A_i^{p_i},
+#' \qquad p_i=\exp(\gamma_i)>0.}
+#' Ordinary and other q terms determine \eqn{q_0}. Abundance is not centered;
+#' this retains the usual SAM power relationship and its baseline-q sharing.
+#' Missing power-group labels fix p to one while retaining the observation.
 #' For each positive observation \eqn{Y_i}, independently conditional on states,
 #' \deqn{\log Y_i\sim N(\log\widetilde Y_i,\tau_i^2),\qquad
 #' \tau_i=\tau_i^{supplied}\exp(X_{sd,i}\beta_{sd}).}
@@ -314,7 +321,8 @@
 #' ## Likelihood and inference
 #'
 #' The joint negative log-likelihood is minus the sum of recruitment innovation,
-#' active process, random initial-age, and observation log densities. Gaussian
+#' active process, formula-effect, and observation log densities. Unpenalized
+#' initial states have no initial density. Gaussian
 #' normalizing constants are retained; there are no added hyperparameter priors.
 #' Observation densities are evaluated on log data. The response Jacobian
 #' \eqn{-\sum_i\log Y_i} is omitted because it is constant in the parameters
@@ -323,6 +331,9 @@
 #'
 #' [fit_tam()] integrates `log_r`, active `log_n`, `log_f`, active `log_m`,
 #' and `log_n0` for `init = "latent"` using RTMB's Laplace approximation.
+#' `rec_settings$init = "latent"` also integrates `log_r0` and any `log_r_init`
+#' boundary states. Their EDF is counted with other initial effects, separately
+#' from subsequent recruitment innovations. Powers remain fixed effects.
 #' All remaining estimated parameters, including free `log_n0`, are fixed
 #' effects optimized by `nlminb`; `dq` has a zero lower bound. Uncertainty is a
 #' local Gaussian approximation from curvature, with delta-method uncertainty
