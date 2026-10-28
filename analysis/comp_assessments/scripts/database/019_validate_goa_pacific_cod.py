@@ -1,6 +1,8 @@
 """Check Pacific cod native records and preservation of other assessments."""
 import csv
+import hashlib
 import io
+import re
 import subprocess
 import sys
 from collections import Counter, defaultdict
@@ -52,7 +54,18 @@ for r in mortality:
  assert float(r['value'])==(.84 if elevated else .5)
  assert float(r['se'])==(.053 if elevated else .023)
  assert not r['lwr'] and not r['upr']
-previous=subprocess.check_output(['git','show','HEAD:analysis/comp_assessments/database/inputs.csv'],cwd=root).decode('utf-8-sig')
+previous_blob=subprocess.check_output(['git','show','HEAD:analysis/comp_assessments/database/inputs.csv'],cwd=root)
+if previous_blob.startswith(b'version https://git-lfs.github.com/spec/v1'):
+ match=re.search(rb'oid sha256:([0-9a-f]{64})',previous_blob)
+ assert match, 'Could not read the committed LFS pointer for inputs.csv'
+ oid=match.group(1).decode('ascii')
+ lfs_objects=Path(subprocess.check_output(['git','rev-parse','--git-path','lfs/objects'],cwd=root,text=True).strip())
+ if not lfs_objects.is_absolute(): lfs_objects=root/lfs_objects
+ previous_path=lfs_objects/oid[:2]/oid[2:4]/oid
+ assert previous_path.is_file(), f'Committed inputs.csv LFS object is not cached: {oid}'
+ previous_blob=previous_path.read_bytes()
+ assert hashlib.sha256(previous_blob).hexdigest()==oid, 'Cached inputs.csv LFS object failed its SHA-256 check'
+previous=previous_blob.decode('utf-8-sig')
 curated_ids={
  'dfo_cod_2j3kl_2025','ices_cod_north_sea_2025','ices_cod_northeast_arctic_2026',
  'ices_haddock_north_sea_2026','ices_herring_north_sea_2026',

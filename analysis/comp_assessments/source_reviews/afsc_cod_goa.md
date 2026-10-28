@@ -1,6 +1,6 @@
 # Gulf of Alaska Pacific cod: official-assessment source review
 
-Status: canonical partial record afsc_cod_goa_2026 imported. Inputs and reported summary outputs are transcribed, including annual sum apical F from Table 2.9; numerical N-at-age and F-at-age surfaces from the current official run have not been recovered.
+Status: canonical partial record afsc_cod_goa_2026 imported. Original observations and reported summary outputs are transcribed. Beginning-of-year N-at-age and fleet-specific and summed F-at-age surfaces have now been recovered from a run-matched SS3 report reconstruction. Age-specific uncertainty and several model-input details remain unavailable.
 Charbonneau identifier: AFSC_GOA_Gadus_macrocephalus.
 
 ## Currentness check as of 2026-10-28
@@ -55,6 +55,14 @@ The control uses estimated natural mortality with a temporal block including 201
 
 An older author repository, https://github.com/pete-hulson/goa_pcod at facf41573f9a0b609d0096611bc9302aaab43abe, was inspected initially; the current report's directly linked repository is preferred. Earlier 2024 numerical files are context only, not substitutes for the current official run.
 
+## Reconstructed native age-specific outputs
+
+The report-linked January archive at `e632807e4947686c16caf99b864bfe8466f8dbca` supplies the Model 24.0 data and control files. The saved management-run `ss3.par` at `facf41573f9a0b609d0096611bc9302aaab43abe` matches the current report's objective (2108.97949000959) and maximum gradient (6.44551037822919e-06; reported as 6.45e-6). Using the official Stock Synthesis 3.30.22.1 executable, the archived files and saved parameters reproduced `Report.sso` with a single parameter evaluation (`-maxfn 0 -phase 50 -nohess`); this did not refit or change the saved estimates. The native inputs, parameter file, executable and generated report are cached locally and listed with checksums in `source_cache/afsc_cod_goa_2026/manifest.csv`.
+
+`NUMBERS_AT_AGE report:35` supplies beginning-of-year N for ages 0–10 (age 10 is the plus group) in 1977–2025. `F_AT_AGE report:39` supplies annual F at ages 0–10 for the three removal fleets, FshTrawl, FshLL and FshPot, over the same years. The canonical outputs now retain all three fleet surfaces and their age-specific sum. N is recorded in thousand fish and F in per year. The summed F is a derived common surface; it is not the annual Sum Apical F reported in Table 2.9. The native age surfaces have no age-specific SE because uncertainty estimation was not run. No uncertainty has been inferred.
+
+Cross-checks support the recovered scale and run identity: age-0 N divided by 1e6 matches the published recruitment series to a maximum absolute difference of 0.004886 billion fish, within the 0.0051 rounding bound; reported spawning output divided by two matches female SSB in Table 2.7 to 0.5 tonnes or less for all 49 years. The reconstructed report contains one warning about a time-block pattern ending at the terminal year and a note about the revised forecast-year protocol; neither changed the saved parameter estimates. The assessment remains partial because source coverage and interpretation gaps remain elsewhere.
+
 ## Native observation inventory
 
 The source-specific inventory reader cached in inventory_native_observations.py checks column counts and section sentinels, and stages every source cell in native_observation_sections_raw.csv. It found 150 catch rows: three initial-equilibrium rows and 147 historical fleet/year catches (49 years for each of trawl, longline/jig and pot). The index section has 110 source rows, of which 52 have positive year and fleet codes: 17 bottom-trawl indices and 35 longline indices. ADFG/Seine definitions do not imply active fitted indices.
@@ -94,14 +102,14 @@ The composition schema validator checks finite numeric dimensions, non-negative 
 
 Assessment afsc_cod_goa_2026 contains 12,689 input cells: 147 catch totals, 52 index observations, 52 index log SDs, 46 environmental covariates, 3,822 length-proportion cells and 8,570 conditional-age-proportion cells. The 1,039 composition observations retain supplied sample sizes, native length labels/conditioning bounds, age-error codes and partitions. The outputs table contains 147 historical biomass/recruitment summaries, 539 repeated year/age representations of two shared M estimates, 49 annual sum apical-F estimates, five growth-parameter estimates, and two published baseline-q estimates (742 output rows total). The assessment has 34 documented assumptions.
 
-The source-specific validator checks each composition cell against the cached native data, verifies observation counts, sample sizes and timing, and confirms that adding optional composition dimensions leaves all earlier input values unchanged. These checks and full database structural validation pass. All completeness statuses remain partial. Equilibrium inputs, selectivity details, interpretation of environmental-covariate units and N/F-at-age outputs still require work. Published baseline q estimates and source ageing-error vectors are recorded; they do not complete the assessment.
+The source-specific validator checks each composition cell against the cached native data, verifies observation counts, sample sizes and timing, and confirms that adding optional composition dimensions leaves all earlier input values unchanged. These checks and full database structural validation pass. All completeness statuses remain partial. Equilibrium inputs, selectivity details, interpretation of environmental-covariate units and age-specific uncertainty still require work. Published baseline q estimates and source ageing-error vectors are recorded; they do not complete the assessment.
 ## Additional material input review
 
 The control links longline catchability to environmental variable 1 (env_var&link=101). All 46 supplied annual temperature-covariate values, 1979–2024, are now represented verbatim as environmental covariates, including negative values. Native scaling units remain unresolved; no restandardization was applied. Source-specific validation checks every year/value against the data section.
 
 All 16 mean-size-at-age observations have negative fleet code -4 and therefore no fitted likelihood contribution. Their absence from canonical fitted observations is intentional; source records remain cached. Three initial-equilibrium catch values and their supplied SEs are retained in fleet-specific assumptions because native year -999 is not a calendar year. The two ageing-error mean/SD definitions (age 0 through age 10) are retained once as numerical assumption vectors. Definition 2's -1 mean flags must not be interpreted as measured negative ages or an empirical misclassification matrix.
 
-Pacific cod coverage is now 12,689 input cells, 742 outputs and 34 assumptions. Structural and source-specific validation pass. Selectivity details, covariate units and fitted N/F-at-age surfaces remain incomplete; all statuses remain partial. The earlier gap list is superseded for temperature, equilibrium catches and source ageing-error vectors.
+Pacific cod coverage is now 12,689 input cells, 3,437 outputs and 34 assumptions. Structural and source-specific validation pass. Selectivity details, covariate units and age-specific uncertainty remain incomplete; all statuses remain partial. The earlier gap list is superseded for temperature, equilibrium catches, source ageing-error vectors and N/F-at-age surfaces.
 ## Annual apical fishing mortality
 
 Table 2.9 reports annual Sum Apical F and SD[F] for 1977–2025. These rounded
@@ -115,9 +123,9 @@ and rounds their estimates and SDs to three decimals. Script: https://github.com
 
 Table 2.6 reports estimated M=0.50 (SD 0.023) outside the 2014–2016 block and M=0.84 (SD 0.053) inside it. The native control specifies age-constant M (natM_type=0) with replacement block 4 covering exactly 2014–2016. The database now expands these rounded published estimates to 1977–2025, ages 0–10+, as 539 mortality output cells. These are repeated representations of two shared parameters, not independently estimated age/year values; notes state the rounding and shared uncertainty. No confidence intervals are manufactured.
 
-Fixed weight-length coefficient/exponent, maturity length/slope, stock-recruit steepness and recruitment sigma are retained as numerical assumptions from negative-phase control parameters. The native stock-recruit code 3 selects the standard Beverton-Holt relationship, now recorded in the assumptions table. They are input parameters, not estimated age-specific biological surfaces. The compact ss3.rep does not contain N-at-age or F-at-age surfaces. Table 2.6 supplies age-constant M estimates with a 2014–2016 block; the database repeats these shared estimates over year and age to match the canonical mortality surface, not as independent age-year estimates.
+Fixed weight-length coefficient/exponent, maturity length/slope, stock-recruit steepness and recruitment sigma are retained as numerical assumptions from negative-phase control parameters. The native stock-recruit code 3 selects the standard Beverton-Holt relationship, now recorded in the assumptions table. They are input parameters, not estimated age-specific biological surfaces. The compact ss3.rep does not contain N-at-age or F-at-age surfaces; those surfaces have now been recovered from a full Report.sso generated from the run-matched native inputs and saved fitted parameters. Table 2.6 supplies age-constant M estimates with a 2014–2016 block; the database repeats these shared estimates over year and age to match the canonical mortality surface, not as independent age-year estimates.
 
-Coverage is now 12,689 input cells, 742 outputs and 34 assumptions. Source validation verifies the M block/year/age mapping and absence of invented intervals, alongside native composition/covariate checks; full structural validation passes. N/F-at-age and selectivity interpretation still require work. Status remains partial.
+Coverage is now 12,689 input cells, 3,437 outputs and 34 assumptions. Source validation verifies the M block/year/age mapping and absence of invented intervals, alongside native composition/covariate checks; full structural validation passes. Selectivity interpretation and age-specific uncertainty still require work. Status remains partial.
 
 ## Active-survey catchability controls
 
@@ -131,7 +139,7 @@ The current report explicitly states that CFSR was discontinued and no 2025 valu
 
 ## Published growth parameters
 
-Table 2.6 of the January 2026 assessment reports estimates and standard deviations for beginning-year length at ages 1 and 10, the von Bertalanffy growth rate, and length-at-age standard deviation at ages 1 and 10. These five estimates are now recorded in `outputs.csv` with their reported natural-scale standard deviations. The official control specifies one von Bertalanffy growth pattern and length-at-age standard deviation as a function of mean length. These parameters support an explicit translation-time reconstruction of biological surfaces; they are not direct annual weight-at-age or maturity-at-age input tables. The record remains partial because fitted abundance-at-age and a complete output inventory are unavailable.
+Table 2.6 of the January 2026 assessment reports estimates and standard deviations for beginning-year length at ages 1 and 10, the von Bertalanffy growth rate, and length-at-age standard deviation at ages 1 and 10. These five estimates are now recorded in `outputs.csv` with their reported natural-scale standard deviations. The official control specifies one von Bertalanffy growth pattern and length-at-age standard deviation as a function of mean length. These parameters support an explicit translation-time reconstruction of biological surfaces; they are not direct annual weight-at-age or maturity-at-age input tables. The recovered abundance-at-age surface is now recorded, but the overall output inventory, selectivity interpretation and age-specific uncertainty remain incomplete.
 
 ## Current tinyAM candidate translation and fit
 
@@ -198,9 +206,10 @@ mean absolute difference 24,893 t (32.10%), terminal difference +7.73%, and
 trend correlation 0.945. Those results belong to that earlier fit and should
 **not** be used to describe the new `cor_rw` F / logistic-plus-year-RW q model.
 
-Official N-at-age and F-at-age surfaces remain unavailable. The M comparison
-is equal by construction because numerical official M was supplied; recruitment
-and total biomass remain definition-non-equivalent because of source age 0.
+Official N-at-age and F-at-age surfaces are now available from the reconstructed
+native report. The M comparison is equal by construction because numerical
+official M was supplied; recruitment and total biomass remain
+definition-non-equivalent because of source age 0.
 
 ## Cached fitted-object check
 
@@ -210,11 +219,12 @@ was inspected rather than assumed to be the official 2026 fit. Its fitted
 years end in 2024, and its aggregate SSB does not reproduce the current Model
 24.0 report series (for example, 78,050 t versus 81,532 t in 1977 and 62,366
 t versus 72,336 t in 2007). It therefore is not used to populate official
-outputs. The current official source remains the pinned 2025/mgmt/24.0/ss3.rep
-and the official report. The compact report supports historical aggregate
-female SSB, age-0 recruitment and the published M blocks, but does not provide
-official N-at-age or F-at-age surfaces. Do not derive them from plots or from
-this mismatched cached fit object.
+outputs. The current official source remains the pinned 2025/mgmt/24.0 model
+files, saved fitted parameters, and official report. The compact ss3.rep
+supports historical aggregate female SSB, age-0 recruitment and the published
+M blocks, but does not contain age-specific N or F. Those surfaces come from
+the reconstructed full Report.sso described above, not from plots or from this
+mismatched cached fit object.
 
 The comparison keeps official SSB in tonnes and scales tinyAM kilograms to
 tonnes by 1e-3. It is approximate because the source aggregate covers ages
@@ -224,7 +234,9 @@ difference: age-0 biomass cannot be removed from the aggregate total, and
 source recruitment is age 0 while tinyAM recruitment is age 1. Official M is
 numerically available and matches tinyAM by construction because the reported
 M blocks are supplied as fixed M; it is not an independent model validation.
-N-at-age, F-at-age and definition-matched F summaries remain unavailable. The
+N-at-age and F-at-age are now available for age-specific comparison. Any
+aggregate F calculated from those surfaces must be labelled with its age range
+and weighting definition; it is distinct from reported Sum Apical F. The
 assessment stays partial.
 
 ### Historical annual-key sensitivity
