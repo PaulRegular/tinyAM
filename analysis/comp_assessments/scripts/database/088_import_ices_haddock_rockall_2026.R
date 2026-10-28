@@ -9,6 +9,18 @@ framework <- "ICES WKBGAD 2024, doi:10.17895/ices.pub.25002470"
 report_url <- "https://doi.org/10.17895/ices.pub.32625759"
 framework_url <- "https://doi.org/10.17895/ices.pub.25002470"
 model_url <- "https://stockassessment.org/datadisk/stockassessment/userdirs/user3/had.6b_2025/run/model.RData"
+taf_commit <- "2b768d6e2563d38a172918390e8fe964596b1325"
+taf_repository_url <- paste0(
+  "https://github.com/ices-advice/2026_had.27.6b/tree/", taf_commit
+)
+taf_stock_weight_code_url <- paste0(
+  "https://github.com/ices-advice/2026_had.27.6b/blob/", taf_commit,
+  "/2026_had.27.6b_assessment/data_stockweights.R"
+)
+taf_data_code_url <- paste0(
+  "https://github.com/ices-advice/2026_had.27.6b/blob/", taf_commit,
+  "/2026_had.27.6b_assessment/data.R"
+)
 
 paths <- setNames(
   file.path(db, paste0(c("stocks", "assessments", "assumptions", "inputs", "outputs"), ".csv")),
@@ -122,6 +134,18 @@ inputs_add <- do.call(rbind, list(
     "kg per fish", paste(report, "Table 8.11, p. 294"),
     fleet = "International catch",
     notes = "Mean weights-at-age in international catch (landings and discards); not the SAM stock-weight surface."),
+  age_inputs("weight", "weight_at_age", "kg_per_fish", catch_weight,
+    "kg per fish", paste(report, "Table 8.11, p. 294;", taf_stock_weight_code_url),
+    source_type = "reconstructed_source_input",
+    transformation = paste(
+      "The pinned official TAF script reads cw.dat and writes its values",
+      "unchanged to sw.dat; Table 8.11 supplies the cw.dat values."
+    ),
+    notes = paste(
+      "SAM stock-weight observations; age 8 is 8+.",
+      "These observations are modelled by SAM and are not the fitted",
+      "stock-weight surface."
+    )),
   age_inputs("index", "numbers_at_age", "index_scale", rockall_pt1,
     "native survey-index units", paste(report, "Table 8.12, p. 295"),
     survey = "Rockall pt1", sampling_time = 0.725,
@@ -216,15 +240,32 @@ assumption_rows <- data.frame(
     "Separate design-based Rockall pt1 (1991-1997) and modelled Q3 (1999-2025) survey series",
     "0.725, carried forward from the 2025 SAM object; 2026 report identifies quarter 3 only",
     "0.75, carried forward from the 2025 SAM object; 2026 report identifies quarter 3 only",
-    "Modelled Q3 CVs are used as relative observation weights; survey observation variance is shared across ages within each survey",
+    paste(
+      "Modelled Q3 CVs are used as relative observation weights; the TAF",
+      "script replaces selected cohort-year CV cells with age-series",
+      "maxima before converting them to weights."
+    ),
     "Fixed time-invariant maturity-at-age based on quarter-3 survey data",
-    "SAM estimates the stock-weight surface from catch weights using a correlated biological process; the complete estimated surface is not published"),
-  source_reference = c(rep(report, 9), rep(model_url, 2), report, report, report),
+    "SAM estimates the stock-weight surface from catch-weight observations using a correlated biological process; the complete fitted surface is not published"),
+  source_reference = c(
+    rep(report, 9), rep(model_url, 2),
+    paste(report, "Table 8.13;", taf_data_code_url), report,
+    paste(report, "Table 8.11;", taf_stock_weight_code_url)
+  ),
   notes = c(rep("2026 assessment represented by its current WGCSE report.", 9),
     rep("Exact sample times are not given in the 2026 report; values were verified in the overlapping 2025 SAM object and are carried forward as a documented approximation.", 2),
-    "Age-specific CVs are retained as published in Table 8.13.",
+    paste(
+      "Table 8.13 CVs are retained as published. TAF data.R replaces",
+      "selected 2023-2025 CV cells with age-series maxima before",
+      "weighting; exact unrounded adjusted values are absent from the",
+      "public mirror."
+    ),
     "Fixed values are transcribed from the 2026 report.",
-    "No complete numerical stock-weight surface was recovered; the translation uses a labelled catch-weight proxy only in its analysis data."),
+    paste(
+      "The TAF data_stockweights.R script copies cw.dat unchanged to",
+      "sw.dat. These observations are reconstructed from Table 8.11; no",
+      "complete fitted stock-weight surface was recovered."
+    )),
   stringsAsFactors = FALSE
 )
 
@@ -244,11 +285,12 @@ assessment_add <- data.frame(
   model_version = "WGCSE 2026 production assessment",
   is_current = "TRUE", is_applied = "TRUE", framework_year = 2024,
   assessment_url = report_url, framework_url = framework_url,
-  data_url = "", model_url = "", repository_url = "",
+  data_url = "", model_url = "", repository_url = taf_repository_url,
   assumptions_status = "partial", inputs_status = "partial", outputs_status = "partial",
   notes = paste(
     "Current detailed assessment. The 2025 SAM fit object was inspected only to verify overlapping input values and survey sample times; it is not represented as the 2026 fit.",
-    "The report does not provide the complete estimated stock-weight surface or age-specific uncertainty for N and F, and does not state coverage for summary Low/High bounds."
+    "The pinned public TAF code mirror confirms that Table 8.11 catch weights are copied unchanged into the SAM stock-weight observation file. The mirror does not include the raw input data or fitted outputs.",
+    "The report does not provide the complete fitted stock-weight surface or age-specific uncertainty for N and F, and does not state coverage for summary Low/High bounds."
   ), stringsAsFactors = FALSE
 )
 
@@ -260,7 +302,7 @@ append_rows <- function(name, rows) {
     row.names = FALSE, col.names = FALSE, append = TRUE, na = "")
 }
 stopifnot(
-  nrow(inputs_add) == 1295L,
+  nrow(inputs_add) == 1575L,
   nrow(outputs_add) == 700L,
   all(is.finite(inputs_add$value)), all(is.finite(outputs_add$value)),
   !anyDuplicated(paste(inputs_add$type, inputs_add$measure, inputs_add$survey,
