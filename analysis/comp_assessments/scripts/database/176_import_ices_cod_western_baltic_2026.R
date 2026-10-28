@@ -5,7 +5,8 @@ id <- "ices_cod_western_baltic_2026"
 old_id <- "ices_cod_western_baltic_2025"
 source_url <- "https://literatur.thuenen.de/digbib_extern/dn071152.pdf"
 pdf <- file.path(cache, "wgbfas_2026_report.pdf")
-stopifnot(tolower(digest::digest(pdf, algo = "sha256", file = TRUE)) ==
+pdf_raw <- readBin(pdf, what = "raw", n = file.info(pdf)[["size"]])
+stopifnot(tolower(digest::digest(pdf_raw, algo = "sha256", serialize = FALSE)) ==
   "7e8a6ac51f72abf7d1f026e0997f764267f07690cb2b78e32e073e13fd658732")
 text <- readLines(file.path(cache, "wgbfas_2026_report.txt"), warn = FALSE, encoding = "UTF-8")
 section <- function(start, end) {
@@ -85,6 +86,8 @@ maturity$unit <- "proportion"; maturity$source_type <- "official_table"; maturit
 maturity$transformation <- "Stored the fixed maturity vector once without annual replication."
 maturity$notes <- "The report specifies this fixed vector for 1998-2025; native model setting and earlier treatment remain unverified."
 inputs <- rbind(inputs, maturity)
+inputs$notes[inputs$type == "index" & inputs$survey == "BITS Q1"] <- "Published rounded values; assessment uses years 2001-2026. The age-4 row is the pooled 4+ group per report; native SAM inputs and observation treatment were not retrieved."
+inputs$notes[inputs$type == "index" & inputs$survey == "BITS Q4"] <- "Published rounded values; assessment uses years 2001-2025. The age-4 row is the pooled 4+ group per report; native SAM inputs and observation treatment were not retrieved."
 inputs$notes[inputs$measure == "discard_weight_at_age" & inputs$year == 2024] <- "Age-6 and age-7+ entries are marked as three-year averages in the source table."
 inputs$notes[inputs$measure == "landings_weight_at_age"] <- "Rounded source values; age-7+ weight is unreported in 2025."
 inputs$notes[inputs$measure == "weight_at_age"] <- "Rounded source values; stock and combined-catch age-7+ weights are unreported in 2024 and 2025."
