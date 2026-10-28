@@ -44,14 +44,28 @@ assumptions$setting <- c("official_method", "advice_rule", "stock_identity", "ca
 assumptions$value <- c("ICES category 5 precautionary advice; no assessment", "Previous 170-tonne catch advice multiplied by 0.8; 136 tonnes annually for 2027-2029", "ICES divisions 7.h-k; biological stock structure uncertain", "Discarding is considered negligible; area misreporting is unquantified")
 assumptions$source_reference <- c(advice_url, advice_url, report_url, report_url)
 assumptions$notes <- c("No fitted abundance, recruitment, SSB or F population model is reported.", "Advice calculation uses previous advice, not a catch-at-age likelihood.", "Potential 7.j distinct population and connectivity with adjacent 7.e-7.g are under investigation; current ICES boundaries remain in force.", "Reported landings mix official totals and ICES estimates across historical years; do not treat them as independent observations.")
+advice_year <- 2027:2029
+advice_outputs <- blank("outputs.csv", length(advice_year))
+advice_outputs$type <- "catch"
+advice_outputs$measure <- "catch_advice"
+advice_outputs$year <- advice_year
+advice_outputs$value <- 136
+advice_outputs$unit <- "tonnes"
+advice_outputs$source_type <- "official_document"
+advice_outputs$source_reference <- advice_url
+advice_outputs$notes <- paste(
+  "ICES advises catches of no more than 136 tonnes in each year.",
+  "This category-5 advice applies a 0.8 buffer to the preceding 170-tonne",
+  "advice; it is not a population-model output."
+)
 assessment <- blank("assessments.csv"); assessment$stock_id <- stock_id
 assessment$assessment_year <- 2026; assessment$terminal_year <- 2025
 assessment$assessment_type <- "advice"; assessment$model_family <- "ICES category 5 precautionary advice"
 assessment$is_current <- "TRUE"; assessment$is_applied <- "TRUE"
 assessment$framework_year <- 2020; assessment$assessment_url <- report_url
 assessment$framework_url <- "https://doi.org/10.17895/ices.pub.5976"; assessment$data_url <- sag_url
-assessment$assumptions_status <- "partial"; assessment$inputs_status <- "partial"; assessment$outputs_status <- "not_applicable"
-assessment$notes <- "2026 advice uses the previous advice and a precautionary buffer; there is no population assessment. Terminal year is the latest reported landings year, not a fitted model year. The 2019 XSA was used for trends but was replaced after the 2020 benchmark; its source data remain under review."
+assessment$assumptions_status <- "partial"; assessment$inputs_status <- "partial"; assessment$outputs_status <- "partial"
+assessment$notes <- "2026 advice uses the previous advice and a precautionary buffer; the 136-tonne annual catch advice for 2027-2029 is recorded as catch_advice. There is no population assessment or population-state output. Terminal year is the latest reported landings year, not a fitted model year. The 2019 XSA was used for trends but was replaced after the 2020 benchmark; its source data remain under review."
 stock <- blank("stocks.csv"); stock$stock_id <- stock_id; stock$authority <- "ICES"
 stock$authority_stock_id <- "sol.27.7h-k"; stock$scientific_name <- "Solea solea"
 stock$common_name <- "Southern Celtic Sea and southwest Ireland sole"
@@ -77,5 +91,6 @@ if (identical(Sys.getenv("TAM_SOURCE_DRY_RUN"), "1")) {
 } else {
   write_rows("stocks.csv", stock, stock_id); write_rows("assessments.csv", assessment, id)
   write_rows("assumptions.csv", assumptions, id); write_rows("inputs.csv", inputs, id)
+  write_rows("outputs.csv", advice_outputs, id)
   cat("Imported current southern Celtic Sea sole advice context.\n")
 }

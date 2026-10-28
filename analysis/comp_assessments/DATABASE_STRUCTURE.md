@@ -550,6 +550,7 @@ mature_biomass_at_age
 biomass_by_age_group
 total_mortality_at_age
 predicted_catch
+catch_advice
 predicted_index
 Fbar
 Mbar
@@ -571,6 +572,11 @@ not an annual recruitment series.
 `median_recruitment` stores a reported time-invariant median recruitment
 estimate. Leave year blank and retain the recruitment age when the source
 specifies one; it is not an annual recruitment series.
+
+`catch_advice` stores an official recommended catch or landings limit for its
+advice years. Preserve whether the source specifies catches or landings and
+state that basis in the notes. This is a management recommendation, not a
+model-predicted catch or a population-state estimate.
 
 apical_F preserves a source-reported annual apical fishing-mortality summary,
 including a sum across fleets when that is how the source defines it. Record

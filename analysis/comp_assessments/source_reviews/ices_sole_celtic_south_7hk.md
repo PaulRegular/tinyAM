@@ -29,7 +29,9 @@ likelihood; the advice is calculated from the previous advice and buffer.
 Discarding is considered negligible in the current advice.
 
 No population N/F-at-age, recruitment or SSB estimates are produced by the
-current rule. The source report notes uncertainty about biological stock
+current rule. The official 136-tonne catch advice for each of 2027–2029 is
+recorded as `catch_advice`, separate from population-model estimates. The
+source report notes uncertainty about biological stock
 structure and possible connectivity across neighbouring areas. Stock
 boundaries have not been revised on that basis. The record's terminal year
 is the latest year of reported landings, not a model fitting year.

@@ -49,13 +49,27 @@ assumptions$setting <- c("official_method", "advice_rule", "available_data", "st
 assumptions$value <- c("ICES category 6 precautionary advice", "Previous advice 2 tonnes multiplied by 0.8, yielding 1.6 tonnes commercial landings in each of 2027-2029", "Commercial landings only; no survey index, numbers at age or discard estimates", "Stock structure is pragmatic and requires further evaluation")
 assumptions$source_reference <- c(advice_url, advice_url, report_url, report_url)
 assumptions$notes <- c("No fitted population model or population-state outputs are reported.", "The published advice specifies commercial landings; total catches cannot be quantified. WGCSE text also uses the word catches, but its rule table specifies landings.", "The landings time series is source context, not an abundance index or catch-at-age likelihood.", "The report identifies unresolved mixing with adjacent stocks.")
+advice_year <- 2027:2029
+advice_outputs <- blank("outputs.csv", length(advice_year))
+advice_outputs$type <- "catch"
+advice_outputs$measure <- "catch_advice"
+advice_outputs$year <- advice_year
+advice_outputs$value <- 1.6
+advice_outputs$unit <- "tonnes"
+advice_outputs$source_type <- "official_document"
+advice_outputs$source_reference <- advice_url
+advice_outputs$notes <- paste(
+  "ICES advises commercial landings of no more than 1.6 tonnes in each year.",
+  "This is management advice, not a model-predicted catch; total catches are",
+  "not quantified."
+)
 assessment <- blank("assessments.csv")
 assessment$stock_id <- stock_id; assessment$assessment_year <- 2026
 assessment$terminal_year <- 2025; assessment$assessment_type <- "advice"
 assessment$model_family <- "ICES category 6 precautionary advice"; assessment$is_current <- "TRUE"; assessment$is_applied <- "TRUE"
 assessment$assessment_url <- report_url; assessment$data_url <- sag_url
-assessment$assumptions_status <- "partial"; assessment$inputs_status <- "partial"; assessment$outputs_status <- "not_applicable"
-assessment$notes <- "Published 2026 advice for 2027-2029 is based on previous advice and a precautionary buffer; no population model is fitted. Terminal year is the latest reported landings year, not a model fitting year. Recreational catches and discards remain unquantified for this area; age data and an abundance index were unavailable."
+assessment$assumptions_status <- "partial"; assessment$inputs_status <- "partial"; assessment$outputs_status <- "partial"
+assessment$notes <- "Published 2026 advice for 2027-2029 is based on previous advice and a precautionary buffer; the 1.6-tonne annual commercial-landings advice is recorded as catch_advice. No population model or population-state outputs are available. Terminal year is the latest reported landings year, not a model fitting year. Recreational catches and discards remain unquantified for this area; age data and an abundance index were unavailable."
 
 stocks <- read.csv(file.path(db, "stocks.csv"), colClasses = "character", na.strings = "", check.names = FALSE)
 stock <- stocks[stocks$stock_id == stock_id, ]
@@ -91,5 +105,6 @@ if (identical(Sys.getenv("TAM_SOURCE_DRY_RUN"), "1")) {
   write_rows("assessments.csv", assessment, id)
   write_rows("assumptions.csv", assumptions, id)
   write_rows("inputs.csv", inputs, id)
+  write_rows("outputs.csv", advice_outputs, id)
   cat("Imported 2026 seabass advice context and landings.\n")
 }
