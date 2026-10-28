@@ -17,12 +17,15 @@ Use this order for source curation:
    A detailed report may be published after the advice document; verify the run
    by its assessment year, terminal data year, model version, and reported
    results.
-3. Curate every verifiable input, assumption, and output for the latest-unit
-   run, even when the record remains partial. Record newer summary-only advice
-   separately and leave unavailable values unresolved.
-4. Only after a documented search fails to recover detailed assessment data
-   for the latest unit may you curate the most recent detailed assessment for
-   a preceding stock definition as a separate fallback. Preserve any verified
+3. For the latest-unit assessment, curate every verifiable original input,
+   assumption, and reported output available in the detailed public sources
+   for that production run, even when the record remains partial. Record newer
+   summary-only advice separately and leave unavailable values unresolved. Do
+   not fill gaps in the latest unit with values from an older unit or run.
+4. Only after a documented search finds detailed assessment data unavailable
+   for the latest assessment of the current stock unit may you curate the most
+   recent detailed assessment for a preceding stock definition. Keep it as a
+   separate, secondary stock and assessment record; preserve any verified
    latest-unit data and explain the boundary change and the fallback's limits.
 
 Do not start with an older, more complete assessment because it is easier to
