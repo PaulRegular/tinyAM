@@ -8,17 +8,21 @@ The governing question is:
 
 > **What data and assumptions entered the most recent official assessment with recoverable detail, and what did it estimate?**
 
-The first priority is to recover the available inputs, assumptions and outputs
-from the most recent publicly accessible detailed official assessment, with
-preference for the latest stock unit. Record newer summary-only advice
-separately. The objective is faithful source representation, not collection of
-every table in every report. A tinyAM translation is a secondary, separate
-activity and is not a prerequisite for curating source data. When working
-through a stock catalogue, prioritize stocks with neither curated inputs nor
-curated outputs;
-return to partial records when useful source material can be recovered. Source
-curation takes priority across stocks: do not postpone recoverable assessment
-data while trying to make a tinyAM translation converge or agree better.
+First curate the latest official assessment for the latest stock unit. Recover
+and validate the inputs, assumptions and outputs available for that specific
+run from its most recent publicly accessible detailed documentation. Record
+newer summary-only advice separately. If the latest run for the latest unit
+lacks detailed data after a documented search, retain its available values and
+gaps, then consider the most recent detailed assessment for a previous stock
+definition as a separate fallback record. Never let a fallback replace or be
+mixed with the latest unit. Judge source detail by what it documents, not by
+whether tinyAM can fit it.
+
+A tinyAM translation is secondary and does not gate source curation. When
+working through a stock catalogue, prioritize stocks with neither curated
+inputs nor curated outputs; return to partial records when useful source
+material can be recovered. Do not postpone recoverable assessment data while
+trying to make a tinyAM translation converge or agree better.
 
 Follow the schema and controlled vocabularies in `DATABASE_STRUCTURE.md`.
 The [scope and provenance statement](README.md#scope-and-provenance) applies
@@ -252,36 +256,44 @@ Do not select a model object solely because it is the newest file or repository.
 
 ### Select the stock unit and detailed assessment
 
-First identify the latest official stock unit and its assessment history. Prefer
-the most recent publicly accessible detailed official assessment for that unit,
-using native files, research documents, tables and other authoritative sources.
-The newest advice or assessment year need not have the newest publicly available
-detailed documentation. Search earlier assessments of the same current unit
-before considering an earlier stock definition, and select the most recent
-detailed official assessment that can be supported by the available evidence.
-Judge the available detail by what the sources actually provide about the
-official assessment, not by whether tinyAM can fit it. A partial source record
-is valuable: capture verified available inputs, assumptions and outputs and
-mark their completeness honestly. The assessment need not be age-structured
-or fit-ready for its source data to be curated.
-Preserve aggregate and index-based methods in their source units and dimensions;
-do not manufacture age-specific states. If a source requires a new schema
-measure, document it and update the relevant validation before importing it.
+Identify the latest official stock unit and the latest official assessment for
+that unit. Make that latest run the primary source target. Search for the
+native files, research documents, machine-readable tables and other detailed
+sources that describe that specific official run. Publication date and
+assessment year can differ, so confirm the run using its model version,
+terminal data year and reported results.
 
-If sufficiently detailed assessment data for the latest unit cannot be
-recovered after the source search, investigate the preceding stock definition
-and select its most recent publicly accessible detailed official assessment as
-a fallback. Document the search, what is missing, the earlier and latest stock
-boundaries and codes, and why the fallback was selected. Do not fall back merely
-to obtain a better tinyAM fit. There is no fixed numerical completeness threshold:
-explain the available material and selection rationale in the stock review.
-Retain verified partial data and newer advice for the latest unit separately,
-even when an earlier unit supplies the detailed fallback.
-Explain which material inputs, assumptions and outputs are available for each
-candidate and why those details are insufficient for the current unit. A
-historical fallback is a separate assessment, not a replacement for the latest
-unit or proof that its results apply to the current boundaries. Revisit the
-selection if detailed current-unit data become publicly available.
+Recover and validate the inputs, assumptions and outputs available for the
+latest run, even when the resulting source record is partial. Record newer
+summary-only advice or information separately. Do not replace the latest run
+with an older, more detailed assessment simply because the older material is
+easier to use or more compatible with tinyAM. An older run of the same unit
+may be retained separately when useful, but it does not stand in for the
+latest run.
+
+Judge source detail by what it documents about the official run, not by
+whether tinyAM can fit it. The assessment need not be age-structured or
+fit-ready for its source data to be curated. Preserve aggregate and index-based
+methods in their source units and dimensions; do not manufacture age-specific
+states. If a source requires a new schema measure, document it and update the
+relevant validation before importing it.
+
+If detailed inputs or outputs for the latest assessment of the latest unit
+cannot be recovered after the documented source search, retain its verified
+summary data and mark its unresolved gaps. You may then investigate the
+preceding stock definition and add its most recent publicly accessible detailed
+official assessment as a separate fallback. Document where you searched, what
+is missing for the latest run, the earlier and latest stock boundaries and
+codes, and why the fallback is useful. Do not fall back merely to obtain a
+better tinyAM fit. There is no fixed numerical completeness threshold; explain
+the available material and selection rationale in the stock review.
+
+Keep the latest-unit assessment and the earlier-unit fallback under separate
+stock and assessment IDs. Never copy, pool or relabel data across the changed
+boundaries, and never imply that fallback results apply to the latest unit.
+Retain verified partial data for the latest unit even when an earlier unit
+supplies the detailed fallback. Revisit the selection if detailed data for the
+latest assessment become publicly available.
 
 Keep distinct stock units and assessment runs identifiable under their own stock
 and assessment IDs. Record their relationship in stock notes and source reviews;
