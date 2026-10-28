@@ -1,7 +1,30 @@
 # Gulf of Alaska Pacific cod: official-assessment source review
 
-Status: canonical partial record afsc_cod_goa_2026 imported. Inputs and reported summary outputs are transcribed; numerical N-at-age and F-at-age surfaces from the current official run have not been recovered.
+Status: canonical partial record afsc_cod_goa_2026 imported. Inputs and reported summary outputs are transcribed, including annual sum apical F from Table 2.9; numerical N-at-age and F-at-age surfaces from the current official run have not been recovered.
 Charbonneau identifier: AFSC_GOA_Gadus_macrocephalus.
+
+## Currentness check as of 2026-10-28
+
+The latest detailed operational run identified remains the January 2026 Model
+24.0 assessment. NPFMC's February 2026 assessment-cycle memo planned a fall
+harvest projection for GOA Pacific cod, rather than a new full assessment,
+because no new survey data were expected. I did not find a separate GOA cod
+projection report among the posted September Plan Team materials. The
+September 9 presentation titled “Pacific cod” is a spatial SPoRC research
+project, with results planned for the September 2027 Plan Team meeting; it is
+not a new official operational fit or a source for replacement outputs. The
+November 16–20, 2026 Plan Team schedule lists GOA Pacific cod and ESP, after
+this review date, so revisit the source search when those materials are posted.
+
+Sources:
+- NPFMC February 2026 assessment priorities:
+  https://meetings.npfmc.org/CommentReview/DownloadFile?fileName=D2+Groundfish+Stock+Assessment+Priorities.pdf&p=ff7dee7e-242d-42e7-85c7-2479d7eeac96.pdf
+- September 2026 Plan Team docket:
+  https://meetings.npfmc.org/Meeting/Details/5140
+- Cached spatial-research presentation:
+  source_cache/afsc_cod_goa_2026/2026_09_goa_pcod_spatial_research_plan_team.pdf
+- November 2026 Plan Team schedule:
+  https://meetings.npfmc.org/Meeting/Details/8165
 
 The active control fixes BH steepness at one and recruitment SD at 0.44;
 a freely estimated BH curve would change that source assumption.
@@ -69,7 +92,7 @@ The composition schema validator checks finite numeric dimensions, non-negative 
 
 ## Canonical coverage and validation
 
-Assessment afsc_cod_goa_2026 contains 12,689 input cells: 147 catch totals, 52 index observations, 52 index log SDs, 46 environmental covariates, 3,822 length-proportion cells and 8,570 conditional-age-proportion cells. The 1,039 composition observations retain supplied sample sizes, native length labels/conditioning bounds, age-error codes and partitions. The outputs table contains 147 historical summaries, 539 repeated year/age representations of two shared M estimates, and two published baseline-q estimates. The assessment has 34 documented assumptions.
+Assessment afsc_cod_goa_2026 contains 12,689 input cells: 147 catch totals, 52 index observations, 52 index log SDs, 46 environmental covariates, 3,822 length-proportion cells and 8,570 conditional-age-proportion cells. The 1,039 composition observations retain supplied sample sizes, native length labels/conditioning bounds, age-error codes and partitions. The outputs table contains 147 historical biomass/recruitment summaries, 539 repeated year/age representations of two shared M estimates, 49 annual sum apical-F estimates, five growth-parameter estimates, and two published baseline-q estimates (742 output rows total). The assessment has 34 documented assumptions.
 
 The source-specific validator checks each composition cell against the cached native data, verifies observation counts, sample sizes and timing, and confirms that adding optional composition dimensions leaves all earlier input values unchanged. These checks and full database structural validation pass. All completeness statuses remain partial. Equilibrium inputs, selectivity details, interpretation of environmental-covariate units and N/F-at-age outputs still require work. Published baseline q estimates and source ageing-error vectors are recorded; they do not complete the assessment.
 ## Additional material input review
@@ -78,14 +101,23 @@ The control links longline catchability to environmental variable 1 (env_var&lin
 
 All 16 mean-size-at-age observations have negative fleet code -4 and therefore no fitted likelihood contribution. Their absence from canonical fitted observations is intentional; source records remain cached. Three initial-equilibrium catch values and their supplied SEs are retained in fleet-specific assumptions because native year -999 is not a calendar year. The two ageing-error mean/SD definitions (age 0 through age 10) are retained once as numerical assumption vectors. Definition 2's -1 mean flags must not be interpreted as measured negative ages or an empirical misclassification matrix.
 
-Pacific cod coverage is now 12,689 input cells, 688 outputs and 34 assumptions. Structural and source-specific validation pass. Selectivity details, covariate units and fitted N/F-at-age surfaces remain incomplete; all statuses remain partial. The earlier gap list is superseded for temperature, equilibrium catches and source ageing-error vectors.
+Pacific cod coverage is now 12,689 input cells, 742 outputs and 34 assumptions. Structural and source-specific validation pass. Selectivity details, covariate units and fitted N/F-at-age surfaces remain incomplete; all statuses remain partial. The earlier gap list is superseded for temperature, equilibrium catches and source ageing-error vectors.
+## Annual apical fishing mortality
+
+Table 2.9 reports annual Sum Apical F and SD[F] for 1977–2025. These rounded
+three-decimal values are imported as the scalar measure apical_F, with the
+reported SD retained in the output uncertainty field. They are not age-specific
+F estimates or Fbar, and no confidence intervals are reconstructed. The
+assessment output-generation script extracts the annual F-derived quantities
+and rounds their estimates and SDs to three decimals. Script: https://github.com/pete-hulson/goa_pcod/blob/facf41573f9a0b609d0096611bc9302aaab43abe/2025/R/safe_tbls.R.
+
 ## Estimated mortality and fixed biological parameters
 
 Table 2.6 reports estimated M=0.50 (SD 0.023) outside the 2014–2016 block and M=0.84 (SD 0.053) inside it. The native control specifies age-constant M (natM_type=0) with replacement block 4 covering exactly 2014–2016. The database now expands these rounded published estimates to 1977–2025, ages 0–10+, as 539 mortality output cells. These are repeated representations of two shared parameters, not independently estimated age/year values; notes state the rounding and shared uncertainty. No confidence intervals are manufactured.
 
 Fixed weight-length coefficient/exponent, maturity length/slope, stock-recruit steepness and recruitment sigma are retained as numerical assumptions from negative-phase control parameters. The native stock-recruit code 3 selects the standard Beverton-Holt relationship, now recorded in the assumptions table. They are input parameters, not estimated age-specific biological surfaces. The compact ss3.rep does not contain N-at-age or F-at-age surfaces. Table 2.6 supplies age-constant M estimates with a 2014–2016 block; the database repeats these shared estimates over year and age to match the canonical mortality surface, not as independent age-year estimates.
 
-Coverage is now 12,689 input cells, 688 outputs and 34 assumptions. Source validation verifies the M block/year/age mapping and absence of invented intervals, alongside native composition/covariate checks; full structural validation passes. N/F-at-age and selectivity interpretation still require work. Status remains partial.
+Coverage is now 12,689 input cells, 742 outputs and 34 assumptions. Source validation verifies the M block/year/age mapping and absence of invented intervals, alongside native composition/covariate checks; full structural validation passes. N/F-at-age and selectivity interpretation still require work. Status remains partial.
 
 ## Active-survey catchability controls
 

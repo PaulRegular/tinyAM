@@ -545,6 +545,7 @@ predicted_catch
 predicted_index
 Fbar
 Mbar
+apical_F
 q
 Fmsy
 Bmsy
@@ -560,6 +561,11 @@ not an annual recruitment series.
 `median_recruitment` stores a reported time-invariant median recruitment
 estimate. Leave year blank and retain the recruitment age when the source
 specifies one; it is not an annual recruitment series.
+
+apical_F preserves a source-reported annual apical fishing-mortality summary,
+including a sum across fleets when that is how the source defines it. Record
+the source age and fleet scope in notes. It is not an F-at-age surface or an
+age-averaged Fbar.
 
 Use measures defined by the official assessment. `derived_source_output` may
 also record an explicitly requested summary calculated from that assessment's
