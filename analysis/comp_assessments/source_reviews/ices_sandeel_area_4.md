@@ -20,11 +20,26 @@ have the SD-name mismatch found in the 2026 regional configurations.
 The benchmark concluded in 2023 and was published in 2024.
 
 Newer category-5 advice, SAG 21271, is recorded separately as
-`ices_sandeel_area_4_2026_summary`. It has later catch/index values on a
-different survey scale, without an updated N/F/SSB age-based assessment.
-Those values are cached but are not used to fill gaps in the 2025 run.
-Their precise scaling/likelihood role remains to be audited; the summary
-record does not claim completed numerical extraction.
+`ices_sandeel_area_4_2026_summary`. Its official data export supplies annual
+total catches in tonnes for 1993–2025 and custom age-0/1 dredge-series values
+for 2008–2025. The 33 catch and 36 index rows are recorded under the 2026
+summary event, not used to fill gaps in the 2025 age-based run. The SAG export
+leaves custom series units blank and does not identify their scaling, sampling
+time, or likelihood role, so their values remain on an explicitly unknown
+index scale.
+The official HTML source-data table is used for numerical values because it
+preserves more displayed precision than the accompanying SAG XML; the XML is
+used to verify category, series labels, blank units and absent stock outputs.
+Both files and their retrieval hashes are cached under
+`source_cache/ck_ices_hawg_dubius_ns/2026_san.sa.4/`.
+The separate import is reproducible from
+`scripts/database/180_import_ices_sandeel_area_4_2026_summary.R`.
+
+The SAG XML identifies category 5, names the data as coming from a previous
+assessment, and reports no model name or recruitment, stock-size, or fishing-
+pressure outputs. No age-structured N/F/SSB outputs are available for this
+summary event; its output status is therefore not applicable. The 2025 run
+remains the latest recovered detailed age-based assessment.
 
 ## Recovered inputs and outputs
 
@@ -230,6 +245,7 @@ statistics are claimed.
 
 - [HAWG 2025, version 5](https://doi.org/10.17895/ices.pub.28389008.v5), section 10.5 and Tables 9.1.5–9.1.7, 9.5.1–9.5.12.
 - [Official 2025 advice](https://asd.ices.dk/viewAdvice/3832), [SAG 19335](https://standardgraphs.ices.dk/ViewSourceData.aspx?key=19335) and separate [2026 SAG 21271](https://standardgraphs.ices.dk/ViewSourceData.aspx?key=21271).
+- [SAG 21271 machine-readable XML](https://sag.ices.dk/SAG_API/StockXmlDownload/21271), cached with the source page and checksums under `source_cache/ck_ices_hawg_dubius_ns/2026_san.sa.4/`.
 - [Pinned production repository](https://github.com/ices-advice/2025_san.sa.4/tree/5ccb6abb2595153a88c9c47ad628ad17f3ea3e06).
 - [Declared smsR source](https://github.com/nissandjac/smsR/tree/a097011f2fff959c9a263e5f6acb49795b9a53ad), particularly survey SDs, catch SD profiling and `Catchtot`.
 - [Sandeel benchmark, published 2024](https://doi.org/10.17895/ices.pub.21581151.v2).

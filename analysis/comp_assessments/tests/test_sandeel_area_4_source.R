@@ -77,7 +77,8 @@ stopifnot(all(yield$value + .5 >= lower[as.character(yield$year)]),
   all(yield$value[yield$year %in% c(2006:2011, 2013, 2024)] == 0))
 later <- read_assessment("ices_sandeel_area_4_2026_summary", db)
 stopifnot(!later$assessment$is_current, later$assessment$is_applied,
-  later$assessment$assessment_year == 2026, nrow(later$inputs) == 0L,
+  later$assessment$assessment_year == 2026, nrow(later$inputs) == 69L,
   nrow(later$outputs) == 0L,
-  later$assessment$inputs_status == "not_started", later$assessment$outputs_status == "not_started")
-cat("Area 4 identity, historical arrays, missing cell, effort reassignment, conditional yield and separate advice vintage passed.\n")
+  later$assessment$inputs_status == "partial",
+  later$assessment$outputs_status == "not_applicable")
+cat("Area 4 identity, historical arrays, missing cell, effort reassignment, conditional yield and separate summary vintage passed.\n")
