@@ -554,6 +554,7 @@ catch_advice
 predicted_index
 Fbar
 Mbar
+fishing_mortality_summary
 apical_F
 q
 LRP
@@ -582,6 +583,11 @@ apical_F preserves a source-reported annual apical fishing-mortality summary,
 including a sum across fleets when that is how the source defines it. Record
 the source age and fleet scope in notes. It is not an F-at-age surface or an
 age-averaged Fbar.
+
+`fishing_mortality_summary` preserves a reported annual F estimate when the
+source does not state enough detail to classify it as F-at-age, apical F, or
+Fbar for a known age range. Record the source's definition and any unresolved
+age range in `notes` rather than inferring one.
 
 Use measures defined by the official assessment. `derived_source_output` may
 also record an explicitly requested summary calculated from that assessment's

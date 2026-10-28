@@ -24,8 +24,8 @@ kt) differ from the report's stated 95% interval (10.5–21.6 kt). No conversion
 or reconciliation is assumed; the database uses the consistent percentile
 series and records the report discrepancy in the 2023 output note.
 
-The detailed 2019 SCA assessment remains as a historical record under the 2012
-framework. It contains 54 annual stock-catch values for 1965-2018
+The detailed 2019 SCA assessment remains the current detailed record under the
+2012 framework. It contains 54 annual stock-catch values for 1965-2018
 (tonnes), plus 480 source-reported landed numbers-at-age values for 1971-2018
 (ages 3-12+, in thousand fish). These age counts do not recover the full fitted
 catch-composition series, which the model describes as ages 2-12+. It also
@@ -44,6 +44,20 @@ medians. The report also states terminal estimates for M at ages 5-8 and 9+
 and fully recruited q for the RV and mobile-sentinel surveys; these are stored
 as grouped or time-invariant outputs with their source identified as report
 text.
+
+The official DFO rebuilding plan also republishes the 2024 assessment's Figure
+3 data table for 1950-2023. Those reported outputs are stored under the 2024
+assessment ID: one annual F summary, plus M for ages 5-8 and 9+, with the
+published 95% confidence limits. The page labels F only and does not identify
+its age range, so it is recorded as `fishing_mortality_summary` without an
+inferred `age_group`. This uses the underlying HTML table, not values
+digitized from the plotted lines. The page and figure are cached with their
+URL, retrieval date, and checksums.
+
+The 2024 outputs remain partial: numerical N-at-age, age-specific F/M and
+annual recruitment are not tabulated. The 2019 run remains the most recent
+assessment with detailed recoverable model inputs and age-specific outputs;
+no 2019 estimates are copied into the 2024 record.
 
 The DFO [4T September RV survey dataset](https://open.canada.ca/data/en/dataset/1989de32-bc5d-c696-879c-54d422438e64)
 and its data dictionary were also checked and cached. The public table gives
