@@ -36,6 +36,12 @@ code should use R. Keep source-import scripts separate from the routine
 database-to-model workflow; fitting must not depend on rerunning an importer
 or reading source-cache files directly.
 
+At the start of work in this folder, read this protocol and
+`DATABASE_STRUCTURE.md`. Before preparing or fitting a tinyAM translation, read
+`TINYAM_TRANSLATION.md` as well. Complete source curation independently of the
+translation attempt: recover and record available authoritative data first,
+then assess whether tinyAM can represent and fit the assessment.
+
 ------------------------------------------------------------------------
 
 # 1. Starting point: Charbonneau–Keith repository
