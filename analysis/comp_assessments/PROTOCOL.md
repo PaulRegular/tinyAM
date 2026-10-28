@@ -43,13 +43,19 @@ its own stock and assessment IDs: it neither replaces the latest-unit record
 nor fills gaps in it. tinyAM fit-readiness and agreement do not determine the
 source-curation target.
 
-Prioritize stocks with no curated input or output rows, then other unresolved
-source-data gaps with actionable source leads. This is only the order for
-selecting work: for each stock, the primary target remains the latest
-assessment of the latest official stock unit. Recover every verifiable input,
-assumption, and output for that run, retain partial data, and document
-remaining gaps. A stock with data on only one side is a partial record;
-revisit it when a concrete source lead is available.
+Prioritize work by the availability of actionable sources for the latest
+official stock unit and its latest assessment used for advice. For each selected
+stock, first recover the most recent publicly accessible detailed assessment
+documentation and its verifiable inputs, assumptions, and outputs. If that
+record is partial, retain it and pursue remaining source gaps rather than
+moving to an older unit or run. Empty or partial database rows are signals for
+follow-up, not criteria for choosing a different unit or assessment. Apply the
+earlier-stock-definition fallback only under Section 2.2, after a documented
+search finds detailed data unavailable for the latest assessment of the latest
+unit.
+
+A stock with data on only one side is a partial record; revisit it when a
+concrete source lead is available.
 
 Do not postpone recoverable assessment data while trying to make a tinyAM
 translation converge or agree better.
