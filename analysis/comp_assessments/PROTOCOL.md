@@ -6,16 +6,29 @@ This document defines the standing protocol for adding, reviewing, and revising 
 
 The governing question is:
 
-> **What data and assumptions entered the most recent official assessment with recoverable detail, and what did it estimate?**
+> **For the latest official stock unit, what inputs, assumptions, and outputs can be recovered from the most recent publicly accessible detailed sources for the assessment used for advice?**
 
-For each stock selected for source curation, establish its latest official
-stock unit and identify the most recent official assessment for that unit.
-Make that assessment the primary target and recover the inputs, assumptions,
-and outputs available in the most recent publicly accessible detailed sources
-for that run. Record newer summary-only advice separately. Prioritize this
-current-unit source work even when an older unit has more complete data or is
-easier to fit in tinyAM. Judge source detail by what it documents, not by
-whether tinyAM can fit it.
+Use this order for source curation:
+
+1. Establish the latest official stock unit and the most recent assessment
+   used for advice on that unit.
+2. Search for detailed public sources for that specific run, including
+   research documents, native files, machine-readable tables, and repositories.
+   A detailed report may be published after the advice document; verify the run
+   by its assessment year, terminal data year, model version, and reported
+   results.
+3. Curate every verifiable input, assumption, and output for the latest-unit
+   run, even when the record remains partial. Record newer summary-only advice
+   separately and leave unavailable values unresolved.
+4. Only after a documented search fails to recover detailed assessment data
+   for the latest unit may you curate the most recent detailed assessment for
+   a preceding stock definition as a separate fallback. Preserve any verified
+   latest-unit data and explain the boundary change and the fallback's limits.
+
+Do not start with an older, more complete assessment because it is easier to
+extract or fit. A fallback describes its own historical stock unit; it never
+substitutes for or gets combined with the latest unit. tinyAM fit-readiness and
+agreement do not determine which assessment is the source-curation target.
 
 Select stocks for follow-up based on unresolved source-data gaps and
 actionable source leads. Having no curated input or output rows can help
@@ -24,14 +37,6 @@ the primary target. Recover every verifiable input, assumption, and output
 for the latest unit, retain partial data, and document remaining gaps. A stock
 with data on only one side is a partial record; revisit it when a concrete
 source lead is available.
-
-Do not add a superseded unit as a separate coverage case merely because its
-older assessment is more detailed. If a documented search cannot recover
-detailed data for the latest unit, retain its verified partial record and
-consider the most recent detailed assessment of the previous unit only as a
-separately identified fallback. Never pool or relabel data across the changed
-boundary. This fallback rule does not change the priority to curate the latest
-unit first.
 
 A tinyAM translation is secondary and does not gate source curation. Do not
 postpone recoverable assessment data while trying to make a tinyAM translation
