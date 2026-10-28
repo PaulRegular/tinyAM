@@ -13,9 +13,11 @@
 prediction), \code{"response"} (observation minus prediction), or \code{"osa"}.}
 
 \item{...}{Computation controls passed to \code{\link[=tidy_obs_pred]{tidy_obs_pred()}} and
-\code{\link[RTMB:oneStepPredict]{RTMB::oneStepPredict()}} when uncached OSA residuals are requested, such as
-\code{trace = FALSE} or \code{parallel = FALSE}. Not used for cached OSA values;
-other residual types reject these arguments.}
+\code{\link[RTMB:OSA-residuals]{RTMB::oneStepPredict()}} when uncached OSA residuals are requested, such as
+\code{trace = FALSE} or \code{parallel = FALSE}.
+\code{subset} and \code{conditional} index included observations in likelihood order;
+unrequested rows retain missing residuals.
+Controls are not used for cached OSA values; other residual types reject them.}
 }
 \value{
 A data frame with year, age, type (catch/index), survey, observations,

@@ -36,6 +36,10 @@ test_that("stock-recruit boundary years retain their values without extra penalt
 })
 
 test_that("fits classify initial recruitment correctly and preserve warm starts", {
+  legacy <- default_fit
+  legacy$refit_args$rec_settings$init <- NULL
+  call <- update(legacy, rec_settings = list(process = "iid", mu_form = ~1), evaluate = FALSE)
+  expect_identical(call$rec_settings$init, "free")
   f <- update(default_fit, rec_settings = list(init = "latent"),
     start_par = default_fit, silent = TRUE)
   expect_true("log_r0" %in% f$obj$env$.random)

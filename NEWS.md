@@ -1,5 +1,8 @@
 # tinyAM 0.1.1.9000
 
+* Partial OSA requests now map returned residuals to their original observations;
+  unrequested and conditioning rows retain missing residuals.
+
 * `power(N, by = group)` in `q_form` estimates positive abundance exponents
   using abundance at survey time. Missing group labels retain p = 1 without
   removing observations. Effective and baseline catchability are reported separately.

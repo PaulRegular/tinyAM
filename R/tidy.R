@@ -176,7 +176,13 @@ tidy_obs_pred <- function(fit, add_osa_res = FALSE, interval = .95, ...) {
       RTMB::oneStepPredict,
       c(list(obj = osa_obj, method = "oneStepGaussianOffMode"), args)
     )
-    split_osa_res <- split(osa_res$residual, fit$dat$obs_map$type[fit$dat$obs_map$is_observed])
+    selected <- if (is.null(args$subset)) setdiff(seq_along(fit$dat$observed), args$conditional) else args$subset
+    if (length(osa_res$residual) != length(selected)) {
+      cli::cli_abort("OSA results do not match the requested observation subset.")
+    }
+    all_osa <- rep(NA_real_, length(fit$dat$observed))
+    all_osa[selected] <- osa_res$residual
+    split_osa_res <- split(all_osa, fit$dat$obs_map$type[fit$dat$obs_map$is_observed])
     split_is_observed <- split(fit$dat$obs_map$is_observed, fit$dat$obs_map$type)
     obs_pred$catch$osa_res <- obs_pred$index$osa_res <- NA
     obs_pred$catch$osa_res[split_is_observed$catch] <- split_osa_res$catch

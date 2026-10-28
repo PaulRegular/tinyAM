@@ -105,6 +105,11 @@ test_that("power fits report effective q with uncertainty and align starts", {
   expect_equal(nrow(retro$fold_diagnostics), 2L)
   expect_identical(f$dat$index_settings$q_form, ~q_block + power(N))
   before <- f$obj$env$last.par
+  selected <- tail(seq_along(f$dat$observed), 2L)
+  actual_osa <- residuals(f, type = "osa", subset = selected,
+    conditional = setdiff(seq_along(f$dat$observed), selected), trace = FALSE, parallel = FALSE)
+  expect_equal(sum(is.finite(actual_osa$residual)), 2L)
+  expect_identical(f$obj$env$last.par, before)
   testthat::local_mocked_bindings(oneStepPredict = function(obj, ...) {
     expect_equal(as.numeric(obj$fn(f$opt$par)), f$opt$objective, tolerance = 1e-6)
     list(residual = rep(0, sum(f$dat$is_observed)))

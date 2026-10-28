@@ -494,7 +494,7 @@ update.tam_fit <- function(object, ..., evaluate = TRUE) {
   }
 
   # Use requested inputs, before preparation changes offsets or designs.
-  args <- object$refit_args
+  args <- .complete_settings(object$refit_args)
   change_expr <- as.list(match.call(expand.dots = FALSE)$...)
   new_call <- as.list(object$call)
   for (name in names(changes)) {
