@@ -11,8 +11,17 @@ assumptions <- source_data$assumptions
 recruitment <- subset(assumptions, setting == "recruitment_and_initial_states")
 survival <- subset(assumptions, setting == "cohort_survival")
 initial <- subset(assumptions, setting == "initial_abundance")
+projection_assumptions <- subset(assumptions, component == "projection")
 stopifnot(
   nrow(recruitment) == 1L, nrow(survival) == 1L, nrow(initial) == 1L,
+  nrow(projection_assumptions) == 2L,
+  setequal(projection_assumptions$setting, c("harvest_scenario", "catch_2025")),
+  grepl("0.176 yr-1", projection_assumptions$value[
+    projection_assumptions$setting == "harvest_scenario"
+  ], fixed = TRUE),
+  grepl("1,802 metric tons", projection_assumptions$value[
+    projection_assumptions$setting == "catch_2025"
+  ], fixed = TRUE),
   grepl("steepness fixed at 1", recruitment$value, fixed = TRUE),
   grepl("lambda = 0", recruitment$notes, fixed = TRUE),
   grepl("sum-to-zero fixed-effect", recruitment$notes, fixed = TRUE),
@@ -68,14 +77,27 @@ stopifnot(
   all(as.numeric(M$value) == .2),
   nrow(maturity) == 9L,
   nrow(weights) == 62L * 9L * 3L,
-  nrow(outputs[outputs$measure == "SSB", ]) == 62L,
-  nrow(outputs[outputs$measure == "Fbar", ]) == 62L,
+  nrow(outputs[outputs$measure == "SSB", ]) == 66L,
+  nrow(outputs[outputs$measure == "Fbar", ]) == 66L,
   all(outputs$age_group[outputs$measure == "Fbar"] == "6-9+"),
   nrow(outputs[outputs$measure == "recruitment", ]) == 62L,
+  nrow(outputs[outputs$measure == "predicted_catch", ]) == 4L,
   nrow(outputs[outputs$measure == "numbers_at_age", ]) == 0L,
   nrow(outputs[outputs$measure == "fishing_mortality_at_age", ]) == 0L,
   all(outputs$source_type == "official_table"),
-  all(is.finite(as.numeric(outputs$se))),
+  all(is.finite(as.numeric(outputs$se[outputs$year <= 2024]))),
+  all(is.na(as.numeric(outputs$se[outputs$year > 2024]))),
+  nrow(outputs[outputs$measure == "SSB" & outputs$year == 2025 &
+    outputs$value == 13385 & outputs$lwr == 10960 & outputs$upr == 15861, ]) == 1L,
+  nrow(outputs[outputs$measure == "Fbar" & outputs$year == 2025 &
+    outputs$value == .144 & outputs$age_group == "6-9+", ]) == 1L,
+  nrow(outputs[outputs$measure == "predicted_catch" & outputs$year == 2025 &
+    outputs$value == 1802, ]) == 1L,
+  nrow(outputs[outputs$measure == "SSB" & outputs$year == 2028 &
+    outputs$value == 10219 & outputs$lwr == 8801 & outputs$upr == 11652, ]) == 1L,
+  all(outputs$value[outputs$measure == "Fbar" &
+    outputs$year %in% 2026:2028] == .176),
+  all(grepl("Table 3", outputs$source_reference[outputs$year > 2024], fixed = TRUE)),
   max(abs(catch_sums[as.character(1989:2024)] /
     catch_totals_1989_2024 - 1)) < .03,
   file.exists("analysis/comp_assessments/source_reviews/ck_nefsc_garmiii_tenuis_gom_gb.md")

@@ -24,6 +24,8 @@ These meanings were checked against the author's ASAP3 technical documentation (
 
 Table 14 reports annual SSB, fully selected F, age-1 recruitment, and their CVs for 1963–2024. The database retains those estimates and converts each reported CV to an approximate natural-scale SE as estimate multiplied by CV; the source CV is repeated in the row notes. This is a derived uncertainty scale, not a separately reported SE.
 
+Table 3 in the same 2025 working paper reports a 2025-2028 management projection under the FMSY-proxy harvest scenario for 2026-2028. It identifies the 2025 catch (1,802 t) as the NEFMC Groundfish Plan Development Team estimate, not a fit output. The table reports SSB bounds as 5th and 95th percentiles; no SE or point-estimate summary is specified. The database stores catch, SSB, and fully selected F projections separately from the historical 1963-2024 series; projected F is 0.144 in 2025 and the scenario value 0.176 in 2026-2028. A pinned NOAA Stock SMART snapshot (revision 664c4237, SHA-256 141db3599cbf37af3e019bd53d2323d829a719b273e8ab0226b73f6ad18620b0) independently reproduces the 2025 SSB estimate of 13,385 t. It corroborates that value only; the snapshot contains no Fmort value for 2025.
+
 The public run archive did not include a numerical ASAP .rep output. No full fitted N-at-age or F-at-age surface was found in the report tables. Those outputs and their uncertainty remain unavailable; figures are not digitized and estimates are not reconstructed from SSB or recruitment. The output status is therefore partial.
 
 ## tinyAM translation
@@ -46,6 +48,7 @@ The recipe explicitly enables comparison with the published aggregate SSB becaus
 - [2025 White Hake assessment working paper and report tables](https://apps-nefsc.fisheries.noaa.gov/saw/sasi_files.php?year=2025&species_id=8&stock_id=6&review_type_id=3&info_type_id=-1&map_type_id=&filename=2025_HKW_UNIT_RPT.pdf)
 - [2025 Run_005 ASAP input](https://apps-nefsc.fisheries.noaa.gov/saw/sasi_files.php?year=2025&species_id=8&stock_id=6&review_type_id=3&info_type_id=3&map_type_id=&filename=RUN_005.DAT)
 - [2025 White Hake run archive](https://apps-nefsc.fisheries.noaa.gov/saw/sasi_files.php?year=2025&species_id=8&stock_id=6&review_type_id=3&filename=2025_HKW_UNIT.zip)
+- [NOAA Stock SMART snapshot](https://github.com/NOAA-EDAB/stocksmart/tree/664c4237e26520b260a090e1821a2cee5d1cdf07), assessment_id 14071; the locally cached data file and checksum are recorded in the stock-specific manifest.
 - [2022 Management Track assessment](https://repository.library.noaa.gov/view/noaa/55264/noaa_55264_DS1.pdf)
 - [2013 SAW56 White Hake assessment summary](https://repository.library.noaa.gov/view/noaa/4374/noaa_4374_DS1.pdf)
 - [ASAP3 technical documentation and printed implementation](https://raw.githubusercontent.com/cmlegault/ASAPplots/75adfd7cf889a5a2b66b6ef0a4dbe22b51aa2084/pdf/Technical_Documentation_for_ASAP3.pdf)

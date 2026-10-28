@@ -46,7 +46,15 @@ stopifnot(
   all(abs(ssb_comparison$percent_difference - 10) < 1e-8),
   all(ssb_comparison$comparison_status == "matched"),
   all(ref$pop$ssb$unit == "tonnes"),
-  all(is.finite(attr(ref, "native_pop")$ssb$se))
+  all(is.finite(attr(ref, "native_pop")$ssb$se[
+    attr(ref, "native_pop")$ssb$year <= 2024
+  ])),
+  all(is.na(attr(ref, "native_pop")$ssb$se[
+    attr(ref, "native_pop")$ssb$year > 2024
+  ])),
+  identical(sort(attr(ref, "native_pop")$ssb$year[
+    attr(ref, "native_pop")$ssb$is_proj
+  ]), 2025:2028)
 )
 
 stopifnot(
