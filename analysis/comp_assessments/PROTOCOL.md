@@ -18,11 +18,24 @@ definition as a separate fallback record. Never let a fallback replace or be
 mixed with the latest unit. Judge source detail by what it documents, not by
 whether tinyAM can fit it.
 
-A tinyAM translation is secondary and does not gate source curation. When
-working through a stock catalogue, prioritize stocks with neither curated
-inputs nor curated outputs; return to partial records when useful source
-material can be recovered. Do not postpone recoverable assessment data while
-trying to make a tinyAM translation converge or agree better.
+First work on current stock units that have no curated input rows and no
+curated output rows across their assessment records. For each unit, start with
+the latest official assessment and recover every verifiable input, assumption,
+and output available for that run, retaining partial data and documenting the
+remaining gaps. A stock with data on only one side is a partial record, not a
+zero-data candidate; return to it when a concrete source lead is available.
+
+Do not add a superseded unit as a separate coverage case merely because its
+older assessment is more detailed. If a documented search cannot recover
+detailed data for the latest unit, retain its verified partial record and
+consider the most recent detailed assessment of the previous unit only as a
+separately identified fallback. Never pool or relabel data across the changed
+boundary. This fallback rule does not change the priority to curate the latest
+unit first.
+
+A tinyAM translation is secondary and does not gate source curation. Do not
+postpone recoverable assessment data while trying to make a tinyAM translation
+converge or agree better.
 
 Follow the schema and controlled vocabularies in `DATABASE_STRUCTURE.md`.
 The [scope and provenance statement](README.md#scope-and-provenance) applies
