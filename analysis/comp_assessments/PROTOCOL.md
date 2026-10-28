@@ -292,12 +292,12 @@ Do not select a model object solely because it is the newest file or repository.
 
 ### Select the stock unit and detailed assessment
 
-Identify the latest official stock unit and the latest official assessment for
-that unit. Make that latest run the primary source target. Search for the
-native files, research documents, machine-readable tables and other detailed
-sources that describe that specific official run. Publication date and
-assessment year can differ, so confirm the run using its model version,
-terminal data year and reported results.
+The latest official stock unit is always the primary database target. If the
+unit has changed, do not default to the older definition represented in a
+catalogue or an earlier assessment. First identify the latest assessment used
+for advice on the current unit, then search for detailed sources for that run.
+Publication date and assessment year can differ, so confirm the run using its
+model version, terminal data year and reported results.
 
 Recover and validate the inputs, assumptions and outputs available for the
 latest run, even when the resulting source record is partial. Record newer
@@ -314,21 +314,21 @@ methods in their source units and dimensions; do not manufacture age-specific
 states. If a source requires a new schema measure, document it and update the
 relevant validation before importing it.
 
-If detailed model-specific sources for the latest assessment of the latest
-unit cannot be recovered after a documented search of the relevant
-authoritative sources, retain any verified latest-unit data and mark the
-remaining gaps. A missing input or output series by itself is a gap to pursue,
-not a reason to switch stock units when detailed sources for the latest run
-are available. Only when the latest assessment is represented by summary-only
-material or its detailed run data otherwise cannot be recovered may you
-investigate the preceding stock definition and add its most recent publicly
-accessible detailed official assessment as a separate fallback. Document
-where you searched, which detailed materials could not be recovered, the
-earlier and latest stock boundaries and codes, and why the fallback is useful.
-Do not fall back merely because the earlier assessment is more complete,
-easier to fit, or more likely to agree with tinyAM. There is no fixed
-numerical completeness threshold; explain the available material and
-selection rationale in the stock review.
+If the latest assessment for the latest unit is available only as summary
+advice, or its detailed assessment data cannot be recovered after a documented
+search of relevant authoritative sources, retain any verified latest-unit data
+and document the remaining gaps. A missing input or output series within an
+otherwise detailed record of the latest run is a gap to pursue, not by itself
+a reason to switch stock units. Only if detailed data for that latest
+assessment are unavailable may you investigate the preceding stock definition
+and add its most recent publicly accessible detailed official assessment as a
+separate fallback. Document where you searched, which detailed materials were
+unavailable, the latest and preceding stock boundaries and codes, and why the
+fallback is useful. Never use fallback data to fill gaps in or replace the
+latest-unit record. Do not fall back because the earlier assessment is more
+complete, easier to fit, or more likely to agree with tinyAM. There is no fixed
+numerical completeness threshold; explain the available material and selection
+rationale in the stock review.
 
 Keep the latest-unit assessment and the earlier-unit fallback under separate
 stock and assessment IDs. Never copy, pool or relabel data across the changed
