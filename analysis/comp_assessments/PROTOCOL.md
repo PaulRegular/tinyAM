@@ -57,6 +57,17 @@ unit.
 A stock with data on only one side is a partial record; revisit it when a
 concrete source lead is available.
 
+### Selecting stocks for an active task
+
+Use the active goal to determine which records to work on and in what order.
+When the goal prioritizes unworked stocks with no input or output records, stay
+within that set; do not switch to partly populated stocks simply because they
+are easier to source or translate. Within the target set, prioritize actionable
+sources for the latest stock unit and assessment used for advice. After
+selecting a stock, follow the source hierarchy and latest-unit/fallback rules
+below. Source curation remains the priority; translation readiness does not
+affect stock selection.
+
 Do not postpone recoverable assessment data while trying to make a tinyAM
 translation converge or agree better.
 
