@@ -196,6 +196,10 @@ check_tam <- function(fit, ..., grad_tol = NULL, detailed = FALSE, model_list = 
         valid <- is.finite(fit$rep$log_pred)
         catch <- fit$dat$proj_settings$catch
         map <- fit$dat$obs_map
+        if (.f_blocked(fit$dat) && !is.null(map)) {
+          zero <- map$type == "catch" & map$age < min(fit$dat$F_settings$age_breaks)
+          valid <- valid | (zero & is.infinite(fit$rep$log_pred) & fit$rep$log_pred < 0)
+        }
         if (!is.null(catch) && !is.null(map) && nrow(map) == length(valid)) {
           zero_years <- as.numeric(names(catch)[catch == 0])
           zero <- map$type == "catch" & map$year %in% zero_years
@@ -203,7 +207,7 @@ check_tam <- function(fit, ..., grad_tol = NULL, detailed = FALSE, model_list = 
         }
         all(valid) && all(is.finite(fit$rep$sd_obs) & fit$rep$sd_obs > 0)
       },
-      "Log predictions and positive observation SDs must be finite, except deliberately zero projected catches."
+      "Log predictions and positive observation SDs must be finite, except structurally unfished ages and deliberately zero projected catches."
     )
   )
   structural <- .check_tam_structure(fit$dat, fit$parameter_map)
@@ -270,10 +274,11 @@ check_tam <- function(fit, ..., grad_tol = NULL, detailed = FALSE, model_list = 
     }
     if (nm == "F_modmat" && dat$F_settings$process %in% c("rw", "cor_rw") && ncol(x)) {
       ny <- sum(!dat$is_proj)
+      n_states <- if (is.null(dat$F_settings$age_block_start)) length(dat$ages) else length(dat$F_settings$age_block_start)
       x <- vapply(seq_len(ncol(x)), function(j) {
-        z <- matrix(x[, j], ny, length(dat$ages))
+        z <- .f_state_mean(matrix(x[, j], ny, length(dat$ages)), dat)
         as.vector(z[-1, , drop = FALSE] - z[-ny, , drop = FALSE])
-      }, numeric((ny - 1L) * length(dat$ages)))
+      }, numeric((ny - 1L) * n_states))
     }
     if (nm == "N_modmat" && ncol(x)) {
       ny <- sum(!dat$is_proj)

@@ -34,7 +34,13 @@ plot_trend(random_par$log_n0,
 `r if ("log_f" %in% names(random_par)) "### F"`
 
 ```{r, eval = "log_f" %in% names(random_par)}
-plot_age_year(random_par$log_f, x = ~year, color = ~model, legendgroup = ~model, colors = cols, frame = ~age, ylab = "Latent F (f)")
+f_states <- random_par$log_f
+if ("age_block" %in% names(f_states)) {
+  # Blocks are the estimated coordinates, rather than replicated biological ages.
+  if (!"age" %in% names(f_states)) f_states$age <- NA_integer_
+  f_states$age <- ifelse(is.na(f_states$age_block), as.character(f_states$age), as.character(f_states$age_block))
+}
+plot_age_year(f_states, x = ~year, color = ~model, legendgroup = ~model, colors = cols, frame = ~age, ylab = "Latent F (f)")
 ```
 
 `r if ("log_m" %in% names(random_par)) "### M"`

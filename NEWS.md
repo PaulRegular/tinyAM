@@ -1,5 +1,10 @@
 # tinyAM 0.1.1.9000
 
+* Add optional F age blocks with explicit closing boundaries. Blocks share
+  actual F; younger ages below the first boundary have exactly zero F.
+  M accepts the same boundaries while preserving all legacy specifications.
+  Pinned SAMjr examples and native SAM provide numerical equivalence checks.
+
 * Partial OSA requests now map returned residuals to their original observations;
   unrequested and conditioning rows retain missing residuals.
 

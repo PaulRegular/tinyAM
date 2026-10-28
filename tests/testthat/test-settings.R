@@ -89,7 +89,7 @@ test_that("Usage shows every supported settings entry and optional projections",
   expected <- list(
     N_settings = c("process", "init", "mu_form", "sd_form"),
     rec_settings = c("process", "init", "mu_form", "sd", "phi"),
-    F_settings = c("process", "mu_form", "sd_form", "mean_ages"),
+    F_settings = c("process", "mu_form", "sd_form", "age_breaks", "mean_ages"),
     M_settings = c("process", "mu_form", "mu_supplied", "sd_form", "age_breaks", "first_dev_year", "mean_ages"),
     catch_settings = c("sd_form", "sd_supplied"),
     index_settings = c("sd_form", "sd_supplied", "q_form", "q_link"))

@@ -75,6 +75,10 @@
 #'
 #' - **Fishing mortality (F)**
 #'   - `log_sd_f` (only when the F process is active)
+#'   - With `F_settings$age_breaks`, `log_f` has one column per active F
+#'     block, indexed by `age_block`. Unfished ages have no latent F entries.
+#'     A single active block has no age-correlation parameter; AR1 retains
+#'     only its temporal correlation.
 #'   - `logit_phi_f` length 2 (if `process == "ar1"`)
 #'   - `atanh_rho_f`: signed age correlation of annual F increments
 #'     (if `process == "cor_rw"`), reported as `rho_f` through `tanh()`.
@@ -161,7 +165,7 @@ make_par <- function(dat) {
   if (dat$rec$type == "ar1" && is.null(dat$rec$phi)) par$logit_phi_r <- c(year = 0)
   if (ncol(dat$N_modmat)) par$mu_n <- setNames(numeric(ncol(dat$N_modmat)), colnames(dat$N_modmat))
   if (dat$F_settings$process != "off") par$log_sd_f <- 0
-  if (dat$F_settings$process == "cor_rw") par$atanh_rho_f <- 0
+  if (dat$F_settings$process == "cor_rw" && length(dat$F_settings$age_block_start) > 1L) par$atanh_rho_f <- 0
   if (!is.null(dat$F_settings$mu_form)) {
     par$log_mu_f <- numeric(ncol(dat$F_modmat))
     names(par$log_mu_f) <- colnames(dat$F_modmat)
@@ -186,7 +190,7 @@ make_par <- function(dat) {
     par$logit_phi_n <- c("age" = 0, "year" = 0)
   }
   if (dat$F_settings$process == "ar1") {
-    par$logit_phi_f <- c("age" = 0, "year" = 0)
+    par$logit_phi_f <- if (length(dat$F_settings$age_block_start) == 1L) c(year = 0) else c(age = 0, year = 0)
   }
   if (dat$M_settings$process == "ar1") {
     par$logit_phi_m <- c("age" = 0, "year" = 0)
@@ -232,8 +236,10 @@ make_par <- function(dat) {
     )
   }
   if (dat$F_settings$process != "off") par$log_f <- matrix(0,
-    nrow = sum(!dat$is_proj), ncol = length(dat$ages),
-    dimnames = list(year = dat$years[!dat$is_proj], age = dat$ages)
+    nrow = sum(!dat$is_proj), ncol = length(dat$F_settings$age_block_start),
+    dimnames = stats::setNames(list(dat$years[!dat$is_proj],
+      if (.f_blocked(dat)) levels(dat$F_settings$age_blocks) else dat$ages),
+      c("year", if (.f_blocked(dat)) "age_block" else "age"))
   )
   if (dat$F_settings$process != "off" && (!is.null(dat$F_mono_modmat) || any(vapply(dat$F_terms, function(x) x$type == "logistic", logical(1))))) {
     surface <- matrix(
@@ -241,7 +247,7 @@ make_par <- function(dat) {
         .mean_effects(par, dat, "F")$contribution,
       length(dat$years), length(dat$ages)
     )
-    par$log_f[] <- surface[!dat$is_proj, , drop = FALSE]
+    par$log_f[] <- .f_state_mean(surface[!dat$is_proj, , drop = FALSE], dat)
   }
 
   if (dat$M_settings$process != "off") {

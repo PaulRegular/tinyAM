@@ -409,6 +409,19 @@
 #' introduced. Fully selected F
 #' is \eqn{\max_a F_{t,a}} and selectivity is F divided by that maximum.
 #' `F_bar` and `M_bar` are abundance-weighted means over their selected ages.
+#'
+#' F age blocks share actual mortality, not just mean selectivity or process
+#' deviations. With `F_settings$age_breaks`, each active year--block has one
+#' absolute log-F state; its realized F is repeated across member ages. Ages
+#' below the first boundary have exactly zero F. Explicit boundaries are
+#' left-closed and right-open and must end at the oldest modeled age plus one.
+#' Process densities and correlated-RW distances operate on unique ordered
+#' blocks. Initial states, SD interpretations and correlation transformations
+#' otherwise retain their existing conventions. Zero-F ages create no latent F
+#' states or catch residuals; their catch predictions are exactly zero. Survey
+#' observations at these ages remain in the index likelihood.
+#' Projections scale only the fished part of terminal F. Catch-target feasibility
+#' uses biomass at ages with positive terminal F.
 #' Total catch sums numbers; yield uses catch weights, falling back to stock
 #' weights when no catch weights are supplied. Observed totals omit missing cells; predicted
 #' totals sum the conditional median predictions over all catch cells.

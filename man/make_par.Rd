@@ -100,6 +100,10 @@ See \code{\link[=prepare_tam]{prepare_tam()}} for the choices and weak-identific
 \item \strong{Fishing mortality (F)}
 \itemize{
 \item \code{log_sd_f} (only when the F process is active)
+\item With \code{F_settings$age_breaks}, \code{log_f} has one column per active F
+block, indexed by \code{age_block}. Unfished ages have no latent F entries.
+A single active block has no age-correlation parameter; AR1 retains
+only its temporal correlation.
 \item \code{logit_phi_f} length 2 (if \code{process == "ar1"})
 \item \code{atanh_rho_f}: signed age correlation of annual F increments
 (if \code{process == "cor_rw"}), reported as \code{rho_f} through \code{tanh()}.

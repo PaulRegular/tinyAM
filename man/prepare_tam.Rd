@@ -10,7 +10,7 @@ prepare_tam(
   ages = NULL,
   N_settings = list(process = "iid", init = "exp", mu_form = NULL, sd_form = ~1),
   rec_settings = list(process = "rw", init = "free", mu_form = NULL, sd = NULL, phi = NULL),
-  F_settings = list(process = "rw", mu_form = NULL, sd_form = ~1, mean_ages = NULL),
+  F_settings = list(process = "rw", mu_form = NULL, sd_form = ~1, age_breaks = NULL, mean_ages = NULL),
   M_settings = list(process = "off", mu_form = NULL, mu_supplied = ~I(0.2), sd_form = ~1,
         age_breaks = NULL, first_dev_year = NULL, mean_ages = NULL),
   catch_settings = list(sd_form = ~1, sd_supplied = NULL),
@@ -95,6 +95,15 @@ correlation; its SD is the marginal SD of annual log-F increments.
 evaluated on \code{data$pop_covariates}. Sharing an SD does not share latent F states.
 IID SDs describe residuals; RW/correlated-RW SDs describe annual increments;
 stationary AR1 retains its innovation-scale convention.
+\item \code{age_breaks}: optional increasing integer interval boundaries for shared
+actual F. Intervals include their lower boundary and exclude their upper
+boundary; the final boundary must be \code{max(ages) + 1}. For ages \code{1:6},
+\code{c(1, 2, 3, 4, 5, 7)} shares F at ages 5 and 6. Ages below the first
+boundary have exactly zero F in all years, with no F state or process
+density. Positive catch observations at those ages are rejected. \code{NULL}
+retains separate F states at every modeled age. All mean components and
+process SDs must agree within a shared block; refine blocks for age-varying
+means. Process correlation uses ordered blocks, not replicated fish ages.
 \item \code{mu_form}: an optional formula for mean-\eqn{F} (coefficients estimated as
 \strong{log-scale} parameters \code{log_mu_f}), evaluated on \code{data$pop_covariates}. Required for \code{"off"}, \code{"iid"} and \code{"ar1"};
 use \code{~ 1} for one estimated mean level or \code{~ factor(age)} for age-specific
@@ -140,6 +149,10 @@ see \link{formula_effects} for the model and statistical cautions.
 \code{~ M_assumption} stored in the \code{data$pop_covariates} data.frame.
 \item \code{age_breaks}: optional integer break points used by \code{\link[=cut_ages]{cut_ages()}} to
 define \code{age_blocks} sharing absolute latent M states across ages.
+Existing specifications retain their original interpretation. Alternatively,
+end at \code{max(ages) + 1} to use explicit half-open intervals as for F:
+with ages \code{1:6}, \code{c(2, 5, 7)} makes blocks 2--4 and 5--6. Ages outside
+M process blocks retain their existing mean M; they are not set to zero.
 When a narrower set of \code{age_breaks} than modeled \code{ages} is provided,
 process states are only estimated for ages within the specified range; ages
 outside this range are fixed to their mean or assumed levels. By default,

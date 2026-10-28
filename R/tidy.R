@@ -397,6 +397,15 @@ tidy_sdrep <- function(fit, interval = 0.95) {
     df$F$se_scale[zero] <- "reported"
   }
   for (nm in names(df)) df[[nm]]$unit <- .population_unit(fit$dat, nm)
+  for (nm in intersect(c("F", "mu_F", "sd_F", "F_bar"), names(df))) {
+    source <- fit$rep[[nm]]
+    if (is.null(source)) next
+    zero <- as.vector(source) == 0
+    if (length(zero) == nrow(df[[nm]]) && any(zero)) {
+      df[[nm]][zero, c("est", "lwr", "upr", "se")] <- 0
+      df[[nm]]$se_scale[zero] <- "reported"
+    }
+  }
   df
 }
 
@@ -509,6 +518,8 @@ tidy_pop <- function(fit, interval = 0.95) {
 #'   remains a log-decrement with an SE on that same scale. For constrained
 #'   initialization, derived `n0` estimates use joint RTMB uncertainty.
 #' - For matrices (e.g., `log_f`, `log_n`), `year` and/or `age` columns are added
+#'   from their dimensions; shared F/M states use `age_block` rather than
+#'   duplicating the parameter at each biological age.
 #'   via [tidy_mat()].
 #'
 #' @param fit A fitted TAM object (from [fit_tam()]) containing an `sdrep`
@@ -828,8 +839,8 @@ stack_nested <- function(x, label = "model",
   }
   if (!is.null(par[["log_f"]])) {
     historical <- !dat$is_proj
-    out$F <- table(log(fit$rep$F[historical, , drop = FALSE]) -
-                     log(fit$rep$mu_F[historical, , drop = FALSE]), dat$F_settings$process)
+    out$F <- table(par$log_f - log(.f_state_mean(fit$rep$mu_F[historical, , drop = FALSE], dat)),
+      dat$F_settings$process, .f_blocked(dat))
   }
   if (!is.null(par[["log_m"]])) {
     out$M <- table(par[["log_m"]] - log(fit$rep$mu_M[rownames(par[["log_m"]]),
