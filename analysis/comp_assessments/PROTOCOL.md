@@ -54,8 +54,12 @@ earlier-stock-definition fallback only under Section 2.2, after a documented
 search finds detailed data unavailable for the latest assessment of the latest
 unit.
 
-A stock with data on only one side is a partial record; revisit it when a
-concrete source lead is available.
+A record with inputs but no outputs, or outputs but no inputs, remains partial.
+Keep its verified data and document the missing side. Pursue that side when
+detailed sources for the same production run make it recoverable; do not fill
+latest-unit gaps with values from an older unit or assessment. Use the separate
+fallback in Section 2.2 only after the documented search finds detailed data
+unavailable for the latest assessment of the current unit.
 
 ### Selecting stocks for an active task
 
