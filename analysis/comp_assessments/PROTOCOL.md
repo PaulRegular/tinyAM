@@ -8,58 +8,37 @@ The governing question is:
 
 > **For the latest official stock unit, what inputs, assumptions, and outputs can be recovered from the most recent publicly accessible detailed sources for the assessment used for advice?**
 
-Source recovery is the primary task; tinyAM translation is downstream. For each
-stock, use this order:
+Source recovery is the primary task; tinyAM translation is secondary. For each
+stock, follow this order:
 
-1. Establish the latest official stock unit and the most recent assessment
-   used for advice on that unit.
-2. Search for detailed public sources for that specific run, including
+1. Establish the latest official stock unit and the most recent assessment used
+   for advice on that unit.
+2. Search for detailed public sources for that assessment run, including
    research documents, native files, machine-readable tables, and repositories.
-   A detailed report may be published after the advice document; verify the run
-   by its assessment year, terminal data year, model version, and reported
-   results.
-3. For the latest-unit assessment, curate every verifiable original input,
-   assumption, and reported output available in the detailed public sources
-   for that production run, even when the record remains partial. Record newer
-   summary-only advice separately and leave unavailable values unresolved. Do
-   not fill gaps in the latest unit with values from an older unit or run.
-4. Only after a documented search finds detailed assessment data unavailable
-   for the latest assessment of the current stock unit may you curate the most
-   recent detailed assessment for a preceding stock definition. Keep it as a
-   separate, secondary stock and assessment record; preserve any verified
-   latest-unit data and explain the boundary change and the fallback's limits.
-5. Once the latest-unit source record and any justified fallback are
-   documented, use `TINYAM_TRANSLATION.md` to assess whether a tinyAM
-   translation is useful and supportable. Fit-readiness or agreement must not
-   decide which stock unit or assessment is curated.
+   Verify the run by its assessment year, terminal data year, model version,
+   and reported results; a detailed report may be published after the advice.
+3. For the latest unit and assessment, capture every verifiable original input,
+   assumption, and reported output in the detailed sources. Keep the current-unit
+   record even when partial, record newer summary-only advice separately, and
+   leave unavailable values unresolved. A missing input or output stream is a
+   source gap to pursue, not a reason to substitute an older run.
+4. Only when a documented search finds no recoverable run-specific detailed
+   data for the latest assessment of the latest unit may you add the most recent
+   detailed assessment for a preceding stock definition. Preserve any verified
+   latest-unit information and keep the fallback under separate stock and
+   assessment IDs. Explain the boundary change and the fallback's limits; never
+   use it to fill gaps in the latest-unit record.
+5. After the source record and its gaps are documented, use
+   `TINYAM_TRANSLATION.md` to assess whether a tinyAM translation is useful and
+   supportable. Translation readiness, fit, or agreement does not decide which
+   stock unit or assessment is curated, and must not delay recoverable source
+   work.
 
-Source availability, not completeness or translation readiness, controls the
-fallback decision. Keep curating the latest-unit assessment when detailed
-sources support a partial record; do not switch to an older, more complete run
-because it is easier to extract or fit. Only after a documented search finds
-the latest assessment's detailed data unavailable may you add the most recent
-detailed assessment for a preceding stock definition. Keep that fallback under
-its own stock and assessment IDs: it neither replaces the latest-unit record
-nor fills gaps in it. tinyAM fit-readiness and agreement do not determine the
-source-curation target.
-
-Prioritize work by the availability of actionable sources for the latest
-official stock unit and its latest assessment used for advice. For each selected
-stock, first recover the most recent publicly accessible detailed assessment
-documentation and its verifiable inputs, assumptions, and outputs. If that
-record is partial, retain it and pursue remaining source gaps rather than
-moving to an older unit or run. Empty or partial database rows are signals for
-follow-up, not criteria for choosing a different unit or assessment. Apply the
-earlier-stock-definition fallback only under Section 2.2, after a documented
-search finds detailed data unavailable for the latest assessment of the latest
-unit.
-
-A record with inputs but no outputs, or outputs but no inputs, remains partial.
-Keep its verified data and document the missing side. Pursue that side when
-detailed sources for the same production run make it recoverable; do not fill
-latest-unit gaps with values from an older unit or assessment. Use the separate
-fallback in Section 2.2 only after the documented search finds detailed data
-unavailable for the latest assessment of the current unit.
+Prioritize stocks by the availability of actionable detailed sources for the
+latest official unit and assessment used for advice. Empty or partial database
+rows are follow-up signals, not reasons to choose a different stock definition
+or assessment. If the active task specifies an unworked stock set, stay within
+that scope and prioritize source availability within it.
 
 ### Selecting stocks for an active task
 
