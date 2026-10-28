@@ -33,14 +33,30 @@ and flags it; it is not silently changed to `0.04`.
 
 ## Input availability and translation readiness
 
-WGBFAS 2024 Table 2.1.8 describes the input categories and coverage, and the
-report discusses the model assumptions. It does not provide the complete
-numerical series used for catch, length and age compositions, survey indices,
-or biological surfaces in a reusable form. The source review therefore records
-the known model structure and assumptions but leaves `inputs.csv` empty and
-marks input recovery as not started. It does not treat estimated catch-at-age
-or fitted outputs as observed model inputs. The record is not ready for a
-tinyAM fit, and no translation is created.
+The 2024 report provides some aggregate annual catch quantities, but not the
+full inputs consumed by Stock Synthesis. Table 2.1.11 reports landings in
+tonnes for 1946-2023 and discards in tonnes for 1966-2023. These annual values
+are imported as aggregate catch records, preserving blank discard years before
+1966 rather than treating them as zero. The table marks its Landings heading
+with an asterisk and gives the footnote “average of 2018-2022”; how that note
+applies to the individual annual values is unclear, so the values are retained
+as printed and the ambiguity is recorded on each imported landings row.
+
+Section 2.1.4.1 states that total catch for 2024 was set to 1065 tonnes, equal
+to the 2023 total catch (1008 tonnes landings plus 57 tonnes discards). This
+assumed total is recorded separately without inventing a 2024 landings/discards
+split. The report says total catch biomass was divided between active and
+passive fleets from 1987 onward and those catches were further divided by
+quarter, but it does not publish the full fleet-by-quarter time series used by
+the model. The exact catch inputs therefore remain incomplete.
+
+Other required input data also remain unavailable as numerical source series:
+catch age/length compositions, survey observations, and complete biological
+input surfaces. The report describes their type and coverage but does not
+provide all values in a reusable form. Estimated catch-at-age is not treated
+as an observed input. The assessment is marked `inputs_status = partial`; it is
+not ready for a tinyAM fit, and no translation is created until the remaining
+input limitations are resolved or explicitly accepted.
 
 The WGBFAS 2025 report says no new advice was requested for this stock and
 reprints its age-specific N and F tables as not updated in 2024. It provides
@@ -49,11 +65,11 @@ summary values are not treated as a separate at-age assessment output here.
 
 The latest advice record is from 2026 and uses a survey-index trend assessment
 (ICES category 3.2) based on standardized BITS Q1/Q4 indices, not an
-age-structured population model. It has no age-specific N/F/M estimates. The current index-based assessment is recorded separately as
+age-structured population model. It has no age-specific N/F/M estimates. The
+current index-based assessment is recorded separately as
 `ices_cod_eastern_baltic_2026`; the 2024 age-structured outputs remain
-available as a distinct historical record. The exploratory SPiCT
-analysis in the 2026 report is not the method used for current advice.
-
+available as a distinct historical record. The exploratory SPiCT analysis in
+the 2026 report is not the method used for current advice.
 Sources:
 
 - [WGBFAS 2024 report](https://doi.org/10.17895/ices.pub.25764978),

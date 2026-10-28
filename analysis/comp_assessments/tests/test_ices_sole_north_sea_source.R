@@ -13,6 +13,7 @@ stock <- stocks[stocks$stock_id == stock_id, ]
 detailed <- assessments[assessments$assessment_id == detailed_id, ]
 summary <- assessments[assessments$assessment_id == summary_id, ]
 source_inputs <- inputs[inputs$assessment_id == detailed_id, ]
+current_inputs <- inputs[inputs$assessment_id == summary_id, ]
 source_outputs <- outputs[outputs$assessment_id %in% c(detailed_id, summary_id), ]
 
 stopifnot(
@@ -20,15 +21,15 @@ stopifnot(
   stock$authority_stock_id == "sol.27.4",
   stock$common_name == "North Sea sole",
   nrow(detailed) == 1L,
-  detailed$is_current,
+  !detailed$is_current,
   detailed$assessment_year == 2025,
   detailed$terminal_year == 2024,
   detailed$estimate_terminal_year == 2025,
   nrow(summary) == 1L,
-  !summary$is_current,
-  summary$inputs_status == "not_started",
+  summary$is_current,
+  summary$inputs_status == "partial",
   summary$outputs_status == "partial",
-  !nrow(source_inputs[source_inputs$assessment_id == summary_id, ]),
+  nrow(current_inputs) == 3394L,
   sum(source_inputs$type == "catch" & source_inputs$fleet == "Landings") == 680L,
   sum(source_inputs$type == "catch" & source_inputs$fleet == "Discards") == 230L,
   sum(source_inputs$measure == "landings_weight_at_age") == 748L,

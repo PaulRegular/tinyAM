@@ -10,7 +10,8 @@ assessment_id <- "ices_cod_eastern_baltic_2024"
 assessment <- utils::read.csv(
   file.path(root, "database", "assessments.csv"),
   stringsAsFactors = FALSE,
-  check.names = FALSE
+  check.names = FALSE,
+  skipNul = TRUE
 )
 assessment <- assessment[assessment$assessment_id == assessment_id, , drop = FALSE]
 all_outputs <- utils::read.csv(
@@ -46,9 +47,9 @@ testthat::test_that("Eastern Baltic cod 2024 outputs match the published tables"
   testthat::expect_equal(as.integer(assessment$terminal_year), 2024L)
   testthat::expect_false(assessment$is_current)
   testthat::expect_true(assessment$is_applied)
-  testthat::expect_equal(assessment$inputs_status, "not_started")
+  testthat::expect_equal(assessment$inputs_status, "partial")
   testthat::expect_equal(assessment$outputs_status, "partial")
-  testthat::expect_false(has_assessment_inputs)
+  testthat::expect_true(has_assessment_inputs)
 
   testthat::expect_equal(nrow(n_at_age), 79L * 8L)
   testthat::expect_setequal(unique(n_at_age$year), 1946:2024)
