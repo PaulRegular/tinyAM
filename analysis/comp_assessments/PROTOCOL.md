@@ -43,13 +43,13 @@ its own stock and assessment IDs: it neither replaces the latest-unit record
 nor fills gaps in it. tinyAM fit-readiness and agreement do not determine the
 source-curation target.
 
-Select stocks for follow-up based on unresolved source-data gaps and
-actionable source leads. Having no curated input or output rows can help
-prioritize a stock, but it does not change which stock unit or assessment is
-the primary target. Recover every verifiable input, assumption, and output
-for the latest unit, retain partial data, and document remaining gaps. A stock
-with data on only one side is a partial record; revisit it when a concrete
-source lead is available.
+Prioritize stocks with no curated input or output rows, then other unresolved
+source-data gaps with actionable source leads. This is only the order for
+selecting work: for each stock, the primary target remains the latest
+assessment of the latest official stock unit. Recover every verifiable input,
+assumption, and output for that run, retain partial data, and document
+remaining gaps. A stock with data on only one side is a partial record;
+revisit it when a concrete source lead is available.
 
 Do not postpone recoverable assessment data while trying to make a tinyAM
 translation converge or agree better.
@@ -314,15 +314,19 @@ methods in their source units and dimensions; do not manufacture age-specific
 states. If a source requires a new schema measure, document it and update the
 relevant validation before importing it.
 
-If detailed inputs or outputs for the latest assessment of the latest unit
-cannot be recovered after a documented search of the relevant authoritative
-sources, retain its verified data and mark the remaining gaps. Only then may
-you investigate the preceding stock definition and add its most recent
-publicly accessible detailed official assessment as a separate fallback.
-Document where you searched, which detailed materials could not be recovered,
-the earlier and latest stock boundaries and codes, and why the fallback is
-useful. Do not fall back merely because the earlier assessment is more
-complete, easier to fit, or more likely to agree with tinyAM. There is no fixed
+If detailed model-specific sources for the latest assessment of the latest
+unit cannot be recovered after a documented search of the relevant
+authoritative sources, retain any verified latest-unit data and mark the
+remaining gaps. A missing input or output series by itself is a gap to pursue,
+not a reason to switch stock units when detailed sources for the latest run
+are available. Only when the latest assessment is represented by summary-only
+material or its detailed run data otherwise cannot be recovered may you
+investigate the preceding stock definition and add its most recent publicly
+accessible detailed official assessment as a separate fallback. Document
+where you searched, which detailed materials could not be recovered, the
+earlier and latest stock boundaries and codes, and why the fallback is useful.
+Do not fall back merely because the earlier assessment is more complete,
+easier to fit, or more likely to agree with tinyAM. There is no fixed
 numerical completeness threshold; explain the available material and
 selection rationale in the stock review.
 
