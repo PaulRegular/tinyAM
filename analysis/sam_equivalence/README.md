@@ -87,3 +87,13 @@ reported summaries. Native SAM interval tables also use different conventions
 from tinyAM's default 95% Wald limits, and conditional state SEs must not be
 compared with SEs that propagate fixed-parameter uncertainty. Align these
 definitions before comparing summaries; they do not change the likelihood.
+
+## Package validation
+
+On R 4.6.1, the complete package suite passed all 3,807 expectations with no
+failures, warnings or skips. `R CMD check --no-manual` returned **Status: OK**,
+including examples and documentation checks. Focused regression tests cover
+latent recruitment boundaries, power-formula validation and derivatives,
+simulation, warm starts, projections, hindcasts, dashboard rendering and OSA
+row identities. These checks complement the pinned SAM comparison above;
+they do not remove its statistical advisories or default-start limitation.
