@@ -41,7 +41,8 @@
 #' mature biomass; see [tinyAM-model]. No extra parameters or process penalties
 #' are introduced. `N_plus`, `W`, and `P` are then included in `report()`.
 #' Initial older-age abundance, `log_r0`, and additional early recruitment
-#' boundary states remain supplied fixed states. See [recruitment_formulas].
+#' boundary states retain their supplied values during process simulation.
+#' See [recruitment_formulas] for fixed versus integrated initialization.
 #' RW processes retain their starting state because it has no process density.
 #' For N, the first `log_n` row is retained and its starting residual is computed
 #' against the newly simulated cohort prediction. Subsequent residuals follow
@@ -327,6 +328,11 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   log_pred[ic] <- log_N_obs[ic] - log(Z_obs[ic]) + log(-expm1(-Z_obs[ic])) + log(F_obs[ic])
 
   ii <- obs_map$type == "index"
+  if (!is.null(dat$q_power)) {
+    log_q_base <- log_q_obs
+    q_power <- .q_power_values(par, dat)
+    log_q_obs <- log_q_base + (q_power - 1) * (log_N_obs[ii] - Z_obs[ii] * samp_time[ii])
+  }
   log_pred[ii] <- log_q_obs + log_N_obs[ii] - Z_obs[ii] * samp_time[ii]
 
   # Internal reporting modes share the fitted population and observation equations.
@@ -455,6 +461,11 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   REPORT(log_obs)
   REPORT(sd_obs)
   REPORT(log_q_obs)
+  if (!is.null(dat$q_power)) {
+    REPORT(log_q_base)
+    REPORT(q_power)
+    ADREPORT(log_q_base)
+  }
   q_link_prediction <- if (identical(index_settings$q_link, "logit")) {
     if (any(vapply(dat$q_terms, function(term) term$type == "logistic", logical(1)))) {
       log_q_obs - log(-expm1(log_q_obs))
@@ -498,6 +509,7 @@ nll_fun <- function(par, dat, simulate = FALSE) {
       log_r = if (dat$rec$type == "off") setNames(log_recruitment[dat$rec$eligible], dat$years[dat$rec$eligible]) else log_r,
       log_obs = log_obs
     ))
+    sims$log_r0 <- par$log_r0
     if (!is.null(par$log_r_init)) sims$log_r_init <- par$log_r_init
     if (N_settings$init %in% c("free", "latent")) {
       sims$log_n0 <- log_n0

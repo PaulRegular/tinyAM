@@ -514,7 +514,7 @@ check_tam <- function(fit, ..., grad_tol = NULL, detailed = FALSE, model_list = 
     .mean_process_advisories(fit$dat), .q_process_advisories(fit$dat),
     .sd_process_advisories(fit$dat),
     .rec_process_advisories(fit$dat), .rec_fit_advisories(fit),
-    .formula_uncertainty_advisories(fit), .cor_rw_advisories(fit),
+    .formula_uncertainty_advisories(fit), .cor_rw_advisories(fit), .q_power_advisories(fit),
     .process_sd_advisories(fit$dat), .process_sd_fit_advisories(fit)
   )
   add <- function(issue, detail) {
