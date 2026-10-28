@@ -3,6 +3,10 @@
 Status: canonical record afsc_pollock_ebs_2024 imported; inputs, outputs and assumptions remain partial.
 Charbonneau identifier: AFSC_ESB_Gadus_chalcogrammus (historical catalogue spelling ESB).
 
+## October 2026 production-status check
+
+The [September 2026 assessment development report](https://noaa-afsc.github.io/EBS_pollock/doc/EBSpollock_Sept_2026.html) identifies Model 23.0 as the accepted 2024 ADMB assessment and recommends Rceattle Model 26.0 for the forthcoming November Plan Team and December SSC and Council reviews. The development fit uses bridge data through 2024; the report calls for the fall assessment to incorporate completed 2025 fishery and 2026 survey updates. Its recommendation does not establish that the later production run was adopted. As of the source check on 2026-10-27, the 2024 assessment remains the supported production record; no development-run values have been substituted. The downloaded report and SHA-256 are recorded in the local source-cache manifest. Revisit after the formal 2026 review and release of the final model and its inputs.
+
 ## Assessment identity
 
 The official 2025 SAFE catch report states that no new assessment was conducted because of the lapse in Congressional appropriations and government shutdown. Its latest full EBS assessment is 2024; previous assessment outputs were rolled forward for specifications. Do not label the 2025 catch-only notice or September 2026 development work as a new fitted assessment.
