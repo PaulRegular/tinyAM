@@ -10,10 +10,14 @@ evidence does not establish which candidate was selected for the management
 advice run. The database therefore labels the represented run as a candidate,
 and the translation dashboard compares against this run only.
 
-The 2024 Management Track update is later and supplies summary catch, SSB,
-recruitment, and Fbar values through 2023. Its recovered report archive has no
-age-specific fitted surfaces or native model object. Those summary values are
-stored under a separate assessment ID and are not mixed with Run29F4. The 2026
+The 2024 Management Track update is later and supplies aggregate commercial
+landings, discards, total catch, SSB, recruitment, and Fbar values through
+2023. The catch values are transcribed as inputs from Table 1; the rounded
+total is stored with its landings and discard components, not as a separate
+output or independent observation. The report archive has no age-specific
+catch inputs, fitted surfaces, or native model object. Those data and summary
+outputs are stored under a separate assessment ID and are not mixed with
+Run29F4. The 2026
 Management Track report updates the summary through 2025 and is marked
 pre-decisional. The September 2026 panel found the 2026 MT3 model technically
 sufficient for status and catch advice; its candidate is now the selected

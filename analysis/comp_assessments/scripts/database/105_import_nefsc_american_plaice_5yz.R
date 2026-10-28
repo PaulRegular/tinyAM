@@ -293,11 +293,9 @@ outputs_2022 <- list(
 )
 outputs_2022 <- do.call(rbind, outputs_2022)
 
-summary_outputs <- function(id, years, catch, ssb, fbar, recruitment, reference) {
+summary_outputs <- function(id, years, ssb, fbar, recruitment, reference) {
   note <- "Transcribed from the official summary table; no numerical uncertainty is reported in the table."
   rbind(
-    output_frame(id, "catch", "total_biomass", catch, "metric tonnes", year = years,
-      source_type = "official_table", source_reference = reference, notes = note),
     output_frame(id, "biomass", "SSB", ssb, "metric tonnes", year = years,
       source_type = "official_table", source_reference = reference, notes = note),
     output_frame(id, "mortality", "Fbar", fbar, "per year", year = years,
@@ -309,15 +307,47 @@ summary_outputs <- function(id, years, catch, ssb, fbar, recruitment, reference)
 }
 outputs_2024 <- summary_outputs(
   summary_2024_id, 2014:2023,
-  c(1331, 1317, 1117, 1235, 1196, 1048, 671, 702, 757, 1244),
   c(32766, 37035, 45530, 48698, 45743, 30378, 23682, 19644, 21206, 25248),
   c(0.042, 0.041, 0.030, 0.029, 0.027, 0.037, 0.031, 0.041, 0.041, 0.057),
   c(109468, 28942, 59527, 15283, 69501, 40833, 56544, 65743, 61410, 46657),
   "2024 Management Track report, Table 1"
 )
+
+summary_catch_inputs <- function(id, years, landings, discards, total_catch, reference) {
+  note <- paste(
+    "Aggregate values reported in the assessment data table; these do not recover",
+    "the age-specific catch inputs or catch likelihood."
+  )
+  rbind(
+    make_input(id, "catch", "landings_biomass", "biomass", landings,
+      "metric tonnes", year = years, fleet = "Commercial fishery",
+      source_type = "official_table", source_reference = reference,
+      transformation = "Transcribed from the reported table; no unit conversion.",
+      notes = paste(note, "Commercial landings are a component of total catch.")),
+    make_input(id, "catch", "discard_biomass", "biomass", discards,
+      "metric tonnes", year = years, fleet = "Commercial fishery",
+      source_type = "official_table", source_reference = reference,
+      transformation = "Transcribed from the reported table; no unit conversion.",
+      notes = paste(note, "Commercial discards are a component of total catch.")),
+    make_input(id, "catch", "total_biomass", "biomass", total_catch,
+      "metric tonnes", year = years, fleet = "Commercial fishery",
+      source_type = "official_table", source_reference = reference,
+      transformation = "Transcribed from the reported table; no unit conversion.",
+      notes = paste(note,
+        "The table's rounded total can differ by 1 tonne from the displayed component sum and is not an independent observation."))
+  )
+}
+
+inputs_2024 <- summary_catch_inputs(
+  summary_2024_id, 2014:2023,
+  c(1239, 1231, 1009, 1134, 1087, 970, 597, 631, 699, 1168),
+  c(92, 86, 108, 102, 109, 78, 74, 71, 58, 77),
+  c(1331, 1317, 1117, 1235, 1196, 1048, 671, 702, 757, 1244),
+  "2024 Management Track report, Table 1"
+)
+
 outputs_2026 <- summary_outputs(
   summary_2026_id, 2015:2025,
-  c(1317, 1117, 1235, 1196, 1048, 671, 702, 756, 1242, 1436, 1564),
   c(33204, 40571, 43962, 39307, 24660, 19003, 13930, 15653, 21966, 21473, 17169),
   c(0.046, 0.034, 0.033, 0.034, 0.045, 0.038, 0.060, 0.047, 0.054, 0.072, 0.096),
   c(22165, 47319, 11948, 48920, 31538, 40894, 45050, 37294, 20696, 8103, 32473),
@@ -378,7 +408,7 @@ assessments <- data.frame(
   outputs_status = c("complete", "partial", "partial"),
   notes = c(
     "Full native WHAM Run29F4 inputs and fitted outputs are cached. Run29F4 was one of three 2022 research-track candidates; the exact candidate adopted for management advice is not established. The report's 2022 research-track model informed subsequent Management Track assessments.",
-    "Official 2024 Management Track summary outputs are recorded, but its model input arrays and age-specific fitted surfaces were not recovered. Values are not mixed with the 2022 candidate run.",
+    "Official 2024 Management Track aggregate catch data and summary outputs are recorded, but its age-specific model inputs and fitted surfaces were not recovered. Values are not mixed with the 2022 candidate run.",
     "The 2026 MT3 assessment passed September 2026 peer review. Available report remains pre-decisional and no native inputs or age surfaces were found. Advice adoption has not been verified; is_applied remains FALSE."
   ), stringsAsFactors = FALSE
 )
@@ -438,12 +468,13 @@ replace_rows("stocks.csv", stock_id, stock)
 replace_rows("assessments.csv", assessments$assessment_id, assessments)
 replace_rows("assumptions.csv", c(assessment_id, summary_2024_id, summary_2026_id),
              rbind(assumptions_2022, assumptions_2024, assumptions_2026))
-replace_rows("inputs.csv", assessment_id, inputs_2022)
+replace_rows("inputs.csv", c(assessment_id, summary_2024_id),
+             rbind(inputs_2022, inputs_2024))
 replace_rows("outputs.csv", c(assessment_id, summary_2024_id, summary_2026_id),
              rbind(outputs_2022, outputs_2024, outputs_2026))
 
 cat("Imported Run29F4", nrow(inputs_2022), "input rows and", nrow(outputs_2022),
-    "fitted outputs; added 2024 and provisional 2026 summary outputs.\n")
+    "fitted outputs; added 2024 aggregate catch inputs and 2024/provisional 2026 summary outputs.\n")
 
 
 # Add the 2026 peer-review evidence and independently verified recent catch.

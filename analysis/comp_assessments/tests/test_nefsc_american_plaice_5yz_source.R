@@ -107,6 +107,19 @@ stopifnot(
 
 summary_2024 <- outputs[outputs$assessment_id == assessment_ids[[2L]], , drop = FALSE]
 summary_2026 <- outputs[outputs$assessment_id == assessment_ids[[3L]], , drop = FALSE]
+summary_2024_inputs <- inputs[inputs$assessment_id == assessment_ids[[2L]], , drop = FALSE]
+summary_2024_landings <- summary_2024_inputs[
+  summary_2024_inputs$measure == "landings_biomass", , drop = FALSE
+]
+summary_2024_discards <- summary_2024_inputs[
+  summary_2024_inputs$measure == "discard_biomass", , drop = FALSE
+]
+summary_2024_catch <- summary_2024_inputs[
+  summary_2024_inputs$measure == "total_biomass", , drop = FALSE
+]
+summary_2024_landings <- summary_2024_landings[order(summary_2024_landings$year), ]
+summary_2024_discards <- summary_2024_discards[order(summary_2024_discards$year), ]
+summary_2024_catch <- summary_2024_catch[order(summary_2024_catch$year), ]
 later <- assessments[match(assessment_ids[2:3], assessments$assessment_id), , drop = FALSE]
 stopifnot(
   !later$is_current[[1L]], isTRUE(later$is_applied[[1L]]),
@@ -114,6 +127,26 @@ stopifnot(
   identical(later$assessment_type[[2L]], "management_track_update"),
   setequal(unique(summary_2024$year), 2014:2023),
   setequal(unique(summary_2026$year[!is.na(summary_2026$year)]), 2015:2025),
+  nrow(summary_2024_landings) == 10L,
+  nrow(summary_2024_discards) == 10L,
+  nrow(summary_2024_catch) == 10L,
+  identical(as.integer(summary_2024_landings$year), 2014:2023),
+  identical(as.integer(summary_2024_discards$year), 2014:2023),
+  identical(as.integer(summary_2024_catch$year), 2014:2023),
+  identical(as.numeric(summary_2024_landings$value),
+    c(1239, 1231, 1009, 1134, 1087, 970, 597, 631, 699, 1168)),
+  identical(as.numeric(summary_2024_discards$value),
+    c(92, 86, 108, 102, 109, 78, 74, 71, 58, 77)),
+  identical(as.numeric(summary_2024_catch$value),
+    c(1331, 1317, 1117, 1235, 1196, 1048, 671, 702, 757, 1244)),
+  all(summary_2024_inputs$unit == "metric tonnes"),
+  all(summary_2024_inputs$source_type == "official_table"),
+  all(summary_2024_inputs$fleet == "Commercial fishery"),
+  all(abs(summary_2024_landings$value + summary_2024_discards$value -
+    summary_2024_catch$value) <= 1),
+  !any(summary_2024$type == "catch"),
+  !any(summary_2026$measure == "total_biomass"),
+  nrow(summary_2024) == 30L,
   !any(summary_2024$measure %in% c("numbers_at_age", "fishing_mortality_at_age")),
   !any(summary_2026$measure %in% c("numbers_at_age", "fishing_mortality_at_age")),
   all(is.na(summary_2024$se)),
