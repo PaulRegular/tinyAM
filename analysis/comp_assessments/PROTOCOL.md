@@ -336,6 +336,15 @@ complete, easier to fit, or more likely to agree with tinyAM. There is no fixed
 numerical completeness threshold; explain the available material and selection
 rationale in the stock review.
 
+Apply this distinction consistently: a partial detailed record has at least
+one assessment-specific input, assumption, or output verified for the latest
+production run from a detailed source. Keep that current-unit record as the
+primary target and pursue its remaining source gaps. Detailed data are
+unavailable when a documented search finds no recoverable run-specific detail
+beyond summary advice; in that case, a separate earlier-unit fallback is
+appropriate. Keep any summary-level values for the latest unit attached to
+that unit, and never combine them with the fallback assessment.
+
 Keep the latest-unit assessment and the earlier-unit fallback under separate
 stock and assessment IDs. Never copy, pool or relabel data across the changed
 boundaries, and never imply that fallback results apply to the latest unit.
