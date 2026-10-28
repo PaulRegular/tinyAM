@@ -21,7 +21,7 @@ fit_env <- new.env(parent = baseenv())
 load(file.path(root, "analysis", "comp_assessments", "source_cache",
   assessment_id, "run", "model.RData"), envir = fit_env)
 fit <- fit_env$fit
-summary_outputs <- outputs[outputs$assessment_id == summary_id, , drop = FALSE]
+summary_outputs <- outputs[outputs$assessment_id == summary_id & outputs$measure %in% c("recruitment", "SSB", "Fbar"), , drop = FALSE]
 predicted_catch <- source_outputs[source_outputs$measure == "predicted_catch", , drop = FALSE]
 predicted_index <- source_outputs[source_outputs$measure == "predicted_index", , drop = FALSE]
 q_outputs <- source_outputs[
@@ -78,18 +78,20 @@ stopifnot(
   stock$ocean == "Northeast Atlantic",
   !any(stock_bytes == as.raw(0L)),
   nrow(detailed) == 1L,
-  detailed$is_current,
+  !detailed$is_current,
   detailed$assessment_year == 2025,
   detailed$terminal_year == 2024,
   detailed$inputs_status == "complete",
   detailed$outputs_status == "complete",
   nrow(summary) == 1L,
-  !summary$is_current,
+  summary$is_current,
   summary$model_family == "SAM",
-  summary$inputs_status == "not_started",
+  summary$inputs_status == "partial",
   summary$outputs_status == "partial",
-  summary$assessment_url == "https://literatur.thuenen.de/digbib_extern/dn071152.pdf",
-  !any(inputs$assessment_id == summary_id),
+  summary$assessment_type == "annual_assessment",
+  summary$assessment_year == 2026,
+  summary$assessment_url == "https://doi.org/10.17895/ices.pub.32455056.v3",
+  any(inputs$assessment_id == summary_id),
   nrow(catch) == 328L,
   all(catch$year %in% 1984:2024),
   setequal(unique(catch$age), 2:9),
