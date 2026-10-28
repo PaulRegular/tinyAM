@@ -8,13 +8,19 @@ The governing question is:
 
 > **For the latest official stock unit, what inputs, assumptions, and outputs can be recovered from the most recent publicly accessible detailed sources for the assessment used for advice?**
 
-Source recovery comes before translation. The latest assessment for the latest
-stock unit is primary whenever any run-specific detailed source material is
-recoverable, even if partial. A preceding stock definition is eligible only as
-a separate fallback when a documented search finds no run-specific detail for
-the latest current-unit assessment beyond summary advice. Never use that
-fallback to fill current-unit gaps. Assess tinyAM translation only after source
-coverage and limitations are recorded. For each stock, follow this order:
+Source recovery comes before translation. The first priority is to recover
+original model inputs and reported outputs from the most recent publicly
+accessible detailed documentation for the latest assessment of the latest
+stock unit. Record the model assumptions that explain those data. Keep the
+latest-unit assessment as the primary record whenever at least one
+run-specific input or reported output is verified, even if the record is
+partial. A preceding stock definition is eligible only as a separate fallback
+when a documented search finds no detailed run-specific input or output for
+the latest current-unit assessment beyond summary advice. Assumptions or
+settings alone do not count as recovered assessment data, but should still be
+recorded for the latest unit. Never use a fallback to fill current-unit gaps.
+Assess tinyAM translation only after source coverage and limitations are
+recorded. For each stock, follow this order:
 
 1. Establish the latest official stock unit and the most recent assessment used
    for advice on that unit.
@@ -22,17 +28,20 @@ coverage and limitations are recorded. For each stock, follow this order:
    research documents, native files, machine-readable tables, and repositories.
    Verify the run by its assessment year, terminal data year, model version,
    and reported results; a detailed report may be published after the advice.
-3. For the latest unit and assessment, capture every verifiable original input,
-   assumption, and reported output in the detailed sources. Keep the current-unit
-   record even when partial, record newer summary-only advice separately, and
-   leave unavailable values unresolved. A missing input or output stream is a
-   source gap to pursue, not a reason to substitute an older run.
+3. For the latest unit and assessment, first capture every verifiable original
+   model input and reported output in the detailed sources, then record the
+   assumptions needed to understand them. Keep the current-unit record even
+   when partial, record newer summary-only advice separately, and leave
+   unavailable values unresolved. A missing input or output series within an
+   otherwise detailed record is a source gap to pursue, not a reason to
+   substitute an older run.
 4. Only when a documented search finds no recoverable run-specific detailed
-   data for the latest assessment of the latest unit may you add the most recent
-   detailed assessment for a preceding stock definition. Preserve any verified
-   latest-unit information and keep the fallback under separate stock and
-   assessment IDs. Explain the boundary change and the fallback's limits; never
-   use it to fill gaps in the latest-unit record.
+   input or reported output for the latest assessment of the latest unit may
+   you add the most recent detailed assessment for a preceding stock
+   definition. Preserve any verified latest-unit information and keep the
+   fallback under separate stock and assessment IDs. Explain the boundary
+   change and the fallback's limits; never use it to fill gaps in the
+   latest-unit record.
 5. After the source record and its gaps are documented, use
    `TINYAM_TRANSLATION.md` to assess whether a tinyAM translation is useful and
    supportable. Translation readiness, fit, or agreement does not decide which
@@ -322,29 +331,31 @@ states. If a source requires a new schema measure, document it and update the
 relevant validation before importing it.
 
 If the latest assessment for the latest unit is available only as summary
-advice, or its detailed assessment data cannot be recovered after a documented
-search of relevant authoritative sources, retain any verified latest-unit data
-and document the remaining gaps. A missing input or output series within an
-otherwise detailed record of the latest run is a gap to pursue, not by itself
-a reason to switch stock units. Only if detailed data for that latest
-assessment are unavailable may you investigate the preceding stock definition
-and add its most recent publicly accessible detailed official assessment as a
-separate fallback. Document where you searched, which detailed materials were
-unavailable, the latest and preceding stock boundaries and codes, and why the
-fallback is useful. Never use fallback data to fill gaps in or replace the
-latest-unit record. Do not fall back because the earlier assessment is more
-complete, easier to fit, or more likely to agree with tinyAM. There is no fixed
-numerical completeness threshold; explain the available material and selection
-rationale in the stock review.
+advice, or no run-specific detailed input or reported output can be recovered
+after a documented search of relevant authoritative sources, retain and record
+any verified latest-unit information and document the remaining gaps. A missing
+input or output series within an otherwise detailed record of the latest run is
+a gap to pursue, not by itself a reason to switch stock units. Assumptions,
+settings, or model descriptions without run-specific inputs or outputs should
+still be documented, but do not by themselves prevent a separate fallback to
+the most recent publicly accessible detailed official assessment for the
+preceding stock definition. Document where you searched, which detailed
+materials were unavailable, the latest and preceding stock boundaries and
+codes, and why the fallback is useful. Never use fallback data to fill gaps in
+or replace the latest-unit record. Do not fall back because the earlier
+assessment is more complete, easier to fit, or more likely to agree with
+tinyAM. There is no fixed numerical completeness threshold; explain the
+available material and selection rationale in the stock review.
 
 Apply this distinction consistently: a partial detailed record has at least
-one assessment-specific input, assumption, or output verified for the latest
+one assessment-specific model input or reported output verified for the latest
 production run from a detailed source. Keep that current-unit record as the
-primary target and pursue its remaining source gaps. Detailed data are
-unavailable when a documented search finds no recoverable run-specific detail
-beyond summary advice; in that case, a separate earlier-unit fallback is
-appropriate. Keep any summary-level values for the latest unit attached to
-that unit, and never combine them with the fallback assessment.
+primary target and pursue its remaining source gaps. Detailed assessment data
+are unavailable when a documented search finds no recoverable run-specific
+input or output beyond summary advice; in that case, a separate earlier-unit
+fallback is appropriate even if assumptions or settings for the latest run are
+known. Keep all latest-unit information attached to that unit, and never
+combine it with the fallback assessment.
 
 Keep the latest-unit assessment and the earlier-unit fallback under separate
 stock and assessment IDs. Never copy, pool or relabel data across the changed
