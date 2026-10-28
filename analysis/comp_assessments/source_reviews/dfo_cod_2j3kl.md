@@ -4,10 +4,29 @@ For Northern cod, the database represents the 2025 production assessment under
 the 2023 framework. DFO's detailed research document for that run was published
 in April 2026; its model inputs extend through 2024 and selected estimates are
 reported through 2025. DFO later published a 2026 assessment summary to 2026
-(Science Advisory Report 2026/030), but it does not provide the full numerical
-input and model-output series needed to link those data to that run. Following
-the selection rule above, the 2026 summary is not entered as a separate
-assessment and none of its values are mixed into the 2025 record.
+(Science Advisory Report
+2026/030). It is now represented separately as `dfo_cod_2j3kl_2026_summary`:
+Table 1 aggregate estimates and Table 2 reported catch totals are preserved
+under that event. The summary does not provide the full age-specific input and
+model-output series. The 2025 production assessment remains the selected
+current detailed record, and summary values are never blended into it.
+
+## Separate 2026 summary-only update
+
+The cached Science Advisory Report 2026/030 is entered as
+`dfo_cod_2j3kl_2026_summary`, with `is_current = FALSE` and `is_applied = TRUE`;
+the 2025 detailed assessment remains the selected detailed record. Table 1
+(p. 5) contributes SSB and age-0 recruitment estimates for 2022-2026, and
+population-weighted average M and F for ages 5+ in 2022-2025, all with the
+published 95% confidence limits. The table does not specify a separate
+point-estimator convention, and no standard errors are derived.
+
+Table 2 (p. 6) contributes reported catch including bycatch for 2016-2025 by
+NAFO division 2J, 3K and 3L. The 2025 values are provisional. Division rows are
+preserved without a duplicate summed total. The report does not provide the
+complete fitted catch-age vector, fleet mapping, age-specific 2026 N/F/M
+surfaces, or native run files, so this remains a summary-only source record and
+is not a tinyAM translation target.
 
 The 2025 record contains 819 commercial catch numbers-at-age values for ages
 2-14 in 1962-2024, plus all 71 reported 2J3KL landings values from 1954-2024.
