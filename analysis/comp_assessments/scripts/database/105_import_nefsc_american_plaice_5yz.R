@@ -361,8 +361,8 @@ assessments <- data.frame(
   assessment_type = c("research_track_candidate", "management_track_update", "provisional_management_track_update"),
   model_family = c("WHAM", "WHAM", "WHAM"),
   model_version = c(paste("WHAM", m$wham_version, "Run29F4 candidate"),
-                    "2024 Management Track update", "2026 Management Track update; provisional report"),
-  is_current = c(TRUE, FALSE, FALSE),
+                    "2024 Management Track update", "2026 Management Track MT3; peer reviewed, report pre-decisional"),
+  is_current = c(FALSE, FALSE, TRUE),
   is_applied = c(FALSE, TRUE, FALSE),
   framework_year = c(2022L, 2022L, 2022L),
   assessment_url = c(report_2022, report_2024,
@@ -379,7 +379,7 @@ assessments <- data.frame(
   notes = c(
     "Full native WHAM Run29F4 inputs and fitted outputs are cached. Run29F4 was one of three 2022 research-track candidates; the exact candidate adopted for management advice is not established. The report's 2022 research-track model informed subsequent Management Track assessments.",
     "Official 2024 Management Track summary outputs are recorded, but its model input arrays and age-specific fitted surfaces were not recovered. Values are not mixed with the 2022 candidate run.",
-    "A provisional 2026 Management Track report was peer-reviewed in September 2026. It remains marked provisional in the cached report; only summary tables are imported, with no raw age inputs or fitted age surfaces. It is not treated as applied advice absent a final production record."
+    "The 2026 MT3 assessment passed September 2026 peer review. Available report remains pre-decisional and no native inputs or age surfaces were found. Advice adoption has not been verified; is_applied remains FALSE."
   ), stringsAsFactors = FALSE
 )
 
@@ -445,3 +445,6 @@ replace_rows("outputs.csv", c(assessment_id, summary_2024_id, summary_2026_id),
 cat("Imported Run29F4", nrow(inputs_2022), "input rows and", nrow(outputs_2022),
     "fitted outputs; added 2024 and provisional 2026 summary outputs.\n")
 
+
+# Add the 2026 peer-review evidence and independently verified recent catch.
+source("analysis/comp_assessments/scripts/database/175_update_nefsc_plaice_2026.R")

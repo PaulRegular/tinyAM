@@ -29,7 +29,7 @@ stopifnot(
   stock$common_name == "American plaice",
   stock$area == "5YZ",
   grepl("Gulf of Maine/Georges Bank", stock$notes),
-  isTRUE(candidate$is_current),
+  !isTRUE(candidate$is_current),
   !isTRUE(candidate$is_applied),
   candidate$assessment_type == "research_track_candidate",
   candidate$assumptions_status == "partial",
@@ -110,10 +110,10 @@ summary_2026 <- outputs[outputs$assessment_id == assessment_ids[[3L]], , drop = 
 later <- assessments[match(assessment_ids[2:3], assessments$assessment_id), , drop = FALSE]
 stopifnot(
   !later$is_current[[1L]], isTRUE(later$is_applied[[1L]]),
-  !later$is_current[[2L]], !isTRUE(later$is_applied[[2L]]),
-  grepl("provisional", later$assessment_type[[2L]]),
+  later$is_current[[2L]], !isTRUE(later$is_applied[[2L]]),
+  identical(later$assessment_type[[2L]], "management_track_update"),
   setequal(unique(summary_2024$year), 2014:2023),
-  setequal(unique(summary_2026$year), 2015:2025),
+  setequal(unique(summary_2026$year[!is.na(summary_2026$year)]), 2015:2025),
   !any(summary_2024$measure %in% c("numbers_at_age", "fishing_mortality_at_age")),
   !any(summary_2026$measure %in% c("numbers_at_age", "fishing_mortality_at_age")),
   all(is.na(summary_2024$se)),

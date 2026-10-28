@@ -2,7 +2,7 @@
 
 ## Assessment represented
 
-The database entry is the latest detailed WHAM fit recovered for this stock:
+The latest full native WHAM fit recovered for this stock is the
 2022 Research Track candidate Run29F4, covering 1980–2019 and ages 1–10 plus
 11+. The cached fit contains its native input and model objects. Run29F4 was
 one of three research-track candidates (29F2, 29F4, and 29F5); the available
@@ -14,9 +14,11 @@ The 2024 Management Track update is later and supplies summary catch, SSB,
 recruitment, and Fbar values through 2023. Its recovered report archive has no
 age-specific fitted surfaces or native model object. Those summary values are
 stored under a separate assessment ID and are not mixed with Run29F4. The 2026
-Management Track report updates the summary through 2025, but its own
-disclaimer identifies it as provisional and pre-decisional. It is recorded
-separately and is not treated as official production advice.
+Management Track report updates the summary through 2025 and is marked
+pre-decisional. The September 2026 panel found the 2026 MT3 model technically
+sufficient for status and catch advice; its candidate is now the selected
+current assessment. The report and its results remain identified as
+pre-review material, and management adoption for advice has not been verified.
 
 ## Inputs and assumptions
 
@@ -87,7 +89,7 @@ particular, tinyAM fits age-specific lognormal catch and survey observations
 instead of the source aggregate and composition likelihoods; it does not
 propagate age-composition uncertainty, reproduce WHAM's joint random-effects
 structure or selectivity constraints, or represent the source's separate age-1
-and ages-2+ N process SDs. The later 2024 and provisional 2026 summaries are
+and ages-2+ N process SDs. The later 2024 and 2026 summaries are
 not used as input or output references for this fit.
 
 The package default start did not pass checks because its fixed-effect Hessian
@@ -127,3 +129,23 @@ Key sources:
 - [2024 Management Track report](https://apps-st.fisheries.noaa.gov/sis/docServlet?fileAction=download&fileId=9879)
 - [2022 WHAM methods paper](https://repository.library.noaa.gov/view/noaa/55264/noaa_55264_DS1.pdf)
 - [September 2026 Management Track review meeting](https://www.fisheries.noaa.gov/event/peer-review-2026-september-management-track-assessments)
+
+## 2026 peer review and additional records
+
+The [September 2026 peer-review panel](https://www.fisheries.noaa.gov/s3/fileserve?filepath=2026-10/september-2026-management-track-peer-review-panel-report_20261007.pdf)
+concluded that MT3 was technically sufficient for stock status and catch
+advice and met all terms of reference. It confirms revised 2018–2023
+commercial age composition and weights, survey selectivity updates, and
+removal of the lognormal adjustment. These details supersede treating the
+model itself as unreviewed; the cached source report is still explicitly
+pre-decisional. Management adoption has not been independently verified.
+
+The 2026 report's Table 1 supplies commercial landings, discards and total
+catch for 2015–2025. The total overlaps the components and is not an extra
+fleet. The total catch in 2025 (1,564 t) and reference point estimates match
+the peer review. The 90% reference-point intervals in Table 3 are retained.
+The 2026 record remains partial: native catch-at-age, survey arrays and fitted
+age-specific surfaces were not recovered. It cannot replace the historical
+Run29F4 as a model-ready input, and its comparison dashboard remains a
+candidate-run comparison. The 2026 assessment ID retains the word
+`provisional` for identifier stability, not as its present review status.
