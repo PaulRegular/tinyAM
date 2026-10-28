@@ -8,22 +8,22 @@ The governing question is:
 
 > **What data and assumptions entered the most recent official assessment with recoverable detail, and what did it estimate?**
 
-First curate the latest official assessment for the latest stock unit. Recover
-and validate the inputs, assumptions and outputs available for that specific
-run from its most recent publicly accessible detailed documentation. Record
-newer summary-only advice separately. If the latest run for the latest unit
-lacks detailed data after a documented search, retain its available values and
-gaps, then consider the most recent detailed assessment for a previous stock
-definition as a separate fallback record. Never let a fallback replace or be
-mixed with the latest unit. Judge source detail by what it documents, not by
+For each stock selected for source curation, establish its latest official
+stock unit and identify the most recent official assessment for that unit.
+Make that assessment the primary target and recover the inputs, assumptions,
+and outputs available in the most recent publicly accessible detailed sources
+for that run. Record newer summary-only advice separately. Prioritize this
+current-unit source work even when an older unit has more complete data or is
+easier to fit in tinyAM. Judge source detail by what it documents, not by
 whether tinyAM can fit it.
 
-First work on current stock units that have no curated input rows and no
-curated output rows across their assessment records. For each unit, start with
-the latest official assessment and recover every verifiable input, assumption,
-and output available for that run, retaining partial data and documenting the
-remaining gaps. A stock with data on only one side is a partial record, not a
-zero-data candidate; return to it when a concrete source lead is available.
+Select stocks for follow-up based on unresolved source-data gaps and
+actionable source leads. Having no curated input or output rows can help
+prioritize a stock, but it does not change which stock unit or assessment is
+the primary target. Recover every verifiable input, assumption, and output
+for the latest unit, retain partial data, and document remaining gaps. A stock
+with data on only one side is a partial record; revisit it when a concrete
+source lead is available.
 
 Do not add a superseded unit as a separate coverage case merely because its
 older assessment is more detailed. If a documented search cannot recover
@@ -298,14 +298,16 @@ states. If a source requires a new schema measure, document it and update the
 relevant validation before importing it.
 
 If detailed inputs or outputs for the latest assessment of the latest unit
-cannot be recovered after the documented source search, retain its verified
-summary data and mark its unresolved gaps. You may then investigate the
-preceding stock definition and add its most recent publicly accessible detailed
-official assessment as a separate fallback. Document where you searched, what
-is missing for the latest run, the earlier and latest stock boundaries and
-codes, and why the fallback is useful. Do not fall back merely to obtain a
-better tinyAM fit. There is no fixed numerical completeness threshold; explain
-the available material and selection rationale in the stock review.
+cannot be recovered after a documented search of the relevant authoritative
+sources, retain its verified data and mark the remaining gaps. Only then may
+you investigate the preceding stock definition and add its most recent
+publicly accessible detailed official assessment as a separate fallback.
+Document where you searched, which detailed materials could not be recovered,
+the earlier and latest stock boundaries and codes, and why the fallback is
+useful. Do not fall back merely because the earlier assessment is more
+complete, easier to fit, or more likely to agree with tinyAM. There is no fixed
+numerical completeness threshold; explain the available material and
+selection rationale in the stock review.
 
 Keep the latest-unit assessment and the earlier-unit fallback under separate
 stock and assessment IDs. Never copy, pool or relabel data across the changed
