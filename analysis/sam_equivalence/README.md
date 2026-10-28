@@ -1,5 +1,19 @@
 # Northern Shelf haddock: SAM likelihood equivalence
 
+## SAMjr fixture comparisons
+
+`compare_samjr.R SAM-library baseline` reproduces the supplied-biology `fit0`
+from SAMjr's `nscodbiopro` at revision
+`0384774a3f2f8ec3dc3330375998bd73ef6bbe7c`, using the pinned native SAM below.
+The first run matched joint objectives within 2.3e-13, scaled gradients within
+6.9e-13, scaled Hessians within 1.6e-12 and optimized objectives within 6.9e-13.
+It uses native fitted parameters as starts, not a default-start convergence test.
+Fixtures, input hashes, native fits, warnings and check tables are retained in
+the ignored `results/` directory. The survey-only last year's missing catch
+weights are padded solely for tinyAM's complete grid; that year's yield is not
+a source comparison. Source scripts are evaluated only through the relevant
+fit, without enabling later biological processes or changing specifications.
+
 This focused comparison tests whether tinyAM can reproduce the **2026 official
 Northern Shelf haddock SAM run**, `NShaddock_WGNSSK2026_Run1`, over 1972–2026,
 ages 0–8+. It does not alter comparative-assessment recipes or result tables.
