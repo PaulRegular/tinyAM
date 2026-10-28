@@ -75,3 +75,22 @@ maturity schedule ends in 2016.
 - [NOAA SASINF assessment-data search](https://apps-nefsc.fisheries.noaa.gov/saw/sasi.php)
 - [2025 Summer Flounder Management Track Assessment Report](https://asmfc.org/wp-content/uploads/2025/08/SF_Management_Track_Assessment_2025.pdf)
 - [NOAA Summer Flounder assessment status](https://www.fisheries.noaa.gov/species/summer-flounder/science)
+
+## 2025 update: recovered aggregate trajectories
+
+The 2025 peer-reviewed assessment is separately recorded as
+`nefsc_summer_flounder_2025`. NOAA Stock SMART assessment 13936 provides annual
+catch, SSB, fully selected F at age 4, and age-0 recruitment for 1982–2024.
+All 2014–2024 values agree with Table 1 of the assessment report. The table
+also supplies commercial and recreational landings and discards for those
+11 years. These components overlap the total catch and must not be fitted
+as an additional fleet. F values were rounded to three decimal places to
+remove binary storage noise. Uncertainty was not inferred from plotted bands.
+The latest run's age-specific inputs and outputs remain unavailable; the 2018
+age-based record and its unconverged translation remain separate.
+
+The report, peer review and pinned Stock SMART snapshot are cached locally
+under `source_cache/nefsc_summer_flounder_2025/`. The importer verifies SHA-256
+checksums and the report overlap. [2025 report](https://asmfc.org/wp-content/uploads/2025/08/SF_Management_Track_Assessment_2025.pdf),
+[peer review](https://www.fisheries.noaa.gov/s3/2025-07/2025-June-Management-Track-Peer-Review-Panel-Report-508.pdf),
+[Stock SMART snapshot](https://github.com/NOAA-EDAB/stocksmart/tree/664c4237e26520b260a090e1821a2cee5d1cdf07).
