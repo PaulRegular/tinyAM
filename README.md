@@ -167,6 +167,10 @@ Other possibilities include:
 | Mean F and catchability | `~ age_group`, `~ logistic(age)`, `~ mono(age)`; q also supports `iid()`, `rw()`, `ar1()` effects | [Curves](https://paulregular.github.io/tinyAM/reference/catchability_curves.html) and [formula effects](https://paulregular.github.io/tinyAM/reference/formula_effects.html): supported combinations have identifiability safeguards; `q_link = "logit"` bounds q between zero and one. |
 | Observation SD | `sd_form = ~ age_group` | [Formula effects](https://paulregular.github.io/tinyAM/reference/formula_effects.html): formulas modify log-SD, not observation covariance. |
 
+Recruitment boundary states are fixed by default; `rec_settings$init = "latent"`
+integrates them without an initial density. For abundance-dependent catchability,
+use [`power(N, by = q_key)`](https://paulregular.github.io/tinyAM/reference/power.html) in `q_form` with the log link.
+
 ## 3. Diagnose, visualize and compare
 
 ```r

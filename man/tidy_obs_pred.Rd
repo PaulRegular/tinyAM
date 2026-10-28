@@ -11,11 +11,11 @@ tidy_obs_pred(fit, add_osa_res = FALSE, interval = 0.95, ...)
 
 \item{add_osa_res}{Logical; add one-step-ahead residuals? Hard wired to
 apply the \code{"oneStepGaussianOffMode"} method.
-See \code{\link[RTMB:oneStepPredict]{RTMB::oneStepPredict()}} for details.}
+See \code{\link[RTMB:OSA-residuals]{RTMB::oneStepPredict()}} for details.}
 
 \item{interval}{Confidence level for combined catchability intervals.}
 
-\item{...}{Arguments to pass to \code{\link[RTMB:oneStepPredict]{RTMB::oneStepPredict()}}.}
+\item{...}{Arguments to pass to \code{\link[RTMB:OSA-residuals]{RTMB::oneStepPredict()}}.}
 }
 \value{
 A named list with two data frames:
@@ -25,6 +25,10 @@ A named list with two data frames:
 Combined catchability intervals are \code{q_lwr}/\code{q_upr}; \code{q_se} is on the
 selected link scale named in \code{q_se_scale}. They include uncertainty across
 the full formula, rather than combining separate coefficient SEs.
+With \code{\link[=power]{power()}}, \code{q} remains effective catchability. Additional \code{q_base},
+\code{q_power}, and \code{q_base_lwr}/\code{q_base_upr}/\code{q_base_se} columns separate the
+baseline and exponent. Baseline-q SEs are on the log scale. Its unit is
+unspecified for active power groups because it depends on p and abundance units.
 }
 }
 \description{

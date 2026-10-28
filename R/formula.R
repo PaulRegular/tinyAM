@@ -189,7 +189,7 @@ logistic <- function(x, by = NULL) .formula_marker_error("logistic")
   if (any(c("bh", "ricker") %in% all.names(formula))) {
     cli::cli_abort("bh() and ricker() are restricted to rec_settings$mu_form.")
   }
-  special <- c("iid", "rw", "ar1", "logistic", "|")
+  special <- c("iid", "rw", "ar1", "logistic", "power", "|")
   contains <- function(x) {
     is.call(x) && (.formula_call_name(x) %in% special ||
       any(vapply(as.list(x)[-1L], contains, logical(1))))
@@ -235,14 +235,18 @@ logistic <- function(x, by = NULL) .formula_marker_error("logistic")
           iid = iid,
           rw = rw,
           ar1 = ar1,
-          logistic = logistic
+          logistic = logistic,
+          power = power
         )
         x[[1L]] <- as.name(type)
         args <- tryCatch(as.list(match.call(fun, x))[-1L], error = function(e) {
           cli::cli_abort("Invalid {type}() arguments: {conditionMessage(e)}")
         })
+        if (type == "power" && !identical(args$x, quote(N))) {
+          cli::cli_abort("power() must use the model's N: power(N, by = group).")
+        }
         spec <- list(
-          type = type, variable = column(args$x, "x"),
+          type = type, variable = if (type == "power") "N" else column(args$x, "x"),
           by = if (is.null(args$by) || identical(args$by, quote(NULL))) NULL else column(args$by, "by"),
           sd = fixed(args$sd, "sd"), phi = fixed(args$phi, "phi", 1, TRUE)
         )
@@ -273,6 +277,10 @@ logistic <- function(x, by = NULL) .formula_marker_error("logistic")
   rhs <- strip(formula[[2L]])
   ordinary[[2L]] <- if (is.null(rhs)) 1 else rhs
   design <- .parse_mono_q_formula(ordinary, data, fixed_design)
+  powers <- Filter(function(x) x$type == "power", specs)
+  if (length(powers) > 1L) cli::cli_abort("Use one additive power() term in q_form.")
+  if (length(powers)) design$q_power <- .make_q_power(powers[[1L]], data)
+  specs <- Filter(function(x) x$type != "power", specs)
   terms <- lapply(specs, .make_q_term, data = data)
   ids <- vapply(terms, `[[`, character(1), "id")
   if (anyDuplicated(ids)) cli::cli_abort("Duplicate structured catchability terms are not identifiable.")
@@ -1184,6 +1192,7 @@ mono <- function(x, by = NULL) {
 
 # Observation SD effects reuse the Gaussian formula-state compiler.
 .parse_sd_formula <- function(formula, data, component) {
+  if (.contains_power(formula)) cli::cli_abort("power() is only supported in index_settings$q_form.")
   design <- .parse_q_formula(formula, data)
   terms <- design$q_terms
   if (!is.null(design$q_mono_modmat) ||

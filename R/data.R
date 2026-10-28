@@ -242,6 +242,7 @@ print.tam_data <- function(x, n = 5, ...) {
 .population_data <- function(dat, formula = NULL, label = "Population formula") {
   d <- dat$pop_data
   if (!is.null(formula)) {
+    if (.contains_power(formula)) cli::cli_abort("power() is only supported in index_settings$q_form.")
     variables <- function(x) {
       if (!is.call(x)) {
         return(x)

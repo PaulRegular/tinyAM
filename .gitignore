@@ -59,6 +59,7 @@ analysis/comp_assessments/source_cache/
 analysis/comp_assessments/results/cache/
 analysis/formula_expansion/results/
 analysis/information_criteria/results/
+analysis/sam_equivalence/results/
 
 # Reproducible cheatsheet examples and rendering assets
 cheatsheet/cache/

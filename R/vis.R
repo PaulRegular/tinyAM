@@ -235,7 +235,7 @@ vis_tam.tam_retro <- function(..., model_list = NULL, interval = 0.95, output_fi
   category[grepl("^sd_", par)] <- "Process SDs"
   category[grepl("^sd_beta_", par)] <- "Process SD coefficients"
   category[par %in% c("sd_catch", "sd_index")] <- "Observation SDs"
-  category[par %in% c("q", "logit_q")] <- "Catchability"
+  category[par %in% c("q", "logit_q", "q_power")] <- "Catchability"
   category[par %in% "dq" | grepl("^q_(a50|slope)_", par)] <- "Catchability curves"
   category[grepl("^mu_", par)] <- "Mortality means"
   category[par == "mu_n"] <- "Cohort means"

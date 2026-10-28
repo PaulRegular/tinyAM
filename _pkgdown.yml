@@ -40,6 +40,7 @@ reference:
 - contents:
   - recruitment_formulas
   - catchability_curves
+  - power
   - formula_effects
 - title: Fit, diagnose and forecast
 - contents:
