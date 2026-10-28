@@ -103,12 +103,24 @@ recovered from the cited publications, DFO data/code links, NOAA resources or
 public model-repository searches. Generic WHAM examples, rejected TRAC models
 and the separate NOAA domestic GB run are not substitutes.
 
-The 2025 summary provides Canada/US landings for 2020-2024, SSB of 7.96 kt
-in 2022 and 10.9 kt in 2024, and fully-selected F of 0.03 in 2024. The 2026
-summary supplies Canada/US removals for 2016-2025, median 2025 SSB of 8,469 t
-and fully-selected F of 0.03. Native kt and tonne units are preserved. These
-F coefficients are not F-at-age or population-weighted Fbar. Numerical
-uncertainty is unavailable; plotted bands are not digitized.
+Research Document 2026/073 identifies the LRP method as the SSB where mean
+surplus production is not significantly different from zero. The document's
+text does not state a numerical threshold, but reports two candidate USR
+approaches of 43.7 and 51.4 kt. The 2025 and 2026 Science Advisory Reports
+still say that a USR has not been determined, so those candidates are not
+recorded as adopted reference points. The annual summaries report separate
+LRP values: 24.9 kt for the 2025 assessment and 26,847 metric tonnes for the
+2026 update. They remain attached to their respective assessment records.
+
+The 2025 summary reports SSB of 7.96 kt in 2022 and 10.9 kt in 2024, plus
+fully-selected F of 0.03 in 2024. Its Current Status paragraph separately
+reports 2024 median SSB of 10.4 kt at 42% of the 24.9 kt LRP. The database
+retains the 10.9 kt headline value and flags the conflicting 10.4 kt text.
+The 2026 summary supplies Canada/US removals for 2016-2025, median 2025 SSB
+of 8,469 t, the 26,847 t LRP and fully-selected F of 0.03. Native kt and tonne
+units are preserved. These F coefficients are not F-at-age or
+population-weighted Fbar. Numerical uncertainty is unavailable; plotted
+bands are not digitized.
 
 Two internal discrepancies in SAR 2026/046 remain explicit. It gives 2022
 SSB as 8,273 t in the summary and 8,327 t in the body; neither is selected for
@@ -135,7 +147,7 @@ uncertainty, omitted averages and conflicting values, and the remaining
 unavailable age observations.
 
 There are 1,440 recovered inputs (1,410 for the framework, including 414
-approximate M points), 21 assumptions and eight outputs across the three
+approximate M points), 22 assumptions and ten outputs across the three
 events. All completeness statuses remain
 **partial**. Missing selected NTS catch-at-age, survey age compositions and
 annual CVs, complete biology, the exact native M input array and numerical

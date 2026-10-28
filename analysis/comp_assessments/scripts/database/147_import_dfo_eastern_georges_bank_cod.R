@@ -221,10 +221,16 @@ outputs$source_type <- "official_table"
 outputs <- rbind(outputs,
   output(summary_ids[1], "biomass", "SSB", c(2022,2024), c(7.96,10.9), "kt",
     paste(urls[["summary_2025"]], "p. 1, Status and Trends", sep = "; "),
-    "Rounded native SSB reported in kilotonnes; annual model outputs otherwise occur only in figures. No numerical SE or CI is tabulated. Kept separate from revised 2026 estimates."),
+    "Rounded native SSB reported in kilotonnes; annual model outputs otherwise occur only in figures. No numerical SE or CI is tabulated. The 2024 value is 10.9 kt in Status and Trends; the Current Status paragraph says 10.4 kt, so retain the headline value with this discrepancy noted. Kept separate from revised 2026 estimates."),
+  output(summary_ids[1], "biomass", "LRP", "", 24.9, "kt",
+    paste(urls[["summary_2025"]], "p. 1 and Figure 1B", sep = "; "),
+    "Reported limit reference point for the 2025 assessment; this is a time-invariant threshold, not an annual SSB estimate. No uncertainty is reported."),
   output(summary_ids[2], "biomass", "SSB", 2025, 8469, "metric tonnes",
     paste(urls[["summary_2026"]], "p. 5, Current Status", sep = "; "),
     "Reported median 2025 SSB. Numerical uncertainty bounds are not provided; none are invented. Source gives conflicting 2022 SSB values (8273 and 8327 t), which are not resolved or imported."),
+  output(summary_ids[2], "biomass", "LRP", "", 26847, "metric tonnes",
+    paste(urls[["summary_2026"]], "pp. 1, 5 and Figure 1B", sep = "; "),
+    "Reported limit reference point for the 2026 assessment; this is a time-invariant threshold, not an annual SSB estimate. No uncertainty is reported. This value belongs to the 2026 assessment and is kept separate from the 2025 assessment's LRP."),
   output(summary_ids[1], "mortality", "fishing_mortality_intensity", 2024, .03, "yr-1",
     paste(urls[["summary_2025"]], "p. 1 and Figure 1C", sep = "; "),
     "Rounded fully-selected F; not F-at-age or an abundance-weighted Fbar."),
@@ -263,8 +269,10 @@ assumptions <- rbind(
     "Survey seasons and timing histories are described, but exact configured within-year fractions are not recovered. No default midpoints are invented.", paste(urls[["data"]], "pp. 16-18;", urls[["model"]], "p. 6")),
   assumption(framework_id, "biology", "input_coverage", "Canadian CATCH weights recovered at ages 1-16 for 1978-2022; complete model biology unavailable",
     "Published zeros are retained. The table is not a complete multi-fleet/stock biological surface or model age-9+ weight. Terminal-year weights, plus-group construction, maturity, spawning fraction and full native arrays remain unresolved.", paste(urls[["data"]], "Table 6;", urls[["projections"]], "p. 1")),
+  assumption(framework_id, "reference_point", "LRP_method", "NegativeSP50CI",
+    "The selected limit reference point is the SSB where mean surplus production is not significantly different from zero. The 2026/073 report describes this method; annual summaries report separate numerical LRPs for their respective updated assessments. The upper stock reference remains undetermined; 43.7 and 51.4 kt are candidate approaches, not adopted values.", paste(urls[["projections"]], "pp. 6-8")),
   assumption(framework_id, "model", "output_availability", "Three numerical survey q coefficients and approximate digitized M points; historical N/F/SSB/recruitment shown only in figures",
-    "Only the annual black M points in Figure 11 are digitized; fitted-state substitution and confidence intervals are not reconstructed. Newer annual-summary estimates remain separate."))
+    "Only the annual black M points in Figure 11 are digitized; fitted-state substitution and confidence intervals are not reconstructed. The 2026/073 report describes the LRP method and candidate USRs but does not provide an exact numerical LRP in its text. Annual-summary outputs remain separate."))
 for (i in seq_along(summary_ids)) {
   reference <- urls[[paste0("summary_", 2024 + i)]]
   assumptions <- rbind(assumptions,
@@ -275,7 +283,7 @@ for (i in seq_along(summary_ids)) {
         "DFO winter 1987-2025; NMFS spring 1978-2025 except 2020/2023; NMFS fall through 2024 except 2020",
       if (i == 1L) "The update adds DFO stratum 5Z9 for 2010-2024 and calibrates the 2022 DFO vessel/gear change. Earlier framework survey inputs must not silently stand in for this update." else
         "The 2025 NMFS fall point was excluded after timing/coverage review. Numerical age-index arrays and exact configured sampling fractions remain unavailable.", paste(reference, "p. 3")),
-    assumption(summary_ids[i], "population", "output_definitions", "SSB and fully-selected F; apparent mortality includes N process error",
+    assumption(summary_ids[i], "population", "output_definitions", "SSB, LRP and fully-selected F; apparent mortality includes N process error",
       "Numerical N-at-age, F-at-age, recruitment series and joint uncertainty are unavailable. Do not interpret the F coefficient as Fbar or disappearance as a direct estimated-M output.", reference))
 }
 assumptions <- rbind(assumptions,
@@ -297,11 +305,11 @@ assessment <- function(id, year, terminal, type, current, reference, notes) {
 }
 assessments <- rbind(
   assessment(framework_id, 2025, 2023, "assessment_framework", TRUE, urls[["model"]],
-    "Latest recoverable detailed selected EGB framework, approved in 2025 and published in 2026; fitted through 2023. EGB Run 1 was chosen for operational access to US data, despite TGB being preferred biologically. Fleet totals, Canadian unpooled CATCH weights, three aggregate EGB survey-index series and three survey q coefficients are recovered. Selected NTS age observations, survey age compositions and CV arrays, complete model biology, the exact native M input array and fitted N/F/SSB/R surfaces remain unavailable; approximate M points are digitized from Figure 11. Do not use Part 1 Table 5 CATCH age estimates as selected NTS inputs. Newer annual advice is separate."),
+    "Latest recoverable detailed selected EGB framework, approved in 2025 and published in 2026; fitted through 2023. EGB Run 1 was chosen for operational access to US data, despite TGB being preferred biologically. Fleet totals, Canadian unpooled CATCH weights, three aggregate EGB survey-index series and three survey q coefficients are recovered. Selected NTS age observations, survey age compositions and CV arrays, complete model biology, the exact native M input array and fitted N/F/SSB/R surfaces remain unavailable; approximate M points are digitized from Figure 11. The projections/reference-points report describes the LRP method and candidate USRs but does not report a numerical LRP in its text. Do not use Part 1 Table 5 CATCH age estimates as selected NTS inputs. Newer annual advice is separate."),
   assessment(summary_ids[1], 2025, 2024, "annual_summary", FALSE, urls[["summary_2025"]],
-    "June 2025 assessment with data through 2024, reported in SAR 2025/039. Summary-only values stay separate from framework and later revisions. Catches are labelled landings; no age arrays recovered."),
+    "June 2025 assessment with data through 2024, reported in SAR 2025/039. Summary-only values stay separate from framework and later revisions. SSB, LRP and fully-selected F are reported, but annual N/F-at-age and recruitment values are unavailable. The report gives two different 2024 SSB values in its headline and current-status text. Catches are labelled landings; no age arrays recovered."),
   assessment(summary_ids[2], 2026, 2025, "annual_summary", FALSE, urls[["summary_2026"]],
-    "Latest official advice: June 2026 assessment through 2025, SAR 2026/046 published September 2026. Summary-only; exact numerical age inputs and fit remain unrecovered. Annual removals and reported 2025 SSB/F are retained. Conflicting 2022 SSB and multi-year average labels are not resolved by guessing."))
+    "Latest official advice: June 2026 assessment through 2025, SAR 2026/046 published September 2026. Summary-only; exact numerical age inputs and fit remain unrecovered. Annual removals and reported 2025 SSB/LRP/fully-selected F are retained. Conflicting 2022 SSB and multi-year average labels are not resolved by guessing."))
 stocks <- read.csv(file.path(database, "stocks.csv"), colClasses = "character", na.strings = "", check.names = FALSE)
 at <- which(stocks$stock_id == stock_id)
 stopifnot(length(at) == 1L, stocks$charbonneau_id[at] == "NEFSC-TRAC-CERT_morhua_GB")

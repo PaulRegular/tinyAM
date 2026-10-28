@@ -78,6 +78,8 @@ summary_2025 <- records[[2L]]
 summary_2026 <- records[[3L]]
 ssb_2025 <- subset(summary_2025$outputs, measure == "SSB")
 ssb_2026 <- subset(summary_2026$outputs, measure == "SSB")
+lrp_2025 <- subset(summary_2025$outputs, measure == "LRP")
+lrp_2026 <- subset(summary_2026$outputs, measure == "LRP")
 all_outputs <- do.call(rbind, lapply(records, `[[`, "outputs"))
 stopifnot(
   nrow(summary_2025$inputs) == 10L, nrow(summary_2026$inputs) == 20L,
@@ -87,9 +89,16 @@ stopifnot(
   value(summary_2026$inputs,2025,"US") == 20,
   value(summary_2026$inputs,2023,"US") == 32,
   all(as.numeric(ssb_2025$value) == c(7.96,10.9)), all(ssb_2025$unit == "kt"),
+  grepl("Current Status paragraph says 10.4", ssb_2025$notes[ssb_2025$year == 2024]),
   ssb_2026$value == 8469, ssb_2026$year == 2025,
   grepl("median", ssb_2026$notes),
   !any(ssb_2026$year == 2022),
+  lrp_2025$value == 24.9, lrp_2025$unit == "kt", is.na(lrp_2025$year),
+  lrp_2026$value == 26847, lrp_2026$unit == "metric tonnes", is.na(lrp_2026$year),
+  grepl("separate from the 2025 assessment", lrp_2026$notes),
+  sum(all_outputs$measure == "LRP") == 2L,
+  sum(framework$assumptions$setting == "LRP_method") == 1L,
+  grepl("43.7 and 51.4 kt", framework$assumptions$notes[framework$assumptions$setting == "LRP_method"]),
   !any(all_outputs$measure %in% c("Fbar","numbers_at_age","fishing_mortality_at_age","natural_mortality_at_age")),
   sum(all_outputs$measure == "fishing_mortality_intensity") == 2L,
   all(is.na(all_outputs$se)), all(is.na(all_outputs$lwr)), all(is.na(all_outputs$upr)),

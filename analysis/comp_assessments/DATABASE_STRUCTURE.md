@@ -518,7 +518,7 @@ Long-format outputs from the official assessment.
 | `sex`              | Sex where applicable            |
 | `region`           | Region where applicable         |
 | `season`           | Season where applicable         |
-| `year`             | Year; blank for time-invariant estimates such as reported catchability parameters |
+| `year`             | Year; blank for time-invariant estimates such as reported catchability parameters and reference points |
 | `age`              | Age where applicable            |
 | `age_group`        | Optional age range for grouped measures such as Fbar or Mbar |
 | `value`            | Point estimate                  |
@@ -555,6 +555,8 @@ Fbar
 Mbar
 apical_F
 q
+LRP
+USR
 Fmsy
 Bmsy
 msy
