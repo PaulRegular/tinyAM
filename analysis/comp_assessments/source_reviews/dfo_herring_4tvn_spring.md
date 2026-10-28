@@ -8,7 +8,7 @@ The canonical database represents the official 2024 assessment to 2023, the most
 
 DFO Research Document 2024/058 is primarily a data and supporting document. It does not provide a complete specification of the fitted statistical catch-at-age (SCA) model.
 
-The official 2026 assessment to 2025 is recorded separately as summary-only because the detailed model documentation and complete numerical input and output tables have not been recovered. No 2026-run data or estimates are mixed into the 2024 record.
+The official 2026 assessment to 2025 is recorded separately. DFO Science Advisory Report 2026/028 publishes selected 2024–2025 estimates for April 1 SSB, age-2 recruitment, and grouped M for ages 8–11+; these values are recorded under the separate 2026 event. The detailed input tables, full methods, age-specific population/F/M series, and complete uncertainty outputs remain unavailable while the Research Document is in preparation. No 2026-run data or estimates are mixed into the 2024 record.
 
 DFO Research Document 2022/068 provides the most recent detailed SCA methods description used in this review. Its equations and parameter settings are retained as methodological context, but are not assumed to be independently verified for every component of the 2024 assessment.
 
