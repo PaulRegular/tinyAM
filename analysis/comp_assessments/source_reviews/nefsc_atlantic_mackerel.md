@@ -5,11 +5,32 @@
 The canonical database represents the 2018 64th Northeast Regional Stock
 Assessment Workshop (SAW-64) final ASAP Run 118 as the latest official detailed
 assessment with recoverable age-specific inputs and outputs. It covers
-1968-2016. The September 2025 management-track update is recorded separately:
-its published summary gives aggregate SSB, fully selected F, and age-1
-recruitment for 2015-2024, but the cached package contains no age-specific input
-tables or fitted age surfaces. Those summary values are not substituted into
-the 2018 time series.
+1968-2016. The September 2025 management-track update is recorded separately.
+Its report describes a Level 1 update of the 2023 ASAP assessment; the planned
+Level 3 WHAM review was delayed by data availability. The report distributed
+with the Mid-Atlantic Fishery Management Council's October 2025 SSC materials
+is explicitly labeled a draft working paper for peer review. No native model
+files, age-specific input tables, or fitted age surfaces were found in the
+2025 SASINF package, which contains the report and diagnostic plot PDFs. The
+2025 summary is therefore retained as a separate partial assessment, not
+merged into the 2018 time series.
+
+The 2025 database record now includes the report's stock-wide aggregate catch
+totals for 2015-2024, annual SSB, fully selected F, and age-1 recruitment, the
+reference points in Table 2, and the 2025-2028 projection values in Table 3.
+The catch totals are not catch-at-age and do not identify the modeled fleet
+inputs. The projection catch for 2025 is an assumed scenario value; later
+projection values and projected SSB/F are not historical observations. Tables
+2-3 give parenthetical bounds without stating their nominal interval level in
+those tables, so no level is assigned in the database.
+
+The 2025 report confirms that M is assumed constant over age and time and that
+the likelihood profile supports the assumed value, but it does not state the
+numerical value for the 2025 run. The 2023 value is not copied forward as if it
+were verified for this run. The 2025 report documents the projection
+recruitment stanzas and the use of recent five-year mean selectivity, maturity,
+and weights; those assumptions are recorded separately from the historical
+assessment inputs.
 
 The 2018 assessment PDF and extracted text are cached under
 `source_cache/nefsc_atlantic_mackerel_2018/`; the 2025 materials are under
@@ -64,5 +85,7 @@ above.
 ## Sources
 
 - [SAW-64 Atlantic mackerel assessment, NEFSC Reference Document 18-06](https://doi.org/10.25923/swk4-1e81)
-- [2025 Atlantic Mackerel Management Track Assessment materials, NOAA SASINF](https://apps-nefsc.fisheries.noaa.gov/saw/sasi.php)
+- [2025 Atlantic Mackerel Management Track Assessment Report](https://www.mafmc.org/s/e_Northwest_Atlantic_Mackerel_Update_2025.pdf), draft working paper posted with the [October 2025 SSC meeting materials](https://www.mafmc.org/ssc-meetings/october-2025)
+- [NOAA Stock Assessment Support Information portal](https://apps-nefsc.fisheries.noaa.gov/saw/sasi.php); the 2025 archive contains the report and Run 8 diagnostic plots, not native inputs or model files
+- [2023 Atlantic Mackerel Management Track Assessment](https://repository.library.noaa.gov/view/noaa/70900/noaa_70900_DS1.pdf)
 - [NOAA Atlantic mackerel science and current status](https://www.fisheries.noaa.gov/species/atlantic-mackerel/science)

@@ -550,11 +550,16 @@ Fmsy
 Bmsy
 msy
 mean_recruitment
+median_recruitment
 ```
 
 `mean_recruitment` stores a reported time-invariant mean of recruitment. Leave
 year blank and retain the recruitment age when the source specifies one; it is
 not an annual recruitment series.
+
+`median_recruitment` stores a reported time-invariant median recruitment
+estimate. Leave year blank and retain the recruitment age when the source
+specifies one; it is not an annual recruitment series.
 
 Use measures defined by the official assessment. `derived_source_output` may
 also record an explicitly requested summary calculated from that assessment's
