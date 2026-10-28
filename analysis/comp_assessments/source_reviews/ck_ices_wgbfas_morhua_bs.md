@@ -1,10 +1,20 @@
-# Western Baltic cod, ICES 2025
+# Western Baltic cod assessment history
 
-## Newer assessment identified: curation in progress
+## Current assessment: WBCod2026
 
-The [2026 WGBFAS report](https://literatur.thuenen.de/digbib_extern/dn071152.pdf), section 2.3.5, identifies the current-unit SAM run `WBCod2026` and provides numerical catch-at-age (Table 2.3.15), survey indices (Tables 2.3.22a–c), stock summaries (Table 2.3.23), numbers-at-age (Table 2.3.24), total mortality (Table 2.3.25), and harvest rates (Table 2.3.26). ICES treats the assessment as category 3 and trusts relative trends because mortality is uncertain; the fitted absolute values should not be presented as reliable advice quantities. The table 2.3.23 caption identifies the mortality statistic as Z, while its column header says Fbar; resolve that inconsistency before importing the mortality series.
+The [WGBFAS 2026 report](https://literatur.thuenen.de/digbib_extern/dn071152.pdf), section 2.3, identifies the 2026 SAM update for cod in subdivisions 22–24. The assessment record uses 2025 as the terminal catch year and 2026 as the terminal estimate year. The report classifies it as category 3: because mortality is uncertain, ICES relies on relative SSB and recruitment trends and uses harvest rate instead of F for advice. The 2025 assessment remains in the database as a historical run.
 
-The report names `WBCod2026` on stockassessment.org, but `fitfromweb()` and a direct request for its model object failed on 2026-10-27 because the connection failed. This does not prove that the model object is unavailable. The 2026 report and text are cached under `source_cache/ices_cod_western_baltic_2026/`; the PDF SHA-256 is `7e8a6ac51f72abf7d1f026e0997f764267f07690cb2b78e32e073e13fd658732`. The verified numerical tables are a viable source for a separate 2026 assessment record. Their extraction and validation remain outstanding; the 2025 data below must not be mixed into the 2026 run.
+The 2026 report is cached under `source_cache/ices_cod_western_baltic_2026/`; its SHA-256 is `7e8a6ac51f72abf7d1f026e0997f764267f07690cb2b78e32e073e13fd658732`. Catch-at-age is reported for ages 1–7+ in 1985–2025 (Table 2.3.15). Landings weights cover ages 1–7+ for 1985–2025, with 2025 age-7+ missing (Table 2.3.16); discard weights cover ages 3–7+ in 2015–2025, with a three-year average marked for some cells (Table 2.3.17); combined catch weights cover ages 1–7+ in 1985–2025, with age-7+ absent in 2024–2025 (Table 2.3.18). Stock weights cover ages 0–7+ in 1985–2025, with age-7+ absent in 2024–2025 (Table 2.3.19). Fixed maturity is reported for ages 1–7+ in 1998–2025 (Table 2.3.20), and an age-specific M vector is reported for 1985–2025 (Table 2.3.21). Missing terminal cells were left missing; values are rounded as published.
+
+BITS Q1 indices cover ages 1–4 in 1996–2026, BITS Q4 ages 0–4 in 1999–2025, and the FEJUCS pound-net age-0 series covers 2011–2025 except 2012 (Tables 2.3.22a–c). The report gives quarter labels but not exact within-quarter sampling fractions or a physical index multiplier. The SAM fit object and exact likelihood configuration could not be downloaded from the stockassessment.org path on 2026-10-27; this remains an access limitation, not proof that the files are unavailable.
+
+Published outputs include SSB, age-1 recruitment and total stock biomass for 1985–2026 (Table 2.3.23); numbers-at-age 0–7+ (Table 2.3.24); total mortality by ages 1–4 and pooled ages 5–7 (Table 2.3.25); and C/SSB harvest rate (Table 2.3.26). The summary mortality column is labeled Fbar(3–5), but the table caption and report text call it Zbar(3–5); it is stored as total mortality with this conflict documented. The reported summary bounds are retained as low/high; the interval level is not stated, and SEs were not inferred. The 2026 age-0 N cell is absent from the published table and was not reconstructed. No age-specific F output is provided.
+
+All three completeness fields remain partial. Report tables provide valuable numerical inputs and outputs, but native SAM input rows, exact likelihood weights/settings, precise survey timing, and an unambiguous F summary are unavailable. The 2026 outputs should be interpreted as relative-trend indicators under the report's category-3 caveat.
+
+## Previous detailed run: WBCod2025
+
+The 2025 WGBFAS assessment and its native SAM files remain separately documented below. It was the latest detailed run before the 2026 update and is retained as historical source data; its observations and outputs are not combined with the 2026 report tables. The existing tinyAM translation and dashboard refer to this 2025 run only.
 
 ## Source selection
 

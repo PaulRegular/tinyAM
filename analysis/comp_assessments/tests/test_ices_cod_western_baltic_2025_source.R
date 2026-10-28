@@ -55,7 +55,7 @@ stopifnot(
   assessment$estimate_terminal_year == 2025L,
   any(assumptions$setting == "terminal_catch_year" & assumptions$value == "2024"),
   assessment$framework_year == 2019L,
-  isTRUE(assessment$is_current), isTRUE(assessment$is_applied),
+  !isTRUE(assessment$is_current), isTRUE(assessment$is_applied),
   assessment$assumptions_status == "complete",
   assessment$inputs_status == "complete",
   assessment$outputs_status == "complete",
@@ -111,7 +111,7 @@ stopifnot(
   all(grepl("no physical scale multiplier", index$notes, fixed = TRUE))
 )
 
-review <- paste(readLines("analysis/comp_assessments/source_reviews/ices_cod_western_baltic_2025.md", warn = FALSE), collapse = " ")
+review <- paste(readLines("analysis/comp_assessments/source_reviews/ck_ices_wgbfas_morhua_bs.md", warn = FALSE), collapse = " ")
 stopifnot(
   grepl("WBCod2025", review, fixed = TRUE),
   grepl("harvest rate is used instead of F for advice", review, fixed = TRUE),
