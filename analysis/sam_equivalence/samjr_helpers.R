@@ -12,6 +12,7 @@ samjr_fixture <- function(case, folder) {
   files <- c("cn.dat", "cw.dat", "dw.dat", "lf.dat", "lw.dat", "mo.dat", "nm.dat", "pf.dat", "pm.dat", "sw.dat", "survey.dat", "script.R")
   if (case %in% c("nscodXtraSd", "codIN3Ben")) files <- c(files, "model.cfg")
   if (case == "nscodXtraSd") files <- c(files, "model2.cfg")
+  if (case %in% c("nscodXtraSd", "codIN3Ben")) files <- c(files, "res.EXP")
   dir.create(folder, recursive = TRUE, showWarnings = FALSE)
   urls <- paste0("https://raw.githubusercontent.com/fishfollower/samjr/", pin, "/testmore/", case, "/", files)
   for (i in seq_along(files)) if (!file.exists(file.path(folder, files[i]))) {
@@ -91,10 +92,8 @@ samjr_inputs <- function(native) {
   list(obs = obs, settings = settings, years = years, ages = ages, aux = aux)
 }
 
-samjr_compare <- function(native, label) {
-  input <- samjr_inputs(native)
-  dat <- do.call(prepare_tam, c(list(data = input$obs, years = input$years, ages = input$ages), input$settings))
-  par <- make_par(dat); src <- native$data; cf <- native$conf
+samjr_parameters <- function(native, dat) {
+  par <- make_par(dat); cf <- native$conf
   key <- function(x) as.integer(sub(".*K", "", x)) + 1L
   par$log_r0 <- native$pl$logN[1L, 1L]; par$log_n0[] <- native$pl$logN[-1L, 1L]
   par$log_r[] <- native$pl$logN[1L, -1L]; par$log_n[] <- t(native$pl$logN[-1L, -1L])
@@ -118,6 +117,14 @@ samjr_compare <- function(native, label) {
     extra <- names(par[[name]]) == "extra"
     if (any(extra)) par[[name]][extra] <- native$pl$logXtraSd
   }
+  par
+}
+
+samjr_compare <- function(native, label) {
+  input <- samjr_inputs(native)
+  dat <- do.call(prepare_tam, c(list(data = input$obs, years = input$years, ages = input$ages), input$settings))
+  par <- samjr_parameters(native, dat); src <- native$data; cf <- native$conf
+  key <- function(x) as.integer(sub(".*K", "", x)) + 1L
   tiny <- RTMB::MakeADFun(function(p) nll_fun(p, dat), par, silent = TRUE)
   sampar <- stockassessment::defpar(src, cf)
   for (name in names(sampar)) sampar[[name]][] <- native$pl[[name]]

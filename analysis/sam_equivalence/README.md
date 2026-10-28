@@ -1,6 +1,74 @@
 # SAM likelihood equivalence checks
 
-## SAMjr fixture comparisons
+## SAMjr-style output tests
+
+The entry point now runs both upstream-style output regressions and the
+unrounded native-SAM likelihood comparisons below. Run only the output subset:
+
+```sh
+Rscript analysis/sam_equivalence/compare_samjr.R SAM-library testmore
+Rscript analysis/sam_equivalence/test_testmore.R
+```
+
+Two complete SAMjr scripts are supported, using unchanged source inputs,
+configurations and expected `res.EXP` files at revision
+`0384774a3f2f8ec3dc3330375998bd73ef6bbe7c`:
+
+| Script | Original tested output | Ordinary `fit_tam()` | SAMjr optimizer with tinyAM likelihood | Native SAM |
+|---|---|---|---|---|
+| `codIN3Ben` | Printed objective, `751.6052` | Exact match | Exact match | Exact match |
+| `nscodXtraSd` | Standard/XtraSd log-likelihood, parameter count, AIC and LR p-value table | Exact match | Exact match | Exact match |
+
+All six script/engine comparisons pass both the exact-output test and their
+numerical-success checks. The extra-SD table, for example, reproduces the
+upstream p-value `0.3031836`. No reference values or scientific settings were
+tuned to achieve a match. Current warnings files are empty for both scripts.
+
+The source scripts' `sam.fit()` calls are intercepted to collect their
+**unoptimized `defpar()` values** and translate them into tinyAM parameters.
+Each model is first fitted with ordinary `fit_tam()` and its existing controls.
+The separately labelled protocol run reconstructs a fresh tinyAM RTMB objective
+from the same initial parameters, using SAMjr's `nlminb` controls
+(`eval.max = iter.max = 2000`, `rel.tol = 1e-10`) and three Newton steps.
+These steps are applied to every protocol fit, not selected as rescue tuning.
+Native SAM also runs from source initial values. None of these output tests
+uses an optimized native fit as a start.
+
+The ordinary and protocol tinyAM fits require optimizer code zero, finite
+gradients below tinyAM's tolerance, and a positive-definite uncertainty Hessian.
+Native SAM requires optimizer code zero and a positive-definite uncertainty
+Hessian. Failed calculations, warnings and available fits are retained locally.
+
+`samjr_testmore.R` adapts the source workflows, comparison-table assembly and
+optimizer steps, with authors, revision and GPL-2 attribution in its header.
+[SOURCES.md](SOURCES.md) identifies each borrowed component and its changes.
+The likelihood remains tinyAM's own implementation. Native SAM supplies the
+ICES readers/configuration/default-parameter utilities; this does not test
+SAMjr's readers. No new package API, model or optimizer behavior is introduced.
+
+Outputs under ignored `results/testmore/CASE/` include `res.public.out`,
+`res.samjr_controls.out`, `res.native.out`, `checks.csv`, warnings and fitted
+objects. The runner checks pinned fixture hashes, records session information
+and exits nonzero on either output or numerical failure. Its portable R
+comparison follows the upstream `diff --strip-trailing-cr`: only trailing
+carriage returns are ignored; whitespace and final newlines still matter.
+Printing uses the upstream R defaults of seven digits and width 80.
+
+This reproduces the upstream **printed-output** standard, not equality of every
+floating-point bit. The independent numerical checks below are retained.
+Deterministic harness tests protect rounding, table ordering, LR calculation,
+working-directory restoration, unfitted starts and exact comparison behavior.
+They pass on R 4.4.1 and R 4.6.1; the complete SAM comparison harness was rerun
+successfully on R 4.4.1 with the pinned native SAM library. This follow-up
+changes analysis files only. The package suite/check results below are from
+the preceding F-block milestone and were not rerun for this analysis-only change.
+
+The full `nscodbiopro` output test is explicitly excluded: it subsequently
+enables biology processes and stochastic forecasts not reproduced here. Its
+`fit0` remains a separate supplied-biology likelihood comparison, not a claim
+of passing that entire upstream script.
+
+## Native likelihood comparisons using SAMjr fixtures
 
 Run from the repository root with R 4.4 and the pinned SAM library:
 
@@ -9,6 +77,7 @@ Rscript analysis/sam_equivalence/compare_samjr.R SAM-library all
 ```
 
 Use `baseline` instead of `all` for only `nscodbiopro`'s supplied-biology `fit0`.
+`all` also runs the two complete output tests above.
 Sources are pinned to SAMjr
 `0384774a3f2f8ec3dc3330375998bd73ef6bbe7c` and native SAM
 `1cc464b80f6f2a4a38b35cce276f13e521761da3` (stockassessment 0.12.0).
