@@ -45,10 +45,10 @@ Snapshot dated 2026-10-29: the register contains 905 source-list entries. These 
 
 | Organization | Entries | Matched | Provisional new | Ambiguous | Identity unreviewed | Eligible | Excluded | Eligibility unresolved | Screened | Not started |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| DFO | 199 | 20 | 23 | 5 | 151 | 18 | 114 | 67 | 146 | 53 |
+| DFO | 199 | 20 | 24 | 5 | 150 | 18 | 115 | 66 | 147 | 52 |
 | ICES | 274 | 57 | 18 | 2 | 197 | 45 | 51 | 178 | 109 | 165 |
 | NOAA | 432 | 28 | 50 | 3 | 351 | 37 | 63 | 332 | 116 | 316 |
-| Total | 905 | 105 | 91 | 10 | 699 | 100 | 228 | 577 | 371 | 534 |
+| Total | 905 | 105 | 92 | 10 | 698 | 100 | 229 | 576 | 372 | 533 |
 The DFO Maritimes herring component rows are crosswalked to the existing
 4VWX canonical management-unit record, not counted as three additional stocks.
 Current component indicators and historical age-based material do not establish
@@ -77,6 +77,10 @@ population N/F/M-at-age or SSB surfaces, so the case is outside the current
 age-structured comparison set. Its latest advice reports a 2025 acoustic
 biomass index of 766 kt (90% CI 560–1,070 kt); detailed 2025 assessment inputs
 are not yet available. See `source_reviews/dfo_capelin_2j3kl_2025.md`.
+The separate DFO 4RST Capelin unit is also index-based. Its 2025 assessment
+reports mature-biomass and fishing-mortality indices but confirms that age data
+are unavailable; it is ineligible for the age-structured comparison set. See
+`source_reviews/dfo_capelin_4rst_2025.md`.
 The Quebec North Shore herring inventory row is one management-area listing for
 spring and fall stocks that DFO assesses separately. The latest update is
 index-based, reports no mortality data, and does not provide fitted population
