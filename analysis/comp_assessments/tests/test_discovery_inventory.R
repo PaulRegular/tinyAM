@@ -199,12 +199,12 @@ stopifnot(sum(progress$inventory_rows) == nrow(register),
 stopifnot(all(progress$eligible_new <= progress$new),
   all(progress$eligible_new <= progress$eligible))
 noaa_progress <- progress[progress$organization == 'NOAA', , drop = FALSE]
-stopifnot(sum(noaa_progress$new) == 8L, sum(noaa_progress$eligible_new) == 5L,
-  sum(noaa_progress$identity_unreviewed) == 396L,
-  sum(noaa_progress$eligible) == 19L, sum(noaa_progress$excluded) == 46L,
-  sum(noaa_progress$eligibility_unresolved) == 367L,
-  sum(noaa_progress$screening_complete) == 71L,
-  sum(noaa_progress$screening_not_started) == 361L)
+stopifnot(sum(noaa_progress$new) == 9L, sum(noaa_progress$eligible_new) == 6L,
+  sum(noaa_progress$identity_unreviewed) == 395L,
+  sum(noaa_progress$eligible) == 20L, sum(noaa_progress$excluded) == 46L,
+  sum(noaa_progress$eligibility_unresolved) == 366L,
+  sum(noaa_progress$screening_complete) == 72L,
+  sum(noaa_progress$screening_not_started) == 360L)
 for (org in unique(register$organization)) {
   stopifnot(sum(progress$inventory_rows[progress$organization == org]) == sum(register$organization == org),
     sum(progress$excluded[progress$organization == org]) == sum(register$organization == org & register$eligibility == 'ineligible'),
@@ -264,6 +264,24 @@ stopifnot(
       'noaa_flathead_bsai.md','noaa_flathead_goa.md'))))
 )
 cat('Alaska flatfish identity and age-input screening checks passed.\n')
+
+goa_pop <- lookup('NOAA:11056')
+stopifnot(
+  goa_pop$match_status == 'new', is.na(goa_pop$matched_stock_id),
+  goa_pop$screening_status == 'screened', goa_pop$eligibility == 'eligible',
+  goa_pop$import_status == 'not_started',
+  grepl('1961-2023', goa_pop$catch_age_evidence, fixed = TRUE),
+  grepl('17 sampled years', goa_pop$catch_age_evidence, fixed = TRUE),
+  grepl('14 years', goa_pop$survey_age_evidence, fixed = TRUE),
+  grepl('fishery and survey', goa_pop$weights_evidence, fixed = TRUE),
+  grepl('one constant parameter', goa_pop$mortality_evidence, fixed = TRUE),
+  grepl('not survey timing', goa_pop$timing_evidence, fixed = TRUE),
+  grepl('numbers-at-age', goa_pop$output_evidence, fixed = TRUE),
+  grepl('2023 operational update', goa_pop$notes, fixed = TRUE),
+  file.exists(file.path('analysis','comp_assessments','discovery','source_reviews',
+    'noaa_goa_pacific_ocean_perch.md'))
+)
+cat('GOA Pacific ocean perch identity and source-screen checks passed.\n')
 
 northern_rockfish <- register[match(paste0('NOAA:', c('10416', '10417')), register$candidate_id), , drop = FALSE]
 stopifnot(
