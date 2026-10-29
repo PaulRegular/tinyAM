@@ -54,17 +54,17 @@ Snapshot dated 2026-10-29: the register contains 905 source-list entries. These 
 
 | Organization | Entries | Matched | Provisional new | Ambiguous | Identity unreviewed | Eligible | Excluded | Eligibility unresolved | Screened | Not started |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| DFO | 199 | 20 | 26 | 5 | 148 | 19 | 116 | 64 | 149 | 50 |
+| DFO | 199 | 20 | 28 | 5 | 146 | 19 | 118 | 62 | 151 | 48 |
 | ICES | 274 | 57 | 20 | 2 | 195 | 45 | 52 | 177 | 111 | 163 |
 | NOAA | 432 | 28 | 52 | 3 | 349 | 38 | 64 | 330 | 118 | 314 |
-| Total | 905 | 105 | 98 | 10 | 692 | 102 | 232 | 571 | 378 | 527 |
+| Total | 905 | 105 | 100 | 10 | 690 | 102 | 234 | 569 | 380 | 525 |
 
 These are inventory-entry counts. The linked-unit crosswalk in
-`inventory_units.csv` currently represents 124 distinct units across 142
-entries: 98 canonical stock IDs and 26 provisional candidate-unit IDs. Of the
-26 candidate units, 7 are screened eligible, 12 are screened ineligible, 5
+`inventory_units.csv` currently represents 126 distinct units across 144
+entries: 98 canonical stock IDs and 28 provisional candidate-unit IDs. Of the
+28 candidate units, 7 are screened eligible, 14 are screened ineligible, 5
 remain eligibility-unresolved, and 2 have ambiguous or mixed identity status.
-The other 763 entries do not yet have an explicit unit crosswalk. These are
+The other 761 entries do not yet have an explicit unit crosswalk. These are
 provisional audit counts, not the selected expansion batch.
 
 `inventory_progress.csv` also reports distinct matched stock IDs,
@@ -223,6 +223,8 @@ Norway pout in ICES Division 6.a (`nop.27.6a`) is distinct from the North Sea/Sk
 ICES North Sea horse mackerel (`hom.27.4bc7d`) is a distinct current unit with a 2026 SAM assessment and public SSB, recruitment and F summaries. The detailed 2024 benchmark gives age-specific catch and biological inputs for its prior run, but those values are not substituted for the latest run; its stock key also changed from `hom.27.3a4bc7d`, so Division 3.a requires boundary verification. Eligibility remains unresolved pending current-run inputs and survey age information. See `source_reviews/ices_north_sea_horse_mackerel_2026.md`.
 
 ICES whiting in Division 3.a (`whg.27.3a`) is a separate stock unit from the North Sea, Irish Sea and West of Scotland whiting entries. Its 2026 official assessment is Category 3 and the SAG source reports an aggregate biomass index, not age-specific population surfaces; it is screened out of the age-structured candidate pool without claiming that raw age samples do not exist elsewhere. See `source_reviews/ices_whiting_3a_2026.md`.
+
+DFO/NAFO redfish in Divisions 3LN and 3O are separate managed units. The latest detailed 3LN assessment located is the 2024 index-based status assessment; its 2025 operating-model update is MSE work, not a new production fit. The latest detailed 3O assessment is the 2025 survey-index assessment. Both are screened out of the age-structured candidate pool because their current official methods do not report age-specific population surfaces. See `source_reviews/dfo_redfish_3ln_2024.md` and `source_reviews/dfo_redfish_3o_2025.md`.
 
 The Southern Gulf spring- and fall-spawning herring entries also match existing, separate stock records. Both have detailed 2024 age-specific inputs and outputs, while 2026 summary-only events are preserved separately. The fall mobile-gear catch-at-age table duplicates the fixed-gear table and is flagged rather than treated as verified data. See `source_reviews/dfo_herring_4tvn_spring.md` and `source_reviews/dfo_herring_4tvn_fall.md`.
 
