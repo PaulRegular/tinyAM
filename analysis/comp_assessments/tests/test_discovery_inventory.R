@@ -202,11 +202,11 @@ dfo_progress <- progress[progress$organization == 'DFO', , drop = FALSE]
 stopifnot(sum(dfo_progress$inventory_rows) == 199L,
   sum(dfo_progress$new) == 4L,
   sum(dfo_progress$identity_unreviewed) == 180L,
-  sum(dfo_progress$screening_complete) == 109L,
-  sum(dfo_progress$screening_not_started) == 90L,
+  sum(dfo_progress$screening_complete) == 110L,
+  sum(dfo_progress$screening_not_started) == 89L,
   sum(dfo_progress$excluded) == 99L,
-  sum(dfo_progress$eligible) == 5L,
-  sum(dfo_progress$eligibility_unresolved) == 95L)
+  sum(dfo_progress$eligible) == 6L,
+  sum(dfo_progress$eligibility_unresolved) == 94L)
 noaa_progress <- progress[progress$organization == 'NOAA', , drop = FALSE]
 stopifnot(sum(noaa_progress$new) == 12L, sum(noaa_progress$eligible_new) == 8L,
   sum(noaa_progress$identity_unreviewed) == 392L,
@@ -431,3 +431,19 @@ stopifnot(
   file.exists(file.path('analysis', 'comp_assessments', 'source_reviews', 'dfo_pop_bc.md'))
 )
 cat('British Columbia Pacific ocean perch identity and source-screening checks passed.\n')
+
+dfo_canary <- lookup('DFO:Pacific:Canary Rockfish')
+stopifnot(
+  dfo_canary$scientific_name == 'Sebastes pinniger',
+  dfo_canary$matched_stock_id == 'dfo_canary_bc',
+  dfo_canary$match_status == 'matched',
+  dfo_canary$screening_status == 'screened',
+  dfo_canary$eligibility == 'eligible',
+  dfo_canary$import_status == 'imported',
+  grepl('36 years (1977-2017)', dfo_canary$catch_age_evidence, fixed = TRUE),
+  grepl('QCS, WCVI and NMFS have source age compositions', dfo_canary$survey_age_evidence, fixed = TRUE),
+  grepl('5/12', dfo_canary$timing_evidence, fixed = TRUE),
+  grepl('500 official posterior-subset', dfo_canary$output_evidence, fixed = TRUE),
+  file.exists(file.path('analysis', 'comp_assessments', 'source_reviews', 'dfo_canary_bc.md'))
+)
+cat('B.C. Canary Rockfish identity and source-screening checks passed.\n')
