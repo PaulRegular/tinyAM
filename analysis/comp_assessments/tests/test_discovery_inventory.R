@@ -35,4 +35,10 @@ stopifnot(
   lookup('DFO:Arctic:Lake Trout - Great Slave Lake')$eligibility == 'ineligible',
   lookup('NOAA:10523')$screening_status == 'not_started'
 )
+stopifnot(
+  lookup('NOAA:10809')$eligibility == 'ineligible',
+  lookup('NOAA:10977')$eligibility == 'ineligible',
+  lookup('NOAA:11763')$eligibility == 'unresolved',
+  lookup('NOAA:11763')$screening_status == 'not_started'
+)
 cat('Discovery register structure, identity and eligibility checks passed.\n')
