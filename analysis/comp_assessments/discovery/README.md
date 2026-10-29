@@ -45,10 +45,10 @@ Snapshot dated 2026-10-29: the register contains 905 source-list entries. These 
 
 | Organization | Entries | Matched | Provisional new | Ambiguous | Identity unreviewed | Eligible | Excluded | Eligibility unresolved | Screened | Not started |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| DFO | 199 | 20 | 22 | 5 | 152 | 18 | 113 | 68 | 145 | 54 |
+| DFO | 199 | 20 | 23 | 5 | 151 | 18 | 114 | 67 | 146 | 53 |
 | ICES | 274 | 57 | 18 | 2 | 197 | 45 | 51 | 178 | 109 | 165 |
 | NOAA | 432 | 28 | 50 | 3 | 351 | 37 | 63 | 332 | 116 | 316 |
-| Total | 905 | 105 | 90 | 10 | 700 | 100 | 227 | 578 | 370 | 535 |
+| Total | 905 | 105 | 91 | 10 | 699 | 100 | 228 | 577 | 371 | 534 |
 The DFO Maritimes herring component rows are crosswalked to the existing
 4VWX canonical management-unit record, not counted as three additional stocks.
 Current component indicators and historical age-based material do not establish
@@ -70,6 +70,13 @@ curation, but numeric series are largely figure-based and require source recover
 or documented digitization; nothing has been imported. The 2024 HCR's later SSB
 extension is not a continuation of the 2022 population fit. See
 `source_reviews/dfo_western_component_pollock_2022.md`.
+The DFO 2J+3KL Capelin complex is a distinct unit with fishery catch-at-age
+reconstructed from biological samples and age-disaggregated spring acoustic
+indices. The current 2026 assessment is index-based and provides no fitted
+population N/F/M-at-age or SSB surfaces, so the case is outside the current
+age-structured comparison set. Its latest advice reports a 2025 acoustic
+biomass index of 766 kt (90% CI 560–1,070 kt); detailed 2025 assessment inputs
+are not yet available. See `source_reviews/dfo_capelin_2j3kl_2025.md`.
 The Quebec North Shore herring inventory row is one management-area listing for
 spring and fall stocks that DFO assesses separately. The latest update is
 index-based, reports no mortality data, and does not provide fitted population
