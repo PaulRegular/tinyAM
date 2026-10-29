@@ -56,15 +56,15 @@ Snapshot dated 2026-10-29: the register contains 905 source-list entries. These 
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 29 | 5 | 145 | 19 | 118 | 62 | 152 | 47 |
 | ICES | 274 | 57 | 20 | 2 | 195 | 45 | 52 | 177 | 111 | 163 |
-| NOAA | 432 | 28 | 60 | 3 | 341 | 41 | 66 | 325 | 126 | 306 |
-| Total | 905 | 105 | 109 | 10 | 681 | 105 | 236 | 564 | 389 | 516 |
+| NOAA | 432 | 28 | 61 | 3 | 340 | 41 | 67 | 324 | 127 | 305 |
+| Total | 905 | 105 | 110 | 10 | 680 | 105 | 237 | 563 | 390 | 515 |
 
 These are inventory-entry counts. The linked-unit crosswalk in
-`inventory_units.csv` currently represents 134 distinct units across 153
-entries: 98 canonical stock IDs and 36 provisional candidate-unit IDs. Of the
-36 candidate units, 10 are screened eligible, 18 are screened ineligible, and 8
+`inventory_units.csv` currently represents 135 distinct units across 154
+entries: 98 canonical stock IDs and 37 provisional candidate-unit IDs. Of the
+37 candidate units, 10 are screened eligible, 19 are screened ineligible, and 8
 remain eligibility-unresolved. Two ineligible units have ambiguous or mixed identity status.
-The other 752 entries do not yet have an explicit unit crosswalk. Regional
+The other 751 entries do not yet have an explicit unit crosswalk. Regional
 counts by organization are available in `inventory_progress.csv`. These are
 provisional audit counts, not the selected expansion batch.
 
@@ -83,6 +83,17 @@ planned. It is screened ineligible for the current age-disaggregated source
 set. The assessment reports age-specific fitted quantities graphically, but
 those states do not replace age-based observations. See
 `source_reviews/iccat_west_atlantic_skipjack_2022.md`.
+
+NOAA Stock SMART 10160 maps to the IATTC Eastern Pacific skipjack benchmark
+assessment conducted in 2024. The assessment uses quarterly fleet catches,
+aggregate abundance/biomass indices and length compositions, while its internal
+age classes are derived from assumed growth because reliable aging is
+unavailable. No observed catch-at-age, age compositions or age-specific survey
+series were found, so the unit is ineligible for the age-disaggregated input
+set. The report and NOAA summary provide official population outputs; the
+generated IATTC run files carry a restriction against redistribution and were
+not cached. See
+`source_reviews/noaa_eastern_pacific_skipjack_2024.md`.
 
 NOAA Gulf red snapper (Stock SMART 10230) is a new, eligible source-curation
 candidate based on the 2026 SEDAR 98 final report, whose terminal data year is
