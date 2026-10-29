@@ -69,7 +69,9 @@ stopifnot(
   lookup('ICES:sol.27.8c9a')$eligibility == 'unresolved',
   lookup('ICES:meg.27.8c9a')$import_status == 'not_started',
   lookup('ICES:mac.27.nea')$match_status == 'new',
+  lookup('ICES:mac.27.nea')$screening_status == 'screened',
   lookup('ICES:mac.27.nea')$eligibility == 'unresolved',
+  grepl('age-specific fitted outputs', lookup('ICES:mac.27.nea')$decision_reason, fixed = TRUE),
   lookup('ICES:pra.27.1-2')$eligibility == 'ineligible',
   lookup('DFO:Arctic:Lake Trout - Great Slave Lake')$eligibility == 'ineligible',
   lookup('NOAA:10523')$screening_status == 'not_started'
