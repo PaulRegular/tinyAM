@@ -55,7 +55,7 @@ stopifnot(
   lookup('NOAA:10510')$matched_stock_id == 'afsc_pollock_ebs',
   lookup('DFO:Gulf:Atlantic Herring - NAFO 4T (Spring Spawner)')$matched_stock_id == 'dfo_herring_4tvn_spring',
   lookup('DFO:Gulf:Atlantic Herring - NAFO 4T (Fall Spawner)')$matched_stock_id == 'ck_dfo_gsl_harengus_4t_fall',
-  lookup('DFO:Gulf:American Plaice - NAFO 4T')$eligibility == 'unresolved',
+  lookup('DFO:Gulf:American Plaice - NAFO 4T')$eligibility == 'eligible',
   lookup('DFO:Pacific:Dungeness Crab')$eligibility == 'ineligible',
   lookup('DFO:Maritimes:Grey Seal')$eligibility == 'ineligible'
 )
@@ -202,11 +202,11 @@ dfo_progress <- progress[progress$organization == 'DFO', , drop = FALSE]
 stopifnot(sum(dfo_progress$inventory_rows) == 199L,
   sum(dfo_progress$new) == 4L,
   sum(dfo_progress$identity_unreviewed) == 180L,
-  sum(dfo_progress$screening_complete) == 116L,
-  sum(dfo_progress$screening_not_started) == 83L,
+  sum(dfo_progress$screening_complete) == 117L,
+  sum(dfo_progress$screening_not_started) == 82L,
   sum(dfo_progress$excluded) == 99L,
-  sum(dfo_progress$eligible) == 12L,
-  sum(dfo_progress$eligibility_unresolved) == 88L)
+  sum(dfo_progress$eligible) == 13L,
+  sum(dfo_progress$eligibility_unresolved) == 87L)
 noaa_progress <- progress[progress$organization == 'NOAA', , drop = FALSE]
 stopifnot(sum(noaa_progress$new) == 22L, sum(noaa_progress$eligible_new) == 13L,
   sum(noaa_progress$ambiguous) == 2L, sum(noaa_progress$identity_unreviewed) == 381L,
@@ -752,3 +752,26 @@ stopifnot(
   sum(ices_progress$eligibility_unresolved) == 207L
 )
 cat('ICES WGCSE identity reconciliation checks passed.\n')
+dfo_plaice <- lookup('DFO:Gulf:American Plaice - NAFO 4T')
+dfo_progress <- progress[progress$organization == 'DFO', , drop = FALSE]
+stopifnot(
+  nrow(dfo_plaice) == 1L,
+  dfo_plaice$matched_stock_id == 'ck_dfo_platessoides_4t',
+  dfo_plaice$match_status == 'matched',
+  dfo_plaice$screening_status == 'screened',
+  dfo_plaice$eligibility == 'eligible',
+  dfo_plaice$import_status == 'imported',
+  grepl('1976-2015', dfo_plaice$catch_age_evidence, fixed = TRUE),
+  grepl('uncalibrated vessel', dfo_plaice$survey_age_evidence, fixed = TRUE),
+  grepl('0.075', dfo_plaice$mortality_evidence, fixed = TRUE),
+  grepl('2025 indicator update', dfo_plaice$decision_reason, fixed = TRUE),
+  file.exists(file.path('analysis', 'comp_assessments', 'source_reviews',
+    'ck_dfo_platessoides_4t.md')),
+  sum(dfo_progress$matched) == 15L,
+  sum(dfo_progress$eligible) == 13L,
+  sum(dfo_progress$excluded) == 99L,
+  sum(dfo_progress$eligibility_unresolved) == 87L,
+  sum(dfo_progress$screening_complete) == 117L,
+  sum(dfo_progress$screening_not_started) == 82L
+)
+cat('Matched DFO Gulf American plaice source-screening checks passed.\n')
