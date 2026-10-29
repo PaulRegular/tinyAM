@@ -36,4 +36,6 @@ Candidate discovery does not modify the canonical database.
 
 Counts are **inventory entries**, not deduplicated stock units. `matched`, `new`, `ambiguous` and `identity_unreviewed` describe current identity-review decisions; a `new` label is provisional until all potential cross-organization matches and boundary changes are resolved. Eligibility and screening columns describe separate decisions and must not be added to identity counts. An unresolved or unstarted entry is not an eligible stock or an exclusion. Because regional listings and identity and source reviews remain incomplete, the snapshot cannot establish final organization coverage or the number of eligible new stocks.
 
+`eligible_new` counts entries provisionally marked both `new` and `eligible`; it is the closest current register measure of potentially eligible new units, but can still include duplicate stock units across organizations until cross-inventory reconciliation is complete. `eligible` alone also includes matched existing assessments.
+
 Regenerate the snapshot with `scripts/database/195_summarize_discovery.R` after updating the register. It uses the cached pinned NOAA metadata described above and checks that each set of categories sums to the source-list count. The candidate register is the audit trail for individual decisions.

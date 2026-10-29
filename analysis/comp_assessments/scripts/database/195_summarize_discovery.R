@@ -19,6 +19,7 @@ metrics <- data.frame(inventory_rows = 1L, matched = as.integer(x$match_status =
   new = as.integer(x$match_status == 'new'), ambiguous = as.integer(x$match_status == 'ambiguous'),
   identity_unreviewed = as.integer(x$match_status == 'unreviewed'),
   eligible = as.integer(x$eligibility == 'eligible'), excluded = as.integer(x$eligibility == 'ineligible'),
+  eligible_new = as.integer(x$match_status == 'new' & x$eligibility == 'eligible'),
   eligibility_unresolved = as.integer(x$eligibility == 'unresolved'),
   screening_not_started = as.integer(x$screening_status == 'not_started'),
   screening_in_progress = as.integer(x$screening_status == 'in_progress'),
