@@ -39,16 +39,25 @@ DFO Atlantic halibut 4RST is a separate provisional new unit. Its 2024 assessmen
 
 DFO Greenland halibut in NAFO Subarea 2 + Divisions 3KLMNO is a provisional new unit eligible for source curation of its detailed 2023 age-structured SCAA/SSM updates. Current 2025 advice uses the 2024-adopted Management Procedure, so the age-model updates from the MSE work must be kept separate from the current MP event. Exact survey timing and machine-readable age-specific output arrays remain to be recovered; see `source_reviews/dfo_greenland_halibut_2_3klmno_2025.md`. The distinct Gulf of St. Lawrence 4RST unit is ineligible: its latest detailed assessment is index-based and the 2025 update reports aggregate biomass above 40 cm; age and maturity analyses are supporting biology, not age-specific assessment inputs. Assessment-date fields differ across the 2025 and 2026 reports; see `source_reviews/dfo_greenland_halibut_4rst_2025_update.md`.
 
+NOAA Stock SMART 11082 and DFO's Pacific halibut entry identify one shared
+IPHC Convention Area stock, new to the canonical database. It is eligible for
+source curation: public commercial age frequencies and area-specific landings,
+FISS age samples and NPUE, biological data, and annual spawning-biomass outputs
+support documented age-input reconstruction. Exact Stock Synthesis input files
+require IPHC permission, and the public commercial-age table was revised after
+the 2025 assessment cutoff; see
+`source_reviews/noaa_dfo_pacific_halibut_iphc_2025.md`.
+
 ## Inventory progress snapshot
 
 Snapshot dated 2026-10-29: the register contains 905 source-list entries. These are not deduplicated stock units.
 
 | Organization | Entries | Matched | Provisional new | Ambiguous | Identity unreviewed | Eligible | Excluded | Eligibility unresolved | Screened | Not started |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| DFO | 199 | 20 | 25 | 5 | 149 | 18 | 116 | 65 | 148 | 51 |
+| DFO | 199 | 20 | 26 | 5 | 148 | 19 | 116 | 64 | 149 | 50 |
 | ICES | 274 | 57 | 18 | 2 | 197 | 45 | 51 | 178 | 109 | 165 |
-| NOAA | 432 | 28 | 51 | 3 | 350 | 37 | 64 | 331 | 117 | 315 |
-| Total | 905 | 105 | 94 | 10 | 696 | 100 | 231 | 574 | 374 | 531 |
+| NOAA | 432 | 28 | 52 | 3 | 349 | 38 | 64 | 330 | 118 | 314 |
+| Total | 905 | 105 | 96 | 10 | 694 | 102 | 231 | 572 | 376 | 529 |
 The DFO Maritimes herring component rows are crosswalked to the existing
 4VWX canonical management-unit record, not counted as three additional stocks.
 Current component indicators and historical age-based material do not establish
