@@ -21,7 +21,7 @@ The [Pacific Fishery Management Council groundfish assessment listing](https://w
 
 The [2026 WGBIE working-group report](https://doi.org/10.17895/ices.pub.32790321.v1) is a regional assessment listing and source. A partial review of its megrim and sole sections is recorded in `source_reviews/ices_iberian_wgbie_2026.md`; the remaining sections still need reconciliation. The locally cached sections and working-document annex have individual URLs and checksums in `source_cache/discovery_ices_wgbie_2026/sources.csv`.
 
-The [2026 WGCSE report](https://doi.org/10.17895/ices.pub.32625759) is a Celtic Seas regional assessment listing. Its Irish Sea sole section has been reviewed and cached, as described in `source_reviews/ices_sol_27_7a_2026.md`; other sections still require reconciliation and screening.
+The full [2026 WGCSE report](https://doi.org/10.17895/ices.pub.32625759.v1) has been cached and used to screen its method categories. Eleven candidate entries are ineligible under the current non-age-structured methods; 14 category-1 age-based stocks remain for stock-specific source screening. See `source_reviews/ices_wgcse_2026.md` and `source_reviews/ices_sol_27_7a_2026.md`; the remaining age-based sections still require reconciliation and input/output review.
 
 The [2026 WGNSSK report](https://doi.org/10.17895/ices.pub.32676345.v2) is a North Sea and Skagerrak regional assessment listing. Its witch section has been screened and cached; other sections still require reconciliation. See `source_reviews/ices_witch_northsea_2026.md`.
 Cached files and their sources.csv manifests are gitignored. The register retains
@@ -37,9 +37,9 @@ Snapshot dated 2026-10-29: the register contains 905 source-list entries. These 
 | Organization | Entries | Matched | Provisional new | Ambiguous | Identity unreviewed | Eligible | Excluded | Eligibility unresolved | Screened | Not started |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 15 | 2 | 0 | 182 | 2 | 98 | 99 | 103 | 96 |
-| ICES | 274 | 57 | 6 | 0 | 211 | 0 | 33 | 241 | 38 | 236 |
+| ICES | 274 | 57 | 6 | 0 | 211 | 0 | 44 | 230 | 49 | 225 |
 | NOAA | 432 | 22 | 2 | 1 | 407 | 2 | 37 | 393 | 39 | 393 |
-| Total | 905 | 94 | 10 | 1 | 800 | 4 | 168 | 733 | 180 | 725 |
+| Total | 905 | 94 | 10 | 1 | 800 | 4 | 179 | 722 | 191 | 714 |
 
 Only two entries are both provisionally new and eligible (NOAA); the two other eligible entries are already matched to existing DFO stocks. These counts do not represent a selected batch, and new entries may still overlap across organizations. Region-level counts and the audit trail are in `inventory_progress.csv` and `candidates.csv`. Screening and identity reconciliation remain incomplete.
 

@@ -73,6 +73,12 @@ stopifnot(
   grepl('production-run M', lookup('ICES:sol.27.8ab')$decision_reason, fixed = TRUE),
   lookup('ICES:meg.27.8c9a')$screening_status == 'screened',
   lookup('ICES:meg.27.8c9a')$eligibility == 'unresolved',
+  all(vapply(c('lez.27.4a6a', 'lez.27.6b', 'ple.27.7e', 'ple.27.7fg',
+    'ple.27.7h-k', 'had.27.7a', 'sol.27.7h-k', 'bss.27.6a7bj',
+    'cod.27.6b', 'ple.27.7bc', 'sol.27.7bc'), function(code) {
+      row <- lookup(paste0('ICES:', code))
+      nrow(row) == 1L && row$screening_status == 'screened' && row$eligibility == 'ineligible'
+    }, logical(1L))),
   lookup('ICES:sol.27.8c9a')$screening_status == 'screened',
   lookup('ICES:sol.27.8c9a')$eligibility == 'ineligible',
   grepl('latest WGBIE update is length-based', lookup('ICES:sol.27.8c9a')$decision_reason, fixed = TRUE),
