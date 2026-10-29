@@ -54,17 +54,17 @@ Snapshot dated 2026-10-29: the register contains 905 source-list entries. These 
 
 | Organization | Entries | Matched | Provisional new | Ambiguous | Identity unreviewed | Eligible | Excluded | Eligibility unresolved | Screened | Not started |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| DFO | 199 | 20 | 35 | 5 | 139 | 20 | 121 | 58 | 158 | 41 |
+| DFO | 199 | 20 | 37 | 5 | 137 | 20 | 123 | 56 | 160 | 39 |
 | ICES | 274 | 57 | 20 | 2 | 195 | 45 | 52 | 177 | 111 | 163 |
 | NOAA | 432 | 28 | 68 | 3 | 333 | 43 | 72 | 317 | 134 | 298 |
-| Total | 905 | 105 | 123 | 10 | 667 | 108 | 245 | 552 | 403 | 502 |
+| Total | 905 | 105 | 125 | 10 | 665 | 108 | 247 | 550 | 405 | 500 |
 
 These are inventory-entry counts. The linked-unit crosswalk in
-`inventory_units.csv` currently represents 148 distinct units across 167
-entries: 98 canonical stock IDs and 50 provisional candidate-unit IDs. Of the
-50 candidate units, 13 are screened eligible, 27 are screened ineligible, and 10
+`inventory_units.csv` currently represents 150 distinct units across 169
+entries: 98 canonical stock IDs and 52 provisional candidate-unit IDs. Of the
+52 candidate units, 13 are screened eligible, 29 are screened ineligible, and 10
 remain eligibility-unresolved. Two ineligible units have ambiguous or mixed
-identity status. The other 738 entries do not yet have an explicit unit
+identity status. The other 736 entries do not yet have an explicit unit
 crosswalk. Regional
 counts by organization are available in `inventory_progress.csv`. These are
 provisional audit counts, not the selected expansion batch.
@@ -386,3 +386,5 @@ The DFO Inside and Outside Yelloweye Rockfish inventory entries are now screened
 
 DFO Yellowmouth Rockfish has been screened as a distinct coastwide provisional unit. The latest detailed assessment found is the 2021 two-sex Stock Synthesis assessment. It documents annual catch, commercial and survey age compositions, four aggregate survey indices, age-specific biology and official SSB/recruitment outputs. The source curation can proceed with documented reconstructions, but exact age matrices and fractional survey timing remain to be recovered; numeric N-at-age and instantaneous F-at-age outputs were not found. See `source_reviews/dfo_yellowmouth_2021.md`.
 The DFO Outside Pacific Spiny Dogfish inventory entry is screened ineligible: the latest 2024 assessment is age-structured but fits aggregate catch and indices with length compositions, while available age samples are not linked to fishery or survey events. No canonical values were imported. See source_reviews/dfo_dogfish_outside_2024.md.
+
+The DFO Pacific Dogfish inside-water unit is screened ineligible for the age-disaggregated candidate set. The latest detailed inside assessment located is the 2010 surplus-production analysis; its authors explicitly state that catch-age data were too sparse for an age-structured model. The 2024 assessment is for outside waters. See `source_reviews/dfo_dogfish_inside_2010.md` and the ignored local cache `source_cache/discovery_dfo_dogfish_inside/`.
