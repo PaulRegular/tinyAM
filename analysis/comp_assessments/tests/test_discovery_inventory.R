@@ -53,6 +53,9 @@ stopifnot(
 )
 stopifnot(
   lookup('NOAA:10809')$eligibility == 'ineligible',
+  lookup('NOAA:17357')$match_status == 'new',
+  lookup('NOAA:17357')$eligibility == 'unresolved',
+  lookup('NOAA:10395')$match_status == 'ambiguous',
   lookup('NOAA:10977')$eligibility == 'ineligible',
   lookup('NOAA:11763')$eligibility == 'unresolved',
   lookup('NOAA:11763')$screening_status == 'not_started'
