@@ -1,9 +1,9 @@
 # SAMjr-derived test code
 
-Upstream: [SAMjr](https://github.com/fishfollower/samjr), revision
-`0384774a3f2f8ec3dc3330375998bd73ef6bbe7c`. Its package DESCRIPTION names
-Anders Nielsen and Christoffer Moesgaard Albertsen as authors and specifies
-GPL-2. The adapted `samjr_testmore.R` file retains that GPL-2 license; the
+Adapted `samjr_testmore.R` from [SAMjr](https://github.com/fishfollower/samjr), revision
+`0384774a3f2f8ec3dc3330375998bd73ef6bbe7c`, written by
+Anders Nielsen and Christoffer Moesgaard Albertsen. 
+The adapted  file retains that GPL-2 license; the
 package's license and model implementation are unchanged. The entire analysis
 directory is excluded from the tinyAM package build. The GPL-2 terms are
 included in [COPYING.SAMJR](COPYING.SAMJR).
