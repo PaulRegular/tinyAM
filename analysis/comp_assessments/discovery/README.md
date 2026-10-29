@@ -54,17 +54,17 @@ Snapshot dated 2026-10-29: the register contains 905 source-list entries. These 
 
 | Organization | Entries | Matched | Provisional new | Ambiguous | Identity unreviewed | Eligible | Excluded | Eligibility unresolved | Screened | Not started |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| DFO | 199 | 20 | 32 | 5 | 142 | 19 | 121 | 59 | 155 | 44 |
+| DFO | 199 | 20 | 34 | 5 | 140 | 19 | 121 | 59 | 157 | 42 |
 | ICES | 274 | 57 | 20 | 2 | 195 | 45 | 52 | 177 | 111 | 163 |
 | NOAA | 432 | 28 | 68 | 3 | 333 | 43 | 72 | 317 | 134 | 298 |
-| Total | 905 | 105 | 120 | 10 | 670 | 107 | 245 | 553 | 400 | 505 |
+| Total | 905 | 105 | 122 | 10 | 668 | 107 | 245 | 553 | 402 | 503 |
 
 These are inventory-entry counts. The linked-unit crosswalk in
-`inventory_units.csv` currently represents 145 distinct units across 164
-entries: 98 canonical stock IDs and 47 provisional candidate-unit IDs. Of the
-47 candidate units, 12 are screened eligible, 27 are screened ineligible, and 8
+`inventory_units.csv` currently represents 147 distinct units across 166
+entries: 98 canonical stock IDs and 49 provisional candidate-unit IDs. Of the
+49 candidate units, 12 are screened eligible, 27 are screened ineligible, and 10
 remain eligibility-unresolved. Two ineligible units have ambiguous or mixed
-identity status. The other 741 entries do not yet have an explicit unit
+identity status. The other 739 entries do not yet have an explicit unit
 crosswalk. Regional
 counts by organization are available in `inventory_progress.csv`. These are
 provisional audit counts, not the selected expansion batch.
@@ -381,3 +381,5 @@ candidate set. Their advice sheets and detailed supporting documents are cached 
 The thorny-skate report is marked DRAFT, and the white-hake report says not to cite it without prior reference to the authors; see
 `source_reviews/dfo_nafo_thorny_skate_2026.md` and
 `source_reviews/dfo_nafo_white_hake_2026.md`.
+
+The DFO Inside and Outside Yelloweye Rockfish inventory entries are now screened as separate provisional units. Inside has survey age compositions in the detailed 2021 rebuilding analysis, but its commercial age sample is from one trip; a representative annual catch-at-age series and several run-matched inputs and outputs remain unverified. Outside received a 2024 status update published in 2026, but the linked official PDF returned an archive placeholder during review. Both remain eligibility-unresolved and no canonical data were imported. See `source_reviews/dfo_yelloweye_inside_2020.md` and `source_reviews/dfo_yelloweye_outside_2024.md`.
