@@ -38,9 +38,17 @@ Snapshot dated 2026-10-29: the register contains 905 source-list entries. These 
 | Organization | Entries | Matched | Provisional new | Ambiguous | Identity unreviewed | Eligible | Excluded | Eligibility unresolved | Screened | Not started |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 15 | 5 | 0 | 179 | 13 | 100 | 86 | 118 | 81 |
-| ICES | 274 | 57 | 17 | 2 | 198 | 39 | 46 | 189 | 96 | 178 |
+| ICES | 274 | 57 | 17 | 2 | 198 | 45 | 50 | 179 | 108 | 166 |
 | NOAA | 432 | 28 | 27 | 3 | 374 | 27 | 52 | 353 | 93 | 339 |
-| Total | 905 | 100 | 49 | 5 | 751 | 79 | 198 | 628 | 307 | 598 |
+| Total | 905 | 100 | 49 | 5 | 751 | 85 | 202 | 618 | 319 | 586 |
+
+On 2026-10-29, twelve already-matched ICES records were screened against
+their latest reviewed assessments: six are eligible for source curation,
+four are ineligible because the current official methods are not
+age-structured, and two remain unresolved because current-run age inputs
+could not be verified. Their source reviews are linked in the candidate
+register. `imported` means some assessment data are already represented in
+the canonical tables; it does not mean the assessment record is complete.
 
 Northern Shelf cod (`ICES:cod.27.46a7d20`) now has a completed source screen. Official 2026 advice and SAG summaries are public, but the 2026 run-specific inputs and fitted object are absent from its pinned public TAF repository. The canonical database holds the distinct 2025 detailed event; it is not treated as a substitute for 2026. Current-run eligibility is unresolved. See `source_reviews/ices_cod_north_sea.md` and the gitignored 2026 source cache.
 
