@@ -41,8 +41,8 @@ Snapshot dated 2026-10-29: the register contains 905 source-list entries. These 
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 15 | 13 | 2 | 169 | 15 | 105 | 79 | 128 | 71 |
 | ICES | 274 | 57 | 18 | 2 | 197 | 45 | 51 | 178 | 109 | 165 |
-| NOAA | 432 | 28 | 49 | 3 | 352 | 36 | 63 | 333 | 115 | 317 |
-| Total | 905 | 100 | 80 | 7 | 718 | 96 | 219 | 590 | 352 | 553 |
+| NOAA | 432 | 28 | 50 | 3 | 351 | 37 | 63 | 332 | 116 | 316 |
+| Total | 905 | 100 | 81 | 7 | 717 | 97 | 219 | 589 | 353 | 552 |
 
 NOAA Stock SMART 10573 and the DFO Pacific Sardine management entry are
 crosswalked to one northern-subpopulation unit. The 2025 NOAA update confirms
@@ -55,6 +55,8 @@ unresolved pending the 2025 electronic files; see
 `source_reviews/pacific_sardine_northern_subpopulation_2025.md`.
 
 NOAA Stock SMART 10574 (“Southern Pacific Coast”) maps to the 2021 PFMC central-subpopulation northern anchovy assessment adopted in 2022. Its native model archive supplies catches and age compositions, with catch-at-age and age-specific survey abundance reconstructed using report-documented weights and compositions. The report also provides numbers-at-age, biomass, SSB, recruitment and an estimated M. It is eligible for source curation; nothing has been imported. See `source_reviews/noaa_northern_anchovy_central_subpopulation_2021.md`.
+
+NOAA South Atlantic red porgy (Stock SMART 10100) is a new eligible source-curation candidate. The latest completed full assessment found is SEDAR 60 (2020; data through 2017), which reports numeric abundance-at-age, SSB, recruitment and fishing mortality. Catch-at-age and age-specific survey inputs can be reconstructed from the reported fleet totals, age/length compositions, survey indices and fixed biology, but digitizing figures and deriving trawl ages are explicit approximations. No successor assessment was completed in the reviewed 2026 planning documents; see `source_reviews/noaa_south_atlantic_red_porgy_2020.md`.
 
 On 2026-10-29, twelve already-matched ICES records were screened against
 their latest reviewed assessments: six are eligible for source curation,
