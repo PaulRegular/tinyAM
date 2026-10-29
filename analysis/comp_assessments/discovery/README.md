@@ -45,10 +45,10 @@ Snapshot dated 2026-10-29: the register contains 905 source-list entries. These 
 
 | Organization | Entries | Matched | Provisional new | Ambiguous | Identity unreviewed | Eligible | Excluded | Eligibility unresolved | Screened | Not started |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| DFO | 199 | 20 | 21 | 5 | 153 | 17 | 113 | 69 | 144 | 55 |
+| DFO | 199 | 20 | 22 | 5 | 152 | 18 | 113 | 68 | 145 | 54 |
 | ICES | 274 | 57 | 18 | 2 | 197 | 45 | 51 | 178 | 109 | 165 |
 | NOAA | 432 | 28 | 50 | 3 | 351 | 37 | 63 | 332 | 116 | 316 |
-| Total | 905 | 105 | 89 | 10 | 701 | 99 | 227 | 579 | 369 | 536 |
+| Total | 905 | 105 | 90 | 10 | 700 | 100 | 227 | 578 | 370 | 535 |
 The DFO Maritimes herring component rows are crosswalked to the existing
 4VWX canonical management-unit record, not counted as three additional stocks.
 Current component indicators and historical age-based material do not establish
@@ -62,6 +62,14 @@ SSB and recruitment outputs; the aggregate egg-production index is not directly
 supported by tinyAM, and output uncertainty remains partial. The NOAA mackerel
 record covers a broader assessment unit and remains separate; see
 `source_reviews/dfo_northern_mackerel_2025.md`.
+The DFO Western Component Pollock entry is a distinct unit (4Xopqrs + 5Yb + 5Zc)
+from the overlapping NOAA 5YZ assessment. Its accepted 2022 ASAP model and 2026
+research reports document catch-at-age, two age-specific survey series, biology,
+time-varying M and population outputs through 2020. It is eligible for source
+curation, but numeric series are largely figure-based and require source recovery
+or documented digitization; nothing has been imported. The 2024 HCR's later SSB
+extension is not a continuation of the 2022 population fit. See
+`source_reviews/dfo_western_component_pollock_2022.md`.
 The Quebec North Shore herring inventory row is one management-area listing for
 spring and fall stocks that DFO assesses separately. The latest update is
 index-based, reports no mortality data, and does not provide fitted population
