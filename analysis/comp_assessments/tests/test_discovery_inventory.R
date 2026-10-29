@@ -244,12 +244,12 @@ stopifnot(
     'dfo_unit3_redfish_2022.md'))
 )
 noaa_progress <- progress[progress$organization == 'NOAA', , drop = FALSE]
-stopifnot(sum(noaa_progress$new) == 45L, sum(noaa_progress$eligible_new) == 20L,
-  sum(noaa_progress$ambiguous) == 3L, sum(noaa_progress$identity_unreviewed) == 356L,
-  sum(noaa_progress$eligible) == 34L, sum(noaa_progress$excluded) == 62L,
-  sum(noaa_progress$eligibility_unresolved) == 336L,
-  sum(noaa_progress$screening_complete) == 111L,
-  sum(noaa_progress$screening_not_started) == 321L)
+stopifnot(sum(noaa_progress$new) == 46L, sum(noaa_progress$eligible_new) == 21L,
+  sum(noaa_progress$ambiguous) == 3L, sum(noaa_progress$identity_unreviewed) == 355L,
+  sum(noaa_progress$eligible) == 35L, sum(noaa_progress$excluded) == 62L,
+  sum(noaa_progress$eligibility_unresolved) == 335L,
+  sum(noaa_progress$screening_complete) == 112L,
+  sum(noaa_progress$screening_not_started) == 320L)
 halibut <- lookup('NOAA:10056')
 stopifnot(
   nrow(halibut) == 1L,
@@ -717,12 +717,12 @@ stopifnot(
   grepl('numeric age inputs', ccgom_yellowtail$decision_reason, fixed = TRUE),
   file.exists(file.path('analysis', 'comp_assessments', 'discovery', 'source_reviews',
     'noaa_yellowtail_ccgom_2025.md')),
-  sum(noaa_progress$new) == 45L,
+  sum(noaa_progress$new) == 46L,
   sum(noaa_progress$ambiguous) == 3L,
-  sum(noaa_progress$identity_unreviewed) == 356L,
-  sum(noaa_progress$eligibility_unresolved) == 336L,
-  sum(noaa_progress$screening_complete) == 111L,
-  sum(noaa_progress$screening_not_started) == 321L
+  sum(noaa_progress$identity_unreviewed) == 355L,
+  sum(noaa_progress$eligibility_unresolved) == 335L,
+  sum(noaa_progress$screening_complete) == 112L,
+  sum(noaa_progress$screening_not_started) == 320L
 )
 cat('NOAA Cape Cod/Gulf of Maine yellowtail identity and source-screening checks passed.\n')
 icelandic_cod <- lookup('ICES:cod.27.5a')
@@ -1433,12 +1433,12 @@ stopifnot(
   file.exists(file.path('analysis', 'comp_assessments', 'source_reviews',
     'dfo_pacific_herring_areas_discovery.md')),
   sum(progress$inventory_rows) == 905L,
-  sum(progress$new) == 74L,
-  sum(progress$identity_unreviewed) == 726L,
-  sum(progress$screening_complete) == 344L,
-  sum(progress$screening_not_started) == 561L,
+  sum(progress$new) == 75L,
+  sum(progress$identity_unreviewed) == 725L,
+  sum(progress$screening_complete) == 345L,
+  sum(progress$screening_not_started) == 560L,
   sum(progress$excluded) == 216L,
-  sum(progress$eligibility_unresolved) == 595L
+  sum(progress$eligibility_unresolved) == 594L
 )
 cat('DFO Pacific herring regional identity and source-screening checks passed.\n')
 
@@ -1462,10 +1462,10 @@ stopifnot(
   grepl('2026-054', gulf_yellowtail$detailed_source_url, fixed = TRUE),
   file.exists(file.path('analysis', 'comp_assessments', 'source_reviews',
     'dfo_yellowtail_flounder_4t_2025.md')),
-  sum(progress$new) == 74L,
-  sum(progress$eligible) == 94L,
-  sum(progress$eligible_new) == 26L,
-  sum(progress$screening_complete) == 344L
+  sum(progress$new) == 75L,
+  sum(progress$eligible) == 95L,
+  sum(progress$eligible_new) == 27L,
+  sum(progress$screening_complete) == 345L
 )
 cat('DFO NAFO 4T yellowtail identity and source-screening checks passed.\n')
 
@@ -1489,10 +1489,10 @@ stopifnot(
   grepl('28963929', gulf_white_hake$detailed_source_url, fixed = TRUE),
   file.exists(file.path('analysis', 'comp_assessments', 'source_reviews',
     'dfo_white_hake_4t_2022.md')),
-  sum(progress$new) == 74L,
-  sum(progress$eligible) == 94L,
-  sum(progress$eligible_new) == 26L,
-  sum(progress$screening_complete) == 344L
+  sum(progress$new) == 75L,
+  sum(progress$eligible) == 95L,
+  sum(progress$eligible_new) == 27L,
+  sum(progress$screening_complete) == 345L
 )
 cat('DFO NAFO 4T white hake identity and source-screening checks passed.\n')
 
@@ -1517,8 +1517,8 @@ stopifnot(
     'source_reviews', 'dfo_noaa_eastern_georges_haddock.md')),
   sum(dfo_progress$screening_complete) == 125L,
   sum(dfo_progress$screening_not_started) == 74L,
-  sum(noaa_progress$screening_complete) == 111L,
-  sum(noaa_progress$screening_not_started) == 321L
+  sum(noaa_progress$screening_complete) == 112L,
+  sum(noaa_progress$screening_not_started) == 320L
 )
 cat('Eastern Georges Bank haddock inventory crosswalk checks passed.\n')
 
@@ -1546,8 +1546,8 @@ stopifnot(
     'source_reviews', 'noaa_goa_northern_rock_sole.md')),
   file.exists(file.path('analysis', 'comp_assessments', 'discovery',
     'source_reviews', 'noaa_goa_southern_rock_sole.md')),
-  sum(noaa_progress$screening_complete) == 111L,
-  sum(noaa_progress$screening_not_started) == 321L
+  sum(noaa_progress$screening_complete) == 112L,
+  sum(noaa_progress$screening_not_started) == 320L
 )
 cat('NOAA Gulf of Alaska rock sole identity and age-data screen checks passed.\n')
 
@@ -1569,12 +1569,12 @@ stopifnot(
   lookup('DFO:Pacific:Canary Rockfish')$matched_stock_id == 'dfo_canary_bc',
   file.exists(file.path('analysis', 'comp_assessments', 'discovery',
     'source_reviews', 'noaa_canary_rockfish_pacific_coast.md')),
-  sum(noaa_progress$new) == 45L,
-  sum(noaa_progress$eligible_new) == 20L,
-  sum(noaa_progress$screening_complete) == 111L,
+  sum(noaa_progress$new) == 46L,
+  sum(noaa_progress$eligible_new) == 21L,
+  sum(noaa_progress$screening_complete) == 112L,
   sum(progress$inventory_rows) == 905L,
-  sum(progress$eligible_new) == 26L,
-  sum(progress$screening_complete) == 344L
+  sum(progress$eligible_new) == 27L,
+  sum(progress$screening_complete) == 345L
 )
 cat('NOAA Pacific Coast Canary Rockfish identity and source-screening checks passed.\n')
 english_sole <- lookup('NOAA:10046')
@@ -1595,13 +1595,13 @@ stopifnot(
     'https://www.pcouncil.org/documents/2015/01/data-moderate-stock-assessments-for-brown-china-copper-sharpchin-stripetail-and-yellowtail-rockfishes-and-english-and-rex-soles-in-2013-published-january-2015.pdf',
   file.exists(file.path('analysis', 'comp_assessments', 'discovery',
     'source_reviews', 'noaa_english_sole_pacific_coast.md')),
-  sum(noaa_progress$new) == 45L,
+  sum(noaa_progress$new) == 46L,
   sum(noaa_progress$excluded) == 62L,
-  sum(noaa_progress$screening_complete) == 111L,
+  sum(noaa_progress$screening_complete) == 112L,
   sum(progress$inventory_rows) == 905L,
-  sum(progress$new) == 74L,
+  sum(progress$new) == 75L,
   sum(progress$excluded) == 216L,
-  sum(progress$screening_complete) == 344L
+  sum(progress$screening_complete) == 345L
 )
 cat('NOAA Pacific Coast English Sole identity and source-screening checks passed.\n')
 darkblotched <- lookup("NOAA:10562")
@@ -1622,20 +1622,20 @@ stopifnot(
   grepl("2025 Stock SMART inventory year refers to a catch-only projection", darkblotched$decision_reason, fixed = TRUE),
   darkblotched$detailed_source_url == "https://www.pcouncil.org/documents/2018/01/status-of-the-darkblotched-rockfish-resource-off-the-continental-u-s-pacific-coast-in-2017-update-of-2015-assessment-model.pdf",
   file.exists(file.path("analysis", "comp_assessments", "discovery", "source_reviews", "noaa_darkblotched_rockfish_pacific_coast.md")),
-  sum(noaa_progress$new) == 45L,
-  sum(noaa_progress$eligible_new) == 20L,
-  sum(noaa_progress$eligible) == 34L,
-  sum(noaa_progress$identity_unreviewed) == 356L,
-  sum(noaa_progress$eligibility_unresolved) == 336L,
-  sum(noaa_progress$screening_complete) == 111L,
-  sum(noaa_progress$screening_not_started) == 321L,
-  sum(progress$new) == 74L,
-  sum(progress$eligible) == 94L,
-  sum(progress$eligible_new) == 26L,
-  sum(progress$identity_unreviewed) == 726L,
-  sum(progress$eligibility_unresolved) == 595L,
-  sum(progress$screening_complete) == 344L,
-  sum(progress$screening_not_started) == 561L
+  sum(noaa_progress$new) == 46L,
+  sum(noaa_progress$eligible_new) == 21L,
+  sum(noaa_progress$eligible) == 35L,
+  sum(noaa_progress$identity_unreviewed) == 355L,
+  sum(noaa_progress$eligibility_unresolved) == 335L,
+  sum(noaa_progress$screening_complete) == 112L,
+  sum(noaa_progress$screening_not_started) == 320L,
+  sum(progress$new) == 75L,
+  sum(progress$eligible) == 95L,
+  sum(progress$eligible_new) == 27L,
+  sum(progress$identity_unreviewed) == 725L,
+  sum(progress$eligibility_unresolved) == 594L,
+  sum(progress$screening_complete) == 345L,
+  sum(progress$screening_not_started) == 560L
 )
 cat("NOAA Pacific Coast Darkblotched Rockfish identity and source-screening checks passed.\n")
 goathorny <- lookup("NOAA:10457")
@@ -1655,12 +1655,12 @@ stopifnot(
   grepl("thornyhead complex", goathorny$notes, fixed = TRUE),
   goathorny$detailed_source_url == "https://www.npfmc.org/wp-content/PDFdocuments/SAFE/2024/GOAthorny.pdf",
   file.exists(file.path("analysis", "comp_assessments", "discovery", "source_reviews", "noaa_goa_thornyhead_complex_2024.md")),
-  sum(noaa_progress$new) == 45L,
+  sum(noaa_progress$new) == 46L,
   sum(noaa_progress$excluded) == 62L,
-  sum(noaa_progress$screening_complete) == 111L,
-  sum(progress$new) == 74L,
+  sum(noaa_progress$screening_complete) == 112L,
+  sum(progress$new) == 75L,
   sum(progress$excluded) == 216L,
-  sum(progress$screening_complete) == 344L
+  sum(progress$screening_complete) == 345L
 )
 cat("NOAA Gulf of Alaska Thornyhead current-method screening checks passed.\n")
 shortspine <- lookup("NOAA:10458")
@@ -1682,17 +1682,17 @@ stopifnot(
     "https://www.pcouncil.org/documents/2024/02/status-of-shortspine-thornyhead-sebastolobus-alascanus-along-the-us-west-coast-in-2023.pdf; https://www.pcouncil.org/documents/shortspine-thornyhead-2023-model-files-zip-file/; https://www.pcouncil.org/documents/2025/08/g-7-attachment-3-catch-only-projection-for-shortspine-thornyhead.pdf/",
   file.exists(file.path("analysis", "comp_assessments", "discovery", "source_reviews",
     "noaa_shortspine_thornyhead_pacific_coast.md")),
-  sum(noaa_progress$new) == 45L,
+  sum(noaa_progress$new) == 46L,
   sum(noaa_progress$excluded) == 62L,
-  sum(noaa_progress$screening_complete) == 111L,
-  sum(noaa_progress$screening_not_started) == 321L,
+  sum(noaa_progress$screening_complete) == 112L,
+  sum(noaa_progress$screening_not_started) == 320L,
   sum(progress$inventory_rows) == 905L,
-  sum(progress$new) == 74L,
-  sum(progress$identity_unreviewed) == 726L,
+  sum(progress$new) == 75L,
+  sum(progress$identity_unreviewed) == 725L,
   sum(progress$excluded) == 216L,
-  sum(progress$eligibility_unresolved) == 595L,
-  sum(progress$screening_complete) == 344L,
-  sum(progress$screening_not_started) == 561L
+  sum(progress$eligibility_unresolved) == 594L,
+  sum(progress$screening_complete) == 345L,
+  sum(progress$screening_not_started) == 560L
 )
 cat("NOAA Pacific Coast Shortspine Thornyhead identity and source-screening checks passed.\n")
 longspine <- lookup("NOAA:10460")
@@ -1711,17 +1711,17 @@ stopifnot(
   grepl("DFO inventory also lists Longspine Thornyhead", longspine$notes, fixed = TRUE),
   file.exists(file.path("analysis", "comp_assessments", "discovery", "source_reviews",
     "noaa_longspine_thornyhead_pacific_coast.md")),
-  sum(noaa_progress$new) == 45L,
+  sum(noaa_progress$new) == 46L,
   sum(noaa_progress$excluded) == 62L,
-  sum(noaa_progress$screening_complete) == 111L,
-  sum(noaa_progress$screening_not_started) == 321L,
+  sum(noaa_progress$screening_complete) == 112L,
+  sum(noaa_progress$screening_not_started) == 320L,
   sum(progress$inventory_rows) == 905L,
-  sum(progress$new) == 74L,
-  sum(progress$identity_unreviewed) == 726L,
+  sum(progress$new) == 75L,
+  sum(progress$identity_unreviewed) == 725L,
   sum(progress$excluded) == 216L,
-  sum(progress$eligibility_unresolved) == 595L,
-  sum(progress$screening_complete) == 344L,
-  sum(progress$screening_not_started) == 561L
+  sum(progress$eligibility_unresolved) == 594L,
+  sum(progress$screening_complete) == 345L,
+  sum(progress$screening_not_started) == 560L
 )
 california_scorpionfish <- lookup("NOAA:10461")
 stopifnot(
@@ -1740,14 +1740,14 @@ stopifnot(
   grepl("2017-california-scorpionfish-model-files", california_scorpionfish$detailed_source_url, fixed = TRUE),
   file.exists(file.path("analysis", "comp_assessments", "discovery", "source_reviews",
     "noaa_california_scorpionfish_southern_california_2017.md")),
-  sum(noaa_progress$new) == 45L,
-  sum(noaa_progress$eligible_new) == 20L,
-  sum(noaa_progress$eligible) == 34L,
-  sum(noaa_progress$screening_complete) == 111L,
-  sum(progress$new) == 74L,
-  sum(progress$eligible_new) == 26L,
-  sum(progress$eligible) == 94L,
-  sum(progress$screening_complete) == 344L
+  sum(noaa_progress$new) == 46L,
+  sum(noaa_progress$eligible_new) == 21L,
+  sum(noaa_progress$eligible) == 35L,
+  sum(noaa_progress$screening_complete) == 112L,
+  sum(progress$new) == 75L,
+  sum(progress$eligible_new) == 27L,
+  sum(progress$eligible) == 95L,
+  sum(progress$screening_complete) == 345L
 )
 cat("NOAA California Scorpionfish identity and source-screening checks passed.\n")
 cat("NOAA Pacific Coast Longspine Thornyhead identity and source-screening checks passed.\n")
@@ -1769,15 +1769,15 @@ stopifnot(
   grepl("age-grid discrepancy", kelp_greenling$decision_reason, fixed = TRUE),
   file.exists(file.path("analysis", "comp_assessments", "discovery", "source_reviews",
     "noaa_oregon_kelp_greenling_2015.md")),
-  sum(noaa_progress$eligible_new) == 20L,
-  sum(noaa_progress$eligible) == 34L,
-  sum(noaa_progress$screening_complete) == 111L,
-  sum(noaa_progress$screening_not_started) == 321L,
-  sum(progress$eligible_new) == 26L,
-  sum(progress$eligible) == 94L,
-  sum(progress$eligibility_unresolved) == 595L,
-  sum(progress$screening_complete) == 344L,
-  sum(progress$screening_not_started) == 561L
+  sum(noaa_progress$eligible_new) == 21L,
+  sum(noaa_progress$eligible) == 35L,
+  sum(noaa_progress$screening_complete) == 112L,
+  sum(noaa_progress$screening_not_started) == 320L,
+  sum(progress$eligible_new) == 27L,
+  sum(progress$eligible) == 95L,
+  sum(progress$eligibility_unresolved) == 594L,
+  sum(progress$screening_complete) == 345L,
+  sum(progress$screening_not_started) == 560L
 )
 cat("NOAA Oregon Kelp Greenling identity and source-screening checks passed.\n")
 rex_sole <- register[!is.na(register$candidate_unit_id) &
@@ -1798,16 +1798,24 @@ stopifnot(
   all(grepl("2026", rex_sole$decision_reason, fixed = TRUE)),
   is.na(rex_sole$matched_stock_id),
   nrow(rex_pacific) == 1L,
-  is.na(rex_pacific$candidate_unit_id),
-  rex_pacific$screening_status == "not_started",
+  rex_pacific$candidate_unit_id == "noaa_pacific_rex_sole",
+  rex_pacific$match_status == "new",
+  rex_pacific$screening_status == "screened",
+  rex_pacific$eligibility == "eligible",
+  rex_pacific$import_status == "not_started",
+  grepl("no fishery age-composition", rex_pacific$catch_age_evidence, fixed = TRUE),
+  grepl("2007-2019", rex_pacific$survey_age_evidence, fixed = TRUE),
+  grepl("numbers-at-age", rex_pacific$output_evidence, fixed = TRUE),
   !any(stocks$scientific_name == "Glyptocephalus zachirus"),
   file.exists(file.path("analysis", "comp_assessments", "discovery", "source_reviews",
     "noaa_goa_rex_sole_2026.md")),
-  sum(noaa_progress$new) == 45L,
-  sum(noaa_progress$eligible_new) == 20L,
-  sum(noaa_progress$screening_complete) == 111L,
-  sum(progress$new) == 74L,
-  sum(progress$eligible_new) == 26L,
-  sum(progress$screening_complete) == 344L
+  file.exists(file.path("analysis", "comp_assessments", "discovery", "source_reviews",
+    "noaa_pacific_rex_sole_2023.md")),
+  sum(noaa_progress$new) == 46L,
+  sum(noaa_progress$eligible_new) == 21L,
+  sum(noaa_progress$screening_complete) == 112L,
+  sum(progress$new) == 75L,
+  sum(progress$eligible_new) == 27L,
+  sum(progress$screening_complete) == 345L
 )
-cat("NOAA Gulf of Alaska Rex Sole identity and source-screening checks passed.\n")
+cat("NOAA rex sole identity and source-screening checks passed.\n")
