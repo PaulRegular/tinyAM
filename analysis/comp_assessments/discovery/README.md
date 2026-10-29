@@ -18,6 +18,8 @@ The initial snapshot was retrieved on 2026-10-28 from:
 Regional supplementation: the [2026 DFO Pacific groundfish plan](https://www.pac.dfo-mpo.gc.ca/fm-gp/mplans/ground-fond-ifmp-pgip-sm-eng.html), retrieved 2026-10-28, led to a British Columbia yellowtail rockfish candidate absent from the initial survey list. The cached regional page SHA-256 is `2CB8792B9AEBE6FE5B27F3887BEFF57F02E2E7CE15D9344353AD705AED18475B`. This partial regional review is not an exhaustive CSAS inventory; further regional sources must still be audited.
 
 The [Pacific Fishery Management Council groundfish assessment listing](https://www.pcouncil.org/stock-assessments-star-reports-stat-reports-rebuilding-analyses-terms-of-reference/groundfish-stock-assessment-documents/) was retrieved 2026-10-28; cached HTML SHA-256 `77FEB82D8A674A018FD3FC7E02CE16579B36F3101B8603FF61286927B1D8B32D`. It provides reports and model files for recent West Coast assessments. The chilipepper identity has been reviewed, but the remainder of this regional listing still needs reconciliation and screening.
+
+The [2026 WGBIE working-group report](https://doi.org/10.17895/ices.pub.32790321.v1) is a regional assessment listing and source. A partial review of its megrim and sole sections is recorded in `source_reviews/ices_iberian_wgbie_2026.md`; the remaining sections still need reconciliation. The locally cached sections and working-document annex have individual URLs and checksums in `source_cache/discovery_ices_wgbie_2026/sources.csv`.
 Cached files and their sources.csv manifests are gitignored. The register retains
 inventory source URLs and leaves unknown identities, run details and data evidence
 blank. `scripts/database/186_build_discovery_inventory.R` builds the initial

@@ -45,6 +45,9 @@ stopifnot(
 )
 stopifnot(
   lookup('ICES:nep.fu.14')$eligibility == 'ineligible',
+  lookup('ICES:meg.27.8c9a')$eligibility == 'unresolved',
+  lookup('ICES:sol.27.8c9a')$eligibility == 'unresolved',
+  lookup('ICES:meg.27.8c9a')$import_status == 'not_started',
   lookup('ICES:mac.27.nea')$match_status == 'new',
   lookup('ICES:mac.27.nea')$eligibility == 'unresolved',
   lookup('ICES:pra.27.1-2')$eligibility == 'ineligible',
