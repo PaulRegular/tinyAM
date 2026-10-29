@@ -45,10 +45,16 @@ Snapshot dated 2026-10-29: the register contains 905 source-list entries. These 
 
 | Organization | Entries | Matched | Provisional new | Ambiguous | Identity unreviewed | Eligible | Excluded | Eligibility unresolved | Screened | Not started |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| DFO | 199 | 16 | 21 | 3 | 159 | 16 | 111 | 72 | 138 | 61 |
+| DFO | 199 | 19 | 21 | 4 | 155 | 16 | 112 | 71 | 142 | 57 |
 | ICES | 274 | 57 | 18 | 2 | 197 | 45 | 51 | 178 | 109 | 165 |
 | NOAA | 432 | 28 | 50 | 3 | 351 | 37 | 63 | 332 | 116 | 316 |
-| Total | 905 | 101 | 89 | 8 | 707 | 98 | 225 | 582 | 363 | 542 |
+| Total | 905 | 104 | 89 | 9 | 703 | 98 | 226 | 581 | 367 | 538 |
+The DFO Maritimes herring component rows are crosswalked to the existing
+4VWX canonical management-unit record, not counted as three additional stocks.
+Current component indicators and historical age-based material do not establish
+a run-matched age-structured production input/output set. The Southwest New
+Brunswick migrant-juvenile fishery is a mixed aggregation, not a separate
+assessed stock. See `source_reviews/dfo_4vwx_herring_component_crosswalk_2025.md`.
 
 NOAA Stock SMART 10573 and the DFO Pacific Sardine management entry are
 crosswalked to one northern-subpopulation unit. The 2025 NOAA update confirms
