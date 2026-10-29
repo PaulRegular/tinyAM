@@ -45,10 +45,10 @@ Snapshot dated 2026-10-29: the register contains 905 source-list entries. These 
 
 | Organization | Entries | Matched | Provisional new | Ambiguous | Identity unreviewed | Eligible | Excluded | Eligibility unresolved | Screened | Not started |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| DFO | 199 | 20 | 24 | 5 | 150 | 18 | 115 | 66 | 147 | 52 |
+| DFO | 199 | 20 | 25 | 5 | 149 | 18 | 116 | 65 | 148 | 51 |
 | ICES | 274 | 57 | 18 | 2 | 197 | 45 | 51 | 178 | 109 | 165 |
-| NOAA | 432 | 28 | 50 | 3 | 351 | 37 | 63 | 332 | 116 | 316 |
-| Total | 905 | 105 | 92 | 10 | 698 | 100 | 229 | 576 | 372 | 533 |
+| NOAA | 432 | 28 | 51 | 3 | 350 | 37 | 64 | 331 | 117 | 315 |
+| Total | 905 | 105 | 94 | 10 | 696 | 100 | 231 | 574 | 374 | 531 |
 The DFO Maritimes herring component rows are crosswalked to the existing
 4VWX canonical management-unit record, not counted as three additional stocks.
 Current component indicators and historical age-based material do not establish
@@ -231,3 +231,5 @@ broad management area spans five separate 3KLPs complexes and includes 2J,
 which is outside those assessment complexes. See
 `source_reviews/dfo_nl_herring_3klps_2025.md`; the detailed 2025 report, current
 update and framework PDF are cached locally with checksums.
+
+NOAA Stock SMART 11682 and the DFO Pacific albacore listing are crosswalked to one North Pacific biological stock and the 2026 ISC benchmark (data through 2024), despite the older inventory metadata. The current assessment fits catch totals, aggregate fishery CPUE and length compositions, not observed age-specific inputs; its modeled age structure and age-specific plotted outputs do not supply those missing observations. Both entries are screened ineligible for the current age-input tinyAM set. See `source_reviews/noaa_dfo_north_pacific_albacore_2026.md` and the ignored cached report under `source_cache/discovery_north_pacific_albacore/`.
