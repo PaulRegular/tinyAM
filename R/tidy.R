@@ -97,6 +97,10 @@ tidy_mat <- tidy_array
 #'   Combined catchability intervals are `q_lwr`/`q_upr`; `q_se` is on the
 #'   selected link scale named in `q_se_scale`. They include uncertainty across
 #'   the full formula, rather than combining separate coefficient SEs.
+#'   With [power()], `q` remains effective catchability. Additional `q_base`,
+#'   `q_power`, and `q_base_lwr`/`q_base_upr`/`q_base_se` columns separate the
+#'   baseline and exponent. Baseline-q SEs are on the log scale. Its unit is
+#'   unspecified for active power groups because it depends on p and abundance units.
 #'
 #' @example inst/examples/example_fit_default.R
 #' @examples
@@ -131,6 +135,14 @@ tidy_obs_pred <- function(fit, add_osa_res = FALSE, interval = .95, ...) {
   obs_pred$index$q_unit <- vapply(index_units, .q_unit, character(1), numbers = units$numbers)
   obs_pred$index$q_lwr <- obs_pred$index$q_upr <- obs_pred$index$q_se <- NA_real_
   obs_pred$index$q_se_scale <- fit$dat$index_settings$q_link
+  if (!is.null(fit$dat$q_power)) {
+    obs_pred$index$q_base <- exp(fit$rep$log_q_base)
+    obs_pred$index$q_power <- as.numeric(fit$rep$q_power)
+    obs_pred$index$q_base_unit <- obs_pred$index$q_unit
+    obs_pred$index$q_base_unit[fit$dat$q_power$index > 0L] <- NA_character_
+    obs_pred$index$q_base_lwr <- obs_pred$index$q_base_upr <- obs_pred$index$q_base_se <- NA_real_
+    obs_pred$index$q_base_se_scale <- "log"
+  }
   if (!is.null(fit[["sdrep"]])) {
     estimate <- as.list(fit[["sdrep"]], "Estimate", report = TRUE)$q_link_prediction
     error <- as.list(fit[["sdrep"]], "Std. Error", report = TRUE)$q_link_prediction
@@ -142,6 +154,14 @@ tidy_obs_pred <- function(fit, add_osa_res = FALSE, interval = .95, ...) {
       obs_pred$index$q_lwr <- inverse(estimate - z * error)
       obs_pred$index$q_upr <- inverse(estimate + z * error)
       obs_pred$index$q_se <- error
+    }
+    if (!is.null(fit$dat$q_power)) {
+      estimate <- as.list(fit$sdrep, "Estimate", report = TRUE)$log_q_base
+      error <- as.list(fit$sdrep, "Std. Error", report = TRUE)$log_q_base
+      z <- stats::qnorm(.5 + interval / 2)
+      obs_pred$index$q_base_lwr <- exp(as.numeric(estimate) - z * as.numeric(error))
+      obs_pred$index$q_base_upr <- exp(as.numeric(estimate) + z * as.numeric(error))
+      obs_pred$index$q_base_se <- as.numeric(error)
     }
   }
   obs_pred$index$std_res <- with(obs_pred$index, ifelse(obs == 0, NA, (log(obs) - log(pred)) / sd))
@@ -156,7 +176,13 @@ tidy_obs_pred <- function(fit, add_osa_res = FALSE, interval = .95, ...) {
       RTMB::oneStepPredict,
       c(list(obj = osa_obj, method = "oneStepGaussianOffMode"), args)
     )
-    split_osa_res <- split(osa_res$residual, fit$dat$obs_map$type[fit$dat$obs_map$is_observed])
+    selected <- if (is.null(args$subset)) setdiff(seq_along(fit$dat$observed), args$conditional) else args$subset
+    if (length(osa_res$residual) != length(selected)) {
+      cli::cli_abort("OSA results do not match the requested observation subset.")
+    }
+    all_osa <- rep(NA_real_, length(fit$dat$observed))
+    all_osa[selected] <- osa_res$residual
+    split_osa_res <- split(all_osa, fit$dat$obs_map$type[fit$dat$obs_map$is_observed])
     split_is_observed <- split(fit$dat$obs_map$is_observed, fit$dat$obs_map$type)
     obs_pred$catch$osa_res <- obs_pred$index$osa_res <- NA
     obs_pred$catch$osa_res[split_is_observed$catch] <- split_osa_res$catch
@@ -218,6 +244,7 @@ tidy_rep <- function(fit) {
   keep[grepl("^eta_(q|mu_[FM]|sd_catch|sd_index)_increments$", names(keep))] <- FALSE
   keep[startsWith(names(keep), "rec_")] <- FALSE
   keep[names(keep) == "initial_log_N"] <- FALSE
+  keep[names(keep) %in% c("log_q_base", "q_power")] <- FALSE
   rep_items <- rep[keep]
 
   trends <- lapply(rep_items, function(x) {
@@ -332,7 +359,7 @@ tidy_sdrep <- function(fit, interval = 0.95) {
   ## assumes all ADREPORTED objects are equal length to years and are in log space
   vals <- as.list(fit[["sdrep"]], "Estimate", report = TRUE)
   ses <- as.list(fit[["sdrep"]], "Std. Error", report = TRUE)
-  vals <- vals[!grepl("^(q_link_prediction|eta_(q|mu_[FM]|sd_catch|sd_index)_increments)$", names(vals))]
+  vals <- vals[!grepl("^(q_link_prediction|log_q_base|eta_(q|mu_[FM]|sd_catch|sd_index)_increments)$", names(vals))]
   vals <- vals[!startsWith(names(vals), "rec_")]
   vals$initial_log_N <- NULL
   ses <- ses[names(vals)]
@@ -370,6 +397,15 @@ tidy_sdrep <- function(fit, interval = 0.95) {
     df$F$se_scale[zero] <- "reported"
   }
   for (nm in names(df)) df[[nm]]$unit <- .population_unit(fit$dat, nm)
+  for (nm in intersect(c("F", "mu_F", "sd_F", "F_bar"), names(df))) {
+    source <- fit$rep[[nm]]
+    if (is.null(source)) next
+    zero <- as.vector(source) == 0
+    if (length(zero) == nrow(df[[nm]]) && any(zero)) {
+      df[[nm]][zero, c("est", "lwr", "upr", "se")] <- 0
+      df[[nm]]$se_scale[zero] <- "reported"
+    }
+  }
   df
 }
 
@@ -482,6 +518,8 @@ tidy_pop <- function(fit, interval = 0.95) {
 #'   remains a log-decrement with an SE on that same scale. For constrained
 #'   initialization, derived `n0` estimates use joint RTMB uncertainty.
 #' - For matrices (e.g., `log_f`, `log_n`), `year` and/or `age` columns are added
+#'   from their dimensions; shared F/M states use `age_block` rather than
+#'   duplicating the parameter at each biological age.
 #'   via [tidy_mat()].
 #'
 #' @param fit A fitted TAM object (from [fit_tam()]) containing an `sdrep`
@@ -521,7 +559,10 @@ tidy_par <- function(fit, interval = 0.95) {
   .par2df <- function(nm) {
     e <- est[[nm]]
     s <- se[[nm]]
-    if (is.matrix(e)) {
+    if (nm == "log_r0") {
+      df <- data.frame(coef = NA_character_, year = fit$dat$years[1L],
+        age = fit$dat$ages[1L], est = e, se = s, is_proj = FALSE)
+    } else if (is.matrix(e)) {
       df <- tidy_mat(e, value_name = "est")
       df$is_proj <- df$year %in% fit$dat$years[fit$dat$is_proj]
       df$se <- as.vector(s)
@@ -572,7 +613,8 @@ tidy_par <- function(fit, interval = 0.95) {
     }
     df$unit <- if (nm %in% c("log_r0", "log_r_init", "log_r", "log_n0", "log_n")) {
       .population_unit(fit$dat, "N")
-    } else if (nm == "d_n0") "log abundance difference" else NA_character_
+    } else if (nm == "d_n0") "log abundance difference" else
+      if (nm == "log_q_power") "unitless" else NA_character_
     values <- c("est", "lwr", "upr", "se", "se_scale")
     df[, c(
       setdiff(names(df), c(values, "is_proj")), values,
@@ -797,8 +839,8 @@ stack_nested <- function(x, label = "model",
   }
   if (!is.null(par[["log_f"]])) {
     historical <- !dat$is_proj
-    out$F <- table(log(fit$rep$F[historical, , drop = FALSE]) -
-                     log(fit$rep$mu_F[historical, , drop = FALSE]), dat$F_settings$process)
+    out$F <- table(par$log_f - log(.f_state_mean(fit$rep$mu_F[historical, , drop = FALSE], dat)),
+      dat$F_settings$process, .f_blocked(dat))
   }
   if (!is.null(par[["log_m"]])) {
     out$M <- table(par[["log_m"]] - log(fit$rep$mu_M[rownames(par[["log_m"]]),

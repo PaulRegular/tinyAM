@@ -1,5 +1,23 @@
 # tinyAM 0.1.1.9000
 
+* Add optional F age blocks with explicit closing boundaries. Blocks share
+  actual F; younger ages below the first boundary have exactly zero F.
+  M accepts the same boundaries while preserving all legacy specifications.
+  Pinned SAMjr examples and native SAM provide numerical equivalence checks.
+
+* Partial OSA requests now map returned residuals to their original observations;
+  unrequested and conditioning rows retain missing residuals.
+
+* `power(N, by = group)` in `q_form` estimates positive abundance exponents
+  using abundance at survey time. Missing group labels retain p = 1 without
+  removing observations. Effective and baseline catchability are reported separately.
+  A focused Northern Shelf haddock comparison reproduces the pinned 2026 SAM
+  likelihood and fit; see `analysis/sam_equivalence` for checks and limitations.
+
+* `rec_settings$init = "latent"` integrates unpenalized recruitment boundary
+  states without an initial density or SD. The default `"free"` preserves
+  fixed boundary parameters, independently of the subsequent process and N initialization.
+
 * Optional `weight$type` distinguishes complete stock and catch weights.
   Stock weights determine biomass and SSB; catch weights determine yield,
   catch targets and observed-catch hindcasts. Untyped and stock-only inputs

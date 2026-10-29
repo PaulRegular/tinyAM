@@ -88,6 +88,17 @@
       start <- start[!grepl("^(log_q|logit_q$|dq$|eta_q_|log_sd_q_|logit_phi_q_|q_a50_|log_q_slope_)", names(start))]
       cli::cli_inform("Catchability starts were omitted because q_link changed.")
     }
+    if (!is.null(start$log_q_power)) {
+      start$log_q_power <- .q_power_starts(start$log_q_power, source$dat, dat)
+    }
+    if (!is.null(start$log_f)) {
+      old <- source$dat$F_settings$age_blocks
+      if (is.null(old)) old <- stats::setNames(as.character(source$dat$ages), source$dat$ages)
+      new <- dat$F_settings$age_blocks
+      groups <- intersect(colnames(start$log_f), levels(new))
+      keep <- vapply(groups, function(g) identical(names(old)[as.character(old) == g], names(new)[as.character(new) == g]), logical(1))
+      start$log_f <- start$log_f[, groups[keep], drop = FALSE]
+    }
     for (component in c("N", "F", "M", "rec")) {
       name <- switch(component, N = "mu_n", F = "log_mu_f", M = "mu_m", rec = "rec_beta")
       if (is.null(start[[name]])) next
@@ -252,8 +263,8 @@ fit_tam <- function(
   years = NULL,
   ages = NULL,
   N_settings = list(process = "iid", init = "exp", mu_form = NULL, sd_form = ~1),
-  rec_settings = list(process = "rw", mu_form = NULL, sd = NULL, phi = NULL),
-  F_settings = list(process = "rw", mu_form = NULL, sd_form = ~1, mean_ages = NULL),
+  rec_settings = list(process = "rw", init = "free", mu_form = NULL, sd = NULL, phi = NULL),
+  F_settings = list(process = "rw", mu_form = NULL, sd_form = ~1, age_breaks = NULL, mean_ages = NULL),
   M_settings = list(
     process = "off", mu_form = NULL, mu_supplied = ~ I(0.2), sd_form = ~1,
     age_breaks = NULL, first_dev_year = NULL, mean_ages = NULL
@@ -309,6 +320,9 @@ fit_tam <- function(
   }
 
   ran <- c(if (dat$F_settings$process != "off") "log_f", if (dat$rec$type != "off") "log_r", .formula_random_parameters(dat))
+  if (dat$rec_settings$init == "latent") {
+    ran <- c(ran, intersect(c("log_r0", "log_r_init"), names(par)))
+  }
   if (dat$N_settings$init == "latent") {
     ran <- c(ran, "log_n0")
   }
@@ -336,7 +350,7 @@ fit_tam <- function(
         dimnames = list(dat$years, dat$ages)
       )
       if (process == "f") {
-        field <- surface[!dat$is_proj, , drop = FALSE]
+        field <- .f_state_mean(surface[!dat$is_proj, , drop = FALSE], dat)
       } else {
         field <- surface[rownames(states), settings$age_block_start, drop = FALSE]
         surface[rownames(states), names(settings$age_blocks)] <- 0
@@ -355,11 +369,12 @@ fit_tam <- function(
   for (process in c("n", "f", "m")) {
     if (dat[[paste0(toupper(process), "_settings")]]$process != "ar1") next
     states <- par[[paste0("log_", process)]]
-    singleton <- c(ncol(states), nrow(states)) == 1L # age, year
+    singleton <- stats::setNames(c(ncol(states), nrow(states)) == 1L, c("age", "year"))
+    nm <- paste0("logit_phi_", process)
+    singleton <- singleton[names(par[[nm]])]
     if (any(singleton)) {
-      nm <- paste0("logit_phi_", process)
       par[[nm]][singleton] <- qlogis(0)
-      indices <- 1:2
+      indices <- seq_along(singleton)
       indices[singleton] <- NA_integer_
       map[[nm]] <- factor(indices)
     }
@@ -488,7 +503,7 @@ update.tam_fit <- function(object, ..., evaluate = TRUE) {
   }
 
   # Use requested inputs, before preparation changes offsets or designs.
-  args <- object$refit_args
+  args <- .complete_settings(object$refit_args)
   change_expr <- as.list(match.call(expand.dots = FALSE)$...)
   new_call <- as.list(object$call)
   for (name in names(changes)) {

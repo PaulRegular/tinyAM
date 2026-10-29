@@ -332,15 +332,15 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #' **Process options and guards**
 #'
 #' - Initial abundance is controlled by `N_settings$init`, independently of
-#'   the subsequent N process. First-year recruitment is the fixed state
-#'   `log_r0`. The default uses survivorship from recruitment under first-year
+#'   the subsequent N process. First-year recruitment is the state
+#'   `log_r0`, controlled separately by `rec_settings$init`. The default uses survivorship from recruitment under first-year
 #'   total mortality Z, with no equilibrium plus-group correction.
 #' - `"exp"` is the default: a parsimonious, comparatively stable nuisance-state
 #'   initialization. More flexible choices are available when first-year data
 #'   support them. `"free"` estimates unpenalized fixed `log_n0` states.
 #'   `"latent"` integrates those states without an initial density, including
 #'   when the subsequent N process is off. It resembles SAM's unpenalized
-#'   older-age boundary but retains tinyAM's fixed first-year recruitment r0.
+#'   older-age boundary; use `rec_settings$init = "latent"` to integrate first-year recruitment too.
 #' - `"mono"` estimates non-increasing initial abundance from r0, including
 #'   the plus group: `log N0[a] = log r0 - cumsum(d_n0)[a-1]`. `"capped"`
 #'   only requires each older abundance to be no greater than r0:
@@ -348,7 +348,7 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #'   allow exact ties, and require no N process or separate initial SD.
 #'   The pooled plus group can naturally exceed a single age; constraining it
 #'   is a deliberate biological assumption. Boundary Wald intervals need care.
-#' - All choices estimate r0 as a fixed effect. Simulations condition on initial states;
+#' - Recruitment initialization is independent of these choices. Simulations condition on initial states;
 #'   joint uncertainty draws can vary fitted latent initial states. No
 #'   mortality-history distribution is imposed on initial abundances.
 #' - `M_settings$age_breaks` (vector of break points on ages)
@@ -386,7 +386,7 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #'   cohort residuals, `"rw"` for residuals that accumulate through time, or
 #'   `"ar1"` for residuals correlated between years and ages. See [tinyAM-model].
 #' - `init`: `"exp"` (default), `"free"`, `"latent"`, `"mono"` or `"capped"`, independently of
-#'   `process`. All use fixed first-year recruitment `log_r0` as the starting
+#'   `process`. All use first-year recruitment `log_r0` as the starting
 #'   anchor. `"exp"` uses deterministic survivorship; `"free"` estimates fixed
 #'   older-age `log_n0` states; `"latent"` integrates them without an initial
 #'   density. `"mono"` constrains abundance to decline from r0; `"capped"`
@@ -405,7 +405,12 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #' @param rec_settings A list controlling recruitment separately from cohort survival:
 #' - `process`: `"off"` for recruitment exactly following its mean formula,
 #'   or `"rw"` (default), `"iid"`, or `"ar1"` for annual log-recruitment
-#'   residuals. First-year recruitment remains a freely estimated fixed anchor.
+#'   residuals. Boundary recruitment states are controlled by `init`.
+#' - `init`: `"free"` (default) estimates first-year recruitment and additional
+#'   pre-parent-SSB boundary states as fixed parameters; `"latent"` integrates
+#'   them without an initial density or separate SD. Independent of `process`,
+#'   including `"off"`, and of older-age `N_settings$init`. Simulations condition
+#'   on these states; joint uncertainty draws can vary them. See [recruitment_formulas].
 #' - `mu_form`: one-sided formula for the expected log recruitment. `NULL` is
 #'   allowed for RW; off/IID/AR1 require an explicit formula, such as `~ 1` for a
 #'   constant mean. Use [bh()] or [ricker()] for a median stock-recruit curve
@@ -429,6 +434,15 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #'   evaluated on `data$pop_covariates`. Sharing an SD does not share latent F states.
 #'   IID SDs describe residuals; RW/correlated-RW SDs describe annual increments;
 #'   stationary AR1 retains its innovation-scale convention.
+#' - `age_breaks`: optional increasing integer interval boundaries for shared
+#'   actual F. Intervals include their lower boundary and exclude their upper
+#'   boundary; the final boundary must be `max(ages) + 1`. For ages `1:6`,
+#'   `c(1, 2, 3, 4, 5, 7)` shares F at ages 5 and 6. Ages below the first
+#'   boundary have exactly zero F in all years, with no F state or process
+#'   density. Positive catch observations at those ages are rejected. `NULL`
+#'   retains separate F states at every modeled age. All mean components and
+#'   process SDs must agree within a shared block; refine blocks for age-varying
+#'   means. Process correlation uses ordered blocks, not replicated fish ages.
 #' - `mu_form`: an optional formula for mean-\eqn{F} (coefficients estimated as
 #'   **log-scale** parameters `log_mu_f`), evaluated on `data$pop_covariates`. Required for `"off"`, `"iid"` and `"ar1"`;
 #'   use `~ 1` for one estimated mean level or `~ factor(age)` for age-specific
@@ -471,6 +485,10 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #'   `~ M_assumption` stored in the `data$pop_covariates` data.frame.
 #' - `age_breaks`: optional integer break points used by [cut_ages()] to
 #'   define `age_blocks` sharing absolute latent M states across ages.
+#'   Existing specifications retain their original interpretation. Alternatively,
+#'   end at `max(ages) + 1` to use explicit half-open intervals as for F:
+#'   with ages `1:6`, `c(2, 5, 7)` makes blocks 2--4 and 5--6. Ages outside
+#'   M process blocks retain their existing mean M; they are not set to zero.
 #'   When a narrower set of `age_breaks` than modeled `ages` is provided,
 #'   process states are only estimated for ages within the specified range; ages
 #'   outside this range are fixed to their mean or assumed levels. By default,
@@ -502,7 +520,10 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #'   blocks. See [mono()] for independent non-decreasing curves by survey.
 #'   Structured effects such as `~ survey + ar1(year, by = survey)` allow shared
 #'   annual changes across ages. `~ survey + logistic(age, by = survey)` fits rising
-#'   selectivity curves. See [formula_effects] for assumptions and constraints.
+#'   selectivity curves. `~ q_key + power(N, by = q_power_group)` allows
+#'   abundance-dependent catchability using internally calculated abundance at
+#'   survey time. Missing power-group labels mean p = 1, not missing observations.
+#'   Powers require the log q link. See [power()] and [formula_effects].
 #' - `q_link`: `"log"` (default) allows any positive catchability; `"logit"`
 #'   restricts catchability to between zero and one. Use the logit link only
 #'   when the survey index has an absolute abundance scale and this restriction
@@ -578,8 +599,8 @@ prepare_tam <- function(
     years = NULL,
     ages = NULL,
     N_settings = list(process = "iid", init = "exp", mu_form = NULL, sd_form = ~1),
-    rec_settings = list(process = "rw", mu_form = NULL, sd = NULL, phi = NULL),
-    F_settings = list(process = "rw", mu_form = NULL, sd_form = ~1, mean_ages = NULL),
+    rec_settings = list(process = "rw", init = "free", mu_form = NULL, sd = NULL, phi = NULL),
+    F_settings = list(process = "rw", mu_form = NULL, sd_form = ~1, age_breaks = NULL, mean_ages = NULL),
     M_settings = list(
       process = "off", mu_form = NULL, mu_supplied = ~ I(0.2), sd_form = ~1,
       age_breaks = NULL, first_dev_year = NULL, mean_ages = NULL
@@ -685,12 +706,16 @@ prepare_tam <- function(
   } else {
     dat$obs$pop_covariates
   }
+  dat <- .prepare_f_blocks(dat)
 
   dat$N_settings$init <- match.arg(dat$N_settings$init, c("exp", "free", "latent", "mono", "capped"))
   if (length(dat$ages) < 2L) {
     cli::cli_abort("N0 initialization requires at least two modeled ages.")
   }
-  if (!is.null(M_settings$age_breaks)) {
+  if (!is.null(M_settings$age_breaks) &&
+      isTRUE(utils::tail(M_settings$age_breaks, 1L) == max(dat$ages) + 1L)) {
+    dat$M_settings$age_blocks <- .explicit_age_blocks(dat$ages, M_settings$age_breaks, "M")
+  } else if (!is.null(M_settings$age_breaks)) {
     m_age_range <- range(dat$M_settings$age_breaks)
     age_range <- range(dat$ages)
     m_ages <- seq(max(age_range[1], m_age_range[1]), min(age_range[2], m_age_range[2]), by = 1)
@@ -805,6 +830,9 @@ prepare_tam <- function(
   .check_sd_terms(dat, "index")
   q_design <- .parse_q_formula(dat$index_settings$q_form, dat$obs$index)
   dat[names(q_design)] <- q_design
+  if (!is.null(dat$q_power) && dat$index_settings$q_link != "log") {
+    cli::cli_abort("power() requires index_settings$q_link = 'log'.")
+  }
   .check_q_terms(dat)
   dat$N_modmat <- .parse_mean_formula(dat$N_settings$mu_form, dat, "N")$matrix
   dat$F_terms <- dat$M_terms <- list()
@@ -815,20 +843,21 @@ prepare_tam <- function(
     dat$F_mono_modmat <- mean_design$mono_matrix
     dat$F_mono_steps <- mean_design$mono_steps
     .check_mean_terms(dat, "F")
+    .check_f_blocks(dat)
     if (nrow(dat$F_modmat) != nrow(dat$pop_data) ||
         any(!is.finite(dat$F_modmat)) || !ncol(dat$F_modmat)) {
       cli::cli_abort("F_settings$mu_form must produce a finite, non-empty design for every modeled year and age.")
     }
-    historical <- dat$F_modmat[!dat$is_proj[match(dat$pop_data$year, dat$years)], , drop = FALSE]
+    historical <- dat$F_modmat[!dat$is_proj[match(dat$pop_data$year, dat$years)] & .f_state_rows(dat), , drop = FALSE]
     if (qr(historical)$rank < ncol(historical)) {
       cli::cli_abort("F_settings$mu_form has a rank-deficient historical design. Remove redundant terms.")
     }
     if (dat$F_settings$process %in% c("rw", "cor_rw")) {
       n_historical <- sum(!dat$is_proj)
       increments <- vapply(seq_len(ncol(historical)), function(j) {
-        surface <- matrix(historical[, j], n_historical, length(dat$ages))
+        surface <- matrix(historical[, j], n_historical, length(dat$F_settings$age_block_start))
         as.vector(surface[-1, , drop = FALSE] - surface[-n_historical, , drop = FALSE])
-      }, numeric((n_historical - 1L) * length(dat$ages)))
+      }, numeric((n_historical - 1L) * length(dat$F_settings$age_block_start)))
       redundant <- colSums(abs(increments)) == 0
       if (any(redundant)) {
         dropped <- colnames(historical)[redundant]

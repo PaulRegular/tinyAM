@@ -8,8 +8,10 @@
 #'   prediction), `"response"` (observation minus prediction), or `"osa"`.
 #' @param ... Computation controls passed to [tidy_obs_pred()] and
 #'   [RTMB::oneStepPredict()] when uncached OSA residuals are requested, such as
-#'   `trace = FALSE` or `parallel = FALSE`. Not used for cached OSA values;
-#'   other residual types reject these arguments.
+#'   `trace = FALSE` or `parallel = FALSE`.
+#'   `subset` and `conditional` index included observations in likelihood order;
+#'   unrequested rows retain missing residuals.
+#'   Controls are not used for cached OSA values; other residual types reject them.
 #' @details `type = "osa"` reuses cached OSA columns, or explicitly requests
 #' their calculation at fitted parameter values when absent. It can be expensive,
 #' but does not rerun [fit_tam()] or re-estimate fixed parameters. Temporary

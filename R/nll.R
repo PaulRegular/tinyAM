@@ -41,7 +41,8 @@
 #' mature biomass; see [tinyAM-model]. No extra parameters or process penalties
 #' are introduced. `N_plus`, `W`, and `P` are then included in `report()`.
 #' Initial older-age abundance, `log_r0`, and additional early recruitment
-#' boundary states remain supplied fixed states. See [recruitment_formulas].
+#' boundary states retain their supplied values during process simulation.
+#' See [recruitment_formulas] for fixed versus integrated initialization.
 #' RW processes retain their starting state because it has no process density.
 #' For N, the first `log_n` row is retained and its starting residual is computed
 #' against the newly simulated cohort prediction. Subsequent residuals follow
@@ -122,19 +123,19 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   log_mu_M[] <- log_mu_supplied_m + drop(M_modmat %*% mu_m) + M_effects$contribution
   if (simulate) {
     if (F_settings$process != "off") {
-      mu_f <- log_mu_F[!is_proj, , drop = FALSE]
+      mu_f <- .f_state_mean(log_mu_F[!is_proj, , drop = FALSE], dat)
       log_f[] <- mu_f + if (!dat$process_sd$F$default && F_settings$process != "cor_rw") {
         .rprocess_scaled(log_f - mu_f, sd_f, F_settings$process,
-          phi = if (F_settings$process == "ar1") plogis(logit_phi_f) else c(0, 0)
+          phi = if (F_settings$process == "ar1") .f_phi(par) else c(0, 0)
         )
       } else if (F_settings$process == "rw") {
         rprocess_rw(log_f - mu_f, sd = sd_f)
       } else if (F_settings$process == "cor_rw") {
-        rprocess_cor_rw(log_f - mu_f, sd = sd_f, rho = tanh(atanh_rho_f))
+        rprocess_cor_rw(log_f - mu_f, sd = sd_f, rho = .f_rho(par))
       } else if (F_settings$process == "iid") {
         matrix(stats::rnorm(length(log_f), 0, sd_f), nrow(log_f), ncol(log_f))
       } else {
-        rprocess_ar1(nrow(log_f), ncol(log_f), sd = sd_f, phi = plogis(logit_phi_f))
+        rprocess_ar1(nrow(log_f), ncol(log_f), sd = sd_f, phi = .f_phi(par))
       }
     }
     if (M_settings$process != "off") {
@@ -157,7 +158,11 @@ nll_fun <- function(par, dat, simulate = FALSE) {
 
   ## Vital rates ----
 
-  log_F[!is_proj, ] <- if (F_settings$process == "off") log_mu_F[!is_proj, , drop = FALSE] else log_f
+  f_index <- F_settings$state_index
+  if (is.null(f_index)) f_index <- seq_along(ages)
+  f_active <- f_index > 0L
+  log_F[!is_proj, ] <- log_mu_F[!is_proj, , drop = FALSE]
+  if (F_settings$process != "off") log_F[!is_proj, f_active] <- log_f[, f_index[f_active], drop = FALSE]
   if (n_proj > 0) {
     log_k <- if (is.null(proj_settings$F_mult)) rep(0, n_proj) else log(proj_settings$F_mult)
     terminal <- max(which(!is_proj))
@@ -167,6 +172,8 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   }
   mu_F <- exp(log_mu_F)
   F <- exp(log_F)
+  F[, !f_active] <- 0
+  mu_F[, !f_active] <- 0
 
   M <- mu_M <- exp(log_mu_M)
   if (M_settings$process != "off") {
@@ -184,7 +191,11 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   population <- .population_states(par, dat, Z, simulate, F = F, M = M)
   F <- population$F
   Z <- population$Z
-  log_F <- log(F)
+  structural_zero <- matrix(rep(!f_active, each = n_years), n_years, n_ages)
+  projection_zero <- if (is.null(proj_settings$catch)) rep(FALSE, n_years) else
+    c(rep(FALSE, sum(!is_proj)), proj_settings$catch == 0)
+  structural_zero[projection_zero, ] <- TRUE
+  log_F <- if (.f_blocked(dat)) log(F + structural_zero) else log(F)
   log_Z <- log(Z)
   log_N <- population$log_N
   pred_log_N <- population$pred_log_N
@@ -264,19 +275,21 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   ## F process ----
 
   if (F_settings$process != "off") {
-    eta_log_f <- log_F[!is_proj, ] - log_mu_F[!is_proj, ]
+    eta_log_f <- if (.f_blocked(dat)) {
+      log_f - .f_state_mean(log_mu_F[!is_proj, , drop = FALSE], dat)
+    } else log_F[!is_proj, ] - log_mu_F[!is_proj, ]
     jnll <- jnll - if (!dat$process_sd$F$default && F_settings$process != "cor_rw") {
       .dprocess_scaled(eta_log_f, sd_f, F_settings$process,
-        phi = if (F_settings$process == "ar1") plogis(logit_phi_f) else c(0, 0)
+        phi = if (F_settings$process == "ar1") .f_phi(par) else c(0, 0)
       )
     } else if (F_settings$process == "rw") {
       dprocess_rw(eta_log_f, sd = sd_f)
     } else if (F_settings$process == "cor_rw") {
-      dprocess_cor_rw(eta_log_f, sd = sd_f, rho = tanh(atanh_rho_f))
+      dprocess_cor_rw(eta_log_f, sd = sd_f, rho = .f_rho(par))
     } else if (F_settings$process == "iid") {
       sum(RTMB::dnorm(eta_log_f, 0, sd_f, log = TRUE))
     } else {
-      dprocess_ar1(eta_log_f, sd = sd_f, phi = plogis(logit_phi_f))
+      dprocess_ar1(eta_log_f, sd = sd_f, phi = .f_phi(par))
     }
 
   }
@@ -324,9 +337,18 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   samp_time <- obs_map$samp_time
 
   ic <- obs_map$type == "catch"
-  log_pred[ic] <- log_N_obs[ic] - log(Z_obs[ic]) + log(-expm1(-Z_obs[ic])) + log(F_obs[ic])
+  zero_catch <- ic & ((!f_active)[match(obs_map$age, ages)] | projection_zero[match(obs_map$year, years)])
+  positive_catch <- ic & !zero_catch
+  log_pred[positive_catch] <- log_N_obs[positive_catch] - log(Z_obs[positive_catch]) +
+    log(-expm1(-Z_obs[positive_catch])) + log(F_obs[positive_catch])
+  log_pred[zero_catch] <- -Inf
 
   ii <- obs_map$type == "index"
+  if (!is.null(dat$q_power)) {
+    log_q_base <- log_q_obs
+    q_power <- .q_power_values(par, dat)
+    log_q_obs <- log_q_base + (q_power - 1) * (log_N_obs[ii] - Z_obs[ii] * samp_time[ii])
+  }
   log_pred[ii] <- log_q_obs + log_N_obs[ii] - Z_obs[ii] * samp_time[ii]
 
   # Internal reporting modes share the fitted population and observation equations.
@@ -357,7 +379,8 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   ia <- as.character(F_settings$mean_ages)
   F_bar <- rowSums(F[, ia, drop = FALSE] * N[, ia, drop = FALSE]) / rowSums(N[, ia, drop = FALSE])
   # Fixed zero catches imply exactly zero F; avoid log(0) in ADREPORT.
-  log_F_bar <- log(F_bar + zero_F)
+  zero_F_bar <- zero_F | !any(f_active[match(F_settings$mean_ages, ages)])
+  log_F_bar <- log(F_bar + zero_F_bar)
   ia <- as.character(M_settings$mean_ages)
   M_bar <- rowSums(M[, ia, drop = FALSE] * N[, ia, drop = FALSE]) / rowSums(N[, ia, drop = FALSE])
   log_M_bar <- log(M_bar)
@@ -395,7 +418,7 @@ nll_fun <- function(par, dat, simulate = FALSE) {
     ADREPORT(log_mu_F)
   }
   if (F_settings$process == "off") {
-    log_F <- log(F + zero_F)
+    log_F <- log(F + structural_zero)
     ADREPORT(log_F)
   }
   REPORT(F_full)
@@ -409,7 +432,7 @@ nll_fun <- function(par, dat, simulate = FALSE) {
 
   if (F_settings$process != "off" && !dat$process_sd$F$default) {
     sd_F <- .process_sd_surface(par, dat, "F")
-    log_sd_F <- log(sd_F)
+    log_sd_F <- log(sd_F + matrix(rep(!f_active, each = n_years), n_years, n_ages))
     REPORT(sd_F)
     ADREPORT(log_sd_F)
   }
@@ -455,6 +478,11 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   REPORT(log_obs)
   REPORT(sd_obs)
   REPORT(log_q_obs)
+  if (!is.null(dat$q_power)) {
+    REPORT(log_q_base)
+    REPORT(q_power)
+    ADREPORT(log_q_base)
+  }
   q_link_prediction <- if (identical(index_settings$q_link, "logit")) {
     if (any(vapply(dat$q_terms, function(term) term$type == "logistic", logical(1)))) {
       log_q_obs - log(-expm1(log_q_obs))
@@ -498,6 +526,7 @@ nll_fun <- function(par, dat, simulate = FALSE) {
       log_r = if (dat$rec$type == "off") setNames(log_recruitment[dat$rec$eligible], dat$years[dat$rec$eligible]) else log_r,
       log_obs = log_obs
     ))
+    sims$log_r0 <- par$log_r0
     if (!is.null(par$log_r_init)) sims$log_r_init <- par$log_r_init
     if (N_settings$init %in% c("free", "latent")) {
       sims$log_n0 <- log_n0

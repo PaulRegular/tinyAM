@@ -88,8 +88,8 @@ test_that("projection settings can be enabled, partially changed and disabled", 
 test_that("Usage shows every supported settings entry and optional projections", {
   expected <- list(
     N_settings = c("process", "init", "mu_form", "sd_form"),
-    rec_settings = c("process", "mu_form", "sd", "phi"),
-    F_settings = c("process", "mu_form", "sd_form", "mean_ages"),
+    rec_settings = c("process", "init", "mu_form", "sd", "phi"),
+    F_settings = c("process", "mu_form", "sd_form", "age_breaks", "mean_ages"),
     M_settings = c("process", "mu_form", "mu_supplied", "sd_form", "age_breaks", "first_dev_year", "mean_ages"),
     catch_settings = c("sd_form", "sd_supplied"),
     index_settings = c("sd_form", "sd_supplied", "q_form", "q_link"))
@@ -122,13 +122,13 @@ test_that("recruitment settings validate and merge independently of survival", {
   expect_error(make_test_dat(rec_settings = list(mu_form = ~ iid(year))), "residual process terms")
   before <- default_fit$refit_args
   call <- update(default_fit, rec_settings = list(process = "iid", mu_form = ~1), evaluate = FALSE)
-  expect_identical(call$rec_settings, list(process = "iid", mu_form = ~1, sd = NULL, phi = NULL))
+  expect_identical(call$rec_settings, list(process = "iid", init = "free", mu_form = ~1, sd = NULL, phi = NULL))
   expect_identical(default_fit$refit_args, before)
   expect_identical(
     make_test_dat(rec_settings = list())$rec_settings,
     tinyAM:::.settings_defaults("rec_settings")
   )
-  base <- list(process = "ar1", mu_form = ~ bh(ssb), sd = .2, phi = .5)
+  base <- list(process = "ar1", init = "free", mu_form = ~ bh(ssb), sd = .2, phi = .5)
   changed <- tinyAM:::.merge_settings(base, list(mu_form = ~1, sd = NULL), "rec_settings")
-  expect_identical(changed, list(process = "ar1", mu_form = ~1, sd = NULL, phi = .5))
+  expect_identical(changed, list(process = "ar1", init = "free", mu_form = ~1, sd = NULL, phi = .5))
 })

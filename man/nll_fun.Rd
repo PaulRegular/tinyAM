@@ -18,7 +18,7 @@ returning the likelihood? Defaults to \code{FALSE}.}
 }
 \value{
 With \code{simulate = FALSE}, a scalar joint negative log-likelihood.
-When used inside \code{\link[RTMB:MakeADFun]{RTMB::MakeADFun()}}, reported population and observation
+When used inside \code{\link[RTMB:TMB-interface]{RTMB::MakeADFun()}}, reported population and observation
 quantities are available through the resulting object's \code{report()} method;
 selected log population summaries also receive uncertainty via \code{sdreport()}.
 With \code{TRUE}, a list containing \code{log_r}, \code{log_obs}, \code{log_f} when its process
@@ -67,7 +67,8 @@ terminal W and P preserve biomass and
 mature biomass; see \link{tinyAM-model}. No extra parameters or process penalties
 are introduced. \code{N_plus}, \code{W}, and \code{P} are then included in \code{report()}.
 Initial older-age abundance, \code{log_r0}, and additional early recruitment
-boundary states remain supplied fixed states. See \link{recruitment_formulas}.
+boundary states retain their supplied values during process simulation.
+See \link{recruitment_formulas} for fixed versus integrated initialization.
 RW processes retain their starting state because it has no process density.
 For N, the first \code{log_n} row is retained and its starting residual is computed
 against the newly simulated cohort prediction. Subsequent residuals follow

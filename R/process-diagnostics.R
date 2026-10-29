@@ -32,7 +32,7 @@
   }
   states <- list(
     N = if (!is.null(par[["log_n"]])) population$log_N[-1L, -1L, drop = FALSE] - population$pred_log_N[-1L, -1L, drop = FALSE],
-    F = if (!is.null(par[["log_f"]])) log_F[!dat$is_proj, , drop = FALSE] - log_mu_F[!dat$is_proj, , drop = FALSE],
+    F = if (!is.null(par[["log_f"]])) par$log_f - .f_state_mean(log_mu_F[!dat$is_proj, , drop = FALSE], dat),
     M = if (!is.null(par[["log_m"]])) par$log_m - log_mu_M[rownames(par$log_m), dat$M_settings$age_block_start, drop = FALSE]
   )
   for (component in names(states)) {
@@ -41,8 +41,10 @@
     if (is.null(x) || process == "off" || (process %in% c("rw", "cor_rw") && nrow(x) < 2L)) next
     suffix <- tolower(component)
     z <- .process_whiten(x, .process_sd(par, dat, component), process,
-      phi = if (process == "ar1") plogis(par[[paste0("logit_phi_", suffix)]]) else c(0, 0),
-      rho = if (process == "cor_rw") tanh(par$atanh_rho_f) else 0)
+      phi = if (process == "ar1") {
+        if (component == "F") .f_phi(par) else plogis(par[[paste0("logit_phi_", suffix)]])
+      } else c(0, 0),
+      rho = if (process == "cor_rw") .f_rho(par) else 0)
     out[[component]] <- z[rownames(z) %in% historical, , drop = FALSE]
   }
   do.call(c, lapply(out, as.vector))
@@ -61,7 +63,7 @@
     if (process %in% c("rw", "cor_rw")) x <- x[-1L, , drop = FALSE]
     x <- x[rownames(x) %in% as.character(dat$years[!dat$is_proj]), , drop = FALSE]
     d <- expand.grid(year = as.numeric(rownames(x)), coordinate = colnames(x), stringsAsFactors = FALSE)
-    if (component == "M") {
+    if (component == "M" || (component == "F" && .f_blocked(dat))) {
       names(d)[2L] <- "age_block"
       d$state_block <- match(d$age_block, colnames(x))
     } else {

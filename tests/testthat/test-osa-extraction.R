@@ -61,3 +61,24 @@ test_that("actual OSA computation preserves objective values and missing masks",
   expect_error(residuals(f,type="osa"),"Could not calculate OSA residuals.*OSA probe failed")
   expect_identical(f$parameter_values,before)
 })
+
+test_that("partial OSA results retain requested order and original row identities", {
+  f <- osa_fixture()
+  n <- length(f$dat$observed)
+  selected <- c(n, 1L)
+  local_mocked_bindings(oneStepPredict = function(obj, subset, ...) {
+    expect_identical(subset, selected)
+    data.frame(residual = c(.4, -.7))
+  }, .package = "RTMB")
+  tables <- tidy_obs_pred(f, add_osa_res = TRUE, subset = selected, trace = FALSE)
+  actual <- c(tables$catch$osa_res, tables$index$osa_res)[f$dat$is_observed]
+  expected <- rep(NA_real_, n); expected[selected] <- c(.4, -.7)
+  expect_equal(actual, expected)
+  local_mocked_bindings(oneStepPredict = function(obj, conditional, ...) {
+    data.frame(residual = rep(.3, n - length(conditional)))
+  }, .package = "RTMB")
+  tables <- tidy_obs_pred(f, add_osa_res = TRUE, conditional = seq_len(n - 1L), trace = FALSE)
+  actual <- c(tables$catch$osa_res, tables$index$osa_res)[f$dat$is_observed]
+  expect_true(all(is.na(actual[-n])))
+  expect_equal(actual[n], .3)
+})

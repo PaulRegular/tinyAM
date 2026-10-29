@@ -30,11 +30,12 @@
   sum(N * W * F * .baranov_fraction(F + M))
 }
 
-.solve_catch <- function(target, N, W, F_ref, M, year) {
+.solve_catch <- function(target, N, W, F_ref, M, year, active = NULL) {
   if (target == 0) return(0)
-  biomass <- sum(N * W)
+  if (is.null(active)) active <- if (inherits(F_ref, "advector")) rep(TRUE, length(F_ref)) else F_ref > 0
+  biomass <- sum(N[active] * W[active])
   ad <- inherits(biomass, "advector") || inherits(F_ref, "advector") || inherits(M, "advector")
-  if (!ad && (!is.finite(biomass) || target >= biomass || any(F_ref <= 0))) {
+  if (!ad && (!is.finite(biomass) || target >= biomass || !any(active) || any(F_ref < 0))) {
     cli::cli_abort("Catch projection for {year} is infeasible: target {signif(target, 6)} must be below vulnerable biomass {signif(biomass, 6)} with positive terminal F.")
   }
   # RTMB root bounds are data, not AD parameters. Use a wide finite bracket;

@@ -62,11 +62,12 @@ with appropriate \code{dimnames} (\verb{year × age} or \verb{year × age_block}
 \itemize{
 \item \strong{Recruitment & variability}
 \itemize{
-\item \code{log_r0} (fixed first-year log recruitment, always present)
+\item \code{log_r0} (first-year log recruitment, always present; fixed by default,
+integrated when \code{rec_settings$init = "latent"})
 \item \code{log_r}: absolute random log recruitment in eligible process years
 when the recruitment process is enabled;
 by default these are \code{dat$years[-1]}, named by year.
-\item \code{log_r_init}: additional free fixed boundary states when parent SSB lies
+\item \code{log_r_init}: additional unpenalized boundary states when parent SSB lies
 before the modeled period, named by year.
 \item \code{log_sd_r}: estimated recruitment SD unless supplied in \code{rec_settings$sd}
 or recruitment is deterministic (\code{process = "off"}).
@@ -99,6 +100,10 @@ See \code{\link[=prepare_tam]{prepare_tam()}} for the choices and weak-identific
 \item \strong{Fishing mortality (F)}
 \itemize{
 \item \code{log_sd_f} (only when the F process is active)
+\item With \code{F_settings$age_breaks}, \code{log_f} has one column per active F
+block, indexed by \code{age_block}. Unfished ages have no latent F entries.
+A single active block has no age-correlation parameter; AR1 retains
+only its temporal correlation.
 \item \code{logit_phi_f} length 2 (if \code{process == "ar1"})
 \item \code{atanh_rho_f}: signed age correlation of annual F increments
 (if \code{process == "cor_rw"}), reported as \code{rho_f} through \code{tanh()}.
@@ -128,6 +133,8 @@ variation in log observation SD, not observation SD itself.
 \item \code{log_q} for \code{q_link = "log"}, or \code{logit_q} for \code{q_link = "logit"}
 (length \code{ncol(dat$q_modmat)}). Zero coefficients start q at 1 or 0.5,
 respectively, before any \code{\link[=mono]{mono()}} increments.
+\item \code{log_q_power}: log positive exponents for \code{\link[=power]{power()}}, named by group,
+initialized at zero (p = 1), estimated as fixed effects.
 \item \code{dq} only for \code{\link[=mono]{mono()}} terms (length \code{ncol(dat$q_mono_modmat)}):
 fixed non-negative increments on the selected q-link scale, initialized to \code{0.05}
 for a nearly flat curve and bounded below by zero in \code{\link[=fit_tam]{fit_tam()}}. Names

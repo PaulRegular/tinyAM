@@ -9,8 +9,8 @@ prepare_tam(
   years = NULL,
   ages = NULL,
   N_settings = list(process = "iid", init = "exp", mu_form = NULL, sd_form = ~1),
-  rec_settings = list(process = "rw", mu_form = NULL, sd = NULL, phi = NULL),
-  F_settings = list(process = "rw", mu_form = NULL, sd_form = ~1, mean_ages = NULL),
+  rec_settings = list(process = "rw", init = "free", mu_form = NULL, sd = NULL, phi = NULL),
+  F_settings = list(process = "rw", mu_form = NULL, sd_form = ~1, age_breaks = NULL, mean_ages = NULL),
   M_settings = list(process = "off", mu_form = NULL, mu_supplied = ~I(0.2), sd_form = ~1,
         age_breaks = NULL, first_dev_year = NULL, mean_ages = NULL),
   catch_settings = list(sd_form = ~1, sd_supplied = NULL),
@@ -41,7 +41,7 @@ weight and maturity are retained for abundance-based aggregation inside
 cohort residuals, \code{"rw"} for residuals that accumulate through time, or
 \code{"ar1"} for residuals correlated between years and ages. See \link{tinyAM-model}.
 \item \code{init}: \code{"exp"} (default), \code{"free"}, \code{"latent"}, \code{"mono"} or \code{"capped"}, independently of
-\code{process}. All use fixed first-year recruitment \code{log_r0} as the starting
+\code{process}. All use first-year recruitment \code{log_r0} as the starting
 anchor. \code{"exp"} uses deterministic survivorship; \code{"free"} estimates fixed
 older-age \code{log_n0} states; \code{"latent"} integrates them without an initial
 density. \code{"mono"} constrains abundance to decline from r0; \code{"capped"}
@@ -63,7 +63,12 @@ initial-abundance SDs remain separate. Random-effect SD terms are not enabled.
 \itemize{
 \item \code{process}: \code{"off"} for recruitment exactly following its mean formula,
 or \code{"rw"} (default), \code{"iid"}, or \code{"ar1"} for annual log-recruitment
-residuals. First-year recruitment remains a freely estimated fixed anchor.
+residuals. Boundary recruitment states are controlled by \code{init}.
+\item \code{init}: \code{"free"} (default) estimates first-year recruitment and additional
+pre-parent-SSB boundary states as fixed parameters; \code{"latent"} integrates
+them without an initial density or separate SD. Independent of \code{process},
+including \code{"off"}, and of older-age \code{N_settings$init}. Simulations condition
+on these states; joint uncertainty draws can vary them. See \link{recruitment_formulas}.
 \item \code{mu_form}: one-sided formula for the expected log recruitment. \code{NULL} is
 allowed for RW; off/IID/AR1 require an explicit formula, such as \code{~ 1} for a
 constant mean. Use \code{\link[=bh]{bh()}} or \code{\link[=ricker]{ricker()}} for a median stock-recruit curve
@@ -90,6 +95,15 @@ correlation; its SD is the marginal SD of annual log-F increments.
 evaluated on \code{data$pop_covariates}. Sharing an SD does not share latent F states.
 IID SDs describe residuals; RW/correlated-RW SDs describe annual increments;
 stationary AR1 retains its innovation-scale convention.
+\item \code{age_breaks}: optional increasing integer interval boundaries for shared
+actual F. Intervals include their lower boundary and exclude their upper
+boundary; the final boundary must be \code{max(ages) + 1}. For ages \code{1:6},
+\code{c(1, 2, 3, 4, 5, 7)} shares F at ages 5 and 6. Ages below the first
+boundary have exactly zero F in all years, with no F state or process
+density. Positive catch observations at those ages are rejected. \code{NULL}
+retains separate F states at every modeled age. All mean components and
+process SDs must agree within a shared block; refine blocks for age-varying
+means. Process correlation uses ordered blocks, not replicated fish ages.
 \item \code{mu_form}: an optional formula for mean-\eqn{F} (coefficients estimated as
 \strong{log-scale} parameters \code{log_mu_f}), evaluated on \code{data$pop_covariates}. Required for \code{"off"}, \code{"iid"} and \code{"ar1"};
 use \code{~ 1} for one estimated mean level or \code{~ factor(age)} for age-specific
@@ -135,6 +149,10 @@ see \link{formula_effects} for the model and statistical cautions.
 \code{~ M_assumption} stored in the \code{data$pop_covariates} data.frame.
 \item \code{age_breaks}: optional integer break points used by \code{\link[=cut_ages]{cut_ages()}} to
 define \code{age_blocks} sharing absolute latent M states across ages.
+Existing specifications retain their original interpretation. Alternatively,
+end at \code{max(ages) + 1} to use explicit half-open intervals as for F:
+with ages \code{1:6}, \code{c(2, 5, 7)} makes blocks 2--4 and 5--6. Ages outside
+M process blocks retain their existing mean M; they are not set to zero.
 When a narrower set of \code{age_breaks} than modeled \code{ages} is provided,
 process states are only estimated for ages within the specified range; ages
 outside this range are fixed to their mean or assumed levels. By default,
@@ -172,7 +190,10 @@ the intercept is removed from \code{sd_form} so supplied SDs act as offsets.
 blocks. See \code{\link[=mono]{mono()}} for independent non-decreasing curves by survey.
 Structured effects such as \code{~ survey + ar1(year, by = survey)} allow shared
 annual changes across ages. \code{~ survey + logistic(age, by = survey)} fits rising
-selectivity curves. See \link{formula_effects} for assumptions and constraints.
+selectivity curves. \code{~ q_key + power(N, by = q_power_group)} allows
+abundance-dependent catchability using internally calculated abundance at
+survey time. Missing power-group labels mean p = 1, not missing observations.
+Powers require the log q link. See \code{\link[=power]{power()}} and \link{formula_effects}.
 \item \code{q_link}: \code{"log"} (default) allows any positive catchability; \code{"logit"}
 restricts catchability to between zero and one. Use the logit link only
 when the survey index has an absolute abundance scale and this restriction
@@ -318,15 +339,15 @@ surface or a mean structure.
 \strong{Process options and guards}
 \itemize{
 \item Initial abundance is controlled by \code{N_settings$init}, independently of
-the subsequent N process. First-year recruitment is the fixed state
-\code{log_r0}. The default uses survivorship from recruitment under first-year
+the subsequent N process. First-year recruitment is the state
+\code{log_r0}, controlled separately by \code{rec_settings$init}. The default uses survivorship from recruitment under first-year
 total mortality Z, with no equilibrium plus-group correction.
 \item \code{"exp"} is the default: a parsimonious, comparatively stable nuisance-state
 initialization. More flexible choices are available when first-year data
 support them. \code{"free"} estimates unpenalized fixed \code{log_n0} states.
 \code{"latent"} integrates those states without an initial density, including
 when the subsequent N process is off. It resembles SAM's unpenalized
-older-age boundary but retains tinyAM's fixed first-year recruitment r0.
+older-age boundary; use \code{rec_settings$init = "latent"} to integrate first-year recruitment too.
 \item \code{"mono"} estimates non-increasing initial abundance from r0, including
 the plus group: \verb{log N0[a] = log r0 - cumsum(d_n0)[a-1]}. \code{"capped"}
 only requires each older abundance to be no greater than r0:
@@ -334,7 +355,7 @@ only requires each older abundance to be no greater than r0:
 allow exact ties, and require no N process or separate initial SD.
 The pooled plus group can naturally exceed a single age; constraining it
 is a deliberate biological assumption. Boundary Wald intervals need care.
-\item All choices estimate r0 as a fixed effect. Simulations condition on initial states;
+\item Recruitment initialization is independent of these choices. Simulations condition on initial states;
 joint uncertainty draws can vary fitted latent initial states. No
 mortality-history distribution is imposed on initial abundances.
 \item \code{M_settings$age_breaks} (vector of break points on ages)

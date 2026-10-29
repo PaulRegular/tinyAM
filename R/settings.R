@@ -43,7 +43,7 @@
   if (name == "proj_settings" && is.null(base$catch) && is.null(base$F_mult)) base$F_mult <- 1
   required <- switch(name,
     N_settings = c("process", "init"),
-    rec_settings = "process",
+    rec_settings = c("process", "init"),
     F_settings = "process",
     M_settings = "process",
     catch_settings = c("sd_form"),

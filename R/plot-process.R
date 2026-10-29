@@ -21,7 +21,7 @@
 #'
 #' Each call returns one plot; the dashboard supplies its dropdown containers.
 #' N/F/M buttons retain the selected model. Signed matrices share symmetric colour ranges across
-#' models within a component and have no logarithmic scale. M uses unique,
+#' models within a component and have no logarithmic scale. Blocked F and M use unique,
 #' ordered state blocks. Bubble areas use absolute residuals with one scale
 #' across all components/models; orange is negative and navy is positive.
 #'
@@ -112,15 +112,16 @@ plot_process_residuals <- function(out, component = c("NFM", "Recruitment")) {
   pieces <- lapply(c("N", "F", "M"), function(component) {
     d <- .process_plot_data(tables[[component]], out)
     if (is.null(d)) d <- data.frame(year = numeric(), est = numeric(), model = character())
-    d$coordinate <- if (component == "M") integer(nrow(d)) else if (nrow(d)) d$age else numeric()
-    if (component == "M" && nrow(d)) {
-      d$coordinate <- integer(nrow(d))
+    blocked <- "age_block" %in% names(d)
+    d$coordinate <- if ("age" %in% names(d)) d$age else rep(NA_real_, nrow(d))
+    d$coordinate_label <- as.character(d$coordinate)
+    if (blocked && nrow(d)) {
       for (model in models) {
-        i <- which(d$model == model)
+        i <- which(d$model == model & !is.na(d$age_block))
         d$coordinate[i] <- match(as.character(d$age_block[i]), unique(as.character(d$age_block[i])))
+        d$coordinate_label[i] <- as.character(d$age_block[i])
       }
     }
-    d$coordinate_label <- if (component == "M") as.character(d$age_block) else as.character(d$age)
     d$component <- rep(component, nrow(d))
     d <- d[intersect(c("year", "est", "model", "coordinate", "coordinate_label", "component", "definition", "notes"), names(d))]
     # NA-only rows keep every model/component selectable, without inventing values.
