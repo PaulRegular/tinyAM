@@ -40,9 +40,9 @@ Snapshot dated 2026-10-29: the register contains 905 source-list entries. These 
 | Organization | Entries | Matched | Provisional new | Ambiguous | Identity unreviewed | Eligible | Excluded | Eligibility unresolved | Screened | Not started |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 15 | 13 | 1 | 170 | 15 | 104 | 80 | 127 | 72 |
-| ICES | 274 | 57 | 17 | 2 | 198 | 45 | 50 | 179 | 108 | 166 |
+| ICES | 274 | 57 | 18 | 2 | 197 | 45 | 51 | 178 | 109 | 165 |
 | NOAA | 432 | 28 | 48 | 3 | 353 | 36 | 62 | 334 | 114 | 318 |
-| Total | 905 | 100 | 78 | 6 | 721 | 96 | 216 | 593 | 349 | 556 |
+| Total | 905 | 100 | 79 | 6 | 720 | 96 | 217 | 592 | 350 | 555 |
 
 NOAA Stock SMART 10573 and the DFO Pacific Sardine management entry are
 crosswalked to one northern-subpopulation unit. The 2025 NOAA update confirms
@@ -146,6 +146,8 @@ Recent DFO screens also reconciled Strait of Georgia Pacific herring to its exis
 The three DFO Pacific ocean perch inventory entries map to the existing coastwide `dfo_pop_bc_2023` assessment and represent its 5ABC, 3CD and 5DE subareas, not three new stocks. The detailed assessment has fishery and survey age compositions, aggregate survey indices, fixed biological inputs, and official sex-specific mortality and terminal-biomass outputs. A source-supported age-indexed translation is possible, but the complete matching coastwide historical output series and biomass definition remain unresolved; see `source_reviews/dfo_pop_bc.md`.
 
 The DFO Canary Rockfish inventory row matches the curated coastwide `dfo_canary_bc_2022` Run24/24.01 assessment. Catch totals, fishery and survey age compositions, fixed biology, survey timing, a female SSB posterior subset and sex-specific M outputs are documented; see `source_reviews/dfo_canary_bc.md` for translation limits.
+
+Norway pout in ICES Division 6.a (`nop.27.6a`) is distinct from the North Sea/Skagerrak stock already in the database. Official ICES scheduling identifies its 2024 advice output as stock status only and schedules the next assessment for 2027; the row is screened out of the current age-structured candidate pool without asserting that age observations are absent from all source datasets. See `source_reviews/ices_norway_pout_6a.md`.
 
 The Southern Gulf spring- and fall-spawning herring entries also match existing, separate stock records. Both have detailed 2024 age-specific inputs and outputs, while 2026 summary-only events are preserved separately. The fall mobile-gear catch-at-age table duplicates the fixed-gear table and is flagged rather than treated as verified data. See `source_reviews/dfo_herring_4tvn_spring.md` and `source_reviews/dfo_herring_4tvn_fall.md`.
 
