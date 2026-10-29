@@ -90,47 +90,43 @@ then assess whether tinyAM can represent and fit the assessment.
 
 ------------------------------------------------------------------------
 
-# 1. Starting point: Charbonneau–Keith repository
+# 1. Discovering candidate assessments
 
-The primary starting point for identifying age-structured assessments is the curated:
+Use official stock and assessment inventories as the starting point for new
+stock discovery. The Charbonneau–Keith catalogue is the seed already reviewed
+and remains an identity and source cross-check. Its historical model labels do
+not establish the current assessment or its inputs.
 
-**Julie Charbonneau / David Keith — Age-structured-marine-fish-database**
+For the first expansion, audit NOAA Stock SMART and regional science-centre
+inventories, ICES SID and working-group listings, and DFO sustainability-survey
+and regional CSAS listings together. Record each inventory's retrieval date,
+coverage limits and source. Inventory membership alone does not establish an
+age-structured assessment or availability of model inputs.
 
-Repository:
+Maintain the separate candidate register described in DATABASE_STRUCTURE.md.
+Reconcile official identifiers, scientific names, areas, authorities and unit
+boundaries against existing stocks, including joint assessments and splits or
+mergers. Record uncertain matches for review; never create a duplicate merely
+because a source uses another name. A new stock without a Charbonneau–Keith
+match may leave charbonneau_id blank.
 
-<https://github.com/JulieCharbonneau/Age-structured-marine-fish-database>
+Screen public evidence for the latest official production run: catch numbers at
+age, age-specific survey information, weights, maturity, mortality assumptions,
+survey timing and comparable official outputs. Record source URLs, review date,
+coverage, unresolved fields and the distinction between a confirmed absence and
+an unsearched source. Direct age observations and source-supported reconstruction
+from totals and age compositions are eligible; a model label or length compositions
+alone do not establish eligibility. Do not manufacture observations from fitted
+states or parameters. Preserve native likelihood inputs in the canonical database;
+perform tinyAM-specific conversions downstream.
 
-For the current curated analysis set, begin with:
-
-<https://github.com/JulieCharbonneau/Age-structured-marine-fish-database/tree/main/PLOS_2026_analysis>
-
-Use this repository as the initial sampling frame and stock catalogue.
-
-For each candidate stock:
-
-1.  locate the stock in the Charbonneau–Keith repository;
-2.  record its Charbonneau identifier;
-3.  inspect the metadata, notes, source assessment, and cited documents;
-4.  establish the latest official stock unit, including any split, merger, or boundary change, and identify the latest assessment used for advice;
-5.  find the most recent publicly accessible detailed official assessment for that unit; if its detailed data are unavailable, investigate the earlier stock definition and assessment as described in Section 2.2;
-6.  recover the available authoritative inputs, outputs, and assumptions, preserving partial records and reporting what remains unavailable.
-
-Charbonneau–Keith is the default place to **start**, but not automatically the preferred source for every numerical value.
-
-Its contents may include:
-
-- extracted assessment data;
-- fitted outputs;
-- reconstructed or digitized quantities;
-- transformed values;
-- collapsed age classes;
-- quantities derived from model results.
-
-Do not assume a Charbonneau–Keith value is an original assessment input.
-
-When a stock has received a newer official assessment than the one represented in Charbonneau–Keith, use the catalogue identity as a starting point, not as proof that its stock boundaries still apply. Follow the current unit and fallback rules in Section 2.2. If newer advice is summary-only, record it and its limitations separately.
-
-If a requested stock is not represented in the curated Charbonneau–Keith set, document that fact before adding it from another authoritative source.
+For an expansion batch, rank verified new stock units by recoverable inputs and
+outputs and access to native or machine-readable sources. Use underrepresented
+regions and species groups to break comparable-readiness ties, followed by stable
+official identifiers. Do not count assessment years, sexes, variants or regional
+components of one unit as additional stocks. Record source blockers and actual
+shortfalls rather than guessing to meet a numerical target. Commit the reviewed
+inventory and selected batch before importing numerical source data.
 
 ------------------------------------------------------------------------
 

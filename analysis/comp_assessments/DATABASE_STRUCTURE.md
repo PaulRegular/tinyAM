@@ -26,6 +26,24 @@ comparisons. Use `PROTOCOL.md` to obtain, verify, or repair records. If a
 downstream analysis reveals a source-data gap, validate and revise the affected
 database records while keeping analysis-specific choices separate.
 
+## Candidate register
+
+Keep discovery records in a separate version-controlled register under
+`analysis/comp_assessments/`, outside the five canonical source tables. A row
+identifies an official candidate stock unit, its organization, scientific name,
+area, latest assessment and source links; record inventory date and coverage,
+matched stock ID or unresolved identity, evidence for each key input and output,
+and the screening decision and reason. Track screening, eligibility and import
+progress separately from canonical input/output completeness and translation
+results. Inventory rows alone do not create canonical assessment events or values.
+`charbonneau_id` may be blank when no verified catalogue match exists.
+
+The current controlled basin vocabulary is validated by the database validator.
+When a verified new stock requires another basin, add and document a specific
+label and update validation alongside that import. Preserve the stock's precise
+extent in area and region, including genuinely wide-ranging units; do not force
+Southern Hemisphere stocks into the current Northern Hemisphere labels.
+
 ## Core principles
 
 1.  **Represent the official assessment faithfully.** Preserve the dimensions and meaning of the official model, including fleets, surveys, sexes, regions, and seasons where applicable.

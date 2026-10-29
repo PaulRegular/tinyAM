@@ -90,6 +90,23 @@ An unsupported model feature is not automatically a missing-data problem.
 For example, a source model may estimate M without a fixed M input. That case
 requires a documented tinyAM model choice, not a fabricated input table.
 
+## Translation readiness
+
+Before fitting, verify actual overlapping years and ages, plus-group treatment,
+observation units and scales, fishery catch and survey information, appropriate
+stock and catch weights, maturity, the source mortality treatment and survey
+sampling time. One numerical row is evidence of presence, not an adequate time
+series. Identify source-supported reconstructions and any gaps explicitly;
+never convert fitted states or fitted parameters into observations. Aggregate
+indices and age compositions may be translated only when the source provides
+the quantities and scaling required for a defensible conversion. An estimated M
+process needs an appropriate model choice, not an invented fixed M input.
+
+Check that at least one official population or mortality output can support a
+meaningful comparison. Record cases with inadequate input coverage, unavailable
+outputs or unsupported model structures separately from numerical fit failures.
+These checks do not prevent curation of verified partial source data.
+
 ## Shared code and stock scripts
 
 Keep the routine workflow small:
