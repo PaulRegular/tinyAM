@@ -45,3 +45,7 @@ The source PDFs and native run are cached locally under analysis/comp_assessment
 ## tinyAM comparison limits
 
 The database record preserves the native fitted inputs and outputs. The tinyAM translation is a separate approximation. In particular, it uses an IID abundance process and independent survey residuals, cannot reproduce SAM's Q4 age-correlated observation errors exactly, and represents supplied M as fixed. Survey catchability sharing, age plus groups, and all year-age input surfaces are retained where tinyAM can represent them.
+
+## Discovery inventory screening
+
+The ICES 2026 inventory entry whg.27.6a matches this existing canonical West of Scotland unit and is screened eligible. The latest detailed production run recovered is the complete 2025 SAM assessment; the 2026 WGCSE chapter is a placeholder. The matched run has age-based catch and survey inputs, fitted biological assumptions and mortality, documented timing, and fitted population/mortality outputs.
