@@ -630,3 +630,18 @@ stopifnot(
     'source_reviews', 'noaa_quillback_california_2025.md'))
 )
 cat('NOAA California Quillback identity and source-screening checks passed.\n')
+icelandic_cod <- lookup('ICES:cod.27.5a')
+stopifnot(
+  nrow(icelandic_cod) == 1L,
+  icelandic_cod$match_status == 'matched',
+  icelandic_cod$matched_stock_id == 'ck_ices_nwwg_morhua_ice5a',
+  icelandic_cod$screening_status == 'screened',
+  icelandic_cod$eligibility == 'eligible',
+  icelandic_cod$import_status == 'imported',
+  grepl('1955-2025', icelandic_cod$catch_age_evidence, fixed = TRUE),
+  grepl('IS-SMB', icelandic_cod$survey_age_evidence, fixed = TRUE),
+  grepl('1955-2026', icelandic_cod$output_evidence, fixed = TRUE),
+  file.exists(file.path('analysis', 'comp_assessments', 'source_reviews',
+    'ices_cod_iceland_2026.md'))
+)
+cat('ICES cod 5.a identity and current-run screen passed.\n')
