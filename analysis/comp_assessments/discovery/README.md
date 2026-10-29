@@ -56,15 +56,15 @@ Snapshot dated 2026-10-29: the register contains 905 source-list entries. These 
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 28 | 5 | 146 | 19 | 118 | 62 | 151 | 48 |
 | ICES | 274 | 57 | 20 | 2 | 195 | 45 | 52 | 177 | 111 | 163 |
-| NOAA | 432 | 28 | 55 | 3 | 346 | 40 | 65 | 327 | 121 | 311 |
-| Total | 905 | 105 | 103 | 10 | 687 | 104 | 235 | 566 | 383 | 522 |
+| NOAA | 432 | 28 | 56 | 3 | 345 | 41 | 65 | 326 | 122 | 310 |
+| Total | 905 | 105 | 104 | 10 | 686 | 105 | 235 | 565 | 384 | 521 |
 
 These are inventory-entry counts. The linked-unit crosswalk in
-`inventory_units.csv` currently represents 129 distinct units across 147
-entries: 98 canonical stock IDs and 31 provisional candidate-unit IDs. Of the
-31 candidate units, 9 are screened eligible, 15 are screened ineligible, 5
+`inventory_units.csv` currently represents 130 distinct units across 148
+entries: 98 canonical stock IDs and 32 provisional candidate-unit IDs. Of the
+32 candidate units, 10 are screened eligible, 17 are screened ineligible, 5
 remain eligibility-unresolved, and 2 have ambiguous or mixed identity status.
-The other 760 entries do not yet have an explicit unit crosswalk. These are
+The other 757 entries do not yet have an explicit unit crosswalk. These are
 provisional audit counts, not the selected expansion batch.
 
 NOAA Gulf red snapper (Stock SMART 10230) is a new, eligible source-curation
@@ -76,6 +76,17 @@ The report says Council SSC review remains pending, and Stock SMART's 2021
 assessment metadata are stale for this run. This is one Gulf unit with three
 assessment areas, distinct from Southern Atlantic red snapper. See
 `source_reviews/noaa_gulf_red_snapper_2026.md`.
+
+NOAA Gulf gray triggerfish (Stock SMART 10062) is a new, eligible source-
+curation candidate based on SEDAR 100, with data through 2024. The assessment
+uses fishery conditional age-at-length data and aggregate indices; age-specific
+catch and survey inputs for tinyAM would require documented reconstruction.
+The Review Panel revised-base report includes annual biomass, SSB, age-1+
+abundance, recruitment and a biomass harvest-rate output, but not annual
+N-at-age or F-at-age arrays. NOAA's peer-review listing has no actual
+dissemination date and formal management adoption was not confirmed in the
+sources reviewed. See
+`source_reviews/noaa_gulf_gray_triggerfish_2026.md`.
 
 `inventory_progress.csv` also reports distinct matched stock IDs,
 crosswalked candidate units and entries without an identity link by source
