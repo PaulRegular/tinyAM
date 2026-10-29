@@ -154,6 +154,21 @@ matched_noaa_review <- c(
   'NOAA:10515','NOAA:10518','NOAA:10520','NOAA:10523','NOAA:11050','NOAA:11055',
   'NOAA:11662','NOAA:12745','NOAA:12746'
 )
+ne_noaa_review <- c('NOAA:10164','NOAA:10508','NOAA:10509','NOAA:10519')
+reviewed_ne_noaa <- register[match(ne_noaa_review, register$candidate_id), , drop = FALSE]
+stopifnot(
+  !anyNA(reviewed_ne_noaa$candidate_id),
+  identical(reviewed_ne_noaa$matched_stock_id, c('nefsc_atlantic_mackerel',
+    'ck_nefsc_saw_morhua_gom','nefsc_cod_georges_bank','ck_nefsc_garmiii_aeglefinus_5y')),
+  all(reviewed_ne_noaa$match_status == 'matched'),
+  all(reviewed_ne_noaa$screening_status == 'screened'),
+  all(reviewed_ne_noaa$import_status == 'imported'),
+  identical(reviewed_ne_noaa$eligibility, c('eligible','ineligible','unresolved','unresolved')),
+  grepl('combined U.S.-Canadian', lookup('NOAA:10164')$catch_age_evidence, fixed = TRUE),
+  grepl('successor stock units', lookup('NOAA:10508')$decision_reason, fixed = TRUE),
+  grepl('10509 / assessment 13596', lookup('NOAA:10509')$decision_reason, fixed = TRUE),
+  grepl('2026 assessment', lookup('NOAA:10519')$decision_reason, fixed = TRUE)
+)
 reviewed_noaa <- register[match(matched_noaa_review, register$candidate_id), , drop = FALSE]
 stopifnot(
   !anyNA(reviewed_noaa$candidate_id),
@@ -184,10 +199,10 @@ stopifnot(sum(progress$inventory_rows) == nrow(register),
 stopifnot(all(progress$eligible_new <= progress$new),
   all(progress$eligible_new <= progress$eligible))
 noaa_progress <- progress[progress$organization == 'NOAA', , drop = FALSE]
-stopifnot(sum(noaa_progress$eligible) == 15L, sum(noaa_progress$excluded) == 41L,
-  sum(noaa_progress$eligibility_unresolved) == 376L,
-  sum(noaa_progress$screening_complete) == 60L,
-  sum(noaa_progress$screening_not_started) == 372L)
+stopifnot(sum(noaa_progress$eligible) == 16L, sum(noaa_progress$excluded) == 42L,
+  sum(noaa_progress$eligibility_unresolved) == 374L,
+  sum(noaa_progress$screening_complete) == 64L,
+  sum(noaa_progress$screening_not_started) == 368L)
 for (org in unique(register$organization)) {
   stopifnot(sum(progress$inventory_rows[progress$organization == org]) == sum(register$organization == org),
     sum(progress$excluded[progress$organization == org]) == sum(register$organization == org & register$eligibility == 'ineligible'),

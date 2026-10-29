@@ -38,10 +38,10 @@ Snapshot dated 2026-10-29: the register contains 905 source-list entries. These 
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 15 | 2 | 0 | 182 | 2 | 98 | 99 | 103 | 96 |
 | ICES | 274 | 57 | 10 | 0 | 207 | 11 | 45 | 218 | 62 | 212 |
-| NOAA | 432 | 22 | 2 | 1 | 407 | 15 | 41 | 376 | 60 | 372 |
-| Total | 905 | 94 | 14 | 1 | 796 | 28 | 184 | 693 | 225 | 680 |
+| NOAA | 432 | 26 | 2 | 1 | 403 | 16 | 42 | 374 | 64 | 368 |
+| Total | 905 | 98 | 14 | 1 | 792 | 29 | 185 | 691 | 229 | 676 |
 
-Four entries are both provisionally new and eligible (two ICES and two NOAA); the other 24 eligible entries are matched to existing records. This update screened 21 previously unresolved NOAA matches against their source reviews. Several latest assessments remain unresolved where age-specific inputs for the selected production run were not recovered. These counts do not represent a selected batch, and new entries may still overlap across organizations. Region-level counts and the audit trail are in `inventory_progress.csv` and `candidates.csv`. Screening and identity reconciliation remain incomplete.
+Four entries are both provisionally new and eligible (two ICES and two NOAA); the other 25 eligible entries are matched to existing records. The NOAA review screened 25 previously unresolved identity/source rows across Bering Sea/Aleutian Islands and Northeast U.S. units. Several latest assessments remain unresolved where age-specific inputs for the selected production run were not recovered. These counts do not represent a selected batch, and new entries may still overlap across organizations. Region-level counts and the audit trail are in `inventory_progress.csv` and `candidates.csv`. Screening and identity reconciliation remain incomplete.
 
 `inventory_progress.csv` summarizes the candidate register by organization and source region. NOAA regions are the science-centre labels in the pinned Stock SMART snapshot; DFO regions are the original Sustainability Survey regions; ICES regions are the exact SID ecoregion labels, including combinations. A row with multiple ICES regions remains one inventory row. These groupings are source reporting categories, not standardized ocean basins.
 
