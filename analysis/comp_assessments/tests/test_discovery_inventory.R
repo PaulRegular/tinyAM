@@ -220,13 +220,29 @@ stopifnot(all(progress$eligible_new <= progress$new),
   all(progress$eligible_new <= progress$eligible))
 dfo_progress <- progress[progress$organization == 'DFO', , drop = FALSE]
 stopifnot(sum(dfo_progress$inventory_rows) == 199L,
-  sum(dfo_progress$new) == 4L,
-  sum(dfo_progress$identity_unreviewed) == 180L,
-  sum(dfo_progress$screening_complete) == 117L,
-  sum(dfo_progress$screening_not_started) == 82L,
-  sum(dfo_progress$excluded) == 99L,
+  sum(dfo_progress$new) == 5L,
+  sum(dfo_progress$identity_unreviewed) == 179L,
+  sum(dfo_progress$screening_complete) == 118L,
+  sum(dfo_progress$screening_not_started) == 81L,
+  sum(dfo_progress$excluded) == 100L,
   sum(dfo_progress$eligible) == 13L,
-  sum(dfo_progress$eligibility_unresolved) == 87L)
+  sum(dfo_progress$eligibility_unresolved) == 86L)
+unit3_redfish <- lookup('DFO:Maritimes:Acadian Redfish - Unit 3')
+stopifnot(
+  nrow(unit3_redfish) == 1L,
+  unit3_redfish$scientific_name == 'Sebastes spp.',
+  unit3_redfish$match_status == 'new',
+  is.na(unit3_redfish$matched_stock_id),
+  unit3_redfish$screening_status == 'screened',
+  unit3_redfish$eligibility == 'ineligible',
+  unit3_redfish$import_status == 'not_started',
+  grepl('not catch-at-age', unit3_redfish$catch_age_evidence, fixed = TRUE),
+  grepl('abundance-at-length', unit3_redfish$survey_age_evidence, fixed = TRUE),
+  grepl('above 22 cm', unit3_redfish$maturity_evidence, fixed = TRUE),
+  grepl('not separated in commercial or survey catches', unit3_redfish$decision_reason, fixed = TRUE),
+  file.exists(file.path('analysis', 'comp_assessments', 'discovery', 'source_reviews',
+    'dfo_unit3_redfish_2022.md'))
+)
 noaa_progress <- progress[progress$organization == 'NOAA', , drop = FALSE]
 stopifnot(sum(noaa_progress$new) == 27L, sum(noaa_progress$eligible_new) == 13L,
   sum(noaa_progress$ambiguous) == 3L, sum(noaa_progress$identity_unreviewed) == 374L,
@@ -848,10 +864,10 @@ stopifnot(
     'ck_dfo_platessoides_4t.md')),
   sum(dfo_progress$matched) == 15L,
   sum(dfo_progress$eligible) == 13L,
-  sum(dfo_progress$excluded) == 99L,
-  sum(dfo_progress$eligibility_unresolved) == 87L,
-  sum(dfo_progress$screening_complete) == 117L,
-  sum(dfo_progress$screening_not_started) == 82L
+  sum(dfo_progress$excluded) == 100L,
+  sum(dfo_progress$eligibility_unresolved) == 86L,
+  sum(dfo_progress$screening_complete) == 118L,
+  sum(dfo_progress$screening_not_started) == 81L
 )
 cat('Matched DFO Gulf American plaice source-screening checks passed.\n')
 channel_plaice <- lookup('ICES:ple.27.7d')
