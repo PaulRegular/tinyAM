@@ -38,9 +38,11 @@ Snapshot dated 2026-10-29: the register contains 905 source-list entries. These 
 | Organization | Entries | Matched | Provisional new | Ambiguous | Identity unreviewed | Eligible | Excluded | Eligibility unresolved | Screened | Not started |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 15 | 5 | 0 | 179 | 13 | 100 | 86 | 118 | 81 |
-| ICES | 274 | 57 | 17 | 2 | 198 | 39 | 46 | 189 | 95 | 179 |
+| ICES | 274 | 57 | 17 | 2 | 198 | 39 | 46 | 189 | 96 | 178 |
 | NOAA | 432 | 28 | 27 | 3 | 374 | 27 | 52 | 353 | 93 | 339 |
-| Total | 905 | 100 | 49 | 5 | 751 | 79 | 198 | 628 | 306 | 599 |
+| Total | 905 | 100 | 49 | 5 | 751 | 79 | 198 | 628 | 307 | 598 |
+
+Northern Shelf cod (`ICES:cod.27.46a7d20`) now has a completed source screen. Official 2026 advice and SAG summaries are public, but the 2026 run-specific inputs and fitted object are absent from its pinned public TAF repository. The canonical database holds the distinct 2025 detailed event; it is not treated as a substitute for 2026. Current-run eligibility is unresolved. See `source_reviews/ices_cod_north_sea.md` and the gitignored 2026 source cache.
 
 DFO Unit 3 redfish is a provisional new current management unit, but is excluded from the age-disaggregated candidate set: its latest status update uses catch-at-size and survey biomass/abundance-at-length, and the source reports that Acadian and Deepwater redfish are not separated in catches. See source_reviews/dfo_unit3_redfish_2022.md.
 

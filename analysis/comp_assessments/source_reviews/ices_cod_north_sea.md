@@ -1,27 +1,26 @@
 # North Sea / Northern Shelf cod source review
 
-Source verification: 2026-10-03.  
+Source verification: 2026-10-29.
 Translation revision: 2026-10-14.
 
-The source-reviewed record remains partial; this is not an input-completeness declaration.
+This review covers the detailed 2025 assessment event already represented in the database and the later 2026 official assessment. The 2025 event remains a separate historical record; its inputs are not assumed to be the 2026 assessment inputs.
 
-## Identity and official run
+## Latest official assessment: 2026
 
-Charbonneau identifier: `ICES-WGNSSK_NS 4-7d,20_Gadus_morhua`.
+ICES released 2026 assessment-year advice for 2027 on 2026-10-09 under DOI [10.17895/ices.advice.30932018](https://doi.org/10.17895/ices.advice.30932018.v1). The current stock code remains `cod.27.46a7d20`, with Northwestern, Southern, and Viking substocks. Official Advice and Scenarios Database pages list assessment keys 26001–26003 for the three substocks and 26010 for combined catch reporting. The advice recommends zero catch in 2027 under the stated MSY and precautionary approach.
 
-The catalogue uses the 2020 report, with data ending in 2019. Its historical stock boundary must not be carried forward unchanged: the 2023 benchmark combined North Sea and West of Scotland cod in a three-substock Northern Shelf assessment (`cod.27.46a7d20`).
+The public [2026 ICES-advice repository](https://github.com/ices-advice/2026_cod.27.46a7d20/tree/4b26121d33252734e3258912968de3cdbda065e4) is pinned here at commit `4b26121d33252734e3258912968de3cdbda065e4` (2026-10-08). Its model code declares stockassessment 0.12.5.9003 and multiStockassessment 0.5.0.9004. Its data scripts identify a current DATRAS age-data bundle (`codData210926.Rdata`) and its assessment setup reads run files and configuration from `boot/data` and `config`. The pinned public repository contains scripts, but not the numerical `.dat` and `.Rdata` inputs, recalibrated configuration, or fitted `model.Rdata`/`model.rds` output required to reproduce the 2026 assessment. The data-preparation script calls for manually downloaded survey archives; their exact run-used bundle is not present in the repository. The ICES TAF GitHub organization search returned no matching repository; the ICES-advice organization search found the separate 2024, 2025, and 2026 repositories. A public search did not locate a 2026 stockassessment.org fit object, and direct access to that service was unavailable during this review, so an unindexed external upload cannot be ruled out.
 
-As checked on 2026-10-03, the ICES Advice and Scenarios Database lists `cod.27.46a7d20` with assessment year 2025 and status Active. Its advice is DOI `10.17895/ices.advice.27202566`. Assessment components are the combined stock (key 19639), Northwestern (19661), Southern (19662), and Viking (19663). The advice applies to 2026 catches.
+The official [2026 SAG component source tables](https://sg.ices.dk/ViewSourceData.aspx?key=26003) (keys 26001–26003) report substock annual recruitment, SSB, total biomass, catch, and F summaries, with uncertainty bounds where available. The [combined SAG table](https://sg.ices.dk/ViewSourceData.aspx?key=26010) provides combined landings and discards through 2025. These public SAG tables are recoverable run-specific outputs, but do not include numerical N-at-age or F-at-age arrays. The source-page snapshots and official SAG XML files, advice pages/PDF, and pinned repository archive are cached under `source_cache/discovery_ices_northern_shelf_cod_2026/`; `sources.csv` records URLs, retrieval date, file sizes, and SHA-256 checksums.
 
-The June 2026 WGNSSK report states that no cod advice was issued that spring. No later active cod assessment was listed in the ASD at the source-review date.
+The current-run source screen is complete but eligibility remains unresolved: latest-run numerical inputs, exact configuration, and fitted object were not recovered. The canonical database still contains the detailed 2025 run described below. It must not be silently presented as or used to fill the 2026 run. The 2026 official outputs should be curated as a separate partial event when source-data curation is undertaken.
 
-Detailed official-run source: [WGNSSK 2025 autumn cod chapter](https://ndownloader.figshare.com/files/59358443), ICES Library article 29085995.
+## Detailed 2025 assessment event currently represented in the database
 
-Framework: [WKBCOD 2023](https://doi.org/10.17895/ices.pub.22591423).
+The Charbonneau identifier is `ICES-WGNSSK_NS 4-7d,20_Gadus_morhua`. The 2023 benchmark combined North Sea and West of Scotland cod in the three-substock Northern Shelf assessment. The canonical event is `ices_cod_north_sea_2025`; its input and output status remains partial.
 
-[Stock annex revised in 2024](https://ndownloader.figshare.com/files/47179495).
-
-## Official assessment: model structure and inputs
+The 2025 autumn WGNSSK assessment chapter is available at [Figshare](https://ndownloader.figshare.com/files/59358443), ICES Library article 29085995. The framework is [WKBCOD 2023](https://doi.org/10.17895/ices.pub.22591423), and the [stock annex revised in 2024](https://ndownloader.figshare.com/files/47179495) provides the preceding detailed model background. The June 2026 WGNSSK report stated that no cod advice was issued that spring; the subsequent autumn 2026 advice above supersedes that assessment-status statement.
+## 2025 assessment: model structure and inputs
 
 The official assessment uses `stockassessment` 0.12.4 and `multiStockassessment` 0.4.0.
 
@@ -50,7 +49,7 @@ Substock and quarterly composition observations use additive logistic-normal lik
 
 Recreational removals are excluded from the fitted assessment.
 
-## Current tinyAM translation
+## tinyAM translation of the 2025 assessment
 
 The recipe fits 1983–2022 and ages 1–7+ as one population. Recruitment is a
 separate RW; older-cohort survival departures are IID with a common SD and
@@ -79,7 +78,7 @@ F/M-at-age are N-weighted. Substock Fbar uses relative abundance at ages 2–4.
 Intervals are not combined. These derived quantities support broad comparisons,
 not exact equivalence with the original multistock model.
 
-## Numerical output source and verification
+## 2025 numerical output source and verification
 
 The official [ICES technical service](https://doi.org/10.17895/ices.advice.32541738) releases FLStock objects from official assessments. The [updated archive](https://ndownloader.figshare.com/files/67087409) contains `Selectivity Indicators/FLStocks.RData`.
 
@@ -105,7 +104,7 @@ Uncertainty should be obtained from the official SAG XML or Table 4.14 rather th
 
 Technical-service DOI: `10.17895/ices.advice.32541738.v2`.
 
-## Source search and remaining gaps
+## 2025 source search and remaining gaps
 
 The official ICES-advice repository is [2025_cod.27.46a7d20](https://github.com/ices-advice/2025_cod.27.46a7d20), pinned at revision `390ff07e3d1de2e14b3a50b1ac27260566d73b62`.
 
@@ -129,7 +128,7 @@ The native installed code revision, complete input data, numerical catchability 
 
 No input values are borrowed from the historical `WKCOD_combined_99` fit or the 2023 assessment.
 
-## Recorded coverage and validation
+## 2025 recorded coverage and validation
 
 Assessment ID: `ices_cod_north_sea_2025`.
 
@@ -156,7 +155,7 @@ The assessment assumptions record parameter sharing, abundance innovations, recr
 
 The statuses remain partial because the complete native inputs and fitted model have not been recovered.
 
-## Record summary and reproduction
+## 2025 record summary and reproduction
 
 The North Sea cod catalogue entry now represents the official three-substock Northern Shelf assessment following the 2023 benchmark.
 
