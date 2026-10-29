@@ -22,6 +22,12 @@ for (column in c('catch_age_evidence', 'survey_age_evidence', 'weights_evidence'
 lookup <- function(id) register[register$candidate_id == id, , drop = FALSE]
 stopifnot(
   lookup('NOAA:10523')$matched_stock_id == 'joint_hake_coastal',
+  lookup('DFO:Pacific:Pacific Hake - Offshore')$matched_stock_id == 'joint_hake_coastal',
+  lookup('DFO:Maritimes:Atlantic Cod - NAFO 5Zjm')$matched_stock_id == 'ck_nefsc_trac_cert_morhua_gb',
+  lookup('DFO:Pacific:Canary Rockfish')$matched_stock_id == 'dfo_canary_bc',
+  lookup('DFO:Pacific:Pacific Ocean Perch - PMFC 3CD-WCVI')$matched_stock_id == 'dfo_pop_bc',
+  lookup('DFO:Pacific:Pacific Ocean Perch - PMFC 5ABC-QCS')$matched_stock_id == 'dfo_pop_bc',
+  lookup('DFO:Pacific:Pacific Ocean Perch - PMFC 5DE-HS/DE/WHG')$matched_stock_id == 'dfo_pop_bc',
   lookup('NOAA:10014')$matched_stock_id == 'nefsc_witch_flounder_unit',
   lookup('NOAA:10026')$matched_stock_id == 'afsc_alaska_plaice_bsai',
   lookup('NOAA:10031')$matched_stock_id == 'afsc_yellowfin_sole_ebs',
