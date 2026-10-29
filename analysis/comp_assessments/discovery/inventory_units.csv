@@ -33,6 +33,7 @@
 "candidate:north_pacific_albacore","","north_pacific_albacore","new","ineligible","screened","not_started","DFO | NOAA","PIFSC | Pacific","DFO:Pacific:Albacore Tuna - North Pacific | NOAA:11682",2
 "candidate:pacific_sardine_northern_subpopulation","","pacific_sardine_northern_subpopulation","new","unresolved","screened","not_started","DFO | NOAA","Pacific | SWFSC","DFO:Pacific:Sardine <U+2013> Pacific | NOAA:10573",2
 "candidate:spiny_dogfish_northwest_atlantic","","spiny_dogfish_northwest_atlantic","mixed","ineligible","screened","not_started","DFO | NOAA","Maritimes | NEFSC","DFO:Maritimes:Atlantic Canada Spiny Dogfish - NAFO 4VWX5 | NOAA:10701",2
+"candidate:western_atlantic_bluefin_tuna","","western_atlantic_bluefin_tuna","new","unresolved","screened","not_started","DFO | NOAA","National Capital Region | SEFSC","DFO:National Capital Region:Bluefin Tuna - Western Atlantic | NOAA:10165",2
 "stock:afsc_alaska_plaice_bsai","afsc_alaska_plaice_bsai","","matched","ineligible","screened","imported","NOAA","AFSC","NOAA:10026",1
 "stock:afsc_arrowtooth_flounder_bsai","afsc_arrowtooth_flounder_bsai","","matched","ineligible","screened","imported","NOAA","AFSC","NOAA:10003",1
 "stock:afsc_atka_mackerel_bsai","afsc_atka_mackerel_bsai","","matched","eligible","screened","imported","NOAA","AFSC","NOAA:11662",1

@@ -54,18 +54,27 @@ Snapshot dated 2026-10-29: the register contains 905 source-list entries. These 
 
 | Organization | Entries | Matched | Provisional new | Ambiguous | Identity unreviewed | Eligible | Excluded | Eligibility unresolved | Screened | Not started |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| DFO | 199 | 20 | 28 | 5 | 146 | 19 | 118 | 62 | 151 | 48 |
+| DFO | 199 | 20 | 29 | 5 | 145 | 19 | 118 | 62 | 152 | 47 |
 | ICES | 274 | 57 | 20 | 2 | 195 | 45 | 52 | 177 | 111 | 163 |
-| NOAA | 432 | 28 | 58 | 3 | 343 | 41 | 65 | 326 | 124 | 308 |
-| Total | 905 | 105 | 106 | 10 | 684 | 105 | 235 | 565 | 386 | 519 |
+| NOAA | 432 | 28 | 59 | 3 | 342 | 41 | 65 | 326 | 125 | 307 |
+| Total | 905 | 105 | 108 | 10 | 682 | 105 | 235 | 565 | 388 | 517 |
 
 These are inventory-entry counts. The linked-unit crosswalk in
-`inventory_units.csv` currently represents 132 distinct units across 150
-entries: 98 canonical stock IDs and 34 provisional candidate-unit IDs. Of the
-34 candidate units, 10 are screened eligible, 17 are screened ineligible, 7
+`inventory_units.csv` currently represents 133 distinct units across 152
+entries: 98 canonical stock IDs and 35 provisional candidate-unit IDs. Of the
+35 candidate units, 10 are screened eligible, 17 are screened ineligible, 8
 remain eligibility-unresolved, and 2 have ambiguous or mixed identity status.
-The other 755 entries do not yet have an explicit unit crosswalk. These are
+The other 753 entries do not yet have an explicit unit crosswalk. Regional
+counts by organization are available in `inventory_progress.csv`. These are
 provisional audit counts, not the selected expansion batch.
+
+NOAA Stock SMART 10165 and the DFO Western Atlantic bluefin listing are
+crosswalked as one ICCAT unit. The 2021 Stock Synthesis assessment was used for
+advice, but the report's numeric catch-at-age and N/F-at-age tables belong to a
+separate VPA rejected for quantitative status advice. The advice model's
+conditional age-at-length inputs could support a reconstruction if its numeric
+run-matched data are recovered; current eligibility remains unresolved. See
+`source_reviews/iccat_west_atlantic_bluefin_2021.md`.
 
 NOAA Gulf red snapper (Stock SMART 10230) is a new, eligible source-curation
 candidate based on the 2026 SEDAR 98 final report, whose terminal data year is
