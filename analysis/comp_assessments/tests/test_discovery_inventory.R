@@ -161,3 +161,33 @@ for (org in unique(register$organization)) {
     sum(progress$matched[progress$organization == org]) == sum(register$organization == org & register$match_status == 'matched'))
 }
 cat('Discovery register structure, identity and eligibility checks passed.\n')
+
+wgcse <- function(code) lookup(paste0('ICES:', code))
+stopifnot(
+  wgcse('anf.27.3a46')$match_status == 'new',
+  wgcse('anf.27.3a46')$screening_status == 'screened',
+  wgcse('anf.27.3a46')$eligibility == 'ineligible',
+  grepl('length-based', wgcse('anf.27.3a46')$decision_reason, fixed = TRUE),
+  wgcse('bss.27.4bc7ad-h')$match_status == 'new',
+  wgcse('bss.27.4bc7ad-h')$screening_status == 'screened',
+  wgcse('bss.27.4bc7ad-h')$eligibility == 'unresolved',
+  grepl('conditional age-at-length', wgcse('bss.27.4bc7ad-h')$decision_reason, fixed = TRUE),
+  wgcse('pol.27.67')$match_status == 'new',
+  wgcse('pol.27.67')$screening_status == 'screened',
+  wgcse('pol.27.67')$eligibility == 'eligible',
+  wgcse('pol.27.67')$import_status == 'not_started',
+  grepl('since 2010', wgcse('pol.27.67')$catch_age_evidence, fixed = TRUE),
+  grepl('0.920', wgcse('pol.27.67')$mortality_evidence, fixed = TRUE),
+  wgcse('whg.27.7a')$match_status == 'matched',
+  wgcse('whg.27.7a')$matched_stock_id == 'ck_ices_wgcse_merlangus_cs7a',
+  wgcse('whg.27.7a')$eligibility == 'eligible',
+  wgcse('whg.27.7a')$import_status == 'imported',
+  wgcse('whg.27.7b-ce-k')$match_status == 'new',
+  wgcse('whg.27.7b-ce-k')$screening_status == 'screened',
+  wgcse('whg.27.7b-ce-k')$eligibility == 'eligible',
+  wgcse('whg.27.7b-ce-k')$import_status == 'not_started',
+  grepl('0-7+', wgcse('whg.27.7b-ce-k')$catch_age_evidence, fixed = TRUE),
+  grepl('ages 0-2', wgcse('whg.27.7b-ce-k')$survey_age_evidence, fixed = TRUE),
+  is.na(wgcse('whg.27.7b-ce-k')$matched_stock_id)
+)
+cat('WGCSE age-based screening decisions passed.\n')
