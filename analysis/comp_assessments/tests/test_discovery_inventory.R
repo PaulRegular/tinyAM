@@ -229,11 +229,28 @@ stopifnot(sum(dfo_progress$inventory_rows) == 199L,
   sum(dfo_progress$eligibility_unresolved) == 87L)
 noaa_progress <- progress[progress$organization == 'NOAA', , drop = FALSE]
 stopifnot(sum(noaa_progress$new) == 26L, sum(noaa_progress$eligible_new) == 13L,
-  sum(noaa_progress$ambiguous) == 2L, sum(noaa_progress$identity_unreviewed) == 376L,
-  sum(noaa_progress$eligible) == 27L, sum(noaa_progress$excluded) == 51L,
-  sum(noaa_progress$eligibility_unresolved) == 354L,
-  sum(noaa_progress$screening_complete) == 91L,
-  sum(noaa_progress$screening_not_started) == 341L)
+  sum(noaa_progress$ambiguous) == 3L, sum(noaa_progress$identity_unreviewed) == 375L,
+  sum(noaa_progress$eligible) == 27L, sum(noaa_progress$excluded) == 52L,
+  sum(noaa_progress$eligibility_unresolved) == 353L,
+  sum(noaa_progress$screening_complete) == 92L,
+  sum(noaa_progress$screening_not_started) == 340L)
+halibut <- lookup('NOAA:10056')
+stopifnot(
+  nrow(halibut) == 1L,
+  halibut$match_status == 'ambiguous',
+  is.na(halibut$matched_stock_id),
+  halibut$screening_status == 'screened',
+  halibut$eligibility == 'ineligible',
+  halibut$import_status == 'not_started',
+  grepl('aggregate annual catch', halibut$catch_age_evidence, fixed = TRUE),
+  grepl('not age-specific', halibut$survey_age_evidence, fixed = TRUE),
+  grepl('does not use maturity-at-age', halibut$maturity_evidence, fixed = TRUE),
+  grepl('does not estimate a natural-mortality process', halibut$mortality_evidence, fixed = TRUE),
+  grepl('does not estimate N-', halibut$output_evidence, fixed = TRUE),
+  grepl('DFO halibut unit', halibut$decision_reason, fixed = TRUE),
+  file.exists(file.path('analysis', 'comp_assessments', 'discovery', 'source_reviews',
+    'noaa_atlantic_halibut_2024.md'))
+)
 for (org in unique(register$organization)) {
   stopifnot(sum(progress$inventory_rows[progress$organization == org]) == sum(register$organization == org),
     sum(progress$excluded[progress$organization == org]) == sum(register$organization == org & register$eligibility == 'ineligible'),
@@ -668,10 +685,11 @@ stopifnot(
   file.exists(file.path('analysis', 'comp_assessments', 'discovery', 'source_reviews',
     'noaa_yellowtail_ccgom_2025.md')),
   sum(noaa_progress$new) == 26L,
-  sum(noaa_progress$identity_unreviewed) == 376L,
-  sum(noaa_progress$eligibility_unresolved) == 354L,
-  sum(noaa_progress$screening_complete) == 91L,
-  sum(noaa_progress$screening_not_started) == 341L
+  sum(noaa_progress$ambiguous) == 3L,
+  sum(noaa_progress$identity_unreviewed) == 375L,
+  sum(noaa_progress$eligibility_unresolved) == 353L,
+  sum(noaa_progress$screening_complete) == 92L,
+  sum(noaa_progress$screening_not_started) == 340L
 )
 cat('NOAA Cape Cod/Gulf of Maine yellowtail identity and source-screening checks passed.\n')
 icelandic_cod <- lookup('ICES:cod.27.5a')
