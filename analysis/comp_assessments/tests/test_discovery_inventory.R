@@ -18,4 +18,21 @@ for (column in c('catch_age_evidence', 'survey_age_evidence', 'weights_evidence'
                  'output_evidence', 'detailed_source_url', 'review_date')) {
   stopifnot(!any(is.na(register[[column]][eligible]) | !nzchar(register[[column]][eligible])))
 }
-cat('Discovery register structure and eligibility evidence checks passed.\n')
+
+lookup <- function(id) register[register$candidate_id == id, , drop = FALSE]
+stopifnot(
+  lookup('NOAA:10523')$matched_stock_id == 'joint_hake_coastal',
+  lookup('NOAA:10510')$matched_stock_id == 'afsc_pollock_ebs',
+  lookup('DFO:Gulf:Atlantic Herring - NAFO 4T (Spring Spawner)')$matched_stock_id == 'dfo_herring_4tvn_spring',
+  lookup('DFO:Gulf:Atlantic Herring - NAFO 4T (Fall Spawner)')$matched_stock_id == 'ck_dfo_gsl_harengus_4t_fall',
+  lookup('DFO:Gulf:American Plaice - NAFO 4T')$eligibility == 'unresolved',
+  lookup('DFO:Pacific:Dungeness Crab')$eligibility == 'ineligible',
+  lookup('DFO:Maritimes:Grey Seal')$eligibility == 'ineligible'
+)
+stopifnot(
+  lookup('ICES:nep.fu.14')$eligibility == 'ineligible',
+  lookup('ICES:pra.27.1-2')$eligibility == 'ineligible',
+  lookup('DFO:Arctic:Lake Trout - Great Slave Lake')$eligibility == 'ineligible',
+  lookup('NOAA:10523')$screening_status == 'not_started'
+)
+cat('Discovery register structure, identity and eligibility checks passed.\n')
