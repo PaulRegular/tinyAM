@@ -716,6 +716,9 @@ stopifnot(
       'ices_saithe_faroe_2025.md')))),
   sum(ices_progress$inventory_rows) == 274L,
   sum(ices_progress$matched) == 57L,
+  sum(ices_progress$new) == 15L,
+  sum(ices_progress$ambiguous) == 2L,
+  sum(ices_progress$identity_unreviewed) == 200L,
   sum(ices_progress$eligible) == 22L,
   sum(ices_progress$excluded) == 45L,
   sum(ices_progress$eligibility_unresolved) == 207L,
@@ -723,3 +726,29 @@ stopifnot(
   sum(ices_progress$screening_not_started) == 201L
 )
 cat('Matched Iceland/Faroe ICES identity and source-screening checks passed.\n')
+wgcse_distinct <- register[match(c('ICES:ple.27.7h-k', 'ICES:had.27.7a',
+  'ICES:cod.27.6b', 'ICES:ple.27.7bc', 'ICES:sol.27.7bc'), register$candidate_id), , drop = FALSE]
+wgcse_ambiguous <- register[match(c('ICES:lez.27.4a6a', 'ICES:lez.27.6b'),
+  register$candidate_id), , drop = FALSE]
+stopifnot(
+  !anyNA(wgcse_distinct$candidate_id),
+  all(wgcse_distinct$match_status == 'new'),
+  all(is.na(wgcse_distinct$matched_stock_id)),
+  all(wgcse_distinct$screening_status == 'screened'),
+  all(wgcse_distinct$eligibility == 'ineligible'),
+  all(wgcse_distinct$import_status == 'not_started'),
+  all(grepl('cross-organization reconciliation', wgcse_distinct$notes, fixed = TRUE)),
+  !anyNA(wgcse_ambiguous$candidate_id),
+  all(wgcse_ambiguous$match_status == 'ambiguous'),
+  all(is.na(wgcse_ambiguous$matched_stock_id)),
+  all(wgcse_ambiguous$screening_status == 'screened'),
+  all(wgcse_ambiguous$eligibility == 'ineligible'),
+  all(grepl('Lepidorhombus spp.', wgcse_ambiguous$notes, fixed = TRUE)),
+  sum(ices_progress$new) == 15L,
+  sum(ices_progress$ambiguous) == 2L,
+  sum(ices_progress$identity_unreviewed) == 200L,
+  sum(ices_progress$eligible) == 22L,
+  sum(ices_progress$excluded) == 45L,
+  sum(ices_progress$eligibility_unresolved) == 207L
+)
+cat('ICES WGCSE identity reconciliation checks passed.\n')
