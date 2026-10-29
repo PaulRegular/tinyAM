@@ -208,12 +208,12 @@ stopifnot(sum(dfo_progress$inventory_rows) == 199L,
   sum(dfo_progress$eligible) == 8L,
   sum(dfo_progress$eligibility_unresolved) == 92L)
 noaa_progress <- progress[progress$organization == 'NOAA', , drop = FALSE]
-stopifnot(sum(noaa_progress$new) == 15L, sum(noaa_progress$eligible_new) == 8L,
-  sum(noaa_progress$ambiguous) == 2L, sum(noaa_progress$identity_unreviewed) == 388L,
-  sum(noaa_progress$eligible) == 22L, sum(noaa_progress$excluded) == 50L,
-  sum(noaa_progress$eligibility_unresolved) == 360L,
-  sum(noaa_progress$screening_complete) == 79L,
-  sum(noaa_progress$screening_not_started) == 353L)
+stopifnot(sum(noaa_progress$new) == 17L, sum(noaa_progress$eligible_new) == 8L,
+  sum(noaa_progress$ambiguous) == 2L, sum(noaa_progress$identity_unreviewed) == 386L,
+  sum(noaa_progress$eligible) == 22L, sum(noaa_progress$excluded) == 51L,
+  sum(noaa_progress$eligibility_unresolved) == 359L,
+  sum(noaa_progress$screening_complete) == 81L,
+  sum(noaa_progress$screening_not_started) == 351L)
 for (org in unique(register$organization)) {
   stopifnot(sum(progress$inventory_rows[progress$organization == org]) == sum(register$organization == org),
     sum(progress$excluded[progress$organization == org]) == sum(register$organization == org & register$eligibility == 'ineligible'),
@@ -505,3 +505,21 @@ stopifnot(
     'source_reviews', 'noaa_starry_flounder.md'))
 )
 cat('NOAA starry flounder identity and age-data screening checks passed.\n')
+
+winter <- register[match(c('NOAA:10028', 'NOAA:10030'), register$candidate_id), , drop = FALSE]
+stopifnot(
+  nrow(winter) == 2L,
+  all(winter$scientific_name == 'Pseudopleuronectes americanus'),
+  all(winter$match_status == 'new'),
+  all(winter$screening_status == 'screened'),
+  all(winter$inventory_assessment_year == 2025L),
+  winter$eligibility[winter$official_stock_id == '10028'] == 'ineligible',
+  grepl('30+ cm', winter$survey_age_evidence[winter$official_stock_id == '10028'], fixed = TRUE),
+  winter$eligibility[winter$official_stock_id == '10030'] == 'unresolved',
+  grepl('ASAP', winter$decision_reason[winter$official_stock_id == '10030'], fixed = TRUE),
+  grepl('catch-age', winter$decision_reason[winter$official_stock_id == '10030'], fixed = TRUE),
+  grepl('6,211 thousand fish', winter$output_evidence[winter$official_stock_id == '10030'], fixed = TRUE),
+  file.exists(file.path('analysis', 'comp_assessments', 'discovery',
+    'source_reviews', 'noaa_winter_flounder_gom_sne.md'))
+)
+cat('NOAA winter flounder identity and source-screening checks passed.\n')
