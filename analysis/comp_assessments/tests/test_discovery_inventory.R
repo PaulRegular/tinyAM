@@ -73,8 +73,16 @@ stopifnot(
 stopifnot(
   lookup('NOAA:10809')$eligibility == 'ineligible',
   lookup('NOAA:17357')$match_status == 'new',
-  lookup('NOAA:17357')$eligibility == 'unresolved',
+  lookup('NOAA:17357')$screening_status == 'screened',
+  lookup('NOAA:17357')$eligibility == 'eligible',
+  lookup('NOAA:17357')$import_status == 'not_started',
+  grepl('Catch-at-age is not direct', lookup('NOAA:17357')$catch_age_evidence, fixed = TRUE),
+  grepl('age-specific index requires', lookup('NOAA:17357')$survey_age_evidence, fixed = TRUE),
+  grepl('N-at-age', lookup('NOAA:17357')$output_evidence, fixed = TRUE),
   lookup('NOAA:10395')$match_status == 'ambiguous',
+  lookup('NOAA:10395')$screening_status == 'screened',
+  lookup('NOAA:10395')$eligibility == 'ineligible',
+  grepl('NOAA:17357', lookup('NOAA:10395')$notes, fixed = TRUE),
   lookup('NOAA:10977')$eligibility == 'ineligible',
   lookup('NOAA:11763')$eligibility == 'unresolved',
   lookup('NOAA:11763')$screening_status == 'not_started'
