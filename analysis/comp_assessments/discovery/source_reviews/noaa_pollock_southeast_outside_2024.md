@@ -4,7 +4,7 @@ Reviewed 2026-10-29. Southeast Outside is the separately managed Gulf of Alaska 
 
 ## Assessment and current status
 
-The latest detailed unit-specific production assessment located is the 2024 GOA SAFE report. The Council approved that SAFE and recommended the 2025-2026 harvest specifications in December 2024; later specification materials continue to refer to the 2024 SAFE. NOAA's management page lists Southeast Outside and C/W/WYK as separate pollock stocks.
+The latest detailed unit-specific production assessment located is the 2024 GOA SAFE report, with the Southeast Outside survey series ending in 2023. The Council approved that SAFE and recommended the 2025-2026 harvest specifications in December 2024; later specification materials continue to refer to the 2024 SAFE. NOAA's management page lists Southeast Outside and C/W/WYK as separate pollock stocks and still labels the latest Southeast Outside assessment as 2023. The detailed report/run year and terminal survey year are therefore recorded separately.
 
 ## Inputs, assumptions, and outputs
 

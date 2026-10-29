@@ -65,10 +65,13 @@ review <- list(
     'age-structured assessment pool.'
   ),
   notes = paste(
-    'The 2024 full assessment remains the latest detailed unit-specific',
-    'production assessment located; later harvest-specification material',
-    'links back to the 2024 SAFE. Source PDFs and SHA-256 hashes are in the',
-    'ignored source_cache/discovery_noaa_pollock_age_units/.'
+    'The 2024 detailed assessment run (with SEO survey observations through',
+    '2023) remains the latest unit-specific production assessment located.',
+    "NOAA's public management page still labels the latest SEO assessment as",
+    '2023; the SAFE report is the detailed source used for 2025-2026',
+    'specifications. Later harvest-specification material links back to the',
+    '2024 SAFE. Source PDFs and SHA-256 hashes are in the ignored',
+    'source_cache/discovery_noaa_pollock_age_units/.'
   )
 )
 
