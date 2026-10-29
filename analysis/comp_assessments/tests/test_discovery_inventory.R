@@ -719,11 +719,11 @@ stopifnot(
   sum(ices_progress$new) == 15L,
   sum(ices_progress$ambiguous) == 2L,
   sum(ices_progress$identity_unreviewed) == 200L,
-  sum(ices_progress$eligible) == 22L,
+  sum(ices_progress$eligible) == 23L,
   sum(ices_progress$excluded) == 45L,
-  sum(ices_progress$eligibility_unresolved) == 207L,
-  sum(ices_progress$screening_complete) == 73L,
-  sum(ices_progress$screening_not_started) == 201L
+  sum(ices_progress$eligibility_unresolved) == 206L,
+  sum(ices_progress$screening_complete) == 74L,
+  sum(ices_progress$screening_not_started) == 200L
 )
 cat('Matched Iceland/Faroe ICES identity and source-screening checks passed.\n')
 wgcse_distinct <- register[match(c('ICES:ple.27.7h-k', 'ICES:had.27.7a',
@@ -747,9 +747,9 @@ stopifnot(
   sum(ices_progress$new) == 15L,
   sum(ices_progress$ambiguous) == 2L,
   sum(ices_progress$identity_unreviewed) == 200L,
-  sum(ices_progress$eligible) == 22L,
+  sum(ices_progress$eligible) == 23L,
   sum(ices_progress$excluded) == 45L,
-  sum(ices_progress$eligibility_unresolved) == 207L
+  sum(ices_progress$eligibility_unresolved) == 206L
 )
 cat('ICES WGCSE identity reconciliation checks passed.\n')
 dfo_plaice <- lookup('DFO:Gulf:American Plaice - NAFO 4T')
@@ -775,3 +775,27 @@ stopifnot(
   sum(dfo_progress$screening_not_started) == 82L
 )
 cat('Matched DFO Gulf American plaice source-screening checks passed.\n')
+channel_plaice <- lookup('ICES:ple.27.7d')
+ices_progress <- progress[progress$organization == 'ICES', , drop = FALSE]
+stopifnot(
+  nrow(channel_plaice) == 1L,
+  channel_plaice$matched_stock_id == 'ck_ices_wgnssk_platessa_ns_7d',
+  channel_plaice$match_status == 'matched',
+  channel_plaice$screening_status == 'screened',
+  channel_plaice$eligibility == 'eligible',
+  channel_plaice$import_status == 'imported',
+  grepl('1980-2025', channel_plaice$catch_age_evidence, fixed = TRUE),
+  grepl('UK BTS', channel_plaice$survey_age_evidence, fixed = TRUE),
+  grepl('0.875', channel_plaice$timing_evidence, fixed = TRUE),
+  grepl('N-at-age, F-at-age', channel_plaice$output_evidence, fixed = TRUE),
+  grepl('native fitted-object endpoint was unavailable', channel_plaice$decision_reason, fixed = TRUE),
+  file.exists(file.path('analysis', 'comp_assessments', 'source_reviews',
+    'ices_plaice_english_channel_7d_2026.md')),
+  sum(ices_progress$matched) == 57L,
+  sum(ices_progress$eligible) == 23L,
+  sum(ices_progress$excluded) == 45L,
+  sum(ices_progress$eligibility_unresolved) == 206L,
+  sum(ices_progress$screening_complete) == 74L,
+  sum(ices_progress$screening_not_started) == 200L
+)
+cat('Matched ICES Division 7.d plaice source-screening checks passed.\n')
