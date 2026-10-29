@@ -45,10 +45,10 @@ Snapshot dated 2026-10-29: the register contains 905 source-list entries. These 
 
 | Organization | Entries | Matched | Provisional new | Ambiguous | Identity unreviewed | Eligible | Excluded | Eligibility unresolved | Screened | Not started |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| DFO | 199 | 15 | 21 | 2 | 161 | 16 | 110 | 73 | 136 | 63 |
+| DFO | 199 | 16 | 21 | 2 | 160 | 16 | 110 | 73 | 137 | 62 |
 | ICES | 274 | 57 | 18 | 2 | 197 | 45 | 51 | 178 | 109 | 165 |
 | NOAA | 432 | 28 | 50 | 3 | 351 | 37 | 63 | 332 | 116 | 316 |
-| Total | 905 | 100 | 89 | 7 | 709 | 98 | 224 | 583 | 361 | 544 |
+| Total | 905 | 101 | 89 | 7 | 708 | 98 | 224 | 583 | 362 | 543 |
 
 NOAA Stock SMART 10573 and the DFO Pacific Sardine management entry are
 crosswalked to one northern-subpopulation unit. The 2025 NOAA update confirms
@@ -183,3 +183,4 @@ The Newfoundland and Labrador DFO inventory's 4R spring- and fall-spawner rows n
 
 The DFO Sustainability Survey's NAFO 3LNO yellowtail flounder entry is a distinct current stock unit, but the latest detailed 2025 NAFO assessment is a Bayesian surplus-production model. It uses annual catch and aggregate survey biomass indices, and the report states age distributions have been unavailable since aging stopped in 2001. It is screened ineligible for the age-disaggregated set; see `source_reviews/dfo_yellowtail_flounder_3lno_2025.md` and the ignored cache `source_cache/discovery_dfo_yellowtail_3lno_2025/`.
 The DFO Sustainability Survey's Witch Flounder - NAFO 3NO entry refers to a distinct NAFO stock unit. The latest detailed full assessment located is the 2024 Bayesian surplus-production model; 2026 advice updates status and says the next full assessment is due in 2028. It does not use age-based likelihoods, and Canadian survey ageing has been unavailable since 1994. See `source_reviews/dfo_witch_flounder_3no_2024.md` and the ignored cache `source_cache/discovery_dfo_witch_flounder_3no_2026/`.
+The DFO Maritimes NAFO 5Z yellowtail inventory entry is crosswalked to the existing combined U.S.-Canada Georges Bank record and NOAA Stock SMART 10033. It is one stock unit, not a second assessment case. The current approved 2025 WHAM run remains only partially represented in the database; its run-matched age inputs and age-specific output surfaces are unresolved. See source_reviews/dfo_yellowtail_5z_crosswalk.md.

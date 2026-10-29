@@ -1,7 +1,7 @@
 "organization","source_region","inventory_rows","matched","new","ambiguous","identity_unreviewed","eligible","excluded","eligible_new","eligibility_unresolved","screening_not_started","screening_in_progress","screening_complete"
 "DFO","Arctic",23,0,0,0,23,0,18,0,5,5,0,18
 "DFO","Gulf",13,4,2,0,7,6,4,2,3,3,0,10
-"DFO","Maritimes",42,2,4,1,35,1,26,0,15,12,0,30
+"DFO","Maritimes",42,3,4,1,34,1,26,0,15,11,0,31
 "DFO","National Capital Region",16,0,0,0,16,0,12,0,4,4,0,12
 "DFO","Newfoundland and Labrador",23,2,5,0,16,3,10,1,10,8,0,15
 "DFO","Pacific",58,6,8,1,43,5,18,0,35,30,0,28
