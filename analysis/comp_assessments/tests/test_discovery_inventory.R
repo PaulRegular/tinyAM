@@ -200,10 +200,10 @@ stopifnot(all(progress$eligible_new <= progress$new),
   all(progress$eligible_new <= progress$eligible))
 dfo_progress <- progress[progress$organization == 'DFO', , drop = FALSE]
 stopifnot(sum(dfo_progress$inventory_rows) == 199L,
-  sum(dfo_progress$new) == 3L,
-  sum(dfo_progress$identity_unreviewed) == 181L,
-  sum(dfo_progress$screening_complete) == 104L,
-  sum(dfo_progress$screening_not_started) == 95L)
+  sum(dfo_progress$new) == 4L,
+  sum(dfo_progress$identity_unreviewed) == 180L,
+  sum(dfo_progress$screening_complete) == 105L,
+  sum(dfo_progress$screening_not_started) == 94L)
 noaa_progress <- progress[progress$organization == 'NOAA', , drop = FALSE]
 stopifnot(sum(noaa_progress$new) == 12L, sum(noaa_progress$eligible_new) == 8L,
   sum(noaa_progress$identity_unreviewed) == 392L,
@@ -368,3 +368,23 @@ stopifnot(
     'dfo_bc_sablefish.md'))
 )
 cat('B.C. Sablefish identity and source-screening checks passed.\n')
+
+dfo_bocaccio <- lookup('DFO:Pacific:Bocaccio Rockfish')
+stopifnot(
+  dfo_bocaccio$scientific_name == 'Sebastes paucispinis',
+  dfo_bocaccio$assessment_area == 'British Columbia coastwide (PMFC 3CD+5ABCDE)',
+  dfo_bocaccio$match_status == 'new',
+  is.na(dfo_bocaccio$matched_stock_id),
+  dfo_bocaccio$screening_status == 'screened',
+  dfo_bocaccio$eligibility == 'unresolved',
+  dfo_bocaccio$import_status == 'not_started',
+  grepl('only the combined trawl fishery has age-frequency observations', dfo_bocaccio$catch_age_evidence, fixed = TRUE),
+  grepl('2021 QCS', dfo_bocaccio$survey_age_evidence, fixed = TRUE),
+  grepl('0.07, 0.08, and 0.09', dfo_bocaccio$mortality_evidence, fixed = TRUE),
+  grepl('fraction 0.5', dfo_bocaccio$timing_evidence, fixed = TRUE),
+  grepl('B2024 = 23,789 tonnes', dfo_bocaccio$output_evidence, fixed = TRUE),
+  grepl('no age composition for the non-trawl catch stream', dfo_bocaccio$decision_reason, fixed = TRUE),
+  file.exists(file.path('analysis', 'comp_assessments', 'discovery', 'source_reviews',
+    'dfo_bc_bocaccio.md'))
+)
+cat('B.C. Bocaccio identity and source-screening checks passed.\n')
