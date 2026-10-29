@@ -199,12 +199,12 @@ stopifnot(sum(progress$inventory_rows) == nrow(register),
 stopifnot(all(progress$eligible_new <= progress$new),
   all(progress$eligible_new <= progress$eligible))
 noaa_progress <- progress[progress$organization == 'NOAA', , drop = FALSE]
-stopifnot(sum(noaa_progress$new) == 9L, sum(noaa_progress$eligible_new) == 6L,
-  sum(noaa_progress$identity_unreviewed) == 395L,
+stopifnot(sum(noaa_progress$new) == 10L, sum(noaa_progress$eligible_new) == 6L,
+  sum(noaa_progress$identity_unreviewed) == 394L,
   sum(noaa_progress$eligible) == 20L, sum(noaa_progress$excluded) == 46L,
   sum(noaa_progress$eligibility_unresolved) == 366L,
-  sum(noaa_progress$screening_complete) == 72L,
-  sum(noaa_progress$screening_not_started) == 360L)
+  sum(noaa_progress$screening_complete) == 73L,
+  sum(noaa_progress$screening_not_started) == 359L)
 for (org in unique(register$organization)) {
   stopifnot(sum(progress$inventory_rows[progress$organization == org]) == sum(register$organization == org),
     sum(progress$excluded[progress$organization == org]) == sum(register$organization == org & register$eligibility == 'ineligible'),
@@ -301,3 +301,14 @@ stopifnot(
     c('noaa_northern_rockfish_bsai.md', 'noaa_northern_rockfish_goa.md'))))
 )
 cat('Northern rockfish identity and source-screening checks passed.\n')
+
+arrowtooth <- lookup('NOAA:10005')
+stopifnot(
+  arrowtooth$match_status == 'new',
+  arrowtooth$screening_status == 'screened',
+  arrowtooth$eligibility == 'unresolved',
+  arrowtooth$scientific_name == 'Atheresthes stomias',
+  grepl('could not be recovered', arrowtooth$decision_reason, fixed = TRUE),
+  grepl('Stock SMART ID 10005', arrowtooth$notes, fixed = TRUE),
+  !identical(arrowtooth$matched_stock_id, 'afsc_arrowtooth_flounder_bsai')
+)
