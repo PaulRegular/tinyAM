@@ -22,6 +22,12 @@ for (column in c('catch_age_evidence', 'survey_age_evidence', 'weights_evidence'
 lookup <- function(id) register[register$candidate_id == id, , drop = FALSE]
 stopifnot(
   lookup('NOAA:10523')$matched_stock_id == 'joint_hake_coastal',
+  lookup('NOAA:10014')$matched_stock_id == 'nefsc_witch_flounder_unit',
+  lookup('NOAA:10026')$matched_stock_id == 'afsc_alaska_plaice_bsai',
+  lookup('NOAA:10031')$matched_stock_id == 'afsc_yellowfin_sole_ebs',
+  lookup('NOAA:10191')$matched_stock_id == 'nefsc_summer_flounder',
+  lookup('NOAA:11050')$matched_stock_id == 'afsc_northern_rock_sole_ebs',
+  lookup('NOAA:12746')$matched_stock_id == 'afsc_cod_ebs',
   lookup('NOAA:10510')$matched_stock_id == 'afsc_pollock_ebs',
   lookup('DFO:Gulf:Atlantic Herring - NAFO 4T (Spring Spawner)')$matched_stock_id == 'dfo_herring_4tvn_spring',
   lookup('DFO:Gulf:Atlantic Herring - NAFO 4T (Fall Spawner)')$matched_stock_id == 'ck_dfo_gsl_harengus_4t_fall',
