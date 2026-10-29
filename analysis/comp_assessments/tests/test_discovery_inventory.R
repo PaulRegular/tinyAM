@@ -208,12 +208,12 @@ stopifnot(sum(dfo_progress$inventory_rows) == 199L,
   sum(dfo_progress$eligible) == 8L,
   sum(dfo_progress$eligibility_unresolved) == 92L)
 noaa_progress <- progress[progress$organization == 'NOAA', , drop = FALSE]
-stopifnot(sum(noaa_progress$new) == 19L, sum(noaa_progress$eligible_new) == 10L,
-  sum(noaa_progress$ambiguous) == 2L, sum(noaa_progress$identity_unreviewed) == 384L,
-  sum(noaa_progress$eligible) == 24L, sum(noaa_progress$excluded) == 51L,
-  sum(noaa_progress$eligibility_unresolved) == 357L,
-  sum(noaa_progress$screening_complete) == 83L,
-  sum(noaa_progress$screening_not_started) == 349L)
+stopifnot(sum(noaa_progress$new) == 20L, sum(noaa_progress$eligible_new) == 11L,
+  sum(noaa_progress$ambiguous) == 2L, sum(noaa_progress$identity_unreviewed) == 383L,
+  sum(noaa_progress$eligible) == 25L, sum(noaa_progress$excluded) == 51L,
+  sum(noaa_progress$eligibility_unresolved) == 356L,
+  sum(noaa_progress$screening_complete) == 84L,
+  sum(noaa_progress$screening_not_started) == 348L)
 for (org in unique(register$organization)) {
   stopifnot(sum(progress$inventory_rows[progress$organization == org]) == sum(register$organization == org),
     sum(progress$excluded[progress$organization == org]) == sum(register$organization == org & register$eligibility == 'ineligible'),
@@ -568,3 +568,24 @@ stopifnot(
     'source_reviews', 'noaa_west_coast_yelloweye_2025.md'))
 )
 cat('NOAA West Coast Yelloweye identity and source-screening checks passed.\n')
+
+yellowtail <- lookup('NOAA:10393')
+stopifnot(
+  yellowtail$scientific_name == 'Sebastes flavidus',
+  yellowtail$stock_name == 'Yellowtail rockfish - Northern Pacific Coast',
+  yellowtail$inventory_assessment_year == 2025L,
+  yellowtail$match_status == 'new', is.na(yellowtail$matched_stock_id),
+  yellowtail$screening_status == 'screened',
+  yellowtail$eligibility == 'eligible',
+  yellowtail$import_status == 'not_started',
+  grepl('three fisheries', yellowtail$catch_age_evidence, fixed = TRUE),
+  grepl('age and length compositions', yellowtail$catch_age_evidence, fixed = TRUE),
+  grepl('four survey indices', yellowtail$survey_age_evidence, fixed = TRUE),
+  grepl('232 histological samples', yellowtail$maturity_evidence, fixed = TRUE),
+  grepl('age 43', yellowtail$mortality_evidence, fixed = TRUE),
+  grepl('July', yellowtail$timing_evidence, fixed = TRUE),
+  grepl('3.30.23.1', yellowtail$notes, fixed = TRUE),
+  file.exists(file.path('analysis', 'comp_assessments', 'discovery',
+    'source_reviews', 'noaa_yellowtail_north_2025.md'))
+)
+cat('NOAA northern Yellowtail Rockfish identity and source-screening checks passed.\n')
