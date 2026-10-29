@@ -23,7 +23,7 @@ cells <- lapply(trs, function(t) trimws(xml2::xml_text(xml2::xml_find_all(t, './
 cells <- cells[lengths(cells) >= 2L]
 dfo <- data.frame(name = vapply(cells, `[[`, character(1), 1L), region = vapply(cells, `[[`, character(1), 2L))
 make_rows <- function(id, organization, official_id, scientific_name, name, area, year, inventory_url, notes) {
-  data.frame(candidate_id = id, organization = organization, official_stock_id = official_id,
+  data.frame(candidate_id = id, candidate_unit_id = '', organization = organization, official_stock_id = official_id,
     scientific_name = scientific_name, stock_name = name, assessment_area = area,
     inventory_assessment_year = year, inventory_url = inventory_url,
     retrieved_on = '2026-10-28', matched_stock_id = '', match_status = 'unreviewed',

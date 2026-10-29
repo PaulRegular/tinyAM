@@ -1,10 +1,12 @@
 # Assessment discovery inventory
 
 `candidates.csv` is a discovery register, not a canonical assessment table. Its
-rows are source-list entries, some reviewed and others not yet reviewed: they are not verified distinct new stock
-units, eligible age-structured assessments, or a selected import batch. Screening,
-identity matching, source verification and exclusion decisions remain outstanding.
-Do not overwrite it with a fresh inventory after review has begun.
+rows are source-list entries, some reviewed and others not yet reviewed: they are not
+automatically verified distinct new stock units, eligible age-structured assessments,
+or a selected import batch. Screening, identity matching, source verification and
+exclusion decisions remain outstanding. `candidate_unit_id` links inventory rows only
+when reviewed evidence confirms a shared stock unit; blank values are unresolved or
+not yet crosswalked. Do not overwrite the register after review has begun.
 
 The initial snapshot was retrieved on 2026-10-28 from:
 
@@ -37,10 +39,10 @@ Snapshot dated 2026-10-29: the register contains 905 source-list entries. These 
 
 | Organization | Entries | Matched | Provisional new | Ambiguous | Identity unreviewed | Eligible | Excluded | Eligibility unresolved | Screened | Not started |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| DFO | 199 | 15 | 11 | 0 | 173 | 15 | 104 | 80 | 124 | 75 |
+| DFO | 199 | 15 | 12 | 0 | 172 | 15 | 104 | 80 | 125 | 74 |
 | ICES | 274 | 57 | 17 | 2 | 198 | 45 | 50 | 179 | 108 | 166 |
-| NOAA | 432 | 28 | 27 | 3 | 374 | 27 | 52 | 353 | 93 | 339 |
-| Total | 905 | 100 | 55 | 5 | 745 | 87 | 206 | 612 | 325 | 580 |
+| NOAA | 432 | 28 | 28 | 3 | 373 | 27 | 52 | 353 | 94 | 338 |
+| Total | 905 | 100 | 57 | 5 | 743 | 87 | 206 | 612 | 327 | 578 |
 
 On 2026-10-29, twelve already-matched ICES records were screened against
 their latest reviewed assessments: six are eligible for source curation,
@@ -132,6 +134,14 @@ The three DFO Pacific ocean perch inventory entries map to the existing coastwid
 The DFO Canary Rockfish inventory row matches the curated coastwide `dfo_canary_bc_2022` Run24/24.01 assessment. Catch totals, fishery and survey age compositions, fixed biology, survey timing, a female SSB posterior subset and sex-specific M outputs are documented; see `source_reviews/dfo_canary_bc.md` for translation limits.
 
 The Southern Gulf spring- and fall-spawning herring entries also match existing, separate stock records. Both have detailed 2024 age-specific inputs and outputs, while 2026 summary-only events are preserved separately. The fall mobile-gear catch-at-age table duplicates the fixed-gear table and is flagged rather than treated as verified data. See `source_reviews/dfo_herring_4tvn_spring.md` and `source_reviews/dfo_herring_4tvn_fall.md`.
+
+The DFO Maritimes Haddock 5Zjm entry and NOAA Stock SMART 12806 are crosswalked
+to candidate unit `haddock_eastern_georges_bank`. NOAA Stock SMART 10520 remains
+matched to the broader U.S. Georges Bank assessment in the canonical database.
+The DFO unit's latest assessment outputs are public, but numerical age-input
+arrays and age-specific outputs for the assessment through 2024 remain unresolved
+pending access to the detailed 2026/048 report. See
+`source_reviews/dfo_noaa_eastern_georges_haddock.md`.
 
 `inventory_progress.csv` summarizes the candidate register by organization and source region. NOAA regions are the science-centre labels in the pinned Stock SMART snapshot; DFO regions are the original Sustainability Survey regions; ICES regions are the exact SID ecoregion labels, including combinations. A row with multiple ICES regions remains one inventory row. These groupings are source reporting categories, not standardized ocean basins.
 

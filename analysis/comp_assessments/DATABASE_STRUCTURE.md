@@ -35,8 +35,13 @@ area, latest assessment and source links; record inventory date and coverage,
 matched stock ID or unresolved identity, evidence for each key input and output,
 and the screening decision and reason. Track screening, eligibility and import
 progress separately from canonical input/output completeness and translation
-results. Inventory rows alone do not create canonical assessment events or values.
-`charbonneau_id` may be blank when no verified catalogue match exists.
+results. `candidate_unit_id` is an internal cross-inventory key for source rows
+verified to represent the same biological or management unit. It is not an
+official identifier or a canonical `stock_id`; leave it blank until the unit
+crosswalk is supported by source evidence. Use `matched_stock_id` when the unit is
+already represented in the canonical database. Inventory rows alone do not create
+canonical assessment events or values. `charbonneau_id` may be blank when no
+verified catalogue match exists.
 
 The current controlled basin vocabulary is validated by the database validator.
 When a verified new stock requires another basin, add and document a specific

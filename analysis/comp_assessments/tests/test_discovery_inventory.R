@@ -220,10 +220,10 @@ stopifnot(all(progress$eligible_new <= progress$new),
   all(progress$eligible_new <= progress$eligible))
 dfo_progress <- progress[progress$organization == 'DFO', , drop = FALSE]
 stopifnot(sum(dfo_progress$inventory_rows) == 199L,
-  sum(dfo_progress$new) == 11L,
-  sum(dfo_progress$identity_unreviewed) == 173L,
-  sum(dfo_progress$screening_complete) == 124L,
-  sum(dfo_progress$screening_not_started) == 75L,
+  sum(dfo_progress$new) == 12L,
+  sum(dfo_progress$identity_unreviewed) == 172L,
+  sum(dfo_progress$screening_complete) == 125L,
+  sum(dfo_progress$screening_not_started) == 74L,
   sum(dfo_progress$excluded) == 104L,
   sum(dfo_progress$eligible) == 15L,
   sum(dfo_progress$eligibility_unresolved) == 80L)
@@ -244,12 +244,12 @@ stopifnot(
     'dfo_unit3_redfish_2022.md'))
 )
 noaa_progress <- progress[progress$organization == 'NOAA', , drop = FALSE]
-stopifnot(sum(noaa_progress$new) == 27L, sum(noaa_progress$eligible_new) == 13L,
-  sum(noaa_progress$ambiguous) == 3L, sum(noaa_progress$identity_unreviewed) == 374L,
+stopifnot(sum(noaa_progress$new) == 28L, sum(noaa_progress$eligible_new) == 13L,
+  sum(noaa_progress$ambiguous) == 3L, sum(noaa_progress$identity_unreviewed) == 373L,
   sum(noaa_progress$eligible) == 27L, sum(noaa_progress$excluded) == 52L,
   sum(noaa_progress$eligibility_unresolved) == 353L,
-  sum(noaa_progress$screening_complete) == 93L,
-  sum(noaa_progress$screening_not_started) == 339L)
+  sum(noaa_progress$screening_complete) == 94L,
+  sum(noaa_progress$screening_not_started) == 338L)
 halibut <- lookup('NOAA:10056')
 stopifnot(
   nrow(halibut) == 1L,
@@ -717,12 +717,12 @@ stopifnot(
   grepl('numeric age inputs', ccgom_yellowtail$decision_reason, fixed = TRUE),
   file.exists(file.path('analysis', 'comp_assessments', 'discovery', 'source_reviews',
     'noaa_yellowtail_ccgom_2025.md')),
-  sum(noaa_progress$new) == 27L,
+  sum(noaa_progress$new) == 28L,
   sum(noaa_progress$ambiguous) == 3L,
-  sum(noaa_progress$identity_unreviewed) == 374L,
+  sum(noaa_progress$identity_unreviewed) == 373L,
   sum(noaa_progress$eligibility_unresolved) == 353L,
-  sum(noaa_progress$screening_complete) == 93L,
-  sum(noaa_progress$screening_not_started) == 339L
+  sum(noaa_progress$screening_complete) == 94L,
+  sum(noaa_progress$screening_not_started) == 338L
 )
 cat('NOAA Cape Cod/Gulf of Maine yellowtail identity and source-screening checks passed.\n')
 icelandic_cod <- lookup('ICES:cod.27.5a')
@@ -866,8 +866,8 @@ stopifnot(
   sum(dfo_progress$eligible) == 15L,
   sum(dfo_progress$excluded) == 104L,
   sum(dfo_progress$eligibility_unresolved) == 80L,
-  sum(dfo_progress$screening_complete) == 124L,
-  sum(dfo_progress$screening_not_started) == 75L
+  sum(dfo_progress$screening_complete) == 125L,
+  sum(dfo_progress$screening_not_started) == 74L
 )
 cat('Matched DFO Gulf American plaice source-screening checks passed.\n')
 channel_plaice <- lookup('ICES:ple.27.7d')
@@ -1433,10 +1433,10 @@ stopifnot(
   file.exists(file.path('analysis', 'comp_assessments', 'source_reviews',
     'dfo_pacific_herring_areas_discovery.md')),
   sum(progress$inventory_rows) == 905L,
-  sum(progress$new) == 55L,
-  sum(progress$identity_unreviewed) == 745L,
-  sum(progress$screening_complete) == 325L,
-  sum(progress$screening_not_started) == 580L,
+  sum(progress$new) == 57L,
+  sum(progress$identity_unreviewed) == 743L,
+  sum(progress$screening_complete) == 327L,
+  sum(progress$screening_not_started) == 578L,
   sum(progress$excluded) == 206L,
   sum(progress$eligibility_unresolved) == 612L
 )
@@ -1462,10 +1462,10 @@ stopifnot(
   grepl('2026-054', gulf_yellowtail$detailed_source_url, fixed = TRUE),
   file.exists(file.path('analysis', 'comp_assessments', 'source_reviews',
     'dfo_yellowtail_flounder_4t_2025.md')),
-  sum(progress$new) == 55L,
+  sum(progress$new) == 57L,
   sum(progress$eligible) == 87L,
   sum(progress$eligible_new) == 19L,
-  sum(progress$screening_complete) == 325L
+  sum(progress$screening_complete) == 327L
 )
 cat('DFO NAFO 4T yellowtail identity and source-screening checks passed.\n')
 
@@ -1489,9 +1489,35 @@ stopifnot(
   grepl('28963929', gulf_white_hake$detailed_source_url, fixed = TRUE),
   file.exists(file.path('analysis', 'comp_assessments', 'source_reviews',
     'dfo_white_hake_4t_2022.md')),
-  sum(progress$new) == 55L,
+  sum(progress$new) == 57L,
   sum(progress$eligible) == 87L,
   sum(progress$eligible_new) == 19L,
-  sum(progress$screening_complete) == 325L
+  sum(progress$screening_complete) == 327L
 )
 cat('DFO NAFO 4T white hake identity and source-screening checks passed.\n')
+
+eastern_georges_haddock <- register[
+  !is.na(register$candidate_unit_id) &
+    register$candidate_unit_id == 'haddock_eastern_georges_bank', , drop = FALSE
+]
+stopifnot(
+  nrow(eastern_georges_haddock) == 2L,
+  identical(sort(eastern_georges_haddock$candidate_id), sort(c(
+    'DFO:Maritimes:Haddock - NAFO 5Zjm', 'NOAA:12806'
+  ))),
+  all(eastern_georges_haddock$match_status == 'new'),
+  all(is.na(eastern_georges_haddock$matched_stock_id)),
+  all(eastern_georges_haddock$screening_status == 'screened'),
+  all(eastern_georges_haddock$eligibility == 'unresolved'),
+  lookup('DFO:Maritimes:Haddock - NAFO 5Zjm')$official_stock_id == '5Zjm',
+  lookup('DFO:Maritimes:Haddock - NAFO 5Zjm')$inventory_assessment_year == 2024L,
+  lookup('NOAA:12806')$inventory_assessment_year == 2023L,
+  lookup('NOAA:10520')$matched_stock_id == 'nefsc_haddock_georges_bank',
+  file.exists(file.path('analysis', 'comp_assessments', 'discovery',
+    'source_reviews', 'dfo_noaa_eastern_georges_haddock.md')),
+  sum(dfo_progress$screening_complete) == 125L,
+  sum(dfo_progress$screening_not_started) == 74L,
+  sum(noaa_progress$screening_complete) == 94L,
+  sum(noaa_progress$screening_not_started) == 338L
+)
+cat('Eastern Georges Bank haddock inventory crosswalk checks passed.\n')
