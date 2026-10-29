@@ -22,6 +22,8 @@ The [Pacific Fishery Management Council groundfish assessment listing](https://w
 The [2026 WGBIE working-group report](https://doi.org/10.17895/ices.pub.32790321.v1) is a regional assessment listing and source. A partial review of its megrim and sole sections is recorded in `source_reviews/ices_iberian_wgbie_2026.md`; the remaining sections still need reconciliation. The locally cached sections and working-document annex have individual URLs and checksums in `source_cache/discovery_ices_wgbie_2026/sources.csv`.
 
 The [2026 WGCSE report](https://doi.org/10.17895/ices.pub.32625759) is a Celtic Seas regional assessment listing. Its Irish Sea sole section has been reviewed and cached, as described in `source_reviews/ices_sol_27_7a_2026.md`; other sections still require reconciliation and screening.
+
+The [2026 WGNSSK report](https://doi.org/10.17895/ices.pub.32676345.v2) is a North Sea and Skagerrak regional assessment listing. Its witch section has been screened and cached; other sections still require reconciliation. See `source_reviews/ices_witch_northsea_2026.md`.
 Cached files and their sources.csv manifests are gitignored. The register retains
 inventory source URLs and leaves unknown identities, run details and data evidence
 blank. `scripts/database/186_build_discovery_inventory.R` builds the initial
