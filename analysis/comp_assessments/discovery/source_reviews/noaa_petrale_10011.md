@@ -1,9 +1,21 @@
-# NOAA Pacific Coast petrale sole: discovery review
+# U.S. Pacific Coast petrale sole: discovery review
 
-NOAA Stock SMART lists `10011`, petrale sole (*Eopsetta jordani*) on the US Pacific Coast. This is distinct from the existing Canadian-managed British Columbia unit `dfo_petrale_bc`: the [2023 US assessment](https://www.pcouncil.org/documents/status-of-petrale-sole-eopsetta-jordanialong-the-u-s-west-coast-in-2023/) defines its modeled unit along the US West Coast, while the existing database entry covers Canadian areas 3CD and 5ABCDE. The US assessment discusses Canadian survey data as a sensitivity, not a joint US-Canada production unit.
+## Assessment year and stock identity
 
-The [Pacific Fishery Management Council assessment list](https://www.pcouncil.org/stock-assessments-star-reports-stat-reports-rebuilding-analyses-terms-of-reference/groundfish-stock-assessment-documents/) provides the 2023 assessment and its [Stock Synthesis model files](https://www.pcouncil.org/documents/petrale-sole-2023-model-files-zip-file/). A [2025 catch-only projection](https://www.pcouncil.org/documents/2025/09/g-8-supplemental-attachment-3-catch-only-projection-for-petrale-sole.pdf/) updates removals and projections, not the detailed 2023 biological and composition data. Verify whether a newer detailed production assessment exists before import.
+NOAA Stock SMART identifies stock 10011 as petrale sole on the U.S. Pacific Coast. It is distinct from the Canadian British Columbia unit in the canonical database.
 
-The 2023 report section 2.1.3 describes expanded, sex- and fleet-specific commercial age frequencies and landed catch. Section 2.2.2.3 describes the West Coast groundfish bottom trawl survey biomass index and conditional age-at-length likelihood. Marginal survey age compositions were included for display and not fitted, so the age-specific abundance index must not be presumed to be a directly observed likelihood input. Section 2.3 describes sex-specific natural mortality, growth, and a female maturity relationship in length. Spawning output is in trillions of eggs, not SSB tonnes. The published model archive includes input data and control files and a fitted report.
+The 2023 PFMC benchmark is the latest completed full assessment located. The 2025 PFMC document is a catch-only projection, not an updated age-structured assessment. A June 2026 PFMC planning document still describes the 2023 benchmark as the current assessment and places an update in a later cycle. Use the 2023 run for source curation; do not treat the projection as a replacement assessment.
 
-Eligibility remains unresolved: inspect the native files to establish whether catch numbers-at-age and a suitable survey-age index can be reconstructed with defensible scales, timing, common coverage, age-specific biology, and comparable outputs. Do not equate conditional age-at-length samples with survey abundance. The source files are cached in `source_cache/discovery_noaa_petrale_10011/` with URLs, retrieval dates, and SHA-256 checksums in `sources.csv`.
+## Native inputs and outputs
+
+The public 2023 archive includes petrale_data.ss, petrale_control.ss, starter, forecast and fitted output files. Stock Synthesis 3.30.21.00 models data through 2022 with two sexes and population age bins through 40. It has North and South commercial fleets plus Triennial and WCGBTS survey fleets. Commercial age-frequency observations and annual fleet catches support a documented reconstruction of catch numbers-at-age; the native model fits compositions rather than direct catch-at-age observations.
+
+The two trawl surveys provide aggregate abundance indices. WCGBTS length and age samples support an approximate age split, including marginal survey age compositions retained for display but not fitted. The report states that the Triennial survey has no age data, so do not create an age-specific Triennial index. Survey index records use month 7, and the fleet timing code is 1007; preserve this source convention and document any translation to fractional-year timing.
+
+The model estimates sex-specific growth and natural mortality, with meta-analytical M priors. The report specifies externally estimated sex-specific length-weight relationships and a female maturity schedule; age-specific weights and maturity require documented derivation through growth. The fitted Report.sso includes numbers-at-age, fishing mortality-at-age, catch-at-age and natural mortality. The terminal 2023 spawning-output estimate is 7.68553 trillion eggs, matching the report's rounded 7.686; it is not SSB in tonnes.
+
+The 2023 source report, model archive and 2025 projection are cached under source_cache/discovery_noaa_petrale_10011/. The 2026 PFMC planning PDF is cached in the same folder. URLs, retrieval dates and SHA-256 checksums are recorded in sources.csv.
+
+## Screening decision
+
+NOAA:10011 is eligible for source curation and a translation attempt. The official archive supports catch-at-age reconstruction from catches and fishery age compositions, and an approximate WCGBTS age split from survey compositions and its aggregate index. Triennial age-specific indices are unavailable. Age weights and maturity require derivation from official model biology. These are explicit transformations, not direct inputs or proof of an equivalent likelihood.

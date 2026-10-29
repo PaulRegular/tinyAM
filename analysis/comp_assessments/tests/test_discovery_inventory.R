@@ -72,6 +72,12 @@ stopifnot(
 )
 stopifnot(
   lookup('NOAA:10809')$eligibility == 'ineligible',
+  lookup('NOAA:10011')$screening_status == 'screened',
+  lookup('NOAA:10011')$eligibility == 'eligible',
+  lookup('NOAA:10011')$import_status == 'not_started',
+  grepl('Catch-at-age can be reconstructed', lookup('NOAA:10011')$catch_age_evidence, fixed = TRUE),
+  grepl('Triennial survey has no age samples', lookup('NOAA:10011')$survey_age_evidence, fixed = TRUE),
+  grepl('2023 spawning output', lookup('NOAA:10011')$output_evidence, fixed = TRUE),
   lookup('NOAA:17357')$match_status == 'new',
   lookup('NOAA:17357')$screening_status == 'screened',
   lookup('NOAA:17357')$eligibility == 'eligible',
