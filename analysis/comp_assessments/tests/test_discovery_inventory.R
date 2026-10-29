@@ -198,6 +198,12 @@ stopifnot(sum(progress$inventory_rows) == nrow(register),
   all(progress$inventory_rows == progress$screening_not_started + progress$screening_in_progress + progress$screening_complete))
 stopifnot(all(progress$eligible_new <= progress$new),
   all(progress$eligible_new <= progress$eligible))
+dfo_progress <- progress[progress$organization == 'DFO', , drop = FALSE]
+stopifnot(sum(dfo_progress$inventory_rows) == 199L,
+  sum(dfo_progress$new) == 3L,
+  sum(dfo_progress$identity_unreviewed) == 181L,
+  sum(dfo_progress$screening_complete) == 104L,
+  sum(dfo_progress$screening_not_started) == 95L)
 noaa_progress <- progress[progress$organization == 'NOAA', , drop = FALSE]
 stopifnot(sum(noaa_progress$new) == 12L, sum(noaa_progress$eligible_new) == 8L,
   sum(noaa_progress$identity_unreviewed) == 392L,
@@ -342,3 +348,23 @@ stopifnot(
     'noaa_west_coast_widow_rockfish.md'))
 )
 cat('Widow rockfish identity and source-screening checks passed.\n')
+
+dfo_sablefish <- lookup('DFO:Pacific:Sablefish')
+stopifnot(
+  dfo_sablefish$scientific_name == 'Anoplopoma fimbria',
+  dfo_sablefish$assessment_area == 'British Columbia coastwide',
+  dfo_sablefish$match_status == 'new',
+  is.na(dfo_sablefish$matched_stock_id),
+  dfo_sablefish$screening_status == 'screened',
+  dfo_sablefish$eligibility == 'unresolved',
+  dfo_sablefish$import_status == 'not_started',
+  grepl('no public numeric commercial age-composition arrays', dfo_sablefish$catch_age_evidence, fixed = TRUE),
+  grepl('2003-2021', dfo_sablefish$survey_age_evidence, fixed = TRUE),
+  grepl('prior (mean 0.1 and standard deviation 0.1', dfo_sablefish$mortality_evidence, fixed = TRUE),
+  grepl('0.75', dfo_sablefish$timing_evidence, fixed = TRUE),
+  grepl('N-at-age and F-at-age output matrices', dfo_sablefish$output_evidence, fixed = TRUE),
+  grepl('2025-26 advice', dfo_sablefish$decision_reason, fixed = TRUE),
+  file.exists(file.path('analysis', 'comp_assessments', 'discovery', 'source_reviews',
+    'dfo_bc_sablefish.md'))
+)
+cat('B.C. Sablefish identity and source-screening checks passed.\n')
