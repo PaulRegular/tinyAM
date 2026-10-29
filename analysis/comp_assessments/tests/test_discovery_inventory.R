@@ -199,10 +199,10 @@ stopifnot(sum(progress$inventory_rows) == nrow(register),
 stopifnot(all(progress$eligible_new <= progress$new),
   all(progress$eligible_new <= progress$eligible))
 noaa_progress <- progress[progress$organization == 'NOAA', , drop = FALSE]
-stopifnot(sum(noaa_progress$eligible) == 16L, sum(noaa_progress$excluded) == 42L,
-  sum(noaa_progress$eligibility_unresolved) == 374L,
-  sum(noaa_progress$screening_complete) == 64L,
-  sum(noaa_progress$screening_not_started) == 368L)
+stopifnot(sum(noaa_progress$eligible) == 17L, sum(noaa_progress$excluded) == 46L,
+  sum(noaa_progress$eligibility_unresolved) == 369L,
+  sum(noaa_progress$screening_complete) == 69L,
+  sum(noaa_progress$screening_not_started) == 363L)
 for (org in unique(register$organization)) {
   stopifnot(sum(progress$inventory_rows[progress$organization == org]) == sum(register$organization == org),
     sum(progress$excluded[progress$organization == org]) == sum(register$organization == org & register$eligibility == 'ineligible'),
@@ -239,3 +239,26 @@ stopifnot(
   is.na(wgcse('whg.27.7b-ce-k')$matched_stock_id)
 )
 cat('WGCSE age-based screening decisions passed.\n')
+
+alaska_flatfish <- register[match(paste0('NOAA:', c('10002','10003','10004','10015','10016')), register$candidate_id), , drop = FALSE]
+stopifnot(
+  !anyNA(alaska_flatfish$candidate_id),
+  identical(alaska_flatfish$match_status, c('new','matched','new','new','new')),
+  identical(alaska_flatfish$matched_stock_id, c(NA, 'afsc_arrowtooth_flounder_bsai', NA, NA, NA)),
+  identical(alaska_flatfish$screening_status, rep('screened', 5L)),
+  identical(alaska_flatfish$eligibility, c('ineligible','ineligible','ineligible','eligible','ineligible')),
+  identical(alaska_flatfish$import_status, c('not_started','imported','not_started','not_started','not_started')),
+  grepl('does not report a fishery catch-age', lookup('NOAA:10002')$catch_age_evidence, fixed = TRUE),
+  grepl('no accepted fishery age-composition', lookup('NOAA:10003')$catch_age_evidence, fixed = TRUE),
+  grepl('Stock SMART lists Reinhardtius stomias', lookup('NOAA:10003')$notes, fixed = TRUE),
+  grepl('Stock SMART snapshot says 2024 and lists Reinhardtius stomias', lookup('NOAA:10004')$notes, fixed = TRUE),
+  grepl('fishery length compositions', lookup('NOAA:10004')$catch_age_evidence, fixed = TRUE),
+  grepl('October 2026 SSC report selects Model 25.0', lookup('NOAA:10004')$output_evidence, fixed = TRUE),
+  grepl('age compositions', lookup('NOAA:10015')$catch_age_evidence, fixed = TRUE),
+  grepl('flathead sole only', lookup('NOAA:10015')$catch_age_evidence, fixed = TRUE),
+  grepl('ghosted', lookup('NOAA:10016')$survey_age_evidence, fixed = TRUE),
+  all(file.exists(file.path('analysis','comp_assessments','discovery','source_reviews',
+    c('noaa_kamchatka_bsai.md','noaa_arrowtooth_bsai_identity.md','noaa_arrowtooth_goa.md',
+      'noaa_flathead_bsai.md','noaa_flathead_goa.md'))))
+)
+cat('Alaska flatfish identity and age-input screening checks passed.\n')

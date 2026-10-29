@@ -38,10 +38,10 @@ Snapshot dated 2026-10-29: the register contains 905 source-list entries. These 
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 15 | 2 | 0 | 182 | 2 | 98 | 99 | 103 | 96 |
 | ICES | 274 | 57 | 10 | 0 | 207 | 11 | 45 | 218 | 62 | 212 |
-| NOAA | 432 | 26 | 2 | 1 | 403 | 16 | 42 | 374 | 64 | 368 |
-| Total | 905 | 98 | 14 | 1 | 792 | 29 | 185 | 691 | 229 | 676 |
+| NOAA | 432 | 27 | 6 | 1 | 398 | 17 | 46 | 369 | 69 | 363 |
+| Total | 905 | 99 | 18 | 1 | 787 | 30 | 189 | 686 | 234 | 671 |
 
-Four entries are both provisionally new and eligible (two ICES and two NOAA); the other 25 eligible entries are matched to existing records. The NOAA review screened 25 previously unresolved identity/source rows across Bering Sea/Aleutian Islands and Northeast U.S. units. Several latest assessments remain unresolved where age-specific inputs for the selected production run were not recovered. These counts do not represent a selected batch, and new entries may still overlap across organizations. Region-level counts and the audit trail are in `inventory_progress.csv` and `candidates.csv`. Screening and identity reconciliation remain incomplete.
+Five entries are both provisionally new and eligible (two ICES and three NOAA); the other 25 eligible entries are matched to existing records. The NOAA review has screened 30 previously unresolved identity/source rows across Bering Sea/Aleutian Islands, Gulf of Alaska and Northeast U.S. units. The latest Alaska flatfish batch screened five entries: one new eligible BSAI flathead sole-complex case, three new ineligible cases lacking fishery age inputs, and one existing BSAI arrowtooth match. Several latest assessments remain unresolved where age-specific inputs for the selected production run were not recovered. These counts do not represent a selected batch, and new entries may still overlap across organizations. Region-level counts and the audit trail are in `inventory_progress.csv` and `candidates.csv`. Screening and identity reconciliation remain incomplete.
 
 `inventory_progress.csv` summarizes the candidate register by organization and source region. NOAA regions are the science-centre labels in the pinned Stock SMART snapshot; DFO regions are the original Sustainability Survey regions; ICES regions are the exact SID ecoregion labels, including combinations. A row with multiple ICES regions remains one inventory row. These groupings are source reporting categories, not standardized ocean basins.
 
