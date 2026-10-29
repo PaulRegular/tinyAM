@@ -94,3 +94,7 @@ per year. These values agree with the rounded values in WGCSE Table 7.9.
 No tinyAM agreement summary is available until a fit passes its numerical
 convergence checks; matching definitions alone do not imply matching fitted
 models.
+
+## Discovery inventory screening
+
+The ICES 2026 inventory entry cod.27.7e-k matches this existing canonical stock and is screened eligible. The run-matched source review and canonical validation test document the required age-based inputs, assumptions, survey timing and fitted outputs. This is an existing-stock match, not an additional stock unit.
