@@ -199,10 +199,12 @@ stopifnot(sum(progress$inventory_rows) == nrow(register),
 stopifnot(all(progress$eligible_new <= progress$new),
   all(progress$eligible_new <= progress$eligible))
 noaa_progress <- progress[progress$organization == 'NOAA', , drop = FALSE]
-stopifnot(sum(noaa_progress$eligible) == 17L, sum(noaa_progress$excluded) == 46L,
-  sum(noaa_progress$eligibility_unresolved) == 369L,
-  sum(noaa_progress$screening_complete) == 69L,
-  sum(noaa_progress$screening_not_started) == 363L)
+stopifnot(sum(noaa_progress$new) == 8L, sum(noaa_progress$eligible_new) == 5L,
+  sum(noaa_progress$identity_unreviewed) == 396L,
+  sum(noaa_progress$eligible) == 19L, sum(noaa_progress$excluded) == 46L,
+  sum(noaa_progress$eligibility_unresolved) == 367L,
+  sum(noaa_progress$screening_complete) == 71L,
+  sum(noaa_progress$screening_not_started) == 361L)
 for (org in unique(register$organization)) {
   stopifnot(sum(progress$inventory_rows[progress$organization == org]) == sum(register$organization == org),
     sum(progress$excluded[progress$organization == org]) == sum(register$organization == org & register$eligibility == 'ineligible'),
@@ -262,3 +264,22 @@ stopifnot(
       'noaa_flathead_bsai.md','noaa_flathead_goa.md'))))
 )
 cat('Alaska flatfish identity and age-input screening checks passed.\n')
+
+northern_rockfish <- register[match(paste0('NOAA:', c('10416', '10417')), register$candidate_id), , drop = FALSE]
+stopifnot(
+  !anyNA(northern_rockfish$candidate_id),
+  identical(northern_rockfish$match_status, c('new', 'new')),
+  all(is.na(northern_rockfish$matched_stock_id)),
+  identical(northern_rockfish$screening_status, c('screened', 'screened')),
+  identical(northern_rockfish$eligibility, c('eligible', 'eligible')),
+  identical(northern_rockfish$import_status, c('not_started', 'not_started')),
+  grepl('2023 full assessment', lookup('NOAA:10416')$catch_age_evidence, fixed = TRUE),
+  grepl('2024 full assessment', lookup('NOAA:10417')$catch_age_evidence, fixed = TRUE),
+  grepl('2026 chapter is a harvest projection', lookup('NOAA:10416')$notes, fixed = TRUE),
+  grepl('December 2026', lookup('NOAA:10417')$notes, fixed = TRUE),
+  grepl('documented reconstruction', lookup('NOAA:10416')$decision_reason, fixed = TRUE),
+  grepl('documented reconstruction', lookup('NOAA:10417')$decision_reason, fixed = TRUE),
+  all(file.exists(file.path('analysis', 'comp_assessments', 'discovery', 'source_reviews',
+    c('noaa_northern_rockfish_bsai.md', 'noaa_northern_rockfish_goa.md'))))
+)
+cat('Northern rockfish identity and source-screening checks passed.\n')
