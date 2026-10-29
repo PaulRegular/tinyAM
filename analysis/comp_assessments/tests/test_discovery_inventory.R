@@ -123,7 +123,7 @@ stopifnot(
   grepl('age-specific fitted outputs', lookup('ICES:mac.27.nea')$decision_reason, fixed = TRUE),
   lookup('ICES:pra.27.1-2')$eligibility == 'ineligible',
   lookup('DFO:Arctic:Lake Trout - Great Slave Lake')$eligibility == 'ineligible',
-  lookup('NOAA:10523')$screening_status == 'not_started'
+  lookup('NOAA:10523')$screening_status == 'screened'
 )
 stopifnot(
   lookup('NOAA:10809')$eligibility == 'ineligible',
@@ -148,6 +148,34 @@ stopifnot(
   lookup('NOAA:11763')$eligibility == 'unresolved',
   lookup('NOAA:11763')$screening_status == 'not_started'
 )
+matched_noaa_review <- c(
+  'NOAA:10014','NOAA:10019','NOAA:10029','NOAA:10031','NOAA:10033','NOAA:10034',
+  'NOAA:10191','NOAA:10286','NOAA:10506','NOAA:10510','NOAA:10511','NOAA:10513',
+  'NOAA:10515','NOAA:10518','NOAA:10520','NOAA:10523','NOAA:11050','NOAA:11055',
+  'NOAA:11662','NOAA:12745','NOAA:12746'
+)
+reviewed_noaa <- register[match(matched_noaa_review, register$candidate_id), , drop = FALSE]
+stopifnot(
+  !anyNA(reviewed_noaa$candidate_id),
+  all(reviewed_noaa$match_status == 'matched'),
+  all(reviewed_noaa$screening_status == 'screened'),
+  all(reviewed_noaa$import_status == 'imported'),
+  identical(reviewed_noaa$eligibility, c(
+    'ineligible','unresolved','eligible','eligible','unresolved','unresolved',
+    'eligible','eligible','ineligible','eligible','eligible','eligible','eligible',
+    'eligible','unresolved','eligible','eligible','eligible','eligible','ineligible','ineligible')),
+  grepl('length compositions', lookup('NOAA:10506')$catch_age_evidence, fixed = TRUE),
+  grepl('current official', lookup('NOAA:10014')$decision_reason, fixed = TRUE),
+  grepl('age-based-M production run', lookup('NOAA:10033')$decision_reason, fixed = TRUE),
+  grepl('2018 official ASAP record', lookup('NOAA:10191')$decision_reason, fixed = TRUE),
+  grepl('no unconditional age-specific index', lookup('NOAA:12745')$survey_age_evidence, fixed = TRUE),
+  all(vapply(c('catch_age_evidence','survey_age_evidence','weights_evidence',
+    'maturity_evidence','mortality_evidence','timing_evidence','output_evidence',
+    'detailed_source_url'), function(column) {
+      values <- reviewed_noaa[[column]][reviewed_noaa$eligibility == 'eligible']
+      all(!is.na(values) & nzchar(values))
+    }, logical(1L)))
+)
 progress <- read.csv('analysis/comp_assessments/discovery/inventory_progress.csv', stringsAsFactors = FALSE)
 stopifnot(sum(progress$inventory_rows) == nrow(register),
   all(progress$inventory_rows == progress$matched + progress$new + progress$ambiguous + progress$identity_unreviewed),
@@ -155,6 +183,11 @@ stopifnot(sum(progress$inventory_rows) == nrow(register),
   all(progress$inventory_rows == progress$screening_not_started + progress$screening_in_progress + progress$screening_complete))
 stopifnot(all(progress$eligible_new <= progress$new),
   all(progress$eligible_new <= progress$eligible))
+noaa_progress <- progress[progress$organization == 'NOAA', , drop = FALSE]
+stopifnot(sum(noaa_progress$eligible) == 15L, sum(noaa_progress$excluded) == 41L,
+  sum(noaa_progress$eligibility_unresolved) == 376L,
+  sum(noaa_progress$screening_complete) == 60L,
+  sum(noaa_progress$screening_not_started) == 372L)
 for (org in unique(register$organization)) {
   stopifnot(sum(progress$inventory_rows[progress$organization == org]) == sum(register$organization == org),
     sum(progress$excluded[progress$organization == org]) == sum(register$organization == org & register$eligibility == 'ineligible'),
