@@ -124,7 +124,7 @@ can differ. Catch/index `NA` values and zeros are excluded from the lognormal
 likelihood; weights and maturities must be complete. No missing-observation
 imputation or zero-count model is provided.
 
-See [?check_tam_data](https://paulregular.github.io/tinyAM/reference/check_tam_data.html)
+See [`?check_tam_data`](https://paulregular.github.io/tinyAM/reference/check_tam_data.html)
 for input requirements and
 [`?cod_obs`](https://paulregular.github.io/tinyAM/reference/cod_obs.html) for
 details on the sources and preparation of the supplied Northern cod data.
