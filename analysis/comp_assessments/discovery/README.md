@@ -1,7 +1,7 @@
 # Assessment discovery inventory
 
 `candidates.csv` is a discovery register, not a canonical assessment table. Its
-rows are unreviewed source-list entries: they are not verified distinct new stock
+rows are source-list entries, some reviewed and others not yet reviewed: they are not verified distinct new stock
 units, eligible age-structured assessments, or a selected import batch. Screening,
 identity matching, source verification and exclusion decisions remain outstanding.
 Do not overwrite it with a fresh inventory after review has begun.
@@ -19,3 +19,11 @@ inventory source URLs and leaves unknown identities, run details and data eviden
 blank. `scripts/database/186_build_discovery_inventory.R` builds the initial
 snapshot and refuses to overwrite an existing register, protecting later reviews.
 Candidate discovery does not modify the canonical database.
+
+## Inventory progress snapshot
+
+`inventory_progress.csv` summarizes the candidate register by organization and source region. NOAA regions are the science-centre labels in the pinned Stock SMART snapshot; DFO regions are the original Sustainability Survey regions; ICES regions are the exact SID ecoregion labels, including combinations. A row with multiple ICES regions remains one inventory row. These groupings are source reporting categories, not standardized ocean basins.
+
+Counts are **inventory entries**, not deduplicated stock units. `matched`, `new`, `ambiguous` and `identity_unreviewed` describe current identity-review decisions; a `new` label is provisional until all potential cross-organization matches and boundary changes are resolved. Eligibility and screening columns describe separate decisions and must not be added to identity counts. An unresolved or unstarted entry is not an eligible stock or an exclusion. Because regional listings and identity and source reviews remain incomplete, the snapshot cannot establish final organization coverage or the number of eligible new stocks.
+
+Regenerate the snapshot with `scripts/database/195_summarize_discovery.R` after updating the register. It uses the cached pinned NOAA metadata described above and checks that each set of categories sums to the source-list count. The candidate register is the audit trail for individual decisions.

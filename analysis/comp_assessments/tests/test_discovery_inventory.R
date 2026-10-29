@@ -41,4 +41,14 @@ stopifnot(
   lookup('NOAA:11763')$eligibility == 'unresolved',
   lookup('NOAA:11763')$screening_status == 'not_started'
 )
+progress <- read.csv('analysis/comp_assessments/discovery/inventory_progress.csv', stringsAsFactors = FALSE)
+stopifnot(sum(progress$inventory_rows) == nrow(register),
+  all(progress$inventory_rows == progress$matched + progress$new + progress$ambiguous + progress$identity_unreviewed),
+  all(progress$inventory_rows == progress$eligible + progress$excluded + progress$eligibility_unresolved),
+  all(progress$inventory_rows == progress$screening_not_started + progress$screening_in_progress + progress$screening_complete))
+for (org in unique(register$organization)) {
+  stopifnot(sum(progress$inventory_rows[progress$organization == org]) == sum(register$organization == org),
+    sum(progress$excluded[progress$organization == org]) == sum(register$organization == org & register$eligibility == 'ineligible'),
+    sum(progress$matched[progress$organization == org]) == sum(register$organization == org & register$match_status == 'matched'))
+}
 cat('Discovery register structure, identity and eligibility checks passed.\n')
