@@ -220,13 +220,13 @@ stopifnot(all(progress$eligible_new <= progress$new),
   all(progress$eligible_new <= progress$eligible))
 dfo_progress <- progress[progress$organization == 'DFO', , drop = FALSE]
 stopifnot(sum(dfo_progress$inventory_rows) == 199L,
-  sum(dfo_progress$new) == 9L,
-  sum(dfo_progress$identity_unreviewed) == 175L,
-  sum(dfo_progress$screening_complete) == 122L,
-  sum(dfo_progress$screening_not_started) == 77L,
+  sum(dfo_progress$new) == 10L,
+  sum(dfo_progress$identity_unreviewed) == 174L,
+  sum(dfo_progress$screening_complete) == 123L,
+  sum(dfo_progress$screening_not_started) == 76L,
   sum(dfo_progress$excluded) == 104L,
-  sum(dfo_progress$eligible) == 13L,
-  sum(dfo_progress$eligibility_unresolved) == 82L)
+  sum(dfo_progress$eligible) == 14L,
+  sum(dfo_progress$eligibility_unresolved) == 81L)
 unit3_redfish <- lookup('DFO:Maritimes:Acadian Redfish - Unit 3')
 stopifnot(
   nrow(unit3_redfish) == 1L,
@@ -863,11 +863,11 @@ stopifnot(
   file.exists(file.path('analysis', 'comp_assessments', 'source_reviews',
     'ck_dfo_platessoides_4t.md')),
   sum(dfo_progress$matched) == 15L,
-  sum(dfo_progress$eligible) == 13L,
+  sum(dfo_progress$eligible) == 14L,
   sum(dfo_progress$excluded) == 104L,
-  sum(dfo_progress$eligibility_unresolved) == 82L,
-  sum(dfo_progress$screening_complete) == 122L,
-  sum(dfo_progress$screening_not_started) == 77L
+  sum(dfo_progress$eligibility_unresolved) == 81L,
+  sum(dfo_progress$screening_complete) == 123L,
+  sum(dfo_progress$screening_not_started) == 76L
 )
 cat('Matched DFO Gulf American plaice source-screening checks passed.\n')
 channel_plaice <- lookup('ICES:ple.27.7d')
@@ -1433,11 +1433,38 @@ stopifnot(
   file.exists(file.path('analysis', 'comp_assessments', 'source_reviews',
     'dfo_pacific_herring_areas_discovery.md')),
   sum(progress$inventory_rows) == 905L,
-  sum(progress$new) == 53L,
-  sum(progress$identity_unreviewed) == 747L,
-  sum(progress$screening_complete) == 323L,
-  sum(progress$screening_not_started) == 582L,
+  sum(progress$new) == 54L,
+  sum(progress$identity_unreviewed) == 746L,
+  sum(progress$screening_complete) == 324L,
+  sum(progress$screening_not_started) == 581L,
   sum(progress$excluded) == 206L,
-  sum(progress$eligibility_unresolved) == 614L
+  sum(progress$eligibility_unresolved) == 613L
 )
 cat('DFO Pacific herring regional identity and source-screening checks passed.\n')
+
+gulf_yellowtail <- lookup('DFO:Gulf:Yellowtail Flounder - NAFO 4T')
+stopifnot(
+  nrow(gulf_yellowtail) == 1L,
+  is.na(gulf_yellowtail$official_stock_id),
+  gulf_yellowtail$scientific_name == 'Myzopsetta ferruginea',
+  gulf_yellowtail$inventory_assessment_year == 2025L,
+  gulf_yellowtail$assessment_area == 'NAFO Division 4T, southern Gulf of St. Lawrence',
+  gulf_yellowtail$match_status == 'new',
+  is.na(gulf_yellowtail$matched_stock_id),
+  gulf_yellowtail$screening_status == 'screened',
+  gulf_yellowtail$eligibility == 'eligible',
+  gulf_yellowtail$import_status == 'not_started',
+  grepl('1985-2022', gulf_yellowtail$catch_age_evidence, fixed = TRUE),
+  grepl('1985-2025', gulf_yellowtail$survey_age_evidence, fixed = TRUE),
+  grepl('age-aggregated', gulf_yellowtail$survey_age_evidence, fixed = TRUE),
+  grepl('4-7, 8-9 and 10+', gulf_yellowtail$mortality_evidence, fixed = TRUE),
+  grepl('8,269 t', gulf_yellowtail$output_evidence, fixed = TRUE),
+  grepl('2026-054', gulf_yellowtail$detailed_source_url, fixed = TRUE),
+  file.exists(file.path('analysis', 'comp_assessments', 'source_reviews',
+    'dfo_yellowtail_flounder_4t_2025.md')),
+  sum(progress$new) == 54L,
+  sum(progress$eligible) == 86L,
+  sum(progress$eligible_new) == 18L,
+  sum(progress$screening_complete) == 324L
+)
+cat('DFO NAFO 4T yellowtail identity and source-screening checks passed.\n')
