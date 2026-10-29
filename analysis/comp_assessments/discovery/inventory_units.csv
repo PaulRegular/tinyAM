@@ -14,6 +14,7 @@
 "candidate:haddock_eastern_georges_bank","","haddock_eastern_georges_bank","new","unresolved","screened","not_started","DFO | NOAA","Maritimes | NEFSC","DFO:Maritimes:Haddock - NAFO 5Zjm | NOAA:12806",2
 "candidate:ices_north_sea_horse_mackerel","","ices_north_sea_horse_mackerel","new","unresolved","screened","not_started","ICES","Greater North Sea","ICES:hom.27.4bc7d",1
 "candidate:ices_norway_pout_6a","","ices_norway_pout_6a","new","ineligible","screened","not_started","ICES","Celtic Seas","ICES:nop.27.6a",1
+"candidate:ices_whiting_3a","","ices_whiting_3a","new","ineligible","screened","not_started","ICES","Greater North Sea","ICES:whg.27.3a",1
 "candidate:iphc_pacific_halibut","","iphc_pacific_halibut","new","eligible","screened","not_started","DFO | NOAA","NWFSC / AFSC | Pacific","DFO:Pacific:Pacific Halibut | NOAA:11082",2
 "candidate:noaa_goa_northern_rock_sole","","noaa_goa_northern_rock_sole","new","ineligible","screened","not_started","NOAA","AFSC","NOAA:10836 | NOAA:15412 | NOAA:15413",3
 "candidate:noaa_goa_rex_sole","","noaa_goa_rex_sole","new","eligible","screened","not_started","NOAA","AFSC","NOAA:10058 | NOAA:15410 | NOAA:15411",3
