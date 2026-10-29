@@ -221,9 +221,10 @@ stopifnot(all(progress$eligible_new <= progress$new),
 dfo_progress <- progress[progress$organization == 'DFO', , drop = FALSE]
 stopifnot(sum(dfo_progress$inventory_rows) == 199L,
   sum(dfo_progress$new) == 12L,
-  sum(dfo_progress$identity_unreviewed) == 172L,
-  sum(dfo_progress$screening_complete) == 125L,
-  sum(dfo_progress$screening_not_started) == 74L,
+  sum(dfo_progress$ambiguous) == 1L,
+  sum(dfo_progress$identity_unreviewed) == 171L,
+  sum(dfo_progress$screening_complete) == 126L,
+  sum(dfo_progress$screening_not_started) == 73L,
   sum(dfo_progress$excluded) == 104L,
   sum(dfo_progress$eligible) == 15L,
   sum(dfo_progress$eligibility_unresolved) == 80L)
@@ -866,8 +867,8 @@ stopifnot(
   sum(dfo_progress$eligible) == 15L,
   sum(dfo_progress$excluded) == 104L,
   sum(dfo_progress$eligibility_unresolved) == 80L,
-  sum(dfo_progress$screening_complete) == 125L,
-  sum(dfo_progress$screening_not_started) == 74L
+  sum(dfo_progress$screening_complete) == 126L,
+  sum(dfo_progress$screening_not_started) == 73L
 )
 cat('Matched DFO Gulf American plaice source-screening checks passed.\n')
 channel_plaice <- lookup('ICES:ple.27.7d')
@@ -1434,9 +1435,9 @@ stopifnot(
     'dfo_pacific_herring_areas_discovery.md')),
   sum(progress$inventory_rows) == 905L,
   sum(progress$new) == 75L,
-  sum(progress$identity_unreviewed) == 725L,
-  sum(progress$screening_complete) == 345L,
-  sum(progress$screening_not_started) == 560L,
+  sum(progress$identity_unreviewed) == 724L,
+  sum(progress$screening_complete) == 346L,
+  sum(progress$screening_not_started) == 559L,
   sum(progress$excluded) == 216L,
   sum(progress$eligibility_unresolved) == 594L
 )
@@ -1465,7 +1466,7 @@ stopifnot(
   sum(progress$new) == 75L,
   sum(progress$eligible) == 95L,
   sum(progress$eligible_new) == 27L,
-  sum(progress$screening_complete) == 345L
+  sum(progress$screening_complete) == 346L
 )
 cat('DFO NAFO 4T yellowtail identity and source-screening checks passed.\n')
 
@@ -1492,7 +1493,7 @@ stopifnot(
   sum(progress$new) == 75L,
   sum(progress$eligible) == 95L,
   sum(progress$eligible_new) == 27L,
-  sum(progress$screening_complete) == 345L
+  sum(progress$screening_complete) == 346L
 )
 cat('DFO NAFO 4T white hake identity and source-screening checks passed.\n')
 
@@ -1515,8 +1516,8 @@ stopifnot(
   lookup('NOAA:10520')$matched_stock_id == 'nefsc_haddock_georges_bank',
   file.exists(file.path('analysis', 'comp_assessments', 'discovery',
     'source_reviews', 'dfo_noaa_eastern_georges_haddock.md')),
-  sum(dfo_progress$screening_complete) == 125L,
-  sum(dfo_progress$screening_not_started) == 74L,
+  sum(dfo_progress$screening_complete) == 126L,
+  sum(dfo_progress$screening_not_started) == 73L,
   sum(noaa_progress$screening_complete) == 112L,
   sum(noaa_progress$screening_not_started) == 320L
 )
@@ -1574,7 +1575,7 @@ stopifnot(
   sum(noaa_progress$screening_complete) == 112L,
   sum(progress$inventory_rows) == 905L,
   sum(progress$eligible_new) == 27L,
-  sum(progress$screening_complete) == 345L
+  sum(progress$screening_complete) == 346L
 )
 cat('NOAA Pacific Coast Canary Rockfish identity and source-screening checks passed.\n')
 english_sole <- lookup('NOAA:10046')
@@ -1601,7 +1602,7 @@ stopifnot(
   sum(progress$inventory_rows) == 905L,
   sum(progress$new) == 75L,
   sum(progress$excluded) == 216L,
-  sum(progress$screening_complete) == 345L
+  sum(progress$screening_complete) == 346L
 )
 cat('NOAA Pacific Coast English Sole identity and source-screening checks passed.\n')
 darkblotched <- lookup("NOAA:10562")
@@ -1632,10 +1633,10 @@ stopifnot(
   sum(progress$new) == 75L,
   sum(progress$eligible) == 95L,
   sum(progress$eligible_new) == 27L,
-  sum(progress$identity_unreviewed) == 725L,
+  sum(progress$identity_unreviewed) == 724L,
   sum(progress$eligibility_unresolved) == 594L,
-  sum(progress$screening_complete) == 345L,
-  sum(progress$screening_not_started) == 560L
+  sum(progress$screening_complete) == 346L,
+  sum(progress$screening_not_started) == 559L
 )
 cat("NOAA Pacific Coast Darkblotched Rockfish identity and source-screening checks passed.\n")
 goathorny <- lookup("NOAA:10457")
@@ -1660,7 +1661,7 @@ stopifnot(
   sum(noaa_progress$screening_complete) == 112L,
   sum(progress$new) == 75L,
   sum(progress$excluded) == 216L,
-  sum(progress$screening_complete) == 345L
+  sum(progress$screening_complete) == 346L
 )
 cat("NOAA Gulf of Alaska Thornyhead current-method screening checks passed.\n")
 shortspine <- lookup("NOAA:10458")
@@ -1688,11 +1689,11 @@ stopifnot(
   sum(noaa_progress$screening_not_started) == 320L,
   sum(progress$inventory_rows) == 905L,
   sum(progress$new) == 75L,
-  sum(progress$identity_unreviewed) == 725L,
+  sum(progress$identity_unreviewed) == 724L,
   sum(progress$excluded) == 216L,
   sum(progress$eligibility_unresolved) == 594L,
-  sum(progress$screening_complete) == 345L,
-  sum(progress$screening_not_started) == 560L
+  sum(progress$screening_complete) == 346L,
+  sum(progress$screening_not_started) == 559L
 )
 cat("NOAA Pacific Coast Shortspine Thornyhead identity and source-screening checks passed.\n")
 longspine <- lookup("NOAA:10460")
@@ -1717,11 +1718,11 @@ stopifnot(
   sum(noaa_progress$screening_not_started) == 320L,
   sum(progress$inventory_rows) == 905L,
   sum(progress$new) == 75L,
-  sum(progress$identity_unreviewed) == 725L,
+  sum(progress$identity_unreviewed) == 724L,
   sum(progress$excluded) == 216L,
   sum(progress$eligibility_unresolved) == 594L,
-  sum(progress$screening_complete) == 345L,
-  sum(progress$screening_not_started) == 560L
+  sum(progress$screening_complete) == 346L,
+  sum(progress$screening_not_started) == 559L
 )
 california_scorpionfish <- lookup("NOAA:10461")
 stopifnot(
@@ -1747,7 +1748,7 @@ stopifnot(
   sum(progress$new) == 75L,
   sum(progress$eligible_new) == 27L,
   sum(progress$eligible) == 95L,
-  sum(progress$screening_complete) == 345L
+  sum(progress$screening_complete) == 346L
 )
 cat("NOAA California Scorpionfish identity and source-screening checks passed.\n")
 cat("NOAA Pacific Coast Longspine Thornyhead identity and source-screening checks passed.\n")
@@ -1776,13 +1777,14 @@ stopifnot(
   sum(progress$eligible_new) == 27L,
   sum(progress$eligible) == 95L,
   sum(progress$eligibility_unresolved) == 594L,
-  sum(progress$screening_complete) == 345L,
-  sum(progress$screening_not_started) == 560L
+  sum(progress$screening_complete) == 346L,
+  sum(progress$screening_not_started) == 559L
 )
 cat("NOAA Oregon Kelp Greenling identity and source-screening checks passed.\n")
 rex_sole <- register[!is.na(register$candidate_unit_id) &
   register$candidate_unit_id == "noaa_goa_rex_sole", , drop = FALSE]
 rex_pacific <- lookup("NOAA:10059")
+dfo_rebs <- lookup("DFO:Pacific:Rougheye Rockfish")
 stopifnot(
   identical(sort(rex_sole$candidate_id), sort(c("NOAA:10058", "NOAA:15410", "NOAA:15411"))),
   nrow(rex_sole) == 3L,
@@ -1816,6 +1818,35 @@ stopifnot(
   sum(noaa_progress$screening_complete) == 112L,
   sum(progress$new) == 75L,
   sum(progress$eligible_new) == 27L,
-  sum(progress$screening_complete) == 345L
+  sum(progress$screening_complete) == 346L
 )
 cat("NOAA rex sole identity and source-screening checks passed.\n")
+stopifnot(
+  nrow(dfo_rebs) == 1L,
+  dfo_rebs$match_status == "ambiguous",
+  is.na(dfo_rebs$candidate_unit_id),
+  is.na(dfo_rebs$official_stock_id),
+  dfo_rebs$screening_status == "screened",
+  dfo_rebs$eligibility == "unresolved",
+  dfo_rebs$inventory_assessment_year == 2020,
+  dfo_rebs$scientific_name == "Sebastes aleutianus; Sebastes melanostictus",
+  grepl("weighted age proportions", dfo_rebs$catch_age_evidence, fixed = TRUE),
+  grepl("WCHG", dfo_rebs$survey_age_evidence, fixed = TRUE),
+  grepl("0.035, 0.045 and 0.055", dfo_rebs$mortality_evidence, fixed = TRUE),
+  grepl("machine-readable run object", dfo_rebs$output_evidence, fixed = TRUE),
+  grepl("two current BC units", dfo_rebs$decision_reason, fixed = TRUE),
+  file.exists(file.path("analysis", "comp_assessments", "discovery", "source_reviews",
+    "dfo_rougheye_blackspotted_bc_2020.md")),
+  sum(dfo_progress$matched) == 15L,
+  sum(dfo_progress$ambiguous) == 1L,
+  sum(dfo_progress$identity_unreviewed) == 171L,
+  sum(dfo_progress$eligibility_unresolved) == 80L,
+  sum(dfo_progress$screening_complete) == 126L,
+  sum(dfo_progress$screening_not_started) == 73L,
+  sum(progress$ambiguous) == 6L,
+  sum(progress$identity_unreviewed) == 724L,
+  sum(progress$eligibility_unresolved) == 594L,
+  sum(progress$screening_complete) == 346L,
+  sum(progress$screening_not_started) == 559L
+)
+cat("DFO Rougheye/Blackspotted identity and age-data screening checks passed.\n")
