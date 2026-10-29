@@ -45,16 +45,23 @@ Snapshot dated 2026-10-29: the register contains 905 source-list entries. These 
 
 | Organization | Entries | Matched | Provisional new | Ambiguous | Identity unreviewed | Eligible | Excluded | Eligibility unresolved | Screened | Not started |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| DFO | 199 | 19 | 21 | 4 | 155 | 16 | 112 | 71 | 142 | 57 |
+| DFO | 199 | 20 | 21 | 4 | 154 | 17 | 112 | 70 | 143 | 56 |
 | ICES | 274 | 57 | 18 | 2 | 197 | 45 | 51 | 178 | 109 | 165 |
 | NOAA | 432 | 28 | 50 | 3 | 351 | 37 | 63 | 332 | 116 | 316 |
-| Total | 905 | 104 | 89 | 9 | 703 | 98 | 226 | 581 | 367 | 538 |
+| Total | 905 | 105 | 89 | 9 | 702 | 99 | 226 | 580 | 368 | 537 |
 The DFO Maritimes herring component rows are crosswalked to the existing
 4VWX canonical management-unit record, not counted as three additional stocks.
 Current component indicators and historical age-based material do not establish
 a run-matched age-structured production input/output set. The Southwest New
 Brunswick migrant-juvenile fishery is a mixed aggregation, not a separate
 assessed stock. See `source_reviews/dfo_4vwx_herring_component_crosswalk_2025.md`.
+
+The DFO Atlantic mackerel inventory row matches the existing northern-contingent
+record. Its pinned 2025 run has age-based catch inputs and fitted N/F-at-age,
+SSB and recruitment outputs; the aggregate egg-production index is not directly
+supported by tinyAM, and output uncertainty remains partial. The NOAA mackerel
+record covers a broader assessment unit and remains separate; see
+`source_reviews/dfo_northern_mackerel_2025.md`.
 
 NOAA Stock SMART 10573 and the DFO Pacific Sardine management entry are
 crosswalked to one northern-subpopulation unit. The 2025 NOAA update confirms
