@@ -26,6 +26,7 @@
 "candidate:noaa_gulf_red_snapper","","noaa_gulf_red_snapper","new","eligible","screened","not_started","NOAA","SEFSC","NOAA:10230",1
 "candidate:noaa_northern_anchovy_central_subpopulation","","noaa_northern_anchovy_central_subpopulation","new","eligible","screened","not_started","NOAA","SWFSC","NOAA:10574",1
 "candidate:noaa_pacific_rex_sole","","noaa_pacific_rex_sole","new","eligible","screened","not_started","NOAA","NWFSC / SWFSC","NOAA:10059",1
+"candidate:noaa_south_atlantic_gray_triggerfish","","noaa_south_atlantic_gray_triggerfish","new","unresolved","screened","not_started","NOAA","SEFSC","NOAA:10063",1
 "candidate:noaa_south_atlantic_red_porgy","","noaa_south_atlantic_red_porgy","new","eligible","screened","not_started","NOAA","SEFSC","NOAA:10100",1
 "candidate:noaa_south_atlantic_red_snapper","","noaa_south_atlantic_red_snapper","new","eligible","screened","not_started","NOAA","SEFSC","NOAA:10231",1
 "candidate:north_pacific_albacore","","north_pacific_albacore","new","ineligible","screened","not_started","DFO | NOAA","PIFSC | Pacific","DFO:Pacific:Albacore Tuna - North Pacific | NOAA:11682",2
