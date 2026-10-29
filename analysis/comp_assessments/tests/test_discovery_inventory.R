@@ -208,12 +208,12 @@ stopifnot(sum(dfo_progress$inventory_rows) == 199L,
   sum(dfo_progress$eligible) == 8L,
   sum(dfo_progress$eligibility_unresolved) == 92L)
 noaa_progress <- progress[progress$organization == 'NOAA', , drop = FALSE]
-stopifnot(sum(noaa_progress$new) == 17L, sum(noaa_progress$eligible_new) == 8L,
-  sum(noaa_progress$ambiguous) == 2L, sum(noaa_progress$identity_unreviewed) == 386L,
-  sum(noaa_progress$eligible) == 22L, sum(noaa_progress$excluded) == 51L,
-  sum(noaa_progress$eligibility_unresolved) == 359L,
-  sum(noaa_progress$screening_complete) == 81L,
-  sum(noaa_progress$screening_not_started) == 351L)
+stopifnot(sum(noaa_progress$new) == 18L, sum(noaa_progress$eligible_new) == 9L,
+  sum(noaa_progress$ambiguous) == 2L, sum(noaa_progress$identity_unreviewed) == 385L,
+  sum(noaa_progress$eligible) == 23L, sum(noaa_progress$excluded) == 51L,
+  sum(noaa_progress$eligibility_unresolved) == 358L,
+  sum(noaa_progress$screening_complete) == 82L,
+  sum(noaa_progress$screening_not_started) == 350L)
 for (org in unique(register$organization)) {
   stopifnot(sum(progress$inventory_rows[progress$organization == org]) == sum(register$organization == org),
     sum(progress$excluded[progress$organization == org]) == sum(register$organization == org & register$eligibility == 'ineligible'),
@@ -523,3 +523,25 @@ stopifnot(
     'source_reviews', 'noaa_winter_flounder_gom_sne.md'))
 )
 cat('NOAA winter flounder identity and source-screening checks passed.\n')
+
+sablefish <- lookup('NOAA:10466')
+stopifnot(
+  sablefish$scientific_name == 'Anoplopoma fimbria',
+  sablefish$assessment_area == 'Pacific Coast',
+  sablefish$inventory_assessment_year == 2025L,
+  sablefish$match_status == 'new', is.na(sablefish$matched_stock_id),
+  sablefish$screening_status == 'screened',
+  sablefish$eligibility == 'eligible',
+  sablefish$import_status == 'not_started',
+  grepl('1983', sablefish$catch_age_evidence, fixed = TRUE),
+  grepl('length-age key', sablefish$catch_age_evidence, fixed = TRUE),
+  grepl('no directly observed age-specific abundance', sablefish$survey_age_evidence, fixed = TRUE),
+  grepl('0-30', sablefish$weights_evidence, fixed = TRUE),
+  grepl('0.088 per year', sablefish$mortality_evidence, fixed = TRUE),
+  grepl('July', sablefish$timing_evidence, fixed = TRUE),
+  grepl('59,331-89,486 mt', sablefish$output_evidence, fixed = TRUE),
+  grepl('3.30.23.1', sablefish$notes, fixed = TRUE),
+  file.exists(file.path('analysis', 'comp_assessments', 'discovery',
+    'source_reviews', 'noaa_west_coast_sablefish_2025.md'))
+)
+cat('NOAA West Coast Sablefish identity and source-screening checks passed.\n')
