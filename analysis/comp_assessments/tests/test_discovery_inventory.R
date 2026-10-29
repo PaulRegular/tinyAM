@@ -719,11 +719,11 @@ stopifnot(
   sum(ices_progress$new) == 15L,
   sum(ices_progress$ambiguous) == 2L,
   sum(ices_progress$identity_unreviewed) == 200L,
-  sum(ices_progress$eligible) == 23L,
+  sum(ices_progress$eligible) == 24L,
   sum(ices_progress$excluded) == 45L,
-  sum(ices_progress$eligibility_unresolved) == 206L,
-  sum(ices_progress$screening_complete) == 74L,
-  sum(ices_progress$screening_not_started) == 200L
+  sum(ices_progress$eligibility_unresolved) == 205L,
+  sum(ices_progress$screening_complete) == 75L,
+  sum(ices_progress$screening_not_started) == 199L
 )
 cat('Matched Iceland/Faroe ICES identity and source-screening checks passed.\n')
 wgcse_distinct <- register[match(c('ICES:ple.27.7h-k', 'ICES:had.27.7a',
@@ -747,9 +747,9 @@ stopifnot(
   sum(ices_progress$new) == 15L,
   sum(ices_progress$ambiguous) == 2L,
   sum(ices_progress$identity_unreviewed) == 200L,
-  sum(ices_progress$eligible) == 23L,
+  sum(ices_progress$eligible) == 24L,
   sum(ices_progress$excluded) == 45L,
-  sum(ices_progress$eligibility_unresolved) == 206L
+  sum(ices_progress$eligibility_unresolved) == 205L
 )
 cat('ICES WGCSE identity reconciliation checks passed.\n')
 dfo_plaice <- lookup('DFO:Gulf:American Plaice - NAFO 4T')
@@ -792,10 +792,33 @@ stopifnot(
   file.exists(file.path('analysis', 'comp_assessments', 'source_reviews',
     'ices_plaice_english_channel_7d_2026.md')),
   sum(ices_progress$matched) == 57L,
-  sum(ices_progress$eligible) == 23L,
+  sum(ices_progress$eligible) == 24L,
   sum(ices_progress$excluded) == 45L,
-  sum(ices_progress$eligibility_unresolved) == 206L,
-  sum(ices_progress$screening_complete) == 74L,
-  sum(ices_progress$screening_not_started) == 200L
+  sum(ices_progress$eligibility_unresolved) == 205L,
+  sum(ices_progress$screening_complete) == 75L,
+  sum(ices_progress$screening_not_started) == 199L
 )
 cat('Matched ICES Division 7.d plaice source-screening checks passed.\n')
+northeast_arctic_haddock <- lookup('ICES:had.27.1-2')
+ices_progress <- progress[progress$organization == 'ICES', , drop = FALSE]
+stopifnot(
+  nrow(northeast_arctic_haddock) == 1L,
+  northeast_arctic_haddock$matched_stock_id == 'ck_ices_afwg_aeglefinus_nea_1_2',
+  northeast_arctic_haddock$match_status == 'matched',
+  northeast_arctic_haddock$screening_status == 'screened',
+  northeast_arctic_haddock$eligibility == 'eligible',
+  northeast_arctic_haddock$import_status == 'imported',
+  grepl('836 residual catch-at-age', northeast_arctic_haddock$catch_age_evidence, fixed = TRUE),
+  grepl('790 non-missing observations', northeast_arctic_haddock$survey_age_evidence, fixed = TRUE),
+  grepl('0.133', northeast_arctic_haddock$timing_evidence, fixed = TRUE),
+  grepl('fixed in the final fit', northeast_arctic_haddock$mortality_evidence, fixed = TRUE),
+  file.exists(file.path('analysis', 'comp_assessments', 'source_reviews',
+    'jrn_afwg_haddock_northeast_arctic_2026.md')),
+  sum(ices_progress$matched) == 57L,
+  sum(ices_progress$eligible) == 24L,
+  sum(ices_progress$excluded) == 45L,
+  sum(ices_progress$eligibility_unresolved) == 205L,
+  sum(ices_progress$screening_complete) == 75L,
+  sum(ices_progress$screening_not_started) == 199L
+)
+cat('Matched ICES Northeast Arctic haddock source-screening checks passed.\n')
