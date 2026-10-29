@@ -35,16 +35,18 @@ Candidate discovery does not modify the canonical database.
 
 DFO Atlantic halibut in 3NOPs4VWX5Zc is a distinct DFO management unit from the separately defined 4RST unit. The latest full assessment is the 2022 SISCAL model, with detailed inputs published in 2025. It is ineligible for the age-indexed candidate set because observed likelihoods are based on catch-at-length and aggregate survey indices, despite the model being age-structured internally. The relationship to NOAA Stock SMART 10056 is not one-to-one, so the two units are not coalesced. See source_reviews/dfo_atlantic_halibut_3nops4vwx5zc_2022.md.
 
+DFO Atlantic halibut 4RST is a separate provisional new unit. Its 2024 assessment (reviewed in 2025) is classified as a delay-difference model and reports aggregate exploitable biomass, fishing mortality and recruitment; it is ineligible for the age-indexed candidate set. The separate 2025/028 research document reviews 2022 data and describes otoliths aged for growth, not an age-indexed likelihood for the 2024 assessment. The 2024 SAR's assessment-date field conflicts with its title and method-change description; see `source_reviews/dfo_atlantic_halibut_4rst_2024.md`.
+
 ## Inventory progress snapshot
 
 Snapshot dated 2026-10-29: the register contains 905 source-list entries. These are not deduplicated stock units.
 
 | Organization | Entries | Matched | Provisional new | Ambiguous | Identity unreviewed | Eligible | Excluded | Eligibility unresolved | Screened | Not started |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| DFO | 199 | 15 | 14 | 2 | 168 | 15 | 106 | 78 | 129 | 70 |
+| DFO | 199 | 15 | 15 | 2 | 167 | 15 | 107 | 77 | 130 | 69 |
 | ICES | 274 | 57 | 18 | 2 | 197 | 45 | 51 | 178 | 109 | 165 |
 | NOAA | 432 | 28 | 50 | 3 | 351 | 37 | 63 | 332 | 116 | 316 |
-| Total | 905 | 100 | 82 | 7 | 716 | 97 | 220 | 588 | 354 | 551 |
+| Total | 905 | 100 | 83 | 7 | 715 | 97 | 221 | 587 | 355 | 550 |
 
 NOAA Stock SMART 10573 and the DFO Pacific Sardine management entry are
 crosswalked to one northern-subpopulation unit. The 2025 NOAA update confirms
