@@ -202,10 +202,11 @@ dfo_progress <- progress[progress$organization == 'DFO', , drop = FALSE]
 stopifnot(sum(dfo_progress$inventory_rows) == 199L,
   sum(dfo_progress$new) == 4L,
   sum(dfo_progress$identity_unreviewed) == 180L,
-  sum(dfo_progress$screening_complete) == 106L,
-  sum(dfo_progress$screening_not_started) == 93L,
+  sum(dfo_progress$screening_complete) == 109L,
+  sum(dfo_progress$screening_not_started) == 90L,
   sum(dfo_progress$excluded) == 99L,
-  sum(dfo_progress$eligibility_unresolved) == 98L)
+  sum(dfo_progress$eligible) == 5L,
+  sum(dfo_progress$eligibility_unresolved) == 95L)
 noaa_progress <- progress[progress$organization == 'NOAA', , drop = FALSE]
 stopifnot(sum(noaa_progress$new) == 12L, sum(noaa_progress$eligible_new) == 8L,
   sum(noaa_progress$identity_unreviewed) == 392L,
@@ -409,3 +410,24 @@ stopifnot(
     'dfo_herring_sog.md'))
 )
 cat('Strait of Georgia herring identity and source-screening checks passed.\n')
+
+dfo_pop <- register[register$candidate_id %in% c(
+  'DFO:Pacific:Pacific Ocean Perch - PMFC 3CD-WCVI',
+  'DFO:Pacific:Pacific Ocean Perch - PMFC 5ABC-QCS',
+  'DFO:Pacific:Pacific Ocean Perch - PMFC 5DE-HS/DE/WHG'), , drop = FALSE]
+stopifnot(
+  nrow(dfo_pop) == 3L,
+  all(dfo_pop$scientific_name == 'Sebastes alutus'),
+  all(dfo_pop$matched_stock_id == 'dfo_pop_bc'),
+  all(dfo_pop$match_status == 'matched'),
+  all(dfo_pop$screening_status == 'screened'),
+  all(dfo_pop$eligibility == 'eligible'),
+  all(dfo_pop$import_status == 'imported'),
+  all(grepl('three subarea fisheries', dfo_pop$catch_age_evidence, fixed = TRUE)),
+  all(grepl('five surveys', dfo_pop$survey_age_evidence, fixed = TRUE)),
+  all(grepl('5/12', dfo_pop$timing_evidence, fixed = TRUE)),
+  all(grepl('2024 spawning biomass', dfo_pop$output_evidence, fixed = TRUE)),
+  all(grepl('do not create duplicate', dfo_pop$notes, fixed = TRUE)),
+  file.exists(file.path('analysis', 'comp_assessments', 'source_reviews', 'dfo_pop_bc.md'))
+)
+cat('British Columbia Pacific ocean perch identity and source-screening checks passed.\n')
