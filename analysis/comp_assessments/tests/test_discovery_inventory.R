@@ -719,11 +719,11 @@ stopifnot(
   sum(ices_progress$new) == 15L,
   sum(ices_progress$ambiguous) == 2L,
   sum(ices_progress$identity_unreviewed) == 200L,
-  sum(ices_progress$eligible) == 27L,
+  sum(ices_progress$eligible) == 31L,
   sum(ices_progress$excluded) == 46L,
-  sum(ices_progress$eligibility_unresolved) == 201L,
-  sum(ices_progress$screening_complete) == 79L,
-  sum(ices_progress$screening_not_started) == 195L
+  sum(ices_progress$eligibility_unresolved) == 197L,
+  sum(ices_progress$screening_complete) == 83L,
+  sum(ices_progress$screening_not_started) == 191L
 )
 cat('Matched Iceland/Faroe ICES identity and source-screening checks passed.\n')
 wgcse_distinct <- register[match(c('ICES:ple.27.7h-k', 'ICES:had.27.7a',
@@ -747,9 +747,9 @@ stopifnot(
   sum(ices_progress$new) == 15L,
   sum(ices_progress$ambiguous) == 2L,
   sum(ices_progress$identity_unreviewed) == 200L,
-  sum(ices_progress$eligible) == 27L,
+  sum(ices_progress$eligible) == 31L,
   sum(ices_progress$excluded) == 46L,
-  sum(ices_progress$eligibility_unresolved) == 201L
+  sum(ices_progress$eligibility_unresolved) == 197L
 )
 cat('ICES WGCSE identity reconciliation checks passed.\n')
 dfo_plaice <- lookup('DFO:Gulf:American Plaice - NAFO 4T')
@@ -792,11 +792,11 @@ stopifnot(
   file.exists(file.path('analysis', 'comp_assessments', 'source_reviews',
     'ices_plaice_english_channel_7d_2026.md')),
   sum(ices_progress$matched) == 57L,
-  sum(ices_progress$eligible) == 27L,
+  sum(ices_progress$eligible) == 31L,
   sum(ices_progress$excluded) == 46L,
-  sum(ices_progress$eligibility_unresolved) == 201L,
-  sum(ices_progress$screening_complete) == 79L,
-  sum(ices_progress$screening_not_started) == 195L
+  sum(ices_progress$eligibility_unresolved) == 197L,
+  sum(ices_progress$screening_complete) == 83L,
+  sum(ices_progress$screening_not_started) == 191L
 )
 cat('Matched ICES Division 7.d plaice source-screening checks passed.\n')
 northeast_arctic_haddock <- lookup('ICES:had.27.1-2')
@@ -815,11 +815,11 @@ stopifnot(
   file.exists(file.path('analysis', 'comp_assessments', 'source_reviews',
     'jrn_afwg_haddock_northeast_arctic_2026.md')),
   sum(ices_progress$matched) == 57L,
-  sum(ices_progress$eligible) == 27L,
+  sum(ices_progress$eligible) == 31L,
   sum(ices_progress$excluded) == 46L,
-  sum(ices_progress$eligibility_unresolved) == 201L,
-  sum(ices_progress$screening_complete) == 79L,
-  sum(ices_progress$screening_not_started) == 195L
+  sum(ices_progress$eligibility_unresolved) == 197L,
+  sum(ices_progress$screening_complete) == 83L,
+  sum(ices_progress$screening_not_started) == 191L
 )
 cat('Matched ICES Northeast Arctic haddock source-screening checks passed.\n')
 norpout <- lookup('ICES:nop.27.3a4')
@@ -838,11 +838,11 @@ stopifnot(
   file.exists(file.path('analysis', 'comp_assessments', 'source_reviews',
     'ices_norway_pout_north_sea.md')),
   sum(ices_progress$matched) == 57L,
-  sum(ices_progress$eligible) == 27L,
+  sum(ices_progress$eligible) == 31L,
   sum(ices_progress$excluded) == 46L,
-  sum(ices_progress$eligibility_unresolved) == 201L,
-  sum(ices_progress$screening_complete) == 79L,
-  sum(ices_progress$screening_not_started) == 195L
+  sum(ices_progress$eligibility_unresolved) == 197L,
+  sum(ices_progress$screening_complete) == 83L,
+  sum(ices_progress$screening_not_started) == 191L
 )
 cat('Matched ICES North Sea Norway pout source-screening checks passed.\n')
 nssh <- lookup('ICES:her.27.1-24a514a')
@@ -861,11 +861,11 @@ stopifnot(
   file.exists(file.path('analysis', 'comp_assessments', 'source_reviews',
     'ices_herring_norwegian_spring_spawning.md')),
   sum(ices_progress$matched) == 57L,
-  sum(ices_progress$eligible) == 27L,
+  sum(ices_progress$eligible) == 31L,
   sum(ices_progress$excluded) == 46L,
-  sum(ices_progress$eligibility_unresolved) == 201L,
-  sum(ices_progress$screening_complete) == 79L,
-  sum(ices_progress$screening_not_started) == 195L
+  sum(ices_progress$eligibility_unresolved) == 197L,
+  sum(ices_progress$screening_complete) == 83L,
+  sum(ices_progress$screening_not_started) == 191L
 )
 cat('Matched ICES Norwegian spring-spawning herring source-screening checks passed.\n')
 golden_redfish <- lookup('ICES:reg.27.1-2')
@@ -884,11 +884,11 @@ stopifnot(
   file.exists(file.path('analysis', 'comp_assessments', 'source_reviews',
     'ices_golden_redfish_northeast_arctic.md')),
   sum(ices_progress$matched) == 57L,
-  sum(ices_progress$eligible) == 27L,
+  sum(ices_progress$eligible) == 31L,
   sum(ices_progress$excluded) == 46L,
-  sum(ices_progress$eligibility_unresolved) == 201L,
-  sum(ices_progress$screening_complete) == 79L,
-  sum(ices_progress$screening_not_started) == 195L
+  sum(ices_progress$eligibility_unresolved) == 197L,
+  sum(ices_progress$screening_complete) == 83L,
+  sum(ices_progress$screening_not_started) == 191L
 )
 cat('Matched ICES Northeast Arctic golden redfish screening checks passed.\n')
 gulf_riga_herring <- lookup('ICES:her.27.28')
@@ -907,10 +907,59 @@ stopifnot(
   file.exists(file.path('analysis', 'comp_assessments', 'source_reviews',
     'ices_herring_gulf_riga_2026.md')),
   sum(ices_progress$matched) == 57L,
-  sum(ices_progress$eligible) == 27L,
+  sum(ices_progress$eligible) == 31L,
   sum(ices_progress$excluded) == 46L,
-  sum(ices_progress$eligibility_unresolved) == 201L,
-  sum(ices_progress$screening_complete) == 79L,
-  sum(ices_progress$screening_not_started) == 195L
+  sum(ices_progress$eligibility_unresolved) == 197L,
+  sum(ices_progress$screening_complete) == 83L,
+  sum(ices_progress$screening_not_started) == 191L
 )
 cat('Matched ICES Gulf of Riga herring source-screening checks passed.\n')
+sandeel_ids <- c('ICES:san.sa.1r', 'ICES:san.sa.2r', 'ICES:san.sa.3r')
+sandeels <- register[match(sandeel_ids, register$candidate_id), , drop = FALSE]
+ices_progress <- progress[progress$organization == 'ICES', , drop = FALSE]
+stopifnot(
+  !anyNA(sandeels$candidate_id),
+  identical(sandeels$matched_stock_id, c('ices_sandeel_area_1r',
+    'ices_sandeel_area_2r', 'ices_sandeel_area_3r')),
+  all(sandeels$match_status == 'matched'),
+  all(sandeels$screening_status == 'screened'),
+  all(sandeels$eligibility == 'eligible'),
+  all(sandeels$import_status == 'imported'),
+  grepl('1983-2025', sandeels$catch_age_evidence[1], fixed = TRUE),
+  grepl('RTM indices', sandeels$survey_age_evidence[1], fixed = TRUE),
+  grepl('long-term multispecies averages', sandeels$mortality_evidence[2], fixed = TRUE),
+  grepl('2025 source zeros are retained', sandeels$catch_age_evidence[3], fixed = TRUE),
+  grepl('acoustic ages 1-4+', sandeels$survey_age_evidence[3], fixed = TRUE),
+  all(file.exists(file.path('analysis', 'comp_assessments', 'source_reviews',
+    c('ices_sandeel_area_1r.md', 'ices_sandeel_area_2r.md', 'ices_sandeel_area_3r.md')))),
+  sum(ices_progress$matched) == 57L,
+  sum(ices_progress$eligible) == 31L,
+  sum(ices_progress$excluded) == 46L,
+  sum(ices_progress$eligibility_unresolved) == 197L,
+  sum(ices_progress$screening_complete) == 83L,
+  sum(ices_progress$screening_not_started) == 191L
+)
+cat('Matched ICES Sandeel Areas 1r-3r source-screening checks passed.\n')
+area4_sandeel <- lookup('ICES:san.sa.4')
+ices_progress <- progress[progress$organization == 'ICES', , drop = FALSE]
+stopifnot(
+  nrow(area4_sandeel) == 1L,
+  area4_sandeel$matched_stock_id == 'ices_sandeel_area_4',
+  area4_sandeel$match_status == 'matched',
+  area4_sandeel$screening_status == 'screened',
+  area4_sandeel$eligibility == 'eligible',
+  area4_sandeel$import_status == 'imported',
+  grepl('1993-2024', area4_sandeel$catch_age_evidence, fixed = TRUE),
+  grepl('Dredge and Dredge2', area4_sandeel$survey_age_evidence, fixed = TRUE),
+  grepl('separate 2026 category-5 advice update', area4_sandeel$output_evidence, fixed = TRUE),
+  grepl('2026 summary event separate', area4_sandeel$notes, fixed = TRUE),
+  file.exists(file.path('analysis', 'comp_assessments', 'source_reviews',
+    'ices_sandeel_area_4.md')),
+  sum(ices_progress$matched) == 57L,
+  sum(ices_progress$eligible) == 31L,
+  sum(ices_progress$excluded) == 46L,
+  sum(ices_progress$eligibility_unresolved) == 197L,
+  sum(ices_progress$screening_complete) == 83L,
+  sum(ices_progress$screening_not_started) == 191L
+)
+cat('Matched ICES Sandeel Area 4 source-screening checks passed.\n')
