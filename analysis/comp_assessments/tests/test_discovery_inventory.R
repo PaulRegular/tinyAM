@@ -22,6 +22,8 @@ for (column in c('catch_age_evidence', 'survey_age_evidence', 'weights_evidence'
 lookup <- function(id) register[register$candidate_id == id, , drop = FALSE]
 stopifnot(
   lookup('NOAA:10523')$matched_stock_id == 'joint_hake_coastal',
+  lookup('DFO:Pacific:Yellowtail Rockfish - British Columbia coastwide')$eligibility == 'unresolved',
+  lookup('DFO:Pacific:Yellowtail Rockfish - British Columbia coastwide')$import_status == 'not_started',
   lookup('DFO:Pacific:Pacific Hake - Offshore')$matched_stock_id == 'joint_hake_coastal',
   lookup('DFO:Maritimes:Atlantic Cod - NAFO 5Zjm')$matched_stock_id == 'ck_nefsc_trac_cert_morhua_gb',
   lookup('DFO:Pacific:Canary Rockfish')$matched_stock_id == 'dfo_canary_bc',
