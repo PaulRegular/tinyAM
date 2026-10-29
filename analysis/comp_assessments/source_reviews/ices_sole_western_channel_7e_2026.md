@@ -19,3 +19,7 @@ The assessment settings specify q plateau age 7, lognormal tuning fleets, a tric
 Tables 21.8 and 21.9 provide 1969–2025 N-at-age and F-at-age for ages 2–12+. Table 21.10 provides rounded annual recruitment, total biomass, SSB, landings and unweighted Fbar for 1969–2025. The official SAG XML provides higher precision for annual recruitment, total biomass, SSB and Fbar, including 2026 forecast recruitment and SSB; the 2026 total biomass and Fbar fields are blank and are not imported.
 
 The reported N, stock weights and maturity reproduce Table 21.10 total biomass and SSB within 0.04% over 1969–2025. The import therefore records the SAG annual series as native source outputs and the reported total-numbers series from Table 21.8, without uncertainty. The total column can differ by one thousand fish from the sum of rounded age rows. No age-specific confidence intervals are supplied. The 2026 forecast rows are kept separate from the 1969–2025 fitted period by `terminal_year` and output notes.
+
+## Discovery inventory screening
+
+The ICES 2026 inventory entry sol.27.7e matches this existing Division 7.e stock and is screened eligible. The latest detailed XSA report supplies age-disaggregated catch and tuning inputs, age weights and maturity, fixed M, timing windows, fitted N/F at age, and annual summary outputs; no native fitted object was located.

@@ -55,3 +55,7 @@ replication or used to interpret tinyAM absolute N, F, q or derived biomass.
 The current translation is retained only as a diagnostic experiment; the
 five commercial biomass indices and their model likelihoods remain
 unrepresented, and no unsupported q prior or fixed scaling was introduced.
+
+## Discovery inventory screening
+
+The ICES 2026 inventory entry sol.27.7fg matches this existing divisions 7.f-g stock and is screened eligible. Report tables supply age-based catch and survey inputs, age weights, fixed biology and mortality, and fitted N/F and annual outputs. The native 7.f-g fit object was not located; source-based report tables are the detailed production record.
