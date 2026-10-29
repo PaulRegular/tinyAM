@@ -56,15 +56,15 @@ Snapshot dated 2026-10-29: the register contains 905 source-list entries. These 
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 29 | 5 | 145 | 19 | 118 | 62 | 152 | 47 |
 | ICES | 274 | 57 | 20 | 2 | 195 | 45 | 52 | 177 | 111 | 163 |
-| NOAA | 432 | 28 | 61 | 3 | 340 | 41 | 67 | 324 | 127 | 305 |
-| Total | 905 | 105 | 110 | 10 | 680 | 105 | 237 | 563 | 390 | 515 |
+| NOAA | 432 | 28 | 62 | 3 | 339 | 42 | 67 | 323 | 128 | 304 |
+| Total | 905 | 105 | 111 | 10 | 679 | 106 | 237 | 562 | 391 | 514 |
 
 These are inventory-entry counts. The linked-unit crosswalk in
-`inventory_units.csv` currently represents 135 distinct units across 154
-entries: 98 canonical stock IDs and 37 provisional candidate-unit IDs. Of the
-37 candidate units, 10 are screened eligible, 19 are screened ineligible, and 8
+`inventory_units.csv` currently represents 136 distinct units across 155
+entries: 98 canonical stock IDs and 38 provisional candidate-unit IDs. Of the
+38 candidate units, 11 are screened eligible, 19 are screened ineligible, and 8
 remain eligibility-unresolved. Two ineligible units have ambiguous or mixed identity status.
-The other 751 entries do not yet have an explicit unit crosswalk. Regional
+The other 750 entries do not yet have an explicit unit crosswalk. Regional
 counts by organization are available in `inventory_progress.csv`. These are
 provisional audit counts, not the selected expansion batch.
 
@@ -318,3 +318,15 @@ NOAA Stock SMART 10063 is the South Atlantic gray triggerfish unit, separate fro
 NOAA Stock SMART 10207 is the Gulf greater amberjack unit, provisionally new relative to the canonical database. Its latest detailed operational fit located is SEDAR 70 (2020; terminal year 2018), accepted by the Gulf Council SSC and still cited by the 2023 framework action. SEDAR reports annual aggregate abundance, biomass and mature-female SSB with uncertainty, but the public age-composition report gives figures rather than numeric input matrices; no species-specific survey age composition was verified. Eligibility remains unresolved pending those age inputs. See `source_reviews/noaa_gulf_greater_amberjack_2021.md` and the ignored local source cache.
 
 NOAA Stock SMART 11682 and the DFO Pacific albacore listing are crosswalked to one North Pacific biological stock and the 2026 ISC benchmark (data through 2024), despite the older inventory metadata. The current assessment fits catch totals, aggregate fishery CPUE and length compositions, not observed age-specific inputs; its modeled age structure and age-specific plotted outputs do not supply those missing observations. Both entries are screened ineligible for the current age-input tinyAM set. See `source_reviews/noaa_dfo_north_pacific_albacore_2026.md` and the ignored cached report under `source_cache/discovery_north_pacific_albacore/`.
+
+NOAA Stock SMART 10163 is the U.S.-managed Pacific Coast Pacific mackerel
+unit. The latest Council-adopted 2025 catch-only update retains age-composition
+and survey likelihoods from the 2023 age-structured benchmark, alongside
+updated catches through model year 2023. Fishery and survey age compositions,
+weights, maturity, mortality assumptions, survey timing and biomass outputs
+are documented; age compositions end in 2021 and annual numeric N-at-age and
+F-at-age outputs were not located. This is a new eligible source-curation
+candidate, not a canonical import. The cached Stock SMART metadata conflicts
+with the detailed current report, so the run-specific report and adoption
+record determine eligibility. See
+`source_reviews/noaa_pacific_mackerel_2025.md`.
