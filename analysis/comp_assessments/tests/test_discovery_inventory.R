@@ -208,12 +208,12 @@ stopifnot(sum(dfo_progress$inventory_rows) == 199L,
   sum(dfo_progress$eligible) == 8L,
   sum(dfo_progress$eligibility_unresolved) == 92L)
 noaa_progress <- progress[progress$organization == 'NOAA', , drop = FALSE]
-stopifnot(sum(noaa_progress$new) == 21L, sum(noaa_progress$eligible_new) == 12L,
-  sum(noaa_progress$ambiguous) == 2L, sum(noaa_progress$identity_unreviewed) == 382L,
-  sum(noaa_progress$eligible) == 26L, sum(noaa_progress$excluded) == 51L,
-  sum(noaa_progress$eligibility_unresolved) == 355L,
-  sum(noaa_progress$screening_complete) == 85L,
-  sum(noaa_progress$screening_not_started) == 347L)
+stopifnot(sum(noaa_progress$new) == 22L, sum(noaa_progress$eligible_new) == 13L,
+  sum(noaa_progress$ambiguous) == 2L, sum(noaa_progress$identity_unreviewed) == 381L,
+  sum(noaa_progress$eligible) == 27L, sum(noaa_progress$excluded) == 51L,
+  sum(noaa_progress$eligibility_unresolved) == 354L,
+  sum(noaa_progress$screening_complete) == 86L,
+  sum(noaa_progress$screening_not_started) == 346L)
 for (org in unique(register$organization)) {
   stopifnot(sum(progress$inventory_rows[progress$organization == org]) == sum(register$organization == org),
     sum(progress$excluded[progress$organization == org]) == sum(register$organization == org & register$eligibility == 'ineligible'),
@@ -609,3 +609,24 @@ stopifnot(
     'source_reviews', 'noaa_rougheye_blackspotted_2025.md'))
 )
 cat('NOAA Rougheye/Blackspotted identity and source-screening checks passed.\n')
+
+quillback <- lookup('NOAA:15342')
+stopifnot(
+  quillback$scientific_name == 'Sebastes maliger',
+  quillback$stock_name == 'Quillback rockfish - California',
+  quillback$assessment_area == 'California',
+  quillback$inventory_assessment_year == 2025L,
+  quillback$match_status == 'new', is.na(quillback$matched_stock_id),
+  quillback$screening_status == 'screened',
+  quillback$eligibility == 'eligible',
+  quillback$import_status == 'not_started',
+  grepl('total removals in metric', quillback$catch_age_evidence, fixed = TRUE),
+  grepl('2007-2024', quillback$catch_age_evidence, fixed = TRUE),
+  grepl('CCFRP', quillback$survey_age_evidence, fixed = TRUE),
+  grepl('0.068 per year', quillback$mortality_evidence, fixed = TRUE),
+  grepl('July', quillback$timing_evidence, fixed = TRUE),
+  grepl('3.30.23.1', quillback$notes, fixed = TRUE),
+  file.exists(file.path('analysis', 'comp_assessments', 'discovery',
+    'source_reviews', 'noaa_quillback_california_2025.md'))
+)
+cat('NOAA California Quillback identity and source-screening checks passed.\n')
