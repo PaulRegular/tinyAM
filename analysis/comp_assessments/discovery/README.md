@@ -56,15 +56,15 @@ Snapshot dated 2026-10-29: the register contains 905 source-list entries. These 
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 37 | 5 | 137 | 20 | 123 | 56 | 160 | 39 |
 | ICES | 274 | 57 | 20 | 2 | 195 | 45 | 52 | 177 | 111 | 163 |
-| NOAA | 432 | 28 | 68 | 3 | 333 | 43 | 72 | 317 | 134 | 298 |
-| Total | 905 | 105 | 125 | 10 | 665 | 108 | 247 | 550 | 405 | 500 |
+| NOAA | 432 | 28 | 69 | 3 | 332 | 43 | 72 | 317 | 135 | 297 |
+| Total | 905 | 105 | 126 | 10 | 664 | 108 | 247 | 550 | 406 | 499 |
 
 These are inventory-entry counts. The linked-unit crosswalk in
-`inventory_units.csv` currently represents 150 distinct units across 169
-entries: 98 canonical stock IDs and 52 provisional candidate-unit IDs. Of the
-52 candidate units, 13 are screened eligible, 29 are screened ineligible, and 10
+`inventory_units.csv` currently represents 151 distinct units across 170
+entries: 98 canonical stock IDs and 53 provisional candidate-unit IDs. Of the
+53 candidate units, 13 are screened eligible, 29 are screened ineligible, and 11
 remain eligibility-unresolved. Two ineligible units have ambiguous or mixed
-identity status. The other 736 entries do not yet have an explicit unit
+identity status. The other 735 entries do not yet have an explicit unit
 crosswalk. Regional
 counts by organization are available in `inventory_progress.csv`. These are
 provisional audit counts, not the selected expansion batch.
@@ -388,3 +388,5 @@ DFO Yellowmouth Rockfish has been screened as a distinct coastwide provisional u
 The DFO Outside Pacific Spiny Dogfish inventory entry is screened ineligible: the latest 2024 assessment is age-structured but fits aggregate catch and indices with length compositions, while available age samples are not linked to fishery or survey events. No canonical values were imported. See source_reviews/dfo_dogfish_outside_2024.md.
 
 The DFO Pacific Dogfish inside-water unit is screened ineligible for the age-disaggregated candidate set. The latest detailed inside assessment located is the 2010 surplus-production analysis; its authors explicitly state that catch-age data were too sparse for an age-structured model. The 2024 assessment is for outside waters. See `source_reviews/dfo_dogfish_inside_2010.md` and the ignored local cache `source_cache/discovery_dfo_dogfish_inside/`.
+
+NOAA Stock SMART 10190 is the PFMC coastwide Pacific sanddab unit. Its detailed 2013 age-structured Stock Synthesis assessment includes retained-fish age compositions and age-at-length survey data, but the Council did not use its biomass scale for harvest specifications; status determination only was accepted. The latest detailed public evidence does not support total catch-at-age because discards were not age-sampled, and the current harvest specification remains Category 3. Eligibility is unresolved pending source-supported catch-age reconstruction and run-matched inputs. See `source_reviews/noaa_pacific_sanddab_2013.md`; source PDFs and checksums are cached under the ignored local source cache.

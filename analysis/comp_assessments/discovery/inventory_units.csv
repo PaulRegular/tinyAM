@@ -40,6 +40,7 @@
 "candidate:noaa_northern_anchovy_central_subpopulation","","noaa_northern_anchovy_central_subpopulation","new","eligible","screened","not_started","NOAA","SWFSC","NOAA:10574",1
 "candidate:noaa_pacific_mackerel_pacific_coast","","noaa_pacific_mackerel_pacific_coast","new","eligible","screened","not_started","NOAA","SWFSC","NOAA:10163",1
 "candidate:noaa_pacific_rex_sole","","noaa_pacific_rex_sole","new","eligible","screened","not_started","NOAA","NWFSC / SWFSC","NOAA:10059",1
+"candidate:noaa_pacific_sanddab_us","","noaa_pacific_sanddab_us","new","unresolved","screened","not_started","NOAA","NWFSC / SWFSC","NOAA:10190",1
 "candidate:noaa_pollock_bogoslof","","noaa_pollock_bogoslof","new","ineligible","screened","not_started","NOAA","AFSC","NOAA:10512",1
 "candidate:noaa_pollock_southeast_outside","","noaa_pollock_southeast_outside","new","ineligible","screened","not_started","NOAA","AFSC","NOAA:10514",1
 "candidate:noaa_silver_hake_northern","","noaa_silver_hake_northern","new","ineligible","screened","not_started","NOAA","NEFSC","NOAA:10521",1
