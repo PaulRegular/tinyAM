@@ -55,16 +55,16 @@ Snapshot dated 2026-10-29: the register contains 905 source-list entries. These 
 | Organization | Entries | Matched | Provisional new | Ambiguous | Identity unreviewed | Eligible | Excluded | Eligibility unresolved | Screened | Not started |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 26 | 5 | 148 | 19 | 116 | 64 | 149 | 50 |
-| ICES | 274 | 57 | 18 | 2 | 197 | 45 | 51 | 178 | 109 | 165 |
+| ICES | 274 | 57 | 19 | 2 | 196 | 45 | 51 | 178 | 110 | 164 |
 | NOAA | 432 | 28 | 52 | 3 | 349 | 38 | 64 | 330 | 118 | 314 |
-| Total | 905 | 105 | 96 | 10 | 694 | 102 | 231 | 572 | 376 | 529 |
+| Total | 905 | 105 | 97 | 10 | 693 | 102 | 231 | 572 | 377 | 528 |
 
 These are inventory-entry counts. The linked-unit crosswalk in
-`inventory_units.csv` currently represents 122 distinct units across 140
-entries: 98 canonical stock IDs and 24 provisional candidate-unit IDs. Of the
-24 candidate units, 7 are screened eligible, 11 are screened ineligible, 4
+`inventory_units.csv` currently represents 123 distinct units across 141
+entries: 98 canonical stock IDs and 25 provisional candidate-unit IDs. Of the
+25 candidate units, 7 are screened eligible, 11 are screened ineligible, 5
 remain eligibility-unresolved, and 2 have ambiguous or mixed identity status.
-The other 765 entries do not yet have an explicit unit crosswalk. These are
+The other 764 entries do not yet have an explicit unit crosswalk. These are
 provisional audit counts, not the selected expansion batch.
 
 `inventory_progress.csv` also reports distinct matched stock IDs,
@@ -219,6 +219,8 @@ The DFO Canary Rockfish inventory row matches the curated coastwide `dfo_canary_
 Northwest Atlantic spiny dogfish is a transboundary population represented by separate NOAA and DFO inventory rows. The latest NOAA management-track report states age and growth data are lacking and reports aggregate spawning output, F and recruitment; DFO's accepted model is stage-based, and its later assessment model was not accepted. The DFO 4VWX5 and NOAA Atlantic Coast definitions are not one-to-one, so the cross-agency identity remains unresolved while both are screened ineligible for the age-structured candidate pool. See `source_reviews/noaa_dfo_spiny_dogfish_northwest_atlantic.md`.
 
 Norway pout in ICES Division 6.a (`nop.27.6a`) is distinct from the North Sea/Skagerrak stock already in the database. Official ICES scheduling identifies its 2024 advice output as stock status only and schedules the next assessment for 2027; the row is screened out of the current age-structured candidate pool without asserting that age observations are absent from all source datasets. See `source_reviews/ices_norway_pout_6a.md`.
+
+ICES North Sea horse mackerel (`hom.27.4bc7d`) is a distinct current unit with a 2026 SAM assessment and public SSB, recruitment and F summaries. The detailed 2024 benchmark gives age-specific catch and biological inputs for its prior run, but those values are not substituted for the latest run; its stock key also changed from `hom.27.3a4bc7d`, so Division 3.a requires boundary verification. Eligibility remains unresolved pending current-run inputs and survey age information. See `source_reviews/ices_north_sea_horse_mackerel_2026.md`.
 
 The Southern Gulf spring- and fall-spawning herring entries also match existing, separate stock records. Both have detailed 2024 age-specific inputs and outputs, while 2026 summary-only events are preserved separately. The fall mobile-gear catch-at-age table duplicates the fixed-gear table and is flagged rather than treated as verified data. See `source_reviews/dfo_herring_4tvn_spring.md` and `source_reviews/dfo_herring_4tvn_fall.md`.
 
