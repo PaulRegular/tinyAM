@@ -202,8 +202,10 @@ dfo_progress <- progress[progress$organization == 'DFO', , drop = FALSE]
 stopifnot(sum(dfo_progress$inventory_rows) == 199L,
   sum(dfo_progress$new) == 4L,
   sum(dfo_progress$identity_unreviewed) == 180L,
-  sum(dfo_progress$screening_complete) == 105L,
-  sum(dfo_progress$screening_not_started) == 94L)
+  sum(dfo_progress$screening_complete) == 106L,
+  sum(dfo_progress$screening_not_started) == 93L,
+  sum(dfo_progress$excluded) == 99L,
+  sum(dfo_progress$eligibility_unresolved) == 98L)
 noaa_progress <- progress[progress$organization == 'NOAA', , drop = FALSE]
 stopifnot(sum(noaa_progress$new) == 12L, sum(noaa_progress$eligible_new) == 8L,
   sum(noaa_progress$identity_unreviewed) == 392L,
@@ -388,3 +390,22 @@ stopifnot(
     'dfo_bc_bocaccio.md'))
 )
 cat('B.C. Bocaccio identity and source-screening checks passed.\n')
+
+dfo_sog_herring <- lookup('DFO:Pacific:Pacific Herring - Strait of Georgia')
+stopifnot(
+  dfo_sog_herring$scientific_name == 'Clupea pallasii',
+  dfo_sog_herring$matched_stock_id == 'dfo_herring_sog',
+  dfo_sog_herring$match_status == 'matched',
+  dfo_sog_herring$screening_status == 'screened',
+  dfo_sog_herring$eligibility == 'ineligible',
+  dfo_sog_herring$import_status == 'imported',
+  grepl('ages 1-10+', dfo_sog_herring$catch_age_evidence, fixed = TRUE),
+  grepl('All native survey age samples are missing (-1)', dfo_sog_herring$survey_age_evidence, fixed = TRUE),
+  grepl('density dependent', dfo_sog_herring$mortality_evidence, fixed = TRUE),
+  grepl('0.766', dfo_sog_herring$timing_evidence, fixed = TRUE),
+  grepl('84.33375 thousand tonnes', dfo_sog_herring$output_evidence, fixed = TRUE),
+  grepl('cannot fit this aggregate spawning-biomass observation', dfo_sog_herring$decision_reason, fixed = TRUE),
+  file.exists(file.path('analysis', 'comp_assessments', 'source_reviews',
+    'dfo_herring_sog.md'))
+)
+cat('Strait of Georgia herring identity and source-screening checks passed.\n')
