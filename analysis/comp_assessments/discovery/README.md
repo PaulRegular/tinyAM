@@ -56,15 +56,15 @@ Snapshot dated 2026-10-29: the register contains 905 source-list entries. These 
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 29 | 5 | 145 | 19 | 118 | 62 | 152 | 47 |
 | ICES | 274 | 57 | 20 | 2 | 195 | 45 | 52 | 177 | 111 | 163 |
-| NOAA | 432 | 28 | 63 | 3 | 338 | 42 | 68 | 322 | 129 | 303 |
-| Total | 905 | 105 | 112 | 10 | 678 | 106 | 238 | 561 | 392 | 513 |
+| NOAA | 432 | 28 | 64 | 3 | 337 | 43 | 68 | 321 | 130 | 302 |
+| Total | 905 | 105 | 113 | 10 | 677 | 107 | 238 | 560 | 393 | 512 |
 
 These are inventory-entry counts. The linked-unit crosswalk in
-`inventory_units.csv` currently represents 137 distinct units across 156
-entries: 98 canonical stock IDs and 39 provisional candidate-unit IDs. Of the
-39 candidate units, 11 are screened eligible, 20 are screened ineligible, and 8
+`inventory_units.csv` currently represents 138 distinct units across 157
+entries: 98 canonical stock IDs and 40 provisional candidate-unit IDs. Of the
+40 candidate units, 12 are screened eligible, 20 are screened ineligible, and 8
 remain eligibility-unresolved. Two ineligible units have ambiguous or mixed identity status.
-The other 749 entries do not yet have an explicit unit crosswalk. Regional
+The other 748 entries do not yet have an explicit unit crosswalk. Regional
 counts by organization are available in `inventory_progress.csv`. These are
 provisional audit counts, not the selected expansion batch.
 
@@ -341,3 +341,13 @@ age-disaggregated input set. The report gives probabilistic status results,
 while run-matched numeric N/F-at-age outputs were not recovered. IATTC
 restricts redistribution of generated run files; only the public report is
 cached. See `source_reviews/noaa_eastern_pacific_yellowfin_2025.md`.
+
+NOAA Stock SMART 10413 is the Southern Pacific Coast bocaccio unit. Its latest
+fitted assessment is the 2017 update, carrying forward age-at-length data from
+the 2015 assessment; the 2025 document is a catch-only projection, not a new
+fit. The source likelihood uses conditional age-at-length observations rather
+than direct marginal catch-at-age, alongside aggregate abundance indices and
+fixed biological relationships. It is eligible for source curation, but a
+catch-at-age reconstruction requires verification of the native age and
+expansion records. Numerical annual N-at-age and F-at-age tables were not
+located. See `source_reviews/noaa_bocaccio_southern_pacific_2017.md`.
