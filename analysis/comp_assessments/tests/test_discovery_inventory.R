@@ -645,3 +645,27 @@ stopifnot(
     'ices_cod_iceland_2026.md'))
 )
 cat('ICES cod 5.a identity and current-run screen passed.\n')
+northsea_ices_ids <- c('ICES:her.27.3a47d', 'ICES:had.27.46a20',
+  'ICES:ple.27.420', 'ICES:pok.27.3a46', 'ICES:whg.27.47d')
+northsea_ices <- register[match(northsea_ices_ids, register$candidate_id), , drop = FALSE]
+stopifnot(
+  !anyNA(northsea_ices$candidate_id),
+  identical(northsea_ices$matched_stock_id, c('ices_herring_north_sea',
+    'ices_haddock_north_sea', 'ices_plaice_north_sea', 'ices_saithe_north_sea',
+    'ices_whiting_north_sea')),
+  all(northsea_ices$match_status == 'matched'),
+  all(northsea_ices$screening_status == 'screened'),
+  all(northsea_ices$eligibility == 'eligible'),
+  all(northsea_ices$import_status == 'imported'),
+  grepl('winter-ring', northsea_ices$catch_age_evidence[1], fixed = TRUE),
+  grepl('partial spawning-component', northsea_ices$survey_age_evidence[1], fixed = TRUE),
+  grepl('Q1', northsea_ices$survey_age_evidence[2], fixed = TRUE),
+  grepl('Five age-specific', northsea_ices$survey_age_evidence[3], fixed = TRUE),
+  grepl('Q3 and Q4', northsea_ices$survey_age_evidence[4], fixed = TRUE),
+  grepl('April NSwhiting_2026n', northsea_ices$catch_age_evidence[5], fixed = TRUE),
+  all(file.exists(file.path('analysis', 'comp_assessments', 'source_reviews',
+    c('ices_herring_north_sea.md', 'ices_haddock_north_sea.md',
+      'ices_plaice_north_sea.md', 'ices_saithe_north_sea.md',
+      'ices_whiting_north_sea_2026.md'))))
+)
+cat('Matched ICES North Sea identity and source-screening checks passed.\n')
