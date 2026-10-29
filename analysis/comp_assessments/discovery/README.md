@@ -32,6 +32,17 @@ Candidate discovery does not modify the canonical database.
 
 ## Inventory progress snapshot
 
+Snapshot dated 2026-10-29: the register contains 905 source-list entries. These are not deduplicated stock units.
+
+| Organization | Entries | Matched | Provisional new | Ambiguous | Identity unreviewed | Eligible | Excluded | Eligibility unresolved | Screened | Not started |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| DFO | 199 | 15 | 2 | 0 | 182 | 2 | 98 | 99 | 103 | 96 |
+| ICES | 274 | 57 | 6 | 0 | 211 | 0 | 33 | 241 | 38 | 236 |
+| NOAA | 432 | 22 | 2 | 1 | 407 | 2 | 37 | 393 | 39 | 393 |
+| Total | 905 | 94 | 10 | 1 | 800 | 4 | 168 | 733 | 180 | 725 |
+
+Only two entries are both provisionally new and eligible (NOAA); the two other eligible entries are already matched to existing DFO stocks. These counts do not represent a selected batch, and new entries may still overlap across organizations. Region-level counts and the audit trail are in `inventory_progress.csv` and `candidates.csv`. Screening and identity reconciliation remain incomplete.
+
 `inventory_progress.csv` summarizes the candidate register by organization and source region. NOAA regions are the science-centre labels in the pinned Stock SMART snapshot; DFO regions are the original Sustainability Survey regions; ICES regions are the exact SID ecoregion labels, including combinations. A row with multiple ICES regions remains one inventory row. These groupings are source reporting categories, not standardized ocean basins.
 
 Counts are **inventory entries**, not deduplicated stock units. `matched`, `new`, `ambiguous` and `identity_unreviewed` describe current identity-review decisions; a `new` label is provisional until all potential cross-organization matches and boundary changes are resolved. Eligibility and screening columns describe separate decisions and must not be added to identity counts. An unresolved or unstarted entry is not an eligible stock or an exclusion. Because regional listings and identity and source reviews remain incomplete, the snapshot cannot establish final organization coverage or the number of eligible new stocks.
