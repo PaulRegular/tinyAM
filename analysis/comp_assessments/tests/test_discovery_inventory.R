@@ -199,12 +199,12 @@ stopifnot(sum(progress$inventory_rows) == nrow(register),
 stopifnot(all(progress$eligible_new <= progress$new),
   all(progress$eligible_new <= progress$eligible))
 noaa_progress <- progress[progress$organization == 'NOAA', , drop = FALSE]
-stopifnot(sum(noaa_progress$new) == 11L, sum(noaa_progress$eligible_new) == 7L,
-  sum(noaa_progress$identity_unreviewed) == 393L,
-  sum(noaa_progress$eligible) == 21L, sum(noaa_progress$excluded) == 46L,
-  sum(noaa_progress$eligibility_unresolved) == 365L,
-  sum(noaa_progress$screening_complete) == 74L,
-  sum(noaa_progress$screening_not_started) == 358L)
+stopifnot(sum(noaa_progress$new) == 12L, sum(noaa_progress$eligible_new) == 8L,
+  sum(noaa_progress$identity_unreviewed) == 392L,
+  sum(noaa_progress$eligible) == 22L, sum(noaa_progress$excluded) == 46L,
+  sum(noaa_progress$eligibility_unresolved) == 364L,
+  sum(noaa_progress$screening_complete) == 75L,
+  sum(noaa_progress$screening_not_started) == 357L)
 for (org in unique(register$organization)) {
   stopifnot(sum(progress$inventory_rows[progress$organization == org]) == sum(register$organization == org),
     sum(progress$excluded[progress$organization == org]) == sum(register$organization == org & register$eligibility == 'ineligible'),
@@ -327,3 +327,18 @@ stopifnot(
     'noaa_pacific_coast_dover_sole.md'))
 )
 cat('Dover sole identity and source-screening checks passed.\n')
+
+widow <- lookup('NOAA:10568')
+stopifnot(
+  widow$match_status == 'new',
+  widow$screening_status == 'screened',
+  widow$eligibility == 'eligible',
+  widow$import_status == 'not_started',
+  grepl('three commercial fleets', widow$catch_age_evidence, fixed = TRUE),
+  grepl('conditional age-at-length', widow$survey_age_evidence, fixed = TRUE),
+  grepl('billions of eggs', widow$output_evidence, fixed = TRUE),
+  grepl('version labels', widow$notes, fixed = TRUE),
+  file.exists(file.path('analysis', 'comp_assessments', 'discovery', 'source_reviews',
+    'noaa_west_coast_widow_rockfish.md'))
+)
+cat('Widow rockfish identity and source-screening checks passed.\n')
