@@ -58,6 +58,21 @@ Snapshot dated 2026-10-29: the register contains 905 source-list entries. These 
 | ICES | 274 | 57 | 18 | 2 | 197 | 45 | 51 | 178 | 109 | 165 |
 | NOAA | 432 | 28 | 52 | 3 | 349 | 38 | 64 | 330 | 118 | 314 |
 | Total | 905 | 105 | 96 | 10 | 694 | 102 | 231 | 572 | 376 | 529 |
+
+These are inventory-entry counts. The linked-unit crosswalk in
+`inventory_units.csv` currently represents 122 distinct units across 140
+entries: 98 canonical stock IDs and 24 provisional candidate-unit IDs. Of the
+24 candidate units, 7 are screened eligible, 11 are screened ineligible, 4
+remain eligibility-unresolved, and 2 have ambiguous or mixed identity status.
+The other 765 entries do not yet have an explicit unit crosswalk. These are
+provisional audit counts, not the selected expansion batch.
+
+`inventory_progress.csv` also reports distinct matched stock IDs,
+crosswalked candidate units and entries without an identity link by source
+region. Region names follow each source inventory; ICES entries with multiple
+ecoregions remain grouped under their original combined label. Cross-agency
+units can appear once under each organization's region, so use
+`inventory_units.csv` for global linked-unit counts.
 The DFO Maritimes herring component rows are crosswalked to the existing
 4VWX canonical management-unit record, not counted as three additional stocks.
 Current component indicators and historical age-based material do not establish
@@ -221,9 +236,9 @@ pending access to the detailed 2026/048 report. See
 
 Counts are **inventory entries**, not deduplicated stock units. `matched`, `new`, `ambiguous` and `identity_unreviewed` describe current identity-review decisions; a `new` label is provisional until all potential cross-organization matches and boundary changes are resolved. Eligibility and screening columns describe separate decisions and must not be added to identity counts. An unresolved or unstarted entry is not an eligible stock or an exclusion. Because regional listings and identity and source reviews remain incomplete, the snapshot cannot establish final organization coverage or the number of eligible new stocks.
 
-`eligible_new` counts entries provisionally marked both `new` and `eligible`; it is the closest current register measure of potentially eligible new units, but can still include duplicate stock units across organizations until cross-inventory reconciliation is complete. `eligible` alone also includes matched existing assessments.
+`eligible_new` counts entries provisionally marked both `new` and `eligible`; it is not a distinct-unit count. Use `inventory_units.csv` to count only units with an explicit crosswalk ID. `eligible` alone also includes matched existing assessments. Identity, screening and eligibility are separate decisions: an entry can have an evidence screen while its cross-inventory identity remains unresolved.
 
-Regenerate the snapshot with `scripts/database/195_summarize_discovery.R` after updating the register. It uses the cached pinned NOAA metadata described above and checks that each set of categories sums to the source-list count. The candidate register is the audit trail for individual decisions.
+Regenerate the regional snapshot with `scripts/database/195_summarize_discovery.R` and the linked-unit crosswalk with `scripts/database/196_summarize_inventory_units.R` after updating the register. Both use the cached pinned NOAA metadata described above; the regional summary checks that each status set sums to the source-list count, and the unit summary checks that each linked entry appears exactly once. The candidate register remains the audit trail for individual decisions.
 
 The Newfoundland and Labrador DFO inventory's 4R spring- and fall-spawner rows now reflect the current 4RSw assessment boundary. The 2024 assessment is a WHAM state-space catch-at-age model, but the detailed framework/model report is still cited as in preparation; current-run numerical inputs and age-specific fitted outputs remain unresolved. Spring and fall components remain separate candidate units. See `source_reviews/dfo_herring_4rsw_2024.md`; the six supporting PDFs and checksum manifest are in the ignored local source cache.
 

@@ -2572,3 +2572,20 @@ stopifnot(
   sum(progress$screening_not_started) == 529L
 )
 cat('Pacific halibut NOAA/DFO cross-agency screening checks passed.\n')
+
+units <- read.csv(file.path('analysis', 'comp_assessments', 'discovery', 'inventory_units.csv'),
+  stringsAsFactors = FALSE)
+halibut_unit <- units[units$candidate_unit_id == 'iphc_pacific_halibut', , drop = FALSE]
+stopifnot(
+  !anyDuplicated(units$unit_key),
+  sum(units$inventory_entries) == sum(!is.na(register$matched_stock_id) & nzchar(register$matched_stock_id) |
+    !is.na(register$candidate_unit_id) & nzchar(register$candidate_unit_id)),
+  nrow(halibut_unit) == 1L,
+  halibut_unit$inventory_entries == 2L,
+  halibut_unit$organizations == 'DFO | NOAA',
+  halibut_unit$eligibility == 'eligible',
+  all(c('matched_units', 'crosswalked_candidate_units', 'identity_unlinked_rows') %in% names(progress)),
+  sum(progress$inventory_rows) == 905L,
+  sum(progress$identity_unlinked_rows) > 0L
+)
+cat('Inventory unit crosswalk and distinct-unit checks passed.\n')

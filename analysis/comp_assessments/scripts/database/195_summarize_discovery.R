@@ -26,6 +26,19 @@ metrics <- data.frame(inventory_rows = 1L, matched = as.integer(x$match_status =
   screening_complete = as.integer(x$screening_status == 'screened'))
 out <- aggregate(metrics, by = key, FUN = sum)
 out <- out[order(out$organization, out$source_region), ]
+out$matched_units <- 0L
+out$crosswalked_candidate_units <- 0L
+out$identity_unlinked_rows <- 0L
+for (i in seq_len(nrow(out))) {
+  rows <- x$organization == out$organization[i] & region == out$source_region[i]
+  matched_ids <- unique(x$matched_stock_id[rows & !is.na(x$matched_stock_id) & nzchar(x$matched_stock_id)])
+  candidate_ids <- unique(x$candidate_unit_id[rows & !is.na(x$candidate_unit_id) & nzchar(x$candidate_unit_id)])
+  linked <- (!is.na(x$matched_stock_id) & nzchar(x$matched_stock_id)) |
+    (!is.na(x$candidate_unit_id) & nzchar(x$candidate_unit_id))
+  out$matched_units[i] <- length(matched_ids)
+  out$crosswalked_candidate_units[i] <- length(candidate_ids)
+  out$identity_unlinked_rows[i] <- sum(rows & !linked)
+}
 stopifnot(sum(out$inventory_rows) == nrow(x),
   all(out$inventory_rows == out$matched + out$new + out$ambiguous + out$identity_unreviewed),
   all(out$inventory_rows == out$eligible + out$excluded + out$eligibility_unresolved),
