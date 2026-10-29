@@ -169,6 +169,26 @@ stopifnot(
   grepl('10509 / assessment 13596', lookup('NOAA:10509')$decision_reason, fixed = TRUE),
   grepl('2026 assessment', lookup('NOAA:10519')$decision_reason, fixed = TRUE)
 )
+reviewed_noaa_cod_units <- register[match(c('NOAA:17280', 'NOAA:17281', 'NOAA:17282'), register$candidate_id), , drop = FALSE]
+stopifnot(
+  nrow(reviewed_noaa_cod_units) == 3L,
+  all(reviewed_noaa_cod_units$match_status == 'new'),
+  all(is.na(reviewed_noaa_cod_units$matched_stock_id)),
+  all(reviewed_noaa_cod_units$screening_status == 'screened'),
+  all(reviewed_noaa_cod_units$eligibility == 'unresolved'),
+  all(reviewed_noaa_cod_units$import_status == 'not_started'),
+  all(grepl('2024', reviewed_noaa_cod_units$detailed_source_url, fixed = TRUE)),
+  grepl('commercial and recreational catch-age composition', lookup('NOAA:17280')$catch_age_evidence, fixed = TRUE),
+  grepl('since 2013', lookup('NOAA:17281')$catch_age_evidence, fixed = TRUE),
+  grepl('no ages from the recreational fishery', lookup('NOAA:17282')$catch_age_evidence, fixed = TRUE),
+  all(grepl('not', reviewed_noaa_cod_units$output_evidence, fixed = TRUE)),
+  lookup('NOAA:12805')$matched_stock_id == 'ck_nefsc_trac_cert_morhua_gb',
+  lookup('NOAA:12805')$match_status == 'matched',
+  lookup('NOAA:12805')$screening_status == 'screened',
+  lookup('NOAA:12805')$eligibility == 'unresolved',
+  grepl('no assessment model', lookup('NOAA:12805')$catch_age_evidence, fixed = TRUE),
+  grepl('2023 TRAC document is an indicator-based status report', lookup('NOAA:12805')$decision_reason, fixed = TRUE)
+)
 reviewed_noaa <- register[match(matched_noaa_review, register$candidate_id), , drop = FALSE]
 stopifnot(
   !anyNA(reviewed_noaa$candidate_id),
@@ -208,12 +228,12 @@ stopifnot(sum(dfo_progress$inventory_rows) == 199L,
   sum(dfo_progress$eligible) == 13L,
   sum(dfo_progress$eligibility_unresolved) == 87L)
 noaa_progress <- progress[progress$organization == 'NOAA', , drop = FALSE]
-stopifnot(sum(noaa_progress$new) == 23L, sum(noaa_progress$eligible_new) == 13L,
-  sum(noaa_progress$ambiguous) == 2L, sum(noaa_progress$identity_unreviewed) == 380L,
+stopifnot(sum(noaa_progress$new) == 26L, sum(noaa_progress$eligible_new) == 13L,
+  sum(noaa_progress$ambiguous) == 2L, sum(noaa_progress$identity_unreviewed) == 376L,
   sum(noaa_progress$eligible) == 27L, sum(noaa_progress$excluded) == 51L,
   sum(noaa_progress$eligibility_unresolved) == 354L,
-  sum(noaa_progress$screening_complete) == 87L,
-  sum(noaa_progress$screening_not_started) == 345L)
+  sum(noaa_progress$screening_complete) == 91L,
+  sum(noaa_progress$screening_not_started) == 341L)
 for (org in unique(register$organization)) {
   stopifnot(sum(progress$inventory_rows[progress$organization == org]) == sum(register$organization == org),
     sum(progress$excluded[progress$organization == org]) == sum(register$organization == org & register$eligibility == 'ineligible'),
@@ -647,11 +667,11 @@ stopifnot(
   grepl('numeric age inputs', ccgom_yellowtail$decision_reason, fixed = TRUE),
   file.exists(file.path('analysis', 'comp_assessments', 'discovery', 'source_reviews',
     'noaa_yellowtail_ccgom_2025.md')),
-  sum(noaa_progress$new) == 23L,
-  sum(noaa_progress$identity_unreviewed) == 380L,
+  sum(noaa_progress$new) == 26L,
+  sum(noaa_progress$identity_unreviewed) == 376L,
   sum(noaa_progress$eligibility_unresolved) == 354L,
-  sum(noaa_progress$screening_complete) == 87L,
-  sum(noaa_progress$screening_not_started) == 345L
+  sum(noaa_progress$screening_complete) == 91L,
+  sum(noaa_progress$screening_not_started) == 341L
 )
 cat('NOAA Cape Cod/Gulf of Maine yellowtail identity and source-screening checks passed.\n')
 icelandic_cod <- lookup('ICES:cod.27.5a')
