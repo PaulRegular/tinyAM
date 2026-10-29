@@ -8,6 +8,7 @@
 "candidate:dfo_herring_4rsw_fall","","dfo_herring_4rsw_fall","new","unresolved","screened","not_started","DFO","Newfoundland and Labrador","DFO:Newfoundland and Labrador:Atlantic Herring - NAFO 4R (Fall Spawner)",1
 "candidate:dfo_herring_4rsw_spring","","dfo_herring_4rsw_spring","new","unresolved","screened","not_started","DFO","Newfoundland and Labrador","DFO:Newfoundland and Labrador:Atlantic Herring - NAFO 4R (Spring Spawner)",1
 "candidate:dfo_quebec_4s_herring","","dfo_quebec_4s_herring","ambiguous","ineligible","screened","not_started","DFO","Quebec","DFO:Quebec:Atlantic Herring - Herring Fishing Area 15",1
+"candidate:dfo_silver_hake_4vwx","","dfo_silver_hake_4vwx","new","ineligible","screened","not_started","DFO","Maritimes","DFO:Maritimes:Silver Hake - NAFO 4VWX",1
 "candidate:dfo_western_component_pollock_4xopqrs5","","dfo_western_component_pollock_4xopqrs5","new","eligible","screened","not_started","DFO","Maritimes","DFO:Maritimes:Pollock - NAFO 4X5 (Western Component)",1
 "candidate:dfo_witch_flounder_3no","","dfo_witch_flounder_3no","new","ineligible","screened","not_started","DFO","Newfoundland and Labrador","DFO:Newfoundland and Labrador:Witch Flounder - NAFO 3NO",1
 "candidate:dfo_yellowtail_flounder_3lno","","dfo_yellowtail_flounder_3lno","new","ineligible","screened","not_started","DFO","Newfoundland and Labrador","DFO:Newfoundland and Labrador:Yellowtail Flounder - NAFO 3LNO",1
@@ -34,6 +35,8 @@
 "candidate:noaa_pacific_rex_sole","","noaa_pacific_rex_sole","new","eligible","screened","not_started","NOAA","NWFSC / SWFSC","NOAA:10059",1
 "candidate:noaa_pollock_bogoslof","","noaa_pollock_bogoslof","new","ineligible","screened","not_started","NOAA","AFSC","NOAA:10512",1
 "candidate:noaa_pollock_southeast_outside","","noaa_pollock_southeast_outside","new","ineligible","screened","not_started","NOAA","AFSC","NOAA:10514",1
+"candidate:noaa_silver_hake_northern","","noaa_silver_hake_northern","new","ineligible","screened","not_started","NOAA","NEFSC","NOAA:10521",1
+"candidate:noaa_silver_hake_southern","","noaa_silver_hake_southern","new","ineligible","screened","not_started","NOAA","NEFSC","NOAA:10522",1
 "candidate:noaa_south_atlantic_gray_triggerfish","","noaa_south_atlantic_gray_triggerfish","new","unresolved","screened","not_started","NOAA","SEFSC","NOAA:10063",1
 "candidate:noaa_south_atlantic_red_porgy","","noaa_south_atlantic_red_porgy","new","eligible","screened","not_started","NOAA","SEFSC","NOAA:10100",1
 "candidate:noaa_south_atlantic_red_snapper","","noaa_south_atlantic_red_snapper","new","eligible","screened","not_started","NOAA","SEFSC","NOAA:10231",1

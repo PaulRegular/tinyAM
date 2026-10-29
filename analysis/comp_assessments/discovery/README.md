@@ -54,17 +54,18 @@ Snapshot dated 2026-10-29: the register contains 905 source-list entries. These 
 
 | Organization | Entries | Matched | Provisional new | Ambiguous | Identity unreviewed | Eligible | Excluded | Eligibility unresolved | Screened | Not started |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| DFO | 199 | 20 | 29 | 5 | 145 | 19 | 118 | 62 | 152 | 47 |
+| DFO | 199 | 20 | 30 | 5 | 144 | 19 | 119 | 61 | 153 | 46 |
 | ICES | 274 | 57 | 20 | 2 | 195 | 45 | 52 | 177 | 111 | 163 |
-| NOAA | 432 | 28 | 66 | 3 | 335 | 43 | 70 | 319 | 132 | 300 |
-| Total | 905 | 105 | 115 | 10 | 675 | 107 | 240 | 558 | 395 | 510 |
+| NOAA | 432 | 28 | 68 | 3 | 333 | 43 | 72 | 317 | 134 | 298 |
+| Total | 905 | 105 | 118 | 10 | 672 | 107 | 243 | 555 | 398 | 507 |
 
 These are inventory-entry counts. The linked-unit crosswalk in
-`inventory_units.csv` currently represents 140 distinct units across 159
-entries: 98 canonical stock IDs and 42 provisional candidate-unit IDs. Of the
-42 candidate units, 12 are screened eligible, 22 are screened ineligible, and 8
-remain eligibility-unresolved. Two ineligible units have ambiguous or mixed identity status.
-The other 746 entries do not yet have an explicit unit crosswalk. Regional
+`inventory_units.csv` currently represents 143 distinct units across 162
+entries: 98 canonical stock IDs and 45 provisional candidate-unit IDs. Of the
+45 candidate units, 12 are screened eligible, 25 are screened ineligible, and 8
+remain eligibility-unresolved. Two ineligible units have ambiguous or mixed
+identity status. The other 743 entries do not yet have an explicit unit
+crosswalk. Regional
 counts by organization are available in `inventory_progress.csv`. These are
 provisional audit counts, not the selected expansion batch.
 
@@ -364,3 +365,5 @@ are screened ineligible for the age-disaggregated candidate pool, not as
 claims that all supporting age data are absent. See
 `source_reviews/noaa_bogoslof_pollock_2024.md` and
 `source_reviews/noaa_pollock_southeast_outside_2024.md`.
+
+NOAA's northern and southern silver hake entries (Stock SMART 10521 and 10522) are distinct U.S. management units. Their latest detailed update is the 2023 empirical catch-and-survey-biomass assessment through 2022; survey numbers-at-age appear in older documentation but are not current model likelihood inputs, and fishery catch-at-age and population-at-age outputs were not verified. The DFO 4VWX Scotian Shelf silver hake record is kept separate; its latest 2025 update (published in 2026) uses a logistic biomass-dynamics method. All three are screened ineligible for the age-disaggregated candidate set. Historical 2012 DFO framework and assessment PDFs are cached with hashes; direct local retrieval of current NOAA/DFO PDFs was blocked, so only complete source files are retained. See `source_reviews/noaa_silver_hake_2023.md` and `source_reviews/dfo_silver_hake_4vwx_2025.md`.
