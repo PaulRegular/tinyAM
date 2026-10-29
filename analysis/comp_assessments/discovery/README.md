@@ -37,16 +37,18 @@ DFO Atlantic halibut in 3NOPs4VWX5Zc is a distinct DFO management unit from the 
 
 DFO Atlantic halibut 4RST is a separate provisional new unit. Its 2024 assessment (reviewed in 2025) is classified as a delay-difference model and reports aggregate exploitable biomass, fishing mortality and recruitment; it is ineligible for the age-indexed candidate set. The separate 2025/028 research document reviews 2022 data and describes otoliths aged for growth, not an age-indexed likelihood for the 2024 assessment. The 2024 SAR's assessment-date field conflicts with its title and method-change description; see `source_reviews/dfo_atlantic_halibut_4rst_2024.md`.
 
+DFO Greenland halibut 4RST is a separate provisional new unit. The latest detailed assessment is index-based and the latest 2025 update reports aggregate biomass above 40 cm; age and maturity analyses are supporting biology, not age-specific assessment inputs. It is ineligible for the age-disaggregated candidate set. Assessment-date fields differ across the 2025 and 2026 reports; see `source_reviews/dfo_greenland_halibut_4rst_2025_update.md`.
+
 ## Inventory progress snapshot
 
 Snapshot dated 2026-10-29: the register contains 905 source-list entries. These are not deduplicated stock units.
 
 | Organization | Entries | Matched | Provisional new | Ambiguous | Identity unreviewed | Eligible | Excluded | Eligibility unresolved | Screened | Not started |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| DFO | 199 | 15 | 15 | 2 | 167 | 15 | 107 | 77 | 130 | 69 |
+| DFO | 199 | 15 | 16 | 2 | 166 | 15 | 108 | 76 | 131 | 68 |
 | ICES | 274 | 57 | 18 | 2 | 197 | 45 | 51 | 178 | 109 | 165 |
 | NOAA | 432 | 28 | 50 | 3 | 351 | 37 | 63 | 332 | 116 | 316 |
-| Total | 905 | 100 | 83 | 7 | 715 | 97 | 221 | 587 | 355 | 550 |
+| Total | 905 | 100 | 84 | 7 | 714 | 97 | 222 | 586 | 356 | 549 |
 
 NOAA Stock SMART 10573 and the DFO Pacific Sardine management entry are
 crosswalked to one northern-subpopulation unit. The 2025 NOAA update confirms
