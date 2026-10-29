@@ -119,7 +119,7 @@ for (j in rows[-1L]) {
     'inputs or outputs. Ineligible for the age-structured candidate set.'
   )
   x$notes[j] <- paste(
-    'NOAA Stock SMART metadata describe a', x$assessment_year[j], 'DB-SRA',
+    'NOAA Stock SMART metadata describe a', x$inventory_assessment_year[j], 'DB-SRA',
     'using data through 2016. The 2026',
     'harvest-specification analysis cites this assessment for 2027-28. See',
     'discovery/source_reviews/noaa_starry_flounder.md.'
