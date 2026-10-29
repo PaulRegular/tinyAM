@@ -208,12 +208,12 @@ stopifnot(sum(dfo_progress$inventory_rows) == 199L,
   sum(dfo_progress$eligible) == 8L,
   sum(dfo_progress$eligibility_unresolved) == 92L)
 noaa_progress <- progress[progress$organization == 'NOAA', , drop = FALSE]
-stopifnot(sum(noaa_progress$new) == 18L, sum(noaa_progress$eligible_new) == 9L,
-  sum(noaa_progress$ambiguous) == 2L, sum(noaa_progress$identity_unreviewed) == 385L,
-  sum(noaa_progress$eligible) == 23L, sum(noaa_progress$excluded) == 51L,
-  sum(noaa_progress$eligibility_unresolved) == 358L,
-  sum(noaa_progress$screening_complete) == 82L,
-  sum(noaa_progress$screening_not_started) == 350L)
+stopifnot(sum(noaa_progress$new) == 19L, sum(noaa_progress$eligible_new) == 10L,
+  sum(noaa_progress$ambiguous) == 2L, sum(noaa_progress$identity_unreviewed) == 384L,
+  sum(noaa_progress$eligible) == 24L, sum(noaa_progress$excluded) == 51L,
+  sum(noaa_progress$eligibility_unresolved) == 357L,
+  sum(noaa_progress$screening_complete) == 83L,
+  sum(noaa_progress$screening_not_started) == 349L)
 for (org in unique(register$organization)) {
   stopifnot(sum(progress$inventory_rows[progress$organization == org]) == sum(register$organization == org),
     sum(progress$excluded[progress$organization == org]) == sum(register$organization == org & register$eligibility == 'ineligible'),
@@ -545,3 +545,26 @@ stopifnot(
     'source_reviews', 'noaa_west_coast_sablefish_2025.md'))
 )
 cat('NOAA West Coast Sablefish identity and source-screening checks passed.\n')
+
+yelloweye <- lookup('NOAA:10426')
+stopifnot(
+  yelloweye$scientific_name == 'Sebastes ruberrimus',
+  yelloweye$assessment_area == 'Pacific Coast',
+  yelloweye$inventory_assessment_year == 2025L,
+  yelloweye$match_status == 'new', is.na(yelloweye$matched_stock_id),
+  yelloweye$screening_status == 'screened',
+  yelloweye$eligibility == 'eligible',
+  yelloweye$import_status == 'not_started',
+  grepl('seven fishery fleets', yelloweye$catch_age_evidence, fixed = TRUE),
+  grepl('conditional age-at-length', yelloweye$catch_age_evidence, fixed = TRUE),
+  grepl('direct age-specific', yelloweye$survey_age_evidence, fixed = TRUE),
+  grepl('growth curve', yelloweye$weights_evidence, fixed = TRUE),
+  grepl('0.044 per year', yelloweye$mortality_evidence, fixed = TRUE),
+  grepl('January', yelloweye$timing_evidence, fixed = TRUE),
+  grepl('477.63 billion eggs', yelloweye$output_evidence, fixed = TRUE),
+  grepl('two areas', yelloweye$notes, fixed = TRUE),
+  grepl('3.30.23.2', yelloweye$notes, fixed = TRUE),
+  file.exists(file.path('analysis', 'comp_assessments', 'discovery',
+    'source_reviews', 'noaa_west_coast_yelloweye_2025.md'))
+)
+cat('NOAA West Coast Yelloweye identity and source-screening checks passed.\n')
