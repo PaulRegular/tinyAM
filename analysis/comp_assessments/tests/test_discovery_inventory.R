@@ -202,11 +202,11 @@ dfo_progress <- progress[progress$organization == 'DFO', , drop = FALSE]
 stopifnot(sum(dfo_progress$inventory_rows) == 199L,
   sum(dfo_progress$new) == 4L,
   sum(dfo_progress$identity_unreviewed) == 180L,
-  sum(dfo_progress$screening_complete) == 110L,
-  sum(dfo_progress$screening_not_started) == 89L,
+  sum(dfo_progress$screening_complete) == 112L,
+  sum(dfo_progress$screening_not_started) == 87L,
   sum(dfo_progress$excluded) == 99L,
-  sum(dfo_progress$eligible) == 6L,
-  sum(dfo_progress$eligibility_unresolved) == 94L)
+  sum(dfo_progress$eligible) == 8L,
+  sum(dfo_progress$eligibility_unresolved) == 92L)
 noaa_progress <- progress[progress$organization == 'NOAA', , drop = FALSE]
 stopifnot(sum(noaa_progress$new) == 12L, sum(noaa_progress$eligible_new) == 8L,
   sum(noaa_progress$identity_unreviewed) == 392L,
@@ -447,3 +447,26 @@ stopifnot(
   file.exists(file.path('analysis', 'comp_assessments', 'source_reviews', 'dfo_canary_bc.md'))
 )
 cat('B.C. Canary Rockfish identity and source-screening checks passed.\n')
+
+dfo_herring <- register[match(c(
+  'DFO:Gulf:Atlantic Herring - NAFO 4T (Spring Spawner)',
+  'DFO:Gulf:Atlantic Herring - NAFO 4T (Fall Spawner)'), register$candidate_id), , drop = FALSE]
+stopifnot(
+  nrow(dfo_herring) == 2L,
+  all(dfo_herring$scientific_name == 'Clupea harengus'),
+  identical(dfo_herring$matched_stock_id, c(
+    'dfo_herring_4tvn_spring', 'ck_dfo_gsl_harengus_4t_fall')),
+  all(dfo_herring$match_status == 'matched'),
+  all(dfo_herring$screening_status == 'screened'),
+  all(dfo_herring$eligibility == 'eligible'),
+  all(dfo_herring$import_status == 'imported'),
+  grepl('thousands of fish', dfo_herring$survey_age_evidence[1L], fixed = TRUE),
+  grepl('duplicat', dfo_herring$catch_age_evidence[2L]),
+  grepl('2026', dfo_herring$decision_reason[1L], fixed = TRUE),
+  grepl('2026 advisory', dfo_herring$decision_reason[2L], fixed = TRUE),
+  file.exists(file.path('analysis', 'comp_assessments', 'source_reviews',
+    'dfo_herring_4tvn_spring.md')),
+  file.exists(file.path('analysis', 'comp_assessments', 'source_reviews',
+    'dfo_herring_4tvn_fall.md'))
+)
+cat('Southern Gulf herring identity and source-screening checks passed.\n')
