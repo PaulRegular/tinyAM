@@ -56,15 +56,15 @@ Snapshot dated 2026-10-29: the register contains 905 source-list entries. These 
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 29 | 5 | 145 | 19 | 118 | 62 | 152 | 47 |
 | ICES | 274 | 57 | 20 | 2 | 195 | 45 | 52 | 177 | 111 | 163 |
-| NOAA | 432 | 28 | 62 | 3 | 339 | 42 | 67 | 323 | 128 | 304 |
-| Total | 905 | 105 | 111 | 10 | 679 | 106 | 237 | 562 | 391 | 514 |
+| NOAA | 432 | 28 | 63 | 3 | 338 | 42 | 68 | 322 | 129 | 303 |
+| Total | 905 | 105 | 112 | 10 | 678 | 106 | 238 | 561 | 392 | 513 |
 
 These are inventory-entry counts. The linked-unit crosswalk in
-`inventory_units.csv` currently represents 136 distinct units across 155
-entries: 98 canonical stock IDs and 38 provisional candidate-unit IDs. Of the
-38 candidate units, 11 are screened eligible, 19 are screened ineligible, and 8
+`inventory_units.csv` currently represents 137 distinct units across 156
+entries: 98 canonical stock IDs and 39 provisional candidate-unit IDs. Of the
+39 candidate units, 11 are screened eligible, 20 are screened ineligible, and 8
 remain eligibility-unresolved. Two ineligible units have ambiguous or mixed identity status.
-The other 750 entries do not yet have an explicit unit crosswalk. Regional
+The other 749 entries do not yet have an explicit unit crosswalk. Regional
 counts by organization are available in `inventory_progress.csv`. These are
 provisional audit counts, not the selected expansion batch.
 
@@ -330,3 +330,14 @@ candidate, not a canonical import. The cached Stock SMART metadata conflicts
 with the detailed current report, so the run-specific report and adoption
 record determine eligibility. See
 `source_reviews/noaa_pacific_mackerel_2025.md`.
+
+
+NOAA Stock SMART 10168 is the Eastern Pacific yellowfin tuna unit assessed
+by IATTC in the 2025 benchmark using data through 2023. The integrated model
+is age-structured internally but fits catches, aggregate indices and length
+compositions; the age-at-length information informs external growth, not
+fishery-specific catch-age observations. It is ineligible for the current
+age-disaggregated input set. The report gives probabilistic status results,
+while run-matched numeric N/F-at-age outputs were not recovered. IATTC
+restricts redistribution of generated run files; only the public report is
+cached. See `source_reviews/noaa_eastern_pacific_yellowfin_2025.md`.
