@@ -208,12 +208,12 @@ stopifnot(sum(dfo_progress$inventory_rows) == 199L,
   sum(dfo_progress$eligible) == 8L,
   sum(dfo_progress$eligibility_unresolved) == 92L)
 noaa_progress <- progress[progress$organization == 'NOAA', , drop = FALSE]
-stopifnot(sum(noaa_progress$new) == 20L, sum(noaa_progress$eligible_new) == 11L,
-  sum(noaa_progress$ambiguous) == 2L, sum(noaa_progress$identity_unreviewed) == 383L,
-  sum(noaa_progress$eligible) == 25L, sum(noaa_progress$excluded) == 51L,
-  sum(noaa_progress$eligibility_unresolved) == 356L,
-  sum(noaa_progress$screening_complete) == 84L,
-  sum(noaa_progress$screening_not_started) == 348L)
+stopifnot(sum(noaa_progress$new) == 21L, sum(noaa_progress$eligible_new) == 12L,
+  sum(noaa_progress$ambiguous) == 2L, sum(noaa_progress$identity_unreviewed) == 382L,
+  sum(noaa_progress$eligible) == 26L, sum(noaa_progress$excluded) == 51L,
+  sum(noaa_progress$eligibility_unresolved) == 355L,
+  sum(noaa_progress$screening_complete) == 85L,
+  sum(noaa_progress$screening_not_started) == 347L)
 for (org in unique(register$organization)) {
   stopifnot(sum(progress$inventory_rows[progress$organization == org]) == sum(register$organization == org),
     sum(progress$excluded[progress$organization == org]) == sum(register$organization == org & register$eligibility == 'ineligible'),
@@ -589,3 +589,23 @@ stopifnot(
     'source_reviews', 'noaa_yellowtail_north_2025.md'))
 )
 cat('NOAA northern Yellowtail Rockfish identity and source-screening checks passed.\n')
+
+rougheye <- lookup('NOAA:14516')
+stopifnot(
+  identical(rougheye$scientific_name, 'Sebastes aleutianus; Sebastes melanostictus'),
+  rougheye$assessment_area == 'U.S. West Coast',
+  rougheye$inventory_assessment_year == 2025L,
+  rougheye$match_status == 'new', is.na(rougheye$matched_stock_id),
+  rougheye$screening_status == 'screened',
+  rougheye$eligibility == 'eligible',
+  rougheye$import_status == 'not_started',
+  grepl('six fisheries', rougheye$catch_age_evidence, fixed = TRUE),
+  grepl('conditional age-at-length', rougheye$catch_age_evidence, fixed = TRUE),
+  grepl('Triennial, Alaska slope', rougheye$survey_age_evidence, fixed = TRUE),
+  grepl('Male natural mortality is fixed at 0.036', rougheye$mortality_evidence, fixed = TRUE),
+  grepl('3.30.23.2', rougheye$notes, fixed = TRUE),
+  grepl('not be counted as two cases', rougheye$decision_reason, fixed = TRUE),
+  file.exists(file.path('analysis', 'comp_assessments', 'discovery',
+    'source_reviews', 'noaa_rougheye_blackspotted_2025.md'))
+)
+cat('NOAA Rougheye/Blackspotted identity and source-screening checks passed.\n')
