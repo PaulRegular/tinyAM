@@ -692,3 +692,34 @@ stopifnot(
       'dfo_haddock_4x5y.md', 'joint_hake_coastal.md'))))
 )
 cat('Matched DFO identity and source-screening checks passed.\n')
+nwwg_match_ids <- c('ICES:pok.27.5a', 'ICES:had.27.5a', 'ICES:cod.27.5b1',
+  'ICES:had.27.5b', 'ICES:pok.27.5b')
+nwwg_matches <- register[match(nwwg_match_ids, register$candidate_id), , drop = FALSE]
+ices_progress <- progress[progress$organization == 'ICES', , drop = FALSE]
+stopifnot(
+  !anyNA(nwwg_matches$candidate_id),
+  identical(nwwg_matches$matched_stock_id, c('ck_ices_nwwg_virens_fa5a',
+    'ices_haddock_iceland', 'ck_ices_nwwg_morhua_fapl5b1',
+    'ck_ices_nwwg_aeglefinus_fa5b', 'ck_ices_nwwg_virens_fa5b')),
+  all(nwwg_matches$match_status == 'matched'),
+  all(nwwg_matches$screening_status == 'screened'),
+  all(nwwg_matches$eligibility == 'eligible'),
+  all(nwwg_matches$import_status == 'imported'),
+  grepl('3-14+', nwwg_matches$catch_age_evidence[1], fixed = TRUE),
+  grepl('IS-SMB', nwwg_matches$survey_age_evidence[2], fixed = TRUE),
+  grepl('1959-2025', nwwg_matches$catch_age_evidence[3], fixed = TRUE),
+  grepl('official 2025 SAM production run', nwwg_matches$decision_reason[4], fixed = TRUE),
+  grepl('1961-2025', nwwg_matches$catch_age_evidence[5], fixed = TRUE),
+  all(file.exists(file.path('analysis', 'comp_assessments', 'source_reviews',
+    c('ices_saithe_iceland_2026.md', 'ices_haddock_iceland_2026.md',
+      'ices_cod_faroe_plateau_2025.md', 'ices_haddock_faroe_2025.md',
+      'ices_saithe_faroe_2025.md')))),
+  sum(ices_progress$inventory_rows) == 274L,
+  sum(ices_progress$matched) == 57L,
+  sum(ices_progress$eligible) == 22L,
+  sum(ices_progress$excluded) == 45L,
+  sum(ices_progress$eligibility_unresolved) == 207L,
+  sum(ices_progress$screening_complete) == 73L,
+  sum(ices_progress$screening_not_started) == 201L
+)
+cat('Matched Iceland/Faroe ICES identity and source-screening checks passed.\n')
