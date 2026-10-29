@@ -208,12 +208,12 @@ stopifnot(sum(dfo_progress$inventory_rows) == 199L,
   sum(dfo_progress$eligible) == 8L,
   sum(dfo_progress$eligibility_unresolved) == 92L)
 noaa_progress <- progress[progress$organization == 'NOAA', , drop = FALSE]
-stopifnot(sum(noaa_progress$new) == 12L, sum(noaa_progress$eligible_new) == 8L,
-  sum(noaa_progress$identity_unreviewed) == 392L,
-  sum(noaa_progress$eligible) == 22L, sum(noaa_progress$excluded) == 46L,
-  sum(noaa_progress$eligibility_unresolved) == 364L,
-  sum(noaa_progress$screening_complete) == 75L,
-  sum(noaa_progress$screening_not_started) == 357L)
+stopifnot(sum(noaa_progress$new) == 13L, sum(noaa_progress$eligible_new) == 8L,
+  sum(noaa_progress$identity_unreviewed) == 391L,
+  sum(noaa_progress$eligible) == 22L, sum(noaa_progress$excluded) == 47L,
+  sum(noaa_progress$eligibility_unresolved) == 363L,
+  sum(noaa_progress$screening_complete) == 76L,
+  sum(noaa_progress$screening_not_started) == 356L)
 for (org in unique(register$organization)) {
   stopifnot(sum(progress$inventory_rows[progress$organization == org]) == sum(register$organization == org),
     sum(progress$excluded[progress$organization == org]) == sum(register$organization == org & register$eligibility == 'ineligible'),
@@ -470,3 +470,20 @@ stopifnot(
     'dfo_herring_4tvn_fall.md'))
 )
 cat('Southern Gulf herring identity and source-screening checks passed.\n')
+
+goa_dover <- lookup('NOAA:10021')
+stopifnot(
+  goa_dover$scientific_name == 'Microstomus pacificus',
+  goa_dover$match_status == 'new', is.na(goa_dover$matched_stock_id),
+  goa_dover$screening_status == 'screened',
+  goa_dover$eligibility == 'ineligible',
+  goa_dover$import_status == 'not_started',
+  grepl('no fishery age composition', goa_dover$catch_age_evidence, fixed = TRUE),
+  grepl('conditional age-at-length', goa_dover$survey_age_evidence, fixed = TRUE),
+  grepl('survey month 6', goa_dover$timing_evidence, fixed = TRUE),
+  grepl('numbers-at-age time series', goa_dover$output_evidence, fixed = TRUE),
+  grepl('Model 19.3.1', goa_dover$decision_reason, fixed = TRUE),
+  file.exists(file.path('analysis', 'comp_assessments', 'discovery',
+    'source_reviews', 'noaa_goa_dover_sole.md'))
+)
+cat('NOAA GOA Dover sole source-screening checks passed.\n')
