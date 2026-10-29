@@ -722,8 +722,8 @@ stopifnot(
   sum(ices_progress$eligible) == 37L,
   sum(ices_progress$excluded) == 46L,
   sum(ices_progress$eligibility_unresolved) == 191L,
-  sum(ices_progress$screening_complete) == 92L,
-  sum(ices_progress$screening_not_started) == 182L
+  sum(ices_progress$screening_complete) == 93L,
+  sum(ices_progress$screening_not_started) == 181L
 )
 cat('Matched Iceland/Faroe ICES identity and source-screening checks passed.\n')
 wgcse_distinct <- register[match(c('ICES:ple.27.7h-k', 'ICES:had.27.7a',
@@ -795,8 +795,8 @@ stopifnot(
   sum(ices_progress$eligible) == 37L,
   sum(ices_progress$excluded) == 46L,
   sum(ices_progress$eligibility_unresolved) == 191L,
-  sum(ices_progress$screening_complete) == 92L,
-  sum(ices_progress$screening_not_started) == 182L
+  sum(ices_progress$screening_complete) == 93L,
+  sum(ices_progress$screening_not_started) == 181L
 )
 cat('Matched ICES Division 7.d plaice source-screening checks passed.\n')
 northeast_arctic_haddock <- lookup('ICES:had.27.1-2')
@@ -818,8 +818,8 @@ stopifnot(
   sum(ices_progress$eligible) == 37L,
   sum(ices_progress$excluded) == 46L,
   sum(ices_progress$eligibility_unresolved) == 191L,
-  sum(ices_progress$screening_complete) == 92L,
-  sum(ices_progress$screening_not_started) == 182L
+  sum(ices_progress$screening_complete) == 93L,
+  sum(ices_progress$screening_not_started) == 181L
 )
 cat('Matched ICES Northeast Arctic haddock source-screening checks passed.\n')
 norpout <- lookup('ICES:nop.27.3a4')
@@ -841,8 +841,8 @@ stopifnot(
   sum(ices_progress$eligible) == 37L,
   sum(ices_progress$excluded) == 46L,
   sum(ices_progress$eligibility_unresolved) == 191L,
-  sum(ices_progress$screening_complete) == 92L,
-  sum(ices_progress$screening_not_started) == 182L
+  sum(ices_progress$screening_complete) == 93L,
+  sum(ices_progress$screening_not_started) == 181L
 )
 cat('Matched ICES North Sea Norway pout source-screening checks passed.\n')
 nssh <- lookup('ICES:her.27.1-24a514a')
@@ -864,8 +864,8 @@ stopifnot(
   sum(ices_progress$eligible) == 37L,
   sum(ices_progress$excluded) == 46L,
   sum(ices_progress$eligibility_unresolved) == 191L,
-  sum(ices_progress$screening_complete) == 92L,
-  sum(ices_progress$screening_not_started) == 182L
+  sum(ices_progress$screening_complete) == 93L,
+  sum(ices_progress$screening_not_started) == 181L
 )
 cat('Matched ICES Norwegian spring-spawning herring source-screening checks passed.\n')
 golden_redfish <- lookup('ICES:reg.27.1-2')
@@ -887,8 +887,8 @@ stopifnot(
   sum(ices_progress$eligible) == 37L,
   sum(ices_progress$excluded) == 46L,
   sum(ices_progress$eligibility_unresolved) == 191L,
-  sum(ices_progress$screening_complete) == 92L,
-  sum(ices_progress$screening_not_started) == 182L
+  sum(ices_progress$screening_complete) == 93L,
+  sum(ices_progress$screening_not_started) == 181L
 )
 cat('Matched ICES Northeast Arctic golden redfish screening checks passed.\n')
 gulf_riga_herring <- lookup('ICES:her.27.28')
@@ -910,8 +910,8 @@ stopifnot(
   sum(ices_progress$eligible) == 37L,
   sum(ices_progress$excluded) == 46L,
   sum(ices_progress$eligibility_unresolved) == 191L,
-  sum(ices_progress$screening_complete) == 92L,
-  sum(ices_progress$screening_not_started) == 182L
+  sum(ices_progress$screening_complete) == 93L,
+  sum(ices_progress$screening_not_started) == 181L
 )
 cat('Matched ICES Gulf of Riga herring source-screening checks passed.\n')
 sandeel_ids <- c('ICES:san.sa.1r', 'ICES:san.sa.2r', 'ICES:san.sa.3r')
@@ -936,8 +936,8 @@ stopifnot(
   sum(ices_progress$eligible) == 37L,
   sum(ices_progress$excluded) == 46L,
   sum(ices_progress$eligibility_unresolved) == 191L,
-  sum(ices_progress$screening_complete) == 92L,
-  sum(ices_progress$screening_not_started) == 182L
+  sum(ices_progress$screening_complete) == 93L,
+  sum(ices_progress$screening_not_started) == 181L
 )
 cat('Matched ICES Sandeel Areas 1r-3r source-screening checks passed.\n')
 area4_sandeel <- lookup('ICES:san.sa.4')
@@ -959,8 +959,8 @@ stopifnot(
   sum(ices_progress$eligible) == 37L,
   sum(ices_progress$excluded) == 46L,
   sum(ices_progress$eligibility_unresolved) == 191L,
-  sum(ices_progress$screening_complete) == 92L,
-  sum(ices_progress$screening_not_started) == 182L
+  sum(ices_progress$screening_complete) == 93L,
+  sum(ices_progress$screening_not_started) == 181L
 )
 cat('Matched ICES Sandeel Area 4 source-screening checks passed.\n')
 north_sea_sole <- lookup('ICES:sol.27.4')
@@ -982,8 +982,8 @@ stopifnot(
   sum(ices_progress$eligible) == 37L,
   sum(ices_progress$excluded) == 46L,
   sum(ices_progress$eligibility_unresolved) == 191L,
-  sum(ices_progress$screening_complete) == 92L,
-  sum(ices_progress$screening_not_started) == 182L
+  sum(ices_progress$screening_complete) == 93L,
+  sum(ices_progress$screening_not_started) == 181L
 )
 cat('Matched ICES North Sea sole source-screening checks passed.\n')
 baltic_sole <- lookup('ICES:sol.27.20-24')
@@ -1005,8 +1005,8 @@ stopifnot(
   sum(ices_progress$eligible) == 37L,
   sum(ices_progress$excluded) == 46L,
   sum(ices_progress$eligibility_unresolved) == 191L,
-  sum(ices_progress$screening_complete) == 92L,
-  sum(ices_progress$screening_not_started) == 182L
+  sum(ices_progress$screening_complete) == 93L,
+  sum(ices_progress$screening_not_started) == 181L
 )
 cat('Matched ICES Baltic sole source-screening checks passed.\n')
 blue_whiting <- lookup('ICES:whb.27.1-91214')
@@ -1028,8 +1028,8 @@ stopifnot(
   sum(ices_progress$eligible) == 37L,
   sum(ices_progress$excluded) == 46L,
   sum(ices_progress$eligibility_unresolved) == 191L,
-  sum(ices_progress$screening_complete) == 92L,
-  sum(ices_progress$screening_not_started) == 182L
+  sum(ices_progress$screening_complete) == 93L,
+  sum(ices_progress$screening_not_started) == 181L
 )
 cat('Matched ICES blue whiting source-screening checks passed.\n')
 icelandic_summer_herring <- lookup('ICES:her.27.5a')
@@ -1051,8 +1051,8 @@ stopifnot(
   sum(ices_progress$eligible) == 37L,
   sum(ices_progress$excluded) == 46L,
   sum(ices_progress$eligibility_unresolved) == 191L,
-  sum(ices_progress$screening_complete) == 92L,
-  sum(ices_progress$screening_not_started) == 182L
+  sum(ices_progress$screening_complete) == 93L,
+  sum(ices_progress$screening_not_started) == 181L
 )
 cat('Matched Icelandic summer-spawning herring source-screening checks passed.\n')
 baltic_sprat <- lookup('ICES:spr.27.22-32')
@@ -1074,8 +1074,8 @@ stopifnot(
   sum(ices_progress$eligible) == 37L,
   sum(ices_progress$excluded) == 46L,
   sum(ices_progress$eligibility_unresolved) == 191L,
-  sum(ices_progress$screening_complete) == 92L,
-  sum(ices_progress$screening_not_started) == 182L
+  sum(ices_progress$screening_complete) == 93L,
+  sum(ices_progress$screening_not_started) == 181L
 )
 cat('Matched ICES Baltic sprat source-screening checks passed.\n')
 southern_horse_mackerel <- lookup('ICES:hom.27.9a')
@@ -1098,8 +1098,8 @@ stopifnot(
   sum(ices_progress$eligible) == 37L,
   sum(ices_progress$excluded) == 46L,
   sum(ices_progress$eligibility_unresolved) == 191L,
-  sum(ices_progress$screening_complete) == 92L,
-  sum(ices_progress$screening_not_started) == 182L
+  sum(ices_progress$screening_complete) == 93L,
+  sum(ices_progress$screening_not_started) == 181L
 )
 cat('Matched ICES Southern horse mackerel source-screening checks passed.\n')
 northeast_arctic_cod <- lookup('ICES:cod.27.1-2')
@@ -1121,8 +1121,8 @@ stopifnot(
   sum(ices_progress$eligible) == 37L,
   sum(ices_progress$excluded) == 46L,
   sum(ices_progress$eligibility_unresolved) == 191L,
-  sum(ices_progress$screening_complete) == 92L,
-  sum(ices_progress$screening_not_started) == 182L
+  sum(ices_progress$screening_complete) == 93L,
+  sum(ices_progress$screening_not_started) == 181L
 )
 cat('Matched ICES Northeast Arctic cod source-screening checks passed.\n')
 sole_7d <- lookup('ICES:sol.27.7d')
@@ -1145,8 +1145,8 @@ stopifnot(
   sum(ices_progress$eligible) == 37L,
   sum(ices_progress$excluded) == 46L,
   sum(ices_progress$eligibility_unresolved) == 191L,
-  sum(ices_progress$screening_complete) == 92L,
-  sum(ices_progress$screening_not_started) == 182L
+  sum(ices_progress$screening_complete) == 93L,
+  sum(ices_progress$screening_not_started) == 181L
 )
 cat('Matched ICES 7.d sole source-screening checks passed.\n')
 western_baltic_herring <- lookup('ICES:her.27.20-24')
@@ -1168,7 +1168,30 @@ stopifnot(
   sum(ices_progress$eligible) == 37L,
   sum(ices_progress$excluded) == 46L,
   sum(ices_progress$eligibility_unresolved) == 191L,
-  sum(ices_progress$screening_complete) == 92L,
-  sum(ices_progress$screening_not_started) == 182L
+  sum(ices_progress$screening_complete) == 93L,
+  sum(ices_progress$screening_not_started) == 181L
 )
 cat('Matched western Baltic herring source-screening checks passed.\n')
+beaked_redfish <- lookup('ICES:reb.27.1-2')
+ices_progress <- progress[progress$organization == 'ICES', , drop = FALSE]
+stopifnot(
+  nrow(beaked_redfish) == 1L,
+  beaked_redfish$matched_stock_id == 'ck_ices_afwg_mentella_deep_1_2',
+  beaked_redfish$match_status == 'matched',
+  beaked_redfish$screening_status == 'screened',
+  beaked_redfish$eligibility == 'unresolved',
+  beaked_redfish$import_status == 'imported',
+  grepl('1992-2025', beaked_redfish$catch_age_evidence, fixed = TRUE),
+  grepl('year class', beaked_redfish$survey_age_evidence, fixed = TRUE),
+  grepl('0.05 per year', beaked_redfish$mortality_evidence, fixed = TRUE),
+  grepl('JRN-AFWG 2026', beaked_redfish$decision_reason, fixed = TRUE),
+  file.exists(file.path('analysis', 'comp_assessments', 'source_reviews',
+    'ck_ices_afwg_mentella_deep_1_2.md')),
+  sum(ices_progress$matched) == 57L,
+  sum(ices_progress$eligible) == 37L,
+  sum(ices_progress$excluded) == 46L,
+  sum(ices_progress$eligibility_unresolved) == 191L,
+  sum(ices_progress$screening_complete) == 93L,
+  sum(ices_progress$screening_not_started) == 181L
+)
+cat('Matched Northeast Arctic beaked redfish source-screening checks passed.\n')
