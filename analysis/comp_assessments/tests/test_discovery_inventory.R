@@ -719,11 +719,11 @@ stopifnot(
   sum(ices_progress$new) == 15L,
   sum(ices_progress$ambiguous) == 2L,
   sum(ices_progress$identity_unreviewed) == 200L,
-  sum(ices_progress$eligible) == 26L,
+  sum(ices_progress$eligible) == 27L,
   sum(ices_progress$excluded) == 46L,
-  sum(ices_progress$eligibility_unresolved) == 202L,
-  sum(ices_progress$screening_complete) == 78L,
-  sum(ices_progress$screening_not_started) == 196L
+  sum(ices_progress$eligibility_unresolved) == 201L,
+  sum(ices_progress$screening_complete) == 79L,
+  sum(ices_progress$screening_not_started) == 195L
 )
 cat('Matched Iceland/Faroe ICES identity and source-screening checks passed.\n')
 wgcse_distinct <- register[match(c('ICES:ple.27.7h-k', 'ICES:had.27.7a',
@@ -747,9 +747,9 @@ stopifnot(
   sum(ices_progress$new) == 15L,
   sum(ices_progress$ambiguous) == 2L,
   sum(ices_progress$identity_unreviewed) == 200L,
-  sum(ices_progress$eligible) == 26L,
+  sum(ices_progress$eligible) == 27L,
   sum(ices_progress$excluded) == 46L,
-  sum(ices_progress$eligibility_unresolved) == 202L
+  sum(ices_progress$eligibility_unresolved) == 201L
 )
 cat('ICES WGCSE identity reconciliation checks passed.\n')
 dfo_plaice <- lookup('DFO:Gulf:American Plaice - NAFO 4T')
@@ -792,11 +792,11 @@ stopifnot(
   file.exists(file.path('analysis', 'comp_assessments', 'source_reviews',
     'ices_plaice_english_channel_7d_2026.md')),
   sum(ices_progress$matched) == 57L,
-  sum(ices_progress$eligible) == 26L,
+  sum(ices_progress$eligible) == 27L,
   sum(ices_progress$excluded) == 46L,
-  sum(ices_progress$eligibility_unresolved) == 202L,
-  sum(ices_progress$screening_complete) == 78L,
-  sum(ices_progress$screening_not_started) == 196L
+  sum(ices_progress$eligibility_unresolved) == 201L,
+  sum(ices_progress$screening_complete) == 79L,
+  sum(ices_progress$screening_not_started) == 195L
 )
 cat('Matched ICES Division 7.d plaice source-screening checks passed.\n')
 northeast_arctic_haddock <- lookup('ICES:had.27.1-2')
@@ -815,11 +815,11 @@ stopifnot(
   file.exists(file.path('analysis', 'comp_assessments', 'source_reviews',
     'jrn_afwg_haddock_northeast_arctic_2026.md')),
   sum(ices_progress$matched) == 57L,
-  sum(ices_progress$eligible) == 26L,
+  sum(ices_progress$eligible) == 27L,
   sum(ices_progress$excluded) == 46L,
-  sum(ices_progress$eligibility_unresolved) == 202L,
-  sum(ices_progress$screening_complete) == 78L,
-  sum(ices_progress$screening_not_started) == 196L
+  sum(ices_progress$eligibility_unresolved) == 201L,
+  sum(ices_progress$screening_complete) == 79L,
+  sum(ices_progress$screening_not_started) == 195L
 )
 cat('Matched ICES Northeast Arctic haddock source-screening checks passed.\n')
 norpout <- lookup('ICES:nop.27.3a4')
@@ -838,11 +838,11 @@ stopifnot(
   file.exists(file.path('analysis', 'comp_assessments', 'source_reviews',
     'ices_norway_pout_north_sea.md')),
   sum(ices_progress$matched) == 57L,
-  sum(ices_progress$eligible) == 26L,
+  sum(ices_progress$eligible) == 27L,
   sum(ices_progress$excluded) == 46L,
-  sum(ices_progress$eligibility_unresolved) == 202L,
-  sum(ices_progress$screening_complete) == 78L,
-  sum(ices_progress$screening_not_started) == 196L
+  sum(ices_progress$eligibility_unresolved) == 201L,
+  sum(ices_progress$screening_complete) == 79L,
+  sum(ices_progress$screening_not_started) == 195L
 )
 cat('Matched ICES North Sea Norway pout source-screening checks passed.\n')
 nssh <- lookup('ICES:her.27.1-24a514a')
@@ -861,11 +861,11 @@ stopifnot(
   file.exists(file.path('analysis', 'comp_assessments', 'source_reviews',
     'ices_herring_norwegian_spring_spawning.md')),
   sum(ices_progress$matched) == 57L,
-  sum(ices_progress$eligible) == 26L,
+  sum(ices_progress$eligible) == 27L,
   sum(ices_progress$excluded) == 46L,
-  sum(ices_progress$eligibility_unresolved) == 202L,
-  sum(ices_progress$screening_complete) == 78L,
-  sum(ices_progress$screening_not_started) == 196L
+  sum(ices_progress$eligibility_unresolved) == 201L,
+  sum(ices_progress$screening_complete) == 79L,
+  sum(ices_progress$screening_not_started) == 195L
 )
 cat('Matched ICES Norwegian spring-spawning herring source-screening checks passed.\n')
 golden_redfish <- lookup('ICES:reg.27.1-2')
@@ -884,10 +884,33 @@ stopifnot(
   file.exists(file.path('analysis', 'comp_assessments', 'source_reviews',
     'ices_golden_redfish_northeast_arctic.md')),
   sum(ices_progress$matched) == 57L,
-  sum(ices_progress$eligible) == 26L,
+  sum(ices_progress$eligible) == 27L,
   sum(ices_progress$excluded) == 46L,
-  sum(ices_progress$eligibility_unresolved) == 202L,
-  sum(ices_progress$screening_complete) == 78L,
-  sum(ices_progress$screening_not_started) == 196L
+  sum(ices_progress$eligibility_unresolved) == 201L,
+  sum(ices_progress$screening_complete) == 79L,
+  sum(ices_progress$screening_not_started) == 195L
 )
 cat('Matched ICES Northeast Arctic golden redfish screening checks passed.\n')
+gulf_riga_herring <- lookup('ICES:her.27.28')
+ices_progress <- progress[progress$organization == 'ICES', , drop = FALSE]
+stopifnot(
+  nrow(gulf_riga_herring) == 1L,
+  gulf_riga_herring$matched_stock_id == 'ck_ices_wgbfas_harengus_bs_28_1',
+  gulf_riga_herring$match_status == 'matched',
+  gulf_riga_herring$screening_status == 'screened',
+  gulf_riga_herring$eligibility == 'eligible',
+  gulf_riga_herring$import_status == 'imported',
+  grepl('1977-2025', gulf_riga_herring$catch_age_evidence, fixed = TRUE),
+  grepl('GRAHS acoustic', gulf_riga_herring$survey_age_evidence, fixed = TRUE),
+  grepl('0.675', gulf_riga_herring$timing_evidence, fixed = TRUE),
+  grepl('conditional N/F state uncertainty', gulf_riga_herring$output_evidence, fixed = TRUE),
+  file.exists(file.path('analysis', 'comp_assessments', 'source_reviews',
+    'ices_herring_gulf_riga_2026.md')),
+  sum(ices_progress$matched) == 57L,
+  sum(ices_progress$eligible) == 27L,
+  sum(ices_progress$excluded) == 46L,
+  sum(ices_progress$eligibility_unresolved) == 201L,
+  sum(ices_progress$screening_complete) == 79L,
+  sum(ices_progress$screening_not_started) == 195L
+)
+cat('Matched ICES Gulf of Riga herring source-screening checks passed.\n')
