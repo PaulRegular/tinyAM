@@ -220,13 +220,13 @@ stopifnot(all(progress$eligible_new <= progress$new),
   all(progress$eligible_new <= progress$eligible))
 dfo_progress <- progress[progress$organization == 'DFO', , drop = FALSE]
 stopifnot(sum(dfo_progress$inventory_rows) == 199L,
-  sum(dfo_progress$new) == 5L,
-  sum(dfo_progress$identity_unreviewed) == 179L,
-  sum(dfo_progress$screening_complete) == 118L,
-  sum(dfo_progress$screening_not_started) == 81L,
-  sum(dfo_progress$excluded) == 100L,
+  sum(dfo_progress$new) == 9L,
+  sum(dfo_progress$identity_unreviewed) == 175L,
+  sum(dfo_progress$screening_complete) == 122L,
+  sum(dfo_progress$screening_not_started) == 77L,
+  sum(dfo_progress$excluded) == 104L,
   sum(dfo_progress$eligible) == 13L,
-  sum(dfo_progress$eligibility_unresolved) == 86L)
+  sum(dfo_progress$eligibility_unresolved) == 82L)
 unit3_redfish <- lookup('DFO:Maritimes:Acadian Redfish - Unit 3')
 stopifnot(
   nrow(unit3_redfish) == 1L,
@@ -864,10 +864,10 @@ stopifnot(
     'ck_dfo_platessoides_4t.md')),
   sum(dfo_progress$matched) == 15L,
   sum(dfo_progress$eligible) == 13L,
-  sum(dfo_progress$excluded) == 100L,
-  sum(dfo_progress$eligibility_unresolved) == 86L,
-  sum(dfo_progress$screening_complete) == 118L,
-  sum(dfo_progress$screening_not_started) == 81L
+  sum(dfo_progress$excluded) == 104L,
+  sum(dfo_progress$eligibility_unresolved) == 82L,
+  sum(dfo_progress$screening_complete) == 122L,
+  sum(dfo_progress$screening_not_started) == 77L
 )
 cat('Matched DFO Gulf American plaice source-screening checks passed.\n')
 channel_plaice <- lookup('ICES:ple.27.7d')
@@ -1411,3 +1411,33 @@ stopifnot(
   sum(ices_progress$screening_not_started) == 166L
 )
 cat('Twelve previously matched ICES candidates passed source-screening checks.\n')
+
+pacific_herring_ids <- c(
+  'DFO:Pacific:Pacific Herring - Central Coast',
+  'DFO:Pacific:Pacific Herring - Haida Gwaii',
+  'DFO:Pacific:Pacific Herring - Prince Rupert District',
+  'DFO:Pacific:Pacific Herring - West Coast of Vancouver Island'
+)
+pacific_herring <- register[match(pacific_herring_ids, register$candidate_id), , drop = FALSE]
+stopifnot(
+  nrow(pacific_herring) == 4L,
+  identical(pacific_herring$official_stock_id, c('CC', 'HG', 'PRD', 'WCVI')),
+  identical(pacific_herring$scientific_name, rep('Clupea pallasii', 4L)),
+  identical(pacific_herring$match_status, rep('new', 4L)),
+  identical(pacific_herring$screening_status, rep('screened', 4L)),
+  identical(pacific_herring$eligibility, rep('ineligible', 4L)),
+  identical(pacific_herring$import_status, rep('not_started', 4L)),
+  all(grepl('aggregate', pacific_herring$survey_age_evidence, fixed = TRUE)),
+  all(grepl('2026-014|2026-006', pacific_herring$detailed_source_url)),
+  all(grepl('2026-10-29', pacific_herring$review_date, fixed = TRUE)),
+  file.exists(file.path('analysis', 'comp_assessments', 'source_reviews',
+    'dfo_pacific_herring_areas_discovery.md')),
+  sum(progress$inventory_rows) == 905L,
+  sum(progress$new) == 53L,
+  sum(progress$identity_unreviewed) == 747L,
+  sum(progress$screening_complete) == 323L,
+  sum(progress$screening_not_started) == 582L,
+  sum(progress$excluded) == 206L,
+  sum(progress$eligibility_unresolved) == 614L
+)
+cat('DFO Pacific herring regional identity and source-screening checks passed.\n')
