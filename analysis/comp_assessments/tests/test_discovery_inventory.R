@@ -199,12 +199,12 @@ stopifnot(sum(progress$inventory_rows) == nrow(register),
 stopifnot(all(progress$eligible_new <= progress$new),
   all(progress$eligible_new <= progress$eligible))
 noaa_progress <- progress[progress$organization == 'NOAA', , drop = FALSE]
-stopifnot(sum(noaa_progress$new) == 10L, sum(noaa_progress$eligible_new) == 6L,
-  sum(noaa_progress$identity_unreviewed) == 394L,
-  sum(noaa_progress$eligible) == 20L, sum(noaa_progress$excluded) == 46L,
-  sum(noaa_progress$eligibility_unresolved) == 366L,
-  sum(noaa_progress$screening_complete) == 73L,
-  sum(noaa_progress$screening_not_started) == 359L)
+stopifnot(sum(noaa_progress$new) == 11L, sum(noaa_progress$eligible_new) == 7L,
+  sum(noaa_progress$identity_unreviewed) == 393L,
+  sum(noaa_progress$eligible) == 21L, sum(noaa_progress$excluded) == 46L,
+  sum(noaa_progress$eligibility_unresolved) == 365L,
+  sum(noaa_progress$screening_complete) == 74L,
+  sum(noaa_progress$screening_not_started) == 358L)
 for (org in unique(register$organization)) {
   stopifnot(sum(progress$inventory_rows[progress$organization == org]) == sum(register$organization == org),
     sum(progress$excluded[progress$organization == org]) == sum(register$organization == org & register$eligibility == 'ineligible'),
@@ -312,3 +312,18 @@ stopifnot(
   grepl('Stock SMART ID 10005', arrowtooth$notes, fixed = TRUE),
   !identical(arrowtooth$matched_stock_id, 'afsc_arrowtooth_flounder_bsai')
 )
+
+dover <- lookup('NOAA:10022')
+stopifnot(
+  dover$match_status == 'new',
+  dover$screening_status == 'screened',
+  dover$eligibility == 'eligible',
+  dover$import_status == 'not_started',
+  grepl('year/sex/fleet age-composition', dover$catch_age_evidence, fixed = TRUE),
+  grepl('conditional age-at-length', dover$survey_age_evidence, fixed = TRUE),
+  grepl('numbers-at-age, catch-at-age, F-at-age', dover$output_evidence, fixed = TRUE),
+  grepl('dover sole', dover$decision_reason, ignore.case = TRUE),
+  file.exists(file.path('analysis', 'comp_assessments', 'discovery', 'source_reviews',
+    'noaa_pacific_coast_dover_sole.md'))
+)
+cat('Dover sole identity and source-screening checks passed.\n')
