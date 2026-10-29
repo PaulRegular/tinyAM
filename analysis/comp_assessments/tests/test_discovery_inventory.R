@@ -220,13 +220,13 @@ stopifnot(all(progress$eligible_new <= progress$new),
   all(progress$eligible_new <= progress$eligible))
 dfo_progress <- progress[progress$organization == 'DFO', , drop = FALSE]
 stopifnot(sum(dfo_progress$inventory_rows) == 199L,
-  sum(dfo_progress$new) == 10L,
-  sum(dfo_progress$identity_unreviewed) == 174L,
-  sum(dfo_progress$screening_complete) == 123L,
-  sum(dfo_progress$screening_not_started) == 76L,
+  sum(dfo_progress$new) == 11L,
+  sum(dfo_progress$identity_unreviewed) == 173L,
+  sum(dfo_progress$screening_complete) == 124L,
+  sum(dfo_progress$screening_not_started) == 75L,
   sum(dfo_progress$excluded) == 104L,
-  sum(dfo_progress$eligible) == 14L,
-  sum(dfo_progress$eligibility_unresolved) == 81L)
+  sum(dfo_progress$eligible) == 15L,
+  sum(dfo_progress$eligibility_unresolved) == 80L)
 unit3_redfish <- lookup('DFO:Maritimes:Acadian Redfish - Unit 3')
 stopifnot(
   nrow(unit3_redfish) == 1L,
@@ -863,11 +863,11 @@ stopifnot(
   file.exists(file.path('analysis', 'comp_assessments', 'source_reviews',
     'ck_dfo_platessoides_4t.md')),
   sum(dfo_progress$matched) == 15L,
-  sum(dfo_progress$eligible) == 14L,
+  sum(dfo_progress$eligible) == 15L,
   sum(dfo_progress$excluded) == 104L,
-  sum(dfo_progress$eligibility_unresolved) == 81L,
-  sum(dfo_progress$screening_complete) == 123L,
-  sum(dfo_progress$screening_not_started) == 76L
+  sum(dfo_progress$eligibility_unresolved) == 80L,
+  sum(dfo_progress$screening_complete) == 124L,
+  sum(dfo_progress$screening_not_started) == 75L
 )
 cat('Matched DFO Gulf American plaice source-screening checks passed.\n')
 channel_plaice <- lookup('ICES:ple.27.7d')
@@ -1433,12 +1433,12 @@ stopifnot(
   file.exists(file.path('analysis', 'comp_assessments', 'source_reviews',
     'dfo_pacific_herring_areas_discovery.md')),
   sum(progress$inventory_rows) == 905L,
-  sum(progress$new) == 54L,
-  sum(progress$identity_unreviewed) == 746L,
-  sum(progress$screening_complete) == 324L,
-  sum(progress$screening_not_started) == 581L,
+  sum(progress$new) == 55L,
+  sum(progress$identity_unreviewed) == 745L,
+  sum(progress$screening_complete) == 325L,
+  sum(progress$screening_not_started) == 580L,
   sum(progress$excluded) == 206L,
-  sum(progress$eligibility_unresolved) == 613L
+  sum(progress$eligibility_unresolved) == 612L
 )
 cat('DFO Pacific herring regional identity and source-screening checks passed.\n')
 
@@ -1462,9 +1462,36 @@ stopifnot(
   grepl('2026-054', gulf_yellowtail$detailed_source_url, fixed = TRUE),
   file.exists(file.path('analysis', 'comp_assessments', 'source_reviews',
     'dfo_yellowtail_flounder_4t_2025.md')),
-  sum(progress$new) == 54L,
-  sum(progress$eligible) == 86L,
-  sum(progress$eligible_new) == 18L,
-  sum(progress$screening_complete) == 324L
+  sum(progress$new) == 55L,
+  sum(progress$eligible) == 87L,
+  sum(progress$eligible_new) == 19L,
+  sum(progress$screening_complete) == 325L
 )
 cat('DFO NAFO 4T yellowtail identity and source-screening checks passed.\n')
+
+gulf_white_hake <- lookup('DFO:Gulf:White Hake - NAFO 4T')
+stopifnot(
+  nrow(gulf_white_hake) == 1L,
+  is.na(gulf_white_hake$official_stock_id),
+  gulf_white_hake$scientific_name == 'Urophycis tenuis',
+  gulf_white_hake$inventory_assessment_year == 2022L,
+  gulf_white_hake$assessment_area == 'NAFO Division 4T, southern Gulf of St. Lawrence',
+  gulf_white_hake$match_status == 'new',
+  is.na(gulf_white_hake$matched_stock_id),
+  gulf_white_hake$screening_status == 'screened',
+  gulf_white_hake$eligibility == 'eligible',
+  gulf_white_hake$import_status == 'not_started',
+  grepl('1978-2022', gulf_white_hake$catch_age_evidence, fixed = TRUE),
+  grepl('0-2', gulf_white_hake$catch_age_evidence, fixed = TRUE),
+  grepl('fish/tow', gulf_white_hake$survey_age_evidence, fixed = TRUE),
+  grepl('September', gulf_white_hake$timing_evidence, fixed = TRUE),
+  grepl('6.1 kt', gulf_white_hake$output_evidence, fixed = TRUE),
+  grepl('28963929', gulf_white_hake$detailed_source_url, fixed = TRUE),
+  file.exists(file.path('analysis', 'comp_assessments', 'source_reviews',
+    'dfo_white_hake_4t_2022.md')),
+  sum(progress$new) == 55L,
+  sum(progress$eligible) == 87L,
+  sum(progress$eligible_new) == 19L,
+  sum(progress$screening_complete) == 325L
+)
+cat('DFO NAFO 4T white hake identity and source-screening checks passed.\n')
