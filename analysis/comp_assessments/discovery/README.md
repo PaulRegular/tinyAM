@@ -56,15 +56,15 @@ Snapshot dated 2026-10-29: the register contains 905 source-list entries. These 
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 29 | 5 | 145 | 19 | 118 | 62 | 152 | 47 |
 | ICES | 274 | 57 | 20 | 2 | 195 | 45 | 52 | 177 | 111 | 163 |
-| NOAA | 432 | 28 | 64 | 3 | 337 | 43 | 68 | 321 | 130 | 302 |
-| Total | 905 | 105 | 113 | 10 | 677 | 107 | 238 | 560 | 393 | 512 |
+| NOAA | 432 | 28 | 66 | 3 | 335 | 43 | 70 | 319 | 132 | 300 |
+| Total | 905 | 105 | 115 | 10 | 675 | 107 | 240 | 558 | 395 | 510 |
 
 These are inventory-entry counts. The linked-unit crosswalk in
-`inventory_units.csv` currently represents 138 distinct units across 157
-entries: 98 canonical stock IDs and 40 provisional candidate-unit IDs. Of the
-40 candidate units, 12 are screened eligible, 20 are screened ineligible, and 8
+`inventory_units.csv` currently represents 140 distinct units across 159
+entries: 98 canonical stock IDs and 42 provisional candidate-unit IDs. Of the
+42 candidate units, 12 are screened eligible, 22 are screened ineligible, and 8
 remain eligibility-unresolved. Two ineligible units have ambiguous or mixed identity status.
-The other 748 entries do not yet have an explicit unit crosswalk. Regional
+The other 746 entries do not yet have an explicit unit crosswalk. Regional
 counts by organization are available in `inventory_progress.csv`. These are
 provisional audit counts, not the selected expansion batch.
 
@@ -351,3 +351,16 @@ fixed biological relationships. It is eligible for source curation, but a
 catch-at-age reconstruction requires verification of the native age and
 expansion records. Numerical annual N-at-age and F-at-age tables were not
 located. See `source_reviews/noaa_bocaccio_southern_pacific_2017.md`.
+
+NOAA Stock SMART 10512 is the separate Bogoslof pollock unit. Its accepted
+2024 production assessment uses Tier 5 and aggregate acoustic-trawl biomass;
+the report's historical age table supports separate research on M and is not
+an age-structured production likelihood. A September 2026 SAFE chapter is
+later draft evidence for 2027-2028 specifications. NOAA Stock SMART 10514 is
+the separate Southeast Outside pollock unit east of 140° W; its 2024
+assessment uses a Tier-5 random-effects model of aggregate bottom-trawl
+biomass, while the age-structured C/W/WYK model applies west of 140° W. Both
+are screened ineligible for the age-disaggregated candidate pool, not as
+claims that all supporting age data are absent. See
+`source_reviews/noaa_bogoslof_pollock_2024.md` and
+`source_reviews/noaa_pollock_southeast_outside_2024.md`.
