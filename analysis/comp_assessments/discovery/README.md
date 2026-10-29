@@ -41,8 +41,8 @@ Snapshot dated 2026-10-29: the register contains 905 source-list entries. These 
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 15 | 12 | 0 | 172 | 15 | 104 | 80 | 125 | 74 |
 | ICES | 274 | 57 | 17 | 2 | 198 | 45 | 50 | 179 | 108 | 166 |
-| NOAA | 432 | 28 | 29 | 3 | 372 | 27 | 53 | 352 | 95 | 337 |
-| Total | 905 | 100 | 58 | 5 | 742 | 87 | 207 | 611 | 328 | 577 |
+| NOAA | 432 | 28 | 34 | 3 | 367 | 27 | 58 | 347 | 100 | 332 |
+| Total | 905 | 100 | 63 | 5 | 737 | 87 | 212 | 606 | 333 | 572 |
 
 On 2026-10-29, twelve already-matched ICES records were screened against
 their latest reviewed assessments: six are eligible for source curation,
@@ -135,7 +135,7 @@ The DFO Canary Rockfish inventory row matches the curated coastwide `dfo_canary_
 
 The Southern Gulf spring- and fall-spawning herring entries also match existing, separate stock records. Both have detailed 2024 age-specific inputs and outputs, while 2026 summary-only events are preserved separately. The fall mobile-gear catch-at-age table duplicates the fixed-gear table and is flagged rather than treated as verified data. See `source_reviews/dfo_herring_4tvn_spring.md` and `source_reviews/dfo_herring_4tvn_fall.md`.
 
-NOAA Stock SMART 10040 is the Gulf of Alaska southern rock sole unit, a provisional new record. Its latest full assessment is from 2021; the 2025 SAFE catch report says no assessment was conducted that year. The documented fishery inputs are total catch and length compositions, not catch-at-age, so this case is screened ineligible for the current tinyAM age-structured translation criteria. See `source_reviews/noaa_goa_southern_rock_sole.md`.
+NOAA Stock SMART rows for Gulf of Alaska northern and southern rock sole are crosswalked by species: legacy Gulf-wide IDs 10836 and 10040 and current central/western components 15412/15413 and 15414/15415 represent two species-specific assessment units, not six stocks. The latest full models are from 2021; later monitoring records continue through 2024, and the 2025 SAFE catch report says no assessment was conducted that year. The documented models use total catch and length compositions rather than fishery catch-at-age, so both units are screened ineligible for the current tinyAM age-structured translation criteria. See `source_reviews/noaa_goa_northern_rock_sole.md` and `source_reviews/noaa_goa_southern_rock_sole.md`.
 
 The DFO Maritimes Haddock 5Zjm entry and NOAA Stock SMART 12806 are crosswalked
 to candidate unit `haddock_eastern_georges_bank`. NOAA Stock SMART 10520 remains

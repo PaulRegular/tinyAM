@@ -244,12 +244,12 @@ stopifnot(
     'dfo_unit3_redfish_2022.md'))
 )
 noaa_progress <- progress[progress$organization == 'NOAA', , drop = FALSE]
-stopifnot(sum(noaa_progress$new) == 29L, sum(noaa_progress$eligible_new) == 13L,
-  sum(noaa_progress$ambiguous) == 3L, sum(noaa_progress$identity_unreviewed) == 372L,
-  sum(noaa_progress$eligible) == 27L, sum(noaa_progress$excluded) == 53L,
-  sum(noaa_progress$eligibility_unresolved) == 352L,
-  sum(noaa_progress$screening_complete) == 95L,
-  sum(noaa_progress$screening_not_started) == 337L)
+stopifnot(sum(noaa_progress$new) == 34L, sum(noaa_progress$eligible_new) == 13L,
+  sum(noaa_progress$ambiguous) == 3L, sum(noaa_progress$identity_unreviewed) == 367L,
+  sum(noaa_progress$eligible) == 27L, sum(noaa_progress$excluded) == 58L,
+  sum(noaa_progress$eligibility_unresolved) == 347L,
+  sum(noaa_progress$screening_complete) == 100L,
+  sum(noaa_progress$screening_not_started) == 332L)
 halibut <- lookup('NOAA:10056')
 stopifnot(
   nrow(halibut) == 1L,
@@ -717,12 +717,12 @@ stopifnot(
   grepl('numeric age inputs', ccgom_yellowtail$decision_reason, fixed = TRUE),
   file.exists(file.path('analysis', 'comp_assessments', 'discovery', 'source_reviews',
     'noaa_yellowtail_ccgom_2025.md')),
-  sum(noaa_progress$new) == 29L,
+  sum(noaa_progress$new) == 34L,
   sum(noaa_progress$ambiguous) == 3L,
-  sum(noaa_progress$identity_unreviewed) == 372L,
-  sum(noaa_progress$eligibility_unresolved) == 352L,
-  sum(noaa_progress$screening_complete) == 95L,
-  sum(noaa_progress$screening_not_started) == 337L
+  sum(noaa_progress$identity_unreviewed) == 367L,
+  sum(noaa_progress$eligibility_unresolved) == 347L,
+  sum(noaa_progress$screening_complete) == 100L,
+  sum(noaa_progress$screening_not_started) == 332L
 )
 cat('NOAA Cape Cod/Gulf of Maine yellowtail identity and source-screening checks passed.\n')
 icelandic_cod <- lookup('ICES:cod.27.5a')
@@ -1433,12 +1433,12 @@ stopifnot(
   file.exists(file.path('analysis', 'comp_assessments', 'source_reviews',
     'dfo_pacific_herring_areas_discovery.md')),
   sum(progress$inventory_rows) == 905L,
-  sum(progress$new) == 58L,
-  sum(progress$identity_unreviewed) == 742L,
-  sum(progress$screening_complete) == 328L,
-  sum(progress$screening_not_started) == 577L,
-  sum(progress$excluded) == 207L,
-  sum(progress$eligibility_unresolved) == 611L
+  sum(progress$new) == 63L,
+  sum(progress$identity_unreviewed) == 737L,
+  sum(progress$screening_complete) == 333L,
+  sum(progress$screening_not_started) == 572L,
+  sum(progress$excluded) == 212L,
+  sum(progress$eligibility_unresolved) == 606L
 )
 cat('DFO Pacific herring regional identity and source-screening checks passed.\n')
 
@@ -1462,10 +1462,10 @@ stopifnot(
   grepl('2026-054', gulf_yellowtail$detailed_source_url, fixed = TRUE),
   file.exists(file.path('analysis', 'comp_assessments', 'source_reviews',
     'dfo_yellowtail_flounder_4t_2025.md')),
-  sum(progress$new) == 58L,
+  sum(progress$new) == 63L,
   sum(progress$eligible) == 87L,
   sum(progress$eligible_new) == 19L,
-  sum(progress$screening_complete) == 328L
+  sum(progress$screening_complete) == 333L
 )
 cat('DFO NAFO 4T yellowtail identity and source-screening checks passed.\n')
 
@@ -1489,10 +1489,10 @@ stopifnot(
   grepl('28963929', gulf_white_hake$detailed_source_url, fixed = TRUE),
   file.exists(file.path('analysis', 'comp_assessments', 'source_reviews',
     'dfo_white_hake_4t_2022.md')),
-  sum(progress$new) == 58L,
+  sum(progress$new) == 63L,
   sum(progress$eligible) == 87L,
   sum(progress$eligible_new) == 19L,
-  sum(progress$screening_complete) == 328L
+  sum(progress$screening_complete) == 333L
 )
 cat('DFO NAFO 4T white hake identity and source-screening checks passed.\n')
 
@@ -1517,26 +1517,36 @@ stopifnot(
     'source_reviews', 'dfo_noaa_eastern_georges_haddock.md')),
   sum(dfo_progress$screening_complete) == 125L,
   sum(dfo_progress$screening_not_started) == 74L,
-  sum(noaa_progress$screening_complete) == 95L,
-  sum(noaa_progress$screening_not_started) == 337L
+  sum(noaa_progress$screening_complete) == 100L,
+  sum(noaa_progress$screening_not_started) == 332L
 )
 cat('Eastern Georges Bank haddock inventory crosswalk checks passed.\n')
 
-goasrs <- lookup('NOAA:10040')
+goa_rock_sole <- register[register$candidate_unit_id %in% c(
+  'noaa_goa_northern_rock_sole', 'noaa_goa_southern_rock_sole'
+), , drop = FALSE]
+goanrs <- goa_rock_sole[goa_rock_sole$candidate_unit_id ==
+  'noaa_goa_northern_rock_sole', , drop = FALSE]
+goasrs <- goa_rock_sole[goa_rock_sole$candidate_unit_id ==
+  'noaa_goa_southern_rock_sole', , drop = FALSE]
 stopifnot(
-  goasrs$scientific_name == 'Lepidopsetta bilineata',
-  goasrs$inventory_assessment_year == 2021L,
-  goasrs$match_status == 'new',
-  is.na(goasrs$matched_stock_id),
-  goasrs$screening_status == 'screened',
-  goasrs$eligibility == 'ineligible',
-  grepl('50:50', goasrs$catch_age_evidence, fixed = TRUE),
-  grepl('lengths', goasrs$catch_age_evidence, fixed = TRUE),
-  grepl('conditional age-at-length', goasrs$survey_age_evidence, fixed = TRUE),
-  grepl('no assessment was conducted', goasrs$notes, fixed = TRUE),
+  nrow(goa_rock_sole) == 6L,
+  identical(sort(goanrs$candidate_id), sort(c('NOAA:10836', 'NOAA:15412', 'NOAA:15413'))),
+  identical(sort(goasrs$candidate_id), sort(c('NOAA:10040', 'NOAA:15414', 'NOAA:15415'))),
+  all(goa_rock_sole$match_status == 'new'),
+  all(goa_rock_sole$screening_status == 'screened'),
+  all(goa_rock_sole$eligibility == 'ineligible'),
+  lookup('NOAA:10040')$inventory_assessment_year == 2020L,
+  lookup('NOAA:15414')$inventory_assessment_year == 2024L,
+  lookup('NOAA:10836')$inventory_assessment_year == 2020L,
+  lookup('NOAA:15412')$inventory_assessment_year == 2024L,
+  all(grepl('length compositions', goa_rock_sole$catch_age_evidence, fixed = TRUE)),
+  all(grepl('not catch-at-age', goa_rock_sole$catch_age_evidence, fixed = TRUE)),
+  file.exists(file.path('analysis', 'comp_assessments', 'discovery',
+    'source_reviews', 'noaa_goa_northern_rock_sole.md')),
   file.exists(file.path('analysis', 'comp_assessments', 'discovery',
     'source_reviews', 'noaa_goa_southern_rock_sole.md')),
-  sum(noaa_progress$screening_complete) == 95L,
-  sum(noaa_progress$screening_not_started) == 337L
+  sum(noaa_progress$screening_complete) == 100L,
+  sum(noaa_progress$screening_not_started) == 332L
 )
-cat('NOAA Gulf of Alaska southern rock sole screen checks passed.\n')
+cat('NOAA Gulf of Alaska rock sole identity and age-data screen checks passed.\n')
