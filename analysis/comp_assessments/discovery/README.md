@@ -37,11 +37,11 @@ Snapshot dated 2026-10-29: the register contains 905 source-list entries. These 
 | Organization | Entries | Matched | Provisional new | Ambiguous | Identity unreviewed | Eligible | Excluded | Eligibility unresolved | Screened | Not started |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 15 | 2 | 0 | 182 | 2 | 98 | 99 | 103 | 96 |
-| ICES | 274 | 57 | 6 | 0 | 211 | 0 | 44 | 230 | 49 | 225 |
+| ICES | 274 | 57 | 6 | 0 | 211 | 1 | 44 | 229 | 50 | 224 |
 | NOAA | 432 | 22 | 2 | 1 | 407 | 2 | 37 | 393 | 39 | 393 |
-| Total | 905 | 94 | 10 | 1 | 800 | 4 | 179 | 722 | 191 | 714 |
+| Total | 905 | 94 | 10 | 1 | 800 | 5 | 179 | 721 | 192 | 713 |
 
-Only two entries are both provisionally new and eligible (NOAA); the two other eligible entries are already matched to existing DFO stocks. These counts do not represent a selected batch, and new entries may still overlap across organizations. Region-level counts and the audit trail are in `inventory_progress.csv` and `candidates.csv`. Screening and identity reconciliation remain incomplete.
+Two entries are both provisionally new and eligible (NOAA); the three other eligible entries are already matched to existing DFO or ICES stocks. These counts do not represent a selected batch, and new entries may still overlap across organizations. Region-level counts and the audit trail are in `inventory_progress.csv` and `candidates.csv`. Screening and identity reconciliation remain incomplete.
 
 `inventory_progress.csv` summarizes the candidate register by organization and source region. NOAA regions are the science-centre labels in the pinned Stock SMART snapshot; DFO regions are the original Sustainability Survey regions; ICES regions are the exact SID ecoregion labels, including combinations. A row with multiple ICES regions remains one inventory row. These groupings are source reporting categories, not standardized ocean basins.
 
