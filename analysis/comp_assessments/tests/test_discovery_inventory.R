@@ -208,12 +208,12 @@ stopifnot(sum(dfo_progress$inventory_rows) == 199L,
   sum(dfo_progress$eligible) == 13L,
   sum(dfo_progress$eligibility_unresolved) == 87L)
 noaa_progress <- progress[progress$organization == 'NOAA', , drop = FALSE]
-stopifnot(sum(noaa_progress$new) == 22L, sum(noaa_progress$eligible_new) == 13L,
-  sum(noaa_progress$ambiguous) == 2L, sum(noaa_progress$identity_unreviewed) == 381L,
+stopifnot(sum(noaa_progress$new) == 23L, sum(noaa_progress$eligible_new) == 13L,
+  sum(noaa_progress$ambiguous) == 2L, sum(noaa_progress$identity_unreviewed) == 380L,
   sum(noaa_progress$eligible) == 27L, sum(noaa_progress$excluded) == 51L,
   sum(noaa_progress$eligibility_unresolved) == 354L,
-  sum(noaa_progress$screening_complete) == 86L,
-  sum(noaa_progress$screening_not_started) == 346L)
+  sum(noaa_progress$screening_complete) == 87L,
+  sum(noaa_progress$screening_not_started) == 345L)
 for (org in unique(register$organization)) {
   stopifnot(sum(progress$inventory_rows[progress$organization == org]) == sum(register$organization == org),
     sum(progress$excluded[progress$organization == org]) == sum(register$organization == org & register$eligibility == 'ineligible'),
@@ -630,6 +630,30 @@ stopifnot(
     'source_reviews', 'noaa_quillback_california_2025.md'))
 )
 cat('NOAA California Quillback identity and source-screening checks passed.\n')
+
+ccgom_yellowtail <- lookup('NOAA:10035')
+noaa_progress <- progress[progress$organization == 'NOAA', , drop = FALSE]
+stopifnot(
+  nrow(ccgom_yellowtail) == 1L,
+  ccgom_yellowtail$match_status == 'new',
+  is.na(ccgom_yellowtail$matched_stock_id),
+  ccgom_yellowtail$screening_status == 'screened',
+  ccgom_yellowtail$eligibility == 'unresolved',
+  ccgom_yellowtail$import_status == 'not_started',
+  grepl('catch-at-age diagnostics', ccgom_yellowtail$catch_age_evidence, fixed = TRUE),
+  grepl('aggregate survey indices', ccgom_yellowtail$survey_age_evidence, fixed = TRUE),
+  grepl('January 1 numbers-at-age', ccgom_yellowtail$output_evidence, fixed = TRUE),
+  grepl('best available science', ccgom_yellowtail$decision_reason, fixed = TRUE),
+  grepl('numeric age inputs', ccgom_yellowtail$decision_reason, fixed = TRUE),
+  file.exists(file.path('analysis', 'comp_assessments', 'discovery', 'source_reviews',
+    'noaa_yellowtail_ccgom_2025.md')),
+  sum(noaa_progress$new) == 23L,
+  sum(noaa_progress$identity_unreviewed) == 380L,
+  sum(noaa_progress$eligibility_unresolved) == 354L,
+  sum(noaa_progress$screening_complete) == 87L,
+  sum(noaa_progress$screening_not_started) == 345L
+)
+cat('NOAA Cape Cod/Gulf of Maine yellowtail identity and source-screening checks passed.\n')
 icelandic_cod <- lookup('ICES:cod.27.5a')
 stopifnot(
   nrow(icelandic_cod) == 1L,
