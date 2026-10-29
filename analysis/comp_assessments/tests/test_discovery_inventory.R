@@ -208,12 +208,12 @@ stopifnot(sum(dfo_progress$inventory_rows) == 199L,
   sum(dfo_progress$eligible) == 8L,
   sum(dfo_progress$eligibility_unresolved) == 92L)
 noaa_progress <- progress[progress$organization == 'NOAA', , drop = FALSE]
-stopifnot(sum(noaa_progress$new) == 13L, sum(noaa_progress$eligible_new) == 8L,
-  sum(noaa_progress$identity_unreviewed) == 391L,
-  sum(noaa_progress$eligible) == 22L, sum(noaa_progress$excluded) == 47L,
-  sum(noaa_progress$eligibility_unresolved) == 363L,
-  sum(noaa_progress$screening_complete) == 76L,
-  sum(noaa_progress$screening_not_started) == 356L)
+stopifnot(sum(noaa_progress$new) == 15L, sum(noaa_progress$eligible_new) == 8L,
+  sum(noaa_progress$ambiguous) == 2L, sum(noaa_progress$identity_unreviewed) == 388L,
+  sum(noaa_progress$eligible) == 22L, sum(noaa_progress$excluded) == 50L,
+  sum(noaa_progress$eligibility_unresolved) == 360L,
+  sum(noaa_progress$screening_complete) == 79L,
+  sum(noaa_progress$screening_not_started) == 353L)
 for (org in unique(register$organization)) {
   stopifnot(sum(progress$inventory_rows[progress$organization == org]) == sum(register$organization == org),
     sum(progress$excluded[progress$organization == org]) == sum(register$organization == org & register$eligibility == 'ineligible'),
@@ -487,3 +487,20 @@ stopifnot(
     'source_reviews', 'noaa_goa_dover_sole.md'))
 )
 cat('NOAA GOA Dover sole source-screening checks passed.\n')
+
+starry <- register[match(c('NOAA:10025', 'NOAA:14804', 'NOAA:14805'), register$candidate_id), , drop = FALSE]
+stopifnot(
+  nrow(starry) == 3L,
+  starry$match_status[1L] == 'ambiguous',
+  starry$eligibility[1L] == 'ineligible',
+  all(starry$screening_status == 'screened'),
+  all(starry$eligibility == 'ineligible'),
+  all(starry$match_status[-1L] == 'new'),
+  all(starry$assessment_year[-1L] == 2017L),
+  all(grepl('DB-SRA', starry$decision_reason[-1L], fixed = TRUE)),
+  all(grepl('catch numbers-at-age', starry$catch_age_evidence[-1L], fixed = TRUE)),
+  all(grepl('age compositions', starry$survey_age_evidence[-1L], fixed = TRUE)),
+  file.exists(file.path('analysis', 'comp_assessments', 'discovery',
+    'source_reviews', 'noaa_starry_flounder.md'))
+)
+cat('NOAA starry flounder identity and age-data screening checks passed.\n')
