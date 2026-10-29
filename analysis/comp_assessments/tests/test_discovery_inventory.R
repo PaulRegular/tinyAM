@@ -202,11 +202,11 @@ dfo_progress <- progress[progress$organization == 'DFO', , drop = FALSE]
 stopifnot(sum(dfo_progress$inventory_rows) == 199L,
   sum(dfo_progress$new) == 4L,
   sum(dfo_progress$identity_unreviewed) == 180L,
-  sum(dfo_progress$screening_complete) == 112L,
-  sum(dfo_progress$screening_not_started) == 87L,
+  sum(dfo_progress$screening_complete) == 116L,
+  sum(dfo_progress$screening_not_started) == 83L,
   sum(dfo_progress$excluded) == 99L,
-  sum(dfo_progress$eligible) == 8L,
-  sum(dfo_progress$eligibility_unresolved) == 92L)
+  sum(dfo_progress$eligible) == 12L,
+  sum(dfo_progress$eligibility_unresolved) == 88L)
 noaa_progress <- progress[progress$organization == 'NOAA', , drop = FALSE]
 stopifnot(sum(noaa_progress$new) == 22L, sum(noaa_progress$eligible_new) == 13L,
   sum(noaa_progress$ambiguous) == 2L, sum(noaa_progress$identity_unreviewed) == 381L,
@@ -669,3 +669,26 @@ stopifnot(
       'ices_whiting_north_sea_2026.md'))))
 )
 cat('Matched ICES North Sea identity and source-screening checks passed.\n')
+dfo_matched_ids <- c(
+  'DFO:Newfoundland and Labrador:Atlantic Cod - NAFO 3Ps',
+  'DFO:Gulf:Atlantic Cod - NAFO 4TVn',
+  'DFO:Maritimes:Haddock - NAFO 4X5Y',
+  'DFO:Pacific:Pacific Hake - Offshore')
+dfo_matched <- register[match(dfo_matched_ids, register$candidate_id), , drop = FALSE]
+stopifnot(
+  !anyNA(dfo_matched$candidate_id),
+  identical(dfo_matched$matched_stock_id, c('ck_dfo_morhua_3ps',
+    'dfo_cod_4t4vn', 'ck_dfo_aeglefinus_4x5y', 'joint_hake_coastal')),
+  all(dfo_matched$match_status == 'matched'),
+  all(dfo_matched$screening_status == 'screened'),
+  all(dfo_matched$eligibility == 'eligible'),
+  all(dfo_matched$import_status == 'imported'),
+  grepl('2025 HYBRID update', dfo_matched$decision_reason[1], fixed = TRUE),
+  grepl('separately', dfo_matched$decision_reason[2], fixed = TRUE),
+  grepl('summary-only', dfo_matched$decision_reason[3], fixed = TRUE),
+  grepl('composition-based', dfo_matched$decision_reason[4], fixed = TRUE),
+  all(file.exists(file.path('analysis', 'comp_assessments', 'source_reviews',
+    c('dfo_cod_3ps_2024.md', 'dfo_cod_4t4vn.md',
+      'dfo_haddock_4x5y.md', 'joint_hake_coastal.md'))))
+)
+cat('Matched DFO identity and source-screening checks passed.\n')

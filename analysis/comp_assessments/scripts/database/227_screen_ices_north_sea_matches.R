@@ -65,7 +65,7 @@ updates <- list(
 for (u in updates) {
   i <- which(x$candidate_id == u$id)
   if (length(i) != 1L || x$matched_stock_id[i] != u$stock ||
-      x$match_status[i] != 'matched' || x$screening_status[i] != 'not_started') {
+      x$match_status[i] != 'matched' || !(x$screening_status[i] %in% c('not_started', 'screened'))) {
     stop('Preserve the current identity or screen for ', u$id, '.', call. = FALSE)
   }
   x$screening_status[i] <- 'screened'
@@ -82,8 +82,8 @@ for (u in updates) {
   x$detailed_source_url[i] <- u$sources
   x$review_date[i] <- '2026-10-29'
   x$decision_reason[i] <- u$reason
-  x$notes[i] <- paste('Already curated as', paste0(u$stock, '_2026'),
-    '; see analysis/comp_assessments/source_reviews/', u$review, '.')
+  x$notes[i] <- paste0('Already curated as ', u$stock, '_2026; see ',
+    'analysis/comp_assessments/source_reviews/', u$review, '.')
 }
 lines <- readLines(path, warn = FALSE, encoding = 'UTF-8')
 if (length(lines) != nrow(x) + 1L) stop('Multiline CSV rows require a safe update method.', call. = FALSE)
