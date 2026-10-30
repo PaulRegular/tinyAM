@@ -56,15 +56,15 @@ Snapshot dated 2026-10-29: the register contains 905 source-list entries. These 
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 38 | 5 | 136 | 20 | 123 | 56 | 161 | 38 |
 | ICES | 274 | 57 | 21 | 2 | 194 | 45 | 52 | 177 | 112 | 162 |
-| NOAA | 432 | 28 | 70 | 3 | 331 | 44 | 72 | 316 | 136 | 296 |
-| Total | 905 | 105 | 129 | 10 | 661 | 109 | 247 | 549 | 409 | 496 |
+| NOAA | 432 | 28 | 71 | 3 | 330 | 44 | 72 | 316 | 137 | 295 |
+| Total | 905 | 105 | 130 | 10 | 660 | 109 | 247 | 549 | 410 | 495 |
 
 These are inventory-entry counts. The linked-unit crosswalk in
-`inventory_units.csv` currently represents 154 distinct units across 173
-entries: 98 canonical stock IDs and 56 provisional candidate-unit IDs. Of the
-56 candidate units, 14 are screened eligible, 29 are screened ineligible, and 13
+`inventory_units.csv` currently represents 155 distinct units across 174
+entries: 98 canonical stock IDs and 57 provisional candidate-unit IDs. Of the
+57 candidate units, 14 are screened eligible, 29 are screened ineligible, and 14
 remain eligibility-unresolved. Two ineligible units have ambiguous or mixed
-identity status. The other 732 entries do not yet have an explicit unit
+identity status. The other 731 entries do not yet have an explicit unit
 crosswalk. Regional
 counts by organization are available in `inventory_progress.csv`. These are
 provisional audit counts, not the selected expansion batch.
@@ -397,3 +397,5 @@ NOAA Butterfish (Stock SMART 10187) is a provisional new eligible unit. The acce
 
 
 DFO Outside Lingcod is a distinct current unit covering PMFC Areas 3CD + 5ABCDE, excluding inside Area 4B. The latest full assessment (2025) used catch, four abundance indices, and age compositions from three fleets and three surveys. The public Science Advisory Report provides fleet catch totals and posterior summary outputs, but the detailed Research Document is still cited as in preparation; numerical age-composition inputs, survey series, and fitted age-specific output arrays were not located. Eligibility remains unresolved pending those source details. See source_reviews/dfo_lingcod_outside_2025.md and the ignored local source cache.
+
+NOAA Atlantic herring (Stock SMART 10572) is screened against the 2026 WHAM Management Track assessment for the U.S. Gulf of Maine/Georges Bank stock complex. Its ignored run archive contains fixed- and mobile-fleet catch-age proportions for ages 1-8 in 1987-2025, plotted survey and biology inputs, and current assessment outputs. Numeric fleet catch totals, survey indices and compositions, full biological arrays, and exact timing remain unresolved; the candidate is not matched to DFO's 4VWX herring components. See `source_reviews/noaa_atlantic_herring_2026.md`.
