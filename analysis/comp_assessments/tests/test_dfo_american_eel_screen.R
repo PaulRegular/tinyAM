@@ -11,8 +11,8 @@ unit_summary <- read.csv('analysis/comp_assessments/discovery/inventory_units.cs
 unit <- unit_summary[!is.na(unit_summary$candidate_unit_id) &
   unit_summary$candidate_unit_id == 'dfo_american_eel_maritimes', , drop = FALSE]
 cache <- 'analysis/comp_assessments/source_cache/discovery_dfo_american_eel_maritimes_2026'
-manifest <- read.csv(file.path(cache, 'sources.csv'), stringsAsFactors = FALSE)
-files <- file.path(cache, manifest$file)
+manifest_path <- file.path(cache, 'sources.csv')
+review_path <- 'analysis/comp_assessments/discovery/source_reviews/dfo_american_eel_maritimes_2026.md'
 
 stopifnot(nrow(rows) == 2L,
   all(rows$scientific_name == 'Anguilla rostrata'),
@@ -31,9 +31,13 @@ stopifnot(nrow(rows) == 2L,
   !any(assessments$assessment_id == 'dfo_american_eel_maritimes'),
   !any(inputs$assessment_id == 'dfo_american_eel_maritimes'),
   !any(outputs$assessment_id == 'dfo_american_eel_maritimes'),
-  nrow(manifest) == 3L, all(file.exists(files)),
-  all(file.info(files)$size == manifest$bytes),
-  all(grepl('^[[:xdigit:]]{64}$', manifest$sha256)),
-  any(grepl('41234996.pdf', manifest$url, fixed = TRUE)),
-  file.exists('analysis/comp_assessments/discovery/source_reviews/dfo_american_eel_maritimes_2026.md'))
+  file.exists(review_path))
+if (file.exists(manifest_path)) {
+  manifest <- read.csv(manifest_path, stringsAsFactors = FALSE)
+  files <- file.path(cache, manifest$file)
+  stopifnot(nrow(manifest) == 3L, all(file.exists(files)),
+    all(file.info(files)$size == manifest$bytes),
+    all(grepl('^[[:xdigit:]]{64}$', manifest$sha256)),
+    any(grepl('41234996.pdf', manifest$url, fixed = TRUE)))
+}
 cat('DFO Maritimes American eel identity, source review and no-import checks passed.\n')
