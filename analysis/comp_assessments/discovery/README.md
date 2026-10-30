@@ -27,14 +27,14 @@ the rows already linked to a stock or candidate unit.
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 63 | 18 | 98 | 21 | 146 | 32 | 198 | 1 | 0 |
 | ICES | 274 | 59 | 118 | 2 | 95 | 52 | 104 | 118 | 179 | 0 | 95 |
-| NOAA | 433 | 28 | 202 | 7 | 196 | 57 | 134 | 242 | 239 | 0 | 194 |
-| **Total** | **906** | **107** | **383** | **27** | **389** | **130** | **384** | **392** | **616** | **1** | **289** |
+| NOAA | 433 | 28 | 204 | 7 | 194 | 57 | 136 | 240 | 241 | 0 | 192 |
+| **Total** | **906** | **107** | **385** | **27** | **387** | **130** | **386** | **390** | **618** | **1** | **287** |
 
-The crosswalk currently links 408 distinct unit keys across 429 inventory rows:
-100 link to canonical stocks and 308 are candidate units. Of the 306 new
-candidate units, 34 are eligible for source curation, 219 are ineligible for
-the age-disaggregated set, and 53 remain unresolved. One candidate unit has
-ambiguous identity and one has mixed identity status. A further 477 inventory
+The crosswalk currently links 410 distinct unit keys across 431 inventory rows:
+100 link to canonical stocks and 310 are candidate units, including one with
+ambiguous identity and one with mixed identity status. Of the 308 new
+candidate units, 34 are eligible for source curation, 221 are ineligible for
+the age-disaggregated set, and 53 remain unresolved. A further 475 inventory
 rows have no unit crosswalk yet. Row-level status and unit-level deduplication
 are intentionally reported separately.
 
@@ -94,6 +94,13 @@ cohort; its shared run database is password-protected. Despite positive NOAA
 composition scores for 16 entries, no public multi-age input and output set
 was verified, so the units are ineligible for this multi-age comparison. See
 `source_reviews/noaa_coho_2026.md`.
+
+The northern and southern NOAA red hake units have separate Stock SMART IDs
+and remain separate candidates. Their latest accepted 2023 updates use an
+empirical swept-area biomass method and report catch, survey biomass, and
+exploitation rates, with length frequencies. They do not provide a multi-age
+population assessment or N/F-at-age outputs, so both are ineligible for this
+age-disaggregated set. See `source_reviews/noaa_red_hake_2023.md`.
 
 The Fraser River Eulachon entry is a distinct Designatable Unit. Its 2012 RPA
 appendix fitted a historical age-structured model, but with aggregate catch
@@ -290,15 +297,15 @@ Snapshot dated 2026-10-30: the register contains 906 source-list entries. These 
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 63 | 18 | 98 | 21 | 146 | 32 | 198 | 1 | 0 |
 | ICES | 274 | 59 | 118 | 2 | 95 | 52 | 104 | 118 | 179 | 0 | 95 |
-| NOAA | 433 | 28 | 183 | 7 | 215 | 57 | 115 | 261 | 220 | 0 | 213 |
-| Total | 906 | 107 | 364 | 27 | 408 | 130 | 365 | 411 | 597 | 1 | 308 |
+| NOAA | 433 | 28 | 204 | 7 | 194 | 57 | 136 | 240 | 241 | 0 | 192 |
+| Total | 906 | 107 | 385 | 27 | 387 | 130 | 386 | 390 | 618 | 1 | 287 |
 
 These are inventory-entry counts. The linked-unit crosswalk in
-inventory_units.csv represents 389 distinct units across 410 inventory rows:
-100 canonical stock IDs and 289 candidate-unit IDs. Of the 287 new units, 34
-are screened eligible, 200 are screened ineligible, and 53 remain
+inventory_units.csv represents 410 distinct units across 431 inventory rows:
+100 canonical stock IDs and 310 candidate-unit IDs. Of the 308 new units, 34
+are screened eligible, 221 are screened ineligible, and 53 remain
 eligibility-unresolved. One candidate-unit ID has ambiguous identity and one
-has mixed identity status. The other 496 entries do not yet have a crosswalk
+has mixed identity status. The other 475 entries do not yet have a crosswalk
 unit. Regional counts by organization are in inventory_progress.csv.
 These are provisional audit counts, not the selected expansion batch.
 
