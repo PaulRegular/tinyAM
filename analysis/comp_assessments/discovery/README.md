@@ -26,15 +26,15 @@ the rows already linked to a stock or candidate unit.
 | Organization | Rows | Matched to database | New candidate rows | Ambiguous identity | Identity unreviewed | Eligible rows | Ineligible rows | Eligibility unresolved | Screened | In progress | Not screened |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 63 | 18 | 98 | 21 | 146 | 32 | 198 | 1 | 0 |
-| ICES | 274 | 59 | 120 | 2 | 93 | 53 | 105 | 116 | 181 | 0 | 93 |
+| ICES | 274 | 59 | 121 | 2 | 92 | 53 | 105 | 116 | 182 | 0 | 92 |
 | NOAA | 432 | 28 | 208 | 8 | 188 | 60 | 137 | 235 | 246 | 0 | 186 |
-| **Total** | **905** | **107** | **391** | **28** | **379** | **134** | **388** | **383** | **625** | **1** | **279** |
+| **Total** | **905** | **107** | **392** | **28** | **378** | **134** | **388** | **383** | **626** | **1** | **278** |
 
-The crosswalk currently links 415 distinct unit keys across 437 inventory rows:
-100 link to canonical stocks and 315 are candidate units, including one with
-ambiguous identity and one with mixed identity status. Of the 313 new
+The crosswalk currently links 416 distinct unit keys across 438 inventory rows:
+100 link to canonical stocks and 316 are candidate units, including one with
+ambiguous identity and one with mixed identity status. Of the 314 new
 candidate units, 37 are eligible for source curation, 222 are ineligible for
-the age-disaggregated set, and 54 remain unresolved. A further 468 inventory
+the age-disaggregated set, and 55 remain unresolved. A further 467 inventory
 rows have no unit crosswalk yet. Row-level status and unit-level deduplication
 are intentionally reported separately.
 
@@ -306,16 +306,16 @@ Snapshot dated 2026-10-30: the register contains 905 source-list entries. These 
 | Organization | Entries | Matched | Provisional new | Ambiguous | Identity unreviewed | Eligible | Excluded | Eligibility unresolved | Screened | In progress | Not started |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 63 | 18 | 98 | 21 | 146 | 32 | 198 | 1 | 0 |
-| ICES | 274 | 59 | 120 | 2 | 93 | 53 | 105 | 116 | 181 | 0 | 93 |
+| ICES | 274 | 59 | 121 | 2 | 92 | 53 | 105 | 116 | 182 | 0 | 92 |
 | NOAA | 432 | 28 | 208 | 8 | 188 | 60 | 137 | 235 | 246 | 0 | 186 |
-| Total | 905 | 107 | 391 | 28 | 379 | 134 | 388 | 383 | 625 | 1 | 279 |
+| Total | 905 | 107 | 392 | 28 | 378 | 134 | 388 | 383 | 626 | 1 | 278 |
 
 These are inventory-entry counts. The linked-unit crosswalk in
-inventory_units.csv represents 415 distinct units across 437 inventory rows:
-100 canonical stock IDs and 315 candidate-unit IDs. Of the 313 new units, 37
-are screened eligible, 222 are screened ineligible, and 54 remain
+inventory_units.csv represents 416 distinct units across 438 inventory rows:
+100 canonical stock IDs and 316 candidate-unit IDs. Of the 314 new units, 37
+are screened eligible, 222 are screened ineligible, and 55 remain
 eligibility-unresolved. One candidate-unit ID has ambiguous identity and one
-has mixed identity status. The other 468 entries do not yet have a crosswalk
+has mixed identity status. The other 467 entries do not yet have a crosswalk
 unit. Regional counts by organization are in inventory_progress.csv.
 These are provisional audit counts, not the selected expansion batch.
 
@@ -951,3 +951,5 @@ NOAA Stock SMART IDs 10500 and 10501 are distinct Northern and Southern Monkfish
 NOAA Stock SMART 10498 is the Gulf of Maine Atlantic salmon unit. Its 2024 Index Method entry and the newer USASAC Report 37 (2024 activities, published 2025) report adult river returns and selected sea-age survival indicators, not a fishery catch-at-age assessment or N/F/M-at-age surfaces. It is screened ineligible for age-structured comparison. The USASAC database ZIP is cached locally with a checksum; direct download of the report PDF returned HTTP 403, and its official NOAA checksum is recorded in the source review. No canonical numerical records were added. See `source_reviews/noaa_atlantic_salmon_gom_2025.md`.
 
 The ICES Bay of Biscay anchovy unit (`ane.27.8`) is a new eligible source-curation candidate. Its latest detailed run is the 2025 Stock Synthesis assessment used for 2026 advice, with catch-at-age, three age-specific survey series, age-specific biology, and reported N-at-age and F-at-age. The 2025 fishery data are provisional, and input values still require careful extraction and validation. See `source_reviews/ices_bay_biscay_anchovy_2025.md`.
+
+ICES tusk (`usk.27.5a14`) is the current combined Icelandic Division 5.a and East Greenland Subarea 14 SAM unit. The 2026 report documents age-structured commercial and Icelandic survey inputs, plus aggregate official outputs, but the accessible sources do not establish how Subarea 14 is represented in the fitted model; it also reports no catch weight-at-age for area 14. The unit is screened with eligibility unresolved pending current run-matched inputs or a complete stock annex. No canonical data were added. See `source_reviews/ices_tusk_5a14_2026.md`.
