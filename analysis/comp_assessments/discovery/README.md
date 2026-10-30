@@ -26,15 +26,15 @@ the rows already linked to a stock or candidate unit.
 | Organization | Rows | Matched to database | New candidate rows | Ambiguous identity | Identity unreviewed | Eligible rows | Ineligible rows | Eligibility unresolved | Screened | Not screened |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 47 | 10 | 122 | 21 | 133 | 45 | 175 | 24 |
-| ICES | 274 | 59 | 41 | 2 | 172 | 49 | 68 | 157 | 134 | 140 |
+| ICES | 274 | 59 | 42 | 2 | 171 | 49 | 68 | 157 | 135 | 139 |
 | NOAA | 432 | 28 | 98 | 3 | 303 | 54 | 78 | 300 | 164 | 268 |
-| **Total** | **905** | **107** | **186** | **15** | **597** | **124** | **279** | **502** | **473** | **432** |
+| **Total** | **905** | **107** | **187** | **15** | **596** | **124** | **279** | **502** | **474** | **431** |
 
-The crosswalk currently links 213 distinct unit keys across 232 inventory rows:
-100 match canonical database stocks and 111 are new candidate units; one unit
-is ambiguous and one has mixed identity status. Of the 111 new candidate units,
+The crosswalk currently links 214 distinct unit keys across 233 inventory rows:
+100 match canonical database stocks and 112 are new candidate units; one unit
+is ambiguous and one has mixed identity status. Of the 112 new candidate units,
 28 are eligible for source curation, 54 are ineligible for the age-disaggregated
-set, and 29 remain unresolved. A further 673 inventory rows have no unit
+set, and 30 remain unresolved. A further 672 inventory rows have no unit
 crosswalk yet. Row-level status and unit-level deduplication are intentionally
 reported separately.
 NOAA Stock SMART 10434, Gulf of Alaska sharpchin rockfish, is the Tier 4 component of the GOA Other Rockfish complex. Stock SMART lists a fully accepted 2023 REMA Model 15.2 run; the 2024 SAFE update carried forward Tier 4 biomass because no new survey data were available to refit, and the 2025 SAFE catch report says no assessment was conducted and prior values were rolled forward. The assessment uses aggregate survey biomass and catch, not age-specific population likelihoods or outputs, so the unit is screened ineligible. See `source_reviews/noaa_goa_sharpchin_2024.md` and its local source cache manifest.
@@ -151,16 +151,16 @@ Snapshot dated 2026-10-30: the register contains 905 source-list entries. These 
 | Organization | Entries | Matched | Provisional new | Ambiguous | Identity unreviewed | Eligible | Excluded | Eligibility unresolved | Screened | Not started |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 47 | 10 | 122 | 21 | 133 | 45 | 175 | 24 |
-| ICES | 274 | 59 | 41 | 2 | 172 | 49 | 68 | 157 | 134 | 140 |
+| ICES | 274 | 59 | 42 | 2 | 171 | 49 | 68 | 157 | 135 | 139 |
 | NOAA | 432 | 28 | 98 | 3 | 303 | 54 | 78 | 300 | 164 | 268 |
-| Total | 905 | 107 | 186 | 15 | 597 | 124 | 279 | 502 | 473 | 432 |
+| Total | 905 | 107 | 187 | 15 | 596 | 124 | 279 | 502 | 474 | 431 |
 
 These are inventory-entry counts. The linked-unit crosswalk in
-inventory_units.csv represents 213 distinct units across 232 inventory rows:
-100 canonical stock IDs and 113 candidate-unit IDs. Of the 111 new candidate
-units, 28 are screened eligible, 54 are screened ineligible, and 29 remain
+inventory_units.csv represents 214 distinct units across 233 inventory rows:
+100 canonical stock IDs and 114 candidate-unit IDs. Of the 112 new candidate
+units, 28 are screened eligible, 54 are screened ineligible, and 30 remain
 eligibility-unresolved. Two additional candidate-unit IDs have ambiguous or
-mixed identity status. The other 673 entries do not yet have a crosswalk unit. Regional
+mixed identity status. The other 672 entries do not yet have a crosswalk unit. Regional
 counts by organization are in inventory_progress.csv. These are provisional
 audit counts, not the selected expansion batch.
 
@@ -686,3 +686,9 @@ ICES sandeel Area 6 (san.sa.6) and Area 7r (san.sa.7r) are screened ineligible f
 
 
 ICES capelin cap.27.2a514 is a new distinct unit with unresolved age-data eligibility. The 2026 MFRI/GINR update is survey-index based; current public age tables cover selected recent surveys, but a run-matched annual age-specific acoustic input series and mortality assumptions remain unverified. See source_reviews/ices_capelin_2a514_2026.md.
+
+ICES cod in Kattegat (`cod.27.21`) is a distinct 2026 Category 3, age-based SAM
+trend assessment. Current public outputs provide relative recruitment, SSB and
+mortality summaries, but the run-matched age-disaggregated inputs remain
+unverified, so eligibility is unresolved. See
+`source_reviews/ices_cod_kattegat_2026.md`.
