@@ -65,6 +65,8 @@
 "candidate:noaa_pollock_bogoslof","","noaa_pollock_bogoslof","new","ineligible","screened","not_started","NOAA","AFSC","NOAA:10512",1
 "candidate:noaa_pollock_southeast_outside","","noaa_pollock_southeast_outside","new","ineligible","screened","not_started","NOAA","AFSC","NOAA:10514",1
 "candidate:noaa_red_grouper_gom","","noaa_red_grouper_gom","new","unresolved","screened","not_started","NOAA","SEFSC","NOAA:10331",1
+"candidate:noaa_scamp_yellowmouth_gulf_complex","","noaa_scamp_yellowmouth_gulf_complex","new","unresolved","screened","not_started","NOAA","SEFSC","NOAA:10324",1
+"candidate:noaa_scamp_yellowmouth_south_atlantic_complex","","noaa_scamp_yellowmouth_south_atlantic_complex","new","unresolved","screened","not_started","NOAA","SEFSC","NOAA:10326",1
 "candidate:noaa_silver_hake_northern","","noaa_silver_hake_northern","new","ineligible","screened","not_started","NOAA","NEFSC","NOAA:10521",1
 "candidate:noaa_silver_hake_southern","","noaa_silver_hake_southern","new","ineligible","screened","not_started","NOAA","NEFSC","NOAA:10522",1
 "candidate:noaa_south_atlantic_black_sea_bass","","noaa_south_atlantic_black_sea_bass","new","unresolved","screened","not_started","NOAA","SEFSC","NOAA:10310",1

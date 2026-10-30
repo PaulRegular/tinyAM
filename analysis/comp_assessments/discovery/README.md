@@ -107,18 +107,27 @@ Snapshot dated 2026-10-30: the register contains 905 source-list entries. These 
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 46 | 10 | 123 | 20 | 133 | 46 | 174 | 25 |
 | ICES | 274 | 58 | 26 | 2 | 188 | 48 | 54 | 172 | 118 | 156 |
-| NOAA | 432 | 28 | 79 | 3 | 322 | 44 | 74 | 314 | 145 | 287 |
-| Total | 905 | 106 | 151 | 15 | 633 | 112 | 261 | 532 | 437 | 468 |
+| NOAA | 432 | 28 | 81 | 3 | 320 | 44 | 74 | 314 | 147 | 285 |
+| Total | 905 | 106 | 153 | 15 | 631 | 112 | 261 | 532 | 439 | 466 |
 
 These are inventory-entry counts. The linked-unit crosswalk in
-`inventory_units.csv` currently represents 177 distinct units across 196
-entries: 99 canonical stock IDs and 78 provisional candidate-unit IDs. Of the
-78 candidate units, 16 are screened eligible, 39 are screened ineligible, and 23
+`inventory_units.csv` currently represents 179 distinct units across 198
+entries: 99 canonical stock IDs and 80 provisional candidate-unit IDs. Of the
+80 candidate units, 16 are screened eligible, 39 are screened ineligible, and 25
 remain eligibility-unresolved. Two of the ineligible units have ambiguous or mixed
-identity status. The other 709 entries do not yet have an explicit unit
+identity status. The other 707 entries do not yet have an explicit unit
 crosswalk. Regional
 counts by organization are available in `inventory_progress.csv`. These are
 provisional audit counts, not the selected expansion batch.
+
+NOAA Stock SMART Scamp rows 10324 (Gulf) and 10326 (South Atlantic) are
+separate regional units, although both SEDAR 68OA assessments model Scamp and
+Yellowmouth Grouper jointly. The Gulf's 2025 update contains projections based on
+the 2022 fitted assessment; the South Atlantic fit ends in 2021 with 2023 SSC
+advice. Both reports provide age-specific population outputs, but their numerical
+age-composition inputs and run-matched biology remain unresolved. See
+`source_reviews/noaa_scamp_sedar68oa_2022.md`; the source PDFs are cached locally
+with checksums.
 
 NOAA Stock SMART Atlantic yellowfin and bigeye entries 10166 and 10169 are
 crosswalked to their single Atlantic-wide ICCAT assessment units. Yellowfin's
