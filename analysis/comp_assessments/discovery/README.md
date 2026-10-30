@@ -107,13 +107,13 @@ Snapshot dated 2026-10-30: the register contains 905 source-list entries. These 
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 46 | 10 | 123 | 20 | 133 | 46 | 174 | 25 |
 | ICES | 274 | 58 | 26 | 2 | 188 | 48 | 54 | 172 | 118 | 156 |
-| NOAA | 432 | 28 | 95 | 3 | 306 | 53 | 76 | 303 | 161 | 271 |
-| Total | 905 | 106 | 167 | 15 | 617 | 121 | 263 | 521 | 453 | 452 |
+| NOAA | 432 | 28 | 96 | 3 | 305 | 54 | 76 | 302 | 162 | 270 |
+| Total | 905 | 106 | 168 | 15 | 616 | 122 | 263 | 520 | 454 | 451 |
 
 These are inventory-entry counts. The linked-unit crosswalk in
-inventory_units.csv represents 193 distinct units across 212 inventory rows:
-99 canonical stock IDs and 94 candidate-unit IDs. Of the 92 new candidate
-units, 25 are screened eligible, 39 are screened ineligible, and 28 remain
+inventory_units.csv represents 194 distinct units across 213 inventory rows:
+99 canonical stock IDs and 95 candidate-unit IDs. Of the 93 new candidate
+units, 26 are screened eligible, 39 are screened ineligible, and 28 remain
 eligibility-unresolved. Two additional candidate-unit IDs have ambiguous or
 mixed identity status. The other 693 entries do not yet have a crosswalk unit. Regional
 counts by organization are in inventory_progress.csv. These are provisional
@@ -541,6 +541,8 @@ The DFO Inside and Outside Yelloweye Rockfish inventory entries are now screened
 
 DFO Yellowmouth Rockfish has been screened as a distinct coastwide provisional unit. The latest detailed assessment found is the 2021 two-sex Stock Synthesis assessment. It documents annual catch, commercial and survey age compositions, four aggregate survey indices, age-specific biology and official SSB/recruitment outputs. The source curation can proceed with documented reconstructions, but exact age matrices and fractional survey timing remain to be recovered; numeric N-at-age and instantaneous F-at-age outputs were not found. See `source_reviews/dfo_yellowmouth_2021.md`.
 The DFO Outside Pacific Spiny Dogfish inventory entry is screened ineligible: the latest 2024 assessment is age-structured but fits aggregate catch and indices with length compositions, while available age samples are not linked to fishery or survey events. No canonical values were imported. See source_reviews/dfo_dogfish_outside_2024.md.
+
+NOAA South Atlantic Spanish mackerel (Stock SMART 10174) maps to the fully accepted SEDAR 78 operational BAM assessment, with data through 2020. The report supplies numeric landings, age compositions, abundance indices, age-specific biology, and N-at-age, F-at-age, SSB and recruitment outputs. Handline and cast-net age compositions are pooled across years; commercial catch totals are weights while other removals are numbers. Survey timing is not one fixed fraction, and SSB timing descriptions conflict within the report. It is eligible for source curation, with these limitations to resolve during extraction. See `source_reviews/noaa_south_atlantic_spanish_mackerel_2022.md`. No canonical values have been imported.
 
 The DFO Pacific Dogfish inside-water unit is screened ineligible for the age-disaggregated candidate set. The latest detailed inside assessment located is the 2010 surplus-production analysis; its authors explicitly state that catch-age data were too sparse for an age-structured model. The 2024 assessment is for outside waters. See `source_reviews/dfo_dogfish_inside_2010.md` and the ignored local cache `source_cache/discovery_dfo_dogfish_inside/`.
 
