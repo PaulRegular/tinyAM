@@ -54,17 +54,17 @@ Snapshot dated 2026-10-29: the register contains 905 source-list entries. These 
 
 | Organization | Entries | Matched | Provisional new | Ambiguous | Identity unreviewed | Eligible | Excluded | Eligibility unresolved | Screened | Not started |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| DFO | 199 | 20 | 41 | 5 | 133 | 20 | 124 | 55 | 164 | 35 |
+| DFO | 199 | 20 | 42 | 5 | 132 | 20 | 125 | 54 | 165 | 34 |
 | ICES | 274 | 57 | 21 | 2 | 194 | 45 | 52 | 177 | 112 | 162 |
 | NOAA | 432 | 28 | 72 | 3 | 329 | 44 | 72 | 316 | 138 | 294 |
-| Total | 905 | 105 | 134 | 10 | 656 | 109 | 248 | 548 | 414 | 491 |
+| Total | 905 | 105 | 135 | 10 | 655 | 109 | 249 | 547 | 415 | 490 |
 
 These are inventory-entry counts. The linked-unit crosswalk in
-`inventory_units.csv` currently represents 159 distinct units across 178
-entries: 98 canonical stock IDs and 61 provisional candidate-unit IDs. Of the
-61 candidate units, 14 are screened eligible, 30 are screened ineligible, and 17
+`inventory_units.csv` currently represents 160 distinct units across 179
+entries: 98 canonical stock IDs and 62 provisional candidate-unit IDs. Of the
+62 candidate units, 14 are screened eligible, 31 are screened ineligible, and 17
 remain eligibility-unresolved. Two ineligible units have ambiguous or mixed
-identity status. The other 727 entries do not yet have an explicit unit
+identity status. The other 726 entries do not yet have an explicit unit
 crosswalk. Regional
 counts by organization are available in `inventory_progress.csv`. These are
 provisional audit counts, not the selected expansion batch.
@@ -401,4 +401,4 @@ DFO Outside Lingcod is a distinct current unit covering PMFC Areas 3CD + 5ABCDE,
 NOAA Atlantic herring (Stock SMART 10572) is screened against the 2026 WHAM Management Track assessment for the U.S. Gulf of Maine/Georges Bank stock complex. Its ignored run archive contains fixed- and mobile-fleet catch-age proportions for ages 1-8 in 1987-2025, plotted survey and biology inputs, and current assessment outputs. Numeric fleet catch totals, survey indices and compositions, full biological arrays, and exact timing remain unresolved; the candidate is not matched to DFO's 4VWX herring components. See `source_reviews/noaa_atlantic_herring_2026.md`.
 
 
-Recent discovery source reviews: [NOAA Gulf Spanish mackerel (Stock SMART 10173)](source_reviews/noaa_gulf_spanish_mackerel_2023.md), [DFO Gulf witch flounder, NAFO 4RST](source_reviews/dfo_witch_flounder_4rst_2022.md), [DFO Inside Quillback](source_reviews/dfo_quillback_inside_2021.md), and [DFO Outside Quillback](source_reviews/dfo_quillback_outside_2021.md).
+Recent discovery source reviews: [NOAA Gulf Spanish mackerel (Stock SMART 10173)](source_reviews/noaa_gulf_spanish_mackerel_2023.md), [DFO Gulf witch flounder, NAFO 4RST](source_reviews/dfo_witch_flounder_4rst_2022.md), [DFO Inside Quillback](source_reviews/dfo_quillback_inside_2021.md), [DFO Outside Quillback](source_reviews/dfo_quillback_outside_2021.md), and [DFO British Columbia Longspine Thornyhead](source_reviews/dfo_longspine_thornyhead_bc.md).
