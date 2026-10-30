@@ -26,17 +26,16 @@ the rows already linked to a stock or candidate unit.
 | Organization | Rows | Matched to database | New candidate rows | Ambiguous identity | Identity unreviewed | Eligible rows | Ineligible rows | Eligibility unresolved | Screened | Not screened |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 49 | 10 | 120 | 21 | 134 | 44 | 177 | 22 |
-| ICES | 274 | 59 | 92 | 2 | 121 | 51 | 81 | 142 | 153 | 121 |
+| ICES | 274 | 59 | 93 | 2 | 120 | 52 | 81 | 141 | 154 | 120 |
 | NOAA | 433 | 28 | 167 | 7 | 231 | 56 | 112 | 265 | 204 | 229 |
-| **Total** | **906** | **107** | **308** | **19** | **472** | **128** | **327** | **451** | **534** | **372** |
+| **Total** | **906** | **107** | **309** | **19** | **471** | **129** | **327** | **450** | **535** | **371** |
 
-The crosswalk currently links 334 distinct unit keys across 354 inventory rows:
-100 link to canonical stocks and 234 are candidate units: 232 are new, one is
-ambiguous and one has mixed identity status. Of the 232 new candidate units, 32 are eligible for source curation, 163 are
-ineligible for the age-
-disaggregated set, and 37 remain unresolved. A further 552 inventory rows have
-no unit crosswalk yet. Row-level status and unit-level deduplication are
-intentionally reported separately.
+The crosswalk currently links 335 distinct unit keys across 355 inventory
+rows: 100 link to canonical stocks and 235 are candidate units. Of the 233 new
+candidate units, 33 are eligible for source curation, 163 are ineligible for
+the age-disaggregated set, and 37 remain unresolved. A further 551 inventory
+rows have no unit crosswalk yet. Row-level status and unit-level deduplication
+are intentionally reported separately.
 
 The 2024 DFO WCVI natural-origin Chinook assessment is now recorded as a new
 unit, with age-input eligibility unresolved. Its detailed report describes
@@ -200,16 +199,16 @@ Snapshot dated 2026-10-30: the register contains 906 source-list entries. These 
 | Organization | Entries | Matched | Provisional new | Ambiguous | Identity unreviewed | Eligible | Excluded | Eligibility unresolved | Screened | Not started |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 49 | 10 | 120 | 21 | 134 | 44 | 177 | 22 |
-| ICES | 274 | 59 | 92 | 2 | 121 | 51 | 81 | 142 | 153 | 121 |
+| ICES | 274 | 59 | 93 | 2 | 120 | 52 | 81 | 141 | 154 | 120 |
 | NOAA | 433 | 28 | 167 | 7 | 231 | 56 | 112 | 265 | 204 | 229 |
-| Total | 906 | 107 | 308 | 19 | 472 | 128 | 327 | 451 | 534 | 372 |
+| Total | 906 | 107 | 309 | 19 | 471 | 129 | 327 | 450 | 535 | 371 |
 
 These are inventory-entry counts. The linked-unit crosswalk in
-inventory_units.csv represents 334 distinct units across 354 inventory rows:
-100 canonical stock IDs and 234 candidate-unit IDs. Of the 232 new candidate
-units, 32 are screened eligible, 163 are screened ineligible, and 37 remain
+inventory_units.csv represents 335 distinct units across 355 inventory rows:
+100 canonical stock IDs and 235 candidate-unit IDs. Of the 233 new candidate
+units, 33 are screened eligible, 163 are screened ineligible, and 37 remain
 eligibility-unresolved. One candidate-unit ID has ambiguous identity and one
-has mixed identity status. The other 552 entries do not yet have a crosswalk
+has mixed identity status. The other 551 entries do not yet have a crosswalk
 unit. Regional counts by organization are in inventory_progress.csv. These are
 provisional audit counts, not the selected expansion batch.
 
@@ -723,6 +722,8 @@ The DFO Pacific Dogfish inside-water unit is screened ineligible for the age-dis
 NOAA Stock SMART 10190 is the PFMC coastwide Pacific sanddab unit. Its detailed 2013 age-structured Stock Synthesis assessment includes retained-fish age compositions and age-at-length survey data, but the Council did not use its biomass scale for harvest specifications; status determination only was accepted. The latest detailed public evidence does not support total catch-at-age because discards were not age-sampled, and the current harvest specification remains Category 3. Eligibility is unresolved pending source-supported catch-age reconstruction and run-matched inputs. See `source_reviews/noaa_pacific_sanddab_2013.md`; source PDFs and checksums are cached under the ignored local source cache.
 
 ICES megrim `meg.27.7b-k8abd` is a distinct Bay of Biscay/Celtic Seas unit with a 2025 a4a catch-at-age assessment and advice for 2026. WGBIE tabulates two age-specific survey-index series and annual aggregate outputs, but the numerical run-matched catch-at-age matrix is only shown in figures and remains unrecovered. The 2025 report links the revised assessment to advice key 21222; its WD12 says the initial base run was rejected before corrections, so exact run linkage remains to be verified. The downloadable stock annex still says it was last updated in 2018 despite the report describing later updates. Eligibility remains unresolved; see `source_reviews/ices_megrim_7b_k8abd_2025.md` and the ignored source cache.
+
+ICES four-spot megrim (`ldb.27.8c9a`) is a separate current stock unit with a 2026 a4a assessment. Its July 2026 Stock Annex documents age-specific catch and survey inputs, catch weights used as stock weights, female maturity, and fixed M = 0.2. The current Standard Graphs entry reports annual recruitment, SSB, and F ages 2–4 through 2025; its 2026 row is a projection. The stock is eligible for source curation, while numerical run-matched catch and survey matrices and exact Q4 survey timing remain follow-ups. See `source_reviews/ices_four_spot_megrim_8c9a_2026.md`.
 
 NOAA Butterfish (Stock SMART 10187) is a provisional new eligible unit. The accepted 2024 Management Track archive provides numerical total-catch proportions by weight, weights-at-age, four seasonal age-index series, and annual SSB, fully selected F, recruitment, and CVs through 2023. The 2021 Research Track report documents maturity ogives for its final ASAP3 run, while the 2024 production update uses WHAM; do not assume those exact ogives are the updated WHAM inputs. The 2024 report states M = 1.278 was carried forward. Current WHAM maturity linkage, complete survey timing, and the 2024 fitted object remain source follow-ups. The panel accepted the assessment for use despite the archived report retaining a draft cover label. See `source_reviews/noaa_butterfish_2024.md` and the ignored local source cache.
 
