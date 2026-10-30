@@ -42,8 +42,12 @@ remaining <- register[register$candidate_id %in% c('ICES:sal.27.22-31',
   'ICES:sal.27.32', 'ICES:trs.27.22-32', 'ICES:dab.27.22-32', 'ICES:bll.27.22-32'), ]
 stopifnot(
   nrow(remaining) == 5L,
-  all(remaining$screening_status == 'not_started'),
-  all(remaining$eligibility == 'unresolved')
+  all(remaining$match_status == 'new'),
+  all(remaining$screening_status == 'screened'),
+  identical(as.character(remaining$eligibility[match(c('ICES:sal.27.22-31',
+    'ICES:sal.27.32', 'ICES:trs.27.22-32', 'ICES:dab.27.22-32',
+    'ICES:bll.27.22-32'), remaining$candidate_id)]),
+    c('unresolved', 'unresolved', 'ineligible', 'ineligible', 'ineligible'))
 )
 
 cache <- file.path(root, 'source_cache', 'discovery_ices_baltic_flatfish_2026')
@@ -51,7 +55,8 @@ manifest_path <- file.path(cache, 'sources.csv')
 review_path <- file.path(root, 'discovery', 'source_reviews', 'ices_baltic_flatfish_2026.md')
 review <- paste(readLines(review_path, warn = FALSE), collapse = ' ')
 stopifnot(
-  grepl('remain unreviewed for current-unit identity and assessment-source coverage', review, fixed = TRUE),
+  grepl('latest detailed report', review, fixed = TRUE),
+  grepl('does not establish that biological age samples do not exist', review, fixed = TRUE),
   grepl('No canonical numerical records were added.', review, fixed = TRUE)
 )
 

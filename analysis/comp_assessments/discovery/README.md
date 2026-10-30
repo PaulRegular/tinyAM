@@ -26,16 +26,17 @@ the rows already linked to a stock or candidate unit.
 | Organization | Rows | Matched to database | New candidate rows | Ambiguous identity | Identity unreviewed | Eligible rows | Ineligible rows | Eligibility unresolved | Screened | In progress | Not screened |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 63 | 18 | 98 | 21 | 146 | 32 | 198 | 1 | 0 |
-| ICES | 274 | 59 | 113 | 2 | 100 | 52 | 101 | 121 | 174 | 0 | 100 |
+| ICES | 274 | 59 | 118 | 2 | 95 | 52 | 104 | 118 | 179 | 0 | 95 |
 | NOAA | 433 | 28 | 168 | 7 | 230 | 57 | 112 | 264 | 205 | 0 | 228 |
-| **Total** | **906** | **107** | **344** | **27** | **428** | **130** | **359** | **417** | **577** | **1** | **328** |
+| **Total** | **906** | **107** | **349** | **27** | **423** | **130** | **362** | **414** | **582** | **1** | **323** |
 
-The crosswalk currently links 369 distinct unit keys across 390 inventory rows:
-100 link to canonical stocks and 269 are candidate units. Of the 267
-provisionally new candidate units, 34 are eligible for source curation, 194
-are ineligible for the age-disaggregated set, and 39 remain unresolved. A
-further 516 inventory rows have no unit crosswalk yet. Row-level status and
-unit-level deduplication are intentionally reported separately.
+The crosswalk currently links 374 distinct unit keys across 395 inventory rows:
+100 link to canonical stocks and 274 are candidate units. Of the 272 new
+candidate units, 34 are eligible for source curation, 197 are ineligible for
+the age-disaggregated set, and 41 remain unresolved. One candidate unit has
+ambiguous identity and one has mixed identity status. A further 511 inventory
+rows have no unit crosswalk yet. Row-level status and unit-level deduplication
+are intentionally reported separately.
 
 The Maritimes American eel “Large Eel” and “Elvers” inventory entries are two
 fisheries for one candidate unit. The latest detailed DFO update reports
@@ -279,17 +280,17 @@ Snapshot dated 2026-10-30: the register contains 906 source-list entries. These 
 | Organization | Entries | Matched | Provisional new | Ambiguous | Identity unreviewed | Eligible | Excluded | Eligibility unresolved | Screened | In progress | Not started |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 63 | 18 | 98 | 21 | 146 | 32 | 198 | 1 | 0 |
-| ICES | 274 | 59 | 113 | 2 | 100 | 52 | 101 | 121 | 174 | 0 | 100 |
+| ICES | 274 | 59 | 118 | 2 | 95 | 52 | 104 | 118 | 179 | 0 | 95 |
 | NOAA | 433 | 28 | 168 | 7 | 230 | 57 | 112 | 264 | 205 | 0 | 228 |
-| Total | 906 | 107 | 344 | 27 | 428 | 130 | 359 | 417 | 577 | 1 | 328 |
+| Total | 906 | 107 | 349 | 27 | 423 | 130 | 362 | 414 | 582 | 1 | 323 |
 
 These are inventory-entry counts. The linked-unit crosswalk in
-inventory_units.csv represents 369 distinct units across 390 inventory rows:
-100 canonical stock IDs and 269 candidate-unit IDs. Of the 267 provisionally
-new units, 34 are screened eligible, 194 are screened ineligible, and 39
-remain eligibility-unresolved. One candidate-unit ID has ambiguous identity
-and one has mixed identity status. The other 516 entries do not yet have a
-crosswalk unit. Regional counts by organization are in inventory_progress.csv.
+inventory_units.csv represents 374 distinct units across 395 inventory rows:
+100 canonical stock IDs and 274 candidate-unit IDs. Of the 272 new units, 34
+are screened eligible, 197 are screened ineligible, and 41 remain
+eligibility-unresolved. One candidate-unit ID has ambiguous identity and one
+has mixed identity status. The other 511 entries do not yet have a crosswalk
+unit. Regional counts by organization are in inventory_progress.csv.
 These are provisional audit counts, not the selected expansion batch.
 
 NOAA Stock SMART 10953 and DFO's North Atlantic swordfish listing are one
@@ -912,4 +913,4 @@ Ten ICES Bay of Biscay and Iberian elasmobranch entries were screened against th
 
 ICES Senegalese sole (oal.27.8c9a) and sand sole (sos.27.8c9a) are screened ineligible from the 2026 category 5 advice-linked pages: they publish landings and commercial-fleet effort/CPUE, with no age-specific inputs or comparable population or mortality outputs. This does not establish that biological age samples do not exist. See source_reviews/ices_iberian_sole_indicators_2026.md.
 
-Five current 2026 ICES Baltic records—turbot, Baltic flounder, and three flounder units—are screened ineligible from the published stock-indicator pages, which lack verified age-specific inputs and population-at-age outputs. Five other Baltic inventory rows are absent from the current Standard Graphs list and remain unreviewed for unit and source coverage. See source_reviews/ices_baltic_flatfish_2026.md.
+Ten ICES Baltic entries are now screened against current stock indicators and detailed working-group reports. Five Standard Graphs units (turbot and four flounder units) are ineligible from their aggregate indicator pages. Of the other five SID entries, dab and brill have 2026 update assessments but no verified age-specific population inputs or outputs; sea trout has no current age-structured population assessment; these three are ineligible for this comparison. Main Basin and Gulf of Finland salmon have documented age-read catch samples, but the age samples' assessment role and ability to support annual catch-at-age remain unresolved; do not treat these as absent. No canonical numerical records were added. See `source_reviews/ices_baltic_flatfish_2026.md`.
