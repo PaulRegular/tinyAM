@@ -27,14 +27,14 @@ the rows already linked to a stock or candidate unit.
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 63 | 18 | 98 | 21 | 146 | 32 | 198 | 1 | 0 |
 | ICES | 274 | 59 | 118 | 2 | 95 | 52 | 104 | 118 | 179 | 0 | 95 |
-| NOAA | 433 | 28 | 168 | 7 | 230 | 57 | 112 | 264 | 205 | 0 | 228 |
-| **Total** | **906** | **107** | **349** | **27** | **423** | **130** | **362** | **414** | **582** | **1** | **323** |
+| NOAA | 433 | 28 | 180 | 7 | 218 | 57 | 112 | 264 | 217 | 0 | 216 |
+| **Total** | **906** | **107** | **361** | **27** | **411** | **130** | **362** | **414** | **594** | **1** | **311** |
 
-The crosswalk currently links 374 distinct unit keys across 395 inventory rows:
-100 link to canonical stocks and 274 are candidate units. Of the 272 new
+The crosswalk currently links 386 distinct unit keys across 407 inventory rows:
+100 link to canonical stocks and 286 are candidate units. Of the 284 new
 candidate units, 34 are eligible for source curation, 197 are ineligible for
-the age-disaggregated set, and 41 remain unresolved. One candidate unit has
-ambiguous identity and one has mixed identity status. A further 511 inventory
+the age-disaggregated set, and 53 remain unresolved. One candidate unit has
+ambiguous identity and one has mixed identity status. A further 499 inventory
 rows have no unit crosswalk yet. Row-level status and unit-level deduplication
 are intentionally reported separately.
 
@@ -281,15 +281,15 @@ Snapshot dated 2026-10-30: the register contains 906 source-list entries. These 
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 63 | 18 | 98 | 21 | 146 | 32 | 198 | 1 | 0 |
 | ICES | 274 | 59 | 118 | 2 | 95 | 52 | 104 | 118 | 179 | 0 | 95 |
-| NOAA | 433 | 28 | 168 | 7 | 230 | 57 | 112 | 264 | 205 | 0 | 228 |
-| Total | 906 | 107 | 349 | 27 | 423 | 130 | 362 | 414 | 582 | 1 | 323 |
+| NOAA | 433 | 28 | 180 | 7 | 218 | 57 | 112 | 264 | 217 | 0 | 216 |
+| Total | 906 | 107 | 361 | 27 | 411 | 130 | 362 | 414 | 594 | 1 | 311 |
 
 These are inventory-entry counts. The linked-unit crosswalk in
-inventory_units.csv represents 374 distinct units across 395 inventory rows:
-100 canonical stock IDs and 274 candidate-unit IDs. Of the 272 new units, 34
-are screened eligible, 197 are screened ineligible, and 41 remain
+inventory_units.csv represents 386 distinct units across 407 inventory rows:
+100 canonical stock IDs and 286 candidate-unit IDs. Of the 284 new units, 34
+are screened eligible, 197 are screened ineligible, and 53 remain
 eligibility-unresolved. One candidate-unit ID has ambiguous identity and one
-has mixed identity status. The other 511 entries do not yet have a crosswalk
+has mixed identity status. The other 499 entries do not yet have a crosswalk
 unit. Regional counts by organization are in inventory_progress.csv.
 These are provisional audit counts, not the selected expansion batch.
 
@@ -914,3 +914,5 @@ Ten ICES Bay of Biscay and Iberian elasmobranch entries were screened against th
 ICES Senegalese sole (oal.27.8c9a) and sand sole (sos.27.8c9a) are screened ineligible from the 2026 category 5 advice-linked pages: they publish landings and commercial-fleet effort/CPUE, with no age-specific inputs or comparable population or mortality outputs. This does not establish that biological age samples do not exist. See source_reviews/ices_iberian_sole_indicators_2026.md.
 
 Ten ICES Baltic entries are now screened against current stock indicators and detailed working-group reports. Five Standard Graphs units (turbot and four flounder units) are ineligible from their aggregate indicator pages. Of the other five SID entries, dab and brill have 2026 update assessments but no verified age-specific population inputs or outputs; sea trout has no current age-structured population assessment; these three are ineligible for this comparison. Main Basin and Gulf of Finland salmon have documented age-read catch samples, but the age samples' assessment role and ability to support annual catch-at-age remain unresolved; do not treat these as absent. No canonical numerical records were added. See `source_reviews/ices_baltic_flatfish_2026.md`.
+
+Twelve 2026 NOAA Stock SMART Chinook units from Washington Coast and Puget Sound have been identity-linked as distinct new candidates. Stock SMART reports age-composition input level 4 for all 12 and VPA model category 4 for 11, but the reviewed PFMC reports do not expose the annual catch-at-age vectors or full age-specific outputs. These candidates remain eligibility-unresolved while their annual regional management inputs are investigated; the positive age-composition evidence is not treated as absence. No canonical numerical records were added. See `source_reviews/noaa_west_coast_chinook_2026.md`.
