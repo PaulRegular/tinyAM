@@ -25,15 +25,15 @@ the rows already linked to a stock or candidate unit.
 
 | Organization | Rows | Matched to database | New candidate rows | Ambiguous identity | Identity unreviewed | Eligible rows | Ineligible rows | Eligibility unresolved | Screened | Not screened |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| DFO | 199 | 20 | 52 | 11 | 116 | 21 | 136 | 42 | 181 | 18 |
+| DFO | 199 | 20 | 53 | 11 | 115 | 21 | 137 | 41 | 182 | 17 |
 | ICES | 274 | 59 | 96 | 2 | 117 | 52 | 84 | 138 | 157 | 117 |
 | NOAA | 433 | 28 | 168 | 7 | 230 | 57 | 112 | 264 | 205 | 228 |
-| **Total** | **906** | **107** | **316** | **20** | **463** | **130** | **332** | **444** | **543** | **363** |
+| **Total** | **906** | **107** | **317** | **20** | **462** | **130** | **333** | **443** | **544** | **362** |
 
-The crosswalk currently links 341 distinct unit keys across 362 inventory
-rows: 100 link to canonical stocks and 241 are candidate units. Of the 239 new
-candidate units, 34 are eligible for source curation, 167 are ineligible for
-the age-disaggregated set, and 38 remain unresolved. A further 544 inventory
+The crosswalk currently links 342 distinct unit keys across 363 inventory
+rows: 100 link to canonical stocks and 242 are candidate units. Of the 240 new
+candidate units, 34 are eligible for source curation, 168 are ineligible for
+the age-disaggregated set, and 38 remain unresolved. A further 543 inventory
 rows have no unit crosswalk yet. Row-level status and unit-level deduplication
 are intentionally reported separately.
 
@@ -65,6 +65,13 @@ run-matched conventional weight/maturity inputs, age-specific mortality
 assumptions, and numeric age-specific abundance outputs are not verified
 together. Its source repository is still marked subject to change, so
 eligibility remains unresolved. See `source_reviews/dfo_yukon_chinook_2024.md`.
+
+The latest Okanagan Chinook assessment (assessment year 2023) is an aggregate
+escapement and stock-status assessment, not an age-structured production
+model. DFO reports that cohort-specific escapement and recruitment are
+unavailable; the row is screened ineligible for the age-disaggregated set.
+The U.S. Stock SMART Chinook aggregate is not an exact unit match. See
+`source_reviews/dfo_okanagan_chinook_2023.md`.
 
 ICES Greenland halibut (`ghl.27.561214`) is a distinct new unit screened with
 eligibility unresolved. Its 2026 GADGET assessment includes recent Icelandic
