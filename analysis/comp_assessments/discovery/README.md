@@ -25,16 +25,16 @@ the rows already linked to a stock or candidate unit.
 
 | Organization | Rows | Matched to database | New candidate rows | Ambiguous identity | Identity unreviewed | Eligible rows | Ineligible rows | Eligibility unresolved | Screened | Not screened |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| DFO | 199 | 20 | 48 | 10 | 121 | 21 | 133 | 45 | 176 | 23 |
+| DFO | 199 | 20 | 49 | 10 | 120 | 21 | 134 | 44 | 177 | 22 |
 | ICES | 274 | 59 | 89 | 2 | 124 | 51 | 79 | 144 | 150 | 124 |
-| NOAA | 432 | 28 | 153 | 4 | 247 | 54 | 101 | 277 | 187 | 245 |
-| **Total** | **905** | **107** | **290** | **16** | **492** | **126** | **313** | **466** | **513** | **392** |
+| NOAA | 432 | 28 | 154 | 4 | 246 | 54 | 102 | 276 | 188 | 244 |
+| **Total** | **905** | **107** | **292** | **16** | **490** | **126** | **315** | **464** | **515** | **390** |
 
-The crosswalk currently links 317 distinct unit keys across 336 inventory rows:
-100 link to canonical stocks and 217 are candidate units: 215 are new, one is
-ambiguous and one has mixed identity status. Of the 215 new
-candidate units, 30 are eligible for source curation, 152 are ineligible for
-the age-disaggregated set, and 33 remain unresolved. A further 569 inventory
+The crosswalk currently links 318 distinct unit keys across 338 inventory rows:
+100 link to canonical stocks and 218 are candidate units: 216 are new, one is
+ambiguous and one has mixed identity status. Of the 216 new
+candidate units, 30 are eligible for source curation, 153 are ineligible for
+the age-disaggregated set, and 33 remain unresolved. A further 567 inventory
 rows have no unit crosswalk yet. Row-level status and unit-level deduplication are intentionally
 reported separately.
 
@@ -197,19 +197,28 @@ Snapshot dated 2026-10-30: the register contains 905 source-list entries. These 
 
 | Organization | Entries | Matched | Provisional new | Ambiguous | Identity unreviewed | Eligible | Excluded | Eligibility unresolved | Screened | Not started |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| DFO | 199 | 20 | 48 | 10 | 121 | 21 | 133 | 45 | 176 | 23 |
+| DFO | 199 | 20 | 49 | 10 | 120 | 21 | 134 | 44 | 177 | 22 |
 | ICES | 274 | 59 | 89 | 2 | 124 | 51 | 79 | 144 | 150 | 124 |
-| NOAA | 432 | 28 | 153 | 4 | 247 | 54 | 101 | 277 | 187 | 245 |
-| Total | 905 | 107 | 290 | 16 | 492 | 126 | 313 | 466 | 513 | 392 |
+| NOAA | 432 | 28 | 154 | 4 | 246 | 54 | 102 | 276 | 188 | 244 |
+| Total | 905 | 107 | 292 | 16 | 490 | 126 | 315 | 464 | 515 | 390 |
 
 These are inventory-entry counts. The linked-unit crosswalk in
-inventory_units.csv represents 317 distinct units across 336 inventory rows:
-100 canonical stock IDs and 217 candidate-unit IDs. Of the 215 new candidate
-units, 30 are screened eligible, 152 are screened ineligible, and 33 remain
-eligibility-unresolved. Two candidate-unit IDs have ambiguous or mixed identity
-status. The other 569 entries do not yet have a crosswalk unit. Regional
-counts by organization are in inventory_progress.csv. These are provisional
-audit counts, not the selected expansion batch.
+inventory_units.csv represents 318 distinct units across 338 inventory rows:
+100 canonical stock IDs and 218 candidate-unit IDs. Of the 216 new candidate
+units, 30 are screened eligible, 153 are screened ineligible, and 33 remain
+eligibility-unresolved. One candidate-unit ID has ambiguous identity and one
+has mixed identity status. The other 567 entries do not yet have a crosswalk
+unit. Regional counts by organization are in inventory_progress.csv. These are
+provisional audit counts, not the selected expansion batch.
+
+NOAA Stock SMART 10953 and DFO's North Atlantic swordfish listing are one
+ICCAT-managed stock unit. The latest detailed North Atlantic assessment located
+is the 2022 assessment using data through 2020. Its model is age-structured,
+but the documented likelihood inputs are catches, CPUE and length compositions;
+fishery catch-at-age was not reported. The age-specific Spanish longline CPUE
+series are fishery-dependent and do not supply catch-at-age, so this unit is
+screened ineligible for the current age-disaggregated set. See
+`source_reviews/noaa_dfo_north_atlantic_swordfish_2022.md`.
 
 The distinct ICES English Channel sprat unit (`spr.27.7de`) is screened
 ineligible for age-disaggregated coverage. The latest 2026 Category 3.3 method
