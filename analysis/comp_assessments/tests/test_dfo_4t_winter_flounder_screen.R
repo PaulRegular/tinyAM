@@ -52,7 +52,7 @@ stopifnot(
   !any(assessments$assessment_id == 'dfo_sgsl_winter_flounder_4t'),
   !any(inputs$assessment_id == 'dfo_sgsl_winter_flounder_4t'),
   !any(outputs$assessment_id == 'dfo_sgsl_winter_flounder_4t'),
-  nrow(units) == 195L,
-  sum(units$inventory_entries) == 214L
+  nrow(units) == 324L,
+  sum(units$inventory_entries) == 344L
 )
 cat('DFO NAFO 4T winter flounder candidate-screening checks passed.\n')

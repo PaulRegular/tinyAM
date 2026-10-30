@@ -45,12 +45,12 @@ stopifnot(
   grepl('North Atlantic MSE work', review, fixed = TRUE),
   grepl('no tinyAM translation was attempted', review, fixed = TRUE),
   sum(progress$inventory_rows) == 906L,
-  sum(progress$new) == 297L,
-  sum(progress$identity_unreviewed) == 483L,
-  sum(progress$excluded) == 319L,
-  sum(progress$eligibility_unresolved) == 460L,
-  sum(progress$screening_complete) == 523L,
-  sum(progress$screening_not_started) == 383L
+  sum(progress$new) == 298L,
+  sum(progress$identity_unreviewed) == 482L,
+  sum(progress$excluded) == 320L,
+  sum(progress$eligibility_unresolved) == 459L,
+  sum(progress$screening_complete) == 524L,
+  sum(progress$screening_not_started) == 382L
 )
 
 cache <- file.path(root, 'source_cache', 'discovery_swordfish_north_atlantic_2022')

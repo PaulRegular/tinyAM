@@ -146,6 +146,7 @@
 "candidate:noaa_gag_south_atlantic","","noaa_gag_south_atlantic","new","eligible","screened","not_started","NOAA","SEFSC","NOAA:10349",1
 "candidate:noaa_giant_octopus_bering","","noaa_giant_octopus_bering","new","ineligible","screened","not_started","NOAA","AFSC","NOAA:10087",1
 "candidate:noaa_giant_octopus_gulf_alaska","","noaa_giant_octopus_gulf_alaska","new","ineligible","screened","not_started","NOAA","AFSC","NOAA:10088",1
+"candidate:noaa_goa_atka_mackerel","","noaa_goa_atka_mackerel","new","ineligible","screened","not_started","NOAA","AFSC","NOAA:10465",1
 "candidate:noaa_goa_northern_rock_sole","","noaa_goa_northern_rock_sole","new","ineligible","screened","not_started","NOAA","AFSC","NOAA:10836 | NOAA:15412 | NOAA:15413",3
 "candidate:noaa_goa_rex_sole","","noaa_goa_rex_sole","new","eligible","screened","not_started","NOAA","AFSC","NOAA:10058 | NOAA:15410 | NOAA:15411",3
 "candidate:noaa_goa_sharpchin_goa","","noaa_goa_sharpchin_goa","new","ineligible","screened","not_started","NOAA","AFSC","NOAA:10434",1
