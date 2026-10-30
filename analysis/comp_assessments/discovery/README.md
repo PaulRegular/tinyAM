@@ -26,15 +26,15 @@ the rows already linked to a stock or candidate unit.
 | Organization | Rows | Matched to database | New candidate rows | Ambiguous identity | Identity unreviewed | Eligible rows | Ineligible rows | Eligibility unresolved | Screened | In progress | Not screened |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 63 | 18 | 98 | 21 | 146 | 32 | 198 | 1 | 0 |
-| ICES | 274 | 59 | 96 | 2 | 117 | 52 | 84 | 138 | 157 | 0 | 117 |
+| ICES | 274 | 59 | 106 | 2 | 107 | 52 | 94 | 128 | 167 | 0 | 107 |
 | NOAA | 433 | 28 | 168 | 7 | 230 | 57 | 112 | 264 | 205 | 0 | 228 |
-| **Total** | **906** | **107** | **327** | **27** | **445** | **130** | **342** | **434** | **560** | **1** | **345** |
+| **Total** | **906** | **107** | **337** | **27** | **435** | **130** | **352** | **424** | **570** | **1** | **335** |
 
-The crosswalk currently links 352 distinct unit keys across 373 inventory rows:
-100 link to canonical stocks and 252 are candidate units. Of the 250
-provisionally new candidate units, 34 are eligible for source curation, 177
+The crosswalk currently links 362 distinct unit keys across 383 inventory rows:
+100 link to canonical stocks and 262 are candidate units. Of the 260
+provisionally new candidate units, 34 are eligible for source curation, 187
 are ineligible for the age-disaggregated set, and 39 remain unresolved. A
-further 533 inventory rows have no unit crosswalk yet. Row-level status and
+further 523 inventory rows have no unit crosswalk yet. Row-level status and
 unit-level deduplication are intentionally reported separately.
 
 The Maritimes American eel “Large Eel” and “Elvers” inventory entries are two
@@ -279,16 +279,16 @@ Snapshot dated 2026-10-30: the register contains 906 source-list entries. These 
 | Organization | Entries | Matched | Provisional new | Ambiguous | Identity unreviewed | Eligible | Excluded | Eligibility unresolved | Screened | In progress | Not started |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 63 | 18 | 98 | 21 | 146 | 32 | 198 | 1 | 0 |
-| ICES | 274 | 59 | 96 | 2 | 117 | 52 | 84 | 138 | 157 | 0 | 117 |
+| ICES | 274 | 59 | 106 | 2 | 107 | 52 | 94 | 128 | 167 | 0 | 107 |
 | NOAA | 433 | 28 | 168 | 7 | 230 | 57 | 112 | 264 | 205 | 0 | 228 |
-| Total | 906 | 107 | 327 | 27 | 445 | 130 | 342 | 434 | 560 | 1 | 345 |
+| Total | 906 | 107 | 337 | 27 | 435 | 130 | 352 | 424 | 570 | 1 | 335 |
 
 These are inventory-entry counts. The linked-unit crosswalk in
-inventory_units.csv represents 352 distinct units across 373 inventory rows:
-100 canonical stock IDs and 252 candidate-unit IDs. Of the 250 provisionally
-new units, 34 are screened eligible, 177 are screened ineligible, and 39
+inventory_units.csv represents 362 distinct units across 383 inventory rows:
+100 canonical stock IDs and 262 candidate-unit IDs. Of the 260 provisionally
+new units, 34 are screened eligible, 187 are screened ineligible, and 39
 remain eligibility-unresolved. One candidate-unit ID has ambiguous identity
-and one has mixed identity status. The other 533 entries do not yet have a
+and one has mixed identity status. The other 523 entries do not yet have a
 crosswalk unit. Regional counts by organization are in inventory_progress.csv.
 These are provisional audit counts, not the selected expansion batch.
 
@@ -906,3 +906,6 @@ production groups, not as one aggregate for each broad DFO row. These rows remai
 identity-ambiguous and eligibility-unresolved; they are not counted as three
 new stock units. See
 source_reviews/dfo_fraser_sockeye_other_groups.md.
+
+
+Ten ICES Bay of Biscay and Iberian elasmobranch entries were screened against the latest advice-linked records. Their published outputs are aggregate indicators or catch advice, without verified age-specific inputs or population surfaces; detailed assessment input files were not recovered. They are ineligible for the current age-disaggregated comparison on this evidence. This does not establish that biological age samples do not exist. See source_reviews/ices_bay_biscay_elasmobranchs_2026.md.
