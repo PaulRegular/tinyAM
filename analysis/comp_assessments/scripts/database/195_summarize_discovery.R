@@ -13,6 +13,7 @@ is_dfo <- x$organization == 'DFO'
 region[is_dfo] <- sub('^DFO:([^:]+):.*$', '\\1', x$candidate_id[is_dfo])
 is_ices <- x$organization == 'ICES'
 region[is_ices] <- x$assessment_area[is_ices]
+region[!is.na(region)] <- trimws(gsub('[[:space:]]+', ' ', region[!is.na(region)]))
 region[is.na(region) | !nzchar(trimws(region))] <- 'Unspecified'
 key <- data.frame(organization = x$organization, source_region = region, stringsAsFactors = FALSE)
 metrics <- data.frame(inventory_rows = 1L, matched = as.integer(x$match_status == 'matched'),

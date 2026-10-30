@@ -1,5 +1,5 @@
 root <- file.path('analysis', 'comp_assessments')
-cache <- file.path(root, 'source_cache', 'discovery_noaa_stripetail_2013_2025')
+cache <- file.path(root, 'source_cache', 'discovery_noaa_data_moderate_2013_2026')
 register_path <- file.path(root, 'discovery', 'candidates.csv')
 candidate_id <- 'NOAA:10428'
 candidate_unit_id <- 'noaa_pacific_stripetail_rockfish'
@@ -96,29 +96,12 @@ screened <- data.frame(
   detailed_source_url = paste(all_urls, collapse = '; '),
   review_date = '2026-10-30',
   decision_reason = 'NOAA Stock SMART 10428 is one coastwide U.S. Pacific unit with no canonical stock match. The latest detailed assessment is the 2013 data-moderate run (published 2015), still identified as latest in the 2025 SAFE. Although the model has 38 internal ages, the run file explicitly contains zero age-composition observations and zero mean-size-at-age observations; it uses catch totals and aggregate survey indices and was accepted only for status determination. Do not substitute earlier methods or infer age observations from model structure.',
-  notes = 'Screened ineligible for the age-disaggregated set. The 2013 report, 2025 SAFE, 2026 preliminary assessment recommendations, and 2026 Amendment 37 analysis are cached with checksums under source_cache/discovery_noaa_stripetail_2013_2025/. See discovery/source_reviews/noaa_stripetail_rockfish_2013.md. No canonical records were added.',
+  notes = 'Screened ineligible for the age-disaggregated set. The 2013 report, 2025 SAFE, 2026 preliminary assessment recommendations, and 2026 Amendment 37 analysis are cached with checksums under source_cache/discovery_noaa_data_moderate_2013_2026/. See discovery/source_reviews/noaa_stripetail_rockfish_2013.md. No canonical records were added.',
   stringsAsFactors = FALSE, check.names = FALSE)
 
 needs_write <- initial_state || (current_state && !all(vapply(names(screened), function(name)
   identical(as.character(register[[name]][row]), as.character(screened[[name]])), logical(1L))))
-csv_line <- function(x) {
-  path <- tempfile(fileext = '.csv')
-  write.table(x, path, sep = ',', row.names = FALSE, col.names = FALSE,
-    quote = TRUE, na = '', qmethod = 'double')
-  raw <- readBin(path, 'raw', n = file.info(path)$size)
-  unlink(path)
-  charToRaw(sub('\\r?\\n$', '', rawToChar(raw), perl = TRUE))
-}
-if (!identical(Sys.getenv('TAM_SOURCE_DRY_RUN'), '1') && needs_write) {
-  bytes <- readBin(register_path, 'raw', n = file.info(register_path)$size)
-  line_feeds <- which(bytes == as.raw(10L))
-  physical_line <- row + 1L
-  if (length(line_feeds) < physical_line) stop('Inventory row is out of range.', call. = FALSE)
-  first <- line_feeds[physical_line - 1L] + 1L
-  last <- line_feeds[physical_line]
-  ending <- if (last > first && bytes[last - 1L] == as.raw(13L)) as.raw(c(13L, 10L)) else as.raw(10L)
-  before <- bytes[seq_len(first - 1L)]
-  after <- if (last < length(bytes)) bytes[(last + 1L):length(bytes)] else raw(0L)
-  writeBin(c(before, csv_line(screened), ending, after), register_path)
-}
+source(file.path(root, 'scripts', 'database', 'candidate_register_io.R'))
+if (!identical(Sys.getenv('TAM_SOURCE_DRY_RUN'), '1') && needs_write)
+  replace_candidate_register_row(register_path, row, screened, candidate_id)
 cat('Screened NOAA:10428 as one distinct U.S. Pacific Coast unit, ineligible for age-disaggregated comparison.\n')
