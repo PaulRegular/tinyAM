@@ -26,15 +26,15 @@ the rows already linked to a stock or candidate unit.
 | Organization | Rows | Matched to database | New candidate rows | Ambiguous identity | Identity unreviewed | Eligible rows | Ineligible rows | Eligibility unresolved | Screened | In progress | Not screened |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 63 | 18 | 98 | 21 | 146 | 32 | 198 | 1 | 0 |
-| ICES | 274 | 59 | 124 | 2 | 89 | 53 | 107 | 114 | 185 | 0 | 89 |
+| ICES | 274 | 59 | 125 | 2 | 88 | 54 | 107 | 113 | 186 | 0 | 88 |
 | NOAA | 432 | 28 | 208 | 8 | 188 | 60 | 137 | 235 | 246 | 0 | 186 |
-| **Total** | **905** | **107** | **395** | **28** | **375** | **134** | **390** | **381** | **629** | **1** | **275** |
+| **Total** | **905** | **107** | **396** | **28** | **374** | **135** | **390** | **380** | **630** | **1** | **274** |
 
-The crosswalk currently links 419 distinct unit keys across 441 inventory rows:
-100 link to canonical stocks and 319 are candidate units, including one with
-ambiguous identity and one with mixed identity status. Of the 317 new
-candidate units, 37 are eligible for source curation, 224 are ineligible for
-the age-disaggregated set, and 56 remain unresolved. A further 464 inventory
+The crosswalk currently links 420 distinct unit keys across 442 inventory rows:
+100 link to canonical stocks and 320 are candidate units, including one with
+ambiguous identity and one with mixed identity status. Of the 318 new
+candidate units, 38 are eligible for source curation, 224 are ineligible for
+the age-disaggregated set, and 56 remain unresolved. A further 463 inventory
 rows have no unit crosswalk yet. Row-level status and unit-level deduplication
 are intentionally reported separately.
 
@@ -45,6 +45,16 @@ biological inputs, but the published repository snapshot omits the referenced
 numeric input folder. Aggregate assessment outputs are available, but they do
 not verify the input data needed for curation. See
 `source_reviews/ices_sprat_3a4_2026.md`.
+
+The current ICES golden-redfish unit `reg.27.561214` is screened eligible from
+the 2026 SAM production report and published input/output tables. The age-based
+assessment uses catch-at-age from 1995 onward, autumn survey age data, weights,
+maturity and fixed M; the official sources also report N-at-age, F-at-age, SSB
+and recruitment. Spring enters the assessment as an aggregate biomass index,
+although an age-disaggregated spring table is published separately. This unit is
+distinct from the existing Northeast Arctic golden redfish `reg.27.1-2`. The
+candidate is eligible for source curation but has not yet been imported. See
+`source_reviews/ices_golden_redfish_561214_2026.md`.
 
 The Maritimes American eel “Large Eel” and “Elvers” inventory entries are two
 fisheries for one candidate unit. The latest detailed DFO update reports
@@ -309,7 +319,7 @@ age-structured assessment; see
 
 ## Inventory progress snapshot
 
-Snapshot dated 2026-10-30: the register contains 905 source-list entries. These are not deduplicated stock units.
+Earlier interim snapshot dated 2026-10-30: the register then contained 905 source-list entries. Current status is summarized above.
 
 | Organization | Entries | Matched | Provisional new | Ambiguous | Identity unreviewed | Eligible | Excluded | Eligibility unresolved | Screened | In progress | Not started |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
