@@ -26,17 +26,19 @@ the rows already linked to a stock or candidate unit.
 | Organization | Rows | Matched to database | New candidate rows | Ambiguous identity | Identity unreviewed | Eligible rows | Ineligible rows | Eligibility unresolved | Screened | Not screened |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 47 | 10 | 122 | 21 | 133 | 45 | 175 | 24 |
-| ICES | 274 | 59 | 81 | 2 | 132 | 51 | 73 | 150 | 142 | 132 |
+| ICES | 274 | 59 | 82 | 2 | 131 | 51 | 74 | 149 | 143 | 131 |
 | NOAA | 432 | 28 | 131 | 3 | 270 | 54 | 78 | 300 | 164 | 268 |
-| **Total** | **905** | **107** | **259** | **15** | **524** | **126** | **284** | **495** | **481** | **424** |
+| **Total** | **905** | **107** | **260** | **15** | **523** | **126** | **285** | **494** | **482** | **423** |
 
-The crosswalk currently links 286 distinct unit keys across 305 inventory rows:
-100 match canonical database stocks and 184 are new candidate units; one unit
-is ambiguous and one has mixed identity status. Of the 184 new candidate units,
-30 are eligible for source curation, 124 are ineligible for the age-disaggregated
+The crosswalk currently links 287 distinct unit keys across 306 inventory rows:
+100 match canonical database stocks and 185 are new candidate units; one unit
+is ambiguous and one has mixed identity status. Of the 185 new candidate units,
+30 are eligible for source curation, 125 are ineligible for the age-disaggregated
 set, and 30 remain unresolved. A further 600 inventory rows have no unit
 crosswalk yet. Row-level status and unit-level deduplication are intentionally
 reported separately.
+
+The 2026 ICES boarfish unit `boc.27.6-8` is newly screened ineligible for the age-disaggregated set: its benchmarked SS3 assessment fits total catch, biomass indices and length compositions, while its 2026 outputs include age-derived quantities. See `source_reviews/ices_boarfish_6_8_2026.md`.
 NOAA Stock SMART 10434, Gulf of Alaska sharpchin rockfish, is the Tier 4 component of the GOA Other Rockfish complex. Stock SMART lists a fully accepted 2023 REMA Model 15.2 run; the 2024 SAFE update carried forward Tier 4 biomass because no new survey data were available to refit, and the 2025 SAFE catch report says no assessment was conducted and prior values were rolled forward. The assessment uses aggregate survey biomass and catch, not age-specific population likelihoods or outputs, so the unit is screened ineligible. See `source_reviews/noaa_goa_sharpchin_2024.md` and its local source cache manifest.
 
 
@@ -151,14 +153,14 @@ Snapshot dated 2026-10-30: the register contains 905 source-list entries. These 
 | Organization | Entries | Matched | Provisional new | Ambiguous | Identity unreviewed | Eligible | Excluded | Eligibility unresolved | Screened | Not started |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 47 | 10 | 122 | 21 | 133 | 45 | 175 | 24 |
-| ICES | 274 | 59 | 81 | 2 | 132 | 51 | 73 | 150 | 142 | 132 |
+| ICES | 274 | 59 | 82 | 2 | 131 | 51 | 74 | 149 | 143 | 131 |
 | NOAA | 432 | 28 | 131 | 3 | 270 | 54 | 78 | 300 | 164 | 268 |
-| Total | 905 | 107 | 259 | 15 | 524 | 126 | 284 | 495 | 481 | 424 |
+| Total | 905 | 107 | 260 | 15 | 523 | 126 | 285 | 494 | 482 | 423 |
 
 These are inventory-entry counts. The linked-unit crosswalk in
-inventory_units.csv represents 286 distinct units across 305 inventory rows:
-100 canonical stock IDs and 186 candidate-unit IDs. Of the 184 new candidate
-units, 30 are screened eligible, 124 are screened ineligible, and 30 remain
+inventory_units.csv represents 287 distinct units across 306 inventory rows:
+100 canonical stock IDs and 187 candidate-unit IDs. Of the 185 new candidate
+units, 30 are screened eligible, 125 are screened ineligible, and 30 remain
 eligibility-unresolved. Two additional candidate-unit IDs have ambiguous or
 mixed identity status. The other 600 entries do not yet have a crosswalk unit. Regional
 counts by organization are in inventory_progress.csv. These are provisional
