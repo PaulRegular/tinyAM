@@ -25,15 +25,15 @@ the rows already linked to a stock or candidate unit.
 
 | Organization | Rows | Matched to database | New candidate rows | Ambiguous identity | Identity unreviewed | Eligible rows | Ineligible rows | Eligibility unresolved | Screened | Not screened |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| DFO | 199 | 20 | 53 | 12 | 114 | 21 | 137 | 41 | 183 | 16 |
+| DFO | 199 | 20 | 54 | 12 | 113 | 21 | 138 | 40 | 184 | 15 |
 | ICES | 274 | 59 | 96 | 2 | 117 | 52 | 84 | 138 | 157 | 117 |
 | NOAA | 433 | 28 | 168 | 7 | 230 | 57 | 112 | 264 | 205 | 228 |
-| **Total** | **906** | **107** | **317** | **21** | **461** | **130** | **333** | **443** | **545** | **361** |
+| **Total** | **906** | **107** | **318** | **21** | **460** | **130** | **334** | **442** | **546** | **360** |
 
-The crosswalk currently links 342 distinct unit keys across 363 inventory
-rows: 100 link to canonical stocks and 242 are candidate units. Of the 240 new
-candidate units, 34 are eligible for source curation, 168 are ineligible for
-the age-disaggregated set, and 38 remain unresolved. A further 543 inventory
+The crosswalk currently links 343 distinct unit keys across 364 inventory
+rows: 100 link to canonical stocks and 243 are candidate units. Of the 241 new
+candidate units, 34 are eligible for source curation, 169 are ineligible for
+the age-disaggregated set, and 38 remain unresolved. A further 542 inventory
 rows have no unit crosswalk yet. Row-level status and unit-level deduplication
 are intentionally reported separately.
 
@@ -78,6 +78,12 @@ including Skeena-Nass and Central Coast Chinook. It is screened as identity-
 ambiguous, with age-structured eligibility unresolved until unit-specific
 production assessments are identified. See
 `source_reviews/dfo_north_coast_chinook_inventory.md`.
+
+The Interior Fraser Coho row is a distinct SMU with a 2022 DFO assessment.
+Although that assessment uses age proportions in its stock-recruit analysis, it
+does not fit or report age-specific population surfaces and is screened
+ineligible for the age-disaggregated set. See
+`source_reviews/dfo_interior_fraser_coho_2022.md`.
 
 ICES Greenland halibut (`ghl.27.561214`) is a distinct new unit screened with
 eligibility unresolved. Its 2026 GADGET assessment includes recent Icelandic
