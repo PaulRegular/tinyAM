@@ -26,14 +26,14 @@ the rows already linked to a stock or candidate unit.
 | Organization | Rows | Matched to database | New candidate rows | Ambiguous identity | Identity unreviewed | Eligible rows | Ineligible rows | Eligibility unresolved | Screened | Not screened |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 49 | 10 | 120 | 21 | 134 | 44 | 177 | 22 |
-| ICES | 274 | 59 | 94 | 2 | 119 | 52 | 82 | 140 | 155 | 119 |
+| ICES | 274 | 59 | 95 | 2 | 118 | 52 | 83 | 139 | 156 | 118 |
 | NOAA | 433 | 28 | 167 | 7 | 231 | 56 | 112 | 265 | 204 | 229 |
-| **Total** | **906** | **107** | **310** | **19** | **470** | **129** | **328** | **449** | **536** | **370** |
+| **Total** | **906** | **107** | **311** | **19** | **469** | **129** | **329** | **448** | **537** | **369** |
 
-The crosswalk currently links 336 distinct unit keys across 356 inventory
-rows: 100 link to canonical stocks and 236 are candidate units. Of the 234 new
-candidate units, 33 are eligible for source curation, 164 are ineligible for
-the age-disaggregated set, and 37 remain unresolved. A further 550 inventory
+The crosswalk currently links 337 distinct unit keys across 357 inventory
+rows: 100 link to canonical stocks and 237 are candidate units. Of the 235 new
+candidate units, 33 are eligible for source curation, 165 are ineligible for
+the age-disaggregated set, and 37 remain unresolved. A further 549 inventory
 rows have no unit crosswalk yet. Row-level status and unit-level deduplication
 are intentionally reported separately.
 
@@ -106,6 +106,12 @@ assessment. ICES provides Category 5 advice from landings only; the report
 identifies no catch-at-age, age-specific index used by the advice, age-specific
 biology, or population outputs. This separate unit is ineligible for the
 age-disaggregated set. See `source_reviews/ices_herring_7ef_2026.md`.
+
+Thornback ray in Division 7.e (`rjc.27.7e`) remains on the 2024 Category 5
+landings method. The 2024 WGEF report describes its Q1 beam-trawl survey as
+qualitative information, not a quantitative input to advice. The unit is
+ineligible for the age-disaggregated set. See
+`source_reviews/ices_thornback_ray_7e_2024.md`.
 
 Cached files and their sources.csv manifests are gitignored. The register retains
 inventory source URLs and leaves unknown identities, run details and data evidence
@@ -205,16 +211,16 @@ Snapshot dated 2026-10-30: the register contains 906 source-list entries. These 
 | Organization | Entries | Matched | Provisional new | Ambiguous | Identity unreviewed | Eligible | Excluded | Eligibility unresolved | Screened | Not started |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 49 | 10 | 120 | 21 | 134 | 44 | 177 | 22 |
-| ICES | 274 | 59 | 94 | 2 | 119 | 52 | 82 | 140 | 155 | 119 |
+| ICES | 274 | 59 | 95 | 2 | 118 | 52 | 83 | 139 | 156 | 118 |
 | NOAA | 433 | 28 | 167 | 7 | 231 | 56 | 112 | 265 | 204 | 229 |
-| Total | 906 | 107 | 310 | 19 | 470 | 129 | 328 | 449 | 536 | 370 |
+| Total | 906 | 107 | 311 | 19 | 469 | 129 | 329 | 448 | 537 | 369 |
 
 These are inventory-entry counts. The linked-unit crosswalk in
-inventory_units.csv represents 336 distinct units across 356 inventory rows:
-100 canonical stock IDs and 236 candidate-unit IDs. Of the 234 new candidate
-units, 33 are screened eligible, 164 are screened ineligible, and 37 remain
+inventory_units.csv represents 337 distinct units across 357 inventory rows:
+100 canonical stock IDs and 237 candidate-unit IDs. Of the 235 new candidate
+units, 33 are screened eligible, 165 are screened ineligible, and 37 remain
 eligibility-unresolved. One candidate-unit ID has ambiguous identity and one
-has mixed identity status. The other 550 entries do not yet have a crosswalk
+has mixed identity status. The other 549 entries do not yet have a crosswalk
 unit. Regional counts by organization are in inventory_progress.csv. These are
 provisional audit counts, not the selected expansion batch.
 
