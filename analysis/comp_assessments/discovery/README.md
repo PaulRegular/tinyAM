@@ -27,16 +27,16 @@ the rows already linked to a stock or candidate unit.
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 49 | 10 | 120 | 21 | 134 | 44 | 177 | 22 |
 | ICES | 274 | 59 | 89 | 2 | 124 | 51 | 79 | 144 | 150 | 124 |
-| NOAA | 432 | 28 | 154 | 4 | 246 | 54 | 102 | 276 | 188 | 244 |
-| **Total** | **905** | **107** | **292** | **16** | **490** | **126** | **315** | **464** | **515** | **390** |
+| NOAA | 432 | 28 | 155 | 4 | 245 | 54 | 103 | 275 | 189 | 243 |
+| **Total** | **905** | **107** | **293** | **16** | **489** | **126** | **316** | **463** | **516** | **389** |
 
-The crosswalk currently links 318 distinct unit keys across 338 inventory rows:
-100 link to canonical stocks and 218 are candidate units: 216 are new, one is
-ambiguous and one has mixed identity status. Of the 216 new
-candidate units, 30 are eligible for source curation, 153 are ineligible for
-the age-disaggregated set, and 33 remain unresolved. A further 567 inventory
-rows have no unit crosswalk yet. Row-level status and unit-level deduplication are intentionally
-reported separately.
+The crosswalk currently links 319 distinct unit keys across 339 inventory rows:
+100 link to canonical stocks and 219 are candidate units: 217 are new, one is
+ambiguous and one has mixed identity status. Of the 217 new candidate units,
+30 are eligible for source curation, 154 are ineligible for the age-
+disaggregated set, and 33 remain unresolved. A further 566 inventory rows have
+no unit crosswalk yet. Row-level status and unit-level deduplication are
+intentionally reported separately.
 
 The 2024 DFO WCVI natural-origin Chinook assessment is now recorded as a new
 unit, with age-input eligibility unresolved. Its detailed report describes
@@ -199,15 +199,15 @@ Snapshot dated 2026-10-30: the register contains 905 source-list entries. These 
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 49 | 10 | 120 | 21 | 134 | 44 | 177 | 22 |
 | ICES | 274 | 59 | 89 | 2 | 124 | 51 | 79 | 144 | 150 | 124 |
-| NOAA | 432 | 28 | 154 | 4 | 246 | 54 | 102 | 276 | 188 | 244 |
-| Total | 905 | 107 | 292 | 16 | 490 | 126 | 315 | 464 | 515 | 390 |
+| NOAA | 432 | 28 | 155 | 4 | 245 | 54 | 103 | 275 | 189 | 243 |
+| Total | 905 | 107 | 293 | 16 | 489 | 126 | 316 | 463 | 516 | 389 |
 
 These are inventory-entry counts. The linked-unit crosswalk in
-inventory_units.csv represents 318 distinct units across 338 inventory rows:
-100 canonical stock IDs and 218 candidate-unit IDs. Of the 216 new candidate
-units, 30 are screened eligible, 153 are screened ineligible, and 33 remain
+inventory_units.csv represents 319 distinct units across 339 inventory rows:
+100 canonical stock IDs and 219 candidate-unit IDs. Of the 217 new candidate
+units, 30 are screened eligible, 154 are screened ineligible, and 33 remain
 eligibility-unresolved. One candidate-unit ID has ambiguous identity and one
-has mixed identity status. The other 567 entries do not yet have a crosswalk
+has mixed identity status. The other 566 entries do not yet have a crosswalk
 unit. Regional counts by organization are in inventory_progress.csv. These are
 provisional audit counts, not the selected expansion batch.
 
@@ -219,6 +219,14 @@ fishery catch-at-age was not reported. The age-specific Spanish longline CPUE
 series are fishery-dependent and do not supply catch-at-age, so this unit is
 screened ineligible for the current age-disaggregated set. See
 `source_reviews/noaa_dfo_north_atlantic_swordfish_2022.md`.
+
+NOAA Stock SMART 10144 is one Caribbean redtail parrotfish management unit.
+SEDAR 26 examined regional components in Puerto Rico, St. Thomas/St. John, and
+St. Croix; they are not counted as separate candidate units. The 2011 detailed
+assessment is length-based and lacks catch-at-age and age-specific abundance
+inputs. SEDAR 103 is still developing alternative methods, not a completed
+redtail assessment. See
+`source_reviews/noaa_caribbean_redtail_parrotfish_sedar26.md`.
 
 The distinct ICES English Channel sprat unit (`spr.27.7de`) is screened
 ineligible for age-disaggregated coverage. The latest 2026 Category 3.3 method
