@@ -106,16 +106,16 @@ Snapshot dated 2026-10-30: the register contains 905 source-list entries. These 
 | Organization | Entries | Matched | Provisional new | Ambiguous | Identity unreviewed | Eligible | Excluded | Eligibility unresolved | Screened | Not started |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 46 | 10 | 123 | 20 | 133 | 46 | 174 | 25 |
-| ICES | 274 | 58 | 24 | 2 | 190 | 48 | 53 | 173 | 116 | 158 |
+| ICES | 274 | 58 | 25 | 2 | 189 | 48 | 54 | 172 | 117 | 157 |
 | NOAA | 432 | 28 | 75 | 3 | 326 | 44 | 72 | 316 | 141 | 291 |
-| Total | 905 | 106 | 145 | 15 | 639 | 112 | 258 | 535 | 431 | 474 |
+| Total | 905 | 106 | 146 | 15 | 638 | 112 | 259 | 534 | 432 | 473 |
 
 These are inventory-entry counts. The linked-unit crosswalk in
-`inventory_units.csv` currently represents 171 distinct units across 190
-entries: 99 canonical stock IDs and 72 provisional candidate-unit IDs. Of the
-72 candidate units, 16 are screened eligible, 36 are screened ineligible, and 20
+`inventory_units.csv` currently represents 172 distinct units across 191
+entries: 99 canonical stock IDs and 73 provisional candidate-unit IDs. Of the
+73 candidate units, 16 are screened eligible, 37 are screened ineligible, and 20
 remain eligibility-unresolved. Two of the ineligible units have ambiguous or mixed
-identity status. The other 715 entries do not yet have an explicit unit
+identity status. The other 714 entries do not yet have an explicit unit
 crosswalk. Regional
 counts by organization are available in `inventory_progress.csv`. These are
 provisional audit counts, not the selected expansion batch.
@@ -455,7 +455,10 @@ NOAA Atlantic herring (Stock SMART 10572) is screened against the 2026 WHAM Mana
 
 NOAA black sea bass Stock SMART units 10310 (South Atlantic) and 10311 (Mid-Atlantic) are distinct stocks with age-structured assessment models. The South Atlantic SEDAR 76 Update reports N-at-age and F-at-age through 2023, but its annual age-composition input matrices remain unverified and a revision is underway. The accepted Mid-Atlantic 2025 multi-WHAM update reports aggregate indicators through 2024; its final input package and age-specific output arrays were not recovered. Both remain eligibility-unresolved. See `source_reviews/noaa_black_sea_bass_south_atlantic_2025.md` and `source_reviews/noaa_black_sea_bass_mid_atlantic_2025.md`.
 
-Recent discovery source reviews: [ICES turbot in Division 3.a](source_reviews/ices_turbot_3a_2026.md), [NOAA Gulf of Mexico red grouper (Stock SMART 10331)](source_reviews/noaa_red_grouper_gom_2025.md), [NOAA Gulf Spanish mackerel (Stock SMART 10173)](source_reviews/noaa_gulf_spanish_mackerel_2023.md), [DFO Gulf witch flounder, NAFO 4RST](source_reviews/dfo_witch_flounder_4rst_2022.md), [DFO Inside Quillback](source_reviews/dfo_quillback_inside_2021.md), [DFO Outside Quillback](source_reviews/dfo_quillback_outside_2021.md), [DFO British Columbia Longspine Thornyhead](source_reviews/dfo_longspine_thornyhead_bc.md), and [DFO Greenland halibut in NAFO Subarea 0](source_reviews/dfo_greenland_halibut_0a0b_2025.md).
+Recent discovery source reviews: [ICES northern hake](source_reviews/ices_northern_hake_2026.md), [ICES turbot in Division 3.a](source_reviews/ices_turbot_3a_2026.md), [NOAA Gulf of Mexico red grouper (Stock SMART 10331)](source_reviews/noaa_red_grouper_gom_2025.md), [NOAA Gulf Spanish mackerel (Stock SMART 10173)](source_reviews/noaa_gulf_spanish_mackerel_2023.md), [DFO Gulf witch flounder, NAFO 4RST](source_reviews/dfo_witch_flounder_4rst_2022.md), [DFO Inside Quillback](source_reviews/dfo_quillback_inside_2021.md), [DFO Outside Quillback](source_reviews/dfo_quillback_outside_2021.md), [DFO British Columbia Longspine Thornyhead](source_reviews/dfo_longspine_thornyhead_bc.md), and [DFO Greenland halibut in NAFO Subarea 0](source_reviews/dfo_greenland_halibut_0a0b_2025.md).
 
 
 ICES turbot in Division 3.a (`tur.27.3a`) is a distinct current advice unit with a 2026 SPiCT assessment. The model uses total catches and three quarterly aggregate exploitable-biomass indices; its use of length data to construct those indices does not provide age-disaggregated likelihood inputs. It is screened ineligible for the age-specific source set, while its relative biomass and fishing-pressure outputs remain available for aggregate comparisons. The WGNSSK report also notes that biological connectivity with North Sea and Baltic populations remains under study. See `source_reviews/ices_turbot_3a_2026.md`.
+
+
+ICES northern hake (`hke.27.3a46-8abd`) is assessed with a sex-separated Stock Synthesis model. Its current 2026 observations are catches, aggregate abundance indices, and length-frequency data, without catch-at-age or age-specific survey series. Public outputs include historical recruitment, SSB, aggregate F1-7 and biomass; the report shows numbers-at-age only for a short-term forecast. The detailed TAF repository cited in the report was not publicly accessible during review. The current assessment is ineligible for the age-disaggregated set; see `source_reviews/ices_northern_hake_2026.md`.
