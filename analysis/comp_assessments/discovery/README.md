@@ -27,14 +27,14 @@ the rows already linked to a stock or candidate unit.
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 47 | 10 | 122 | 21 | 133 | 45 | 175 | 24 |
 | ICES | 274 | 59 | 84 | 2 | 129 | 51 | 76 | 147 | 145 | 129 |
-| NOAA | 432 | 28 | 132 | 3 | 269 | 54 | 79 | 299 | 165 | 267 |
-| **Total** | **905** | **107** | **263** | **15** | **520** | **126** | **288** | **491** | **485** | **420** |
+| NOAA | 432 | 28 | 133 | 3 | 268 | 54 | 80 | 298 | 166 | 266 |
+| **Total** | **905** | **107** | **264** | **15** | **519** | **126** | **289** | **490** | **486** | **419** |
 
-The crosswalk currently links 290 distinct unit keys across 309 inventory rows:
-100 link to canonical stocks and 190 are candidate units: 188 are new, one is
-ambiguous and one has mixed identity status. Of the 188 new
-candidate units, 30 are eligible for source curation, 128 are ineligible for
-the age-disaggregated set, and 30 remain unresolved. A further 596 inventory
+The crosswalk currently links 291 distinct unit keys across 310 inventory rows:
+100 link to canonical stocks and 191 are candidate units: 189 are new, one is
+ambiguous and one has mixed identity status. Of the 189 new
+candidate units, 30 are eligible for source curation, 129 are ineligible for
+the age-disaggregated set, and 30 remain unresolved. A further 595 inventory
 rows have no unit crosswalk yet. Row-level status and unit-level deduplication are intentionally
 reported separately.
 
@@ -43,6 +43,9 @@ The 2026 ICES boarfish unit `boc.27.6-8` is newly screened ineligible for the ag
 The 2025 ICES red gurnard advice (`gur.27.3-8`) describes a survey trends-based assessment with an aggregate biomass index, no reliable catch data, and no age-specific inputs or population outputs. It is screened ineligible. See `source_reviews/ices_red_gurnard_3_8_2025.md`.
 
 NOAA Stock SMART Pacific bluefin tuna (ID 11687) is a new Pacific-wide ISC/PBFWG assessment unit. The 2024 fully accepted SS3.30 run uses catch totals, size compositions, and annual fishery CPUE indices; its reported catch-at-age is estimated internally, not an observed age input. The age-input candidate is screened ineligible. See `source_reviews/noaa_pacific_bluefin_2024.md`.
+
+NOAA Stock SMART ID 11827 is the Main Hawaiian Islands Deep 7 multispecies complex. Its accepted 2024 JABBA assessment uses total catch and aggregate fishery/survey indices; a supplementary Opakapaka age-structured model uses length and weight compositions but no documented age-composition likelihood. The complex is screened ineligible for age-disaggregated inputs. Its seven component species remain one assessment unit. See `source_reviews/noaa_mhi_deep7_2024.md`.
+
 NOAA Stock SMART 10434, Gulf of Alaska sharpchin rockfish, is the Tier 4 component of the GOA Other Rockfish complex. Stock SMART lists a fully accepted 2023 REMA Model 15.2 run; the 2024 SAFE update carried forward Tier 4 biomass because no new survey data were available to refit, and the 2025 SAFE catch report says no assessment was conducted and prior values were rolled forward. The assessment uses aggregate survey biomass and catch, not age-specific population likelihoods or outputs, so the unit is screened ineligible. See `source_reviews/noaa_goa_sharpchin_2024.md` and its local source cache manifest.
 
 
@@ -158,15 +161,15 @@ Snapshot dated 2026-10-30: the register contains 905 source-list entries. These 
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 47 | 10 | 122 | 21 | 133 | 45 | 175 | 24 |
 | ICES | 274 | 59 | 84 | 2 | 129 | 51 | 76 | 147 | 145 | 129 |
-| NOAA | 432 | 28 | 132 | 3 | 269 | 54 | 79 | 299 | 165 | 267 |
-| Total | 905 | 107 | 263 | 15 | 520 | 126 | 288 | 491 | 485 | 420 |
+| NOAA | 432 | 28 | 133 | 3 | 268 | 54 | 80 | 298 | 166 | 266 |
+| Total | 905 | 107 | 264 | 15 | 519 | 126 | 289 | 490 | 486 | 419 |
 
 These are inventory-entry counts. The linked-unit crosswalk in
-inventory_units.csv represents 290 distinct units across 309 inventory rows:
-100 canonical stock IDs and 190 candidate-unit IDs. Of the 188 new candidate
-units, 30 are screened eligible, 128 are screened ineligible, and 30 remain
+inventory_units.csv represents 291 distinct units across 310 inventory rows:
+100 canonical stock IDs and 191 candidate-unit IDs. Of the 189 new candidate
+units, 30 are screened eligible, 129 are screened ineligible, and 30 remain
 eligibility-unresolved. Two additional candidate-unit IDs have ambiguous or
-mixed identity status. The other 596 entries do not yet have a crosswalk unit. Regional
+mixed identity status. The other 595 entries do not yet have a crosswalk unit. Regional
 counts by organization are in inventory_progress.csv. These are provisional
 audit counts, not the selected expansion batch.
 
