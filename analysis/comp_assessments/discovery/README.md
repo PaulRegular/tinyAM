@@ -26,15 +26,15 @@ the rows already linked to a stock or candidate unit.
 | Organization | Rows | Matched to database | New candidate rows | Ambiguous identity | Identity unreviewed | Eligible rows | Ineligible rows | Eligibility unresolved | Screened | Not screened |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 49 | 10 | 120 | 21 | 134 | 44 | 177 | 22 |
-| ICES | 274 | 59 | 91 | 2 | 122 | 51 | 80 | 143 | 152 | 122 |
+| ICES | 274 | 59 | 92 | 2 | 121 | 51 | 81 | 142 | 153 | 121 |
 | NOAA | 433 | 28 | 167 | 7 | 231 | 56 | 112 | 265 | 204 | 229 |
-| **Total** | **906** | **107** | **307** | **19** | **473** | **128** | **326** | **452** | **533** | **373** |
+| **Total** | **906** | **107** | **308** | **19** | **472** | **128** | **327** | **451** | **534** | **372** |
 
-The crosswalk currently links 333 distinct unit keys across 353 inventory rows:
-100 link to canonical stocks and 233 are candidate units: 231 are new, one is
-ambiguous and one has mixed identity status. Of the 231 new candidate units, 32 are eligible for source curation, 162 are
+The crosswalk currently links 334 distinct unit keys across 354 inventory rows:
+100 link to canonical stocks and 234 are candidate units: 232 are new, one is
+ambiguous and one has mixed identity status. Of the 232 new candidate units, 32 are eligible for source curation, 163 are
 ineligible for the age-
-disaggregated set, and 37 remain unresolved. A further 553 inventory rows have
+disaggregated set, and 37 remain unresolved. A further 552 inventory rows have
 no unit crosswalk yet. Row-level status and unit-level deduplication are
 intentionally reported separately.
 
@@ -200,16 +200,16 @@ Snapshot dated 2026-10-30: the register contains 906 source-list entries. These 
 | Organization | Entries | Matched | Provisional new | Ambiguous | Identity unreviewed | Eligible | Excluded | Eligibility unresolved | Screened | Not started |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 49 | 10 | 120 | 21 | 134 | 44 | 177 | 22 |
-| ICES | 274 | 59 | 91 | 2 | 122 | 51 | 80 | 143 | 152 | 122 |
+| ICES | 274 | 59 | 92 | 2 | 121 | 51 | 81 | 142 | 153 | 121 |
 | NOAA | 433 | 28 | 167 | 7 | 231 | 56 | 112 | 265 | 204 | 229 |
-| Total | 906 | 107 | 307 | 19 | 473 | 128 | 326 | 452 | 533 | 373 |
+| Total | 906 | 107 | 308 | 19 | 472 | 128 | 327 | 451 | 534 | 372 |
 
 These are inventory-entry counts. The linked-unit crosswalk in
-inventory_units.csv represents 333 distinct units across 353 inventory rows:
-100 canonical stock IDs and 233 candidate-unit IDs. Of the 231 new candidate
-units, 32 are screened eligible, 162 are screened ineligible, and 37 remain
+inventory_units.csv represents 334 distinct units across 354 inventory rows:
+100 canonical stock IDs and 234 candidate-unit IDs. Of the 232 new candidate
+units, 32 are screened eligible, 163 are screened ineligible, and 37 remain
 eligibility-unresolved. One candidate-unit ID has ambiguous identity and one
-has mixed identity status. The other 553 entries do not yet have a crosswalk
+has mixed identity status. The other 552 entries do not yet have a crosswalk
 unit. Regional counts by organization are in inventory_progress.csv. These are
 provisional audit counts, not the selected expansion batch.
 
@@ -264,6 +264,8 @@ advice uses landings only, with no age-specific population inputs or outputs,
 so it is screened ineligible for the age-disaggregated set. See
 `source_reviews/ices_small_eyed_ray_7de_2024.md`.
 The separate small-eyed ray unit in divisions 7.f and 7.g (`rje.27.7fg`) is screened ineligible based on the 2026 Category 3 advice and Standard Graphs data. Its published series contains an aggregate biomass index and landings, with no age-specific inputs or population outputs. See `source_reviews/ices_small_eyed_ray_7fg_2026.md`.
+
+ICES porbeagle (por.27.nea) is screened ineligible using the latest 2026 Category 2.11 advice and its stock graph. Published data provide annual landings only, with no age-specific inputs or population outputs. See `source_reviews/ices_porbeagle_nea_2026.md`.
 
 The ICES alfonsino unit (`alf.27.nea`) is screened ineligible: the 2026
 Category 3.2 advice reports aggregate landings, a biomass index in kg/day and a
