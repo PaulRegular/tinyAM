@@ -74,6 +74,7 @@
 "candidate:noaa_goa_northern_rock_sole","","noaa_goa_northern_rock_sole","new","ineligible","screened","not_started","NOAA","AFSC","NOAA:10836 | NOAA:15412 | NOAA:15413",3
 "candidate:noaa_goa_rex_sole","","noaa_goa_rex_sole","new","eligible","screened","not_started","NOAA","AFSC","NOAA:10058 | NOAA:15410 | NOAA:15411",3
 "candidate:noaa_goa_southern_rock_sole","","noaa_goa_southern_rock_sole","new","ineligible","screened","not_started","NOAA","AFSC","NOAA:10040 | NOAA:15414 | NOAA:15415",3
+"candidate:noaa_goa_yelloweye_seo","","noaa_goa_yelloweye_seo","new","ineligible","screened","not_started","NOAA","AFSC","NOAA:10425",1
 "candidate:noaa_golden_tilefish_mid_atlantic","","noaa_golden_tilefish_mid_atlantic","new","eligible","screened","not_started","NOAA","NEFSC","NOAA:10385",1
 "candidate:noaa_golden_tilefish_south_atlantic","","noaa_golden_tilefish_south_atlantic","new","eligible","screened","not_started","NOAA","SEFSC","NOAA:10384",1
 "candidate:noaa_gray_snapper_gulf_mexico","","noaa_gray_snapper_gulf_mexico","new","eligible","screened","not_started","NOAA","SEFSC","NOAA:10221",1

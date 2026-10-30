@@ -16,6 +16,28 @@ The initial snapshot was retrieved on 2026-10-28 from:
 | ICES SID | 274 published stock entries | `source_cache/discovery_ices_sid/stock_list_2026.json`, SHA-256 `913D6A3EEAB9449AE3CD0DD15661A150D36FF79B6E6A9BA78D86D46BA1035F42` | Published 2026 stock list includes assessments and advice that may not use age observations. |
 | DFO Sustainability Survey | 198 selected stocks | `source_cache/discovery_dfo_sustainability/survey_2024.html`, SHA-256 `A10E65EEF028C2A524973FFCFA155915D673AE3AB9A9F1312581449E29644A28` | The 2024 survey covers only selected managed stocks, including non-finfish. Supplement with regional CSAS inventories. Official IDs and scientific names require review. |
 
+## Current inventory status
+
+The inventory has 905 source-list rows. These are not unique stock counts.
+`inventory_progress.csv` breaks row-level identity, screening, and eligibility
+status down by organization and source region; `inventory_units.csv` summarizes
+the rows already linked to a stock or candidate unit.
+
+| Organization | Rows | Matched to database | New candidate rows | Ambiguous identity | Identity unreviewed | Eligible rows | Ineligible rows | Eligibility unresolved | Screened | Not screened |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| DFO | 199 | 20 | 47 | 10 | 122 | 21 | 133 | 45 | 175 | 24 |
+| ICES | 274 | 59 | 41 | 2 | 172 | 49 | 68 | 157 | 134 | 140 |
+| NOAA | 432 | 28 | 97 | 3 | 304 | 54 | 77 | 301 | 163 | 269 |
+| **Total** | **905** | **107** | **185** | **15** | **598** | **124** | **278** | **503** | **472** | **433** |
+
+The crosswalk currently links 212 distinct unit keys across 231 inventory rows:
+100 match canonical database stocks and 110 are new candidate units; one unit
+is ambiguous and one has mixed identity status. Of the 110 new candidate units,
+28 are eligible for source curation, 53 are ineligible for the age-disaggregated
+set, and 29 remain unresolved. A further 674 inventory rows have no unit
+crosswalk yet. Row-level status and unit-level deduplication are intentionally
+reported separately.
+
 
 Regional supplementation: the [2026 DFO Pacific groundfish plan](https://www.pac.dfo-mpo.gc.ca/fm-gp/mplans/ground-fond-ifmp-pgip-sm-eng.html), retrieved 2026-10-28, led to a British Columbia yellowtail rockfish candidate absent from the initial survey list. The cached regional page SHA-256 is `2CB8792B9AEBE6FE5B27F3887BEFF57F02E2E7CE15D9344353AD705AED18475B`. This partial regional review is not an exhaustive CSAS inventory; further regional sources must still be audited.
 
