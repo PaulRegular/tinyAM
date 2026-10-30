@@ -26,15 +26,15 @@ the rows already linked to a stock or candidate unit.
 | Organization | Rows | Matched to database | New candidate rows | Ambiguous identity | Identity unreviewed | Eligible rows | Ineligible rows | Eligibility unresolved | Screened | Not screened |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 47 | 10 | 122 | 21 | 133 | 45 | 175 | 24 |
-| ICES | 274 | 59 | 44 | 2 | 169 | 51 | 68 | 155 | 137 | 137 |
+| ICES | 274 | 59 | 45 | 2 | 168 | 51 | 69 | 154 | 138 | 136 |
 | NOAA | 432 | 28 | 98 | 3 | 303 | 54 | 78 | 300 | 164 | 268 |
-| **Total** | **905** | **107** | **189** | **15** | **594** | **126** | **279** | **500** | **476** | **429** |
+| **Total** | **905** | **107** | **190** | **15** | **593** | **126** | **280** | **499** | **477** | **428** |
 
-The crosswalk currently links 216 distinct unit keys across 235 inventory rows:
-100 match canonical database stocks and 114 are new candidate units; one unit
-is ambiguous and one has mixed identity status. Of the 114 new candidate units,
-30 are eligible for source curation, 54 are ineligible for the age-disaggregated
-set, and 30 remain unresolved. A further 670 inventory rows have no unit
+The crosswalk currently links 217 distinct unit keys across 236 inventory rows:
+100 match canonical database stocks and 115 are new candidate units; one unit
+is ambiguous and one has mixed identity status. Of the 115 new candidate units,
+30 are eligible for source curation, 55 are ineligible for the age-disaggregated
+set, and 30 remain unresolved. A further 669 inventory rows have no unit
 crosswalk yet. Row-level status and unit-level deduplication are intentionally
 reported separately.
 NOAA Stock SMART 10434, Gulf of Alaska sharpchin rockfish, is the Tier 4 component of the GOA Other Rockfish complex. Stock SMART lists a fully accepted 2023 REMA Model 15.2 run; the 2024 SAFE update carried forward Tier 4 biomass because no new survey data were available to refit, and the 2025 SAFE catch report says no assessment was conducted and prior values were rolled forward. The assessment uses aggregate survey biomass and catch, not age-specific population likelihoods or outputs, so the unit is screened ineligible. See `source_reviews/noaa_goa_sharpchin_2024.md` and its local source cache manifest.
@@ -151,16 +151,16 @@ Snapshot dated 2026-10-30: the register contains 905 source-list entries. These 
 | Organization | Entries | Matched | Provisional new | Ambiguous | Identity unreviewed | Eligible | Excluded | Eligibility unresolved | Screened | Not started |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 47 | 10 | 122 | 21 | 133 | 45 | 175 | 24 |
-| ICES | 274 | 59 | 44 | 2 | 169 | 51 | 68 | 155 | 137 | 137 |
+| ICES | 274 | 59 | 45 | 2 | 168 | 51 | 69 | 154 | 138 | 136 |
 | NOAA | 432 | 28 | 98 | 3 | 303 | 54 | 78 | 300 | 164 | 268 |
-| Total | 905 | 107 | 189 | 15 | 594 | 126 | 279 | 500 | 476 | 429 |
+| Total | 905 | 107 | 190 | 15 | 593 | 126 | 280 | 499 | 477 | 428 |
 
 These are inventory-entry counts. The linked-unit crosswalk in
-inventory_units.csv represents 216 distinct units across 235 inventory rows:
-100 canonical stock IDs and 116 candidate-unit IDs. Of the 114 new candidate
-units, 30 are screened eligible, 54 are screened ineligible, and 30 remain
+inventory_units.csv represents 217 distinct units across 236 inventory rows:
+100 canonical stock IDs and 117 candidate-unit IDs. Of the 115 new candidate
+units, 30 are screened eligible, 55 are screened ineligible, and 30 remain
 eligibility-unresolved. Two additional candidate-unit IDs have ambiguous or
-mixed identity status. The other 670 entries do not yet have a crosswalk unit. Regional
+mixed identity status. The other 669 entries do not yet have a crosswalk unit. Regional
 counts by organization are in inventory_progress.csv. These are provisional
 audit counts, not the selected expansion batch.
 
@@ -696,3 +696,5 @@ unverified, so eligibility is unresolved. See
 ICES greater silver smelt in Subarea 14 and Division 5.a (`aru.27.5a14`) is a distinct eligible candidate for source curation. The 2026 MFRI report documents the age-structured inputs, but the annual matrices are mostly figure-based; official outputs include recruitment, SSB and F summaries with uncertainty. See `source_reviews/ices_greater_silver_smelt_5a14_2026.md`.
 
 ICES ling in Division 5.a (`lin.27.5a`) is a distinct, eligible candidate for source curation. The 2026 MFRI report documents a SAM assessment with catch-at-age, three age-specific survey series, biology, and fixed M = 0.15; catch-age inputs and much of the age-specific data are figure-based, with a documented sampling gap. See `source_reviews/ices_ling_5a_2026.md`.
+
+ICES blue ling in Subarea 14 and Division 5.a (`bli.27.5a14`) is a distinct current stock screened ineligible for the age-disaggregated set. The latest assessment is length-based GADGET; the report says reliable age composition and weights-at-age are unavailable, while maturity is modeled at length. See `source_reviews/ices_blue_ling_5a14_2026.md`.
