@@ -106,16 +106,16 @@ Snapshot dated 2026-10-30: the register contains 905 source-list entries. These 
 | Organization | Entries | Matched | Provisional new | Ambiguous | Identity unreviewed | Eligible | Excluded | Eligibility unresolved | Screened | Not started |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 47 | 10 | 122 | 21 | 133 | 45 | 175 | 24 |
-| ICES | 274 | 58 | 38 | 2 | 176 | 48 | 65 | 161 | 130 | 144 |
+| ICES | 274 | 58 | 39 | 2 | 175 | 48 | 66 | 160 | 131 | 143 |
 | NOAA | 432 | 28 | 96 | 3 | 305 | 54 | 76 | 302 | 162 | 270 |
-| Total | 905 | 106 | 181 | 15 | 603 | 123 | 274 | 508 | 467 | 438 |
+| Total | 905 | 106 | 182 | 15 | 602 | 123 | 275 | 507 | 468 | 437 |
 
 These are inventory-entry counts. The linked-unit crosswalk in
-inventory_units.csv represents 207 distinct units across 226 inventory rows:
-99 canonical stock IDs and 108 candidate-unit IDs. Of the 106 new candidate
-units, 27 are screened eligible, 50 are screened ineligible, and 29 remain
+inventory_units.csv represents 208 distinct units across 227 inventory rows:
+99 canonical stock IDs and 109 candidate-unit IDs. Of the 107 new candidate
+units, 27 are screened eligible, 51 are screened ineligible, and 29 remain
 eligibility-unresolved. Two additional candidate-unit IDs have ambiguous or
-mixed identity status. The other 679 entries do not yet have a crosswalk unit. Regional
+mixed identity status. The other 678 entries do not yet have a crosswalk unit. Regional
 counts by organization are in inventory_progress.csv. These are provisional
 audit counts, not the selected expansion batch.
 
@@ -611,6 +611,8 @@ ICES turbot in Division 3.a (`tur.27.3a`) is a distinct current advice unit with
 ICES northern hake (`hke.27.3a46-8abd`) is assessed with a sex-separated Stock Synthesis model. Its current 2026 observations are catches, aggregate abundance indices, and length-frequency data, without catch-at-age or age-specific survey series. Public outputs include historical recruitment, SSB, aggregate F1-7 and biomass; the report shows numbers-at-age only for a short-term forecast. The detailed TAF repository cited in the report was not publicly accessible during review. The current assessment is ineligible for the age-disaggregated set; see `source_reviews/ices_northern_hake_2026.md`.
 
 ICES southern hake (`hke.27.8c9a`) is assessed with a 2026 length-based production model. Standard Graphs reports age-0 recruitment, SSB, and F averaged over ages 1-7 with 90% intervals, but no historical N-at-age, F-at-age, or M-at-age surfaces. It is ineligible for the age-disaggregated set; see `source_reviews/ices_southern_hake_8c9a_2026.md`.
+
+ICES southern black-bellied anglerfish (`ank.27.8c9a`) is assessed with a 2026 surplus-production model. Its graph provides aggregate recruitment, SSB, catch, and F with 90% intervals, not age-specific inputs or population outputs. It is ineligible for the age-disaggregated set; see `source_reviews/ices_black_bellied_anglerfish_8c9a_2026.md`.
 
 
 ICES Iberian sardine (pil.27.8c9a) is assessed using a 2025 Stock Synthesis run. Its March 2026 Stock Annex documents catch-at-age, spring acoustic age indices and compositions, age-specific biology, and fixed M; Standard Graphs provides recruitment, B1+, and aggregate F outputs. The actual annual input matrices and numeric fractional-year survey timing were not recovered because the assessment TAF repository was not publicly accessible. Eligibility remains unresolved pending those data. See source_reviews/ices_iberian_sardine_2025.md.
