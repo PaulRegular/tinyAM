@@ -59,6 +59,7 @@
 "candidate:noaa_pacific_sanddab_us","","noaa_pacific_sanddab_us","new","unresolved","screened","not_started","NOAA","NWFSC / SWFSC","NOAA:10190",1
 "candidate:noaa_pollock_bogoslof","","noaa_pollock_bogoslof","new","ineligible","screened","not_started","NOAA","AFSC","NOAA:10512",1
 "candidate:noaa_pollock_southeast_outside","","noaa_pollock_southeast_outside","new","ineligible","screened","not_started","NOAA","AFSC","NOAA:10514",1
+"candidate:noaa_red_grouper_gom","","noaa_red_grouper_gom","new","unresolved","screened","not_started","NOAA","SEFSC","NOAA:10331",1
 "candidate:noaa_silver_hake_northern","","noaa_silver_hake_northern","new","ineligible","screened","not_started","NOAA","NEFSC","NOAA:10521",1
 "candidate:noaa_silver_hake_southern","","noaa_silver_hake_southern","new","ineligible","screened","not_started","NOAA","NEFSC","NOAA:10522",1
 "candidate:noaa_south_atlantic_black_sea_bass","","noaa_south_atlantic_black_sea_bass","new","unresolved","screened","not_started","NOAA","SEFSC","NOAA:10310",1
@@ -113,6 +114,7 @@
 "stock:ck_ices_wgcse_platessa_is7e","ck_ices_wgcse_platessa_is7e","","matched","ineligible","screened","not_started","ICES","Celtic Seas, Greater North Sea","ICES:ple.27.7e",1
 "stock:ck_ices_wghansa_pilchardus_sp8abd","ck_ices_wghansa_pilchardus_sp8abd","","matched","unresolved","screened","imported","ICES","Bay of Biscay and the Iberian Coast","ICES:pil.27.8abd",1
 "stock:ck_ices_wghansa_trachurus_sp9a","ck_ices_wghansa_trachurus_sp9a","","matched","unresolved","screened","imported","ICES","Bay of Biscay and the Iberian Coast","ICES:hom.27.9a",1
+"stock:ck_ices_wgnssk_maximus_ns_4","ck_ices_wgnssk_maximus_ns_4","","matched","eligible","screened","imported","ICES","Greater North Sea","ICES:tur.27.4",1
 "stock:ck_ices_wgnssk_platessa_ns_7d","ck_ices_wgnssk_platessa_ns_7d","","matched","eligible","screened","imported","ICES","Greater North Sea","ICES:ple.27.7d",1
 "stock:ck_ices_wgnssk_solea_ns_4","ck_ices_wgnssk_solea_ns_4","","matched","unresolved","screened","imported","ICES","Greater North Sea","ICES:sol.27.4",1
 "stock:ck_ices_wgnssk_solea_ns_7d","ck_ices_wgnssk_solea_ns_7d","","matched","eligible","screened","imported","ICES","Greater North Sea","ICES:sol.27.7d",1
