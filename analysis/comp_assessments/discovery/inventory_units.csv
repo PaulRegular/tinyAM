@@ -183,6 +183,7 @@
 "candidate:noaa_pacific_mackerel_pacific_coast","","noaa_pacific_mackerel_pacific_coast","new","eligible","screened","not_started","NOAA","SWFSC","NOAA:10163",1
 "candidate:noaa_pacific_rex_sole","","noaa_pacific_rex_sole","new","eligible","screened","not_started","NOAA","NWFSC / SWFSC","NOAA:10059",1
 "candidate:noaa_pacific_sanddab_us","","noaa_pacific_sanddab_us","new","unresolved","screened","not_started","NOAA","NWFSC / SWFSC","NOAA:10190",1
+"candidate:noaa_pacific_stripetail_rockfish","","noaa_pacific_stripetail_rockfish","new","ineligible","screened","not_started","NOAA","NWFSC / SWFSC","NOAA:10428",1
 "candidate:noaa_pink_shrimp_gulf","","noaa_pink_shrimp_gulf","new","ineligible","screened","not_started","NOAA","SEFSC","NOAA:10081",1
 "candidate:noaa_pink_shrimp_south_atlantic","","noaa_pink_shrimp_south_atlantic","new","ineligible","screened","not_started","NOAA","SEFSC","NOAA:10082",1
 "candidate:noaa_pollock_bogoslof","","noaa_pollock_bogoslof","new","ineligible","screened","not_started","NOAA","AFSC","NOAA:10512",1
