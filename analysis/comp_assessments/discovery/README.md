@@ -107,18 +107,17 @@ Snapshot dated 2026-10-30: the register contains 905 source-list entries. These 
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 46 | 10 | 123 | 20 | 133 | 46 | 174 | 25 |
 | ICES | 274 | 58 | 26 | 2 | 188 | 48 | 54 | 172 | 118 | 156 |
-| NOAA | 432 | 28 | 84 | 3 | 317 | 46 | 74 | 312 | 150 | 282 |
-| Total | 905 | 106 | 156 | 15 | 628 | 114 | 261 | 530 | 442 | 463 |
+| NOAA | 432 | 28 | 85 | 3 | 316 | 47 | 74 | 311 | 151 | 281 |
+| Total | 905 | 106 | 157 | 15 | 627 | 115 | 261 | 529 | 443 | 462 |
 
 These are inventory-entry counts. The linked-unit crosswalk in
-`inventory_units.csv` currently represents 182 distinct units across 201
-entries: 99 canonical stock IDs and 83 provisional candidate-unit IDs. Of the
-83 candidate units, 18 are screened eligible, 39 are screened ineligible, and 26
-remain eligibility-unresolved. Two of the ineligible units have ambiguous or mixed
-identity status. The other 704 entries do not yet have an explicit unit
-crosswalk. Regional
-counts by organization are available in `inventory_progress.csv`. These are
-provisional audit counts, not the selected expansion batch.
+inventory_units.csv represents 183 distinct units across 202 inventory rows:
+99 canonical stock IDs and 84 provisional candidate-unit IDs. Of the 84
+candidate units, 19 are screened eligible, 39 are screened ineligible, and 26
+remain eligibility-unresolved. Two ineligible units have ambiguous or mixed
+identity status. The other 703 entries do not yet have a crosswalk unit. Regional
+counts by organization are in inventory_progress.csv. These are provisional
+audit counts, not the selected expansion batch.
 
 NOAA Stock SMART Scamp rows 10324 (Gulf) and 10326 (South Atlantic) are
 separate regional units, although both SEDAR 68OA assessments model Scamp and
@@ -522,3 +521,5 @@ age compositions informed the SERFS video selectivity but were not themselves
 fitted as an age-specific abundance index. This unit must remain separate from
 Gulf Gag Grouper (Stock SMART 10348). See
 source_reviews/noaa_gag_sedar71_2021.md.
+
+NOAA Stock SMART row 10339 is a distinct South Atlantic Snowy Grouper unit. The latest completed assessment located is SEDAR 36 Update, revised January 2021, using data through 2018. Its report provides removal totals, aggregate indices, age-composition figures and sample sizes, age-specific biology, and numeric abundance-at-age, biomass-at-age, recruitment, SSB, F-at-age, and estimated-removals-at-age outputs. Reconstructing observed catch-at-age requires digitizing composition figures. The 2013 SEDAR 36 WP15 model files are for the superseded benchmark and are not a substitute for update inputs. See source_reviews/noaa_snowy_grouper_sedar36u_2021.md.
