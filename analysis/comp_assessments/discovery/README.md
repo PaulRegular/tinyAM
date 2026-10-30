@@ -27,14 +27,14 @@ the rows already linked to a stock or candidate unit.
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 63 | 18 | 98 | 21 | 146 | 32 | 198 | 1 | 0 |
 | ICES | 274 | 59 | 118 | 2 | 95 | 52 | 104 | 118 | 179 | 0 | 95 |
-| NOAA | 433 | 28 | 181 | 7 | 217 | 57 | 113 | 263 | 218 | 0 | 215 |
-| **Total** | **906** | **107** | **362** | **27** | **410** | **130** | **363** | **413** | **595** | **1** | **310** |
+| NOAA | 433 | 28 | 183 | 7 | 215 | 57 | 115 | 261 | 220 | 0 | 213 |
+| **Total** | **906** | **107** | **364** | **27** | **408** | **130** | **365** | **411** | **597** | **1** | **308** |
 
-The crosswalk currently links 387 distinct unit keys across 408 inventory rows:
-100 link to canonical stocks and 287 are candidate units. Of the 285 new
-candidate units, 34 are eligible for source curation, 198 are ineligible for
+The crosswalk currently links 389 distinct unit keys across 410 inventory rows:
+100 link to canonical stocks and 289 are candidate units. Of the 287 new
+candidate units, 34 are eligible for source curation, 200 are ineligible for
 the age-disaggregated set, and 53 remain unresolved. One candidate unit has
-ambiguous identity and one has mixed identity status. A further 498 inventory
+ambiguous identity and one has mixed identity status. A further 496 inventory
 rows have no unit crosswalk yet. Row-level status and unit-level deduplication
 are intentionally reported separately.
 
@@ -281,15 +281,15 @@ Snapshot dated 2026-10-30: the register contains 906 source-list entries. These 
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 63 | 18 | 98 | 21 | 146 | 32 | 198 | 1 | 0 |
 | ICES | 274 | 59 | 118 | 2 | 95 | 52 | 104 | 118 | 179 | 0 | 95 |
-| NOAA | 433 | 28 | 181 | 7 | 217 | 57 | 113 | 263 | 218 | 0 | 215 |
-| Total | 906 | 107 | 362 | 27 | 410 | 130 | 363 | 413 | 595 | 1 | 310 |
+| NOAA | 433 | 28 | 183 | 7 | 215 | 57 | 115 | 261 | 220 | 0 | 213 |
+| Total | 906 | 107 | 364 | 27 | 408 | 130 | 365 | 411 | 597 | 1 | 308 |
 
 These are inventory-entry counts. The linked-unit crosswalk in
-inventory_units.csv represents 387 distinct units across 408 inventory rows:
-100 canonical stock IDs and 287 candidate-unit IDs. Of the 285 new units, 34
-are screened eligible, 198 are screened ineligible, and 53 remain
+inventory_units.csv represents 389 distinct units across 410 inventory rows:
+100 canonical stock IDs and 289 candidate-unit IDs. Of the 287 new units, 34
+are screened eligible, 200 are screened ineligible, and 53 remain
 eligibility-unresolved. One candidate-unit ID has ambiguous identity and one
-has mixed identity status. The other 498 entries do not yet have a crosswalk
+has mixed identity status. The other 496 entries do not yet have a crosswalk
 unit. Regional counts by organization are in inventory_progress.csv.
 These are provisional audit counts, not the selected expansion batch.
 
@@ -918,3 +918,5 @@ Ten ICES Baltic entries are now screened against current stock indicators and de
 Twelve 2026 NOAA Stock SMART Chinook units from Washington Coast and Puget Sound have been identity-linked as distinct new candidates. Stock SMART reports age-composition input level 4 for all 12 and VPA model category 4 for 11, but the reviewed PFMC reports do not expose the annual catch-at-age vectors or full age-specific outputs. These candidates remain eligibility-unresolved while their annual regional management inputs are investigated; the positive age-composition evidence is not treated as absence. No canonical numerical records were added. See `source_reviews/noaa_west_coast_chinook_2026.md`.
 
 NOAA Stock SMART 10525 is the Northwestern Atlantic Coast ocean pout unit. Its latest operational assessment, from 2022, is index-based and uses aggregate catch and a spring survey biomass index; age-specific population inputs and outputs were not part of that assessment. Stock SMART labels the result “Full acceptance,” while the report says it was not peer-reviewed in the Fall 2022 panel and records it as a Level 1 direct delivery. It is screened ineligible for this age-disaggregated set, without claiming age samples are absent. No canonical numerical records were added. See `source_reviews/noaa_ocean_pout_2022.md`. The official report PDF's remote checksum is recorded, but direct downloading was denied; a checksummed HTML text mirror is cached locally for reference.
+
+NOAA Stock SMART IDs 10500 and 10501 are distinct Northern and Southern Monkfish (Goosefish) units. Their latest 2022 operational assessment uses the Ismooth index method because a reliable aging method was unavailable; it reports aggregate catch and spring/fall survey indices with catch multipliers, not age-specific population inputs or outputs. Both candidates are screened ineligible for the age-disaggregated set, without claiming age samples are absent. No canonical numerical records were added. See source_reviews/noaa_monkfish_2022.md.

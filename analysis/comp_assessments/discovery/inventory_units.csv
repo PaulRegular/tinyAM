@@ -235,6 +235,8 @@
 "candidate:noaa_mhi_spectacled_parrotfish","","noaa_mhi_spectacled_parrotfish","new","ineligible","screened","not_started","NOAA","PIFSC","NOAA:14619",1
 "candidate:noaa_mhi_twosaddle_goatfish","","noaa_mhi_twosaddle_goatfish","new","ineligible","screened","not_started","NOAA","PIFSC","NOAA:14617",1
 "candidate:noaa_mid_atlantic_black_sea_bass","","noaa_mid_atlantic_black_sea_bass","new","unresolved","screened","not_started","NOAA","NEFSC","NOAA:10311",1
+"candidate:noaa_monkfish_north_10500","","noaa_monkfish_north_10500","new","ineligible","screened","not_started","NOAA","NEFSC","NOAA:10500",1
+"candidate:noaa_monkfish_south_10501","","noaa_monkfish_south_10501","new","ineligible","screened","not_started","NOAA","NEFSC","NOAA:10501",1
 "candidate:noaa_northern_anchovy_central_subpopulation","","noaa_northern_anchovy_central_subpopulation","new","eligible","screened","not_started","NOAA","SWFSC","NOAA:10574",1
 "candidate:noaa_ocean_pout_10525","","noaa_ocean_pout_10525","new","ineligible","screened","not_started","NOAA","NEFSC","NOAA:10525",1
 "candidate:noaa_pacific_aurora_rockfish","","noaa_pacific_aurora_rockfish","new","unresolved","screened","not_started","NOAA","NWFSC / SWFSC","NOAA:10547",1
