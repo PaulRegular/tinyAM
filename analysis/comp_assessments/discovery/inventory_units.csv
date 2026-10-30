@@ -145,6 +145,7 @@
 "stock:ck_ices_wgbfas_harengus_bs_25_29_32","ck_ices_wgbfas_harengus_bs_25_29_32","","matched","eligible","screened","imported","ICES","Baltic Sea","ICES:her.27.25-2932",1
 "stock:ck_ices_wgbfas_harengus_bs_28_1","ck_ices_wgbfas_harengus_bs_28_1","","matched","eligible","screened","imported","ICES","Baltic Sea","ICES:her.27.28",1
 "stock:ck_ices_wgbfas_morhua_bs","ck_ices_wgbfas_morhua_bs","","matched","eligible","screened","imported","ICES","Baltic Sea","ICES:cod.27.22-24",1
+"stock:ck_ices_wgbfas_morhua_bs_25_32","ck_ices_wgbfas_morhua_bs_25_32","","matched","ineligible","screened","imported","ICES","Baltic Sea","ICES:cod.27.24-32",1
 "stock:ck_ices_wgbfas_solea_ns_iiia_22_24","ck_ices_wgbfas_solea_ns_iiia_22_24","","matched","eligible","screened","imported","ICES","Baltic Sea, Greater North Sea","ICES:sol.27.20-24",1
 "stock:ck_ices_wgcse_aeglefinus_rock6b","ck_ices_wgcse_aeglefinus_rock6b","","matched","eligible","screened","imported","ICES","Celtic Seas, Oceanic Northeast Atlantic","ICES:had.27.6b",1
 "stock:ck_ices_wgcse_merlangus_cs7a","ck_ices_wgcse_merlangus_cs7a","","matched","eligible","screened","imported","ICES","Celtic Seas","ICES:whg.27.7a",1

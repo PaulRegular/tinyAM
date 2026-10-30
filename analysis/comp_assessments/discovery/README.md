@@ -114,6 +114,13 @@ and length-based fishing-pressure proxy, not age-disaggregated inputs or
 outputs. No canonical data were added; see
 `source_reviews/ices_whiting_89a_2026.md`.
 
+ICES eastern Baltic cod (`cod.27.24-32`) is reconciled to the existing eastern
+Baltic cod stock record. The canonical extent now reflects subdivisions 24–32
+and retains the historical Charbonneau–Keith 25–32 label as an alias. Its
+current 2026 index assessment remains distinct from the historical 2024
+age-structured assessment; see
+`../source_reviews/ck_ices_wgbfas_morhua_bs_25_32.md`.
+
 ## Inventory progress snapshot
 
 Snapshot dated 2026-10-30: the register contains 905 source-list entries. These are not deduplicated stock units.
@@ -121,16 +128,16 @@ Snapshot dated 2026-10-30: the register contains 905 source-list entries. These 
 | Organization | Entries | Matched | Provisional new | Ambiguous | Identity unreviewed | Eligible | Excluded | Eligibility unresolved | Screened | Not started |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 47 | 10 | 122 | 21 | 133 | 45 | 175 | 24 |
-| ICES | 274 | 58 | 41 | 2 | 173 | 49 | 67 | 158 | 133 | 141 |
+| ICES | 274 | 59 | 41 | 2 | 172 | 49 | 68 | 157 | 134 | 140 |
 | NOAA | 432 | 28 | 96 | 3 | 305 | 54 | 76 | 302 | 162 | 270 |
-| Total | 905 | 106 | 184 | 15 | 600 | 124 | 276 | 505 | 470 | 435 |
+| Total | 905 | 107 | 184 | 15 | 599 | 124 | 277 | 504 | 471 | 434 |
 
 These are inventory-entry counts. The linked-unit crosswalk in
-inventory_units.csv represents 210 distinct units across 229 inventory rows:
-99 canonical stock IDs and 111 candidate-unit IDs. Of the 109 new candidate
+inventory_units.csv represents 211 distinct units across 230 inventory rows:
+100 canonical stock IDs and 111 candidate-unit IDs. Of the 109 new candidate
 units, 28 are screened eligible, 52 are screened ineligible, and 29 remain
 eligibility-unresolved. Two additional candidate-unit IDs have ambiguous or
-mixed identity status. The other 676 entries do not yet have a crosswalk unit. Regional
+mixed identity status. The other 675 entries do not yet have a crosswalk unit. Regional
 counts by organization are in inventory_progress.csv. These are provisional
 audit counts, not the selected expansion batch.
 

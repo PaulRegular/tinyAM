@@ -1,4 +1,4 @@
-# Eastern Baltic cod in subdivisions 25–32
+# Eastern Baltic cod: 2024 age-structured assessment and 2026 index update
 
 ## Assessment selected for the partial database record
 
@@ -7,9 +7,13 @@ WGBFAS Stock Synthesis assessment. It is a one-area, quarterly,
 length-based Stock Synthesis 3.30 model for both sexes combined, with age
 classes 0–15+ and spawning time set to month 5. The model includes BITS Q1
 survey data through 2024; catch for 2024 was assumed equal to 2023 catch.
-Because the Charbonneau–Keith stock row identifies subdivisions 25–32, the
-stock identity remains unchanged; the model also includes eastern Baltic cod
-from the eastern part of subdivision 24.
+
+The current ICES assessment unit is `cod.27.24-32`, subdivisions 24–32. The
+canonical stock record uses that current official identifier and extent while
+retaining the Charbonneau–Keith `BS 25-32` label as its historical catalogue
+identifier. The 2024 SS3 assessment covers the eastern Baltic unit and includes
+the eastern part of subdivision 24; its age-specific outputs remain a separate
+historical assessment record.
 
 The 2024 report tabulates:
 
@@ -66,10 +70,12 @@ summary values are not treated as a separate at-age assessment output here.
 The latest advice record is from 2026 and uses a survey-index trend assessment
 (ICES category 3.2) based on standardized BITS Q1/Q4 indices, not an
 age-structured population model. It has no age-specific N/F/M estimates. The
-current index-based assessment is recorded separately as
-`ices_cod_eastern_baltic_2026`; the 2024 age-structured outputs remain
-available as a distinct historical record. The exploratory SPiCT analysis in
-the 2026 report is not the method used for current advice.
+current index-based assessment is recorded as `ices_cod_eastern_baltic_2026`
+under the same stock identity; the 2024 age-structured outputs remain a
+separate historical assessment record. The exploratory SPiCT analysis in the
+2026 report is not the method used for current advice. The 2026 inventory code
+`cod.27.24-32` is therefore reconciled to this existing eastern Baltic cod
+record rather than counted as a new stock unit.
 Sources:
 
 - [WGBFAS 2024 report](https://doi.org/10.17895/ices.pub.25764978),
