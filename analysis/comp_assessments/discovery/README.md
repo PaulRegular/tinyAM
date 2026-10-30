@@ -106,16 +106,16 @@ Snapshot dated 2026-10-30: the register contains 905 source-list entries. These 
 | Organization | Entries | Matched | Provisional new | Ambiguous | Identity unreviewed | Eligible | Excluded | Eligibility unresolved | Screened | Not started |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 47 | 10 | 122 | 21 | 133 | 45 | 175 | 24 |
-| ICES | 274 | 58 | 27 | 2 | 187 | 48 | 55 | 171 | 119 | 155 |
+| ICES | 274 | 58 | 29 | 2 | 185 | 48 | 57 | 169 | 121 | 153 |
 | NOAA | 432 | 28 | 96 | 3 | 305 | 54 | 76 | 302 | 162 | 270 |
-| Total | 905 | 106 | 170 | 15 | 614 | 123 | 264 | 518 | 456 | 449 |
+| Total | 905 | 106 | 172 | 15 | 612 | 123 | 266 | 516 | 458 | 447 |
 
 These are inventory-entry counts. The linked-unit crosswalk in
-inventory_units.csv represents 196 distinct units across 215 inventory rows:
-99 canonical stock IDs and 97 candidate-unit IDs. Of the 95 new candidate
-units, 27 are screened eligible, 40 are screened ineligible, and 28 remain
+inventory_units.csv represents 198 distinct units across 217 inventory rows:
+99 canonical stock IDs and 99 candidate-unit IDs. Of the 97 new candidate
+units, 27 are screened eligible, 42 are screened ineligible, and 28 remain
 eligibility-unresolved. Two additional candidate-unit IDs have ambiguous or
-mixed identity status. The other 690 entries do not yet have a crosswalk unit. Regional
+mixed identity status. The other 688 entries do not yet have a crosswalk unit. Regional
 counts by organization are in inventory_progress.csv. These are provisional
 audit counts, not the selected expansion batch.
 
@@ -591,3 +591,5 @@ NOAA Stock SMART blueline tilefish entries 10381 (South Atlantic) and 14922 (Mid
 NOAA Stock SMART identifies South Atlantic (10384; SEDAR 89, 2025 run through 2022) and Mid-Atlantic (10385; 2024 WHAM run through 2023) golden tilefish as separate, fully accepted units. Both assessments use age compositions and age-specific biological inputs and report population-at-age or related outputs, so each is eligible for source curation. The South Atlantic input/output matrices are partly tabulated and partly figure-based; the Mid-Atlantic series are largely chart-based in the public SASINF reports. Exact numeric age matrices still require extraction, and the Mid-Atlantic report is publicly labelled draft despite the peer-review panel's acceptance for management. See `source_reviews/noaa_golden_tilefish_2024_2025.md`; the reviewed PDFs and SASINF archive are cached locally with checksums.
 
 ICES sandeel Area 5r (san.sa.5r) is screened ineligible for the age-disaggregated set. Its 2025 advice is Category 5; the HAWG report lists the Area 5r Category 5.4 analysis as last updated in 2019 and describes it as catch-only. The published graph provides annual catches but no age-specific population inputs or outputs. See source_reviews/ices_sandeel_area_5r_2025.md.
+
+ICES sandeel Area 6 (san.sa.6) and Area 7r (san.sa.7r) are screened ineligible for the age-disaggregated set. The latest advice records located are from 2023 and cover 2023–2024; the 2026 HAWG report lists their catch-only Category 5.2 and 5.3 analyses as last updated in 2019. The associated stock graphs provide catch entries only. See `source_reviews/ices_sandeel_area_6_2023.md` and `source_reviews/ices_sandeel_area_7r_2023.md`.

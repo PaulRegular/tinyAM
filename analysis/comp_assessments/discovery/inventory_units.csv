@@ -41,6 +41,8 @@
 "candidate:ices_norway_pout_6a","","ices_norway_pout_6a","new","ineligible","screened","not_started","ICES","Celtic Seas","ICES:nop.27.6a",1
 "candidate:ices_plaice_iceland_5a","","ices_plaice_iceland_5a","new","eligible","screened","not_started","ICES","Icelandic Waters","ICES:ple.27.5a",1
 "candidate:ices_sandeel_area_5r","","ices_sandeel_area_5r","new","ineligible","screened","not_started","ICES","Greater North Sea","ICES:san.sa.5r",1
+"candidate:ices_sandeel_area_6","","ices_sandeel_area_6","new","ineligible","screened","not_started","ICES","Greater North Sea","ICES:san.sa.6",1
+"candidate:ices_sandeel_area_7r","","ices_sandeel_area_7r","new","ineligible","screened","not_started","ICES","Greater North Sea","ICES:san.sa.7r",1
 "candidate:ices_turbot_3a","","ices_turbot_3a","new","ineligible","screened","not_started","ICES","Greater North Sea","ICES:tur.27.3a",1
 "candidate:ices_whiting_3a","","ices_whiting_3a","new","ineligible","screened","not_started","ICES","Greater North Sea","ICES:whg.27.3a",1
 "candidate:iphc_pacific_halibut","","iphc_pacific_halibut","new","eligible","screened","not_started","DFO | NOAA","NWFSC / AFSC | Pacific","DFO:Pacific:Pacific Halibut | NOAA:11082",2
