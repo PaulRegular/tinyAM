@@ -54,17 +54,17 @@ Snapshot dated 2026-10-29: the register contains 905 source-list entries. These 
 
 | Organization | Entries | Matched | Provisional new | Ambiguous | Identity unreviewed | Eligible | Excluded | Eligibility unresolved | Screened | Not started |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| DFO | 199 | 20 | 37 | 5 | 137 | 20 | 123 | 56 | 160 | 39 |
+| DFO | 199 | 20 | 38 | 5 | 136 | 20 | 123 | 56 | 161 | 38 |
 | ICES | 274 | 57 | 21 | 2 | 194 | 45 | 52 | 177 | 112 | 162 |
 | NOAA | 432 | 28 | 70 | 3 | 331 | 44 | 72 | 316 | 136 | 296 |
-| Total | 905 | 105 | 128 | 10 | 662 | 109 | 247 | 549 | 408 | 497 |
+| Total | 905 | 105 | 129 | 10 | 661 | 109 | 247 | 549 | 409 | 496 |
 
 These are inventory-entry counts. The linked-unit crosswalk in
-`inventory_units.csv` currently represents 153 distinct units across 172
-entries: 98 canonical stock IDs and 55 provisional candidate-unit IDs. Of the
-55 candidate units, 14 are screened eligible, 29 are screened ineligible, and 12
+`inventory_units.csv` currently represents 154 distinct units across 173
+entries: 98 canonical stock IDs and 56 provisional candidate-unit IDs. Of the
+56 candidate units, 14 are screened eligible, 29 are screened ineligible, and 13
 remain eligibility-unresolved. Two ineligible units have ambiguous or mixed
-identity status. The other 733 entries do not yet have an explicit unit
+identity status. The other 732 entries do not yet have an explicit unit
 crosswalk. Regional
 counts by organization are available in `inventory_progress.csv`. These are
 provisional audit counts, not the selected expansion batch.
@@ -393,5 +393,7 @@ NOAA Stock SMART 10190 is the PFMC coastwide Pacific sanddab unit. Its detailed 
 
 ICES megrim `meg.27.7b-k8abd` is a distinct Bay of Biscay/Celtic Seas unit with a 2025 a4a catch-at-age assessment and advice for 2026. WGBIE tabulates two age-specific survey-index series and annual aggregate outputs, but the numerical run-matched catch-at-age matrix is only shown in figures and remains unrecovered. The 2025 report links the revised assessment to advice key 21222; its WD12 says the initial base run was rejected before corrections, so exact run linkage remains to be verified. The downloadable stock annex still says it was last updated in 2018 despite the report describing later updates. Eligibility remains unresolved; see `source_reviews/ices_megrim_7b_k8abd_2025.md` and the ignored source cache.
 
-
 NOAA Butterfish (Stock SMART 10187) is a provisional new eligible unit. The accepted 2024 Management Track archive provides numerical total-catch proportions by weight, weights-at-age, four seasonal age-index series, and annual SSB, fully selected F, recruitment, and CVs through 2023. The 2021 Research Track report documents maturity ogives for its final ASAP3 run, while the 2024 production update uses WHAM; do not assume those exact ogives are the updated WHAM inputs. The 2024 report states M = 1.278 was carried forward. Current WHAM maturity linkage, complete survey timing, and the 2024 fitted object remain source follow-ups. The panel accepted the assessment for use despite the archived report retaining a draft cover label. See `source_reviews/noaa_butterfish_2024.md` and the ignored local source cache.
+
+
+DFO Outside Lingcod is a distinct current unit covering PMFC Areas 3CD + 5ABCDE, excluding inside Area 4B. The latest full assessment (2025) used catch, four abundance indices, and age compositions from three fleets and three surveys. The public Science Advisory Report provides fleet catch totals and posterior summary outputs, but the detailed Research Document is still cited as in preparation; numerical age-composition inputs, survey series, and fitted age-specific output arrays were not located. Eligibility remains unresolved pending those source details. See source_reviews/dfo_lingcod_outside_2025.md and the ignored local source cache.
