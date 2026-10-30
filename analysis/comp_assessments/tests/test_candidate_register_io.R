@@ -23,6 +23,15 @@ stopifnot(nrow(updated) == 3L,
   identical(updated$candidate_id, c('NOAA:1', 'NOAA:2', 'NOAA:3')),
   identical(updated$notes, c('first line\nsecond line "quoted"', 'updated', 'unchanged')))
 
+updated_row <- updated[2L, , drop = FALSE]
+updated_row$notes <- 'updated twice'
+replace_candidate_register_row(path, 2L, updated_row, 'NOAA:2')
+updated_twice <- read.csv(path, stringsAsFactors = FALSE, check.names = FALSE)
+serialized <- rawToChar(readBin(path, 'raw', n = file.info(path)$size))
+stopifnot(nrow(updated_twice) == 3L,
+  identical(updated_twice$notes[2L], 'updated twice'),
+  !grepl('\r\r\n', serialized, fixed = TRUE))
+
 before_mismatch <- readBin(path, 'raw', n = file.info(path)$size)
 mismatch_error <- tryCatch({
   replace_candidate_register_row(path, 1L, updated_row, 'NOAA:2')

@@ -22,7 +22,7 @@ csv_record_bounds <- function(bytes) {
       }
     } else if (bytes[i] == lf && !in_quotes) {
       end <- i - 1L
-      if (end >= start && bytes[end] == cr) end <- end - 1L
+      while (end >= start && bytes[end] == cr) end <- end - 1L
       record <- if (end >= start) bytes[start:end] else raw(0L)
       if (length(record) && any(!(record %in% c(space, tab, cr)))) {
         starts <- c(starts, start)
@@ -59,9 +59,7 @@ replace_candidate_register_row <- function(path, row_index, row, candidate_id) {
     stop('Candidate register row index is out of range.', call. = FALSE)
 
   old_record <- rawToChar(bytes[bounds$start[record_index]:bounds$end[record_index]])
-  old_values <- read.csv(text = old_record, header = FALSE,
-    stringsAsFactors = FALSE, na.strings = c('', 'NA'), check.names = FALSE)
-  if (nrow(old_values) != 1L || as.character(old_values[[1L]][1L]) != candidate_id)
+  if (!startsWith(old_record, paste0('"', candidate_id, '"')))
     stop('Candidate register row identity does not match ', candidate_id, '.', call. = FALSE)
 
   temporary <- tempfile(fileext = '.csv')
@@ -71,9 +69,23 @@ replace_candidate_register_row <- function(path, row_index, row, candidate_id) {
   replacement <- readBin(temporary, 'raw', n = file.info(temporary)$size)
   if (length(replacement) && tail(replacement, 1L) == as.raw(10L))
     replacement <- replacement[-length(replacement)]
+  if (length(replacement) && tail(replacement, 1L) == as.raw(13L))
+    replacement <- replacement[-length(replacement)]
 
   first <- bounds$start[record_index]
   last <- bounds$end[record_index]
+  next_byte <- last + 1L
+  has_carriage_return <- FALSE
+  while (next_byte <= length(bytes) && bytes[next_byte] == as.raw(13L)) {
+    has_carriage_return <- TRUE
+    next_byte <- next_byte + 1L
+  }
+  line_ending <- raw(0L)
+  if (next_byte <= length(bytes) && bytes[next_byte] == as.raw(10L)) {
+    line_ending <- c(if (has_carriage_return) as.raw(13L) else raw(0L), as.raw(10L))
+    last <- next_byte
+    replacement <- c(replacement, line_ending)
+  }
   before <- if (first > 1L) bytes[seq_len(first - 1L)] else raw(0L)
   after <- if (last < length(bytes)) bytes[(last + 1L):length(bytes)] else raw(0L)
   original <- bytes
