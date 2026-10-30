@@ -10,6 +10,7 @@
 "candidate:dfo_dogfish_outside_bc","","dfo_dogfish_outside_bc","new","ineligible","screened","not_started","DFO","Pacific","DFO:Pacific:Dogfish - Outside waters",1
 "candidate:dfo_eulachon_fraser_du","","dfo_eulachon_fraser_du","new","ineligible","screened","not_started","DFO","Pacific","DFO:Pacific:Eulachon - Fraser River",1
 "candidate:dfo_fraser_chum_smu","","dfo_fraser_chum_smu","new","ineligible","screened","not_started","DFO","Pacific","DFO:Pacific:Fraser Chum Salmon",1
+"candidate:dfo_fraser_pink_odd_smu","","dfo_fraser_pink_odd_smu","new","ineligible","screened","not_started","DFO","Pacific","DFO:Pacific:Pink Salmon – Fraser",1
 "candidate:dfo_fraser_sockeye_early_stuart","","dfo_fraser_sockeye_early_stuart","new","ineligible","screened","not_started","DFO","Pacific","DFO:Pacific:Sockeye Salmon - Fraser (Early Stuart)",1
 "candidate:dfo_greenland_halibut_2_3klmno","","dfo_greenland_halibut_2_3klmno","new","eligible","screened","not_started","DFO","Newfoundland and Labrador","DFO:Newfoundland and Labrador:Greenland Halibut (Turbot) - NAFO 2 + 3KLMNO",1
 "candidate:dfo_greenland_halibut_4rst","","dfo_greenland_halibut_4rst","new","ineligible","screened","not_started","DFO","Quebec","DFO:Quebec:Greenland Halibut - NAFO 4RST",1
@@ -17,6 +18,7 @@
 "candidate:dfo_herring_4rsw_spring","","dfo_herring_4rsw_spring","new","unresolved","screened","not_started","DFO","Newfoundland and Labrador","DFO:Newfoundland and Labrador:Atlantic Herring - NAFO 4R (Spring Spawner)",1
 "candidate:dfo_lingcod_outside_bc","","dfo_lingcod_outside_bc","new","unresolved","screened","not_started","DFO","Pacific","DFO:Pacific:Lingcod - Outside waters",1
 "candidate:dfo_longspine_thornyhead_bc","","dfo_longspine_thornyhead_bc","new","ineligible","screened","not_started","DFO","Pacific","DFO:Pacific:Longspine Thornyhead",1
+"candidate:dfo_nass_sockeye_smu","","dfo_nass_sockeye_smu","new","ineligible","screened","not_started","DFO","Pacific","DFO:Pacific:Sockeye Salmon - Nass",1
 "candidate:dfo_okanagan_chinook","","dfo_okanagan_chinook","new","ineligible","screened","not_started","DFO","Pacific","DFO:Pacific:Chinook salmon - Okanagan",1
 "candidate:dfo_quebec_4s_herring","","dfo_quebec_4s_herring","ambiguous","ineligible","screened","not_started","DFO","Quebec","DFO:Quebec:Atlantic Herring - Herring Fishing Area 15",1
 "candidate:dfo_quillback_inside","","dfo_quillback_inside","new","unresolved","screened","not_started","DFO","Pacific","DFO:Pacific:Quillback Rockfish - Inside waters",1
@@ -25,7 +27,10 @@
 "candidate:dfo_redfish_s_mentella_units_1_2","","dfo_redfish_s_mentella_units_1_2","new","ineligible","screened","not_started","DFO","National Capital Region","DFO:National Capital Region:Redfish (Sebastes mentella) Unit 1 + 2",1
 "candidate:dfo_sgsl_winter_flounder_4t","","dfo_sgsl_winter_flounder_4t","new","eligible","screened","not_started","DFO","Gulf","DFO:Gulf:Winter Flounder - NAFO 4T",1
 "candidate:dfo_silver_hake_4vwx","","dfo_silver_hake_4vwx","new","ineligible","screened","not_started","DFO","Maritimes","DFO:Maritimes:Silver Hake - NAFO 4VWX",1
+"candidate:dfo_skeena_sockeye_smu","","dfo_skeena_sockeye_smu","new","ineligible","screened","not_started","DFO","Pacific","DFO:Pacific:Sockeye Salmon - Skeena",1
+"candidate:dfo_stikine_sockeye_smu","","dfo_stikine_sockeye_smu","new","ineligible","screened","not_started","DFO","Pacific","DFO:Pacific:Sockeye Salmon - Stikine",1
 "candidate:dfo_striped_bass_bay_of_fundy_du","","dfo_striped_bass_bay_of_fundy_du","new","ineligible","screened","not_started","DFO","Maritimes","DFO:Maritimes:Striped Bass - Bay of Fundy",1
+"candidate:dfo_wcvi_barkley_sockeye_smu","","dfo_wcvi_barkley_sockeye_smu","new","unresolved","in_progress","not_started","DFO","Pacific","DFO:Pacific:WCVI Barkley Sockeye Salmon",1
 "candidate:dfo_western_component_pollock_4xopqrs5","","dfo_western_component_pollock_4xopqrs5","new","eligible","screened","not_started","DFO","Maritimes","DFO:Maritimes:Pollock - NAFO 4X5 (Western Component)",1
 "candidate:dfo_witch_flounder_3no","","dfo_witch_flounder_3no","new","ineligible","screened","not_started","DFO","Newfoundland and Labrador","DFO:Newfoundland and Labrador:Witch Flounder - NAFO 3NO",1
 "candidate:dfo_witch_flounder_4rst","","dfo_witch_flounder_4rst","new","ineligible","screened","not_started","DFO","Gulf","DFO:Gulf:Witch Flounder - NAFO 4RST",1

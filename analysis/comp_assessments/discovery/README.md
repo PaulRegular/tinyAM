@@ -23,19 +23,19 @@ The inventory has 906 source-list rows. These are not unique stock counts.
 status down by organization and source region; `inventory_units.csv` summarizes
 the rows already linked to a stock or candidate unit.
 
-| Organization | Rows | Matched to database | New candidate rows | Ambiguous identity | Identity unreviewed | Eligible rows | Ineligible rows | Eligibility unresolved | Screened | Not screened |
-|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| DFO | 199 | 20 | 58 | 16 | 105 | 21 | 142 | 36 | 192 | 7 |
-| ICES | 274 | 59 | 96 | 2 | 117 | 52 | 84 | 138 | 157 | 117 |
-| NOAA | 433 | 28 | 168 | 7 | 230 | 57 | 112 | 264 | 205 | 228 |
-| **Total** | **906** | **107** | **322** | **25** | **452** | **130** | **338** | **438** | **554** | **352** |
+| Organization | Rows | Matched to database | New candidate rows | Ambiguous identity | Identity unreviewed | Eligible rows | Ineligible rows | Eligibility unresolved | Screened | In progress | Not screened |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| DFO | 199 | 20 | 63 | 18 | 98 | 21 | 146 | 32 | 198 | 1 | 0 |
+| ICES | 274 | 59 | 96 | 2 | 117 | 52 | 84 | 138 | 157 | 0 | 117 |
+| NOAA | 433 | 28 | 168 | 7 | 230 | 57 | 112 | 264 | 205 | 0 | 228 |
+| **Total** | **906** | **107** | **327** | **27** | **445** | **130** | **342** | **434** | **560** | **1** | **345** |
 
-The crosswalk currently links 347 distinct unit keys across 368 inventory
-rows: 100 link to canonical stocks and 247 are candidate units. Of the 245 new
-candidate units, 34 are eligible for source curation, 173 are ineligible for
-the age-disaggregated set, and 38 remain unresolved. A further 538 inventory
-rows have no unit crosswalk yet. Row-level status and unit-level deduplication
-are intentionally reported separately.
+The crosswalk currently links 352 distinct unit keys across 373 inventory rows:
+100 link to canonical stocks and 252 are candidate units. Of the 250
+provisionally new candidate units, 34 are eligible for source curation, 177
+are ineligible for the age-disaggregated set, and 39 remain unresolved. A
+further 533 inventory rows have no unit crosswalk yet. Row-level status and
+unit-level deduplication are intentionally reported separately.
 
 The Maritimes American eel “Large Eel” and “Elvers” inventory entries are two
 fisheries for one candidate unit. The latest detailed DFO update reports
@@ -276,21 +276,21 @@ age-structured assessment; see
 
 Snapshot dated 2026-10-30: the register contains 906 source-list entries. These are not deduplicated stock units.
 
-| Organization | Entries | Matched | Provisional new | Ambiguous | Identity unreviewed | Eligible | Excluded | Eligibility unresolved | Screened | Not started |
-|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| DFO | 199 | 20 | 51 | 10 | 118 | 21 | 136 | 42 | 179 | 20 |
-| ICES | 274 | 59 | 96 | 2 | 117 | 52 | 84 | 138 | 157 | 117 |
-| NOAA | 433 | 28 | 168 | 7 | 230 | 57 | 112 | 264 | 205 | 228 |
-| Total | 906 | 107 | 315 | 19 | 465 | 130 | 332 | 444 | 541 | 365 |
+| Organization | Entries | Matched | Provisional new | Ambiguous | Identity unreviewed | Eligible | Excluded | Eligibility unresolved | Screened | In progress | Not started |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| DFO | 199 | 20 | 63 | 18 | 98 | 21 | 146 | 32 | 198 | 1 | 0 |
+| ICES | 274 | 59 | 96 | 2 | 117 | 52 | 84 | 138 | 157 | 0 | 117 |
+| NOAA | 433 | 28 | 168 | 7 | 230 | 57 | 112 | 264 | 205 | 0 | 228 |
+| Total | 906 | 107 | 327 | 27 | 445 | 130 | 342 | 434 | 560 | 1 | 345 |
 
 These are inventory-entry counts. The linked-unit crosswalk in
-inventory_units.csv represents 340 distinct units across 361 inventory rows:
-100 canonical stock IDs and 240 candidate-unit IDs. Of the 238 new candidate
-units, 34 are screened eligible, 167 are screened ineligible, and 37 remain
-eligibility-unresolved. One candidate-unit ID has ambiguous identity and one
-has mixed identity status. The other 545 entries do not yet have a crosswalk
-unit. Regional counts by organization are in inventory_progress.csv. These are
-provisional audit counts, not the selected expansion batch.
+inventory_units.csv represents 352 distinct units across 373 inventory rows:
+100 canonical stock IDs and 252 candidate-unit IDs. Of the 250 provisionally
+new units, 34 are screened eligible, 177 are screened ineligible, and 39
+remain eligibility-unresolved. One candidate-unit ID has ambiguous identity
+and one has mixed identity status. The other 533 entries do not yet have a
+crosswalk unit. Regional counts by organization are in inventory_progress.csv.
+These are provisional audit counts, not the selected expansion batch.
 
 NOAA Stock SMART 10953 and DFO's North Atlantic swordfish listing are one
 ICCAT-managed stock unit. The latest detailed North Atlantic assessment located
