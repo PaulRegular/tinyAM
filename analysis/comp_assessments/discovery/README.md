@@ -107,15 +107,15 @@ Snapshot dated 2026-10-30: the register contains 905 source-list entries. These 
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 46 | 10 | 123 | 20 | 133 | 46 | 174 | 25 |
 | ICES | 274 | 58 | 26 | 2 | 188 | 48 | 54 | 172 | 118 | 156 |
-| NOAA | 432 | 28 | 87 | 3 | 314 | 47 | 76 | 309 | 153 | 279 |
-| Total | 905 | 106 | 159 | 15 | 625 | 115 | 263 | 527 | 445 | 460 |
+| NOAA | 432 | 28 | 89 | 3 | 312 | 49 | 76 | 307 | 155 | 277 |
+| Total | 905 | 106 | 161 | 15 | 623 | 117 | 263 | 525 | 447 | 458 |
 
 These are inventory-entry counts. The linked-unit crosswalk in
-inventory_units.csv represents 185 distinct units across 204 inventory rows:
-99 canonical stock IDs and 86 provisional candidate-unit IDs. Of the 86
-candidate units, 19 are screened eligible, 41 are screened ineligible, and 26
-remain eligibility-unresolved. Two ineligible units have ambiguous or mixed
-identity status. The other 701 entries do not yet have a crosswalk unit. Regional
+inventory_units.csv represents 187 distinct units across 206 inventory rows:
+99 canonical stock IDs and 88 candidate-unit IDs. Of the 86 new candidate
+units, 21 are screened eligible, 39 are screened ineligible, and 26 remain
+eligibility-unresolved. Two additional candidate-unit IDs have ambiguous or
+mixed identity status. The other 699 entries do not yet have a crosswalk unit. Regional
 counts by organization are in inventory_progress.csv. These are provisional
 audit counts, not the selected expansion batch.
 
@@ -525,3 +525,5 @@ source_reviews/noaa_gag_sedar71_2021.md.
 NOAA Stock SMART row 10339 is a distinct South Atlantic Snowy Grouper unit. The latest completed assessment located is SEDAR 36 Update, revised January 2021, using data through 2018. Its report provides removal totals, aggregate indices, age-composition figures and sample sizes, age-specific biology, and numeric abundance-at-age, biomass-at-age, recruitment, SSB, F-at-age, and estimated-removals-at-age outputs. Reconstructing observed catch-at-age requires digitizing composition figures. The 2013 SEDAR 36 WP15 model files are for the superseded benchmark and are not a substitute for update inputs. See source_reviews/noaa_snowy_grouper_sedar36u_2021.md.
 
 NOAA Stock SMART blueline tilefish entries 10381 (South Atlantic) and 14922 (Mid-Atlantic) are distinct management-unit candidates with nonidentical boundaries relative to SEDAR 92. The 2025 southern ASPIC assessment was rejected for management; the replacement southern DLM and northern DLM use aggregate removals, length/life-history data, and TAC methods, not age-disaggregated likelihood observations or population-at-age outputs. Both are screened ineligible for the age-input set. See source_reviews/noaa_blueline_tilefish_sedar92_2025.md; four official assessment and SSC PDFs are cached locally with checksums.
+
+NOAA Stock SMART identifies South Atlantic (10384; SEDAR 89, 2025 run through 2022) and Mid-Atlantic (10385; 2024 WHAM run through 2023) golden tilefish as separate, fully accepted units. Both assessments use age compositions and age-specific biological inputs and report population-at-age or related outputs, so each is eligible for source curation. The South Atlantic input/output matrices are partly tabulated and partly figure-based; the Mid-Atlantic series are largely chart-based in the public SASINF reports. Exact numeric age matrices still require extraction, and the Mid-Atlantic report is publicly labelled draft despite the peer-review panel's acceptance for management. See `source_reviews/noaa_golden_tilefish_2024_2025.md`; the reviewed PDFs and SASINF archive are cached locally with checksums.
