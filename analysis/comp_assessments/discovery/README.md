@@ -25,10 +25,10 @@ the rows already linked to a stock or candidate unit.
 
 | Organization | Rows | Matched to database | New candidate rows | Ambiguous identity | Identity unreviewed | Eligible rows | Ineligible rows | Eligibility unresolved | Screened | Not screened |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| DFO | 199 | 20 | 51 | 10 | 118 | 21 | 136 | 42 | 179 | 20 |
+| DFO | 199 | 20 | 51 | 11 | 117 | 21 | 136 | 42 | 180 | 19 |
 | ICES | 274 | 59 | 96 | 2 | 117 | 52 | 84 | 138 | 157 | 117 |
 | NOAA | 433 | 28 | 168 | 7 | 230 | 57 | 112 | 264 | 205 | 228 |
-| **Total** | **906** | **107** | **315** | **19** | **465** | **130** | **332** | **444** | **541** | **365** |
+| **Total** | **906** | **107** | **315** | **20** | **464** | **130** | **332** | **444** | **542** | **364** |
 
 The crosswalk currently links 340 distinct unit keys across 361 inventory
 rows: 100 link to canonical stocks and 240 are candidate units. Of the 238 new
@@ -42,6 +42,14 @@ fisheries for one candidate unit. The latest detailed DFO update reports
 fishery and regional abundance indicators, not an age-structured population
 assessment, so this unit is screened ineligible for the age-disaggregated set.
 See `source_reviews/dfo_american_eel_maritimes_2026.md`.
+
+The Maritimes “Gaspereau” entry is a regional fishery label covering two species
+and river-specific populations, not one assessment unit. DFO held a 2025–2026
+assessment for Alewife in the Gaspereau River and reports an accepted limit
+reference point, but its detailed Research Document remains expected. Keep the
+regional row ambiguous and age-input eligibility unresolved; assess the
+Gaspereau River Alewife unit separately when its source materials are public.
+See `source_reviews/dfo_maritimes_gaspereau.md`.
 
 The 2024 DFO WCVI natural-origin Chinook assessment is now recorded as a new
 unit, with age-input eligibility unresolved. Its detailed report describes
