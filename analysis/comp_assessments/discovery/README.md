@@ -25,15 +25,15 @@ the rows already linked to a stock or candidate unit.
 
 | Organization | Rows | Matched to database | New candidate rows | Ambiguous identity | Identity unreviewed | Eligible rows | Ineligible rows | Eligibility unresolved | Screened | Not screened |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| DFO | 199 | 20 | 55 | 12 | 112 | 21 | 139 | 39 | 185 | 14 |
+| DFO | 199 | 20 | 56 | 12 | 111 | 21 | 140 | 38 | 186 | 13 |
 | ICES | 274 | 59 | 96 | 2 | 117 | 52 | 84 | 138 | 157 | 117 |
 | NOAA | 433 | 28 | 168 | 7 | 230 | 57 | 112 | 264 | 205 | 228 |
-| **Total** | **906** | **107** | **319** | **21** | **459** | **130** | **335** | **441** | **547** | **359** |
+| **Total** | **906** | **107** | **320** | **21** | **458** | **130** | **336** | **440** | **548** | **358** |
 
-The crosswalk currently links 344 distinct unit keys across 365 inventory
-rows: 100 link to canonical stocks and 244 are candidate units. Of the 242 new
-candidate units, 34 are eligible for source curation, 170 are ineligible for
-the age-disaggregated set, and 38 remain unresolved. A further 541 inventory
+The crosswalk currently links 345 distinct unit keys across 366 inventory
+rows: 100 link to canonical stocks and 245 are candidate units. Of the 243 new
+candidate units, 34 are eligible for source curation, 171 are ineligible for
+the age-disaggregated set, and 38 remain unresolved. A further 540 inventory
 rows have no unit crosswalk yet. Row-level status and unit-level deduplication
 are intentionally reported separately.
 
@@ -84,6 +84,13 @@ Although that assessment uses age proportions in its stock-recruit analysis, it
 does not fit or report age-specific population surfaces and is screened
 ineligible for the age-disaggregated set. See
 `source_reviews/dfo_interior_fraser_coho_2022.md`.
+
+The Fraser River Eulachon entry is a distinct Designatable Unit. Its 2012 RPA
+appendix fitted a historical age-structured model, but with aggregate catch
+biomass and abundance indices; current DFO management relies on aggregate egg-
+and-larval SSB indices and reports no validated ageing method. It is ineligible
+for the age-disaggregated candidate set. See
+`source_reviews/dfo_eulachon_fraser_2026.md`.
 
 The Bay of Fundy Striped Bass entry is a distinct conservation unit consisting
 of three river populations. DFO's 2024 inventory marks its status uncertain;
