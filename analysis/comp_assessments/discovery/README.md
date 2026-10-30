@@ -106,14 +106,14 @@ Snapshot dated 2026-10-30: the register contains 905 source-list entries. These 
 | Organization | Entries | Matched | Provisional new | Ambiguous | Identity unreviewed | Eligible | Excluded | Eligibility unresolved | Screened | Not started |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 47 | 10 | 122 | 21 | 133 | 45 | 175 | 24 |
-| ICES | 274 | 58 | 35 | 2 | 179 | 48 | 62 | 164 | 127 | 147 |
+| ICES | 274 | 58 | 37 | 2 | 177 | 48 | 64 | 162 | 129 | 145 |
 | NOAA | 432 | 28 | 96 | 3 | 305 | 54 | 76 | 302 | 162 | 270 |
-| Total | 905 | 106 | 178 | 15 | 606 | 123 | 271 | 511 | 464 | 441 |
+| Total | 905 | 106 | 180 | 15 | 604 | 123 | 273 | 509 | 466 | 439 |
 
 These are inventory-entry counts. The linked-unit crosswalk in
-inventory_units.csv represents 204 distinct units across 223 inventory rows:
-99 canonical stock IDs and 105 candidate-unit IDs. Of the 103 new candidate
-units, 27 are screened eligible, 47 are screened ineligible, and 29 remain
+inventory_units.csv represents 206 distinct units across 225 inventory rows:
+99 canonical stock IDs and 107 candidate-unit IDs. Of the 105 new candidate
+units, 27 are screened eligible, 49 are screened ineligible, and 29 remain
 eligibility-unresolved. Two additional candidate-unit IDs have ambiguous or
 mixed identity status. The other 683 entries do not yet have a crosswalk unit. Regional
 counts by organization are in inventory_progress.csv. These are provisional
@@ -150,6 +150,15 @@ age-disaggregated set. The 2026 production run is a length-based age-structured
 Stock Synthesis model, with catch and survey observations at length and public
 outputs limited to age-0 recruitment, SSB and F ages 3–10. No canonical data
 were added. See `source_reviews/ices_black_bellied_anglerfish_78abd_2026.md`.
+
+Both ICES white anglerfish units added from WGBIE 2026 are screened ineligible
+for age-disaggregated coverage. Subarea 7/8.a/8.b/8.d (`mon.27.78abd`) is a
+length-based age-structured SS3 assessment with length observations; divisions
+8.c/9.a (`mon.27.8c9a`) explicitly has no age information. Their public graphs
+provide recruitment, SSB and age-group F summaries rather than annual
+age-specific population surfaces. See
+`source_reviews/ices_white_anglerfish_78abd_2026.md` and
+`source_reviews/ices_white_anglerfish_8c9a_2026.md`.
 
 The 2025 NOAA Acadian redfish Gulf of Maine / Georges Bank Run 5 source screen
 found native catch and age-composition inputs, spring and fall survey indices
