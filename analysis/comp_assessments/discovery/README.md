@@ -107,17 +107,24 @@ Snapshot dated 2026-10-30: the register contains 905 source-list entries. These 
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 46 | 10 | 123 | 20 | 133 | 46 | 174 | 25 |
 | ICES | 274 | 58 | 26 | 2 | 188 | 48 | 54 | 172 | 118 | 156 |
-| NOAA | 432 | 28 | 89 | 3 | 312 | 49 | 76 | 307 | 155 | 277 |
-| Total | 905 | 106 | 161 | 15 | 623 | 117 | 263 | 525 | 447 | 458 |
+| NOAA | 432 | 28 | 90 | 3 | 311 | 50 | 76 | 306 | 156 | 276 |
+| Total | 905 | 106 | 162 | 15 | 622 | 118 | 263 | 524 | 448 | 457 |
 
 These are inventory-entry counts. The linked-unit crosswalk in
-inventory_units.csv represents 187 distinct units across 206 inventory rows:
-99 canonical stock IDs and 88 candidate-unit IDs. Of the 86 new candidate
-units, 21 are screened eligible, 39 are screened ineligible, and 26 remain
+inventory_units.csv represents 188 distinct units across 207 inventory rows:
+99 canonical stock IDs and 89 candidate-unit IDs. Of the 87 new candidate
+units, 22 are screened eligible, 39 are screened ineligible, and 26 remain
 eligibility-unresolved. Two additional candidate-unit IDs have ambiguous or
-mixed identity status. The other 699 entries do not yet have a crosswalk unit. Regional
+mixed identity status. The other 698 entries do not yet have a crosswalk unit. Regional
 counts by organization are in inventory_progress.csv. These are provisional
 audit counts, not the selected expansion batch.
+
+The 2025 NOAA Acadian redfish Gulf of Maine / Georges Bank Run 5 source screen
+found native catch and age-composition inputs, spring and fall survey indices
+and compositions, age-specific biology, and comparable fitted N-at-age and
+F-at-age outputs. It is eligible for source curation; catch-age gaps and the
+native survey-index unit code still need to be resolved during import. See
+[`noaa_acadian_redfish_2025.md`](source_reviews/noaa_acadian_redfish_2025.md).
 
 NOAA Stock SMART Scamp rows 10324 (Gulf) and 10326 (South Atlantic) are
 separate regional units, although both SEDAR 68OA assessments model Scamp and
