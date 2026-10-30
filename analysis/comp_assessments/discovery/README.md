@@ -26,15 +26,15 @@ the rows already linked to a stock or candidate unit.
 | Organization | Rows | Matched to database | New candidate rows | Ambiguous identity | Identity unreviewed | Eligible rows | Ineligible rows | Eligibility unresolved | Screened | In progress | Not screened |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 63 | 18 | 98 | 21 | 146 | 32 | 198 | 1 | 0 |
-| ICES | 274 | 59 | 118 | 2 | 95 | 52 | 104 | 118 | 179 | 0 | 95 |
+| ICES | 274 | 59 | 119 | 2 | 94 | 52 | 105 | 117 | 180 | 0 | 94 |
 | NOAA | 432 | 28 | 208 | 8 | 188 | 60 | 137 | 235 | 246 | 0 | 186 |
-| **Total** | **905** | **107** | **389** | **28** | **381** | **133** | **387** | **385** | **623** | **1** | **281** |
+| **Total** | **905** | **107** | **390** | **28** | **380** | **133** | **388** | **384** | **624** | **1** | **280** |
 
-The crosswalk currently links 413 distinct unit keys across 435 inventory rows:
-100 link to canonical stocks and 313 are candidate units, including one with
-ambiguous identity and one with mixed identity status. Of the 311 new
-candidate units, 36 are eligible for source curation, 221 are ineligible for
-the age-disaggregated set, and 54 remain unresolved. A further 470 inventory
+The crosswalk currently links 414 distinct unit keys across 436 inventory rows:
+100 link to canonical stocks and 314 are candidate units, including one with
+ambiguous identity and one with mixed identity status. Of the 312 new
+candidate units, 36 are eligible for source curation, 222 are ineligible for
+the age-disaggregated set, and 54 remain unresolved. A further 469 inventory
 rows have no unit crosswalk yet. Row-level status and unit-level deduplication
 are intentionally reported separately.
 
@@ -306,16 +306,16 @@ Snapshot dated 2026-10-30: the register contains 905 source-list entries. These 
 | Organization | Entries | Matched | Provisional new | Ambiguous | Identity unreviewed | Eligible | Excluded | Eligibility unresolved | Screened | In progress | Not started |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 63 | 18 | 98 | 21 | 146 | 32 | 198 | 1 | 0 |
-| ICES | 274 | 59 | 118 | 2 | 95 | 52 | 104 | 118 | 179 | 0 | 95 |
+| ICES | 274 | 59 | 119 | 2 | 94 | 52 | 105 | 117 | 180 | 0 | 94 |
 | NOAA | 432 | 28 | 208 | 8 | 188 | 60 | 137 | 235 | 246 | 0 | 186 |
-| Total | 905 | 107 | 389 | 28 | 381 | 133 | 387 | 385 | 623 | 1 | 281 |
+| Total | 905 | 107 | 390 | 28 | 380 | 133 | 388 | 384 | 624 | 1 | 280 |
 
 These are inventory-entry counts. The linked-unit crosswalk in
-inventory_units.csv represents 413 distinct units across 435 inventory rows:
-100 canonical stock IDs and 313 candidate-unit IDs. Of the 311 new units, 36
-are screened eligible, 221 are screened ineligible, and 54 remain
+inventory_units.csv represents 414 distinct units across 436 inventory rows:
+100 canonical stock IDs and 314 candidate-unit IDs. Of the 312 new units, 36
+are screened eligible, 222 are screened ineligible, and 54 remain
 eligibility-unresolved. One candidate-unit ID has ambiguous identity and one
-has mixed identity status. The other 470 entries do not yet have a crosswalk
+has mixed identity status. The other 469 entries do not yet have a crosswalk
 unit. Regional counts by organization are in inventory_progress.csv.
 These are provisional audit counts, not the selected expansion batch.
 
