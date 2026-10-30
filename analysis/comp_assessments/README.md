@@ -32,6 +32,7 @@ assessments or management advice.
 | Georges Bank yellowtail flounder | [source review and production-data gap](source_reviews/ck_dfo_nefsc_ferruginea_gb.md) |
 | Northeast Arctic beaked redfish | [source review and remaining input gaps](source_reviews/ck_ices_afwg_mentella_deep_1_2.md) |
 | 4VWX Atlantic herring | [component indicators and production-input gap](source_reviews/ck_dfo_mar_harengus_4vwx.md) |
+| DFO Gulf witch flounder, NAFO 4RST | [surplus-production assessment and age-model exclusion](discovery/source_reviews/dfo_witch_flounder_4rst_2022.md) |
 | Atlantic striped bass | [base-run outputs and missing production inputs](source_reviews/ck_nefsc_garmiii_saxatilis_gom_chatt.md) |
 | Eastern Georges Bank cod | [selected framework, later summaries and missing age inputs](source_reviews/ck_nefsc_trac_cert_morhua_gb.md) |
 | Historical Norwegian coastal cod (subareas 1–2) | [2018 index-based assessment and 2021 boundary split](source_reviews/ck_ices_afwg_morhua_coastnor_1_2.md) |
