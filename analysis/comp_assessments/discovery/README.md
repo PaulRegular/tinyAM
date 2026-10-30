@@ -27,14 +27,14 @@ the rows already linked to a stock or candidate unit.
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 47 | 10 | 122 | 21 | 133 | 45 | 175 | 24 |
 | ICES | 274 | 59 | 84 | 2 | 129 | 51 | 76 | 147 | 145 | 129 |
-| NOAA | 432 | 28 | 144 | 4 | 256 | 54 | 92 | 286 | 178 | 254 |
-| **Total** | **905** | **107** | **275** | **16** | **507** | **126** | **301** | **478** | **498** | **407** |
+| NOAA | 432 | 28 | 152 | 4 | 248 | 54 | 100 | 278 | 186 | 246 |
+| **Total** | **905** | **107** | **283** | **16** | **499** | **126** | **309** | **470** | **506** | **399** |
 
-The crosswalk currently links 302 distinct unit keys across 321 inventory rows:
-100 link to canonical stocks and 202 are candidate units: 200 are new, one is
-ambiguous and one has mixed identity status. Of the 200 new
-candidate units, 30 are eligible for source curation, 140 are ineligible for
-the age-disaggregated set, and 30 remain unresolved. A further 584 inventory
+The crosswalk currently links 310 distinct unit keys across 329 inventory rows:
+100 link to canonical stocks and 210 are candidate units: 208 are new, one is
+ambiguous and one has mixed identity status. Of the 208 new
+candidate units, 30 are eligible for source curation, 148 are ineligible for
+the age-disaggregated set, and 30 remain unresolved. A further 576 inventory
 rows have no unit crosswalk yet. Row-level status and unit-level deduplication are intentionally
 reported separately.
 
@@ -49,6 +49,8 @@ NOAA Stock SMART ID 11827 is the Main Hawaiian Islands Deep 7 multispecies compl
 NOAA Stock SMART IDs 11997, 11998, 12003, and 12005 have newer 2026 American Samoa species assessments than the 2023 rows in the pinned snapshot. The WPSAR-reviewed update fits four species using aggregate catch, aggregate boat-based CPUE, and length compositions; it reports SSB, age-0 recruitment, and annual F, but not age-specific observed inputs or numeric N/F-at-age outputs. They are screened ineligible for the age-disaggregated set. Five other 2023 Samoa species entries are outside the revised 2026 assessment list, while the older 2019 multispecies complex has an unresolved one-to-many crosswalk. *Etelis boweni* and *E. carbunculus* are current management species but were not modeled separately because their data are confounded; they have no separate Stock SMART inventory rows. See `source_reviews/noaa_american_samoa_bottomfish_2026.md`.
 
 NOAA Stock SMART IDs 11696 (Guam, 2024) and 11731 (CNMI, 2025) are current 13-species bottomfish-complex JABBA assessments. Both use aggregate catch and standardized creel CPUE, report biomass and harvest-rate outputs, and provide no age-specific likelihood inputs or numeric N/F-at-age outputs; each complex is one ineligible assessment unit. The 2026 CNMI life-history survey report is not an input source for the 2025 model. See `source_reviews/noaa_marianas_bottomfish_2024_2025.md`.
+
+NOAA Stock SMART IDs 12452 and 14617-14623 are eight species-specific Main Hawaiian Islands reef-fish assessments in the fully accepted 2016 PIFSC report. The report uses aggregate catch, diver abundance and size composition; it derives status metrics with an age-structured calculation but does not provide the age-specific observations and annual N/F-at-age outputs required by this candidate set. See `source_reviews/noaa_mhi_reef_fish_2016.md`.
 
 NOAA Stock SMART 10434, Gulf of Alaska sharpchin rockfish, is the Tier 4 component of the GOA Other Rockfish complex. Stock SMART lists a fully accepted 2023 REMA Model 15.2 run; the 2024 SAFE update carried forward Tier 4 biomass because no new survey data were available to refit, and the 2025 SAFE catch report says no assessment was conducted and prior values were rolled forward. The assessment uses aggregate survey biomass and catch, not age-specific population likelihoods or outputs, so the unit is screened ineligible. See `source_reviews/noaa_goa_sharpchin_2024.md` and its local source cache manifest.
 
@@ -165,15 +167,15 @@ Snapshot dated 2026-10-30: the register contains 905 source-list entries. These 
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 47 | 10 | 122 | 21 | 133 | 45 | 175 | 24 |
 | ICES | 274 | 59 | 84 | 2 | 129 | 51 | 76 | 147 | 145 | 129 |
-| NOAA | 432 | 28 | 144 | 4 | 256 | 54 | 92 | 286 | 178 | 254 |
-| Total | 905 | 107 | 275 | 16 | 507 | 126 | 301 | 478 | 498 | 407 |
+| NOAA | 432 | 28 | 152 | 4 | 248 | 54 | 100 | 278 | 186 | 246 |
+| Total | 905 | 107 | 283 | 16 | 499 | 126 | 309 | 470 | 506 | 399 |
 
 These are inventory-entry counts. The linked-unit crosswalk in
-inventory_units.csv represents 302 distinct units across 321 inventory rows:
-100 canonical stock IDs and 202 candidate-unit IDs. Of the 200 new candidate
-units, 30 are screened eligible, 140 are screened ineligible, and 30 remain
+inventory_units.csv represents 310 distinct units across 329 inventory rows:
+100 canonical stock IDs and 210 candidate-unit IDs. Of the 208 new candidate
+units, 30 are screened eligible, 148 are screened ineligible, and 30 remain
 eligibility-unresolved. Two candidate-unit IDs have ambiguous or mixed identity
-status. The other 584 entries do not yet have a crosswalk unit. Regional
+status. The other 576 entries do not yet have a crosswalk unit. Regional
 counts by organization are in inventory_progress.csv. These are provisional
 audit counts, not the selected expansion batch.
 
