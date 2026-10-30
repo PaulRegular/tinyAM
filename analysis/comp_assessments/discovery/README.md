@@ -106,16 +106,16 @@ Snapshot dated 2026-10-30: the register contains 905 source-list entries. These 
 | Organization | Entries | Matched | Provisional new | Ambiguous | Identity unreviewed | Eligible | Excluded | Eligibility unresolved | Screened | Not started |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 47 | 10 | 122 | 21 | 133 | 45 | 175 | 24 |
-| ICES | 274 | 58 | 32 | 2 | 182 | 48 | 59 | 167 | 124 | 150 |
+| ICES | 274 | 58 | 33 | 2 | 181 | 48 | 60 | 166 | 125 | 149 |
 | NOAA | 432 | 28 | 96 | 3 | 305 | 54 | 76 | 302 | 162 | 270 |
-| Total | 905 | 106 | 175 | 15 | 609 | 123 | 268 | 514 | 461 | 444 |
+| Total | 905 | 106 | 176 | 15 | 608 | 123 | 269 | 513 | 462 | 443 |
 
 These are inventory-entry counts. The linked-unit crosswalk in
-inventory_units.csv represents 201 distinct units across 220 inventory rows:
-99 canonical stock IDs and 102 candidate-unit IDs. Of the 100 new candidate
-units, 27 are screened eligible, 44 are screened ineligible, and 29 remain
+inventory_units.csv represents 202 distinct units across 221 inventory rows:
+99 canonical stock IDs and 103 candidate-unit IDs. Of the 101 new candidate
+units, 27 are screened eligible, 45 are screened ineligible, and 29 remain
 eligibility-unresolved. Two additional candidate-unit IDs have ambiguous or
-mixed identity status. The other 685 entries do not yet have a crosswalk unit. Regional
+mixed identity status. The other 684 entries do not yet have a crosswalk unit. Regional
 counts by organization are in inventory_progress.csv. These are provisional
 audit counts, not the selected expansion batch.
 
@@ -131,6 +131,12 @@ The separate Celtic Seas and West of Scotland sprat unit (`spr.27.67a-cf-k`)
 is also screened ineligible. Its 2025 Category 5.2 advice uses catch/landings
 data only and the published graph contains catch history only. See
 `source_reviews/ices_sprat_celtic_seas_2025.md`.
+
+ICES English Channel small-eyed ray (`rje.27.7de`) is a distinct current unit,
+separate from the Bristol Channel/Celtic Sea North unit. Its 2024 Category 5
+advice uses landings only, with no age-specific population inputs or outputs,
+so it is screened ineligible for the age-disaggregated set. See
+`source_reviews/ices_small_eyed_ray_7de_2024.md`.
 
 The 2025 NOAA Acadian redfish Gulf of Maine / Georges Bank Run 5 source screen
 found native catch and age-composition inputs, spring and fall survey indices
