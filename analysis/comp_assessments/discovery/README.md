@@ -25,15 +25,15 @@ the rows already linked to a stock or candidate unit.
 
 | Organization | Rows | Matched to database | New candidate rows | Ambiguous identity | Identity unreviewed | Eligible rows | Ineligible rows | Eligibility unresolved | Screened | Not screened |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| DFO | 199 | 20 | 56 | 12 | 111 | 21 | 140 | 38 | 186 | 13 |
+| DFO | 199 | 20 | 57 | 13 | 109 | 21 | 141 | 37 | 188 | 11 |
 | ICES | 274 | 59 | 96 | 2 | 117 | 52 | 84 | 138 | 157 | 117 |
 | NOAA | 433 | 28 | 168 | 7 | 230 | 57 | 112 | 264 | 205 | 228 |
-| **Total** | **906** | **107** | **320** | **21** | **458** | **130** | **336** | **440** | **548** | **358** |
+| **Total** | **906** | **107** | **321** | **22** | **456** | **130** | **337** | **439** | **550** | **356** |
 
-The crosswalk currently links 345 distinct unit keys across 366 inventory
-rows: 100 link to canonical stocks and 245 are candidate units. Of the 243 new
-candidate units, 34 are eligible for source curation, 171 are ineligible for
-the age-disaggregated set, and 38 remain unresolved. A further 540 inventory
+The crosswalk currently links 346 distinct unit keys across 367 inventory
+rows: 100 link to canonical stocks and 246 are candidate units. Of the 244 new
+candidate units, 34 are eligible for source curation, 172 are ineligible for
+the age-disaggregated set, and 38 remain unresolved. A further 539 inventory
 rows have no unit crosswalk yet. Row-level status and unit-level deduplication
 are intentionally reported separately.
 
@@ -91,6 +91,11 @@ biomass and abundance indices; current DFO management relies on aggregate egg-
 and-larval SSB indices and reports no validated ageing method. It is ineligible
 for the age-disaggregated candidate set. See
 `source_reviews/dfo_eulachon_fraser_2026.md`.
+
+DFO's 2026 Fraser Chum output is an aggregate in-season run-size estimate, not
+an age-structured population assessment. “Inner South Coast Chum” remains an
+ambiguous inventory label because DFO distinguishes Fraser and non-Fraser
+components. See `source_reviews/dfo_fraser_chum_2026.md`.
 
 The Bay of Fundy Striped Bass entry is a distinct conservation unit consisting
 of three river populations. DFO's 2024 inventory marks its status uncertain;
