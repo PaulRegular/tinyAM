@@ -50,6 +50,7 @@
 "candidate:iccat_west_atlantic_skipjack","","iccat_west_atlantic_skipjack","new","ineligible","screened","not_started","NOAA","SEFSC","NOAA:10158",1
 "candidate:ices_alfonsinos_nea","","ices_alfonsinos_nea","new","ineligible","screened","not_started","ICES","Azores, Bay of Biscay and the Iberian Coast, Celtic Seas, Greater North Sea, Oceanic Northeast Atlantic","ICES:alf.27.nea",1
 "candidate:ices_atlantic_wolffish_iceland_5a","","ices_atlantic_wolffish_iceland_5a","new","eligible","screened","not_started","ICES","Icelandic Waters","ICES:caa.27.5a",1
+"candidate:ices_baltic_flounder_2729_32","","ices_baltic_flounder_2729_32","new","ineligible","screened","not_started","ICES","Baltic Sea","ICES:bwp.27.2729-32",1
 "candidate:ices_black_bellied_anglerfish_78abd","","ices_black_bellied_anglerfish_78abd","new","ineligible","screened","not_started","ICES","Bay of Biscay and the Iberian Coast, Celtic Seas, Greater North Sea, Oceanic Northeast Atlantic","ICES:ank.27.78abd",1
 "candidate:ices_black_bellied_anglerfish_8c9a","","ices_black_bellied_anglerfish_8c9a","new","ineligible","screened","not_started","ICES","Bay of Biscay and the Iberian Coast","ICES:ank.27.8c9a",1
 "candidate:ices_blackspot_seabream_6_8","","ices_blackspot_seabream_6_8","new","ineligible","screened","not_started","ICES","Bay of Biscay and the Iberian Coast, Celtic Seas, Greater North Sea","ICES:sbr.27.6-8",1
@@ -62,6 +63,9 @@
 "candidate:ices_cod_kattegat_21","","ices_cod_kattegat_21","new","unresolved","screened","not_started","ICES","Greater North Sea","ICES:cod.27.21",1
 "candidate:ices_cuckoo_ray_9a","","ices_cuckoo_ray_9a","new","ineligible","screened","not_started","ICES","Bay of Biscay and the Iberian Coast","ICES:rjn.27.9a",1
 "candidate:ices_flounder_420","","ices_flounder_420","new","ineligible","screened","not_started","ICES","Greater North Sea","ICES:fle.27.420",1
+"candidate:ices_flounder_baltic_21_23","","ices_flounder_baltic_21_23","new","ineligible","screened","not_started","ICES","Baltic Sea","ICES:fle.27.21-23",1
+"candidate:ices_flounder_baltic_2425","","ices_flounder_baltic_2425","new","ineligible","screened","not_started","ICES","Baltic Sea","ICES:bzq.27.2425",1
+"candidate:ices_flounder_baltic_2628","","ices_flounder_baltic_2628","new","ineligible","screened","not_started","ICES","Baltic Sea","ICES:bzq.27.2628",1
 "candidate:ices_four_spot_megrim_8c9a","","ices_four_spot_megrim_8c9a","new","eligible","screened","not_started","ICES","Southern Bay of Biscay and Atlantic Iberian waters East","ICES:ldb.27.8c9a",1
 "candidate:ices_greater_silver_smelt_5a14","","ices_greater_silver_smelt_5a14","new","eligible","screened","not_started","ICES","Greenland Sea, Icelandic Waters","ICES:aru.27.5a14",1
 "candidate:ices_greenland_halibut_1_2","","ices_greenland_halibut_1_2","new","unresolved","screened","not_started","ICES","Arctic Ocean, Barents Sea, Norwegian Sea","ICES:ghl.27.1-2",1
@@ -129,6 +133,7 @@
 "candidate:ices_thornback_ray_8c","","ices_thornback_ray_8c","new","ineligible","screened","not_started","ICES","Bay of Biscay and the Iberian Coast","ICES:rjc.27.8c",1
 "candidate:ices_thornback_ray_9a","","ices_thornback_ray_9a","new","ineligible","screened","not_started","ICES","Bay of Biscay and the Iberian Coast","ICES:rjc.27.9a",1
 "candidate:ices_turbot_3a","","ices_turbot_3a","new","ineligible","screened","not_started","ICES","Greater North Sea","ICES:tur.27.3a",1
+"candidate:ices_turbot_baltic_22_32","","ices_turbot_baltic_22_32","new","ineligible","screened","not_started","ICES","Baltic Sea","ICES:tur.27.22-32",1
 "candidate:ices_undulate_ray_7de","","ices_undulate_ray_7de","new","ineligible","screened","not_started","ICES","Celtic Seas, Greater North Sea","ICES:rju.27.7de",1
 "candidate:ices_undulate_ray_8ab","","ices_undulate_ray_8ab","new","ineligible","screened","not_started","ICES","Bay of Biscay and the Iberian Coast","ICES:rju.27.8ab",1
 "candidate:ices_undulate_ray_8c","","ices_undulate_ray_8c","new","ineligible","screened","not_started","ICES","Bay of Biscay and the Iberian Coast","ICES:rju.27.8c",1
