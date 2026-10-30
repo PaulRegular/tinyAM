@@ -30,6 +30,7 @@
 "candidate:iattc_eastern_pacific_skipjack","","iattc_eastern_pacific_skipjack","new","ineligible","screened","not_started","NOAA","SWFSC","NOAA:10160",1
 "candidate:iattc_eastern_pacific_yellowfin","","iattc_eastern_pacific_yellowfin","new","ineligible","screened","not_started","NOAA","SWFSC","NOAA:10168",1
 "candidate:iccat_west_atlantic_skipjack","","iccat_west_atlantic_skipjack","new","ineligible","screened","not_started","NOAA","SEFSC","NOAA:10158",1
+"candidate:ices_atlantic_wolffish_iceland_5a","","ices_atlantic_wolffish_iceland_5a","new","eligible","screened","not_started","ICES","Icelandic Waters","ICES:caa.27.5a",1
 "candidate:ices_megrim_north_7b_k8abd","","ices_megrim_north_7b_k8abd","new","unresolved","screened","not_started","ICES","ICES divisions 7.b-k, 8.a-b, and 8.d (west and southwest of Ireland, Bay of Biscay)","ICES:meg.27.7b-k8abd",1
 "candidate:ices_north_sea_horse_mackerel","","ices_north_sea_horse_mackerel","new","unresolved","screened","not_started","ICES","Greater North Sea","ICES:hom.27.4bc7d",1
 "candidate:ices_norway_pout_6a","","ices_norway_pout_6a","new","ineligible","screened","not_started","ICES","Celtic Seas","ICES:nop.27.6a",1
