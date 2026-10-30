@@ -26,15 +26,15 @@ the rows already linked to a stock or candidate unit.
 | Organization | Rows | Matched to database | New candidate rows | Ambiguous identity | Identity unreviewed | Eligible rows | Ineligible rows | Eligibility unresolved | Screened | Not screened |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 47 | 10 | 122 | 21 | 133 | 45 | 175 | 24 |
-| ICES | 274 | 59 | 49 | 2 | 164 | 51 | 73 | 150 | 142 | 132 |
+| ICES | 274 | 59 | 81 | 2 | 132 | 51 | 73 | 150 | 142 | 132 |
 | NOAA | 432 | 28 | 131 | 3 | 270 | 54 | 78 | 300 | 164 | 268 |
-| **Total** | **905** | **107** | **227** | **15** | **556** | **126** | **284** | **495** | **481** | **424** |
+| **Total** | **905** | **107** | **259** | **15** | **524** | **126** | **284** | **495** | **481** | **424** |
 
-The crosswalk currently links 254 distinct unit keys across 273 inventory rows:
-100 match canonical database stocks and 152 are new candidate units; one unit
-is ambiguous and one has mixed identity status. Of the 152 new candidate units,
-30 are eligible for source curation, 92 are ineligible for the age-disaggregated
-set, and 30 remain unresolved. A further 632 inventory rows have no unit
+The crosswalk currently links 286 distinct unit keys across 305 inventory rows:
+100 match canonical database stocks and 184 are new candidate units; one unit
+is ambiguous and one has mixed identity status. Of the 184 new candidate units,
+30 are eligible for source curation, 124 are ineligible for the age-disaggregated
+set, and 30 remain unresolved. A further 600 inventory rows have no unit
 crosswalk yet. Row-level status and unit-level deduplication are intentionally
 reported separately.
 NOAA Stock SMART 10434, Gulf of Alaska sharpchin rockfish, is the Tier 4 component of the GOA Other Rockfish complex. Stock SMART lists a fully accepted 2023 REMA Model 15.2 run; the 2024 SAFE update carried forward Tier 4 biomass because no new survey data were available to refit, and the 2025 SAFE catch report says no assessment was conducted and prior values were rolled forward. The assessment uses aggregate survey biomass and catch, not age-specific population likelihoods or outputs, so the unit is screened ineligible. See `source_reviews/noaa_goa_sharpchin_2024.md` and its local source cache manifest.
@@ -151,16 +151,16 @@ Snapshot dated 2026-10-30: the register contains 905 source-list entries. These 
 | Organization | Entries | Matched | Provisional new | Ambiguous | Identity unreviewed | Eligible | Excluded | Eligibility unresolved | Screened | Not started |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 47 | 10 | 122 | 21 | 133 | 45 | 175 | 24 |
-| ICES | 274 | 59 | 49 | 2 | 164 | 51 | 73 | 150 | 142 | 132 |
+| ICES | 274 | 59 | 81 | 2 | 132 | 51 | 73 | 150 | 142 | 132 |
 | NOAA | 432 | 28 | 131 | 3 | 270 | 54 | 78 | 300 | 164 | 268 |
-| Total | 905 | 107 | 227 | 15 | 556 | 126 | 284 | 495 | 481 | 424 |
+| Total | 905 | 107 | 259 | 15 | 524 | 126 | 284 | 495 | 481 | 424 |
 
 These are inventory-entry counts. The linked-unit crosswalk in
-inventory_units.csv represents 254 distinct units across 273 inventory rows:
-100 canonical stock IDs and 154 candidate-unit IDs. Of the 152 new candidate
-units, 30 are screened eligible, 92 are screened ineligible, and 30 remain
+inventory_units.csv represents 286 distinct units across 305 inventory rows:
+100 canonical stock IDs and 186 candidate-unit IDs. Of the 184 new candidate
+units, 30 are screened eligible, 124 are screened ineligible, and 30 remain
 eligibility-unresolved. Two additional candidate-unit IDs have ambiguous or
-mixed identity status. The other 632 entries do not yet have a crosswalk unit. Regional
+mixed identity status. The other 600 entries do not yet have a crosswalk unit. Regional
 counts by organization are in inventory_progress.csv. These are provisional
 audit counts, not the selected expansion batch.
 
@@ -703,3 +703,4 @@ ICES lemon sole in Subarea 4 and divisions 3.a and 7.d (lem.27.3a47d) is a disti
 NOAA Stock SMART IDs 10079, 10081, and 10083 are now linked to their distinct Gulf of Mexico brown, pink, and white shrimp units. They remain outside the initial marine-finfish scope and are not assessment-input candidates. See source_reviews/noaa_gulf_shrimp_inventory_2026.md.
 NOAA Stock SMART IDs 10080–14842 covering 30 shrimp, crab, lobster, scallop, clam, and squid management units are now linked to distinct candidate units. They are screened out only because they fall outside the initial marine-finfish scope; their assessment inputs and outputs have not been audited. See source_reviews/noaa_invertebrate_inventory_2026.md.
 ICES grey gurnard (`gug.27.3a47d`), brill (`bll.27.3a47de`), and North Sea flounder (`fle.27.420`) are current distinct stocks screened ineligible under their 2026 advised methods. The report describes a category-3 trends method for grey gurnard and SPiCT assessments for brill and flounder, without age-disaggregated population inputs or outputs. See `source_reviews/ices_wgnssk_n_age_methods_2026.md`.
+ICES SID stock codes for 32 Norway lobster and northern shrimp entries are now linked to distinct candidate units. They remain screened outside the marine-finfish scope; assessment inputs and outputs have not been audited. See `source_reviews/ices_invertebrate_inventory_2026.md`.
