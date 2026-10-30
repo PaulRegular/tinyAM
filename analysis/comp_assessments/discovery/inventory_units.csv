@@ -14,6 +14,8 @@
 "candidate:dfo_quebec_4s_herring","","dfo_quebec_4s_herring","ambiguous","ineligible","screened","not_started","DFO","Quebec","DFO:Quebec:Atlantic Herring - Herring Fishing Area 15",1
 "candidate:dfo_quillback_inside","","dfo_quillback_inside","new","unresolved","screened","not_started","DFO","Pacific","DFO:Pacific:Quillback Rockfish - Inside waters",1
 "candidate:dfo_quillback_outside","","dfo_quillback_outside","new","unresolved","screened","not_started","DFO","Pacific","DFO:Pacific:Quillback Rockfish - Outside waters",1
+"candidate:dfo_redfish_s_fasciatus_units_1_2","","dfo_redfish_s_fasciatus_units_1_2","new","ineligible","screened","not_started","DFO","National Capital Region","DFO:National Capital Region:Redfish (Sebastes fasciatus) Unit 1 + 2",1
+"candidate:dfo_redfish_s_mentella_units_1_2","","dfo_redfish_s_mentella_units_1_2","new","ineligible","screened","not_started","DFO","National Capital Region","DFO:National Capital Region:Redfish (Sebastes mentella) Unit 1 + 2",1
 "candidate:dfo_silver_hake_4vwx","","dfo_silver_hake_4vwx","new","ineligible","screened","not_started","DFO","Maritimes","DFO:Maritimes:Silver Hake - NAFO 4VWX",1
 "candidate:dfo_western_component_pollock_4xopqrs5","","dfo_western_component_pollock_4xopqrs5","new","eligible","screened","not_started","DFO","Maritimes","DFO:Maritimes:Pollock - NAFO 4X5 (Western Component)",1
 "candidate:dfo_witch_flounder_3no","","dfo_witch_flounder_3no","new","ineligible","screened","not_started","DFO","Newfoundland and Labrador","DFO:Newfoundland and Labrador:Witch Flounder - NAFO 3NO",1
