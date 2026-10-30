@@ -99,6 +99,15 @@ require IPHC permission, and the public commercial-age table was revised after
 the 2025 assessment cutoff; see
 `source_reviews/noaa_dfo_pacific_halibut_iphc_2025.md`.
 
+ICES Bay of Biscay sea bass (`bss.27.8ab`) is screened eligible for source
+curation from the 2026 update (data through 2025) and the 2025 benchmark input
+annex. Annual conditional age-at-length data support catch-at-age
+reconstruction, while two juvenile indices, adult LPUE, age-based mortality,
+growth and maturity assumptions, and recruitment/SSB/Fbar outputs are
+documented. Exact weight-at-age and index timing still need validation; no
+canonical data were added. See
+`source_reviews/ices_seabass_8ab_2026.md`.
+
 ## Inventory progress snapshot
 
 Snapshot dated 2026-10-30: the register contains 905 source-list entries. These are not deduplicated stock units.
@@ -106,14 +115,14 @@ Snapshot dated 2026-10-30: the register contains 905 source-list entries. These 
 | Organization | Entries | Matched | Provisional new | Ambiguous | Identity unreviewed | Eligible | Excluded | Eligibility unresolved | Screened | Not started |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 47 | 10 | 122 | 21 | 133 | 45 | 175 | 24 |
-| ICES | 274 | 58 | 39 | 2 | 175 | 48 | 66 | 160 | 131 | 143 |
+| ICES | 274 | 58 | 40 | 2 | 174 | 49 | 66 | 159 | 132 | 142 |
 | NOAA | 432 | 28 | 96 | 3 | 305 | 54 | 76 | 302 | 162 | 270 |
-| Total | 905 | 106 | 182 | 15 | 602 | 123 | 275 | 507 | 468 | 437 |
+| Total | 905 | 106 | 183 | 15 | 601 | 124 | 275 | 506 | 469 | 436 |
 
 These are inventory-entry counts. The linked-unit crosswalk in
-inventory_units.csv represents 208 distinct units across 227 inventory rows:
-99 canonical stock IDs and 109 candidate-unit IDs. Of the 107 new candidate
-units, 27 are screened eligible, 51 are screened ineligible, and 29 remain
+inventory_units.csv represents 209 distinct units across 228 inventory rows:
+99 canonical stock IDs and 110 candidate-unit IDs. Of the 108 new candidate
+units, 28 are screened eligible, 51 are screened ineligible, and 29 remain
 eligibility-unresolved. Two additional candidate-unit IDs have ambiguous or
 mixed identity status. The other 678 entries do not yet have a crosswalk unit. Regional
 counts by organization are in inventory_progress.csv. These are provisional
