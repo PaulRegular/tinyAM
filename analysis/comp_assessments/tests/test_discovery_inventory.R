@@ -1,6 +1,7 @@
 register <- read.csv('analysis/comp_assessments/discovery/candidates.csv', stringsAsFactors = FALSE, na.strings = c('', 'NA'))
 stocks <- read.csv('analysis/comp_assessments/database/stocks.csv', stringsAsFactors = FALSE)
 stopifnot(nrow(register) > 0L, !anyNA(register$candidate_id), !anyDuplicated(register$candidate_id),
+  !any(register$candidate_id == 'candidate_id'),
   all(register$organization %in% c('NOAA', 'ICES', 'DFO')),
   all(register$match_status %in% c('unreviewed', 'matched', 'new', 'ambiguous')),
   all(register$screening_status %in% c('not_started', 'in_progress', 'screened')),
