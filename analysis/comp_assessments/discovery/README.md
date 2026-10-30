@@ -107,18 +107,27 @@ Snapshot dated 2026-10-30: the register contains 905 source-list entries. These 
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 46 | 10 | 123 | 20 | 133 | 46 | 174 | 25 |
 | ICES | 274 | 58 | 26 | 2 | 188 | 48 | 54 | 172 | 118 | 156 |
-| NOAA | 432 | 28 | 77 | 3 | 324 | 44 | 74 | 314 | 143 | 289 |
-| Total | 905 | 106 | 149 | 15 | 635 | 112 | 261 | 532 | 435 | 470 |
+| NOAA | 432 | 28 | 79 | 3 | 322 | 44 | 74 | 314 | 145 | 287 |
+| Total | 905 | 106 | 151 | 15 | 633 | 112 | 261 | 532 | 437 | 468 |
 
 These are inventory-entry counts. The linked-unit crosswalk in
-`inventory_units.csv` currently represents 175 distinct units across 194
-entries: 99 canonical stock IDs and 76 provisional candidate-unit IDs. Of the
-76 candidate units, 16 are screened eligible, 39 are screened ineligible, and 21
+`inventory_units.csv` currently represents 177 distinct units across 196
+entries: 99 canonical stock IDs and 78 provisional candidate-unit IDs. Of the
+78 candidate units, 16 are screened eligible, 39 are screened ineligible, and 23
 remain eligibility-unresolved. Two of the ineligible units have ambiguous or mixed
-identity status. The other 711 entries do not yet have an explicit unit
+identity status. The other 709 entries do not yet have an explicit unit
 crosswalk. Regional
 counts by organization are available in `inventory_progress.csv`. These are
 provisional audit counts, not the selected expansion batch.
+
+NOAA Stock SMART Atlantic yellowfin and bigeye entries 10166 and 10169 are
+crosswalked to their single Atlantic-wide ICCAT assessment units. Yellowfin's
+conditional age-at-length observations inform growth, while bigeye's reported
+age-specific exploitation rates are derived from fitted states; neither report
+provides a complete age-disaggregated observation matrix. Their source data may
+still support a limited reconstruction, so eligibility remains unresolved. See
+`source_reviews/noaa_iccat_atlantic_tunas_2024_2025.md`; the four ICCAT reports
+are cached locally with checksums.
 
 NOAA Stock SMART 10165 and the DFO Western Atlantic bluefin listing are
 crosswalked as one ICCAT unit. The 2021 Stock Synthesis assessment was used for
@@ -462,7 +471,7 @@ NOAA Atlantic herring (Stock SMART 10572) is screened against the 2026 WHAM Mana
 
 NOAA black sea bass Stock SMART units 10310 (South Atlantic) and 10311 (Mid-Atlantic) are distinct stocks with age-structured assessment models. The South Atlantic SEDAR 76 Update reports N-at-age and F-at-age through 2023, but its annual age-composition input matrices remain unverified and a revision is underway. The accepted Mid-Atlantic 2025 multi-WHAM update reports aggregate indicators through 2024; its final input package and age-specific output arrays were not recovered. Both remain eligibility-unresolved. See `source_reviews/noaa_black_sea_bass_south_atlantic_2025.md` and `source_reviews/noaa_black_sea_bass_mid_atlantic_2025.md`.
 
-Recent discovery source reviews: [ICES Iberian sardine](source_reviews/ices_iberian_sardine_2025.md), [ICES northern hake](source_reviews/ices_northern_hake_2026.md), [ICES turbot in Division 3.a](source_reviews/ices_turbot_3a_2026.md), [NOAA northern and southern Windowpane](source_reviews/noaa_windowpane_2023.md), [NOAA Gulf of Mexico red grouper (Stock SMART 10331)](source_reviews/noaa_red_grouper_gom_2025.md), [NOAA Gulf Spanish mackerel (Stock SMART 10173)](source_reviews/noaa_gulf_spanish_mackerel_2023.md), [DFO Gulf witch flounder, NAFO 4RST](source_reviews/dfo_witch_flounder_4rst_2022.md), [DFO Inside Quillback](source_reviews/dfo_quillback_inside_2021.md), [DFO Outside Quillback](source_reviews/dfo_quillback_outside_2021.md), [DFO British Columbia Longspine Thornyhead](source_reviews/dfo_longspine_thornyhead_bc.md), and [DFO Greenland halibut in NAFO Subarea 0](source_reviews/dfo_greenland_halibut_0a0b_2025.md).
+Recent discovery source reviews: [ICES Iberian sardine](source_reviews/ices_iberian_sardine_2025.md), [ICES northern hake](source_reviews/ices_northern_hake_2026.md), [ICES turbot in Division 3.a](source_reviews/ices_turbot_3a_2026.md), [NOAA northern and southern Windowpane](source_reviews/noaa_windowpane_2023.md), [NOAA Atlantic yellowfin and bigeye](source_reviews/noaa_iccat_atlantic_tunas_2024_2025.md), [NOAA Gulf of Mexico red grouper (Stock SMART 10331)](source_reviews/noaa_red_grouper_gom_2025.md), [NOAA Gulf Spanish mackerel (Stock SMART 10173)](source_reviews/noaa_gulf_spanish_mackerel_2023.md), [DFO Gulf witch flounder, NAFO 4RST](source_reviews/dfo_witch_flounder_4rst_2022.md), [DFO Inside Quillback](source_reviews/dfo_quillback_inside_2021.md), [DFO Outside Quillback](source_reviews/dfo_quillback_outside_2021.md), [DFO British Columbia Longspine Thornyhead](source_reviews/dfo_longspine_thornyhead_bc.md), and [DFO Greenland halibut in NAFO Subarea 0](source_reviews/dfo_greenland_halibut_0a0b_2025.md).
 
 
 ICES turbot in Division 3.a (`tur.27.3a`) is a distinct current advice unit with a 2026 SPiCT assessment. The model uses total catches and three quarterly aggregate exploitable-biomass indices; its use of length data to construct those indices does not provide age-disaggregated likelihood inputs. It is screened ineligible for the age-specific source set, while its relative biomass and fishing-pressure outputs remain available for aggregate comparisons. The WGNSSK report also notes that biological connectivity with North Sea and Baltic populations remains under study. See `source_reviews/ices_turbot_3a_2026.md`.
