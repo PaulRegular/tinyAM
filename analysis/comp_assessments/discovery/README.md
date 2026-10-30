@@ -25,10 +25,10 @@ the rows already linked to a stock or candidate unit.
 
 | Organization | Rows | Matched to database | New candidate rows | Ambiguous identity | Identity unreviewed | Eligible rows | Ineligible rows | Eligibility unresolved | Screened | Not screened |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| DFO | 199 | 20 | 58 | 13 | 108 | 21 | 142 | 36 | 189 | 10 |
+| DFO | 199 | 20 | 58 | 16 | 105 | 21 | 142 | 36 | 192 | 7 |
 | ICES | 274 | 59 | 96 | 2 | 117 | 52 | 84 | 138 | 157 | 117 |
 | NOAA | 433 | 28 | 168 | 7 | 230 | 57 | 112 | 264 | 205 | 228 |
-| **Total** | **906** | **107** | **322** | **22** | **455** | **130** | **338** | **438** | **551** | **355** |
+| **Total** | **906** | **107** | **322** | **25** | **452** | **130** | **338** | **438** | **554** | **352** |
 
 The crosswalk currently links 347 distinct unit keys across 368 inventory
 rows: 100 link to canonical stocks and 247 are candidate units. Of the 245 new
@@ -899,3 +899,10 @@ The 2025 entries are incomplete in-season estimates. The unit is screened
 ineligible for age-structured population assessment curation, with its official
 age-specific outputs documented separately. See
 source_reviews/dfo_fraser_sockeye_early_stuart.md.
+The DFO Fraser Early Summer, Summer and Late Sockeye inventory rows are broad
+management/run-timing groups that span multiple current production groups and
+Conservation Units. The PSC age-specific outputs are reported for constituent
+production groups, not as one aggregate for each broad DFO row. These rows remain
+identity-ambiguous and eligibility-unresolved; they are not counted as three
+new stock units. See
+source_reviews/dfo_fraser_sockeye_other_groups.md.
