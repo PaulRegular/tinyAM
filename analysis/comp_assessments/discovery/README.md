@@ -25,15 +25,15 @@ the rows already linked to a stock or candidate unit.
 
 | Organization | Rows | Matched to database | New candidate rows | Ambiguous identity | Identity unreviewed | Eligible rows | Ineligible rows | Eligibility unresolved | Screened | Not screened |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| DFO | 199 | 20 | 57 | 13 | 109 | 21 | 141 | 37 | 188 | 11 |
+| DFO | 199 | 20 | 58 | 13 | 108 | 21 | 142 | 36 | 189 | 10 |
 | ICES | 274 | 59 | 96 | 2 | 117 | 52 | 84 | 138 | 157 | 117 |
 | NOAA | 433 | 28 | 168 | 7 | 230 | 57 | 112 | 264 | 205 | 228 |
-| **Total** | **906** | **107** | **321** | **22** | **456** | **130** | **337** | **439** | **550** | **356** |
+| **Total** | **906** | **107** | **322** | **22** | **455** | **130** | **338** | **438** | **551** | **355** |
 
-The crosswalk currently links 346 distinct unit keys across 367 inventory
-rows: 100 link to canonical stocks and 246 are candidate units. Of the 244 new
-candidate units, 34 are eligible for source curation, 172 are ineligible for
-the age-disaggregated set, and 38 remain unresolved. A further 539 inventory
+The crosswalk currently links 347 distinct unit keys across 368 inventory
+rows: 100 link to canonical stocks and 247 are candidate units. Of the 245 new
+candidate units, 34 are eligible for source curation, 173 are ineligible for
+the age-disaggregated set, and 38 remain unresolved. A further 538 inventory
 rows have no unit crosswalk yet. Row-level status and unit-level deduplication
 are intentionally reported separately.
 
@@ -889,3 +889,13 @@ legacy NOAA:10402 and NOAA:11302 2007 area labels do not map one-to-one to the
 four current areas and are retained as ambiguous historical rows, not extra
 current cases. See
 `source_reviews/noaa_black_rockfish_pacific_coast_2023.md`.
+
+DFO's Fraser Early Stuart Sockeye row is linked to the current Fraser Early Stuart
+management group and the PSC Early Stuart production group (Takla/Trembleur
+Early Stuart CU). The official PSC stock-recruit dataset reports age-specific
+recruits and spawner estimates through return year 2025, but does not provide
+the matching population-assessment catch-at-age and independent survey inputs.
+The 2025 entries are incomplete in-season estimates. The unit is screened
+ineligible for age-structured population assessment curation, with its official
+age-specific outputs documented separately. See
+source_reviews/dfo_fraser_sockeye_early_stuart.md.
