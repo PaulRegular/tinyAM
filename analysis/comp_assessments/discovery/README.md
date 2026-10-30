@@ -26,15 +26,15 @@ the rows already linked to a stock or candidate unit.
 | Organization | Rows | Matched to database | New candidate rows | Ambiguous identity | Identity unreviewed | Eligible rows | Ineligible rows | Eligibility unresolved | Screened | In progress | Not screened |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 63 | 18 | 98 | 21 | 146 | 32 | 198 | 1 | 0 |
-| ICES | 274 | 59 | 106 | 2 | 107 | 52 | 94 | 128 | 167 | 0 | 107 |
+| ICES | 274 | 59 | 108 | 2 | 105 | 52 | 96 | 126 | 169 | 0 | 105 |
 | NOAA | 433 | 28 | 168 | 7 | 230 | 57 | 112 | 264 | 205 | 0 | 228 |
-| **Total** | **906** | **107** | **337** | **27** | **435** | **130** | **352** | **424** | **570** | **1** | **335** |
+| **Total** | **906** | **107** | **339** | **27** | **433** | **130** | **354** | **422** | **572** | **1** | **333** |
 
-The crosswalk currently links 362 distinct unit keys across 383 inventory rows:
-100 link to canonical stocks and 262 are candidate units. Of the 260
-provisionally new candidate units, 34 are eligible for source curation, 187
+The crosswalk currently links 364 distinct unit keys across 385 inventory rows:
+100 link to canonical stocks and 264 are candidate units. Of the 262
+provisionally new candidate units, 34 are eligible for source curation, 189
 are ineligible for the age-disaggregated set, and 39 remain unresolved. A
-further 523 inventory rows have no unit crosswalk yet. Row-level status and
+further 521 inventory rows have no unit crosswalk yet. Row-level status and
 unit-level deduplication are intentionally reported separately.
 
 The Maritimes American eel “Large Eel” and “Elvers” inventory entries are two
@@ -279,16 +279,16 @@ Snapshot dated 2026-10-30: the register contains 906 source-list entries. These 
 | Organization | Entries | Matched | Provisional new | Ambiguous | Identity unreviewed | Eligible | Excluded | Eligibility unresolved | Screened | In progress | Not started |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 63 | 18 | 98 | 21 | 146 | 32 | 198 | 1 | 0 |
-| ICES | 274 | 59 | 106 | 2 | 107 | 52 | 94 | 128 | 167 | 0 | 107 |
+| ICES | 274 | 59 | 108 | 2 | 105 | 52 | 96 | 126 | 169 | 0 | 105 |
 | NOAA | 433 | 28 | 168 | 7 | 230 | 57 | 112 | 264 | 205 | 0 | 228 |
-| Total | 906 | 107 | 337 | 27 | 435 | 130 | 352 | 424 | 570 | 1 | 335 |
+| Total | 906 | 107 | 339 | 27 | 433 | 130 | 354 | 422 | 572 | 1 | 333 |
 
 These are inventory-entry counts. The linked-unit crosswalk in
-inventory_units.csv represents 362 distinct units across 383 inventory rows:
-100 canonical stock IDs and 262 candidate-unit IDs. Of the 260 provisionally
-new units, 34 are screened eligible, 187 are screened ineligible, and 39
+inventory_units.csv represents 364 distinct units across 385 inventory rows:
+100 canonical stock IDs and 264 candidate-unit IDs. Of the 262 provisionally
+new units, 34 are screened eligible, 189 are screened ineligible, and 39
 remain eligibility-unresolved. One candidate-unit ID has ambiguous identity
-and one has mixed identity status. The other 523 entries do not yet have a
+and one has mixed identity status. The other 521 entries do not yet have a
 crosswalk unit. Regional counts by organization are in inventory_progress.csv.
 These are provisional audit counts, not the selected expansion batch.
 
@@ -909,3 +909,5 @@ source_reviews/dfo_fraser_sockeye_other_groups.md.
 
 
 Ten ICES Bay of Biscay and Iberian elasmobranch entries were screened against the latest advice-linked records. Their published outputs are aggregate indicators or catch advice, without verified age-specific inputs or population surfaces; detailed assessment input files were not recovered. They are ineligible for the current age-disaggregated comparison on this evidence. This does not establish that biological age samples do not exist. See source_reviews/ices_bay_biscay_elasmobranchs_2026.md.
+
+ICES Senegalese sole (oal.27.8c9a) and sand sole (sos.27.8c9a) are screened ineligible from the 2026 category 5 advice-linked pages: they publish landings and commercial-fleet effort/CPUE, with no age-specific inputs or comparable population or mortality outputs. This does not establish that biological age samples do not exist. See source_reviews/ices_iberian_sole_indicators_2026.md.
