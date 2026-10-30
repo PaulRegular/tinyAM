@@ -2,58 +2,78 @@
 
 ## Current assessment and stock identity
 
-NOAA Stock SMART's assessment identifier 166727 is associated with the 2023
-black rockfish assessment suite. The suite contains four regional model
-components: Washington, Oregon, northern California, and central California.
-For inventory counting, these are grouped as one assessment case; this does not
-assert that they are one biological population, and the regions remain separate
-in the source files and any later translation.
+NOAA's 2023 Pacific Coast benchmark work covers three state-level assessment
+units: Washington, Oregon, and California. The Washington and Oregon reports
+each describe a separate Stock Synthesis assessment. The California report
+describes one California stock assessment represented by northern and central
+sub-area models. Those sub-area models are components of the California
+assessment, not additional stock cases.
 
-The inventory's older NOAA:10402 and NOAA:11302 entries identify broad northern
-and southern Pacific Coast units with an assessment year of 2007. Those labels
-do not map one-to-one to the four 2023 model areas. They are retained as
-ambiguous historical identifiers and are not counted as separate current
-cases. The 2023 suite is registered once as NOAA:166727.
+The pinned NOAA Stock SMART summary identifies four 2023 records: stock IDs
+14409 (Washington; assessment 12965), 14407 (Oregon; assessment 12964), 17194
+(South of Point Conception; assessment 12963), and 17195 (Point Conception /
+Oregon Border; assessment 12962). The Stock SMART metadata field `itis` is
+166727 for all four; the number in parentheses in the NOAA-EDAB changelog is
+the species taxonomic identifier, not a unique Stock SMART stock ID. The
+California Stock SMART area labels do not map one-to-one to the assessment's
+Point Arena sub-area split. They are therefore grouped under the single
+California assessment-unit key for inventory counts, with the precise
+crosswalk retained as unresolved; the source models remain separate.
+
+Older Stock SMART rows 10402 and 11302 are broad northern and southern Pacific
+Coast units from 2007. Row 14408 is a California record from 2019. The available
+sources do not establish a one-to-one mapping from these older boundaries to
+the current state-specific stock definitions. They remain ambiguous historical
+rows and are not counted as current assessment cases.
 
 ## Source evidence
 
-The four 2023 components use Stock Synthesis 3 age-structured models. PFMC's
-report and model-file links include the model data and control files, fitted
-reports, and numeric age-specific population tables. The downloaded model
-archives contain sex-specific numbers-at-age and biomass-at-age tables. The
-available age grids are ages 0-40 for Washington and Oregon and ages 0-50 for
-northern and central California. The reported population histories begin in
-1940 for Washington, 1892 for Oregon, and 1875 for both California components.
+The 2023 California report describes the California stock as two sub-area
+models, northern and central, divided at Point Arena to represent differing
+exploitation histories, compositions, and abundance trends. The central model
+extends to the U.S.-Mexico border, although black rockfish are rare south of
+Point Conception and the data informing that model are concentrated farther
+north. Washington, Oregon, and California each have their own source model
+files; retain the state and sub-area distinctions in any later extraction.
 
-Inputs include fleet catches, fishery and survey age/length compositions,
-abundance indices, and sex-specific biological settings. Catch-at-age and
-age-specific survey indices are not all supplied as direct observation
-matrices: age compositions, conditional age-at-length samples, aggregate
-catches, and survey indices require documented reconstruction for tinyAM.
-The native model files preserve the source likelihood inputs and component-
-specific fleet and survey settings. Natural mortality and other biological
-assumptions differ among regional models and sexes and must remain component-
-specific during translation.
+The four regional model components use Stock Synthesis 3. Their reports and
+archives provide fleet catches, fishery and survey age/length compositions,
+abundance indices, sex-specific biological settings, and numeric age-specific
+population output. The available age grids are ages 0-40 for Washington and
+Oregon and ages 0-50 for both California sub-area models. Reported population
+histories begin in 1940 for Washington, 1892 for Oregon, and 1875 for both
+California components.
 
-The official output archives provide sex-specific abundance-at-age and
-biomass-at-age. Spawning output is reported in millions of eggs, not as
-spawning biomass in tonnes. This is an eligible source-curation case because
-the native inputs support documented age-based reconstruction and the official
-files provide numeric age-specific population outputs; eligibility does not
-mean the tinyAM observation likelihood is identical to Stock Synthesis.
+Catch-at-age and age-specific survey indices are not all provided as direct
+observation matrices. Some tinyAM inputs would require documented
+reconstruction from catch totals, age compositions, conditional age-at-length
+samples, and aggregate survey indices. Preserve the original likelihood inputs
+and regional settings. Natural mortality and other assumptions differ among
+the regional models and sexes.
+
+The official archives provide sex-specific abundance-at-age and
+biomass-at-age. California spawning output is reported in millions of eggs,
+not spawning biomass in tonnes. The case is eligible for source curation
+because age-based inputs can be reconstructed from the native data and numeric
+age-specific outputs are available. This does not mean the tinyAM likelihood
+would match Stock Synthesis exactly.
 
 ## Screening decision
 
-Screen NOAA:166727 as one eligible current assessment case with four preserved
-regional model components. Keep both legacy 2007 inventory identifiers
-ambiguous and ineligible as separate current cases. Do not pool regional
-observations or biological assumptions without an explicit translation
-decision. No canonical assessment, input, or output records were added and no
-tinyAM translation was attempted.
+Screen three current assessment units as eligible for source curation:
+Washington (NOAA:14409), Oregon (NOAA:14407), and California (NOAA:17194 and
+NOAA:17195, grouped as the single California assessment). Keep the exact
+California inventory-to-sub-area correspondence unresolved, and do not pool
+observations or biology across model components. Keep NOAA:10402, NOAA:11302,
+and NOAA:14408 as ambiguous, ineligible historical rows. The prior register
+entry NOAA:166727 was invalid as a stock key and has been removed; it was a
+taxonomic identifier, not a Stock SMART stock row. No canonical assessment,
+input, or output records were added and no tinyAM translation was attempted.
 
 ## Sources
 
-- [NOAA-EDAB Stock SMART changelog](https://noaa-edab.github.io/stocksmart/news/index.html)
-- [PFMC Groundfish assessment documents and model files](https://www.pcouncil.org/stock-assessments-star-reports-stat-reports-rebuilding-analyses-terms-of-reference/groundfish-stock-assessment-documents/)
+- [NOAA Stock SMART changelog](https://noaa-edab.github.io/stocksmart/news/index.html)
+- [PFMC groundfish assessment documents and model files](https://www.pcouncil.org/stock-assessments-star-reports-stat-reports-rebuilding-analyses-terms-of-reference/groundfish-stock-assessment-documents/)
 - [2023 Black Rockfish STAR panel report](https://www.pcouncil.org/documents/2023/11/stock-assessment-review-star-panel-report-for-black-rockfish.pdf/)
-- Washington, Oregon, and California assessment reports and their model-file archives are cached locally. URLs, revisions, retrieval date, byte sizes, and SHA-256 checksums are listed in `source_cache/discovery_noaa_black_rockfish_2023/sources.csv`.
+- [NOAA peer-review record for the 2023 assessments](https://www.noaa.gov/information-technology/stock-assessment-review-panel-review-of-2023-stock-assessments-for-black-rockfish-off-washington)
+- Washington, Oregon, and California reports and model-file archives are cached locally. URLs, revisions, retrieval dates, byte sizes, and SHA-256 checksums are listed in `source_cache/discovery_noaa_black_rockfish_2023/sources.csv`.

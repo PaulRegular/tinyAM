@@ -168,7 +168,9 @@
 "candidate:noaa_atlantic_herring_gom_georges_bank","","noaa_atlantic_herring_gom_georges_bank","new","unresolved","screened","not_started","NOAA","NEFSC","NOAA:10572",1
 "candidate:noaa_atlantic_salmon_gom","","noaa_atlantic_salmon_gom","new","ineligible","screened","not_started","NOAA","NEFSC","NOAA:10498",1
 "candidate:noaa_atlantic_surfclam_mid_atlantic","","noaa_atlantic_surfclam_mid_atlantic","new","ineligible","screened","not_started","NOAA","NEFSC","NOAA:10787",1
-"candidate:noaa_black_rockfish_pacific_coast_2023","","noaa_black_rockfish_pacific_coast_2023","new","eligible","screened","not_started","NOAA","Unspecified","NOAA:166727",1
+"candidate:noaa_black_rockfish_california_2023","","noaa_black_rockfish_california_2023","new","eligible","screened","not_started","NOAA","NWFSC / SWFSC","NOAA:17194 | NOAA:17195",2
+"candidate:noaa_black_rockfish_oregon_2023","","noaa_black_rockfish_oregon_2023","new","eligible","screened","not_started","NOAA","NWFSC / SWFSC","NOAA:14407",1
+"candidate:noaa_black_rockfish_washington_2023","","noaa_black_rockfish_washington_2023","new","eligible","screened","not_started","NOAA","NWFSC / SWFSC","NOAA:14409",1
 "candidate:noaa_blue_king_crab_pribilof","","noaa_blue_king_crab_pribilof","new","ineligible","screened","not_started","NOAA","AFSC","NOAA:10813",1
 "candidate:noaa_blue_king_crab_st_matthew","","noaa_blue_king_crab_st_matthew","new","ineligible","screened","not_started","NOAA","AFSC","NOAA:10814",1
 "candidate:noaa_blue_shark_north_pacific","","noaa_blue_shark_north_pacific","new","ineligible","screened","not_started","NOAA","PIFSC","NOAA:11686",1

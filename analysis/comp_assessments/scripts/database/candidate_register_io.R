@@ -102,3 +102,38 @@ replace_candidate_register_row <- function(path, row_index, row, candidate_id) {
   }
   invisible(NULL)
 }
+
+remove_candidate_register_row <- function(path, row_index, candidate_id) {
+  bytes <- readBin(path, 'raw', n = file.info(path)$size)
+  bounds <- csv_record_bounds(bytes)
+  record_index <- as.integer(row_index) + 1L
+  if (length(record_index) != 1L || is.na(record_index) ||
+      record_index < 2L || record_index > length(bounds$start))
+    stop('Candidate register row index is out of range.', call. = FALSE)
+
+  old_record <- rawToChar(bytes[bounds$start[record_index]:bounds$end[record_index]])
+  if (!startsWith(old_record, paste0('"', candidate_id, '"')))
+    stop('Candidate register row identity does not match ', candidate_id, '.', call. = FALSE)
+
+  first <- bounds$start[record_index]
+  last <- bounds$end[record_index]
+  next_byte <- last + 1L
+  while (next_byte <= length(bytes) && bytes[next_byte] %in% as.raw(c(13L, 10L))) {
+    last <- next_byte
+    next_byte <- next_byte + 1L
+  }
+  before <- if (first > 1L) bytes[seq_len(first - 1L)] else raw(0L)
+  after <- if (last < length(bytes)) bytes[(last + 1L):length(bytes)] else raw(0L)
+  original <- bytes
+  writeBin(c(before, after), path)
+
+  updated <- tryCatch(read.csv(path, stringsAsFactors = FALSE,
+    na.strings = c('', 'NA'), check.names = FALSE), error = function(e) NULL)
+  valid <- !is.null(updated) && nrow(updated) == length(bounds$start) - 2L &&
+    !any(updated$candidate_id == candidate_id, na.rm = TRUE)
+  if (!valid) {
+    writeBin(original, path)
+    stop('Updated candidate register failed its row-count or identity check.', call. = FALSE)
+  }
+  invisible(NULL)
+}

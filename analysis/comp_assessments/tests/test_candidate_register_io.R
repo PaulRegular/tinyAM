@@ -40,5 +40,17 @@ mismatch_error <- tryCatch({
 after_mismatch <- readBin(path, 'raw', n = file.info(path)$size)
 stopifnot(mismatch_error, identical(before_mismatch, after_mismatch))
 
+remove_candidate_register_row(path, 2L, 'NOAA:2')
+after_remove <- read.csv(path, stringsAsFactors = FALSE, check.names = FALSE)
+stopifnot(nrow(after_remove) == 2L,
+  identical(after_remove$candidate_id, c('NOAA:1', 'NOAA:3')),
+  identical(after_remove$notes, c('first line\nsecond line "quoted"', 'unchanged')))
+
+remove_candidate_register_row(path, 2L, 'NOAA:3')
+after_remove_last <- read.csv(path, stringsAsFactors = FALSE, check.names = FALSE)
+stopifnot(nrow(after_remove_last) == 1L,
+  identical(after_remove_last$candidate_id, 'NOAA:1'),
+  identical(after_remove_last$notes, 'first line\nsecond line "quoted"'))
+
 unlink(path)
-cat('Candidate register updates preserve quoted newlines and skip blank CSV lines.\n')
+cat('Candidate register updates preserve quoted newlines, skip blank CSV lines, and remove exact records safely.\n')

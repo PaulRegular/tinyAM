@@ -44,7 +44,7 @@ units <- read.csv('analysis/comp_assessments/discovery/inventory_units.csv',
 red_hake_units <- units[units$candidate_unit_id %in% paste0('noaa_red_hake_', stock_ids), , drop = FALSE]
 stopifnot(nrow(red_hake_units) == 2L,
   all(red_hake_units$eligibility == 'ineligible'),
-  sum(register$organization == 'NOAA') == 433L,
-  sum(register$organization == 'NOAA' & register$screening_status == 'screened') == 241L)
+  sum(register$organization == 'NOAA') == 432L,
+  sum(register$organization == 'NOAA' & register$screening_status == 'screened') == 245L)
 
 cat('NOAA red hake candidate identity and multi-age eligibility screen passed.\n')

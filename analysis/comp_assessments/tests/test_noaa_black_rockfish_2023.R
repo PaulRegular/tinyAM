@@ -1,12 +1,17 @@
 root <- file.path('analysis', 'comp_assessments')
 register <- read.csv(file.path(root, 'discovery', 'candidates.csv'),
   stringsAsFactors = FALSE, na.strings = c('', 'NA'))
-ids <- c('NOAA:166727', 'NOAA:10402', 'NOAA:11302')
+ids <- c('NOAA:14407', 'NOAA:14409', 'NOAA:17194', 'NOAA:17195',
+  'NOAA:10402', 'NOAA:11302', 'NOAA:14408')
 rows <- register[match(ids, register$candidate_id), , drop = FALSE]
-unit_id <- 'noaa_black_rockfish_pacific_coast_2023'
-unit <- read.csv(file.path(root, 'discovery', 'inventory_units.csv'),
-  stringsAsFactors = FALSE, na.strings = c('', 'NA'))
-unit <- unit[unit$unit_key == paste0('candidate:', unit_id), , drop = FALSE]
+current_units <- c('noaa_black_rockfish_oregon_2023',
+  'noaa_black_rockfish_washington_2023',
+  'noaa_black_rockfish_california_2023',
+  'noaa_black_rockfish_california_2023')
+unit_ids <- unique(current_units)
+units <- read.csv(file.path(root, 'discovery', 'inventory_units.csv'),
+  stringsAsFactors = FALSE, na.strings = c('', ''))
+units <- units[units$candidate_unit_id %in% unit_ids, , drop = FALSE]
 review <- paste(readLines(file.path(root, 'discovery', 'source_reviews',
   'noaa_black_rockfish_pacific_coast_2023.md'), warn = FALSE), collapse = '\n')
 stocks <- read.csv(file.path(root, 'database', 'stocks.csv'),
@@ -19,33 +24,30 @@ outputs <- read.csv(file.path(root, 'database', 'outputs.csv'),
   stringsAsFactors = FALSE, na.strings = c('', 'NA'))
 
 stopifnot(
-  nrow(rows) == 3L,
-  rows$candidate_unit_id[1L] == unit_id,
-  rows$official_stock_id[1L] == '166727',
-  rows$match_status[1L] == 'new',
-  rows$screening_status[1L] == 'screened',
-  rows$eligibility[1L] == 'eligible',
-  rows$import_status[1L] == 'not_started',
-  rows$scientific_name[1L] == 'Sebastes melanops',
-  grepl('Washington, Oregon, northern California, central California',
-    rows$assessment_area[1L], fixed = TRUE),
-  grepl('numeric N-at-age and biomass-at-age tables',
-    rows$output_evidence[1L], fixed = TRUE),
-  all(rows$match_status[-1L] == 'ambiguous'),
-  all(rows$screening_status[-1L] == 'screened'),
-  all(rows$eligibility[-1L] == 'ineligible'),
-  all(is.na(rows$candidate_unit_id[-1L]) | !nzchar(rows$candidate_unit_id[-1L])),
-  nrow(unit) == 1L,
-  unit$inventory_entries == 1L,
-  unit$organizations == 'NOAA',
-  grepl('assert that they are one biological population', review, fixed = TRUE),
-  grepl('not all supplied as direct observation', review, fixed = TRUE),
-  grepl('Do not pool regional', review, fixed = TRUE),
+  nrow(rows) == 7L,
+  identical(as.character(rows$candidate_unit_id[1:4]), current_units),
+  identical(as.character(rows$official_stock_id[1:4]), c('14407', '14409', '17194', '17195')),
+  identical(as.character(rows$match_status[1:4]), rep('new', 4L)),
+  identical(as.character(rows$screening_status[1:4]), rep('screened', 4L)),
+  identical(as.character(rows$eligibility[1:4]), rep('eligible', 4L)),
+  identical(as.character(rows$import_status[1:4]), rep('not_started', 4L)),
+  all(rows$scientific_name[1:4] == 'Sebastes melanops'),
+  identical(as.character(rows$match_status[5:7]), rep('ambiguous', 3L)),
+  identical(as.character(rows$screening_status[5:7]), rep('screened', 3L)),
+  identical(as.character(rows$eligibility[5:7]), rep('ineligible', 3L)),
+  all(is.na(rows$candidate_unit_id[5:7]) | !nzchar(rows$candidate_unit_id[5:7])),
+  nrow(units) == 3L,
+  setequal(units$candidate_unit_id, unit_ids),
+  identical(sort(units$inventory_entries), c(1L, 1L, 2L)),
+  !any(register$candidate_id == 'NOAA:166727'),
+  grepl('not a unique Stock SMART stock ID', review, fixed = TRUE),
+  grepl('not additional stock cases', review, fixed = TRUE),
+  grepl('do not map one-to-one', review, fixed = TRUE),
   !any(stocks$authority_stock_id == '166727', na.rm = TRUE),
-  !any(stocks$stock_id == unit_id, na.rm = TRUE),
-  !any(assessments$assessment_id == unit_id, na.rm = TRUE),
-  !any(inputs$assessment_id == unit_id, na.rm = TRUE),
-  !any(outputs$assessment_id == unit_id, na.rm = TRUE)
+  !any(stocks$stock_id %in% unit_ids, na.rm = TRUE),
+  !any(assessments$assessment_id %in% unit_ids, na.rm = TRUE),
+  !any(inputs$assessment_id %in% unit_ids, na.rm = TRUE),
+  !any(outputs$assessment_id %in% unit_ids, na.rm = TRUE)
 )
 
-cat('NOAA Pacific Coast black rockfish screen checks passed.\n')
+cat('NOAA Pacific Coast black rockfish source-ID and case crosswalk checks passed.\n')

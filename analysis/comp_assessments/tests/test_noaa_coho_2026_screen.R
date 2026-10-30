@@ -37,7 +37,7 @@ units <- read.csv('analysis/comp_assessments/discovery/inventory_units.csv',
   stringsAsFactors = FALSE, na.strings = c('', 'NA'))
 coho_units <- units[units$candidate_unit_id %in% paste0('noaa_coho_', stock_ids), , drop = FALSE]
 stopifnot(nrow(coho_units) == 18L, all(coho_units$eligibility == 'ineligible'),
-  sum(register$organization == 'NOAA') == 433L,
-  sum(register$organization == 'NOAA' & register$screening_status == 'screened') == 241L)
+  sum(register$organization == 'NOAA') == 432L,
+  sum(register$organization == 'NOAA' & register$screening_status == 'screened') == 245L)
 
 cat('NOAA coho candidate identity and multi-age eligibility screen passed.\n')
