@@ -23,12 +23,12 @@ stopifnot(nrow(row) == 1L,
   grepl('Research Document', row$decision_reason, fixed = TRUE),
   !any(units$candidate_ids == row$candidate_id, na.rm = TRUE),
   nrow(maritimes) == 1L, maritimes$inventory_rows == 42L,
-  maritimes$matched == 6L, maritimes$new == 9L,
-  maritimes$ambiguous == 3L, maritimes$identity_unreviewed == 24L,
-  maritimes$eligible == 2L, maritimes$excluded == 31L,
-  maritimes$eligibility_unresolved == 9L,
-  maritimes$screening_complete == 41L,
-  maritimes$screening_not_started == 1L,
+  maritimes$matched == 6L, maritimes$new == 10L,
+  maritimes$ambiguous == 3L, maritimes$identity_unreviewed == 23L,
+  maritimes$eligible == 2L, maritimes$excluded == 32L,
+  maritimes$eligibility_unresolved == 8L,
+  maritimes$screening_complete == 42L,
+  maritimes$screening_not_started == 0L,
   file.exists(review))
 
 if (file.exists(manifest_path)) {

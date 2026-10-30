@@ -25,15 +25,15 @@ the rows already linked to a stock or candidate unit.
 
 | Organization | Rows | Matched to database | New candidate rows | Ambiguous identity | Identity unreviewed | Eligible rows | Ineligible rows | Eligibility unresolved | Screened | Not screened |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| DFO | 199 | 20 | 54 | 12 | 113 | 21 | 138 | 40 | 184 | 15 |
+| DFO | 199 | 20 | 55 | 12 | 112 | 21 | 139 | 39 | 185 | 14 |
 | ICES | 274 | 59 | 96 | 2 | 117 | 52 | 84 | 138 | 157 | 117 |
 | NOAA | 433 | 28 | 168 | 7 | 230 | 57 | 112 | 264 | 205 | 228 |
-| **Total** | **906** | **107** | **318** | **21** | **460** | **130** | **334** | **442** | **546** | **360** |
+| **Total** | **906** | **107** | **319** | **21** | **459** | **130** | **335** | **441** | **547** | **359** |
 
-The crosswalk currently links 343 distinct unit keys across 364 inventory
-rows: 100 link to canonical stocks and 243 are candidate units. Of the 241 new
-candidate units, 34 are eligible for source curation, 169 are ineligible for
-the age-disaggregated set, and 38 remain unresolved. A further 542 inventory
+The crosswalk currently links 344 distinct unit keys across 365 inventory
+rows: 100 link to canonical stocks and 244 are candidate units. Of the 242 new
+candidate units, 34 are eligible for source curation, 170 are ineligible for
+the age-disaggregated set, and 38 remain unresolved. A further 541 inventory
 rows have no unit crosswalk yet. Row-level status and unit-level deduplication
 are intentionally reported separately.
 
@@ -84,6 +84,13 @@ Although that assessment uses age proportions in its stock-recruit analysis, it
 does not fit or report age-specific population surfaces and is screened
 ineligible for the age-disaggregated set. See
 `source_reviews/dfo_interior_fraser_coho_2022.md`.
+
+The Bay of Fundy Striped Bass entry is a distinct conservation unit consisting
+of three river populations. DFO's 2024 inventory marks its status uncertain;
+the latest detailed DFO material found is a recovery/status review rather than
+a current production assessment. It is therefore ineligible for the
+age-disaggregated set. See
+`source_reviews/dfo_striped_bass_bay_of_fundy.md`.
 
 ICES Greenland halibut (`ghl.27.561214`) is a distinct new unit screened with
 eligibility unresolved. Its 2026 GADGET assessment includes recent Icelandic
