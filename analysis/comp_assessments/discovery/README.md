@@ -27,14 +27,14 @@ the rows already linked to a stock or candidate unit.
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 63 | 18 | 98 | 21 | 146 | 32 | 198 | 1 | 0 |
 | ICES | 274 | 59 | 118 | 2 | 95 | 52 | 104 | 118 | 179 | 0 | 95 |
-| NOAA | 433 | 28 | 183 | 7 | 215 | 57 | 115 | 261 | 220 | 0 | 213 |
-| **Total** | **906** | **107** | **364** | **27** | **408** | **130** | **365** | **411** | **597** | **1** | **308** |
+| NOAA | 433 | 28 | 202 | 7 | 196 | 57 | 134 | 242 | 239 | 0 | 194 |
+| **Total** | **906** | **107** | **383** | **27** | **389** | **130** | **384** | **392** | **616** | **1** | **289** |
 
-The crosswalk currently links 389 distinct unit keys across 410 inventory rows:
-100 link to canonical stocks and 289 are candidate units. Of the 287 new
-candidate units, 34 are eligible for source curation, 200 are ineligible for
+The crosswalk currently links 408 distinct unit keys across 429 inventory rows:
+100 link to canonical stocks and 308 are candidate units. Of the 306 new
+candidate units, 34 are eligible for source curation, 219 are ineligible for
 the age-disaggregated set, and 53 remain unresolved. One candidate unit has
-ambiguous identity and one has mixed identity status. A further 496 inventory
+ambiguous identity and one has mixed identity status. A further 477 inventory
 rows have no unit crosswalk yet. Row-level status and unit-level deduplication
 are intentionally reported separately.
 
@@ -85,6 +85,15 @@ Although that assessment uses age proportions in its stock-recruit analysis, it
 does not fit or report age-specific population surfaces and is screened
 ineligible for the age-disaggregated set. See
 `source_reviews/dfo_interior_fraser_coho_2022.md`.
+
+The 18 NOAA West Coast coho inventory entries are distinct U.S. management
+units, not one-to-one matches to DFO Interior Fraser or North Coast coho. The
+2026 PFMC documents provide age-3 adult forecasts, escapement, and fishery
+accounting. Coho FRAM's documented population unit is a single adult age-3
+cohort; its shared run database is password-protected. Despite positive NOAA
+composition scores for 16 entries, no public multi-age input and output set
+was verified, so the units are ineligible for this multi-age comparison. See
+`source_reviews/noaa_coho_2026.md`.
 
 The Fraser River Eulachon entry is a distinct Designatable Unit. Its 2012 RPA
 appendix fitted a historical age-structured model, but with aggregate catch
