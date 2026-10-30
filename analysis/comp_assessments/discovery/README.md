@@ -26,15 +26,15 @@ the rows already linked to a stock or candidate unit.
 | Organization | Rows | Matched to database | New candidate rows | Ambiguous identity | Identity unreviewed | Eligible rows | Ineligible rows | Eligibility unresolved | Screened | Not screened |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 48 | 10 | 121 | 21 | 133 | 45 | 176 | 23 |
-| ICES | 274 | 59 | 86 | 2 | 127 | 51 | 76 | 147 | 147 | 127 |
+| ICES | 274 | 59 | 88 | 2 | 125 | 51 | 78 | 145 | 149 | 125 |
 | NOAA | 432 | 28 | 153 | 4 | 247 | 54 | 101 | 277 | 187 | 245 |
-| **Total** | **905** | **107** | **287** | **16** | **495** | **126** | **310** | **469** | **510** | **395** |
+| **Total** | **905** | **107** | **289** | **16** | **493** | **126** | **312** | **467** | **512** | **393** |
 
-The crosswalk currently links 314 distinct unit keys across 333 inventory rows:
-100 link to canonical stocks and 214 are candidate units: 212 are new, one is
-ambiguous and one has mixed identity status. Of the 212 new
-candidate units, 30 are eligible for source curation, 149 are ineligible for
-the age-disaggregated set, and 33 remain unresolved. A further 572 inventory
+The crosswalk currently links 316 distinct unit keys across 335 inventory rows:
+100 link to canonical stocks and 216 are candidate units: 214 are new, one is
+ambiguous and one has mixed identity status. Of the 214 new
+candidate units, 30 are eligible for source curation, 151 are ineligible for
+the age-disaggregated set, and 33 remain unresolved. A further 570 inventory
 rows have no unit crosswalk yet. Row-level status and unit-level deduplication are intentionally
 reported separately.
 
@@ -57,6 +57,16 @@ data. The current report describes commercial catches and length distributions;
 a 2024 source archive has only partial sampled catch age-length data and is not
 verified as the exact 2026 run. Eligibility remains unresolved. See
 `source_reviews/ices_greenland_halibut_1_2_2026.md`.
+
+ICES blackspot seabream (`sbr.27.6-8`) is screened ineligible: the current
+2026 advice is category 6 and the linked current and prior source tables report
+aggregate catch history without age-disaggregated inputs or population outputs.
+See `source_reviews/ices_blackspot_seabream_6_8_2026.md`.
+
+ICES pollack (`pol.27.89a`) is screened ineligible: the 2025 category 3.2
+assessment reports a biomass index, landings, discards, and a length-based
+fishing-pressure proxy, without age-disaggregated inputs or outputs. See
+`source_reviews/ices_pollack_89a_2025.md`.
 
 The 2026 ICES boarfish unit `boc.27.6-8` is newly screened ineligible for the age-disaggregated set: its benchmarked SS3 assessment fits total catch, biomass indices and length compositions, while its 2026 outputs include age-derived quantities. See `source_reviews/ices_boarfish_6_8_2026.md`.
 
@@ -188,16 +198,16 @@ Snapshot dated 2026-10-30: the register contains 905 source-list entries. These 
 | Organization | Entries | Matched | Provisional new | Ambiguous | Identity unreviewed | Eligible | Excluded | Eligibility unresolved | Screened | Not started |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 48 | 10 | 121 | 21 | 133 | 45 | 176 | 23 |
-| ICES | 274 | 59 | 86 | 2 | 127 | 51 | 76 | 147 | 147 | 127 |
+| ICES | 274 | 59 | 88 | 2 | 125 | 51 | 78 | 145 | 149 | 125 |
 | NOAA | 432 | 28 | 153 | 4 | 247 | 54 | 101 | 277 | 187 | 245 |
-| Total | 905 | 107 | 287 | 16 | 495 | 126 | 310 | 469 | 510 | 395 |
+| Total | 905 | 107 | 289 | 16 | 493 | 126 | 312 | 467 | 512 | 393 |
 
 These are inventory-entry counts. The linked-unit crosswalk in
-inventory_units.csv represents 314 distinct units across 333 inventory rows:
-100 canonical stock IDs and 214 candidate-unit IDs. Of the 212 new candidate
-units, 30 are screened eligible, 149 are screened ineligible, and 33 remain
+inventory_units.csv represents 316 distinct units across 335 inventory rows:
+100 canonical stock IDs and 216 candidate-unit IDs. Of the 214 new candidate
+units, 30 are screened eligible, 151 are screened ineligible, and 33 remain
 eligibility-unresolved. Two candidate-unit IDs have ambiguous or mixed identity
-status. The other 572 entries do not yet have a crosswalk unit. Regional
+status. The other 570 entries do not yet have a crosswalk unit. Regional
 counts by organization are in inventory_progress.csv. These are provisional
 audit counts, not the selected expansion batch.
 
