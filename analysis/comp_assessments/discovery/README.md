@@ -26,15 +26,15 @@ the rows already linked to a stock or candidate unit.
 | Organization | Rows | Matched to database | New candidate rows | Ambiguous identity | Identity unreviewed | Eligible rows | Ineligible rows | Eligibility unresolved | Screened | Not screened |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 49 | 10 | 120 | 21 | 134 | 44 | 177 | 22 |
-| ICES | 274 | 59 | 89 | 2 | 124 | 51 | 79 | 144 | 150 | 124 |
+| ICES | 274 | 59 | 90 | 2 | 123 | 51 | 79 | 144 | 151 | 123 |
 | NOAA | 432 | 28 | 155 | 4 | 245 | 54 | 103 | 275 | 189 | 243 |
-| **Total** | **905** | **107** | **293** | **16** | **489** | **126** | **316** | **463** | **516** | **389** |
+| **Total** | **905** | **107** | **294** | **16** | **488** | **126** | **316** | **463** | **517** | **388** |
 
-The crosswalk currently links 319 distinct unit keys across 339 inventory rows:
-100 link to canonical stocks and 219 are candidate units: 217 are new, one is
-ambiguous and one has mixed identity status. Of the 217 new candidate units,
+The crosswalk currently links 320 distinct unit keys across 340 inventory rows:
+100 link to canonical stocks and 220 are candidate units: 218 are new, one is
+ambiguous and one has mixed identity status. Of the 218 new candidate units,
 30 are eligible for source curation, 154 are ineligible for the age-
-disaggregated set, and 33 remain unresolved. A further 566 inventory rows have
+disaggregated set, and 34 remain unresolved. A further 565 inventory rows have
 no unit crosswalk yet. Row-level status and unit-level deduplication are
 intentionally reported separately.
 
@@ -198,16 +198,16 @@ Snapshot dated 2026-10-30: the register contains 905 source-list entries. These 
 | Organization | Entries | Matched | Provisional new | Ambiguous | Identity unreviewed | Eligible | Excluded | Eligibility unresolved | Screened | Not started |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 49 | 10 | 120 | 21 | 134 | 44 | 177 | 22 |
-| ICES | 274 | 59 | 89 | 2 | 124 | 51 | 79 | 144 | 150 | 124 |
+| ICES | 274 | 59 | 90 | 2 | 123 | 51 | 79 | 144 | 151 | 123 |
 | NOAA | 432 | 28 | 155 | 4 | 245 | 54 | 103 | 275 | 189 | 243 |
-| Total | 905 | 107 | 293 | 16 | 489 | 126 | 316 | 463 | 516 | 389 |
+| Total | 905 | 107 | 294 | 16 | 488 | 126 | 316 | 463 | 517 | 388 |
 
 These are inventory-entry counts. The linked-unit crosswalk in
-inventory_units.csv represents 319 distinct units across 339 inventory rows:
-100 canonical stock IDs and 219 candidate-unit IDs. Of the 217 new candidate
-units, 30 are screened eligible, 154 are screened ineligible, and 33 remain
+inventory_units.csv represents 320 distinct units across 340 inventory rows:
+100 canonical stock IDs and 220 candidate-unit IDs. Of the 218 new candidate
+units, 30 are screened eligible, 154 are screened ineligible, and 34 remain
 eligibility-unresolved. One candidate-unit ID has ambiguous identity and one
-has mixed identity status. The other 566 entries do not yet have a crosswalk
+has mixed identity status. The other 565 entries do not yet have a crosswalk
 unit. Regional counts by organization are in inventory_progress.csv. These are
 provisional audit counts, not the selected expansion batch.
 
@@ -219,6 +219,13 @@ fishery catch-at-age was not reported. The age-specific Spanish longline CPUE
 series are fishery-dependent and do not supply catch-at-age, so this unit is
 screened ineligible for the current age-disaggregated set. See
 `source_reviews/noaa_dfo_north_atlantic_swordfish_2022.md`.
+ICES western horse mackerel (`hom.27.2a3a4a5b6a7a-ce-k8`) is one new
+Northeast Atlantic unit. The 2025 detailed report confirms age-based catch,
+biology, and N/F-at-age outputs, while the newer 2026 advice and graph table
+provide only summary outputs. The 2026 run-matched input series have not been
+verified, so eligibility remains unresolved; 2025 inputs are not being used to
+fill that gap. See
+`source_reviews/ices_western_horse_mackerel_2026.md`.
 
 NOAA Stock SMART 10144 is one Caribbean redtail parrotfish management unit.
 SEDAR 26 examined regional components in Puerto Rico, St. Thomas/St. John, and
