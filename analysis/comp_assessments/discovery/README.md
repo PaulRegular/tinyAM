@@ -107,15 +107,15 @@ Snapshot dated 2026-10-30: the register contains 905 source-list entries. These 
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 46 | 10 | 123 | 20 | 133 | 46 | 174 | 25 |
 | ICES | 274 | 58 | 26 | 2 | 188 | 48 | 54 | 172 | 118 | 156 |
-| NOAA | 432 | 28 | 82 | 3 | 319 | 44 | 74 | 314 | 148 | 284 |
-| Total | 905 | 106 | 154 | 15 | 630 | 112 | 261 | 532 | 440 | 465 |
+| NOAA | 432 | 28 | 83 | 3 | 318 | 45 | 74 | 313 | 149 | 283 |
+| Total | 905 | 106 | 155 | 15 | 629 | 113 | 261 | 531 | 441 | 464 |
 
 These are inventory-entry counts. The linked-unit crosswalk in
-`inventory_units.csv` currently represents 180 distinct units across 199
-entries: 99 canonical stock IDs and 81 provisional candidate-unit IDs. Of the
-81 candidate units, 16 are screened eligible, 39 are screened ineligible, and 26
+`inventory_units.csv` currently represents 181 distinct units across 200
+entries: 99 canonical stock IDs and 82 provisional candidate-unit IDs. Of the
+82 candidate units, 17 are screened eligible, 39 are screened ineligible, and 26
 remain eligibility-unresolved. Two of the ineligible units have ambiguous or mixed
-identity status. The other 706 entries do not yet have an explicit unit
+identity status. The other 705 entries do not yet have an explicit unit
 crosswalk. Regional
 counts by organization are available in `inventory_progress.csv`. These are
 provisional audit counts, not the selected expansion batch.
@@ -136,6 +136,17 @@ survey age compositions, aggregate abundance indices, and age-based biology; its
 and sample counts are tabulated, but complete numerical composition arrays and
 run-matched model files were not recovered. Eligibility remains unresolved. See
 `source_reviews/noaa_yellowedge_sedar85_2023.md`; the reviewed PDFs are cached locally
+with checksums.
+
+NOAA Stock SMART Gulf Gag Grouper row 10348 is a separate unit from South Atlantic
+Gag (row 10349). The latest accepted production run located is the SEDAR 72
+September 2022 amendment using calibrated Florida SRFS private-mode catch inputs;
+its inputs and outputs cover 1963–2019. Annual catch and index tables, age-composition
+figures and sample counts, fixed age-specific biology, and SSB/recruitment outputs
+support source curation. Exact composition arrays and native run files were not
+recovered, so any age data import will need a documented figure-based reconstruction.
+SEDAR 105 is underway in 2026 and has not superseded the completed production run.
+See `source_reviews/noaa_gag_sedar72_2022.md`; five reviewed PDFs are cached locally
 with checksums.
 
 NOAA Stock SMART Atlantic yellowfin and bigeye entries 10166 and 10169 are
