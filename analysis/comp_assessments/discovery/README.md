@@ -39,6 +39,13 @@ DFO Atlantic halibut 4RST is a separate provisional new unit. Its 2024 assessmen
 
 DFO Greenland halibut in NAFO Subarea 2 + Divisions 3KLMNO is a provisional new unit eligible for source curation of its detailed 2023 age-structured SCAA/SSM updates. Current 2025 advice uses the 2024-adopted Management Procedure, so the age-model updates from the MSE work must be kept separate from the current MP event. Exact survey timing and machine-readable age-specific output arrays remain to be recovered; see `source_reviews/dfo_greenland_halibut_2_3klmno_2025.md`. The distinct Gulf of St. Lawrence 4RST unit is ineligible: its latest detailed assessment is index-based and the 2025 update reports aggregate biomass above 40 cm; age and maturity analyses are supporting biology, not age-specific assessment inputs. Assessment-date fields differ across the 2025 and 2026 reports; see `source_reviews/dfo_greenland_halibut_4rst_2025_update.md`.
 
+The DFO Cambridge Bay Arctic Char survey entry covers five river-specific
+management units. Its latest detailed reports include data-limited DB-SRA work
+for Halokvik and Jayko, with biological age samples but no catch-at-age model
+likelihood or age-specific population outputs. The aggregate entry remains
+identity-ambiguous and is excluded from the age-disaggregated set; see
+`source_reviews/dfo_arctic_char_cambridge_bay.md`.
+
 NOAA Stock SMART 11082 and DFO's Pacific halibut entry identify one shared
 IPHC Convention Area stock, new to the canonical database. It is eligible for
 source curation: public commercial age frequencies and area-specific landings,
@@ -54,10 +61,10 @@ Snapshot dated 2026-10-29: the register contains 905 source-list entries. These 
 
 | Organization | Entries | Matched | Provisional new | Ambiguous | Identity unreviewed | Eligible | Excluded | Eligibility unresolved | Screened | Not started |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| DFO | 199 | 20 | 43 | 5 | 131 | 20 | 126 | 53 | 166 | 33 |
+| DFO | 199 | 20 | 43 | 6 | 130 | 20 | 127 | 52 | 167 | 32 |
 | ICES | 274 | 57 | 21 | 2 | 194 | 45 | 52 | 177 | 112 | 162 |
 | NOAA | 432 | 28 | 72 | 3 | 329 | 44 | 72 | 316 | 138 | 294 |
-| Total | 905 | 105 | 136 | 10 | 654 | 109 | 250 | 546 | 416 | 489 |
+| Total | 905 | 105 | 136 | 11 | 653 | 109 | 251 | 545 | 417 | 488 |
 
 These are inventory-entry counts. The linked-unit crosswalk in
 `inventory_units.csv` currently represents 161 distinct units across 180
