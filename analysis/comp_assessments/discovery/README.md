@@ -106,18 +106,26 @@ Snapshot dated 2026-10-30: the register contains 905 source-list entries. These 
 | Organization | Entries | Matched | Provisional new | Ambiguous | Identity unreviewed | Eligible | Excluded | Eligibility unresolved | Screened | Not started |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 47 | 10 | 122 | 21 | 133 | 45 | 175 | 24 |
-| ICES | 274 | 58 | 30 | 2 | 184 | 48 | 57 | 169 | 122 | 152 |
+| ICES | 274 | 58 | 31 | 2 | 183 | 48 | 58 | 168 | 123 | 151 |
 | NOAA | 432 | 28 | 96 | 3 | 305 | 54 | 76 | 302 | 162 | 270 |
-| Total | 905 | 106 | 173 | 15 | 611 | 123 | 266 | 516 | 459 | 446 |
+| Total | 905 | 106 | 174 | 15 | 610 | 123 | 267 | 515 | 460 | 445 |
 
 These are inventory-entry counts. The linked-unit crosswalk in
-inventory_units.csv represents 199 distinct units across 218 inventory rows:
-99 canonical stock IDs and 100 candidate-unit IDs. Of the 98 new candidate
-units, 27 are screened eligible, 42 are screened ineligible, and 29 remain
+inventory_units.csv represents 200 distinct units across 219 inventory rows:
+99 canonical stock IDs and 101 candidate-unit IDs. Of the 99 new candidate
+units, 27 are screened eligible, 43 are screened ineligible, and 29 remain
 eligibility-unresolved. Two additional candidate-unit IDs have ambiguous or
-mixed identity status. The other 687 entries do not yet have a crosswalk unit. Regional
+mixed identity status. The other 686 entries do not yet have a crosswalk unit. Regional
 counts by organization are in inventory_progress.csv. These are provisional
 audit counts, not the selected expansion batch.
+
+The distinct ICES English Channel sprat unit (`spr.27.7de`) is screened
+ineligible for age-disaggregated coverage. The latest 2026 Category 3.3 method
+uses aggregate PELTIC biomass and a constant harvest-rate rule. Survey age and
+length samples are collected but are not used in the assessment. The 2025
+biomass index and 2026 catch advice are documented in
+`source_reviews/ices_sprat_english_channel_2026.md`; no canonical data were
+added.
 
 The 2025 NOAA Acadian redfish Gulf of Maine / Georges Bank Run 5 source screen
 found native catch and age-composition inputs, spring and fall survey indices
