@@ -25,15 +25,15 @@ the rows already linked to a stock or candidate unit.
 
 | Organization | Rows | Matched to database | New candidate rows | Ambiguous identity | Identity unreviewed | Eligible rows | Ineligible rows | Eligibility unresolved | Screened | Not screened |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| DFO | 199 | 20 | 51 | 11 | 117 | 21 | 136 | 42 | 180 | 19 |
+| DFO | 199 | 20 | 52 | 11 | 116 | 21 | 136 | 42 | 181 | 18 |
 | ICES | 274 | 59 | 96 | 2 | 117 | 52 | 84 | 138 | 157 | 117 |
 | NOAA | 433 | 28 | 168 | 7 | 230 | 57 | 112 | 264 | 205 | 228 |
-| **Total** | **906** | **107** | **315** | **20** | **464** | **130** | **332** | **444** | **542** | **364** |
+| **Total** | **906** | **107** | **316** | **20** | **463** | **130** | **332** | **444** | **543** | **363** |
 
-The crosswalk currently links 340 distinct unit keys across 361 inventory
-rows: 100 link to canonical stocks and 240 are candidate units. Of the 238 new
+The crosswalk currently links 341 distinct unit keys across 362 inventory
+rows: 100 link to canonical stocks and 241 are candidate units. Of the 239 new
 candidate units, 34 are eligible for source curation, 167 are ineligible for
-the age-disaggregated set, and 37 remain unresolved. A further 545 inventory
+the age-disaggregated set, and 38 remain unresolved. A further 544 inventory
 rows have no unit crosswalk yet. Row-level status and unit-level deduplication
 are intentionally reported separately.
 
@@ -56,6 +56,15 @@ unit, with age-input eligibility unresolved. Its detailed report describes
 run-reconstruction samples and supporting data, but a complete, aligned age-
 specific input set for the natural-origin unit has not been verified. See
 `source_reviews/dfo_wcvi_chinook_2024.md`.
+The DFO Yukon Chinook entry is linked to the distinct Yukon Chinook SMU (nine
+CUs), within the larger Yukon River Chinook major stock that also includes the
+Porcupine SMU. The 2024 assessment has daily border passage data, annual age
+compositions, and an age-structured spawner-recruitment component. The official
+summary states that its run reconstruction derives returns by age, but final
+run-matched conventional weight/maturity inputs, age-specific mortality
+assumptions, and numeric age-specific abundance outputs are not verified
+together. Its source repository is still marked subject to change, so
+eligibility remains unresolved. See `source_reviews/dfo_yukon_chinook_2024.md`.
 
 ICES Greenland halibut (`ghl.27.561214`) is a distinct new unit screened with
 eligibility unresolved. Its 2026 GADGET assessment includes recent Icelandic
