@@ -25,10 +25,10 @@ the rows already linked to a stock or candidate unit.
 
 | Organization | Rows | Matched to database | New candidate rows | Ambiguous identity | Identity unreviewed | Eligible rows | Ineligible rows | Eligibility unresolved | Screened | Not screened |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| DFO | 199 | 20 | 53 | 11 | 115 | 21 | 137 | 41 | 182 | 17 |
+| DFO | 199 | 20 | 53 | 12 | 114 | 21 | 137 | 41 | 183 | 16 |
 | ICES | 274 | 59 | 96 | 2 | 117 | 52 | 84 | 138 | 157 | 117 |
 | NOAA | 433 | 28 | 168 | 7 | 230 | 57 | 112 | 264 | 205 | 228 |
-| **Total** | **906** | **107** | **317** | **20** | **462** | **130** | **333** | **443** | **544** | **362** |
+| **Total** | **906** | **107** | **317** | **21** | **461** | **130** | **333** | **443** | **545** | **361** |
 
 The crosswalk currently links 342 distinct unit keys across 363 inventory
 rows: 100 link to canonical stocks and 242 are candidate units. Of the 240 new
@@ -72,6 +72,12 @@ model. DFO reports that cohort-specific escapement and recruitment are
 unavailable; the row is screened ineligible for the age-disaggregated set.
 The U.S. Stock SMART Chinook aggregate is not an exact unit match. See
 `source_reviews/dfo_okanagan_chinook_2023.md`.
+
+The DFO “North Coast Chinook” inventory label spans multiple management units,
+including Skeena-Nass and Central Coast Chinook. It is screened as identity-
+ambiguous, with age-structured eligibility unresolved until unit-specific
+production assessments are identified. See
+`source_reviews/dfo_north_coast_chinook_inventory.md`.
 
 ICES Greenland halibut (`ghl.27.561214`) is a distinct new unit screened with
 eligibility unresolved. Its 2026 GADGET assessment includes recent Icelandic
