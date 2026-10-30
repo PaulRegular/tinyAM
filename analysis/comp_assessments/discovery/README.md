@@ -106,16 +106,16 @@ Snapshot dated 2026-10-30: the register contains 905 source-list entries. These 
 | Organization | Entries | Matched | Provisional new | Ambiguous | Identity unreviewed | Eligible | Excluded | Eligibility unresolved | Screened | Not started |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 47 | 10 | 122 | 21 | 133 | 45 | 175 | 24 |
-| ICES | 274 | 58 | 29 | 2 | 185 | 48 | 57 | 169 | 121 | 153 |
+| ICES | 274 | 58 | 30 | 2 | 184 | 48 | 57 | 169 | 122 | 152 |
 | NOAA | 432 | 28 | 96 | 3 | 305 | 54 | 76 | 302 | 162 | 270 |
-| Total | 905 | 106 | 172 | 15 | 612 | 123 | 266 | 516 | 458 | 447 |
+| Total | 905 | 106 | 173 | 15 | 611 | 123 | 266 | 516 | 459 | 446 |
 
 These are inventory-entry counts. The linked-unit crosswalk in
-inventory_units.csv represents 198 distinct units across 217 inventory rows:
-99 canonical stock IDs and 99 candidate-unit IDs. Of the 97 new candidate
-units, 27 are screened eligible, 42 are screened ineligible, and 28 remain
+inventory_units.csv represents 199 distinct units across 218 inventory rows:
+99 canonical stock IDs and 100 candidate-unit IDs. Of the 98 new candidate
+units, 27 are screened eligible, 42 are screened ineligible, and 29 remain
 eligibility-unresolved. Two additional candidate-unit IDs have ambiguous or
-mixed identity status. The other 688 entries do not yet have a crosswalk unit. Regional
+mixed identity status. The other 687 entries do not yet have a crosswalk unit. Regional
 counts by organization are in inventory_progress.csv. These are provisional
 audit counts, not the selected expansion batch.
 
@@ -593,3 +593,6 @@ NOAA Stock SMART identifies South Atlantic (10384; SEDAR 89, 2025 run through 20
 ICES sandeel Area 5r (san.sa.5r) is screened ineligible for the age-disaggregated set. Its 2025 advice is Category 5; the HAWG report lists the Area 5r Category 5.4 analysis as last updated in 2019 and describes it as catch-only. The published graph provides annual catches but no age-specific population inputs or outputs. See source_reviews/ices_sandeel_area_5r_2025.md.
 
 ICES sandeel Area 6 (san.sa.6) and Area 7r (san.sa.7r) are screened ineligible for the age-disaggregated set. The latest advice records located are from 2023 and cover 2023–2024; the 2026 HAWG report lists their catch-only Category 5.2 and 5.3 analyses as last updated in 2019. The associated stock graphs provide catch entries only. See `source_reviews/ices_sandeel_area_6_2023.md` and `source_reviews/ices_sandeel_area_7r_2023.md`.
+
+
+ICES capelin cap.27.2a514 is a new distinct unit with unresolved age-data eligibility. The 2026 MFRI/GINR update is survey-index based; current public age tables cover selected recent surveys, but a run-matched annual age-specific acoustic input series and mortality assumptions remain unverified. See source_reviews/ices_capelin_2a514_2026.md.
