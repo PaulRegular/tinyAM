@@ -56,6 +56,14 @@ ineligible for the age-disaggregated set. Ikaluit Lake (Robert Peel Inlet) is a
 separate 2023 assessment. See
 `source_reviews/dfo_arctic_char_cumberland_sound.md`.
 
+
+The DFO North Slope Dolly Varden entry combines several river populations with
+different assessment histories. The register row remains identity-ambiguous and
+eligibility-unresolved; Rat River is a distinct follow-up candidate because
+DFO's 2025 research document describes an integrated statistical catch-at-age
+model. Its numerical inputs, link to the formal advice run, and the newer
+2015–2022 monitoring report still need verification. See
+`source_reviews/dfo_north_slope_dolly_varden.md`.
 The DFO Greenland halibut Cumberland Sound Turbot Management Area is a separate
 management unit from NAFO Subarea 0, though the 2019 review documents movement
 and emigration between Cumberland Sound and offshore waters. Its latest review
@@ -83,17 +91,17 @@ Snapshot dated 2026-10-29: the register contains 905 source-list entries. These 
 
 | Organization | Entries | Matched | Provisional new | Ambiguous | Identity unreviewed | Eligible | Excluded | Eligibility unresolved | Screened | Not started |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| DFO | 199 | 20 | 44 | 7 | 128 | 20 | 129 | 50 | 169 | 30 |
+| DFO | 199 | 20 | 44 | 8 | 127 | 20 | 129 | 50 | 170 | 29 |
 | ICES | 274 | 57 | 21 | 2 | 194 | 45 | 52 | 177 | 112 | 162 |
 | NOAA | 432 | 28 | 72 | 3 | 329 | 44 | 72 | 316 | 138 | 294 |
-| Total | 905 | 105 | 137 | 12 | 651 | 109 | 253 | 543 | 419 | 486 |
+| Total | 905 | 105 | 137 | 13 | 650 | 109 | 253 | 543 | 420 | 485 |
 
 These are inventory-entry counts. The linked-unit crosswalk in
 `inventory_units.csv` currently represents 162 distinct units across 181
 entries: 98 canonical stock IDs and 64 provisional candidate-unit IDs. Of the
 64 candidate units, 14 are screened eligible, 33 are screened ineligible, and 17
 remain eligibility-unresolved. Two ineligible units have ambiguous or mixed
-identity status. The other 725 entries do not yet have an explicit unit
+identity status. The other 724 entries do not yet have an explicit unit
 crosswalk. Regional
 counts by organization are available in `inventory_progress.csv`. These are
 provisional audit counts, not the selected expansion batch.
