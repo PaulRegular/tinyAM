@@ -26,6 +26,8 @@ The [2026 WGBIE working-group report](https://doi.org/10.17895/ices.pub.32790321
 The full [2026 WGCSE report](https://doi.org/10.17895/ices.pub.32625759.v1) has been cached and used to screen its method categories. Eleven candidate entries are ineligible under the current non-age-structured methods; 14 category-1 age-based stocks remain for stock-specific source screening. See `source_reviews/ices_wgcse_2026.md` and `source_reviews/ices_sol_27_7a_2026.md`; the remaining age-based sections still require reconciliation and input/output review.
 
 The [2026 WGNSSK report](https://doi.org/10.17895/ices.pub.32676345.v2) is a North Sea and Skagerrak regional assessment listing. Its witch section has been screened and cached; other sections still require reconciliation. See `source_reviews/ices_witch_northsea_2026.md`.
+
+ICES plaice in Division 5.a (ple.27.5a) is a distinct current Icelandic unit screened against the 2026 SAM production assessment. Catch-at-age, age-specific spring-survey indices and age-specific biology are documented, along with annual recruitment, SSB and F outputs with uncertainty. Numerical input matrices are mainly figure-based, so this is eligible for source curation but not yet a ready numerical import. The 2026 fitted series ends in 2025; the 2026 assessment-graph row is a projection. See source_reviews/ices_plaice_iceland_2026.md.
 The 2026 Celtic Sea herring assessment (`her.27.irls`) is a distinct provisional new eligible ICES case. Its report provides numerical catch-at-age, age-specific acoustic survey inputs, biology, timing and annual SSB/F/recruitment outputs; raw bootstrap files and generated numeric N/F-at-age outputs are absent from the public TAF snapshot. The report also documents unquantified mixing with Irish Sea herring. See `source_reviews/ices_celtic_herring_2026.md`. The northern Irish Sea herring assessment (`her.27.nirs`) is a separate eligible unit with catch-at-age, ISAS age-specific abundance, an ISSS SSB index, annual biology and annual SSB/recruitment/F outputs. Its report flags mixed-stock observations and survey catchability scaling (2.7–4.9); numerical fitted N/F-at-age arrays were not recovered. See `source_reviews/ices_irish_sea_herring_2026.md`.
 Cached files and their sources.csv manifests are gitignored. The register retains
 inventory source URLs and leaves unknown identities, run details and data evidence
@@ -103,16 +105,16 @@ Snapshot dated 2026-10-29: the register contains 905 source-list entries. These 
 | Organization | Entries | Matched | Provisional new | Ambiguous | Identity unreviewed | Eligible | Excluded | Eligibility unresolved | Screened | Not started |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 46 | 10 | 123 | 20 | 133 | 46 | 174 | 25 |
-| ICES | 274 | 57 | 21 | 2 | 194 | 45 | 52 | 177 | 112 | 162 |
+| ICES | 274 | 57 | 22 | 2 | 193 | 46 | 52 | 176 | 113 | 161 |
 | NOAA | 432 | 28 | 74 | 3 | 327 | 44 | 72 | 316 | 140 | 292 |
-| Total | 905 | 105 | 141 | 15 | 644 | 109 | 257 | 539 | 426 | 479 |
+| Total | 905 | 105 | 142 | 15 | 643 | 110 | 257 | 538 | 427 | 478 |
 
 These are inventory-entry counts. The linked-unit crosswalk in
-`inventory_units.csv` currently represents 166 distinct units across 185
-entries: 98 canonical stock IDs and 68 provisional candidate-unit IDs. Of the
-68 candidate units, 14 are screened eligible, 35 are screened ineligible, and 19
+`inventory_units.csv` currently represents 167 distinct units across 186
+entries: 98 canonical stock IDs and 69 provisional candidate-unit IDs. Of the
+69 candidate units, 15 are screened eligible, 35 are screened ineligible, and 19
 remain eligibility-unresolved. Two ineligible units have ambiguous or mixed
-identity status. The other 720 entries do not yet have an explicit unit
+identity status. The other 719 entries do not yet have an explicit unit
 crosswalk. Regional
 counts by organization are available in `inventory_progress.csv`. These are
 provisional audit counts, not the selected expansion batch.
