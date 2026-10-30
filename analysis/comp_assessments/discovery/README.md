@@ -26,19 +26,21 @@ the rows already linked to a stock or candidate unit.
 | Organization | Rows | Matched to database | New candidate rows | Ambiguous identity | Identity unreviewed | Eligible rows | Ineligible rows | Eligibility unresolved | Screened | Not screened |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 47 | 10 | 122 | 21 | 133 | 45 | 175 | 24 |
-| ICES | 274 | 59 | 83 | 2 | 130 | 51 | 75 | 148 | 144 | 130 |
+| ICES | 274 | 59 | 84 | 2 | 129 | 51 | 76 | 147 | 145 | 129 |
 | NOAA | 432 | 28 | 131 | 3 | 270 | 54 | 78 | 300 | 164 | 268 |
-| **Total** | **905** | **107** | **261** | **15** | **522** | **126** | **286** | **493** | **483** | **422** |
+| **Total** | **905** | **107** | **262** | **15** | **521** | **126** | **287** | **492** | **484** | **421** |
 
-The crosswalk currently links 288 distinct unit keys across 307 inventory rows:
-100 match canonical database stocks and 186 are new candidate units; one unit
-is ambiguous and one has mixed identity status. Of the 186 new candidate units,
-30 are eligible for source curation, 126 are ineligible for the age-disaggregated
+The crosswalk currently links 289 distinct unit keys across 308 inventory rows:
+100 match canonical database stocks and 187 are new candidate units; one unit
+is ambiguous and one has mixed identity status. Of the 187 new candidate units,
+30 are eligible for source curation, 127 are ineligible for the age-disaggregated
 set, and 30 remain unresolved. A further 600 inventory rows have no unit
 crosswalk yet. Row-level status and unit-level deduplication are intentionally
 reported separately.
 
 The 2026 ICES boarfish unit `boc.27.6-8` is newly screened ineligible for the age-disaggregated set: its benchmarked SS3 assessment fits total catch, biomass indices and length compositions, while its 2026 outputs include age-derived quantities. See `source_reviews/ices_boarfish_6_8_2026.md`.
+
+The 2025 ICES red gurnard advice (`gur.27.3-8`) describes a survey trends-based assessment with an aggregate biomass index, no reliable catch data, and no age-specific inputs or population outputs. It is screened ineligible. See `source_reviews/ices_red_gurnard_3_8_2025.md`.
 NOAA Stock SMART 10434, Gulf of Alaska sharpchin rockfish, is the Tier 4 component of the GOA Other Rockfish complex. Stock SMART lists a fully accepted 2023 REMA Model 15.2 run; the 2024 SAFE update carried forward Tier 4 biomass because no new survey data were available to refit, and the 2025 SAFE catch report says no assessment was conducted and prior values were rolled forward. The assessment uses aggregate survey biomass and catch, not age-specific population likelihoods or outputs, so the unit is screened ineligible. See `source_reviews/noaa_goa_sharpchin_2024.md` and its local source cache manifest.
 
 
@@ -153,14 +155,14 @@ Snapshot dated 2026-10-30: the register contains 905 source-list entries. These 
 | Organization | Entries | Matched | Provisional new | Ambiguous | Identity unreviewed | Eligible | Excluded | Eligibility unresolved | Screened | Not started |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 47 | 10 | 122 | 21 | 133 | 45 | 175 | 24 |
-| ICES | 274 | 59 | 83 | 2 | 130 | 51 | 75 | 148 | 144 | 130 |
+| ICES | 274 | 59 | 84 | 2 | 129 | 51 | 76 | 147 | 145 | 129 |
 | NOAA | 432 | 28 | 131 | 3 | 270 | 54 | 78 | 300 | 164 | 268 |
-| Total | 905 | 107 | 261 | 15 | 522 | 126 | 286 | 493 | 483 | 422 |
+| Total | 905 | 107 | 262 | 15 | 521 | 126 | 287 | 492 | 484 | 421 |
 
 These are inventory-entry counts. The linked-unit crosswalk in
-inventory_units.csv represents 288 distinct units across 307 inventory rows:
-100 canonical stock IDs and 188 candidate-unit IDs. Of the 186 new candidate
-units, 30 are screened eligible, 126 are screened ineligible, and 30 remain
+inventory_units.csv represents 289 distinct units across 308 inventory rows:
+100 canonical stock IDs and 189 candidate-unit IDs. Of the 187 new candidate
+units, 30 are screened eligible, 127 are screened ineligible, and 30 remain
 eligibility-unresolved. Two additional candidate-unit IDs have ambiguous or
 mixed identity status. The other 600 entries do not yet have a crosswalk unit. Regional
 counts by organization are in inventory_progress.csv. These are provisional
