@@ -56,6 +56,18 @@ ineligible for the age-disaggregated set. Ikaluit Lake (Robert Peel Inlet) is a
 separate 2023 assessment. See
 `source_reviews/dfo_arctic_char_cumberland_sound.md`.
 
+The DFO Greenland halibut Cumberland Sound Turbot Management Area is a separate
+management unit from NAFO Subarea 0, though the 2019 review documents movement
+and emigration between Cumberland Sound and offshore waters. Its latest review
+was held in 2019 and published as Science Advisory Report 2026/007. The report
+provides aggregate survey abundance and biomass indices, but the generic
+population model had poor convergence and was not used for advice; matched
+age-specific inputs and accepted population-at-age outputs were not located.
+The entry is ineligible for the age-disaggregated set. The report PDF redirected
+to an archived-information notice during local retrieval; available supporting
+documents and checksums are in the ignored source cache. See
+`source_reviews/dfo_greenland_halibut_cumberland_sound_2019.md`.
+
 NOAA Stock SMART 11082 and DFO's Pacific halibut entry identify one shared
 IPHC Convention Area stock, new to the canonical database. It is eligible for
 source curation: public commercial age frequencies and area-specific landings,
@@ -71,15 +83,15 @@ Snapshot dated 2026-10-29: the register contains 905 source-list entries. These 
 
 | Organization | Entries | Matched | Provisional new | Ambiguous | Identity unreviewed | Eligible | Excluded | Eligibility unresolved | Screened | Not started |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| DFO | 199 | 20 | 43 | 7 | 129 | 20 | 128 | 51 | 168 | 31 |
+| DFO | 199 | 20 | 44 | 7 | 128 | 20 | 129 | 50 | 169 | 30 |
 | ICES | 274 | 57 | 21 | 2 | 194 | 45 | 52 | 177 | 112 | 162 |
 | NOAA | 432 | 28 | 72 | 3 | 329 | 44 | 72 | 316 | 138 | 294 |
-| Total | 905 | 105 | 136 | 12 | 652 | 109 | 252 | 544 | 418 | 487 |
+| Total | 905 | 105 | 137 | 12 | 651 | 109 | 253 | 543 | 419 | 486 |
 
 These are inventory-entry counts. The linked-unit crosswalk in
-`inventory_units.csv` currently represents 161 distinct units across 180
-entries: 98 canonical stock IDs and 63 provisional candidate-unit IDs. Of the
-63 candidate units, 14 are screened eligible, 32 are screened ineligible, and 17
+`inventory_units.csv` currently represents 162 distinct units across 181
+entries: 98 canonical stock IDs and 64 provisional candidate-unit IDs. Of the
+64 candidate units, 14 are screened eligible, 33 are screened ineligible, and 17
 remain eligibility-unresolved. Two ineligible units have ambiguous or mixed
 identity status. The other 725 entries do not yet have an explicit unit
 crosswalk. Regional
