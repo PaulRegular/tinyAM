@@ -64,6 +64,17 @@ DFO's 2025 research document describes an integrated statistical catch-at-age
 model. Its numerical inputs, link to the formal advice run, and the newer
 2015–2022 monitoring report still need verification. See
 `source_reviews/dfo_north_slope_dolly_varden.md`.
+
+The DFO Gulf and Newfoundland and Labrador Atlantic salmon rows each combine
+many river-level populations and are not single stock units. Their current
+advice is based on river counts, fishery or juvenile indices, and egg-deposition
+calculations; age and size biology in some programs does not establish
+catch-at-age and population-at-age inputs and outputs for an age-structured
+assessment. Both regional rows are screened out as composite candidates, while
+river-specific units remain possible subjects for separate review. See
+`source_reviews/dfo_atlantic_salmon_gulf_2025.md` and
+`source_reviews/dfo_atlantic_salmon_nl_2026.md`.
+
 The DFO Greenland halibut Cumberland Sound Turbot Management Area is a separate
 management unit from NAFO Subarea 0, though the 2019 review documents movement
 and emigration between Cumberland Sound and offshore waters. Its latest review
@@ -91,10 +102,10 @@ Snapshot dated 2026-10-29: the register contains 905 source-list entries. These 
 
 | Organization | Entries | Matched | Provisional new | Ambiguous | Identity unreviewed | Eligible | Excluded | Eligibility unresolved | Screened | Not started |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| DFO | 199 | 20 | 46 | 8 | 125 | 20 | 131 | 48 | 172 | 27 |
+| DFO | 199 | 20 | 46 | 10 | 123 | 20 | 133 | 46 | 174 | 25 |
 | ICES | 274 | 57 | 21 | 2 | 194 | 45 | 52 | 177 | 112 | 162 |
 | NOAA | 432 | 28 | 72 | 3 | 329 | 44 | 72 | 316 | 138 | 294 |
-| Total | 905 | 105 | 139 | 13 | 648 | 109 | 255 | 541 | 422 | 483 |
+| Total | 905 | 105 | 139 | 15 | 646 | 109 | 257 | 539 | 424 | 481 |
 
 These are inventory-entry counts. The linked-unit crosswalk in
 `inventory_units.csv` currently represents 164 distinct units across 183
