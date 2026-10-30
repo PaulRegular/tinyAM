@@ -26,17 +26,25 @@ the rows already linked to a stock or candidate unit.
 | Organization | Rows | Matched to database | New candidate rows | Ambiguous identity | Identity unreviewed | Eligible rows | Ineligible rows | Eligibility unresolved | Screened | In progress | Not screened |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 63 | 18 | 98 | 21 | 146 | 32 | 198 | 1 | 0 |
-| ICES | 274 | 59 | 123 | 2 | 90 | 53 | 107 | 114 | 184 | 0 | 90 |
+| ICES | 274 | 59 | 124 | 2 | 89 | 53 | 107 | 114 | 185 | 0 | 89 |
 | NOAA | 432 | 28 | 208 | 8 | 188 | 60 | 137 | 235 | 246 | 0 | 186 |
-| **Total** | **905** | **107** | **394** | **28** | **376** | **134** | **390** | **381** | **628** | **1** | **276** |
+| **Total** | **905** | **107** | **395** | **28** | **375** | **134** | **390** | **381** | **629** | **1** | **275** |
 
-The crosswalk currently links 418 distinct unit keys across 440 inventory rows:
-100 link to canonical stocks and 318 are candidate units, including one with
-ambiguous identity and one with mixed identity status. Of the 316 new
+The crosswalk currently links 419 distinct unit keys across 441 inventory rows:
+100 link to canonical stocks and 319 are candidate units, including one with
+ambiguous identity and one with mixed identity status. Of the 317 new
 candidate units, 37 are eligible for source curation, 224 are ineligible for
-the age-disaggregated set, and 55 remain unresolved. A further 465 inventory
+the age-disaggregated set, and 56 remain unresolved. A further 464 inventory
 rows have no unit crosswalk yet. Row-level status and unit-level deduplication
 are intentionally reported separately.
+
+The distinct North Sea, Skagerrak and Kattegat sprat unit (ICES `spr.27.3a4`)
+is screened as a new unit with eligibility unresolved. Its current public TAF
+script specifies seasonal catch-at-age, three age-specific survey series and
+biological inputs, but the published repository snapshot omits the referenced
+numeric input folder. Aggregate assessment outputs are available, but they do
+not verify the input data needed for curation. See
+`source_reviews/ices_sprat_3a4_2026.md`.
 
 The Maritimes American eel “Large Eel” and “Elvers” inventory entries are two
 fisheries for one candidate unit. The latest detailed DFO update reports
