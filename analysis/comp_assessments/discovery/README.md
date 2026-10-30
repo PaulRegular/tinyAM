@@ -26,15 +26,15 @@ the rows already linked to a stock or candidate unit.
 | Organization | Rows | Matched to database | New candidate rows | Ambiguous identity | Identity unreviewed | Eligible rows | Ineligible rows | Eligibility unresolved | Screened | Not screened |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 48 | 10 | 121 | 21 | 133 | 45 | 176 | 23 |
-| ICES | 274 | 59 | 88 | 2 | 125 | 51 | 78 | 145 | 149 | 125 |
+| ICES | 274 | 59 | 89 | 2 | 124 | 51 | 79 | 144 | 150 | 124 |
 | NOAA | 432 | 28 | 153 | 4 | 247 | 54 | 101 | 277 | 187 | 245 |
-| **Total** | **905** | **107** | **289** | **16** | **493** | **126** | **312** | **467** | **512** | **393** |
+| **Total** | **905** | **107** | **290** | **16** | **492** | **126** | **313** | **466** | **513** | **392** |
 
-The crosswalk currently links 316 distinct unit keys across 335 inventory rows:
-100 link to canonical stocks and 216 are candidate units: 214 are new, one is
-ambiguous and one has mixed identity status. Of the 214 new
-candidate units, 30 are eligible for source curation, 151 are ineligible for
-the age-disaggregated set, and 33 remain unresolved. A further 570 inventory
+The crosswalk currently links 317 distinct unit keys across 336 inventory rows:
+100 link to canonical stocks and 217 are candidate units: 215 are new, one is
+ambiguous and one has mixed identity status. Of the 215 new
+candidate units, 30 are eligible for source curation, 152 are ineligible for
+the age-disaggregated set, and 33 remain unresolved. A further 569 inventory
 rows have no unit crosswalk yet. Row-level status and unit-level deduplication are intentionally
 reported separately.
 
@@ -198,16 +198,16 @@ Snapshot dated 2026-10-30: the register contains 905 source-list entries. These 
 | Organization | Entries | Matched | Provisional new | Ambiguous | Identity unreviewed | Eligible | Excluded | Eligibility unresolved | Screened | Not started |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 48 | 10 | 121 | 21 | 133 | 45 | 176 | 23 |
-| ICES | 274 | 59 | 88 | 2 | 125 | 51 | 78 | 145 | 149 | 125 |
+| ICES | 274 | 59 | 89 | 2 | 124 | 51 | 79 | 144 | 150 | 124 |
 | NOAA | 432 | 28 | 153 | 4 | 247 | 54 | 101 | 277 | 187 | 245 |
-| Total | 905 | 107 | 289 | 16 | 493 | 126 | 312 | 467 | 512 | 393 |
+| Total | 905 | 107 | 290 | 16 | 492 | 126 | 313 | 466 | 513 | 392 |
 
 These are inventory-entry counts. The linked-unit crosswalk in
-inventory_units.csv represents 316 distinct units across 335 inventory rows:
-100 canonical stock IDs and 216 candidate-unit IDs. Of the 214 new candidate
-units, 30 are screened eligible, 151 are screened ineligible, and 33 remain
+inventory_units.csv represents 317 distinct units across 336 inventory rows:
+100 canonical stock IDs and 217 candidate-unit IDs. Of the 215 new candidate
+units, 30 are screened eligible, 152 are screened ineligible, and 33 remain
 eligibility-unresolved. Two candidate-unit IDs have ambiguous or mixed identity
-status. The other 570 entries do not yet have a crosswalk unit. Regional
+status. The other 569 entries do not yet have a crosswalk unit. Regional
 counts by organization are in inventory_progress.csv. These are provisional
 audit counts, not the selected expansion batch.
 
@@ -223,6 +223,14 @@ The separate Celtic Seas and West of Scotland sprat unit (`spr.27.67a-cf-k`)
 is also screened ineligible. Its 2025 Category 5.2 advice uses catch/landings
 data only and the published graph contains catch history only. See
 `source_reviews/ices_sprat_celtic_seas_2025.md`.
+
+ICES undulate ray (`rju.27.7de`) in the English Channel is screened ineligible.
+The latest located advice-linked run is the 2024 category 2 assessment; the
+2022 benchmark documents an aggregate SPiCT model with removals and survey
+biomass indices, and the current graph reports aggregate relative biomass and
+fishing pressure. It provides no age-disaggregated inputs or population
+outputs. The 2026 SID row is an inventory listing, not a 2026 assessment. See
+`source_reviews/ices_undulate_ray_7de_2024.md`.
 
 ICES English Channel small-eyed ray (`rje.27.7de`) is a distinct current unit,
 separate from the Bristol Channel/Celtic Sea North unit. Its 2024 Category 5
