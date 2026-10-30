@@ -106,16 +106,16 @@ Snapshot dated 2026-10-30: the register contains 905 source-list entries. These 
 | Organization | Entries | Matched | Provisional new | Ambiguous | Identity unreviewed | Eligible | Excluded | Eligibility unresolved | Screened | Not started |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 47 | 10 | 122 | 21 | 133 | 45 | 175 | 24 |
-| ICES | 274 | 58 | 33 | 2 | 181 | 48 | 60 | 166 | 125 | 149 |
+| ICES | 274 | 58 | 34 | 2 | 180 | 48 | 61 | 165 | 126 | 148 |
 | NOAA | 432 | 28 | 96 | 3 | 305 | 54 | 76 | 302 | 162 | 270 |
-| Total | 905 | 106 | 176 | 15 | 608 | 123 | 269 | 513 | 462 | 443 |
+| Total | 905 | 106 | 177 | 15 | 607 | 123 | 270 | 512 | 463 | 442 |
 
 These are inventory-entry counts. The linked-unit crosswalk in
-inventory_units.csv represents 202 distinct units across 221 inventory rows:
-99 canonical stock IDs and 103 candidate-unit IDs. Of the 101 new candidate
-units, 27 are screened eligible, 45 are screened ineligible, and 29 remain
+inventory_units.csv represents 203 distinct units across 222 inventory rows:
+99 canonical stock IDs and 104 candidate-unit IDs. Of the 102 new candidate
+units, 27 are screened eligible, 46 are screened ineligible, and 29 remain
 eligibility-unresolved. Two additional candidate-unit IDs have ambiguous or
-mixed identity status. The other 684 entries do not yet have a crosswalk unit. Regional
+mixed identity status. The other 683 entries do not yet have a crosswalk unit. Regional
 counts by organization are in inventory_progress.csv. These are provisional
 audit counts, not the selected expansion batch.
 
@@ -137,6 +137,13 @@ separate from the Bristol Channel/Celtic Sea North unit. Its 2024 Category 5
 advice uses landings only, with no age-specific population inputs or outputs,
 so it is screened ineligible for the age-disaggregated set. See
 `source_reviews/ices_small_eyed_ray_7de_2024.md`.
+
+The ICES alfonsino unit (`alf.27.nea`) is screened ineligible: the 2026
+Category 3.2 advice reports aggregate landings, a biomass index in kg/day and a
+length-based fishing-pressure proxy, without age-specific population inputs or
+outputs. The graph's “SSB” heading is identified as `B_index` in its metadata
+and is not treated as spawning biomass. See
+`source_reviews/ices_alfonsinos_nea_2026.md`.
 
 The 2025 NOAA Acadian redfish Gulf of Maine / Georges Bank Run 5 source screen
 found native catch and age-composition inputs, spring and fall survey indices

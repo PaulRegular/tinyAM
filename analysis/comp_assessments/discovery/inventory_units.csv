@@ -33,6 +33,7 @@
 "candidate:iccat_atlantic_bigeye_tuna","","iccat_atlantic_bigeye_tuna","new","unresolved","screened","not_started","NOAA","SEFSC","NOAA:10169",1
 "candidate:iccat_atlantic_yellowfin_tuna","","iccat_atlantic_yellowfin_tuna","new","unresolved","screened","not_started","NOAA","SEFSC","NOAA:10166",1
 "candidate:iccat_west_atlantic_skipjack","","iccat_west_atlantic_skipjack","new","ineligible","screened","not_started","NOAA","SEFSC","NOAA:10158",1
+"candidate:ices_alfonsinos_nea","","ices_alfonsinos_nea","new","ineligible","screened","not_started","ICES","Azores, Bay of Biscay and the Iberian Coast, Celtic Seas, Greater North Sea, Oceanic Northeast Atlantic","ICES:alf.27.nea",1
 "candidate:ices_atlantic_wolffish_iceland_5a","","ices_atlantic_wolffish_iceland_5a","new","eligible","screened","not_started","ICES","Icelandic Waters","ICES:caa.27.5a",1
 "candidate:ices_capelin_iegjm","","ices_capelin_iegjm","new","unresolved","screened","not_started","ICES","Icelandic Waters, Norwegian Sea","ICES:cap.27.2a514",1
 "candidate:ices_iberian_sardine_8c9a","","ices_iberian_sardine_8c9a","new","unresolved","screened","not_started","ICES","Bay of Biscay and the Iberian Coast","ICES:pil.27.8c9a",1
