@@ -107,15 +107,15 @@ Snapshot dated 2026-10-30: the register contains 905 source-list entries. These 
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 46 | 10 | 123 | 20 | 133 | 46 | 174 | 25 |
 | ICES | 274 | 58 | 26 | 2 | 188 | 48 | 54 | 172 | 118 | 156 |
-| NOAA | 432 | 28 | 83 | 3 | 318 | 45 | 74 | 313 | 149 | 283 |
-| Total | 905 | 106 | 155 | 15 | 629 | 113 | 261 | 531 | 441 | 464 |
+| NOAA | 432 | 28 | 84 | 3 | 317 | 46 | 74 | 312 | 150 | 282 |
+| Total | 905 | 106 | 156 | 15 | 628 | 114 | 261 | 530 | 442 | 463 |
 
 These are inventory-entry counts. The linked-unit crosswalk in
-`inventory_units.csv` currently represents 181 distinct units across 200
-entries: 99 canonical stock IDs and 82 provisional candidate-unit IDs. Of the
-82 candidate units, 17 are screened eligible, 39 are screened ineligible, and 26
+`inventory_units.csv` currently represents 182 distinct units across 201
+entries: 99 canonical stock IDs and 83 provisional candidate-unit IDs. Of the
+83 candidate units, 18 are screened eligible, 39 are screened ineligible, and 26
 remain eligibility-unresolved. Two of the ineligible units have ambiguous or mixed
-identity status. The other 705 entries do not yet have an explicit unit
+identity status. The other 704 entries do not yet have an explicit unit
 crosswalk. Regional
 counts by organization are available in `inventory_progress.csv`. These are
 provisional audit counts, not the selected expansion batch.
@@ -510,3 +510,15 @@ ICES northern hake (`hke.27.3a46-8abd`) is assessed with a sex-separated Stock S
 
 
 ICES Iberian sardine (pil.27.8c9a) is assessed using a 2025 Stock Synthesis run. Its March 2026 Stock Annex documents catch-at-age, spring acoustic age indices and compositions, age-specific biology, and fixed M; Standard Graphs provides recruitment, B1+, and aggregate F outputs. The actual annual input matrices and numeric fractional-year survey timing were not recovered because the assessment TAF repository was not publicly accessible. Eligibility remains unresolved pending those data. See source_reviews/ices_iberian_sardine_2025.md.
+
+NOAA Stock SMART row 10349 is the separate South Atlantic Gag Grouper unit. Its
+latest completed assessment located is SEDAR 71 (2021; data through 2019);
+SEDAR 106, planned with terminal year 2024, was delayed and has no new schedule.
+The report provides numeric aggregate catch and index series, age-composition
+figures, biological inputs and age-specific abundance/biomass outputs. Exact
+fishery composition arrays and native fit files were not recovered, so
+catch-at-age requires documented figure digitization. Its numeric chevron-trap
+age compositions informed the SERFS video selectivity but were not themselves
+fitted as an age-specific abundance index. This unit must remain separate from
+Gulf Gag Grouper (Stock SMART 10348). See
+source_reviews/noaa_gag_sedar71_2021.md.
