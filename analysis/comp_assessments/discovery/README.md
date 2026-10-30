@@ -107,15 +107,15 @@ Snapshot dated 2026-10-30: the register contains 905 source-list entries. These 
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 46 | 10 | 123 | 20 | 133 | 46 | 174 | 25 |
 | ICES | 274 | 58 | 26 | 2 | 188 | 48 | 54 | 172 | 118 | 156 |
-| NOAA | 432 | 28 | 81 | 3 | 320 | 44 | 74 | 314 | 147 | 285 |
-| Total | 905 | 106 | 153 | 15 | 631 | 112 | 261 | 532 | 439 | 466 |
+| NOAA | 432 | 28 | 82 | 3 | 319 | 44 | 74 | 314 | 148 | 284 |
+| Total | 905 | 106 | 154 | 15 | 630 | 112 | 261 | 532 | 440 | 465 |
 
 These are inventory-entry counts. The linked-unit crosswalk in
-`inventory_units.csv` currently represents 179 distinct units across 198
-entries: 99 canonical stock IDs and 80 provisional candidate-unit IDs. Of the
-80 candidate units, 16 are screened eligible, 39 are screened ineligible, and 25
+`inventory_units.csv` currently represents 180 distinct units across 199
+entries: 99 canonical stock IDs and 81 provisional candidate-unit IDs. Of the
+81 candidate units, 16 are screened eligible, 39 are screened ineligible, and 26
 remain eligibility-unresolved. Two of the ineligible units have ambiguous or mixed
-identity status. The other 707 entries do not yet have an explicit unit
+identity status. The other 706 entries do not yet have an explicit unit
 crosswalk. Regional
 counts by organization are available in `inventory_progress.csv`. These are
 provisional audit counts, not the selected expansion batch.
@@ -127,6 +127,15 @@ the 2022 fitted assessment; the South Atlantic fit ends in 2021 with 2023 SSC
 advice. Both reports provide age-specific population outputs, but their numerical
 age-composition inputs and run-matched biology remain unresolved. See
 `source_reviews/noaa_scamp_sedar68oa_2022.md`; the source PDFs are cached locally
+with checksums.
+
+NOAA Stock SMART Yellowedge Grouper row 10323 maps to one Gulf of Mexico
+management unit. The 2023 SEDAR 85 assessment fits commercial and bottom-longline
+survey age compositions, aggregate abundance indices, and age-based biology; its
+2024 SSC outputs and projections derive from that fit. Age compositions are plotted
+and sample counts are tabulated, but complete numerical composition arrays and
+run-matched model files were not recovered. Eligibility remains unresolved. See
+`source_reviews/noaa_yellowedge_sedar85_2023.md`; the reviewed PDFs are cached locally
 with checksums.
 
 NOAA Stock SMART Atlantic yellowfin and bigeye entries 10166 and 10169 are

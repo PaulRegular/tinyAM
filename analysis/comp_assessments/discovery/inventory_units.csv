@@ -75,6 +75,7 @@
 "candidate:noaa_south_atlantic_red_snapper","","noaa_south_atlantic_red_snapper","new","eligible","screened","not_started","NOAA","SEFSC","NOAA:10231",1
 "candidate:noaa_windowpane_north_gom_gb","","noaa_windowpane_north_gom_gb","new","ineligible","screened","not_started","NOAA","NEFSC","NOAA:10192",1
 "candidate:noaa_windowpane_south_sne_ma","","noaa_windowpane_south_sne_ma","new","ineligible","screened","not_started","NOAA","NEFSC","NOAA:10193",1
+"candidate:noaa_yellowedge_gulf","","noaa_yellowedge_gulf","new","unresolved","screened","not_started","NOAA","SEFSC","NOAA:10323",1
 "candidate:north_pacific_albacore","","north_pacific_albacore","new","ineligible","screened","not_started","DFO | NOAA","PIFSC | Pacific","DFO:Pacific:Albacore Tuna - North Pacific | NOAA:11682",2
 "candidate:pacific_sardine_northern_subpopulation","","pacific_sardine_northern_subpopulation","new","unresolved","screened","not_started","DFO | NOAA","Pacific | SWFSC","DFO:Pacific:Sardine <U+2013> Pacific | NOAA:10573",2
 "candidate:spiny_dogfish_northwest_atlantic","","spiny_dogfish_northwest_atlantic","mixed","ineligible","screened","not_started","DFO | NOAA","Maritimes | NEFSC","DFO:Maritimes:Atlantic Canada Spiny Dogfish - NAFO 4VWX5 | NOAA:10701",2
