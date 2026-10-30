@@ -104,15 +104,15 @@ Snapshot dated 2026-10-29: the register contains 905 source-list entries. These 
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 46 | 10 | 123 | 20 | 133 | 46 | 174 | 25 |
 | ICES | 274 | 57 | 21 | 2 | 194 | 45 | 52 | 177 | 112 | 162 |
-| NOAA | 432 | 28 | 72 | 3 | 329 | 44 | 72 | 316 | 138 | 294 |
-| Total | 905 | 105 | 139 | 15 | 646 | 109 | 257 | 539 | 424 | 481 |
+| NOAA | 432 | 28 | 74 | 3 | 327 | 44 | 72 | 316 | 140 | 292 |
+| Total | 905 | 105 | 141 | 15 | 644 | 109 | 257 | 539 | 426 | 479 |
 
 These are inventory-entry counts. The linked-unit crosswalk in
-`inventory_units.csv` currently represents 164 distinct units across 183
-entries: 98 canonical stock IDs and 66 provisional candidate-unit IDs. Of the
-66 candidate units, 14 are screened eligible, 35 are screened ineligible, and 17
+`inventory_units.csv` currently represents 166 distinct units across 185
+entries: 98 canonical stock IDs and 68 provisional candidate-unit IDs. Of the
+68 candidate units, 14 are screened eligible, 35 are screened ineligible, and 19
 remain eligibility-unresolved. Two ineligible units have ambiguous or mixed
-identity status. The other 722 entries do not yet have an explicit unit
+identity status. The other 720 entries do not yet have an explicit unit
 crosswalk. Regional
 counts by organization are available in `inventory_progress.csv`. These are
 provisional audit counts, not the selected expansion batch.
@@ -450,5 +450,6 @@ DFO Outside Lingcod is a distinct current unit covering PMFC Areas 3CD + 5ABCDE,
 
 NOAA Atlantic herring (Stock SMART 10572) is screened against the 2026 WHAM Management Track assessment for the U.S. Gulf of Maine/Georges Bank stock complex. Its ignored run archive contains fixed- and mobile-fleet catch-age proportions for ages 1-8 in 1987-2025, plotted survey and biology inputs, and current assessment outputs. Numeric fleet catch totals, survey indices and compositions, full biological arrays, and exact timing remain unresolved; the candidate is not matched to DFO's 4VWX herring components. See `source_reviews/noaa_atlantic_herring_2026.md`.
 
+NOAA black sea bass Stock SMART units 10310 (South Atlantic) and 10311 (Mid-Atlantic) are distinct stocks with age-structured assessment models. The South Atlantic SEDAR 76 Update reports N-at-age and F-at-age through 2023, but its annual age-composition input matrices remain unverified and a revision is underway. The accepted Mid-Atlantic 2025 multi-WHAM update reports aggregate indicators through 2024; its final input package and age-specific output arrays were not recovered. Both remain eligibility-unresolved. See `source_reviews/noaa_black_sea_bass_south_atlantic_2025.md` and `source_reviews/noaa_black_sea_bass_mid_atlantic_2025.md`.
 
 Recent discovery source reviews: [NOAA Gulf Spanish mackerel (Stock SMART 10173)](source_reviews/noaa_gulf_spanish_mackerel_2023.md), [DFO Gulf witch flounder, NAFO 4RST](source_reviews/dfo_witch_flounder_4rst_2022.md), [DFO Inside Quillback](source_reviews/dfo_quillback_inside_2021.md), [DFO Outside Quillback](source_reviews/dfo_quillback_outside_2021.md), [DFO British Columbia Longspine Thornyhead](source_reviews/dfo_longspine_thornyhead_bc.md), and [DFO Greenland halibut in NAFO Subarea 0](source_reviews/dfo_greenland_halibut_0a0b_2025.md).
