@@ -1,4 +1,5 @@
 "unit_key","matched_stock_id","candidate_unit_id","match_status","eligibility","screening_status","import_status","organizations","source_regions","candidate_ids","inventory_entries"
+"candidate:dfo_american_eel_maritimes","","dfo_american_eel_maritimes","new","ineligible","screened","not_started","DFO","Maritimes","DFO:Maritimes:Eel (Large) | DFO:Maritimes:Elvers",2
 "candidate:dfo_atlantic_halibut_3nops4vwx5zc","","dfo_atlantic_halibut_3nops4vwx5zc","new","ineligible","screened","not_started","DFO","Maritimes","DFO:Maritimes:Atlantic Halibut - NAFO 3NOPs4VWX5Z",1
 "candidate:dfo_atlantic_halibut_4rst","","dfo_atlantic_halibut_4rst","new","ineligible","screened","not_started","DFO","Quebec","DFO:Quebec:Atlantic Halibut - NAFO 4RST",1
 "candidate:dfo_capelin_2j3kl","","dfo_capelin_2j3kl","new","ineligible","screened","not_started","DFO","Newfoundland and Labrador","DFO:Newfoundland and Labrador:Capelin - NAFO 2J3KL",1

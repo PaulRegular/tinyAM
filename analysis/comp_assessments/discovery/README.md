@@ -25,17 +25,23 @@ the rows already linked to a stock or candidate unit.
 
 | Organization | Rows | Matched to database | New candidate rows | Ambiguous identity | Identity unreviewed | Eligible rows | Ineligible rows | Eligibility unresolved | Screened | Not screened |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| DFO | 199 | 20 | 49 | 10 | 120 | 21 | 134 | 44 | 177 | 22 |
+| DFO | 199 | 20 | 51 | 10 | 118 | 21 | 136 | 42 | 179 | 20 |
 | ICES | 274 | 59 | 96 | 2 | 117 | 52 | 84 | 138 | 157 | 117 |
 | NOAA | 433 | 28 | 168 | 7 | 230 | 57 | 112 | 264 | 205 | 228 |
-| **Total** | **906** | **107** | **313** | **19** | **467** | **130** | **330** | **446** | **539** | **367** |
+| **Total** | **906** | **107** | **315** | **19** | **465** | **130** | **332** | **444** | **541** | **365** |
 
-The crosswalk currently links 339 distinct unit keys across 359 inventory
-rows: 100 link to canonical stocks and 239 are candidate units. Of the 237 new
-candidate units, 34 are eligible for source curation, 166 are ineligible for
-the age-disaggregated set, and 37 remain unresolved. A further 547 inventory
+The crosswalk currently links 340 distinct unit keys across 361 inventory
+rows: 100 link to canonical stocks and 240 are candidate units. Of the 238 new
+candidate units, 34 are eligible for source curation, 167 are ineligible for
+the age-disaggregated set, and 37 remain unresolved. A further 545 inventory
 rows have no unit crosswalk yet. Row-level status and unit-level deduplication
 are intentionally reported separately.
+
+The Maritimes American eel “Large Eel” and “Elvers” inventory entries are two
+fisheries for one candidate unit. The latest detailed DFO update reports
+fishery and regional abundance indicators, not an age-structured population
+assessment, so this unit is screened ineligible for the age-disaggregated set.
+See `source_reviews/dfo_american_eel_maritimes_2026.md`.
 
 The 2024 DFO WCVI natural-origin Chinook assessment is now recorded as a new
 unit, with age-input eligibility unresolved. Its detailed report describes
@@ -217,17 +223,17 @@ Snapshot dated 2026-10-30: the register contains 906 source-list entries. These 
 
 | Organization | Entries | Matched | Provisional new | Ambiguous | Identity unreviewed | Eligible | Excluded | Eligibility unresolved | Screened | Not started |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| DFO | 199 | 20 | 49 | 10 | 120 | 21 | 134 | 44 | 177 | 22 |
+| DFO | 199 | 20 | 51 | 10 | 118 | 21 | 136 | 42 | 179 | 20 |
 | ICES | 274 | 59 | 96 | 2 | 117 | 52 | 84 | 138 | 157 | 117 |
 | NOAA | 433 | 28 | 168 | 7 | 230 | 57 | 112 | 264 | 205 | 228 |
-| Total | 906 | 107 | 313 | 19 | 467 | 130 | 330 | 446 | 539 | 367 |
+| Total | 906 | 107 | 315 | 19 | 465 | 130 | 332 | 444 | 541 | 365 |
 
 These are inventory-entry counts. The linked-unit crosswalk in
-inventory_units.csv represents 339 distinct units across 359 inventory rows:
-100 canonical stock IDs and 239 candidate-unit IDs. Of the 237 new candidate
-units, 34 are screened eligible, 166 are screened ineligible, and 37 remain
+inventory_units.csv represents 340 distinct units across 361 inventory rows:
+100 canonical stock IDs and 240 candidate-unit IDs. Of the 238 new candidate
+units, 34 are screened eligible, 167 are screened ineligible, and 37 remain
 eligibility-unresolved. One candidate-unit ID has ambiguous identity and one
-has mixed identity status. The other 547 entries do not yet have a crosswalk
+has mixed identity status. The other 545 entries do not yet have a crosswalk
 unit. Regional counts by organization are in inventory_progress.csv. These are
 provisional audit counts, not the selected expansion batch.
 
