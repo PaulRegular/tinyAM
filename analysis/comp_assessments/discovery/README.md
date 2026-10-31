@@ -26,15 +26,15 @@ the rows already linked to a stock or candidate unit.
 | Organization | Rows | Matched to database | New candidate rows | Ambiguous identity | Identity unreviewed | Eligible rows | Ineligible rows | Eligibility unresolved | Screened | In progress | Not screened |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 63 | 18 | 98 | 21 | 146 | 32 | 198 | 1 | 0 |
-| ICES | 274 | 59 | 142 | 2 | 71 | 56 | 121 | 97 | 203 | 0 | 71 |
+| ICES | 274 | 59 | 144 | 2 | 69 | 56 | 123 | 95 | 205 | 0 | 69 |
 | NOAA | 432 | 28 | 213 | 8 | 183 | 63 | 138 | 231 | 251 | 0 | 181 |
-| **Total** | **905** | **107** | **418** | **28** | **352** | **140** | **405** | **360** | **652** | **1** | **252** |
+| **Total** | **905** | **107** | **420** | **28** | **350** | **140** | **407** | **358** | **654** | **1** | **250** |
 
-The crosswalk currently links 442 distinct unit keys across 464 inventory rows:
-100 link to canonical stocks and 342 are candidate units, including one with
-ambiguous identity and one with mixed identity status. Of the 340 new
-candidate units, 43 are eligible for source curation, 239 are ineligible for
-the age-disaggregated set, and 58 remain unresolved. A further 441 inventory
+The crosswalk currently links 444 distinct unit keys across 466 inventory rows:
+100 link to canonical stocks and 344 are candidate units, including one with
+ambiguous identity and one with mixed identity status. Of the 342 new
+candidate units, 43 are eligible for source curation, 241 are ineligible for
+the age-disaggregated set, and 58 remain unresolved. A further 439 inventory
 rows have no unit crosswalk yet. The progress summary has 74 organization-region
 rows. Row-level status and unit-level deduplication are intentionally reported
 separately.
@@ -1131,10 +1131,17 @@ per 1,000 hooks and is not SSB. This screen does not establish that age samples
 are absent from national source systems. See
 `source_reviews/ices_ling_1_2_2025.md`.
 
+ICES blue ling (`bli.27.5b6712`) is a separate current unit from Icelandic blue
+ling. Its 2026 assessment is a trend assessment based on an aggregate B_index
+(kg/hour) and a length-based fishing-pressure indicator; age-disaggregated
+inputs and population outputs were not reported. It is screened ineligible for
+the age-disaggregated comparison set. See
+`source_reviews/ices_blue_ling_5b6712_2026.md`.
+
 The discovery snapshot as of 2026-10-31 contains 905 inventory rows: 107
-matched, 419 provisionally new, 28 ambiguous, and 351 identity-unreviewed.
-Across all rows, 140 are eligible, 406 ineligible, and 359 unresolved; 653
-are screened, 1 is in progress, and 251 are not started. The organization and
+matched, 420 provisionally new, 28 ambiguous, and 350 identity-unreviewed.
+Across all rows, 140 are eligible, 407 ineligible, and 358 unresolved; 654
+are screened, 1 is in progress, and 250 are not started. The organization and
 source-region breakdowns are in `inventory_progress.csv`. The crosswalk has
-443 linked units (100 canonical stock links and 343 candidate units) and 440
+444 linked units (100 canonical stock links and 344 candidate units) and 439
 unlinked inventory rows in `inventory_units.csv`.
