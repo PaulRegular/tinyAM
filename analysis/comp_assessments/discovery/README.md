@@ -26,15 +26,15 @@ the rows already linked to a stock or candidate unit.
 | Organization | Rows | Matched to database | New candidate rows | Ambiguous identity | Identity unreviewed | Eligible rows | Ineligible rows | Eligibility unresolved | Screened | In progress | Not screened |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 63 | 18 | 98 | 21 | 146 | 32 | 198 | 1 | 0 |
-| ICES | 274 | 59 | 138 | 2 | 75 | 54 | 120 | 100 | 199 | 0 | 75 |
+| ICES | 274 | 59 | 139 | 2 | 74 | 54 | 121 | 99 | 200 | 0 | 74 |
 | NOAA | 432 | 28 | 213 | 8 | 183 | 63 | 138 | 231 | 251 | 0 | 181 |
-| **Total** | **905** | **107** | **414** | **28** | **356** | **138** | **404** | **363** | **648** | **1** | **256** |
+| **Total** | **905** | **107** | **415** | **28** | **355** | **138** | **405** | **362** | **649** | **1** | **255** |
 
-The crosswalk currently links 438 distinct unit keys across 460 inventory rows:
-100 link to canonical stocks and 338 are candidate units, including one with
-ambiguous identity and one with mixed identity status. Of the 336 new
-candidate units, 41 are eligible for source curation, 238 are ineligible for
-the age-disaggregated set, and 57 remain unresolved. A further 445 inventory
+The crosswalk currently links 439 distinct unit keys across 461 inventory rows:
+100 link to canonical stocks and 339 are candidate units, including one with
+ambiguous identity and one with mixed identity status. Of the 337 new
+candidate units, 41 are eligible for source curation, 239 are ineligible for
+the age-disaggregated set, and 57 remain unresolved. A further 444 inventory
 rows have no unit crosswalk yet. Row-level status and unit-level deduplication
 are intentionally reported separately.
 ICES sandeel `san.27.6a` is a distinct current unit in Division 6.a (West of
@@ -1096,3 +1096,10 @@ but approximate reconstruction; annual aggregate outputs are tabulated, while
 numeric N-at-age and F-at-age tables were not located. It is eligible for
 source curation with those limitations. See
 source_reviews/noaa_southeastern_mutton_snapper_sedar79_2024.md.
+
+ICES thornback ray in Subarea 6 (`rjc.27.6`) has 2026 Category 3 advice using
+aggregate landings and a biomass index (`B_index`, kg/km²); the official data
+and XML provide no age-disaggregated observations or population outputs. The
+advice limits landings to 51 tonnes in each of 2027 and 2028 and cannot quantify
+corresponding catches. It is screened ineligible for the age-disaggregated set.
+See `source_reviews/ices_thornback_ray_6_2026.md`.
