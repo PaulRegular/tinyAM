@@ -26,16 +26,13 @@ the rows already linked to a stock or candidate unit.
 | Organization | Rows | Matched to database | New candidate rows | Ambiguous identity | Identity unreviewed | Eligible rows | Ineligible rows | Eligibility unresolved | Screened | In progress | Not screened |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 63 | 18 | 98 | 21 | 147 | 31 | 199 | 0 | 0 |
-| ICES | 274 | 59 | 159 | 2 | 54 | 56 | 136 | 82 | 220 | 0 | 54 |
-| NOAA | 432 | 28 | 223 | 8 | 173 | 65 | 146 | 221 | 261 | 0 | 171 |
-| **Total** | **905** | **107** | **445** | **28** | **325** | **142** | **429** | **334** | **680** | **0** | **225** |
+| ICES | 274 | 59 | 160 | 2 | 53 | 56 | 136 | 82 | 221 | 0 | 53 |
+| NOAA | 432 | 28 | 224 | 8 | 172 | 65 | 147 | 220 | 262 | 0 | 170 |
+| **Total** | **905** | **107** | **447** | **28** | **323** | **142** | **430** | **333** | **682** | **0** | **223** |
 
-The crosswalk currently links 469 distinct unit keys across 491 inventory rows:
-100 link to canonical stocks and 369 are candidate units, including one with
-ambiguous identity and one with mixed identity status. Of the 367 new
-candidate units, 45 are eligible for source curation, 263 are ineligible for
-the age-disaggregated set, and 59 remain unresolved. A further 414 inventory
-rows have no unit crosswalk yet. The progress summary has 74 organization-region
+The crosswalk currently links 471 distinct unit keys across 493 inventory rows: 100 canonical stock units and 371 candidate units. Of the candidate units, 369 are provisionally new, one has an ambiguous identity, and one has mixed identity status. The 369 new units include 45 eligible, 264 ineligible and 60 unresolved candidates. A further 412 inventory rows have no unit crosswalk yet.
+
+The progress summary has 74 organization-region
 rows. Row-level status and unit-level deduplication are intentionally reported
 separately.
 
@@ -1212,17 +1209,11 @@ inputs and population outputs were not reported. It is screened ineligible for
 the age-disaggregated comparison set. See
 `source_reviews/ices_blue_ling_5b6712_2026.md`.
 
-The discovery snapshot as of 2026-10-31 contains 905 inventory rows: 107
-matched, 443 provisionally new, 28 ambiguous, and 327 identity-unreviewed.
-Across all rows, 142 are eligible, 427 ineligible, and 336 unresolved; 678
-are screened, none is in progress, and 227 are not started. The organization and
-source-region breakdowns are in inventory_progress.csv.
+The discovery snapshot as of 2026-10-31 contains 905 inventory rows: 107 matched, 447 provisionally new, 28 ambiguous, and 323 identity-unreviewed. Across all rows, 142 are eligible, 430 ineligible, and 333 unresolved; 682 are screened, none is in progress, and 223 are not started. The organization and source-region breakdowns are in inventory_progress.csv.
 
 The DFO WCVI Barkley Sockeye row is screened ineligible: its 2024 update uses salmon run reconstruction and stock-recruit methods, but does not verify the age-structured catch, survey, biological, and mortality inputs or N-at-age/F-at-age outputs needed for tinyAM. See discovery/source_reviews/dfo_wcvi_barkley_sockeye_2024.md.
 
-The crosswalk has
-467 linked units (100 canonical stock links and 367 candidate units) and 416
-unlinked inventory rows in `inventory_units.csv`.
+The crosswalk has 471 linked units (100 canonical stock units and 371 candidate units) and 412 unlinked inventory rows in inventory_units.csv.
 
 ICES Northeast Atlantic spurdog (`dgs.27.nea`) is a new 2026 candidate with
 verified current assessment outputs. Age-input eligibility remains unresolved:
@@ -1253,3 +1244,5 @@ papers provide documented age-specific inputs and population outputs, with
 fleet-year gaps and index timing to retain explicitly. It is eligible for
 source curation; no canonical values have been imported. See
 source_reviews/noaa_red_grouper_south_atlantic_2017.md.
+
+ICES SID entry cap.27.1-2 is now linked to the distinct Barents Sea capelin candidate unit. Its current 2026 assessment and 2027 advice are from the bilateral JRN-AFWG, not ICES. Age-specific acoustic stock estimates and CVs are available, but current-run catch and biological inputs remain unrecovered; eligibility is unresolved. See source_reviews/ices_barents_capelin_jrn_afwg_2026.md.
