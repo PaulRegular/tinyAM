@@ -27,14 +27,14 @@ the rows already linked to a stock or candidate unit.
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 63 | 18 | 98 | 21 | 146 | 32 | 198 | 1 | 0 |
 | ICES | 274 | 59 | 145 | 2 | 68 | 56 | 123 | 95 | 206 | 0 | 68 |
-| NOAA | 432 | 28 | 219 | 8 | 177 | 64 | 143 | 225 | 257 | 0 | 175 |
-| **Total** | **905** | **107** | **427** | **28** | **343** | **141** | **412** | **352** | **661** | **1** | **243** |
+| NOAA | 432 | 28 | 220 | 8 | 176 | 64 | 144 | 224 | 258 | 0 | 174 |
+| **Total** | **905** | **107** | **428** | **28** | **342** | **141** | **413** | **351** | **662** | **1** | **242** |
 
-The crosswalk currently links 451 distinct unit keys across 473 inventory rows:
-100 link to canonical stocks and 351 are candidate units, including one with
-ambiguous identity and one with mixed identity status. Of the 349 new
-candidate units, 44 are eligible for source curation, 246 are ineligible for
-the age-disaggregated set, and 59 remain unresolved. A further 432 inventory
+The crosswalk currently links 452 distinct unit keys across 474 inventory rows:
+100 link to canonical stocks and 352 are candidate units, including one with
+ambiguous identity and one with mixed identity status. Of the 350 new
+candidate units, 44 are eligible for source curation, 247 are ineligible for
+the age-disaggregated set, and 59 remain unresolved. A further 431 inventory
 rows have no unit crosswalk yet. The progress summary has 74 organization-region
 rows. Row-level status and unit-level deduplication are intentionally reported
 separately.
@@ -1177,6 +1177,14 @@ per 1,000 hooks and is not SSB. This screen does not establish that age samples
 are absent from national source systems. See
 `source_reviews/ices_ling_1_2_2025.md`.
 
+NOAA Stock SMART 11073 is the IATTC northern EPO striped marlin unit, distinct
+from the separate western and central Pacific striped marlin row. The 2010
+Stock Synthesis assessment uses catch, aggregate longline CPUE and length
+compositions; IATTC explicitly reports that no age-at-length data were
+available. Its published annual spawning biomass and recruitment do not
+replace age-specific observations, so it is screened ineligible. See
+`source_reviews/noaa_iattc_striped_marlin_2010.md`.
+
 ICES blue ling (`bli.27.5b6712`) is a separate current unit from Icelandic blue
 ling. Its 2026 assessment is a trend assessment based on an aggregate B_index
 (kg/hour) and a length-based fishing-pressure indicator; age-disaggregated
@@ -1185,11 +1193,11 @@ the age-disaggregated comparison set. See
 `source_reviews/ices_blue_ling_5b6712_2026.md`.
 
 The discovery snapshot as of 2026-10-31 contains 905 inventory rows: 107
-matched, 425 provisionally new, 28 ambiguous, and 345 identity-unreviewed.
-Across all rows, 141 are eligible, 410 ineligible, and 354 unresolved; 659
-are screened, 1 is in progress, and 245 are not started. The organization and
+matched, 428 provisionally new, 28 ambiguous, and 342 identity-unreviewed.
+Across all rows, 141 are eligible, 413 ineligible, and 351 unresolved; 662
+are screened, 1 is in progress, and 242 are not started. The organization and
 source-region breakdowns are in `inventory_progress.csv`. The crosswalk has
-449 linked units (100 canonical stock links and 349 candidate units) and 434
+452 linked units (100 canonical stock links and 352 candidate units) and 431
 unlinked inventory rows in `inventory_units.csv`.
 
 ICES Northeast Atlantic spurdog (`dgs.27.nea`) is a new 2026 candidate with
