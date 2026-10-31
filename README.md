@@ -44,17 +44,17 @@ print(cod_obs, n = 2)
 
 ```text
 
-── tinyAM data ───────────────────────────────────────────────────────────────────────────
+── tinyAM data ─────────────────────────────────────────────────────────────────────────────────────
 
-── catch: 1512 rows, 4 columns ──
+── catch: 1512 rows, 6 columns ──
 
 Years 1954–2025; ages 0–20
-     year age obs          unit
-1    1954   0  NA thousand fish
-2    1955   0  NA thousand fish
-⋮       ⋮   ⋮   ⋮             ⋮
-1511 2024  20   0 thousand fish
-1512 2025  20   0 thousand fish
+     year age obs          unit F_y_block F_a_block
+1    1954   0  NA thousand fish 1954-1991       0-1
+2    1955   0  NA thousand fish 1954-1991       0-1
+⋮       ⋮   ⋮   ⋮             ⋮         ⋮         ⋮
+1511 2024  20   0 thousand fish 2023-2025     18-20
+1512 2025  20   0 thousand fish 2023-2025     18-20
 
 ── index: 1512 rows, 7 columns ──
 
@@ -63,8 +63,8 @@ Years 1954–2025; ages 0–20
 1    1954   0  NA Fall 2J3KL       0.8       0 thousand fish
 2    1954   1  NA Fall 2J3KL       0.8       1 thousand fish
 ⋮       ⋮   ⋮   ⋮          ⋮         ⋮       ⋮             ⋮
-1511 2025  18   0 Fall 2J3KL       0.8    6-20 thousand fish
-1512 2025  19   0 Fall 2J3KL       0.8    6-20 thousand fish
+1511 2025  19   0 Fall 2J3KL       0.8    6-20 thousand fish
+1512 2025  20   0 Fall 2J3KL       0.8    6-20 thousand fish
 
 ── weight: 1512 rows, 4 columns ──
 
@@ -86,15 +86,15 @@ Years 1954–2025; ages 0–20
 1711 2024  20   1
 1712 2025  20   1
 
-── pop_covariates: 1512 rows, 6 columns ──
+── pop_covariates: 1512 rows, 4 columns ──
 
 Years 1954–2025; ages 0–20
-     year age F_y_block F_a_block allometric_M_assumption M_a_block
-1    1954   0 1954-1991       0-1               4.9990199       0-1
-2    1954  16 1954-1991     16-17               0.1793953      8-20
-⋮       ⋮   ⋮         ⋮         ⋮                       ⋮         ⋮
-1511 2025  10 2023-2025     10-11               0.2927334      8-20
-1512 2025  20 2023-2025     18-20               0.1889190      8-20
+     year age allometric_M_assumption M_a_block
+1    1954   0               4.9990199       0-1
+2    1955   0               4.9990199       0-1
+⋮       ⋮   ⋮                       ⋮         ⋮
+1511 2024  20               0.1872682      8-20
+1512 2025  20               0.1889190      8-20
 ```
 
 The four required tables have numeric `year`, `age` and `obs` columns.
@@ -103,14 +103,19 @@ mature. Index rows also identify `survey` and `samp_time`: `0.8` means sampling
 eight-tenths of the way through the year. `q_block` groups ages sharing
 catchability in the example.
 
-Keep q and observation-SD covariates in catch/index tables. The
-`pop_covariates` holds population predictors, process-SD groups and supplied M
-assumptions; it needs a complete year–age grid, without an `obs` column.
+Catch covariates explain F means, F process SDs/correlation groups and catch
+observation SDs; index covariates explain q and index SDs. The optional
+`pop_covariates` table supplies recruitment, N and M predictors, including
+process-SD groups and supplied M; it needs a complete year–age grid without `obs`.
 Keep weights in `weight`, and maturity and optional `spawn_time` in `maturity`.
 An optional `weight$type` column separates complete stock and catch weights:
 stock weights determine biomass/SSB, catch weights determine yield
 and catch targets. Untyped or stock-only weights serve both purposes. Each
-type must cover the same biological year-age grid; see [input help](https://paulregular.github.io/tinyAM/reference/as_tam_data.html).
+type must cover the same biological year-age grid. Optional `catch$fleet` adds
+separate fisheries on one shared population: supply a complete year–age grid
+per fleet, with missing observations as `NA`. Catch weights may be shared or
+fully fleet-specific using `weight$fleet`; stock weights have no fleet label.
+See [input help](https://paulregular.github.io/tinyAM/reference/as_tam_data.html).
 
 ```r
 dat <- cod_obs                    # replace with your own named list of tables
@@ -170,6 +175,30 @@ Other possibilities include:
 Recruitment boundary states are fixed by default; `rec_settings$init = "latent"`
 integrates them without an initial density. For abundance-dependent catchability,
 use [`power(N, by = q_key)`](https://paulregular.github.io/tinyAM/reference/power.html) in `q_form` with the log link.
+
+With fleet catches, F is estimated separately for each fleet and summed for
+population survival. A single formula can give fleets different selectivity
+curves and surveys different q relationships:
+
+```r
+# Settings for your fleet/survey names and complete explanatory grids
+F_settings <- list(process = "off", mu_form = ~ 0 +
+  for_fleet("Trawl", ~ factor(year) + logistic(age)) +
+  for_fleet("Gillnet", ~ factor(year) + warped_normal(age)))
+index_settings <- list(q_form = ~ 0 +
+  for_survey("RV", ~ logistic(age)) +
+  for_survey("Sentinel", ~ s(age, k = 4)))
+```
+
+[Scopes](https://paulregular.github.io/tinyAM/reference/for_fleet.html) also support
+ordinary interactions. [Curves](https://paulregular.github.io/tinyAM/reference/warped_normal.html)
+include warped-normal and WHAM-style double-logistic shapes;
+[smooths](https://paulregular.github.io/tinyAM/reference/smooth_formulas.html)
+use jointly estimated mgcv penalties. Flexible F means can be deterministic
+or have IID/AR1 residuals. Their separation can be weak; intrinsic F random
+walks cannot identify these mean shapes. Shared correlation parameters do
+not correlate innovations between fleets; observation covariance and
+time-varying structural closures remain unsupported.
 
 ## 3. Diagnose, visualize and compare
 

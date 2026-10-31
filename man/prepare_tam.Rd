@@ -90,8 +90,9 @@ independent departures from the mean log F,
 \code{"rw"} for departures that accumulate over time, or \code{"ar1"} for departures
 correlated between years and ages.
 \code{"cor_rw"} accumulates changes over time with AR1 correlation between
-annual increments at neighbouring ages. It estimates one signed age
-correlation; its SD is the marginal SD of annual log-F increments.
+annual increments at neighbouring states within each fleet. It estimates
+one signed age correlation per active correlation group; its SD is the
+marginal SD of annual log-F increments.
 \item \code{sd_form}: ordinary age-based formula for log process SD, default \code{~ 1},
 evaluated on \code{data$catch}. Sharing an SD does not share latent F states.
 IID SDs describe residuals; RW/correlated-RW SDs describe annual increments;

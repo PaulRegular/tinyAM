@@ -202,7 +202,8 @@
 #' With `F_settings$process = "off"`, historical \eqn{F=\mu^F}.
 #' No F latent states, process SD or correlations are created. Projection
 #' controls still scale terminal historical F or solve for total catch.
-#' With an active F process, historical F has one `log_f` state per year and age:
+#' With an active F process, historical F has one `log_f` state per year,
+#' fleet and active age block (separate ages when no blocks are supplied):
 #' \deqn{\log F_{t,a}=\log\mu^F_{t,a}+\eta^F_{t,a},\quad t\le H.}
 #' `log_f` is the left-hand side; `eta_log_f` is the deviation on the right.
 #' For an active M process, `log_m` has one state per selected year and age
@@ -449,10 +450,12 @@
 #' Optional `weight$type` distinguishes complete stock and catch weights
 #' on the same biological year-age grid. Untyped or stock-only inputs
 #' use stock weights for both purposes. In the equations above, W denotes stock
-#' weight. Yield is \eqn{Y_t=\sum_a C_{t,a}W^{catch}_{t,a}}; catch targets use
+#' weight. Yield is \eqn{Y_t=\sum_{a,f} C_{t,a,f}W^{catch}_{t,a,f}}; catch targets use
 #' these same catch weights. Effective plus-group catch weights use the same
 #' abundance shares as stock weights, retaining all biological ages. Projection
-#' averages are calculated separately by age and type over training years.
+#' averages are calculated separately by age, type and fleet over training years.
+#' Stock weights have no fleet label. Catch weights can be one shared complete
+#' grid or complete grids for every catch fleet, never partial fleet overrides.
 #' Stock and catch weights share one optional mass-unit label, conventionally kg.
 #' They describe values without converting them. This adds no parameters and
 #' does not change the catch-number likelihood. `fit$rep$W` remains stock

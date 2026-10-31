@@ -81,8 +81,9 @@ uses training years and \code{n_mean}.
 evaluation (\code{fit_hindcast()} or \code{fit_retro(hindcast = TRUE)}), not ordinary
 \code{\link[=fit_tam]{fit_tam()}} projections. It uses actual total catch weight in each held-out
 year, calculated from complete raw catch-at-age and catch weights (stock
-weights if no catch weights are supplied). Forecast stock and catch weights
-are averaged separately using training years only. This
+weights if no catch weights are supplied), summed across all fleets with
+their own catch weights. Forecast stock and catch weights
+are averaged separately by type and fleet using training years only. This
 conditions prediction on removals that actually occurred; held-out surveys
 and catch compositions do not enter fitting. Agreement with the conditioning
 catch total is not forecast skill. Missing catch/weight coverage fails that

@@ -178,6 +178,11 @@ ncam <- update(scaa,
       output_file = file.path(output, "tinyAM_dashboard.html"), open_file = FALSE)
     saveRDS(dashboard_key, dashboard_file)
   }
+  # Keep a self-contained companion beside the PDF for sharing both files.
+  if (!file.copy(file.path(output,"tinyAM_dashboard.html"),
+      file.path(root,"tinyAM_dashboard.html"),overwrite=TRUE)) {
+    cli::cli_abort("Could not copy the companion dashboard beside the cheatsheet PDF.")
+  }
   if (mode == "dashboard") return(invisible(fits))
 # ---- tidy ----
 # out <- tidy_tam(scaa, sam, ncam)
@@ -216,5 +221,16 @@ index <- out$obs_pred$index
   print(hind)
   invisible(fits)
 }
+
+# Formula excerpts are read directly into the reference page. They describe
+# users' named fleets/surveys; they do not split the Northern cod observations.
+# ---- scoped ----
+# mu_form = ~ 0 +
+#   for_fleet("Trawl", ~ factor(year) + logistic(age)) +
+#   for_fleet("Gillnet", ~ factor(year) + warped_normal(age))
+# q_form = ~ 0 +
+#   for_survey("RV", ~ logistic(age)) +
+#   for_survey("Sentinel", ~ s(age, k = 4))
+# ---- end ----
 
 if (sys.nframe() == 0L) main(if (length(commandArgs(TRUE))) commandArgs(TRUE)[1L] else "prepare")

@@ -39,10 +39,10 @@ excerpt <- function(name) {
   markers <- grep("^# ---- .* ----$", script)
   last <- min(markers[markers > first]) - 1L
   code <- script[seq.int(first + 1L, last)]
-  if (name %in% c("dashboard", "hindcast", "tidy")) code <- sub("^# ?", "", code)
+  if (name %in% c("dashboard", "hindcast", "tidy", "scoped")) code <- sub("^# ?", "", code)
   code
 }
-for (name in c("inputs", "scaa", "sam", "ncam", "dashboard", "hindcast", "tidy")) {
+for (name in c("inputs", "scaa", "sam", "ncam", "dashboard", "hindcast", "tidy", "scoped")) {
   writeLines(c("\\begin{rcode}", excerpt(name), "\\end{rcode}"), paste0("cache/code_", name, ".tex"))
 }
 writeLines(package_version, "cache/package_version.tex")
@@ -70,7 +70,7 @@ input_table <- function(name, columns) {
   header <- paste0("\\textcolor{white}{\\textbf{", escape_tex(columns), "}}")
   widths <- switch(name,
     catch = c(.17, .13, .17, .53),
-    index = c(.09, .07, .18, .19, .12, .12, .23),
+    index = c(.11, .08, .23, .23, .15, .20),
     weight = c(.22, .16, .32, .30),
     maturity = c(.25, .20, .55))
   column_spec <- sprintf(
@@ -83,7 +83,7 @@ input_table <- function(name, columns) {
   ), paste0("cache/table_", name, ".tex"))
 }
 input_table("catch", c("year", "age", "obs", "unit"))
-input_table("index", c("year", "age", "survey", "samp_time", "obs", "q_block", "unit"))
+input_table("index", c("year", "age", "survey", "samp_time", "obs", "q_block"))
 input_table("weight", c("year", "age", "obs", "unit"))
 input_table("maturity", c("year", "age", "obs"))
 
@@ -95,24 +95,23 @@ rsvg::rsvg_pdf(file.path(repo, "man/figures/logo.svg"), "logo.pdf")
 \pageheader{Tiny Assessment Model (tinyAM) :: \textbf{CHEATSHEET}}{Formula-driven age-structured stock assessment}
 \begin{minipage}[t][164mm][s]{.28\linewidth}\vspace{0pt}
 \sectitle{1}{Setup tidy inputs}{}
-\panelnote{Use four tidy tables: \texttt{catch}, \texttt{index}, \texttt{weight}, and \texttt{maturity}. Keys are year--age, plus survey for indices. Optional \texttt{weight\$type}: stock (biomass/SSB) or catch (yield); stock is required and supplies both uses if catch is absent. Each type needs a complete grid. Survey rows may be sparse; \texttt{NA} is allowed only in catch/index.}\par\vspace{2mm}
+\panelnote{Four tables: \texttt{catch}, \texttt{index}, \texttt{weight}, \texttt{maturity}. Keys: year--age, plus optional \texttt{fleet} for catch or \texttt{survey} for indices. Complete catch grids per fleet; \texttt{NA} for missing observations. Optional \texttt{weight\$type}: stock (biomass/SSB) or catch (yield); catch weights may be shared or complete per \texttt{fleet}. Stock weights are required and supply both uses if catch weights are absent.}\par\vspace{2mm}
 \tablelabel{catch}\par\vspace{.5mm}\nointerlineskip
 \begin{minipage}[t]{.54\linewidth}\vspace{0pt}
 \input{cache/table_catch.tex}
 \end{minipage}\hfill
 \begin{minipage}[t]{.42\linewidth}\vspace{0pt}
-\panelnote{\RaggedRight\hyphenpenalty=10000 Optional \texttt{pop\_covariates} table: year--age predictors on complete grids.\par}
+\panelnote{\RaggedRight\hyphenpenalty=10000 Predictors: F in \texttt{catch}; q in \texttt{index}; recruitment/N/M in optional \texttt{pop\_covariates}.\par}
 \end{minipage}\par\vspace{2mm}
-\tablelabel{index}\par\vspace{.5mm}\input{cache/table_index.tex}\par\vspace{2mm}
+\tablelabel{index}\ \panelnote{(thousand fish)}\par\vspace{.5mm}\input{cache/table_index.tex}\par\vspace{2mm}
 \begin{minipage}[t]{.48\linewidth}\vspace{0pt}
 \tablelabel{weight}\par\vspace{.5mm}\input{cache/table_weight.tex}
 \end{minipage}\hfill
 \begin{minipage}[t]{.48\linewidth}\vspace{0pt}
 \tablelabel{maturity}\par\vspace{.5mm}\input{cache/table_maturity.tex}
 \end{minipage}\par\vspace{.5mm}
-\panelnote{Assemble and validate input tables using \texttt{make\_tam\_data()}:}\par\vspace{.5mm}
+\panelnote{Example: \texttt{cod\_obs}. Assemble and validate tables:}\par\vspace{.5mm}
 \inputcode{inputs}\par\vspace{.5mm}
-\panelnote{Example \texttt{dat} = packaged \texttt{cod\_obs} data (see \texttt{?cod\_obs}).}
 \end{minipage}\hfill
 \begin{minipage}[t][164mm][s]{.42\linewidth}\vspace{0pt}
 \sectitle{2}{Specify model hypotheses}{}
@@ -132,7 +131,7 @@ rsvg::rsvg_pdf(file.path(repo, "man/figures/logo.svg"), "logo.pdf")
 \begin{minipage}[t]{.64\linewidth}\sectitle{3}{Visualize\\and compare}{.84\linewidth}\end{minipage}\par\vspace{1mm}
 \smallkey{Explore model fits}\par\vspace{1mm}
 \inputcode{dashboard}\par\vspace{1mm}
-\panelnote{\href{https://paulregular.github.io/tinyAM/cheatsheet/}{\textcolor{tamnavy}{\underline{\textbf{Online dashboard}}}}: Explore these three example fits and their diagnostics.}\par\vspace{2mm}
+\panelnote{\href{tinyAM_dashboard.html}{\textcolor{tamnavy}{\underline{\textbf{Local dashboard}}}} / \href{https://paulregular.github.io/tinyAM/cheatsheet/}{\textcolor{tamnavy}{\underline{online}}}: Explore these three example fits and their diagnostics.}\par\vspace{2mm}
 \smallkey{Test survey forecast skill}\par\vspace{1mm}
 \inputcode{hindcast}\par\vspace{1mm}
 \panelnote{Assess survey forecast skill conditional on observed catches, and retrospective stability. Inspect \texttt{hind\$fold\_diagnostics} before comparing scores.}\par\vspace{2mm}
@@ -185,25 +184,25 @@ SSB_t=\sum_b n_{t,b}w_{t,b}p_{t,b}e^{-\tau_{t,b}Z_{t,b}}.
 \end{minipage}\hfill
 \begin{minipage}[t][160mm][s]{.33\linewidth}\vspace{0pt}
 \begin{mathbox}{Mean fishing mortality}
-\micro{\RaggedRight \texttt{F\_settings}: fixed separable effects use \texttt{process = "off"} and\\
-\texttt{mu\_form = \string~ factor(year) +} \texttt{factor(age)}. The alternative \texttt{\string~ logistic(age)} gives a rising long-term mean.}
+\micro{\RaggedRight \texttt{F\_settings}: \texttt{process = "off"} with \texttt{\string~ factor(year) + factor(age)} gives separable F. Example F mean and index q formulas:}
+\inputcode{scoped}\par\vspace{1mm}
 \[
 \begin{aligned}
 S(a)&=\{1+e^{-k(a-a_{50})}\}^{-1},\quad k>0,\\
-\log F_{t,a}&=\beta_F+\log S(a)+\eta^F_{t,a}.
+\log F_{t,a,f}&=X_{t,a,f}\beta_F+\log S_f(a)+\eta^F_{t,a,f}.
 \end{aligned}
 \]
-\micro{With IID or AR1 process deviations, \texttt{mu\_form = \string~ mono(age)} instead adds cumulative nonnegative log-mean steps. Annual F can depart from the mean through $\eta^F$ (see Variation in N, F and M).}
+\micro{Total F is $\sum_f F_{t,a,f}$. \texttt{warped\_normal()}: rising to Gaussian shapes; \texttt{double\_logistic()}: WHAM product. \href{https://paulregular.github.io/tinyAM/reference/smooth_formulas.html}{Smooths}: \texttt{s()} or \texttt{t2(age, year)}, with estimated penalties. Check weak mean/process separation.}
 \end{mathbox}\vfill
 \begin{mathbox}{Natural mortality}
 \micro{\texttt{M\_settings}: \texttt{mu\_supplied = \string~ M0} supplies the baseline mortality surface.}
 \[
 \log M_{t,a}=\log M^0_{t,a}+\eta^M_{t,a}.
 \]
-\micro{\texttt{M0} comes from \texttt{pop\_covariates}. M states share age blocks and start in year 2 by default; other cells retain the mean. $\eta^M$ denotes process deviations (see Variation in N, F and M); \texttt{mu\_form} adds log-mean effects.}
+\micro{\texttt{M0} comes from \texttt{pop\_covariates}. M states share age blocks and start in year 2 by default; other cells retain the mean. \texttt{mu\_form} adds log-mean effects.}
 \end{mathbox}\vfill
 \begin{mathbox}{Variation in N, F and M}
-\micro{N and M support \texttt{"off"}, \texttt{"iid"}, \texttt{"rw"}, and \texttt{"ar1"}; F supports \texttt{"off"}, \texttt{"iid"}, \texttt{"rw"}, \texttt{"ar1"}, and \texttt{"cor\_rw"}. The equations above use $\eta^N$, $\eta^F$, and $\eta^M$ for these deviations.}
+\micro{N/F/M: \texttt{"off"}, \texttt{"iid"}, \texttt{"rw"}, \texttt{"ar1"}; F also \texttt{"cor\_rw"}. Off means no deviations; RW starts are unpenalized. Curve/smooth F means exclude intrinsic RW. Fleets have independent processes; \texttt{cor\_form = \string~ fleet} separates their correlations. \texttt{sd\_form} groups process SDs.}
 \[
 \begin{aligned}
 \text{IID: }&\eta_{t,a}\sim\mathcal N(0,\sigma_a^2),\\
@@ -220,8 +219,6 @@ S(a)&=\{1+e^{-k(a-a_{50})}\}^{-1},\quad k>0,\\
 \[
 \Sigma_{ab}=\sigma_a\sigma_b\rho^{|a-b|},\quad-1<\rho<1.
 \]
-\micro{RW starts are unpenalized. \texttt{"off"} sets process deviations to zero.}
-\micro{N, F and M have separate process parameters. \texttt{sd\_form = \string~ 1} shares SDs; \texttt{\string~ factor(age)} gives age-specific SDs. \texttt{iid()}, \texttt{rw()} and \texttt{ar1()} terms structure log SD. Ordinary age formulas give $\sigma_a=\exp(X_a\beta_\sigma)$. Shared SDs do not share states.}
 \end{mathbox}
 \end{minipage}\hfill
 \begin{minipage}[t][160mm][s]{.31\linewidth}\vspace{0pt}
@@ -245,13 +242,13 @@ q_k=\{1+e^{-\eta_{q,k}}\}^{-1}.
 \micro{Catch and survey observations are linked to population quantities by the predictions below; observed log values have Gaussian errors.}
 \[
 \begin{aligned}
-\widetilde C_{t,a}&=N_{t,a}\frac{F_{t,a}}{Z_{t,a}}(1-e^{-Z_{t,a}}),\\
+\widetilde C_{t,a,f}&=N_{t,a}\frac{F_{t,a,f}}{Z_{t,a}}(1-e^{-Z_{t,a}}),\\
 \widetilde I_i&=q_iN_{t_i,a_i}e^{-s_iZ_{t_i,a_i}},\\
 \log Y_i&\sim\mathcal N(\log\widetilde Y_i,\sigma_i^2),\\
 \sigma_i&=\sigma_i^0\exp(X_{sd,i}\beta_{sd}).
 \end{aligned}
 \]
-\micro{where $\widetilde Y_i$ and $Y_i$ are predicted and observed catch or index values, respectively, and $s_i$ is the survey sampling fraction. Catch/index \texttt{sd\_form = \string~ 1} shares an observation SD; \texttt{\string~ survey} allows survey differences. Baseline SDs and Gaussian formula effects can modify log SD. Predictions are medians; zero/NA observations are excluded, with complete predictions.}
+\micro{$Y_i$, $\widetilde Y_i$: observed and predicted catch/index; $s_i$: survey fraction. Catch/index \texttt{sd\_form = \string~ fleet} or \texttt{\string~ survey} gives group SDs. Errors are independent. Predictions are medians; zero/NA observations are excluded. Yield is $\sum_{a,f}C_{t,a,f}w^{catch}_{t,a,f}$; biomass/SSB use stock weights. Forecasts average each weight type/fleet separately.}
 \end{mathbox}\vfill
 \begin{mathbox}{Fit and prediction checks}
 \micro{\texttt{check\_tam()} checks numerical and statistical diagnostics; \texttt{fit\_hindcast()} evaluates survey forecasts given observed removals and retrospective stability. The joint likelihood includes active process, formula-effect and observation densities. RTMB integrates random effects by Laplace approximation; intervals use local curvature. Standardized residuals $(\log Y_i-\log\widetilde Y_i)/\sigma_i$ depend on fitted, shrunken states. Convergence does not establish identifiability. Hindcasts report survey log-RMSE, MASE, scored/failed folds and Mohn's $\rho$.}

@@ -17,6 +17,9 @@
   fleet-specific catch weights. Total F drives population survival.
 * F mean, process-SD and correlation covariates are supplied in the catch table;
   recruitment, N and M covariates remain in the population table.
+* Expand reproducible curve/smooth recovery and multi-fleet assessment trials.
+  Default-start failures and weak smoothing/shape identification remain
+  documented limitations; these flexible combinations are experimental.
 
 # tinyAM 0.1.1.9000
 
