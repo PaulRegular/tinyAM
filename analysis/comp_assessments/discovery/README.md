@@ -27,14 +27,14 @@ the rows already linked to a stock or candidate unit.
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 63 | 18 | 98 | 21 | 146 | 32 | 198 | 1 | 0 |
 | ICES | 274 | 59 | 125 | 2 | 88 | 54 | 107 | 113 | 186 | 0 | 88 |
-| NOAA | 432 | 28 | 208 | 8 | 188 | 60 | 137 | 235 | 246 | 0 | 186 |
-| **Total** | **905** | **107** | **396** | **28** | **374** | **135** | **390** | **380** | **630** | **1** | **274** |
+| NOAA | 432 | 28 | 209 | 8 | 187 | 61 | 137 | 234 | 247 | 0 | 185 |
+| **Total** | **905** | **107** | **397** | **28** | **373** | **136** | **390** | **379** | **631** | **1** | **273** |
 
-The crosswalk currently links 420 distinct unit keys across 442 inventory rows:
-100 link to canonical stocks and 320 are candidate units, including one with
-ambiguous identity and one with mixed identity status. Of the 318 new
-candidate units, 38 are eligible for source curation, 224 are ineligible for
-the age-disaggregated set, and 56 remain unresolved. A further 463 inventory
+The crosswalk currently links 421 distinct unit keys across 443 inventory rows:
+100 link to canonical stocks and 321 are candidate units, including one with
+ambiguous identity and one with mixed identity status. Of the 319 new
+candidate units, 39 are eligible for source curation, 224 are ineligible for
+the age-disaggregated set, and 56 remain unresolved. A further 462 inventory
 rows have no unit crosswalk yet. Row-level status and unit-level deduplication
 are intentionally reported separately.
 
@@ -55,6 +55,15 @@ although an age-disaggregated spring table is published separately. This unit is
 distinct from the existing Northeast Arctic golden redfish `reg.27.1-2`. The
 candidate is eligible for source curation but has not yet been imported. See
 `source_reviews/ices_golden_redfish_561214_2026.md`.
+
+The NOAA Southern California cowcod unit (Stock SMART 10443) is screened as a
+new eligible source-curation candidate from its 2019 accepted Stock Synthesis
+assessment and native model archive. The input file contains fishery and
+survey length compositions with conditional age-at-length observations, not a
+direct catch-at-age likelihood; an age-based reconstruction is limited to
+overlapping sampled fleet-years and must preserve that approximation. The
+archive also provides numbers-, catch-, F- and biomass-at-age outputs. See
+`source_reviews/noaa_cowcod_southern_california_2019.md`.
 
 The Maritimes American eel “Large Eel” and “Elvers” inventory entries are two
 fisheries for one candidate unit. The latest detailed DFO update reports
