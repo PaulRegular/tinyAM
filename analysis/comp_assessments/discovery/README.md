@@ -27,14 +27,14 @@ the rows already linked to a stock or candidate unit.
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 63 | 18 | 98 | 21 | 146 | 32 | 198 | 1 | 0 |
 | ICES | 274 | 59 | 145 | 2 | 68 | 56 | 123 | 95 | 206 | 0 | 68 |
-| NOAA | 432 | 28 | 215 | 8 | 181 | 64 | 139 | 229 | 253 | 0 | 179 |
-| **Total** | **905** | **107** | **423** | **28** | **347** | **141** | **408** | **356** | **657** | **1** | **247** |
+| NOAA | 432 | 28 | 216 | 8 | 180 | 64 | 140 | 228 | 254 | 0 | 178 |
+| **Total** | **905** | **107** | **424** | **28** | **346** | **141** | **409** | **355** | **658** | **1** | **246** |
 
-The crosswalk currently links 447 distinct unit keys across 469 inventory rows:
-100 link to canonical stocks and 347 are candidate units, including one with
-ambiguous identity and one with mixed identity status. Of the 345 new
-candidate units, 44 are eligible for source curation, 242 are ineligible for
-the age-disaggregated set, and 59 remain unresolved. A further 436 inventory
+The crosswalk currently links 448 distinct unit keys across 470 inventory rows:
+100 link to canonical stocks and 348 are candidate units, including one with
+ambiguous identity and one with mixed identity status. Of the 346 new
+candidate units, 44 are eligible for source curation, 243 are ineligible for
+the age-disaggregated set, and 59 remain unresolved. A further 435 inventory
 rows have no unit crosswalk yet. The progress summary has 74 organization-region
 rows. Row-level status and unit-level deduplication are intentionally reported
 separately.
@@ -862,6 +862,14 @@ age-disaggregated input set. The report gives probabilistic status results,
 while run-matched numeric N/F-at-age outputs were not recovered. IATTC
 restricts redistribution of generated run files; only the public report is
 cached. See `source_reviews/noaa_eastern_pacific_yellowfin_2025.md`.
+
+NOAA Stock SMART 11685 maps to the Eastern Pacific bigeye unit assessed by
+IATTC. The latest accepted assessment is the 2026 update through 2025. It
+fits catches, an aggregate Japanese longline index, and length compositions,
+not observed catch-at-age or age compositions. Its grouped-age fishing
+mortality outputs do not establish age-disaggregated observations. It is
+ineligible for this input set. See
+source_reviews/noaa_iattc_bigeye_eastern_pacific_2026.md.
 
 NOAA Stock SMART 10413 is the Southern Pacific Coast bocaccio unit. Its latest
 fitted assessment is the 2017 update, carrying forward age-at-length data from
