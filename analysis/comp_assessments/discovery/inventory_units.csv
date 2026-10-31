@@ -299,6 +299,8 @@
 "candidate:noaa_gulf_red_snapper","","noaa_gulf_red_snapper","new","eligible","screened","not_started","NOAA","SEFSC","NOAA:10230",1
 "candidate:noaa_gulf_spanish_mackerel","","noaa_gulf_spanish_mackerel","new","unresolved","screened","not_started","NOAA","SEFSC","NOAA:10173",1
 "candidate:noaa_isc_pacific_bluefin","","noaa_isc_pacific_bluefin","new","ineligible","screened","not_started","NOAA","PIFSC","NOAA:11687",1
+"candidate:noaa_lingcod_north_pacific_coast_2021","","noaa_lingcod_north_pacific_coast_2021","new","eligible","screened","not_started","NOAA","NWFSC / SWFSC","NOAA:12194",1
+"candidate:noaa_lingcod_south_pacific_coast_2021","","noaa_lingcod_south_pacific_coast_2021","new","ineligible","screened","not_started","NOAA","NWFSC / SWFSC","NOAA:12195",1
 "candidate:noaa_longfin_squid_georges_bank","","noaa_longfin_squid_georges_bank","new","ineligible","screened","not_started","NOAA","NEFSC","NOAA:10792",1
 "candidate:noaa_mhi_bullethead_parrotfish","","noaa_mhi_bullethead_parrotfish","new","ineligible","screened","not_started","NOAA","PIFSC","NOAA:14620",1
 "candidate:noaa_mhi_deep7_complex","","noaa_mhi_deep7_complex","new","ineligible","screened","not_started","NOAA","PIFSC","NOAA:11827",1
