@@ -26,15 +26,15 @@ the rows already linked to a stock or candidate unit.
 | Organization | Rows | Matched to database | New candidate rows | Ambiguous identity | Identity unreviewed | Eligible rows | Ineligible rows | Eligibility unresolved | Screened | In progress | Not screened |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 63 | 18 | 98 | 21 | 146 | 32 | 198 | 1 | 0 |
-| ICES | 274 | 59 | 132 | 2 | 81 | 54 | 114 | 106 | 193 | 0 | 81 |
+| ICES | 274 | 59 | 133 | 2 | 80 | 54 | 115 | 105 | 194 | 0 | 80 |
 | NOAA | 432 | 28 | 210 | 8 | 186 | 61 | 138 | 233 | 248 | 0 | 184 |
-| **Total** | **905** | **107** | **405** | **28** | **365** | **136** | **398** | **371** | **639** | **1** | **265** |
+| **Total** | **905** | **107** | **406** | **28** | **364** | **136** | **399** | **370** | **640** | **1** | **264** |
 
-The crosswalk currently links 429 distinct unit keys across 451 inventory rows:
-100 link to canonical stocks and 329 are candidate units, including one with
-ambiguous identity and one with mixed identity status. Of the 327 new
-candidate units, 39 are eligible for source curation, 232 are ineligible for
-the age-disaggregated set, and 56 remain unresolved. A further 454 inventory
+The crosswalk currently links 430 distinct unit keys across 452 inventory rows:
+100 link to canonical stocks and 330 are candidate units, including one with
+ambiguous identity and one with mixed identity status. Of the 328 new
+candidate units, 39 are eligible for source curation, 233 are ineligible for
+the age-disaggregated set, and 56 remain unresolved. A further 453 inventory
 rows have no unit crosswalk yet. Row-level status and unit-level deduplication
 are intentionally reported separately.
 
@@ -1031,3 +1031,5 @@ ICES Northeast Atlantic white skate (`rja.27.nea`) has no formal stock assessmen
 ICES Northeast Atlantic angel shark (`agn.27.nea`) has no benchmarked quantitative assessment. The latest WGEF report describes an earlier exploratory Tralee Bay tagging analysis, no commercial catch composition or effort data, and no age-and-growth information for the Northeast Atlantic stock. It is screened ineligible for age-disaggregated comparison. See `source_reviews/ices_angel_shark_nea_2025.md`.
 
 ICES Northeast Atlantic smooth-hounds (`sdv.27.nea`) have a current category-3 `rfb` advice rule based on standardized survey biomass and a commercial length-based fishing proxy. The 2025 update advises a landings maximum of 6,395 t for 2026 and 2027, but does not provide age-disaggregated population inputs or outputs. It is ineligible for the age-disaggregated set; the report also notes that survey signals are primarily *Mustelus asterias* while commercial data cover *Mustelus* spp. See `source_reviews/ices_smooth_hounds_nea_2025.md`.
+
+ICES spotted ray in Subarea 4, divisions 3.a and 7.d (`rjm.27.3a47d`) has a 2025 SPiCT surplus-production assessment based on total catches and two aggregate seasonal survey-biomass indices. It reports relative biomass and fishing pressure but no age-specific population outputs, so it is ineligible for the age-disaggregated set. See `source_reviews/ices_spotted_ray_3a47d_2025.md`.
