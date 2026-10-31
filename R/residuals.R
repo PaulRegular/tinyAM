@@ -56,7 +56,14 @@ residuals.tam_fit <- function(object, type = c("standardized", "log", "response"
     d <- tables[[name]]
     if (!is.data.frame(d) || !nrow(d)) return(NULL)
     residual <- switch(type, standardized = d$std_res, osa = d$osa_res,
-      response = d$obs - d$pred, log = d$std_res * d$sd)
+      response = d$obs - d$pred, log = {
+        value <- suppressWarnings(log(d$obs) - log(d$pred))
+        if (!is.null(d$sd) && !is.null(d$std_res)) {
+          underflow <- which(d$pred == 0 & d$obs > 0 & is.finite(d$std_res) & is.finite(d$sd))
+          value[underflow] <- d$std_res[underflow] * d$sd[underflow]
+        }
+        value
+      })
     if (is.null(residual)) residual <- rep(NA_real_, nrow(d))
     keep <- is.finite(d$obs) & d$obs > 0 & is.finite(residual)
     if ("is_proj" %in% names(d)) keep <- keep & !d$is_proj
