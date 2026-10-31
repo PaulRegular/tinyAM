@@ -26,15 +26,15 @@ the rows already linked to a stock or candidate unit.
 | Organization | Rows | Matched to database | New candidate rows | Ambiguous identity | Identity unreviewed | Eligible rows | Ineligible rows | Eligibility unresolved | Screened | In progress | Not screened |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 63 | 18 | 98 | 21 | 146 | 32 | 198 | 1 | 0 |
-| ICES | 274 | 59 | 141 | 2 | 72 | 55 | 121 | 98 | 202 | 0 | 72 |
+| ICES | 274 | 59 | 142 | 2 | 71 | 56 | 121 | 97 | 203 | 0 | 71 |
 | NOAA | 432 | 28 | 213 | 8 | 183 | 63 | 138 | 231 | 251 | 0 | 181 |
-| **Total** | **905** | **107** | **417** | **28** | **353** | **139** | **405** | **361** | **651** | **1** | **253** |
+| **Total** | **905** | **107** | **418** | **28** | **352** | **140** | **405** | **360** | **652** | **1** | **252** |
 
-The crosswalk currently links 441 distinct unit keys across 463 inventory rows:
-100 link to canonical stocks and 341 are candidate units, including one with
-ambiguous identity and one with mixed identity status. Of the 339 new
-candidate units, 42 are eligible for source curation, 239 are ineligible for
-the age-disaggregated set, and 58 remain unresolved. A further 442 inventory
+The crosswalk currently links 442 distinct unit keys across 464 inventory rows:
+100 link to canonical stocks and 342 are candidate units, including one with
+ambiguous identity and one with mixed identity status. Of the 340 new
+candidate units, 43 are eligible for source curation, 239 are ineligible for
+the age-disaggregated set, and 58 remain unresolved. A further 441 inventory
 rows have no unit crosswalk yet. The progress summary has 74 organization-region
 rows. Row-level status and unit-level deduplication are intentionally reported
 separately.
