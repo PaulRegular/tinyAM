@@ -1,5 +1,9 @@
 # tinyAM 0.1.1.9001
 
+* Add `warped_normal()` asymptotic/dome curves and WHAM-style
+  `double_logistic()` curves for F and q. Report warped peak/tail quantities
+  and maximum realized fleet F without normalizing selectivity peaks.
+  Keep likelihood calculations stable when selectivity is extremely small.
 * Add `for_fleet()` and `for_survey()` for group-specific F means and
   catchability relationships within one formula, alongside shared effects.
   Scoped curves, Gaussian effects and abundance powers retain their own groups.

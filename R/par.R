@@ -120,6 +120,10 @@
 #'   - Logistic curves have `q_a50_*` midpoints and positive `log_q_slope_*`
 #'     coefficients, initialized from each group's observed coordinate range.
 #'     Names identify terms, groups and unique states for warm starts.
+#'     [warped_normal()] uses an ascending midpoint, log positive scale and
+#'     optionally a directly bounded shape (`q_shape_*` or `F_shape_*`, starting
+#'     at 0.5). [double_logistic()] has ascending/descending midpoints and log
+#'     positive scales. There is no midpoint ordering or peak normalization.
 #'
 #' All scalar SD parameters are on the log scale, and AR(1) parameters are on
 #' the logit scale (later transformed by `plogis()` in the likelihood).
@@ -244,7 +248,7 @@ make_par <- function(dat) {
       if (dat$has_fleet) dat$F_states$key else if (.f_blocked(dat)) levels(dat$F_settings$age_blocks) else dat$ages),
       c("year", if (.f_blocked(dat)) "age_block" else "age"))
   )
-  if (dat$F_settings$process != "off" && (!is.null(dat$F_mono_modmat) || any(vapply(dat$F_terms, function(x) x$type == "logistic", logical(1))))) {
+  if (dat$F_settings$process != "off" && (!is.null(dat$F_mono_modmat) || any(vapply(dat$F_terms, .is_selectivity_curve, logical(1))))) {
     surface <- matrix(
       drop(dat$F_modmat %*% par$log_mu_f) +
         .mean_effects(par, dat, "F")$contribution,

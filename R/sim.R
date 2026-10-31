@@ -82,6 +82,9 @@
   par <- par_fun(fit)
   # Gaussian uncertainty draws can cross monotonic-increment lower bounds.
   for (name in c("dq", "dmu_f", "d_n0")) if (!is.null(par[[name]])) par[[name]][] <- pmax(par[[name]], 0)
+  for (name in grep("^(q|F)_shape_", names(par), value = TRUE)) {
+    par[[name]][] <- pmin(1, pmax(0, par[[name]]))
+  }
 
   if (redraw_random) {
     sims <- nll_fun(par, dat, simulate = TRUE)
@@ -135,6 +138,9 @@
 #' are clipped to zero before generating predictions or observations. This
 #' projects the normal approximation onto the feasible increments and adds
 #' probability at zero; it is not a boundary-corrected posterior sampler.
+#' Warped-curve shape draws are similarly clipped to their fitted 0--1 bounds.
+#' This can put probability at the asymptotic or Gaussian endpoint; normal
+#' uncertainty approximations near either boundary require particular care.
 #'
 #' The simulation has two orthogonal controls:
 #'

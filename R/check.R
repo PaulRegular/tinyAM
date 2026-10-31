@@ -385,7 +385,7 @@ check_tam <- function(fit, ..., grad_tol = NULL, detailed = FALSE, model_list = 
   }
   observed <- !d$is_proj & is.finite(d$obs) & d$obs > 0
   for (term in dat$q_terms) {
-    if (term$type == "logistic") next
+    if (.is_selectivity_curve(term)) next
     if (!is.null(term$sd_parameter) || !is.null(term$phi_parameter)) {
       for (group in term$groups) {
         rows <- group$rows[observed[group$rows] & term$multiplier[group$rows] != 0]
@@ -490,10 +490,12 @@ check_tam <- function(fit, ..., grad_tol = NULL, detailed = FALSE, model_list = 
       )
     ))
   }
-  for (term in Filter(function(x) x$type == "logistic", c(fit$dat$q_terms, fit$dat$F_terms))) {
+  for (term in Filter(.is_selectivity_curve, c(fit$dat$q_terms, fit$dat$F_terms))) {
     is_F <- startsWith(term$id, "F_")
     d <- if (is_F) .mean_formula_data(fit$dat, "F") else fit$dat$obs$index
-    indices <- which(names(p) == term$a50_parameter)
+    midpoints <- unlist(term[c("a50_parameter","a50_up_parameter","a50_down_parameter")],use.names=FALSE)
+    for (midpoint in midpoints) {
+    indices <- which(names(p) == midpoint)
     if (length(indices) != length(term$groups)) next
     for (g in seq_along(term$groups)) {
       group <- term$groups[[g]]
@@ -504,7 +506,7 @@ check_tam <- function(fit, ..., grad_tol = NULL, detailed = FALSE, model_list = 
       if (is.finite(p[i]) && is.finite(half_width[i]) &&
         (p[i] < support[1] || p[i] > support[2]) && 2 * half_width[i] > diff(support)) {
         out <- rbind(out, data.frame(
-          issue = "logistic_support",
+          issue = if (term$type == "logistic") "logistic_support" else "selectivity_support",
           detail = paste0(
             term$id, ", group ", group$group,
             ": the fitted midpoint lies outside the observed range (", paste(support, collapse = " to "),
@@ -513,6 +515,14 @@ check_tam <- function(fit, ..., grad_tol = NULL, detailed = FALSE, model_list = 
           )
         ))
       }
+    }
+    }
+    if (!is.null(term$shape_parameter)) {
+      i <- which(names(p) == term$shape_parameter)
+      if (any(2*half_width[i] > .8,na.rm=TRUE)) out <- rbind(out,data.frame(
+        issue = "warped_shape_uncertainty",
+        detail = paste0(term$id, ": the shape interval covers most of its 0--1 range. The data may not distinguish asymptotic from dome-shaped selectivity; compare supported fixed shapes and inspect older-age coverage.")
+      ))
     }
   }
   out

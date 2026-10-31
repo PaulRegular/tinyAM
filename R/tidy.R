@@ -122,11 +122,12 @@ tidy_obs_pred <- function(fit, add_osa_res = FALSE, interval = .95, ...) {
 
   obs_pred <- fit$dat$obs[c("catch", "index")]
   pred <- split(exp(fit$rep$log_pred), fit$dat$obs_map$type)
+  log_pred <- split(fit$rep$log_pred, fit$dat$obs_map$type)
   sd <- split(fit$rep$sd_obs, fit$dat$obs_map$type)
 
   obs_pred$catch$pred <- pred$catch
   obs_pred$catch$sd <- sd$catch
-  obs_pred$catch$std_res <- with(obs_pred$catch, ifelse(obs == 0, NA, (log(obs) - log(pred)) / sd))
+  obs_pred$catch$std_res <- with(obs_pred$catch, ifelse(obs == 0, NA, (log(obs) - log_pred$catch) / sd))
 
   obs_pred$index$pred <- pred$index
   obs_pred$index$sd <- sd$index
@@ -165,7 +166,7 @@ tidy_obs_pred <- function(fit, add_osa_res = FALSE, interval = .95, ...) {
       obs_pred$index$q_base_se <- as.numeric(error)
     }
   }
-  obs_pred$index$std_res <- with(obs_pred$index, ifelse(obs == 0, NA, (log(obs) - log(pred)) / sd))
+  obs_pred$index$std_res <- with(obs_pred$index, ifelse(obs == 0, NA, (log(obs) - log_pred$index) / sd))
 
   if (add_osa_res) {
     args <- list(...)
@@ -398,10 +399,14 @@ tidy_sdrep <- function(fit, interval = 0.95) {
     df$F$se_scale[zero] <- "reported"
   }
   for (nm in names(df)) df[[nm]]$unit <- .population_unit(fit$dat, nm)
-  for (nm in intersect(c("F", "F_fleet", "mu_F", "mu_F_fleet", "sd_F", "F_bar"), names(df))) {
+  for (nm in intersect(c("F", "F_fleet", "F_full", "F_full_fleet", "mu_F", "mu_F_fleet", "sd_F", "F_bar"), names(df))) {
     source <- fit$rep[[nm]]
     if (is.null(source)) next
-    zero <- as.vector(source) == 0
+    # A structurally zero F uses a finite log-report placeholder of zero.
+    # A very small positive F may underflow on the natural scale; retain its
+    # log-scale uncertainty rather than treating it as a structural constraint.
+    log_value <- vals[[paste0("log_", nm)]]
+    zero <- as.vector(source) == 0 & if (is.null(log_value)) TRUE else as.vector(log_value) == 0
     if (length(zero) == nrow(df[[nm]]) && any(zero)) {
       df[[nm]][zero, c("est", "lwr", "upr", "se")] <- 0
       df[[nm]]$se_scale[zero] <- "reported"
@@ -492,6 +497,12 @@ tidy_pop <- function(fit, interval = 0.95) {
 #'   F mean-curve increments `dmu_f` likewise remain on their fitted log-F
 #'   increment scale. F logistic midpoints are on the age/covariate scale;
 #'   slopes are reported positive, with SEs on their fitted log scale.
+#'   Warped and double-logistic scales are also positive with log-scale SEs.
+#'   The warped shape c is on its fitted 0--1 scale; its intervals are clipped
+#'   to those bounds. Derived warped b, peak and tail rows are marked `derived`.
+#'   Their SEs use joint RTMB derivatives and fixed-parameter covariance.
+#'   An infinite endpoint has missing SEs/intervals. Boundary Wald intervals
+#'   are descriptive local approximations, not boundary-adjusted inference.
 #'   Coefficient names identify
 #'   transitions and groups. Actual observation-specific q is in [tidy_obs_pred()].
 #'
@@ -646,6 +657,11 @@ tidy_par <- function(fit, interval = 0.95) {
     initial$unit <- .population_unit(fit$dat, "N")
     fixed <- stack_list(list(fixed, initial), label = NULL)
   }
+  shape <- grepl("^(q|F)_shape_", fixed$par)
+  fixed$lwr[shape] <- pmax(0, fixed$lwr[shape])
+  fixed$upr[shape] <- pmin(1, fixed$upr[shape])
+  curves <- .tidy_selectivity_curves(fit, interval)
+  if (nrow(curves)) fixed <- stack_list(list(fixed, curves), label = NULL)
   rownames(fixed) <- NULL
   values <- c("est", "lwr", "upr", "se", "se_scale")
   fixed <- fixed[, c(

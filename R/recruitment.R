@@ -335,7 +335,7 @@ ricker <- function(ssb, lag = NULL) {
 }
 
 # One chronological population construction for estimation and simulation.
-.population_states <- function(par, dat, Z, simulate = FALSE, initialize = FALSE, F = NULL, M = NULL, F_by_fleet = NULL) {
+.population_states <- function(par, dat, Z, simulate = FALSE, initialize = FALSE, F = NULL, M = NULL, F_by_fleet = NULL, log_F_by_fleet = NULL) {
   "[<-" <- RTMB::ADoverload("[<-")
   T <- length(dat$years)
   A <- length(dat$ages)
@@ -375,6 +375,7 @@ ricker <- function(ssb, lag = NULL) {
   W_catch_by_fleet <- dat$W_catch_fleet
   P <- dat$P
   log_ssb <- numeric(T)
+  log_F_multiplier <- numeric(T)
   ssb_mat <- matrix(0, T, A, dimnames = dimnames(log_N))
   mean <- .rec_mean(par, dat)
   log_mu_R <- log_pred_R <- mean
@@ -455,12 +456,23 @@ ricker <- function(ssb, lag = NULL) {
         dat$F_settings$state_index > 0L
       target_weight <- W_catch[y, ]
       if (!is.null(F_by_fleet)) {
-        weighted <- rowSums(matrix(W_catch_by_fleet[y, ] * F_by_fleet[terminal, ], A))
-        target_weight <- weighted / (F[terminal, ] + !active)
+        if (is.null(log_F_by_fleet)) {
+          weighted <- rowSums(matrix(W_catch_by_fleet[y, ] * F_by_fleet[terminal, ], A))
+          target_weight <- weighted / (F[terminal, ] + !active)
+        } else {
+          target_weight <- numeric(A)
+          for (a in which(active)) {
+            columns <- which(dat$F_columns$age == dat$ages[a] & dat$F_settings$state_index > 0L)
+            rates <- log_F_by_fleet[terminal, columns]
+            total <- Reduce(RTMB::logspace_add, lapply(seq_along(rates), function(j) rates[j]))
+            target_weight[a] <- sum(exp(rates - total) * W_catch_by_fleet[y, columns])
+          }
+        }
       }
       k <- .solve_catch(dat$proj_settings$catch[as.character(dat$years[y])],
         exp(log_N[y, ]), target_weight, F[terminal, ], M[y, ], dat$years[y], active = active)
       F[y, ] <- k * F[terminal, ]
+      log_F_multiplier[y] <- log(k + as.integer(dat$proj_settings$catch[as.character(dat$years[y])] == 0))
       if (!is.null(F_by_fleet)) F_by_fleet[y, ] <- k * F_by_fleet[terminal, ]
       Z[y, ] <- F[y, ] + M[y, ]
     }
@@ -477,7 +489,8 @@ ricker <- function(ssb, lag = NULL) {
     eta_R = log_recruitment - log_pred_R, eta_R_state = u,
     W = W, W_catch = W_catch, P = P, ssb_mat = ssb_mat,
     N_plus = if (!is.null(dat$plus_ages)) exp(log_N_plus) else NULL,
-    F = F, Z = Z, F_by_fleet = F_by_fleet, W_catch_by_fleet = W_catch_by_fleet
+    F = F, Z = Z, F_by_fleet = F_by_fleet, W_catch_by_fleet = W_catch_by_fleet,
+    log_F_multiplier = log_F_multiplier
   )
 }
 

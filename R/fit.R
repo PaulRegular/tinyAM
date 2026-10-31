@@ -85,7 +85,7 @@
       start$log_r <- setNames(log(source$rep$recruitment[years]), source$dat$years[years])
     }
     if (!identical(source$dat$index_settings$q_link, dat$index_settings$q_link)) {
-      start <- start[!grepl("^(log_q|logit_q$|dq$|eta_q_|log_sd_q_|logit_phi_q_|q_a50_|log_q_slope_)", names(start))]
+      start <- start[!grepl("^(log_q|logit_q$|dq$|eta_q_|log_sd_q_|logit_phi_q_|q_a50_|q_shape_)", names(start))]
       cli::cli_inform("Catchability starts were omitted because q_link changed.")
     }
     if (!is.null(start$log_q_power)) {
@@ -331,6 +331,12 @@ fit_tam <- function(
       cli::cli_abort("Starting {.arg {name}} increments must be finite and non-negative.")
     }
   }
+  shape_parameters <- grep("^(q|F)_shape_", names(par), value = TRUE)
+  for (name in shape_parameters) {
+    if (any(!is.finite(par[[name]]) | par[[name]] < 0 | par[[name]] > 1)) {
+      cli::cli_abort("Starting {.arg {name}} must lie between zero and one.")
+    }
+  }
 
   ran <- c(if (dat$F_settings$process != "off") "log_f", if (dat$rec$type != "off") "log_r", .formula_random_parameters(dat))
   if (dat$rec_settings$init == "latent") {
@@ -409,10 +415,13 @@ fit_tam <- function(
   )
 
   lower <- rep(-Inf, length(obj$par))
+  upper <- rep(Inf, length(obj$par))
   lower[names(obj$par) %in% c("dq", "dmu_f", "d_n0")] <- 0
+  lower[names(obj$par) %in% shape_parameters] <- 0
+  upper[names(obj$par) %in% shape_parameters] <- 1
   opt <- tryCatch(stats::nlminb(
     obj$par, obj$fn, obj$gr,
-    lower = lower,
+    lower = lower, upper = upper,
     control = list(eval.max = 1000, iter.max = 1000)
   ), error = function(e) cli::cli_abort("Optimization failed: {conditionMessage(e)}"))
   # Synchronize reports and the conditional random states with the returned solution.
@@ -444,7 +453,7 @@ fit_tam <- function(
     gradient = gradient,
     parameter_values = parameter_values,
     parameter_map = map,
-    bounds = list(lower = lower, upper = rep(Inf, length(lower))),
+    bounds = list(lower = lower, upper = upper),
     grad_tol = grad_tol
   )
 

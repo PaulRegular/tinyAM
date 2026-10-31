@@ -58,9 +58,9 @@ for_survey <- function(survey, formula) {
       return(walk(spec$formula[[2L]], environment(spec$formula)))
     }
     parts <- as.list(x)[-1L]
-    if (name %in% c("iid", "rw", "ar1")) {
+    if (name %in% c("iid", "rw", "ar1", "warped_normal", "double_logistic")) {
       parts <- as.list(match.call(get(name, mode="function"), x))[-1L]
-      parts <- parts[!names(parts) %in% c("sd", "phi")]
+      parts <- parts[!names(parts) %in% c("sd", "phi", "b")]
     }
     unique(unlist(lapply(parts, walk, env=env),use.names=FALSE))
   }
@@ -133,7 +133,7 @@ for_survey <- function(survey, formula) {
     z
   }
   has_curve <- function(design) !is.null(design$q_mono_modmat) ||
-    any(vapply(design$q_terms, function(x) x$type == "logistic", logical(1)))
+    any(vapply(design$q_terms, .is_selectivity_curve, logical(1)))
   curve_rows <- if (has_curve(global)) list(seq_len(n)) else list()
   for (spec in split$scopes) {
     rows <- spec$rows
@@ -156,9 +156,10 @@ for_survey <- function(survey, formula) {
     for (term in piece$q_terms) {
       term$id <- paste0(spec$id, ":", term$id)
       term$scope <- spec[c("type","name","id")]
+      if (.is_selectivity_curve(term)) term <- .curve_parameter_names(term)
       prefixes <- c(parameter="eta_q_",sd_parameter="log_sd_q_",phi_parameter="logit_phi_q_",
         a50_parameter="q_a50_",slope_parameter="log_q_slope_")
-      for (field in c("parameter","sd_parameter","phi_parameter","a50_parameter","slope_parameter")) {
+      for (field in c("parameter","sd_parameter","phi_parameter")) {
         if (!is.null(term[[field]])) {
           prefix <- prefixes[[field]]
           term[[field]] <- paste0(prefix,spec$id,":",substring(term[[field]],nchar(prefix)+1L))
@@ -190,7 +191,7 @@ for_survey <- function(survey, formula) {
 }
 
 .check_f_curve_design <- function(design, data, terms) {
-  specifications <- lapply(Filter(function(x) x$type == "logistic",terms),function(x) {
+  specifications <- lapply(Filter(.is_selectivity_curve,terms),function(x) {
     list(variable=x$variable, by=x$by, rows=unique(unlist(lapply(x$groups,`[[`,"rows"))))
   })
   mono <- design$q_mono_steps

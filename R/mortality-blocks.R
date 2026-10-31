@@ -63,7 +63,7 @@
     labels <- c(labels, paste("mu_form", colnames(dat$F_mono_modmat)))
   }
   for (term in dat$F_terms) {
-    design <- if (term$type == "logistic") {
+    design <- if (.is_selectivity_curve(term)) {
       z <- matrix(0, nrow(dat$F_data), 2L * length(term$groups))
       for (i in seq_along(term$groups)) {
         rows <- term$groups[[i]]$rows

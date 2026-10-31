@@ -103,6 +103,20 @@
   out
 }
 
+# Log total F without exp/log round trips in the tails of selectivity curves.
+# Inactive ages use a finite placeholder; their reported F remains exactly zero.
+.F_log_total <- function(x, dat, active = dat$F_settings$state_index > 0L) {
+  "[<-" <- RTMB::ADoverload("[<-")
+  out <- matrix(0, length(dat$years), length(dat$ages),
+    dimnames = list(year = dat$years, age = dat$ages))
+  for (a in seq_along(dat$ages)) {
+    columns <- which(dat$F_columns$age == dat$ages[a] & active)
+    if (length(columns)) out[, a] <- Reduce(RTMB::logspace_add,
+      lapply(columns, function(j) x[, j]))
+  }
+  out
+}
+
 .F_array <- function(x, dat) array(x,
   c(length(dat$years), length(dat$ages), length(dat$fleets)),
   dimnames = list(year = dat$years, age = dat$ages, fleet = dat$fleets))

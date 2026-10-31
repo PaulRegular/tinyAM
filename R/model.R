@@ -174,7 +174,7 @@
 #' An absent F formula contributes zero. Either M contribution may be absent
 #' (then contributes zero on the log scale), but at least one is required.
 #' The M formula intercept is removed when supplied M is also present.
-#' Design rows use the aligned population-covariate frame for F and M.
+#' F designs use catch covariates; M designs use population covariates.
 #' With AR1 M residuals, one age-defined IID random-slope mean term may be
 #' added. Its group slopes are drawn once and multiplied by a supplied numeric
 #' covariate each year, independently of the AR1 residual matrix. All mean
@@ -183,8 +183,9 @@
 #' are centred on zero. See [formula_effects] for the equations and cautions.
 #'
 #' F mean curves with no residual process or with IID/AR1 residuals add cumulative non-negative log-F
-#' increments for [mono()], or \eqn{\log S(a)} for [logistic()], so the latter
-#' multiplies the ordinary mean F by rising selectivity. These are fixed curve
+#' increments for [mono()], or \eqn{\log S(a)} for [logistic()],
+#' [warped_normal()] or [double_logistic()]. Parametric curves multiply the
+#' ordinary mean F by selectivity, without extra peak normalization. These are fixed curve
 #' parameters, separate from Gaussian mean effects and latent F states. Static
 #' curves cancel from RW increments and are not supported there.
 #'

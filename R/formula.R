@@ -191,7 +191,7 @@ logistic <- function(x, by = NULL) .formula_marker_error("logistic")
   if (any(c("bh", "ricker") %in% all.names(formula))) {
     cli::cli_abort("bh() and ricker() are restricted to rec_settings$mu_form.")
   }
-  special <- c("iid", "rw", "ar1", "logistic", "power", "|")
+  special <- c("iid", "rw", "ar1", "logistic", "warped_normal", "double_logistic", "power", "|")
   contains <- function(x) {
     is.call(x) && (.formula_call_name(x) %in% special ||
       any(vapply(as.list(x)[-1L], contains, logical(1))))
@@ -238,6 +238,8 @@ logistic <- function(x, by = NULL) .formula_marker_error("logistic")
           rw = rw,
           ar1 = ar1,
           logistic = logistic,
+          warped_normal = warped_normal,
+          double_logistic = double_logistic,
           power = power
         )
         x[[1L]] <- as.name(type)
@@ -252,6 +254,14 @@ logistic <- function(x, by = NULL) .formula_marker_error("logistic")
           by = if (is.null(args$by) || identical(args$by, quote(NULL))) NULL else column(args$by, "by"),
           sd = fixed(args$sd, "sd"), phi = fixed(args$phi, "phi", 1, TRUE)
         )
+        if (type == "warped_normal" && !is.null(args$b) && !identical(args$b, quote(NULL))) {
+          b <- tryCatch(eval(args$b, environment(formula)),
+            error = function(e) cli::cli_abort("Cannot evaluate warped_normal() b: {conditionMessage(e)}"))
+          if (!is.null(b) && (!is.numeric(b) || length(b) != 1L || is.na(b) || b < 0)) {
+            cli::cli_abort("warped_normal() b must be one nonnegative number, Inf, or NULL.")
+          }
+          if (!is.null(b)) spec$b <- b
+        }
       }
       specs[[length(specs) + 1L]] <<- spec
       return(NULL)
@@ -301,8 +311,9 @@ logistic <- function(x, by = NULL) .formula_marker_error("logistic")
     (is.numeric(x) && all(x == floor(x))))) {
     cli::cli_abort("RW/AR1 coordinates must be integer numeric values or ordered factors.")
   }
-  if (spec$type == "logistic" && !is.numeric(x)) {
-    cli::cli_abort("logistic() {.arg x} must be numeric.")
+  curve <- .is_selectivity_curve(spec)
+  if (curve && !is.numeric(x)) {
+    cli::cli_abort("{spec$type}() {.arg x} must be numeric.")
   }
   by <- if (is.null(spec$by)) rep("all", nrow(data)) else data[[spec$by]]
   if (!is.atomic(by) || !is.null(dim(by)) || anyNA(by) ||
@@ -310,8 +321,8 @@ logistic <- function(x, by = NULL) .formula_marker_error("logistic")
     cli::cli_abort("Structured {.arg by} must have finite, non-missing values.")
   }
   numeric_by <- !is.null(spec$by) && is.numeric(by)
-  if (numeric_by && spec$type == "logistic") {
-    cli::cli_abort("logistic() only supports categorical {.arg by} groups.")
+  if (numeric_by && curve) {
+    cli::cli_abort("{spec$type}() only supports categorical {.arg by} groups.")
   }
   multiplier <- if (numeric_by) by else rep(1, nrow(data))
   if (numeric_by) by <- rep("all", nrow(data))
@@ -325,13 +336,15 @@ logistic <- function(x, by = NULL) .formula_marker_error("logistic")
     past <- rows[historical[rows]]
     support <- rows[observed[rows] & multiplier[rows] != 0]
     if (!length(support)) cli::cli_abort("{id}: group {group} has no informative historical observations.")
-    if (spec$type == "logistic") {
-      if (length(unique(x[support])) < 3L) {
-        cli::cli_abort("logistic() needs at least three observed x values per group.")
+    if (curve) {
+      required <- switch(spec$type, logistic = 3L, warped_normal = if (is.null(spec$b)) 4L else 3L,
+        double_logistic = 5L)
+      if (length(unique(x[support])) < required) {
+        cli::cli_abort("{spec$type}() needs at least {required} observed x values per group.")
       }
       return(list(
         group = group, rows = rows, midpoint = stats::median(x[support]),
-        slope = 4 / diff(range(x[support]))
+        slope = 4 / diff(range(x[support])), width = diff(range(x[support]))
       ))
     }
     if (temporal && is.numeric(x)) {
@@ -363,13 +376,10 @@ logistic <- function(x, by = NULL) .formula_marker_error("logistic")
   spec$id <- id
   spec$groups <- groups
   spec$multiplier <- multiplier
-  spec$parameter <- if (spec$type == "logistic") NULL else paste0("eta_q_", id)
-  spec$sd_parameter <- if (is.null(spec$sd) && spec$type != "logistic") paste0("log_sd_q_", id) else NULL
+  spec$parameter <- if (curve) NULL else paste0("eta_q_", id)
+  spec$sd_parameter <- if (is.null(spec$sd) && !curve) paste0("log_sd_q_", id) else NULL
   spec$phi_parameter <- if (spec$type == "ar1" && is.null(spec$phi)) paste0("logit_phi_q_", id) else NULL
-  if (spec$type == "logistic") {
-    spec$a50_parameter <- paste0("q_a50_", id)
-    spec$slope_parameter <- paste0("log_q_slope_", id)
-  }
+  if (curve) spec <- .curve_parameter_names(spec)
   spec
 }
 
@@ -377,13 +387,8 @@ logistic <- function(x, by = NULL) .formula_marker_error("logistic")
   parameters <- list()
   for (term in terms) {
     labels <- vapply(term$groups, `[[`, character(1), "group")
-    if (term$type == "logistic") {
-      parameters[[term$a50_parameter]] <- stats::setNames(
-        vapply(term$groups, `[[`, numeric(1), "midpoint"), labels
-      )
-      parameters[[term$slope_parameter]] <- stats::setNames(log(
-        vapply(term$groups, `[[`, numeric(1), "slope")
-      ), labels)
+    if (.is_selectivity_curve(term)) {
+      parameters <- c(parameters, .curve_parameters(term))
     } else {
       states <- unlist(lapply(term$groups, `[[`, "states"), use.names = FALSE)
       parameters[[term$parameter]] <- stats::setNames(numeric(length(states)), states)
@@ -419,17 +424,10 @@ logistic <- function(x, by = NULL) .formula_marker_error("logistic")
   rows <- !d$is_proj & is.finite(d$obs) & d$obs > 0
   fixed <- dat$q_modmat[rows, , drop = FALSE]
   if (!is.null(dat$q_mono_modmat)) fixed <- cbind(fixed, dat$q_mono_modmat[rows, , drop = FALSE])
-  gaussian <- Filter(function(term) term$type != "logistic", dat$q_terms)
+  gaussian <- Filter(Negate(.is_selectivity_curve), dat$q_terms)
   designs <- lapply(gaussian, .q_term_design, n = nrow(d))
-  for (term in Filter(function(term) term$type == "logistic", dat$q_terms)) {
-    jacobian <- matrix(0, nrow(d), 2L * length(term$groups))
-    for (i in seq_along(term$groups)) {
-      g <- term$groups[[i]]
-      x <- d[[term$variable]][g$rows] - g$midpoint
-      remaining <- 1 - stats::plogis(g$slope * x)
-      jacobian[g$rows, 2L * i - 1L] <- -g$slope * remaining
-      jacobian[g$rows, 2L * i] <- g$slope * x * remaining
-    }
+  for (term in Filter(.is_selectivity_curve, dat$q_terms)) {
+    jacobian <- .curve_jacobian(term, d)
     combined <- cbind(fixed, jacobian[rows, , drop = FALSE])
     scale <- sqrt(colSums(combined^2))
     scale[scale == 0] <- 1
@@ -506,13 +504,11 @@ logistic <- function(x, by = NULL) .formula_marker_error("logistic")
   }, integer(1))))
   increment_offset <- 0L
   for (term in dat$q_terms) {
-    if (term$type == "logistic") {
-      a50 <- par[[term$a50_parameter]]
-      slope <- exp(par[[term$slope_parameter]])
+    if (.is_selectivity_curve(term)) {
       for (i in seq_along(term$groups)) {
         rows <- term$groups[[i]]$rows
-        predictor <- slope[i] * (dat$obs$index[[term$variable]][rows] - a50[i])
-        selectivity[rows] <- selectivity[rows] - RTMB::logspace_add(0, -predictor)
+        selectivity[rows] <- selectivity[rows] + .curve_log_selectivity(
+          dat$obs$index[[term$variable]][rows], par, term, i)
       }
       next
     }
@@ -588,7 +584,7 @@ logistic <- function(x, by = NULL) .formula_marker_error("logistic")
 }
 
 .tidy_q_effects <- function(fit, interval = .95, increment_report = "eta_q_increments") {
-  terms <- Filter(function(term) term$type != "logistic", fit$dat$q_terms)
+  terms <- Filter(Negate(.is_selectivity_curve), fit$dat$q_terms)
   if (!length(terms)) {
     return(list())
   }
@@ -948,7 +944,7 @@ mono <- function(x, by = NULL) {
     }
     forbidden <- function(x) {
       if (!is.call(x)) return(FALSE)
-      .formula_call_name(x) %in% c("iid", "rw", "ar1", "mono", "logistic", "bh", "ricker", "|", "offset", "for_fleet", "for_survey") ||
+      .formula_call_name(x) %in% c("iid", "rw", "ar1", "mono", "logistic", "warped_normal", "double_logistic", "bh", "ricker", "|", "offset", "for_fleet", "for_survey") ||
         any(vapply(as.list(x)[-1L], forbidden, logical(1)))
     }
     if (forbidden(formula[[2L]])) {
@@ -985,14 +981,14 @@ mono <- function(x, by = NULL) {
   } else stats::model.matrix
   design <- .parse_q_formula(formula, d, fixed_design, scope=if(component == "F") "fleet" else NULL)
   terms <- design$q_terms
-  logistic <- Filter(function(x) x$type == "logistic", terms)
+  curves <- Filter(.is_selectivity_curve, terms)
   mono <- design$q_mono_steps
   n_mono <- if (is.null(mono)) 0L else length(unique(mono$variable))
-  has_curve <- n_mono + length(logistic) > 0L
+  has_curve <- n_mono + length(curves) > 0L
   if (has_curve) {
-    if (component != "F") cli::cli_abort("M_settings$mu_form does not support catchability curves: mono() and logistic() are enabled for F only.")
+    if (component != "F") cli::cli_abort("M_settings$mu_form does not support catchability curves; they are enabled for F only.")
     scoped <- length(design$q_scope_components) > 0L
-    if (!scoped && n_mono + length(logistic) != 1L) cli::cli_abort("Use one mono() or logistic() curve in F_settings$mu_form.")
+    if (!scoped && n_mono + length(curves) != 1L) cli::cli_abort("Use one mono() or parametric selectivity curve in F_settings$mu_form, or disjoint for_fleet() scopes.")
     if (!dat$F_settings$process %in% c("off", "iid", "ar1")) {
       cli::cli_abort("F mean curves require process = 'off', 'iid' or 'ar1'. Static age curves cancel from RW increments.")
     }
@@ -1006,9 +1002,8 @@ mono <- function(x, by = NULL) {
   for (i in seq_along(terms)) {
     term <- terms[[i]]
     term$id <- paste(component, term$id, sep = "_")
-    if (term$type == "logistic") {
-      term$a50_parameter <- paste0("F_a50_", term$id)
-      term$slope_parameter <- paste0("log_F_slope_", term$id)
+    if (.is_selectivity_curve(term)) {
+      term <- .curve_parameter_names(term, "F")
     } else {
       term$parameter <- paste0("eta_mu_", term$id)
     }
@@ -1052,7 +1047,7 @@ mono <- function(x, by = NULL) {
       "i" = "Retain one rw() or ar1() term and use IID residuals for independent fluctuations."
     ))
   }
-  gaussian <- Filter(function(x) x$type != "logistic", terms)
+  gaussian <- Filter(Negate(.is_selectivity_curve), terms)
   random_slope <- component == "M" && .M_ar1_random_slope(dat)
   if (length(gaussian) && !settings$process %in% c("iid", "off") && !random_slope) {
     alternative <- paste0(", or use process = 'off' to vary only the ", component, " mean")
@@ -1200,7 +1195,7 @@ mono <- function(x, by = NULL) {
   design <- .parse_q_formula(formula, data)
   terms <- design$q_terms
   if (!is.null(design$q_mono_modmat) ||
-    any(vapply(terms, function(x) x$type == "logistic", logical(1)))) {
+    any(vapply(terms, .is_selectivity_curve, logical(1)))) {
     cli::cli_abort("{component}_settings$sd_form supports iid(), rw() and ar1(), not catchability curves.")
   }
   for (i in seq_along(terms)) {

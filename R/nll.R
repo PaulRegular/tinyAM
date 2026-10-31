@@ -168,15 +168,21 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   log_F[!is_proj, ] <- log_mu_F[!is_proj, , drop = FALSE]
   if (F_settings$process != "off") log_F[!is_proj, f_active] <- log_f[, f_index[f_active], drop = FALSE]
   if (n_proj > 0) {
-    log_k <- if (is.null(proj_settings$F_mult)) rep(0, n_proj) else log(proj_settings$F_mult)
+    log_k <- if (is.null(proj_settings$F_mult)) rep(0, n_proj) else
+      log(proj_settings$F_mult + as.integer(proj_settings$F_mult == 0))
     terminal <- max(which(!is_proj))
     log_f_last <- log_F[rep(terminal, n_proj), , drop = FALSE]
     proj_log_F <- sweep(log_f_last, 1, log_k, `+`)
     log_F[is_proj, ] <- proj_log_F
   }
+  projection_zero <- base::c(base::rep(FALSE, sum(!is_proj)), if (!is.null(proj_settings$catch))
+    proj_settings$catch == 0 else if (!is.null(proj_settings$F_mult))
+    proj_settings$F_mult == 0 else base::rep(FALSE, n_proj))
+  log_F_grid <- log_F
   mu_F <- exp(log_mu_F)
   F <- exp(log_F)
   F[, !f_active] <- 0
+  F[projection_zero, ] <- 0
   mu_F[, !f_active] <- 0
   if (dat$has_fleet) {
     F_by_fleet <- F; mu_F_by_fleet <- mu_F
@@ -184,7 +190,7 @@ nll_fun <- function(par, dat, simulate = FALSE) {
     F <- .F_total(F_by_fleet, dat)
     mu_F <- .F_total(mu_F_by_fleet, dat)
     inactive <- base::rowSums(base::matrix(f_active, n_ages)) == 0L
-    log_mu_F <- log(mu_F + matrix(rep(inactive, each = n_years), n_years, n_ages))
+    log_mu_F <- .F_log_total(log_mu_F_by_fleet, dat, f_active)
   }
 
   M <- mu_M <- exp(log_mu_M)
@@ -201,15 +207,19 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   ## Population states and recruitment ----
 
   population <- .population_states(par, dat, Z, simulate, F = F, M = M,
-    F_by_fleet = if (dat$has_fleet) F_by_fleet else NULL)
+    F_by_fleet = if (dat$has_fleet) F_by_fleet else NULL,
+    log_F_by_fleet = if (dat$has_fleet) log_F_grid else NULL)
   F <- population$F
   Z <- population$Z
   total_active <- if (dat$has_fleet) base::rowSums(base::matrix(f_active, n_ages)) > 0L else f_active
-  structural_zero <- matrix(rep(!total_active, each = n_years), n_years, n_ages)
-  projection_zero <- if (is.null(proj_settings$catch)) rep(FALSE, n_years) else
-    c(rep(FALSE, sum(!is_proj)), proj_settings$catch == 0)
-  structural_zero[projection_zero, ] <- TRUE
-  log_F <- if (.f_blocked(dat)) log(F + structural_zero) else log(F)
+  structural_zero <- base::matrix(base::rep(!total_active, each = n_years), n_years, n_ages)
+  structural_zero <- structural_zero | base::matrix(base::rep(projection_zero, n_ages), n_years, n_ages)
+  if (n_proj > 0 && !is.null(proj_settings$catch)) {
+    log_F_grid[is_proj, ] <- sweep(log_F_grid[rep(terminal, n_proj), , drop = FALSE],
+      1L, population$log_F_multiplier[is_proj], `+`)
+  }
+  log_F <- if (dat$has_fleet) .F_log_total(log_F_grid, dat, f_active) else log_F_grid
+  log_F[structural_zero] <- 0 # finite reporting placeholders, never a positive F
   log_Z <- log(Z)
   log_N <- population$log_N
   pred_log_N <- population$pred_log_N
@@ -321,11 +331,11 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   iya <- sapply(obs_map[, c("year", "age")], as.character)
   log_N_obs <- log_N[iya]
   Z_obs <- Z[iya]
-  F_obs <- F[iya]
+  log_F_obs <- log_F[iya]
   if (dat$has_fleet) {
     rows <- which(obs_map$type == "catch")
     columns <- match(paste(obs_map$fleet[rows], obs_map$age[rows]), paste(dat$F_columns$fleet, dat$F_columns$age))
-    F_obs[rows] <- F_by_fleet[cbind(match(obs_map$year[rows], years), columns)]
+    log_F_obs[rows] <- log_F_grid[cbind(match(obs_map$year[rows], years), columns)]
   }
   if (ncol(sd_catch_modmat) > 0) {
     log_sd_catch_eff <- drop(sd_catch_modmat %*% log_sd_catch)
@@ -367,7 +377,7 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   zero_catch <- ic & ((!f_active)[obs_column] | projection_zero[match(obs_map$year, years)])
   positive_catch <- ic & !zero_catch
   log_pred[positive_catch] <- log_N_obs[positive_catch] - log(Z_obs[positive_catch]) +
-    log(-expm1(-Z_obs[positive_catch])) + log(F_obs[positive_catch])
+    log(-expm1(-Z_obs[positive_catch])) + log_F_obs[positive_catch]
   log_pred[zero_catch] <- -Inf
 
   ii <- obs_map$type == "index"
@@ -395,10 +405,12 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   obs <- exp(log_obs)
   obs[is_missing] <- NA
 
-  zero_F <- if (is.null(proj_settings$catch)) rep(FALSE, n_years) else c(rep(FALSE, sum(!is_proj)), proj_settings$catch == 0)
+  zero_F <- projection_zero
   F_full <- apply(F, 1, max)
-  S <- sweep(F, 1, F_full + zero_F, "/")
-  if (!is.null(proj_settings$catch)) {
+  log_F_full <- apply(log_F[, total_active, drop = FALSE], 1, max)
+  S <- exp(sweep(log_F, 1, log_F_full, `-`))
+  S[, !total_active] <- 0
+  if (any(zero_F)) {
     zero <- which(zero_F)
     if (length(zero)) S[zero, ] <- S[rep(max(which(!is_proj)), length(zero)), , drop = FALSE]
   }
@@ -407,7 +419,13 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   F_bar <- rowSums(F[, ia, drop = FALSE] * N[, ia, drop = FALSE]) / rowSums(N[, ia, drop = FALSE])
   # Fixed zero catches imply exactly zero F; avoid log(0) in ADREPORT.
   zero_F_bar <- zero_F | !any(total_active[match(F_settings$mean_ages, ages)])
-  log_F_bar <- log(F_bar + zero_F_bar)
+  log_F_bar <- numeric(n_years)
+  active_mean <- intersect(ia, as.character(ages[total_active]))
+  if (length(active_mean)) log_F_bar <- Reduce(RTMB::logspace_add,
+    lapply(active_mean, function(a) log_F[, a] + log_N[, a])) -
+    Reduce(RTMB::logspace_add, lapply(ia, function(a) log_N[, a]))
+  log_F_bar[zero_F_bar] <- 0
+  log_F_full[zero_F] <- 0
   ia <- as.character(M_settings$mean_ages)
   M_bar <- rowSums(M[, ia, drop = FALSE] * N[, ia, drop = FALSE]) / rowSums(N[, ia, drop = FALSE])
   log_M_bar <- log(M_bar)
@@ -464,25 +482,37 @@ nll_fun <- function(par, dat, simulate = FALSE) {
     yield_by_fleet <- .F_array(yield_by_fleet, dat)
     yield_pred_by_fleet <- .F_array(yield_pred_by_fleet, dat)
     REPORT(F_fleet); REPORT(mu_F_fleet); REPORT(W_catch_fleet)
+    F_full_fleet <- log_F_full_fleet <- matrix(0, n_years, length(dat$fleets),
+      dimnames = list(year = years, fleet = dat$fleets))
+    for (f in seq_along(dat$fleets)) {
+      columns <- which(dat$F_columns$fleet == dat$fleets[f] & f_active)
+      F_full_fleet[, f] <- apply(F_by_fleet[, columns, drop = FALSE], 1, max)
+      log_F_full_fleet[, f] <- apply(log_F_grid[, columns, drop = FALSE], 1, max)
+    }
+    log_F_full_fleet[projection_zero, ] <- 0
+    REPORT(F_full_fleet)
+    ADREPORT(log_F_full_fleet)
     REPORT(catch_by_fleet); REPORT(catch_pred_by_fleet)
     REPORT(yield_by_fleet); REPORT(yield_pred_by_fleet)
-    zero <- .F_matrix(rep(!f_active, each = n_years), dat)
-    zero[projection_zero, ] <- 1
-    log_F_fleet <- .F_array(log(F_by_fleet + zero), dat)
+    zero <- base::matrix(base::rep(!f_active, each = n_years), n_years, nrow(dat$F_columns)) |
+      base::matrix(base::rep(projection_zero, nrow(dat$F_columns)), n_years, nrow(dat$F_columns))
+    log_F_fleet <- .F_array(log_F_grid, dat)
+    log_F_fleet[which(zero)] <- 0
     ADREPORT(log_F_fleet)
     if (!is.null(F_settings$mu_form)) {
       log_mu_F_fleet <- .F_array(log_mu_F_by_fleet, dat)
+      log_mu_F_fleet[which(base::rep(!f_active, each = n_years))] <- 0
       ADREPORT(log_mu_F_fleet)
     }
   }
-  if (F_settings$process == "off" || !is.null(dat$F_mono_modmat) || any(vapply(dat$F_terms, function(x) x$type == "logistic", logical(1)))) {
+  if (F_settings$process == "off" || !is.null(dat$F_mono_modmat) || any(vapply(dat$F_terms, .is_selectivity_curve, logical(1)))) {
     ADREPORT(log_mu_F)
   }
   if (F_settings$process == "off" || dat$has_fleet) {
-    log_F <- log(F + structural_zero)
     ADREPORT(log_F)
   }
   REPORT(F_full)
+  ADREPORT(log_F_full)
   REPORT(F_bar)
   REPORT(S)
   REPORT(Z)
@@ -549,7 +579,7 @@ nll_fun <- function(par, dat, simulate = FALSE) {
     ADREPORT(log_q_base)
   }
   q_link_prediction <- if (identical(index_settings$q_link, "logit")) {
-    if (any(vapply(dat$q_terms, function(term) term$type == "logistic", logical(1)))) {
+    if (any(vapply(dat$q_terms, .is_selectivity_curve, logical(1)))) {
       log_q_obs - log(-expm1(log_q_obs))
     } else {
       q_predictor
