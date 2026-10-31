@@ -27,10 +27,10 @@ the rows already linked to a stock or candidate unit.
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 63 | 18 | 98 | 21 | 147 | 31 | 199 | 0 | 0 |
 | ICES | 274 | 59 | 160 | 2 | 53 | 56 | 136 | 82 | 221 | 0 | 53 |
-| NOAA | 432 | 28 | 233 | 9 | 162 | 70 | 152 | 210 | 272 | 0 | 160 |
-| **Total** | **905** | **107** | **456** | **29** | **313** | **147** | **435** | **323** | **692** | **0** | **213** |
+| NOAA | 432 | 28 | 235 | 9 | 160 | 70 | 154 | 208 | 274 | 0 | 158 |
+| **Total** | **905** | **107** | **458** | **29** | **311** | **147** | **437** | **321** | **694** | **0** | **211** |
 
-The crosswalk currently links 479 distinct unit keys across 502 inventory rows: 100 canonical stock units and 379 candidate units. Of the candidate units, 377 are provisionally new, one has an ambiguous identity, and one has mixed identity status. The 377 new units include 49 eligible, 268 ineligible and 60 unresolved candidates. A further 403 inventory rows have no unit crosswalk yet.
+The crosswalk currently links 481 distinct unit keys across 504 inventory rows: 100 canonical stock units and 381 candidate units. Of the candidate units, 379 are provisionally new, one has an ambiguous identity, and one has mixed identity status. The 379 new units include 49 eligible, 270 ineligible and 60 unresolved candidates. A further 401 inventory rows have no unit crosswalk yet.
 
 The progress summary has 74 organization-region
 rows. Row-level status and unit-level deduplication are intentionally reported
@@ -1269,3 +1269,11 @@ abundance-at-age are not direct input series and require documented
 reconstruction. Washington and Oregon copper rockfish are separate assessment
 areas last assessed in 2021. See
 `source_reviews/noaa_copper_rockfish_california_2023.md`.
+
+NOAA Stock SMART IDs 15330 and 15331 are separate Washington and Oregon copper
+rockfish assessment units. Their 2021 assessments use catch and length data;
+age samples inform biological growth but do not provide annual age-specific
+observations. Washington had no fishery-independent index in the assessment;
+the Oregon marine-reserve survey was not used in the base model. Both are
+ineligible for age-disaggregated source curation. See
+`source_reviews/noaa_copper_rockfish_washington_oregon_2021.md`.
