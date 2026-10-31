@@ -27,10 +27,10 @@ the rows already linked to a stock or candidate unit.
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 63 | 18 | 98 | 21 | 147 | 31 | 199 | 0 | 0 |
 | ICES | 274 | 59 | 160 | 2 | 53 | 56 | 136 | 82 | 221 | 0 | 53 |
-| NOAA | 432 | 28 | 235 | 9 | 160 | 70 | 154 | 208 | 274 | 0 | 158 |
-| **Total** | **905** | **107** | **458** | **29** | **311** | **147** | **437** | **321** | **694** | **0** | **211** |
+| NOAA | 432 | 28 | 236 | 9 | 159 | 71 | 154 | 207 | 275 | 0 | 157 |
+| **Total** | **905** | **107** | **459** | **29** | **310** | **148** | **437** | **320** | **695** | **0** | **210** |
 
-The crosswalk currently links 481 distinct unit keys across 504 inventory rows: 100 canonical stock units and 381 candidate units. Of the candidate units, 379 are provisionally new, one has an ambiguous identity, and one has mixed identity status. The 379 new units include 49 eligible, 270 ineligible and 60 unresolved candidates. A further 401 inventory rows have no unit crosswalk yet.
+The crosswalk currently links 482 distinct unit keys across 505 inventory rows: 100 canonical stock units and 382 candidate units. Of the candidate units, 380 are provisionally new, one has an ambiguous identity, and one has mixed identity status. The 380 new units include 50 eligible, 270 ineligible and 60 unresolved candidates. A further 400 inventory rows have no unit crosswalk yet.
 
 The progress summary has 74 organization-region
 rows. Row-level status and unit-level deduplication are intentionally reported
@@ -110,6 +110,15 @@ direct catch-at-age likelihood; an age-based reconstruction is limited to
 overlapping sampled fleet-years and must preserve that approximation. The
 archive also provides numbers-, catch-, F- and biomass-at-age outputs. See
 `source_reviews/noaa_cowcod_southern_california_2019.md`.
+
+NOAA Gulf of Mexico cobia (Stock SMART 10390) is a new eligible source-curation
+candidate from the June 2020 SEDAR 28 update. It includes conditional recreational
+age-at-length observations, annual length compositions and catch totals, fixed
+age-specific biology, aggregate MRIP/SRHS indices, and official population
+outputs. Age compositions are plotted rather than tabulated, so import requires
+validated recovery or digitization; neither the age-composition likelihood nor
+the aggregate indices are direct age-specific abundance observations. See
+`source_reviews/noaa_gulf_cobia_2020.md`.
 
 NOAA squarespot rockfish (Stock SMART 10442) is screened ineligible. The latest
 accepted 2021 assessment reports age-indexed fitted quantities, but fits only
