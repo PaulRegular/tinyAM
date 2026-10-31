@@ -229,12 +229,153 @@ run_fleet_smooth_workflow <- function(output = "analysis/formula_expansion/resul
   invisible(results)
 }
 
+run_fleet_herring_trial <- function(database_dir,
+  output="analysis/formula_expansion/results/multi_fleet/herring") {
+  dir.create(output,recursive=TRUE,showWarnings=FALSE)
+  source("analysis/comp_assessments/R/read_database.R",local=TRUE)
+  source("analysis/comp_assessments/R/database_to_tam_obs.R",local=TRUE)
+  source("analysis/comp_assessments/R/database_to_tam_ref.R",local=TRUE)
+  id <- "ices_herring_west_scotland_ireland_2020"
+  paths <- file.path(database_dir,.assessment_database_files)
+  if (!all(file.exists(paths))) cli::cli_abort("Supply the source database containing the historical 2020 herring assessment.")
+  hashes <- tools::md5sum(paths)
+  read_source_table <- function(path) {
+    lines <- if (basename(path) == "assumptions.csv") readLines(path,warn=FALSE) else character()
+    if (length(lines) == 1L && grepl('"\\r\\n"',lines,fixed=TRUE)) {
+      # A local unfinished import encoded record separators literally. Decode
+      # in memory for this trial only; the user's source file stays untouched.
+      return(utils::read.csv(text=gsub("\\r\\n","\n",lines,fixed=TRUE),
+        stringsAsFactors=FALSE,na.strings=c("","NA"),check.names=FALSE))
+    }
+    utils::read.csv(path,stringsAsFactors=FALSE,na.strings=c("","NA"),check.names=FALSE)
+  }
+  source_cache <- file.path(output,"source.rds")
+  if (file.exists(source_cache) && identical(readRDS(source_cache)$hashes,hashes)) {
+    source <- readRDS(source_cache)$source
+  } else {
+    database <- .assessment_database(function(name) {
+      cli::cli_inform("Reading source {name}.")
+      x <- read_source_table(file.path(database_dir,name))
+      if ("assessment_id" %in% names(x)) x <- x[!is.na(x$assessment_id) & x$assessment_id == id,,drop=FALSE]
+      x
+    },source=normalizePath(database_dir,winslash="/"))
+    source <- read_assessment(id,database)
+    saveRDS(list(source=source,hashes=hashes),source_cache)
+  }
+  # Also repair the metadata of an earlier source-only cache, never its inputs.
+  assumptions <- read_source_table(file.path(database_dir,"assumptions.csv"))
+  source$assumptions <- assumptions[assumptions$assessment_id == id,,drop=FALSE]
+  result <- list(source=source,source_hashes=hashes); warnings <- character(); stage <- "preparation"
+  withCallingHandlers(tryCatch({
+    raw <- source$inputs
+    # Missing source index cells are unavailable observations, not zeros. The
+    # canonical converter expects observed rows and expands missing grid cells.
+    missing_index <- raw$type == "index" & is.na(raw$value)
+    result$missing_source_index <- raw[missing_index,,drop=FALSE]
+    raw <- raw[!missing_index,,drop=FALSE]
+    raw$unit[raw$type == "index"] <- "native survey index"
+    fleets <- unique(raw$fleet[raw$type == "catch" & raw$measure == "numbers_at_age"])
+    catch_row <- raw$type == "catch" & raw$measure == "numbers_at_age"
+    # The canonical converter selects one stream at a time. Preserve both streams
+    # here; do not alter the settled aggregate recipe or canonical database.
+    converted <- lapply(fleets,function(f)database_to_tam_obs(id,
+      raw[!catch_row | (!is.na(raw$fleet) & raw$fleet == f),,drop=FALSE],
+      years=1957:2019,ages=1:9,surveys=c("MS_HERAS","IBTS_Q1","IBTS_Q4"),
+      assumptions=source$assumptions))
+    obs <- converted[[1]]
+    missing <- result$missing_source_index
+    for (j in seq_len(nrow(missing))) {
+      key <- obs$index$year == as.numeric(missing$year[j]) & obs$index$age == as.numeric(missing$age[j]) & obs$index$survey == missing$survey[j]
+      if (any(key)) {obs$index$obs[key] <- NA_real_; next}
+      row <- obs$index[which(obs$index$survey == missing$survey[j])[1L],,drop=FALSE]
+      row$year <- as.numeric(missing$year[j]); row$age <- as.numeric(missing$age[j]); row$obs <- NA_real_
+      obs$index <- rbind(obs$index,row)
+    }
+    obs$catch <- do.call(rbind,lapply(seq_along(fleets),function(i)
+      transform(converted[[i]]$catch,fleet=fleets[i])))
+    stock <- transform(obs$weight,type="stock",fleet=NA_character_)
+    catch_weights <- lapply(fleets,function(f) {
+      x <- raw[raw$type == "catch_weight" & !is.na(raw$fleet) & raw$fleet == f,,drop=FALSE]
+      data.frame(year=as.numeric(x$year),age=as.numeric(x$age),
+        obs=mapply(.translation_weight_to_kg,as.numeric(x$value),x$unit),
+        unit="kg",type="catch",fleet=f)
+    })
+    obs$weight <- do.call(rbind,c(list(stock),catch_weights))
+    obs$maturity$spawn_time <- .67
+    i <- obs$index
+    i$q_key <- interaction(i$survey,ifelse(i$age >= 8,"8plus",paste0("age",i$age)),drop=TRUE)
+    sd_age <- ifelse(i$survey == "MS_HERAS",ifelse(i$age == 1,"age1",ifelse(i$age == 2,"age2",ifelse(i$age <= 6,"ages3_6","ages7_9"))),
+      ifelse(i$survey == "IBTS_Q1",ifelse(i$age == 2,"age2",ifelse(i$age <= 5,"ages3_5",ifelse(i$age <= 7,"ages6_7","ages8_9"))),
+        ifelse(i$age == 2,"age2",ifelse(i$age <= 6,"ages3_6","ages7_9"))))
+    i$sd_block <- interaction(i$survey,sd_age,drop=TRUE)
+    # Unknown survey units remain unspecified, rather than pretending they are counts.
+    i$unit <- NULL; obs$index <- i
+    result$data <- obs
+    tinyAM::check_tam_data(obs)
+    stage <- "fit"
+    result$fit <- tinyAM::fit_tam(obs,years=1957:2019,ages=1:9,
+      N_settings=list(process="iid",init="exp"),rec_settings=list(process="iid",mu_form=~1),
+      F_settings=list(process="cor_rw",sd_form=~fleet,cor_form=~fleet,mean_ages=3:6),
+      M_settings=list(process="off",mu_supplied=~M_assumption),
+      catch_settings=list(sd_form=~fleet),index_settings=list(q_form=~0+q_key,sd_form=~0+sd_block),silent=TRUE)
+    result$diagnostics <- tinyAM::check_tam(result$fit)
+    result$population <- tinyAM::tidy_pop(result$fit)
+    stage <- "dashboard"
+    result$reference <- render_fleet_herring(result,output)
+  },error=function(e){result$error <<- conditionMessage(e); result$stage <<- stage}),
+    warning=function(w){warnings <<- c(warnings,conditionMessage(w)); invokeRestart("muffleWarning")})
+  result$warnings <- warnings; result$session <- utils::sessionInfo()
+  previous <- file.path(output,"trial.rds")
+  if (file.exists(previous)) {
+    prior <- readRDS(previous)
+    result$earlier_attempts <- c(prior$earlier_attempts,list(prior[c("stage","error","warnings")]))
+  }
+  saveRDS(result,file.path(output,"trial.rds"))
+  if (!is.null(result$error)) cli::cli_abort("Herring trial stopped during {result$stage}: {result$error}")
+  print(result$diagnostics)
+  invisible(result)
+}
+
+render_fleet_herring <- function(result,output="analysis/formula_expansion/results/multi_fleet/herring") {
+  source("analysis/comp_assessments/R/database_to_tam_obs.R",local=TRUE)
+  source("analysis/comp_assessments/R/compare_assessment.R",local=TRUE)
+  source("analysis/comp_assessments/R/database_to_tam_ref.R",local=TRUE)
+  outputs <- result$source$outputs
+  area_to_fleet <- c("ICES Division 6.a North"="Catch 6aN",
+    "ICES divisions 6.a South, 7.b-c"="Catch 6aS/7bc")
+  f <- outputs$measure == "fishing_mortality_at_age"
+  if (any(!outputs$region[f] %in% names(area_to_fleet))) stop("Unknown source F area; do not infer its fleet.")
+  outputs$fleet[f] <- unname(area_to_fleet[outputs$region[f]])
+  reference <- database_to_tam_ref("ices_herring_west_scotland_ireland_2020",outputs,
+    obs=result$data,years=1957:2019,ages=1:9,age_plus_group=9,template=result$fit,
+    assumptions=result$source$assumptions)
+  tinyAM::vis_tam(tinyAM=result$fit,Official=reference,open_file=FALSE,
+    output_file=file.path(output,"dashboard.html"),render_args=list(quiet=TRUE),
+    background=c("### Historical west-of-Scotland/Ireland herring trial",
+      "Two source catch fleets and their own catch weights are retained. Separate correlated F random walks share one population.",
+      "This is a parsimonious fleet trial, not an exact official specification: fleet SD/correlation sharing is explicit, source F bindings are unresolved, survey observation covariance is unavailable, and no executed source fit was recovered.",
+      "Catch units are inferred from the source record; survey units remain unspecified. No rescue tuning or canonical recipe changes were applied."))
+  invisible(reference)
+}
+
 if (sys.nframe() == 0L) {
   mode <- commandArgs(TRUE)
   if (!length(mode)) mode <- "core"
+  if (mode[1L] == "herring-dashboard") {
+    output <- if(length(mode)>1L)mode[2L] else "analysis/formula_expansion/results/multi_fleet/herring"
+    result <- readRDS(file.path(output,"trial.rds"))
+    result$reference <- render_fleet_herring(result,output)
+    result$earlier_attempts <- c(result$earlier_attempts,list(result[c("stage","error","warnings")]))
+    result$error <- result$stage <- NULL
+    saveRDS(result,file.path(output,"trial.rds"))
+    quit(status=0L)
+  }
   run <- list(core = run_fleet_core_workflow, active = run_fleet_active_workflow,
     scoped = run_fleet_scoped_workflow, curves = run_fleet_curve_workflow,
-    smooths = run_fleet_smooth_workflow)
+    smooths = run_fleet_smooth_workflow,herring=run_fleet_herring_trial)
   if (!mode[1L] %in% names(run)) cli::cli_abort("Available validation modes: {paste(names(run), collapse = ', ')}.")
-  run[[mode[1L]]]()
+  if (mode[1L] == "herring") {
+    if (length(mode) < 2L) cli::cli_abort("Supply the source assessment database directory after herring.")
+    run_fleet_herring_trial(mode[2L])
+  } else run[[mode[1L]]]()
 }

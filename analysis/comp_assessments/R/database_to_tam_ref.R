@@ -59,6 +59,15 @@
     return(x)
   }
   dimensions <- dim(x)
+  if (length(dimensions) == 3L && setequal(names(dimnames(x)),c("year","age","fleet"))) {
+    labels <- dimnames(x)
+    if (!all(names(labels) %in% names(table))) return(x)
+    coordinates <- vapply(names(labels),function(name)
+      match(as.character(table[[name]]),labels[[name]]),integer(nrow(table)))
+    take <- which(rowSums(is.na(coordinates)) == 0L)
+    if (length(take)) x[coordinates[take,,drop=FALSE]] <- table$est[take]
+    return(x)
+  }
   if (length(dimensions) == 2L) {
     if (!"age" %in% names(table)) {
       return(x)
@@ -245,6 +254,18 @@ database_to_tam_ref <- function(assessment_id, outputs, obs = NULL, years = NULL
       source$type == unname(type_map[[measure]]), , drop = FALSE]
     if (nrow(rows)) pop[[unname(measure_map[[measure]])]] <- reporting_table(rows)
   }
+  if (!is.null(pop$F$fleet)) {
+    labeled <- !is.na(pop$F$fleet) & nzchar(pop$F$fleet)
+    fleets <- unique(pop$F$fleet[labeled])
+    if (length(fleets) > 1L || (length(fleets) && isTRUE(template$dat$has_fleet))) {
+      if (isTRUE(template$dat$has_fleet) && !all(fleets %in% template$dat$fleets)) {
+        cli::cli_abort("Source F fleet names must match the fitted catch fleets; supply an explicit source-label mapping.")
+      }
+      pop$F_fleet <- pop$F[labeled,,drop=FALSE]
+      pop["F"] <- list(if(any(!labeled))pop$F[!labeled,,drop=FALSE] else NULL)
+      # Component rates are not silently reconstructed as a stock-wide source F.
+    }
+  }
   native_pop <- pop
 
   # Recruitment on the model grid is N at its first age in the same year.
@@ -307,7 +328,7 @@ database_to_tam_ref <- function(assessment_id, outputs, obs = NULL, years = NULL
 
   if (!is.null(age_plus_group)) {
     source_n <- pop$N
-    for (metric in intersect(c("N", "F", "M", "Z", "biomass_at_age", "ssb_mat"), names(pop))) {
+    for (metric in intersect(c("N", "F", "F_fleet", "M", "Z", "biomass_at_age", "ssb_mat"), names(pop))) {
       x <- pop[[metric]]
       age_number <- suppressWarnings(as.integer(as.character(x$age)))
       in_plus <- !is.na(age_number) & age_number >= age_plus_group
@@ -315,7 +336,7 @@ database_to_tam_ref <- function(assessment_id, outputs, obs = NULL, years = NULL
       lower <- x[!in_plus, , drop = FALSE]
       plus <- x[in_plus, , drop = FALSE]
       expected_ages <- unique(age_number[in_plus])
-      by_year <- split(plus, plus$year)
+      by_year <- if(metric == "F_fleet")split(plus,interaction(plus$year,plus$fleet,drop=TRUE)) else split(plus,plus$year)
       rows <- lapply(by_year, function(group) {
         row <- group[1L, , drop = FALSE]
         values <- group$est
@@ -326,7 +347,7 @@ database_to_tam_ref <- function(assessment_id, outputs, obs = NULL, years = NULL
           row$est <- NA_real_
         } else if (!collapsed) {
           row$est <- values[[1L]]
-        } else if (metric %in% c("F", "M", "Z")) {
+        } else if (metric %in% c("F", "F_fleet", "M", "Z")) {
           # A shared rate is unchanged by aggregation, even when older N is
           # reported only as a plus group (as in the BSAI POP reference).
           weights <- source_n$est[match(
@@ -361,7 +382,7 @@ database_to_tam_ref <- function(assessment_id, outputs, obs = NULL, years = NULL
         transformation_note <- if (collapsed) {
           paste0(
             "Collapsed ", nrow(group), " source ages for comparison with the tinyAM plus age; ",
-            if (metric %in% c("F", "M", "Z")) {
+            if (metric %in% c("F", "F_fleet", "M", "Z")) {
               if (length(unique(values)) == 1L && complete) {
                 "The rate is constant across these ages; it is retained without N weights. Uncertainty is not combined."
               } else {
@@ -393,9 +414,10 @@ database_to_tam_ref <- function(assessment_id, outputs, obs = NULL, years = NULL
 
   # Preserve source groups for comparison construction, then fill model grids.
   source_pop <- lapply(pop, function(x) x[x$year %in% years, , drop = FALSE])
-  age_metrics <- c("N", "F", "M", "Z", "biomass_at_age", "ssb_mat")
+  age_metrics <- c("N", "F", "F_fleet", "M", "Z", "biomass_at_age", "ssb_mat")
   for (name in names(pop)) {
     x <- source_pop[[name]]
+    if (is.null(x)) next
     age_specific <- name %in% age_metrics
     if (age_specific) {
       if ("age_group" %in% names(x)) {
@@ -405,7 +427,10 @@ database_to_tam_ref <- function(assessment_id, outputs, obs = NULL, years = NULL
       }
       x$age <- suppressWarnings(as.integer(as.character(x$age)))
       x <- x[x$age %in% ages, , drop = FALSE]
-      grid <- expand.grid(year = years, age = ages, KEEP.OUT.ATTRS = FALSE)
+      grid <- if(name == "F_fleet")expand.grid(year=years,age=ages,
+        fleet=if(isTRUE(template$dat$has_fleet))template$dat$fleets else unique(x$fleet),
+        KEEP.OUT.ATTRS=FALSE,stringsAsFactors=FALSE) else
+        expand.grid(year = years, age = ages, KEEP.OUT.ATTRS = FALSE)
     } else {
       grid <- data.frame(year = years)
       if (name == "recruitment" && length(ages)) grid$age <- min(ages)
