@@ -9,7 +9,7 @@ urls <- c(
   'https://standardgraphs.ices.dk/ViewSourceData.aspx?key=21039')
 revisions <- c(
   paste('ICES. 2025. Working Group on Elasmobranch Fishes (WGEF), ICES Scientific Reports 7(92),',
-    '934 pp.; DOI 10.17895/ices.pub.30137623. Stock sections 25.9.3 (printed pp. 710-713) and 25.9.5 (printed pp. 716-722).'),
+    '934 pp.; DOI 10.17895/ices.pub.30137623. Stock sections 23 (printed pp. 670-674), 25.9.3 (printed pp. 710-713) and 25.9.5 (printed pp. 716-722).'),
   'ICES Standard Graphs source data, assessment year 2025, stock assessment key 21039; B_index and Fproxy fields; age-specific F field blank.')
 paths <- file.path(cache, files)
 
