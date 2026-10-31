@@ -26,14 +26,14 @@ the rows already linked to a stock or candidate unit.
 | Organization | Rows | Matched to database | New candidate rows | Ambiguous identity | Identity unreviewed | Eligible rows | Ineligible rows | Eligibility unresolved | Screened | In progress | Not screened |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 63 | 18 | 98 | 21 | 146 | 32 | 198 | 1 | 0 |
-| ICES | 274 | 59 | 133 | 2 | 80 | 54 | 115 | 105 | 194 | 0 | 80 |
+| ICES | 274 | 59 | 134 | 2 | 79 | 54 | 116 | 104 | 195 | 0 | 79 |
 | NOAA | 432 | 28 | 210 | 8 | 186 | 61 | 138 | 233 | 248 | 0 | 184 |
-| **Total** | **905** | **107** | **406** | **28** | **364** | **136** | **399** | **370** | **640** | **1** | **264** |
+| **Total** | **905** | **107** | **407** | **28** | **363** | **136** | **400** | **369** | **641** | **1** | **263** |
 
-The crosswalk currently links 430 distinct unit keys across 452 inventory rows:
-100 link to canonical stocks and 330 are candidate units, including one with
-ambiguous identity and one with mixed identity status. Of the 328 new
-candidate units, 39 are eligible for source curation, 233 are ineligible for
+The crosswalk currently links 431 distinct unit keys across 453 inventory rows:
+100 link to canonical stocks and 331 are candidate units, including one with
+ambiguous identity and one with mixed identity status. Of the 329 new
+candidate units, 39 are eligible for source curation, 234 are ineligible for
 the age-disaggregated set, and 56 remain unresolved. A further 453 inventory
 rows have no unit crosswalk yet. Row-level status and unit-level deduplication
 are intentionally reported separately.
@@ -70,6 +70,12 @@ accepted 2021 assessment reports age-indexed fitted quantities, but fits only
 removals, length compositions and an aggregate abundance index; the report
 says age observations inform life-history parameters outside the assessment.
 See `source_reviews/noaa_squarespot_rockfish_pacific_2021.md`.
+
+ICES lesser-spotted dogfish `syc.27.3a47d` is a distinct new unit. Its latest
+2025 WGEF assessment applies the Category 3 rfb rule to aggregate biomass
+indices and length-based catch indicators; it does not provide age-structured
+inputs or population outputs. The unit is screened ineligible. See
+`source_reviews/ices_lesser_spotted_dogfish_3a47d_2025.md`.
 
 The Maritimes American eel “Large Eel” and “Elvers” inventory entries are two
 fisheries for one candidate unit. The latest detailed DFO update reports
