@@ -26,15 +26,15 @@ the rows already linked to a stock or candidate unit.
 | Organization | Rows | Matched to database | New candidate rows | Ambiguous identity | Identity unreviewed | Eligible rows | Ineligible rows | Eligibility unresolved | Screened | In progress | Not screened |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 63 | 18 | 98 | 21 | 146 | 32 | 198 | 1 | 0 |
-| ICES | 274 | 59 | 136 | 2 | 77 | 54 | 118 | 102 | 197 | 0 | 77 |
+| ICES | 274 | 59 | 137 | 2 | 76 | 54 | 119 | 101 | 198 | 0 | 76 |
 | NOAA | 432 | 28 | 211 | 8 | 185 | 61 | 138 | 233 | 249 | 0 | 183 |
-| **Total** | **905** | **107** | **410** | **28** | **360** | **136** | **402** | **367** | **644** | **1** | **260** |
+| **Total** | **905** | **107** | **411** | **28** | **359** | **136** | **403** | **366** | **645** | **1** | **259** |
 
-The crosswalk currently links 434 distinct unit keys across 456 inventory rows:
-100 link to canonical stocks and 334 are candidate units, including one with
-ambiguous identity and one with mixed identity status. Of the 332 new
-candidate units, 39 are eligible for source curation, 236 are ineligible for
-the age-disaggregated set, and 57 remain unresolved. A further 449 inventory
+The crosswalk currently links 435 distinct unit keys across 457 inventory rows:
+100 link to canonical stocks and 335 are candidate units, including one with
+ambiguous identity and one with mixed identity status. Of the 333 new
+candidate units, 39 are eligible for source curation, 237 are ineligible for
+the age-disaggregated set, and 57 remain unresolved. A further 448 inventory
 rows have no unit crosswalk yet. Row-level status and unit-level deduplication
 are intentionally reported separately.
 ICES sandeel `san.27.6a` is a distinct current unit in Division 6.a (West of
@@ -51,6 +51,13 @@ defines category 5 as landings-only. The reviewed current advice does not
 provide age-disaggregated inputs or fitted population outputs, so the unit is
 screened ineligible for this age-structured source set. See
 `source_reviews/ices_roundnose_grenadier_oceanic_2023.md`.
+
+ICES roundnose grenadier `rng.27.3a` is a separate Division 3.a unit. Its 2026
+advice is category 3.2, and the current published graphs report an aggregate
+B-index with total landings and discards. The source metadata has no age-specific
+recruitment or F series; its generic SSB-labelled graph columns are identified
+as B-index, not SSB. It is screened ineligible for the age-disaggregated set.
+See `source_reviews/ices_roundnose_grenadier_3a_2026.md`.
 
 The distinct North Sea, Skagerrak and Kattegat sprat unit (ICES `spr.27.3a4`)
 is screened as a new unit with eligibility unresolved. Its current public TAF
