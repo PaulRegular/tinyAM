@@ -48,23 +48,22 @@ stopifnot(
   sum(outputs$assessment_id == candidate$candidate_unit_id, na.rm = TRUE) == 0L,
   sum(units$candidate_unit_id == candidate$candidate_unit_id, na.rm = TRUE) == 1L,
   sum(noaa$inventory_rows) == 432L,
-  sum(noaa$new) == 237L,
+  sum(noaa$new) == 239L,
   sum(noaa$ambiguous) == 9L,
-  sum(noaa$identity_unreviewed) == 158L,
+  sum(noaa$identity_unreviewed) == 156L,
   sum(noaa$eligible) == 72L,
   sum(noaa$eligible_new) == 58L,
-  sum(noaa$excluded) == 154L,
-  sum(noaa$eligibility_unresolved) == 206L,
-  sum(noaa$screening_complete) == 276L,
-  sum(noaa$screening_not_started) == 156L,
+  sum(noaa$excluded) == 156L,
+  sum(noaa$eligibility_unresolved) == 204L,
+  sum(noaa$screening_complete) == 278L,
+  sum(noaa$screening_not_started) == 154L,
   nrow(nw) == 1L,
   nw$new == 77L,
   nw$eligible == 27L,
   nw$eligible_new == 26L,
   nw$screening_complete == 85L,
-  nrow(units) == 483L,
-  sum(units$inventory_entries) == 506L,
-  sum(!is.na(units$candidate_unit_id) & nzchar(units$candidate_unit_id)) == 383L
-)
+  nrow(units) == 484L,
+  sum(units$inventory_entries) == 508L,
+  sum(!is.na(units$candidate_unit_id) & nzchar(units$candidate_unit_id)) == 384L)
 
 cat('NOAA Pacific Coast spiny dogfish screening, provenance, reconstruction caveats, and no-import checks passed.\n')

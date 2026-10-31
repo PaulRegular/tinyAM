@@ -27,10 +27,10 @@ the rows already linked to a stock or candidate unit.
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 63 | 18 | 98 | 21 | 147 | 31 | 199 | 0 | 0 |
 | ICES | 274 | 59 | 160 | 2 | 53 | 56 | 136 | 82 | 221 | 0 | 53 |
-| NOAA | 432 | 28 | 237 | 9 | 158 | 72 | 154 | 206 | 276 | 0 | 156 |
-| **Total** | **905** | **107** | **460** | **29** | **309** | **149** | **437** | **319** | **696** | **0** | **209** |
+| NOAA | 432 | 28 | 239 | 9 | 156 | 72 | 156 | 204 | 278 | 0 | 154 |
+| **Total** | **905** | **107** | **462** | **29** | **307** | **149** | **439** | **317** | **698** | **0** | **207** |
 
-The crosswalk currently links 483 distinct unit keys across 506 inventory rows: 100 canonical stock units and 383 candidate units. Of the candidate units, 381 are provisionally new, one has an ambiguous identity, and one has mixed identity status. The 381 new units include 51 eligible, 270 ineligible and 60 unresolved candidates. A further 399 inventory rows have no unit crosswalk yet.
+The crosswalk currently links 484 distinct unit keys across 508 inventory rows: 100 canonical stock units and 384 candidate units. Of the candidate units, 382 are provisionally new, one has an ambiguous identity, and one has mixed identity status. The 382 new units include 51 eligible, 271 ineligible and 60 unresolved candidates. A further 397 inventory rows have no unit crosswalk yet.
 
 The progress summary has 74 organization-region
 rows. Row-level status and unit-level deduplication are intentionally reported
@@ -403,25 +403,9 @@ current 2026 index assessment remains distinct from the historical 2024
 age-structured assessment; see
 `../source_reviews/ck_ices_wgbfas_morhua_bs_25_32.md`.
 
-## Inventory progress snapshot
+## Historical inventory snapshot
 
-Earlier interim snapshot dated 2026-10-30: the register then contained 905 source-list entries. Current status is summarized above.
-
-| Organization | Entries | Matched | Provisional new | Ambiguous | Identity unreviewed | Eligible | Excluded | Eligibility unresolved | Screened | In progress | Not started |
-|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| DFO | 199 | 20 | 63 | 18 | 98 | 21 | 146 | 32 | 198 | 1 | 0 |
-| ICES | 274 | 59 | 123 | 2 | 90 | 53 | 107 | 114 | 184 | 0 | 90 |
-| NOAA | 432 | 28 | 208 | 8 | 188 | 60 | 137 | 235 | 246 | 0 | 186 |
-| Total | 905 | 107 | 394 | 28 | 376 | 134 | 390 | 381 | 628 | 1 | 276 |
-
-These are inventory-entry counts. The linked-unit crosswalk in
-inventory_units.csv represents 418 distinct units across 440 inventory rows:
-100 canonical stock IDs and 318 candidate-unit IDs. Of the 316 new units, 37
-are screened eligible, 224 are screened ineligible, and 55 remain
-eligibility-unresolved. One candidate-unit ID has ambiguous identity and one
-has mixed identity status. The other 465 entries do not yet have a crosswalk
-unit. Regional counts by organization are in inventory_progress.csv.
-These are provisional audit counts, not the selected expansion batch.
+The interim table dated 2026-10-30 has been superseded by the current summary above. Use `inventory_progress.csv` for row-level status by organization and region and `inventory_units.csv` for deduplicated unit counts.
 
 NOAA Stock SMART 10953 and DFO's North Atlantic swordfish listing are one
 ICCAT-managed stock unit. The latest detailed North Atlantic assessment located
@@ -1286,6 +1270,8 @@ observations. Washington had no fishery-independent index in the assessment;
 the Oregon marine-reserve survey was not used in the base model. Both are
 ineligible for age-disaggregated source curation. See
 `source_reviews/noaa_copper_rockfish_washington_oregon_2021.md`.
+
+NOAA Stock SMART IDs 10315 and 11042 point to the same 2016 SEDAR 47 goliath grouper assessment family; that assessment covers one Southeastern U.S. unit and is screened ineligible because the review panel rejected it for management use and the catch lacks age structure. See `source_reviews/noaa_goliath_grouper_2016.md`.
 
 NOAA Stock SMART ID 15338 is the distinct Oregon vermilion rockfish unit. The
 Council-adopted 2021 Stock Synthesis archive contains conditional age-at-length
