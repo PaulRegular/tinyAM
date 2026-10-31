@@ -26,15 +26,15 @@ the rows already linked to a stock or candidate unit.
 | Organization | Rows | Matched to database | New candidate rows | Ambiguous identity | Identity unreviewed | Eligible rows | Ineligible rows | Eligibility unresolved | Screened | In progress | Not screened |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 63 | 18 | 98 | 21 | 146 | 32 | 198 | 1 | 0 |
-| ICES | 274 | 59 | 126 | 2 | 87 | 54 | 108 | 112 | 187 | 0 | 87 |
+| ICES | 274 | 59 | 127 | 2 | 86 | 54 | 109 | 111 | 188 | 0 | 86 |
 | NOAA | 432 | 28 | 210 | 8 | 186 | 61 | 138 | 233 | 248 | 0 | 184 |
-| **Total** | **905** | **107** | **399** | **28** | **371** | **136** | **392** | **377** | **633** | **1** | **271** |
+| **Total** | **905** | **107** | **400** | **28** | **370** | **136** | **393** | **376** | **634** | **1** | **270** |
 
-The crosswalk currently links 423 distinct unit keys across 445 inventory rows:
-100 link to canonical stocks and 323 are candidate units, including one with
-ambiguous identity and one with mixed identity status. Of the 321 new
-candidate units, 39 are eligible for source curation, 226 are ineligible for
-the age-disaggregated set, and 56 remain unresolved. A further 460 inventory
+The crosswalk currently links 424 distinct unit keys across 446 inventory rows:
+100 link to canonical stocks and 324 are candidate units, including one with
+ambiguous identity and one with mixed identity status. Of the 322 new
+candidate units, 39 are eligible for source curation, 227 are ineligible for
+the age-disaggregated set, and 56 remain unresolved. A further 459 inventory
 rows have no unit crosswalk yet. Row-level status and unit-level deduplication
 are intentionally reported separately.
 
@@ -1007,3 +1007,10 @@ and population outputs are not part of that assessment. It is screened
 ineligible for this age-based set, without implying that age samples are
 unavailable elsewhere. See
 `source_reviews/ices_cod_faroe_bank_2025.md`.
+
+ICES lesser spotted dogfish in divisions 8.c and 9.a (`syc.27.8c9a`) was
+reassessed in the 2025 WGEF report using landings length distributions,
+length-based indicators, and a combined survey biomass index. It does not
+report age-disaggregated population inputs or outputs, so it is ineligible for
+this age-based set. ICES did not request fishing-opportunity advice for
+2026–2027. See `source_reviews/ices_dogfish_8c9a_2025.md`.
