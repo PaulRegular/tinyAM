@@ -47,7 +47,7 @@ stopifnot(
   grepl('Tables 7.7.3.1 and 7.7.3.2', review, fixed = TRUE),
   grepl('Division 3.a', review, fixed = TRUE),
   sum(progress$new[progress$organization == 'ICES']) == 90L,
-  sum(progress$screening_complete[progress$organization == 'ICES']) == 151L,
+  sum(progress$screening_complete[progress$organization == 'ICES']) == 157L,
   sum(progress$screening_not_started[progress$organization == 'ICES']) == 123L,
   sum(progress$eligibility_unresolved[progress$organization == 'ICES']) == 144L
 )
