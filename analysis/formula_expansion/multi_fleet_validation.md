@@ -66,6 +66,12 @@ rows before combining it with shared global terms. Tests cover contrast and
 formula environments, disjoint Gaussian mean effects, different fleet curves,
 sparse survey support, abundance powers, projection preparation and warm starts.
 The targeted suite passed 525 assertions with no failures or warnings.
+The full package check returned **OK** with 3,995 passing assertions and no
+failures, warnings or skips (`scoped-model-formulas`, commit `6b545481`).
+The comparative suite returned 59 passes and the same ten starting-main
+failures listed above. Two worker-based checks needed the ordinary local
+worker connections that were blocked by the restricted test runner; they
+passed when rerun with those connections available.
 
 `multi_fleet_validation.R scoped` compares equivalent ordinary and scoped
 fixed designs on the artificial catch split and two copies of the survey.
@@ -80,6 +86,35 @@ or the benefit of collecting an additional survey.
 Browser-based visual inspection was attempted but the computer-use tool stopped
 because it could not verify the current Chrome URL. HTML generation succeeded;
 interactive visual inspection remains outstanding.
+
+## Selectivity curves
+
+The new curve tests independently check warped half-selection, slope, peak,
+tail, Gaussian/asymptotic endpoints, first and second AD derivatives, and
+WHAM's raw four-parameter double-logistic values and derivatives. WHAM source
+is pinned to `ffcbfd093161e8210aa20716933975191b661807`; its `get_selAA()`
+age counter is translated explicitly when comparing biological ages.
+No peak normalization or midpoint ordering is added. Tiny positive rates stay
+on the log scale for likelihood calculations, without a positive floor.
+The 123 new curve assertions and 391 workflow assertions pass without warnings.
+Rechecking the five one-fleet baseline processes found zero objective changes,
+maximum gradient difference 7.11e-15 and prediction difference 1.11e-16.
+
+`multi_fleet_validation.R curves` generates a 20-year, two-fleet example with
+logistic and warped F, IID recruitment and supplied M. It uses default starts
+and optimizer settings, seed 47281, and no rescue tuning. The initial fit hit
+the 1,000-function-evaluation limit (945 iterations, maximum gradient 5.70),
+despite a positive-definite Hessian. Both hindcast attempts failed numerical
+checks and supplied no forecast scores. The attempted fit, warnings, truth,
+projections, simulations and rendered dashboard are retained. A read-only
+derivative review agreed with independent central differences; the largest
+absolute discrepancy for the six checked curve/initial parameters was
+7.52e-5 (the corresponding gradient was 5.70).
+
+This attempt demonstrates an unresolved estimation limitation with many annual
+fleet coefficients and nonlinear curves. Close parameter recovery in one
+unconverged fit is not evidence of reliable estimation. The planned recovery
+experiments must retain this difficulty rather than tune it away.
 
 ## Remaining validation
 
