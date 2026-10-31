@@ -26,17 +26,23 @@ the rows already linked to a stock or candidate unit.
 | Organization | Rows | Matched to database | New candidate rows | Ambiguous identity | Identity unreviewed | Eligible rows | Ineligible rows | Eligibility unresolved | Screened | In progress | Not screened |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 63 | 18 | 98 | 21 | 146 | 32 | 198 | 1 | 0 |
-| ICES | 274 | 59 | 134 | 2 | 79 | 54 | 116 | 104 | 195 | 0 | 79 |
+| ICES | 274 | 59 | 135 | 2 | 78 | 54 | 117 | 103 | 196 | 0 | 78 |
 | NOAA | 432 | 28 | 211 | 8 | 185 | 61 | 138 | 233 | 249 | 0 | 183 |
-| **Total** | **905** | **107** | **408** | **28** | **362** | **136** | **400** | **369** | **642** | **1** | **262** |
+| **Total** | **905** | **107** | **409** | **28** | **361** | **136** | **401** | **368** | **643** | **1** | **261** |
 
-The crosswalk currently links 432 distinct unit keys across 454 inventory rows:
-100 link to canonical stocks and 332 are candidate units, including one with
-ambiguous identity and one with mixed identity status. Of the 330 new
-candidate units, 39 are eligible for source curation, 234 are ineligible for
-the age-disaggregated set, and 57 remain unresolved. A further 451 inventory
+The crosswalk currently links 433 distinct unit keys across 455 inventory rows:
+100 link to canonical stocks and 333 are candidate units, including one with
+ambiguous identity and one with mixed identity status. Of the 331 new
+candidate units, 39 are eligible for source curation, 235 are ineligible for
+the age-disaggregated set, and 57 remain unresolved. A further 450 inventory
 rows have no unit crosswalk yet. Row-level status and unit-level deduplication
 are intentionally reported separately.
+ICES sandeel `san.27.6a` is a distinct current unit in Division 6.a (West of
+Scotland). The 2024 advice is category 6 and the 2025 HAWG report confirms
+zero-catch advice for 2024–2026. No current age-structured inputs or fitted
+population outputs were identified, so it is screened ineligible for the
+age-disaggregated source set. See
+`source_reviews/ices_sandeel_west_scotland_6a_2024.md`.
 
 The distinct North Sea, Skagerrak and Kattegat sprat unit (ICES `spr.27.3a4`)
 is screened as a new unit with eligibility unresolved. Its current public TAF
