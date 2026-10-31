@@ -147,6 +147,10 @@ was not positive definite and its fixed covariance was unavailable/non-finite;
 it was retained and excluded from scoring. The unpeeled reference passed.
 No rescue tuning or automatic component removal was applied.
 
+The smooth milestone's full package check returned **OK**, with 4,218 passing
+assertions and no failures, warnings or skips. Comparative assessments again
+returned 59 passes and the same ten pre-existing failures listed above.
+
 ## Remaining validation
 
 Visual inspection, recovery experiments and source-supported multi-fleet
