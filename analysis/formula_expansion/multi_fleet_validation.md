@@ -116,6 +116,37 @@ fleet coefficients and nonlinear curves. Close parameter recovery in one
 unconverged fit is not evidence of reliable estimation. The planned recovery
 experiments must retain this difficulty rather than tune it away.
 
+The final curve package check returned **OK** with 4,118 passing assertions,
+no warnings/failures/skips, after fixing log-residual extraction from cached
+tables without SD columns. That regression and the underflow case pass 161
+focused assertions together. Comparative assessments returned the same 59
+passes and ten documented failures. The curve milestone is pushed in
+`c21ee870`, `6ea3c2fc` and `a3ad9881`.
+
+## Penalized smooths
+
+Univariate thin-plate/cubic bases, categorical-by smooths and three-penalty
+age-year tensors agree with mgcv's matrices. Independently constructed dense
+Gaussian covariances reproduce integrated objectives and gradients. Tests also
+cover retained-basis predictions, training-only forecasts, compatible warm
+starts, scopes, coherent simulation, signed null-space coefficients and full
+function uncertainty. The expanded targeted run passed 581 assertions without
+failures or warnings, including curve regression and warm-start checks.
+
+`multi_fleet_validation.R smooths` generates and fits a separate, fully simulated
+smooth model (seed 47281). It converged with a positive-definite Hessian and
+maximum gradient 0.00329. Two smoothing SD intervals span more than tenfold;
+these limitations remain flagged. The fit has 52 fixed and 27 random parameters.
+Its cAIC accounting reconciles: recruitment EDF 18.72865 plus smooth/other EDF
+3.948775 gives random EDF 22.67742; adding fixed EDF 47 gives EDF 69.67742.
+This is an accounting check, not a model ranking.
+
+Catch-target projections, coherent simulations, explicit OSA extraction and
+dashboard rendering completed. The one hindcast peel failed because its Hessian
+was not positive definite and its fixed covariance was unavailable/non-finite;
+it was retained and excluded from scoring. The unpeeled reference passed.
+No rescue tuning or automatic component removal was applied.
+
 ## Remaining validation
 
 Visual inspection, recovery experiments and source-supported multi-fleet
