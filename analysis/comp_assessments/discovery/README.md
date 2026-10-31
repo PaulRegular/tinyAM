@@ -26,15 +26,15 @@ the rows already linked to a stock or candidate unit.
 | Organization | Rows | Matched to database | New candidate rows | Ambiguous identity | Identity unreviewed | Eligible rows | Ineligible rows | Eligibility unresolved | Screened | In progress | Not screened |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 63 | 18 | 98 | 21 | 147 | 31 | 199 | 0 | 0 |
-| ICES | 274 | 59 | 157 | 2 | 56 | 56 | 135 | 83 | 218 | 0 | 56 |
+| ICES | 274 | 59 | 159 | 2 | 54 | 56 | 136 | 82 | 220 | 0 | 54 |
 | NOAA | 432 | 28 | 220 | 8 | 176 | 64 | 144 | 224 | 258 | 0 | 174 |
-| **Total** | **905** | **107** | **440** | **28** | **330** | **141** | **426** | **338** | **675** | **0** | **230** |
+| **Total** | **905** | **107** | **442** | **28** | **328** | **141** | **427** | **337** | **677** | **0** | **228** |
 
-The crosswalk currently links 464 distinct unit keys across 486 inventory rows:
-100 link to canonical stocks and 364 are candidate units, including one with
-ambiguous identity and one with mixed identity status. Of the 362 new
-candidate units, 44 are eligible for source curation, 260 are ineligible for
-the age-disaggregated set, and 58 remain unresolved. A further 419 inventory
+The crosswalk currently links 466 distinct unit keys across 488 inventory rows:
+100 link to canonical stocks and 366 are candidate units, including one with
+ambiguous identity and one with mixed identity status. Of the 364 new
+candidate units, 44 are eligible for source curation, 261 are ineligible for
+the age-disaggregated set, and 59 remain unresolved. A further 417 inventory
 rows have no unit crosswalk yet. The progress summary has 74 organization-region
 rows. Row-level status and unit-level deduplication are intentionally reported
 separately.
@@ -1230,3 +1230,10 @@ survey length-at-age observations support growth estimation only. The 2023
 report and native output tables include age-specific fitted results, which do
 not establish age-disaggregated observation inputs. See
 `source_reviews/noaa_bsai_alaska_skate_2026.md`.
+
+The 2024 Irminger Sea beaked-redfish pair was also reviewed as separate depth
+units. Deep pelagic redfish uses an age-length Gadget model and has relative
+aggregate outputs, but key biological inputs and native age data remain
+unverified; its eligibility is unresolved. Shallow pelagic redfish uses an
+aggregate survey-trends method and is ineligible for the age-structured set.
+See source_reviews/ices_pelagic_redfish_2026.md.
