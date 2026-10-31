@@ -26,15 +26,15 @@ the rows already linked to a stock or candidate unit.
 | Organization | Rows | Matched to database | New candidate rows | Ambiguous identity | Identity unreviewed | Eligible rows | Ineligible rows | Eligibility unresolved | Screened | In progress | Not screened |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 63 | 18 | 98 | 21 | 146 | 32 | 198 | 1 | 0 |
-| ICES | 274 | 59 | 125 | 2 | 88 | 54 | 107 | 113 | 186 | 0 | 88 |
+| ICES | 274 | 59 | 126 | 2 | 87 | 54 | 108 | 112 | 187 | 0 | 87 |
 | NOAA | 432 | 28 | 210 | 8 | 186 | 61 | 138 | 233 | 248 | 0 | 184 |
-| **Total** | **905** | **107** | **398** | **28** | **372** | **136** | **391** | **378** | **632** | **1** | **272** |
+| **Total** | **905** | **107** | **399** | **28** | **371** | **136** | **392** | **377** | **633** | **1** | **271** |
 
-The crosswalk currently links 422 distinct unit keys across 444 inventory rows:
-100 link to canonical stocks and 322 are candidate units, including one with
-ambiguous identity and one with mixed identity status. Of the 320 new
-candidate units, 39 are eligible for source curation, 225 are ineligible for
-the age-disaggregated set, and 56 remain unresolved. A further 461 inventory
+The crosswalk currently links 423 distinct unit keys across 445 inventory rows:
+100 link to canonical stocks and 323 are candidate units, including one with
+ambiguous identity and one with mixed identity status. Of the 321 new
+candidate units, 39 are eligible for source curation, 226 are ineligible for
+the age-disaggregated set, and 56 remain unresolved. A further 460 inventory
 rows have no unit crosswalk yet. Row-level status and unit-level deduplication
 are intentionally reported separately.
 
@@ -999,3 +999,11 @@ advice-linked table reports aggregate landings; the detailed 2025 WKBSS3 SS3
 benchmark provides aggregate outputs but explicitly states that age data were
 unavailable and fits length compositions instead. See
 `source_reviews/ices_blackspot_seabream_9_2026.md`.
+
+ICES Faroe Bank cod (`cod.27.5b2`) is a distinct unit from Faroe Plateau cod.
+The latest 2025 advice uses a category 3 survey-biomass-index rule, with
+landings and an aggregate summer survey index; age-disaggregated model inputs
+and population outputs are not part of that assessment. It is screened
+ineligible for this age-based set, without implying that age samples are
+unavailable elsewhere. See
+`source_reviews/ices_cod_faroe_bank_2025.md`.
