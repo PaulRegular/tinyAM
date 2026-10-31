@@ -167,3 +167,26 @@ test_that("fleet process plots retain distinct state coordinates", {
   expect_s3_class(plot_process_residuals(out),"plotly")
   expect_identical(serialize(out,NULL),before)
 })
+
+test_that("fleet hindcast targets use actual removals and training weights stay separate", {
+  g <- expand.grid(year=2000:2002,age=2:4)
+  c <- rbind(transform(g,fleet="A",obs=age,unit="fish"),
+    transform(g,fleet="B",obs=2*age,unit="fish"))
+  w <- rbind(transform(g,type="stock",fleet=NA_character_,obs=1,unit="kg"),
+    transform(g,type="catch",fleet="A",obs=year-1998,unit="kg"),
+    transform(g,type="catch",fleet="B",obs=year-1995,unit="kg"))
+  obs <- list(catch=c,weight=w,maturity=transform(g,obs=.5),
+    index=transform(g,obs=100,survey="RV",samp_time=.5))
+  d <- prepare_tam(obs,years=2000:2001,ages=2:3,
+    index_settings=list(q_form=~1),
+    proj_settings=list(n_proj=1,n_mean=1,F_mult=1))
+  f <- list(dat=d,refit_args=list(data=obs))
+  target <- .hindcast_controls(f,2002,.retro_projection(NULL))
+  expect_equal(target$target,162)
+  expect_equal(d$W_catch_fleet[d$is_proj,d$F_columns$fleet == "A"],rep(3,2),ignore_attr=TRUE)
+  expect_equal(d$W_catch_fleet[d$is_proj,d$F_columns$fleet == "B"],rep(6,2),ignore_attr=TRUE)
+  expect_equal(d$W_catch_plus_fleet$A[d$is_proj,],rep(3,2),ignore_attr=TRUE)
+  expect_equal(d$W_catch_plus_fleet$B[d$is_proj,],rep(6,2),ignore_attr=TRUE)
+  f$refit_args$data$catch$obs[which(c$year == 2002 & c$fleet == "B")[1L]] <- NA
+  expect_match(.hindcast_controls(f,2002,.retro_projection(NULL))$error,"incomplete")
+})
