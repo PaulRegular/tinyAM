@@ -27,14 +27,14 @@ the rows already linked to a stock or candidate unit.
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 63 | 18 | 98 | 21 | 146 | 32 | 198 | 1 | 0 |
 | ICES | 274 | 59 | 138 | 2 | 75 | 54 | 120 | 100 | 199 | 0 | 75 |
-| NOAA | 432 | 28 | 211 | 8 | 185 | 61 | 138 | 233 | 249 | 0 | 183 |
-| **Total** | **905** | **107** | **412** | **28** | **358** | **136** | **404** | **365** | **646** | **1** | **258** |
+| NOAA | 432 | 28 | 212 | 8 | 184 | 62 | 138 | 232 | 250 | 0 | 182 |
+| **Total** | **905** | **107** | **413** | **28** | **357** | **137** | **404** | **364** | **647** | **1** | **257** |
 
-The crosswalk currently links 436 distinct unit keys across 458 inventory rows:
-100 link to canonical stocks and 336 are candidate units, including one with
-ambiguous identity and one with mixed identity status. Of the 334 new
-candidate units, 39 are eligible for source curation, 238 are ineligible for
-the age-disaggregated set, and 57 remain unresolved. A further 447 inventory
+The crosswalk currently links 437 distinct unit keys across 459 inventory rows:
+100 link to canonical stocks and 337 are candidate units, including one with
+ambiguous identity and one with mixed identity status. Of the 335 new
+candidate units, 40 are eligible for source curation, 238 are ineligible for
+the age-disaggregated set, and 57 remain unresolved. A further 446 inventory
 rows have no unit crosswalk yet. Row-level status and unit-level deduplication
 are intentionally reported separately.
 ICES sandeel `san.27.6a` is a distinct current unit in Division 6.a (West of
@@ -1077,3 +1077,12 @@ ICES Northeast Atlantic angel shark (`agn.27.nea`) has no benchmarked quantitati
 ICES Northeast Atlantic smooth-hounds (`sdv.27.nea`) have a current category-3 `rfb` advice rule based on standardized survey biomass and a commercial length-based fishing proxy. The 2025 update advises a landings maximum of 6,395 t for 2026 and 2027, but does not provide age-disaggregated population inputs or outputs. It is ineligible for the age-disaggregated set; the report also notes that survey signals are primarily *Mustelus asterias* while commercial data cover *Mustelus* spp. See `source_reviews/ices_smooth_hounds_nea_2025.md`.
 
 ICES spotted ray in Subarea 4, divisions 3.a and 7.d (`rjm.27.3a47d`) has a 2025 SPiCT surplus-production assessment based on total catches and two aggregate seasonal survey-biomass indices. It reports relative biomass and fishing pressure but no age-specific population outputs, so it is ineligible for the age-disaggregated set. See `source_reviews/ices_spotted_ray_3a47d_2025.md`.
+
+NOAA Stock SMART 10208 is the distinct South Atlantic greater amberjack unit.
+SEDAR 59 is the latest detailed completed assessment located (2020, data through
+2017). Numeric commercial age proportions, charted recreational age proportions,
+annual catch and index series, age-specific biology, and age-specific population
+outputs are available. Recreational age proportions require figure digitization;
+exact discard ages and a single within-year index timing are not provided. The
+unit is eligible for source curation with these limitations recorded. See
+`source_reviews/noaa_greater_amberjack_south_atlantic_2020.md`.
