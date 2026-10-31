@@ -45,6 +45,6 @@ red_hake_units <- units[units$candidate_unit_id %in% paste0('noaa_red_hake_', st
 stopifnot(nrow(red_hake_units) == 2L,
   all(red_hake_units$eligibility == 'ineligible'),
   sum(register$organization == 'NOAA') == 432L,
-  sum(register$organization == 'NOAA' & register$screening_status == 'screened') == 245L)
+  sum(register$organization == 'NOAA' & register$screening_status == 'screened') == 272L)
 
 cat('NOAA red hake candidate identity and multi-age eligibility screen passed.\n')

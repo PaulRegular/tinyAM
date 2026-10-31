@@ -27,10 +27,10 @@ the rows already linked to a stock or candidate unit.
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 63 | 18 | 98 | 21 | 147 | 31 | 199 | 0 | 0 |
 | ICES | 274 | 59 | 160 | 2 | 53 | 56 | 136 | 82 | 221 | 0 | 53 |
-| NOAA | 432 | 28 | 224 | 8 | 172 | 65 | 147 | 220 | 262 | 0 | 170 |
-| **Total** | **905** | **107** | **447** | **28** | **323** | **142** | **430** | **333** | **682** | **0** | **223** |
+| NOAA | 432 | 28 | 233 | 9 | 162 | 70 | 152 | 210 | 272 | 0 | 160 |
+| **Total** | **905** | **107** | **456** | **29** | **313** | **147** | **435** | **323** | **692** | **0** | **213** |
 
-The crosswalk currently links 471 distinct unit keys across 493 inventory rows: 100 canonical stock units and 371 candidate units. Of the candidate units, 369 are provisionally new, one has an ambiguous identity, and one has mixed identity status. The 369 new units include 45 eligible, 264 ineligible and 60 unresolved candidates. A further 412 inventory rows have no unit crosswalk yet.
+The crosswalk currently links 479 distinct unit keys across 502 inventory rows: 100 canonical stock units and 379 candidate units. Of the candidate units, 377 are provisionally new, one has an ambiguous identity, and one has mixed identity status. The 377 new units include 49 eligible, 268 ineligible and 60 unresolved candidates. A further 403 inventory rows have no unit crosswalk yet.
 
 The progress summary has 74 organization-region
 rows. Row-level status and unit-level deduplication are intentionally reported
@@ -1260,3 +1260,12 @@ reconstruction must make the age-length-key assumptions visible. Natural
 mortality is fixed at 0.065 per year. Do not merge this U.S. unit with either
 DFO British Columbia spiny dogfish unit. See
 `source_reviews/noaa_pacific_spiny_dogfish_2021.md`.
+
+NOAA Stock SMART IDs 15332 and 15333 are linked to one California copper
+rockfish assessment family with separate north and south 2023 model areas. The
+native fits contain conditional age-at-length and marginal-age observations,
+plus age-specific population outputs. Annual catch-at-age and survey
+abundance-at-age are not direct input series and require documented
+reconstruction. Washington and Oregon copper rockfish are separate assessment
+areas last assessed in 2021. See
+`source_reviews/noaa_copper_rockfish_california_2023.md`.
