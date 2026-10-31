@@ -26,17 +26,18 @@ the rows already linked to a stock or candidate unit.
 | Organization | Rows | Matched to database | New candidate rows | Ambiguous identity | Identity unreviewed | Eligible rows | Ineligible rows | Eligibility unresolved | Screened | In progress | Not screened |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 63 | 18 | 98 | 21 | 146 | 32 | 198 | 1 | 0 |
-| ICES | 274 | 59 | 140 | 2 | 73 | 55 | 121 | 98 | 201 | 0 | 73 |
+| ICES | 274 | 59 | 141 | 2 | 72 | 55 | 121 | 98 | 202 | 0 | 72 |
 | NOAA | 432 | 28 | 213 | 8 | 183 | 63 | 138 | 231 | 251 | 0 | 181 |
-| **Total** | **905** | **107** | **416** | **28** | **354** | **139** | **405** | **361** | **650** | **1** | **254** |
+| **Total** | **905** | **107** | **417** | **28** | **353** | **139** | **405** | **361** | **651** | **1** | **253** |
 
-The crosswalk currently links 440 distinct unit keys across 462 inventory rows:
-100 link to canonical stocks and 340 are candidate units, including one with
-ambiguous identity and one with mixed identity status. Of the 338 new
+The crosswalk currently links 441 distinct unit keys across 463 inventory rows:
+100 link to canonical stocks and 341 are candidate units, including one with
+ambiguous identity and one with mixed identity status. Of the 339 new
 candidate units, 42 are eligible for source curation, 239 are ineligible for
-the age-disaggregated set, and 57 remain unresolved. A further 443 inventory
-rows have no unit crosswalk yet. Row-level status and unit-level deduplication
-are intentionally reported separately.
+the age-disaggregated set, and 58 remain unresolved. A further 442 inventory
+rows have no unit crosswalk yet. The progress summary has 74 organization-region
+rows. Row-level status and unit-level deduplication are intentionally reported
+separately.
 ICES sandeel `san.27.6a` is a distinct current unit in Division 6.a (West of
 Scotland). The 2024 advice is category 6 and the 2025 HAWG report confirms
 zero-catch advice for 2024–2026. No current age-structured inputs or fitted
@@ -1114,3 +1115,10 @@ for old fish in 2019. Exact annual survey timing fractions and the fitted
 numeric TAF inputs/outputs remain unresolved for translation. No canonical
 database values have been added. See
 discovery/source_reviews/ices_greater_silver_smelt_5b6a_2026.md.
+
+ICES Icelandic slope beaked redfish (`reb.27.5a14`) is a distinct 2026
+Category 1 Gadget assessment. The current report documents age-length
+observations, but the reviewed public sources do not provide complete numeric
+annual age-length inputs and supporting expansion data. Eligibility remains
+unresolved pending recovery of those source quantities. See
+`source_reviews/ices_beaked_redfish_icelandic_slope_2026.md`.
