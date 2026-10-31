@@ -27,10 +27,10 @@ the rows already linked to a stock or candidate unit.
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 63 | 18 | 98 | 21 | 147 | 31 | 199 | 0 | 0 |
 | ICES | 274 | 59 | 160 | 2 | 53 | 56 | 136 | 82 | 221 | 0 | 53 |
-| NOAA | 432 | 28 | 239 | 9 | 156 | 72 | 156 | 204 | 278 | 0 | 154 |
-| **Total** | **905** | **107** | **462** | **29** | **307** | **149** | **439** | **317** | **698** | **0** | **207** |
+| NOAA | 432 | 28 | 240 | 9 | 155 | 72 | 156 | 204 | 279 | 0 | 153 |
+| **Total** | **905** | **107** | **463** | **29** | **306** | **149** | **439** | **317** | **699** | **0** | **206** |
 
-The crosswalk currently links 484 distinct unit keys across 508 inventory rows: 100 canonical stock units and 384 candidate units. Of the candidate units, 382 are provisionally new, one has an ambiguous identity, and one has mixed identity status. The 382 new units include 51 eligible, 271 ineligible and 60 unresolved candidates. A further 397 inventory rows have no unit crosswalk yet.
+The crosswalk currently links 485 distinct unit keys across 509 inventory rows: 100 canonical stock units and 385 candidate units. Of the candidate units, 383 are provisionally new, one has an ambiguous identity, and one has mixed identity status. The 383 new units include 51 eligible, 271 ineligible and 61 unresolved candidates. A further 396 inventory rows have no unit crosswalk yet.
 
 The progress summary has 74 organization-region
 rows. Row-level status and unit-level deduplication are intentionally reported
@@ -1272,6 +1272,8 @@ ineligible for age-disaggregated source curation. See
 `source_reviews/noaa_copper_rockfish_washington_oregon_2021.md`.
 
 NOAA Stock SMART IDs 10315 and 11042 point to the same 2016 SEDAR 47 goliath grouper assessment family; that assessment covers one Southeastern U.S. unit and is screened ineligible because the review panel rejected it for management use and the catch lacks age structure. See `source_reviews/noaa_goliath_grouper_2016.md`.
+
+NOAA Stock SMART 10369 is one South Atlantic wreckfish unit. Its accepted 2014 production assessment fits catch-at-length and aggregate CPUE; the 2026 preliminary update documents port-sampled age material but defers likelihood use until representativeness is checked. Eligibility remains unresolved pending numerical age compositions or final model files. See `source_reviews/noaa_wreckfish_south_atlantic_2014.md`.
 
 NOAA Stock SMART ID 15338 is the distinct Oregon vermilion rockfish unit. The
 Council-adopted 2021 Stock Synthesis archive contains conditional age-at-length
