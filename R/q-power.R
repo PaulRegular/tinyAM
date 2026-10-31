@@ -15,7 +15,8 @@
 #' on the observation scale. Abundance is not automatically centered or rescaled;
 #' baseline q therefore depends on its units and on the exponent.
 #'
-#' One additive power term is supported, with the log q link only. It can be
+#' One additive power term per observation is supported, with the log q link
+#' only. Disjoint [for_survey()] scopes can each contain a power term. It can be
 #' combined with ordinary q terms and existing catchability curves and Gaussian
 #' effects. Its coefficients are fixed effects, with no additional process SD.
 #' Do not place it in interactions or numeric transformations.
@@ -50,8 +51,7 @@ power <- function(x, by = NULL) {
 }
 
 .contains_power <- function(x) {
-  is.call(x) && (.formula_call_name(x) == "power" ||
-    any(vapply(as.list(x)[-1L], .contains_power, logical(1))))
+  .formula_has_call(x,"power")
 }
 
 .make_q_power <- function(spec, data) {

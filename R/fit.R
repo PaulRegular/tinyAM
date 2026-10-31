@@ -105,15 +105,21 @@
         start$log_f <- start$log_f[, groups[keep], drop = FALSE]
       }
     }
-    for (component in c("N", "F", "M", "rec")) {
-      name <- switch(component, N = "mu_n", F = "log_mu_f", M = "mu_m", rec = "rec_beta")
+    for (component in c("N", "F", "M", "rec", "q")) {
+      name <- switch(component, N = "mu_n", F = "log_mu_f", M = "mu_m", rec = "rec_beta",
+        q=if (dat$index_settings$q_link == "logit") "logit_q" else "log_q")
       if (is.null(start[[name]])) next
       old <- if (component == "rec") source$dat$rec$matrix else source$dat[[paste0(component, "_modmat")]]
       new <- if (component == "rec") dat$rec$matrix else dat[[paste0(component, "_modmat")]]
+      if (!is.matrix(new)) next
+      if (component %in% c("F","q")) {
+        old <- cbind(old,source$dat[[if(component == "F") "F_mono_modmat" else "q_mono_modmat"]])
+        new <- cbind(new,dat[[if(component == "F") "F_mono_modmat" else "q_mono_modmat"]])
+      }
       if (!is.matrix(new) || !ncol(new)) next
-      before <- if (component == "rec") source$dat$rec$data else if (component == "F") source$dat$F_data else source$dat$pop_data
-      after <- if (component == "rec") dat$rec$data else if (component == "F") dat$F_data else dat$pop_data
-      key <- function(d) paste(d$year, d$age, if ("fleet" %in% names(d)) d$fleet else "")
+      before <- if (component == "rec") source$dat$rec$data else if (component == "F") source$dat$F_data else if(component == "q") source$dat$obs$index else source$dat$pop_data
+      after <- if (component == "rec") dat$rec$data else if (component == "F") dat$F_data else if(component == "q") dat$obs$index else dat$pop_data
+      key <- function(d) paste(d$year, d$age, if ("fleet" %in% names(d)) d$fleet else "",if("survey" %in% names(d)) d$survey else "")
       rows <- match(key(after), key(before))
       retained <- !is.na(rows) & !dat$is_proj[match(after$year, dat$years)]
       if (component == "rec") retained <- retained &
@@ -121,13 +127,14 @@
         before$year[rows] %in% source$dat$years[source$dat$rec$historical]
       columns <- intersect(colnames(old), colnames(new))
       omitted <- setdiff(colnames(old), columns)
-      same <- identical(deparse(source$dat[[paste0(component, "_settings")]]$mu_form),
-        deparse(dat[[paste0(component, "_settings")]]$mu_form)) &&
+      previous <- if(component == "q") source$dat$index_settings$q_form else source$dat[[paste0(component,"_settings")]]$mu_form
+      current <- if(component == "q") dat$index_settings$q_form else dat[[paste0(component,"_settings")]]$mu_form
+      same <- identical(deparse(previous),deparse(current)) && any(retained) &&
         isTRUE(all.equal(old[rows[retained], columns, drop = FALSE], new[retained, columns, drop = FALSE],
           check.attributes = FALSE)) && !any(old[rows[retained], omitted, drop = FALSE] != 0)
       if (!same) {
         start[[name]] <- NULL
-        label <- if (component == "rec") "Recruitment" else component
+        label <- if (component == "rec") "Recruitment" else if(component == "q") "Catchability" else component
         cli::cli_inform("{label} mean starts were omitted because the formula basis changed.")
       }
     }

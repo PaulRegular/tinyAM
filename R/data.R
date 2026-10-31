@@ -250,18 +250,7 @@ print.tam_data <- function(x, n = 5, ...) {
   d <- dat$pop_data
   if (!is.null(formula)) {
     if (.contains_power(formula)) cli::cli_abort("power() is only supported in index_settings$q_form.")
-    variables <- function(x) {
-      if (!is.call(x)) {
-        return(x)
-      }
-      parts <- as.list(x)
-      if (.formula_call_name(x) %in% c("iid", "rw", "ar1")) {
-        parts <- as.list(match.call(get(.formula_call_name(x), mode = "function"), x))
-        parts <- parts[!names(parts) %in% c("sd", "phi")]
-      }
-      as.call(lapply(parts, variables))
-    }
-    missing <- setdiff(all.vars(variables(formula[[2L]])), names(d))
+    missing <- setdiff(.formula_input_variables(formula), names(d))
     if (length(missing)) {
       cli::cli_abort("{label} needs {paste(missing, collapse = ', ')} in {table}.")
     }

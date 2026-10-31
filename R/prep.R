@@ -465,8 +465,9 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #'   Ordinary F mean designs use historical support only; projection rows carry
 #'   the terminal historical design by age. No future-year coefficients are fitted.
 #'   With IID residuals, [iid()], [rw()] and [ar1()] can add random mean effects,
-#'   e.g. `~ factor(age) + rw(year)`. Only one temporal mean term is supported;
-#'   structured means with temporal residual processes are not yet enabled.
+#'   e.g. `~ factor(age) + rw(year)`. Temporal mean terms must have disjoint
+#'   support, for example one per fleet; overlapping temporal mean terms and
+#'   structured means with temporal residual processes are not enabled.
 #'   [mono()] and [logistic()] can instead describe a rising mean age curve
 #'   with no residual process or with IID/AR1 residuals, e.g. `~ logistic(age)`. Ordinary terms supply
 #'   baseline F; realized F can depart from the rising mean. Static curves are
@@ -475,6 +476,11 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #'   They must agree across biological ages pooled into a modeled plus group.
 #'   The catch response `obs` cannot enter an F formula. With fleet labels,
 #'   each fleet has its own F states; total F is their sum for survival and Z.
+#'   [for_fleet()] gives one fleet its own formula, e.g.
+#'   `~ 0 + for_fleet("Trawl", ~ factor(year) + logistic(age)) +
+#'   for_fleet("Gillnet", ~ factor(year) + factor(age))`. Ordinary terms outside
+#'   scopes share their coefficients. Each inner formula includes an intercept
+#'   unless removed explicitly; avoid redundant global and scoped baselines.
 #' - `mean_ages`: optional vector of ages to include in population weighted
 #'   average F (`F_bar`) calculations. All ages used if absent.
 #' @param M_settings A list with elements:
@@ -541,6 +547,10 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #'   abundance-dependent catchability using internally calculated abundance at
 #'   survey time. Missing power-group labels mean p = 1, not missing observations.
 #'   Powers require the log q link. See [power()] and [formula_effects].
+#'   [for_survey()] applies a formula to one named survey, e.g.
+#'   `~ 0 + for_survey("RV", ~ logistic(age)) +
+#'   for_survey("Sentinel", ~ q_block)`. Effects are built on each survey's
+#'   own reporting ages, then contribute zero to the predictor elsewhere.
 #' - `q_link`: `"log"` (default) allows any positive catchability; `"logit"`
 #'   restricts catchability to between zero and one. Use the logit link only
 #'   when the survey index has an absolute abundance scale and this restriction
@@ -682,7 +692,7 @@ prepare_tam <- function(
     cli::cli_abort("{.arg ages} must be consecutive ages.")
   }
   if (max(all_obs_ages) > max(dat$ages)) {
-    .check_f_plus_covariates(dat$obs, max(dat$ages), dat$F_settings)
+    .check_f_plus_covariates(dat$obs, max(dat$ages), dat$F_settings, dat$years)
     dat$obs <- .plus_fun(dat$obs, max(dat$ages))
   }
   dat$obs <- stats::setNames(lapply(names(dat$obs), function(nm) {
@@ -863,7 +873,7 @@ prepare_tam <- function(
 
   .check_sd_terms(dat, "catch")
   .check_sd_terms(dat, "index")
-  q_design <- .parse_q_formula(dat$index_settings$q_form, dat$obs$index)
+  q_design <- .parse_q_formula(dat$index_settings$q_form, dat$obs$index, scope="survey")
   dat[names(q_design)] <- q_design
   if (!is.null(dat$q_power) && dat$index_settings$q_link != "log") {
     cli::cli_abort("power() requires index_settings$q_link = 'log'.")
@@ -877,6 +887,7 @@ prepare_tam <- function(
     dat$F_terms <- mean_design$terms
     dat$F_mono_modmat <- mean_design$mono_matrix
     dat$F_mono_steps <- mean_design$mono_steps
+    dat$F_scopes <- mean_design$scopes
     .check_mean_terms(dat, "F")
     .check_f_blocks(dat)
     if (nrow(dat$F_modmat) != nrow(dat$F_data) ||

@@ -1,5 +1,8 @@
 # tinyAM 0.1.1.9001
 
+* Add `for_fleet()` and `for_survey()` for group-specific F means and
+  catchability relationships within one formula, alongside shared effects.
+  Scoped curves, Gaussian effects and abundance powers retain their own groups.
 * Add optional catch fleets with independent F surfaces on one shared population,
   shared or fleet-specific correlation groups and F age blocks, and typed
   fleet-specific catch weights. Total F drives population survival.

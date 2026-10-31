@@ -265,5 +265,11 @@ vis_tam.tam_retro <- function(..., model_list = NULL, interval = 0.95, output_fi
   variable <- unique(effect$variable)
   by <- unique(effect$by)
   if (!is.na(by)) variable <- paste(variable, "by", by)
-  paste0(component, " ", process, " (", gsub("_", " ", variable, fixed = TRUE), ")")
+  label <- paste0(component, " ", process, " (", gsub("_", " ", variable, fixed = TRUE), ")")
+  scope <- intersect(c("fleet","survey"),names(effect))
+  if (length(scope)) {
+    values <- unique(effect[[scope[1L]]]); values <- values[!is.na(values)]
+    if (length(values) == 1L) label <- paste0(label," [",values,"]")
+  }
+  label
 }

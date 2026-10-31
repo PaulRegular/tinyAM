@@ -1,15 +1,26 @@
 # Catch rows are the explanatory grid for F, including unobserved catches.
-.check_f_plus_covariates <- function(obs, plus_age, settings) {
-  forms <- c(list(settings$mu_form, settings$sd_form),
+.check_f_plus_covariates <- function(obs, plus_age, settings, years = unique(obs$catch$year)) {
+  mean <- settings$mu_form
+  parts <- list()
+  if (!is.null(mean) && .contains_scope(mean)) {
+    split <- .split_scopes(mean,obs$catch,"fleet")
+    parts <- lapply(split$scopes,function(x) list(formula=x$formula,fleet=x$name))
+    parts[[length(parts)+1L]] <- list(formula=split$formula,fleet=NULL)
+  } else parts <- list(list(formula=mean,fleet=NULL))
+  forms <- c(list(settings$sd_form),
     if (inherits(settings$cor_form, "formula")) list(settings$cor_form) else settings$cor_form)
-  variables <- setdiff(unique(unlist(lapply(forms, all.vars))), c("year", "age", "fleet"))
-  if ("obs" %in% variables) cli::cli_abort("F formulas cannot use the catch response obs as a predictor.")
-  variables <- intersect(variables, names(obs$catch))
-  d <- obs$catch[obs$catch$age >= plus_age, , drop = FALSE]
-  group <- paste(d$year, if ("fleet" %in% names(d)) d$fleet else "Fishery")
-  for (name in variables) for (g in unique(group)) {
-    if (length(unique(d[[name]][group == g])) > 1L) {
-      cli::cli_abort("Catch covariate {name} conflicts across biological ages pooled into plus age {plus_age} in {g}. Supply a consistent predictor for the modeled plus group.")
+  parts <- c(parts,lapply(forms,function(x) list(formula=x,fleet=NULL)))
+  for (part in parts) {
+    variables <- setdiff(.formula_input_variables(part$formula),c("year","age","fleet"))
+    if ("obs" %in% variables) cli::cli_abort("F formulas cannot use the catch response obs as a predictor.")
+    variables <- intersect(variables,names(obs$catch))
+    d <- obs$catch[obs$catch$age >= plus_age & obs$catch$year %in% years,,drop=FALSE]
+    if (!is.null(part$fleet)) d <- d[d$fleet == part$fleet,,drop=FALSE]
+    group <- paste(d$year,if("fleet" %in% names(d)) d$fleet else "Fishery")
+    for (name in variables) for (g in unique(group)) {
+      if (length(unique(d[[name]][group == g])) > 1L) {
+        cli::cli_abort("Catch covariate {name} conflicts across biological ages pooled into plus age {plus_age} in {g}. Supply a consistent predictor for the modeled plus group.")
+      }
     }
   }
   invisible(NULL)
@@ -18,7 +29,7 @@
 .f_data <- function(dat, formula = NULL, label = "F formula") {
   d <- dat$F_data
   if (!is.null(formula)) {
-    if ("obs" %in% all.vars(formula)) cli::cli_abort("{label} cannot use the catch response obs as a predictor.")
+    if ("obs" %in% .formula_input_variables(formula)) cli::cli_abort("{label} cannot use the catch response obs as a predictor.")
     # The common population checker also understands formula marker arguments.
     proxy <- dat; proxy$pop_data <- d
     .population_data(proxy, formula, label, table = "data$catch")

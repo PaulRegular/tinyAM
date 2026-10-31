@@ -121,8 +121,9 @@ columns must be identifiable from historical year-to-year differences.
 Ordinary F mean designs use historical support only; projection rows carry
 the terminal historical design by age. No future-year coefficients are fitted.
 With IID residuals, \code{\link[=iid]{iid()}}, \code{\link[=rw]{rw()}} and \code{\link[=ar1]{ar1()}} can add random mean effects,
-e.g. \code{~ factor(age) + rw(year)}. Only one temporal mean term is supported;
-structured means with temporal residual processes are not yet enabled.
+e.g. \code{~ factor(age) + rw(year)}. Temporal mean terms must have disjoint
+support, for example one per fleet; overlapping temporal mean terms and
+structured means with temporal residual processes are not enabled.
 \code{\link[=mono]{mono()}} and \code{\link[=logistic]{logistic()}} can instead describe a rising mean age curve
 with no residual process or with IID/AR1 residuals, e.g. \code{~ logistic(age)}. Ordinary terms supply
 baseline F; realized F can depart from the rising mean. Static curves are
@@ -131,6 +132,10 @@ Catch covariates must be available even where observations are missing.
 They must agree across biological ages pooled into a modeled plus group.
 The catch response \code{obs} cannot enter an F formula. With fleet labels,
 each fleet has its own F states; total F is their sum for survival and Z.
+\code{\link[=for_fleet]{for_fleet()}} gives one fleet its own formula, e.g.
+\code{~ 0 + for_fleet("Trawl", ~ factor(year) + logistic(age)) + for_fleet("Gillnet", ~ factor(year) + factor(age))}. Ordinary terms outside
+scopes share their coefficients. Each inner formula includes an intercept
+unless removed explicitly; avoid redundant global and scoped baselines.
 \item \code{mean_ages}: optional vector of ages to include in population weighted
 average F (\code{F_bar}) calculations. All ages used if absent.
 }}
@@ -206,6 +211,9 @@ selectivity curves. \code{~ q_key + power(N, by = q_power_group)} allows
 abundance-dependent catchability using internally calculated abundance at
 survey time. Missing power-group labels mean p = 1, not missing observations.
 Powers require the log q link. See \code{\link[=power]{power()}} and \link{formula_effects}.
+\code{\link[=for_survey]{for_survey()}} applies a formula to one named survey, e.g.
+\code{~ 0 + for_survey("RV", ~ logistic(age)) + for_survey("Sentinel", ~ q_block)}. Effects are built on each survey's
+own reporting ages, then contribute zero to the predictor elsewhere.
 \item \code{q_link}: \code{"log"} (default) allows any positive catchability; \code{"logit"}
 restricts catchability to between zero and one. Use the logit link only
 when the survey index has an absolute abundance scale and this restriction

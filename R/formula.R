@@ -53,8 +53,9 @@
 #' M age block. Use a categorical age column for separate trajectories;
 #' numeric `by = age` instead multiplies one shared trajectory by age.
 #'
-#' Initially, one temporal mean term is permitted per F/M surface, with IID
-#' residuals or M residuals off. Structured means with RW/AR1 residuals are
+#' One temporal mean term is permitted on each set of applicable F/M rows,
+#' with IID residuals or the residual process off. Disjoint [for_fleet()] scopes
+#' can therefore have different temporal means. Structured means with RW/AR1 residuals are
 #' rejected pending evidence that both temporal components can be separated,
 #' except for the age-group M random slopes described below.
 #' Two estimated IID variances on the same states are also rejected.
@@ -184,8 +185,9 @@ logistic <- function(x, by = NULL) .formula_marker_error("logistic")
   ""
 }
 
-.parse_q_formula <- function(formula, data, fixed_design = stats::model.matrix) {
+.parse_q_formula <- function(formula, data, fixed_design = stats::model.matrix, scope = NULL) {
   if (!inherits(formula, "formula")) cli::cli_abort("{.arg q_form} must be a formula.")
+  if (.contains_scope(formula)) return(.scoped_q_design(formula,data,fixed_design,scope))
   if (any(c("bh", "ricker") %in% all.names(formula))) {
     cli::cli_abort("bh() and ricker() are restricted to rec_settings$mu_form.")
   }
@@ -602,6 +604,7 @@ logistic <- function(x, by = NULL) .formula_marker_error("logistic")
   offset <- 0L
   for (term in terms) {
     tab <- .q_level_metadata(term)
+    if (!is.null(term$scope)) tab[[term$scope$type]] <- term$scope$name
     tab$est <- tab$se <- numeric(nrow(tab))
     tab$est[!tab$is_fixed] <- estimate[[term$parameter]]
     tab$se[!tab$is_fixed] <- error[[term$parameter]]
@@ -700,10 +703,11 @@ logistic <- function(x, by = NULL) .formula_marker_error("logistic")
 #' ## Mean fishing mortality
 #'
 #' With `F_settings$process = "off"`, `"iid"` or `"ar1"`, use `~ mono(age)` or
-#' `~ logistic(age)`. Ordinary terms provide the baseline F. One curve is allowed;
-#' its numeric coordinate must be age or an age-derived `pop_covariates` column
-#' constant across years at each age. Categorical `by` groups may have separate
-#' curves. M mean curves are not enabled.
+#' `~ logistic(age)`. Ordinary terms provide the baseline F. One curve is allowed
+#' on each set of applicable rows; [for_fleet()] can give fleets different curves.
+#' Its numeric coordinate must be age or an age-derived catch-table column
+#' constant across years at each age within the fleet. Categorical `by` groups
+#' may have separate curves. M mean curves are not enabled.
 #'
 #' For mono, \eqn{\log\mu_F = X\beta + C d}, where C contains cumulative
 #' indicators and the directly fitted `dmu_f` increments satisfy \eqn{d\geq0}.
@@ -722,7 +726,7 @@ logistic <- function(x, by = NULL) .formula_marker_error("logistic")
 #'
 #' @param x Name of an index column for q: numeric or factor for `mono()`,
 #'   numeric age/size for `logistic()`. F mean curves require numeric age or
-#'   an age-derived population covariate.
+#'   an age-derived catch covariate.
 #' @param by Optional name of a categorical grouping column.
 #' @return A formula marker; calling this function directly raises an error.
 #' @seealso [formula_effects], [prepare_tam()], [make_par()], [tidy_obs_pred()], [tidy_par()], [tinyAM-model]
@@ -944,7 +948,7 @@ mono <- function(x, by = NULL) {
     }
     forbidden <- function(x) {
       if (!is.call(x)) return(FALSE)
-      .formula_call_name(x) %in% c("iid", "rw", "ar1", "mono", "logistic", "bh", "ricker", "|", "offset") ||
+      .formula_call_name(x) %in% c("iid", "rw", "ar1", "mono", "logistic", "bh", "ricker", "|", "offset", "for_fleet", "for_survey") ||
         any(vapply(as.list(x)[-1L], forbidden, logical(1)))
     }
     if (forbidden(formula[[2L]])) {
@@ -979,7 +983,7 @@ mono <- function(x, by = NULL) {
     .fixed_mean_design(formula, data, !data$is_proj, carry_terminal = TRUE,
       label = "F_settings$mu_form")$matrix
   } else stats::model.matrix
-  design <- .parse_q_formula(formula, d, fixed_design)
+  design <- .parse_q_formula(formula, d, fixed_design, scope=if(component == "F") "fleet" else NULL)
   terms <- design$q_terms
   logistic <- Filter(function(x) x$type == "logistic", terms)
   mono <- design$q_mono_steps
@@ -987,20 +991,12 @@ mono <- function(x, by = NULL) {
   has_curve <- n_mono + length(logistic) > 0L
   if (has_curve) {
     if (component != "F") cli::cli_abort("M_settings$mu_form does not support catchability curves: mono() and logistic() are enabled for F only.")
-    if (n_mono + length(logistic) != 1L) cli::cli_abort("Use one mono() or logistic() curve in F_settings$mu_form.")
+    scoped <- length(design$q_scope_components) > 0L
+    if (!scoped && n_mono + length(logistic) != 1L) cli::cli_abort("Use one mono() or logistic() curve in F_settings$mu_form.")
     if (!dat$F_settings$process %in% c("off", "iid", "ar1")) {
       cli::cli_abort("F mean curves require process = 'off', 'iid' or 'ar1'. Static age curves cancel from RW increments.")
     }
-    variable <- if (n_mono) mono$variable[1L] else logistic[[1L]]$variable
-    x <- d[[variable]]
-    if (!is.numeric(x) || any(vapply(split(x, interaction(d$age, if ("fleet" %in% names(d)) d$fleet else 1)), function(z) length(unique(z)) != 1L, logical(1)))) {
-      cli::cli_abort("F mean curves must use numeric age or an age-derived population covariate constant across years at each age.")
-    }
-    by <- if (n_mono) mono$by[1L] else logistic[[1L]]$by
-    if (!is.null(by) && !is.na(by) && is.numeric(d[[by]])) cli::cli_abort("F mean curves require categorical by groups.")
-    if (!ncol(design$q_modmat)) cli::cli_abort("F mean curves require an ordinary baseline; retain the intercept or supply group baselines.")
-    fixed <- design$q_modmat[!d$is_proj, , drop = FALSE]
-    if (qr(cbind(fixed, 1))$rank > qr(fixed)$rank) cli::cli_abort("F mean curves require an ordinary baseline; retain the intercept or supply group baselines.")
+    .check_f_curve_design(design, d, terms)
     if (n_mono) {
       combined <- cbind(design$q_modmat, design$q_mono_modmat)
       combined <- combined[!d$is_proj, , drop = FALSE]
@@ -1023,7 +1019,7 @@ mono <- function(x, by = NULL) {
   if (length(terms)) names(terms) <- vapply(terms, `[[`, character(1), "id")
   list(
     matrix = design$q_modmat, terms = terms,
-    mono_matrix = design$q_mono_modmat, mono_steps = mono
+    mono_matrix = design$q_mono_modmat, mono_steps = mono, scopes=design$q_scope_components
   )
 }
 
@@ -1044,7 +1040,13 @@ mono <- function(x, by = NULL) {
     return(invisible(NULL))
   }
   settings <- dat[[paste0(component, "_settings")]]
-  if (sum(vapply(terms, function(x) x$type %in% c("rw", "ar1"), logical(1))) > 1L) {
+  temporal <- Filter(function(x) x$type %in% c("rw","ar1"),terms)
+  overlap <- FALSE
+  if (length(temporal) > 1L) for (i in seq_len(length(temporal)-1L)) for (j in seq.int(i+1L,length(temporal))) {
+    rows <- function(x) unlist(lapply(x$groups,`[[`,"rows"),use.names=FALSE)
+    if (length(intersect(rows(temporal[[i]]),rows(temporal[[j]])))) overlap <- TRUE
+  }
+  if (overlap) {
     cli::cli_abort(c("Use one temporal process in the {component} mean.",
       "i" = "Multiple RW/AR1 mean terms may explain the same changes in mortality; their separate contributions have not been validated.",
       "i" = "Retain one rw() or ar1() term and use IID residuals for independent fluctuations."

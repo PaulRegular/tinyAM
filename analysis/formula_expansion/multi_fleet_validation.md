@@ -59,6 +59,28 @@ documented on starting main: age subsets, Atka, BC canary, coastal hake, EBS
 cod/pollock, GOA cod/pollock, Pacific M priors and recipe blocks. No canonical
 assessment exports were retained from testing.
 
+## Scoped formulas
+
+`for_fleet()` and `for_survey()` compile each inner formula on its selected
+rows before combining it with shared global terms. Tests cover contrast and
+formula environments, disjoint Gaussian mean effects, different fleet curves,
+sparse survey support, abundance powers, projection preparation and warm starts.
+The targeted suite passed 525 assertions with no failures or warnings.
+
+`multi_fleet_validation.R scoped` compares equivalent ordinary and scoped
+fixed designs on the artificial catch split and two copies of the survey.
+Both fits converged with positive-definite Hessians (maximum gradients 0.00229
+and 0.00251). Both had 55 fixed parameters, no random coefficients, and
+AIC/cAIC 1162.469; their cAIC difference was 7.49e-9. The scoped one-fold
+hindcast was scored, and explicitly requested OSA residuals left the supplied
+fit's parameter values unchanged. The two-model dashboard rendered without
+warnings. These duplicated observations test software behavior, not recovery
+or the benefit of collecting an additional survey.
+
+Browser-based visual inspection was attempted but the computer-use tool stopped
+because it could not verify the current Chrome URL. HTML generation succeeded;
+interactive visual inspection remains outstanding.
+
 ## Remaining validation
 
 Visual inspection, recovery experiments and source-supported multi-fleet
