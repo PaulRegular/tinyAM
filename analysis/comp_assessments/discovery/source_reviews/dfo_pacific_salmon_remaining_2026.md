@@ -11,7 +11,7 @@ This screen covers the seven DFO Pacific salmon inventory rows left unreviewed a
 - **Skeena-Nass Pink:** identity ambiguous. Current DFO sources distinguish Skeena and Nass Pink units, so the combined inventory label is not treated as a single unit.
 - **Nass and Skeena sockeye:** distinct current aggregates. The 2025 DFO technical report and 2024/056 research document review age-composition data and use age composition to back-calculate brood-year recruitment for stock-recruit analyses. The assessment outputs are spawner/run/recruitment series and benchmarks, not age-specific population N/F/M surfaces; both are ineligible for this age-structured candidate screen.
 - **Stikine sockeye:** distinct transboundary management unit. DFO and ADF&G describe a genetic mark-recapture assessment for stock composition and in-river run abundance. Age/sex/length samples are collected, but the reviewed assessment description does not indicate an age-structured population likelihood or age-specific population outputs; screened ineligible.
-- **Barkley sockeye:** distinct West Coast Vancouver Island - Barkley unit, with a 2024 assessment published as DFO Science Response 2026/022. Detailed methods and age-specific outputs remain unverified, so screening remains in progress and eligibility unresolved.
+- **Barkley sockeye:** distinct West Coast Vancouver Island - Barkley unit, with a 2024 assessment published as DFO Science Response 2026/022. It is screened ineligible for the age-structured candidate set because the response describes run reconstruction and stock-recruit methods but does not establish the complete age-specific model inputs or N/F-at-age outputs tinyAM needs. See source_reviews/dfo_wcvi_barkley_sockeye_2024.md.
 
 ## Sources
 
@@ -25,7 +25,7 @@ This screen covers the seven DFO Pacific salmon inventory rows left unreviewed a
 - [ADF&G Stikine River Chinook and sockeye assessment description](https://newsrelease.adfg.alaska.gov/index.cfm?adfg=commercialbyareasoutheast.salmon_research_stikineriver_stockassess).
 - [Barkley Sockeye assessment in 2024, DFO Science Response 2026/022](https://publications.gc.ca/collections/collection_2026/mpo-dfo/Fs70-7-2026-022-eng.pdf).
 
-DFO Science Response 2025/001 and the three DFO summary pages are cached locally under `source_cache/discovery_dfo_pacific_salmon_2026/`; `sources.csv` records retrieval dates, sizes and SHA-256 hashes. Attempts to retrieve the newer Government of Canada Publications PDFs for the Skeena/Nass reports and Barkley Science Response returned the archive-information HTML page, not the requested documents. The URLs remain recorded above; those documents were reviewed via official full-text search results or publication metadata, and the Barkley screen stays open until its detailed report can be checked directly.
+DFO Science Response 2025/001 and the three DFO summary pages are cached locally under `source_cache/discovery_dfo_pacific_salmon_2026/`; `sources.csv` records retrieval dates, sizes and SHA-256 hashes. Attempts to retrieve the newer Government of Canada Publications PDFs for the Skeena/Nass reports and Barkley Science Response returned the archive-information HTML page, not the requested documents. The URLs remain recorded above; the reports were reviewed via official full-text search results or publication metadata. Barkley screening is complete, and its evidence and local-download limitation are described in the dedicated review.
 
 ## Register and canonical data
 

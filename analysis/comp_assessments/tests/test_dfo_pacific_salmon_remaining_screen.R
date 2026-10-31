@@ -51,8 +51,8 @@ stopifnot(
   grepl('genetic mark-recapture', stikine_sockeye$decision_reason, fixed = TRUE),
   barkley_sockeye$candidate_unit_id == 'dfo_wcvi_barkley_sockeye_smu',
   barkley_sockeye$inventory_assessment_year == 2024L,
-  barkley_sockeye$match_status == 'new', barkley_sockeye$screening_status == 'in_progress',
-  barkley_sockeye$eligibility == 'unresolved',
+  barkley_sockeye$match_status == 'new', barkley_sockeye$screening_status == 'screened',
+  barkley_sockeye$eligibility == 'ineligible',
   grepl('2026/022', barkley_sockeye$output_evidence, fixed = TRUE),
   all(register$import_status[c(grep('^DFO:Pacific:Coho Salmon - North Coast$', register$candidate_id),
     grep('^DFO:Pacific:Pink Salmon .* Fraser$', register$candidate_id),
@@ -95,7 +95,7 @@ if (file.exists(manifest_path)) {
 }
 stopifnot(
   grepl('Fraser Pink Odd', review, fixed = TRUE),
-  grepl('eligibility unresolved', review, fixed = TRUE),
+  grepl('Barkley sockeye', review, fixed = TRUE),
   grepl('No canonical database stock, assessment, input or output records were created.', review, fixed = TRUE),
   grepl('2026/022', review, fixed = TRUE)
 )

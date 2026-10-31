@@ -25,16 +25,16 @@ the rows already linked to a stock or candidate unit.
 
 | Organization | Rows | Matched to database | New candidate rows | Ambiguous identity | Identity unreviewed | Eligible rows | Ineligible rows | Eligibility unresolved | Screened | In progress | Not screened |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| DFO | 199 | 20 | 63 | 18 | 98 | 21 | 146 | 32 | 198 | 1 | 0 |
+| DFO | 199 | 20 | 63 | 18 | 98 | 21 | 147 | 31 | 199 | 0 | 0 |
 | ICES | 274 | 59 | 145 | 2 | 68 | 56 | 123 | 95 | 206 | 0 | 68 |
 | NOAA | 432 | 28 | 220 | 8 | 176 | 64 | 144 | 224 | 258 | 0 | 174 |
-| **Total** | **905** | **107** | **428** | **28** | **342** | **141** | **413** | **351** | **662** | **1** | **242** |
+| **Total** | **905** | **107** | **428** | **28** | **342** | **141** | **414** | **350** | **663** | **0** | **242** |
 
 The crosswalk currently links 452 distinct unit keys across 474 inventory rows:
 100 link to canonical stocks and 352 are candidate units, including one with
 ambiguous identity and one with mixed identity status. Of the 350 new
-candidate units, 44 are eligible for source curation, 247 are ineligible for
-the age-disaggregated set, and 59 remain unresolved. A further 431 inventory
+candidate units, 44 are eligible for source curation, 248 are ineligible for
+the age-disaggregated set, and 58 remain unresolved. A further 431 inventory
 rows have no unit crosswalk yet. The progress summary has 74 organization-region
 rows. Row-level status and unit-level deduplication are intentionally reported
 separately.
@@ -1194,9 +1194,13 @@ the age-disaggregated comparison set. See
 
 The discovery snapshot as of 2026-10-31 contains 905 inventory rows: 107
 matched, 428 provisionally new, 28 ambiguous, and 342 identity-unreviewed.
-Across all rows, 141 are eligible, 413 ineligible, and 351 unresolved; 662
-are screened, 1 is in progress, and 242 are not started. The organization and
-source-region breakdowns are in `inventory_progress.csv`. The crosswalk has
+Across all rows, 141 are eligible, 414 ineligible, and 350 unresolved; 663
+are screened, none is in progress, and 242 are not started. The organization and
+source-region breakdowns are in inventory_progress.csv.
+
+The DFO WCVI Barkley Sockeye row is screened ineligible: its 2024 update uses salmon run reconstruction and stock-recruit methods, but does not verify the age-structured catch, survey, biological, and mortality inputs or N-at-age/F-at-age outputs needed for tinyAM. See discovery/source_reviews/dfo_wcvi_barkley_sockeye_2024.md.
+
+The crosswalk has
 452 linked units (100 canonical stock links and 352 candidate units) and 431
 unlinked inventory rows in `inventory_units.csv`.
 
