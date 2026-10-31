@@ -26,15 +26,15 @@ the rows already linked to a stock or candidate unit.
 | Organization | Rows | Matched to database | New candidate rows | Ambiguous identity | Identity unreviewed | Eligible rows | Ineligible rows | Eligibility unresolved | Screened | In progress | Not screened |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 63 | 18 | 98 | 21 | 146 | 32 | 198 | 1 | 0 |
-| ICES | 274 | 59 | 144 | 2 | 69 | 56 | 123 | 95 | 205 | 0 | 69 |
-| NOAA | 432 | 28 | 213 | 8 | 183 | 63 | 138 | 231 | 251 | 0 | 181 |
-| **Total** | **905** | **107** | **420** | **28** | **350** | **140** | **407** | **358** | **654** | **1** | **250** |
+| ICES | 274 | 59 | 145 | 2 | 68 | 56 | 123 | 95 | 206 | 0 | 68 |
+| NOAA | 432 | 28 | 214 | 8 | 182 | 63 | 139 | 230 | 252 | 0 | 180 |
+| **Total** | **905** | **107** | **422** | **28** | **348** | **140** | **408** | **357** | **656** | **1** | **248** |
 
-The crosswalk currently links 444 distinct unit keys across 466 inventory rows:
-100 link to canonical stocks and 344 are candidate units, including one with
-ambiguous identity and one with mixed identity status. Of the 342 new
-candidate units, 43 are eligible for source curation, 241 are ineligible for
-the age-disaggregated set, and 58 remain unresolved. A further 439 inventory
+The crosswalk currently links 446 distinct unit keys across 468 inventory rows:
+100 link to canonical stocks and 346 are candidate units, including one with
+ambiguous identity and one with mixed identity status. Of the 344 new
+candidate units, 43 are eligible for source curation, 242 are ineligible for
+the age-disaggregated set, and 59 remain unresolved. A further 437 inventory
 rows have no unit crosswalk yet. The progress summary has 74 organization-region
 rows. Row-level status and unit-level deduplication are intentionally reported
 separately.
@@ -1139,11 +1139,11 @@ the age-disaggregated comparison set. See
 `source_reviews/ices_blue_ling_5b6712_2026.md`.
 
 The discovery snapshot as of 2026-10-31 contains 905 inventory rows: 107
-matched, 421 provisionally new, 28 ambiguous, and 349 identity-unreviewed.
-Across all rows, 140 are eligible, 407 ineligible, and 358 unresolved; 655
-are screened, 1 is in progress, and 249 are not started. The organization and
+matched, 422 provisionally new, 28 ambiguous, and 348 identity-unreviewed.
+Across all rows, 140 are eligible, 408 ineligible, and 357 unresolved; 656
+are screened, 1 is in progress, and 248 are not started. The organization and
 source-region breakdowns are in `inventory_progress.csv`. The crosswalk has
-445 linked units (100 canonical stock links and 345 candidate units) and 438
+446 linked units (100 canonical stock links and 346 candidate units) and 437
 unlinked inventory rows in `inventory_units.csv`.
 
 ICES Northeast Atlantic spurdog (`dgs.27.nea`) is a new 2026 candidate with
@@ -1151,3 +1151,11 @@ verified current assessment outputs. Age-input eligibility remains unresolved:
 the latest detailed input description located is from 2024 and documents
 aggregate catches, biomass indices, and length compositions; 2026 input arrays
 were not located. See `source_reviews/ices_spurdog_nea_2026.md`.
+
+NOAA BSAI Alaska skate (Stock SMART 10736) is a new candidate screened
+ineligible for age-disaggregated curation. The completed Model 14.2d assessment
+uses aggregate catch, survey biomass and length compositions; the sparse
+survey length-at-age observations support growth estimation only. The 2023
+report and native output tables include age-specific fitted results, which do
+not establish age-disaggregated observation inputs. See
+`source_reviews/noaa_bsai_alaska_skate_2026.md`.
