@@ -27,10 +27,10 @@ the rows already linked to a stock or candidate unit.
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 63 | 18 | 98 | 21 | 147 | 31 | 199 | 0 | 0 |
 | ICES | 274 | 59 | 160 | 2 | 53 | 56 | 136 | 82 | 221 | 0 | 53 |
-| NOAA | 432 | 28 | 236 | 9 | 159 | 71 | 154 | 207 | 275 | 0 | 157 |
-| **Total** | **905** | **107** | **459** | **29** | **310** | **148** | **437** | **320** | **695** | **0** | **210** |
+| NOAA | 432 | 28 | 237 | 9 | 158 | 72 | 154 | 206 | 276 | 0 | 156 |
+| **Total** | **905** | **107** | **460** | **29** | **309** | **149** | **437** | **319** | **696** | **0** | **209** |
 
-The crosswalk currently links 482 distinct unit keys across 505 inventory rows: 100 canonical stock units and 382 candidate units. Of the candidate units, 380 are provisionally new, one has an ambiguous identity, and one has mixed identity status. The 380 new units include 50 eligible, 270 ineligible and 60 unresolved candidates. A further 400 inventory rows have no unit crosswalk yet.
+The crosswalk currently links 483 distinct unit keys across 506 inventory rows: 100 canonical stock units and 383 candidate units. Of the candidate units, 381 are provisionally new, one has an ambiguous identity, and one has mixed identity status. The 381 new units include 51 eligible, 270 ineligible and 60 unresolved candidates. A further 399 inventory rows have no unit crosswalk yet.
 
 The progress summary has 74 organization-region
 rows. Row-level status and unit-level deduplication are intentionally reported
@@ -1218,11 +1218,11 @@ inputs and population outputs were not reported. It is screened ineligible for
 the age-disaggregated comparison set. See
 `source_reviews/ices_blue_ling_5b6712_2026.md`.
 
-The discovery snapshot as of 2026-10-31 contains 905 inventory rows: 107 matched, 454 provisionally new, 29 ambiguous, and 315 identity-unreviewed. Across all rows, 145 are eligible, 435 ineligible, and 325 unresolved; 690 are screened, none is in progress, and 215 are not started. The organization and source-region breakdowns are in inventory_progress.csv.
+The current discovery snapshot as of 2026-10-31 contains 905 inventory rows: 107 matched, 460 provisionally new, 29 ambiguous, and 309 identity-unreviewed. Across all rows, 149 are eligible, 437 ineligible, and 319 unresolved; 696 are screened, none is in progress, and 209 are not started. The organization and source-region breakdowns are in `inventory_progress.csv`.
 
 The DFO WCVI Barkley Sockeye row is screened ineligible: its 2024 update uses salmon run reconstruction and stock-recruit methods, but does not verify the age-structured catch, survey, biological, and mortality inputs or N-at-age/F-at-age outputs needed for tinyAM. See discovery/source_reviews/dfo_wcvi_barkley_sockeye_2024.md.
 
-The crosswalk has 478 linked units (100 canonical stock units and 378 candidate units) and 405 unlinked inventory rows in inventory_units.csv.
+The crosswalk has 483 linked units (100 canonical stock units and 383 candidate units) and 399 unlinked inventory rows in `inventory_units.csv`.
 
 ICES Northeast Atlantic spurdog (`dgs.27.nea`) is a new 2026 candidate with
 verified current assessment outputs. Age-input eligibility remains unresolved:
@@ -1286,3 +1286,13 @@ observations. Washington had no fishery-independent index in the assessment;
 the Oregon marine-reserve survey was not used in the base model. Both are
 ineligible for age-disaggregated source curation. See
 `source_reviews/noaa_copper_rockfish_washington_oregon_2021.md`.
+
+NOAA Stock SMART ID 15338 is the distinct Oregon vermilion rockfish unit. The
+Council-adopted 2021 Stock Synthesis archive contains conditional age-at-length
+observations, length compositions, catch histories and machine-readable
+numbers-at-age, catch-at-age and F-at-age outputs. It is eligible for source
+curation, with sparse age coverage and an approximate age-specific index
+reconstruction from aggregate recreational CPUE. The report documents a
+summer index period but not a fractional-year timing value. No canonical data
+have been imported. See
+`source_reviews/noaa_vermilion_rockfish_oregon_2021.md`.
