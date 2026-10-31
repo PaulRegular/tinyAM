@@ -26,15 +26,15 @@ the rows already linked to a stock or candidate unit.
 | Organization | Rows | Matched to database | New candidate rows | Ambiguous identity | Identity unreviewed | Eligible rows | Ineligible rows | Eligibility unresolved | Screened | In progress | Not screened |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 63 | 18 | 98 | 21 | 146 | 32 | 198 | 1 | 0 |
-| ICES | 274 | 59 | 127 | 2 | 86 | 54 | 109 | 111 | 188 | 0 | 86 |
+| ICES | 274 | 59 | 128 | 2 | 85 | 54 | 110 | 110 | 189 | 0 | 85 |
 | NOAA | 432 | 28 | 210 | 8 | 186 | 61 | 138 | 233 | 248 | 0 | 184 |
-| **Total** | **905** | **107** | **400** | **28** | **370** | **136** | **393** | **376** | **634** | **1** | **270** |
+| **Total** | **905** | **107** | **401** | **28** | **369** | **136** | **394** | **375** | **635** | **1** | **269** |
 
-The crosswalk currently links 424 distinct unit keys across 446 inventory rows:
-100 link to canonical stocks and 324 are candidate units, including one with
-ambiguous identity and one with mixed identity status. Of the 322 new
-candidate units, 39 are eligible for source curation, 227 are ineligible for
-the age-disaggregated set, and 56 remain unresolved. A further 459 inventory
+The crosswalk currently links 425 distinct unit keys across 447 inventory rows:
+100 link to canonical stocks and 325 are candidate units, including one with
+ambiguous identity and one with mixed identity status. Of the 323 new
+candidate units, 39 are eligible for source curation, 228 are ineligible for
+the age-disaggregated set, and 56 remain unresolved. A further 458 inventory
 rows have no unit crosswalk yet. Row-level status and unit-level deduplication
 are intentionally reported separately.
 
@@ -1014,3 +1014,10 @@ length-based indicators, and a combined survey biomass index. It does not
 report age-disaggregated population inputs or outputs, so it is ineligible for
 this age-based set. ICES did not request fishing-opportunity advice for
 2026–2027. See `source_reviews/ices_dogfish_8c9a_2025.md`.
+
+ICES lesser spotted dogfish in Celtic Seas (`syc.27.67a-ce-j`) was reassessed
+in the 2025 WGEF report with commercial length-frequency data, four aggregate
+survey biomass indices, and the category 3 `rfb` rule. The assessment reports
+stock-level biomass and fishing-pressure indicators and catch advice, but no
+age-disaggregated population inputs or outputs. It is ineligible for this
+age-based set. See `source_reviews/ices_dogfish_67a_ce_j_2025.md`.

@@ -9,6 +9,7 @@ candidate <- register[register$candidate_id == 'ICES:syc.27.8c9a', , drop = FALS
 cache <- file.path(root, 'source_cache/discovery_ices_dogfish_2025')
 sources <- read.csv(file.path(cache, 'sources.csv'), stringsAsFactors = FALSE)
 path <- file.path(cache, 'wgef_2025.pdf')
+pdf_source <- sources[sources$file == basename(path), , drop = FALSE]
 review <- paste(readLines(file.path(root,
   'discovery/source_reviews/ices_dogfish_8c9a_2025.md'), warn = FALSE), collapse = '\n')
 stocks <- read.csv(file.path(root, 'database/stocks.csv'), stringsAsFactors = FALSE,
@@ -36,10 +37,11 @@ stopifnot(
   grepl('length-frequency data', candidate$catch_age_evidence, fixed = TRUE),
   grepl('aggregate survey indices', candidate$survey_age_evidence, fixed = TRUE),
   grepl('2025 WGEF report', candidate$decision_reason, fixed = TRUE),
-  nrow(sources) == 1L,
+  nrow(sources) == 2L,
+  nrow(pdf_source) == 1L,
   file.exists(path),
-  file.info(path)$size == sources$bytes,
-  identical(toupper(sources$sha256), sha256_file(path)),
+  file.info(path)$size == pdf_source$bytes,
+  identical(toupper(pdf_source$sha256), sha256_file(path)),
   identical(rawToChar(readBin(path, 'raw', n = 4L)), '%PDF'),
   grepl('new assessment was done in 2025', review, fixed = TRUE),
   grepl('ICES did not receive a request for fishing-opportunity advice', review, fixed = TRUE),
