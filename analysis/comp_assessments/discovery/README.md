@@ -26,15 +26,15 @@ the rows already linked to a stock or candidate unit.
 | Organization | Rows | Matched to database | New candidate rows | Ambiguous identity | Identity unreviewed | Eligible rows | Ineligible rows | Eligibility unresolved | Screened | In progress | Not screened |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 63 | 18 | 98 | 21 | 146 | 32 | 198 | 1 | 0 |
-| ICES | 274 | 59 | 128 | 2 | 85 | 54 | 110 | 110 | 189 | 0 | 85 |
+| ICES | 274 | 59 | 129 | 2 | 84 | 54 | 111 | 109 | 190 | 0 | 84 |
 | NOAA | 432 | 28 | 210 | 8 | 186 | 61 | 138 | 233 | 248 | 0 | 184 |
-| **Total** | **905** | **107** | **401** | **28** | **369** | **136** | **394** | **375** | **635** | **1** | **269** |
+| **Total** | **905** | **107** | **402** | **28** | **368** | **136** | **395** | **374** | **636** | **1** | **268** |
 
-The crosswalk currently links 425 distinct unit keys across 447 inventory rows:
-100 link to canonical stocks and 325 are candidate units, including one with
-ambiguous identity and one with mixed identity status. Of the 323 new
-candidate units, 39 are eligible for source curation, 228 are ineligible for
-the age-disaggregated set, and 56 remain unresolved. A further 458 inventory
+The crosswalk currently links 426 distinct unit keys across 448 inventory rows:
+100 link to canonical stocks and 326 are candidate units, including one with
+ambiguous identity and one with mixed identity status. Of the 324 new
+candidate units, 39 are eligible for source curation, 229 are ineligible for
+the age-disaggregated set, and 56 remain unresolved. A further 457 inventory
 rows have no unit crosswalk yet. Row-level status and unit-level deduplication
 are intentionally reported separately.
 
@@ -1021,3 +1021,6 @@ survey biomass indices, and the category 3 `rfb` rule. The assessment reports
 stock-level biomass and fishing-pressure indicators and catch advice, but no
 age-disaggregated population inputs or outputs. It is ineligible for this
 age-based set. See `source_reviews/ices_dogfish_67a_ce_j_2025.md`.
+
+
+ICES Bay of Biscay plaice (`ple.27.89a`) remains a category 5.2 data-limited stock. The 2025 WGBIE report documents landings and commercial length frequencies, but no analytical age-structured assessment or abundance index. Its report and Advice record differ on the 2026–2028 landings recommendation (124 t versus 99 t); the discrepancy is recorded, and the unit is screened ineligible. See `source_reviews/ices_plaice_89a_2025.md`.
