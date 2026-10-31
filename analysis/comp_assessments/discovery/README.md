@@ -27,14 +27,14 @@ the rows already linked to a stock or candidate unit.
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 63 | 18 | 98 | 21 | 146 | 32 | 198 | 1 | 0 |
 | ICES | 274 | 59 | 145 | 2 | 68 | 56 | 123 | 95 | 206 | 0 | 68 |
-| NOAA | 432 | 28 | 218 | 8 | 178 | 64 | 142 | 226 | 256 | 0 | 176 |
-| **Total** | **905** | **107** | **426** | **28** | **344** | **141** | **411** | **353** | **660** | **1** | **244** |
+| NOAA | 432 | 28 | 219 | 8 | 177 | 64 | 143 | 225 | 257 | 0 | 175 |
+| **Total** | **905** | **107** | **427** | **28** | **343** | **141** | **412** | **352** | **661** | **1** | **243** |
 
-The crosswalk currently links 450 distinct unit keys across 472 inventory rows:
-100 link to canonical stocks and 350 are candidate units, including one with
-ambiguous identity and one with mixed identity status. Of the 348 new
-candidate units, 44 are eligible for source curation, 245 are ineligible for
-the age-disaggregated set, and 59 remain unresolved. A further 433 inventory
+The crosswalk currently links 451 distinct unit keys across 473 inventory rows:
+100 link to canonical stocks and 351 are candidate units, including one with
+ambiguous identity and one with mixed identity status. Of the 349 new
+candidate units, 44 are eligible for source curation, 246 are ineligible for
+the age-disaggregated set, and 59 remain unresolved. A further 432 inventory
 rows have no unit crosswalk yet. The progress summary has 74 organization-region
 rows. Row-level status and unit-level deduplication are intentionally reported
 separately.
@@ -889,6 +889,16 @@ and length compositions; otolith age-at-size observations inform growth rather
 than population age composition. The reports do not provide annual N-at-age or
 F-at-age surfaces, so the unit is ineligible for the age-disaggregated input
 set. See `source_reviews/noaa_iccat_blue_marlin_2024.md`.
+
+NOAA Stock SMART 10180 is the western Atlantic sailfish unit. The latest
+operational 2023 assessment used data through 2021. ICCAT selected JABBA S5 for
+western-stock advice and also evaluated Stock Synthesis; the Stock Synthesis
+report explicitly says it included no age data. The fit uses catches, aggregate
+fishery CPUE and length compositions, with no annual N-at-age or F-at-age
+surfaces in the report. NOAA and ICCAT use different scientific-name labels;
+the crosswalk follows the common name and western Atlantic assessment area.
+This unit is ineligible for the age-disaggregated set. See
+`source_reviews/noaa_iccat_west_sailfish_2023.md`.
 
 NOAA Stock SMART 10413 is the Southern Pacific Coast bocaccio unit. Its latest
 fitted assessment is the 2017 update, carrying forward age-at-length data from

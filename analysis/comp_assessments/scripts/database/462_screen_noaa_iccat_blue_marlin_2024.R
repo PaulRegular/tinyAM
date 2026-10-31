@@ -141,8 +141,8 @@ review <- list(
     'NOAA Stock SMART 11254 is the Atlantic blue marlin unit. Its 2024 operational',
     'full-acceptance assessment is an age-structured Stock Synthesis model used',
     'alongside JABBA, but the population data are aggregate removals, CPUE and',
-    'length compositions; age-at-size observations inform growth. Required age-',
-    'disaggregated population inputs and annual N/F-at-age outputs were not verified.'
+    'length compositions; age-at-size observations inform growth. Required age-disaggregated',
+    'population inputs and annual N/F-at-age outputs were not verified.'
   ),
   notes = paste(
     'The 2024 ICCAT report describes an Atlantic-wide single stock and data through',
