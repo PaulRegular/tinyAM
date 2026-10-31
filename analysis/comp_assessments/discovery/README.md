@@ -1122,3 +1122,19 @@ observations, but the reviewed public sources do not provide complete numeric
 annual age-length inputs and supporting expansion data. Eligibility remains
 unresolved pending recovery of those source quantities. See
 `source_reviews/ices_beaked_redfish_icelandic_slope_2026.md`.
+
+ICES Northeast Arctic ling (`lin.27.1-2`) is screened ineligible for the
+age-disaggregated assessment set. Its 2025 ICES assessment output reports an
+aggregate longline biomass index, landings, and a length-based fishing-pressure
+proxy, without age-specific population outputs. The stock-size index is in kg
+per 1,000 hooks and is not SSB. This screen does not establish that age samples
+are absent from national source systems. See
+`source_reviews/ices_ling_1_2_2025.md`.
+
+The discovery snapshot as of 2026-10-31 contains 905 inventory rows: 107
+matched, 419 provisionally new, 28 ambiguous, and 351 identity-unreviewed.
+Across all rows, 140 are eligible, 406 ineligible, and 359 unresolved; 653
+are screened, 1 is in progress, and 251 are not started. The organization and
+source-region breakdowns are in `inventory_progress.csv`. The crosswalk has
+443 linked units (100 canonical stock links and 343 candidate units) and 440
+unlinked inventory rows in `inventory_units.csv`.
