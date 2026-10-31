@@ -27,14 +27,14 @@ the rows already linked to a stock or candidate unit.
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 63 | 18 | 98 | 21 | 146 | 32 | 198 | 1 | 0 |
 | ICES | 274 | 59 | 145 | 2 | 68 | 56 | 123 | 95 | 206 | 0 | 68 |
-| NOAA | 432 | 28 | 214 | 8 | 182 | 63 | 139 | 230 | 252 | 0 | 180 |
-| **Total** | **905** | **107** | **422** | **28** | **348** | **140** | **408** | **357** | **656** | **1** | **248** |
+| NOAA | 432 | 28 | 215 | 8 | 181 | 64 | 139 | 229 | 253 | 0 | 179 |
+| **Total** | **905** | **107** | **423** | **28** | **347** | **141** | **408** | **356** | **657** | **1** | **247** |
 
-The crosswalk currently links 446 distinct unit keys across 468 inventory rows:
-100 link to canonical stocks and 346 are candidate units, including one with
-ambiguous identity and one with mixed identity status. Of the 344 new
-candidate units, 43 are eligible for source curation, 242 are ineligible for
-the age-disaggregated set, and 59 remain unresolved. A further 437 inventory
+The crosswalk currently links 447 distinct unit keys across 469 inventory rows:
+100 link to canonical stocks and 347 are candidate units, including one with
+ambiguous identity and one with mixed identity status. Of the 345 new
+candidate units, 44 are eligible for source curation, 242 are ineligible for
+the age-disaggregated set, and 59 remain unresolved. A further 436 inventory
 rows have no unit crosswalk yet. The progress summary has 74 organization-region
 rows. Row-level status and unit-level deduplication are intentionally reported
 separately.
@@ -507,6 +507,15 @@ age-specific survey abundance indices or numeric N-at-age/F-at-age series. See
 The Gulf Council's February 2025 scheduling summary recommends an update in
 2027; it is a future recommendation, not a completed assessment. A separate
 August 2025 vermilion-snapper schedule entry concerns the South Atlantic unit.
+
+The South Atlantic vermilion snapper unit (NOAA:10257) is distinct from the Gulf
+unit and is eligible for detailed source curation from the accepted SEDAR 55
+catch-at-age update (2018; data through 2016). The 2023 interim analysis was not
+accepted for catch advice, and a replacement assessment is planned outside
+SEDAR for 2027. SEDAR 55 provides weighted fishery and SERFS age compositions,
+age-specific biology, and numerical N-at-age and F-at-age outputs. Its spawning
+measure is egg production rather than biomass. See
+`source_reviews/noaa_vermilion_snapper_south_atlantic_2018.md`.
 
 NOAA Stock SMART Gulf king mackerel (10171) maps to the accepted SEDAR 38 Update
 through FY 2017-2018. The report documents conditional age-at-length inputs and
