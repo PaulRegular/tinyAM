@@ -27,14 +27,14 @@ the rows already linked to a stock or candidate unit.
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 63 | 18 | 98 | 21 | 146 | 32 | 198 | 1 | 0 |
 | ICES | 274 | 59 | 125 | 2 | 88 | 54 | 107 | 113 | 186 | 0 | 88 |
-| NOAA | 432 | 28 | 209 | 8 | 187 | 61 | 137 | 234 | 247 | 0 | 185 |
-| **Total** | **905** | **107** | **397** | **28** | **373** | **136** | **390** | **379** | **631** | **1** | **273** |
+| NOAA | 432 | 28 | 210 | 8 | 186 | 61 | 138 | 233 | 248 | 0 | 184 |
+| **Total** | **905** | **107** | **398** | **28** | **372** | **136** | **391** | **378** | **632** | **1** | **272** |
 
-The crosswalk currently links 421 distinct unit keys across 443 inventory rows:
-100 link to canonical stocks and 321 are candidate units, including one with
-ambiguous identity and one with mixed identity status. Of the 319 new
-candidate units, 39 are eligible for source curation, 224 are ineligible for
-the age-disaggregated set, and 56 remain unresolved. A further 462 inventory
+The crosswalk currently links 422 distinct unit keys across 444 inventory rows:
+100 link to canonical stocks and 322 are candidate units, including one with
+ambiguous identity and one with mixed identity status. Of the 320 new
+candidate units, 39 are eligible for source curation, 225 are ineligible for
+the age-disaggregated set, and 56 remain unresolved. A further 461 inventory
 rows have no unit crosswalk yet. Row-level status and unit-level deduplication
 are intentionally reported separately.
 
@@ -64,6 +64,12 @@ direct catch-at-age likelihood; an age-based reconstruction is limited to
 overlapping sampled fleet-years and must preserve that approximation. The
 archive also provides numbers-, catch-, F- and biomass-at-age outputs. See
 `source_reviews/noaa_cowcod_southern_california_2019.md`.
+
+NOAA squarespot rockfish (Stock SMART 10442) is screened ineligible. The latest
+accepted 2021 assessment reports age-indexed fitted quantities, but fits only
+removals, length compositions and an aggregate abundance index; the report
+says age observations inform life-history parameters outside the assessment.
+See `source_reviews/noaa_squarespot_rockfish_pacific_2021.md`.
 
 The Maritimes American eel “Large Eel” and “Elvers” inventory entries are two
 fisheries for one candidate unit. The latest detailed DFO update reports
