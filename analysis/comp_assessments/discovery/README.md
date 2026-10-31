@@ -27,14 +27,14 @@ the rows already linked to a stock or candidate unit.
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 63 | 18 | 98 | 21 | 146 | 32 | 198 | 1 | 0 |
 | ICES | 274 | 59 | 138 | 2 | 75 | 54 | 120 | 100 | 199 | 0 | 75 |
-| NOAA | 432 | 28 | 212 | 8 | 184 | 62 | 138 | 232 | 250 | 0 | 182 |
-| **Total** | **905** | **107** | **413** | **28** | **357** | **137** | **404** | **364** | **647** | **1** | **257** |
+| NOAA | 432 | 28 | 213 | 8 | 183 | 63 | 138 | 231 | 251 | 0 | 181 |
+| **Total** | **905** | **107** | **414** | **28** | **356** | **138** | **404** | **363** | **648** | **1** | **256** |
 
-The crosswalk currently links 437 distinct unit keys across 459 inventory rows:
-100 link to canonical stocks and 337 are candidate units, including one with
-ambiguous identity and one with mixed identity status. Of the 335 new
-candidate units, 40 are eligible for source curation, 238 are ineligible for
-the age-disaggregated set, and 57 remain unresolved. A further 446 inventory
+The crosswalk currently links 438 distinct unit keys across 460 inventory rows:
+100 link to canonical stocks and 338 are candidate units, including one with
+ambiguous identity and one with mixed identity status. Of the 336 new
+candidate units, 41 are eligible for source curation, 238 are ineligible for
+the age-disaggregated set, and 57 remain unresolved. A further 445 inventory
 rows have no unit crosswalk yet. Row-level status and unit-level deduplication
 are intentionally reported separately.
 ICES sandeel `san.27.6a` is a distinct current unit in Division 6.a (West of
@@ -1086,3 +1086,13 @@ outputs are available. Recreational age proportions require figure digitization;
 exact discard ages and a single within-year index timing are not provided. The
 unit is eligible for source curation with these limitations recorded. See
 `source_reviews/noaa_greater_amberjack_south_atlantic_2020.md`.
+
+NOAA Stock SMART 11342 is the single Southeastern U.S. mutton snapper unit
+assessed by SEDAR 79 across Gulf and South Atlantic council areas. Its 2024
+final report covers 1981–2023 and was reviewed by the joint SSCs in 2025. The
+model uses length compositions and conditional age-at-length rather than direct
+catch-at-age. Published catch and age-at-length figures support a documented
+but approximate reconstruction; annual aggregate outputs are tabulated, while
+numeric N-at-age and F-at-age tables were not located. It is eligible for
+source curation with those limitations. See
+source_reviews/noaa_southeastern_mutton_snapper_sedar79_2024.md.
