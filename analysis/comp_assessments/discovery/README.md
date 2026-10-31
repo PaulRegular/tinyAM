@@ -26,15 +26,15 @@ the rows already linked to a stock or candidate unit.
 | Organization | Rows | Matched to database | New candidate rows | Ambiguous identity | Identity unreviewed | Eligible rows | Ineligible rows | Eligibility unresolved | Screened | In progress | Not screened |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 63 | 18 | 98 | 21 | 146 | 32 | 198 | 1 | 0 |
-| ICES | 274 | 59 | 139 | 2 | 74 | 54 | 121 | 99 | 200 | 0 | 74 |
+| ICES | 274 | 59 | 140 | 2 | 73 | 55 | 121 | 98 | 201 | 0 | 73 |
 | NOAA | 432 | 28 | 213 | 8 | 183 | 63 | 138 | 231 | 251 | 0 | 181 |
-| **Total** | **905** | **107** | **415** | **28** | **355** | **138** | **405** | **362** | **649** | **1** | **255** |
+| **Total** | **905** | **107** | **416** | **28** | **354** | **139** | **405** | **361** | **650** | **1** | **254** |
 
-The crosswalk currently links 439 distinct unit keys across 461 inventory rows:
-100 link to canonical stocks and 339 are candidate units, including one with
-ambiguous identity and one with mixed identity status. Of the 337 new
-candidate units, 41 are eligible for source curation, 239 are ineligible for
-the age-disaggregated set, and 57 remain unresolved. A further 444 inventory
+The crosswalk currently links 440 distinct unit keys across 462 inventory rows:
+100 link to canonical stocks and 340 are candidate units, including one with
+ambiguous identity and one with mixed identity status. Of the 338 new
+candidate units, 42 are eligible for source curation, 239 are ineligible for
+the age-disaggregated set, and 57 remain unresolved. A further 443 inventory
 rows have no unit crosswalk yet. Row-level status and unit-level deduplication
 are intentionally reported separately.
 ICES sandeel `san.27.6a` is a distinct current unit in Division 6.a (West of
@@ -1103,3 +1103,14 @@ and XML provide no age-disaggregated observations or population outputs. The
 advice limits landings to 51 tonnes in each of 2027 and 2028 and cannot quantify
 corresponding catches. It is screened ineligible for the age-disaggregated set.
 See `source_reviews/ices_thornback_ray_6_2026.md`.
+
+
+ICES greater silver smelt aru.27.5b6a is a new unit eligible for source curation
+from the 2026 WGDEEP report. It has catch-at-age, two age-specific Faroese
+survey tables, fixed maturity and M, and official SSB, recruitment, and F
+outputs with intervals. Weights are tabulated for ages 5–9; weights for ages
+10–21+ must be digitized from a figure, with a reported small-sample concern
+for old fish in 2019. Exact annual survey timing fractions and the fitted
+numeric TAF inputs/outputs remain unresolved for translation. No canonical
+database values have been added. See
+discovery/source_reviews/ices_greater_silver_smelt_5b6a_2026.md.
