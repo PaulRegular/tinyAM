@@ -27,17 +27,24 @@ the rows already linked to a stock or candidate unit.
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 63 | 18 | 98 | 21 | 147 | 31 | 199 | 0 | 0 |
 | ICES | 274 | 59 | 159 | 2 | 54 | 56 | 136 | 82 | 220 | 0 | 54 |
-| NOAA | 432 | 28 | 221 | 8 | 175 | 65 | 144 | 223 | 259 | 0 | 173 |
-| **Total** | **905** | **107** | **443** | **28** | **327** | **142** | **427** | **336** | **678** | **0** | **227** |
+| NOAA | 432 | 28 | 223 | 8 | 173 | 65 | 146 | 221 | 261 | 0 | 171 |
+| **Total** | **905** | **107** | **445** | **28** | **325** | **142** | **429** | **334** | **680** | **0** | **225** |
 
-The crosswalk currently links 467 distinct unit keys across 489 inventory rows:
-100 link to canonical stocks and 367 are candidate units, including one with
-ambiguous identity and one with mixed identity status. Of the 365 new
-candidate units, 45 are eligible for source curation, 261 are ineligible for
-the age-disaggregated set, and 59 remain unresolved. A further 416 inventory
+The crosswalk currently links 469 distinct unit keys across 491 inventory rows:
+100 link to canonical stocks and 369 are candidate units, including one with
+ambiguous identity and one with mixed identity status. Of the 367 new
+candidate units, 45 are eligible for source curation, 263 are ineligible for
+the age-disaggregated set, and 59 remain unresolved. A further 414 inventory
 rows have no unit crosswalk yet. The progress summary has 74 organization-region
 rows. Row-level status and unit-level deduplication are intentionally reported
 separately.
+
+NOAA Caribbean silk snapper (Stock SMART 10241) and queen snapper (10247) are
+separate, new ineligible candidates. Their latest completed detailed assessment
+located, SEDAR 26 (2011), uses data-limited commercial CPUE and length-frequency
+methods and does not provide the age-disaggregated inputs and population outputs
+required for this comparison. SEDAR 103 is still in progress. See
+`source_reviews/noaa_caribbean_snappers_sedar26_2011.md`.
 
 The first six newly screened ICES units in this review are ineligible for the
 age-disaggregated source set. Four use no-assessment or landings-only advice;
