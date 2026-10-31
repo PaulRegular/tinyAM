@@ -156,10 +156,10 @@ rsvg::rsvg_pdf(file.path(repo, "man/figures/logo.svg"), "logo.pdf")
 \widehat N_{t,a}&=N_{t-1,a-1}e^{-Z_{t-1,a-1}},\\[-1mm]
 \widehat N_{t,A}&=N_{t-1,A-1}e^{-Z_{t-1,A-1}}\\[-1mm]
 &\quad+N_{t-1,A}e^{-Z_{t-1,A}},\\
-\log N_{t,a}&=\log\widehat N_{t,a}+\eta^N_{t,a}.
+\log N_{t,a}&=\log\widehat N_{t,a}+X^N_{t,a}\beta_N+\eta^N_{t,a}.
 \end{aligned}
 \]
-\micro{$\eta^N_{t,a}$ is the abundance deviation; see Variation in N, F and M for process choices. \texttt{init = "exp"} initializes older ages from exponential survivorship; other choices are \texttt{"free"}, \texttt{"latent"}, \texttt{"mono"}, and \texttt{"capped"}. Age indices $1,\ldots,A$ run from the youngest modeled age to the plus group.}
+\micro{Optional \texttt{N\_settings\$mu\_form} adds proportional apparent gains/losses; $\eta^N$ is the process deviation. \texttt{init = "exp"} initializes older ages from exponential survivorship; alternatives: \texttt{"free"}, \texttt{"latent"}, \texttt{"mono"}, \texttt{"capped"}. Indices $1,\ldots,A$ run from the youngest modeled age to the plus group.}
 \micro{For $t\ge2$, non-plus ages use the first survival equation.}
 \end{mathbox}\vfill
 \begin{mathbox}{Recruitment}
@@ -172,7 +172,7 @@ g_{BH}(S)&=\alpha S/(1+\beta S),\\
 g_{Ricker}(S)&=\alpha S e^{-\beta S}.
 \end{aligned}
 \]
-\micro{$\alpha,\beta>0$; $\epsilon_t\sim\mathcal N(0,\sigma_R^2)$. IID has $u_t=\epsilon_t$; AR1 has $u_t=\phi_Ru_{t-1}+\epsilon_t$ and a stationary start. Curves describe medians. Lag $L$ defaults to the youngest biological age; early boundary R is free. No RW + curve.}
+\micro{$\alpha,\beta>0$; $\epsilon_t\sim\mathcal N(0,\sigma_R^2)$. IID: $u_t=\epsilon_t$; AR1: $u_t=\phi_Ru_{t-1}+\epsilon_t$, with a stationary start. Curves describe medians. Lag $L$ defaults to the youngest biological age. Boundary R is free by default; \texttt{init = "latent"} integrates it. No RW + curve.}
 \end{mathbox}\vfill
 \begin{mathbox}{Biomass and spawning biomass}
 \micro{Spawning biomass sums mature biomass across biological ages after mortality up to spawning.}

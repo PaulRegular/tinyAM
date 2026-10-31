@@ -287,10 +287,34 @@ checks and six SAMjr printed-output comparisons pass. The haddock fit's
 objective difference is 5.00e-12, with convergence and positive-definite
 uncertainty. Printed-output agreement is not bitwise identity.
 
-## Remaining validation
+## Final validation and delivery
 
-Visual inspection, recovery experiments and source-supported multi-fleet
-assessment trials are recorded as they finish on the subsequent branches.
-No recovery or superiority claim is made from the artificial workflow example.
-Generated fits, warnings, dashboards and numerical tables stay in ignored
-`results/multi_fleet/` and `analysis/sam_equivalence/results/` directories.
+The final focused run passed **395 assertions**, without warnings or failures.
+The clean package build passed `R CMD check --no-manual`: **OK**, **4,218
+assertions**, zero failures/warnings/skips. Comparative assessments returned
+**60 passes and the same ten pre-existing failures** listed in the core section;
+the additional fleet-reference test passed. No canonical aggregate exports
+were retained from targeted runs.
+
+The SCAA/SAM/NCAM cheatsheet fits, two-fold multi-model hindcast, SSB figure,
+companion HTML and tracked PDF were regenerated through `cheatsheet/examples.R`,
+with its source/provenance guards intact. The SAM example had one failed
+hindcast attempt; differing validation coverage remains flagged. Both PDF pages
+were rendered and visually checked for clipping and legibility. The PDF's
+relative `tinyAM_dashboard.html` link and the adjacent self-contained HTML were
+verified. The reference now also shows the existing cohort-covariate term and
+optional latent recruitment boundary convention.
+
+Core, scoped, curve, smooth, herring and multi-model example dashboards rendered
+with `open_file = FALSE`. Interactive browser inspection was blocked when the
+computer-use tool could not verify the current Chrome URL; it was not bypassed.
+Manual control/rotation/resize checks therefore remain unverified. Programmatic
+widget, orientation, scope, interval and rendering checks passed.
+
+Keep the default-start curve/smooth estimation failures visible. This work adds
+modeling capabilities, not a recommendation for routine use of every flexible
+combination or a claim of improved/exact official assessment reproduction.
+Generated fits, warnings, dashboards, numerical summaries and source hashes
+remain in ignored `results/multi_fleet/` and `analysis/sam_equivalence/results/`.
+Only source code, concise reports, documentation and the designated cheatsheet
+PDF are tracked. Version is `0.1.1.9001`, targeting a future 0.2.0 release.
