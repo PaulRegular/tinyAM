@@ -27,14 +27,14 @@ the rows already linked to a stock or candidate unit.
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 63 | 18 | 98 | 21 | 147 | 31 | 199 | 0 | 0 |
 | ICES | 274 | 59 | 159 | 2 | 54 | 56 | 136 | 82 | 220 | 0 | 54 |
-| NOAA | 432 | 28 | 220 | 8 | 176 | 64 | 144 | 224 | 258 | 0 | 174 |
-| **Total** | **905** | **107** | **442** | **28** | **328** | **141** | **427** | **337** | **677** | **0** | **228** |
+| NOAA | 432 | 28 | 221 | 8 | 175 | 65 | 144 | 223 | 259 | 0 | 173 |
+| **Total** | **905** | **107** | **443** | **28** | **327** | **142** | **427** | **336** | **678** | **0** | **227** |
 
-The crosswalk currently links 466 distinct unit keys across 488 inventory rows:
-100 link to canonical stocks and 366 are candidate units, including one with
-ambiguous identity and one with mixed identity status. Of the 364 new
-candidate units, 44 are eligible for source curation, 261 are ineligible for
-the age-disaggregated set, and 59 remain unresolved. A further 417 inventory
+The crosswalk currently links 467 distinct unit keys across 489 inventory rows:
+100 link to canonical stocks and 367 are candidate units, including one with
+ambiguous identity and one with mixed identity status. Of the 365 new
+candidate units, 45 are eligible for source curation, 261 are ineligible for
+the age-disaggregated set, and 59 remain unresolved. A further 416 inventory
 rows have no unit crosswalk yet. The progress summary has 74 organization-region
 rows. Row-level status and unit-level deduplication are intentionally reported
 separately.
@@ -1206,15 +1206,15 @@ the age-disaggregated comparison set. See
 `source_reviews/ices_blue_ling_5b6712_2026.md`.
 
 The discovery snapshot as of 2026-10-31 contains 905 inventory rows: 107
-matched, 428 provisionally new, 28 ambiguous, and 342 identity-unreviewed.
-Across all rows, 141 are eligible, 414 ineligible, and 350 unresolved; 663
-are screened, none is in progress, and 242 are not started. The organization and
+matched, 443 provisionally new, 28 ambiguous, and 327 identity-unreviewed.
+Across all rows, 142 are eligible, 427 ineligible, and 336 unresolved; 678
+are screened, none is in progress, and 227 are not started. The organization and
 source-region breakdowns are in inventory_progress.csv.
 
 The DFO WCVI Barkley Sockeye row is screened ineligible: its 2024 update uses salmon run reconstruction and stock-recruit methods, but does not verify the age-structured catch, survey, biological, and mortality inputs or N-at-age/F-at-age outputs needed for tinyAM. See discovery/source_reviews/dfo_wcvi_barkley_sockeye_2024.md.
 
 The crosswalk has
-452 linked units (100 canonical stock links and 352 candidate units) and 431
+467 linked units (100 canonical stock links and 367 candidate units) and 416
 unlinked inventory rows in `inventory_units.csv`.
 
 ICES Northeast Atlantic spurdog (`dgs.27.nea`) is a new 2026 candidate with
@@ -1237,3 +1237,12 @@ aggregate outputs, but key biological inputs and native age data remain
 unverified; its eligibility is unresolved. Shallow pelagic redfish uses an
 aggregate survey-trends method and is ineligible for the age-structured set.
 See source_reviews/ices_pelagic_redfish_2026.md.
+
+NOAA South Atlantic red grouper (Stock SMART 10332) is a distinct unit from Gulf
+of Mexico red grouper (10331). NOAA identifies the 2017 SEDAR 53 assessment as
+the latest assessment used for South Atlantic stock status; planned SEDAR 86
+was not completed. The SEDAR 53 catch-age report and supporting age-composition
+papers provide documented age-specific inputs and population outputs, with
+fleet-year gaps and index timing to retain explicitly. It is eligible for
+source curation; no canonical values have been imported. See
+source_reviews/noaa_red_grouper_south_atlantic_2017.md.
