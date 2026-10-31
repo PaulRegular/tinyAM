@@ -1209,11 +1209,11 @@ inputs and population outputs were not reported. It is screened ineligible for
 the age-disaggregated comparison set. See
 `source_reviews/ices_blue_ling_5b6712_2026.md`.
 
-The discovery snapshot as of 2026-10-31 contains 905 inventory rows: 107 matched, 447 provisionally new, 28 ambiguous, and 323 identity-unreviewed. Across all rows, 142 are eligible, 430 ineligible, and 333 unresolved; 682 are screened, none is in progress, and 223 are not started. The organization and source-region breakdowns are in inventory_progress.csv.
+The discovery snapshot as of 2026-10-31 contains 905 inventory rows: 107 matched, 454 provisionally new, 29 ambiguous, and 315 identity-unreviewed. Across all rows, 145 are eligible, 435 ineligible, and 325 unresolved; 690 are screened, none is in progress, and 215 are not started. The organization and source-region breakdowns are in inventory_progress.csv.
 
 The DFO WCVI Barkley Sockeye row is screened ineligible: its 2024 update uses salmon run reconstruction and stock-recruit methods, but does not verify the age-structured catch, survey, biological, and mortality inputs or N-at-age/F-at-age outputs needed for tinyAM. See discovery/source_reviews/dfo_wcvi_barkley_sockeye_2024.md.
 
-The crosswalk has 471 linked units (100 canonical stock units and 371 candidate units) and 412 unlinked inventory rows in inventory_units.csv.
+The crosswalk has 478 linked units (100 canonical stock units and 378 candidate units) and 405 unlinked inventory rows in inventory_units.csv.
 
 ICES Northeast Atlantic spurdog (`dgs.27.nea`) is a new 2026 candidate with
 verified current assessment outputs. Age-input eligibility remains unresolved:
@@ -1250,3 +1250,13 @@ ICES SID entry cap.27.1-2 is now linked to the distinct Barents Sea capelin cand
 NOAA Stock SMART lingcod IDs 12194 and 12195 are distinct U.S. north and south assessment units. The 2021 northern model includes age-composition likelihoods across fisheries and surveys and is eligible for source curation. The 2021 southern model retains WCGBTS age data only; sparse fishery age data were excluded from its likelihood, so it is ineligible for age-disaggregated inputs. Both 2021 model archives provide population and mortality outputs. See source_reviews/noaa_lingcod_2021.md.
 
 NOAA cabezon's 2019 PFMC assessment covers Northern California, Southern California, Oregon, and Washington substocks. The full Stock Synthesis fits for Northern California, Southern California, and Oregon provide age-specific outputs; only Oregon has fishery age samples that support a limited, documented age-specific reconstruction. Washington used a data-poor Simple Stock Synthesis method. Historical California Stock SMART ID 10299 maps ambiguously to the separate current Northern California and Southern California units. Treat these regions as one assessment family, not four additional species cases. See source_reviews/noaa_cabezon_2019.md.
+
+NOAA Pacific Coast spiny dogfish (Stock SMART 10702) is screened eligible for
+source curation with a substantial reconstruction caveat. The 2021 assessment
+includes annual catch and length compositions, aggregate survey indices, one
+2010 WCGBTS conditional age-at-length sample, and age-specific fitted outputs.
+Catch-at-age and age-specific survey inputs were not directly observed; any
+reconstruction must make the age-length-key assumptions visible. Natural
+mortality is fixed at 0.065 per year. Do not merge this U.S. unit with either
+DFO British Columbia spiny dogfish unit. See
+`source_reviews/noaa_pacific_spiny_dogfish_2021.md`.
