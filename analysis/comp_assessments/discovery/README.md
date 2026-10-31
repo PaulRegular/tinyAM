@@ -1284,3 +1284,5 @@ reconstruction from aggregate recreational CPUE. The report documents a
 summer index period but not a fractional-year timing value. No canonical data
 have been imported. See
 `source_reviews/noaa_vermilion_rockfish_oregon_2021.md`.
+
+NOAA Stock SMART 10383 is the Gulf of Mexico golden tilefish unit, assessed in SEDAR 22 with data through 2009. Appendix B provides age counts conditional on length bins, so age-specific inputs can be reconstructed from the source compositions and removals, but they are not direct catch-at-age or index-at-age series. The case is eligible for source curation with a major advice caveat: Stock SMART records partial acceptance for status determinations only, and the Gulf SSC found the model unsuitable for useful management advice. See `source_reviews/noaa_golden_tilefish_gulf_sedar22_2011.md`.
