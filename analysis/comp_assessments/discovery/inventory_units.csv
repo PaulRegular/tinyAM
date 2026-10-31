@@ -182,6 +182,7 @@
 "candidate:noaa_american_samoa_przo","","noaa_american_samoa_przo","new","ineligible","screened","not_started","NOAA","PIFSC","NOAA:12005",1
 "candidate:noaa_american_samoa_valo","","noaa_american_samoa_valo","new","ineligible","screened","not_started","NOAA","PIFSC","NOAA:12011",1
 "candidate:noaa_atlantic_herring_gom_georges_bank","","noaa_atlantic_herring_gom_georges_bank","new","unresolved","screened","not_started","NOAA","NEFSC","NOAA:10572",1
+"candidate:noaa_atlantic_menhaden","","noaa_atlantic_menhaden","new","unresolved","screened","not_started","NOAA","NEFSC / SEFSC","NOAA:11089",1
 "candidate:noaa_atlantic_salmon_gom","","noaa_atlantic_salmon_gom","new","ineligible","screened","not_started","NOAA","NEFSC","NOAA:10498",1
 "candidate:noaa_atlantic_surfclam_mid_atlantic","","noaa_atlantic_surfclam_mid_atlantic","new","ineligible","screened","not_started","NOAA","NEFSC","NOAA:10787",1
 "candidate:noaa_black_rockfish_california_2023","","noaa_black_rockfish_california_2023","new","eligible","screened","not_started","NOAA","NWFSC / SWFSC","NOAA:17194 | NOAA:17195",2

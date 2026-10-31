@@ -27,14 +27,14 @@ the rows already linked to a stock or candidate unit.
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 63 | 18 | 98 | 21 | 146 | 32 | 198 | 1 | 0 |
 | ICES | 274 | 59 | 134 | 2 | 79 | 54 | 116 | 104 | 195 | 0 | 79 |
-| NOAA | 432 | 28 | 210 | 8 | 186 | 61 | 138 | 233 | 248 | 0 | 184 |
-| **Total** | **905** | **107** | **407** | **28** | **363** | **136** | **400** | **369** | **641** | **1** | **263** |
+| NOAA | 432 | 28 | 211 | 8 | 185 | 61 | 138 | 233 | 249 | 0 | 183 |
+| **Total** | **905** | **107** | **408** | **28** | **362** | **136** | **400** | **369** | **642** | **1** | **262** |
 
-The crosswalk currently links 431 distinct unit keys across 453 inventory rows:
-100 link to canonical stocks and 331 are candidate units, including one with
-ambiguous identity and one with mixed identity status. Of the 329 new
+The crosswalk currently links 432 distinct unit keys across 454 inventory rows:
+100 link to canonical stocks and 332 are candidate units, including one with
+ambiguous identity and one with mixed identity status. Of the 330 new
 candidate units, 39 are eligible for source curation, 234 are ineligible for
-the age-disaggregated set, and 56 remain unresolved. A further 453 inventory
+the age-disaggregated set, and 57 remain unresolved. A further 451 inventory
 rows have no unit crosswalk yet. Row-level status and unit-level deduplication
 are intentionally reported separately.
 
@@ -76,6 +76,16 @@ ICES lesser-spotted dogfish `syc.27.3a47d` is a distinct new unit. Its latest
 indices and length-based catch indicators; it does not provide age-structured
 inputs or population outputs. The unit is screened ineligible. See
 `source_reviews/ices_lesser_spotted_dogfish_3a47d_2025.md`.
+
+NOAA Atlantic menhaden (Stock SMART 11089) is a new coastwide unit. Its Stock
+SMART assessment year is 2022, while the latest detailed single-species BAM
+update located is the 2025 run through 2023. The report provides catch-at-age
+proportions and landings; survey abundance is aggregate with length
+compositions, and the older benchmark documents a survey length-to-age
+sensitivity. Eligibility remains unresolved because updated age-specific
+biology for 2018–2023, exact index timing fractions, and numerical age-specific
+outputs were not verified. See
+`source_reviews/noaa_atlantic_menhaden_2025.md`.
 
 The Maritimes American eel “Large Eel” and “Elvers” inventory entries are two
 fisheries for one candidate unit. The latest detailed DFO update reports
