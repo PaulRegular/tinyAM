@@ -80,6 +80,10 @@
 
 .population_unit <- function(dat, metric) {
   units <- .data_units(dat$obs)
+  if (metric %in% c("F_fleet", "mu_F_fleet")) return("per year")
+  if (metric == "W_catch_fleet") return(units$weight)
+  if (metric %in% c("catch_by_fleet", "catch_pred_by_fleet")) return(units$numbers)
+  if (metric %in% c("yield_by_fleet", "yield_pred_by_fleet")) return(units$mass)
   if (metric %in% c("W", "W_catch")) return(units$weight)
   if (metric == "P") return("proportion")
   if (metric == "S") return("dimensionless")

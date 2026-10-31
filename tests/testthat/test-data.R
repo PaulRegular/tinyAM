@@ -4,7 +4,7 @@ test_that("the cod example retains core observations and mortality covariates", 
   expect_named(cod_obs, c("catch", "index", "weight", "maturity", "pop_covariates"))
   expect_named(cod_obs$index, c("year", "age", "obs", "survey", "samp_time", "q_block", "unit"), ignore.order = TRUE)
   expect_named(cod_obs$pop_covariates,
-    c("year", "age", "F_y_block", "F_a_block", "M_a_block", "allometric_M_assumption"),
+    c("year", "age", "M_a_block", "allometric_M_assumption"),
     ignore.order = TRUE)
   expect_identical(unique(cod_obs$catch$unit), "thousand fish")
   expect_identical(unique(cod_obs$index$unit), "thousand fish")
@@ -22,6 +22,7 @@ population_fixture <- function() {
   data$pop_covariates <- data$weight[c("year", "age")]
   data$pop_covariates$M_assumption <- .3
   data$pop_covariates$group <- factor(ifelse(data$pop_covariates$age < 5, "young", "old"))
+  data$catch$group <- factor(ifelse(data$catch$age < 5, "young", "old"))
   data$pop_covariates$temp <- ifelse(data$pop_covariates$age == 2, sin(data$pop_covariates$year), NA)
   data
 }
@@ -139,7 +140,7 @@ test_that("updates retain population covariates", {
   expect_true(all(names(default_fit$dat$pop_data) %in% names(changed$dat$pop_data)))
   projected <- update(changed, proj_settings = list(n_proj = 1), silent = TRUE)
   expect_equal(unique(subset(projected$dat$pop_data, is_proj)$year), 2021)
-  expect_identical(levels(projected$dat$pop_data$F_a_block), levels(changed$dat$pop_data$F_a_block))
+  expect_identical(levels(projected$dat$F_data$F_a_block), levels(changed$dat$F_data$F_a_block))
 })
 
 test_that("data previews separate head and tail with vertical dots in every column", {

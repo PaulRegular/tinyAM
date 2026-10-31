@@ -335,7 +335,7 @@ ricker <- function(ssb, lag = NULL) {
 }
 
 # One chronological population construction for estimation and simulation.
-.population_states <- function(par, dat, Z, simulate = FALSE, initialize = FALSE, F = NULL, M = NULL) {
+.population_states <- function(par, dat, Z, simulate = FALSE, initialize = FALSE, F = NULL, M = NULL, F_by_fleet = NULL) {
   "[<-" <- RTMB::ADoverload("[<-")
   T <- length(dat$years)
   A <- length(dat$ages)
@@ -372,6 +372,7 @@ ricker <- function(ssb, lag = NULL) {
   }
   W <- dat$W
   W_catch <- if (is.null(dat$W_catch)) W else dat$W_catch
+  W_catch_by_fleet <- dat$W_catch_fleet
   P <- dat$P
   log_ssb <- numeric(T)
   ssb_mat <- matrix(0, T, A, dimnames = dimnames(log_N))
@@ -411,6 +412,10 @@ ricker <- function(ssb, lag = NULL) {
       W[y, A] <- sum(exp(shares) * dat$W_plus_input[y, ])
       catch_input <- if (is.null(dat$W_catch_plus_input)) dat$W_plus_input else dat$W_catch_plus_input
       W_catch[y, A] <- sum(exp(shares) * catch_input[y, ])
+      if (dat$has_fleet) for (f in dat$fleets) {
+        column <- which(dat$F_columns$fleet == f & dat$F_columns$age == max(dat$ages))
+        W_catch_by_fleet[y, column] <- sum(exp(shares) * dat$W_catch_plus_fleet[[f]][y, ])
+      }
       P[y, A] <- if (all(dat$W_plus_input[y, ] == 0)) {
         0
       } else {
@@ -446,10 +451,17 @@ ricker <- function(ssb, lag = NULL) {
     }
     if (dat$is_proj[y] && !is.null(dat$proj_settings$catch) && !is.null(F)) {
       terminal <- max(which(!dat$is_proj))
+      active <- if (dat$has_fleet) base::rowSums(base::matrix(dat$F_settings$state_index > 0L, A)) > 0L else
+        dat$F_settings$state_index > 0L
+      target_weight <- W_catch[y, ]
+      if (!is.null(F_by_fleet)) {
+        weighted <- rowSums(matrix(W_catch_by_fleet[y, ] * F_by_fleet[terminal, ], A))
+        target_weight <- weighted / (F[terminal, ] + !active)
+      }
       k <- .solve_catch(dat$proj_settings$catch[as.character(dat$years[y])],
-        exp(log_N[y, ]), W_catch[y, ], F[terminal, ], M[y, ], dat$years[y],
-        active = if (.f_blocked(dat)) dat$ages >= min(dat$F_settings$age_breaks) else rep(TRUE, length(dat$ages)))
+        exp(log_N[y, ]), target_weight, F[terminal, ], M[y, ], dat$years[y], active = active)
       F[y, ] <- k * F[terminal, ]
+      if (!is.null(F_by_fleet)) F_by_fleet[y, ] <- k * F_by_fleet[terminal, ]
       Z[y, ] <- F[y, ] + M[y, ]
     }
     ssb_mat[y, ] <- .ssb_contributions(exp(log_N[y, ]), W[y, ], P[y, ], Z[y, ], dat,
@@ -465,7 +477,7 @@ ricker <- function(ssb, lag = NULL) {
     eta_R = log_recruitment - log_pred_R, eta_R_state = u,
     W = W, W_catch = W_catch, P = P, ssb_mat = ssb_mat,
     N_plus = if (!is.null(dat$plus_ages)) exp(log_N_plus) else NULL,
-    F = F, Z = Z
+    F = F, Z = Z, F_by_fleet = F_by_fleet, W_catch_by_fleet = W_catch_by_fleet
   )
 }
 
@@ -495,7 +507,13 @@ ricker <- function(ssb, lag = NULL) {
       exp(par[["log_m"]][, dat$M_settings$age_blocks, drop = FALSE])
   }
   F <- matrix(0, length(dat$years), length(dat$ages))
-  if (dat$F_settings$process == "off") {
+  if (dat$has_fleet) {
+    rates <- .F_matrix(drop(dat$F_modmat %*% par$log_mu_f) + .mean_effects(par, dat, "F")$contribution, dat)
+    index <- dat$F_settings$state_index
+    if (dat$F_settings$process != "off") rates[!dat$is_proj, index > 0L] <- par$log_f[, index[index > 0L], drop = FALSE]
+    rates <- exp(rates); rates[, index == 0L] <- 0
+    F <- .F_total(rates, dat)
+  } else if (dat$F_settings$process == "off") {
     mean <- matrix(drop(dat$F_modmat %*% par$log_mu_f) + .mean_effects(par, dat, "F")$contribution, length(dat$years), length(dat$ages))
     F[!dat$is_proj, ] <- exp(mean[!dat$is_proj, , drop = FALSE])
   } else {
@@ -503,7 +521,7 @@ ricker <- function(ssb, lag = NULL) {
     if (is.null(index)) index <- seq_along(dat$ages)
     F[!dat$is_proj, index > 0L] <- exp(par$log_f[, index[index > 0L], drop = FALSE])
   }
-  if (.f_blocked(dat)) F[, dat$ages < min(dat$F_settings$age_breaks)] <- 0
+  if (!dat$has_fleet && .f_blocked(dat)) F[, dat$ages < min(dat$F_settings$age_breaks)] <- 0
   if (any(dat$is_proj)) {
     F[dat$is_proj, ] <- sweep(
       F[rep(max(which(!dat$is_proj)), sum(dat$is_proj)), , drop = FALSE],

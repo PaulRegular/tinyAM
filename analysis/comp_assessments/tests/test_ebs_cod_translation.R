@@ -29,7 +29,7 @@ stopifnot(min(coverage)>.994,all(coverage<1),
 stopifnot(s$dat$F_settings$process == "rw")
 # The reviewed shared-level alternative must not add free projection means.
 candidate_obs <- s$obs
-candidate_obs$pop_covariates$F_year <- factor(candidate_obs$pop_covariates$year)
+candidate_obs$catch$F_year <- factor(candidate_obs$catch$year)
 candidate_settings <- s$settings
 candidate_settings$F_settings <- list(process="iid",mu_form=~F_year+factor(age))
 candidate <- do.call(tinyAM::prepare_tam,c(

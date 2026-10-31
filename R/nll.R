@@ -119,10 +119,13 @@ nll_fun <- function(par, dat, simulate = FALSE) {
 
   F_effects <- .mean_effects(par, dat, "F", simulate)
   M_effects <- .mean_effects(par, dat, "M", simulate)
+  if (dat$has_fleet) log_mu_F <- .F_matrix(0, dat)
   log_mu_F[] <- drop(F_modmat %*% log_mu_f) + F_effects$contribution
   log_mu_M[] <- log_mu_supplied_m + drop(M_modmat %*% mu_m) + M_effects$contribution
   if (simulate) {
-    if (F_settings$process != "off") {
+    if (dat$has_fleet && F_settings$process != "off") {
+      log_f <- .fleet_F_process(log_f, log_mu_F, par, dat, simulate = TRUE)
+    } else if (F_settings$process != "off") {
       mu_f <- .f_state_mean(log_mu_F[!is_proj, , drop = FALSE], dat)
       log_f[] <- mu_f + if (!dat$process_sd$F$default && F_settings$process != "cor_rw") {
         .rprocess_scaled(log_f - mu_f, sd_f, F_settings$process,
@@ -161,6 +164,7 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   f_index <- F_settings$state_index
   if (is.null(f_index)) f_index <- seq_along(ages)
   f_active <- f_index > 0L
+  if (dat$has_fleet) log_F <- .F_matrix(0, dat)
   log_F[!is_proj, ] <- log_mu_F[!is_proj, , drop = FALSE]
   if (F_settings$process != "off") log_F[!is_proj, f_active] <- log_f[, f_index[f_active], drop = FALSE]
   if (n_proj > 0) {
@@ -174,6 +178,14 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   F <- exp(log_F)
   F[, !f_active] <- 0
   mu_F[, !f_active] <- 0
+  if (dat$has_fleet) {
+    F_by_fleet <- F; mu_F_by_fleet <- mu_F
+    log_mu_F_by_fleet <- log_mu_F
+    F <- .F_total(F_by_fleet, dat)
+    mu_F <- .F_total(mu_F_by_fleet, dat)
+    inactive <- base::rowSums(base::matrix(f_active, n_ages)) == 0L
+    log_mu_F <- log(mu_F + matrix(rep(inactive, each = n_years), n_years, n_ages))
+  }
 
   M <- mu_M <- exp(log_mu_M)
   if (M_settings$process != "off") {
@@ -188,10 +200,12 @@ nll_fun <- function(par, dat, simulate = FALSE) {
 
   ## Population states and recruitment ----
 
-  population <- .population_states(par, dat, Z, simulate, F = F, M = M)
+  population <- .population_states(par, dat, Z, simulate, F = F, M = M,
+    F_by_fleet = if (dat$has_fleet) F_by_fleet else NULL)
   F <- population$F
   Z <- population$Z
-  structural_zero <- matrix(rep(!f_active, each = n_years), n_years, n_ages)
+  total_active <- if (dat$has_fleet) base::rowSums(base::matrix(f_active, n_ages)) > 0L else f_active
+  structural_zero <- matrix(rep(!total_active, each = n_years), n_years, n_ages)
   projection_zero <- if (is.null(proj_settings$catch)) rep(FALSE, n_years) else
     c(rep(FALSE, sum(!is_proj)), proj_settings$catch == 0)
   structural_zero[projection_zero, ] <- TRUE
@@ -206,11 +220,16 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   eta_R_state <- population$eta_R_state
   W <- population$W
   W_catch <- population$W_catch
+  if (dat$has_fleet) {
+    F_by_fleet <- population$F_by_fleet
+    W_catch_by_fleet <- population$W_catch_by_fleet
+  }
   P <- population$P
   N <- exp(log_N)
   recruitment <- exp(log_recruitment)
   if (identical(dat$.likelihood_component, "process_innovations")) {
-    return(.process_innovations(par, dat, population, log_F, log_mu_F, log_mu_M))
+    return(.process_innovations(par, dat, population, log_F,
+      if (dat$has_fleet) log_mu_F_by_fleet else log_mu_F, log_mu_M))
   }
   if (simulate) {
     if (dat$rec$type != "off") log_r[] <- log_recruitment[dat$rec$eligible]
@@ -274,7 +293,9 @@ nll_fun <- function(par, dat, simulate = FALSE) {
 
   ## F process ----
 
-  if (F_settings$process != "off") {
+  if (dat$has_fleet && F_settings$process != "off") {
+    jnll <- jnll - .fleet_F_process(log_f, log_mu_F_by_fleet, par, dat)
+  } else if (F_settings$process != "off") {
     eta_log_f <- if (.f_blocked(dat)) {
       log_f - .f_state_mean(log_mu_F[!is_proj, , drop = FALSE], dat)
     } else log_F[!is_proj, ] - log_mu_F[!is_proj, ]
@@ -301,6 +322,11 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   log_N_obs <- log_N[iya]
   Z_obs <- Z[iya]
   F_obs <- F[iya]
+  if (dat$has_fleet) {
+    rows <- which(obs_map$type == "catch")
+    columns <- match(paste(obs_map$fleet[rows], obs_map$age[rows]), paste(dat$F_columns$fleet, dat$F_columns$age))
+    F_obs[rows] <- F_by_fleet[cbind(match(obs_map$year[rows], years), columns)]
+  }
   if (ncol(sd_catch_modmat) > 0) {
     log_sd_catch_eff <- drop(sd_catch_modmat %*% log_sd_catch)
   } else {
@@ -337,7 +363,8 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   samp_time <- obs_map$samp_time
 
   ic <- obs_map$type == "catch"
-  zero_catch <- ic & ((!f_active)[match(obs_map$age, ages)] | projection_zero[match(obs_map$year, years)])
+  obs_column <- if (dat$has_fleet) match(paste(obs_map$fleet, obs_map$age), paste(dat$F_columns$fleet, dat$F_columns$age)) else match(obs_map$age, ages)
+  zero_catch <- ic & ((!f_active)[obs_column] | projection_zero[match(obs_map$year, years)])
   positive_catch <- ic & !zero_catch
   log_pred[positive_catch] <- log_N_obs[positive_catch] - log(Z_obs[positive_catch]) +
     log(-expm1(-Z_obs[positive_catch])) + log(F_obs[positive_catch])
@@ -379,7 +406,7 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   ia <- as.character(F_settings$mean_ages)
   F_bar <- rowSums(F[, ia, drop = FALSE] * N[, ia, drop = FALSE]) / rowSums(N[, ia, drop = FALSE])
   # Fixed zero catches imply exactly zero F; avoid log(0) in ADREPORT.
-  zero_F_bar <- zero_F | !any(f_active[match(F_settings$mean_ages, ages)])
+  zero_F_bar <- zero_F | !any(total_active[match(F_settings$mean_ages, ages)])
   log_F_bar <- log(F_bar + zero_F_bar)
   ia <- as.character(M_settings$mean_ages)
   M_bar <- rowSums(M[, ia, drop = FALSE] * N[, ia, drop = FALSE]) / rowSums(N[, ia, drop = FALSE])
@@ -396,12 +423,26 @@ nll_fun <- function(par, dat, simulate = FALSE) {
 
   pred <- exp(log_pred)
   C_obs <- C_pred <- empty_mat
-  C_obs[] <- obs[ic]
-  C_pred[] <- pred[ic]
+  if (dat$has_fleet) {
+    catch_by_fleet <- .F_matrix(obs[ic], dat)
+    catch_pred_by_fleet <- .F_matrix(pred[ic], dat)
+    C_obs <- .F_total(catch_by_fleet, dat)
+    C_pred <- .F_total(catch_pred_by_fleet, dat)
+  } else {
+    C_obs[] <- obs[ic]
+    C_pred[] <- pred[ic]
+  }
   total_catch <- rowSums(C_obs, na.rm = TRUE)
+  if (dat$has_fleet) total_catch <- rowSums(catch_by_fleet, na.rm = TRUE)
   total_catch_pred <- rowSums(C_pred, na.rm = TRUE)
   total_yield <- rowSums(C_obs * W_catch, na.rm = TRUE)
   total_yield_pred <- rowSums(C_pred * W_catch, na.rm = TRUE)
+  if (dat$has_fleet) {
+    yield_by_fleet <- catch_by_fleet * W_catch_by_fleet
+    yield_pred_by_fleet <- catch_pred_by_fleet * W_catch_by_fleet
+    total_yield <- rowSums(yield_by_fleet, na.rm = TRUE)
+    total_yield_pred <- rowSums(yield_pred_by_fleet, na.rm = TRUE)
+  }
 
 
   ## Output ----
@@ -414,10 +455,30 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   REPORT(M_bar)
   REPORT(F)
   REPORT(mu_F)
+  if (dat$has_fleet) {
+    F_fleet <- .F_array(F_by_fleet, dat)
+    mu_F_fleet <- .F_array(mu_F_by_fleet, dat)
+    W_catch_fleet <- .F_array(W_catch_by_fleet, dat)
+    catch_by_fleet <- .F_array(catch_by_fleet, dat)
+    catch_pred_by_fleet <- .F_array(catch_pred_by_fleet, dat)
+    yield_by_fleet <- .F_array(yield_by_fleet, dat)
+    yield_pred_by_fleet <- .F_array(yield_pred_by_fleet, dat)
+    REPORT(F_fleet); REPORT(mu_F_fleet); REPORT(W_catch_fleet)
+    REPORT(catch_by_fleet); REPORT(catch_pred_by_fleet)
+    REPORT(yield_by_fleet); REPORT(yield_pred_by_fleet)
+    zero <- .F_matrix(rep(!f_active, each = n_years), dat)
+    zero[projection_zero, ] <- 1
+    log_F_fleet <- .F_array(log(F_by_fleet + zero), dat)
+    ADREPORT(log_F_fleet)
+    if (!is.null(F_settings$mu_form)) {
+      log_mu_F_fleet <- .F_array(log_mu_F_by_fleet, dat)
+      ADREPORT(log_mu_F_fleet)
+    }
+  }
   if (F_settings$process == "off" || !is.null(dat$F_mono_modmat) || any(vapply(dat$F_terms, function(x) x$type == "logistic", logical(1)))) {
     ADREPORT(log_mu_F)
   }
-  if (F_settings$process == "off") {
+  if (F_settings$process == "off" || dat$has_fleet) {
     log_F <- log(F + structural_zero)
     ADREPORT(log_F)
   }
@@ -432,7 +493,11 @@ nll_fun <- function(par, dat, simulate = FALSE) {
 
   if (F_settings$process != "off" && !dat$process_sd$F$default) {
     sd_F <- .process_sd_surface(par, dat, "F")
-    log_sd_F <- log(sd_F + matrix(rep(!f_active, each = n_years), n_years, n_ages))
+    log_sd_F <- log(sd_F + matrix(rep(!f_active, each = n_years), n_years, length(f_active)))
+    if (dat$has_fleet) {
+      sd_F <- .F_array(sd_F, dat)
+      log_sd_F <- .F_array(log_sd_F, dat)
+    }
     REPORT(sd_F)
     ADREPORT(log_sd_F)
   }

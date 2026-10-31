@@ -31,8 +31,8 @@ names(maturity)[names(maturity) == "mat"] <- "obs"
 
 # Label pre-moratorium, limited fishing gear + rec, closed, stewardship + rec / post-moratorium blocks
 pop_covariates <- catch[c("year", "age")]
-pop_covariates$F_y_block <- cut_years(catch$year, c(min(catch$year), 1992, 1998, 2002, 2006, 2023, max(catch$year)))
-pop_covariates$F_a_block <- cut_ages(catch$age, seq(min(catch$age), max(catch$age), 2))
+catch$F_y_block <- cut_years(catch$year, c(min(catch$year), 1992, 1998, 2002, 2006, 2023, max(catch$year)))
+catch$F_a_block <- cut_ages(catch$age, seq(min(catch$age), max(catch$age), 2))
 pop_covariates$M_a_block <- cut_ages(pop_covariates$age, c(0, 2, 5, 8, 20))
 
 
@@ -64,6 +64,9 @@ weight <- weight[weight$year >= min(catch$year) &
                    weight$year <= max(catch$year), ]
 index <- index[index$year >= min(catch$year) &
                  index$year <= max(catch$year), ]
+index <- index[order(index$survey, index$year, index$age), ]
+rownames(index) <- NULL
+pop_covariates <- pop_covariates[c("year", "age", "allometric_M_assumption", "M_a_block")]
 
 cod_obs <- as_tam_data(
   list(

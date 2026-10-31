@@ -39,7 +39,11 @@ test_that("AR1 M accepts only one age-defined numeric-by IID slope", {
   bad <- dat$obs
   bad$pop_covariates$M_group <- factor(paste(bad$pop_covariates$age, bad$pop_covariates$year))
   expect_error(m_slope_dat(data = bad), "constant across years")
-  expect_error(prepare_tam(dat$obs, years = dat$years, ages = dat$ages,
+  f_data <- dat$obs
+  keys <- function(d) paste(d$year, d$age)
+  f_data$catch[c("M_group", "capelin")] <- f_data$pop_covariates[
+    match(keys(f_data$catch), keys(f_data$pop_covariates)), c("M_group", "capelin")]
+  expect_error(prepare_tam(f_data, years = dat$years, ages = dat$ages,
     F_settings = list(process = "ar1", mu_form = ~ 0 + iid(M_group, by = capelin))),
     "IID residuals")
 })

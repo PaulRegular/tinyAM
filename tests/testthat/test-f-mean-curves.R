@@ -54,10 +54,10 @@ test_that("F curves and q curves have independent parameter blocks", {
   expect_true(all(is.finite(RTMB::MakeADFun(function(p) nll_fun(p, d), p, silent = TRUE)$gr())))
 })
 
-test_that("F curve grouping uses population columns and retains warm-start labels", {
+test_that("F curve grouping uses catch columns and retains warm-start labels", {
   data <- cod_obs
-  data$pop_covariates$shape <- factor(ifelse(data$pop_covariates$year < 1990, "early", "late"))
-  data$pop_covariates$size <- data$pop_covariates$age * 2
+  data$catch$shape <- factor(ifelse(data$catch$year < 1990, "early", "late"))
+  data$catch$size <- pmin(data$catch$age, 8) * 2
   for (curve in c("mono", "logistic")) {
     form <- if (curve == "mono") ~ shape + mono(size, by = shape) else ~ shape + logistic(size, by = shape)
     d <- prepare_tam(data, years = 1983:1998, ages = 2:8, F_settings = list(process = "iid", mu_form = form))

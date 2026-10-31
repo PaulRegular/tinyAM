@@ -29,8 +29,15 @@
   ages <- sort(unique(c(fit$dat$ages, fit$dat$plus_ages)))
   if (observed) for (i in seq_along(years)) {
     d <- source$catch[source$catch$year == years[i], ]
-    w <- .select_weights(source$weight[source$weight$year == years[i], ], "catch")
-    counts <- d$obs[match(ages, d$age)]; weights <- w$obs[match(ages, w$age)]
+    fleets <- if ("fleet" %in% names(source$catch)) unique(as.character(source$catch$fleet)) else "Fishery"
+    pieces <- lapply(fleets, function(f) {
+      w <- .select_weights(source$weight[source$weight$year == years[i], ], "catch", f)
+      c <- if ("fleet" %in% names(d)) d[d$fleet == f, ] else d
+      counts <- c$obs[match(ages, c$age)]; weights <- w$obs[match(ages, w$age)]
+      data.frame(counts, weights)
+    })
+    pieces <- do.call(rbind, pieces)
+    counts <- pieces$counts; weights <- pieces$weights
     if (any(!is.finite(counts) | counts < 0) || any(!is.finite(weights) | weights < 0)) {
       out$error[i] <- "Observed catch biomass unavailable: incomplete catch-at-age or weights; supply complete inputs or use F_mult."
     } else out$target[i] <- sum(counts * weights)

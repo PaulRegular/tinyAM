@@ -38,6 +38,9 @@ Weight requires the same grid within each supplied type.
 are required. With types, the unique key is \verb{(year, age, type)} and every
 supplied type must cover the complete same grid. Without types, or with
 stock alone, stock weights also supply yield and catch targets.
+\item Optional \code{catch$fleet} adds fleet to its unique key and requires a complete
+year-age grid within every fleet. \code{weight$fleet} can identify complete
+fleet-specific catch weights; stock weights remain unlabelled (\code{NA}).
 \item Optional character \code{unit} columns must be consistent throughout catch and
 weight, and within each survey. Missing columns are valid; a supplied column
 requires nonempty labels on every row. Units never change input values.

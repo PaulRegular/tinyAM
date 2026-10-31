@@ -245,7 +245,8 @@ rprocess_cor_rw <- function(x, sd = 1, rho = 0) {
   if (walk(formula[[2L]]) || "year" %in% all.vars(formula)) {
     cli::cli_abort("{label} supports ordinary age-based formulas, not temporal or random-effect SD terms.")
   }
-  d <- .population_data(dat, formula, label)
+  if (component == "F" && dat$has_fleet) return(.parse_fleet_sd(dat, formula, default))
+  d <- if (component == "F") .f_data(dat, formula, label) else .population_data(dat, formula, label)
   d$is_proj <- dat$is_proj[match(d$year, dat$years)]
   active <- if (component == "N") {
     dat$ages[-1L]
@@ -294,10 +295,12 @@ rprocess_cor_rw <- function(x, sd = 1, rho = 0) {
 .process_sd_surface <- function(par, dat, component) {
   design <- dat$process_sd[[component]]
   if (component == "F" && .f_blocked(dat)) {
+    "[<-" <- RTMB::ADoverload("[<-")
     sd <- .process_sd(par, dat, component)
-    values <- c(0, sd)[dat$F_settings$state_index + 1L]
-    return(matrix(rep(values, each = length(dat$years)), length(dat$years), length(dat$ages),
-      dimnames = list(year = dat$years, age = dat$ages)))
+    index <- dat$F_settings$state_index
+    values <- numeric(length(index)); active <- index > 0L
+    values[active] <- if (length(sd) == 1L) rep(sd, sum(active)) else sd[index[active]]
+    return(.F_matrix(rep(values, each = length(dat$years)), dat))
   }
   matrix(rep(.process_sd(par, dat, component), each = length(dat$years)),
     length(dat$years), nrow(design$matrix),

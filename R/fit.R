@@ -92,12 +92,18 @@
       start$log_q_power <- .q_power_starts(start$log_q_power, source$dat, dat)
     }
     if (!is.null(start$log_f)) {
-      old <- source$dat$F_settings$age_blocks
-      if (is.null(old)) old <- stats::setNames(as.character(source$dat$ages), source$dat$ages)
-      new <- dat$F_settings$age_blocks
-      groups <- intersect(colnames(start$log_f), levels(new))
-      keep <- vapply(groups, function(g) identical(names(old)[as.character(old) == g], names(new)[as.character(new) == g]), logical(1))
-      start$log_f <- start$log_f[, groups[keep], drop = FALSE]
+      if (dat$has_fleet || isTRUE(source$dat$has_fleet)) {
+        old_states <- source$dat$F_states; new_states <- dat$F_states
+        keep <- if (is.null(old_states) || is.null(new_states)) character() else intersect(old_states$key, new_states$key)
+        start$log_f <- start$log_f[, keep, drop = FALSE]
+      } else {
+        old <- source$dat$F_settings$age_blocks
+        if (is.null(old)) old <- stats::setNames(as.character(source$dat$ages), source$dat$ages)
+        new <- dat$F_settings$age_blocks
+        groups <- intersect(colnames(start$log_f), levels(new))
+        keep <- vapply(groups, function(g) identical(names(old)[as.character(old) == g], names(new)[as.character(new) == g]), logical(1))
+        start$log_f <- start$log_f[, groups[keep], drop = FALSE]
+      }
     }
     for (component in c("N", "F", "M", "rec")) {
       name <- switch(component, N = "mu_n", F = "log_mu_f", M = "mu_m", rec = "rec_beta")
@@ -105,9 +111,9 @@
       old <- if (component == "rec") source$dat$rec$matrix else source$dat[[paste0(component, "_modmat")]]
       new <- if (component == "rec") dat$rec$matrix else dat[[paste0(component, "_modmat")]]
       if (!is.matrix(new) || !ncol(new)) next
-      before <- if (component == "rec") source$dat$rec$data else source$dat$pop_data
-      after <- if (component == "rec") dat$rec$data else dat$pop_data
-      key <- function(d) paste(d$year, d$age)
+      before <- if (component == "rec") source$dat$rec$data else if (component == "F") source$dat$F_data else source$dat$pop_data
+      after <- if (component == "rec") dat$rec$data else if (component == "F") dat$F_data else dat$pop_data
+      key <- function(d) paste(d$year, d$age, if ("fleet" %in% names(d)) d$fleet else "")
       rows <- match(key(after), key(before))
       retained <- !is.na(rows) & !dat$is_proj[match(after$year, dat$years)]
       if (component == "rec") retained <- retained &
@@ -264,7 +270,7 @@ fit_tam <- function(
   ages = NULL,
   N_settings = list(process = "iid", init = "exp", mu_form = NULL, sd_form = ~1),
   rec_settings = list(process = "rw", init = "free", mu_form = NULL, sd = NULL, phi = NULL),
-  F_settings = list(process = "rw", mu_form = NULL, sd_form = ~1, age_breaks = NULL, mean_ages = NULL),
+  F_settings = list(process = "rw", mu_form = NULL, sd_form = ~1, age_breaks = NULL, cor_form = ~1, mean_ages = NULL),
   M_settings = list(
     process = "off", mu_form = NULL, mu_supplied = ~ I(0.2), sd_form = ~1,
     age_breaks = NULL, first_dev_year = NULL, mean_ages = NULL

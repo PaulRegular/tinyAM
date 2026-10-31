@@ -5,7 +5,7 @@ mean_test_dat <- function(component, type, ...) {
     ar1 = ~ ar1(year, sd = .2, phi = .6)
   )
   data <- lapply(cod_obs, function(d) {
-    d$age_group <- factor(d$age)
+    d$age_group <- factor(pmin(d$age, 6))
     d
   })
   args <- list(
@@ -81,7 +81,7 @@ test_that("mean/residual variance aliases and temporal overlaps are rejected", {
   )), "one temporal")
   expect_error(mean_test_dat("F", "iid", F_settings = list(
     mu_form = ~ iid(year, by = factor_age)
-  )), "pop_covariates")
+  )), "data\\$catch")
   expect_error(mean_test_dat("F", "iid", F_settings = list(
     mu_form = ~ iid(year, by = age_group)
   )), "IID F residual variance")

@@ -40,6 +40,20 @@
     process <- dat[[paste0(component, "_settings")]]$process
     if (is.null(x) || process == "off" || (process %in% c("rw", "cor_rw") && nrow(x) < 2L)) next
     suffix <- tolower(component)
+    if (component == "F" && dat$has_fleet) {
+      z <- if (process %in% c("rw", "cor_rw")) x[-1L, , drop = FALSE] else x
+      sd <- .process_sd(par, dat, "F")
+      "[<-" <- RTMB::ADoverload("[<-")
+      for (f in seq_along(dat$fleets)) {
+        columns <- which(dat$F_states$fleet == dat$fleets[f])
+        z[, columns] <- .process_whiten(x[, columns, drop = FALSE],
+          if (length(sd) == 1L) sd else sd[columns], process,
+          phi = if (process == "ar1") .fleet_phi(par, dat, f) else c(0, 0),
+          rho = if (process == "cor_rw" && length(columns) > 1L) tanh(par$atanh_rho_f[dat$F_cor$age$index[f]]) else 0)
+      }
+      out[[component]] <- z[rownames(z) %in% historical, , drop = FALSE]
+      next
+    }
     z <- .process_whiten(x, .process_sd(par, dat, component), process,
       phi = if (process == "ar1") {
         if (component == "F") .f_phi(par) else plogis(par[[paste0("logit_phi_", suffix)]])
@@ -66,6 +80,10 @@
     if (component == "M" || (component == "F" && .f_blocked(dat))) {
       names(d)[2L] <- "age_block"
       d$state_block <- match(d$age_block, colnames(x))
+      if (component == "F" && dat$has_fleet) {
+        i <- match(d$age_block, dat$F_states$key)
+        d$fleet <- dat$F_states$fleet[i]; d$age_block <- dat$F_states$block[i]
+      }
     } else {
       d$age <- as.numeric(d$coordinate)
       d$coordinate <- NULL

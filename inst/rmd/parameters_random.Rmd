@@ -43,6 +43,10 @@ if ("age_block" %in% names(f_states)) {
   labels <- labels[order(as.numeric(sub("-.*", "", labels)), labels)]
   f_states$age <- factor(f_states$age, levels = labels)
 }
+if ("fleet" %in% names(f_states)) {
+  values <- paste(f_states$fleet, f_states$age, sep = " / ")
+  f_states$age <- factor(values, levels = unique(values))
+}
 plot_age_year(f_states, x = ~year, color = ~model, legendgroup = ~model, colors = cols, frame = ~age, ylab = "Latent F (f)")
 ```
 

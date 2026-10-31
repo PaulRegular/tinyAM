@@ -12,15 +12,15 @@
 #' A `tam_data` object containing five data frames:
 #'
 #' - **`catch`**: Commercial catch numbers at age (`year`, `age`, `obs`), in
-#'   thousands of fish; observations can be missing.
+#'   thousands of fish; observations can be missing. `F_y_block` and `F_a_block`
+#'   are candidate fishing-mortality mean groups.
 #' - **`index`**: DFO autumn research-vessel (RV) abundance index at age
 #'   (`year`, `age`, `obs`), with `survey`, survey timing `samp_time = 0.8`,
 #'   and catchability age group `q_block`. Survey observations have been expanded using
 #'   12,048,556 trawl units and expressed in thousands of fish.
 #' - **`weight`**: Annual stock weight at age (`obs`, kg).
 #' - **`maturity`**: Annual proportion mature at age (`obs`, from 0 to 1).
-#' - **`pop_covariates`**: A complete year-age table with `F_y_block` and
-#'   `F_a_block` (candidate fishing-mortality mean groups), `M_a_block`
+#' - **`pop_covariates`**: A complete year-age table with `M_a_block`
 #'   (candidate natural-mortality age groups), `allometric_M_assumption`
 #'   (a weight-based baseline M, per year).
 #'
@@ -126,7 +126,7 @@
 #'
 #' @details
 #' The required tables are `catch`, `index`, `weight` and `maturity`.
-#' An optional `pop_covariates` table supplies columns used by N, F and M
+#' An optional `pop_covariates` table supplies columns used by N and M
 #' formulas, including recruitment covariates and supplied M assumptions.
 #' It has one row per input year and age, with `year` and `age` keys and no
 #' required `obs` column. Values may be missing where a formula does not use
@@ -142,6 +142,10 @@
 #' in their respective observation tables. Weight, maturity and spawning timing
 #' stay in the biological tables. Validation does not add the class, and inputs
 #' are checked again during preparation after any edits.
+#' F mean, process-SD and correlation-group covariates belong in `catch`,
+#' including rows with missing catch. The response `obs` cannot predict F.
+#' Optional `catch$fleet` identifies separate fisheries on a shared population;
+#' each fleet requires a complete year-age grid, using `NA` for missing catches.
 #'
 #' The optional `weight$type` key distinguishes `"stock"` and `"catch"`
 #' average individual weights. Stock weights are required and determine biomass
@@ -149,6 +153,9 @@
 #' weights serve both purposes. Each supplied type needs the complete same
 #' year-age grid, including retained biological ages beyond a modeled plus age.
 #' Missing catch-weight cells never fall back individually to stock weights.
+#' Optional `weight$fleet` applies only to catch weights: stock rows use `NA`.
+#' Supply either shared catch weights (no fleet labels), or complete catch-weight
+#' grids for every declared catch fleet. Shared and fleet-specific rows cannot mix.
 #' For a prepared wide table with `stock` and `catch` columns, the tidy form is:
 #' ```r
 #' tidyr::pivot_longer(wide, c(stock, catch),
@@ -239,7 +246,7 @@ print.tam_data <- function(x, n = 5, ...) {
 }
 
 # One model-surface frame, ordered year within age, for every population formula.
-.population_data <- function(dat, formula = NULL, label = "Population formula") {
+.population_data <- function(dat, formula = NULL, label = "Population formula", table = "data$pop_covariates") {
   d <- dat$pop_data
   if (!is.null(formula)) {
     if (.contains_power(formula)) cli::cli_abort("power() is only supported in index_settings$q_form.")
@@ -256,7 +263,7 @@ print.tam_data <- function(x, n = 5, ...) {
     }
     missing <- setdiff(all.vars(variables(formula[[2L]])), names(d))
     if (length(missing)) {
-      cli::cli_abort("{label} needs {paste(missing, collapse = ', ')} in data$pop_covariates.")
+      cli::cli_abort("{label} needs {paste(missing, collapse = ', ')} in {table}.")
     }
   }
   d
@@ -288,6 +295,9 @@ print.tam_data <- function(x, n = 5, ...) {
 #'   are required. With types, the unique key is `(year, age, type)` and every
 #'   supplied type must cover the complete same grid. Without types, or with
 #'   stock alone, stock weights also supply yield and catch targets.
+#' - Optional `catch$fleet` adds fleet to its unique key and requires a complete
+#'   year-age grid within every fleet. `weight$fleet` can identify complete
+#'   fleet-specific catch weights; stock weights remain unlabelled (`NA`).
 #' - Optional character `unit` columns must be consistent throughout catch and
 #'   weight, and within each survey. Missing columns are valid; a supplied column
 #'   requires nonempty labels on every row. Units never change input values.
@@ -417,6 +427,12 @@ check_tam_data <- function(data) {
   }
 
   for (nm in required_tabs) check_one(obs[[nm]], nm)
+  if ("fleet" %in% names(obs$catch)) {
+    fleet <- obs$catch$fleet
+    if ((!is.character(fleet) && !is.factor(fleet)) || anyNA(fleet) || any(!nzchar(trimws(as.character(fleet))))) {
+      cli::cli_abort("catch$fleet must contain nonempty fleet names, without missing labels.")
+    }
+  }
   if ("type" %in% names(obs$weight)) {
     type <- as.character(obs$weight$type)
     if (anyNA(type) || any(!type %in% c("stock", "catch"))) {
@@ -424,6 +440,7 @@ check_tam_data <- function(data) {
     }
     if (!"stock" %in% type) cli::cli_abort("Stock weights are required; catch-only weights are not supported.")
   }
+  .check_weight_fleets(obs)
 
   # Covariates cannot change the range supplied by observations and biology.
   obs_years <- unlist(lapply(obs[required_tabs], function(d) d$year))
@@ -449,13 +466,17 @@ check_tam_data <- function(data) {
     if (!is.null(obs$pop_covariates)) "pop_covariates"
   )
   for (nm in must_be_full) {
-    keys <- c("year", "age", if (nm == "weight" && "type" %in% names(obs$weight)) "type")
+    keys <- c("year", "age", if (nm == "catch" && "fleet" %in% names(obs$catch)) "fleet",
+      if (nm == "weight" && "type" %in% names(obs$weight)) "type",
+      if (nm == "weight" && "fleet" %in% names(obs$weight)) "fleet")
     if (anyDuplicated(obs[[nm]][, keys])) {
       cli::cli_abort("{.arg {nm}} must have exactly one row per {paste(keys, collapse = ' and ')}; duplicate rows would misalign the model surfaces.")
     }
     xy <- unique(obs[[nm]][, c("year", "age")])
-    sizes <- if (nm == "weight" && "type" %in% names(obs$weight)) {
-      vapply(split(obs$weight, obs$weight$type, drop = TRUE), nrow, integer(1))
+    groups <- setdiff(keys, c("year", "age"))
+    sizes <- if (length(groups)) {
+      group <- do.call(paste, c(lapply(obs[[nm]][groups], function(x) ifelse(is.na(x), "<shared>", as.character(x))), sep = "\r"))
+      as.integer(table(group))
     } else nrow(xy)
     if (any(sizes != grid_size)) {
       cli::cli_abort(c(
@@ -472,10 +493,31 @@ check_tam_data <- function(data) {
 }
 
 # Select stock or catch weights; stock is the fallback only when catch is absent.
-.select_weights <- function(weight, type = "stock") {
+.select_weights <- function(weight, type = "stock", fleet = NULL) {
   if (!"type" %in% names(weight)) return(weight)
   if (type == "catch" && !any(weight$type == "catch")) type <- "stock"
-  weight[weight$type == type, , drop = FALSE]
+  out <- weight[weight$type == type, , drop = FALSE]
+  if (type == "catch" && "fleet" %in% names(out) && any(!is.na(out$fleet))) {
+    if (is.null(fleet)) cli::cli_abort("Select a fleet when catch weights are fleet-specific.")
+    out <- out[!is.na(out$fleet) & out$fleet == fleet, , drop = FALSE]
+  }
+  out
+}
+
+.check_weight_fleets <- function(data) {
+  w <- data$weight
+  if (!"fleet" %in% names(w)) return(invisible(NULL))
+  if (!"type" %in% names(w)) cli::cli_abort("weight$fleet requires type = 'stock' or 'catch'; stock weights have no fleet label.")
+  label <- as.character(w$fleet)
+  if (any(!is.na(label[w$type == "stock"]))) cli::cli_abort("Stock weights must have missing fleet labels.")
+  catch <- label[w$type == "catch"]
+  if (any(!is.na(catch) & !nzchar(trimws(catch)))) cli::cli_abort("Catch-weight fleet names must be nonempty, or NA for shared weights.")
+  if (anyNA(catch) && any(!is.na(catch))) cli::cli_abort("Catch weights cannot mix shared rows and fleet-specific rows.")
+  if (length(catch) && !anyNA(catch)) {
+    fleets <- if ("fleet" %in% names(data$catch)) unique(as.character(data$catch$fleet)) else character()
+    if (!setequal(unique(catch), fleets)) cli::cli_abort("Fleet-specific catch weights must name every declared catch fleet exactly.")
+  }
+  invisible(NULL)
 }
 
 #' Check the structure of a TAM obs list

@@ -866,7 +866,7 @@ mono <- function(x, by = NULL) {
 
 # Mean effects use the same unique-state compiler and densities as q effects.
 .mean_formula_data <- function(dat, component) {
-  d <- .population_data(dat)
+  d <- if (component == "F") .f_data(dat) else .population_data(dat)
   d$is_proj <- dat$is_proj[match(d$year, dat$years)]
   d$obs <- 1
   d
@@ -921,7 +921,8 @@ mono <- function(x, by = NULL) {
   }
   if (carry_terminal && any(future)) {
     terminal <- which(historical & data$year == max(data$year[historical]))
-    data[future, ] <- data[terminal[match(data$age[future], data$age[terminal])], , drop = FALSE]
+    key <- function(d) paste(d$age, if ("fleet" %in% names(d)) d$fleet else "")
+    data[future, ] <- data[terminal[match(key(data[future, , drop = FALSE]), key(data[terminal, , drop = FALSE]))], , drop = FALSE]
   }
   # model.frame resets factor contrasts with xlev; supply training contrasts below.
   for (name in names(data)[vapply(data, is.factor, logical(1))]) attr(data[[name]], "contrasts") <- NULL
@@ -971,7 +972,8 @@ mono <- function(x, by = NULL) {
     out[active, ] <- full
     return(list(matrix = out, terms = list(), mono_matrix = NULL, mono_steps = NULL))
   }
-  .population_data(dat, formula, paste0(component, "_settings$mu_form"))
+  if (component == "F") .f_data(dat, formula, "F_settings$mu_form") else
+    .population_data(dat, formula, paste0(component, "_settings$mu_form"))
   d <- .mean_formula_data(dat, component)
   fixed_design <- if (component == "F") function(formula, data) {
     .fixed_mean_design(formula, data, !data$is_proj, carry_terminal = TRUE,
@@ -991,7 +993,7 @@ mono <- function(x, by = NULL) {
     }
     variable <- if (n_mono) mono$variable[1L] else logistic[[1L]]$variable
     x <- d[[variable]]
-    if (!is.numeric(x) || any(vapply(split(x, d$age), function(z) length(unique(z)) != 1L, logical(1)))) {
+    if (!is.numeric(x) || any(vapply(split(x, interaction(d$age, if ("fleet" %in% names(d)) d$fleet else 1)), function(z) length(unique(z)) != 1L, logical(1)))) {
       cli::cli_abort("F mean curves must use numeric age or an age-derived population covariate constant across years at each age.")
     }
     by <- if (n_mono) mono$by[1L] else logistic[[1L]]$by

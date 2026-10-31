@@ -1,3 +1,11 @@
+# tinyAM 0.1.1.9001
+
+* Add optional catch fleets with independent F surfaces on one shared population,
+  shared or fleet-specific correlation groups and F age blocks, and typed
+  fleet-specific catch weights. Total F drives population survival.
+* F mean, process-SD and correlation covariates are supplied in the catch table;
+  recruitment, N and M covariates remain in the population table.
+
 # tinyAM 0.1.1.9000
 
 * Add optional F age blocks with explicit closing boundaries. Blocks share

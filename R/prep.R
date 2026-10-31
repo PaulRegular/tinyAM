@@ -167,10 +167,13 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
     mean_years <- seq.int(max_year - n_mean + 1L, max_year)
     template <- x[x$year == max(x$year), , drop = FALSE]
     if (nm %in% c("weight", "maturity")) {
-      keys <- c("age", if (nm == "weight" && "type" %in% names(x)) "type")
-      mean_obs <- stats::aggregate(x[x$year %in% mean_years, "obs", drop = FALSE],
-        x[x$year %in% mean_years, keys, drop = FALSE], FUN = mean)
-      key <- function(d) do.call(paste, c(d[keys], sep = "\r"))
+      keys <- c("age", if (nm == "weight" && "type" %in% names(x)) "type",
+        if (nm == "weight" && "fleet" %in% names(x)) "fleet")
+      # aggregate() drops NA groups; stock and shared catch weights use NA fleet.
+      x_mean <- x[x$year %in% mean_years, , drop = FALSE]
+      if ("fleet" %in% keys) x_mean$fleet <- ifelse(is.na(x_mean$fleet), "<shared>", as.character(x_mean$fleet))
+      mean_obs <- stats::aggregate(x_mean["obs"], x_mean[keys], FUN = mean)
+      key <- function(d) do.call(paste, c(lapply(d[keys], function(z) ifelse(is.na(z), "<shared>", as.character(z))), sep = "\r"))
       template$obs <- mean_obs$obs[match(key(template), key(mean_obs))]
     } else if (nm != "pop_covariates") {
       template$obs <- NA_real_
@@ -231,11 +234,14 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
                          by = groups
       )
       df_out <- rbind(df[df$age < plus_age, , drop = FALSE], plus_rows[, names(df), drop = FALSE])
+      for (column in names(df)[vapply(df, is.factor, logical(1))]) {
+        attr(df_out[[column]], "contrasts") <- attr(df[[column]], "contrasts")
+      }
       return(df_out[order(df_out$age, df_out$year), ])
     }
   }
 
-  obs$catch <- .aggregate_one(obs$catch, plus_age, sum)
+  obs$catch <- .aggregate_one(obs$catch, plus_age, sum, c("year", if ("fleet" %in% names(obs$catch)) "fleet"))
   obs$index <- .aggregate_one(obs$index, plus_age, sum, groups = c("year", "survey"))
   obs
 }
@@ -431,7 +437,7 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #'   annual increments at neighbouring ages. It estimates one signed age
 #'   correlation; its SD is the marginal SD of annual log-F increments.
 #' - `sd_form`: ordinary age-based formula for log process SD, default `~ 1`,
-#'   evaluated on `data$pop_covariates`. Sharing an SD does not share latent F states.
+#'   evaluated on `data$catch`. Sharing an SD does not share latent F states.
 #'   IID SDs describe residuals; RW/correlated-RW SDs describe annual increments;
 #'   stationary AR1 retains its innovation-scale convention.
 #' - `age_breaks`: optional increasing integer interval boundaries for shared
@@ -443,8 +449,15 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #'   retains separate F states at every modeled age. All mean components and
 #'   process SDs must agree within a shared block; refine blocks for age-varying
 #'   means. Process correlation uses ordered blocks, not replicated fish ages.
+#'   With fleet labels, supply a common vector or a named list covering all
+#'   fleets; `NULL` entries retain separate states by age within that fleet.
+#' - `cor_form`: categorical correlation groups constant within each fleet.
+#'   Default `~ 1` shares correlations; `~ fleet` estimates separate values.
+#'   For AR1, `list(age = ~ fleet, year = ~ 1)` allows different sharing by
+#'   dimension. A single formula applies to both dimensions. Sharing parameters
+#'   never correlates innovations between fleets. Unused groups are omitted.
 #' - `mu_form`: an optional formula for mean-\eqn{F} (coefficients estimated as
-#'   **log-scale** parameters `log_mu_f`), evaluated on `data$pop_covariates`. Required for `"off"`, `"iid"` and `"ar1"`;
+#'   **log-scale** parameters `log_mu_f`), evaluated on `data$catch`. Required for `"off"`, `"iid"` and `"ar1"`;
 #'   use `~ 1` for one estimated mean level or `~ factor(age)` for age-specific
 #'   means. For `"rw"`, `NULL` is allowed. Mean columns constant through time
 #'   cancel from RW increments and are removed with a warning. Remaining
@@ -458,6 +471,10 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #'   with no residual process or with IID/AR1 residuals, e.g. `~ logistic(age)`. Ordinary terms supply
 #'   baseline F; realized F can depart from the rising mean. Static curves are
 #'   not identifiable with RW/correlated-RW residuals. See [catchability_curves].
+#'   Catch covariates must be available even where observations are missing.
+#'   They must agree across biological ages pooled into a modeled plus group.
+#'   The catch response `obs` cannot enter an F formula. With fleet labels,
+#'   each fleet has its own F states; total F is their sum for survival and Z.
 #' - `mean_ages`: optional vector of ages to include in population weighted
 #'   average F (`F_bar`) calculations. All ages used if absent.
 #' @param M_settings A list with elements:
@@ -600,7 +617,7 @@ prepare_tam <- function(
     ages = NULL,
     N_settings = list(process = "iid", init = "exp", mu_form = NULL, sd_form = ~1),
     rec_settings = list(process = "rw", init = "free", mu_form = NULL, sd = NULL, phi = NULL),
-    F_settings = list(process = "rw", mu_form = NULL, sd_form = ~1, age_breaks = NULL, mean_ages = NULL),
+    F_settings = list(process = "rw", mu_form = NULL, sd_form = ~1, age_breaks = NULL, cor_form = ~1, mean_ages = NULL),
     M_settings = list(
       process = "off", mu_form = NULL, mu_supplied = ~ I(0.2), sd_form = ~1,
       age_breaks = NULL, first_dev_year = NULL, mean_ages = NULL
@@ -665,6 +682,7 @@ prepare_tam <- function(
     cli::cli_abort("{.arg ages} must be consecutive ages.")
   }
   if (max(all_obs_ages) > max(dat$ages)) {
+    .check_f_plus_covariates(dat$obs, max(dat$ages), dat$F_settings)
     dat$obs <- .plus_fun(dat$obs, max(dat$ages))
   }
   dat$obs <- stats::setNames(lapply(names(dat$obs), function(nm) {
@@ -706,7 +724,9 @@ prepare_tam <- function(
   } else {
     dat$obs$pop_covariates
   }
+  dat <- .prepare_fleets(dat)
   dat <- .prepare_f_blocks(dat)
+  dat <- .prepare_f_cor(dat)
 
   dat$N_settings$init <- match.arg(dat$N_settings$init, c("exp", "free", "latent", "mono", "capped"))
   if (length(dat$ages) < 2L) {
@@ -741,11 +761,12 @@ prepare_tam <- function(
                       nrow = length(dat$years), ncol = length(dat$ages),
                       dimnames = list(year = dat$years, age = dat$ages)
   )
+  prepared_weight <- dat$obs$weight
   if (max(dat$obs$weight$age) > max(dat$ages)) {
     dat$plus_ages <- seq.int(max(dat$ages), max(dat$obs$weight$age))
     plus_dimnames <- list(year = dat$years, age = dat$plus_ages)
     stock_weight <- .select_weights(dat$obs$weight)
-    catch_weight <- .select_weights(dat$obs$weight, "catch")
+    catch_weight <- .select_weights(dat$obs$weight, "catch", dat$fleets[1L])
     dat$W_plus_input <- matrix(stock_weight$obs[stock_weight$age %in% dat$plus_ages],
                                length(dat$years), length(dat$plus_ages),
                                dimnames = plus_dimnames
@@ -768,7 +789,21 @@ prepare_tam <- function(
   dat$spawn_time[] <- dat$obs$maturity$spawn_time
   dat$W <- dat$W_catch <- dat$P <- empty_mat
   dat$W[] <- .select_weights(dat$obs$weight)$obs
-  dat$W_catch[] <- .select_weights(dat$obs$weight, "catch")$obs
+  dat$W_catch[] <- .select_weights(dat$obs$weight, "catch", dat$fleets[1L])$obs
+  if (dat$has_fleet) {
+    dat$W_catch_fleet <- .F_matrix(0, dat)
+    if (!is.null(dat$plus_ages)) dat$W_catch_plus_fleet <- list()
+    for (f in dat$fleets) {
+      prepared <- .select_weights(prepared_weight, "catch", f)
+      w <- prepared[prepared$year %in% dat$years & prepared$age %in% dat$ages, , drop = FALSE]
+      w <- w[order(w$age, w$year), ]
+      dat$W_catch_fleet[, dat$F_columns$fleet == f] <- matrix(w$obs, length(dat$years), length(dat$ages))
+      if (!is.null(dat$plus_ages)) {
+        w <- prepared[prepared$year %in% dat$years & prepared$age %in% dat$plus_ages, , drop = FALSE]
+        dat$W_catch_plus_fleet[[f]] <- matrix(w$obs[order(w$age, w$year)], length(dat$years), length(dat$plus_ages))
+      }
+    }
+  }
   dat$P[] <- dat$obs$maturity$obs
 
   catch <- dat$obs$catch
@@ -844,11 +879,11 @@ prepare_tam <- function(
     dat$F_mono_steps <- mean_design$mono_steps
     .check_mean_terms(dat, "F")
     .check_f_blocks(dat)
-    if (nrow(dat$F_modmat) != nrow(dat$pop_data) ||
+    if (nrow(dat$F_modmat) != nrow(dat$F_data) ||
         any(!is.finite(dat$F_modmat)) || !ncol(dat$F_modmat)) {
       cli::cli_abort("F_settings$mu_form must produce a finite, non-empty design for every modeled year and age.")
     }
-    historical <- dat$F_modmat[!dat$is_proj[match(dat$pop_data$year, dat$years)] & .f_state_rows(dat), , drop = FALSE]
+    historical <- dat$F_modmat[!dat$is_proj[match(dat$F_data$year, dat$years)] & .f_state_rows(dat), , drop = FALSE]
     if (qr(historical)$rank < ncol(historical)) {
       cli::cli_abort("F_settings$mu_form has a rank-deficient historical design. Remove redundant terms.")
     }
@@ -901,11 +936,11 @@ prepare_tam <- function(
   # model.matrix() can silently omit rows with missing covariates.
   design_tables <- c(
     sd_catch_modmat = "catch", sd_index_modmat = "index",
-    q_modmat = "index", N_modmat = "population", F_modmat = "population", M_modmat = "population"
+    q_modmat = "index", N_modmat = "population", F_modmat = "F_data", M_modmat = "population"
   )
   for (nm in names(design_tables)) {
     x <- dat[[nm]]
-    if (is.matrix(x) && (nrow(x) != nrow(if (design_tables[[nm]] == "population") dat$pop_data else dat$obs[[design_tables[[nm]]]]) ||
+    if (is.matrix(x) && (nrow(x) != nrow(if (design_tables[[nm]] == "population") dat$pop_data else if (design_tables[[nm]] == "F_data") dat$F_data else dat$obs[[design_tables[[nm]]]]) ||
                          any(!is.finite(x)))) {
       cli::cli_abort("{nm} must have one finite row per observation. Check for missing or non-finite formula covariates.")
     }

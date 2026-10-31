@@ -8,15 +8,15 @@
 A \code{tam_data} object containing five data frames:
 \itemize{
 \item \strong{\code{catch}}: Commercial catch numbers at age (\code{year}, \code{age}, \code{obs}), in
-thousands of fish; observations can be missing.
+thousands of fish; observations can be missing. \code{F_y_block} and \code{F_a_block}
+are candidate fishing-mortality mean groups.
 \item \strong{\code{index}}: DFO autumn research-vessel (RV) abundance index at age
 (\code{year}, \code{age}, \code{obs}), with \code{survey}, survey timing \code{samp_time = 0.8},
 and catchability age group \code{q_block}. Survey observations have been expanded using
 12,048,556 trawl units and expressed in thousands of fish.
 \item \strong{\code{weight}}: Annual stock weight at age (\code{obs}, kg).
 \item \strong{\code{maturity}}: Annual proportion mature at age (\code{obs}, from 0 to 1).
-\item \strong{\code{pop_covariates}}: A complete year-age table with \code{F_y_block} and
-\code{F_a_block} (candidate fishing-mortality mean groups), \code{M_a_block}
+\item \strong{\code{pop_covariates}}: A complete year-age table with \code{M_a_block}
 (candidate natural-mortality age groups), \code{allometric_M_assumption}
 (a weight-based baseline M, per year).
 }

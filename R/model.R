@@ -21,7 +21,7 @@
 #'
 #' `sd_form` in N, F and M settings describes process variation at each age.
 #' For example, `~ age_group` estimates shared SDs for groups supplied in
-#' `data$pop_covariates`; it does not pool abundance or mortality states.
+#' `data$catch` for F or `data$pop_covariates` for N/M; it does not pool states.
 #' Start with few groups and examine their uncertainty.
 #'
 #' Supply `data$maturity$spawn_time` to calculate SSB after a fraction of annual
@@ -45,6 +45,15 @@
 #' biomass and SSB units (thousand fish times kg gives tonnes). F, M and Z
 #' are per year. Survey units can differ, and q need not be dimensionless.
 #' The model never converts inputs automatically; see [as_tam_data()].
+#'
+#' Optional catch fleets share N and M but have separate F surfaces:
+#' \deqn{F^{total}_{t,a}=\sum_f F_{t,a,f},\quad
+#' Z_{t,a}=M_{t,a}+F^{total}_{t,a},\quad
+#' \widehat C_{t,a,f}=N_{t,a}\frac{F_{t,a,f}}{Z_{t,a}}(1-e^{-Z_{t,a}}).}
+#' The selected F process operates independently within fleets; sharing SDs or
+#' correlations does not correlate their innovations. Typed fleet catch weights
+#' determine yield, while stock weights determine biomass and SSB. A stock-wide
+#' projection multiplier scales all fleets, preserving their relative F at age.
 #'
 #' `log_r`, `log_n0`, `log_n`, `log_f`, and `log_m` are absolute latent log
 #' states. Full surfaces `log_N`, `log_F`, and `log_M` are constructed from
@@ -448,8 +457,8 @@
 #' @examples
 #' data <- cod_obs
 #' data$maturity$spawn_time <- 0.25
-#' data$pop_covariates$age_group <- factor(
-#'   ifelse(data$pop_covariates$age < 6, "young", "older")
+#' data$catch$age_group <- factor(
+#'   ifelse(data$catch$age < 6, "young", "older")
 #' )
 #' dat <- prepare_tam(data,
 #'   F_settings = list(process = "cor_rw", sd_form = ~age_group),

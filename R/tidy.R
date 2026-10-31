@@ -53,7 +53,8 @@ tidy_array <- function(x, value_name = "x", require_dimnames = TRUE) {
 
   k <- length(dim(x))
   if (k > 0) {
-    df[seq_len(k)] <- lapply(df[seq_len(k)], type.convert, as.is = TRUE)
+    columns <- setdiff(seq_len(k), which(names(df)[seq_len(k)] == "fleet"))
+    df[columns] <- lapply(df[columns], type.convert, as.is = TRUE)
   }
 
   df
@@ -238,7 +239,7 @@ tidy_rep <- function(fit) {
   }
 
   keep <- vapply(
-    rep, function(x) is.matrix(x) || length(x) == length(dat$years),
+    rep, function(x) length(dim(x)) >= 2L || length(x) == length(dat$years),
     logical(1)
   )
   keep[grepl("^eta_(q|mu_[FM]|sd_catch|sd_index)_increments$", names(keep))] <- FALSE
@@ -248,7 +249,7 @@ tidy_rep <- function(fit) {
   rep_items <- rep[keep]
 
   trends <- lapply(rep_items, function(x) {
-    if (is.matrix(x)) {
+    if (length(dim(x)) >= 2L) {
       d <- tidy_mat(x, value_name = "est")
       d$is_proj <- d$year %in% dat$years[dat$is_proj]
       return(d)
@@ -364,7 +365,7 @@ tidy_sdrep <- function(fit, interval = 0.95) {
   vals$initial_log_N <- NULL
   ses <- ses[names(vals)]
   df <- lapply(seq_along(vals), function(i) {
-    if (is.matrix(vals[[i]])) {
+    if (length(dim(vals[[i]])) >= 2L) {
       dimnames(vals[[i]]) <- dimnames(fit$rep[[sub("^log_", "", names(vals)[i])]])
       d <- tidy_mat(vals[[i]], value_name = "est")
       d$se <- as.vector(ses[[i]])
@@ -397,7 +398,7 @@ tidy_sdrep <- function(fit, interval = 0.95) {
     df$F$se_scale[zero] <- "reported"
   }
   for (nm in names(df)) df[[nm]]$unit <- .population_unit(fit$dat, nm)
-  for (nm in intersect(c("F", "mu_F", "sd_F", "F_bar"), names(df))) {
+  for (nm in intersect(c("F", "F_fleet", "mu_F", "mu_F_fleet", "sd_F", "F_bar"), names(df))) {
     source <- fit$rep[[nm]]
     if (is.null(source)) next
     zero <- as.vector(source) == 0
@@ -564,6 +565,11 @@ tidy_par <- function(fit, interval = 0.95) {
         age = fit$dat$ages[1L], est = e, se = s, is_proj = FALSE)
     } else if (is.matrix(e)) {
       df <- tidy_mat(e, value_name = "est")
+      if (nm == "log_f" && fit$dat$has_fleet) {
+        i <- match(df$age_block, fit$dat$F_states$key)
+        df$fleet <- fit$dat$F_states$fleet[i]
+        df$age_block <- fit$dat$F_states$block[i]
+      }
       df$is_proj <- df$year %in% fit$dat$years[fit$dat$is_proj]
       df$se <- as.vector(s)
     } else {
@@ -839,8 +845,13 @@ stack_nested <- function(x, label = "model",
   }
   if (!is.null(par[["log_f"]])) {
     historical <- !dat$is_proj
-    out$F <- table(par$log_f - log(.f_state_mean(fit$rep$mu_F[historical, , drop = FALSE], dat)),
+    mean <- if (dat$has_fleet) .F_matrix(fit$rep$mu_F_fleet, dat) else fit$rep$mu_F
+    out$F <- table(par$log_f - log(.f_state_mean(mean[historical, , drop = FALSE], dat)),
       dat$F_settings$process, .f_blocked(dat))
+    if (dat$has_fleet && !is.null(out$F)) {
+      i <- match(out$F$age_block, dat$F_states$key)
+      out$F$fleet <- dat$F_states$fleet[i]; out$F$age_block <- dat$F_states$block[i]
+    }
   }
   if (!is.null(par[["log_m"]])) {
     out$M <- table(par[["log_m"]] - log(fit$rep$mu_M[rownames(par[["log_m"]]),
