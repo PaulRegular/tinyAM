@@ -191,7 +191,7 @@ logistic <- function(x, by = NULL) .formula_marker_error("logistic")
   if (any(c("bh", "ricker") %in% all.names(formula))) {
     cli::cli_abort("bh() and ricker() are restricted to rec_settings$mu_form.")
   }
-  special <- c("iid", "rw", "ar1", "logistic", "warped_normal", "double_logistic", "power", "|")
+  special <- c("iid", "rw", "ar1", "logistic", "warped_normal", "double_logistic", "power", "|", "s", "t2", "te", "ti")
   contains <- function(x) {
     is.call(x) && (.formula_call_name(x) %in% special ||
       any(vapply(as.list(x)[-1L], contains, logical(1))))
@@ -224,6 +224,11 @@ logistic <- function(x, by = NULL) .formula_marker_error("logistic")
     }
     type <- .formula_call_name(x)
     if (type %in% special) {
+      if (type %in% c("te","ti")) cli::cli_abort("Use supported s() or t2(age, year) smooths; te() and ti() are not supported.")
+      if (type %in% c("s","t2")) {
+        specs[[length(specs)+1L]] <<- .smooth_spec(x,environment(formula))
+        return(NULL)
+      }
       if (type == "|") {
         if (length(x) != 3L || !identical(x[[2L]], 1)) {
           cli::cli_abort("Only random intercept syntax {.code (1 | group)} is supported.")
@@ -293,7 +298,18 @@ logistic <- function(x, by = NULL) .formula_marker_error("logistic")
   if (length(powers) > 1L) cli::cli_abort("Use one additive power() term in q_form.")
   if (length(powers)) design$q_power <- .make_q_power(powers[[1L]], data)
   specs <- Filter(function(x) x$type != "power", specs)
+  smooth_specs <- Filter(function(x) x$type == "smooth",specs)
+  specs <- Filter(function(x) x$type != "smooth",specs)
   terms <- lapply(specs, .make_q_term, data = data)
+  if (length(smooth_specs)) {
+    smooths <- .compile_smooths(smooth_specs,data)
+    design$q_modmat <- cbind(design$q_modmat,smooths$fixed)
+    terms <- c(terms,smooths$terms)
+    rows <- if (is.null(data$is_proj)) rep(TRUE,nrow(data)) else !data$is_proj
+    if (!is.null(data$obs)) rows <- rows & is.finite(data$obs) & data$obs > 0
+    fixed <- design$q_modmat[rows,,drop=FALSE]
+    if (ncol(fixed) && qr(fixed)$rank < ncol(fixed)) cli::cli_abort("Smooth null-space columns duplicate ordinary fixed terms. Remove redundant linear effects, intercepts or overlapping smooths.")
+  }
   ids <- vapply(terms, `[[`, character(1), "id")
   if (anyDuplicated(ids)) cli::cli_abort("Duplicate structured catchability terms are not identifiable.")
   design$q_terms <- stats::setNames(terms, ids)
@@ -404,6 +420,7 @@ logistic <- function(x, by = NULL) .formula_marker_error("logistic")
 }
 
 .q_term_design <- function(term, n) {
+  if (term$type == "smooth") return(term$design)
   states <- sum(vapply(term$groups, function(g) length(g$states), integer(1)))
   z <- matrix(0, n, states)
   offset <- 0L
@@ -512,6 +529,15 @@ logistic <- function(x, by = NULL) .formula_marker_error("logistic")
       }
       next
     }
+    if (term$type == "smooth") {
+      sd <- exp(par[[term$sd_parameter]])
+      states <- par[[term$parameter]]
+      if (simulate) states[] <- stats::rnorm(length(states),0,sd)
+      nll <- nll - sum(RTMB::dnorm(states,0,sd,log=TRUE))
+      contribution <- contribution + drop(term$design %*% states)
+      simulated[[term$parameter]] <- states
+      next
+    }
     sd <- if (is.null(term$sd)) exp(par[[term$sd_parameter]]) else term$sd
     phi <- if (is.null(term$phi)) {
       if (term$type == "ar1") plogis(par[[term$phi_parameter]]) else 0
@@ -570,6 +596,13 @@ logistic <- function(x, by = NULL) .formula_marker_error("logistic")
 }
 
 .q_level_metadata <- function(term) {
+  if (term$type == "smooth") {
+    states <- term$groups[[1L]]$states
+    return(data.frame(term=term$id,process="smooth",variable=term$variable,
+      by=if(is.null(term$by))NA_character_ else term$by,group=term$groups[[1L]]$group,
+      level=states,coordinate=seq_along(states),basis=seq_along(states),
+      is_proj=FALSE,is_fixed=FALSE))
+  }
   all_levels <- unique(unlist(lapply(term$groups, `[[`, "levels"), use.names = FALSE))
   do.call(rbind, lapply(term$groups, function(g) {
     level <- as.character(g$levels)
@@ -618,7 +651,7 @@ logistic <- function(x, by = NULL) .formula_marker_error("logistic")
       out$increments[[term$id]] <- delta
       offset <- offset + nrow(delta)
     }
-    if (!is.null(term$by) && is.numeric(fit$dat$obs$index[[term$by]])) {
+    if (term$type != "smooth" && !is.null(term$by) && is.numeric(fit$dat$obs$index[[term$by]])) {
       d <- fit$dat$obs$index
       rows <- unlist(lapply(term$groups, `[[`, "rows"), use.names = FALSE)
       index <- unlist(lapply(term$groups, `[[`, "index"), use.names = FALSE)
@@ -944,7 +977,7 @@ mono <- function(x, by = NULL) {
     }
     forbidden <- function(x) {
       if (!is.call(x)) return(FALSE)
-      .formula_call_name(x) %in% c("iid", "rw", "ar1", "mono", "logistic", "warped_normal", "double_logistic", "bh", "ricker", "|", "offset", "for_fleet", "for_survey") ||
+      .formula_call_name(x) %in% c("iid", "rw", "ar1", "mono", "logistic", "warped_normal", "double_logistic", "s", "t2", "te", "ti", "bh", "ricker", "|", "offset", "for_fleet", "for_survey") ||
         any(vapply(as.list(x)[-1L], forbidden, logical(1)))
     }
     if (forbidden(formula[[2L]])) {
@@ -981,6 +1014,9 @@ mono <- function(x, by = NULL) {
   } else stats::model.matrix
   design <- .parse_q_formula(formula, d, fixed_design, scope=if(component == "F") "fleet" else NULL)
   terms <- design$q_terms
+  has_smooth <- any(vapply(terms,function(x)x$type == "smooth",logical(1)))
+  if (has_smooth && component != "F") cli::cli_abort("Smooth means are supported for F and q only, not M.")
+  if (has_smooth && !dat$F_settings$process %in% c("off","iid","ar1")) cli::cli_abort("Smooth F means require process = 'off', 'iid' or 'ar1'; intrinsic RW/correlated-RW residuals are not supported.")
   curves <- Filter(.is_selectivity_curve, terms)
   mono <- design$q_mono_steps
   n_mono <- if (is.null(mono)) 0L else length(unique(mono$variable))
@@ -1047,7 +1083,7 @@ mono <- function(x, by = NULL) {
       "i" = "Retain one rw() or ar1() term and use IID residuals for independent fluctuations."
     ))
   }
-  gaussian <- Filter(Negate(.is_selectivity_curve), terms)
+  gaussian <- Filter(function(x) !.is_selectivity_curve(x) && x$type != "smooth", terms)
   random_slope <- component == "M" && .M_ar1_random_slope(dat)
   if (length(gaussian) && !settings$process %in% c("iid", "off") && !random_slope) {
     alternative <- paste0(", or use process = 'off' to vary only the ", component, " mean")
@@ -1155,6 +1191,7 @@ mono <- function(x, by = NULL) {
 
 .tidy_formula_effects <- function(fit, interval = .95) {
   all <- list(q = .tidy_q_effects(fit, interval))
+  all$q$smooths <- .tidy_smooth_functions(fit,interval,"q")
   for (component in c("F", "M", "sd_catch", "sd_index")) {
     if (!length(fit$dat[[paste0(component, "_terms")]])) next
     proxy <- fit
@@ -1170,8 +1207,9 @@ mono <- function(x, by = NULL) {
         component, "_increments"
       )
     )
+    if (component == "F") all[[component]]$smooths <- .tidy_smooth_functions(fit,interval,"F")
   }
-  out <- list(levels = list(), increments = list(), contributions = list())
+  out <- list(levels = list(), increments = list(), contributions = list(), smooths = list())
   for (component in names(all)) {
     for (part in names(out)) {
       tables <- lapply(all[[component]][[part]], function(tab) {
@@ -1184,6 +1222,7 @@ mono <- function(x, by = NULL) {
   if (!length(out$levels)) {
     return(list())
   }
+  if (!length(out$smooths)) out$smooths <- NULL
   attr(out, "interval") <- interval
   out
 }
@@ -1195,8 +1234,8 @@ mono <- function(x, by = NULL) {
   design <- .parse_q_formula(formula, data)
   terms <- design$q_terms
   if (!is.null(design$q_mono_modmat) ||
-    any(vapply(terms, .is_selectivity_curve, logical(1)))) {
-    cli::cli_abort("{component}_settings$sd_form supports iid(), rw() and ar1(), not catchability curves.")
+    any(vapply(terms, function(x) .is_selectivity_curve(x) || x$type == "smooth", logical(1)))) {
+    cli::cli_abort("{component}_settings$sd_form supports iid(), rw() and ar1(), not catchability curves or smooths.")
   }
   for (i in seq_along(terms)) {
     term <- terms[[i]]

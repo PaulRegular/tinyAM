@@ -243,7 +243,7 @@ tidy_rep <- function(fit) {
     rep, function(x) length(dim(x)) >= 2L || length(x) == length(dat$years),
     logical(1)
   )
-  keep[grepl("^eta_(q|mu_[FM]|sd_catch|sd_index)_increments$", names(keep))] <- FALSE
+  keep[grepl("^eta_(q|mu_[FM]|sd_catch|sd_index)_(increments|smooth)$", names(keep))] <- FALSE
   keep[startsWith(names(keep), "rec_")] <- FALSE
   keep[names(keep) == "initial_log_N"] <- FALSE
   keep[names(keep) %in% c("log_q_base", "q_power")] <- FALSE
@@ -361,7 +361,7 @@ tidy_sdrep <- function(fit, interval = 0.95) {
   ## assumes all ADREPORTED objects are equal length to years and are in log space
   vals <- as.list(fit[["sdrep"]], "Estimate", report = TRUE)
   ses <- as.list(fit[["sdrep"]], "Std. Error", report = TRUE)
-  vals <- vals[!grepl("^(q_link_prediction|log_q_base|eta_(q|mu_[FM]|sd_catch|sd_index)_increments)$", names(vals))]
+  vals <- vals[!grepl("^(q_link_prediction|log_q_base|eta_(q|mu_[FM]|sd_catch|sd_index)_(increments|smooth))$", names(vals))]
   vals <- vals[!startsWith(names(vals), "rec_")]
   vals$initial_log_N <- NULL
   ses <- ses[names(vals)]
@@ -505,8 +505,12 @@ tidy_pop <- function(fit, interval = 0.95) {
 #'   are descriptive local approximations, not boundary-adjusted inference.
 #'   Coefficient names identify
 #'   transitions and groups. Actual observation-specific q is in [tidy_obs_pred()].
+#' - Smooth null-space coefficients and penalized basis coefficients are signed
+#'   link-scale effects, not exponentiated F/q values. Smoothing SDs are positive
+#'   with log-scale SEs. Complete functions, including null-space contributions,
+#'   are in [tidy_tam()]'s `formula_effects$smooths`, with joint uncertainty.
 #'
-#' Formula coefficients named `log_mu_f`, `log_sd_*`, or `log_q` are
+#' Ordinary formula coefficients named `log_mu_f`, `log_sd_*`, or `log_q` are
 #' exponentiated in summaries. An exponentiated slope is a multiplicative
 #' change per unit covariate, not the fitted F, SD, or q surface itself.
 #' An exception is the mean-\eqn{M} formula
@@ -567,6 +571,8 @@ tidy_par <- function(fit, interval = 0.95) {
   ran_nms <- intersect(fit$obj$env$.random, nms)
   fix_nms <- setdiff(nms, ran_nms)
   z <- stats::qnorm(0.5 + interval / 2)
+  smooth_columns <- unique(unlist(lapply(.formula_terms(fit$dat),function(term)
+    if (term$type == "smooth") colnames(term$smooth_fixed) else character()),use.names=FALSE))
 
   .par2df <- function(nm) {
     e <- est[[nm]]
@@ -613,6 +619,8 @@ tidy_par <- function(fit, interval = 0.95) {
     } else {
       "reported"
     }
+    smooth_fixed <- nm %in% c("log_mu_f","log_q","logit_q") & df$coef %in% smooth_columns
+    original_smooth <- df[smooth_fixed,c("est","lwr","upr","se"),drop=FALSE]
 
     if (startsWith(nm, "atanh_")) {
       df <- trans_est(df, transform = tanh, scale = 1)
@@ -628,10 +636,17 @@ tidy_par <- function(fit, interval = 0.95) {
     } else {
       df <- trans_est(df, transform = NULL, scale = 1)
     }
+    if (any(smooth_fixed)) {
+      df[smooth_fixed,c("est","lwr","upr","se")] <- original_smooth
+      df$se_scale[smooth_fixed] <- "reported"
+      df$par[smooth_fixed] <- if (nm == "log_mu_f") "mu_F_smooth" else "q_smooth_fixed"
+    }
     df$unit <- if (nm %in% c("log_r0", "log_r_init", "log_r", "log_n0", "log_n")) {
       .population_unit(fit$dat, "N")
     } else if (nm == "d_n0") "log abundance difference" else
       if (nm == "log_q_power") "unitless" else NA_character_
+    if (any(smooth_fixed)) df$unit[smooth_fixed] <- if (nm == "log_mu_f") "log F coefficient" else
+      if (nm == "logit_q") "logit q coefficient" else "log q coefficient"
     values <- c("est", "lwr", "upr", "se", "se_scale")
     df[, c(
       setdiff(names(df), c(values, "is_proj")), values,
@@ -953,6 +968,10 @@ stack_nested <- function(x, label = "model",
 #' - **formula_effects** — signed Gaussian q, F/M mean and log observation-SD effect levels, RW increments and
 #'   numeric-by contributions, grouped by term. Intervals use their joint fitted
 #'   uncertainty; the zero RW anchor is explicitly marked as fixed.
+#'   `smooths` contains complete centered smooth functions, including their
+#'   unpenalized directions, with joint uncertainty on the log F/q-link scale.
+#'   Log-q and logit-q functions are kept in separate entries. Basis coefficient
+#'   tables identify basis indices, which are not biological ages or years.
 #'
 #' @example inst/examples/example_fit_default.R
 #' @examples
@@ -1175,6 +1194,7 @@ tidy_tam <- function(..., model_list = NULL, interval = 0.95, label = "model", l
   })
   if (any(lengths(effects))) {
     components <- c("levels", "increments", "contributions")
+    if (any(vapply(effects,function(x)length(x$smooths) > 0L,logical(1)))) components <- c(components,"smooths")
     out$formula_effects <- stats::setNames(lapply(components, function(nm) {
       stack_nested(lapply(effects, `[[`, nm), label = id_col, label_type = label_type)
     }), components)

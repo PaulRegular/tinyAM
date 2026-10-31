@@ -147,6 +147,9 @@ each fleet has its own F states; total F is their sum for survival and Z.
 \code{~ 0 + for_fleet("Trawl", ~ factor(year) + logistic(age)) + for_fleet("Gillnet", ~ factor(year) + factor(age))}. Ordinary terms outside
 scopes share their coefficients. Each inner formula includes an intercept
 unless removed explicitly; avoid redundant global and scoped baselines.
+\link{smooth_formulas} adds penalized \code{s()} and age-year \code{t2()} relationships.
+Smooth means support \code{"off"}, \code{"iid"} and \code{"ar1"} F processes; the latter
+combinations are experimental and require mean/process separation checks.
 \item \code{mean_ages}: optional vector of ages to include in population weighted
 average F (\code{F_bar}) calculations. All ages used if absent.
 }}
@@ -224,6 +227,8 @@ survey time. Missing power-group labels mean p = 1, not missing observations.
 Powers require the log q link. See \code{\link[=power]{power()}} and \link{formula_effects}.
 \code{\link[=warped_normal]{warped_normal()}} and \code{\link[=double_logistic]{double_logistic()}} allow dome-shaped selectivity;
 they multiply baseline q after its inverse link.
+Penalized \code{s()} and \code{t2(age, year)} terms instead modify the selected q-link
+predictor. See \link{smooth_formulas} for supported bases, grouping and penalties.
 \code{\link[=for_survey]{for_survey()}} applies a formula to one named survey, e.g.
 \code{~ 0 + for_survey("RV", ~ logistic(age)) + for_survey("Sentinel", ~ q_block)}. Effects are built on each survey's
 own reporting ages, then contribute zero to the predictor elsewhere.

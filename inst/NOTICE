@@ -1,0 +1,21 @@
+Selectivity and smoothing references
+
+The double-logistic expression and its independent reference tests follow
+WHAM get_selAA(), src/selectivity.hpp, model 3, by Tim J. Miller and
+Brian C. Stock and WHAM contributors (GPL-3), revision
+ffcbfd093161e8210aa20716933975191b661807.
+https://github.com/timjmiller/wham
+
+Smooth construction uses mgcv::smoothCon() and smooth2random(type = 2),
+following the approach in sdmTMB R/smoothers.R, revision
+34740199c51fbebe86a6de7671f33f590db166bf (GPL-3).
+https://github.com/sdmTMB/sdmTMB
+
+The retained-basis prediction transformation is adapted from Simon N. Wood's
+mgcv smooth2random help example (GPL >= 2), also used by sdmTMB::s2rPred().
+Validation uses mgcv 1.9.4. The formula parser and scope integration in tinyAM
+are independent implementations; no separate mgcv model is fitted.
+https://stat.ethz.ch/R-manual/R-devel/library/mgcv/html/smooth2random.html
+
+These adaptations are distributed with tinyAM under GPL >= 3, consistent
+with the source licenses. Standard GPL license texts are distributed with R.

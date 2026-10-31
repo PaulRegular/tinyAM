@@ -138,6 +138,15 @@
         cli::cli_inform("{label} mean starts were omitted because the formula basis changed.")
       }
     }
+    for (component in c("q","F")) {
+      field <- if (component == "q") "q_terms" else "F_terms"
+      for (term in Filter(function(x)x$type == "smooth",dat[[field]])) {
+        previous <- source$dat[[field]][[term$id]]
+        if (is.null(previous) || !.smooth_basis_compatible(previous,term)) {
+          start[c(term$parameter,term$sd_parameter)] <- NULL
+        }
+      }
+    }
   }
   if (!is.list(start) || (length(start) && (is.null(names(start)) ||
     anyNA(names(start)) || any(!nzchar(names(start))) || anyDuplicated(names(start))))) {
@@ -310,7 +319,7 @@ fit_tam <- function(
   formula_advisories <- rbind(
     .mean_process_advisories(dat), .q_process_advisories(dat),
     .sd_process_advisories(dat), .rec_process_advisories(dat),
-    .process_sd_advisories(dat)
+    .process_sd_advisories(dat), .smooth_design_advisories(dat)
   )
   if (nrow(formula_advisories)) {
     cli::cli_warn(c(
@@ -322,6 +331,9 @@ fit_tam <- function(
     start_par <- .start_parameters(start_par, dat)
     refit_args$start_par <- start_par
     par <- .merge_start_par(par, start_par)
+    if (is.null(start_par$log_f) && any(vapply(dat$F_terms,function(x)x$type == "smooth",logical(1)))) {
+      par <- .initialize_F_states(par,dat)
+    }
     if (!is.null(dat$rec$curve) && !any(c("log_sr_alpha", "log_sr_beta") %in% names(start_par))) {
       par <- .initialize_rec_curve(par, dat)
     }

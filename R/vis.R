@@ -233,10 +233,11 @@ vis_tam.tam_retro <- function(..., model_list = NULL, interval = 0.95, output_fi
   par <- data$par
   category <- rep("Other", nrow(data))
   category[grepl("^sd_", par)] <- "Process SDs"
+  category[grepl("^sd_(q|mu_F)_.*smooth_",par)] <- "Smoothing SDs"
   category[grepl("^sd_beta_", par)] <- "Process SD coefficients"
   category[par %in% c("sd_catch", "sd_index")] <- "Observation SDs"
   category[par %in% c("q", "logit_q", "q_power")] <- "Catchability"
-  category[par %in% "dq" | grepl("^q_(a50|slope|scale|shape|curve)_", par)] <- "Catchability curves"
+  category[par %in% "dq" | grepl("^q_(a50|slope|scale|shape|curve|smooth)_", par)] <- "Catchability curves"
   category[grepl("^mu_", par)] <- "Mortality means"
   category[par == "mu_n"] <- "Cohort means"
   category[par == "dmu_f" | grepl("^F_(a50|slope|scale|shape|curve)_", par)] <- "Mortality means"
@@ -245,7 +246,7 @@ vis_tam.tam_retro <- function(..., model_list = NULL, interval = 0.95, output_fi
   category[par %in% c("r0", "r_init", "n0")] <- "Initial abundance"
   category[par == "d_n0"] <- "Initial steps"
   category <- factor(category, levels = c(
-    "Process SDs", "Process SD coefficients", "Observation SDs",
+    "Process SDs", "Smoothing SDs", "Process SD coefficients", "Observation SDs",
     "Catchability", "Catchability curves", "Mortality means", "Cohort means", "Correlations",
     "Recruitment", "Initial abundance", "Initial steps", "Other"
   ))
@@ -266,10 +267,18 @@ vis_tam.tam_retro <- function(..., model_list = NULL, interval = 0.95, output_fi
   by <- unique(effect$by)
   if (!is.na(by)) variable <- paste(variable, "by", by)
   label <- paste0(component, " ", process, " (", gsub("_", " ", variable, fixed = TRUE), ")")
-  scope <- intersect(c("fleet","survey"),names(effect))
+  scope <- intersect(if (any(effect$component %in% c("q","sd_index")))
+    c("survey","fleet") else c("fleet","survey"),names(effect))
   if (length(scope)) {
     values <- unique(effect[[scope[1L]]]); values <- values[!is.na(values)]
     if (length(values) == 1L) label <- paste0(label," [",values,"]")
+  }
+  if (identical(process,"smooth")) {
+    group <- unique(effect$group)
+    shown <- unique(unlist(effect[scope],use.names=FALSE))
+    if (length(group) == 1L && !is.na(group) && group != "all" && !group %in% shown) {
+      label <- paste0(label," [",group,"]")
+    }
   }
   label
 }

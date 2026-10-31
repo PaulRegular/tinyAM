@@ -11,6 +11,8 @@
 #' Scoped contributions are zero outside their selected rows; this means no
 #' contribution to log F or the q predictor, rather than zero fishing mortality.
 #' Joint design checks reject redundant intercepts and age relationships.
+#' Supported [smooth_formulas] are constructed within the selected rows;
+#' groups with different reporting ages retain their own bases.
 #' @return Formula markers; direct calls raise an error.
 #' @examples
 #' ~ 0 + for_fleet("Trawl", ~ factor(year) + logistic(age)) +
@@ -53,6 +55,10 @@ for_survey <- function(survey, formula) {
     if (is.symbol(x)) return(as.character(x))
     if (!is.call(x)) return(character())
     name <- .formula_call_name(x)
+    if (name %in% c("s","t2")) {
+      spec <- .smooth_spec(x,env)
+      return(c(spec$variables,spec$by))
+    }
     if (name %in% c("for_fleet", "for_survey")) {
       spec <- .scope_spec(x, env)
       return(walk(spec$formula[[2L]], environment(spec$formula)))
@@ -166,6 +172,11 @@ for_survey <- function(survey, formula) {
         }
       }
       for (i in seq_along(term$groups)) term$groups[[i]]$rows <- rows[term$groups[[i]]$rows]
+      if (term$type == "smooth") {
+        term$design <- padding(term$design,rows,spec$id)
+        term$smooth_fixed <- padding(term$smooth_fixed,rows,spec$id)
+        term$smooth_id <- paste0(spec$id,":",term$smooth_id)
+      }
       multiplier <- numeric(n); multiplier[rows] <- term$multiplier; term$multiplier <- multiplier
       if (term$id %in% names(out$q_terms)) cli::cli_abort("Duplicate scoped term {term$id}.")
       out$q_terms[[term$id]] <- term

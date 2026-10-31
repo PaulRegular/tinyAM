@@ -248,13 +248,9 @@ make_par <- function(dat) {
       if (dat$has_fleet) dat$F_states$key else if (.f_blocked(dat)) levels(dat$F_settings$age_blocks) else dat$ages),
       c("year", if (.f_blocked(dat)) "age_block" else "age"))
   )
-  if (dat$F_settings$process != "off" && (!is.null(dat$F_mono_modmat) || any(vapply(dat$F_terms, .is_selectivity_curve, logical(1))))) {
-    surface <- matrix(
-      drop(dat$F_modmat %*% par$log_mu_f) +
-        .mean_effects(par, dat, "F")$contribution,
-      length(dat$years), nrow(dat$F_columns)
-    )
-    par$log_f[] <- .f_state_mean(surface[!dat$is_proj, , drop = FALSE], dat)
+  if (dat$F_settings$process != "off" && (!is.null(dat$F_mono_modmat) ||
+      any(vapply(dat$F_terms,function(x).is_selectivity_curve(x) || x$type == "smooth",logical(1))))) {
+    par <- .initialize_F_states(par,dat)
   }
 
   if (dat$M_settings$process != "off") {
@@ -309,5 +305,14 @@ make_par <- function(dat) {
   if (!is.null(dat$rec$curve)) {
     par <- .initialize_rec_curve(par, dat, initialize_states = TRUE)
   }
+  par
+}
+
+# A newly introduced F residual process starts at its complete fitted mean.
+.initialize_F_states <- function(par, dat) {
+  if (dat$F_settings$process == "off" || is.null(par$log_mu_f)) return(par)
+  surface <- matrix(drop(dat$F_modmat %*% par$log_mu_f) +
+    .mean_effects(par,dat,"F")$contribution,length(dat$years),nrow(dat$F_columns))
+  par$log_f[] <- .f_state_mean(surface[!dat$is_proj,,drop=FALSE],dat)
   par
 }

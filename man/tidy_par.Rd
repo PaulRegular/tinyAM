@@ -66,9 +66,13 @@ An infinite endpoint has missing SEs/intervals. Boundary Wald intervals
 are descriptive local approximations, not boundary-adjusted inference.
 Coefficient names identify
 transitions and groups. Actual observation-specific q is in \code{\link[=tidy_obs_pred]{tidy_obs_pred()}}.
+\item Smooth null-space coefficients and penalized basis coefficients are signed
+link-scale effects, not exponentiated F/q values. Smoothing SDs are positive
+with log-scale SEs. Complete functions, including null-space contributions,
+are in \code{\link[=tidy_tam]{tidy_tam()}}'s \code{formula_effects$smooths}, with joint uncertainty.
 }
 
-Formula coefficients named \code{log_mu_f}, \verb{log_sd_*}, or \code{log_q} are
+Ordinary formula coefficients named \code{log_mu_f}, \verb{log_sd_*}, or \code{log_q} are
 exponentiated in summaries. An exponentiated slope is a multiplicative
 change per unit covariate, not the fitted F, SD, or q surface itself.
 An exception is the mean-\eqn{M} formula

@@ -1,5 +1,10 @@
 # tinyAM 0.1.1.9001
 
+* Add mgcv thin-plate/cubic `s()` and age-year `t2()` smooths to F means and
+  catchability formulas, including fleet/survey scopes. Estimate normalized
+  Gaussian smooth penalties jointly, retain training bases for prediction,
+  and report complete smooth functions with joint uncertainty. Flag weak
+  separation from IID/AR1 F residuals; intrinsic F random walks are excluded.
 * Add `warped_normal()` asymptotic/dome curves and WHAM-style
   `double_logistic()` curves for F and q. Report warped peak/tail quantities
   and maximum realized fleet F without normalizing selectivity peaks.

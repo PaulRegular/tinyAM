@@ -189,6 +189,16 @@
 #' parameters, separate from Gaussian mean effects and latent F states. Static
 #' curves cancel from RW increments and are not supported there.
 #'
+#' Penalized [smooth_formulas] instead contribute
+#' \eqn{\sum_j Z_j u_j} to the log F or q-link predictor. mgcv supplies the
+#' basis and penalty conversion; unpenalized directions join \eqn{X\beta}.
+#' Each penalized block has the proper density
+#' \eqn{u_j\sim N(0,\tau_j^2 I)}, including its normalization. Its SD depends
+#' on the retained basis scale and is distinct from F residual-process SD.
+#' Factor groups and tensor penalties have separate coefficient blocks.
+#' F smooths support off/IID/AR1 residual processes; overlapping mean/residual
+#' patterns require experimental-combination and uncertainty checks.
+#'
 #' With `F_settings$process = "off"`, historical \eqn{F=\mu^F}.
 #' No F latent states, process SD or correlations are created. Projection
 #' controls still scale terminal historical F or solve for total catch.

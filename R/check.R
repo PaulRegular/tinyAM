@@ -385,7 +385,7 @@ check_tam <- function(fit, ..., grad_tol = NULL, detailed = FALSE, model_list = 
   }
   observed <- !d$is_proj & is.finite(d$obs) & d$obs > 0
   for (term in dat$q_terms) {
-    if (.is_selectivity_curve(term)) next
+    if (.is_selectivity_curve(term) || term$type == "smooth") next
     if (!is.null(term$sd_parameter) || !is.null(term$phi_parameter)) {
       for (group in term$groups) {
         rows <- group$rows[observed[group$rows] & term$multiplier[group$rows] != 0]
@@ -534,7 +534,8 @@ check_tam <- function(fit, ..., grad_tol = NULL, detailed = FALSE, model_list = 
     .sd_process_advisories(fit$dat),
     .rec_process_advisories(fit$dat), .rec_fit_advisories(fit),
     .formula_uncertainty_advisories(fit), .cor_rw_advisories(fit), .q_power_advisories(fit),
-    .process_sd_advisories(fit$dat), .process_sd_fit_advisories(fit)
+    .process_sd_advisories(fit$dat), .process_sd_fit_advisories(fit),
+    .smooth_design_advisories(fit$dat), .smooth_fit_advisories(fit)
   )
   add <- function(issue, detail) {
     out <<- rbind(out, data.frame(issue = issue, detail = detail))

@@ -597,6 +597,10 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   REPORT(eta_mu_M_increments)
   if (length(eta_mu_F_increments)) ADREPORT(eta_mu_F_increments)
   if (length(eta_mu_M_increments)) ADREPORT(eta_mu_M_increments)
+  eta_q_smooth <- .smooth_function_values(par,dat,"q",q_effects)
+  eta_mu_F_smooth <- .smooth_function_values(par,dat,"F",F_effects)
+  if (length(eta_q_smooth)) { REPORT(eta_q_smooth); ADREPORT(eta_q_smooth) }
+  if (length(eta_mu_F_smooth)) { REPORT(eta_mu_F_smooth); ADREPORT(eta_mu_F_smooth) }
   eta_sd_catch_increments <- sd_catch_effects$rw_increments
   eta_sd_index_increments <- sd_index_effects$rw_increments
   REPORT(eta_sd_catch_increments)

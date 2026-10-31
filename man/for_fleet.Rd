@@ -29,6 +29,8 @@ outer \code{~ 0 + ...} when the inner formulas supply all group baselines.
 Scoped contributions are zero outside their selected rows; this means no
 contribution to log F or the q predictor, rather than zero fishing mortality.
 Joint design checks reject redundant intercepts and age relationships.
+Supported \link{smooth_formulas} are constructed within the selected rows;
+groups with different reporting ages retain their own bases.
 }
 \examples{
 ~ 0 + for_fleet("Trawl", ~ factor(year) + logistic(age)) +

@@ -483,6 +483,9 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #'   for_fleet("Gillnet", ~ factor(year) + factor(age))`. Ordinary terms outside
 #'   scopes share their coefficients. Each inner formula includes an intercept
 #'   unless removed explicitly; avoid redundant global and scoped baselines.
+#'   [smooth_formulas] adds penalized `s()` and age-year `t2()` relationships.
+#'   Smooth means support `"off"`, `"iid"` and `"ar1"` F processes; the latter
+#'   combinations are experimental and require mean/process separation checks.
 #' - `mean_ages`: optional vector of ages to include in population weighted
 #'   average F (`F_bar`) calculations. All ages used if absent.
 #' @param M_settings A list with elements:
@@ -551,6 +554,8 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #'   Powers require the log q link. See [power()] and [formula_effects].
 #'   [warped_normal()] and [double_logistic()] allow dome-shaped selectivity;
 #'   they multiply baseline q after its inverse link.
+#'   Penalized `s()` and `t2(age, year)` terms instead modify the selected q-link
+#'   predictor. See [smooth_formulas] for supported bases, grouping and penalties.
 #'   [for_survey()] applies a formula to one named survey, e.g.
 #'   `~ 0 + for_survey("RV", ~ logistic(age)) +
 #'   for_survey("Sentinel", ~ q_block)`. Effects are built on each survey's
