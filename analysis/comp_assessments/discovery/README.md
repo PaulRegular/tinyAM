@@ -871,6 +871,17 @@ mortality outputs do not establish age-disaggregated observations. It is
 ineligible for this input set. See
 source_reviews/noaa_iattc_bigeye_eastern_pacific_2026.md.
 
+NOAA Stock SMART 10955 is the Atlantic white marlin unit. It lists the 2025
+JABBA run as operational and fully accepted. The ICCAT meeting report says
+its conclusions were preliminary pending SCRS adoption; the group selected
+JABBA for stock-status advice and did not use the companion Stock Synthesis
+results for that purpose. The fitted inputs are aggregate removals, fleet
+CPUE, and length compositions; no age-specific observations or population
+surfaces were verified. The assessment combines white marlin and roundscale
+spearfish because of species-identification and catch-reporting overlap. It
+is ineligible for the age-disaggregated input set. See
+`source_reviews/noaa_iccat_white_marlin_2025.md`.
+
 NOAA Stock SMART 10413 is the Southern Pacific Coast bocaccio unit. Its latest
 fitted assessment is the 2017 update, carrying forward age-at-length data from
 the 2015 assessment; the 2025 document is a catch-only projection, not a new
@@ -1156,11 +1167,11 @@ the age-disaggregated comparison set. See
 `source_reviews/ices_blue_ling_5b6712_2026.md`.
 
 The discovery snapshot as of 2026-10-31 contains 905 inventory rows: 107
-matched, 422 provisionally new, 28 ambiguous, and 348 identity-unreviewed.
-Across all rows, 140 are eligible, 408 ineligible, and 357 unresolved; 656
-are screened, 1 is in progress, and 248 are not started. The organization and
+matched, 425 provisionally new, 28 ambiguous, and 345 identity-unreviewed.
+Across all rows, 141 are eligible, 410 ineligible, and 354 unresolved; 659
+are screened, 1 is in progress, and 245 are not started. The organization and
 source-region breakdowns are in `inventory_progress.csv`. The crosswalk has
-446 linked units (100 canonical stock links and 346 candidate units) and 437
+449 linked units (100 canonical stock links and 349 candidate units) and 434
 unlinked inventory rows in `inventory_units.csv`.
 
 ICES Northeast Atlantic spurdog (`dgs.27.nea`) is a new 2026 candidate with
