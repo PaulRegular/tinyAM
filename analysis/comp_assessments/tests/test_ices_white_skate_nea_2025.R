@@ -43,7 +43,7 @@ stopifnot(
   file.info(path)$size == source$bytes,
   identical(toupper(source$sha256), sha256_file(path)),
   identical(rawToChar(readBin(path, 'raw', n = 4L)), '%PDF'),
-  grepl('Stock sections 23', source$revision, fixed = TRUE),
+  grepl('section 23 (printed pp. 670-674)', source$revision, fixed = TRUE),
   grepl('25.9.5', source$revision, fixed = TRUE),
   grepl('recommended zero catches', review, fixed = TRUE),
   !any(tolower(stocks$authority_stock_id) == 'rja.27.nea', na.rm = TRUE),

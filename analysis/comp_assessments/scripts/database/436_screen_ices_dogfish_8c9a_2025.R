@@ -6,7 +6,7 @@ unit_id <- 'ices_lesser_spotted_dogfish_8c9a'
 file <- 'wgef_2025.pdf'
 url <- 'https://literatur.thuenen.de/digbib_extern/dn070539.pdf'
 revision <- paste('ICES. 2025. Working Group on Elasmobranch Fishes (WGEF), ICES Scientific Reports 7(92),',
-  '934 pp.; DOI 10.17895/ices.pub.30137623. Stock sections 23 (printed pp. 670-674), 25.9.3 (printed pp. 710-713) and 25.9.5 (printed pp. 716-722).')
+  '934 pp.; DOI 10.17895/ices.pub.30137623. Stock section 22 (printed pp. 648-669), section 23 (printed pp. 670-674), and sections 25.9.3 (printed pp. 710-713) and 25.9.5 (printed pp. 716-722).')
 path <- file.path(cache, file)
 
 sha256_file <- function(path) {
