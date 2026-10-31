@@ -1139,9 +1139,15 @@ the age-disaggregated comparison set. See
 `source_reviews/ices_blue_ling_5b6712_2026.md`.
 
 The discovery snapshot as of 2026-10-31 contains 905 inventory rows: 107
-matched, 420 provisionally new, 28 ambiguous, and 350 identity-unreviewed.
-Across all rows, 140 are eligible, 407 ineligible, and 358 unresolved; 654
-are screened, 1 is in progress, and 250 are not started. The organization and
+matched, 421 provisionally new, 28 ambiguous, and 349 identity-unreviewed.
+Across all rows, 140 are eligible, 407 ineligible, and 358 unresolved; 655
+are screened, 1 is in progress, and 249 are not started. The organization and
 source-region breakdowns are in `inventory_progress.csv`. The crosswalk has
-444 linked units (100 canonical stock links and 344 candidate units) and 439
+445 linked units (100 canonical stock links and 345 candidate units) and 438
 unlinked inventory rows in `inventory_units.csv`.
+
+ICES Northeast Atlantic spurdog (`dgs.27.nea`) is a new 2026 candidate with
+verified current assessment outputs. Age-input eligibility remains unresolved:
+the latest detailed input description located is from 2024 and documents
+aggregate catches, biomass indices, and length compositions; 2026 input arrays
+were not located. See `source_reviews/ices_spurdog_nea_2026.md`.
