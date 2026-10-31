@@ -26,18 +26,24 @@ the rows already linked to a stock or candidate unit.
 | Organization | Rows | Matched to database | New candidate rows | Ambiguous identity | Identity unreviewed | Eligible rows | Ineligible rows | Eligibility unresolved | Screened | In progress | Not screened |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 63 | 18 | 98 | 21 | 147 | 31 | 199 | 0 | 0 |
-| ICES | 274 | 59 | 145 | 2 | 68 | 56 | 123 | 95 | 206 | 0 | 68 |
+| ICES | 274 | 59 | 151 | 2 | 62 | 56 | 129 | 89 | 212 | 0 | 62 |
 | NOAA | 432 | 28 | 220 | 8 | 176 | 64 | 144 | 224 | 258 | 0 | 174 |
-| **Total** | **905** | **107** | **428** | **28** | **342** | **141** | **414** | **350** | **663** | **0** | **242** |
+| **Total** | **905** | **107** | **434** | **28** | **336** | **141** | **420** | **344** | **669** | **0** | **236** |
 
-The crosswalk currently links 452 distinct unit keys across 474 inventory rows:
-100 link to canonical stocks and 352 are candidate units, including one with
-ambiguous identity and one with mixed identity status. Of the 350 new
-candidate units, 44 are eligible for source curation, 248 are ineligible for
-the age-disaggregated set, and 58 remain unresolved. A further 431 inventory
+The crosswalk currently links 458 distinct unit keys across 480 inventory rows:
+100 link to canonical stocks and 358 are candidate units, including one with
+ambiguous identity and one with mixed identity status. Of the 356 new
+candidate units, 44 are eligible for source curation, 254 are ineligible for
+the age-disaggregated set, and 58 remain unresolved. A further 425 inventory
 rows have no unit crosswalk yet. The progress summary has 74 organization-region
 rows. Row-level status and unit-level deduplication are intentionally reported
 separately.
+
+The first six newly screened ICES units in this review are ineligible for the
+age-disaggregated source set. Four use no-assessment or landings-only advice;
+greater silver smelt `aru.27.6b7-1012` uses a survey-trends method and spotted
+ray `rjm.27.67bj` uses biomass-index and length-based indicators. See
+`source_reviews/ices_initial_data_limited_group_2026.md`.
 ICES sandeel `san.27.6a` is a distinct current unit in Division 6.a (West of
 Scotland). The 2024 advice is category 6 and the 2025 HAWG report confirms
 zero-catch advice for 2024–2026. No current age-structured inputs or fitted

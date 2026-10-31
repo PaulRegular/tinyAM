@@ -55,6 +55,7 @@
 "candidate:iccat_west_atlantic_skipjack","","iccat_west_atlantic_skipjack","new","ineligible","screened","not_started","NOAA","SEFSC","NOAA:10158",1
 "candidate:ices_alfonsinos_nea","","ices_alfonsinos_nea","new","ineligible","screened","not_started","ICES","Azores, Bay of Biscay and the Iberian Coast, Celtic Seas, Greater North Sea, Oceanic Northeast Atlantic","ICES:alf.27.nea",1
 "candidate:ices_angel_shark_nea","","ices_angel_shark_nea","new","ineligible","screened","not_started","ICES","Bay of Biscay and the Iberian Coast, Celtic Seas, Greater North Sea","ICES:agn.27.nea",1
+"candidate:ices_aru_27_6b7_1012","","ices_aru_27_6b7_1012","new","ineligible","screened","not_started","ICES","Bay of Biscay and the Iberian Coast, Celtic Seas, Greater North Sea, Oceanic Northeast Atlantic","ICES:aru.27.6b7-1012",1
 "candidate:ices_atlantic_wolffish_iceland_5a","","ices_atlantic_wolffish_iceland_5a","new","eligible","screened","not_started","ICES","Icelandic Waters","ICES:caa.27.5a",1
 "candidate:ices_baltic_flounder_2729_32","","ices_baltic_flounder_2729_32","new","ineligible","screened","not_started","ICES","Baltic Sea","ICES:bwp.27.2729-32",1
 "candidate:ices_bay_biscay_anchovy_8","","ices_bay_biscay_anchovy_8","new","eligible","screened","not_started","ICES","Bay of Biscay and the Iberian Coast","ICES:ane.27.8",1
@@ -97,6 +98,7 @@
 "candidate:ices_ling_faroe_5b","","ices_ling_faroe_5b","new","eligible","screened","not_started","ICES","Faroes","ICES:lin.27.5b",1
 "candidate:ices_ling_ne_arctic_1_2","","ices_ling_ne_arctic_1_2","new","ineligible","screened","not_started","ICES","Arctic Ocean, Barents Sea, Norwegian Sea","ICES:lin.27.1-2",1
 "candidate:ices_megrim_north_7b_k8abd","","ices_megrim_north_7b_k8abd","new","unresolved","screened","not_started","ICES","ICES divisions 7.b-k, 8.a-b, and 8.d (west and southwest of Ireland, Bay of Biscay)","ICES:meg.27.7b-k8abd",1
+"candidate:ices_mur_27_67a_ce_k89a","","ices_mur_27_67a_ce_k89a","new","ineligible","screened","not_started","ICES","Bay of Biscay and the Iberian Coast, Celtic Seas, Greater North Sea","ICES:mur.27.67a-ce-k89a",1
 "candidate:ices_nep_27_4outfu","","ices_nep_27_4outfu","new","ineligible","screened","not_started","ICES","Greater North Sea","ICES:nep.27.4outFU",1
 "candidate:ices_nep_27_6aoutfu","","ices_nep_27_6aoutfu","new","ineligible","screened","not_started","ICES","Celtic Seas","ICES:nep.27.6aoutFU",1
 "candidate:ices_nep_27_7outfu","","ices_nep_27_7outfu","new","ineligible","screened","not_started","ICES","Celtic Seas","ICES:nep.27.7outFU",1
@@ -138,6 +140,10 @@
 "candidate:ices_pra_27_3a4a","","ices_pra_27_3a4a","new","ineligible","screened","not_started","ICES","Greater North Sea","ICES:pra.27.3a4a",1
 "candidate:ices_pra_27_4a","","ices_pra_27_4a","new","ineligible","screened","not_started","ICES","Greater North Sea","ICES:pra.27.4a",1
 "candidate:ices_red_gurnard_3_8","","ices_red_gurnard_3_8","new","ineligible","screened","not_started","ICES","Bay of Biscay and the Iberian Coast, Celtic Seas, Greater North Sea","ICES:gur.27.3-8",1
+"candidate:ices_rhg_27_nea","","ices_rhg_27_nea","new","ineligible","screened","not_started","ICES","Arctic Ocean, Bay of Biscay and the Iberian Coast, Celtic Seas, Greater North Sea, Greenland Sea, Oceanic Northeast Atlantic","ICES:rhg.27.nea",1
+"candidate:ices_rji_27_67","","ices_rji_27_67","new","ineligible","screened","not_started","ICES","Celtic Seas, Greater North Sea, Oceanic Northeast Atlantic","ICES:rji.27.67",1
+"candidate:ices_rjm_27_67bj","","ices_rjm_27_67bj","new","ineligible","screened","not_started","ICES","Celtic Seas, Oceanic Northeast Atlantic","ICES:rjm.27.67bj",1
+"candidate:ices_rju_27_7bj","","ices_rju_27_7bj","new","ineligible","screened","not_started","ICES","Celtic Seas","ICES:rju.27.7bj",1
 "candidate:ices_roundnose_grenadier_3a","","ices_roundnose_grenadier_3a","new","ineligible","screened","not_started","ICES","Division 3.a (Skagerrak, Kattegat)","ICES:rng.27.3a",1
 "candidate:ices_roundnose_grenadier_oceanic","","ices_roundnose_grenadier_oceanic","new","ineligible","screened","not_started","ICES","Oceanic Northeast Atlantic and northern Reykjanes Ridge","ICES:rng.27.5a10b12ac14b",1
 "candidate:ices_salmon_gulf_finland_32","","ices_salmon_gulf_finland_32","new","unresolved","screened","not_started","ICES","Baltic Sea","ICES:sal.27.32",1
