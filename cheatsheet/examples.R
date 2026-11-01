@@ -222,15 +222,4 @@ index <- out$obs_pred$index
   invisible(fits)
 }
 
-# Formula excerpts are read directly into the reference page. They describe
-# users' named fleets/surveys; they do not split the Northern cod observations.
-# ---- scoped ----
-# mu_form = ~ 0 +
-#   for_fleet("Trawl", ~factor(year)+logistic(age)) +
-#   for_fleet("Gillnet", ~factor(year)+double_logistic(age))
-# q_form = ~ 0 +
-#   for_survey("RV", ~ logistic(age)) +
-#   for_survey("Sentinel", ~ s(age, k = 4))
-# ---- end ----
-
 if (sys.nframe() == 0L) main(if (length(commandArgs(TRUE))) commandArgs(TRUE)[1L] else "prepare")
