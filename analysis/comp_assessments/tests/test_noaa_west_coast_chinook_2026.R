@@ -38,13 +38,16 @@ stopifnot(
 cache <- file.path(root, 'source_cache', 'discovery_noaa_puget_sound_chinook_2026')
 manifest <- read.csv(file.path(cache, 'sources.csv'), stringsAsFactors = FALSE)
 cached <- file.path(cache, manifest$file)
+pdf_cached <- cached[grepl('\\.pdf$', manifest$file, ignore.case = TRUE)]
 stopifnot(
-  nrow(manifest) == 3L,
+  nrow(manifest) == 8L,
   all(file.exists(cached)),
   all(file.info(cached)$size == manifest$bytes),
-  all(manifest$retrieved_on == '2026-10-30'),
   all(grepl('^[[:xdigit:]]{64}$', manifest$sha256)),
-  all(startsWith(vapply(cached, function(path) rawToChar(readBin(path, 'raw', n = 5L)),
+  all(manifest$retrieved_on[match(c('Preseason_Report_I_2026.pdf',
+    'Review_of_2025.pdf', 'StockSMART_DataDictionary.pdf'), manifest$file)] ==
+      '2026-10-30'),
+  all(startsWith(vapply(pdf_cached, function(path) rawToChar(readBin(path, 'raw', n = 5L)),
     character(1L)), '%PDF-'))
 )
 

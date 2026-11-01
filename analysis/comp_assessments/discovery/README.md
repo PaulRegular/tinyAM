@@ -27,10 +27,10 @@ the rows already linked to a stock or candidate unit.
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 63 | 18 | 98 | 21 | 147 | 31 | 199 | 0 | 0 |
 | ICES | 274 | 59 | 212 | 3 | 0 | 60 | 185 | 29 | 274 | 0 | 0 |
-| NOAA | 432 | 28 | 282 | 9 | 113 | 80 | 190 | 162 | 321 | 0 | 111 |
-| **Total** | **905** | **107** | **557** | **30** | **211** | **161** | **522** | **222** | **794** | **0** | **111** |
+| NOAA | 432 | 28 | 312 | 9 | 83 | 80 | 190 | 162 | 351 | 0 | 81 |
+| **Total** | **905** | **107** | **587** | **30** | **181** | **161** | **522** | **222** | **824** | **0** | **81** |
 
-The crosswalk currently links 568 distinct unit keys across 604 inventory rows: 100 canonical stock units and 468 candidate units. Candidate units include 466 with new identity status, one ambiguous identity, and one mixed identity. Of the new-status candidate units, 59 are eligible, 343 ineligible, 61 unresolved, and three have mixed eligibility. A further 301 inventory rows have no unit crosswalk yet.
+The crosswalk currently links 598 distinct unit keys across 634 inventory rows: 100 canonical stock units and 498 candidate units. Candidate units include 496 with new identity status, one ambiguous identity, and one mixed identity. Of the new-status candidate units, 59 are eligible, 343 ineligible, 91 unresolved, and three have mixed eligibility. A further 271 inventory rows have no unit crosswalk yet.
 
 The progress summary has 75 organization-region
 rows. Row-level status and unit-level deduplication are intentionally reported
@@ -1337,3 +1337,5 @@ The ICES ray and dogfish screen adds eight distinct, new units. Current 2025-202
 Recent NOAA screens also cover Atlantic wolffish (Stock SMART 11562), offshore hake (10524), and Pacific grenadier (10526). Wolffish and offshore hake were excluded because reviewed latest sources do not provide the candidate units with age-disaggregated assessment inputs and outputs. Pacific grenadier is the current PFMC species unit, but the latest detailed 2010 accepted DB-SRA is for an aggregate grenadier complex; species-specific catch-at-age and population-at-age outputs are unavailable. See `source_reviews/noaa_atlantic_wolffish_us.md`, `source_reviews/noaa_offshore_hake_us.md`, and `source_reviews/noaa_pacific_grenadier_2010.md`.
 
 Three additional NOAA coho entries for the Strait of Juan de Fuca, Oregon Coast Hatchery, and Willapa Bay Natural were screened against the current 2026 PFMC run and Coho FRAM documentation. They use the single-age-3 coho forecast structure, so the public sources do not establish multi-age assessment inputs or outputs. See `source_reviews/noaa_coho_2026.md`.
+
+Thirty additional PFMC Chinook units (California, Oregon, Columbia River, and Washington Coast) have been reconciled to current NOAA Stock SMART IDs. Their full-acceptance 2026 records show varied age-composition and model-category scores; current public reports provide forecasts and management results, but not the full run-specific age inputs or population histories. Eligibility remains unresolved pending source-data recovery. See `source_reviews/noaa_west_coast_chinook_2026.md`.
