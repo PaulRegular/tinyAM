@@ -72,8 +72,11 @@
 "candidate:ices_brill_3a47de","","ices_brill_3a47de","new","ineligible","screened","not_started","ICES","Greater North Sea","ICES:bll.27.3a47de",1
 "candidate:ices_brill_baltic_22_32","","ices_brill_baltic_22_32","new","ineligible","screened","not_started","ICES","Baltic Sea","ICES:bll.27.22-32",1
 "candidate:ices_capelin_iegjm","","ices_capelin_iegjm","new","unresolved","screened","not_started","ICES","Icelandic Waters, Norwegian Sea","ICES:cap.27.2a514",1
+"candidate:ices_cod_east_greenland_iceland_offshore","","ices_cod_east_greenland_iceland_offshore","new","unresolved","not_started","not_started","ICES","Greenland Sea, Icelandic Waters","ICES:cod.21.27.1.14",1
 "candidate:ices_cod_faroe_bank","","ices_cod_faroe_bank","new","ineligible","screened","not_started","ICES","Faroes","ICES:cod.27.5b2",1
 "candidate:ices_cod_kattegat_21","","ices_cod_kattegat_21","new","unresolved","screened","not_started","ICES","Greater North Sea","ICES:cod.27.21",1
+"candidate:ices_cod_west_greenland_inshore","","ices_cod_west_greenland_inshore","new","unresolved","not_started","not_started","ICES","Greenland Sea","ICES:cod.21.1.isc",1
+"candidate:ices_cod_west_greenland_offshore","","ices_cod_west_greenland_offshore","new","unresolved","not_started","not_started","ICES","Greenland Sea","ICES:cod.21.1.osc",1
 "candidate:ices_cuckoo_ray_9a","","ices_cuckoo_ray_9a","new","ineligible","screened","not_started","ICES","Bay of Biscay and the Iberian Coast","ICES:rjn.27.9a",1
 "candidate:ices_dab_baltic_22_32","","ices_dab_baltic_22_32","new","ineligible","screened","not_started","ICES","Baltic Sea","ICES:dab.27.22-32",1
 "candidate:ices_flounder_420","","ices_flounder_420","new","ineligible","screened","not_started","ICES","Greater North Sea","ICES:fle.27.420",1

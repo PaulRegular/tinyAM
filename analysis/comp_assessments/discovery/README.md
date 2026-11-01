@@ -26,15 +26,21 @@ the rows already linked to a stock or candidate unit.
 | Organization | Rows | Matched to database | New candidate rows | Ambiguous identity | Identity unreviewed | Eligible rows | Ineligible rows | Eligibility unresolved | Screened | In progress | Not screened |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 63 | 18 | 98 | 21 | 147 | 31 | 199 | 0 | 0 |
-| ICES | 274 | 59 | 161 | 2 | 52 | 56 | 137 | 81 | 222 | 0 | 52 |
+| ICES | 274 | 59 | 164 | 2 | 49 | 56 | 137 | 81 | 222 | 0 | 52 |
 | NOAA | 432 | 28 | 253 | 9 | 142 | 76 | 165 | 191 | 292 | 0 | 140 |
-| **Total** | **905** | **107** | **477** | **29** | **292** | **153** | **449** | **303** | **713** | **0** | **192** |
+| **Total** | **905** | **107** | **480** | **29** | **289** | **153** | **449** | **303** | **713** | **0** | **192** |
 
-The crosswalk currently links 495 distinct unit keys across 524 inventory rows: 100 canonical stock units and 395 candidate units. Of the candidate units, 393 are provisionally new, one has an ambiguous identity, and one has mixed identity status. The 393 new units include 52 eligible, 277 ineligible, 61 unresolved, and three with mixed eligibility. A further 381 inventory rows have no unit crosswalk yet.
+The crosswalk currently links 498 distinct unit keys across 527 inventory rows: 100 canonical stock units and 398 candidate units. Of the candidate units, 396 are provisionally new, one has an ambiguous identity, and one has mixed identity status. The 396 new units include 52 eligible, 277 ineligible, 64 unresolved, and three with mixed eligibility. A further 378 inventory rows have no unit crosswalk yet.
 
 The progress summary has 74 organization-region
 rows. Row-level status and unit-level deduplication are intentionally reported
 separately.
+
+DFO's 98 identity-unreviewed entries are outside this marine-finfish audit
+scope: 95 are invertebrate or marine-mammal records and three are Great Slave
+Lake freshwater stocks. They are already screened as ineligible. The remaining
+DFO marine-finfish identity cases are the 18 ambiguous entries shown above;
+they are tracked separately from eligibility-unresolved screens.
 
 NOAA Caribbean silk snapper (Stock SMART 10241) and queen snapper (10247) are
 separate, new ineligible candidates. Their latest completed detailed assessment
@@ -1208,11 +1214,13 @@ inputs and population outputs were not reported. It is screened ineligible for
 the age-disaggregated comparison set. See
 `source_reviews/ices_blue_ling_5b6712_2026.md`.
 
-The current discovery snapshot as of 2026-11-01 contains 905 inventory rows: 107 matched, 477 provisionally new, 29 ambiguous, and 292 identity-unreviewed. Across all rows, 153 are eligible, 449 ineligible, and 303 unresolved; 713 are screened, none is in progress, and 192 are not started. The organization and source-region breakdowns are in `inventory_progress.csv`.
+The current discovery snapshot as of 2026-11-01 contains 905 inventory rows: 107 matched, 480 provisionally new, 29 ambiguous, and 289 identity-unreviewed. Across all rows, 153 are eligible, 449 ineligible, and 303 unresolved; 713 are screened, none is in progress, and 192 are not started. The organization and source-region breakdowns are in `inventory_progress.csv`.
 
 The DFO WCVI Barkley Sockeye row is screened ineligible: its 2024 update uses salmon run reconstruction and stock-recruit methods, but does not verify the age-structured catch, survey, biological, and mortality inputs or N-at-age/F-at-age outputs needed for tinyAM. See discovery/source_reviews/dfo_wcvi_barkley_sockeye_2024.md.
 
-The crosswalk has 495 linked units (100 canonical stock units and 395 candidate units) and 381 unlinked inventory rows in `inventory_units.csv`.
+The crosswalk has 498 linked units (100 canonical stock units and 398 candidate units) and 378 unlinked inventory rows in `inventory_units.csv`.
+
+The 2026 ICES Advice and Scenarios Database identifies West Greenland inshore cod (`cod.21.1.isc`), West Greenland offshore cod (`cod.21.1.osc`), and East Greenland–Iceland offshore cod (`cod.21.27.1.14`) as separate assessment components. The advice notes that the NAFO Subarea 1 fishery can mix catches from these stocks; that does not make them one stock unit. They are crosswalked to three separate provisional candidates, distinct from the existing Northeast Arctic and Northwest Atlantic cod records. Their age-input and age-specific output screens remain unresolved. See `source_reviews/ices_greenland_cod_identity_2026.md` and the gitignored cache `source_cache/discovery_ices_greenland_cod_2026/`.
 
 ICES Northeast Atlantic spurdog (`dgs.27.nea`) is a new 2026 candidate with
 verified current assessment outputs. Age-input eligibility remains unresolved:
