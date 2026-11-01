@@ -26,11 +26,11 @@ the rows already linked to a stock or candidate unit.
 | Organization | Rows | Matched to database | New candidate rows | Ambiguous identity | Identity unreviewed | Eligible rows | Ineligible rows | Eligibility unresolved | Screened | In progress | Not screened |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 63 | 18 | 98 | 21 | 147 | 31 | 199 | 0 | 0 |
-| ICES | 274 | 59 | 164 | 2 | 49 | 56 | 137 | 81 | 222 | 0 | 52 |
+| ICES | 274 | 59 | 164 | 2 | 49 | 58 | 138 | 78 | 225 | 0 | 49 |
 | NOAA | 432 | 28 | 253 | 9 | 142 | 76 | 165 | 191 | 292 | 0 | 140 |
-| **Total** | **905** | **107** | **480** | **29** | **289** | **153** | **449** | **303** | **713** | **0** | **192** |
+| **Total** | **905** | **107** | **480** | **29** | **289** | **155** | **450** | **300** | **716** | **0** | **189** |
 
-The crosswalk currently links 498 distinct unit keys across 527 inventory rows: 100 canonical stock units and 398 candidate units. Of the candidate units, 396 are provisionally new, one has an ambiguous identity, and one has mixed identity status. The 396 new units include 52 eligible, 277 ineligible, 64 unresolved, and three with mixed eligibility. A further 378 inventory rows have no unit crosswalk yet.
+The crosswalk currently links 498 distinct unit keys across 527 inventory rows: 100 canonical stock units and 398 candidate units. Of the candidate units, 396 are provisionally new, one has an ambiguous identity, and one has mixed identity status. The 396 new units include 54 eligible, 278 ineligible, 61 unresolved, and three with mixed eligibility. A further 378 inventory rows have no unit crosswalk yet.
 
 The progress summary has 74 organization-region
 rows. Row-level status and unit-level deduplication are intentionally reported
@@ -107,6 +107,8 @@ although an age-disaggregated spring table is published separately. This unit is
 distinct from the existing Northeast Arctic golden redfish `reg.27.1-2`. The
 candidate is eligible for source curation but has not yet been imported. See
 `source_reviews/ices_golden_redfish_561214_2026.md`.
+
+ICES 2026 Greenland cod source screening reconciled three distinct current advice units. West Greenland offshore (`cod.21.1.osc`) is eligible from a current SAM assessment with age-indexed inputs and reported recruitment, SSB and F outputs. West Greenland inshore (`cod.21.1.isc`) is eligible for partial source curation: its advice combines separate N-WISC and S-WISC components, but only the northern component retains a Category 1 age-based assessment; the southern component was downgraded to catch-based Category 5 advice. East Greenland-Iceland offshore (`cod.21.27.1.14`) is ineligible for the age-based comparison batch because its SAM fit was not robust and current advice is catch-based. No canonical data were added. See `source_reviews/ices_greenland_cod_identity_2026.md`.
 
 The NOAA Southern California cowcod unit (Stock SMART 10443) is screened as a
 new eligible source-curation candidate from its 2019 accepted Stock Synthesis
@@ -1214,7 +1216,7 @@ inputs and population outputs were not reported. It is screened ineligible for
 the age-disaggregated comparison set. See
 `source_reviews/ices_blue_ling_5b6712_2026.md`.
 
-The current discovery snapshot as of 2026-11-01 contains 905 inventory rows: 107 matched, 480 provisionally new, 29 ambiguous, and 289 identity-unreviewed. Across all rows, 153 are eligible, 449 ineligible, and 303 unresolved; 713 are screened, none is in progress, and 192 are not started. The organization and source-region breakdowns are in `inventory_progress.csv`.
+The current discovery snapshot as of 2026-11-01 contains 905 inventory rows: 107 matched, 480 provisionally new, 29 ambiguous, and 289 identity-unreviewed. Across all rows, 155 are eligible, 450 ineligible, and 300 unresolved; 716 are screened, none is in progress, and 189 are not started. The organization and source-region breakdowns are in `inventory_progress.csv`.
 
 The DFO WCVI Barkley Sockeye row is screened ineligible: its 2024 update uses salmon run reconstruction and stock-recruit methods, but does not verify the age-structured catch, survey, biological, and mortality inputs or N-at-age/F-at-age outputs needed for tinyAM. See discovery/source_reviews/dfo_wcvi_barkley_sockeye_2024.md.
 

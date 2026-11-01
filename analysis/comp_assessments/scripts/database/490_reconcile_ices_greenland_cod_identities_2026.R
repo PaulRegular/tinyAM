@@ -33,13 +33,13 @@ reviews <- data.frame(
 )
 reviews$advice_url <- paste0('https://asd.ices.dk/viewAdvice/', reviews$advice_id)
 
-if (nrow(manifest) != nrow(reviews) || anyDuplicated(manifest$file) ||
-    !setequal(manifest$file, reviews$advice_file) ||
-    any(manifest$retrieved_on != '2026-11-01'))
+manifest_advice <- match(reviews$advice_file, manifest$file)
+if (anyDuplicated(manifest$file) || anyNA(manifest_advice) ||
+    any(manifest$retrieved_on[manifest_advice] != '2026-11-01'))
   stop('The Greenland cod source manifest is incomplete or has changed.', call. = FALSE)
 
 for (i in seq_len(nrow(reviews))) {
-  manifest_row <- match(reviews$advice_file[i], manifest$file)
+  manifest_row <- manifest_advice[i]
   path <- file.path(cache, reviews$advice_file[i])
   page <- if (file.exists(path)) paste(readLines(path, warn = FALSE), collapse = '\n') else ''
   if (!file.exists(path) || manifest$url[manifest_row] != reviews$advice_url[i] ||
@@ -98,14 +98,14 @@ for (i in seq_len(nrow(reviews))) {
     candidates$screening_status[row] == 'not_started' &&
     candidates$eligibility[row] == 'unresolved' &&
     (is.na(candidates$candidate_unit_id[row]) || !nzchar(candidates$candidate_unit_id[row]))
-  already_reviewed <- all(vapply(names(identity_review), function(column)
-    identical(as.character(candidates[[column]][row]),
-      as.character(identity_review[[column]])), logical(1L)))
-  if (!(pristine || already_reviewed))
+  identity_matches <- candidates$candidate_unit_id[row] == reviews$candidate_unit_id[i] &&
+    candidates$match_status[row] == 'new' &&
+    (is.na(candidates$matched_stock_id[row]) || !nzchar(candidates$matched_stock_id[row]))
+  if (!(pristine || identity_matches))
     stop('Conflicting ICES Greenland cod identity review: ',
       reviews$candidate_id[i], call. = FALSE)
   if (!identical(Sys.getenv('TAM_SOURCE_DRY_RUN'), '1')) {
-    for (column in names(identity_review)) candidates[[column]][row] <- identity_review[[column]]
+    if (pristine) for (column in names(identity_review)) candidates[[column]][row] <- identity_review[[column]]
     replace_candidate_register_row(register_path, row, candidates[row, , drop = FALSE],
       reviews$candidate_id[i])
     candidates <- read.csv(register_path, stringsAsFactors = FALSE,
@@ -118,4 +118,4 @@ if (!identical(Sys.getenv('TAM_SOURCE_DRY_RUN'), '1')) {
   source(file.path(root, 'scripts', 'database', '196_summarize_inventory_units.R'))
 }
 
-cat('Reconciled the three ICES Greenland cod spawning components as distinct candidates; age-data screening remains unresolved.\n')
+cat('Reconciled the three ICES Greenland cod advice-unit identities; screening results are recorded separately.\n')

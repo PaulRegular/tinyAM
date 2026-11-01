@@ -47,10 +47,10 @@ stopifnot(
   sum(progress$inventory_rows) == 905L,
   sum(progress$new) == 480L,
   sum(progress$identity_unreviewed) == 289L,
-  sum(progress$excluded) == 449L,
-  sum(progress$eligibility_unresolved) == 303L,
-  sum(progress$screening_complete) == 713L,
-  sum(progress$screening_not_started) == 192L
+  sum(progress$excluded) == 450L,
+  sum(progress$eligibility_unresolved) == 300L,
+  sum(progress$screening_complete) == 716L,
+  sum(progress$screening_not_started) == 189L
 )
 
 cache <- file.path(root, 'source_cache', 'discovery_swordfish_north_atlantic_2022')
