@@ -11,6 +11,7 @@ if (x$screening_status[i] == 'screened') {
 
 x$scientific_name[i] <- 'Sebastes aleutianus; Sebastes melanostictus'
 x$assessment_area[i] <- 'U.S. West Coast'
+x$candidate_unit_id[i] <- 'noaa_uswc_rougheye_blackspotted'
 x$match_status[i] <- 'new'
 x$matched_stock_id[i] <- NA_character_
 x$screening_status[i] <- 'screened'
@@ -80,10 +81,16 @@ x$notes[i] <- paste(
 )
 
 lines <- readLines(path, warn = FALSE, encoding = 'UTF-8')
-if (length(lines) != nrow(x) + 1L) stop('Multiline CSV rows require a safe update method.', call. = FALSE)
+starts <- grep('^"(NOAA|ICES|DFO):', lines, perl = TRUE)
+if (length(starts) != nrow(x)) stop('Could not map CSV records to physical lines.', call. = FALSE)
+record_start <- starts[i]
+later <- starts[starts > record_start]
+record_end <- if (length(later)) min(later) - 1L else length(lines)
 tmp <- tempfile(fileext = '.csv')
 write.csv(x[i, , drop = FALSE], tmp, row.names = FALSE, na = '')
 updated <- readLines(tmp, warn = FALSE, encoding = 'UTF-8')[-1L]
 unlink(tmp)
-lines[i + 1L] <- updated
+if (length(updated) != 1L) stop('Updated CSV record unexpectedly contains line breaks.', call. = FALSE)
+lines <- c(lines[seq_len(record_start - 1L)], updated,
+  if (record_end < length(lines)) lines[(record_end + 1L):length(lines)] else character())
 writeLines(lines, path, useBytes = TRUE)
