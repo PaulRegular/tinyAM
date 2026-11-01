@@ -95,7 +95,7 @@ rsvg::rsvg_pdf(file.path(repo, "man/figures/logo.svg"), "logo.pdf")
 \pageheader{Tiny Assessment Model (tinyAM) :: \textbf{CHEATSHEET}}{Formula-driven age-structured stock assessment}
 \begin{minipage}[t][164mm][s]{.28\linewidth}\vspace{0pt}
 \sectitle{1}{Setup tidy inputs}{}
-\panelnote{Four tables: \texttt{catch}, \texttt{index}, \texttt{weight}, \texttt{maturity}. Keys: year--age. Indices also require \texttt{survey}; \texttt{fleet} is optional for catch. Complete catch grids per fleet; \texttt{NA} for missing observations. Optional \texttt{weight\$type}: stock (biomass/SSB) or catch (yield); catch weights may be shared or fleet specific. Stock weights are required and also used for yield if catch weights are absent.}\par\vspace{2mm}
+\panelnote{Four tables: \texttt{catch}, \texttt{index}, \texttt{weight}, \texttt{maturity}. Keys: year--age. Indices also require \texttt{survey}; \texttt{fleet} is optional for catch. Optional \texttt{weight\$type}: stock (biomass) or catch (yield); catch weights may be shared or fleet specific. Stock weights are required and also used for yield if catch weights are absent.}\par\vspace{2mm}
 \tablelabel{catch}\par\vspace{.5mm}\nointerlineskip
 \begin{minipage}[t]{.54\linewidth}\vspace{0pt}
 \input{cache/table_catch.tex}
@@ -184,14 +184,14 @@ SSB_t=\sum_b n_{t,b}w_{t,b}p_{t,b}e^{-\tau_{t,b}Z_{t,b}}.
 \end{minipage}\hfill
 \begin{minipage}[t][160mm][s]{.33\linewidth}\vspace{0pt}
 \begin{mathbox}{Mean fishing mortality}
-\micro{\RaggedRight \texttt{F\_settings}: \texttt{process = "off"} with \texttt{\string~ factor(year) + factor(age)} gives separable F. See \href{https://paulregular.github.io/tinyAM/reference/for_fleet.html}{\texttt{?for\_fleet}} for fleet-specific formulas.}
+\micro{\RaggedRight Specify mean fishing mortality with \texttt{F\_settings\$mu\_form}. For example, \texttt{mu\_form = \string~ factor(year) + factor(age)} gives separable year and age effects. With \texttt{process = "off"}, F follows this mean exactly. See \href{https://paulregular.github.io/tinyAM/reference/for_fleet.html}{\texttt{?for\_fleet}} for fleet-specific formulas.}
 \[
 \begin{aligned}
 S(a)&=\{1+e^{-k(a-a_{50})}\}^{-1},\quad k>0,\\
 \log F_{t,a,f}&=X_{t,a,f}\beta_F+\log S_f(a)+\eta^F_{t,a,f}.
 \end{aligned}
 \]
-\micro{Total F is $\sum_f F_{t,a,f}$. \href{https://paulregular.github.io/tinyAM/reference/double_logistic.html}{\texttt{double\_logistic()}} gives WHAM's unnormalized dome. \href{https://paulregular.github.io/tinyAM/reference/smooth_formulas.html}{Smooths}: \texttt{s()} or \texttt{t2(age, year)}. Check mean/process separation.}
+\micro{Total F is $\sum_f F_{t,a,f}$. Different shapes can be specified with \texttt{logistic()}, \href{https://paulregular.github.io/tinyAM/reference/double_logistic.html}{\texttt{double\_logistic()}}, or \href{https://paulregular.github.io/tinyAM/reference/smooth_formulas.html}{smooths} such as \texttt{s()} and \texttt{t2(age, year)}. Check mean/process separation.}
 \end{mathbox}\vfill
 \begin{mathbox}{Natural mortality}
 \micro{\texttt{M\_settings}: \texttt{mu\_supplied = \string~ M0} supplies the baseline mortality surface.}
