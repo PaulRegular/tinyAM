@@ -27,10 +27,17 @@ the rows already linked to a stock or candidate unit.
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 63 | 18 | 98 | 21 | 147 | 31 | 199 | 0 | 0 |
 | ICES | 274 | 59 | 212 | 3 | 0 | 60 | 185 | 29 | 274 | 0 | 0 |
-| NOAA | 432 | 28 | 317 | 9 | 78 | 80 | 192 | 160 | 356 | 0 | 76 |
-| **Total** | **905** | **107** | **592** | **30** | **176** | **161** | **524** | **220** | **829** | **0** | **76** |
+| NOAA | 432 | 28 | 318 | 9 | 77 | 80 | 193 | 159 | 357 | 0 | 75 |
+| **Total** | **905** | **107** | **593** | **30** | **175** | **161** | **525** | **219** | **830** | **0** | **75** |
 
-The crosswalk currently links 603 distinct unit keys across 639 inventory rows: 100 canonical stock units and 503 candidate units. Candidate units include 501 with new identity status, one ambiguous identity, and one mixed identity. Of the new-status candidate units, 59 are eligible, 345 ineligible, 94 unresolved, and three have mixed eligibility. A further 266 inventory rows have no unit crosswalk yet.
+The crosswalk currently links 604 distinct unit keys across 640 inventory rows: 100 canonical stock units and 504 candidate units. Candidate units include 502 with new identity status, one ambiguous identity, and one mixed identity. Of the new-status candidate units, 59 are eligible, 346 ineligible, 94 unresolved, and three have mixed eligibility. A further 265 inventory rows have no unit crosswalk yet.
+
+NOAA Ocean quahog (Stock SMART 10788) is the 2020 operational update of the 2017
+Stock Synthesis benchmark. The reviewed assessment products report commercial
+catch totals and length compositions, aggregate biomass indices, and aggregate
+population outputs, but no observed age-specific input series or age-specific
+population outputs. It is screened as ineligible for the current age-disaggregated
+set; see `source_reviews/noaa_ocean_quahog_2020.md`.
 
 The progress summary has 75 organization-region
 rows. Row-level status and unit-level deduplication are intentionally reported
