@@ -296,6 +296,9 @@
 "candidate:noaa_caribbean_spiny_lobster_south_atlantic_gulf","","noaa_caribbean_spiny_lobster_south_atlantic_gulf","new","ineligible","screened","not_started","NOAA","SEFSC","NOAA:11031",1
 "candidate:noaa_caribbean_spiny_lobster_st_croix","","noaa_caribbean_spiny_lobster_st_croix","new","ineligible","screened","not_started","NOAA","SEFSC","NOAA:12534",1
 "candidate:noaa_caribbean_spiny_lobster_st_thomas","","noaa_caribbean_spiny_lobster_st_thomas","new","ineligible","screened","not_started","NOAA","SEFSC","NOAA:12533",1
+"candidate:noaa_china_rockfish_central_pacific_coast","","noaa_china_rockfish_central_pacific_coast","new","eligible","screened","not_started","NOAA","NWFSC / SWFSC","NOAA:14430",1
+"candidate:noaa_china_rockfish_northern_pacific_coast","","noaa_china_rockfish_northern_pacific_coast","new","eligible","screened","not_started","NOAA","NWFSC / SWFSC","NOAA:14410",1
+"candidate:noaa_china_rockfish_southern_pacific_coast","","noaa_china_rockfish_southern_pacific_coast","new","eligible","screened","not_started","NOAA","NWFSC / SWFSC","NOAA:14429",1
 "candidate:noaa_chinook_10483","","noaa_chinook_10483","new","unresolved","screened","not_started","NOAA","NWFSC / SWFSC","NOAA:10483",1
 "candidate:noaa_chinook_10484","","noaa_chinook_10484","new","unresolved","screened","not_started","NOAA","NWFSC / SWFSC","NOAA:10484",1
 "candidate:noaa_chinook_10485","","noaa_chinook_10485","new","unresolved","screened","not_started","NOAA","NWFSC / SWFSC","NOAA:10485",1
@@ -394,6 +397,7 @@
 "candidate:noaa_ocean_pout_10525","","noaa_ocean_pout_10525","new","ineligible","screened","not_started","NOAA","NEFSC","NOAA:10525",1
 "candidate:noaa_pacific_aurora_rockfish","","noaa_pacific_aurora_rockfish","new","unresolved","screened","not_started","NOAA","NWFSC / SWFSC","NOAA:10547",1
 "candidate:noaa_pacific_brown_rockfish","","noaa_pacific_brown_rockfish","new","ineligible","screened","not_started","NOAA","NWFSC / SWFSC","NOAA:10546",1
+"candidate:noaa_pacific_coast_longnose_skate","","noaa_pacific_coast_longnose_skate","new","eligible","screened","not_started","NOAA","NWFSC / SWFSC","NOAA:10731",1
 "candidate:noaa_pacific_coast_pop_uswc","","noaa_pacific_coast_pop_uswc","new","unresolved","screened","not_started","NOAA","NWFSC / SWFSC","NOAA:10545",1
 "candidate:noaa_pacific_greenspotted_rockfish","","noaa_pacific_greenspotted_rockfish","new","unresolved","screened","not_started","NOAA","NWFSC / SWFSC","NOAA:10437",1
 "candidate:noaa_pacific_greenstriped_rockfish_coastwide","","noaa_pacific_greenstriped_rockfish_coastwide","new","ineligible","screened","not_started","NOAA","NWFSC / SWFSC","NOAA:10566",1
