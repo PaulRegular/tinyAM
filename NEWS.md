@@ -10,9 +10,10 @@
   Gaussian smooth penalties jointly, retain training bases for prediction,
   and report complete smooth functions with joint uncertainty. Flag weak
   separation from IID/AR1 F residuals; intrinsic F random walks are excluded.
-* Add `warped_normal()` asymptotic/dome curves and WHAM-style
-  `double_logistic()` curves for F and q. Report warped peak/tail quantities
-  and maximum realized fleet F without normalizing selectivity peaks.
+* Retire experimental `warped_normal()` support before release. Its code and
+  diagnostic history remain at revision `417e2636`; historical caches are retained.
+* Add WHAM-style `double_logistic()` curves for F and q. Report maximum realized
+  fleet F without normalizing selectivity peaks.
   Keep likelihood calculations stable when selectivity is extremely small.
 * Add `for_fleet()` and `for_survey()` for group-specific F means and
   catchability relationships within one formula, alongside shared effects.
@@ -23,7 +24,7 @@
 * F mean, process-SD and correlation covariates are supplied in the catch table;
   recruitment, N and M covariates remain in the population table.
 * Expand reproducible curve/smooth recovery and multi-fleet assessment trials.
-  Default-start failures and weak smoothing/shape identification remain
+  Default-start failures and weak smoothing identification remain
   documented limitations; these flexible combinations are experimental.
 
 # tinyAM 0.1.1.9000

@@ -61,5 +61,5 @@ sdmTMB contributors, \code{R/smoothers.R} (GPL-3):
 \url{https://github.com/sdmTMB/sdmTMB/blob/34740199c51fbebe86a6de7671f33f590db166bf/R/smoothers.R}
 }
 \seealso{
-\code{\link[=fit_tam]{fit_tam()}}, \code{\link[=for_fleet]{for_fleet()}}, \link{formula_effects}, \code{\link[=warped_normal]{warped_normal()}}
+\code{\link[=fit_tam]{fit_tam()}}, \code{\link[=for_fleet]{for_fleet()}}, \link{formula_effects}, \code{\link[=double_logistic]{double_logistic()}}
 }

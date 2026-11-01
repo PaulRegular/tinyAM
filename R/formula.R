@@ -191,7 +191,7 @@ logistic <- function(x, by = NULL) .formula_marker_error("logistic")
   if (any(c("bh", "ricker") %in% all.names(formula))) {
     cli::cli_abort("bh() and ricker() are restricted to rec_settings$mu_form.")
   }
-  special <- c("iid", "rw", "ar1", "logistic", "warped_normal", "double_logistic", "power", "|", "s", "t2", "te", "ti")
+  special <- c("iid", "rw", "ar1", "logistic", "double_logistic", "power", "|", "s", "t2", "te", "ti")
   contains <- function(x) {
     is.call(x) && (.formula_call_name(x) %in% special ||
       any(vapply(as.list(x)[-1L], contains, logical(1))))
@@ -243,7 +243,6 @@ logistic <- function(x, by = NULL) .formula_marker_error("logistic")
           rw = rw,
           ar1 = ar1,
           logistic = logistic,
-          warped_normal = warped_normal,
           double_logistic = double_logistic,
           power = power
         )
@@ -259,14 +258,6 @@ logistic <- function(x, by = NULL) .formula_marker_error("logistic")
           by = if (is.null(args$by) || identical(args$by, quote(NULL))) NULL else column(args$by, "by"),
           sd = fixed(args$sd, "sd"), phi = fixed(args$phi, "phi", 1, TRUE)
         )
-        if (type == "warped_normal" && !is.null(args$b) && !identical(args$b, quote(NULL))) {
-          b <- tryCatch(eval(args$b, environment(formula)),
-            error = function(e) cli::cli_abort("Cannot evaluate warped_normal() b: {conditionMessage(e)}"))
-          if (!is.null(b) && (!is.numeric(b) || length(b) != 1L || is.na(b) || b < 0)) {
-            cli::cli_abort("warped_normal() b must be one nonnegative number, Inf, or NULL.")
-          }
-          if (!is.null(b)) spec$b <- b
-        }
       }
       specs[[length(specs) + 1L]] <<- spec
       return(NULL)
@@ -353,8 +344,7 @@ logistic <- function(x, by = NULL) .formula_marker_error("logistic")
     support <- rows[observed[rows] & multiplier[rows] != 0]
     if (!length(support)) cli::cli_abort("{id}: group {group} has no informative historical observations.")
     if (curve) {
-      required <- switch(spec$type, logistic = 3L, warped_normal = if (is.null(spec$b)) 4L else 3L,
-        double_logistic = 5L)
+      required <- switch(spec$type, logistic = 3L, double_logistic = 5L)
       if (length(unique(x[support])) < required) {
         cli::cli_abort("{spec$type}() needs at least {required} observed x values per group.")
       }
@@ -977,7 +967,7 @@ mono <- function(x, by = NULL) {
     }
     forbidden <- function(x) {
       if (!is.call(x)) return(FALSE)
-      .formula_call_name(x) %in% c("iid", "rw", "ar1", "mono", "logistic", "warped_normal", "double_logistic", "s", "t2", "te", "ti", "bh", "ricker", "|", "offset", "for_fleet", "for_survey") ||
+      .formula_call_name(x) %in% c("iid", "rw", "ar1", "mono", "logistic", "double_logistic", "s", "t2", "te", "ti", "bh", "ricker", "|", "offset", "for_fleet", "for_survey") ||
         any(vapply(as.list(x)[-1L], forbidden, logical(1)))
     }
     if (forbidden(formula[[2L]])) {

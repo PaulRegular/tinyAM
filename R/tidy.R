@@ -497,12 +497,7 @@ tidy_pop <- function(fit, interval = 0.95) {
 #'   F mean-curve increments `dmu_f` likewise remain on their fitted log-F
 #'   increment scale. F logistic midpoints are on the age/covariate scale;
 #'   slopes are reported positive, with SEs on their fitted log scale.
-#'   Warped and double-logistic scales are also positive with log-scale SEs.
-#'   The warped shape c is on its fitted 0--1 scale; its intervals are clipped
-#'   to those bounds. Derived warped b, peak and tail rows are marked `derived`.
-#'   Their SEs use joint RTMB derivatives and fixed-parameter covariance.
-#'   An infinite endpoint has missing SEs/intervals. Boundary Wald intervals
-#'   are descriptive local approximations, not boundary-adjusted inference.
+#'   Double-logistic scales are also positive with log-scale SEs.
 #'   Coefficient names identify
 #'   transitions and groups. Actual observation-specific q is in [tidy_obs_pred()].
 #' - Smooth null-space coefficients and penalized basis coefficients are signed
@@ -672,11 +667,6 @@ tidy_par <- function(fit, interval = 0.95) {
     initial$unit <- .population_unit(fit$dat, "N")
     fixed <- stack_list(list(fixed, initial), label = NULL)
   }
-  shape <- grepl("^(q|F)_shape_", fixed$par)
-  fixed$lwr[shape] <- pmax(0, fixed$lwr[shape])
-  fixed$upr[shape] <- pmin(1, fixed$upr[shape])
-  curves <- .tidy_selectivity_curves(fit, interval)
-  if (nrow(curves)) fixed <- stack_list(list(fixed, curves), label = NULL)
   rownames(fixed) <- NULL
   values <- c("est", "lwr", "upr", "se", "se_scale")
   fixed <- fixed[, c(

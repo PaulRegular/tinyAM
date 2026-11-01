@@ -129,7 +129,6 @@ structured means with temporal residual processes are not enabled.
 with no residual process or with IID/AR1 residuals, e.g. \code{~ logistic(age)}. Ordinary terms supply
 baseline F; realized F can depart from the rising mean. Static curves are
 not identifiable with RW/correlated-RW residuals. See \link{catchability_curves}.
-\code{\link[=warped_normal]{warped_normal()}} allows asymptotic or dome-shaped means and
 \code{\link[=double_logistic]{double_logistic()}} supplies WHAM's unnormalized four-parameter dome.
 Catch covariates must be available even where observations are missing.
 They must agree across biological ages pooled into a modeled plus group.
@@ -217,8 +216,8 @@ selectivity curves. \code{~ q_key + power(N, by = q_power_group)} allows
 abundance-dependent catchability using internally calculated abundance at
 survey time. Missing power-group labels mean p = 1, not missing observations.
 Powers require the log q link. See \code{\link[=power]{power()}} and \link{formula_effects}.
-\code{\link[=warped_normal]{warped_normal()}} and \code{\link[=double_logistic]{double_logistic()}} allow dome-shaped selectivity;
-they multiply baseline q after its inverse link.
+\code{\link[=double_logistic]{double_logistic()}} allows dome-shaped selectivity and multiplies baseline
+q after its inverse link.
 Penalized \code{s()} and \code{t2(age, year)} terms instead modify the selected q-link
 predictor. See \link{smooth_formulas} for supported bases, grouping and penalties.
 \code{\link[=for_survey]{for_survey()}} applies a formula to one named survey, e.g.

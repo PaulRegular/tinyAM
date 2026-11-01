@@ -120,9 +120,7 @@
 #'   - Logistic curves have `q_a50_*` midpoints and positive `log_q_slope_*`
 #'     coefficients, initialized from each group's observed coordinate range.
 #'     Names identify terms, groups and unique states for warm starts.
-#'     [warped_normal()] uses an ascending midpoint, log positive scale and
-#'     optionally a directly bounded shape (`q_shape_*` or `F_shape_*`, starting
-#'     at 0.5). [double_logistic()] has ascending/descending midpoints and log
+#'     [double_logistic()] has ascending/descending midpoints and log
 #'     positive scales. There is no midpoint ordering or peak normalization.
 #'
 #' All scalar SD parameters are on the log scale, and AR(1) parameters are on

@@ -51,7 +51,7 @@
 #'   for_fleet("Gillnet", ~ factor(year) + s(age, k = 5))
 #' ~ 0 + for_survey("RV", ~ s(age, k = 5)) +
 #'   for_survey("Sentinel", ~ logistic(age))
-#' @seealso [fit_tam()], [for_fleet()], [formula_effects], [warped_normal()]
+#' @seealso [fit_tam()], [for_fleet()], [formula_effects], [double_logistic()]
 #' @name smooth_formulas
 NULL
 

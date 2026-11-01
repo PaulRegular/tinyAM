@@ -517,13 +517,6 @@ check_tam <- function(fit, ..., grad_tol = NULL, detailed = FALSE, model_list = 
       }
     }
     }
-    if (!is.null(term$shape_parameter)) {
-      i <- which(names(p) == term$shape_parameter)
-      if (any(2*half_width[i] > .8,na.rm=TRUE)) out <- rbind(out,data.frame(
-        issue = "warped_shape_uncertainty",
-        detail = paste0(term$id, ": the shape interval covers most of its 0--1 range. The data may not distinguish asymptotic from dome-shaped selectivity; compare supported fixed shapes and inspect older-age coverage.")
-      ))
-    }
   }
   out
 }

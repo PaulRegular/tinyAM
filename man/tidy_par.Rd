@@ -58,12 +58,7 @@ These local curvature SEs are not boundary-adjusted inference.
 F mean-curve increments \code{dmu_f} likewise remain on their fitted log-F
 increment scale. F logistic midpoints are on the age/covariate scale;
 slopes are reported positive, with SEs on their fitted log scale.
-Warped and double-logistic scales are also positive with log-scale SEs.
-The warped shape c is on its fitted 0--1 scale; its intervals are clipped
-to those bounds. Derived warped b, peak and tail rows are marked \code{derived}.
-Their SEs use joint RTMB derivatives and fixed-parameter covariance.
-An infinite endpoint has missing SEs/intervals. Boundary Wald intervals
-are descriptive local approximations, not boundary-adjusted inference.
+Double-logistic scales are also positive with log-scale SEs.
 Coefficient names identify
 transitions and groups. Actual observation-specific q is in \code{\link[=tidy_obs_pred]{tidy_obs_pred()}}.
 \item Smooth null-space coefficients and penalized basis coefficients are signed

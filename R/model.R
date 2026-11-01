@@ -183,8 +183,8 @@
 #' are centred on zero. See [formula_effects] for the equations and cautions.
 #'
 #' F mean curves with no residual process or with IID/AR1 residuals add cumulative non-negative log-F
-#' increments for [mono()], or \eqn{\log S(a)} for [logistic()],
-#' [warped_normal()] or [double_logistic()]. Parametric curves multiply the
+#' increments for [mono()], or \eqn{\log S(a)} for [logistic()]
+#' or [double_logistic()]. Parametric curves multiply the
 #' ordinary mean F by selectivity, without extra peak normalization. These are fixed curve
 #' parameters, separate from Gaussian mean effects and latent F states. Static
 #' curves cancel from RW increments and are not supported there.

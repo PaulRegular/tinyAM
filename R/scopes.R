@@ -64,7 +64,7 @@ for_survey <- function(survey, formula) {
       return(walk(spec$formula[[2L]], environment(spec$formula)))
     }
     parts <- as.list(x)[-1L]
-    if (name %in% c("iid", "rw", "ar1", "warped_normal", "double_logistic")) {
+    if (name %in% c("iid", "rw", "ar1", "double_logistic")) {
       parts <- as.list(match.call(get(name, mode="function"), x))[-1L]
       parts <- parts[!names(parts) %in% c("sd", "phi", "b")]
     }
