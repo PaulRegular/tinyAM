@@ -26,15 +26,17 @@ the rows already linked to a stock or candidate unit.
 | Organization | Rows | Matched to database | New candidate rows | Ambiguous identity | Identity unreviewed | Eligible rows | Ineligible rows | Eligibility unresolved | Screened | In progress | Not screened |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 63 | 18 | 98 | 21 | 147 | 31 | 199 | 0 | 0 |
-| ICES | 274 | 59 | 175 | 2 | 38 | 58 | 149 | 67 | 236 | 0 | 38 |
-| NOAA | 432 | 28 | 253 | 9 | 142 | 76 | 165 | 191 | 292 | 0 | 140 |
-| **Total** | **905** | **107** | **491** | **29** | **278** | **155** | **461** | **289** | **727** | **0** | **178** |
+| ICES | 274 | 59 | 212 | 3 | 0 | 60 | 185 | 29 | 274 | 0 | 0 |
+| NOAA | 432 | 28 | 265 | 9 | 130 | 76 | 177 | 179 | 304 | 0 | 128 |
+| **Total** | **905** | **107** | **540** | **30** | **228** | **157** | **509** | **239** | **777** | **0** | **128** |
 
-The crosswalk currently links 509 distinct unit keys across 538 inventory rows: 100 canonical stock units and 409 candidate units. Of the candidate units, 407 are provisionally new, one has an ambiguous identity, and one has mixed identity status. The 407 new units include 54 eligible, 289 ineligible, 61 unresolved, and three with mixed eligibility. A further 367 inventory rows have no unit crosswalk yet.
+The crosswalk currently links 557 distinct unit keys across 587 inventory rows: 100 canonical stock units and 457 candidate units. Candidate units include 455 with new identity status, one ambiguous identity, and one mixed identity. Of the new-status candidate units, 55 are eligible, 336 ineligible, 61 unresolved, and three have mixed eligibility. A further 318 inventory rows have no unit crosswalk yet.
 
 The progress summary has 75 organization-region
 rows. Row-level status and unit-level deduplication are intentionally reported
 separately.
+
+The remaining five ICES source-list rows are now screened. The 2026 WGNAS salmon assessment supports age/stage-resolved source curation, with NAC and NEAC grouped as one joint assessment unit; the West Greenland entry is a mixed-stock fishery, not a separate stock. The 2026 Norwegian anglerfish update is an aggregate JABBA assessment, and Northeast Atlantic thresher advice remains data-limited; both are ineligible for the age-disaggregated set. See `source_reviews/ices_final_five_2026.md`.
 
 DFO's 98 identity-unreviewed entries are outside this marine-finfish audit
 scope: 95 are invertebrate or marine-mammal records and three are Great Slave

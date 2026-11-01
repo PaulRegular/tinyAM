@@ -6,7 +6,7 @@
 "DFO","Newfoundland and Labrador",23,2,11,2,8,3,18,1,2,0,0,23,2,11,10
 "DFO","Pacific",58,6,31,8,13,7,32,2,19,0,0,58,4,24,28
 "DFO","Quebec",24,1,2,1,20,1,23,0,0,0,0,24,1,3,20
-"ICES","Arctic Ocean, Azores, Barents Sea, Bay of Biscay and the Iberian Coast, Celtic Seas, Faroes, Greater North Sea, Greenland Sea, Icelandic Waters, Norwegian Sea, Oceanic Northeast Atlantic",1,0,0,0,1,0,0,0,1,1,0,0,0,0,1
+"ICES","Arctic Ocean, Azores, Barents Sea, Bay of Biscay and the Iberian Coast, Celtic Seas, Faroes, Greater North Sea, Greenland Sea, Icelandic Waters, Norwegian Sea, Oceanic Northeast Atlantic",1,0,1,0,0,1,0,1,0,0,0,1,0,1,0
 "ICES","Arctic Ocean, Azores, Barents Sea, Bay of Biscay and the Iberian Coast, Celtic Seas, Greater North Sea, Norwegian Sea, Oceanic Northeast Atlantic",1,0,1,0,0,0,1,0,0,0,0,1,0,1,0
 "ICES","Arctic Ocean, Azores, Bay of Biscay and the Iberian Coast, Celtic Seas, Greater North Sea, Norwegian Sea, Oceanic Northeast Atlantic",1,0,1,0,0,0,1,0,0,0,0,1,0,1,0
 "ICES","Arctic Ocean, Azores, Bay of Biscay and the Iberian Coast, Celtic Seas, Greater North Sea, Oceanic Northeast Atlantic",1,0,1,0,0,0,1,0,0,0,0,1,0,1,0
@@ -14,7 +14,7 @@
 "ICES","Arctic Ocean, Barents Sea, Bay of Biscay and the Iberian Coast, Celtic Seas, Greater North Sea, Oceanic Northeast Atlantic",1,0,1,0,0,0,1,0,0,0,0,1,0,1,0
 "ICES","Arctic Ocean, Barents Sea, Bay of Biscay and the Iberian Coast, Greater North Sea, Greenland Sea, Norwegian Sea, Oceanic Northeast Atlantic",1,0,1,0,0,0,1,0,0,0,0,1,0,1,0
 "ICES","Arctic Ocean, Barents Sea, Celtic Seas, Greater North Sea, Norwegian Sea",1,0,1,0,0,0,1,0,0,0,0,1,0,1,0
-"ICES","Arctic Ocean, Barents Sea, Faroes, Greenland Sea, Icelandic Waters, Norwegian Sea",1,0,0,0,1,0,0,0,1,1,0,0,0,0,1
+"ICES","Arctic Ocean, Barents Sea, Faroes, Greenland Sea, Icelandic Waters, Norwegian Sea",1,0,1,0,0,0,1,0,0,0,0,1,0,1,0
 "ICES","Arctic Ocean, Barents Sea, Greater North Sea, Norwegian Sea",2,0,2,0,0,0,2,0,0,0,0,2,0,2,0
 "ICES","Arctic Ocean, Barents Sea, Norwegian Sea",9,6,3,0,0,4,3,0,2,0,0,9,6,3,0
 "ICES","Arctic Ocean, Bay of Biscay and the Iberian Coast, Celtic Seas, Faroes, Greater North Sea, Icelandic Waters, Norwegian Sea, Oceanic Northeast Atlantic",2,1,1,0,0,1,0,0,1,0,0,2,1,0,1
@@ -26,7 +26,7 @@
 "ICES","Arctic Ocean, Greenland Sea, Icelandic Waters, Oceanic Northeast Atlantic",1,0,1,0,0,0,0,0,1,0,0,1,0,1,0
 "ICES","Arctic Ocean, Norwegian Sea",1,1,0,0,0,0,1,0,0,0,0,1,1,0,0
 "ICES","Azores",1,0,1,0,0,0,1,0,0,0,0,1,0,1,0
-"ICES","Azores, Bay of Biscay and the Iberian Coast, Celtic Seas, Faroes, Icelandic Waters, Oceanic Northeast Atlantic",1,0,0,0,1,0,0,0,1,1,0,0,0,0,1
+"ICES","Azores, Bay of Biscay and the Iberian Coast, Celtic Seas, Faroes, Icelandic Waters, Oceanic Northeast Atlantic",1,0,1,0,0,0,1,0,0,0,0,1,0,1,0
 "ICES","Azores, Bay of Biscay and the Iberian Coast, Celtic Seas, Greater North Sea, Norwegian Sea, Oceanic Northeast Atlantic",1,0,1,0,0,0,1,0,0,0,0,1,0,1,0
 "ICES","Azores, Bay of Biscay and the Iberian Coast, Celtic Seas, Greater North Sea, Oceanic Northeast Atlantic",4,0,4,0,0,0,4,0,0,0,0,4,0,4,0
 "ICES","Azores, Oceanic Northeast Atlantic",2,0,2,0,0,0,2,0,0,0,0,2,0,2,0
@@ -56,7 +56,7 @@
 "ICES","Greenland Sea stock (subareas 1, 2, and 14; Division 5.a)",1,0,1,0,0,0,1,0,0,0,0,1,0,1,0
 "ICES","Greenland Sea stock (subareas 2, 5, and 14)",1,0,1,0,0,0,1,0,0,0,0,1,0,1,0
 "ICES","Greenland Sea, Icelandic Waters",4,0,4,0,0,1,2,1,1,0,0,4,0,4,0
-"ICES","Greenland Sea, Oceanic Northeast Atlantic",2,0,0,0,2,0,0,0,2,2,0,0,0,0,2
+"ICES","Greenland Sea, Oceanic Northeast Atlantic",2,0,1,1,0,1,1,1,0,0,0,2,0,1,1
 "ICES","ICES divisions 7.b-k, 8.a-b, and 8.d (west and southwest of Ireland, Bay of Biscay)",1,0,1,0,0,0,0,0,1,0,0,1,0,1,0
 "ICES","Icelandic Waters",7,4,3,0,0,6,0,3,1,0,0,7,4,3,0
 "ICES","Icelandic Waters, Norwegian Sea",1,0,1,0,0,0,0,0,1,0,0,1,0,1,0

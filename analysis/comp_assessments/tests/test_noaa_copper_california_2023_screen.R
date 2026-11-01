@@ -55,7 +55,7 @@ stopifnot(nrow(candidates) == 2L,
   sum(noaa$screening_not_started) == 128L,
   nrow(nw) == 1L, nw$new == 84L, nw$eligible == 28L,
   nw$eligible_new == 27L, nw$screening_complete == 92L,
-  nrow(units) == 554L, sum(units$inventory_entries) == 583L,
-  sum(!is.na(units$candidate_unit_id) & nzchar(units$candidate_unit_id)) == 454L)
+  nrow(units) == 557L, sum(units$inventory_entries) == 587L,
+  sum(!is.na(units$candidate_unit_id) & nzchar(units$candidate_unit_id)) == 457L)
 
 cat('NOAA California copper 2023 age-composition, source-integrity, crosswalk and no-import checks passed.\n')
