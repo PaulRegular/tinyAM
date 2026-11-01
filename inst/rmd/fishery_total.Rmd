@@ -1,4 +1,4 @@
-Fishery
+Aggregate fishery {#fishery-aggregate data-navmenu="Fisheries"}
 ================================================================================
 
 ### Total yield

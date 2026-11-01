@@ -15,7 +15,7 @@ The fits use `cod_obs` for 1983-2025 and model ages 2-14, with age 14 as the plu
 
 ### Navigating the dashboard
 
-Use **Fishery** and **Surveys** to compare observations with fitted values and inspect residual plots. **Trends** compares population estimates such as spawning stock biomass. The **Parameters** pages show fixed parameter estimates, including coefficients and process or observation standard deviations, and random parameter estimates, including latent states and process deviations across years and ages.
+Use **Fisheries** and **Surveys** to compare observations with fitted values and inspect residual plots. Fisheries lists one page per fleet, then **Aggregate fishery**. Without fleets, the aggregate page contains the single-fishery diagnostics. **Trends** compares population estimates such as spawning stock biomass. The **Parameters** pages show fixed parameter estimates, including coefficients and process or observation standard deviations, and random parameter estimates, including latent states and process deviations across years and ages.
 
 On **Random**, **Process deviations** shows fitted log-scale departures from mean or cohort predictions, or annual increments for random walks. **Joint-sample residuals** standardizes these innovations using the fitted process correlations and variation, then propagates one shared draw from Gaussian parameter uncertainty. This local Gaussian approximation provides reproducible diagnostic values (default seed `123456`). Missing or invalid joint uncertainty is identified explicitly; fitted deviations remain available. Each viewer separates recruitment line plots from N/F/M matrices or bubbles.
 

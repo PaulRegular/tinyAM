@@ -24,6 +24,13 @@
 #'          Precomputed assessment references may be mixed with tinyAM fits; they are
 #'          not refittable TAM objects. Supply `background` to add a page
 #'          describing assessment assumptions and translation choices.
+#'          Fisheries is a dropdown with one page per declared catch fleet,
+#'          followed by Aggregate fishery. Fleet pages show yield, catch and F
+#'          at age, and observation residuals. Unlabeled catch models appear
+#'          only on the aggregate page; they are not allocated among fleets.
+#'          Without fleets, Aggregate fishery retains all single-fishery
+#'          diagnostics. With fleets, it shows total yield; residuals are
+#'          assessed separately within each fleet.
 #'          The Parameters menu separates Fixed and Random pages. Fixed plots
 #'          group similar quantities, with initial abundance shown separately.
 #'          Stock-recruit models add a relationship page with parent-year pairs,
@@ -224,6 +231,46 @@ vis_tam.tam_retro <- function(..., model_list = NULL, interval = 0.95, output_fi
   do.call(rmarkdown::render, render_call)
 
   if (open_file) utils::browseURL(output_file)
+}
+
+# Navigation and reported-yield preparation; plots remain public plot functions.
+.fishery_pages <- function(catch) {
+  fleet <- if(is.null(catch$fleet))character() else if(is.factor(catch$fleet))
+    levels(droplevels(catch$fleet)) else unique(as.character(catch$fleet))
+  fleet <- fleet[!is.na(fleet) & nzchar(fleet)]
+  data.frame(title=c(fleet,"Aggregate fishery"),fleet=c(fleet,NA_character_),
+    id=c(if(length(fleet))paste0("fishery-fleet-",seq_along(fleet)) else character(),"fishery-aggregate"),
+    kind=c(rep("fleet",length(fleet)),"aggregate"),stringsAsFactors=FALSE)
+}
+
+.fleet_yield_data <- function(pop,fleet) {
+  annual <- function(data,column) {
+    if(!is.data.frame(data) || !all(c("fleet","year","model","est") %in% names(data)))return(NULL)
+    data <- data[which(as.character(data$fleet) == fleet),,drop=FALSE]
+    if(!nrow(data))return(NULL)
+    groups <- split(seq_len(nrow(data)),paste(data$year,as.character(data$model),sep="\r"))
+    do.call(rbind,lapply(groups,function(i) {
+      d <- data[i,,drop=FALSE]
+      out <- d[1L,intersect(c("year","model","unit","is_proj","fold","horizon"),names(d)),drop=FALSE]
+      # Unknown references/all-missing years stay missing; genuine zeros remain.
+      out[[column]] <- if(all(is.finite(d$est)))sum(d$est) else NA_real_
+      if(column == "obs" && isTRUE(out$is_proj))out$obs <- NA_real_
+      out
+    }))
+  }
+  observed <- annual(pop$yield_by_fleet,"obs")
+  predicted <- annual(pop$yield_pred_by_fleet,"pred")
+  if(is.null(observed) && is.null(predicted))return(NULL)
+  if(is.null(observed)) {predicted$obs <- NA_real_; return(predicted)}
+  if(is.null(predicted)) {observed$pred <- NA_real_; return(observed)}
+  out <- merge(observed,predicted,by=c("year","model"),all=TRUE,suffixes=c(".obs",".pred"))
+  for(name in intersect(names(observed),names(predicted))) {
+    if(name %in% c("year","model"))next
+    a <- out[[paste0(name,".pred")]]; b <- out[[paste0(name,".obs")]]
+    out[[name]] <- ifelse(is.na(a),b,a)
+    out[[paste0(name,".pred")]] <- out[[paste0(name,".obs")]] <- NULL
+  }
+  out
 }
 
 .fixed_parameter_groups <- function(data) {

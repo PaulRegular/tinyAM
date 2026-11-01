@@ -1,5 +1,8 @@
 # tinyAM 0.1.1.9001
 
+* Group fishery diagnostics under Fisheries: one complete page per fleet,
+  followed by Aggregate fishery. Unlabeled catches remain stock-wide; aggregate
+  residuals are not invented for multi-fleet fits.
 * Add mgcv thin-plate/cubic `s()` and age-year `t2()` smooths to F means and
   catchability formulas, including fleet/survey scopes. Estimate normalized
   Gaussian smooth penalties jointly, retain training bases for prediction,

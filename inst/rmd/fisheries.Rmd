@@ -1,0 +1,19 @@
+```{r, results='asis'}
+fishery_pages <- tinyAM:::.fishery_pages(obs_pred$catch)
+for (page_index in seq_len(nrow(fishery_pages))) {
+  page <- fishery_pages[page_index, ]
+  child_env <- new.env(parent = environment())
+  child_env$fishery_page <- page
+  if (page$kind == "fleet") {
+    child_env$catch_data <- obs_pred$catch[which(as.character(obs_pred$catch$fleet) == page$fleet), ]
+    child_env$F_data <- if (is.null(pop$F_fleet)) NULL else pop$F_fleet[which(as.character(pop$F_fleet$fleet) == page$fleet), ]
+    child_env$mean_data <- if (is.null(pop$mu_F_fleet)) NULL else pop$mu_F_fleet[which(as.character(pop$mu_F_fleet$fleet) == page$fleet), ]
+    child_env$yield_data <- tinyAM:::.fleet_yield_data(pop, page$fleet)
+    child <- "one_fleet.Rmd"
+  } else {
+    child <- if (nrow(fishery_pages) == 1L) "fishery.Rmd" else "fishery_total.Rmd"
+  }
+  rendered <- knitr::knit_child(child, envir = child_env, quiet = TRUE)
+  cat(rendered, sep = "\n")
+}
+```

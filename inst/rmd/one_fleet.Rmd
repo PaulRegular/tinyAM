@@ -1,0 +1,68 @@
+`r htmltools::htmlEscape(fishery_page$title)` {#`r fishery_page$id` data-navmenu="Fisheries"}
+================================================================================
+
+Row {.tabset}
+--------------------------------------------------------------------------------
+
+### Yield
+
+```{r}
+if (!is.null(yield_data)) {
+  plot_obs_pred(yield_data, color = ~model, colors = cols,
+    ylab = tinyAM:::.unit_label(yield_data, "Yield"))
+} else plotly::plot_ly()
+```
+
+### Numbers-at-age
+
+```{r}
+plot_age_year(catch_data, plot = plot_obs_pred, frame = ~age, color = ~model,
+  colors = cols, ylab = tinyAM:::.unit_label(catch_data, "Catch"))
+```
+
+### F-at-age
+
+```{r}
+if (!is.null(F_data) && nrow(F_data)) {
+  d <- mortality_plot_data(F_data, mean_data, fits, "F")
+  plot_age_year(d, plot = plot_mortality, frame = ~age, color = ~model,
+    legendgroup = ~model, colors = cols, ylab = "F (per year)")
+} else plotly::plot_ly()
+```
+
+Row {.tabset}
+--------------------------------------------------------------------------------
+
+```{r}
+resid_plots <- make_resid_plots(catch_data)
+```
+
+### Residuals (age, year)
+
+```{r}
+resid_plots$bubbles
+```
+
+### (year)
+
+```{r}
+resid_plots$year
+```
+
+### (age)
+
+```{r}
+resid_plots$age
+```
+
+### (cohort)
+
+```{r}
+resid_plots$cohort
+```
+
+### (expected)
+
+```{r}
+resid_plots$expected
+```

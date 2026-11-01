@@ -212,8 +212,10 @@ statistical advisories. Convergence alone does not establish that the data
 identify every component.
 Inspect each check before interpreting or ranking an alternative.
 
-In the dashboard, start with **Fishery** and **Surveys** to inspect fits and
-standardized residuals. Review **Tables → Diagnostics** and **Parameters** for
+In the dashboard, start with **Fisheries** and **Surveys** to inspect fits and
+standardized residuals. Fisheries lists each fleet, then **Aggregate fishery**;
+without fleets, the aggregate page contains the single-fishery diagnostics.
+Review **Tables → Diagnostics** and **Parameters** for
 checks, uncertainty and process deviations before interpreting **Trends** for
 abundance and mortality. Residuals use fitted states and can be affected by
 shrinkage.
