@@ -397,6 +397,7 @@
 "candidate:noaa_northeast_skate_complex","","noaa_northeast_skate_complex","new","ineligible","screened","not_started","NOAA","NEFSC","NOAA:11036 | NOAA:11047 | NOAA:11063 | NOAA:11071 | NOAA:11076 | NOAA:11080 | NOAA:11269",7
 "candidate:noaa_northern_anchovy_central_subpopulation","","noaa_northern_anchovy_central_subpopulation","new","eligible","screened","not_started","NOAA","SWFSC","NOAA:10574",1
 "candidate:noaa_ocean_pout_10525","","noaa_ocean_pout_10525","new","ineligible","screened","not_started","NOAA","NEFSC","NOAA:10525",1
+"candidate:noaa_offshore_hake_us","","noaa_offshore_hake_us","new","ineligible","screened","not_started","NOAA","NEFSC","NOAA:10524",1
 "candidate:noaa_pacific_aurora_rockfish","","noaa_pacific_aurora_rockfish","new","unresolved","screened","not_started","NOAA","NWFSC / SWFSC","NOAA:10547",1
 "candidate:noaa_pacific_brown_rockfish","","noaa_pacific_brown_rockfish","new","ineligible","screened","not_started","NOAA","NWFSC / SWFSC","NOAA:10546",1
 "candidate:noaa_pacific_coast_longnose_skate","","noaa_pacific_coast_longnose_skate","new","eligible","screened","not_started","NOAA","NWFSC / SWFSC","NOAA:10731",1
