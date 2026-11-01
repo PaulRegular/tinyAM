@@ -27,10 +27,10 @@ the rows already linked to a stock or candidate unit.
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 63 | 18 | 98 | 21 | 147 | 31 | 199 | 0 | 0 |
 | ICES | 274 | 59 | 212 | 3 | 0 | 60 | 185 | 29 | 274 | 0 | 0 |
-| NOAA | 432 | 28 | 318 | 9 | 77 | 80 | 193 | 159 | 357 | 0 | 75 |
-| **Total** | **905** | **107** | **593** | **30** | **175** | **161** | **525** | **219** | **830** | **0** | **75** |
+| NOAA | 432 | 28 | 319 | 9 | 76 | 80 | 194 | 158 | 358 | 0 | 74 |
+| **Total** | **905** | **107** | **594** | **30** | **174** | **161** | **526** | **218** | **831** | **0** | **74** |
 
-The crosswalk currently links 604 distinct unit keys across 640 inventory rows: 100 canonical stock units and 504 candidate units. Candidate units include 502 with new identity status, one ambiguous identity, and one mixed identity. Of the new-status candidate units, 59 are eligible, 346 ineligible, 94 unresolved, and three have mixed eligibility. A further 265 inventory rows have no unit crosswalk yet.
+The crosswalk currently links 605 distinct unit keys across 641 inventory rows: 100 canonical stock units and 505 candidate units. Candidate units include 503 with new identity status, one ambiguous identity, and one mixed identity. Of the new-status candidate units, 59 are eligible, 347 ineligible, and 94 unresolved; three candidate units have mixed eligibility. A further 264 inventory rows have no unit crosswalk yet.
 
 NOAA Ocean quahog (Stock SMART 10788) is the 2020 operational update of the 2017
 Stock Synthesis benchmark. The reviewed assessment products report commercial
@@ -38,6 +38,14 @@ catch totals and length compositions, aggregate biomass indices, and aggregate
 population outputs, but no observed age-specific input series or age-specific
 population outputs. It is screened as ineligible for the current age-disaggregated
 set; see `source_reviews/noaa_ocean_quahog_2020.md`.
+
+NOAA Auke Creek coho (Stock SMART 10580) is a distinct Southeast Alaska indicator
+stock. Its latest full-acceptance operational record is assessment 13939 (2024,
+data through 2024). The assessment reports total-run, escapement, and exploitation
+status; separate research reports contain age-specific smolt samples, but the
+current assessment does not provide multi-age population inputs or outputs. It is
+screened ineligible for the age-disaggregated set; see
+`source_reviews/noaa_auke_creek_coho_2024.md`.
 
 The progress summary has 75 organization-region
 rows. Row-level status and unit-level deduplication are intentionally reported
