@@ -27,10 +27,10 @@ the rows already linked to a stock or candidate unit.
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 63 | 18 | 98 | 21 | 147 | 31 | 199 | 0 | 0 |
 | ICES | 274 | 59 | 161 | 2 | 52 | 56 | 137 | 81 | 222 | 0 | 52 |
-| NOAA | 432 | 28 | 249 | 9 | 146 | 75 | 162 | 195 | 288 | 0 | 144 |
-| **Total** | **905** | **107** | **473** | **29** | **296** | **152** | **446** | **307** | **709** | **0** | **196** |
+| NOAA | 432 | 28 | 250 | 9 | 145 | 75 | 163 | 194 | 289 | 0 | 143 |
+| **Total** | **905** | **107** | **474** | **29** | **295** | **152** | **447** | **306** | **710** | **0** | **195** |
 
-The crosswalk currently links 492 distinct unit keys across 520 inventory rows: 100 canonical stock units and 392 candidate units. Of the candidate units, 390 are provisionally new, one has an ambiguous identity, and one has mixed identity status. The 390 new units include 52 eligible, 274 ineligible, 61 unresolved, and three with mixed eligibility. A further 385 inventory rows have no unit crosswalk yet.
+The crosswalk currently links 493 distinct unit keys across 521 inventory rows: 100 canonical stock units and 393 candidate units. Of the candidate units, 391 are provisionally new, one has an ambiguous identity, and one has mixed identity status. The 391 new units include 52 eligible, 275 ineligible, 61 unresolved, and three with mixed eligibility. A further 384 inventory rows have no unit crosswalk yet.
 
 The progress summary has 74 organization-region
 rows. Row-level status and unit-level deduplication are intentionally reported
@@ -121,6 +121,8 @@ the aggregate indices are direct age-specific abundance observations. See
 `source_reviews/noaa_gulf_cobia_2020.md`.
 
 NOAA greenstriped rockfish (Stock SMART 10566) is the current Pacific Coast coastwide unit, with the fully accepted 2009 SS2 assessment through 2008 still the latest detailed run located. Its NWFSC survey includes conditional age-at-length data, but no fishery ages are available in the accepted assessment, so catch-at-age cannot be reconstructed without unsupported assumptions. The candidate is screened ineligible; no canonical records were added. See `source_reviews/noaa_greenstriped_rockfish_pacific_2009.md`.
+
+NOAA splitnose rockfish (Stock SMART 10564) is one coastwide Pacific Coast assessment unit; the 2009 SS3 assessment through 2008 remains the latest full run. NWFSC survey conditional age-at-length data were used, but fishery age data were excluded from the base model after inconsistent double reads and retained only for sensitivity analysis. The candidate is screened ineligible because the base model has no fishery catch-at-age inputs. No canonical records were added. See `source_reviews/noaa_splitnose_rockfish_pacific_2009.md`.
 
 NOAA squarespot rockfish (Stock SMART 10442) is screened ineligible. The latest
 accepted 2021 assessment reports age-indexed fitted quantities, but fits only
