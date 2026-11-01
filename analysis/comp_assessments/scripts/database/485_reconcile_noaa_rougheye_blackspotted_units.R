@@ -7,13 +7,14 @@ units <- list(
   'NOAA:10539' = 'noaa_uswc_rougheye_blackspotted',
   'NOAA:14516' = 'noaa_uswc_rougheye_blackspotted',
   'NOAA:11382' = 'noaa_bsai_rougheye_blackspotted',
-  'NOAA:15394' = 'noaa_bsai_rougheye_blackspotted'
+  'NOAA:15394' = 'noaa_bsai_rougheye_blackspotted',
+  'NOAA:15395' = 'noaa_bsai_rougheye_blackspotted'
 )
 ids <- names(units)
 rows <- match(ids, x$candidate_id)
 if (anyNA(rows)) stop('Expected NOAA rougheye/blackspotted inventory rows are missing.', call. = FALSE)
 
-expected_initial <- c('NOAA:10538', 'NOAA:10539', 'NOAA:11382', 'NOAA:11443', 'NOAA:15394')
+expected_initial <- c('NOAA:10538', 'NOAA:10539', 'NOAA:11382', 'NOAA:11443', 'NOAA:15394', 'NOAA:15395')
 for (id in expected_initial) {
   i <- match(id, x$candidate_id)
   expected_eligibility <- if (id %in% c('NOAA:11382', 'NOAA:11443')) 'eligible' else 'ineligible'
@@ -196,9 +197,9 @@ set_values('NOAA:11382', list(
   ),
   notes = paste(
     'The 2024 report says the last full assessment was in 2022. NOAA:15394 is',
-    'the Eastern Bering Sea component and is grouped under this one BSAI',
-    'candidate unit, not counted as a second stock. Exact survey timing remains',
-    'unverified.', cache_note
+    'the Eastern Bering Sea component and NOAA:15395 is a historical Aleutian',
+    'Islands row; both are grouped under this BSAI candidate unit and not counted',
+    'as separate stocks. Exact survey timing remains unverified.', cache_note
   )
 ))
 
@@ -220,6 +221,29 @@ set_values('NOAA:15394', list(
     'the 2024 SAFE describes the whole BSAI complex as AI age-structured plus',
     'EBS Tier 5. Age-specific curation eligibility applies to the AI model',
     'component only.', cache_note
+  )
+))
+
+set_values('NOAA:15395', list(
+  candidate_unit_id = units[['NOAA:15395']],
+  scientific_name = 'Sebastes aleutianus; Sebastes melanostictus',
+  assessment_area = 'Aleutian Islands', match_status = 'new',
+  screening_status = 'screened', eligibility = 'ineligible',
+  import_status = 'not_started',
+  detailed_source_url = 'https://apps-afsc.fisheries.noaa.gov/REFM/Docs/2016/BSAIrougheye.pdf',
+  review_date = review_date,
+  decision_reason = paste(
+    'This historical Aleutian Islands inventory row belongs to the BSAI',
+    'rougheye/blackspotted assessment unit represented by current NOAA:11382.',
+    'The 2016 full assessment describes age-structured assessments for the AI',
+    'portion during 2008-2015. Retain NOAA:15395 as a historical component',
+    'record, not a separate current assessment case.'
+  ),
+  notes = paste(
+    'NOAA:15395 is the historical 2008 Aleutian Islands entry. The official',
+    '2016 BSAI assessment documents the age-structured AI model history. The',
+    'current 2024 SAFE retains an AI age-structured component and an EBS Tier 5',
+    'component under the BSAI unit. Do not count this row separately.', cache_note
   )
 ))
 

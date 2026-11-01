@@ -27,10 +27,10 @@ the rows already linked to a stock or candidate unit.
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 63 | 18 | 98 | 21 | 147 | 31 | 199 | 0 | 0 |
 | ICES | 274 | 59 | 161 | 2 | 52 | 56 | 137 | 81 | 222 | 0 | 52 |
-| NOAA | 432 | 28 | 247 | 9 | 148 | 75 | 160 | 197 | 286 | 0 | 146 |
-| **Total** | **905** | **107** | **471** | **29** | **298** | **152** | **444** | **309** | **707** | **0** | **198** |
+| NOAA | 432 | 28 | 248 | 9 | 147 | 75 | 161 | 196 | 287 | 0 | 145 |
+| **Total** | **905** | **107** | **472** | **29** | **297** | **152** | **445** | **308** | **708** | **0** | **197** |
 
-The crosswalk currently links 491 distinct unit keys across 518 inventory rows: 100 canonical stock units and 391 candidate units. Of the candidate units, 389 are provisionally new, one has an ambiguous identity, and one has mixed identity status. The 389 new units include 52 eligible, 273 ineligible, 61 unresolved, and three with mixed eligibility. A further 387 inventory rows have no unit crosswalk yet.
+The crosswalk currently links 491 distinct unit keys across 519 inventory rows: 100 canonical stock units and 391 candidate units. Of the candidate units, 389 are provisionally new, one has an ambiguous identity, and one has mixed identity status. The 389 new units include 52 eligible, 273 ineligible, 61 unresolved, and three with mixed eligibility. A further 386 inventory rows have no unit crosswalk yet.
 
 The progress summary has 74 organization-region
 rows. Row-level status and unit-level deduplication are intentionally reported
@@ -785,6 +785,8 @@ NOAA West Coast Yelloweye Rockfish (ID 10426) is screened as a distinct eligible
 NOAA Northern Yellowtail Rockfish (ID 10393) is screened as a distinct eligible unit. Its 2025 single-area, two-sex benchmark includes fishery and survey age data, age-based maturity, estimated mortality, and native fitted age-specific outputs. Catch-at-age and age-indexed observations would require reconstruction. See `source_reviews/noaa_yellowtail_north_2025.md`.
 
 NOAA Rougheye/Blackspotted Rockfish (ID 14516) is screened as one eligible U.S. West Coast complex assessment, not two species-level cases. Its 2025 model includes fishery conditional age-at-length data, survey age information, and age-specific fitted outputs. Catch-at-age and age-specific survey indices would require reconstruction. See `source_reviews/noaa_rougheye_blackspotted_2025.md`.
+
+The NOAA BSAI rougheye/blackspotted entry (ID 11382) also links the Eastern Bering Sea component (15394) and historical 2008 Aleutian Islands row (15395) to one current regional unit. Only the Aleutian Islands component has age-structured population outputs; neither subarea row is counted as a separate current stock. See `source_reviews/noaa_rougheye_blackspotted_crosswalk.md`.
 
 NOAA California Quillback Rockfish (ID 15342) is a new eligible California assessment unit. Its 2025 assessment has fishery age compositions, fishery-independent survey age data, biological inputs, and fitted age-specific outputs. Catch-at-age and age-specific indices would require reconstruction. See `source_reviews/noaa_quillback_california_2025.md`.
 

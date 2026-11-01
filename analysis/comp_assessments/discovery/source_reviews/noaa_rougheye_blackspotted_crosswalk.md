@@ -11,7 +11,7 @@ North Pacific stock and not two species-level candidates per region.
 |---|---|---|---|---|
 | U.S. West Coast | `NOAA:14516` | `NOAA:10539` (2010 legacy label) | 2025 adopted assessment, data through 2024 | Eligible; the age-structured assessment pools both species. |
 | Gulf of Alaska | `NOAA:11443` | `NOAA:10538` (2007 legacy label) | 2023 full age-structured assessment; 2024 SAFE is a harvest projection based on it | Eligible for source curation; verify exact survey timing before translation. |
-| BSAI | `NOAA:11382` | `NOAA:15394` (EBS component record) | 2024 SAFE update, retaining the 2022 full assessment | Eligible only for the Aleutian Islands age-structured component; EBS uses Tier 5 and has no age-specific population output. |
+| BSAI | `NOAA:11382` | `NOAA:15394` (EBS component); `NOAA:15395` (historical AI row) | 2024 SAFE update, retaining the 2022 full assessment | Eligible only for the Aleutian Islands age-structured component; EBS uses Tier 5 and has no age-specific population output. |
 
 The historical West Coast label is linked to the current U.S. coastwide complex
 because the 2013 formal assessment pooled rougheye and blackspotted data and
@@ -38,8 +38,11 @@ and AI survey observations to the retained AI model and reports AI
 numbers-at-age, biomass, spawning biomass, recruitment and uncertainty. The
 2022 full assessment is the underlying full model. NOAA:15394 is the EBS
 component record, not an additional current stock and not an age-structured
-candidate on its own. The 2026 schedule lists a BSAI update for later review;
-it was not final at the review date.
+candidate on its own. NOAA:15395 is the historical 2008 Aleutian Islands
+inventory row. The official 2016 full assessment describes the age-structured
+AI model history for 2008-2015; this row is retained as a historical component
+under the current BSAI unit, not a separate case. The 2026 schedule lists a
+BSAI update for later review; it was not final at the review date.
 
 ## Cross-source boundary checks
 
@@ -74,4 +77,5 @@ checksums are in the ignored manifest
 - [2023 GOA full assessment](https://apps-afsc.fisheries.noaa.gov/Plan_Team/2023/GOArougheye.pdf)
 - [2024 GOA harvest projection](https://apps-st.fisheries.noaa.gov/sis/docServlet?fileAction=download&fileId=10291)
 - [2024 BSAI assessment update](https://www.npfmc.org/wp-content/PDFdocuments/SAFE/2024/BSAIrougheye.pdf)
+- [2016 full BSAI assessment](https://apps-afsc.fisheries.noaa.gov/REFM/Docs/2016/BSAIrougheye.pdf)
 - [2026 North Pacific assessment priorities](https://meetings.npfmc.org/CommentReview/DownloadFile?fileName=D2+Groundfish+Stock+Assessment+Priorities.pdf&p=ff7dee7e-242d-42e7-85c7-2479d7eeac96.pdf)
