@@ -267,6 +267,7 @@
 "candidate:noaa_atlantic_menhaden","","noaa_atlantic_menhaden","new","unresolved","screened","not_started","NOAA","NEFSC / SEFSC","NOAA:11089",1
 "candidate:noaa_atlantic_salmon_gom","","noaa_atlantic_salmon_gom","new","ineligible","screened","not_started","NOAA","NEFSC","NOAA:10498",1
 "candidate:noaa_atlantic_surfclam_mid_atlantic","","noaa_atlantic_surfclam_mid_atlantic","new","ineligible","screened","not_started","NOAA","NEFSC","NOAA:10787",1
+"candidate:noaa_atlantic_wolffish_us","","noaa_atlantic_wolffish_us","new","ineligible","screened","not_started","NOAA","NEFSC","NOAA:11562",1
 "candidate:noaa_bank_rockfish_california","","noaa_bank_rockfish_california","new","ineligible","screened","not_started","NOAA","NWFSC / SWFSC","NOAA:10448",1
 "candidate:noaa_black_rockfish_california_2023","","noaa_black_rockfish_california_2023","new","eligible","screened","not_started","NOAA","NWFSC / SWFSC","NOAA:17194 | NOAA:17195",2
 "candidate:noaa_black_rockfish_oregon_2023","","noaa_black_rockfish_oregon_2023","new","eligible","screened","not_started","NOAA","NWFSC / SWFSC","NOAA:14407",1
