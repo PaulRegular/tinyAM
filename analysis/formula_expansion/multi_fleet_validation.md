@@ -89,39 +89,23 @@ interactive visual inspection remains outstanding.
 
 ## Selectivity curves
 
-The new curve tests independently check warped half-selection, slope, peak,
-tail, Gaussian/asymptotic endpoints, first and second AD derivatives, and
-WHAM's raw four-parameter double-logistic values and derivatives. WHAM source
-is pinned to `ffcbfd093161e8210aa20716933975191b661807`; its `get_selAA()`
-age counter is translated explicitly when comparing biological ages.
-No peak normalization or midpoint ordering is added. Tiny positive rates stay
-on the log scale for likelihood calculations, without a positive floor.
-The 123 new curve assertions and 391 workflow assertions pass without warnings.
-Rechecking the five one-fleet baseline processes found zero objective changes,
-maximum gradient difference 7.11e-15 and prediction difference 1.11e-16.
+Logistic and WHAM-style double-logistic curves remain supported for F means
+and catchability. Independent tests compare the double-logistic raw product
+and AD derivatives with WHAM revision
+`ffcbfd093161e8210aa20716933975191b661807`, including its age-counter offset
+and reversed midpoints. No peak normalization or midpoint ordering is added.
+Tiny selectivities stay on the log scale without artificial positive floors.
+Shared tests cover scoped fleets/surveys, simulation and projections.
 
-`multi_fleet_validation.R curves` generates a 20-year, two-fleet example with
-logistic and warped F, IID recruitment and supplied M. It uses default starts
-and optimizer settings, seed 47281, and no rescue tuning. The initial fit hit
-the 1,000-function-evaluation limit (945 iterations, maximum gradient 5.70),
-despite a positive-definite Hessian. Both hindcast attempts failed numerical
-checks and supplied no forecast scores. The attempted fit, warnings, truth,
-projections, simulations and rendered dashboard are retained. A read-only
-derivative review agreed with independent central differences; the largest
-absolute discrepancy for the six checked curve/initial parameters was
-7.52e-5 (the corresponding gradient was 5.70).
+### Retired warped-normal exploration
 
-This attempt demonstrates an unresolved estimation limitation with many annual
-fleet coefficients and nonlinear curves. Close parameter recovery in one
-unconverged fit is not evidence of reliable estimation. The planned recovery
-experiments must retain this difficulty rather than tune it away.
-
-The final curve package check returned **OK** with 4,118 passing assertions,
-no warnings/failures/skips, after fixing log-residual extraction from cached
-tables without SD columns. That regression and the underflow case pass 161
-focused assertions together. Comparative assessments returned the same 59
-passes and ten documented failures. The curve milestone is pushed in
-`c21ee870`, `6ea3c2fc` and `a3ad9881`.
+`warped_normal()` was retired before release because default fitting was
+unreliable. Diagnostics found poor optimizer solutions, nearly flat curves at
+extreme widths and unresolved boundary uncertainty. The complete code, results
+and diagnosis are recorded at [revision 417e2636](https://github.com/PaulRegular/tinyAM/tree/417e2636/analysis/formula_expansion).
+Original caches, warnings, profiles, manifests and benchmark summaries remain
+unchanged under ignored `results/multi_fleet/recovery/`, `curves/` and
+`warped_diagnostics/`. No replacement family or compatibility alias is provided.
 
 ## Penalized smooths
 
@@ -153,22 +137,22 @@ returned 59 passes and the same ten pre-existing failures listed above.
 
 ## Recovery experiments
 
-`multi_fleet_recovery.R` runs 100 isolated replicates for each of 13 curve/smooth
-configurations and 30 full assessments for each of 13 scenarios: **1,690
-attempts**, all retained. `postprocess` adds N-at-age uncertainty to a private
-copy of each successful objective without optimizing; `metrics` produces
-replicate-level recovery/coverage and Monte Carlo SE tables. The original
-manifest retains generation hashes, seeds and runtime versions. Subsequent
-changes added only reporting/uncertainty extraction and corrected documentation,
-not the data generator, likelihood or fitting controls. A fresh results
-directory is required if the script's provenance changes; existing results are
-never silently reused under changed sources.
+`multi_fleet_recovery.R` retains seven isolated configurations (100 replicates
+each) and seven full-assessment scenarios (30 each): **910 configured attempts**.
+The historical results below are the supported scenarios from the original
+1,690-attempt benchmark; they were not refitted or relabeled during retirement.
+Seeds, generating models and optimizer controls are unchanged.
+
+Fresh runs default to `results/multi_fleet/recovery_supported/`, keeping the
+original benchmark immutable. Source-fingerprint guards remain active.
+`postprocess` adds N uncertainty to private objectives; `metrics` reports
+recovery, coverage and between-replicate Monte Carlo SEs. Removing scenarios
+does not authorize overwriting or mixing the historical checkpoints.
 
 Full assessments use 12 training years, ages 1–10, two fleets, known M, distinct
 catch weights, and two held-out years. The SCAA has logistic/double-logistic
 fleet curves; SAM scenarios use shared/separate age correlations and fleet F
-blocks (one unfished young age). Warped shapes are asymptotic, intermediate and
-Gaussian, each with full or sparse older-age training coverage. Smooth scenarios
+blocks (one unfished young age). Smooth scenarios
 use age/year means with off/IID/AR1 residuals; the weak-separation scenario has
 more temporal basis functions and stronger residual persistence. Penalized
 smooth SDs are 0.2/0.15 on the retained mgcv basis scale, so their signal can be
@@ -184,9 +168,6 @@ process-integrated forecast uncertainty.
 | SCAA: logistic/double logistic | 30 |
 | SAM: shared correlation | 30 |
 | SAM: separate correlations | 30 |
-| Warped: asymptotic, full / weak coverage | 0 / 0 |
-| Warped: intermediate, full / weak coverage | 3 / 6 |
-| Warped: Gaussian, full / weak coverage | 0 / 11 |
 | Smooth: off / IID / AR1 | 7 / 11 / 21 |
 | Smooth: weak mean/AR1 separation | 20 |
 
@@ -213,12 +194,6 @@ points; they do not count ages or years as independent replicates.
 | Smooth AR1 (21) | 0.48 ± 0.18 | −0.18 ± 0.12 | −0.32 ± 0.11 | 0.01 ± 0.32 | 98.0 ± 1.4 |
 | Smooth weak (20) | 0.99 ± 0.26 | −0.48 ± 0.31 | −0.53 ± 0.34 | 0.28 ± 0.26 | 91.7 ± 3.2 |
 
-Warped recovery is based on only 3–11 retained fits and cannot offset the poor
-success rates. Their full surface, shape, scale and interval results remain in
-the generated tables. Among the three successful full-coverage intermediate
-fits, mean c was 0.3461 (MCSE 0.0018; truth 0.35); six weak-coverage fits gave
-0.3486 (0.0034). These selected estimates are not an unconditional recovery claim.
-
 SAM correlation recovery on the fitted atanh scale had bias 0.041 ± 0.041
 (shared), 0.038 ± 0.041 (Gillnet) and −0.112 ± 0.066 (Trawl), with interval
 coverage 100%, 96.7% and 93.3%. Smooth/AR1 separation was poor: smoothing
@@ -229,20 +204,11 @@ scenario, age/year AR1 logit-parameter biases were −0.718 ± 0.093 and
 converged fits does not establish identification of its component processes.
 
 Isolated fits had 100/100 successes for logistic, both double-logistic midpoint
-orders, intermediate warped shapes, and tp/cr smooths; asymptotic warped shapes
-had 99/100, factor-by/tensor smooths 97/100, and estimated Gaussian-endpoint
-warped shapes 0/100. One hundred successes has exact 95% interval 96.4–100%;
-zero has 0–3.6%. Function coverage was 95.4% for ordinary double logistic but
-85.3% for reversed midpoints; tp/cr/factor-by/tensor smooth coverage was
-87.0%/93.9%/89.2%/92.0%. Local Gaussian/Wald intervals can under-cover.
-
-A read-only Gaussian failure review found a flat fitted curve with a50=38.8
-and log scale=23.16, objective 44,138.76, compared with −39.73 at the known
-truth (a50=3.5, scale=1.5). Independent formula evaluation agrees at both
-points; the truth has positive curvature, while the fitted Hessian is nearly
-singular/indefinite. This is an unresolved default-start/local-optimization
-failure, not evidence that Gaussian shapes are intrinsically unidentified.
-No alternative start was fitted in that original benchmark.
+orders and tp/cr smooths; factor-by/tensor smooths had 97/100. One hundred
+successes has exact 95% interval 96.4–100%. Function coverage was 95.4% for
+ordinary double logistic and 85.3% for reversed midpoints; tp/cr/factor-by/tensor
+smooth coverage was 87.0%/93.9%/89.2%/92.0%. Local Gaussian/Wald intervals can
+under-cover.
 
 One-/two-year survey log-RMSE averaged 0.130/0.167 for SCAA, 0.187/0.214 for
 SAM shared, and 0.171/0.204 for SAM separate (MCSE 0.005–0.010). These are
@@ -252,101 +218,6 @@ unstable with one origin per replicate and nearly zero persistence errors:
 SCAA's one-year mean was 359.7 ± 358.1. All individual cases/denominators and
 coverage remain available; this statistic should not drive conclusions here.
 Predictive interval coverage and process-integrated scoring remain future work.
-
-### Warped-normal diagnosis (original benchmark unchanged)
-
-`multi_fleet_recovery.R diagnostics` audits 1,010 cached attempts: all 600
-isolated warped fits, 200 isolated double-logistic fits, 180 warped assessments
-and 30 SCAA double-logistic assessments. Private RTMB objectives reproduce every
-stored objective exactly in this run. File hashes confirm that the original
-attempts, manifest and summary tables were not changed. Diagnostic output has
-its own manifest, source snapshot, warnings and per-point records in
-`results/multi_fleet/warped_diagnostics/`. `diagnostic-tests` independently checks
-a quadratic nuisance profile and the isolated likelihood reconstruction.
-
-The following classification uses the original optimizer code, the projected
-gradient (threshold 0.01), Hessian eigenvalues and active bounds. It is a
-diagnosis, not a replacement for the original success definition. Positive
-curvature away from an active boundary does not change an original failure
-into a benchmark success. Failed/indefinite covariance matrices
-are never converted into correlations.
-
-| Full assessment | Optimizer/gradient | Weak/invalid curvature | Boundary uncertainty | Original passes |
-|---|---:|---:|---:|---:|
-| Warped asymptotic, full / weak | 30 / 30 | 0 / 0 | 0 / 0 | 0 / 0 |
-| Warped intermediate, full / weak | 27 / 24 | 0 / 0 | 0 / 0 | 3 / 6 |
-| Warped Gaussian, full / weak | 1 / 19 | 28 / 0 | 1 / 0 | 0 / 11 |
-| SCAA double logistic | 0 | 0 | 0 | 30 |
-
-Among successful full-coverage intermediate warped fits, the largest absolute
-within-curve correlation per fit is 0.720–0.729; with the Gillnet F scale it is
-at most 0.290. Weak-coverage intermediate and Gaussian fits have within-curve
-maxima of 0.641 and 0.798 respectively. Double-logistic fits have stronger
-within-curve correlations (up to 0.935) and curve/F-scale correlations (up to
-0.952), yet all converge. Correlation alone therefore does not explain the
-success-rate contrast. All pairs with other outer coefficients are retained
-in `correlations.csv`; their largest warped correlation is 0.382 with the
-survey q intercept, versus 0.381 with an annual F coefficient. These are
-local, success-conditioned summaries.
-
-Ten cases were profiled: the first successful and first failed full-coverage
-replicate for each warped shape at each study level, where available, plus
-the sparse Gaussian assessment (first success and failure). Gaussian full
-coverage has no successful replicate, asymptotic assessments have none, and
-intermediate isolated fits have no failure. Each case fixes shape at
-`(0:20)/20`, or fixes log width at widths spanning 0.05–100 times the modeled
-age range plus its generating and returned widths. Each point re-estimates
-all nuisance parameters with the original `nlminb` controls (1,000 evaluations
-and iterations) and original bounds. Saved-estimate and generating-parameter
-starts use separate private objectives and separate initial latent modes.
-
-The fixed-coordinate/nuisance-optimization method follows
-[TMB's `tmbprofile()`](https://github.com/kaskr/adcomp/blob/master/TMB/R/tmbprofile.R)
-(Kasper Kristensen, GPL-2); this study implements its own fixed-grid wrapper,
-retains the benchmark optimizer controls and does not copy its adaptive search.
-Of 620 profile attempts, 522 pass optimizer, nuisance-gradient and curvature
-checks: 256/310 from saved starts and 266/310 from generating starts. All 98
-failed points and their warnings remain visible. A profile point with a good
-objective but failed checks is not a valid likelihood optimum. Coarse grids,
-local nuisance minima and boundary parameters preclude profile confidence
-interval claims from these plots.
-
-The first full-coverage Gaussian assessment has a stored negative log
-likelihood of 119.66 on a nearly flat curve. Valid profile points reach 93.38
-from saved starts, versus −224.76 from generating starts. In the analogous
-isolated case, the stored value is 44,138.76, while valid profiles reach −40.19
-and −40.43. This is strong evidence of poor local solutions, not simply wide
-uncertainty around the best fit. Intermediate assessment profiles reach the
-same minima from both starts (−243.17 and −225.63 for the selected failure
-and success). Asymptotic assessment profiles remain difficult: some low
-objective points fail nuisance checks, and the best *valid* generating-start
-point is worse than its saved-start counterpart. Known truth is not a
-guarantee that nuisance optimization succeeds.
-
-Starting positions also differ between families. On the isolated age range
-1–12, warped half-selection starts at 6.5, versus ascending half-selection
-3.75 for double logistic (generating values 3.5 and 3 respectively). The
-benchmark therefore compares default fitting robustness as well as curve
-geometry; it cannot establish which family performs best after improved starts.
-
-There is a real weak direction as well. At huge width, the curve approaches
-the constant one-half and its amplitude absorbs the level. The failed
-isolated Gaussian example has nearly singular curvature, whereas the
-generating point has positive curvature. The smallest Hessian directions
-and their coefficient loadings are stored with each audit. The failed full
-Gaussian case has a50=24.70 (modeled ages 1–10), log width=22.70 and shape
-0.752; its weakest eigenvector is almost entirely the shape coefficient.
-It has lost shape information far from the generating curve. Shape zero/one
-also lies on a boundary; ordinary two-sided Wald uncertainty is unreliable
-there even when the remaining parameters have positive curvature.
-
-These results justify investigating better initial values and a more direct
-peak/width interpretation in a future experiment. Fixed-shape hypotheses and
-more informative age coverage could also be compared prospectively. They do
-not justify automatic retries, new bounds or priors, changing the curve, or
-reclassifying failed benchmark fits. No such changes were made. The original
-warped-versus-double-logistic success rates and their Monte Carlo uncertainty
-remain those reported above.
 
 ## Historical herring trial and regression checks
 
@@ -406,7 +277,7 @@ computer-use tool could not verify the current Chrome URL; it was not bypassed.
 Manual control/rotation/resize checks therefore remain unverified. Programmatic
 widget, orientation, scope, interval and rendering checks passed.
 
-Keep the default-start curve/smooth estimation failures visible. This work adds
+Keep the default-start smooth estimation failures visible. This work adds
 modeling capabilities, not a recommendation for routine use of every flexible
 combination or a claim of improved/exact official assessment reproduction.
 Generated fits, warnings, dashboards, numerical summaries and source hashes
@@ -461,3 +332,18 @@ passing assertions**, zero failures, warnings or skips. Version remains
 `0.1.1.9001`. Separate feature commits are `070ed90c` (diagnosis), `48c3ee2e`
 (Fisheries navigation), `0d7227b2` (reference units), and `0b80a0e1` (updated
 heading regression). This branch is intended for review, without a main merge.
+
+## Retirement validation
+
+On `retire-warped-normal`, six supported model fixtures retain their parameter
+lists, objectives, gradients and predictions within a 1e-12 comparison tolerance.
+The seven retained full generators, seeds and smooth workflow example also
+match their recorded pre-cleanup baselines at that tolerance. No new curve,
+initial-value policy or fitter change was introduced.
+
+One smoke attempt per retained configuration produced seven isolated successes
+and six full-assessment successes. The smooth-off assessment failed numerical
+checks; its fit and warnings were retained without rescue tuning. All 14 runners
+completed without uncaught study errors. These are workflow checks, not a new
+recovery benchmark. Their separate output is
+`results/multi_fleet/retirement_validation/smoke/`.
