@@ -27,10 +27,10 @@ the rows already linked to a stock or candidate unit.
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 63 | 18 | 98 | 21 | 147 | 31 | 199 | 0 | 0 |
 | ICES | 274 | 59 | 161 | 2 | 52 | 56 | 137 | 81 | 222 | 0 | 52 |
-| NOAA | 432 | 28 | 251 | 9 | 144 | 76 | 163 | 193 | 290 | 0 | 142 |
-| **Total** | **905** | **107** | **475** | **29** | **294** | **153** | **447** | **305** | **711** | **0** | **194** |
+| NOAA | 432 | 28 | 253 | 9 | 142 | 76 | 165 | 191 | 292 | 0 | 140 |
+| **Total** | **905** | **107** | **477** | **29** | **292** | **153** | **449** | **303** | **713** | **0** | **192** |
 
-The crosswalk currently links 493 distinct unit keys across 522 inventory rows: 100 canonical stock units and 393 candidate units. Of the candidate units, 391 are provisionally new, one has an ambiguous identity, and one has mixed identity status. The 391 new units include 52 eligible, 275 ineligible, 61 unresolved, and three with mixed eligibility. A further 383 inventory rows have no unit crosswalk yet.
+The crosswalk currently links 495 distinct unit keys across 524 inventory rows: 100 canonical stock units and 395 candidate units. Of the candidate units, 393 are provisionally new, one has an ambiguous identity, and one has mixed identity status. The 393 new units include 52 eligible, 277 ineligible, 61 unresolved, and three with mixed eligibility. A further 381 inventory rows have no unit crosswalk yet.
 
 The progress summary has 74 organization-region
 rows. Row-level status and unit-level deduplication are intentionally reported
@@ -1208,11 +1208,11 @@ inputs and population outputs were not reported. It is screened ineligible for
 the age-disaggregated comparison set. See
 `source_reviews/ices_blue_ling_5b6712_2026.md`.
 
-The current discovery snapshot as of 2026-10-31 contains 905 inventory rows: 107 matched, 460 provisionally new, 29 ambiguous, and 309 identity-unreviewed. Across all rows, 149 are eligible, 437 ineligible, and 319 unresolved; 696 are screened, none is in progress, and 209 are not started. The organization and source-region breakdowns are in `inventory_progress.csv`.
+The current discovery snapshot as of 2026-11-01 contains 905 inventory rows: 107 matched, 477 provisionally new, 29 ambiguous, and 292 identity-unreviewed. Across all rows, 153 are eligible, 449 ineligible, and 303 unresolved; 713 are screened, none is in progress, and 192 are not started. The organization and source-region breakdowns are in `inventory_progress.csv`.
 
 The DFO WCVI Barkley Sockeye row is screened ineligible: its 2024 update uses salmon run reconstruction and stock-recruit methods, but does not verify the age-structured catch, survey, biological, and mortality inputs or N-at-age/F-at-age outputs needed for tinyAM. See discovery/source_reviews/dfo_wcvi_barkley_sockeye_2024.md.
 
-The crosswalk has 483 linked units (100 canonical stock units and 383 candidate units) and 399 unlinked inventory rows in `inventory_units.csv`.
+The crosswalk has 495 linked units (100 canonical stock units and 395 candidate units) and 381 unlinked inventory rows in `inventory_units.csv`.
 
 ICES Northeast Atlantic spurdog (`dgs.27.nea`) is a new 2026 candidate with
 verified current assessment outputs. Age-input eligibility remains unresolved:
@@ -1294,6 +1294,18 @@ no abundance index. The Oregon report documents a summer index period but not a
 fractional-year timing value. No canonical data have been imported. See
 `source_reviews/noaa_vermilion_rockfish_oregon_2021.md` and
 `source_reviews/noaa_vermilion_rockfish_washington_2021.md`.
+
+NOAA Stock SMART IDs 15340 (Oregon) and 15341 (Washington) are distinct 2021
+quillback assessment components. Their cached Stock Synthesis archives provide
+age-specific population outputs, but the base models use catch and length
+compositions only; age samples inform fixed biology and the age-composition
+rows are commented out. Neither assessment has a usable abundance index, so
+both are ineligible for the age-disaggregated source set. Amendment 31 defined
+state units; the Council's 2026 Amendment 37 recommendation lists a
+Washington-only stock in the federal FMP, and its final federal status should
+be verified before changing the stock-unit crosswalk. No canonical values were
+imported. See `source_reviews/noaa_quillback_rockfish_oregon_2021.md` and
+`source_reviews/noaa_quillback_rockfish_washington_2021.md`.
 
 NOAA Stock SMART 10383 is the Gulf of Mexico golden tilefish unit, assessed in SEDAR 22 with data through 2009. Appendix B provides age counts conditional on length bins, so age-specific inputs can be reconstructed from the source compositions and removals, but they are not direct catch-at-age or index-at-age series. The case is eligible for source curation with a major advice caveat: Stock SMART records partial acceptance for status determinations only, and the Gulf SSC found the model unsuitable for useful management advice. See `source_reviews/noaa_golden_tilefish_gulf_sedar22_2011.md`.
 
