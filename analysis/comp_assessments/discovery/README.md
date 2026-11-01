@@ -1218,11 +1218,13 @@ inputs and population outputs were not reported. It is screened ineligible for
 the age-disaggregated comparison set. See
 `source_reviews/ices_blue_ling_5b6712_2026.md`.
 
-The current discovery snapshot as of 2026-11-01 contains 905 inventory rows: 107 matched, 483 provisionally new, 29 ambiguous, and 286 identity-unreviewed. Across all rows, 155 are eligible, 453 ineligible, and 297 unresolved; 719 are screened, none is in progress, and 186 are not started. The organization and source-region breakdowns are in `inventory_progress.csv`.
+The current discovery snapshot as of 2026-11-01 contains 905 inventory rows: 107 matched, 503 provisionally new, 29 ambiguous, and 266 identity-unreviewed. Across all rows, 155 are eligible, 473 ineligible, and 277 unresolved; 739 are screened, none is in progress, and 166 are not started. The organization and source-region breakdowns are in `inventory_progress.csv`.
 
 The DFO WCVI Barkley Sockeye row is screened ineligible: its 2024 update uses salmon run reconstruction and stock-recruit methods, but does not verify the age-structured catch, survey, biological, and mortality inputs or N-at-age/F-at-age outputs needed for tinyAM. See discovery/source_reviews/dfo_wcvi_barkley_sockeye_2024.md.
 
-The crosswalk has 498 linked units (100 canonical stock units and 398 candidate units) and 378 unlinked inventory rows in `inventory_units.csv`.
+The crosswalk has 521 linked units (100 canonical stock units and 421 candidate units), representing 550 inventory rows; 355 rows remain unlinked in `inventory_units.csv`.
+
+NOAA Stock SMART IDs 15110, 15113–15114, and 15130–15138 represent 12 single-species Guam Island reef-fish units assessed with length-based GTG-LBSPR methods. Three species have a later 2023 PIFSC management-strategy analysis using the same length-based method. All 12 are screened ineligible for age-disaggregated curation; the Guam bottomfish management-unit complex is a separate stock group. See `source_reviews/noaa_guam_reef_fish_2019.md`.
 
 The 2026 ICES Advice and Scenarios Database identifies West Greenland inshore cod (`cod.21.1.isc`), West Greenland offshore cod (`cod.21.1.osc`), and East Greenland–Iceland offshore cod (`cod.21.27.1.14`) as separate assessment components. The advice notes that the NAFO Subarea 1 fishery can mix catches from these stocks; that does not make them one stock unit. They are crosswalked to three separate provisional candidates, distinct from the existing Northeast Arctic and Northwest Atlantic cod records. Their age-input and age-specific output screens remain unresolved. See `source_reviews/ices_greenland_cod_identity_2026.md` and the gitignored cache `source_cache/discovery_ices_greenland_cod_2026/`.
 
