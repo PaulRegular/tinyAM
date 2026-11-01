@@ -56,7 +56,7 @@ stopifnot(nrow(candidates) == 2L,
   nrow(nw) == 1L, nw$new == 84L, nw$excluded == 46L,
   nw$eligibility_unresolved == 64L, nw$screening_complete == 92L,
   nw$screening_not_started == 46L,
-  nrow(units) == 498L, sum(units$inventory_entries) == 527L,
-  sum(!is.na(units$candidate_unit_id) & nzchar(units$candidate_unit_id)) == 398L)
+  nrow(units) == 501L, sum(units$inventory_entries) == 530L,
+  sum(!is.na(units$candidate_unit_id) & nzchar(units$candidate_unit_id)) == 401L)
 
 cat('NOAA Washington/Oregon copper 2021 source-integrity, exclusion, and no-import checks passed.\n')
