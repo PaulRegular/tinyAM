@@ -3,6 +3,8 @@
 * Group fishery diagnostics under Fisheries: one complete page per fleet,
   followed by Aggregate fishery. Unlabeled catches remain stock-wide; aggregate
   residuals are not invented for multi-fleet fits.
+* Separate inferred count-unit labels from source notes in translated reporting
+  references, keeping herring abundance labels concise without changing values.
 * Add mgcv thin-plate/cubic `s()` and age-year `t2()` smooths to F means and
   catchability formulas, including fleet/survey scopes. Estimate normalized
   Gaussian smooth penalties jointly, retain training bases for prediction,

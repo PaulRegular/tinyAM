@@ -27,6 +27,29 @@
   }), sep = "\034"))
 }
 
+# Units describe the scale; source qualifications belong in notes. Only known
+# plain counts with an explicit inference annotation are separated here.
+.reference_count_units <- function(data) {
+  if(is.null(data$unit))return(data)
+  original <- as.character(data$unit)
+  annotation <- "\\s*(\\(\\s*inferred\\b|;\\s*inferred\\b).*"
+  tagged <- !is.na(original) & grepl(annotation,original,ignore.case=TRUE,perl=TRUE)
+  if(!any(tagged))return(data)
+  prefix <- trimws(sub(annotation,"",original,ignore.case=TRUE,perl=TRUE))
+  scale <- tinyAM:::.unit_scale(prefix,"numbers")
+  i <- which(tagged & is.finite(scale))
+  if(!length(i))return(data)
+  labels <- c("1"="fish","1000"="thousand fish","1e+06"="million fish","1e+09"="billion fish")
+  data$unit <- original
+  data$unit[i] <- unname(labels[as.character(scale[i])])
+  if(is.null(data$notes))data$notes <- rep(NA_character_,nrow(data))
+  data$notes <- as.character(data$notes)
+  notes <- data$notes[i]
+  notes[is.na(notes)] <- ""
+  data$notes[i] <- paste0(notes,ifelse(nzchar(notes)," ",""),"Unit provenance: ",original[i])
+  data
+}
+
 .fill_tam_table <- function(template, source) {
   if (!nrow(template) || !nrow(source)) {
     return(template)
@@ -213,7 +236,7 @@ database_to_tam_ref <- function(assessment_id, outputs, obs = NULL, years = NULL
       value <- as.character(rows[[name]])
       if (any(!is.na(value) & nzchar(value))) out[[name]] <- value
     }
-    out
+    .reference_count_units(out)
   }
 
   measure_map <- c(
