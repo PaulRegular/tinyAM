@@ -1,12 +1,12 @@
 # Assessment discovery inventory
 
 `candidates.csv` is a discovery register, not a canonical assessment table. Its
-rows are source-list entries, some reviewed and others not yet reviewed: they are not
-automatically verified distinct new stock units, eligible age-structured assessments,
-or a selected import batch. Screening, identity matching, source verification and
-exclusion decisions remain outstanding. `candidate_unit_id` links inventory rows only
-when reviewed evidence confirms a shared stock unit; blank values are unresolved or
-not yet crosswalked. Do not overwrite the register after review has begun.
+rows are source-list entries and are not automatically verified distinct new stock
+units, eligible age-structured assessments, or a selected import batch. Some rows
+have been screened; others still need identity reconciliation or source review.
+`candidate_unit_id` links inventory rows only when reviewed evidence confirms a
+shared stock unit; blank values are unresolved or not yet crosswalked. Do not
+overwrite the register after review has begun.
 
 The initial snapshot was retrieved on 2026-10-28 from:
 
@@ -27,10 +27,10 @@ the rows already linked to a stock or candidate unit.
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 63 | 18 | 98 | 21 | 147 | 31 | 199 | 0 | 0 |
 | ICES | 274 | 59 | 212 | 3 | 0 | 60 | 185 | 29 | 274 | 0 | 0 |
-| NOAA | 432 | 28 | 265 | 9 | 130 | 76 | 177 | 179 | 304 | 0 | 128 |
-| **Total** | **905** | **107** | **540** | **30** | **228** | **157** | **509** | **239** | **777** | **0** | **128** |
+| NOAA | 432 | 28 | 279 | 9 | 116 | 80 | 187 | 165 | 318 | 0 | 114 |
+| **Total** | **905** | **107** | **554** | **30** | **214** | **161** | **519** | **225** | **791** | **0** | **114** |
 
-The crosswalk currently links 557 distinct unit keys across 587 inventory rows: 100 canonical stock units and 457 candidate units. Candidate units include 455 with new identity status, one ambiguous identity, and one mixed identity. Of the new-status candidate units, 55 are eligible, 336 ineligible, 61 unresolved, and three have mixed eligibility. A further 318 inventory rows have no unit crosswalk yet.
+The crosswalk currently links 565 distinct unit keys across 601 inventory rows: 100 canonical stock units and 465 candidate units. Candidate units include 463 with new identity status, one ambiguous identity, and one mixed identity. Of the new-status candidate units, 59 are eligible, 340 ineligible, 61 unresolved, and three have mixed eligibility. A further 304 inventory rows have no unit crosswalk yet.
 
 The progress summary has 75 organization-region
 rows. Row-level status and unit-level deduplication are intentionally reported
@@ -1332,3 +1332,6 @@ NOAA Stock SMART 10448 is the Bank rockfish - California unit. Its 2010 accepted
 ICES saithe `pok.27.7-10` was last assessed in 2025 as a category-5 stock. The current SAG export contains only aggregate landings and discards for 2003–2024; it does not publish age-disaggregated inputs or age-specific population outputs. The advice limit of 146 tonnes for 2026–2028 is not a fitted population output. The current unit is screened ineligible for the age-disaggregated source set. See `source_reviews/ices_saithe_subareas_7_10_2025.md`.
 
 The ICES ray and dogfish screen adds eight distinct, new units. Current 2025-2026 methods are SPiCT or survey-trend/length-indicator assessments; linked Standard Graphs pages report aggregate biomass, catch, landings and fishing-pressure summaries, with no age-indexed outputs. These units are ineligible for the age-disaggregated comparison set based on the reviewed assessment methods and published tables. This does not imply that age samples are unavailable for other research. See discovery/source_reviews/ices_ray_method_group_2026.md.
+
+
+Recent NOAA screens also cover Atlantic wolffish (Stock SMART 11562), offshore hake (10524), and Pacific grenadier (10526). Wolffish and offshore hake were excluded because reviewed latest sources do not provide the candidate units with age-disaggregated assessment inputs and outputs. Pacific grenadier is the current PFMC species unit, but the latest detailed 2010 accepted DB-SRA is for an aggregate grenadier complex; species-specific catch-at-age and population-at-age outputs are unavailable. See `source_reviews/noaa_atlantic_wolffish_us.md`, `source_reviews/noaa_offshore_hake_us.md`, and `source_reviews/noaa_pacific_grenadier_2010.md`.
