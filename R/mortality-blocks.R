@@ -13,6 +13,8 @@
 }
 
 .prepare_f_blocks <- function(dat) {
+  if (dat$has_fleet) return(.prepare_fleet_blocks(dat))
+  if (is.list(dat$F_settings$age_breaks)) cli::cli_abort("Named-list F age_breaks require catch$fleet labels.")
   settings <- dat$F_settings
   blocks <- if (is.null(settings$age_breaks)) stats::setNames(factor(dat$ages, levels = dat$ages), dat$ages) else
     .explicit_age_blocks(dat$ages, settings$age_breaks, "F")
@@ -30,12 +32,16 @@
 }
 
 .f_state_mean <- function(x, dat) {
+  if (dat$has_fleet) {
+    rows <- match(paste(dat$F_states$fleet, dat$F_states$age), paste(dat$F_columns$fleet, dat$F_columns$age))
+    return(x[, rows, drop = FALSE])
+  }
   starts <- dat$F_settings$age_block_start
   if (is.null(starts)) return(x) # Saved fits prepared before block support.
   x[, match(starts, dat$ages), drop = FALSE]
 }
 
-.f_blocked <- function(dat) !is.null(dat$F_settings$age_breaks)
+.f_blocked <- function(dat) isTRUE(dat$has_fleet) || !is.null(dat$F_settings$age_breaks)
 
 .f_phi <- function(par) {
   "[<-" <- RTMB::ADoverload("[<-")
@@ -57,11 +63,32 @@
     labels <- c(labels, paste("mu_form", colnames(dat$F_mono_modmat)))
   }
   for (term in dat$F_terms) {
-    design <- .q_term_design(term, nrow(dat$pop_data))
+    design <- if (.is_selectivity_curve(term)) {
+      z <- matrix(0, nrow(dat$F_data), 2L * length(term$groups))
+      for (i in seq_along(term$groups)) {
+        rows <- term$groups[[i]]$rows
+        z[rows, 2L * i - 1L] <- 1
+        z[rows, 2L * i] <- dat$F_data[[term$variable]][rows]
+      }
+      z
+    } else .q_term_design(term, nrow(dat$F_data))
+    colnames(design) <- paste0(term$id, ":", seq_len(ncol(design)))
     parts <- cbind(parts, design)
     labels <- c(labels, rep(paste("mu_form", term$id), ncol(design)))
   }
   if (is.null(dim(parts)) || !ncol(parts)) return(invisible(NULL))
+  if (dat$has_fleet) {
+    for (f in dat$fleets) {
+      proxy <- dat; proxy$has_fleet <- FALSE
+      proxy$F_settings$age_blocks <- dat$F_blocks[[f]]
+      rows <- dat$F_data$fleet == f
+      proxy$F_modmat <- parts[rows, , drop = FALSE]
+      proxy$F_mono_modmat <- NULL; proxy$F_terms <- list()
+      proxy$F_block_fleet_label <- f
+      .check_f_blocks(proxy)
+    }
+    return(invisible(NULL))
+  }
   blocks <- dat$F_settings$age_blocks
   for (block in levels(blocks)) {
     ages <- as.numeric(names(blocks)[blocks == block])
@@ -70,7 +97,7 @@
       surface <- matrix(parts[, j], length(dat$years), length(dat$ages))
       values <- surface[, match(ages, dat$ages), drop = FALSE]
       if (any(values != values[, 1L])) cli::cli_abort(c(
-        "F age block {block} (ages {paste(ages, collapse = ', ')}) has a conflicting {labels[j]} component.",
+        "F age block {block} (ages {paste(ages, collapse = ', ')}{if (!is.null(dat$F_block_fleet_label)) paste0('; fleet ', dat$F_block_fleet_label) else ''}) has a conflicting {labels[j]} component.",
         "i" = "Share the mean within this block or refine F_settings$age_breaks."
       ))
     }
@@ -79,6 +106,7 @@
 }
 
 .f_state_rows <- function(dat) {
+  if (dat$has_fleet) return(paste(dat$F_data$fleet, dat$F_data$age) %in% paste(dat$F_states$fleet, dat$F_states$age))
   starts <- dat$F_settings$age_block_start
-  dat$pop_data$age %in% if (is.null(starts)) dat$ages else starts
+  dat$F_data$age %in% if (is.null(starts)) dat$ages else starts
 }

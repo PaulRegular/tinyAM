@@ -178,6 +178,11 @@ ncam <- update(scaa,
       output_file = file.path(output, "tinyAM_dashboard.html"), open_file = FALSE)
     saveRDS(dashboard_key, dashboard_file)
   }
+  # Keep a self-contained companion beside the PDF for sharing both files.
+  if (!file.copy(file.path(output,"tinyAM_dashboard.html"),
+      file.path(root,"tinyAM_dashboard.html"),overwrite=TRUE)) {
+    cli::cli_abort("Could not copy the companion dashboard beside the cheatsheet PDF.")
+  }
   if (mode == "dashboard") return(invisible(fits))
 # ---- tidy ----
 # out <- tidy_tam(scaa, sam, ncam)

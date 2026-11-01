@@ -43,6 +43,10 @@ if ("age_block" %in% names(f_states)) {
   labels <- labels[order(as.numeric(sub("-.*", "", labels)), labels)]
   f_states$age <- factor(f_states$age, levels = labels)
 }
+if ("fleet" %in% names(f_states)) {
+  values <- paste(f_states$fleet, f_states$age, sep = " / ")
+  f_states$age <- factor(values, levels = unique(values))
+}
 plot_age_year(f_states, x = ~year, color = ~model, legendgroup = ~model, colors = cols, frame = ~age, ylab = "Latent F (f)")
 ```
 
@@ -79,7 +83,26 @@ plot_process_residuals(tabs, component = "NFM")
 ```{r, results = "asis"}
 for (term in names(formula_effects$levels)) {
   effect <- formula_effects$levels[[term]]
+  if (all(effect$process == "smooth")) next
   rendered <- knitr::knit_child("one_formula_effect.Rmd", quiet = TRUE)
+  cat(rendered, sep = "\n")
+}
+```
+
+```{r, results = "asis"}
+for (term in names(formula_effects$smooths)) {
+  effect <- formula_effects$smooths[[term]]
+  variables <- strsplit(unique(effect$variable), ",", fixed = TRUE)[[1L]]
+  rendered <- knitr::knit_child(text = c(
+    paste("###", tinyAM:::.formula_effect_label(effect)), "", "```{r}",
+    'd <- plot_rows(effect, "est")',
+    'if (length(variables) == 1L) {',
+    '  d <- d[!duplicated(d[c("model", variables)]), ]',
+    '  plot_trend(d, x = reformulate(variables), xlab = tools::toTitleCase(variables),',
+    '    ylab = unique(d$unit), color = ~model, legendgroup = ~model, colors = cols)',
+    '} else {',
+    '  plot_age_year(d, ylab = unique(d$unit), color = ~model, legendgroup = ~model, colors = cols)',
+    '}', "```", ""), quiet = TRUE)
   cat(rendered, sep = "\n")
 }
 ```

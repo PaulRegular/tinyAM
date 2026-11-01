@@ -1,3 +1,32 @@
+# tinyAM 0.1.1.9001
+
+* Group fishery diagnostics under Fisheries: one complete page per fleet,
+  followed by Aggregate fishery. Unlabeled catches remain stock-wide; aggregate
+  residuals are not invented for multi-fleet fits.
+* Separate inferred count-unit labels from source notes in translated reporting
+  references, keeping herring abundance labels concise without changing values.
+* Add mgcv thin-plate/cubic `s()` and age-year `t2()` smooths to F means and
+  catchability formulas, including fleet/survey scopes. Estimate normalized
+  Gaussian smooth penalties jointly, retain training bases for prediction,
+  and report complete smooth functions with joint uncertainty. Flag weak
+  separation from IID/AR1 F residuals; intrinsic F random walks are excluded.
+* Retire experimental `warped_normal()` support before release. Its code and
+  diagnostic history remain at revision `417e2636`; historical caches are retained.
+* Add WHAM-style `double_logistic()` curves for F and q. Report maximum realized
+  fleet F without normalizing selectivity peaks.
+  Keep likelihood calculations stable when selectivity is extremely small.
+* Add `for_fleet()` and `for_survey()` for group-specific F means and
+  catchability relationships within one formula, alongside shared effects.
+  Scoped curves, Gaussian effects and abundance powers retain their own groups.
+* Add optional catch fleets with independent F surfaces on one shared population,
+  shared or fleet-specific correlation groups and F age blocks, and typed
+  fleet-specific catch weights. Total F drives population survival.
+* F mean, process-SD and correlation covariates are supplied in the catch table;
+  recruitment, N and M covariates remain in the population table.
+* Expand reproducible curve/smooth recovery and multi-fleet assessment trials.
+  Default-start failures and weak smoothing identification remain
+  documented limitations; these flexible combinations are experimental.
+
 # tinyAM 0.1.1.9000
 
 * Add optional F age blocks with explicit closing boundaries. Blocks share

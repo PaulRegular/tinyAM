@@ -147,6 +147,8 @@ process densities and integrate out of the historical likelihood.
 \item Logistic curves have \verb{q_a50_*} midpoints and positive \verb{log_q_slope_*}
 coefficients, initialized from each group's observed coordinate range.
 Names identify terms, groups and unique states for warm starts.
+\code{\link[=double_logistic]{double_logistic()}} has ascending/descending midpoints and log
+positive scales. There is no midpoint ordering or peak normalization.
 }
 }
 

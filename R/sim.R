@@ -135,6 +135,8 @@
 #' are clipped to zero before generating predictions or observations. This
 #' projects the normal approximation onto the feasible increments and adds
 #' probability at zero; it is not a boundary-corrected posterior sampler.
+#' This can put probability at the asymptotic or Gaussian endpoint; normal
+#' uncertainty approximations near either boundary require particular care.
 #'
 #' The simulation has two orthogonal controls:
 #'

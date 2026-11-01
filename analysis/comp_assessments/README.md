@@ -55,7 +55,8 @@ temporary dashboard comparing tinyAM with the Official assessment. Observations,
 years, ages, fit, background and the `assessment` comparison context remain in
 your workspace. Each stock script retains its visible `fit_tam()` call. Observations are a
 `tam_data` list; population formula columns belong in `obs$pop_covariates`.
-Catch/index covariates describe observation SD and q, while weight, maturity
+Catch covariates also describe F means, process SDs and correlation groups;
+index covariates describe observation SD and q, while weight, maturity
 and spawning timing stay in their biological tables.
 
 Edit and rerun the stock script's Model section, or update the current fit. Then

@@ -24,6 +24,13 @@
 #'          Precomputed assessment references may be mixed with tinyAM fits; they are
 #'          not refittable TAM objects. Supply `background` to add a page
 #'          describing assessment assumptions and translation choices.
+#'          Fisheries is a dropdown with one page per declared catch fleet,
+#'          followed by Aggregate fishery. Fleet pages show yield, catch and F
+#'          at age, and observation residuals. Unlabeled catch models appear
+#'          only on the aggregate page; they are not allocated among fleets.
+#'          Without fleets, Aggregate fishery retains all single-fishery
+#'          diagnostics. With fleets, it shows total yield; residuals are
+#'          assessed separately within each fleet.
 #'          The Parameters menu separates Fixed and Random pages. Fixed plots
 #'          group similar quantities, with initial abundance shown separately.
 #'          Stock-recruit models add a relationship page with parent-year pairs,
@@ -226,6 +233,46 @@ vis_tam.tam_retro <- function(..., model_list = NULL, interval = 0.95, output_fi
   if (open_file) utils::browseURL(output_file)
 }
 
+# Navigation and reported-yield preparation; plots remain public plot functions.
+.fishery_pages <- function(catch) {
+  fleet <- if(is.null(catch$fleet))character() else if(is.factor(catch$fleet))
+    levels(droplevels(catch$fleet)) else unique(as.character(catch$fleet))
+  fleet <- fleet[!is.na(fleet) & nzchar(fleet)]
+  data.frame(title=c(fleet,"Aggregate fishery"),fleet=c(fleet,NA_character_),
+    id=c(if(length(fleet))paste0("fishery-fleet-",seq_along(fleet)) else character(),"fishery-aggregate"),
+    kind=c(rep("fleet",length(fleet)),"aggregate"),stringsAsFactors=FALSE)
+}
+
+.fleet_yield_data <- function(pop,fleet) {
+  annual <- function(data,column) {
+    if(!is.data.frame(data) || !all(c("fleet","year","model","est") %in% names(data)))return(NULL)
+    data <- data[which(as.character(data$fleet) == fleet),,drop=FALSE]
+    if(!nrow(data))return(NULL)
+    groups <- split(seq_len(nrow(data)),paste(data$year,as.character(data$model),sep="\r"))
+    do.call(rbind,lapply(groups,function(i) {
+      d <- data[i,,drop=FALSE]
+      out <- d[1L,intersect(c("year","model","unit","is_proj","fold","horizon"),names(d)),drop=FALSE]
+      # Unknown references/all-missing years stay missing; genuine zeros remain.
+      out[[column]] <- if(all(is.finite(d$est)))sum(d$est) else NA_real_
+      if(column == "obs" && isTRUE(out$is_proj))out$obs <- NA_real_
+      out
+    }))
+  }
+  observed <- annual(pop$yield_by_fleet,"obs")
+  predicted <- annual(pop$yield_pred_by_fleet,"pred")
+  if(is.null(observed) && is.null(predicted))return(NULL)
+  if(is.null(observed)) {predicted$obs <- NA_real_; return(predicted)}
+  if(is.null(predicted)) {observed$pred <- NA_real_; return(observed)}
+  out <- merge(observed,predicted,by=c("year","model"),all=TRUE,suffixes=c(".obs",".pred"))
+  for(name in intersect(names(observed),names(predicted))) {
+    if(name %in% c("year","model"))next
+    a <- out[[paste0(name,".pred")]]; b <- out[[paste0(name,".obs")]]
+    out[[name]] <- ifelse(is.na(a),b,a)
+    out[[paste0(name,".pred")]] <- out[[paste0(name,".obs")]] <- NULL
+  }
+  out
+}
+
 .fixed_parameter_groups <- function(data) {
   if (!is.data.frame(data) || !nrow(data)) {
     return(list())
@@ -233,19 +280,20 @@ vis_tam.tam_retro <- function(..., model_list = NULL, interval = 0.95, output_fi
   par <- data$par
   category <- rep("Other", nrow(data))
   category[grepl("^sd_", par)] <- "Process SDs"
+  category[grepl("^sd_(q|mu_F)_.*smooth_",par)] <- "Smoothing SDs"
   category[grepl("^sd_beta_", par)] <- "Process SD coefficients"
   category[par %in% c("sd_catch", "sd_index")] <- "Observation SDs"
   category[par %in% c("q", "logit_q", "q_power")] <- "Catchability"
-  category[par %in% "dq" | grepl("^q_(a50|slope)_", par)] <- "Catchability curves"
+  category[par %in% "dq" | grepl("^q_(a50|slope|scale|smooth)_", par)] <- "Catchability curves"
   category[grepl("^mu_", par)] <- "Mortality means"
   category[par == "mu_n"] <- "Cohort means"
-  category[par == "dmu_f" | grepl("^F_(a50|slope)_", par)] <- "Mortality means"
+  category[par == "dmu_f" | grepl("^F_(a50|slope|scale)_", par)] <- "Mortality means"
   category[grepl("^(phi_|rho_)", par)] <- "Correlations"
   category[par %in% c("rec_beta", "sr_alpha", "sr_beta")] <- "Recruitment"
   category[par %in% c("r0", "r_init", "n0")] <- "Initial abundance"
   category[par == "d_n0"] <- "Initial steps"
   category <- factor(category, levels = c(
-    "Process SDs", "Process SD coefficients", "Observation SDs",
+    "Process SDs", "Smoothing SDs", "Process SD coefficients", "Observation SDs",
     "Catchability", "Catchability curves", "Mortality means", "Cohort means", "Correlations",
     "Recruitment", "Initial abundance", "Initial steps", "Other"
   ))
@@ -265,5 +313,19 @@ vis_tam.tam_retro <- function(..., model_list = NULL, interval = 0.95, output_fi
   variable <- unique(effect$variable)
   by <- unique(effect$by)
   if (!is.na(by)) variable <- paste(variable, "by", by)
-  paste0(component, " ", process, " (", gsub("_", " ", variable, fixed = TRUE), ")")
+  label <- paste0(component, " ", process, " (", gsub("_", " ", variable, fixed = TRUE), ")")
+  scope <- intersect(if (any(effect$component %in% c("q","sd_index")))
+    c("survey","fleet") else c("fleet","survey"),names(effect))
+  if (length(scope)) {
+    values <- unique(effect[[scope[1L]]]); values <- values[!is.na(values)]
+    if (length(values) == 1L) label <- paste0(label," [",values,"]")
+  }
+  if (identical(process,"smooth")) {
+    group <- unique(effect$group)
+    shown <- unique(unlist(effect[scope],use.names=FALSE))
+    if (length(group) == 1L && !is.na(group) && group != "all" && !group %in% shown) {
+      label <- paste0(label," [",group,"]")
+    }
+  }
+  label
 }

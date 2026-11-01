@@ -30,7 +30,7 @@ Plain lists can also be passed directly to \code{\link[=prepare_tam]{prepare_tam
 }
 \details{
 The required tables are \code{catch}, \code{index}, \code{weight} and \code{maturity}.
-An optional \code{pop_covariates} table supplies columns used by N, F and M
+An optional \code{pop_covariates} table supplies columns used by N and M
 formulas, including recruitment covariates and supplied M assumptions.
 It has one row per input year and age, with \code{year} and \code{age} keys and no
 required \code{obs} column. Values may be missing where a formula does not use
@@ -46,6 +46,10 @@ Catch/index observation-SD covariates and survey catchability covariates stay
 in their respective observation tables. Weight, maturity and spawning timing
 stay in the biological tables. Validation does not add the class, and inputs
 are checked again during preparation after any edits.
+F mean, process-SD and correlation-group covariates belong in \code{catch},
+including rows with missing catch. The response \code{obs} cannot predict F.
+Optional \code{catch$fleet} identifies separate fisheries on a shared population;
+each fleet requires a complete year-age grid, using \code{NA} for missing catches.
 
 The optional \code{weight$type} key distinguishes \code{"stock"} and \code{"catch"}
 average individual weights. Stock weights are required and determine biomass
@@ -53,6 +57,9 @@ and SSB. Catch weights determine yield and catch targets; if absent, stock
 weights serve both purposes. Each supplied type needs the complete same
 year-age grid, including retained biological ages beyond a modeled plus age.
 Missing catch-weight cells never fall back individually to stock weights.
+Optional \code{weight$fleet} applies only to catch weights: stock rows use \code{NA}.
+Supply either shared catch weights (no fleet labels), or complete catch-weight
+grids for every declared catch fleet. Shared and fleet-specific rows cannot mix.
 For a prepared wide table with \code{stock} and \code{catch} columns, the tidy form is:
 
 \if{html}{\out{<div class="sourceCode r">}}\preformatted{tidyr::pivot_longer(wide, c(stock, catch),

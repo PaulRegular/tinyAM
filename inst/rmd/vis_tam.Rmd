@@ -154,7 +154,7 @@ table_link <- function(x, table_name = NULL, download_text = "Download table") {
 ```{r background, child = if (is.null(background)) NULL else "background.Rmd"}
 ```
 
-```{r fishery, child = "fishery.Rmd"}
+```{r fisheries, child = "fisheries.Rmd"}
 ```
 
 ```{r surveys, child = "surveys.Rmd"}

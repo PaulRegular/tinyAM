@@ -53,8 +53,9 @@
 #' M age block. Use a categorical age column for separate trajectories;
 #' numeric `by = age` instead multiplies one shared trajectory by age.
 #'
-#' Initially, one temporal mean term is permitted per F/M surface, with IID
-#' residuals or M residuals off. Structured means with RW/AR1 residuals are
+#' One temporal mean term is permitted on each set of applicable F/M rows,
+#' with IID residuals or the residual process off. Disjoint [for_fleet()] scopes
+#' can therefore have different temporal means. Structured means with RW/AR1 residuals are
 #' rejected pending evidence that both temporal components can be separated,
 #' except for the age-group M random slopes described below.
 #' Two estimated IID variances on the same states are also rejected.
@@ -184,12 +185,13 @@ logistic <- function(x, by = NULL) .formula_marker_error("logistic")
   ""
 }
 
-.parse_q_formula <- function(formula, data, fixed_design = stats::model.matrix) {
+.parse_q_formula <- function(formula, data, fixed_design = stats::model.matrix, scope = NULL) {
   if (!inherits(formula, "formula")) cli::cli_abort("{.arg q_form} must be a formula.")
+  if (.contains_scope(formula)) return(.scoped_q_design(formula,data,fixed_design,scope))
   if (any(c("bh", "ricker") %in% all.names(formula))) {
     cli::cli_abort("bh() and ricker() are restricted to rec_settings$mu_form.")
   }
-  special <- c("iid", "rw", "ar1", "logistic", "power", "|")
+  special <- c("iid", "rw", "ar1", "logistic", "double_logistic", "power", "|", "s", "t2", "te", "ti")
   contains <- function(x) {
     is.call(x) && (.formula_call_name(x) %in% special ||
       any(vapply(as.list(x)[-1L], contains, logical(1))))
@@ -222,6 +224,11 @@ logistic <- function(x, by = NULL) .formula_marker_error("logistic")
     }
     type <- .formula_call_name(x)
     if (type %in% special) {
+      if (type %in% c("te","ti")) cli::cli_abort("Use supported s() or t2(age, year) smooths; te() and ti() are not supported.")
+      if (type %in% c("s","t2")) {
+        specs[[length(specs)+1L]] <<- .smooth_spec(x,environment(formula))
+        return(NULL)
+      }
       if (type == "|") {
         if (length(x) != 3L || !identical(x[[2L]], 1)) {
           cli::cli_abort("Only random intercept syntax {.code (1 | group)} is supported.")
@@ -236,6 +243,7 @@ logistic <- function(x, by = NULL) .formula_marker_error("logistic")
           rw = rw,
           ar1 = ar1,
           logistic = logistic,
+          double_logistic = double_logistic,
           power = power
         )
         x[[1L]] <- as.name(type)
@@ -281,7 +289,18 @@ logistic <- function(x, by = NULL) .formula_marker_error("logistic")
   if (length(powers) > 1L) cli::cli_abort("Use one additive power() term in q_form.")
   if (length(powers)) design$q_power <- .make_q_power(powers[[1L]], data)
   specs <- Filter(function(x) x$type != "power", specs)
+  smooth_specs <- Filter(function(x) x$type == "smooth",specs)
+  specs <- Filter(function(x) x$type != "smooth",specs)
   terms <- lapply(specs, .make_q_term, data = data)
+  if (length(smooth_specs)) {
+    smooths <- .compile_smooths(smooth_specs,data)
+    design$q_modmat <- cbind(design$q_modmat,smooths$fixed)
+    terms <- c(terms,smooths$terms)
+    rows <- if (is.null(data$is_proj)) rep(TRUE,nrow(data)) else !data$is_proj
+    if (!is.null(data$obs)) rows <- rows & is.finite(data$obs) & data$obs > 0
+    fixed <- design$q_modmat[rows,,drop=FALSE]
+    if (ncol(fixed) && qr(fixed)$rank < ncol(fixed)) cli::cli_abort("Smooth null-space columns duplicate ordinary fixed terms. Remove redundant linear effects, intercepts or overlapping smooths.")
+  }
   ids <- vapply(terms, `[[`, character(1), "id")
   if (anyDuplicated(ids)) cli::cli_abort("Duplicate structured catchability terms are not identifiable.")
   design$q_terms <- stats::setNames(terms, ids)
@@ -299,8 +318,9 @@ logistic <- function(x, by = NULL) .formula_marker_error("logistic")
     (is.numeric(x) && all(x == floor(x))))) {
     cli::cli_abort("RW/AR1 coordinates must be integer numeric values or ordered factors.")
   }
-  if (spec$type == "logistic" && !is.numeric(x)) {
-    cli::cli_abort("logistic() {.arg x} must be numeric.")
+  curve <- .is_selectivity_curve(spec)
+  if (curve && !is.numeric(x)) {
+    cli::cli_abort("{spec$type}() {.arg x} must be numeric.")
   }
   by <- if (is.null(spec$by)) rep("all", nrow(data)) else data[[spec$by]]
   if (!is.atomic(by) || !is.null(dim(by)) || anyNA(by) ||
@@ -308,8 +328,8 @@ logistic <- function(x, by = NULL) .formula_marker_error("logistic")
     cli::cli_abort("Structured {.arg by} must have finite, non-missing values.")
   }
   numeric_by <- !is.null(spec$by) && is.numeric(by)
-  if (numeric_by && spec$type == "logistic") {
-    cli::cli_abort("logistic() only supports categorical {.arg by} groups.")
+  if (numeric_by && curve) {
+    cli::cli_abort("{spec$type}() only supports categorical {.arg by} groups.")
   }
   multiplier <- if (numeric_by) by else rep(1, nrow(data))
   if (numeric_by) by <- rep("all", nrow(data))
@@ -323,13 +343,14 @@ logistic <- function(x, by = NULL) .formula_marker_error("logistic")
     past <- rows[historical[rows]]
     support <- rows[observed[rows] & multiplier[rows] != 0]
     if (!length(support)) cli::cli_abort("{id}: group {group} has no informative historical observations.")
-    if (spec$type == "logistic") {
-      if (length(unique(x[support])) < 3L) {
-        cli::cli_abort("logistic() needs at least three observed x values per group.")
+    if (curve) {
+      required <- switch(spec$type, logistic = 3L, double_logistic = 5L)
+      if (length(unique(x[support])) < required) {
+        cli::cli_abort("{spec$type}() needs at least {required} observed x values per group.")
       }
       return(list(
         group = group, rows = rows, midpoint = stats::median(x[support]),
-        slope = 4 / diff(range(x[support]))
+        slope = 4 / diff(range(x[support])), width = diff(range(x[support]))
       ))
     }
     if (temporal && is.numeric(x)) {
@@ -361,13 +382,10 @@ logistic <- function(x, by = NULL) .formula_marker_error("logistic")
   spec$id <- id
   spec$groups <- groups
   spec$multiplier <- multiplier
-  spec$parameter <- if (spec$type == "logistic") NULL else paste0("eta_q_", id)
-  spec$sd_parameter <- if (is.null(spec$sd) && spec$type != "logistic") paste0("log_sd_q_", id) else NULL
+  spec$parameter <- if (curve) NULL else paste0("eta_q_", id)
+  spec$sd_parameter <- if (is.null(spec$sd) && !curve) paste0("log_sd_q_", id) else NULL
   spec$phi_parameter <- if (spec$type == "ar1" && is.null(spec$phi)) paste0("logit_phi_q_", id) else NULL
-  if (spec$type == "logistic") {
-    spec$a50_parameter <- paste0("q_a50_", id)
-    spec$slope_parameter <- paste0("log_q_slope_", id)
-  }
+  if (curve) spec <- .curve_parameter_names(spec)
   spec
 }
 
@@ -375,13 +393,8 @@ logistic <- function(x, by = NULL) .formula_marker_error("logistic")
   parameters <- list()
   for (term in terms) {
     labels <- vapply(term$groups, `[[`, character(1), "group")
-    if (term$type == "logistic") {
-      parameters[[term$a50_parameter]] <- stats::setNames(
-        vapply(term$groups, `[[`, numeric(1), "midpoint"), labels
-      )
-      parameters[[term$slope_parameter]] <- stats::setNames(log(
-        vapply(term$groups, `[[`, numeric(1), "slope")
-      ), labels)
+    if (.is_selectivity_curve(term)) {
+      parameters <- c(parameters, .curve_parameters(term))
     } else {
       states <- unlist(lapply(term$groups, `[[`, "states"), use.names = FALSE)
       parameters[[term$parameter]] <- stats::setNames(numeric(length(states)), states)
@@ -397,6 +410,7 @@ logistic <- function(x, by = NULL) .formula_marker_error("logistic")
 }
 
 .q_term_design <- function(term, n) {
+  if (term$type == "smooth") return(term$design)
   states <- sum(vapply(term$groups, function(g) length(g$states), integer(1)))
   z <- matrix(0, n, states)
   offset <- 0L
@@ -417,17 +431,10 @@ logistic <- function(x, by = NULL) .formula_marker_error("logistic")
   rows <- !d$is_proj & is.finite(d$obs) & d$obs > 0
   fixed <- dat$q_modmat[rows, , drop = FALSE]
   if (!is.null(dat$q_mono_modmat)) fixed <- cbind(fixed, dat$q_mono_modmat[rows, , drop = FALSE])
-  gaussian <- Filter(function(term) term$type != "logistic", dat$q_terms)
+  gaussian <- Filter(Negate(.is_selectivity_curve), dat$q_terms)
   designs <- lapply(gaussian, .q_term_design, n = nrow(d))
-  for (term in Filter(function(term) term$type == "logistic", dat$q_terms)) {
-    jacobian <- matrix(0, nrow(d), 2L * length(term$groups))
-    for (i in seq_along(term$groups)) {
-      g <- term$groups[[i]]
-      x <- d[[term$variable]][g$rows] - g$midpoint
-      remaining <- 1 - stats::plogis(g$slope * x)
-      jacobian[g$rows, 2L * i - 1L] <- -g$slope * remaining
-      jacobian[g$rows, 2L * i] <- g$slope * x * remaining
-    }
+  for (term in Filter(.is_selectivity_curve, dat$q_terms)) {
+    jacobian <- .curve_jacobian(term, d)
     combined <- cbind(fixed, jacobian[rows, , drop = FALSE])
     scale <- sqrt(colSums(combined^2))
     scale[scale == 0] <- 1
@@ -504,14 +511,21 @@ logistic <- function(x, by = NULL) .formula_marker_error("logistic")
   }, integer(1))))
   increment_offset <- 0L
   for (term in dat$q_terms) {
-    if (term$type == "logistic") {
-      a50 <- par[[term$a50_parameter]]
-      slope <- exp(par[[term$slope_parameter]])
+    if (.is_selectivity_curve(term)) {
       for (i in seq_along(term$groups)) {
         rows <- term$groups[[i]]$rows
-        predictor <- slope[i] * (dat$obs$index[[term$variable]][rows] - a50[i])
-        selectivity[rows] <- selectivity[rows] - RTMB::logspace_add(0, -predictor)
+        selectivity[rows] <- selectivity[rows] + .curve_log_selectivity(
+          dat$obs$index[[term$variable]][rows], par, term, i)
       }
+      next
+    }
+    if (term$type == "smooth") {
+      sd <- exp(par[[term$sd_parameter]])
+      states <- par[[term$parameter]]
+      if (simulate) states[] <- stats::rnorm(length(states),0,sd)
+      nll <- nll - sum(RTMB::dnorm(states,0,sd,log=TRUE))
+      contribution <- contribution + drop(term$design %*% states)
+      simulated[[term$parameter]] <- states
       next
     }
     sd <- if (is.null(term$sd)) exp(par[[term$sd_parameter]]) else term$sd
@@ -572,6 +586,13 @@ logistic <- function(x, by = NULL) .formula_marker_error("logistic")
 }
 
 .q_level_metadata <- function(term) {
+  if (term$type == "smooth") {
+    states <- term$groups[[1L]]$states
+    return(data.frame(term=term$id,process="smooth",variable=term$variable,
+      by=if(is.null(term$by))NA_character_ else term$by,group=term$groups[[1L]]$group,
+      level=states,coordinate=seq_along(states),basis=seq_along(states),
+      is_proj=FALSE,is_fixed=FALSE))
+  }
   all_levels <- unique(unlist(lapply(term$groups, `[[`, "levels"), use.names = FALSE))
   do.call(rbind, lapply(term$groups, function(g) {
     level <- as.character(g$levels)
@@ -586,7 +607,7 @@ logistic <- function(x, by = NULL) .formula_marker_error("logistic")
 }
 
 .tidy_q_effects <- function(fit, interval = .95, increment_report = "eta_q_increments") {
-  terms <- Filter(function(term) term$type != "logistic", fit$dat$q_terms)
+  terms <- Filter(Negate(.is_selectivity_curve), fit$dat$q_terms)
   if (!length(terms)) {
     return(list())
   }
@@ -602,6 +623,7 @@ logistic <- function(x, by = NULL) .formula_marker_error("logistic")
   offset <- 0L
   for (term in terms) {
     tab <- .q_level_metadata(term)
+    if (!is.null(term$scope)) tab[[term$scope$type]] <- term$scope$name
     tab$est <- tab$se <- numeric(nrow(tab))
     tab$est[!tab$is_fixed] <- estimate[[term$parameter]]
     tab$se[!tab$is_fixed] <- error[[term$parameter]]
@@ -619,7 +641,7 @@ logistic <- function(x, by = NULL) .formula_marker_error("logistic")
       out$increments[[term$id]] <- delta
       offset <- offset + nrow(delta)
     }
-    if (!is.null(term$by) && is.numeric(fit$dat$obs$index[[term$by]])) {
+    if (term$type != "smooth" && !is.null(term$by) && is.numeric(fit$dat$obs$index[[term$by]])) {
       d <- fit$dat$obs$index
       rows <- unlist(lapply(term$groups, `[[`, "rows"), use.names = FALSE)
       index <- unlist(lapply(term$groups, `[[`, "index"), use.names = FALSE)
@@ -700,10 +722,11 @@ logistic <- function(x, by = NULL) .formula_marker_error("logistic")
 #' ## Mean fishing mortality
 #'
 #' With `F_settings$process = "off"`, `"iid"` or `"ar1"`, use `~ mono(age)` or
-#' `~ logistic(age)`. Ordinary terms provide the baseline F. One curve is allowed;
-#' its numeric coordinate must be age or an age-derived `pop_covariates` column
-#' constant across years at each age. Categorical `by` groups may have separate
-#' curves. M mean curves are not enabled.
+#' `~ logistic(age)`. Ordinary terms provide the baseline F. One curve is allowed
+#' on each set of applicable rows; [for_fleet()] can give fleets different curves.
+#' Its numeric coordinate must be age or an age-derived catch-table column
+#' constant across years at each age within the fleet. Categorical `by` groups
+#' may have separate curves. M mean curves are not enabled.
 #'
 #' For mono, \eqn{\log\mu_F = X\beta + C d}, where C contains cumulative
 #' indicators and the directly fitted `dmu_f` increments satisfy \eqn{d\geq0}.
@@ -722,7 +745,7 @@ logistic <- function(x, by = NULL) .formula_marker_error("logistic")
 #'
 #' @param x Name of an index column for q: numeric or factor for `mono()`,
 #'   numeric age/size for `logistic()`. F mean curves require numeric age or
-#'   an age-derived population covariate.
+#'   an age-derived catch covariate.
 #' @param by Optional name of a categorical grouping column.
 #' @return A formula marker; calling this function directly raises an error.
 #' @seealso [formula_effects], [prepare_tam()], [make_par()], [tidy_obs_pred()], [tidy_par()], [tinyAM-model]
@@ -866,7 +889,7 @@ mono <- function(x, by = NULL) {
 
 # Mean effects use the same unique-state compiler and densities as q effects.
 .mean_formula_data <- function(dat, component) {
-  d <- .population_data(dat)
+  d <- if (component == "F") .f_data(dat) else .population_data(dat)
   d$is_proj <- dat$is_proj[match(d$year, dat$years)]
   d$obs <- 1
   d
@@ -921,7 +944,8 @@ mono <- function(x, by = NULL) {
   }
   if (carry_terminal && any(future)) {
     terminal <- which(historical & data$year == max(data$year[historical]))
-    data[future, ] <- data[terminal[match(data$age[future], data$age[terminal])], , drop = FALSE]
+    key <- function(d) paste(d$age, if ("fleet" %in% names(d)) d$fleet else "")
+    data[future, ] <- data[terminal[match(key(data[future, , drop = FALSE]), key(data[terminal, , drop = FALSE]))], , drop = FALSE]
   }
   # model.frame resets factor contrasts with xlev; supply training contrasts below.
   for (name in names(data)[vapply(data, is.factor, logical(1))]) attr(data[[name]], "contrasts") <- NULL
@@ -943,7 +967,7 @@ mono <- function(x, by = NULL) {
     }
     forbidden <- function(x) {
       if (!is.call(x)) return(FALSE)
-      .formula_call_name(x) %in% c("iid", "rw", "ar1", "mono", "logistic", "bh", "ricker", "|", "offset") ||
+      .formula_call_name(x) %in% c("iid", "rw", "ar1", "mono", "logistic", "double_logistic", "s", "t2", "te", "ti", "bh", "ricker", "|", "offset", "for_fleet", "for_survey") ||
         any(vapply(as.list(x)[-1L], forbidden, logical(1)))
     }
     if (forbidden(formula[[2L]])) {
@@ -971,34 +995,30 @@ mono <- function(x, by = NULL) {
     out[active, ] <- full
     return(list(matrix = out, terms = list(), mono_matrix = NULL, mono_steps = NULL))
   }
-  .population_data(dat, formula, paste0(component, "_settings$mu_form"))
+  if (component == "F") .f_data(dat, formula, "F_settings$mu_form") else
+    .population_data(dat, formula, paste0(component, "_settings$mu_form"))
   d <- .mean_formula_data(dat, component)
   fixed_design <- if (component == "F") function(formula, data) {
     .fixed_mean_design(formula, data, !data$is_proj, carry_terminal = TRUE,
       label = "F_settings$mu_form")$matrix
   } else stats::model.matrix
-  design <- .parse_q_formula(formula, d, fixed_design)
+  design <- .parse_q_formula(formula, d, fixed_design, scope=if(component == "F") "fleet" else NULL)
   terms <- design$q_terms
-  logistic <- Filter(function(x) x$type == "logistic", terms)
+  has_smooth <- any(vapply(terms,function(x)x$type == "smooth",logical(1)))
+  if (has_smooth && component != "F") cli::cli_abort("Smooth means are supported for F and q only, not M.")
+  if (has_smooth && !dat$F_settings$process %in% c("off","iid","ar1")) cli::cli_abort("Smooth F means require process = 'off', 'iid' or 'ar1'; intrinsic RW/correlated-RW residuals are not supported.")
+  curves <- Filter(.is_selectivity_curve, terms)
   mono <- design$q_mono_steps
   n_mono <- if (is.null(mono)) 0L else length(unique(mono$variable))
-  has_curve <- n_mono + length(logistic) > 0L
+  has_curve <- n_mono + length(curves) > 0L
   if (has_curve) {
-    if (component != "F") cli::cli_abort("M_settings$mu_form does not support catchability curves: mono() and logistic() are enabled for F only.")
-    if (n_mono + length(logistic) != 1L) cli::cli_abort("Use one mono() or logistic() curve in F_settings$mu_form.")
+    if (component != "F") cli::cli_abort("M_settings$mu_form does not support catchability curves; they are enabled for F only.")
+    scoped <- length(design$q_scope_components) > 0L
+    if (!scoped && n_mono + length(curves) != 1L) cli::cli_abort("Use one mono() or parametric selectivity curve in F_settings$mu_form, or disjoint for_fleet() scopes.")
     if (!dat$F_settings$process %in% c("off", "iid", "ar1")) {
       cli::cli_abort("F mean curves require process = 'off', 'iid' or 'ar1'. Static age curves cancel from RW increments.")
     }
-    variable <- if (n_mono) mono$variable[1L] else logistic[[1L]]$variable
-    x <- d[[variable]]
-    if (!is.numeric(x) || any(vapply(split(x, d$age), function(z) length(unique(z)) != 1L, logical(1)))) {
-      cli::cli_abort("F mean curves must use numeric age or an age-derived population covariate constant across years at each age.")
-    }
-    by <- if (n_mono) mono$by[1L] else logistic[[1L]]$by
-    if (!is.null(by) && !is.na(by) && is.numeric(d[[by]])) cli::cli_abort("F mean curves require categorical by groups.")
-    if (!ncol(design$q_modmat)) cli::cli_abort("F mean curves require an ordinary baseline; retain the intercept or supply group baselines.")
-    fixed <- design$q_modmat[!d$is_proj, , drop = FALSE]
-    if (qr(cbind(fixed, 1))$rank > qr(fixed)$rank) cli::cli_abort("F mean curves require an ordinary baseline; retain the intercept or supply group baselines.")
+    .check_f_curve_design(design, d, terms)
     if (n_mono) {
       combined <- cbind(design$q_modmat, design$q_mono_modmat)
       combined <- combined[!d$is_proj, , drop = FALSE]
@@ -1008,9 +1028,8 @@ mono <- function(x, by = NULL) {
   for (i in seq_along(terms)) {
     term <- terms[[i]]
     term$id <- paste(component, term$id, sep = "_")
-    if (term$type == "logistic") {
-      term$a50_parameter <- paste0("F_a50_", term$id)
-      term$slope_parameter <- paste0("log_F_slope_", term$id)
+    if (.is_selectivity_curve(term)) {
+      term <- .curve_parameter_names(term, "F")
     } else {
       term$parameter <- paste0("eta_mu_", term$id)
     }
@@ -1021,7 +1040,7 @@ mono <- function(x, by = NULL) {
   if (length(terms)) names(terms) <- vapply(terms, `[[`, character(1), "id")
   list(
     matrix = design$q_modmat, terms = terms,
-    mono_matrix = design$q_mono_modmat, mono_steps = mono
+    mono_matrix = design$q_mono_modmat, mono_steps = mono, scopes=design$q_scope_components
   )
 }
 
@@ -1042,13 +1061,19 @@ mono <- function(x, by = NULL) {
     return(invisible(NULL))
   }
   settings <- dat[[paste0(component, "_settings")]]
-  if (sum(vapply(terms, function(x) x$type %in% c("rw", "ar1"), logical(1))) > 1L) {
+  temporal <- Filter(function(x) x$type %in% c("rw","ar1"),terms)
+  overlap <- FALSE
+  if (length(temporal) > 1L) for (i in seq_len(length(temporal)-1L)) for (j in seq.int(i+1L,length(temporal))) {
+    rows <- function(x) unlist(lapply(x$groups,`[[`,"rows"),use.names=FALSE)
+    if (length(intersect(rows(temporal[[i]]),rows(temporal[[j]])))) overlap <- TRUE
+  }
+  if (overlap) {
     cli::cli_abort(c("Use one temporal process in the {component} mean.",
       "i" = "Multiple RW/AR1 mean terms may explain the same changes in mortality; their separate contributions have not been validated.",
       "i" = "Retain one rw() or ar1() term and use IID residuals for independent fluctuations."
     ))
   }
-  gaussian <- Filter(function(x) x$type != "logistic", terms)
+  gaussian <- Filter(function(x) !.is_selectivity_curve(x) && x$type != "smooth", terms)
   random_slope <- component == "M" && .M_ar1_random_slope(dat)
   if (length(gaussian) && !settings$process %in% c("iid", "off") && !random_slope) {
     alternative <- paste0(", or use process = 'off' to vary only the ", component, " mean")
@@ -1156,6 +1181,7 @@ mono <- function(x, by = NULL) {
 
 .tidy_formula_effects <- function(fit, interval = .95) {
   all <- list(q = .tidy_q_effects(fit, interval))
+  all$q$smooths <- .tidy_smooth_functions(fit,interval,"q")
   for (component in c("F", "M", "sd_catch", "sd_index")) {
     if (!length(fit$dat[[paste0(component, "_terms")]])) next
     proxy <- fit
@@ -1171,8 +1197,9 @@ mono <- function(x, by = NULL) {
         component, "_increments"
       )
     )
+    if (component == "F") all[[component]]$smooths <- .tidy_smooth_functions(fit,interval,"F")
   }
-  out <- list(levels = list(), increments = list(), contributions = list())
+  out <- list(levels = list(), increments = list(), contributions = list(), smooths = list())
   for (component in names(all)) {
     for (part in names(out)) {
       tables <- lapply(all[[component]][[part]], function(tab) {
@@ -1185,6 +1212,7 @@ mono <- function(x, by = NULL) {
   if (!length(out$levels)) {
     return(list())
   }
+  if (!length(out$smooths)) out$smooths <- NULL
   attr(out, "interval") <- interval
   out
 }
@@ -1196,8 +1224,8 @@ mono <- function(x, by = NULL) {
   design <- .parse_q_formula(formula, data)
   terms <- design$q_terms
   if (!is.null(design$q_mono_modmat) ||
-    any(vapply(terms, function(x) x$type == "logistic", logical(1)))) {
-    cli::cli_abort("{component}_settings$sd_form supports iid(), rw() and ar1(), not catchability curves.")
+    any(vapply(terms, function(x) .is_selectivity_curve(x) || x$type == "smooth", logical(1)))) {
+    cli::cli_abort("{component}_settings$sd_form supports iid(), rw() and ar1(), not catchability curves or smooths.")
   }
   for (i in seq_along(terms)) {
     term <- terms[[i]]

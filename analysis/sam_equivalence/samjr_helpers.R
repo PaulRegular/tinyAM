@@ -74,8 +74,8 @@ samjr_inputs <- function(native) {
   stopifnot(!anyDuplicated(blocks$values))
   starts <- ages[active[c(1L, head(cumsum(blocks$lengths), -1L) + 1L)]]
   breaks <- if (identical(as.numeric(f_states), seq_along(ages) - 1 + 0)) NULL else c(starts, max(ages) + 1L)
-  pop <- transform(grid, M = as.vector(src$natMor), N_sd_key = key(n_keys[match(age, ages)]),
-    F_sd_key = key(f_keys[match(age, ages)]))
+  pop <- transform(grid, M = as.vector(src$natMor), N_sd_key = key(n_keys[match(age, ages)]))
+  catch$F_sd_key <- key(f_keys[match(catch$age, ages)])
   obs <- list(catch = catch, index = index, weight = weight, maturity = maturity, pop_covariates = pop)
   catch_form <- if (length(unique(stats::na.omit(catch$sd_key))) == 1L) ~1 else ~0 + sd_key
   if (any(catch$extra != 0)) catch_form <- update(catch_form, ~. + extra)

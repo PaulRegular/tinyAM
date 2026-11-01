@@ -21,7 +21,7 @@
 #'
 #' `sd_form` in N, F and M settings describes process variation at each age.
 #' For example, `~ age_group` estimates shared SDs for groups supplied in
-#' `data$pop_covariates`; it does not pool abundance or mortality states.
+#' `data$catch` for F or `data$pop_covariates` for N/M; it does not pool states.
 #' Start with few groups and examine their uncertainty.
 #'
 #' Supply `data$maturity$spawn_time` to calculate SSB after a fraction of annual
@@ -45,6 +45,15 @@
 #' biomass and SSB units (thousand fish times kg gives tonnes). F, M and Z
 #' are per year. Survey units can differ, and q need not be dimensionless.
 #' The model never converts inputs automatically; see [as_tam_data()].
+#'
+#' Optional catch fleets share N and M but have separate F surfaces:
+#' \deqn{F^{total}_{t,a}=\sum_f F_{t,a,f},\quad
+#' Z_{t,a}=M_{t,a}+F^{total}_{t,a},\quad
+#' \widehat C_{t,a,f}=N_{t,a}\frac{F_{t,a,f}}{Z_{t,a}}(1-e^{-Z_{t,a}}).}
+#' The selected F process operates independently within fleets; sharing SDs or
+#' correlations does not correlate their innovations. Typed fleet catch weights
+#' determine yield, while stock weights determine biomass and SSB. A stock-wide
+#' projection multiplier scales all fleets, preserving their relative F at age.
 #'
 #' `log_r`, `log_n0`, `log_n`, `log_f`, and `log_m` are absolute latent log
 #' states. Full surfaces `log_N`, `log_F`, and `log_M` are constructed from
@@ -165,7 +174,7 @@
 #' An absent F formula contributes zero. Either M contribution may be absent
 #' (then contributes zero on the log scale), but at least one is required.
 #' The M formula intercept is removed when supplied M is also present.
-#' Design rows use the aligned population-covariate frame for F and M.
+#' F designs use catch covariates; M designs use population covariates.
 #' With AR1 M residuals, one age-defined IID random-slope mean term may be
 #' added. Its group slopes are drawn once and multiplied by a supplied numeric
 #' covariate each year, independently of the AR1 residual matrix. All mean
@@ -174,15 +183,27 @@
 #' are centred on zero. See [formula_effects] for the equations and cautions.
 #'
 #' F mean curves with no residual process or with IID/AR1 residuals add cumulative non-negative log-F
-#' increments for [mono()], or \eqn{\log S(a)} for [logistic()], so the latter
-#' multiplies the ordinary mean F by rising selectivity. These are fixed curve
+#' increments for [mono()], or \eqn{\log S(a)} for [logistic()]
+#' or [double_logistic()]. Parametric curves multiply the
+#' ordinary mean F by selectivity, without extra peak normalization. These are fixed curve
 #' parameters, separate from Gaussian mean effects and latent F states. Static
 #' curves cancel from RW increments and are not supported there.
+#'
+#' Penalized [smooth_formulas] instead contribute
+#' \eqn{\sum_j Z_j u_j} to the log F or q-link predictor. mgcv supplies the
+#' basis and penalty conversion; unpenalized directions join \eqn{X\beta}.
+#' Each penalized block has the proper density
+#' \eqn{u_j\sim N(0,\tau_j^2 I)}, including its normalization. Its SD depends
+#' on the retained basis scale and is distinct from F residual-process SD.
+#' Factor groups and tensor penalties have separate coefficient blocks.
+#' F smooths support off/IID/AR1 residual processes; overlapping mean/residual
+#' patterns require experimental-combination and uncertainty checks.
 #'
 #' With `F_settings$process = "off"`, historical \eqn{F=\mu^F}.
 #' No F latent states, process SD or correlations are created. Projection
 #' controls still scale terminal historical F or solve for total catch.
-#' With an active F process, historical F has one `log_f` state per year and age:
+#' With an active F process, historical F has one `log_f` state per year,
+#' fleet and active age block (separate ages when no blocks are supplied):
 #' \deqn{\log F_{t,a}=\log\mu^F_{t,a}+\eta^F_{t,a},\quad t\le H.}
 #' `log_f` is the left-hand side; `eta_log_f` is the deviation on the right.
 #' For an active M process, `log_m` has one state per selected year and age
@@ -429,10 +450,12 @@
 #' Optional `weight$type` distinguishes complete stock and catch weights
 #' on the same biological year-age grid. Untyped or stock-only inputs
 #' use stock weights for both purposes. In the equations above, W denotes stock
-#' weight. Yield is \eqn{Y_t=\sum_a C_{t,a}W^{catch}_{t,a}}; catch targets use
+#' weight. Yield is \eqn{Y_t=\sum_{a,f} C_{t,a,f}W^{catch}_{t,a,f}}; catch targets use
 #' these same catch weights. Effective plus-group catch weights use the same
 #' abundance shares as stock weights, retaining all biological ages. Projection
-#' averages are calculated separately by age and type over training years.
+#' averages are calculated separately by age, type and fleet over training years.
+#' Stock weights have no fleet label. Catch weights can be one shared complete
+#' grid or complete grids for every catch fleet, never partial fleet overrides.
 #' Stock and catch weights share one optional mass-unit label, conventionally kg.
 #' They describe values without converting them. This adds no parameters and
 #' does not change the catch-number likelihood. `fit$rep$W` remains stock
@@ -448,8 +471,8 @@
 #' @examples
 #' data <- cod_obs
 #' data$maturity$spawn_time <- 0.25
-#' data$pop_covariates$age_group <- factor(
-#'   ifelse(data$pop_covariates$age < 6, "young", "older")
+#' data$catch$age_group <- factor(
+#'   ifelse(data$catch$age < 6, "young", "older")
 #' )
 #' dat <- prepare_tam(data,
 #'   F_settings = list(process = "cor_rw", sd_form = ~age_group),

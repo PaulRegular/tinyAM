@@ -389,7 +389,7 @@ test_that("tam_ref objects accept a Background page", {
   expect_true(any(grepl("<td>Ages</td>", html, fixed = TRUE)))
   expect_true(any(grepl("<td>Weights and maturity</td>", html, fixed = TRUE)))
   expect_true(any(grepl("All assessment assumptions are included.", html, fixed = TRUE)))
-  expect_true(any(grepl("<h1>Fishery</h1>", html, fixed = TRUE)))
+  expect_true(any(grepl("<h1>Aggregate fishery</h1>", html, fixed = TRUE)))
   expect_true(any(grepl("<h1>Trends</h1>", html, fixed = TRUE)))
   expect_true(any(grepl("<h1>Fixed</h1>", html, fixed = TRUE)))
   expect_true(any(grepl("<h1>Random</h1>", html, fixed = TRUE)))

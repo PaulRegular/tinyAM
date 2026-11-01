@@ -27,6 +27,7 @@ Full studies are explicit analyses, not routine CI tests.
 | BH noise and parent-SSB contrast | `simulate_recruitment_noise.R` | `recruitment_cross_report.Rmd` |
 | Rising F means | `f_mean_curve_validation.R` | `f_mean_curve_report.Rmd` |
 | Correlated F and process-SD sharing | `validate_process_expansion.R` | `process_expansion_report.Rmd` |
+| Fleet curves, processes and smooths | `multi_fleet_recovery.R`, `multi_fleet_validation.R` | `multi_fleet_validation.md` |
 
 For example:
 
@@ -60,6 +61,11 @@ where implemented, reject changed source fingerprints. Start a fresh checkpoint
 after substantive source/design changes rather than mixing revisions. Report
 interval coverage separately from numerical success and unavailable uncertainty.
 Generated reports read cached experiments; rendering does not refit models.
+
+The current fleet recovery runner uses `results/multi_fleet/recovery_supported/`.
+Its seven isolated and seven full configurations retain their original seeds.
+The earlier mixed benchmark and retired exploration caches remain historical;
+their provenance is recorded in `multi_fleet_validation.md` and Git history.
 
 Population mean/SD and recruitment covariates now belong in `pop_covariates`.
 Recruitment uses `rec_settings`; parent SSB follows supplied maturity timing,

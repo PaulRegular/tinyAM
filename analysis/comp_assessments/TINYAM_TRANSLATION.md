@@ -1300,6 +1300,13 @@ outcomes, rather than counting them as successful models. Preparing a usable
 
 ## Build the source reporting reference
 
+Recognized count units with explicit inference annotations are displayed with
+their conventional labels (for example, `thousand fish`). The full original
+annotation is retained in reference notes and the canonical source records;
+this cleanup does not convert numerical values. Existing explicit comparison
+conversions still control scale alignment. Unknown and descriptive survey
+units remain unchanged.
+
 Use `database_to_tam_ref()` to translate available canonical `outputs.csv`
 records for the same assessment into a `tam_ref`. Pass the converged tinyAM fit
 as `template` so the comparison list keeps the same output tables, years, ages,

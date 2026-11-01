@@ -3,6 +3,9 @@ library(tinyAM)
 library(plotly)
 
 cod_obs <- tinyAM::cod_obs
+# Preserve the original mean assigned to the model's age-14 plus group.
+cod_obs$catch$F_a_block[cod_obs$catch$age >= 14] <-
+  cod_obs$catch$F_a_block[match(14, cod_obs$catch$age)]
 cod_obs$pop_covariates$collapse <- ifelse(cod_obs$pop_covariates$year %in% 1991:1994, 1, 0)
 # cod_obs$index$q_block <- cut(cod_obs$index$age, c(min(cod_obs$index$age):6, max(cod_obs$index$age) + 1), right = FALSE)
 cod_obs$index$smith_sound_q_block <- cut(cod_obs$index$age, c(min(cod_obs$index$age):14, max(cod_obs$index$age) + 1), right = FALSE)
