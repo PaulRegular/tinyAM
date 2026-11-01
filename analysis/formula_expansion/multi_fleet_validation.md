@@ -266,9 +266,9 @@ a quadratic nuisance profile and the isolated likelihood reconstruction.
 
 The following classification uses the original optimizer code, the projected
 gradient (threshold 0.01), Hessian eigenvalues and active bounds. It is a
-diagnosis, not a replacement for the original success definition. For example,
-a few originally failed isolated fits have positive reconstructed curvature
-but remain failed benchmark attempts. Failed/indefinite covariance matrices
+diagnosis, not a replacement for the original success definition. Positive
+curvature away from an active boundary does not change an original failure
+into a benchmark success. Failed/indefinite covariance matrices
 are never converted into correlations.
 
 | Full assessment | Optimizer/gradient | Weak/invalid curvature | Boundary uncertainty | Original passes |
@@ -285,7 +285,9 @@ maxima of 0.641 and 0.798 respectively. Double-logistic fits have stronger
 within-curve correlations (up to 0.935) and curve/F-scale correlations (up to
 0.952), yet all converge. Correlation alone therefore does not explain the
 success-rate contrast. All pairs with other outer coefficients are retained
-in `correlations.csv`; these are local, success-conditioned summaries.
+in `correlations.csv`; their largest warped correlation is 0.382 with the
+survey q intercept, versus 0.381 with an annual F coefficient. These are
+local, success-conditioned summaries.
 
 Ten cases were profiled: the first successful and first failed full-coverage
 replicate for each warped shape at each study level, where available, plus
@@ -321,11 +323,20 @@ objective points fail nuisance checks, and the best *valid* generating-start
 point is worse than its saved-start counterpart. Known truth is not a
 guarantee that nuisance optimization succeeds.
 
+Starting positions also differ between families. On the isolated age range
+1–12, warped half-selection starts at 6.5, versus ascending half-selection
+3.75 for double logistic (generating values 3.5 and 3 respectively). The
+benchmark therefore compares default fitting robustness as well as curve
+geometry; it cannot establish which family performs best after improved starts.
+
 There is a real weak direction as well. At huge width, the curve approaches
 the constant one-half and its amplitude absorbs the level. The failed
-isolated Gaussian example has effective curve-Jacobian rank two of four,
-versus four at the generating parameters. The smallest Hessian directions
-and their coefficient loadings are stored with each audit. Shape zero/one
+isolated Gaussian example has nearly singular curvature, whereas the
+generating point has positive curvature. The smallest Hessian directions
+and their coefficient loadings are stored with each audit. The failed full
+Gaussian case has a50=24.70 (modeled ages 1–10), log width=22.70 and shape
+0.752; its weakest eigenvector is almost entirely the shape coefficient.
+It has lost shape information far from the generating curve. Shape zero/one
 also lies on a boundary; ordinary two-sided Wald uncertainty is unreliable
 there even when the remaining parameters have positive curvature.
 
@@ -402,3 +413,51 @@ Generated fits, warnings, dashboards, numerical summaries and source hashes
 remain in ignored `results/multi_fleet/` and `analysis/sam_equivalence/results/`.
 Only source code, concise reports, documentation and the designated cheatsheet
 PDF are tracked. Version is `0.1.1.9001`, targeting a future 0.2.0 release.
+
+## Fisheries dashboard refinements
+
+On `fleet-dashboard-refinements`, Fisheries replaces the separate Fishery and
+Fleets entries. Fleet pages retain reported yield, catch-at-age, F-at-age and
+available dotted means, plus all five observation-residual views. Aggregate
+fishery follows the fleets and shows total yield; unlabeled models are never
+allocated among fleets. With no fleet labels it retains the existing complete
+single-fishery diagnostics. Incomplete reported fleet yields remain missing.
+
+Translated reference count units now separate explicit inference annotations
+from recognized count labels, including both herring annotation forms. The
+original statements remain in notes and raw source records; values, SEs and
+intervals are unchanged. Unknown/descriptive survey units stay unchanged and
+incompatible known units still fail overlay checks. Herring's Population
+patterns colorbar reads `Abundance<br>(thousand fish)`.
+
+Focused checks pass **425 assertions** without failures or warnings: 34 new
+Fisheries checks, 204 dashboard regressions and 187 unit/matrix/retrospective
+checks. Standalone reference-unit tests also pass. The comparative suite returns
+**61 passes and the same ten pre-existing failures** listed in the core section.
+Its preview-render test initially lacked the installed Pandoc path; it passes
+with that path set. Both attempts are retained. The temporary comparative
+checkout and its generated readiness table were removed; canonical exports
+were not updated.
+
+Herring, three-model cheatsheet and single-SCAA dashboards rendered from
+existing fits with `open_file = FALSE`. The single-fit check confirms unchanged
+parameters and RTMB objective state. The cheatsheet generator reused its fit
+and hindcast caches, regenerated its companion HTML and two-page PDF, and
+preserved provenance checks. Both PDF pages and the relative companion link
+were inspected. Interactive Chrome inspection succeeded for this refinement:
+fleet order/selection, residual panels, F age selection and both orientations,
+heatmap/surface switching, the concise unit label and resizing. This supersedes
+the earlier browser-access limitation for those checks, without claiming an
+exhaustive manual check of every widget combination.
+
+The first full package run passed 4,251 assertions and failed one old test
+expecting the retired Fishery heading. Its expectation was updated to Aggregate
+fishery; all 204 dashboard regressions then passed. That check log is retained.
+Curve, parameterization, starting values, optimizer controls, scientific
+specifications and original recovery success rates are unchanged.
+
+The fresh final build passes `R CMD check --no-manual`: **OK**, with **4,252
+passing assertions**, zero failures, warnings or skips. Version remains
+`0.1.1.9001`. Separate feature commits are `070ed90c` (diagnosis), `48c3ee2e`
+(Fisheries navigation), `0d7227b2` (reference units), and `0b80a0e1` (updated
+heading regression). This branch is intended for review, without a main merge.
