@@ -226,8 +226,8 @@ index <- out$obs_pred$index
 # users' named fleets/surveys; they do not split the Northern cod observations.
 # ---- scoped ----
 # mu_form = ~ 0 +
-#   for_fleet("Trawl", ~ factor(year) + logistic(age)) +
-#   for_fleet("Gillnet", ~ factor(year) + warped_normal(age))
+#   for_fleet("Trawl", ~factor(year)+logistic(age)) +
+#   for_fleet("Gillnet", ~factor(year)+double_logistic(age))
 # q_form = ~ 0 +
 #   for_survey("RV", ~ logistic(age)) +
 #   for_survey("Sentinel", ~ s(age, k = 4))

@@ -347,3 +347,27 @@ checks; its fit and warnings were retained without rescue tuning. All 14 runners
 completed without uncaught study errors. These are workflow checks, not a new
 recovery benchmark. Their separate output is
 `results/multi_fleet/retirement_validation/smoke/`.
+
+All 14 optimized objectives exactly match their original benchmark records,
+and all success/failure flags are unchanged, including the smooth-off failure.
+
+Focused validation passes 533 assertions without warnings or failures. The
+comparative suite returns 61 passes and the same ten pre-existing failures
+listed above. No canonical assessment exports were retained from testing.
+
+The cheatsheet generator refitted its unchanged SCAA/SAM/NCAM examples and
+two-fold hindcasts under the new source hashes, retaining warnings and the
+existing failed SAM fold. Both PDF pages were visually checked, with readable
+type sizes and no clipping; the adjacent companion HTML and relative link were
+verified. README and reference pages build with working double-logistic help
+and navigation. The local website build used CI mode to skip an unavailable
+optional favicon service. Browser inspection of the dashboard was stopped by
+the computer-use tool because it could not verify the Chrome URL; static HTML
+and link checks passed, but no new interactive-browser validation is claimed.
+
+The full package suite passes **4,170 assertions**, with no failures, warnings
+or skips. `R CMD check --no-manual` returns **OK**. Hash verification confirms
+that all **5,020 historical cache files** are unchanged. Version remains
+`0.1.1.9001`. The package retirement is committed in `3985b8cd`, and study
+cleanup in `9e5f66c7`; the final documentation/assets commit completes the
+three-step cleanup without a main merge.

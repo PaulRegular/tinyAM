@@ -192,7 +192,7 @@ S(a)&=\{1+e^{-k(a-a_{50})}\}^{-1},\quad k>0,\\
 \log F_{t,a,f}&=X_{t,a,f}\beta_F+\log S_f(a)+\eta^F_{t,a,f}.
 \end{aligned}
 \]
-\micro{Total F is $\sum_f F_{t,a,f}$. \texttt{warped\_normal()}: rising to Gaussian shapes; \texttt{double\_logistic()}: WHAM product. \href{https://paulregular.github.io/tinyAM/reference/smooth_formulas.html}{Smooths}: \texttt{s()} or \texttt{t2(age, year)}, with estimated penalties. Check weak mean/process separation.}
+\micro{Total F is $\sum_f F_{t,a,f}$. \href{https://paulregular.github.io/tinyAM/reference/double_logistic.html}{\texttt{double\_logistic()}}: WHAM's unnormalized four-parameter product. \href{https://paulregular.github.io/tinyAM/reference/smooth_formulas.html}{Smooths}: \texttt{s()} or \texttt{t2(age, year)}, with estimated penalties. Check mean/process separation.}
 \end{mathbox}\vfill
 \begin{mathbox}{Natural mortality}
 \micro{\texttt{M\_settings}: \texttt{mu\_supplied = \string~ M0} supplies the baseline mortality surface.}

@@ -184,15 +184,15 @@ curves and surveys different q relationships:
 # Settings for your fleet/survey names and complete explanatory grids
 F_settings <- list(process = "off", mu_form = ~ 0 +
   for_fleet("Trawl", ~ factor(year) + logistic(age)) +
-  for_fleet("Gillnet", ~ factor(year) + warped_normal(age)))
+  for_fleet("Gillnet", ~ factor(year) + double_logistic(age)))
 index_settings <- list(q_form = ~ 0 +
   for_survey("RV", ~ logistic(age)) +
   for_survey("Sentinel", ~ s(age, k = 4)))
 ```
 
 [Scopes](https://paulregular.github.io/tinyAM/reference/for_fleet.html) also support
-ordinary interactions. [Curves](https://paulregular.github.io/tinyAM/reference/warped_normal.html)
-include warped-normal and WHAM-style double-logistic shapes;
+ordinary interactions. [Double-logistic curves](https://paulregular.github.io/tinyAM/reference/double_logistic.html)
+follow WHAM's four-parameter product;
 [smooths](https://paulregular.github.io/tinyAM/reference/smooth_formulas.html)
 use jointly estimated mgcv penalties. Flexible F means can be deterministic
 or have IID/AR1 residuals. Their separation can be weak; intrinsic F random
