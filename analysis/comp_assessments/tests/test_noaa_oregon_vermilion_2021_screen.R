@@ -25,7 +25,7 @@ review <- paste(readLines(file.path(root,
   collapse = ' ')
 
 stopifnot(nrow(candidate) == 1L,
-  candidate$candidate_unit_id == 'noaa_vermilion_rockfish_oregon_2021',
+  candidate$candidate_unit_id == 'noaa_vermilion_rockfish_or_wa',
   candidate$official_stock_id == '15338',
   candidate$scientific_name == 'Sebastes miniatus',
   candidate$assessment_area == 'Oregon',
@@ -42,6 +42,6 @@ stopifnot(nrow(candidate) == 1L,
   sum(assessments$assessment_id == 'noaa_vermilion_rockfish_oregon_2021', na.rm = TRUE) == 0L,
   sum(inputs$assessment_id == 'noaa_vermilion_rockfish_oregon_2021', na.rm = TRUE) == 0L,
   sum(outputs$assessment_id == 'noaa_vermilion_rockfish_oregon_2021', na.rm = TRUE) == 0L,
-  sum(units$candidate_unit_id == 'noaa_vermilion_rockfish_oregon_2021', na.rm = TRUE) == 1L)
+  sum(units$candidate_unit_id == 'noaa_vermilion_rockfish_or_wa', na.rm = TRUE) == 1L)
 
 cat('NOAA Oregon vermilion 2021 source, screening, and no-import checks passed.\n')

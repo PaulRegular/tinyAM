@@ -2,12 +2,15 @@
 
 ## Assessment unit and sources
 
-Stock SMART ID 15338 is the Oregon assessment unit for vermilion rockfish
-(*Sebastes miniatus*). The 2021 report treats Oregon as a separate population
-from Washington and California based on the species' sedentary nature, habitat
-separation and different exploitation history. The Pacific Fishery Management
-Council adopted the 2021 assessment for management. The council's assessment
-index reviewed on 2026-10-31 lists no later Oregon-specific assessment.
+Stock SMART ID 15338 is the Oregon component of the current Vermilion rockfish
+(OR/WA) managed stock. The 2021 report treats Oregon as a separate modeled
+population from Washington and California based on the species' sedentary
+nature, habitat separation and different exploitation history. The Pacific
+Fishery Management Council adopted the 2021 assessment for management. Its
+June 2025 meeting record retains the current managed stock as Vermilion
+rockfish (OR/WA); the state assessment components remain separate and must not
+be represented as one pooled model. The council's assessment index reviewed
+on 2026-10-31 lists no later Oregon-specific assessment.
 
 The source report and model archive were cached locally under
 `source_cache/discovery_noaa_oregon_vermilion_2021/`. The ignored
@@ -62,8 +65,9 @@ are 0.080 and 0.073 per year.
 The archived `Report.sso` includes machine-readable numbers-at-age,
 catch-at-age and F-at-age output, alongside fitted biological surfaces. The
 assessment report also tabulates the ORBS index and population reference
-quantities. The 2021 Oregon unit is **new and eligible for source curation**;
-this screen does not create a canonical stock or import numerical values.
+quantities. The current OR/WA stock candidate is **new and eligible for source
+curation**; this screen covers its Oregon component and does not create a
+canonical stock or import numerical values.
 
 Translation would require retaining the incomplete age-sample coverage, the
 recreational CPUE index's fishery-dependent basis and approximate index-at-age

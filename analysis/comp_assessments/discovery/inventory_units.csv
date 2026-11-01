@@ -378,7 +378,7 @@
 "candidate:noaa_spiny_dogfish_pacific_coast_2021","","noaa_spiny_dogfish_pacific_coast_2021","new","eligible","screened","not_started","NOAA","NWFSC / SWFSC","NOAA:10702",1
 "candidate:noaa_squarespot_rockfish_california","","noaa_squarespot_rockfish_california","new","ineligible","screened","not_started","NOAA","NWFSC / SWFSC","NOAA:10442",1
 "candidate:noaa_uswc_rougheye_blackspotted","","noaa_uswc_rougheye_blackspotted","new","mixed","screened","not_started","NOAA","NWFSC / SWFSC","NOAA:10539 | NOAA:14516",2
-"candidate:noaa_vermilion_rockfish_oregon_2021","","noaa_vermilion_rockfish_oregon_2021","new","eligible","screened","not_started","NOAA","NWFSC / SWFSC","NOAA:15338",1
+"candidate:noaa_vermilion_rockfish_or_wa","","noaa_vermilion_rockfish_or_wa","new","eligible","screened","not_started","NOAA","NWFSC / SWFSC","NOAA:15338 | NOAA:15339",2
 "candidate:noaa_vermilion_snapper_gulf_mexico","","noaa_vermilion_snapper_gulf_mexico","new","eligible","screened","not_started","NOAA","SEFSC","NOAA:10256",1
 "candidate:noaa_vermilion_snapper_south_atlantic","","noaa_vermilion_snapper_south_atlantic","new","eligible","screened","not_started","NOAA","SEFSC","NOAA:10257",1
 "candidate:noaa_weathervane_scallop_alaska","","noaa_weathervane_scallop_alaska","new","ineligible","screened","not_started","NOAA","AFSC","NOAA:11201",1

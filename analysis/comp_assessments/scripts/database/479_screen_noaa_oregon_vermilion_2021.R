@@ -36,7 +36,7 @@ for (file in names(expected_hashes)) {
 candidates <- read.csv(register_path, stringsAsFactors = FALSE,
   na.strings = c('', 'NA'), check.names = FALSE)
 candidate_id <- 'NOAA:15338'
-candidate_unit_id <- 'noaa_vermilion_rockfish_oregon_2021'
+candidate_unit_id <- 'noaa_vermilion_rockfish_or_wa'
 row <- match(candidate_id, candidates$candidate_id)
 if (is.na(row) || candidates$official_stock_id[row] != '15338' ||
     candidates$scientific_name[row] != 'Sebastes miniatus' ||
@@ -107,8 +107,10 @@ review <- list(
     'index support documented age-specific reconstruction, but age coverage is sparse ' ,
     'and index-at-age is approximate; these limits must remain explicit.'),
   notes = paste0(
-    'NOAA Stock SMART ID 15338 is the Oregon assessment unit, separate from Washington ' ,
-    'and the north/south California assessment units. The model uses one annual season, ' ,
+    'The Council identifies the current managed stock as Vermilion rockfish (OR/WA). ' ,
+    'Stock SMART ID 15338 is its Oregon component. Oregon and Washington were fitted ' ,
+    'as separate 2021 assessment areas and remain separate source components; they are ' ,
+    'not counted as two current stock units. The Oregon model uses one annual season, ' ,
     'two removal fleets, and ages 0-65. This is an inventory screen only; no canonical ' ,
     'assessment or values have been imported.'))
 
@@ -119,7 +121,12 @@ pristine <- candidates$match_status[row] == 'unreviewed' &&
 already_reviewed <- all(vapply(names(review), function(column)
   identical(as.character(candidates[[column]][row]), as.character(review[[column]])),
   logical(1L)))
-if (!(pristine || already_reviewed))
+previously_screened <- candidates$match_status[row] == 'new' &&
+  candidates$candidate_unit_id[row] == 'noaa_vermilion_rockfish_oregon_2021' &&
+  candidates$screening_status[row] == 'screened' &&
+  candidates$eligibility[row] == 'eligible' &&
+  candidates$import_status[row] == 'not_started'
+if (!(pristine || previously_screened || already_reviewed))
   stop('The NOAA Oregon vermilion candidate has a conflicting review.', call. = FALSE)
 
 if (!identical(Sys.getenv('TAM_SOURCE_DRY_RUN'), '1')) {
