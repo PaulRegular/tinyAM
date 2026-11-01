@@ -26,11 +26,11 @@ the rows already linked to a stock or candidate unit.
 | Organization | Rows | Matched to database | New candidate rows | Ambiguous identity | Identity unreviewed | Eligible rows | Ineligible rows | Eligibility unresolved | Screened | In progress | Not screened |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 63 | 18 | 98 | 21 | 147 | 31 | 199 | 0 | 0 |
-| ICES | 274 | 59 | 167 | 2 | 46 | 58 | 141 | 75 | 228 | 0 | 46 |
+| ICES | 274 | 59 | 175 | 2 | 38 | 58 | 149 | 67 | 236 | 0 | 38 |
 | NOAA | 432 | 28 | 253 | 9 | 142 | 76 | 165 | 191 | 292 | 0 | 140 |
-| **Total** | **905** | **107** | **483** | **29** | **286** | **155** | **453** | **297** | **719** | **0** | **186** |
+| **Total** | **905** | **107** | **491** | **29** | **278** | **155** | **461** | **289** | **727** | **0** | **178** |
 
-The crosswalk currently links 501 distinct unit keys across 530 inventory rows: 100 canonical stock units and 401 candidate units. Of the candidate units, 399 are provisionally new, one has an ambiguous identity, and one has mixed identity status. The 399 new units include 54 eligible, 281 ineligible, 61 unresolved, and three with mixed eligibility. A further 375 inventory rows have no unit crosswalk yet.
+The crosswalk currently links 509 distinct unit keys across 538 inventory rows: 100 canonical stock units and 409 candidate units. Of the candidate units, 407 are provisionally new, one has an ambiguous identity, and one has mixed identity status. The 407 new units include 54 eligible, 289 ineligible, 61 unresolved, and three with mixed eligibility. A further 367 inventory rows have no unit crosswalk yet.
 
 The progress summary has 75 organization-region
 rows. Row-level status and unit-level deduplication are intentionally reported
@@ -1324,3 +1324,5 @@ NOAA Stock SMART 10383 is the Gulf of Mexico golden tilefish unit, assessed in S
 NOAA Stock SMART 10448 is the Bank rockfish - California unit. Its 2010 accepted DB-SRA uses aggregate catch history and life-history priors, not annual age-specific inputs; PFMC reports that the age readings available for the species were not included in the DB-SRA. The candidate is screened ineligible for age-disaggregated source curation. A separate 2000 California-only stock assessment is cited in NOAA's 2026 background, while PFMC's 2022 data inventory calls 2010 the latest data-limited assessment; the referenced 2000 report link was unavailable during review. See `source_reviews/noaa_bank_rockfish_california_2010.md`.
 
 ICES saithe `pok.27.7-10` was last assessed in 2025 as a category-5 stock. The current SAG export contains only aggregate landings and discards for 2003–2024; it does not publish age-disaggregated inputs or age-specific population outputs. The advice limit of 146 tonnes for 2026–2028 is not a fitted population output. The current unit is screened ineligible for the age-disaggregated source set. See `source_reviews/ices_saithe_subareas_7_10_2025.md`.
+
+The ICES ray and dogfish screen adds eight distinct, new units. Current 2025-2026 methods are SPiCT or survey-trend/length-indicator assessments; linked Standard Graphs pages report aggregate biomass, catch, landings and fishing-pressure summaries, with no age-indexed outputs. These units are ineligible for the age-disaggregated comparison set based on the reviewed assessment methods and published tables. This does not imply that age samples are unavailable for other research. See discovery/source_reviews/ices_ray_method_group_2026.md.
