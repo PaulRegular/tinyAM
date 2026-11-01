@@ -472,9 +472,292 @@ postprocess_fleet_recovery <- function(directory="analysis/formula_expansion/res
   summarize_fleet_recovery(directory)
 }
 
+# Diagnostic refits below are a separate experiment. They never write to the
+# recovery directory or alter the package's curves, starts, or optimizer.
+.warped_diagnostic_object <- function(record) {
+  config <- record$job$config
+  if (record$job$kind == "full") {
+    fit <- record$value$fit
+    obj <- tinyAM:::.fitted_objective(fit)
+    par <- fit$obj$env$parList(par=fit$parameter_values)
+    truth <- tinyAM:::.merge_start_par(par,record$value$example$parameters)
+    dat <- fit$dat
+    oracle_obj <- RTMB::MakeADFun(function(p)tinyAM::nll_fun(p,dat),truth,
+      random=fit$obj$env$.random,map=fit$parameter_map,silent=TRUE)
+    oracle <- oracle_obj$par
+    estimate <- fit$opt$par
+    bounds <- fit$bounds
+    if (is.null(bounds)) bounds <- fit$parameter_bounds
+    curve <- grep("^(F_a50|log_F_scale|F_shape).*Gillnet",names(estimate))
+    scale <- which(names(estimate) == "log_mu_f")
+    scale <- scale[grepl("Gillnet",names(par$log_mu_f))]
+    labels <- names(estimate)
+    for (nm in unique(labels)) {
+      i <- which(names(estimate) == nm)
+      if (length(names(par[[nm]])) == length(i)) labels[i] <- paste(nm,names(par[[nm]]),sep=":")
+    }
+    age_range <- range(dat$ages)
+  } else {
+    d <- expand.grid(age=1:12,year=2000:2007); d$obs <- 1; d$is_proj <- FALSE
+    type <- if(config$shape %in% c("double_logistic","reversed"))"double_logistic" else "warped_normal"
+    term <- tinyAM:::.make_q_term(list(type=type,variable="age",by=NULL),d)
+    initial <- c(list(level=log(.3)),tinyAM:::.curve_parameters(term))
+    truth <- initial
+    truth$level <- log(.4)
+    if (type == "warped_normal") {
+      truth[[term$a50_parameter]][] <- 3.5
+      truth[[term$scale_parameter]][] <- log(1.5)
+      truth[[term$shape_parameter]][] <- switch(config$shape,asymptotic=1,intermediate=.35,gaussian=0)
+    } else {
+      truth[[term$a50_up_parameter]][] <- if(config$shape == "reversed")8 else 3
+      truth[[term$a50_down_parameter]][] <- if(config$shape == "reversed")3 else 8
+      truth[[term$scale_up_parameter]][] <- 0
+      truth[[term$scale_down_parameter]][] <- log(1.3)
+    }
+    mean <- truth$level+tinyAM:::.curve_log_selectivity(d$age,truth,term,1)
+    y <- withr::with_seed(record$job$seed,stats::rnorm(nrow(d),mean,.15))
+    keep <- if(config$coverage == "weak")d$age < 8 | (d$year-2000) %% 4 == 0 else rep(TRUE,nrow(d))
+    obj <- RTMB::MakeADFun(function(p)-sum(RTMB::dnorm(y[keep],p$level+
+      tinyAM:::.curve_log_selectivity(d$age[keep],p,term,1),.15,log=TRUE)),initial,silent=TRUE)
+    oracle_obj <- obj
+    oracle <- unlist(truth,use.names=FALSE)
+    estimate <- record$value$opt$par
+    curve <- seq_along(estimate)[-1L]; scale <- 1L; labels <- names(estimate)
+    age_range <- range(d$age[keep]); bounds <- NULL
+  }
+  if (is.null(bounds)) bounds <- list(lower=rep(-Inf,length(estimate)),upper=rep(Inf,length(estimate)))
+  shape <- grep("^(F|q)_shape_",names(estimate))
+  bounds$lower[shape] <- 0; bounds$upper[shape] <- 1
+  stopifnot(length(obj$par) == length(estimate),length(oracle) == length(estimate))
+  list(obj=obj,oracle_obj=oracle_obj,estimate=estimate,oracle=oracle,bounds=bounds,curve=curve,scale=scale,
+    shape=shape,width=grep("^log_(F|q)_scale_",names(estimate)),labels=labels,age_range=age_range)
+}
+
+.warped_geometry <- function(obj,x,bounds) {
+  value <- as.numeric(obj$fn(x)); gradient <- as.numeric(obj$gr(x))
+  H <- if (length(obj$env$random))stats::optimHess(x,obj$fn,obj$gr) else obj$he(x)
+  H <- (H+t(H))/2
+  finite <- all(is.finite(H))
+  eigen <- if(finite)eigen(H,symmetric=TRUE) else NULL
+  active <- x == bounds$lower | x == bounds$upper
+  free <- which(!active)
+  free_eigen <- if(finite && length(free))eigen(H[free,free,drop=FALSE],symmetric=TRUE,only.values=TRUE)$values else numeric()
+  list(value=value,gradient=gradient,H=H,eigen=eigen,
+    min_eigen=if(finite)min(eigen$values) else NA_real_,
+    free_min_eigen=if(length(free_eigen))min(free_eigen) else NA_real_,active=active,
+    max_gradient=max(abs(tinyAM:::.project_gradient(gradient,x,bounds)$gradient)))
+}
+
+.warped_audit <- function(path) {
+  record <- readRDS(path); d <- .warped_diagnostic_object(record)
+  g <- .warped_geometry(d$obj,d$estimate,d$bounds)
+  target <- record$value$opt$objective
+  if (record$job$kind == "full")target <- record$value$fit$opt$objective
+  optimizer <- if(record$job$kind == "full")record$value$fit$opt$convergence else record$value$opt$convergence
+  valid <- is.finite(g$min_eigen) && g$min_eigen > 0
+  V <- if(valid)tryCatch(solve(g$H),error=function(e)NULL) else NULL
+  valid <- valid && !is.null(V) && all(is.finite(V)) && all(diag(V) > 0)
+  valid <- valid && isTRUE(record$value$is_converged)
+  pairs <- data.frame()
+  if (valid) {
+    R <- cov2cor(V)
+    index <- which(upper.tri(R) & (row(R) %in% d$curve | col(R) %in% d$curve),arr.ind=TRUE)
+    pairs <- data.frame(first=d$labels[index[,1]],second=d$labels[index[,2]],
+      correlation=R[index],within_curve=index[,1] %in% d$curve & index[,2] %in% d$curve,
+      with_scale=index[,1] %in% d$scale | index[,2] %in% d$scale)
+  }
+  weak <- if(!is.null(g$eigen)) {
+    v <- g$eigen$vectors[,ncol(g$H)]; i <- head(order(abs(v),decreasing=TRUE),6L)
+    data.frame(parameter=d$labels[i],loading=v[i])
+  } else data.frame()
+  numerical <- if(abs(g$value-target) > 1e-7)"mode_not_reproduced" else
+    if(optimizer != 0 || !is.finite(g$max_gradient) || g$max_gradient > .01)"optimizer_or_gradient" else
+    if(isTRUE(record$value$is_converged) && valid)"passed" else
+    if(any(g$active[d$shape]) && is.finite(g$free_min_eigen) && g$free_min_eigen > 0)"boundary_uncertainty" else "weak_or_invalid_curvature"
+  list(job=record$job,source=path,objective_difference=g$value-target,classification=numerical,
+    success=isTRUE(record$value$is_converged),max_gradient=g$max_gradient,
+    min_eigen=g$min_eigen,free_min_eigen=g$free_min_eigen,valid_covariance=valid,
+    curve=data.frame(parameter=d$labels[d$curve],estimate=d$estimate[d$curve],truth=d$oracle[d$curve]),
+    correlations=pairs,weak_direction=weak,active_bounds=d$labels[g$active])
+}
+
+.warped_profile_point <- function(d,index,value,start) {
+  free <- setdiff(seq_along(start),index)
+  expand <- function(z) {x <- start; x[index] <- value; x[free] <- z; x}
+  fn <- function(z)d$obj$fn(expand(z))
+  gr <- function(z)d$obj$gr(expand(z))[free]
+  opt <- stats::nlminb(start[free],fn,gr,lower=d$bounds$lower[free],upper=d$bounds$upper[free],
+    control=list(eval.max=1000,iter.max=1000))
+  x <- expand(opt$par)
+  g <- .warped_geometry(d$obj,x,d$bounds)
+  nuisance <- free[!g$active[free]]
+  eigen <- if(length(nuisance) && all(is.finite(g$H)))
+    eigen(g$H[nuisance,nuisance,drop=FALSE],symmetric=TRUE,only.values=TRUE)$values else NA_real_
+  gradient <- tinyAM:::.project_gradient(g$gradient,x,d$bounds)$gradient[free]
+  list(value=value,objective=as.numeric(opt$objective),parameters=x,optimizer=opt$convergence,
+    max_gradient=max(abs(gradient)),min_nuisance_eigen=min(eigen),
+    valid=opt$convergence == 0 && all(is.finite(gradient)) && max(abs(gradient)) <= .01 &&
+      all(is.finite(eigen)) && min(eigen) > 0)
+}
+
+.warped_capture <- function(code) {
+  warnings <- character()
+  value <- withCallingHandlers(tryCatch(code(),error=function(e)list(error=conditionMessage(e))),
+    warning=function(w){warnings <<- c(warnings,conditionMessage(w)); invokeRestart("muffleWarning")})
+  if(!is.list(value))value <- list(value=value)
+  value$warnings <- warnings; value
+}
+
+.warped_profile_case <- function(path,output) {
+  record <- readRDS(path); d <- .warped_diagnostic_object(record)
+  case <- paste(record$job$kind,record$job$config$id,sprintf("%03d",record$job$replicate),sep="-")
+  folder <- file.path(output,"profiles",case); dir.create(folder,recursive=TRUE,showWarnings=FALSE)
+  geometry <- lapply(c("estimate","oracle"),function(start) {
+    obj <- if(start == "oracle")d$oracle_obj else d$obj
+    .warped_capture(function().warped_geometry(obj,d[[start]],d$bounds))
+  })
+  names(geometry) <- c("estimate","oracle")
+  saveRDS(list(geometry=geometry,labels=d$labels,curve=d$curve,source=path),file.path(folder,"geometry.rds"))
+  for (parameter in c("shape","width")) {
+    index <- d[[parameter]][1L]
+    if (is.na(index))next
+    values <- if(parameter == "shape")seq(0,1,.05) else sort(unique(c(
+      log(diff(d$age_range)*c(.05,.1,.25,.5,1,2,10,100)),d$oracle[index],d$estimate[index])))
+    for (i in seq_along(values)) for (start in c("estimate","oracle")) {
+      file <- file.path(folder,paste0(parameter,"-",sprintf("%02d",i),"-",start,".rds"))
+      if(file.exists(file))next
+      # Each point starts with its own RTMB conditional modes, so previous
+      # profile points cannot determine an oracle/estimate comparison.
+      point <- .warped_diagnostic_object(record)
+      if(start == "oracle")point$obj <- point$oracle_obj
+      result <- .warped_capture(function().warped_profile_point(point,index,values[i],point[[start]]))
+      result$case <- case; result$parameter <- parameter; result$fixed_value <- values[i]; result$start <- start
+      saveRDS(result,file)
+    }
+  }
+  case
+}
+
+diagnose_warped_normal <- function(workers=3L,
+  recovery="analysis/formula_expansion/results/multi_fleet/recovery",
+  output="analysis/formula_expansion/results/multi_fleet/warped_diagnostics") {
+  dir.create(output,recursive=TRUE,showWarnings=FALSE)
+  attempts <- read.csv(file.path(recovery,"attempts.csv"))
+  use <- grepl("^warped_",attempts$scenario) | attempts$scenario %in%
+    c("double_logistic","double_logistic_reversed","scaa_double_logistic")
+  a <- attempts[use,,drop=FALSE]
+  paths <- file.path(recovery,a$kind,a$scenario,sprintf("%03d.rds",a$replicate))
+  before <- tools::md5sum(c(paths,file.path(recovery,c("manifest.rds","summary.csv","attempts.csv"))))
+  manifest <- list(sources=before,R=as.character(getRversion()),RTMB=as.character(packageVersion("RTMB")),
+    diagnostic_code=tools::md5sum("analysis/formula_expansion/multi_fleet_recovery.R"),
+    model_sources=tools::md5sum(c("R/nll.R","R/selectivity-curves.R","R/par.R","R/fit.R",
+      "R/recruitment.R","R/projection.R")))
+  old <- file.path(output,"manifest.rds")
+  if(file.exists(old) && !identical(readRDS(old),manifest))stop("Diagnostic sources changed; archive previous diagnostic output first.")
+  saveRDS(manifest,old)
+  cluster <- parallel::makePSOCKcluster(workers,outfile=file.path(output,"workers.log"))
+  on.exit(parallel::stopCluster(cluster))
+  parallel::clusterCall(cluster,function(root,libs) {
+    .libPaths(libs); setwd(root); source("analysis/formula_expansion/multi_fleet_recovery.R"); NULL
+  },getwd(),.libPaths())
+  parallel::parLapplyLB(cluster,paths,function(path,output) {
+    r <- readRDS(path)
+    folder <- file.path(output,"audit",r$job$kind,r$job$config$id)
+    dir.create(folder,recursive=TRUE,showWarnings=FALSE)
+    file <- file.path(folder,sprintf("%03d.rds",r$job$replicate))
+    if(!file.exists(file))saveRDS(.warped_capture(function().warped_audit(path)),file)
+    NULL
+  },output=output)
+  eligible <- grepl("^warped_.*_full$",a$scenario) |
+    (a$kind == "full" & a$scenario == "warped_gaussian_weak")
+  candidates <- split(which(eligible),interaction(a$kind[eligible],a$scenario[eligible],drop=TRUE))
+  selected <- unlist(lapply(candidates,function(i)unlist(lapply(c(FALSE,TRUE),function(success)
+    head(i[a$success[i] == success],1L)))),use.names=FALSE)
+  saveRDS(a[selected,],file.path(output,"profile_cases.rds"))
+  parallel::parLapplyLB(cluster,paths[selected],function(path,output) {
+    .warped_capture(function().warped_profile_case(path,output))
+  },output=output) -> profile_status
+  saveRDS(profile_status,file.path(output,"profile_status.rds"))
+  stopifnot(identical(before,tools::md5sum(names(before))))
+  summarize_warped_diagnostics(output)
+}
+
+summarize_warped_diagnostics <- function(output="analysis/formula_expansion/results/multi_fleet/warped_diagnostics") {
+  files <- list.files(file.path(output,"audit"),pattern="[.]rds$",recursive=TRUE,full.names=TRUE)
+  audit <- lapply(files,readRDS)
+  table <- do.call(rbind,lapply(seq_along(audit),function(i) {
+    r <- audit[[i]]
+    if(!is.null(r$error))return(data.frame(kind=basename(dirname(dirname(files[i]))),scenario=basename(dirname(files[i])),
+      replicate=as.integer(sub("[.]rds$","",basename(files[i]))),classification="diagnostic_error",error=r$error,
+      objective_difference=NA_real_,max_gradient=NA_real_,min_eigen=NA_real_,free_min_eigen=NA_real_))
+    data.frame(kind=r$job$kind,scenario=r$job$config$id,replicate=r$job$replicate,
+      classification=r$classification,error=NA_character_,objective_difference=r$objective_difference,
+      max_gradient=r$max_gradient,min_eigen=r$min_eigen,free_min_eigen=r$free_min_eigen)
+  }))
+  utils::write.csv(table,file.path(output,"audit.csv"),row.names=FALSE)
+  pairs <- do.call(rbind,lapply(audit,function(r) {
+    if(is.null(r$correlations) || !nrow(r$correlations))return(NULL)
+    cbind(kind=r$job$kind,scenario=r$job$config$id,replicate=r$job$replicate,r$correlations)
+  }))
+  utils::write.csv(pairs,file.path(output,"correlations.csv"),row.names=FALSE)
+  files <- list.files(file.path(output,"profiles"),pattern="^(shape|width)-.*[.]rds$",recursive=TRUE,full.names=TRUE)
+  profiles <- lapply(files,readRDS)
+  p <- do.call(rbind,lapply(profiles,function(r)data.frame(case=r$case,parameter=r$parameter,
+    fixed_value=r$fixed_value,start=r$start,objective=if(is.null(r$objective))NA_real_ else r$objective,
+    valid=isTRUE(r$valid),error=if(is.null(r$error))NA_character_ else r$error,
+    max_gradient=if(is.null(r$max_gradient))NA_real_ else r$max_gradient)))
+  utils::write.csv(p,file.path(output,"profiles.csv"),row.names=FALSE)
+  grDevices::pdf(file.path(output,"profiles.pdf"),width=9,height=4.5)
+  on.exit(grDevices::dev.off())
+  for (case in unique(p$case)) {
+    graphics::par(mfrow=c(1,2))
+    for (parameter in c("shape","width")) {
+      d <- p[p$case == case & p$parameter == parameter & is.finite(p$objective),]
+      if(!nrow(d)) {graphics::plot.new(); next}
+      best <- min(d$objective[d$valid],Inf)
+      if(!is.finite(best))best <- min(d$objective)
+      graphics::plot(range(d$fixed_value),range(c(0,pmax(-20,pmin(20,d$objective-best)))),type="n",
+        xlab=if(parameter == "shape")"c (0 = Gaussian; 1 = asymptotic)" else "log width",
+        ylab="Delta negative log likelihood (clipped at +/-20)",main=paste(case,parameter,sep="\n"),cex.main=.75)
+      graphics::abline(h=0,col="grey80")
+      for(start in c("estimate","oracle")) {
+        z <- d[d$start == start,]; z <- z[order(z$fixed_value),]
+        delta <- pmax(-20,pmin(20,z$objective-best))
+        graphics::lines(z$fixed_value,delta,col=if(start == "oracle")"#F05C28" else "#003E56")
+        graphics::points(z$fixed_value,delta,pch=ifelse(z$valid,16,4),
+          col=if(start == "oracle")"#F05C28" else "#003E56")
+      }
+      graphics::legend("topright",c("Saved start","Generating start","Cross: failed check"),
+        col=c("#003E56","#F05C28","black"),lty=c(1,1,NA),pch=c(16,16,4),bty="n",cex=.65)
+    }
+  }
+  print(with(table,table(kind,scenario,classification)))
+  invisible(list(audit=table,profiles=p))
+}
+
+test_warped_diagnostics <- function() {
+  d <- list(obj=list(fn=function(x)sum((x-c(.4,2))^2),gr=function(x)2*(x-c(.4,2)),
+    he=function(x)diag(2,2),env=list(random=NULL)),bounds=list(lower=c(0,-Inf),upper=c(1,Inf)))
+  result <- .warped_profile_point(d,1,.8,c(.2,0))
+  stopifnot(abs(result$objective-.16) < 1e-8,result$valid,abs(result$parameters[2]-2) < 1e-6)
+  config <- fleet_recovery_configs()$isolated
+  config <- config[config$id == "warped_intermediate_full",]
+  record <- list(job=list(kind="isolated",config=config,replicate=1L,seed=504001L),
+    value=withr::with_seed(17,.fleet_isolated(config,504001L)))
+  file <- tempfile(fileext=".rds"); on.exit(unlink(file))
+  saveRDS(record,file); before <- tools::md5sum(file)
+  audit <- .warped_audit(file)
+  stopifnot(abs(audit$objective_difference) < 1e-7,identical(before,tools::md5sum(file)))
+  cat("Analytic nuisance profile and independent curve-objective reconstruction passed.\n")
+  invisible(TRUE)
+}
+
 if (sys.nframe() == 0L) {
   args <- commandArgs(TRUE)
-  if (length(args) && args[1L] == "metrics") summarize_fleet_metrics() else
+  if (length(args) && args[1L] == "diagnostic-tests") test_warped_diagnostics() else
+    if (length(args) && args[1L] == "diagnostics") diagnose_warped_normal() else
+    if (length(args) && args[1L] == "diagnostic-summary") summarize_warped_diagnostics() else
+    if (length(args) && args[1L] == "metrics") summarize_fleet_metrics() else
     if (length(args) && args[1L] == "postprocess") postprocess_fleet_recovery() else
     if (length(args) && args[1L] == "summary") summarize_fleet_recovery() else
     run_fleet_recovery(if(length(args))as.integer(args[1L]) else 3L)

@@ -242,7 +242,7 @@ truth (a50=3.5, scale=1.5). Independent formula evaluation agrees at both
 points; the truth has positive curvature, while the fitted Hessian is nearly
 singular/indefinite. This is an unresolved default-start/local-optimization
 failure, not evidence that Gaussian shapes are intrinsically unidentified.
-No alternative start was fitted.
+No alternative start was fitted in that original benchmark.
 
 One-/two-year survey log-RMSE averaged 0.130/0.167 for SCAA, 0.187/0.214 for
 SAM shared, and 0.171/0.204 for SAM separate (MCSE 0.005–0.010). These are
@@ -252,6 +252,90 @@ unstable with one origin per replicate and nearly zero persistence errors:
 SCAA's one-year mean was 359.7 ± 358.1. All individual cases/denominators and
 coverage remain available; this statistic should not drive conclusions here.
 Predictive interval coverage and process-integrated scoring remain future work.
+
+### Warped-normal diagnosis (original benchmark unchanged)
+
+`multi_fleet_recovery.R diagnostics` audits 1,010 cached attempts: all 600
+isolated warped fits, 200 isolated double-logistic fits, 180 warped assessments
+and 30 SCAA double-logistic assessments. Private RTMB objectives reproduce every
+stored objective exactly in this run. File hashes confirm that the original
+attempts, manifest and summary tables were not changed. Diagnostic output has
+its own manifest, source snapshot, warnings and per-point records in
+`results/multi_fleet/warped_diagnostics/`. `diagnostic-tests` independently checks
+a quadratic nuisance profile and the isolated likelihood reconstruction.
+
+The following classification uses the original optimizer code, the projected
+gradient (threshold 0.01), Hessian eigenvalues and active bounds. It is a
+diagnosis, not a replacement for the original success definition. For example,
+a few originally failed isolated fits have positive reconstructed curvature
+but remain failed benchmark attempts. Failed/indefinite covariance matrices
+are never converted into correlations.
+
+| Full assessment | Optimizer/gradient | Weak/invalid curvature | Boundary uncertainty | Original passes |
+|---|---:|---:|---:|---:|
+| Warped asymptotic, full / weak | 30 / 30 | 0 / 0 | 0 / 0 | 0 / 0 |
+| Warped intermediate, full / weak | 27 / 24 | 0 / 0 | 0 / 0 | 3 / 6 |
+| Warped Gaussian, full / weak | 1 / 19 | 28 / 0 | 1 / 0 | 0 / 11 |
+| SCAA double logistic | 0 | 0 | 0 | 30 |
+
+Among successful full-coverage intermediate warped fits, the largest absolute
+within-curve correlation per fit is 0.720–0.729; with the Gillnet F scale it is
+at most 0.290. Weak-coverage intermediate and Gaussian fits have within-curve
+maxima of 0.641 and 0.798 respectively. Double-logistic fits have stronger
+within-curve correlations (up to 0.935) and curve/F-scale correlations (up to
+0.952), yet all converge. Correlation alone therefore does not explain the
+success-rate contrast. All pairs with other outer coefficients are retained
+in `correlations.csv`; these are local, success-conditioned summaries.
+
+Ten cases were profiled: the first successful and first failed full-coverage
+replicate for each warped shape at each study level, where available, plus
+the sparse Gaussian assessment (first success and failure). Gaussian full
+coverage has no successful replicate, asymptotic assessments have none, and
+intermediate isolated fits have no failure. Each case fixes shape at
+`(0:20)/20`, or fixes log width at widths spanning 0.05–100 times the modeled
+age range plus its generating and returned widths. Each point re-estimates
+all nuisance parameters with the original `nlminb` controls (1,000 evaluations
+and iterations) and original bounds. Saved-estimate and generating-parameter
+starts use separate private objectives and separate initial latent modes.
+
+The fixed-coordinate/nuisance-optimization method follows
+[TMB's `tmbprofile()`](https://github.com/kaskr/adcomp/blob/master/TMB/R/tmbprofile.R)
+(Kasper Kristensen, GPL-2); this study implements its own fixed-grid wrapper,
+retains the benchmark optimizer controls and does not copy its adaptive search.
+Of 620 profile attempts, 522 pass optimizer, nuisance-gradient and curvature
+checks: 256/310 from saved starts and 266/310 from generating starts. All 98
+failed points and their warnings remain visible. A profile point with a good
+objective but failed checks is not a valid likelihood optimum. Coarse grids,
+local nuisance minima and boundary parameters preclude profile confidence
+interval claims from these plots.
+
+The first full-coverage Gaussian assessment has a stored negative log
+likelihood of 119.66 on a nearly flat curve. Valid profile points reach 93.38
+from saved starts, versus −224.76 from generating starts. In the analogous
+isolated case, the stored value is 44,138.76, while valid profiles reach −40.19
+and −40.43. This is strong evidence of poor local solutions, not simply wide
+uncertainty around the best fit. Intermediate assessment profiles reach the
+same minima from both starts (−243.17 and −225.63 for the selected failure
+and success). Asymptotic assessment profiles remain difficult: some low
+objective points fail nuisance checks, and the best *valid* generating-start
+point is worse than its saved-start counterpart. Known truth is not a
+guarantee that nuisance optimization succeeds.
+
+There is a real weak direction as well. At huge width, the curve approaches
+the constant one-half and its amplitude absorbs the level. The failed
+isolated Gaussian example has effective curve-Jacobian rank two of four,
+versus four at the generating parameters. The smallest Hessian directions
+and their coefficient loadings are stored with each audit. Shape zero/one
+also lies on a boundary; ordinary two-sided Wald uncertainty is unreliable
+there even when the remaining parameters have positive curvature.
+
+These results justify investigating better initial values and a more direct
+peak/width interpretation in a future experiment. Fixed-shape hypotheses and
+more informative age coverage could also be compared prospectively. They do
+not justify automatic retries, new bounds or priors, changing the curve, or
+reclassifying failed benchmark fits. No such changes were made. The original
+warped-versus-double-logistic success rates and their Monte Carlo uncertainty
+remain those reported above.
 
 ## Historical herring trial and regression checks
 
