@@ -80,6 +80,15 @@ into the canonical database.
 | 10599 | Snohomish | Cohort Analysis | 4 | 3 | Ineligible: adult age-3 forecast, not a multi-age population assessment |
 | 10600 | South Puget Sound Hatchery | Cohort Analysis | 4 | 3 | Ineligible: adult age-3 forecast, not a multi-age population assessment |
 
+The same 2026 operational coho run also appears under NOAA Stock SMART IDs
+11869 (Washington Coast: Strait of Juan de Fuca), 11874 (Oregon Coast
+Hatchery), and 11875 (Willapa Bay Natural). All three are marked full
+acceptance, use the 2025 data year, and have a Cohort Analysis model label.
+The 2026 PFMC reports and Coho FRAM documentation show the same single-age-3
+forecast and fishery-accounting structure. They are also ineligible for the
+multi-age assessment set; Stock SMART's composition-input score is not the
+underlying observation vector.
+
 The independent NOAA stock IDs are retained as separate candidate units. Early
 and late OPI hatchery forecasts, natural and hatchery populations, and separate
 river or Puget Sound units remain distinct where NOAA reports them separately;
