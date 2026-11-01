@@ -27,10 +27,10 @@ the rows already linked to a stock or candidate unit.
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 63 | 18 | 98 | 21 | 147 | 31 | 199 | 0 | 0 |
 | ICES | 274 | 59 | 212 | 3 | 0 | 60 | 185 | 29 | 274 | 0 | 0 |
-| NOAA | 432 | 28 | 312 | 9 | 83 | 80 | 190 | 162 | 351 | 0 | 81 |
-| **Total** | **905** | **107** | **587** | **30** | **181** | **161** | **522** | **222** | **824** | **0** | **81** |
+| NOAA | 432 | 28 | 317 | 9 | 78 | 80 | 192 | 160 | 356 | 0 | 76 |
+| **Total** | **905** | **107** | **592** | **30** | **176** | **161** | **524** | **220** | **829** | **0** | **76** |
 
-The crosswalk currently links 598 distinct unit keys across 634 inventory rows: 100 canonical stock units and 498 candidate units. Candidate units include 496 with new identity status, one ambiguous identity, and one mixed identity. Of the new-status candidate units, 59 are eligible, 343 ineligible, 91 unresolved, and three have mixed eligibility. A further 271 inventory rows have no unit crosswalk yet.
+The crosswalk currently links 603 distinct unit keys across 639 inventory rows: 100 canonical stock units and 503 candidate units. Candidate units include 501 with new identity status, one ambiguous identity, and one mixed identity. Of the new-status candidate units, 59 are eligible, 345 ineligible, 94 unresolved, and three have mixed eligibility. A further 266 inventory rows have no unit crosswalk yet.
 
 The progress summary has 75 organization-region
 rows. Row-level status and unit-level deduplication are intentionally reported
@@ -1339,3 +1339,10 @@ Recent NOAA screens also cover Atlantic wolffish (Stock SMART 11562), offshore h
 Three additional NOAA coho entries for the Strait of Juan de Fuca, Oregon Coast Hatchery, and Willapa Bay Natural were screened against the current 2026 PFMC run and Coho FRAM documentation. They use the single-age-3 coho forecast structure, so the public sources do not establish multi-age assessment inputs or outputs. See `source_reviews/noaa_coho_2026.md`.
 
 Thirty additional PFMC Chinook units (California, Oregon, Columbia River, and Washington Coast) have been reconciled to current NOAA Stock SMART IDs. Their full-acceptance 2026 records show varied age-composition and model-category scores; current public reports provide forecasts and management results, but not the full run-specific age inputs or population histories. Eligibility remains unresolved pending source-data recovery. See `source_reviews/noaa_west_coast_chinook_2026.md`.
+
+Five NOAA Cook Inlet EEZ salmon entries were screened against the final 2026
+SAFE and ADF&G supporting reports. The aggregate other-sockeye and coho units
+are ineligible for the age-structured candidate set on current evidence. The
+aggregate Chinook run-to-inventory mapping and the underlying annual age inputs
+for Kenai and Kasilof sockeye remain unresolved. See
+`source_reviews/noaa_cook_inlet_salmon_2026.md`.

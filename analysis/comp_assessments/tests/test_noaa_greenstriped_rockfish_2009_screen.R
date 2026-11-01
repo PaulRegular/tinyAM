@@ -60,9 +60,9 @@ stopifnot(
   grepl('NOAA:10566', unit$candidate_ids, fixed = TRUE),
   sum(noaa$inventory_rows) == 432L,
 
-  sum(noaa$new) == 312L,
-  sum(noaa$excluded) == 190L,
-  sum(noaa$screening_complete) == 351L,
+  sum(noaa$new) == 317L,
+  sum(noaa$excluded) == 192L,
+  sum(noaa$screening_complete) == 356L,
   !any(stocks$authority_stock_id == '10566', na.rm = TRUE),
   !any(stocks$stock_id == candidate$candidate_unit_id),
   !any(assessments$stock_id == candidate$candidate_unit_id),

@@ -482,6 +482,11 @@
 "candidate:noaa_spanner_crab_hawaii","","noaa_spanner_crab_hawaii","new","ineligible","screened","not_started","NOAA","PIFSC","NOAA:11843",1
 "candidate:noaa_spiny_dogfish_pacific_coast_2021","","noaa_spiny_dogfish_pacific_coast_2021","new","eligible","screened","not_started","NOAA","NWFSC / SWFSC","NOAA:10702",1
 "candidate:noaa_squarespot_rockfish_california","","noaa_squarespot_rockfish_california","new","ineligible","screened","not_started","NOAA","NWFSC / SWFSC","NOAA:10442",1
+"candidate:noaa_uci_salmon_17337","","noaa_uci_salmon_17337","new","unresolved","screened","not_started","NOAA","AFSC","NOAA:17337",1
+"candidate:noaa_uci_salmon_17338","","noaa_uci_salmon_17338","new","unresolved","screened","not_started","NOAA","AFSC","NOAA:17338",1
+"candidate:noaa_uci_salmon_17339","","noaa_uci_salmon_17339","new","unresolved","screened","not_started","NOAA","AFSC","NOAA:17339",1
+"candidate:noaa_uci_salmon_17340","","noaa_uci_salmon_17340","new","ineligible","screened","not_started","NOAA","AFSC","NOAA:17340",1
+"candidate:noaa_uci_salmon_17341","","noaa_uci_salmon_17341","new","ineligible","screened","not_started","NOAA","AFSC","NOAA:17341",1
 "candidate:noaa_uswc_rougheye_blackspotted","","noaa_uswc_rougheye_blackspotted","new","mixed","screened","not_started","NOAA","NWFSC / SWFSC","NOAA:10539 | NOAA:14516",2
 "candidate:noaa_vermilion_rockfish_or_wa","","noaa_vermilion_rockfish_or_wa","new","eligible","screened","not_started","NOAA","NWFSC / SWFSC","NOAA:15338 | NOAA:15339",2
 "candidate:noaa_vermilion_snapper_gulf_mexico","","noaa_vermilion_snapper_gulf_mexico","new","eligible","screened","not_started","NOAA","SEFSC","NOAA:10256",1
