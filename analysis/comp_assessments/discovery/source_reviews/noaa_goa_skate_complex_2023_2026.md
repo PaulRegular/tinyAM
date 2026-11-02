@@ -1,7 +1,7 @@
 # NOAA Gulf of Alaska skate complex
 
-Review date: 2026-11-02  
-Inventory record: `NOAA:11005`  
+Review date: 2026-11-02
+Inventory record: `NOAA:11005`
 Candidate unit: `noaa_goa_skate_complex`
 
 ## Assessment identity
