@@ -440,6 +440,7 @@
 "candidate:noaa_monkfish_south_10501","","noaa_monkfish_south_10501","new","ineligible","screened","not_started","NOAA","NEFSC","NOAA:10501",1
 "candidate:noaa_north_atlantic_albacore","","noaa_north_atlantic_albacore","new","unresolved","screened","not_started","NOAA","SEFSC","NOAA:10950",1
 "candidate:noaa_north_atlantic_shortfin_mako","","noaa_north_atlantic_shortfin_mako","new","unresolved","screened","not_started","NOAA","SEFSC","NOAA:10657",1
+"candidate:noaa_north_pacific_shortfin_mako","","noaa_north_pacific_shortfin_mako","new","ineligible","screened","not_started","NOAA","SWFSC / PIFSC","NOAA:11715",1
 "candidate:noaa_northeast_skate_complex","","noaa_northeast_skate_complex","new","ineligible","screened","not_started","NOAA","NEFSC","NOAA:11036 | NOAA:11047 | NOAA:11063 | NOAA:11071 | NOAA:11076 | NOAA:11080 | NOAA:11269",7
 "candidate:noaa_northern_anchovy_central_subpopulation","","noaa_northern_anchovy_central_subpopulation","new","eligible","screened","not_started","NOAA","SWFSC","NOAA:10574",1
 "candidate:noaa_northwest_atlantic_porbeagle","","noaa_northwest_atlantic_porbeagle","new","ineligible","screened","not_started","NOAA","SEFSC","NOAA:10654",1

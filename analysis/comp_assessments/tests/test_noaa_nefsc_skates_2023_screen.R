@@ -64,7 +64,7 @@ stopifnot(nrow(rows) == 7L, !anyDuplicated(rows$candidate_id),
   !any(assessments$assessment_id == 'noaa_northeast_skate_complex_2023', na.rm = TRUE),
   !any(inputs$assessment_id == 'noaa_northeast_skate_complex_2023', na.rm = TRUE),
   !any(outputs$assessment_id == 'noaa_northeast_skate_complex_2023', na.rm = TRUE),
-  sum(noaa$inventory_rows) == 432L, sum(noaa$screening_not_started) == 51L,
-  sum(noaa$screening_complete) == 381L)
+  sum(noaa$inventory_rows) == 432L, sum(noaa$screening_not_started) == 50L,
+  sum(noaa$screening_complete) == 382L)
 
 cat('NOAA Northeast Skate Complex screening, source provenance, unit crosswalk and no-import checks passed.\n')
