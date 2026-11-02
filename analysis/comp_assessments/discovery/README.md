@@ -27,10 +27,10 @@ the rows already linked to a stock or candidate unit.
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 63 | 18 | 98 | 21 | 147 | 31 | 199 | 0 | 0 |
 | ICES | 274 | 59 | 212 | 3 | 0 | 60 | 185 | 29 | 274 | 0 | 0 |
-| NOAA | 432 | 28 | 319 | 9 | 76 | 80 | 194 | 158 | 358 | 0 | 74 |
-| **Total** | **905** | **107** | **594** | **30** | **174** | **161** | **526** | **218** | **831** | **0** | **74** |
+| NOAA | 432 | 28 | 331 | 9 | 64 | 80 | 204 | 148 | 370 | 0 | 62 |
+| **Total** | **905** | **107** | **606** | **30** | **162** | **161** | **536** | **208** | **843** | **0** | **62** |
 
-The crosswalk currently links 605 distinct unit keys across 641 inventory rows: 100 canonical stock units and 505 candidate units. Candidate units include 503 with new identity status, one ambiguous identity, and one mixed identity. Of the new-status candidate units, 59 are eligible, 347 ineligible, and 94 unresolved; three candidate units have mixed eligibility. A further 264 inventory rows have no unit crosswalk yet.
+The crosswalk currently links 616 distinct unit keys across 653 inventory rows: 100 canonical stock units and 516 candidate units. Candidate units include 514 with new identity status, one ambiguous identity, and one mixed identity. Of the new-status candidate units, 59 are eligible, 356 ineligible, and 96 unresolved; three candidate units have mixed eligibility. A further 252 inventory rows have no unit crosswalk yet.
 
 NOAA Ocean quahog (Stock SMART 10788) is the 2020 operational update of the 2017
 Stock Synthesis benchmark. The reviewed assessment products report commercial
@@ -1361,3 +1361,9 @@ are ineligible for the age-structured candidate set on current evidence. The
 aggregate Chinook run-to-inventory mapping and the underlying annual age inputs
 for Kenai and Kasilof sockeye remain unresolved. See
 `source_reviews/noaa_cook_inlet_salmon_2026.md`.
+Six NOAA Alaska regional rows were screened against the latest detailed SAFE and
+ecosystem reports. The two sculpin rows share one report and one candidate
+assessment unit. This added five distinct ineligible units. For BSAI Other
+Flatfish, the latest Stock SMART row remains 2020, but the official 2024 SAFE
+and SSC report document a newer operational update. See
+`source_reviews/noaa_alaska_index_aggregates_2024.md`.
