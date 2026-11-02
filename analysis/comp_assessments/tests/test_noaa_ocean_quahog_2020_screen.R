@@ -40,9 +40,9 @@ progress <- read.csv(file.path(root, 'discovery', 'inventory_progress.csv'),
   stringsAsFactors = FALSE)
 noaa <- progress[progress$organization == 'NOAA', , drop = FALSE]
 stopifnot(sum(noaa$inventory_rows) == 432L,
-  sum(noaa$screening_complete) == 409L,
-  sum(noaa$screening_not_started) == 23L,
-  sum(noaa$excluded) == 238L,
-  sum(noaa$eligibility_unresolved) == 110L)
+  sum(noaa$screening_complete) == 411L,
+  sum(noaa$screening_not_started) == 21L,
+  sum(noaa$excluded) == 240L,
+  sum(noaa$eligibility_unresolved) == 108L)
 
 cat('NOAA ocean quahog inventory screen passed.\n')

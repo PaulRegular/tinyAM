@@ -7,11 +7,13 @@ source('analysis/comp_assessments/scripts/database/523_screen_noaa_isc_shortfin_
 source('analysis/comp_assessments/scripts/database/529_screen_noaa_alaska_sharks_2022.R')
 source('analysis/comp_assessments/scripts/database/530_screen_noaa_isc_pacific_swordfish_marlin_2026.R')
 source('analysis/comp_assessments/scripts/database/531_screen_noaa_seak_coho_indicators_2024.R')
+source('analysis/comp_assessments/scripts/database/532_screen_noaa_blacktip_assessments_2018_2020.R')
 source('analysis/comp_assessments/scripts/database/195_summarize_discovery.R')
 source('analysis/comp_assessments/scripts/database/196_summarize_inventory_units.R')
 source('analysis/comp_assessments/tests/test_noaa_alaska_sharks_2022_screen.R')
 source('analysis/comp_assessments/tests/test_noaa_isc_pacific_swordfish_marlin_2026_screen.R')
 source('analysis/comp_assessments/tests/test_noaa_seak_coho_indicators_2024_screen.R')
+source('analysis/comp_assessments/tests/test_noaa_blacktip_assessments_2018_2020_screen.R')
 source('analysis/comp_assessments/tests/test_noaa_isc_shortfin_mako_2024_screen.R')
 source('analysis/comp_assessments/tests/test_noaa_south_pacific_albacore_2024_screen.R')
 source('analysis/comp_assessments/tests/test_noaa_wcpfc_skipjack_2025_screen.R')
@@ -366,12 +368,12 @@ stopifnot(
     'dfo_unit3_redfish_2022.md'))
 )
 noaa_progress <- progress[progress$organization == 'NOAA', , drop = FALSE]
-stopifnot(sum(noaa_progress$new) == 366L, sum(noaa_progress$eligible_new) == 70L,
-  sum(noaa_progress$ambiguous) == 13L, sum(noaa_progress$identity_unreviewed) == 25L,
-  sum(noaa_progress$eligible) == 84L, sum(noaa_progress$excluded) == 238L,
-  sum(noaa_progress$eligibility_unresolved) == 110L,
-  sum(noaa_progress$screening_complete) == 409L,
-  sum(noaa_progress$screening_not_started) == 23L)
+stopifnot(sum(noaa_progress$new) == 368L, sum(noaa_progress$eligible_new) == 70L,
+  sum(noaa_progress$ambiguous) == 13L, sum(noaa_progress$identity_unreviewed) == 23L,
+  sum(noaa_progress$eligible) == 84L, sum(noaa_progress$excluded) == 240L,
+  sum(noaa_progress$eligibility_unresolved) == 108L,
+  sum(noaa_progress$screening_complete) == 411L,
+  sum(noaa_progress$screening_not_started) == 21L)
 pifsc_progress <- noaa_progress[noaa_progress$source_region == 'PIFSC', , drop = FALSE]
 stopifnot(nrow(pifsc_progress) == 1L,
   pifsc_progress$inventory_rows == 45L,
@@ -861,12 +863,12 @@ stopifnot(
   grepl('numeric age inputs', ccgom_yellowtail$decision_reason, fixed = TRUE),
   file.exists(file.path('analysis', 'comp_assessments', 'discovery', 'source_reviews',
     'noaa_yellowtail_ccgom_2025.md')),
-  sum(noaa_progress$new) == 366L,
+  sum(noaa_progress$new) == 368L,
   sum(noaa_progress$ambiguous) == 13L,
-  sum(noaa_progress$identity_unreviewed) == 25L,
-  sum(noaa_progress$eligibility_unresolved) == 110L,
-  sum(noaa_progress$screening_complete) == 409L,
-  sum(noaa_progress$screening_not_started) == 23L)
+  sum(noaa_progress$identity_unreviewed) == 23L,
+  sum(noaa_progress$eligibility_unresolved) == 108L,
+  sum(noaa_progress$screening_complete) == 411L,
+  sum(noaa_progress$screening_not_started) == 21L)
 cat('NOAA Cape Cod/Gulf of Maine yellowtail identity and source-screening checks passed.\n')
 icelandic_cod <- lookup('ICES:cod.27.5a')
 stopifnot(
@@ -1576,12 +1578,12 @@ stopifnot(
   file.exists(file.path('analysis', 'comp_assessments', 'source_reviews',
     'dfo_pacific_herring_areas_discovery.md')),
   sum(progress$inventory_rows) == 905L,
-  sum(progress$new) == 641L,
-  sum(progress$identity_unreviewed) == 123L,
-  sum(progress$screening_complete) == 882L,
-  sum(progress$screening_not_started) == 23L,
-  sum(progress$excluded) == 570L,
-  sum(progress$eligibility_unresolved) == 170L)
+  sum(progress$new) == 643L,
+  sum(progress$identity_unreviewed) == 121L,
+  sum(progress$screening_complete) == 884L,
+  sum(progress$screening_not_started) == 21L,
+  sum(progress$excluded) == 572L,
+  sum(progress$eligibility_unresolved) == 168L)
 cat('DFO Pacific herring regional identity and source-screening checks passed.\n')
 
 gulf_yellowtail <- lookup('DFO:Gulf:Yellowtail Flounder - NAFO 4T')
@@ -1604,10 +1606,10 @@ stopifnot(
   grepl('2026-054', gulf_yellowtail$detailed_source_url, fixed = TRUE),
   file.exists(file.path('analysis', 'comp_assessments', 'source_reviews',
     'dfo_yellowtail_flounder_4t_2025.md')),
-  sum(progress$new) == 641L,
+  sum(progress$new) == 643L,
   sum(progress$eligible) == 165L,
   sum(progress$eligible_new) == 95L,
-  sum(progress$screening_complete) == 882L)
+  sum(progress$screening_complete) == 884L)
 cat('DFO NAFO 4T yellowtail identity and source-screening checks passed.\n')
 
 gulf_white_hake <- lookup('DFO:Gulf:White Hake - NAFO 4T')
@@ -1630,10 +1632,10 @@ stopifnot(
   grepl('28963929', gulf_white_hake$detailed_source_url, fixed = TRUE),
   file.exists(file.path('analysis', 'comp_assessments', 'source_reviews',
     'dfo_white_hake_4t_2022.md')),
-  sum(progress$new) == 641L,
+  sum(progress$new) == 643L,
   sum(progress$eligible) == 165L,
   sum(progress$eligible_new) == 95L,
-  sum(progress$screening_complete) == 882L)
+  sum(progress$screening_complete) == 884L)
 cat('DFO NAFO 4T white hake identity and source-screening checks passed.\n')
 noaa_sardine <- lookup('NOAA:10573')
 dfo_sardine <- register[register$organization == 'DFO' &
@@ -1677,8 +1679,8 @@ stopifnot(
     'source_reviews', 'dfo_noaa_eastern_georges_haddock.md')),
   sum(dfo_progress$screening_complete) == 199L,
   sum(dfo_progress$screening_not_started) == 0L,
-  sum(noaa_progress$screening_complete) == 409L,
-  sum(noaa_progress$screening_not_started) == 23L)
+  sum(noaa_progress$screening_complete) == 411L,
+  sum(noaa_progress$screening_not_started) == 21L)
 cat('Eastern Georges Bank haddock inventory crosswalk checks passed.\n')
 
 goa_rock_sole <- register[register$candidate_unit_id %in% c(
@@ -1705,8 +1707,8 @@ stopifnot(
     'source_reviews', 'noaa_goa_northern_rock_sole.md')),
   file.exists(file.path('analysis', 'comp_assessments', 'discovery',
     'source_reviews', 'noaa_goa_southern_rock_sole.md')),
-  sum(noaa_progress$screening_complete) == 409L,
-  sum(noaa_progress$screening_not_started) == 23L)
+  sum(noaa_progress$screening_complete) == 411L,
+  sum(noaa_progress$screening_not_started) == 21L)
 cat('NOAA Gulf of Alaska rock sole identity and age-data screen checks passed.\n')
 
 canary_pacific <- lookup('NOAA:10415')
@@ -1727,12 +1729,12 @@ stopifnot(
   lookup('DFO:Pacific:Canary Rockfish')$matched_stock_id == 'dfo_canary_bc',
   file.exists(file.path('analysis', 'comp_assessments', 'discovery',
     'source_reviews', 'noaa_canary_rockfish_pacific_coast.md')),
-  sum(noaa_progress$new) == 366L,
+  sum(noaa_progress$new) == 368L,
   sum(noaa_progress$eligible_new) == 70L,
-  sum(noaa_progress$screening_complete) == 409L,
+  sum(noaa_progress$screening_complete) == 411L,
   sum(progress$inventory_rows) == 905L,
   sum(progress$eligible_new) == 95L,
-  sum(progress$screening_complete) == 882L)
+  sum(progress$screening_complete) == 884L)
 cat('NOAA Pacific Coast Canary Rockfish identity and source-screening checks passed.\n')
 english_sole <- lookup('NOAA:10046')
 stopifnot(
@@ -1752,13 +1754,13 @@ stopifnot(
     'https://www.pcouncil.org/documents/2015/01/data-moderate-stock-assessments-for-brown-china-copper-sharpchin-stripetail-and-yellowtail-rockfishes-and-english-and-rex-soles-in-2013-published-january-2015.pdf',
   file.exists(file.path('analysis', 'comp_assessments', 'discovery',
     'source_reviews', 'noaa_english_sole_pacific_coast.md')),
-  sum(noaa_progress$new) == 366L,
-  sum(noaa_progress$excluded) == 238L,
-  sum(noaa_progress$screening_complete) == 409L,
+  sum(noaa_progress$new) == 368L,
+  sum(noaa_progress$excluded) == 240L,
+  sum(noaa_progress$screening_complete) == 411L,
   sum(progress$inventory_rows) == 905L,
-  sum(progress$new) == 641L,
-  sum(progress$excluded) == 570L,
-  sum(progress$screening_complete) == 882L)
+  sum(progress$new) == 643L,
+  sum(progress$excluded) == 572L,
+  sum(progress$screening_complete) == 884L)
 cat('NOAA Pacific Coast English Sole identity and source-screening checks passed.\n')
 darkblotched <- lookup("NOAA:10562")
 stopifnot(
@@ -1778,20 +1780,20 @@ stopifnot(
   grepl("2025 Stock SMART inventory year refers to a catch-only projection", darkblotched$decision_reason, fixed = TRUE),
   darkblotched$detailed_source_url == "https://www.pcouncil.org/documents/2018/01/status-of-the-darkblotched-rockfish-resource-off-the-continental-u-s-pacific-coast-in-2017-update-of-2015-assessment-model.pdf",
   file.exists(file.path("analysis", "comp_assessments", "discovery", "source_reviews", "noaa_darkblotched_rockfish_pacific_coast.md")),
-  sum(noaa_progress$new) == 366L,
+  sum(noaa_progress$new) == 368L,
   sum(noaa_progress$eligible_new) == 70L,
   sum(noaa_progress$eligible) == 84L,
-  sum(noaa_progress$identity_unreviewed) == 25L,
-  sum(noaa_progress$eligibility_unresolved) == 110L,
-  sum(noaa_progress$screening_complete) == 409L,
-  sum(noaa_progress$screening_not_started) == 23L,
-  sum(progress$new) == 641L,
+  sum(noaa_progress$identity_unreviewed) == 23L,
+  sum(noaa_progress$eligibility_unresolved) == 108L,
+  sum(noaa_progress$screening_complete) == 411L,
+  sum(noaa_progress$screening_not_started) == 21L,
+  sum(progress$new) == 643L,
   sum(progress$eligible) == 165L,
   sum(progress$eligible_new) == 95L,
-  sum(progress$identity_unreviewed) == 123L,
-  sum(progress$eligibility_unresolved) == 170L,
-  sum(progress$screening_complete) == 882L,
-  sum(progress$screening_not_started) == 23L)
+  sum(progress$identity_unreviewed) == 121L,
+  sum(progress$eligibility_unresolved) == 168L,
+  sum(progress$screening_complete) == 884L,
+  sum(progress$screening_not_started) == 21L)
 cat("NOAA Pacific Coast Darkblotched Rockfish identity and source-screening checks passed.\n")
 goathorny <- lookup("NOAA:10457")
 stopifnot(
@@ -1810,12 +1812,12 @@ stopifnot(
   grepl("thornyhead complex", goathorny$notes, fixed = TRUE),
   goathorny$detailed_source_url == "https://www.npfmc.org/wp-content/PDFdocuments/SAFE/2024/GOAthorny.pdf",
   file.exists(file.path("analysis", "comp_assessments", "discovery", "source_reviews", "noaa_goa_thornyhead_complex_2024.md")),
-  sum(noaa_progress$new) == 366L,
-  sum(noaa_progress$excluded) == 238L,
-  sum(noaa_progress$screening_complete) == 409L,
-  sum(progress$new) == 641L,
-  sum(progress$excluded) == 570L,
-  sum(progress$screening_complete) == 882L)
+  sum(noaa_progress$new) == 368L,
+  sum(noaa_progress$excluded) == 240L,
+  sum(noaa_progress$screening_complete) == 411L,
+  sum(progress$new) == 643L,
+  sum(progress$excluded) == 572L,
+  sum(progress$screening_complete) == 884L)
 cat("NOAA Gulf of Alaska Thornyhead current-method screening checks passed.\n")
 shortspine <- lookup("NOAA:10458")
 stopifnot(
@@ -1836,17 +1838,17 @@ stopifnot(
     "https://www.pcouncil.org/documents/2024/02/status-of-shortspine-thornyhead-sebastolobus-alascanus-along-the-us-west-coast-in-2023.pdf; https://www.pcouncil.org/documents/shortspine-thornyhead-2023-model-files-zip-file/; https://www.pcouncil.org/documents/2025/08/g-7-attachment-3-catch-only-projection-for-shortspine-thornyhead.pdf/",
   file.exists(file.path("analysis", "comp_assessments", "discovery", "source_reviews",
     "noaa_shortspine_thornyhead_pacific_coast.md")),
-  sum(noaa_progress$new) == 366L,
-  sum(noaa_progress$excluded) == 238L,
-  sum(noaa_progress$screening_complete) == 409L,
-  sum(noaa_progress$screening_not_started) == 23L,
+  sum(noaa_progress$new) == 368L,
+  sum(noaa_progress$excluded) == 240L,
+  sum(noaa_progress$screening_complete) == 411L,
+  sum(noaa_progress$screening_not_started) == 21L,
   sum(progress$inventory_rows) == 905L,
-  sum(progress$new) == 641L,
-  sum(progress$identity_unreviewed) == 123L,
-  sum(progress$excluded) == 570L,
-  sum(progress$eligibility_unresolved) == 170L,
-  sum(progress$screening_complete) == 882L,
-  sum(progress$screening_not_started) == 23L)
+  sum(progress$new) == 643L,
+  sum(progress$identity_unreviewed) == 121L,
+  sum(progress$excluded) == 572L,
+  sum(progress$eligibility_unresolved) == 168L,
+  sum(progress$screening_complete) == 884L,
+  sum(progress$screening_not_started) == 21L)
 cat("NOAA Pacific Coast Shortspine Thornyhead identity and source-screening checks passed.\n")
 longspine <- lookup("NOAA:10460")
 stopifnot(
@@ -1864,17 +1866,17 @@ stopifnot(
   grepl("DFO inventory also lists Longspine Thornyhead", longspine$notes, fixed = TRUE),
   file.exists(file.path("analysis", "comp_assessments", "discovery", "source_reviews",
     "noaa_longspine_thornyhead_pacific_coast.md")),
-  sum(noaa_progress$new) == 366L,
-  sum(noaa_progress$excluded) == 238L,
-  sum(noaa_progress$screening_complete) == 409L,
-  sum(noaa_progress$screening_not_started) == 23L,
+  sum(noaa_progress$new) == 368L,
+  sum(noaa_progress$excluded) == 240L,
+  sum(noaa_progress$screening_complete) == 411L,
+  sum(noaa_progress$screening_not_started) == 21L,
   sum(progress$inventory_rows) == 905L,
-  sum(progress$new) == 641L,
-  sum(progress$identity_unreviewed) == 123L,
-  sum(progress$excluded) == 570L,
-  sum(progress$eligibility_unresolved) == 170L,
-  sum(progress$screening_complete) == 882L,
-  sum(progress$screening_not_started) == 23L)
+  sum(progress$new) == 643L,
+  sum(progress$identity_unreviewed) == 121L,
+  sum(progress$excluded) == 572L,
+  sum(progress$eligibility_unresolved) == 168L,
+  sum(progress$screening_complete) == 884L,
+  sum(progress$screening_not_started) == 21L)
 california_scorpionfish <- lookup("NOAA:10461")
 stopifnot(
   nrow(california_scorpionfish) == 1L,
@@ -1892,14 +1894,14 @@ stopifnot(
   grepl("2017-california-scorpionfish-model-files", california_scorpionfish$detailed_source_url, fixed = TRUE),
   file.exists(file.path("analysis", "comp_assessments", "discovery", "source_reviews",
     "noaa_california_scorpionfish_southern_california_2017.md")),
-  sum(noaa_progress$new) == 366L,
+  sum(noaa_progress$new) == 368L,
   sum(noaa_progress$eligible_new) == 70L,
   sum(noaa_progress$eligible) == 84L,
-  sum(noaa_progress$screening_complete) == 409L,
-  sum(progress$new) == 641L,
+  sum(noaa_progress$screening_complete) == 411L,
+  sum(progress$new) == 643L,
   sum(progress$eligible_new) == 95L,
   sum(progress$eligible) == 165L,
-  sum(progress$screening_complete) == 882L)
+  sum(progress$screening_complete) == 884L)
 cat("NOAA California Scorpionfish identity and source-screening checks passed.\n")
 cat("NOAA Pacific Coast Longspine Thornyhead identity and source-screening checks passed.\n")
 kelp_greenling <- lookup("NOAA:10462")
@@ -1922,13 +1924,13 @@ stopifnot(
     "noaa_oregon_kelp_greenling_2015.md")),
   sum(noaa_progress$eligible_new) == 70L,
   sum(noaa_progress$eligible) == 84L,
-  sum(noaa_progress$screening_complete) == 409L,
-  sum(noaa_progress$screening_not_started) == 23L,
+  sum(noaa_progress$screening_complete) == 411L,
+  sum(noaa_progress$screening_not_started) == 21L,
   sum(progress$eligible_new) == 95L,
   sum(progress$eligible) == 165L,
-  sum(progress$eligibility_unresolved) == 170L,
-  sum(progress$screening_complete) == 882L,
-  sum(progress$screening_not_started) == 23L)
+  sum(progress$eligibility_unresolved) == 168L,
+  sum(progress$screening_complete) == 884L,
+  sum(progress$screening_not_started) == 21L)
 cat("NOAA Oregon Kelp Greenling identity and source-screening checks passed.\n")
 rex_sole <- register[!is.na(register$candidate_unit_id) &
   register$candidate_unit_id == "noaa_goa_rex_sole", , drop = FALSE]
@@ -1962,12 +1964,12 @@ stopifnot(
     "noaa_goa_rex_sole_2026.md")),
   file.exists(file.path("analysis", "comp_assessments", "discovery", "source_reviews",
     "noaa_pacific_rex_sole_2023.md")),
-  sum(noaa_progress$new) == 366L,
+  sum(noaa_progress$new) == 368L,
   sum(noaa_progress$eligible_new) == 70L,
-  sum(noaa_progress$screening_complete) == 409L,
-  sum(progress$new) == 641L,
+  sum(noaa_progress$screening_complete) == 411L,
+  sum(progress$new) == 643L,
   sum(progress$eligible_new) == 95L,
-  sum(progress$screening_complete) == 882L)
+  sum(progress$screening_complete) == 884L)
 cat("NOAA rex sole identity and source-screening checks passed.\n")
 stopifnot(
   nrow(dfo_rebs) == 1L,
@@ -1992,10 +1994,10 @@ stopifnot(
   sum(dfo_progress$screening_complete) == 199L,
   sum(dfo_progress$screening_not_started) == 0L,
   sum(progress$ambiguous) == 34L,
-  sum(progress$identity_unreviewed) == 123L,
-  sum(progress$eligibility_unresolved) == 170L,
-  sum(progress$screening_complete) == 882L,
-  sum(progress$screening_not_started) == 23L)
+  sum(progress$identity_unreviewed) == 121L,
+  sum(progress$eligibility_unresolved) == 168L,
+  sum(progress$screening_complete) == 884L,
+  sum(progress$screening_not_started) == 21L)
 cat("DFO Rougheye/Blackspotted identity and age-data screening checks passed.\n")
 
 anchovy <- lookup("NOAA:10574")
@@ -2021,17 +2023,17 @@ stopifnot(
   !any(stocks$scientific_name == "Engraulis mordax"),
   file.exists(file.path("analysis", "comp_assessments", "discovery", "source_reviews",
     "noaa_northern_anchovy_central_subpopulation_2021.md")),
-  sum(noaa_progress$new) == 366L,
+  sum(noaa_progress$new) == 368L,
   sum(noaa_progress$eligible_new) == 70L,
   sum(noaa_progress$eligible) == 84L,
-  sum(noaa_progress$screening_complete) == 409L,
-  sum(noaa_progress$screening_not_started) == 23L,
-  sum(progress$new) == 641L,
+  sum(noaa_progress$screening_complete) == 411L,
+  sum(noaa_progress$screening_not_started) == 21L,
+  sum(progress$new) == 643L,
   sum(progress$eligible_new) == 95L,
   sum(progress$eligible) == 165L,
-  sum(progress$eligibility_unresolved) == 170L,
-  sum(progress$screening_complete) == 882L,
-  sum(progress$screening_not_started) == 23L)
+  sum(progress$eligibility_unresolved) == 168L,
+  sum(progress$screening_complete) == 884L,
+  sum(progress$screening_not_started) == 21L)
 cat("NOAA northern anchovy identity and source-screening checks passed.\n")
 
 red_porgy <- lookup("NOAA:10100")
@@ -2104,12 +2106,12 @@ stopifnot(
   sum(dfo_progress$eligibility_unresolved) == 31L,
   sum(dfo_progress$screening_complete) == 199L,
   sum(dfo_progress$screening_not_started) == 0L,
-  sum(progress$new) == 641L,
-  sum(progress$identity_unreviewed) == 123L,
-  sum(progress$excluded) == 570L,
-  sum(progress$eligibility_unresolved) == 170L,
-  sum(progress$screening_complete) == 882L,
-  sum(progress$screening_not_started) == 23L)
+  sum(progress$new) == 643L,
+  sum(progress$identity_unreviewed) == 121L,
+  sum(progress$excluded) == 572L,
+  sum(progress$eligibility_unresolved) == 168L,
+  sum(progress$screening_complete) == 884L,
+  sum(progress$screening_not_started) == 21L)
 cat("DFO 4RST halibut source-screening checks passed.\n")
 
 greenland_halibut_4rst <- lookup("DFO:Quebec:Greenland Halibut - NAFO 4RST")
@@ -2141,12 +2143,12 @@ stopifnot(
   sum(dfo_progress$eligibility_unresolved) == 31L,
   sum(dfo_progress$screening_complete) == 199L,
   sum(dfo_progress$screening_not_started) == 0L,
-  sum(progress$new) == 641L,
-  sum(progress$identity_unreviewed) == 123L,
-  sum(progress$excluded) == 570L,
-  sum(progress$eligibility_unresolved) == 170L,
-  sum(progress$screening_complete) == 882L,
-  sum(progress$screening_not_started) == 23L)
+  sum(progress$new) == 643L,
+  sum(progress$identity_unreviewed) == 121L,
+  sum(progress$excluded) == 572L,
+  sum(progress$eligibility_unresolved) == 168L,
+  sum(progress$screening_complete) == 884L,
+  sum(progress$screening_not_started) == 21L)
 cat("DFO 4RST Greenland halibut source-screening checks passed.\n")
 
 greenland_halibut_2_3klmno <- lookup('DFO:Newfoundland and Labrador:Greenland Halibut (Turbot) - NAFO 2 + 3KLMNO')
@@ -2177,13 +2179,13 @@ stopifnot(
   sum(dfo_progress$eligibility_unresolved) == 31L,
   sum(dfo_progress$screening_complete) == 199L,
   sum(dfo_progress$screening_not_started) == 0L,
-  sum(progress$new) == 641L,
-  sum(progress$identity_unreviewed) == 123L,
+  sum(progress$new) == 643L,
+  sum(progress$identity_unreviewed) == 121L,
   sum(progress$eligible) == 165L,
   sum(progress$eligible_new) == 95L,
-  sum(progress$eligibility_unresolved) == 170L,
-  sum(progress$screening_complete) == 882L,
-  sum(progress$screening_not_started) == 23L)
+  sum(progress$eligibility_unresolved) == 168L,
+  sum(progress$screening_complete) == 884L,
+  sum(progress$screening_not_started) == 21L)
 cat('DFO 2+3KLMNO Greenland halibut source-screening checks passed.\n')
 herring_4rsw_spring <- lookup('DFO:Newfoundland and Labrador:Atlantic Herring - NAFO 4R (Spring Spawner)')
 herring_4rsw_fall <- lookup('DFO:Newfoundland and Labrador:Atlantic Herring - NAFO 4R (Fall Spawner)')
@@ -2218,12 +2220,12 @@ stopifnot(
   sum(dfo_progress$eligibility_unresolved) == 31L,
   sum(dfo_progress$screening_complete) == 199L,
   sum(dfo_progress$screening_not_started) == 0L,
-  sum(progress$new) == 641L,
-  sum(progress$identity_unreviewed) == 123L,
+  sum(progress$new) == 643L,
+  sum(progress$identity_unreviewed) == 121L,
   sum(progress$eligible_new) == 95L,
-  sum(progress$eligibility_unresolved) == 170L,
-  sum(progress$screening_complete) == 882L,
-  sum(progress$screening_not_started) == 23L)
+  sum(progress$eligibility_unresolved) == 168L,
+  sum(progress$screening_complete) == 884L,
+  sum(progress$screening_not_started) == 21L)
 cat('DFO 4RSw spring/fall herring source-screening checks passed.\n')
 yellowtail_3lno <- lookup('DFO:Newfoundland and Labrador:Yellowtail Flounder - NAFO 3LNO')
 stopifnot(
@@ -2253,12 +2255,12 @@ stopifnot(
   sum(dfo_progress$eligibility_unresolved) == 31L,
   sum(dfo_progress$screening_complete) == 199L,
   sum(dfo_progress$screening_not_started) == 0L,
-  sum(progress$new) == 641L,
-  sum(progress$identity_unreviewed) == 123L,
-  sum(progress$excluded) == 570L,
-  sum(progress$eligibility_unresolved) == 170L,
-  sum(progress$screening_complete) == 882L,
-  sum(progress$screening_not_started) == 23L)
+  sum(progress$new) == 643L,
+  sum(progress$identity_unreviewed) == 121L,
+  sum(progress$excluded) == 572L,
+  sum(progress$eligibility_unresolved) == 168L,
+  sum(progress$screening_complete) == 884L,
+  sum(progress$screening_not_started) == 21L)
 cat('DFO 3LNO yellowtail flounder source-screening checks passed.
 ')
 witch_3no <- lookup('DFO:Newfoundland and Labrador:Witch Flounder - NAFO 3NO')
@@ -2289,12 +2291,12 @@ stopifnot(
   sum(dfo_progress$eligibility_unresolved) == 31L,
   sum(dfo_progress$screening_complete) == 199L,
   sum(dfo_progress$screening_not_started) == 0L,
-  sum(progress$new) == 641L,
-  sum(progress$identity_unreviewed) == 123L,
-  sum(progress$excluded) == 570L,
-  sum(progress$eligibility_unresolved) == 170L,
-  sum(progress$screening_complete) == 882L,
-  sum(progress$screening_not_started) == 23L)
+  sum(progress$new) == 643L,
+  sum(progress$identity_unreviewed) == 121L,
+  sum(progress$excluded) == 572L,
+  sum(progress$eligibility_unresolved) == 168L,
+  sum(progress$screening_complete) == 884L,
+  sum(progress$screening_not_started) == 21L)
 cat('DFO NAFO 3NO witch flounder source-screening checks passed.
 ')
 yellowtail_5z <- lookup('DFO:Maritimes:Yellowtail Flounder - NAFO 5Z')
@@ -2322,9 +2324,9 @@ stopifnot(
   sum(dfo_progress$screening_complete) == 199L,
   sum(dfo_progress$screening_not_started) == 0L,
   sum(progress$matched) == 107L,
-  sum(progress$identity_unreviewed) == 123L,
-  sum(progress$screening_complete) == 882L,
-  sum(progress$screening_not_started) == 23L)
+  sum(progress$identity_unreviewed) == 121L,
+  sum(progress$screening_complete) == 884L,
+  sum(progress$screening_not_started) == 21L)
 cat('DFO 5Z yellowtail crosswalk and source-screening checks passed.
 ')
 nl_herring <- lookup('DFO:Newfoundland and Labrador:Atlantic Herring - NAFO 2J3KLPs')
@@ -2361,15 +2363,15 @@ stopifnot(
   sum(dfo_progress$screening_complete) == 199L,
   sum(dfo_progress$screening_not_started) == 0L,
   sum(progress$matched) == 107L,
-  sum(progress$new) == 641L,
+  sum(progress$new) == 643L,
   sum(progress$ambiguous) == 34L,
-  sum(progress$identity_unreviewed) == 123L,
+  sum(progress$identity_unreviewed) == 121L,
   sum(progress$eligible) == 165L,
-  sum(progress$excluded) == 570L,
+  sum(progress$excluded) == 572L,
   sum(progress$eligible_new) == 95L,
-  sum(progress$eligibility_unresolved) == 170L,
-  sum(progress$screening_complete) == 882L,
-  sum(progress$screening_not_started) == 23L)
+  sum(progress$eligibility_unresolved) == 168L,
+  sum(progress$screening_complete) == 884L,
+  sum(progress$screening_not_started) == 21L)
 cat('DFO Newfoundland 2J3KLPs herring source-screening checks passed.\n')
 
 dfo_4vwx_herring_components <- register[register$candidate_id %in% c(
@@ -2404,10 +2406,10 @@ stopifnot(
   sum(dfo_progress$screening_not_started) == 0L,
   sum(progress$matched) == 107L,
   sum(progress$ambiguous) == 34L,
-  sum(progress$identity_unreviewed) == 123L,
-  sum(progress$eligibility_unresolved) == 170L,
-  sum(progress$screening_complete) == 882L,
-  sum(progress$screening_not_started) == 23L)
+  sum(progress$identity_unreviewed) == 121L,
+  sum(progress$eligibility_unresolved) == 168L,
+  sum(progress$screening_complete) == 884L,
+  sum(progress$screening_not_started) == 21L)
 cat('DFO 4VWX herring component crosswalk checks passed.\n')
 
 dfo_mackerel <- lookup('DFO:National Capital Region:Atlantic Mackerel')
@@ -2434,11 +2436,11 @@ stopifnot(
   sum(dfo_progress$screening_complete) == 199L,
   sum(dfo_progress$screening_not_started) == 0L,
   sum(progress$matched) == 107L,
-  sum(progress$identity_unreviewed) == 123L,
+  sum(progress$identity_unreviewed) == 121L,
   sum(progress$eligible) == 165L,
-  sum(progress$eligibility_unresolved) == 170L,
-  sum(progress$screening_complete) == 882L,
-  sum(progress$screening_not_started) == 23L)
+  sum(progress$eligibility_unresolved) == 168L,
+  sum(progress$screening_complete) == 884L,
+  sum(progress$screening_not_started) == 21L)
 cat('DFO Atlantic mackerel inventory crosswalk checks passed.\n')
 
 quebec_4s_herring <- lookup('DFO:Quebec:Atlantic Herring - Herring Fishing Area 15')
@@ -2467,11 +2469,11 @@ stopifnot(
   sum(dfo_progress$screening_complete) == 199L,
   sum(dfo_progress$screening_not_started) == 0L,
   sum(progress$ambiguous) == 34L,
-  sum(progress$identity_unreviewed) == 123L,
-  sum(progress$excluded) == 570L,
-  sum(progress$eligibility_unresolved) == 170L,
-  sum(progress$screening_complete) == 882L,
-  sum(progress$screening_not_started) == 23L)
+  sum(progress$identity_unreviewed) == 121L,
+  sum(progress$excluded) == 572L,
+  sum(progress$eligibility_unresolved) == 168L,
+  sum(progress$screening_complete) == 884L,
+  sum(progress$screening_not_started) == 21L)
 cat('DFO Quebec North Shore herring screening checks passed.\n')
 
 western_pollock <- lookup('DFO:Maritimes:Pollock - NAFO 4X5 (Western Component)')
@@ -2501,13 +2503,13 @@ stopifnot(
   sum(dfo_progress$eligibility_unresolved) == 31L,
   sum(dfo_progress$screening_complete) == 199L,
   sum(dfo_progress$screening_not_started) == 0L,
-  sum(progress$new) == 641L,
-  sum(progress$identity_unreviewed) == 123L,
+  sum(progress$new) == 643L,
+  sum(progress$identity_unreviewed) == 121L,
   sum(progress$eligible) == 165L,
   sum(progress$eligible_new) == 95L,
-  sum(progress$eligibility_unresolved) == 170L,
-  sum(progress$screening_complete) == 882L,
-  sum(progress$screening_not_started) == 23L)
+  sum(progress$eligibility_unresolved) == 168L,
+  sum(progress$screening_complete) == 884L,
+  sum(progress$screening_not_started) == 21L)
 cat('DFO western-component Pollock source-screening checks passed.\n')
 
 capelin <- lookup('DFO:Newfoundland and Labrador:Capelin - NAFO 2J3KL')
@@ -2538,14 +2540,14 @@ stopifnot(
   sum(dfo_progress$eligibility_unresolved) == 31L,
   sum(dfo_progress$screening_complete) == 199L,
   sum(dfo_progress$screening_not_started) == 0L,
-  sum(progress$new) == 641L,
-  sum(progress$identity_unreviewed) == 123L,
+  sum(progress$new) == 643L,
+  sum(progress$identity_unreviewed) == 121L,
   sum(progress$eligible) == 165L,
-  sum(progress$excluded) == 570L,
+  sum(progress$excluded) == 572L,
   sum(progress$eligible_new) == 95L,
-  sum(progress$eligibility_unresolved) == 170L,
-  sum(progress$screening_complete) == 882L,
-  sum(progress$screening_not_started) == 23L)
+  sum(progress$eligibility_unresolved) == 168L,
+  sum(progress$screening_complete) == 884L,
+  sum(progress$screening_not_started) == 21L)
 cat('DFO 2J3KL Capelin source-screening checks passed.\n')
 
 capelin_4rst <- lookup('DFO:Newfoundland and Labrador:Capelin - NAFO 4RST')
@@ -2578,14 +2580,14 @@ stopifnot(
   sum(dfo_progress$eligibility_unresolved) == 31L,
   sum(dfo_progress$screening_complete) == 199L,
   sum(dfo_progress$screening_not_started) == 0L,
-  sum(progress$new) == 641L,
-  sum(progress$identity_unreviewed) == 123L,
+  sum(progress$new) == 643L,
+  sum(progress$identity_unreviewed) == 121L,
   sum(progress$eligible) == 165L,
-  sum(progress$excluded) == 570L,
+  sum(progress$excluded) == 572L,
   sum(progress$eligible_new) == 95L,
-  sum(progress$eligibility_unresolved) == 170L,
-  sum(progress$screening_complete) == 882L,
-  sum(progress$screening_not_started) == 23L)
+  sum(progress$eligibility_unresolved) == 168L,
+  sum(progress$screening_complete) == 884L,
+  sum(progress$screening_not_started) == 21L)
 cat('DFO 4RST Capelin source-screening checks passed.\n')
 
 albacore <- register[register$candidate_id %in% c('NOAA:11682',
@@ -2614,13 +2616,13 @@ stopifnot(
   sum(dfo_progress$excluded) == 147L,
   sum(dfo_progress$screening_complete) == 199L,
   sum(noaa_progress$inventory_rows) == 432L,
-  sum(noaa_progress$new) == 366L,
-  sum(noaa_progress$excluded) == 238L,
-  sum(noaa_progress$screening_complete) == 409L,
+  sum(noaa_progress$new) == 368L,
+  sum(noaa_progress$excluded) == 240L,
+  sum(noaa_progress$screening_complete) == 411L,
   sum(progress$inventory_rows) == 905L,
-  sum(progress$new) == 641L,
-  sum(progress$excluded) == 570L,
-  sum(progress$screening_complete) == 882L)
+  sum(progress$new) == 643L,
+  sum(progress$excluded) == 572L,
+  sum(progress$screening_complete) == 884L)
 cat('North Pacific albacore cross-agency screening checks passed.\n')
 
 halibut <- register[register$candidate_id %in% c('NOAA:11082',
@@ -2653,19 +2655,19 @@ stopifnot(
   sum(dfo_progress$eligibility_unresolved) == 31L,
   sum(dfo_progress$screening_complete) == 199L,
   sum(dfo_progress$screening_not_started) == 0L,
-  sum(noaa_progress$new) == 366L,
-  sum(noaa_progress$identity_unreviewed) == 25L,
+  sum(noaa_progress$new) == 368L,
+  sum(noaa_progress$identity_unreviewed) == 23L,
   sum(noaa_progress$eligible) == 84L,
-  sum(noaa_progress$eligibility_unresolved) == 110L,
-  sum(noaa_progress$screening_complete) == 409L,
-  sum(noaa_progress$screening_not_started) == 23L,
-  sum(progress$new) == 641L,
-  sum(progress$identity_unreviewed) == 123L,
+  sum(noaa_progress$eligibility_unresolved) == 108L,
+  sum(noaa_progress$screening_complete) == 411L,
+  sum(noaa_progress$screening_not_started) == 21L,
+  sum(progress$new) == 643L,
+  sum(progress$identity_unreviewed) == 121L,
   sum(progress$eligible) == 165L,
   sum(progress$eligible_new) == 95L,
-  sum(progress$eligibility_unresolved) == 170L,
-  sum(progress$screening_complete) == 882L,
-  sum(progress$screening_not_started) == 23L)
+  sum(progress$eligibility_unresolved) == 168L,
+  sum(progress$screening_complete) == 884L,
+  sum(progress$screening_not_started) == 21L)
 cat('Pacific halibut NOAA/DFO cross-agency screening checks passed.\n')
 
 units <- read.csv(file.path('analysis', 'comp_assessments', 'discovery', 'inventory_units.csv'),
@@ -2892,13 +2894,13 @@ stopifnot(
   western_bluefin_unit$eligibility == 'unresolved',
   all(c('matched_units', 'crosswalked_candidate_units', 'identity_unlinked_rows') %in% names(progress)),
   sum(progress$inventory_rows) == 905L,
-  sum(progress$new) == 641L,
-  sum(progress$identity_unreviewed) == 123L,
-  sum(progress$excluded) == 570L,
-  sum(progress$screening_complete) == 882L,
-  sum(progress$screening_not_started) == 23L,
-  nrow(units) == 651L,
-  sum(units$inventory_entries) == 690L,
+  sum(progress$new) == 643L,
+  sum(progress$identity_unreviewed) == 121L,
+  sum(progress$excluded) == 572L,
+  sum(progress$screening_complete) == 884L,
+  sum(progress$screening_not_started) == 21L,
+  nrow(units) == 653L,
+  sum(units$inventory_entries) == 692L,
   sum(progress$identity_unlinked_rows) > 0L
 )
 cat('Inventory unit crosswalk and distinct-unit checks passed.\n')
@@ -2926,17 +2928,17 @@ stopifnot(
   western_skipjack_unit$organizations == 'NOAA',
   western_skipjack_unit$eligibility == 'ineligible',
   nrow(noaa_sefsc) == 1L,
-  noaa_sefsc$screening_complete == 78L,
-  noaa_sefsc$excluded == 42L,
+  noaa_sefsc$screening_complete == 80L,
+  noaa_sefsc$excluded == 44L,
   sum(progress$inventory_rows) == 905L,
-  sum(progress$new) == 641L,
-  sum(progress$identity_unreviewed) == 123L,
-  sum(progress$excluded) == 570L,
-  sum(progress$eligibility_unresolved) == 170L,
-  sum(progress$screening_complete) == 882L,
-  sum(progress$screening_not_started) == 23L,
-  nrow(units) == 651L,
-  sum(units$inventory_entries) == 690L)
+  sum(progress$new) == 643L,
+  sum(progress$identity_unreviewed) == 121L,
+  sum(progress$excluded) == 572L,
+  sum(progress$eligibility_unresolved) == 168L,
+  sum(progress$screening_complete) == 884L,
+  sum(progress$screening_not_started) == 21L,
+  nrow(units) == 653L,
+  sum(units$inventory_entries) == 692L)
 cat('Western Atlantic skipjack screen checks passed.\n')
 
 eastern_skipjack <- lookup('NOAA:10160')
@@ -2968,14 +2970,14 @@ stopifnot(
   noaa_swfsc$screening_complete == 6L,
   noaa_swfsc$excluded == 3L,
   sum(progress$inventory_rows) == 905L,
-  sum(progress$new) == 641L,
-  sum(progress$identity_unreviewed) == 123L,
-  sum(progress$excluded) == 570L,
-  sum(progress$eligibility_unresolved) == 170L,
-  sum(progress$screening_complete) == 882L,
-  sum(progress$screening_not_started) == 23L,
-  nrow(units) == 651L,
-  sum(units$inventory_entries) == 690L)
+  sum(progress$new) == 643L,
+  sum(progress$identity_unreviewed) == 121L,
+  sum(progress$excluded) == 572L,
+  sum(progress$eligibility_unresolved) == 168L,
+  sum(progress$screening_complete) == 884L,
+  sum(progress$screening_not_started) == 21L,
+  nrow(units) == 653L,
+  sum(units$inventory_entries) == 692L)
 cat('Eastern Pacific skipjack screen checks passed.\n')
 
 
@@ -3061,13 +3063,13 @@ stopifnot(
   bocaccio_unit$inventory_entries == 1L,
   bocaccio_unit$organizations == 'NOAA',
   bocaccio_unit$eligibility == 'eligible',
-  sum(progress$new) == 641L,
-  sum(progress$identity_unreviewed) == 123L,
-  sum(progress$eligibility_unresolved) == 170L,
-  sum(progress$screening_complete) == 882L,
-  sum(progress$screening_not_started) == 23L,
-  nrow(units) == 651L,
-  sum(units$inventory_entries) == 690L)
+  sum(progress$new) == 643L,
+  sum(progress$identity_unreviewed) == 121L,
+  sum(progress$eligibility_unresolved) == 168L,
+  sum(progress$screening_complete) == 884L,
+  sum(progress$screening_not_started) == 21L,
+  nrow(units) == 653L,
+  sum(units$inventory_entries) == 692L)
 cat('Southern Pacific Coast bocaccio source-screening checks passed.\n')
 
 bogoslof_pollock <- lookup('NOAA:10512')
@@ -3108,13 +3110,13 @@ stopifnot(
   noaa_alaska$excluded == 65L,
   noaa_alaska$screening_complete == 87L,
   noaa_alaska$screening_not_started == 2L,
-  sum(progress$new) == 641L,
-  sum(progress$identity_unreviewed) == 123L,
-  sum(progress$eligibility_unresolved) == 170L,
-  sum(progress$screening_complete) == 882L,
-  sum(progress$screening_not_started) == 23L,
-  nrow(units) == 651L,
-  sum(units$inventory_entries) == 690L)
+  sum(progress$new) == 643L,
+  sum(progress$identity_unreviewed) == 121L,
+  sum(progress$eligibility_unresolved) == 168L,
+  sum(progress$screening_complete) == 884L,
+  sum(progress$screening_not_started) == 21L,
+  nrow(units) == 653L,
+  sum(units$inventory_entries) == 692L)
 cat('Bogoslof and Southeast Outside pollock source-screening checks passed.\n')
 
 silver_hake_noaa <- register[register$candidate_id %in% c('NOAA:10521', 'NOAA:10522'), , drop = FALSE]
@@ -3153,13 +3155,13 @@ stopifnot(
   dfo_maritimes$new == 10L,
   dfo_maritimes$screening_complete == 42L,
   dfo_maritimes$screening_not_started == 0L,
-  sum(progress$new) == 641L,
-  sum(progress$identity_unreviewed) == 123L,
-  sum(progress$eligibility_unresolved) == 170L,
-  sum(progress$screening_complete) == 882L,
-  sum(progress$screening_not_started) == 23L,
-  nrow(units) == 651L,
-  sum(units$inventory_entries) == 690L,
+  sum(progress$new) == 643L,
+  sum(progress$identity_unreviewed) == 121L,
+  sum(progress$eligibility_unresolved) == 168L,
+  sum(progress$screening_complete) == 884L,
+  sum(progress$screening_not_started) == 21L,
+  nrow(units) == 653L,
+  sum(units$inventory_entries) == 692L,
   file.exists(file.path('analysis', 'comp_assessments', 'discovery', 'source_reviews',
     'noaa_silver_hake_2023.md')),
   file.exists(file.path('analysis', 'comp_assessments', 'discovery', 'source_reviews',
@@ -3209,13 +3211,13 @@ stopifnot(
   dfo_newfoundland$screening_complete == 23L,
   dfo_newfoundland$screening_not_started == 0L,
   sum(progress$inventory_rows) == 905L,
-  sum(progress$new) == 641L,
-  sum(progress$identity_unreviewed) == 123L,
-  sum(progress$excluded) == 570L,
-  sum(progress$screening_complete) == 882L,
-  sum(progress$screening_not_started) == 23L,
-  nrow(units) == 651L,
-  sum(units$inventory_entries) == 690L,
+  sum(progress$new) == 643L,
+  sum(progress$identity_unreviewed) == 121L,
+  sum(progress$excluded) == 572L,
+  sum(progress$screening_complete) == 884L,
+  sum(progress$screening_not_started) == 21L,
+  nrow(units) == 653L,
+  sum(units$inventory_entries) == 692L,
   file.exists(file.path('analysis', 'comp_assessments', 'discovery', 'source_reviews',
     'dfo_nafo_thorny_skate_2026.md')),
   file.exists(file.path('analysis', 'comp_assessments', 'discovery', 'source_reviews',
@@ -3307,13 +3309,13 @@ stopifnot(
   inside_dogfish_unit$eligibility == 'ineligible',
   file.exists(file.path('analysis', 'comp_assessments', 'discovery', 'source_reviews',
     'dfo_dogfish_inside_2010.md')),
-  sum(progress$new) == 641L,
-  sum(progress$identity_unreviewed) == 123L,
-  sum(progress$excluded) == 570L,
-  sum(progress$screening_complete) == 882L,
-  sum(progress$screening_not_started) == 23L,
-  nrow(units) == 651L,
-  sum(units$inventory_entries) == 690L,
+  sum(progress$new) == 643L,
+  sum(progress$identity_unreviewed) == 121L,
+  sum(progress$excluded) == 572L,
+  sum(progress$screening_complete) == 884L,
+  sum(progress$screening_not_started) == 21L,
+  nrow(units) == 653L,
+  sum(units$inventory_entries) == 692L,
   dfo_pacific$new == 31L,
   dfo_pacific$identity_unreviewed == 13L,
   dfo_pacific$eligibility_unresolved == 19L,
@@ -3341,18 +3343,18 @@ stopifnot(
   sanddab_unit$eligibility == 'unresolved',
   file.exists(file.path('analysis', 'comp_assessments', 'discovery', 'source_reviews',
     'noaa_pacific_sanddab_2013.md')),
-  sum(progress$new) == 641L,
-  sum(progress$identity_unreviewed) == 123L,
-  sum(progress$eligibility_unresolved) == 170L,
-  sum(progress$screening_complete) == 882L,
-  sum(progress$screening_not_started) == 23L,
-  nrow(units) == 651L,
-  sum(units$inventory_entries) == 690L,
-  sum(noaa_progress$new) == 366L,
-  sum(noaa_progress$identity_unreviewed) == 25L,
-  sum(noaa_progress$eligibility_unresolved) == 110L,
-  sum(noaa_progress$screening_complete) == 409L,
-  sum(noaa_progress$screening_not_started) == 23L)
+  sum(progress$new) == 643L,
+  sum(progress$identity_unreviewed) == 121L,
+  sum(progress$eligibility_unresolved) == 168L,
+  sum(progress$screening_complete) == 884L,
+  sum(progress$screening_not_started) == 21L,
+  nrow(units) == 653L,
+  sum(units$inventory_entries) == 692L,
+  sum(noaa_progress$new) == 368L,
+  sum(noaa_progress$identity_unreviewed) == 23L,
+  sum(noaa_progress$eligibility_unresolved) == 108L,
+  sum(noaa_progress$screening_complete) == 411L,
+  sum(noaa_progress$screening_not_started) == 21L)
 cat('NOAA Pacific sanddab identity and source-screening checks passed.\n')
 megrim_north <- lookup('ICES:meg.27.7b-k8abd')
 megrim_north_unit <- units[units$candidate_unit_id == 'ices_megrim_north_7b_k8abd', , drop = FALSE]
@@ -3382,13 +3384,13 @@ stopifnot(
   sum(ices_progress$identity_unreviewed) == 0L,
   sum(ices_progress$screening_complete) == 274L,
   sum(ices_progress$screening_not_started) == 0L,
-  sum(progress$new) == 641L,
-  sum(progress$identity_unreviewed) == 123L,
-  sum(progress$eligibility_unresolved) == 170L,
-  sum(progress$screening_complete) == 882L,
-  sum(progress$screening_not_started) == 23L,
-  nrow(units) == 651L,
-  sum(units$inventory_entries) == 690L)
+  sum(progress$new) == 643L,
+  sum(progress$identity_unreviewed) == 121L,
+  sum(progress$eligibility_unresolved) == 168L,
+  sum(progress$screening_complete) == 884L,
+  sum(progress$screening_not_started) == 21L,
+  nrow(units) == 653L,
+  sum(units$inventory_entries) == 692L)
 cat('ICES northern megrim source-screening checks passed.\n')
 
 butterfish <- lookup('NOAA:10187')
@@ -3415,20 +3417,20 @@ stopifnot(
   file.exists(file.path('analysis', 'comp_assessments', 'discovery', 'source_reviews',
     'noaa_butterfish_2024.md')),
   sum(noaa_progress$inventory_rows) == 432L,
-  sum(noaa_progress$new) == 366L,
-  sum(noaa_progress$identity_unreviewed) == 25L,
+  sum(noaa_progress$new) == 368L,
+  sum(noaa_progress$identity_unreviewed) == 23L,
   sum(noaa_progress$eligible) == 84L,
-  sum(noaa_progress$eligibility_unresolved) == 110L,
-  sum(noaa_progress$screening_complete) == 409L,
-  sum(noaa_progress$screening_not_started) == 23L,
-  sum(progress$new) == 641L,
-  sum(progress$identity_unreviewed) == 123L,
+  sum(noaa_progress$eligibility_unresolved) == 108L,
+  sum(noaa_progress$screening_complete) == 411L,
+  sum(noaa_progress$screening_not_started) == 21L,
+  sum(progress$new) == 643L,
+  sum(progress$identity_unreviewed) == 121L,
   sum(progress$eligible) == 165L,
-  sum(progress$eligibility_unresolved) == 170L,
-  sum(progress$screening_complete) == 882L,
-  sum(progress$screening_not_started) == 23L,
-  nrow(units) == 651L,
-  sum(units$inventory_entries) == 690L)
+  sum(progress$eligibility_unresolved) == 168L,
+  sum(progress$screening_complete) == 884L,
+  sum(progress$screening_not_started) == 21L,
+  nrow(units) == 653L,
+  sum(units$inventory_entries) == 692L)
 cat('NOAA butterfish source-screening checks passed.\n')
 lingcod <- lookup('DFO:Pacific:Lingcod - Outside waters')
 lingcod_unit <- units[units$candidate_unit_id == 'dfo_lingcod_outside_bc', , drop = FALSE]
@@ -3462,12 +3464,12 @@ stopifnot(
   dfo_pacific$eligibility_unresolved == 19L,
   dfo_pacific$screening_complete == 58L,
   dfo_pacific$screening_not_started == 0L,
-  sum(progress$new) == 641L,
-  sum(progress$identity_unreviewed) == 123L,
-  sum(progress$screening_complete) == 882L,
-  sum(progress$screening_not_started) == 23L,
-  nrow(units) == 651L,
-  sum(units$inventory_entries) == 690L)
+  sum(progress$new) == 643L,
+  sum(progress$identity_unreviewed) == 121L,
+  sum(progress$screening_complete) == 884L,
+  sum(progress$screening_not_started) == 21L,
+  nrow(units) == 653L,
+  sum(units$inventory_entries) == 692L)
 cat('DFO outside lingcod source-screening checks passed.\n')
 herring <- lookup('NOAA:10572')
 herring_unit <- units[units$candidate_unit_id == 'noaa_atlantic_herring_gom_georges_bank', , drop = FALSE]
@@ -3501,17 +3503,17 @@ stopifnot(
   file.exists(file.path('analysis', 'comp_assessments', 'discovery', 'source_reviews',
     'noaa_atlantic_herring_2026.md')),
   sum(noaa_progress$inventory_rows) == 432L,
-  sum(noaa_progress$new) == 366L,
-  sum(noaa_progress$identity_unreviewed) == 25L,
-  sum(noaa_progress$eligibility_unresolved) == 110L,
-  sum(noaa_progress$screening_complete) == 409L,
-  sum(noaa_progress$screening_not_started) == 23L,
-  sum(progress$new) == 641L,
-  sum(progress$identity_unreviewed) == 123L,
-  sum(progress$screening_complete) == 882L,
-  sum(progress$screening_not_started) == 23L,
-  nrow(units) == 651L,
-  sum(units$inventory_entries) == 690L)
+  sum(noaa_progress$new) == 368L,
+  sum(noaa_progress$identity_unreviewed) == 23L,
+  sum(noaa_progress$eligibility_unresolved) == 108L,
+  sum(noaa_progress$screening_complete) == 411L,
+  sum(noaa_progress$screening_not_started) == 21L,
+  sum(progress$new) == 643L,
+  sum(progress$identity_unreviewed) == 121L,
+  sum(progress$screening_complete) == 884L,
+  sum(progress$screening_not_started) == 21L,
+  nrow(units) == 653L,
+  sum(units$inventory_entries) == 692L)
 cat('NOAA Atlantic herring 2026 source-screening checks passed.\n')
 
 spanish_mackerel <- lookup('NOAA:10173')
@@ -3542,17 +3544,17 @@ stopifnot(
   file.exists(file.path('analysis', 'comp_assessments', 'discovery', 'source_reviews',
     'noaa_gulf_spanish_mackerel_2023.md')),
   sum(noaa_progress$inventory_rows) == 432L,
-  sum(noaa_progress$new) == 366L,
-  sum(noaa_progress$identity_unreviewed) == 25L,
-  sum(noaa_progress$eligibility_unresolved) == 110L,
-  sum(noaa_progress$screening_complete) == 409L,
-  sum(noaa_progress$screening_not_started) == 23L,
-  sum(progress$new) == 641L,
-  sum(progress$identity_unreviewed) == 123L,
-  sum(progress$screening_complete) == 882L,
-  sum(progress$screening_not_started) == 23L,
-  nrow(units) == 651L,
-  sum(units$inventory_entries) == 690L)
+  sum(noaa_progress$new) == 368L,
+  sum(noaa_progress$identity_unreviewed) == 23L,
+  sum(noaa_progress$eligibility_unresolved) == 108L,
+  sum(noaa_progress$screening_complete) == 411L,
+  sum(noaa_progress$screening_not_started) == 21L,
+  sum(progress$new) == 643L,
+  sum(progress$identity_unreviewed) == 121L,
+  sum(progress$screening_complete) == 884L,
+  sum(progress$screening_not_started) == 21L,
+  nrow(units) == 653L,
+  sum(units$inventory_entries) == 692L)
 cat('NOAA Gulf Spanish mackerel SEDAR 81 source-screening checks passed.\n')
 
 witch_4rst <- lookup('DFO:Gulf:Witch Flounder - NAFO 4RST')
@@ -3591,14 +3593,14 @@ stopifnot(
   dfo_gulf$eligibility_unresolved == 0L,
   dfo_gulf$screening_complete == 13L,
   dfo_gulf$screening_not_started == 0L,
-  sum(progress$new) == 641L,
-  sum(progress$identity_unreviewed) == 123L,
-  sum(progress$excluded) == 570L,
-  sum(progress$eligibility_unresolved) == 170L,
-  sum(progress$screening_complete) == 882L,
-  sum(progress$screening_not_started) == 23L,
-  nrow(units) == 651L,
-  sum(units$inventory_entries) == 690L)
+  sum(progress$new) == 643L,
+  sum(progress$identity_unreviewed) == 121L,
+  sum(progress$excluded) == 572L,
+  sum(progress$eligibility_unresolved) == 168L,
+  sum(progress$screening_complete) == 884L,
+  sum(progress$screening_not_started) == 21L,
+  nrow(units) == 653L,
+  sum(units$inventory_entries) == 692L)
 cat('DFO 4RST witch flounder assessment screening checks passed.\n')
 
 quillback_register <- read.csv(file.path('analysis', 'comp_assessments', 'discovery', 'candidates.csv'),
@@ -3667,9 +3669,9 @@ stopifnot(
   dfo_pacific_summary$eligibility_unresolved == 19L,
   dfo_pacific_summary$screening_complete == 58L,
   dfo_pacific_summary$screening_not_started == 0L,
-  nrow(quillback_units) == 651L,
-  sum(quillback_units$inventory_entries) == 690L,
-  sum(!is.na(quillback_units$candidate_unit_id) & nzchar(quillback_units$candidate_unit_id)) == 551L)
+  nrow(quillback_units) == 653L,
+  sum(quillback_units$inventory_entries) == 692L,
+  sum(!is.na(quillback_units$candidate_unit_id) & nzchar(quillback_units$candidate_unit_id)) == 553L)
 cat('DFO Inside and Outside Quillback source-screening checks passed.\n')
 
 longspine <- register[
@@ -3711,9 +3713,9 @@ stopifnot(
   dfo_pacific_summary$eligibility_unresolved == 19L,
   dfo_pacific_summary$screening_complete == 58L,
   dfo_pacific_summary$screening_not_started == 0L,
-  nrow(quillback_units) == 651L,
-  sum(quillback_units$inventory_entries) == 690L,
-  sum(!is.na(quillback_units$candidate_unit_id) & nzchar(quillback_units$candidate_unit_id)) == 551L)
+  nrow(quillback_units) == 653L,
+  sum(quillback_units$inventory_entries) == 692L,
+  sum(!is.na(quillback_units$candidate_unit_id) & nzchar(quillback_units$candidate_unit_id)) == 553L)
 cat('DFO British Columbia Longspine Thornyhead screening checks passed.\n')
 
 greenland_halibut_0 <- register[
@@ -3759,15 +3761,15 @@ stopifnot(
   dfo_arctic_summary$screening_not_started == 0L,
   dfo_arctic_summary$crosswalked_candidate_units == 2L,
   dfo_arctic_summary$identity_unlinked_rows == 21L,
-  sum(progress$new) == 641L,
-  sum(progress$identity_unreviewed) == 123L,
-  sum(progress$excluded) == 570L,
-  sum(progress$eligibility_unresolved) == 170L,
-  sum(progress$screening_complete) == 882L,
-  sum(progress$screening_not_started) == 23L,
-  nrow(quillback_units) == 651L,
-  sum(quillback_units$inventory_entries) == 690L,
-  sum(!is.na(quillback_units$candidate_unit_id) & nzchar(quillback_units$candidate_unit_id)) == 551L)
+  sum(progress$new) == 643L,
+  sum(progress$identity_unreviewed) == 121L,
+  sum(progress$excluded) == 572L,
+  sum(progress$eligibility_unresolved) == 168L,
+  sum(progress$screening_complete) == 884L,
+  sum(progress$screening_not_started) == 21L,
+  nrow(quillback_units) == 653L,
+  sum(quillback_units$inventory_entries) == 692L,
+  sum(!is.na(quillback_units$candidate_unit_id) & nzchar(quillback_units$candidate_unit_id)) == 553L)
 cat('DFO Greenland halibut Subarea 0 screening checks passed.\n')
 
 cambridge_char <- lookup('DFO:Arctic:Arctic Char - Cambridge Bay')
@@ -3803,14 +3805,14 @@ stopifnot(
   dfo_arctic_summary$screening_not_started == 0L,
   dfo_arctic_summary$crosswalked_candidate_units == 2L,
   sum(progress$ambiguous) == 34L,
-  sum(progress$identity_unreviewed) == 123L,
-  sum(progress$excluded) == 570L,
-  sum(progress$eligibility_unresolved) == 170L,
-  sum(progress$screening_complete) == 882L,
-  sum(progress$screening_not_started) == 23L,
-  nrow(quillback_units) == 651L,
-  sum(quillback_units$inventory_entries) == 690L,
-  sum(!is.na(quillback_units$candidate_unit_id) & nzchar(quillback_units$candidate_unit_id)) == 551L)
+  sum(progress$identity_unreviewed) == 121L,
+  sum(progress$excluded) == 572L,
+  sum(progress$eligibility_unresolved) == 168L,
+  sum(progress$screening_complete) == 884L,
+  sum(progress$screening_not_started) == 21L,
+  nrow(quillback_units) == 653L,
+  sum(quillback_units$inventory_entries) == 692L,
+  sum(!is.na(quillback_units$candidate_unit_id) & nzchar(quillback_units$candidate_unit_id)) == 553L)
 if (dir.exists(cambridge_char_cache)) {
   cambridge_char_sources <- read.csv(file.path(cambridge_char_cache, 'sources.csv'),
     stringsAsFactors = FALSE)
@@ -3865,11 +3867,11 @@ stopifnot(
   dfo_arctic_summary$screening_complete == 23L,
   dfo_arctic_summary$screening_not_started == 0L,
   sum(progress$ambiguous) == 34L,
-  sum(progress$identity_unreviewed) == 123L,
-  sum(progress$excluded) == 570L,
-  sum(progress$eligibility_unresolved) == 170L,
-  sum(progress$screening_complete) == 882L,
-  sum(progress$screening_not_started) == 23L)
+  sum(progress$identity_unreviewed) == 121L,
+  sum(progress$excluded) == 572L,
+  sum(progress$eligibility_unresolved) == 168L,
+  sum(progress$screening_complete) == 884L,
+  sum(progress$screening_not_started) == 21L)
 if (dir.exists(cumberland_char_cache)) {
   cumberland_char_sources <- read.csv(file.path(cumberland_char_cache, 'sources.csv'),
     stringsAsFactors = FALSE)
@@ -3914,15 +3916,15 @@ stopifnot(
   dfo_arctic_summary$screening_complete == 23L,
   dfo_arctic_summary$screening_not_started == 0L,
   dfo_arctic_summary$crosswalked_candidate_units == 2L,
-  sum(progress$new) == 641L,
-  sum(progress$identity_unreviewed) == 123L,
-  sum(progress$excluded) == 570L,
-  sum(progress$eligibility_unresolved) == 170L,
-  sum(progress$screening_complete) == 882L,
-  sum(progress$screening_not_started) == 23L,
-  nrow(quillback_units) == 651L,
-  sum(quillback_units$inventory_entries) == 690L,
-  sum(!is.na(quillback_units$candidate_unit_id) & nzchar(quillback_units$candidate_unit_id)) == 551L)
+  sum(progress$new) == 643L,
+  sum(progress$identity_unreviewed) == 121L,
+  sum(progress$excluded) == 572L,
+  sum(progress$eligibility_unresolved) == 168L,
+  sum(progress$screening_complete) == 884L,
+  sum(progress$screening_not_started) == 21L,
+  nrow(quillback_units) == 653L,
+  sum(quillback_units$inventory_entries) == 692L,
+  sum(!is.na(quillback_units$candidate_unit_id) & nzchar(quillback_units$candidate_unit_id)) == 553L)
 if (dir.exists(cumberland_halibut_cache)) {
   cumberland_halibut_sources <- read.csv(file.path(cumberland_halibut_cache, 'sources.csv'),
     stringsAsFactors = FALSE)
@@ -3967,13 +3969,13 @@ stopifnot(
   dfo_arctic_summary$screening_complete == 23L,
   dfo_arctic_summary$screening_not_started == 0L,
   sum(progress$ambiguous) == 34L,
-  sum(progress$identity_unreviewed) == 123L,
-  sum(progress$excluded) == 570L,
-  sum(progress$eligibility_unresolved) == 170L,
-  sum(progress$screening_complete) == 882L,
-  sum(progress$screening_not_started) == 23L,
-  nrow(quillback_units) == 651L,
-  sum(quillback_units$inventory_entries) == 690L)
+  sum(progress$identity_unreviewed) == 121L,
+  sum(progress$excluded) == 572L,
+  sum(progress$eligibility_unresolved) == 168L,
+  sum(progress$screening_complete) == 884L,
+  sum(progress$screening_not_started) == 21L,
+  nrow(quillback_units) == 653L,
+  sum(quillback_units$inventory_entries) == 692L)
 if (dir.exists(north_slope_cache)) {
   north_slope_sources <- read.csv(file.path(north_slope_cache, 'sources.csv'),
     stringsAsFactors = FALSE)
@@ -4016,15 +4018,15 @@ stopifnot(
   ncr_redfish$screening_not_started == 0L,
   ncr_redfish$crosswalked_candidate_units == 4L,
   sum(progress$inventory_rows) == 905L,
-  sum(progress$new) == 641L,
-  sum(progress$identity_unreviewed) == 123L,
-  sum(progress$excluded) == 570L,
-  sum(progress$eligibility_unresolved) == 170L,
-  sum(progress$screening_complete) == 882L,
-  sum(progress$screening_not_started) == 23L,
-  nrow(quillback_units) == 651L,
-  sum(quillback_units$inventory_entries) == 690L,
-  sum(!is.na(quillback_units$candidate_unit_id) & nzchar(quillback_units$candidate_unit_id)) == 551L)
+  sum(progress$new) == 643L,
+  sum(progress$identity_unreviewed) == 121L,
+  sum(progress$excluded) == 572L,
+  sum(progress$eligibility_unresolved) == 168L,
+  sum(progress$screening_complete) == 884L,
+  sum(progress$screening_not_started) == 21L,
+  nrow(quillback_units) == 653L,
+  sum(quillback_units$inventory_entries) == 692L,
+  sum(!is.na(quillback_units$candidate_unit_id) & nzchar(quillback_units$candidate_unit_id)) == 553L)
 redfish_sources <- read.csv(file.path(redfish_cache, 'sources.csv'),
   stringsAsFactors = FALSE)
 stopifnot(
@@ -4080,11 +4082,11 @@ stopifnot(
   dfo_newfoundland$screening_complete == 23L,
   dfo_newfoundland$screening_not_started == 0L,
   sum(progress$ambiguous) == 34L,
-  sum(progress$identity_unreviewed) == 123L,
-  sum(progress$excluded) == 570L,
-  sum(progress$eligibility_unresolved) == 170L,
-  sum(progress$screening_complete) == 882L,
-  sum(progress$screening_not_started) == 23L)
+  sum(progress$identity_unreviewed) == 121L,
+  sum(progress$excluded) == 572L,
+  sum(progress$eligibility_unresolved) == 168L,
+  sum(progress$screening_complete) == 884L,
+  sum(progress$screening_not_started) == 21L)
 salmon_cache <- file.path('analysis', 'comp_assessments', 'source_cache',
   'discovery_dfo_atlantic_salmon_2025')
 if (file.exists(file.path(salmon_cache, 'sources.csv'))) {
@@ -4126,17 +4128,17 @@ stopifnot(
     'noaa_black_sea_bass_south_atlantic_2025.md')),
   file.exists(file.path('analysis', 'comp_assessments', 'discovery', 'source_reviews',
     'noaa_black_sea_bass_mid_atlantic_2025.md')),
-  sum(noaa_progress$new) == 366L,
-  sum(noaa_progress$identity_unreviewed) == 25L,
-  sum(noaa_progress$screening_complete) == 409L,
-  sum(noaa_progress$screening_not_started) == 23L,
-  sum(progress$new) == 641L,
-  sum(progress$identity_unreviewed) == 123L,
-  sum(progress$screening_complete) == 882L,
-  sum(progress$screening_not_started) == 23L,
-  nrow(units) == 651L,
-  sum(units$inventory_entries) == 690L,
-  sum(!is.na(units$candidate_unit_id) & nzchar(units$candidate_unit_id)) == 551L)
+  sum(noaa_progress$new) == 368L,
+  sum(noaa_progress$identity_unreviewed) == 23L,
+  sum(noaa_progress$screening_complete) == 411L,
+  sum(noaa_progress$screening_not_started) == 21L,
+  sum(progress$new) == 643L,
+  sum(progress$identity_unreviewed) == 121L,
+  sum(progress$screening_complete) == 884L,
+  sum(progress$screening_not_started) == 21L,
+  nrow(units) == 653L,
+  sum(units$inventory_entries) == 692L,
+  sum(!is.na(units$candidate_unit_id) & nzchar(units$candidate_unit_id)) == 553L)
 bass_cache <- file.path('analysis', 'comp_assessments', 'source_cache',
   'discovery_noaa_black_sea_bass_2025')
 if (file.exists(file.path(bass_cache, 'sources.csv'))) {
@@ -4269,18 +4271,18 @@ stopifnot(
   red_grouper_unit$screening_status == 'screened',
   file.exists(file.path('analysis', 'comp_assessments', 'discovery', 'source_reviews',
     'noaa_red_grouper_gom_2025.md')),
-  noaa_sefsc$screening_complete == 78L,
-  noaa_sefsc$screening_not_started == 12L,
-  sum(noaa_progress$new) == 366L,
-  sum(noaa_progress$identity_unreviewed) == 25L,
-  sum(noaa_progress$screening_complete) == 409L,
-  sum(noaa_progress$screening_not_started) == 23L,
-  sum(progress$new) == 641L,
-  sum(progress$identity_unreviewed) == 123L,
-  sum(progress$screening_complete) == 882L,
-  sum(progress$screening_not_started) == 23L,
-  nrow(units) == 651L,
-  sum(units$inventory_entries) == 690L)
+  noaa_sefsc$screening_complete == 80L,
+  noaa_sefsc$screening_not_started == 10L,
+  sum(noaa_progress$new) == 368L,
+  sum(noaa_progress$identity_unreviewed) == 23L,
+  sum(noaa_progress$screening_complete) == 411L,
+  sum(noaa_progress$screening_not_started) == 21L,
+  sum(progress$new) == 643L,
+  sum(progress$identity_unreviewed) == 121L,
+  sum(progress$screening_complete) == 884L,
+  sum(progress$screening_not_started) == 21L,
+  nrow(units) == 653L,
+  sum(units$inventory_entries) == 692L)
 cat('NOAA Gulf red grouper SEDAR 88 source-screening checks passed.\n')
 
 north_sea_turbot <- lookup('ICES:tur.27.4')
@@ -4364,14 +4366,14 @@ stopifnot(
   sum(ices_progress$eligibility_unresolved) == 29L,
   sum(ices_progress$screening_complete) == 274L,
   sum(ices_progress$screening_not_started) == 0L,
-  sum(progress$new) == 641L,
-  sum(progress$identity_unreviewed) == 123L,
-  sum(progress$excluded) == 570L,
-  sum(progress$eligibility_unresolved) == 170L,
-  sum(progress$screening_complete) == 882L,
-  sum(progress$screening_not_started) == 23L,
-  nrow(units) == 651L,
-  sum(units$inventory_entries) == 690L)
+  sum(progress$new) == 643L,
+  sum(progress$identity_unreviewed) == 121L,
+  sum(progress$excluded) == 572L,
+  sum(progress$eligibility_unresolved) == 168L,
+  sum(progress$screening_complete) == 884L,
+  sum(progress$screening_not_started) == 21L,
+  nrow(units) == 653L,
+  sum(units$inventory_entries) == 692L)
 ices_hake_cache <- file.path('analysis', 'comp_assessments', 'source_cache',
   'ices_northern_hake_2026')
 if (file.exists(file.path(ices_hake_cache, 'manifest.csv'))) {
@@ -4425,14 +4427,14 @@ stopifnot(
   sum(ices_progress$screening_complete) == 274L,
   sum(ices_progress$screening_not_started) == 0L,
   sum(progress$inventory_rows) == 905L,
-  sum(progress$new) == 641L,
-  sum(progress$identity_unreviewed) == 123L,
-  sum(progress$eligibility_unresolved) == 170L,
-  sum(progress$screening_complete) == 882L,
-  sum(progress$screening_not_started) == 23L,
-  nrow(units) == 651L,
-  sum(units$inventory_entries) == 690L,
-  sum(!is.na(units$candidate_unit_id) & nzchar(units$candidate_unit_id)) == 551L)
+  sum(progress$new) == 643L,
+  sum(progress$identity_unreviewed) == 121L,
+  sum(progress$eligibility_unresolved) == 168L,
+  sum(progress$screening_complete) == 884L,
+  sum(progress$screening_not_started) == 21L,
+  nrow(units) == 653L,
+  sum(units$inventory_entries) == 692L,
+  sum(!is.na(units$candidate_unit_id) & nzchar(units$candidate_unit_id)) == 553L)
 ices_sardine_cache <- file.path('analysis', 'comp_assessments', 'source_cache',
   'ices_iberian_sardine_2025')
 if (file.exists(file.path(ices_sardine_cache, 'manifest.csv'))) {
@@ -4476,12 +4478,12 @@ stopifnot(
   !any(stocks$authority_stock_id %in% c('10192', '10193'), na.rm = TRUE),
   file.exists(file.path('analysis', 'comp_assessments', 'discovery', 'source_reviews',
     'noaa_windowpane_2023.md')),
-  sum(noaa_progress$new) == 366L,
-  sum(noaa_progress$identity_unreviewed) == 25L,
-  sum(noaa_progress$excluded) == 238L,
-  sum(noaa_progress$eligibility_unresolved) == 110L,
-  sum(noaa_progress$screening_complete) == 409L,
-  sum(noaa_progress$screening_not_started) == 23L,
+  sum(noaa_progress$new) == 368L,
+  sum(noaa_progress$identity_unreviewed) == 23L,
+  sum(noaa_progress$excluded) == 240L,
+  sum(noaa_progress$eligibility_unresolved) == 108L,
+  sum(noaa_progress$screening_complete) == 411L,
+  sum(noaa_progress$screening_not_started) == 21L,
   noaa_nefsc$new == 39L,
   noaa_nefsc$screening_complete == 55L,
   noaa_nefsc$screening_not_started == 0L
@@ -4538,14 +4540,14 @@ stopifnot(
     'iccat_atlantic_bigeye_tuna')),
   !any(output_records$assessment_id %in% c('iccat_atlantic_yellowfin_tuna',
     'iccat_atlantic_bigeye_tuna')),
-  sum(noaa_progress$new) == 366L,
-  sum(noaa_progress$identity_unreviewed) == 25L,
-  sum(noaa_progress$screening_complete) == 409L,
-  sum(noaa_progress$screening_not_started) == 23L,
-  noaa_sefsc$new == 75L,
-  noaa_sefsc$identity_unreviewed == 12L,
-  noaa_sefsc$screening_complete == 78L,
-  noaa_sefsc$screening_not_started == 12L,
+  sum(noaa_progress$new) == 368L,
+  sum(noaa_progress$identity_unreviewed) == 23L,
+  sum(noaa_progress$screening_complete) == 411L,
+  sum(noaa_progress$screening_not_started) == 21L,
+  noaa_sefsc$new == 77L,
+  noaa_sefsc$identity_unreviewed == 10L,
+  noaa_sefsc$screening_complete == 80L,
+  noaa_sefsc$screening_not_started == 10L,
   file.exists(file.path('analysis', 'comp_assessments', 'discovery',
     'source_reviews', 'noaa_iccat_atlantic_tunas_2024_2025.md'))
 )
@@ -4602,14 +4604,14 @@ stopifnot(
   !any(output_records$assessment_id %in% c(
     'noaa_scamp_yellowmouth_gulf_complex',
     'noaa_scamp_yellowmouth_south_atlantic_complex')),
-  sum(noaa_progress$new) == 366L,
-  sum(noaa_progress$identity_unreviewed) == 25L,
-  sum(noaa_progress$screening_complete) == 409L,
-  sum(noaa_progress$screening_not_started) == 23L,
-  noaa_sefsc$new == 75L,
-  noaa_sefsc$identity_unreviewed == 12L,
-  noaa_sefsc$screening_complete == 78L,
-  noaa_sefsc$screening_not_started == 12L,
+  sum(noaa_progress$new) == 368L,
+  sum(noaa_progress$identity_unreviewed) == 23L,
+  sum(noaa_progress$screening_complete) == 411L,
+  sum(noaa_progress$screening_not_started) == 21L,
+  noaa_sefsc$new == 77L,
+  noaa_sefsc$identity_unreviewed == 10L,
+  noaa_sefsc$screening_complete == 80L,
+  noaa_sefsc$screening_not_started == 10L,
   file.exists(file.path('analysis', 'comp_assessments', 'discovery',
     'source_reviews', 'noaa_scamp_sedar68oa_2022.md'))
 )
@@ -4660,21 +4662,21 @@ stopifnot(
   !any(output_records$assessment_id == 'noaa_yellowedge_gulf', na.rm = TRUE),
   file.exists(file.path('analysis', 'comp_assessments', 'discovery', 'source_reviews',
     'noaa_yellowedge_sedar85_2023.md')),
-  sum(noaa_progress$new) == 366L,
-  sum(noaa_progress$identity_unreviewed) == 25L,
-  sum(noaa_progress$screening_complete) == 409L,
-  sum(noaa_progress$screening_not_started) == 23L,
-  noaa_sefsc$new == 75L,
-  noaa_sefsc$identity_unreviewed == 12L,
-  noaa_sefsc$screening_complete == 78L,
-  noaa_sefsc$screening_not_started == 12L,
-  sum(progress$new) == 641L,
-  sum(progress$identity_unreviewed) == 123L,
-  sum(progress$screening_complete) == 882L,
-  sum(progress$screening_not_started) == 23L,
-  nrow(units) == 651L,
-  sum(units$inventory_entries) == 690L,
-  sum(!is.na(units$candidate_unit_id) & nzchar(units$candidate_unit_id)) == 551L)
+  sum(noaa_progress$new) == 368L,
+  sum(noaa_progress$identity_unreviewed) == 23L,
+  sum(noaa_progress$screening_complete) == 411L,
+  sum(noaa_progress$screening_not_started) == 21L,
+  noaa_sefsc$new == 77L,
+  noaa_sefsc$identity_unreviewed == 10L,
+  noaa_sefsc$screening_complete == 80L,
+  noaa_sefsc$screening_not_started == 10L,
+  sum(progress$new) == 643L,
+  sum(progress$identity_unreviewed) == 121L,
+  sum(progress$screening_complete) == 884L,
+  sum(progress$screening_not_started) == 21L,
+  nrow(units) == 653L,
+  sum(units$inventory_entries) == 692L,
+  sum(!is.na(units$candidate_unit_id) & nzchar(units$candidate_unit_id)) == 553L)
 
 yellowedge_cache <- file.path('analysis', 'comp_assessments', 'source_cache',
   'noaa_yellowedge_sedar85_2023')
@@ -4723,23 +4725,23 @@ stopifnot(
   !any(output_records$assessment_id == 'noaa_gag_gulf', na.rm = TRUE),
   file.exists(file.path('analysis', 'comp_assessments', 'discovery', 'source_reviews',
     'noaa_gag_sedar72_2022.md')),
-  sum(noaa_progress$new) == 366L,
-  sum(noaa_progress$identity_unreviewed) == 25L,
-  sum(noaa_progress$eligibility_unresolved) == 110L,
-  sum(noaa_progress$screening_complete) == 409L,
-  sum(noaa_progress$screening_not_started) == 23L,
-  noaa_sefsc$new == 75L,
-  noaa_sefsc$identity_unreviewed == 12L,
-  noaa_sefsc$screening_complete == 78L,
-  noaa_sefsc$screening_not_started == 12L,
-  sum(progress$new) == 641L,
-  sum(progress$identity_unreviewed) == 123L,
-  sum(progress$eligibility_unresolved) == 170L,
-  sum(progress$screening_complete) == 882L,
-  sum(progress$screening_not_started) == 23L,
-  nrow(units) == 651L,
-  sum(units$inventory_entries) == 690L,
-  sum(!is.na(units$candidate_unit_id) & nzchar(units$candidate_unit_id)) == 551L)
+  sum(noaa_progress$new) == 368L,
+  sum(noaa_progress$identity_unreviewed) == 23L,
+  sum(noaa_progress$eligibility_unresolved) == 108L,
+  sum(noaa_progress$screening_complete) == 411L,
+  sum(noaa_progress$screening_not_started) == 21L,
+  noaa_sefsc$new == 77L,
+  noaa_sefsc$identity_unreviewed == 10L,
+  noaa_sefsc$screening_complete == 80L,
+  noaa_sefsc$screening_not_started == 10L,
+  sum(progress$new) == 643L,
+  sum(progress$identity_unreviewed) == 121L,
+  sum(progress$eligibility_unresolved) == 168L,
+  sum(progress$screening_complete) == 884L,
+  sum(progress$screening_not_started) == 21L,
+  nrow(units) == 653L,
+  sum(units$inventory_entries) == 692L,
+  sum(!is.na(units$candidate_unit_id) & nzchar(units$candidate_unit_id)) == 553L)
 
 gag_cache <- file.path('analysis', 'comp_assessments', 'source_cache',
   'noaa_gag_sedar72_2022')
@@ -4790,26 +4792,26 @@ stopifnot(
   !any(output_records$assessment_id == 'noaa_gag_south_atlantic', na.rm = TRUE),
   file.exists(file.path('analysis', 'comp_assessments', 'discovery', 'source_reviews',
     'noaa_gag_sedar71_2021.md')),
-  sum(noaa_progress$new) == 366L,
-  sum(noaa_progress$identity_unreviewed) == 25L,
+  sum(noaa_progress$new) == 368L,
+  sum(noaa_progress$identity_unreviewed) == 23L,
   sum(noaa_progress$eligible_new) == 70L,
-  sum(noaa_progress$eligibility_unresolved) == 110L,
-  sum(noaa_progress$screening_complete) == 409L,
-  sum(noaa_progress$screening_not_started) == 23L,
-  noaa_sefsc$new == 75L,
-  noaa_sefsc$identity_unreviewed == 12L,
-  noaa_sefsc$screening_complete == 78L,
-  noaa_sefsc$screening_not_started == 12L,
-  sum(progress$new) == 641L,
-  sum(progress$identity_unreviewed) == 123L,
+  sum(noaa_progress$eligibility_unresolved) == 108L,
+  sum(noaa_progress$screening_complete) == 411L,
+  sum(noaa_progress$screening_not_started) == 21L,
+  noaa_sefsc$new == 77L,
+  noaa_sefsc$identity_unreviewed == 10L,
+  noaa_sefsc$screening_complete == 80L,
+  noaa_sefsc$screening_not_started == 10L,
+  sum(progress$new) == 643L,
+  sum(progress$identity_unreviewed) == 121L,
   sum(progress$eligible) == 165L,
   sum(progress$eligible_new) == 95L,
-  sum(progress$eligibility_unresolved) == 170L,
-  sum(progress$screening_complete) == 882L,
-  sum(progress$screening_not_started) == 23L,
-  nrow(units) == 651L,
-  sum(units$inventory_entries) == 690L,
-  sum(!is.na(units$candidate_unit_id) & nzchar(units$candidate_unit_id)) == 551L)
+  sum(progress$eligibility_unresolved) == 168L,
+  sum(progress$screening_complete) == 884L,
+  sum(progress$screening_not_started) == 21L,
+  nrow(units) == 653L,
+  sum(units$inventory_entries) == 692L,
+  sum(!is.na(units$candidate_unit_id) & nzchar(units$candidate_unit_id)) == 553L)
 
 gag_south_atlantic_cache <- file.path('analysis', 'comp_assessments', 'source_cache',
   'noaa_gag_sedar71_2021')
@@ -4867,26 +4869,26 @@ stopifnot(
     na.rm = TRUE),
   file.exists(file.path('analysis', 'comp_assessments', 'discovery', 'source_reviews',
     'noaa_snowy_grouper_sedar36u_2021.md')),
-  sum(noaa_progress$new) == 366L,
-  sum(noaa_progress$identity_unreviewed) == 25L,
+  sum(noaa_progress$new) == 368L,
+  sum(noaa_progress$identity_unreviewed) == 23L,
   sum(noaa_progress$eligible_new) == 70L,
-  sum(noaa_progress$eligibility_unresolved) == 110L,
-  sum(noaa_progress$screening_complete) == 409L,
-  sum(noaa_progress$screening_not_started) == 23L,
-  noaa_sefsc$new == 75L,
-  noaa_sefsc$identity_unreviewed == 12L,
-  noaa_sefsc$screening_complete == 78L,
-  noaa_sefsc$screening_not_started == 12L,
-  sum(progress$new) == 641L,
-  sum(progress$identity_unreviewed) == 123L,
+  sum(noaa_progress$eligibility_unresolved) == 108L,
+  sum(noaa_progress$screening_complete) == 411L,
+  sum(noaa_progress$screening_not_started) == 21L,
+  noaa_sefsc$new == 77L,
+  noaa_sefsc$identity_unreviewed == 10L,
+  noaa_sefsc$screening_complete == 80L,
+  noaa_sefsc$screening_not_started == 10L,
+  sum(progress$new) == 643L,
+  sum(progress$identity_unreviewed) == 121L,
   sum(progress$eligible) == 165L,
   sum(progress$eligible_new) == 95L,
-  sum(progress$eligibility_unresolved) == 170L,
-  sum(progress$screening_complete) == 882L,
-  sum(progress$screening_not_started) == 23L,
-  nrow(units) == 651L,
-  sum(units$inventory_entries) == 690L,
-  sum(!is.na(units$candidate_unit_id) & nzchar(units$candidate_unit_id)) == 551L)
+  sum(progress$eligibility_unresolved) == 168L,
+  sum(progress$screening_complete) == 884L,
+  sum(progress$screening_not_started) == 21L,
+  nrow(units) == 653L,
+  sum(units$inventory_entries) == 692L,
+  sum(!is.na(units$candidate_unit_id) & nzchar(units$candidate_unit_id)) == 553L)
 snowy_cache <- file.path('analysis', 'comp_assessments', 'source_cache',
   'noaa_snowy_grouper_sedar36u_2021')
 if (file.exists(file.path(snowy_cache, 'manifest.csv'))) {
@@ -4964,23 +4966,23 @@ stopifnot(
   all(grepl('Reject', blueline_latest$review_result, fixed = TRUE)),
   all(file.exists(file.path('analysis', 'comp_assessments', 'discovery',
     'source_reviews', 'noaa_blueline_tilefish_sedar92_2025.md'))),
-  sum(noaa_progress$new) == 366L,
-  sum(noaa_progress$identity_unreviewed) == 25L,
-  sum(noaa_progress$excluded) == 238L,
-  sum(noaa_progress$eligibility_unresolved) == 110L,
-  sum(noaa_progress$screening_complete) == 409L,
-  sum(noaa_progress$screening_not_started) == 23L,
-  noaa_sefsc$screening_complete == 78L,
-  noaa_sefsc$screening_not_started == 12L,
-  sum(progress$new) == 641L,
-  sum(progress$identity_unreviewed) == 123L,
-  sum(progress$excluded) == 570L,
-  sum(progress$eligibility_unresolved) == 170L,
-  sum(progress$screening_complete) == 882L,
-  sum(progress$screening_not_started) == 23L,
-  nrow(units) == 651L,
-  sum(units$inventory_entries) == 690L,
-  sum(!is.na(units$candidate_unit_id) & nzchar(units$candidate_unit_id)) == 551L)
+  sum(noaa_progress$new) == 368L,
+  sum(noaa_progress$identity_unreviewed) == 23L,
+  sum(noaa_progress$excluded) == 240L,
+  sum(noaa_progress$eligibility_unresolved) == 108L,
+  sum(noaa_progress$screening_complete) == 411L,
+  sum(noaa_progress$screening_not_started) == 21L,
+  noaa_sefsc$screening_complete == 80L,
+  noaa_sefsc$screening_not_started == 10L,
+  sum(progress$new) == 643L,
+  sum(progress$identity_unreviewed) == 121L,
+  sum(progress$excluded) == 572L,
+  sum(progress$eligibility_unresolved) == 168L,
+  sum(progress$screening_complete) == 884L,
+  sum(progress$screening_not_started) == 21L,
+  nrow(units) == 653L,
+  sum(units$inventory_entries) == 692L,
+  sum(!is.na(units$candidate_unit_id) & nzchar(units$candidate_unit_id)) == 553L)
 blueline_cache <- file.path('analysis', 'comp_assessments', 'source_cache',
   'noaa_blueline_tilefish_sedar92_2025')
 if (file.exists(file.path(blueline_cache, 'manifest.csv'))) {
@@ -5046,25 +5048,25 @@ stopifnot(
   file.exists(file.path('analysis', 'comp_assessments', 'scripts', 'database',
     '333_screen_noaa_golden_tilefish_2024_2025.R')),
   sum(golden_noaa$inventory_rows) == 432L,
-  sum(golden_noaa$new) == 366L,
-  sum(golden_noaa$identity_unreviewed) == 25L,
+  sum(golden_noaa$new) == 368L,
+  sum(golden_noaa$identity_unreviewed) == 23L,
   sum(golden_noaa$eligible) == 84L,
-  sum(golden_noaa$eligibility_unresolved) == 110L,
-  sum(golden_noaa$screening_complete) == 409L,
-  sum(golden_noaa$screening_not_started) == 23L,
+  sum(golden_noaa$eligibility_unresolved) == 108L,
+  sum(golden_noaa$screening_complete) == 411L,
+  sum(golden_noaa$screening_not_started) == 21L,
   nrow(golden_progress) == 75L,
   sum(golden_progress$inventory_rows) == 905L,
-  sum(golden_progress$new) == 641L,
-  sum(golden_progress$identity_unreviewed) == 123L,
+  sum(golden_progress$new) == 643L,
+  sum(golden_progress$identity_unreviewed) == 121L,
   sum(golden_progress$eligible) == 165L,
-  sum(golden_progress$eligibility_unresolved) == 170L,
-  sum(golden_progress$screening_complete) == 882L,
-  sum(golden_progress$screening_not_started) == 23L,
-  nrow(golden_units) == 651L,
-  sum(golden_units$inventory_entries) == 690L,
-  sum(!is.na(golden_units$candidate_unit_id) & nzchar(golden_units$candidate_unit_id)) == 551L,
+  sum(golden_progress$eligibility_unresolved) == 168L,
+  sum(golden_progress$screening_complete) == 884L,
+  sum(golden_progress$screening_not_started) == 21L,
+  nrow(golden_units) == 653L,
+  sum(golden_units$inventory_entries) == 692L,
+  sum(!is.na(golden_units$candidate_unit_id) & nzchar(golden_units$candidate_unit_id)) == 553L,
   sum(golden_new_units$eligibility == 'eligible') == 63L,
-  sum(golden_new_units$eligibility == 'ineligible') == 385L,
+  sum(golden_new_units$eligibility == 'ineligible') == 387L,
   sum(golden_new_units$eligibility == 'unresolved') == 97L,
   sum(golden_new_units$eligibility == 'mixed') == 3L
 )
@@ -5491,9 +5493,9 @@ stopifnot(
   all(spanish_sources$retrieved_utc == '2026-10-30'),
   file.exists('analysis/comp_assessments/discovery/source_reviews/noaa_south_atlantic_spanish_mackerel_2022.md'),
   file.exists('analysis/comp_assessments/scripts/database/340_screen_noaa_south_atlantic_spanish_mackerel_2022.R'),
-  nrow(units) == 651L,
-  sum(units$inventory_entries) == 690L,
-  sum(!is.na(units$candidate_unit_id) & nzchar(units$candidate_unit_id)) == 551L)
+  nrow(units) == 653L,
+  sum(units$inventory_entries) == 692L,
+  sum(!is.na(units$candidate_unit_id) & nzchar(units$candidate_unit_id)) == 553L)
 cat('NOAA South Atlantic Spanish mackerel candidate-screening checks passed.\n')
 
 sprat_english_channel <- lookup('ICES:spr.27.7de')
@@ -5516,9 +5518,9 @@ stopifnot(
   sum(ices_progress$eligibility_unresolved) == 29L,
   sum(ices_progress$screening_complete) == 274L,
   sum(ices_progress$screening_not_started) == 0L,
-  nrow(units) == 651L,
-  sum(units$inventory_entries) == 690L,
-  sum(!is.na(units$candidate_unit_id) & nzchar(units$candidate_unit_id)) == 551L)
+  nrow(units) == 653L,
+  sum(units$inventory_entries) == 692L,
+  sum(!is.na(units$candidate_unit_id) & nzchar(units$candidate_unit_id)) == 553L)
 cat('ICES English Channel sprat inventory audit checks passed.\n')
 
 sprat_celtic_seas <- lookup('ICES:spr.27.67a-cf-k')
@@ -5541,9 +5543,9 @@ stopifnot(
   sum(ices_progress$eligibility_unresolved) == 29L,
   sum(ices_progress$screening_complete) == 274L,
   sum(ices_progress$screening_not_started) == 0L,
-  nrow(units) == 651L,
-  sum(units$inventory_entries) == 690L,
-  sum(!is.na(units$candidate_unit_id) & nzchar(units$candidate_unit_id)) == 551L)
+  nrow(units) == 653L,
+  sum(units$inventory_entries) == 692L,
+  sum(!is.na(units$candidate_unit_id) & nzchar(units$candidate_unit_id)) == 553L)
 cat('ICES Celtic Seas sprat inventory audit checks passed.\n')
 
 bay_biscay_seabass <- lookup('ICES:bss.27.8ab')
@@ -5570,16 +5572,16 @@ stopifnot(
   sum(ices_progress$eligibility_unresolved) == 29L,
   sum(ices_progress$screening_complete) == 274L,
   sum(ices_progress$screening_not_started) == 0L,
-  sum(progress$new) == 641L,
-  sum(progress$identity_unreviewed) == 123L,
+  sum(progress$new) == 643L,
+  sum(progress$identity_unreviewed) == 121L,
   sum(progress$eligible) == 165L,
   sum(progress$eligible_new) == 95L,
-  sum(progress$eligibility_unresolved) == 170L,
-  sum(progress$screening_complete) == 882L,
-  sum(progress$screening_not_started) == 23L,
-  nrow(units) == 651L,
-  sum(units$inventory_entries) == 690L,
-  sum(!is.na(units$candidate_unit_id) & nzchar(units$candidate_unit_id)) == 551L)
+  sum(progress$eligibility_unresolved) == 168L,
+  sum(progress$screening_complete) == 884L,
+  sum(progress$screening_not_started) == 21L,
+  nrow(units) == 653L,
+  sum(units$inventory_entries) == 692L,
+  sum(!is.na(units$candidate_unit_id) & nzchar(units$candidate_unit_id)) == 553L)
 cat('ICES Bay of Biscay sea bass inventory audit checks passed.\n')
 
 
@@ -5591,20 +5593,20 @@ stopifnot(
   sharpchin_goa$screening_status == 'screened',
   sharpchin_goa$eligibility == 'ineligible',
   sharpchin_goa$import_status == 'not_started',
-  sum(noaa_progress$new) == 366L,
-  sum(noaa_progress$identity_unreviewed) == 25L,
-  sum(noaa_progress$excluded) == 238L,
-  sum(noaa_progress$screening_complete) == 409L,
-  sum(noaa_progress$screening_not_started) == 23L,
-  sum(progress$new) == 641L,
-  sum(progress$identity_unreviewed) == 123L,
-  sum(progress$excluded) == 570L,
-  sum(progress$eligibility_unresolved) == 170L,
-  sum(progress$screening_complete) == 882L,
-  sum(progress$screening_not_started) == 23L,
-  nrow(units) == 651L,
-  sum(units$inventory_entries) == 690L,
-  sum(!is.na(units$candidate_unit_id) & nzchar(units$candidate_unit_id)) == 551L)
+  sum(noaa_progress$new) == 368L,
+  sum(noaa_progress$identity_unreviewed) == 23L,
+  sum(noaa_progress$excluded) == 240L,
+  sum(noaa_progress$screening_complete) == 411L,
+  sum(noaa_progress$screening_not_started) == 21L,
+  sum(progress$new) == 643L,
+  sum(progress$identity_unreviewed) == 121L,
+  sum(progress$excluded) == 572L,
+  sum(progress$eligibility_unresolved) == 168L,
+  sum(progress$screening_complete) == 884L,
+  sum(progress$screening_not_started) == 21L,
+  nrow(units) == 653L,
+  sum(units$inventory_entries) == 692L,
+  sum(!is.na(units$candidate_unit_id) & nzchar(units$candidate_unit_id)) == 553L)
 
 source(file.path(root, 'tests', 'test_noaa_aurora_rockfish_2013.R'))
 
