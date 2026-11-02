@@ -40,12 +40,12 @@ stopifnot(nrow(row) == 1L,
   !any(inputs$assessment_id == 'iattc_northeast_pacific_striped_marlin', na.rm = TRUE),
   !any(outputs$assessment_id == 'iattc_northeast_pacific_striped_marlin', na.rm = TRUE),
   sum(progress$inventory_rows) == 905L,
-  sum(progress$new) == 618L,
-  sum(progress$identity_unreviewed) == 149L,
+  sum(progress$new) == 619L,
+  sum(progress$identity_unreviewed) == 148L,
   sum(progress$excluded) == 546L,
   sum(progress$eligibility_unresolved) == 195L,
-  sum(progress$screening_complete) == 856L,
-  sum(progress$screening_not_started) == 49L,
-  nrow(units) == 628L,
-  sum(!is.na(units$candidate_unit_id) & nzchar(units$candidate_unit_id)) == 528L)
+  sum(progress$screening_complete) == 857L,
+  sum(progress$screening_not_started) == 48L,
+  nrow(units) == 629L,
+  sum(!is.na(units$candidate_unit_id) & nzchar(units$candidate_unit_id)) == 529L)
 cat('NOAA:11073 IATTC striped marlin source-screening checks passed.\n')

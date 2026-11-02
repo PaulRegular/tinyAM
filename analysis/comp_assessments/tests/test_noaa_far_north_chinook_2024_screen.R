@@ -53,9 +53,9 @@ progress <- read.csv(file.path(root, 'discovery', 'inventory_progress.csv'),
 noaa <- progress[progress$organization == 'NOAA', , drop = FALSE]
 afsc <- noaa[noaa$source_region == 'AFSC', , drop = FALSE]
 stopifnot(sum(noaa$inventory_rows) == 432L,
-  sum(noaa$screening_complete) == 383L,
-  sum(noaa$screening_not_started) == 49L,
-  sum(noaa$new) == 343L, sum(noaa$identity_unreviewed) == 51L,
+  sum(noaa$screening_complete) == 384L,
+  sum(noaa$screening_not_started) == 48L,
+  sum(noaa$new) == 344L, sum(noaa$identity_unreviewed) == 50L,
   sum(noaa$excluded) == 214L, sum(noaa$eligibility_unresolved) == 135L,
   nrow(afsc) == 1L, afsc$inventory_rows == 89L,
   afsc$screening_complete == 80L, afsc$screening_not_started == 9L)

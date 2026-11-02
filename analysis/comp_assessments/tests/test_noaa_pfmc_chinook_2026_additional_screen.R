@@ -54,18 +54,18 @@ stopifnot(
       manifest$file),
   all(file.exists(file.path(cache, manifest$file))),
   all(grepl('^[[:xdigit:]]{64}$', manifest$sha256)),
-  sum(noaa$inventory_rows) == 432L, sum(noaa$new) == 343L,
-  sum(noaa$identity_unreviewed) == 51L,
-  sum(noaa$screening_complete) == 383L,
-  sum(noaa$screening_not_started) == 49L,
+  sum(noaa$inventory_rows) == 432L, sum(noaa$new) == 344L,
+  sum(noaa$identity_unreviewed) == 50L,
+  sum(noaa$screening_complete) == 384L,
+  sum(noaa$screening_not_started) == 48L,
   nrow(pacific) == 1L, pacific$new == 124L,
   pacific$identity_unreviewed == 6L,
   pacific$screening_complete == 132L,
   pacific$screening_not_started == 6L,
   sum(progress$inventory_rows) == 905L,
-  sum(progress$new) == 618L,
-  sum(progress$identity_unreviewed) == 149L,
-  sum(progress$screening_complete) == 856L,
-  sum(progress$screening_not_started) == 49L)
+  sum(progress$new) == 619L,
+  sum(progress$identity_unreviewed) == 148L,
+  sum(progress$screening_complete) == 857L,
+  sum(progress$screening_not_started) == 48L)
 
 cat('NOAA PFMC Chinook screen and inventory updates passed.\n')
