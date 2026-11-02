@@ -55,9 +55,9 @@ progress <- read.csv(file.path(root, 'discovery', 'inventory_progress.csv'),
   stringsAsFactors = FALSE)
 noaa <- progress[progress$organization == 'NOAA', , drop = FALSE]
 stopifnot(sum(noaa$inventory_rows) == 432L,
-  sum(noaa$screening_complete) == 362L,
-  sum(noaa$screening_not_started) == 70L,
-  sum(noaa$excluded) == 197L,
-  sum(noaa$eligibility_unresolved) == 155L)
+  sum(noaa$screening_complete) == 363L,
+  sum(noaa$screening_not_started) == 69L,
+  sum(noaa$excluded) == 198L,
+  sum(noaa$eligibility_unresolved) == 154L)
 
 cat('NOAA Puget Sound pink salmon inventory screen passed.\n')
