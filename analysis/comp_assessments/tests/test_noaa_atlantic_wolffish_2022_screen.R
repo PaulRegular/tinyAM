@@ -42,7 +42,7 @@ stopifnot(nrow(candidate) == 1L,
   !any(assessments$assessment_id == 'noaa_atlantic_wolffish_2022', na.rm = TRUE),
   !any(inputs$assessment_id == 'noaa_atlantic_wolffish_2022', na.rm = TRUE),
   !any(outputs$assessment_id == 'noaa_atlantic_wolffish_2022', na.rm = TRUE),
-  sum(noaa$inventory_rows) == 432L, sum(noaa$screening_complete) == 370L,
-  sum(noaa$screening_not_started) == 62L)
+  sum(noaa$inventory_rows) == 432L, sum(noaa$screening_complete) == 373L,
+  sum(noaa$screening_not_started) == 59L)
 
 cat('NOAA Atlantic wolffish identity, source, eligibility and no-import checks passed.\n')
