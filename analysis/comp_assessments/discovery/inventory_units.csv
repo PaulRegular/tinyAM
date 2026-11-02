@@ -387,6 +387,7 @@
 "candidate:noaa_goa_rougheye_blackspotted","","noaa_goa_rougheye_blackspotted","new","mixed","screened","not_started","NOAA","AFSC","NOAA:10538 | NOAA:11443",2
 "candidate:noaa_goa_sharpchin_goa","","noaa_goa_sharpchin_goa","new","ineligible","screened","not_started","NOAA","AFSC","NOAA:10434",1
 "candidate:noaa_goa_shortraker","","noaa_goa_shortraker","new","ineligible","screened","not_started","NOAA","AFSC","NOAA:10554",1
+"candidate:noaa_goa_skate_complex","","noaa_goa_skate_complex","new","ineligible","screened","not_started","NOAA","AFSC","NOAA:11005",1
 "candidate:noaa_goa_southern_rock_sole","","noaa_goa_southern_rock_sole","new","ineligible","screened","not_started","NOAA","AFSC","NOAA:10040 | NOAA:15414 | NOAA:15415",3
 "candidate:noaa_goa_yelloweye_seo","","noaa_goa_yelloweye_seo","new","ineligible","screened","not_started","NOAA","AFSC","NOAA:10425",1
 "candidate:noaa_golden_king_crab_aleutian","","noaa_golden_king_crab_aleutian","new","ineligible","screened","not_started","NOAA","AFSC","NOAA:10816",1

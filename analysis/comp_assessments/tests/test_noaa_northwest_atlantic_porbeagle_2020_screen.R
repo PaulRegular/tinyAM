@@ -59,9 +59,9 @@ progress <- read.csv(file.path(root, 'discovery', 'inventory_progress.csv'),
   stringsAsFactors = FALSE)
 noaa <- progress[progress$organization == 'NOAA', , drop = FALSE]
 stopifnot(sum(noaa$inventory_rows) == 432L,
-  sum(noaa$new) == 334L, sum(noaa$identity_unreviewed) == 61L,
-  sum(noaa$excluded) == 207L, sum(noaa$eligibility_unresolved) == 145L,
-  sum(noaa$screening_complete) == 373L,
-  sum(noaa$screening_not_started) == 59L)
+  sum(noaa$new) == 335L, sum(noaa$identity_unreviewed) == 60L,
+  sum(noaa$excluded) == 208L, sum(noaa$eligibility_unresolved) == 144L,
+  sum(noaa$screening_complete) == 374L,
+  sum(noaa$screening_not_started) == 58L)
 
 cat('NOAA Northwestern Atlantic porbeagle source screen passed.\n')

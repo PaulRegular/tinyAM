@@ -50,13 +50,13 @@ stopifnot(nrow(candidates) == 2L,
   sum(outputs$assessment_id %in% candidates$candidate_unit_id, na.rm = TRUE) == 0L,
   sum(units$candidate_unit_id %in% candidates$candidate_unit_id, na.rm = TRUE) == 2L,
   sum(noaa$inventory_rows) == 432L,
-  sum(noaa$new) == 334L, sum(noaa$identity_unreviewed) == 61L,
-  sum(noaa$excluded) == 207L, sum(noaa$eligibility_unresolved) == 145L,
-  sum(noaa$screening_complete) == 373L, sum(noaa$screening_not_started) == 59L,
+  sum(noaa$new) == 335L, sum(noaa$identity_unreviewed) == 60L,
+  sum(noaa$excluded) == 208L, sum(noaa$eligibility_unresolved) == 144L,
+  sum(noaa$screening_complete) == 374L, sum(noaa$screening_not_started) == 58L,
   nrow(nw) == 1L, nw$new == 124L, nw$excluded == 52L,
   nw$eligibility_unresolved == 54L, nw$screening_complete == 132L,
   nw$screening_not_started == 6L,
-  nrow(units) == 619L, sum(units$inventory_entries) == 656L,
-  sum(!is.na(units$candidate_unit_id) & nzchar(units$candidate_unit_id)) == 519L)
+  nrow(units) == 620L, sum(units$inventory_entries) == 657L,
+  sum(!is.na(units$candidate_unit_id) & nzchar(units$candidate_unit_id)) == 520L)
 
 cat('NOAA Washington/Oregon copper 2021 source-integrity, exclusion, and no-import checks passed.\n')
