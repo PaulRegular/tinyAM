@@ -1371,3 +1371,5 @@ and SSC report document a newer operational update. See
 `source_reviews/noaa_alaska_index_aggregates_2024.md`.
 
 NOAA Stock SMART 11688 represents the South Pacific-wide albacore assessment led by SPC with IATTC participation. The public 2024 diagnostic repository includes source catches, length compositions, conditional age-at-length observations, and annual N-at-age and F-at-age outputs. It is eligible for source curation through an explicitly approximate catch-at-age reconstruction; the MFCL likelihood itself is length-based. See source_reviews/noaa_south_pacific_albacore_2024.md.
+
+NOAA Stock SMART 11691 is the current Western and Central Pacific skipjack unit. WCPFC accepted the 2025 production assessment through 2024; its catch, length-frequency, aggregate CPUE, and tagging likelihoods do not use observed age compositions or age-specific abundance indices. Public N-at-age and F-at-age are model outputs, so the unit is screened ineligible for age-disaggregated source curation. The pinned TAF CPUE input also has one anomalous year/season row to resolve before reuse. See `source_reviews/noaa_wcpfc_skipjack_2025.md`.
