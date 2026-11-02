@@ -27,12 +27,12 @@ the rows already linked to a stock or candidate unit.
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 63 | 18 | 98 | 21 | 147 | 31 | 199 | 0 | 0 |
 | ICES | 274 | 59 | 212 | 3 | 0 | 60 | 185 | 29 | 274 | 0 | 0 |
-| NOAA | 432 | 28 | 369 | 13 | 22 | 84 | 241 | 107 | 412 | 0 | 20 |
-| **Total** | **905** | **107** | **644** | **34** | **120** | **165** | **573** | **167** | **885** | **0** | **20** |
+| NOAA | 432 | 28 | 372 | 13 | 19 | 84 | 242 | 106 | 415 | 0 | 17 |
+| **Total** | **905** | **107** | **647** | **34** | **117** | **165** | **574** | **166** | **888** | **0** | **17** |
 
 These are source-list row counts, not counts of unique stock units. The
-`inventory_units.csv` summary contains 654 unit keys covering 693 inventory
-rows; 212 rows still lack a unit-level identity match.
+`inventory_units.csv` summary contains 657 unit keys covering 696 inventory
+rows; 209 rows still lack a unit-level identity match.
 
 NOAA Stock SMART 11009 is a legacy broad Gulf of Alaska shallow-water-flatfish complex, not a distinct current stock unit. Its species and age-structured components are tracked separately; the old record remains an ambiguous, ineligible crosswalk and adds no canonical assessment data. See `source_reviews/noaa_goa_shallow_flatfish_legacy_2016_2026.md`.
 
@@ -51,6 +51,7 @@ current assessment does not provide multi-age population inputs or outputs. It i
 screened ineligible for the age-disaggregated set; see
 `source_reviews/noaa_auke_creek_coho_2024.md`.
 
+NOAA Florida hogfish candidates 12808 and 12809 map to the current SEDAR 94 West Florida Shelf and East Florida/Florida Keys units. SEDAR 94 uses conditional age-at-length data but its reviewed public materials do not yet establish a complete machine-readable age-disaggregated input/output series, so both candidates remain eligibility-unresolved. Candidate 12810 is the separate Georgia–North Carolina unit and is screened ineligible because the reviewed SAFE report says an assessment attempt lacked sufficient information. See source_reviews/noaa_hogfish_sedar94_2026.md.
 The progress summary has 75 organization-region
 rows. Row-level status and unit-level deduplication are intentionally reported
 separately.
@@ -1253,8 +1254,8 @@ The organization and source-region breakdowns are in `inventory_progress.csv`; t
 
 The DFO WCVI Barkley Sockeye row is screened ineligible: its 2024 update uses salmon run reconstruction and stock-recruit methods, but does not verify the age-structured catch, survey, biological, and mortality inputs or N-at-age/F-at-age outputs needed for tinyAM. See discovery/source_reviews/dfo_wcvi_barkley_sockeye_2024.md.
 
-The current `inventory_units.csv` contains 654 unit keys covering 693 inventory
-rows. The remaining 212 inventory rows lack a unit-level identity match.
+The current `inventory_units.csv` contains 657 unit keys covering 696 inventory
+rows. The remaining 209 inventory rows lack a unit-level identity match.
 
 NOAA Stock SMART IDs 15110, 15113–15114, and 15130–15138 represent 12 single-species Guam Island reef-fish units assessed with length-based GTG-LBSPR methods. Three species have a later 2023 PIFSC management-strategy analysis using the same length-based method. All 12 are screened ineligible for age-disaggregated curation; the Guam bottomfish management-unit complex is a separate stock group. See `source_reviews/noaa_guam_reef_fish_2019.md`.
 
