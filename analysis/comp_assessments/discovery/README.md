@@ -27,10 +27,12 @@ the rows already linked to a stock or candidate unit.
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 63 | 18 | 98 | 21 | 147 | 31 | 199 | 0 | 0 |
 | ICES | 274 | 59 | 212 | 3 | 0 | 60 | 185 | 29 | 274 | 0 | 0 |
-| NOAA | 432 | 28 | 331 | 9 | 64 | 80 | 204 | 148 | 370 | 0 | 62 |
-| **Total** | **905** | **107** | **606** | **30** | **162** | **161** | **536** | **208** | **843** | **0** | **62** |
+| NOAA | 432 | 28 | 335 | 10 | 59 | 80 | 209 | 143 | 375 | 0 | 57 |
+| **Total** | **905** | **107** | **610** | **31** | **157** | **161** | **541** | **203** | **848** | **0** | **57** |
 
-The crosswalk currently links 616 distinct unit keys across 653 inventory rows: 100 canonical stock units and 516 candidate units. Candidate units include 514 with new identity status, one ambiguous identity, and one mixed identity. Of the new-status candidate units, 59 are eligible, 356 ineligible, and 96 unresolved; three candidate units have mixed eligibility. A further 252 inventory rows have no unit crosswalk yet.
+The crosswalk currently links 620 distinct unit keys across 657 inventory rows. A further 248 inventory rows have no unit crosswalk yet.
+
+NOAA Stock SMART 11009 is a legacy broad Gulf of Alaska shallow-water-flatfish complex, not a distinct current stock unit. Its species and age-structured components are tracked separately; the old record remains an ambiguous, ineligible crosswalk and adds no canonical assessment data. See `source_reviews/noaa_goa_shallow_flatfish_legacy_2016_2026.md`.
 
 NOAA Ocean quahog (Stock SMART 10788) is the 2020 operational update of the 2017
 Stock Synthesis benchmark. The reviewed assessment products report commercial

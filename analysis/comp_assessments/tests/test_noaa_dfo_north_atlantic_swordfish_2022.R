@@ -46,11 +46,11 @@ stopifnot(
   grepl('no tinyAM translation was attempted', review, fixed = TRUE),
   sum(progress$inventory_rows) == 905L,
   sum(progress$new) == 610L,
-  sum(progress$identity_unreviewed) == 158L,
-  sum(progress$excluded) == 540L,
-  sum(progress$eligibility_unresolved) == 204L,
-  sum(progress$screening_complete) == 847L,
-  sum(progress$screening_not_started) == 58L
+  sum(progress$identity_unreviewed) == 157L,
+  sum(progress$excluded) == 541L,
+  sum(progress$eligibility_unresolved) == 203L,
+  sum(progress$screening_complete) == 848L,
+  sum(progress$screening_not_started) == 57L
 )
 
 cache <- file.path(root, 'source_cache', 'discovery_swordfish_north_atlantic_2022')

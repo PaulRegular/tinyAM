@@ -61,8 +61,8 @@ stopifnot(
   sum(noaa$inventory_rows) == 432L,
 
   sum(noaa$new) == 335L,
-  sum(noaa$excluded) == 208L,
-  sum(noaa$screening_complete) == 374L,
+  sum(noaa$excluded) == 209L,
+  sum(noaa$screening_complete) == 375L,
   !any(stocks$authority_stock_id == '10566', na.rm = TRUE),
   !any(stocks$stock_id == candidate$candidate_unit_id),
   !any(assessments$stock_id == candidate$candidate_unit_id),
