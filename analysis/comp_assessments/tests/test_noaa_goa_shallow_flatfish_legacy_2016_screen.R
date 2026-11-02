@@ -40,12 +40,12 @@ stopifnot(
   grepl('No canonical stock, assessment, input, or output rows were added', review, fixed = TRUE),
   sum(progress$inventory_rows) == 905L,
   sum(progress$ambiguous) == 31L,
-  sum(progress$identity_unreviewed) == 152L,
+  sum(progress$identity_unreviewed) == 151L,
   sum(progress$excluded) == 544L,
-  sum(progress$eligibility_unresolved) == 198L,
-  sum(progress$screening_not_started) == 52L,
-  sum(progress$screening_complete) == 853L,
-  sum(units$inventory_entries) == 662L
+  sum(progress$eligibility_unresolved) == 197L,
+  sum(progress$screening_not_started) == 51L,
+  sum(progress$screening_complete) == 854L,
+  sum(units$inventory_entries) == 663L
 )
 
 stocks <- read.csv(file.path(root, 'database', 'stocks.csv'),

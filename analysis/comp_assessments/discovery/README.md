@@ -27,10 +27,10 @@ the rows already linked to a stock or candidate unit.
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 63 | 18 | 98 | 21 | 147 | 31 | 199 | 0 | 0 |
 | ICES | 274 | 59 | 212 | 3 | 0 | 60 | 185 | 29 | 274 | 0 | 0 |
-| NOAA | 432 | 28 | 340 | 10 | 54 | 82 | 212 | 138 | 380 | 0 | 52 |
-| **Total** | **905** | **107** | **615** | **31** | **152** | **163** | **544** | **198** | **853** | **0** | **52** |
+| NOAA | 432 | 28 | 341 | 10 | 53 | 83 | 212 | 137 | 381 | 0 | 51 |
+| **Total** | **905** | **107** | **616** | **31** | **151** | **164** | **544** | **197** | **854** | **0** | **51** |
 
-The crosswalk currently links 625 distinct unit keys across 662 inventory rows. A further 243 inventory records remain without a unit-level identity match.
+The crosswalk currently links 626 distinct unit keys across 663 inventory rows. A further 242 inventory records remain without a unit-level identity match.
 
 NOAA Stock SMART 11009 is a legacy broad Gulf of Alaska shallow-water-flatfish complex, not a distinct current stock unit. Its species and age-structured components are tracked separately; the old record remains an ambiguous, ineligible crosswalk and adds no canonical assessment data. See `source_reviews/noaa_goa_shallow_flatfish_legacy_2016_2026.md`.
 
@@ -67,6 +67,16 @@ located, SEDAR 26 (2011), uses data-limited commercial CPUE and length-frequency
 methods and does not provide the age-disaggregated inputs and population outputs
 required for this comparison. SEDAR 103 is still in progress. See
 `source_reviews/noaa_caribbean_snappers_sedar26_2011.md`.
+
+NOAA Stock SMART 11694 is the Western and Central Pacific yellowfin tuna unit.
+Its latest detailed production run is the 2026 WCPFC assessment through 2024,
+but the report says SC22 deferred its management-advice review to SC23. The
+2023 Stock SMART run remains the latest accepted advice basis. The pinned SPC
+files include age-at-length samples, length compositions, aggregate quarterly
+CPUE, biological surfaces and fitted age-specific outputs. They support source
+curation with an explicitly approximate age-composition reconstruction; the
+age samples are not direct catch-at-age observations. No canonical data were
+added. See `source_reviews/noaa_wcpfc_yellowfin_2026.md`.
 
 The first six newly screened ICES units in this review are ineligible for the
 age-disaggregated source set. Four use no-assessment or landings-only advice;

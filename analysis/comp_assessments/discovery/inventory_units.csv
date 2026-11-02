@@ -523,6 +523,7 @@
 "candidate:wcpfc_south_pacific_albacore","","wcpfc_south_pacific_albacore","new","eligible","screened","not_started","NOAA","PIFSC","NOAA:11688",1
 "candidate:wcpfc_wcpo_bigeye","","wcpfc_wcpo_bigeye","new","eligible","screened","not_started","NOAA","SWFSC / PIFSC","NOAA:11684",1
 "candidate:wcpfc_wcpo_skipjack","","wcpfc_wcpo_skipjack","new","ineligible","screened","not_started","NOAA","PIFSC","NOAA:11691",1
+"candidate:wcpfc_wcpo_yellowfin","","wcpfc_wcpo_yellowfin","new","eligible","screened","not_started","NOAA","PIFSC","NOAA:11694",1
 "candidate:western_atlantic_bluefin_tuna","","western_atlantic_bluefin_tuna","new","unresolved","screened","not_started","DFO | NOAA","National Capital Region | SEFSC","DFO:National Capital Region:Bluefin Tuna - Western Atlantic | NOAA:10165",2
 "stock:afsc_alaska_plaice_bsai","afsc_alaska_plaice_bsai","","matched","ineligible","screened","imported","NOAA","AFSC","NOAA:10026",1
 "stock:afsc_arrowtooth_flounder_bsai","afsc_arrowtooth_flounder_bsai","","matched","ineligible","screened","imported","NOAA","AFSC","NOAA:10003",1
