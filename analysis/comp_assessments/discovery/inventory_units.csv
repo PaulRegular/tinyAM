@@ -283,8 +283,12 @@
 "candidate:noaa_black_rockfish_washington_2023","","noaa_black_rockfish_washington_2023","new","eligible","screened","not_started","NOAA","NWFSC / SWFSC","NOAA:14409",1
 "candidate:noaa_blacknose_shark_atlantic","","noaa_blacknose_shark_atlantic","new","ineligible","screened","not_started","NOAA","SEFSC","NOAA:12130",1
 "candidate:noaa_blacknose_shark_gulf","","noaa_blacknose_shark_gulf","new","ineligible","screened","not_started","NOAA","SEFSC","NOAA:12131",1
+"candidate:noaa_blue_deacon_california","","noaa_blue_deacon_california","new","eligible","screened","not_started","NOAA","NWFSC / SWFSC","NOAA:14821",1
+"candidate:noaa_blue_deacon_oregon","","noaa_blue_deacon_oregon","new","eligible","screened","not_started","NOAA","NWFSC / SWFSC","NOAA:14822",1
 "candidate:noaa_blue_king_crab_pribilof","","noaa_blue_king_crab_pribilof","new","ineligible","screened","not_started","NOAA","AFSC","NOAA:10813",1
 "candidate:noaa_blue_king_crab_st_matthew","","noaa_blue_king_crab_st_matthew","new","ineligible","screened","not_started","NOAA","AFSC","NOAA:10814",1
+"candidate:noaa_blue_rockfish_southern_california","","noaa_blue_rockfish_southern_california","new","ineligible","screened","not_started","NOAA","NWFSC / SWFSC","NOAA:15351",1
+"candidate:noaa_blue_shark_north_atlantic","","noaa_blue_shark_north_atlantic","new","ineligible","screened","not_started","NOAA","SEFSC","NOAA:10689",1
 "candidate:noaa_blue_shark_north_pacific","","noaa_blue_shark_north_pacific","new","ineligible","screened","not_started","NOAA","PIFSC","NOAA:11686",1
 "candidate:noaa_bluefish_atlantic_coast","","noaa_bluefish_atlantic_coast","new","eligible","screened","not_started","NOAA","NEFSC","NOAA:10388",1
 "candidate:noaa_blueline_tilefish_mid_atlantic","","noaa_blueline_tilefish_mid_atlantic","new","ineligible","screened","not_started","NOAA","SEFSC","NOAA:14922",1
@@ -297,14 +301,17 @@
 "candidate:noaa_bsai_alaska_skate","","noaa_bsai_alaska_skate","new","ineligible","screened","not_started","NOAA","AFSC","NOAA:10736",1
 "candidate:noaa_bsai_other_flatfish_complex","","noaa_bsai_other_flatfish_complex","new","ineligible","screened","not_started","NOAA","AFSC","NOAA:10973",1
 "candidate:noaa_bsai_other_rockfish_complex","","noaa_bsai_other_rockfish_complex","new","ineligible","screened","not_started","NOAA","AFSC","NOAA:10974",1
+"candidate:noaa_bsai_other_skates","","noaa_bsai_other_skates","new","ineligible","screened","not_started","NOAA","AFSC","NOAA:11444",1
 "candidate:noaa_bsai_rougheye_blackspotted","","noaa_bsai_rougheye_blackspotted","new","mixed","screened","not_started","NOAA","AFSC","NOAA:11382 | NOAA:15394 | NOAA:15395",3
 "candidate:noaa_bsai_shark_complex","","noaa_bsai_shark_complex","new","ineligible","screened","not_started","NOAA","AFSC","NOAA:11403",1
 "candidate:noaa_bsai_shortraker","","noaa_bsai_shortraker","new","ineligible","screened","not_started","NOAA","AFSC","NOAA:10553",1
+"candidate:noaa_bsai_skates_legacy_aggregate","","noaa_bsai_skates_legacy_aggregate","ambiguous","ineligible","screened","not_started","NOAA","AFSC","NOAA:11402",1
 "candidate:noaa_butterfish_gom_cape_hatteras","","noaa_butterfish_gom_cape_hatteras","new","eligible","screened","not_started","NOAA","NEFSC","NOAA:10187",1
 "candidate:noaa_cabezon_northern_california_2019","","noaa_cabezon_northern_california_2019","new","ineligible","screened","not_started","NOAA","NWFSC / SWFSC","NOAA:15050",1
 "candidate:noaa_cabezon_oregon_2019","","noaa_cabezon_oregon_2019","new","eligible","screened","not_started","NOAA","NWFSC / SWFSC","NOAA:12193",1
 "candidate:noaa_cabezon_southern_california_2019","","noaa_cabezon_southern_california_2019","new","ineligible","screened","not_started","NOAA","NWFSC / SWFSC","NOAA:15051",1
 "candidate:noaa_cabezon_washington_2019","","noaa_cabezon_washington_2019","new","ineligible","screened","not_started","NOAA","NWFSC / SWFSC","NOAA:14803",1
+"candidate:noaa_caribbean_parrotfishes_complex","","noaa_caribbean_parrotfishes_complex","new","ineligible","screened","not_started","NOAA","SEFSC","NOAA:10989",1
 "candidate:noaa_caribbean_queen_snapper","","noaa_caribbean_queen_snapper","new","ineligible","screened","not_started","NOAA","SEFSC","NOAA:10247",1
 "candidate:noaa_caribbean_red_hind","","noaa_caribbean_red_hind","new","ineligible","screened","not_started","NOAA","SEFSC","NOAA:10327",1
 "candidate:noaa_caribbean_silk_snapper","","noaa_caribbean_silk_snapper","new","ineligible","screened","not_started","NOAA","SEFSC","NOAA:10241",1
@@ -385,6 +392,7 @@
 "candidate:noaa_coho_berners_river","","noaa_coho_berners_river","new","ineligible","screened","not_started","NOAA","AFSC","NOAA:10959",1
 "candidate:noaa_coho_ford_arm_lake_discontinued","","noaa_coho_ford_arm_lake_discontinued","new","ineligible","screened","not_started","NOAA","AFSC","NOAA:10960",1
 "candidate:noaa_coho_hugh_smith_lake","","noaa_coho_hugh_smith_lake","new","ineligible","screened","not_started","NOAA","AFSC","NOAA:10961",1
+"candidate:noaa_common_thresher_pacific_coast","","noaa_common_thresher_pacific_coast","new","unresolved","screened","not_started","NOAA","SWFSC / PIFSC","NOAA:11714",1
 "candidate:noaa_copper_rockfish_california_2023","","noaa_copper_rockfish_california_2023","new","eligible","screened","not_started","NOAA","NWFSC / SWFSC","NOAA:15332 | NOAA:15333",2
 "candidate:noaa_copper_rockfish_oregon_2021","","noaa_copper_rockfish_oregon_2021","new","ineligible","screened","not_started","NOAA","NWFSC / SWFSC","NOAA:15331",1
 "candidate:noaa_copper_rockfish_washington_2021","","noaa_copper_rockfish_washington_2021","new","ineligible","screened","not_started","NOAA","NWFSC / SWFSC","NOAA:15330",1
@@ -418,6 +426,7 @@
 "candidate:noaa_golden_tilefish_mid_atlantic","","noaa_golden_tilefish_mid_atlantic","new","eligible","screened","not_started","NOAA","NEFSC","NOAA:10385",1
 "candidate:noaa_golden_tilefish_south_atlantic","","noaa_golden_tilefish_south_atlantic","new","eligible","screened","not_started","NOAA","SEFSC","NOAA:10384",1
 "candidate:noaa_goliath_grouper_southeastern_us_2016","","noaa_goliath_grouper_southeastern_us_2016","new","ineligible","screened","not_started","NOAA","SEFSC","NOAA:10315 | NOAA:11042",2
+"candidate:noaa_gopher_black_yellow_northern_california","","noaa_gopher_black_yellow_northern_california","new","eligible","screened","not_started","NOAA","NWFSC / SWFSC","NOAA:15052",1
 "candidate:noaa_gray_snapper_gulf_mexico","","noaa_gray_snapper_gulf_mexico","new","eligible","screened","not_started","NOAA","SEFSC","NOAA:10221",1
 "candidate:noaa_greater_amberjack_south_atlantic","","noaa_greater_amberjack_south_atlantic","new","eligible","screened","not_started","NOAA","SEFSC","NOAA:10208",1
 "candidate:noaa_guam_bottomfish_complex","","noaa_guam_bottomfish_complex","new","ineligible","screened","not_started","NOAA","PIFSC","NOAA:11696",1
@@ -470,9 +479,11 @@
 "candidate:noaa_northwest_atlantic_porbeagle","","noaa_northwest_atlantic_porbeagle","new","ineligible","screened","not_started","NOAA","SEFSC","NOAA:10654",1
 "candidate:noaa_ocean_pout_10525","","noaa_ocean_pout_10525","new","ineligible","screened","not_started","NOAA","NEFSC","NOAA:10525",1
 "candidate:noaa_ocean_quahog_atlantic","","noaa_ocean_quahog_atlantic","new","ineligible","screened","not_started","NOAA","NEFSC","NOAA:10788",1
+"candidate:noaa_oceanic_whitetip_wcpo","","noaa_oceanic_whitetip_wcpo","new","ineligible","screened","not_started","NOAA","PIFSC","NOAA:11724",1
 "candidate:noaa_offshore_hake_us","","noaa_offshore_hake_us","new","ineligible","screened","not_started","NOAA","NEFSC","NOAA:10524",1
 "candidate:noaa_opakapaka_mhi","","noaa_opakapaka_mhi","new","ineligible","screened","not_started","NOAA","PIFSC","NOAA:12442",1
 "candidate:noaa_pacific_aurora_rockfish","","noaa_pacific_aurora_rockfish","new","unresolved","screened","not_started","NOAA","NWFSC / SWFSC","NOAA:10547",1
+"candidate:noaa_pacific_bigeye_thresher","","noaa_pacific_bigeye_thresher","new","ineligible","screened","not_started","NOAA","SWFSC / PIFSC","NOAA:11712",1
 "candidate:noaa_pacific_brown_rockfish","","noaa_pacific_brown_rockfish","new","ineligible","screened","not_started","NOAA","NWFSC / SWFSC","NOAA:10546",1
 "candidate:noaa_pacific_coast_longnose_skate","","noaa_pacific_coast_longnose_skate","new","eligible","screened","not_started","NOAA","NWFSC / SWFSC","NOAA:10731",1
 "candidate:noaa_pacific_coast_pacific_grenadier","","noaa_pacific_coast_pacific_grenadier","new","ineligible","screened","not_started","NOAA","NWFSC / SWFSC","NOAA:10526",1
@@ -490,6 +501,7 @@
 "candidate:noaa_pink_shrimp_south_atlantic","","noaa_pink_shrimp_south_atlantic","new","ineligible","screened","not_started","NOAA","SEFSC","NOAA:10082",1
 "candidate:noaa_pollock_bogoslof","","noaa_pollock_bogoslof","new","ineligible","screened","not_started","NOAA","AFSC","NOAA:10512",1
 "candidate:noaa_pollock_southeast_outside","","noaa_pollock_southeast_outside","new","ineligible","screened","not_started","NOAA","AFSC","NOAA:10514",1
+"candidate:noaa_puerto_rico_grouper_unit_6","","noaa_puerto_rico_grouper_unit_6","new","ineligible","screened","not_started","NOAA","SEFSC","NOAA:15577",1
 "candidate:noaa_puget_sound_pink_salmon","","noaa_puget_sound_pink_salmon","new","ineligible","screened","not_started","NOAA","NWFSC / SWFSC","NOAA:10576",1
 "candidate:noaa_queen_triggerfish_puerto_rico","","noaa_queen_triggerfish_puerto_rico","new","ineligible","screened","not_started","NOAA","SEFSC","NOAA:15649",1
 "candidate:noaa_queen_triggerfish_st_croix","","noaa_queen_triggerfish_st_croix","new","ineligible","screened","not_started","NOAA","SEFSC","NOAA:15558",1
@@ -508,6 +520,7 @@
 "candidate:noaa_redtail_parrotfish_caribbean","","noaa_redtail_parrotfish_caribbean","new","ineligible","screened","not_started","NOAA","SEFSC","NOAA:10144",1
 "candidate:noaa_royal_red_shrimp_gulf","","noaa_royal_red_shrimp_gulf","new","ineligible","screened","not_started","NOAA","SEFSC","NOAA:10802",1
 "candidate:noaa_sandbar_shark_atlantic_gulf","","noaa_sandbar_shark_atlantic_gulf","new","ineligible","screened","not_started","NOAA","SEFSC","NOAA:10676",1
+"candidate:noaa_scalloped_hammerhead_atlantic_gulf","","noaa_scalloped_hammerhead_atlantic_gulf","new","unresolved","screened","not_started","NOAA","SEFSC","NOAA:11763",1
 "candidate:noaa_scamp_yellowmouth_gulf_complex","","noaa_scamp_yellowmouth_gulf_complex","new","unresolved","screened","not_started","NOAA","SEFSC","NOAA:10324",1
 "candidate:noaa_scamp_yellowmouth_south_atlantic_complex","","noaa_scamp_yellowmouth_south_atlantic_complex","new","unresolved","screened","not_started","NOAA","SEFSC","NOAA:10326",1
 "candidate:noaa_sea_scallop_nw_atlantic","","noaa_sea_scallop_nw_atlantic","new","ineligible","screened","not_started","NOAA","NEFSC","NOAA:10786",1
@@ -530,6 +543,8 @@
 "candidate:noaa_spiny_dogfish_goa","","noaa_spiny_dogfish_goa","new","ineligible","screened","not_started","NOAA","AFSC","NOAA:10700",1
 "candidate:noaa_spiny_dogfish_pacific_coast_2021","","noaa_spiny_dogfish_pacific_coast_2021","new","eligible","screened","not_started","NOAA","NWFSC / SWFSC","NOAA:10702",1
 "candidate:noaa_squarespot_rockfish_california","","noaa_squarespot_rockfish_california","new","ineligible","screened","not_started","NOAA","NWFSC / SWFSC","NOAA:10442",1
+"candidate:noaa_st_croix_grouper_unit_4","","noaa_st_croix_grouper_unit_4","new","ineligible","screened","not_started","NOAA","SEFSC","NOAA:15512",1
+"candidate:noaa_st_thomas_st_john_grouper_unit_3","","noaa_st_thomas_st_john_grouper_unit_3","new","ineligible","screened","not_started","NOAA","SEFSC","NOAA:15439",1
 "candidate:noaa_uci_salmon_17337","","noaa_uci_salmon_17337","new","unresolved","screened","not_started","NOAA","AFSC","NOAA:17337",1
 "candidate:noaa_uci_salmon_17338","","noaa_uci_salmon_17338","new","unresolved","screened","not_started","NOAA","AFSC","NOAA:17338",1
 "candidate:noaa_uci_salmon_17339","","noaa_uci_salmon_17339","new","unresolved","screened","not_started","NOAA","AFSC","NOAA:17339",1
@@ -539,6 +554,8 @@
 "candidate:noaa_vermilion_rockfish_or_wa","","noaa_vermilion_rockfish_or_wa","new","eligible","screened","not_started","NOAA","NWFSC / SWFSC","NOAA:15338 | NOAA:15339",2
 "candidate:noaa_vermilion_snapper_gulf_mexico","","noaa_vermilion_snapper_gulf_mexico","new","eligible","screened","not_started","NOAA","SEFSC","NOAA:10256",1
 "candidate:noaa_vermilion_snapper_south_atlantic","","noaa_vermilion_snapper_south_atlantic","new","eligible","screened","not_started","NOAA","SEFSC","NOAA:10257",1
+"candidate:noaa_vermilion_sunset_northern_california","","noaa_vermilion_sunset_northern_california","new","eligible","screened","not_started","NOAA","NWFSC / SWFSC","NOAA:15335",1
+"candidate:noaa_vermilion_sunset_southern_california","","noaa_vermilion_sunset_southern_california","new","eligible","screened","not_started","NOAA","NWFSC / SWFSC","NOAA:15310",1
 "candidate:noaa_wcnpo_swordfish","","noaa_wcnpo_swordfish","new","ineligible","screened","not_started","NOAA","SWFSC / PIFSC","NOAA:11642",1
 "candidate:noaa_weathervane_scallop_alaska","","noaa_weathervane_scallop_alaska","new","ineligible","screened","not_started","NOAA","AFSC","NOAA:11201",1
 "candidate:noaa_white_shrimp_gulf","","noaa_white_shrimp_gulf","new","ineligible","screened","not_started","NOAA","SEFSC","NOAA:10083",1

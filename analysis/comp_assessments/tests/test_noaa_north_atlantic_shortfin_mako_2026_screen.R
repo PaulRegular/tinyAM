@@ -60,14 +60,14 @@ progress <- read.csv(file.path(root, 'discovery', 'inventory_progress.csv'),
 noaa <- progress[progress$organization == 'NOAA', , drop = FALSE]
 sefsc <- noaa[noaa$source_region == 'SEFSC', , drop = FALSE]
 stopifnot(sum(noaa$inventory_rows) == 432L,
-  sum(noaa$new) == 372L, sum(noaa$identity_unreviewed) == 19L,
-  sum(noaa$excluded) == 242L, sum(noaa$eligibility_unresolved) == 106L,
-  sum(noaa$screening_complete) == 415L,
-  sum(noaa$screening_not_started) == 17L,
-  nrow(sefsc) == 1L, sefsc$new == 81L,
-  sefsc$identity_unreviewed == 6L,
-  sefsc$eligibility_unresolved == 26L,
-  sefsc$screening_complete == 84L,
-  sefsc$screening_not_started == 6L)
+  sum(noaa$new) == 388L, sum(noaa$identity_unreviewed) == 2L,
+  sum(noaa$excluded) == 252L, sum(noaa$eligibility_unresolved) == 91L,
+  sum(noaa$screening_complete) == 432L,
+  sum(noaa$screening_not_started) == 0L,
+  nrow(sefsc) == 1L, sefsc$new == 87L,
+  sefsc$identity_unreviewed == 0L,
+  sefsc$eligibility_unresolved == 21L,
+  sefsc$screening_complete == 90L,
+  sefsc$screening_not_started == 0L)
 
 cat('NOAA North Atlantic shortfin mako source screen passed.\n')

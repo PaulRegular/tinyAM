@@ -27,12 +27,12 @@ the rows already linked to a stock or candidate unit.
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 63 | 18 | 98 | 21 | 147 | 31 | 199 | 0 | 0 |
 | ICES | 274 | 59 | 212 | 3 | 0 | 60 | 185 | 29 | 274 | 0 | 0 |
-| NOAA | 432 | 28 | 372 | 13 | 19 | 84 | 242 | 106 | 415 | 0 | 17 |
-| **Total** | **905** | **107** | **647** | **34** | **117** | **165** | **574** | **166** | **888** | **0** | **17** |
+| NOAA | 432 | 28 | 388 | 14 | 2 | 89 | 252 | 91 | 432 | 0 | 0 |
+| **Total** | **905** | **107** | **663** | **35** | **100** | **170** | **584** | **151** | **905** | **0** | **0** |
 
 These are source-list row counts, not counts of unique stock units. The
-`inventory_units.csv` summary contains 657 unit keys covering 696 inventory
-rows; 209 rows still lack a unit-level identity match.
+`inventory_units.csv` summary contains 674 unit keys covering 713 inventory
+rows; 192 rows still lack a unit-level identity match.
 
 NOAA Stock SMART 11009 is a legacy broad Gulf of Alaska shallow-water-flatfish complex, not a distinct current stock unit. Its species and age-structured components are tracked separately; the old record remains an ambiguous, ineligible crosswalk and adds no canonical assessment data. See `source_reviews/noaa_goa_shallow_flatfish_legacy_2016_2026.md`.
 
@@ -1387,3 +1387,11 @@ and SSC report document a newer operational update. See
 NOAA Stock SMART 11688 represents the South Pacific-wide albacore assessment led by SPC with IATTC participation. The public 2024 diagnostic repository includes source catches, length compositions, conditional age-at-length observations, and annual N-at-age and F-at-age outputs. It is eligible for source curation through an explicitly approximate catch-at-age reconstruction; the MFCL likelihood itself is length-based. See source_reviews/noaa_south_pacific_albacore_2024.md.
 
 NOAA Stock SMART 11691 is the current Western and Central Pacific skipjack unit. WCPFC accepted the 2025 production assessment through 2024; its catch, length-frequency, aggregate CPUE, and tagging likelihoods do not use observed age compositions or age-specific abundance indices. Public N-at-age and F-at-age are model outputs, so the unit is screened ineligible for age-disaggregated source curation. The pinned TAF CPUE input also has one anomalous year/season row to resolve before reuse. See `source_reviews/noaa_wcpfc_skipjack_2025.md`.
+
+The remaining 17 NOAA rows were screened on 2026-11-02. Five Pacific
+groundfish units are eligible for source curation from public Stock Synthesis
+materials; the common thresher row remains unresolved pending run-matched data
+verification. Ten candidates are ineligible for the age-disaggregated set, and
+the 2007 BSAI skate aggregate is an ambiguous legacy row overlapping the current
+Alaska skate and Other Skates units. See
+`source_reviews/noaa_remaining_unscreened_2026.md`.

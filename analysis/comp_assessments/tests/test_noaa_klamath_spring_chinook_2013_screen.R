@@ -67,14 +67,14 @@ progress <- read.csv(file.path(root, 'discovery', 'inventory_progress.csv'),
 noaa <- progress[progress$organization == 'NOAA', , drop = FALSE]
 swfsc <- noaa[noaa$source_region == 'NWFSC / SWFSC', , drop = FALSE]
 stopifnot(sum(noaa$inventory_rows) == 432L,
-  sum(noaa$new) == 372L, sum(noaa$identity_unreviewed) == 19L,
-  sum(noaa$excluded) == 242L, sum(noaa$eligibility_unresolved) == 106L,
-  sum(noaa$screening_complete) == 415L,
-  sum(noaa$screening_not_started) == 17L,
-  nrow(swfsc) == 1L, swfsc$new == 124L,
-  swfsc$identity_unreviewed == 6L, swfsc$excluded == 52L,
-  swfsc$eligibility_unresolved == 54L,
-  swfsc$screening_complete == 132L,
-  swfsc$screening_not_started == 6L)
+  sum(noaa$new) == 388L, sum(noaa$identity_unreviewed) == 2L,
+  sum(noaa$excluded) == 252L, sum(noaa$eligibility_unresolved) == 91L,
+  sum(noaa$screening_complete) == 432L,
+  sum(noaa$screening_not_started) == 0L,
+  nrow(swfsc) == 1L, swfsc$new == 130L,
+  swfsc$identity_unreviewed == 0L, swfsc$excluded == 53L,
+  swfsc$eligibility_unresolved == 48L,
+  swfsc$screening_complete == 138L,
+  swfsc$screening_not_started == 0L)
 
 cat('NOAA Klamath spring Chinook source screen passed.\n')

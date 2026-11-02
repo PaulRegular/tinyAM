@@ -44,21 +44,21 @@ noaa <- progress[progress$organization == 'NOAA', , drop = FALSE]
 se <- noaa[noaa$source_region == 'SEFSC', , drop = FALSE]
 units <- read_table('discovery/inventory_units.csv')
 stopifnot(sum(progress$inventory_rows) == 905L,
-  sum(progress$new) == 647L, sum(progress$identity_unreviewed) == 117L,
-  sum(progress$eligible) == 165L, sum(progress$excluded) == 574L,
-  sum(progress$eligible_new) == 95L,
-  sum(progress$eligibility_unresolved) == 166L,
-  sum(progress$screening_complete) == 888L,
-  sum(progress$screening_not_started) == 17L,
-  sum(noaa$new) == 372L, sum(noaa$identity_unreviewed) == 19L,
-  sum(noaa$excluded) == 242L, sum(noaa$eligibility_unresolved) == 106L,
-  sum(noaa$screening_complete) == 415L, sum(noaa$screening_not_started) == 17L,
-  nrow(se) == 1L, se$inventory_rows == 90L, se$new == 81L,
-  se$identity_unreviewed == 6L, se$excluded == 46L,
-  se$eligibility_unresolved == 26L, se$screening_complete == 84L,
-  se$screening_not_started == 6L, nrow(units) == 657L,
-  sum(units$inventory_entries) == 696L,
-  sum(!is.na(units$candidate_unit_id) & nzchar(units$candidate_unit_id)) == 557L,
-  sum(progress$identity_unlinked_rows) == 209L)
+  sum(progress$new) == 663L, sum(progress$identity_unreviewed) == 100L,
+  sum(progress$eligible) == 170L, sum(progress$excluded) == 584L,
+  sum(progress$eligible_new) == 100L,
+  sum(progress$eligibility_unresolved) == 151L,
+  sum(progress$screening_complete) == 905L,
+  sum(progress$screening_not_started) == 0L,
+  sum(noaa$new) == 388L, sum(noaa$identity_unreviewed) == 2L,
+  sum(noaa$excluded) == 252L, sum(noaa$eligibility_unresolved) == 91L,
+  sum(noaa$screening_complete) == 432L, sum(noaa$screening_not_started) == 0L,
+  nrow(se) == 1L, se$inventory_rows == 90L, se$new == 87L,
+  se$identity_unreviewed == 0L, se$excluded == 51L,
+  se$eligibility_unresolved == 21L, se$screening_complete == 90L,
+  se$screening_not_started == 0L, nrow(units) == 674L,
+  sum(units$inventory_entries) == 713L,
+  sum(!is.na(units$candidate_unit_id) & nzchar(units$candidate_unit_id)) == 574L,
+  sum(progress$identity_unlinked_rows) == 192L)
 
 cat('NOAA Gulf smoothhound source-screening checks passed.\n')
