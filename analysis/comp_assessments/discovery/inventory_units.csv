@@ -295,6 +295,7 @@
 "candidate:noaa_bsai_other_flatfish_complex","","noaa_bsai_other_flatfish_complex","new","ineligible","screened","not_started","NOAA","AFSC","NOAA:10973",1
 "candidate:noaa_bsai_other_rockfish_complex","","noaa_bsai_other_rockfish_complex","new","ineligible","screened","not_started","NOAA","AFSC","NOAA:10974",1
 "candidate:noaa_bsai_rougheye_blackspotted","","noaa_bsai_rougheye_blackspotted","new","mixed","screened","not_started","NOAA","AFSC","NOAA:11382 | NOAA:15394 | NOAA:15395",3
+"candidate:noaa_bsai_shark_complex","","noaa_bsai_shark_complex","new","ineligible","screened","not_started","NOAA","AFSC","NOAA:11403",1
 "candidate:noaa_bsai_shortraker","","noaa_bsai_shortraker","new","ineligible","screened","not_started","NOAA","AFSC","NOAA:10553",1
 "candidate:noaa_butterfish_gom_cape_hatteras","","noaa_butterfish_gom_cape_hatteras","new","eligible","screened","not_started","NOAA","NEFSC","NOAA:10187",1
 "candidate:noaa_cabezon_northern_california_2019","","noaa_cabezon_northern_california_2019","new","ineligible","screened","not_started","NOAA","NWFSC / SWFSC","NOAA:15050",1
@@ -398,6 +399,7 @@
 "candidate:noaa_goa_other_skates","","noaa_goa_other_skates","new","ineligible","screened","not_started","NOAA","AFSC","NOAA:11005",1
 "candidate:noaa_goa_rex_sole","","noaa_goa_rex_sole","new","eligible","screened","not_started","NOAA","AFSC","NOAA:10058 | NOAA:15410 | NOAA:15411",3
 "candidate:noaa_goa_rougheye_blackspotted","","noaa_goa_rougheye_blackspotted","new","mixed","screened","not_started","NOAA","AFSC","NOAA:10538 | NOAA:11443",2
+"candidate:noaa_goa_shark_complex","","noaa_goa_shark_complex","new","ineligible","screened","not_started","NOAA","AFSC","NOAA:11450",1
 "candidate:noaa_goa_sharpchin_goa","","noaa_goa_sharpchin_goa","new","ineligible","screened","not_started","NOAA","AFSC","NOAA:10434",1
 "candidate:noaa_goa_shortraker","","noaa_goa_shortraker","new","ineligible","screened","not_started","NOAA","AFSC","NOAA:10554",1
 "candidate:noaa_goa_southern_rock_sole","","noaa_goa_southern_rock_sole","new","ineligible","screened","not_started","NOAA","AFSC","NOAA:10040 | NOAA:15414 | NOAA:15415",3
@@ -469,6 +471,7 @@
 "candidate:noaa_pacific_rex_sole","","noaa_pacific_rex_sole","new","eligible","screened","not_started","NOAA","NWFSC / SWFSC","NOAA:10059",1
 "candidate:noaa_pacific_sanddab_us","","noaa_pacific_sanddab_us","new","unresolved","screened","not_started","NOAA","NWFSC / SWFSC","NOAA:10190",1
 "candidate:noaa_pacific_sharpchin_rockfish","","noaa_pacific_sharpchin_rockfish","new","ineligible","screened","not_started","NOAA","NWFSC / SWFSC","NOAA:10435",1
+"candidate:noaa_pacific_sleeper_shark_bsai","","noaa_pacific_sleeper_shark_bsai","new","ineligible","screened","not_started","NOAA","AFSC","NOAA:10696",1
 "candidate:noaa_pacific_splitnose_rockfish_coastwide","","noaa_pacific_splitnose_rockfish_coastwide","new","ineligible","screened","not_started","NOAA","NWFSC / SWFSC","NOAA:10564",1
 "candidate:noaa_pacific_stripetail_rockfish","","noaa_pacific_stripetail_rockfish","new","ineligible","screened","not_started","NOAA","NWFSC / SWFSC","NOAA:10428",1
 "candidate:noaa_pink_shrimp_gulf","","noaa_pink_shrimp_gulf","new","ineligible","screened","not_started","NOAA","SEFSC","NOAA:10081",1
@@ -512,6 +515,7 @@
 "candidate:noaa_southeastern_us_mutton_snapper","","noaa_southeastern_us_mutton_snapper","new","eligible","screened","not_started","NOAA","SEFSC","NOAA:11342",1
 "candidate:noaa_southern_tanner_crab_bering","","noaa_southern_tanner_crab_bering","new","ineligible","screened","not_started","NOAA","AFSC","NOAA:10821",1
 "candidate:noaa_spanner_crab_hawaii","","noaa_spanner_crab_hawaii","new","ineligible","screened","not_started","NOAA","PIFSC","NOAA:11843",1
+"candidate:noaa_spiny_dogfish_goa","","noaa_spiny_dogfish_goa","new","ineligible","screened","not_started","NOAA","AFSC","NOAA:10700",1
 "candidate:noaa_spiny_dogfish_pacific_coast_2021","","noaa_spiny_dogfish_pacific_coast_2021","new","eligible","screened","not_started","NOAA","NWFSC / SWFSC","NOAA:10702",1
 "candidate:noaa_squarespot_rockfish_california","","noaa_squarespot_rockfish_california","new","ineligible","screened","not_started","NOAA","NWFSC / SWFSC","NOAA:10442",1
 "candidate:noaa_uci_salmon_17337","","noaa_uci_salmon_17337","new","unresolved","screened","not_started","NOAA","AFSC","NOAA:17337",1
