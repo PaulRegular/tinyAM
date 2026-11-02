@@ -67,10 +67,10 @@ progress <- read.csv(file.path(root, 'discovery', 'inventory_progress.csv'),
 noaa <- progress[progress$organization == 'NOAA', , drop = FALSE]
 swfsc <- noaa[noaa$source_region == 'NWFSC / SWFSC', , drop = FALSE]
 stopifnot(sum(noaa$inventory_rows) == 432L,
-  sum(noaa$new) == 322L, sum(noaa$identity_unreviewed) == 73L,
+  sum(noaa$new) == 323L, sum(noaa$identity_unreviewed) == 72L,
   sum(noaa$excluded) == 197L, sum(noaa$eligibility_unresolved) == 155L,
-  sum(noaa$screening_complete) == 361L,
-  sum(noaa$screening_not_started) == 71L,
+  sum(noaa$screening_complete) == 362L,
+  sum(noaa$screening_not_started) == 70L,
   nrow(swfsc) == 1L, swfsc$new == 124L,
   swfsc$identity_unreviewed == 6L, swfsc$excluded == 52L,
   swfsc$eligibility_unresolved == 54L,
