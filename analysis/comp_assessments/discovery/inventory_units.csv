@@ -381,6 +381,9 @@
 "candidate:noaa_coho_11869","","noaa_coho_11869","new","ineligible","screened","not_started","NOAA","NWFSC / SWFSC","NOAA:11869",1
 "candidate:noaa_coho_11874","","noaa_coho_11874","new","ineligible","screened","not_started","NOAA","NWFSC / SWFSC","NOAA:11874",1
 "candidate:noaa_coho_11875","","noaa_coho_11875","new","ineligible","screened","not_started","NOAA","NWFSC / SWFSC","NOAA:11875",1
+"candidate:noaa_coho_berners_river","","noaa_coho_berners_river","new","ineligible","screened","not_started","NOAA","AFSC","NOAA:10959",1
+"candidate:noaa_coho_ford_arm_lake_discontinued","","noaa_coho_ford_arm_lake_discontinued","new","ineligible","screened","not_started","NOAA","AFSC","NOAA:10960",1
+"candidate:noaa_coho_hugh_smith_lake","","noaa_coho_hugh_smith_lake","new","ineligible","screened","not_started","NOAA","AFSC","NOAA:10961",1
 "candidate:noaa_copper_rockfish_california_2023","","noaa_copper_rockfish_california_2023","new","eligible","screened","not_started","NOAA","NWFSC / SWFSC","NOAA:15332 | NOAA:15333",2
 "candidate:noaa_copper_rockfish_oregon_2021","","noaa_copper_rockfish_oregon_2021","new","ineligible","screened","not_started","NOAA","NWFSC / SWFSC","NOAA:15331",1
 "candidate:noaa_copper_rockfish_washington_2021","","noaa_copper_rockfish_washington_2021","new","ineligible","screened","not_started","NOAA","NWFSC / SWFSC","NOAA:15330",1

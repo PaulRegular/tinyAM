@@ -55,13 +55,13 @@ stopifnot(nrow(rows) == 4L, !anyNA(rows$candidate_id),
 progress <- read_table('discovery/inventory_progress.csv')
 units <- read_table('discovery/inventory_units.csv')
 stopifnot(sum(progress$inventory_rows) == 905L,
-  sum(progress$new) == 638L,
-  sum(progress$identity_unreviewed) == 126L,
-  sum(progress$excluded) == 567L,
-  sum(progress$eligibility_unresolved) == 173L,
-  sum(progress$screening_complete) == 879L,
-  sum(progress$screening_not_started) == 26L,
-  nrow(units) == 648L,
-  sum(!is.na(units$candidate_unit_id) & nzchar(units$candidate_unit_id)) == 548L)
+  sum(progress$new) == 641L,
+  sum(progress$identity_unreviewed) == 123L,
+  sum(progress$excluded) == 570L,
+  sum(progress$eligibility_unresolved) == 170L,
+  sum(progress$screening_complete) == 882L,
+  sum(progress$screening_not_started) == 23L,
+  nrow(units) == 651L,
+  sum(!is.na(units$candidate_unit_id) & nzchar(units$candidate_unit_id)) == 551L)
 
 cat('NOAA Pacific swordfish and marlin source-screening checks passed.\n')
