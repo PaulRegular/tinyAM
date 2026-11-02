@@ -265,8 +265,11 @@
 "candidate:noaa_american_samoa_przo","","noaa_american_samoa_przo","new","ineligible","screened","not_started","NOAA","PIFSC","NOAA:12005",1
 "candidate:noaa_american_samoa_valo","","noaa_american_samoa_valo","new","ineligible","screened","not_started","NOAA","PIFSC","NOAA:12011",1
 "candidate:noaa_atlantic_herring_gom_georges_bank","","noaa_atlantic_herring_gom_georges_bank","new","unresolved","screened","not_started","NOAA","NEFSC","NOAA:10572",1
+"candidate:noaa_atlantic_large_coastal_shark_complex","","noaa_atlantic_large_coastal_shark_complex","new","ineligible","screened","not_started","NOAA","SEFSC","NOAA:10967",1
 "candidate:noaa_atlantic_menhaden","","noaa_atlantic_menhaden","new","unresolved","screened","not_started","NOAA","NEFSC / SEFSC","NOAA:11089",1
 "candidate:noaa_atlantic_salmon_gom","","noaa_atlantic_salmon_gom","new","ineligible","screened","not_started","NOAA","NEFSC","NOAA:10498",1
+"candidate:noaa_atlantic_sharpnose_combined","","noaa_atlantic_sharpnose_combined","mixed","ineligible","screened","not_started","NOAA","SEFSC","NOAA:10670 | NOAA:14141 | NOAA:14142",3
+"candidate:noaa_atlantic_small_coastal_shark_complex","","noaa_atlantic_small_coastal_shark_complex","new","ineligible","screened","not_started","NOAA","SEFSC","NOAA:10969",1
 "candidate:noaa_atlantic_surfclam_mid_atlantic","","noaa_atlantic_surfclam_mid_atlantic","new","ineligible","screened","not_started","NOAA","NEFSC","NOAA:10787",1
 "candidate:noaa_atlantic_wolffish_us","","noaa_atlantic_wolffish_us","new","ineligible","screened","not_started","NOAA","NEFSC","NOAA:11562",1
 "candidate:noaa_auke_creek_coho_southeast_alaska","","noaa_auke_creek_coho_southeast_alaska","new","ineligible","screened","not_started","NOAA","AFSC","NOAA:10580",1
@@ -275,6 +278,8 @@
 "candidate:noaa_black_rockfish_california_2023","","noaa_black_rockfish_california_2023","new","eligible","screened","not_started","NOAA","NWFSC / SWFSC","NOAA:17194 | NOAA:17195",2
 "candidate:noaa_black_rockfish_oregon_2023","","noaa_black_rockfish_oregon_2023","new","eligible","screened","not_started","NOAA","NWFSC / SWFSC","NOAA:14407",1
 "candidate:noaa_black_rockfish_washington_2023","","noaa_black_rockfish_washington_2023","new","eligible","screened","not_started","NOAA","NWFSC / SWFSC","NOAA:14409",1
+"candidate:noaa_blacknose_shark_atlantic","","noaa_blacknose_shark_atlantic","new","ineligible","screened","not_started","NOAA","SEFSC","NOAA:12130",1
+"candidate:noaa_blacknose_shark_gulf","","noaa_blacknose_shark_gulf","new","ineligible","screened","not_started","NOAA","SEFSC","NOAA:12131",1
 "candidate:noaa_blue_king_crab_pribilof","","noaa_blue_king_crab_pribilof","new","ineligible","screened","not_started","NOAA","AFSC","NOAA:10813",1
 "candidate:noaa_blue_king_crab_st_matthew","","noaa_blue_king_crab_st_matthew","new","ineligible","screened","not_started","NOAA","AFSC","NOAA:10814",1
 "candidate:noaa_blue_shark_north_pacific","","noaa_blue_shark_north_pacific","new","ineligible","screened","not_started","NOAA","PIFSC","NOAA:11686",1
@@ -282,6 +287,7 @@
 "candidate:noaa_blueline_tilefish_mid_atlantic","","noaa_blueline_tilefish_mid_atlantic","new","ineligible","screened","not_started","NOAA","SEFSC","NOAA:14922",1
 "candidate:noaa_blueline_tilefish_south_atlantic","","noaa_blueline_tilefish_south_atlantic","new","ineligible","screened","not_started","NOAA","SEFSC","NOAA:10381",1
 "candidate:noaa_bocaccio_southern_pacific_coast","","noaa_bocaccio_southern_pacific_coast","new","eligible","screened","not_started","NOAA","NWFSC / SWFSC","NOAA:10413",1
+"candidate:noaa_bonnethead_atlantic_gulf_combined","","noaa_bonnethead_atlantic_gulf_combined","new","ineligible","screened","not_started","NOAA","SEFSC","NOAA:10692",1
 "candidate:noaa_brown_rock_shrimp_south_atlantic","","noaa_brown_rock_shrimp_south_atlantic","new","ineligible","screened","not_started","NOAA","SEFSC","NOAA:10803",1
 "candidate:noaa_brown_shrimp_gulf","","noaa_brown_shrimp_gulf","new","ineligible","screened","not_started","NOAA","SEFSC","NOAA:10079",1
 "candidate:noaa_brown_shrimp_south_atlantic","","noaa_brown_shrimp_south_atlantic","new","ineligible","screened","not_started","NOAA","SEFSC","NOAA:10080",1
@@ -375,6 +381,8 @@
 "candidate:noaa_copper_rockfish_oregon_2021","","noaa_copper_rockfish_oregon_2021","new","ineligible","screened","not_started","NOAA","NWFSC / SWFSC","NOAA:15331",1
 "candidate:noaa_copper_rockfish_washington_2021","","noaa_copper_rockfish_washington_2021","new","ineligible","screened","not_started","NOAA","NWFSC / SWFSC","NOAA:15330",1
 "candidate:noaa_cowcod_southern_california","","noaa_cowcod_southern_california","new","eligible","screened","not_started","NOAA","NWFSC / SWFSC","NOAA:10443",1
+"candidate:noaa_dusky_shark_atlantic_gulf","","noaa_dusky_shark_atlantic_gulf","new","ineligible","screened","not_started","NOAA","SEFSC","NOAA:10674",1
+"candidate:noaa_finetooth_shark_atlantic_gulf","","noaa_finetooth_shark_atlantic_gulf","new","ineligible","screened","not_started","NOAA","SEFSC","NOAA:10687",1
 "candidate:noaa_gag_gulf","","noaa_gag_gulf","new","eligible","screened","not_started","NOAA","SEFSC","NOAA:10348",1
 "candidate:noaa_gag_south_atlantic","","noaa_gag_south_atlantic","new","eligible","screened","not_started","NOAA","SEFSC","NOAA:10349",1
 "candidate:noaa_giant_octopus_bering","","noaa_giant_octopus_bering","new","ineligible","screened","not_started","NOAA","AFSC","NOAA:10087",1
@@ -483,6 +491,7 @@
 "candidate:noaa_red_king_crab_western_aleutian","","noaa_red_king_crab_western_aleutian","new","ineligible","screened","not_started","NOAA","AFSC","NOAA:10933",1
 "candidate:noaa_redtail_parrotfish_caribbean","","noaa_redtail_parrotfish_caribbean","new","ineligible","screened","not_started","NOAA","SEFSC","NOAA:10144",1
 "candidate:noaa_royal_red_shrimp_gulf","","noaa_royal_red_shrimp_gulf","new","ineligible","screened","not_started","NOAA","SEFSC","NOAA:10802",1
+"candidate:noaa_sandbar_shark_atlantic_gulf","","noaa_sandbar_shark_atlantic_gulf","new","ineligible","screened","not_started","NOAA","SEFSC","NOAA:10676",1
 "candidate:noaa_scamp_yellowmouth_gulf_complex","","noaa_scamp_yellowmouth_gulf_complex","new","unresolved","screened","not_started","NOAA","SEFSC","NOAA:10324",1
 "candidate:noaa_scamp_yellowmouth_south_atlantic_complex","","noaa_scamp_yellowmouth_south_atlantic_complex","new","unresolved","screened","not_started","NOAA","SEFSC","NOAA:10326",1
 "candidate:noaa_sea_scallop_nw_atlantic","","noaa_sea_scallop_nw_atlantic","new","ineligible","screened","not_started","NOAA","NEFSC","NOAA:10786",1

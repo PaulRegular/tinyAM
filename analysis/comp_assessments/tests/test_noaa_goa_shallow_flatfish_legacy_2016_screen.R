@@ -39,13 +39,13 @@ stopifnot(
   grepl('ambiguous legacy identity', review, fixed = TRUE),
   grepl('No canonical stock, assessment, input, or output rows were added', review, fixed = TRUE),
   sum(progress$inventory_rows) == 905L,
-  sum(progress$ambiguous) == 31L,
-  sum(progress$identity_unreviewed) == 147L,
-  sum(progress$excluded) == 547L,
-  sum(progress$eligibility_unresolved) == 194L,
-  sum(progress$screening_not_started) == 47L,
-  sum(progress$screening_complete) == 858L,
-  sum(units$inventory_entries) == 667L
+  sum(progress$ambiguous) == 34L,
+  sum(progress$identity_unreviewed) == 135L,
+  sum(progress$excluded) == 559L,
+  sum(progress$eligibility_unresolved) == 182L,
+  sum(progress$screening_not_started) == 35L,
+  sum(progress$screening_complete) == 870L,
+  sum(units$inventory_entries) == 678L
 )
 
 stocks <- read.csv(file.path(root, 'database', 'stocks.csv'),
