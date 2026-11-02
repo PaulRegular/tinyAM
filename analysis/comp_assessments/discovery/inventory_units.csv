@@ -247,6 +247,8 @@
 "candidate:ices_whiting_89a","","ices_whiting_89a","new","ineligible","screened","not_started","ICES","Bay of Biscay and the Iberian Coast","ICES:whg.27.89a",1
 "candidate:ices_whiting_rockall_6b","","ices_whiting_rockall_6b","new","ineligible","screened","not_started","ICES","Celtic Seas, Oceanic Northeast Atlantic","ICES:whg.27.6b",1
 "candidate:iphc_pacific_halibut","","iphc_pacific_halibut","new","eligible","screened","not_started","DFO | NOAA","NWFSC / AFSC | Pacific","DFO:Pacific:Pacific Halibut | NOAA:11082",2
+"candidate:isc_pacific_blue_marlin","","isc_pacific_blue_marlin","new","ineligible","screened","not_started","NOAA","PIFSC","NOAA:11706",1
+"candidate:isc_wcnpo_striped_marlin","","isc_wcnpo_striped_marlin","new","ineligible","screened","not_started","NOAA","PIFSC","NOAA:11692",1
 "candidate:jrn_afwg_barents_capelin","","jrn_afwg_barents_capelin","new","unresolved","screened","not_started","ICES","Arctic Ocean, Barents Sea","ICES:cap.27.1-2",1
 "candidate:nafo_redfish_3ln","","nafo_redfish_3ln","new","ineligible","screened","not_started","DFO","Newfoundland and Labrador","DFO:Newfoundland and Labrador:Redfish - NAFO 3LN",1
 "candidate:nafo_redfish_3o","","nafo_redfish_3o","new","ineligible","screened","not_started","DFO","Newfoundland and Labrador","DFO:Newfoundland and Labrador:Redfish - NAFO 3O",1
@@ -384,6 +386,7 @@
 "candidate:noaa_copper_rockfish_washington_2021","","noaa_copper_rockfish_washington_2021","new","ineligible","screened","not_started","NOAA","NWFSC / SWFSC","NOAA:15330",1
 "candidate:noaa_cowcod_southern_california","","noaa_cowcod_southern_california","new","eligible","screened","not_started","NOAA","NWFSC / SWFSC","NOAA:10443",1
 "candidate:noaa_dusky_shark_atlantic_gulf","","noaa_dusky_shark_atlantic_gulf","new","ineligible","screened","not_started","NOAA","SEFSC","NOAA:10674",1
+"candidate:noaa_eastern_pacific_swordfish","","noaa_eastern_pacific_swordfish","new","ineligible","screened","not_started","NOAA","SWFSC / PIFSC","NOAA:11643",1
 "candidate:noaa_finetooth_shark_atlantic_gulf","","noaa_finetooth_shark_atlantic_gulf","new","ineligible","screened","not_started","NOAA","SEFSC","NOAA:10687",1
 "candidate:noaa_gag_gulf","","noaa_gag_gulf","new","eligible","screened","not_started","NOAA","SEFSC","NOAA:10348",1
 "candidate:noaa_gag_south_atlantic","","noaa_gag_south_atlantic","new","eligible","screened","not_started","NOAA","SEFSC","NOAA:10349",1
@@ -527,6 +530,7 @@
 "candidate:noaa_vermilion_rockfish_or_wa","","noaa_vermilion_rockfish_or_wa","new","eligible","screened","not_started","NOAA","NWFSC / SWFSC","NOAA:15338 | NOAA:15339",2
 "candidate:noaa_vermilion_snapper_gulf_mexico","","noaa_vermilion_snapper_gulf_mexico","new","eligible","screened","not_started","NOAA","SEFSC","NOAA:10256",1
 "candidate:noaa_vermilion_snapper_south_atlantic","","noaa_vermilion_snapper_south_atlantic","new","eligible","screened","not_started","NOAA","SEFSC","NOAA:10257",1
+"candidate:noaa_wcnpo_swordfish","","noaa_wcnpo_swordfish","new","ineligible","screened","not_started","NOAA","SWFSC / PIFSC","NOAA:11642",1
 "candidate:noaa_weathervane_scallop_alaska","","noaa_weathervane_scallop_alaska","new","ineligible","screened","not_started","NOAA","AFSC","NOAA:11201",1
 "candidate:noaa_white_shrimp_gulf","","noaa_white_shrimp_gulf","new","ineligible","screened","not_started","NOAA","SEFSC","NOAA:10083",1
 "candidate:noaa_white_shrimp_south_atlantic","","noaa_white_shrimp_south_atlantic","new","ineligible","screened","not_started","NOAA","SEFSC","NOAA:10084",1
