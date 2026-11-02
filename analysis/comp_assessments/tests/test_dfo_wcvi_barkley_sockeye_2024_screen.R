@@ -28,13 +28,13 @@ stopifnot(
   !any(inputs$assessment_id == 'dfo_wcvi_barkley_sockeye_smu', na.rm = TRUE),
   !any(outputs$assessment_id == 'dfo_wcvi_barkley_sockeye_smu', na.rm = TRUE),
   sum(progress$inventory_rows) == 905L,
-  sum(progress$excluded) == 527L,
-  sum(progress$eligibility_unresolved) == 217L,
-  sum(progress$screening_complete) == 832L,
-  sum(progress$screening_not_started) == 73L,
+  sum(progress$excluded) == 528L,
+  sum(progress$eligibility_unresolved) == 216L,
+  sum(progress$screening_complete) == 833L,
+  sum(progress$screening_not_started) == 72L,
   sum(progress$screening_in_progress) == 0L,
   sum(progress$screening_in_progress[progress$organization == 'DFO']) == 0L,
   sum(progress$excluded[progress$organization == 'DFO']) == 147L,
   sum(progress$screening_complete[progress$organization == 'DFO']) == 199L,
-  nrow(units) == 606L)
+  nrow(units) == 607L)
 cat('DFO Barkley Sockeye source-screening checks passed.\n')

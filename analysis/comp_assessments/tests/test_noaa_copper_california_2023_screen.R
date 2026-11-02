@@ -49,13 +49,13 @@ stopifnot(nrow(candidates) == 2L,
   sum(units$candidate_unit_id == 'noaa_copper_rockfish_california_2023', na.rm = TRUE) == 1L,
   units$inventory_entries[units$candidate_unit_id %in% 'noaa_copper_rockfish_california_2023'] == 2L,
   sum(noaa$inventory_rows) == 432L,
-  sum(noaa$new) == 320L, sum(noaa$identity_unreviewed) == 75L,
+  sum(noaa$new) == 321L, sum(noaa$identity_unreviewed) == 74L,
   sum(noaa$eligible) == 80L, sum(noaa$eligible_new) == 66L,
-  sum(noaa$eligibility_unresolved) == 157L, sum(noaa$screening_complete) == 359L,
-  sum(noaa$screening_not_started) == 73L,
+  sum(noaa$eligibility_unresolved) == 156L, sum(noaa$screening_complete) == 360L,
+  sum(noaa$screening_not_started) == 72L,
   nrow(nw) == 1L, nw$new == 123L, nw$eligible == 32L,
   nw$eligible_new == 31L, nw$screening_complete == 131L,
-  nrow(units) == 606L, sum(units$inventory_entries) == 642L,
-  sum(!is.na(units$candidate_unit_id) & nzchar(units$candidate_unit_id)) == 506L)
+  nrow(units) == 607L, sum(units$inventory_entries) == 643L,
+  sum(!is.na(units$candidate_unit_id) & nzchar(units$candidate_unit_id)) == 507L)
 
 cat('NOAA California copper 2023 age-composition, source-integrity, crosswalk and no-import checks passed.\n')

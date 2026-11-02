@@ -53,11 +53,11 @@ progress <- read.csv(file.path(root, 'discovery', 'inventory_progress.csv'),
 noaa <- progress[progress$organization == 'NOAA', , drop = FALSE]
 afsc <- noaa[noaa$source_region == 'AFSC', , drop = FALSE]
 stopifnot(sum(noaa$inventory_rows) == 432L,
-  sum(noaa$new) == 320L, sum(noaa$identity_unreviewed) == 75L,
-  sum(noaa$excluded) == 195L, sum(noaa$eligibility_unresolved) == 157L,
-  sum(noaa$screening_complete) == 359L,
-  sum(noaa$screening_not_started) == 73L,
-  nrow(afsc) == 1L, afsc$screening_complete == 69L,
-  afsc$screening_not_started == 20L)
+  sum(noaa$new) == 321L, sum(noaa$identity_unreviewed) == 74L,
+  sum(noaa$excluded) == 196L, sum(noaa$eligibility_unresolved) == 156L,
+  sum(noaa$screening_complete) == 360L,
+  sum(noaa$screening_not_started) == 72L,
+  nrow(afsc) == 1L, afsc$screening_complete == 70L,
+  afsc$screening_not_started == 19L)
 
 cat('NOAA Auke Creek coho source screen passed.\n')
