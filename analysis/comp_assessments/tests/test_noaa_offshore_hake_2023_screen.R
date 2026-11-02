@@ -54,7 +54,7 @@ stopifnot(nrow(candidate) == 1L,
   sum(progress$identity_unreviewed) == 100L, sum(progress$excluded) == 584L,
   sum(progress$eligibility_unresolved) == 151L, sum(progress$screening_complete) == 905L,
   sum(progress$screening_not_started) == 0L,
-  nrow(units) == 674L, sum(units$inventory_entries) == 713L,
-  sum(!is.na(units$candidate_unit_id) & nzchar(units$candidate_unit_id)) == 574L)
+  nrow(units) == 736L, sum(units$inventory_entries) == 775L,
+  sum(!is.na(units$candidate_unit_id) & nzchar(units$candidate_unit_id)) == 636L)
 
 cat('NOAA offshore hake identity, source, eligibility, provenance and no-import checks passed.\n')

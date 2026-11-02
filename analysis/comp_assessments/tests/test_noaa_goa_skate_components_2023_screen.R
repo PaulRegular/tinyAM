@@ -54,8 +54,8 @@ stopifnot(
   sum(progress$eligibility_unresolved) == 151L,
   sum(progress$screening_complete) == 905L,
   sum(progress$screening_not_started) == 0L,
-  sum(units$inventory_entries) == 713L,
-  sum(!is.na(units$candidate_unit_id) & nzchar(units$candidate_unit_id)) == 574L,
+  sum(units$inventory_entries) == 775L,
+  sum(!is.na(units$candidate_unit_id) & nzchar(units$candidate_unit_id)) == 636L,
   grepl('three distinct current management units', review, fixed = TRUE),
   grepl('8,869 t for Other skates', review, fixed = TRUE))
 

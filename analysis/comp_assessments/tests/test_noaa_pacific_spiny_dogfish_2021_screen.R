@@ -62,8 +62,8 @@ stopifnot(
   nw$eligible == 37L,
   nw$eligible_new == 36L,
   nw$screening_complete == 138L,
-  nrow(units) == 674L,
-  sum(units$inventory_entries) == 713L,
-  sum(!is.na(units$candidate_unit_id) & nzchar(units$candidate_unit_id)) == 574L)
+  nrow(units) == 736L,
+  sum(units$inventory_entries) == 775L,
+  sum(!is.na(units$candidate_unit_id) & nzchar(units$candidate_unit_id)) == 636L)
 
 cat('NOAA Pacific Coast spiny dogfish screening, provenance, reconstruction caveats, and no-import checks passed.\n')

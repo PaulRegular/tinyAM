@@ -56,9 +56,9 @@ stopifnot(sum(progress$inventory_rows) == 905L,
   nrow(se) == 1L, se$inventory_rows == 90L, se$new == 87L,
   se$identity_unreviewed == 0L, se$excluded == 51L,
   se$eligibility_unresolved == 21L, se$screening_complete == 90L,
-  se$screening_not_started == 0L, nrow(units) == 674L,
-  sum(units$inventory_entries) == 713L,
-  sum(!is.na(units$candidate_unit_id) & nzchar(units$candidate_unit_id)) == 574L,
-  sum(progress$identity_unlinked_rows) == 192L)
+  se$screening_not_started == 0L, nrow(units) == 736L,
+  sum(units$inventory_entries) == 775L,
+  sum(!is.na(units$candidate_unit_id) & nzchar(units$candidate_unit_id)) == 636L,
+  sum(progress$identity_unlinked_rows) == 130L)
 
 cat('NOAA Gulf smoothhound source-screening checks passed.\n')

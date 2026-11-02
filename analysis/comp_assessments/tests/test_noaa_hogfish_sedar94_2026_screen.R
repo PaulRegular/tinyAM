@@ -49,7 +49,7 @@ stopifnot(
 
 units <- read.csv(file.path(root, 'discovery', 'inventory_units.csv'),
   stringsAsFactors = FALSE)
-stopifnot(nrow(units) == 674L, sum(units$inventory_entries) == 713L)
+stopifnot(nrow(units) == 736L, sum(units$inventory_entries) == 775L)
 
 review_path <- file.path(root, 'discovery', 'source_reviews',
   'noaa_hogfish_sedar94_2026.md')

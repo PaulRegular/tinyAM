@@ -36,5 +36,5 @@ stopifnot(
   sum(progress$screening_in_progress[progress$organization == 'DFO']) == 0L,
   sum(progress$excluded[progress$organization == 'DFO']) == 147L,
   sum(progress$screening_complete[progress$organization == 'DFO']) == 199L,
-  nrow(units) == 674L)
+  nrow(units) == 736L)
 cat('DFO Barkley Sockeye source-screening checks passed.\n')

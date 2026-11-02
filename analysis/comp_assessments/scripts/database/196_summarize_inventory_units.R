@@ -62,5 +62,5 @@ stopifnot(!anyDuplicated(units$unit_key),
   all(units$eligibility %in% c('eligible', 'ineligible', 'unresolved', 'mixed')),
   all(units$screening_status %in% c('screened', 'not_started', 'in_progress', 'mixed')))
 
-cat(nrow(units), 'linked stock units represented by', sum(units$inventory_entries),
-  'inventory rows; ', sum(!linked), ' rows still lack a crosswalk unit.\n', sep = '')
+cat(nrow(units), ' linked stock units represented by ', sum(units$inventory_entries),
+  ' inventory rows; ', sum(!linked), ' rows still lack a crosswalk unit.\n', sep = '')

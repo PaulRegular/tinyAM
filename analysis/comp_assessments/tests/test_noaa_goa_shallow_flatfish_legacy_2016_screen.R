@@ -45,7 +45,7 @@ stopifnot(
   sum(progress$eligibility_unresolved) == 151L,
   sum(progress$screening_not_started) == 0L,
   sum(progress$screening_complete) == 905L,
-  sum(units$inventory_entries) == 713L
+  sum(units$inventory_entries) == 775L
 )
 
 stocks <- read.csv(file.path(root, 'database', 'stocks.csv'),

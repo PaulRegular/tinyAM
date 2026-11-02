@@ -63,8 +63,8 @@ stopifnot(sum(progress$inventory_rows) == 905L,
   afsc$identity_unreviewed == 2L, afsc$excluded == 67L,
   afsc$eligibility_unresolved == 4L, afsc$screening_complete == 89L,
   afsc$screening_not_started == 0L,
-  nrow(units) == 674L,
-  sum(units$inventory_entries) == 713L,
-  sum(!is.na(units$candidate_unit_id) & nzchar(units$candidate_unit_id)) == 574L)
+  nrow(units) == 736L,
+  sum(units$inventory_entries) == 775L,
+  sum(!is.na(units$candidate_unit_id) & nzchar(units$candidate_unit_id)) == 636L)
 
 cat('NOAA Southeast Alaska coho indicator source-screening checks passed.\n')

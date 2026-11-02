@@ -61,7 +61,7 @@ stopifnot(sum(progress$inventory_rows) == 905L,
   sum(progress$eligibility_unresolved) == 151L,
   sum(progress$screening_complete) == 905L,
   sum(progress$screening_not_started) == 0L,
-  nrow(units) == 674L,
-  sum(!is.na(units$candidate_unit_id) & nzchar(units$candidate_unit_id)) == 574L)
+  nrow(units) == 736L,
+  sum(!is.na(units$candidate_unit_id) & nzchar(units$candidate_unit_id)) == 636L)
 
 cat('NOAA Pacific swordfish and marlin source-screening checks passed.\n')

@@ -14,14 +14,17 @@ The initial snapshot was retrieved on 2026-10-28 from:
 |---|---:|---|---|
 | NOAA Stock SMART via NOAA-EDAB | 432 stock IDs | `source_cache/discovery_noaa_stocksmart/stock_assessment_summary.rda`, revision `664c4237e26520b260a090e1821a2cee5d1cdf07`, SHA-256 `AD47F9EEB240C2E77B2B952809A12C4FA739E3F0D39BEAB283B413FDBAEF76A8` | Latest metadata row per stock ID, not a verified official production run or proof of age observations. Regional official sources require separate review. |
 | ICES SID | 274 published stock entries | `source_cache/discovery_ices_sid/stock_list_2026.json`, SHA-256 `913D6A3EEAB9449AE3CD0DD15661A150D36FF79B6E6A9BA78D86D46BA1035F42` | Published 2026 stock list includes assessments and advice that may not use age observations. |
-| DFO Sustainability Survey | 198 selected stocks | `source_cache/discovery_dfo_sustainability/survey_2024.html`, SHA-256 `A10E65EEF028C2A524973FFCFA155915D673AE3AB9A9F1312581449E29644A28` | The 2024 survey covers only selected managed stocks, including non-finfish. Supplement with regional CSAS inventories. Official IDs and scientific names require review. |
+| DFO Sustainability Survey | 198 selected stocks, plus one supplementary Pacific IFMP entry for coastwide yellowtail rockfish | `source_cache/discovery_dfo_sustainability/survey_2024.html`, SHA-256 `A10E65EEF028C2A524973FFCFA155915D673AE3AB9A9F1312581449E29644A28` | The 2024 survey covers only selected managed stocks, including non-finfish. Supplement with regional CSAS inventories. Official IDs and scientific names require review. |
 
 ## Current inventory status
 
 As of 2026-11-02, the inventory has 905 source-list rows. These are not unique stock counts.
 `inventory_progress.csv` breaks row-level identity, screening, and eligibility
-status down by organization and source region; `inventory_units.csv` summarizes
-the rows already linked to a stock or candidate unit.
+status down by organization and source region and reports distinct candidate
+unit counts by eligibility; `inventory_units.csv` summarizes the rows already
+linked to a stock or candidate unit. Cross-inventory units may appear in more
+than one organization/region group, while `inventory_units.csv` counts each key
+once.
 
 | Organization | Rows | Matched to database | New candidate rows | Ambiguous identity | Identity unreviewed | Eligible rows | Ineligible rows | Eligibility unresolved | Screened | In progress | Not screened |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
@@ -30,9 +33,16 @@ the rows already linked to a stock or candidate unit.
 | NOAA | 432 | 28 | 388 | 14 | 2 | 89 | 252 | 91 | 432 | 0 | 0 |
 | **Total** | **905** | **107** | **663** | **35** | **100** | **170** | **584** | **151** | **905** | **0** | **0** |
 
-These are source-list row counts, not counts of unique stock units. The
-`inventory_units.csv` summary contains 674 unit keys covering 713 inventory
-rows; 192 rows still lack a unit-level identity match.
+The table counts source-list rows. After the latest identity reconciliation,
+`inventory_units.csv` contains 736 linked unit keys covering 775 rows: 100
+canonical database units and 636 candidate-unit keys. Those candidate keys
+represent 632 new units, two ambiguous units and two units whose identity
+classification is mixed. Among the 632 new units, 90 are eligible, 421 are
+ineligible, 118 have unresolved age-input eligibility, and three have mixed
+eligibility evidence. The remaining 130 source rows are unlinked: 30 have an
+unresolved stock-identity or boundary crosswalk, and 100 are explicit scope
+exclusions. See `inventory_audit_2026.md` for the region-level breakdown and
+interpretation.
 
 NOAA Stock SMART 11009 is a legacy broad Gulf of Alaska shallow-water-flatfish complex, not a distinct current stock unit. Its species and age-structured components are tracked separately; the old record remains an ambiguous, ineligible crosswalk and adds no canonical assessment data. See `source_reviews/noaa_goa_shallow_flatfish_legacy_2016_2026.md`.
 
@@ -60,9 +70,12 @@ The remaining five ICES source-list rows are now screened. The 2026 WGNAS salmon
 
 DFO's 98 identity-unreviewed entries are outside this marine-finfish audit
 scope: 95 are invertebrate or marine-mammal records and three are Great Slave
-Lake freshwater stocks. They are already screened as ineligible. The remaining
-DFO marine-finfish identity cases are the 18 ambiguous entries shown above;
-they are tracked separately from eligibility-unresolved screens.
+Lake freshwater stocks. NOAA's two identity-unreviewed rows are squid
+complexes, also outside scope. These 100 entries are screened as ineligible;
+they are not unresolved marine-finfish candidates. The remaining 30 unlinked
+ambiguous entries concern stock identities, historical boundaries, or
+multi-unit inventory labels and are listed by source region in
+`inventory_audit_2026.md`.
 
 NOAA Caribbean silk snapper (Stock SMART 10241) and queen snapper (10247) are
 separate, new ineligible candidates. Their latest completed detailed assessment

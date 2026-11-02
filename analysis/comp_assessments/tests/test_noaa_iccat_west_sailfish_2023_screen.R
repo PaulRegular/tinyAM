@@ -45,6 +45,6 @@ stopifnot(nrow(row) == 1L,
   sum(progress$eligibility_unresolved) == 151L,
   sum(progress$screening_complete) == 905L,
   sum(progress$screening_not_started) == 0L,
-  nrow(units) == 674L,
-  sum(!is.na(units$candidate_unit_id) & nzchar(units$candidate_unit_id)) == 574L)
+  nrow(units) == 736L,
+  sum(!is.na(units$candidate_unit_id) & nzchar(units$candidate_unit_id)) == 636L)
 cat('NOAA:10180 ICCAT western sailfish source-screening checks passed.\n')
