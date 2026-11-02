@@ -55,21 +55,21 @@ noaa <- progress[progress$organization == 'NOAA', , drop = FALSE]
 se <- noaa[noaa$source_region == 'SEFSC', , drop = FALSE]
 units <- read_table('discovery/inventory_units.csv')
 stopifnot(sum(progress$inventory_rows) == 905L,
-  sum(progress$new) == 643L,
-  sum(progress$identity_unreviewed) == 121L,
-  sum(progress$excluded) == 572L,
-  sum(progress$eligibility_unresolved) == 168L,
-  sum(progress$screening_complete) == 884L,
-  sum(progress$screening_not_started) == 21L,
-  sum(noaa$new) == 368L, sum(noaa$identity_unreviewed) == 23L,
-  sum(noaa$excluded) == 240L, sum(noaa$eligibility_unresolved) == 108L,
-  sum(noaa$screening_complete) == 411L, sum(noaa$screening_not_started) == 21L,
-  nrow(se) == 1L, se$inventory_rows == 90L, se$new == 77L,
-  se$identity_unreviewed == 10L, se$excluded == 44L,
-  se$eligible_new == 18L, se$eligibility_unresolved == 28L,
-  se$screening_complete == 80L, se$screening_not_started == 10L,
-  nrow(units) == 653L, sum(units$inventory_entries) == 692L,
-  sum(!is.na(units$candidate_unit_id) & nzchar(units$candidate_unit_id)) == 553L,
-  sum(progress$identity_unlinked_rows) == 213L)
+  sum(progress$new) == 644L,
+  sum(progress$identity_unreviewed) == 120L,
+  sum(progress$excluded) == 573L,
+  sum(progress$eligibility_unresolved) == 167L,
+  sum(progress$screening_complete) == 885L,
+  sum(progress$screening_not_started) == 20L,
+  sum(noaa$new) == 369L, sum(noaa$identity_unreviewed) == 22L,
+  sum(noaa$excluded) == 241L, sum(noaa$eligibility_unresolved) == 107L,
+  sum(noaa$screening_complete) == 412L, sum(noaa$screening_not_started) == 20L,
+  nrow(se) == 1L, se$inventory_rows == 90L, se$new == 78L,
+  se$identity_unreviewed == 9L, se$excluded == 45L,
+  se$eligible_new == 18L, se$eligibility_unresolved == 27L,
+  se$screening_complete == 81L, se$screening_not_started == 9L,
+  nrow(units) == 654L, sum(units$inventory_entries) == 693L,
+  sum(!is.na(units$candidate_unit_id) & nzchar(units$candidate_unit_id)) == 554L,
+  sum(progress$identity_unlinked_rows) == 212L)
 
 cat('NOAA Atlantic and Gulf blacktip source-screening checks passed.\n')

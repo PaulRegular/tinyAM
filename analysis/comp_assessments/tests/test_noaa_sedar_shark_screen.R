@@ -63,8 +63,8 @@ stopifnot(nrow(sharpnose) == 1L,
 progress <- read.csv(file.path(root, 'discovery', 'inventory_progress.csv'),
   stringsAsFactors = FALSE)
 noaa <- progress[progress$organization == 'NOAA', , drop = FALSE]
-stopifnot(sum(noaa$screening_complete) == 411L,
-  sum(noaa$screening_not_started) == 21L,
+stopifnot(sum(noaa$screening_complete) == 412L,
+  sum(noaa$screening_not_started) == 20L,
   sum(noaa$eligible_new) == 70L,
-  sum(noaa$excluded) == 240L,
-  sum(noaa$eligibility_unresolved) == 108L)
+  sum(noaa$excluded) == 241L,
+  sum(noaa$eligibility_unresolved) == 107L)

@@ -50,21 +50,21 @@ units <- read_table('discovery/inventory_units.csv')
 noaa <- progress[progress$organization == 'NOAA', , drop = FALSE]
 afsc <- noaa[noaa$source_region == 'AFSC', , drop = FALSE]
 stopifnot(sum(progress$inventory_rows) == 905L,
-  sum(progress$new) == 643L,
-  sum(progress$identity_unreviewed) == 121L,
-  sum(progress$excluded) == 572L,
-  sum(progress$eligibility_unresolved) == 168L,
-  sum(progress$screening_complete) == 884L,
-  sum(progress$screening_not_started) == 21L,
-  sum(noaa$new) == 368L, sum(noaa$identity_unreviewed) == 23L,
-  sum(noaa$excluded) == 240L, sum(noaa$eligibility_unresolved) == 108L,
-  sum(noaa$screening_complete) == 411L, sum(noaa$screening_not_started) == 21L,
+  sum(progress$new) == 644L,
+  sum(progress$identity_unreviewed) == 120L,
+  sum(progress$excluded) == 573L,
+  sum(progress$eligibility_unresolved) == 167L,
+  sum(progress$screening_complete) == 885L,
+  sum(progress$screening_not_started) == 20L,
+  sum(noaa$new) == 369L, sum(noaa$identity_unreviewed) == 22L,
+  sum(noaa$excluded) == 241L, sum(noaa$eligibility_unresolved) == 107L,
+  sum(noaa$screening_complete) == 412L, sum(noaa$screening_not_started) == 20L,
   nrow(afsc) == 1L, afsc$inventory_rows == 89L, afsc$new == 72L,
   afsc$identity_unreviewed == 4L, afsc$excluded == 65L,
   afsc$eligibility_unresolved == 6L, afsc$screening_complete == 87L,
   afsc$screening_not_started == 2L,
-  nrow(units) == 653L,
-  sum(units$inventory_entries) == 692L,
-  sum(!is.na(units$candidate_unit_id) & nzchar(units$candidate_unit_id)) == 553L)
+  nrow(units) == 654L,
+  sum(units$inventory_entries) == 693L,
+  sum(!is.na(units$candidate_unit_id) & nzchar(units$candidate_unit_id)) == 554L)
 
 cat('NOAA Southeast Alaska coho indicator source-screening checks passed.\n')
