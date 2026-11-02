@@ -65,7 +65,7 @@
 "ICES","Oceanic Northeast Atlantic and northern Reykjanes Ridge",1,0,1,0,0,0,1,0,0,0,0,1,0,1,0
 "ICES","Southern Bay of Biscay and Atlantic Iberian waters East",1,0,1,0,0,1,0,1,0,0,0,1,0,1,0
 "ICES","Subarea 6 (West of Scotland)",1,0,1,0,0,0,1,0,0,0,0,1,0,1,0
-"NOAA","AFSC",89,12,63,1,13,18,56,11,15,11,0,78,12,43,24
+"NOAA","AFSC",89,12,65,1,11,18,58,11,13,9,0,80,12,45,22
 "NOAA","NEFSC",55,15,39,1,0,10,30,4,15,0,0,55,15,27,7
 "NOAA","NEFSC / SEFSC",1,0,1,0,0,0,0,0,1,0,0,1,0,1,0
 "NOAA","NWFSC / AFSC",1,0,1,0,0,1,0,1,0,0,0,1,0,1,0

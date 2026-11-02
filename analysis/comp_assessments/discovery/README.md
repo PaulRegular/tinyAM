@@ -27,10 +27,10 @@ the rows already linked to a stock or candidate unit.
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 63 | 18 | 98 | 21 | 147 | 31 | 199 | 0 | 0 |
 | ICES | 274 | 59 | 212 | 3 | 0 | 60 | 185 | 29 | 274 | 0 | 0 |
-| NOAA | 432 | 28 | 335 | 10 | 59 | 80 | 209 | 143 | 375 | 0 | 57 |
-| **Total** | **905** | **107** | **610** | **31** | **157** | **161** | **541** | **203** | **848** | **0** | **57** |
+| NOAA | 432 | 28 | 337 | 10 | 57 | 80 | 211 | 141 | 377 | 0 | 55 |
+| **Total** | **905** | **107** | **612** | **31** | **155** | **161** | **543** | **201** | **850** | **0** | **55** |
 
-The crosswalk currently links 620 distinct unit keys across 657 inventory rows. A further 248 inventory rows have no unit crosswalk yet.
+The crosswalk currently links 622 distinct unit keys across 659 inventory rows. A further 246 inventory records remain without a unit-level identity match.
 
 NOAA Stock SMART 11009 is a legacy broad Gulf of Alaska shallow-water-flatfish complex, not a distinct current stock unit. Its species and age-structured components are tracked separately; the old record remains an ambiguous, ineligible crosswalk and adds no canonical assessment data. See `source_reviews/noaa_goa_shallow_flatfish_legacy_2016_2026.md`.
 

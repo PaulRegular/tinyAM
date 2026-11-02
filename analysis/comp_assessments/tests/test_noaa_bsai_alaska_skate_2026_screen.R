@@ -82,7 +82,7 @@ stopifnot(
   identical(as.integer(naa$Yr), 1948:2028),
   nrow(other_goa_skates) == 1L,
   other_goa_skates$official_stock_id == '11005',
-  other_goa_skates$candidate_unit_id == 'noaa_goa_skate_complex',
+  other_goa_skates$candidate_unit_id == 'noaa_goa_other_skates',
   other_goa_skates$screening_status == 'screened',
   other_goa_skates$eligibility == 'ineligible',
   !any(stocks$stock_id == 'noaa_bsai_alaska_skate', na.rm = TRUE),

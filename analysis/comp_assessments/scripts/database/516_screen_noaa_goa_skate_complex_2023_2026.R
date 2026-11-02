@@ -3,7 +3,7 @@ register_path <- file.path(root, 'discovery', 'candidates.csv')
 cache <- file.path(root, 'source_cache', 'discovery_noaa_goa_skates_2023_2026')
 review_date <- '2026-11-02'
 candidate_id <- 'NOAA:11005'
-unit_id <- 'noaa_goa_skate_complex'
+unit_id <- 'noaa_goa_other_skates'
 
 manifest <- read.csv(file.path(cache, 'sources.csv'), stringsAsFactors = FALSE,
   na.strings = c('', 'NA'), check.names = FALSE)
@@ -50,6 +50,7 @@ if (nrow(assessment) != 1L || assessment$stock_name != 'Gulf of Alaska Skate Com
     as.integer(assessment$last_data_year) != 2023L ||
     assessment$assessment_model != 'Survey Abundance' ||
     assessment$model_version != 'REMA' ||
+    as.numeric(assessment$estimated_b) != 8869 ||
     assessment$review_result != 'Full acceptance' ||
     assessment$assessment_type != 'Operational')
   stop('The pinned NOAA Stock SMART assessment changed for stock 11005.', call. = FALSE)
@@ -75,8 +76,8 @@ if (any(stocks$scientific_name %in% c('Beringraja binoculata', 'Raja rhina'), na
 source(file.path(root, 'scripts', 'database', 'candidate_register_io.R'))
 row <- candidates[row_index, , drop = FALSE]
 row$candidate_unit_id <- unit_id
-row$scientific_name <- 'Beringraja binoculata; Raja rhina; Bathyraja spp.'
-row$assessment_area <- 'Gulf of Alaska (Big skate, Longnose skate, Other skates)'
+row$scientific_name <- 'Bathyraja spp.'
+row$assessment_area <- 'Gulf of Alaska (Other skates group)'
 row$matched_stock_id <- ''
 row$match_status <- 'new'
 row$screening_status <- 'screened'
@@ -107,8 +108,8 @@ row$decision_reason <- paste0(
   'The later September 2026 chapter is explicitly pre-dissemination and is used only to confirm the continuing biomass-only method and updated survey coverage, not as an accepted run. ',
   'No age-disaggregated catch, abundance, or biological inputs were identified; classified ineligible for age-structured source curation.')
 row$notes <- paste0(
-  'Preserve the three assessment groups: Big skate, Longnose skate, and Other skates; the first two also have regional harvest distributions. ',
-  'Do not treat the 2026 draft SAFE chapter as an accepted production assessment. No canonical stock, assessment, input, or output records were added.')
+  'This Stock SMART record maps to the Other skates management group within the three-unit GOA skate assessment. NOAA:10727 (Big skate) and NOAA:10730 (Longnose skate) are separate current stock units with their own 2023 estimates. ',
+  'The 2026 draft SAFE chapter is not treated as an accepted production assessment. No canonical stock, assessment, input, or output records were added.')
 
 current <- candidates[row_index, names(row), drop = FALSE]
 same <- all(vapply(names(row), function(name) {
@@ -121,7 +122,7 @@ initial <- candidates$match_status[row_index] == 'unreviewed' &&
   candidates$eligibility[row_index] == 'unresolved' &&
   candidates$import_status[row_index] == 'not_started' &&
   (is.na(candidates$candidate_unit_id[row_index]) || !nzchar(candidates$candidate_unit_id[row_index]))
-reviewed <- candidates$candidate_unit_id[row_index] == unit_id &&
+reviewed <- candidates$candidate_unit_id[row_index] %in% c(unit_id, 'noaa_goa_skate_complex') &&
   candidates$match_status[row_index] == 'new' &&
   candidates$screening_status[row_index] == 'screened' &&
   candidates$eligibility[row_index] == 'ineligible' &&
@@ -136,4 +137,4 @@ if (!same) {
 
 source(file.path(root, 'scripts', 'database', '195_summarize_discovery.R'))
 source(file.path(root, 'scripts', 'database', '196_summarize_inventory_units.R'))
-cat('Screened NOAA:11005 as a biomass-only GOA skate complex; it is ineligible for age-structured source curation.\n')
+cat('Screened NOAA:11005 as the biomass-only GOA Other skates group; it is ineligible for age-structured source curation.\n')

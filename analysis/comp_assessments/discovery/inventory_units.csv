@@ -379,15 +379,17 @@
 "candidate:noaa_giant_octopus_bering","","noaa_giant_octopus_bering","new","ineligible","screened","not_started","NOAA","AFSC","NOAA:10087",1
 "candidate:noaa_giant_octopus_gulf_alaska","","noaa_giant_octopus_gulf_alaska","new","ineligible","screened","not_started","NOAA","AFSC","NOAA:10088",1
 "candidate:noaa_goa_atka_mackerel","","noaa_goa_atka_mackerel","new","ineligible","screened","not_started","NOAA","AFSC","NOAA:10465",1
+"candidate:noaa_goa_big_skate","","noaa_goa_big_skate","new","ineligible","screened","not_started","NOAA","AFSC","NOAA:10727",1
 "candidate:noaa_goa_dusky","","noaa_goa_dusky","new","eligible","screened","not_started","NOAA","AFSC","NOAA:10559",1
+"candidate:noaa_goa_longnose_skate","","noaa_goa_longnose_skate","new","ineligible","screened","not_started","NOAA","AFSC","NOAA:10730",1
 "candidate:noaa_goa_northern_rock_sole","","noaa_goa_northern_rock_sole","new","ineligible","screened","not_started","NOAA","AFSC","NOAA:10836 | NOAA:15412 | NOAA:15413",3
 "candidate:noaa_goa_other_rockfish_complex","","noaa_goa_other_rockfish_complex","new","ineligible","screened","not_started","NOAA","AFSC","NOAA:11804",1
 "candidate:noaa_goa_other_shallow_water_flatfish_complex","","noaa_goa_other_shallow_water_flatfish_complex","new","ineligible","screened","not_started","NOAA","AFSC","NOAA:11803",1
+"candidate:noaa_goa_other_skates","","noaa_goa_other_skates","new","ineligible","screened","not_started","NOAA","AFSC","NOAA:11005",1
 "candidate:noaa_goa_rex_sole","","noaa_goa_rex_sole","new","eligible","screened","not_started","NOAA","AFSC","NOAA:10058 | NOAA:15410 | NOAA:15411",3
 "candidate:noaa_goa_rougheye_blackspotted","","noaa_goa_rougheye_blackspotted","new","mixed","screened","not_started","NOAA","AFSC","NOAA:10538 | NOAA:11443",2
 "candidate:noaa_goa_sharpchin_goa","","noaa_goa_sharpchin_goa","new","ineligible","screened","not_started","NOAA","AFSC","NOAA:10434",1
 "candidate:noaa_goa_shortraker","","noaa_goa_shortraker","new","ineligible","screened","not_started","NOAA","AFSC","NOAA:10554",1
-"candidate:noaa_goa_skate_complex","","noaa_goa_skate_complex","new","ineligible","screened","not_started","NOAA","AFSC","NOAA:11005",1
 "candidate:noaa_goa_southern_rock_sole","","noaa_goa_southern_rock_sole","new","ineligible","screened","not_started","NOAA","AFSC","NOAA:10040 | NOAA:15414 | NOAA:15415",3
 "candidate:noaa_goa_yelloweye_seo","","noaa_goa_yelloweye_seo","new","ineligible","screened","not_started","NOAA","AFSC","NOAA:10425",1
 "candidate:noaa_golden_king_crab_aleutian","","noaa_golden_king_crab_aleutian","new","ineligible","screened","not_started","NOAA","AFSC","NOAA:10816",1

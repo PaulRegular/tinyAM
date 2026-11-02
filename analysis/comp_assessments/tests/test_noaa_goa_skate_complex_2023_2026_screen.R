@@ -12,12 +12,14 @@ units <- read.csv(file.path(root, 'discovery', 'inventory_units.csv'),
 
 stopifnot(
   nrow(row) == 1L,
-  row$candidate_unit_id == 'noaa_goa_skate_complex',
-  row$scientific_name == 'Beringraja binoculata; Raja rhina; Bathyraja spp.',
-  row$assessment_area == 'Gulf of Alaska (Big skate, Longnose skate, Other skates)',
+  row$candidate_unit_id == 'noaa_goa_other_skates',
+  row$scientific_name == 'Bathyraja spp.',
+  row$assessment_area == 'Gulf of Alaska (Other skates group)',
   row$inventory_assessment_year == 2023L,
   row$match_status == 'new', row$screening_status == 'screened',
   row$eligibility == 'ineligible', row$import_status == 'not_started',
+  identical(register$candidate_unit_id[match(c('NOAA:10727', 'NOAA:10730'),
+    register$candidate_id)], c('noaa_goa_big_skate', 'noaa_goa_longnose_skate')),
   grepl('not numbers-at-age', row$catch_age_evidence, fixed = TRUE),
   grepl('rather than age-specific', row$survey_age_evidence, fixed = TRUE),
   grepl('M = 0.1', row$mortality_evidence, fixed = TRUE),
@@ -29,8 +31,8 @@ stopifnot(
   all(grepl('^[[:xdigit:]]{64}$', manifest$sha256)),
   all(file.info(file.path(cache, manifest$file))$size == manifest$bytes),
   all(manifest$retrieval_date == '2026-11-02'),
-  sum(units$inventory_entries) == 657L,
-  sum(!is.na(units$candidate_unit_id) & nzchar(units$candidate_unit_id)) == 520L,
+  sum(units$inventory_entries) == 659L,
+  sum(!is.na(units$candidate_unit_id) & nzchar(units$candidate_unit_id)) == 522L,
   grepl('2023 operational assessment', review, fixed = TRUE),
   grepl('not been formally disseminated', review, fixed = TRUE),
   grepl('within-year timing fraction', review, fixed = TRUE),
@@ -47,8 +49,8 @@ outputs <- read.csv(file.path(root, 'database', 'outputs.csv'),
   stringsAsFactors = FALSE, na.strings = c('', 'NA'))
 stopifnot(
   !any(stocks$scientific_name %in% c('Beringraja binoculata', 'Raja rhina'), na.rm = TRUE),
-  !any(grepl('noaa_goa_skate_complex', assessments$assessment_id, fixed = TRUE)),
-  !any(grepl('noaa_goa_skate_complex', inputs$assessment_id, fixed = TRUE)),
-  !any(grepl('noaa_goa_skate_complex', outputs$assessment_id, fixed = TRUE))
+  !any(grepl('noaa_goa_other_skates', assessments$assessment_id, fixed = TRUE)),
+  !any(grepl('noaa_goa_other_skates', inputs$assessment_id, fixed = TRUE)),
+  !any(grepl('noaa_goa_other_skates', outputs$assessment_id, fixed = TRUE))
 )
 cat('NOAA Gulf of Alaska skate source-screen checks passed.\n')

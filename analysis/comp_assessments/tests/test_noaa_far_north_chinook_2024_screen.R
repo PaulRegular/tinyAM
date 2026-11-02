@@ -53,10 +53,10 @@ progress <- read.csv(file.path(root, 'discovery', 'inventory_progress.csv'),
 noaa <- progress[progress$organization == 'NOAA', , drop = FALSE]
 afsc <- noaa[noaa$source_region == 'AFSC', , drop = FALSE]
 stopifnot(sum(noaa$inventory_rows) == 432L,
-  sum(noaa$screening_complete) == 375L,
-  sum(noaa$screening_not_started) == 57L,
-  sum(noaa$new) == 335L, sum(noaa$identity_unreviewed) == 59L,
-  sum(noaa$excluded) == 209L, sum(noaa$eligibility_unresolved) == 143L,
+  sum(noaa$screening_complete) == 377L,
+  sum(noaa$screening_not_started) == 55L,
+  sum(noaa$new) == 337L, sum(noaa$identity_unreviewed) == 57L,
+  sum(noaa$excluded) == 211L, sum(noaa$eligibility_unresolved) == 141L,
   nrow(afsc) == 1L, afsc$inventory_rows == 89L,
-  afsc$screening_complete == 78L, afsc$screening_not_started == 11L)
+  afsc$screening_complete == 80L, afsc$screening_not_started == 9L)
 cat('NOAA Far North Migrating Chinook screen passed.\n')

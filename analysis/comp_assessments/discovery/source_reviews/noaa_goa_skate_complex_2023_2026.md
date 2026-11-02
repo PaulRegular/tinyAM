@@ -1,12 +1,12 @@
-# NOAA Gulf of Alaska skate complex
+# NOAA Gulf of Alaska Other skates group
 
 Review date: 2026-11-02
 Inventory record: `NOAA:11005`
-Candidate unit: `noaa_goa_skate_complex`
+Candidate unit: `noaa_goa_other_skates`
 
 ## Assessment identity
 
-NOAA Stock SMART identifies assessment 13101 as the 2023 operational assessment, with data through 2023, model `Survey Abundance` / REMA, and full acceptance. The 2024 Gulf of Alaska SAFE introduction confirms that 2023 was the latest full operational assessment at that time. The management complex contains three assessment groups: Big skate, Longnose skate, and Other skates. Big and Longnose skate biomass is also divided among western, central, and eastern Gulf of Alaska regions for harvest distribution.
+NOAA Stock SMART identifies assessment 13101 as the full-acceptance 2023 operational assessment for stock ID 11005, with data through 2023 and model `Survey Abundance` / REMA. The 2024 Gulf of Alaska SAFE introduction confirms that 2023 was the latest full operational assessment at that time. The 2023 SAFE explicitly treats Big skate, Longnose skate, and Other skates as three separate current management units. Stock SMART records 10727 and 10730 are the two named species units, each with a separate assessment ID and biomass series. Stock ID 11005, despite its broad “Gulf of Alaska Skate Complex” label, corresponds to the residual Other skates group: the 2023 SAFE reports 2024 biomass estimates of 37,804 t for Big skate, 33,804 t for Longnose skate, and 8,869 t for Other skates, matching the three Stock SMART estimates.
 
 The September 2026 GOA skates chapter is later, but it labels itself pre-dissemination peer-review material and says it has not been formally disseminated. It is not treated here as an accepted production run. It was reviewed only to check whether the method or evidence changed: it continues to describe a biomass-only random-effects approach and reports updated survey biomass through 2025.
 
@@ -23,7 +23,7 @@ The 2023 report describes REMA as a random-effects model applied to biomass esti
 
 ## Decision
 
-Classify this inventory entry as **ineligible** for age-structured source curation. Aggregate catch and survey biomass are useful for the current management assessment but do not meet the database's age-disaggregated input requirement. Keep Big skate, Longnose skate, and Other skates identified as separate groups; do not count them as three completed assessment cases based on this one Stock SMART entry. No canonical stock, assessment, input, or output records were added, and no tinyAM translation was attempted.
+Classify `NOAA:11005` as the distinct **Other skates** current stock unit and **ineligible** for age-structured source curation. Its catch and survey biomass are useful for the current management assessment but do not meet the database's age-disaggregated input requirement. Keep Big skate and Longnose skate as their own stock units under `NOAA:10727` and `NOAA:10730`. These three units share a SAFE chapter but are not regional variants or duplicate stock cases. No canonical stock, assessment, input, or output records were added, and no tinyAM translation was attempted.
 
 ## Cached sources
 
