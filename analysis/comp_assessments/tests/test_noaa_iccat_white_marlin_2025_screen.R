@@ -38,12 +38,12 @@ stopifnot(nrow(row) == 1L,
   !any(inputs$assessment_id == 'iccat_atlantic_white_marlin', na.rm = TRUE),
   !any(outputs$assessment_id == 'iccat_atlantic_white_marlin', na.rm = TRUE),
   sum(progress$inventory_rows) == 905L,
-  sum(progress$new) == 599L,
-  sum(progress$identity_unreviewed) == 169L,
+  sum(progress$new) == 600L,
+  sum(progress$identity_unreviewed) == 168L,
   sum(progress$excluded) == 530L,
   sum(progress$eligibility_unresolved) == 214L,
-  sum(progress$screening_complete) == 836L,
-  sum(progress$screening_not_started) == 69L,
-  nrow(units) == 610L,
-  sum(!is.na(units$candidate_unit_id) & nzchar(units$candidate_unit_id)) == 510L)
+  sum(progress$screening_complete) == 837L,
+  sum(progress$screening_not_started) == 68L,
+  nrow(units) == 611L,
+  sum(!is.na(units$candidate_unit_id) & nzchar(units$candidate_unit_id)) == 511L)
 cat('NOAA:10955 ICCAT white marlin source-screening checks passed.\n')

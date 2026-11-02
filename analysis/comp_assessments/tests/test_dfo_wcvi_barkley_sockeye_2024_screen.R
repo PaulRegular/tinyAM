@@ -30,11 +30,11 @@ stopifnot(
   sum(progress$inventory_rows) == 905L,
   sum(progress$excluded) == 530L,
   sum(progress$eligibility_unresolved) == 214L,
-  sum(progress$screening_complete) == 836L,
-  sum(progress$screening_not_started) == 69L,
+  sum(progress$screening_complete) == 837L,
+  sum(progress$screening_not_started) == 68L,
   sum(progress$screening_in_progress) == 0L,
   sum(progress$screening_in_progress[progress$organization == 'DFO']) == 0L,
   sum(progress$excluded[progress$organization == 'DFO']) == 147L,
   sum(progress$screening_complete[progress$organization == 'DFO']) == 199L,
-  nrow(units) == 610L)
+  nrow(units) == 611L)
 cat('DFO Barkley Sockeye source-screening checks passed.\n')
