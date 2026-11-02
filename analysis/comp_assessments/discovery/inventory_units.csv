@@ -523,6 +523,7 @@
 "candidate:spiny_dogfish_northwest_atlantic","","spiny_dogfish_northwest_atlantic","mixed","ineligible","screened","not_started","DFO | NOAA","Maritimes | NEFSC","DFO:Maritimes:Atlantic Canada Spiny Dogfish - NAFO 4VWX5 | NOAA:10701",2
 "candidate:wcpfc_south_pacific_albacore","","wcpfc_south_pacific_albacore","new","eligible","screened","not_started","NOAA","PIFSC","NOAA:11688",1
 "candidate:wcpfc_wcpo_bigeye","","wcpfc_wcpo_bigeye","new","eligible","screened","not_started","NOAA","SWFSC / PIFSC","NOAA:11684",1
+"candidate:wcpfc_wcpo_silky_shark","","wcpfc_wcpo_silky_shark","new","ineligible","screened","not_started","NOAA","PIFSC","NOAA:11728",1
 "candidate:wcpfc_wcpo_skipjack","","wcpfc_wcpo_skipjack","new","ineligible","screened","not_started","NOAA","PIFSC","NOAA:11691",1
 "candidate:wcpfc_wcpo_yellowfin","","wcpfc_wcpo_yellowfin","new","eligible","screened","not_started","NOAA","PIFSC","NOAA:11694",1
 "candidate:western_atlantic_bluefin_tuna","","western_atlantic_bluefin_tuna","new","unresolved","screened","not_started","DFO | NOAA","National Capital Region | SEFSC","DFO:National Capital Region:Bluefin Tuna - Western Atlantic | NOAA:10165",2
