@@ -18,7 +18,7 @@ The initial snapshot was retrieved on 2026-10-28 from:
 
 ## Current inventory status
 
-The inventory has 905 source-list rows. These are not unique stock counts.
+As of 2026-11-02, the inventory has 905 source-list rows. These are not unique stock counts.
 `inventory_progress.csv` breaks row-level identity, screening, and eligibility
 status down by organization and source region; `inventory_units.csv` summarizes
 the rows already linked to a stock or candidate unit.
@@ -27,10 +27,12 @@ the rows already linked to a stock or candidate unit.
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | DFO | 199 | 20 | 63 | 18 | 98 | 21 | 147 | 31 | 199 | 0 | 0 |
 | ICES | 274 | 59 | 212 | 3 | 0 | 60 | 185 | 29 | 274 | 0 | 0 |
-| NOAA | 432 | 28 | 341 | 10 | 53 | 83 | 212 | 137 | 381 | 0 | 51 |
-| **Total** | **905** | **107** | **616** | **31** | **151** | **164** | **544** | **197** | **854** | **0** | **51** |
+| NOAA | 432 | 28 | 369 | 13 | 22 | 84 | 241 | 107 | 412 | 0 | 20 |
+| **Total** | **905** | **107** | **644** | **34** | **120** | **165** | **573** | **167** | **885** | **0** | **20** |
 
-The crosswalk currently links 626 distinct unit keys across 663 inventory rows. A further 242 inventory records remain without a unit-level identity match.
+These are source-list row counts, not counts of unique stock units. The
+`inventory_units.csv` summary contains 654 unit keys covering 693 inventory
+rows; 212 rows still lack a unit-level identity match.
 
 NOAA Stock SMART 11009 is a legacy broad Gulf of Alaska shallow-water-flatfish complex, not a distinct current stock unit. Its species and age-structured components are tracked separately; the old record remains an ambiguous, ineligible crosswalk and adds no canonical assessment data. See `source_reviews/noaa_goa_shallow_flatfish_legacy_2016_2026.md`.
 
@@ -1247,11 +1249,12 @@ inputs and population outputs were not reported. It is screened ineligible for
 the age-disaggregated comparison set. See
 `source_reviews/ices_blue_ling_5b6712_2026.md`.
 
-The current discovery snapshot as of 2026-11-01 contains 905 inventory rows: 107 matched, 536 provisionally new, 29 ambiguous, and 233 identity-unreviewed. Across all rows, 155 are eligible, 506 ineligible, and 244 unresolved; 772 are screened, none is in progress, and 133 are not started. The organization and source-region breakdowns are in `inventory_progress.csv`.
+The organization and source-region breakdowns are in `inventory_progress.csv`; the summary table above reflects that current snapshot.
 
 The DFO WCVI Barkley Sockeye row is screened ineligible: its 2024 update uses salmon run reconstruction and stock-recruit methods, but does not verify the age-structured catch, survey, biological, and mortality inputs or N-at-age/F-at-age outputs needed for tinyAM. See discovery/source_reviews/dfo_wcvi_barkley_sockeye_2024.md.
 
-The crosswalk has 554 linked units (100 canonical stock units and 454 candidate units), representing 583 inventory rows; 322 rows remain unlinked in `inventory_units.csv`.
+The current `inventory_units.csv` contains 654 unit keys covering 693 inventory
+rows. The remaining 212 inventory rows lack a unit-level identity match.
 
 NOAA Stock SMART IDs 15110, 15113–15114, and 15130–15138 represent 12 single-species Guam Island reef-fish units assessed with length-based GTG-LBSPR methods. Three species have a later 2023 PIFSC management-strategy analysis using the same length-based method. All 12 are screened ineligible for age-disaggregated curation; the Guam bottomfish management-unit complex is a separate stock group. See `source_reviews/noaa_guam_reef_fish_2019.md`.
 
