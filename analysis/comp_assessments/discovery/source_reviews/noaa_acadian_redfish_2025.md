@@ -1,25 +1,98 @@
-# NOAA Acadian redfish source screen
+# NOAA Acadian redfish, Gulf of Maine / Georges Bank
 
-**Screened:** 2026-10-30  
-**Candidate:** NOAA Stock SMART 10455, Acadian redfish, Gulf of Maine / Georges Bank  
-**Scope:** Discovery screen only; no canonical stock, assessment, input, assumption, or output rows are added.
+- **Source review:** 2026-11-03
+- **Official assessment:** 2025 Management Track, Stock SMART assessment 14070
+- **Run:** Run 5, WHAM 2.1.0.9002, commit `47506172e9a55376137501608e645ddae8a574e9`
+- **Fitted years:** 1963–2024
+- **Status:** Source inputs curated; outputs partial; no tinyAM translation started.
 
-## Current assessment and source run
+## Assessment identity and sources
 
-The latest inventory identifies assessment 14070 as the 2025 Acadian redfish Management Track assessment, with data through 2024 and full acceptance. The NOAA SASINF archive contains the run-specific report, `BaseWHAMCode.R`, `BaseWHAMInput.DAT`, and the fitted figures-and-tables bundle. The code identifies Run 5 and WHAM 2.1.0.9002 at commit `47506172e9a55376137501608e645ddae8a574e9`. The final September 2025 peer-review panel concluded that the assessment met its terms of reference and represented best scientific information available.
+The run-specific SASINF bundle identifies the assessment as an ASAP-like WHAM
+model and includes its input file, R model code, report, and fitted tables. The
+NOAA Stock SMART record gives the assessment ID as 14070 and the terminal data
+year as 2024. The September 2025 peer-review panel found that the assessment met
+its terms of reference and represented best scientific information available.
+The older Stock SMART model label says ASAP; this review uses the run-specific
+model code and fitted report tables for the 2025 run.
 
-The cached Stock SMART summary still labels the model as ASAP. The assessment-specific SASINF code and the peer-review report document the 2025 transition from ASAP to an ASAP-like WHAM model, so the run-specific sources are used for model identification. The input file retains a stale comment calling it the “Updated 2023 redfish final model”; its 62-year span beginning in 1963, the 2025 Run 5 code, the September 2025 report, and the accepted terminal year 2024 identify the current production run.
+Source links: [2025 assessment report](https://apps-nefsc.fisheries.noaa.gov/saw/sasi_files.php?year=2025&species_id=1&stock_id=6&review_type_id=3&info_type_id=-1&map_type_id=&filename=2025_RED_UNIT_RPT_2025_09_17_121440.522737.pdf), [Run 5 input](https://apps-nefsc.fisheries.noaa.gov/saw/sasi_files.php?year=2025&species_id=1&stock_id=6&review_type_id=3&info_type_id=3&map_type_id=&filename=2025_RED_UNIT_MOD_BaseWHAMInput.DAT), [Run 5 model code](https://apps-nefsc.fisheries.noaa.gov/saw/sasi_files.php?year=2025&species_id=1&stock_id=6&review_type_id=3&info_type_id=3&map_type_id=&filename=2025_RED_UNIT_MOD_BaseWHAMCode.R), [fitted figures and tables](https://apps-nefsc.fisheries.noaa.gov/saw/sasi_files.php?year=2025&species_id=1&stock_id=6&review_type_id=3&info_type_id=1&map_type_id=&filename=2025_RED_UNIT_FIG_FiguresTables.zip), [peer-review panel report](https://www.fisheries.noaa.gov/s3/2025-11/September-2025-Management-Track-Peer-Review-Panel-Report_Final-508.pdf).
 
-## Recoverable inputs and outputs
+The source ZIP and standalone files are cached under the gitignored
+`source_cache/discovery_noaa_acadian_redfish_2025/` folder. Its `sources.csv`
+records retrieval date, source URL, revision, file size, and SHA-256. The HTML
+table used below is also checksummed as an extracted member of the official
+figures-and-tables ZIP. The cache includes the 2023 assessment and 2024
+state-space assessment reports as background; they are not treated as the
+specification for the 2025 WHAM run.
 
-The fitted model covers 1963-2024 and uses ages 1-25 plus a 26+ group. It has one commercial trawl fleet and two aggregate abundance indices, spring and fall. Catch input includes annual total catch and proportions-at-age. The surveys also include age compositions; their native month values are 4.5 for spring and 10.5 for fall. The ASAP file uses index-unit code 2 for both series; its exact physical-unit definition should be checked against the reader/model convention during import rather than guessed. Some age-composition years are incomplete. The final WHAM setup uses a logistic-normal AR1 age-composition likelihood that treats zeros as missing.
+## Model inputs
 
-The input supplies three weight-at-age matrices, maturity-at-age schedules, and fixed natural mortality of 0.05 per year across ages. The peer review confirms the same weight matrix is used for the catch fleet, SSB calculation, and projections. Survey timing must be translated from the native month convention without substituting the spawning date or assuming a different survey season.
+The native input spans 62 years, 1963–2024, and ages 1–25 plus 26+. It has one
+commercial trawl fleet and two NEFSC abundance indices, spring and fall.
 
-The fitted figures-and-tables bundle reports abundance-at-age in thousands of fish and fishing mortality-at-age by fleet, as well as recruitment and biomass time series. Parameter estimates include standard errors and 95% intervals. The bundle also contains projection results beyond the terminal historical year; those years must not be mixed with the fitted 1963-2024 series. Uncertainty for every age-year cell in the reported N/F surfaces was not verified in this screen.
+- Annual catch is retained as aggregate catch biomass in metric tons. The
+  accompanying age composition is retained as number proportions, together
+  with the source-supplied effective sample size and total-catch CV. The source uses a
+  logistic-normal AR(1) age-composition likelihood; zero entries are treated
+  as missing. Years with zero effective sample size have no observed
+  composition rows in the database.
+- Each survey's aggregate index is retained on its native number-index scale.
+  The ASAP unit code is 2 (numbers), but the physical multiplier is not stated;
+  the values are not rescaled. Survey age compositions are retained separately
+  as number proportions with their effective sample sizes. The source month is
+  4.5 for spring and 10.5 for fall; fractional-year sampling time is calculated
+  as `(month - 1) / 12`, while the original month is preserved in the source
+  inputs and assumptions.
+- The three weight-at-age matrices retain their source roles: catch weight,
+  spawning weight, and January 1 biomass weight. Both survey index weight
+  pointers refer to matrix 3. The age-specific maturity schedule and all three
+  weight matrices are constant over years. Natural mortality is fixed at
+  0.05 per year at every modeled age.
+- The source sets the SSB calculation at 0.4 of the year. The model code uses
+  age-specific, time-invariant selectivity and a mean-recruitment process with
+  annual AR(1) variation. Initial numbers use the equilibrium-age setup.
 
-## Identity and screening decision
+The canonical inputs preserve the official values and native observation
+components. They do not replace the original index series with fitted values.
 
-No canonical NOAA Acadian redfish stock was found. Keep this as the distinct Gulf of Maine / Georges Bank NOAA unit. DFO and NAFO also manage redfish units containing the same species, but shared taxonomy alone does not establish that their assessment boundaries are identical. This candidate is **eligible for source curation**: direct catch-age compositions, aggregate survey indices with survey age compositions, run-specific biological schedules and fixed M, native timing, and comparable fitted age-specific and aggregate outputs are available. Resolve the exact index-unit code and retain missing composition years during the import.
+## Fitted outputs and derived summaries
 
-The official source files, retrieval date, URLs, sizes, and SHA-256 values are recorded in the gitignored cache at `source_cache/discovery_noaa_acadian_redfish_2025/sources.csv`. The discovery register is updated; the canonical database remains unchanged.
+The machine-readable fitted tables report N-at-age in thousands of fish and
+trawl F-at-age in year⁻¹. The tables extend through 2028, but 2025–2028 are
+projection years. Only fitted historical values through 2024 are entered as
+age-specific outputs; `estimate_terminal_year` records that the supplied tables
+also extend through 2028.
+
+The parameter table reports spring and fall fully selected q, mean recruitment
+to age 1, and the annual recruitment AR(1) correlation, each with an estimate,
+standard error, and 95% confidence interval. The q estimates remain on the
+source index scale. The fitted age-year N and F tables do not provide
+cell-specific uncertainty.
+
+The database also records three clearly labeled derived series from the
+reported N-at-age and F-at-age tables:
+
+- total abundance is the sum across ages 1–25 and 26+;
+- recruitment is age-1 abundance;
+- SSB is calculated at the source's 0.4-year timing as
+  `sum(N_at_age * spawning_weight_at_age * maturity * exp(-(F + M) * 0.4))`.
+
+The SSB calculation uses the official age schedules and rounded table values.
+The total-abundance, recruitment, and SSB rows have no calculated uncertainty.
+The assessment output status remains partial because the age-specific output
+uncertainty is unavailable and the annual SSB series is derived rather than
+reported in the machine-readable tables.
+
+## Remaining limitations
+
+- The physical multiplier for the native number-index scale is not specified;
+  no conversion is guessed.
+- A fitted model object was not recovered. The pinned model code, native inputs,
+  fitted age tables, and parameter table are available.
+- Full uncertainty for annual N, F, total abundance, recruitment, and SSB is not
+  available in the extracted tables. SSB and total abundance uncertainty are
+  not reconstructed.
+- No tinyAM settings or fit have been produced yet. Any future translation
+  should compare the source scale, age grid, survey timing, and the spawning
+  biomass definition explicitly.

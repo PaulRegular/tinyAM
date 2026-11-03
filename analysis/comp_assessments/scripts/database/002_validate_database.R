@@ -257,6 +257,7 @@ for (name in c("inputs", "outputs")) {
     "q", "q_power", "process_sd", "observation_sd", "mat_beta1", "mat_beta2",
     "log_q_power", "growth_length_at_age", "growth_rate", "growth_sd_length_at_age",
     "Fmsy", "Bmsy", "msy", "mean_recruitment", "median_recruitment",
+    "recruitment_ar1_rho",
     "fleet_selectivity_at_age", "LRP", "USR", "unfished_spawning_biomass",
     "maximum_exploitation_rate", "biomass_reference_point_0.4_BMSY",
     "biomass_reference_point_0.8_BMSY", "Bmsy_to_B0",

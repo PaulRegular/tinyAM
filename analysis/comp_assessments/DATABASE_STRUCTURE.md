@@ -593,6 +593,7 @@ Bmsy
 msy
 mean_recruitment
 median_recruitment
+recruitment_ar1_rho
 ```
 
 `mean_recruitment` stores a reported time-invariant mean of recruitment. Leave
@@ -602,6 +603,10 @@ not an annual recruitment series.
 `median_recruitment` stores a reported time-invariant median recruitment
 estimate. Leave year blank and retain the recruitment age when the source
 specifies one; it is not an annual recruitment series.
+
+`recruitment_ar1_rho` stores a reported time-invariant AR(1) correlation
+parameter for annual recruitment deviations. Leave year blank and retain its
+reported standard error and interval when available.
 
 `catch_advice` stores an official recommended catch or landings limit for its
 advice years. Preserve whether the source specifies catches or landings and
