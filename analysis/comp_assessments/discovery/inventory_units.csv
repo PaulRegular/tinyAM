@@ -590,7 +590,7 @@
 "candidate:noaa_stocksmart_10415","","noaa_stocksmart_10415","new","eligible","screened","not_started","NOAA","NWFSC / SWFSC","NOAA:10415",1
 "candidate:noaa_stocksmart_10416","","noaa_stocksmart_10416","new","eligible","screened","not_started","NOAA","AFSC","NOAA:10416",1
 "candidate:noaa_stocksmart_10417","","noaa_stocksmart_10417","new","eligible","screened","not_started","NOAA","AFSC","NOAA:10417",1
-"candidate:noaa_stocksmart_10426","","noaa_stocksmart_10426","new","eligible","screened","not_started","NOAA","NWFSC / SWFSC","NOAA:10426",1
+"candidate:noaa_stocksmart_10426","noaa_west_coast_yelloweye","noaa_stocksmart_10426","new","eligible","screened","partial","NOAA","NWFSC / SWFSC","NOAA:10426",1
 "candidate:noaa_stocksmart_10457","","noaa_stocksmart_10457","new","ineligible","screened","not_started","NOAA","AFSC","NOAA:10457",1
 "candidate:noaa_stocksmart_10458","","noaa_stocksmart_10458","new","ineligible","screened","not_started","NOAA","NWFSC / SWFSC","NOAA:10458",1
 "candidate:noaa_stocksmart_10460","","noaa_stocksmart_10460","new","ineligible","screened","not_started","NOAA","NWFSC / SWFSC","NOAA:10460",1
