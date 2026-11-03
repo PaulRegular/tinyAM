@@ -249,6 +249,7 @@ Add new types only when a real assessment requires them.
 
 ``` text
 numbers_at_age
+numbers_at_age_group
 numbers_at_age_for_M_reconstruction
 index_by_age_group
 index_catch_numbers_at_age
@@ -288,6 +289,11 @@ multiple age classes and cannot be represented as a single-age observation.
 Store the lower age in age and record the full source age interval, including
 any plus group, in notes. This measure is kept for provenance and is not
 passed to tinyAM's single-age index likelihood.
+
+`numbers_at_age_group` preserves fish numbers reported for a grouped catch age
+bin. Store the lower age in `age` and the full source interval, including any
+plus group, in `notes`. It is not interchangeable with single-age
+`numbers_at_age` and is not passed to a single-age likelihood.
 
 `numbers_at_age_for_M_reconstruction` preserves an age-specific total catch
 series used to reconstruct a separate natural-mortality input. It is distinct
