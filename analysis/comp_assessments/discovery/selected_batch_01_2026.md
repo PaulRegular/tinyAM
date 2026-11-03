@@ -47,6 +47,10 @@ definition to fill a gap.
 
 The selected batch is recorded in `selected_batch_01_2026.csv`. Candidate
 years are being refreshed against current official advice before each source
-import. The Greenland halibut source review and partial database import are
-recorded separately; its 2023 age-structured source is not represented as the
-model used for the 2026 management-procedure advice.
+import. The Greenland halibut and GOA Pacific ocean perch source reviews and
+partial database imports are recorded separately. The Greenland halibut's
+2023 age-structured source is not represented as the model used for the 2026
+management-procedure advice. GOA Pacific ocean perch uses the latest completed
+detailed fit located for that unit, the 2023 operational update, because its
+2024 estimates were projections and the scheduled 2025 full assessment was
+cancelled.
