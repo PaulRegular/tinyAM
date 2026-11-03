@@ -63,3 +63,5 @@ historical trajectories remain unavailable, so this case is not ready for
 translation.
 
 Yellowmouth Rockfish has a partial source import from the 2021 production assessment. It includes catch, aggregate survey biomass indices, commercial CPUE, maturity, fixed biological parameter values and composite-base reference-point quantiles. The report specifies midyear timing. Numerical age compositions and annual age-specific population outputs remain unavailable; see source_reviews/dfo_yellowmouth_2021.md.
+
+Canary Rockfish has a partial source import from NOAA's 2023 production assessment. The native archive provides catch totals, aggregate indices, age and length composition samples, fitted age-specific outputs, and recent recruitment and spawning-output intervals. It does not provide observed catch-at-age or direct survey indices-at-age; these were not fabricated from model outputs. See `source_reviews/noaa_canary_rockfish_pacific_coast.md`.
