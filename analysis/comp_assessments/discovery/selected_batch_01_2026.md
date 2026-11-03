@@ -54,3 +54,10 @@ management-procedure advice. GOA Pacific ocean perch uses the latest completed
 detailed fit located for that unit, the 2023 operational update, because its
 2024 estimates were projections and the scheduled 2025 full assessment was
 cancelled.
+
+Yellowtail flounder in NAFO 4T has a partial source import from DFO's 2025
+assessment. The accessible 2026/022 summary supports the age-5+ biomass estimate
+and recent zero-F statement, but the linked detailed Research Document 2026/054
+PDF currently redirects to an archive notice. Numerical input series and
+historical trajectories remain unavailable, so this case is not ready for
+translation.
