@@ -269,6 +269,7 @@ relative_biomass_index
 relative_abundance_index
 relative_precision_weight
 relative_standard_error
+log_catch_sd
 abundance_index_cv
 biomass_index_cv
 ```
@@ -316,6 +317,7 @@ weight_at_age
 catch_weight_at_age
 start_weight_at_age
 maturity_at_age
+mature_weight_at_age
 natural_mortality_at_age
 fecundity_at_age
 proportion_female_at_age
@@ -344,6 +346,10 @@ the same survey identity as the corresponding observation; use `type = index`,
 weight. `landings_proportion` retains a source landings-weight composition by substock
 or quarter (`basis = proportion_biomass`); these records have no age. Reference
 components are retained, and report rounding is not silently renormalized.
+
+`log_catch_sd` stores the standard error of log catch when the source model
+specifies that scale. Use `type = catch` and `basis = log_scale`; do not label it
+as a coefficient of variation unless the source defines it that way.
 Landings fractions should normally lie in `[0, 1]`. If an official model input
 contains values slightly above one, preserve them without clipping and explain
 the source-specific exception in `notes`; the validator accepts only documented
@@ -807,6 +813,11 @@ the original weight units to retain supplied maturity-times-fecundity weights.
 It is not a maturity proportion. Record the source sex fraction, minimum mature
 age and SSB equation separately. Deriving a maturity proportion for tinyAM by
 dividing this product by population weight is an analysis transformation.
+
+`mature_weight_at_age` records a source product of maturity proportion and body
+weight when that is the quantity supplied. It is not a standalone maturity
+proportion or a maturity-times-fecundity series; retain the source units and
+document any fecundity assumption separately.
 
 `fishing_mortality_intensity` is an annual mortality output parameter before
 age selectivity. It is neither F-at-age nor an age-averaged Fbar; do not substitute

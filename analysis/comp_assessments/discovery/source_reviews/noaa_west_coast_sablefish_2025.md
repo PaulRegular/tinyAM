@@ -4,69 +4,78 @@
 
 NOAA Stock SMART ID 10466 is the U.S. West Coast Sablefish management unit.
 It is separate from the Alaska and British Columbia units, despite sharing the
-species name (*Anoplopoma fimbria*). No canonical U.S. West Coast Sablefish
-record was present in the database. The register marks it as a provisional new
-unit, subject to later cross-inventory reconciliation.
-
-The selected assessment is the 2025 official assessment, which fits data
-through 2024. The Pacific Fishery Management Council provides both the detailed
-assessment report and a native Stock Synthesis model archive. The assessment is
-a two-sex, age-structured population model with ages tracked from 0 to an
-accumulated age of 70. The observation age bins span 0-50, with age 50 used as
-a plus group.
+species name (*Anoplopoma fimbria*). The 2025 official assessment fits data
+through 2024 and includes forecasts through 2036. The two-sex model tracks
+ages 0-70; observed age-composition bins span 0-50, with age 50 as the terminal
+accumulator.
 
 The report states Stock Synthesis version 3.30.24. The bundled input echo and
-`Report.sso` identify version 3.30.23.1, compiled December 5, 2024. The bundle
-is titled for the 2025 assessment, has input data through 2024, and reports
-outputs for that run, but the version discrepancy should be resolved or
-retained explicitly during import.
+`Report.sso` identify version 3.30.23.1, compiled December 5, 2024. The
+assessment is identified by its 2025 run and source bundle; the version
+discrepancy is retained rather than resolved by assumption.
 
-## Evidence for age-structured source data
+## Recovered inputs and assumptions
 
-- Catch input is biomass in metric tonnes, divided among trawl, hook-and-line,
-  and pot retained fleets and corresponding discard fleets. Retained-catch
-  age compositions are sampled by year and sex: trawl ages begin in 1983, and
-  hook-and-line and pot ages begin in 1986. Discard age compositions are
-  derived in the assessment from length observations using a length-age key.
-  These inputs do not provide observed catch numbers-at-age for every year.
-  A downstream catch-at-age reconstruction would need to use catch totals,
-  observed age compositions, and appropriate weights, and must leave years
-  without age samples visibly limited rather than fill them with fitted states.
-- Biomass indices are supplied for the early and late Triennial surveys, the
-  NWFSC Slope Survey, and the NWFSC West Coast Groundfish Bottom Trawl Survey
-  (WCGBTS). Native age-composition observations are also supplied for surveys
-  in 0-50 bins. WCGBTS age samples cover 2003-2024 except 2020; the historical
-  survey composition coverage is intermittent. The age-specific survey
-  abundance index is not directly observed. A tinyAM age-indexed series would
-  require an explicit transformation of aggregate index and age-composition
-  observations, with the resulting assumptions recorded.
-- The model uses empirically estimated sex-specific weight-at-age from WCGBTS
-  samples for ages 0-30 during 2003-2024, with age 30 as the plus group.
-  Earlier weight-at-age is constant. A fixed spatially integrated maturity
-  schedule is used in the model.
-- Natural mortality is estimated as a constant shared by sexes. The base
-  estimate is 0.088 per year, with a lognormal prior whose median is 0.072 and
-  standard error is 0.31. The report identifies mortality, absolute stock
-  scale, and productivity as important sources of uncertainty.
-- The native data files contain observation-month values for surveys. The
-  sampled month is July for the early Triennial, NWFSC Slope, and WCGBTS data,
-  and August for the late Triennial period; the model spawning month is
-  January. A fractional-year conversion for tinyAM must state how these
-  monthly conventions are represented.
-- `Report.sso` enables annual numbers-at-age, catch-at-age, F-at-age, and
-  biomass-at-age output tables. The report also provides annual spawning
-  output, recruitment, and exploitation estimates with uncertainty. It reports
-  2025 spawning output of 74,409 mt with a 95% interval of 59,331-89,486 mt.
+The native data file contains 620 annual catch-biomass records in metric tons
+across trawl, hook-and-line, and pot retained and discard fleets. The
+accompanying `catch_se` is retained as the standard error of log catch. The
+assessment does not provide direct catch numbers-at-age for every year.
+Catch-at-age reconstruction would require explicit use of catch totals,
+sampled age compositions, and weights; unsampled fleet-years must not be filled
+from fitted states.
 
-The native bundle and report make this a source-ready age-structured case.
-The distinction between observed catch/index inputs and assessment-derived
-age surfaces remains important for any later tinyAM translation.
+Four aggregate biomass indices are supplied: early and late Triennial surveys,
+NWFSC Slope Survey, and WCGBTS. They comprise 35 records, use SS3 units code 1
+and lognormal error, and retain native index scales. A further five observations
+are a recruitment-deviation index (special units code 36, normal error), not an
+abundance survey. Index months are July for the early Triennial, NWFSC Slope,
+and WCGBTS series and August for the late Triennial series. Canonical timing
+fractions use `(month - 1) / 12`, while preserving source month.
+
+The native file has 57 length-composition rows and 273 age-composition rows.
+Frequency values are retained exactly as supplied, without normalization.
+Source sex, partition, effective sample size, age-error code, month, and signed
+fleet code are retained. Negative fleet composition rows are retained but
+excluded from the total likelihood. The age compositions describe samples;
+they are not an age-specific abundance index.
+
+`wtatage.ss` provides 980 rows for ages 0-30, sexes, and model fleets or roles:
+mature weight, mid-season population weight, beginning-season weight, and
+fleet-specific weights. It includes baseline year `-1890` and annual schedules
+for 2003-2036; 2025-2036 are forecast inputs, and age 30 is the terminal group.
+The mature-weight schedule is maturity multiplied by weight-at-age, not a
+standalone maturity proportion. It is based on external spatial maturity
+estimates; the report describes the coastwide schedule as biomass-weighted
+using WCGBTS biomass. The spatial maturity curve differs between north and
+south.
+
+Natural mortality is estimated as a constant shared across ages and sexes.
+`Report.sso` gives 0.087777 yr-1; its lognormal prior median is 0.072 yr-1 with
+SD 0.31.
+
+## Recovered outputs and limitations
+
+The machine-readable report supplies fitted and forecast numbers-at-age,
+fleet-specific fishing mortality-at-age, natural mortality-at-age, SSB, and
+recruitment from 1890 through 2036. Total abundance is derived by summing
+numbers-at-age across ages 0-70 and both sexes; no uncertainty is calculated
+for this derived quantity. SSB and recruitment point estimates are retained
+from the report table. Recent 95% intervals for SSB (2015-2025) and recruitment
+(2015-2024) are transcribed from report Tables II-III. The report does not
+provide age-specific uncertainty in these extracted surfaces.
+
+The canonical record is partial: catch numbers-at-age and standalone maturity
+proportions are unavailable, and the aggregate survey indices plus age
+compositions are not a directly observed age-specific abundance series. Fitted
+N/F/M surfaces are assessment outputs, not source observations. These limits
+must remain explicit in any later tinyAM translation.
 
 ## Sources and local cache
 
-The report and native model archive were retrieved on 2026-10-29 and are
-cached under `source_cache/discovery_noaa_sablefish_2025/`. Their URLs, sizes,
-and SHA-256 checksums are in the ignored `sources.csv` manifest.
+The report and native model archive were retrieved on 2026-10-29 and are cached
+under `source_cache/discovery_noaa_sablefish_2025/`. Their URLs, sizes,
+retrieval date, and SHA-256 checksums are recorded in the ignored `sources.csv`
+manifest.
 
 - [2025 West Coast Sablefish assessment report](https://www.pcouncil.org/documents/2026/02/status-of-the-sablefish-off-the-u-s-west-coast-in-2025.pdf/)
 - [2025 West Coast Sablefish native model files](https://www.pcouncil.org/documents/sablefish-2025-model-files/)

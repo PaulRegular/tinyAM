@@ -596,7 +596,7 @@
 "candidate:noaa_stocksmart_10460","","noaa_stocksmart_10460","new","ineligible","screened","not_started","NOAA","NWFSC / SWFSC","NOAA:10460",1
 "candidate:noaa_stocksmart_10461","","noaa_stocksmart_10461","new","eligible","screened","not_started","NOAA","NWFSC / SWFSC","NOAA:10461",1
 "candidate:noaa_stocksmart_10462","","noaa_stocksmart_10462","new","eligible","screened","not_started","NOAA","NWFSC / SWFSC","NOAA:10462",1
-"candidate:noaa_stocksmart_10466","","noaa_stocksmart_10466","new","eligible","screened","not_started","NOAA","NWFSC / SWFSC","NOAA:10466",1
+"stock:noaa_sablefish_pacific_coast","noaa_sablefish_pacific_coast","","new","eligible","screened","partial","NOAA","NWFSC / SWFSC","NOAA:10466",1
 "candidate:noaa_stocksmart_10562","","noaa_stocksmart_10562","new","eligible","screened","not_started","NOAA","NWFSC / SWFSC","NOAA:10562",1
 "candidate:noaa_stocksmart_10568","","noaa_stocksmart_10568","new","eligible","screened","not_started","NOAA","NWFSC / SWFSC","NOAA:10568",1
 "candidate:noaa_stocksmart_11056","","noaa_stocksmart_11056","new","eligible","screened","not_started","NOAA","AFSC","NOAA:11056",1

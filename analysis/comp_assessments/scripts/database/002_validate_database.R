@@ -208,13 +208,13 @@ allowed_input_measures <- c(
   "total_biomass", "landings_biomass", "discard_biomass", "total_egg_production", "landings_lower_bound", "landings_upper_bound",
   "catch_lower_bound", "catch_upper_bound", "proportion_at_age", "proportion_at_length",
   "conditional_proportion_at_age", "weight_at_age", "catch_weight_at_age", "spawning_weight_at_age", "start_weight_at_age",
-  "maturity_at_age", "natural_mortality_at_age", "condition_index_for_mortality",
+  "maturity_at_age", "mature_weight_at_age", "natural_mortality_at_age", "condition_index_for_mortality",
   "fecundity_at_age", "proportion_female_at_age",
   "mean_catch_length", "length_at_first_capture", "MSY_proxy_length",
   "fixed_mortality_medium", "fixed_mortality_low", "fixed_mortality_high",
   "relative_biomass_index", "relative_abundance_index", "abundance_index_cv", "biomass_index_cv",
   "landings_proportion", "landings_numbers_at_age", "discard_numbers_at_age", "landings_fraction_at_age",
-  "landings_weight_at_age", "discard_weight_at_age", "log_index_sd", "index_sd", "relative_precision_weight", "observation_likelihood_weight", "relative_standard_error", "larval_abundance_index", "environmental_covariate", "fraction_F_before_spawning",
+  "landings_weight_at_age", "discard_weight_at_age", "log_index_sd", "log_catch_sd", "index_sd", "relative_precision_weight", "observation_likelihood_weight", "relative_standard_error", "larval_abundance_index", "environmental_covariate", "fraction_F_before_spawning",
   "fraction_M_before_spawning", "capelin_biomass_index"
 )
 allowed_bases <- c(
@@ -272,7 +272,7 @@ for (name in c("inputs", "outputs")) {
       "biomass_at_age", "proportion_at_age", "frequency_at_age", "maturity_fecundity_at_age",
       "conditional_proportion_at_age", "fraction_F_before_spawning",
       "fraction_M_before_spawning", "weight_at_age", "catch_weight_at_age", "spawning_weight_at_age", "start_weight_at_age",
-      "maturity_at_age", "natural_mortality_at_age", "fecundity_at_age", "proportion_female_at_age",
+      "maturity_at_age", "mature_weight_at_age", "natural_mortality_at_age", "fecundity_at_age", "proportion_female_at_age",
       "landings_numbers_at_age", "discard_numbers_at_age", "landings_fraction_at_age", "relative_standard_error",
       "landings_weight_at_age", "discard_weight_at_age", "relative_precision_weight", "observation_likelihood_weight"
     )
@@ -394,7 +394,7 @@ for (name in c("inputs", "outputs")) {
     if (any(proportion & value > 1 & !above_one_landings_fraction)) {
       stop("Input proportions must lie in [0, 1].", call. = FALSE)
     }
-    if (any(x$measure %in% c("log_index_sd", "index_sd", "relative_precision_weight", "observation_likelihood_weight") & value <= 0)) {
+    if (any(x$measure %in% c("log_index_sd", "log_catch_sd", "index_sd", "relative_precision_weight", "observation_likelihood_weight") & value <= 0)) {
       stop("Supplied SDs, precision weights, and likelihood weights must be positive.", call. = FALSE)
     }
   } else {
