@@ -36,7 +36,7 @@ result <- run_assessment("afsc_cod_ebs_2024", tier = "curated",
 preliminary <- assessment_translations("preliminary")
 ```
 
-The full scientific translation instructions remain in TINYAM_TRANSLATION.md. Shared converters and dashboard helpers serve both tiers. These are analysis-local functions; package model mathematics and public interfaces are unchanged.
+The full scientific translation instructions remain in [TINYAM_TRANSLATION.md](TINYAM_TRANSLATION.md). Stock-specific assumptions and inherited fit reviews are in [translation_notes/](translation_notes/README.md); official source evidence remains in SAIO. Shared converters and dashboard helpers serve both tiers. These are analysis-local functions; package model mathematics and public interfaces are unchanged.
 
 ## Local outputs
 

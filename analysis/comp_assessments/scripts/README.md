@@ -2,14 +2,9 @@
 
 Run these scripts from the repository root in RStudio.
 
-## Database
+## Source database
 
-`database/` contains reproducible source imports, extraction helpers and
-validators. Retain scripts that recover canonical values or assumptions even
-when their names contain `review`. They are curation code, not model trials.
-Run `002_validate_database.R` to validate the canonical database;
-`003_observation_readiness.R` regenerates the observation-readiness table.
-Source-dependent validators require the corresponding ignored source cache.
+Source importers, extraction helpers and validators are maintained in [SAIO](https://github.com/PaulRegular/saio/tree/main/scripts/database). Run canonical validation from the SAIO repository root. Routine translations read the pinned SAIO tables and do not rerun source imports.
 
 ## Translation and fitting
 
@@ -32,7 +27,7 @@ with an explicit `timed_out` diagnostic; settings and starting-value rules are
 unchanged. Set `timeout <- Inf` for unbounded fitting.
 
 Stock starts and completions are printed as they happen. With `cache = TRUE`,
-each completed stock is saved immediately as `results/cache/<id>/result.rds`,
+each completed stock is saved immediately as `results/<tier>/cache/<id>/result.rds`,
 alongside its fit (if available), `run.log` with stage timestamps, and
 `run.log.output` with subprocess output. These checkpoints do not wait for the
 whole batch. Existing old fit files are retained; `result.rds` records the current
@@ -41,6 +36,6 @@ Checkpoint replacement happens only after serialization completes, so an
 interrupted save does not overwrite a previous complete checkpoint.
 Reduce worker count when memory is limited; use serial execution for debugging.
 
-Current summary CSVs and overview figures are tracked. Fits, dashboards,
-source files, detailed trial outputs and rendering failures remain local and
-ignored. The complete batch alone refreshes aggregate results.
+Summary CSVs, overview figures, fits, dashboards and detailed trial outputs
+remain local and ignored under `results/<tier>/`. Authoritative source files
+remain in SAIO's ignored cache. The complete batch alone refreshes aggregate results.

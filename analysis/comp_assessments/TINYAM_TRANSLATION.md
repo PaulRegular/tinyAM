@@ -6,12 +6,14 @@ Canonical records, importers, source reviews, discovery registers, DATABASE_STRU
 
 Translations are registered in translations.csv and stored under scripts/translation/curated/ or preliminary/. The curated set is inherited from main; preliminary scripts and alternatives require explicit selection. A successful fit does not promote a script. Default batches and plots select only curated entries.
 
+Stock-specific model choices and inherited fitting notes are kept in [translation_notes/](translation_notes/README.md). Official source evidence belongs in SAIO, even when a downstream comparison revealed the issue. The registered recipe and its tier define current settings; transferred notes do not constitute a new fit or review.
+
 All local outputs, including dashboards and initialization logs, belong under results/<tier>/, never a shared output directory or SAIO source_cache/. Source caches are external in SAIO. Migrated legacy results retain their provenance and are not newly validated results.
 
 ## Purpose
 
 This document defines how a curated source assessment is transformed into data and model settings suitable for a tinyAM analysis.
-Read the [scope and provenance statement](README.md#scope-and-provenance)
+Read the [scope and provenance statement](README.md#verification-and-purpose)
 before interpreting these illustrative model comparisons.
 
 The canonical assessment database is intentionally richer than tinyAM. It preserves the fleets, surveys, biological inputs, and statistical assumptions of the official source assessment.
@@ -259,7 +261,7 @@ Use short biological explanations rather than only process names or formulas.
 Identify whether each choice preserves, approximates, or omits the source
 assumption. Honor previously agreed stock-specific choices and record them
 here. Include source references where needed, without repeating the full
-curation history from `source_reviews/`.
+curation history from [SAIO source reviews](https://github.com/PaulRegular/saio/tree/main/source_reviews).
 
 Pass this Markdown to `vis_tam(background = background)`. The dashboard should
 display a Background page only when text is supplied; ordinary dashboards
