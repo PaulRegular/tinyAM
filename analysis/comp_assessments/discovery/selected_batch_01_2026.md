@@ -9,7 +9,7 @@ source-curation batch, not a translation-readiness ranking.
 
 | Priority | Organization | Candidate unit | Stock | Inventory assessment year |
 |---:|---|---|---|---:|
-| 1 | DFO | `dfo_greenland_halibut_2_3klmno` | Greenland halibut, NAFO 2 + 3KLMNO | 2025 |
+| 1 | DFO | `dfo_greenland_halibut_2_3klmno` | Greenland halibut, NAFO 2 + 3KLMNO | 2026 |
 | 2 | DFO | `dfo_sff_2024_gulf_white_hake_nafo_4t` | White hake, NAFO 4T | 2022 |
 | 3 | DFO | `dfo_sff_2024_gulf_yellowtail_flounder_nafo_4t` | Yellowtail flounder, NAFO 4T | 2025 |
 | 4 | DFO | `dfo_western_component_pollock_4xopqrs5` | Pollock, western component | 2024 |
@@ -41,6 +41,8 @@ does not replace that run-level verification. Preserve partial latest-unit
 records when a series cannot be recovered. Do not substitute an older stock
 definition to fill a gap.
 
-The selected batch is recorded in `selected_batch_01_2026.csv`. No canonical
-stock, assessment, input, assumption or output record is created by this
-selection checkpoint.
+The selected batch is recorded in `selected_batch_01_2026.csv`. Candidate
+years are being refreshed against current official advice before each source
+import. The Greenland halibut source review and partial database import are
+recorded separately; its 2023 age-structured source is not represented as the
+model used for the 2026 management-procedure advice.
