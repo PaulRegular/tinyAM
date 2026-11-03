@@ -77,17 +77,16 @@ review <- list(
   eligibility = 'eligible',
   import_status = 'not_started',
   catch_age_evidence = paste(
-    'The 2017 statistical catch-at-age assessment uses total commercial landings in tonnes and',
-    'annual catch-at-age proportions for ages 2-12+ in numbers, 1973-2016 (Table 9). These',
-    'source quantities support a documented number-at-age reconstruction using the annual',
-    'fishery mean weights-at-age; they are not direct catch numbers-at-age.'),
+    'Table 9 reports commercial catch numbers-at-age in thousands of fish for ages 2-12+,',
+    '1973-2016; the 2016 estimates are preliminary. The model fits annual number proportions',
+    'derived from these counts alongside total landings in tonnes (Table 1).'),
   survey_age_evidence = paste(
-    'The September RV survey provides annual trawlable biomass and survey abundance-at-age',
-    'proportions for ages 2-12+, 1973-2016 (Table 10). Its age-specific index can be reconstructed',
-    'from the biomass and survey weights-at-age. The model also used survey age proportions.'),
+    'Table 10 reports September RV trawlable abundance-at-age in thousands of fish for ages',
+    '2-12+, 1973-2016. The model fits annual age proportions derived from these counts and an',
+    'aggregate survey index shown in Figure 18; the methods list tonnes while the plot reports kg/tow.'),
   weights_evidence = paste(
-    'Table 13 reports annual mean weights-at-age for the RV survey and fishery in kg per fish,',
-    'ages 2-12+, 1973-2016.'),
+    'Table 13 reports RV survey weights-at-age in kg/fish for ages 2-12+, 1973-2016. The',
+    'methods also mention fishery weights-at-age, but no numeric fishery surface was recovered.'),
   maturity_evidence = paste(
     'Table 12 reports mature proportions-at-age for 1973-2016, derived from survey length-based',
     'maturity curves and the age-length key.'),
@@ -98,23 +97,21 @@ review <- list(
     'The model places the September RV survey at 0.71 of the annual time step. Fishery catches',
     'are annual totals; no separate within-year fishery observation fraction is used.'),
   output_evidence = paste(
-    'The assessment reports estimated SSB, age-2 and age-3 recruitment, fishing mortality, and',
-    'time-varying M. Age-specific state surfaces are shown in figures, but no machine-readable',
-    'run output or annual N-at-age table was located in the report.'),
+    'The report gives 2016 Model 2 SSB, total abundance, and age-2/age-3 recruitment in prose,',
+    'plus a Model 2 q estimate. Annual N/F/M/SSB state surfaces are shown in figures but are',
+    'not tabulated; no machine-readable fitted object was located.'),
   detailed_source_url = paste(sources$url, collapse = '; '),
-  review_date = '2026-10-30',
+  review_date = '2026-11-03',
   decision_reason = paste(
-    'Eligible for source curation. The latest detailed full assessment located is the 2017',
-    'statistical catch-at-age model (Research Document 2019/026), with inputs for 1973-2016.',
-    'The 2025/010 update is an interim survey-indicator update, not a new full assessment.',
-    'Catch-at-age is reported as proportions and must be reconstructed from total catch and',
-    'weights-at-age. The 2025 response says a full assessment is planned for 2026; check for',
-    'its publication before importing. No canonical values have been added.'),
+    'The 2017 full statistical catch-at-age assessment remains the latest detailed model report',
+    'located as of 2026-11-03; the 2025/010 report is an interim indicator update. A partial',
+    'source import is available. Fishery weights-at-age and annual fitted state output tables',
+    'remain unavailable, and the Figure 18 survey-index scale is unresolved.'),
   notes = paste(
     'Distinct from NOAA winter flounder units in Georges Bank, Gulf of Maine, and Southern New',
     'England/Mid-Atlantic. DFO identifies the current unit as NAFO Division 4T. The full report',
-    'models one combined-sex population; its mixed catch-weight and composition inputs require',
-    'documented conversions during extraction.')
+    'models one combined-sex population. Models 1-7 were compared; Table 11 gives Model 7 the',
+    'lowest AIC, while main inference results are presented for Model 2.')
 )
 for (column in names(review)) candidate[[column]][i] <- review[[column]]
 
