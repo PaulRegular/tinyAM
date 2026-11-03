@@ -93,7 +93,7 @@
 "candidate:ices_cod_east_greenland_iceland_offshore","","ices_cod_east_greenland_iceland_offshore","new","ineligible","screened","not_started","ICES","Greenland Sea, Icelandic Waters","ICES:cod.21.27.1.14",1
 "candidate:ices_cod_faroe_bank","","ices_cod_faroe_bank","new","ineligible","screened","not_started","ICES","Faroes","ICES:cod.27.5b2",1
 "candidate:ices_cod_kattegat_21","","ices_cod_kattegat_21","new","unresolved","screened","not_started","ICES","Greater North Sea","ICES:cod.27.21",1
-"candidate:ices_cod_west_greenland_inshore","","ices_cod_west_greenland_inshore","new","eligible","screened","not_started","ICES","Greenland Sea","ICES:cod.21.1.isc",1
+"candidate:ices_cod_west_greenland_inshore",,"ices_cod_west_greenland_inshore","new","eligible","screened","partial","ICES","Greenland Sea","ICES:cod.21.1.isc",1
 "candidate:ices_cod_west_greenland_offshore","","ices_cod_west_greenland_offshore","new","eligible","screened","not_started","ICES","Greenland Sea","ICES:cod.21.1.osc",1
 "candidate:ices_cuckoo_ray_9a","","ices_cuckoo_ray_9a","new","ineligible","screened","not_started","ICES","Bay of Biscay and the Iberian Coast","ICES:rjn.27.9a",1
 "candidate:ices_cyo_27_nea","","ices_cyo_27_nea","new","ineligible","screened","not_started","ICES","Arctic Ocean, Azores, Bay of Biscay and the Iberian Coast, Celtic Seas, Greater North Sea, Oceanic Northeast Atlantic","ICES:cyo.27.nea",1
