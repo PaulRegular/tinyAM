@@ -29,3 +29,9 @@ The 30 pre-migration `legacy_main` review copies were reconciled with their prim
 ## Independent-source cleanup
 
 The source repository was reviewed from SAIO commit `8eeb542`. Project-specific references remained in documentation, generated annotations, discovery decisions and importer controls. The subsequent cleanup removes those references and makes the dry-run controls source-owned (`SAIO_DATABASE_DRY_RUN` and `SAIO_IMPORT_DRY_RUN`). The former `tinyam_surveys` assumption records recovered survey coverage; it is renamed `recovered_survey_coverage`, preserving its value, missing-survey caveat and source citation. Only explanatory text and that recovery-inventory label change in the canonical tables; source observations, estimates, units, age/year keys, identifiers and citations are preserved.
+
+## Source-test follow-up
+
+The five reported SAIO test failures were resolved by validating current discovery accounting and using no-write source-import previews. The inventory test no longer replays historical screening decisions; stock-specific source tests remain in their own files. Inventory membership uses stable candidate identifiers, allowing either candidate or canonical-stock keys after curation.
+
+All five affected tests, the inventory-lookup regression checks and canonical validation passed. During this follow-up, all 900 protected source files—including the five canonical tables, candidate register, selected batch, source reviews and retrieval provenance—remained byte-for-byte unchanged. Only the two derived inventory summaries were refreshed. This does not advance tinyAM's data pins, change its model specifications or rerun any assessment fits.
