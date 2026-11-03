@@ -26,12 +26,12 @@ translation-readiness ranking.
 | 14 | ICES | `ices_whg_27_7b-ce-k` | Whiting, divisions 7.b, 7.c and 7.e-k | 2026 |
 | 15 | NOAA | `noaa_acadian_redfish_gom_gb` | Acadian redfish, Gulf of Maine / Georges Bank | 2025 |
 | 16 | NOAA | `noaa_stocksmart_10466` | Sablefish, Pacific Coast | 2025 |
-| 17 | NOAA | `noaa_stocksmart_10568` | Widow rockfish, Pacific Coast | 2026 |
+| 17 | NOAA | `noaa_stocksmart_10022` | Dover sole, Pacific Coast | 2021 |
 | 18 | NOAA | `noaa_stocksmart_10426` | Yelloweye rockfish, Pacific Coast | 2025 |
 | 19 | NOAA | `noaa_stocksmart_10415` | Canary rockfish, Pacific Coast | 2025 |
 | 20 | NOAA | `noaa_black_rockfish_oregon_2023` | Black rockfish, Oregon | 2023 |
 
-The two West Greenland cod units are separate current ICES assessment units,
+The initial priority 17 entry for widow rockfish was removed after confirming that its current assessment was already in the canonical database; eligible NOAA Pacific Coast Dover sole (Stock SMART 10022) replaces it. The two West Greenland cod units are separate current ICES assessment units,
 not separate model variants. The selection was checked against the canonical
 database after synchronization with `main`; White hake, golden redfish, and
 greater silver smelt already had assessment records, so those duplicate
