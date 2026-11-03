@@ -53,3 +53,7 @@ The broad library supports future standardized comparative modelling. A stock-sp
 ## Preserved paper inputs
 
 The curated pin preserves the five source tables from the original main working set byte for byte. The preliminary pin uses the expanded SAIO source database. Both are immutable commits in the same SAIO history, not separately maintained databases. Select the same tier for the database and the translation; switching to newer source data is a deliberate scientific update.
+
+## Migration history
+
+The source-database split and its initial snapshot manifest are documented in [migration/](migration/README.md). SAIO is maintained independently; tinyAM owns its data pins, translations and migration history.
