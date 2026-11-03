@@ -1,15 +1,16 @@
 pkgload::load_all(".", quiet = TRUE, helpers = FALSE)
+if (!exists(".assessment_script", mode = "function")) {
+  source("analysis/comp_assessments/R/translation_registry.R")
+}
 
 .test_stock <- function(source_record, ..., script = NULL) {
   e <- new.env(parent = globalenv())
   e$source <- source_record
   e$do_fit <- FALSE
   e$silent <- TRUE
+  e$translation_tier <- .assessment_translation(source_record$assessment$assessment_id[[1]])$tier[[1]]
   list2env(list(...), e)
-  path <- file.path(
-    "analysis/comp_assessments/scripts/translation/stocks",
-    paste0(source_record$assessment$assessment_id[[1]], ".R")
-  )
+  path <- .assessment_script(source_record$assessment$assessment_id[[1]])
   if (!is.null(script)) path <- script
   sys.source(path, e)
   calls <- list()

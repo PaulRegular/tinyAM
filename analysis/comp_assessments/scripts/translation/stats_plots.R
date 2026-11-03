@@ -1,3 +1,4 @@
+source("analysis/comp_assessments/R/read_database.R")
 
 library(dplyr)
 library(tidyr)
@@ -8,25 +9,26 @@ library(patchwork)
 pkgload::load_all(".", quiet = TRUE)
 
 root <- "analysis/comp_assessments"
+source(file.path(root, "R", "read_database.R"))
+source(file.path(root, "R", "translation_registry.R"))
+if (!exists("translation_tier", inherits = FALSE)) translation_tier <- "curated"
+results_dir <- .assessment_results(translation_tier)
+translation_ids <- assessment_translations(translation_tier)$assessment_id
 source(file.path(root, "R", "plot_stock_order.R"))
 
 plot_agreement_heatmap <- function(root) {
 
   # Read comparison results and stock metadata.
   comparison <- read_csv(
-    file.path(root, "results", "comparison_summary.csv"),
+    file.path(results_dir, "comparison_summary.csv"),
     show_col_types = FALSE
   )
 
-  assessments <- read_csv(
-    file.path(root, "database", "assessments.csv"),
-    show_col_types = FALSE
-  )
+  assessments <- .saio_read_table("assessments.csv", tier = translation_tier)
 
-  stocks <- read_csv(
-    file.path(root, "database", "stocks.csv"),
-    show_col_types = FALSE
-  )
+  stocks <- .saio_read_table("stocks.csv", tier = translation_tier)
+
+  comparison <- comparison |> filter(assessment_id %in% translation_ids)
 
   # Population metrics.
   metrics <- c("ssb", "recruitment", "abundance", "F_bar")
@@ -320,7 +322,7 @@ p_agreement <- plot_agreement_heatmap(root)
 p_agreement
 
 # Export.
-figure_dir <- file.path(root, "results", "figures")
+figure_dir <- file.path(results_dir, "figures")
 
 dir.create(
   figure_dir,

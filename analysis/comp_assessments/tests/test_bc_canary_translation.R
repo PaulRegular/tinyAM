@@ -5,11 +5,13 @@ record <- read_assessment("dfo_canary_bc_2022")
 original <- record
 x <- .test_stock(record)
 stopifnot(identical(record, original), is.null(x$fit),
-  identical(x$years, 1977:2022), identical(x$ages, 1:60),
-  x$settings$N_settings$process == "off", x$settings$N_settings$init == "free",
+  identical(x$years, 1977:2022), identical(x$ages, 1:40),
+  x$settings$N_settings$process == "off", x$settings$N_settings$init == "exp",
   x$settings$rec_settings$sd == .9,
   identical(all.vars(x$settings$rec_settings$mu_form), character()),
-  x$settings$F_settings$process == "iid", x$settings$M_settings$process == "off",
+  x$settings$F_settings$process == "ar1",
+  identical(all.vars(x$settings$F_settings$mu_form), "age"),
+  x$settings$M_settings$process == "off",
   setequal(x$obs$index$survey, c("QCS_SYNOPTIC", "WCVI_SYNOPTIC", "NMFS_TRIENNIAL")),
   max(abs(x$obs$index$samp_time - 5/12)) < 1e-12,
   all(x$obs$maturity$obs[x$obs$maturity$age < 10] == 0),

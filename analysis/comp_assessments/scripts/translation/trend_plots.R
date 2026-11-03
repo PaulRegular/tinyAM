@@ -9,31 +9,33 @@ library(ggplot2)
 pkgload::load_all(".", quiet = TRUE)
 
 root <- "analysis/comp_assessments"
+source(file.path(root, "R", "read_database.R"))
+source(file.path(root, "R", "translation_registry.R"))
+if (!exists("translation_tier", inherits = FALSE)) translation_tier <- "curated"
+results_dir <- .assessment_results(translation_tier)
+translation_ids <- assessment_translations(translation_tier)$assessment_id
 source(file.path(root, "R", "plot_stock_order.R"))
 
 # Read annual comparisons and stock metadata.
 ts <- read_csv(
-  file.path(root, "results/population_timeseries.csv"),
+  file.path(results_dir, "population_timeseries.csv"),
   show_col_types = FALSE
 )
-batch_file <- file.path(root, "results", "cache", "assessment_runs.rds")
+batch_file <- file.path(results_dir, "cache", "assessment_runs.rds")
 batch_runs <- if (file.exists(batch_file)) readRDS(batch_file) else NULL
 
-assessments <- read_csv(
-  file.path(root, "database/assessments.csv"),
-  show_col_types = FALSE
-)
+assessments <- .saio_read_table("assessments.csv", tier = translation_tier)
 
-stocks <- read_csv(
-  file.path(root, "database/stocks.csv"),
-  show_col_types = FALSE
-)
+stocks <- .saio_read_table("stocks.csv", tier = translation_tier)
+
+ts <- ts |> filter(assessment_id %in% translation_ids)
 
 # Match the heatmap: ocean, phylogenetic group, species and stock.
 comparison <- read_csv(
   file.path(root, "results/comparison_summary.csv"),
   show_col_types = FALSE
 )
+comparison <- comparison |> filter(assessment_id %in% translation_ids)
 stock_info <- assessment_plot_stocks(assessments, stocks,
   comparison$assessment_id[comparison$metric %in% c("ssb", "recruitment", "abundance", "F_bar")])
 
@@ -181,7 +183,7 @@ plot_comparison <- function(metric_name) {
   model_rows <- lapply(unavailable$assessment_id, function(id) {
 
     file <- file.path(
-      root, "results", "cache", id, "fit.rds"
+      results_dir, "cache", id, "fit.rds"
     )
 
     fit <- if (!is.null(batch_runs)) batch_runs[[id]]$fit else if (file.exists(file)) readRDS(file) else NULL
@@ -294,7 +296,7 @@ plot_comparison <- function(metric_name) {
     facet_wrap(
       ~panel,
       ncol = 7,
-      nrow = 4,
+      nrow = max(4, ceiling(nrow(panels) / 7)),
       scales = "free",
       drop = FALSE,
       labeller = labeller(
@@ -382,16 +384,16 @@ plots <- list(
 )
 
 dir.create(
-  file.path(root, "results", "figures"),
+  file.path(results_dir, "figures"),
   showWarnings = FALSE
 )
 
 for (metric in names(plots)) {
   ggsave(
-    filename = file.path(root, "results", "figures", paste0(metric, ".png")),
+    filename = file.path(results_dir, "figures", paste0(metric, ".png")),
     plot = plots[[metric]],
     width = 14,
-    height = 8,
+    height = max(8, 2 * ceiling(nrow(stock_info) / 7)),
     dpi = 300,
     bg = "white"
   )

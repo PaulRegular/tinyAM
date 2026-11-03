@@ -4,13 +4,14 @@ root <- file.path("analysis", "comp_assessments")
 pkgload::load_all(".", quiet = TRUE)
 source(file.path(root, "R", "run_assessment.R"))
 
+translation_tier <- "curated"
 assessment_id <- "afsc_atka_mackerel_bsai_2024"
-database <- read_database()
+database <- read_database(tier = translation_tier)
 source <- read_assessment(assessment_id, database)
 do_fit <- TRUE
 silent <- FALSE
 
-stock <- .assessment_stock(source, do_fit, silent)
+stock <- .assessment_stock(source, do_fit, silent, tier = translation_tier)
 if (inherits(stock$error, "error")) stop(stock$error)
 assessment <- .assessment_context(source, as.list(stock$env))
 list2env(as.list(stock$env), envir = environment())

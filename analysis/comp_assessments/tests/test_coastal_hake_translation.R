@@ -6,7 +6,8 @@ s <- .test_stock(x)
 stopifnot(identical(x,original),is.null(s$fit),identical(s$years,1975:2024),
   identical(s$ages,2:15),!"start_par" %in% names(s$fit_call),
   all(s$obs$maturity$spawn_time==0),all(s$obs$index$samp_time==.5),
-  s$settings$rec_settings$sd==1.4,length(s$dat$M_terms)==1L,
+  s$settings$rec_settings$sd==1.4,identical(s$dat$rec$curve$type,"bh"),
+  identical(s$dat$rec$curve$lag,2L),length(s$dat$M_terms)==1L,
   abs(unique(s$dat$log_mu_supplied_m)+1.60944)<1e-12,
   identical(levels(s$obs$index$q_block),as.character(2:6)),
   all(s$obs$index$q_block[s$obs$index$age>=6]=="6"),
@@ -33,15 +34,16 @@ partial <- s$retry_start
 e <- new.env(parent=environment(partial))
 e$source <- x
 zero <- e$source$outputs$measure=="numbers_at_age" &
-  e$source$outputs$year==1976 & e$source$outputs$age==2
+  e$source$outputs$year==1977 & e$source$outputs$age==2
 stopifnot(sum(zero)==1)
 e$source$outputs$value[zero] <- 0
 environment(partial) <- e
 start <- partial()
 merged <- tinyAM:::.merge_start_par(defaults,start)
 missing <- setdiff(names(defaults$log_r),names(start$log_r))
+matched <- intersect(names(start$log_r),names(merged$log_r))
 stopifnot(length(missing)>0,all(is.finite(unlist(start))),
   identical(merged$log_r[missing],defaults$log_r[missing]),
   identical(merged$log_f,defaults$log_f),identical(merged$log_q,defaults$log_q),
-  all(merged$log_r[names(start$log_r)]==start$log_r))
+  all(merged$log_r[matched]==start$log_r[matched]))
 cat("Coastal hake native-percent conversion, fecundity/sex scaling, q sharing, plus biology and fit-disabled preparation passed.\n")

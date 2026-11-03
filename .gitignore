@@ -56,7 +56,6 @@ analysis/*.rds
 
 # Local assessment source documents and model/data files
 analysis/comp_assessments/source_cache/
-analysis/comp_assessments/results/cache/
 analysis/formula_expansion/results/
 analysis/information_criteria/results/
 analysis/sam_equivalence/results/
@@ -66,3 +65,6 @@ cheatsheet/cache/
 cheatsheet/output/
 
 .positai
+
+# Curated and preliminary assessment outputs are local generated artifacts.
+analysis/comp_assessments/results/

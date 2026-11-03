@@ -1,5 +1,8 @@
 # tinyAM 0.1.1.9001
 
+* Read assessment examples from pinned external SAIO snapshots. Separate
+  curated and preliminary translations, dashboards, caches and comparison outputs.
+
 * Group fishery diagnostics under Fisheries: one complete page per fleet,
   followed by Aggregate fishery. Unlabeled catches remain stock-wide; aggregate
   residuals are not invented for multi-fleet fits.

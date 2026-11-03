@@ -10,84 +10,90 @@
   tables
 }
 
-.database_head <- function() {
-  repo <- normalizePath(getwd(), winslash = "/", mustWork = TRUE)
-  commit <- suppressWarnings(tryCatch(
-    system2("git", c(
-      "-c", paste0("safe.directory=", repo),
-      "rev-parse", "--verify", "HEAD^{commit}"
-    ),
-    stdout = TRUE, stderr = TRUE
-    ),
-    error = function(e) character()
+.database_git <- function(repo, args, stdout = TRUE) {
+  system2("git", c("-C", shQuote(normalizePath(repo, winslash = "/", mustWork = TRUE)),
+    args), stdout = stdout, stderr = TRUE)
+}
+
+.database_head <- function(repo = ".", revision = "HEAD") {
+  value <- suppressWarnings(tryCatch(.database_git(repo,
+    c("rev-parse", "--verify", paste0(revision, "^{commit}"))),
+    error = function(e) character()))
+  if (length(value) != 1L || !grepl("^[[:xdigit:]]{40}$", value)) return(NA_character_)
+  value[[1]]
+}
+
+saio_path <- function() {
+  configured <- getOption("tinyAM.saio_path", Sys.getenv("SAIO_PATH", ""))
+  common <- suppressWarnings(tryCatch(system2("git",
+    c("rev-parse", "--path-format=absolute", "--git-common-dir"),
+    stdout = TRUE, stderr = FALSE), error = function(e) character()))
+  candidates <- if (nzchar(configured)) configured else c(
+    file.path("..", "saio"), file.path("..", "Codex", "saio"),
+    if (length(common) == 1L) file.path(dirname(dirname(common)), "saio"),
+    if (length(common) == 1L) file.path(dirname(dirname(common)), "Codex", "saio")
+  )
+  found <- candidates[dir.exists(file.path(candidates, "database"))]
+  if (!length(found)) cli::cli_abort(c(
+    "Cannot find the independent SAIO checkout.",
+    "i" = "Set SAIO_PATH or {.code options(tinyAM.saio_path = '/path/to/saio')}."
   ))
-  if (!length(commit) || !grepl("^[[:xdigit:]]{40}$", commit[[1]])) {
-    return(NA_character_)
-  }
-  commit[[1]]
+  normalizePath(found[[1]], winslash = "/", mustWork = TRUE)
 }
 
-read_database <- function(database_dir = file.path(
-                            "analysis", "comp_assessments", "database"
-                          )) {
-  if (!dir.exists(database_dir)) {
-    stop("Database directory does not exist: ", database_dir, call. = FALSE)
+.saio_revision <- function(tier = "curated") {
+  tier <- match.arg(tier, c("curated", "preliminary"))
+  pins <- read.csv(file.path("analysis", "comp_assessments", "saio_revisions.csv"),
+    stringsAsFactors = FALSE)
+  revision <- pins$revision[pins$tier == tier]
+  if (length(revision) != 1L || !grepl("^[[:xdigit:]]{40}$", revision)) {
+    cli::cli_abort("saio_revisions.csv must contain one complete SAIO commit ID per tier.")
   }
-  .assessment_database(
-    function(name) {
-      path <- file.path(database_dir, name)
-      if (!file.exists(path)) {
-        stop("Database table does not exist: ", path, call. = FALSE)
-      }
-      read.csv(path,
-        stringsAsFactors = FALSE,
-        na.strings = c("", "NA"), check.names = FALSE
-      )
-    },
-    source = "working_tree",
-    commit = .database_head()
-  )
+  revision
 }
 
-read_committed_database <- function() {
-  repo <- normalizePath(getwd(), winslash = "/", mustWork = TRUE)
-  git <- function(args, stdout = TRUE) {
-    system2("git", c("-c", paste0("safe.directory=", repo), args),
-      stdout = stdout, stderr = TRUE
-    )
+.saio_read_table <- function(name, repo = saio_path(), revision = .saio_revision(tier),
+                             tier = "curated") {
+  pointer <- tempfile("saio_table_", fileext = ".csv")
+  on.exit(unlink(pointer), add = TRUE)
+  status <- .database_git(repo, c("show", paste0(revision, ":database/", name)),
+    stdout = pointer)
+  code <- if (is.numeric(status)) status else attr(status, "status")
+  if ((!is.null(code) && code != 0L) || !file.exists(pointer)) {
+    cli::cli_abort("Cannot read {.file {name}} at SAIO revision {.val {revision}}.")
   }
-  commit <- git(c("rev-parse", "--verify", "HEAD^{commit}"))
-  if (!is.null(attr(commit, "status"))) {
-    stop("Could not resolve the committed database revision.", call. = FALSE)
+  first <- readLines(pointer, n = 1L, warn = FALSE)
+  table_path <- pointer
+  if (identical(first, "version https://git-lfs.github.com/spec/v1")) {
+    oid <- sub("^oid sha256:", "", readLines(pointer, warn = FALSE)[[2]])
+    if (!grepl("^[[:xdigit:]]{64}$", oid)) cli::cli_abort("Invalid SAIO LFS pointer.")
+    common <- .database_git(repo,
+      c("rev-parse", "--path-format=absolute", "--git-common-dir"))
+    table_path <- file.path(common[[1]], "lfs", "objects", substr(oid, 1L, 2L),
+      substr(oid, 3L, 4L), oid)
+    if (!file.exists(table_path)) cli::cli_abort(c(
+      "The pinned SAIO data object for {.file {name}} is unavailable locally.",
+      "i" = "Fetch the pinned revision's Git LFS objects in the SAIO checkout."
+    ))
   }
-  commit <- commit[[1]]
+  read.csv(table_path, stringsAsFactors = FALSE,
+    na.strings = c("", "NA"), check.names = FALSE)
+}
 
-  .assessment_database(
-    function(name) {
-      path <- file.path("analysis", "comp_assessments", "database", name)
-      tempfile_path <- tempfile(
-        pattern = "tinyAM_committed_database_",
-        fileext = ".csv"
-      )
-      on.exit(unlink(tempfile_path), add = TRUE)
-      status <- git(c("show", paste0(commit, ":", path)), stdout = tempfile_path)
-      exit_status <- if (is.numeric(status) && length(status) == 1L) {
-        status
-      } else {
-        attr(status, "status")
-      }
-      if (!is.null(exit_status) && exit_status != 0L ||
-        !file.exists(tempfile_path) || file.info(tempfile_path)$size == 0) {
-        stop("Could not read committed database table: ", name, call. = FALSE)
-      }
-      read.csv(tempfile_path,
-        stringsAsFactors = FALSE,
-        na.strings = c("", "NA"), check.names = FALSE
-      )
-    },
-    source = "committed",
-    commit = commit
-  )
+read_database <- function(database_dir = NULL, tier = "curated") {
+  if (is.null(database_dir)) return(read_committed_database(tier = tier))
+  if (!dir.exists(database_dir)) cli::cli_abort("Database directory does not exist: {.file {database_dir}}.")
+  .assessment_database(function(name) read.csv(file.path(database_dir, name),
+    stringsAsFactors = FALSE, na.strings = c("", "NA"), check.names = FALSE),
+    source = "working_tree", commit = .database_head(database_dir))
+}
+
+read_committed_database <- function(revision = .saio_revision(tier), repo = saio_path(),
+                                    tier = "curated") {
+  commit <- .database_head(repo, revision)
+  if (is.na(commit)) cli::cli_abort("Cannot resolve the pinned SAIO revision {.val {revision}}.")
+  .assessment_database(function(name) .saio_read_table(name, repo, commit),
+    source = "saio_committed", commit = commit)
 }
 
 read_assessment <- function(assessment_id, database = NULL) {

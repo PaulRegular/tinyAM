@@ -4,12 +4,16 @@ record <- read_assessment("afsc_atka_mackerel_bsai_2024")
 stock <- .test_stock(record)
 stopifnot(is.null(stock$fit), identical(stock$years, 1990:2023),
   identical(stock$ages, 2:11),
+  identical(stock$settings$F_settings$process, "ar1"),
+  identical(all.vars(stock$settings$F_settings$mu_form), "age"),
   all(stock$obs$maturity$spawn_time == 7 / 12),
   all(stock$obs$pop_covariates$M_assumption == .3),
   max(abs(stock$obs$index$samp_time - 6.5 / 12)) < 1e-12,
   all(stock$obs$index$year <= 2022),
   all(stock$obs$index$relative_sd > 0),
-  all(stock$obs$index$q_block[stock$obs$index$age >= 10] == "10"),
+  all(stock$obs$index$q_block[stock$obs$index$age >= 7] == "7"),
+  identical(all.vars(stock$settings$index_settings$q_form), "q_block"),
+  identical(stock$settings$index_settings$q_link, "log"),
   !"start_par" %in% names(stock$fit_call))
 ref <- database_to_tam_ref("afsc_atka_mackerel_bsai_2024", stock$comparison_outputs,
   obs = stock$obs, years = stock$years, ages = stock$ages, age_plus_group = 11,

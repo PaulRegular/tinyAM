@@ -28,8 +28,12 @@ maturity <- source_inputs[source_inputs$type == "maturity" &
   source_inputs$age %in% translated$ages, ]
 maturity_average <- stats::aggregate(as.numeric(value) ~ year + age, maturity, mean)
 comparison <- translated$comparison_outputs
+comparison_total <- comparison[comparison$measure == "total_numbers", ]
 source_n <- source_data$outputs[source_data$outputs$measure == "numbers_at_age", ]
 sum_n <- stats::aggregate(value ~ year + age, source_n, sum)
+source_total <- source_data$outputs[
+  source_data$outputs$measure == "total_numbers", ]
+sum_total <- stats::aggregate(value ~ year, source_n, sum)
 source_ssb <- source_data$outputs[source_data$outputs$measure == "SSB", ]
 sum_ssb <- stats::aggregate(value ~ year, source_ssb, sum)
 source_f <- source_data$outputs[
@@ -82,6 +86,23 @@ stopifnot(
     )]
   )),
   identical(source_data$inputs, source_inputs),
+  nrow(source_total) == 43L,
+  identical(as.integer(source_total$year), 1983:2025),
+  all(source_total$source_type == "derived_source_output"),
+  all(source_total$unit == "thousand_fish"),
+  all(is.na(source_total$age)),
+  isTRUE(all.equal(
+    as.numeric(source_total$value),
+    sum_total$value[match(source_total$year, sum_total$year)]
+  )),
+  nrow(comparison_total) == 43L,
+  identical(as.integer(comparison_total$year), 1983:2025),
+  all(comparison_total$source_type == "derived_source_output"),
+  all(is.na(comparison_total$age)),
+  isTRUE(all.equal(
+    as.numeric(comparison_total$value),
+    sum_total$value[match(comparison_total$year, sum_total$year)]
+  )),
   all(is.na(comparison$region)),
   isTRUE(all.equal(
     comparison$value[comparison$measure == "numbers_at_age"],

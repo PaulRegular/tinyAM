@@ -1,180 +1,53 @@
-# Comparing assessment fits
+# Comparing stock assessments with tinyAM
 
-This analysis translates selected production age-structured assessments into tinyAM models and compares their reported population estimates. The database preserves source values and assumptions; stock scripts make the tinyAM-specific choices. A close fit is an empirical comparison, not a claim that the models use identical likelihoods or assumptions.
+Source data are maintained in the independent **SAIO — Stock Assessment Inputs and Outputs Database**. This folder contains tinyAM translations and comparisons.
 
-## Scope and provenance
+## Curated and preliminary translations
 
-The assessment database was constructed with substantial agentic-AI assistance.
-Source records have not all been exhaustively human-verified; check values,
-definitions and provenance against the authoritative assessment sources before
-using them in research. The tinyAM translations are illustrative abstractions
-and proof-of-concept models. They are not exact reproductions, official stock
-assessments or management advice.
+- scripts/translation/curated/: the 35 scripts retained from main at 78f3d347331b0e770d55a855de4c5b90307fd400. This preserves the existing paper working set, including its documented blocked cases. Membership does not imply convergence or scientific equivalence.
+- scripts/translation/preliminary/: additional translations and changed alternatives from comp-assessments. They have not been promoted into the paper working set.
+- translations.csv: the explicit registry, including each script's originating commit. An assessment can have a curated version and a preliminary alternative.
 
-## Where to look
+Curated runs are the default. Preliminary runs require an explicit tier. Extraction completeness, translation review and numerical convergence are separate. Move a script and update the registry only after reviewing its sources, assumptions and comparisons. If both tiers contain the same assessment, selecting its ID without a tier uses the curated version.
 
-| Material | Location |
-|---|---|
-| Canonical stock, assessment, assumption, input, and output records | `database/` |
-| Database fields and units | `DATABASE_STRUCTURE.md` |
-| Source selection, extraction, and validation rules | `PROTOCOL.md` |
-| Translation, fitting, and comparison workflow | `TINYAM_TRANSLATION.md` |
-| Stock-specific source checks and unresolved gaps | `source_reviews/` |
-| Shared readers, converters, audits, and runners | `R/` |
-| Source imports and validators | `scripts/database/` |
-| Visible stock model calls and run drivers | `scripts/translation/` |
-| Remaining model capabilities and priorities | `CAPABILITY_GAPS.md` |
-| Readiness and aggregate run results | `results/` |
+## SAIO data
 
-The five CSVs in `database/` are canonical. Source PDFs, data files, and model objects are cached locally under the gitignored `source_cache/` directory when available. Do not place tinyAM settings or derived run outputs in the canonical tables.
-
-The assessment marked `is_current` is the latest official assessment with
-detailed inputs, assumptions, and outputs recoverable for the database. It may
-predate newer summary-only advice or an FSAR.
-
-## Validate the database
-
-From the repository root, run:
+Set SAIO_PATH to your local SAIO checkout, or use:
 
 ```r
-source("analysis/comp_assessments/scripts/database/002_validate_database.R")
-source("analysis/comp_assessments/scripts/database/003_observation_readiness.R")
-```
-
-`observation_readiness.csv` is an observation/data readiness screen: it reports input
-coverage, whether observation translation succeeds, and whether
-`tinyAM::check_tam_data()` passes. It does not load each stock recipe or call
-`prepare_tam()`; recipe-level model readiness is checked during translation. A
-ready observation object does not guarantee model convergence.
-
-## Fit one assessment
-
-Open `scripts/translation/run_stock.R`, set `assessment_id`, then source it. It
-loads the working-tree database, fits the selected stock script and opens a
-temporary dashboard comparing tinyAM with the Official assessment. Observations,
-years, ages, fit, background and the `assessment` comparison context remain in
-your workspace. Each stock script retains its visible `fit_tam()` call. Observations are a
-`tam_data` list; population formula columns belong in `obs$pop_covariates`.
-Catch covariates also describe F means, process SDs and correlation groups;
-index covariates describe observation SD and q, while weight, maturity
-and spawning timing stay in their biological tables.
-
-Edit and rerun the stock script's Model section, or update the current fit. Then
-rerun the Preview line in `run_stock.R`:
-
-```r
-fit <- update(fit, catch_settings = list(sd_form = ~ age + I(age^2)))
-preview <- view_assessment(fit, assessment)
-preview$summary
-```
-
-The preview uses the supplied fit without fitting again, rebuilds the Official
-reference on its grid, and saves nothing into the repository. Its temporary HTML
-opens in the browser. Use `open_file = FALSE` to render without opening, or
-`output_file = "experiment.html"` to retain a dashboard. A non-converged fit with
-usable predictions can be previewed with a warning; missing uncertainty remains
-missing. Inspect `check_tam(fit)` before interpreting such a fit. If you change
-the age range, revise incompatible mappings in `assessment$comparison` explicitly.
-
-For diagnostics, references and an optional dashboard, use the shared runner.
-It refits the stock script rather than previewing an edited fit. `fit = FALSE` prepares
-observations without running final or preliminary fits. Settings are available
-in `x$fit$dat`; the result does not duplicate them in a settings list.
-
-```r
-pkgload::load_all(".", quiet = TRUE)
+options(tinyAM.saio_path = "/path/to/saio")
 source("analysis/comp_assessments/R/run_assessment.R")
-x <- run_assessment("dfo_cod_2j3kl_2025", dashboard = TRUE, cache = TRUE)
-check_tam(x$fit)
+database <- read_database()
 ```
 
-## Fit all applicable assessments
+The default reader uses the exact commit for its tier in saio_revisions.csv, including locally available Git LFS objects. It does not silently follow SAIO's current branch or uncommitted changes. Fetch each pinned revision and its LFS objects when setting up another machine, using git -C /path/to/saio lfs fetch origin <revision>. The reader does not require checking out the historical revision. To deliberately inspect a working-tree database, use read_database(file.path(saio_path(), "database")).
 
-Source `scripts/translation/run_all.R` for the reproducible batch. It reads the committed database snapshot, uses `future::multisession` through `furrr`, and writes aggregate results once in the parent process. The script currently uses four workers; reduce `workers` when memory is limited. Assessments without stock recipes and individual fit failures remain visible in the returned diagnostics. Use `parallel = FALSE` when debugging.
+Change saio_revisions.csv deliberately and recheck affected curated examples before refreshing paper figures. Diagnostics record the SAIO revision and tinyAM revision independently. DATABASE_STRUCTURE.md and PROTOCOL.md now point to their maintained SAIO documents.
 
-The batch includes every assessment marked `is_current`, including a current
-official benchmark that has not yet been applied for advice.
+## Run or preview a translation
+
+Open scripts/translation/run_stock.R, select translation_tier and assessment_id, then source it. For a batch, use scripts/translation/run_all.R. Its translation_tier defaults to curated; use preliminary deliberately for the wider library. Batch membership comes from translations.csv, rather than SAIO's is_current flag.
 
 ```r
-pkgload::load_all(".", quiet = TRUE)
-source("analysis/comp_assessments/R/run_assessment.R")
-runs <- run_assessments(
-  database = read_committed_database(),
-  parallel = TRUE,
-  workers = 4,
-  save_results = TRUE,
-  cache = TRUE,
-  dashboard = FALSE
-)
+result <- run_assessment("afsc_cod_ebs_2024", tier = "curated",
+  database = database, fit = FALSE)
+preliminary <- assessment_translations("preliminary")
 ```
 
-## Committed results and local cache
+The full scientific translation instructions remain in TINYAM_TRANSLATION.md. Shared converters and dashboard helpers serve both tiers. These are analysis-local functions; package model mathematics and public interfaces are unchanged.
 
-`results/` retains observation readiness, fit diagnostics, comparison summaries,
-annual population comparisons and five overview figures. These are compact
-snapshots of the complete batch; individual stock trials do not overwrite them.
-Fitted objects, dashboards, warnings and failures stay in the gitignored
-`results/cache/` directory. Authoritative downloaded sources stay in
-`source_cache/`. Neither directory is pruned by routine repository tidying.
+## Local outputs
 
-Current source availability and translation blockers are recorded in each
-stock's `source_reviews/` note. A stock recipe may deliberately reject fitting
-when the necessary source data or comparison definitions remain unavailable.
+All generated results are ignored by Git and separated under results/curated/ and results/preliminary/, including cache/, dashboards, initialization attempts, summaries and figures. Plot scripts use the selected tier and filter assessment IDs against its registry. Preliminary results never enter curated summaries by default.
 
-Translations and comparison displays use thousand fish, average weight in kg,
-and biomass in tonnes. Count-rate surveys retain their effort denominator;
-relative indices retain their source scale. See the units section of
-[TINYAM_TRANSLATION.md](TINYAM_TRANSLATION.md#translation-units).
-The complete `run_all.R` workflow saves returned fits before optional dashboards,
-including exploratory previews of usable non-converged fits. Rendering failures
-are recorded locally. Figure fallbacks use this complete batch rather than
-older stock caches; aggregate comparison eligibility is unchanged.
+Open results/curated/index.html or results/preliminary/index.html for migrated dashboards. Older comp-assessments outputs for curated stocks are under curated/legacy_comp_assessments/ and require revalidation before paper use. Older mixed batch summaries remain in preliminary/ and are historical outputs, not a newly completed preliminary batch. results/output_migration.json records the source and destination of relocated files.
 
-The script's `dashboard` switch controls every preview, and defaults to `FALSE`.
-Its `timeout` control defaults to 1200 seconds per assessment; `callr` supervises
-the individual R processes so native-code fitting cannot hold the entire batch
-indefinitely. Timeouts remain explicit failures, never successful comparisons.
-`run_assessments()` accepts the same deadline (default `Inf` for compatibility)
-and `progress = FALSE` to suppress stock progress messages. See
-[the runner controls and logs](scripts/README.md#translation-and-fitting) for
-checkpoint paths and troubleshooting. Some existing recipes take several
-minutes; the recorded ocean-perch timeout and numerical failures are not solved
-by adding workers or memory.
+## Verification and purpose
 
-Comparison summaries separate scale agreement (absolute and percent differences)
-from trajectory agreement (`trend_correlation`). Each row records its unit,
-definition and matching status. Native aggregates are retained for dashboard
-context; common-age calculations used in the summary are labelled separately.
-See `TINYAM_TRANSLATION.md` for the matching rules and their limitations.
+Source recovery and translations used substantial agentic-AI assistance. Not all records and translations have been exhaustively human-verified. Check authoritative sources and diagnostic warnings before research use. tinyAM translations are illustrative abstractions, not official assessments or management advice.
 
-## Reviewing model choices
+The broad library supports future standardized comparative modelling. A stock-specific approximation of an official assessment does not automatically define the common formulation for a depensation study.
 
-Current model choices are visible in each stock script's `fit_tam()` call.
-Superseded trials and review reports remain in Git history. Source notes retain
-current rationale, extraction definitions and limitations rather than a model
-development diary. See `CAPABILITY_GAPS.md` for supported approximations and
-remaining capabilities.
+## Preserved paper inputs
 
-Retain the baseline when a candidate weakens diagnostics or produces unclear
-comparison trade-offs. Numerical convergence and statistical support are
-separate; fixed-M agreement is not evidence of successful estimation.
-
-The agreement heatmap includes exploratory, non-converged fits where reporting
-is available. Check `results/fit_diagnostics.csv` and the comparison definitions
-before interpreting its colours. Blank or grey cells do not indicate agreement.
-
-Both figure scripts share `R/plot_stock_order.R`: ocean first, then
-phylogenetic groups, scientific species names and stock labels. Higher groups
-follow [Betancur-R. et al. (2017)](https://doi.org/10.1186/s12862-017-0958-3);
-alphabetical ties within groups do not imply a fully resolved species tree.
-Trend facets follow the heatmap from top to bottom, reading facets left to
-right and top to bottom. Add new genera to the shared ordering before plotting.
-Trend figures use a seven-column, four-row layout. The stock name appears
-above a smaller grey ocean label, rendered with `ggtext`.
-
-Current comparison tables retain matching status, definitions, units and
-mean/median/terminal differences. Annual trajectories in
-`results/population_timeseries.csv` must agree with those summaries. Diagnostic
-failures remain visible; their comparison values are not grounds for selecting
-a model. Cached exploratory fits are retained without inventing missing
-official estimates.
+The curated pin preserves the five source tables from the original main working set byte for byte. The preliminary pin uses the expanded SAIO source database. Both are immutable commits in the same SAIO history, not separately maintained databases. Select the same tier for the database and the translation; switching to newer source data is a deliberate scientific update.

@@ -1,4 +1,9 @@
 source("analysis/comp_assessments/R/run_assessment.R")
+stopifnot(
+  .translation_biomass_to_kg(12, "metric tons") == 12000,
+  .translation_biomass_to_kg(12, "metric tonnes") == 12000,
+  .translation_biomass_to_kg(12, "million metric tons") == 12e9
+)
 .compare_fixture <- function(fit, reference, ...) {
   measures <- c(
     N = "numbers_at_age", F = "fishing_mortality_at_age",
@@ -261,6 +266,34 @@ stopifnot(
   all(ssb_comparison$comparison_status == "approximate"),
   grepl("survival adjustment", ssb_comparison$reason[1L], fixed = TRUE)
 )
+
+grouped_rate_cells <- .assessment_age_comparison_cells(
+  source = data.frame(
+    year = 2020L, age = "2-3", age_group = "2-3", est = 0.5
+  ),
+  tiny = data.frame(year = 2020L, age = 2:3, est = c(0.2, 0.8)),
+  ages = 2:3,
+  groups = list(`2-3` = 2:3),
+  group_weights = data.frame(year = 2020L, age = 2:3, est = c(9, 1)),
+  group_aggregation = "n_weighted_mean"
+)
+unweighted_rate_cells <- .assessment_age_comparison_cells(
+  source = data.frame(
+    year = 2020L, age = "2-3", age_group = "2-3", est = 0.5
+  ),
+  tiny = data.frame(year = 2020L, age = 2:3, est = c(0.2, 0.8)),
+  ages = 2:3,
+  groups = list(`2-3` = 2:3),
+  group_aggregation = "n_weighted_mean"
+)
+stopifnot(
+  nrow(grouped_rate_cells$rows) == 1L,
+  abs(grouped_rate_cells$rows$tinyAM - 0.26) < 1e-12,
+  grepl("official-N-weighted mean", grouped_rate_cells$rows$definition, fixed = TRUE),
+  is.null(unweighted_rate_cells$rows),
+  grepl("Official N-at-age weights are required", unweighted_rate_cells$reason, fixed = TRUE)
+)
+
 unmapped <- .compare_fixture(fit_grouped, ref_grouped)
 stopifnot(
   unmapped$comparison_status[unmapped$metric == "N"] == "non_equivalent",

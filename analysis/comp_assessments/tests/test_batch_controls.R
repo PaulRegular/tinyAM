@@ -13,6 +13,7 @@ for (dashboards in c(FALSE, TRUE)) {
     list(example = list(fit = structure(list(), class = "tam_fit")))
   }
   e$.assessment_save_rds <- function(...) invisible(NULL)
+  e$index_assessment_dashboards <- function(...) invisible(NULL)
   e$previews <- 0L
   e$view_assessment <- function(...) e$previews <- e$previews + 1L
   for (expr in script) {
@@ -48,7 +49,7 @@ for (bad in list(0, -1, NA_real_, c(1, 2), "10")) {
 stopifnot(inherits(tryCatch(run_assessments(id, database, fit = FALSE,
   progress = NA), error = identity), "error"))
 empty_database <- database
-empty_database$assessments$is_current <- FALSE
+empty_database$assessments <- empty_database$assessments[FALSE, , drop = FALSE]
 stopifnot(length(run_assessments(database = empty_database, progress = FALSE)) == 0L)
 
 # A hard deadline must become a diagnostic and leave no live child blocking the
@@ -91,14 +92,14 @@ dir.create(test_root)
 .assessment_root <- test_root
 run_assessment <- function(assessment_id, ...) {
   if (assessment_id == ids[[2L]]) {
-    stopifnot(file.exists(file.path(test_root, "results", "cache", ids[[1L]], "result.rds")))
+    stopifnot(file.exists(file.path(test_root, "results", "curated", "cache", ids[[1L]], "result.rds")))
   }
   list(assessment_id = assessment_id, fit = NULL, differences = NULL, summary = NULL,
     diagnostics = data.frame(assessment_id = assessment_id, status = "not_fitted"))
 }
 tryCatch({
   cached <- run_assessments(ids, database, fit = FALSE, cache = TRUE, progress = FALSE)
-  stopifnot(all(file.exists(file.path(test_root, "results", "cache", ids, "result.rds"))),
+  stopifnot(all(file.exists(file.path(test_root, "results", "curated", "cache", ids, "result.rds"))),
     all(vapply(cached, function(x) x$diagnostics$status == "not_fitted", logical(1))))
 }, finally = {
   run_assessment <- original_runner

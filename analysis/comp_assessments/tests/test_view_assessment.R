@@ -9,7 +9,7 @@ testthat::test_that("previews use the supplied fit, refresh comparisons and do n
   before <- fit
   source_before <- assessment$source
   aggregate_files <- file.path(
-    .assessment_root, "results",
+    .assessment_results("curated"),
     c("fit_diagnostics.csv", "comparison_summary.csv")
   )
   hashes <- tools::md5sum(aggregate_files)

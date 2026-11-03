@@ -58,15 +58,16 @@
   }), sep = "\r"))
 }
 
-.translation_calendar_rows <- function(x, label) {
+.translation_calendar_rows <- function(x, label, allow_missing_observations = FALSE) {
   if ("year_basis" %in% names(x)) {
     x <- x[!is.na(x$year_basis) & x$year_basis == "calendar_year", , drop = FALSE]
   }
   if (!nrow(x)) .translation_abort(paste("No calendar-year", label, "inputs are recorded."))
-  if (anyNA(x$year) || anyNA(x$age) || anyNA(x$value) ||
+  if (anyNA(x$year) || anyNA(x$age) ||
+    (!allow_missing_observations && anyNA(x$value)) ||
     any(!is.finite(x$year)) || any(!is.finite(x$age)) ||
     any(x$year != as.integer(x$year)) || any(x$age != as.integer(x$age)) ||
-    any(!is.finite(x$value)) || any(x$value < 0)) {
+    any(!is.finite(x$value[!is.na(x$value)])) || any(x$value < 0, na.rm = TRUE)) {
     .translation_abort(paste(label, "rows need finite, non-negative values and whole years and ages."))
   }
   x
@@ -194,11 +195,11 @@
 .translation_biomass_to_kg <- function(value, unit) {
   unit <- tolower(trimws(as.character(unit)))
 
-  if (grepl("^(million|1,000,000) (t|tonnes?)( |$)", unit)) {
+  if (grepl("^(million|1,000,000) (metric )?(t|tons?|tonnes?)( |$)", unit)) {
     return(value * 1e9)
   }
 
-  if (grepl("^(thousand|1000|1,000) (t|tonnes?)( |$)", unit)) {
+  if (grepl("^(thousand|1000|1,000) (metric )?(t|tons?|tonnes?)( |$)", unit)) {
     return(value * 1e6)
   }
 
@@ -211,6 +212,7 @@
   }
 
   if (grepl("tonne", unit, fixed = TRUE) ||
+    grepl("^metric tons?($| )", unit) ||
     grepl("(^|[^a-z])t($|[^a-z])", unit)) {
     return(value * 1000)
   }
@@ -272,7 +274,8 @@
 
 .translation_index_multiplier <- function(unit) {
   unit <- tolower(trimws(as.character(unit)))
-  if (grepl("^(native[ _-]+)?survey[ _-]?index( \\(unit unresolved\\)| units?)?$", unit)) {
+  if (grepl("^source index scale per effort unit", unit) ||
+    grepl("^(native[ _-]+)?survey[ _-]?index( \\(unit unresolved\\)| units?)?$", unit)) {
     return(1)
   }
   .translation_number_multiplier(unit)
@@ -293,7 +296,9 @@
   if (!nrow(direct) && !nrow(composition)) {
     .translation_abort("No source catch-at-age or number-proportion inputs are recorded.")
   }
-  if (nrow(direct)) direct <- .translation_calendar_rows(direct, "catch numbers-at-age")
+  if (nrow(direct)) direct <- .translation_calendar_rows(
+    direct, "catch numbers-at-age", allow_missing_observations = TRUE
+  )
   if (nrow(composition)) composition <- .translation_calendar_rows(composition, "catch age composition")
   source_rows <- rbind(direct, composition)
   .translation_one_group(
@@ -491,7 +496,7 @@
   supported_measures <- c(
     "numbers_at_age", "proportion_at_age",
     "total_numbers", "total_biomass", "log_index_sd",
-    "index_sd", "relative_precision_weight",
+    "index_sd", "relative_precision_weight", "index_catch_numbers_at_age",
     "relative_standard_error"
   )
   unsupported <- x[
@@ -550,7 +555,9 @@
   provenance <- list()
   k <- 0L
   if (nrow(direct)) {
-    direct <- .translation_calendar_rows(direct, "direct index-at-age")
+    direct <- .translation_calendar_rows(
+      direct, "direct index-at-age", allow_missing_observations = TRUE
+    )
     if (anyNA(direct$survey) || any(!nzchar(as.character(direct$survey)))) {
       .translation_abort("Every direct index row needs its original survey name.")
     }
@@ -568,6 +575,9 @@
     direct <- direct[direct$year %in% years & direct$age >= min(ages), , drop = FALSE]
     if (nrow(direct)) {
       direct_source <- direct
+      direct <- direct[!is.na(direct$value), , drop = FALSE]
+    }
+    if (nrow(direct)) {
       direct_multiplier <- vapply(direct$unit, .translation_index_multiplier, numeric(1))
       direct$value <- direct$value * direct_multiplier
       direct$age <- pmin(direct$age, max(ages))
@@ -728,7 +738,21 @@
     }
   }
 
-  if (!length(result)) .translation_abort("No translatable age-structured index rows were found.")
+  if (!length(result)) {
+    if (identical(surveys, character())) {
+      out <- data.frame(
+        year = numeric(), age = numeric(), obs = numeric(),
+        survey = character(), samp_time = numeric(), unit = character(),
+        stringsAsFactors = FALSE
+      )
+      attr(out, "translation") <- data.frame(
+        survey = character(), method = character(),
+        source_reference = character(), stringsAsFactors = FALSE
+      )
+      return(out)
+    }
+    .translation_abort("No translatable age-structured index rows were found.")
+  }
   out <- do.call(rbind, result)
   out <- out[out$year %in% years & out$age %in% ages, , drop = FALSE]
   key <- .translation_key(out, c("year", "age", "survey"))
@@ -786,6 +810,8 @@
 #' timing is never replaced silently.
 #' Index measures without an age-abundance translation are reported as errors
 #' unless their surveys are explicitly excluded with `surveys`.
+#' Source-only index_catch_numbers_at_age rows remain in the database to
+#' reproduce per-effort indices and are not passed as separate observations.
 #' The translated index also carries `q_block` (age) and `q_key`
 #' (survey-by-age) factors so the fit can state catchability sharing explicitly.
 #'
@@ -806,7 +832,10 @@
 #' @param sampling_times Optional named numeric vector supplying timing for
 #'   surveys whose source rows do not contain a value. Values must be in [0, 1].
 #' @param surveys Optional survey names to include. Omitting a source survey is
-#'   an analysis choice and should be recorded in the assumption audit.
+#'   an analysis choice and should be recorded in the assumption audit. Use
+#'   `character()` to explicitly fit without an index; this returns a valid
+#'   empty index table when the source index has no faithful age-structured
+#'   translation.
 #' @param exclude_index_years Optional named list of years excluded by the
 #'   official source assessment, one vector per survey.
 #' @param weight_reference_year,maturity_reference_year Optional source year
@@ -1144,7 +1173,7 @@ database_to_tam_M <- function(assessment_id, inputs, assumptions = NULL,
     .translation_abort("M input years and ages must be whole numbers.")
   }
   if (length(unique(m$unit)) != 1L ||
-    !grepl("per.?year|yr.?-?1|year.?-?1", unique(m$unit), ignore.case = TRUE)) {
+    !grepl("per.?year|1\\s*/\\s*year|yr.?-?1|year.?-?1", unique(m$unit), ignore.case = TRUE)) {
     .translation_abort("M inputs must use one explicit per-year unit.")
   }
 

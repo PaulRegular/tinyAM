@@ -3,9 +3,8 @@ root <- file.path("analysis", "comp_assessments")
 source("analysis/comp_assessments/R/run_assessment.R")
 database <- read_database()
 assessment_ids <- c("ices_cod_north_sea_2025", "dfo_cod_2j3kl_2025")
-current_ids <- database$assessments$assessment_id[
-  !is.na(database$assessments$is_current) & database$assessments$is_current
-]
+current_ids <- intersect(assessment_translations("curated")$assessment_id,
+  database$assessments$assessment_id)
 current_batch <- run_assessments(database = database, fit = FALSE)
 stopifnot(
   setequal(names(current_batch), current_ids),
@@ -42,11 +41,11 @@ stopifnot(
 
 previous_plan <- future::plan("list")[[1L]]
 previous_workers <- future::nbrOfWorkers()
-shared_outputs <- file.path(root, "results", c(
+shared_outputs <- file.path(.assessment_results("curated"), c(
   "fit_diagnostics.csv", "comparison_summary.csv"
 ))
 shared_outputs_existed <- file.exists(shared_outputs)
-cache_existed <- dir.exists(file.path(root, "results", "cache"))
+cache_existed <- dir.exists(file.path(.assessment_results("curated"), "cache"))
 parallel <- run_assessments(
   assessment_ids,
   database = database, parallel = TRUE, workers = 2,
@@ -60,7 +59,7 @@ stopifnot(
   ),
   future::nbrOfWorkers() == previous_workers,
   identical(file.exists(shared_outputs), shared_outputs_existed),
-  identical(dir.exists(file.path(root, "results", "cache")), cache_existed),
+  identical(dir.exists(file.path(.assessment_results("curated"), "cache")), cache_existed),
   all(vapply(parallel, function(x) x$diagnostics$status == "not_fitted", logical(1))),
   identical(attr(parallel, "diagnostics")$assessment_id, assessment_ids)
 )

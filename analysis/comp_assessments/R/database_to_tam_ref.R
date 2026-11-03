@@ -67,7 +67,27 @@
   }
   source_key <- .tam_table_key(source, keys)
   if (anyDuplicated(source_key)) {
-    cli::cli_abort("Assessment output rows do not map uniquely to the fitted template groups.")
+    duplicate_keys <- unique(source_key[duplicated(source_key)])
+    keep <- rep(TRUE, nrow(source))
+    for (key in duplicate_keys) {
+      rows <- which(source_key == key)
+      derived <- if ("source_type" %in% names(source)) {
+        rows[!is.na(source$source_type[rows]) &
+          source$source_type[rows] == "derived_source_output"]
+      } else {
+        integer()
+      }
+      if (length(derived) != 1L) {
+        cli::cli_abort("Assessment output rows do not map uniquely to the fitted template groups.")
+      }
+      keep[rows] <- FALSE
+      keep[derived] <- TRUE
+    }
+    source <- source[keep, , drop = FALSE]
+    source_key <- source_key[keep]
+    if (anyDuplicated(source_key)) {
+      cli::cli_abort("Assessment output rows do not map uniquely to the fitted template groups.")
+    }
   }
   index <- match(.tam_table_key(template, keys), source_key)
   matched <- which(!is.na(index))
@@ -126,6 +146,141 @@
     if (length(take)) x[index[take]] <- table$est[take]
   }
   x
+}
+
+.fill_tam_observation_outputs <- function(obs_pred, template_obs_pred, source) {
+  for (name in c("catch", "index")) {
+    target <- obs_pred[[name]]
+    if (!is.data.frame(target)) next
+    measure <- if (name == "catch") "predicted_catch" else "predicted_index"
+    type <- if (name == "catch") "catch" else "index"
+    dimension <- if (name == "catch") "fleet" else "survey"
+    rows <- source[source$type == type & source$measure == measure, , drop = FALSE]
+    keys <- c("year", "age")
+    target_dimension <- if (dimension %in% names(target)) {
+      as.character(target[[dimension]])
+    } else {
+      character()
+    }
+    has_dimension <- length(target_dimension) && any(
+      !is.na(target_dimension) & nzchar(target_dimension)
+    )
+    if (has_dimension) keys <- c(keys, dimension)
+    if (!nrow(rows) || !all(keys %in% names(target)) || !all(keys %in% names(rows))) next
+    key <- .tam_table_key(rows, keys)
+    if (anyDuplicated(key)) {
+      cli::cli_abort("Assessment {measure} rows do not map uniquely to observations.")
+    }
+    index <- match(.tam_table_key(target, keys), key)
+    matched <- which(!is.na(index))
+    if (length(matched)) target$pred[matched] <- rows$value[index[matched]]
+    obs_pred[[name]] <- target
+  }
+
+  target <- obs_pred$index
+  template <- template_obs_pred$index
+  rows <- source[source$type == "catchability" & source$measure == "q", , drop = FALSE]
+  if (!is.data.frame(target) || !is.data.frame(template) || !nrow(rows) ||
+    !all(c("survey", "age") %in% names(rows))) {
+    return(obs_pred)
+  }
+
+  for (i in seq_len(nrow(target))) {
+    survey_rows <- which(
+      as.character(rows$survey) == as.character(template$survey[i])
+    )
+    observation_age <- suppressWarnings(as.integer(as.character(template$age[i])))
+    age_match <- vapply(survey_rows, function(j) {
+      group <- if ("age_group" %in% names(rows)) {
+        trimws(as.character(rows$age_group[j]))
+      } else {
+        ""
+      }
+      if (!is.na(group) && nzchar(group)) {
+        bounds <- regmatches(group, regexec("^([0-9]+)-([0-9]+)$", group))[[1L]]
+        if (length(bounds) == 3L) {
+          return(observation_age >= as.integer(bounds[[2L]]) &&
+            observation_age <= as.integer(bounds[[3L]]))
+        }
+        plus <- regmatches(group, regexec("^([0-9]+)\\+$", group))[[1L]]
+        if (length(plus) == 2L) {
+          return(observation_age >= as.integer(plus[[2L]]))
+        }
+      }
+      source_age <- suppressWarnings(as.integer(as.character(rows$age[j])))
+      !is.na(source_age) && !is.na(observation_age) && source_age == observation_age
+    }, logical(1))
+    candidates <- survey_rows[age_match]
+    if ("year" %in% names(rows)) {
+      year <- suppressWarnings(as.integer(as.character(rows$year[candidates])))
+      exact_year <- candidates[!is.na(year) & year == as.integer(template$year[i])]
+      if (length(exact_year)) {
+        candidates <- exact_year
+      } else {
+        candidates <- candidates[is.na(year)]
+      }
+    }
+    if (length(candidates) > 1L) {
+      group <- if ("age_group" %in% names(rows)) {
+        unique(trimws(as.character(rows$age_group[candidates])))
+      } else {
+        character()
+      }
+      fields <- intersect(
+        c("value", "se", "lwr", "upr", "unit", "source_reference", "notes"),
+        names(rows)
+      )
+      same_estimate <- length(group) == 1L && !is.na(group) && nzchar(group) &&
+        all(vapply(fields, function(field) {
+          length(unique(rows[[field]][candidates])) == 1L
+        }, logical(1)))
+      bounds <- if (same_estimate) {
+        regmatches(group, regexec("^([0-9]+)-([0-9]+)$", group))[[1L]]
+      } else {
+        character()
+      }
+      if (length(bounds) == 3L) {
+        representative <- candidates[
+          suppressWarnings(as.integer(as.character(rows$age[candidates]))) ==
+            as.integer(bounds[[2L]])
+        ]
+        if (length(representative) == 1L) candidates <- representative
+      }
+      if (length(candidates) > 1L) {
+        cli::cli_abort("Assessment q rows do not map uniquely to observations.")
+      }
+    }
+    if (length(candidates) != 1L) next
+
+    row <- rows[candidates, , drop = FALSE]
+    target$q[i] <- row$value
+    if ("unit" %in% names(row) && "q_unit" %in% names(target)) {
+      target$q_unit[i] <- as.character(row$unit)
+    }
+    if ("se" %in% names(row) && "q_se" %in% names(target) &&
+      is.finite(row$se) && is.finite(row$value)) {
+      scale <- if ("q_se_scale" %in% names(template)) {
+        as.character(template$q_se_scale[i])
+      } else {
+        ""
+      }
+      target$q_se[i] <- switch(
+        scale,
+        log = row$se / row$value,
+        logit = row$se / (row$value * (1 - row$value)),
+        identity = row$se,
+        row$se
+      )
+    }
+    for (field in c("q_lwr", "q_upr")) {
+      source_field <- sub("^q_", "", field)
+      if (field %in% names(target) && source_field %in% names(row)) {
+        target[[field]][i] <- row[[source_field]]
+      }
+    }
+  }
+  obs_pred$index <- target
+  obs_pred
 }
 
 database_to_tam_ref <- function(assessment_id, outputs, obs = NULL, years = NULL,
@@ -476,7 +631,11 @@ database_to_tam_ref <- function(assessment_id, outputs, obs = NULL, years = NULL
       x$sd <- NA_real_
       x$std_res <- NA_real_
       x$osa_res <- NA_real_
-      if ("survey" %in% names(x)) x$q <- NA_real_
+      x$is_proj <- !is.na(x$year) & !is.na(terminal_year) & x$year > terminal_year
+      if ("survey" %in% names(x)) {
+        x$q <- NA_real_
+        x$q_unit <- NA_character_
+      }
       x
     })
     fixed_par <- data.frame(
@@ -488,7 +647,7 @@ database_to_tam_ref <- function(assessment_id, outputs, obs = NULL, years = NULL
       call = match.call(),
       dat = list(
         obs = obs, years = years, ages = ages,
-        is_proj = rep(FALSE, length(years))
+        is_proj = !is.na(terminal_year) & years > terminal_year
       ),
       pop = pop, obs_pred = obs_pred, fixed_par = fixed_par, random_par = list()
     )
@@ -506,11 +665,15 @@ database_to_tam_ref <- function(assessment_id, outputs, obs = NULL, years = NULL
       if (!is.data.frame(input) || !is.data.frame(target)) next
       copy <- intersect(c(
         "year", "age", "fleet", "survey", "samp_time", "q_block",
-        "q_key", "is_proj", "obs"
+        "q_key", "q_se_scale", "is_proj", "obs"
       ), names(input))
       target[copy] <- input[copy]
       out$obs_pred[[name]] <- target
     }
+
+    out$obs_pred <- .fill_tam_observation_outputs(
+      out$obs_pred, template$obs_pred, source
+    )
 
     for (name in names(pop)) {
       source_table <- pop[[name]]

@@ -1,4 +1,12 @@
-# Translating the Assessment Database to tinyAM
+# tinyAM translation protocol
+
+## Repository and review tiers
+
+Canonical records, importers, source reviews, discovery registers, DATABASE_STRUCTURE.md and PROTOCOL.md are maintained in SAIO. Read those source instructions there before proposing source corrections. tinyAM reads the SAIO commit in saio_revisions.csv; record both data and model revisions.
+
+Translations are registered in translations.csv and stored under scripts/translation/curated/ or preliminary/. The curated set is inherited from main; preliminary scripts and alternatives require explicit selection. A successful fit does not promote a script. Default batches and plots select only curated entries.
+
+All local outputs, including dashboards and initialization logs, belong under results/<tier>/, never a shared output directory or SAIO source_cache/. Source caches are external in SAIO. Migrated legacy results retain their provenance and are not newly validated results.
 
 ## Purpose
 
@@ -17,11 +25,14 @@ example, a model plus group at age 10 receives the sum of reported ages 10 and
 older. Do not fit both overlapping detailed and pooled versions of the same
 observations.
 
-The expected result for each selected assessment is a documented tinyAM model,
-a record of its convergence, and, when it converges, a comparison with the
-official assessment. Fits and dashboards can be cached locally when useful;
-they are not routine committed outputs. Preparing observation tables alone does
-not complete a translation task.
+Source curation takes priority and does not depend on tinyAM readiness. For
+each selected assessment where source data and the official method support a
+defensible translation, the expected result is a documented tinyAM model, a
+record of its convergence, and, when it converges, a comparison with the
+official assessment. Document missing-data or method blockers separately. Fits
+and dashboards can be cached locally when useful; they are not routine
+committed outputs. Preparing observation tables alone does not complete a
+translation task.
 
 Data conversion and model specification are separate: the shared converters
 reshape recorded information, while the stock script makes the scientific
@@ -41,12 +52,13 @@ translation, and analysis code.
 
 Use `run_stock.R` and `view_assessment()` for interactive model development,
 `run_assessment()` to rerun one stock recipe, and `run_assessments()` for a reproducible batch. Normally select the record marked
-`is_current`: the most recent official assessment for which detailed inputs,
-assumptions, and outputs can be recovered for the canonical database. This is
-the current detailed assessment and may predate the newest advice, FSAR, or
-publication when later material is summary-only. Use another record only when
-that assessment is explicitly part of the task. Keep all inputs, assumptions,
-and outputs tied to the same `assessment_id`.
+`is_current`: the selected publicly accessible detailed assessment for that
+stock record, which may be partial or predate newer advice. As described in
+`PROTOCOL.md`, a selected record may be a documented fallback for an earlier
+stock unit; the flag alone does not establish the latest stock boundary or
+advice. Confirm the unit and source coverage before attempting translation.
+Use another record only when that assessment is explicitly part of the task.
+Keep all inputs, assumptions, and outputs tied to the same `assessment_id`.
 
 ``` text
 load canonical database
@@ -85,6 +97,23 @@ be recovered, report the blocker and continue with other requested stocks.
 An unsupported model feature is not automatically a missing-data problem.
 For example, a source model may estimate M without a fixed M input. That case
 requires a documented tinyAM model choice, not a fabricated input table.
+
+## Translation readiness
+
+Before fitting, verify actual overlapping years and ages, plus-group treatment,
+observation units and scales, fishery catch and survey information, appropriate
+stock and catch weights, maturity, the source mortality treatment and survey
+sampling time. One numerical row is evidence of presence, not an adequate time
+series. Identify source-supported reconstructions and any gaps explicitly;
+never convert fitted states or fitted parameters into observations. Aggregate
+indices and age compositions may be translated only when the source provides
+the quantities and scaling required for a defensible conversion. An estimated M
+process needs an appropriate model choice, not an invented fixed M input.
+
+Check that at least one official population or mortality output can support a
+meaningful comparison. Record cases with inadequate input coverage, unavailable
+outputs or unsupported model structures separately from numerical fit failures.
+These checks do not prevent curation of verified partial source data.
 
 ## Shared code and stock scripts
 
@@ -1155,7 +1184,7 @@ fits, translated observations, audits, settings, or dashboards; those can be
 recreated from the database and stock translation script.
 
 `run_assessment(..., cache = TRUE)` optionally saves a fitted object under
-`results/cache/<assessment_id>/`. A dashboard is optional through
+`results/<tier>/cache/<assessment_id>/`. A dashboard is optional through
 `dashboard = TRUE` and is cached there only when caching is enabled. Both
 `run_assessment()` and `run_assessments()` leave caching off by default.
 `run_assessments(..., save_results = TRUE)` writes the shared diagnostic and
@@ -1204,7 +1233,7 @@ Canonical completeness statuses and model readiness are different: a partial
 assessment may support a clearly limited fit, while a complete source model may
 contain features that tinyAM cannot represent.
 
-The repository's `results/observation_readiness.csv` is an observation/data-readiness
+The repository's `results/<tier>/observation_readiness.csv` is an observation/data-readiness
 screen. It checks source coverage, observation conversion, and `check_obs()`;
 it does not load stock recipes or call `prepare_tam()`. The model-readiness checks
 below apply after the recipe and settings are available.
@@ -1267,21 +1296,20 @@ diagnostics for failed or non-converged attempts, identify the reason, and
 continue with other requested stocks. Report numerical convergence separately
 from biological plausibility and source-model agreement.
 
-An additional attempt may investigate a clear numerical issue, such as poor
-starting values, but must record what changed. Do not repeatedly change data,
-processes, or q structures merely to obtain convergence. Source estimates may
-provide starting values; they must not silently constrain tinyAM estimates.
+Initialize new or revised fits with tinyAM's package-default starting values.
+Use explicit source-based starts only after numerical checks fail, and make at
+most one documented retry when suitable official estimates are available. Align
+starts to the model's year and age grids with the existing helpers; leave
+unavailable components at package defaults. Keep observations, formulas, and
+model settings identical between attempts. Starting values must not constrain
+the estimates, and poor agreement with the official assessment alone is not a
+reason to retry. Do not keep changing data or model structure merely to obtain
+convergence.
 
-For the twelve new Pacific cases, first call `fit_tam()` without `start_par`,
-using normal package initialization. Only if numerical convergence checks fail,
-allow one documented retry with explicit starting values. Construct source-based
-starts only when needed, using the existing year/age alignment helpers; retain
-package defaults for unavailable components. Keep data, formulas and model
-assumptions identical between attempts. Poor agreement with the official
-assessment alone does not justify a retry. Preserve diagnostics from the default
-attempt and identify the final initialization strategy in the diagnostic notes
-and stock review. Preparation with fitting disabled must run neither attempt.
-Existing stock scripts retain their current starting-value workflows.
+For the twelve new Pacific cases, preserve diagnostics from the default attempt
+and identify the final initialization strategy in the diagnostic notes and
+stock review. Preparation with fitting disabled must run neither attempt.
+Existing stock scripts retain their documented starting-value workflows.
 
 For a converged fit, `run_assessment()` returns the fitted object, source
 reference, detailed differences, and summary in memory. The fit is cached only

@@ -20,7 +20,7 @@ all_maturity <- source_data$inputs[
 ]
 
 tinyAM::check_obs(obs)
-readiness <- read.csv(file.path(root, "results", "observation_readiness.csv"),
+readiness <- read.csv(file.path(.assessment_results("curated"), "observation_readiness.csv"),
   stringsAsFactors = FALSE
 )
 dat <- do.call(tinyAM::prepare_tam, c(

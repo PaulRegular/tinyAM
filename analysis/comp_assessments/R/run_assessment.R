@@ -1,6 +1,6 @@
 .assessment_root <- file.path("analysis", "comp_assessments")
 for (.assessment_helper in c(
-  "read_database.R", "database_to_tam_obs.R", "database_to_tam_ref.R",
+  "translation_registry.R", "read_database.R", "database_to_tam_obs.R", "database_to_tam_ref.R",
   "audit_assumptions.R", "compare_assessment.R"
 )) {
   sys.source(file.path(.assessment_root, "R", .assessment_helper),
@@ -59,6 +59,8 @@ rm(.assessment_helper)
   data.frame(
     assessment_id = assessment_id,
     database_revision = if (length(database$commit)) database$commit[[1]] else NA_character_,
+    tinyAM_revision = .database_head("."),
+    translation_tier = if (length(database$translation_tier)) database$translation_tier[[1]] else NA_character_,
     status = status,
     is_converged = if (is.null(checks)) NA else checks$is_converged,
     optimizer_code = if (is.null(opt)) NA_integer_ else opt$convergence,
@@ -167,17 +169,16 @@ print_sources <- function(assessment) {
   c("#### Assessment documentation", links)
 }
 
-.assessment_stock <- function(source, do_fit, silent) {
+.assessment_stock <- function(source, do_fit, silent, tier = NULL) {
+  entry <- .assessment_translation(source$assessment$assessment_id[[1]], tier)
   stock_env <- new.env(parent = environment(.assessment_stock))
   stock_env$source <- source
+  stock_env$translation_tier <- entry$tier[[1]]
   stock_env$do_fit <- do_fit
   stock_env$silent <- silent
   stock_env$fit_stage <- "translation"
   stock_env$fit_started <- Sys.time()
-  script <- file.path(
-    .assessment_root, "scripts", "translation", "stocks",
-    paste0(source$assessment$assessment_id[[1]], ".R")
-  )
+  script <- entry$script[[1]]
   error <- tryCatch(
     {
       sys.source(script, envir = stock_env)
@@ -189,6 +190,7 @@ print_sources <- function(assessment) {
 }
 
 .assessment_context <- function(source, translated) {
+  source$translation_tier <- translated$translation_tier
   keys <- c(
     "age_plus_group", "comparison_scales", "comparison_outputs",
     "comparison_aggregates", "comparison_age_groups", "comparison_definitions",
@@ -196,6 +198,7 @@ print_sources <- function(assessment) {
   )
   list(
     assessment_id = source$assessment$assessment_id[[1]], source = source,
+    translation_tier = translated$translation_tier,
     background = translated$background,
     comparison = stats::setNames(lapply(keys, function(key) translated[[key]]), keys)
   )
@@ -328,8 +331,11 @@ view_assessment <- function(fit, assessment, output_file = NULL, open_file = TRU
 
 run_assessment <- function(assessment_id, database = NULL, fit = TRUE,
                            dashboard = FALSE, cache = FALSE, silent = TRUE,
-                           log_file = NULL) {
-  if (is.null(database)) database <- read_database()
+                           log_file = NULL, tier = NULL) {
+  entry <- .assessment_translation(assessment_id, tier, required = FALSE)
+  tier <- if (is.null(entry)) "curated" else entry$tier[[1]]
+  if (is.null(database)) database <- read_database(tier = tier)
+  database$translation_tier <- tier
   if (length(fit) != 1L || is.na(fit) || !is.logical(fit) ||
     length(dashboard) != 1L || is.na(dashboard) || !is.logical(dashboard) ||
     length(cache) != 1L || is.na(cache) || !is.logical(cache)) {
@@ -340,6 +346,7 @@ run_assessment <- function(assessment_id, database = NULL, fit = TRUE,
   audit <- audit_assumptions(assessment_id, source$assumptions)
   result <- list(
     assessment_id = assessment_id,
+    translation_tier = tier,
     source = source,
     obs = NULL,
     fit = NULL,
@@ -352,10 +359,7 @@ run_assessment <- function(assessment_id, database = NULL, fit = TRUE,
     dashboard_file = NULL
   )
 
-  script <- file.path(
-    .assessment_root, "scripts", "translation", "stocks",
-    paste0(assessment_id, ".R")
-  )
+  script <- if (is.null(entry)) "" else entry$script[[1]]
   if (!file.exists(script)) {
     result$diagnostics <- .assessment_diagnostics(
       assessment_id, database, "blocked_no_stock_spec",
@@ -365,7 +369,7 @@ run_assessment <- function(assessment_id, database = NULL, fit = TRUE,
   }
 
   .assessment_log(log_file, if (fit) "Translating inputs and fitting model." else "Translating inputs.")
-  stock <- .assessment_stock(source, do_fit = fit, silent = silent)
+  stock <- .assessment_stock(source, do_fit = fit, silent = silent, tier = tier)
   stock_env <- stock$env
   sourced <- stock$error
   translated <- as.list(stock_env)
@@ -404,7 +408,7 @@ run_assessment <- function(assessment_id, database = NULL, fit = TRUE,
     if (isTRUE(fitted$is_converged)) "converged" else "not_converged",
     fit = fitted, elapsed = elapsed
   )
-  cache_dir <- file.path(.assessment_root, "results", "cache", assessment_id)
+  cache_dir <- .assessment_cache(assessment_id, tier)
   if (cache) {
     dir.create(cache_dir, recursive = TRUE, showWarnings = FALSE)
     .assessment_log(log_file, "Saving fitted object.")
@@ -460,7 +464,7 @@ run_assessment <- function(assessment_id, database = NULL, fit = TRUE,
 }
 
 .parallel_assessment_worker <- function(assessment_id, database, repo_root, fit,
-                                        cache = FALSE, timeout = Inf, log_file = NULL) {
+                                        cache = FALSE, timeout = Inf, log_file = NULL, tier = NULL) {
   original_wd <- getwd()
   on.exit(setwd(original_wd), add = TRUE)
   begun <- Sys.time()
@@ -468,14 +472,14 @@ run_assessment <- function(assessment_id, database = NULL, fit = TRUE,
   # R's elapsed-time interrupt. Only this assessment's process is terminated.
   if (is.finite(timeout)) {
     return(tryCatch(
-      callr::r(function(assessment_id, database, repo_root, fit, cache, log_file) {
+      callr::r(function(assessment_id, database, repo_root, fit, cache, log_file, tier) {
         pkgload::load_all(repo_root, quiet = TRUE)
         runner_env <- new.env(parent = globalenv())
         sys.source(file.path(repo_root, "analysis", "comp_assessments", "R",
           "run_assessment.R"), envir = runner_env)
         runner_env$run_assessment(assessment_id, database = database, fit = fit,
-          dashboard = FALSE, cache = cache, log_file = log_file)
-      }, args = list(assessment_id, database, repo_root, fit, cache, log_file),
+          dashboard = FALSE, cache = cache, log_file = log_file, tier = tier)
+      }, args = list(assessment_id, database, repo_root, fit, cache, log_file, tier),
       wd = repo_root, libpath = .libPaths(), timeout = timeout,
       stdout = if (is.null(log_file)) NULL else paste0(log_file, ".output"),
       stderr = "2>&1"),
@@ -503,7 +507,7 @@ run_assessment <- function(assessment_id, database = NULL, fit = TRUE,
       runner_env$run_assessment(
         assessment_id,
         database = database, fit = fit,
-        dashboard = FALSE, cache = cache, log_file = log_file
+        dashboard = FALSE, cache = cache, log_file = log_file, tier = tier
       )
     },
     error = function(e) .failed_assessment_run(assessment_id, database, e)
@@ -513,8 +517,10 @@ run_assessment <- function(assessment_id, database = NULL, fit = TRUE,
 run_assessments <- function(assessment_ids = NULL, database = NULL,
                             parallel = FALSE, workers = 4L, fit = TRUE,
                             dashboard = FALSE, cache = FALSE,
-                            save_results = FALSE, timeout = Inf, progress = TRUE) {
-  if (is.null(database)) database <- read_database()
+                            save_results = FALSE, timeout = Inf, progress = TRUE,
+                            tier = "curated") {
+  tier <- match.arg(tier, c("curated", "preliminary"))
+  if (is.null(database)) database <- read_database(tier = tier)
   if (!is.logical(parallel) || length(parallel) != 1L || is.na(parallel) ||
     !is.logical(fit) || length(fit) != 1L || is.na(fit) ||
     !is.logical(dashboard) || length(dashboard) != 1L || is.na(dashboard) ||
@@ -538,9 +544,9 @@ run_assessments <- function(assessment_ids = NULL, database = NULL,
     cli::cli_abort("Install callr to use an assessment time limit.")
   }
 
-  eligible <- database$assessments$assessment_id[
-    !is.na(database$assessments$is_current) & database$assessments$is_current
-  ]
+  database$translation_tier <- tier
+  eligible <- assessment_translations(tier)$assessment_id
+  eligible <- eligible[eligible %in% database$assessments$assessment_id]
   if (is.null(assessment_ids)) {
     assessment_ids <- eligible
   } else {
@@ -551,13 +557,14 @@ run_assessments <- function(assessment_ids = NULL, database = NULL,
         call. = FALSE
       )
     }
-    unknown <- setdiff(assessment_ids, database$assessments$assessment_id)
+    unknown <- setdiff(assessment_ids, intersect(database$assessments$assessment_id,
+      assessment_translations(tier)$assessment_id))
     if (length(unknown)) {
-      stop("Unknown assessment_id: ", paste(unknown, collapse = ", "), call. = FALSE)
+      stop("Unknown or unregistered assessment_id in the selected tier: ", paste(unknown, collapse = ", "), call. = FALSE)
     }
   }
 
-  if (!length(assessment_ids)) return(.assessment_result_tables(list(), save_results))
+  if (!length(assessment_ids)) return(.assessment_result_tables(list(), save_results, tier))
   repo_root <- normalizePath(getwd(), winslash = "/", mustWork = TRUE)
   if (parallel) {
     if (!requireNamespace("pkgload", quietly = TRUE)) {
@@ -577,7 +584,7 @@ run_assessments <- function(assessment_ids = NULL, database = NULL,
       stock_database <- read_assessment(id, database)
       log_file <- NULL
       if (cache) {
-        cache_dir <- file.path(.assessment_root, "results", "cache", id)
+        cache_dir <- .assessment_cache(id, tier)
         dir.create(cache_dir, recursive = TRUE, showWarnings = FALSE)
         log_file <- file.path(cache_dir, "run.log")
         writeLines(character(), log_file)
@@ -585,10 +592,10 @@ run_assessments <- function(assessment_ids = NULL, database = NULL,
       .assessment_log(log_file, paste(id, "started; timeout", timeout, "seconds."))
       result <- if (parallel || is.finite(timeout)) {
         .parallel_assessment_worker(id, stock_database, repo_root, fit,
-          cache = cache, timeout = timeout, log_file = log_file)
+          cache = cache, timeout = timeout, log_file = log_file, tier = tier)
       } else {
         tryCatch(run_assessment(id, database = stock_database, fit = fit,
-          dashboard = FALSE, cache = cache, log_file = log_file),
+          dashboard = FALSE, cache = cache, log_file = log_file, tier = tier),
           error = function(e) .failed_assessment_run(id, stock_database, e))
       }
       if (cache) {
@@ -618,7 +625,7 @@ run_assessments <- function(assessment_ids = NULL, database = NULL,
     if (dashboard && !is.null(result$fit) && isTRUE(result$fit$is_converged) &&
       !is.null(result$ref)) {
       result$dashboard_file <- if (cache) {
-        file.path(.assessment_root, "results", "cache", id, "dashboard.html")
+        file.path(.assessment_cache(id, tier), "dashboard.html")
       } else {
         tempfile(pattern = paste0(id, "_"), fileext = ".html")
       }
@@ -632,11 +639,15 @@ run_assessments <- function(assessment_ids = NULL, database = NULL,
     }
   }
 
-  .assessment_result_tables(runs, save_results)
+  .assessment_result_tables(runs, save_results, tier)
 }
 
 # Rebuild complete-run tables without fitting or changing comparison eligibility.
-.assessment_result_tables <- function(runs, save_results = FALSE) {
+.assessment_result_tables <- function(runs, save_results = FALSE, tier = "curated") {
+  tiers <- unique(vapply(runs, function(x) {
+    if (is.null(x$translation_tier)) tier else x$translation_tier
+  }, character(1)))
+  if (save_results && any(tiers != tier)) cli::cli_abort("Cannot save mixed translation tiers into one result set.")
   diagnostics <- if (length(runs)) {
     do.call(rbind, lapply(runs, `[[`, "diagnostics"))
   } else {
@@ -696,7 +707,7 @@ run_assessments <- function(assessment_ids = NULL, database = NULL,
   rownames(population_timeseries) <- NULL
 
   if (save_results) {
-    results_dir <- file.path(.assessment_root, "results")
+    results_dir <- .assessment_results(tier)
     dir.create(results_dir, recursive = TRUE, showWarnings = FALSE)
     write.csv(diagnostics, file.path(results_dir, "fit_diagnostics.csv"),
       row.names = FALSE, na = ""

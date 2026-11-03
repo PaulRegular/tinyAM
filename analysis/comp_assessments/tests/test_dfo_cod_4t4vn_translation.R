@@ -1,3 +1,4 @@
+source("analysis/comp_assessments/R/read_database.R")
 source("analysis/comp_assessments/tests/helper_stock.R")
 pkgload::load_all(".", quiet = TRUE)
 
@@ -84,11 +85,11 @@ stopifnot(all(known_m$est[known_m$age %in% 9:12] == 0.85))
 
 readiness_env <- new.env(parent = globalenv())
 sys.source(
-  file.path(root, "scripts", "database", "003_observation_readiness.R"),
+  file.path(saio_path(), "scripts", "database", "003_observation_readiness.R"),
   envir = readiness_env
 )
 readiness <- utils::read.csv(
-  file.path(root, "results", "observation_readiness.csv"),
+  file.path(.assessment_results("curated"), "observation_readiness.csv"),
   stringsAsFactors = FALSE
 )
 southern_gulf <- readiness[

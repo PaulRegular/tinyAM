@@ -90,7 +90,7 @@ e <- new.env(parent = globalenv())
 e$source <- source_data
 e$do_fit <- FALSE
 e$silent <- TRUE
-script <- file.path(.assessment_root, "scripts/translation/stocks", paste0(id, ".R"))
+script <- .assessment_script(id)
 for (expr in parse(script)) {
   if (is.call(expr) && identical(expr[[1]], quote(`<-`)) && identical(expr[[2]], quote(ages))) {
     expr[[3]] <- quote(0:4)
