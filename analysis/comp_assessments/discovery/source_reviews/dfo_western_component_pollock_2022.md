@@ -1,34 +1,64 @@
 # DFO Western Component Pollock
 
-## Unit and assessment run
+## Stock and current advice
 
-The Maritimes inventory entry refers to Western Component Pollock, *Pollachius virens*. DFO's science unit is NAFO 4Xopqrs plus the Canadian portions 5Yb and 5Zc. This differs from the broader 4X5YbZc Resource Management spatial area. The component structure is also distinct from the eastern component (4VW and 4Xmn).
+The assessment unit is Western Component Pollock (*Pollachius virens*): NAFO
+4Xopqrs and the Canadian portions of 5Yb and 5Zc. This is the science unit;
+the broader DFO management area also includes 4Xmn. It is not interchangeable
+with NOAA Stock SMART 10515 (5YZ), whose assessment area overlaps but is not the
+same stock unit.
 
-Do not coalesce this record with NOAA Stock SMART 10515 (Atlantic pollock, 5YZ). The assessment areas overlap in parts of 5Y/5Z but are not the same one-to-one stock definition.
+The latest full population model remains the 2022 statistical catch-at-age
+model, J_M4B, with fitted data through 2020. The 2025 HCR update, published as
+Science Response 2026/015, is an interim index update rather than a model
+refit. It uses bottom-trawl data through 2025, acoustic data through 2024, and
+Canadian fishery data through the 2024–2025 fishing year. DFO reports the 2020
+model SSB as 21,711 t, a 2025 q-adjusted three-year survey SSB index of 28,368 t,
+and catch advice of 2,999 t for fishing year 2026–2027. The survey index is not
+the same quantity as the model SSB.
 
-The 2024 HCR update identifies 2022 as the last full assessment and reports no later interim model update at that time. It extends the survey and catch information used for HCR advice through 2024, but does not refit the population model; its 2024 SSB is an index-based three-year estimate, not an extension of the accepted model's SSB series. DFO's 2026 Research Documents 2026/025 and 2026/029 publish detailed data and model review from the 2022 MSE after the advice update. The accepted population model is ASAP Model J_M4B, with Model I treated as a constant-M sensitivity. Its population series ends in 2020.
+## 2022 model inputs and assumptions
 
-## Inputs and model assumptions
+Research Document 2026/029 identifies J_M4B as the accepted candidate
+population model for the 2022 MSE. It tabulates corrected commercial
+catch-at-age for ages 2–13 in 1982–2020, in thousands of fish. The summer RV
+bottom-trawl series contains age-specific relative-abundance indices over
+1984–2020 with gaps; the 2022 model also uses the acoustic index for 2012 and
+2016–2020. The acoustic index is divided among ages using tow length
+frequencies. The research documents describe the age-specific weights and
+maturity surfaces, but the exact run matrices still need to be transferred and
+validated against the selected model.
 
-- Commercial catch-at-age: ages 2-13, 1982-2020. The 2026 input report identifies corrected age assignments for 2017-2020. Source charts provide the series, but a run-matched machine-readable input array was not found.
-- Summer RV trawl survey: abundance-at-age, ages 2-13, survey years from 1984 through 2020 with gaps. The index is relative abundance; the 2022 model uses mid-year timing (0.5).
-- Summer acoustic survey: biomass-at-age, ages 2-13, 2012 and 2016-2020. The age-specific series is derived from total biomass using length frequencies by tow; it is not a directly aged abundance index. Model timing is mid-year (0.5).
-- Weight-at-age: annual survey and beginning-of-year surfaces for model ages 2-13 through 2020; these are shown in the model/data review, but numeric arrays were not located.
-- Maturity-at-age: age-year matrix for ages 1-13 in the population model. The data review describes winter-survey maturity samples and early/recent periods; exact model-input values are not printed as a numeric table.
-- Natural mortality: the accepted ASAP model uses the four-block M matrix estimated by VPA Model F. Ages 2-4 are fixed at 0.2 from 1994; ages 5+ have three period blocks (1994-2000, 2001-2010, 2011-2020). ASAP receives the matrix as input; it does not jointly estimate M.
-- The accepted model applies equal objective-function weights to commercial catch-at-age and the two survey indices; the report specifies CV 0.2 for catch and CV 0.4 for survey observations. SSB is calculated at start of year with beginning-of-year weights and summed over ages 4+.
+J_M4B uses three time blocks of natural mortality for ages 5+; ages 2–4 use
+M=0.2 in the documented model period. Inputs and tuning indices are treated as
+mid-year, while population outputs are at the start of the year. The reported
+SSB is start-of-year biomass for ages 4+. The 2025 HCR update retains the
+reference points from the 2022 model: LRP 14,350 t, USR 22,960 t and removal
+reference 0.187.
 
-## Outputs and source limits
+## Imported records and remaining source work
 
-The accepted model report shows numbers-at-age and fishing mortality-at-age, age-2 recruitment, and SSB (ages 4+) through 2020. The time-series surfaces appear in figures rather than downloadable numeric arrays. The reports provide model-fit and retrospective summaries, but the fitted trajectory uncertainty is not available as a full numeric series.
+The database now records the 2022 model and 2025 HCR update separately. It
+includes only numerical summary outputs that are directly stated in official
+reports. It does not treat the HCR survey index as model SSB or its relative
+harvest rate as model F. Catch-at-age, survey-age indices, weights, maturity,
+full mortality matrices and model trajectories remain to be imported.
 
-This is an eligible source-curation candidate because official documents verify all required age-structured input/output families and support source-based reconstruction. Any recovered values from figures must be marked as digitized estimates and retain the plot scale and reading uncertainty. No canonical assessment values have been imported in this screening step.
-
-The 2026 research PDFs are available in the official publication viewer, but attempts to retrieve their direct file URLs locally returned the site's archived-page notice. The official 2024 HCR update PDF is cached in the ignored local directory `source_cache/discovery_dfo_western_pollock_2022/`; its `sources.csv` records the URL, retrieval time, byte count, and SHA-256.
+The official Publications pages expose searchable PDF text, including the
+input tables, but direct PDF requests from this environment redirect to an
+archived-page notice. The local ignored source cache preserves the existing
+2024 HCR PDF and records the failed PDF downloads for Research Documents
+2026/025 and 2026/029, Science Response 2026/015, and Science Advisory Report
+2023/037. Those HTML notices are access records, not substitutes for the PDFs.
+The case is therefore a partial source import and is not ready for a tinyAM
+fit. Resume by obtaining the four official PDFs or corresponding run-matched
+data files, then transfer and validate the tabulated arrays.
 
 ## Sources
 
-- [2026 Research Document 2026/025, Data Inputs](https://publications.gc.ca/collections/collection_2026/mpo-dfo/fs70-5/Fs70-5-2026-025-eng.pdf)
-- [2026 Research Document 2026/029, Population Modeling](https://publications.gc.ca/collections/collection_2026/mpo-dfo/fs70-5/Fs70-5-2026-029-eng.pdf)
-- [2024 HCR update, published as Research Document 2025/012](https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/41291050.pdf)
-- [DFO Pollock profile and component boundaries](https://www.dfo-mpo.gc.ca/species-especes/profiles-profils/pollock-goberge-eng.html)
+- [DFO Science Response 2026/015: HCR update in 2025](https://publications.gc.ca/collections/collection_2026/mpo-dfo/fs70-7/Fs70-7-2026-015-eng.pdf)
+- [DFO Research Document 2026/029: population modelling and MSE](https://publications.gc.ca/collections/collection_2026/mpo-dfo/fs70-5/Fs70-5-2026-029-eng.pdf)
+- [DFO Research Document 2026/025: data inputs](https://publications.gc.ca/collections/collection_2026/mpo-dfo/fs70-5/Fs70-5-2026-025-eng.pdf)
+- [DFO Science Advisory Report 2023/037: MSE stock status and advice](https://publications.gc.ca/collections/collection_2023/mpo-dfo/fs70-6/Fs70-6-2023-037-eng.pdf)
+- [DFO 2024 HCR update, published as Science Response 2025/012](https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/41291050.pdf)
+- [DFO Pollock stock profile](https://www.dfo-mpo.gc.ca/species-especes/profiles-profils/pollock-goberge-eng.html)
