@@ -31,7 +31,7 @@ natural_mortality <- inputs[inputs$type == "M", ]
 stopifnot(
   nrow(catch) == 390L,
   identical(sort(unique(catch$year)), c(1979L, 1980L, 1998L:2025L)),
-  identical(sort(unique(catch$age)), 4:16),
+  identical(sort(unique(as.integer(catch$age))), 4:16),
   !any(catch$year %in% 1981:1997),
   catch$value[catch$year == 1979L & catch$age == 4L] == 2.104,
   all(catch$unit == "thousand fish"),
@@ -55,7 +55,7 @@ stopifnot(
   all(maturity$value >= 0 & maturity$value <= 1),
   nrow(spring) == 533L,
   identical(sort(unique(spring$year)), 1985:2025),
-  identical(sort(unique(spring$age)), 4:16),
+  identical(sort(unique(as.integer(spring$age))), 4:16),
   spring$value[spring$year == 1985L & spring$age == 4L] == 0.483,
   all(spring$basis == "index_scale"),
   all(spring$sampling_time == 0.17),
@@ -66,7 +66,7 @@ stopifnot(
   all(autumn$sampling_time == 0.83),
   all(grepl("2011 row is retained", autumn$notes[autumn$year == 2011L])),
   nrow(natural_mortality) == 13L,
-  identical(sort(natural_mortality$age), 4:16),
+  identical(sort(as.integer(natural_mortality$age)), 4:16),
   all(natural_mortality$value == 0.15),
   all(natural_mortality$basis == "per_year")
 )
@@ -80,12 +80,12 @@ fbar <- outputs[outputs$measure == "Fbar", ]
 stopifnot(
   nrow(numbers) == 624L,
   identical(sort(unique(numbers$year)), 1979:2026),
-  identical(sort(unique(numbers$age)), 4:16),
+  identical(sort(unique(as.integer(numbers$age))), 4:16),
   numbers$value[numbers$year == 1979L & numbers$age == 4L] == 19013,
   all(numbers$unit == "thousand fish"),
   nrow(f_at_age) == 611L,
   identical(sort(unique(f_at_age$year)), 1979:2025),
-  identical(sort(unique(f_at_age$age)), 4:16),
+  identical(sort(unique(as.integer(f_at_age$age))), 4:16),
   f_at_age$value[f_at_age$year == 1979L & f_at_age$age == 10L] == 0.162,
   all(f_at_age$unit == "per year"),
   all(is.na(numbers$se) & is.na(numbers$lwr) & is.na(numbers$upr)),
