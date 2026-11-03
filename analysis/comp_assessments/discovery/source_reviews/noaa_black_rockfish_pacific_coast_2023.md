@@ -62,13 +62,15 @@ would match Stock Synthesis exactly.
 
 Screen three current assessment units as eligible for source curation:
 Washington (NOAA:14409), Oregon (NOAA:14407), and California (NOAA:17194 and
-NOAA:17195, grouped as the single California assessment). Keep the exact
-California inventory-to-sub-area correspondence unresolved, and do not pool
-observations or biology across model components. Keep NOAA:10402, NOAA:11302,
-and NOAA:14408 as ambiguous, ineligible historical rows. The prior register
-entry NOAA:166727 was invalid as a stock key and has been removed; it was a
-taxonomic identifier, not a Stock SMART stock row. No canonical assessment,
-input, or output records were added and no tinyAM translation was attempted.
+NOAA:17195, grouped as the single California assessment). Oregon now has a
+partial canonical 2023 source record; see
+`noaa_black_rockfish_oregon_2023.md`. Washington and California remain screened
+but have not been imported. Keep the exact California inventory-to-sub-area
+correspondence unresolved, and do not pool observations or biology across model
+components. Keep NOAA:10402, NOAA:11302, and NOAA:14408 as ambiguous,
+ineligible historical rows. The prior register entry NOAA:166727 was invalid as
+a stock key and has been removed; it was a taxonomic identifier, not a Stock
+SMART stock row. No tinyAM translation has been attempted.
 
 ## Sources
 

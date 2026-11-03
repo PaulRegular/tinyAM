@@ -30,7 +30,8 @@ stopifnot(
   identical(as.character(rows$match_status[1:4]), rep('new', 4L)),
   identical(as.character(rows$screening_status[1:4]), rep('screened', 4L)),
   identical(as.character(rows$eligibility[1:4]), rep('eligible', 4L)),
-  identical(as.character(rows$import_status[1:4]), rep('not_started', 4L)),
+  identical(as.character(rows$import_status[1:4]),
+    c('partial', 'not_started', 'not_started', 'not_started')),
   all(rows$scientific_name[1:4] == 'Sebastes melanops'),
   identical(as.character(rows$match_status[5:7]), rep('ambiguous', 3L)),
   identical(as.character(rows$screening_status[5:7]), rep('screened', 3L)),
@@ -44,10 +45,14 @@ stopifnot(
   grepl('not additional stock cases', review, fixed = TRUE),
   grepl('do not map one-to-one', review, fixed = TRUE),
   !any(stocks$authority_stock_id == '166727', na.rm = TRUE),
-  !any(stocks$stock_id %in% unit_ids, na.rm = TRUE),
-  !any(assessments$assessment_id %in% unit_ids, na.rm = TRUE),
-  !any(inputs$assessment_id %in% unit_ids, na.rm = TRUE),
-  !any(outputs$assessment_id %in% unit_ids, na.rm = TRUE)
+  any(stocks$stock_id == 'noaa_black_rockfish_oregon'),
+  any(assessments$assessment_id == 'noaa_black_rockfish_oregon_2023'),
+  any(inputs$assessment_id == 'noaa_black_rockfish_oregon_2023'),
+  any(outputs$assessment_id == 'noaa_black_rockfish_oregon_2023'),
+  !any(stocks$stock_id %in% unit_ids[-1L], na.rm = TRUE),
+  !any(assessments$assessment_id %in% unit_ids[-1L], na.rm = TRUE),
+  !any(inputs$assessment_id %in% unit_ids[-1L], na.rm = TRUE),
+  !any(outputs$assessment_id %in% unit_ids[-1L], na.rm = TRUE)
 )
 
 cat('NOAA Pacific Coast black rockfish source-ID and case crosswalk checks passed.\n')
