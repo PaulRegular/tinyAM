@@ -106,8 +106,8 @@ if (nrow(terminal_m)) {
   }))
   comparison_outputs <- rbind(comparison_outputs, terminal_m)
 }
-obs$pop_covariates$age_blocks <- cut_ages(
-  obs$pop_covariates$age,
+obs$catch$age_blocks <- cut_ages(
+  obs$catch$age,
   c(3, 5, 7, 9, 12)
 )
 

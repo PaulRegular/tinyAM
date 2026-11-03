@@ -34,7 +34,20 @@ plot_trend(random_par$log_n0,
 `r if ("log_f" %in% names(random_par)) "### F"`
 
 ```{r, eval = "log_f" %in% names(random_par)}
-plot_age_year(random_par$log_f, x = ~year, color = ~model, legendgroup = ~model, colors = cols, frame = ~age, ylab = "Latent F (f)")
+f_states <- random_par$log_f
+if ("age_block" %in% names(f_states)) {
+  # Blocks are the estimated coordinates, rather than replicated biological ages.
+  if (!"age" %in% names(f_states)) f_states$age <- NA_integer_
+  f_states$age <- ifelse(is.na(f_states$age_block), as.character(f_states$age), as.character(f_states$age_block))
+  labels <- unique(f_states$age)
+  labels <- labels[order(as.numeric(sub("-.*", "", labels)), labels)]
+  f_states$age <- factor(f_states$age, levels = labels)
+}
+if ("fleet" %in% names(f_states)) {
+  values <- paste(f_states$fleet, f_states$age, sep = " / ")
+  f_states$age <- factor(values, levels = unique(values))
+}
+plot_age_year(f_states, x = ~year, color = ~model, legendgroup = ~model, colors = cols, frame = ~age, ylab = "Latent F (f)")
 ```
 
 `r if ("log_m" %in% names(random_par)) "### M"`
@@ -70,7 +83,26 @@ plot_process_residuals(tabs, component = "NFM")
 ```{r, results = "asis"}
 for (term in names(formula_effects$levels)) {
   effect <- formula_effects$levels[[term]]
+  if (all(effect$process == "smooth")) next
   rendered <- knitr::knit_child("one_formula_effect.Rmd", quiet = TRUE)
+  cat(rendered, sep = "\n")
+}
+```
+
+```{r, results = "asis"}
+for (term in names(formula_effects$smooths)) {
+  effect <- formula_effects$smooths[[term]]
+  variables <- strsplit(unique(effect$variable), ",", fixed = TRUE)[[1L]]
+  rendered <- knitr::knit_child(text = c(
+    paste("###", tinyAM:::.formula_effect_label(effect)), "", "```{r}",
+    'd <- plot_rows(effect, "est")',
+    'if (length(variables) == 1L) {',
+    '  d <- d[!duplicated(d[c("model", variables)]), ]',
+    '  plot_trend(d, x = reformulate(variables), xlab = tools::toTitleCase(variables),',
+    '    ylab = unique(d$unit), color = ~model, legendgroup = ~model, colors = cols)',
+    '} else {',
+    '  plot_age_year(d, ylab = unique(d$unit), color = ~model, legendgroup = ~model, colors = cols)',
+    '}', "```", ""), quiet = TRUE)
   cat(rendered, sep = "\n")
 }
 ```

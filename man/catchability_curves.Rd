@@ -13,7 +13,7 @@ mono(x, by = NULL)
 \arguments{
 \item{x}{Name of an index column for q: numeric or factor for \code{mono()},
 numeric age/size for \code{logistic()}. F mean curves require numeric age or
-an age-derived population covariate.}
+an age-derived catch covariate.}
 
 \item{by}{Optional name of a categorical grouping column.}
 }
@@ -79,10 +79,11 @@ separately by the numerical convergence checks.
 \subsection{Mean fishing mortality}{
 
 With \code{F_settings$process = "off"}, \code{"iid"} or \code{"ar1"}, use \code{~ mono(age)} or
-\code{~ logistic(age)}. Ordinary terms provide the baseline F. One curve is allowed;
-its numeric coordinate must be age or an age-derived \code{pop_covariates} column
-constant across years at each age. Categorical \code{by} groups may have separate
-curves. M mean curves are not enabled.
+\code{~ logistic(age)}. Ordinary terms provide the baseline F. One curve is allowed
+on each set of applicable rows; \code{\link[=for_fleet]{for_fleet()}} can give fleets different curves.
+Its numeric coordinate must be age or an age-derived catch-table column
+constant across years at each age within the fleet. Categorical \code{by} groups
+may have separate curves. M mean curves are not enabled.
 
 For mono, \eqn{\log\mu_F = X\beta + C d}, where C contains cumulative
 indicators and the directly fitted \code{dmu_f} increments satisfy \eqn{d\geq0}.

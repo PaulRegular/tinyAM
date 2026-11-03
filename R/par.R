@@ -75,6 +75,10 @@
 #'
 #' - **Fishing mortality (F)**
 #'   - `log_sd_f` (only when the F process is active)
+#'   - With `F_settings$age_breaks`, `log_f` has one column per active F
+#'     block, indexed by `age_block`. Unfished ages have no latent F entries.
+#'     A single active block has no age-correlation parameter; AR1 retains
+#'     only its temporal correlation.
 #'   - `logit_phi_f` length 2 (if `process == "ar1"`)
 #'   - `atanh_rho_f`: signed age correlation of annual F increments
 #'     (if `process == "cor_rw"`), reported as `rho_f` through `tanh()`.
@@ -116,6 +120,8 @@
 #'   - Logistic curves have `q_a50_*` midpoints and positive `log_q_slope_*`
 #'     coefficients, initialized from each group's observed coordinate range.
 #'     Names identify terms, groups and unique states for warm starts.
+#'     [double_logistic()] has ascending/descending midpoints and log
+#'     positive scales. There is no midpoint ordering or peak normalization.
 #'
 #' All scalar SD parameters are on the log scale, and AR(1) parameters are on
 #' the logit scale (later transformed by `plogis()` in the likelihood).
@@ -161,7 +167,10 @@ make_par <- function(dat) {
   if (dat$rec$type == "ar1" && is.null(dat$rec$phi)) par$logit_phi_r <- c(year = 0)
   if (ncol(dat$N_modmat)) par$mu_n <- setNames(numeric(ncol(dat$N_modmat)), colnames(dat$N_modmat))
   if (dat$F_settings$process != "off") par$log_sd_f <- 0
-  if (dat$F_settings$process == "cor_rw") par$atanh_rho_f <- 0
+  if (dat$F_settings$process == "cor_rw" && length(dat$F_cor$age$levels)) {
+    par$atanh_rho_f <- .f_cor_parameters(dat, "age")
+    if (!dat$has_fleet && identical(dat$F_cor$age$levels, "shared")) par$atanh_rho_f <- 0
+  }
   if (!is.null(dat$F_settings$mu_form)) {
     par$log_mu_f <- numeric(ncol(dat$F_modmat))
     names(par$log_mu_f) <- colnames(dat$F_modmat)
@@ -186,7 +195,7 @@ make_par <- function(dat) {
     par$logit_phi_n <- c("age" = 0, "year" = 0)
   }
   if (dat$F_settings$process == "ar1") {
-    par$logit_phi_f <- c("age" = 0, "year" = 0)
+    par$logit_phi_f <- c(.f_cor_parameters(dat, "age"), .f_cor_parameters(dat, "year"))
   }
   if (dat$M_settings$process == "ar1") {
     par$logit_phi_m <- c("age" = 0, "year" = 0)
@@ -232,16 +241,14 @@ make_par <- function(dat) {
     )
   }
   if (dat$F_settings$process != "off") par$log_f <- matrix(0,
-    nrow = sum(!dat$is_proj), ncol = length(dat$ages),
-    dimnames = list(year = dat$years[!dat$is_proj], age = dat$ages)
+    nrow = sum(!dat$is_proj), ncol = length(dat$F_settings$age_block_start),
+    dimnames = stats::setNames(list(dat$years[!dat$is_proj],
+      if (dat$has_fleet) dat$F_states$key else if (.f_blocked(dat)) levels(dat$F_settings$age_blocks) else dat$ages),
+      c("year", if (.f_blocked(dat)) "age_block" else "age"))
   )
-  if (dat$F_settings$process != "off" && (!is.null(dat$F_mono_modmat) || any(vapply(dat$F_terms, function(x) x$type == "logistic", logical(1))))) {
-    surface <- matrix(
-      drop(dat$F_modmat %*% par$log_mu_f) +
-        .mean_effects(par, dat, "F")$contribution,
-      length(dat$years), length(dat$ages)
-    )
-    par$log_f[] <- surface[!dat$is_proj, , drop = FALSE]
+  if (dat$F_settings$process != "off" && (!is.null(dat$F_mono_modmat) ||
+      any(vapply(dat$F_terms,function(x).is_selectivity_curve(x) || x$type == "smooth",logical(1))))) {
+    par <- .initialize_F_states(par,dat)
   }
 
   if (dat$M_settings$process != "off") {
@@ -296,5 +303,14 @@ make_par <- function(dat) {
   if (!is.null(dat$rec$curve)) {
     par <- .initialize_rec_curve(par, dat, initialize_states = TRUE)
   }
+  par
+}
+
+# A newly introduced F residual process starts at its complete fitted mean.
+.initialize_F_states <- function(par, dat) {
+  if (dat$F_settings$process == "off" || is.null(par$log_mu_f)) return(par)
+  surface <- matrix(drop(dat$F_modmat %*% par$log_mu_f) +
+    .mean_effects(par,dat,"F")$contribution,length(dat$years),nrow(dat$F_columns))
+  par$log_f[] <- .f_state_mean(surface[!dat$is_proj,,drop=FALSE],dat)
   par
 }

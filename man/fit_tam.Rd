@@ -10,7 +10,8 @@ fit_tam(
   ages = NULL,
   N_settings = list(process = "iid", init = "exp", mu_form = NULL, sd_form = ~1),
   rec_settings = list(process = "rw", init = "free", mu_form = NULL, sd = NULL, phi = NULL),
-  F_settings = list(process = "rw", mu_form = NULL, sd_form = ~1, mean_ages = NULL),
+  F_settings = list(process = "rw", mu_form = NULL, sd_form = ~1, age_breaks = NULL, cor_form = ~1,
+        mean_ages = NULL),
   M_settings = list(process = "off", mu_form = NULL, mu_supplied = ~I(0.2), sd_form = ~1,
         age_breaks = NULL, first_dev_year = NULL, mean_ages = NULL),
   catch_settings = list(sd_form = ~1, sd_supplied = NULL),
@@ -98,14 +99,31 @@ independent departures from the mean log F,
 \code{"rw"} for departures that accumulate over time, or \code{"ar1"} for departures
 correlated between years and ages.
 \code{"cor_rw"} accumulates changes over time with AR1 correlation between
-annual increments at neighbouring ages. It estimates one signed age
-correlation; its SD is the marginal SD of annual log-F increments.
+annual increments at neighbouring states within each fleet. It estimates
+one signed age correlation per active correlation group; its SD is the
+marginal SD of annual log-F increments.
 \item \code{sd_form}: ordinary age-based formula for log process SD, default \code{~ 1},
-evaluated on \code{data$pop_covariates}. Sharing an SD does not share latent F states.
+evaluated on \code{data$catch}. Sharing an SD does not share latent F states.
 IID SDs describe residuals; RW/correlated-RW SDs describe annual increments;
 stationary AR1 retains its innovation-scale convention.
+\item \code{age_breaks}: optional increasing integer interval boundaries for shared
+actual F. Intervals include their lower boundary and exclude their upper
+boundary; the final boundary must be \code{max(ages) + 1}. For ages \code{1:6},
+\code{c(1, 2, 3, 4, 5, 7)} shares F at ages 5 and 6. Ages below the first
+boundary have exactly zero F in all years, with no F state or process
+density. Positive catch observations at those ages are rejected. \code{NULL}
+retains separate F states at every modeled age. All mean components and
+process SDs must agree within a shared block; refine blocks for age-varying
+means. Process correlation uses ordered blocks, not replicated fish ages.
+With fleet labels, supply a common vector or a named list covering all
+fleets; \code{NULL} entries retain separate states by age within that fleet.
+\item \code{cor_form}: categorical correlation groups constant within each fleet.
+Default \code{~ 1} shares correlations; \code{~ fleet} estimates separate values.
+For AR1, \code{list(age = ~ fleet, year = ~ 1)} allows different sharing by
+dimension. A single formula applies to both dimensions. Sharing parameters
+never correlates innovations between fleets. Unused groups are omitted.
 \item \code{mu_form}: an optional formula for mean-\eqn{F} (coefficients estimated as
-\strong{log-scale} parameters \code{log_mu_f}), evaluated on \code{data$pop_covariates}. Required for \code{"off"}, \code{"iid"} and \code{"ar1"};
+\strong{log-scale} parameters \code{log_mu_f}), evaluated on \code{data$catch}. Required for \code{"off"}, \code{"iid"} and \code{"ar1"};
 use \code{~ 1} for one estimated mean level or \code{~ factor(age)} for age-specific
 means. For \code{"rw"}, \code{NULL} is allowed. Mean columns constant through time
 cancel from RW increments and are removed with a warning. Remaining
@@ -113,12 +131,25 @@ columns must be identifiable from historical year-to-year differences.
 Ordinary F mean designs use historical support only; projection rows carry
 the terminal historical design by age. No future-year coefficients are fitted.
 With IID residuals, \code{\link[=iid]{iid()}}, \code{\link[=rw]{rw()}} and \code{\link[=ar1]{ar1()}} can add random mean effects,
-e.g. \code{~ factor(age) + rw(year)}. Only one temporal mean term is supported;
-structured means with temporal residual processes are not yet enabled.
+e.g. \code{~ factor(age) + rw(year)}. Temporal mean terms must have disjoint
+support, for example one per fleet; overlapping temporal mean terms and
+structured means with temporal residual processes are not enabled.
 \code{\link[=mono]{mono()}} and \code{\link[=logistic]{logistic()}} can instead describe a rising mean age curve
 with no residual process or with IID/AR1 residuals, e.g. \code{~ logistic(age)}. Ordinary terms supply
 baseline F; realized F can depart from the rising mean. Static curves are
 not identifiable with RW/correlated-RW residuals. See \link{catchability_curves}.
+\code{\link[=double_logistic]{double_logistic()}} supplies WHAM's unnormalized four-parameter dome.
+Catch covariates must be available even where observations are missing.
+They must agree across biological ages pooled into a modeled plus group.
+The catch response \code{obs} cannot enter an F formula. With fleet labels,
+each fleet has its own F states; total F is their sum for survival and Z.
+\code{\link[=for_fleet]{for_fleet()}} gives one fleet its own formula, e.g.
+\code{~ 0 + for_fleet("Trawl", ~ factor(year) + logistic(age)) + for_fleet("Gillnet", ~ factor(year) + factor(age))}. Ordinary terms outside
+scopes share their coefficients. Each inner formula includes an intercept
+unless removed explicitly; avoid redundant global and scoped baselines.
+\link{smooth_formulas} adds penalized \code{s()} and age-year \code{t2()} relationships.
+Smooth means support \code{"off"}, \code{"iid"} and \code{"ar1"} F processes; the latter
+combinations are experimental and require mean/process separation checks.
 \item \code{mean_ages}: optional vector of ages to include in population weighted
 average F (\code{F_bar}) calculations. All ages used if absent.
 }}
@@ -149,6 +180,10 @@ see \link{formula_effects} for the model and statistical cautions.
 \code{~ M_assumption} stored in the \code{data$pop_covariates} data.frame.
 \item \code{age_breaks}: optional integer break points used by \code{\link[=cut_ages]{cut_ages()}} to
 define \code{age_blocks} sharing absolute latent M states across ages.
+Existing specifications retain their original interpretation. Alternatively,
+end at \code{max(ages) + 1} to use explicit half-open intervals as for F:
+with ages \code{1:6}, \code{c(2, 5, 7)} makes blocks 2--4 and 5--6. Ages outside
+M process blocks retain their existing mean M; they are not set to zero.
 When a narrower set of \code{age_breaks} than modeled \code{ages} is provided,
 process states are only estimated for ages within the specified range; ages
 outside this range are fixed to their mean or assumed levels. By default,
@@ -190,6 +225,13 @@ selectivity curves. \code{~ q_key + power(N, by = q_power_group)} allows
 abundance-dependent catchability using internally calculated abundance at
 survey time. Missing power-group labels mean p = 1, not missing observations.
 Powers require the log q link. See \code{\link[=power]{power()}} and \link{formula_effects}.
+\code{\link[=double_logistic]{double_logistic()}} allows dome-shaped selectivity and multiplies baseline
+q after its inverse link.
+Penalized \code{s()} and \code{t2(age, year)} terms instead modify the selected q-link
+predictor. See \link{smooth_formulas} for supported bases, grouping and penalties.
+\code{\link[=for_survey]{for_survey()}} applies a formula to one named survey, e.g.
+\code{~ 0 + for_survey("RV", ~ logistic(age)) + for_survey("Sentinel", ~ q_block)}. Effects are built on each survey's
+own reporting ages, then contribute zero to the predictor elsewhere.
 \item \code{q_link}: \code{"log"} (default) allows any positive catchability; \code{"logit"}
 restricts catchability to between zero and one. Use the logit link only
 when the survey index has an absolute abundance scale and this restriction

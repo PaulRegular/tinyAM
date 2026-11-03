@@ -196,6 +196,12 @@ check_tam <- function(fit, ..., grad_tol = NULL, detailed = FALSE, model_list = 
         valid <- is.finite(fit$rep$log_pred)
         catch <- fit$dat$proj_settings$catch
         map <- fit$dat$obs_map
+        if (.f_blocked(fit$dat) && !is.null(map)) {
+          d <- fit$dat
+          column <- if (d$has_fleet) match(paste(map$fleet, map$age), paste(d$F_columns$fleet, d$F_columns$age)) else match(map$age, d$ages)
+          zero <- map$type == "catch" & (d$F_settings$state_index[column] == 0L)
+          valid <- valid | (zero & is.infinite(fit$rep$log_pred) & fit$rep$log_pred < 0)
+        }
         if (!is.null(catch) && !is.null(map) && nrow(map) == length(valid)) {
           zero_years <- as.numeric(names(catch)[catch == 0])
           zero <- map$type == "catch" & map$year %in% zero_years
@@ -203,7 +209,7 @@ check_tam <- function(fit, ..., grad_tol = NULL, detailed = FALSE, model_list = 
         }
         all(valid) && all(is.finite(fit$rep$sd_obs) & fit$rep$sd_obs > 0)
       },
-      "Log predictions and positive observation SDs must be finite, except deliberately zero projected catches."
+      "Log predictions and positive observation SDs must be finite, except structurally unfished ages and deliberately zero projected catches."
     )
   )
   structural <- .check_tam_structure(fit$dat, fit$parameter_map)
@@ -246,7 +252,7 @@ check_tam <- function(fit, ..., grad_tol = NULL, detailed = FALSE, model_list = 
   out <- data.frame(check = character(), status = character(), detail = character())
   designs <- c(
     q_modmat = "index", sd_index_modmat = "index",
-    sd_catch_modmat = "catch", N_modmat = "population", F_modmat = "population", M_modmat = "population"
+    sd_catch_modmat = "catch", N_modmat = "population", F_modmat = "F_data", M_modmat = "population"
   )
   parameters <- c(
     q_modmat = if (identical(dat$index_settings$q_link, "logit")) "logit_q" else "log_q",
@@ -255,7 +261,7 @@ check_tam <- function(fit, ..., grad_tol = NULL, detailed = FALSE, model_list = 
   )
   for (nm in names(designs)) {
     x <- dat[[nm]]
-    d <- if (designs[[nm]] == "population") dat$pop_data else dat$obs[[designs[[nm]]]]
+    d <- if (designs[[nm]] == "population") dat$pop_data else if (designs[[nm]] == "F_data") dat$F_data else dat$obs[[designs[[nm]]]]
     if (!is.null(d) && designs[[nm]] == "population") d$is_proj <- dat$is_proj[match(d$year, dat$years)]
     if (!is.matrix(x) || is.null(d)) next
     mapped <- parameter_map[[parameters[[nm]]]]
@@ -270,10 +276,11 @@ check_tam <- function(fit, ..., grad_tol = NULL, detailed = FALSE, model_list = 
     }
     if (nm == "F_modmat" && dat$F_settings$process %in% c("rw", "cor_rw") && ncol(x)) {
       ny <- sum(!dat$is_proj)
+      n_states <- if (is.null(dat$F_settings$age_block_start)) length(dat$ages) else length(dat$F_settings$age_block_start)
       x <- vapply(seq_len(ncol(x)), function(j) {
-        z <- matrix(x[, j], ny, length(dat$ages))
+        z <- .f_state_mean(matrix(x[, j], ny, nrow(dat$F_columns)), dat)
         as.vector(z[-1, , drop = FALSE] - z[-ny, , drop = FALSE])
-      }, numeric((ny - 1L) * length(dat$ages)))
+      }, numeric((ny - 1L) * n_states))
     }
     if (nm == "N_modmat" && ncol(x)) {
       ny <- sum(!dat$is_proj)
@@ -308,7 +315,7 @@ check_tam <- function(fit, ..., grad_tol = NULL, detailed = FALSE, model_list = 
 
 .check_tam_residuals <- function(obs_pred) {
   out <- data.frame(
-    type = character(), survey = character(), age = numeric(),
+    type = character(), survey = character(), fleet = character(), age = numeric(),
     n = integer(), mean = numeric(), sd = numeric(),
     max_abs = numeric(), lag1 = numeric()
   )
@@ -320,7 +327,8 @@ check_tam <- function(fit, ..., grad_tol = NULL, detailed = FALSE, model_list = 
     d <- d[historical & observed & is.finite(d$std_res), , drop = FALSE]
     if (!nrow(d)) next
     if (is.null(d$survey)) d$survey <- ""
-    groups <- split(d, interaction(d$survey, d$age, drop = TRUE))
+    if (is.null(d$fleet)) d$fleet <- ""
+    groups <- split(d, interaction(d$survey, d$fleet, d$age, drop = TRUE))
     for (z in groups) {
       z <- z[order(z$year), , drop = FALSE]
       adjacent <- which(diff(z$year) == 1L)
@@ -332,7 +340,7 @@ check_tam <- function(fit, ..., grad_tol = NULL, detailed = FALSE, model_list = 
         NA_real_
       }
       out <- rbind(out, data.frame(
-        type = type, survey = as.character(z$survey[1]),
+        type = type, survey = as.character(z$survey[1]), fleet = as.character(z$fleet[1]),
         age = z$age[1], n = nrow(z), mean = mean(z$std_res), sd = stats::sd(z$std_res),
         max_abs = max(abs(z$std_res)), lag1 = lag1
       ))
@@ -343,7 +351,7 @@ check_tam <- function(fit, ..., grad_tol = NULL, detailed = FALSE, model_list = 
 
 .check_tam_data_summary <- function(dat) {
   out <- data.frame(
-    type = character(), survey = character(), observed = integer(),
+    type = character(), survey = character(), fleet = character(), observed = integer(),
     zero = integer(), missing = integer(),
     years = integer()
   )
@@ -352,10 +360,11 @@ check_tam <- function(fit, ..., grad_tol = NULL, detailed = FALSE, model_list = 
     if (is.null(d) || !all(c("obs", "year") %in% names(d))) next
     if (!is.null(d$is_proj)) d <- d[!d$is_proj, , drop = FALSE]
     if (is.null(d$survey)) d$survey <- ""
-    for (z in split(d, d$survey)) {
+    if (is.null(d$fleet)) d$fleet <- ""
+    for (z in split(d, interaction(d$survey, d$fleet, drop = TRUE))) {
       observed <- is.finite(z$obs) & z$obs > 0
       out <- rbind(out, data.frame(
-        type = type, survey = as.character(z$survey[1]),
+        type = type, survey = as.character(z$survey[1]), fleet = as.character(z$fleet[1]),
         observed = sum(observed), zero = sum(z$obs == 0, na.rm = TRUE),
         missing = sum(is.na(z$obs)),
         years = length(unique(z$year[observed]))
@@ -376,7 +385,7 @@ check_tam <- function(fit, ..., grad_tol = NULL, detailed = FALSE, model_list = 
   }
   observed <- !d$is_proj & is.finite(d$obs) & d$obs > 0
   for (term in dat$q_terms) {
-    if (term$type == "logistic") next
+    if (.is_selectivity_curve(term) || term$type == "smooth") next
     if (!is.null(term$sd_parameter) || !is.null(term$phi_parameter)) {
       for (group in term$groups) {
         rows <- group$rows[observed[group$rows] & term$multiplier[group$rows] != 0]
@@ -481,10 +490,12 @@ check_tam <- function(fit, ..., grad_tol = NULL, detailed = FALSE, model_list = 
       )
     ))
   }
-  for (term in Filter(function(x) x$type == "logistic", c(fit$dat$q_terms, fit$dat$F_terms))) {
+  for (term in Filter(.is_selectivity_curve, c(fit$dat$q_terms, fit$dat$F_terms))) {
     is_F <- startsWith(term$id, "F_")
     d <- if (is_F) .mean_formula_data(fit$dat, "F") else fit$dat$obs$index
-    indices <- which(names(p) == term$a50_parameter)
+    midpoints <- unlist(term[c("a50_parameter","a50_up_parameter","a50_down_parameter")],use.names=FALSE)
+    for (midpoint in midpoints) {
+    indices <- which(names(p) == midpoint)
     if (length(indices) != length(term$groups)) next
     for (g in seq_along(term$groups)) {
       group <- term$groups[[g]]
@@ -495,7 +506,7 @@ check_tam <- function(fit, ..., grad_tol = NULL, detailed = FALSE, model_list = 
       if (is.finite(p[i]) && is.finite(half_width[i]) &&
         (p[i] < support[1] || p[i] > support[2]) && 2 * half_width[i] > diff(support)) {
         out <- rbind(out, data.frame(
-          issue = "logistic_support",
+          issue = if (term$type == "logistic") "logistic_support" else "selectivity_support",
           detail = paste0(
             term$id, ", group ", group$group,
             ": the fitted midpoint lies outside the observed range (", paste(support, collapse = " to "),
@@ -504,6 +515,7 @@ check_tam <- function(fit, ..., grad_tol = NULL, detailed = FALSE, model_list = 
           )
         ))
       }
+    }
     }
   }
   out
@@ -515,7 +527,8 @@ check_tam <- function(fit, ..., grad_tol = NULL, detailed = FALSE, model_list = 
     .sd_process_advisories(fit$dat),
     .rec_process_advisories(fit$dat), .rec_fit_advisories(fit),
     .formula_uncertainty_advisories(fit), .cor_rw_advisories(fit), .q_power_advisories(fit),
-    .process_sd_advisories(fit$dat), .process_sd_fit_advisories(fit)
+    .process_sd_advisories(fit$dat), .process_sd_fit_advisories(fit),
+    .smooth_design_advisories(fit$dat), .smooth_fit_advisories(fit)
   )
   add <- function(issue, detail) {
     out <<- rbind(out, data.frame(issue = issue, detail = detail))

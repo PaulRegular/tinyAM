@@ -245,11 +245,12 @@ rprocess_cor_rw <- function(x, sd = 1, rho = 0) {
   if (walk(formula[[2L]]) || "year" %in% all.vars(formula)) {
     cli::cli_abort("{label} supports ordinary age-based formulas, not temporal or random-effect SD terms.")
   }
-  d <- .population_data(dat, formula, label)
+  if (component == "F" && dat$has_fleet) return(.parse_fleet_sd(dat, formula, default))
+  d <- if (component == "F") .f_data(dat, formula, label) else .population_data(dat, formula, label)
   d$is_proj <- dat$is_proj[match(d$year, dat$years)]
   active <- if (component == "N") {
     dat$ages[-1L]
-  } else if (component == "M") {
+  } else if (component %in% c("M", "F")) {
     as.numeric(names(settings$age_blocks))
   } else {
     dat$ages
@@ -267,11 +268,11 @@ rprocess_cor_rw <- function(x, sd = 1, rho = 0) {
   }
   design <- design[match(active, d$age), , drop = FALSE]
   rownames(design) <- as.character(active)
-  if (component == "M") {
+  if (component %in% c("M", "F")) {
     for (block in levels(settings$age_blocks)) {
       rows <- design[settings$age_blocks == block, , drop = FALSE]
       if (any(rows != rep(rows[1L, ], each = nrow(rows)))) {
-        cli::cli_abort("{label} varies within an M age block. Use finer age_breaks or share the SD within each block.")
+        cli::cli_abort("{label} varies within an {component} age block {block} (ages {paste(names(settings$age_blocks)[settings$age_blocks == block], collapse = ', ')}). Use finer age_breaks or share the SD within each block.")
       }
     }
     design <- design[as.character(settings$age_block_start), , drop = FALSE]
@@ -293,6 +294,14 @@ rprocess_cor_rw <- function(x, sd = 1, rho = 0) {
 
 .process_sd_surface <- function(par, dat, component) {
   design <- dat$process_sd[[component]]
+  if (component == "F" && .f_blocked(dat)) {
+    "[<-" <- RTMB::ADoverload("[<-")
+    sd <- .process_sd(par, dat, component)
+    index <- dat$F_settings$state_index
+    values <- numeric(length(index)); active <- index > 0L
+    values[active] <- if (length(sd) == 1L) rep(sd, sum(active)) else sd[index[active]]
+    return(.F_matrix(rep(values, each = length(dat$years)), dat))
+  }
   matrix(rep(.process_sd(par, dat, component), each = length(dat$years)),
     length(dat$years), nrow(design$matrix),
     dimnames = list(year = dat$years, age = rownames(design$matrix))

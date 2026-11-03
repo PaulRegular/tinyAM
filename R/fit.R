@@ -85,21 +85,41 @@
       start$log_r <- setNames(log(source$rep$recruitment[years]), source$dat$years[years])
     }
     if (!identical(source$dat$index_settings$q_link, dat$index_settings$q_link)) {
-      start <- start[!grepl("^(log_q|logit_q$|dq$|eta_q_|log_sd_q_|logit_phi_q_|q_a50_|log_q_slope_)", names(start))]
+      start <- start[!grepl("^(log_q|logit_q$|dq$|eta_q_|log_sd_q_|logit_phi_q_|q_a50_)", names(start))]
       cli::cli_inform("Catchability starts were omitted because q_link changed.")
     }
     if (!is.null(start$log_q_power)) {
       start$log_q_power <- .q_power_starts(start$log_q_power, source$dat, dat)
     }
-    for (component in c("N", "F", "M", "rec")) {
-      name <- switch(component, N = "mu_n", F = "log_mu_f", M = "mu_m", rec = "rec_beta")
+    if (!is.null(start$log_f)) {
+      if (dat$has_fleet || isTRUE(source$dat$has_fleet)) {
+        old_states <- source$dat$F_states; new_states <- dat$F_states
+        keep <- if (is.null(old_states) || is.null(new_states)) character() else intersect(old_states$key, new_states$key)
+        start$log_f <- start$log_f[, keep, drop = FALSE]
+      } else {
+        old <- source$dat$F_settings$age_blocks
+        if (is.null(old)) old <- stats::setNames(as.character(source$dat$ages), source$dat$ages)
+        new <- dat$F_settings$age_blocks
+        groups <- intersect(colnames(start$log_f), levels(new))
+        keep <- vapply(groups, function(g) identical(names(old)[as.character(old) == g], names(new)[as.character(new) == g]), logical(1))
+        start$log_f <- start$log_f[, groups[keep], drop = FALSE]
+      }
+    }
+    for (component in c("N", "F", "M", "rec", "q")) {
+      name <- switch(component, N = "mu_n", F = "log_mu_f", M = "mu_m", rec = "rec_beta",
+        q=if (dat$index_settings$q_link == "logit") "logit_q" else "log_q")
       if (is.null(start[[name]])) next
       old <- if (component == "rec") source$dat$rec$matrix else source$dat[[paste0(component, "_modmat")]]
       new <- if (component == "rec") dat$rec$matrix else dat[[paste0(component, "_modmat")]]
+      if (!is.matrix(new)) next
+      if (component %in% c("F","q")) {
+        old <- cbind(old,source$dat[[if(component == "F") "F_mono_modmat" else "q_mono_modmat"]])
+        new <- cbind(new,dat[[if(component == "F") "F_mono_modmat" else "q_mono_modmat"]])
+      }
       if (!is.matrix(new) || !ncol(new)) next
-      before <- if (component == "rec") source$dat$rec$data else source$dat$pop_data
-      after <- if (component == "rec") dat$rec$data else dat$pop_data
-      key <- function(d) paste(d$year, d$age)
+      before <- if (component == "rec") source$dat$rec$data else if (component == "F") source$dat$F_data else if(component == "q") source$dat$obs$index else source$dat$pop_data
+      after <- if (component == "rec") dat$rec$data else if (component == "F") dat$F_data else if(component == "q") dat$obs$index else dat$pop_data
+      key <- function(d) paste(d$year, d$age, if ("fleet" %in% names(d)) d$fleet else "",if("survey" %in% names(d)) d$survey else "")
       rows <- match(key(after), key(before))
       retained <- !is.na(rows) & !dat$is_proj[match(after$year, dat$years)]
       if (component == "rec") retained <- retained &
@@ -107,14 +127,24 @@
         before$year[rows] %in% source$dat$years[source$dat$rec$historical]
       columns <- intersect(colnames(old), colnames(new))
       omitted <- setdiff(colnames(old), columns)
-      same <- identical(deparse(source$dat[[paste0(component, "_settings")]]$mu_form),
-        deparse(dat[[paste0(component, "_settings")]]$mu_form)) &&
+      previous <- if(component == "q") source$dat$index_settings$q_form else source$dat[[paste0(component,"_settings")]]$mu_form
+      current <- if(component == "q") dat$index_settings$q_form else dat[[paste0(component,"_settings")]]$mu_form
+      same <- identical(deparse(previous),deparse(current)) && any(retained) &&
         isTRUE(all.equal(old[rows[retained], columns, drop = FALSE], new[retained, columns, drop = FALSE],
           check.attributes = FALSE)) && !any(old[rows[retained], omitted, drop = FALSE] != 0)
       if (!same) {
         start[[name]] <- NULL
-        label <- if (component == "rec") "Recruitment" else component
+        label <- if (component == "rec") "Recruitment" else if(component == "q") "Catchability" else component
         cli::cli_inform("{label} mean starts were omitted because the formula basis changed.")
+      }
+    }
+    for (component in c("q","F")) {
+      field <- if (component == "q") "q_terms" else "F_terms"
+      for (term in Filter(function(x)x$type == "smooth",dat[[field]])) {
+        previous <- source$dat[[field]][[term$id]]
+        if (is.null(previous) || !.smooth_basis_compatible(previous,term)) {
+          start[c(term$parameter,term$sd_parameter)] <- NULL
+        }
       }
     }
   }
@@ -256,7 +286,7 @@ fit_tam <- function(
   ages = NULL,
   N_settings = list(process = "iid", init = "exp", mu_form = NULL, sd_form = ~1),
   rec_settings = list(process = "rw", init = "free", mu_form = NULL, sd = NULL, phi = NULL),
-  F_settings = list(process = "rw", mu_form = NULL, sd_form = ~1, mean_ages = NULL),
+  F_settings = list(process = "rw", mu_form = NULL, sd_form = ~1, age_breaks = NULL, cor_form = ~1, mean_ages = NULL),
   M_settings = list(
     process = "off", mu_form = NULL, mu_supplied = ~ I(0.2), sd_form = ~1,
     age_breaks = NULL, first_dev_year = NULL, mean_ages = NULL
@@ -289,7 +319,7 @@ fit_tam <- function(
   formula_advisories <- rbind(
     .mean_process_advisories(dat), .q_process_advisories(dat),
     .sd_process_advisories(dat), .rec_process_advisories(dat),
-    .process_sd_advisories(dat)
+    .process_sd_advisories(dat), .smooth_design_advisories(dat)
   )
   if (nrow(formula_advisories)) {
     cli::cli_warn(c(
@@ -301,6 +331,9 @@ fit_tam <- function(
     start_par <- .start_parameters(start_par, dat)
     refit_args$start_par <- start_par
     par <- .merge_start_par(par, start_par)
+    if (is.null(start_par$log_f) && any(vapply(dat$F_terms,function(x)x$type == "smooth",logical(1)))) {
+      par <- .initialize_F_states(par,dat)
+    }
     if (!is.null(dat$rec$curve) && !any(c("log_sr_alpha", "log_sr_beta") %in% names(start_par))) {
       par <- .initialize_rec_curve(par, dat)
     }
@@ -342,7 +375,7 @@ fit_tam <- function(
         dimnames = list(dat$years, dat$ages)
       )
       if (process == "f") {
-        field <- surface[!dat$is_proj, , drop = FALSE]
+        field <- .f_state_mean(surface[!dat$is_proj, , drop = FALSE], dat)
       } else {
         field <- surface[rownames(states), settings$age_block_start, drop = FALSE]
         surface[rownames(states), names(settings$age_blocks)] <- 0
@@ -361,11 +394,12 @@ fit_tam <- function(
   for (process in c("n", "f", "m")) {
     if (dat[[paste0(toupper(process), "_settings")]]$process != "ar1") next
     states <- par[[paste0("log_", process)]]
-    singleton <- c(ncol(states), nrow(states)) == 1L # age, year
+    singleton <- stats::setNames(c(ncol(states), nrow(states)) == 1L, c("age", "year"))
+    nm <- paste0("logit_phi_", process)
+    singleton <- singleton[names(par[[nm]])]
     if (any(singleton)) {
-      nm <- paste0("logit_phi_", process)
       par[[nm]][singleton] <- qlogis(0)
-      indices <- 1:2
+      indices <- seq_along(singleton)
       indices[singleton] <- NA_integer_
       map[[nm]] <- factor(indices)
     }
@@ -387,10 +421,11 @@ fit_tam <- function(
   )
 
   lower <- rep(-Inf, length(obj$par))
+  upper <- rep(Inf, length(obj$par))
   lower[names(obj$par) %in% c("dq", "dmu_f", "d_n0")] <- 0
   opt <- tryCatch(stats::nlminb(
     obj$par, obj$fn, obj$gr,
-    lower = lower,
+    lower = lower, upper = upper,
     control = list(eval.max = 1000, iter.max = 1000)
   ), error = function(e) cli::cli_abort("Optimization failed: {conditionMessage(e)}"))
   # Synchronize reports and the conditional random states with the returned solution.
@@ -422,7 +457,7 @@ fit_tam <- function(
     gradient = gradient,
     parameter_values = parameter_values,
     parameter_map = map,
-    bounds = list(lower = lower, upper = rep(Inf, length(lower))),
+    bounds = list(lower = lower, upper = upper),
     grad_tol = grad_tol
   )
 

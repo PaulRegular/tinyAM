@@ -1,106 +1,81 @@
-# Northern Shelf haddock: SAM likelihood equivalence
+# SAM likelihood equivalence checks
 
-This focused comparison tests whether tinyAM can reproduce the **2026 official
-Northern Shelf haddock SAM run**, `NShaddock_WGNSSK2026_Run1`, over 1972–2026,
-ages 0–8+. It does not alter comparative-assessment recipes or result tables.
+These tests compare tinyAM with native [SAM](https://github.com/fishfollower/SAM) using pinned SAMjr fixtures and the official 2026 Northern Shelf haddock assessment. **All supported comparisons pass.** This establishes numerical equivalence for the tested configurations, not general model validity or convergence from default starts.
 
-## Reproduce
+## SAMjr printed-output tests
 
-Use the native model object retained by the source review and stockassessment
-0.12.0 at **`1cc464b80f6f2a4a38b35cce276f13e521761da3`**. The script verifies
-the installed revision and input MD5 (`3ae172debf40dbc59d202335d9d08371`).
-The local pinned installation was built with R 4.4.1; use a compatible runtime.
-
-```r
-# From the repository root:
-# Rscript analysis/sam_equivalence/compare_haddock.R path/to/run_model.RData path/to/SAM-library
+```sh
+Rscript analysis/sam_equivalence/compare_samjr.R SAM-library testmore
+Rscript analysis/sam_equivalence/test_testmore.R
 ```
 
-The default output directory is `results/haddock/` beneath this document and is
-ignored. It retains the fitted object, numerical check tables, warnings and a
-self-contained HTML dashboard. A failed run records its error and warnings.
-The script uses source parameters as starts for a numerical equivalence test;
-it does not claim a test of default-start convergence or tune failed models.
+Using unchanged SAMjr inputs and expected outputs (revision `0384774a3f2f8ec3dc3330375998bd73ef6bbe7c`), all three implementations reproduce both scripts' printed results exactly:
 
-To render both saved fits together without refitting, run
-`Rscript analysis/sam_equivalence/render_haddock.R`. This creates
-`results/haddock/haddock-comparison.html` and `SAM-reference.rds`. The SAM
-`tam_ref` uses native states, predictions, coefficients and available uncertainty;
-its Background page identifies aligned summary definitions and unavailable
-intervals. The curves overlap to numerical precision.
+| Script | Matched output |
+|---|---|
+| `codIN3Ben` | Objective `751.6052` |
+| `nscodXtraSd` | Log-likelihood, parameter count, AIC and LR test (*p* = `0.3031836`) |
 
-Sources:
+Implementations are ordinary `fit_tam()`, tinyAM's likelihood with SAMjr optimizer controls, and native SAM (**six passing comparisons**). Each starts from the source's **unoptimized `defpar()` values**, not a fitted SAM solution. The protocol optimizer uses `nlminb` (`eval.max = iter.max = 2000`, `rel.tol = 1e-10`) and three Newton steps for every fit. All fits pass convergence/Hessian checks. No scientific settings were tuned.
 
-- [Official 2026 assessment chapter](https://ndownloader.figshare.com/files/66104291).
-- [Official SAM run](https://stockassessment.org/datadisk/stockassessment/userdirs/user259/NShaddock_WGNSSK2026_Run1/).
-- [Pinned SAM implementation](https://github.com/fishfollower/SAM/tree/1cc464b80f6f2a4a38b35cce276f13e521761da3/stockassessment).
+The runner verifies fixture hashes and exact printed output (ignoring trailing carriage returns only), saves fits/checks/warnings under ignored `results/testmore/`, and exits nonzero on failure. This is **printed-output equivalence**, not bitwise identity. Harness tests pass on R 4.4.1 and 4.6.1; the complete comparison was rerun on R 4.4.1.
 
-## Matched specification
+`samjr_testmore.R` adapts attributed GPL-2 source workflows; [SOURCES.md](SOURCES.md) documents changes. The likelihood is implemented by tinyAM; native SAM provides input/configuration utilities. SAMjr readers are not tested. The full `nscodbiopro` output script is excluded because its later biology processes and stochastic forecasts are unsupported here.
 
-Both models integrate all first-year N states without an initial density, use
-random-walk recruitment, independent cohort-survival innovations with a shared
-age-1–7 SD and a separate 8+ SD, and age-correlated F random-walk increments.
-There is one F state per age, one F innovation SD, and no first-year F density.
-SAM's correlation transform is `tanh(itrans_rho)`, identical to tinyAM's
-`tanh(atanh_rho_f)`. The parameter mapping is otherwise a permutation.
+## Native SAM likelihood comparisons
 
-Both use the same supplied M, stock weights, maturity, zero spawning fractions,
-observation values, survey times, relative precision, 17 baseline-q coefficients,
-three positive q powers, and 12 observation-SD groups. Power affects abundance
-at survey time: `log I = log q0 + p * (log N - s * Z) + error`.
-No reference estimates constrain the fitted parameters.
+Run from the repository root with R 4.4 and the pinned SAM library:
 
-SAM has no catch-weight input for the survey-only year 2026. The script repeats
-2025 catch weights solely to satisfy tinyAM's complete input grid. This enters
-neither the numbers likelihood nor SSB; **2026 yield is not compared**. Native
-stock weights, M and maturity for 2026 are retained unchanged.
+```sh
+Rscript analysis/sam_equivalence/compare_samjr.R SAM-library all
+```
 
-The initial source preparation also excludes the unused recruitment-SD category
-from the older-cohort SD design. Recruitment retains its own source SD; no
-active variance parameter or density is changed.
+Use `baseline` instead of `all` for only `nscodbiopro`'s supplied-biology `fit0`; `all` includes the printed-output tests. Sources are pinned to SAMjr `0384774a3f2f8ec3dc3330375998bd73ef6bbe7c` and SAM `1cc464b80f6f2a4a38b35cce276f13e521761da3` (stockassessment 0.12.0). `fixtures.csv` records provenance and hashes. Results and failures are retained under ignored `results/`.
 
-## Numerical result
+**All four specifications pass 33 checks each (132 total)**, including objectives, derivatives, Laplace likelihoods, parameter estimates/SEs, N/F, predictions, AIC and aligned stock summaries. Both packages pass a 0.01-SD perturbed-start fit and two retrospective peels per specification.
 
-Checks compare the independently compiled, pinned SAM likelihood with RTMB at
-the native fitted parameter vector and a reproducible small perturbation.
+| Specification | Max. joint objective difference | Optimized difference | Max. scaled SE difference |
+|---|---:|---:|---:|
+| `nscodbiopro`: supplied biology | 2.28e-13 | 6.83e-13 | 4.50e-12 |
+| `nscodXtraSd`: standard | 2.28e-13 | 6.83e-13 | 1.31e-12 |
+| `nscodXtraSd`: extra SD | 5.69e-13 | 1.60e-12 | 2.29e-12 |
+| `codIN3Ben`: unfished young ages | 6.83e-13 | 1.71e-12 | 1.15e-9 |
 
-| Quantity | Result |
+Tolerance limits are `1e-7` for joint objectives, `1e-6` for scaled derivatives, `1e-5` for Laplace objectives and `1e-4` for optimized objectives/scaled summaries. Scaled differences divide by `1 + abs(native value)`; relative N differences use native N. State and observation counts must match exactly. The largest observed scaled derivative and Laplace differences are `1.60e-12` and `1.71e-12`, respectively; maximum relative N difference across perturbed/peel fits is `3.26e-5`. Comparisons initialize from **native fitted parameters**, so do not test tinyAM's default starts.
+
+Model-specific handling is unchanged: `nscodXtraSd` binds F at ages 5–6 and estimates a multiplicative 1993–2005 catch SD using `catch_settings$sd_form`; `codIN3Ben` fixes F to zero at ages 1–2 and shares F at ages 9–10. The latter has 115 missing observations represented as auxiliary Gaussian states in SAM. Their independent densities integrate to one and are subtracted, with derivatives, only for common-state joint comparisons. The original native fit and full Laplace objective remain intact; random-state counts differ by 115. Survey-only years may require padded catch weights; their yield is not compared. Fbar is aligned using tinyAM's abundance-weighted definition, not SAM's arithmetic Fbar intervals.
+
+Render a saved comparison without refitting:
+
+```sh
+Rscript analysis/sam_equivalence/render_samjr.R analysis/sam_equivalence/results/samjr/nscodXtraSd/extra_sd.rds
+```
+
+OSA residual and process-draw equivalence remain untested. An exploratory, non-fixture configuration estimated catch SD near `4e-5` and failed positive-definite uncertainty checks despite matching objectives. **Likelihood equivalence does not establish identifiability**; AIC/cAIC normalization cautions still apply.
+
+## Northern Shelf haddock (2026)
+
+The official `NShaddock_WGNSSK2026_Run1` SAM model (1972–2026, ages 0–8+) is reproduced using the source's fitted parameters and a small perturbation. Run with a compatible R 4.4 installation and pinned SAM `1cc464b80f6f2a4a38b35cce276f13e521761da3`:
+
+```sh
+Rscript analysis/sam_equivalence/compare_haddock.R path/to/run_model.RData path/to/SAM-library
+Rscript analysis/sam_equivalence/render_haddock.R
+```
+
+The script checks the source input MD5 (`3ae172debf40dbc59d202335d9d08371`). Results, warnings and an HTML dashboard are saved under ignored `results/haddock/`.
+
+Both implementations integrate first-year N without an initial density, use random-walk recruitment, independent survival innovations (one SD for ages 1–7, another for 8+), and age-correlated F random walks with one state per age. They retain the same M, maturity, weights, survey timing, zero spawning fractions and relative precision, including 17 baseline catchability coefficients, three positive survey powers and 12 observation-SD groups. The F-correlation transformations are equivalent; no source estimates are fixed as parameter constraints. The source's 2026 survey-only year lacks catch weights: 2025 weights are repeated for tinyAM's input grid, but **2026 yield is excluded**.
+
+| Measure | Difference or value |
 |---|---:|
-| Included observations | 1,153 |
-| Estimated outer parameters | 37 |
-| Integrated N/F states | 990 |
-| Maximum absolute joint-objective difference | 7.96e-13 |
-| Maximum absolute gradient difference | 8.42e-12 |
-| Maximum absolute full Hessian difference | 1.17e-10 |
-| Maximum absolute log-observation-prediction difference | 3.56e-15 |
-| Laplace objective, both implementations | 650.04377631258 |
-| Optimized objective difference | -4.55e-13 |
-| Maximum absolute outer-parameter difference | 5.11e-11 |
-| Maximum relative N difference | 1.10e-10 |
-| Maximum relative F difference | 9.26e-11 |
+| Observations / fixed parameters / N-F states | 1,153 / 37 / 990 |
+| Maximum joint-objective difference | 7.96e-13 |
+| Maximum gradient / full-Hessian difference | 8.42e-12 / 1.17e-10 |
+| Laplace objective (both models) | 650.04377631258 |
+| Optimized-objective difference | -4.55e-13 |
+| Maximum parameter / relative N / relative F difference | 5.11e-11 / 1.10e-10 / 9.26e-11 |
 
-The full joint Hessian check includes the random-state block and its cross
-derivatives. The tinyAM fit passes numerical checks: optimizer code 0, maximum
-absolute gradient 9.82e-7 and a positive-definite Hessian.
+The tinyAM fit converges (optimizer code 0, maximum gradient `9.82e-7`) with a positive-definite Hessian. The joint Hessian comparison includes the random-state block and cross derivatives. Scientific cautions remain: F-correlation approaches a boundary, three parameter pairs are highly correlated, and some residuals are large or serially correlated. SAM's arithmetic Fbar differs from tinyAM's abundance-weighted Fbar. SAM intervals also differ from default 95% Wald intervals; conditional state SEs should not be compared with SEs that propagate fixed-parameter uncertainty. **Numerical agreement does not validate model assumptions.**
 
-Scientific advisories remain: F-increment correlation is within 0.05 of a
-boundary, three fixed-parameter pairs exceed 0.95 absolute correlation, some
-standardized residuals exceed three SDs, and some groups have substantial
-adjacent-year residual correlation. Equivalence does not validate these
-assumptions or establish that the model is suitable for operational use.
+Sources: [assessment chapter](https://ndownloader.figshare.com/files/66104291), [official SAM run](https://stockassessment.org/datadisk/stockassessment/userdirs/user259/NShaddock_WGNSSK2026_Run1/), [pinned SAM code](https://github.com/fishfollower/SAM/tree/1cc464b80f6f2a4a38b35cce276f13e521761da3/stockassessment).
 
-The source's arithmetic Fbar and tinyAM's abundance-weighted Fbar are different
-reported summaries. Native SAM interval tables also use different conventions
-from tinyAM's default 95% Wald limits, and conditional state SEs must not be
-compared with SEs that propagate fixed-parameter uncertainty. Align these
-definitions before comparing summaries; they do not change the likelihood.
-
-## Package validation
-
-On R 4.6.1, the complete package suite passed all 3,807 expectations with no
-failures, warnings or skips. `R CMD check --no-manual` returned **Status: OK**,
-including examples and documentation checks. Focused regression tests cover
-latent recruitment boundaries, power-formula validation and derivatives,
-simulation, warm starts, projections, hindcasts, dashboard rendering and OSA
-row identities. These checks complement the pinned SAM comparison above;
-they do not remove its statistical advisories or default-start limitation.

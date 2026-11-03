@@ -53,7 +53,8 @@ tidy_array <- function(x, value_name = "x", require_dimnames = TRUE) {
 
   k <- length(dim(x))
   if (k > 0) {
-    df[seq_len(k)] <- lapply(df[seq_len(k)], type.convert, as.is = TRUE)
+    columns <- setdiff(seq_len(k), which(names(df)[seq_len(k)] == "fleet"))
+    df[columns] <- lapply(df[columns], type.convert, as.is = TRUE)
   }
 
   df
@@ -121,11 +122,12 @@ tidy_obs_pred <- function(fit, add_osa_res = FALSE, interval = .95, ...) {
 
   obs_pred <- fit$dat$obs[c("catch", "index")]
   pred <- split(exp(fit$rep$log_pred), fit$dat$obs_map$type)
+  log_pred <- split(fit$rep$log_pred, fit$dat$obs_map$type)
   sd <- split(fit$rep$sd_obs, fit$dat$obs_map$type)
 
   obs_pred$catch$pred <- pred$catch
   obs_pred$catch$sd <- sd$catch
-  obs_pred$catch$std_res <- with(obs_pred$catch, ifelse(obs == 0, NA, (log(obs) - log(pred)) / sd))
+  obs_pred$catch$std_res <- with(obs_pred$catch, ifelse(obs == 0, NA, (log(obs) - log_pred$catch) / sd))
 
   n_index <- nrow(obs_pred$index)
   obs_pred$index$pred <- if (is.null(pred$index)) rep(NA_real_, n_index) else pred$index
@@ -167,7 +169,7 @@ tidy_obs_pred <- function(fit, add_osa_res = FALSE, interval = .95, ...) {
       obs_pred$index$q_base_se <- as.numeric(error)
     }
   }
-  obs_pred$index$std_res <- with(obs_pred$index, ifelse(obs == 0, NA, (log(obs) - log(pred)) / sd))
+  obs_pred$index$std_res <- with(obs_pred$index, ifelse(obs == 0, NA, (log(obs) - log_pred$index) / sd))
 
   if (add_osa_res) {
     args <- list(...)
@@ -242,17 +244,17 @@ tidy_rep <- function(fit) {
   }
 
   keep <- vapply(
-    rep, function(x) is.matrix(x) || length(x) == length(dat$years),
+    rep, function(x) length(dim(x)) >= 2L || length(x) == length(dat$years),
     logical(1)
   )
-  keep[grepl("^eta_(q|mu_[FM]|sd_catch|sd_index)_increments$", names(keep))] <- FALSE
+  keep[grepl("^eta_(q|mu_[FM]|sd_catch|sd_index)_(increments|smooth)$", names(keep))] <- FALSE
   keep[startsWith(names(keep), "rec_")] <- FALSE
   keep[names(keep) == "initial_log_N"] <- FALSE
   keep[names(keep) %in% c("log_q_base", "q_power")] <- FALSE
   rep_items <- rep[keep]
 
   trends <- lapply(rep_items, function(x) {
-    if (is.matrix(x)) {
+    if (length(dim(x)) >= 2L) {
       d <- tidy_mat(x, value_name = "est")
       d$is_proj <- d$year %in% dat$years[dat$is_proj]
       return(d)
@@ -363,12 +365,12 @@ tidy_sdrep <- function(fit, interval = 0.95) {
   ## assumes all ADREPORTED objects are equal length to years and are in log space
   vals <- as.list(fit[["sdrep"]], "Estimate", report = TRUE)
   ses <- as.list(fit[["sdrep"]], "Std. Error", report = TRUE)
-  vals <- vals[!grepl("^(q_link_prediction|log_q_base|eta_(q|mu_[FM]|sd_catch|sd_index)_increments)$", names(vals))]
+  vals <- vals[!grepl("^(q_link_prediction|log_q_base|eta_(q|mu_[FM]|sd_catch|sd_index)_(increments|smooth))$", names(vals))]
   vals <- vals[!startsWith(names(vals), "rec_")]
   vals$initial_log_N <- NULL
   ses <- ses[names(vals)]
   df <- lapply(seq_along(vals), function(i) {
-    if (is.matrix(vals[[i]])) {
+    if (length(dim(vals[[i]])) >= 2L) {
       dimnames(vals[[i]]) <- dimnames(fit$rep[[sub("^log_", "", names(vals)[i])]])
       d <- tidy_mat(vals[[i]], value_name = "est")
       d$se <- as.vector(ses[[i]])
@@ -401,6 +403,19 @@ tidy_sdrep <- function(fit, interval = 0.95) {
     df$F$se_scale[zero] <- "reported"
   }
   for (nm in names(df)) df[[nm]]$unit <- .population_unit(fit$dat, nm)
+  for (nm in intersect(c("F", "F_fleet", "F_full", "F_full_fleet", "mu_F", "mu_F_fleet", "sd_F", "F_bar"), names(df))) {
+    source <- fit$rep[[nm]]
+    if (is.null(source)) next
+    # A structurally zero F uses a finite log-report placeholder of zero.
+    # A very small positive F may underflow on the natural scale; retain its
+    # log-scale uncertainty rather than treating it as a structural constraint.
+    log_value <- vals[[paste0("log_", nm)]]
+    zero <- as.vector(source) == 0 & if (is.null(log_value)) TRUE else as.vector(log_value) == 0
+    if (length(zero) == nrow(df[[nm]]) && any(zero)) {
+      df[[nm]][zero, c("est", "lwr", "upr", "se")] <- 0
+      df[[nm]]$se_scale[zero] <- "reported"
+    }
+  }
   df
 }
 
@@ -486,10 +501,15 @@ tidy_pop <- function(fit, interval = 0.95) {
 #'   F mean-curve increments `dmu_f` likewise remain on their fitted log-F
 #'   increment scale. F logistic midpoints are on the age/covariate scale;
 #'   slopes are reported positive, with SEs on their fitted log scale.
+#'   Double-logistic scales are also positive with log-scale SEs.
 #'   Coefficient names identify
 #'   transitions and groups. Actual observation-specific q is in [tidy_obs_pred()].
+#' - Smooth null-space coefficients and penalized basis coefficients are signed
+#'   link-scale effects, not exponentiated F/q values. Smoothing SDs are positive
+#'   with log-scale SEs. Complete functions, including null-space contributions,
+#'   are in [tidy_tam()]'s `formula_effects$smooths`, with joint uncertainty.
 #'
-#' Formula coefficients named `log_mu_f`, `log_sd_*`, or `log_q` are
+#' Ordinary formula coefficients named `log_mu_f`, `log_sd_*`, or `log_q` are
 #' exponentiated in summaries. An exponentiated slope is a multiplicative
 #' change per unit covariate, not the fitted F, SD, or q surface itself.
 #' An exception is the mean-\eqn{M} formula
@@ -513,6 +533,8 @@ tidy_pop <- function(fit, interval = 0.95) {
 #'   remains a log-decrement with an SE on that same scale. For constrained
 #'   initialization, derived `n0` estimates use joint RTMB uncertainty.
 #' - For matrices (e.g., `log_f`, `log_n`), `year` and/or `age` columns are added
+#'   from their dimensions; shared F/M states use `age_block` rather than
+#'   duplicating the parameter at each biological age.
 #'   via [tidy_mat()].
 #'
 #' @param fit A fitted TAM object (from [fit_tam()]) containing an `sdrep`
@@ -548,6 +570,8 @@ tidy_par <- function(fit, interval = 0.95) {
   ran_nms <- intersect(fit$obj$env$.random, nms)
   fix_nms <- setdiff(nms, ran_nms)
   z <- stats::qnorm(0.5 + interval / 2)
+  smooth_columns <- unique(unlist(lapply(.formula_terms(fit$dat),function(term)
+    if (term$type == "smooth") colnames(term$smooth_fixed) else character()),use.names=FALSE))
 
   .par2df <- function(nm) {
     e <- est[[nm]]
@@ -557,6 +581,11 @@ tidy_par <- function(fit, interval = 0.95) {
         age = fit$dat$ages[1L], est = e, se = s, is_proj = FALSE)
     } else if (is.matrix(e)) {
       df <- tidy_mat(e, value_name = "est")
+      if (nm == "log_f" && fit$dat$has_fleet) {
+        i <- match(df$age_block, fit$dat$F_states$key)
+        df$fleet <- fit$dat$F_states$fleet[i]
+        df$age_block <- fit$dat$F_states$block[i]
+      }
       df$is_proj <- df$year %in% fit$dat$years[fit$dat$is_proj]
       df$se <- as.vector(s)
     } else {
@@ -589,6 +618,8 @@ tidy_par <- function(fit, interval = 0.95) {
     } else {
       "reported"
     }
+    smooth_fixed <- nm %in% c("log_mu_f","log_q","logit_q") & df$coef %in% smooth_columns
+    original_smooth <- df[smooth_fixed,c("est","lwr","upr","se"),drop=FALSE]
 
     if (startsWith(nm, "atanh_")) {
       df <- trans_est(df, transform = tanh, scale = 1)
@@ -604,10 +635,17 @@ tidy_par <- function(fit, interval = 0.95) {
     } else {
       df <- trans_est(df, transform = NULL, scale = 1)
     }
+    if (any(smooth_fixed)) {
+      df[smooth_fixed,c("est","lwr","upr","se")] <- original_smooth
+      df$se_scale[smooth_fixed] <- "reported"
+      df$par[smooth_fixed] <- if (nm == "log_mu_f") "mu_F_smooth" else "q_smooth_fixed"
+    }
     df$unit <- if (nm %in% c("log_r0", "log_r_init", "log_r", "log_n0", "log_n")) {
       .population_unit(fit$dat, "N")
     } else if (nm == "d_n0") "log abundance difference" else
       if (nm == "log_q_power") "unitless" else NA_character_
+    if (any(smooth_fixed)) df$unit[smooth_fixed] <- if (nm == "log_mu_f") "log F coefficient" else
+      if (nm == "logit_q") "logit q coefficient" else "log q coefficient"
     values <- c("est", "lwr", "upr", "se", "se_scale")
     df[, c(
       setdiff(names(df), c(values, "is_proj")), values,
@@ -863,8 +901,13 @@ stack_nested <- function(x, label = "model",
   }
   if (!is.null(par[["log_f"]])) {
     historical <- !dat$is_proj
-    out$F <- table(log(fit$rep$F[historical, , drop = FALSE]) -
-                     log(fit$rep$mu_F[historical, , drop = FALSE]), dat$F_settings$process)
+    mean <- if (dat$has_fleet) .F_matrix(fit$rep$mu_F_fleet, dat) else fit$rep$mu_F
+    out$F <- table(par$log_f - log(.f_state_mean(mean[historical, , drop = FALSE], dat)),
+      dat$F_settings$process, .f_blocked(dat))
+    if (dat$has_fleet && !is.null(out$F)) {
+      i <- match(out$F$age_block, dat$F_states$key)
+      out$F$fleet <- dat$F_states$fleet[i]; out$F$age_block <- dat$F_states$block[i]
+    }
   }
   if (!is.null(par[["log_m"]])) {
     out$M <- table(par[["log_m"]] - log(fit$rep$mu_M[rownames(par[["log_m"]]),
@@ -950,6 +993,10 @@ stack_nested <- function(x, label = "model",
 #' - **formula_effects** — signed Gaussian q, F/M mean and log observation-SD effect levels, RW increments and
 #'   numeric-by contributions, grouped by term. Intervals use their joint fitted
 #'   uncertainty; the zero RW anchor is explicitly marked as fixed.
+#'   `smooths` contains complete centered smooth functions, including their
+#'   unpenalized directions, with joint uncertainty on the log F/q-link scale.
+#'   Log-q and logit-q functions are kept in separate entries. Basis coefficient
+#'   tables identify basis indices, which are not biological ages or years.
 #'
 #' @example inst/examples/example_fit_default.R
 #' @examples
@@ -1172,6 +1219,7 @@ tidy_tam <- function(..., model_list = NULL, interval = 0.95, label = "model", l
   })
   if (any(lengths(effects))) {
     components <- c("levels", "increments", "contributions")
+    if (any(vapply(effects,function(x)length(x$smooths) > 0L,logical(1)))) components <- c(components,"smooths")
     out$formula_effects <- stats::setNames(lapply(components, function(nm) {
       stack_nested(lapply(effects, `[[`, nm), label = id_col, label_type = label_type)
     }), components)

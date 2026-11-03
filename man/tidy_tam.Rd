@@ -64,6 +64,10 @@ see \code{\link[=tidy_recruitment]{tidy_recruitment()}};
 \item \strong{formula_effects} — signed Gaussian q, F/M mean and log observation-SD effect levels, RW increments and
 numeric-by contributions, grouped by term. Intervals use their joint fitted
 uncertainty; the zero RW anchor is explicitly marked as fixed.
+\code{smooths} contains complete centered smooth functions, including their
+unpenalized directions, with joint uncertainty on the log F/q-link scale.
+Log-q and logit-q functions are kept in separate entries. Basis coefficient
+tables identify basis indices, which are not biological ages or years.
 }
 }
 \description{

@@ -2,14 +2,20 @@
 # Scientific names break ties within groups; stocks of a species stay together.
 assessment_plot_stocks <- function(assessments, stocks, assessment_ids) {
   groups <- list(
-    Clupeiformes = c("Clupea", "Sprattus"),
+    Clupeiformes = c("Clupea", "Sprattus", "Engraulis"),
     Gadidae = c("Gadus", "Melanogrammus", "Merlangius", "Micromesistius",
                 "Pollachius", "Trisopterus"),
     Merlucciidae = "Merluccius",
+    Phycidae = "Urophycis",
     Scombriformes = "Scomber",
+    Carangidae = "Trachurus",
     Cyclopsettidae = "Paralichthys",
-    Pleuronectidae = c("Atheresthes", "Eopsetta", "Lepidopsetta", "Limanda", "Pleuronectes"),
+    Scophthalmidae = "Scophthalmus",
+    Pleuronectidae = c("Atheresthes", "Eopsetta", "Glyptocephalus", "Hippoglossoides", "Lepidopsetta", "Limanda", "Pleuronectes", "Pseudopleuronectes"),
+    Soleidae = "Solea",
+    Sparidae = "Stenotomus",
     Uranoscopiformes = "Ammodytes",
+    Moronidae = c("Morone", "Dicentrarchus"),
     Sebastidae = "Sebastes",
     Hexagrammidae = "Pleurogrammus"
   )

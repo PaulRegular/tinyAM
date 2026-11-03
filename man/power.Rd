@@ -31,7 +31,8 @@ and below one q increases as abundance declines. Error is multiplicative
 on the observation scale. Abundance is not automatically centered or rescaled;
 baseline q therefore depends on its units and on the exponent.
 
-One additive power term is supported, with the log q link only. It can be
+One additive power term per observation is supported, with the log q link
+only. Disjoint \code{\link[=for_survey]{for_survey()}} scopes can each contain a power term. It can be
 combined with ordinary q terms and existing catchability curves and Gaussian
 effects. Its coefficients are fixed effects, with no additional process SD.
 Do not place it in interactions or numeric transformations.

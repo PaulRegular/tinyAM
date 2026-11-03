@@ -79,8 +79,9 @@ estimating another baseline. Effects must be constant within each fitted
 M age block. Use a categorical age column for separate trajectories;
 numeric \code{by = age} instead multiplies one shared trajectory by age.
 
-Initially, one temporal mean term is permitted per F/M surface, with IID
-residuals or M residuals off. Structured means with RW/AR1 residuals are
+One temporal mean term is permitted on each set of applicable F/M rows,
+with IID residuals or the residual process off. Disjoint \code{\link[=for_fleet]{for_fleet()}} scopes
+can therefore have different temporal means. Structured means with RW/AR1 residuals are
 rejected pending evidence that both temporal components can be separated,
 except for the age-group M random slopes described below.
 Two estimated IID variances on the same states are also rejected.

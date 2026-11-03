@@ -294,7 +294,7 @@ plot_comparison <- function(metric_name) {
     facet_wrap(
       ~panel,
       ncol = 7,
-      nrow = 4,
+      nrow = max(4, ceiling(nrow(panels) / 7)),
       scales = "free",
       drop = FALSE,
       labeller = labeller(
@@ -391,7 +391,7 @@ for (metric in names(plots)) {
     filename = file.path(root, "results", "figures", paste0(metric, ".png")),
     plot = plots[[metric]],
     width = 14,
-    height = 8,
+    height = max(8, 2 * ceiling(nrow(stock_info) / 7)),
     dpi = 300,
     bg = "white"
   )

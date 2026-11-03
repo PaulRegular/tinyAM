@@ -45,9 +45,9 @@ test_that("process SD guards reject unsupported or conflicting designs", {
     sd_form = ~ factor(age), age_breaks = c(3, 14)
   )), "within an M age block")
   obs <- cod_obs
-  obs$pop_covariates$varying <- obs$pop_covariates$year
+  obs$catch$varying <- obs$catch$year
   expect_error(make_test_dat(data = obs, F_settings = list(process = "rw", sd_form = ~varying)), "varies across years")
-  obs$pop_covariates$varying[] <- NA
+  obs$catch$varying[] <- NA
   expect_error(make_test_dat(data = obs, F_settings = list(process = "rw", sd_form = ~varying)), "complete covariates")
   expect_error(make_test_dat(N_settings = list(process = "off", sd_form = ~age)), "no process")
 })

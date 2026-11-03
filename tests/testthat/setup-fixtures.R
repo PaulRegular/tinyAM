@@ -11,6 +11,13 @@ make_test_dat <- function(...) {
   args <- list(data = cod_obs, years = YEARS, ages = AGES)
   supplied <- list(...)
   args[names(supplied)] <- supplied
+  if (!"data" %in% names(supplied)) {
+    # This fixture represents the chosen terminal age as one explanatory group,
+    # retaining the former plus-age mean rather than choosing an older-age group.
+    c <- args$data$catch
+    c$F_a_block[c$age >= max(args$ages)] <- c$F_a_block[match(max(args$ages), c$age)]
+    args$data$catch <- c
+  }
   do.call(prepare_tam, args)
 }
 

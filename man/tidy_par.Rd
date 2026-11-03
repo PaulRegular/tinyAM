@@ -8,7 +8,7 @@ tidy_par(fit, interval = 0.95)
 }
 \arguments{
 \item{fit}{A fitted TAM object (from \code{\link[=fit_tam]{fit_tam()}}) containing an \code{sdrep}
-(an \code{\link[RTMB:sdreport]{RTMB::sdreport()}} object) and \code{obj$env$.random} (names of random effects).}
+(an \code{\link[RTMB:TMB-interface]{RTMB::sdreport()}} object) and \code{obj$env$.random} (names of random effects).}
 
 \item{interval}{Confidence level for Wald intervals; default \code{0.95}.}
 }
@@ -58,11 +58,16 @@ These local curvature SEs are not boundary-adjusted inference.
 F mean-curve increments \code{dmu_f} likewise remain on their fitted log-F
 increment scale. F logistic midpoints are on the age/covariate scale;
 slopes are reported positive, with SEs on their fitted log scale.
+Double-logistic scales are also positive with log-scale SEs.
 Coefficient names identify
 transitions and groups. Actual observation-specific q is in \code{\link[=tidy_obs_pred]{tidy_obs_pred()}}.
+\item Smooth null-space coefficients and penalized basis coefficients are signed
+link-scale effects, not exponentiated F/q values. Smoothing SDs are positive
+with log-scale SEs. Complete functions, including null-space contributions,
+are in \code{\link[=tidy_tam]{tidy_tam()}}'s \code{formula_effects$smooths}, with joint uncertainty.
 }
 
-Formula coefficients named \code{log_mu_f}, \verb{log_sd_*}, or \code{log_q} are
+Ordinary formula coefficients named \code{log_mu_f}, \verb{log_sd_*}, or \code{log_q} are
 exponentiated in summaries. An exponentiated slope is a multiplicative
 change per unit covariate, not the fitted F, SD, or q surface itself.
 An exception is the mean-\eqn{M} formula
@@ -87,6 +92,8 @@ are in \code{\link[=tidy_recruitment]{tidy_recruitment()}}.
 remains a log-decrement with an SE on that same scale. For constrained
 initialization, derived \code{n0} estimates use joint RTMB uncertainty.
 \item For matrices (e.g., \code{log_f}, \code{log_n}), \code{year} and/or \code{age} columns are added
+from their dimensions; shared F/M states use \code{age_block} rather than
+duplicating the parameter at each biological age.
 via \code{\link[=tidy_mat]{tidy_mat()}}.
 }
 }

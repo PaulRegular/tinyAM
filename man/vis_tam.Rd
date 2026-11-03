@@ -86,6 +86,13 @@ Additional arguments for \code{\link[rmarkdown:render]{rmarkdown::render()}} can
 Precomputed assessment references may be mixed with tinyAM fits; they are
 not refittable TAM objects. Supply \code{background} to add a page
 describing assessment assumptions and translation choices.
+Fisheries is a dropdown with one page per declared catch fleet,
+followed by Aggregate fishery. Fleet pages show yield, catch and F
+at age, and observation residuals. Unlabeled catch models appear
+only on the aggregate page; they are not allocated among fleets.
+Without fleets, Aggregate fishery retains all single-fishery
+diagnostics. With fleets, it shows total yield; residuals are
+assessed separately within each fleet.
 The Parameters menu separates Fixed and Random pages. Fixed plots
 group similar quantities, with initial abundance shown separately.
 Stock-recruit models add a relationship page with parent-year pairs,

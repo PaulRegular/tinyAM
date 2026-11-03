@@ -21,7 +21,7 @@
 #'
 #' Each call returns one plot; the dashboard supplies its dropdown containers.
 #' N/F/M buttons retain the selected model. Signed matrices share symmetric colour ranges across
-#' models within a component and have no logarithmic scale. M uses unique,
+#' models within a component and have no logarithmic scale. Blocked F and M use unique,
 #' ordered state blocks. Bubble areas use absolute residuals with one scale
 #' across all components/models; orange is negative and navy is positive.
 #'
@@ -112,15 +112,21 @@ plot_process_residuals <- function(out, component = c("NFM", "Recruitment")) {
   pieces <- lapply(c("N", "F", "M"), function(component) {
     d <- .process_plot_data(tables[[component]], out)
     if (is.null(d)) d <- data.frame(year = numeric(), est = numeric(), model = character())
-    d$coordinate <- if (component == "M") integer(nrow(d)) else if (nrow(d)) d$age else numeric()
-    if (component == "M" && nrow(d)) {
-      d$coordinate <- integer(nrow(d))
+    blocked <- "age_block" %in% names(d)
+    d$coordinate <- if ("age" %in% names(d)) d$age else rep(NA_real_, nrow(d))
+    d$coordinate_label <- as.character(d$coordinate)
+    if (blocked && nrow(d)) {
+      d$age_block <- as.character(d$age_block)
+      if ("fleet" %in% names(d)) {
+        has_fleet <- !is.na(d$fleet)
+        d$age_block[has_fleet] <- paste(d$fleet[has_fleet], d$age_block[has_fleet], sep = " / ")
+      }
       for (model in models) {
-        i <- which(d$model == model)
+        i <- which(d$model == model & !is.na(d$age_block))
         d$coordinate[i] <- match(as.character(d$age_block[i]), unique(as.character(d$age_block[i])))
+        d$coordinate_label[i] <- as.character(d$age_block[i])
       }
     }
-    d$coordinate_label <- if (component == "M") as.character(d$age_block) else as.character(d$age)
     d$component <- rep(component, nrow(d))
     d <- d[intersect(c("year", "est", "model", "coordinate", "coordinate_label", "component", "definition", "notes"), names(d))]
     # NA-only rows keep every model/component selectable, without inventing values.
@@ -148,9 +154,10 @@ plot_process_residuals <- function(out, component = c("NFM", "Recruitment")) {
     cells <- lapply(models, function(model) {
       z <- values[values$model == model & is.finite(values$est), , drop = FALSE]
       traces <- list()
+      state_labels <- component == "M" || (component == "F" && any(grepl(" / |^[0-9]+-", z$coordinate_label)))
       if (nrow(z)) {
         z$kind <- paste0("Model: ", model, "<br>", component, " residual<br>",
-          if (component == "M") "M state block: " else "Age: ", z$coordinate_label,
+          if (state_labels) paste0(component, " state block: ") else "Age: ", z$coordinate_label,
           "<br>Year: ", z$year, "<br>Residual")
         p <- plotly::plotly_build(plot_bubbles(z, res = ~est, y = ~coordinate,
           title = "", colors = colours))
@@ -171,9 +178,9 @@ plot_process_residuals <- function(out, component = c("NFM", "Recruitment")) {
         trace
       })
       ticks <- sort(unique(z$coordinate))
-      axis <- list(title = if (component == "M") "M state block" else "Age",
+      axis <- list(title = if (component == "M") "M state block" else if (state_labels) "F state block" else "Age",
         type = "linear", range = span(z$coordinate), autorange = FALSE,
-        tickmode = if (component == "M") "array" else "auto",
+        tickmode = if (state_labels) "array" else "auto",
         tickvals = ticks, ticktext = z$coordinate_label[match(ticks, z$coordinate)])
       list(data = traces, layout = list(xaxis = list(title = "Year", range = xrange, autorange = FALSE),
         yaxis = axis, annotations = if (nrow(z)) list() else .process_empty_annotation()), available = nrow(z) > 0L)
@@ -209,5 +216,6 @@ plot_process_residuals <- function(out, component = c("NFM", "Recruitment")) {
   if (residuals) return(.process_bubbles(d, models))
   plot_matrix(d, metric = ~component, frame = ~model, signed = TRUE,
     y = ~coordinate, y_labels = ~coordinate_label,
-    ylab = c(N = "Age", F = "Age", M = "M state block"))
+    ylab = c(N = "Age", F = if ("fleet" %in% names(tables$F)) "Fleet / F state block" else
+      if ("age_block" %in% names(tables$F)) "F state block" else "Age", M = "M state block"))
 }

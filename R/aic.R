@@ -124,7 +124,7 @@ NULL
 
 .aic_observations <- function(object) {
   dat <- object$dat
-  cols <- c("type", "survey", "year", "age", "samp_time", "unit")
+  cols <- c("type", "survey", "fleet", "year", "age", "samp_time", "unit")
   d <- dat$obs_map[dat$is_observed, intersect(cols, names(dat$obs_map)), drop = FALSE]
   for (nm in setdiff(cols, names(d))) d[[nm]] <- NA_character_
   d <- d[, cols, drop = FALSE]
