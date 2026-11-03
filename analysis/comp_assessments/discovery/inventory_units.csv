@@ -47,7 +47,7 @@
 "candidate:dfo_witch_flounder_4rst","","dfo_witch_flounder_4rst","new","ineligible","screened","not_started","DFO","Gulf","DFO:Gulf:Witch Flounder - NAFO 4RST",1
 "candidate:dfo_yelloweye_inside_bc","","dfo_yelloweye_inside_bc","new","unresolved","screened","not_started","DFO","Pacific","DFO:Pacific:Yelloweye Rockfish - Inside Waters",1
 "candidate:dfo_yelloweye_outside_bc","","dfo_yelloweye_outside_bc","new","unresolved","screened","not_started","DFO","Pacific","DFO:Pacific:Yelloweye Rockfish - Outside Waters",1
-"candidate:dfo_yellowmouth_bc","","dfo_yellowmouth_bc","new","eligible","screened","not_started","DFO","Pacific","DFO:Pacific:Yellowmouth Rockfish",1
+"candidate:dfo_yellowmouth_bc","dfo_yellowmouth_bc","dfo_yellowmouth_bc","new","eligible","screened","partial","DFO","Pacific","DFO:Pacific:Yellowmouth Rockfish","1"
 "candidate:dfo_yellowtail_flounder_3lno","","dfo_yellowtail_flounder_3lno","new","ineligible","screened","not_started","DFO","Newfoundland and Labrador","DFO:Newfoundland and Labrador:Yellowtail Flounder - NAFO 3LNO",1
 "candidate:dfo_yukon_chinook_smu","","dfo_yukon_chinook_smu","new","unresolved","screened","not_started","DFO","Pacific","DFO:Pacific:Chinook Salmon - Yukon",1
 "candidate:greenland_halibut_cumberland_sound_tma","","greenland_halibut_cumberland_sound_tma","new","ineligible","screened","not_started","DFO","Arctic","DFO:Arctic:Greenland Halibut - Cumberland Sound Turbot Management Area",1

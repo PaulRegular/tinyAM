@@ -61,3 +61,5 @@ and recent zero-F statement, but the linked detailed Research Document 2026/054
 PDF currently redirects to an archive notice. Numerical input series and
 historical trajectories remain unavailable, so this case is not ready for
 translation.
+
+Yellowmouth Rockfish has a partial source import from the 2021 production assessment. It includes catch, aggregate survey biomass indices, commercial CPUE, maturity, fixed biological parameter values and composite-base reference-point quantiles. The report specifies midyear timing. Numerical age compositions and annual age-specific population outputs remain unavailable; see source_reviews/dfo_yellowmouth_2021.md.

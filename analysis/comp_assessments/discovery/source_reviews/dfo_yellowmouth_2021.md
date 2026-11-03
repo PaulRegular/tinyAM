@@ -1,28 +1,46 @@
 # Yellowmouth Rockfish
 
-Reviewed 2026-10-29. DFO's current inventory lists Yellowmouth Rockfish as a Pacific stock. The latest detailed assessment located is the coastwide 2021 assessment, published as Research Document 2022/010 and Science Advisory Report 2022/001. It covers PMFC areas 3CD and 5ABCDE and excludes area 4B. No canonical Yellowmouth stock record was found.
+Reviewed 2026-11-03. The current DFO unit is the coastwide Yellowmouth Rockfish stock in PMFC areas 3CD and 5ABCDE; area 4B is excluded. No Charbonneau–Keith identifier was matched. The latest detailed production assessment located is the 2021 assessment, published as DFO Research Document 2022/010 with advice in Science Advisory Report 2022/001. The 2025/26 Groundfish IFMP anticipated an update in 2024, but the 2026/27 plan identifies other forthcoming advice and no later Yellowmouth assessment. The 2021 run remains the latest detailed run found in this review.
 
-## Assessment and source evidence
+## Assessment and recovered source data
 
-The 2021 production assessment uses Stock Synthesis 3 (version 3.30.17.01) as an annual, two-sex, age-structured model. It tracks ages 1-60, with age 60 as an accumulator, and combines bottom and midwater trawl catch into one commercial fishery. Commercial catch is estimated annually from 1935 through 2021. Commercial age-frequency samples cover 28 years from 1979-2019; quarterly samples were weighted by sampled-trip catch and expanded with quarterly landings. Four fishery-independent trawl biomass-index series are used: QCS, WCVI, WCHG and GIG. Survey index years span 1967-2020, and survey age compositions cover 25 years. The report downweights survey age compositions to 0.25 because they did not consistently track cohorts; commercial age compositions provide the main recruitment information.
+The assessment is an annual, two-sex Stock Synthesis 3.30.17.01 model with age classes 1–60 and age 60 as the accumulator. Its 1935–2021 catch history is treated as one fishery, Trawl+, combining five catch sources. The report states that catches are known without error and occur midyear. It estimates the population at the beginning of 2022.
 
-The report describes sex-specific growth and length-weight relationships, a time-invariant female maturity ogive, and the biological data used to derive them. Its composite base case pools five component assessments with fixed scalar M values of 0.04, 0.045, 0.05, 0.055 and 0.06. An estimated-M sensitivity had poor MCMC diagnostics and is not the adopted central run. The assessment reports annual female spawning-biomass and age-0 recruitment trajectories with posterior intervals through 2022, and tabulates terminal B2022 quantiles. The reported fishing-pressure measure is exploitation; numeric N-at-age and instantaneous F-at-age arrays were not recovered in this screen.
+The source import records 87 annual Trawl+ catch inputs for 1935–2021 from Table A.4. Values are rounded as printed in the report. Table A.4 gives a partial 2021 catch of 298 t through June, but explicitly says the model used the 2020 total of 1,057 t for 2021; that carry-forward is recorded as a documented reconstruction.
 
-The published report contains age-composition figures and detailed input-processing descriptions, but a run-matched native Stock Synthesis bundle or separate numeric age-composition matrices were not located. The quarterly catch expansion is described, so catch-at-age can be reconstructed from catch totals and compositions if the plotted observations can be recovered with adequate precision. The exact within-year survey timing was not verified. These are explicit source-recovery and translation limitations, not reasons to substitute fitted states for observations.
+Four fishery-independent survey biomass series are imported in tonnes, with midyear timing:
 
-The 2025/26 Groundfish IFMP anticipated an updated assessment in 2024. The 2026/27 Pacific plan summary lists other new advice priorities but no later Yellowmouth assessment. No more recent detailed stock assessment was found in DFO's public CSAS search; the 2021 assessment remains the latest detailed run located for this review.
+- Goose Island Gully: 1967, 1969, 1971, 1973, 1976, 1977, 1984, 1994.
+- Queen Charlotte Sound: 2003, 2004, 2005, 2007, 2009, 2011, 2013, 2015, 2017, 2019.
+- West Coast Vancouver Island: 2004, 2006, 2008, 2010, 2012, 2014, 2016, 2018.
+- West Coast Haida Gwaii: 2006, 2007, 2008, 2010, 2012, 2016, 2018, 2020.
 
-## Screening decision
+The imported point estimates are the Table B estimates from Eq. B.4. The report also gives bootstrap means, 95% bootstrap intervals, bootstrap CVs from 1,000 resamples, and analytic CVs. The import keeps the bootstrap CV as the numeric precision record and preserves both CV values and interval bounds in the corresponding observation notes. The report does not establish which CV series was supplied to the production model. Table B.13 includes a 1997 WCHG estimate, but Table E.1 excludes 1997 from the model's biomass-index years, so it is not imported as a fitted index.
 
-Identity is a provisional new coastwide unit, screened eligible for source curation. The official report documents the age-composition inputs, annual catches, four aggregate survey indices, age-specific biological relationships, mortality scenarios, and official SSB/recruitment outputs. Source curation must preserve native aggregate observations, composition weights and the composite fixed-M run structure. Numerical age arrays, fractional survey timing and age-specific fitted N/F outputs remain unavailable until further recovery. No canonical values were imported.
+The combined delta-lognormal commercial bottom-trawl CPUE index is imported for 1996–2020. It is a relative index scaled to geometric mean 1.0, with midyear timing. Table C.9 reports bootstrap 95% intervals and standard errors from 100 replicates; the standard errors are preserved on the relative-index scale. The report says they were used as initial CVs in the assessment.
+
+The time-invariant female maturity input is recorded for ages 1–60: zero at ages 1–4, the model values from Table D.6 for ages 5–16, and one from age 17 onward. The source also provides the fixed biological parameter values used to derive weights-at-age: coastwide survey length-weight parameters by sex from Table D.2, and von Bertalanffy growth parameters from Table D.4. The final numeric weight-at-age surface is not tabulated, so it is not presented as a direct source observation.
+
+Table E.1 gives the years with age-composition observations for the commercial fishery and four surveys. Those year sets, the midyear timing, and the survey age-composition weight of 0.25 are recorded as assumptions. The report explains that survey age compositions were downweighted because they did not consistently track cohorts.
+
+## Recovered official outputs
+
+Table F.4 reports posterior quantiles for the composite base case, pooling 10,000 MCMC samples from five component runs with fixed M values 0.04, 0.045, 0.05, 0.055, and 0.06. The database records all 13 quantities in the table. For example, start-of-2022 female spawning biomass has a median of 18,001 t and 5th/95th percentiles of 10,070 and 42,533 t. The 5th and 95th percentiles form a central 90% posterior interval, not a 95% interval; no standard error is reported.
+
+Annual SSB and age-0 recruitment trajectories are shown in figures but not tabulated numerically. Numerical N-at-age and instantaneous F-at-age series were not recovered. M is fixed in the five component runs and is not an estimated output; the report's fishing-pressure summaries are exploitation rates, not F-at-age.
+
+## Remaining source gaps and translation limits
+
+No run-matched native Stock Synthesis input/output bundle or numeric age-composition matrices were located. Commercial and survey age compositions are shown in figures, but exact age vectors, effective sample sizes and the original annual catch vector are unavailable. The catch table is rounded. The survey tables report both bootstrap and analytic CVs without identifying the version used in the production run. The fixed weight-at-age surface can be reconstructed from the recorded biological parameters, but the report's age-class convention must be followed and the result verified before a translation uses it. Exact numeric annual SSB/recruitment and age-specific N/F outputs remain unavailable.
+
+This is a partial source record: it contains run-specific catch, index, biological, assumption and reference-point data, but does not reproduce the complete official likelihood inputs or output trajectories. The evidence supports a later, clearly labelled approximate translation using the aggregate index series and reconstructed biological surface. It does not support treating the survey compositions as age-specific abundance indices or claiming an exact model replication.
 
 ## Sources
 
 - [DFO Research Document 2022/010](https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/41091449.pdf), detailed 2021 assessment.
-- [DFO Science Advisory Report 2022/001](https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/4103336x.pdf), accepted advice and reported stock status.
-- [DFO CSAS publication record](https://csas-sccs.dfo-mpo.gc.ca/publications/96b903ca-fd67-4275-8236-84df0597b400).
-- [2025/26 Groundfish IFMP](https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/4127698x.pdf), which anticipated an update in 2024.
-- [2026/27 Pacific Groundfish plan summary](https://www.pac.dfo-mpo.gc.ca/fm-gp/mplans/ground-fond-ifmp-pgip-sm-eng.html), checked for later advice priorities.
-- [DFO peer-review proceedings, 2022/003](https://publications.gc.ca/collections/collection_2022/mpo-dfo/fs70-4/Fs70-4-2022-003-eng.pdf), indexed in the Government of Canada Publications catalogue; its download endpoint returned an archived-information page during this review.
+- [DFO Science Advisory Report 2022/001](https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/4103336x.pdf), assessment advice.
+- [DFO CSAS publication record](https://csas-scas.dfo-mpo.gc.ca/publications/96b903ca-fd67-4275-8236-84df0597b400).
+- [2025/26 Groundfish IFMP](https://waves-vagues.dfo-mpo.gc.ca/library-bibliotheque/4127698x.pdf).
+- [2026/27 Groundfish IFMP summary](https://www.pac.dfo-mpo.gc.ca/fm-gp/mplans/ground-fond-ifmp-pgip-sm-eng.html).
 
-The detailed report, advisory report, IFMP, plan page and proceedings download response are cached under the gitignored `source_cache/discovery_dfo_yellowmouth/`; `sources.csv` records retrieval dates, URLs, sizes and SHA-256 checksums.
+The detailed report, advice report, IFMP and current plan summary are cached under the gitignored source cache for this stock. The source manifest records the retrieval URL, date, size and SHA-256 checksum.
