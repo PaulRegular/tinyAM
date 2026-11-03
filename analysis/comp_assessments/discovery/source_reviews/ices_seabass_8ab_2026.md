@@ -1,70 +1,86 @@
-# ICES Bay of Biscay sea bass (`bss.27.8ab`), 2026 assessment
+# ICES Bay of Biscay seabass (`bss.27.8ab`), 2026 assessment
 
-## Identity and latest assessment
+## Assessment identity
 
-The ICES 2026 stock list and advice record 6153 identify the current unit as
-sea bass (*Dicentrarchus labrax*) in divisions 8.a–b, northern and central Bay
-of Biscay. The assessment year is 2026 and the advice is for 2027. The latest
-production assessment is an update using data through 2025 and the model
-structure accepted at the 2025 WKBSEABASS benchmark. Seasonal movement is
-accounted for by reallocating part of catches from the northern sea bass unit;
-the Bay of Biscay unit remains distinct.
+ICES assessment key 22538 and advice record 6153 identify the 2026 assessment
+for 2027 advice of seabass (*Dicentrarchus labrax*) in divisions 8.a and 8.b.
+The WGBIE 2026 report describes an update using data through 2025 and the
+age- and length-structured Stock Synthesis model established at the 2025
+WKBSEABASS benchmark. This is distinct from the separate 8.c–9.a seabass unit
+and from the western seabass units. The assessment year, fitted-data terminal
+year, and 2026 forecast year are recorded separately.
 
-## Inputs and assumptions
+## Recovered source data
 
-- The assessment is an age- and length-based Stock Synthesis model. Commercial
-  catches are represented by landings and discards, recreational removals, and
-  length compositions. The 2026 report says annual conditional age-at-length
-  observations (age-length keys) are combined into a commercial fleet to
-  provide catch-at-age estimates. Marginal age compositions by fleet are not
-  included in the likelihood. This is a reconstructible age input, but it must
-  not be described as a directly observed catch-at-age likelihood.
-- Two research surveys, Nourdem Loire (from 2016) and Nourdem Gironde (from
-  2019), provide juvenile abundance indices. An adult OTB LPUE index covers
-  2000–2025, with 2000 and 2008 excluded from the fitted series. The 2025
-  benchmark describes the juvenile indices as covering ages 1–4; the 2026
-  update reports aggregate juvenile-index series and does not publish
-  age-by-age index values. Survey age composition and timing need to be
-  verified before an age-specific tinyAM translation.
-- The 2026 update estimates most von Bertalanffy growth parameters and fixes
-  length-at-age 30 at 87.7611 cm. Female maturity is length-based, with
-  L50 = 42.14 cm and logistic slope -0.37809. These quantities support
-  deriving maturity-at-age, but the report does not tabulate a maturity-at-age
-  vector. Exact weight-at-age inputs and their conversion remain to be
-  extracted from the model input/control files.
-- Natural mortality is specified at ages 0–5 as
-  0.840918, 0.463849, 0.365109, 0.306347, 0.267492, and 0.24 per year;
-  ages 6 and older use 0.24. Recruitment occurs at the beginning of the year
-  and follows a Beverton–Holt stock–recruit relationship with fixed steepness
-  0.8 and recruitment-deviation SD 0.6.
-- Seasonal catch reallocations use exchange rates of 0.28803 for Q3 and
-  0.40665 for Q4. This is a stock-mixing treatment, not survey timing.
-  Exact fractional-year timing for the three abundance indices was not
-  recovered from the reviewed 2026 section.
+The ICES Standard Graphs source data and XML provide annual series for
+1985–2025 and 2026 forecasts:
 
-## Outputs and eligibility
+- Combined-sex spawning-stock biomass in tonnes, with reported 90% interval
+  endpoints.
+- Age-0 recruitment in thousands of fish, with reported 90% interval
+  endpoints.
+- Fishing mortality averaged over ages 4–15 in inverse years, with 90%
+  interval endpoints for 1985–2025. The 2026 Fbar field is blank.
+- Aggregate catch, landings, and discards in tonnes for 1985–2025. The source
+  series are retained as separate total and component quantities. They overlap
+  and must not be summed together as independent removals. The XML does not
+  identify their fleet coverage or confirm that they exhaust the fitted SS3
+  catch observations, so the canonical input record is partial.
 
-ICES Standard Graphs assessment key 22538 reports age-0 recruitment in
-thousands, combined-sex SSB in tonnes, and F averaged over ages 4–15, with a
-90% interval. These are annual assessment outputs; the report's data cutoff is
-2025, so 2026 is the forecast year. It does not publish historical N-at-age,
-F-at-age, or M-at-age arrays in the standard graph.
+The published point estimates and 90% endpoints are stored as reported.
+Standard errors are unavailable and have not been calculated from those
+intervals. The 2026 SSB and recruitment values are forecasts, not fitted
+historical estimates.
 
-Screened **eligible for source curation** because the official assessment
-provides catch-at-length and conditional age-at-length source quantities for
-reconstructing catch-at-age, juvenile abundance indices with age-composition
-information, age-based mortality, growth and maturity assumptions, and
-comparable annual recruitment, SSB and F outputs. Eligibility does not mean
-that numerical inputs are ready for import: the age-length data, exact
-weight-at-age derivation, survey timing, and their units still require
-source-level extraction and validation. No canonical database records were
-added.
+## Assessment structure and unresolved inputs
 
-## Sources
+The WGBIE 2026 report describes an age- and length-based Stock Synthesis
+assessment. Commercial catch and length-composition information and annual
+conditional age-at-length data are used; the report explains that age-length
+keys support catch-at-age estimates, while marginal fleet age compositions
+are not the fitted likelihood input. No run-matched age-length quantities or
+age-specific catch inputs were recovered for the 2026 assessment.
 
-- [2026 advice record 6153](https://asd.ices.dk/viewAdvice/6153) and [Standard Graphs source data, key 22538](https://standardgraphs.ices.dk/ViewSourceData.aspx?key=22538).
-- [WGBIE 2026 report, section 11](https://doi.org/10.17895/ices.pub.32790321.v1), especially sections 11.2.1–11.3.
-- [WKBSEABASS 2025 benchmark report](https://doi.org/10.17895/ices.pub.25002488.v1), especially the Bay of Biscay stock model annex and its Stock Synthesis data/control files.
+The assessment uses juvenile abundance indices from Nourdem Loire
+(2016–2025) and Nourdem Gironde (2019–2025), plus adult OTB LPUE
+(2000–2025; 2000 and 2008 are excluded from the fitted series). The 2025
+benchmark describes the juvenile indices as covering ages 1–4, but the 2026
+source table reports only aggregate index series. Age-specific survey
+observations and exact fractional-year timing for these indices remain
+unavailable.
 
-The ignored local source cache contains the reviewed report files, advice,
-graph page, source data, XML, retrieval dates, and SHA-256 checksums.
+The 2026 report describes von Bertalanffy growth, a length-based female
+maturity ogive, and age-specific natural mortality values of 0.840918,
+0.463849, 0.365109, 0.306347, 0.267492, and 0.24 per year at ages 0–5,
+with 0.24 at older ages. It fixes length-at-age 30 at 87.7611 cm and gives
+female maturity L50 = 42.14 cm with logistic slope -0.37809. These are
+useful assumptions, but exact run-matched weight-at-age, the complete growth
+and weight-length inputs, and maturity-at-age rows were not recovered.
+
+Seasonal catch reallocation rates are reported for Q3 and Q4. Those describe
+stock mixing and are not survey timing. The exact 2026 fitted model files and
+full age-specific state outputs were not located. No age-specific N, F, or M
+surface is present in the Standard Graphs export.
+
+## Canonical record and status
+
+The canonical record contains the 2026 assessment's aggregate catch, landings,
+and discard series; fixed M-at-age inputs for ages 0–5 and the age-6+ value;
+2026 SSB, age-0 recruitment, and Fbar outputs; and a small set of
+model-definition and reference-point assumptions. Inputs, assumptions, and
+outputs remain marked partial. This is a source-curation record, not a
+translation-ready age-structured data set. No tinyAM fit is attempted until
+the database batch is curated and the missing age-specific inputs are
+recovered or documented as unavailable.
+
+## Sources and cached files
+
+- [2026 ICES advice record 6153](https://asd.ices.dk/viewAdvice/6153)
+- [2026 ICES Standard Graphs source data, key 22538](https://standardgraphs.ices.dk/ViewSourceData.aspx?key=22538)
+- [WGBIE 2026 report](https://doi.org/10.17895/ices.pub.32790321.v1), section 11
+- [WKBSEABASS 2025 benchmark report](https://doi.org/10.17895/ices.pub.25002488.v1)
+- [ICES XML assessment export, key 22538](https://sag.ices.dk/SAG_API/StockXmlDownload/22538)
+
+The gitignored local cache is `analysis/comp_assessments/source_cache/discovery_ices_seabass_8ab_2026/`.
+Its `sources.csv` records URLs, retrieval date, pinned assessment identity,
+file sizes, and SHA-256 checksums for both 2026 and 2025 reference files.
