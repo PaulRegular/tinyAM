@@ -1,4 +1,4 @@
-> **Migration archive:** Source curation has moved to the independent local SAIO repository at `C:/Users/paulr/Documents/Codex/saio`. New curated and preliminary tinyAM translation work belongs on `main`, under `analysis/comp_assessments/scripts/translation/`. This branch preserves the pre-migration source history; do not add new source records here. Its ignored source cache and untracked results have moved to SAIO and the corresponding translation output folders. The maintained workflow and data pins are documented on `main`.
+> **Migration archive:** Source curation has moved to the independent local SAIO repository at `C:/Users/paulr/Documents/saio`. New curated and preliminary tinyAM translation work belongs on `main`, under `analysis/comp_assessments/scripts/translation/`. This branch preserves the pre-migration source history; do not add new source records here. Its ignored source cache and untracked results have moved to SAIO and the corresponding translation output folders. The maintained workflow and data pins are documented on `main`.
 
 # Comparing assessment fits
 
