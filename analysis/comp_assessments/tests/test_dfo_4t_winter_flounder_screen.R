@@ -6,6 +6,9 @@ candidate <- candidates[candidates$candidate_id ==
 units <- read.csv(file.path(root, 'discovery', 'inventory_units.csv'),
   stringsAsFactors = FALSE, na.strings = c('', 'NA'))
 unit <- units[units$unit_key == 'candidate:dfo_sgsl_winter_flounder_4t', , drop = FALSE]
+selected <- read.csv(file.path(root, 'discovery', 'selected_batch_01_2026.csv'),
+  stringsAsFactors = FALSE, na.strings = c('', 'NA'))
+selected <- selected[selected$candidate_unit_id == 'dfo_sgsl_winter_flounder_4t', , drop = FALSE]
 cache <- file.path(root, 'source_cache', 'discovery_dfo_4t_winter_flounder_2019')
 sources <- read.csv(file.path(cache, 'sources.csv'), stringsAsFactors = FALSE)
 paths <- file.path(cache, sources$file)
@@ -38,6 +41,8 @@ stopifnot(
   grepl('no later full assessment', candidate$notes, ignore.case = TRUE),
   nrow(unit) == 1L,
   unit$eligibility == 'eligible',
+  nrow(selected) == 1L,
+  selected$curation_status == 'partial_source_import',
   nrow(sources) == 2L,
   all(file.exists(paths)),
   all(file.info(paths)$size == sources$bytes),
