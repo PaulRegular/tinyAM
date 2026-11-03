@@ -12,7 +12,9 @@ Curated runs are the default. Preliminary runs require an explicit tier. Extract
 
 ## SAIO data
 
-Set SAIO_PATH to your local SAIO checkout, or use:
+Clone [SAIO](https://github.com/PaulRegular/saio) beside tinyAM. The default lookup uses the primary tinyAM checkout's parent directory, so it also works from Git worktrees. On this laptop the locations are `C:/Users/paulr/Documents/tinyAM` and `C:/Users/paulr/Documents/saio`.
+
+For another location, set SAIO_PATH to your local SAIO checkout, or use:
 
 ```r
 options(tinyAM.saio_path = "/path/to/saio")

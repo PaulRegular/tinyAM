@@ -29,9 +29,8 @@ saio_path <- function() {
     c("rev-parse", "--path-format=absolute", "--git-common-dir"),
     stdout = TRUE, stderr = FALSE), error = function(e) character()))
   candidates <- if (nzchar(configured)) configured else c(
-    file.path("..", "saio"), file.path("..", "Codex", "saio"),
     if (length(common) == 1L) file.path(dirname(dirname(common)), "saio"),
-    if (length(common) == 1L) file.path(dirname(dirname(common)), "Codex", "saio")
+    file.path("..", "saio")
   )
   found <- candidates[dir.exists(file.path(candidates, "database"))]
   if (!length(found)) cli::cli_abort(c(
