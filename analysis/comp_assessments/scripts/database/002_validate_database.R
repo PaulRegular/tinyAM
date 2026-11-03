@@ -205,7 +205,7 @@ allowed_input_measures <- c(
   "numbers_at_age", "numbers_at_age_group", "numbers_at_age_for_M_reconstruction", "index_by_age_group",
   "index_catch_numbers_at_age", "effort",
   "biomass_at_age", "total_numbers",
-  "total_biomass", "landings_biomass", "discard_biomass", "total_egg_production", "landings_lower_bound", "landings_upper_bound",
+  "total_biomass", "landings_biomass", "discard_biomass", "discard_fraction", "discard_fraction_cv", "catch_se", "total_egg_production", "landings_lower_bound", "landings_upper_bound",
   "catch_lower_bound", "catch_upper_bound", "proportion_at_age", "proportion_at_length",
   "conditional_proportion_at_age", "weight_at_age", "catch_weight_at_age", "spawning_weight_at_age", "start_weight_at_age",
   "maturity_at_age", "mature_weight_at_age", "natural_mortality_at_age", "condition_index_for_mortality",
@@ -214,13 +214,13 @@ allowed_input_measures <- c(
   "fixed_mortality_medium", "fixed_mortality_low", "fixed_mortality_high",
   "relative_biomass_index", "relative_abundance_index", "abundance_index_cv", "biomass_index_cv",
   "landings_proportion", "landings_numbers_at_age", "discard_numbers_at_age", "landings_fraction_at_age",
-  "landings_weight_at_age", "discard_weight_at_age", "log_index_sd", "log_catch_sd", "index_sd", "relative_precision_weight", "observation_likelihood_weight", "relative_standard_error", "larval_abundance_index", "environmental_covariate", "fraction_F_before_spawning",
+  "landings_weight_at_age", "discard_weight_at_age", "log_index_sd", "log_catch_sd", "index_sd", "relative_precision_weight", "observation_likelihood_weight", "relative_standard_error", "mean_body_weight", "mean_body_weight_cv", "ageing_error_sd", "larval_abundance_index", "environmental_covariate", "fraction_F_before_spawning",
   "fraction_M_before_spawning", "capelin_biomass_index"
 )
 allowed_bases <- c(
   "native_frequency",
   "numbers", "biomass", "proportion_numbers", "proportion_biomass",
-  "kg_per_fish", "g_per_fish", "proportion", "per_year", "per_season", "log_scale", "native_covariate",
+  "kg_per_fish", "g_per_fish", "weight_per_fish", "age_error_sd", "native_scale", "proportion", "per_year", "per_season", "log_scale", "native_covariate",
   "relative_precision", "relative_scale", "index_scale", "egg_count"
 )
 for (name in c("inputs", "outputs")) {
@@ -258,7 +258,7 @@ for (name in c("inputs", "outputs")) {
     "log_q_power", "growth_length_at_age", "growth_rate", "growth_sd_length_at_age",
     "Fmsy", "Bmsy", "msy", "mean_recruitment", "median_recruitment",
     "recruitment_ar1_rho",
-    "fleet_selectivity_at_age", "LRP", "USR", "unfished_spawning_biomass",
+    "fleet_selectivity_at_age", "natural_mortality_at_age", "LRP", "USR", "unfished_spawning_biomass",
     "maximum_exploitation_rate", "biomass_reference_point_0.4_BMSY",
     "biomass_reference_point_0.8_BMSY", "Bmsy_to_B0",
     "exploitation_rate_at_msy"
@@ -272,7 +272,7 @@ for (name in c("inputs", "outputs")) {
       "biomass_at_age", "proportion_at_age", "frequency_at_age", "maturity_fecundity_at_age",
       "conditional_proportion_at_age", "fraction_F_before_spawning",
       "fraction_M_before_spawning", "weight_at_age", "catch_weight_at_age", "spawning_weight_at_age", "start_weight_at_age",
-      "maturity_at_age", "mature_weight_at_age", "natural_mortality_at_age", "fecundity_at_age", "proportion_female_at_age",
+      "maturity_at_age", "mature_weight_at_age", "natural_mortality_at_age", "fecundity_at_age", "proportion_female_at_age", "ageing_error_sd",
       "landings_numbers_at_age", "discard_numbers_at_age", "landings_fraction_at_age", "relative_standard_error",
       "landings_weight_at_age", "discard_weight_at_age", "relative_precision_weight", "observation_likelihood_weight"
     )
@@ -344,8 +344,12 @@ for (name in c("inputs", "outputs")) {
     }
     age_required[aggregate_precision] <- FALSE
   }
-  if (any(age_required & (is.na(age) | !is.finite(age) | age != as.integer(age)))) {
-    stop(name, "$age must contain whole ages for age-specific measures.", call. = FALSE)
+  whole_age <- !is.na(age) & is.finite(age) & age == as.integer(age)
+  age_error_midpoint <- name == "inputs" & x$measure == "ageing_error_sd" &
+    !is.na(age) & is.finite(age) &
+    abs((age - floor(age)) - 0.5) < 1e-8
+  if (any(age_required & !(whole_age | age_error_midpoint))) {
+    stop(name, "$age must contain whole ages, except for native half-year ageing-error midpoints.", call. = FALSE)
   }
   value <- suppressWarnings(as.numeric(x$value))
   if (name == "outputs" && any(x$measure == "fleet_selectivity_at_age" &

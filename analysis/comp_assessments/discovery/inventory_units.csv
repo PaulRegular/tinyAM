@@ -580,7 +580,7 @@
 "candidate:noaa_stocksmart_10015","","noaa_stocksmart_10015","new","eligible","screened","not_started","NOAA","AFSC","NOAA:10015",1
 "candidate:noaa_stocksmart_10016","","noaa_stocksmart_10016","new","ineligible","screened","not_started","NOAA","AFSC","NOAA:10016",1
 "candidate:noaa_stocksmart_10021","","noaa_stocksmart_10021","new","ineligible","screened","not_started","NOAA","AFSC","NOAA:10021",1
-"candidate:noaa_stocksmart_10022","","noaa_stocksmart_10022","new","eligible","screened","not_started","NOAA","NWFSC / SWFSC","NOAA:10022",1
+"candidate:noaa_stocksmart_10022","noaa_pacific_coast_dover_sole","noaa_stocksmart_10022","new","eligible","screened","partial","NOAA","NWFSC / SWFSC","NOAA:10022",1
 "candidate:noaa_stocksmart_10028","","noaa_stocksmart_10028","new","ineligible","screened","not_started","NOAA","NEFSC","NOAA:10028",1
 "candidate:noaa_stocksmart_10030","","noaa_stocksmart_10030","new","unresolved","screened","not_started","NOAA","NEFSC","NOAA:10030",1
 "candidate:noaa_stocksmart_10035","","noaa_stocksmart_10035","new","unresolved","screened","not_started","NOAA","NEFSC","NOAA:10035",1

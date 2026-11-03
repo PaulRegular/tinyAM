@@ -259,6 +259,9 @@ total_numbers
 total_biomass
 landings_biomass
 discard_biomass
+discard_fraction
+discard_fraction_cv
+catch_se
 total_egg_production
 landings_lower_bound
 landings_upper_bound
@@ -330,6 +333,9 @@ landings_weight_at_age
 discard_weight_at_age
 log_index_sd
 landings_proportion
+mean_body_weight
+mean_body_weight_cv
+ageing_error_sd
 ```
 
 `landings_numbers_at_age`, `discard_numbers_at_age`, and
@@ -350,6 +356,27 @@ components are retained, and report rounding is not silently renormalized.
 `log_catch_sd` stores the standard error of log catch when the source model
 specifies that scale. Use `type = catch` and `basis = log_scale`; do not label it
 as a coefficient of variation unless the source defines it that way.
+`catch_se` preserves a source model's native catch error field when its scale
+is not documented well enough to call it a log-scale standard error or a CV;
+use `type = catch`, `basis = native_scale`, and a unit that identifies the
+native field. Do not transform it.
+
+`discard_fraction` records a source fraction of total catch discarded. Use
+`type = catch` and `basis = proportion_biomass` or `proportion_numbers` to match
+the source fleet's catch basis. `discard_fraction_cv` stores its source CV with
+`basis = relative_scale` and `unit = ratio`. Keep the CV as a separate row and
+document the source likelihood.
+
+`mean_body_weight` stores a source mean body-weight observation, not a
+stock-weight-at-age surface. Use `type = weight`, `basis = weight_per_fish`,
+and the source unit. `mean_body_weight_cv` stores its source CV separately
+using `basis = relative_scale` and `unit = ratio`.
+
+`ageing_error_sd` stores a source age-error standard-deviation vector. Use
+`type = biology`, `basis = age_error_sd`, the age-error definition code in
+`age_error`, and the source unit (normally years). Preserve half-year age
+labels when the source defines them as bin midpoints. It does not by itself
+represent the full transition matrix from true age to observed age.
 Landings fractions should normally lie in `[0, 1]`. If an official model input
 contains values slightly above one, preserve them without clipping and explain
 the source-specific exception in `notes`; the validator accepts only documented
