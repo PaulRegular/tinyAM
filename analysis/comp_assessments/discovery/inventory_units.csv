@@ -118,7 +118,7 @@
 "candidate:ices_had_27_7a","","ices_had_27_7a","new","ineligible","screened","not_started","ICES","Celtic Seas","ICES:had.27.7a",1
 "candidate:ices_harp_seal_barents_white_sea","","ices_harp_seal_barents_white_sea","new","ineligible","screened","not_started","ICES","Barents and White Sea stock (Subarea 1)","ICES:seh.27.1",1
 "candidate:ices_harp_seal_greenland_sea","","ices_harp_seal_greenland_sea","new","ineligible","screened","not_started","ICES","Greenland Sea stock (subareas 1, 2, and 14; Division 5.a)","ICES:seh.27.125a14",1
-"candidate:ices_her_27_irls","","ices_her_27_irls","new","eligible","screened","not_started","ICES","Celtic Seas","ICES:her.27.irls",1
+"candidate:ices_her_27_irls",,"ices_her_27_irls","new","eligible","screened","partial","ICES","Celtic Seas","ICES:her.27.irls",1
 "candidate:ices_her_27_nirs",,"ices_her_27_nirs","new","eligible","screened","partial","ICES","Celtic Seas","ICES:her.27.nirs",1
 "candidate:ices_herring_7ef","","ices_herring_7ef","new","ineligible","screened","not_started","ICES","Celtic Seas","ICES:her.27.7ef",1
 "candidate:ices_hooded_seal_greenland_sea","","ices_hooded_seal_greenland_sea","new","ineligible","screened","not_started","ICES","Greenland Sea stock (subareas 2, 5, and 14)","ICES:sez.27.2514",1
