@@ -1,5 +1,10 @@
 # tinyAM 0.1.1.9001
 
+* Add simulated, 3Ps-inspired cod inputs with three active fleets and two
+  surveys of coastal and offshore areas. Keep compact generating truth and
+  monitoring provenance separate from the estimated observations; SimSurvey
+  is required only by the data-generation script.
+
 * Organize plots by purpose and colocate population getters. Share fitted test
   fixtures, remove redundant renders and unused implementations, and retire the
   `check_obs()` and `tidy_mat()` aliases in favor of `check_tam_data()` and

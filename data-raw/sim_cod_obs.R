@@ -66,6 +66,7 @@ raise_sim_cod_catch <- function(operations, samples, ages, years, fleets,
   required_samples <- c("operation", "length", "age", "aged")
   stopifnot(all(required_ops %in% names(operations)), all(required_samples %in% names(samples)))
   if (anyDuplicated(operations$operation)) stop("Operation identifiers must be unique.")
+  sample_rows <- split(seq_len(nrow(samples)), samples$operation)
   out <- monitors <- list()
   for (fleet in fleets) for (year in years) {
     ops <- operations[operations$fishery == fleet & operations$year == year, , drop = FALSE]
@@ -77,7 +78,7 @@ raise_sim_cod_catch <- function(operations, samples, ages, years, fleets,
     if (total > 0 && !nrow(sampled)) status <- "no_samples"
     for (j in seq_len(nrow(sampled))) {
       op <- sampled[j, ]
-      s <- samples[samples$operation == op$operation, , drop = FALSE]
+      s <- samples[sample_rows[[as.character(op$operation)]], , drop = FALSE]
       if ("measured" %in% names(s)) s <- s[s$measured, , drop = FALSE]
       if (!nrow(s) || !is.finite(op$sampling_probability) || op$sampling_probability <= 0) {
         status <- "unsupported_operation"
@@ -364,8 +365,13 @@ raise_sim_cod_catch <- function(operations, samples, ages, years, fleets,
     fleet_truth[[column]] <- fleet_truth[[column]] / 1000
   }
   loss <- population$N[population$age == max(ages)] * exp(-population$Z[population$age == max(ages)])
+  last_weight <- population$weight[population$age == max(ages)]
+  last_maturity <- population$maturity[population$age == max(ages)]
   checks <- list(terminal_survivors = data.frame(year = years, N = loss,
-      proportion = loss / annual$N),
+      proportion = loss / annual$N, B = loss * last_weight,
+      SSB = loss * last_weight * last_maturity,
+      B_proportion = loss * last_weight / annual$B,
+      SSB_proportion = loss * last_weight * last_maturity / annual$SSB),
     negative_remaining_M = population[is.finite(population$M) & population$M < 0, c("year", "age", "M")],
     shortfalls = as.data.frame(simulation$fishery$annual)[c("fishery", "year", "target", "n", "shortfall", "status")],
     unsupported_catch = raised$monitoring[raised$monitoring$status != "ok" & raised$monitoring$status != "zero_total", ])
@@ -493,6 +499,7 @@ build_sim_cod_obs <- function(simsurvey_repo, repo = ".", cache_dir = file.path(
     stop("Table preparation failed; see the retained generation report. ", error)
   }
   result$sim_cod_truth$provenance <- provenance
+  result$sim_cod_truth$provenance$session <- utils::capture.output(utils::sessionInfo())
   dir.create(file.path(repo, "data"), showWarnings = FALSE)
   sim_cod_obs <- result$sim_cod_obs
   sim_cod_truth <- result$sim_cod_truth

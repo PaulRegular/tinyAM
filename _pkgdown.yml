@@ -30,6 +30,7 @@ reference:
 - contents:
   - tinyAM-model
   - cod_obs
+  - sim_cod_obs
 - title: Prepare inputs
 - contents:
   - make_tam_data
