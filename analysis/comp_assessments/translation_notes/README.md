@@ -15,6 +15,17 @@ Current expansion-batch notes:
 - [Gulf of Alaska ocean perch](noaa_goa_pop_2023.md)
 - [4T winter flounder](dfo_sgsl_winter_flounder_2017.md)
 - [West Coast sablefish](noaa_sablefish_pacific_coast_2025.md)
+- [West Coast Dover sole](noaa_pacific_coast_dover_sole_2021.md)
+- [West Coast yelloweye rockfish](noaa_west_coast_yelloweye_2025.md)
+- [Pacific coast Canary Rockfish](noaa_canary_rockfish_2023.md)
+- [Oregon Black Rockfish](noaa_black_rockfish_oregon_2023.md)
+- [Greenland halibut in NAFO Divisions 2+3KLMNO](dfo_greenland_halibut_2_3klmno_2026_mp.md)
+- [Southern Gulf yellowtail flounder](dfo_yellowtail_flounder_4t_2025.md)
+- [Western component pollock](dfo_western_component_pollock_2025_hcr_update.md)
+- [British Columbia yellowmouth rockfish](dfo_yellowmouth_2021.md)
+- [West Greenland inshore cod](ices_cod_west_greenland_inshore_2026.md)
+- [West Greenland offshore cod](ices_cod_west_greenland_offshore_2026.md)
+- [Seabass in ICES divisions 8.a-b](ices_seabass_8ab_2026.md)
 
 The 2026-11-03 content review also separates anonymous analysis passages that remained in source reviews after the earlier migration. Each additional passage links to its original SAIO revision. These are historical notes, including blocked or exploratory cases; their presence does not establish a runnable or reviewed translation. Discovery-only recommendations remain provisional.
 

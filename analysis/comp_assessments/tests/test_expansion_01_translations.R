@@ -10,6 +10,10 @@ testthat::test_that("the expansion register keeps all twenty distinct source tar
   testthat::expect_true(all(batch$assessment_id %in% database$assessments$assessment_id))
   testthat::expect_true(all(batch$data_revision == .saio_revision("preliminary")))
   testthat::expect_true(all(nzchar(batch$limitation)))
+  translations <- assessment_translations("preliminary")
+  selected <- translations[match(batch$assessment_id, translations$assessment_id), ]
+  testthat::expect_false(anyNA(selected$assessment_id))
+  testthat::expect_true(all(file.exists(selected$script)))
 })
 
 testthat::test_that("the first expansion recipes preserve source values and never fit during preparation", {
@@ -111,6 +115,46 @@ testthat::test_that("Irish herring records a source-date blocker before any fitt
   testthat::expect_identical(result$diagnostics$status, "source_readiness_failed")
   testthat::expect_match(result$diagnostics$reason, "reference dates")
   testthat::expect_null(result$fit)
+})
+
+testthat::test_that("remaining NOAA cases record input blockers without fitting", {
+  cases <- list(
+    noaa_pacific_coast_dover_sole_2021 = "age samples do not represent discards",
+    noaa_west_coast_yelloweye_2025 = "age composition",
+    noaa_canary_rockfish_2023 = "Conditional ages",
+    noaa_black_rockfish_oregon_2023 = "age-specific catches and survey observations"
+  )
+  testthat::local_mocked_bindings(fit_tam = function(...) stop("Unexpected fit"),
+    .package = "tinyAM")
+  for (id in names(cases)) {
+    result <- run_assessment(id, database, fit = FALSE, tier = "preliminary")
+    testthat::expect_identical(result$diagnostics$status, "source_readiness_failed")
+    testthat::expect_match(result$diagnostics$reason, cases[[id]])
+    testthat::expect_null(result$fit)
+    testthat::expect_null(result$obs)
+    testthat::expect_true(any(grepl("###", result$background)))
+  }
+})
+
+testthat::test_that("other source-blocked cases have explicit preliminary recipes", {
+  cases <- c(
+    dfo_greenland_halibut_2_3klmno_2026_mp = "management procedure",
+    dfo_yellowtail_flounder_4t_2025 = "numeric age inputs",
+    dfo_western_component_pollock_2025_hcr_update = "HCR update",
+    dfo_yellowmouth_2021 = "age-composition arrays",
+    ices_cod_west_greenland_inshore_2026 = "named 2026 SAM object",
+    ices_cod_west_greenland_offshore_2026 = "named 2026 SAM object",
+    ices_seabass_8ab_2026 = "run-matched observations"
+  )
+  testthat::local_mocked_bindings(fit_tam = function(...) stop("Unexpected fit"),
+    .package = "tinyAM")
+  for (id in names(cases)) {
+    result <- run_assessment(id, database, fit = FALSE, tier = "preliminary")
+    testthat::expect_identical(result$diagnostics$status, "source_readiness_failed")
+    testthat::expect_match(result$diagnostics$reason, cases[[id]])
+    testthat::expect_null(result$fit)
+    testthat::expect_null(result$obs)
+  }
 })
 
 testthat::test_that("Celtic herring retains model-year labels, source conflicts and exclusions", {

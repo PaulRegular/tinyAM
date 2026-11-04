@@ -1,0 +1,3 @@
+# West Greenland inshore cod: translation blocked
+
+The preliminary recipe stops before fitting. The named 2026 N-WISC SAM object could not be retrieved, leaving run-matched observation arrays and survey timing unverified. A different southern stock or earlier advice is not substituted.
