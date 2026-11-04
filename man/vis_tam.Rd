@@ -83,6 +83,9 @@ Supply models via \code{...} or \code{model_list}, but not both. The models must
 form a uniquely named list so they can be labeled in the dashboard.
 Additional arguments for \code{\link[rmarkdown:render]{rmarkdown::render()}} can be passed through
 \code{render_args}, which must itself be a (named) list.
+Dashboard R packages are installed with tinyAM. Rendering also needs
+Pandoc, included with RStudio or available from
+\url{https://pandoc.org/installing.html}.
 Precomputed assessment references may be mixed with tinyAM fits; they are
 not refittable TAM objects. Supply \code{background} to add a page
 describing assessment assumptions and translation choices.

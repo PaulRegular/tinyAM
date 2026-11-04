@@ -662,7 +662,7 @@ prepare_tam <- function(
     ))
   }
 
-  check_tam_data(obs)
+  check_tam_data(obs, quiet = TRUE)
 
   for (nm in c("years", "ages")) {
     x <- get(nm)

@@ -21,6 +21,9 @@
 #'          form a uniquely named list so they can be labeled in the dashboard.
 #'          Additional arguments for [rmarkdown::render()] can be passed through
 #'          `render_args`, which must itself be a (named) list.
+#'          Dashboard R packages are installed with tinyAM. Rendering also needs
+#'          Pandoc, included with RStudio or available from
+#'          <https://pandoc.org/installing.html>.
 #'          Precomputed assessment references may be mixed with tinyAM fits; they are
 #'          not refittable TAM objects. Supply `background` to add a page
 #'          describing assessment assumptions and translation choices.
@@ -77,6 +80,8 @@
 #' }
 #'
 #' @importFrom utils browseURL
+#' @importFrom knitr knit_expand
+#' @importFrom flexdashboard flex_dashboard
 #'
 #' @export
 vis_tam <- function(..., model_list = NULL, interval = 0.95, output_file = NULL,
@@ -188,6 +193,12 @@ vis_tam.tam_retro <- function(..., model_list = NULL, interval = 0.95, output_fi
     cli::cli_abort(c(
       "Required package(s) not installed: {paste(missing, collapse = ', ')}.",
       "i" = "Install with: {.code {install_call}}"
+    ))
+  }
+  if (!rmarkdown::pandoc_available()) {
+    cli::cli_abort(c(
+      "Pandoc is required to render a dashboard.",
+      "i" = "RStudio includes Pandoc. Otherwise install it from https://pandoc.org/installing.html and make it available on PATH."
     ))
   }
 

@@ -4,11 +4,13 @@
 \alias{check_tam_data}
 \title{Check tinyAM input data}
 \usage{
-check_tam_data(data)
+check_tam_data(data, quiet = FALSE)
 }
 \arguments{
 \item{data}{A named list expected to contain data.frames \code{catch}, \code{index},
 \code{weight}, and \code{maturity} with the columns described above.}
+
+\item{quiet}{Logical. Suppress the success summary? Defaults to \code{FALSE}.}
 }
 \value{
 \code{TRUE} (invisibly) if validation passes; otherwise aborts.
@@ -47,11 +49,13 @@ requires nonempty labels on every row. Units never change input values.
 See \code{\link[=as_tam_data]{as_tam_data()}} for units of derived quantities.
 }
 
-On failure the function aborts with a \code{cli} error. On success, it returns
-\code{TRUE} (invisibly).
+On failure the function aborts with a \code{cli} error. On success, it prints a
+concise summary and returns \code{TRUE} invisibly. Use \code{quiet = TRUE} to suppress
+the success summary; validation errors are always reported.
 }
 \examples{
 data(cod_obs)
-check_obs(cod_obs) # returns TRUE (invisibly) if valid
+check_tam_data(cod_obs)
+check_tam_data(cod_obs, quiet = TRUE)
 
 }

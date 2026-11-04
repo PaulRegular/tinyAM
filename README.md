@@ -14,8 +14,11 @@ The development version can be installed from GitHub:
 
 ```r
 # install.packages("pak")
-pak::pak(c("PaulRegular/tinyAM", "rmarkdown", "flexdashboard"))
+pak::pak("PaulRegular/tinyAM")
 ```
+
+Dashboard R packages install automatically. Rendering requires
+[Pandoc](https://pandoc.org/installing.html), which is included with RStudio.
 
 See the [package website](https://paulregular.github.io/tinyAM/) and
 [cheatsheet](https://paulregular.github.io/tinyAM/cheatsheet/tinyAM_cheatsheet.pdf)

@@ -4,10 +4,12 @@
 \alias{check_obs}
 \title{Check the structure of a TAM obs list}
 \usage{
-check_obs(obs)
+check_obs(obs, quiet = FALSE)
 }
 \arguments{
 \item{obs}{A named list of tinyAM input tables.}
+
+\item{quiet}{Logical. Suppress the success summary? Defaults to \code{FALSE}.}
 }
 \value{
 \code{TRUE} (invisibly) if validation passes; otherwise aborts.

@@ -181,7 +181,7 @@
 #' check_tam_data(data)
 #' @export
 as_tam_data <- function(data) {
-  check_tam_data(data)
+  check_tam_data(data, quiet = TRUE)
   class(data) <- unique(c("tam_data", class(data)))
   data
 }
@@ -292,20 +292,26 @@ print.tam_data <- function(x, n = 5, ...) {
 #'   requires nonempty labels on every row. Units never change input values.
 #'   See [as_tam_data()] for units of derived quantities.
 #'
-#' On failure the function aborts with a `cli` error. On success, it returns
-#' `TRUE` (invisibly).
+#' On failure the function aborts with a `cli` error. On success, it prints a
+#' concise summary and returns `TRUE` invisibly. Use `quiet = TRUE` to suppress
+#' the success summary; validation errors are always reported.
 #'
 #' @param data A named list expected to contain data.frames `catch`, `index`,
 #'   `weight`, and `maturity` with the columns described above.
+#' @param quiet Logical. Suppress the success summary? Defaults to `FALSE`.
 #'
 #' @return `TRUE` (invisibly) if validation passes; otherwise aborts.
 #' @examples
 #' data(cod_obs)
-#' check_obs(cod_obs) # returns TRUE (invisibly) if valid
+#' check_tam_data(cod_obs)
+#' check_tam_data(cod_obs, quiet = TRUE)
 #'
 #' @importFrom cli cli_abort cli_warn
 #' @export
-check_tam_data <- function(data) {
+check_tam_data <- function(data, quiet = FALSE) {
+  if (!is.logical(quiet) || length(quiet) != 1L || is.na(quiet)) {
+    cli::cli_abort("{.arg quiet} must be TRUE or FALSE.")
+  }
   obs <- data
   if (!is.list(obs)) {
     cli::cli_abort(c(
@@ -478,6 +484,14 @@ check_tam_data <- function(data) {
   }
 
   .data_units(obs)
+  if (!quiet) {
+    n_fleets <- if ("fleet" %in% names(obs$catch)) length(unique(obs$catch$fleet)) else 1L
+    n_surveys <- length(unique(obs$index$survey))
+    cli::cli_inform(c(
+      "v" = "Input data passed validation.",
+      "i" = "Years {years[1]}-{years[length(years)]}; ages {ages[1]}-{ages[length(ages)]}; fleets: {n_fleets}; surveys: {n_surveys}."
+    ))
+  }
   invisible(TRUE)
 }
 
@@ -513,10 +527,11 @@ check_tam_data <- function(data) {
 #'
 #' A convenience wrapper for [check_tam_data()].
 #' @param obs A named list of tinyAM input tables.
+#' @inheritParams check_tam_data
 #' @inherit check_tam_data details
 #' @return `TRUE` (invisibly) if validation passes; otherwise aborts.
 #' @examples
 #' check_tam_data(cod_obs)
 #' @export
-check_obs <- function(obs) check_tam_data(obs)
+check_obs <- function(obs, quiet = FALSE) check_tam_data(obs, quiet = quiet)
 

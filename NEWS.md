@@ -1,5 +1,9 @@
 # tinyAM 0.1.1.9001
 
+* Print a concise input-validation summary with `check_tam_data()`; internal
+  preparation remains quiet. Install dashboard R dependencies automatically and
+  check for Pandoc before rendering.
+
 * Preserve smooth warm-start functions across equivalent mgcv basis signs and
   rotations, while rejecting changes to predictor grids or Gaussian penalties.
   This fixes platform-dependent retrospective warm-start checks.
