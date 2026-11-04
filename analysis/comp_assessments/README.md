@@ -17,6 +17,12 @@ records the origin of migrated scripts; new recipes leave it blank and use Git
 history and run diagnostics for their model revision. The SAIO data revision
 is recorded separately.
 
+The batch register also records translation limitations. `source_readiness_blocked`
+means the pinned source record does not yet support a defensible fit; it does
+not establish that data can never be recovered. `reconstruction_pending` means
+native observations are present but their age/length, sex, area or removal
+definitions still need a reviewed conversion. Neither status counts as a fit.
+
 ## SAIO data
 
 Clone [SAIO](https://github.com/PaulRegular/saio) beside tinyAM. The default lookup uses the primary tinyAM checkout's parent directory, so it also works from Git worktrees. On this laptop the locations are `C:/Users/paulr/Documents/tinyAM` and `C:/Users/paulr/Documents/saio`.

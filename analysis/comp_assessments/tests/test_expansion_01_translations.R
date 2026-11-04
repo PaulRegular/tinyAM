@@ -2,6 +2,16 @@ source("analysis/comp_assessments/R/run_assessment.R")
 source("analysis/comp_assessments/tests/helper_stock.R")
 database <- read_database(tier = "preliminary")
 
+testthat::test_that("the expansion register keeps all twenty distinct source targets visible", {
+  batch <- read.csv("analysis/comp_assessments/expansion_batch_01.csv", stringsAsFactors = FALSE)
+  testthat::expect_equal(nrow(batch), 20L)
+  testthat::expect_false(anyDuplicated(batch$stock_id) > 0L)
+  testthat::expect_false(anyDuplicated(batch$assessment_id) > 0L)
+  testthat::expect_true(all(batch$assessment_id %in% database$assessments$assessment_id))
+  testthat::expect_true(all(batch$data_revision == .saio_revision("preliminary")))
+  testthat::expect_true(all(nzchar(batch$limitation)))
+})
+
 testthat::test_that("the first expansion recipes preserve source values and never fit during preparation", {
   ids <- c("ices_ling_faroe_5b_2026", "ices_atlantic_wolffish_iceland_2026")
   testthat::local_mocked_bindings(fit_tam = function(...) {
@@ -168,4 +178,45 @@ testthat::test_that("winter flounder uses one count representation and estimates
     testthat::expect_equal(current$obs, original$value[match(paste(current$year, current$age),
       paste(original$year, original$age))])
   }
+})
+
+testthat::test_that("sablefish reconstruction conserves source biomass and never fills partial removals", {
+  record <- read_assessment("noaa_sablefish_pacific_coast_2025", database)
+  before <- record
+  testthat::local_mocked_bindings(fit_tam = function(...) stop("Do not fit during preparation"),
+    .package = "tinyAM")
+  stock <- .test_stock(record)
+  testthat::expect_identical(record, before)
+  testthat::expect_equal(stock$years, 2006:2023)
+  testthat::expect_equal(stock$ages, 0:30)
+  testthat::expect_null(stock$dat$M_settings$mu_supplied)
+  testthat::expect_true(all(is.na(stock$obs$catch$obs[stock$obs$catch$year == 2014])))
+  testthat::expect_true(all(is.finite(stock$obs$catch$obs[stock$obs$catch$year != 2014])))
+  testthat::expect_equal(stock$catch_reconstruction$source_tonnes,
+    stock$catch_reconstruction$reconstructed_tonnes)
+  testthat::expect_true(all(stock$obs$index$unit == "native survey index"))
+  testthat::expect_identical(unique(stock$obs$index$survey), "WCGBTS")
+  testthat::expect_true(all(stock$obs$index$samp_time == 0.5))
+  biology <- record$inputs[record$inputs$sex == "female" &
+    record$inputs$year %in% stock$years, ]
+  key <- function(x) paste(x$year, x$age)
+  lookup <- function(fleet, measure, target) {
+    x <- biology[biology$fleet %in% fleet & biology$measure == measure, ]
+    x$value[match(key(target), key(x))]
+  }
+  testthat::expect_equal(stock$obs$weight$obs,
+    lookup("beginning-season population", "start_weight_at_age", stock$obs$weight))
+  testthat::expect_equal(stock$obs$maturity$obs,
+    0.5 * lookup("mature weight schedule", "mature_weight_at_age", stock$obs$maturity) /
+      lookup("mid-season population", "weight_at_age", stock$obs$maturity))
+  share <- stock$age_share("catch", "Hook-and-line", 2020)
+  testthat::expect_equal(sum(share$share), 1)
+  testthat::expect_setequal(share$sex, c("female", "male"))
+  testthat::expect_true(all(share$sex_code == "3"))
+  # Reported states are for comparisons/optional starts, never for observations.
+  changed <- record
+  changed$outputs$value[changed$outputs$measure == "numbers_at_age"] <-
+    changed$outputs$value[changed$outputs$measure == "numbers_at_age"] * 10
+  other <- .test_stock(changed)
+  testthat::expect_identical(stock$obs, other$obs)
 })
