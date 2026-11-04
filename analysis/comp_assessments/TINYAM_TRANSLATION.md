@@ -2,13 +2,13 @@
 
 ## Repository and review tiers
 
-Canonical records, importers, source reviews, discovery registers, DATABASE_STRUCTURE.md and PROTOCOL.md are maintained in SAIO. Read those source instructions there before proposing source corrections. tinyAM reads the SAIO commit in saio_revisions.csv; record both data and model revisions.
+Canonical records, importers, source reviews, discovery registers, DATABASE_STRUCTURE.md and PROTOCOL.md are maintained in SAIO. Read those source instructions there before proposing source corrections. Both translation tiers read committed local SAIO main by default and record the exact data and model revisions. saio_revisions.csv contains historical snapshots for explicit reproduction, not active defaults.
 
 Translations are registered in translations.csv and stored under scripts/translation/curated/ or preliminary/. The curated set is inherited from main; preliminary scripts and alternatives require explicit selection. A successful fit does not promote a script. Default batches and plots select only curated entries.
 
 Stock-specific model choices and inherited fitting notes are kept in [translation_notes/](translation_notes/README.md). Official source evidence belongs in SAIO, even when a downstream comparison revealed the issue. The registered recipe and its tier define current settings; transferred notes do not constitute a new fit or review.
 
-All local outputs, including dashboards and initialization logs, belong under results/<tier>/, never a shared output directory or SAIO source_cache/. Source caches are external in SAIO. Migrated legacy results retain their provenance and are not newly validated results.
+All local outputs, including dashboards and initialization logs, belong under results/<tier>/, with fits and checkpoints separated by SAIO revision in cache/<revision>/, never a shared output directory or SAIO source_cache/. Source caches are external in SAIO. Migrated legacy results retain their provenance and are not newly validated results.
 
 ## Purpose
 
@@ -204,7 +204,7 @@ exploratory previews, not successful batch results. The batch convergence rules
 are unchanged. `run_assessment()` reruns the recipe rather than previewing an
 edited fit, and retains its optional dashboard/cache controls.
 
-`run_all.R` reads the committed snapshot and
+`run_all.R` reads committed local SAIO main once for the batch and
 uses `future::multisession` through `furrr`; workers load tinyAM from the current
 repository checkout. Workers return objects only. The parent process writes
 aggregate CSV files after all workers finish, and restores the previous future
@@ -1186,7 +1186,7 @@ fits, translated observations, audits, settings, or dashboards; those can be
 recreated from the database and stock translation script.
 
 `run_assessment(..., cache = TRUE)` optionally saves a fitted object under
-`results/<tier>/cache/<assessment_id>/`. A dashboard is optional through
+`results/<tier>/cache/<SAIO revision>/<assessment_id>/`. A dashboard is optional through
 `dashboard = TRUE` and is cached there only when caching is enabled. Both
 `run_assessment()` and `run_assessments()` leave caching off by default.
 `run_assessments(..., save_results = TRUE)` writes the shared diagnostic and

@@ -117,6 +117,6 @@ if (do_fit) {
     f <- .translation_start_surface(comparison_outputs, "mortality", "fishing_mortality_at_age", years, ages)
     list(log_r0 = log(n[1L, 1L]), log_r = log(n[-1L, 1L]),
       log_n0 = log(n[1L, -1L]), log_f = log(f))
-  }, attempt_file = file.path(.assessment_cache_root(translation_tier), assessment_id,
+  }, attempt_file = file.path(.assessment_cache_root(translation_tier, database = source), assessment_id,
     "initialization_attempts.rds"))
 }

@@ -156,5 +156,5 @@ if (do_fit) {
     states <- source; states$outputs <- comparison_outputs
     source_start_parameters(states, dat)
   }, attempt_file = file.path(.assessment_cache(source$assessment$assessment_id,
-    translation_tier), "initialization_attempts.rds"))
+    translation_tier, database = source), "initialization_attempts.rds"))
 }

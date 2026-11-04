@@ -8,7 +8,9 @@ testthat::test_that("the expansion register keeps all twenty distinct source tar
   testthat::expect_false(anyDuplicated(batch$stock_id) > 0L)
   testthat::expect_false(anyDuplicated(batch$assessment_id) > 0L)
   testthat::expect_true(all(batch$assessment_id %in% database$assessments$assessment_id))
-  testthat::expect_true(all(batch$data_revision == .saio_revision("preliminary")))
+  # The batch register records its original source review; do not relabel it
+  # when current default reads advance to SAIO main.
+  testthat::expect_true(all(batch$data_revision == .saio_snapshot_revision("preliminary")))
   testthat::expect_true(all(nzchar(batch$limitation)))
   translations <- assessment_translations("preliminary")
   selected <- translations[match(batch$assessment_id, translations$assessment_id), ]

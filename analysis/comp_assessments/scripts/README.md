@@ -4,7 +4,7 @@ Run these scripts from the repository root in RStudio.
 
 ## Source database
 
-Source importers, extraction helpers and validators are maintained in [SAIO](https://github.com/PaulRegular/saio/tree/main/scripts/database). Run canonical validation from the SAIO repository root. Routine translations read the pinned SAIO tables and do not rerun source imports.
+Source importers, extraction helpers and validators are maintained in [SAIO](https://github.com/PaulRegular/saio/tree/main/scripts/database). Run canonical validation from the SAIO repository root. Routine translations read committed local SAIO main, record its exact revision, and do not rerun source imports. Historical revisions require an explicit request.
 
 ## Translation and fitting
 

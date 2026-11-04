@@ -133,7 +133,7 @@ if (do_fit) {
     positive <- is.finite(f$obs) & f$obs > 0
     log_f[cbind(match(f$year[positive], years), match(f$age[positive], ages))] <- log(f$obs[positive])
     list(log_r0 = log(n[1L, 1L]), log_r = log(n[-1L, 1L]), log_n0 = log(n[1L, -1L]), log_f = log_f)
-  }, attempt_file = file.path(.assessment_cache_root(translation_tier), assessment_id, "initialization_attempts.rds"))
+  }, attempt_file = file.path(.assessment_cache_root(translation_tier, database = source), assessment_id, "initialization_attempts.rds"))
   if (any(!is.finite(fit$pop$ssb$upr))) {
     note <- "Exploratory result: SSB has non-finite upper uncertainty limits. Numerical convergence alone does not establish a usable abundance scale."
     cli::cli_warn(note)

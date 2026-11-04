@@ -142,7 +142,7 @@ if (do_fit) {
     fit_model,
     retry_start = retry_start,
     attempt_file = file.path(
-      file.path(.assessment_cache_root(translation_tier), "ices_plaice_english_channel_7d_2026"),
+      file.path(.assessment_cache_root(translation_tier, database = source), "ices_plaice_english_channel_7d_2026"),
       "initialization_attempts.rds"
     )
   )

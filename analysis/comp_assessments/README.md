@@ -18,7 +18,7 @@ history and run diagnostics for their model revision. The SAIO data revision
 is recorded separately.
 
 The batch register also records translation limitations. `source_readiness_blocked`
-means the pinned source record does not yet support a defensible fit; it does
+means the reviewed source record does not yet support a defensible fit; it does
 not establish that data can never be recovered. `reconstruction_pending` means
 native observations are present but their age/length, sex, area or removal
 definitions still need a reviewed conversion. Neither status counts as a fit.
@@ -35,9 +35,13 @@ source("analysis/comp_assessments/R/run_assessment.R")
 database <- read_database()
 ```
 
-The default reader uses the exact commit for its tier in saio_revisions.csv, including locally available Git LFS objects. It does not silently follow SAIO's current branch or uncommitted changes. Fetch each pinned revision and its LFS objects when setting up another machine, using git -C /path/to/saio lfs fetch origin <revision>. The reader does not require checking out the historical revision. To deliberately inspect a working-tree database, use read_database(file.path(saio_path(), "database")).
+Both translation tiers read the latest **committed local SAIO main** by default. The reader resolves main once and records that exact commit; it ignores uncommitted table edits and another checked-out branch. Curated membership remains the same 35 scripts, while their inputs now follow current SAIO data.
 
-Change saio_revisions.csv deliberately and recheck affected curated examples before refreshing paper figures. Diagnostics record the SAIO revision and tinyAM revision independently. DATABASE_STRUCTURE.md and PROTOCOL.md now point to their maintained SAIO documents.
+Update SAIO before an analysis with `git -C /path/to/saio switch main`, `git -C /path/to/saio pull --ff-only` and `git -C /path/to/saio lfs pull`. Reading or fitting never fetches data automatically. If the fetched origin/main is ahead of or diverges from local main, reading current data stops with an update instruction. Locally committed changes ahead of origin/main are included and identified by their actual commit.
+
+For a reproducible historical run, supply `read_database(revision = "<SAIO commit>")` or `read_committed_database(revision = "<SAIO commit>")`. The commit and its LFS objects must be available locally; fetch missing objects explicitly with `git -C /path/to/saio lfs fetch origin <revision>`. To deliberately inspect edited tables, use `read_database(file.path(saio_path(), "database"))`; those reads have a separate content fingerprint.
+
+Diagnostics and cached fits record the actual SAIO revision, selection and tinyAM revision. Recheck affected translations before refreshing paper figures when source data advance. DATABASE_STRUCTURE.md and PROTOCOL.md point to their maintained SAIO documents.
 
 ## Run or preview a translation
 
@@ -53,9 +57,9 @@ The full scientific translation instructions remain in [TINYAM_TRANSLATION.md](T
 
 ## Local outputs
 
-All generated results are ignored by Git and separated under results/curated/ and results/preliminary/, including cache/, dashboards, initialization attempts, summaries and figures. Plot scripts use the selected tier and filter assessment IDs against its registry. Preliminary results never enter curated summaries by default.
+All generated results are ignored by Git and separated under results/curated/ and results/preliminary/. Fits, dashboards and initialization attempts use `cache/<SAIO commit>/<assessment_id>/`; batch checkpoints share that revision folder. Explicit edited-table reads use a `working-<fingerprint>` key. Previous unversioned caches and historical revision folders are preserved and are never substituted for current fits. Plot scripts reject result tables or caches from another or unknown data revision. Preliminary results never enter curated summaries by default.
 
-Open results/curated/index.html or results/preliminary/index.html for migrated dashboards. Older comp-assessments outputs for curated stocks are under curated/legacy_comp_assessments/ and require revalidation before paper use. Older mixed batch summaries remain in preliminary/ and are historical outputs, not a newly completed preliminary batch. results/output_migration.json records the source and destination of relocated files.
+Open results/curated/index.html or results/preliminary/index.html for dashboards. Regenerated indexes label the selected source revision separately from historical or unknown-revision outputs, without rewriting old HTML. Fresh previews show source provenance and reject a known mismatch between the supplied fit and assessment context. Older comp-assessments outputs for curated stocks are under curated/legacy_comp_assessments/ and require revalidation before paper use. Older mixed batch summaries remain in preliminary/ and are historical outputs, not a newly completed preliminary batch. results/output_migration.json records the source and destination of relocated files.
 
 ## Verification and purpose
 
@@ -63,10 +67,10 @@ Source recovery and translations used substantial agentic-AI assistance. Not all
 
 The broad library supports future standardized comparative modelling. A stock-specific approximation of an official assessment does not automatically define the common formulation for a depensation study.
 
-## Preserved paper inputs
+## Historical source snapshots
 
-The curated pin preserves the five source tables from the original main working set byte for byte. The preliminary pin uses the expanded SAIO source database. Both are immutable commits in the same SAIO history, not separately maintained databases. Select the same tier for the database and the translation; switching to newer source data is a deliberate scientific update.
+`saio_revisions.csv` retains historical snapshot references, not active defaults. The curated snapshot preserves the original paper-input tables byte for byte; the preliminary snapshot preserves the expanded database at migration. Request one explicitly with `read_database(revision = .saio_snapshot_revision("curated"))`. Old cached estimates keep their original provenance and are not relabeled as results from current data.
 
 ## Migration history
 
-The source-database split and its initial snapshot manifest are documented in [migration/](migration/README.md). SAIO is maintained independently; tinyAM owns its data pins, translations and migration history.
+The source-database split and its initial snapshot manifest are documented in [migration/](migration/README.md). SAIO is maintained independently; tinyAM owns its translation provenance and migration history.

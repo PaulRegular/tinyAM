@@ -13,6 +13,8 @@ source(file.path(root, "R", "read_database.R"))
 source(file.path(root, "R", "translation_registry.R"))
 if (!exists("translation_tier", inherits = FALSE)) translation_tier <- "curated"
 results_dir <- .assessment_results(translation_tier)
+plot_database <- .saio_metadata(tier = translation_tier)
+.assessment_check_results_revision(results_dir, plot_database)
 translation_ids <- assessment_translations(translation_tier)$assessment_id
 source(file.path(root, "R", "plot_stock_order.R"))
 
@@ -21,18 +23,17 @@ ts <- read_csv(
   file.path(results_dir, "population_timeseries.csv"),
   show_col_types = FALSE
 )
-batch_file <- file.path(results_dir, "cache", "assessment_runs.rds")
-batch_runs <- if (file.exists(batch_file)) readRDS(batch_file) else NULL
+batch_runs <- .assessment_cached_runs(translation_tier, plot_database)
 
-assessments <- .saio_read_table("assessments.csv", tier = translation_tier)
+assessments <- .saio_read_table("assessments.csv", revision = plot_database$commit)
 
-stocks <- .saio_read_table("stocks.csv", tier = translation_tier)
+stocks <- .saio_read_table("stocks.csv", revision = plot_database$commit)
 
 ts <- ts |> filter(assessment_id %in% translation_ids)
 
 # Match the heatmap: ocean, phylogenetic group, species and stock.
 comparison <- read_csv(
-  file.path(root, "results/comparison_summary.csv"),
+  file.path(results_dir, "comparison_summary.csv"),
   show_col_types = FALSE
 )
 comparison <- comparison |> filter(assessment_id %in% translation_ids)
@@ -182,11 +183,8 @@ plot_comparison <- function(metric_name) {
 
   model_rows <- lapply(unavailable$assessment_id, function(id) {
 
-    file <- file.path(
-      results_dir, "cache", id, "fit.rds"
-    )
-
-    fit <- if (!is.null(batch_runs)) batch_runs[[id]]$fit else if (file.exists(file)) readRDS(file) else NULL
+    fit <- if (!is.null(batch_runs)) batch_runs[[id]]$fit else
+      .assessment_cached_fit(id, translation_tier, plot_database)
     if (!inherits(fit, "tam_fit")) return(NULL)
     pop <- fit$pop[[metric_name]]
 

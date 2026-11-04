@@ -22,7 +22,10 @@ testthat::test_that("previews use the supplied fit, refresh comparisons and do n
   testthat::expect_false(result$visible)
   testthat::expect_false(captured$open_file)
   testthat::expect_identical(names(captured$model_list), c("Official", "tinyAM"))
-  testthat::expect_identical(captured$background, assessment$background)
+  testthat::expect_identical(utils::head(captured$background, length(assessment$background)), assessment$background)
+  background <- paste(captured$background, collapse = "\n")
+  testthat::expect_match(background, assessment$source$database_key, fixed = TRUE)
+  testthat::expect_match(background, "### Source provenance", fixed = TRUE)
   testthat::expect_identical(captured$output_file, result$value$dashboard_file)
   testthat::expect_identical(dirname(captured$output_file), normalizePath(tempdir(), winslash = "/"))
   testthat::expect_false(file.exists(captured$output_file))
@@ -72,6 +75,10 @@ testthat::test_that("comparison construction reads the current fit grid and biol
   incompatible$comparison$comparison_age_groups <- NULL
   incompatible$comparison$age_plus_group <- max(fit$dat$ages) + 1
   testthat::expect_error(.assessment_comparison(fit, incompatible), "fitted plus age")
+  historical <- fit
+  historical$assessment_provenance$database_key <- paste(rep("0", 40), collapse = "")
+  testthat::expect_error(view_assessment(historical, assessment, open_file = FALSE),
+    "different SAIO source revisions")
 })
 
 testthat::test_that("failed numerical checks do not block usable exploratory previews", {

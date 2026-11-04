@@ -53,6 +53,6 @@ if (do_fit) {
                                      years, ages, 1e6)
     list(log_r0 = log(n[1, 1]), log_r = log(n[-1, 1]),
          log_n0 = log(n[1, -1]), mu_m = log(.206))
-  }, attempt_file = file.path(.assessment_cache_root(translation_tier),
+  }, attempt_file = file.path(.assessment_cache_root(translation_tier, database = source),
     source$assessment$assessment_id, "initialization_attempts.rds"))
 }

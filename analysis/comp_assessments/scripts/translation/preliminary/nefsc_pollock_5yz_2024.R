@@ -168,7 +168,7 @@ if (do_fit) {
       log_f = log(f)
     )
   }, attempt_file = file.path(
-    .assessment_cache_root(translation_tier), assessment_id,
+    .assessment_cache_root(translation_tier, database = source), assessment_id,
     "initialization_attempts.rds"
   ))
 }

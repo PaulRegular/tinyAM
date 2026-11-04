@@ -94,7 +94,7 @@ if (do_fit) {
     fit_model,
     retry_start = source_starts,
     attempt_file = file.path(
-      .assessment_cache_root(translation_tier),
+      .assessment_cache_root(translation_tier, database = source),
       source$assessment$assessment_id[[1L]], "initialization_attempts.rds"
     )
   )

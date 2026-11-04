@@ -59,6 +59,11 @@ rm(.assessment_helper)
   data.frame(
     assessment_id = assessment_id,
     database_revision = if (length(database$commit)) database$commit[[1]] else NA_character_,
+    database_source = if (length(database$database_source)) database$database_source[[1]] else NA_character_,
+    database_ref = if (length(database$database_ref)) database$database_ref[[1]] else NA_character_,
+    database_selection = if (length(database$database_selection)) database$database_selection[[1]] else NA_character_,
+    database_key = if (length(database$database_key)) database$database_key[[1]] else
+      if (length(database$commit)) database$commit[[1]] else NA_character_,
     tinyAM_revision = .database_head("."),
     translation_tier = if (length(database$translation_tier)) database$translation_tier[[1]] else NA_character_,
     status = status,
@@ -289,6 +294,13 @@ view_assessment <- function(fit, assessment, output_file = NULL, open_file = TRU
     is.na(output_file) || !nzchar(output_file))) {
     cli::cli_abort("{.arg output_file} must be NULL or one HTML file path.")
   }
+  source_key <- if (!is.null(assessment$source$database_key)) {
+    .assessment_cache_key(assessment$source)
+  } else NA_character_
+  fit_key <- fit$assessment_provenance$database_key
+  if (length(fit_key) && !is.na(source_key) && !identical(fit_key, source_key)) {
+    cli::cli_abort("The supplied fit and assessment use different SAIO source revisions. Supply the original matching assessment context or refit from the selected data; a preview must not relabel historical estimates.")
+  }
   result <- .assessment_comparison(fit, assessment)
   result$diagnostics <- .assessment_diagnostics(assessment$assessment_id,
     assessment$source, "preview",
@@ -307,9 +319,13 @@ view_assessment <- function(fit, assessment, output_file = NULL, open_file = TRU
   } else {
     output_file
   }
+  provenance <- paste0("### Source provenance\n\nAssessment source: ",
+    if (is.na(source_key)) "unrecorded" else source_key,
+    ". Fit source: ", if (length(fit_key)) fit_key else
+      "unrecorded; supplied fit provenance has not been verified", ".")
   tinyAM::vis_tam(
     model_list = list(Official = result$ref, tinyAM = result$fit),
-    background = assessment$background, output_file = result$dashboard_file,
+    background = c(assessment$background, "", provenance), output_file = result$dashboard_file,
     open_file = open_file
   )
   invisible(result)
@@ -322,6 +338,7 @@ view_assessment <- function(fit, assessment, output_file = NULL, open_file = TRU
 
 .assessment_save_rds <- function(object, file) {
   # Keep the previous complete checkpoint if serialization is interrupted.
+  dir.create(dirname(file), recursive = TRUE, showWarnings = FALSE)
   temporary <- tempfile(paste0(".", basename(file), "-"), tmpdir = dirname(file))
   on.exit(unlink(temporary), add = TRUE)
   saveRDS(object, temporary)
@@ -402,13 +419,18 @@ run_assessment <- function(assessment_id, database = NULL, fit = TRUE,
   fitted <- stock_env$fit
   .assessment_log(log_file, "Model returned; checking diagnostics.")
   fitted <- .assessment_catch_reporting(fitted, translated$catch_reporting)
+  fitted$assessment_provenance <- list(
+    database_revision = database$commit, database_source = database$database_source,
+    database_ref = database$database_ref, database_selection = database$database_selection,
+    database_key = .assessment_cache_key(database), translation_tier = tier,
+    tinyAM_revision = .database_head("."))
   result$fit <- fitted
   result$diagnostics <- .assessment_diagnostics(
     assessment_id, database,
     if (isTRUE(fitted$is_converged)) "converged" else "not_converged",
     fit = fitted, elapsed = elapsed
   )
-  cache_dir <- .assessment_cache(assessment_id, tier)
+  cache_dir <- .assessment_cache(assessment_id, tier, database)
   if (cache) {
     dir.create(cache_dir, recursive = TRUE, showWarnings = FALSE)
     .assessment_log(log_file, "Saving fitted object.")
@@ -584,7 +606,7 @@ run_assessments <- function(assessment_ids = NULL, database = NULL,
       stock_database <- read_assessment(id, database)
       log_file <- NULL
       if (cache) {
-        cache_dir <- .assessment_cache(id, tier)
+        cache_dir <- .assessment_cache(id, tier, database)
         dir.create(cache_dir, recursive = TRUE, showWarnings = FALSE)
         log_file <- file.path(cache_dir, "run.log")
         writeLines(character(), log_file)
@@ -625,7 +647,7 @@ run_assessments <- function(assessment_ids = NULL, database = NULL,
     if (dashboard && !is.null(result$fit) && isTRUE(result$fit$is_converged) &&
       !is.null(result$ref)) {
       result$dashboard_file <- if (cache) {
-        file.path(.assessment_cache(id, tier), "dashboard.html")
+        file.path(.assessment_cache(id, tier, database), "dashboard.html")
       } else {
         tempfile(pattern = paste0(id, "_"), fileext = ".html")
       }
@@ -648,6 +670,9 @@ run_assessments <- function(assessment_ids = NULL, database = NULL,
     if (is.null(x$translation_tier)) tier else x$translation_tier
   }, character(1)))
   if (save_results && any(tiers != tier)) cli::cli_abort("Cannot save mixed translation tiers into one result set.")
+  if (save_results && length(unique(vapply(runs, .assessment_result_key, character(1)))) > 1L) {
+    cli::cli_abort("Cannot save mixed SAIO revisions into one current result set; keep historical batches separate.")
+  }
   diagnostics <- if (length(runs)) {
     do.call(rbind, lapply(runs, `[[`, "diagnostics"))
   } else {

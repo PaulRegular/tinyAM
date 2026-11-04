@@ -198,7 +198,7 @@ if (do_fit) {
   fit <- fit_default_first(
     fit_model,
     retry_start = source_starts,
-    attempt_file = file.path(.assessment_cache_root(translation_tier), assessment_id,
+    attempt_file = file.path(.assessment_cache_root(translation_tier, database = source), assessment_id,
       "initialization_attempts.rds")
   )
 }

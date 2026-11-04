@@ -7,7 +7,7 @@ for (dashboards in c(FALSE, TRUE)) {
   e <- new.env(parent = globalenv())
   e$source <- function(...) invisible(NULL)
   e$requireNamespace <- function(...) TRUE
-  e$read_committed_database <- function() list()
+  e$read_committed_database <- function(...) list(commit = paste(rep("a", 40), collapse = ""))
   e$run_assessments <- function(...) {
     e$batch_args <- list(...)
     list(example = list(fit = structure(list(), class = "tam_fit")))
@@ -92,14 +92,15 @@ dir.create(test_root)
 .assessment_root <- test_root
 run_assessment <- function(assessment_id, ...) {
   if (assessment_id == ids[[2L]]) {
-    stopifnot(file.exists(file.path(test_root, "results", "curated", "cache", ids[[1L]], "result.rds")))
+    stopifnot(file.exists(file.path(.assessment_cache(ids[[1L]], "curated", database), "result.rds")))
   }
   list(assessment_id = assessment_id, fit = NULL, differences = NULL, summary = NULL,
-    diagnostics = data.frame(assessment_id = assessment_id, status = "not_fitted"))
+    diagnostics = data.frame(assessment_id = assessment_id, status = "not_fitted",
+      database_revision = database$commit, database_key = .assessment_cache_key(database)))
 }
 tryCatch({
   cached <- run_assessments(ids, database, fit = FALSE, cache = TRUE, progress = FALSE)
-  stopifnot(all(file.exists(file.path(test_root, "results", "curated", "cache", ids, "result.rds"))),
+  stopifnot(all(file.exists(file.path(.assessment_cache(ids, "curated", database), "result.rds"))),
     all(vapply(cached, function(x) x$diagnostics$status == "not_fitted", logical(1))))
 }, finally = {
   run_assessment <- original_runner

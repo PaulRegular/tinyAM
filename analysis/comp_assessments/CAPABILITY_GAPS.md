@@ -2,6 +2,27 @@
 
 # Assessment capabilities and remaining gaps
 
+## Current construction check: 2026-11-04
+
+Using committed SAIO main `757b59c11453c2e5d9333c5fcf0f23323b9c828f`,
+**30 of 35 curated recipes** and **54 of 80 preliminary recipes** construct
+their tinyAM inputs and model designs. These are preparation checks only:
+no models were fitted, no convergence or scientific-equivalence claim follows,
+and no registry membership or historical fit result was changed.
+
+The five curated blocks remain BSAI arrowtooth flounder, Aleutian Islands cod,
+Strait of Georgia herring, BC petrale sole and BC Pacific ocean perch. Their
+recipes describe missing or incompatible source observations, biology, timing
+or official comparisons. Preliminary cases also retain unresolved source/run
+definitions, F covariates still placed in population rather than catch tables,
+and an ambiguous weight grid. These are translation/source backlogs, separately
+identified from the committed-data reader and cache-provenance checks.
+
+Seven older preparation probes could not inspect `do.call()` fit wrappers;
+checking the recipes' declared settings directly confirmed six additional
+preparations and one existing F-covariate routing failure. The resulting counts
+above do not turn those helper failures into model-fitting failures or successes.
+
 ## First expansion batch: preliminary work in progress
 
 The [20-stock register](expansion_batch_01.csv) separates fitting outcomes
@@ -37,7 +58,7 @@ retained in their [translation notes](translation_notes/README.md). These
 experiments do not isolate one omitted feature as the cause of disagreement.
 
 Current tinyAM supports separate catch fleets, stock/catch weight roles and
-normalized selectivity curves. Pooling sexes or areas remains a different
+formula-defined selectivity curves. Pooling sexes or areas remains a different
 approximation; those native population dimensions are not created merely by
 declaring fleets. No package mathematics or public interfaces changed in this
 translation work.
@@ -68,7 +89,7 @@ source inputs to fit; their limited known specifications remain in the inventory
 | Correlated observation errors, including full biomass covariance | 9 | [NE Arctic cod](https://github.com/PaulRegular/saio/blob/main/source_reviews/ices_cod_northeast_arctic.md), [EBS pollock](https://github.com/PaulRegular/saio/blob/main/source_reviews/afsc_pollock_ebs.md) | Independent lognormal observations; mean/SD random effects are not equivalent. | Represent joint information and uncertainty more faithfully. | Moderate–high |
 | Multiple age-sharing groups for latent F/N process SDs | 9 | [Plaice](https://github.com/PaulRegular/saio/blob/main/source_reviews/ices_plaice_north_sea.md), [Northern Gulf cod](https://github.com/PaulRegular/saio/blob/main/source_reviews/dfo_cod_3pn4rs.md) | Ordinary age-based `sd_form` is now supported for N/F/M, with M designs constant within fitted state blocks. Recruitment remains separate. | Different process variability for young ages or plus groups without extra observation noise. | Implemented |
 | Totals plus age/length composition likelihoods | 9 | [GOA cod](https://github.com/PaulRegular/saio/blob/main/source_reviews/afsc_cod_goa.md), [Northern Shelf cod](https://github.com/PaulRegular/saio/blob/main/source_reviews/ices_cod_north_sea.md) | Convert recoverable totals/compositions to age observations, or omit unsupported components. Multinomial, Dirichlet-multinomial and logistic-normal source likelihoods differ. | Use original observation units and sample-size information. | High |
-| Fleet, substock and normalized selectivity structures | 8 | [GOA pollock](https://github.com/PaulRegular/saio/blob/main/source_reviews/afsc_pollock_goa.md), [summer flounder](https://github.com/PaulRegular/saio/blob/main/source_reviews/nefsc_summer_flounder.md) | Fleet-specific catches/F and normalized selectivity curves are supported. Native sex/substock dynamics still require explicit pooling or omission; fleet-specific process and normalization conventions need source checks. | Preserve fishery distinctions, selectivity normalization and associated observations. | Partial support |
+| Fleet, substock and normalized selectivity structures | 8 | [GOA pollock](https://github.com/PaulRegular/saio/blob/main/source_reviews/afsc_pollock_goa.md), [summer flounder](https://github.com/PaulRegular/saio/blob/main/source_reviews/nefsc_summer_flounder.md) | Fleet-specific catches/F and formula-defined selectivity curves are supported. Native sex/substock dynamics still require explicit pooling or omission; fleet-specific process and normalization conventions need source checks. | Preserve fishery distinctions, selectivity normalization and associated observations. | Partial support |
 | Survival to spawning time in SSB | 6 | [Baltic sprat](https://github.com/PaulRegular/saio/blob/main/source_reviews/ices_sprat_baltic.md), [EBS pollock](https://github.com/PaulRegular/saio/blob/main/source_reviews/afsc_pollock_ebs.md) | `data$maturity$spawn_time` supports age/year timing, shared by F/M. Separate F/M fractions and seasonal biology remain unsupported. | Match parent SSB and reported biomass timing. | Implemented for supplied age/year fractions |
 | Priors on starting mortality, q or selectivity | 3 | [Southern Gulf cod](https://github.com/PaulRegular/saio/blob/main/source_reviews/dfo_cod_4t4vn.md), [GOA pollock](https://github.com/PaulRegular/saio/blob/main/source_reviews/afsc_pollock_goa.md) | Starting values or q logit restriction are not priors. Fixed Gaussian effect SDs are supported, including a standalone M mean RW; the source starting-level priors remain different. | Reproduce external information and stabilize genuinely weak boundaries. | Moderate |
 | Recruitment curves beyond BH/Ricker | 2 | [Western Baltic herring](https://github.com/PaulRegular/saio/blob/main/source_reviews/ices_herring_western_baltic_2026.md), [Southern Gulf cod](https://github.com/PaulRegular/saio/blob/main/source_reviews/dfo_cod_4t4vn.md) | RW or stationary recruitment; hockey-stick and SSB times an AR1 recruitment rate remain distinct. | Match those recruitment equations without substituting another curve. | Moderate |

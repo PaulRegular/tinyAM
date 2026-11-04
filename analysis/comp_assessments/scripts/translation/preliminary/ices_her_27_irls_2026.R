@@ -80,5 +80,5 @@ if (do_fit) {
     silent = silent), retry_start = function() {
       cli::cli_abort("Aligned official N/F states are unavailable; no source-state retry is possible.")
     }, attempt_file = file.path(.assessment_cache(
-      source$assessment$assessment_id, translation_tier), "initialization_attempts.rds"))
+      source$assessment$assessment_id, translation_tier, database = source), "initialization_attempts.rds"))
 }

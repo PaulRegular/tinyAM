@@ -91,7 +91,7 @@ if (do_fit) {
       "No official age-specific N or F estimates are available for a source-based retry."
     ),
     attempt_file = file.path(
-      .assessment_cache_root(translation_tier), assessment_id,
+      .assessment_cache_root(translation_tier, database = source), assessment_id,
       "initialization_attempts.rds"
     )
   )

@@ -1,5 +1,10 @@
 # tinyAM 0.1.1.9001
 
+* Restore catch-only preparation, projections, simulation and tidy outputs,
+  retaining empty survey tables without unused catchability or survey-SD
+  parameters. Render reporting references with missing yield, observations or
+  age-year surfaces without inventing unavailable quantities.
+
 * Add `plot_model()` and a Model structure dashboard page showing biological
   connections, process switches, formulas, initialization and input predictors.
   Compare stored specifications with an independent model selector; link
@@ -27,8 +32,10 @@
   rotations, while rejecting changes to predictor grids or Gaussian penalties.
   This fixes platform-dependent retrospective warm-start checks.
 
-* Read assessment examples from pinned external SAIO snapshots. Separate
-  curated and preliminary translations, dashboards, caches and comparison outputs.
+* Read assessment examples from SAIO's latest committed main by default, recording
+  the exact source revision and separating caches by database version. Explicit
+  revisions remain available for reproducing historical results. Keep curated
+  and preliminary translation membership and outputs separate.
 
 * Group fishery diagnostics under Fisheries: one complete page per fleet,
   followed by Aggregate fishery. Unlabeled catches remain stock-wide; aggregate

@@ -60,5 +60,5 @@ if (do_fit) {
       catch_settings = catch_settings, index_settings = index_settings)
     source_start_parameters(source, dat)
   }, attempt_file = file.path(.assessment_cache(source$assessment$assessment_id,
-    translation_tier), "initialization_attempts.rds"))
+    translation_tier, database = source), "initialization_attempts.rds"))
 }

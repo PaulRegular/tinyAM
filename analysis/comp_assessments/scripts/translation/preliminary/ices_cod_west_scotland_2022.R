@@ -144,6 +144,6 @@ if (do_fit) {
       starts$log_q[colnames(design)[j]] <- unique(q_log[design[, j] == 1])
     }
     starts
-  }, attempt_file = file.path("analysis", "comp_assessments", "results", "cache",
+  }, attempt_file = file.path(.assessment_cache_root(translation_tier, database = source),
     assessment_id, "initialization_attempts.rds"))
 }

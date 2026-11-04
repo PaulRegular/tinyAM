@@ -174,7 +174,7 @@ if (do_fit) {
       source_start_par(tinyAM::make_par(model_dat), source$outputs)
     },
     attempt_file = file.path(
-      "analysis", "comp_assessments", "results", "cache",
+      .assessment_cache_root(translation_tier, database = source),
       source$assessment$assessment_id[[1]], "initialization_attempts.rds"
     )
   )

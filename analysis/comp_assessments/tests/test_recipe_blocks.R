@@ -1,18 +1,28 @@
 source("analysis/comp_assessments/tests/helper_stock.R")
 source("analysis/comp_assessments/R/run_assessment.R")
 db <- read_database()
-translate <- function(id) {
+translate_recipe <- function(id) {
   e <- new.env(parent = environment())
-  .test_stock(read_assessment(id, db))$obs
+  .test_stock(read_assessment(id, db))
 }
+translate <- function(id) translate_recipe(id)$obs
 expect_block <- function(actual, expected) stopifnot(identical(as.character(actual), as.character(expected)))
 
-obs <- translate("afsc_pollock_goa_2024")
-expect_block(obs$index$q_age_block, paste0(2 * ((obs$index$age - 1) %/% 2) + 1, "-", 2 * ((obs$index$age - 1) %/% 2) + 2))
+recipe <- translate_recipe("afsc_pollock_goa_2024")
+obs <- recipe$obs
+descending <- obs$index$survey %in% c("Shelikof winter acoustic", "Summer acoustic")
+expect_block(obs$index$sel_age, ifelse(descending, 11 - obs$index$age, obs$index$age))
+expect_block(obs$index$survey_type, ifelse(descending, "acoustic", "trawl"))
 adfg <- "ADF&G crab/groundfish trawl"
-expect_block(obs$index$adfg_year, ifelse(obs$index$survey == adfg, obs$index$year, min(obs$index$year[obs$index$survey == adfg])))
-obs <- translate("afsc_pollock_ebs_2024")
-expect_block(obs$index$q_age_block, ifelse(obs$index$age >= 9, "9+", obs$index$age))
+expect_block(obs$index$adfg_indicator, as.numeric(obs$index$survey == adfg))
+stopifnot(identical(recipe$settings$index_settings$q_form,
+  stats::as.formula("~0 + survey + logistic(sel_age, by = survey_type) + environmental_effect + rw(year, by = adfg_indicator)",
+    env = environment(recipe$settings$index_settings$q_form))))
+recipe <- translate_recipe("afsc_pollock_ebs_2024")
+obs <- recipe$obs
+stopifnot(identical(recipe$settings$index_settings$q_form,
+  stats::as.formula("~0 + survey + logistic(age, by = survey)",
+    env = environment(recipe$settings$index_settings$q_form))))
 obs <- translate("dfo_cod_2j3kl_2025")
 rv <- obs$index$survey == "DFO fall RV survey"
 expected <- paste("age", paste0(2 * ((obs$index$age - 2) %/% 2) + 2, "-", pmin(2 * ((obs$index$age - 2) %/% 2) + 3, 14)))

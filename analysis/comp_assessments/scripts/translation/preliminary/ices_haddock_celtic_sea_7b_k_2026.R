@@ -184,7 +184,7 @@ if (do_fit) {
       starts
     },
     attempt_file = file.path(
-      "analysis", "comp_assessments", "results", "cache",
+      .assessment_cache_root(translation_tier, database = source),
       assessment_id, "initialization_attempts.rds"
     )
   )

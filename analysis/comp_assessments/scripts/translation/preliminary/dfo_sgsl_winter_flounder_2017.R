@@ -56,5 +56,5 @@ if (do_fit) {
     silent = silent), retry_start = function() {
       cli::cli_abort("Official N/F age states are unavailable; no aligned source-state retry is possible.")
     }, attempt_file = file.path(.assessment_cache(source$assessment$assessment_id,
-      translation_tier), "initialization_attempts.rds"))
+      translation_tier, database = source), "initialization_attempts.rds"))
 }

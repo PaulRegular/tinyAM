@@ -69,5 +69,5 @@ if (do_fit) {
     colnames(starts$log_f) <- levels(dat$F_settings$age_blocks)
     starts
   }, attempt_file = file.path(.assessment_cache(source$assessment$assessment_id,
-    translation_tier), "initialization_attempts.rds"))
+    translation_tier, database = source), "initialization_attempts.rds"))
 }

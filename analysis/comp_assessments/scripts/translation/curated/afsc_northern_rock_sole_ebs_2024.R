@@ -89,5 +89,5 @@ if(do_fit) {
     n <- .translation_start_surface(comparison_outputs,"population","numbers_at_age",years,ages,1000)
     f <- .translation_start_surface(comparison_outputs,"mortality","fishing_mortality_at_age",years,ages)
     list(log_r0=log(n[1,1]),log_r=log(n[-1,1]),log_n0=log(n[1,-1]),log_f=log(f))
-  },attempt_file=file.path(.assessment_cache_root(translation_tier),source$assessment$assessment_id,"initialization_attempts.rds"))
+  },attempt_file=file.path(.assessment_cache_root(translation_tier, database = source),source$assessment$assessment_id,"initialization_attempts.rds"))
 }
