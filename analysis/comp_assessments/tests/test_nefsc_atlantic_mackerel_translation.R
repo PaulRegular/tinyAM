@@ -36,7 +36,7 @@ expected_recruitment <- outputs$value[
 ]
 
 stopifnot(
-  tinyAM::check_obs(translated$obs),
+  tinyAM::check_tam_data(translated$obs),
   identical(translated$years, 1968:2016),
   identical(translated$ages, 1:10),
   translated$age_plus_group == 10L,
@@ -77,7 +77,8 @@ stopifnot(
   outputs$value[outputs$measure == "Fbar" & outputs$year == 2016] == 0.468,
   outputs$age[outputs$measure == "recruitment" & outputs$year == 2016] == 1,
   egg_ssb$value[egg_ssb$year == 1979] == 1131094,
-  nrow(summary_outputs) == 30L,
+  sum(summary_outputs$measure %in% c("SSB", "Fbar", "recruitment") &
+    summary_outputs$year %in% 2015:2024) == 30L,
   summary_outputs$value[summary_outputs$measure == "SSB" & summary_outputs$year == 2024] == 94702,
   summary_outputs$lwr[summary_outputs$measure == "SSB" & summary_outputs$year == 2024] == 52539,
   summary_outputs$upr[summary_outputs$measure == "SSB" & summary_outputs$year == 2024] == 170702,

@@ -1,7 +1,7 @@
 source("analysis/comp_assessments/tests/helper_stock.R")
 source("analysis/comp_assessments/R/read_database.R")
 
-database <- read_database(tier = "preliminary")
+database <- read_database()
 benchmark_id <- "ices_whiting_irish_sea_2025_benchmark"
 summary_id <- "ices_whiting_irish_sea_2025_sag_summary"
 benchmark <- read_assessment(benchmark_id, database)

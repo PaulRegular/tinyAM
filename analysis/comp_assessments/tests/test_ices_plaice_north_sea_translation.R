@@ -17,7 +17,7 @@ par <- tinyAM::make_par(dat)
 inputs <- source_data$inputs
 outputs <- source_data$outputs
 stopifnot(
-  tinyAM::check_obs(translated$obs),
+  tinyAM::check_tam_data(translated$obs),
   identical(translated$years, 1957:2025),
   identical(translated$ages, 1:10),
   identical(source_data$assessment$terminal_year, 2025L),

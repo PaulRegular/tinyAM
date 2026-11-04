@@ -2,7 +2,7 @@ source("analysis/comp_assessments/tests/helper_stock.R")
 pkgload::load_all(".", quiet = TRUE)
 source("analysis/comp_assessments/R/run_assessment.R")
 
-database <- read_database(tier = "preliminary")
+database <- read_database()
 source_record <- read_assessment("dfo_herring_4tvn_fall_2024", database)
 source_original <- source_record
 translated <- .test_stock(source_record)
@@ -29,7 +29,7 @@ cpue_index <- obs$index$survey %in% c(
 stopifnot(
   identical(translated$years, 1978:2023),
   identical(translated$ages, 2:11),
-  check_obs(obs),
+  check_tam_data(obs),
   nrow(obs$catch) == length(1978:2023) * length(2:11),
   all(is.finite(obs$catch$obs)),
   !anyNA(expected_catch_index),

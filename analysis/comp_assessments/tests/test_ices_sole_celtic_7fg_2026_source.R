@@ -4,7 +4,7 @@ source("analysis/comp_assessments/R/read_database.R")
 source("analysis/comp_assessments/R/database_to_tam_obs.R")
 
 assessment_id <- "ices_sole_celtic_7fg_2026"
-database <- read_database(tier = "preliminary")
+database <- read_database()
 assessment <- read_assessment(assessment_id, database)
 inputs <- assessment$inputs
 outputs <- assessment$outputs

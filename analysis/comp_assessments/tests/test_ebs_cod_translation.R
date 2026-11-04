@@ -7,7 +7,8 @@ stopifnot(identical(x,original),is.null(s$fit),identical(s$years,2000:2023),
   identical(s$ages,1:12),!"start_par" %in% names(s$fit_call),
   all(s$obs$index$samp_time==.5),all(s$obs$maturity$spawn_time==0),
   all(s$obs$pop_covariates$M_assumption==.3866),
-  s$settings$rec_settings$sd==.6908,all(is.finite(s$obs$weight$obs)),
+  is.null(s$settings$rec_settings$sd),
+  identical(s$settings$rec_settings$process,"iid"),all(is.finite(s$obs$weight$obs)),
   all(s$obs$weight$obs>0),all(s$obs$maturity$obs>=0 & s$obs$maturity$obs<=.5),
   all(abs(rowSums(s$key)-1)<1e-12))
 raw <- x$inputs
@@ -26,7 +27,7 @@ coverage <- vapply(split(length_rows,length_rows$year),function(z)
 stopifnot(min(coverage)>.994,all(coverage<1),
   all(s$comparison_definitions$F$status=="approximate"),
   s$comparison_definitions$ssb$status=="approximate")
-stopifnot(s$dat$F_settings$process == "rw")
+stopifnot(s$dat$F_settings$process == "cor_rw")
 # The reviewed shared-level alternative must not add free projection means.
 candidate_obs <- s$obs
 candidate_obs$catch$F_year <- factor(candidate_obs$catch$year)

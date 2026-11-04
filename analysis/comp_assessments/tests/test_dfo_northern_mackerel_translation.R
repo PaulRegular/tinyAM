@@ -6,7 +6,7 @@ source(file.path(root, "R", "read_database.R"))
 source(file.path(root, "R", "database_to_tam_obs.R"))
 
 assessment_id <- "dfo_northern_mackerel_2025"
-source_data <- read_assessment(assessment_id, read_database(tier = "preliminary"))
+source_data <- read_assessment(assessment_id, read_database())
 original <- source_data
 translated <- .test_stock(source_data)
 obs <- translated$obs
@@ -16,7 +16,7 @@ stopifnot(
   identical(translated$years, 1969:2025),
   identical(translated$ages, 1:10),
   translated$age_plus_group == 10,
-  tinyAM::check_obs(obs),
+  tinyAM::check_tam_data(obs),
   nrow(obs$catch) == 570L,
   nrow(obs$index) == 0L,
   nrow(obs$weight) == 570L,

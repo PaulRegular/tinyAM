@@ -27,7 +27,7 @@ expected_catch <- published_catch$value[match(
 )]
 
 stopifnot(
-  tinyAM::check_obs(translated$obs),
+  tinyAM::check_tam_data(translated$obs),
   identical(translated$years, 1982:2016),
   identical(translated$ages, 0:7),
   nrow(translated$obs$catch) == 35L * 8L,

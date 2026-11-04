@@ -9,7 +9,7 @@ Official assessment evidence is maintained in [SAIO](https://github.com/PaulRegu
 ### tinyAM translation
 
 The current-run approximation is defined in
-[preliminary recipe](../scripts/translation/preliminary/ices_herring_norwegian_spring_2026.R). It fits
+[preliminary recipe](../scripts/preliminary/ices_herring_norwegian_spring_2026.R). It fits
 1988–2025 at ages 2–12, using IID N with free initial abundance, an F random
 walk, and the standard age-specific M pattern as fixed. Catch and the four
 numerical survey series are fitted with tinyAM observation errors; SAM's

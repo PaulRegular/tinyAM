@@ -2,7 +2,7 @@ pkgload::load_all(".", quiet = TRUE)
 root <- file.path("analysis", "comp_assessments")
 source(file.path(root, "R", "run_assessment.R"))
 if (!exists("translation_tier", inherits = FALSE)) translation_tier <- "curated"
-database <- read_database(tier = translation_tier)
+if (!exists("database", inherits = FALSE)) database <- read_database()
 read_table <- function(name) {
   database[[sub("[.]csv$", "", name)]]
 }
@@ -188,7 +188,7 @@ readiness <- lapply(seq_len(nrow(assessments)), function(i) {
     nrow(model_weight) > 0L, nrow(maturity) + nrow(maturity_static) > 0L
   ))
   conversion_ok <- FALSE
-  check_obs_ok <- FALSE
+  check_tam_data_ok <- FALSE
   conversion_error <- "Required catch, index, weight, and maturity rows are not all present."
   stock_script <- .assessment_script(id, translation_tier)
   if (has_expected_obs || file.exists(stock_script)) {
@@ -210,8 +210,8 @@ readiness <- lapply(seq_len(nrow(assessments)), function(i) {
     if (conversion_ok) {
       conversion_error <- ""
       if (requireNamespace("tinyAM", quietly = TRUE)) {
-        check_result <- tryCatch(tinyAM::check_obs(conversion), error = identity)
-        check_obs_ok <- !inherits(check_result, "error")
+        check_result <- tryCatch(tinyAM::check_tam_data(conversion), error = identity)
+        check_tam_data_ok <- !inherits(check_result, "error")
       }
     } else {
       conversion_error <- conditionMessage(conversion)
@@ -235,8 +235,8 @@ readiness <- lapply(seq_len(nrow(assessments)), function(i) {
     if (!maturity_grid) "complete calendar-year maturity-at-age matrix for all modeled years and ages",
     if (!m_represented) "a documented M treatment: supplied numerical values or a source-estimated M structure",
     if (!conversion_ok) paste("database_to_tam_obs failed:", conversion_error),
-    if (conversion_ok && !requireNamespace("tinyAM", quietly = TRUE)) "tinyAM is not installed; check_obs was not run",
-    if (conversion_ok && requireNamespace("tinyAM", quietly = TRUE) && !check_obs_ok) "tinyAM::check_obs failed"
+    if (conversion_ok && !requireNamespace("tinyAM", quietly = TRUE)) "tinyAM is not installed; check_tam_data was not run",
+    if (conversion_ok && requireNamespace("tinyAM", quietly = TRUE) && !check_tam_data_ok) "tinyAM::check_tam_data failed"
   )
   type_counts <- table(x$type)
   count <- function(type) if (type %in% names(type_counts)) as.integer(type_counts[[type]]) else 0L
@@ -281,7 +281,7 @@ readiness <- lapply(seq_len(nrow(assessments)), function(i) {
     M_numerical_values_available = m_grid || m_static,
     M_estimated_in_source = m_estimated,
     database_to_tam_obs_succeeds = conversion_ok,
-    tinyAM_check_obs_passes = check_obs_ok,
+    tinyAM_check_tam_data_passes = check_tam_data_ok,
     N_at_age_output = any(y$measure == "numbers_at_age" & !is.na(y$age)),
     F_at_age_output = any(y$measure == "fishing_mortality_at_age" & !is.na(y$age)),
     SSB_output = any(y$measure == "SSB"),
@@ -299,7 +299,7 @@ print(
     "minimum_age", "maximum_age", "catch_rows", "catch_at_age_rows",
     "index_rows", "weight_rows", "catch_weight_rows", "maturity_rows",
     "M_rows",
-    "database_to_tam_obs_succeeds", "tinyAM_check_obs_passes", "missing_items"
+    "database_to_tam_obs_succeeds", "tinyAM_check_tam_data_passes", "missing_items"
   )],
   row.names = FALSE
 )

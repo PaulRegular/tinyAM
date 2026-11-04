@@ -1,7 +1,7 @@
 pkgload::load_all(".", quiet = TRUE)
 source("analysis/comp_assessments/R/run_assessment.R")
 
-database <- read_database(tier = "preliminary")
+database <- read_database()
 source_data <- read_assessment("ices_cod_western_baltic_2026", database)
 translation <- new.env(parent = environment())
 translation$source <- source_data

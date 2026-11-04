@@ -37,7 +37,7 @@ stopifnot(!exists("warm_fit", inherits = FALSE))
 
 # Run the interactive setup with fitting disabled, in a separate workspace.
 interactive_env <- new.env(parent = globalenv())
-for (statement in parse("analysis/comp_assessments/scripts/translation/run_stock.R")) {
+for (statement in parse("analysis/comp_assessments/scripts/run_stock.R")) {
   if (is.call(statement) && identical(statement[[1]], quote(`<-`)) &&
     identical(statement[[2]], quote(do_fit))) {
     statement[[3]] <- FALSE
@@ -53,7 +53,7 @@ cat("Top-level stock scripts and fitting-disabled isolation passed.\n")
 
 # Loading another stock must clear absent comparison options, including in the workspace.
 interactive_env$comparison_age_groups <- list(N = list(stale = 999))
-for (statement in parse("analysis/comp_assessments/scripts/translation/run_stock.R")) {
+for (statement in parse("analysis/comp_assessments/scripts/run_stock.R")) {
   if (is.call(statement) && identical(statement[[1]], quote(`<-`))) {
     if (identical(statement[[2]], quote(do_fit))) statement[[3]] <- FALSE
     if (identical(statement[[2]], quote(assessment_id))) statement[[3]] <- "afsc_cod_goa_2026"

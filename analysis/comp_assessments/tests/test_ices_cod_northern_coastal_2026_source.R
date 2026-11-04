@@ -3,7 +3,7 @@ pkgload::load_all(".", quiet = TRUE)
 source(file.path(root, "R", "run_assessment.R"))
 
 id <- "ices_cod_northern_coastal_2026"
-database <- read_database(tier = "preliminary")
+database <- read_database()
 assessment <- read_assessment(id, database)
 inputs <- assessment$inputs
 outputs <- assessment$outputs

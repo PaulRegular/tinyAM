@@ -23,7 +23,7 @@ stopifnot(identical(record, original), is.null(x$fit),
   identical(x$comparison_aggregates, "ssb"),
   sum(x$dat$is_proj) == 1L, max(x$dat$years) == 2023L,
   is.finite(tinyAM::nll_fun(tinyAM::make_par(x$dat), x$dat)))
-tinyAM::check_obs(x$obs)
+tinyAM::check_tam_data(x$obs)
 
 # The biomass-to-number denominator includes both sexes before selection.
 fixture <- record$inputs[rep(1L, 10L), ]

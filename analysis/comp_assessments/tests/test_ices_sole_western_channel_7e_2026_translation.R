@@ -1,6 +1,6 @@
 source("analysis/comp_assessments/tests/helper_stock.R")
 source("analysis/comp_assessments/R/run_assessment.R")
-database <- read_database(tier = "preliminary")
+database <- read_database()
 assessment_id <- "ices_sole_western_channel_7e_2026"
 assessment <- read_assessment(assessment_id, database)
 trans <- .test_stock(assessment)

@@ -45,7 +45,7 @@ ssb_check <- ssb$value[!is.na(ssb$year) & ssb$year == 2014 & ssb_age == 3]
 stopifnot(
   identical(x$diagnostics$status, "not_fitted"),
   is.null(x$fit),
-  isTRUE(tinyAM::check_obs(x$obs)),
+  isTRUE(tinyAM::check_tam_data(x$obs)),
   nrow(biomass) == 31L * 8L,
   nrow(ssb) == 31L * 8L,
   identical(sort(unique(as.integer(biomass$year))), 1984:2014),

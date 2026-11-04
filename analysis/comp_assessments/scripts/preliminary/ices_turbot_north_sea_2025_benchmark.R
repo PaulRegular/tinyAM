@@ -70,10 +70,10 @@ obs$index$sd_group <- ifelse(
   ifelse(obs$index$age == 1, "BSAS_age1", "BSAS_ages2_8")
 )
 obs$index$sd_group <- factor(obs$index$sd_group)
-obs$pop_covariates$F_sd_group <- factor(
-  ifelse(obs$pop_covariates$age == 1, "age1",
-    ifelse(obs$pop_covariates$age == 2, "age2",
-      ifelse(obs$pop_covariates$age <= 4, "ages3_4", "ages5_8")
+obs$catch$F_sd_group <- factor(
+  ifelse(obs$catch$age == 1, "age1",
+    ifelse(obs$catch$age == 2, "age2",
+      ifelse(obs$catch$age <= 4, "ages3_4", "ages5_8")
     )
   ),
   levels = c("age1", "age2", "ages3_4", "ages5_8")

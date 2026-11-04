@@ -1,7 +1,7 @@
 .libPaths(c("C:/Users/paulr/AppData/Local/R/win-library/4.4", .libPaths()))
 pkgload::load_all(".", quiet = TRUE)
 source("analysis/comp_assessments/R/run_assessment.R")
-db <- read_database(tier = "preliminary")
+db <- read_database()
 record <- read_assessment("asmfc_striped_bass_atlantic_2018", db)
 years <- 1982:2017
 inputs <- record$inputs
@@ -82,6 +82,6 @@ stopifnot(
   nrow(total_biomass) == length(years),
   !anyDuplicated(total_biomass$year),
   setequal(total_biomass$year, years),
-  tinyAM::check_obs(translated$obs)
+  tinyAM::check_tam_data(translated$obs)
 )
 cat("2018 striped-bass source extraction and tinyAM observation preparation passed.\n")

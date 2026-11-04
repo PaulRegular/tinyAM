@@ -31,8 +31,8 @@ obs <- database_to_tam_obs(
 )
 
 obs$maturity$spawn_time <- 0
-obs$pop_covariates$f_age_group <- factor(
-  ifelse(obs$pop_covariates$age >= 3, "age3_plus", paste0("age", obs$pop_covariates$age)),
+obs$catch$f_age_group <- factor(
+  ifelse(obs$catch$age >= 3, "age3_plus", paste0("age", obs$catch$age)),
   levels = c("age0", "age1", "age2", "age3_plus")
 )
 

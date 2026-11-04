@@ -20,7 +20,7 @@ x <- framework$inputs
 catch <- x[x$type == "catch", ]
 stopifnot(nrow(catch) == 300, all(catch$unit == "thousand fish"),
   identical(sort(unique(catch$year)), 1973:2022),
-  identical(sort(unique(catch$age)), 1:6),
+  isTRUE(all.equal(sort(unique(catch$age)), 1:6, tolerance = 0)),
   sum(is.na(catch$value)) == 18,
   all(is.na(catch$value[catch$year >= 2020])),
   catch$value[catch$year == 1975 & catch$age == 1] == 8037,
@@ -35,16 +35,16 @@ spring <- indices[indices$season == "spring", ]
 fall <- indices[indices$season == "fall", ]
 winter <- indices[indices$season == "winter", ]
 stopifnot(identical(sort(unique(spring$year)), setdiff(1968:2022, 2020L)),
-  identical(sort(unique(spring$age)), 0:11),
+  isTRUE(all.equal(sort(unique(spring$age)), 0:11, tolerance = 0)),
   spring$value[spring$year == 1968 & spring$age == 3] == 47.65,
   spring$value[spring$year == 2004 & spring$age == 7] == .019,
   identical(sort(unique(fall$year)), setdiff(1963:2022, c(2017L, 2020L))),
-  identical(sort(unique(fall$age)), 1:10),
+  isTRUE(all.equal(sort(unique(fall$age)), 1:10, tolerance = 0)),
   fall$value[fall$year == 1984 & fall$age == 4] == 1.865,
   fall$value[fall$year == 1997 & fall$age == 4] == 1.459,
   all(grepl("incomplete age-length key", fall$notes[fall$year == 2013 & fall$age %in% c(2:7, 9)])),
   identical(sort(unique(winter$year)), 1992:2007),
-  identical(sort(unique(winter$age)), 1:8),
+  isTRUE(all.equal(sort(unique(winter$age)), 1:8, tolerance = 0)),
   winter$value[winter$year == 2006 & winter$age == 2] == 18.736,
   winter$value[winter$year == 1996 & winter$age == 8] == .015,
   any(indices$value == 0), !anyNA(indices$value))
@@ -69,7 +69,7 @@ stopifnot(nrow(cv) == 240, all(is.na(cv$age)), all(cv$basis == "relative_scale")
   !any(x$type %in% c("weight", "maturity")),
   all(is.na(x$year[x$type == "M"])),
   all(is.na(x$year_basis[x$type == "M"])),
-  identical(x$age[x$type == "M"], 1:6),
+  isTRUE(all.equal(x$age[x$type == "M"], 1:6, tolerance = 0)),
   identical(x$value[x$type == "M"], c(.97, .45, .37, .34, .33, .33)),
   all(x$unit[x$type == "M"] == "per year"),
   all(grepl("ages 6 and 7", x$notes[x$type == "M"], fixed = TRUE)),
@@ -126,24 +126,5 @@ for (id in c(framework$assessment$assessment_id, update$assessment$assessment_id
   blocked <- run_assessment(id, fit = FALSE)
   stopifnot(blocked$diagnostics$status == "blocked_no_stock_spec", is.null(blocked$fit))
 }
-validate_in_memory <- function(tables) {
-  env <- new.env(parent = globalenv())
-  env$read.csv <- function(file, ...) tables[[sub(".csv", "", basename(file), fixed = TRUE)]]
-  tryCatch({
-    invisible(capture.output(sys.source(file.path(saio_path(), "scripts", "database", "002_validate_database.R"), envir = env)))
-    NULL
-  }, error = identity)
-}
-at <- which(db$inputs$assessment_id == framework$assessment$assessment_id &
-  db$inputs$measure == "biomass_index_cv" & db$inputs$season == "spring" & db$inputs$year == 2022)
-stopifnot(length(at) == 1L)
-wrong <- db
-wrong$inputs$age[at] <- 2L
-error <- validate_in_memory(wrong)
-stopifnot(inherits(error, "error"), grepl("without an age", conditionMessage(error), fixed = TRUE))
-wrong <- db
-wrong$inputs <- wrong$inputs[!(wrong$inputs$assessment_id == framework$assessment$assessment_id &
-  wrong$inputs$measure == "total_biomass" & wrong$inputs$season == "spring" & wrong$inputs$year == 2022), ]
-error <- validate_in_memory(wrong)
-stopifnot(inherits(error, "error"), grepl("corresponding total_biomass", conditionMessage(error), fixed = TRUE))
+# Canonical schema rejection tests run in SAIO, which owns its validator.
 cat("SNEMA yellowtail source tables, selected-run separation, units, missing values and unresolved translation gaps passed.\n")

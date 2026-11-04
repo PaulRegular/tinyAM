@@ -1,7 +1,7 @@
 pkgload::load_all(".", quiet = TRUE)
 source("analysis/comp_assessments/R/run_assessment.R")
 
-database <- read_database(tier = "preliminary")
+database <- read_database()
 source_data <- read_assessment("ices_cod_western_baltic_2025", database)
 translation <- new.env(parent = environment())
 translation$source <- source_data
@@ -32,7 +32,7 @@ stopifnot(
   length(unique(index$q_key)) == 10L,
   all(!is.na(index$sd_block)),
   nrow(obs$pop_covariates) == length(years) * length(ages),
-  setequal(levels(obs$pop_covariates$f_age_group), c("age0", "age1", "age2", "age3_4", "age5plus")),
+  setequal(levels(obs$catch$f_age_group), c("age0", "age1", "age2", "age3_4", "age5plus")),
   all(obs$maturity$spawn_time == 0)
 )
 

@@ -4,14 +4,14 @@ source(file.path(root, "R", "run_assessment.R"))
 source(file.path(root, "R", "read_database.R"))
 source(file.path(root, "R", "database_to_tam_obs.R"))
 
-database <- read_database(tier = "preliminary")
+database <- read_database()
 source_data <- read_assessment("ices_sole_20_24_2025", database)
 translated <- .test_stock(source_data)
 obs <- translated$obs
 dat <- translated$dat
 survey_names <- c("Q4Solesurvey1-9+", "Gillnet", "Trawl")
 
-tinyAM::check_obs(obs)
+tinyAM::check_tam_data(obs)
 
 stopifnot(
   identical(translated$years, 1984:2024),

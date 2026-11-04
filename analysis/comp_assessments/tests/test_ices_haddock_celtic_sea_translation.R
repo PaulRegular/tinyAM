@@ -22,7 +22,7 @@ zero_source_catch <- source_record$inputs[
 ]
 zero_source_rows <- match(weight_key(zero_source_catch), weight_key(obs$catch))
 
-tinyAM::check_obs(obs)
+tinyAM::check_tam_data(obs)
 stopifnot(
   identical(translated$years, 1993:2025),
   identical(translated$ages, 0:8),

@@ -1,3 +1,3 @@
-# SAIO curation protocol
+# Source protocol
 
-The maintained document is PROTOCOL.md in the independent SAIO checkout. Read it before changing source records. Locate that checkout with SAIO_PATH or options(tinyAM.saio_path = '/path/to/saio'). See README.md here for the translation workflow.
+The maintained document is [PROTOCOL.md](https://github.com/PaulRegular/saio/blob/main/PROTOCOL.md) in SAIO. Source changes and validation belong there. tinyAM reads a manually refreshed local snapshot; see [README.md](README.md).

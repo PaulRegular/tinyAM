@@ -4,7 +4,7 @@ s <- read_assessment("ices_sandeel_area_4_2025")
 before <- s
 x <- .test_stock(s)
 obs <- x$obs; dat <- x$dat
-stopifnot(identical(s, before), is.null(x$fit), tinyAM::check_obs(obs),
+stopifnot(identical(s, before), is.null(x$fit), tinyAM::check_tam_data(obs),
   identical(x$years, 1993:2024), identical(x$ages, 1:4),
   nrow(obs$catch) == 128L, nrow(obs$index) == 42L,
   all(obs$catch$unit == "thousand fish"), all(obs$index$age == 1),

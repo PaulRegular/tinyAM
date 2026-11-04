@@ -1,6 +1,6 @@
 pkgload::load_all(".", quiet = TRUE)
 source("analysis/comp_assessments/R/run_assessment.R")
-record <- read_assessment("jrn_redfish_beaked_2026", read_database(tier = "preliminary"))
+record <- read_assessment("jrn_redfish_beaked_2026", read_database())
 inputs <- record$inputs
 outputs <- record$outputs
 stopifnot(
@@ -41,12 +41,12 @@ catch_weight <- inputs[inputs$type == "catch_weight", ]
 maturity <- inputs[inputs$type == "maturity", ]
 M <- inputs[inputs$type == "M", ]
 stopifnot(
-  identical(weight$age, 6:19), all(is.na(weight$year)),
+  isTRUE(all.equal(weight$age, 6:19, tolerance = 0)), all(is.na(weight$year)),
   identical(weight$value, c(.141, .188, .237, .286, .334, .381, .424, .465, .503, .537, .569, .597, .623, .755)),
   identical(catch_weight$value, weight$value),
-  identical(maturity$age, 6:19), all(is.na(maturity$year)),
+  isTRUE(all.equal(maturity$age, 6:19, tolerance = 0)), all(is.na(maturity$year)),
   identical(maturity$value, c(.02, .04, .08, .14, .24, .37, .49, .58, .66, .73, .77, .81, .85, 1)),
-  identical(M$age, 2:19), all(M$value == .05), all(is.na(M$year))
+  isTRUE(all.equal(M$age, 2:19, tolerance = 0)), all(M$value == .05), all(is.na(M$year))
 )
 russian <- select_input("numbers_at_age", survey = "Russian autumn groundfish")
 eco <- select_input("numbers_at_age", survey = "Ecosystem survey")
@@ -114,6 +114,6 @@ prepared <- run_assessment(record$assessment$assessment_id, fit = FALSE)
 stopifnot(
   prepared$diagnostics$status == "not_fitted",
   is.null(prepared$fit),
-  isTRUE(tinyAM::check_obs(prepared$obs))
+  isTRUE(tinyAM::check_tam_data(prepared$obs))
 )
 cat("Beaked redfish source coverage, fixed biology, missing cells, year basis, units and rounded F passed.\n")

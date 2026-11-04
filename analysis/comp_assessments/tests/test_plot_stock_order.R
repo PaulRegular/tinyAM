@@ -1,9 +1,9 @@
 source("analysis/comp_assessments/R/plot_stock_order.R")
 source("analysis/comp_assessments/R/run_assessment.R")
 root <- "analysis/comp_assessments"
-revision <- .saio_revision()
-assessments <- .saio_read_table("assessments.csv", revision = revision)
-stocks <- .saio_read_table("stocks.csv", revision = revision)
+database <- read_database()
+assessments <- database$assessments
+stocks <- database$stocks
 ids <- intersect(assessment_translations("curated")$assessment_id, assessments$assessment_id)
 info <- assessment_plot_stocks(assessments, stocks, ids)
 stopifnot(nrow(info) == length(ids), !anyDuplicated(info$assessment_id),

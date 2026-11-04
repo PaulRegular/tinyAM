@@ -18,7 +18,7 @@ stopifnot(
 )
 settings <- translated$settings
 
-tinyAM::check_obs(obs)
+tinyAM::check_tam_data(obs)
 dat <- do.call(tinyAM::prepare_tam, c(
   list(data = obs, years = translated$years, ages = translated$ages),
   settings
@@ -30,16 +30,6 @@ age1_ats <- obs$index[
   drop = FALSE
 ]
 ats_old_age1 <- age1_ats[age1_ats$year < 2024, , drop = FALSE]
-high_age <- obs$index[obs$index$age >= 9, , drop = FALSE]
-high_age_keys <- unique(high_age[c("survey", "age", "q_key")])
-keys_by_age <- aggregate(
-  q_key ~ survey + age, high_age_keys,
-  function(x) length(unique(as.character(x)))
-)
-keys_by_survey <- aggregate(
-  q_key ~ survey, high_age_keys,
-  function(x) length(unique(as.character(x)))
-)
 m_values <- unique(obs$pop_covariates[c("age", "M_assumption")])
 m_values <- m_values[order(m_values$age), ]
 
@@ -49,20 +39,16 @@ stopifnot(
   translated$age_plus_group == 15,
   identical(dat$years, 1964:2024),
   identical(dat$ages, 1:15),
-  identical(settings$N_settings$process, "iid"),
+  identical(settings$N_settings$process, "off"),
   identical(settings$N_settings$init, "exp"),
-  identical(settings$F_settings$process, "rw"),
+  identical(settings$F_settings$process, "cor_rw"),
   identical(settings$M_settings$process, "off"),
   identical(settings$M_settings$mu_form, NULL),
   grepl("M_assumption",
         paste(deparse(settings$M_settings$mu_supplied), collapse = "")),
-  grepl("q_key", paste(deparse(settings$index_settings$q_form), collapse = "")),
+  grepl("logistic(age, by = survey)", paste(deparse(settings$index_settings$q_form), collapse = ""), fixed = TRUE),
   grepl("survey", paste(deparse(settings$index_settings$sd_form), collapse = "")),
-  grepl("age", paste(deparse(settings$catch_settings$sd_form), collapse = ""), fixed = TRUE),
-  grepl("I(age^2)",
-    paste(deparse(settings$catch_settings$sd_form), collapse = ""),
-    fixed = TRUE
-  ),
+  identical(deparse(settings$catch_settings$sd_form), "~1"),
   identical(
     survey_names,
     sort(c("NMFS bottom-trawl VAST", "NMFS acoustic-trawl"))
@@ -70,16 +56,14 @@ stopifnot(
   !"NMFS acoustic-trawl age-1 index" %in% survey_names,
   nrow(ats_old_age1) > 0L,
   !any(age1_ats$year == 2024),
-  nrow(high_age_keys) > 0L,
-  all(high_age$q_age_block == "9+"),
-  all(keys_by_age$q_key == 1L),
-  all(keys_by_survey$q_key == 1L),
-  length(unique(as.character(high_age_keys$q_key))) == length(survey_names),
+  any(obs$index$age >= 9),
+  ncol(dat$q_modmat) == length(survey_names),
   all(m_values$age == 1:15),
   isTRUE(all.equal(m_values$M_assumption, c(0.9, 0.45, rep(0.3, 13)))),
   identical(translated$comparison_age_groups$N[["10+"]], 10:15),
   identical(translated$comparison_age_groups$biomass_at_age[["3+"]], 3:15),
-  identical(translated$comparison_definitions$ssb$status, "approximate")
+  identical(translated$comparison_definitions$ssb$status, "matched"),
+  all(obs$maturity$spawn_time == 0.25)
 )
 
 cat("EBS pollock translation tests passed.\n")

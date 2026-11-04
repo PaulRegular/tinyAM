@@ -5,12 +5,12 @@ pkgload::load_all(".", quiet = TRUE)
 source(file.path(root, "R", "read_database.R"))
 source(file.path(root, "R", "database_to_tam_obs.R"))
 
-database <- read_committed_database()
-source_data <- read_committed_assessment("ices_herring_north_sea_2026", database)
+database <- read_database()
+source_data <- read_assessment("ices_herring_north_sea_2026", database)
 translated <- .test_stock(source_data)
 obs <- translated$obs
 
-tinyAM::check_obs(obs)
+tinyAM::check_tam_data(obs)
 dat <- do.call(tinyAM::prepare_tam, c(
   list(data = obs, years = translated$years, ages = translated$ages),
   translated$settings

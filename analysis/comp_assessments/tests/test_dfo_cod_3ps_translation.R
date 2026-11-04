@@ -1,17 +1,10 @@
-source("analysis/comp_assessments/R/read_database.R")
+source("analysis/comp_assessments/R/run_assessment.R")
+database <- read_database()
 root <- file.path("analysis", "comp_assessments")
-source_data <- read.csv(file.path(saio_path(), "database", "inputs.csv"),
-  na.strings = c("", "NA"), stringsAsFactors = FALSE
-)
-outputs <- read.csv(file.path(saio_path(), "database", "outputs.csv"),
-  na.strings = c("", "NA"), stringsAsFactors = FALSE
-)
-assessments <- read.csv(file.path(saio_path(), "database", "assessments.csv"),
-  na.strings = c("", "NA"), stringsAsFactors = FALSE
-)
-assumptions <- read.csv(file.path(saio_path(), "database", "assumptions.csv"),
-  na.strings = c("", "NA"), stringsAsFactors = FALSE
-)
+source_data <- database$inputs
+outputs <- database$outputs
+assessments <- database$assessments
+assumptions <- database$assumptions
 id <- "dfo_cod_3ps_2024"
 script_path <- .assessment_script(id)
 script_lines <- readLines(script_path, warn = FALSE)

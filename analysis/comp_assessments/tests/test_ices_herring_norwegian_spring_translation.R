@@ -36,7 +36,7 @@ n_source <- source_data$outputs[source_data$outputs$type == "population" &
   source_data$outputs$age == "2", ]
 
 stopifnot(
-  tinyAM::check_obs(translated$obs),
+  tinyAM::check_tam_data(translated$obs),
   identical(translated$years, 1988:2024),
   identical(translated$ages, 2:12),
   nrow(translated$obs$catch) == 37L * 11L,

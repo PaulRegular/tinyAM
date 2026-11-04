@@ -3,7 +3,7 @@ source("analysis/comp_assessments/R/run_assessment.R")
 source("analysis/comp_assessments/R/database_to_tam_obs.R")
 source("analysis/comp_assessments/R/read_database.R")
 
-database <- read_database(tier = "preliminary")
+database <- read_database()
 assessment_id <- "ices_whiting_west_scotland_2025"
 source_data <- read_assessment(assessment_id, database)
 translated <- .test_stock(source_data)
@@ -21,7 +21,7 @@ matched <- match(key(index), weight_key)
 has_weight <- !is.na(matched)
 
 stopifnot(
-  tinyAM::check_obs(obs),
+  tinyAM::check_tam_data(obs),
   identical(translated$years, 1981:2025),
   identical(translated$ages, 0:7),
   identical(translated$age_plus_group, 7L),

@@ -1,7 +1,7 @@
 root <- file.path("analysis", "comp_assessments")
-source(file.path(root, "R", "read_database.R"))
+source(file.path(root, "R", "run_assessment.R"))
 source(file.path(root, "R", "database_to_tam_obs.R"))
-source_data <- read_assessment("ices_cod_iceland_2026", read_database(tier = "preliminary"))
+source_data <- read_assessment("ices_cod_iceland_2026", read_database())
 env <- new.env(parent = globalenv())
 env$source <- source_data
 env$do_fit <- FALSE

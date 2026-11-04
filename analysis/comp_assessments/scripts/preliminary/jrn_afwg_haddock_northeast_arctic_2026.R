@@ -20,8 +20,8 @@ obs <- database_to_tam_obs(
 )
 
 obs$catch$catch_sd_group <- factor(ifelse(obs$catch$age == 3, "age3", "age4plus"))
-obs$pop_covariates$F_sd_group <- factor(ifelse(
-  obs$pop_covariates$age == 3, "age3", "age4plus"
+obs$catch$F_sd_group <- factor(ifelse(
+  obs$catch$age == 3, "age3", "age4plus"
 ))
 obs$index$q_age_group <- ifelse(obs$index$age == 3, "age3", ifelse(
   obs$index$survey == "RU-BTr-Q4", "age4-8",

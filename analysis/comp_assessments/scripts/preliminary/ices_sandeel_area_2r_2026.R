@@ -37,12 +37,12 @@ obs$maturity$spawn_time <- 0
 effort <- inputs[inputs$type == "covariate" & inputs$measure == "effort" &
   inputs$season == "annual", ]
 stopifnot(!anyDuplicated(effort$year), setequal(effort$year, years), all(effort$value > 0))
-pop <- obs$pop_covariates
-pop$log_effort <- log(effort$value[match(pop$year, effort$year)]) - mean(log(effort$value))
-period <- cut(pop$year, c(1982, 1998, 2004, 2009, 2025),
+fishing <- obs$catch
+fishing$log_effort <- log(effort$value[match(fishing$year, effort$year)]) - mean(log(effort$value))
+period <- cut(fishing$year, c(1982, 1998, 2004, 2009, 2025),
   labels = c("early", "middle1", "middle2", "recent"))
-pop$F_mean_group <- interaction(period, pmin(pop$age, 3), drop = TRUE)
-obs$pop_covariates <- pop
+fishing$F_mean_group <- interaction(period, pmin(fishing$age, 3), drop = TRUE)
+obs$catch <- fishing
 obs$catch$catch_sd_group <- factor(ifelse(obs$catch$age <= 2, "young", "old"))
 
 cw <- inputs[inputs$type == "catch_weight" & inputs$age %in% ages, ]

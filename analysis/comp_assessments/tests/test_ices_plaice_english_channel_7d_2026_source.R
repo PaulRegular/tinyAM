@@ -8,11 +8,11 @@ source(file.path(root, "R", "database_to_tam_obs.R"))
 
 assessment_id <- "ices_plaice_english_channel_7d_2026"
 stock_id <- "ck_ices_wgnssk_platessa_ns_7d"
-database <- read_database(tier = "preliminary")
+database <- read_database()
 source <- read_assessment(assessment_id, database)
 inputs <- source$inputs
 outputs <- source$outputs
-cache <- file.path(saio_path(), "source_cache", "ices_plaice_7d_2026")
+cache <- file.path("analysis", "comp_assessments", "source_cache", "ices_plaice_7d_2026")
 data_env <- new.env(parent = baseenv())
 load(file.path(cache, "run/data.RData"), envir = data_env)
 dat <- data_env$dat

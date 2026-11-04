@@ -12,14 +12,14 @@ obs <- database_to_tam_obs(
   assumptions = source$assumptions
 )
 
-obs$pop_covariates$F_age_block <- cut(
-  obs$pop_covariates$age,
+obs$catch$F_age_block <- cut(
+  obs$catch$age,
   breaks = c(1, 3, 5, 7, 9, 11),
   labels = c("2-3", "4-5", "6-7", "8-9", "10-11"),
   include.lowest = TRUE
 )
-obs$pop_covariates$F_period <- cut(
-  obs$pop_covariates$year,
+obs$catch$F_period <- cut(
+  obs$catch$year,
   breaks = c(1994, 1999, 2005, 2013, 2021, 2024),
   labels = c("1995-1999", "2000-2005", "2006-2013", "2014-2021", "2022-2024")
 )

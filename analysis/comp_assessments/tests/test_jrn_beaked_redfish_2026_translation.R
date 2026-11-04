@@ -2,7 +2,7 @@ pkgload::load_all(".", quiet = TRUE)
 source("analysis/comp_assessments/R/run_assessment.R")
 
 assessment_id <- "jrn_redfish_beaked_2026"
-database <- read_database(tier = "preliminary")
+database <- read_database()
 record <- read_assessment(assessment_id, database)
 original_inputs <- record$inputs
 original_outputs <- record$outputs
@@ -22,7 +22,7 @@ stopifnot(
     deparse(~ 0 + survey + survey:age)),
   identical(deparse(prepared$index_settings$sd_form),
     deparse(~ 0 + survey)),
-  isTRUE(tinyAM::check_obs(obs)),
+  isTRUE(tinyAM::check_tam_data(obs)),
   nrow(obs$catch) == length(years) * length(ages),
   identical(as.integer(sort(unique(obs$catch$year))), years),
   identical(as.integer(sort(unique(obs$catch$age))), ages),

@@ -103,8 +103,7 @@ stopifnot(
   sum(all_outputs$measure == "fishing_mortality_intensity") == 2L,
   all(is.na(all_outputs$se)), all(is.na(all_outputs$lwr)), all(is.na(all_outputs$upr)),
   all(nzchar(all_outputs$source_reference)),
-  !any(grepl("sensitivity|Run 5|Run 6|Run 9", q$source_reference)),
-  file.exists(file.path(saio_path(), "source_reviews", "ck_nefsc_trac_cert_morhua_gb.md"))
+  !any(grepl("sensitivity|Run 5|Run 6|Run 9", q$source_reference))
 )
 before <- framework
 error <- tryCatch(database_to_tam_obs(ids[1], framework$inputs,

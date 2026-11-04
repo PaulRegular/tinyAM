@@ -1,7 +1,7 @@
 pkgload::load_all(".", quiet = TRUE)
 source("analysis/comp_assessments/R/run_assessment.R")
 
-database <- read_database(tier = "preliminary")
+database <- read_database()
 source_before <- read_assessment("nefsc_white_hake_2025", database)
 result <- run_assessment("nefsc_white_hake_2025", database, fit = FALSE, silent = TRUE)
 obs <- result$obs
@@ -60,7 +60,7 @@ stopifnot(
 stopifnot(
   result$diagnostics$status == "not_fitted",
   inherits(obs, "list"),
-  tinyAM::check_obs(obs),
+  tinyAM::check_tam_data(obs),
   isTRUE(all.equal(as.numeric(sort(unique(obs$weight$year))), 1963:2024)),
   isTRUE(all.equal(as.numeric(sort(unique(obs$weight$age))), 1:9)),
   nrow(obs$weight) == 62L * 9L,

@@ -101,7 +101,7 @@ common_ssb <- comparison[
 common_ssb <- stats::aggregate(value ~ year, common_ssb, sum)
 
 stopifnot(
-  tinyAM::check_obs(translated$obs),
+  tinyAM::check_tam_data(translated$obs),
   identical(translated$years, 1984:2024),
   identical(translated$ages, 0:3),
   nrow(translated$obs$catch) == 41L * 4L,
@@ -148,10 +148,7 @@ stopifnot(
   isTRUE(all.equal(common_ssb$value, as.numeric(ssb_q1$value))),
   nrow(comparison[comparison$measure == "biomass_at_age", ]) == 41L * 4L,
   nrow(source_q) == 13L,
-  nrow(comparison_q) == 13L,
-  isTRUE(all.equal(
-    sort(as.numeric(comparison_q$value)), sort(as.numeric(source_q$value))
-  )),
+  nrow(comparison_q) == 0L, # Native quarterly q is not an annual-q comparison.
   all(is.na(comparison$se[comparison$source_type == "derived_common_definition"]))
 )
 

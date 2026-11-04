@@ -325,10 +325,62 @@ view_assessment <- function(fit, assessment, output_file = NULL, open_file = TRU
       "unrecorded; supplied fit provenance has not been verified", ".")
   tinyAM::vis_tam(
     model_list = list(Official = result$ref, tinyAM = result$fit),
-    background = c(assessment$background, "", provenance), output_file = result$dashboard_file,
+    background = c(if (!isTRUE(result$diagnostics$is_converged)) c(
+      "### Troubleshooting fit", "Numerical checks did not pass. Inspect Diagnostics before interpreting estimates or uncertainty.", ""),
+      assessment$background, "", provenance), output_file = result$dashboard_file,
     open_file = open_file
   )
   invisible(result)
+}
+
+# Rendering is deliberately separate from fitting and numerical eligibility.
+render_assessment_dashboards <- function(runs, open_file = FALSE) {
+  if (!is.list(runs) || any(!vapply(runs, is.list, logical(1)))) {
+    cli::cli_abort("Supply the results returned by run_assessments().")
+  }
+  if (!is.logical(open_file) || length(open_file) != 1L || is.na(open_file)) {
+    cli::cli_abort("open_file must be TRUE or FALSE.")
+  }
+  if (!length(runs)) return(data.frame(assessment_id = character(), status = character(),
+    file = character(), error = character()))
+  tiers <- unique(vapply(runs, function(x) x$translation_tier, character(1)))
+  keys <- unique(vapply(runs, .assessment_result_key, character(1)))
+  if (length(tiers) != 1L || length(keys) != 1L) {
+    cli::cli_abort("Render one translation tier and SAIO snapshot at a time.")
+  }
+  tier <- tiers[[1]]
+  database <- list(database_key = keys[[1]])
+  manifest <- lapply(names(runs), function(id) {
+    result <- runs[[id]]
+    row <- data.frame(assessment_id = id, status = "skipped_no_fit", file = NA_character_,
+      error = "No usable fitted model was returned.", stringsAsFactors = FALSE)
+    if (!inherits(result$fit, "tam_fit")) {
+      reason <- result$diagnostics$reason
+      if (length(reason) && !is.na(reason[[1]]) && nzchar(reason[[1]])) row$error <- reason[[1]]
+      return(row)
+    }
+    row$file <- file.path(.assessment_cache(id, tier, database), "dashboard.html")
+    dir.create(dirname(row$file), recursive = TRUE, showWarnings = FALSE)
+    troubleshooting <- !isTRUE(result$fit$is_converged)
+    cli::cli_inform("Rendering {id}{if (troubleshooting) ' (troubleshooting: numerical checks did not pass)' else ''}.")
+    error <- tryCatch({
+      view_assessment(result$fit, result, output_file = row$file, open_file = FALSE)
+      NULL
+    }, error = conditionMessage)
+    row$status <- if (!is.null(error)) "render_failed" else if (troubleshooting) "troubleshooting" else "rendered"
+    row$error <- if (is.null(error)) NA_character_ else error
+    if (identical(row$status, "troubleshooting")) cli::cli_inform("Troubleshooting dashboard: {.file {row$file}}")
+    row
+  })
+  manifest <- do.call(rbind, manifest)
+  folder <- .assessment_cache_root(tier, database)
+  dir.create(folder, recursive = TRUE, showWarnings = FALSE)
+  write.csv(manifest, file.path(folder, "dashboard_manifest.csv"), row.names = FALSE, na = "")
+  index <- .index_assessment_dashboards(tier, database)
+  cli::cli_inform(c("Dashboards: {sum(manifest$status == 'rendered')} rendered; {sum(manifest$status == 'troubleshooting')} for troubleshooting; {sum(manifest$status == 'render_failed')} failed; {sum(manifest$status == 'skipped_no_fit')} skipped.",
+    "i" = "Fits and numerical comparison eligibility are unchanged. Inspect dashboard_manifest.csv and fit_diagnostics.csv before interpreting results."))
+  if (open_file) utils::browseURL(index)
+  manifest
 }
 
 .assessment_log <- function(path, text) {
@@ -347,16 +399,15 @@ view_assessment <- function(fit, assessment, output_file = NULL, open_file = TRU
 }
 
 run_assessment <- function(assessment_id, database = NULL, fit = TRUE,
-                           dashboard = FALSE, cache = FALSE, silent = TRUE,
+                           cache = FALSE, silent = TRUE,
                            log_file = NULL, tier = NULL) {
   entry <- .assessment_translation(assessment_id, tier, required = FALSE)
   tier <- if (is.null(entry)) "curated" else entry$tier[[1]]
-  if (is.null(database)) database <- read_database(tier = tier)
+  if (is.null(database)) database <- read_database()
   database$translation_tier <- tier
   if (length(fit) != 1L || is.na(fit) || !is.logical(fit) ||
-    length(dashboard) != 1L || is.na(dashboard) || !is.logical(dashboard) ||
     length(cache) != 1L || is.na(cache) || !is.logical(cache)) {
-    stop("fit, dashboard, and cache must each be one TRUE/FALSE value.", call. = FALSE)
+    stop("fit and cache must each be one TRUE/FALSE value.", call. = FALSE)
   }
 
   source <- read_assessment(assessment_id, database)
@@ -449,25 +500,13 @@ run_assessment <- function(assessment_id, database = NULL, fit = TRUE,
   }
   result[c("ref", "differences", "summary")] <- comparison[c("ref", "differences", "summary")]
 
-  if (dashboard) {
-    result$dashboard_file <- if (cache) {
-      file.path(cache_dir, "dashboard.html")
-    } else {
-      tempfile(pattern = paste0(assessment_id, "_"), fileext = ".html")
-    }
-    tinyAM::vis_tam(
-      model_list = list(Official = result$ref, tinyAM = fitted),
-      background = result$background,
-      output_file = result$dashboard_file,
-      open_file = interactive()
-    )
-  }
   result
 }
 
 .failed_assessment_run <- function(assessment_id, database, error) {
   result <- list(
     assessment_id = assessment_id,
+    translation_tier = database$translation_tier,
     source = NULL,
     obs = NULL,
     fit = NULL,
@@ -485,76 +524,78 @@ run_assessment <- function(assessment_id, database = NULL, fit = TRUE,
   result
 }
 
-.parallel_assessment_worker <- function(assessment_id, database, repo_root, fit,
-                                        cache = FALSE, timeout = Inf, log_file = NULL, tier = NULL) {
+.assessment_worker <- function(database, repo_root, fit, cache = FALSE,
+                               timeout = Inf, tier = NULL, isolated = TRUE, tick = NULL) {
+  id <- database$assessment$assessment_id[[1]]
+  if (!is.null(tick)) tick(amount = 0, message = paste(id, "started"))
+  log_file <- NULL
+  if (cache) {
+    cache_dir <- .assessment_cache(id, tier, database)
+    dir.create(cache_dir, recursive = TRUE, showWarnings = FALSE)
+    log_file <- file.path(cache_dir, "run.log")
+    writeLines(character(), log_file)
+  }
+  .assessment_log(log_file, paste(id, "started; timeout", timeout, "seconds."))
   original_wd <- getwd()
   on.exit(setwd(original_wd), add = TRUE)
   begun <- Sys.time()
-  # A subprocess deadline also covers native optimizer code that may not check
-  # R's elapsed-time interrupt. Only this assessment's process is terminated.
-  if (is.finite(timeout)) {
-    return(tryCatch(
-      callr::r(function(assessment_id, database, repo_root, fit, cache, log_file, tier) {
+  result <- tryCatch({
+    # A subprocess deadline can also interrupt native optimizer code.
+    if (is.finite(timeout)) {
+      callr::r(function(id, database, repo_root, fit, cache, log_file, tier) {
         pkgload::load_all(repo_root, quiet = TRUE)
-        runner_env <- new.env(parent = globalenv())
+        runner <- new.env(parent = globalenv())
         sys.source(file.path(repo_root, "analysis", "comp_assessments", "R",
-          "run_assessment.R"), envir = runner_env)
-        runner_env$run_assessment(assessment_id, database = database, fit = fit,
-          dashboard = FALSE, cache = cache, log_file = log_file, tier = tier)
-      }, args = list(assessment_id, database, repo_root, fit, cache, log_file, tier),
+          "run_assessment.R"), envir = runner)
+        runner$run_assessment(id, database = database, fit = fit,
+          cache = cache, log_file = log_file, tier = tier)
+      }, args = list(id, database, repo_root, fit, cache, log_file, tier),
       wd = repo_root, libpath = .libPaths(), timeout = timeout,
       stdout = if (is.null(log_file)) NULL else paste0(log_file, ".output"),
-      stderr = "2>&1"),
-      error = function(e) {
-        result <- .failed_assessment_run(assessment_id, database, e)
-        result$diagnostics$elapsed_seconds <- as.numeric(difftime(Sys.time(), begun, units = "secs"))
-        if (inherits(e, "callr_timeout_error")) {
-          result$diagnostics$status <- "timed_out"
-          result$diagnostics$reason <- paste("Time limit of", timeout,
-            "seconds exceeded; model settings were not changed.")
-        }
-        result
-      }
-    ))
-  }
-  tryCatch(
-    {
+      stderr = "2>&1")
+    } else if (isolated) {
       setwd(repo_root)
       pkgload::load_all(repo_root, quiet = TRUE)
-      runner_env <- new.env(parent = globalenv())
-      sys.source(file.path(
-        repo_root, "analysis", "comp_assessments", "R",
-        "run_assessment.R"
-      ), envir = runner_env)
-      runner_env$run_assessment(
-        assessment_id,
-        database = database, fit = fit,
-        dashboard = FALSE, cache = cache, log_file = log_file, tier = tier
-      )
-    },
-    error = function(e) .failed_assessment_run(assessment_id, database, e)
-  )
+      runner <- new.env(parent = globalenv())
+      sys.source(file.path(repo_root, "analysis", "comp_assessments", "R",
+        "run_assessment.R"), envir = runner)
+      runner$run_assessment(id, database = database, fit = fit,
+        cache = cache, log_file = log_file, tier = tier)
+    } else {
+      run_assessment(id, database = database, fit = fit,
+        cache = cache, log_file = log_file, tier = tier)
+    }
+  }, error = function(e) {
+    result <- .failed_assessment_run(id, database, e)
+    result$diagnostics$elapsed_seconds <- as.numeric(difftime(Sys.time(), begun, units = "secs"))
+    if (inherits(e, "callr_timeout_error")) {
+      result$diagnostics$status <- "timed_out"
+      result$diagnostics$reason <- paste("Time limit of", timeout,
+        "seconds exceeded; model settings were not changed.")
+    }
+    result
+  })
+  if (cache) {
+    .assessment_log(log_file, "Saving completed assessment checkpoint.")
+    .assessment_save_rds(result, file.path(cache_dir, "result.rds"))
+  }
+  .assessment_log(log_file, paste(id, "finished:", result$diagnostics$status))
+  if (!is.null(tick)) tick(message = paste(id, result$diagnostics$status))
+  result
 }
 
 run_assessments <- function(assessment_ids = NULL, database = NULL,
-                            parallel = FALSE, workers = 4L, fit = TRUE,
-                            dashboard = FALSE, cache = FALSE,
+                            fit = TRUE, cache = FALSE,
                             save_results = FALSE, timeout = Inf, progress = TRUE,
                             tier = "curated") {
   tier <- match.arg(tier, c("curated", "preliminary"))
-  if (is.null(database)) database <- read_database(tier = tier)
-  if (!is.logical(parallel) || length(parallel) != 1L || is.na(parallel) ||
-    !is.logical(fit) || length(fit) != 1L || is.na(fit) ||
-    !is.logical(dashboard) || length(dashboard) != 1L || is.na(dashboard) ||
+  if (is.null(database)) database <- read_database()
+  if (!is.logical(fit) || length(fit) != 1L || is.na(fit) ||
     !is.logical(cache) || length(cache) != 1L || is.na(cache) ||
     !is.logical(save_results) || length(save_results) != 1L || is.na(save_results)) {
-    stop("parallel, fit, dashboard, cache, and save_results must each be one TRUE/FALSE value.",
+    stop("fit, cache, and save_results must each be one TRUE/FALSE value.",
       call. = FALSE
     )
-  }
-  if (length(workers) != 1L || is.na(workers) || !is.numeric(workers) ||
-    !is.finite(workers) || workers < 1 || workers != as.integer(workers)) {
-    stop("workers must be one positive integer.", call. = FALSE)
   }
   if (!is.numeric(timeout) || length(timeout) != 1L || is.na(timeout) || timeout <= 0) {
     cli::cli_abort("{.arg timeout} must be positive seconds or Inf.")
@@ -588,52 +629,14 @@ run_assessments <- function(assessment_ids = NULL, database = NULL,
 
   if (!length(assessment_ids)) return(.assessment_result_tables(list(), save_results, tier))
   repo_root <- normalizePath(getwd(), winslash = "/", mustWork = TRUE)
-  if (parallel) {
-    if (!requireNamespace("pkgload", quietly = TRUE)) {
-      stop("Install pkgload to run parallel workers from the current tinyAM checkout.",
-        call. = FALSE
-      )
-    }
-    old_plan <- future::plan()
-    on.exit(future::plan(old_plan), add = TRUE)
-    future::plan(future::multisession, workers = as.integer(workers))
-  }
+  if (!requireNamespace("pkgload", quietly = TRUE)) cli::cli_abort("Install pkgload to load the current tinyAM checkout in assessment workers.")
+  use_worker <- is.finite(timeout) || !inherits(future::plan(), "sequential")
+  jobs <- lapply(assessment_ids, read_assessment, database = database)
   runs <- progressr::with_progress({
     tick <- progressr::progressor(steps = length(assessment_ids))
-    safe_run <- function(id) {
-      tick(amount = 0, message = paste(id, "started"))
-      # Workers need only this stock's tables, not the entire source database.
-      stock_database <- read_assessment(id, database)
-      log_file <- NULL
-      if (cache) {
-        cache_dir <- .assessment_cache(id, tier, database)
-        dir.create(cache_dir, recursive = TRUE, showWarnings = FALSE)
-        log_file <- file.path(cache_dir, "run.log")
-        writeLines(character(), log_file)
-      }
-      .assessment_log(log_file, paste(id, "started; timeout", timeout, "seconds."))
-      result <- if (parallel || is.finite(timeout)) {
-        .parallel_assessment_worker(id, stock_database, repo_root, fit,
-          cache = cache, timeout = timeout, log_file = log_file, tier = tier)
-      } else {
-        tryCatch(run_assessment(id, database = stock_database, fit = fit,
-          dashboard = FALSE, cache = cache, log_file = log_file, tier = tier),
-          error = function(e) .failed_assessment_run(id, stock_database, e))
-      }
-      if (cache) {
-        .assessment_log(log_file, "Saving completed assessment checkpoint.")
-        .assessment_save_rds(result, file.path(cache_dir, "result.rds"))
-      }
-      .assessment_log(log_file, paste(id, "finished:", result$diagnostics$status))
-      tick(message = paste(id, result$diagnostics$status))
-      result
-    }
-    if (parallel) {
-      furrr::future_map(assessment_ids, safe_run,
-        .options = furrr::furrr_options(seed = TRUE, scheduling = Inf))
-    } else {
-      lapply(assessment_ids, safe_run)
-    }
+    furrr::future_map(jobs, .assessment_worker, repo_root = repo_root, fit = fit,
+      cache = cache, timeout = timeout, tier = tier, isolated = use_worker, tick = tick,
+      .options = furrr::furrr_options(seed = TRUE, scheduling = Inf))
   }, enable = progress, handlers = progressr::make_progression_handler(
     "assessment", interval = 0, enable = progress,
     reporter = list(update = function(config, state, progression, ...) {
@@ -641,25 +644,6 @@ run_assessments <- function(assessment_ids = NULL, database = NULL,
     })
   ))
   names(runs) <- assessment_ids
-
-  for (id in assessment_ids) {
-    result <- runs[[id]]
-    if (dashboard && !is.null(result$fit) && isTRUE(result$fit$is_converged) &&
-      !is.null(result$ref)) {
-      result$dashboard_file <- if (cache) {
-        file.path(.assessment_cache(id, tier, database), "dashboard.html")
-      } else {
-        tempfile(pattern = paste0(id, "_"), fileext = ".html")
-      }
-      tinyAM::vis_tam(
-        model_list = list(Official = result$ref, tinyAM = result$fit),
-        background = result$background,
-        output_file = result$dashboard_file,
-        open_file = FALSE
-      )
-      runs[[id]] <- result
-    }
-  }
 
   .assessment_result_tables(runs, save_results, tier)
 }

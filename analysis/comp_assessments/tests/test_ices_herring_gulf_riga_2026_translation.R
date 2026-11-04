@@ -1,7 +1,7 @@
 pkgload::load_all(".", quiet = TRUE)
 source("analysis/comp_assessments/R/run_assessment.R")
 
-database <- read_database(tier = "preliminary")
+database <- read_database()
 source_record <- read_assessment("ices_herring_gulf_riga_2026", database)
 stock <- .assessment_stock(source_record, do_fit = FALSE, silent = TRUE)
 stopifnot(is.null(stock$error))

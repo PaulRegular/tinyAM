@@ -4,7 +4,7 @@ root <- "analysis/comp_assessments"
 source(file.path(root, "R", "read_database.R"))
 
 assessment_id <- "ices_plaice_baltic_21_32_2026"
-database <- read_database(tier = "preliminary")
+database <- read_database()
 source_record <- read_assessment(assessment_id, database)
 inputs <- source_record$inputs
 outputs <- source_record$outputs
@@ -180,11 +180,7 @@ stopifnot(
   all(as.numeric(maturity$value) >= 0 & as.numeric(maturity$value) <= 1)
 )
 
-review <- paste(readLines(file.path(saio_path(), "source_reviews", "ices_plaice_baltic_21_32_2026.md"), warn = FALSE), collapse = " ")
-stopifnot(
-  grepl("fbarRange=3:6", review, fixed = TRUE),
-  grepl("14,910,084", review, fixed = TRUE),
-  grepl("95% confidence", review, fixed = TRUE)
-)
+# Source-review text is validated in SAIO; this test checks the cached source records.
+
 
 cat("ICES Baltic plaice source records passed.\n")

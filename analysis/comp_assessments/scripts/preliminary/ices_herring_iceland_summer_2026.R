@@ -20,9 +20,9 @@ obs <- database_to_tam_obs(
   assumptions = source$assumptions
 )
 
-obs$pop_covariates$F_age_block <- factor(ifelse(
-  obs$pop_covariates$age <= 6,
-  paste0("age", obs$pop_covariates$age),
+obs$catch$F_age_block <- factor(ifelse(
+  obs$catch$age <= 6,
+  paste0("age", obs$catch$age),
   "age7plus"
 ), levels = c(paste0("age", 2:6), "age7plus"))
 obs$index$q_age <- factor(ifelse(

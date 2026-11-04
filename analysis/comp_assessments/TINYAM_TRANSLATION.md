@@ -2,18 +2,18 @@
 
 ## Repository and review tiers
 
-Canonical records, importers, source reviews, discovery registers, DATABASE_STRUCTURE.md and PROTOCOL.md are maintained in SAIO. Read those source instructions there before proposing source corrections. Both translation tiers read committed local SAIO main by default and record the exact data and model revisions. saio_revisions.csv contains historical snapshots for explicit reproduction, not active defaults.
+Canonical records, importers, source reviews, discovery registers, DATABASE_STRUCTURE.md and PROTOCOL.md are maintained in SAIO. Read those source instructions there before proposing source corrections. Both translation tiers read the same manually refreshed local CSV snapshot. `saio_revisions.csv` selects its source commit. Run `scripts/update_database_cache.R` explicitly after committing the intended SAIO tables; normal reads never access SAIO or Git.
 
-Translations are registered in translations.csv and stored under scripts/translation/curated/ or preliminary/. The curated set is inherited from main; preliminary scripts and alternatives require explicit selection. A successful fit does not promote a script. Default batches and plots select only curated entries.
+Translations are registered in translations.csv and stored under scripts/curated/ or preliminary/. The curated set is inherited from main; preliminary scripts and alternatives require explicit selection. A successful fit does not promote a script. Default batches and plots select only curated entries.
 
 Stock-specific model choices and inherited fitting notes are kept in [translation_notes/](translation_notes/README.md). Official source evidence belongs in SAIO, even when a downstream comparison revealed the issue. The registered recipe and its tier define current settings; transferred notes do not constitute a new fit or review.
 
-All local outputs, including dashboards and initialization logs, belong under results/<tier>/, with fits and checkpoints separated by SAIO revision in cache/<revision>/, never a shared output directory or SAIO source_cache/. Source caches are external in SAIO. Migrated legacy results retain their provenance and are not newly validated results.
+All local outputs, including dashboards and initialization logs, belong under results/<tier>/, with fits and checkpoints separated by SAIO revision in cache/<revision>/, never a shared output directory or SAIO source_cache/. Source evidence is maintained in SAIO; a recipe needing a native starting-value artifact uses a separately copied local source_cache file. Migrated legacy results retain their provenance and are not newly validated results.
 
 ## Purpose
 
 This document defines how a curated source assessment is transformed into data and model settings suitable for a tinyAM analysis.
-Read the [scope and provenance statement](README.md#verification-and-purpose)
+Read the [workflow and provenance guidance](README.md#results-and-translation-guidance)
 before interpreting these illustrative model comparisons.
 
 The canonical assessment database is intentionally richer than tinyAM. It preserves the fleets, surveys, biological inputs, and statistical assumptions of the official source assessment.
@@ -71,7 +71,7 @@ database_to_tam_obs(): catch, index, weights, maturity, and M assumption
         ↓
 review source assumptions and specify tinyAM settings
         ↓
-check_obs() and prepare_tam()
+check_tam_data() and prepare_tam()
         ↓
 fit_tam()
         ↓
@@ -144,31 +144,25 @@ A useful directory structure is:
 
 ``` text
 analysis/comp_assessments/
-├── R/
-│   ├── read_database.R
-│   ├── database_to_tam_obs.R
-│   ├── database_to_tam_ref.R
-│   ├── audit_assumptions.R
-│   └── run_assessment.R
+├── R/                            # converters and workflow functions
 ├── scripts/
-│   ├── database/
-│   └── translation/
-│       ├── run_stock.R
-│       ├── run_all.R
-│       └── stocks/
-│           └── <assessment_id>.R
+│   ├── update_database_cache.R
+│   ├── run_stock.R
+│   ├── run_all.R
+│   ├── observation_readiness.R
+│   ├── stats_plots.R
+│   ├── trend_plots.R
+│   ├── curated/<assessment_id>.R
+│   └── preliminary/<assessment_id>.R
+├── saio_revisions.csv             # selected source commit
+├── cache/saio/<commit>/           # ignored CSV copies and parsed database.rds
 ├── tests/
-├── results/
-│   ├── observation_readiness.csv
-│   ├── fit_diagnostics.csv
-│   ├── comparison_summary.csv
-│   ├── population_timeseries.csv
-│   ├── figures/
-│   └── cache/                    # gitignored local fits and dashboards
-└── source_cache/                 # gitignored authoritative source files
+├── results/<tier>/                # ignored shared CSVs and figures
+│   └── cache/<commit>/            # fits, checkpoints and dashboards
+└── source_cache/                  # optional ignored native-reference artifacts
 ```
 
-`run_stock.R` reads the working-tree database and sources the selected stock
+`scripts/run_stock.R` reads the selected local SAIO snapshot and sources the selected stock
 script in a fresh environment. Prepared objects, fit and background are exposed
 in the workspace, together with an `assessment` context containing the canonical
 source and comparison options. Stock model calls remain visible in their scripts.
@@ -202,13 +196,17 @@ can still be previewed when usable predictions exist, with a warning and the
 existing dashboard diagnostics. Missing uncertainty is not replaced. These are
 exploratory previews, not successful batch results. The batch convergence rules
 are unchanged. `run_assessment()` reruns the recipe rather than previewing an
-edited fit, and retains its optional dashboard/cache controls.
+edited fit, and retains its optional cache control. Rendering is separate.
 
-`run_all.R` reads committed local SAIO main once for the batch and
-uses `future::multisession` through `furrr`; workers load tinyAM from the current
-repository checkout. Workers return objects only. The parent process writes
-aggregate CSV files after all workers finish, and restores the previous future
-plan. Set `parallel = FALSE` when debugging.
+`scripts/run_all.R` reads the local snapshot once and configures
+`future::plan(future::multisession, workers = 10)` visibly. The batch runner
+honors that plan; choose `future::sequential` for troubleshooting. Workers load
+the current tinyAM checkout and save per-stock checkpoints. The parent writes
+aggregate CSVs after fitting. Rendering is separate:
+`render_assessment_dashboards(runs)` records successful, troubleshooting,
+skipped and failed dashboards without changing comparison eligibility. A
+nonconverged dashboard is for troubleshooting, not a successful assessment.
+See [README.md](README.md) for manual snapshot refresh, deadlines and evaluation.
 
 ## Translation units
 
@@ -318,9 +316,10 @@ year, and age rows as `relative_sd` for an explicit `sd_supplied` setting.
 M is a population input, not an additional likelihood observation.
 
 The converter returns a `tam_data` list. Its optional `pop_covariates` table
-contains one row per input year and age and supplies all variables referenced
-by N/F/M formulas, including supplied M, process-SD groups and recruitment
-covariates. It requires `year` and `age`, not `obs`. Missing values are allowed
+contains one row per input year and age and supplies variables referenced
+by recruitment, N and M formulas, including supplied M and their process-SD groups.
+F mean/SD predictors belong in `catch`, and q/index-SD predictors belong in `index`.
+The population table requires `year` and `age`, not `obs`. Missing values are allowed
 where unused; recruitment covariates are read at the youngest modeled age.
 Population formulas do not search observation or biological tables for columns.
 
@@ -831,7 +830,7 @@ No missing `obs`.
 Then run:
 
 ``` r
-tinyAM::check_obs(obs)
+tinyAM::check_tam_data(obs)
 ```
 
 A passing result means the translated observation object satisfies current tinyAM structural requirements.
@@ -1005,8 +1004,8 @@ or double-logistic selectivity automatically.
 
 `cor_rw` provides AR1 age correlation between annual F increments; its SDs are
 marginal increment SDs. Use it only when that covariance matches the source
-assumption. N, F and M can have ordinary age-based `sd_form` terms, with sharing
-covariates in `pop_covariates`. Designs must be constant across years at each
+assumption. N, F and M can have ordinary age-based `sd_form` terms. F sharing covariates
+belong in `catch`; N and M sharing covariates belong in `pop_covariates`. Designs must be constant across years at each
 active age; M sharing must also be constant within fitted M state blocks.
 Recruitment SD remains separate; no initial-abundance SD is estimated. Inspect group uncertainty
 and `check_tam()` advisories rather than equating convergence with support.
@@ -1178,16 +1177,14 @@ and comparisons only with a complete final batch, not a subset of stocks.
 
 # 18. Keep generated outputs small
 
-The committed results are the assessment-level observation/data-readiness
-table (`observation_readiness.csv`), one
-diagnostics table, one comparison-summary table, and the small sensitivity
-summary retained from prior focused checks. Do not commit duplicate per-stock
+Shared local results include the observation-readiness, diagnostics and
+comparison-summary tables. These generated outputs remain ignored. Do not commit duplicate per-stock
 fits, translated observations, audits, settings, or dashboards; those can be
 recreated from the database and stock translation script.
 
 `run_assessment(..., cache = TRUE)` optionally saves a fitted object under
-`results/<tier>/cache/<SAIO revision>/<assessment_id>/`. A dashboard is optional through
-`dashboard = TRUE` and is cached there only when caching is enabled. Both
+`results/<tier>/cache/<SAIO revision>/<assessment_id>/`. Render dashboards separately
+with `render_assessment_dashboards(runs)`. Both
 `run_assessment()` and `run_assessments()` leave caching off by default.
 `run_assessments(..., save_results = TRUE)` writes the shared diagnostic and
 comparison-summary tables once in the parent process.
@@ -1236,7 +1233,7 @@ assessment may support a clearly limited fit, while a complete source model may
 contain features that tinyAM cannot represent.
 
 The repository's `results/<tier>/observation_readiness.csv` is an observation/data-readiness
-screen. It checks source coverage, observation conversion, and `check_obs()`;
+screen. It checks source coverage, observation conversion, and `check_tam_data()`;
 it does not load stock recipes or call `prepare_tam()`. The model-readiness checks
 below apply after the recipe and settings are available.
 
@@ -1268,7 +1265,7 @@ below apply after the recipe and settings are available.
 
 ## Validation
 
-- `tinyAM::check_obs(obs)` passes;
+- `tinyAM::check_tam_data(obs)` passes;
 - `prepare_tam()` succeeds with the proposed years, ages, and settings;
 - all retained observations have compatible age groups and prediction definitions;
 - the stock background explains the official assumptions and chosen differences.
@@ -1315,9 +1312,9 @@ Existing stock scripts retain their documented starting-value workflows.
 
 For a converged fit, `run_assessment()` returns the fitted object, source
 reference, detailed differences, and summary in memory. The fit is cached only
-when `cache = TRUE`. A dashboard is rendered only when `dashboard = TRUE` and
-is stored in the local cache only when caching is also enabled; otherwise it is
-written to a temporary file. A successful run does not require a per-stock fit
+when `cache = TRUE`. `render_assessment_dashboards(runs)` renders returned fits
+separately and records render failures. `view_assessment(fit, assessment)` previews
+one supplied fit, using a temporary HTML file unless an output path is given. A successful run does not require a per-stock fit
 or detailed-difference file on disk. The batch runner writes aggregate
 diagnostics and comparison summaries only when `save_results = TRUE`. Report
 investigated blockers, failed attempts, and non-converged fits as separate

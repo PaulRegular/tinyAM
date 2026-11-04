@@ -7,7 +7,7 @@ obs <- x$obs
 dat <- x$dat
 stopifnot(identical(source_record, before), is.null(x$fit),
   identical(x$years, 1983:2025), identical(x$ages, 1:4),
-  tinyAM::check_obs(obs), nrow(obs$catch) == 172L, nrow(obs$index) == 22L,
+  tinyAM::check_tam_data(obs), nrow(obs$catch) == 172L, nrow(obs$index) == 22L,
   all(obs$catch$unit == "thousand fish"),
   obs$catch$obs[obs$catch$year == 1983 & obs$catch$age == 2] == (6191 + 877) * 1000,
   all(obs$index$age >= 1), sum(obs$index$survey == "Dredge") == 22L,
@@ -22,7 +22,7 @@ stopifnot(identical(source_record, before), is.null(x$fit),
 expected <- c("1983" = "early.1", "1998" = "early.1", "1999" = "middle1.1",
   "2004" = "middle1.1", "2005" = "middle2.1", "2009" = "middle2.1",
   "2010" = "recent.1", "2025" = "recent.1")
-young <- obs$pop_covariates[obs$pop_covariates$age == 1, ]
+young <- obs$catch[obs$catch$age == 1, ]
 stopifnot(identical(as.character(young$F_mean_group[
   match(as.integer(names(expected)), young$year)]), unname(expected)))
 

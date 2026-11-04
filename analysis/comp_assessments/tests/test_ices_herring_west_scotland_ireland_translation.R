@@ -3,7 +3,7 @@ pkgload::load_all(".", quiet = TRUE)
 source(file.path(root, "R", "run_assessment.R"))
 
 assessment_id <- "ices_herring_west_scotland_ireland_2020"
-database <- read_database(tier = "preliminary")
+database <- read_database()
 source_data <- read_assessment(assessment_id, database)
 translated <- run_assessment(
   assessment_id, database = database, fit = FALSE, silent = TRUE
@@ -40,7 +40,7 @@ stopifnot(
   identical(translated$diagnostics$status, "not_fitted"),
   is.null(translated$fit),
   inherits(obs, "tam_data"),
-  tinyAM::check_obs(obs),
+  tinyAM::check_tam_data(obs),
   sum(is.finite(obs$catch$obs)) == 567L,
   isTRUE(all.equal(obs$catch$obs, expected_catch, tolerance = 1e-12)),
   identical(unique(source_catch$fleet), c("Catch 6aN", "Catch 6aS/7bc")),

@@ -2,7 +2,25 @@
 
 # Assessment capabilities and remaining gaps
 
-## Current construction check: 2026-11-04
+## Workflow validation update: 2026-11-04
+
+The manual local snapshot at SAIO `c8b4a967b6654a7d8a63536825702c72afdc7384`
+was checked after the workflow cleanup. **135 of 137 comparative-assessment test
+scripts passed.** Two failures remain without rescue tuning:
+`test_age_subsets.R` has false convergence and a non-positive-definite covariance
+for its direct reduced-age fit using the original full-age observations;
+`test_ices_haddock_rockall_translation.R` rejects duplicate year–age stock weights.
+The explicitly reduced-input fit and its dashboard pass the age-subset check.
+
+All **80 preliminary recipes** were also checked with fitting disabled:
+**65 prepare**, **14 stop at their declared source blocks**, and **one fails on
+the Rockall weight duplicates**. Seven `do.call()` wrappers were evaluated from
+their existing settings/arguments directly rather than counted as helper errors.
+F-covariate routing was corrected without changing formulas, factor definitions
+or fitting controls. Preparation is not evidence of convergence, fit quality or
+scientific equivalence. No aggregate assessment exports were regenerated.
+
+## Previous construction check: 2026-11-04
 
 Using committed SAIO main `757b59c11453c2e5d9333c5fcf0f23323b9c828f`,
 **30 of 35 curated recipes** and **54 of 80 preliminary recipes** construct

@@ -4,7 +4,7 @@ source(file.path(root, "R", "read_database.R"))
 source(file.path(root, "R", "database_to_tam_obs.R"))
 
 assessment_id <- "ices_haddock_celtic_sea_7b_k_2026"
-database <- read_database(tier = "preliminary")
+database <- read_database()
 source_record <- read_assessment(assessment_id, database)
 inputs <- source_record$inputs
 outputs <- source_record$outputs

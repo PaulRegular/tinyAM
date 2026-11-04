@@ -95,7 +95,7 @@ obs <- database_to_tam_obs(
   surveys = surveys, assumptions = source$assumptions
 )
 obs$maturity$spawn_time <- 0
-obs$pop_covariates$age_factor <- factor(obs$pop_covariates$age, levels = ages)
+obs$catch$age_factor <- factor(obs$catch$age, levels = ages)
 obs$index$q_key <- interaction(obs$index$survey, factor(obs$index$age, levels = ages), drop = TRUE, lex.order = TRUE)
 zero_index_rows <- sum(obs$index$obs <= 0, na.rm = TRUE)
 obs$index <- droplevels(obs$index[is.finite(obs$index$obs) & obs$index$obs > 0, , drop = FALSE])

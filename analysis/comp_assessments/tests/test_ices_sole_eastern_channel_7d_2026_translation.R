@@ -2,7 +2,7 @@ pkgload::load_all(".", quiet = TRUE)
 source("analysis/comp_assessments/R/run_assessment.R")
 
 assessment_id <- "ices_sole_eastern_channel_7d_2026"
-database <- read_database(tier = "preliminary")
+database <- read_database()
 source_record <- read_assessment(assessment_id, database)
 original_inputs <- source_record$inputs
 original_outputs <- source_record$outputs
@@ -12,7 +12,7 @@ prepared <- stock$env
 stopifnot(
   is.null(stock$error),
   is.null(prepared$fit),
-  isTRUE(tinyAM::check_obs(prepared$obs)),
+  isTRUE(tinyAM::check_tam_data(prepared$obs)),
   identical(prepared$years, 1982:2025),
   identical(prepared$ages, 1:11),
   identical(prepared$age_plus_group, 11L),

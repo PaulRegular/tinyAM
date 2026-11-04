@@ -6,7 +6,7 @@ source(file.path(root, "R", "database_to_tam_obs.R"))
 source(file.path(root, "R", "database_to_tam_ref.R"))
 
 assessment_id <- "ices_saithe_northeast_arctic_2026"
-database <- read_database(tier = "preliminary")
+database <- read_database()
 source_data <- read_assessment(assessment_id, database)
 translated <- .test_stock(source_data)
 dat <- do.call(tinyAM::prepare_tam, c(
@@ -40,7 +40,7 @@ ref <- database_to_tam_ref(
 )
 
 stopifnot(
-  tinyAM::check_obs(translated$obs),
+  tinyAM::check_tam_data(translated$obs),
   identical(translated$years, 1960:2025),
   identical(translated$ages, 3:12),
   identical(translated$age_plus_group, 12L),

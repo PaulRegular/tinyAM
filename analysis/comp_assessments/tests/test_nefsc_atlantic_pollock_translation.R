@@ -1,7 +1,7 @@
 source("analysis/comp_assessments/tests/helper_stock.R")
 source("analysis/comp_assessments/R/run_assessment.R")
 source("analysis/comp_assessments/R/read_database.R")
-database <- read_database(tier = "preliminary")
+database <- read_database()
 source_data <- read_assessment("nefsc_pollock_5yz_2024", database)
 translated <- .test_stock(source_data)
 
@@ -30,7 +30,7 @@ expected_index <- aggregate_index$value *
   survey_weights$value[survey_weights$age == 1]
 
 stopifnot(
-  tinyAM::check_obs(obs),
+  tinyAM::check_tam_data(obs),
   identical(years, 1970:2023),
   identical(ages, 1:9),
   translated$age_plus_group == 9L,

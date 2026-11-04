@@ -15,11 +15,11 @@ obs <- database_to_tam_obs(
 )
 
 obs$maturity$spawn_time <- 0
-obs$pop_covariates$f_age_group <- factor(ifelse(
-  obs$pop_covariates$age == 0, "age0",
-  ifelse(obs$pop_covariates$age == 1, "age1",
-    ifelse(obs$pop_covariates$age == 2, "age2",
-      ifelse(obs$pop_covariates$age <= 4, "age3_4", "age5plus")
+obs$catch$f_age_group <- factor(ifelse(
+  obs$catch$age == 0, "age0",
+  ifelse(obs$catch$age == 1, "age1",
+    ifelse(obs$catch$age == 2, "age2",
+      ifelse(obs$catch$age <= 4, "age3_4", "age5plus")
     )
   )
 ), levels = c("age0", "age1", "age2", "age3_4", "age5plus"))

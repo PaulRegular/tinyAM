@@ -1,20 +1,14 @@
-source("analysis/comp_assessments/R/read_database.R")
 source("analysis/comp_assessments/R/run_assessment.R")
-
+source("analysis/comp_assessments/R/update_database_cache.R")
 registry <- assessment_translations()
 stopifnot(all(file.exists(registry$script)),
   !anyDuplicated(paste(registry$assessment_id, registry$tier)),
-  nrow(assessment_translations("curated")) == 35L,
-  !anyNA(.saio_read_table("stocks.csv")$stock_id),
-  identical(.database_head(saio_path(), "refs/heads/main"), .saio_revision()),
-  identical(.saio_revision("curated"), .saio_revision("preliminary")))
+  nrow(assessment_translations("curated")) == 35L)
 
 local({
   original_wd <- getwd()
-  fixture <- tempfile("saio_migration_")
+  fixture <- tempfile("saio_snapshot_")
   dir.create(fixture)
-  stopifnot(startsWith(normalizePath(fixture, winslash = "/"),
-    normalizePath(tempdir(), winslash = "/")))
   on.exit({setwd(original_wd); unlink(fixture, recursive = TRUE)}, add = TRUE)
   relative_root <- file.path("analysis", "comp_assessments")
   dir.create(file.path(fixture, relative_root, "R"), recursive = TRUE)
@@ -31,86 +25,60 @@ local({
   stocks <- data.frame(stock_id = "source_stock", scientific_name = "Source species")
   assessments <- data.frame(assessment_id = c("shared", "extra"),
     stock_id = "source_stock", is_current = c(FALSE, TRUE))
-  assumptions <- data.frame(assessment_id = assessments$assessment_id,
-    component = "population", setting = "age_range", value = "1-2",
-    source_reference = "fixture", notes = "fixture")
   tables <- list(stocks = stocks, assessments = assessments,
-    assumptions = assumptions,
+    assumptions = data.frame(assessment_id = assessments$assessment_id,
+      component = "population", setting = "age_range", value = "1-2",
+      source_reference = "fixture", notes = "fixture"),
     inputs = data.frame(assessment_id = assessments$assessment_id),
     outputs = data.frame(assessment_id = assessments$assessment_id))
   for (name in names(tables)) write.csv(tables[[name]],
     file.path("data_repo/database", paste0(name, ".csv")), row.names = FALSE)
   git("init", "-b", "main")
   git("add", "database")
-  git("-c", "user.name=MigrationTest", "-c", "user.email=migration@example.invalid",
-    "-c", "commit.gpgsign=false", "commit", "-m", "fixture")
+  commit <- function(text) git("-c", "user.name=SnapshotTest", "-c", "user.email=snapshot@example.invalid",
+    "-c", "commit.gpgsign=false", "commit", "-m", text)
+  commit("fixture")
   revision <- git("rev-parse", "HEAD")[[1]]
-  stocks$scientific_name <- "Uncommitted replacement"
-  write.csv(stocks, "data_repo/database/stocks.csv", row.names = FALSE)
-  source(file.path(relative_root, "R", "read_database.R"))
-  original_options <- options(tinyAM.saio_path = normalizePath("data_repo", winslash = "/"))
-  on.exit(options(original_options), add = TRUE)
-  pinned <- read_committed_database(revision, repo = "data_repo")
-  latest <- read_database()
-  latest_preliminary <- read_database(tier = "preliminary")
-  working <- read_database("data_repo/database")
+  update_database_cache("data_repo")
+  pinned <- read_database()
   stopifnot(pinned$stocks$scientific_name == "Source species",
-    latest$stocks$scientific_name == "Source species",
-    identical(latest$commit, latest_preliminary$commit),
-    latest$database_selection == "latest_main",
-    latest$database_ref == "refs/heads/main",
-    pinned$database_selection == "explicit_revision",
-    working$stocks$scientific_name == "Uncommitted replacement",
-    grepl("^working-[[:xdigit:]]{32}$", working$database_key),
-    identical(read_database("data_repo/database")$database_key, working$database_key),
-    identical(pinned$commit, revision))
-  stocks$scientific_name <- "Another uncommitted value"
+    pinned$commit == revision, pinned$database_selection == "cached_snapshot")
+  # Reading remains local and stable when upstream data advance or Git is unavailable.
+  stocks$scientific_name <- "New committed species"
   write.csv(stocks, "data_repo/database/stocks.csv", row.names = FALSE)
-  stopifnot(read_database("data_repo/database")$database_key != working$database_key,
-    read_database()$stocks$scientific_name == "Source species")
-  stocks$scientific_name <- "Uncommitted replacement"
-  write.csv(stocks, "data_repo/database/stocks.csv", row.names = FALSE)
-  git("switch", "-c", "experiment")
-  git("add", "database")
-  git("-c", "user.name=MigrationTest", "-c", "user.email=migration@example.invalid",
-    "-c", "commit.gpgsign=false", "commit", "-m", "experiment")
-  experimental <- git("rev-parse", "HEAD")[[1]]
-  stopifnot(read_database()$stocks$scientific_name == "Source species",
-    read_database(revision = experimental)$stocks$scientific_name == "Uncommitted replacement")
-  git("switch", "main")
-  git("update-ref", "refs/remotes/origin/main", revision)
-  stocks$scientific_name <- "Latest committed main"
-  write.csv(stocks, "data_repo/database/stocks.csv", row.names = FALSE)
-  git("add", "database")
-  git("-c", "user.name=MigrationTest", "-c", "user.email=migration@example.invalid",
-    "-c", "commit.gpgsign=false", "commit", "-m", "advance main")
+  stopifnot(read_database()$stocks$scientific_name == "Source species")
+  git("add", "database"); commit("new data")
+  stopifnot(read_database()$commit == revision)
+  update_database_cache("data_repo")
   current <- read_database()
-  stopifnot(current$stocks$scientific_name == "Latest committed main",
-    current$commit != revision, current$database_key == current$commit,
-    read_database(revision = revision)$stocks$scientific_name == "Source species")
-  git("update-ref", "refs/remotes/origin/main", experimental)
-  divergent <- tryCatch(read_database(), error = identity)
-  stopifnot(inherits(divergent, "error"), grepl("behind or diverged", conditionMessage(divergent), fixed = TRUE),
-    read_database(revision = revision)$stocks$scientific_name == "Source species")
-  git("update-ref", "refs/remotes/origin/main", revision)
-  git("switch", "-c", "remote-ahead")
-  stocks$scientific_name <- "Remote main ahead"
-  write.csv(stocks, "data_repo/database/stocks.csv", row.names = FALSE)
-  git("add", "database")
-  git("-c", "user.name=MigrationTest", "-c", "user.email=migration@example.invalid",
-    "-c", "commit.gpgsign=false", "commit", "-m", "remote main")
-  remote_ahead <- git("rev-parse", "HEAD")[[1]]
-  git("switch", "main")
-  git("update-ref", "refs/remotes/origin/main", remote_ahead)
-  behind <- tryCatch(read_database(), error = identity)
-  stopifnot(inherits(behind, "error"), grepl("behind or diverged", conditionMessage(behind), fixed = TRUE))
-  git("update-ref", "refs/remotes/origin/main", revision)
-
+  stopifnot(current$commit != revision, current$stocks$scientific_name == "New committed species",
+    dir.exists(file.path(relative_root, "cache", "saio", revision)))
+  # An incomplete source copy cannot change the selected manifest.
+  writeLines("next source revision", "data_repo/note.txt")
+  git("add", "note.txt"); commit("copy interruption fixture")
+  file.rename("data_repo/database/outputs.csv", "data_repo/database/outputs.saved")
+  selected <- readLines(file.path(relative_root, "saio_revisions.csv"))
+  copy_error <- suppressWarnings(tryCatch(update_database_cache("data_repo"), error = identity))
+  stopifnot(inherits(copy_error, "error"),
+    identical(readLines(file.path(relative_root, "saio_revisions.csv")), selected),
+    identical(read_database()$commit, current$commit))
+  file.rename("data_repo/database/outputs.saved", "data_repo/database/outputs.csv")
+  rename <- file.rename("data_repo", "hidden_source")
+  original_head <- .database_head
+  .database_head <- function(...) stop("Reader must not invoke Git")
+  stopifnot(rename, identical(read_database()$commit, current$commit))
+  .database_head <- original_head
+  # A missing copy gives the manual-refresh instruction.
+  path <- file.path(relative_root, "cache", "saio", current$commit, "database.rds")
+  file.rename(path, paste0(path, ".saved"))
+  bad <- tryCatch(read_database(), error = identity)
+  stopifnot(inherits(bad, "error"), grepl("unavailable or incomplete", conditionMessage(bad)))
+  file.rename(paste0(path, ".saved"), path)
   entries <- data.frame(assessment_id = c("shared", "shared", "extra"),
     tier = c("curated", "preliminary", "preliminary"), source_commit = revision)
   write.csv(entries, file.path(relative_root, "translations.csv"), row.names = FALSE)
   for (tier in c("curated", "preliminary")) {
-    folder <- file.path(relative_root, "scripts", "translation", tier)
+    folder <- file.path(relative_root, "scripts", tier)
     dir.create(folder, recursive = TRUE)
     for (id in entries$assessment_id[entries$tier == tier]) writeLines(c(
       paste0('obs <- list(marker = "', tier, '")'),
@@ -138,7 +106,7 @@ local({
   stopifnot(is.null(.assessment_cached_fit("shared", "curated", current)),
     .assessment_cached_fit("shared", "curated", pinned)$marker == "historical",
     current_cache != historical_cache,
-    .assessment_cache_key(working) != .assessment_cache_key(current))
+    .assessment_cache_key(pinned) != .assessment_cache_key(current))
   dir.create(current_cache, recursive = TRUE)
   saveRDS(old_fit, file.path(current_cache, "fit.rds"))
   mismatched <- tryCatch(.assessment_cached_fit("shared", "curated", current), error = identity)
@@ -186,7 +154,7 @@ local({
       dir.create(cache, recursive = TRUE, showWarnings = FALSE)
       writeLines("<html>Cached dashboard</html>", file.path(cache, "dashboard.html"))
     }
-    index_assessment_dashboards(tier, current)
+    .index_assessment_dashboards(tier, current)
   }
   curated_index <- readLines(file.path(.assessment_results("curated"), "index.html"))
   preliminary_index <- readLines(file.path(.assessment_results("preliminary"), "index.html"))
@@ -200,4 +168,4 @@ local({
     !any(grepl("/experiments/", curated_index, fixed = TRUE)),
     !any(grepl("/experiments/", preliminary_index, fixed = TRUE)))
 })
-cat("Latest committed SAIO reads, explicit snapshots, source-keyed caches, tier dispatch and provenance regression checks passed.\n")
+cat("Manual SAIO snapshots, stable local reads, tier dispatch and source-keyed cache checks passed.\n")

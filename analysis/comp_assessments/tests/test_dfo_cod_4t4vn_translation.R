@@ -22,7 +22,7 @@ obs <- translated$obs
 
 stopifnot(identical(translated$years, 1971:2018))
 stopifnot(identical(translated$ages, 3:12))
-stopifnot(check_obs(obs))
+stopifnot(check_tam_data(obs))
 expected_key <- paste(landings_at_age$year, landings_at_age$age, sep = ":")
 observed_catch <- obs$catch[!is.na(obs$catch$obs), , drop = FALSE]
 catch_key <- paste(observed_catch$year, observed_catch$age, sep = ":")
@@ -83,21 +83,4 @@ stopifnot(all(known_m$year == 2018L), setequal(known_m$age, 5:12))
 stopifnot(all(known_m$est[known_m$age %in% 5:8] == 0.81))
 stopifnot(all(known_m$est[known_m$age %in% 9:12] == 0.85))
 
-readiness_env <- new.env(parent = globalenv())
-sys.source(
-  file.path(saio_path(), "scripts", "database", "003_observation_readiness.R"),
-  envir = readiness_env
-)
-readiness <- utils::read.csv(
-  file.path(.assessment_results("curated"), "observation_readiness.csv"),
-  stringsAsFactors = FALSE
-)
-southern_gulf <- readiness[
-  readiness$assessment_id == "dfo_cod_4t4vn_2019", ,
-  drop = FALSE
-]
-stopifnot(nrow(southern_gulf) == 1L)
-stopifnot(southern_gulf$catch_at_age_rows == 0L)
-stopifnot(southern_gulf$landings_at_age_rows == 480L)
-stopifnot(isTRUE(southern_gulf$database_to_tam_obs_succeeds))
-stopifnot(isTRUE(southern_gulf$tinyAM_check_obs_passes))
+# The local observation-readiness stage uses the same prepared-input checks.

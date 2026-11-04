@@ -68,3 +68,6 @@ cheatsheet/output/
 
 # Curated and preliminary assessment outputs are local generated artifacts.
 analysis/comp_assessments/results/
+
+# Manually refreshed SAIO source snapshots; the selected revision is tracked.
+analysis/comp_assessments/cache/saio/

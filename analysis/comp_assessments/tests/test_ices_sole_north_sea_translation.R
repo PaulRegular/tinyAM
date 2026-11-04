@@ -5,14 +5,14 @@ source(file.path(root, "R", "read_database.R"))
 source(file.path(root, "R", "database_to_tam_obs.R"))
 
 assessment_id <- "ices_sole_north_sea_2025"
-database <- read_database(tier = "preliminary")
+database <- read_database()
 source_data <- read_assessment(assessment_id, database)
 source_inputs <- source_data$inputs
 translated <- .test_stock(source_data)
 obs <- translated$obs
 dat <- translated$dat
 
-tinyAM::check_obs(obs)
+tinyAM::check_tam_data(obs)
 
 source_catch <- source_inputs[
   source_inputs$type == "catch" &
@@ -41,13 +41,10 @@ expected_m <- c(.754, .465, .368, .321, .295, .278, .267, .260, .254, .248)
 actual_m <- vapply(1:10, function(age) {
   unique(obs$pop_covariates$M_assumption[obs$pop_covariates$age == age])
 }, numeric(1))
-readiness <- read.csv(
-  file.path(.assessment_results("curated"), "observation_readiness.csv"),
-  stringsAsFactors = FALSE, check.names = FALSE
-)
-sole_readiness <- readiness[
-  readiness$assessment_id == assessment_id, , drop = FALSE
-]
+grid <- expand.grid(year = translated$years, age = translated$ages)
+key <- function(x) paste(x$year, x$age)
+catch_weights <- source_inputs[source_inputs$type == "catch_weight" &
+  source_inputs$year %in% translated$years & source_inputs$age %in% translated$ages, ]
 
 stopifnot(
   identical(translated$years, 1957:2024),
@@ -78,12 +75,11 @@ stopifnot(
   is.null(translated$start_par),
   !"relative_biomass_index" %in% obs$index$measure,
   identical(source_data$inputs, source_inputs),
-  nrow(sole_readiness) == 1L,
-  isTRUE(sole_readiness$weight_full_year_age_grid),
-  isTRUE(sole_readiness$catch_weight_full_year_age_grid),
-  isTRUE(sole_readiness$maturity_full_year_age_grid),
-  isTRUE(sole_readiness$M_numerical_values_available),
-  !isTRUE(sole_readiness$M_estimated_in_source)
+  setequal(key(obs$weight), key(grid)),
+  setequal(key(obs$maturity), key(grid)),
+  setequal(key(catch_weights), key(grid)),
+  all(is.finite(obs$weight$obs)),
+  all(is.finite(obs$pop_covariates$M_assumption))
 )
 
 cat("North Sea sole translation structure passed.\n")

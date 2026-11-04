@@ -29,7 +29,7 @@ expected_total_numbers <- tapply(
 )
 
 stopifnot(
-  tinyAM::check_obs(translated$obs),
+  tinyAM::check_tam_data(translated$obs),
   all(translated$obs$maturity$spawn_time == .4),
   identical(translated$years, 1974:2025),
   identical(translated$ages, 1:8),

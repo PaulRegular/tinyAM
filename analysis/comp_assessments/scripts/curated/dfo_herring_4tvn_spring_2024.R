@@ -139,9 +139,9 @@ obs$pop_covariates$age_blocks <- cut_ages(
   c(2, 4, 6, 8, 11)
 )
 
-obs$pop_covariates$fishery_period <- cut_years(
-  obs$pop_covariates$year,
-  c(1978, 1990, 2005, max(obs$pop_covariates$year))
+obs$catch$fishery_period <- cut_years(
+  obs$catch$year,
+  c(1978, 1990, 2005, max(obs$catch$year))
 )
 
 # Restrict the catchability random walk to CPUE.

@@ -1,7 +1,7 @@
 source("analysis/comp_assessments/R/read_database.R")
 pkgload::load_all(".", quiet = TRUE)
 source("analysis/comp_assessments/R/run_assessment.R")
-db <- read_database(tier = "preliminary")
+db <- read_database()
 source <- read_assessment("ices_sandeel_area_1r_2026", db)
 stopifnot(source$stocks$stock_id == "ices_sandeel_area_1r",
   is.na(source$stocks$charbonneau_id), source$stocks$authority_stock_id == "san.sa.1r",
@@ -69,20 +69,4 @@ stopifnot(abs(exp(mean(log(recruits$value))) - 111219266) < 1,
 stopifnot(grepl("surveySD/catchSD/estSD", source$assumptions$notes[
   source$assumptions$setting == "remaining_sources"], fixed = TRUE))
 
-validate_seasonal_fixture <- function(tables) {
-  env <- new.env(parent = globalenv())
-  env$read.csv <- function(file, ...) tables[[sub(".csv", "", basename(file), fixed = TRUE)]]
-  tryCatch({
-    invisible(capture.output(sys.source(
-      file.path(saio_path(), "scripts", "database", "002_validate_database.R"), envir = env)))
-    NULL
-  }, error = identity)
-}
-at <- which(db$inputs$assessment_id == source$assessment$assessment_id & db$inputs$type == "M")[1L]
-for (field in c("type", "season")) {
-  wrong <- db
-  wrong$inputs[[field]][at] <- if (field == "type") "weight" else NA_character_
-  error <- validate_seasonal_fixture(wrong)
-  stopifnot(inherits(error, "error"), grepl("M-at-age and a source season", conditionMessage(error), fixed = TRUE))
-}
-cat("Seasonal mortality validation rejects other input types and missing source seasons.\n")
+# Canonical schema rejection tests run in SAIO, which owns its validator.

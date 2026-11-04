@@ -5,13 +5,13 @@ source(file.path(root, "R", "read_database.R"))
 source(file.path(root, "R", "database_to_tam_obs.R"))
 
 assessment_id <- "ices_turbot_north_sea_2025_benchmark"
-source_data <- read_assessment(assessment_id, read_database(tier = "preliminary"))
+source_data <- read_assessment(assessment_id, read_database())
 translated <- .test_stock(source_data)
 obs <- translated$obs
 dat <- translated$dat
 inputs <- source_data$inputs
 
-tinyAM::check_obs(obs)
+tinyAM::check_tam_data(obs)
 
 catch <- inputs[
   inputs$type == "catch" & inputs$measure == "numbers_at_age",
@@ -64,7 +64,7 @@ stopifnot(
   length(unique(obs$index$q_key)) == 13L,
   length(unique(obs$catch$sd_group)) == 3L,
   length(unique(obs$index$sd_group)) == 5L,
-  length(unique(obs$pop_covariates$F_sd_group)) == 4L,
+  length(unique(obs$catch$F_sd_group)) == 4L,
   all(obs$index$q_key[obs$index$survey == "BTS+COAST" & obs$index$age %in% 6:7] ==
     obs$index$q_key[obs$index$survey == "BTS+COAST" & obs$index$age == 6][1]),
   all(obs$index$q_key[obs$index$survey == "BSAS" & obs$index$age %in% 7:8] ==

@@ -1,9 +1,9 @@
 root <- file.path("analysis", "comp_assessments")
-source(file.path(root, "R", "read_database.R"))
+source(file.path(root, "R", "run_assessment.R"))
 source(file.path(root, "R", "database_to_tam_obs.R"))
 .translation_abort <- function(message) stop(message, call. = FALSE)
 id <- "ices_haddock_rockall_2026"
-source_data <- read_assessment(id, read_database(tier = "preliminary"))
+source_data <- read_assessment(id, read_database())
 env <- new.env(parent = globalenv())
 env$source <- source_data
 env$do_fit <- FALSE

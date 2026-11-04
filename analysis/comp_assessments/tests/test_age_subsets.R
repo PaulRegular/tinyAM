@@ -53,7 +53,7 @@ testthat::test_that("observations select biology and retain older catch in the n
     years = full$years, ages = 0:4,
     surveys = c("HERAS", "GERAS", "N20", "IBTS/BITSQ1"), assumptions = source_data$assumptions
   )
-  testthat::expect_true(tinyAM::check_obs(obs))
+  testthat::expect_true(tinyAM::check_tam_data(obs))
   for (component in names(obs)) testthat::expect_true(all(obs[[component]]$age %in% 0:4))
   testthat::expect_equal(nrow(obs$weight), 35L * 5L)
   old_plus <- subset(full$obs$catch, age >= 4)

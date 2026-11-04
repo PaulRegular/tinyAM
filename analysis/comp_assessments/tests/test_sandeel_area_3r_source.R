@@ -1,5 +1,5 @@
 source("analysis/comp_assessments/R/run_assessment.R")
-db <- read_database(tier = "preliminary")
+db <- read_database()
 s <- read_assessment("ices_sandeel_area_3r_2026", db)
 i <- s$inputs; o <- s$outputs
 stopifnot(s$stocks$authority_stock_id == "san.sa.3r", is.na(s$stocks$charbonneau_id),

@@ -16,8 +16,8 @@ source("analysis/comp_assessments/R/plot_stock_order.R")
 plot_stocks <- assessment_plot_stocks(db$assessments, db$stocks,
   db$assessments$assessment_id[db$assessments$is_current])
 stopifnot(identical(as.character(plot_stocks$basin), plot_stocks$ocean))
-plot_code <- readLines("analysis/comp_assessments/scripts/translation/trend_plots.R")
-heatmap_code <- readLines("analysis/comp_assessments/scripts/translation/stats_plots.R")
+plot_code <- readLines("analysis/comp_assessments/scripts/trend_plots.R")
+heatmap_code <- readLines("analysis/comp_assessments/scripts/stats_plots.R")
 stopifnot(any(grepl("assessment_plot_stocks(", plot_code, fixed = TRUE)),
   any(grepl("assessment_plot_stocks(", heatmap_code, fixed = TRUE)))
 stopifnot(!any(grepl('"North Pacific"', heatmap_code, fixed = TRUE)))

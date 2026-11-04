@@ -2,7 +2,7 @@ source("analysis/comp_assessments/tests/helper_stock.R")
 pkgload::load_all(".", quiet = TRUE)
 source("analysis/comp_assessments/R/run_assessment.R")
 
-database <- read_database(tier = "preliminary")
+database <- read_database()
 source_data <- read_assessment("ices_cod_irish_sea_2026", database)
 translated <- .test_stock(source_data)
 obs <- translated$obs
@@ -12,7 +12,7 @@ index <- obs$index
 excluded <- catch$year %in% 2003:2005
 
 stopifnot(
-  tinyAM::check_obs(obs),
+  tinyAM::check_tam_data(obs),
   identical(translated$years, 1968:2018),
   identical(translated$ages, 0:6),
   nrow(catch) == 51L * 7L,

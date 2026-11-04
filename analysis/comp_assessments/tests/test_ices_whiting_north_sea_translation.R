@@ -24,7 +24,7 @@ m_surface <- translated$obs$pop_covariates
 m_2022 <- m_surface[m_surface$year == 2022, c("age", "M_assumption")]
 
 stopifnot(
-  tinyAM::check_obs(translated$obs),
+  tinyAM::check_tam_data(translated$obs),
   identical(translated$years, 1978:2026),
   identical(translated$ages, 0:8),
   nrow(translated$obs$catch) == 49L * 9L,

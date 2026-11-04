@@ -39,7 +39,9 @@ stopifnot(
   "assessment_id" %in% names(attr(serial, "comparison_summary"))
 )
 
-previous_plan <- future::plan("list")[[1L]]
+previous_plan <- future::plan()
+future::plan(future::multisession, workers = 2)
+configured_plan <- future::plan("list")[[1L]]
 previous_workers <- future::nbrOfWorkers()
 shared_outputs <- file.path(.assessment_results("curated"), c(
   "fit_diagnostics.csv", "comparison_summary.csv"
@@ -48,14 +50,14 @@ shared_outputs_existed <- file.exists(shared_outputs)
 cache_existed <- dir.exists(file.path(.assessment_results("curated"), "cache"))
 parallel <- run_assessments(
   assessment_ids,
-  database = database, parallel = TRUE, workers = 2,
+  database = database,
   fit = FALSE
 )
 stopifnot(
   identical(names(parallel), assessment_ids),
   identical(
     attr(future::plan("list")[[1L]], "call"),
-    attr(previous_plan, "call")
+    attr(configured_plan, "call")
   ),
   future::nbrOfWorkers() == previous_workers,
   identical(file.exists(shared_outputs), shared_outputs_existed),
@@ -72,7 +74,7 @@ bad_database$inputs <- bad_database$inputs[
 ]
 failed <- run_assessments(
   c("dfo_cod_2j3kl_2025", "ices_cod_north_sea_2025"),
-  database = bad_database, parallel = TRUE, workers = 2, fit = FALSE
+  database = bad_database, fit = FALSE
 )
 goa <- run_assessments("afsc_cod_goa_2026",
   database = database,
@@ -85,4 +87,5 @@ stopifnot(
   !is.null(goa$afsc_cod_goa_2026$obs)
 )
 
+future::plan(previous_plan)
 cat("Multi-assessment runner tests passed.\n")

@@ -1,7 +1,7 @@
 source("analysis/comp_assessments/tests/helper_stock.R")
 source("analysis/comp_assessments/R/read_database.R")
 
-database <- read_database(tier = "preliminary")
+database <- read_database()
 assessment_id <- "ices_whiting_west_scotland_2025"
 assessment <- database$assessments[
   database$assessments$assessment_id == assessment_id, , drop = FALSE

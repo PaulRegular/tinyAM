@@ -5,7 +5,7 @@ before <- source_record
 x <- .test_stock(source_record)
 obs <- x$obs; dat <- x$dat
 stopifnot(identical(source_record, before), is.null(x$fit),
-  identical(x$years, 1987:2025), identical(x$ages, 1:4), tinyAM::check_obs(obs),
+  identical(x$years, 1987:2025), identical(x$ages, 1:4), tinyAM::check_tam_data(obs),
   nrow(obs$catch) == 156L, nrow(obs$index) == 88L,
   all(obs$catch$unit == "thousand fish"),
   obs$catch$obs[obs$catch$year == 1987 & obs$catch$age == 1] == (33760 + 65) * 1000,

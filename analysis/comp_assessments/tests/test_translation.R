@@ -2,7 +2,7 @@ source("analysis/comp_assessments/R/read_database.R")
 pkgload::load_all(".", quiet = TRUE)
 root <- file.path("analysis", "comp_assessments")
 source(file.path(root, "R", "database_to_tam_obs.R"))
-check_obs <- tinyAM::check_obs
+check_tam_data <- tinyAM::check_tam_data
 source(file.path(root, "R", "audit_assumptions.R"))
 if (!requireNamespace("cli", quietly = TRUE)) {
   .translation_abort <- function(message) stop(message, call. = FALSE)
@@ -469,7 +469,8 @@ expect_equal(
 )
 expect_equal(fixed_m_inputs, fixed_m_inputs_before)
 
-read_table <- function(name) .saio_read_table(name)
+database <- read_database()
+read_table <- function(name) database[[sub("[.]csv$", "", name)]]
 assumptions_db <- read_table("assumptions.csv")
 inputs_db <- read_table("inputs.csv")
 audit <- audit_assumptions("dfo_cod_4t4vn_2019", assumptions_db)
@@ -621,11 +622,9 @@ expect_equal(herring_inputs, herring_before)
 expect_equal(sum(is.na(herring_obs$catch$obs)), 18L)
 
 source(file.path(root, "R", "read_database.R"))
-working_db <- read_database()
-db <- read_committed_database()
-expect_equal(working_db$database_source, "saio_committed")
-expect_equal(db$database_source, "saio_committed")
-expect_equal(grepl("^[[:xdigit:]]{40}$", working_db$commit), TRUE)
+db <- read_database()
+expect_equal(db$database_source, "saio_snapshot")
+expect_equal(grepl("^[[:xdigit:]]{40}$", db$commit), TRUE)
 
 fixture_dir <- tempfile("assessment_database_")
 dir.create(fixture_dir)
@@ -633,12 +632,14 @@ database_files <- c(
   "stocks.csv", "assessments.csv", "assumptions.csv",
   "inputs.csv", "outputs.csv"
 )
-for (name in database_files) {
-  write.csv(data.frame(source_file = name), file.path(fixture_dir, name),
-    row.names = FALSE
-  )
-}
-fixture_db <- read_database(fixture_dir)
+fixture_revision <- paste(rep("f", 40), collapse = "")
+dir.create(file.path(fixture_dir, fixture_revision))
+fixture_tables <- setNames(lapply(database_files, function(name)
+  data.frame(source_file = name)), sub("[.]csv$", "", database_files))
+saveRDS(fixture_tables, file.path(fixture_dir, fixture_revision, "database.rds"))
+fixture_manifest <- file.path(fixture_dir, "saio_revisions.csv")
+write.csv(data.frame(revision = fixture_revision), fixture_manifest, row.names = FALSE)
+fixture_db <- read_database(fixture_dir, fixture_manifest)
 expect_equal(
   unname(vapply(
     fixture_db[c(
@@ -650,12 +651,10 @@ expect_equal(
   database_files
 )
 
-working_ebs <- read_assessment("afsc_pollock_ebs_2024", working_db)
-ebs <- read_committed_assessment("afsc_pollock_ebs_2024", database = db)
+ebs <- read_assessment("afsc_pollock_ebs_2024", database = db)
 expect_equal(nrow(ebs$assessment), 1L)
 expect_equal(all(ebs$inputs$assessment_id == "afsc_pollock_ebs_2024"), TRUE)
 expect_equal(grepl("^[[:xdigit:]]{40}$", ebs$commit), TRUE)
-expect_equal(working_ebs$inputs, ebs$inputs)
 expect_equal(read_assessment("afsc_pollock_ebs_2024", db)$inputs, ebs$inputs)
 ebs_surveys <- c(
   "NMFS bottom-trawl VAST", "NMFS acoustic-trawl",
@@ -743,12 +742,12 @@ expect_equal(all(is.na(ebs_reference$obs_pred$catch$pred)), TRUE)
 expect_equal(all(is.na(ebs_reference$pop$ssb$se_scale)), TRUE)
 
 ns_haddock_id <- "ices_haddock_north_sea_2026"
-ns_haddock <- read_committed_assessment(ns_haddock_id, database = db)
+ns_haddock <- read_assessment(ns_haddock_id, database = db)
 ns_haddock_obs <- database_to_tam_obs(
   ns_haddock_id, ns_haddock$inputs,
   years = 1972:2026, ages = 0:8, assumptions = ns_haddock$assumptions
 )
-expect_equal(check_obs(ns_haddock_obs), TRUE)
+expect_equal(check_tam_data(ns_haddock_obs), TRUE)
 expect_equal(nrow(ns_haddock_obs$index), 667L)
 expect_equal(all(is.finite(ns_haddock_obs$index$relative_sd)), TRUE)
 expect_equal(all(abs(ns_haddock_obs$index$relative_sd^2 *

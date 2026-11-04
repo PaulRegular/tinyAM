@@ -5,9 +5,9 @@ source(file.path(root, "R", "run_assessment.R"))
 result <- run_assessment("dfo_cod_2j3kl_2025", fit = FALSE)
 stopifnot(
   result$source$assessment$assessment_id == "dfo_cod_2j3kl_2025",
-  result$source$database_source == "saio_committed",
-  result$source$database_selection == "latest_main",
-  result$source$commit == .saio_revision(),
+  result$source$database_source == "saio_snapshot",
+  result$source$database_selection == "cached_snapshot",
+  result$source$commit == .assessment_snapshot(),
   is.data.frame(result$obs$catch),
   is.data.frame(result$obs$index),
   is.data.frame(result$audit),

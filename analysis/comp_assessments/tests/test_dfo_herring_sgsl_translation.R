@@ -14,7 +14,7 @@ obs <- translated$obs
 stopifnot(
   identical(translated$years, 1978:2023),
   identical(translated$ages, 2:11),
-  tinyAM::check_obs(obs),
+  tinyAM::check_tam_data(obs),
   nrow(obs$catch) == 460L,
   nrow(obs$index) == 526L,
   nrow(obs$weight) == 460L,

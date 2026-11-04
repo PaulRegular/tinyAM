@@ -1,6 +1,6 @@
 # Source snapshots
 
-This is the historical migration record. Current tinyAM runs read committed local SAIO main by default; these frozen snapshots remain available only through an explicit revision request.
+This is the historical migration record. Current tinyAM runs read the manually refreshed local CSV snapshot selected by saio_revisions.csv. The historical revisions below remain in Git and any existing local caches; they are not current results.
 
 The canonical working tables on main are the expanded source database extracted from tinyAM comp-assessments 34470212e1102f3f31bf3f08c26a8a72a985c948.
 

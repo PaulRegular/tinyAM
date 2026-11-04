@@ -3,7 +3,7 @@ source("analysis/comp_assessments/R/database_to_tam_obs.R")
 
 assessment_id <- "ices_haddock_irish_sea_7a_2025"
 advice_id <- "ices_haddock_irish_sea_7a_2026_summary"
-database <- read_database(tier = "preliminary")
+database <- read_database()
 assessment <- read_assessment(assessment_id, database)
 i <- assessment$inputs
 o <- assessment$outputs
@@ -58,7 +58,7 @@ stopifnot(
 )
 
 source("analysis/comp_assessments/R/run_assessment.R")
-prepared <- run_assessment(assessment_id, fit = FALSE, dashboard = FALSE, cache = FALSE)
+prepared <- run_assessment(assessment_id, fit = FALSE, cache = FALSE)
 stopifnot(
   identical(prepared$diagnostics$status, "not_fitted"),
   !is.null(prepared$obs),

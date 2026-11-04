@@ -11,7 +11,7 @@ assessment_translations <- function(tier = NULL) {
     registry <- registry[registry$tier == tier, , drop = FALSE]
   }
   registry$script <- file.path("analysis", "comp_assessments", "scripts",
-    "translation", registry$tier, paste0(registry$assessment_id, ".R"))
+    registry$tier, paste0(registry$assessment_id, ".R"))
   registry
 }
 
@@ -39,7 +39,7 @@ assessment_translations <- function(tier = NULL) {
 }
 
 .assessment_cache_key <- function(database = NULL) {
-  if (is.null(database)) return(.saio_revision())
+  if (is.null(database)) return(.assessment_snapshot())
   key <- database$database_key
   if (is.null(key) && !identical(database$database_source, "working_tree")) key <- database$commit
   if (!is.character(key) || length(key) != 1L || is.na(key) ||
@@ -96,7 +96,7 @@ assessment_translations <- function(tier = NULL) {
   invisible(TRUE)
 }
 
-index_assessment_dashboards <- function(tier = "curated", database = NULL) {
+.index_assessment_dashboards <- function(tier = "curated", database = NULL) {
   selected <- .assessment_cache_key(database)
   folder <- .assessment_results(tier)
   dir.create(folder, recursive = TRUE, showWarnings = FALSE)

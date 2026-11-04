@@ -5,16 +5,6 @@ for (id in "joint_hake_coastal_2025") {
   record <- read_assessment(id, database)
   original <- record
   spec <- .test_stock(record)
-  baseline_script <- tempfile(fileext = ".R")
-  status <- system2("git", c("show", shQuote(paste0(
-    "86e44bf:analysis/comp_assessments/scripts/translation/stocks/", id, ".R"
-  ))), stdout = baseline_script)
-  stopifnot(status == 0)
-  baseline <- .test_stock(record, script = baseline_script)
-  unlink(baseline_script)
-  for (table in c("catch", "index", "weight", "maturity")) {
-    stopifnot(identical(spec$obs[[table]], baseline$obs[[table]]))
-  }
   stopifnot(attr(spec$obs, "translation")$M$status != "fixed_numerical_input")
   dat <- spec$dat
   par <- tinyAM::make_par(dat)
@@ -31,7 +21,7 @@ for (id in "joint_hake_coastal_2025") {
   }
   center <- exp(unique(dat$log_mu_supplied_m))
   stopifnot(abs(log(center) + 1.60944) < 1e-12, term$sd == .1,
-    !"mu_m" %in% names(spec$retry_start()))
+    is.null(spec$retry_start))
 }
 cat("One shared M level receives one fixed-SD Gaussian penalty; source prior scales and input preservation passed.\n")
 

@@ -1,5 +1,5 @@
 source("analysis/comp_assessments/R/run_assessment.R")
-database <- read_database(tier = "preliminary")
+database <- read_database()
 record <- read_assessment("nefsc_cod_georges_bank_2024", database)
 original <- record
 for (fit in c(FALSE, TRUE)) {
@@ -12,7 +12,7 @@ for (fit in c(FALSE, TRUE)) {
     is.null(stock$env$retry_start), is.null(stock$env$start_par),
     identical(record, original))
   result <- run_assessment("nefsc_cod_georges_bank_2024", database,
-    fit = fit, dashboard = TRUE, cache = FALSE)
+    fit = fit, cache = FALSE)
   stopifnot(result$diagnostics$status == "translation_failed",
     is.null(result$fit), is.null(result$obs), is.null(result$ref),
     is.null(result$summary), is.null(result$differences),

@@ -1,10 +1,10 @@
 pkgload::load_all(".", quiet = TRUE, helpers = FALSE)
 root <- file.path("analysis", "comp_assessments")
-source(file.path(root, "R", "read_database.R"))
+source(file.path(root, "R", "run_assessment.R"))
 source(file.path(root, "R", "database_to_tam_obs.R"))
 
 assessment_id <- "jrn_afwg_haddock_northeast_arctic_2026"
-source_data <- read_assessment(assessment_id, read_database(tier = "preliminary"))
+source_data <- read_assessment(assessment_id, read_database())
 env <- new.env(parent = globalenv())
 env$source <- source_data
 env$do_fit <- FALSE
@@ -53,7 +53,7 @@ stopifnot(
   all(is.finite(env$obs$pop_covariates$M_assumption)),
   all(env$obs$pop_covariates$M_assumption[env$obs$pop_covariates$age >= 7] == 0.2),
   identical(levels(env$obs$catch$catch_sd_group), c("age3", "age4plus")),
-  identical(levels(env$obs$pop_covariates$F_sd_group), c("age3", "age4plus")),
+  identical(levels(env$obs$catch$F_sd_group), c("age3", "age4plus")),
   ncol(prepared$process_sd$F$matrix) == 2L,
   identical(prepared$F_settings$mean_ages, 4:7),
   env$age_plus_group == 13L,

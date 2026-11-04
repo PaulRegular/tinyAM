@@ -40,7 +40,7 @@ comparison_f_10plus <- translated$comparison_outputs[
 ]
 
 stopifnot(
-  tinyAM::check_obs(translated$obs),
+  tinyAM::check_tam_data(translated$obs),
   identical(translated$years, 1967:2025),
   identical(translated$ages, 3:8),
   identical(translated$age_plus_group, 8),

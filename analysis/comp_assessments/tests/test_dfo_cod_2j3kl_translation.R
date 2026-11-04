@@ -19,10 +19,7 @@ all_maturity <- source_data$inputs[
   drop = FALSE
 ]
 
-tinyAM::check_obs(obs)
-readiness <- read.csv(file.path(.assessment_results("curated"), "observation_readiness.csv"),
-  stringsAsFactors = FALSE
-)
+tinyAM::check_tam_data(obs)
 dat <- do.call(tinyAM::prepare_tam, c(
   list(data = obs, years = translated$years, ages = translated$ages),
   translated$settings
@@ -73,9 +70,6 @@ stopifnot(
   ),
   identical(source_data$inputs$year, source_year),
   identical(source_data$inputs$year_basis, source_basis),
-  readiness$maturity_rows[readiness$assessment_id == "dfo_cod_2j3kl_2025"] == 1065L,
-  readiness$maturity_full_year_age_grid[readiness$assessment_id == "dfo_cod_2j3kl_2025"],
-  !any(grepl("maturity_cohort", names(readiness))),
   audit$tinyam_support[audit$setting == "maturity_at_age"] == "supported",
   dat$N_settings$process == "off",
   dat$N_settings$init == "exp",

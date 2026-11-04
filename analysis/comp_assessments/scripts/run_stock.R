@@ -6,7 +6,7 @@ source(file.path(root, "R", "run_assessment.R"))
 
 translation_tier <- "curated"
 assessment_id <- "afsc_atka_mackerel_bsai_2024"
-database <- read_database(tier = translation_tier)
+database <- read_database()
 source <- read_assessment(assessment_id, database)
 do_fit <- TRUE
 silent <- FALSE

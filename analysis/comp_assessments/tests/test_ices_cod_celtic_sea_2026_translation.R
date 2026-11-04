@@ -15,7 +15,7 @@ source_F <- .translation_start_surface(
 )
 
 stopifnot(
-  tinyAM::check_obs(obs),
+  tinyAM::check_tam_data(obs),
   identical(translated$years, 1980:2025),
   identical(translated$ages, 1:7),
   translated$age_plus_group == 7L,

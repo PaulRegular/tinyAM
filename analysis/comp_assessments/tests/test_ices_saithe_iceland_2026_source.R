@@ -4,7 +4,7 @@ root <- "analysis/comp_assessments"
 source(file.path(root, "R", "read_database.R"))
 
 assessment_id <- "ices_saithe_iceland_2026"
-database <- read_database(tier = "preliminary")
+database <- read_database()
 source_data <- read_assessment(assessment_id, database)
 inputs <- source_data$inputs
 outputs <- source_data$outputs
@@ -76,13 +76,7 @@ stopifnot(
   !any(outputs$measure == "Fbar" & outputs$year == 2026L)
 )
 
-review <- paste(readLines(file.path(saio_path(), "source_reviews", "ices_saithe_iceland_2026.md"), warn = FALSE), collapse = " ")
-stopifnot(
-  grepl("28 blank age-year cells", review, fixed = TRUE),
-  grepl("Table 2 `F` column's age range and calculation are not defined", review, fixed = TRUE),
-  grepl("Through 2025, `HR` agrees to rounding", review, fixed = TRUE),
-  grepl("exact 2026 production settings are not fully published", review, fixed = TRUE),
-  grepl("0.20 as a month-midpoint approximation", review, fixed = TRUE)
-)
+# Source-review text is validated in SAIO; this test checks the cached source records.
+
 
 cat("Icelandic saithe 2026 source records passed.\n")

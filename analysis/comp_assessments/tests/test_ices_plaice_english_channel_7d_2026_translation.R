@@ -4,7 +4,7 @@ source(file.path(root, "R", "run_assessment.R"))
 source(file.path(root, "R", "read_database.R"))
 source(file.path(root, "R", "database_to_tam_obs.R"))
 
-database <- read_database(tier = "preliminary")
+database <- read_database()
 source <- read_assessment("ices_plaice_english_channel_7d_2026", database)
 model <- .test_stock(source)
 

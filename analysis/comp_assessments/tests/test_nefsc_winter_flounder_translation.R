@@ -2,14 +2,14 @@ source("analysis/comp_assessments/tests/helper_stock.R")
 root <- file.path("analysis", "comp_assessments")
 source(file.path(root, "R", "run_assessment.R"))
 
-database <- read_database(tier = "preliminary")
+database <- read_database()
 source_data <- read_assessment("nefsc_winter_flounder_gb_2022_vpa", database)
 original_inputs <- source_data$inputs
 translated <- .test_stock(source_data)
 obs <- translated$obs
 index <- obs$index
 
-tinyAM::check_obs(obs)
+tinyAM::check_tam_data(obs)
 
 stopifnot(
   identical(translated$years, 1982:2021),

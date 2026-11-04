@@ -4,14 +4,14 @@ pkgload::load_all(".", quiet = TRUE)
 source(file.path(root, "R", "run_assessment.R"))
 
 assessment_id <- "ices_herring_norwegian_spring_2026"
-database <- read_database(tier = "preliminary")
+database <- read_database()
 result <- run_assessment(assessment_id, database = database, fit = FALSE)
 obs <- result$obs
 
 stopifnot(
   identical(result$diagnostics$status, "not_fitted"),
   is.null(result$fit),
-  tinyAM::check_obs(obs),
+  tinyAM::check_tam_data(obs),
   identical(sort(unique(as.integer(obs$catch$year))), 1988:2025),
   identical(sort(unique(as.integer(obs$catch$age))), 2:12),
   nrow(obs$catch) == 38L * 11L,

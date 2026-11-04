@@ -10,7 +10,7 @@ source_data <- read_assessment("afsc_pollock_goa_2024", database)
 translated <- .test_stock(source_data)
 obs <- translated$obs
 
-tinyAM::check_obs(obs)
+tinyAM::check_tam_data(obs)
 stopifnot(
   any(is.finite(obs$catch$obs[obs$catch$age == 1])),
   any(is.finite(obs$catch$obs[obs$catch$age == 2])),

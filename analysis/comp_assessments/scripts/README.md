@@ -1,41 +1,19 @@
 # Assessment scripts
 
-Run these scripts from the repository root in RStudio.
+Run these scripts from the tinyAM repository root in RStudio.
 
-## Source database
+1. `update_database_cache.R`: manually copy the five clean, committed SAIO CSVs into `cache/saio/<commit>/`. Set `saio_repo` first. The CSVs are parsed once into `database.rds`; the tracked manifest is updated only after both steps finish; SAIO is never changed or fetched.
+2. `run_stock.R`: choose a stock and tier, fit its literal recipe, then preview the supplied fit independently.
+3. `run_all.R`: read the snapshot once, configure `future::plan(future::multisession, workers = 10)`, fit/checkpoint the batch, then render dashboards and overview figures in separate sections.
+4. `observation_readiness.R`: audit the same supplied `database`; when run alone, read the selected local snapshot.
+5. `stats_plots.R` and `trend_plots.R`: rebuild overview figures from results matching the selected source revision.
 
-Source importers, extraction helpers and validators are maintained in [SAIO](https://github.com/PaulRegular/saio/tree/main/scripts/database). Run canonical validation from the SAIO repository root. Routine translations read committed local SAIO main, record its exact revision, and do not rerun source imports. Historical revisions require an explicit request.
+`run_assessment(..., fit = FALSE)` prepares inputs without final or preliminary fits. The batch functions honor your existing future plan; choose `future::sequential` for troubleshooting. `run_all.R` selects a 20-minute per-assessment deadline; use `timeout = Inf` for unrestricted fitting. A finite deadline requires `callr` and records a timeout without retuning the model.
 
-## Translation and fitting
+With `cache = TRUE`, each completed attempt is saved immediately under `results/<tier>/cache/<SAIO commit>/<assessment_id>/`, along with the fit when available and stage logs. Interrupted serialization preserves the previous complete checkpoint. `cache` does not reuse or skip fits. Only an intentional full batch should set `save_results = TRUE` to refresh aggregate CSVs.
 
-Open `translation/run_stock.R`, choose `assessment_id`, and source it. Each
-stock script prepares observations and shows its literal `fit_tam()` call.
-The workspace retains `obs`, years, ages, `fit`, background and `assessment`.
-Rerun the Preview line after editing a fit; previewing never refits it.
+Run `render_assessment_dashboards(runs)` after fitting. It records rendered, troubleshooting, skipped and failed outcomes in `dashboard_manifest.csv` and rebuilds the tier's index. It never fits or changes numerical eligibility. Troubleshooting dashboards may lack reliable estimates or uncertainty; inspect `check_tam()` and the diagnostic table.
 
-`run_assessment(..., fit = FALSE)` prepares observations without final or
-preliminary fits. Model settings are stored in a fitted object's `dat`.
+For retrospectives or hindcasts, configure the same future plan and call `fit_retro(fit, folds = 5)` or `fit_hindcast(fit, folds = 5)`, then `vis_tam(result)`. Close workers with `future::plan(future::sequential)` when finished. See the [workflow](../README.md) for catch conditioning and score interpretation.
 
-`translation/run_all.R` reads the committed database, fits with four workers,
-and writes aggregate results only in the parent process. It caches returned
-fits before optional dashboards, then runs the two overview-figure scripts.
-The controls at the top select parallel execution, worker count, dashboards
-(off by default), and a 20-minute per-assessment deadline. A finite deadline
-requires `callr` and runs each assessment in a supervised R subprocess, including
-when `parallel = FALSE`. A timed-out process is stopped and the batch continues
-with an explicit `timed_out` diagnostic; settings and starting-value rules are
-unchanged. Set `timeout <- Inf` for unbounded fitting.
-
-Stock starts and completions are printed as they happen. With `cache = TRUE`,
-each completed stock is saved immediately as `results/<tier>/cache/<id>/result.rds`,
-alongside its fit (if available), `run.log` with stage timestamps, and
-`run.log.output` with subprocess output. These checkpoints do not wait for the
-whole batch. Existing old fit files are retained; `result.rds` records the current
-run's outcome and database revision. `cache` saves results; it does not skip fits.
-Checkpoint replacement happens only after serialization completes, so an
-interrupted save does not overwrite a previous complete checkpoint.
-Reduce worker count when memory is limited; use serial execution for debugging.
-
-Summary CSVs, overview figures, fits, dashboards and detailed trial outputs
-remain local and ignored under `results/<tier>/`. Authoritative source files
-remain in SAIO's ignored cache. The complete batch alone refreshes aggregate results.
+All generated snapshots, fits, dashboards and figures stay local and ignored. Canonical source curation, extraction and validation are maintained in [SAIO](https://github.com/PaulRegular/saio).

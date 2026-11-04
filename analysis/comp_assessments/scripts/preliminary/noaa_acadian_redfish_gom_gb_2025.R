@@ -26,7 +26,6 @@ inputs <- rbind(inputs[inputs$type != "index", ], index)
 obs <- database_to_tam_obs(source$assessment$assessment_id, inputs,
   years = years, ages = ages, assumptions = source$assumptions)
 obs$maturity$spawn_time <- 0.4
-obs$pop_covariates$F_age <- tinyAM::cut_ages(obs$pop_covariates$age, c(1:9, 26))
 obs$catch$F_age <- tinyAM::cut_ages(obs$catch$age, c(1:9, 26))
 q_age <- ifelse(grepl("fall", obs$index$survey, ignore.case = TRUE),
   pmin(obs$index$age, 4), pmin(obs$index$age, 7))

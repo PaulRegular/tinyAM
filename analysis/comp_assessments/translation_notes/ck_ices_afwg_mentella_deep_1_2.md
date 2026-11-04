@@ -5,7 +5,7 @@ Transferred from the pre-cleanup SAIO review without refitting. Check the regist
 ## Limited tinyAM translation
 
 The maintained recipe is
-[preliminary recipe](../scripts/translation/preliminary/jrn_redfish_beaked_2026.R). It fits 1992–2025
+[preliminary recipe](../scripts/preliminary/jrn_redfish_beaked_2026.R). It fits 1992–2025
 at ages 6–19+, using the non-overlapping total catch-at-age series once,
 fixed M = 0.05, published age-6+ weight and maturity, and the ecosystem and
 winter number indices for ages 6–15. The million-fish indices are converted

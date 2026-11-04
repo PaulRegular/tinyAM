@@ -7,7 +7,7 @@ obs <- x$obs
 dat <- x$dat
 stopifnot(identical(source_record, before), is.null(x$fit),
   identical(x$years, 1983:2025), identical(x$ages, 1:4),
-  tinyAM::check_obs(obs), nrow(obs$catch) == 172L, nrow(obs$index) == 43L,
+  tinyAM::check_tam_data(obs), nrow(obs$catch) == 172L, nrow(obs$index) == 43L,
   all(obs$catch$unit == "thousand fish"),
   obs$catch$obs[obs$catch$year == 1983 & obs$catch$age == 2] == (28971 + 3085) * 1000,
   all(obs$index$age >= 1), sum(obs$index$survey == "Dredge") == 22L,
@@ -58,7 +58,7 @@ stopifnot(all(ref$pop$recruitment$est == n$value[match(ref$pop$recruitment$year,
   all(attr(ref, "native_pop")$recruitment$age == 0))
 cat("Sandeel annual catch/M aggregation, January biology, original indices, settings and same-year recruitment passed.\n")
 source("analysis/comp_assessments/R/plot_stock_order.R")
-metadata <- assessment_plot_stocks(read_database(tier = "preliminary")$assessments, read_database(tier = "preliminary")$stocks,
+metadata <- assessment_plot_stocks(read_database()$assessments, read_database()$stocks,
   source_record$assessment$assessment_id)
 stopifnot(nrow(metadata) == 1L, metadata$scientific_name == "Ammodytes spp.",
   as.character(metadata$basin) == "Northeast Atlantic")

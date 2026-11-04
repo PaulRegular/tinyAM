@@ -73,7 +73,7 @@ obs$weight$obs[obs$weight$age == 7] <- plus_weight$weight[
   match(obs$weight$year[obs$weight$age == 7], plus_weight$year)
 ]
 obs$maturity$spawn_time <- 0.5
-obs$pop_covariates$age_factor <- factor(obs$pop_covariates$age, levels = ages)
+obs$catch$age_factor <- factor(obs$catch$age, levels = ages)
 obs$index$q_key <- interaction(obs$index$survey, factor(obs$index$age, levels = ages),
   drop = TRUE, lex.order = TRUE
 )

@@ -91,7 +91,7 @@ if (do_fit) {
   }
   retry_start <- function() {
     source_fit_file <- file.path(
-      file.path(saio_path(), "source_cache", "ices_plaice_7d_2026"),
+      file.path("analysis", "comp_assessments", "source_cache", "ices_plaice_7d_2026"),
       "fit_local_locked.RData"
     )
     if (!file.exists(source_fit_file)) {

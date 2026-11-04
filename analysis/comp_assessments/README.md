@@ -4,8 +4,8 @@ Source data are maintained in the independent **SAIO — Stock Assessment Inputs
 
 ## Curated and preliminary translations
 
-- scripts/translation/curated/: the 35 scripts retained from main at 78f3d347331b0e770d55a855de4c5b90307fd400. This preserves the existing paper working set, including its documented blocked cases. Membership does not imply convergence or scientific equivalence.
-- scripts/translation/preliminary/: additional translations and changed alternatives from comp-assessments. They have not been promoted into the paper working set.
+- scripts/curated/: the 35 scripts retained from main at 78f3d347331b0e770d55a855de4c5b90307fd400. This preserves the existing paper working set, including its documented blocked cases. Membership does not imply convergence or scientific equivalence.
+- scripts/preliminary/: additional translations and changed alternatives from comp-assessments. They have not been promoted into the paper working set.
 - translations.csv: the explicit registry, including each script's originating commit. An assessment can have a curated version and a preliminary alternative.
 
 Curated runs are the default. Preliminary runs require an explicit tier. Extraction completeness, translation review and numerical convergence are separate. Move a script and update the registry only after reviewing its sources, assumptions and comparisons. If both tiers contain the same assessment, selecting its ID without a tier uses the curated version.
@@ -23,54 +23,68 @@ not establish that data can never be recovered. `reconstruction_pending` means
 native observations are present but their age/length, sex, area or removal
 definitions still need a reviewed conversion. Neither status counts as a fit.
 
-## SAIO data
+## 1. Refresh source data manually
 
-Clone [SAIO](https://github.com/PaulRegular/saio) beside tinyAM. The default lookup uses the primary tinyAM checkout's parent directory, so it also works from Git worktrees. On this laptop the locations are `C:/Users/paulr/Documents/tinyAM` and `C:/Users/paulr/Documents/saio`.
+Source curation and validation belong to [SAIO](https://github.com/PaulRegular/saio). Update its local checkout yourself, then open `scripts/update_database_cache.R`, set `saio_repo`, and run it from the tinyAM repository root. Before running it, commit the five database CSVs in SAIO and ensure they are available as real CSV files, not Git LFS pointers. The script never fetches, switches branches or edits SAIO.
 
-For another location, set SAIO_PATH to your local SAIO checkout, or use:
+The updater copies the five tables into ignored `cache/saio/<commit>/` and parses those copies once into `database.rds` with base R, then updates tracked `saio_revisions.csv` **last**. Both translation tiers use this one snapshot. Previous snapshots remain untouched. Commit the manifest when intentionally advancing the shared data version; collaborators run the updater from that same SAIO commit to obtain its ignored files.
+
+Normal analysis reads only the local snapshot:
 
 ```r
-options(tinyAM.saio_path = "/path/to/saio")
 source("analysis/comp_assessments/R/run_assessment.R")
 database <- read_database()
 ```
 
-Both translation tiers read the latest **committed local SAIO main** by default. The reader resolves main once and records that exact commit; it ignores uncommitted table edits and another checked-out branch. Curated membership remains the same 35 scripts, while their inputs now follow current SAIO data.
+Normal reads load the parsed cache rather than repeatedly parsing the large CSVs. Reading and fitting do not need SAIO or Git. They do not notice later SAIO edits until the cache is explicitly refreshed. A missing or incomplete snapshot stops with an update instruction. Treat cached snapshots as read-only. There is no automatic historical-revision or working-tree reader; old manifests are preserved in Git history and old snapshot folders are retained locally.
 
-Update SAIO before an analysis with `git -C /path/to/saio switch main`, `git -C /path/to/saio pull --ff-only` and `git -C /path/to/saio lfs pull`. Reading or fitting never fetches data automatically. If the fetched origin/main is ahead of or diverges from local main, reading current data stops with an update instruction. Locally committed changes ahead of origin/main are included and identified by their actual commit.
+One preliminary English Channel plaice recipe retains its documented native-SAM starting-value retry. That optional retry also needs `source_cache/ices_plaice_7d_2026/fit_local_locked.RData`, copied manually from the reviewed source artifact. It is distinct from the five-table snapshot and is never fetched at fitting time.
 
-For a reproducible historical run, supply `read_database(revision = "<SAIO commit>")` or `read_committed_database(revision = "<SAIO commit>")`. The commit and its LFS objects must be available locally; fetch missing objects explicitly with `git -C /path/to/saio lfs fetch origin <revision>`. To deliberately inspect edited tables, use `read_database(file.path(saio_path(), "database"))`; those reads have a separate content fingerprint.
+## 2. Fit assessments
 
-Diagnostics and cached fits record the actual SAIO revision, selection and tinyAM revision. Recheck affected translations before refreshing paper figures when source data advance. DATABASE_STRUCTURE.md and PROTOCOL.md point to their maintained SAIO documents.
+For one stock, open `scripts/run_stock.R`, select `translation_tier` and `assessment_id`, and source its Fit section. The literal model call remains in the registered recipe. The workspace exposes its inputs, fit and comparison context. Rerun the Preview line after editing the model; previewing never refits it.
 
-## Run or preview a translation
-
-Open scripts/translation/run_stock.R, select translation_tier and assessment_id, then source it. For a batch, use scripts/translation/run_all.R. Its translation_tier defaults to curated; use preliminary deliberately for the wider library. Batch membership comes from translations.csv, rather than SAIO's is_current flag.
+For a batch, open `scripts/run_all.R`. Its stages are deliberately separate:
 
 ```r
-result <- run_assessment("afsc_cod_ebs_2024", tier = "curated",
-  database = database, fit = FALSE)
-preliminary <- assessment_translations("preliminary")
+future::plan(future::multisession, workers = 10)
+runs <- run_assessments(database = database, tier = "curated",
+  cache = TRUE, save_results = TRUE, timeout = 20 * 60)
 ```
 
-The full scientific translation instructions remain in [TINYAM_TRANSLATION.md](TINYAM_TRANSLATION.md). Stock-specific assumptions and inherited fit reviews are in [translation_notes/](translation_notes/README.md); official source evidence remains in SAIO. Shared converters and dashboard helpers serve both tiers. These are analysis-local functions; package model mathematics and public interfaces are unchanged.
+Use `future::plan(future::sequential)` to troubleshoot. `run_assessments()` honors the caller's plan and never changes it. Its default `timeout = Inf` is unbounded; the batch script visibly selects a 20-minute deadline. A finite limit uses a supervised R subprocess so native optimizer code can be stopped. Every failed or timed-out attempt remains in diagnostics; model settings and starting-value policies are unchanged.
 
-## Local outputs
+Each completed assessment is checkpointed immediately when caching is enabled. Checkpoints are replaced only after serialization completes. `cache` saves results; it never skips fitting. Aggregate CSVs are written only with `save_results = TRUE`, after workers finish. Targeted trials must not overwrite the canonical batch summaries.
 
-All generated results are ignored by Git and separated under results/curated/ and results/preliminary/. Fits, dashboards and initialization attempts use `cache/<SAIO commit>/<assessment_id>/`; batch checkpoints share that revision folder. Explicit edited-table reads use a `working-<fingerprint>` key. Previous unversioned caches and historical revision folders are preserved and are never substituted for current fits. Plot scripts reject result tables or caches from another or unknown data revision. Preliminary results never enter curated summaries by default.
+## 3. Render and inspect dashboards
 
-Open results/curated/index.html or results/preliminary/index.html for dashboards. Regenerated indexes label the selected source revision separately from historical or unknown-revision outputs, without rewriting old HTML. Fresh previews show source provenance and reject a known mismatch between the supplied fit and assessment context. Older comp-assessments outputs for curated stocks are under curated/legacy_comp_assessments/ and require revalidation before paper use. Older mixed batch summaries remain in preliminary/ and are historical outputs, not a newly completed preliminary batch. results/output_migration.json records the source and destination of relocated files.
+```r
+dashboards <- render_assessment_dashboards(runs)
+```
 
-## Verification and purpose
+This stage uses returned fits and their original source context. It does not reread SAIO, refit models or calculate OSA residuals. Nonconverged fits with usable predictions may produce clearly identified **troubleshooting** dashboards; they do not become numerically eligible comparisons. Missing fits and render errors remain in `dashboard_manifest.csv`. A rendering failure never loses the saved fit.
 
-Source recovery and translations used substantial agentic-AI assistance. Not all records and translations have been exhaustively human-verified. Check authoritative sources and diagnostic warnings before research use. tinyAM translations are illustrative abstractions, not official assessments or management advice.
+Open `results/<tier>/index.html`. Inspect Fisheries/Surveys residuals, Tables → Diagnostics and Model structure before interpreting trends. Rerun dashboard generation independently after fixing a plotting problem. For an edited individual fit, use `view_assessment(fit, assessment)`; explicit mismatches between fit and source revisions remain errors.
 
-The broad library supports future standardized comparative modelling. A stock-specific approximation of an official assessment does not automatically define the common formulation for a depensation study.
+The overview scripts `scripts/stats_plots.R` and `scripts/trend_plots.R` can also run separately. They reject result tables from another data revision.
 
-## Historical source snapshots
+## Retrospectives and hindcasts
 
-`saio_revisions.csv` retains historical snapshot references, not active defaults. The curated snapshot preserves the original paper-input tables byte for byte; the preliminary snapshot preserves the expanded database at migration. Request one explicitly with `read_database(revision = .saio_snapshot_revision("curated"))`. Old cached estimates keep their original provenance and are not relabeled as results from current data.
+The same caller-owned future plan controls package evaluation functions:
 
-## Migration history
+```r
+future::plan(future::multisession, workers = 10)
+retro <- fit_retro(fit, folds = 5)
+hind <- fit_hindcast(fit, folds = 5, start_from_fit = TRUE)
+print(hind)
+vis_tam(hind)
+future::plan(future::sequential)
+```
 
-The source-database split and its initial snapshot manifest are documented in [migration/](migration/README.md). SAIO is maintained independently; tinyAM owns its translation provenance and migration history.
+The hindcast default conditions each forecast on actual aggregate catch, while holding out survey observations and catch composition. Catch-total agreement is therefore not forecast skill. `proj_settings = list(F_mult = 1)` is the status-quo-F alternative. Compare validation coverage before comparing scores; failed folds remain in `fold_diagnostics`. See `?fit_retro` for Mohn's rho, log-RMSE and MASE definitions and multi-model calls.
+
+## Results and translation guidance
+
+Generated results remain local and ignored under `results/curated/` and `results/preliminary/`. Fits, checkpoints and dashboards are separated by `cache/<SAIO commit>/<assessment_id>/`; batch checkpoints share that revision folder. Old revisions and unversioned outputs are historical, never substituted for current fits or relabeled. Cached fits record both their SAIO snapshot and tinyAM revision.
+
+The scientific translation instructions remain in [TINYAM_TRANSLATION.md](TINYAM_TRANSLATION.md). Stock-specific assumptions and inherited reviews are in [translation_notes/](translation_notes/README.md); official source evidence is maintained in SAIO. The migration record is in [migration/](migration/README.md). No operational assessment or study hypothesis is changed by this workflow.

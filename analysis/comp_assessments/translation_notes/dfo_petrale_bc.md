@@ -9,7 +9,7 @@ SSB now preserved in the canonical database. Fitting is **source-blocked**.
 These source gaps must be resolved before preparing a model. There is no
 catch-only substitute, invented `fit_tam()` model, optimizer result or dashboard.
 
-The stock entry point is now the [curated stock script](../scripts/translation/curated/dfo_petrale_bc_2024.R). It records the source
+The stock entry point is now the [curated stock script](../scripts/curated/dfo_petrale_bc_2024.R). It records the source
 background and stops with the missing-input inventory before `prepare_tam()`
 or `fit_tam()`, for both `fit = FALSE` and `fit = TRUE`. An explicit runner
 attempt is recorded as `translation_failed`, with no optimizer or uncertainty

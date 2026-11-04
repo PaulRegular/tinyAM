@@ -10,7 +10,7 @@ stopifnot(
   is.null(stock$env$fit),
   identical(as.integer(stock$env$years), 1982:2019),
   identical(as.integer(stock$env$ages), 1:9),
-  tinyAM::check_obs(result$obs),
+  tinyAM::check_tam_data(result$obs),
   nrow(result$obs$catch) == 38L * 9L,
   nrow(result$obs$weight) == 38L * 9L,
   nrow(result$obs$maturity) == 38L * 9L,

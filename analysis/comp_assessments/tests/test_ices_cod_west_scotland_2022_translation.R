@@ -1,6 +1,6 @@
 pkgload::load_all(".", quiet = TRUE)
 source("analysis/comp_assessments/R/run_assessment.R")
-record <- read_assessment("ices_cod_west_scotland_2022", read_database(tier = "preliminary"))
+record <- read_assessment("ices_cod_west_scotland_2022", read_database())
 before <- record
 stock <- .assessment_stock(record, do_fit = FALSE, silent = TRUE)
 stopifnot(is.null(stock$error), is.null(stock$env$fit), identical(record, before))

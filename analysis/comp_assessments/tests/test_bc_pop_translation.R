@@ -8,13 +8,12 @@ for (fit in c(FALSE, TRUE)) {
       gsub("[[:space:]]+", " ", conditionMessage(x$error)), fixed = TRUE),
     x$env$fit_stage == "translation", is.null(x$env$fit), is.null(x$env$obs),
     is.null(x$env$fit_model), is.null(x$env$retry_start), identical(record, original))
-  result <- run_assessment("dfo_pop_bc_2023", fit = fit, dashboard = TRUE, cache = FALSE)
+  result <- run_assessment("dfo_pop_bc_2023", fit = fit, cache = FALSE)
   stopifnot(result$diagnostics$status == "translation_failed",
     is.null(result$fit), is.null(result$ref), is.null(result$summary),
     is.null(result$dashboard_file), identical(record, original))
 }
-summary <- read.csv("analysis/comp_assessments/results/comparison_summary.csv")
-series <- read.csv("analysis/comp_assessments/results/population_timeseries.csv")
-stopifnot(!"dfo_pop_bc_2023" %in% summary$assessment_id,
-          !"dfo_pop_bc_2023" %in% series$assessment_id)
+tables <- .assessment_result_tables(list(result), save_results = FALSE)
+stopifnot(nrow(attr(tables, "comparison_summary")) == 0L,
+  nrow(attr(tables, "population_timeseries")) == 0L)
 cat("BC POP is blocked before fitting/comparison; source records remain intact and no stale comparison rows remain.\n")

@@ -5,7 +5,7 @@ source(file.path(root, "R", "read_database.R"))
 source(file.path(root, "R", "database_to_tam_obs.R"))
 
 assessment_id <- "ices_plaice_baltic_21_32_2026"
-database <- read_database(tier = "preliminary")
+database <- read_database()
 source_record <- read_assessment(assessment_id, database)
 translated <- .test_stock(source_record)
 obs <- translated$obs

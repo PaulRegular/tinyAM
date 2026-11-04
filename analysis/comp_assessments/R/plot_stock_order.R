@@ -1,4 +1,8 @@
 # Higher groups follow Betancur-R. et al. (2017), doi:10.1186/s12862-017-0958-3.
+# Additional genera/families checked against Eschmeyer's Catalog of Fishes (2026):
+# https://researcharchive.calacademy.org/research/ichthyology/catalog/SpeciesByFamily.asp
+# Species records: Molva (Lotidae), Argentina (Argentinidae), Anarhichas
+# (Anarhichadidae), Anoplopoma (Anoplopomatidae); flatfishes remain Pleuronectidae.
 # Scientific names break ties within groups; stocks of a species stay together.
 assessment_plot_stocks <- function(assessments, stocks, assessment_ids) {
   groups <- list(
@@ -11,13 +15,18 @@ assessment_plot_stocks <- function(assessments, stocks, assessment_ids) {
     Carangidae = "Trachurus",
     Cyclopsettidae = "Paralichthys",
     Scophthalmidae = "Scophthalmus",
-    Pleuronectidae = c("Atheresthes", "Eopsetta", "Glyptocephalus", "Hippoglossoides", "Lepidopsetta", "Limanda", "Pleuronectes", "Pseudopleuronectes"),
+    Pleuronectidae = c("Atheresthes", "Eopsetta", "Glyptocephalus", "Hippoglossoides", "Lepidopsetta", "Limanda", "Pleuronectes", "Pseudopleuronectes",
+                      "Reinhardtius", "Myzopsetta", "Microstomus"),
     Soleidae = "Solea",
     Sparidae = "Stenotomus",
     Uranoscopiformes = "Ammodytes",
     Moronidae = c("Morone", "Dicentrarchus"),
     Sebastidae = "Sebastes",
-    Hexagrammidae = "Pleurogrammus"
+    Hexagrammidae = "Pleurogrammus",
+    Argentinidae = "Argentina",
+    Lotidae = "Molva",
+    Anarhichadidae = "Anarhichas",
+    Anoplopomatidae = "Anoplopoma"
   )
   group_rank <- setNames(rep(seq_along(groups), lengths(groups)),
                         unlist(groups, use.names = FALSE))

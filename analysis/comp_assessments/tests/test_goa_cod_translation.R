@@ -11,8 +11,7 @@ obs <- translated$obs
 settings <- translated$settings
 stock <- .assessment_stock(source_data, do_fit = FALSE, silent = TRUE)$env
 
-annual_years <- sort(unique(stats::na.omit(stock$age_key$year)))
-pooled_key <- stock$age_key[is.na(stock$age_key$year), , drop = FALSE]
+pooled_key <- stock$age_key
 pooled_catch <- stock$.goa_age_shares(
   stock$inputs, pooled_key, "catch", "Trawl fishery", "",
   stock$years, stock$ages
@@ -27,23 +26,19 @@ trawl_shares <- stock$catch_shares[
 ]
 pooled_catch_match <- match(share_key(trawl_shares), share_key(pooled_catch))
 
-tinyAM::check_obs(obs)
+tinyAM::check_tam_data(obs)
 stopifnot(
   identical(source_data$inputs, inputs_before),
   identical(translated$years, 2007:2025),
   identical(translated$ages, 1:10),
   translated$age_plus_group == 10,
-  identical(annual_years, 2007:2024),
+  !"year" %in% names(pooled_key),
   nrow(pooled_key) > 0L,
   !anyNA(pooled_catch_match),
-  any(abs(
-    trawl_shares$proportion -
-      pooled_catch$proportion[pooled_catch_match]
-  ) > 1e-6),
-  isTRUE(all.equal(
-    trawl_shares$proportion[trawl_shares$year == 2025],
-    pooled_catch$proportion[pooled_catch$year == 2025]
-  )),
+  isTRUE(all.equal(trawl_shares$proportion,
+    pooled_catch$proportion[pooled_catch_match])),
+  all(abs(aggregate(age_given_length ~ type + fleet + survey +
+    length_bin_lower + length_bin_upper, pooled_key, sum)$age_given_length - 1) < 1e-12),
   isTRUE(all.equal(stock$index_shares, pooled_index)),
   nrow(obs$catch) == 19L * 10L,
   nrow(obs$index) == 10L * 10L,
@@ -51,8 +46,8 @@ stopifnot(
   all(is.finite(obs$index$obs)),
   identical(settings$N_settings$process, "off"),
   identical(settings$N_settings$init, "exp"),
-  identical(settings$F_settings$process, "iid"),
-  grepl("age", paste(deparse(settings$F_settings$mu_form), collapse = "")),
+  identical(settings$F_settings$process, "cor_rw"),
+  is.null(settings$F_settings$mu_form),
   identical(settings$M_settings$process, "off"),
   identical(settings$M_settings$mu_form, NULL),
   grepl(
@@ -60,10 +55,10 @@ stopifnot(
     paste(deparse(settings$M_settings$mu_supplied), collapse = "")
   ),
   grepl(
-    "q_block",
-    paste(deparse(settings$index_settings$q_form), collapse = "")
+    "logistic(age)",
+    paste(deparse(settings$index_settings$q_form), collapse = ""), fixed = TRUE
   ),
-  length(unique(obs$index$q_block)) > 1L,
+  grepl("rw(year)", paste(deparse(settings$index_settings$q_form), collapse = ""), fixed = TRUE),
   all(is.finite(obs$pop_covariates$M_assumption)),
   all(obs$pop_covariates$M_assumption[obs$pop_covariates$year %in% 2014:2016] == 0.84),
   all(obs$pop_covariates$M_assumption[!obs$pop_covariates$year %in% 2014:2016] == 0.50),

@@ -28,10 +28,10 @@ obs$index$sd_block <- interaction(
   drop = TRUE, lex.order = TRUE
 )
 obs$catch$sd_block <- factor(ifelse(obs$catch$age == 1, "age1", "age2plus"))
-obs$pop_covariates$f_age_group <- factor(
-  ifelse(obs$pop_covariates$age == 1, "age1",
-    ifelse(obs$pop_covariates$age == 2, "age2",
-      ifelse(obs$pop_covariates$age <= 4, "age3_4", "age5plus"))),
+obs$catch$f_age_group <- factor(
+  ifelse(obs$catch$age == 1, "age1",
+    ifelse(obs$catch$age == 2, "age2",
+      ifelse(obs$catch$age <= 4, "age3_4", "age5plus"))),
   levels = c("age1", "age2", "age3_4", "age5plus")
 )
 

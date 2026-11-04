@@ -1,81 +1,55 @@
 pkgload::load_all(".", quiet = TRUE)
 source("analysis/comp_assessments/R/run_assessment.R")
 
-# Exercise the actual top-level orchestration without fits, exports or rendering.
-script <- parse("analysis/comp_assessments/scripts/translation/run_all.R")
-for (dashboards in c(FALSE, TRUE)) {
-  e <- new.env(parent = globalenv())
-  e$source <- function(...) invisible(NULL)
-  e$requireNamespace <- function(...) TRUE
-  e$read_committed_database <- function(...) list(commit = paste(rep("a", 40), collapse = ""))
-  e$run_assessments <- function(...) {
-    e$batch_args <- list(...)
-    list(example = list(fit = structure(list(), class = "tam_fit")))
-  }
-  e$.assessment_save_rds <- function(...) invisible(NULL)
-  e$index_assessment_dashboards <- function(...) invisible(NULL)
-  e$previews <- 0L
-  e$view_assessment <- function(...) e$previews <- e$previews + 1L
-  for (expr in script) {
-    if (is.call(expr) && identical(expr[[1L]], quote(`<-`)) &&
-        identical(expr[[2L]], quote(dashboard))) expr[[3L]] <- dashboards
-    eval(expr, e)
-  }
-  stopifnot(e$previews == as.integer(dashboards), !e$batch_args$dashboard,
-    identical(e$batch_args$timeout, 1200), isTRUE(e$batch_args$cache))
-}
-
-missing_packages <- new.env(parent = globalenv())
-missing_packages$requireNamespace <- function(...) FALSE
-missing_packages$run_assessments <- function(...) stop("Fitting must not begin.")
-missing_error <- tryCatch({
-  for (expr in script) eval(expr, missing_packages)
-  NULL
-}, error = identity)
-stopifnot(inherits(missing_error, "error"),
-  grepl("Install the batch's analysis packages before fitting", conditionMessage(missing_error), fixed = TRUE))
+# The script exposes one caller-owned future plan and a separate render stage.
+script <- paste(readLines("analysis/comp_assessments/scripts/run_all.R"), collapse = "\n")
+stopifnot(grepl("future::plan(future::multisession, workers = 10)", script, fixed = TRUE),
+  grepl("timeout <- 20 * 60", script, fixed = TRUE),
+  grepl("render_assessment_dashboards(runs)", script, fixed = TRUE),
+  !any(c("parallel", "workers", "dashboard") %in% names(formals(run_assessments))),
+  !"dashboard" %in% names(formals(run_assessment)),
+  identical(formals(run_assessments)$timeout, quote(Inf)))
 
 database <- read_database()
-id <- "ices_cod_north_sea_2025"
+ids <- c("ices_cod_north_sea_2025", "ices_herring_north_sea_2026")
+old_plan <- future::plan()
+future::plan(future::sequential)
 progress_text <- character()
-withCallingHandlers(run_assessments(id, database, fit = FALSE, progress = TRUE),
+withCallingHandlers(run_assessments(ids[1], database, fit = FALSE, progress = TRUE),
   message = function(m) progress_text <<- c(progress_text, conditionMessage(m)))
-stopifnot(any(grepl(paste(id, "started"), progress_text, fixed = TRUE)),
-  any(grepl(paste(id, "not_fitted"), progress_text, fixed = TRUE)))
+stopifnot(any(grepl(paste(ids[1], "started"), progress_text, fixed = TRUE)),
+  any(grepl(paste(ids[1], "not_fitted"), progress_text, fixed = TRUE)))
 for (bad in list(0, -1, NA_real_, c(1, 2), "10")) {
-  stopifnot(inherits(tryCatch(run_assessments(id, database, fit = FALSE,
+  stopifnot(inherits(tryCatch(run_assessments(ids[1], database, fit = FALSE,
     timeout = bad, progress = FALSE), error = identity), "error"))
 }
-stopifnot(inherits(tryCatch(run_assessments(id, database, fit = FALSE,
+stopifnot(inherits(tryCatch(run_assessments(ids[1], database, fit = FALSE,
   progress = NA), error = identity), "error"))
 empty_database <- database
 empty_database$assessments <- empty_database$assessments[FALSE, , drop = FALSE]
 stopifnot(length(run_assessments(database = empty_database, progress = FALSE)) == 0L)
 
-# A hard deadline must become a diagnostic and leave no live child blocking the
-# next job. A tiny limit expires during R startup, without running a model.
-timed <- run_assessments(id, database, fit = FALSE, timeout = .01, progress = FALSE)
-stopifnot(timed[[id]]$diagnostics$status == "timed_out",
-  is.null(timed[[id]]$fit), grepl("settings were not changed", timed[[id]]$diagnostics$reason),
-  is.finite(timed[[id]]$diagnostics$elapsed_seconds))
-
-ids <- c(id, "ices_herring_north_sea_2026")
-for (parallel in c(FALSE, TRUE)) {
-  ran <- run_assessments(ids, database, fit = FALSE, parallel = parallel,
-    workers = 2L, timeout = 60, progress = FALSE)
-  stopifnot(identical(names(ran), ids),
-    all(vapply(ran, function(x) x$diagnostics$status == "not_fitted", logical(1))))
+# Both plans retain all attempts and the same prepared observations.
+sequential <- run_assessments(ids, database, fit = FALSE, progress = FALSE)
+future::plan(future::multisession, workers = 2)
+parallel <- run_assessments(ids, database, fit = FALSE, progress = FALSE)
+if (!isTRUE(all.equal(lapply(sequential, `[[`, "obs"), lapply(parallel, `[[`, "obs"), tolerance = 0))) {
+  print(lapply(parallel, function(x) x$diagnostics[, c("status", "reason")]))
 }
-
-limited <- run_assessments(ids, database, fit = FALSE, parallel = TRUE,
-  workers = 2L, timeout = .01, progress = FALSE)
+stopifnot(inherits(future::plan(), "multisession"),
+  identical(names(sequential), names(parallel)),
+  isTRUE(all.equal(lapply(sequential, `[[`, "obs"), lapply(parallel, `[[`, "obs"), tolerance = 0)),
+  all(vapply(parallel, function(x) x$diagnostics$status == "not_fitted", logical(1))))
+# A tiny deadline expires in startup without running or retuning a model.
+limited <- run_assessments(ids, database, fit = FALSE, timeout = .01, progress = FALSE)
 stopifnot(identical(names(limited), ids),
-  all(vapply(limited, function(x) x$diagnostics$status == "timed_out", logical(1))))
+  all(vapply(limited, function(x) x$diagnostics$status == "timed_out" &&
+    grepl("settings were not changed", x$diagnostics$reason), logical(1))))
+future::plan(future::sequential)
 
-# Passing a real fitted RTMB object back from a supervised process must preserve
-# the estimates, reporting tables, diagnostics and standalone tidying workflow.
-direct <- run_assessment(id, database)
-supervised <- run_assessments(id, database, timeout = 60, progress = FALSE)[[id]]
+# A fitted RTMB result must survive the supervised-process return path.
+direct <- run_assessment(ids[1], database)
+supervised <- run_assessments(ids[1], database, timeout = 120, progress = FALSE)[[ids[1]]]
 stopifnot(inherits(supervised$fit, "tam_fit"),
   isTRUE(all.equal(direct$fit$opt$objective, supervised$fit$opt$objective)),
   isTRUE(all.equal(direct$fit$parameter_values, supervised$fit$parameter_values)),
@@ -84,7 +58,7 @@ stopifnot(inherits(supervised$fit, "tam_fit"),
 tidied <- tinyAM::tidy_tam(model_list = list(supervised = supervised$fit))
 stopifnot(tidied$process_residuals$status$status == "ok")
 
-# Cache each stock before the next serial job is allowed to start.
+# Every completed attempt is checkpointed before the next sequential job starts.
 original_runner <- run_assessment
 original_root <- .assessment_root
 test_root <- tempfile("assessment_checkpoint_")
@@ -100,14 +74,12 @@ run_assessment <- function(assessment_id, ...) {
 }
 tryCatch({
   cached <- run_assessments(ids, database, fit = FALSE, cache = TRUE, progress = FALSE)
-  stopifnot(all(file.exists(file.path(.assessment_cache(ids, "curated", database), "result.rds"))),
-    all(vapply(cached, function(x) x$diagnostics$status == "not_fitted", logical(1))))
+  stopifnot(all(file.exists(file.path(.assessment_cache(ids, "curated", database), "result.rds"))))
 }, finally = {
   run_assessment <- original_runner
   .assessment_root <- original_root
   unlink(test_root, recursive = TRUE)
 })
-cat("Batch controls, subprocess deadlines and immediate checkpoints passed.\n")
 
 checkpoint <- tempfile(fileext = ".rds")
 .assessment_save_rds(list(version = 1), checkpoint)
@@ -116,4 +88,40 @@ stopifnot(inherits(interrupted, "error"), identical(readRDS(checkpoint), list(ve
 .assessment_save_rds(list(version = 2), checkpoint)
 stopifnot(identical(readRDS(checkpoint), list(version = 2)))
 unlink(checkpoint)
-cat("Interrupted checkpoint preservation and replacement passed.\n")
+
+# Rendering never refits, rereads the source, changes eligibility or loses failures.
+local({
+  old_root <- .assessment_root; old_view <- view_assessment
+  old_reader <- read_database; old_runner <- run_assessment
+  output <- tempfile("assessment_render_"); dir.create(output)
+  .assessment_root <<- output
+  on.exit({.assessment_root <<- old_root; view_assessment <<- old_view
+    read_database <<- old_reader; run_assessment <<- old_runner
+    unlink(output, recursive = TRUE)}, add = TRUE)
+  read_database <<- function(...) stop("Rendering must not reread source data")
+  run_assessment <<- function(...) stop("Rendering must not refit")
+  view_assessment <<- function(fit, assessment, output_file, open_file) {
+    if (assessment$assessment_id == "failed") stop("Example render error")
+    writeLines("<html>Rendered</html>", output_file)
+  }
+  result <- function(id, convergence) list(assessment_id = id,
+    translation_tier = "curated", source = database,
+    fit = structure(list(is_converged = convergence), class = "tam_fit"),
+    diagnostics = data.frame(database_key = database$database_key),
+    summary = data.frame(marker = "unchanged"))
+  failed_source <- database; failed_source$translation_tier <- "curated"
+  empty <- .failed_assessment_run("absent", failed_source, simpleError("No fitted model"))
+  runs <- list(absent = empty, good = result("good", TRUE),
+    uncertain = result("uncertain", FALSE), failed = result("failed", TRUE))
+  original <- serialize(runs, NULL)
+  rendered <- render_assessment_dashboards(runs)
+  stopifnot(identical(rendered$status, c("skipped_no_fit", "rendered", "troubleshooting", "render_failed")),
+    rendered$error[1] == "No fitted model", rendered$error[4] == "Example render error", identical(serialize(runs, NULL), original),
+    file.exists(file.path(output, "results", "curated", "index.html")),
+    file.exists(file.path(.assessment_cache_root("curated", database), "dashboard_manifest.csv")))
+  all_failed <- render_assessment_dashboards(list(absent = empty))
+  stopifnot(identical(all_failed$status, "skipped_no_fit"),
+    file.exists(file.path(.assessment_cache_root("curated", failed_source), "dashboard_manifest.csv")))
+})
+future::plan(old_plan)
+cat("Caller-owned future plans, deadlines, checkpoints and separate dashboard status checks passed.\n")

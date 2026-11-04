@@ -71,13 +71,7 @@ stopifnot(
 other_assessment <- database$assessments[
   database$assessments$assessment_id == "ices_haddock_iceland_2025", ]
 stopifnot(nrow(other_assessment) == 1L, !isTRUE(other_assessment$is_current))
-review <- paste(readLines(file.path(saio_path(), "source_reviews", "ices_haddock_iceland_2026.md"), warn = FALSE), collapse = " ")
-stopifnot(
-  grepl("4,000 g", review, fixed = TRUE),
-  grepl("role in the assessment projections is not specified", review, fixed = TRUE),
-  grepl("Fbar", review, fixed = TRUE),
-  grepl("interval coverage", review, fixed = TRUE),
-  grepl("not used to fill gaps", review, fixed = TRUE)
-)
+# Source-review text is validated in SAIO; this test checks the cached source records.
+
 
 cat("Icelandic haddock 2026 source records passed.\n")

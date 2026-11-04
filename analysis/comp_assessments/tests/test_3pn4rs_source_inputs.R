@@ -1,8 +1,6 @@
 source("analysis/comp_assessments/R/read_database.R")
 root <- file.path("analysis", "comp_assessments")
-inputs <- read.csv(file.path(saio_path(), "database", "inputs.csv"),
-  stringsAsFactors = FALSE
-)
+inputs <- read_database()$inputs
 inputs <- inputs[inputs$assessment_id == "dfo_cod_3pn4rs_2025", ]
 index <- inputs[inputs$type == "index", ]
 weights <- inputs[inputs$type == "catch_weight", ]
@@ -58,7 +56,7 @@ stopifnot(
 )
 
 source(file.path(root, "R", "run_assessment.R"))
-source_data <- read_assessment("dfo_cod_3pn4rs_2025", read_database(tier = "preliminary"))
+source_data <- read_assessment("dfo_cod_3pn4rs_2025", read_database())
 before <- source_data
 obs <- database_to_tam_obs(
   "dfo_cod_3pn4rs_2025", source_data$inputs,
@@ -73,7 +71,7 @@ stopifnot(
   nrow(obs$weight) == 30L * 10L,
   nrow(obs$maturity) == 30L * 10L,
   all(is.finite(obs$pop_covariates$M_assumption)),
-  identical(tinyAM::check_obs(obs), TRUE),
+  identical(tinyAM::check_tam_data(obs), TRUE),
   identical(source_data, before),
   source_data$assessment$inputs_status == "partial"
 )

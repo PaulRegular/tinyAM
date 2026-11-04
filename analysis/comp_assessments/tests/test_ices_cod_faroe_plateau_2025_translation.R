@@ -1,10 +1,10 @@
 root <- file.path("analysis", "comp_assessments")
 pkgload::load_all(".", quiet = TRUE)
-source(file.path(root, "R", "read_database.R"))
+source(file.path(root, "R", "run_assessment.R"))
 source(file.path(root, "R", "database_to_tam_obs.R"))
 
 id <- "ices_cod_faroe_plateau_2025"
-source_data <- read_assessment(id, read_database(tier = "preliminary"))
+source_data <- read_assessment(id, read_database())
 env <- new.env(parent = globalenv())
 env$source <- source_data
 env$do_fit <- FALSE

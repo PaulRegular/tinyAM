@@ -13,7 +13,7 @@ source(file.path(root, "R", "read_database.R"))
 source(file.path(root, "R", "translation_registry.R"))
 if (!exists("translation_tier", inherits = FALSE)) translation_tier <- "curated"
 results_dir <- .assessment_results(translation_tier)
-plot_database <- .saio_metadata(tier = translation_tier)
+plot_database <- if (exists("database", inherits = FALSE)) database else read_database()
 .assessment_check_results_revision(results_dir, plot_database)
 translation_ids <- assessment_translations(translation_tier)$assessment_id
 source(file.path(root, "R", "plot_stock_order.R"))
@@ -25,9 +25,9 @@ ts <- read_csv(
 )
 batch_runs <- .assessment_cached_runs(translation_tier, plot_database)
 
-assessments <- .saio_read_table("assessments.csv", revision = plot_database$commit)
+assessments <- plot_database$assessments
 
-stocks <- .saio_read_table("stocks.csv", revision = plot_database$commit)
+stocks <- plot_database$stocks
 
 ts <- ts |> filter(assessment_id %in% translation_ids)
 
