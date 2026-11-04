@@ -2,6 +2,10 @@
 # Rscript data-raw/sim_cod_obs.R prepare /path/to/SimSurvey
 # Rscript data-raw/validate_sim_cod.R
 # SimSurvey source revision is deliberately fixed. No automatic install/update.
+# The original 80 x 80 grid can require several GB of RAM; run generation alone.
+# Packaged data and the guides do not run this script. For a separate coarser
+# experiment, use grid$res = c(7, 7) (40 x 40 cells) and a distinct cache_dir.
+# That changes the spatial realization and requires fresh data/model validation.
 #
 # Population settings reproduce Regular et al. (2020), S1/S2 supplements. The
 # rigid grid rotation changes orientation only. DFO Data Report 1381 (2024)
