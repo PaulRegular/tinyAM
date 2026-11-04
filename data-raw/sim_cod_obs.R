@@ -16,6 +16,11 @@
 # represent aggregate fishing days/hauls, not calibrated literal survey effort.
 # No contemporary critical-zone TAC or closures are imposed. All fleets have
 # positive allocations in all years; access can still cause recorded shortfalls.
+# For fleet f/year t, A=sum(N_region*s*(1-exp(-Z))) and
+# G=sum(N_total*s*(1-exp(-Z))). Effective fishery_share=base_share*A/G makes
+# the reference annual catch base_share*A. This allocates existing deaths using
+# operating-model access; it is neither an assessment predictor nor F feedback
+# into future populations. Targeting can still concentrate local/age removals.
 # Stock/catch weights and age maturity are assumed known teaching inputs. The
 # weight relationship is the 3Ps reference allometry in Data Report 1381 Table10;
 # maturity(age) is deliberately illustrative, not the default female length curve.
@@ -144,23 +149,37 @@ raise_sim_cod_catch <- function(operations, samples, ages, years, fleets,
     Sentinel = function(length) stats::plogis((length - 50) / 5) * stats::plogis((80 - length) / 5))
 }
 
-.sim_cod_fisheries <- function(settings, selectivity) {
+.sim_cod_fisheries <- function(settings, selectivity, allocations) {
   # Operations are aggregate fishing-day/haul units. Capacity and encounter
   # coefficients are illustrative; no claim of calibrated net/hook saturation.
   common <- c(list(selectivity_by = "length", targeting = 1, exploration = 0.05,
     knowledge_sd = 0.2, max_operations = settings$max_operations, light = FALSE,
     maturity_sampling = "none"), settings$monitoring)
-  gillnet <- do.call(SimSurvey::sim_fishery, c(list(fishery_share = settings$shares[["Gillnet"]],
+  shares <- lapply(names(settings$shares), function(fleet) {
+    rows <- allocations[allocations$fleet == fleet, ]
+    stats::setNames(rows$fishery_share[match(settings$years, rows$year)], settings$years)
+  })
+  names(shares) <- names(settings$shares)
+  gillnet <- do.call(SimSurvey::sim_fishery, c(list(fishery_share = shares$Gillnet,
     catch_model = SimSurvey::sim_capture(q = 0.02, capacity_per_gear = 150),
-    selectivity = selectivity$Gillnet, gear_amount = 60, duration = 24,
+    selectivity = selectivity$Gillnet, gear_amount = function(operation) {
+      if (operation$fishery_operation == 1L) message("Gillnet: year ", operation$year)
+      60
+    }, duration = 24,
     gear_unit = "net", time_unit = "hour", subset_cells = quote(Gillnet)), common))
-  longline <- do.call(SimSurvey::sim_fishery, c(list(fishery_share = settings$shares[["Longline"]],
+  longline <- do.call(SimSurvey::sim_fishery, c(list(fishery_share = shares$Longline,
     catch_model = SimSurvey::sim_capture(q = 0.001, capacity_per_gear = 1),
-    selectivity = selectivity$Longline, gear_amount = 4000, duration = 24,
+    selectivity = selectivity$Longline, gear_amount = function(operation) {
+      if (operation$fishery_operation == 1L) message("Longline: year ", operation$year)
+      4000
+    }, duration = 24,
     gear_unit = "hook", time_unit = "hour", subset_cells = quote(Longline)), common))
-  trawl <- do.call(SimSurvey::sim_fishery, c(list(fishery_share = settings$shares[["Trawl"]],
+  trawl <- do.call(SimSurvey::sim_fishery, c(list(fishery_share = shares$Trawl,
     catch_model = SimSurvey::sim_capture(q = 2, capacity_per_gear = 10000),
-    selectivity = selectivity$Trawl, gear_amount = 1, duration = 4,
+    selectivity = selectivity$Trawl, gear_amount = function(operation) {
+      if (operation$fishery_operation == 1L) message("Trawl: year ", operation$year)
+      1
+    }, duration = 4,
     gear_unit = "trawl", time_unit = "hour", subset_cells = quote(Trawl)), common))
   list(Gillnet = gillnet, Longline = longline, Trawl = trawl)
 }
@@ -215,7 +234,27 @@ raise_sim_cod_catch <- function(operations, samples, ages, years, fleets,
   do.call(rbind, answer)
 }
 
-.sim_cod_tables <- function(simulation, settings, selectivity, available, provenance) {
+.sim_cod_allocations <- function(population, settings, available) {
+  result <- list()
+  for (fleet in names(settings$shares)) for (year in settings$years) {
+    rows <- available[available$program == fleet & available$year == year, ]
+    z <- population$Z[cbind(match(rows$age, settings$ages), match(rows$year, settings$years))]
+    global <- sum(rows$N_total * rows$selection * -expm1(-z))
+    accessible <- sum(rows$N_region * rows$selection * -expm1(-z))
+    if (!is.finite(global) || !is.finite(accessible) || global <= 0 || accessible <= 0 || accessible > global) {
+      stop("Every active fleet/year requires positive accessible and global vulnerable deaths: ", fleet, " / ", year)
+    }
+    fraction <- accessible / global
+    base <- unname(settings$shares[[fleet]])
+    result[[length(result) + 1L]] <- data.frame(fleet = fleet, year = year,
+      base_share = base, fishery_share = base * fraction, access_fraction = fraction,
+      global_vulnerable_deaths = global, accessible_vulnerable_deaths = accessible,
+      target = base * accessible)
+  }
+  do.call(rbind, result)
+}
+
+.sim_cod_tables <- function(simulation, settings, selectivity, available, provenance, allocations) {
   ages <- settings$ages
   years <- settings$years
   fleets <- names(settings$shares)
@@ -225,7 +264,7 @@ raise_sim_cod_catch <- function(operations, samples, ages, years, fleets,
   catch <- raised$catch
   catch$obs <- catch$obs / 1000
   catch$unit <- "thousand fish"
-  index <- survey_precision <- list()
+  index <- survey_precision <- survey_monitoring <- list()
   for (survey in names(settings$survey_density)) {
     selected <- SimSurvey::select_survey(simulation, survey)
     stratified <- SimSurvey::run_strat(selected, alk_scale = "set")
@@ -235,8 +274,8 @@ raise_sim_cod_catch <- function(operations, samples, ages, years, fleets,
     index[[survey]] <- data.frame(year = table$year, age = table$age, obs = table$total / 1000,
       survey = survey, samp_time = 0, unit = "thousand fish")
     survey_precision[[survey]] <- data.frame(year = table$year, age = table$age,
-      survey = survey, sets = table$sets, total_se = table$sd * table$sampling_units / 1000,
-      n_measured = NA_integer_, n_aged = NA_integer_)
+      survey = survey, sets = table$sets, total_se = table$sd * table$sampling_units / 1000)
+    survey_monitoring[[survey]] <- transform(as.data.frame(selected$samp_totals), survey = survey)
   }
   index <- do.call(rbind, index)
   key <- simulation$sim_length(age = ages, length_age_key = TRUE)
@@ -308,14 +347,18 @@ raise_sim_cod_catch <- function(operations, samples, ages, years, fleets,
   accessibility <- lapply(fleets, function(fleet) {
     regional <- available[available$program == fleet, ]
     z <- population$Z[match(paste(regional$year, regional$age), paste(population$year, population$age))]
+    allocation <- allocations[allocations$fleet == fleet, ]
     # Separate-fleet necessary bound, not a guarantee under competition. Use
     # ceil(expected deaths) as an upper bound on balanced integer age budgets.
-    regional$target <- regional$N_total * settings$shares[[fleet]] * regional$selection * -expm1(-z)
+    regional$target <- regional$N_total * allocation$fishery_share[match(regional$year, allocation$year)] *
+      regional$selection * -expm1(-z)
+    regional$accessible_expected_deaths <- regional$N_region * regional$selection * -expm1(-z)
     regional$accessible_bound <- pmin(regional$N_region,
       ceiling(regional$N_total * 1000 * -expm1(-z)) / 1000)
-    table <- stats::aggregate(regional[c("target", "accessible_bound")], regional["year"], sum)
+    table <- stats::aggregate(regional[c("target", "accessible_bound", "accessible_expected_deaths")], regional["year"], sum)
     table$fleet <- fleet
     table$target_exceeds_bound <- table$target > table$accessible_bound
+    table$local_reference_fraction <- table$target / table$accessible_expected_deaths
     table
   })
   checks$accessibility <- do.call(rbind, accessibility)
@@ -323,6 +366,8 @@ raise_sim_cod_catch <- function(operations, samples, ages, years, fleets,
     surveys = regional, footprint = footprint, selectivity = curves,
     fishery_annual = as.data.frame(simulation$fishery$annual),
     monitoring = raised$monitoring, survey_precision = do.call(rbind, survey_precision),
+    survey_monitoring = do.call(rbind, survey_monitoring),
+    allocations = allocations,
     checks = checks, provenance = provenance)
   list(sim_cod_obs = dat, sim_cod_truth = truth)
 }
@@ -330,6 +375,7 @@ raise_sim_cod_catch <- function(operations, samples, ages, years, fleets,
 build_sim_cod_obs <- function(simsurvey_repo, repo = ".", cache_dir = file.path(repo, "data-raw", "cache", "sim_cod"),
                               overwrite = FALSE) {
   settings <- sim_cod_settings()
+  RNGkind("Mersenne-Twister", "Inversion", "Rejection")
   if (missing(simsurvey_repo) || !nzchar(simsurvey_repo)) stop("Supply a clean SimSurvey checkout at the recorded revision; see data-raw/sim_cod_obs.R.")
   revision <- .sim_cod_git(simsurvey_repo)
   if (!identical(revision, settings$simsurvey_revision)) stop("SimSurvey revision differs from the recorded generation source.")
@@ -370,6 +416,7 @@ build_sim_cod_obs <- function(simsurvey_repo, repo = ".", cache_dir = file.path(
   runtime <- vapply(c("SimSurvey", "sf", "stars", "data.table"), function(x) as.character(utils::packageVersion(x)), character(1))
   source_files <- list.files(file.path(simsurvey_repo, "R"), "[.]R$", full.names = TRUE)
   provenance <- list(simsurvey_revision = revision, seed = settings$seed, settings = settings,
+    rng_kind = RNGkind(),
     sources = stats::setNames(unname(tools::md5sum(source_files)), basename(source_files)),
     generator_md5 = unname(tools::md5sum(file.path(repo, "data-raw", "sim_cod_obs.R"))),
     runtime = c(R = as.character(getRversion()), runtime),
@@ -378,16 +425,19 @@ build_sim_cod_obs <- function(simsurvey_repo, repo = ".", cache_dir = file.path(
   population_key <- .sim_cod_hash(list(settings[c("seed", "ages", "years", "recruitment",
     "mortality", "growth", "grid", "spatial", "depth", "weight", "maturity")],
     body(.sim_cod_population), body(.sim_cod_grid), provenance$sources, provenance$runtime))
-  fishery_key <- .sim_cod_hash(list(population_key, settings$shares, settings$monitoring,
-    settings$max_operations, body(.sim_cod_fisheries), body(.sim_cod_selectivity)))
-  survey_key <- .sim_cod_hash(list(fishery_key, settings$survey_density, settings$survey_sampling,
-    body(.sim_cod_surveys)))
   population <- cached("population", population_key, function() .sim_cod_population(settings))
   selectivity <- .sim_cod_selectivity()
   available <- .sim_cod_available(population$value, settings, selectivity)
+  allocations <- .sim_cod_allocations(population$value, settings, available)
+  provenance$allocation <- list(method = "base_share * accessible/global vulnerable expected deaths",
+    table_hash = .sim_cod_hash(allocations))
+  fishery_key <- .sim_cod_hash(list(population_key, allocations, settings$monitoring,
+    settings$max_operations, body(.sim_cod_allocations), body(.sim_cod_fisheries), body(.sim_cod_selectivity)))
+  survey_key <- .sim_cod_hash(list(fishery_key, settings$survey_density, settings$survey_sampling,
+    body(.sim_cod_surveys)))
   fisheries <- cached("fisheries", fishery_key, function() {
     assign(".Random.seed", population$rng, envir = .GlobalEnv)
-    configs <- .sim_cod_fisheries(settings, selectivity)
+    configs <- .sim_cod_fisheries(settings, selectivity, allocations)
     result <- do.call(SimSurvey::sim_fisheries, c(list(sim = population$value, n_sims = 1), configs))
     list(value = result, rng = .Random.seed)
   })
@@ -396,7 +446,22 @@ build_sim_cod_obs <- function(simsurvey_repo, repo = ".", cache_dir = file.path(
     .sim_cod_surveys(fisheries$value, settings, selectivity)
   })
   provenance$records <- records
-  result <- .sim_cod_tables(surveys, settings, selectivity, available, provenance)
+  warnings <- character()
+  started <- proc.time()[["elapsed"]]
+  error <- NULL
+  result <- tryCatch(withCallingHandlers(
+    .sim_cod_tables(surveys, settings, selectivity, available, provenance, allocations),
+    warning = function(w) {
+      warnings <<- c(warnings, conditionMessage(w))
+      invokeRestart("muffleWarning")
+    }), error = function(e) { error <<- conditionMessage(e); NULL })
+  provenance$records$tables <- list(warnings = warnings, error = error,
+    elapsed_seconds = proc.time()[["elapsed"]] - started)
+  if (!is.null(error)) {
+    saveRDS(list(provenance = provenance), file.path(cache_dir, "generation-report.rds"))
+    stop("Table preparation failed; see the retained generation report. ", error)
+  }
+  result$sim_cod_truth$provenance <- provenance
   dir.create(file.path(repo, "data"), showWarnings = FALSE)
   sim_cod_obs <- result$sim_cod_obs
   sim_cod_truth <- result$sim_cod_truth
