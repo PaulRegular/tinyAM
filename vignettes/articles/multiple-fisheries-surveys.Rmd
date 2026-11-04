@@ -1,0 +1,240 @@
+---
+title: "Fit multiple fisheries and surveys"
+output: rmarkdown::html_document
+---
+
+```{r setup, include=FALSE}
+library(tinyAM)
+source_files <- list.files(system.file("R", package = "tinyAM"),
+  pattern = "[.](R|rdb|rdx)$", full.names = TRUE)
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>", warning = TRUE,
+  cache.extra = list(package = as.character(packageVersion("tinyAM")),
+    R = as.character(getRversion()), RTMB = as.character(packageVersion("RTMB")),
+    mgcv = as.character(packageVersion("mgcv")),
+    sources = unname(tools::md5sum(source_files)),
+    inputs = sim_cod_obs))
+```
+
+Different fishing gears remove different parts of a shared population. Surveys
+also differ in coverage and selectivity. tinyAM represents these differences
+with fleet-specific fishing mortality and survey-specific catchability, while
+retaining one population and natural-mortality surface.
+
+Here we use a simulated cod population inspired by 3Ps: active trawl, longline
+and gillnet fisheries, an offshore RV-like survey, and a coastal
+Sentinel-gillnet-like survey. These are teaching data, not observations from the
+3Ps assessment. No SimSurvey installation is needed to use them. The
+[dataset help](../reference/sim_cod_obs.html) documents generation, monitoring
+assumptions and the separate truth object.
+
+## Inspect the input keys
+
+```{r inputs}
+dat <- sim_cod_obs
+check_tam_data(dat)
+head(dat$catch)
+head(dat$index)
+```
+
+Catch has a complete year–age grid within each `fleet`. An unavailable catch is
+`NA`; it does not imply a closure. Each index row identifies `survey` and
+`samp_time`. Both simulated surveys observe the same annual snapshot, so their
+sampling fraction is zero. This deliberately removes seasonal timing from the
+example.
+
+F covariates belong in catch, q covariates in index, and recruitment/N/M
+covariates in the optional population table. The same routing applies to a
+single-fleet assessment. Fleet labels alone do not allocate an aggregate catch
+among fisheries: separate observed catches are required.
+
+The RV-like survey covers a broad offshore footprint. The regional survey
+concentrates denser sampling in a northern coastal band and has dome-shaped
+selection. The simulated coastline and depth restrictions are approximations.
+The Sentinel-like program retains swept-area sampling; it does not reproduce
+net saturation or literal fish-per-net CPUE.
+
+```{r footprints, fig.width=8, fig.height=3.6, fig.cap="Survey footprints on the synthetic grid. The northern edge represents the coast; grey cells are outside each survey's footprint."}
+local({
+  old <- par(mfrow = c(1, 2), mar = c(3.5, 3.5, 2, 0.5))
+  on.exit(par(old))
+  grid <- sim_cod_truth$footprint
+  for (survey in c("RV", "Sentinel")) {
+    selected <- grid[[survey]]
+    plot(grid$x, grid$y, asp = 1, pch = 15, cex = 0.45,
+      col = "grey90", xlab = "East-west (km)", ylab = "North-south (km)",
+      main = if (survey == "RV") "RV-like" else "Sentinel-gillnet-like")
+    points(grid$x[selected], grid$y[selected], pch = 15, cex = 0.45,
+    col = tam_cols()[if (survey == "RV") 1 else 7])
+  }
+})
+```
+
+Catch inputs are expanded monitoring estimates, not the simulator's true
+catches or raw counts of aged fish. Keep these distinctions when preparing your
+own data. Genuine zeros remain in the inputs but are excluded from the current
+lognormal likelihood. Missing biological samples must not be converted to zero
+catches.
+
+## Describe each fleet within one formula
+
+Start with fleet-specific annual effects and selectivity shapes. `for_fleet()`
+evaluates its inner formula only on the named fleet. Each inner formula includes
+an intercept, so the outer formula uses `~ 0 +` to avoid an extra common baseline.
+
+```{r fleet-formula}
+fishing <- ~ 0 +
+  for_fleet("Trawl", ~ factor(year) + logistic(age)) +
+  for_fleet("Longline", ~ factor(year) + logistic(age)) +
+  for_fleet("Gillnet", ~ factor(year) + double_logistic(age))
+```
+
+The trawl and longline relationships ascend toward a plateau; the gillnet curve
+can decline at older ages. These age-based shapes are hypotheses about the
+observed catches. The generator selects fish by length, and variability in
+length at age means its average age relationship need not match these curves
+exactly.
+The plotted curves are gear-selection inputs; realized F also reflects spatial
+access, capture and local depletion.
+
+```{r selection, fig.width=7, fig.height=3.8, fig.cap="Generating selectivity curves. Dashed lines identify surveys; solid lines identify fisheries."}
+local({
+  curves <- sim_cod_truth$selectivity
+  components <- c("Trawl", "Longline", "Gillnet", "RV", "Sentinel")
+  colors <- tam_cols()[c(1, 2, 3, 6, 7)]
+  line_types <- c(1, 1, 1, 2, 2)
+  plot(range(curves$length), c(0, 1), type = "n",
+    xlab = "Length (cm)", ylab = "Selectivity")
+  for (i in seq_along(components)) {
+    d <- curves[curves$component == components[i], ]
+    lines(d$length, d$selectivity, col = colors[i], lty = line_types[i], lwd = 2)
+  }
+  legend("bottomright", legend = components, col = colors, lty = line_types,
+    lwd = 2, bty = "n", cex = 0.85)
+})
+```
+
+`factor(year)` supplies a separate annual scale within each fleet. The
+double-logistic curve is its raw four-parameter product; its accompanying scale
+is not automatically maximum F. Simpler age groups and penalized smooths are
+also available. See [scopes](../reference/for_fleet.html),
+[curves](../reference/catchability_curves.html) and
+[smooths](../reference/smooth_formulas.html) when extending the example.
+
+## Give surveys their own relationships
+
+```{r survey-formula}
+catchability <- ~ 0 +
+  for_survey("RV", ~ logistic(age)) +
+  for_survey("Sentinel", ~ double_logistic(age))
+```
+
+These components have separate q scales and shapes. Under the default log link,
+q is positive and need not be below one: it relates the supplied index scale to
+modeled abundance. A regional survey measures abundance inside its footprint.
+Spatial redistribution can change the fraction of the population there, even
+when its gear selectivity stays constant. A constant-q relationship to total
+abundance is therefore an assumption to inspect, not a consequence of using a
+standardized sampling design.
+
+## Fit and compare a second hypothesis
+
+```{r separable, cache=TRUE, dependson=c("fleet-formula", "survey-formula")}
+separable <- fit_tam(
+  dat, ages = 1:14,
+  N_settings = list(process = "iid", init = "exp"),
+  rec_settings = list(process = "rw"),
+  F_settings = list(process = "off", mu_form = fishing, mean_ages = 5:10),
+  M_settings = list(process = "off", mu_supplied = ~ I(0.3), mean_ages = 5:10),
+  catch_settings = list(sd_form = ~ fleet),
+  index_settings = list(q_form = catchability, sd_form = ~ survey)
+)
+```
+
+For the alternative, replace the free annual scales with AR1 departures around
+each fleet's mean age curve:
+
+```{r flexible, cache=TRUE, dependson="separable"}
+fishing_process <- ~ 0 +
+  for_fleet("Trawl", ~ logistic(age)) +
+  for_fleet("Longline", ~ logistic(age)) +
+  for_fleet("Gillnet", ~ double_logistic(age))
+
+flexible <- update(separable,
+  F_settings = list(process = "ar1", mu_form = fishing_process,
+                   sd_form = ~ fleet)
+)
+check_tam(separable, flexible)
+```
+
+Age 14 is the modeled plus group, using retained biological inputs through age
+20. Average F and M are reported over ages 5–10. The finite-age generator and
+the fitted plus group remain an approximation; the dataset records tail losses.
+
+With F process off, each fleet's F follows its formula exactly and has no latent
+F process. The alternative does not also estimate an unrestricted annual mean
+for its AR1 departures. Process densities operate
+separately within fleets; shared correlation parameters do not correlate
+innovations between fleets. Observation SD formulas give each fleet and each
+survey its own precision.
+
+Both models allow IID cohort-survival variation while holding M at a working
+value of 0.3. Those deviations can accommodate departures from assumed mortality;
+they do not identify natural mortality separately from other apparent losses.
+The generator partitions a pre-generated total mortality budget, so neither
+example is its exact generating model. Remaining mortality varies, and regional
+availability changes. Parameter uncertainty also conditions on supplied biology.
+Inspect numerical and statistical diagnostics before interpreting the extra
+process variation.
+
+The shared population experiences total fishing mortality,
+
+\[
+F^{\mathrm{total}}_{t,a}=\sum_f F_{t,a,f},
+\qquad Z_{t,a}=M_{t,a}+F^{\mathrm{total}}_{t,a}.
+\]
+
+Each fleet's catch prediction uses its own F in the Baranov equation, with this
+common Z. Catch weights determine yield; stock weights determine biomass and
+SSB. Optional typed fleet catch weights must be complete, while stock rows have
+no fleet label. Both weight types use kg; the catch-number scale determines
+the resulting biomass units.
+
+## Inspect fleets, surveys and the common population
+
+```{r dashboard, eval=FALSE}
+vis_tam(Separable = separable, Flexible = flexible, open_file = FALSE)
+```
+
+In **Fisheries**, inspect each fleet's yield, catch-at-age, F and residuals;
+**Aggregate fishery** follows the fleet pages. The aggregate yield does not create
+an aggregate standardized residual. In **Surveys**, check the RV-like and
+Sentinel-like fits separately. Inspect age patterns and regional-survey residuals
+before interpreting total-population trends.
+
+```{r quantities}
+ssb <- get_ssb(Separable = separable, Flexible = flexible)
+plot_trend(ssb, color = ~model, colors = tam_pal(2), ylab = "SSB (tonnes)",
+           add_buttons = FALSE) |>
+  plotly::add_lines(data = sim_cod_truth$annual, x = ~year, y = ~SSB,
+    inherit = FALSE, name = "Generating SSB",
+    line = list(color = "#333333", dash = "dot"),
+    hovertemplate = "%{x}<br>%{y} tonnes<extra>Generating SSB</extra>") |>
+  add_plot_buttons()
+plot_matrix(get_f(flexible))
+```
+
+The dotted SSB line is known generating biomass and has no confidence interval.
+`get_f()` returns total age-specific F. Fleet-specific F is available in
+`tidy_pop(flexible)$F_fleet`. The separate simulation truth permits checks of
+abundance, mortality and regional availability; it should not be used to adjust
+observed indices until a fitted relationship looks satisfactory. This single
+realization demonstrates the workflow. It does not establish estimator bias,
+interval coverage or which model generalizes best.
+
+## Initial curve-hypothesis validation
+
+Both initial fits fail Hessian checks; the separable fit also fails optimizer
+and gradient checks. Private objective evaluations reproduce the fitted
+objectives exactly. Weak directions concern a nearly flat RV q curve and an
+extreme Sentinel descending midpoint, rather than a zero N-process SD. These
+attempts and their warnings are retained; their Wald intervals are unreliable.
