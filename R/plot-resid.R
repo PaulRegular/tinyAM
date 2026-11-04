@@ -1,3 +1,4 @@
+#' @name plot_tam
 #' @rdname plot_tam
 #' @export
 plot_bubbles <- function(data, res = NULL, y = ~age, ylab = "Age", title = NULL,
@@ -37,6 +38,7 @@ plot_bubbles <- function(data, res = NULL, y = ~age, ylab = "Age", title = NULL,
         x = ~year,
         y = y,
         marker = list(
+          line = list(width = 0),
           size     = ~abs_res,
           sizemin  = 1,
           sizeref  = 0.01,
@@ -58,6 +60,7 @@ plot_bubbles <- function(data, res = NULL, y = ~age, ylab = "Age", title = NULL,
 }
 
 
+#' @name plot_tam
 #' @rdname plot_tam
 #' @export
 plot_resid <- function(
@@ -143,7 +146,7 @@ plot_resid <- function(
     "Standardized residuals"
   } else if (type == "osa") "OSA residuals" else if (type == "standardized") {
     "Standardized residuals"
-  } else "Residuals (Auto)"
+  } else "Residuals"
 }
 
 .residual_plot_annotations <- function(status, type) {
@@ -157,7 +160,6 @@ plot_resid <- function(
   labels[!available] <- if (type == "osa") "OSA unavailable" else "Unavailable"
   if (nrow(status) > 1L) labels <- paste0(status$model, ": ", labels)
   text <- paste(labels, collapse = "; ")
-  if (type == "auto") text <- paste0("Auto: ", text)
   list(list(text = as.character(htmltools::htmlEscape(text)), x = 0, y = 1,
     xref = "paper", yref = "paper", xanchor = "left", yanchor = "bottom",
     yshift = 8, showarrow = FALSE, font = list(size = 10)))
@@ -203,8 +205,18 @@ plot_resid <- function(
   if (!is.data.frame(data)) cli::cli_abort("Residual plots require a data frame.")
   frame <- .residual_frame_values(data, args$frame)
   animated <- !is.null(args$frame) && length(frame$levels) > 1L
+  model_frame <- identical(args$frame, "model") ||
+    (inherits(args$frame, "formula") && identical(all.vars(args$frame), "model"))
   args$frame <- NULL
-  types <- c("auto", "standardized", "osa")
+  types <- c("standardized", "osa")
+  available <- .observation_residual_data(data, "auto")$status
+  # Resolve once for the complete panel, never from a partially observed frame.
+  default_type <- if (all(available$residual_type == "osa")) "osa" else "standardized"
+  defaults <- if (model_frame) {
+    available$residual_type[match(frame$levels, available$model)]
+  } else rep(default_type, length(frame$levels))
+  defaults[is.na(defaults)] <- "standardized"
+  default_views <- match(defaults, types) - 1L
   models <- if (is.factor(data$model)) levels(data$model) else unique(as.character(data$model))
   model_colors <- NULL
   if (kind == "scatter" && inherits(args$color, "formula") && identical(all.vars(args$color), "model")) {
@@ -229,6 +241,7 @@ plot_resid <- function(
       if (!is.null(yrange)) cell$layout$yaxis <- utils::modifyList(cell$layout$yaxis, list(range = yrange, autorange = FALSE))
       for (j in seq_along(cell$data)) {
         trace <- cell$data[[j]]
+        if (kind == "bubbles") trace$marker$line <- list(width = 0)
         if (kind == "bubbles" && length(trace$name) == 1L &&
             trace$name %in% c("+", "-") && is.character(sign_colors)) {
           trace$marker$color <- sign_colors[match(trace$name, c("+", "-"))]
@@ -262,17 +275,22 @@ plot_resid <- function(
     })
     views[[i]]$cells[[j]] <- cell
   }
+  initial_views <- if (type == "auto") default_views else
+    rep(match(type, types) - 1L, length(frame$levels))
   config <- list(views = views, frames = frame$levels, animated = animated,
-    prefix = frame$prefix, view = match(type, types) - 1L, frame = 0L)
-  initial <- views[[match(type, types)]]$cells[[1L]]
+    prefix = frame$prefix, view = initial_views[1L], frame = 0L,
+    automatic = type == "auto", defaultViews = default_views,
+    showSelector = any(available$residual_type == "osa"))
+  initial <- views[[initial_views[1L] + 1L]]$cells[[1L]]
   p <- plotly::plotly_build(plotly::plot_ly(type = "scatter", mode = "markers", x = numeric(), y = numeric()))
   p$x$data <- initial$data
   p$x$layout <- utils::modifyList(p$x$layout, initial$layout)
   if (animated) {
-    cells <- views[[match(type, types)]]$cells
-    p$x$frames <- lapply(seq_along(frame$levels), function(i) list(
-      name = frame$levels[i], data = cells[[i]]$data, layout = cells[[i]]$layout,
-      traces = seq_along(cells[[i]]$data) - 1L))
+    p$x$frames <- lapply(seq_along(frame$levels), function(i) {
+      cell <- views[[initial_views[i] + 1L]]$cells[[i]]
+      list(name = frame$levels[i], data = cell$data, layout = cell$layout,
+        traces = seq_along(cell$data) - 1L)
+    })
   }
   script <- paste(readLines(system.file("js", "residual-selection.js", package = "tinyAM"), warn = FALSE), collapse = "\n")
   htmlwidgets::onRender(p, script, data = config)

@@ -2,6 +2,7 @@ function(el, x, config) {
   'use strict';
   function array(value) { return Array.isArray(value) ? value : [value]; }
   config.frames = array(config.frames);
+  config.defaultViews = array(config.defaultViews);
   config.views.forEach(function(view) {
     view.cells.forEach(function(cell) {
       cell.data.forEach(function(trace) {
@@ -12,23 +13,28 @@ function(el, x, config) {
       });
     });
   });
-  var state = {view: config.view, frame: config.frame}, busy = false, pending = false;
+  var state = {view: config.view, frame: config.frame, automatic: config.automatic}, busy = false, pending = false;
+  function selectedView(frame) {
+    return state.automatic ? config.defaultViews[frame] : state.view;
+  }
   function draw() {
     if (busy) { pending = true; return; }
     busy = true;
-    var view = config.views[state.view], cell = view.cells[state.frame];
+    state.view = selectedView(state.frame);
+    var cell = config.views[state.view].cells[state.frame];
     var frames = config.frames.map(function(name, i) {
-      return {name: name, data: view.cells[i].data, layout: view.cells[i].layout,
-        traces: view.cells[i].data.map(function(trace, j) { return j; })};
+      var frameCell = config.views[selectedView(i)].cells[i];
+      return {name: name, data: frameCell.data, layout: frameCell.layout,
+        traces: frameCell.data.map(function(trace, j) { return j; })};
     });
     var layout = Object.assign({}, x.layout, cell.layout, {
-      autosize: true, margin: Object.assign({}, cell.layout.margin, {t: 100}),
+      autosize: true, margin: Object.assign({}, cell.layout.margin, {t: config.showSelector ? 100 : 60}),
       // Leave the upper-right modebar clear and reserve a separate method row.
-      updatemenus: [{name: 'tam-residual-type', type: 'dropdown',
+      updatemenus: config.showSelector ? [{name: 'tam-residual-type', type: 'dropdown',
         x: 0, y: 1, xanchor: 'left', yanchor: 'bottom', pad: {b: 28}, active: state.view,
-        buttons: ['Auto', 'Standardized', 'OSA'].map(function(label, i) {
+        buttons: ['Standardized', 'OSA'].map(function(label, i) {
           return {label: label, method: 'skip', execute: false, args: [i]};
-        })}],
+        })}] : [],
       sliders: config.animated ? [{active: state.frame, pad: {t: 45},
         currentvalue: {prefix: config.prefix}, steps: config.frames.map(function(name) {
           return {label: name, method: 'animate', args: [[name],
@@ -50,12 +56,17 @@ function(el, x, config) {
   el.on('plotly_buttonclicked', function(event) {
     if (!event.menu || event.menu.name !== 'tam-residual-type') return;
     state.view = event.button.args[0];
+    state.automatic = false;
     draw();
   });
   el.on('plotly_animatingframe', function(event) {
     var index = config.frames.indexOf(event.name);
     if (index >= 0) {
       state.frame = index;
+      if (state.automatic) {
+        state.view = config.defaultViews[index];
+        if (!busy && config.showSelector) Plotly.relayout(el, {'updatemenus[0].active': state.view});
+      }
       if (busy) pending = true;
     }
   });

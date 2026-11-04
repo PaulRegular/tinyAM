@@ -26,7 +26,7 @@
 #' objective, sampling uncertainty, calculating residuals or changing the fit.
 #' No additional diagramming package is required.
 #'
-#' @return A browsable HTML container with a responsive SVG diagram and model
+#' @return A browsable HTML container with responsive HTML nodes, SVG connectors and model
 #'   settings. Display it directly, or save it with [htmltools::save_html()].
 #' @examples
 #' \dontrun{
@@ -53,25 +53,42 @@ plot_model <- function(..., model_list = NULL) {
   })
   selector <- if (length(fits) > 1L) htmltools::tags$label(
     "Model ", htmltools::tags$select(`aria-label` = "Model structure model",
-      onchange = paste0("var c=this.closest('.tam-model-structure');",
-        "var v=this.value;c.querySelectorAll('[data-model-pane]').forEach(",
-        "function(p){p.style.display=p.getAttribute('data-model-pane')===v?'':'none';});"),
+      `data-model-selector` = "",
       lapply(seq_along(fits), function(i) htmltools::tags$option(
         value = as.character(i), selected = if (i == first) "selected" else NULL,
         names(fits)[i]))))
   htmltools::browsable(htmltools::tags$div(class = "tam-model-structure",
     htmltools::tags$style(htmltools::HTML(paste0(
-      ".tam-model-structure{font-family:Arial,sans-serif;color:#1f2933;background:#fff;padding:8px;overflow:auto}",
+      ".tam-model-structure{font:inherit;color:#1f2933;background:#fff;padding:8px;overflow:auto}",
       ".tam-model-structure select{margin:0 0 12px 8px;padding:5px;max-width:80%}",
-      ".tam-model-structure svg{width:100%;height:auto;min-width:630px;display:block}",
+      ".tam-model-graph{position:relative;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));",
+      "grid-template-areas:'initial . . survey' 'recruitment . population .' 'fishing natural ssb catch';",
+      "gap:2.5em 2em;padding:1.5em;isolation:isolate}",
+      ".tam-model-connectors{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:-1}",
+      ".tam-model-node-wrap{min-width:0;align-self:center}",
+      ".tam-model-node{font:inherit;background:#f1f3f5;border:1px solid #c5ced3;border-radius:8px;padding:.75em}",
+      ".tam-model-node[data-process='stochastic']{background:#d9e2e6;border-color:#8caab6}",
+      ".tam-model-node[data-process='deterministic']{background:#fde7df;border-color:#e3ad98}",
+      ".tam-model-node h4{font:inherit;font-weight:bold;margin:0 0 .4em}",
+      ".tam-model-node p{font:inherit;font-size:.875em;margin:.35em 0;overflow-wrap:anywhere}",
+      ".tam-model-node code{font-size:.85em;white-space:normal;overflow-wrap:anywhere;color:inherit;background:transparent;padding:0}",
+      ".tam-model-input{font-size:.8em;overflow-wrap:anywhere;background:#fff8df;border:1px dashed #af8a27;",
+      "border-radius:4px;padding:.35em .5em;margin-bottom:max(1em,16px)}",
+      ".tam-model-connections{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0)}",
+      ".tam-model-graph[data-layout='compact']{grid-template-columns:repeat(2,minmax(0,1fr));",
+      "grid-template-areas:'initial recruitment' 'fishing natural' 'population population' 'survey catch' 'ssb ssb'}",
+      ".tam-model-graph[data-layout='stacked']{grid-template-columns:minmax(0,1fr);",
+      "grid-template-areas:'initial' 'recruitment' 'fishing' 'natural' 'population' 'survey' 'catch' 'ssb'}",
       ".tam-model-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(235px,1fr));gap:12px}",
       ".tam-model-card{border:1px solid #d6dce0;border-top:3px solid #007187;padding:10px}",
-      ".tam-model-card h4{font-size:16px;color:#003e56;margin:0 0 6px}",
-      ".tam-model-card p{font-size:13px;margin:4px 0;overflow-wrap:anywhere}",
-      ".tam-model-card code{font-size:12px;white-space:pre-wrap}",
-      ".tam-model-legend,.tam-model-note{font-size:13px;margin:8px 0 12px}",
+      ".tam-model-card h4{font:inherit;font-weight:bold;color:#003e56;margin:0 0 6px}",
+      ".tam-model-card p{font-size:.875em;margin:4px 0;overflow-wrap:anywhere}",
+      ".tam-model-card code{font-size:.85em;white-space:pre-wrap}",
+      ".tam-model-legend,.tam-model-note{font-size:.875em;margin:8px 0 12px}",
       ".tam-model-unavailable{padding:25px;border:1px solid #d6dce0}"))),
-    selector, panes))
+    selector, panes,
+    htmltools::tags$script(htmltools::HTML(paste(readLines(
+      system.file("js", "model-structure.js", package = "tinyAM"), warn = FALSE), collapse = "\n")))))
 }
 
 .model_structure_spec <- function(dat) {
@@ -190,12 +207,8 @@ plot_model <- function(..., model_list = NULL) {
 
 .model_structure_view <- function(dat, label) {
   spec <- .model_structure_spec(dat)
-  escape <- function(x) as.character(htmltools::htmlEscape(x))
-  shorten <- function(x, width = 34L) if (nchar(x) > width)
+  shorten <- function(x, width = 65L) if (nchar(x) > width)
     paste0(substr(x, 1L, width - 3L), "...") else x
-  positions <- list(initial = c(30, 35), recruitment = c(30, 200),
-    fishing = c(30, 370), natural = c(310, 370), population = c(590, 200),
-    catch = c(920, 370), survey = c(920, 35), ssb = c(590, 425))
   subtitles <- c(initial = "Boundary parameters", recruitment = "New youngest-age fish",
     fishing = "Total F = sum of fleet F", natural = "Shared population M",
     population = "Survivors + recruitment", catch = "Fleet catch predictions",
@@ -204,79 +217,44 @@ plot_model <- function(..., model_list = NULL) {
     fishing = "Fishing mortality", natural = "Natural mortality",
     population = "Population abundance", catch = "Catch observations",
     survey = "Survey observations", ssb = "Spawning biomass")
-  arrow <- function(points) {
-    n <- nrow(points)
-    direction <- points[n, ] - points[n - 1L, ]
-    direction <- direction / sqrt(sum(direction^2))
-    tip <- points[n, ]; base <- tip - 9 * direction
-    normal <- c(-direction[2L], direction[1L]) * 4
-    paste0('<polyline fill="none" stroke="#526a75" stroke-width="2" points="',
-      paste(apply(points, 1L, paste, collapse = ","), collapse = " "), '"/>',
-      '<polygon fill="#526a75" points="', paste(c(
-        paste(tip, collapse = ","), paste(base + normal, collapse = ","),
-        paste(base - normal, collapse = ",")), collapse = " "), '"/>')
-  }
-  edges <- list(rbind(c(270, 90), c(550, 90), c(550, 215), c(590, 215)),
-    rbind(c(270, 255), c(590, 255)),
-    rbind(c(270, 425), c(295, 425), c(295, 335), c(640, 335), c(640, 310)),
-    rbind(c(550, 425), c(570, 425), c(570, 290), c(590, 290)),
-    rbind(c(830, 230), c(875, 230), c(875, 90), c(920, 90)),
-    rbind(c(830, 280), c(875, 280), c(875, 425), c(920, 425)),
-    rbind(c(150, 480), c(150, 548), c(1040, 548), c(1040, 480)),
-    rbind(c(710, 310), c(710, 425)))
-  if (spec$feedback) edges[[length(edges) + 1L]] <-
-    rbind(c(590, 480), c(285, 480), c(285, 275), c(270, 275))
-  nodes <- vapply(names(positions), function(id) {
-    p <- positions[[id]]
+  nodes <- lapply(names(titles), function(id) {
     status <- spec$statuses[id]
     stochastic <- length(status) && !is.na(status) && status != "off"
-    fill <- if (stochastic) "#d9efed" else "#f0f3f5"
+    state <- if (is.na(status)) "neutral" else if (stochastic) "stochastic" else "deterministic"
     annotation <- if (is.na(status)) "" else if (stochastic)
       paste("Stochastic", toupper(status)) else "Deterministic: process off"
-    title <- paste(spec$cards[[id]]$lines, collapse = "\n")
-    paste0('<g data-component="', id, '"><title>', escape(title), '</title>',
-      '<rect x="', p[1L], '" y="', p[2L], '" width="240" height="110" rx="8" fill="',
-      fill, '" stroke="#007187"/>',
-      '<text x="', p[1L] + 12, '" y="', p[2L] + 24,
-      '" font-size="16" font-weight="bold">', escape(titles[id]), '</text>',
-      '<text x="', p[1L] + 12, '" y="', p[2L] + 46,
-      '" font-size="13">', escape(subtitles[id]), '</text>',
-      '<text x="', p[1L] + 12, '" y="', p[2L] + 68,
-      '" font-size="12">', escape(annotation), '</text>',
-      '<text data-formula="', id, '" x="', p[1L] + 12, '" y="', p[2L] + 91,
-      '" font-size="11">', escape(shorten(spec$formula_labels[id])), '</text></g>')
-  }, character(1))
-  input_arrows <- vapply(names(spec$inputs)[nzchar(spec$inputs)], function(id) {
-    p <- positions[[id]]
-    paste0('<g data-input-component="', id, '"><title>', escape(spec$inputs[id]), '</title>',
-      '<rect x="', p[1L], '" y="', p[2L] - 28, '" width="240" height="18" rx="4" ',
-      'fill="#fff8df" stroke="#af8a27" stroke-dasharray="3,3"/>',
-      '<text x="', p[1L] + 8, '" y="', p[2L] - 15, '" font-size="11">',
-      escape(shorten(spec$inputs[id], 36L)), '</text>',
-      '<line x1="', p[1L] + 200, '" y1="', p[2L] - 10,
-      '" x2="', p[1L] + 200, '" y2="', p[2L],
-      '" stroke="#af8a27" stroke-dasharray="3,3"/>',
-      '<polygon fill="#af8a27" points="', p[1L] + 200, ',', p[2L], ' ',
-      p[1L] + 196, ',', p[2L] - 6, ' ', p[1L] + 204, ',', p[2L] - 6, '"/></g>')
-  }, character(1))
-  svg <- paste0('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 560" font-family="Arial,sans-serif" ',
-    'role="img" aria-label="Model structure: ', as.character(htmltools::htmlEscape(label, attribute = TRUE)), '">',
-    '<title>Model structure: ', escape(label), '</title><rect width="1200" height="560" fill="white"/>',
-    paste(vapply(edges, arrow, character(1)), collapse = ""), paste(nodes, collapse = ""),
-    paste(input_arrows, collapse = ""),
-    if (spec$feedback) paste0('<text x="320" y="472" font-size="13">',
-      escape(spec$feedback_label), '</text>') else "", '</svg>')
+    input <- spec$inputs[id]
+    htmltools::tags$div(class = "tam-model-node-wrap", style = paste0("grid-area:", id),
+      if (length(input) && !is.na(input) && nzchar(input)) htmltools::tags$div(
+        class = "tam-model-input", `data-input-component` = id, title = input, input),
+      htmltools::tags$section(class = "tam-model-node", `data-component` = id,
+        `data-process` = state, title = paste(spec$cards[[id]]$lines, collapse = "\n"),
+        htmltools::tags$h4(titles[id]), htmltools::tags$p(subtitles[id]),
+        if (nzchar(annotation)) htmltools::tags$p(annotation),
+        htmltools::tags$code(`data-formula` = id, spec$formula_labels[id] |> shorten()),
+        if (id == "ssb" && spec$feedback) htmltools::tags$p(spec$feedback_label)))
+  })
+  edges <- list(c("initial", "population"), c("recruitment", "population"),
+    c("fishing", "population"), c("natural", "population"),
+    c("population", "survey"), c("population", "catch"),
+    c("fishing", "catch"), c("population", "ssb"))
+  if (spec$feedback) edges[[length(edges) + 1L]] <- c("ssb", "recruitment")
+  graph <- htmltools::tags$div(class = "tam-model-graph", role = "group",
+    `aria-label` = paste("Model structure:", label), `data-feedback` = tolower(spec$feedback),
+    htmltools::HTML('<svg class="tam-model-connectors" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"></svg>'),
+    nodes,
+    htmltools::tags$ul(class = "tam-model-connections", lapply(edges, function(edge)
+      htmltools::tags$li(paste(titles[edge], collapse = " to ")))))
   cards <- lapply(spec$cards, function(card) htmltools::tags$section(class = "tam-model-card",
     htmltools::tags$h4(card$title), lapply(card$lines, htmltools::tags$p),
     htmltools::tags$a(href = paste0("https://paulregular.github.io/tinyAM/reference/", card$help, ".html"),
       "Equations and settings")))
-  htmltools::tagList(htmltools::tags$p(class = "tam-model-note",
-    "Stored specification for ", htmltools::tags$strong(label),
-    ". Arrows show biological and observation relationships, not a computation order."),
-    htmltools::HTML(svg), htmltools::tags$p(class = "tam-model-legend",
-      "Teal: annual stochastic process. Gray: no annual process deviations. ",
+  htmltools::tagList(graph, htmltools::tags$p(class = "tam-model-legend",
+      "Navy: annual stochastic process. Orange: no annual process deviations. ",
       "Dashed arrows: active input-table predictors. Process off retains the biological component. ",
       "Initial parameters and observations are separate."),
+    htmltools::tags$p(class = "tam-model-note",
+      "Arrows show biological and observation relationships, not a computation order."),
     htmltools::tags$details(htmltools::tags$summary("Formulas and settings"),
       htmltools::tags$div(class = "tam-model-cards", cards)))
 }

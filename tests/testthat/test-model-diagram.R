@@ -83,7 +83,7 @@ test_that("model selectors handle references and independent escaped containers"
   expect_match(html, 'data-model-pane="1" style="display:none"', fixed = TRUE)
   expect_match(html, "unavailable for a reporting reference", fixed = TRUE)
   expect_match(html, "Fit &lt;two&gt; &quot;quoted&quot;", fixed = TRUE)
-  expect_match(html, "closest(&#39;.tam-model-structure&#39;)", fixed = TRUE)
+  expect_match(html, "document.currentScript.closest('.tam-model-structure')", fixed = TRUE)
   expect_false(grepl("document.querySelector", html, fixed = TRUE))
   all_refs <- htmltools::renderTags(plot_model(reference))$html
   expect_match(all_refs, "unavailable", fixed = TRUE)
@@ -91,11 +91,40 @@ test_that("model selectors handle references and independent escaped containers"
   expect_error(plot_model(default_fit, model_list = fits), "either")
 })
 
-test_that("the dedicated Model structure page preserves the dashboard initial page", {
+test_that("Model structure opens first and groups its diagram with function calls", {
   template <- readLines(system.file("rmd", "vis_tam.Rmd", package = "tinyAM"))
   structure <- readLines(system.file("rmd", "model_structure.Rmd", package = "tinyAM"))
   expect_true(any(grepl('child = "model_structure.Rmd"', template, fixed = TRUE)))
   expect_true(any(grepl("plot_model(model_list = fits)", structure, fixed = TRUE)))
-  expect_gt(which(grepl('child = "model_structure.Rmd"', template, fixed = TRUE)),
+  expect_lt(which(grepl('child = "model_structure.Rmd"', template, fixed = TRUE)),
     which(grepl('child = "fisheries.Rmd"', template, fixed = TRUE)))
+  expect_lt(which(grepl('child = "model_structure.Rmd"', template, fixed = TRUE)),
+    which(grepl('child = if (is.null(background))', template, fixed = TRUE)))
+  expect_true(any(grepl("Row {.tabset}", structure, fixed = TRUE)))
+  expect_true(all(c("### Diagram", "### Function calls") %in% structure))
+  tables <- readLines(system.file("rmd", "tables.Rmd", package = "tinyAM"))
+  expect_false(any(grepl("### Function calls", tables, fixed = TRUE)))
+  expect_false(any(grepl('Settings {data-navmenu="Tables"}', tables, fixed = TRUE)))
+})
+
+test_that("diagram nodes inherit typography and explain colours and arrows below", {
+  html <- htmltools::renderTags(plot_model(default_fit))$html
+  expect_match(html, '<section class="tam-model-node"', fixed = TRUE)
+  expect_match(html, 'data-process="stochastic"', fixed = TRUE)
+  expect_match(html, 'data-process="deterministic"', fixed = TRUE)
+  expect_match(html, 'data-process="neutral"', fixed = TRUE)
+  expect_false(grepl("font-family:Arial", html, fixed = TRUE))
+  expect_false(grepl("<text ", html, fixed = TRUE))
+  expect_false(grepl("Stored specification for", html, fixed = TRUE))
+  expect_match(html, "Navy: annual stochastic process. Orange: no annual process deviations.", fixed = TRUE)
+  expect_lt(regexpr("Initial parameters and observations are separate.", html, fixed = TRUE)[1],
+    regexpr("Arrows show biological and observation relationships", html, fixed = TRUE)[1])
+})
+
+test_that("responsive connectors avoid nodes and follow selection and visibility changes", {
+  node <- Sys.which("node"); skip_if(!nzchar(node))
+  result <- system2(node, c(shQuote(test_path("model-structure-controls.js")),
+    shQuote(system.file("js", "model-structure.js", package = "tinyAM"))), stdout = TRUE, stderr = TRUE)
+  expect_null(attr(result, "status"))
+  expect_match(paste(result, collapse = "\n"), "Responsive model structure controls passed", fixed = TRUE)
 })

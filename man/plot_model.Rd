@@ -13,7 +13,7 @@ or one named list of these objects.}
 \item{model_list}{A named list of models, instead of \code{...}.}
 }
 \value{
-A browsable HTML container with a responsive SVG diagram and model
+A browsable HTML container with responsive HTML nodes, SVG connectors and model
 settings. Display it directly, or save it with \code{\link[htmltools:save_html]{htmltools::save_html()}}.
 }
 \description{

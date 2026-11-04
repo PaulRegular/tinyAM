@@ -174,6 +174,7 @@ plot_process_residuals <- function(out, component = c("NFM", "Recruitment")) {
         trace$marker$sizeref <- 2 * limit / 30^2
         trace$marker$sizemode <- "area"
         trace$marker$sizemin <- 0
+        trace$marker$line <- list(width = 0)
         trace$frame <- NULL
         trace
       })

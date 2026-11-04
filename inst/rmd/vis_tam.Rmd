@@ -152,6 +152,9 @@ table_link <- function(x, table_name = NULL, download_text = "Download table") {
 
 ```
 
+```{r model-structure, child = "model_structure.Rmd"}
+```
+
 ```{r background, child = if (is.null(background)) NULL else "background.Rmd"}
 ```
 
@@ -178,13 +181,4 @@ table_link <- function(x, table_name = NULL, download_text = "Download table") {
 
 ```{r tables, child = "tables.Rmd"}
 ```
-
-```{r model-structure, child = "model_structure.Rmd"}
-```
-
-
-
-
-
-
 

@@ -6,7 +6,10 @@ global.Plotly = {
   react: async (el, data, layout) => { el.data = data; el.layout = layout; },
   addFrames: async (el, frames) => { banks++; el._transitionData = {_frames: frames}; },
   deleteFrames: async el => { el._transitionData = {_frames: []}; },
-  animate: async () => {}
+  animate: async () => {},
+  relayout: async (el, patch) => {
+    if (patch["updatemenus[0].active"] !== undefined) el.layout.updatemenus[0].active = patch["updatemenus[0].active"];
+  }
 };
 const flush = () => new Promise(resolve => setImmediate(resolve));
 function widget() {
@@ -30,36 +33,38 @@ const points = el => el.data.reduce((n, trace) => n + trace.x.length, 0);
   await flush();
   assert.equal(points(a), 2);
   assert.equal(points(b), 2);
-  assert.deepEqual(a.layout.updatemenus[0].buttons.map(button => button.label), ['Auto', 'Standardized', 'OSA']);
+  assert.deepEqual(a.layout.updatemenus[0].buttons.map(button => button.label), ['Standardized', 'OSA']);
   assert.equal(a.layout.updatemenus[0].x, 0);
   assert.equal(a.layout.updatemenus[0].xanchor, 'left');
   assert.equal(a.layout.updatemenus[0].yanchor, 'bottom');
   assert.equal(a.layout.updatemenus[0].pad.b, 28);
   assert.equal(a.layout.margin.t, 100); // Header rows stay clear of the upper-right modebar.
   chooseFrame(a, 'B');
-  assert.equal(points(a), 6); // Auto keeps a model without cached OSA.
+  assert.equal(points(a), 6); // Initial choice keeps models without cached OSA.
+  assert.equal(a.layout.updatemenus[0].active, 0);
   const before = banks;
   chooseFrame(a, 'A');
   chooseFrame(a, 'B');
   assert.equal(banks, before); // Native frame changes keep their frame bank.
-  chooseType(a, 2); await flush();
+  chooseType(a, 1); await flush();
   assert.equal(a.layout.sliders[0].active, 1);
   assert.equal(points(a), 0);
   assert(a.layout.annotations[0].text.includes('OSA residuals unavailable'));
   assert.equal(points(b), 2); // Widgets have independent selections.
-  chooseType(a, 1); await flush();
+  chooseType(a, 0); await flush();
   assert.equal(points(a), 6);
   assert.equal(a.layout.sliders[0].active, 1);
   chooseFrame(a, 'A');
   assert.equal(points(a), 6);
-  chooseType(a, 0); await flush();
+  chooseType(a, 1); await flush();
   assert.equal(points(a), 2); // Partial OSA never fills its gaps from standard residuals.
   assert(a.layout.annotations[0].text.includes('oneStepGeneric'));
-  for (let i = 0; i < 3; i++) chooseType(a, i);
+  for (let i = 0; i < 5; i++) chooseType(a, i % 2);
   await flush(); await flush();
-  assert.equal(a.layout.updatemenus[0].active, 2);
+  assert.equal(a.layout.updatemenus[0].active, 0);
   const singleConfig = JSON.parse(JSON.stringify(source));
   singleConfig.frames = 'Only'; singleConfig.animated = false;
+  singleConfig.defaultViews = 1;
   singleConfig.views.forEach(view => {
     view.cells = [view.cells[0]];
     view.cells[0].data.forEach(trace => {
@@ -71,5 +76,9 @@ const points = el => el.data.reduce((n, trace) => n + trace.x.length, 0);
   assert.deepEqual(single.data[0].x, [2000]);
   assert.deepEqual(single.data[0].customdata, ['custom']);
   assert.deepEqual(single.layout.sliders, []);
+  const noOsaConfig = JSON.parse(JSON.stringify(singleConfig));
+  noOsaConfig.showSelector = false; noOsaConfig.defaultViews = 0;
+  const noOsa = widget(); draw(noOsa, {layout: {}}, noOsaConfig); await flush();
+  assert.deepEqual(noOsa.layout.updatemenus, []);
   console.log('Residual controls passed');
 })().catch(error => { console.error(error); process.exit(1); });

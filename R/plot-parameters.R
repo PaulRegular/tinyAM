@@ -1,3 +1,4 @@
+#' @name plot_tam
 #' @rdname plot_tam
 #' @export
 plot_par <- function(data, ...) {

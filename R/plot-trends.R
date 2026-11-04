@@ -44,9 +44,10 @@
 #'   `~est` for process deviations. Omitted values use OSA or standardized
 #'   observation residuals. Use `y = ~age_block` for shared M state blocks.
 #' @param residual_type Initial observation residual view: `"auto"` (default),
-#'   `"standardized"` or `"osa"`. Auto uses available cached OSA residuals
-#'   separately for each model in the supplied panel, otherwise standardized
-#'   residuals. Partial OSA gaps remain missing. A dropdown switches views;
+#'   `"standardized"` or `"osa"`. The default uses retained OSA residuals
+#'   when available, otherwise standardized residuals. Model frames choose
+#'   separately; overlays use OSA only when all models have them. A dropdown
+#'   offers OSA and Standardized when OSAs are available. Partial gaps stay missing;
 #'   unavailable OSA values are identified without computing them. A supplied
 #'   `res` formula in `plot_bubbles()` bypasses these observation controls.
 #' @param ylab Label for the y-axis.
@@ -220,6 +221,7 @@ plot_trend <- function(
   p
 }
 
+#' @name plot_tam
 #' @rdname plot_tam
 #' @export
 plot_obs_pred <- function(

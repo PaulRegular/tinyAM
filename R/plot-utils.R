@@ -34,6 +34,7 @@
   args
 }
 
+#' @name plot_tam
 #' @rdname plot_tam
 #' @export
 add_plot_buttons <- function(p) {
