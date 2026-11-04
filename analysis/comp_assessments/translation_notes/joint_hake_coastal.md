@@ -97,3 +97,20 @@ Recruitment differences remained near 55.2% median absolute percent difference,
 with terminal difference changing from +346.1% to +347.2%. This sensitivity is
 retained as historical context; it is not the current constant-mean recruitment
 specification in the translation script.
+
+## Additional inherited translation context
+
+Preserved from the [SAIO review at `e723863`](https://github.com/PaulRegular/saio/blob/e723863b83e12b2f9ca7142eb147d1ae082bdb98/source_reviews/joint_hake_coastal.md) during the 2026-11-03 content separation. These passages describe earlier analysis choices or checks; they were not refitted or revalidated as current recipes. Use the registered stock script and `translations.csv` for current settings and status.
+
+The translation uses 1975–2024 and ages 2–15+. Native percentages are
+normalized outside the database, as in the source, and converted using
+original totals and weights before age restriction. All supplied weights
+and fecundity products are identical across ages 15–20+, so the observed
+15+ grouping does not require an invented biological tail. The supplied
+fecundity product divided by population weight gives maturity; first mature
+age 2, female fraction 0.5 and January 1 timing are applied separately.
+
+The local dashboard retains native posterior SSB and explicitly approximate
+common-age sums of marginal medians. F-at-age and Fbar comparisons remain
+unavailable. Available credible intervals are retained only on their native
+quantities; no uncertainty is attached to sums or pooled posterior medians.

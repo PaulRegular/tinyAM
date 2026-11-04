@@ -51,3 +51,9 @@ F-at-age −24.1%, recruitment +3.1%, SSB +30.3%, total abundance +7.5%, and
 total biomass +17.3%. These differences are retained for review rather than
 used to alter source observations or tune the translation to the official
 estimates. The dashboard is stored in the local ignored results cache.
+
+## Additional inherited translation context
+
+Preserved from the [SAIO review at `e723863`](https://github.com/PaulRegular/saio/blob/e723863b83e12b2f9ca7142eb147d1ae082bdb98/source_reviews/ck_ices_afwg_virens_nea_1_2.md) during the 2026-11-03 content separation. These passages describe earlier analysis choices or checks; they were not refitted or revalidated as current recipes. Use the registered stock script and `translations.csv` for current settings and status.
+
+The translation uses the native observation-aligned precision weights and does not infer a year-age pairing for the separately reported raw StoX CV table.

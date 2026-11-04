@@ -29,3 +29,14 @@ input, not estimated. See the local dashboard for the year- and age-specific
 comparisons.
 
 [Official source review](https://github.com/PaulRegular/saio/blob/main/source_reviews/ck_nefsc_garmiii_saxatilis_gom_chatt.md).
+
+## Additional inherited translation context
+
+Preserved from the [SAIO review at `e723863`](https://github.com/PaulRegular/saio/blob/e723863b83e12b2f9ca7142eb147d1ae082bdb98/source_reviews/ck_nefsc_garmiii_saxatilis_gom_chatt.md) during the 2026-11-03 content separation. These passages describe earlier analysis choices or checks; they were not refitted or revalidated as current recipes. Use the registered stock script and `translations.csv` for current settings and status.
+
+The published index tables provide numerical values for 1982–2017. The model
+text also describes Maryland YOY and age-1 indices in 1970–1981, but those
+values are not tabulated in the available numerical appendix. They are not
+invented or used in the translation. Appendix B10 links YOY indices to age 1 and age-1 indices to age 2. Its “VA Age 1” label conflicts with the “NY Age-1” label in Table B5.6 and
+assessment diagnostics. The translation retains the table label, links the
+series to age 2, and records the discrepancy.

@@ -29,3 +29,15 @@ per year. These values agree with the rounded values in WGCSE Table 7.9.
 No tinyAM agreement summary is available until a fit passes its numerical
 convergence checks; matching definitions alone do not imply matching fitted
 models.
+
+## Additional inherited translation context
+
+Preserved from the [SAIO review at `e723863`](https://github.com/PaulRegular/saio/blob/e723863b83e12b2f9ca7142eb147d1ae082bdb98/source_reviews/ices_cod_celtic_sea_2026.md) during the 2026-11-03 content separation. These passages describe earlier analysis choices or checks; they were not refitted or revalidated as current recipes. Use the registered stock script and `translations.csv` for current settings and status.
+
+The translation uses
+source fixed M, source stock weights and maturity, a zero spawning time, three
+catch SD groups, age-specific q for VAST, one VAST SD group, an IID N process,
+random-walk recruitment and a correlated-random-walk F process. The aggregate
+commercial LPUE likelihood and VAST's age-correlated observation errors are
+not represented. The source's exact age-state sharing, F covariance and N
+initial-state treatment are also simplified.

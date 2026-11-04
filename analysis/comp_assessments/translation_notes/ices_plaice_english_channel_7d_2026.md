@@ -21,3 +21,9 @@ differences from 60.9% to 113.7% for recruitment and from 236.8% to 336.8%
 for SSB. Terminal differences also increased. This alternative is rejected;
 the existing N-RW translation remains the closer scale match, though neither
 fit closely reproduces the published series.
+
+## Additional inherited translation context
+
+Preserved from the [SAIO review at `e723863`](https://github.com/PaulRegular/saio/blob/e723863b83e12b2f9ca7142eb147d1ae082bdb98/source_reviews/ices_plaice_english_channel_7d_2026.md) during the 2026-11-03 content separation. These passages describe earlier analysis choices or checks; they were not refitted or revalidated as current recipes. Use the registered stock script and `translations.csv` for current settings and status.
+
+The translation uses the native observations and fixed M, a temporal random walk for N and recruitment, and a correlated random walk for F with an estimated age correlation. It retains survey-specific q groups (ages 1–4 separate; ages 5–6 shared) and one index SD per survey. These approximate SAM's process covariance and parameter sharing; they do not reproduce SAM's exact likelihood or age-6/7 shared F state. Only aggregate SSB and recruitment are directly comparable; Fbar is non-equivalent, and N-at-age, F-at-age and total abundance are unavailable.

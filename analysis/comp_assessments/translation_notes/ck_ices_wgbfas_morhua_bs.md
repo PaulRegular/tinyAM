@@ -32,3 +32,13 @@ like-for-like with the SAM age-state definitions. Convergence therefore does
 not imply close terminal agreement. The exploratory comparison is available
 in the local cached dashboard at
 `results/cache/ices_cod_western_baltic_2025/dashboard.html`.
+
+## Additional inherited translation context
+
+Preserved from the [SAIO review at `e723863`](https://github.com/PaulRegular/saio/blob/e723863b83e12b2f9ca7142eb147d1ae082bdb98/source_reviews/ck_ices_wgbfas_morhua_bs.md) during the 2026-11-03 content separation. These passages describe earlier analysis choices or checks; they were not refitted or revalidated as current recipes. Use the registered stock script and `translations.csv` for current settings and status.
+
+The translation uses an IID recruitment process and cohort deviations,
+IID F states, fixed source M, source survey timings and survey-by-age q groups. It cannot reproduce SAM's joint survey residual correlation, native catch
+observation weights, or the exact initial-state and process parameterization. These
+are recorded as approximations; no observations are adjusted to improve
+agreement.

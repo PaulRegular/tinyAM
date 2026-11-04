@@ -101,3 +101,9 @@ a +3.97% terminal difference, and 0.928 trend correlation. These results are
 for that annual-key sensitivity and the preceding F-IID/q-block specification;
 they are not fit results for the current pooled-key, correlated-F, logistic-age
 and year-RW q candidate.
+
+## Additional inherited translation context
+
+Preserved from the [SAIO review at `e723863`](https://github.com/PaulRegular/saio/blob/e723863b83e12b2f9ca7142eb147d1ae082bdb98/source_reviews/afsc_cod_goa.md) during the 2026-11-03 content separation. These passages describe earlier analysis choices or checks; they were not refitted or revalidated as current recipes. Use the registered stock script and `translations.csv` for current settings and status.
+
+The translation uses a pooled age-length key and does not preserve the native conditional-composition likelihood.

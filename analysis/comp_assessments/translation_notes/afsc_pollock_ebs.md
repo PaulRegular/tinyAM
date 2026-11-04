@@ -141,3 +141,12 @@ model. Once the updated fit and comparison tables are available, regenerate
 insert the current convergence, SSB-scale, abundance, recruitment and F-at-age
 comparison results here. No updated numerical performance claims have been
 introduced without those outputs.
+
+## Additional inherited translation context
+
+Preserved from the [SAIO review at `e723863`](https://github.com/PaulRegular/saio/blob/e723863b83e12b2f9ca7142eb147d1ae082bdb98/source_reviews/afsc_pollock_ebs.md) during the 2026-11-03 content separation. These passages describe earlier analysis choices or checks; they were not refitted or revalidated as current recipes. Use the registered stock script and `translations.csv` for current settings and status.
+
+SAFE Table 26's age-3+ biomass is stored as biomass_by_age_group, with age
+blank and age_group set to 3+. Female SSB is available for both fits over ages 1–15. The SSB comparison is now marked `matched` in the sense of its biomass
+definition, **not** as a claim of identical fitted SSB estimates or likelihoods. Printed CV fields are not converted to standard errors; uncertainty is
+unavailable for these source outputs.

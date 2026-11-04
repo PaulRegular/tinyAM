@@ -48,3 +48,20 @@ estimated fixed effect, so this is not complete SAM initial-state equivalence.
 ## Initial-state approximation
 
 The revised translation remains a proof-of-concept approximation of the official model. Numerical convergence and improved agreement do not establish equivalence of the underlying likelihoods or assessment uncertainty.
+
+## Additional inherited translation context
+
+Preserved from the [SAIO review at `e723863`](https://github.com/PaulRegular/saio/blob/e723863b83e12b2f9ca7142eb147d1ae082bdb98/source_reviews/ices_whiting_north_sea_2026.md) during the 2026-11-03 content separation. These passages describe earlier analysis choices or checks; they were not refitted or revalidated as current recipes. Use the registered stock script and `translations.csv` for current settings and status.
+
+**Survival process:** The official model uses random-walk survival deviations with age-specific variance sharing. The translation instead assumes IID cohort-survival deviations with one shared SD.
+
+**Fishing-mortality process:** Both models now permit correlated annual F increments across ages, but their process covariance and variance-sharing configurations need not be identical.
+
+**Natural mortality:** The official model estimates M through a GMRF. The translation uses fixed numerical M, including a constant extension of the 2022 values into 2023–2026.
+
+**Survey plus groups:** Both IBTS surveys report age 6 as a 6+ group, whereas the population model has an 8+ terminal group. The current translation treats these observations at age 6 rather than explicitly predicting the sum of survey-vulnerable abundance over ages 6–8+. This remains an observation-definition approximation that should be resolved or tested separately.
+
+**Initial abundance:** Older initial ages now use latent states without an
+initial density. The estimated fixed r0 anchor still differs from SAM.
+
+These differences are documented limitations of an illustrative translation, not corrections to the official SAM assessment.

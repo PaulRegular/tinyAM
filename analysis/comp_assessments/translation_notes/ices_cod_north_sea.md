@@ -34,3 +34,13 @@ For comparisons, source N, recruitment and biomass are summed across substocks;
 F/M-at-age are N-weighted. Substock Fbar uses relative abundance at ages 2–4.
 Intervals are not combined. These derived quantities support broad comparisons,
 not exact equivalence with the original multistock model.
+
+## Additional inherited translation context
+
+Preserved from the [SAIO review at `e723863`](https://github.com/PaulRegular/saio/blob/e723863b83e12b2f9ca7142eb147d1ae082bdb98/source_reviews/ices_cod_north_sea.md) during the 2026-11-03 content separation. These passages describe earlier analysis choices or checks; they were not refitted or revalidated as current recipes. Use the registered stock script and `translations.csv` for current settings and status.
+
+The revised translation fits one combined population over 1983–2022, with IID older-cohort survival deviations, correlated F random walks, fixed supplied M, and monotone non-decreasing survey catchability.
+
+The `mono(q_key)` constraint is particularly important: it prevents the reduced observation model from estimating declining catchability at older ages, while allowing flexible increases and plateaus.
+
+The comparison evaluates whether this simpler configuration can approximate broad official stock dynamics. It does not reproduce the official three-substock likelihood, selectivity model, or full uncertainty.

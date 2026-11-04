@@ -67,3 +67,27 @@ This model is more consistent with the documented temporal CPUE catchability pro
 The translation is retained as a practical approximation of a more complex SCA assessment. Its principal unresolved differences involve the original observation likelihood, selectivity constraints and mortality-process priors.
 
 Source completeness remains partial, and the latest numerical performance should be recorded separately from the historical refinement results.
+
+## Additional inherited translation context
+
+Preserved from the [SAIO review at `e723863`](https://github.com/PaulRegular/saio/blob/e723863b83e12b2f9ca7142eb147d1ae082bdb98/source_reviews/dfo_herring_4tvn_spring.md) during the 2026-11-03 content separation. These passages describe earlier analysis choices or checks; they were not refitted or revalidated as current recipes. Use the registered stock script and `translations.csv` for current settings and status.
+
+The translation combines the two fishing gears into one total catch-at-age stream.
+
+The translation uses age-specific lognormal survey observations rather than the source SCA's age-composition and aggregate-biomass likelihoods.
+
+The translation constructs a fit-only approximation by combining positive gear weights using catch-number-weighted arithmetic means. When both gear catches are zero, it uses the arithmetic mean of available positive gear weights.
+
+Missing weights are interpolated within age.
+
+For an ordinary interior cell, beginning-year weight at age a in year t is calculated as the geometric mean of the combined gear weight at age a−1 in year t−1 and age a in year t.
+
+Age 2 and the first model year use available same-year values because preceding cells are unavailable.
+
+This procedure is an inference, not a fully verified source calculation.
+
+Its median absolute percentage difference from weights implied by the published biomass and abundance surfaces is 0.073%, compared with 2.63% for the earlier equal geometric gear mean.
+
+Source biomass divided by abundance is used to evaluate the weight approximation, not as a fitted model input.
+
+The common-definition SSB comparison therefore uses January 1 mature biomass. It is not the official assessment's April 1 SSB, which would require pre-spawning survival calculated from the unavailable fitted M surface.

@@ -15,3 +15,9 @@ tinyAM estimates an IID cohort-survival process, a random walk for log recruitme
 The final fit passed `check_tam()`: optimizer code 0, maximum adjusted gradient about 0.001, positive-definite Hessian, and successful uncertainty estimation. Residual diagnostics still flag some standardized residual spreads outside 0.5–1.5 and some residuals above 3 SD. The cached dashboard is local at `results/cache/ices_sole_north_sea_2025/dashboard.html`.
 
 Common-definition agreement over 1957–2024 is mixed. SSB has 11.7% mean absolute percent difference, −41.8% terminal difference, and 0.957 trend correlation. Recruitment is 29.1%, +5.9%, and 0.662; N-at-age is 27.2%, −41.1%, and 0.913; F-at-age is 31.7%, +106.5%, and 0.731. Total abundance has 16.2% mean absolute percent difference and 0.693 trend correlation. M is identical because it is fixed to the same source input, not independently estimated. These numbers describe this simplified fit and are not evidence of equivalence to the SS3 likelihood.
+
+## Additional inherited translation context
+
+Preserved from the [SAIO review at `e723863`](https://github.com/PaulRegular/saio/blob/e723863b83e12b2f9ca7142eb147d1ae082bdb98/source_reviews/ices_sole_north_sea.md) during the 2026-11-03 content separation. These passages describe earlier analysis choices or checks; they were not refitted or revalidated as current recipes. Use the registered stock script and `translations.csv` for current settings and status.
+
+The recovered BTS and COAST observations are aggregate biomass indices; the current supports age-specific index observations or aggregate biomass indices paired with age compositions. No matching 2026 age-composition series was recovered. Assigning these totals to ages or deriving compositions from fitted abundance would invent observations, while fitting catch alone would omit the assessment's survey likelihood.

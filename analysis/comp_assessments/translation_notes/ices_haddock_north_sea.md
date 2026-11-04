@@ -31,3 +31,9 @@ not reproduce a power relationship between abundance and an index.
 The translation uses `init = "latent"`: older first-year log-abundances are
 integrated without an initial density. First-year recruitment remains an
 estimated fixed effect, so this is not complete SAM initial-state equivalence.
+
+## Additional inherited translation context
+
+Preserved from the [SAIO review at `e723863`](https://github.com/PaulRegular/saio/blob/e723863b83e12b2f9ca7142eb147d1ae082bdb98/source_reviews/ices_haddock_north_sea.md) during the 2026-11-03 content separation. These passages describe earlier analysis choices or checks; they were not refitted or revalidated as current recipes. Use the registered stock script and `translations.csv` for current settings and status.
+
+The historical translation fits ages 0–8+ over 1972–2026 with random-walk recruitment, IID cohort-survival deviations and grouped survival-process SDs, correlated F random walks, fixed M and both standardized surveys. It preserves the zero pre-spawning mortality fractions. Remaining differences include precise initial-state and covariance conventions, observation variances and the omission of the three estimated density-dependent q powers. The q powers are a potential source of observation-model disagreement. No likelihood or uncertainty equivalence is claimed.

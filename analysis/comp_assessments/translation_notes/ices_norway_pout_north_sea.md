@@ -197,3 +197,9 @@ These changes improve structural correspondence without reproducing the source m
 The model should therefore be assessed primarily as an annual approximation of population dynamics and stock-status trajectories rather than as an exact reproduction of the quarterly likelihood.
 
 Numerical success should be established using the current tinyAM convergence checks and comparison results, independently of the official benchmark fit.
+
+## Additional inherited translation context
+
+Preserved from the [SAIO review at `e723863`](https://github.com/PaulRegular/saio/blob/e723863b83e12b2f9ca7142eb147d1ae082bdb98/source_reviews/ices_norway_pout_north_sea.md) during the 2026-11-03 content separation. These passages describe earlier analysis choices or checks; they were not refitted or revalidated as current recipes. Use the registered stock script and `translations.csv` for current settings and status.
+
+The annual translation ends in 2024, the last year with complete quarterly catch observations for aggregation. Annualized comparison definitions must disclose differences in reference times and the age-0 recruitment convention. This is a simplified annual approximation of the quarterly SESAM benchmark.

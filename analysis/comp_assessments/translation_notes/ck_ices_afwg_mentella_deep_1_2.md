@@ -45,3 +45,28 @@ age 6. Age-specific biomass is unavailable from the source outputs.
 The dashboard and fitted object are cached locally under
 `results/cache/jrn_redfish_beaked_2026/`; they are generated outputs and are
 not committed.
+
+## Additional inherited translation context
+
+Preserved from the [SAIO review at `e723863`](https://github.com/PaulRegular/saio/blob/e723863b83e12b2f9ca7142eb147d1ae082bdb98/source_reviews/ck_ices_afwg_mentella_deep_1_2.md) during the 2026-11-03 content separation. These passages describe earlier analysis choices or checks; they were not refitted or revalidated as current recipes. Use the registered stock script and `translations.csv` for current settings and status.
+
+1. Numerical model weights and current maturity at ages 2–5 are unpublished. The framework describes young-age biology but does not supply the complete
+   current numerical vector. The limited fit therefore starts at age 6 and
+   cannot reproduce the full age-2+ population model.
+2. Table 6.19 contains aggregate deep-pelagic survey comparisons and means,
+   **not** a numerical age-composition table. The age curves are Figure 6.14;
+   numerical likelihood compositions and age-block weights remain unavailable.
+3. The total and outside-EEZ pelagic catch tables overlap. Their exact assembly
+   into the two source fleet likelihoods must be recovered for a closer
+   source-faithful translation; the current approximation uses total catch once.
+4. Current production observation selection, variance settings and the full
+   native configuration have not been recovered. Survey coverage and species-identification qualifications
+   in the source still apply.
+5. Aggregated 19+ reporting does not recover the source's explicit older-age
+   state and biological surfaces. Native SSB is retained; no claim is made that
+   it can be reconstructed exactly from the incomplete published biology.
+
+The partial import supports a restricted, converged age-6+ approximation and
+dashboard, not a source-faithful age-2+ replication. The source completeness
+statuses remain partial, and the substantial F and SSB scale differences
+should remain visible in any use of this comparison.

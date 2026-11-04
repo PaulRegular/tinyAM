@@ -40,3 +40,11 @@ Combining survey observations also changes their statistical properties. The sum
 Comparisons involving abundance, SSB, and Fbar require particular care. Official age-specific abundance should be aggregated consistently to 5+ before comparison. The source age-5 F estimate is not directly equivalent to the effective F for the translated 5+ group, and the translated Fbar over ages 2–5 includes an aggregate terminal age rather than the official model's individual age-5 state.
 
 The revised translation is intended as a simpler, internally consistent approximation of the official assessment, not an exact reproduction of its age structure or likelihood.
+
+## Additional inherited translation context
+
+Preserved from the [SAIO review at `e723863`](https://github.com/PaulRegular/saio/blob/e723863b83e12b2f9ca7142eb147d1ae082bdb98/source_reviews/ices_herring_western_baltic_2026.md) during the 2026-11-03 content separation. These passages describe earlier analysis choices or checks; they were not refitted or revalidated as current recipes. Use the registered stock script and `translations.csv` for current settings and status.
+
+Remaining differences include the official hockey-stick recruitment relationship, cross-age survey observation correlations, the full age-specific F-state structure, and the use of source age-5 biology for the translated 5+ population group.
+
+Inspect the current diagnostics and comparison definitions before interpreting this translation.

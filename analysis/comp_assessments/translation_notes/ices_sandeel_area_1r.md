@@ -71,3 +71,11 @@ The local dashboard is
 `results/cache/ices_sandeel_area_1r_2026/dashboard.html`. Fit, initialization,
 comparison and validation records are retained alongside it. Shared aggregate
 result tables and plots have not been refreshed from this single-stock run.
+
+## Additional inherited translation context
+
+Preserved from the [SAIO review at `e723863`](https://github.com/PaulRegular/saio/blob/e723863b83e12b2f9ca7142eb147d1ae082bdb98/source_reviews/ices_sandeel_area_1r.md) during the 2026-11-03 content separation. These passages describe earlier analysis choices or checks; they were not refitted or revalidated as current recipes. Use the registered stock script and `translations.csv` for current settings and status.
+
+The limited annual translation must document
+its age-1 entry, seasonal aggregation, survey timing approximation and changed
+recruitment/effort likelihoods before a fit is interpreted.

@@ -55,3 +55,64 @@ attempt, not a successful official–tinyAM replication. It should not be used
 as evidence of estimated abundance or mortality agreement. No source values,
 terminal years, tinyAM mathematics or aggregate library results were changed
 to conceal the problem.
+
+## Additional inherited translation context
+
+Preserved from the [SAIO review at `e723863`](https://github.com/PaulRegular/saio/blob/e723863b83e12b2f9ca7142eb147d1ae082bdb98/source_reviews/ices_sandeel_area_3r.md) during the 2026-11-03 content separation. These passages describe earlier analysis choices or checks; they were not refitted or revalidated as current recipes. Use the registered stock script and `translations.csv` for current settings and status.
+
+A finite latent log-F state cannot reproduce the structural zero in 2025.
+The annual translation must preserve this terminal year and disclose that
+limitation; adding small effort/catches would change source observations.
+The source's zero F also has no defined percent-difference denominator, so
+an unavailable terminal F statistic cannot be interpreted as agreement.
+
+The first annual translation retains 1987–2025, ages 1–4+, both surveys
+(Dredge age 1 and Acoustic ages 1–4+), the native q/SD sharing among retained
+observations, January biology and supplied annual M. Seasonal catch counts
+are summed and converted from million to thousand fish. July age-0 Dredge
+observations are omitted. Catch weights are observed-catch-weighted seasonal
+means; the four zero-catch cells in 2025 use equal-duration means for yield
+reporting only. The zeros themselves are unchanged.
+
+Free initial abundance, deterministic older-cohort survival and IID age-1
+recruitment approximate the source's January adults and weak July recruitment
+penalty. Correlated random-walk F increments were first used to approximate
+common annual fishing variation without taking the log of zero effort.
+This does not reproduce exact effort proportionality or shared F states.
+
+| Initialization | Optimizer code | Objective | Maximum absolute gradient | Positive-definite Hessian |
+|---|---:|---:|---:|---|
+| Package defaults | 1, false convergence | 362.1409 | 503,245 | No |
+| Aligned source starts | 1, false convergence | 361.8999 | 124,547,007 | No |
+
+Both failed numerical checks. An sdreport object was returned, but its
+covariance was not finite/usable. The estimated F increment age correlation
+was near its boundary; some residuals exceeded three SDs. A single
+source-start retry used positive official F cells and aligned N states;
+the unrepresentable zero-F cells retained package log-F starts of zero
+(F = 1), not an invented positive source observation. Settings/data were
+identical between attempts.
+
+The resulting exploratory comparison has large differences and must not be
+treated as a converged result. Terminal official F is zero in all four ages,
+so those percent differences remain unavailable while absolute differences
+remain visible. The failure diagnostics, source-start attempt and exploratory
+dashboard are cached. This motivates testing independent annual F increments
+as the simpler existing alternative identified by the correlation diagnostic;
+it does not establish that the closure alone caused the failure.
+
+Nine targeted scripts pass: the three regional source and translation
+checks, reference alignment, plus groups and default-first initialization.
+They protect the original survey values, q/SD sharing, annual transformations,
+time-varying supplied M, mixed recruitment dates, terminal zeros and missing
+uncertainty. Dashboard metadata were refreshed from the cached fit only after
+checking that all five fitted data tables were unchanged. The rendered HTML
+contains the scientific-review warning and the structural-zero limitation.
+
+The full package suite passes **2,929 checks, zero failures, warnings or
+skips**. Its first attempt could not locate Pandoc; rerunning with the bundled
+renderer configured resolves those environment-only dashboard failures.
+`R CMD check --no-manual --no-tests` returns **Status: OK**; tests ran
+separately as above. Logs are retained beside the dashboard. The broader
+assessment-analysis sweep was not repeated for this milestone; its previously
+documented unrelated baseline failures are not claimed to be resolved.

@@ -40,3 +40,15 @@ recruitment 46.1%, −60.2%, 0.852; F-at-age 48.1%, −22.5%, 0.841; and
 N-weighted F over ages 6–9 33.4%, +7.9%, 0.956. These statistics describe the
 candidate-run comparison and do not establish that Run29F4 was the production
 advice model. Fixed M is identical by construction and is only an input check.
+
+## Additional inherited translation context
+
+Preserved from the [SAIO review at `e723863`](https://github.com/PaulRegular/saio/blob/e723863b83e12b2f9ca7142eb147d1ae082bdb98/source_reviews/nefsc_american_plaice_5yz.md) during the 2026-11-03 content separation. These passages describe earlier analysis choices or checks; they were not refitted or revalidated as current recipes. Use the registered stock script and `translations.csv` for current settings and status.
+
+The survey season labels and native timing values disagree for the middle two
+series. The recorded values are 0.25, 0.75, 0.25, and 0.75 for spring
+Albatross, spring Bigelow, fall Albatross, and fall Bigelow, respectively.
+The age-composition tables support the series order, but no source evidence
+resolved whether the Bigelow timing values or labels are wrong. The source
+values remain unchanged and the translation uses those recorded
+fractions.

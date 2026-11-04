@@ -117,3 +117,9 @@ The N process, biological assumptions, survey selection and observation-error sp
 The revised configuration improves the representation of temporally varying fishing mortality without adding stock-specific biological processes or extra observation streams.
 
 The numerical fix and any improved agreement with official outputs should be documented using the newly generated convergence diagnostics and comparison summaries. No new numerical performance statistics are asserted in this source review.
+
+## Additional inherited translation context
+
+Preserved from the [SAIO review at `e723863`](https://github.com/PaulRegular/saio/blob/e723863b83e12b2f9ca7142eb147d1ae082bdb98/source_reviews/ices_haddock_iceland.md) during the 2026-11-03 content separation. These passages describe earlier analysis choices or checks; they were not refitted or revalidated as current recipes. Use the registered stock script and `translations.csv` for current settings and status.
+
+The historical translation fits 1979–2024, ages 1–12+, with random-walk recruitment, IID cohort-survival deviations, free initial abundance, correlated F random walks and fixed natural mortality. Catch and survey observations retain the source age structure and biological inputs, with simplified observation-error models and approximate survey timing. It tests broad population dynamics without reproducing every feature of the official SAM configuration.

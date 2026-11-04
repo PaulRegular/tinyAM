@@ -36,3 +36,16 @@ and biological constraints. `057_cache_dfo_cod_3pn4rs_sources.R` retrieves the
 additional public survey archives and maturity report and records their URLs
 and checksums. The source record remains partial because most official indices
 and some exact likelihood settings have not been recovered.
+
+## Additional inherited translation context
+
+Preserved from the [SAIO review at `e723863`](https://github.com/PaulRegular/saio/blob/e723863b83e12b2f9ca7142eb147d1ae082bdb98/source_reviews/dfo_cod_3pn4rs.md) during the 2026-11-03 content separation. These passages describe earlier analysis choices or checks; they were not refitted or revalidated as current recipes. Use the registered stock script and `translations.csv` for current settings and status.
+
+A Sentinel-only simplified fit is prepared for 1995–2024, ages 2–11+, using
+published catch-at-age, the Sentinel mobile index, digitized Figure 90 stock
+weights and Figure 70 maturity, and the documented baseline M means. It excludes
+the other five official survey streams and simplifies their combined observation
+structure, the source's initial-state integration, and the source likelihoods.
+Sentinel timing remains a mid-July approximation. These choices are explicit
+in the translation script; no fitted population values are used as observations
+or biological inputs.

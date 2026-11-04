@@ -78,3 +78,17 @@ and complete projection/missing-q metadata for standalone references.
 Cached initialization attempts, failure diagnostics, the reference object
 and original-to-model index mapping remain available. No core mathematics
 or public API was changed and shared aggregate tables were not regenerated.
+
+## Additional inherited translation context
+
+Preserved from the [SAIO review at `e723863`](https://github.com/PaulRegular/saio/blob/e723863b83e12b2f9ca7142eb147d1ae082bdb98/source_reviews/ices_sandeel_area_4.md) during the 2026-11-03 content separation. These passages describe earlier analysis choices or checks; they were not refitted or revalidated as current recipes. Use the registered stock script and `translations.csv` for current settings and status.
+
+The four regional source checks, four translation checks, reference alignment,
+plus-group handling and default-first initialization checks all passed (11
+assessment-analysis scripts). The dashboard tests passed 203 assertions;
+the full package suite passed 2,936 assertions with no failures, warnings or
+skips. A package-only `R CMD check --no-manual --no-tests` returned Status: OK;
+the complete package tests were run separately. The full assessment-analysis
+suite was not repeated for this milestone; its previously documented unrelated
+failures remain outside this source/translation review. The actual Official-only
+Area 4 dashboard rendered successfully.

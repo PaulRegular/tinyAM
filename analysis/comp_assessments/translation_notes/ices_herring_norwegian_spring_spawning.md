@@ -35,3 +35,12 @@ describe this documented approximation; they are not fit targets.
 
 The fit, initialization diagnostics, and dashboard are cached locally under
 `results/cache/ices_herring_norwegian_spring_2026/`.
+
+## Additional inherited translation context
+
+Preserved from the [SAIO review at `e723863`](https://github.com/PaulRegular/saio/blob/e723863b83e12b2f9ca7142eb147d1ae082bdb98/source_reviews/ices_herring_norwegian_spring_spawning.md) during the 2026-11-03 content separation. These passages describe earlier analysis choices or checks; they were not refitted or revalidated as current recipes. Use the registered stock script and `translations.csv` for current settings and status.
+
+The published age-12 stock weight and maturity are used as proxies for the
+12+ group because no abundance-by-single-age surface above age 12 supports a
+defensible weighted biological average. Maturity cohorts are mapped to
+calendar year by `cohort = year - age` in the translation.

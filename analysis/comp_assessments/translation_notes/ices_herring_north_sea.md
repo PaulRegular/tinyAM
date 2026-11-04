@@ -116,3 +116,24 @@ The improvement is attributable to scientifically motivated changes in the survi
 The translation remains an approximation. In particular, the four omitted larval indices, approximate survey timing, incomplete F age-sharing and variance groups, and differences in observation-error covariance may influence the fitted population states.
 
 The revised model's numerical convergence and comparison statistics should be evaluated separately from the previous random-walk N and independent F random-walk configuration.
+
+## Additional inherited translation context
+
+Preserved from the [SAIO review at `e723863`](https://github.com/PaulRegular/saio/blob/e723863b83e12b2f9ca7142eb147d1ae082bdb98/source_reviews/ices_herring_north_sea.md) during the 2026-11-03 content separation. These passages describe earlier analysis choices or checks; they were not refitted or revalidated as current recipes. Use the registered stock script and `translations.csv` for current settings and status.
+
+The revised translation is closer to the official FLSAM process structure, but it is not an exact reproduction.
+
+The main remaining differences are:
+
+- **Observation coverage:** Four regional larval indices and their partial spawning-component likelihoods are omitted.
+- **Fishing mortality:** Correlated random-walk increments are represented, but the official age-specific variance sharing and common F state at ages 7–8 are not.
+- **Observation errors:** The official IBTS-Q3 cross-age correlation is omitted.
+- **Survey timing:** Sampling fractions for the four age-structured indices are approximations, not independently recovered native values.
+- **SSB definition:** Official spawning-time fractions remain unavailable.
+- **Native assessment recovery:** Complete current-run FLSAM inputs and fitted objects have not been recovered for a direct likelihood-level comparison.
+
+These are documented limitations of the simplified translation, not errors in the official assessment.
+
+These settings more closely approximate the official assessment's core population dynamics than the previous translation.
+
+The case tests whether a comparatively simple age-structured state-space model can recover broad official stock dynamics without reproducing the complete FLSAM observation likelihood, state-sharing configuration or biological uncertainty.
