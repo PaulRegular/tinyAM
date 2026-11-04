@@ -144,6 +144,7 @@ testthat::test_that("other source-blocked cases have explicit preliminary recipe
     dfo_yellowtail_flounder_4t_2025 = "numeric age inputs",
     dfo_western_component_pollock_2025_hcr_update = "HCR update",
     dfo_yellowmouth_2021 = "age-composition arrays",
+    nafo_redfish_3m_2024 = "annual age-specific inputs are unavailable",
     ices_cod_west_greenland_inshore_2026 = "named 2026 SAM object",
     ices_cod_west_greenland_offshore_2026 = "named 2026 SAM object",
     ices_seabass_8ab_2026 = "run-matched observations"

@@ -1,15 +1,15 @@
 # NAFO translation readiness and preliminary fits
 
-This review uses the selected local SAIO snapshot at commit `eee9dd7e2d683041e8f25d1d28e2db8d483c22b1`. Source tables and reviews remain in SAIO. The three fit recipes use ages and inputs retained in the source tables; no age data were digitized from plots or inferred from fitted outputs.
+This review uses the selected local SAIO snapshot at commit `eee9dd7e2d683041e8f25d1d28e2db8d483c22b1`. Source tables and reviews remain in SAIO. The three fit candidate recipes use ages and inputs retained in the source tables; a fourth preliminary recipe records a source blocker. No age data were digitized from plots or inferred from fitted outputs.
 
 | Assessment record | Readiness and fitted grid | Main limitation |
 |---|---|---|
 | `nafo_cod_3m_2026` | Ready for a limited fit, 1988–2025, ages 2–8+ | Age 1 is omitted; source zeros are omitted as specified; the incomplete 2018 age-8+ survey value is excluded. Source-estimated M is represented by fixed prior medians. |
 | `nafo_cod_3no_2021` | Inputs support an approximate ADAPT translation, 1960–2019, ages 3–12 | Age 2 is omitted because stock weights begin at age 3. Source catch is exact and survey residuals have equal log-scale weights; tinyAM uses a tight finite catch SD and unit index SD. Age-12 F constraints are not reproduced. |
 | `nafo_american_plaice_3lno_2021` | Inputs support an exploratory translation, 1960–2020, ages 5–15+ | The 2026 record is monitoring only. The historical 2021 run has no tabulated annual N/F/SSB series; its terminal survivor parameters are not substitutes. The source warns that absolute estimates are unreliable. |
-| `nafo_redfish_3m_2024` | Not fit-ready | The accessible sources provide total catch and short-term scenario outputs, but no age-specific catch, index, weight or maturity matrices. |
+| `nafo_redfish_3m_2024` | Explicitly blocked before fitting | The detailed 2024 assessment report is inaccessible; available sources provide total catch and projections, but no age-specific catch, index, weight or maturity matrices. |
 
-All three recipe grids passed the no-fit `run_assessment(..., fit = FALSE)` checks after the final settings were applied. Catch and index observation SDs are supplied as fixed values, so the recipes use `sd_form = ~0`.
+All three fit candidate grids passed the no-fit `run_assessment(..., fit = FALSE)` checks after the final settings were applied. The redfish recipe returns a source-readiness blocker without constructing data or fitting. Catch and index observation SDs are supplied as fixed values, so the fit recipes use `sd_form = ~0`.
 
 ## 3M cod fit and comparison
 
@@ -40,4 +40,4 @@ The final-settings 3NO default fit returned after 599.7 seconds but failed numer
 
 The historical 3LNO 2021 default fit converged after 527.9 seconds (optimizer code 0, objective 1720.647, maximum gradient 0.00818, 43 fixed effects and 731 random effects; SD report succeeded and the Hessian was positive definite). `check_tam()` flagged residual spread outside 0.5–1.5 for some age/series groups and adjacent-year residual correlation above 0.5. No comparable annual reference rows are available: the accessible numerical outputs are terminal survivor estimates, not annual N/F/SSB. The fit is retained for structural exploration, but there are no annual agreement statistics or Official–tinyAM dashboard. The source has no aligned annual N/F surfaces for a source-start retry; none was needed because the default fit converged. The 2026 interim-monitoring record remains separate and is not treated as a model assessment.
 
-The interrupted attempts are marked in `results/preliminary/nafo_fit_diagnostics.csv` and their local initialization records. No tinyAM package code or core model mathematics was changed.
+The final fit outcomes are recorded in `results/preliminary/nafo_fit_diagnostics.csv` and their local initialization records. The targeted `test_expansion_01_translations.R` checks passed with 153 expectations, including the redfish blocker. No tinyAM package code or core model mathematics was changed.
