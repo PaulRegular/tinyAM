@@ -80,6 +80,12 @@ add_osa_residuals <- function(fit, method = "oneStepGaussianOffMode", ...) {
 
 .compute_osa_residuals <- function(fit, method, controls = list()) {
   method <- .osa_method(method, controls)
+  if (is.null(fit$obj) || is.null(fit$parameter_values)) {
+    cli::cli_abort("OSA calculation requires the fitted objective and stored parameter values.")
+  }
+  if (is.null(fit$dat$obs_map) || is.null(fit$dat$observed)) {
+    cli::cli_abort("OSA calculation requires the stored observations and likelihood mapping.")
+  }
   requested_settings <- controls
   n <- length(fit$dat$observed)
   conditional <- .osa_indices(controls$conditional, n, "conditional")
