@@ -485,7 +485,7 @@ test_that("tam_ref objects accept a Background page", {
   call_start <- regexpr('<div id="function-calls"', visible_html, fixed = TRUE)[[1L]]
   expect_gt(call_start, 0L)
   call_html <- regmatches(visible_html, regexpr(
-    '(?s)<div id="function-calls".*?(?=<div id="output")',
+    '(?s)<div id="function-calls".*?</table>',
     visible_html,
     perl = TRUE
   ))

@@ -43,7 +43,7 @@ test_that("a fitted plateau has finite direct-scale increments and SEs", {
     tolerance = 1e-6
   )
   fit <- structure(list(
-    obj = obj, dat = list(), sdrep = sdrep, opt = opt,
+    obj = obj, dat = list(), sdrep = sdrep, opt = opt, grad_tol = 1e-2,
     rep = list(log_pred = drop(design$q_modmat %*% estimates$log_q +
       design$q_mono_modmat %*% estimates$dq), sd_obs = rep(.1, 4))
   ), class = "tam_fit")
@@ -56,6 +56,7 @@ test_that("a fitted plateau has finite direct-scale increments and SEs", {
 
 test_that("convergence diagnostics respect only valid active-bound gradients", {
   fit <- structure(list(
+    grad_tol = 1e-2,
     opt = list(
       par = c(dq = 0), convergence = 0,
       objective = 1, message = "OK"
