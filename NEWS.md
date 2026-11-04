@@ -1,5 +1,9 @@
 # tinyAM 0.1.1.9001
 
+* Preserve smooth warm-start functions across equivalent mgcv basis signs and
+  rotations, while rejecting changes to predictor grids or Gaussian penalties.
+  This fixes platform-dependent retrospective warm-start checks.
+
 * Read assessment examples from pinned external SAIO snapshots. Separate
   curated and preliminary translations, dashboards, caches and comparison outputs.
 

@@ -105,11 +105,14 @@
         start$log_f <- start$log_f[, groups[keep], drop = FALSE]
       }
     }
+    smooth_start <- .smooth_warm_starts(start, source$dat, dat)
+    start <- smooth_start$parameters
     for (component in c("N", "F", "M", "rec", "q")) {
       name <- switch(component, N = "mu_n", F = "log_mu_f", M = "mu_m", rec = "rec_beta",
         q=if (dat$index_settings$q_link == "logit") "logit_q" else "log_q")
       if (is.null(start[[name]])) next
       old <- if (component == "rec") source$dat$rec$matrix else source$dat[[paste0(component, "_modmat")]]
+      if (component %in% c("F", "q")) old <- smooth_start$designs[[component]]
       new <- if (component == "rec") dat$rec$matrix else dat[[paste0(component, "_modmat")]]
       if (!is.matrix(new)) next
       if (component %in% c("F","q")) {
@@ -136,15 +139,6 @@
         start[[name]] <- NULL
         label <- if (component == "rec") "Recruitment" else if(component == "q") "Catchability" else component
         cli::cli_inform("{label} mean starts were omitted because the formula basis changed.")
-      }
-    }
-    for (component in c("q","F")) {
-      field <- if (component == "q") "q_terms" else "F_terms"
-      for (term in Filter(function(x)x$type == "smooth",dat[[field]])) {
-        previous <- source$dat[[field]][[term$id]]
-        if (is.null(previous) || !.smooth_basis_compatible(previous,term)) {
-          start[c(term$parameter,term$sd_parameter)] <- NULL
-        }
       }
     }
   }

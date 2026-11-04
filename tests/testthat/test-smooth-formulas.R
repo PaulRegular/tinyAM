@@ -164,16 +164,43 @@ test_that("smooth warm starts retain compatible age bases and reject changed bas
   settings$years <- 2000:2006
   peel <- do.call(make_test_dat,settings)
   start <- .start_parameters(fake,peel)
-  for (term in c(peel$F_terms,peel$q_terms)) {
-    expect_equal(start[[term$parameter]],p[[term$parameter]])
-    expect_equal(start[[term$sd_parameter]],p[[term$sd_parameter]])
+  merged <- .merge_start_par(make_par(peel),start)
+  for (component in c("F", "q")) {
+    source_data <- if (component == "F") d$F_data else d$obs$index
+    target_data <- if (component == "F") peel$F_data else peel$obs$index
+    key <- function(x) paste(x$year, x$age)
+    rows <- match(key(target_data), key(source_data))
+    field <- if (component == "F") "F_terms" else "q_terms"
+    coefficient <- if (component == "F") "log_mu_f" else "log_q"
+    matrix <- paste0(component, "_modmat")
+    old_effect <- if (component == "F") .mean_effects(p,d,"F") else .q_effects(p,d)
+    new_effect <- if (component == "F") .mean_effects(merged,peel,"F") else .q_effects(merged,peel)
+    old_function <- drop(d[[matrix]] %*% p[[coefficient]]) + old_effect$contribution
+    new_function <- drop(peel[[matrix]] %*% merged[[coefficient]]) + new_effect$contribution
+    expect_equal(new_function, old_function[rows], ignore_attr = TRUE)
+    expect_equal(new_effect$nll, old_effect$nll)
+    for (term in peel[[field]]) {
+      expect_false(is.null(start[[term$parameter]]))
+      expect_equal(sum(start[[term$parameter]]^2),sum(p[[term$parameter]]^2))
+      expect_equal(start[[term$sd_parameter]],p[[term$sd_parameter]])
+    }
   }
   settings$F_settings$mu_form <- ~factor(year)+s(age,k=6)
   changed <- do.call(make_test_dat,settings)
   start <- suppressMessages(.start_parameters(fake,changed))
   expect_null(start[[changed$F_terms[[1]]$parameter]])
   expect_null(start[[changed$F_terms[[1]]$sd_parameter]])
-  expect_equal(start[[changed$q_terms[[1]]$parameter]],p[[changed$q_terms[[1]]$parameter]])
+  changed_par <- .merge_start_par(make_par(changed),start)
+  q_rows <- match(paste(changed$obs$index$year,changed$obs$index$age),
+    paste(d$obs$index$year,d$obs$index$age))
+  old_q <- .q_effects(p,d)
+  new_q <- .q_effects(changed_par,changed)
+  expect_equal(drop(changed$q_modmat %*% changed_par$log_q)+new_q$contribution,
+    (drop(d$q_modmat %*% p$log_q)+old_q$contribution)[q_rows],ignore_attr=TRUE)
+  expect_equal(new_q$nll,old_q$nll)
+  for (term in changed$q_terms) {
+    expect_equal(start[[term$sd_parameter]],p[[term$sd_parameter]])
+  }
   expect_identical(fake$parameter_values,before)
   active <- settings
   active$F_settings <- list(process="iid",mu_form=~factor(year)+s(age,k=5))
@@ -183,6 +210,92 @@ test_that("smooth warm starts retain compatible age bases and reject changed bas
   expected <- matrix(drop(active$F_modmat %*% initialized$log_mu_f)+
     .mean_effects(initialized,active,"F")$contribution,length(active$years))
   expect_equal(unname(initialized$log_f),unname(.f_state_mean(expected,active)))
+})
+
+test_that("smooth warm starts preserve functions and penalties under explicit rotations", {
+  # Deliberately change coordinates instead of relying on a platform's choice
+  # of eigenvector signs. Multiple tensor penalties must transfer together.
+  for (tensor in c(FALSE, TRUE)) {
+    d <- make_test_dat(years=2000:2007, ages=2:10,
+      F_settings=list(process="off",mu_form=~factor(year)+s(age,k=5)),
+      index_settings=list(q_form=if (tensor) ~t2(age,year,k=c(4,4)) else ~s(age,k=4)))
+    old <- d
+    p <- make_par(d)
+    rotation <- function(n) {
+      out <- diag(n)
+      if (n == 1L) return(-out)
+      out[1:2,1:2] <- matrix(c(cos(.6),sin(.6),-sin(.6),cos(.6)),2)
+      out
+    }
+    for (component in c("F", "q")) {
+      field <- if (component == "F") "F_terms" else "q_terms"
+      coefficient <- if (component == "F") "log_mu_f" else "log_q"
+      pieces <- d[[field]]
+      signature <- pieces[[1]]$basis_signature
+      fixed <- rotation(ncol(signature$design$fixed))
+      random <- lapply(signature$design$random, function(x) rotation(ncol(x)))
+      signature$design$fixed <- signature$design$fixed %*% fixed
+      signature$design$random <- Map(function(x,r) x %*% r,signature$design$random,random)
+      columns <- colnames(pieces[[1]]$smooth_fixed)
+      old[[paste0(component,"_modmat")]][,columns] <-
+        d[[paste0(component,"_modmat")]][,columns,drop=FALSE] %*% fixed
+      p[[coefficient]][] <- seq_along(p[[coefficient]])/7
+      for (j in seq_along(pieces)) {
+        term <- pieces[[j]]
+        old[[field]][[j]]$basis_signature <- signature
+        old[[field]][[j]]$smooth_fixed <- term$smooth_fixed %*% fixed
+        colnames(old[[field]][[j]]$smooth_fixed) <- columns
+        old[[field]][[j]]$design <- term$design %*% random[[term$penalty]]
+        p[[term$parameter]][] <- seq_along(p[[term$parameter]])/10
+        p[[term$sd_parameter]][] <- log(.3+j/10)
+      }
+    }
+    fake <- structure(list(dat=old,parameter_values=unlist(p),
+      obj=list(env=list(parList=function(par)p))),class="tam_fit")
+    original <- fake
+    start <- .start_parameters(fake,d)
+    merged <- .merge_start_par(make_par(d),start)
+    for (component in c("F", "q")) {
+      coefficient <- if (component == "F") "log_mu_f" else "log_q"
+      field <- if (component == "F") "F_terms" else "q_terms"
+      old_effect <- if (component == "F") .mean_effects(p,old,"F") else .q_effects(p,old)
+      new_effect <- if (component == "F") .mean_effects(merged,d,"F") else .q_effects(merged,d)
+      expect_equal(drop(old[[paste0(component,"_modmat")]] %*% p[[coefficient]])+
+        old_effect$contribution, drop(d[[paste0(component,"_modmat")]] %*%
+        merged[[coefficient]])+new_effect$contribution,ignore_attr=TRUE,tolerance=1e-10)
+      expect_equal(old_effect$nll,new_effect$nll,tolerance=1e-10)
+      for (term in d[[field]]) {
+        expect_false(is.null(start[[term$parameter]]))
+        expect_equal(sum(p[[term$parameter]]^2),sum(start[[term$parameter]]^2),tolerance=1e-10)
+        expect_equal(p[[term$sd_parameter]],start[[term$sd_parameter]])
+      }
+    }
+    expect_identical(fake,original)
+    # A non-orthogonal penalty change invalidates the entire tensor, including
+    # its null space and every smoothing SD, even if other blocks still match.
+    bad <- old
+    for (j in seq_along(bad$q_terms)) {
+      bad$q_terms[[j]]$basis_signature$design$random[[1]] <-
+        2*bad$q_terms[[j]]$basis_signature$design$random[[1]]
+    }
+    fake$dat <- bad
+    rejected <- suppressMessages(.start_parameters(fake,d))
+    for (term in d$q_terms) {
+      expect_null(rejected[[term$parameter]])
+      expect_null(rejected[[term$sd_parameter]])
+    }
+    expect_false(any(colnames(d$q_terms[[1]]$smooth_fixed) %in% names(rejected$log_q)))
+    changed <- d$q_terms[[1]]
+    changed$basis_signature$grid$age <- changed$basis_signature$grid$age+.01
+    expect_false(.smooth_basis_compatible(d$q_terms[[1]],changed))
+    changed <- d$q_terms[[1]]
+    changed$scope <- list(type="survey",name="different",id="survey:different")
+    expect_false(.smooth_basis_compatible(d$q_terms[[1]],changed))
+    fake$dat <- old
+    fake$dat$q_terms <- fake$dat$q_terms[-1]
+    rejected <- suppressMessages(.start_parameters(fake,d))
+    for (term in d$q_terms) expect_null(rejected[[term$parameter]])
+  }
 })
 
 test_that("scoped F and q smooths report complete functions and signed null-space coefficients", {
