@@ -1,5 +1,9 @@
 # tinyAM 0.1.1.9001
 
+* Add concise website guides for comparing Northern cod model hypotheses and
+  fitting multiple fisheries and surveys. Link both from a Guides menu alongside
+  the model-structure examples.
+
 * Add simulated, 3Ps-inspired cod inputs with three active fleets and two
   surveys of coastal and offshore areas. Keep compact generating truth and
   monitoring provenance separate from the estimated observations; SimSurvey

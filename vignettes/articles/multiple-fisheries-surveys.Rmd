@@ -53,9 +53,10 @@ selection. The simulated coastline and depth restrictions are approximations.
 The Sentinel-like program retains swept-area sampling; it does not reproduce
 net saturation or literal fish-per-net CPUE.
 
-```{r footprints, fig.width=8, fig.height=3.6, fig.cap="Survey footprints on the synthetic grid. The northern edge represents the coast; grey cells are outside each survey's footprint."}
+```{r footprints, fig.width=8, fig.height=4.2, fig.cap="Survey footprints on the synthetic grid. The northern edge represents the coast; grey cells are outside each survey's footprint."}
 local({
-  old <- par(mfrow = c(1, 2), mar = c(3.5, 3.5, 2, 0.5))
+  old <- par(mfrow = c(1, 2), mar = c(4.5, 4.8, 2.2, 0.8),
+             mgp = c(2.8, 0.8, 0), cex = 0.85)
   on.exit(par(old))
   grid <- sim_cod_truth$footprint
   for (survey in c("RV", "Sentinel")) {
@@ -81,7 +82,7 @@ Start with fleet-specific annual effects and selectivity shapes. `for_fleet()`
 evaluates its inner formula only on the named fleet. Each inner formula includes
 an intercept, so the outer formula uses `~ 0 +` to avoid an extra common baseline.
 
-```{r fleet-formula}
+```{r fleet-formula, cache=TRUE}
 fishing <- ~ 0 +
   for_fleet("Trawl", ~ factor(year) + logistic(age)) +
   for_fleet("Longline", ~ factor(year) + logistic(age)) +
@@ -122,23 +123,34 @@ also available. See [scopes](../reference/for_fleet.html),
 
 ## Give surveys their own relationships
 
-```{r survey-formula}
+```{r survey-formula, cache=TRUE}
+dat$index$q_age_group <- cut(dat$index$age, c(0, 3, 5, 7, 9, Inf))
 catchability <- ~ 0 +
-  for_survey("RV", ~ logistic(age)) +
-  for_survey("Sentinel", ~ double_logistic(age))
+  for_survey("RV", ~ q_age_group) +
+  for_survey("Sentinel", ~ q_age_group)
 ```
 
-These components have separate q scales and shapes. Under the default log link,
+These components estimate separate age-group catchabilities for each survey.
+Groups are defined from ages alone, without using simulation truth. Initial
+logistic RV and double-logistic Sentinel q fits had weakly identified curve
+parameters and failed Hessian checks; the grouped relationship is a different
+teaching hypothesis, with those attempts retained. Curves and smooths remain
+available when the data support them.
+
+Under the default log link,
 q is positive and need not be below one: it relates the supplied index scale to
 modeled abundance. A regional survey measures abundance inside its footprint.
 Spatial redistribution can change the fraction of the population there, even
 when its gear selectivity stays constant. A constant-q relationship to total
 abundance is therefore an assumption to inspect, not a consequence of using a
 standardized sampling design.
+In this realization, the annual fraction of gear-selected fish inside the
+footprint ranges from 52–99% for RV and 5–87% for Sentinel. A constant q cannot
+fully describe that variation.
 
 ## Fit and compare a second hypothesis
 
-```{r separable, cache=TRUE, dependson=c("fleet-formula", "survey-formula")}
+```{r separable, cache=TRUE, dependson=c("fleet-formula", "survey-formula"), results='hide'}
 separable <- fit_tam(
   dat, ages = 1:14,
   N_settings = list(process = "iid", init = "exp"),
@@ -153,7 +165,7 @@ separable <- fit_tam(
 For the alternative, replace the free annual scales with AR1 departures around
 each fleet's mean age curve:
 
-```{r flexible, cache=TRUE, dependson="separable"}
+```{r flexible, cache=TRUE, dependson="separable", results='hide'}
 fishing_process <- ~ 0 +
   for_fleet("Trawl", ~ logistic(age)) +
   for_fleet("Longline", ~ logistic(age)) +
@@ -163,6 +175,9 @@ flexible <- update(separable,
   F_settings = list(process = "ar1", mu_form = fishing_process,
                    sd_form = ~ fleet)
 )
+```
+
+```{r checks}
 check_tam(separable, flexible)
 ```
 
@@ -224,17 +239,11 @@ plot_matrix(get_f(flexible))
 ```
 
 The dotted SSB line is known generating biomass and has no confidence interval.
+Both fitted examples underestimate SSB in this realization despite passing
+numerical checks; convergence alone does not establish biological accuracy.
 `get_f()` returns total age-specific F. Fleet-specific F is available in
 `tidy_pop(flexible)$F_fleet`. The separate simulation truth permits checks of
-abundance, mortality and regional availability; it should not be used to adjust
-observed indices until a fitted relationship looks satisfactory. This single
+abundance, mortality and regional availability. Use it to evaluate the fitted
+results while keeping it separate from the fitting inputs. This single
 realization demonstrates the workflow. It does not establish estimator bias,
 interval coverage or which model generalizes best.
-
-## Initial curve-hypothesis validation
-
-Both initial fits fail Hessian checks; the separable fit also fails optimizer
-and gradient checks. Private objective evaluations reproduce the fitted
-objectives exactly. Weak directions concern a nearly flat RV q curve and an
-extreme Sentinel descending midpoint, rather than a zero N-process SD. These
-attempts and their warnings are retained; their Wald intervals are unreliable.

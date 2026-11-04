@@ -54,7 +54,7 @@ fixed effects, cohort survival follows the mortality calculation exactly, and F
 is separable into annual and age effects. Natural mortality is supplied as 0.3
 per year.
 
-```{r scaa, cache=TRUE}
+```{r scaa, cache=TRUE, results='hide'}
 scaa <- fit_tam(
   dat, years = 1983:2025, ages = 2:14,
   N_settings = list(process = "off", init = "exp"),
@@ -77,7 +77,7 @@ Now allow cohort-survival deviations, random-walk recruitment and correlated
 annual F increments. This SAM-like model explains additional variation through
 population processes while retaining the same observations and fixed M.
 
-```{r sam, cache=TRUE, dependson="scaa"}
+```{r sam, cache=TRUE, dependson="scaa", results='hide'}
 sam <- update(scaa,
   N_settings = list(process = "iid"),
   rec_settings = list(process = "rw", mu_form = NULL),
@@ -88,7 +88,7 @@ sam <- update(scaa,
 The NCAM-like alternative keeps exact cohort survival but allows temporally
 correlated F and M. Ages within each M block share actual M.
 
-```{r ncam, cache=TRUE, dependson="scaa"}
+```{r ncam, cache=TRUE, dependson="scaa", results='hide'}
 ncam <- update(scaa,
   rec_settings = list(process = "rw", mu_form = NULL),
   F_settings = list(process = "ar1", mu_form = ~ 1),
