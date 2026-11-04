@@ -216,9 +216,9 @@
 #' @param interval Level in `(0, 1)` to use to generate confidence intervals,
 #'   where applicable; default `0.95.`
 #' @param silent Logical; if `TRUE`, disables tracing information.
-#' @param add_osa_res Logical; add one-step-ahead residuals? Hard wired to
-#'   apply the `"oneStepGaussianOffMode"` method. See [RTMB::oneStepPredict()]
-#'   for details.
+#' @param add_osa_res Logical; add one-step-ahead residuals using
+#'   `"oneStepGaussianOffMode"`? To select another method after fitting and
+#'   retain its results, use [add_osa_residuals()].
 #' @param start_par Optional fitted `tam_fit` or list of starting parameter values, matching the
 #'   structure returned by [make_par()]. Useful for warm starts or retrospective
 #'   runs where parameter estimates from a previous fit are reused to improve

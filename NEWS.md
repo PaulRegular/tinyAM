@@ -1,5 +1,10 @@
 # tinyAM 0.1.1.9001
 
+* Select any supported OSA algorithm through `method` and retain diagnostics
+  with `add_osa_residuals()`, without refitting. Explicit computation requests
+  refresh catch and survey residuals together; cached extraction stays cheap.
+  Retain method/settings/coverage metadata through tidying and model comparisons.
+
 * Add `get_ssb()`, `get_recruitment()`, `get_fbar()`, `get_mbar()`, `get_f()`
   and `get_m()` for common population tables, retaining uncertainty, units,
   projections and comparison labels without calculating diagnostics.
