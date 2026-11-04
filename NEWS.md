@@ -22,7 +22,8 @@
 * Offer Standardized / OSA residual controls without bubble outlines. Start with
   retained OSAs when available; overlays use a common residual type and model
   frames choose separately. Preserve partial gaps and identify the OSA method;
-  plotting never calculates residuals.
+  plotting never calculates residuals. Explicit row-wise hover values stay
+  aligned through model frames and missing residuals.
 
 * Select any supported OSA algorithm through `method` and retain diagnostics
   with `add_osa_residuals()`, without refitting. Explicit computation requests

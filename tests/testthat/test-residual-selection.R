@@ -133,3 +133,19 @@ test_that("overlay defaults require eligible OSA in every displayed model", {
     do.call(c, lapply(view$cells, `[[`, "data"))))
   expect_true(all(vapply(traces, function(trace) identical(trace$marker$line$width, 0), logical(1))))
 })
+
+test_that("explicit hover vectors follow model frames and partial OSA rows", {
+  d <- residual_plot_data()
+  labels <- paste0("row-", seq_len(nrow(d)))
+  p <- plot_resid(d, frame = ~model, text = labels,
+    customdata = seq_len(nrow(d)), hovertemplate = "%{text}: %{customdata}")
+  osa <- residual_config(p)$views[[2]]$cells[[1]]
+  traces <- Filter(function(trace) length(trace$x), osa$data)
+  expect_identical(as.character(traces[[1]]$text), labels[1:2])
+  expect_equal(as.numeric(traces[[1]]$customdata), 1:2)
+  expect_true(all(as.character(traces[[1]]$hovertemplate) == "%{text}: %{customdata}"))
+  standard <- residual_config(p)$views[[1]]$cells[[2]]
+  traces <- Filter(function(trace) length(trace$x), standard$data)
+  expect_identical(as.character(traces[[1]]$text), labels[7:12])
+  expect_equal(as.numeric(traces[[1]]$customdata), 7:12)
+})

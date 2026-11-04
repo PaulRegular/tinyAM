@@ -203,6 +203,21 @@ plot_resid <- function(
                                       x = ~year, xlab = "Year", y = ~age,
                                       ylab = "Age", title = NULL) {
   if (!is.data.frame(data)) cli::cli_abort("Residual plots require a data frame.")
+  # Keep explicit Plotly row attributes aligned when frames or OSA gaps subset
+  # the data. Formulas and scalar style arguments already have the right scope.
+  for (field in c("text", "hovertext", "customdata", "ids", "key", "hovertemplate",
+                  "color", "symbol", "size", "opacity")) {
+    value <- args[[field]]
+    rowwise <- !inherits(value, "formula") &&
+      ((is.matrix(value) && nrow(value) == nrow(data)) ||
+       ((is.atomic(value) || is.list(value)) && is.null(dim(value)) &&
+        length(value) > 1L && length(value) == nrow(data)))
+    if (rowwise) {
+      column <- paste0(".tam_residual_", field)
+      data[[column]] <- value
+      args[[field]] <- stats::reformulate(column)
+    }
+  }
   frame <- .residual_frame_values(data, args$frame)
   animated <- !is.null(args$frame) && length(frame$levels) > 1L
   model_frame <- identical(args$frame, "model") ||
