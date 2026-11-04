@@ -1,5 +1,14 @@
 # tinyAM 0.1.1.9001
 
+* Organize plots by purpose and colocate population getters. Share fitted test
+  fixtures, remove redundant renders and unused implementations, and retire the
+  `check_obs()` and `tidy_mat()` aliases in favor of `check_tam_data()` and
+  `tidy_array()`. Old saved-fit migrations are no longer maintained.
+
+* Open dashboards on Model structure, with Diagram and Function calls tabs.
+  Use responsive, palette-colored boxes with normal dashboard typography and
+  SVG connections, without adding a diagramming dependency.
+
 * Restore catch-only preparation, projections, simulation and tidy outputs,
   retaining empty survey tables without unused catchability or survey-SD
   parameters. Render reporting references with missing yield, observations or
@@ -10,10 +19,10 @@
   Compare stored specifications with an independent model selector; link
   components to maintained equations without calculating or changing fits.
 
-* Add Auto / Standardized / OSA controls to public residual plots and dashboards.
-  Auto selects retained OSAs separately for each model and panel, preserving
-  partial gaps and models without OSA calculations. Labels identify the method;
-  changing plot controls never calculates residuals.
+* Offer Standardized / OSA residual controls without bubble outlines. Start with
+  retained OSAs when available; overlays use a common residual type and model
+  frames choose separately. Preserve partial gaps and identify the OSA method;
+  plotting never calculates residuals.
 
 * Select any supported OSA algorithm through `method` and retain diagnostics
   with `add_osa_residuals()`, without refitting. Explicit computation requests
@@ -32,10 +41,10 @@
   rotations, while rejecting changes to predictor grids or Gaussian penalties.
   This fixes platform-dependent retrospective warm-start checks.
 
-* Read assessment examples from SAIO's latest committed main by default, recording
-  the exact source revision and separating caches by database version. Explicit
-  revisions remain available for reproducing historical results. Keep curated
-  and preliminary translation membership and outputs separate.
+* Run comparative assessments from an explicitly refreshed local SAIO snapshot,
+  recording its commit in a tracked manifest. Separate fitting, dashboard
+  rendering and overview figures; honor the caller's future plan. Keep curated
+  and preliminary membership and revision-specific result caches separate.
 
 * Group fishery diagnostics under Fisheries: one complete page per fleet,
   followed by Aggregate fishery. Unlabeled catches remain stock-wide; aggregate

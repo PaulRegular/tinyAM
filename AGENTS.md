@@ -61,6 +61,11 @@ transparent, and consistent with existing package structure.
 - Run targeted tests first, then the full test suite.
 - Run `R CMD check` for substantial changes when practical.
 - Do not weaken existing tests merely to make new code pass.
+- Share fitted fixtures across tests; refit or render HTML only when that
+  operation protects behavior not already covered. Judge coverage by meaningful
+  contracts rather than the number of assertions.
+- Retired interfaces and old saved-object migrations need no compatibility
+  tests. Preserve checks of current scientific conventions, including M blocks.
 
 ## RTMB / model conventions
 

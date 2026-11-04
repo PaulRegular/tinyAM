@@ -215,15 +215,15 @@ statistical advisories. Convergence alone does not establish that the data
 identify every component.
 Inspect each check before interpreting or ranking an alternative.
 
-Use `plot_model(base, N_iid, M_ar1)` or the dashboard's **Model structure** page
-to inspect process switches and formulas. The
+Use `plot_model(base, N_iid, M_ar1)` or the dashboard's opening **Model structure**
+page to inspect process switches and formulas. Its second tab shows function calls. The
 [structure guide](https://paulregular.github.io/tinyAM/articles/model-structure.html)
 links contrasting diagrams to the model equations.
 
 In the dashboard, start with **Fisheries** and **Surveys** to inspect fits and
-residuals. **Auto** uses retained OSA residuals where available for each model;
-otherwise it uses standardized residuals. Select either type explicitly with
-the residual dropdown. Fisheries lists each fleet, then **Aggregate fishery**;
+residuals. Plots start with retained OSA residuals when available, otherwise
+standardized residuals; the dropdown selects either type explicitly. Fisheries
+lists each fleet, then **Aggregate fishery**;
 without fleets, the aggregate page contains the single-fishery diagnostics.
 Review **Tables → Diagnostics** and **Parameters** for
 checks, uncertainty and process deviations before interpreting **Trends** for

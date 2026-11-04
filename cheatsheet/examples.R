@@ -92,8 +92,9 @@ dat <- make_tam_data(
 )
 # ---- end ----
   # Reporting/layout changes must not invalidate numerical model fits.
-  fit_sources <- sources[!names(sources) %in% c("plot.R", "plot-process.R", "palette.R",
-    "tidy.R", "vis.R", "process-diagnostics.R", "NAMESPACE")]
+  fit_sources <- sources[!grepl("^plot[-.]", names(sources)) &
+    !names(sources) %in% c("palette.R", "tidy.R", "vis.R", "model-diagram.R",
+      "getters.R", "process-diagnostics.R", "NAMESPACE")]
   fit_key <- list(sources = fit_sources, example = provenance$example_md5, data = fingerprint(dat), runtime = provenance$runtime)
   records <- list()
   cached <- function(name, key, code) {
@@ -167,7 +168,8 @@ ncam <- update(scaa,
   provenance$process_diagnostics <- diagnostics
   tidy_key <- list(fit = fit_key, sources = sources[c("tidy.R", "process-diagnostics.R")], diagnostics = diagnostics)
   out <- cached("tidy", tidy_key, function() tidy_tam(scaa, sam, ncam, process_seed = process_seed))
-  dashboard_key <- list(tidy = tidy_key, sources = sources[c("vis.R", "plot.R", "plot-process.R")],
+  dashboard_key <- list(tidy = tidy_key, sources = sources[c("vis.R", "model-diagram.R",
+    names(sources)[grepl("^plot[-.]", names(sources))])],
     layout = "random-dropdowns-v2", templates = templates, background = file_hashes(background_file))
   prior <- if (file.exists(dashboard_file)) readRDS(dashboard_file) else NULL
 # ---- dashboard ----

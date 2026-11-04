@@ -35,7 +35,6 @@ reference:
   - make_tam_data
   - as_tam_data
   - check_tam_data
-  - check_obs
   - cut_int
   - prepare_tam
   - make_par
