@@ -53,15 +53,25 @@ test_that("recruitment covariates come only from youngest-age population covaria
 test_that("Gaussian recruitment simulation keeps the anchor and residual convention", {
   for (type in c("iid", "ar1", "rw")) {
     spec <- list(process = type, mu_form = ~1, sd = .2, phi = if (type == "ar1") .5 else NULL)
-    d <- make_test_dat(N_settings = list(process = "off"), rec_settings = spec)
+    d <- make_test_dat(years = 2000:2006, ages = 2:6,
+      N_settings = list(process = "off"), rec_settings = spec)
     p <- make_par(d)
     p$log_r0 <- 1
     if (!is.null(p$rec_beta)) p$rec_beta[] <- 2
     set.seed(912)
-    draws <- replicate(500, tinyAM:::.simulate_rec(p, d))
-    expected <- if (type == "rw") 1 else 2
-    expect_lt(max(abs(rowMeans(draws) - expected)), if (type == "rw") .15 else .05)
-    expect_equal(p$log_r0, 1)
+    actual <- .population_states(p, d, d$W * 0 + .3, simulate = TRUE)
+    set.seed(912)
+    noise <- stats::rnorm(length(d$years) - 1L)
+    expected <- c(1, rep(NA_real_, length(noise)))
+    for (i in seq_along(noise)) {
+      mean <- switch(type, iid = 2, rw = expected[i],
+        ar1 = if (i == 1L) 2 else 2 + .5 * (expected[i] - 2))
+      sd <- if (type == "ar1" && i == 1L) .2 / sqrt(1 - .5^2) else .2
+      expected[i + 1L] <- mean + sd * noise[i]
+    }
+    expect_equal(unname(actual$log_recruitment), expected, tolerance = 1e-12)
+    expect_equal(unname(actual$log_N[, 1L]), expected, tolerance = 1e-12)
+    expect_equal(actual$log_recruitment[1L], c(`2000` = p$log_r0))
   }
 })
 

@@ -64,6 +64,7 @@ if (requireNamespace("RTMB", quietly = TRUE) && exists("cod_obs", inherits = TRU
       age_breaks = c(3, 14)
     )
   )
+  fits <- list(N_dev = N_dev, M_dev = M_dev)
 } else {
   default_fit <- NULL
   N_dev <- NULL

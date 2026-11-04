@@ -1,6 +1,3 @@
-suppressWarnings(
-  source(system.file("examples/example_fits.R", package = "tinyAM"))
-)
 fit <- N_dev
 
 ## sim_tam ----

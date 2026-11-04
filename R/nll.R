@@ -75,24 +75,6 @@
 #' @importFrom stats rnorm
 #' @seealso [tinyAM-model], [prepare_tam()], [make_par()], [fit_tam()], [sim_tam()]
 #' @export
-nll_fun <- function(f, d) function(p) f(p, d)
-#' obj <- RTMB::MakeADFun(make_nll_fun(nll_fun, dat), par,
-#'   random = c("log_n", "log_f","log_r"), silent = TRUE
-#' )
-#' opt <- nlminb(obj$par, obj$fn, obj$gr)
-#' rep <- obj$report()
-#' sdrep <- RTMB::sdreport(obj)
-#'
-#' # Simulate from fitted parameters
-#' p_hat <- as.list(sdrep, "Estimate")
-#' sims  <- nll_fun(p_hat, dat, simulate = TRUE)
-#'
-#' @importFrom stats rnorm
-#'
-#' @seealso
-#' [prepare_tam()], [make_par()], [fit_tam()], [sim_tam()],
-#' [dprocess_ar1()], [rprocess_ar1()]
-#' @export
 nll_fun <- function(par, dat, simulate = FALSE) {
   "[<-" <- ADoverload("[<-")
 

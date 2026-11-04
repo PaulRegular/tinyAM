@@ -103,7 +103,7 @@ test_that("temporal smooth forecasts hold training-year values without future ba
     historical <- .parse_q_formula(form,d)
     actual <- .parse_q_formula(form,full)
     for (j in seq_along(actual$q_terms)) {
-      expect_true(.smooth_basis_compatible(historical$q_terms[[j]],actual$q_terms[[j]]))
+      expect_false(is.null(.smooth_basis_transform(historical$q_terms[[j]],actual$q_terms[[j]])))
       expect_equal(actual$q_terms[[j]]$design[!full$is_proj,,drop=FALSE],historical$q_terms[[j]]$design)
       expect_equal(unname(actual$q_terms[[j]]$design[full$is_proj,,drop=FALSE]),
         unname(actual$q_terms[[j]]$design[full$year == 2007,,drop=FALSE]))
@@ -287,10 +287,10 @@ test_that("smooth warm starts preserve functions and penalties under explicit ro
     expect_false(any(colnames(d$q_terms[[1]]$smooth_fixed) %in% names(rejected$log_q)))
     changed <- d$q_terms[[1]]
     changed$basis_signature$grid$age <- changed$basis_signature$grid$age+.01
-    expect_false(.smooth_basis_compatible(d$q_terms[[1]],changed))
+    expect_null(.smooth_basis_transform(d$q_terms[[1]],changed))
     changed <- d$q_terms[[1]]
     changed$scope <- list(type="survey",name="different",id="survey:different")
-    expect_false(.smooth_basis_compatible(d$q_terms[[1]],changed))
+    expect_null(.smooth_basis_transform(d$q_terms[[1]],changed))
     fake$dat <- old
     fake$dat$q_terms <- fake$dat$q_terms[-1]
     rejected <- suppressMessages(.start_parameters(fake,d))

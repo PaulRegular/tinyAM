@@ -265,121 +265,40 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #'
 #' Supply only the entries to change from the defaults shown in Usage. Formulas
 #' and vectors replace an entire entry. Optional `NULL` entries clear a formula,
-#' offset or age selection; recruitment defaults to an anchored RW and a latent
-#' `sd_form = NULL` restores `~ 1`. Required entries cannot be `NULL`.
+#' offset or age selection; `sd_form = NULL` restores `~ 1`.
+#' Required entries cannot be `NULL`.
 #' [update()] retains unspecified entries from the original fit instead.
 #'
-#' **Spawning time**
+#' **Inputs and preparation**
 #'
-#' An optional `data$maturity$spawn_time` column supplies spawning timing as a
-#' fraction of the year for each year and age. If absent, timing is zero
-#' (start-of-year SSB). If present, every value must be finite and between zero
-#' and one, including immature and retained older biological ages. Projections
-#' carry forward the terminal historical value at each biological age.
-#' SSB includes survival through this fraction of annual F and M. The same
-#' definition supplies recruitment parents and uncertainty. Age-specific timing
-#' sums each age's contribution at its own spawning time; it is not a snapshot
-#' on one common date. Hidden plus-age contributions are calculated separately
-#' before summing. Weight and maturity remain supplied quantities; seasonal
-#' growth and maturation are not modeled.
+#' See [as_tam_data()] for table keys, units, fleet-specific catch weights and
+#' covariate routing, and [cod_obs] for example data. Catch and survey zeros and
+#' missing values are excluded from the lognormal observation likelihood;
+#' complete predictions are still calculated.
 #'
-#' **Observation handling**
+#' Biological ages above the modeled plus age are retained in `W_plus_input`,
+#' `W_catch_plus_input` and `P_plus_input`. The population calculation derives
+#' effective plus-group weights and maturity from their hidden abundances;
+#' prepared terminal biological values are placeholders. Formula covariates
+#' use the supplied modeled-age rows, avoiding circular mortality calculations.
+#' The equations and spawning-time definition are in [tinyAM-model].
 #'
-#' - Inputs are expected as a list with components `catch`, `index`, `weight`,
-#'   and `maturity`. Each must include columns `year`, `age`, and a value column
-#'   named `obs`. Rename any differently named input columns before calling. See
-#'   [cod_obs] for an example of the required structure. The optional
-#'   `pop_covariates` table supplies population formula inputs; see [as_tam_data()].
-#' - Catch and maturity must already contain exactly one row per
-#'   year-age combination across the input range. Survey tables may be sparse.
-#'   Weight needs the same complete grid for every supplied `type`; see
-#'   [as_tam_data()] for stock and catch weights and fallback rules.
-#' - A combined observation table is created for catch and index; `log(0)` is
-#'   excluded from the observation likelihood.
-#' - When biological inputs extend above the modeled plus age, the underlying
-#'   stock/catch weight and maturity values are retained in `W_plus_input`,
-#'   `W_catch_plus_input` and `P_plus_input`,
-#'   indexed by `years` and `plus_ages`. Their projection rows use the same
-#'   recent-year averages by biological age as other weight/maturity inputs.
-#'   `dat$W`, `dat$W_catch`, `dat$P`, and `dat$obs` retain input values at modeled ages;
-#'   their terminal biological values are placeholders. [nll_fun()] replaces
-#'   terminal W by an abundance-weighted mean and terminal P by a biomass-weighted
-#'   proportion using its reconstructed hidden age composition. See [tinyAM-model].
-#'   Formula covariates continue to use the input rows at modeled ages, not these
-#'   effective biological values; this avoids circular mortality calculations.
+#' **Formula designs**
 #'
-#' **Design matrices**
+#' Ordinary formula terms create design matrices. Structured [formula_effects],
+#' [mono()] curves and [smooth_formulas] also store unique effect states and
+#' their grouping metadata. [make_par()] constructs the associated parameters.
+#' Supplied M and observation SDs act as offsets; their mean/SD formulas omit
+#' an intercept to avoid estimating another baseline. The settings below define
+#' available terms, restrictions and data sources.
 #'
-#' - `catch_settings$sd_form` is evaluated on the catch table to produce
-#'   `sd_catch_modmat` and associated **log-scale** parameters `log_sd_catch`
-#'   (intercept removed when `sd_supplied` is provided so supplied SDs act as
-#'   offsets).
-#' - `index_settings$sd_form` is evaluated on the index table to produce
-#'   `sd_index_modmat` and **log-scale** parameters `log_sd_index`.
-#'   Both SD formulas support additive [iid()], [rw()], [ar1()] and random
-#'   intercepts; their compact unique states are stored in `sd_catch_terms`
-#'   and `sd_index_terms`. They modify log observation SD, with supplied SDs
-#'   acting as offsets. See [formula_effects] for interpretation and support checks.
-#' - `index_settings$q_form` is evaluated on the index table to produce
-#'   `q_modmat` and parameters `log_q` (log link) or `logit_q` (logit link).
-#'   Additive [mono()] terms instead contribute cumulative indicators
-#'   in `q_mono_modmat`, with directly fitted non-negative increments `dq`
-#'   on the selected link scale.
-#'   `q_mono_steps` records each transition and its optional group.
-#'   Structured [iid()], [rw()], [ar1()], random-intercept and [logistic()]
-#'   terms are recorded separately in `q_terms`. Their unique states and process
-#'   parameters are added by [make_par()], rather than treated as ordinary columns.
-#' - If `M_settings$mu_form` is provided, `M_modmat <- model.matrix(mu_form,
-#'   data = data$pop_covariates)` and the resulting coefficients are parameters `mu_m`.
-#'   These coefficients are applied on the log scale to build \eqn{M}, but
-#'   retain the `mu_` prefix to emphasize they can be positive or negative.
-#'   If `mu_supplied` is also provided, the intercept in `mu_form` is dropped
-#'   and a warning is issued.
-#' - If neither `M_settings$mu_form` nor `M_settings$mu_supplied` is supplied,
-#'   the function stops, because \eqn{M} must be identified by either a supplied
-#'   surface or a mean structure.
+#' **Projections**
 #'
-#' **Process options and guards**
-#'
-#' - Initial abundance is controlled by `N_settings$init`, independently of
-#'   the subsequent N process. First-year recruitment is the state
-#'   `log_r0`, controlled separately by `rec_settings$init`. The default uses survivorship from recruitment under first-year
-#'   total mortality Z, with no equilibrium plus-group correction.
-#' - `"exp"` is the default: a parsimonious, comparatively stable nuisance-state
-#'   initialization. More flexible choices are available when first-year data
-#'   support them. `"free"` estimates unpenalized fixed `log_n0` states.
-#'   `"latent"` integrates those states without an initial density, including
-#'   when the subsequent N process is off. It resembles SAM's unpenalized
-#'   older-age boundary; use `rec_settings$init = "latent"` to integrate first-year recruitment too.
-#' - `"mono"` estimates non-increasing initial abundance from r0, including
-#'   the plus group: `log N0[a] = log r0 - cumsum(d_n0)[a-1]`. `"capped"`
-#'   only requires each older abundance to be no greater than r0:
-#'   `log N0[a] = log r0 - d_n0[a-1]`. Both use nonnegative log-decrements,
-#'   allow exact ties, and require no N process or separate initial SD.
-#'   The pooled plus group can naturally exceed a single age; constraining it
-#'   is a deliberate biological assumption. Boundary Wald intervals need care.
-#' - Recruitment initialization is independent of these choices. Simulations condition on initial states;
-#'   joint uncertainty draws can vary fitted latent initial states. No
-#'   mortality-history distribution is imposed on initial abundances.
-#' - `M_settings$age_breaks` (vector of break points on ages)
-#'   defines `M_settings$age_blocks` via [cut_ages()], used
-#'   to share absolute latent \eqn{M} states across ages. All mean components
-#'   must be constant across ages within each fitted block.
-#' - The AR(1) correlation parameters are only initialized for
-#'   processes whose `process == "ar1"`. Correlations are assumed to be 0
-#'   when `process == "iid"`. A temporal random walk (`"rw"`) has independent
-#'   year-to-year increments within each age or age block, with no age
-#'   correlation or AR parameter. Its first process row is unpenalized.
-#'   For N the walk acts on cohort residuals; for F/M it acts on deviations
-#'   from their existing log mean surfaces. Initial abundance, the M process
-#'   start year, and terminal-F projections retain their usual meanings.
-#'
-#' **Projections (optional)**
-#'
-#' - If `proj_settings` is supplied, the function adds:
-#'   - `proj_years`: the set of projection years;
-#'   - `is_proj`: logical vector identifying the projection years;
-#'   - `obs$...$is_proj` rows to each `obs` table identifying the projection years.
+#' `proj_settings` appends future years and marks them with `is_proj` in the
+#' prepared grid and tables. Stock/catch weights and maturity use recent-year
+#' averages by biological age; covariates and spawning timing retain terminal
+#' historical values. See [tinyAM-model] for forecasting and initial-state
+#' equations, and [fit_hindcast()] for held-out-data evaluation.
 #'
 #' @param data A list of tidy observation data.frames: `catch`, `index`,
 #'   `weight`, and `maturity`. See **Details**.
@@ -410,8 +329,9 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #'   directions cancel and are rejected. See [tinyAM-model].
 #' - `sd_form`: ordinary formula for log SD of older-age survival residuals,
 #'   default `~ 1`. Use `~ factor(age)` or a supplied age-sharing column in
-#'   `data$pop_covariates`. Its design must be constant across years. Recruitment and
-#'   initial-abundance SDs remain separate. Random-effect SD terms are not enabled.
+#'   `data$pop_covariates`. Its design must be constant across years. Recruitment
+#'   SD is controlled separately by `rec_settings`; initial abundance has no
+#'   separate SD. Random-effect SD terms are not enabled.
 #' @param rec_settings A list controlling recruitment separately from cohort survival:
 #' - `process`: `"off"` for recruitment exactly following its mean formula,
 #'   or `"rw"` (default), `"iid"`, or `"ar1"` for annual log-recruitment

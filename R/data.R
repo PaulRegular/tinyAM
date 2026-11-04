@@ -526,15 +526,3 @@ check_tam_data <- function(data, quiet = FALSE) {
   invisible(NULL)
 }
 
-#' Check the structure of a TAM obs list
-#'
-#' A convenience wrapper for [check_tam_data()].
-#' @param obs A named list of tinyAM input tables.
-#' @inheritParams check_tam_data
-#' @inherit check_tam_data details
-#' @return `TRUE` (invisibly) if validation passes; otherwise aborts.
-#' @examples
-#' check_tam_data(cod_obs)
-#' @export
-check_obs <- function(obs, quiet = FALSE) check_tam_data(obs, quiet = quiet)
-

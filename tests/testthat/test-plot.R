@@ -1,8 +1,5 @@
 ## Globals ----
 
-suppressWarnings(
-  source(system.file("examples/example_fits.R", package = "tinyAM"))
-)
 tabs <- tidy_tam(model_list = fits)
 
 ## Helpers ----

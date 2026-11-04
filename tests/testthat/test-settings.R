@@ -107,7 +107,6 @@ test_that("Usage shows every supported settings entry and optional projections",
 })
 
 test_that("recruitment settings validate and merge independently of survival", {
-  expect_error(make_test_dat(N_settings = list(rec_form = ~ rw(year))), "has moved")
   expect_error(make_test_dat(rec_settings = list(process = "iid")), "mu_form is required")
   expect_error(make_test_dat(rec_settings = list(process = "ar1")), "mu_form is required")
   expect_error(make_test_dat(rec_settings = list(process = "off")), "mu_form is required")

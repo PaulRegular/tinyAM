@@ -120,8 +120,17 @@ Missing baselines or zero persistence error make MASE unavailable. Failed
 numerical fits remain in \code{fits}, but not in stacked results or scores.
 Supplied fits and fitted objectives are unchanged.
 }
+\section{Parallel execution}{
+
+Set the execution plan before calling either function, for example
+\code{future::plan(future::multisession, workers = 4)}. Without a parallel plan,
+folds run sequentially. Neither function changes your plan or worker count.
+Use \code{future::plan(future::sequential)} afterwards to shut down the workers.
+}
+
 \examples{
 \dontrun{
+future::plan(future::multisession, workers = 4)
 retro <- fit_retro(fit, alternative = other_fit, folds = 5)
 hind <- fit_hindcast(fit, folds = 10,
   proj_settings = list(n_proj = 3, n_mean = 3, catch = "observed"))
@@ -129,6 +138,7 @@ print(hind)
 hind$scores
 vis_tam(hind)
 vis_tam(retro, model = names(retro$fits)[1])
+future::plan(future::sequential)
 }
 }
 \seealso{

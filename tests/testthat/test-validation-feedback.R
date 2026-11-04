@@ -3,7 +3,6 @@ test_that("input validation reports success while preserving its logical return"
   expect_message(check_tam_data(cod_obs), "fleets: 1; surveys: 1")
   expect_silent(result <- check_tam_data(cod_obs, quiet = TRUE))
   expect_identical(result, TRUE)
-  expect_silent(expect_identical(check_obs(cod_obs, quiet = TRUE), TRUE))
   for (quiet in list(NA, 1, "yes", logical())) {
     expect_error(check_tam_data(cod_obs, quiet = quiet), "quiet.*TRUE or FALSE")
   }

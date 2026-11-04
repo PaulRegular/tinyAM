@@ -113,7 +113,7 @@ test_that("invalid grid boundaries cannot enter cohort and mortality matrices", 
   for (nm in c("catch", "weight", "maturity")) {
     obs <- cod_obs
     obs[[nm]] <- rbind(obs[[nm]], obs[[nm]][1, ])
-    expect_error(check_obs(obs), "exactly one row per year and age")
+    expect_error(check_tam_data(obs), "exactly one row per year and age")
   }
 })
 
@@ -165,6 +165,6 @@ test_that("missing formula rows and invalid supplied scales cannot misalign like
   for (nm in c("catch", "index", "weight", "maturity")) {
     bad <- cod_obs
     bad[[nm]]$obs[1] <- -1
-    expect_error(check_obs(bad), "non-negative values")
+    expect_error(check_tam_data(bad), "non-negative values")
   }
 })

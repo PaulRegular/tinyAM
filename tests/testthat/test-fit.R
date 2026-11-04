@@ -72,16 +72,6 @@ test_that("fit_tam objective is unaffected by projections", {
   expect_true(all(is.finite(fit$rep$log_pred[is_proj])))
 })
 
-test_that("fit_tam does not estimate missing observation values", {
-  fit <- update(
-    default_fit,
-    catch_settings = list(sd_form = ~1),
-    index_settings = list(sd_form = ~1, q_form = ~ q_block),
-    silent = TRUE
-  )
-  expect_false("missing" %in% fit$obj$env$.random)
-})
-
 test_that("update can add arguments absent from the original call", {
   cl <- update(
     default_fit,
@@ -126,23 +116,6 @@ test_that("fit_retro inherits grad_tol stored on the fit when omitted", {
   fit$grad_tol <- 1e-16
   out <- suppressWarnings(fit_retro(fit, folds = 1, progress = FALSE))
   expect_false(any(out$fold_diagnostics$is_converged))
-})
-
-test_that("fit_retro falls back to default grad_tol when fit has none", {
-  fit <- default_fit
-  fit$grad_tol <- NULL
-  fit$sdrep$gradient.fixed[] <- 5e-4
-
-  implicit <- fit_retro(fit, folds = 0, progress = FALSE)
-  explicit <- fit_retro(fit, folds = 0, progress = FALSE, grad_tol = 1e-2)
-
-  expect_identical(names(implicit$fits[[1]]), names(explicit$fits[[1]]))
-  expect_identical(
-    lapply(implicit$fits[[1]], `[[`, "is_converged"),
-    lapply(explicit$fits[[1]], `[[`, "is_converged")
-  )
-  expect_identical(names(implicit$obs_pred), names(explicit$obs_pred))
-  expect_identical(names(implicit$pop), names(explicit$pop))
 })
 
 

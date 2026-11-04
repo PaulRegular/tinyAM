@@ -35,7 +35,6 @@ test_that("tam_data adds only a class and validates again after edits", {
   expect_identical(unclass(x), unclass(data))
   expect_identical(as_tam_data(x), x)
   expect_invisible(check_tam_data(x))
-  expect_identical(check_obs(x), check_tam_data(x))
   a <- make_test_dat(data = data, years = 1983:1990, ages = 2:6)
   b <- make_test_dat(data = x, years = 1983:1990, ages = 2:6)
   expect_identical(make_par(a), make_par(b))

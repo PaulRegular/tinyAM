@@ -110,7 +110,7 @@
     tick <- progressr::progressor(steps = nrow(jobs))
     furrr::future_map(seq_len(nrow(jobs)), function(i) {
       fit <- models[[jobs$model_index[i]]]
-      tolerance <- if (!is.null(grad_tol)) grad_tol else if (!is.null(fit$grad_tol)) fit$grad_tol else .01
+      tolerance <- if (!is.null(grad_tol)) grad_tol else fit$grad_tol
       result <- .retro_fold(fit, jobs$fold[i], jobs$final[i], settings, start_from_fit, tolerance)
       tick(); result
     }, .options = furrr::furrr_options(seed = 1, packages = "tinyAM", globals = globals))
@@ -253,6 +253,12 @@
 #' Missing baselines or zero persistence error make MASE unavailable. Failed
 #' numerical fits remain in `fits`, but not in stacked results or scores.
 #' Supplied fits and fitted objectives are unchanged.
+#'
+#' @section Parallel execution:
+#' Set the execution plan before calling either function, for example
+#' `future::plan(future::multisession, workers = 4)`. Without a parallel plan,
+#' folds run sequentially. Neither function changes your plan or worker count.
+#' Use `future::plan(future::sequential)` afterwards to shut down the workers.
 #' @return A `tam_retro` list with `fits` nested by model and terminal year;
 #'   stacked `pop` and `obs_pred` with model, fold and horizon (zero historically);
 #'   `mohns_rho`; detailed `scores`; matched `forecast_pairs`; `fold_diagnostics`;
@@ -260,6 +266,7 @@
 #'   All-failed runs still return diagnostics.
 #' @examples
 #' \dontrun{
+#' future::plan(future::multisession, workers = 4)
 #' retro <- fit_retro(fit, alternative = other_fit, folds = 5)
 #' hind <- fit_hindcast(fit, folds = 10,
 #'   proj_settings = list(n_proj = 3, n_mean = 3, catch = "observed"))
@@ -267,6 +274,7 @@
 #' hind$scores
 #' vis_tam(hind)
 #' vis_tam(retro, model = names(retro$fits)[1])
+#' future::plan(future::sequential)
 #' }
 #' @seealso [fit_tam()], [compute_mohns_rho()], [compute_hindcast_mase()], [compute_hindcast_rmse()]
 #' @importFrom future plan multisession

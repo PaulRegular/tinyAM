@@ -120,8 +120,6 @@ test_that("numerical diagnostics include optimizer status and use one tolerance"
   fit$sdrep$gradient.fixed <- .005
   expect_true(check_tam(fit)$is_converged)
   expect_false(check_tam(fit, grad_tol = .001)$is_converged)
-  fit$grad_tol <- NULL
-  expect_equal(check_tam(fit)$grad_tol, .01)
 })
 
 test_that("unavailable and non-finite numerical information cannot pass", {

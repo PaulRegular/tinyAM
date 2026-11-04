@@ -29,5 +29,5 @@ tam_pal(3)
 
 }
 \seealso{
-\code{\link[grDevices:colorRampPalette]{grDevices::colorRampPalette()}}
+\code{\link[grDevices:colorRamp]{grDevices::colorRampPalette()}}
 }

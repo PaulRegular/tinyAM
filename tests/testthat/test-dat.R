@@ -153,13 +153,6 @@ test_that("prepare_tam stops if neither M mu_supplied nor mu_form is provided", 
   )
 })
 
-test_that("prepare_tam rejects the retired initialization setting", {
-  expect_error(
-    make_test_dat(N_settings = list(process = "off", init_N0 = FALSE)),
-    "has been retired"
-  )
-})
-
 test_that("prepare_tam appends projection years and shapes obs correctly with proj_settings (F_mult API)", {
   # n_proj = 2, n_mean = 3, status-quo F multiplier = 1
   dat <- prepare_tam(

@@ -65,8 +65,9 @@ RW residuals require independent temporal mean contrasts; constant
 directions cancel and are rejected. See \link{tinyAM-model}.
 \item \code{sd_form}: ordinary formula for log SD of older-age survival residuals,
 default \code{~ 1}. Use \code{~ factor(age)} or a supplied age-sharing column in
-\code{data$pop_covariates}. Its design must be constant across years. Recruitment and
-initial-abundance SDs remain separate. Random-effect SD terms are not enabled.
+\code{data$pop_covariates}. Its design must be constant across years. Recruitment
+SD is controlled separately by \code{rec_settings}; initial abundance has no
+separate SD. Random-effect SD terms are not enabled.
 }}
 
 \item{rec_settings}{A list controlling recruitment separately from cohort survival:
@@ -273,7 +274,9 @@ retain its results, use \code{\link[=add_osa_residuals]{add_osa_residuals()}}.}
 \item{start_par}{Optional fitted \code{tam_fit} or list of starting parameter values, matching the
 structure returned by \code{\link[=make_par]{make_par()}}. Useful for warm starts or retrospective
 runs where parameter estimates from a previous fit are reused to improve
-convergence and speed. Non-matching or missing entries are ignored.}
+convergence and speed. Non-matching or missing entries are ignored.
+Fitted-object starts require the current stored parameter modes; regenerate
+older saved fits. Catchability coefficients are omitted if \code{q_link} changes.}
 
 \item{grad_tol}{Numeric tolerance passed to \code{\link[=check_tam]{check_tam()}} when
 evaluating the fitted object's gradients. Defaults to \code{1e-2}.}
@@ -316,36 +319,18 @@ RTMB integrates random effects using the Laplace approximation; \code{nlminb}
 optimizes the remaining fixed effects. \code{\link[=mono]{mono()}} increments \code{dq} and \code{dmu_f} have a zero
 lower bound, as do initial-abundance decrements \code{d_n0}. Their SEs remain on the increment scale, but symmetric Wald
 intervals are only local approximations at a boundary.
-Set \code{index_settings$q_link = "logit"} to restrict the full catchability
-prediction to between zero and one; the default \code{"log"} allows q above one.
-Formula coefficients are then named \code{logit_q}, and \code{\link[=mono]{mono()}} increments
-act on logit-q. Starting q coefficients must use the selected link scale:
-old \code{log_q} starts are not reused as \code{logit_q}. See \code{\link[=prepare_tam]{prepare_tam()}} and \code{\link[=tidy_par]{tidy_par()}}.
-
-Random-effect blocks are chosen automatically from the model settings:
-\itemize{
-\item Includes \code{log_f} when the F process is active, and eligible \code{log_r} states when recruitment is stochastic. Early recruitment
-anchors are fixed; see \link{recruitment_formulas}.
-\item Includes \code{log_n0} only if \code{N_settings$init == "latent"}.
-\item Includes \code{log_n} if \code{N_settings$process != "off"}.
-\item Includes \code{log_m} if \code{M_settings$process != "off"}.
-\item Includes the unique \verb{eta_q_*} states of Gaussian catchability formula terms.
-\item Includes Gaussian F/M mean and catch/index log-SD formula states.
-Logistic midpoint/slope and process SD/correlation are fixed effects.
-}
+Random-effect blocks are chosen from the active processes and Gaussian
+formula effects. Initial abundance and recruitment boundaries are integrated
+only when their respective \code{init} setting is \code{"latent"}; see \link{tinyAM-model}
+and \link{recruitment_formulas}. \code{\link[=make_par]{make_par()}} describes the parameter layout.
 
 A warning is issued if the number of random effects exceeds 1.5 times the
 number of observed data points (rough identifiability check).
 
-For F random walks, \code{\link[=prepare_tam]{prepare_tam()}} removes time-invariant mean columns
-because they cancel from all increments. For M random walks, mean coefficients
-with no effect on either increments or mortality outside the fitted process
-states are held at their starting values.
-An RW SD is also held fixed if the process has only one row (no increments).
-These parameters cannot be estimated from the likelihood; no constraint is
-imposed on the latent states themselves.
-For AR1, the correlation for an axis containing a single row or column is
-fixed at zero; otherwise it would be confounded with the SD.
+Parameters without likelihood support are removed or fixed: examples include
+constant mean directions canceled by RW increments, RW SDs with no increments,
+and AR1 correlations on singleton axes. The latent states themselves retain
+the conventions in \link{tinyAM-model}.
 
 \code{is_converged} summarizes optimizer, gradient and uncertainty checks. Also inspect
 \code{opt$convergence} and \code{opt$message}; a passing numerical check does not

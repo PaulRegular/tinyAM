@@ -11,7 +11,7 @@
 #' independent departures, `"ar1"` allows departures to be similar in adjacent
 #' years and ages, and `"rw"` allows departures to accumulate over time without
 #' returning to a mean. These choices make different assumptions, even when
-#' they produce similar fitted curves. N and M can also have their process
+#' they produce similar fitted curves. N, F and M can also have their process
 #' switched `"off"`. Recruitment defaults to a temporal random walk;
 #' `rec_settings$mu_form` can describe stock-recruit relationships and covariates.
 #'
@@ -61,10 +61,6 @@
 #' is a deviation from an expected log state, never an additional absolute state.
 #' All matrices have years in rows. Vectorization stacks columns, as in R.
 #'
-#' Numbers and weights must use consistent units. There is no automatic unit
-#' conversion. For [cod_obs], numbers in thousands and weights in kg give
-#' biomass in tonnes. Survey catchability absorbs differences in survey units.
-#'
 #' ## Recruitment and initial abundance
 #'
 #' Recruitment is \eqn{R_t=N_{t,1}}. The first log recruitment `log_r0` is an
@@ -93,6 +89,9 @@
 #' \eqn{\log N_{1,a}=\log r_0-\sum_{j=2}^a d_j}; for `"capped"`,
 #' \eqn{\log N_{1,a}=\log r_0-d_a}, with \eqn{d_j\ge0}.
 #' These fixed constraints include the terminal plus group and allow ties.
+#' A pooled plus group can exceed a single age's abundance, so imposing these
+#' constraints on it is a deliberate biological assumption. Wald intervals
+#' at a constraint boundary are only local approximations.
 #' The baseline always uses the realized preceding initial-age state.
 #' No equilibrium plus-group correction is applied in this first year.
 #' This is an initial-state assumption, not a reconstruction of past cohorts.
@@ -399,9 +398,9 @@
 #' observation draws then use each row's SD. Initial RW
 #' states are retained: F/M walks start from the supplied first latent row;
 #' the N walk retains its first `log_n` row and computes that row's residual
-#' against the newly generated cohort prediction. Random N0 is redrawn; free
-#' N0, first recruitment and additional early boundary recruitment states
-#' remain supplied fixed states.
+#' against the newly generated cohort prediction. Initial older-age abundance,
+#' first recruitment and additional early recruitment boundaries retain their
+#' supplied values, including when integrated with `init = "latent"`.
 #'
 #' [sim_tam()] can hold parameters fixed, draw fixed effects with their estimated
 #' covariance while retaining fitted random states, or draw all parameters with

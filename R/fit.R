@@ -73,13 +73,10 @@
 .start_parameters <- function(start, dat) {
   if (inherits(start, "tam_fit")) {
     source <- start
-    if (!is.null(source$parameter_values) && !is.null(source$obj)) {
-      start <- source$obj$env$parList(par = source$parameter_values)
-    } else if (!is.null(source$sdrep)) {
-      start <- as.list(source$sdrep, "Estimate")
-    } else {
+    if (is.null(source$parameter_values) || is.null(source$obj)) {
       cli::cli_abort("Starting fit has no stored parameter estimates.")
     }
+    start <- source$obj$env$parList(par = source$parameter_values)
     if (identical(source$dat$rec$type, "off") && !is.null(source$rep$recruitment)) {
       years <- source$dat$rec$eligible
       start$log_r <- setNames(log(source$rep$recruitment[years]), source$dat$years[years])
@@ -98,7 +95,6 @@
         start$log_f <- start$log_f[, keep, drop = FALSE]
       } else {
         old <- source$dat$F_settings$age_blocks
-        if (is.null(old)) old <- stats::setNames(as.character(source$dat$ages), source$dat$ages)
         new <- dat$F_settings$age_blocks
         groups <- intersect(colnames(start$log_f), levels(new))
         keep <- vapply(groups, function(g) identical(names(old)[as.character(old) == g], names(new)[as.character(new) == g]), logical(1))
@@ -165,35 +161,18 @@
 #' optimizes the remaining fixed effects. [mono()] increments `dq` and `dmu_f` have a zero
 #' lower bound, as do initial-abundance decrements `d_n0`. Their SEs remain on the increment scale, but symmetric Wald
 #' intervals are only local approximations at a boundary.
-#' Set `index_settings$q_link = "logit"` to restrict the full catchability
-#' prediction to between zero and one; the default `"log"` allows q above one.
-#' Formula coefficients are then named `logit_q`, and [mono()] increments
-#' act on logit-q. Starting q coefficients must use the selected link scale:
-#' old `log_q` starts are not reused as `logit_q`. See [prepare_tam()] and [tidy_par()].
-#'
-#' Random-effect blocks are chosen automatically from the model settings:
-#'
-#' - Includes `log_f` when the F process is active, and eligible `log_r` states when recruitment is stochastic. Early recruitment
-#'   anchors are fixed; see [recruitment_formulas].
-#' - Includes `log_n0` only if `N_settings$init == "latent"`.
-#' - Includes `log_n` if `N_settings$process != "off"`.
-#' - Includes `log_m` if `M_settings$process != "off"`.
-#' - Includes the unique `eta_q_*` states of Gaussian catchability formula terms.
-#' - Includes Gaussian F/M mean and catch/index log-SD formula states.
-#'   Logistic midpoint/slope and process SD/correlation are fixed effects.
+#' Random-effect blocks are chosen from the active processes and Gaussian
+#' formula effects. Initial abundance and recruitment boundaries are integrated
+#' only when their respective `init` setting is `"latent"`; see [tinyAM-model]
+#' and [recruitment_formulas]. [make_par()] describes the parameter layout.
 #'
 #' A warning is issued if the number of random effects exceeds 1.5 times the
 #' number of observed data points (rough identifiability check).
 #'
-#' For F random walks, [prepare_tam()] removes time-invariant mean columns
-#' because they cancel from all increments. For M random walks, mean coefficients
-#' with no effect on either increments or mortality outside the fitted process
-#' states are held at their starting values.
-#' An RW SD is also held fixed if the process has only one row (no increments).
-#' These parameters cannot be estimated from the likelihood; no constraint is
-#' imposed on the latent states themselves.
-#' For AR1, the correlation for an axis containing a single row or column is
-#' fixed at zero; otherwise it would be confounded with the SD.
+#' Parameters without likelihood support are removed or fixed: examples include
+#' constant mean directions canceled by RW increments, RW SDs with no increments,
+#' and AR1 correlations on singleton axes. The latent states themselves retain
+#' the conventions in [tinyAM-model].
 #'
 #' `is_converged` summarizes optimizer, gradient and uncertainty checks. Also inspect
 #' `opt$convergence` and `opt$message`; a passing numerical check does not
@@ -223,6 +202,8 @@
 #'   structure returned by [make_par()]. Useful for warm starts or retrospective
 #'   runs where parameter estimates from a previous fit are reused to improve
 #'   convergence and speed. Non-matching or missing entries are ignored.
+#'   Fitted-object starts require the current stored parameter modes; regenerate
+#'   older saved fits. Catchability coefficients are omitted if `q_link` changes.
 #' @param grad_tol Numeric tolerance passed to [check_tam()] when
 #'   evaluating the fitted object's gradients. Defaults to `1e-2`.
 #'

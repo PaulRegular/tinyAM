@@ -37,7 +37,6 @@
     return(x[, rows, drop = FALSE])
   }
   starts <- dat$F_settings$age_block_start
-  if (is.null(starts)) return(x) # Saved fits prepared before block support.
   x[, match(starts, dat$ages), drop = FALSE]
 }
 
@@ -108,5 +107,5 @@
 .f_state_rows <- function(dat) {
   if (dat$has_fleet) return(paste(dat$F_data$fleet, dat$F_data$age) %in% paste(dat$F_states$fleet, dat$F_states$age))
   starts <- dat$F_settings$age_block_start
-  dat$F_data$age %in% if (is.null(starts)) dat$ages else starts
+  dat$F_data$age %in% starts
 }

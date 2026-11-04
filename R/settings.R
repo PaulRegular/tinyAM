@@ -24,12 +24,6 @@
   if (is.null(keys) || anyNA(keys) || any(!nzchar(keys)) || anyDuplicated(keys)) {
     cli::cli_abort("Entries in {.arg {name}} must have unique, nonempty names.")
   }
-  if (name == "N_settings" && "init_N0" %in% keys) {
-    cli::cli_abort("N_settings$init_N0 has been retired. Use N_settings$init instead.")
-  }
-  if (name == "N_settings" && "rec_form" %in% keys) {
-    cli::cli_abort("N_settings$rec_form has moved. Use rec_settings with separate process and mu_form entries.")
-  }
   unknown <- setdiff(keys, allowed)
   if (length(unknown)) cli::cli_abort("Unknown {.arg {name}} setting(s): {paste(unknown, collapse = ', ')}.")
   if (is.null(base)) base <- .settings_defaults(name)

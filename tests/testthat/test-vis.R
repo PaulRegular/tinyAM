@@ -1,9 +1,5 @@
 ## vis_tam ----
 
-suppressWarnings(
-  source(system.file("examples/example_fits.R", package = "tinyAM"))
-)
-
 dashboard_plots <- function(file) {
   # Embedded Plotly code contains Ctrl-Z, which ends Windows text-mode reads.
   con <- file(file, "rb")
@@ -209,32 +205,6 @@ test_that("render_args must be a named list", {
     ),
     "named list"
   )
-})
-
-test_that("vis_tam accepts models provided via dots", {
-  tmpfile <- tempfile(fileext = ".html")
-
-  expect_no_error({
-    vis_tam(N_dev, M_dev,
-      output_file = tmpfile, open_file = FALSE,
-      render_args = list(quiet = TRUE)
-    )
-  })
-
-  expect_true(file.exists(tmpfile))
-})
-
-test_that("vis_tam accepts list input supplied through dots", {
-  tmpfile <- tempfile(fileext = ".html")
-
-  expect_no_error({
-    vis_tam(list(N_dev = N_dev, M_dev = M_dev),
-      output_file = tmpfile, open_file = FALSE,
-      render_args = list(quiet = TRUE)
-    )
-  })
-
-  expect_true(file.exists(tmpfile))
 })
 
 test_that("vis_tam rejects unnamed or duplicated model lists", {

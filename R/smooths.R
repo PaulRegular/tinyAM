@@ -212,10 +212,6 @@ NULL
   list(fixed = fixed, random = random)
 }
 
-.smooth_basis_compatible <- function(old, new) {
-  !is.null(.smooth_basis_transform(old, new))
-}
-
 .smooth_warm_starts <- function(start, old, new) {
   designs <- list(F = old$F_modmat, q = old$q_modmat)
   for (component in c("q", "F")) {

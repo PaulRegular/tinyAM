@@ -35,5 +35,5 @@ head(trends$N)
 
 }
 \seealso{
-\code{\link[=tidy_obs_pred]{tidy_obs_pred()}}, \code{\link[=tidy_sdrep]{tidy_sdrep()}}, \code{\link[=tidy_pop]{tidy_pop()}}, \code{\link[=tidy_mat]{tidy_mat()}}
+\code{\link[=tidy_obs_pred]{tidy_obs_pred()}}, \code{\link[=tidy_sdrep]{tidy_sdrep()}}, \code{\link[=tidy_pop]{tidy_pop()}}, \code{\link[=tidy_array]{tidy_array()}}
 }

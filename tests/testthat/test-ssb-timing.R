@@ -127,7 +127,7 @@ test_that("timing is validated even at immature and hidden biological ages", {
   for (value in list(NA_real_, NaN, Inf, -.1, 1.1, "fall", factor("fall"))) {
     data <- timed_obs()
     data$maturity$spawn_time <- value
-    expect_error(check_obs(data), "spawn_time")
+    expect_error(check_tam_data(data), "spawn_time")
     expect_error(make_test_dat(data = data, ages = 2:8), "spawn_time")
   }
   data <- timed_obs()

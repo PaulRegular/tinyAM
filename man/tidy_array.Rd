@@ -2,12 +2,9 @@
 % Please edit documentation in R/tidy.R
 \name{tidy_array}
 \alias{tidy_array}
-\alias{tidy_mat}
 \title{Tidy a (named) matrix/array into long format}
 \usage{
 tidy_array(x, value_name = "x", require_dimnames = TRUE)
-
-tidy_mat(x, value_name = "x", require_dimnames = TRUE)
 }
 \arguments{
 \item{x}{A matrix or array. Works with 2D or higher dimensions.}
@@ -27,7 +24,7 @@ one column per dimension (using the dimension names if available), and a
 value column.
 }
 \details{
-Internally uses \code{\link[base:as.data.frame.table]{base::as.data.frame.table()}} to reshape \code{x}. After reshaping,
+Internally uses \code{\link[base:table]{base::as.data.frame.table()}} to reshape \code{x}. After reshaping,
 all \strong{dimension columns} are passed through \code{\link[utils:type.convert]{utils::type.convert()}} with
 \code{as.is = TRUE}, so numeric-like labels (e.g., \code{"1"}, \code{"2.5"}) become numeric.
 }

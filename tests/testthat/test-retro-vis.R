@@ -1,4 +1,4 @@
-test_that("S3 dispatch preserves legacy fit, reference and list labels", {
+test_that("S3 dispatch preserves fit, reference and list labels", {
   testthat::local_mocked_bindings(.render_vis_tam = function(fits, ...) names(fits),
     .package = "tinyAM")
   first <- second <- default_fit

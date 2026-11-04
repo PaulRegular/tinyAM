@@ -33,8 +33,7 @@
 #' dimnames(m) <- NULL
 #' tidy_array(m, require_dimnames = FALSE)
 #'
-#' @aliases tidy_mat
-#' @export tidy_array tidy_mat
+#' @export
 tidy_array <- function(x, value_name = "x", require_dimnames = TRUE) {
   if (!is.matrix(x) && !is.array(x)) {
     cli::cli_abort("{.arg x} must be a matrix or array.")
@@ -59,10 +58,6 @@ tidy_array <- function(x, value_name = "x", require_dimnames = TRUE) {
 
   df
 }
-
-#' @rdname tidy_array
-#' @export
-tidy_mat <- tidy_array
 
 
 #' Tidy observed, predicted, and residual diagnostics
@@ -203,7 +198,7 @@ tidy_obs_pred <- function(fit, add_osa_res = FALSE, interval = .95,
 #' names(trends)
 #' head(trends$N)
 #'
-#' @seealso [tidy_obs_pred()], [tidy_sdrep()], [tidy_pop()], [tidy_mat()]
+#' @seealso [tidy_obs_pred()], [tidy_sdrep()], [tidy_pop()], [tidy_array()]
 #' @export
 
 tidy_rep <- function(fit) {
@@ -240,7 +235,7 @@ tidy_rep <- function(fit) {
 
   trends <- lapply(rep_items, function(x) {
     if (length(dim(x)) >= 2L) {
-      d <- tidy_mat(x, value_name = "est")
+      d <- tidy_array(x, value_name = "est")
       d$is_proj <- d$year %in% dat$years[dat$is_proj]
       return(d)
     }
@@ -357,7 +352,7 @@ tidy_sdrep <- function(fit, interval = 0.95) {
   df <- lapply(seq_along(vals), function(i) {
     if (length(dim(vals[[i]])) >= 2L) {
       dimnames(vals[[i]]) <- dimnames(fit$rep[[sub("^log_", "", names(vals)[i])]])
-      d <- tidy_mat(vals[[i]], value_name = "est")
+      d <- tidy_array(vals[[i]], value_name = "est")
       d$se <- as.vector(ses[[i]])
       d$lwr <- d$est - qnorm(1 - ((1 - interval) / 2)) * d$se
       d$upr <- d$est + qnorm(1 - ((1 - interval) / 2)) * d$se
@@ -520,7 +515,7 @@ tidy_pop <- function(fit, interval = 0.95) {
 #' - For matrices (e.g., `log_f`, `log_n`), `year` and/or `age` columns are added
 #'   from their dimensions; shared F/M states use `age_block` rather than
 #'   duplicating the parameter at each biological age.
-#'   via [tidy_mat()].
+#'   via [tidy_array()].
 #'
 #' @param fit A fitted TAM object (from [fit_tam()]) containing an `sdrep`
 #'   (an [RTMB::sdreport()] object) and `obj$env$.random` (names of random effects).
@@ -542,7 +537,7 @@ tidy_pop <- function(fit, interval = 0.95) {
 #' names(par_tab$random)        # e.g., "log_f", "log_r", ...
 #' head(par_tab$random$log_f)
 #'
-#' @seealso [tidy_mat()], [fit_tam()]
+#' @seealso [tidy_array()], [fit_tam()]
 #' @export
 tidy_par <- function(fit, interval = 0.95) {
   fit <- .require_tam_fit(fit, arg = "fit")
@@ -565,7 +560,7 @@ tidy_par <- function(fit, interval = 0.95) {
       df <- data.frame(coef = NA_character_, year = fit$dat$years[1L],
         age = fit$dat$ages[1L], est = e, se = s, is_proj = FALSE)
     } else if (is.matrix(e)) {
-      df <- tidy_mat(e, value_name = "est")
+      df <- tidy_array(e, value_name = "est")
       if (nm == "log_f" && fit$dat$has_fleet) {
         i <- match(df$age_block, fit$dat$F_states$key)
         df$fleet <- fit$dat$F_states$fleet[i]

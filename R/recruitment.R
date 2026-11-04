@@ -315,25 +315,6 @@ ricker <- function(ssb, lag = NULL) {
   nll
 }
 
-.simulate_rec <- function(par, dat) {
-  mean <- .rec_mean(par, dat)
-  if (!is.null(dat$rec$curve)) cli::cli_abort("Recruitment curves must be simulated through the chronological population constructor.")
-  if (dat$rec$type == "off") return(mean[-1L])
-  scale <- .rec_scale(par, dat)
-  u <- numeric(length(dat$years))
-  u[1L] <- par$log_r0 - mean[1L]
-  for (i in dat$rec$eligible) {
-    expected <- switch(dat$rec$type,
-      rw = u[i - 1L],
-      iid = 0,
-      ar1 = if (i == dat$rec$eligible[1L]) 0 else scale$phi * u[i - 1L]
-    )
-    sd <- if (dat$rec$type == "ar1" && i == dat$rec$eligible[1L]) scale$sd / sqrt(1 - scale$phi^2) else scale$sd
-    u[i] <- stats::rnorm(1L, expected, sd)
-  }
-  (mean + u)[-1L]
-}
-
 # One chronological population construction for estimation and simulation.
 .population_states <- function(par, dat, Z, simulate = FALSE, initialize = FALSE, F = NULL, M = NULL, F_by_fleet = NULL, log_F_by_fleet = NULL) {
   "[<-" <- RTMB::ADoverload("[<-")

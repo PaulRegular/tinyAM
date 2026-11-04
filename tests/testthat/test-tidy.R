@@ -45,19 +45,6 @@ test_that("tidy_array respects value_name and converts numeric-like dimnames", {
 })
 
 
-## tidy_mat ----
-
-test_that("tidy_mat is an alias of tidy_array", {
-  m <- matrix(
-    1:6,
-    nrow = 2,
-    dimnames = list(age = c("2", "3"), year = c("2001", "2002", "2003"))
-  )
-  a <- tidy_array(m)
-  b <- tidy_mat(m)
-  expect_identical(a, b)
-})
-
 test_that("tidy_array handles 3D arrays, converting only numeric-like dims", {
   a <- array(
     1:8,

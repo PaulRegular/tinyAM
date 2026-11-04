@@ -94,7 +94,7 @@ initialization, derived \code{n0} estimates use joint RTMB uncertainty.
 \item For matrices (e.g., \code{log_f}, \code{log_n}), \code{year} and/or \code{age} columns are added
 from their dimensions; shared F/M states use \code{age_block} rather than
 duplicating the parameter at each biological age.
-via \code{\link[=tidy_mat]{tidy_mat()}}.
+via \code{\link[=tidy_array]{tidy_array()}}.
 }
 }
 \examples{
@@ -117,5 +117,5 @@ head(par_tab$random$log_f)
 
 }
 \seealso{
-\code{\link[=tidy_mat]{tidy_mat()}}, \code{\link[=fit_tam]{fit_tam()}}
+\code{\link[=tidy_array]{tidy_array()}}, \code{\link[=fit_tam]{fit_tam()}}
 }

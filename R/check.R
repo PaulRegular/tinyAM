@@ -59,7 +59,7 @@
 #' @param model_list Optional named list of fitted `tam_fit` objects. Supply
 #'   this or individual models, not both.
 #' @param grad_tol Positive gradient tolerance. `NULL` uses the tolerance stored
-#'   in the fit, or `1e-2` if none is stored.
+#'   in the fit.
 #' @param detailed Examine covariance eigenvalues and weak parameter directions?
 #' @return For one individual model, a `tam_check` list with `is_converged`, `numerical`, `structural`,
 #'   `structural_status`, `advisories`, `residuals`, `data`, and `curvature`.
@@ -99,7 +99,7 @@ check_tam <- function(fit, ..., grad_tol = NULL, detailed = FALSE, model_list = 
 
 .check_tam_fit <- function(fit, grad_tol = NULL, detailed = FALSE) {
   fit <- .require_tam_fit(fit, arg = "fit")
-  if (is.null(grad_tol)) grad_tol <- if (is.null(fit$grad_tol)) 1e-2 else fit$grad_tol
+  if (is.null(grad_tol)) grad_tol <- fit$grad_tol
   if (!is.numeric(grad_tol) || length(grad_tol) != 1L ||
     !is.finite(grad_tol) || grad_tol <= 0) {
     cli::cli_abort("{.arg grad_tol} must be one positive finite number.")

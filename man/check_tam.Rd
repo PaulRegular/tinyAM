@@ -20,7 +20,7 @@ through named \code{...} arguments or \code{model_list}.}
 unnamed models use their expression names. Unused by the print methods.}
 
 \item{grad_tol}{Positive gradient tolerance. \code{NULL} uses the tolerance stored
-in the fit, or \code{1e-2} if none is stored.}
+in the fit.}
 
 \item{detailed}{Examine covariance eigenvalues and weak parameter directions?}
 

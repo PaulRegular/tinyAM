@@ -5,8 +5,6 @@
 \title{Evaluate or simulate the tinyAM model}
 \usage{
 nll_fun(par, dat, simulate = FALSE)
-
-nll_fun(par, dat, simulate = FALSE)
 }
 \arguments{
 \item{par}{Parameter list with the structure produced by \code{\link[=make_par]{make_par()}}.}
@@ -77,11 +75,6 @@ F scales terminal historical F by a supplied multiplier or a multiplier solved
 from projected catch biomass. Both paths use the same chronological population.
 Active M states already extend into projected years under their process density.
 }
-\section{Simulate from fitted parameters}{
-p_hat <- as.list(sdrep, "Estimate")
-sims  <- nll_fun(p_hat, dat, simulate = TRUE)
-}
-
 \examples{
 dat <- prepare_tam(
   cod_obs,
@@ -101,7 +94,4 @@ head(exp(simulated$log_r))
 }
 \seealso{
 \link{tinyAM-model}, \code{\link[=prepare_tam]{prepare_tam()}}, \code{\link[=make_par]{make_par()}}, \code{\link[=fit_tam]{fit_tam()}}, \code{\link[=sim_tam]{sim_tam()}}
-
-\code{\link[=prepare_tam]{prepare_tam()}}, \code{\link[=make_par]{make_par()}}, \code{\link[=fit_tam]{fit_tam()}}, \code{\link[=sim_tam]{sim_tam()}},
-\code{\link[=dprocess_ar1]{dprocess_ar1()}}, \code{\link[=rprocess_ar1]{rprocess_ar1()}}
 }

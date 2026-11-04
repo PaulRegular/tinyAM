@@ -56,8 +56,9 @@ RW residuals require independent temporal mean contrasts; constant
 directions cancel and are rejected. See \link{tinyAM-model}.
 \item \code{sd_form}: ordinary formula for log SD of older-age survival residuals,
 default \code{~ 1}. Use \code{~ factor(age)} or a supplied age-sharing column in
-\code{data$pop_covariates}. Its design must be constant across years. Recruitment and
-initial-abundance SDs remain separate. Random-effect SD terms are not enabled.
+\code{data$pop_covariates}. Its design must be constant across years. Recruitment
+SD is controlled separately by \code{rec_settings}; initial abundance has no
+separate SD. Random-effect SD terms are not enabled.
 }}
 
 \item{rec_settings}{A list controlling recruitment separately from cohort survival:
@@ -290,126 +291,40 @@ function automatically; call it directly to inspect a model specification.
 
 Supply only the entries to change from the defaults shown in Usage. Formulas
 and vectors replace an entire entry. Optional \code{NULL} entries clear a formula,
-offset or age selection; recruitment defaults to an anchored RW and a latent
-\code{sd_form = NULL} restores \code{~ 1}. Required entries cannot be \code{NULL}.
+offset or age selection; \code{sd_form = NULL} restores \code{~ 1}.
+Required entries cannot be \code{NULL}.
 \code{\link[=update]{update()}} retains unspecified entries from the original fit instead.
 
-\strong{Spawning time}
+\strong{Inputs and preparation}
 
-An optional \code{data$maturity$spawn_time} column supplies spawning timing as a
-fraction of the year for each year and age. If absent, timing is zero
-(start-of-year SSB). If present, every value must be finite and between zero
-and one, including immature and retained older biological ages. Projections
-carry forward the terminal historical value at each biological age.
-SSB includes survival through this fraction of annual F and M. The same
-definition supplies recruitment parents and uncertainty. Age-specific timing
-sums each age's contribution at its own spawning time; it is not a snapshot
-on one common date. Hidden plus-age contributions are calculated separately
-before summing. Weight and maturity remain supplied quantities; seasonal
-growth and maturation are not modeled.
+See \code{\link[=as_tam_data]{as_tam_data()}} for table keys, units, fleet-specific catch weights and
+covariate routing, and \link{cod_obs} for example data. Catch and survey zeros and
+missing values are excluded from the lognormal observation likelihood;
+complete predictions are still calculated.
 
-\strong{Observation handling}
-\itemize{
-\item Inputs are expected as a list with components \code{catch}, \code{index}, \code{weight},
-and \code{maturity}. Each must include columns \code{year}, \code{age}, and a value column
-named \code{obs}. Rename any differently named input columns before calling. See
-\link{cod_obs} for an example of the required structure. The optional
-\code{pop_covariates} table supplies population formula inputs; see \code{\link[=as_tam_data]{as_tam_data()}}.
-\item Catch and maturity must already contain exactly one row per
-year-age combination across the input range. Survey tables may be sparse.
-Weight needs the same complete grid for every supplied \code{type}; see
-\code{\link[=as_tam_data]{as_tam_data()}} for stock and catch weights and fallback rules.
-\item A combined observation table is created for catch and index; \code{log(0)} is
-excluded from the observation likelihood.
-\item When biological inputs extend above the modeled plus age, the underlying
-stock/catch weight and maturity values are retained in \code{W_plus_input},
-\code{W_catch_plus_input} and \code{P_plus_input},
-indexed by \code{years} and \code{plus_ages}. Their projection rows use the same
-recent-year averages by biological age as other weight/maturity inputs.
-\code{dat$W}, \code{dat$W_catch}, \code{dat$P}, and \code{dat$obs} retain input values at modeled ages;
-their terminal biological values are placeholders. \code{\link[=nll_fun]{nll_fun()}} replaces
-terminal W by an abundance-weighted mean and terminal P by a biomass-weighted
-proportion using its reconstructed hidden age composition. See \link{tinyAM-model}.
-Formula covariates continue to use the input rows at modeled ages, not these
-effective biological values; this avoids circular mortality calculations.
-}
+Biological ages above the modeled plus age are retained in \code{W_plus_input},
+\code{W_catch_plus_input} and \code{P_plus_input}. The population calculation derives
+effective plus-group weights and maturity from their hidden abundances;
+prepared terminal biological values are placeholders. Formula covariates
+use the supplied modeled-age rows, avoiding circular mortality calculations.
+The equations and spawning-time definition are in \link{tinyAM-model}.
 
-\strong{Design matrices}
-\itemize{
-\item \code{catch_settings$sd_form} is evaluated on the catch table to produce
-\code{sd_catch_modmat} and associated \strong{log-scale} parameters \code{log_sd_catch}
-(intercept removed when \code{sd_supplied} is provided so supplied SDs act as
-offsets).
-\item \code{index_settings$sd_form} is evaluated on the index table to produce
-\code{sd_index_modmat} and \strong{log-scale} parameters \code{log_sd_index}.
-Both SD formulas support additive \code{\link[=iid]{iid()}}, \code{\link[=rw]{rw()}}, \code{\link[=ar1]{ar1()}} and random
-intercepts; their compact unique states are stored in \code{sd_catch_terms}
-and \code{sd_index_terms}. They modify log observation SD, with supplied SDs
-acting as offsets. See \link{formula_effects} for interpretation and support checks.
-\item \code{index_settings$q_form} is evaluated on the index table to produce
-\code{q_modmat} and parameters \code{log_q} (log link) or \code{logit_q} (logit link).
-Additive \code{\link[=mono]{mono()}} terms instead contribute cumulative indicators
-in \code{q_mono_modmat}, with directly fitted non-negative increments \code{dq}
-on the selected link scale.
-\code{q_mono_steps} records each transition and its optional group.
-Structured \code{\link[=iid]{iid()}}, \code{\link[=rw]{rw()}}, \code{\link[=ar1]{ar1()}}, random-intercept and \code{\link[=logistic]{logistic()}}
-terms are recorded separately in \code{q_terms}. Their unique states and process
-parameters are added by \code{\link[=make_par]{make_par()}}, rather than treated as ordinary columns.
-\item If \code{M_settings$mu_form} is provided, \code{M_modmat <- model.matrix(mu_form, data = data$pop_covariates)} and the resulting coefficients are parameters \code{mu_m}.
-These coefficients are applied on the log scale to build \eqn{M}, but
-retain the \code{mu_} prefix to emphasize they can be positive or negative.
-If \code{mu_supplied} is also provided, the intercept in \code{mu_form} is dropped
-and a warning is issued.
-\item If neither \code{M_settings$mu_form} nor \code{M_settings$mu_supplied} is supplied,
-the function stops, because \eqn{M} must be identified by either a supplied
-surface or a mean structure.
-}
+\strong{Formula designs}
 
-\strong{Process options and guards}
-\itemize{
-\item Initial abundance is controlled by \code{N_settings$init}, independently of
-the subsequent N process. First-year recruitment is the state
-\code{log_r0}, controlled separately by \code{rec_settings$init}. The default uses survivorship from recruitment under first-year
-total mortality Z, with no equilibrium plus-group correction.
-\item \code{"exp"} is the default: a parsimonious, comparatively stable nuisance-state
-initialization. More flexible choices are available when first-year data
-support them. \code{"free"} estimates unpenalized fixed \code{log_n0} states.
-\code{"latent"} integrates those states without an initial density, including
-when the subsequent N process is off. It resembles SAM's unpenalized
-older-age boundary; use \code{rec_settings$init = "latent"} to integrate first-year recruitment too.
-\item \code{"mono"} estimates non-increasing initial abundance from r0, including
-the plus group: \verb{log N0[a] = log r0 - cumsum(d_n0)[a-1]}. \code{"capped"}
-only requires each older abundance to be no greater than r0:
-\verb{log N0[a] = log r0 - d_n0[a-1]}. Both use nonnegative log-decrements,
-allow exact ties, and require no N process or separate initial SD.
-The pooled plus group can naturally exceed a single age; constraining it
-is a deliberate biological assumption. Boundary Wald intervals need care.
-\item Recruitment initialization is independent of these choices. Simulations condition on initial states;
-joint uncertainty draws can vary fitted latent initial states. No
-mortality-history distribution is imposed on initial abundances.
-\item \code{M_settings$age_breaks} (vector of break points on ages)
-defines \code{M_settings$age_blocks} via \code{\link[=cut_ages]{cut_ages()}}, used
-to share absolute latent \eqn{M} states across ages. All mean components
-must be constant across ages within each fitted block.
-\item The AR(1) correlation parameters are only initialized for
-processes whose \code{process == "ar1"}. Correlations are assumed to be 0
-when \code{process == "iid"}. A temporal random walk (\code{"rw"}) has independent
-year-to-year increments within each age or age block, with no age
-correlation or AR parameter. Its first process row is unpenalized.
-For N the walk acts on cohort residuals; for F/M it acts on deviations
-from their existing log mean surfaces. Initial abundance, the M process
-start year, and terminal-F projections retain their usual meanings.
-}
+Ordinary formula terms create design matrices. Structured \link{formula_effects},
+\code{\link[=mono]{mono()}} curves and \link{smooth_formulas} also store unique effect states and
+their grouping metadata. \code{\link[=make_par]{make_par()}} constructs the associated parameters.
+Supplied M and observation SDs act as offsets; their mean/SD formulas omit
+an intercept to avoid estimating another baseline. The settings below define
+available terms, restrictions and data sources.
 
-\strong{Projections (optional)}
-\itemize{
-\item If \code{proj_settings} is supplied, the function adds:
-\itemize{
-\item \code{proj_years}: the set of projection years;
-\item \code{is_proj}: logical vector identifying the projection years;
-\item \code{obs$...$is_proj} rows to each \code{obs} table identifying the projection years.
-}
-}
+\strong{Projections}
+
+\code{proj_settings} appends future years and marks them with \code{is_proj} in the
+prepared grid and tables. Stock/catch weights and maturity use recent-year
+averages by biological age; covariates and spawning timing retain terminal
+historical values. See \link{tinyAM-model} for forecasting and initial-state
+equations, and \code{\link[=fit_hindcast]{fit_hindcast()}} for held-out-data evaluation.
 }
 \examples{
 dat <- prepare_tam(
