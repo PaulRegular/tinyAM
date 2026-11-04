@@ -79,6 +79,12 @@
 #' @param res Optional one-column formula for signed bubble values, e.g.
 #'   `~est` for process deviations. Omitted values use OSA or standardized
 #'   observation residuals. Use `y = ~age_block` for shared M state blocks.
+#' @param residual_type Initial observation residual view: `"auto"` (default),
+#'   `"standardized"` or `"osa"`. Auto uses available cached OSA residuals
+#'   separately for each model in the supplied panel, otherwise standardized
+#'   residuals. Partial OSA gaps remain missing. A dropdown switches views;
+#'   unavailable OSA values are identified without computing them. A supplied
+#'   `res` formula in `plot_bubbles()` bypasses these observation controls.
 #' @param ylab Label for the y-axis.
 #' @param xlab Label for the x-axis.
 #' @param zlab Label for the colorbar in heatmaps.
@@ -411,7 +417,12 @@ plot_obs_pred <- function(
 
 #' @rdname plot_tam
 #' @export
-plot_bubbles <- function(data, res = NULL, y = ~age, ylab = "Age", title = NULL, ...) {
+plot_bubbles <- function(data, res = NULL, y = ~age, ylab = "Age", title = NULL,
+                         residual_type = c("auto", "standardized", "osa"), ...) {
+  if (is.null(res)) {
+    return(.plot_observation_residuals(data, match.arg(residual_type), "bubbles",
+      list(...), y = y, ylab = ylab, title = title))
+  }
   if (!is.null(res)) {
     if (!inherits(res, "formula") || length(res) != 2L) cli::cli_abort("res must be a one-sided formula selecting a numeric column.")
     values <- stats::model.frame(res, data, na.action = stats::na.pass)
@@ -419,12 +430,6 @@ plot_bubbles <- function(data, res = NULL, y = ~age, ylab = "Age", title = NULL,
     data$res <- values[[1L]]
     if (!is.numeric(data$res)) cli::cli_abort("res must select a signed numeric column.")
     if (is.null(title)) title <- "Process deviations"
-  } else if ("osa_res" %in% names(data)) {
-    if (is.null(title)) title <- "OSA residuals"
-    data$res <- data$osa_res
-  } else {
-    if (is.null(title)) title <- "Standardized residuals"
-    data$res <- data$std_res
   }
   data$sign <- ifelse(data$res > 0, "+", "-")
   # Break size ties deterministically without advancing the caller's RNG.
@@ -439,6 +444,7 @@ plot_bubbles <- function(data, res = NULL, y = ~age, ylab = "Age", title = NULL,
   if (is.null(args$colors)) {
     args$colors <- c(utils::head(tam_cols(), 1), tail(tam_cols(), 1))
   }
+  if (is.null(args$text)) args$text <- ~.bubble_text
 
   p <- do.call(
     plotly::plot_ly,
@@ -453,8 +459,7 @@ plot_bubbles <- function(data, res = NULL, y = ~age, ylab = "Age", title = NULL,
           sizeref  = 0.01,
           sizemode = "area"
         ),
-        color = ~sign,
-        text = ~.bubble_text
+        color = ~sign
       ),
       args
     )
@@ -476,23 +481,11 @@ plot_resid <- function(
   data,
   x = ~year,
   xlab = "Year",
+  residual_type = c("auto", "standardized", "osa"),
   ...
 ) {
-  if ("osa_res" %in% names(data)) {
-    title <- "OSA residuals"
-    data$res <- data$osa_res
-  } else {
-    title <- "Standardized residuals"
-    data$res <- data$std_res
-  }
-  data <- data[!is.na(data$res), ]
-
-  plot_ly(data, x = x, y = ~res, ...) |>
-    add_markers(alpha = 0.8) |>
-    layout(
-      xaxis = list(title = xlab),
-      yaxis = list(title = title)
-    )
+  .plot_observation_residuals(data, match.arg(residual_type), "scatter",
+    list(...), x = x, xlab = xlab)
 }
 
 #' @rdname plot_tam

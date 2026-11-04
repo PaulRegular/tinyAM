@@ -1,5 +1,10 @@
 # tinyAM 0.1.1.9001
 
+* Add Auto / Standardized / OSA controls to public residual plots and dashboards.
+  Auto selects retained OSAs separately for each model and panel, preserving
+  partial gaps and models without OSA calculations. Labels identify the method;
+  changing plot controls never calculates residuals.
+
 * Select any supported OSA algorithm through `method` and retain diagnostics
   with `add_osa_residuals()`, without refitting. Explicit computation requests
   refresh catch and survey residuals together; cached extraction stays cheap.

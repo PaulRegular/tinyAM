@@ -96,6 +96,11 @@ only on the aggregate page; they are not allocated among fleets.
 Without fleets, Aggregate fishery retains all single-fishery
 diagnostics. With fleets, it shows total yield; residuals are
 assessed separately within each fleet.
+Observation residuals default to Auto: each model uses retained OSA
+residuals when available in that panel, otherwise standardized
+residuals. The dropdown also selects either type explicitly. Partial
+OSA gaps remain missing, and labels identify the method. Retain OSA
+calculations with \code{\link[=add_osa_residuals]{add_osa_residuals()}}; rendering never computes them.
 The Parameters menu separates Fixed and Random pages. Fixed plots
 group similar quantities, with initial abundance shown separately.
 Stock-recruit models add a relationship page with parent-year pairs,
