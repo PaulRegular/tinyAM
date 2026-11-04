@@ -1,3 +1,76 @@
+#' @rdname plot_tam
+#' @export
+plot_bubbles <- function(data, res = NULL, y = ~age, ylab = "Age", title = NULL,
+                         residual_type = c("auto", "standardized", "osa"), ...) {
+  if (is.null(res)) {
+    return(.plot_observation_residuals(data, match.arg(residual_type), "bubbles",
+      list(...), y = y, ylab = ylab, title = title))
+  }
+  if (!is.null(res)) {
+    if (!inherits(res, "formula") || length(res) != 2L) cli::cli_abort("res must be a one-sided formula selecting a numeric column.")
+    values <- stats::model.frame(res, data, na.action = stats::na.pass)
+    if (ncol(values) != 1L) cli::cli_abort("res must select one signed numeric column.")
+    data$res <- values[[1L]]
+    if (!is.numeric(data$res)) cli::cli_abort("res must select a signed numeric column.")
+    if (is.null(title)) title <- "Process deviations"
+  }
+  data$sign <- ifelse(data$res > 0, "+", "-")
+  # Break size ties deterministically without advancing the caller's RNG.
+  data$abs_res <- abs(data$res) + seq_len(nrow(data)) * .Machine$double.eps
+  data <- data[!is.na(data$res), ]
+  # Unused factor levels create empty Plotly animation frames and can leave
+  # the initial bubble chart blank when some models lack this process.
+  data <- droplevels(data)
+  data$.bubble_text <- if ("kind" %in% names(data)) paste0(data$kind, ": ", round(data$res, 2)) else as.character(round(data$res, 2))
+
+  args <- list(...)
+  if (is.null(args$colors)) {
+    args$colors <- c(utils::head(tam_cols(), 1), tail(tam_cols(), 1))
+  }
+  if (is.null(args$text)) args$text <- ~.bubble_text
+
+  p <- do.call(
+    plotly::plot_ly,
+    c(
+      list(
+        data = data,
+        x = ~year,
+        y = y,
+        marker = list(
+          size     = ~abs_res,
+          sizemin  = 1,
+          sizeref  = 0.01,
+          sizemode = "area"
+        ),
+        color = ~sign
+      ),
+      args
+    )
+  )
+
+  p |>
+    plotly::add_markers() |>
+    plotly::layout(
+      title = title,
+      xaxis = list(title = "Year"),
+      yaxis = list(title = ylab)
+    )
+}
+
+
+#' @rdname plot_tam
+#' @export
+plot_resid <- function(
+  data,
+  x = ~year,
+  xlab = "Year",
+  residual_type = c("auto", "standardized", "osa"),
+  ...
+) {
+  .plot_observation_residuals(data, match.arg(residual_type), "scatter",
+    list(...), x = x, xlab = xlab)
+}
+
 # Observation plots consume retained residuals; selecting a view never invokes
 # residuals() or oneStepPredict(). Missing OSA values stay missing within a model.
 .observation_residual_data <- function(data, type, selection = NULL) {
