@@ -85,8 +85,9 @@
   if (nrow(status) > 1L) labels <- paste0(status$model, ": ", labels)
   text <- paste(labels, collapse = "; ")
   if (type == "auto") text <- paste0("Auto: ", text)
-  list(list(text = as.character(htmltools::htmlEscape(text)), x = 1, y = 1.08,
-    xref = "paper", yref = "paper", xanchor = "right", showarrow = FALSE, font = list(size = 10)))
+  list(list(text = as.character(htmltools::htmlEscape(text)), x = 0, y = 1,
+    xref = "paper", yref = "paper", xanchor = "left", yanchor = "bottom",
+    yshift = 8, showarrow = FALSE, font = list(size = 10)))
 }
 
 .residual_plot_cell <- function(data, type, kind, args, x, xlab, y, ylab, title, selection) {

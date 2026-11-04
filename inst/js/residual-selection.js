@@ -22,9 +22,10 @@ function(el, x, config) {
         traces: view.cells[i].data.map(function(trace, j) { return j; })};
     });
     var layout = Object.assign({}, x.layout, cell.layout, {
-      autosize: true, margin: Object.assign({}, cell.layout.margin, {t: 80}),
+      autosize: true, margin: Object.assign({}, cell.layout.margin, {t: 100}),
+      // Leave the upper-right modebar clear and reserve a separate method row.
       updatemenus: [{name: 'tam-residual-type', type: 'dropdown',
-        x: 1, y: 1.18, xanchor: 'right', yanchor: 'top', active: state.view,
+        x: 0, y: 1, xanchor: 'left', yanchor: 'bottom', pad: {b: 28}, active: state.view,
         buttons: ['Auto', 'Standardized', 'OSA'].map(function(label, i) {
           return {label: label, method: 'skip', execute: false, args: [i]};
         })}],

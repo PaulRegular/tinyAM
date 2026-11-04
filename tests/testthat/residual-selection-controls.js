@@ -31,6 +31,11 @@ const points = el => el.data.reduce((n, trace) => n + trace.x.length, 0);
   assert.equal(points(a), 2);
   assert.equal(points(b), 2);
   assert.deepEqual(a.layout.updatemenus[0].buttons.map(button => button.label), ['Auto', 'Standardized', 'OSA']);
+  assert.equal(a.layout.updatemenus[0].x, 0);
+  assert.equal(a.layout.updatemenus[0].xanchor, 'left');
+  assert.equal(a.layout.updatemenus[0].yanchor, 'bottom');
+  assert.equal(a.layout.updatemenus[0].pad.b, 28);
+  assert.equal(a.layout.margin.t, 100); // Header rows stay clear of the upper-right modebar.
   chooseFrame(a, 'B');
   assert.equal(points(a), 6); // Auto keeps a model without cached OSA.
   const before = banks;

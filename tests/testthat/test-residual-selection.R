@@ -51,6 +51,10 @@ test_that("public residual plots retain models, labels and unavailable OSA frame
     expect_match(note, "OSA residuals unavailable", fixed = TRUE)
     expect_match(config$views[[1]]$cells[[1]]$layout$annotations[[1]]$text,
       "oneStepGeneric", fixed = TRUE)
+    annotation <- config$views[[1]]$cells[[1]]$layout$annotations[[1]]
+    expect_equal(annotation$x, 0)
+    expect_identical(annotation$xanchor, "left")
+    expect_equal(annotation$yshift, 8)
     slots <- unlist(lapply(config$views, function(view) vapply(view$cells, function(cell) length(cell$data), integer(1))))
     expect_length(unique(slots), 1L)
     expect_identical(residual_config(fun(d, residual_type = "osa"))$view, 2L)
