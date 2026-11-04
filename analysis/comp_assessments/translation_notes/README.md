@@ -4,6 +4,11 @@ These notes separate downstream model choices and fit diagnostics from SAIO sour
 
 Source values, official definitions, units, run identity and unresolved extraction gaps remain in [SAIO source reviews](https://github.com/PaulRegular/saio/tree/main/source_reviews).
 
+Current expansion-batch notes:
+
+- [Icelandic Atlantic wolffish](ices_atlantic_wolffish_iceland_2026.md)
+- [Faroes ling](ices_ling_faroe_5b_2026.md)
+
 The 2026-11-03 content review also separates anonymous analysis passages that remained in source reviews after the earlier migration. Each additional passage links to its original SAIO revision. These are historical notes, including blocked or exploratory cases; their presence does not establish a runnable or reviewed translation. Discovery-only recommendations remain provisional.
 
 - [Bering Sea/Aleutian Islands Alaska plaice: tinyAM translation notes](afsc_alaska_plaice_bsai.md)

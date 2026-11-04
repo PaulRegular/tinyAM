@@ -10,6 +10,13 @@ Source data are maintained in the independent **SAIO — Stock Assessment Inputs
 
 Curated runs are the default. Preliminary runs require an explicit tier. Extraction completeness, translation review and numerical convergence are separate. Move a script and update the registry only after reviewing its sources, assumptions and comparisons. If both tiers contain the same assessment, selecting its ID without a tier uses the curated version.
 
+The first 20-stock expansion beyond Charbonneau–Keith is tracked in
+[expansion_batch_01.csv](expansion_batch_01.csv), using the selected stock units
+in SAIO. Its new recipes are preliminary. The registry's `source_commit`
+records the origin of migrated scripts; new recipes leave it blank and use Git
+history and run diagnostics for their model revision. The SAIO data revision
+is recorded separately.
+
 ## SAIO data
 
 Clone [SAIO](https://github.com/PaulRegular/saio) beside tinyAM. The default lookup uses the primary tinyAM checkout's parent directory, so it also works from Git worktrees. On this laptop the locations are `C:/Users/paulr/Documents/tinyAM` and `C:/Users/paulr/Documents/saio`.
