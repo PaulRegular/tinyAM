@@ -190,7 +190,17 @@ test_that("smooth warm starts retain compatible age bases and reject changed bas
   start <- suppressMessages(.start_parameters(fake,changed))
   expect_null(start[[changed$F_terms[[1]]$parameter]])
   expect_null(start[[changed$F_terms[[1]]$sd_parameter]])
-  expect_equal(start[[changed$q_terms[[1]]$parameter]],p[[changed$q_terms[[1]]$parameter]])
+  changed_par <- .merge_start_par(make_par(changed),start)
+  q_rows <- match(paste(changed$obs$index$year,changed$obs$index$age),
+    paste(d$obs$index$year,d$obs$index$age))
+  old_q <- .q_effects(p,d)
+  new_q <- .q_effects(changed_par,changed)
+  expect_equal(drop(changed$q_modmat %*% changed_par$log_q)+new_q$contribution,
+    (drop(d$q_modmat %*% p$log_q)+old_q$contribution)[q_rows],ignore_attr=TRUE)
+  expect_equal(new_q$nll,old_q$nll)
+  for (term in changed$q_terms) {
+    expect_equal(start[[term$sd_parameter]],p[[term$sd_parameter]])
+  }
   expect_identical(fake$parameter_values,before)
   active <- settings
   active$F_settings <- list(process="iid",mu_form=~factor(year)+s(age,k=5))

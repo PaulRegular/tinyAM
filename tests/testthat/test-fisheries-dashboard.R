@@ -67,7 +67,7 @@ test_that("Fisheries renders full fleet diagnostics and an unlabeled aggregate",
   ref$pop$yield_pred_by_fleet$est <- ref$obs_pred$catch$pred
   ref$fixed_par$est <- NA_real_
   parameters <- default_fit$parameter_values
-  reference_before <- serialize(ref,NULL)
+  reference_before <- ref
   path <- tempfile(fileext=".html"); on.exit(unlink(path))
   vis_tam(Unlabeled=default_fit,Fleet_reference=ref,output_file=path,
     open_file=FALSE,render_args=list(quiet=TRUE))
@@ -92,5 +92,5 @@ test_that("Fisheries renders full fleet diagnostics and an unlabeled aggregate",
   expect_match(aggregate_html,"Total yield",fixed=TRUE)
   expect_false(grepl("Residuals (age, year)",aggregate_html,fixed=TRUE))
   expect_identical(default_fit$parameter_values,parameters)
-  expect_identical(serialize(ref,NULL),reference_before)
+  expect_identical(ref,reference_before)
 })
