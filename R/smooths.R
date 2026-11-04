@@ -175,9 +175,90 @@ NULL
   list(fixed=fixed,terms=terms)
 }
 
+# A smooth2random basis can change eigenvector signs (or rotate an eigenspace)
+# without changing its function or Gaussian penalty. Transfer coefficients only
+# when both the function and, for random coefficients, the penalty are preserved.
+.smooth_design_transform <- function(old, new, orthogonal = TRUE) {
+  tolerance <- 1e-10
+  if (!is.matrix(old) || !is.matrix(new) || !identical(dim(old), dim(new)) ||
+      any(!is.finite(old)) || any(!is.finite(new))) return(NULL)
+  n <- ncol(old)
+  if (!n) return(matrix(numeric(), 0L, 0L))
+  if (identical(unname(old), unname(new))) return(diag(n))
+  transform <- tryCatch(qr.solve(new, old, tol = tolerance),
+    error = function(e) NULL)
+  if (is.null(transform) || any(!is.finite(transform))) return(NULL)
+  scale <- max(abs(old))
+  if (!scale || max(abs(new %*% transform - old)) > tolerance * scale) return(NULL)
+  if (orthogonal && max(abs(crossprod(transform) - diag(n))) > tolerance) return(NULL)
+  if (!orthogonal && qr(transform, tol = tolerance)$rank != n) return(NULL)
+  transform
+}
+
+.smooth_basis_transform <- function(old, new) {
+  fields <- c("type", "smooth_id", "variables", "by", "scope")
+  if (!identical(old$type, "smooth") || !identical(new$type, "smooth") ||
+      !identical(old[fields], new[fields]) ||
+      !identical(class(old$smooth), class(new$smooth)) ||
+      !identical(old$smooth$bs.dim, new$smooth$bs.dim) ||
+      !isTRUE(all.equal(old$basis_signature$grid, new$basis_signature$grid,
+        tolerance = 0))) return(NULL)
+  before <- old$basis_signature$design
+  after <- new$basis_signature$design
+  if (length(before$random) != length(after$random)) return(NULL)
+  fixed <- .smooth_design_transform(before$fixed, after$fixed, orthogonal = FALSE)
+  random <- Map(.smooth_design_transform, before$random, after$random)
+  if (is.null(fixed) || any(vapply(random, is.null, logical(1)))) return(NULL)
+  list(fixed = fixed, random = random)
+}
+
 .smooth_basis_compatible <- function(old, new) {
-  identical(old$type,"smooth") && identical(new$type,"smooth") &&
-    isTRUE(all.equal(old$basis_signature,new$basis_signature,tolerance=1e-10))
+  !is.null(.smooth_basis_transform(old, new))
+}
+
+.smooth_warm_starts <- function(start, old, new) {
+  designs <- list(F = old$F_modmat, q = old$q_modmat)
+  for (component in c("q", "F")) {
+    field <- if (component == "q") "q_terms" else "F_terms"
+    coefficient <- if (component == "F") "log_mu_f" else
+      if (new$index_settings$q_link == "logit") "logit_q" else "log_q"
+    terms <- Filter(function(x) x$type == "smooth", new[[field]])
+    ids <- unique(vapply(terms, `[[`, character(1), "smooth_id"))
+    for (id in ids) {
+      pieces <- Filter(function(x) identical(x$smooth_id, id), terms)
+      previous <- Filter(function(x) identical(x$type, "smooth") &&
+        identical(x$smooth_id, id), old[[field]])
+      transform <- if (identical(names(previous), names(pieces)))
+        .smooth_basis_transform(previous[[1L]], pieces[[1L]]) else NULL
+      columns <- colnames(pieces[[1L]]$smooth_fixed)
+      if (is.null(transform)) {
+        parameters <- unlist(lapply(pieces, function(x) c(x$parameter, x$sd_parameter)))
+        start[parameters] <- NULL
+        if (!is.null(start[[coefficient]])) {
+          start[[coefficient]] <- start[[coefficient]][!names(start[[coefficient]]) %in% columns]
+        }
+        next
+      }
+      for (piece in pieces) {
+        parameter <- piece$parameter
+        if (!is.null(start[[parameter]])) {
+          value <- drop(transform$random[[piece$penalty]] %*% start[[parameter]])
+          names(value) <- names(start[[parameter]])
+          start[[parameter]] <- value
+        }
+      }
+      if (length(columns)) {
+        if (!is.null(start[[coefficient]]) && all(columns %in% names(start[[coefficient]]))) {
+          start[[coefficient]][columns] <- drop(transform$fixed %*% start[[coefficient]][columns])
+        }
+        # Express the old design in the new coordinates before checking the
+        # ordinary fixed-effect design, including the smooth null space.
+        designs[[component]][, columns] <- designs[[component]][, columns, drop = FALSE] %*%
+          solve(transform$fixed)
+      }
+    }
+  }
+  list(parameters = start, designs = designs)
 }
 
 .smooth_function_values <- function(par, dat, component, effects) {
