@@ -106,6 +106,7 @@ test_that("all-empty nested tables preserve union schema and identifier types", 
     if (type == "factor") expect_identical(levels(out$model), c("Official", "tinyAM"))
     if (type == "numeric") expect_type(out$model, "double")
     if (type == "character") expect_type(out$model, "character")
+    if (type == "auto") expect_identical(out$model, character())
   }
   expect_false("model" %in% names(stack_nested(x, label = NULL)$index))
   expect_identical(x, before)
@@ -114,4 +115,13 @@ test_that("all-empty nested tables preserve union schema and identifier types", 
   stacked <- stack_nested(partial, label_type = "factor")$index
   expect_identical(nrow(stacked), 1L)
   expect_equal(stacked$pred, 2)
+})
+
+test_that("empty nested auto labels use the same types as populated labels", {
+  for (ids in list(c("Official", "tinyAM"), c("1", "2"), c("1.5", "2.5"),
+                   c("TRUE", "FALSE"), c("1", "tinyAM"))) {
+    empty <- stats::setNames(rep(list(list(index = data.frame(year = integer()))), 2), ids)
+    populated <- stats::setNames(rep(list(data.frame(year = 2000L)), 2), ids)
+    expect_identical(stack_nested(empty)$index$model, stack_list(populated)$model[0])
+  }
 })

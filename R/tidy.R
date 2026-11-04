@@ -839,7 +839,7 @@ stack_nested <- function(x, label = "model",
       empty <- empty[, columns, drop = FALSE]
       if (!is.null(label)) {
         empty[[label]] <- switch(label_type,
-          auto = utils::type.convert(character(), as.is = TRUE),
+          auto = utils::type.convert(names(pieces), as.is = TRUE)[0],
           numeric = numeric(), character = character(),
           factor = factor(character(), levels = names(pieces)))
         empty <- empty[, c(label, setdiff(names(empty), label)), drop = FALSE]
