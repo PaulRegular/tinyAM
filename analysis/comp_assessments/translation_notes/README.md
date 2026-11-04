@@ -8,6 +8,9 @@ Current expansion-batch notes:
 
 - [Icelandic Atlantic wolffish](ices_atlantic_wolffish_iceland_2026.md)
 - [Faroes ling](ices_ling_faroe_5b_2026.md)
+- [Celtic Sea whiting](ices_whg_27_7b_ce_k_2026.md)
+- [Acadian redfish](noaa_acadian_redfish_gom_gb_2025.md)
+- [Irish Sea herring: annual-reference check](ices_her_27_nirs_2026.md)
 
 The 2026-11-03 content review also separates anonymous analysis passages that remained in source reviews after the earlier migration. Each additional passage links to its original SAIO revision. These are historical notes, including blocked or exploratory cases; their presence does not establish a runnable or reviewed translation. Discovery-only recommendations remain provisional.
 
