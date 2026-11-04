@@ -1,5 +1,9 @@
 # tinyAM 0.1.1.9001
 
+* Add `get_ssb()`, `get_recruitment()`, `get_fbar()`, `get_mbar()`, `get_f()`
+  and `get_m()` for common population tables, retaining uncertainty, units,
+  projections and comparison labels without calculating diagnostics.
+
 * Print a concise input-validation summary with `check_tam_data()`; internal
   preparation remains quiet. Install dashboard R dependencies automatically and
   check for Pandoc before rendering.
