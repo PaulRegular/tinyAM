@@ -102,3 +102,70 @@ testthat::test_that("Irish herring records a source-date blocker before any fitt
   testthat::expect_match(result$diagnostics$reason, "reference dates")
   testthat::expect_null(result$fit)
 })
+
+testthat::test_that("Celtic herring retains model-year labels, source conflicts and exclusions", {
+  record <- read_assessment("ices_her_27_irls_2026", database)
+  before <- record
+  testthat::local_mocked_bindings(fit_tam = function(...) stop("Do not fit during preparation"),
+    .package = "tinyAM")
+  stock <- .test_stock(record)
+  testthat::expect_identical(record, before)
+  testthat::expect_equal(stock$years, 2002:2024)
+  testthat::expect_identical(attr(stock$obs, "translation")$year_origin, "1 April")
+  testthat::expect_false(any(stock$obs$index$year %in% c(2004, 2017, 2024)))
+  testthat::expect_true(all(stock$obs$index$samp_time == 0.5))
+  testthat::expect_equal(stock$obs$index$obs[stock$obs$index$year == 2019 & stock$obs$index$age == 2], 98229)
+  raw <- record$inputs[record$inputs$type == "catch" & record$inputs$measure == "numbers_at_age", ]
+  key <- function(x) paste(x$year, x$age)
+  testthat::expect_equal(stock$obs$catch$obs, raw$value[match(key(stock$obs$catch), key(raw))])
+  testthat::expect_true(all(stock$obs$catch$unit == "thousand fish"))
+  testthat::expect_length(unique(stock$obs$index$q_group[stock$obs$index$age %in% 3:5]), 1L)
+})
+
+testthat::test_that("GOA ocean perch uses source biological roles and retains older biology", {
+  record <- read_assessment("noaa_goa_pop_2023", database)
+  before <- record
+  testthat::local_mocked_bindings(fit_tam = function(...) stop("Do not fit during preparation"),
+    .package = "tinyAM")
+  stock <- .test_stock(record)
+  testthat::expect_identical(record, before)
+  testthat::expect_equal(stock$years, 1990:2023)
+  testthat::expect_equal(stock$ages, 2:25)
+  testthat::expect_true(all(stock$obs$index$samp_time == 0))
+  testthat::expect_equal(max(stock$obs$weight$age), 29)
+  testthat::expect_equal(max(stock$obs$maturity$age), 29)
+  testthat::expect_identical(stock$settings$M_settings$process, "off")
+  testthat::expect_identical(deparse(stock$settings$M_settings$mu_form), "~1")
+  testthat::expect_null(stock$settings$M_settings$mu_supplied)
+  testthat::expect_null(stock$dat$M_settings$mu_supplied)
+  testthat::expect_false(any(is.finite(stock$obs$catch$obs[stock$obs$catch$year == 1991])))
+  w <- record$inputs[record$inputs$type == "weight" & is.na(record$inputs$survey), ]
+  testthat::expect_equal(stock$obs$weight$obs, w$value[match(stock$obs$weight$age, w$age)] / 1000)
+  p <- record$outputs[record$outputs$measure == "maturity_at_age" & record$outputs$year == 1961, ]
+  testthat::expect_equal(stock$obs$maturity$obs, p$value[match(stock$obs$maturity$age, p$age)] * 0.5)
+})
+
+testthat::test_that("winter flounder uses one count representation and estimates source-shaped M", {
+  record <- read_assessment("dfo_sgsl_winter_flounder_2017", database)
+  before <- record
+  testthat::local_mocked_bindings(fit_tam = function(...) stop("Do not fit during preparation"),
+    .package = "tinyAM")
+  stock <- .test_stock(record)
+  testthat::expect_identical(record, before)
+  testthat::expect_equal(stock$years, 1973:2016)
+  testthat::expect_equal(stock$ages, 2:12)
+  testthat::expect_null(stock$dat$M_settings$mu_supplied)
+  testthat::expect_equal(stock$dat$rec_settings$phi, plogis(-4))
+  testthat::expect_length(unique(stock$obs$pop_covariates$M_group), 2L)
+  testthat::expect_length(unique(stock$obs$pop_covariates$M_period), 9L)
+  testthat::expect_true(all(stock$obs$index$samp_time == 0.71))
+  testthat::expect_equal(exp(stock$dat$log_sd_catch_supplied),
+    ifelse(stock$dat$obs$catch$year == 1984, 2, 0.1))
+  testthat::expect_equal(ncol(stock$dat$sd_catch_modmat), 0L)
+  for (type in c("catch", "index")) {
+    original <- record$inputs[record$inputs$type == type & record$inputs$measure == "numbers_at_age", ]
+    current <- stock$obs[[type]]
+    testthat::expect_equal(current$obs, original$value[match(paste(current$year, current$age),
+      paste(original$year, original$age))])
+  }
+})

@@ -11,6 +11,9 @@ Current expansion-batch notes:
 - [Celtic Sea whiting](ices_whg_27_7b_ce_k_2026.md)
 - [Acadian redfish](noaa_acadian_redfish_gom_gb_2025.md)
 - [Irish Sea herring: annual-reference check](ices_her_27_nirs_2026.md)
+- [Celtic Sea herring](ices_her_27_irls_2026.md)
+- [Gulf of Alaska ocean perch](noaa_goa_pop_2023.md)
+- [4T winter flounder](dfo_sgsl_winter_flounder_2017.md)
 
 The 2026-11-03 content review also separates anonymous analysis passages that remained in source reviews after the earlier migration. Each additional passage links to its original SAIO revision. These are historical notes, including blocked or exploratory cases; their presence does not establish a runnable or reviewed translation. Discovery-only recommendations remain provisional.
 
