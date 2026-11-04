@@ -2,6 +2,41 @@
 
 # Assessment capabilities and remaining gaps
 
+## First expansion batch: preliminary work in progress
+
+The [20-stock register](expansion_batch_01.csv) separates fitting outcomes
+from source and reconstruction blockers. Eight models have been attempted:
+three pass numerical checks and have dashboards; five fail optimizer or
+uncertainty checks. Eight stock records lack a defensible translation from
+the pinned inputs, including the unresolved Irish herring annual origin.
+Four other Pacific SS3 cases still need reviewed age/length, sex, area or
+removal reconstruction. These are preliminary outcomes, not additions to
+the historical prevalence counts below or curated paper examples.
+
+Independent age-index errors remain an approximation when observations are
+expanded from biomass totals and compositions. Aggregate CVs, composition
+sample weights and ageing-error matrices do not become independent age SDs.
+The sablefish reconstruction conserves each represented fleet's biomass and
+leaves a whole catch year missing if any positive removal stream lacks ages.
+Its original empirical mature-weight and body-weight schedules support an
+explicit maturity conversion; fitted population states supply no observations.
+
+Numerical convergence does not establish an informative approximation.
+Sablefish passes numerical checks but estimates M effectively at zero with
+extreme uncertainty after its source M prior is omitted. Its approximate SSB
+and N/F-at-age comparisons trigger review. Wolffish has good aggregate trend
+correlation but substantial scale disagreement; Celtic herring retains an
+unresolved published acoustic value and a flagged terminal SSB difference.
+The failed whiting, redfish, ocean-perch and winter-flounder attempts are
+retained in their [translation notes](translation_notes/README.md). These
+experiments do not isolate one omitted feature as the cause of disagreement.
+
+Current tinyAM supports separate catch fleets, stock/catch weight roles and
+normalized selectivity curves. Pooling sexes or areas remains a different
+approximation; those native population dimensions are not created merely by
+declaring fleets. No package mathematics or public interfaces changed in this
+translation work.
+
 ## Historical 23-assessment capability inventory
 
 **Process-expansion follow-up:** F now supports AR1 age-correlated RW increments
@@ -28,7 +63,7 @@ source inputs to fit; their limited known specifications remain in the inventory
 | Correlated observation errors, including full biomass covariance | 9 | [NE Arctic cod](https://github.com/PaulRegular/saio/blob/main/source_reviews/ices_cod_northeast_arctic.md), [EBS pollock](https://github.com/PaulRegular/saio/blob/main/source_reviews/afsc_pollock_ebs.md) | Independent lognormal observations; mean/SD random effects are not equivalent. | Represent joint information and uncertainty more faithfully. | Moderate–high |
 | Multiple age-sharing groups for latent F/N process SDs | 9 | [Plaice](https://github.com/PaulRegular/saio/blob/main/source_reviews/ices_plaice_north_sea.md), [Northern Gulf cod](https://github.com/PaulRegular/saio/blob/main/source_reviews/dfo_cod_3pn4rs.md) | Ordinary age-based `sd_form` is now supported for N/F/M, with M designs constant within fitted state blocks. Recruitment remains separate. | Different process variability for young ages or plus groups without extra observation noise. | Implemented |
 | Totals plus age/length composition likelihoods | 9 | [GOA cod](https://github.com/PaulRegular/saio/blob/main/source_reviews/afsc_cod_goa.md), [Northern Shelf cod](https://github.com/PaulRegular/saio/blob/main/source_reviews/ices_cod_north_sea.md) | Convert recoverable totals/compositions to age observations, or omit unsupported components. Multinomial, Dirichlet-multinomial and logistic-normal source likelihoods differ. | Use original observation units and sample-size information. | High |
-| Fleet, substock and normalized selectivity structures | 8 | [GOA pollock](https://github.com/PaulRegular/saio/blob/main/source_reviews/afsc_pollock_goa.md), [summer flounder](https://github.com/PaulRegular/saio/blob/main/source_reviews/nefsc_summer_flounder.md) | Aggregate removals and flexible F-at-age. Rising mono/logistic F means are supported with IID/AR1 residuals; they do not reproduce fleet-specific, normalized or double-logistic selectivity processes. | Preserve fishery distinctions, selectivity normalization and associated observations. | High |
+| Fleet, substock and normalized selectivity structures | 8 | [GOA pollock](https://github.com/PaulRegular/saio/blob/main/source_reviews/afsc_pollock_goa.md), [summer flounder](https://github.com/PaulRegular/saio/blob/main/source_reviews/nefsc_summer_flounder.md) | Fleet-specific catches/F and normalized selectivity curves are supported. Native sex/substock dynamics still require explicit pooling or omission; fleet-specific process and normalization conventions need source checks. | Preserve fishery distinctions, selectivity normalization and associated observations. | Partial support |
 | Survival to spawning time in SSB | 6 | [Baltic sprat](https://github.com/PaulRegular/saio/blob/main/source_reviews/ices_sprat_baltic.md), [EBS pollock](https://github.com/PaulRegular/saio/blob/main/source_reviews/afsc_pollock_ebs.md) | `data$maturity$spawn_time` supports age/year timing, shared by F/M. Separate F/M fractions and seasonal biology remain unsupported. | Match parent SSB and reported biomass timing. | Implemented for supplied age/year fractions |
 | Priors on starting mortality, q or selectivity | 3 | [Southern Gulf cod](https://github.com/PaulRegular/saio/blob/main/source_reviews/dfo_cod_4t4vn.md), [GOA pollock](https://github.com/PaulRegular/saio/blob/main/source_reviews/afsc_pollock_goa.md) | Starting values or q logit restriction are not priors. Fixed Gaussian effect SDs are supported, including a standalone M mean RW; the source starting-level priors remain different. | Reproduce external information and stabilize genuinely weak boundaries. | Moderate |
 | Recruitment curves beyond BH/Ricker | 2 | [Western Baltic herring](https://github.com/PaulRegular/saio/blob/main/source_reviews/ices_herring_western_baltic_2026.md), [Southern Gulf cod](https://github.com/PaulRegular/saio/blob/main/source_reviews/dfo_cod_4t4vn.md) | RW or stationary recruitment; hockey-stick and SSB times an AR1 recruitment rate remain distinct. | Match those recruitment equations without substituting another curve. | Moderate |
@@ -262,7 +297,7 @@ The remaining items are proposals, not authorized additions.
    mean effects; a dedicated residual-SD interface would mainly ease that
    specification. Avoid a general prior language initially.
 
-Composition likelihoods and explicit fleets are useful but would substantially
-expand tinyAM. Additional recruitment curves have lower confirmed prevalence
+Composition likelihoods and sex/substock dynamics would substantially
+expand tinyAM; explicit catch fleets are already supported. Additional recruitment curves have lower confirmed prevalence
 in this inventory. None of these recommendations assumes that a new feature
 would necessarily improve agreement with an official assessment.

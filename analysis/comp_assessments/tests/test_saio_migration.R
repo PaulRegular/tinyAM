@@ -93,6 +93,9 @@ local({
     folder <- file.path(.assessment_results(tier), "dashboards")
     dir.create(folder, recursive = TRUE)
     writeLines("<html>Fixture</html>", file.path(folder, paste0(tier, "_only.html")))
+    trial <- file.path(.assessment_results(tier), "cache", "shared", "experiments", "setup")
+    dir.create(trial, recursive = TRUE)
+    writeLines("<html>Retired setup</html>", file.path(trial, "dashboard.html"))
     index_assessment_dashboards(tier)
   }
   curated_index <- readLines(file.path(.assessment_results("curated"), "index.html"))
@@ -100,6 +103,8 @@ local({
   stopifnot(any(grepl("curated_only.html", curated_index, fixed = TRUE)),
     !any(grepl("preliminary_only.html", curated_index, fixed = TRUE)),
     any(grepl("preliminary_only.html", preliminary_index, fixed = TRUE)),
-    !any(grepl("curated_only.html", preliminary_index, fixed = TRUE)))
+    !any(grepl("curated_only.html", preliminary_index, fixed = TRUE)),
+    !any(grepl("/experiments/", curated_index, fixed = TRUE)),
+    !any(grepl("/experiments/", preliminary_index, fixed = TRUE)))
 })
 cat("Pinned SAIO reads, tier dispatch, curated defaults and separate output regression checks passed.\n")

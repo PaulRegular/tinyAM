@@ -53,7 +53,7 @@ index_assessment_dashboards <- function(tier = "curated") {
   files <- list.files(folder, "[.]html$", recursive = TRUE, full.names = TRUE)
   relative <- substring(gsub("\\", "/", files, fixed = TRUE), nchar(gsub("\\", "/", folder, fixed = TRUE)) + 2L)
   keep <- (basename(files) == "dashboard.html" | grepl("(^|/)dashboards/[^/]+[.]html$", relative)) &
-    !grepl("/(check|source|tinyAM[.]Rcheck)/", relative)
+    !grepl("/(check|source|tinyAM[.]Rcheck|experiments)/", relative)
   relative <- sort(relative[keep])
   escape <- function(x) {
     x <- gsub("&", "&amp;", x, fixed = TRUE)
