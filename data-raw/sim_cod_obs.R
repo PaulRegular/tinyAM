@@ -254,6 +254,31 @@ raise_sim_cod_catch <- function(operations, samples, ages, years, fleets,
   do.call(rbind, result)
 }
 
+# Only the fishing copy omits exact-zero spatial rows. One zero anchor per
+# year-age keeps even entirely empty groups explicit for round_sim(). The full
+# grid remains the location/sampling frame. Restore dense sp_N before surveys.
+.sim_cod_fishing_population <- function(population) {
+  spatial <- population$sp_N
+  keep <- spatial$N > 0 | !duplicated(spatial[, c("year", "age")])
+  result <- population
+  result$sp_N <- data.table::copy(spatial[keep, ])
+  totals <- tapply(result$sp_N$N,
+    list(age = result$sp_N$age, year = result$sp_N$year), sum)
+  if (!isTRUE(all.equal(totals, population$N, tolerance = 0, check.attributes = FALSE)) ||
+      !identical(result$grid, population$grid)) {
+    stop("Sparse fishing representation must preserve every population total and the complete grid.")
+  }
+  result
+}
+
+.sim_cod_run_fisheries <- function(population, configurations) {
+  result <- do.call(SimSurvey::sim_fisheries, c(list(
+    sim = .sim_cod_fishing_population(population), n_sims = 1), configurations))
+  if (!identical(result$N, population$N)) stop("Fishing changed the pre-generated population totals.")
+  result$sp_N <- data.table::copy(population$sp_N)
+  result
+}
+
 .sim_cod_tables <- function(simulation, settings, selectivity, available, provenance, allocations) {
   ages <- settings$ages
   years <- settings$years
@@ -431,14 +456,20 @@ build_sim_cod_obs <- function(simsurvey_repo, repo = ".", cache_dir = file.path(
   allocations <- .sim_cod_allocations(population$value, settings, available)
   provenance$allocation <- list(method = "base_share * accessible/global vulnerable expected deaths",
     table_hash = .sim_cod_hash(allocations))
+  representation <- "positive-spatial-rows-with-year-age-zero-anchors-v1"
+  sparse_population <- .sim_cod_fishing_population(population$value)
+  provenance$computation <- list(fishing_representation = representation,
+    dense_spatial_rows = nrow(population$value$sp_N), sparse_spatial_rows = nrow(sparse_population$sp_N))
+  rm(sparse_population)
   fishery_key <- .sim_cod_hash(list(population_key, allocations, settings$monitoring,
-    settings$max_operations, body(.sim_cod_allocations), body(.sim_cod_fisheries), body(.sim_cod_selectivity)))
+    settings$max_operations, body(.sim_cod_allocations), body(.sim_cod_fisheries), body(.sim_cod_selectivity),
+    representation, body(.sim_cod_fishing_population), body(.sim_cod_run_fisheries)))
   survey_key <- .sim_cod_hash(list(fishery_key, settings$survey_density, settings$survey_sampling,
     body(.sim_cod_surveys)))
   fisheries <- cached("fisheries", fishery_key, function() {
     assign(".Random.seed", population$rng, envir = .GlobalEnv)
     configs <- .sim_cod_fisheries(settings, selectivity, allocations)
-    result <- do.call(SimSurvey::sim_fisheries, c(list(sim = population$value, n_sims = 1), configs))
+    result <- .sim_cod_run_fisheries(population$value, configs)
     list(value = result, rng = .Random.seed)
   })
   surveys <- cached("surveys", survey_key, function() {
