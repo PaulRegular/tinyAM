@@ -5,13 +5,18 @@
 ## First expansion batch: preliminary work in progress
 
 The [20-stock register](expansion_batch_01.csv) separates fitting outcomes
-from source and reconstruction blockers. Eight models have been attempted:
-three pass numerical checks and have dashboards; five fail optimizer or
-uncertainty checks. Eight stock records lack a defensible translation from
-the pinned inputs, including the unresolved Irish herring annual origin.
-Four other Pacific SS3 cases still need reviewed age/length, sex, area or
-removal reconstruction. These are preliminary outcomes, not additions to
-the historical prevalence counts below or curated paper examples.
+from source and reconstruction blockers. Eight models have been numerically
+attempted: three pass checks and have dashboards; five fail optimizer or
+uncertainty checks. Eight other stock records lack a defensible translation
+from the pinned inputs, including the unresolved Irish herring annual origin.
+The four remaining Pacific SS3 cases now have reviewed preliminary recipes
+that stop at source readiness. Dover sole lacks discard ages and compatible
+catch weights; yelloweye has unsampled active catch and unresolved catch units;
+Canary Rockfish lacks a verified conditional-age mapping and compatible catch
+weights; Oregon Black Rockfish lacks age samples for shore removals and
+age-specific survey observations. These are source-data limitations, not
+missing tinyAM model features. All outcomes remain preliminary and are not
+additions to the historical prevalence counts below or curated paper examples.
 
 Independent age-index errors remain an approximation when observations are
 expanded from biomass totals and compositions. Aggregate CVs, composition
