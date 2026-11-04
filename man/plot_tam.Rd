@@ -37,9 +37,23 @@ plot_obs_pred(
   ...
 )
 
-plot_bubbles(data, res = NULL, y = ~age, ylab = "Age", title = NULL, ...)
+plot_bubbles(
+  data,
+  res = NULL,
+  y = ~age,
+  ylab = "Age",
+  title = NULL,
+  residual_type = c("auto", "standardized", "osa"),
+  ...
+)
 
-plot_resid(data, x = ~year, xlab = "Year", ...)
+plot_resid(
+  data,
+  x = ~year,
+  xlab = "Year",
+  residual_type = c("auto", "standardized", "osa"),
+  ...
+)
 
 plot_par(data, ...)
 }
@@ -70,6 +84,13 @@ applicable, Show CI / Hide CI.}
 \item{res}{Optional one-column formula for signed bubble values, e.g.
 \code{~est} for process deviations. Omitted values use OSA or standardized
 observation residuals. Use \code{y = ~age_block} for shared M state blocks.}
+
+\item{residual_type}{Initial observation residual view: \code{"auto"} (default),
+\code{"standardized"} or \code{"osa"}. Auto uses available cached OSA residuals
+separately for each model in the supplied panel, otherwise standardized
+residuals. Partial OSA gaps remain missing. A dropdown switches views;
+unavailable OSA values are identified without computing them. A supplied
+\code{res} formula in \code{plot_bubbles()} bypasses these observation controls.}
 }
 \value{
 A Plotly object.

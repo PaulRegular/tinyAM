@@ -4,7 +4,12 @@
 \alias{residuals.tam_fit}
 \title{Extract observation residuals}
 \usage{
-\method{residuals}{tam_fit}(object, type = c("standardized", "log", "response", "osa"), ...)
+\method{residuals}{tam_fit}(
+  object,
+  type = c("standardized", "log", "response", "osa"),
+  method = "oneStepGaussianOffMode",
+  ...
+)
 }
 \arguments{
 \item{object}{A fitted \code{tam_fit}.}
@@ -12,17 +17,20 @@
 \item{type}{\code{"standardized"} (default), \code{"log"} (log observation minus log
 prediction), \code{"response"} (observation minus prediction), or \code{"osa"}.}
 
-\item{...}{Computation controls passed to \code{\link[=tidy_obs_pred]{tidy_obs_pred()}} and
-\code{\link[RTMB:OSA-residuals]{RTMB::oneStepPredict()}} when uncached OSA residuals are requested, such as
+\item{method}{OSA algorithm, as in \code{\link[=add_osa_residuals]{add_osa_residuals()}}. Only used with
+\code{type = "osa"}. Explicitly supplying it requests a fresh calculation.}
+
+\item{...}{Computation controls passed to \code{\link[RTMB:OSA-residuals]{RTMB::oneStepPredict()}}, such as
 \code{trace = FALSE} or \code{parallel = FALSE}.
 \code{subset} and \code{conditional} index included observations in likelihood order;
 unrequested rows retain missing residuals.
-Controls are not used for cached OSA values; other residual types reject them.}
+Explicit controls request a fresh calculation; other residual types reject them.}
 }
 \value{
 A data frame with year, age, type (catch/index), survey, observations,
-predictions, residuals, and available unit/fleet columns. The \code{residual_type}
-attribute names the requested scale.
+predictions, residuals, and available unit/fleet columns. OSA output also
+identifies \code{osa_method}. The \code{residual_type} attribute names the requested
+scale, and \code{osa} retains available method/settings/coverage metadata.
 }
 \description{
 Return keyed catch and survey rows for plotting or further checks. This is a
@@ -30,20 +38,21 @@ convenience extractor: standardized residuals are the existing fitted-state
 residuals, affected by shrinkage, not independent prediction errors.
 }
 \details{
-\code{type = "osa"} reuses cached OSA columns, or explicitly requests
-their calculation at fitted parameter values when absent. It can be expensive,
+\code{type = "osa"} reuses cached OSA columns when no computation controls
+or method are supplied. Otherwise both catch and index residuals are calculated
+together, using one algorithm at fitted parameter values. It can be expensive,
 but does not rerun \code{\link[=fit_tam]{fit_tam()}} or re-estimate fixed parameters. Temporary
 objectives protect the fitted object's state. Other residual types remain
 simple extractors. Excluded observations, including zeros, retain rows with
 missing residuals. The supplied fit is not modified or implicitly cached.
-To retain OSA results for later extraction and dashboard use, assign
-\code{fit$obs_pred <- tidy_obs_pred(fit, add_osa_res = TRUE, trace = FALSE)}.
+To retain results for later extraction and dashboard use, assign
+\code{fit_osa <- add_osa_residuals(fit, method = "oneStepGeneric", trace = FALSE)}.
 }
 \examples{
 \dontrun{
 residuals(fit)
 residuals(fit, type = "log")
-residuals(fit, type = "osa", trace = FALSE)
+residuals(fit, type = "osa", method = "oneStepGeneric", trace = FALSE)
 }
 }
 \seealso{

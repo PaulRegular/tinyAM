@@ -73,9 +73,9 @@ tidy_mat <- tidy_array
 #'
 #' @param fit A fitted TAM object as returned by [fit_tam()].
 #' @param interval Confidence level for combined catchability intervals.
-#' @param add_osa_res Logical; add one-step-ahead residuals? Hard wired to
-#'                    apply the `"oneStepGaussianOffMode"` method.
-#'                    See [RTMB::oneStepPredict()] for details.
+#' @param add_osa_res Logical; calculate one-step-ahead residuals?
+#' @param method OSA algorithm; defaults to `"oneStepGaussianOffMode"`.
+#'   See [add_osa_residuals()] for supported choices and computation details.
 #' @param ... Arguments to pass to [RTMB::oneStepPredict()].
 #'
 #' @details
@@ -87,6 +87,10 @@ tidy_mat <- tidy_array
 #' different predictive calculation. See [tinyAM-model] for the observation equations.
 #' OSA calculation rebuilds a temporary objective at stored fitted parameters;
 #' it does not refit fixed parameters or modify the fitted objective.
+#' With `add_osa_res = TRUE`, it computes the requested method afresh and records
+#' its settings and observation coverage. `osa_method` identifies the algorithm
+#' beside `osa_res`. To retain diagnostics while preserving existing observation
+#' tables and confidence intervals, use [add_osa_residuals()].
 #' When stockassessment is loaded, one-step residuals run sequentially: the
 #' upstream TMB parallel helper cannot select between SAM and RTMB libraries.
 #'
@@ -112,9 +116,10 @@ tidy_mat <- tidy_array
 #' @seealso [fit_tam()], [tidy_rep()], [tidy_sdrep()], [tidy_pop()]
 #' @export
 
-tidy_obs_pred <- function(fit, add_osa_res = FALSE, interval = .95, ...) {
+tidy_obs_pred <- function(fit, add_osa_res = FALSE, interval = .95,
+                          method = "oneStepGaussianOffMode", ...) {
   fit <- .require_tam_fit(fit, arg = "fit")
-  osa_obj <- if (add_osa_res) .fitted_objective(fit) else NULL
+  .osa_method(method, list(...))
   if (!is.numeric(interval) || length(interval) != 1L || !is.finite(interval) ||
     interval <= 0 || interval >= 1) {
     cli::cli_abort("{.arg interval} must be one number strictly between zero and one.")
@@ -169,26 +174,8 @@ tidy_obs_pred <- function(fit, add_osa_res = FALSE, interval = .95, ...) {
   obs_pred$index$std_res <- with(obs_pred$index, ifelse(obs == 0, NA, (log(obs) - log_pred$index) / sd))
 
   if (add_osa_res) {
-    args <- list(...)
-    if (isTRUE(args$parallel) && "stockassessment" %in% loadedNamespaces()) {
-      args$parallel <- FALSE
-      cli::cli_inform("Calculating one-step residuals sequentially while SAM and RTMB are loaded.")
-    }
-    osa_res <- do.call(
-      RTMB::oneStepPredict,
-      c(list(obj = osa_obj, method = "oneStepGaussianOffMode"), args)
-    )
-    selected <- if (is.null(args$subset)) setdiff(seq_along(fit$dat$observed), args$conditional) else args$subset
-    if (length(osa_res$residual) != length(selected)) {
-      cli::cli_abort("OSA results do not match the requested observation subset.")
-    }
-    all_osa <- rep(NA_real_, length(fit$dat$observed))
-    all_osa[selected] <- osa_res$residual
-    split_osa_res <- split(all_osa, fit$dat$obs_map$type[fit$dat$obs_map$is_observed])
-    split_is_observed <- split(fit$dat$obs_map$is_observed, fit$dat$obs_map$type)
-    obs_pred$catch$osa_res <- obs_pred$index$osa_res <- NA
-    obs_pred$catch$osa_res[split_is_observed$catch] <- split_osa_res$catch
-    obs_pred$index$osa_res[split_is_observed$index] <- split_osa_res$index
+    osa <- .compute_osa_residuals(fit, method, list(...))
+    obs_pred <- .attach_osa_tables(obs_pred, osa$tables, osa$metadata)
   }
 
   attr(obs_pred, "interval") <- interval
@@ -1048,66 +1035,12 @@ tidy_tam <- function(..., model_list = NULL, interval = 0.95, label = "model", l
       return(fit$obs_pred)
     }
     tables <- tidy_obs_pred(fit, interval = interval)
-    for (nm in names(tables)) {
-      extras <- setdiff(names(fit$obs_pred[[nm]]), names(tables[[nm]]))
-      tables[[nm]][extras] <- fit$obs_pred[[nm]][extras]
-    }
-    tables
+    metadata <- attr(fit$obs_pred, "osa", exact = TRUE)
+    if (is.null(metadata)) metadata <- fit$osa
+    .preserve_observation_extras(tables, fit$obs_pred, metadata)
   })
 
-  pop_list <- lapply(model_list, function(fit) {
-    if (inherits(fit, "tam_ref")) {
-      return(fit$pop)
-    }
-    if (!is.null(fit$pop) && interval_matches(fit$pop)) {
-      fit$pop
-    } else {
-      tidy_pop(fit, interval = interval)
-    }
-  })
-  references <- Filter(function(fit) inherits(fit, "tam_ref"), model_list)
-  comparison_scales <- lapply(references, `[[`, "comparison_scales")
-  comparison_scales <- Filter(function(x) length(x) > 0L, comparison_scales)
-  if (length(comparison_scales)) {
-    comparison_scales <- lapply(comparison_scales, function(x) {
-      if (is.list(x)) x <- unlist(x, use.names = TRUE)
-      if (!is.numeric(x) || is.null(names(x)) || any(!nzchar(names(x))) ||
-        anyDuplicated(names(x)) || any(!is.finite(x)) || any(x <= 0)) {
-        cli::cli_abort("A {.cls tam_ref} {.field comparison_scales} value must be a named vector of positive finite numbers.")
-      }
-      x
-    })
-    if (length(comparison_scales) > 1L &&
-      !all(vapply(comparison_scales[-1L], identical, logical(1), comparison_scales[[1L]]))) {
-      cli::cli_abort("Assessment references use different {.field comparison_scales}; the fitted outputs cannot be shown on one scale.")
-    }
-    comparison_scales <- comparison_scales[[1L]]
-    reference_pop <- references[[1L]]$pop
-    for (i in seq_along(model_list)) {
-      if (inherits(model_list[[i]], "tam_ref")) next
-      for (metric in intersect(names(comparison_scales), names(pop_list[[i]]))) {
-        tab <- pop_list[[i]][[metric]]
-        scale <- comparison_scales[[metric]]
-        reference <- reference_pop[[metric]]
-        from <- unique(tab$unit[!is.na(tab$unit)])
-        to <- unique(reference$unit[!is.na(reference$unit)])
-        if (length(from) == 1L && length(to) == 1L) .check_unit_conversion(from, to, scale)
-        for (field in intersect(c("est", "lwr", "upr"), names(tab))) {
-          tab[[field]] <- tab[[field]] * scale
-        }
-        if ("se" %in% names(tab)) {
-          natural <- if ("se_scale" %in% names(tab)) tab$se_scale == "reported" else rep(TRUE, nrow(tab))
-          tab$se[which(natural)] <- tab$se[which(natural)] * scale
-        }
-        if (is.data.frame(reference) && "unit" %in% names(reference)) {
-          units <- unique(as.character(reference$unit[!is.na(reference$unit) &
-            nzchar(as.character(reference$unit))]))
-          if (length(units) == 1L) tab$unit <- units[[1L]]
-        }
-        pop_list[[i]][[metric]] <- tab
-      }
-    }
-  }
+  pop_list <- .population_tables(model_list, interval)
   fitted <- which(vapply(model_list, inherits, logical(1), "tam_fit"))
   pattern_units <- if (length(fitted)) {
     displayed <- pop_list[[fitted[1L]]]
@@ -1135,6 +1068,17 @@ tidy_tam <- function(..., model_list = NULL, interval = 0.95, label = "model", l
   })
 
   obs_pred <- stack_nested(obs_list, label = id_col, label_type = label_type)
+  osa_metadata <- lapply(seq_along(model_list), function(i) {
+    metadata <- attr(obs_list[[i]], "osa", exact = TRUE)
+    if (is.null(metadata)) metadata <- model_list[[i]]$osa
+    metadata
+  })
+  names(osa_metadata) <- names(model_list)
+  osa_metadata <- Filter(Negate(is.null), osa_metadata)
+  if (length(osa_metadata)) {
+    attr(obs_pred, "osa") <- osa_metadata
+    for (name in names(obs_pred)) attr(obs_pred[[name]], "osa") <- osa_metadata
+  }
   pop <- stack_nested(pop_list, label = id_col, label_type = label_type)
   .unit_label(obs_pred$catch, "")
   if (is.data.frame(obs_pred$index)) {
@@ -1154,6 +1098,7 @@ tidy_tam <- function(..., model_list = NULL, interval = 0.95, label = "model", l
 
   out <- list(
     obs_pred   = obs_pred,
+    osa        = osa_metadata,
     pop        = pop,
     patterns   = stack_nested(patterns, label = id_col, label_type = label_type),
     fixed_par  = fixed_tbl,

@@ -13,12 +13,15 @@ template:
     heading_font: 'Arial, sans-serif'
 navbar:
   structure:
-    left: [intro, reference, cheatsheet]
+    left: [intro, model_structure, reference, cheatsheet]
     right: [search, github]
   components:
     intro:
       text: Home
       href: index.html
+    model_structure:
+      text: Model structure
+      href: articles/model-structure.html
     cheatsheet:
       text: Cheatsheet
       href: cheatsheet/tinyAM_cheatsheet.pdf
@@ -60,6 +63,7 @@ reference:
 - title: Visualize and compare
 - contents:
   - vis_tam
+  - plot_model
   - plot_tam
   - plot_age_year
   - plot_matrix
@@ -70,7 +74,9 @@ reference:
   - tidy_tam
   - tidy_obs_pred
   - residuals.tam_fit
+  - add_osa_residuals
   - tidy_pop
+  - get_population
   - tidy_par
   - tidy_recruitment
   - tidy_sdrep

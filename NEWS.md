@@ -1,5 +1,28 @@
 # tinyAM 0.1.1.9001
 
+* Add `plot_model()` and a Model structure dashboard page showing biological
+  connections, process switches, formulas, initialization and input predictors.
+  Compare stored specifications with an independent model selector; link
+  components to maintained equations without calculating or changing fits.
+
+* Add Auto / Standardized / OSA controls to public residual plots and dashboards.
+  Auto selects retained OSAs separately for each model and panel, preserving
+  partial gaps and models without OSA calculations. Labels identify the method;
+  changing plot controls never calculates residuals.
+
+* Select any supported OSA algorithm through `method` and retain diagnostics
+  with `add_osa_residuals()`, without refitting. Explicit computation requests
+  refresh catch and survey residuals together; cached extraction stays cheap.
+  Retain method/settings/coverage metadata through tidying and model comparisons.
+
+* Add `get_ssb()`, `get_recruitment()`, `get_fbar()`, `get_mbar()`, `get_f()`
+  and `get_m()` for common population tables, retaining uncertainty, units,
+  projections and comparison labels without calculating diagnostics.
+
+* Print a concise input-validation summary with `check_tam_data()`; internal
+  preparation remains quiet. Install dashboard R dependencies automatically and
+  check for Pandoc before rendering.
+
 * Preserve smooth warm-start functions across equivalent mgcv basis signs and
   rotations, while rejecting changes to predictor grids or Gaussian penalties.
   This fixes platform-dependent retrospective warm-start checks.

@@ -116,11 +116,26 @@ test_that("tidy_obs_pred builds residual diagnostics for catch and index", {
   expect_equal(out$index$std_res, expected_index_res)
 })
 
-test_that("tidy_obs_pred adds osa residuals", {
+test_that("tidy_obs_pred forwards OSA controls and maps included observations", {
   n_observed <- length(fit$dat$observed)
+  expected <- seq_len(n_observed) / 10
+  local_mocked_bindings(oneStepPredict = function(obj, method, trace, parallel, reverse, discrete, ...) {
+    expect_false(identical(obj, fit$obj))
+    expect_identical(method, "oneStepGaussianOffMode")
+    expect_false(trace)
+    expect_identical(parallel, !"stockassessment" %in% loadedNamespaces())
+    expect_false(reverse)
+    expect_false(discrete)
+    data.frame(residual = expected)
+  }, .package = "RTMB")
   out <- tidy_obs_pred(fit, add_osa_res = TRUE, trace = FALSE, parallel = TRUE, reverse = FALSE)
   expect_true("osa_res" %in% names(out$catch))
   expect_true("osa_res" %in% names(out$index))
+  actual <- c(out$catch$osa_res, out$index$osa_res)
+  expect_equal(actual[fit$dat$is_observed], expected)
+  expect_true(all(is.na(actual[!fit$dat$is_observed])))
+  expect_identical(attr(out, "osa")$n_available, n_observed)
+  expect_identical(attr(out, "osa")$n_failed, 0L)
 })
 
 

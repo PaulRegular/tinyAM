@@ -409,9 +409,19 @@ test_that("tam_ref objects accept a Background page", {
   visible_html <- gsub("(?is)<(script|style)\\b.*?</\\1>", "", visible_html,
     perl = TRUE
   )
-  # Unavailable diagnostics are plot annotations, never prose above the plots.
+  # Missing diagnostics remain plot annotations, not prose above the plots.
+  # The reference's separate model-structure pane explains its unavailable
+  # specification; permit only that exact notice, retaining all panel checks.
   expect_false(grepl('class="tam-process-unavailable"', visible_html, fixed = TRUE))
-  expect_false(grepl("unavailable", tolower(visible_html), fixed = TRUE))
+  reference_notice <- paste0(
+    '<p\\b[^>]*class="tam-model-unavailable"[^>]*>\\s*',
+    'Model structure is unavailable for a reporting reference \\(tam_ref\\)\\.',
+    '\\s*</p>'
+  )
+  notices <- regmatches(visible_html, gregexpr(reference_notice, visible_html, perl = TRUE))[[1L]]
+  expect_length(notices, 1L)
+  diagnostic_html <- gsub(reference_notice, "", visible_html, perl = TRUE)
+  expect_false(grepl("unavailable", tolower(diagnostic_html), fixed = TRUE))
   expect_false(grepl("database_to_tam_ref", visible_html, fixed = TRUE))
   call_start <- regexpr('<div id="function-calls"', visible_html, fixed = TRUE)[[1L]]
   expect_gt(call_start, 0L)

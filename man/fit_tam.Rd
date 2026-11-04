@@ -264,9 +264,9 @@ See \link{tinyAM-model} for the catch solver and feasibility safeguards.
 \item{interval}{Level in \verb{(0, 1)} to use to generate confidence intervals,
 where applicable; default \verb{0.95.}}
 
-\item{add_osa_res}{Logical; add one-step-ahead residuals? Hard wired to
-apply the \code{"oneStepGaussianOffMode"} method. See \code{\link[RTMB:OSA-residuals]{RTMB::oneStepPredict()}}
-for details.}
+\item{add_osa_res}{Logical; add one-step-ahead residuals using
+\code{"oneStepGaussianOffMode"}? To select another method after fitting and
+retain its results, use \code{\link[=add_osa_residuals]{add_osa_residuals()}}.}
 
 \item{silent}{Logical; if \code{TRUE}, disables tracing information.}
 

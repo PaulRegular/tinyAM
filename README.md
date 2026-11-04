@@ -14,8 +14,11 @@ The development version can be installed from GitHub:
 
 ```r
 # install.packages("pak")
-pak::pak(c("PaulRegular/tinyAM", "rmarkdown", "flexdashboard"))
+pak::pak("PaulRegular/tinyAM")
 ```
+
+Dashboard R packages install automatically. Rendering requires
+[Pandoc](https://pandoc.org/installing.html), which is included with RStudio.
 
 See the [package website](https://paulregular.github.io/tinyAM/) and
 [cheatsheet](https://paulregular.github.io/tinyAM/cheatsheet/tinyAM_cheatsheet.pdf)
@@ -212,8 +215,15 @@ statistical advisories. Convergence alone does not establish that the data
 identify every component.
 Inspect each check before interpreting or ranking an alternative.
 
+Use `plot_model(base, N_iid, M_ar1)` or the dashboard's **Model structure** page
+to inspect process switches and formulas. The
+[structure guide](https://paulregular.github.io/tinyAM/articles/model-structure.html)
+links contrasting diagrams to the model equations.
+
 In the dashboard, start with **Fisheries** and **Surveys** to inspect fits and
-standardized residuals. Fisheries lists each fleet, then **Aggregate fishery**;
+residuals. **Auto** uses retained OSA residuals where available for each model;
+otherwise it uses standardized residuals. Select either type explicitly with
+the residual dropdown. Fisheries lists each fleet, then **Aggregate fishery**;
 without fleets, the aggregate page contains the single-fishery diagnostics.
 Review **Tables → Diagnostics** and **Parameters** for
 checks, uncertainty and process deviations before interpreting **Trends** for
@@ -251,8 +261,12 @@ before interpreting rankings.
   `tidy_tam(base, N_iid, M_ar1)` collects population, parameter and observation tables.
   Confidence limits use the reported scale; `se_scale` identifies the SE scale.
 - [Residuals](https://paulregular.github.io/tinyAM/reference/residuals.tam_fit.html):
-  `residuals(base)` extracts standardized residuals; `type = "osa"` explicitly
-  requests one-step-ahead calculations without refitting.
+  `residuals(base)` extracts standardized residuals. To calculate and retain
+  OSAs for dashboards, use `base <- add_osa_residuals(base, method = "oneStepGeneric")`.
+  Calculation can be expensive and does not refit the model.
+- [Population shortcuts](https://paulregular.github.io/tinyAM/reference/get_population.html):
+  `get_ssb(base)`, `get_recruitment(base)`, `get_fbar(base)` and `get_mbar(base)`
+  select annual summaries; `get_f(base)` and `get_m(base)` select age-specific tables.
 - [Simulation](https://paulregular.github.io/tinyAM/reference/sim_tam.html) and
   [projections](https://paulregular.github.io/tinyAM/reference/prepare_tam.html)
   explore model behavior and future scenarios.
