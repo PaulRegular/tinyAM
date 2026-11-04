@@ -1,5 +1,10 @@
 # tinyAM 0.1.1.9001
 
+* Add `plot_model()` and a Model structure dashboard page showing biological
+  connections, process switches, formulas, initialization and input predictors.
+  Compare stored specifications with an independent model selector; link
+  components to maintained equations without calculating or changing fits.
+
 * Add Auto / Standardized / OSA controls to public residual plots and dashboards.
   Auto selects retained OSAs separately for each model and panel, preserving
   partial gaps and models without OSA calculations. Labels identify the method;
