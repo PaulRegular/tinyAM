@@ -126,6 +126,9 @@
 #'
 #' @details
 #' The required tables are `catch`, `index`, `weight` and `maturity`.
+#' For a catch-only model, keep `index` as a zero-row table with its required
+#' columns. Catchability and survey observation-SD settings then contribute no
+#' parameters. Model identification still depends on the remaining assumptions.
 #' An optional `pop_covariates` table supplies columns used by N and M
 #' formulas, including recruitment covariates and supplied M assumptions.
 #' It has one row per input year and age, with `year` and `age` keys and no

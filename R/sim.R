@@ -110,7 +110,7 @@
   obs <- fit$dat$obs[c("catch", "index")]
   split_obs <- split(exp(sims$log_obs), fit$dat$obs_map$type)
   obs$catch$obs <- split_obs$catch
-  obs$index$obs <- split_obs$index
+  obs$index$obs <- if (is.null(split_obs$index)) rep(NA_real_, nrow(obs$index)) else split_obs$index
 
   # Return a flat list of data.frames
   c(obs, pop)

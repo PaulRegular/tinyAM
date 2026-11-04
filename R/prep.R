@@ -163,6 +163,10 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 .add_proj_rows <- function(obs, n_proj = 3, n_mean = 3) {
   max_year <- max(unlist(lapply(obs[c("catch", "index", "weight", "maturity")], `[[`, "year")))
   .add_one <- function(x, nm) {
+    if (!nrow(x)) {
+      x$is_proj <- logical()
+      return(x)
+    }
     proj_years <- seq.int(max_year + 1L, max_year + n_proj)
     mean_years <- seq.int(max_year - n_mean + 1L, max_year)
     template <- x[x$year == max(x$year), , drop = FALSE]
@@ -734,7 +738,7 @@ prepare_tam <- function(
   } else {
     dat$proj_settings <- list(n_proj = 0)
     for (nm in names(dat$obs)) {
-      dat$obs[[nm]]$is_proj <- FALSE
+      dat$obs[[nm]]$is_proj <- rep(FALSE, nrow(dat$obs[[nm]]))
     }
   }
 
@@ -827,10 +831,10 @@ prepare_tam <- function(
 
   catch <- dat$obs$catch
   index <- dat$obs$index
-  catch[setdiff(names(index), names(catch))] <- NA
-  index[setdiff(names(catch), names(index))] <- NA
-  catch$type <- "catch"
-  index$type <- "index"
+  for (nm in setdiff(names(index), names(catch))) catch[[nm]] <- rep(NA, nrow(catch))
+  for (nm in setdiff(names(catch), names(index))) index[[nm]] <- rep(NA, nrow(index))
+  catch$type <- rep("catch", nrow(catch))
+  index$type <- rep("index", nrow(index))
   obs_fit <- rbind(catch, index)
   obs_fit$log_obs <- log(obs_fit$obs)
   obs_fit$log_obs[is.infinite(obs_fit$log_obs)] <- NA # zero observations are treated as missing
@@ -866,10 +870,14 @@ prepare_tam <- function(
     dat$log_sd_catch_supplied <- rep(0, nrow(dat$obs$catch))
   }
 
-  sd_design <- .parse_sd_formula(dat$index_settings$sd_form, dat$obs$index, "index")
+  has_index <- nrow(dat$obs$index) > 0L
+  # An absent survey contributes neither catchability nor observation-SD
+  # parameters. Avoid evaluating factor/scoped formulas on an empty table.
+  sd_design <- if (has_index) .parse_sd_formula(dat$index_settings$sd_form, dat$obs$index, "index") else
+    list(matrix = matrix(numeric(), 0L, 0L), terms = list())
   dat$sd_index_modmat <- sd_design$matrix
   dat$sd_index_terms <- sd_design$terms
-  if (!is.null(dat$index_settings$sd_supplied)) {
+  if (has_index && !is.null(dat$index_settings$sd_supplied)) {
     if ("(Intercept)" %in% colnames(dat$sd_index_modmat)) {
       dat$sd_index_modmat <- .parse_sd_formula(update(dat$index_settings$sd_form, ~ 0 + .), dat$obs$index, "index")$matrix
       dat$index_settings$sd_form <- update(dat$index_settings$sd_form, ~ 0 + .)
@@ -882,7 +890,8 @@ prepare_tam <- function(
 
   .check_sd_terms(dat, "catch")
   .check_sd_terms(dat, "index")
-  q_design <- .parse_q_formula(dat$index_settings$q_form, dat$obs$index, scope="survey")
+  q_design <- if (has_index) .parse_q_formula(dat$index_settings$q_form, dat$obs$index, scope="survey") else
+    list(q_modmat = matrix(numeric(), 0L, 0L), q_terms = list())
   dat[names(q_design)] <- q_design
   if (!is.null(dat$q_power) && dat$index_settings$q_link != "log") {
     cli::cli_abort("power() requires index_settings$q_link = 'log'.")

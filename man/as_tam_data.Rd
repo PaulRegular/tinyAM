@@ -30,6 +30,9 @@ Plain lists can also be passed directly to \code{\link[=prepare_tam]{prepare_tam
 }
 \details{
 The required tables are \code{catch}, \code{index}, \code{weight} and \code{maturity}.
+For a catch-only model, keep \code{index} as a zero-row table with its required
+columns. Catchability and survey observation-SD settings then contribute no
+parameters. Model identification still depends on the remaining assumptions.
 An optional \code{pop_covariates} table supplies columns used by N and M
 formulas, including recruitment covariates and supplied M assumptions.
 It has one row per input year and age, with \code{year} and \code{age} keys and no

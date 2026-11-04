@@ -134,14 +134,15 @@ tidy_obs_pred <- function(fit, add_osa_res = FALSE, interval = .95,
   obs_pred$catch$sd <- sd$catch
   obs_pred$catch$std_res <- with(obs_pred$catch, ifelse(obs == 0, NA, (log(obs) - log_pred$catch) / sd))
 
-  obs_pred$index$pred <- pred$index
-  obs_pred$index$sd <- sd$index
-  obs_pred$index$q <- exp(fit$rep$log_q_obs)
+  n_index <- nrow(obs_pred$index)
+  obs_pred$index$pred <- if (is.null(pred$index)) rep(NA_real_, n_index) else pred$index
+  obs_pred$index$sd <- if (is.null(sd$index)) rep(NA_real_, n_index) else sd$index
+  obs_pred$index$q <- if (is.null(fit$rep$log_q_obs)) rep(NA_real_, n_index) else exp(fit$rep$log_q_obs)
   units <- .data_units(fit$dat$obs)
   index_units <- unname(units$index[as.character(obs_pred$index$survey)])
   obs_pred$index$q_unit <- vapply(index_units, .q_unit, character(1), numbers = units$numbers)
-  obs_pred$index$q_lwr <- obs_pred$index$q_upr <- obs_pred$index$q_se <- NA_real_
-  obs_pred$index$q_se_scale <- fit$dat$index_settings$q_link
+  obs_pred$index$q_lwr <- obs_pred$index$q_upr <- obs_pred$index$q_se <- rep(NA_real_, n_index)
+  obs_pred$index$q_se_scale <- rep(fit$dat$index_settings$q_link, n_index)
   if (!is.null(fit$dat$q_power)) {
     obs_pred$index$q_base <- exp(fit$rep$log_q_base)
     obs_pred$index$q_power <- as.numeric(fit$rep$q_power)
@@ -171,7 +172,8 @@ tidy_obs_pred <- function(fit, add_osa_res = FALSE, interval = .95,
       obs_pred$index$q_base_se <- as.numeric(error)
     }
   }
-  obs_pred$index$std_res <- with(obs_pred$index, ifelse(obs == 0, NA, (log(obs) - log_pred$index) / sd))
+  obs_pred$index$std_res <- if (!n_index) numeric() else
+    with(obs_pred$index, ifelse(obs == 0, NA, (log(obs) - log_pred$index) / sd))
 
   if (add_osa_res) {
     osa <- .compute_osa_residuals(fit, method, list(...))
@@ -824,6 +826,25 @@ stack_nested <- function(x, label = "model",
     pieces <- pieces[!vapply(pieces, is.null, logical(1))]
     if (!length(pieces)) {
       out[[nm]] <- NULL
+      next
+    }
+    nonempty <- vapply(pieces, function(piece) is.data.frame(piece) && nrow(piece) > 0L, logical(1))
+    if (!any(nonempty) && all(vapply(pieces, is.data.frame, logical(1)))) {
+      columns <- Reduce(union, lapply(pieces, names))
+      empty <- pieces[[1L]][0, , drop = FALSE]
+      for (column in setdiff(columns, names(empty))) {
+        template <- pieces[[which(vapply(pieces, function(piece) column %in% names(piece), logical(1)))[1L]]][[column]]
+        empty[[column]] <- template[0]
+      }
+      empty <- empty[, columns, drop = FALSE]
+      if (!is.null(label)) {
+        empty[[label]] <- switch(label_type,
+          auto = utils::type.convert(character(), as.is = TRUE),
+          numeric = numeric(), character = character(),
+          factor = factor(character(), levels = names(pieces)))
+        empty <- empty[, c(label, setdiff(names(empty), label)), drop = FALSE]
+      }
+      out[[nm]] <- empty
       next
     }
     out[[nm]] <- stack_list(pieces, label = label, label_type = label_type)

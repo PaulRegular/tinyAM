@@ -282,6 +282,95 @@ test_that("vis_tam errors when supplied objects are not TAM fits", {
 })
 
 
+test_that("reference-only dashboards permit missing yield comparisons", {
+  reference <- structure(list(dat = N_dev$dat, pop = N_dev$pop,
+    obs_pred = N_dev$obs_pred, fixed_par = N_dev$fixed_par[0, ],
+    random_par = list()), class = c("tam_ref", "list"))
+  reference$pop$total_yield <- reference$pop$total_yield_pred <- NULL
+  reference$obs_pred <- lapply(reference$obs_pred, function(x) {
+    for (name in intersect(c("pred", "sd", "std_res", "osa_res", "q"), names(x))) {
+      x[[name]][] <- NA_real_
+    }
+    x
+  })
+  original <- reference
+  file <- tempfile(fileext = ".html")
+  on.exit(unlink(file), add = TRUE)
+  expect_no_error(vis_tam(model_list = list(Official = reference),
+    background = "Official outputs only; no tinyAM fit is available.",
+    output_file = file, open_file = FALSE, render_args = list(quiet = TRUE)))
+  expect_true(file.exists(file))
+  con <- file(file, "rb")
+  html <- paste(readLines(con, warn = FALSE, encoding = "UTF-8"), collapse = "\n")
+  close(con)
+  expect_match(html, "Observed-predicted yield comparison is unavailable", fixed = TRUE)
+  expect_match(html, "Official outputs only", fixed = TRUE)
+  expect_match(html, "Model structure is unavailable for a reporting reference", fixed = TRUE)
+  expect_null(reference$opt)
+  expect_null(reference$obj)
+  expect_equal(nrow(reference$fixed_par), 0L)
+  expect_length(reference$random_par, 0L)
+  expect_identical(reference, original)
+})
+
+test_that("reference-only dashboards retain supplied parameters with sparse data", {
+  years <- 2000:2002
+  annual <- data.frame(year = years, est = c(100, 150, 120), se = NA_real_,
+    se_scale = NA_character_, lwr = NA_real_, upr = NA_real_, unit = "tonnes", is_proj = FALSE)
+  surface <- expand.grid(year = years, age = 2:3)
+  surface$est <- .2
+  surface$unit <- "per year"
+  surface$is_proj <- FALSE
+  reference <- structure(list(
+    dat = list(years = years, ages = 2:3, is_proj = rep(FALSE, 3), obs = NULL),
+    pop = list(ssb = annual, recruitment = transform(annual, unit = "thousand fish")),
+    obs_pred = list(), fixed_par = data.frame(par = "q", coef = "supplied survey",
+      est = .4, se = .1, se_scale = "reported", lwr = .2, upr = .6),
+    random_par = list()), class = c("tam_ref", "list"))
+  for (kind in c("mortality", "none", "fleets")) {
+    reference$pop$F <- if (kind == "none") NULL else surface
+    reference$obs_pred <- list()
+    reference$dat$obs <- NULL
+    if (kind == "fleets") {
+      catch <- expand.grid(year = years, age = 2:3,
+        fleet = c("Trawl", "Gillnet"), stringsAsFactors = FALSE)
+      catch$obs <- 1
+      catch$pred <- catch$sd <- catch$std_res <- catch$osa_res <- NA_real_
+      catch$unit <- "thousand fish"
+      catch$is_proj <- FALSE
+      reference$obs_pred <- list(catch = catch)
+      reference$dat$obs <- list(catch = catch[c("year", "age", "fleet", "obs", "unit")])
+    }
+    original <- reference
+    file <- tempfile(fileext = ".html")
+    expect_no_error(vis_tam(model_list = list(Official = reference),
+      background = "Official outputs only; original observations are absent.",
+      output_file = file, open_file = FALSE, render_args = list(quiet = TRUE)))
+    expect_true(file.exists(file))
+    con <- file(file, "rb")
+    html <- paste(readLines(con, warn = FALSE, encoding = "UTF-8"), collapse = "\n")
+    close(con)
+    expect_match(html, "Population patterns are unavailable", fixed = TRUE)
+    if (kind == "none") expect_match(html, "Mortality patterns are unavailable", fixed = TRUE)
+    if (kind == "fleets") {
+      expect_match(html, '<h1>Trawl</h1>', fixed = TRUE)
+      expect_match(html, '<h1>Gillnet</h1>', fixed = TRUE)
+      expect_match(html, '<h1>Aggregate fishery</h1>', fixed = TRUE)
+      expect_match(html, "Observed-predicted yield comparison is unavailable", fixed = TRUE)
+    }
+    expect_match(html, "Model structure is unavailable for a reporting reference", fixed = TRUE)
+    traces <- unlist(lapply(dashboard_plots(file), `[[`, "data"), recursive = FALSE)
+    parameter <- Filter(function(trace) identical(trace$mode, "markers") &&
+      "q: supplied survey" %in% unlist(trace$y), traces)
+    expect_length(parameter, 1L)
+    expect_equal(as.numeric(unlist(parameter[[1L]]$x)), .4)
+    expect_identical(reference, original)
+    expect_length(reference$obs_pred, if (kind == "fleets") 1L else 0L)
+    expect_null(reference$opt)
+    unlink(file)
+  }
+})
+
 test_that("tam_ref objects accept a Background page", {
   blank_values <- function(x, keys) {
     for (name in setdiff(names(x), keys)) x[[name]][] <- NA
