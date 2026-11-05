@@ -13,23 +13,35 @@ template:
     heading_font: 'Arial, sans-serif'
 navbar:
   structure:
-    left: [intro, model_structure, reference, cheatsheet]
+    left: [intro, guides, reference]
     right: [search, github]
   components:
     intro:
       text: Home
       href: index.html
-    model_structure:
-      text: Model structure
-      href: articles/model-structure.html
-    cheatsheet:
-      text: Cheatsheet
-      href: cheatsheet/tinyAM_cheatsheet.pdf
+    guides:
+      text: Guides
+      menu:
+      - text: Compare assessment structures
+        href: articles/compare-assessments.html
+      - text: Fit multiple fisheries and surveys
+        href: articles/multiple-fisheries-surveys.html
+      - text: Understand model structure
+        href: articles/model-structure.html
+      - text: Cheatsheet
+        href: cheatsheet/tinyAM_cheatsheet.pdf
+articles:
+- title: Guides
+  contents:
+  - '`articles/compare-assessments`'
+  - '`articles/multiple-fisheries-surveys`'
+  - '`articles/model-structure`'
 reference:
 - title: Model overview and example data
 - contents:
   - tinyAM-model
   - cod_obs
+  - sim_cod_obs
 - title: Prepare inputs
 - contents:
   - make_tam_data

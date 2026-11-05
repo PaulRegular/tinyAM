@@ -64,6 +64,9 @@ analysis/sam_equivalence/results/
 cheatsheet/cache/
 cheatsheet/output/
 
+# Simulated teaching data: raw spatial populations, operations and validation.
+data-raw/cache/
+
 .positai
 
 # Curated and preliminary assessment outputs are local generated artifacts.

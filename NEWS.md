@@ -1,13 +1,25 @@
 # tinyAM 0.1.1.9001
 
+* Add concise website guides for comparing Northern cod model structures and
+  fitting multiple fisheries and surveys. Link both from a Guides menu alongside
+  the model-structure examples and cheatsheet. Include an evaluated NCAM
+  retrospective SSB comparison and a companion simulated-cod dashboard.
+
+* Add simulated, 3Ps-inspired cod inputs with three active fleets and two
+  surveys of coastal and offshore areas. Keep compact generating truth and
+  monitoring provenance separate from the estimated observations; SimSurvey
+  is required only by the data-generation script.
+  Use a compact, static-availability teaching scenario with known mean length
+  and a reference M baseline; compare fixed and AR1 M with exact cohort survival.
+
 * Organize plots by purpose and colocate population getters. Share fitted test
   fixtures, remove redundant renders and unused implementations, and retire the
   `check_obs()` and `tidy_mat()` aliases in favor of `check_tam_data()` and
   `tidy_array()`. Old saved-fit migrations are no longer maintained.
 
-* Open dashboards on Model structure, with Diagram and Function calls tabs.
-  Use responsive, palette-colored boxes with normal dashboard typography and
-  SVG connections, without adding a diagramming dependency.
+* Open dashboards on Background when supplied, followed by Model structure
+  with Diagram and Function calls tabs. Use compact, responsive HTML boxes,
+  readable typography and cleaner SVG connectors without a new dependency.
 
 * Restore catch-only preparation, projections, simulation and tidy outputs,
   retaining empty survey tables without unused catchability or survey-SD

@@ -32,7 +32,35 @@ jobs:
       - uses: actions/configure-pages@v5
       - name: Build package documentation
         shell: Rscript {0}
-        run: pkgdown::build_site(preview = FALSE)
+        run: |
+          Sys.setenv(TINYAM_GUIDE_ROOT = getwd(),
+            TINYAM_GUIDE_FITS = file.path(getwd(), "data-raw", "cache",
+              "vignettes", "simulated-cod-dashboard.rds"))
+          pkgdown::build_site(preview = FALSE)
+      - name: Build simulated-cod dashboard from guide fits
+        shell: Rscript {0}
+        run: |
+          pkgload::load_all(".", quiet = TRUE, helpers = FALSE)
+          path <- file.path("data-raw", "cache", "vignettes", "simulated-cod-dashboard.rds")
+          if (!file.exists(path)) stop("The multi-fleet guide did not save its fitted models.")
+          example <- readRDS(path)
+          source_paths <- c(file.path("R", list.files("R", "[.]R$")), "NAMESPACE")
+          if (!identical(names(example$sources), source_paths) ||
+              !identical(unname(example$sources), unname(tools::md5sum(source_paths)))) {
+            stop("The guide's package sources changed or are unavailable; rebuild the guide before its dashboard.")
+          }
+          versions <- c(tinyAM = as.character(packageVersion("tinyAM")),
+            R = as.character(getRversion()), RTMB = as.character(packageVersion("RTMB")),
+            mgcv = as.character(packageVersion("mgcv")))
+          stopifnot(identical(example$versions, versions),
+            identical(example$inputs, sim_cod_obs), identical(example$truth, sim_cod_truth),
+            length(example$models) > 0L,
+            all(vapply(example$models, inherits, logical(1), "tam_fit")))
+          output <- file.path("docs", "examples", "simulated-cod", "index.html")
+          dir.create(dirname(output), recursive = TRUE, showWarnings = FALSE)
+          vis_tam(model_list = example$models, background = example$background,
+            output_file = output, open_file = FALSE)
+          stopifnot(file.exists(output), !"SimSurvey" %in% loadedNamespaces())
       - name: Build combined dashboard
         run: Rscript cheatsheet/examples.R dashboard
       - name: Add cheatsheet and dashboard
@@ -46,7 +74,7 @@ jobs:
           stopifnot(file.copy("cheatsheet/output/tinyAM_dashboard.html", "docs/cheatsheet/index.html", overwrite = TRUE))
           stopifnot(file.copy("cheatsheet/tinyAM_cheatsheet.pdf", "docs/cheatsheet/tinyAM_cheatsheet.pdf", overwrite = TRUE))
           writeLines('<!doctype html><meta charset="utf-8"><meta http-equiv="refresh" content="0; url=../index.html"><a href="../index.html">Open dashboard</a>', "docs/cheatsheet/output/tinyAM_dashboard.html")
-          stopifnot(all(file.exists(c("docs/index.html", "docs/reference/index.html", "docs/cheatsheet/index.html", "docs/cheatsheet/tinyAM_cheatsheet.pdf"))))
+          stopifnot(all(file.exists(c("docs/index.html", "docs/reference/index.html", "docs/cheatsheet/index.html", "docs/cheatsheet/tinyAM_cheatsheet.pdf", "docs/examples/simulated-cod/index.html"))))
       - uses: actions/upload-pages-artifact@v4
         with:
           path: docs

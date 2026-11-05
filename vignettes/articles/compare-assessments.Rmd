@@ -1,0 +1,208 @@
+---
+title: "Compare assessment structures"
+output: rmarkdown::html_document
+---
+
+```{r setup, include=FALSE}
+library(tinyAM)
+guide_root <- Sys.getenv("TINYAM_GUIDE_ROOT")
+source_files <- if (nzchar(guide_root)) {
+  c(list.files(file.path(guide_root, "R"), "[.]R$", full.names = TRUE),
+    file.path(guide_root, "NAMESPACE"))
+} else {
+  c(list.files(system.file("R", package = "tinyAM"),
+    pattern = "[.](R|rdb|rdx)$", full.names = TRUE),
+    system.file("NAMESPACE", package = "tinyAM"))
+}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>", warning = TRUE,
+  cache.extra = list(package = as.character(packageVersion("tinyAM")),
+    R = as.character(getRversion()), RTMB = as.character(packageVersion("RTMB")),
+    mgcv = as.character(packageVersion("mgcv")),
+    sources = unname(tools::md5sum(source_files)),
+    inputs = cod_obs))
+```
+
+An age-structured assessment combines catch, survey indices and biology to
+estimate abundance, recruitment and mortality. Different assumptions can explain
+the same observations differently. This guide uses the Northern cod example to
+compare three assessment structures, then inspect their diagnostics and
+forecasting skill.
+
+The models match the [cheatsheet](../cheatsheet/tinyAM_cheatsheet.pdf). They are
+SCAA-, SAM- and NCAM-*like* examples, rather than reproductions of complete
+official assessments or recommended settings for another stock. For fleet catches
+and multiple surveys, continue with [the simulated example](multiple-fisheries-surveys.html).
+
+## Start with tidy inputs
+
+```{r inputs}
+dat <- cod_obs
+print(dat, n = 2)
+check_tam_data(dat)
+```
+
+Arrange your own data in the same four required tables. Catch and index contain
+observations; weight and maturity contain biological inputs. Each index row
+identifies its survey and sampling time as a fraction of the year. Optional
+population covariates explain recruitment, cohort survival or natural mortality.
+Catch-table covariates explain fishing mortality, while index-table covariates
+explain catchability and index precision.
+
+The example catches and indices use thousand fish, and weights use kg, giving
+biomass in tonnes. Unit columns describe supplied values; they do not convert
+them. Keep unavailable observations as `NA`. Genuine catch/index zeros remain in
+the inputs but are excluded from the current lognormal likelihood. Biological
+inputs must be complete. Read [input requirements](../reference/check_tam_data.html)
+before fitting, and [the data help](../reference/cod_obs.html) for provenance.
+
+## Specify three structures
+
+First fit a statistical catch-at-age model. Annual recruitment is estimated as
+fixed effects, cohort survival follows the mortality calculation exactly, and F
+is separable into annual and age effects. Natural mortality is supplied as 0.3
+per year.
+
+```{r scaa, cache=TRUE, results='hide'}
+scaa <- fit_tam(
+  dat, years = 1983:2025, ages = 2:14,
+  N_settings = list(process = "off", init = "exp"),
+  rec_settings = list(process = "off", mu_form = ~ factor(year)),
+  F_settings = list(process = "off",
+    mu_form = ~ factor(year) + factor(age), mean_ages = 5:14),
+  M_settings = list(process = "off",
+    mu_supplied = ~ I(0.3), mean_ages = 5:14),
+  catch_settings = list(sd_form = ~ 1),
+  index_settings = list(sd_form = ~ 1, q_form = ~ mono(q_block))
+)
+```
+
+Age 14 is the modeled plus group: it includes older fish retained by the model's
+biological calculations. `mean_ages` defines the ages used to report average
+mortality. The catchability formula allows non-decreasing steps among `q_block`
+groups under the default log link.
+
+Now allow cohort-survival deviations, random-walk recruitment and correlated
+annual F increments. This SAM-like model explains additional variation through
+population processes while retaining the same observations and fixed M.
+
+```{r sam, cache=TRUE, dependson="scaa", results='hide'}
+sam <- update(scaa,
+  N_settings = list(process = "iid"),
+  rec_settings = list(process = "rw", mu_form = NULL),
+  F_settings = list(process = "cor_rw", mu_form = NULL)
+)
+```
+
+The NCAM-like alternative keeps exact cohort survival but allows temporally
+correlated F and M. Ages within each M block share actual M.
+
+```{r ncam, cache=TRUE, dependson="scaa", results='hide'}
+ncam <- update(scaa,
+  rec_settings = list(process = "rw", mu_form = NULL),
+  F_settings = list(process = "ar1", mu_form = ~ 1),
+  M_settings = list(process = "ar1", age_breaks = c(2, 5, 8, 14))
+)
+```
+
+Partial updates retain omitted settings. These examples differ in several
+deliberate assumptions; a focused investigation would also compare intermediate
+models that change one assumption at a time. The [population equations](../reference/tinyAM-model.html)
+describe process and initial-state conventions.
+
+## Inspect diagnostics before trends
+
+```{r checks}
+check_tam(scaa, sam, ncam)
+plot_model(scaa, sam, ncam)
+```
+
+`check_tam()` reports numerical checks separately from statistical advisories.
+Convergence does not establish that the observations distinguish F, M and cohort
+variation. Warnings and failed numerical checks are reasons to investigate, not
+an invitation to rank the models immediately.
+
+```{r dashboard, eval=FALSE}
+vis_tam(scaa, sam, ncam, open_file = FALSE)
+```
+
+Explore the [example dashboard](https://paulregular.github.io/tinyAM/cheatsheet/)
+to inspect these three models without fitting them first.
+
+When supplied, **Background** is the first page, followed by **Model structure**
+and its **Function calls** tab. Without Background, Model structure opens first.
+Start your diagnostic review in **Fisheries → Aggregate fishery** and **Surveys**:
+inspect observed/predicted trajectories and residual patterns across age and
+year. Retained OSA residuals are displayed when available; otherwise the plots
+start with standardized residuals. Rendering never calculates OSAs implicitly.
+
+Next inspect **Parameters** and **Tables → Diagnostics** for uncertainty and
+process behavior. Then use **Trends** to compare abundance and mortality. The
+pattern tabs show age–year structure; they can reveal differences hidden by
+annual totals. Standardized residuals condition on fitted states and are affected
+by shrinkage.
+
+Public plotting functions reproduce these views outside the dashboard:
+
+```{r ssb}
+ssb <- get_ssb(SCAA = scaa, SAM = sam, NCAM = ncam)
+plot_trend(ssb, color = ~model, colors = tam_pal(3),
+           ylab = "SSB (tonnes)")
+```
+
+## Check historical stability and prediction
+
+First examine historical stability by refitting the NCAM-like model after
+successively withholding five terminal years. This example runs sequentially;
+the evaluation functions respect the caller's future plan.
+
+```{r retrospective, cache=TRUE, dependson="ncam", results='hide'}
+future::plan(future::sequential)
+retro <- fit_retro(ncam, folds = 5)
+```
+
+```{r retrospective-ssb}
+retro
+ssb_retro <- retro$pop$ssb
+ssb_retro$terminal_year <- factor(ssb_retro$fold,
+  levels = sort(unique(ssb_retro$fold), decreasing = TRUE))
+plot_trend(ssb_retro, color = ~terminal_year,
+  colors = tam_pal(nlevels(ssb_retro$terminal_year)), add_intervals = FALSE,
+  ylab = "SSB (tonnes)")
+```
+
+The lines show the reference and successful peels, labeled by terminal year.
+Check `retro$fold_diagnostics` for unsuccessful attempts. This is a view of
+retrospective stability, not a measure of SSB forecast accuracy.
+This run retained `r with(retro$fold_diagnostics, sum(!is_reference & is_converged))`
+of `r sum(!retro$fold_diagnostics$is_reference)` peels. `scored_folds` is zero
+for historical retrospectives because only hindcasts produce forecast scores.
+
+Hindcasts additionally predict excluded observations. The following ten-fold
+example is supplied for you to run; it is not executed when building this guide.
+
+```{r hindcast, eval=FALSE}
+hind <- fit_hindcast(scaa, sam, ncam, folds = 10)
+hind
+hind$fold_diagnostics
+vis_tam(hind, model = "scaa", open_file = FALSE)
+```
+
+The printed summary includes Mohn's rho, survey log-RMSE, MASE and scored/failed
+attempt counts. Rho describes retrospective change; values near zero indicate
+greater historical stability. Lower log-RMSE indicates smaller log-scale forecast
+errors. MASE below one beats keeping the last observed index value unchanged.
+
+Default forecasts condition on the actual aggregate catch in the withheld year.
+Survey observations and catch compositions remain held out. Agreement with the
+imposed catch total therefore does not measure forecasting skill. Use
+`proj_settings = list(F_mult = 1)` for a status-quo-F alternative.
+
+Inspect failures and compare validation coverage before interpreting score
+differences. Failed numerical fits are retained in diagnostics and excluded from
+scores; unequal coverage is not a fair ranking. These checks examine different
+aspects of model performance. See [hindcast definitions](../reference/fit_retro.html)
+for detailed scores and caller-controlled parallel execution.
+
+For further comparisons, [AIC and cAIC](../reference/information_criteria.html)
+have additional assumptions, especially for intrinsic random walks and
+unpenalized initial states. They complement diagnostic and predictive checks.

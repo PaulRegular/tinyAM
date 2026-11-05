@@ -4,7 +4,7 @@
 
 <!-- badges: end -->
 
-# tinyAM <img src="man/figures/logo.png" align="right" height="138"/>
+# tinyAM <a href="https://paulregular.github.io/tinyAM/"><img src="man/figures/logo.png" alt="tinyAM website" align="right" height="138"/></a>
 
 **tinyAM** (*tiny assessment model*; aka TAM) is an R package for fitting age-structured stock assessment models using [RTMB](https://github.com/kaskr/RTMB).
 
