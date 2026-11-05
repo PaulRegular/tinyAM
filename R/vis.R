@@ -27,7 +27,8 @@
 #'          Precomputed assessment references may be mixed with tinyAM fits; they are
 #'          not refittable TAM objects. Supply `background` to add a page
 #'          describing assessment assumptions and translation choices.
-#'          Model structure opens first, with Diagram and Function calls tabs.
+#'          When supplied, Background opens first; otherwise Model structure opens
+#'          first. Model structure contains Diagram and Function calls tabs.
 #'          Fisheries is a dropdown with one page per declared catch fleet,
 #'          followed by Aggregate fishery. Fleet pages show yield, catch and F
 #'          at age, and observation residuals. Unlabeled catch models appear

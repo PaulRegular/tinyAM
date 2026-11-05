@@ -46,7 +46,7 @@ plot_model(SCAA = scaa, SAM = sam)
 ```
 
 The arrows show biological and observation relationships. They do not specify the
-order in which the program calculates quantities. Teal nodes have annual
+order in which the program calculates quantities. Light navy nodes have annual
 stochastic process variation. Setting a process to `"off"` retains the biological
 component and removes its annual deviations. Initial parameters are a separate
 choice; their uncertainty is not annual process variation.

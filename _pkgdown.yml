@@ -13,7 +13,7 @@ template:
     heading_font: 'Arial, sans-serif'
 navbar:
   structure:
-    left: [intro, guides, reference, cheatsheet]
+    left: [intro, guides, reference]
     right: [search, github]
   components:
     intro:
@@ -22,15 +22,14 @@ navbar:
     guides:
       text: Guides
       menu:
-      - text: Compare assessment hypotheses
+      - text: Compare assessment structures
         href: articles/compare-assessments.html
       - text: Fit multiple fisheries and surveys
         href: articles/multiple-fisheries-surveys.html
       - text: Understand model structure
         href: articles/model-structure.html
-    cheatsheet:
-      text: Cheatsheet
-      href: cheatsheet/tinyAM_cheatsheet.pdf
+      - text: Cheatsheet
+        href: cheatsheet/tinyAM_cheatsheet.pdf
 articles:
 - title: Guides
   contents:
