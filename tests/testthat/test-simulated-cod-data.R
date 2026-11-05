@@ -115,3 +115,40 @@ test_that("active fleet targets respect their accessible vulnerable populations"
   expect_equal(annual$reference_target, allocation$target[position], tolerance = 1e-12)
   expect_true(all(annual$n > 0))
 })
+
+test_that("teaching covariates retain a known M baseline and stable regional coverage", {
+  settings <- sim_cod_truth$provenance$settings
+  expect_equal(list(grid = settings$grid$res, Z_log_sd = settings$mortality$log_sd,
+    length_log_sd = settings$growth$log_sd, density = settings$survey_density),
+    list(grid = c(14, 14), Z_log_sd = .1, length_log_sd = .03,
+      density = c(RV = 2 / 1000, Sentinel = 4 / 1000)))
+  expect_identical(settings$spatial$group_ages, settings$ages)
+  expect_identical(settings$spatial$group_years, settings$years)
+  key <- function(x) paste(x$year, x$age)
+  baseline <- sim_cod_obs$pop_covariates
+  fleet <- sim_cod_truth$fleet
+  expect_true(all(c("year", "age", "M0") %in% names(baseline)))
+  expect_true(all(is.finite(baseline$M0) & baseline$M0 > 0))
+  reference_fraction <- aggregate(
+    list(fraction = fleet$F_reference / fleet$Z), fleet[c("year", "age")], sum)
+  expected <- .5 * (1 - reference_fraction$fraction)
+  expect_setequal(key(baseline), key(reference_fraction))
+  expect_equal(baseline$M0, expected[match(key(baseline), key(reference_fraction))],
+    tolerance = 1e-12)
+  expect_equal(exp(mean(log(baseline$M0))), .3, tolerance = 1e-8)
+
+  lengths <- lapply(sim_cod_obs[c("catch", "index")], function(x) {
+    expect_true(all(is.finite(x$mean_length) & x$mean_length > 0))
+    unique(x[c("age", "mean_length")])
+  })
+  expect_false(anyDuplicated(lengths$catch$age) > 0L)
+  expect_false(anyDuplicated(lengths$index$age) > 0L)
+  expect_equal(lengths$catch$mean_length,
+    lengths$index$mean_length[match(lengths$catch$age, lengths$index$age)])
+  expect_true(all(diff(lengths$catch$mean_length[order(lengths$catch$age)]) > 0))
+  surveys <- subset(sim_cod_truth$surveys, N_total >= 100)
+  expect_setequal(unique(surveys$survey), unique(sim_cod_obs$index$survey))
+  spread <- vapply(split(surveys$availability, surveys$survey),
+    function(x) diff(range(x)), numeric(1))
+  expect_true(all(is.finite(spread) & spread <= .005))
+})

@@ -130,3 +130,26 @@ recruitment settings, static common availability, Z innovation SD 0.1 and
 length-at-age log-SD 0.03. These are deliberate operating-model simplifications,
 not a controlled one-factor comparison with the previous simulation. The two
 queued assessments share all assumptions except deterministic versus AR1 M.
+
+The 20 x 20 population/fisheries completed, but Sentinel's requested 6 sets per
+1,000 km2 exceeded the grid's available cells (12 requested from 10). A survey-only
+revision uses 4 per 1,000 km2, still twice RV density. Population/fishery values and
+their RNG states were reused only after verifying unchanged sources and all
+non-survey settings. Original failed caches were preserved; reused stages record
+their source fingerprint, hashes and the sole changed setting.
+
+Both final fits passed numerical checks with no fitting warnings. Reference M
+gave SSB mean RE -6.57086%, mean absolute RE 8.829263%, terminal RE -13.67024%;
+AR1 M gave -3.661328%, 6.724424% and -13.12024%. Mean abundance/recruitment REs were
+-11.96159%/-13.72883% and -21.767852%/-28.949161%, respectively. Thus the agreed
+SSB criterion is achieved without cancellation, while other recovery remains
+weaker. All 60 fleet-year targets were met, with supported monitoring, no stage
+warnings/errors and no negative remaining M. Largest finite-age SSB loss was
+0.0115%. Realized M geometric/arithmetic means were 0.3388/0.3645, separately
+from the supplied reference baseline.
+
+Final caches: `data-raw/cache/sim_cod_exploration/teaching-common-20-M03-survey4/`.
+Current defaults exactly match that scenario's prospective settings. The
+reference and AR1-M fits retain original starts and optimizer controls. The
+source guide will refit the same specifications before exporting the dashboard;
+it will not substitute these exploratory fitted objects into displayed code.

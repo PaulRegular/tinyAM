@@ -133,6 +133,16 @@ validate_sim_cod_monitoring <- function(repo = ".") {
     error=function(e) conditionMessage(e))
   if (!grepl("lowest feasible", error, fixed=TRUE)) stop("Unattainable reference M must report its feasible bound.")
   cat("Simulated-cod reference M: baseline, geometric calibration and feasibility checks passed.\n")
+  grid <- data.frame(strat = rep(c("A", "B"), c(10, 2)), RV = TRUE, Sentinel = TRUE)
+  survey_settings <- list(survey_density = c(RV = .002, Sentinel = .004))
+  stopifnot(code$.sim_cod_check_surveys(grid, survey_settings, cell_area = 196))
+  survey_settings$survey_density[["Sentinel"]] <- .006
+  error <- tryCatch({code$.sim_cod_check_surveys(grid, survey_settings, 196); ""},
+    error = function(e) conditionMessage(e))
+  if (!grepl("12 sets from 10 cells", error, fixed = TRUE)) {
+    stop("Survey feasibility must reject over-allocation before fishing.")
+  }
+  cat("Simulated-cod surveys: without-replacement allocation checks passed.\n")
   invisible(TRUE)
 }
 

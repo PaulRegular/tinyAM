@@ -102,6 +102,23 @@ raise_sim_cod_catch <- function(operations, samples, ages, years, fleets,
       stats::plogis((p$Sentinel[["down"]] - x) / p$Sentinel[["down_width"]]))
 }
 
+# Match sim_sets(min_sets = 2, resample_cells = FALSE), without drawing sets.
+.sim_cod_check_surveys <- function(grid, settings, cell_area) {
+  for (survey in names(settings$survey_density)) {
+    cells <- table(as.character(grid$strat[grid[[survey]]]))
+    if (!length(cells)) stop(survey, " has no eligible survey cells.")
+    requested <- pmax(2, round(as.numeric(cells) * cell_area * settings$survey_density[[survey]]))
+    bad <- which(requested > cells)
+    if (length(bad)) {
+      i <- bad[[1L]]
+      stop(survey, " requests ", requested[[i]], " sets from ", cells[[i]],
+        " cells in stratum ", names(cells)[[i]],
+        ". Reduce survey_density or use smaller grid cells; cells are sampled without replacement.")
+    }
+  }
+  invisible(TRUE)
+}
+
 .sim_cod_available <- function(population, settings, selectivity) {
   grid <- as.data.frame(population$grid)
   stock <- as.data.frame(population$sp_N)
@@ -363,4 +380,3 @@ raise_sim_cod_catch <- function(operations, samples, ages, years, fleets,
     checks = checks, provenance = provenance)
   list(sim_cod_obs = dat, sim_cod_truth = truth)
 }
-

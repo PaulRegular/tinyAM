@@ -2,35 +2,35 @@
 # only, not by tinyAM installation or documentation builds.
 #
 # source("data-raw/sim_cod_obs.R")
-# result <- build_sim_cod_obs("../SimSurvey")  # original 80 x 80 configuration
-# coarse <- build_sim_cod_obs("../SimSurvey", settings = sim_cod_settings(c(7, 7)))
+# result <- build_sim_cod_obs("../SimSurvey")  # selected 20 x 20 teaching case
 # Trial results and three stage caches use configuration-specific folders.
 # write_data = TRUE is an explicit decision to replace the packaged .rda files.
-# Existing packaged data and original 80 x 80 caches are never changed by default.
+# Existing packaged data and earlier simulation caches are never changed by default.
 #
-# Population parameters follow Regular et al. (2020), S1/S2. Coastal fixed gear,
+# Population centres follow Regular et al. (2020), S1/S2; smaller mortality and
+# length variation simplify this teaching case. Coastal fixed gear,
 # offshore trawling/RV and Sentinel size coverage are inspired by DFO Data Report
 # 1381 (2024) and Res. Doc. 2026/056. Footprints, mortality shares, capacities and
 # sample caps are illustrative choices, not a reproduction of the assessment.
 # All fleets operate; no contemporary rebuilding TAC or closures are imposed.
 # The RV curve is logistic and the gillnet/Sentinel curves are double logistic.
-# The 80 x 80 population can require several GB of RAM; generate it on its own.
+# Operation-level simulation can require several GB of RAM; generate it on its own.
 # Optional reference_M calibrates the geometric centre of an M baseline using
 # exp(log_mean_Z), the Z process median/log-scale centre. It is not E[Z] or a
-# target for arithmetic realized M. Default NULL preserves the original design.
+# target for arithmetic realized M. NULL skips this calibration in explorations.
 
-sim_cod_settings <- function(res = c(3.5, 3.5)) {
+sim_cod_settings <- function(res = c(14, 14)) {
   list(
     simsurvey_revision = "282e3c14a2fbb5d312a2fde79ee3e8d8511b4513",
     seed = 438L, ages = 1:20, years = 1:20,
     recruitment = list(log_mean = log(30e6), log_sd = 0.5, random_walk = TRUE),
-    mortality = list(log_mean = log(0.5), log_sd = 0.2, phi_age = 0.9, phi_year = 0.5),
-    growth = list(Linf = 120, L0 = 5, K = 0.1, log_sd = 0.1, length_group = 3),
+    mortality = list(log_mean = log(0.5), log_sd = 0.1, phi_age = 0.9, phi_year = 0.5),
+    growth = list(Linf = 120, L0 = 5, K = 0.1, log_sd = 0.03, length_group = 3),
     grid = list(x_range = c(-140, 140), y_range = c(-140, 140), res = res,
       shelf_depth = 200, shelf_width = 100, depth_range = c(0, 1000), n_div = 1,
       strat_breaks = seq(0, 1000, by = 40), strat_splits = 2),
     spatial = list(sd = 2.8, range = 300, lambda = 1, model = "matern",
-      phi_age = 0.5, phi_year = 0.9, group_ages = 5:20, group_years = NULL),
+      phi_age = 0, phi_year = 0, group_ages = 1:20, group_years = 1:20),
     depth = list(mu = 200, sigma = 70),
     weight = list(alpha = 10^-5.2106, beta = 3.0879),
     maturity = list(k = 1, x50 = 5),
@@ -38,11 +38,11 @@ sim_cod_settings <- function(res = c(3.5, 3.5)) {
       Longline = c(up = 40, width = 5), Trawl = c(up = 45, width = 5),
       RV = c(up = 30, width = 5), Sentinel = c(up = 50, width = 5, down = 80, down_width = 5)),
     shares = c(Gillnet = 0.30, Longline = 0.15, Trawl = 0.15),
-    reference_M = NULL,
+    reference_M = 0.3,
     monitoring = list(sampling_coverage = 0.30, lengths_cap = 150, ages_cap = 3,
       age_sampling = "stratified", age_length_group = 3, sampling_targeting = 0,
       reporting_factor = 1, reporting_cv = 0.05),
-    survey_density = c(RV = 2 / 1000, Sentinel = 6 / 1000),
+    survey_density = c(RV = 2 / 1000, Sentinel = 4 / 1000),
     survey_sampling = list(lengths_cap = 100, ages_cap = 3,
       age_sampling = "stratified", age_length_group = 3, age_space_group = "set"),
     max_operations = 5000L,
@@ -130,6 +130,10 @@ build_sim_cod_obs <- function(simsurvey_repo, settings = sim_cod_settings(),
         depth_par = SimSurvey::sim_parabola(mu = settings$depth$mu, sigma = settings$depth$sigma)) |>
       SimSurvey::round_sim()
   })
+  # Survey cells are sampled without replacement. Reject infeasible set counts
+  # before the expensive fishery stage, rather than failing after it completes.
+  helpers$.sim_cod_check_surveys(as.data.frame(population$grid), settings,
+    abs(prod(stars::st_res(population$grid))))
   selectivity <- helpers$.sim_cod_selectivity(settings)
   available <- helpers$.sim_cod_available(population, settings, selectivity)
   allocations <- helpers$.sim_cod_allocations(population, settings, available)
