@@ -4,6 +4,7 @@
 
 validate_sim_cod_monitoring <- function(repo = ".") {
   code <- new.env(parent = globalenv())
+  sys.source(file.path(repo, "data-raw", "sim_cod_helpers.R"), envir = code)
   sys.source(file.path(repo, "data-raw", "sim_cod_obs.R"), envir = code)
   raise <- code$raise_sim_cod_catch
   if (!is.function(raise)) stop("The generator must define raise_sim_cod_catch().")
@@ -102,6 +103,36 @@ validate_sim_cod_monitoring <- function(repo = ".") {
   rejected <- tryCatch({ allocate(inaccessible); FALSE }, error = function(e) TRUE)
   if (!rejected) stop("An active fleet without accessible fish must be rejected.")
   cat("Simulated-cod allocations: independent accessibility checks passed.\n")
+  # Calibrate only the declared baseline Z, independently of the actual Z
+  # matrix used above to calculate accessibility. Full coverage and S=1 give
+  # .5 * (1 - .3*s) = .3, hence s=4/3 and scaled base share=.4.
+  reference_settings <- allocation_settings
+  reference_settings$mortality <- list(log_mean = log(.5))
+  reference_settings$reference_M <- .3
+  reference_available <- full
+  reference_available$selection <- 1
+  reference_allocations <- code$.sim_cod_allocations(population, reference_settings, reference_available)
+  reference <- code$.sim_cod_reference_M(reference_settings, reference_available, reference_allocations)
+  equal(reference$calibration$multiplier, 4/3, "Reference M used the wrong common multiplier.")
+  equal(reference$calibration$calibrated_shares, .4, "Calibrated local shares are incorrect.")
+  equal(reference$calibration$M0$M0, c(.3,.3), "The reference M profile is incorrect.")
+  equal(reference$allocations$fishery_share, .4, "Native shares were not scaled consistently.")
+  # Heterogeneous selection: (.5^2)*(1-.15*s)*(1-.3*s) = .3^2.
+  heterogeneous <- full
+  reference_allocations <- code$.sim_cod_allocations(population, reference_settings, heterogeneous)
+  reference <- code$.sim_cod_reference_M(reference_settings, heterogeneous, reference_allocations)
+  expected_scale <- (.45 - sqrt(.45^2 - 4*.045*.64))/(2*.045)
+  equal(reference$calibration$multiplier, expected_scale,
+    "The calibration must average log M across ages, not arithmetic M.")
+  equal(exp(mean(log(reference$calibration$M0$M0))), .3,
+    "The geometric centre of the reference surface is incorrect.")
+  weak_selection <- full
+  weak_selection$selection <- c(.05,.1)
+  weak_allocations <- code$.sim_cod_allocations(population, reference_settings, weak_selection)
+  error <- tryCatch({code$.sim_cod_reference_M(reference_settings, weak_selection, weak_allocations); ""},
+    error=function(e) conditionMessage(e))
+  if (!grepl("lowest feasible", error, fixed=TRUE)) stop("Unattainable reference M must report its feasible bound.")
+  cat("Simulated-cod reference M: baseline, geometric calibration and feasibility checks passed.\n")
   invisible(TRUE)
 }
 

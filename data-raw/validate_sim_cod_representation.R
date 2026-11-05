@@ -3,6 +3,7 @@
 
 validate_sim_cod_representation <- function(simsurvey_repo, repo = ".") {
   code <- new.env(parent = globalenv())
+  sys.source(file.path(repo, "data-raw", "sim_cod_helpers.R"), envir = code)
   sys.source(file.path(repo, "data-raw", "sim_cod_obs.R"), envir = code)
   if (!identical(code$.sim_cod_git(simsurvey_repo), code$sim_cod_settings()$simsurvey_revision)) {
     stop("Use the SimSurvey revision recorded by the data generator.")
@@ -48,10 +49,11 @@ validate_sim_cod_representation <- function(simsurvey_repo, repo = ".") {
       c(list(sim = dense, n_sims = 1), configurations))
     dense_rng <- .Random.seed
     set.seed(802)
-    sparse_result <- code$.sim_cod_run_fisheries(dense, configurations)
+    sparse_result <- SimSurvey::sim_fisheries(sparse, n_sims = 1,
+      FleetA = configurations$FleetA, FleetB = configurations$FleetB)
     sparse_rng <- .Random.seed
     stopifnot(identical(dense_rng, sparse_rng), identical(dense, original),
-      identical(sparse_result$sp_N, dense$sp_N),
+      identical(sparse_result$grid, dense$grid),
       identical(sparse_result$N, dense_result$N),
       identical(sparse_result$N_at_length, dense_result$N_at_length),
       identical(sparse_result$B, dense_result$B), identical(sparse_result$S, dense_result$S))
@@ -66,7 +68,7 @@ validate_sim_cod_representation <- function(simsurvey_repo, repo = ".") {
       isTRUE(all.equal(dense_ledger, sparse_ledger, tolerance = 0, check.attributes = FALSE)))
     results[[length(results) + 1L]] <- data.frame(empty_age_year = empty_age_year,
       dense_rows = nrow(dense$sp_N), sparse_rows = nrow(sparse$sp_N),
-      outputs_exact = TRUE, rng_exact = TRUE, dense_spatial_restored = TRUE)
+      outputs_exact = TRUE, rng_exact = TRUE, dense_population_preserved = TRUE)
   }
   result <- do.call(rbind, results)
   print(result, row.names = FALSE)
