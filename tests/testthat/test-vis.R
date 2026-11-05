@@ -42,6 +42,9 @@ test_that("vis_tam renders cleanly and produces an HTML output", {
   con <- file(tmpfile, "rb")
   html <- paste(readLines(con, warn = FALSE), collapse = "\n")
   close(con)
+  expect_false(grepl('id="assessment-background"', html, fixed = TRUE))
+  expect_match(regmatches(html, regexpr('<div id="[^"]+" class="section level1"', html)),
+    'id="model-structure"', fixed = TRUE)
   expect_match(html, "Population covariates", fixed = TRUE)
   expect_match(html, "allometric_M_assumption", fixed = TRUE)
   expect_match(html, 'id="diagnostics" class="section level1" data-navmenu="Tables"', fixed = TRUE)
@@ -442,6 +445,8 @@ test_that("tam_ref objects accept a Background page", {
   expect_true(any(grepl("Assessment assumptions", html, fixed = TRUE)))
   expect_true(any(grepl("ages are retained", html, fixed = TRUE)))
   expect_true(any(grepl('id="assessment-background"', html, fixed = TRUE)))
+  first_page <- which(grepl('^<div id="[^"]+" class="section level1"', html))[1L]
+  expect_match(html[first_page], 'id="assessment-background"', fixed = TRUE)
   expect_true(any(grepl("<th>Component</th>", html, fixed = TRUE)))
   expect_true(any(grepl("<td>Years</td>", html, fixed = TRUE)))
   expect_true(any(grepl("2000\u20132024", html, fixed = TRUE)))

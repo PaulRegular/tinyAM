@@ -14,9 +14,9 @@
   `check_obs()` and `tidy_mat()` aliases in favor of `check_tam_data()` and
   `tidy_array()`. Old saved-fit migrations are no longer maintained.
 
-* Open dashboards on Model structure, with Diagram and Function calls tabs.
-  Use responsive, palette-colored boxes with normal dashboard typography and
-  SVG connections, without adding a diagramming dependency.
+* Open dashboards on Background when supplied, followed by Model structure
+  with Diagram and Function calls tabs. Use compact, responsive HTML boxes,
+  readable typography and cleaner SVG connectors without a new dependency.
 
 * Restore catch-only preparation, projections, simulation and tidy outputs,
   retaining empty survey tables without unused catchability or survey-SD

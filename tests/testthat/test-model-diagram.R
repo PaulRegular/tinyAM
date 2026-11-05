@@ -91,15 +91,15 @@ test_that("model selectors handle references and independent escaped containers"
   expect_error(plot_model(default_fit, model_list = fits), "either")
 })
 
-test_that("Model structure opens first and groups its diagram with function calls", {
+test_that("Background opens first when present and Model structure groups its tabs", {
   template <- readLines(system.file("rmd", "vis_tam.Rmd", package = "tinyAM"))
   structure <- readLines(system.file("rmd", "model_structure.Rmd", package = "tinyAM"))
   expect_true(any(grepl('child = "model_structure.Rmd"', template, fixed = TRUE)))
   expect_true(any(grepl("plot_model(model_list = fits)", structure, fixed = TRUE)))
   expect_lt(which(grepl('child = "model_structure.Rmd"', template, fixed = TRUE)),
     which(grepl('child = "fisheries.Rmd"', template, fixed = TRUE)))
-  expect_lt(which(grepl('child = "model_structure.Rmd"', template, fixed = TRUE)),
-    which(grepl('child = if (is.null(background))', template, fixed = TRUE)))
+  expect_lt(which(grepl('child = if (is.null(background))', template, fixed = TRUE)),
+    which(grepl('child = "model_structure.Rmd"', template, fixed = TRUE)))
   expect_true(any(grepl("Row {.tabset}", structure, fixed = TRUE)))
   expect_true(all(c("### Diagram", "### Function calls") %in% structure))
   tables <- readLines(system.file("rmd", "tables.Rmd", package = "tinyAM"))
@@ -116,6 +116,8 @@ test_that("diagram nodes inherit typography and explain colours and arrows below
   expect_false(grepl("font-family:Arial", html, fixed = TRUE))
   expect_false(grepl("<text ", html, fixed = TRUE))
   expect_false(grepl("Stored specification for", html, fixed = TRUE))
+  expect_match(html, "grid-template-areas:'initial recruitment population survey' 'fishing natural ssb catch'", fixed = TRUE)
+  expect_match(html, ".chart-stage .tam-model-structure{height:100%;max-height:100%;min-height:0;box-sizing:border-box}", fixed = TRUE)
   expect_match(html, "Navy: annual stochastic process. Orange: no annual process deviations.", fixed = TRUE)
   expect_lt(regexpr("Initial parameters and observations are separate.", html, fixed = TRUE)[1],
     regexpr("Arrows show biological and observation relationships", html, fixed = TRUE)[1])

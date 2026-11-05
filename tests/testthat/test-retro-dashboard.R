@@ -11,6 +11,8 @@ test_that("retrospective and hindcast objects render without changing their fits
     background = "User background retained.")
   expect_true(file.exists(file))
   con <- file(file, "rb"); html <- paste(readLines(con, warn = FALSE), collapse = "\n"); close(con)
+  expect_lt(regexpr('<div id="assessment-background" class="section level1"', html, fixed = TRUE)[1L],
+    regexpr('<div id="model-structure" class="section level1"', html, fixed = TRUE)[1L])
   expect_match(html, "Retrospective comparison", fixed = TRUE)
   expect_match(html, "<h3[^>]*>Retrospective comparison</h3>")
   expect_match(html, "User background retained.", fixed = TRUE)
