@@ -48,9 +48,12 @@ Abundance/recruitment recovery is weaker. The generator also couples fleet F and
 remaining M through an existing death budget, unlike the fitted independent
 processes. Agreement in SSB does not establish general accuracy or coverage.
 
-Generation remains a substantial manual job. Run it separately from fitting and
-checks. Configuration-specific caches under `data-raw/cache/sim_cod/` preserve
+Generation remains a substantial manual job: the selected fishery stage took
+about 20 minutes and generation peaked near 5 GB RAM on the development machine.
+Run it separately from fitting and checks. Configuration-specific caches under
+`data-raw/cache/sim_cod/` preserve
 completed stages, RNG states and warnings. Original 80×80 and intermediate 40×40
 data, fits and failed attempts remain in local ignored caches and earlier
 worktrees; refreshing this example does not overwrite those files. Exploration
-code and results are retained in branch history rather than active entry points.
+code and results are retained in [the exploration history](https://github.com/PaulRegular/tinyAM/tree/a98322f8/analysis/simulated_cod)
+rather than active entry points.
