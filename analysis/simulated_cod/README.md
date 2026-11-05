@@ -91,3 +91,42 @@ toward 0.3; this is only a design approximation, not a new simulated dataset.
 Further trials and their outcomes will be recorded here before selecting the
 final example. No exploratory trial changes package likelihoods or settled
 assessment specifications.
+
+### Completed static 40 x 40 trials
+
+All 60 fleet-year targets were met, monitoring was complete, and generation
+retained no warnings. Fisheries took 3,586 seconds; population and surveys each
+took about five seconds. Peak resident memory was approximately 9.8 GB. Reducing
+the grid alone does not remove the cost of simulating operations and samples.
+
+| F / q means | M specification | Numerical checks | Mean SSB error |
+|---|---|---|---:|
+| Curves / curves | Default shared block, scalar 0.3 | Pass | -43.77% |
+| Curves / curves | Default shared block, M0 | Preparation error: incompatible means | — |
+| Curves / curves | Every age, scalar 0.3 | Fail | -29.90% |
+| Curves / curves | Every age, M0 | Fail | -25.97% |
+| Curves / free q | Four blocks, scalar 0.3 | Pass | -34.03% |
+| Curves / free q | Four blocks, block-mean M0 | Pass | -34.97% |
+| Free age / free q | Four blocks, block-mean M0 | Pass | -28.36% |
+| Correlated RW / free q | Four blocks, block-mean M0 | Optimization error | — |
+| Curves / free q | Deterministic M0 | Pass | -26.03% |
+| Curves / curves | Deterministic M0 | Pass | -22.66% |
+
+The supplied M0 age curve requires compatible M blocks; using the default
+shared-actual-M block was an incorrect initial specification, retained above.
+Four-block models use ages 1–3, 4–5, 6–10 and 11–20 and geometric block means.
+Free q uses separate ages through 13, with older observations sharing the tail.
+None qualifies. Failed-fit point estimates do not establish accuracy.
+
+Realized geometric M was 0.366, but SSB-weighted geometric M was 0.278 versus
+reference M0 of 0.264. Thus the unweighted mean discrepancy alone does not
+explain the SSB error. Capture and depletion also alter the realized age profile:
+at ages 6–10, geometric M exceeded the Z-adjusted reference by about 19%.
+Meeting annual fleet targets does not preserve reference F at age. Separating
+F, M and q remains difficult even with stable regional availability.
+
+`teaching_scenario.R` predeclares a 20 x 20 scenario with the same seed and
+recruitment settings, static common availability, Z innovation SD 0.1 and
+length-at-age log-SD 0.03. These are deliberate operating-model simplifications,
+not a controlled one-factor comparison with the previous simulation. The two
+queued assessments share all assumptions except deterministic versus AR1 M.
