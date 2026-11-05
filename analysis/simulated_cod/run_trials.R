@@ -18,12 +18,28 @@ flexible <- ~ 0 + for_fleet("Trawl", ~ logistic(age)) +
   for_fleet("Gillnet", ~ double_logistic(age))
 
 errors <- function(fit, truth = sim_cod_truth$annual) {
+  if (!is.data.frame(truth) || !nrow(truth) ||
+      !all(c("year", "SSB", "N", "recruitment") %in% names(truth)) ||
+      !is.numeric(truth$year) ||
+      any(!is.finite(truth$year)) || anyDuplicated(truth$year)) {
+    stop("Truth must have one finite numeric year per annual row.")
+  }
   tables <- list(SSB = fit$pop$ssb, abundance = fit$pop$abundance,
     recruitment = fit$pop$recruitment)
   columns <- c(SSB = "SSB", abundance = "N", recruitment = "recruitment")
   do.call(rbind, lapply(names(tables), function(quantity) {
     estimated <- tables[[quantity]]
-    estimated <- estimated[!estimated$is_proj, ]
+    if (!is.data.frame(estimated) ||
+        !all(c("year", "est", "is_proj") %in% names(estimated)) ||
+        anyNA(estimated$is_proj)) {
+      stop("Missing annual comparison columns for ", quantity, ".")
+    }
+    estimated <- estimated[!estimated$is_proj, , drop = FALSE]
+    if (!is.numeric(estimated$year) || any(!is.finite(estimated$year)) ||
+        anyDuplicated(estimated$year) || nrow(estimated) != nrow(truth) ||
+        !setequal(estimated$year, truth$year)) {
+      stop("The ", quantity, " comparison requires exactly one estimate for every truth year.")
+    }
     position <- match(estimated$year, truth$year)
     relative <- estimated$est / truth[[columns[[quantity]]]][position] - 1
     if (any(!is.finite(relative))) stop("Incomplete or nonfinite truth comparison.")
@@ -58,15 +74,19 @@ run_trial <- function(name, F_settings, M_settings, q_form = catchability, ages 
     source = system2("git", c("rev-parse", "HEAD"), stdout = TRUE),
     input_hash = input_hash,
     packaged_baseline_hashes = tools::md5sum(c("data/sim_cod_obs.rda", "data/sim_cod_truth.rda")),
-    criterion = "Absolute mean annual relative SSB error < 0.10; single-realization criterion.")
+    criterion = "Numerical checks pass and absolute mean annual relative SSB error < 0.10; single-realization criterion.",
+    accepted = FALSE)
   saveRDS(record, path)
   if (!is.null(fit)) {
     record$diagnostics <- check_tam(fit)
     record$errors <- errors(fit)
+    ssb_error <- record$errors$mean_relative_error[record$errors$quantity == "SSB"]
+    record$accepted <- isTRUE(record$diagnostics$is_converged) &&
+      length(ssb_error) == 1L && is.finite(ssb_error) && abs(ssb_error) < 0.10
   }
   saveRDS(record, path)
   cat("\n", name, "\n")
-  print(record[c("elapsed_seconds", "warnings", "error")])
+  print(record[c("elapsed_seconds", "warnings", "error", "accepted")])
   if (!is.null(fit)) {
     print(record$diagnostics)
     print(record$errors)

@@ -49,6 +49,10 @@ warnings/failures and numerical results. Run one fitting/simulation job at a tim
    example. They test whether remaining-M assumptions or another observation/
    population mismatch drives the error. Empty true population cells use Z as
    supplied M; their true catches are zero. Finite terminal-age loss remains.
+   The separable-F fit failed numerical checks. The AR1-F fit passed, but its
+   mean SSB error was +65.51% (mean absolute error 65.51%), with abundance +34.3%
+   and recruitment +33.95%. It also had weak gillnet-curve parameters and extreme
+   correlations. Supplying realized M therefore did not remove all discrepancies.
 
 An abundance-scale ambiguity is important: for admissible positive k, scaling
 N and recruitment by k, q and F by 1/k, and replacing M by Z-F/k preserves the
@@ -66,6 +70,10 @@ realization of the original spatial experiment. A single positive fleet-share
 multiplier sets the geometric mean of the reference M baseline to 0.3 using
 declared Z log-mean and integrated selectivities. No fitted estimates or SSB
 errors enter this calibration. Realized M is reported separately.
+The multiplier is 2.035524; its largest local base share is 0.6107 and largest
+combined reference fishing fraction is 0.5683, leaving positive remaining M.
+Physical access allocations use the simulated spatial population; the target
+calculation uses the declared Z centre, not a target for realized remaining M.
 
 Known growth-derived mean length is an explanatory column, not hidden population
 abundance. Logistic/double-logistic relationships are evaluated on this length
