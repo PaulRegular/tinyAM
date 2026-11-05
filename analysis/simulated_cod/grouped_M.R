@@ -35,3 +35,10 @@ if (mode == "F-flexibility") {
   F <- list(process = "cor_rw", sd_form = ~ fleet, mean_ages = 5:10)
   run_trial("M-ar1-four-blocks-cor-rw-F-free-q", F, M, q, ages = 1:20)
 }
+if (mode == "M-fixed") {
+  M <- list(process = "off", mu_supplied = ~ M0, mean_ages = 5:10)
+  run_trial("M-reference-fixed-free-q", F, M, q, ages = 1:20)
+  q <- ~ 0 + for_survey("RV", ~ logistic(mean_length)) +
+    for_survey("Sentinel", ~ double_logistic(mean_length))
+  run_trial("M-reference-fixed-curved-q", F, M, q, ages = 1:20)
+}
