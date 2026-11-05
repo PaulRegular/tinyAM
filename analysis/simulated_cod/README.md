@@ -56,6 +56,24 @@ Baranov catches, index predictions and cohort survival. Process assumptions or
 external mortality information select a point on this observational ridge;
 allowing more random effects does not independently anchor abundance.
 
+## Prospective simpler operating model
+
+`stable_scenario.R` declares a new scenario before fitting: seed 438, 40 x 40
+cells, one shared spatial field across ages and years, spatial SD 2.8 with no
+unused age/year persistence, and the original recruitment, Z and growth
+parameters. This is a static-availability teaching benchmark, not an unchanged
+realization of the original spatial experiment. A single positive fleet-share
+multiplier sets the geometric mean of the reference M baseline to 0.3 using
+declared Z log-mean and integrated selectivities. No fitted estimates or SSB
+errors enter this calibration. Realized M is reported separately.
+
+Known growth-derived mean length is an explanatory column, not hidden population
+abundance. Logistic/double-logistic relationships are evaluated on this length
+scale. Both candidate assessments have closed N, AR1 F and AR1 M; compare scalar
+baseline 0.3 with the declared reference age-specific M0, using all 20 biological
+ages. M0 is a process-mean assumption, not realized M states. Reference F/M
+coupling, finite tail, capture and sampling still differ from tinyAM's model.
+
 The original remaining M is not centered at 0.3: its geometric mean over ages
 5--10 is 0.359 (arithmetic mean 0.390), and abundance-weighted across all ages the
 geometric mean is 0.455. A reference-removal preflight suggests multiplying

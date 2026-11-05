@@ -38,6 +38,10 @@ run_trial <- function(name, F_settings, M_settings, q_form = catchability, ages 
   if (file.exists(path)) stop("Preserve the existing attempt: ", path)
   warnings <- character()
   error <- NULL
+  input_file <- tempfile()
+  saveRDS(list(data = dat, truth = sim_cod_truth$annual), input_file)
+  input_hash <- unname(tools::md5sum(input_file))
+  unlink(input_file)
   started <- proc.time()[["elapsed"]]
   fit <- tryCatch(withCallingHandlers(fit_tam(dat, ages = ages,
     N_settings = list(process = "off", init = "exp"),
@@ -52,7 +56,8 @@ run_trial <- function(name, F_settings, M_settings, q_form = catchability, ages 
   record <- list(name = name, fit = fit, warnings = warnings, error = error,
     elapsed_seconds = proc.time()[["elapsed"]] - started,
     source = system2("git", c("rev-parse", "HEAD"), stdout = TRUE),
-    input_hashes = tools::md5sum(c("data/sim_cod_obs.rda", "data/sim_cod_truth.rda")),
+    input_hash = input_hash,
+    packaged_baseline_hashes = tools::md5sum(c("data/sim_cod_obs.rda", "data/sim_cod_truth.rda")),
     criterion = "Absolute mean annual relative SSB error < 0.10; single-realization criterion.")
   saveRDS(record, path)
   if (!is.null(fit)) {
@@ -69,6 +74,7 @@ run_trial <- function(name, F_settings, M_settings, q_form = catchability, ages 
   invisible(record)
 }
 
+if (sys.nframe() == 0L) {
 mode <- commandArgs(trailingOnly = TRUE)
 if (!length(mode)) mode <- "M-fixed"
 M <- list(process = "ar1", mu_supplied = ~ I(0.3), mean_ages = 5:10)
@@ -120,4 +126,5 @@ if (mode == "known-M-diagnostic") {
     mean_ages = 5:10), known, q_year, ages = 1:20)
   run_trial("known-M-diagnostic-flexible-F", list(process = "ar1", mu_form = flexible,
     sd_form = ~ fleet, mean_ages = 5:10), known, q_year, ages = 1:20)
+}
 }
