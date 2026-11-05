@@ -33,13 +33,13 @@ errors <- function(fit, truth = sim_cod_truth$annual) {
   }))
 }
 
-run_trial <- function(name, F_settings, M_settings, q_form = catchability) {
+run_trial <- function(name, F_settings, M_settings, q_form = catchability, ages = 1:14) {
   path <- file.path(directory, paste0(name, ".rds"))
   if (file.exists(path)) stop("Preserve the existing attempt: ", path)
   warnings <- character()
   error <- NULL
   started <- proc.time()[["elapsed"]]
-  fit <- tryCatch(withCallingHandlers(fit_tam(dat, ages = 1:14,
+  fit <- tryCatch(withCallingHandlers(fit_tam(dat, ages = ages,
     N_settings = list(process = "off", init = "exp"),
     rec_settings = list(process = "rw"),
     F_settings = F_settings, M_settings = M_settings,
@@ -84,4 +84,40 @@ if (mode == "q-curves") {
     mean_ages = 5:10), M, curves)
   run_trial("M-ar1-flexible-F-q-curves", list(process = "ar1", mu_form = flexible,
     sd_form = ~ fleet, mean_ages = 5:10), M, curves)
+}
+if (mode == "q-age") {
+  dat$index$q_age <- factor(pmin(dat$index$age, 14L))
+  q_age <- ~ 0 + for_survey("RV", ~ q_age) + for_survey("Sentinel", ~ q_age)
+  run_trial("M-ar1-separable-F-q-age", list(process = "off", mu_form = separable,
+    mean_ages = 5:10), M, q_age)
+  M_estimated <- list(process = "ar1", mu_form = ~ 1, mu_supplied = NULL, mean_ages = 5:10)
+  run_trial("M-ar1-estimated-mean-separable-F-q-age", list(process = "off", mu_form = separable,
+    mean_ages = 5:10), M_estimated, q_age)
+}
+if (mode == "q-year") {
+  dat$index$q_age <- factor(pmin(dat$index$age, 14L))
+  dat$index$availability_group <- factor(pmin(dat$index$age, 5L))
+  q_year <- ~ 0 +
+    for_survey("RV", ~ q_age + ar1(year, by = availability_group)) +
+    for_survey("Sentinel", ~ q_age + ar1(year, by = availability_group))
+  run_trial("M-ar1-separable-F-q-age-year", list(process = "off", mu_form = separable,
+    mean_ages = 5:10), M, q_year)
+  M_point_four <- list(process = "ar1", mu_supplied = ~ I(0.4), mean_ages = 5:10)
+  run_trial("M-ar1-point-four-separable-F-q-age-year", list(process = "off", mu_form = separable,
+    mean_ages = 5:10), M_point_four, q_year)
+}
+if (mode == "known-M-diagnostic") {
+  dat$index$q_age <- factor(pmin(dat$index$age, 14L))
+  dat$index$availability_group <- factor(pmin(dat$index$age, 5L))
+  q_year <- ~ 0 +
+    for_survey("RV", ~ q_age + ar1(year, by = availability_group)) +
+    for_survey("Sentinel", ~ q_age + ar1(year, by = availability_group))
+  p <- sim_cod_truth$population
+  dat$pop_covariates <- data.frame(year = p$year, age = p$age,
+    M_known = ifelse(is.finite(p$M), p$M, p$Z))
+  known <- list(process = "off", mu_supplied = ~ M_known, mean_ages = 5:10)
+  run_trial("known-M-diagnostic-separable-F", list(process = "off", mu_form = separable,
+    mean_ages = 5:10), known, q_year, ages = 1:20)
+  run_trial("known-M-diagnostic-flexible-F", list(process = "ar1", mu_form = flexible,
+    sd_form = ~ fleet, mean_ages = 5:10), known, q_year, ages = 1:20)
 }

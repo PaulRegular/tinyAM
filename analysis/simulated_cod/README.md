@@ -25,6 +25,42 @@ warnings/failures and numerical results. Run one fitting/simulation job at a tim
    pooled ages with very different RV length-selectivity; it could distort
    inferred recruitment and apparent survival. This is a separate q hypothesis,
    evaluated from default starts, not a retry of the earlier model.
+   These curved-q fits also failed numerical checks. Mean SSB errors were
+   -49.53% and -30.28%; neither qualifies regardless of those point estimates.
+3. Give each survey a separate q at each modeled age (with 14+ sharing the last
+   q), eliminating the arbitrary young-age grouping without forcing nonlinear
+   curves into flat solutions. Compare fixed M log-mean baseline 0.3 with an
+   estimated intercept; otherwise retain separable F, AR1 M and closed N.
+   The fixed-mean model converged but retained -55.94% mean SSB error. Estimating
+   the M intercept produced an implausibly large population (SSB roughly
+   8.2e7 times truth), despite numerical checks passing, and 15 extreme parameter
+   correlations. This weak-scale solution is rejected.
+4. Retain age-specific q, adding independent AR1 year trajectories for each
+   survey's ages 1, 2, 3, 4 and 5+ groups. The grouping follows the declared
+   spatial operating-model structure, not fitted abundance or hidden numerical
+   availability values. Compare supplied M baseline 0.3 and 0.4 as explicit
+   alternatives, keeping separable F and N off. The latter is a design-based
+   diagnostic motivated by the remaining-M summary, not an estimated M mean.
+   Both converged, but mean SSB errors were -57.03% and -44.49%. The temporal
+   terms also generated sparse-support/persistence warnings. Neither qualifies.
+5. Diagnostic only: supply realized M, use all biological ages 1--20, and
+   compare the same separable and AR1 F structures with temporal q. These fits
+   deliberately use hidden truth and are ineligible as the final teaching
+   example. They test whether remaining-M assumptions or another observation/
+   population mismatch drives the error. Empty true population cells use Z as
+   supplied M; their true catches are zero. Finite terminal-age loss remains.
+
+An abundance-scale ambiguity is important: for admissible positive k, scaling
+N and recruitment by k, q and F by 1/k, and replacing M by Z-F/k preserves the
+Baranov catches, index predictions and cohort survival. Process assumptions or
+external mortality information select a point on this observational ridge;
+allowing more random effects does not independently anchor abundance.
+
+The original remaining M is not centered at 0.3: its geometric mean over ages
+5--10 is 0.359 (arithmetic mean 0.390), and abundance-weighted across all ages the
+geometric mean is 0.455. A reference-removal preflight suggests multiplying
+fishery allocations by about 1.48 would bring the ages 5--10 geometric mean
+toward 0.3; this is only a design approximation, not a new simulated dataset.
 
 Further trials and their outcomes will be recorded here before selecting the
 final example. No exploratory trial changes package likelihoods or settled
