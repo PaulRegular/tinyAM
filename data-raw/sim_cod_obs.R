@@ -207,6 +207,7 @@ build_sim_cod_obs <- function(simsurvey_repo, settings = sim_cod_settings(),
   })
   provenance$records <- records
   provenance$generated <- Sys.time()
+  provenance$generation_revision <- helpers$.sim_cod_git(repo)
   provenance$session <- utils::capture.output(utils::sessionInfo())
   result <- stage("tables", helpers$.sim_cod_tables(population, fisheries, surveys, settings, selectivity,
     available, provenance, allocations, calibration), cache = FALSE)

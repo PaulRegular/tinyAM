@@ -173,6 +173,9 @@ plot_trend(ssb_retro, color = ~terminal_year,
 The lines show the reference and successful peels, labeled by terminal year.
 Check `retro$fold_diagnostics` for unsuccessful attempts. This is a view of
 retrospective stability, not a measure of SSB forecast accuracy.
+This run retained `r with(retro$fold_diagnostics, sum(!is_reference & is_converged))`
+of `r sum(!retro$fold_diagnostics$is_reference)` peels. `scored_folds` is zero
+for historical retrospectives because only hindcasts produce forecast scores.
 
 Hindcasts additionally predict excluded observations. The following ten-fold
 example is supplied for you to run; it is not executed when building this guide.
