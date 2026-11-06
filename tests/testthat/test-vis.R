@@ -329,7 +329,11 @@ test_that("reference-only dashboards retain supplied parameters with sparse data
       expect_match(html, '<h1>Trawl</h1>', fixed = TRUE)
       expect_match(html, '<h1>Gillnet</h1>', fixed = TRUE)
       expect_match(html, '<h1>Aggregate fishery</h1>', fixed = TRUE)
-      expect_match(html, "Observed-predicted yield comparison is unavailable", fixed = TRUE)
+      aggregate <- regexpr('id="fishery-aggregate"', html, fixed = TRUE)[1L]
+      pages <- gregexpr('<div id="[^"]+" class="section level1"', html)[[1L]]
+      aggregate_html <- substr(html, aggregate, min(pages[pages > aggregate]) - 1L)
+      expect_match(aggregate_html, "Observed-predicted yield comparison is unavailable", fixed = TRUE)
+      expect_false(grepl("Numbers-at-age|Residuals", aggregate_html))
     }
     expect_match(html, "Model structure is unavailable for a reporting reference", fixed = TRUE)
     traces <- unlist(lapply(dashboard_plots(file), `[[`, "data"), recursive = FALSE)

@@ -31,11 +31,10 @@
 #'          first. Model structure contains Diagram and Function calls tabs.
 #'          Fisheries is a dropdown with one page per declared catch fleet,
 #'          followed by Aggregate fishery. Fleet pages show yield, catch and F
-#'          at age, and observation residuals. Unlabeled catch models appear
-#'          only on the aggregate page; they are not allocated among fleets.
-#'          Without fleets, Aggregate fishery retains all single-fishery
-#'          diagnostics. With fleets, it shows total yield; residuals are
-#'          assessed separately within each fleet.
+#'          at age, and observation residuals. Aggregate fishery compares total
+#'          yield across models and shows catch at age and residuals for models
+#'          fitted to aggregate catches. Fleet residuals appear on each
+#'          fleet's page.
 #'          Observation residuals initially use retained OSA
 #'          residuals when available in that panel, otherwise standardized
 #'          residuals. The dropdown offers OSA and Standardized when OSAs are

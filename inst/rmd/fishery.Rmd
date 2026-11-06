@@ -6,7 +6,7 @@ Aggregate fishery {#fishery-aggregate data-navmenu="Fisheries"}
 Row {.tabset}
 --------------------------------------------------------------------------------
 
-### Yield
+### `r if (nrow(fishery_pages) > 1L) "Total yield" else "Yield"`
 
 ```{r}
 obs_yield <- pop$total_yield
@@ -29,8 +29,8 @@ if (!is.data.frame(obs_yield) || !nrow(obs_yield) ||
 ### Numbers-at-age
 
 ```{r}
-plot_age_year(obs_pred$catch, plot = plot_obs_pred, frame = ~age, color = ~model,
-                     colors = cols, ylab = tinyAM:::.unit_label(obs_pred$catch, "Catch"))
+plot_age_year(catch_data, plot = plot_obs_pred, frame = ~age, color = ~model,
+  colors = cols, ylab = tinyAM:::.unit_label(catch_data, "Catch"))
 ```
 
 
@@ -38,7 +38,7 @@ Row {.tabset}
 --------------------------------------------------------------------------------
 
 ```{r}
-resid_plots <- make_resid_plots(obs_pred$catch)
+resid_plots <- make_resid_plots(catch_data)
 ```
 
 ### Residuals (age, year)
