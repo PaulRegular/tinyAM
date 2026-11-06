@@ -22,14 +22,14 @@ navbar:
     guides:
       text: Guides
       menu:
+      - text: Cheatsheet
+        href: cheatsheet/tinyAM_cheatsheet.pdf
       - text: Compare assessment structures
         href: articles/compare-assessments.html
       - text: Fit multiple fisheries and surveys
         href: articles/multiple-fisheries-surveys.html
       - text: Understand model structure
         href: articles/model-structure.html
-      - text: Cheatsheet
-        href: cheatsheet/tinyAM_cheatsheet.pdf
 articles:
 - title: Guides
   contents:
