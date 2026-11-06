@@ -1,59 +1,44 @@
 # Simulated cod teaching data
 
-`sim_cod_obs.R` is the entry point. Its visible sequence is one population,
-distribution and rounding pipeline, followed by fishery and survey branches.
-`sim_cod_helpers.R` contains the access, mortality-allocation, monitoring-expansion
-and tidy-table calculations. SimSurvey is used only for regeneration.
-
-Use a clean SimSurvey checkout at
-`282e3c14a2fbb5d312a2fde79ee3e8d8511b4513`:
+`sim_cod_obs.R` generates one population and simulates three fisheries and two
+surveys on it. Run the script from the tinyAM repository root with tinyAM
+available in your R session. Use a clean
+SimSurvey checkout at
+[`42e5def`](https://github.com/PaulRegular/SimSurvey/commit/42e5def3819a5eec443deaabd5d268c7f126438d)
+or install that revision into your R library before running it.
 
 ```r
+# With a local checkout of the pinned SimSurvey revision
+pkgload::load_all("../SimSurvey")
+Sys.setenv(TINYAM_SIMSURVEY_REVISION = system2("git",
+  c("-C", "../SimSurvey", "rev-parse", "HEAD"), stdout = TRUE))
 source("data-raw/sim_cod_obs.R")
-result <- build_sim_cod_obs("../SimSurvey")
-# Inspect result, warnings and checks before replacing packaged inputs:
-result <- build_sim_cod_obs("../SimSurvey", write_data = TRUE)
 ```
 
-Run `Rscript data-raw/validate_sim_cod.R` for deterministic monitoring, allocation
-and survey-capacity checks. The optional representation validator uses the pinned
-SimSurvey checkout to compare sparse and dense fishing inputs.
+With SimSurvey installed by `remotes::install_github()` at that revision,
+run the script directly. It stages the prepared inputs, truth and diagnostics at
+`data-raw/cache/sim_cod/f-full-age/prepared-data.rds`. Set
+`TINYAM_SIM_COD_OUTPUT` to a new file for another run. Existing staged files
+are kept. Generation runs separately from package checks and documentation.
+The seed-438 run took about 43 minutes on the development workstation.
 
-The selected defaults retain the paper's recruitment and demographic centres,
-with a 20×20 grid, one spatial field shared across ages/years, Z innovation SD
-0.1, and length-at-age log-SD 0.03. RV/Sentinel set densities are 2/4 per 1,000
-km². Cells are sampled without replacement; infeasible allocations fail before
-fishing starts. Narrower length variation improves the approximation of
-length-integrated selectivity by a curve evaluated at mean length.
+Review the staged run before updating the packaged data. Check catch and survey
+coverage, target shortfalls, realized M across years and ages, and the age-20
+survivor losses. After reviewing the run, load its two objects and save them
+as the packaged datasets.
 
-Fleet allocations calibrate the geometric reference M baseline to 0.3, not
-realized annual M. Inputs supply this known baseline (`M0`) and known population
-mean length; annual latent states remain separate in `sim_cod_truth`. Source
-papers, SimSurvey revision, settings, hashes and warnings are retained there.
+```r
+staged <- readRDS("data-raw/cache/sim_cod/f-full-age/prepared-data.rds")
+sim_cod_obs <- staged$sim_cod_obs
+sim_cod_truth <- staged$sim_cod_truth
+tinyAM::check_tam_data(sim_cod_obs)
+
+save(sim_cod_obs, file = "data/sim_cod_obs.rda", compress = "xz", version = 2)
+save(sim_cod_truth, file = "data/sim_cod_truth.rda", compress = "xz", version = 2)
+```
 
 The [multi-fleet guide](../vignettes/articles/multiple-fisheries-surveys.Rmd)
-owns the final model specifications and exports its exact fits for the dashboard.
-Both models have N process off and AR1 fleet F; they differ only in fixed versus
-AR1 M. All 20 years enter the primary SSB comparison:
-
-| Model | Mean SSB RE | Mean absolute RE | Terminal RE | Mean abundance RE | Mean recruitment RE |
-|---|---:|---:|---:|---:|---:|
-| Reference M | −6.6% | 8.8% | −13.7% | −12.0% | −13.7% |
-| AR1 M | −3.7% | 6.7% | −13.1% | −21.8% | −28.9% |
-
-Both passed numerical checks without changed optimizer controls or fitted-value
-starts. This case was selected after exploration to meet an absolute mean annual
-SSB error below 10%; these are single-realization errors, not Monte Carlo bias.
-Abundance/recruitment recovery is weaker. The generator also couples fleet F and
-remaining M through an existing death budget, unlike the fitted independent
-processes. Agreement in SSB does not establish general accuracy or coverage.
-
-Generation remains a substantial manual job: the selected fishery stage took
-about 20 minutes and generation peaked near 5 GB RAM on the development machine.
-Run it separately from fitting and checks. Configuration-specific caches under
-`data-raw/cache/sim_cod/` preserve
-completed stages, RNG states and warnings. Original 80×80 and intermediate 40×40
-data, fits and failed attempts remain in local ignored caches and earlier
-worktrees; refreshing this example does not overwrite those files. Exploration
-code and results are retained in [the exploration history](https://github.com/PaulRegular/tinyAM/tree/a98322f8/analysis/simulated_cod)
-rather than active entry points.
+fits ages 1–14 with an age-14 plus group. Its fixed-M and AR1-M fits use the
+same reference of 0.3 per year. The website renders the dashboard using the
+same fits as the guide. Previous simulations and fitted objects remain in
+their original caches and worktrees. [Earlier exploration](https://github.com/PaulRegular/tinyAM/tree/a98322f8/analysis/simulated_cod)

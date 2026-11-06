@@ -1,114 +1,75 @@
 #' Simulated cod fisheries and surveys
 #'
 #' @description
-#' A reproducible teaching example loosely based on 3Ps cod, with three fisheries
-#' and two surveys of one spatially distributed population. All fisheries are active.
-#' The example is based on recognizable fishing and monitoring practices, not a
-#' reconstruction of the official assessment or a stock-status evaluation.
+#' A teaching dataset loosely based on 3Ps cod, with three active fisheries and
+#' two surveys of a shared population. The fishing grounds and survey programs
+#' illustrate inshore and offshore fishing and monitoring practices.
 #'
 #' @format
-#' `sim_cod_obs` is a `tam_data` list (see [as_tam_data()]) of tidy input tables:
-#' - `catch`: estimated catch numbers at age, with `year`, `age`, `fleet`,
-#'   `obs`, `unit` and `mean_length`. Fleets are Gillnet, Longline and Trawl.
-#' - `index`: estimated abundance indices with `year`, `age`, `survey`,
-#'   `samp_time`, `obs`, `unit` and `mean_length`. Both programs observe the same annual
-#'   population snapshot (`samp_time = 0`).
-#' - `weight`: assumed-known stock and fleet-specific catch weights at age,
-#'   distinguished by `type` and `fleet`. Average weights are in kg.
-#' - `maturity`: assumed-known proportion mature at age.
-#' - `pop_covariates`: a complete `year`-`age` table containing `M0`, an
-#'   assumed-known natural-mortality baseline (per year).
+#' `sim_cod_obs` is a `tam_data` list (see [as_tam_data()]) with four tables
+#' covering ages 1 through 20.
+#' - `catch` gives estimated catch numbers by year, age and fleet. The fleets
+#'   are Gillnet, Longline and Trawl.
+#' - `index` gives abundance indices by year, age and survey. The RV and Sentinel
+#'   programs observe the same annual population snapshot (`samp_time = 0`).
+#' - `weight` gives stock and fleet-specific catch weights at age, distinguished
+#'   by `type` and `fleet`. Individual weights are in kg.
+#' - `maturity` gives the proportion mature at age.
 #'
-#' `mean_length` is the expected population length at age (cm), calculated from
-#' the generating growth distribution. It is constant across years and is not a
-#' mean calculated from selected catches or survey samples.
+#' Catch and index values are in thousand fish. Multiplying thousands of fish
+#' by weight in kg gives biomass or yield in tonnes. Each index estimates
+#' abundance within its survey footprint.
 #'
-#' Catch and abundance indices are in thousand fish; their product with kg
-#' gives biomass or yield in tonnes. Survey totals refer to their own footprints,
-#' not an extrapolation of coastal density over the whole population.
-#' `sim_cod_truth` is a list containing:
-#' - `population`: `year`, `age`, abundance `N` (thousand fish), `Z`, total `F`
-#'   and remaining `M` (per year), `weight` (kg), `maturity`, `B` and `SSB` (tonnes).
-#' - `annual`: total `N`, `B`, `SSB`, recruitment (thousand fish) and yield (tonnes).
-#' - `fleet`: reference and realized catches (thousand fish),
-#'   `F_reference`, `F_realized`, catch weights (kg) and yield (tonnes).
-#' - `surveys`: regional and total abundance, selection, expected regional index
-#'   (all abundances in thousand fish) and the regional availability fraction.
-#' - `footprint`: cell coordinates (km), depth (m), area (square km), strata
-#'   and logical access columns for each fishery and survey.
-#' - `selectivity`: curves by component and length (cm).
-#' - `fishery_annual` and `monitoring`: operation, sampling, reporting and
-#'   termination summaries in native counts of fish, operations and samples.
-#' - `allocations`: base and effective fleet shares, access fractions and
-#'   selectivity-weighted expected deaths in native fish counts.
-#' - `survey_precision`: estimated total-index SEs in thousand fish.
-#' - `survey_monitoring`: annual set, catch, length and age sample counts.
-#' - `checks` and `provenance`: tail losses, shortfalls, unsupported observations,
-#'   settings, source revision, software versions and retained warnings.
-#' Realized population states remain separate from the fitting inputs.
+#' `sim_cod_truth` keeps generating quantities separate from the fitting data.
+#' - `population` gives abundance `N` (thousand fish), biomass `B` and `SSB`
+#'   (tonnes), individual weight (kg), maturity, total mortality `Z`, total
+#'   fishing mortality `F`, and realized and reference natural mortality
+#'   (`M` and `M_reference`, per year), by year and age.
+#' - `annual` gives total abundance, recruitment, biomass, SSB and yield in
+#'   the same units.
+#' - `fleet` gives reference and realized catches (thousand fish) and F (per
+#'   year), catch weights (kg) and yield (tonnes) by fleet, year and age.
+#' - `surveys` gives selectivity, the regional availability fraction, and
+#'   regional abundance, total abundance and expected index in thousand fish.
+#' - `footprint` gives cell coordinates (km), depth (m), area (square km),
+#'   strata and access for each fishery and survey. `selectivity` gives the
+#'   generating curves by component and age.
+#' - `fishery_annual` and `monitoring` summarize targets, catches and sampling.
+#'   `survey_precision` gives estimated index SEs in thousand fish and
+#'   `survey_monitoring` summarizes survey sampling.
+#' - `checks` summarizes realized M, target shortfalls, unsupported observations
+#'   and survivors omitted at the terminal simulated age.
+#'   `provenance` records the source revision, seed and runtime.
 #'
 #' @details
-#' The teaching scenario uses seed 438 and retains the recruitment process,
-#' growth centres, total-mortality log-scale centre and mortality correlations
-#' from Regular et al. (2020). It reduces the total-mortality innovation log-SD
-#' from 0.2 to 0.1 and length-at-age log-SD from 0.1 to 0.03. These are deliberate
-#' teaching simplifications, not the original paper's demographic settings.
-#' The data use a 20-by-20 grid and one spatial field shared by all ages and years.
-#' Its spatial SD remains 2.8. Sharing the field removes changing regional
-#' availability as an additional source of catchability variation. Age/year
-#' correlation inputs are zero because only one grouped field is drawn.
-#' Whole-fish rounding can introduce small
-#' differences in availability when abundances are low. These are deliberate
-#' simplifications of the paper's finer grid and age- and time-varying fields.
-#' Fisheries divide existing deaths among fleets; their operations do not change
-#' the future pre-generated population. Reference F and realized Baranov-equivalent
-#' F therefore have different meanings. The simulator has finite ages rather than
-#' a biological plus group; the retained tail and its losses are recorded.
-#' Annual allocations scale each base share by the fraction of selectivity-weighted
-#' expected deaths inside the fleet's accessible grounds. This prevents a coastal
-#' target from being allocated on inaccessible fish. It does not guarantee equal
-#' exploitation among cells or ages. Allocation uses simulation truth to construct
-#' the operating scenario. It does not rescale observed indices or substitute
-#' realized mortality in the fitting inputs.
-#' A common multiplier on fleet allocations sets the geometric mean of `M0` to
-#' 0.30 per year. The calculation uses the declared total-mortality log-scale
-#' centre, `exp(log(0.5))`, and the remaining reference fraction after fleet
-#' selection. It does not use fitted estimates or realized remaining mortality.
-#' `M0` is a baseline, not the realized `M` in `sim_cod_truth$population`.
-#' Its geometric centre is not a target for arithmetic realized M; the separate
-#' realized-M summary is retained in `provenance`.
+#' The simulation uses seed 438 from Regular et al. (2020). A shared spatial
+#' field on a 20-by-20 grid gives each fleet and survey a stable footprint.
+#' Gillnet and longline fleets fish inshore, while trawlers fish offshore. The denser,
+#' inshore Sentinel survey has dome-shaped selectivity and uses the same
+#' swept-area sampling model as the offshore RV survey, omitting fixed-gear
+#' saturation.
 #'
-#' Gillnet and longline fisheries concentrate near the synthetic northern coast;
-#' trawling occurs offshore. The RV-like survey samples a broad offshore footprint.
-#' The denser Sentinel-gillnet-like survey samples a restricted coastal footprint
-#' with dome-shaped selectivity. Both surveys use swept-area sampling: the latter
-#' does not reproduce gillnet saturation or fish-per-net CPUE. Geographic access
-#' and depth restrictions are illustrative, not regulatory boundaries.
-#' Nominal set densities are two per 1,000 square km for RV and four for Sentinel,
-#' with a minimum of two sets per sampled stratum. Actual set counts are retained.
+#' Each fleet has a constant target fishing mortality at full selectivity
+#' (`F_full`). Total mortality combines the age-specific reference fleet rates
+#' with a varying reference M centred on 0.3 per year. SimSurvey allocates
+#' fishing removals from those deaths. Realized fishing mortality depends on
+#' which ages are caught and whether fleets meet their targets. Realized M
+#' is the remainder of total mortality after subtracting realized fleet F.
 #'
-#' Commercial catch-at-age is raised from biological samples and calibrated to
-#' reported totals. It is not the simulator's true catch-at-age. Survey indices
-#' are stratified estimates within each footprint. Age compositions and regional
-#' availability can introduce dependence and variation that a simple independent
-#' lognormal assessment does not describe. Genuine sampled zeros remain in the
-#' inputs; tinyAM excludes them from its lognormal observation likelihood.
-#' Length-based selectivity integrates over the generating length distribution
-#' within each age. Evaluating a fitted curve at `mean_length` approximates that
-#' expectation: a nonlinear curve at mean length need not equal mean selectivity.
-#' Differences can be more apparent near steep portions of the curves.
+#' Commercial catch-at-age estimates use randomly sampled ages and are
+#' calibrated to reported fleet totals. The two surveys provide stratified
+#' abundance indices. Genuine sampled zeros remain in the data and tinyAM
+#' excludes them from its lognormal likelihood. Weight and maturity are
+#' supplied as known in this example.
 #'
-#' Weight and age-based maturity are supplied without sampling uncertainty to
-#' keep the example focused on fleets and surveys. Fitted confidence intervals
-#' consequently condition on these biological inputs. `M0` is also supplied as a
-#' known baseline; assuming deterministic M equal to it is a model hypothesis.
-#' The seed was fixed before
-#' fitting; warnings and failures are retained.
+#' The guide fits ages 1 through 14. tinyAM pools catches and indices for
+#' ages 14 and older while retaining weight and maturity through age 20.
+#' The simulator ends at age 20 and drops survivors that would reach age 21.
+#' This difference matters when comparing the fitted plus group with truth.
 #'
 #' @source
-#' Generated by `data-raw/sim_cod_obs.R` using a recorded development revision of
-#' SimSurvey. The generator retains its settings, seed, software versions and
-#' warnings. SimSurvey is needed only to regenerate the data, not to use them.
+#' Generated by `data-raw/sim_cod_obs.R` with a recorded development revision
+#' of [SimSurvey](https://paulregular.github.io/SimSurvey/).
 #'
 #' @references
 #' Regular, P.M. et al. (2020). SimSurvey: An R package for comparing the design
@@ -126,7 +87,6 @@
 #' \url{https://publications.gc.ca/collections/collection_2026/mpo-dfo/fs70-5/Fs70-5-2026-056-eng.pdf}
 #'
 #' @examples
-#' data(sim_cod_obs)
 #' check_tam_data(sim_cod_obs)
 #' unique(sim_cod_obs$catch$fleet)
 #' unique(sim_cod_obs$index$survey)
