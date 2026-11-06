@@ -8,14 +8,22 @@ installed_revision <- utils::packageDescription("SimSurvey", fields = "RemoteSha
 if (is.na(installed_revision)) installed_revision <- Sys.getenv("TINYAM_SIMSURVEY_REVISION")
 stopifnot(identical(installed_revision, revision))
 output <- Sys.getenv("TINYAM_SIM_COD_OUTPUT",
-  "data-raw/cache/sim_cod/f-full-age/prepared-data.rds")
+  "data-raw/cache/sim_cod/seed17-trawl-reduction/prepared-data.rds")
 if (file.exists(output)) stop("Choose a fresh TINYAM_SIM_COD_OUTPUT path.")
 
 RNGkind("Mersenne-Twister", "Inversion", "Rejection")
-set.seed(438)
 
-# Three fishing rates at full selectivity. Reuse the curves when generating Z.
-F_full <- c(Gillnet = 0.06, Longline = 0.05, Trawl = 0.07)
+# Draw the three fishing trajectories separately from M and recruitment.
+years <- 1:20
+trawl_reduction_year <- 11L
+set.seed(1701)
+F_full_unreduced <- lapply(c(Gillnet = 0.06, Longline = 0.05, Trawl = 0.07), function(f) {
+  f * exp(c(0, cumsum(stats::rnorm(length(years) - 1L, sd = 0.10))))
+})
+F_full <- F_full_unreduced
+F_full$Trawl[years >= trawl_reduction_year] <- 0.2 * F_full$Trawl[years >= trawl_reduction_year]
+
+# Reuse these curves and annual rates when generating Z and fleet targets.
 gillnet <- function(age) plogis(1.4 * (age - 5)) * plogis(0.8 * (10.5 - age))
 longline <- sim_logistic(k = 1.6, x50 = 3.6)
 trawl <- sim_logistic(k = 1.5, x50 = 4.3)
@@ -35,11 +43,15 @@ grid <- stars::st_as_stars(footprint, crs = sf::st_crs(grid))
 
 # Default recruitment, growth and stock weight. Share one spatial field so
 # the fraction available within each survey footprint changes little over time.
+# Reference M of 0.28 gives realized M near 0.30 once catches are allocated.
+reference_M <- 0.28
+set.seed(17)
 pop <- sim_abundance(
+  years = years,
   Z = function(ages, years) {
-    M <- sim_Z(log_mean = log(0.3), log_sd = 0.04)(ages, years)
-    M + F_full[["Gillnet"]] * gillnet(ages) +
-      F_full[["Longline"]] * longline(ages) + F_full[["Trawl"]] * trawl(ages)
+    M <- sim_Z(log_mean = log(reference_M), log_sd = 0.04)(ages, years)
+    M + outer(gillnet(ages), F_full$Gillnet) +
+      outer(longline(ages), F_full$Longline) + outer(trawl(ages), F_full$Trawl)
   },
   maturity = sim_maturity(k = 1, x50 = 5), maturity_by = "age"
 ) |>
@@ -177,14 +189,22 @@ tail[, SSB := N * weight * maturity]
 tail <- merge(tail[, .(year, N, SSB)], annual[, .(year, N_total = N, SSB_total = SSB)], by = "year")
 tail[, `:=`(proportion = N / N_total, SSB_proportion = SSB / SSB_total)]
 M_center <- population[age %in% 5:10 & is.finite(M), M]
+fishery_annual <- copy(fishery$annual)
+fishery_annual[, F_full_unreduced := F_full_unreduced[[.BY$fishery]][match(year, years)], by = fishery]
 checks <- list(terminal_survivors = as.data.frame(tail),
   shortfalls = as.data.frame(fishery$annual[shortfall > 0, .(fishery, year, target, n, shortfall, status)]),
   unsupported_catch = as.data.frame(monitoring[status == "no_samples"]),
   realized_M = list(ages = 5:10, mean = mean(M_center), sd = sd(M_center),
     min = min(M_center), max = max(M_center)),
+  realized_M_by_period = as.data.frame(population[age %in% 5:10 & is.finite(M),
+    .(mean = mean(M), sd = sd(M), min = min(M), max = max(M)),
+    by = .(period = ifelse(year < trawl_reduction_year, "Before", "After"))]),
   realized_M_at_age = as.data.frame(population[is.finite(M),
     .(mean = mean(M), sd = sd(M), min = min(M), max = max(M)), by = age]))
-provenance <- list(simsurvey_revision = revision, seed = 438L, rng_kind = RNGkind(),
+provenance <- list(simsurvey_revision = revision, seed = 17L, fishing_seed = 1701L,
+  fishing_log_step_sd = 0.10, trawl_reduction_year = trawl_reduction_year,
+  reference_M = reference_M,
+  rng_kind = RNGkind(),
   generator = unname(tools::md5sum("data-raw/sim_cod_obs.R")),
   session = capture.output(utils::sessionInfo()),
   sources = c(population = "https://doi.org/10.1371/journal.pone.0232822",
@@ -192,7 +212,7 @@ provenance <- list(simsurvey_revision = revision, seed = 438L, rng_kind = RNGkin
     sentinel = "https://publications.gc.ca/collections/collection_2026/mpo-dfo/fs70-5/Fs70-5-2026-056-eng.pdf"))
 sim_cod_truth <- lapply(list(population = population, annual = annual, fleet = fleet,
   surveys = survey_truth, footprint = footprint, selectivity = selectivity,
-  fishery_annual = fishery$annual, monitoring = monitoring,
+  fishery_annual = fishery_annual, monitoring = monitoring,
   survey_precision = rbindlist(lapply(survey_tables, "[[", "precision")),
   survey_monitoring = rbindlist(lapply(survey_tables, "[[", "monitoring"))), as.data.frame)
 sim_cod_truth$checks <- checks
@@ -204,5 +224,12 @@ message("Staged data at ", output)
 message(sprintf("Realized M at ages 5–10: mean %.3f, SD %.3f, range %.3f–%.3f per year",
   mean(M_center), sd(M_center), min(M_center), max(M_center)))
 print(checks$realized_M_at_age)
+print(checks$realized_M_by_period)
 print(checks$shortfalls)
-stopifnot(abs(mean(M_center) - 0.30) <= 0.03)
+stopifnot(
+  abs(mean(M_center) - 0.30) <= 0.03,
+  all(abs(checks$realized_M_by_period$mean - 0.30) <= 0.03),
+  annual$SSB[which.max(annual$year)] < annual$SSB[which.min(annual$year)],
+  all(fishery_annual$F_full_reference == fishery_annual$F_full_unreduced *
+    ifelse(fishery_annual$fishery == "Trawl" & fishery_annual$year >= trawl_reduction_year, 0.2, 1))
+)

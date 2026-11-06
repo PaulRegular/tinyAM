@@ -3,7 +3,8 @@
 #' @description
 #' A teaching dataset loosely based on 3Ps cod, with three active fisheries and
 #' two surveys of a shared population. The fishing grounds and survey programs
-#' illustrate inshore and offshore fishing and monitoring practices.
+#' illustrate inshore and offshore fishing and monitoring practices. The trawl
+#' fleet continues at a bycatch level after directed fishing ends in year 10.
 #'
 #' @format
 #' `sim_cod_obs` is a `tam_data` list (see [as_tam_data()]) with four tables
@@ -35,24 +36,30 @@
 #'   strata and access for each fishery and survey. `selectivity` gives the
 #'   generating curves by component and age.
 #' - `fishery_annual` and `monitoring` summarize targets, catches and sampling.
+#'   `F_full_reference` is the annual target at full selectivity and
+#'   `F_full_unreduced` is the target trajectory without the trawl reduction.
 #'   `survey_precision` gives estimated index SEs in thousand fish and
 #'   `survey_monitoring` summarizes survey sampling.
-#' - `checks` summarizes realized M, target shortfalls, unsupported observations
-#'   and survivors omitted at the terminal simulated age.
-#'   `provenance` records the source revision, seed and runtime.
+#' - `checks` summarizes realized M, including before and after the trawl
+#'   reduction, target shortfalls, unsupported observations and survivors
+#'   omitted at the terminal simulated age.
+#'   `provenance` records the source revision, seeds and runtime.
 #'
 #' @details
-#' The simulation uses seed 438 from Regular et al. (2020). A shared spatial
-#' field on a 20-by-20 grid gives each fleet and survey a stable footprint.
+#' The population uses seed 17 and a shared spatial field on a 20-by-20 grid.
+#' Each fleet and survey has a stable footprint.
 #' Gillnet and longline fleets fish inshore, while trawlers fish offshore. The denser,
 #' inshore Sentinel survey has dome-shaped selectivity and uses the same
 #' swept-area sampling model as the offshore RV survey, omitting fixed-gear
 #' saturation.
 #'
-#' Each fleet has a constant target fishing mortality at full selectivity
-#' (`F_full`). Total mortality combines the age-specific reference fleet rates
-#' with a varying reference M centred on 0.3 per year. SimSurvey allocates
-#' fishing removals from those deaths. Realized fishing mortality depends on
+#' Each fleet's target fishing mortality at full selectivity (`F_full`)
+#' follows an independent random walk on the log scale, generated with seed
+#' 1701. The trawl target is multiplied by 0.2 from year 11 onward to represent
+#' bycatch. Total mortality combines the age-specific reference fleet rates
+#' with an independently generated reference M centred on 0.28 per year
+#' to keep realized M near 0.3.
+#' SimSurvey allocates fishing removals from those deaths. Realized F depends on
 #' which ages are caught and whether fleets meet their targets. Realized M
 #' is the remainder of total mortality after subtracting realized fleet F.
 #'
@@ -62,7 +69,8 @@
 #' excludes them from its lognormal likelihood. Weight and maturity are
 #' supplied as known in this example.
 #'
-#' The guide fits ages 1 through 14. tinyAM pools catches and indices for
+#' The guide compares fleet-specific and aggregate fits over ages 1 through 14.
+#' tinyAM pools catches and indices for
 #' ages 14 and older while retaining weight and maturity through age 20.
 #' The simulator ends at age 20 and drops survivors that would reach age 21.
 #' This difference matters when comparing the fitted plus group with truth.

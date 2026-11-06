@@ -8,9 +8,11 @@
 * Add simulated, 3Ps-inspired cod inputs with three active fleets and two
   surveys of coastal and offshore areas. Keep compact generating truth and
   monitoring provenance separate from the estimated observations; SimSurvey
-  is required only by the data-generation script. Use age-based selectivity,
-  constant fully selected F targets and a compact grid. Compare fixed and AR1 M
-  around 0.3 per year with an age-14 plus group.
+  is required only by the data-generation script. Use age-based selectivity
+  and annual fleet F targets with a trawl reduction after year 10. Compare
+  fleet-specific and aggregate assessments with an age-14 plus group.
+  Show aggregate catch fits and residuals alongside fleet pages in mixed
+  dashboards.
 
 * Organize plots by purpose and colocate population getters. Share fitted test
   fixtures, remove redundant renders and unused implementations, and retire the

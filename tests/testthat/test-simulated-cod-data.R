@@ -1,5 +1,5 @@
 test_that("simulated cod inputs retain complete fleet keys and explicit units", {
-  expect_equal(sim_cod_truth$provenance$seed, 438)
+  expect_equal(sim_cod_truth$provenance$seed, 17)
   expect_s3_class(sim_cod_obs, "tam_data")
   expect_invisible(check_tam_data(sim_cod_obs, quiet = TRUE))
   catch <- sim_cod_obs$catch
@@ -44,6 +44,10 @@ test_that("simulated cod weights and maturity reproduce biomass and SSB", {
   expected_ssb <- aggregate(SSB ~ year, population, sum)
   annual <- sim_cod_truth$annual
   expect_equal(annual$SSB, expected_ssb$SSB[match(annual$year, expected_ssb$year)])
+  first <- which.min(annual$year)
+  last <- which.max(annual$year)
+  expect_lt(annual$N[last], annual$N[first])
+  expect_lt(annual$SSB[last], annual$SSB[first])
 })
 
 test_that("simulated cod fits can pool observations and retain older biology", {
@@ -103,6 +107,13 @@ test_that("simulated cod truth conserves mortality, removals and yield", {
   expect_equal(population$Z[populated],
     population$M[populated] + expected_f[populated], tolerance = 1e-12)
   expect_lte(abs(mean(subset(population, age %in% 5:10)$M) - 0.30), 0.03)
+  periods <- sim_cod_truth$checks$realized_M_by_period
+  expect_setequal(periods$period, c("Before", "After"))
+  adult <- subset(population, age %in% 5:10)
+  expected_means <- c(Before = mean(adult$M[adult$year < 11]),
+    After = mean(adult$M[adult$year >= 11]))
+  expect_equal(periods$mean, unname(expected_means[periods$period]))
+  expect_true(all(abs(periods$mean - 0.30) <= 0.03))
 
   terminal <- subset(population, age == 20)
   loss <- sim_cod_truth$checks$terminal_survivors
@@ -111,13 +122,22 @@ test_that("simulated cod truth conserves mortality, removals and yield", {
   expect_equal(loss$SSB, with(terminal, SSB * exp(-Z))[i])
 })
 
-test_that("fleet targets hold reference F constant and catches match reported totals", {
+test_that("fleet F walks follow the seeded design and only trawl is reduced", {
   annual <- sim_cod_truth$fishery_annual
+  provenance <- sim_cod_truth$provenance
   expect_true(all(annual$target_type == "F_full"))
   expect_true(all(annual$n > 0 & annual$requested_target > 0))
-  target_counts <- vapply(split(annual$requested_target, annual$fishery),
-    function(x) length(unique(x)), integer(1))
-  expect_true(all(target_counts == 1L))
+  expect_equal(provenance$fishing_seed, 1701L)
+  expect_equal(provenance$fishing_log_step_sd, 0.10)
+  expect_equal(provenance$trawl_reduction_year, 11L)
+  starting_F <- c(Gillnet = 0.06, Longline = 0.05, Trawl = 0.07)
+  increments <- withr::with_seed(1701, matrix(stats::rnorm(57, sd = 0.10), ncol = 3),
+    .rng_kind = "Mersenne-Twister", .rng_normal_kind = "Inversion", .rng_sample_kind = "Rejection")
+  expected <- sweep(exp(apply(rbind(0, increments), 2, cumsum)), 2, starting_F, "*")
+  i <- cbind(annual$year, match(annual$fishery, names(starting_F)))
+  expect_equal(annual$F_full_unreduced, expected[i], tolerance = 1e-12)
+  reduction <- ifelse(annual$fishery == "Trawl" & annual$year >= 11, 0.2, 1)
+  expect_equal(annual$F_full_reference, annual$F_full_unreduced * reduction)
   expect_equal(annual$F_full_reference, annual$requested_target)
 
   fleet <- sim_cod_truth$fleet
@@ -129,7 +149,16 @@ test_that("fleet targets hold reference F constant and catches match reported to
   expected_f <- ref$F_reference[match(paste(population$year, population$age),
     paste(ref$year, ref$age))]
   expect_equal(population$Z, population$M_reference + expected_f, tolerance = 1e-12)
+  # The first M draw still uses the population seed, independent of the F walks.
+  expect_equal(provenance$reference_M, 0.28)
+  first_M <- withr::with_seed(17, exp(log(provenance$reference_M) +
+    stats::rnorm(1, sd = 0.04 / sqrt((1 - 0.9^2) * (1 - 0.5^2)))),
+    .rng_kind = "Mersenne-Twister", .rng_normal_kind = "Inversion", .rng_sample_kind = "Rejection")
+  expect_equal(population$M_reference[population$year == 1 & population$age == 1],
+    first_M, tolerance = 1e-12)
+})
 
+test_that("simulated catches match reported totals", {
   catch <- sim_cod_obs$catch
   observed <- aggregate(catch["obs"], catch[c("year", "fleet")], function(x) {
     if (all(is.na(x))) NA_real_ else sum(x, na.rm = TRUE)
