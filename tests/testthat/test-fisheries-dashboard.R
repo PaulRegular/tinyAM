@@ -69,7 +69,7 @@ test_that("Fisheries renders full fleet diagnostics and an unlabeled aggregate",
   parameters <- default_fit$parameter_values
   reference_before <- ref
   path <- tempfile(fileext=".html"); on.exit(unlink(path))
-  vis_tam(Unlabeled=default_fit,Fleet_reference=ref,output_file=path,
+  vis_tam(Fleet_reference=ref,Unlabeled=default_fit,output_file=path,
     open_file=FALSE,render_args=list(quiet=TRUE))
   expect_true(file.exists(path))
   html <- paste(readLines(path,warn=FALSE),collapse="\n")
@@ -87,10 +87,19 @@ test_that("Fisheries renders full fleet diagnostics and an unlabeled aggregate",
   expect_match(fleet_html,"(cohort)",fixed=TRUE)
   expect_match(fleet_html,"(expected)",fixed=TRUE)
   expect_match(fleet_html,'"dash":"dot"',fixed=TRUE)
+  expect_false(grepl('"name":"Unlabeled"',fleet_html,fixed=TRUE))
   pages <- gregexpr('<div id="[^"]+" class="section level1"',html)[[1L]]
   aggregate_html <- substr(html,aggregate,min(pages[pages > aggregate])-1L)
   expect_match(aggregate_html,"Total yield",fixed=TRUE)
-  expect_false(grepl("Residuals (age, year)",aggregate_html,fixed=TRUE))
+  details <- regexpr("Numbers-at-age",aggregate_html,fixed=TRUE)[1L]
+  expect_gt(details,0L)
+  yield_html <- substr(aggregate_html,1L,details-1L)
+  details_html <- substr(aggregate_html,details,nchar(aggregate_html))
+  expect_match(yield_html,'"name":"Fleet_reference"',fixed=TRUE)
+  expect_match(yield_html,'"name":"Unlabeled"',fixed=TRUE)
+  expect_match(details_html,"Residuals (age, year)",fixed=TRUE)
+  expect_match(details_html,'"name":"Unlabeled"',fixed=TRUE)
+  expect_false(grepl('"name":"Fleet_reference"',details_html,fixed=TRUE))
   expect_identical(default_fit$parameter_values,parameters)
   expect_identical(ref,reference_before)
 })

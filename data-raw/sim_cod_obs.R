@@ -1,229 +1,209 @@
-# Reproduce or explore the 3Ps-inspired teaching scenario. SimSurvey is used here
-# only, not by tinyAM installation or documentation builds.
-#
-# source("data-raw/sim_cod_obs.R")
-# result <- build_sim_cod_obs("../SimSurvey")  # selected 20 x 20 teaching case
-# Trial results and three stage caches use configuration-specific folders.
-# write_data = TRUE is an explicit decision to replace the packaged .rda files.
-# Existing packaged data and earlier simulation caches are never changed by default.
-#
-# Population centres follow Regular et al. (2020), S1/S2; smaller mortality and
-# length variation simplify this teaching case. Coastal fixed gear,
-# offshore trawling/RV and Sentinel size coverage are inspired by DFO Data Report
-# 1381 (2024) and Res. Doc. 2026/056. Footprints, mortality shares, capacities and
-# sample caps are illustrative choices, not a reproduction of the assessment.
-# All fleets operate; no contemporary rebuilding TAC or closures are imposed.
-# The RV curve is logistic and the gillnet/Sentinel curves are double logistic.
-# Operation-level simulation can require several GB of RAM; generate it on its own.
-# Optional reference_M calibrates the geometric centre of an M baseline using
-# exp(log_mean_Z), the Z process median/log-scale centre. It is not E[Z] or a
-# target for arithmetic realized M. NULL skips this calibration in explorations.
+# Run from the tinyAM root with the SimSurvey revision documented in README.md.
+# Only the compact prepared data are saved. Redirect console output to keep a run log.
+library(SimSurvey)
+library(data.table)
 
-sim_cod_settings <- function(res = c(14, 14)) {
-  list(
-    simsurvey_revision = "282e3c14a2fbb5d312a2fde79ee3e8d8511b4513",
-    seed = 438L, ages = 1:20, years = 1:20,
-    recruitment = list(log_mean = log(30e6), log_sd = 0.5, random_walk = TRUE),
-    mortality = list(log_mean = log(0.5), log_sd = 0.1, phi_age = 0.9, phi_year = 0.5),
-    growth = list(Linf = 120, L0 = 5, K = 0.1, log_sd = 0.03, length_group = 3),
-    grid = list(x_range = c(-140, 140), y_range = c(-140, 140), res = res,
-      shelf_depth = 200, shelf_width = 100, depth_range = c(0, 1000), n_div = 1,
-      strat_breaks = seq(0, 1000, by = 40), strat_splits = 2),
-    spatial = list(sd = 2.8, range = 300, lambda = 1, model = "matern",
-      phi_age = 0, phi_year = 0, group_ages = 1:20, group_years = 1:20),
-    depth = list(mu = 200, sigma = 70),
-    weight = list(alpha = 10^-5.2106, beta = 3.0879),
-    maturity = list(k = 1, x50 = 5),
-    selectivity = list(Gillnet = c(up = 50, width = 5, down = 80, down_width = 5),
-      Longline = c(up = 40, width = 5), Trawl = c(up = 45, width = 5),
-      RV = c(up = 30, width = 5), Sentinel = c(up = 50, width = 5, down = 80, down_width = 5)),
-    shares = c(Gillnet = 0.30, Longline = 0.15, Trawl = 0.15),
-    reference_M = 0.3,
-    monitoring = list(sampling_coverage = 0.30, lengths_cap = 150, ages_cap = 3,
-      age_sampling = "stratified", age_length_group = 3, sampling_targeting = 0,
-      reporting_factor = 1, reporting_cv = 0.05),
-    survey_density = c(RV = 2 / 1000, Sentinel = 4 / 1000),
-    survey_sampling = list(lengths_cap = 100, ages_cap = 3,
-      age_sampling = "stratified", age_length_group = 3, age_space_group = "set"),
-    max_operations = 5000L,
-    sources = c(
-      population = "https://doi.org/10.1371/journal.pone.0232822",
-      data_review = "https://publications.gc.ca/collections/collection_2024/mpo-dfo/Fs97-13-1381-eng.pdf",
-      management = "https://www.dfo-mpo.gc.ca/fisheries-peches/ifmp-gmp/groundfish-poisson-fond/2025/groundfish-poisson-fond-div3ps-nafo-opano-eng.html",
-      sentinel = "https://publications.gc.ca/collections/collection_2026/mpo-dfo/fs70-5/Fs70-5-2026-056-eng.pdf"))
-}
+revision <- "29a1b03350c274f88dac108fb95f9446eac79233"
+installed_revision <- utils::packageDescription("SimSurvey", fields = "RemoteSha")
+if (is.na(installed_revision)) installed_revision <- Sys.getenv("TINYAM_SIMSURVEY_REVISION")
+stopifnot(identical(installed_revision, revision))
+output <- Sys.getenv("TINYAM_SIM_COD_OUTPUT",
+  "data-raw/cache/sim_cod/seed17-simsurvey-biology/prepared-data.rds")
+if (file.exists(output)) stop("Choose a fresh TINYAM_SIM_COD_OUTPUT path.")
 
-build_sim_cod_obs <- function(simsurvey_repo, settings = sim_cod_settings(),
-                              repo = ".", cache_dir = NULL, write_data = FALSE,
-                              overwrite = FALSE) {
-  helpers <- new.env(parent = globalenv())
-  sys.source(file.path(repo, "data-raw", "sim_cod_helpers.R"), envir = helpers)
-  if (!identical(helpers$.sim_cod_git(simsurvey_repo), settings$simsurvey_revision)) {
-    stop("Use the SimSurvey revision recorded in sim_cod_settings().")
-  }
-  if (length(system2("git", c("-C", shQuote(simsurvey_repo), "status", "--porcelain",
-      "--untracked-files=all", "--", "R", "DESCRIPTION", "NAMESPACE"), stdout = TRUE))) stop("Use clean SimSurvey package sources.")
-  pkgload::load_all(repo, quiet = TRUE, helpers = FALSE, export_all = FALSE)
-  pkgload::load_all(simsurvey_repo, quiet = TRUE, helpers = FALSE, export_all = FALSE)
-  RNGkind("Mersenne-Twister", "Inversion", "Rejection")
-  source_files <- file.path(repo, "data-raw", c("sim_cod_obs.R", "sim_cod_helpers.R"))
-  provenance <- list(simsurvey_revision = settings$simsurvey_revision,
-    seed = settings$seed, rng_kind = RNGkind(), settings = settings,
-    sources = stats::setNames(unname(tools::md5sum(source_files)), basename(source_files)),
-    runtime = c(R = as.character(getRversion()), vapply(c("SimSurvey", "sf", "stars", "data.table"),
-      function(package) as.character(utils::packageVersion(package)), character(1))),
-    units = c(abundance = "thousand fish", weight = "kg", biomass = "tonnes", mortality = "per year"))
-  # One readable configuration/source fingerprint, not a dependency graph of
-  # reflected function bodies. Different trials cannot share a cache folder.
-  fingerprint <- helpers$.sim_cod_hash(provenance)
-  if (is.null(cache_dir)) cache_dir <- file.path(repo, "data-raw", "cache", "sim_cod", fingerprint)
-  dir.create(cache_dir, recursive = TRUE, showWarnings = FALSE)
-  records <- list()
-  stage <- function(name, code, cache = TRUE) {
-    path <- file.path(cache_dir, paste0(name, ".rds"))
-    if (cache && !overwrite && file.exists(path)) {
-      saved <- readRDS(path)
-      if (!identical(saved$fingerprint, fingerprint)) stop("The selected cache belongs to a different configuration.")
-      if (!is.null(saved$error)) stop("The previous ", name, " attempt failed: ", saved$error)
-      assign(".Random.seed", saved$rng, envir = .GlobalEnv)
-      records[[name]] <<- saved[c("warnings", "error", "elapsed_seconds")]
-      message(name, ": reused cache")
-      return(saved$value)
-    }
-    message(name, ": generating")
-    warnings <- character(); error <- NULL; started <- proc.time()[["elapsed"]]
-    value <- tryCatch(withCallingHandlers(force(code), warning = function(w) {
-      warnings <<- c(warnings, conditionMessage(w)); invokeRestart("muffleWarning")
-    }), error = function(e) { error <<- conditionMessage(e); NULL })
-    saved <- list(fingerprint = fingerprint, value = value, rng = .Random.seed,
-      warnings = warnings, error = error, elapsed_seconds = proc.time()[["elapsed"]] - started)
-    if (cache) saveRDS(saved, path)
-    records[[name]] <<- saved[c("warnings", "error", "elapsed_seconds")]
-    if (!is.null(error)) {
-      saveRDS(list(provenance = provenance, records = records), file.path(cache_dir, "generation-report.rds"))
-      stop(name, ": ", error)
-    }
-    value
-  }
+RNGkind("Mersenne-Twister", "Inversion", "Rejection")
 
-  # 1. One population; the original paper settings are visible in these calls.
-  population <- stage("population", {
-    set.seed(settings$seed)
-    SimSurvey::sim_abundance(
-      ages = settings$ages, years = settings$years,
-      R = SimSurvey::sim_R(log_mean = settings$recruitment$log_mean,
-        log_sd = settings$recruitment$log_sd, random_walk = settings$recruitment$random_walk),
-      Z = SimSurvey::sim_Z(log_mean = settings$mortality$log_mean,
-        log_sd = settings$mortality$log_sd, phi_age = settings$mortality$phi_age,
-        phi_year = settings$mortality$phi_year),
-      N0 = SimSurvey::sim_N0("exp"),
-      growth = SimSurvey::sim_growth(Linf = settings$growth$Linf, L0 = settings$growth$L0,
-        K = settings$growth$K, log_sd = settings$growth$log_sd, length_group = settings$growth$length_group),
-      weight = SimSurvey::sim_weight(alpha = settings$weight$alpha, beta = settings$weight$beta),
-      maturity = SimSurvey::sim_maturity(k = settings$maturity$k, x50 = settings$maturity$x50),
-      maturity_by = "age") |>
-      SimSurvey::sim_distribution(grid = helpers$.sim_cod_grid(settings),
-        ays_covar = SimSurvey::sim_ays_covar(sd = settings$spatial$sd, range = settings$spatial$range,
-          lambda = settings$spatial$lambda, model = settings$spatial$model,
-          phi_age = settings$spatial$phi_age, phi_year = settings$spatial$phi_year,
-          group_ages = settings$spatial$group_ages, group_years = settings$spatial$group_years),
-        depth_par = SimSurvey::sim_parabola(mu = settings$depth$mu, sigma = settings$depth$sigma)) |>
-      SimSurvey::round_sim()
-  })
-  # Survey cells are sampled without replacement. Reject infeasible set counts
-  # before the expensive fishery stage, rather than failing after it completes.
-  helpers$.sim_cod_check_surveys(as.data.frame(population$grid), settings,
-    abs(prod(stars::st_res(population$grid))))
-  selectivity <- helpers$.sim_cod_selectivity(settings)
-  available <- helpers$.sim_cod_available(population, settings, selectivity)
-  allocations <- helpers$.sim_cod_allocations(population, settings, available)
-  calibration <- NULL
-  if (!is.null(settings$reference_M)) {
-    calibrated <- helpers$.sim_cod_reference_M(settings, available, allocations)
-    allocations <- calibrated$allocations
-    calibration <- calibrated$calibration
-    provenance$reference_M <- calibration
-  }
-  shares <- split(allocations$fishery_share, allocations$fleet)
-  shares <- lapply(shares, stats::setNames, settings$years)
-  m <- settings$monitoring
+# Draw the three fishing trajectories separately from M and recruitment.
+years <- 1:20
+trawl_reduction_year <- 11L
+set.seed(1701)
+F_full_unreduced <- lapply(c(Gillnet = 0.06, Longline = 0.05, Trawl = 0.07), function(f) {
+  f * exp(c(0, cumsum(stats::rnorm(length(years) - 1L, sd = 0.10))))
+})
+F_full <- F_full_unreduced
+F_full$Trawl[years >= trawl_reduction_year] <- 0.2 * F_full$Trawl[years >= trawl_reduction_year]
 
-  # 2. Fishery branch: allocate existing deaths, then sample actual catches.
-  # Access-adjusted share = base share * accessible/global vulnerable deaths.
-  # SimSurvey retains a configuration's calling environment. Keep this small,
-  # so configurations cannot retain the whole population or build workspace.
-  program_settings <- list2env(list(settings = settings, selectivity = selectivity,
-    shares = shares, m = m), parent = globalenv())
-  fisheries <- stage("fisheries", {
-    programs <- evalq(list(
-      Gillnet = SimSurvey::sim_fishery(fishery_share = shares$Gillnet,
-        catch_model = SimSurvey::sim_capture(q = 0.02, capacity_per_gear = 150),
-        selectivity = selectivity$Gillnet, selectivity_by = "length", subset_cells = Gillnet,
-        gear_amount = 60, duration = 24, gear_unit = "net", time_unit = "hour",
-        targeting = 1, knowledge_sd = 0.2, exploration = 0.05, max_operations = settings$max_operations,
-        sampling_coverage = m$sampling_coverage, sampling_targeting = m$sampling_targeting,
-        lengths_cap = m$lengths_cap, ages_cap = m$ages_cap, age_sampling = m$age_sampling,
-        age_length_group = m$age_length_group, reporting_factor = m$reporting_factor,
-        reporting_cv = m$reporting_cv, maturity_sampling = "none", light = FALSE),
-      Longline = SimSurvey::sim_fishery(fishery_share = shares$Longline,
-        catch_model = SimSurvey::sim_capture(q = 0.001, capacity_per_gear = 1),
-        selectivity = selectivity$Longline, selectivity_by = "length", subset_cells = Longline,
-        gear_amount = 4000, duration = 24, gear_unit = "hook", time_unit = "hour",
-        targeting = 1, knowledge_sd = 0.2, exploration = 0.05, max_operations = settings$max_operations,
-        sampling_coverage = m$sampling_coverage, sampling_targeting = m$sampling_targeting,
-        lengths_cap = m$lengths_cap, ages_cap = m$ages_cap, age_sampling = m$age_sampling,
-        age_length_group = m$age_length_group, reporting_factor = m$reporting_factor,
-        reporting_cv = m$reporting_cv, maturity_sampling = "none", light = FALSE),
-      Trawl = SimSurvey::sim_fishery(fishery_share = shares$Trawl,
-        catch_model = SimSurvey::sim_capture(q = 2, capacity_per_gear = 10000),
-        selectivity = selectivity$Trawl, selectivity_by = "length", subset_cells = Trawl,
-        gear_amount = 1, duration = 4, gear_unit = "trawl", time_unit = "hour",
-        targeting = 1, knowledge_sd = 0.2, exploration = 0.05, max_operations = settings$max_operations,
-        sampling_coverage = m$sampling_coverage, sampling_targeting = m$sampling_targeting,
-        lengths_cap = m$lengths_cap, ages_cap = m$ages_cap, age_sampling = m$age_sampling,
-        age_length_group = m$age_length_group, reporting_factor = m$reporting_factor,
-        reporting_cv = m$reporting_cv, maturity_sampling = "none", light = FALSE)), program_settings)
-    SimSurvey::sim_fisheries(helpers$.sim_cod_fishing_population(population), n_sims = 1,
-      Gillnet = programs$Gillnet, Longline = programs$Longline, Trawl = programs$Trawl)$fishery
-  })
+# Reuse these curves and annual rates when generating Z and fleet targets.
+gillnet <- function(age) plogis(1.4 * (age - 5)) * plogis(0.8 * (10.5 - age))
+longline <- sim_logistic(k = 1.6, x50 = 3.6)
+trawl <- sim_logistic(k = 1.5, x50 = 4.3)
+rv <- sim_logistic(k = 1.8, x50 = 2.5)
 
-  # 3. Independent survey branch: use the same dense annual population, not the
-  # large fishery result. Neither survey depletes the other or observes removals.
-  surveys <- stage("surveys", {
-    rv_sets <- SimSurvey::sim_sets(population, subset_cells = RV,
-      n_sims = 1, set_den = settings$survey_density[["RV"]], min_sets = 2, trawl_dim = c(1.5, 0.02))
-    sentinel_sets <- SimSurvey::sim_sets(population, subset_cells = Sentinel,
-      n_sims = 1, set_den = settings$survey_density[["Sentinel"]], min_sets = 2, trawl_dim = c(1.5, 0.02))
-    a <- settings$survey_sampling
-    SimSurvey::sim_surveys(population, n_sims = 1,
-      RV = SimSurvey::sim_survey(q = selectivity$RV, q_by = "length", custom_sets = rv_sets,
-        lengths_cap = a$lengths_cap, ages_cap = a$ages_cap, age_sampling = a$age_sampling,
-        age_length_group = a$age_length_group, age_space_group = a$age_space_group,
-        maturity_sampling = "none", light = FALSE),
-      Sentinel = SimSurvey::sim_survey(q = selectivity$Sentinel, q_by = "length", custom_sets = sentinel_sets,
-        lengths_cap = a$lengths_cap, ages_cap = a$ages_cap, age_sampling = a$age_sampling,
-        age_length_group = a$age_length_group, age_space_group = a$age_space_group,
-        maturity_sampling = "none", light = FALSE))
-  })
-  provenance$records <- records
-  provenance$generated <- Sys.time()
-  provenance$generation_revision <- helpers$.sim_cod_git(repo)
-  provenance$session <- utils::capture.output(utils::sessionInfo())
-  result <- stage("tables", helpers$.sim_cod_tables(population, fisheries, surveys, settings, selectivity,
-    available, provenance, allocations, calibration), cache = FALSE)
-  result$sim_cod_truth$provenance$records <- records
-  saveRDS(result, file.path(cache_dir, "prepared-data.rds"))
-  if (write_data) {
-    sim_cod_obs <- result$sim_cod_obs; sim_cod_truth <- result$sim_cod_truth
-    save(sim_cod_obs, file = file.path(repo, "data", "sim_cod_obs.rda"), compress = "xz", version = 2)
-    save(sim_cod_truth, file = file.path(repo, "data", "sim_cod_truth.rda"), compress = "xz", version = 2)
-  }
-  message("Prepared data in ", cache_dir, if (write_data) "; packaged data updated." else "; packaged data unchanged.")
-  invisible(result)
-}
+# Rotate the depth gradient so the shallow edge represents the northern coast.
+grid <- make_grid(res = c(14, 14))
+footprint <- as.data.frame(grid)
+footprint[c("x", "y")] <- list(footprint$y, -footprint$x)
+footprint <- transform(footprint,
+  Gillnet = y >= 40 & depth >= 25 & depth <= 250,
+  Longline = y >= 0 & depth >= 25 & depth <= 350,
+  Trawl = y < 70 & depth >= 50 & depth <= 550,
+  RV = y < 70 & depth >= 50 & depth <= 550,
+  Sentinel = y >= 40 & depth >= 25 & depth <= 250)
+grid <- stars::st_as_stars(footprint, crs = sf::st_crs(grid))
 
-if (sys.nframe() == 0L) {
-  args <- commandArgs(trailingOnly = TRUE)
-  if (length(args) != 1L) stop("Supply the pinned SimSurvey checkout; source this script to choose settings or write_data = TRUE.")
-  build_sim_cod_obs(args[[1]])
-}
+# Default recruitment, growth and stock weight. Share one spatial field so
+# the fraction available within each survey footprint changes little over time.
+# Reference M of 0.28 gives realized M near 0.30 once catches are allocated.
+reference_M <- 0.28
+set.seed(17)
+pop <- sim_abundance(
+  years = years,
+  Z = function(ages, years) {
+    M <- sim_Z(log_mean = log(reference_M), log_sd = 0.04)(ages, years)
+    M + outer(gillnet(ages), F_full$Gillnet) +
+      outer(longline(ages), F_full$Longline) + outer(trawl(ages), F_full$Trawl)
+  },
+  maturity = sim_maturity(k = 1, x50 = 5), maturity_by = "age"
+) |>
+  sim_distribution(grid = grid,
+    ays_covar = sim_ays_covar(phi_age = 0, phi_year = 0, group_ages = 1:20, group_years = 1:20)) |>
+  round_sim()
+
+# Fisheries draw from the same death budget. Observe catches through reporting
+# and random age samples from a subset of operations.
+message("Simulating the three fisheries")
+fishery <- sim_fisheries(pop,
+  Gillnet = sim_fishery(target = F_full[["Gillnet"]], target_type = "F_full",
+    selectivity = gillnet, subset_cells = Gillnet,
+    catch_model = sim_capture(q = 0.02, capacity_per_gear = 150),
+    gear_amount = 60, duration = 24, gear_unit = "net", time_unit = "hour",
+    sampling_coverage = 0.30, lengths_cap = 150, ages_cap = 150,
+    age_sampling = "random", reporting_cv = 0.05, maturity_sampling = "none"),
+  Longline = sim_fishery(target = F_full[["Longline"]], target_type = "F_full",
+    selectivity = longline, subset_cells = Longline,
+    catch_model = sim_capture(q = 0.001, capacity_per_gear = 1),
+    gear_amount = 4000, duration = 24, gear_unit = "hook", time_unit = "hour",
+    sampling_coverage = 0.30, lengths_cap = 150, ages_cap = 150,
+    age_sampling = "random", reporting_cv = 0.05, maturity_sampling = "none"),
+  Trawl = sim_fishery(target = F_full[["Trawl"]], target_type = "F_full",
+    selectivity = trawl, subset_cells = Trawl,
+    catch_model = sim_capture(q = 2, capacity_per_gear = 10000),
+    gear_amount = 1, duration = 4, gear_unit = "trawl", time_unit = "hour",
+    sampling_coverage = 0.30, lengths_cap = 150, ages_cap = 150,
+    age_sampling = "random", reporting_cv = 0.05, maturity_sampling = "none")
+) |>
+  run_catch() |>
+  catch_error()
+fishery <- fishery$fishery
+
+# Both surveys observe the original population at the start of each year.
+message("Simulating the offshore RV and inshore Sentinel surveys")
+surveys <- sim_surveys(pop,
+  RV = sim_survey(q = rv,
+    custom_sets = sim_sets(pop, subset_cells = RV, set_den = 2 / 1000),
+    lengths_cap = 100, ages_cap = 3, age_length_group = 3, age_space_group = "set",
+    maturity_sampling = "none"),
+  Sentinel = sim_survey(q = gillnet,
+    custom_sets = sim_sets(pop, subset_cells = Sentinel, set_den = 4 / 1000),
+    lengths_cap = 100, ages_cap = 3, age_length_group = 3, age_space_group = "set",
+    maturity_sampling = "none")
+) |>
+  run_strat(alk_scale = "set") |>
+  strat_error(scope = "survey_frame")
+
+# Convert SimSurvey's estimates from fish to thousand fish.
+catch_at_age <- fishery$catch_estimates$catch_at_age
+catch <- catch_at_age[,
+  .(year, age, fleet = fishery, obs = n_hat / 1000, unit = "thousand fish")]
+index <- surveys$age_strat[!is.na(age),
+  .(year, age, survey, obs = total / 1000, samp_time = 0, unit = "thousand fish")]
+monitoring <- fishery$catch_diagnostics[, .(fleet = fishery, year,
+  reported_total = reported_n, n_operations, n_aged, status = age_status)]
+monitoring <- merge(monitoring, catch[, .(estimated_total = sum(obs) * 1000), by = .(fleet, year)],
+  by = c("fleet", "year"))
+survey_precision <- surveys$age_strat[!is.na(age),
+  .(year, age, survey, sets, total_se = sd * sampling_units / 1000, estimate_status)]
+survey_monitoring <- rbindlist(lapply(surveys$survey_programs, "[[", "samp_totals"), idcol = "survey")
+
+# Use known stock biology. Fill ages lacking a monitored catch weight with
+# stock weight so tinyAM has complete weights through age 20.
+stock <- stock_biology(pop)$at_age[, .(year, age, weight = mean_weight_kg, maturity = prop_mature)]
+catch_biology <- catch_at_age[, .(year, age, fleet = fishery, mean_weight_kg, weight_status)]
+weights <- rbind(
+  stock[, .(year, age, obs = weight, type = "stock", fleet = NA_character_, unit = "kg")],
+  stock[catch_biology, on = .(year, age),
+    .(year, age, obs = fcoalesce(mean_weight_kg, weight), type = "catch", fleet, unit = "kg")]
+)
+maturity <- stock[, .(year, age, obs = maturity, spawn_time = 0)]
+sim_cod_obs <- tinyAM::as_tam_data(lapply(list(catch = catch, index = index,
+  weight = weights, maturity = maturity), as.data.frame))
+tinyAM::check_tam_data(sim_cod_obs, quiet = TRUE)
+
+# Keep realized states and monitoring diagnostics separate from the fitting data.
+population <- stock[, .(year, age, weight, maturity, N = as.numeric(pop$N) / 1000,
+  Z = as.numeric(pop$Z), B = as.numeric(pop$B) / 1000, SSB = as.numeric(pop$S) / 1000)]
+realized <- fishery$catch_error$catch_at_age[, .(year, age, fishery, n_true, mean_weight_true_kg)]
+fleet <- merge(fishery$reference, realized, by = c("fishery", "year", "age"))
+fleet[stock, on = .(year, age), weight := fcoalesce(mean_weight_true_kg, i.weight)]
+fleet[, `:=`(yield = n_true * weight / 1000, n_true = NULL, mean_weight_true_kg = NULL)]
+setnames(fleet, "fishery", "fleet")
+counts <- c("N", "catch_reference", "catch_realized", "total_deaths", "death_budget")
+fleet[, (counts) := lapply(.SD, function(x) x / 1000), .SDcols = counts]
+rates <- fleet[, .(F = sum(F_realized), F_reference = sum(F_reference)), by = .(year, age)]
+population <- merge(population, rates, by = c("year", "age"))
+population[, `:=`(M = Z - F, M_reference = Z - F_reference)]
+annual <- merge(population[, .(N = sum(N), B = sum(B), SSB = sum(SSB),
+  recruitment = N[age == min(age)]), by = year],
+  fleet[, .(yield = sum(yield)), by = year], by = "year")
+
+curves <- list(Gillnet = gillnet, Longline = longline, Trawl = trawl, RV = rv, Sentinel = gillnet)
+survey_truth <- surveys$age_strat_error[!is.na(age),
+  .(year, age, survey, N_region = N_frame / 1000, N_total = N_stock / 1000,
+    index_expected = I / 1000)]
+survey_truth[, selection := curves[[.BY$survey]](age), by = survey]
+survey_truth[, availability := fifelse(N_total > 0, N_region / N_total, NA_real_)]
+selectivity <- rbindlist(lapply(names(curves), function(name) {
+  age <- seq(1, 20, by = 0.1)
+  data.table(component = name, age, selectivity = curves[[name]](age))
+}))
+footprint$area_km2 <- abs(prod(stars::st_res(grid)))
+
+tail <- population[age == max(age)]
+tail[, N := N * exp(-Z)]
+tail[, SSB := N * weight * maturity]
+tail <- merge(tail[, .(year, N, SSB)], annual[, .(year, N_total = N, SSB_total = SSB)], by = "year")
+tail[, `:=`(proportion = N / N_total, SSB_proportion = SSB / SSB_total)]
+M_center <- population[age %in% 5:10 & is.finite(M), M]
+fishery_annual <- copy(fishery$annual)
+fishery_annual[, F_full_unreduced := F_full_unreduced[[.BY$fishery]][match(year, years)], by = fishery]
+checks <- list(terminal_survivors = as.data.frame(tail),
+  shortfalls = as.data.frame(fishery$annual[shortfall > 0, .(fishery, year, target, n, shortfall, status)]),
+  unsupported_catch = as.data.frame(monitoring[!status %in% c("estimated", "zero_reported_catch")]),
+  realized_M = list(ages = 5:10, mean = mean(M_center), sd = sd(M_center),
+    min = min(M_center), max = max(M_center)),
+  realized_M_by_period = as.data.frame(population[age %in% 5:10 & is.finite(M),
+    .(mean = mean(M), sd = sd(M), min = min(M), max = max(M)),
+    by = .(period = ifelse(year < trawl_reduction_year, "Before", "After"))]),
+  realized_M_at_age = as.data.frame(population[is.finite(M),
+    .(mean = mean(M), sd = sd(M), min = min(M), max = max(M)), by = age]))
+provenance <- list(simsurvey_revision = revision, seed = 17L, fishing_seed = 1701L,
+  fishing_log_step_sd = 0.10, trawl_reduction_year = trawl_reduction_year,
+  reference_M = reference_M,
+  rng_kind = RNGkind(),
+  generator = unname(tools::md5sum("data-raw/sim_cod_obs.R")),
+  session = capture.output(utils::sessionInfo()),
+  sources = c(population = "https://doi.org/10.1371/journal.pone.0232822",
+    data_review = "https://publications.gc.ca/collections/collection_2024/mpo-dfo/Fs97-13-1381-eng.pdf",
+    sentinel = "https://publications.gc.ca/collections/collection_2026/mpo-dfo/fs70-5/Fs70-5-2026-056-eng.pdf"))
+sim_cod_truth <- lapply(list(population = population, annual = annual, fleet = fleet,
+  surveys = survey_truth, footprint = footprint, selectivity = selectivity,
+  fishery_annual = fishery_annual, monitoring = monitoring, catch_biology = catch_biology,
+  survey_precision = survey_precision, survey_monitoring = survey_monitoring), as.data.frame)
+sim_cod_truth$checks <- checks
+sim_cod_truth$provenance <- provenance
+
+dir.create(dirname(output), recursive = TRUE, showWarnings = FALSE)
+saveRDS(list(sim_cod_obs = sim_cod_obs, sim_cod_truth = sim_cod_truth), output, compress = "xz")
+message("Staged data at ", output)
+message(sprintf("Realized M at ages 5–10: mean %.3f, SD %.3f, range %.3f–%.3f per year",
+  mean(M_center), sd(M_center), min(M_center), max(M_center)))
+print(checks$realized_M_at_age)
+print(checks$realized_M_by_period)
+print(checks$shortfalls)
+stopifnot(
+  abs(mean(M_center) - 0.30) <= 0.03,
+  all(abs(checks$realized_M_by_period$mean - 0.30) <= 0.03),
+  annual$SSB[which.max(annual$year)] < annual$SSB[which.min(annual$year)],
+  all(fishery_annual$F_full_reference == fishery_annual$F_full_unreduced *
+    ifelse(fishery_annual$fishery == "Trawl" & fishery_annual$year >= trawl_reduction_year, 0.2, 1))
+)

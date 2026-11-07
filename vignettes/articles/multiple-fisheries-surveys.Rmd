@@ -22,15 +22,17 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>", warning = TRUE,
     inputs = sim_cod_obs, truth = sim_cod_truth))
 ```
 
-Different fishing gears remove different parts of a shared population. Surveys
-also differ in coverage and selectivity. tinyAM represents these differences
-with fleet-specific fishing mortality and survey-specific catchability, while
-retaining one population and natural-mortality surface.
+Different fishing gears remove different parts of a shared population. When
+the fleet mix changes, the age pattern of total fishing mortality can change
+too. This guide compares a fit to individual fleet catches with a fit to their
+sum. Both fits use the same survey indices and population biology.
 
-This example uses [SimSurvey](https://paulregular.github.io/SimSurvey/) data
-loosely based on 3Ps cod: three active fisheries, an offshore RV-like survey and
-a coastal Sentinel-gillnet-like survey. The [dataset help](../reference/sim_cod_obs.html)
-documents their generation and separate truth tables.
+The simulated cod stock declines over 20 years. Trawl fishing drops to a low
+bycatch level from year 11, while gillnet and longline fishing continue. Two survey
+programs represent an offshore research-vessel survey and a coastal Sentinel
+gillnet survey. The example uses [SimSurvey](https://paulregular.github.io/SimSurvey/).
+The [dataset help](../reference/sim_cod_obs.html) describes the 3Ps cod
+inspiration, simulation and generating values.
 
 ## Inspect the input keys
 
@@ -41,19 +43,14 @@ head(dat$catch)
 head(dat$index)
 ```
 
-Catch has a complete year–age grid within each `fleet`. An unavailable catch is
-`NA`; it does not imply a closure. Each index row identifies `survey` and
-`samp_time`. Both simulated surveys observe the population at the beginning of
-each modeled year (`samp_time = 0`): this specifies timing, not sampling effort.
-
-F covariates belong in catch, q covariates in index, and recruitment/N/M
-covariates in `pop_covariates`. Here `mean_length` is the assumed-known population
-mean length at age in cm, not a mean calculated from selected fish.
+Catch has a complete year–age grid within each `fleet`, with `NA` for
+unavailable observations. Each index row identifies `survey` and `samp_time`.
+Both surveys sample at the start of each year (`samp_time = 0`).
 
 The Sentinel-like survey samples a coastal band more densely than the RV-like
 survey samples offshore. Its dome-shaped selection contrasts with ascending
-RV selection. Both use swept-area sampling; the Sentinel-like program does not
-reproduce net saturation or literal fish-per-net CPUE.
+RV selection. Both use swept-area sampling, so the Sentinel-like program
+approximates the footprint and selectivity of a gillnet survey.
 
 ```{r footprints, echo=FALSE, fig.width=8, fig.height=4.2, fig.cap="Survey footprints on the synthetic grid. The northern edge represents the coast; grey cells are outside each survey's footprint."}
 local({
@@ -67,19 +64,63 @@ local({
       col = "grey90", xlab = "East-west (km)", ylab = "North-south (km)",
       main = if (survey == "RV") "RV-like" else "Sentinel-gillnet-like")
     points(grid$x[selected], grid$y[selected], pch = 15, cex = 0.45,
-    col = tam_cols()[if (survey == "RV") 1 else 7])
+      col = tam_cols()[if (survey == "RV") 1 else 7])
   }
 })
 ```
 
-Catch inputs are expanded monitoring estimates, not true catches or raw age
-sample counts. Genuine zeros remain in the inputs but are excluded from the
-lognormal likelihood. Missing biological samples are not zero catches.
+SimSurvey's `run_catch()` uses sampled fish ages and reported annual fleet totals
+to estimate catch at age. It also estimates catch weights, using stock weight
+in the tinyAM inputs where a fleet has no estimate. The fit takes stock
+weights and maturity from the simulated population. `run_strat()` estimates
+abundance within each survey's footprint. The input tables retain zero
+estimates, which the lognormal likelihood excludes.
+The simulation uses a fixed spatial pattern on a 20-by-20 grid, so the share
+of the population available to each survey is approximately constant.
 
-This introductory scenario uses a fixed spatial pattern, a 20-by-20 grid, and
-log-scale SDs of 0.03 for length at age and 0.1 for total mortality, compared
-with 0.1 and 0.2 in the original SimSurvey paper. Static coverage keeps regional
-availability approximately constant; whole-fish rounding can cause small changes.
+## See how fishing changes
+
+Each fleet's reference F at full selectivity follows its own log-scale random
+walk. From year 11, the trawl rate is 20% of what its random walk would
+otherwise produce. Gillnet and longline follow their own paths through the
+change.
+
+```{r fishing-scenario, echo=FALSE, fig.width=7, fig.height=3.5, fig.cap="Fleet targets at full selectivity. The vertical line marks the trawl reduction between years 10 and 11."}
+local({
+  targets <- sim_cod_truth$fishery_annual
+  paths <- split(targets, targets$fishery)
+  uncut <- subset(paths$Trawl, year >= 10)
+  colors <- tam_pal(length(paths))
+  plot(range(targets$year), c(0, max(targets$F_full_unreduced)), type = "n",
+    xlab = "Year", ylab = "Fully selected F target (per year)")
+  abline(v = 10.5, lty = 3)
+  for (i in seq_along(paths)) {
+    d <- paths[[i]]
+    lines(d$year, d$F_full_reference, col = colors[i], lwd = 2)
+  }
+  trawl_color <- colors[match("Trawl", names(paths))]
+  lines(uncut$year, uncut$F_full_unreduced, col = trawl_color, lwd = 2, lty = 2)
+  legend("bottomleft", legend = c(names(paths), "Trawl without reduction"),
+    col = c(colors, trawl_color), lty = c(rep(1, length(paths)), 2), lwd = 2, bty = "n")
+})
+
+annual_fbar <- function(year, rate, abundance) {
+  totals <- aggregate(cbind(FN = rate * abundance, N = abundance), list(year = year), sum)
+  data.frame(year = totals$year, F = totals$FN / totals$N)
+}
+trawl_fbar <- with(subset(sim_cod_truth$fleet, fleet == "Trawl" & age %in% 5:10),
+  annual_fbar(year, F_realized, N))
+trawl_before <- mean(trawl_fbar$F[trawl_fbar$year <= 10])
+trawl_after <- mean(trawl_fbar$F[trawl_fbar$year >= 11])
+m_by_period <- with(sim_cod_truth$checks$realized_M_by_period, setNames(mean, period))
+```
+
+Realized F also depends on which ages the fleets catch. The trawl's average
+realized F over ages 5–10 falls from `r sprintf("%.3f", trawl_before)` to
+`r sprintf("%.3f", trawl_after)` per year between the two periods. The simulation
+draws reference M independently of the fishing targets. Realized M is the part
+of Z that remains after accounting for actual fleet catches.
+Recruitment also varies substantially through the decline.
 
 ## Describe each fleet within one formula
 
@@ -87,16 +128,17 @@ availability approximately constant; whole-fish rounding can cause small changes
 intercepts, so use outer `~ 0 +` to avoid an extra common baseline.
 
 ```{r fleet-formula, cache=TRUE}
+fleet_dat <- dat
+fleet_dat$catch <- transform(dat$catch, trawl_low = year >= 11)
 fishing <- ~ 0 +
-  for_fleet("Trawl", ~ logistic(mean_length)) +
-  for_fleet("Longline", ~ logistic(mean_length)) +
-  for_fleet("Gillnet", ~ double_logistic(mean_length))
+  for_fleet("Trawl", ~ logistic(age) + trawl_low) +
+  for_fleet("Longline", ~ logistic(age)) +
+  for_fleet("Gillnet", ~ double_logistic(age))
 ```
 
-Trawl and longline curves ascend; the gillnet curve can decline. The generator
-selects individual lengths, whereas the fitted curves use mean length at age.
-These are approximations: a nonlinear curve at mean length need not equal mean
-selectivity. Realized F also reflects access, capture and depletion.
+Trawl and longline selectivity rise with age. Gillnet selectivity is
+dome-shaped. The `trawl_low` term lets the trawl scale shift in year 11 while
+keeping its selectivity curve. The fit estimates the size of the shift.
 
 ```{r selection, echo=FALSE, fig.width=7, fig.height=3.8, fig.cap="Generating selectivity curves. Dashed lines identify surveys; solid lines identify fisheries."}
 local({
@@ -104,109 +146,133 @@ local({
   components <- c("Trawl", "Longline", "Gillnet", "RV", "Sentinel")
   colors <- tam_cols()[c(1, 2, 3, 6, 7)]
   line_types <- c(1, 1, 1, 2, 2)
-  plot(range(curves$length), c(0, 1), type = "n",
-    xlab = "Length (cm)", ylab = "Selectivity")
+  plot(range(curves$age), c(0, 1), type = "n",
+    xlab = "Age (years)", ylab = "Selectivity")
   for (i in seq_along(components)) {
     d <- curves[curves$component == components[i], ]
-    lines(d$length, d$selectivity, col = colors[i], lty = line_types[i], lwd = 2)
+    lines(d$age, d$selectivity, col = colors[i], lty = line_types[i], lwd = 2)
   }
   legend("bottomright", legend = components, col = colors, lty = line_types,
     lwd = 2, bty = "n", cex = 0.85)
 })
 ```
 
-The raw double-logistic product is not peak-normalized; its scale is not
-automatically maximum F. See [scopes](../reference/for_fleet.html) and
-[double-logistic help](../reference/double_logistic.html) for its definition.
+The double-logistic curve can peak below one, so its peak mean F can be lower
+than its scale parameter. See [fleet formulas](../reference/for_fleet.html)
+and [double-logistic curves](../reference/double_logistic.html).
 
 ## Give surveys their own relationships
 
 ```{r survey-formula, cache=TRUE}
 catchability <- ~ 0 +
-  for_survey("RV", ~ logistic(mean_length)) +
-  for_survey("Sentinel", ~ double_logistic(mean_length))
+  for_survey("RV", ~ logistic(age)) +
+  for_survey("Sentinel", ~ age + I(age^2))
 ```
 
-Each survey has a separate q scale and shape. With the default log link, q is
-positive and can exceed one. Here it includes the fraction of the population
-inside the footprint. Changing regional availability would require further
-assumptions; it is deliberately simplified in this example.
+Each survey has a separate q scale and shape. A quadratic in age can
+describe a dome on the log q scale with fewer parameters than a double-logistic
+curve. This helps when few Sentinel observations are positive at the youngest
+and oldest ages. Here q also includes the fraction of the population inside
+the survey footprint.
 
-## Compare assumptions about natural mortality
+## Fit the fleet and aggregate models
 
-The supplied `M0` is a known baseline from the simulation settings, not realized
-M. Average it geometrically within four age blocks so that each block has one
-reference value per year.
+Use deterministic cohort survival, random-walk recruitment and M fixed at
+0.3 per year in both models. Realized M over ages 5–10 averages
+`r sprintf("%.3f", m_by_period[["Before"]])` before and
+`r sprintf("%.3f", m_by_period[["After"]])` after the trawl reduction.
+Fitting `ages = 1:14` pools catches and survey indices from ages 14–20
+while retaining age-specific weights and maturity for biomass and SSB.
 
-```{r mortality-reference, cache=TRUE}
-breaks <- c(1, 4, 6, 11, 21)
-dat$pop_covariates$M0_block <- with(dat$pop_covariates,
-  exp(ave(log(M0), year, cut(age, breaks, right = FALSE), FUN = mean)))
-```
-
-```{r reference-M, cache=TRUE, dependson=c("fleet-formula", "survey-formula", "mortality-reference"), results='hide'}
-reference_M <- fit_tam(
-  dat, ages = 1:20,
+```{r multifleet, cache=TRUE, dependson=c("fleet-formula", "survey-formula"), results='hide'}
+multifleet <- fit_tam(
+  fleet_dat, ages = 1:14,
   N_settings = list(process = "off", init = "exp"),
   rec_settings = list(process = "rw"),
-  F_settings = list(process = "ar1", mu_form = fishing,
-                   sd_form = ~ fleet, mean_ages = 5:10),
-  M_settings = list(process = "off", mu_supplied = ~ M0_block,
-                   age_breaks = breaks, mean_ages = 5:10),
-  catch_settings = list(sd_form = ~ fleet),
+  F_settings = list(process = "iid", mu_form = fishing,
+                   sd_form = ~ 1, mean_ages = 5:10),
+  M_settings = list(process = "off", mu_supplied = ~ I(0.3), mean_ages = 5:10),
+  catch_settings = list(sd_form = ~ 1),
   index_settings = list(q_form = catchability, sd_form = ~ survey)
 )
 ```
 
-Now allow M to vary around those same block baselines:
+The fleet model estimates independent F deviations around each fleet's age
+curve. It shares one process SD and one catch observation SD across fleets
+because separate SDs were poorly identified in this example. Each fleet's
+Baranov catch prediction uses its own F and the common total mortality
+$Z = M + \sum_f F_f$.
 
-```{r variable-M, cache=TRUE, dependson="reference-M", results='hide'}
-variable_M <- update(reference_M, M_settings = list(process = "ar1"))
+For the aggregate model, sum catches across fleets at each year and age
+before forming the plus group. A missing fleet catch makes the sum missing.
+Compute a catch-number-weighted weight at age so the pooled data give the
+same observed yield before plus-group pooling. Use the stock weight where
+total catch is zero or missing.
+
+```{r aggregate-inputs, cache=TRUE}
+stock_weight <- subset(dat$weight, type == "stock")
+fleet_weights <- subset(dat$weight, type == "catch", select = c(year, age, fleet, obs))
+names(fleet_weights)[names(fleet_weights) == "obs"] <- "weight"
+fleet_catch <- merge(dat$catch, fleet_weights, by = c("year", "age", "fleet"))
+fleet_catch$yield <- fleet_catch$obs * fleet_catch$weight
+totals <- aggregate(fleet_catch[c("obs", "yield")], fleet_catch[c("year", "age")], sum)
+
+aggregate_dat <- dat
+aggregate_dat$catch <- transform(totals[c("year", "age", "obs")],
+  unit = unique(dat$catch$unit))
+pooled_weight <- merge(totals, stock_weight[c("year", "age", "obs", "unit")],
+  by = c("year", "age"), suffixes = c("", "_stock"))
+pooled_weight <- transform(pooled_weight,
+  obs = ifelse(!is.na(obs) & obs > 0, yield / obs, obs_stock),
+  type = "catch", fleet = NA_character_)
+aggregate_dat$weight <- rbind(stock_weight, pooled_weight[names(stock_weight)])
+```
+
+The aggregate model uses an AR1 process around age-specific mean F.
+Departures from the mean are correlated across years and neighboring ages.
+The model learns the timing of changes from the pooled catches and survey
+indices.
+
+```{r aggregate-fit, cache=TRUE, dependson=c("aggregate-inputs", "survey-formula"), results='hide'}
+aggregate_fit <- fit_tam(
+  aggregate_dat, ages = 1:14,
+  N_settings = list(process = "off", init = "exp"),
+  rec_settings = list(process = "rw"),
+  F_settings = list(process = "ar1", mu_form = ~ factor(age), mean_ages = 5:10),
+  M_settings = list(process = "off", mu_supplied = ~ I(0.3), mean_ages = 5:10),
+  index_settings = list(q_form = catchability, sd_form = ~ survey)
+)
 ```
 
 ```{r checks}
-check_tam(reference_M, variable_M)
+check_tam(multifleet, aggregate_fit)
 ```
 
-The models differ only in the M process. Both use exact cohort survival,
-random-walk recruitment and separate AR1 F processes. M blocks share actual M;
-F innovations are independent between fleets, conditional on shared parameters.
-SD formulas distinguish fleet
-and survey precision. Average F/M use ages 5–10. The terminal age 20 is a plus
-group; the generator's finite-age losses remain a small approximation to check.
-
-Allowing M variation is closer to this generator than setting M equal to its
-baseline, but neither model is exact. Their intervals condition on known
-biology and baseline M; they do not establish that M is identifiable in real data.
-The generator partitions pre-generated total deaths, connecting fleet F and
-remaining M variation; the fitted fleet and M processes have separate densities.
-
-The shared population experiences total fishing mortality,
-
-\[
-F^{\mathrm{total}}_{t,a}=\sum_f F_{t,a,f},
-\qquad Z_{t,a}=M_{t,a}+F^{\mathrm{total}}_{t,a}.
-\]
-
-Each fleet's Baranov prediction uses its own F and this common Z. Catch weights
-determine yield; stock weights determine biomass/SSB. Catch numbers are in
-thousand fish and weights in kg, giving biomass in tonnes.
+The fitted plus group applies its modeled mortality rates to ages 14 and
+older. The generator drops surviving age-20 fish at the next year boundary.
+These survivors represent up to
+`r sprintf("%.3f%%", 100 * max(sim_cod_truth$checks$terminal_survivors$proportion))`
+of annual abundance and
+`r sprintf("%.2f%%", 100 * max(sim_cod_truth$checks$terminal_survivors$SSB_proportion))`
+of annual SSB at their age-20 weight and maturity.
 
 ## Inspect fleets, surveys and the common population
 
 ```{r dashboard, eval=FALSE}
-vis_tam(ReferenceM = reference_M, AR1M = variable_M, open_file = FALSE)
+vis_tam(MultiFleet = multifleet, Aggregate = aggregate_fit, open_file = FALSE)
 ```
 
 Explore the [simulated-cod dashboard](../examples/simulated-cod/index.html)
 to inspect the example fits and diagnostics.
 
-Start with each fleet under **Fisheries**, then inspect both **Surveys** before
-population trends. **Aggregate fishery** shows total yield without inventing
-aggregate standardized residuals.
+Start with each fleet under **Fisheries**. **Aggregate fishery** shows total
+yield for both models and catch-at-age fits and residuals for the aggregate
+model. Both models appear under **Surveys** and **Trends**.
 
 ```{r quantities}
-ssb <- get_ssb(ReferenceM = reference_M, AR1M = variable_M)
+model_order <- c("MultiFleet", "Aggregate")
+ssb <- get_ssb(MultiFleet = multifleet, Aggregate = aggregate_fit)
+ssb$model <- factor(ssb$model, levels = model_order)
 plot_trend(ssb, color = ~model, colors = tam_pal(2), ylab = "SSB (tonnes)",
            add_buttons = FALSE) |>
   plotly::add_lines(data = sim_cod_truth$annual, x = ~year, y = ~SSB,
@@ -214,48 +280,49 @@ plot_trend(ssb, color = ~model, colors = tam_pal(2), ylab = "SSB (tonnes)",
     line = list(color = "#333333", dash = "dot"),
     hovertemplate = "%{x}<br>%{y} tonnes<extra>Generating SSB</extra>") |>
   add_plot_buttons()
-plot_matrix(get_f(variable_M))
+
+fbar <- get_fbar(MultiFleet = multifleet, Aggregate = aggregate_fit)
+fbar$model <- factor(fbar$model, levels = model_order)
+fbar_truth <- with(subset(sim_cod_truth$population, age %in% 5:10),
+  annual_fbar(year, F, N))
+plot_trend(fbar, color = ~model, colors = tam_pal(2), ylab = "Average F, ages 5–10 (per year)",
+           add_buttons = FALSE) |>
+  plotly::add_lines(data = fbar_truth, x = ~year, y = ~F,
+    inherit = FALSE, name = "Generating F",
+    line = list(color = "#333333", dash = "dot"),
+    hovertemplate = "%{x}<br>%{y} per year<extra>Generating F</extra>") |>
+  add_plot_buttons()
 ```
 
-The dotted line is known SSB, without a confidence interval. The table measures
-relative error, `(estimate - truth) / truth`, across years and at the terminal
-year; mean absolute relative error prevents errors of opposing signs from canceling.
+The dotted lines show generating SSB and abundance-weighted F over ages
+5–10. The SSB errors are percentages of generating SSB in each year.
 
-```{r ssb-errors, echo=FALSE}
+```{r fit-errors, echo=FALSE}
 comparison <- merge(ssb, sim_cod_truth$annual[c("year", "SSB")], by = "year")
 stopifnot(nrow(comparison) == 2L * nrow(sim_cod_truth$annual),
   !anyDuplicated(comparison[c("model", "year")]))
 comparison$relative_error <- (comparison$est - comparison$SSB) / comparison$SSB
-errors <- do.call(rbind, lapply(c("ReferenceM", "AR1M"), function(model) {
+fbar_comparison <- merge(fbar, fbar_truth, by = "year")
+errors <- do.call(rbind, lapply(model_order, function(model) {
   d <- comparison[comparison$model == model, ]
-  data.frame(Model = model, `Mean SSB (tonnes)` = mean(d$est),
-    `Mean RE (%)` = 100 * mean(d$relative_error),
-    `Mean ARE (%)` = 100 * mean(abs(d$relative_error)),
-    `Terminal RE (%)` = 100 * d$relative_error[which.max(d$year)],
+  fishing <- fbar_comparison[fbar_comparison$model == model, ]
+  data.frame(Model = model,
+    `Mean SSB error (%)` = 100 * mean(d$relative_error),
+    `Mean absolute SSB error (%)` = 100 * mean(abs(d$relative_error)),
+    `Terminal SSB error (%)` = 100 * d$relative_error[which.max(d$year)],
+    `Mean absolute F error (per year)` = mean(abs(fishing$est - fishing$F)),
+    `Change in F, years 10 to 11` = diff(fishing$est[match(10:11, fishing$year)]),
     check.names = FALSE)
 }))
-knitr::kable(errors, digits = 1, row.names = FALSE)
-population <- tidy_pop(variable_M)
-secondary <- vapply(c(abundance = "N", recruitment = "recruitment"), function(column) {
-  table <- population[[if (column == "N") "abundance" else "recruitment"]]
-  position <- match(table$year, sim_cod_truth$annual$year)
-  100 * mean(table$est / sim_cod_truth$annual[[column]][position] - 1)
-}, numeric(1))
+knitr::kable(errors, digits = c(0, 2, 2, 2, 3, 3), row.names = FALSE)
 ```
 
-These compare historical estimates with truth for one selected teaching
-realization, not forecast skill, simulation-study bias or coverage.
-Mean errors for AR1M abundance and recruitment are
-`r sprintf("%.1f%% and %.1f%%", secondary[["abundance"]], secondary[["recruitment"]])`.
-Agreement in SSB does not guarantee recovery of every population quantity.
-`get_f()` returns total F; fleet-specific F is in `tidy_pop(variable_M)$F_fleet`.
-Use generating truth to evaluate results, not to alter observations.
-
-As a further hypothesis, remove age-dependent q while retaining survey scales:
-
-```{r flat-q, eval=FALSE}
-flat_q <- update(variable_M, index_settings = list(q_form = ~ survey))
-```
+Generating F changes by
+`r sprintf("%+.3f", diff(fbar_truth$F[match(10:11, fbar_truth$year)]))` per year
+at the trawl reduction. Differences between the fits reflect how they use
+the catches and how they describe F, including the fleet model's known
+timing of the trawl reduction. This example compares recovery against the
+generating values because the fits use different catch observations.
 
 ```{r dashboard-export, include=FALSE, cache=FALSE}
 dashboard_cache <- Sys.getenv("TINYAM_GUIDE_FITS")
@@ -264,13 +331,13 @@ if (nzchar(dashboard_cache)) {
   source_paths <- c(file.path("R", list.files(file.path(guide_root, "R"), "[.]R$")),
     "NAMESPACE")
   dir.create(dirname(dashboard_cache), recursive = TRUE, showWarnings = FALSE)
-  saveRDS(list(models = list(ReferenceM = reference_M, AR1M = variable_M),
+  saveRDS(list(models = list(MultiFleet = multifleet, Aggregate = aggregate_fit),
     inputs = sim_cod_obs, truth = sim_cod_truth,
     background = paste("### Simulated cod fisheries and surveys",
-      "Teaching data generated with SimSurvey: three active fleets, two regional surveys, and one closed population. Both fits use known biology and a reference M baseline; they differ in whether M has AR1 deviations.",
-      "### SSB comparison with generating truth",
-      paste(knitr::kable(errors, digits = 1, row.names = FALSE), collapse = "\n"),
-      "Errors describe this selected realization, not simulation-study bias or coverage. Abundance and recruitment can differ substantially even when SSB agrees. See the [guide](https://paulregular.github.io/tinyAM/articles/multiple-fisheries-surveys.html) for the assumptions and additional comparisons.",
+      "SimSurvey teaching data with three fleets, two regional surveys and one declining population. The trawl F target is reduced from year 11. Both fits fix M at 0.3 per year and pool ages 14 and older. MultiFleet estimates separate F by fleet. Aggregate fits an AR1 process to total F using pooled catches.",
+      "### Comparison with generating values",
+      paste(knitr::kable(errors, digits = c(0, 2, 2, 2, 3, 3), row.names = FALSE), collapse = "\n"),
+      "See the [guide](https://paulregular.github.io/tinyAM/articles/multiple-fisheries-surveys.html) for the assumptions and comparisons.",
       sep = "\n\n"),
     sources = setNames(unname(tools::md5sum(file.path(guide_root, source_paths))), source_paths),
     versions = c(tinyAM = as.character(packageVersion("tinyAM")),

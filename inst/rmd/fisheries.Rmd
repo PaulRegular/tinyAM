@@ -11,7 +11,17 @@ for (page_index in seq_len(nrow(fishery_pages))) {
     child_env$yield_data <- tinyAM:::.fleet_yield_data(pop, page$fleet)
     child <- "one_fleet.Rmd"
   } else {
-    child <- if (nrow(fishery_pages) == 1L) "fishery.Rmd" else "fishery_total.Rmd"
+    catch_data <- obs_pred$catch
+    fleet <- as.character(catch_data$fleet)
+    if (length(fleet)) {
+      catch_data <- catch_data[is.na(fleet) | !nzchar(fleet), , drop = FALSE]
+    }
+    child_env$catch_data <- catch_data
+    child <- if (nrow(fishery_pages) > 1L && NROW(catch_data) == 0L) {
+      "fishery_total.Rmd"
+    } else {
+      "fishery.Rmd"
+    }
   }
   rendered <- knitr::knit_child(child, envir = child_env, quiet = TRUE)
   cat(rendered, sep = "\n")
