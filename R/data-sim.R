@@ -29,7 +29,9 @@
 #' - `annual` gives total abundance, recruitment, biomass, SSB and yield in
 #'   the same units.
 #' - `fleet` gives reference and realized catches (thousand fish) and F (per
-#'   year), catch weights (kg) and yield (tonnes) by fleet, year and age.
+#'   year), realized catch weights (kg) and yield (tonnes) by fleet, year and age.
+#'   Empty catch cells use stock weight.
+#'   `catch_biology` gives monitored catch weights and their support status.
 #' - `surveys` gives selectivity, the regional availability fraction, and
 #'   regional abundance, total abundance and expected index in thousand fish.
 #' - `footprint` gives cell coordinates (km), depth (m), area (square km),
@@ -70,7 +72,9 @@
 #' estimates abundance indices for both survey programs. The data retain
 #' supported zero estimates and record unavailable estimates as missing.
 #' tinyAM excludes zeros and missing values from its lognormal likelihood.
-#' Weight and maturity are supplied as known in this example.
+#' The fit uses expected stock weights and maturity from SimSurvey's
+#' `stock_biology()`. Fleet catch weights come from `run_catch()`, with
+#' stock weight used for ages lacking a monitored estimate.
 #'
 #' The guide compares fleet-specific and aggregate fits over ages 1 through 14.
 #' tinyAM pools catches and indices for

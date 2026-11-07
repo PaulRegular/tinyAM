@@ -46,6 +46,17 @@ test_that("simulated cod weights and maturity reproduce biomass and SSB", {
     expect_setequal(key(catch[catch$fleet == f, ]), key(stock))
   }
 
+  biology <- sim_cod_truth$catch_biology
+  fleet_key <- function(x) paste(x$fleet, x$year, x$age)
+  position <- match(fleet_key(catch), fleet_key(biology))
+  expect_false(anyNA(position))
+  estimated <- biology$mean_weight_kg[position]
+  supported <- biology$weight_status[position] == "estimated"
+  expect_identical(!is.na(estimated), supported)
+  expect_true(any(supported) && any(!supported))
+  expect_equal(catch$obs[supported], estimated[supported])
+  expect_equal(catch$obs[!supported], stock$obs[match(key(catch[!supported, ]), key(stock))])
+
   population <- sim_cod_truth$population
   maturity <- sim_cod_obs$maturity
   expected_biomass <- population$N * stock$obs[match(key(population), key(stock))]

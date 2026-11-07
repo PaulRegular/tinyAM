@@ -4,7 +4,7 @@
 surveys on it. Run the script from the tinyAM repository root with tinyAM
 available in your R session. Use a clean
 SimSurvey checkout at
-[`b6c4914`](https://github.com/PaulRegular/SimSurvey/commit/b6c491473e887ca0c913df1f3d155267515ee99f)
+[`29a1b03`](https://github.com/PaulRegular/SimSurvey/commit/29a1b03350c274f88dac108fb95f9446eac79233)
 or install that revision into your R library before running it.
 
 ```r
@@ -17,11 +17,13 @@ source("data-raw/sim_cod_obs.R")
 
 With SimSurvey installed by `remotes::install_github()` at that revision,
 run the script directly. It stages the prepared inputs, truth and diagnostics at
-`data-raw/cache/sim_cod/seed17-simsurvey-estimators/prepared-data.rds`. Set
+`data-raw/cache/sim_cod/seed17-simsurvey-biology/prepared-data.rds`. Set
 `TINYAM_SIM_COD_OUTPUT` to a new file for another run. Existing staged files
 are kept. Generation runs separately from package checks and documentation.
 
-SimSurvey's `run_catch()` estimates catch at age from fleet monitoring.
+SimSurvey's `run_catch()` estimates catch and mean weight at age from fleet
+monitoring. `stock_biology()` supplies expected whole-stock weights and
+maturity. Use stock weight where there is no fleet weight estimate.
 `sim_surveys() |> run_strat()` estimates indices for both survey programs,
 and `strat_error(scope = "survey_frame")` supplies the matching truth.
 
@@ -39,13 +41,13 @@ the reduction. After reviewing the run, load its two objects and save them as
 the packaged datasets.
 
 ```r
-staged <- readRDS("data-raw/cache/sim_cod/seed17-simsurvey-estimators/prepared-data.rds")
+staged <- readRDS("data-raw/cache/sim_cod/seed17-simsurvey-biology/prepared-data.rds")
 sim_cod_obs <- staged$sim_cod_obs
 sim_cod_truth <- staged$sim_cod_truth
 tinyAM::check_tam_data(sim_cod_obs)
 
-save(sim_cod_obs, file = "data/sim_cod_obs.rda", compress = "xz", version = 2)
-save(sim_cod_truth, file = "data/sim_cod_truth.rda", compress = "xz", version = 2)
+usethis::with_project(".", usethis::use_data(sim_cod_obs, sim_cod_truth,
+  overwrite = TRUE, compress = "xz", version = 2))
 ```
 
 The [multi-fleet guide](../vignettes/articles/multiple-fisheries-surveys.Rmd)

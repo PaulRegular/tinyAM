@@ -3,12 +3,12 @@
 library(SimSurvey)
 library(data.table)
 
-revision <- "b6c491473e887ca0c913df1f3d155267515ee99f"
+revision <- "29a1b03350c274f88dac108fb95f9446eac79233"
 installed_revision <- utils::packageDescription("SimSurvey", fields = "RemoteSha")
 if (is.na(installed_revision)) installed_revision <- Sys.getenv("TINYAM_SIMSURVEY_REVISION")
 stopifnot(identical(installed_revision, revision))
 output <- Sys.getenv("TINYAM_SIM_COD_OUTPUT",
-  "data-raw/cache/sim_cod/seed17-simsurvey-estimators/prepared-data.rds")
+  "data-raw/cache/sim_cod/seed17-simsurvey-biology/prepared-data.rds")
 if (file.exists(output)) stop("Choose a fresh TINYAM_SIM_COD_OUTPUT path.")
 
 RNGkind("Mersenne-Twister", "Inversion", "Rejection")
@@ -82,7 +82,8 @@ fishery <- sim_fisheries(pop,
     sampling_coverage = 0.30, lengths_cap = 150, ages_cap = 150,
     age_sampling = "random", reporting_cv = 0.05, maturity_sampling = "none")
 ) |>
-  run_catch()
+  run_catch() |>
+  catch_error()
 fishery <- fishery$fishery
 
 # Both surveys observe the original population at the start of each year.
@@ -101,7 +102,8 @@ surveys <- sim_surveys(pop,
   strat_error(scope = "survey_frame")
 
 # Convert SimSurvey's estimates from fish to thousand fish.
-catch <- fishery$catch_estimates$catch_at_age[,
+catch_at_age <- fishery$catch_estimates$catch_at_age
+catch <- catch_at_age[,
   .(year, age, fleet = fishery, obs = n_hat / 1000, unit = "thousand fish")]
 index <- surveys$age_strat[!is.na(age),
   .(year, age, survey, obs = total / 1000, samp_time = 0, unit = "thousand fish")]
@@ -113,33 +115,30 @@ survey_precision <- surveys$age_strat[!is.na(age),
   .(year, age, survey, sets, total_se = sd * sampling_units / 1000, estimate_status)]
 survey_monitoring <- rbindlist(lapply(surveys$survey_programs, "[[", "samp_totals"), idcol = "survey")
 
-# Biology is supplied for every simulated age, including 14–20. In the fit,
-# these ages retain separate biological weights and maturity inside age 14+.
-lak <- pop$sim_length(age = pop$ages, length_age_key = TRUE)
-weight_at_age <- colSums(lak * pop$sim_weight(as.numeric(rownames(lak))))
-population <- as.data.table(expand.grid(age = pop$ages, year = pop$years))
-population[, `:=`(N = as.numeric(pop$N) / 1000, Z = as.numeric(pop$Z),
-  weight = weight_at_age[match(age, pop$ages)], maturity = pop$sim_maturity(age),
-  B = as.numeric(pop$B) / 1000, SSB = as.numeric(pop$S) / 1000)]
-fleet <- copy(fishery$reference)
-setnames(fleet, "fishery", "fleet")
-removals <- fishery$catch_at_age[, .(n = sum(n), kg = sum(kg)), by = .(fleet = fishery, year, age)]
-fleet <- merge(fleet, removals, by = c("fleet", "year", "age"), all.x = TRUE)
-fleet[, `:=`(weight = fifelse(!is.na(n) & n > 0, kg / n, weight_at_age[match(age, pop$ages)]),
-  yield = fcoalesce(kg, 0) / 1000, n = NULL, kg = NULL)]
-counts <- c("N", "catch_reference", "catch_realized", "total_deaths", "death_budget")
-fleet[, (counts) := lapply(.SD, function(x) x / 1000), .SDcols = counts]
-
+# Use known stock biology. Fill ages lacking a monitored catch weight with
+# stock weight so tinyAM has complete weights through age 20.
+stock <- stock_biology(pop)$at_age[, .(year, age, weight = mean_weight_kg, maturity = prop_mature)]
+catch_biology <- catch_at_age[, .(year, age, fleet = fishery, mean_weight_kg, weight_status)]
 weights <- rbind(
-  population[, .(year, age, obs = weight, type = "stock", fleet = NA_character_, unit = "kg")],
-  fleet[, .(year, age, obs = weight, type = "catch", fleet, unit = "kg")]
+  stock[, .(year, age, obs = weight, type = "stock", fleet = NA_character_, unit = "kg")],
+  stock[catch_biology, on = .(year, age),
+    .(year, age, obs = fcoalesce(mean_weight_kg, weight), type = "catch", fleet, unit = "kg")]
 )
-maturity <- population[, .(year, age, obs = maturity, spawn_time = 0)]
+maturity <- stock[, .(year, age, obs = maturity, spawn_time = 0)]
 sim_cod_obs <- tinyAM::as_tam_data(lapply(list(catch = catch, index = index,
   weight = weights, maturity = maturity), as.data.frame))
 tinyAM::check_tam_data(sim_cod_obs, quiet = TRUE)
 
 # Keep realized states and monitoring diagnostics separate from the fitting data.
+population <- stock[, .(year, age, weight, maturity, N = as.numeric(pop$N) / 1000,
+  Z = as.numeric(pop$Z), B = as.numeric(pop$B) / 1000, SSB = as.numeric(pop$S) / 1000)]
+realized <- fishery$catch_error$catch_at_age[, .(year, age, fishery, n_true, mean_weight_true_kg)]
+fleet <- merge(fishery$reference, realized, by = c("fishery", "year", "age"))
+fleet[stock, on = .(year, age), weight := fcoalesce(mean_weight_true_kg, i.weight)]
+fleet[, `:=`(yield = n_true * weight / 1000, n_true = NULL, mean_weight_true_kg = NULL)]
+setnames(fleet, "fishery", "fleet")
+counts <- c("N", "catch_reference", "catch_realized", "total_deaths", "death_budget")
+fleet[, (counts) := lapply(.SD, function(x) x / 1000), .SDcols = counts]
 rates <- fleet[, .(F = sum(F_realized), F_reference = sum(F_reference)), by = .(year, age)]
 population <- merge(population, rates, by = c("year", "age"))
 population[, `:=`(M = Z - F, M_reference = Z - F_reference)]
@@ -188,7 +187,7 @@ provenance <- list(simsurvey_revision = revision, seed = 17L, fishing_seed = 170
     sentinel = "https://publications.gc.ca/collections/collection_2026/mpo-dfo/fs70-5/Fs70-5-2026-056-eng.pdf"))
 sim_cod_truth <- lapply(list(population = population, annual = annual, fleet = fleet,
   surveys = survey_truth, footprint = footprint, selectivity = selectivity,
-  fishery_annual = fishery_annual, monitoring = monitoring,
+  fishery_annual = fishery_annual, monitoring = monitoring, catch_biology = catch_biology,
   survey_precision = survey_precision, survey_monitoring = survey_monitoring), as.data.frame)
 sim_cod_truth$checks <- checks
 sim_cod_truth$provenance <- provenance
