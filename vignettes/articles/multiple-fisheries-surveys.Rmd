@@ -85,11 +85,10 @@ walk. From year 11, the trawl rate is 20% of what its random walk would
 otherwise produce. Gillnet and longline follow their own paths through the
 change.
 
-```{r fishing-scenario, echo=FALSE, fig.width=7, fig.height=3.5, fig.cap="Fleet targets at full selectivity. The vertical line marks the trawl reduction between years 10 and 11."}
+```{r fishing-scenario, echo=FALSE, fig.width=7, fig.height=4.5, fig.cap="Fleet targets at full selectivity. The vertical line marks the trawl reduction between years 10 and 11."}
 local({
   targets <- sim_cod_truth$fishery_annual
   paths <- split(targets, targets$fishery)
-  uncut <- subset(paths$Trawl, year >= 10)
   colors <- tam_pal(length(paths))
   plot(range(targets$year), c(0, max(targets$F_full_unreduced)), type = "n",
     xlab = "Year", ylab = "Fully selected F target (per year)")
@@ -98,10 +97,7 @@ local({
     d <- paths[[i]]
     lines(d$year, d$F_full_reference, col = colors[i], lwd = 2)
   }
-  trawl_color <- colors[match("Trawl", names(paths))]
-  lines(uncut$year, uncut$F_full_unreduced, col = trawl_color, lwd = 2, lty = 2)
-  legend("bottomleft", legend = c(names(paths), "Trawl without reduction"),
-    col = c(colors, trawl_color), lty = c(rep(1, length(paths)), 2), lwd = 2, bty = "n")
+  legend("bottomleft", legend = names(paths), col = colors, lty = 1, lwd = 2, bty = "n")
 })
 
 annual_fbar <- function(year, rate, abundance) {
