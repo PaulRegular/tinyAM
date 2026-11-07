@@ -3,12 +3,12 @@
 library(SimSurvey)
 library(data.table)
 
-revision <- "42e5def3819a5eec443deaabd5d268c7f126438d"
+revision <- "b6c491473e887ca0c913df1f3d155267515ee99f"
 installed_revision <- utils::packageDescription("SimSurvey", fields = "RemoteSha")
 if (is.na(installed_revision)) installed_revision <- Sys.getenv("TINYAM_SIMSURVEY_REVISION")
 stopifnot(identical(installed_revision, revision))
 output <- Sys.getenv("TINYAM_SIM_COD_OUTPUT",
-  "data-raw/cache/sim_cod/seed17-trawl-reduction/prepared-data.rds")
+  "data-raw/cache/sim_cod/seed17-simsurvey-estimators/prepared-data.rds")
 if (file.exists(output)) stop("Choose a fresh TINYAM_SIM_COD_OUTPUT path.")
 
 RNGkind("Mersenne-Twister", "Inversion", "Rejection")
@@ -81,7 +81,9 @@ fishery <- sim_fisheries(pop,
     gear_amount = 1, duration = 4, gear_unit = "trawl", time_unit = "hour",
     sampling_coverage = 0.30, lengths_cap = 150, ages_cap = 150,
     age_sampling = "random", reporting_cv = 0.05, maturity_sampling = "none")
-)$fishery[c("annual", "setdet", "samp", "catch_at_age", "reference")]
+) |>
+  run_catch()
+fishery <- fishery$fishery
 
 # Both surveys observe the original population at the start of each year.
 message("Simulating the offshore RV and inshore Sentinel surveys")
@@ -94,45 +96,22 @@ surveys <- sim_surveys(pop,
     custom_sets = sim_sets(pop, subset_cells = Sentinel, set_den = 4 / 1000),
     lengths_cap = 100, ages_cap = 3, age_length_group = 3, age_space_group = "set",
     maturity_sampling = "none")
-)
+) |>
+  run_strat(alk_scale = "set") |>
+  strat_error(scope = "survey_frame")
 
-# Raise sampled age proportions by reported operation size and inverse operation
-# sampling probability. Calibrate each fleet-year to its annual reported total.
-aged <- fishery$samp[aged == TRUE, .(n_age = .N), by = .(operation, age)]
-aged[, proportion := n_age / sum(n_age), by = operation]
-raised <- merge(aged, fishery$setdet[, .(operation, fishery, year, reported_n, sampling_probability)],
-  by = "operation")
-raised <- raised[, .(expanded = sum(reported_n * proportion / sampling_probability)),
-  by = .(fleet = fishery, year, age)]
-monitoring <- fishery$annual[, .(fleet = fishery, year, reported_total = reported_n,
-  n_operations, n_aged)]
-catch <- merge(CJ(fleet = names(F_full), year = pop$years, age = pop$ages),
-  raised, by = c("fleet", "year", "age"), all.x = TRUE)
-catch <- merge(catch, monitoring[, .(fleet, year, reported_total)], by = c("fleet", "year"))
-catch[is.na(expanded), expanded := 0]
-catch[, obs := if (reported_total[1] == 0) 0 else if (sum(expanded) > 0) {
-  reported_total * expanded / sum(expanded) / 1000
-} else NA_real_, by = .(fleet, year)]
+# Convert SimSurvey's estimates from fish to thousand fish.
+catch <- fishery$catch_estimates$catch_at_age[,
+  .(year, age, fleet = fishery, obs = n_hat / 1000, unit = "thousand fish")]
+index <- surveys$age_strat[!is.na(age),
+  .(year, age, survey, obs = total / 1000, samp_time = 0, unit = "thousand fish")]
+monitoring <- fishery$catch_diagnostics[, .(fleet = fishery, year,
+  reported_total = reported_n, n_operations, n_aged, status = age_status)]
 monitoring <- merge(monitoring, catch[, .(estimated_total = sum(obs) * 1000), by = .(fleet, year)],
   by = c("fleet", "year"))
-monitoring[, status := fifelse(reported_total == 0, "zero_total",
-  fifelse(is.na(estimated_total), "no_samples", "ok"))]
-catch <- catch[, .(year, age, fleet, obs, unit = "thousand fish")]
-
-# Keep each survey's own footprint in the stratified analysis.
-survey_tables <- lapply(names(surveys$survey_programs), function(survey) {
-  selected <- select_survey(surveys, survey)
-  analysis <- run_strat(selected, alk_scale = "set")
-  # SimSurvey reports unassigned abundance at age NA separately from known ages.
-  at_age <- analysis$age_strat[!is.na(age),
-    .(year, age, obs = total / 1000, sets, total_se = sd * sampling_units / 1000)]
-  at_age <- merge(CJ(year = pop$years, age = pop$ages), at_age,
-    by = c("year", "age"), all.x = TRUE)
-  list(index = at_age[, .(year, age, survey, obs, samp_time = 0, unit = "thousand fish")],
-    precision = at_age[, .(year, age, survey, sets, total_se)],
-    monitoring = copy(selected$samp_totals)[, survey := survey])
-})
-index <- rbindlist(lapply(survey_tables, "[[", "index"))
+survey_precision <- surveys$age_strat[!is.na(age),
+  .(year, age, survey, sets, total_se = sd * sampling_units / 1000, estimate_status)]
+survey_monitoring <- rbindlist(lapply(surveys$survey_programs, "[[", "samp_totals"), idcol = "survey")
 
 # Biology is supplied for every simulated age, including 14–20. In the fit,
 # these ages retain separate biological weights and maturity inside age 14+.
@@ -169,14 +148,11 @@ annual <- merge(population[, .(N = sum(N), B = sum(B), SSB = sum(SSB),
   fleet[, .(yield = sum(yield)), by = year], by = "year")
 
 curves <- list(Gillnet = gillnet, Longline = longline, Trawl = trawl, RV = rv, Sentinel = gillnet)
-survey_truth <- rbindlist(lapply(names(surveys$survey_programs), function(survey) {
-  cells <- footprint$cell[footprint[[survey]]]
-  regional <- pop$sp_N[cell %in% cells, .(N_region = sum(N) / 1000), by = .(year, age)]
-  regional <- merge(regional, population[, .(year, age, N_total = N)], by = c("year", "age"))
-  regional[, `:=`(survey = survey, selection = curves[[survey]](age))]
-  regional[, `:=`(index_expected = N_region * selection,
-    availability = fifelse(N_total > 0, N_region / N_total, NA_real_))]
-}))
+survey_truth <- surveys$age_strat_error[!is.na(age),
+  .(year, age, survey, N_region = N_frame / 1000, N_total = N_stock / 1000,
+    index_expected = I / 1000)]
+survey_truth[, selection := curves[[.BY$survey]](age), by = survey]
+survey_truth[, availability := fifelse(N_total > 0, N_region / N_total, NA_real_)]
 selectivity <- rbindlist(lapply(names(curves), function(name) {
   age <- seq(1, 20, by = 0.1)
   data.table(component = name, age, selectivity = curves[[name]](age))
@@ -193,7 +169,7 @@ fishery_annual <- copy(fishery$annual)
 fishery_annual[, F_full_unreduced := F_full_unreduced[[.BY$fishery]][match(year, years)], by = fishery]
 checks <- list(terminal_survivors = as.data.frame(tail),
   shortfalls = as.data.frame(fishery$annual[shortfall > 0, .(fishery, year, target, n, shortfall, status)]),
-  unsupported_catch = as.data.frame(monitoring[status == "no_samples"]),
+  unsupported_catch = as.data.frame(monitoring[!status %in% c("estimated", "zero_reported_catch")]),
   realized_M = list(ages = 5:10, mean = mean(M_center), sd = sd(M_center),
     min = min(M_center), max = max(M_center)),
   realized_M_by_period = as.data.frame(population[age %in% 5:10 & is.finite(M),
@@ -213,8 +189,7 @@ provenance <- list(simsurvey_revision = revision, seed = 17L, fishing_seed = 170
 sim_cod_truth <- lapply(list(population = population, annual = annual, fleet = fleet,
   surveys = survey_truth, footprint = footprint, selectivity = selectivity,
   fishery_annual = fishery_annual, monitoring = monitoring,
-  survey_precision = rbindlist(lapply(survey_tables, "[[", "precision")),
-  survey_monitoring = rbindlist(lapply(survey_tables, "[[", "monitoring"))), as.data.frame)
+  survey_precision = survey_precision, survey_monitoring = survey_monitoring), as.data.frame)
 sim_cod_truth$checks <- checks
 sim_cod_truth$provenance <- provenance
 

@@ -40,7 +40,9 @@ generating curves by component and age.
 \item \code{fishery_annual} and \code{monitoring} summarize targets, catches and sampling.
 \code{F_full_reference} is the annual target at full selectivity and
 \code{F_full_unreduced} is the target trajectory without the trawl reduction.
-\code{survey_precision} gives estimated index SEs in thousand fish and
+\code{monitoring$status} records whether catch-at-age estimates were supported.
+\code{survey_precision} gives estimated index SEs in thousand fish and the
+support status for each survey estimate.
 \code{survey_monitoring} summarizes survey sampling.
 \item \code{checks} summarizes realized M, including before and after the trawl
 reduction, target shortfalls, unsupported observations and survivors
@@ -83,11 +85,12 @@ SimSurvey allocates fishing removals from those deaths. Realized F depends on
 which ages are caught and whether fleets meet their targets. Realized M
 is the remainder of total mortality after subtracting realized fleet F.
 
-Commercial catch-at-age estimates use randomly sampled ages and are
-calibrated to reported fleet totals. The two surveys provide stratified
-abundance indices. Genuine sampled zeros remain in the data and tinyAM
-excludes them from its lognormal likelihood. Weight and maturity are
-supplied as known in this example.
+SimSurvey's \code{run_catch()} uses randomly sampled ages to estimate catch at
+age and calibrates the estimates to reported fleet totals. \code{run_strat()}
+estimates abundance indices for both survey programs. The data retain
+supported zero estimates and record unavailable estimates as missing.
+tinyAM excludes zeros and missing values from its lognormal likelihood.
+Weight and maturity are supplied as known in this example.
 
 The guide compares fleet-specific and aggregate fits over ages 1 through 14.
 tinyAM pools catches and indices for

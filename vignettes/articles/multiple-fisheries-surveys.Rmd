@@ -69,7 +69,8 @@ local({
 })
 ```
 
-Catch estimates use sampled fish ages and reported annual fleet totals. The
+SimSurvey's `run_catch()` uses sampled fish ages and reported annual fleet totals.
+Its `run_strat()` estimates abundance within each survey's footprint. The
 input tables retain sampled zeros, which the lognormal likelihood excludes.
 The simulation uses a fixed spatial pattern on a 20-by-20 grid, so the share
 of the population available to each survey is approximately constant.

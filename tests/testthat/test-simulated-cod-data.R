@@ -18,6 +18,18 @@ test_that("simulated cod inputs retain complete fleet keys and explicit units", 
   expect_true(all(index$samp_time == 0))
   expect_false(anyDuplicated(index[c("year", "age", "survey")]) > 0L)
   expect_identical(unique(index$unit), "thousand fish")
+  expected <- expand.grid(year = unique(catch$year), age = 1:20,
+    survey = unique(index$survey))
+  expect_setequal(with(index, paste(year, age, survey)),
+    with(expected, paste(year, age, survey)))
+
+  precision <- sim_cod_truth$survey_precision
+  position <- match(with(index, paste(year, age, survey)),
+    with(precision, paste(year, age, survey)))
+  expect_false(anyNA(position))
+  status <- precision$estimate_status[position]
+  expect_true(all(status[!is.na(index$obs)] %in% c("ok", "partial_age")))
+  expect_true(all(is.na(index$obs[status %in% c("no_sets", "unsampled_strata", "missing_lengths")])))
 })
 
 test_that("simulated cod weights and maturity reproduce biomass and SSB", {
@@ -168,7 +180,8 @@ test_that("simulated catches match reported totals", {
     paste(monitoring$year, monitoring$fleet))
   expect_false(anyNA(position))
   expect_equal(1000 * observed$obs, monitoring$estimated_total[position], tolerance = 1e-10)
-  supported <- !is.na(observed$obs)
+  supported <- monitoring$status[position] %in% c("estimated", "zero_reported_catch")
+  expect_identical(!is.na(observed$obs), supported)
   expect_equal(1000 * observed$obs[supported],
     monitoring$reported_total[position[supported]], tolerance = 1e-10)
 })
