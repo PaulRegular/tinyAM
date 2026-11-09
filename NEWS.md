@@ -3,6 +3,9 @@
 * Allow positive within-year age AR1 observation correlation separately for
   catch fleets and surveys with `cor_struct`. Independent errors remain the default.
 
+* Allow penalized mgcv `s()` and age-year `t2()` terms in catch and index
+  observation SD formulas. Estimate smoothness jointly with the assessment.
+
 * Add concise website guides for comparing Northern cod model structures and
   fitting multiple fisheries and surveys. Link both from a Guides menu alongside
   the model-structure examples and cheatsheet. Include an evaluated NCAM

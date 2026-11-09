@@ -125,7 +125,6 @@ test_that("smooth options, roles, missing predictors and redundant designs fail 
   expect_error(.parse_q_formula(~s(age,k=5),d),"complete finite")
   expect_error(make_test_dat(N_settings=list(mu_form=~s(age,k=5))),"ordinary fixed")
   expect_error(make_test_dat(M_settings=list(mu_form=~s(age,k=5))),"F and q only")
-  expect_error(make_test_dat(index_settings=list(sd_form=~s(age,k=5))),"not catchability")
   expect_error(make_test_dat(F_settings=list(process="rw",mu_form=~s(age,k=5))),"intrinsic RW")
   form <- local({basis_size <- 4L; ~s(age,k=basis_size,bs="cr")})
   expect_identical(.formula_input_variables(form),"age")

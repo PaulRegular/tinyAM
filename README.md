@@ -173,7 +173,7 @@ Other possibilities include:
 | Fishing mortality | `F_settings`: `"off"`, `"iid"`, `"rw"`, `"ar1"`, `"cor_rw"`; `sd_form = ~ age_group` | [Settings](https://paulregular.github.io/tinyAM/reference/prepare_tam.html): deterministic F requires an explicit mean. Optional `age_breaks` share actual F and can leave younger ages unfished; `"cor_rw"` correlates annual changes across states. |
 | Natural mortality | `M_settings`: `"off"`, `"iid"`, `"rw"`, `"ar1"`; `sd_form = ~ age_group` | [Settings](https://paulregular.github.io/tinyAM/reference/prepare_tam.html): M can be supplied or estimated; age blocks share actual M. |
 | Mean F and catchability | `~ age_group`, `~ logistic(age)`, `~ mono(age)`; q also supports `iid()`, `rw()`, `ar1()` effects | [Curves](https://paulregular.github.io/tinyAM/reference/catchability_curves.html) and [formula effects](https://paulregular.github.io/tinyAM/reference/formula_effects.html): supported combinations have identifiability safeguards; `q_link = "logit"` bounds q between zero and one. |
-| Observation SD | `sd_form = ~ age_group` | [Formula effects](https://paulregular.github.io/tinyAM/reference/formula_effects.html): formulas modify log-SD, not observation covariance. |
+| Observation SD | `sd_form = ~ age_group` or `~ s(age, k = 5)` | [Formula effects](https://paulregular.github.io/tinyAM/reference/formula_effects.html) and [smooths](https://paulregular.github.io/tinyAM/reference/smooth_formulas.html) model catch and index spread on the log-SD scale. |
 
 Recruitment boundary states are fixed by default; `rec_settings$init = "latent"`
 integrates them without an initial density. For abundance-dependent catchability,

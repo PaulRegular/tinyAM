@@ -455,8 +455,9 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #' - `mean_ages`: optional vector of ages to include in population weighted
 #'   average M (`M_bar`) calculations. All ages used if absent.
 #' @param catch_settings A list with elements:
-#' - `sd_form`: formula for log observation SD for catch-at-age data. Ordinary
-#'   terms and Gaussian [formula_effects] are supported, e.g. `~ iid(age)`.
+#' - `sd_form`: formula for log observation SD for catch-at-age data. Use
+#'   ordinary terms, Gaussian [formula_effects] such as `~ iid(age)`, or
+#'   penalized [smooths][smooth_formulas] such as `~ s(age, k = 5)`.
 #' - `sd_supplied`: optional one-sided formula giving supplied SDs (on the natural
 #'   scale of the log-observation residuals) for catch-at-age data. When provided,
 #'   the intercept is removed from `sd_form` so supplied SDs act as offsets.
@@ -467,9 +468,9 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #'   stay independent. A catch table without fleet labels has one series named
 #'   `"Fishery"`.
 #' @param index_settings A list with elements:
-#' - `sd_form`: formula for log observation SD for index-at-age data. Ordinary
-#'   terms and Gaussian [formula_effects] are supported, e.g.
-#'   `~ survey + rw(age, by = survey)`.
+#' - `sd_form`: formula for log observation SD for index-at-age data. It uses the
+#'   same syntax as catch observation SD. For example,
+#'   `~ survey + s(age, k = 5, by = survey)` gives each survey its own age curve.
 #' - `sd_supplied`: optional one-sided formula giving supplied SDs (on the natural
 #'   scale of the log-observation residuals) for index-at-age data. When provided,
 #'   the intercept is removed from `sd_form` so supplied SDs act as offsets.
@@ -789,12 +790,10 @@ prepare_tam <- function(
   dat$obs_correlation <- .prepare_obs_correlation(dat, unique(as.character(obs$index$survey)))
 
   sd_design <- .parse_sd_formula(dat$catch_settings$sd_form, dat$obs$catch, "catch")
-  dat$sd_catch_modmat <- sd_design$matrix
-  dat$sd_catch_terms <- sd_design$terms
   if (!is.null(dat$catch_settings$sd_supplied)) {
-    if ("(Intercept)" %in% colnames(dat$sd_catch_modmat)) {
-      dat$sd_catch_modmat <- .parse_sd_formula(update(dat$catch_settings$sd_form, ~ 0 + .), dat$obs$catch, "catch")$matrix
+    if ("(Intercept)" %in% colnames(sd_design$matrix)) {
       dat$catch_settings$sd_form <- update(dat$catch_settings$sd_form, ~ 0 + .)
+      sd_design <- .parse_sd_formula(dat$catch_settings$sd_form, dat$obs$catch, "catch")
       cli::cli_warn("Dropping intercept term in catch sd_form since supplied SDs are provided. Set sd_supplied to NULL to estimate the intercept.")
     }
     dat$log_sd_catch_supplied <- .log_supplied(dat$catch_settings$sd_supplied, dat$obs$catch, "catch sd_supplied")
@@ -802,23 +801,27 @@ prepare_tam <- function(
     dat$log_sd_catch_supplied <- rep(0, nrow(dat$obs$catch))
   }
 
+  dat$sd_catch_modmat <- sd_design$matrix
+  dat$sd_catch_terms <- sd_design$terms
+
   has_index <- nrow(dat$obs$index) > 0L
   # An absent survey contributes neither catchability nor observation-SD
   # parameters. Avoid evaluating factor/scoped formulas on an empty table.
   sd_design <- if (has_index) .parse_sd_formula(dat$index_settings$sd_form, dat$obs$index, "index") else
     list(matrix = matrix(numeric(), 0L, 0L), terms = list())
-  dat$sd_index_modmat <- sd_design$matrix
-  dat$sd_index_terms <- sd_design$terms
   if (has_index && !is.null(dat$index_settings$sd_supplied)) {
-    if ("(Intercept)" %in% colnames(dat$sd_index_modmat)) {
-      dat$sd_index_modmat <- .parse_sd_formula(update(dat$index_settings$sd_form, ~ 0 + .), dat$obs$index, "index")$matrix
+    if ("(Intercept)" %in% colnames(sd_design$matrix)) {
       dat$index_settings$sd_form <- update(dat$index_settings$sd_form, ~ 0 + .)
+      sd_design <- .parse_sd_formula(dat$index_settings$sd_form, dat$obs$index, "index")
       cli::cli_warn("Dropping intercept term in index sd_form since supplied SDs are provided. Set sd_supplied to NULL to estimate the intercept.")
     }
     dat$log_sd_index_supplied <- .log_supplied(dat$index_settings$sd_supplied, dat$obs$index, "index sd_supplied")
   } else {
     dat$log_sd_index_supplied <- rep(0, nrow(dat$obs$index))
   }
+
+  dat$sd_index_modmat <- sd_design$matrix
+  dat$sd_index_terms <- sd_design$terms
 
   .check_sd_terms(dat, "catch")
   .check_sd_terms(dat, "index")
@@ -951,4 +954,3 @@ prepare_tam <- function(
   }
   log(x[[1L]])
 }
-

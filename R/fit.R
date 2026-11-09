@@ -103,12 +103,17 @@
     }
     smooth_start <- .smooth_warm_starts(start, source$dat, dat)
     start <- smooth_start$parameters
-    for (component in c("N", "F", "M", "rec", "q")) {
-      name <- switch(component, N = "mu_n", F = "log_mu_f", M = "mu_m", rec = "rec_beta",
-        q=if (dat$index_settings$q_link == "logit") "logit_q" else "log_q")
+    for (component in c("N", "F", "M", "rec", "q", "sd_catch", "sd_index")) {
+      is_sd <- startsWith(component, "sd_")
+      if (is_sd) {
+        terms <- c(source$dat[[paste0(component, "_terms")]], dat[[paste0(component, "_terms")]])
+        if (!any(vapply(terms, function(term) term$type == "smooth", logical(1)))) next
+      }
+      name <- switch(component, N = "mu_n", M = "mu_m", rec = "rec_beta",
+        .smooth_coefficient(dat, component))
       if (is.null(start[[name]])) next
       old <- if (component == "rec") source$dat$rec$matrix else source$dat[[paste0(component, "_modmat")]]
-      if (component %in% c("F", "q")) old <- smooth_start$designs[[component]]
+      if (component %in% names(smooth_start$designs)) old <- smooth_start$designs[[component]]
       new <- if (component == "rec") dat$rec$matrix else dat[[paste0(component, "_modmat")]]
       if (!is.matrix(new)) next
       if (component %in% c("F","q")) {
@@ -116,8 +121,12 @@
         new <- cbind(new,dat[[if(component == "F") "F_mono_modmat" else "q_mono_modmat"]])
       }
       if (!is.matrix(new) || !ncol(new)) next
-      before <- if (component == "rec") source$dat$rec$data else if (component == "F") source$dat$F_data else if(component == "q") source$dat$obs$index else source$dat$pop_data
-      after <- if (component == "rec") dat$rec$data else if (component == "F") dat$F_data else if(component == "q") dat$obs$index else dat$pop_data
+      formula_data <- function(dat) {
+        switch(component, rec = dat$rec$data, F = dat$F_data, N = dat$pop_data, M = dat$pop_data,
+          .smooth_component_data(dat, component))
+      }
+      before <- formula_data(source$dat)
+      after <- formula_data(dat)
       key <- function(d) paste(d$year, d$age, if ("fleet" %in% names(d)) d$fleet else "",if("survey" %in% names(d)) d$survey else "")
       rows <- match(key(after), key(before))
       retained <- !is.na(rows) & !dat$is_proj[match(after$year, dat$years)]
@@ -126,15 +135,21 @@
         before$year[rows] %in% source$dat$years[source$dat$rec$historical]
       columns <- intersect(colnames(old), colnames(new))
       omitted <- setdiff(colnames(old), columns)
-      previous <- if(component == "q") source$dat$index_settings$q_form else source$dat[[paste0(component,"_settings")]]$mu_form
-      current <- if(component == "q") dat$index_settings$q_form else dat[[paste0(component,"_settings")]]$mu_form
+      component_formula <- function(dat) {
+        if (is_sd) return(dat[[paste0(sub("^sd_", "", component), "_settings")]]$sd_form)
+        if (component == "q") return(dat$index_settings$q_form)
+        dat[[paste0(component, "_settings")]]$mu_form
+      }
+      previous <- component_formula(source$dat)
+      current <- component_formula(dat)
       same <- identical(deparse(previous),deparse(current)) && any(retained) &&
         isTRUE(all.equal(old[rows[retained], columns, drop = FALSE], new[retained, columns, drop = FALSE],
           check.attributes = FALSE)) && !any(old[rows[retained], omitted, drop = FALSE] != 0)
       if (!same) {
         start[[name]] <- NULL
-        label <- if (component == "rec") "Recruitment" else if(component == "q") "Catchability" else component
-        cli::cli_inform("{label} mean starts were omitted because the formula basis changed.")
+        label <- switch(component, rec = "Recruitment mean", q = "Catchability mean",
+          sd_catch = "Catch SD", sd_index = "Survey SD", paste(component, "mean"))
+        cli::cli_inform("{label} starts were omitted because the formula basis changed.")
       }
     }
   }
