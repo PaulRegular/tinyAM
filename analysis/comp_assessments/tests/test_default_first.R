@@ -48,26 +48,30 @@ testthat::test_that("failed numerical checks allow exactly one initialization-on
   testthat::expect_true(all(!attr(fit, "initialization_attempts")$is_converged))
 })
 
-testthat::test_that("attempt history survives complete fitting errors", {
+testthat::test_that("fitting errors do not trigger a source-start retry", {
   file <- tempfile(fileext = ".rds")
   on.exit(unlink(file))
   calls <- 0L
+  starts_built <- 0L
   model <- function(...) {
     calls <<- calls + 1L
     active <- readRDS(file)
     testthat::expect_true(is.na(tail(active$is_converged, 1)))
-    stop("Numerical fit error")
+    stop("Model setup error")
   }
-  err <- tryCatch(fit_default_first(model, function() list(log_r0 = 10),
-                                    attempt_file = file), error = identity)
+  err <- tryCatch(fit_default_first(model, function() {
+    starts_built <<- starts_built + 1L
+    list(log_r0 = 10)
+  }, attempt_file = file), error = identity)
   testthat::expect_s3_class(err, "error")
-  testthat::expect_equal(calls, 2L)
+  testthat::expect_equal(calls, 1L)
+  testthat::expect_equal(starts_built, 0L)
   saved <- readRDS(file)
   testthat::expect_identical(saved, err$initialization_attempts)
-  testthat::expect_identical(saved$initialization, c("default", "source_start"))
-  testthat::expect_true(all(grepl("Numerical fit error", saved$notes)))
+  testthat::expect_identical(saved$initialization, "default")
+  testthat::expect_true(is.na(saved$is_converged))
+  testthat::expect_true(grepl("Model setup error", saved$notes))
 })
-
 testthat::test_that("BSAI POP preparation leaves the source untouched and runs no fit", {
   record <- read_assessment("afsc_pop_bsai_2024")
   before <- record

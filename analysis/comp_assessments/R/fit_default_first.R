@@ -29,7 +29,7 @@ fit_default_first <- function(fit_model, retry_start, attempt_file = NULL) {
     checks <- if (inherits(fit, "tam_fit")) tinyAM::check_tam(fit) else NULL
     attempts[[number]] <<- data.frame(
       initialization = strategy,
-      is_converged = !is.null(checks) && isTRUE(checks$is_converged),
+      is_converged = if (is.null(checks)) NA else isTRUE(checks$is_converged),
       optimizer_code = if (is.list(fit$opt)) fit$opt$convergence else NA_integer_,
       optimizer_message = if (is.list(fit$opt) && length(fit$opt$message)) fit$opt$message else "",
       objective = if (is.list(fit$opt)) fit$opt$objective else NA_real_,
@@ -44,7 +44,12 @@ fit_default_first <- function(fit_model, retry_start, attempt_file = NULL) {
     fit
   }
   fit <- attempt("default")
-  if (!attempts[[1L]]$is_converged) {
+  if (!inherits(fit, "tam_fit")) {
+    cli::cli_abort(paste(vapply(attempts, function(x) x$notes, character(1)), collapse = " | "),
+      initialization_attempts = do.call(rbind, attempts)
+    )
+  }
+  if (!isTRUE(attempts[[1L]]$is_converged)) {
     starts <- tryCatch(retry_start(), error = identity)
     if (inherits(starts, "error")) {
       attempts[[1L]]$notes <- paste(attempts[[1L]]$notes,
