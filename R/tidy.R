@@ -75,11 +75,12 @@ tidy_array <- function(x, value_name = "x", require_dimnames = TRUE) {
 #'
 #' @details
 #' `pred` is the conditional median on the natural scale. `sd` is the fitted
-#' SD of log observations, not a standard error of the prediction. Standardized
-#' residuals are `(log(obs) - log(pred)) / sd`; zero and missing observations
-#' have missing residuals. These standardized residuals do not account for the
-#' uncertainty in fitted states. Optional one-step-ahead residuals use a
-#' different predictive calculation. See [tinyAM-model] for the observation equations.
+#' marginal SD of log observations. Standardized residuals are
+#' `(log(obs) - log(pred)) / sd`. Zero and missing observations have missing
+#' residuals. Standardizing by marginal SD leaves any across-age correlation
+#' in the residuals and treats fitted states as given. Optional one-step-ahead
+#' residuals use a different predictive calculation. See [tinyAM-model] for the
+#' observation equations.
 #' OSA calculation rebuilds a temporary objective at stored fitted parameters;
 #' it does not refit fixed parameters or modify the fitted objective.
 #' With `add_osa_res = TRUE`, it computes the requested method afresh and records

@@ -1,6 +1,6 @@
 # SAMjr-style tests, adapted for tinyAM; not package code.
 # Source: fishfollower/samjr, revision 0384774a3f2f8ec3dc3330375998bd73ef6bbe7c
-#   testmore/{codIN3Ben,nscodXtraSd}/script.R: input and output workflows
+#   testmore/{codIN3Ben,nscodXtraSd,nscodcovar}/script.R: input and output workflows
 #   samjr/R/tables.R, modeltable.default: comparison table below
 #   samjr/R/fit.R, sam.fit: optimizer controls and three Newton steps below
 #   Makefile, testmore-%: exact output comparison, ignoring trailing CR
@@ -20,7 +20,7 @@ samjr_source_models <- function(case, folder, fit_function) {
   }
   if (case == "nscodbiopro") list(baseline = env$fit0) else if (case == "nscodXtraSd") {
     list(Standard = env$fit, XtraSd = env$fit2)
-  } else list(baseline = env$fit)
+  } else if (case == "nscodcovar") list(ESTMATED = env$fit) else list(baseline = env$fit)
 }
 
 # Adapted from modeltable.default in samjr/R/tables.R. Only extraction changes:
@@ -84,7 +84,7 @@ samjr_write_output <- function(case, fits, path) {
   on.exit(options(old))
   if (case == "codIN3Ben") {
     cat(fits[[1L]]$opt$objective, "\n", file = path)
-  } else if (case == "nscodXtraSd") {
+  } else if (case %in% c("nscodXtraSd", "nscodcovar")) {
     cat(capture.output(samjr_modeltable(fits)), file = path, sep = "\n")
   } else stop("No complete upstream output test is supported for ", case)
 }
@@ -97,6 +97,16 @@ samjr_output_bytes <- function(path) {
 
 samjr_output_match <- function(actual, expected) {
   identical(samjr_output_bytes(actual), samjr_output_bytes(expected))
+}
+
+samjr_estimated_covariance_match <- function(actual, expected) {
+  # Only the upstream estimated-AR row is run. Other rows use supplied matrices.
+  row <- function(path) {
+    table <- read.table(path, skip = 1L, col.names = c("case", "logLik", "parameters", "AIC"))
+    stopifnot(sum(table$case == "ESTMATED") == 1L)
+    unname(unlist(table[table$case == "ESTMATED", -1L]))
+  }
+  identical(row(actual), row(expected))
 }
 
 samjr_testmore <- function(case, folder, output) {
@@ -139,7 +149,8 @@ samjr_testmore <- function(case, folder, output) {
         isTRUE(f$converged)
       } else f$opt$convergence == 0L && isTRUE(f$sdrep$pdHess)
     }, logical(1)))
-    data.frame(case = case, engine = engine, output_match = samjr_output_match(path, expected),
+    match_output <- if (case == "nscodcovar") samjr_estimated_covariance_match else samjr_output_match
+    data.frame(case = case, engine = engine, output_match = match_output(path, expected),
       numerical_success = numerical)
   })
   checks <- do.call(rbind, rows)

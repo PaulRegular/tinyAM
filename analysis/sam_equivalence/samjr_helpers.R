@@ -12,7 +12,7 @@ samjr_fixture <- function(case, folder) {
   files <- c("cn.dat", "cw.dat", "dw.dat", "lf.dat", "lw.dat", "mo.dat", "nm.dat", "pf.dat", "pm.dat", "sw.dat", "survey.dat", "script.R")
   if (case %in% c("nscodXtraSd", "codIN3Ben")) files <- c(files, "model.cfg")
   if (case == "nscodXtraSd") files <- c(files, "model2.cfg")
-  if (case %in% c("nscodXtraSd", "codIN3Ben")) files <- c(files, "res.EXP")
+  if (case %in% c("nscodXtraSd", "codIN3Ben", "nscodcovar")) files <- c(files, "res.EXP")
   dir.create(folder, recursive = TRUE, showWarnings = FALSE)
   urls <- paste0("https://raw.githubusercontent.com/fishfollower/samjr/", pin, "/testmore/", case, "/", files)
   for (i in seq_along(files)) if (!file.exists(file.path(folder, files[i]))) {
@@ -28,9 +28,11 @@ samjr_fixture <- function(case, folder) {
 
 samjr_inputs <- function(native) {
   src <- native$data; cf <- native$conf
+  cor_type <- as.character(cf$obsCorStruct)
   stopifnot(cf$stockRecruitmentModelCode == 0, cf$noScaledYears == 0,
     cf$initState == 0, all(cf$logNMeanAssumption == 0),
-    all(as.character(cf$obsCorStruct) == "ID"), all(as.vector(src$propF) == as.vector(src$propM)),
+    all(cor_type %in% c("ID", "AR")), all(is.na(src$idxCor)),
+    all(as.vector(src$propF) == as.vector(src$propM)),
     cf$stockWeightModel == 0, cf$catchWeightModel == 0, cf$matureModel == 0,
     cf$mortalityModel == 0, all(cf$fracMixN == 0), cf$fracMixF == 0,
     all(cf$fracMixObs == 0), all(is.finite(src$logobs) | is.na(src$logobs)))
@@ -89,6 +91,16 @@ samjr_inputs <- function(native) {
     M_settings = list(process = "off", mu_supplied = ~M),
     catch_settings = list(sd_form = catch_form),
     index_settings = list(q_form = ~0 + q_key, sd_form = ~0 + sd_key, sd_supplied = ~relative_sd))
+  ar <- which(cor_type == "AR")
+  if (length(ar)) {
+    # The pinned covariance case has one survey with a common adjacent-age key.
+    # Stop before translating irregular lattices, supplied matrices or other AR layouts.
+    stopifnot(length(ar) == 1L, ar > 1L, length(native$pl$transfIRARdist) == 1L)
+    survey_ages <- sort(unique(aux$age[aux$fleet == ar]))
+    stopifnot(length(survey_ages) >= 3L, all(diff(survey_ages) == 1L),
+      all(cf$keyCorObs[ar, match(head(survey_ages, -1L), ages)] == 0L))
+    settings$index_settings$cor_struct <- setNames("ar1", paste0("Survey ", ar - 1L))
+  }
   list(obs = obs, settings = settings, years = years, ages = ages, aux = aux)
 }
 
@@ -108,6 +120,9 @@ samjr_parameters <- function(native, dat) {
     par[[name]][] <- native$pl[[source]][indices]
   }
   if (cf$corFlag == 2) par$atanh_rho_f <- native$pl$itrans_rho[1L]
+  if (length(par$logit_rho_obs)) {
+    par$logit_rho_obs[] <- qlogis(0.5^exp(native$pl$transfIRARdist))
+  }
   par$log_q[] <- native$pl$logFpar[key(names(par$log_q))]
   for (name in c("log_sd_catch", "log_sd_index")) {
     grouped <- grepl("K", names(par[[name]]))
@@ -118,6 +133,31 @@ samjr_parameters <- function(native, dat) {
     if (any(extra)) par[[name]][extra] <- native$pl$logXtraSd
   }
   par
+}
+
+# SAM uses log lattice distance; tinyAM uses logit adjacent-age correlation.
+samjr_rho_distance <- function(logit) log(-log(plogis(logit)) / log(2))
+
+samjr_rho_distance_derivatives <- function(logit) {
+  rho <- as.numeric(plogis(logit))
+  ratio <- (1 - rho) / -log(rho)
+  c(first = -ratio, second = rho * ratio - ratio^2)
+}
+
+samjr_dense_observation_nll <- function(dat, report, correlation, survey) {
+  # Independent reference for tinyAM's Markov likelihood, including age gaps.
+  obs <- dat$obs_map[dat$is_observed, ]
+  error <- dat$observed - report$log_pred[dat$is_observed]
+  sd <- report$sd_obs[dat$is_observed]
+  blocks <- split(seq_len(nrow(obs)), paste(obs$type, obs$survey, obs$year))
+  sum(vapply(blocks, function(i) {
+    R <- if (obs$type[i[1L]] == "index" && obs$survey[i[1L]] == survey) {
+      correlation^abs(outer(obs$age[i], obs$age[i], `-`))
+    } else diag(length(i))
+    upper <- chol(R * tcrossprod(sd[i]))
+    z <- forwardsolve(t(upper), error[i])
+    sum(log(diag(upper))) + (sum(z^2) + length(i) * log(2 * pi)) / 2
+  }, numeric(1)))
 }
 
 samjr_compare <- function(native, label) {
@@ -133,28 +173,37 @@ samjr_compare <- function(native, label) {
     list(simFlag = c(1L, 1L), reportingLevel = 0L, resFlag = 0L))
   maps <- list(logFScaleMSY = factor(NA), implicitFunctionDelta = factor(NA), splinePenalty = factor(NA))
   sam <- TMB::MakeADFun(samdata, sampar, DLL = "stockassessment", map = maps, silent = TRUE)
-  # Independent missing Normal observations integrate to one. For joint-density
-  # checks only, remove their auxiliary densities and compare common states.
-  # The original native fit and its full Laplace objective remain unchanged.
-  missing_term <- NULL
+  has_ar <- length(par$logit_rho_obs) > 0L
+  observation_objective <- function(d) {
+    d$.likelihood_component <- "observation"
+    RTMB::MakeADFun(function(p) nll_fun(p, d), par, silent = TRUE)
+  }
+  # Native SAM's joint density includes the missing log observations. For
+  # joint comparisons only, subtract their conditional density given the
+  # observed ages. Full minus observed also handles correlated missing ages.
+  extra_observations <- common_observations <- NULL
   if (length(sampar$missing)) {
-    missing_dat <- dat
+    full_dat <- dat
     aux <- input$aux[is.na(src$logobs), ]
     fleet <- ifelse(dat$obs_map$type == "catch", 1L,
       as.integer(sub("Survey ", "", dat$obs_map$survey)) + 1L)
     rows <- match(paste(aux$year, aux$fleet, aux$age),
       paste(dat$obs_map$year, fleet, dat$obs_map$age))
-    stopifnot(!anyNA(rows), !anyDuplicated(rows))
-    missing_dat$is_observed[] <- FALSE; missing_dat$is_observed[rows] <- TRUE
-    missing_dat$observed <- sampar$missing[order(rows)]
-    missing_dat$.likelihood_component <- "observation"
-    missing_term <- RTMB::MakeADFun(function(p) nll_fun(p, missing_dat), par, silent = TRUE)
+    stopifnot(!anyNA(rows), !anyDuplicated(rows), !any(dat$is_observed[rows]))
+    value <- rep(NA_real_, nrow(dat$obs_map))
+    value[dat$is_observed] <- dat$observed
+    value[rows] <- sampar$missing
+    full_dat$is_observed[rows] <- TRUE
+    full_dat$observed <- value[full_dat$is_observed]
+    if (has_ar) full_dat$obs_correlation <- tinyAM:::.prepare_obs_correlation(full_dat)
+    extra_observations <- observation_objective(full_dat)
+    common_observations <- observation_objective(dat)
   }
   pack <- function(p, template) {
     for (name in unique(names(template))) template[names(template) == name] <- as.vector(p[[name]])
     template
   }
-  to_sam <- function(p) {
+  to_sam <- function(p, transform_rho = TRUE) {
     out <- sampar
     out$logN[1L, 1L] <- p$log_r0; out$logN[-1L, 1L] <- p$log_n0
     out$logN[1L, -1L] <- p$log_r; out$logN[-1L, -1L] <- t(p$log_n)
@@ -168,6 +217,9 @@ samjr_compare <- function(native, label) {
       out[[source]][indices] <- p[[name]]
     }
     if (cf$corFlag == 2) out$itrans_rho[] <- p$atanh_rho_f
+    if (has_ar) {
+      out$transfIRARdist[] <- if (transform_rho) samjr_rho_distance(p$logit_rho_obs) else p$logit_rho_obs
+    }
     out$logFpar[key(names(p$log_q))] <- p$log_q
     for (name in c("log_sd_catch", "log_sd_index")) {
       grouped <- grepl("K", names(p[[name]]))
@@ -182,7 +234,7 @@ samjr_compare <- function(native, label) {
   marker <- par; n <- 0L
   for (name in names(marker)) { marker[[name]][] <- n + seq_along(marker[[name]]); n <- n + length(marker[[name]]) }
   common <- which(names(sam$par) != "missing")
-  permutation <- as.integer(pack(to_sam(marker), sam$par)[common])
+  permutation <- as.integer(pack(to_sam(marker, transform_rho = FALSE), sam$par)[common])
   stopifnot(identical(sort(permutation), seq_along(tiny$par)))
   order <- common[order(permutation)]
   checks <- list()
@@ -190,17 +242,45 @@ samjr_compare <- function(native, label) {
     checks[[length(checks) + 1L]] <<- data.frame(case = label, test = test,
       difference = value, tolerance = tolerance, passed = is.finite(value) && value <= tolerance)
   }
+  rho_index <- which(names(tiny$par) == "logit_rho_obs")
+  if (has_ar) {
+    survey <- names(input$settings$index_settings$cor_struct)
+    obs <- dat$obs_map[dat$is_observed, ]
+    suitable <- which(obs$type == "index" & obs$survey == survey)
+    by_year <- split(suitable, obs$year[suitable])
+    interior <- function(i) which(obs$age[i] > min(obs$age[i]) & obs$age[i] < max(obs$age[i]))
+    eligible <- vapply(by_year, function(i) length(interior(i)) > 0L, logical(1))
+    stopifnot(any(eligible))
+    i <- by_year[[which(eligible)[1L]]]
+    removed <- i[interior(i)[1L]]
+    gap_dat <- dat
+    gap_dat$is_observed[which(dat$is_observed)[removed]] <- FALSE
+    gap_dat$observed <- dat$observed[-removed]
+    gap_dat$obs_correlation <- tinyAM:::.prepare_obs_correlation(gap_dat)
+    gap_objective <- observation_objective(gap_dat)
+  }
   for (attempt in 1:2) {
     v <- tiny$par
     if (attempt == 2L) { set.seed(761); v <- v + rnorm(length(v), sd = .001) }
     y <- pack(to_sam(tiny$env$parList(v)), sam$par)
-    correction <- if (is.null(missing_term)) 0 else missing_term$fn(v)
+    correction <- if (is.null(extra_observations)) 0 else extra_observations$fn(v) - common_observations$fn(v)
     add(paste0("joint_", attempt), abs(tiny$fn(v) - (sam$fn(y) - correction)), 1e-7)
     g <- as.numeric(sam$gr(y))[order]
-    if (!is.null(missing_term)) g <- g - as.numeric(missing_term$gr(v))
-    add(paste0("gradient_", attempt), max(abs(tiny$gr(v) - g) / (1 + abs(g))), 1e-6)
     h <- sam$he(y)[order, order]
-    if (!is.null(missing_term)) h <- h - missing_term$he(v)
+    if (has_ar) {
+      derivatives <- samjr_rho_distance_derivatives(v[rho_index])
+      h[rho_index, ] <- h[rho_index, ] * derivatives[["first"]]
+      h[, rho_index] <- h[, rho_index] * derivatives[["first"]]
+      h[rho_index, rho_index] <- h[rho_index, rho_index] + g[rho_index] * derivatives[["second"]]
+      g[rho_index] <- g[rho_index] * derivatives[["first"]]
+      expected <- samjr_dense_observation_nll(gap_dat, tiny$report(v), plogis(v[rho_index]), survey)
+      add(paste0("missing_age_observation_", attempt), abs(gap_objective$fn(v) - expected), 1e-7)
+    }
+    if (!is.null(extra_observations)) {
+      g <- g - as.numeric(extra_observations$gr(v) - common_observations$gr(v))
+      h <- h - extra_observations$he(v) + common_observations$he(v)
+    }
+    add(paste0("gradient_", attempt), max(abs(tiny$gr(v) - g) / (1 + abs(g))), 1e-6)
     add(paste0("hessian_", attempt), max(abs(tiny$he(v) - h) / (1 + abs(h))), 1e-6)
   }
   fit <- do.call(fit_tam, c(list(data = input$obs, years = input$years, ages = input$ages,
@@ -230,7 +310,11 @@ samjr_compare <- function(native, label) {
     paste(dat$obs_map$year, fleet, dat$obs_map$age))
   add("log_predictions", max(abs(fit$rep$log_pred[observation_order] - native$rep$predObs), na.rm = TRUE), 1e-4)
   sd <- tinyAM:::.tam_parameter_summary(fit, "Std. Error")
-  sd <- pack(to_sam(sd), sam$par)[order]
+  sd <- pack(to_sam(sd, transform_rho = FALSE), sam$par)[order]
+  if (has_ar) {
+    fitted <- fit$obj$env$parList(par = fit$parameter_values)$logit_rho_obs
+    sd[rho_index] <- sd[rho_index] * abs(samjr_rho_distance_derivatives(fitted)[["first"]])
+  }
   native_sd <- pack(native$plsd, sam$par)[order]
   add("parameter_SE", max(abs(sd - native_sd) / (1 + abs(native_sd))), 1e-4)
   reports <- summary(native$sdrep, "report")

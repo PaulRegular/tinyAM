@@ -199,9 +199,15 @@ follow WHAM's four-parameter product;
 [smooths](https://paulregular.github.io/tinyAM/reference/smooth_formulas.html)
 use jointly estimated mgcv penalties. Flexible F means can be deterministic
 or have IID/AR1 residuals. Their separation can be weak; intrinsic F random
-walks cannot identify these mean shapes. Shared correlation parameters do
-not correlate innovations between fleets; observation covariance and
-time-varying structural closures remain unsupported.
+walks cannot identify these mean shapes. Fleet process innovations are
+independent across fleets even when they share correlation parameters.
+Structural zeros in F apply to the same ages throughout the time series.
+
+Observation errors are independent by default. Use
+`index_settings = list(cor_struct = c(RV = "ar1"))` to estimate positive
+age correlation in RV log observation errors within each year. The same
+setting in `catch_settings` selects catch fleets.
+See [observation settings](https://paulregular.github.io/tinyAM/reference/prepare_tam.html).
 
 ## 3. Diagnose, visualize and compare
 

@@ -319,7 +319,7 @@
 #' Ordinary and other q terms determine \eqn{q_0}. Abundance is not centered;
 #' this retains the usual SAM power relationship and its baseline-q sharing.
 #' Missing power-group labels fix p to one while retaining the observation.
-#' For each positive observation \eqn{Y_i}, independently conditional on states,
+#' For each positive observation \eqn{Y_i}, conditional on states,
 #' \deqn{\log Y_i\sim N(\log\widetilde Y_i,\tau_i^2),\qquad
 #' \tau_i=\tau_i^{supplied}\exp(X_{sd,i}\beta_{sd}).}
 #' Catch and survey SDs have separate designs and coefficients. Without a supplied
@@ -328,6 +328,15 @@
 #' must produce one finite design row per observation.
 #' Predictions \eqn{\widetilde Y} are conditional medians. Arithmetic means
 #' are \eqn{\widetilde Y\exp(\tau^2/2)}.
+#' Observation errors are independent by default. With `cor_struct = "ar1"`,
+#' a survey or catch fleet has within-year log-error covariance
+#' \deqn{\operatorname{Cov}(\log Y_a,\log Y_b)=\tau_a\tau_b\rho^{|a-b|},
+#' \qquad 0 < \rho < 1.}
+#' This uses the same marginal SDs and medians. Each enabled series estimates
+#' one adjacent-age correlation shared across years. For a gap of two ages,
+#' the correlation is \eqn{\rho^2}. Years and series remain conditionally independent.
+#' Check that the data support separate estimation of observation and population
+#' process correlations when both are enabled.
 #'
 #' Zero and NA catch/index values are treated as missing, not as censored values
 #' or counts. They contribute no observation density and remain missing in

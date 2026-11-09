@@ -34,8 +34,9 @@ scale, and \code{osa} retains available method/settings/coverage metadata.
 }
 \description{
 Return keyed catch and survey rows for plotting or further checks. This is a
-convenience extractor: standardized residuals are the existing fitted-state
-residuals, affected by shrinkage, not independent prediction errors.
+convenience extractor. Standardized residuals use fitted states and marginal
+observation SDs. Shrinkage affects these residuals, and standardization
+leaves any across-age correlation in place.
 }
 \details{
 \code{type = "osa"} reuses cached OSA columns when no computation controls

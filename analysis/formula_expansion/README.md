@@ -22,6 +22,7 @@ Full studies are explicit analyses, not routine CI tests.
 | Catchability effects | `simulate_q_effects.R`, `q_validation.R` | `q_effects_report.Rmd` |
 | F/M mean effects | `simulate_mean_effects.R` | `mean_effects_report.Rmd` |
 | Observation SD effects | `simulate_sd_effects.R`, `sd_validation.R` | `sd_effects_report.Rmd` |
+| RV observation covariance | `benchmark_rv_covariance.R` | [RV covariance benchmark](rv_covariance_benchmark.md) |
 | Recruitment recovery | `simulate_recruitment.R`, `recruitment_validation.R` | `recruitment_report.Rmd` |
 | Recruitment self-/cross-tests | `simulate_recruitment_cross.R`, `recruitment_cross_validation.R` | `recruitment_cross_report.Rmd` |
 | BH noise and parent-SSB contrast | `simulate_recruitment_noise.R` | `recruitment_cross_report.Rmd` |

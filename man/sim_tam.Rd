@@ -49,6 +49,8 @@ Missing observations, including zeros treated as missing by the likelihood,
 remain \code{NA} in the simulated catch and index tables. Population states and
 predictions are still calculated throughout the modeled period, including
 projection years. Missing observations are not estimated as extra parameters.
+Observation draws preserve fitted age correlations within each fleet-year
+or survey-year when enabled.
 
 For \code{\link[=mono]{mono()}} effects, negative \code{dq} or \code{dmu_f} values from Gaussian parameter draws
 are clipped to zero before generating predictions or observations. This

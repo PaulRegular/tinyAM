@@ -11,7 +11,10 @@ add_osa_residuals(fit, method = "oneStepGaussianOffMode", ...)
 
 \item{method}{One algorithm supported by \code{\link[RTMB:OSA-residuals]{RTMB::oneStepPredict()}}:
 \code{"oneStepGaussianOffMode"} (default), \code{"oneStepGaussian"},
-\code{"oneStepGeneric"}, \code{"fullGaussian"}, or \code{"cdf"}.}
+\code{"oneStepGeneric"}, \code{"fullGaussian"}, or \code{"cdf"}.
+Use one of the first four algorithms for models with correlated
+observation errors. RTMB's \code{"cdf"} method does not support its multivariate
+normal density.}
 
 \item{...}{Named computation controls for \code{\link[RTMB:OSA-residuals]{RTMB::oneStepPredict()}}, such as
 \code{trace}, \code{parallel}, \code{subset}, \code{conditional}, or \code{splineApprox}.

@@ -1,6 +1,7 @@
 # Deterministic tests of the SAMjr-style runner, without fitting or downloads.
 # Run from the repository root: Rscript analysis/sam_equivalence/test_testmore.R
 source("analysis/sam_equivalence/samjr_testmore.R")
+source("analysis/sam_equivalence/samjr_helpers.R")
 folder <- tempfile("samjr-testmore-"); dir.create(folder)
 expected <- file.path(folder, "expected")
 actual <- file.path(folder, "actual")
@@ -25,6 +26,18 @@ samjr_write_output("codIN3Ben", list(list(opt = list(objective = 751.6052))), ac
 stopifnot(identical(getOption("digits"), 3L), identical(getOption("width"), 120L),
   identical(rawToChar(samjr_output_bytes(actual)), "751.6052 \n"))
 options(old)
+writeLines(c("log(L) #par AIC", "ESTMATED -276.9702 18 589.9404",
+  "ASSIGNEDcor -276.9702 17 587.9404"), expected)
+samjr_write_output("nscodcovar", list(ESTMATED = list(opt = list(objective = 276.9702,
+  par = numeric(18)))), actual)
+stopifnot(samjr_estimated_covariance_match(actual, expected), !samjr_output_match(actual, expected))
+for (logit in c(-2, 0, 1.5)) {
+  h <- 1e-4
+  y <- samjr_rho_distance(logit + c(-h, 0, h))
+  derivative <- samjr_rho_distance_derivatives(logit)
+  stopifnot(abs(derivative[["first"]] - (y[3L] - y[1L]) / (2 * h)) < 1e-7,
+    abs(derivative[["second"]] - (y[1L] - 2 * y[2L] + y[3L]) / h^2) < 1e-5)
+}
 # The source workflow must use supplied starts, not call a real fitter or run
 # downstream forecasts/outputs. It must restore the working directory on error.
 writeLines(c("library(samjr)", "par <- list(logN = 123)",
