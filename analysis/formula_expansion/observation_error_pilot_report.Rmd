@@ -1,0 +1,675 @@
+---
+title: "Do age-specific observation SDs improve stock estimates?"
+output:
+  html_document:
+    self_contained: true
+    toc: true
+params:
+  result: null
+---
+
+```{r setup, include=FALSE}
+stopifnot(file.exists(params$result))
+pilot <- readRDS(params$result)
+manifest <- as.data.frame(pilot$manifest)
+results <- pilot$evaluation
+complete <- isTRUE(pilot$complete)
+library(ggplot2)
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE,
+  fig.width = 8.6, fig.height = 4.2, out.width = "100%", dpi = 130)
+theme_set(theme_minimal(base_size = 12) +
+  theme(panel.grid.minor = element_blank(), legend.position = "bottom",
+    strip.text = element_text(face = "bold")))
+model_names <- c(constant = "Constant SD", gillnet_groups = "Gillnet age groups",
+  gillnet_smooth3 = "Gillnet age smooth (k = 3)", gillnet_age = "Gillnet age smooth (k = 5)",
+  gillnet_iid = "Gillnet IID age", rv_smooth3 = "RV age smooth (k = 3)",
+  rv_age = "RV age smooth (k = 5)", rv_iid = "RV IID age",
+  rv_pooled = "RV pooled design SD", rv_design_annual = "RV annual design SD",
+  rv_cadigan = "RV Cadigan SD")
+planned <- pilot$models
+if (is.null(planned)) {
+  planned <- unique(c("constant", "gillnet_groups", "gillnet_age", "rv_pooled", "rv_age", pilot$fits$model))
+}
+model_names <- model_names[names(model_names) %in% planned]
+expanded <- length(model_names) > 5L
+regime_names <- c(stable = "Stable", decline = "Decline", rise_fall = "Rise and fall")
+regime_colors <- stats::setNames(c("#00425A", "#B74C2D", "#007984"), regime_names)
+model_axis <- function(x) factor(unname(model_names[x]), levels = rev(model_names))
+regime_axis <- function(x) factor(unname(regime_names[x]), levels = regime_names)
+fit_count <- nrow(manifest) + sum(manifest$repeat_monitoring)
+attempts <- if (NROW(results$stock)) subset(results$stock, quantity == "ssb")
+ssb_pairs <- if (NROW(results$pairs)) {
+  subset(results$pairs, quantity == "ssb" & usable_pair)
+}
+ssb_summary <- if (NROW(results$comparisons)) {
+  subset(results$comparisons, quantity == "ssb" & regime == "overall")
+}
+sd_check <- results$sd_validation
+sd_gains <- if (NROW(sd_check$comparisons)) subset(sd_check$comparisons, regime == "overall")
+better_sd <- if (NROW(sd_gains)) {
+  names(Filter(function(z) nrow(z) == 2L && all(is.finite(z$lower) & z$lower > 0),
+    split(sd_gains, sd_gains$model)))
+}
+```
+
+## Abstract
+
+```{r abstract, results='asis'}
+cat(paste0("Fish stock assessments use catches and surveys to estimate how many fish remain and how the stock is changing. ",
+  "Precision can vary by age as catchability, abundance and sampling effort change. The observation standard deviation (SD) ",
+  "determines how strongly each estimate influences the assessment. We asked whether modeling this variation improves ",
+  "estimates and intervals for spawning biomass, the combined weight of mature fish. ",
+  sprintf("We simulated %d cod histories spanning stable, declining and rise-and-fall trajectories and compared ",
+    nrow(manifest)),
+  sprintf("constant SD with %d alternatives for Gillnet catch and research vessel (RV) survey observations. ",
+    length(model_names) - 1L)))
+if (NROW(sd_check$cells)) {
+  cat("Repeated monitoring of fixed populations estimated the sampling SD directly. ")
+}
+if (complete && NROW(results$sample_size)) {
+  g <- subset(ssb_summary, model == "gillnet_groups" & metric == "error_gain_pp")
+  if (nrow(g) == 1L && all(is.finite(c(g$estimate, g$lower, g$upper))) && g$lower > 0) {
+    cat(sprintf(paste0("Here we show that grouping Gillnet ages reduced mean absolute annual biomass error by %.2f ",
+      "percentage points (95%% paired interval %.2f to %.2f). "), g$estimate, g$lower, g$upper))
+  }
+  if ("gillnet_groups" %in% better_sd && any(grepl("^gillnet_(age|smooth3)$", better_sd))) {
+    cat("Gillnet age groups and smooths matched the measured sampling SD more closely than constant SD. ")
+  }
+  r <- subset(ssb_summary, model == "rv_design_annual" & metric == "coverage_change_pp")
+  if (nrow(r) == 1L && all(is.finite(c(r$baseline, r$candidate)))) {
+    cat(sprintf(paste0("For RV, biomass intervals covered %.0f%% of years with constant SD and %.0f%% ",
+      "with annual design SD on matched histories. "), r$baseline, r$candidate))
+  }
+  advance <- subset(results$sample_size, status == "Advance to confirmation")
+  if (!nrow(advance)) {
+    cat("No alternative met the prespecified joint accuracy and coverage criteria for confirmation. ")
+  } else {
+    cat(sprintf("%s met the prespecified joint accuracy and coverage criteria for confirmation. ",
+      paste(unname(model_names[advance$model]), collapse = ", ")))
+  }
+  cat(paste0("These comparisons apply to whole-area monitoring at the effort tested. ",
+    "They show why the observation mean and interval coverage matter alongside SD when judging a more flexible model."))
+} else {
+  cat("Results are interim. Final decisions use all planned histories.")
+}
+cat("\n\n")
+```
+
+## How was the pilot designed?
+
+`r if (!complete) "**Interim results.** The final decisions use all planned population histories."`
+The design uses `r nrow(manifest)` independent 20-year cod histories, balanced
+across stable, declining, and rise-and-fall trajectories. We classified
+them by three-year averages of true biomass before simulating monitoring.
+Each has its own spatial realization. Research vessel (RV) surveys sample
+160 cells across the whole 40 × 40 grid. Gillnet monitoring samples 30% of
+fishing operations on average. The Gillnet simulator uses age classes and mean weight
+at age. Capture depends on age, and fishing targets are in numbers of fish.
+For each training history, we also draw fresh observations from the same years.
+On `r sum(manifest$repeat_monitoring)` preselected populations, we repeat
+both monitoring draws while keeping the stock and realized removals fixed.
+
+```{r trajectories, fig.cap="True spawning biomass across the planned histories. Each line shows one independently simulated population, expressed relative to its mean biomass in years 1–3. Orange lines mark the populations chosen in advance for repeated monitoring."}
+truth <- pilot$truth
+if (NROW(truth)) {
+  initial <- aggregate(SSB ~ population_id, subset(truth, year %in% 1:3), mean)
+  truth$relative <- truth$SSB / initial$SSB[match(truth$population_id, initial$population_id)]
+  truth$trajectory <- regime_axis(truth$regime)
+  truth$repeat_monitoring <- manifest$repeat_monitoring[match(truth$population_id, manifest$population_id)]
+  ggplot(truth, aes(year, relative, group = population_id, color = repeat_monitoring)) +
+    geom_hline(yintercept = 1, color = "grey65", linetype = 2) +
+    geom_line(linewidth = .65, alpha = .78) +
+    facet_wrap(vars(trajectory)) +
+    scale_color_manual(values = c(`FALSE` = "#627886", `TRUE` = "#B74C2D"), guide = "none") +
+    labs(x = "Simulated year", y = "Biomass relative to years 1–3")
+}
+```
+
+We planned `r fit_count * length(model_names)` fits across primary and repeat
+datasets. The assessment uses simulated biology and supplied natural mortality.
+All models use the same double-logistic age curve for fishing mortality
+and logistic RV catchability curve with a fixed asymptote. The baseline
+uses constant SD for both programs. Each alternative changes the SD for
+one program, using the same training observations and fresh holdout draws.
+
+- **Gillnet** compares the baseline with three age groups (1–4, 5–10, 11–14+)
+  and `r if (expanded) "age smooths with basis dimensions of 3 or 5. The IID model gives ages independent normal effects on log SD." else "an age smooth."`
+- **RV** uses `r if (expanded) "the same two age smooths or independent age effects, pooled or annual survey design SD, or a Cadigan mean–variance curve." else "an age smooth or pooled survey design SD."`
+  Pooled design SD uses survey variances from the other training years.
+  `r if (expanded) "Annual design SD uses each year's reported survey precision, with the pooled design SD where annual precision is unavailable. The Cadigan curve converts a variance on the arithmetic scale to log SD. We use dispersion from the independent seed-21 experiment and hold the mean prediction from the constant-SD fit fixed when computing this SD. All three supplied RV SD structures estimate one multiplier."`
+  `r if (expanded) "[Cadigan (2011)](https://doi.org/10.1139/F2011-026)"`
+
+## How reliably did the models fit?
+
+```{r fit-count, results='asis'}
+if (NROW(attempts)) {
+  primary <- subset(attempts, draw == "primary")
+  repeat_fits <- subset(attempts, draw == "repeat")
+  cat(sprintf("%d of %d primary attempts and %d of %d repeat attempts produced usable fits.\n\n",
+    sum(primary$eligible), nrow(primary),
+    sum(repeat_fits$eligible), nrow(repeat_fits)))
+}
+```
+
+```{r failures, fig.height=if (expanded) 5.2 else 3.7, fig.cap="Primary fit attempts by model and trajectory. Each bar counts all attempts, including fits that failed numerical checks or could not provide a usable biomass estimate and interval. A complete pilot has eight attempts per bar."}
+if (NROW(attempts)) {
+  primary$model_name <- model_axis(primary$model)
+  primary$trajectory <- regime_axis(primary$regime)
+  primary$outcome <- ifelse(primary$eligible, "Usable fit",
+    ifelse(primary$fit_usable, "Incomplete biomass results", "Fit failed checks"))
+  ggplot(primary, aes(y = model_name, fill = outcome)) +
+    geom_bar(width = .65) +
+    facet_wrap(vars(trajectory)) +
+    scale_fill_manual(values = c("Usable fit" = "#007984", "Fit failed checks" = "#B74C2D",
+      "Incomplete biomass results" = "#76649C")) +
+    scale_x_continuous(breaks = c(0, 2, 4, 6, 8), limits = c(0, 8)) +
+    labs(x = "Number of populations", y = NULL, fill = NULL)
+}
+```
+
+## Did estimates of spawning biomass improve?
+
+For each population, we average the absolute percentage error in annual
+spawning biomass across the full history. The gain is the baseline error
+minus the alternative's error on that same population. We weight the three
+trajectory classes equally. Terminal biomass error shows whether gains
+across the series extend to the last year. Coverage is the percentage of
+annual 95% intervals that contain true biomass. Interval width is expressed
+relative to true biomass.
+
+```{r biomass, fig.height=if (expanded) 8.5 else 6.25, fig.cap="Paired changes from constant SD. Each small dot is one population with usable fits for both models. Colored diamonds show the means by trajectory. Black points and lines show the overall mean and paired 95% interval where estimable, weighting trajectories equally. Positive error gains mean lower error. Positive coverage and width changes mean greater coverage and wider intervals. Orange dashed lines mark the pilot decision margins."}
+if (NROW(ssb_pairs) && NROW(ssb_summary)) {
+  measures <- c(error_gain_pp = "Mean annual error gain (pp)",
+    terminal_gain_pp = "Terminal error gain (pp)",
+    coverage_change_pp = "Change in interval coverage (pp)",
+    width_change_pp = "Change in relative interval width (pp)")
+  points <- do.call(rbind, lapply(names(measures), function(metric) {
+    data.frame(ssb_pairs[c("model", "regime")], metric = metric, value = ssb_pairs[[metric]])
+  }))
+  points$measure <- factor(unname(measures[points$metric]), levels = measures)
+  points$model_name <- model_axis(points$model)
+  points$trajectory <- regime_axis(points$regime)
+  estimates <- subset(ssb_summary, metric %in% names(measures) & is.finite(estimate))
+  estimates$measure <- factor(unname(measures[estimates$metric]), levels = measures)
+  estimates$model_name <- model_axis(estimates$model)
+  class_means <- subset(results$comparisons, quantity == "ssb" & regime != "overall" &
+    metric %in% names(measures) & is.finite(estimate))
+  class_means$measure <- factor(unname(measures[class_means$metric]), levels = measures)
+  class_means$model_name <- model_axis(class_means$model)
+  class_means$trajectory <- regime_axis(class_means$regime)
+  margins <- data.frame(measure = factor(unname(measures[c("error_gain_pp", "coverage_change_pp")]),
+    levels = measures), value = c(2, -5))
+  ggplot(points, aes(value, model_name)) +
+    geom_vline(xintercept = 0, color = "grey60", linetype = 2) +
+    geom_vline(data = margins, aes(xintercept = value), color = "#B74C2D", linetype = 2) +
+    geom_point(aes(color = trajectory), position = position_jitter(height = .12, width = 0, seed = 21),
+      alpha = .65, size = 1.6, na.rm = TRUE) +
+    geom_point(data = class_means, aes(estimate, model_name, color = trajectory),
+      inherit.aes = FALSE, position = position_nudge(y = -.22), size = 2.25, shape = 18) +
+    geom_segment(data = estimates, aes(x = lower, xend = upper, y = model_name, yend = model_name),
+      inherit.aes = FALSE, linewidth = .75, na.rm = TRUE) +
+    geom_point(data = estimates, aes(estimate, model_name), inherit.aes = FALSE, size = 2.7) +
+    facet_wrap(vars(measure), scales = "free_x") +
+    scale_color_manual(values = regime_colors) +
+    labs(x = NULL, y = NULL, color = NULL)
+}
+```
+
+```{r direct-contrasts, results='asis', fig.height=3.4, fig.cap="Paired comparisons between alternatives on the same populations. Positive error gains mean lower error for the first model named. Positive coverage changes mean its biomass intervals covered more years. Lines give paired 95% intervals, weighting trajectory classes equally. The number of paired populations follows each contrast."}
+if (NROW(results$direct_comparisons)) {
+  measures <- c(error_gain_pp = "Mean annual error gain (pp)",
+    coverage_change_pp = "Change in interval coverage (pp)")
+  z <- subset(results$direct_comparisons, regime == "overall" & metric %in% names(measures) &
+    is.finite(estimate))
+  if (nrow(z)) {
+    cat("The direct comparisons use the stocks where both alternatives provided usable biomass estimates.\n\n")
+    reference <- sub("^(Gillnet|RV) ", "", unname(model_names[z$reference_model]))
+    z$contrast <- paste0(unname(model_names[z$model]), " vs ", reference, " (", z$n_pairs, ")")
+    z$contrast <- factor(z$contrast, levels = rev(unique(z$contrast)))
+    z$measure <- factor(unname(measures[z$metric]), levels = measures)
+    print(ggplot(z, aes(estimate, contrast)) +
+      geom_vline(xintercept = 0, color = "grey65", linetype = 2) +
+      geom_segment(aes(x = lower, xend = upper, yend = contrast), linewidth = .7, na.rm = TRUE) +
+      geom_point(color = "#007984", size = 2.1) +
+      facet_wrap(vars(measure), scales = "free_x") + labs(x = NULL, y = NULL))
+  }
+}
+```
+
+## Did the alternatives help recruitment, fishing mortality or holdout scores?
+
+These comparisons help explain the biomass results. The holdout score
+measures how much probability the fit assigns to fresh positive observations.
+Both fits in a pair use the same observations for scoring. Fishing mortality
+is the abundance-weighted average across ages 5–10.
+
+```{r secondary, fig.height=if (expanded) 8.0 else 5.7, fig.cap="Mean paired gains in annual recruitment and fishing mortality error, and in negative log scores for fresh Gillnet and RV observations. Positive gains favor the alternative. Lines show paired 95% intervals across populations where estimable. Each panel has its own scale and can use a different set of eligible populations."}
+population_gains <- if (NROW(results$comparisons)) {
+  subset(results$comparisons,
+    quantity %in% c("recruitment", "F_bar") & regime == "overall" & metric == "error_gain_pp")
+}
+score_gains <- if (NROW(results$holdout_comparisons)) {
+  subset(results$holdout_comparisons,
+    draw == "primary" & regime == "overall" & metric == "nll_gain")
+}
+panels <- c(recruitment = "Recruitment error gain (pp)",
+  F_bar = "Fishing mortality error gain (pp)",
+  Gillnet = "Gillnet log-score gain", RV = "RV log-score gain")
+prepare <- function(x, panel) {
+  if (!NROW(x)) return(NULL)
+  x$measure <- factor(unname(panels[x[[panel]]]), levels = panels)
+  x[c("model", "measure", "estimate", "lower", "upper", "n_pairs")]
+}
+z <- rbind(prepare(population_gains, "quantity"), prepare(score_gains, "component"))
+if (NROW(z)) {
+  z <- subset(z, is.finite(estimate))
+  z$model_name <- model_axis(z$model)
+  if (nrow(z)) {
+    ggplot(z, aes(estimate, model_name)) +
+      geom_vline(xintercept = 0, color = "grey60", linetype = 2) +
+      geom_segment(aes(x = lower, xend = upper, yend = model_name), linewidth = .75, na.rm = TRUE) +
+      geom_point(color = "#007984", size = 2.4) +
+      facet_wrap(vars(measure), scales = "free_x") +
+      labs(x = NULL, y = NULL)
+  }
+}
+```
+
+## How much did the monitoring draw matter?
+
+```{r repeat-monitoring, fig.height=if (expanded) 7.8 else 4.1, fig.cap="Changes in the mean annual biomass error gain when the same population was monitored again. Each line connects two independent monitoring draws for one population. The dashed line marks equal error under the alternative and constant SD."}
+repeats <- if (NROW(results$repeat_pairs)) {
+  subset(results$repeat_pairs, quantity == "ssb" & usable_pair)
+}
+if (NROW(ssb_pairs) && NROW(repeats)) {
+  paired <- merge(ssb_pairs[c("population_id", "regime", "model", "error_gain_pp")],
+    repeats[c("population_id", "regime", "model", "error_gain_pp")],
+    by = c("population_id", "regime", "model"), suffixes = c("_primary", "_repeat"))
+  if (nrow(paired)) {
+    display <- rbind(transform(paired, monitoring = "Primary", gain = error_gain_pp_primary),
+      transform(paired, monitoring = "Repeat", gain = error_gain_pp_repeat))
+    display$model_name <- model_axis(display$model)
+    display$trajectory <- regime_axis(display$regime)
+    ggplot(display, aes(monitoring, gain, group = population_id, color = trajectory)) +
+      geom_hline(yintercept = 0, color = "grey60", linetype = 2) +
+      geom_line(alpha = .72) +
+      geom_point(size = 1.8) +
+      facet_wrap(vars(model_name), ncol = if (expanded) 4 else length(model_names) - 1L) +
+      scale_color_manual(values = regime_colors) +
+      labs(x = "Monitoring draw", y = "Mean annual biomass error gain (pp)", color = NULL)
+  }
+}
+```
+
+```{r mean-diagnostic-intro, results='asis'}
+means <- pilot$mean_diagnostic
+if (is.null(means)) {
+  diagnostic_path <- file.path(dirname(params$result), "mean-diagnostic.rds")
+  if (file.exists(diagnostic_path)) {
+    means <- readRDS(diagnostic_path)
+    stopifnot(identical(means$pilot, unname(tools::md5sum(
+      file.path(dirname(params$result), "population-manifest.rds")))))
+  }
+}
+if (NROW(means$ratios)) {
+  cat(paste0("## How much did the observation means matter?\n\n",
+    "The constant-SD fit underestimated spawning biomass in the preflight. ",
+    "We used 20 independent monitoring draws per year for each of those stocks ",
+    "to compare the arithmetic and positive-log centers with the known targets. ",
+    "A sampling estimate can have a low geometric mean even when its arithmetic ",
+    "mean is near the target. The lognormal likelihood fits a mean on the log scale.\n\n"))
+}
+```
+
+```{r mean-ratios, fig.height=4.7, fig.cap="Arithmetic and geometric means of the ratio of each monitoring estimate to its target, pooled across years. Arithmetic means retain zeros. Geometric means use positive estimates. Each column uses one preflight stock, with 20 independent monitoring draws per year. The dashed line marks agreement with the target."}
+if (NROW(means$ratios)) {
+  z <- means$ratios
+  z$regime <- factor(z$regime, names(regime_names), regime_names)
+  ratios <- rbind(transform(z, center = "Arithmetic", value = ratio),
+    transform(z, center = "Geometric, positive only", value = geometric_ratio))
+  ggplot(ratios, aes(age, value, color = center)) +
+    geom_hline(yintercept = 1, linetype = 2, color = "grey50") +
+    geom_line(linewidth = .65) + geom_point(size = 1.4) +
+    facet_grid(component ~ regime) + scale_x_continuous(breaks = c(1, 5, 10, 14),
+      labels = c(1, 5, 10, "14+")) +
+    scale_color_manual(values = c("Arithmetic" = "#00425A", "Geometric, positive only" = "#DF542D")) +
+    labs(x = "Age", y = "Estimate / target", color = NULL)
+}
+```
+
+```{r mean-recovery, results='asis'}
+if (NROW(means$recovery)) {
+  z <- means$recovery
+  common <- names(which(tapply(z$usable, z$population_id, all)))
+  cat("We refitted the constant-SD model after centering the training observations using only the independent calibration draws. ")
+  if (length(common)) {
+    paired <- subset(z, population_id %in% common)
+    a <- subset(paired, data == "Primary")
+    b <- subset(paired, data == "Known log centers")
+    cat(sprintf("Across %d comparable stocks, mean absolute annual biomass error changed from %.1f%% to %.1f%% and interval coverage changed from %.1f%% to %.1f%%. ",
+      length(common), mean(a$abs_error), mean(b$abs_error), mean(a$coverage), mean(b$coverage)))
+  }
+  cat("This diagnostic uses known simulation truth. The SD comparisons use the original monitoring estimates.\n\n")
+}
+```
+
+```{r mean-recovery-by-stock, fig.height=3.5, fig.cap="Biomass bias and coverage for the constant-SD model on each preflight stock. The lines connect fits to the original data with fits after adjusting the log observation means. Dashed lines mark zero bias and nominal 95% coverage. Each point summarizes the 20 years for one stock."}
+if (NROW(means$recovery)) {
+  z <- subset(means$recovery, usable)
+  if (nrow(z)) {
+    z$regime <- regime_axis(z$regime)
+    z$data <- factor(z$data, levels = c("Primary", "Known log centers"),
+      labels = c("Original data", "Calibration-adjusted"))
+    metrics <- c("Biomass bias (%)", "Interval coverage (%)")
+    long <- rbind(transform(z, metric = metrics[1L], value = bias),
+      transform(z, metric = metrics[2L], value = coverage))
+    refs <- data.frame(metric = metrics, value = c(0, 95))
+    ggplot(long, aes(data, value, color = regime, group = regime)) +
+      geom_hline(data = refs, aes(yintercept = value), inherit.aes = FALSE,
+        linetype = 2, color = "grey60") +
+      geom_line(linewidth = .7) + geom_point(size = 2) +
+      facet_wrap(vars(metric), scales = "free_y") +
+      scale_color_manual(values = regime_colors) + labs(x = NULL, y = NULL, color = NULL)
+  }
+}
+```
+
+```{r sampling-sd-intro, results='asis'}
+if (NROW(sd_check$cells)) {
+  cells <- sd_check$cells
+  n_draws <- if (is.null(pilot$sd_reference_draws)) max(cells$n_draws) else pilot$sd_reference_draws
+  cat(sprintf(paste0("## How closely did the fitted SDs match sampling variation?\n\n",
+    "We repeated Gillnet and RV monitoring in years %s for %d populations, holding each stock and its realized removals fixed. ",
+    "We scheduled %d draws per stock and year, independently of the training and holdout samples. Variation among draws at a fixed stock, year and age estimates the sampling SD. ",
+    "Arithmetic SD and coefficient of variation (CV) retain zeros. Log SD uses positive observations, matching the scale of the fitted SDs.\n\n"),
+    paste(sort(unique(cells$year)), collapse = ", "), length(unique(cells$population_id)), n_draws))
+  reliability <- sd_check$reliability
+  if (NROW(reliability)) {
+    for (i in seq_len(nrow(reliability))) {
+      r <- reliability[i, ]
+      cat(sprintf(paste0("%s had %d of %d cells with a usable positive log SD. ",
+        "The median cell had %.1f positive draws and the median relative standard error of the SD was about %.0f%% under a normal approximation. "),
+        r$component, r$n_supported, r$n_cells, r$median_positive, 100 * r$median_relative_mcse))
+    }
+    cat("The comparisons pool agreement across stocks to reduce the influence of noisy cell estimates.\n\n")
+  }
+}
+```
+
+```{r observed-sampling-sd, fig.height=7.6, fig.cap="Sampling variation across repeated monitoring draws. SD and CV lines show the median across stocks and years at each age, with the middle half of the estimates shaded. Arithmetic CV divides arithmetic SD by the mean. Log SD uses cells with at least five positive draws. The bottom panels show the share of all finite observations equal to zero at each age."}
+if (NROW(sd_check$cells)) {
+  measures <- c(arithmetic_sd = "Arithmetic SD (thousand fish)", arithmetic_cv = "Arithmetic CV (%)",
+    empirical_sd = "SD of positive log observations")
+  cells <- sd_check$cells
+  cells$arithmetic_cv <- 100 * cells$arithmetic_cv
+  panels <- do.call(rbind, lapply(names(measures), function(metric) {
+    data.frame(cells[c("component", "age")], measure = measures[metric], value = cells[[metric]])
+  }))
+  zeros <- aggregate(cbind(n_zero, n_finite) ~ component + age, cells, sum)
+  zeros$value <- 100 * zeros$n_zero / zeros$n_finite
+  measures <- c(measures, zero_fraction = "Zero observations (%)")
+  panels$measure <- factor(panels$measure, levels = measures)
+  zeros$measure <- factor(measures["zero_fraction"], levels = measures)
+  panels <- subset(panels, is.finite(value))
+  quartiles <- function(x) data.frame(y = stats::median(x),
+    ymin = stats::quantile(x, .25, names = FALSE), ymax = stats::quantile(x, .75, names = FALSE))
+  ggplot(panels, aes(age, value, group = 1)) +
+    stat_summary(fun.data = quartiles, geom = "ribbon", fill = "#007984", alpha = .18) +
+    stat_summary(fun = stats::median, geom = "line", color = "#007984", linewidth = .7) +
+    geom_line(data = subset(zeros, is.finite(value)), color = "#007984", linewidth = .7) +
+    facet_wrap(vars(measure, component), ncol = 2, scales = "free_y") +
+    scale_x_continuous(breaks = c(1, 5, 10, 14), labels = c(1, 5, 10, "14+")) +
+    labs(x = "Age", y = NULL)
+}
+```
+
+```{r fitted-sampling-sd, fig.height=8.6, fig.cap="Fitted log-scale SD against empirical positive log SD. Each alternative and its constant-SD baseline use the same supported stock, year and age cells with positive training observations. Within each stock and age, SDs are pooled as the square root of mean variance across matched years. Lines show the median age profile across paired stocks. Failed fits can reduce support. Panels use separate logarithmic y axes."}
+if (NROW(sd_check$profiles)) {
+  profiles <- subset(sd_check$profiles, model %in% names(model_names) & model != "constant")
+  if (nrow(profiles)) {
+    definitions <- c(empirical_sd = "Empirical", baseline_sd = "Constant SD", fitted_sd = "Alternative")
+    panels <- do.call(rbind, lapply(names(definitions), function(metric) {
+      data.frame(profiles[c("model", "age")], source = definitions[metric], value = profiles[[metric]])
+    }))
+    panels$model_name <- factor(unname(model_names[panels$model]), levels = model_names)
+    ggplot(panels, aes(age, value, color = source, linetype = source)) +
+      stat_summary(fun = median, geom = "line", linewidth = .65) +
+      facet_wrap(vars(model_name), ncol = 3, scales = "free_y") +
+      scale_color_manual(values = c(Empirical = "#1F2529", `Constant SD` = "#697B85",
+        Alternative = "#007984")) +
+      scale_linetype_manual(values = c(Empirical = 1, `Constant SD` = 2, Alternative = 1)) +
+      scale_x_continuous(breaks = c(1, 5, 10, 14), labels = c(1, 5, 10, "14+")) +
+      scale_y_log10() +
+      labs(x = "Age", y = "Log-scale SD", color = NULL, linetype = NULL)
+  }
+}
+```
+
+```{r youngest-gillnet-sd, results='asis'}
+if (NROW(sd_check$profiles)) {
+  p <- subset(sd_check$profiles, model == "gillnet_smooth3" & age == 1)
+  if (nrow(p)) {
+    cat(sprintf(paste0("The smaller Gillnet smooth assigned very little weight to age 1. ",
+      "Across %d matched populations its median fitted log SD was %.2f, compared with %.2f ",
+      "from repeated monitoring and %.2f under constant SD. Its largest age-1 log SD was %.1f. ",
+      "This matters when choosing an SD model for the youngest fish, even when the SSB results look similar.\n\n"),
+      nrow(p), median(p$fitted_sd), median(p$empirical_sd), median(p$baseline_sd), max(p$fitted_sd)))
+  }
+}
+```
+
+```{r sd-agreement, fig.height=5.4, fig.cap="Paired gains in SD agreement against constant SD. The centered log score compares fitted SDs using the same empirical log mean for each cell. The absolute log ratio measures the distance between fitted and empirical SD after pooling the matched years within each stock and age. Positive gains favor the alternative. Paired 95% intervals summarize variation among populations and give equal weight to trajectory classes. The number of paired populations follows each model name."}
+if (NROW(sd_check$comparisons)) {
+  measures <- c(sd_nll_gain = "Centered negative log-score gain",
+    abs_log_sd_gain = "Absolute log SD error gain")
+  z <- subset(sd_check$comparisons, regime == "overall" & metric %in% names(measures) &
+    model %in% names(model_names) & is.finite(estimate))
+  if (nrow(z)) {
+    z$model_name <- paste0(unname(model_names[z$model]), " (", z$n_pairs, ")")
+    z$model_name <- factor(z$model_name, levels = unique(z$model_name[order(match(z$model, rev(names(model_names))))]))
+    z$measure <- factor(unname(measures[z$metric]), levels = measures)
+    ggplot(z, aes(estimate, model_name)) +
+      geom_vline(xintercept = 0, color = "grey65", linetype = 2) +
+      geom_segment(aes(x = lower, xend = upper, yend = model_name), linewidth = .7, na.rm = TRUE) +
+      geom_point(color = "#007984", size = 2.1) +
+      facet_wrap(vars(measure), scales = "free_x") + labs(x = NULL, y = NULL)
+  }
+}
+```
+
+```{r sampling-sd-interpretation, results='asis'}
+if (NROW(sd_check$cells)) {
+  supported <- subset(sd_check$cells, is.finite(empirical_sd))
+  if (nrow(supported)) {
+    medians <- aggregate(empirical_sd ~ component + age, supported, stats::median)
+    age_name <- function(age) if (age == 14) "14+" else as.character(age)
+    for (z in split(medians, medians$component)) {
+      low <- z[which.min(z$empirical_sd), ]
+      high <- z[which.max(z$empirical_sd), ]
+      cat(sprintf("For %s, median empirical log SD ranged from %.2f at age %s to %.2f at age %s. ",
+        low$component, low$empirical_sd, age_name(low$age), high$empirical_sd, age_name(high$age)))
+    }
+    cat("The biomass decisions also account for fit reliability and interval coverage.\n\n")
+  }
+}
+```
+
+<!-- Keep the fixed-stock effort contrast separate from the 24-stock fit comparisons. -->
+```{r effort-intro, results='asis'}
+effort_data <- pilot$effort_profiles
+age_correlation <- NULL
+archive <- file.path(dirname(params$result), "..", "..", "..", "observation_error_seed21",
+  "study-grid40", "summary.rds")
+if (is.null(effort_data) && file.exists(archive)) {
+  sampling <- readRDS(archive)$diagnostics
+  effort_data <- subset(as.data.frame(sampling$age_year), om == "default" & bin == "modeled",
+    select = c(component, population_id, year, age, effort, cv_obs, sd_log_error))
+  age_correlation <- subset(as.data.frame(sampling$covariance_lags),
+    bin == "modeled" & effort == "standard" & scale == "log" & gap == 1)
+}
+if (NROW(effort_data)) {
+  cat(paste0("## What happens when sampling effort changes?\n\n",
+    "In a separate experiment we held the population history fixed and sampled three spatial ",
+    "realizations in years 5, 10 and 16. At half, standard and double effort, the RV sampled 80, 160 ",
+    "and 320 cells, and Gillnet monitoring sampled 15%, 30% and 60% of operations. Length and age ",
+    "subsampling rules were the same at each effort level.\n\n"))
+  cv <- aggregate(cv_obs ~ component + effort, effort_data, mean)
+  cv_at <- function(program, effort_level) {
+    100 * cv$cv_obs[cv$component == program & cv$effort == effort_level]
+  }
+  if (all(c("Gillnet", "RV") %in% cv$component) &&
+      all(c("half", "double") %in% cv$effort)) {
+    cat(sprintf(paste0("From half to double effort, the average age-specific CV fell from %.0f%% to %.0f%% ",
+      "for Gillnet and from %.0f%% to %.0f%% for RV. The 24-stock fits use standard effort, so their ",
+      "SD comparisons do not test changes in effort across years.\n\n"), cv_at("Gillnet", "half"),
+      cv_at("Gillnet", "double"), cv_at("RV", "half"), cv_at("RV", "double")))
+  }
+}
+```
+
+```{r effort-profiles, fig.height=4.7, fig.cap="Age-specific sampling precision at half, standard and double effort in the fixed-stock experiment. Curves average the three years and three spatial realizations under the default spatial design. CV includes zero estimates. Log SD uses only positive estimates. Age 14+ combines ages 14–20."}
+if (NROW(effort_data)) {
+  effort_data$cv_obs <- 100 * effort_data$cv_obs
+  measures <- c(cv_obs = "Arithmetic CV (%)", sd_log_error = "Positive log SD")
+  display <- do.call(rbind, lapply(names(measures), function(metric) {
+    data.frame(effort_data[c("component", "effort", "age")], value = effort_data[[metric]],
+      measure = measures[[metric]])
+  }))
+  display$effort <- factor(display$effort, levels = c("half", "standard", "double"),
+    labels = c("Half", "Standard", "Double"))
+  ggplot(subset(display, is.finite(value)), aes(age, value, color = effort)) +
+    stat_summary(fun = mean, geom = "line", linewidth = .75) +
+    facet_wrap(vars(measure, component), ncol = 2, scales = "free_y") +
+    scale_color_manual(values = c(Half = "#00425A", Standard = "#007984", Double = "#B74C2D")) +
+    scale_x_continuous(breaks = c(1, 5, 10, 14), labels = c(1, 5, 10, "14+")) +
+    labs(x = "Age", y = NULL, color = "Monitoring effort")
+}
+```
+
+```{r sampling-correlation, results='asis'}
+if (NROW(age_correlation)) {
+  z <- aggregate(mean_correlation ~ om + component, age_correlation, mean)
+  coupled <- subset(z, om == "coupled")
+  default <- subset(z, om == "default")
+  if (all(c("RV", "Gillnet") %in% coupled$component) &&
+      all(c("RV", "Gillnet") %in% default$component)) {
+    cat(sprintf(paste0("At standard effort, mean correlations between neighboring ages' positive log errors ",
+      "were %+.2f for RV and %+.2f for Gillnet with a spatial field shared by all ages. Under default ",
+      "spatial fields they were %+.2f and %+.2f, respectively. RV tows can encounter dense patches ",
+      "of several ages together, while Gillnet monitoring allocates a reported total among ages. ",
+      "These are sampling correlations within fixed snapshots. Separating them from population-process ",
+      "correlations in fitted assessments remains a separate question.\n\n"),
+      coupled$mean_correlation[coupled$component == "RV"],
+      coupled$mean_correlation[coupled$component == "Gillnet"],
+      default$mean_correlation[default$component == "RV"],
+      default$mean_correlation[default$component == "Gillnet"]))
+  }
+}
+```
+
+## What should advance to confirmation?
+
+A gain of two percentage points in annual biomass error is the threshold
+for a useful improvement. A coverage loss greater than five points is
+material. We require at least 20 usable pairs overall, including at least
+six in each class, before using the results to guide a larger comparison.
+An alternative advances when the estimated gain reaches two points, its
+95% interval supports an improvement, and the coverage interval rules out
+a material loss. We retain constant SD when the interval rules out a
+two-point gain.
+
+```{r decisions, results='asis'}
+if (complete && NROW(results$sample_size)) {
+  z <- results$sample_size[match(names(model_names)[-1], results$sample_size$model), ]
+  z <- z[!is.na(z$model), ]
+  counts <- function(x) ifelse(is.finite(x), format(x, trim = TRUE), "—")
+  coverage <- subset(ssb_summary, metric == "coverage_change_pp")
+  coverage <- coverage[match(z$model, coverage$model), ]
+  observed <- ifelse(is.finite(coverage$baseline) & is.finite(coverage$candidate),
+    sprintf("%.0f%% → %.0f%%", coverage$baseline, coverage$candidate), "—")
+  bias <- subset(ssb_summary, metric == "bias_change_pp")
+  bias <- bias[match(z$model, bias$model), ]
+  signed_error <- ifelse(is.finite(bias$baseline) & is.finite(bias$candidate),
+    sprintf("%+.1f%% → %+.1f%%", bias$baseline, bias$candidate), "—")
+  knitr::kable(data.frame(
+    Model = unname(model_names[z$model]),
+    `Usable pairs` = paste0(z$n_pairs, "/", nrow(manifest)),
+    `Fewest pairs in a class` = z$smallest_class_n,
+    `Biomass coverage` = observed,
+    `Biomass bias` = signed_error,
+    `Pilot decision` = z$status,
+    `Populations for target precision` = counts(z$balanced_scheduled_total),
+    check.names = FALSE))
+} else {
+  cat("The decision and sample size estimates will appear after the planned fits finish.\n\n")
+}
+```
+
+The confirmation calculation targets 95% interval half-widths of one
+percentage point for biomass error gain and five points for the coverage
+change. It uses the variability of paired differences within each trajectory
+class. Coverage and signed annual bias are shown as constant SD followed by
+the alternative. The table gives the larger population requirement across
+the two precision targets, allowing for the observed rate of unusable pairs.
+These are precision estimates for a possible future study on fresh populations.
+[Morris, White and Crowther on simulation design](https://doi.org/10.1002/sim.8086)
+
+## Conclusion
+
+```{r conclusion, results='asis'}
+if (complete && NROW(results$sample_size)) {
+  decisions <- results$sample_size
+  advance <- subset(decisions, status == "Advance to confirmation")
+  if ("gillnet_groups" %in% better_sd) {
+    cat(paste0("**For Gillnet, start with age-group SDs when sampling variation shows a clear age pattern.** ",
+      "The tested cutoffs are illustrative. Age groups followed the sampling SD more closely than constant SD, ",
+      "with a modest gain in biomass accuracy. An age smooth is a sensitivity analysis that avoids choosing cutoffs. ",
+      "Check the weights it assigns the youngest and oldest ages. "))
+    iid <- subset(results$failures, regime == "overall" & model == "gillnet_iid")
+    if (nrow(iid)) {
+      cat(sprintf("The IID age model produced usable results in %d of %d attempts. ",
+        sum(iid$usable), sum(iid$attempted)))
+    }
+    cat("\n\n")
+  }
+  if (all(c("rv_design_annual", "rv_pooled") %in% decisions$model) &&
+      !any(grepl("^rv_", advance$model))) {
+    cat("**For RV, start with constant SD at the effort tested.** ")
+    r <- subset(ssb_summary, model == "rv_design_annual" & metric == "coverage_change_pp")
+    if (nrow(r) == 1L && all(is.finite(c(r$baseline, r$candidate)))) {
+      cat(sprintf(paste0("Annual design SD improved one sampling-variance score, but biomass coverage fell ",
+        "from %.0f%% to %.0f%% on matched histories. "), r$baseline, r$candidate))
+      if (all(is.finite(c(r$lower, r$upper)))) {
+        cat(sprintf("The 95%% interval for that change ranged from %+.1f to %+.1f percentage points. ",
+          r$lower, r$upper))
+      }
+    }
+    cat("Pooled design SD and the Cadigan variance law made little difference to biomass accuracy.\n\n")
+  }
+  base <- subset(attempts, draw == "primary" & model == "constant" & eligible)
+  if (all(names(regime_names) %in% base$regime)) {
+    coverage <- mean(tapply(base$coverage_pct, base$regime, mean))
+    cat(sprintf(paste0("**Check the observation mean and interval coverage before adding SD flexibility.** ",
+      "The constant-SD intervals covered true biomass in %.0f%% of years on average, against a nominal 95%%. "), coverage))
+    if (coverage < 90 && NROW(means$recovery)) {
+      cat(paste0("Centering the log observations with independent simulations helped some of the three diagnostic stocks. ",
+        "The diagnostic used known targets, so test whether the same mismatch occurs in the intended monitoring program ",
+        "before adopting a correction. "))
+    }
+    cat("\n\n")
+  }
+  further <- subset(decisions, status == "More populations needed" & is.finite(balanced_scheduled_total))
+  if (!nrow(advance)) {
+    cat(paste0("**Hold off on a larger confirmation study.** None of the alternatives met the prespecified biomass ",
+      "accuracy and coverage criteria. "))
+    if (nrow(further)) {
+      limits <- range(further$balanced_scheduled_total)
+      cat(sprintf(paste0("The unresolved comparisons would take an estimated %d–%d populations to reach the ",
+        "target precision if they were pursued. "), limits[1L], limits[2L]))
+    }
+    cat("Resolve the mean and coverage questions first, then choose which comparison merits confirmation.\n\n")
+  }
+} else {
+  cat("The final recommendations use the completed 24-stock pilot.\n\n")
+}
+```
