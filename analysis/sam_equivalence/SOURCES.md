@@ -14,6 +14,7 @@ Sources, all at the pinned revision:
 |---|---|
 | [`testmore/codIN3Ben/script.R`](https://github.com/fishfollower/samjr/blob/0384774a3f2f8ec3dc3330375998bd73ef6bbe7c/testmore/codIN3Ben/script.R) | Original ICES input preparation, configuration and `defpar()` values are evaluated. The fitting call is intercepted, then replaced with the corresponding tinyAM specification. The original objective-only output expression is retained. |
 | [`testmore/nscodXtraSd/script.R`](https://github.com/fishfollower/samjr/blob/0384774a3f2f8ec3dc3330375998bd73ef6bbe7c/testmore/nscodXtraSd/script.R) | Same substitution for both Standard and XtraSd models; the original comparison-table output is retained. |
+| [`testmore/nscodcovar/script.R`](https://github.com/fishfollower/samjr/blob/0384774a3f2f8ec3dc3330375998bd73ef6bbe7c/testmore/nscodcovar/script.R) | Same substitution through the first, estimated regular AR(1) fit. Compare the three printed numeric fields of the `ESTMATED` row to the upstream output. The other three rows use supplied matrices and are outside the comparison. |
 | [`samjr/R/tables.R`](https://github.com/fishfollower/samjr/blob/0384774a3f2f8ec3dc3330375998bd73ef6bbe7c/samjr/R/tables.R), `modeltable.default()` | Adapted table assembly, sorting, likelihood-ratio calculation and column labels. Extraction uses the fitted objective and active outer-parameter count, shared by tinyAM and native SAM. |
 | [`samjr/R/fit.R`](https://github.com/fishfollower/samjr/blob/0384774a3f2f8ec3dc3330375998bd73ef6bbe7c/samjr/R/fit.R), `sam.fit()` | A separately labelled protocol run adapts its `nlminb()` settings and three subsequent Newton steps, applied to a fresh tinyAM RTMB objective. Ordinary `fit_tam()` results are also tested, without these additional steps. |
 | [`Makefile`](https://github.com/fishfollower/samjr/blob/0384774a3f2f8ec3dc3330375998bd73ef6bbe7c/Makefile), `testmore-%` | Exact generated-output comparison against `res.EXP`, ignoring only trailing carriage returns as in `diff --strip-trailing-cr`. Implemented in R for Windows portability. |
@@ -30,7 +31,8 @@ models, not its ability to reproduce SAMjr's input-reader implementations.
 No SAMjr likelihood code is copied or used to calculate tinyAM predictions.
 `samjr_helpers.R` is tinyAM-specific translation and numerical comparison code.
 
-Only the two complete scripts above count as upstream output tests.
+The `codIN3Ben` and `nscodXtraSd` scripts are complete upstream output tests.
+The covariance script contributes one row at the upstream printing precision.
 `nscodbiopro` is retained as a separate supplied-biology likelihood comparison;
 its full script's biology processes and stochastic forecasts are not supported
 and are not reported as a passing upstream test.

@@ -1,5 +1,5 @@
 # Run from the repository root with R 4.4 and the pinned SAM library:
-# Rscript analysis/sam_equivalence/compare_samjr.R SAM-library [testmore|baseline|all]
+# Rscript analysis/sam_equivalence/compare_samjr.R SAM-library [testmore|baseline|covariance|all]
 args <- commandArgs(TRUE)
 if (!length(args)) stop("Supply the pinned stockassessment library directory.")
 .libPaths(c(normalizePath(args[1L]), .libPaths()))
@@ -14,10 +14,11 @@ root <- normalizePath("analysis/sam_equivalence/results", mustWork = TRUE)
 writeLines(c(paste("SAM revision:", revision),
   "SAMjr fixtures: 0384774a3f2f8ec3dc3330375998bd73ef6bbe7c",
   capture.output(sessionInfo())), file.path(root, "sessionInfo.txt"))
-selection <- if (length(args) > 1L) match.arg(args[2L], c("testmore", "baseline", "all")) else "all"
+selection <- if (length(args) > 1L) match.arg(args[2L], c("testmore", "baseline", "covariance", "all")) else "all"
 failed <- FALSE
-if (selection %in% c("testmore", "all")) {
-  for (case in c("codIN3Ben", "nscodXtraSd")) {
+if (selection %in% c("testmore", "covariance", "all")) {
+  cases <- if (selection == "covariance") "nscodcovar" else c("codIN3Ben", "nscodXtraSd", "nscodcovar")
+  for (case in cases) {
     folder <- file.path(root, "fixtures", case)
     samjr_fixture(case, folder)
     output <- file.path(root, "testmore", case)
@@ -34,7 +35,8 @@ if (selection %in% c("testmore", "all")) {
   }
 }
 if (selection == "testmore") quit(status = as.integer(failed))
-cases <- if (selection == "baseline") "nscodbiopro" else c("nscodbiopro", "nscodXtraSd", "codIN3Ben")
+cases <- switch(selection, baseline = "nscodbiopro", covariance = "nscodcovar",
+  all = c("nscodbiopro", "nscodXtraSd", "codIN3Ben", "nscodcovar"))
 for (case in cases) {
   folder <- file.path(root, "fixtures", case)
   samjr_fixture(case, folder)

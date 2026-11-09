@@ -20,7 +20,33 @@ Implementations are ordinary `fit_tam()`, tinyAM's likelihood with SAMjr optimiz
 
 The runner verifies fixture hashes and exact printed output (ignoring trailing carriage returns only), saves fits/checks/warnings under ignored `results/testmore/`, and exits nonzero on failure. This is **printed-output equivalence**, not bitwise identity. Harness tests pass on R 4.4.1 and 4.6.1; the complete comparison was rerun on R 4.4.1.
 
+`testmore` also checks the estimated-correlation row described below.
+
 `samjr_testmore.R` adapts attributed GPL-2 source workflows; [SOURCES.md](SOURCES.md) documents changes. The likelihood is implemented by tinyAM; native SAM provides input/configuration utilities. SAMjr readers are not tested. The full `nscodbiopro` output script is excluded because its later biology processes and stochastic forecasts are unsupported here.
+
+## Estimated observation correlation
+
+```sh
+Rscript analysis/sam_equivalence/compare_samjr.R SAM-library covariance
+```
+
+The `ESTMATED` row of `nscodcovar` uses a shared positive adjacent-age
+correlation for the second survey, with separate marginal SDs at ages 1–4.
+Catch and the first survey retain independent errors. Ordinary `fit_tam()`,
+the SAMjr optimization protocol and native SAM reproduce the pinned row's
+log-likelihood `-276.9702`, 18 fixed parameters and AIC `589.9404` from the
+source starts. The fitted adjacent-age correlation is about 0.289. The
+other three rows use supplied correlation or covariance matrices and are
+outside this comparison.
+
+The numerical comparison also covers matched and perturbed joint objectives,
+gradients and Hessians, the Laplace objective, fitted quantities, uncertainty,
+perturbed starts and retrospective peels. The derivative comparison accounts
+for SAM's log-distance parameter and tinyAM's logit correlation. The source
+fit has no missing observations. A separate likelihood check removes an
+interior survey age and compares tinyAM with a dense Gaussian likelihood
+using the observed covariance submatrix at two parameter vectors. The
+largest difference is `5.69e-14`.
 
 ## Native SAM likelihood comparisons
 
@@ -30,18 +56,19 @@ Run from the repository root with R 4.4 and the pinned SAM library:
 Rscript analysis/sam_equivalence/compare_samjr.R SAM-library all
 ```
 
-Use `baseline` instead of `all` for only `nscodbiopro`'s supplied-biology `fit0`; `all` includes the printed-output tests. Sources are pinned to SAMjr `0384774a3f2f8ec3dc3330375998bd73ef6bbe7c` and SAM `1cc464b80f6f2a4a38b35cce276f13e521761da3` (stockassessment 0.12.0). `fixtures.csv` records provenance and hashes. Results and failures are retained under ignored `results/`.
+Use `baseline` for `nscodbiopro`'s supplied-biology `fit0`. The `all` option includes the printed-output and covariance tests. Sources are pinned to SAMjr `0384774a3f2f8ec3dc3330375998bd73ef6bbe7c` and SAM `1cc464b80f6f2a4a38b35cce276f13e521761da3` (stockassessment 0.12.0). `fixtures.csv` records provenance and hashes. Results and failures are retained under ignored `results/`.
 
-**All four specifications pass 33 checks each (132 total)**, including objectives, derivatives, Laplace likelihoods, parameter estimates/SEs, N/F, predictions, AIC and aligned stock summaries. Both packages pass a 0.01-SD perturbed-start fit and two retrospective peels per specification.
+**All five specifications pass 167 numerical checks on R 4.4.1.** The four independent-observation specifications have 33 checks each and the correlated specification has 35. The comparisons cover objectives, derivatives, Laplace likelihoods, parameter estimates and SEs, N/F, predictions, AIC and aligned stock summaries. Both packages pass a 0.01-SD perturbed-start fit and two retrospective peels per specification.
 
 | Specification | Max. joint objective difference | Optimized difference | Max. scaled SE difference |
 |---|---:|---:|---:|
-| `nscodbiopro`: supplied biology | 2.28e-13 | 6.83e-13 | 4.50e-12 |
-| `nscodXtraSd`: standard | 2.28e-13 | 6.83e-13 | 1.31e-12 |
-| `nscodXtraSd`: extra SD | 5.69e-13 | 1.60e-12 | 2.29e-12 |
-| `codIN3Ben`: unfished young ages | 6.83e-13 | 1.71e-12 | 1.15e-9 |
+| `nscodbiopro` supplied biology | 6.82e-13 | 1.82e-12 | 1.03e-11 |
+| `nscodXtraSd` standard | 2.27e-13 | 2.27e-13 | 5.32e-12 |
+| `nscodXtraSd` extra SD | 2.27e-13 | 3.41e-13 | 3.99e-12 |
+| `codIN3Ben` unfished young ages | 1.88e-12 | 2.84e-12 | 7.56e-10 |
+| `nscodcovar` estimated survey AR(1) | 3.41e-13 | 3.41e-13 | 8.45e-8 |
 
-Tolerance limits are `1e-7` for joint objectives, `1e-6` for scaled derivatives, `1e-5` for Laplace objectives and `1e-4` for optimized objectives/scaled summaries. Scaled differences divide by `1 + abs(native value)`; relative N differences use native N. State and observation counts must match exactly. The largest observed scaled derivative and Laplace differences are `1.60e-12` and `1.71e-12`, respectively; maximum relative N difference across perturbed/peel fits is `3.26e-5`. Comparisons initialize from **native fitted parameters**, so do not test tinyAM's default starts.
+Tolerance limits are `1e-7` for joint objectives, `1e-6` for scaled derivatives, `1e-5` for Laplace objectives and `1e-4` for optimized objectives and scaled summaries. Scaled differences divide by `1 + abs(native value)`. Relative N differences use native N. State and observation counts must match exactly. The largest observed scaled derivative and Laplace differences are `2.71e-12` and `2.84e-12`, respectively. The maximum relative N difference across perturbed and peel fits is `3.26e-5`. These numerical comparisons start from native fitted parameters. The printed-output tests start from the source's unoptimized values.
 
 Model-specific handling is unchanged: `nscodXtraSd` binds F at ages 5–6 and estimates a multiplicative 1993–2005 catch SD using `catch_settings$sd_form`; `codIN3Ben` fixes F to zero at ages 1–2 and shares F at ages 9–10. The latter has 115 missing observations represented as auxiliary Gaussian states in SAM. Their independent densities integrate to one and are subtracted, with derivatives, only for common-state joint comparisons. The original native fit and full Laplace objective remain intact; random-state counts differ by 115. Survey-only years may require padded catch weights; their yield is not compared. Fbar is aligned using tinyAM's abundance-weighted definition, not SAM's arithmetic Fbar intervals.
 
