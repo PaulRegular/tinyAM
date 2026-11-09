@@ -266,8 +266,9 @@ fit_tam <- function(
     process = "off", mu_form = NULL, mu_supplied = ~ I(0.2), sd_form = ~1,
     age_breaks = NULL, first_dev_year = NULL, mean_ages = NULL
   ),
-  catch_settings = list(sd_form = ~1, sd_supplied = NULL),
-  index_settings = list(sd_form = ~1, sd_supplied = NULL, q_form = ~q_block, q_link = "log"),
+  catch_settings = list(sd_form = ~1, sd_supplied = NULL, cor_struct = "independent"),
+  index_settings = list(sd_form = ~1, sd_supplied = NULL, cor_struct = "independent",
+                        q_form = ~q_block, q_link = "log"),
   proj_settings = NULL,
   interval = 0.95,
   add_osa_res = FALSE,

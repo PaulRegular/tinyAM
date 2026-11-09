@@ -61,7 +61,7 @@ calculate the trace without forming a dense inverse.
 
 \code{edf_fixed} is \eqn{p_c}, the number of estimated outer parameters entering
 the conditional observation likelihood, identified using structural
-dependencies of observation predictions and SDs. It need not equal
+dependencies of observation predictions, SDs and correlations. It need not equal
 \code{n_fixed}: process-only parameters are excluded. The supplementary Gaussian
 example similarly excludes a prior-only parameter. This differs from the
 all-outer-parameter convention currently used by sdmTMB and WHAM.

@@ -1,5 +1,8 @@
 # tinyAM 0.1.1.9001
 
+* Allow positive within-year age AR1 observation correlation separately for
+  catch fleets and surveys with `cor_struct`. Independent errors remain the default.
+
 * Add concise website guides for comparing Northern cod model structures and
   fitting multiple fisheries and surveys. Link both from a Guides menu alongside
   the model-structure examples and cheatsheet. Include an evaluated NCAM

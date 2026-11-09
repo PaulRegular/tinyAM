@@ -98,6 +98,8 @@
 #' - **Observation model**
 #'   - `log_sd_catch` (length `ncol(dat$sd_catch_modmat)`) adjusting any supplied SDs
 #'   - `log_sd_index` (length `ncol(dat$sd_index_modmat)`) adjusting any supplied SDs
+#'   - `logit_rho_obs`: adjacent-age log-error correlations for AR1 catch fleets
+#'     and surveys, named by observation series and initialized at correlation 0.5.
 #'   - Gaussian observation-SD terms add signed `eta_sd_catch_*` or
 #'     `eta_sd_index_*` log-SD effects, initially zero, with process SD parameters
 #'     `log_sd_catch_*`/`log_sd_index_*` initially `log(0.1)` unless supplied.
@@ -204,6 +206,10 @@ make_par <- function(dat) {
   names(par$log_sd_catch) <- colnames(dat$sd_catch_modmat)
   par$log_sd_index <- numeric(ncol(dat$sd_index_modmat))
   names(par$log_sd_index) <- colnames(dat$sd_index_modmat)
+  if (.obs_has_correlation(dat)) {
+    groups <- dat$obs_correlation$groups
+    par$logit_rho_obs <- stats::setNames(numeric(length(groups)), groups)
+  }
   q_par <- if (identical(dat$index_settings$q_link, "logit")) "logit_q" else "log_q"
   par[[q_par]] <- setNames(numeric(ncol(dat$q_modmat)), colnames(dat$q_modmat))
   if (!is.null(dat$q_mono_modmat)) {

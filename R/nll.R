@@ -372,14 +372,14 @@ nll_fun <- function(par, dat, simulate = FALSE) {
 
   # Internal reporting modes share the fitted population and observation equations.
   if (identical(dat$.likelihood_component, "design")) {
-    return(c(log_pred[is_observed], sd_obs[is_observed]))
+    return(c(log_pred[is_observed], sd_obs[is_observed], par$logit_rho_obs))
   }
-  observation_nll <- -sum(RTMB::dnorm(observed, log_pred[is_observed], sd = sd_obs[is_observed], log = TRUE))
+  observation_nll <- .obs_cor_nll(dat, par, observed, log_pred[is_observed], sd_obs[is_observed])
   if (identical(dat$.likelihood_component, "observation")) return(observation_nll)
   if (identical(dat$.likelihood_component, "process")) return(jnll)
   jnll <- jnll + observation_nll
   if (simulate) {
-    log_obs[is_observed] <- stats::rnorm(sum(is_observed), mean = log_pred[is_observed], sd = sd_obs[is_observed])
+    log_obs <- .draw_log_observations(dat, par, log_pred, sd_obs)
   }
 
   ## Derived quantities ----

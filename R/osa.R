@@ -8,6 +8,9 @@
 #' @param method One algorithm supported by [RTMB::oneStepPredict()]:
 #'   `"oneStepGaussianOffMode"` (default), `"oneStepGaussian"`,
 #'   `"oneStepGeneric"`, `"fullGaussian"`, or `"cdf"`.
+#'   Use one of the first four algorithms for models with correlated
+#'   observation errors. RTMB's `"cdf"` method does not support its multivariate
+#'   normal density.
 #' @param ... Named computation controls for [RTMB::oneStepPredict()], such as
 #'   `trace`, `parallel`, `subset`, `conditional`, or `splineApprox`.
 #'   `subset` and `conditional` index included log observations in likelihood
@@ -85,6 +88,12 @@ add_osa_residuals <- function(fit, method = "oneStepGaussianOffMode", ...) {
   }
   if (is.null(fit$dat$obs_map) || is.null(fit$dat$observed)) {
     cli::cli_abort("OSA calculation requires the stored observations and likelihood mapping.")
+  }
+  if (method == "cdf" && .obs_has_correlation(fit$dat)) {
+    cli::cli_abort(c(
+      "OSA method 'cdf' does not support correlated observation errors.",
+      "i" = "Use method = 'oneStepGaussianOffMode', 'oneStepGaussian', 'oneStepGeneric' or 'fullGaussian'."
+    ))
   }
   requested_settings <- controls
   n <- length(fit$dat$observed)

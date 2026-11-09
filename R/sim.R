@@ -91,10 +91,7 @@
     # Conditional observation draws keep the supplied latent realization.
     make_nll_fun <- function(f, d) function(p) f(p, d)
     rep <- RTMB::MakeADFun(make_nll_fun(nll_fun, dat), par, silent = TRUE)$report()
-    log_obs <- dat$log_obs
-    draw <- dat$is_observed
-    log_obs[draw] <- stats::rnorm(sum(draw), rep$log_pred[draw], rep$sd_obs[draw])
-    sims <- list(log_obs = log_obs)
+    sims <- list(log_obs = .draw_log_observations(dat, par, rep$log_pred, rep$sd_obs))
   }
 
   # Rebuild report with simulated obs (+ maybe simulated RE)
@@ -130,6 +127,8 @@
 #' remain `NA` in the simulated catch and index tables. Population states and
 #' predictions are still calculated throughout the modeled period, including
 #' projection years. Missing observations are not estimated as extra parameters.
+#' Observation draws preserve fitted age correlations within each fleet-year
+#' or survey-year when enabled.
 #'
 #' For [mono()] effects, negative `dq` or `dmu_f` values from Gaussian parameter draws
 #' are clipped to zero before generating predictions or observations. This

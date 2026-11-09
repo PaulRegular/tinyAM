@@ -460,6 +460,12 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #' - `sd_supplied`: optional one-sided formula giving supplied SDs (on the natural
 #'   scale of the log-observation residuals) for catch-at-age data. When provided,
 #'   the intercept is removed from `sd_form` so supplied SDs act as offsets.
+#' - `cor_struct`: correlation of log observation errors among modeled ages
+#'   in each fleet and year. The default is `"independent"`. Use `"ar1"` for
+#'   positive correlation that decays with age distance in every fleet, or a
+#'   named vector such as `c(Gillnet = "ar1")` to select fleets. Unlisted fleets
+#'   stay independent. A catch table without fleet labels has one series named
+#'   `"Fishery"`.
 #' @param index_settings A list with elements:
 #' - `sd_form`: formula for log observation SD for index-at-age data. Ordinary
 #'   terms and Gaussian [formula_effects] are supported, e.g.
@@ -467,6 +473,10 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #' - `sd_supplied`: optional one-sided formula giving supplied SDs (on the natural
 #'   scale of the log-observation residuals) for index-at-age data. When provided,
 #'   the intercept is removed from `sd_form` so supplied SDs act as offsets.
+#' - `cor_struct`: as for catch, with names taken from the `survey` column.
+#'   Each selected survey or fleet estimates its own correlation from
+#'   years with at least two observed ages. If there are no such years, the
+#'   series is fitted with independent errors and a warning.
 #' - `q_form`: formula for catchability, evaluated on the index table. Ordinary
 #'   `~ q_block` allows any pattern across blocks; `~ mono(q_block)` is non-decreasing across ordered
 #'   blocks. See [mono()] for independent non-decreasing curves by survey.
@@ -565,8 +575,9 @@ prepare_tam <- function(
       process = "off", mu_form = NULL, mu_supplied = ~ I(0.2), sd_form = ~1,
       age_breaks = NULL, first_dev_year = NULL, mean_ages = NULL
     ),
-    catch_settings = list(sd_form = ~1, sd_supplied = NULL),
-    index_settings = list(sd_form = ~1, sd_supplied = NULL, q_form = ~q_block, q_link = "log"),
+    catch_settings = list(sd_form = ~1, sd_supplied = NULL, cor_struct = "independent"),
+    index_settings = list(sd_form = ~1, sd_supplied = NULL, cor_struct = "independent",
+                          q_form = ~q_block, q_link = "log"),
     proj_settings = NULL
 ) {
   settings <- .complete_settings(mget(.settings_names))
@@ -775,6 +786,7 @@ prepare_tam <- function(
   dat$is_missing <- obs_fit$is_missing
   dat$is_observed <- obs_fit$is_observed
   dat$observed <- dat$log_obs[!dat$is_missing]
+  dat$obs_correlation <- .prepare_obs_correlation(dat, unique(as.character(obs$index$survey)))
 
   sd_design <- .parse_sd_formula(dat$catch_settings$sd_form, dat$obs$catch, "catch")
   dat$sd_catch_modmat <- sd_design$matrix

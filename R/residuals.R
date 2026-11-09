@@ -1,8 +1,9 @@
 #' Extract observation residuals
 #'
 #' Return keyed catch and survey rows for plotting or further checks. This is a
-#' convenience extractor: standardized residuals are the existing fitted-state
-#' residuals, affected by shrinkage, not independent prediction errors.
+#' convenience extractor. Standardized residuals use fitted states and marginal
+#' observation SDs. Shrinkage affects these residuals, and standardization
+#' leaves any across-age correlation in place.
 #' @param object A fitted `tam_fit`.
 #' @param type `"standardized"` (default), `"log"` (log observation minus log
 #'   prediction), `"response"` (observation minus prediction), or `"osa"`.
