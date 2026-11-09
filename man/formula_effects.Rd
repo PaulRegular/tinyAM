@@ -138,6 +138,8 @@ intercept, as for fixed SD formulas. The effect's process SD describes
 variation in log SD, not observation error itself. There is no requirement
 that the age curve rise at either tail; a quadratic fixed age term is also
 a useful simpler alternative when that pattern is expected.
+For penalized univariate \code{s()} or age-year \code{t2()} terms on log SD,
+see \link{smooth_formulas}.
 
 One RW/AR1 term is initially allowed per observation SD surface. \code{mono()}
 and \code{logistic()} remain catchability curves. Replication across years at each

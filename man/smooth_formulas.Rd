@@ -2,12 +2,14 @@
 % Please edit documentation in R/smooths.R
 \name{smooth_formulas}
 \alias{smooth_formulas}
-\title{Penalized smooth F and catchability relationships}
+\title{Penalized smooths for fishing mortality, catchability and observation SD}
 \description{
-Use \code{s()} or \code{t2()} in \code{F_settings$mu_form} or \code{index_settings$q_form},
-including inside \code{\link[=for_fleet]{for_fleet()}} and \code{\link[=for_survey]{for_survey()}}. The basis is built by
-mgcv; the assessment jointly estimates the relationship and its smoothness.
-No separate GAM is fitted to catch or survey observations.
+Use \code{s()} or \code{t2()} in \code{F_settings$mu_form}, \code{index_settings$q_form},
+\code{catch_settings$sd_form} or \code{index_settings$sd_form}. \code{\link[=for_fleet]{for_fleet()}} scopes
+F mean formulas and \code{\link[=for_survey]{for_survey()}} scopes catchability formulas. Use a
+categorical \code{by} column for separate observation-SD smooths by group.
+mgcv builds the basis, and the assessment jointly estimates each
+relationship and its smoothness.
 }
 \details{
 Supported terms are univariate \code{s(x, k, bs, by)} with thin-plate
@@ -23,21 +25,26 @@ has coefficients \eqn{u_j\sim N(0,\tau_j^2 I)} with its complete normalized
 Gaussian density. Smoothing SDs are estimated through RTMB and coefficients
 are integrated by Laplace approximation. Tensor terms can have several
 independent penalties; factor-by smooths have separate penalties per level.
-These penalties describe mean relationships, not F residual innovations.
-Contributions enter the log F or selected q-link predictor, before any
-multiplicative selectivity curve. Ordinary terms provide intercepts.
+In mean formulas, contributions enter the log F or selected q-link
+predictor before any multiplicative selectivity curve. In \code{sd_form},
+contributions enter the log of the observation SD. A positive effect
+increases residual spread. Catch and index SD smooths each have their
+own coefficients and penalties. The \code{cor_struct} setting controls
+correlation among observation errors. Ordinary terms provide intercepts, and
+\code{sd_supplied} continues to supply an offset on the log-SD scale.
 
 F smooths support \code{process = "off"}, \code{"iid"} or \code{"ar1"}. Smooth means with
 residual variation are experimental: both may describe the same pattern.
 Inspect \code{\link[=check_tam]{check_tam()}}, uncertainty, and recovery simulations. Intrinsic
 RW/correlated-RW F residuals are not supported with smooth means.
 
-Bases are constructed from historical covariates only and rebuilt in every
-fold. New temporal smooth contributions hold the terminal training year in
-projections; existing \code{\link[=rw]{rw()}}/\code{\link[=ar1]{ar1()}} q-effect forecasts retain their process
-definitions. Warm starts are retained only for compatible bases. Simulation
-draws each penalized coefficient once per realization and applies the same
-function throughout its grid. Conditional draws retain fitted coefficients.
+Bases use historical covariates and are rebuilt in every fold. Temporal
+smooth contributions hold the terminal training year in projections.
+The \code{\link[=rw]{rw()}}/\code{\link[=ar1]{ar1()}} q effects follow their own process definitions. Warm starts
+are retained only for compatible bases. Simulation draws each penalized
+coefficient once per realization and applies the same function throughout
+its grid. Conditional draws retain fitted coefficients. See
+\code{\link[=tidy_tam]{tidy_tam()}} for the fitted contributions and uncertainty.
 
 The conversion follows mgcv's \code{smoothCon()}/\code{smooth2random(type = 2)} and
 the approach in sdmTMB. Prediction transforms are adapted from Simon Wood's
@@ -52,6 +59,8 @@ Validation pins mgcv 1.9.4 and sdmTMB revision
   for_fleet("Gillnet", ~ factor(year) + s(age, k = 5))
 ~ 0 + for_survey("RV", ~ s(age, k = 5)) +
   for_survey("Sentinel", ~ logistic(age))
+catch_settings <- list(sd_form = ~ s(age, k = 5))
+index_settings <- list(sd_form = ~ survey + s(age, k = 5, by = survey))
 }
 \references{
 Wood, S. N. (2017). \emph{Generalized Additive Models: An Introduction

@@ -1,7 +1,7 @@
 # Does RV sampling correlation decline with age distance?
 
 We compared three models for the positive RV observations in the
-SimSurvey mortality and sampling study in the `observation-error-study` worktree.
+[SimSurvey mortality and sampling study](observation_error_z_report.Rmd).
 All used the same calibration means, marginal log-SDs and held-out
 observations. One assumed independence, one used a positive age AR1, and
 one assigned the same positive correlation to every age pair within a

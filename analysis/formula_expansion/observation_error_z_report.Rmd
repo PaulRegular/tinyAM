@@ -1,0 +1,351 @@
+---
+title: "What causes observations at different ages to move together?"
+output:
+  html_document:
+    self_contained: true
+    toc: true
+params:
+  result: null
+---
+
+```{r setup, include=FALSE}
+stopifnot(file.exists(params$result))
+study <- readRDS(params$result)
+sampling <- study$sampling
+assessment <- study$assessment
+m <- study$manifest
+library(ggplot2)
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE,
+  fig.width = 8.4, fig.height = 4.2, out.width = "100%", dpi = 130)
+theme_set(theme_minimal(base_size = 12) +
+  theme(panel.grid.minor = element_blank(), legend.position = "bottom",
+    strip.text = element_text(face = "bold")))
+
+spatial_names <- c(coupled = "Shared spatial field", default = "Default spatial fields",
+  iid_age = "Independent age fields")
+mortality_names <- c(iid = "Independent", ar1 = "Age AR1", shared = "Shared by age",
+  temporal_only = "Temporal only")
+mortality_colors <- c(Independent = "#00425A", `Age AR1` = "#007984",
+  `Shared by age` = "#B74C2D", `Temporal only` = "#765A9A")
+spatial_axis <- function(x) factor(x, levels = names(spatial_names), labels = spatial_names)
+mortality_axis <- function(x) factor(x, levels = names(mortality_names), labels = mortality_names)
+avg <- function(x) if (any(is.finite(x))) mean(x[is.finite(x)]) else NA_real_
+by_mean <- function(x, by, fields) aggregate(x[fields], x[by], avg)
+log_lags <- as.data.frame(sampling$log_summary)
+cor_at <- function(program, design, pattern = "iid") {
+  if (!nrow(log_lags)) return(NA_real_)
+  z <- subset(log_lags, age_gap == 1 & component == program &
+    spatial == design & mortality == pattern)
+  if (nrow(z) == 1L) z$estimate else NA_real_
+}
+histories <- nrow(m$histories)
+settings <- m$settings
+```
+
+## Abstract
+
+```{r abstract, results='asis'}
+cat(paste0("Fish stock assessments use catch and survey estimates to follow the same generations as they age. ",
+  "Changes in survival can shift abundance at several ages, while a shared sampling event can shift several estimates ",
+  "even when the stock stays fixed. A single record of observations mixes these two sources of variation. ",
+  "We crossed three age patterns of total mortality with three spatial designs in simulated cod histories ",
+  "and repeatedly sampled Gillnet catch and research vessel (RV) survey observations. "))
+shared_rv <- cor_at("RV", "coupled")
+independent_rv <- cor_at("RV", "iid_age")
+default_iid <- cor_at("RV", "default")
+default_shared <- cor_at("RV", "default", "shared")
+if (all(is.finite(c(shared_rv, independent_rv, default_iid, default_shared)))) {
+  cat(sprintf(paste0("Here we show that with independent mortality shocks, the mean neighboring-age correlation of positive RV ",
+    "log observations from fixed stocks was %+.2f under a shared spatial field and %+.2f under independent age fields. ",
+    "With default spatial fields, it was %+.2f for independent and %+.2f for shared mortality shocks. "),
+    shared_rv, independent_rv, default_iid, default_shared))
+  if (abs(shared_rv - independent_rv) > abs(default_iid - default_shared)) {
+    cat("The spatial contrast was larger in these histories. ")
+  }
+} else {
+  cat("This run does not yet support the planned log-correlation comparisons. ")
+}
+cat(paste0("Repeated sampling isolates monitoring variation, and comparing stocks observed at the same simulated year ",
+  "estimates a separate contribution from differences in their expected observations. ",
+  "We use a small assessment diagnostic to examine how those signals appear after fitting. ",
+  "These comparisons show what evidence a model would need to distinguish observation dependence from population change.\n\n"))
+```
+
+## What changed in the experiment?
+
+We crossed independent, age-correlated and fully shared mortality shocks
+with a shared spatial field, default SimSurvey spatial fields and
+independent age fields. Total mortality is \(Z=F+M\). The shocks change
+the correlation of log mortality across ages while the age-specific mean
+rates and marginal log-scale SD of `r settings$log_z_marginal_sd` are held
+fixed. Mean \(Z\) is 0.3 plus 0.06 times Gillnet selectivity at each age.
+The age AR1 design gives neighboring ages a correlation of 0.9.
+The temporal-only sensitivity instead gives successive years a correlation
+of 0.5 within each age, using default spatial fields. The same
+`r histories` recruitment histories are paired across the scenarios.
+
+Within each scenario, the Gillnet target is the realized catch at age.
+The RV target is whole-area abundance weighted by age-specific
+catchability. We use standard effort on a `r settings$grid_n` ×
+`r settings$grid_n` grid. We hold each stock and its removals fixed at
+years `r paste(settings$years, collapse = " and ")` and schedule
+`r settings$repeats` monitoring draws per program at each snapshot.
+Age 14+ combines all simulated ages from 14 onwards for monitoring and
+assessment comparisons. [SimSurvey](https://doi.org/10.1371/journal.pone.0232822)
+
+```{r mortality-design, fig.height=4.7, fig.cap="One matched history under each pattern of total mortality. Colors show log mortality relative to the average log mortality at that age in the selected history. A column with similar colors across ages shows a shared shock. Adjacent columns with similar colors illustrate temporal persistence. These panels show native population ages before pooling age 14+ for monitoring."}
+z <- as.data.frame(study$mortality)
+if (nrow(z)) {
+  z <- subset(z, spatial == "default" & history_id == z$history_id[1L] & Z > 0)
+  z$deviation <- log(z$Z) - ave(log(z$Z), z$mortality, z$age)
+  z$pattern <- mortality_axis(z$mortality)
+  ggplot(z, aes(year, age, fill = deviation)) +
+    geom_tile() + facet_wrap(vars(pattern), ncol = 2) +
+    scale_fill_gradient2(low = "#1F567A", mid = "white", high = "#B74C2D") +
+    labs(x = "Simulated year", y = "Age", fill = "Log mortality\ndeviation") +
+    theme(panel.grid = element_blank())
+}
+```
+
+```{r study-support, results='asis'}
+draws <- as.data.frame(study$draw_attempts)
+if (nrow(draws)) {
+  cat(sprintf("%s of %s scheduled monitoring draws succeeded, including the annual histories for the assessment comparison. ",
+    format(sum(draws$success), big.mark = ","), format(nrow(draws), big.mark = ",")))
+}
+s <- as.data.frame(sampling$support)
+if (nrow(s)) {
+  totals <- aggregate(cbind(n_obs, n_zero, n_missing, n_complete, n_draws) ~ component, s, sum)
+  for (i in seq_len(nrow(totals))) {
+    a <- totals[i, ]
+    cat(sprintf(paste0("%s had %s finite estimates, including %s zeros, and %s missing estimates. ",
+      "%s of %s draws contained a complete age vector. "),
+      a$component, format(a$n_obs, big.mark = ","), format(a$n_zero, big.mark = ","),
+      format(a$n_missing, big.mark = ","), format(a$n_complete, big.mark = ","),
+      format(a$n_draws, big.mark = ",")))
+  }
+  cat("\n\n")
+}
+```
+
+## How much covariance came from repeated monitoring?
+
+For an age vector \(Y\) in one simulated year, let \(S\) identify the
+stock and its realized removals. The total covariance separates as
+
+\[
+\operatorname{Cov}(Y)
+= \underbrace{\operatorname{Cov}\{\operatorname{E}(Y\mid S)\}}_{\text{between stocks}}
++ \underbrace{\operatorname{E}\{\operatorname{Cov}(Y\mid S)\}}_{\text{within stocks}}.
+\]
+
+Within-stock covariance measures how the ages move together when we
+repeat monitoring. Between-stock covariance measures differences among
+their expected observations. It can reflect both changes in the true
+targets and changes in monitoring bias. We use complete age vectors of
+finite observations, including zeros, and calculate the decomposition
+within each sampled year before averaging across years. The between-stock
+term subtracts estimated sampling covariance in the repeat means. With
+few histories, it is imprecise and the correction can produce negative
+estimates.
+
+```{r arithmetic-decomposition, fig.height=6.5, fig.cap="Mean covariance contributions between neighboring ages on the arithmetic observation scale. Both covariance terms are divided by the same product of total marginal SDs, so their sum equals the total correlation. Points left of zero mean that larger estimates at one age accompany smaller estimates at the next. The figure summarizes these scenarios and does not provide a precision interval for the between-stock term."}
+a <- as.data.frame(sampling$decomposition)
+if (nrow(a)) {
+  a <- by_mean(subset(a, age_gap == 1), c("component", "spatial", "mortality"),
+    c("within_contribution", "between_contribution", "total_corr",
+      "within_cov", "between_cov", "target_cov"))
+  fields <- c(within_contribution = "Within stocks", between_contribution = "Between stocks",
+    total_corr = "Total")
+  display <- do.call(rbind, lapply(names(fields), function(f) {
+    data.frame(a[c("component", "spatial", "mortality")], value = a[[f]], term = fields[[f]])
+  }))
+  display$spatial <- spatial_axis(display$spatial)
+  display$mortality <- mortality_axis(display$mortality)
+  display$term <- factor(display$term, levels = fields)
+  ggplot(display, aes(value, mortality, color = term, shape = term)) +
+    geom_vline(xintercept = 0, linetype = 2, color = "grey60") +
+    geom_point(size = 2.4, position = position_dodge(width = .5, orientation = "y")) +
+    facet_grid(spatial ~ component) +
+    scale_color_manual(values = c(`Within stocks` = "#007984", `Between stocks` = "#B74C2D",
+      Total = "#30363D")) +
+    labs(x = "Contribution to total correlation", y = "Mortality shocks", color = NULL, shape = NULL)
+}
+```
+
+```{r arithmetic-readout, results='asis'}
+if (nrow(a)) {
+  b <- subset(a, spatial == "default" & mortality == "iid")
+  if (nrow(b)) {
+    for (i in seq_len(nrow(b))) {
+      x <- b[i, ]
+      cat(sprintf(paste0("With default spatial fields and independent mortality shocks, mean neighboring-age ",
+        "arithmetic covariance for %s was %+.2g within stocks and %+.2g between stocks. ",
+        "Covariance of the known targets was %+.2g. "),
+        x$component, x$within_cov, x$between_cov, x$target_cov))
+    }
+    cat("These covariances are in squared thousand fish. They depend on abundance scale as well as correlation.\n\n")
+  }
+}
+```
+
+## Do mortality shocks alter within-stock log correlations?
+
+The log analysis uses draws where both estimates and targets in an age
+pair are positive. For a fixed stock and year, correlation of the log
+estimates is the same as correlation of log errors relative to each age's
+fixed target. We require at
+least ten jointly positive draws for an age pair and average within
+each history before comparing histories. These correlations describe
+the positive observations. The arithmetic analysis above covers zeros.
+
+```{r log-age-gaps, fig.height=6.5, fig.cap="Within-stock correlations of positive log errors by distance between ages. Lines give the mean of the history-level correlations. Shading gives 95% intervals across histories where estimable. The temporal-only contrast uses default spatial fields. Large age gaps use fewer age pairs."}
+if (nrow(log_lags)) {
+  log_lags$spatial_name <- spatial_axis(log_lags$spatial)
+  log_lags$pattern <- mortality_axis(log_lags$mortality)
+  ggplot(log_lags, aes(age_gap, estimate, color = pattern, fill = pattern, group = pattern)) +
+    geom_hline(yintercept = 0, color = "grey60", linetype = 2) +
+    geom_ribbon(aes(ymin = lower, ymax = upper), alpha = .12, color = NA, na.rm = TRUE) +
+    geom_line(linewidth = .8, na.rm = TRUE) +
+    facet_grid(spatial_name ~ component) +
+    scale_color_manual(values = mortality_colors) +
+    scale_fill_manual(values = mortality_colors) +
+    labs(x = "Age gap (years)", y = "Within-stock log-error correlation",
+      color = "Mortality shocks", fill = "Mortality shocks")
+}
+```
+
+```{r paired-neighboring-ages, fig.height=5.0, fig.cap="Paired changes in within-stock neighboring-age log-error correlation compared with independent mortality shocks under the same spatial design. A change can arise because the stock state affects what monitoring encounters. Each contrast uses the same histories, years and supported age pairs. The bars are paired 95% intervals across histories, with few independent histories per contrast."}
+contrasts <- as.data.frame(sampling$contrasts)
+if (nrow(contrasts)) {
+  contrasts <- subset(contrasts, age_gap == 1)
+  contrasts$spatial_name <- spatial_axis(contrasts$spatial)
+  contrasts$pattern <- mortality_axis(contrasts$mortality)
+  ggplot(contrasts, aes(estimate, pattern, color = pattern)) +
+    geom_vline(xintercept = 0, color = "grey60", linetype = 2) +
+    geom_segment(aes(x = lower, xend = upper, yend = pattern), linewidth = .75, na.rm = TRUE) +
+    geom_point(size = 2.3, na.rm = TRUE) +
+    facet_grid(spatial_name ~ component) +
+    scale_color_manual(values = mortality_colors, guide = "none") +
+    labs(x = "Change from independent mortality shocks", y = "Mortality shocks")
+}
+```
+
+## What can fitted residuals tell us?
+
+The small tinyAM comparison treats observation errors as independent
+in the fitted likelihood. It compares SimSurvey draws with independent
+lognormal draws on the same positive cells. Both use fixed log SDs by
+age, calibrated from separate SimSurvey draws. Known-target errors use
+the simulated targets as their reference. For fitted residuals, we
+compare supplying realized natural mortality with fixing it at 0.3 per
+year. In each RV holdout fit, we remove all RV ages from one year and
+keep the other observations, including later years. The held-out log
+errors are standardized by the observation SD alone.
+
+```{r residual-support, results='asis'}
+fits <- as.data.frame(assessment$attempts)
+if (nrow(fits)) {
+  cat(sprintf("The diagnostic recorded %d fit attempts. ", nrow(fits)))
+  if ("usable" %in% names(fits)) cat(sprintf("%d passed numerical checks. ", sum(fits$usable %in% TRUE)))
+  cat("The fitted and held-out panels use only the residuals from usable attempts.\n\n")
+} else {
+  cat("Assessment diagnostic results are unavailable for this run.\n\n")
+}
+```
+
+```{r residual-correlations, fig.height=7.2, fig.cap="Adjacent-age correlations in the known-target, fitted and held-out standardized errors. Each point is one history. Left-out RV years are shown separately so the stages in that row use the same years and ages. Fits use an independent observation likelihood. Color identifies the simulated monitoring protocol and shape identifies the natural mortality assumption. Known-target errors have no fitted mortality assumption."}
+resid <- as.data.frame(assessment$correlation)
+if (nrow(resid)) {
+  resid <- subset(resid, age_gap == 1 & is.finite(estimate))
+  resid$stage <- factor(resid$stage, levels = c("oracle", "fitted", "heldout"),
+    labels = c("Known target", "Fitted", "Held out"))
+  resid$design <- paste(spatial_axis(resid$spatial), mortality_axis(resid$mortality), sep = "\n")
+  resid$panel <- factor(ifelse(resid$scope == "heldout_years", "RV, left-out years",
+    paste0(resid$component, ", all years")),
+    levels = c("Gillnet, all years", "RV, all years", "RV, left-out years"))
+  resid$model <- ifelse(resid$stage == "Known target", "Known target",
+    ifelse(resid$model == "truth_M", "Realized M", "Constant M"))
+  ggplot(resid, aes(stage, estimate, color = observation, shape = model)) +
+    geom_hline(yintercept = 0, color = "grey60", linetype = 2) +
+    geom_point(size = 2.1, alpha = .75, position = position_jitterdodge(jitter.width = .13, seed = 21)) +
+    facet_grid(panel ~ design) +
+    scale_color_manual(values = c(SimSurvey = "#B74C2D", Independent = "#00425A")) +
+    labs(x = NULL, y = "Adjacent-age error correlation", color = "Observations", shape = "M assumption")
+}
+```
+
+The residual comparisons are descriptive. Pairs within a year can share
+an age, and the holdout panel uses only the sampled years. Gaps in the
+figure indicate unsupported comparisons or unsuccessful fits.
+
+## Conclusion
+
+```{r covariance-conclusion, results='asis'}
+d <- as.data.frame(sampling$contrasts)
+if (nrow(d)) {
+  x <- subset(d, component == "RV" & mortality == "temporal_only" & age_gap == 1)
+  if (nrow(x) == 1L) {
+    cat(sprintf(paste0("At default spatial overlap, temporal correlation in mortality changed ",
+      "the mean within-stock RV correlation between neighboring ages by %+.2f ",
+      "(95%% paired interval %+.2f to %+.2f). This comparison uses %d histories. "),
+      x$estimate, x$lower, x$upper, x$n_histories))
+  }
+  x <- subset(d, component == "RV" & age_gap == 1)
+  if (nrow(x) && all(is.finite(x$estimate))) {
+    cat(sprintf(paste0("Across all tested spatial fields, changing mortality correlation ",
+      "shifted the estimated within-stock RV correlation by at most %.2f in absolute value. "),
+      max(abs(x$estimate))))
+  }
+  cat("For these scenarios, the spatial field is the clearest lever for the RV sampling correlation.\n\n")
+}
+```
+
+Repeated monitoring of a fixed stock measures sampling covariance. The
+separate covariance between stocks includes changes in true abundance
+and removals, along with any changes in monitoring bias. A single time
+series of catch or survey estimates combines those sources.
+
+```{r independent-field-example, results='asis'}
+d <- as.data.frame(sampling$decomposition)
+if (nrow(d)) {
+  x <- subset(d, component == "RV" & scenario == "iid_age_iid" & age_gap == 1)
+  if (nrow(x)) {
+    cat(sprintf(paste0("For example, with independent age fields and independent mortality shocks, ",
+      "the average raw RV correlation between neighboring ages was %.2f. The within-stock term ",
+      "contributed %.2f and the between-stock term contributed %.2f on the same scale. ",
+      "The contrast illustrates how a strong correlation in the observations can arise with little ",
+      "within-stock sampling correlation.\n\n"),
+      avg(x$total_corr), avg(x$within_contribution), avg(x$between_contribution)))
+  }
+}
+```
+
+```{r residual-conclusion, results='asis'}
+d <- as.data.frame(assessment$correlation)
+if (nrow(d)) {
+  x <- subset(d, component == "RV" & scope == "all_years" & age_gap == 1 &
+    observation == "Independent" & complete & is.finite(estimate))
+  observed <- subset(d, component == "RV" & scope == "all_years" & age_gap == 1 &
+    observation == "SimSurvey" & stage == "fitted" & complete & is.finite(estimate))
+  if (nrow(observed)) {
+    cat(sprintf("Across the selected histories, the median neighboring-age correlation in fitted SimSurvey RV residuals was %+.2f. ",
+      median(observed$estimate)))
+  }
+  known <- x$estimate[x$stage == "oracle"]
+  fitted <- x$estimate[x$stage == "fitted"]
+  if (length(known) && length(fitted)) {
+    cat(sprintf(paste0("For the independent RV control, the median neighboring-age correlation ",
+      "was %+.2f in the known-target errors and %+.2f in the fitted residuals. ",
+      "Across the fits the residual correlation ranged from %+.2f to %+.2f. ",
+      "This finite-sample comparison shows why fitted residual correlations need a simulated reference.\n\n"),
+      median(known), median(fitted), min(fitted), max(fitted)))
+  }
+}
+```
+
+For tinyAM, test an RV observation covariance option against known
+observation and survival errors on more independent histories. Repeat
+monitoring or other information about sampling covariance can help
+anchor the observation model. Compare recovery of each source and
+the effect on biomass and mortality uncertainty.

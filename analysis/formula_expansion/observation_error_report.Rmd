@@ -1,0 +1,338 @@
+---
+title: "How does monitoring shape observation error at age?"
+output:
+  html_document:
+    self_contained: true
+    toc: true
+params:
+  result: null
+---
+
+```{r setup, include=FALSE}
+stopifnot(file.exists(params$result))
+study <- readRDS(params$result)
+d <- study$diagnostics
+m <- study$manifest
+library(ggplot2)
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE,
+  fig.width = 8.4, fig.height = 4.2, out.width = "100%", dpi = 130)
+theme_set(theme_minimal(base_size = 12) +
+  theme(panel.grid.minor = element_blank(), legend.position = "bottom",
+    strip.text = element_text(face = "bold")))
+
+avg <- function(x) if (any(is.finite(x))) mean(x[is.finite(x)]) else NA_real_
+summarize <- function(x, by, cols) aggregate(x[cols], x[by], avg)
+effort_levels <- c("half", "standard", "double")
+effort_axis <- function(x) factor(x, levels = effort_levels, labels = c("Half", "Standard", "Double"))
+effort_colors <- c(Half = "#00425A", Standard = "#007984", Double = "#B74C2D")
+program_colors <- c(Gillnet = "#B74C2D", RV = "#007984")
+spatial <- c(coupled = "Coupled", default = "Default", iid_age = "Independent ages")
+spatial_axis <- function(x) factor(x, levels = names(spatial), labels = spatial)
+age_ticks <- c(1, 4, 7, 10, 14)
+age_labels <- c(1, 4, 7, 10, "14+")
+age_axis <- scale_x_continuous(breaks = age_ticks, labels = age_labels)
+ages <- subset(as.data.frame(d$age_year), bin == "modeled")
+default_ages <- subset(ages, om == "default")
+standard_ages <- subset(default_ages, effort == "standard")
+mean_cv <- function(program, effort_level) {
+  sprintf("%.0f%%", 100 * avg(subset(default_ages,
+    component == program & effort == effort_level)$cv_obs))
+}
+gillnet_sd <- function(selected_ages) {
+  sprintf("%.2f", avg(subset(standard_ages,
+    component == "Gillnet" & age %in% selected_ages)$sd_log_error))
+}
+share <- summarize(as.data.frame(d$level_share), c("component", "population_id", "year"),
+  c("correlation_level", "correlation_share"))
+share_means <- summarize(share, "component", c("correlation_level", "correlation_share"))
+rv_share <- subset(share_means, component == "RV")
+total_cv <- summarize(as.data.frame(d$total_cv), "component", "cv")
+age_scores <- subset(as.data.frame(d$variance_selection), bin == "modeled" & is.finite(delta))
+```
+
+## Abstract
+
+Fish stock assessments use catches and surveys to track populations. The
+precision of these estimates can vary across ages, and a single fishing or
+sampling event can affect several ages at once. It is difficult to tell from
+one estimate per year how much of this variation comes from monitoring.
+We repeatedly sampled a fixed simulated cod history with Gillnet catch
+monitoring and a research vessel (RV) survey, varying sampling effort and
+spatial overlap among ages. Here we show that Gillnet log-scale standard
+deviation (SD) was `r gillnet_sd(1)` at age 1 and `r gillnet_sd(5:9)`
+across ages 5–9 at standard effort. In the RV survey, increasing effort
+from half to double lowered mean age-specific coefficient of variation
+from `r mean_cv("RV", "half")` to `r mean_cv("RV", "double")`.
+When ages shared a spatial field, the correlation between RV estimates at
+neighboring ages changed from `r sprintf("%+.2f", rv_share$correlation_level)`
+to `r sprintf("%+.2f", rv_share$correlation_share)` after expressing them as
+shares of the survey total. Variation in that total explains much of the
+positive dependence, while Gillnet monitoring apportions a nearly known
+total catch. These findings give reasons to test age-group SDs for Gillnet
+and effort-dependent survey precision. Whether either improves estimates
+of the stock requires a separate assessment experiment.
+
+## How did we isolate monitoring error?
+
+We simulated one 20-year cod history with population seed
+`r m$population_seed`. We then redistributed the same numbers at age
+over a `r m$grid_n` × `r m$grid_n` grid using a shared field for all ages,
+SimSurvey’s default age–year–space fields, and independent fields by age
+with temporal persistence. The designs share a depth preference and the
+same marginal variance in the simulated log spatial fields. Each design
+has `r length(m$field_seeds)` spatial realizations. At years
+`r paste(m$years, collapse = ", ")` we held each stock and its realized
+removals fixed, using `r length(m$calibration)` calibration and
+`r length(m$validation)` independent validation draws per program and
+snapshot. `r sum(study$draw_attempts$success)` of
+`r nrow(study$draw_attempts)` monitoring draws completed.
+[SimSurvey](https://doi.org/10.1371/journal.pone.0232822)
+
+- **Gillnet.** The target is the realized catch in numbers at age. Monitoring estimates age shares from sampled operations and applies them to the annual reported catch. Half, standard and double effort monitor 15%, 30% and 60% of operations on average.
+- **RV.** The target is whole-area abundance weighted by age-specific catchability. Half, standard and double effort use 80, 160 and 320 distinct grid cells across strata.
+
+Larger samples include the smaller samples. Measuring and ageing rules
+within a sampled unit stay the same at all three effort levels. Age 14+
+combines ages 14–20. We sum those ages within each tow before calculating
+RV precision.
+
+```{r spatial-fields, fig.height=6.2, fig.cap="One spatial realization in year 10, shown at ages 2, 5 and 12. Each panel shows where that age is found as a percentage of its total abundance. All three designs use the same total numbers at age. Colors use a square-root scale to show both dense patches and sparse areas."}
+maps <- study$overlap[[1L]]
+maps <- do.call(rbind, lapply(names(spatial), function(design) {
+  transform(subset(as.data.frame(maps[[design]]$map), year == 10), design = design)
+}))
+maps$design <- spatial_axis(maps$design)
+maps$age <- factor(maps$age, labels = paste("Age", sort(unique(maps$age))))
+ggplot(maps, aes(x, y, fill = 100 * share)) +
+  geom_raster() + facet_grid(age ~ design) + coord_equal() +
+  scale_fill_viridis_c(trans = "sqrt", option = "cividis") +
+  labs(x = NULL, y = NULL, fill = "Age total in cell (%)") +
+  theme(axis.text = element_blank(), panel.grid = element_blank())
+```
+
+## How do age and effort affect precision?
+
+Each estimate \(\widehat Y\) has a known target \(Y\). On the arithmetic
+scale, bias is the average of \(\widehat Y-Y\), and the coefficient of
+variation (CV) is the SD of \(\widehat Y\) divided by its mean. Both
+retain zeros. Log-scale summaries use \(\log(\widehat Y/Y)\) when
+both values are positive. This describes the spread of detectable
+observations. The zero frequency shows how much of the sampling
+distribution this comparison leaves out.
+
+```{r observations, fig.height=3.5, fig.cap="Average monitoring estimates and their targets at standard effort under default spatial fields. Each point averages nine fixed snapshots. Targets are realized catch for Gillnet and catchability-weighted abundance for RV. Numbers at age use a log axis to show sparse ages. Arithmetic means retain zeros."}
+age_mean <- summarize(standard_ages, c("component", "age"), c("mean_obs", "mean_truth"))
+estimates <- rbind(transform(age_mean, source = "Mean estimate", value = mean_obs),
+  transform(age_mean, source = "Target", value = mean_truth))
+ggplot(estimates, aes(age, value, color = source, linetype = source)) +
+  geom_line(linewidth = .75) + geom_point(size = 1.35) +
+  facet_wrap(vars(component), scales = "free_y") + age_axis + scale_y_log10() +
+  scale_color_manual(values = c(`Mean estimate` = "#007984", Target = "#252E34")) +
+  labs(x = "Age", y = "Numbers at age (thousand fish)", color = NULL, linetype = NULL)
+```
+
+```{r bias-and-samples, fig.height=4.7, fig.cap="Arithmetic bias relative to the target and number of fish aged per draw at standard effort. Lines average the nine snapshots under the default spatial design. Points show individual snapshots. Negative bias means estimates were lower than the target on average."}
+age_sample <- rbind(
+  transform(standard_ages, metric = "Bias relative to target (%)", value = 100 * relative_bias),
+  transform(standard_ages, metric = "Fish aged per draw", value = mean_n_aged_at_age))
+ggplot(age_sample, aes(age, value, color = component)) +
+  geom_hline(data = data.frame(metric = "Bias relative to target (%)", value = 0),
+    aes(yintercept = value), inherit.aes = FALSE, linetype = 2, color = "grey60") +
+  geom_point(alpha = .35, size = 1.35) +
+  stat_summary(fun = avg, geom = "line", linewidth = .75) +
+  facet_wrap(vars(metric, component), ncol = 2, scales = "free_y") + age_axis +
+  scale_color_manual(values = program_colors, guide = "none") + labs(x = "Age", y = NULL)
+```
+
+From half to double effort, average age-specific CV fell from
+`r mean_cv("Gillnet", "half")` to `r mean_cv("Gillnet", "double")`
+for Gillnet and from `r mean_cv("RV", "half")` to `r mean_cv("RV", "double")`
+for RV. The largest Gillnet log SD was at age 1. It fell through
+the main catch ages and rose again to `r gillnet_sd(14)` at age 14+.
+RV log SD varied less sharply by age. The youngest Gillnet ages were
+also most likely to be missing from sampled age compositions at low effort.
+
+```{r effort-profiles, fig.height=5.1, fig.cap="Precision at half, standard and double effort under the default spatial design. Each line averages summaries across three years and three spatial realizations. Arithmetic CV and zero frequency retain zeros. Log SD uses positive estimates and targets. The oldest point combines ages 14–20."}
+fields <- c(cv_obs = "Arithmetic CV (%)", sd_log_error = "Positive log SD", zero_rate = "Zero estimates (%)")
+profiles <- summarize(default_ages, c("component", "effort", "age"), names(fields))
+profiles$cv_obs <- 100 * profiles$cv_obs
+profiles$zero_rate <- 100 * profiles$zero_rate
+profiles <- do.call(rbind, lapply(names(fields), function(nm) {
+  data.frame(profiles[c("component", "effort", "age")], value = profiles[[nm]], metric = fields[[nm]])
+}))
+profiles$metric <- factor(profiles$metric, levels = fields)
+ggplot(profiles, aes(age, value, color = effort_axis(effort))) +
+  geom_line(linewidth = .75, na.rm = TRUE) + geom_point(size = 1.4, na.rm = TRUE) +
+  facet_wrap(vars(metric, component), ncol = 2, scales = "free_y") + age_axis +
+  scale_color_manual(values = effort_colors) + labs(x = "Age", y = NULL, color = "Effort")
+```
+
+In a sampling-only comparison, the paired-age model reduced the mean
+negative log score on fresh Gillnet draws by
+`r sprintf("%.2f", -subset(age_scores, component == "Gillnet" & model == "paired_age")$delta)`
+per observation versus constant SD. The improvement was
+`r sprintf("%.2f", -subset(age_scores, component == "RV" & model == "paired_age")$delta)`
+for RV. These comparisons use the same positive draws and independent
+calibration estimates of the mean for both models. They give evidence
+about the shape of sampling variation when the underlying population is held fixed.
+
+## Can survey precision estimates guide the SD?
+
+We compared the SE reported by the stratified estimator with the SD across
+repeated surveys. To use an estimate \(\widehat I>0\) and its SE on the log
+scale, we converted them to \(\sqrt{\log[1+(\mathrm{SE}/\widehat I)^2]}\).
+This matches a lognormal variance to the supplied arithmetic precision.
+It applies to the positive observations.
+
+```{r design-precision, fig.height=3.9, fig.cap="Reported RV log SD divided by empirical log SD under the default spatial design. Reported SD is the square root of the mean of the reported log variances. Points show fixed snapshots and curves show the median at age for each effort. A ratio below one means the survey's own precision estimates understated repeated-sampling variation."}
+precision <- subset(as.data.frame(d$rv_precision), bin == "modeled" & om == "default" &
+  is.finite(empirical_log_sd) & empirical_log_sd > 0)
+precision$ratio <- precision$rms_log_sd / precision$empirical_log_sd
+ggplot(precision, aes(age, ratio, color = effort_axis(effort))) +
+  geom_hline(yintercept = 1, linetype = 2, color = "grey55") +
+  geom_point(alpha = .35, size = 1.4) +
+  stat_summary(fun = median, geom = "line", linewidth = .85) +
+  age_axis + scale_color_manual(values = effort_colors) +
+  labs(x = "Age", y = "Reported / empirical log SD", color = "Effort")
+```
+
+At standard effort, the median reported log SD was about
+`r sprintf("%.0f%%", 100 * median(subset(precision, effort == "standard")$ratio, na.rm = TRUE))`
+of the repeated-sampling SD. It was closer at double effort. A
+survey’s SE and abundance come from the same tows, so a single year's
+SE can be noisy and can change with the observed index. Treat these SEs
+as evidence about precision and check their scale on fresh draws before
+using them as weights.
+
+We also tested Cadigan’s approximation \((\mu+\theta\mu^2)/n\)
+for the variance of the mean catch per tow, where \(\mu\) is expected catch
+per tow, \(n\) is the number of tows and \(\theta\) describes clustering.
+We estimated \(\theta\) and \(\mu\) using standard-effort calibration draws
+and evaluated other effort levels with held-out draws.
+[Cadigan (2011)](https://doi.org/10.1139/F2011-026)
+
+```{r cadigan-result, results='asis'}
+law <- subset(as.data.frame(d$cadigan), bin == "modeled" & om == "default" &
+  model == "cadigan_calibration" & effort != "standard")
+law <- summarize(law, c("effort", "scale"), "delta")
+arithmetic <- subset(law, scale == "original")
+log_scale <- subset(law, scale == "log")
+if (nrow(arithmetic) && nrow(log_scale)) {
+  cat(sprintf(paste0("Under default spatial fields, the mean negative log score on the arithmetic scale ",
+    "improved at %d of %d held-out effort levels. After conversion to log SD, the changes on the positive ",
+    "observations were %+.3f at half effort and %+.3f at double effort, where lower is better. ",
+    "Good arithmetic-scale calibration gave little gain on the scale used by the lognormal likelihood.\n\n"),
+    sum(arithmetic$delta < 0), nrow(arithmetic), log_scale$delta[log_scale$effort == "half"],
+    log_scale$delta[log_scale$effort == "double"]))
+}
+```
+
+## Why do errors at different ages move together?
+
+An RV tow through a dense patch can raise estimates for several ages
+together. Gillnet monitoring divides a nearly known total among ages, so
+a larger estimated share for one age leaves less for others. We measure
+this dependence within each fixed stock and year before comparing spatial
+designs. Correlations describe how estimates move together after
+accounting for their individual SDs.
+
+```{r correlations, fig.height=5.7, fig.cap="Across-age correlations of positive log errors at standard effort. Tiles average within-snapshot correlations from at least ten jointly positive draws. Orange means estimates move together and blue means they tend to move in opposite directions. Faded tiles have fewer contributing snapshots. Grey marks insufficient support. The diagonal is omitted."}
+pairs <- subset(as.data.frame(d$covariance_pairs), bin == "modeled" &
+  effort == "standard" & scale == "log")
+pairs$correlation[pairs$n < 10L] <- NA_real_
+pairs$support <- as.integer(is.finite(pairs$correlation))
+pairs <- summarize(pairs, c("component", "om", "age_a", "age_b"), c("correlation", "support"))
+pairs <- rbind(pairs, transform(pairs, age_a = age_b, age_b = age_a))
+pairs$om <- spatial_axis(pairs$om)
+ggplot(pairs, aes(age_a, age_b, fill = correlation, alpha = support)) +
+  geom_tile() + facet_grid(component ~ om) + coord_equal() + age_axis +
+  scale_y_continuous(breaks = age_ticks, labels = age_labels) +
+  scale_fill_gradient2(low = "#1F567A", mid = "white", high = "#B74C2D",
+    limits = c(-1, 1), na.value = "grey76") +
+  scale_alpha_continuous(limits = c(0, 1), range = c(.55, 1), guide = "none") +
+  labs(x = "Age", y = "Age", fill = "Correlation") + theme(panel.grid = element_blank())
+```
+
+When age groups shared a spatial field, the CV of the estimated total
+was `r sprintf("%.1f%%", 100 * total_cv$cv[total_cv$component == "RV"])`
+for RV and
+`r sprintf("%.1f%%", 100 * total_cv$cv[total_cv$component == "Gillnet"])`
+for Gillnet. Dividing each estimate by its total largely removed the
+positive correlation for RV. Using RV captures before length and age
+subsampling gave a similar result, so the shared sampling locations and
+variation in the survey total help explain the correlation.
+
+```{r level-share, fig.height=3.3, fig.cap="Adjacent-age log-error correlations when all ages share a spatial field. Thin lines connect results for numbers at age and shares of the total from the same monitoring draws within each fixed snapshot. Open symbols show means across snapshots. RV capture only uses the same tows before length and age subsampling."}
+programs <- c("RV capture only", "RV", "Gillnet")
+share$component <- factor(share$component, levels = programs)
+share_means$component <- factor(share_means$component, levels = programs)
+points <- rbind(transform(share_means, value = correlation_level, type = "Numbers at age"),
+  transform(share_means, value = correlation_share, type = "Shares of total"))
+ggplot(share, aes(correlation_level, component)) +
+  geom_vline(xintercept = 0, linetype = 2, color = "grey60") +
+  geom_segment(aes(xend = correlation_share, yend = component), alpha = .22,
+    position = position_jitter(height = .09, width = 0, seed = 21)) +
+  geom_segment(data = share_means, aes(xend = correlation_share, yend = component), linewidth = .75) +
+  geom_point(data = points, aes(value, color = type, shape = type), size = 3, fill = "white") +
+  scale_color_manual(values = c(`Numbers at age` = "#00425A", `Shares of total` = "#B74C2D")) +
+  scale_shape_manual(values = c(`Numbers at age` = 21, `Shares of total` = 23)) +
+  scale_x_continuous(limits = c(-1, 1)) +
+  labs(x = "Adjacent-age log-error correlation", y = NULL, color = NULL, shape = NULL)
+```
+
+We separately benchmarked a simple correlated error model with one
+neighboring-age parameter \(\rho\) and correlation \(\rho^h\) for ages
+\(h\) apart. It uses the same means, individual age SDs and validation
+observations as the independent model. In the RV survey, it scored
+better with shared and default spatial fields and showed little gain
+with independent fields. For Gillnet, gains were smaller and most
+apparent under default fields. This benchmark evaluates joint sampling
+errors when population and removals are known. Estimating observation
+correlation separately from population-process correlation in a fitted
+stock assessment is a different question.
+
+```{r covariance-benchmark, fig.height=3.7, fig.cap="Change in mean negative log score from allowing neighboring-age correlation at standard effort. Lower is better. Each thin interval resamples monitoring draws within one spatial realization. Three points per spatial design show how those results vary among realizations. The benchmark uses the same marginal SDs as the independent model."}
+joint <- subset(as.data.frame(d$covariance_scores), bin == "modeled" &
+  effort == "standard" & is.finite(delta))
+joint$design <- spatial_axis(joint$om)
+offset <- position_dodge(width = .35)
+ggplot(joint, aes(delta, design, group = population_id, color = component)) +
+  geom_vline(xintercept = 0, linetype = 2, color = "grey55") +
+  geom_errorbar(aes(xmin = delta_lower, xmax = delta_upper), orientation = "y",
+    width = .12, position = offset) +
+  geom_point(position = offset, size = 1.9) +
+  facet_wrap(vars(component), scales = "free_x") +
+  scale_color_manual(values = program_colors, guide = "none") +
+  labs(x = "Change in negative log score", y = NULL)
+```
+
+## Conclusion
+
+**Gillnet.** Start by checking whether spread is largest at the ends of
+the age range. A few age-group SDs are a useful candidate for the pattern
+seen here, especially when youngest-age samples are sparse. Retain
+zero frequencies alongside the positive log summaries.
+
+**RV.** Use constant SD as a benchmark and check reported precision
+against replicate variability before relying on design-based weights.
+If effort varies across years, calibrate its relationship with SD across
+the effort range and check both the arithmetic and log scales.
+
+Under shared and default spatial fields, observations at neighboring
+ages moved together more strongly in RV than in Gillnet. With the
+shared field, the mean neighboring-age correlation in RV log errors
+fell from `r sprintf("%+.2f", rv_share$correlation_level)` to
+`r sprintf("%+.2f", rv_share$correlation_share)` when we expressed
+the same observations as shares of the survey total. This suggests
+that variation in the total accounts for much of the positive
+correlation. Gillnet correlations were weaker and more sensitive to
+the spatial design. Allowing age correlation improved joint scores on
+held-out RV draws under both shared and default fields.
+
+**Next steps in tinyAM.** Test whether an assessment can recover
+within-year RV observation correlation when population changes are
+also correlated across ages. Compare cases with each source of
+correlation alone and with both present. Use repeat survey draws from
+the same stock and year to see whether independent information on
+sampling error improves separation. The separate assessment pilot
+evaluates how SD choices affect estimates of the stock.

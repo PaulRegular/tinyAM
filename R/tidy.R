@@ -486,7 +486,7 @@ tidy_pop <- function(fit, interval = 0.95) {
 #'   Coefficient names identify
 #'   transitions and groups. Actual observation-specific q is in [tidy_obs_pred()].
 #' - Smooth null-space coefficients and penalized basis coefficients are signed
-#'   link-scale effects, not exponentiated F/q values. Smoothing SDs are positive
+#'   effects on their fitted link scale. Smoothing SDs are positive
 #'   with log-scale SEs. Complete functions, including null-space contributions,
 #'   are in [tidy_tam()]'s `formula_effects$smooths`, with joint uncertainty.
 #'
@@ -599,7 +599,7 @@ tidy_par <- function(fit, interval = 0.95) {
     } else {
       "reported"
     }
-    smooth_fixed <- nm %in% c("log_mu_f","log_q","logit_q") & df$coef %in% smooth_columns
+    smooth_fixed <- nm %in% c("log_mu_f", "log_q", "logit_q", "log_sd_catch", "log_sd_index") & df$coef %in% smooth_columns
     original_smooth <- df[smooth_fixed,c("est","lwr","upr","se"),drop=FALSE]
 
     if (startsWith(nm, "atanh_")) {
@@ -619,14 +619,23 @@ tidy_par <- function(fit, interval = 0.95) {
     if (any(smooth_fixed)) {
       df[smooth_fixed,c("est","lwr","upr","se")] <- original_smooth
       df$se_scale[smooth_fixed] <- "reported"
-      df$par[smooth_fixed] <- if (nm == "log_mu_f") "mu_F_smooth" else "q_smooth_fixed"
+      df$par[smooth_fixed] <- switch(nm,
+        log_mu_f = "mu_F_smooth",
+        log_sd_catch = "sd_catch_smooth_fixed",
+        log_sd_index = "sd_index_smooth_fixed",
+        "q_smooth_fixed"
+      )
     }
     df$unit <- if (nm %in% c("log_r0", "log_r_init", "log_r", "log_n0", "log_n")) {
       .population_unit(fit$dat, "N")
     } else if (nm == "d_n0") "log abundance difference" else
       if (nm == "log_q_power") "unitless" else NA_character_
-    if (any(smooth_fixed)) df$unit[smooth_fixed] <- if (nm == "log_mu_f") "log F coefficient" else
-      if (nm == "logit_q") "logit q coefficient" else "log q coefficient"
+    if (any(smooth_fixed)) df$unit[smooth_fixed] <- switch(nm,
+      log_mu_f = "log F coefficient",
+      log_q = "log q coefficient",
+      logit_q = "logit q coefficient",
+      "log SD coefficient"
+    )
     values <- c("est", "lwr", "upr", "se", "se_scale")
     df[, c(
       setdiff(names(df), c(values, "is_proj")), values,

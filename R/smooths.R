@@ -1,9 +1,11 @@
-#' Penalized smooth F and catchability relationships
+#' Penalized smooths for fishing mortality, catchability and observation SD
 #'
-#' Use `s()` or `t2()` in `F_settings$mu_form` or `index_settings$q_form`,
-#' including inside [for_fleet()] and [for_survey()]. The basis is built by
-#' mgcv; the assessment jointly estimates the relationship and its smoothness.
-#' No separate GAM is fitted to catch or survey observations.
+#' Use `s()` or `t2()` in `F_settings$mu_form`, `index_settings$q_form`,
+#' `catch_settings$sd_form` or `index_settings$sd_form`. [for_fleet()] scopes
+#' F mean formulas and [for_survey()] scopes catchability formulas. Use a
+#' categorical `by` column for separate observation-SD smooths by group.
+#' mgcv builds the basis, and the assessment jointly estimates each
+#' relationship and its smoothness.
 #'
 #' @details Supported terms are univariate `s(x, k, bs, by)` with thin-plate
 #' (`"tp"`) or cubic-regression (`"cr"`) bases, and `t2(age, year, k, bs, by)`
@@ -18,21 +20,26 @@
 #' Gaussian density. Smoothing SDs are estimated through RTMB and coefficients
 #' are integrated by Laplace approximation. Tensor terms can have several
 #' independent penalties; factor-by smooths have separate penalties per level.
-#' These penalties describe mean relationships, not F residual innovations.
-#' Contributions enter the log F or selected q-link predictor, before any
-#' multiplicative selectivity curve. Ordinary terms provide intercepts.
+#' In mean formulas, contributions enter the log F or selected q-link
+#' predictor before any multiplicative selectivity curve. In `sd_form`,
+#' contributions enter the log of the observation SD. A positive effect
+#' increases residual spread. Catch and index SD smooths each have their
+#' own coefficients and penalties. The `cor_struct` setting controls
+#' correlation among observation errors. Ordinary terms provide intercepts, and
+#' `sd_supplied` continues to supply an offset on the log-SD scale.
 #'
 #' F smooths support `process = "off"`, `"iid"` or `"ar1"`. Smooth means with
 #' residual variation are experimental: both may describe the same pattern.
 #' Inspect [check_tam()], uncertainty, and recovery simulations. Intrinsic
 #' RW/correlated-RW F residuals are not supported with smooth means.
 #'
-#' Bases are constructed from historical covariates only and rebuilt in every
-#' fold. New temporal smooth contributions hold the terminal training year in
-#' projections; existing [rw()]/[ar1()] q-effect forecasts retain their process
-#' definitions. Warm starts are retained only for compatible bases. Simulation
-#' draws each penalized coefficient once per realization and applies the same
-#' function throughout its grid. Conditional draws retain fitted coefficients.
+#' Bases use historical covariates and are rebuilt in every fold. Temporal
+#' smooth contributions hold the terminal training year in projections.
+#' The [rw()]/[ar1()] q effects follow their own process definitions. Warm starts
+#' are retained only for compatible bases. Simulation draws each penalized
+#' coefficient once per realization and applies the same function throughout
+#' its grid. Conditional draws retain fitted coefficients. See
+#' [tidy_tam()] for the fitted contributions and uncertainty.
 #'
 #' The conversion follows mgcv's `smoothCon()`/`smooth2random(type = 2)` and
 #' the approach in sdmTMB. Prediction transforms are adapted from Simon Wood's
@@ -51,6 +58,8 @@
 #'   for_fleet("Gillnet", ~ factor(year) + s(age, k = 5))
 #' ~ 0 + for_survey("RV", ~ s(age, k = 5)) +
 #'   for_survey("Sentinel", ~ logistic(age))
+#' catch_settings <- list(sd_form = ~ s(age, k = 5))
+#' index_settings <- list(sd_form = ~ survey + s(age, k = 5, by = survey))
 #' @seealso [fit_tam()], [for_fleet()], [formula_effects], [double_logistic()]
 #' @name smooth_formulas
 NULL
@@ -212,12 +221,26 @@ NULL
   list(fixed = fixed, random = random)
 }
 
+.smooth_coefficient <- function(dat, component) {
+  switch(component,
+    F = "log_mu_f",
+    q = if (dat$index_settings$q_link == "logit") "logit_q" else "log_q",
+    sd_catch = "log_sd_catch",
+    sd_index = "log_sd_index"
+  )
+}
+
+.smooth_component_data <- function(dat, component) {
+  if (component == "F") return(.mean_formula_data(dat, "F"))
+  dat$obs[[if (component == "q") "index" else sub("^sd_", "", component)]]
+}
+
 .smooth_warm_starts <- function(start, old, new) {
-  designs <- list(F = old$F_modmat, q = old$q_modmat)
-  for (component in c("q", "F")) {
-    field <- if (component == "q") "q_terms" else "F_terms"
-    coefficient <- if (component == "F") "log_mu_f" else
-      if (new$index_settings$q_link == "logit") "logit_q" else "log_q"
+  components <- c("q", "F", "sd_catch", "sd_index")
+  designs <- stats::setNames(old[paste0(components, "_modmat")], components)
+  for (component in components) {
+    field <- paste0(component, "_terms")
+    coefficient <- .smooth_coefficient(new, component)
     terms <- Filter(function(x) x$type == "smooth", new[[field]])
     ids <- unique(vapply(terms, `[[`, character(1), "smooth_id"))
     for (id in ids) {
@@ -258,15 +281,14 @@ NULL
 }
 
 .smooth_function_values <- function(par, dat, component, effects) {
-  terms <- Filter(function(x)x$type == "smooth",dat[[if(component == "q") "q_terms" else "F_terms"]])
-  n <- if (component == "q") nrow(dat$obs$index) else nrow(dat$F_data)
+  terms <- Filter(function(x) x$type == "smooth", dat[[paste0(component, "_terms")]])
+  n <- if (component == "F") nrow(dat$F_data) else nrow(.smooth_component_data(dat, component))
   ids <- unique(vapply(terms,`[[`,character(1),"smooth_id"))
   out <- matrix(0,n,length(ids),dimnames=list(row=seq_len(n),smooth=ids))
   if (!length(ids)) return(out)
   p <- par
   p[names(effects$parameters)] <- effects$parameters
-  coefficient <- if (component == "F") "log_mu_f" else
-    if (dat$index_settings$q_link == "logit") "logit_q" else "log_q"
+  coefficient <- .smooth_coefficient(dat, component)
   "[<-" <- RTMB::ADoverload("[<-")
   for (id in ids) {
     pieces <- Filter(function(x)x$smooth_id == id,terms)
@@ -279,13 +301,13 @@ NULL
 }
 
 .tidy_smooth_functions <- function(fit, interval, component) {
-  terms <- Filter(function(x)x$type == "smooth",fit$dat[[if(component == "q")"q_terms" else "F_terms"]])
+  terms <- Filter(function(x) x$type == "smooth", fit$dat[[paste0(component, "_terms")]])
   if (!length(terms)) return(list())
-  field <- if (component == "q") "eta_q_smooth" else "eta_mu_F_smooth"
+  field <- paste0("eta_", if (component == "F") "mu_F" else component, "_smooth")
   estimate <- fit$rep[[field]]
   if (is.null(estimate)) return(list())
   error <- if (is.null(fit[["sdrep"]])) NULL else as.list(fit$sdrep,"Std. Error",report=TRUE)[[field]]
-  data <- if (component == "q") fit$dat$obs$index else .mean_formula_data(fit$dat,"F")
+  data <- .smooth_component_data(fit$dat, component)
   ids <- unique(vapply(terms,`[[`,character(1),"smooth_id"))
   z <- stats::qnorm(.5+interval/2)
   out <- lapply(seq_along(ids),function(j) {
@@ -300,8 +322,11 @@ NULL
     tab$se <- if (is.null(error)) NA_real_ else as.numeric(error[rows,j])
     tab$lwr <- tab$est-z*tab$se; tab$upr <- tab$est+z*tab$se
     tab$se_scale <- "reported"
-    tab$unit <- if (component == "F") "log F contribution" else
-      if (fit$dat$index_settings$q_link == "logit")"logit q contribution" else "log q contribution"
+    tab$unit <- switch(component,
+      F = "log F contribution",
+      q = if (fit$dat$index_settings$q_link == "logit") "logit q contribution" else "log q contribution",
+      "log SD contribution"
+    )
     tab
   })
   link <- if (component == "q") fit$dat$index_settings$q_link else "log"
@@ -315,17 +340,21 @@ NULL
     issue="smooth_F_residuals",detail=paste(
       "Smooth F means with IID/AR1 residuals are experimental. Both components may explain the same age/year patterns;",
       "inspect smoothing and residual SD uncertainty, their correlation, and recovery simulations. No component is simplified automatically.")))
-  for (component in c("q","F")) for (term in Filter(function(x)x$type == "smooth",
-      dat[[if(component == "q") "q_terms" else "F_terms"]])) {
-    rows <- term$groups[[1L]]$rows
-    d <- if (component == "q") dat$obs$index else .mean_formula_data(dat,"F")
+  for (component in c("q", "F", "sd_catch", "sd_index")) {
+    terms <- Filter(function(x) x$type == "smooth", dat[[paste0(component, "_terms")]])
+    if (!length(terms)) next
+    d <- .smooth_component_data(dat, component)
     eligible <- !d$is_proj
-    if (component == "q") eligible <- eligible & is.finite(d$obs) & d$obs > 0 else
-      eligible <- eligible & .f_state_rows(dat)
-    rows <- rows[eligible[rows]]
-    cells <- nrow(unique(d[rows,term$variables,drop=FALSE]))
-    if (cells < 5L) out <- rbind(out,data.frame(issue="smooth_support",
-      detail=paste0(term$id,": only ",cells," distinct historical predictor cells support the smoothing SD. Repeated ages are not independent function coordinates; inspect uncertainty.")))
+    if (component == "F") eligible <- eligible & .f_state_rows(dat) else
+      eligible <- eligible & is.finite(d$obs) & d$obs > 0
+    for (term in terms) {
+      rows <- term$groups[[1L]]$rows
+      rows <- rows[eligible[rows]]
+      cells <- nrow(unique(d[rows, term$variables, drop = FALSE]))
+      if (cells < 5L) out <- rbind(out, data.frame(issue = "smooth_support",
+        detail = paste0(term$id, ": only ", cells,
+          " distinct historical predictor cells support the smoothing SD. Repeated ages are not independent function coordinates; inspect uncertainty.")))
+    }
   }
   out
 }

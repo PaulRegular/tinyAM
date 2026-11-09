@@ -53,6 +53,87 @@ tidying and dashboard integration against their study caches. They do not tune
 stock recipes. Run small smoke cases after changes; rerun the long studies only
 when their mathematics or generating designs change.
 
+## Gillnet and RV observation error
+
+[**SimSurvey observation properties**](observation_error_report.Rmd) examines
+how repeated monitoring of a fixed cod history changes age-specific precision,
+zero frequency, and correlations among ages. It varies spatial patterns and
+monitoring effort. The seed 21 results also supply independent calibration
+for the Cadigan-style survey SD tested in the pilot.
+[Generated sampling report](results/observation_error_seed21/study-grid40/observation_error_report.html)
+
+[**tinyAM population pilot**](observation_error_pilot_report.Rmd) compares
+11 SD models across 24 stable, declining and rise-and-fall stock histories.
+It checks fitted SD against independent monitoring draws and uses paired
+comparisons to judge changes in spawning biomass error, interval coverage
+and fit reliability.
+[Generated pilot report](results/observation_error_population_pilot/study-grid40/extension/observation_error_pilot_report.html)
+
+### Render from saved results
+
+Run from the package root with PowerShell 7.4 or later, using R with
+`rmarkdown` and Pandoc available. Set `$rscript` to the Rscript executable.
+
+```powershell
+$runner = './analysis/formula_expansion/run_observation_error.ps1'
+& $runner -Phase SamplingReport -Rscript $rscript
+& $runner -Phase Report -Rscript $rscript
+```
+
+### Generate study checkpoints
+
+Set `$simSurveySnapshot` to the extracted
+`SimSurvey-29a1b03350c274f88dac108fb95f9446eac79233` source. The launcher uses
+one below-normal worker with RAM and CPU safeguards. Skip stages with complete
+checkpoints.
+
+```powershell
+& $runner -Phase Pilot -Grid 40 -SimSurveySource $simSurveySnapshot -Rscript $rscript
+& $runner -Phase Study -Grid 40 -SimSurveySource $simSurveySnapshot -Rscript $rscript
+& $runner -Phase PopulationPilot -SimSurveySource $simSurveySnapshot -Rscript $rscript
+& $runner -Phase PopulationDiagnostic -SimSurveySource $simSurveySnapshot -Rscript $rscript
+& $runner -Phase PopulationExtension -SimSurveySource $simSurveySnapshot -Rscript $rscript
+```
+
+`Pilot` checks the sampling run and `Study` generates the full sampling
+results. The population diagnostic tests observation means on three histories
+and supplies some of the independent SD draws. The extension uses
+`results/observation_error_seed21/study-grid40/summary.rds` for the Cadigan
+calibration.
+
+The earlier single-population assessment experiments are recorded on the
+`observation-error-study` branch through `bee37cb3`.
+
+### Mortality and sampling covariance
+
+The [Z covariance study](observation_error_z_report.Rmd) crosses the three
+spatial designs with independent, age-correlated, and shared mortality
+shocks. It includes a temporal-only contrast under default spatial fields.
+Repeat monitoring in years 5 and 16 of four paired histories separates
+sampling covariance from covariance between stock states. A small tinyAM
+comparison checks whether age correlations in residuals track the known
+sampling errors.
+
+```powershell
+& $runner -Phase ZPilot -SimSurveySource $simSurveySnapshot -Rscript $rscript
+& $runner -Phase ZStudy -SimSurveySource $simSurveySnapshot -Rscript $rscript
+& $runner -Phase ZReport -Rscript $rscript
+```
+
+The 40 × 40 experiment uses standard effort. The smoke run, full checkpoints,
+and [generated report](results/observation_error_z_covariance/study-grid40/observation_error_z_report.html)
+are under `results/observation_error_z_covariance`.
+
+The [RV covariance benchmark](rv_covariance_benchmark.md) compares independent,
+positive age-AR1 and exchangeable log errors on held-out draws from this study.
+
+### Study to-do
+
+- [ ] Test whether an assessment that estimates both observation and process
+  correlation can recover their strengths. Use simulations with known
+  observation covariance and repeat surveys to assess when the model can
+  separate the two sources.
+
 ## Outputs and reproducibility
 
 All results, fits, figures, HTML, warnings and failures stay under ignored

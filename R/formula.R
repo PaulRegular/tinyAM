@@ -113,6 +113,8 @@
 #' variation in log SD, not observation error itself. There is no requirement
 #' that the age curve rise at either tail; a quadratic fixed age term is also
 #' a useful simpler alternative when that pattern is expected.
+#' For penalized univariate `s()` or age-year `t2()` terms on log SD,
+#' see [smooth_formulas].
 #'
 #' One RW/AR1 term is initially allowed per observation SD surface. `mono()`
 #' and `logistic()` remain catchability curves. Replication across years at each
@@ -1197,7 +1199,7 @@ mono <- function(x, by = NULL) {
         component, "_increments"
       )
     )
-    if (component == "F") all[[component]]$smooths <- .tidy_smooth_functions(fit,interval,"F")
+    if (component != "M") all[[component]]$smooths <- .tidy_smooth_functions(fit, interval, component)
   }
   out <- list(levels = list(), increments = list(), contributions = list(), smooths = list())
   for (component in names(all)) {
@@ -1224,8 +1226,8 @@ mono <- function(x, by = NULL) {
   design <- .parse_q_formula(formula, data)
   terms <- design$q_terms
   if (!is.null(design$q_mono_modmat) ||
-    any(vapply(terms, function(x) .is_selectivity_curve(x) || x$type == "smooth", logical(1)))) {
-    cli::cli_abort("{component}_settings$sd_form supports iid(), rw() and ar1(), not catchability curves or smooths.")
+    any(vapply(terms, .is_selectivity_curve, logical(1)))) {
+    cli::cli_abort("{component}_settings$sd_form supports iid(), rw(), ar1(), s() and t2(), not catchability curves.")
   }
   for (i in seq_along(terms)) {
     term <- terms[[i]]
@@ -1270,6 +1272,7 @@ mono <- function(x, by = NULL) {
     d <- dat$obs[[component]]
     observed <- !d$is_proj & is.finite(d$obs) & d$obs > 0
     for (term in terms) {
+      if (term$type == "smooth") next
       if (component == "catch" && term$type == "rw" && term$variable == "age" &&
         !is.null(term$sd_parameter)) {
         out <- rbind(out, data.frame(issue = "catch_SD_RW", detail = paste0(

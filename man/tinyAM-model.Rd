@@ -331,8 +331,10 @@ this retains the usual SAM power relationship and its baseline-q sharing.
 Missing power-group labels fix p to one while retaining the observation.
 For each positive observation \eqn{Y_i}, conditional on states,
 \deqn{\log Y_i\sim N(\log\widetilde Y_i,\tau_i^2),\qquad
-\tau_i=\tau_i^{supplied}\exp(X_{sd,i}\beta_{sd}).}
-Catch and survey SDs have separate designs and coefficients. Without a supplied
+\tau_i=\tau_i^{supplied}\exp(X_{sd,i}\beta_{sd}+z_{sd,i}).}
+Catch and survey SDs have separate designs and coefficients. Gaussian formula
+effects and penalized smooths contribute to \eqn{z_{sd,i}} on the log-SD scale.
+See \link{formula_effects} and \link{smooth_formulas}. Without a supplied
 SD the baseline is one; with a supplied SD the formula intercept is removed.
 All supplied SDs and M offsets must be positive and finite; formula covariates
 must produce one finite design row per observation.

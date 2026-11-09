@@ -195,3 +195,114 @@ test_that("SD random intercepts and by specifications use the same formula rules
   p[[compiled$terms[[1]]$parameter]][] <- .1
   expect_equal(tinyAM:::.sd_effects(p, dat, "index")$contribution, .1 * d$multiplier)
 })
+
+test_that("smooth observation SDs change spread with Gaussian penalties", {
+  expect_warning(
+    dat <- sd_test_dat(
+      catch_settings = list(sd_form = ~ s(age, k = 4), sd_supplied = ~ I(.2)),
+      index_settings = list(sd_form = ~ t2(age, year, k = c(4, 4))),
+      proj_settings = list(n_proj = 2, n_mean = 2, F_mult = 1)
+    ),
+    "Dropping intercept"
+  )
+  expect_false("(Intercept)" %in% colnames(dat$sd_catch_modmat))
+  expect_length(dat$sd_catch_terms, 1L)
+  expect_gt(length(dat$sd_index_terms), 1L)
+  p <- make_par(dat)
+  p$log_sd_index["(Intercept)"] <- log(.4)
+  p$log_sd_f <- p$log_sd_r <- log(.1)
+  objective <- RTMB::MakeADFun(function(p) nll_fun(p, dat), p, silent = TRUE)
+  initial <- objective$report()
+
+  for (term in c(dat$sd_catch_terms, dat$sd_index_terms)) {
+    p[[term$parameter]][] <- seq(-.05, .06, length.out = length(p[[term$parameter]]))
+    expect_true(term$parameter %in% tinyAM:::.formula_random_parameters(dat))
+  }
+  p$log_sd_catch[] <- -.08
+  p$log_sd_index[names(p$log_sd_index) != "(Intercept)"] <- -.03
+  modified <- objective$par
+  for (name in unique(names(modified))) {
+    modified[names(modified) == name] <- p[[name]]
+  }
+  expect_true(is.finite(objective$fn(modified)))
+  expect_true(all(is.finite(objective$gr(modified))))
+  final <- objective$report()
+  expect_equal(final$log_pred, initial$log_pred)
+
+  for (component in c("catch", "index")) {
+    field <- paste0("sd_", component)
+    terms <- dat[[paste0(field, "_terms")]]
+    fitted <- p[[paste0("log_", field)]]
+    z <- Reduce("+", lapply(terms, function(term) {
+      drop(term$design %*% p[[term$parameter]])
+    }))
+    penalty <- sum(vapply(terms, function(term) {
+      -sum(dnorm(p[[term$parameter]], sd = exp(p[[term$sd_parameter]]), log = TRUE))
+    }, numeric(1)))
+    effects <- tinyAM:::.sd_effects(p, dat, component)
+    expect_equal(effects$nll, penalty, tolerance = 1e-10)
+    expect_equal(effects$contribution, z)
+    smooth <- terms[[1L]]$smooth_fixed
+    smooth_value <- drop(smooth %*% fitted[colnames(smooth)]) + z
+    expect_equal(as.numeric(final[[paste0("eta_", field, "_smooth")]]), smooth_value)
+    offset <- if (component == "catch") .2 else .4
+    expect_equal(final$sd_obs[dat$obs_map$type == component], offset * exp(smooth_value))
+  }
+
+  index <- dat$obs$index
+  key <- function(d) paste(d$survey, d$age)
+  terminal <- which(index$year == max(index$year[!index$is_proj]))
+  matched <- terminal[match(key(index[index$is_proj, ]), key(index[terminal, ]))]
+  expect_true(any(index$is_proj))
+  expect_false(anyNA(matched))
+  expect_equal(as.numeric(final$eta_sd_index_smooth[index$is_proj, ]),
+    as.numeric(final$eta_sd_index_smooth[matched, ]))
+
+  set.seed(912)
+  draw <- nll_fun(p, dat, simulate = TRUE)
+  set.seed(912)
+  expect_equal(draw, nll_fun(p, dat, simulate = TRUE))
+  for (component in c("catch", "index")) {
+    terms <- dat[[paste0("sd_", component, "_terms")]]
+    expect_true(all(vapply(terms, function(term) {
+      !is.null(draw[[term$parameter]]) && any(draw[[term$parameter]] != p[[term$parameter]])
+    }, logical(1))))
+  }
+
+  proxy <- list(dat = dat, parameter_values = p, rep = final,
+    obj = list(env = list(parList = function(par) par)))
+  effects <- tinyAM:::.tidy_formula_effects(proxy)$smooths
+  expect_length(effects, 2L)
+  for (tab in effects) {
+    expect_identical(unique(tab$unit), "log SD contribution")
+    expect_equal(tab$est, as.numeric(final[[paste0("eta_", tab$component[1L], "_smooth")]]))
+  }
+})
+
+test_that("survey SD warm starts preserve smooths across basis sign changes", {
+  dat <- sd_test_dat(index_settings = list(sd_form = ~ s(age, k = 4)))
+  old <- dat
+  term <- dat$sd_index_terms[[1L]]
+  columns <- colnames(term$smooth_fixed)
+  old$sd_index_modmat[, columns] <- -old$sd_index_modmat[, columns]
+  reversed <- term
+  reversed$smooth_fixed <- -term$smooth_fixed
+  reversed$design <- -term$design
+  reversed$basis_signature$design$fixed <- -term$basis_signature$design$fixed
+  reversed$basis_signature$design$random[[1L]] <- -term$basis_signature$design$random[[1L]]
+  old$sd_index_terms[[1L]] <- reversed
+  p <- make_par(old)
+  p$log_sd_index[columns] <- -.03
+  p[[term$parameter]][] <- seq_along(p[[term$parameter]]) / 50
+  p[[term$sd_parameter]][] <- log(.3)
+  source <- structure(list(dat = old, parameter_values = p,
+    obj = list(env = list(parList = function(par) par))), class = "tam_fit")
+  start <- tinyAM:::.start_parameters(source, dat)
+  merged <- tinyAM:::.merge_start_par(make_par(dat), start)
+  before <- tinyAM:::.sd_effects(p, old, "index")
+  after <- tinyAM:::.sd_effects(merged, dat, "index")
+  expect_equal(drop(dat$sd_index_modmat %*% merged$log_sd_index) + after$contribution,
+    drop(old$sd_index_modmat %*% p$log_sd_index) + before$contribution)
+  expect_equal(after$nll, before$nll)
+  expect_equal(merged[[term$sd_parameter]], p[[term$sd_parameter]])
+})

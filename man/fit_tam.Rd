@@ -203,8 +203,9 @@ average M (\code{M_bar}) calculations. All ages used if absent.
 
 \item{catch_settings}{A list with elements:
 \itemize{
-\item \code{sd_form}: formula for log observation SD for catch-at-age data. Ordinary
-terms and Gaussian \link{formula_effects} are supported, e.g. \code{~ iid(age)}.
+\item \code{sd_form}: formula for log observation SD for catch-at-age data. Use
+ordinary terms, Gaussian \link{formula_effects} such as \code{~ iid(age)}, or
+penalized \link[=smooth_formulas]{smooths} such as \code{~ s(age, k = 5)}.
 \item \code{sd_supplied}: optional one-sided formula giving supplied SDs (on the natural
 scale of the log-observation residuals) for catch-at-age data. When provided,
 the intercept is removed from \code{sd_form} so supplied SDs act as offsets.
@@ -218,9 +219,9 @@ stay independent. A catch table without fleet labels has one series named
 
 \item{index_settings}{A list with elements:
 \itemize{
-\item \code{sd_form}: formula for log observation SD for index-at-age data. Ordinary
-terms and Gaussian \link{formula_effects} are supported, e.g.
-\code{~ survey + rw(age, by = survey)}.
+\item \code{sd_form}: formula for log observation SD for index-at-age data. It uses the
+same syntax as catch observation SD. For example,
+\code{~ survey + s(age, k = 5, by = survey)} gives each survey its own age curve.
 \item \code{sd_supplied}: optional one-sided formula giving supplied SDs (on the natural
 scale of the log-observation residuals) for index-at-age data. When provided,
 the intercept is removed from \code{sd_form} so supplied SDs act as offsets.

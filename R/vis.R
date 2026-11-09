@@ -298,9 +298,9 @@ vis_tam.tam_retro <- function(..., model_list = NULL, interval = 0.95, output_fi
   par <- data$par
   category <- rep("Other", nrow(data))
   category[grepl("^sd_", par)] <- "Process SDs"
-  category[grepl("^sd_(q|mu_F)_.*smooth_",par)] <- "Smoothing SDs"
+  category[grepl("^sd_(q|mu_F|catch|index)_.*smooth_", par)] <- "Smoothing SDs"
   category[grepl("^sd_beta_", par)] <- "Process SD coefficients"
-  category[par %in% c("sd_catch", "sd_index")] <- "Observation SDs"
+  category[par %in% c("sd_catch", "sd_index", "sd_catch_smooth_fixed", "sd_index_smooth_fixed")] <- "Observation SDs"
   category[par %in% c("q", "logit_q", "q_power")] <- "Catchability"
   category[par %in% "dq" | grepl("^q_(a50|slope|scale|smooth)_", par)] <- "Catchability curves"
   category[grepl("^mu_", par)] <- "Mortality means"
@@ -326,7 +326,8 @@ vis_tam.tam_retro <- function(..., model_list = NULL, interval = 0.95, output_fi
   process <- switch(unique(effect$process),
     rw = "random walk",
     ar1 = "AR1",
-    iid = "IID"
+    iid = "IID",
+    smooth = "smooth"
   )
   variable <- unique(effect$variable)
   by <- unique(effect$by)
