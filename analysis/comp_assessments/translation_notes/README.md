@@ -5,6 +5,7 @@ These notes separate downstream model choices and fit diagnostics from SAIO sour
 Source values, official definitions, units, run identity and unresolved extraction gaps remain in [SAIO source reviews](https://github.com/PaulRegular/saio/tree/main/source_reviews).
 
 Current expansion-batch notes:
+- [Southern Argentine hake, south of 41 degrees S](argentina_merluccius_hubbsi_south_41s_2025.md)
 
 - [Icelandic Atlantic wolffish](ices_atlantic_wolffish_iceland_2026.md)
 - [Faroes ling](ices_ling_faroe_5b_2026.md)
