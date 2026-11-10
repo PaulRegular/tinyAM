@@ -235,10 +235,10 @@ series is fitted with independent errors and a warning.
 blocks. See \code{\link[=mono]{mono()}} for independent non-decreasing curves by survey.
 Structured effects such as \code{~ survey + ar1(year, by = survey)} allow shared
 annual changes across ages. \code{~ survey + logistic(age, by = survey)} fits rising
-selectivity curves. \code{~ q_key + power(N, by = q_power_group)} allows
+selectivity curves. \code{~ q_key + q_power(N, by = q_power_group)} allows
 abundance-dependent catchability using internally calculated abundance at
 survey time. Missing power-group labels mean p = 1, not missing observations.
-Powers require the log q link. See \code{\link[=power]{power()}} and \link{formula_effects}.
+Powers require the log q link. See \code{\link[=q_power]{q_power()}} and \link{formula_effects}.
 \code{\link[=normal]{normal()}} and \code{\link[=double_logistic]{double_logistic()}} give dome-shaped selectivity that
 multiplies baseline q after its inverse link.
 Penalized \code{s()} and \code{t2(age, year)} terms instead modify the selected q-link

@@ -56,7 +56,7 @@ reference:
   - catchability_curves
   - for_fleet
   - smooth_formulas
-  - power
+  - q_power
   - formula_effects
 - title: Fit, diagnose and forecast
 - contents:

@@ -1,6 +1,6 @@
 #' Abundance-dependent catchability
 #'
-#' Use `power(N)` in `index_settings$q_form` to allow catchability to change
+#' Use `q_power(N)` in `index_settings$q_form` to allow catchability to change
 #' with abundance. Ordinary formula terms specify baseline catchability.
 #' `N` inside this marker is the model's abundance at survey time,
 #' \eqn{A=N\exp(-sZ)}, not an observation column or the observed index.
@@ -40,34 +40,34 @@
 #' @param by Optional index-table grouping column. Missing labels fix p to one.
 #' @return A formula marker; direct calls raise an error.
 #' @examples
-#' ~ q_key + power(N, by = q_key)
-#' ~ survey + power(N)
+#' ~ q_key + q_power(N, by = q_key)
+#' ~ survey + q_power(N)
 #' # Set q_power_group to NA for survey ages without an estimated power:
-#' ~ q_key + power(N, by = q_power_group)
+#' ~ q_key + q_power(N, by = q_power_group)
 #' @seealso [prepare_tam()], [formula_effects], [catchability_curves]
 #' @export
-power <- function(x, by = NULL) {
-  cli::cli_abort("power() is a formula marker; use power(N) in index_settings$q_form with q_link = 'log'.")
+q_power <- function(x, by = NULL) {
+  cli::cli_abort("q_power() is a formula marker; use q_power(N) in index_settings$q_form with q_link = 'log'.")
 }
 
-.contains_power <- function(x) {
-  .formula_has_call(x,"power")
+.contains_q_power <- function(x) {
+  .formula_has_call(x, "q_power")
 }
 
 .make_q_power <- function(spec, data) {
   group <- if (is.null(spec$by)) rep("all", nrow(data)) else data[[spec$by]]
   if (!is.atomic(group) || !is.null(dim(group)) ||
       (is.numeric(group) && any(!is.finite(group[!is.na(group)])))) {
-    cli::cli_abort("power() by must contain categorical labels or missing values.")
+    cli::cli_abort("q_power() by must contain categorical labels or missing values.")
   }
   group <- as.character(group)
-  if (any(!is.na(group) & !nzchar(trimws(group)))) cli::cli_abort("power() group labels must be nonempty or NA.")
+  if (any(!is.na(group) & !nzchar(trimws(group)))) cli::cli_abort("q_power() group labels must be nonempty or NA.")
   levels <- unique(group[!is.na(group)])
   index <- match(group, levels, nomatch = 0L)
   active <- is.finite(data$obs) & data$obs > 0
   if ("is_proj" %in% names(data)) active <- active & !data$is_proj
   absent <- setdiff(levels, group[active])
-  if (length(absent)) cli::cli_abort("power() groups need fitted positive observations: {paste(absent, collapse = ', ')}.")
+  if (length(absent)) cli::cli_abort("q_power() groups need fitted positive observations: {paste(absent, collapse = ', ')}.")
   list(by = spec$by, levels = levels, index = index)
 }
 

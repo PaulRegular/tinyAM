@@ -184,7 +184,7 @@ for_survey <- function(survey, formula) {
     if (!is.null(piece$q_power)) {
       if (is.null(out$q_power)) out$q_power <- list(by=NULL,levels=character(),index=integer(n))
       active <- piece$q_power$index > 0L
-      if (any(out$q_power$index[rows[active]] > 0L)) cli::cli_abort("Overlapping power(N) terms in {spec$id}.")
+      if (any(out$q_power$index[rows[active]] > 0L)) cli::cli_abort("Overlapping q_power(N) terms in {spec$id}.")
       offset <- length(out$q_power$levels)
       out$q_power$levels <- c(out$q_power$levels,paste0(spec$id, ":",piece$q_power$levels))
       out$q_power$index[rows[active]] <- piece$q_power$index[active] + offset

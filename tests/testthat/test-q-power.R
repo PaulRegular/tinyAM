@@ -4,29 +4,30 @@ power_data <- function() {
   d
 }
 
-test_that("power parses categorical groups without dropping inactive observations", {
+test_that("q_power parses categorical groups without dropping inactive observations", {
   d <- make_test_dat(data = power_data(), years = 2000:2005,
-    index_settings = list(q_form = ~q_block + power(N, by = power_group)))
+    index_settings = list(q_form = ~q_block + q_power(N, by = power_group)))
   p <- make_par(d)
   expect_setequal(names(p$log_q_power), c("age2", "age3"))
   expect_equal(length(d$q_power$index), nrow(d$obs$index))
   expect_equal(d$q_power$index == 0L, is.na(d$obs$index$power_group))
   expect_false(any(grepl("sd.*power|eta.*power", names(p))))
-  all <- make_test_dat(index_settings = list(q_form = ~q_block + power(N)))
+  expect_false("power" %in% getNamespaceExports("tinyAM"))
+  all <- make_test_dat(index_settings = list(q_form = ~q_block + tinyAM::q_power(N)))
   expect_identical(all$q_power$levels, "all")
   z <- power_data(); z$index$power_group <- match(z$index$power_group, c("age2", "age3"))
   numeric <- make_test_dat(data = z,
-    index_settings = list(q_form = ~q_block + power(N, by = power_group)))
+    index_settings = list(q_form = ~q_block + q_power(N, by = power_group)))
   expect_equal(length(make_par(numeric)$log_q_power), 2L)
   z$index$power_group[] <- NA
   inactive <- make_test_dat(data = z,
-    index_settings = list(q_form = ~q_block + power(N, by = power_group)))
+    index_settings = list(q_form = ~q_block + q_power(N, by = power_group)))
   expect_false("log_q_power" %in% names(make_par(inactive)))
 })
 
-test_that("power uses latent abundance at survey time and positive exponents", {
+test_that("q_power uses latent abundance at survey time and positive exponents", {
   d <- make_test_dat(data = power_data(), years = 2000:2005,
-    index_settings = list(q_form = ~q_block + power(N, by = power_group)))
+    index_settings = list(q_form = ~q_block + q_power(N, by = power_group)))
   p <- make_par(d)
   p$log_q_power[] <- log(c(.7, 1.4))
   obj <- RTMB::MakeADFun(function(p) nll_fun(p, d), p, silent = TRUE)
@@ -51,7 +52,7 @@ test_that("power uses latent abundance at survey time and positive exponents", {
 test_that("p equal to one preserves the original likelihood and other derivatives", {
   plain <- make_test_dat(years = 2000:2005)
   powered <- make_test_dat(years = 2000:2005,
-    index_settings = list(q_form = ~q_block + power(N)))
+    index_settings = list(q_form = ~q_block + q_power(N)))
   a <- RTMB::MakeADFun(function(p) nll_fun(p, plain), make_par(plain), silent = TRUE)
   b <- RTMB::MakeADFun(function(p) nll_fun(p, powered), make_par(powered), silent = TRUE)
   expect_equal(a$fn(), b$fn(), tolerance = 1e-10)
@@ -59,23 +60,23 @@ test_that("p equal to one preserves the original likelihood and other derivative
   expect_equal(a$report()$log_pred, b$report()$log_pred, tolerance = 1e-10)
 })
 
-test_that("unsupported power specifications fail explicitly", {
-  expect_error(power(N), "formula marker")
-  for (form in list(~power(obs), ~power(log(N)), ~power(N):age,
-    ~I(power(N)), ~power(N) + power(N, by = survey))) {
-    expect_error(make_test_dat(index_settings = list(q_form = form)), "power|Structured")
+test_that("unsupported q_power specifications fail explicitly", {
+  expect_error(q_power(N), "formula marker")
+  for (form in list(~q_power(obs), ~q_power(log(N)), ~q_power(N):age,
+    ~I(q_power(N)), ~q_power(N) + q_power(N, by = survey))) {
+    expect_error(make_test_dat(index_settings = list(q_form = form)), "q_power|Structured")
   }
-  expect_error(make_test_dat(index_settings = list(q_form = ~power(N), q_link = "logit")), "q_link")
-  expect_error(make_test_dat(catch_settings = list(sd_form = ~power(N))), "only supported")
-  expect_error(make_test_dat(rec_settings = list(mu_form = ~power(N))), "only supported")
-  expect_error(make_test_dat(F_settings = list(mu_form = ~power(N))), "only supported")
+  expect_error(make_test_dat(index_settings = list(q_form = ~q_power(N), q_link = "logit")), "q_link")
+  expect_error(make_test_dat(catch_settings = list(sd_form = ~q_power(N))), "only supported")
+  expect_error(make_test_dat(rec_settings = list(mu_form = ~q_power(N))), "only supported")
+  expect_error(make_test_dat(F_settings = list(mu_form = ~q_power(N))), "only supported")
   z <- power_data(); z$index$power_group[z$index$obs > 0] <- NA
   expect_error(make_test_dat(data = z,
-    index_settings = list(q_form = ~q_block + power(N, by = power_group))), "positive observations")
+    index_settings = list(q_form = ~q_block + q_power(N, by = power_group))), "positive observations")
 })
 
-test_that("power fits report effective q with uncertainty and align starts", {
-  f <- update(default_fit, index_settings = list(q_form = ~q_block + power(N)),
+test_that("q_power fits report effective q with uncertainty and align starts", {
+  f <- update(default_fit, index_settings = list(q_form = ~q_block + q_power(N)),
     rec_settings = list(init = "latent"), start_par = default_fit, silent = TRUE)
   z <- f$obs_pred$index
   expect_true(all(c("q", "q_base", "q_power", "q_base_lwr", "q_base_se_scale") %in% names(z)))
@@ -103,7 +104,7 @@ test_that("power fits report effective q with uncertainty and align starts", {
   retro <- fit_hindcast(f, folds = 1, start_from_fit = TRUE, progress = FALSE,
     proj_settings = list(F_mult = 1))
   expect_equal(nrow(retro$fold_diagnostics), 2L)
-  expect_identical(f$dat$index_settings$q_form, ~q_block + power(N))
+  expect_identical(f$dat$index_settings$q_form, ~q_block + q_power(N))
   before <- f$obj$env$last.par
   selected <- tail(seq_along(f$dat$observed), 2L)
   actual_osa <- residuals(f, type = "osa", subset = selected,

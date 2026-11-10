@@ -177,7 +177,7 @@ Other possibilities include:
 
 Recruitment boundary states are fixed by default; `rec_settings$init = "latent"`
 integrates them without an initial density. For abundance-dependent catchability,
-use [`power(N, by = q_key)`](https://paulregular.github.io/tinyAM/reference/power.html) in `q_form` with the log link.
+use [`q_power(N, by = q_key)`](https://paulregular.github.io/tinyAM/reference/q_power.html) in `q_form` with the log link.
 
 With fleet catches, F is estimated separately for each fleet and summed for
 population survival. A single formula can give fleets different selectivity

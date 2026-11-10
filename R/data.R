@@ -252,7 +252,7 @@ print.tam_data <- function(x, n = 5, ...) {
 .population_data <- function(dat, formula = NULL, label = "Population formula", table = "data$pop_covariates") {
   d <- dat$pop_data
   if (!is.null(formula)) {
-    if (.contains_power(formula)) cli::cli_abort("power() is only supported in index_settings$q_form.")
+    if (.contains_q_power(formula)) cli::cli_abort("q_power() is only supported in index_settings$q_form.")
     missing <- setdiff(.formula_input_variables(formula), names(d))
     if (length(missing)) {
       cli::cli_abort("{label} needs {paste(missing, collapse = ', ')} in {table}.")

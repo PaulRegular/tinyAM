@@ -312,7 +312,7 @@
 #' (1-e^{-Z_{t,a}}),\qquad
 #' \widetilde I_i=q_i N_{t_i,a_i}e^{-s_i Z_{t_i,a_i}},}
 #' where \eqn{s_i\in[0,1]} is survey sampling time within the year.
-#' With [power()] in `q_form`, write \eqn{A_i=N_{t_i,a_i}e^{-s_iZ_{t_i,a_i}}}.
+#' With [q_power()] in `q_form`, write \eqn{A_i=N_{t_i,a_i}e^{-s_iZ_{t_i,a_i}}}.
 #' The log link then gives
 #' \deqn{q_i=q_{0,i}A_i^{p_i-1},\qquad \widetilde I_i=q_{0,i}A_i^{p_i},
 #' \qquad p_i=\exp(\gamma_i)>0.}

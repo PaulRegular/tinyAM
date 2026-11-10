@@ -1,5 +1,8 @@
 # tinyAM 0.1.1.9001
 
+* Rename the catchability marker `power()` to `q_power()` to avoid masking
+  `stats::power()`. Use `q_power(N)` in catchability formulas.
+
 * Add symmetric dome-shaped `normal()` curves for fishing mortality and
   survey catchability. Document all four selectivity markers together.
 
@@ -107,7 +110,7 @@
 * Partial OSA requests now map returned residuals to their original observations;
   unrequested and conditioning rows retain missing residuals.
 
-* `power(N, by = group)` in `q_form` estimates positive abundance exponents
+* `q_power(N, by = group)` in `q_form` estimates positive abundance exponents
   using abundance at survey time. Missing group labels retain p = 1 without
   removing observations. Effective and baseline catchability are reported separately.
   A focused Northern Shelf haddock comparison reproduces the pinned 2026 SAM

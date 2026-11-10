@@ -129,9 +129,9 @@ test_that("scoped Gaussian effects simulate once per coordinate and keep indepen
   expect_true(all(is.finite(o$gr())))
 })
 
-test_that("scoped power terms keep their abundance-time semantics", {
+test_that("scoped q_power terms keep their abundance-time semantics", {
   d <- make_test_dat(data=.scope_inputs(),years=2000:2005,ages=2:6,
-    index_settings=list(q_form=~0+for_survey("RV",~1+power(N))+for_survey("Sentinel",~1+power(N))))
+    index_settings=list(q_form=~0+for_survey("RV",~1+q_power(N))+for_survey("Sentinel",~1+q_power(N))))
   p <- make_par(d); p$log_q_power[] <- log(c(.8,1.2))
   o <- RTMB::MakeADFun(function(p)nll_fun(p,d),p,silent=TRUE)
   r <- o$report(); rows <- d$obs_map$type == "index"; map <- d$obs_map[rows,]
@@ -140,8 +140,8 @@ test_that("scoped power terms keep their abundance-time semantics", {
   expected <- ifelse(map$survey == "RV",.8,1.2)*at_time
   expect_equal(unname(r$log_pred[rows]),expected)
   expect_true(all(is.finite(o$gr())))
-  expect_error(make_test_dat(data=.scope_inputs(),index_settings=list(q_form=~power(N)+for_survey("RV",~0+power(N)))),"Overlapping power")
-  q_only <- ~1+power(N)
+  expect_error(make_test_dat(data=.scope_inputs(),index_settings=list(q_form=~q_power(N)+for_survey("RV",~0+q_power(N)))),"Overlapping q_power")
+  q_only <- ~1+q_power(N)
   obs <- .scope_inputs(); obs$catch$N <- 1
   expect_error(make_test_dat(data=obs,F_settings=list(process="off",
     mu_form=~0+for_fleet("Trawl",q_only)+for_fleet("Gillnet",~1))),"only supported in index_settings")

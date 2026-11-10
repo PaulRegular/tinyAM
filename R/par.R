@@ -110,7 +110,7 @@
 #'   - `log_q` for `q_link = "log"`, or `logit_q` for `q_link = "logit"`
 #'     (length `ncol(dat$q_modmat)`). Zero coefficients start q at 1 or 0.5,
 #'     respectively, before any [mono()] increments.
-#'   - `log_q_power`: log positive exponents for [power()], named by group,
+#'   - `log_q_power`: log positive exponents for [q_power()], named by group,
 #'     initialized at zero (p = 1), estimated as fixed effects.
 #'   - `dq` only for [mono()] terms (length `ncol(dat$q_mono_modmat)`):
 #'     fixed non-negative increments on the selected q-link scale, initialized to `0.05`
