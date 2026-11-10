@@ -85,12 +85,13 @@ walk. From year 11, the trawl rate is 20% of what its random walk would
 otherwise produce. Gillnet and longline follow their own paths through the
 change.
 
-```{r fishing-scenario, echo=FALSE, fig.width=7, fig.height=4.5, fig.cap="Fleet targets at full selectivity. The vertical line marks the trawl reduction between years 10 and 11."}
+```{r fishing-scenario, echo=FALSE, fig.width=7, fig.height=5, fig.cap="Fleet targets at full selectivity. The vertical line marks the trawl reduction between years 10 and 11."}
 local({
   targets <- sim_cod_truth$fishery_annual
   paths <- split(targets, targets$fishery)
   colors <- tam_pal(length(paths))
-  plot(range(targets$year), c(0, max(targets$F_full_unreduced)), type = "n",
+  max_F <- max(unlist(lapply(paths, `[[`, "F_full_reference"))) * 1.05
+  plot(range(targets$year), c(0, max_F), type = "n",
     xlab = "Year", ylab = "Fully selected F target (per year)")
   abline(v = 10.5, lty = 3)
   for (i in seq_along(paths)) {
@@ -162,7 +163,7 @@ and [double-logistic curves](../reference/double_logistic.html).
 ```{r survey-formula, cache=TRUE}
 catchability <- ~ 0 +
   for_survey("RV", ~ logistic(age)) +
-  for_survey("Sentinel", ~ age + I(age^2))
+  for_survey("Sentinel", ~ age + I(age ^ 2))
 ```
 
 Each survey has a separate q scale and shape. A quadratic in age can
@@ -185,11 +186,11 @@ multifleet <- fit_tam(
   fleet_dat, ages = 1:14,
   N_settings = list(process = "off", init = "exp"),
   rec_settings = list(process = "rw"),
-  F_settings = list(process = "iid", mu_form = fishing,
-                   sd_form = ~ 1, mean_ages = 5:10),
-  M_settings = list(process = "off", mu_supplied = ~ I(0.3), mean_ages = 5:10),
-  catch_settings = list(sd_form = ~ 1),
-  index_settings = list(q_form = catchability, sd_form = ~ survey)
+  F_settings = list(process = "ar1", mu_form = fishing,
+                    sd_form = ~ 1, mean_ages = 5:10),
+  M_settings = list(process = "ar1", mu_supplied = ~ I(0.3), mean_ages = 5:10),
+  catch_settings = list(sd_form = ~ 0 + fleet),
+  index_settings = list(q_form = catchability, sd_form = ~ 0 + survey)
 )
 ```
 
@@ -234,9 +235,9 @@ aggregate_fit <- fit_tam(
   aggregate_dat, ages = 1:14,
   N_settings = list(process = "off", init = "exp"),
   rec_settings = list(process = "rw"),
-  F_settings = list(process = "ar1", mu_form = ~ factor(age), mean_ages = 5:10),
-  M_settings = list(process = "off", mu_supplied = ~ I(0.3), mean_ages = 5:10),
-  index_settings = list(q_form = catchability, sd_form = ~ survey)
+  F_settings = list(process = "ar1", mu_form = ~ logistic(age), mean_ages = 5:10),
+  M_settings = list(process = "ar1", mu_supplied = ~ I(0.3), mean_ages = 5:10),
+  index_settings = list(q_form = catchability, sd_form = ~ 0 + survey)
 )
 ```
 
