@@ -1,5 +1,8 @@
 # tinyAM 0.1.1.9001
 
+* Add symmetric dome-shaped `normal()` curves for fishing mortality and
+  survey catchability. Document all four selectivity markers together.
+
 * Allow positive within-year age AR1 observation correlation separately for
   catch fleets and surveys with `cor_struct`. Independent errors remain the default.
 

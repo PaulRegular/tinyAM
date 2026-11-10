@@ -66,7 +66,7 @@
       curves[[length(curves) + 1L]] <<- list(type = type, lag = as.integer(lag))
       return(NULL)
     }
-    if (type %in% c("mono", "logistic", "|")) {
+    if (type %in% c("mono", "logistic", "normal", "double_logistic", "|")) {
       cli::cli_abort("Unsupported recruitment formula term: {type}().")
     }
     if (type == "(") {

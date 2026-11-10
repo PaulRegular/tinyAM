@@ -397,7 +397,8 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #'   with no residual process or with IID/AR1 residuals, e.g. `~ logistic(age)`. Ordinary terms supply
 #'   baseline F; realized F can depart from the rising mean. Static curves are
 #'   not identifiable with RW/correlated-RW residuals. See [catchability_curves].
-#'   [double_logistic()] supplies WHAM's unnormalized four-parameter dome.
+#'   [normal()] supplies a symmetric two-parameter dome and [double_logistic()]
+#'   supplies WHAM's four-parameter dome.
 #'   Catch covariates must be available even where observations are missing.
 #'   They must agree across biological ages pooled into a modeled plus group.
 #'   The catch response `obs` cannot enter an F formula. With fleet labels,
@@ -487,8 +488,8 @@ cut_years <- function(years, breaks) cut_int(years, breaks, ordered = FALSE)
 #'   abundance-dependent catchability using internally calculated abundance at
 #'   survey time. Missing power-group labels mean p = 1, not missing observations.
 #'   Powers require the log q link. See [power()] and [formula_effects].
-#'   [double_logistic()] allows dome-shaped selectivity and multiplies baseline
-#'   q after its inverse link.
+#'   [normal()] and [double_logistic()] give dome-shaped selectivity that
+#'   multiplies baseline q after its inverse link.
 #'   Penalized `s()` and `t2(age, year)` terms instead modify the selected q-link
 #'   predictor. See [smooth_formulas] for supported bases, grouping and penalties.
 #'   [for_survey()] applies a formula to one named survey, e.g.

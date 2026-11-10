@@ -82,7 +82,7 @@
       start$log_r <- setNames(log(source$rep$recruitment[years]), source$dat$years[years])
     }
     if (!identical(source$dat$index_settings$q_link, dat$index_settings$q_link)) {
-      start <- start[!grepl("^(log_q|logit_q$|dq$|eta_q_|log_sd_q_|logit_phi_q_|q_a50_)", names(start))]
+      start <- start[!grepl("^(log_q|logit_q$|dq$|eta_q_|log_sd_q_|logit_phi_q_|q_a50_|q_peak_)", names(start))]
       cli::cli_inform("Catchability starts were omitted because q_link changed.")
     }
     if (!is.null(start$log_q_power)) {

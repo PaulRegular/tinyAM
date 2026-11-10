@@ -142,7 +142,7 @@ For penalized univariate \code{s()} or age-year \code{t2()} terms on log SD,
 see \link{smooth_formulas}.
 
 One RW/AR1 term is initially allowed per observation SD surface. \code{mono()}
-and \code{logistic()} remain catchability curves. Replication across years at each
+and the parametric \link{catchability_curves} apply to F or q. Replication across years at each
 age helps estimate residual spread; a few ages give little information about
 AR1 persistence. Fitting warns about levels with fewer than three observations
 and estimated processes with fewer than five observed levels per group.

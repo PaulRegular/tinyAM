@@ -85,7 +85,9 @@
 #'   - `log_mu_f` coefficients (length `ncol(dat$F_modmat)`) if a mean structure was supplied
 #'   - `dmu_f`: directly fitted non-negative log-mean-F increments for [mono()]
 #'   - `F_a50_*`, `log_F_slope_*`: midpoint and log positive slope for [logistic()]
-#'     mean curves. F states start at their complete mean curve, giving zero residuals.
+#'     mean curves. [normal()] uses `F_peak_*` and `log_F_scale_*` for peak
+#'     location and log width. F states start at their complete mean curve,
+#'     giving zero residuals.
 #'   - `log_f` matrix (only with an active F process; historical `year` × `age`; no projection rows)
 #'
 #' - **Natural mortality (M)**
@@ -122,6 +124,8 @@
 #'   - Logistic curves have `q_a50_*` midpoints and positive `log_q_slope_*`
 #'     coefficients, initialized from each group's observed coordinate range.
 #'     Names identify terms, groups and unique states for warm starts.
+#'     [normal()] uses `q_peak_*` and `log_q_scale_*` for peak location
+#'     and log width.
 #'     [double_logistic()] has ascending/descending midpoints and log
 #'     positive scales. There is no midpoint ordering or peak normalization.
 #'

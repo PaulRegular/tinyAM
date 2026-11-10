@@ -8,7 +8,7 @@ installed_revision <- utils::packageDescription("SimSurvey", fields = "RemoteSha
 if (is.na(installed_revision)) installed_revision <- Sys.getenv("TINYAM_SIMSURVEY_REVISION")
 stopifnot(identical(installed_revision, revision))
 output <- Sys.getenv("TINYAM_SIM_COD_OUTPUT",
-  "data-raw/cache/sim_cod/seed17-simsurvey-biology/prepared-data.rds")
+  "data-raw/cache/sim_cod/seed17-normal-gillnet/prepared-data.rds")
 if (file.exists(output)) stop("Choose a fresh TINYAM_SIM_COD_OUTPUT path.")
 
 RNGkind("Mersenne-Twister", "Inversion", "Rejection")
@@ -24,7 +24,9 @@ F_full <- F_full_unreduced
 F_full$Trawl[years >= trawl_reduction_year] <- 0.2 * F_full$Trawl[years >= trawl_reduction_year]
 
 # Reuse these curves and annual rates when generating Z and fleet targets.
-gillnet <- function(age) plogis(1.4 * (age - 5)) * plogis(0.8 * (10.5 - age))
+gillnet_peak_age <- 7.7
+gillnet_width <- 2.5
+gillnet <- function(age) exp(-0.5 * ((age - gillnet_peak_age) / gillnet_width)^2)
 longline <- sim_logistic(k = 1.6, x50 = 3.6)
 trawl <- sim_logistic(k = 1.5, x50 = 4.3)
 rv <- sim_logistic(k = 1.8, x50 = 2.5)
@@ -178,7 +180,8 @@ checks <- list(terminal_survivors = as.data.frame(tail),
     .(mean = mean(M), sd = sd(M), min = min(M), max = max(M)), by = age]))
 provenance <- list(simsurvey_revision = revision, seed = 17L, fishing_seed = 1701L,
   fishing_log_step_sd = 0.10, trawl_reduction_year = trawl_reduction_year,
-  reference_M = reference_M,
+  reference_M = reference_M, gillnet_peak_age = gillnet_peak_age,
+  gillnet_width = gillnet_width,
   rng_kind = RNGkind(),
   generator = unname(tools::md5sum("data-raw/sim_cod_obs.R")),
   session = capture.output(utils::sessionInfo()),

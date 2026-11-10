@@ -194,9 +194,9 @@ index_settings <- list(q_form = ~ 0 +
 ```
 
 [Scopes](https://paulregular.github.io/tinyAM/reference/for_fleet.html) also support
-ordinary interactions. [Double-logistic curves](https://paulregular.github.io/tinyAM/reference/double_logistic.html)
-follow WHAM's four-parameter product;
-[smooths](https://paulregular.github.io/tinyAM/reference/smooth_formulas.html)
+ordinary interactions. The [selectivity curves](https://paulregular.github.io/tinyAM/reference/catchability_curves.html)
+include a symmetric normal curve and WHAM's four-parameter double logistic.
+[Smooths](https://paulregular.github.io/tinyAM/reference/smooth_formulas.html)
 use jointly estimated mgcv penalties. Flexible F means can be deterministic
 or have IID/AR1 residuals. Their separation can be weak; intrinsic F random
 walks cannot identify these mean shapes. Fleet process innovations are

@@ -34,8 +34,32 @@ test_that("double logistic matches the pinned WHAM raw product", {
   expect_equal(unname(f$jacobian(theta)),independent,tolerance=1e-12)
 })
 
+test_that("normal selectivity matches a peak-normalized Gaussian", {
+  term <- curve_term("normal")
+  par <- .curve_parameters(term)
+  peak <- 6.5
+  width <- 2.25
+  par[[term$peak_parameter]][] <- peak
+  par[[term$scale_parameter]][] <- log(width)
+  age <- c(1:12, peak)
+  log_selectivity <- .curve_log_selectivity(age, par, term, 1)
+  expect_equal(unname(exp(log_selectivity)),
+    stats::dnorm(age, peak, width) / stats::dnorm(peak, peak, width))
+  expect_equal(unname(tail(log_selectivity, 1)), 0)
+  expect_true(is.finite(.curve_log_selectivity(1000, par, term, 1)))
+  theta <- unlist(par, use.names = FALSE)
+  tape <- RTMB::MakeTape(function(x) {
+    parameters <- stats::setNames(list(x[1], x[2]), names(par))
+    .curve_log_selectivity(age, parameters, term, 1)
+  }, theta)
+  distance <- age - peak
+  expected <- cbind(distance / width^2, distance^2 / width^2)
+  expect_equal(unname(tape$jacobian(theta)), expected, tolerance = 1e-12)
+  expect_error(normal(age), "formula marker")
+})
+
 test_that("selectivity curves compile independently for F and q and reject invalid roles", {
-  for (form in list(~logistic(age),~double_logistic(age))) {
+  for (form in list(~logistic(age), ~normal(age), ~double_logistic(age))) {
     d <- make_test_dat(years=2000:2005,ages=2:8,
       F_settings=list(process="off",mu_form=form),index_settings=list(q_form=form))
     p <- make_par(d)
@@ -50,6 +74,8 @@ test_that("selectivity curves compile independently for F and q and reject inval
   expect_error(make_test_dat(F_settings=list(process="rw",mu_form=~double_logistic(age))),"cancel")
   expect_error(make_test_dat(M_settings=list(mu_form=~double_logistic(age))),"F only")
   expect_error(make_test_dat(index_settings=list(sd_form=~double_logistic(age))),"not catchability")
+  expect_error(.make_q_term(list(type = "normal", variable = "age", by = NULL),
+    data.frame(age = 1:2, obs = 1)), "needs at least 3 observed")
 })
 
 test_that("tiny selectivities retain finite likelihoods and residuals without floors", {

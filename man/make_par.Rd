@@ -110,7 +110,9 @@ only its temporal correlation.
 \item \code{log_mu_f} coefficients (length \code{ncol(dat$F_modmat)}) if a mean structure was supplied
 \item \code{dmu_f}: directly fitted non-negative log-mean-F increments for \code{\link[=mono]{mono()}}
 \item \verb{F_a50_*}, \verb{log_F_slope_*}: midpoint and log positive slope for \code{\link[=logistic]{logistic()}}
-mean curves. F states start at their complete mean curve, giving zero residuals.
+mean curves. \code{\link[=normal]{normal()}} uses \verb{F_peak_*} and \verb{log_F_scale_*} for peak
+location and log width. F states start at their complete mean curve,
+giving zero residuals.
 \item \code{log_f} matrix (only with an active F process; historical \code{year} × \code{age}; no projection rows)
 }
 \item \strong{Natural mortality (M)}
@@ -149,6 +151,8 @@ process densities and integrate out of the historical likelihood.
 \item Logistic curves have \verb{q_a50_*} midpoints and positive \verb{log_q_slope_*}
 coefficients, initialized from each group's observed coordinate range.
 Names identify terms, groups and unique states for warm starts.
+\code{\link[=normal]{normal()}} uses \verb{q_peak_*} and \verb{log_q_scale_*} for peak location
+and log width.
 \code{\link[=double_logistic]{double_logistic()}} has ascending/descending midpoints and log
 positive scales. There is no midpoint ordering or peak normalization.
 }

@@ -54,7 +54,6 @@ reference:
 - contents:
   - recruitment_formulas
   - catchability_curves
-  - double_logistic
   - for_fleet
   - smooth_formulas
   - power

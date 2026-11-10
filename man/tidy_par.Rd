@@ -58,7 +58,7 @@ These local curvature SEs are not boundary-adjusted inference.
 F mean-curve increments \code{dmu_f} likewise remain on their fitted log-F
 increment scale. F logistic midpoints are on the age/covariate scale;
 slopes are reported positive, with SEs on their fitted log scale.
-Double-logistic scales are also positive with log-scale SEs.
+Normal and double-logistic widths are positive with log-scale SEs.
 Coefficient names identify
 transitions and groups. Actual observation-specific q is in \code{\link[=tidy_obs_pred]{tidy_obs_pred()}}.
 \item Smooth null-space coefficients and penalized basis coefficients are signed

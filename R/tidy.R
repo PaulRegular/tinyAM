@@ -482,7 +482,7 @@ tidy_pop <- function(fit, interval = 0.95) {
 #'   F mean-curve increments `dmu_f` likewise remain on their fitted log-F
 #'   increment scale. F logistic midpoints are on the age/covariate scale;
 #'   slopes are reported positive, with SEs on their fitted log scale.
-#'   Double-logistic scales are also positive with log-scale SEs.
+#'   Normal and double-logistic widths are positive with log-scale SEs.
 #'   Coefficient names identify
 #'   transitions and groups. Actual observation-specific q is in [tidy_obs_pred()].
 #' - Smooth null-space coefficients and penalized basis coefficients are signed

@@ -197,6 +197,22 @@ test_that("simulated catches match reported totals", {
     monitoring$reported_total[position[supported]], tolerance = 1e-10)
 })
 
+test_that("Gillnet and Sentinel share the generating normal curve", {
+  provenance <- sim_cod_truth$provenance
+  peak <- provenance$gillnet_peak_age
+  width <- provenance$gillnet_width
+  selectivity <- function(age) {
+    stats::dnorm(age, peak, width) / stats::dnorm(peak, peak, width)
+  }
+  curves <- subset(sim_cod_truth$selectivity, component %in% c("Gillnet", "Sentinel"))
+  expect_equal(curves$selectivity, selectivity(curves$age))
+
+  fleet <- subset(sim_cod_truth$fleet, fleet == "Gillnet")
+  survey <- subset(sim_cod_truth$surveys, survey == "Sentinel")
+  expect_equal(fleet$selectivity, selectivity(fleet$age))
+  expect_equal(survey$selection, selectivity(survey$age))
+})
+
 test_that("survey truth describes distinct, stable footprints", {
   survey <- sim_cod_truth$surveys
   population <- sim_cod_truth$population
