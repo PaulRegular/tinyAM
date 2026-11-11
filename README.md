@@ -223,8 +223,8 @@ Inspect each check before interpreting or ranking an alternative.
 
 Use `plot_model(base, N_iid, M_ar1)` or the dashboard's opening **Model structure**
 page to inspect process switches and formulas. Its second tab shows function calls. The
-[structure guide](https://paulregular.github.io/tinyAM/articles/model-structure.html)
-links contrasting diagrams to the model equations.
+[comparison guide](https://paulregular.github.io/tinyAM/articles/compare-assessments.html#inspect-diagnostics-before-trends)
+shows how to read the diagram alongside the fit diagnostics.
 
 In the dashboard, start with **Fisheries** and **Surveys** to inspect fits and
 residuals. Plots start with retained OSA residuals when available, otherwise

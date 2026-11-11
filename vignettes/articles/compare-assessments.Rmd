@@ -116,6 +116,10 @@ check_tam(scaa, sam, ncam)
 plot_model(scaa, sam, ncam)
 ```
 
+Choose a model above the diagram, then expand **Formulas and settings** to
+inspect its formulas, age blocks and initial conditions. The diagram shows
+the model as specified, even when the fit fails convergence checks.
+
 `check_tam()` reports numerical checks separately from statistical advisories.
 Convergence does not establish that the observations distinguish F, M and cohort
 variation. Warnings and failed numerical checks are reasons to investigate, not
@@ -162,7 +166,9 @@ retro <- fit_retro(ncam, folds = 5)
 
 ```{r retrospective-ssb}
 retro
-ssb_retro <- retro$pop$ssb
+retro_fits <- Filter(function(fit) isTRUE(fit$is_converged), retro$fits$ncam)
+ssb_retro <- get_ssb(model_list = retro_fits)
+ssb_retro$fold <- as.integer(ssb_retro$model)
 ssb_retro$terminal_year <- factor(ssb_retro$fold,
   levels = sort(unique(ssb_retro$fold), decreasing = TRUE))
 plot_trend(ssb_retro, color = ~terminal_year,
