@@ -2,5 +2,12 @@ Background {#assessment-background}
 ================================================================================
 
 ```{r, results='asis', echo=FALSE}
-knitr::asis_output(paste(background, collapse = "\n"))
+if (grepl("(?m)^ {0,3}###[ \t]+\\S", background, perl = TRUE)) {
+  knitr::asis_output(paste(
+    "::: {#background-tabs .section .level2 .tabset}",
+    background, ":::", sep = "\n\n"
+  ))
+} else {
+  knitr::asis_output(background)
+}
 ```

@@ -278,6 +278,7 @@ test_that("reference-only dashboards permit missing yield comparisons", {
   close(con)
   expect_match(html, "Observed-predicted yield comparison is unavailable", fixed = TRUE)
   expect_match(html, "Official outputs only", fixed = TRUE)
+  expect_false(grepl('id="background-tabs"', html, fixed = TRUE))
   expect_match(html, "Model structure is unavailable for a reporting reference", fixed = TRUE)
   expect_null(reference$opt)
   expect_null(reference$obj)
@@ -348,7 +349,7 @@ test_that("reference-only dashboards retain supplied parameters with sparse data
   }
 })
 
-test_that("tam_ref objects accept a Background page", {
+test_that("tam_ref dashboards show level-three Background headings as tabs", {
   blank_values <- function(x, keys) {
     for (name in setdiff(names(x), keys)) x[[name]][] <- NA
     x
@@ -427,13 +428,15 @@ test_that("tam_ref objects accept a Background page", {
 
   file <- tempfile(fileext = ".html")
   background <- c(
-    "## Assessment assumptions", "",
+    "Assessment overview.", "",
+    "### Assessment assumptions", "",
     "| Component | Official assessment | tinyAM representation | Reason |",
     "|---|---|---|---|",
     "| Years | 2000\u20132024 and ages are retained. | Same years | Common period |",
     "| Ages | 2\u201314 | Same ages | Retain the age range |",
     "| Weights and maturity | The assessment\u2019s year-age inputs | Original values | Preserve inputs |",
-    "", "All assessment assumptions are included."
+    "", "All assessment assumptions are included.", "",
+    "### Source notes", "", "Reference notes are available."
   )
   Encoding(background) <- "unknown"
   vis_tam(
@@ -451,6 +454,13 @@ test_that("tam_ref objects accept a Background page", {
   expect_true(any(grepl('id="assessment-background"', html, fixed = TRUE)))
   first_page <- which(grepl('^<div id="[^"]+" class="section level1"', html))[1L]
   expect_match(html[first_page], 'id="assessment-background"', fixed = TRUE)
+  background_tabs <- grep('id="background-tabs" class="section level2 tabset"', html, fixed = TRUE)
+  preamble <- grep("<p>Assessment overview.</p>", html, fixed = TRUE)
+  assumptions <- grep('id="assessment-assumptions" class="section level3"', html, fixed = TRUE)
+  notes <- grep('id="source-notes" class="section level3"', html, fixed = TRUE)
+  expect_true(all(diff(c(background_tabs, preamble, assumptions, notes)) > 0))
+  expect_length(c(background_tabs, preamble, assumptions, notes), 4L)
+  expect_true(any(grepl("Reference notes are available.", html, fixed = TRUE)))
   expect_true(any(grepl("<th>Component</th>", html, fixed = TRUE)))
   expect_true(any(grepl("<td>Years</td>", html, fixed = TRUE)))
   expect_true(any(grepl("2000\u20132024", html, fixed = TRUE)))
