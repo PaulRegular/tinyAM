@@ -1,0 +1,102 @@
+---
+title: "tinyAM: Exploring assumptions in age-structured stock assessments"
+format: docx
+bibliography: references.bib
+execute:
+  enabled: false
+---
+
+Drafting outline for an Application in *Methods in Ecology and Evolution*. Aim for roughly 3,300–3,600 words in total, leaving room within the 4,000-word limit for captions, statements and references.
+
+## Abstract
+
+1. Biologists use age-structured assessments to ask why fish populations change. A change in the ages observed in catches or surveys can have several explanations, including changes in natural mortality, recruitment or the fraction of the stock sampled.
+2. Introduce tinyAM, an open-source R package for expressing biological assumptions as model settings and formulas, checking fits and evaluating alternative explanations with the same data. In Northern cod, ask whether allowing natural mortality to vary over time improves predictions of the ages seen in surveys and changes the inferred biomass trajectory.
+3. Insert the result from the fixed versus time-varying mortality comparison, including forecast coverage and the size and uncertainty of any biomass difference. Summarize numerical agreement under matched SAM specifications and the range of agreement across curated assessments.
+4. Explain what the worked example enables biologists and ecologists to do with their own data. State what the comparison can tell them about the importance of an assumption and what would require independent evidence about the underlying mechanism.
+
+## Data and code for peer review
+
+[Insert review archive and instructions for reproducing the example, numerical checks and figures. Pin tinyAM, SAIO and external fixtures. Confirm which source inputs can be redistributed and provide retrieval instructions for the others.]
+
+**Keywords** Age structure, fisheries, model diagnostics, population dynamics, state-space models, stock assessment.
+
+## Introduction
+
+- Begin with the biologist’s question. When older fish become scarce in a survey, could survival have changed? Explain why age-structured models are useful for exploring such questions and why the answer can depend on assumptions about fishing, recruitment and survey catchability.
+- Acknowledge the closest precedents. a4a uses R formulas to specify age-structured assessments [@jardim2015]. WHAM spans statistical catch-at-age and state-space models and supports comparisons among them [@stock2021]. SAM and Stock Synthesis are established assessment frameworks [@nielsen2014; @methot2013].
+- State tinyAM’s design goal. A biologist or ecologist with basic R skills can express an assumption in a short model call, see where it enters the model and inspect how it affects the fit, forecasts and stock estimates. The worked example demonstrates that sequence. The SAM checks and curated translations establish its numerical fidelity and scope in specific cases.
+
+## Materials and methods
+
+### Model and software
+
+Explain the data keys and the roles of catch-at-age, survey indices, weights and maturity. Give the core population transitions and the link to predicted catches and survey observations. Explain in biological terms where a user can choose a fixed relationship or add process variation. Keep the full likelihood, plus-group conventions, variance structures and formula reference in the supplement.
+
+Explain how `fit_tam()` compiles settings and formulas into an RTMB likelihood, uses automatic differentiation and integrates random effects by the Laplace approximation [@kristensen2026]. Describe how the same outputs feed diagnostics, uncertainty summaries, retrospective fits and hindcasts.
+
+### Northern cod worked example
+
+**Biological question.** Does allowing natural mortality to vary over time improve predictions of Northern cod survey observations at age and change the inferred history of spawning-stock biomass (SSB)? The [2025 Northern cod assessment](https://publications.gc.ca/collections/collection_2026/mpo-dfo/fs70-5/Fs70-5-2026-026-eng.pdf) motivates the question through its analysis of natural mortality and prey availability. The worked example uses the packaged catch and survey observations to evaluate the more specific assumption about variation in mortality.
+
+**Specify two alternatives.** Start with the NCAM-like fit in [the case-study script](https://github.com/PaulRegular/tinyAM/blob/694039bb4ba31a2419dc587098442ed05ba7af91/analysis/case_study/001_models.R), which uses 1983–2025 and ages 2–14+. Compare fixed natural mortality of 0.3 per year with deviations around `log(0.3)` that are correlated across years and age blocks. Retain the same data, recruitment, cohort survival, fishing mortality and observation specifications. Show the mortality settings and how they enter cohort survival. Use the existing SCAA-, SAM- and NCAM-like fits in the supplement to show how several components can vary together.
+
+```r
+m_varying <- ncam
+m_constant <- update(ncam, M_settings = list(process = "off"))
+```
+
+**Evaluate the hypothesis.** Use `plot_model()` to verify the change in specification and `check_tam()` to assess numerical fit and uncertainty. Inspect age-by-year survey residuals for runs of over- or underprediction. Compare one-year-ahead survey log-RMSE and MASE on identical forecast origins and survey–age observations. Both hindcasts condition on observed aggregate catch. Report the full fold coverage and failures before interpreting score differences.
+
+**Interpret the consequences.** Compare estimated mortality and SSB with uncertainty, and use retrospective peels to assess how terminal estimates change as observations are removed. Examine whether the mortality process is weakly estimated or near a correlation boundary. Interpret any predictive improvement relative to the chosen constant mortality baseline. Discuss what external information on survival, fishing mortality or availability would help distinguish explanations.
+
+### Numerical agreement under matching assumptions
+
+Use the existing [SAM equivalence analyses](https://github.com/PaulRegular/tinyAM/tree/694039bb4ba31a2419dc587098442ed05ba7af91/analysis/sam_equivalence). Define what was matched and the tolerances for likelihoods, derivatives and fitted summaries. Distinguish matched-parameter evaluations, source-start fits and tests of convergence from default starts.
+
+### Breadth across curated assessments
+
+Use the existing [comparative assessment workflow](https://github.com/PaulRegular/tinyAM/tree/694039bb4ba31a2419dc587098442ed05ba7af91/analysis/comp_assessments). Document stock selection, source availability, translation rules and numerical eligibility. Align years, units and definitions before comparison. Report the median absolute percentage difference in levels and Pearson correlation of the annual trajectories. State how zero reference values, missing metrics and approximate definitions are handled.
+
+## Results
+
+### Does time-varying natural mortality change the Northern cod inference?
+
+Begin with the numerical checks and uncertainty in the mortality process. Then show whether the fixed model leaves a pattern in survey observations at age, whether the variable model improves predictions on the same held-out observations, and how much the SSB trajectory changes. Report how many folds contributed to each comparison and how sensitive recent SSB estimates are to peeling. Insert results after running the paired comparison. A small, mixed or inconclusive difference is a result in its own right.
+
+### Reproduce selected SAM configurations
+
+Summarize the pinned checks in a short paragraph. Use Northern Shelf haddock as the example from an official assessment. Put maximum differences, tolerances, initialization details and unsupported configurations in a supplement table.
+
+### Translate assessments across stocks
+
+Report the denominators in sequence: cases considered, input blockers, cases fitted, fits passing numerical checks and cases with comparable official outputs. Use the heatmap to show variation in agreement. Select one clear agreement and one important discrepancy to interpret in the text. Cite the associated translation notes and supplement trajectories.
+
+## Discussion
+
+- Answer the Northern cod question at the level the evidence supports. Distinguish a better fit to observations, better held-out predictions and a change in the stock interpretation. Explain how fishing mortality, other changes in apparent survival and changes in survey availability can affect the same age patterns. Discuss what additional observations could help distinguish these mechanisms.
+- Explain how the case can guide a biologist investigating their own stock. Show how the same workflow makes the biological choice visible in the settings, equations and diagnostics. Keep accessibility for new users as a design goal and describe the skills and data preparation the example requires.
+- Use the matched SAM results to describe implementation fidelity. Use the heatmap to discuss where translations agree with published estimates and where differences in data, model structure, numerical fit or reporting definitions limit agreement. Link the runnable guides and dashboards.
+
+## Figures and supporting information
+
+1. **Figure 1. From a biological question to a model change.** Adapt `plot_model()` into a compact static diagram. Highlight where natural mortality enters survival and connect the two mortality settings to the observations and diagnostic outputs. Include the short R update so the reader can locate the change in the code.
+2. **Figure 2. What changes when natural mortality can vary.** Show the two mortality assumptions and estimated SSB trajectories with uncertainty. Include one informative survey diagnostic or a compact display of held-out forecast scores and coverage. Put the full retrospective and residual plots in the supplement.
+3. **Figure 3. Agreement with official assessments across stocks.** Adapt `analysis/comp_assessments/scripts/stats_plots.R`. Preserve separate panels for differences in magnitude and trajectory correlation. Distinguish unavailable, approximate and matched comparisons, and show the overall screening counts alongside the heatmap.
+4. **Supporting information.** Include the full Northern cod settings, diagnostic and retrospective outputs, the broader SCAA-, SAM- and NCAM-like comparison, and reproduction instructions. Include stock-by-stock tinyAM and official trajectories from `trend_plots.R`, comparison coverage and definitions, translation dispositions and SAM equivalence details.
+
+## Submission notes
+
+Add a separate title page, contributions, disclosures and the Application Code Checklist. Record the exact software and data revisions and the scripts and outputs needed to regenerate the main figures. Use a separate run for fits and figure generation, then render the manuscript from the saved outputs. Review the journal’s AI disclosure requirements when preparing the submission.
+
+## References
+
+::: {#refs}
+:::
+
+<!--
+Draft from this file and render with: quarto render tinyAM.qmd --to docx
+Merge Word comments and tracked edits back into this source before rendering again.
+The bibliography contains starting references. Useful paper models also include
+TropFishR (10.1111/2041-210X.12791) and tinyVAST (10.1111/geb.70035).
+-->

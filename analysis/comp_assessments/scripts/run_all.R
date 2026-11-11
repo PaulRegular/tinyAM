@@ -9,7 +9,7 @@ database <- read_database()
 
 # Configure parallelism here, as for fit_retro() and fit_hindcast().
 # Use future::plan(future::sequential) when troubleshooting.
-future::plan(future::multisession, workers = 10)
+future::plan(future::multisession, workers = 1)
 
 ## Fit and save first ----
 source(file.path(root, "scripts", "observation_readiness.R"))
