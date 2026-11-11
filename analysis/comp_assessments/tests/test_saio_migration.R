@@ -3,7 +3,7 @@ source("analysis/comp_assessments/R/update_database_cache.R")
 registry <- assessment_translations()
 stopifnot(all(file.exists(registry$script)),
   !anyDuplicated(paste(registry$assessment_id, registry$tier)),
-  nrow(assessment_translations("curated")) == 37L)
+  nrow(assessment_translations("curated")) == 38L)
 
 local({
   original_wd <- getwd()

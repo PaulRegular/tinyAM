@@ -1,16 +1,28 @@
 ## Observations ----
 years <- 1984:2014
 ages <- 0:7
-survey <- "NEFSC fall trawl survey"
+surveys <- c("NEFSC fall trawl survey", "CTDEEP fall trawl survey")
 
 source_inputs <- source$inputs
+ctdeep <- source_inputs$type %in% "index" & source_inputs$survey %in% surveys[2L]
+# The native 10+ bin contributes to the modeled 7+ index. Use the age series only.
+ctdeep_plus <- ctdeep & source_inputs$measure %in% "index_by_age_group" &
+  source_inputs$age %in% 10L
+source_inputs$measure[ctdeep_plus] <- "numbers_at_age"
+source_inputs <- source_inputs[!(ctdeep & source_inputs$measure %in% "total_numbers"), ]
+
 catch_age <- source_inputs[
   source_inputs$type == "catch" & source_inputs$measure == "numbers_at_age",
   , drop = FALSE
 ]
+if (!all(catch_age$unit %in% "thousand fish")) {
+  cli::cli_abort("Scup source catch-at-age must be in thousand fish.")
+}
 catch_age$value <- as.numeric(catch_age$value)
 catch_age$value[catch_age$fleet == "Recreational discards"] <-
   catch_age$value[catch_age$fleet == "Recreational discards"] * 0.15
+# The shared converter prepares the biological inputs and indices with one catch series.
+# Replace its pooled catch table below with the four fitted fleet series.
 catch_total <- aggregate(value ~ year + age, catch_age, sum)
 catch_rows <- catch_age[rep(1L, nrow(catch_total)), , drop = FALSE]
 catch_rows$year <- catch_total$year
@@ -64,8 +76,8 @@ fit_inputs <- rbind(fit_inputs, catch_rows)
 
 obs <- database_to_tam_obs(
   source$assessment$assessment_id[[1L]], fit_inputs,
-  years = years, ages = ages, surveys = survey,
-  sampling_times = c("NEFSC fall trawl survey" = 0.8),
+  years = years, ages = ages, surveys = surveys,
+  sampling_times = setNames(c(0.8, 0.75), surveys),
   assumptions = source$assumptions
 )
 
@@ -73,6 +85,26 @@ obs$weight$obs[obs$weight$age == 7] <- plus_weight$weight[
   match(obs$weight$year[obs$weight$age == 7], plus_weight$year)
 ]
 obs$maturity$spawn_time <- 0.5
+catch_age$age <- pmin(as.integer(catch_age$age), max(ages))
+fleet_catch <- aggregate(value ~ year + age + fleet, catch_age, sum)
+if (nrow(fleet_catch) != length(years) * length(ages) * 4L ||
+    anyDuplicated(fleet_catch[c("year", "age", "fleet")])) {
+  stop("The four source catch fleets require complete, unique year-age grids.")
+}
+obs$catch <- data.frame(
+  year = as.integer(fleet_catch$year), age = as.integer(fleet_catch$age),
+  fleet = fleet_catch$fleet, obs = fleet_catch$value, unit = "thousand fish"
+)
+translation <- attr(obs, "translation")
+translation$catch_method <- paste(
+  "Keep numbers-at-age separate by source fleet, sum ages 7–10+ into age 7+,",
+  "and apply 15% mortality to recreational discards."
+)
+translation$source_provenance <- rbind(
+  .translation_source_provenance(catch_age, "catch", translation$catch_method),
+  translation$source_provenance[translation$source_provenance$component != "catch", ]
+)
+attr(obs, "translation") <- translation
 obs$catch$age_factor <- factor(obs$catch$age, levels = ages)
 obs$index$q_key <- interaction(obs$index$survey, factor(obs$index$age, levels = ages),
   drop = TRUE, lex.order = TRUE
@@ -177,14 +209,15 @@ background <- c(
   "| Component | Official assessment | tinyAM representation | Reason for difference |",
   "|---|---|---|---|",
   "| Years and ages | S60_BASE_18 modeled 1963-2014, true ages 0-7+. Detailed catch-at-age starts in 1984. | Fit 1984-2014, ages 0-7 with age 7 as the plus group. | Restricts the comparison to the years with reported catch-at-age, annual weights, and age-specific population outputs. |",
-  "| Catch | Four source fleets; commercial discards are fully mortal and recreational discards have 15% mortality. | Sum the four source series after applying the reported recreational-discard mortality. | tinyAM fits one catch series and does not reproduce fleet-specific selectivity or the official catch-composition likelihood. Zero catch cells are retained as source values. |",
-  "| NEFSC fall index | Stratified mean numbers per tow at ages 0-8; HBB values from 2009 onward are calibrated to ALB equivalents. The official configuration combines age composition and aggregate-index likelihoods. | Use positive age-specific numbers per tow as a lognormal index at 0.8 of the year; combine source ages 7 and 8 into age 7+. | This approximates, but does not reproduce, the official multinomial age-composition and aggregate lognormal likelihood. Zero index cells are omitted from tinyAM's log-scale likelihood. Other active survey series and their CV adjustments are unavailable. |",
-  "| N, recruitment, and F | ASAP estimates annual abundance at age, age-0 recruitment, and fishing mortality with cohort survival between years. | Deterministic N survival, IID recruitment around a constant mean, and an AR1 F process with age-specific means. | The native ASAP process and likelihood details are incomplete; this is a simpler process representation, not an equivalent likelihood. |",
+  "| Catch | Four source fleets; commercial discards are fully mortal and recreational discards have 15% mortality. | Retain the four source series after applying the reported recreational-discard mortality. | tinyAM fits lognormal numbers at age with a common SD. The source uses fleet-specific observation and composition likelihoods. Zero catch cells are retained as source values. |",
+  "| NEFSC fall index | Stratified mean numbers per tow at ages 0–8. HBB values from 2009 onward are calibrated to ALB equivalents. The official model fits total indices and age compositions. | Fit positive age-specific numbers per tow at 0.8 of the year, with ages 7 and 8 combined into age 7+. | The age-specific lognormal likelihood approximates the official model's separate total-index and composition likelihoods. |",
+  "| CTDEEP fall index | Table A43 reports Long Island Sound stratified mean numbers per tow, ages 0–10+, 1984–2014, with no 2010 survey. | Fit the age series with ages 7–10+ pooled to 7+, a separate q at each age, and one survey log-SD. | The 0.75 sampling fraction approximates the September–October midpoint. The published all-age total is used to check transcription. |",
+  "| N, recruitment, and F | ASAP estimates annual abundance at age, age-0 recruitment, and fishing mortality with cohort survival between years. | Deterministic N survival, IID recruitment around a constant mean, and an AR1 F process with fleet-specific age means. | F deviations are independent across fleets with shared process parameters. The source uses time-blocked selectivity. |",
   "| M | Fixed M = 0.20 per year for all ages and years. | Use the same fixed M surface. | Fixed M is checked for input consistency, not treated as an estimated model match. |",
-  "| Weights and maturity | Annual catch-number-weighted weights at ages 0-10; annual sex-combined MAT3 maturity. Spawning occurs May-August and peaks in June. | Retain annual weights and maturity; calculate age-7+ weight by weighting ages 7-10 with total source catch numbers; use a June midpoint at 0.5 of the year. | The plus-group weight is an explicit translation calculation. In 1999 no catch occurred at ages 7-10, so the missing plus-group weight is linearly interpolated between adjacent years for this fit only. |",
+  "| Weights and maturity | Annual catch-number-weighted weights at ages 0-10; annual sex-combined MAT3 maturity. Spawning occurs May-August and peaks in June. | Retain annual weights and maturity; calculate age-7+ weight by weighting ages 7-10 with total source catch numbers; use a June midpoint at 0.5 of the year. | The same total-fishery weight table is used for all fleets. The plus-group weight is an explicit translation calculation. In 1999 no catch occurred at ages 7-10, so the missing plus-group weight is linearly interpolated between adjacent years for this fit only. |",
   "| Biomass, SSB, and recruitment | Annual aggregate SSB and age-0 recruitment are reported; 2014 SSB includes a 90% MCMC interval. | Derive source biomass-at-age from N and translated weights, and source SSB-at-age from N, translated weights and maturity with official F/M survival to the June spawning midpoint. | Biomass and SSB comparisons are approximate because the 7+ weight and spawning calculation are reconstructed; the directly reported aggregate SSB and its available uncertainty remain in the source record. |",
   "",
-  "The 2015 source record remains partial. The fit is a one-survey approximation to S60_BASE_18, not a full ASAP replication. The 2025 management-track update is stored separately and is not mixed into the historical fit."
+  "The fit approximates the 2015 S60_BASE_18 assessment with two of its survey series and age-specific lognormal observation likelihoods. The historical comparison uses the 2015 source record."
 )
 
 ## Model ----
@@ -196,10 +229,10 @@ if (do_fit) {
     data = obs, years = years, ages = ages,
     N_settings = list(process = "off", init = "exp"),
     rec_settings = list(process = "iid", mu_form = ~1),
-    F_settings = list(process = "ar1", mu_form = ~0 + age_factor, mean_ages = 3:7),
+    F_settings = list(process = "ar1", mu_form = ~0 + fleet:age_factor, mean_ages = 3:7),
     M_settings = list(process = "off", mu_form = NULL, mu_supplied = ~M_assumption),
     catch_settings = list(sd_form = ~1),
-    index_settings = list(q_form = ~0 + q_key, sd_form = ~1),
+    index_settings = list(q_form = ~0 + q_key, sd_form = ~0 + survey),
     silent = silent
   )
 }
