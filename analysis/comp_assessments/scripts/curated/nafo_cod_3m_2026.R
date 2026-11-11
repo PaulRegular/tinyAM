@@ -3,6 +3,7 @@
 assessment_id <- source$assessment$assessment_id[[1]]
 years <- 1988:2025
 ages <- 1:8
+F_block_ages <- 2:7
 survey <- "EU Flemish Cap bottom-trawl survey"
 
 inputs <- source$inputs
@@ -106,7 +107,6 @@ if (do_fit) {
   source_N <- .translation_start_surface(
     source$outputs, "population", "numbers_at_age", years, ages
   )
-  F_block_ages <- 2:7
   source_F <- .translation_surface(
     subset(source$outputs, type == "mortality" & measure == "fishing_mortality_at_age"),
     years, F_block_ages, "Official fishing mortality"
