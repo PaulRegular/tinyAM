@@ -44,7 +44,7 @@ background <- c(
   "|---|---|---|---|",
   "| Years and ages | Fit 1985–2015, ages 1–11+; population estimates through 2016. | Fit 1985–2015, ages 1–11+, with age 11 as the plus group. | The source model grid is retained; source catch ages 11–16 are summed to 11+. |",
   "| N and recruitment | ADAPT VPA estimates population abundance; age-1 N in 2016 is assigned from a geometric mean excluding the 2013 year class. | Exponential initial abundance with no separate N process; recruitment is age 1. | tinyAM's initial-state construction does not reproduce the VPA terminal-age parameterization. |",
-  "| F | VPA estimates annual F-at-age and defines F11+ through a Fratio. | AR(1) F process with age-specific mean states. | This is a practical tinyAM process approximation, not the VPA estimation method or Fratio. |",
+  "| F | VPA estimates annual F-at-age and defines F11+ through a Fratio. | AR(1) F process with age-specific mean states. | This approximates the VPA process and Fratio. Both Fbar series use abundance-weighted F at ages 6–10. |",
   "| M | Fixed at 0.2, except ages 10–11+ at 0.3, 0.6, and 0.9 in successive five-year blocks from 2000 to 2015. | Same fixed annual age-specific M surface. | Numerical M inputs are preserved. |",
   "| Catch | Commercial catch-at-age is an input to the VPA; ages 1–11+ are used. | Catch-at-age is fitted with tinyAM's lognormal observation likelihood. | tinyAM does not treat catch-at-age as an exact VPA input. |",
   "| Survey and q | DFO Summer RV swept-area abundance-at-age, ages 1–10; age-specific q; zero index cells treated as missing. | Same survey index ages and age-specific q; zero values are omitted by the log-scale observation likelihood. | The annual within-summer timing is not reported; 0.5 is used as a midyear approximation. |",
@@ -62,7 +62,7 @@ if (do_fit) {
     years = years,
     ages = ages,
     N_settings = list(process = "off", init = "exp"),
-    F_settings = list(process = "ar1", mu_form = ~ 0 + factor(age)),
+    F_settings = list(process = "ar1", mu_form = ~ 0 + factor(age), mean_ages = 6:10),
     M_settings = list(
       process = "off", mu_form = NULL,
       mu_supplied = ~M_assumption

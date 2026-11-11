@@ -1,6 +1,6 @@
-# NAFO translation readiness and preliminary fits
+# NAFO translation readiness and fits
 
-This review uses the selected local SAIO snapshot at commit `eee9dd7e2d683041e8f25d1d28e2db8d483c22b1`. Source tables and reviews remain in SAIO. The three fit candidate recipes use ages and inputs retained in the source tables; a fourth preliminary recipe records a source blocker. No age data were digitized from plots or inferred from fitted outputs.
+The original review used the local SAIO snapshot at commit `eee9dd7e2d683041e8f25d1d28e2db8d483c22b1`. Source tables and reviews remain in SAIO. The three fit candidate recipes use ages and inputs retained in the source tables; a fourth preliminary recipe records a source blocker. No age data were digitized from plots or inferred from fitted outputs.
 
 | Assessment record | Readiness and fitted grid | Main limitation |
 |---|---|---|
@@ -11,7 +11,22 @@ This review uses the selected local SAIO snapshot at commit `eee9dd7e2d683041e8f
 
 All three fit candidate grids passed the no-fit `run_assessment(..., fit = FALSE)` checks after the final settings were applied. The redfish recipe returns a source-readiness blocker without constructing data or fitting. Catch and index observation SDs are supplied as fixed values, so the fit recipes use `sd_form = ~0`.
 
-## 3M cod fit and comparison
+## Curated Flemish Cap cod
+
+The curated 2026 recipe uses ages 1–8+ with structural-zero fishing mortality at age 1 and a shared F state at ages 7–8+. The EU survey's age-1 abundance exponent is estimated with `q_power()`. Other ages retain proportional catchability. The translation represents the survey interval by its midpoint, retains the baseline 2018 survey omission and fixes M at the source prior medians. It approximates the source fleet mortality process and omits the Bayesian priors.
+
+Both fits use SAIO `cecb45ad` and cover 1988–2025. Default starts for the age-1 trial exceeded the gradient tolerance. The recipe now uses one `fit_tam()` call with the successful source N and positive F starting values. Its maximum gradient was 0.00554 and its Hessian was positive definite. The age-2 baseline passed from default starts.
+
+| Metric | Baseline median absolute difference | Curated median absolute difference | Curated terminal difference | Curated trend correlation |
+|---|---:|---:|---:|---:|
+| SSB | 15.3% | 13.3% | +12.0% | 0.995 |
+| Recruitment | 21.9% | 10.3% | +6.9% | 0.983 |
+| Abundance | 12.6% | 11.3% | +7.6% | 0.986 |
+| Fbar | 18.0% | 13.1% | −17.6% | 0.889 |
+
+The curated recruitment comparison uses age 1, while the baseline uses age 2 as a proxy. SSB and abundance use all modeled ages in each fit, with both reference and tinyAM series aligned to the same ages within each comparison. Fbar remains approximate because the official average is unweighted.
+
+## Historical 3M cod fit and comparison
 
 The final fit used package-default starting values and converged. The supplied-SD formulas were changed from `~1` to `~0` so the supplied values are not accompanied by an additional estimated scale. This changed the fitted parameter count and objective; the values below and the dashboard use the final settings.
 
