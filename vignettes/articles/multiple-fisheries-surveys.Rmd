@@ -48,9 +48,10 @@ unavailable observations. Each index row identifies `survey` and `samp_time`.
 Both surveys sample at the start of each year (`samp_time = 0`).
 
 The Sentinel-like survey samples a coastal band more densely than the RV-like
-survey samples offshore. Its dome-shaped selection contrasts with ascending
-RV selection. Both use swept-area sampling, so the Sentinel-like program
-approximates the footprint and selectivity of a gillnet survey.
+survey samples offshore. Its normal selectivity curve is shared with the
+gillnet fishery. RV selectivity rises with age. Both use swept-area sampling,
+so the Sentinel-like program approximates the footprint and selectivity of a
+gillnet survey.
 
 ```{r footprints, echo=FALSE, fig.width=8, fig.height=4.2, fig.cap="Survey footprints on the synthetic grid. The northern edge represents the coast; grey cells are outside each survey's footprint."}
 local({
@@ -85,12 +86,13 @@ walk. From year 11, the trawl rate is 20% of what its random walk would
 otherwise produce. Gillnet and longline follow their own paths through the
 change.
 
-```{r fishing-scenario, echo=FALSE, fig.width=7, fig.height=4.5, fig.cap="Fleet targets at full selectivity. The vertical line marks the trawl reduction between years 10 and 11."}
+```{r fishing-scenario, echo=FALSE, fig.width=7, fig.height=5, fig.cap="Fleet targets at full selectivity. The vertical line marks the trawl reduction between years 10 and 11."}
 local({
   targets <- sim_cod_truth$fishery_annual
   paths <- split(targets, targets$fishery)
   colors <- tam_pal(length(paths))
-  plot(range(targets$year), c(0, max(targets$F_full_unreduced)), type = "n",
+  max_F <- max(unlist(lapply(paths, `[[`, "F_full_reference"))) * 1.05
+  plot(range(targets$year), c(0, max_F), type = "n",
     xlab = "Year", ylab = "Fully selected F target (per year)")
   abline(v = 10.5, lty = 3)
   for (i in seq_along(paths)) {
@@ -129,12 +131,13 @@ fleet_dat$catch <- transform(dat$catch, trawl_low = year >= 11)
 fishing <- ~ 0 +
   for_fleet("Trawl", ~ logistic(age) + trawl_low) +
   for_fleet("Longline", ~ logistic(age)) +
-  for_fleet("Gillnet", ~ double_logistic(age))
+  for_fleet("Gillnet", ~ normal(age))
 ```
 
-Trawl and longline selectivity rise with age. Gillnet selectivity is
-dome-shaped. The `trawl_low` term lets the trawl scale shift in year 11 while
-keeping its selectivity curve. The fit estimates the size of the shift.
+Trawl and longline selectivity rise with age. Gillnet selectivity peaks at
+an intermediate age and falls symmetrically on either side. The `trawl_low`
+term lets the trawl scale shift in year 11 while keeping its selectivity
+curve. The fit estimates the size of the shift.
 
 ```{r selection, echo=FALSE, fig.width=7, fig.height=3.8, fig.cap="Generating selectivity curves. Dashed lines identify surveys; solid lines identify fisheries."}
 local({
@@ -153,28 +156,29 @@ local({
 })
 ```
 
-The double-logistic curve can peak below one, so its peak mean F can be lower
-than its scale parameter. See [fleet formulas](../reference/for_fleet.html)
-and [double-logistic curves](../reference/double_logistic.html).
+The normal curve estimates two shape parameters, the peak age and the width.
+The curve reaches one at the peak, so the fleet intercept sets peak mean F.
+See [fleet formulas](../reference/for_fleet.html) and
+[catchability and selectivity curves](../reference/catchability_curves.html).
 
 ## Give surveys their own relationships
 
 ```{r survey-formula, cache=TRUE}
 catchability <- ~ 0 +
   for_survey("RV", ~ logistic(age)) +
-  for_survey("Sentinel", ~ age + I(age^2))
+  for_survey("Sentinel", ~ normal(age))
 ```
 
-Each survey has a separate q scale and shape. A quadratic in age can
-describe a dome on the log q scale with fewer parameters than a double-logistic
-curve. This helps when few Sentinel observations are positive at the youngest
-and oldest ages. Here q also includes the fraction of the population inside
-the survey footprint.
+Each survey has a separate q scale and shape. The Sentinel curve uses the
+same form as the Gillnet curve and estimates its own peak and width. Survey
+q also includes the fraction of the stock inside the survey footprint.
 
 ## Fit the fleet and aggregate models
 
-Use deterministic cohort survival, random-walk recruitment and M fixed at
-0.3 per year in both models. Realized M over ages 5–10 averages
+Both models use deterministic cohort survival, random-walk recruitment and
+an AR1 process for M around a reference value of 0.3 per year. The M process
+correlates deviations across ages and years. In the simulation, realized
+M over ages 5–10 averages
 `r sprintf("%.3f", m_by_period[["Before"]])` before and
 `r sprintf("%.3f", m_by_period[["After"]])` after the trawl reduction.
 Fitting `ages = 1:14` pools catches and survey indices from ages 14–20
@@ -185,17 +189,17 @@ multifleet <- fit_tam(
   fleet_dat, ages = 1:14,
   N_settings = list(process = "off", init = "exp"),
   rec_settings = list(process = "rw"),
-  F_settings = list(process = "iid", mu_form = fishing,
-                   sd_form = ~ 1, mean_ages = 5:10),
-  M_settings = list(process = "off", mu_supplied = ~ I(0.3), mean_ages = 5:10),
-  catch_settings = list(sd_form = ~ 1),
-  index_settings = list(q_form = catchability, sd_form = ~ survey)
+  F_settings = list(process = "ar1", mu_form = fishing,
+                    sd_form = ~ 1, mean_ages = 5:10),
+  M_settings = list(process = "ar1", mu_supplied = ~ I(0.3), mean_ages = 5:10),
+  catch_settings = list(sd_form = ~ 0 + fleet),
+  index_settings = list(q_form = catchability, sd_form = ~ 0 + survey)
 )
 ```
 
-The fleet model estimates independent F deviations around each fleet's age
-curve. It shares one process SD and one catch observation SD across fleets
-because separate SDs were poorly identified in this example. Each fleet's
+Within a fleet, F deviations from the mean curve are correlated across ages
+and years. The fleets share process parameters and have separate catch
+observation SDs. Each survey also has its own observation SD. Each fleet's
 Baranov catch prediction uses its own F and the common total mortality
 $Z = M + \sum_f F_f$.
 
@@ -224,7 +228,7 @@ pooled_weight <- transform(pooled_weight,
 aggregate_dat$weight <- rbind(stock_weight, pooled_weight[names(stock_weight)])
 ```
 
-The aggregate model uses an AR1 process around age-specific mean F.
+The aggregate model uses an AR1 process around a logistic mean F curve.
 Departures from the mean are correlated across years and neighboring ages.
 The model learns the timing of changes from the pooled catches and survey
 indices.
@@ -234,9 +238,9 @@ aggregate_fit <- fit_tam(
   aggregate_dat, ages = 1:14,
   N_settings = list(process = "off", init = "exp"),
   rec_settings = list(process = "rw"),
-  F_settings = list(process = "ar1", mu_form = ~ factor(age), mean_ages = 5:10),
-  M_settings = list(process = "off", mu_supplied = ~ I(0.3), mean_ages = 5:10),
-  index_settings = list(q_form = catchability, sd_form = ~ survey)
+  F_settings = list(process = "ar1", mu_form = ~ logistic(age), mean_ages = 5:10),
+  M_settings = list(process = "ar1", mu_supplied = ~ I(0.3), mean_ages = 5:10),
+  index_settings = list(q_form = catchability, sd_form = ~ 0 + survey)
 )
 ```
 
@@ -330,7 +334,7 @@ if (nzchar(dashboard_cache)) {
   saveRDS(list(models = list(MultiFleet = multifleet, Aggregate = aggregate_fit),
     inputs = sim_cod_obs, truth = sim_cod_truth,
     background = paste("### Simulated cod fisheries and surveys",
-      "SimSurvey teaching data with three fleets, two regional surveys and one declining population. The trawl F target is reduced from year 11. Both fits fix M at 0.3 per year and pool ages 14 and older. MultiFleet estimates separate F by fleet. Aggregate fits an AR1 process to total F using pooled catches.",
+      "SimSurvey teaching data with three fleets, two regional surveys and one declining population. The trawl F target is reduced from year 11. Both fits use an AR1 process for M around 0.3 per year and pool ages 14 and older. MultiFleet estimates an AR1 F process for each fleet. Aggregate fits an AR1 process to total F using pooled catches. Both estimate a normal catchability curve for Sentinel, and MultiFleet estimates a normal selectivity curve for Gillnet.",
       "### Comparison with generating values",
       paste(knitr::kable(errors, digits = c(0, 2, 2, 2, 3, 3), row.names = FALSE), collapse = "\n"),
       "See the [guide](https://paulregular.github.io/tinyAM/articles/multiple-fisheries-surveys.html) for the assumptions and comparisons.",

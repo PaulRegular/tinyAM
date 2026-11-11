@@ -39,6 +39,17 @@ stopifnot(
   ]))
 )
 
+cpue_rw <- Filter(function(term) term$type == "rw", translated$dat$q_terms)
+stopifnot(length(cpue_rw) == 1L)
+cpue_rw <- cpue_rw[[1L]]
+cpue_rows <- which(translated$dat$obs$index$survey == "Spring fixed-gear CPUE")
+stopifnot(
+  identical(cpue_rw$scope$name, "Spring fixed-gear CPUE"),
+  identical(cpue_rw$groups[[1L]]$levels, 1990:2021),
+  identical(cpue_rw$groups[[1L]]$states, paste0("all:", 1991:2021)),
+  identical(which(cpue_rw$multiplier != 0), cpue_rows)
+)
+
 acoustic_source <- source_data$inputs[
   source_data$inputs$type == "index" &
     source_data$inputs$measure == "numbers_at_age" &

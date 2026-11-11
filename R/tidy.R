@@ -98,7 +98,7 @@ tidy_array <- function(x, value_name = "x", require_dimnames = TRUE) {
 #'   Combined catchability intervals are `q_lwr`/`q_upr`; `q_se` is on the
 #'   selected link scale named in `q_se_scale`. They include uncertainty across
 #'   the full formula, rather than combining separate coefficient SEs.
-#'   With [power()], `q` remains effective catchability. Additional `q_base`,
+#'   With [q_power()], `q` remains effective catchability. Additional `q_base`,
 #'   `q_power`, and `q_base_lwr`/`q_base_upr`/`q_base_se` columns separate the
 #'   baseline and exponent. Baseline-q SEs are on the log scale. Its unit is
 #'   unspecified for active power groups because it depends on p and abundance units.
@@ -482,7 +482,7 @@ tidy_pop <- function(fit, interval = 0.95) {
 #'   F mean-curve increments `dmu_f` likewise remain on their fitted log-F
 #'   increment scale. F logistic midpoints are on the age/covariate scale;
 #'   slopes are reported positive, with SEs on their fitted log scale.
-#'   Double-logistic scales are also positive with log-scale SEs.
+#'   Normal and double-logistic widths are positive with log-scale SEs.
 #'   Coefficient names identify
 #'   transitions and groups. Actual observation-specific q is in [tidy_obs_pred()].
 #' - Smooth null-space coefficients and penalized basis coefficients are signed

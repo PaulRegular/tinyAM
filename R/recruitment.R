@@ -31,7 +31,7 @@
     phi = fixed(settings$phi, "phi", 1, TRUE)
   )
   form <- settings$mu_form
-  if (.contains_power(form)) cli::cli_abort("power() is only supported in index_settings$q_form.")
+  if (.contains_q_power(form)) cli::cli_abort("q_power() is only supported in index_settings$q_form.")
   if (is.null(form)) {
     if (type != "rw") cli::cli_abort("rec_settings$mu_form is required for deterministic or IID/AR1 recruitment. Use ~ 1 for a constant mean.")
     form <- ~1
@@ -66,7 +66,7 @@
       curves[[length(curves) + 1L]] <<- list(type = type, lag = as.integer(lag))
       return(NULL)
     }
-    if (type %in% c("mono", "logistic", "|")) {
+    if (type %in% c("mono", "logistic", "normal", "double_logistic", "|")) {
       cli::cli_abort("Unsupported recruitment formula term: {type}().")
     }
     if (type == "(") {

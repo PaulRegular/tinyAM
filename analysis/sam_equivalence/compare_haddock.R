@@ -67,7 +67,7 @@ tryCatch(withCallingHandlers({
     F_settings = list(process = "cor_rw", mu_form = NULL, mean_ages = 2:6),
     M_settings = list(process = "off", mu_supplied = ~M),
     catch_settings = list(sd_form = ~0 + sd_key),
-    index_settings = list(q_form = ~0 + q_key + power(N, by = q_power_group),
+    index_settings = list(q_form = ~0 + q_key + q_power(N, by = q_power_group),
       sd_form = ~0 + sd_key, sd_supplied = ~relative_sd))
   dat <- do.call(prepare_tam, c(list(data = obs, years = years, ages = ages), settings))
   par <- make_par(dat)

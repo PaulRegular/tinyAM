@@ -144,15 +144,6 @@ obs$catch$fishery_period <- cut_years(
   c(1978, 1990, 2005, max(obs$catch$year))
 )
 
-# Restrict the catchability random walk to CPUE.
-# The first CPUE year defines the baseline; its RW effect is zero.
-is_cpue <- obs$index$survey == "Spring fixed-gear CPUE"
-first_cpue_year <- min(obs$index$year[is_cpue])
-
-obs$index$cpue_active <- as.numeric(is_cpue)
-obs$index$cpue_year <- ifelse(
-  is_cpue, obs$index$year, first_cpue_year
-)
 
 
 ## Background and comparisons ----
@@ -220,7 +211,7 @@ background <- c(
   "",
   "The revised translation uses correlated F random walks rather than stationary AR1 F around age-blocked means. Period-specific logistic fishery selectivity was explored but is not retained; the final model does not use fishery_period in its F specification.",
   "",
-  "CPUE catchability has a survey-specific estimated baseline and an annual random walk on log q. Its first-year random-walk effect is fixed at zero, while the baseline determines absolute catchability. The random-walk increment SD is estimated rather than fixed at the 0.1 value documented in the 2022 SCA methods.",
+  "The catchability formula uses for_survey() to give CPUE its own annual random walk on log q. Its first-year random-walk effect is fixed at zero, while the baseline determines absolute catchability. The random-walk increment SD is estimated rather than fixed at the 0.1 value documented in the 2022 SCA methods.",
   "",
   "The acoustic survey has a separate baseline and monotone age-q curve but no temporal catchability random walk. Both surveys retain their published observations and separate estimated observation SDs.",
   "",
@@ -263,7 +254,7 @@ if (do_fit) {
     index_settings = list(
       q_form = ~ 0 + survey +
         mono(age, by = survey) +
-        rw(cpue_year, by = cpue_active),
+        for_survey("Spring fixed-gear CPUE", ~0 + rw(year)),
       q_link = "log",
       sd_form = ~ 0 + survey
     ),

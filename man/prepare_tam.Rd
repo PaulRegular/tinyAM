@@ -131,7 +131,8 @@ structured means with temporal residual processes are not enabled.
 with no residual process or with IID/AR1 residuals, e.g. \code{~ logistic(age)}. Ordinary terms supply
 baseline F; realized F can depart from the rising mean. Static curves are
 not identifiable with RW/correlated-RW residuals. See \link{catchability_curves}.
-\code{\link[=double_logistic]{double_logistic()}} supplies WHAM's unnormalized four-parameter dome.
+\code{\link[=normal]{normal()}} supplies a symmetric two-parameter dome and \code{\link[=double_logistic]{double_logistic()}}
+supplies WHAM's four-parameter dome.
 Catch covariates must be available even where observations are missing.
 They must agree across biological ages pooled into a modeled plus group.
 The catch response \code{obs} cannot enter an F formula. With fleet labels,
@@ -225,12 +226,12 @@ series is fitted with independent errors and a warning.
 blocks. See \code{\link[=mono]{mono()}} for independent non-decreasing curves by survey.
 Structured effects such as \code{~ survey + ar1(year, by = survey)} allow shared
 annual changes across ages. \code{~ survey + logistic(age, by = survey)} fits rising
-selectivity curves. \code{~ q_key + power(N, by = q_power_group)} allows
+selectivity curves. \code{~ q_key + q_power(N, by = q_power_group)} allows
 abundance-dependent catchability using internally calculated abundance at
 survey time. Missing power-group labels mean p = 1, not missing observations.
-Powers require the log q link. See \code{\link[=power]{power()}} and \link{formula_effects}.
-\code{\link[=double_logistic]{double_logistic()}} allows dome-shaped selectivity and multiplies baseline
-q after its inverse link.
+Powers require the log q link. See \code{\link[=q_power]{q_power()}} and \link{formula_effects}.
+\code{\link[=normal]{normal()}} and \code{\link[=double_logistic]{double_logistic()}} give dome-shaped selectivity that
+multiplies baseline q after its inverse link.
 Penalized \code{s()} and \code{t2(age, year)} terms instead modify the selected q-link
 predictor. See \link{smooth_formulas} for supported bases, grouping and penalties.
 \code{\link[=for_survey]{for_survey()}} applies a formula to one named survey, e.g.

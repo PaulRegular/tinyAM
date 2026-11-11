@@ -47,15 +47,15 @@
 #' - `checks` summarizes realized M, including before and after the trawl
 #'   reduction, target shortfalls, unsupported observations and survivors
 #'   omitted at the terminal simulated age.
-#'   `provenance` records the source revision, seeds and runtime.
+#'   `provenance` records the source revision, seeds, gillnet curve and runtime.
 #'
 #' @details
 #' The population uses seed 17 and a shared spatial field on a 20-by-20 grid.
 #' Each fleet and survey has a stable footprint.
-#' Gillnet and longline fleets fish inshore, while trawlers fish offshore. The denser,
-#' inshore Sentinel survey has dome-shaped selectivity and uses the same
-#' swept-area sampling model as the offshore RV survey, omitting fixed-gear
-#' saturation.
+#' Gillnet and longline fleets fish inshore, while trawlers fish offshore.
+#' Gillnet and the inshore Sentinel survey share a normal selectivity curve
+#' with a peak of one at age 7.7 and a width of 2.5 years. The denser Sentinel
+#' survey uses the same swept-area sampling model as the offshore RV survey.
 #'
 #' Each fleet's target fishing mortality at full selectivity (`F_full`)
 #' follows an independent random walk on the log scale, generated with seed

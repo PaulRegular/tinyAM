@@ -1,8 +1,10 @@
 # Stock translation notes
 
-These notes separate downstream model choices and fit diagnostics from SAIO source curation. They were transferred without refitting. The expanded-library and pre-migration paper reviews may describe different recipes. Use [translations.csv](../translations.csv) and the registered stock scripts for current settings and review tiers. Superseded fit statistics are historical; they must not be presented as results for a different model.
+These notes separate downstream model choices and fit diagnostics from SAIO source curation. The earlier notes were transferred without refitting. The expanded-library and pre-migration paper reviews may describe different recipes. Use [translations.csv](../translations.csv) and the registered stock scripts for current settings and review tiers. Superseded fit statistics are historical; they must not be presented as results for a different model.
 
 Source values, official definitions, units, run identity and unresolved extraction gaps remain in [SAIO source reviews](https://github.com/PaulRegular/saio/tree/main/source_reviews).
+
+The [curated refresh review](curated_refresh.md) records the paired fits and review decisions for all 35 curated cases.
 
 Current expansion-batch notes:
 - [Southern Argentine hake, south of 41 degrees S](argentina_merluccius_hubbsi_south_41s_2025.md)

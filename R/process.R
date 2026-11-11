@@ -239,7 +239,7 @@ rprocess_cor_rw <- function(x, sd = 1, rho = 0) {
     if (!is.call(x)) {
       return(FALSE)
     }
-    .formula_call_name(x) %in% c("iid", "rw", "ar1", "mono", "logistic", "bh", "ricker", "|") ||
+    .formula_call_name(x) %in% c("iid", "rw", "ar1", "mono", "logistic", "normal", "double_logistic", "bh", "ricker", "|") ||
       any(vapply(as.list(x)[-1L], walk, logical(1)))
   }
   if (walk(formula[[2L]]) || "year" %in% all.vars(formula)) {

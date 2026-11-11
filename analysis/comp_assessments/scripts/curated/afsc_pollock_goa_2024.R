@@ -50,9 +50,9 @@ is_shelikof <- obs$index$survey == "Shelikof winter acoustic"
 if (anyNA(environmental_effect[is_shelikof])) {
   cli::cli_abort("Shelikof age-composition years are missing the source environmental covariate.")
 }
-obs$index$environmental_effect <- ifelse(is_shelikof, environmental_effect, 0)
+obs$index$environmental_effect <- environmental_effect
 
-# Only ADF&G catchability receives an annual random-walk effect.
+# Gate the ADF&G random walk while retaining its full set of model years.
 adfg <- "ADF&G crab/groundfish trawl"
 obs$index$adfg_indicator <- as.numeric(obs$index$survey == adfg)
 
@@ -109,11 +109,11 @@ background <- c(
   "| Index observations | Separate survey biomass indices and age compositions with survey timing, age-reading error and source-specific likelihoods and weights. | Age-specific indices reconstructed from biomass/composition and survey weights, retaining source timing; supplied log-SDs plus one estimated scale per survey. | Independent lognormal age-specific observations replace native biomass/composition likelihoods; aggregate-only and pooled Shelikof age-1-3 rows omitted. |",
   "| Weights, maturity and SSB | Annual spawning weights, survival to year fraction 0.21, and female fraction 0.5. | Stock weights, survey-specific weights for index reconstruction, maturity multiplied by 0.5; beginning-year tinyAM SSB. | Source spawning weights and survival-to-spawning adjustment are not reproduced in this candidate. |",
   "",
-  "The translation retains the 1970-2024 model years and supplied age-specific natural mortality. Its candidate specification uses deterministic older-age survival, IID recruitment (fixed log-SD 1.3), an AR1 fishing-mortality residual around a logistic age pattern, and bounded survey q with type-shared logistic age patterns. Only ADF&G q receives a random walk; the Shelikof observed environmental covariate enters directly. This is a parsimonious approximation, not a reproduction of the official likelihood.",
+  "The translation retains the 1970-2024 model years and supplied age-specific natural mortality. Its candidate specification uses deterministic older-age survival, IID recruitment (fixed log-SD 1.3), an AR1 fishing-mortality residual around a logistic age pattern, and bounded survey q with type-shared logistic age patterns. Only ADF&G q receives a random walk; for_survey() applies the observed environmental covariate to Shelikof q alone. This is a parsimonious approximation, not a reproduction of the official likelihood.",
   "",
   "Because q_link = 'logit', the age curves and temporal effects enter the logit-q predictor, unlike the official log-q parameterization. The older paired-age q blocks and separate ADF&G annual factor effects are no longer used in the fit. Weak q identification and sensitivity to the link should be checked after refitting.",
   "",
-  "The translation uses thousand fish, average weights in kg, and biomass in tonnes. Original catch totals are used for the yield panel; predicted catch numbers are multiplied by catch weights. The published 1975-2023 catch table is rounded to 0.01 million fish and printed zeros are missing under tinyAM's lognormal likelihood. Predictions are conditional medians without lognormal mean correction; official F-at-age is unavailable.",
+  "The translation uses thousand fish, average weights in kg, and biomass in tonnes. Original catch totals are used for the yield panel; predicted catch numbers are multiplied by catch weights. The published 1975-2023 catch table is rounded to 0.01 million fish and printed zeros are missing under tinyAM's lognormal likelihood. Predictions are conditional medians without lognormal mean correction; the reference F-at-age series is reconstructed from rounded official numbers-at-age and has no reported uncertainty.",
   "",
   "SSB remains a definition-sensitive comparison: the official assessment uses spawning-time biomass at fraction 0.21 with spawning weights, whereas this candidate reports beginning-year SSB using stock weights. No updated fit diagnostics or numerical agreement statistics are attributed to this candidate without a separate run."
 )
@@ -142,7 +142,7 @@ if (do_fit) {
     catch_settings = list(sd_form = ~1),
     index_settings = list(
       q_form = ~ 0 + survey + logistic(sel_age, by = survey_type) +
-        environmental_effect +
+        for_survey("Shelikof winter acoustic", ~0 + environmental_effect) +
         rw(year, by = adfg_indicator),
       q_link = "logit",
       sd_form = ~ 0 + survey,

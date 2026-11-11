@@ -117,7 +117,7 @@
 #' see [smooth_formulas].
 #'
 #' One RW/AR1 term is initially allowed per observation SD surface. `mono()`
-#' and `logistic()` remain catchability curves. Replication across years at each
+#' and the parametric [catchability_curves] apply to F or q. Replication across years at each
 #' age helps estimate residual spread; a few ages give little information about
 #' AR1 persistence. Fitting warns about levels with fewer than three observations
 #' and estimated processes with fewer than five observed levels per group.
@@ -165,6 +165,7 @@ rw <- function(x, by = NULL, sd = NULL) .formula_marker_error("rw")
 ar1 <- function(x, by = NULL, sd = NULL, phi = NULL) .formula_marker_error("ar1")
 
 #' @rdname catchability_curves
+#' @name catchability_curves
 #' @export
 logistic <- function(x, by = NULL) .formula_marker_error("logistic")
 
@@ -193,7 +194,7 @@ logistic <- function(x, by = NULL) .formula_marker_error("logistic")
   if (any(c("bh", "ricker") %in% all.names(formula))) {
     cli::cli_abort("bh() and ricker() are restricted to rec_settings$mu_form.")
   }
-  special <- c("iid", "rw", "ar1", "logistic", "double_logistic", "power", "|", "s", "t2", "te", "ti")
+  special <- c("iid", "rw", "ar1", "logistic", "normal", "double_logistic", "q_power", "|", "s", "t2", "te", "ti")
   contains <- function(x) {
     is.call(x) && (.formula_call_name(x) %in% special ||
       any(vapply(as.list(x)[-1L], contains, logical(1))))
@@ -245,18 +246,19 @@ logistic <- function(x, by = NULL) .formula_marker_error("logistic")
           rw = rw,
           ar1 = ar1,
           logistic = logistic,
+          normal = normal,
           double_logistic = double_logistic,
-          power = power
+          q_power = q_power
         )
         x[[1L]] <- as.name(type)
         args <- tryCatch(as.list(match.call(fun, x))[-1L], error = function(e) {
           cli::cli_abort("Invalid {type}() arguments: {conditionMessage(e)}")
         })
-        if (type == "power" && !identical(args$x, quote(N))) {
-          cli::cli_abort("power() must use the model's N: power(N, by = group).")
+        if (type == "q_power" && !identical(args$x, quote(N))) {
+          cli::cli_abort("q_power() must use the model's N: q_power(N, by = group).")
         }
         spec <- list(
-          type = type, variable = if (type == "power") "N" else column(args$x, "x"),
+          type = type, variable = if (type == "q_power") "N" else column(args$x, "x"),
           by = if (is.null(args$by) || identical(args$by, quote(NULL))) NULL else column(args$by, "by"),
           sd = fixed(args$sd, "sd"), phi = fixed(args$phi, "phi", 1, TRUE)
         )
@@ -287,10 +289,10 @@ logistic <- function(x, by = NULL) .formula_marker_error("logistic")
   rhs <- strip(formula[[2L]])
   ordinary[[2L]] <- if (is.null(rhs)) 1 else rhs
   design <- .parse_mono_q_formula(ordinary, data, fixed_design)
-  powers <- Filter(function(x) x$type == "power", specs)
-  if (length(powers) > 1L) cli::cli_abort("Use one additive power() term in q_form.")
+  powers <- Filter(function(x) x$type == "q_power", specs)
+  if (length(powers) > 1L) cli::cli_abort("Use one additive q_power() term in q_form.")
   if (length(powers)) design$q_power <- .make_q_power(powers[[1L]], data)
-  specs <- Filter(function(x) x$type != "power", specs)
+  specs <- Filter(function(x) x$type != "q_power", specs)
   smooth_specs <- Filter(function(x) x$type == "smooth",specs)
   specs <- Filter(function(x) x$type != "smooth",specs)
   terms <- lapply(specs, .make_q_term, data = data)
@@ -346,7 +348,7 @@ logistic <- function(x, by = NULL) .formula_marker_error("logistic")
     support <- rows[observed[rows] & multiplier[rows] != 0]
     if (!length(support)) cli::cli_abort("{id}: group {group} has no informative historical observations.")
     if (curve) {
-      required <- switch(spec$type, logistic = 3L, double_logistic = 5L)
+      required <- if (spec$type == "double_logistic") 5L else 3L
       if (length(unique(x[support])) < required) {
         cli::cli_abort("{spec$type}() needs at least {required} observed x values per group.")
       }
@@ -664,18 +666,21 @@ logistic <- function(x, by = NULL) .formula_marker_error("logistic")
   out
 }
 
-#' Rising catchability and mean fishing-mortality curves
+#' Catchability and fishing selectivity curves
 #'
 #' @description
-#' Use these terms in `index_settings$q_form` when catchability should increase
-#' with age or size, or in `F_settings$mu_form` for a rising long-term mean F.
-#' `mono()` fits flexible non-decreasing steps, including exact
-#' plateaus. `logistic()` fits a smooth rising selectivity curve. Ordinary formula
-#' terms supply baseline catchability; neither curve describes a dome with other
-#' covariates held constant.
+#' Use these terms in `index_settings$q_form` or `F_settings$mu_form` to
+#' describe how catchability or mean fishing mortality varies with age or size.
+#' `mono()` fits non-decreasing steps, including exact plateaus.
+#' `logistic()` fits a smooth rising curve. `normal()` fits a symmetric dome
+#' and `double_logistic()` gives the two sides of the dome separate slopes.
+#' Use [for_fleet()] or [for_survey()] to give different fleets or surveys their
+#' own curves.
 #'
 #' @details
-#' Both functions are additive formula markers, not numeric transformations.
+#' Include the curves as additive terms in formulas. Ordinary terms provide
+#' the baseline. The parametric curves multiply mean F or multiply q after its
+#' inverse link, so a logit link keeps q below one.
 #'
 #' ## Flexible steps: mono()
 #'
@@ -707,8 +712,6 @@ logistic <- function(x, by = NULL) .formula_marker_error("logistic")
 #' For numeric age or size, the curve is
 #' \eqn{S(x) = 1 / (1 + \exp\{-k(x-a_{50})\})}, with positive slope \eqn{k}.
 #' The midpoint \eqn{a_{50}} is the age/size at half the asymptotic selectivity.
-#' This curve multiplies catchability after the selected inverse link, rather
-#' than adding a sigmoid on the link scale. Thus logit q remains below one.
 #' Ordinary terms supply its baseline: `~ survey + logistic(age, by = survey)`
 #' gives survey-specific baselines and curves. Each curve needs at least three
 #' observed x values. Numeric `by` and interactions are unsupported.
@@ -721,10 +724,33 @@ logistic <- function(x, by = NULL) .formula_marker_error("logistic")
 #' a successful positive-definite uncertainty calculation; failures are reported
 #' separately by the numerical convergence checks.
 #'
+#' ## Symmetric dome with normal()
+#'
+#' The normal-shaped curve is
+#' \eqn{S(x) = \exp\{-\tfrac{1}{2}[(x-a_{peak})/\sigma]^2\}}.
+#' It estimates a peak location \eqn{a_{peak}} and a positive width
+#' \eqn{\sigma} in the units of `x`. The curve reaches one at its peak and
+#' falls to about 0.61 one width away on either side. The baseline is the
+#' mean F or q at the peak with other covariates held constant.
+#' Each curve needs at least three observed x values.
+#'
+#' ## Dome with double_logistic()
+#'
+#' The four-parameter curve follows WHAM's raw product:
+#' \deqn{S(x)=\frac{1}{1+\exp\{-(x-a_{50,up})/k_{up}\}}
+#'             \frac{1}{1+\exp\{(x-a_{50,down})/k_{down}\}},}
+#' with positive \eqn{k_{up},k_{down}}. The two midpoints can occur in either
+#' order. The peak of the product can fall below one, so the baseline acts as
+#' a scale multiplier. Sparse tails and alternative parameter combinations
+#' can yield weak or multimodal estimates. Each curve needs at least five
+#' observed x values.
+#' WHAM evaluates the curve at consecutive age indices starting from one.
+#' tinyAM uses the numeric coordinates in `x`.
+#'
 #' ## Mean fishing mortality
 #'
-#' With `F_settings$process = "off"`, `"iid"` or `"ar1"`, use `~ mono(age)` or
-#' `~ logistic(age)`. Ordinary terms provide the baseline F. One curve is allowed
+#' Mean F curves support `F_settings$process = "off"`, `"iid"` or `"ar1"`.
+#' Ordinary terms provide the baseline F. One curve is allowed
 #' on each set of applicable rows; [for_fleet()] can give fleets different curves.
 #' Its numeric coordinate must be age or an age-derived catch-table column
 #' constant across years at each age within the fleet. Categorical `by` groups
@@ -732,11 +758,9 @@ logistic <- function(x, by = NULL) .formula_marker_error("logistic")
 #'
 #' For mono, \eqn{\log\mu_F = X\beta + C d}, where C contains cumulative
 #' indicators and the directly fitted `dmu_f` increments satisfy \eqn{d\geq0}.
-#' For logistic, \eqn{\log\mu_F = X\beta + \log S(x)}. The baseline therefore
-#' gives the asymptotic F when other covariates are held constant. Midpoint
-#' `F_a50_*` and positive slope `log_F_slope_*` are fitted separately from q
-#' curves. With the residual process off, F equals this mean. Otherwise realized
-#' F fluctuates around it and need not be monotonic.
+#' Parametric curves use \eqn{\log\mu_F = X\beta + \log S(x)} and have their
+#' own shape parameters separate from q curves. With the residual process off,
+#' F equals this mean. Otherwise realized F fluctuates around it.
 #' `mu_F` is the exponential of expected log F, rather than an arithmetic
 #' average over lognormal process draws.
 #' Static curves are rejected with RW/correlated-RW residuals because they
@@ -745,19 +769,25 @@ logistic <- function(x, by = NULL) .formula_marker_error("logistic")
 #' `dmu_f` has the same zero bounds and boundary-inference limitations as `dq`.
 #' [tidy_pop()] reports mean-F profiles with joint RTMB-derived uncertainty.
 #'
-#' @param x Name of an index column for q: numeric or factor for `mono()`,
-#'   numeric age/size for `logistic()`. F mean curves require numeric age or
-#'   an age-derived catch covariate.
+#' @param x Column name. Use a numeric coordinate or a factor for `mono()` in
+#'   a q formula and a numeric coordinate for the parametric curves. F mean
+#'   curves require numeric age or an age-derived catch covariate.
 #' @param by Optional name of a categorical grouping column.
-#' @return A formula marker; calling this function directly raises an error.
-#' @seealso [formula_effects], [prepare_tam()], [make_par()], [tidy_obs_pred()], [tidy_par()], [tinyAM-model]
+#' @return A formula marker. Calling the function directly raises an error.
+#' @references Miller, T. J. and Stock, B. C., WHAM, `src/selectivity.hpp`,
+#'   `get_selAA()`, double-logistic model 3, revision
+#'   `ffcbfd093161e8210aa20716933975191b661807` (GPL-3).
+#'   <https://github.com/timjmiller/wham/blob/ffcbfd093161e8210aa20716933975191b661807/src/selectivity.hpp>
+#' @seealso [for_fleet()], [for_survey()], [formula_effects], [prepare_tam()],
+#'   [make_par()], [tidy_obs_pred()], [tidy_par()], [tinyAM-model]
 #' @examples
 #' ~q_block # ordinary unconstrained q
 #' ~ mono(q_block)
 #' ~ survey + mono(q_block, by = survey)
 #' ~ survey + logistic(age, by = survey)
-#' # F_settings = list(process = "iid", mu_form = ~ mono(age))
-#' # F_settings = list(process = "ar1", mu_form = ~ logistic(age))
+#' ~ survey + double_logistic(age, by = survey)
+#' ~ 0 + for_fleet("Trawl", ~ logistic(age)) +
+#'   for_fleet("Gillnet", ~ normal(age))
 #' @name catchability_curves
 #' @export
 mono <- function(x, by = NULL) {
@@ -969,7 +999,7 @@ mono <- function(x, by = NULL) {
     }
     forbidden <- function(x) {
       if (!is.call(x)) return(FALSE)
-      .formula_call_name(x) %in% c("iid", "rw", "ar1", "mono", "logistic", "double_logistic", "s", "t2", "te", "ti", "bh", "ricker", "|", "offset", "for_fleet", "for_survey") ||
+      .formula_call_name(x) %in% c("iid", "rw", "ar1", "mono", "logistic", "normal", "double_logistic", "s", "t2", "te", "ti", "bh", "ricker", "|", "offset", "for_fleet", "for_survey") ||
         any(vapply(as.list(x)[-1L], forbidden, logical(1)))
     }
     if (forbidden(formula[[2L]])) {
@@ -1222,7 +1252,7 @@ mono <- function(x, by = NULL) {
 
 # Observation SD effects reuse the Gaussian formula-state compiler.
 .parse_sd_formula <- function(formula, data, component) {
-  if (.contains_power(formula)) cli::cli_abort("power() is only supported in index_settings$q_form.")
+  if (.contains_q_power(formula)) cli::cli_abort("q_power() is only supported in index_settings$q_form.")
   design <- .parse_q_formula(formula, data)
   terms <- design$q_terms
   if (!is.null(design$q_mono_modmat) ||

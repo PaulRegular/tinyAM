@@ -28,14 +28,11 @@ navbar:
         href: articles/compare-assessments.html
       - text: Fit multiple fisheries and surveys
         href: articles/multiple-fisheries-surveys.html
-      - text: Understand model structure
-        href: articles/model-structure.html
 articles:
 - title: Guides
   contents:
   - '`articles/compare-assessments`'
   - '`articles/multiple-fisheries-surveys`'
-  - '`articles/model-structure`'
 reference:
 - title: Model overview and example data
 - contents:
@@ -54,10 +51,9 @@ reference:
 - contents:
   - recruitment_formulas
   - catchability_curves
-  - double_logistic
   - for_fleet
   - smooth_formulas
-  - power
+  - q_power
   - formula_effects
 - title: Fit, diagnose and forecast
 - contents:

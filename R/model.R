@@ -182,8 +182,8 @@
 #' are centred on zero. See [formula_effects] for the equations and cautions.
 #'
 #' F mean curves with no residual process or with IID/AR1 residuals add cumulative non-negative log-F
-#' increments for [mono()], or \eqn{\log S(a)} for [logistic()]
-#' or [double_logistic()]. Parametric curves multiply the
+#' increments for [mono()], or \eqn{\log S(a)} for [logistic()],
+#' [normal()] or [double_logistic()]. Parametric curves multiply the
 #' ordinary mean F by selectivity, without extra peak normalization. These are fixed curve
 #' parameters, separate from Gaussian mean effects and latent F states. Static
 #' curves cancel from RW increments and are not supported there.
@@ -312,7 +312,7 @@
 #' (1-e^{-Z_{t,a}}),\qquad
 #' \widetilde I_i=q_i N_{t_i,a_i}e^{-s_i Z_{t_i,a_i}},}
 #' where \eqn{s_i\in[0,1]} is survey sampling time within the year.
-#' With [power()] in `q_form`, write \eqn{A_i=N_{t_i,a_i}e^{-s_iZ_{t_i,a_i}}}.
+#' With [q_power()] in `q_form`, write \eqn{A_i=N_{t_i,a_i}e^{-s_iZ_{t_i,a_i}}}.
 #' The log link then gives
 #' \deqn{q_i=q_{0,i}A_i^{p_i-1},\qquad \widetilde I_i=q_{0,i}A_i^{p_i},
 #' \qquad p_i=\exp(\gamma_i)>0.}

@@ -16,7 +16,7 @@ expect_block(obs$index$survey_type, ifelse(descending, "acoustic", "trawl"))
 adfg <- "ADF&G crab/groundfish trawl"
 expect_block(obs$index$adfg_indicator, as.numeric(obs$index$survey == adfg))
 stopifnot(identical(recipe$settings$index_settings$q_form,
-  stats::as.formula("~0 + survey + logistic(sel_age, by = survey_type) + environmental_effect + rw(year, by = adfg_indicator)",
+  stats::as.formula("~0 + survey + logistic(sel_age, by = survey_type) + for_survey(\"Shelikof winter acoustic\", ~0 + environmental_effect) + rw(year, by = adfg_indicator)",
     env = environment(recipe$settings$index_settings$q_form))))
 recipe <- translate_recipe("afsc_pollock_ebs_2024")
 obs <- recipe$obs
@@ -27,8 +27,7 @@ obs <- translate("dfo_cod_2j3kl_2025")
 rv <- obs$index$survey == "DFO fall RV survey"
 expected <- paste("age", paste0(2 * ((obs$index$age - 2) %/% 2) + 2, "-", pmin(2 * ((obs$index$age - 2) %/% 2) + 3, 14)))
 expected[obs$index$age >= 12] <- "age 12-14"
-expected[!rv] <- "age 2-3"
-expect_block(obs$index$smith_sound_q_key, expected)
+expect_block(obs$index$smith_sound_q_key[rv], expected[rv])
 obs <- translate("ices_bluewhiting_northeast_atlantic_2026")
 expect_block(obs$catch$sd_group, ifelse(obs$catch$age <= 2, obs$catch$age, ifelse(obs$catch$age <= 8, "3-8", "9-10")))
 expect_block(obs$index$sd_group, ifelse(obs$index$age <= 3, obs$index$age, ifelse(obs$index$age <= 6, "4-6", "7-8")))

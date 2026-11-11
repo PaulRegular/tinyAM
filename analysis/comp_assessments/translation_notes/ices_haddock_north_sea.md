@@ -1,36 +1,29 @@
 # Northern Shelf (North Sea) haddock: 2026 source review: tinyAM translation notes
 
-Transferred from the [SAIO source review](https://github.com/PaulRegular/saio/blob/4b347a10b95e8d1f9b3d34156bf58ed63c82f775/source_reviews/ices_haddock_north_sea.md) during the repository cleanup. These are previously recorded settings, caveats and diagnostics, not new fitting results. The registered stock script defines the current model; check its curated or preliminary tier before using these notes.
+The registered stock script defines the current model. Earlier translation notes were transferred from the [SAIO source review](https://github.com/PaulRegular/saio/blob/4b347a10b95e8d1f9b3d34156bf58ed63c82f775/source_reviews/ices_haddock_north_sea.md) and are retained below.
 
 Official assessment evidence is maintained in [SAIO](https://github.com/PaulRegular/saio/blob/main/source_reviews/ices_haddock_north_sea.md).
 
-## Expanded-library review
+## Current curated translation
 
-### Current tinyAM translation
+The recipe matches the native SAM likelihood over 1972–2026 at ages 0–8+.
+It integrates first-year recruitment and older first-year abundance without
+an initial density. Recruitment and age-specific F follow random walks, with
+correlated F increments across ages. Older-cohort survival SDs are shared
+over ages 1–7, with a separate SD at 8+.
 
-The recipe retains 1972–2026 and ages 0–8+, RW recruitment, IID survival
-residuals, and integrated older initial abundance. `N_sd_key` in population
-covariates shares survival SD over destination ages 1–7, with a separate 8+
-SD. First-year recruitment remains an estimated fixed effect; SAM initial-state
-integration is not claimed to be identical.
+The model uses the native catch and survey observation-SD groups and retains
+the survey precision multipliers. Each survey and age has a baseline
+catchability. The three q powers apply to Q1 age 1 and Q3+Q4 ages 0 and 1.
+Observation errors are independent on the log scale.
 
-F follows `cor_rw` with one shared SD. Supplied annual M, stock weights,
-maturity and zero pre-spawning mortality fractions are retained. The shared
-age-correlation structure approximates SAM; first-state and integration
-conventions may still differ.
-
-Catch uses one lognormal SD. Both delta-GAM survey series retain native scales,
-ages, timing and relative precision factors, with survey-by-age q and one
-estimated SD level per survey. Missing observations are excluded from the
-likelihood. Source density-dependent q powers at Q1 age 1 and Q3+Q4 ages 0–1
-are omitted, and exact observation-variance sharing differs. Ordinary q does
-not reproduce a power relationship between abundance and an index.
-
-## Initial-state approximation
-
-The translation uses `init = "latent"`: older first-year log-abundances are
-integrated without an initial density. First-year recruitment remains an
-estimated fixed effect, so this is not complete SAM initial-state equivalence.
+The fitted catch and survey observations, fixed M, stock weights, maturity
+and beginning-of-year spawning match the native inputs. Separate catch weights
+support yield reporting. The 2025 catch weights fill the tinyAM reporting grid
+in the survey-only final year. The Fbar comparison uses an abundance-weighted
+mean over ages 2–4 for both fits. The published SAM Fbar is an arithmetic mean.
+The [native SAM checks](../../sam_equivalence/README.md#northern-shelf-haddock-2026)
+document equivalence and uncertainty conventions.
 
 ## Additional inherited translation context
 

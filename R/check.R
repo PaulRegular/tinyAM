@@ -493,9 +493,10 @@ check_tam <- function(fit, ..., grad_tol = NULL, detailed = FALSE, model_list = 
   for (term in Filter(.is_selectivity_curve, c(fit$dat$q_terms, fit$dat$F_terms))) {
     is_F <- startsWith(term$id, "F_")
     d <- if (is_F) .mean_formula_data(fit$dat, "F") else fit$dat$obs$index
-    midpoints <- unlist(term[c("a50_parameter","a50_up_parameter","a50_down_parameter")],use.names=FALSE)
-    for (midpoint in midpoints) {
-    indices <- which(names(p) == midpoint)
+    locations <- unlist(term[c("a50_parameter", "a50_up_parameter", "a50_down_parameter", "peak_parameter")],
+      use.names = FALSE)
+    for (location in locations) {
+    indices <- which(names(p) == location)
     if (length(indices) != length(term$groups)) next
     for (g in seq_along(term$groups)) {
       group <- term$groups[[g]]
@@ -509,9 +510,11 @@ check_tam <- function(fit, ..., grad_tol = NULL, detailed = FALSE, model_list = 
           issue = if (term$type == "logistic") "logistic_support" else "selectivity_support",
           detail = paste0(
             term$id, ", group ", group$group,
-            ": the fitted midpoint lies outside the observed range (", paste(support, collapse = " to "),
+            ": the fitted ", if (term$type == "normal") "peak" else "midpoint",
+            " lies outside the observed range (", paste(support, collapse = " to "),
             "), and its 95% interval is wider than that range. The data may not distinguish the baseline ",
-            if (is_F) "F" else "catchability", " from the age/size curve. Consider a simpler curve or observations covering its rising part and plateau."
+            if (is_F) "F" else "catchability",
+            " from the age/size curve. Consider a simpler curve or observations covering more of its shape."
           )
         ))
       }

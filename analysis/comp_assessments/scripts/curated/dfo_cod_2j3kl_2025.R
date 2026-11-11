@@ -54,11 +54,8 @@ obs$index$smith_sound_q_key <- cut_ages(
   pmax(obs$index$age, 2), c(seq(2, 12, 2), 14)
 )
 levels(obs$index$smith_sound_q_key) <- paste("age", levels(obs$index$smith_sound_q_key))
-# The interaction must be zero, rather than NA, on non-RV observations.
-obs$index$smith_sound_q_key[!rv] <- levels(obs$index$smith_sound_q_key)[1L]
-obs$index$smith_sound_year <- as.integer(
-  rv & obs$index$year %in% 1995:2007
-) # Approximate offshore-availability effect during years with >10 kt in Smith Sound
+# The RV formula applies the offshore-availability effect in years with >10 kt in Smith Sound.
+obs$index$smith_sound_year <- as.integer(obs$index$year %in% 1995:2007)
 
 
 ## Background and comparisons ----
@@ -76,7 +73,7 @@ background <- c(
   "| F | Fishing mortality varies across ages and years with strongly correlated process variation; the official assessment estimates very high temporal correlation and substantial age correlation. | Fit independent age-specific temporal random walks in F and summarize mean F over ages 5–14. | The random walk approximates the strong temporal persistence in xteNCAM, but does not reproduce correlation among ages. A closer two-dimensional AR1 approximation did not converge reliably. |",
   "| M | Natural mortality varies through time around a baseline level and includes correlated age-year process variation plus a Capelin-to-cod biomass effect. | Use the median reported official-assessment Mbar as a fixed baseline and estimate an AR1 M process from 1984 onward, with neighbouring ages coupled into blocks; summarize mean M over ages 5–14. | Estimating both the overall M level and its process was unstable. The official Capelin effect and full age-year M structure cannot be reproduced, so the reported Mbar level is used as a replication-oriented plug-in calibration. |",
   "| Catch | xteNCAM uses commercial catch-age composition together with reported landings treated as bounded information on total removals. | Fit the reported catch-at-age numbers directly using tinyAM's lognormal observation model and omit the bounded landings component. | The catch likelihood and treatment of total removals differ substantially between models. Zero catch cells are treated as missing by tinyAM's log-scale observation model. |",
-  "| Index | RV catchability is separate at ages 2–5 and shared at ages 6–14. Smith Sound biomass and sampled counts inform an inshore population component and offshore availability. | Retain RV q sharing and its 1995–2007 age-block availability adjustment. Include reconstructed Smith Sound numbers in years with both biomass and samples, with independent q by age and separate SD. RV timing is approximated as 0.75; Smith timing uses reported months. | The availability adjustment and reconstructed index approximate rather than reproduce the local-population likelihood. Sentinel and juvenile indices are omitted from the main age-2+ fit; juvenile integration is tested separately. |",
+  "| Index | RV catchability is separate at ages 2–5 and shared at ages 6–14. Smith Sound biomass and sampled counts inform an inshore population component and offshore availability. | Retain RV q sharing and scope the 1995–2007 age-block availability adjustment to the RV survey. Include reconstructed Smith Sound numbers in years with both biomass and samples, with independent q by age and separate SD. RV timing is approximated as 0.75; Smith timing uses reported months. | The availability adjustment and reconstructed index approximate rather than reproduce the local-population likelihood. Sentinel and juvenile indices are omitted from the main age-2+ fit; juvenile integration is tested separately. |",
   "| Weights | xteNCAM uses annual age-specific biological weights, including beginning-of-year stock weights and separate catch weights. | Use the reported annual stock weight-at-age values for population biomass calculations. | tinyAM does not reproduce all source-specific uses of separate weight series within the official likelihood. |",
   "| Maturity | Female maturity-at-age varies by calendar year; the underlying maturity model includes a cohort effect. | Use the reported calendar-year-by-age female maturity values directly. | The reported table already contains the resulting annual maturity-at-age values, so no cohort-year shift is applied. tinyAM has no explicit sex structure. |",
   "| SSB | The official assessment calculates spawning biomass from the age-0+ population using its full mortality, maturity, and population structure. | Calculate SSB from modeled ages 2–14 using the reported weights and maturity-at-age. | Ages 0–1 and several source-model processes are absent, so SSB is an approximate rather than exact reproduction of the official quantity. |",
@@ -101,12 +98,12 @@ if (do_fit) {
       age_breaks = c(3, 5, 7, 9, 11, 14), mean_ages = 5:14
     ),
     catch_settings = list(sd_form = ~1),
-    index_settings = list(q_form = ~ q_key + smith_sound_year:smith_sound_q_key, sd_form = if (length(surveys) >
-      1L) {
-      ~ 0 + sd_key
-    } else {
-      ~1
-    }),
+    index_settings = list(
+      q_form = ~ q_key + tinyAM::for_survey(
+        "DFO fall RV survey", ~ 0 + smith_sound_year:smith_sound_q_key
+      ),
+      sd_form = if (length(surveys) > 1L) ~ 0 + sd_key else ~ 1
+    ),
     silent = silent
   )
 }

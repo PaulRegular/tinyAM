@@ -32,7 +32,7 @@ A named list with two data frames:
 Combined catchability intervals are \code{q_lwr}/\code{q_upr}; \code{q_se} is on the
 selected link scale named in \code{q_se_scale}. They include uncertainty across
 the full formula, rather than combining separate coefficient SEs.
-With \code{\link[=power]{power()}}, \code{q} remains effective catchability. Additional \code{q_base},
+With \code{\link[=q_power]{q_power()}}, \code{q} remains effective catchability. Additional \code{q_base},
 \code{q_power}, and \code{q_base_lwr}/\code{q_base_upr}/\code{q_base_se} columns separate the
 baseline and exponent. Baseline-q SEs are on the log scale. Its unit is
 unspecified for active power groups because it depends on p and abundance units.

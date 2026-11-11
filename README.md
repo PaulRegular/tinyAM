@@ -177,7 +177,7 @@ Other possibilities include:
 
 Recruitment boundary states are fixed by default; `rec_settings$init = "latent"`
 integrates them without an initial density. For abundance-dependent catchability,
-use [`power(N, by = q_key)`](https://paulregular.github.io/tinyAM/reference/power.html) in `q_form` with the log link.
+use [`q_power(N, by = q_key)`](https://paulregular.github.io/tinyAM/reference/q_power.html) in `q_form` with the log link.
 
 With fleet catches, F is estimated separately for each fleet and summed for
 population survival. A single formula can give fleets different selectivity
@@ -194,9 +194,9 @@ index_settings <- list(q_form = ~ 0 +
 ```
 
 [Scopes](https://paulregular.github.io/tinyAM/reference/for_fleet.html) also support
-ordinary interactions. [Double-logistic curves](https://paulregular.github.io/tinyAM/reference/double_logistic.html)
-follow WHAM's four-parameter product;
-[smooths](https://paulregular.github.io/tinyAM/reference/smooth_formulas.html)
+ordinary interactions. The [selectivity curves](https://paulregular.github.io/tinyAM/reference/catchability_curves.html)
+include a symmetric normal curve and WHAM's four-parameter double logistic.
+[Smooths](https://paulregular.github.io/tinyAM/reference/smooth_formulas.html)
 use jointly estimated mgcv penalties. Flexible F means can be deterministic
 or have IID/AR1 residuals. Their separation can be weak; intrinsic F random
 walks cannot identify these mean shapes. Fleet process innovations are
@@ -223,8 +223,8 @@ Inspect each check before interpreting or ranking an alternative.
 
 Use `plot_model(base, N_iid, M_ar1)` or the dashboard's opening **Model structure**
 page to inspect process switches and formulas. Its second tab shows function calls. The
-[structure guide](https://paulregular.github.io/tinyAM/articles/model-structure.html)
-links contrasting diagrams to the model equations.
+[comparison guide](https://paulregular.github.io/tinyAM/articles/compare-assessments.html#inspect-diagnostics-before-trends)
+shows how to read the diagram alongside the fit diagnostics.
 
 In the dashboard, start with **Fisheries** and **Surveys** to inspect fits and
 residuals. Plots start with retained OSA residuals when available, otherwise
