@@ -38,6 +38,10 @@ expected_maturity <- as.numeric(source_maturity$value)[
   match(paste(obs$maturity$year, obs$maturity$age), source_key)
 ]
 
+rv_availability <- startsWith(colnames(dat$q_modmat), "survey[DFO fall RV survey]:")
+rv_period <- dat$obs$index$survey == "DFO fall RV survey" &
+  dat$obs$index$year %in% 1995:2007
+
 stopifnot(
   identical(translated$years, 1968:2024),
   identical(translated$ages, 2:14),
@@ -77,7 +81,10 @@ stopifnot(
   dat$M_settings$process == "ar1",
   min(dat$M_settings$years) == 1984,
   all(obs$index$samp_time[obs$index$survey == "DFO fall RV survey"] == 0.75),
-  all(obs$index$smith_sound_year[obs$index$survey != "DFO fall RV survey"] == 0),
+  all(obs$index$smith_sound_year == as.integer(obs$index$year %in% 1995:2007)),
+  any(rv_availability),
+  all(dat$q_modmat[!rv_period, rv_availability, drop = FALSE] == 0),
+  all(rowSums(dat$q_modmat[rv_period, rv_availability, drop = FALSE]) == 1),
   !anyNA(dat$q_modmat)
 )
 

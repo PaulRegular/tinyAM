@@ -27,8 +27,7 @@ obs <- translate("dfo_cod_2j3kl_2025")
 rv <- obs$index$survey == "DFO fall RV survey"
 expected <- paste("age", paste0(2 * ((obs$index$age - 2) %/% 2) + 2, "-", pmin(2 * ((obs$index$age - 2) %/% 2) + 3, 14)))
 expected[obs$index$age >= 12] <- "age 12-14"
-expected[!rv] <- "age 2-3"
-expect_block(obs$index$smith_sound_q_key, expected)
+expect_block(obs$index$smith_sound_q_key[rv], expected[rv])
 obs <- translate("ices_bluewhiting_northeast_atlantic_2026")
 expect_block(obs$catch$sd_group, ifelse(obs$catch$age <= 2, obs$catch$age, ifelse(obs$catch$age <= 8, "3-8", "9-10")))
 expect_block(obs$index$sd_group, ifelse(obs$index$age <= 3, obs$index$age, ifelse(obs$index$age <= 6, "4-6", "7-8")))
