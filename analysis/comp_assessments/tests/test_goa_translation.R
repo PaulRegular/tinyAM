@@ -56,6 +56,15 @@ stopifnot(
   grepl("logistic(sel_age,by=survey_type)", q_form_text, fixed = TRUE),
   grepl("rw(year,by=adfg_indicator)", q_form_text, fixed = TRUE)
 )
+shelikof_col <- "survey[Shelikof winter acoustic]:environmental_effect"
+shelikof_rows <- dat$obs$index$survey == "Shelikof winter acoustic"
+adfg_rw <- Filter(function(term) term$type == "rw", dat$q_terms)[[1L]]
+stopifnot(
+  all(dat$q_modmat[!shelikof_rows, shelikof_col] == 0),
+  isTRUE(all.equal(unname(dat$q_modmat[shelikof_rows, shelikof_col]),
+    dat$obs$index$environmental_effect[shelikof_rows])),
+  identical(adfg_rw$groups[[1L]]$levels, 1990:2024)
+)
 par <- tinyAM::make_par(dat)
 stopifnot("logit_q" %in% names(par), !"log_n" %in% names(par))
 reported <- RTMB::MakeADFun(function(p) tinyAM::nll_fun(p, dat), par,

@@ -16,7 +16,7 @@ expect_block(obs$index$survey_type, ifelse(descending, "acoustic", "trawl"))
 adfg <- "ADF&G crab/groundfish trawl"
 expect_block(obs$index$adfg_indicator, as.numeric(obs$index$survey == adfg))
 stopifnot(identical(recipe$settings$index_settings$q_form,
-  stats::as.formula("~0 + survey + logistic(sel_age, by = survey_type) + environmental_effect + rw(year, by = adfg_indicator)",
+  stats::as.formula("~0 + survey + logistic(sel_age, by = survey_type) + for_survey(\"Shelikof winter acoustic\", ~0 + environmental_effect) + rw(year, by = adfg_indicator)",
     env = environment(recipe$settings$index_settings$q_form))))
 recipe <- translate_recipe("afsc_pollock_ebs_2024")
 obs <- recipe$obs
