@@ -23,6 +23,22 @@ for (id in c(
     if (stationary) length(par$logit_phi_f) == 2L else length(par$atanh_rho_f) == 1L,
     is.finite(tinyAM::nll_fun(par, dat))
   )
+  if (id == "ices_haddock_north_sea_2026") {
+    index <- dat$obs$index
+    powered <- index[index$q_power_group %in% names(par$log_q_power), ]
+    stopifnot(
+      dat$N_settings$init == "latent", dat$rec_settings$init == "latent",
+      identical(as.integer(dat$F_settings$mean_ages), 2:4),
+      length(dat$observed) == 1153L,
+      length(par$log_q) == 17L,
+      length(par$log_sd_catch) == 3L, length(par$log_sd_index) == 9L,
+      setequal(unique(paste(powered$survey, powered$age)), c(
+        "delta-GAMNS-WCQ1 1", "delta-GAMNS-WCQ3+Q4 0", "delta-GAMNS-WCQ3+Q4 1"
+      )),
+      length(par$log_q_power) == 3L,
+      setequal(translated$obs$weight$type, c("stock", "catch"))
+    )
+  }
 }
 translated <- .test_stock(read_assessment("ices_saithe_north_sea_2026", database))
 dat <- do.call(tinyAM::prepare_tam, c(
