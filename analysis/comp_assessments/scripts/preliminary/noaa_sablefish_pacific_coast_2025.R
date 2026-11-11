@@ -104,12 +104,6 @@ attr(obs, "translation") <- list(
   notes = "Joint number frequencies normalized once over both sexes; inactive samples excluded. Combined-sex samples use mean female/male weights. Ages above 30 use the empirical age-30 terminal weight. Years with any unsampled positive catch stream remain wholly missing.",
   catch_coverage = catch_coverage)
 
-N_settings <- list(process = "off", init = "exp")
-rec_settings <- list(process = "iid", mu_form = ~1)
-F_settings <- list(process = "ar1", mu_form = ~logistic(age), mean_ages = 3:15)
-M_settings <- list(process = "off", mu_form = ~1, mu_supplied = NULL)
-catch_settings <- list(sd_form = ~1)
-index_settings <- list(q_form = ~logistic(age), sd_form = ~1)
 age_plus_group <- 30L
 source("analysis/comp_assessments/R/pool_source_states.R", local = TRUE)
 comparison_outputs <- pool_source_states(source$outputs, plus_age = 30L)
@@ -133,28 +127,22 @@ background <- c(
   "| F and M | Fleet-specific selectivity and one estimated constant M with a prior. | Aggregate F has AR1 age/year residuals about a logistic mean; estimate constant M without the prior. | F dynamics and regularization differ. M is estimated, not fixed at its official estimate. |",
   "| Biology | Original sex-specific beginning/mid-season weights and maturity-times-weight schedules. | Derive female maturity by dividing mature weight by mid-season female weight; use beginning-year female weight as a shared proxy and multiply maturity by 0.5. | A fixed 1:1 sex ratio approximates source sex structure; biology is not obtained from fitted N/F. Catch/index conversions still use stream-specific sex weights. |",
   "| Comparison | Native two-sex N and fleet F; native SSB and recruitment. | Sum source N; add fleet F before N-weighting rates across sexes and terminal ages. | Pooled rates are descriptive common-definition quantities, not equivalent sex-specific dynamics. No uncertainty is invented for these sums. Native aggregate outputs remain separate. |",
-  "", "Default starts are attempted first. One numerical retry may use aligned, explicitly pooled official states; poor agreement is not a reason to retry.",
   "", "The first validated run passed numerical checks but estimated M close to zero with extreme uncertainty. It is flagged for review: omitting the M prior can leave mortality weakly identified. Numerical convergence is not evidence of a successful replication."
 )
 
 ## Model ----
 fit <- NULL
 if (do_fit) {
-  source("analysis/comp_assessments/R/fit_default_first.R", local = TRUE)
-  source("analysis/comp_assessments/R/source_start_parameters.R", local = TRUE)
   fit_stage <- "fit"
   fit_started <- Sys.time()
-  fit_model <- function(start_par = NULL) tinyAM::fit_tam(
-    data = obs, years = years, ages = ages, N_settings = N_settings,
-    rec_settings = rec_settings, F_settings = F_settings, M_settings = M_settings,
-    catch_settings = catch_settings, index_settings = index_settings,
-    start_par = start_par, silent = silent)
-  fit <- fit_default_first(fit_model, retry_start = function() {
-    dat <- tinyAM::prepare_tam(data = obs, years = years, ages = ages,
-      N_settings = N_settings, rec_settings = rec_settings, F_settings = F_settings,
-      M_settings = M_settings, catch_settings = catch_settings, index_settings = index_settings)
-    states <- source; states$outputs <- comparison_outputs
-    source_start_parameters(states, dat)
-  }, attempt_file = file.path(.assessment_cache(source$assessment$assessment_id,
-    translation_tier, database = source), "initialization_attempts.rds"))
+  fit <- tinyAM::fit_tam(
+    data = obs, years = years, ages = ages,
+    N_settings = list(process = "off", init = "exp"),
+    rec_settings = list(process = "iid", mu_form = ~1),
+    F_settings = list(process = "ar1", mu_form = ~logistic(age), mean_ages = 3:15),
+    M_settings = list(process = "off", mu_form = ~1, mu_supplied = NULL),
+    catch_settings = list(sd_form = ~1),
+    index_settings = list(q_form = ~logistic(age), sd_form = ~1),
+    silent = silent
+  )
 }

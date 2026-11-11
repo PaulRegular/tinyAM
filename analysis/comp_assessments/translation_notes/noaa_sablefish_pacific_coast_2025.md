@@ -37,7 +37,7 @@ source schedules. The corrected fit is evaluated separately.
 
 With correct biology, the default attempt passes numerical checks:
 optimizer code 0, objective 1298.976, maximum gradient 0.0000588 and a
-positive-definite Hessian. No source-start retry was used. However, constant
+positive-definite Hessian. The recipe uses package starting values. Constant
 M is about 2.4e−10 per year, with log-M SE about 3023. The estimate is
 effectively uninformative after omission of the source prior; numerical
 convergence does not make this a defensible estimate of M.
@@ -53,3 +53,9 @@ cache, clearly separate from the invalid biological setup.
 
 Source facts and native-file provenance remain in the
 [SAIO review](https://github.com/PaulRegular/saio/blob/757b59c/discovery/source_reviews/noaa_west_coast_sablefish_2025.md).
+
+## Curated expansion review on SAIO `cecb45ad`
+
+The estimated-M recipe reproduced the near-zero M estimate. It passed numerical checks and gave a median absolute SSB difference of 29.4% over 18 common years, with trend correlation 0.835 and a terminal difference of +3.6%.
+
+Fixing M at the source prior median of 0.072 per year gave an implausibly large population and virtually zero fishing mortality. Both default starts and a restart from the tinyAM estimated-M fit led to the same pattern. Relative to the reference, the median SSB ratio exceeded 300 million in both fixed-M fits. Optimizer and Hessian checks passed, and several estimated parameters were highly correlated. The two starts indicate that the scale problem persists in this pooled catch and survey specification. Sablefish remains preliminary.

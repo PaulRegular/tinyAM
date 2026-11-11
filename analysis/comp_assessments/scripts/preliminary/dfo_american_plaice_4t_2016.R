@@ -45,7 +45,7 @@ comparison_definitions <- list(
   ssb = list(
     status = "matched",
     definition = "Beginning-of-year spawning biomass using January 1 N, weight-at-age and maturity-at-age.",
-    reason = "The annual VPA series is digitized from Figure 23, with its 2015 median anchored to the exact 55,023 t value in the report. The source biology is retained, including the unresolved 2003 age-16+ weight."
+    reason = "The reference uses reported median N-at-age and the same weights and maturity as tinyAM. Summing these contributions gives 59,928 t in 2015. The VPA's reported posterior median SSB is 55,023 t."
   )
 )
 
@@ -59,13 +59,13 @@ background <- c(
   "| Years and ages | VPA covers 1976-2015, ages 4-16+, with age 16 as the plus group. | Fit the same years and ages. | The source model grid is retained. |",
   "| N and recruitment | The VPA estimates 12 terminal-age abundance parameters and reconstructs population numbers from catch and M. Recruitment is age 4. | Free initial abundance at age, with an age-4 recruitment random walk. | tinyAM estimates abundance forward and does not reproduce the source VPA recursion or its terminal-state parameterization. |",
   "| F | Fishing mortality is recovered within the VPA from catch and population dynamics. | Age-specific temporal random walks. | tinyAM uses an explicit F process instead of the source VPA catch equation. |",
-  "| M | Two log-scale random walks: ages 4-9 and 10+, with fixed increment SD 0.075 and initial-M prior means 0.6 and 0.3. | Two age-block random walks around surfaces set to those prior means; process SDs are estimated. | Initial prior SDs are not reported, and tinyAM does not use the source's fixed M-increment SD. The values 0.6 and 0.3 are not treated as fixed M. |",
+  "| M | Two log-scale random walks: ages 4-9 and 10+, with fixed increment SD 0.075 and initial-M prior means 0.6 and 0.3. | Fix the first year at 0.6 and 0.3 per year, then fit two random walks starting in 1977 with an estimated common increment SD. | The 1977 process states are free of a penalty tying them to the 1976 rates. |",
   "| Catch and indices | Commercial catch-at-age, including estimated discards, is a VPA input. The RV and mobile sentinel indices use age-specific q and lognormal observation errors. | Catch-at-age is fitted with tinyAM's lognormal likelihood; both indices have separate age-specific q and observation SDs. | tinyAM's likelihoods and population equations differ from the VPA. |",
   "| Survey timing | The RV and sentinel surveys occur in September. The 2003 RV observations were excluded because an uncalibrated vessel was used. | Retain the source index years and use 0.75 as the September timing fraction. | The exact annual survey dates are not reported; 0.75 is a seasonal approximation. |",
-  "| Biology and SSB | Annual population weights are adjusted to January 1; maturity is age- and year-specific. Figure 23 reports annual VPA SSB. | Retain both source surfaces and compare the annual SSB series. | SSB is digitized from the figure; 2015 uses the exact 55,023 t estimate. The 2003 age-16+ weight of 0.000 remains unresolved. |",
-  "| Outputs | N-at-age is tabulated. Annual F, M and SSB medians appear in figures; 2015 SSB is also reported as 55,023 t. | Compare N-at-age, derived total abundance and age-4 recruitment, plus digitized grouped F/M and SSB where recoverable. | Figure values are approximate; some grouped mortality points cannot be separated, and F uncertainty bands are not visible. |",
+  "| Biology and SSB | Annual population weights are adjusted to January 1; maturity is age- and year-specific. Figure 23 reports annual VPA SSB. | Retain both source surfaces and use them with source median N-at-age to calculate the SSB comparison. | In 2015 the comparison is 59,928 t and the reported VPA posterior median is 55,023 t. The 2003 age-16+ weight of 0.000 remains unresolved. |",
+  "| Outputs | N-at-age is tabulated. Annual F, M and SSB medians appear in figures; 2015 SSB is also reported as 55,023 t. | Compare N-at-age, derived total abundance, age-4 recruitment, common-definition SSB, and digitized grouped F/M where recoverable. | Figure values are approximate; some grouped mortality points cannot be separated, and F uncertainty bands are not visible. |",
   "",
-  "The fit uses the source data without explicit starting values. The two tinyAM M baselines come from the source's initial-M prior means; they are starting mean surfaces for an estimated process, not fixed source M. F and M age-group summaries use the source's 4-9 and 10+ group definitions."
+  "The fit uses package starting values. F and M age-group summaries use the source's 4-9 and 10+ group definitions."
 )
 
 ## Model ----
