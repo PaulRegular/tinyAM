@@ -4,6 +4,24 @@ Transferred from the [SAIO source review](https://github.com/PaulRegular/saio/bl
 
 Official assessment evidence is maintained in [SAIO](https://github.com/PaulRegular/saio/blob/main/source_reviews/ices_herring_north_sea.md).
 
+## Curated refresh
+
+Table 2.6.2.7 of the 2026 HAWG report assigns one F state to ages 7–8
+and groups F innovation SDs over ages 0–1, 2–5, and 6–8. The single-fleet
+FLSAM control also uses one age-correlation parameter for IBTS-Q3.
+The curated recipe represents these settings with F age blocks, an F SD
+formula, and survey-specific `cor_struct`.
+
+Both tinyAM fits passed numerical checks on SAIO snapshot `54474f12`.
+On the same 711 matched F-at-age cells, the median absolute percentage
+difference from the official estimates fell from 4.49% to 1.09%. On
+the same 79 years, it fell from 2.71% to 0.91% for Fbar, from 1.51% to
+0.80% for SSB, and from 2.49% to 0.61% for recruitment. The 2025 SSB
+difference moved from +4.20% to −0.38%. Remaining limitations include
+the approximate survey timing, omitted larval indices, and differences
+in initialization and spawning conventions.
+
+
 ## Expanded-library review
 
 ### tinyAM translation revision (2026-10-14)

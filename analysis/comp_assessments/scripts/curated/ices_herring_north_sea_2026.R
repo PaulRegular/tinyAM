@@ -34,6 +34,8 @@ obs$index$q_key[q3] <- paste0("IBTS-Q3_", obs$index$age[q3])
 obs$index$q_key <- factor(obs$index$q_key)
 
 
+obs$catch$F_sd_group <- cut(obs$catch$age, c(0, 2, 6, 9), right = FALSE)
+
 model_dat <- tinyAM::prepare_tam(
   data = obs, years = years, ages = ages, N_settings = list(
     process = "rw",
@@ -42,7 +44,7 @@ model_dat <- tinyAM::prepare_tam(
     process = "off",
     mu_form = NULL, mu_supplied = ~M_assumption
   ), catch_settings = list(sd_form = ~ 0 + sd_block),
-  index_settings = list(q_form = ~ 0 + q_key, sd_form = ~ 0 + sd_block)
+  index_settings = list(q_form = ~ 0 + q_key, sd_form = ~ 0 + sd_block, cor_struct = c(`IBTS-Q3` = "ar1"))
 )
 start_par <- tinyAM::make_par(model_dat)
 source_N <- .translation_start_surface(source$outputs, "population", "numbers_at_age", years, ages, 1)
@@ -51,7 +53,8 @@ start_par$log_r0 <- log(source_N[1, 1])
 start_par$log_n0 <- log(source_N[1, -1])
 start_par$log_r <- log(source_N[-1, 1])
 start_par$log_n <- log(source_N[-1, -1, drop = FALSE])
-start_par$log_f <- log(source_F)
+start_par$log_f <- log(source_F[, as.character(0:7), drop = FALSE])
+colnames(start_par$log_f)[8L] <- "7-8"
 
 
 ## Background and comparisons ----
@@ -74,22 +77,20 @@ background <- c(
 
   "| N | Recruitment has a separate process variance; ages 1–8 share a survival-process variance. | Random-walk recruitment, IID cohort-survival deviations with one shared SD, and free initial older-age abundance. | The independent survival deviations and shared older-age SD broadly approximate SAM, but its initial-state treatment and full process specification are not reproduced. |",
 
-  "| F | Random-walk F with AR(1) correlation across ages in annual increments. Ages 0–6 have separate F states, ages 7–8 share one state, and innovation variances are grouped over ages 0–1, 2–5 and 6–8. Fbar uses ages 2–6. | Correlated F random walks (cor_rw), with AR(1) correlation between age-specific annual log-F increments, one shared process SD and Fbar ages 2–6. | Cross-age correlation is now represented, but the source variance groups and shared oldest-age F state are not. |",
+  "| F | Random-walk F with AR(1) correlation across ages in annual increments. Ages 0–6 have separate F states, ages 7–8 share one state, and innovation variances are grouped over ages 0–1, 2–5 and 6–8. Fbar uses ages 2–6. | Correlated F random walks with a shared age 7–8 state, the three official innovation SD groups and Fbar ages 2–6. | The reported F-state and process variance sharing are retained. |",
 
   "| M | Fixed annual SMS-2023 age surface with an additional 0.02 in the official model configuration. | Supply the translated 1947–2025 M surface as fixed numerical values. | No M process is estimated; the official final-M convention must be preserved without applying the offset twice. |",
 
   "| Catch | Direct catch-at-age in thousand fish; fishery-closure years 1978–1979 have missing observations. | Retain thousand fish and fit positive catch observations with independent lognormal errors and SD groups defined by sd_block. | Source catch-error structure may differ; zero observations cannot enter the standard lognormal likelihood directly. |",
 
-  "| Indices | HERAS, IBTS-Q1, IBTS0 and IBTS-Q3 are age-structured. Four larval indices use partial spawning-component likelihoods. | Retain the four age-structured surveys, with source-derived q and observation-SD groups. Omit the larval indices. | Partial spawning-component indices are not abundance-at-age observations. IBTS-Q3 cross-age observation correlation is omitted, and timing remains approximate. |",
+  "| Indices | HERAS, IBTS-Q1, IBTS0 and IBTS-Q3 are age-structured. Four larval indices use partial spawning-component likelihoods. | Retain the four age-structured surveys, with source-derived q and observation SD groups and AR(1) age correlation for IBTS-Q3. | The larval indices measure partial spawning components, and timing remains approximate. |",
 
   "| Weights and maturity | Annual stock and catch weights and annual maturity are tabulated through 2025. | Retain the source annual biological surfaces for 1947–2025. | No alternative biological surfaces are substituted. |",
 
   "| SSB | The official assessment uses its spawning-time biomass convention. | Calculate SSB from translated stock weights, maturity and fitted abundance using tinyAM's timing convention. | The source spawning fractions remain unavailable, so native SSB definitions may differ. |",
 
   "",
-  "The revised translation uses IID cohort-survival deviations and correlated F random walks in place of the previous random-walk N process and independent age-specific F random walks. This more closely approximates the official assessment's broad process structure while retaining a simpler parameterization.",
-  "",
-  "The official FLSAM shares its oldest F state and estimates three groups of F-process variances; tinyAM retains separate age-specific F states and uses one shared increment SD. Recruitment remains a separate random-walk process.",
+  "Recruitment retains a separate random-walk process.",
   "",
   "Official N and F surfaces provide optimizer starting values only; tinyAM re-estimates the population and mortality states. The historical fit is restricted to 1947–2025, although official N and F estimates extend through 2026.",
   "",
@@ -109,10 +110,16 @@ if (do_fit) {
     years = years,
     ages = ages,
     N_settings = list(process = "iid", init = "free"),
-    F_settings = list(process = "cor_rw", mu_form = NULL, mean_ages = 2:6),
+    F_settings = list(
+      process = "cor_rw", mu_form = NULL, age_breaks = c(0:7, 9),
+      sd_form = ~ 0 + F_sd_group, mean_ages = 2:6
+    ),
     M_settings = list(process = "off", mu_form = NULL, mu_supplied = ~M_assumption),
     catch_settings = list(sd_form = ~ 0 + sd_block),
-    index_settings = list(q_form = ~ 0 + q_key, sd_form = ~ 0 + sd_block),
+    index_settings = list(
+      q_form = ~ 0 + q_key, sd_form = ~ 0 + sd_block,
+      cor_struct = c(`IBTS-Q3` = "ar1")
+    ),
     silent = silent,
     start_par = start_par
   )
