@@ -15,7 +15,8 @@ stopifnot(
   identical(as.integer(sort(unique(sentinel$year))), 2003:2015),
   nrow(rv) == 39L * 13L,
   nrow(sentinel) == 13L * 13L,
-  all(index$samp_time == 0.75),
+  all(rv$samp_time == 0.75),
+  all(sentinel$samp_time == 0.625),
   length(unique(index$q_key)) == 26L,
   length(unique(x$obs$pop_covariates$M_assumption)) == 2L,
   x$obs$pop_covariates$M_assumption[

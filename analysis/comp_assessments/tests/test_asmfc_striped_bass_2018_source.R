@@ -71,6 +71,10 @@ stopifnot(
   all(abs(aggregate(value ~ year, SSB_age, sum)$value - SSB$value) <= 8)
 )
 translated <- run_assessment(record$assessment$assessment_id, database = db, fit = FALSE, silent = TRUE)
+index <- translated$obs$index
+md <- index$survey == "MD SSN"
+md_old <- md & index$age >= 4L
+md_age3 <- md & index$age == 3L
 comparison_outputs <- translated$comparison$comparison_outputs
 total_biomass <- comparison_outputs[
   comparison_outputs$type == "biomass" & comparison_outputs$measure == "total_biomass", ]
@@ -79,6 +83,12 @@ stopifnot(
   nrow(translated$obs$catch) == 540L,
   nrow(translated$obs$weight) == 540L,
   nrow(translated$obs$maturity) == 540L,
+  sum(md_age3) == 33L, sum(md & index$age == 15L) == 28L,
+  any(md & index$age == 15L & index$year == 2017L),
+  all(index$q_key[md_old] == "MD SSN.4"),
+  all(index$q_key[md_age3] == "MD SSN.3"),
+  all(index$q_key[md & index$age == 2L] == "MD SSN.2"),
+  all(as.character(index$q_key[!md]) == paste(index$survey[!md], index$age[!md], sep = ".")),
   nrow(total_biomass) == length(years),
   !anyDuplicated(total_biomass$year),
   setequal(total_biomass$year, years),
