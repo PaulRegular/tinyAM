@@ -113,7 +113,7 @@ background <- c(
   "",
   "Because q_link = 'logit', the age curves and temporal effects enter the logit-q predictor, unlike the official log-q parameterization. The older paired-age q blocks and separate ADF&G annual factor effects are no longer used in the fit. Weak q identification and sensitivity to the link should be checked after refitting.",
   "",
-  "The translation uses thousand fish, average weights in kg, and biomass in tonnes. Original catch totals are used for the yield panel; predicted catch numbers are multiplied by catch weights. The published 1975-2023 catch table is rounded to 0.01 million fish and printed zeros are missing under tinyAM's lognormal likelihood. Predictions are conditional medians without lognormal mean correction; official F-at-age is unavailable.",
+  "The translation uses thousand fish, average weights in kg, and biomass in tonnes. Original catch totals are used for the yield panel; predicted catch numbers are multiplied by catch weights. The published 1975-2023 catch table is rounded to 0.01 million fish and printed zeros are missing under tinyAM's lognormal likelihood. Predictions are conditional medians without lognormal mean correction; the reference F-at-age series is reconstructed from rounded official numbers-at-age and has no reported uncertainty.",
   "",
   "SSB remains a definition-sensitive comparison: the official assessment uses spawning-time biomass at fraction 0.21 with spawning weights, whereas this candidate reports beginning-year SSB using stock weights. No updated fit diagnostics or numerical agreement statistics are attributed to this candidate without a separate run."
 )
