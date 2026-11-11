@@ -29,3 +29,9 @@ With fixed M, fitted abundance increased and survey catchability fell. For examp
 The random-walk fit estimates 65% fewer fish than the source in 1976, while estimating 57 times as many fish at age 16+. Those oldest fish account for 80% of fitted SSB that year and 5% of the reference. This age composition helps explain why SSB can be high despite low total abundance.
 
 A third trial used two `rw(year, by = M_age_group, sd = 0.075)` effects for M. They start from the supplied 1976 rates and use the VPA's fixed increment SD, including the first transition. The trial prepared successfully with the same observed data. From default starts the optimizer returned false convergence, a maximum gradient of `7.08e8` and a non-positive-definite Hessian. It produced no validated comparisons. The registered recipe remains preliminary.
+
+## Follow-up scale checks
+
+Starting the fixed-SD random walks from the converged constant-M fit passed numerical checks. Median abundance and recruitment differences fell to 22.3% and 14.2%, compared with 66.3% and 89.6% in the baseline. SSB agreement was mixed. The mean absolute difference improved from 90.4% to 60.8%, while the median increased from 37.8% to 61.2% and the terminal difference shifted from −14.7% to +65.7%.
+
+A separate diagnostic supplied the official time-varying M medians from Figure 21. The 10+ series was complete. For ages 4–9, 1993, 1997 and 2005 were linearly interpolated between reported neighboring years. The fit passed numerical checks from defaults. Common-definition median SSB difference fell to 29.7%, with trend correlation 0.997 and a terminal difference of −25.2% (−18.5% against the published median). The initial 16+ abundance fell from 793 million to 5.18 million, versus 13.82 million in the VPA. This supports a role for the mortality trajectory in the scale mismatch. The result conditions on the VPA mortality estimates, and the surviving biomass gap keeps the comparison preliminary.
