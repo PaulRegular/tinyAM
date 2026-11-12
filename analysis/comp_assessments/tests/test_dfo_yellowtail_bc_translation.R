@@ -11,6 +11,10 @@ testthat::test_that("BC Yellowtail uses matched age samples, timing and native b
   testthat::expect_identical(stock$years, 1979:2018)
   testthat::expect_identical(stock$ages, 0:45)
   testthat::expect_identical(stock$dat$F_settings$mean_ages, 9:20)
+  testthat::expect_identical(stock$dat$N_settings$process, "off")
+  testthat::expect_identical(
+    attr(terms(stock$settings$index_settings$q_form), "term.labels"),
+    c("survey", "logistic(age, by = survey)"))
   testthat::expect_false(stock$dat$has_fleet)
   testthat::expect_equal(stock$dat$rec$sd, 0.9)
   testthat::expect_equal(exp(stock$dat$log_mu_supplied_m[1]), 0.08 / sqrt(1.09))

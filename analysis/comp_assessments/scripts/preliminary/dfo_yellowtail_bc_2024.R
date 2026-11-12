@@ -58,8 +58,6 @@ index_numbers <- age_numbers(index_composition, index_total, survey_weight, "sur
 index <- aggregate(numbers ~ year + age + survey + samp_time, index_numbers, sum)
 names(index)[names(index) == "numbers"] <- "obs"
 index$unit <- "thousand fish"
-# The native QCS and WCVI curves are essentially flat at older ages.
-index$q_age <- findInterval(index$age, c(1L, 6L, 8L, 10L, 12L))
 index_sd <- subset(inputs, type == "index" & measure == "log_index_sd" &
   survey %in% surveys & year %in% years)
 survey_year <- function(x) paste(x$survey, x$year)
@@ -151,7 +149,7 @@ background <- c(
   "| Biology and SSB | Fixed growth and weight relationships, January female spawning biomass. | Use source-derived sex-specific weight schedules to expand age samples. Stock weight averages both sexes. SSB uses the female reproductive weights and a 1:1 sex ratio at age. |",
   "",
   "### Surveys and comparison", "",
-  "Retain the six NMFS Triennial, eight Queen Charlotte Sound and six West Coast Vancouver Island index years with matched age samples in the fitted window. Use a logistic age pattern for the Triennial survey and monotone age groups with a 12+ plateau for the two synoptic surveys. Estimate a separate scale and age-level lognormal SD for each survey. The original aggregate log-SDs remain in the input table.",
+  "Retain the six NMFS Triennial, eight Queen Charlotte Sound and six West Coast Vancouver Island index years with matched age samples in the fitted window. Estimate a separate logistic age pattern, scale and age-level lognormal SD for each survey. The West Coast Vancouver Island midpoint lies well beyond the observed ages and is poorly determined. The original aggregate log-SDs remain in the input table.",
   "",
   "The reconstructed age observations use the same annual biomass within each stream. The native model fits biomass and compositions separately and accounts for ageing error and composition weighting. The tinyAM likelihood treats the reconstructed ages as independent.",
   "",
@@ -173,10 +171,7 @@ if (do_fit) {
     M_settings = list(process = "off", mu_supplied = ~ I(0.08 / sqrt(1 + (0.024 / 0.08)^2)),
       mu_form = ~ 0 + iid(M_prior_group, sd = M_log_sd)),
     catch_settings = list(sd_form = ~ 1),
-    index_settings = list(q_form = ~ 0 +
-      for_survey("NMFS_TRIENNIAL", ~ logistic(age)) +
-      for_survey("QCS_SYNOPTIC", ~ mono(q_age)) +
-      for_survey("WCVI_SYNOPTIC", ~ mono(q_age)),
+    index_settings = list(q_form = ~ 0 + survey + logistic(age, by = survey),
       sd_form = ~ 0 + survey),
     silent = silent
   )

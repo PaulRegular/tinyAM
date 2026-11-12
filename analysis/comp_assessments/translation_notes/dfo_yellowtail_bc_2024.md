@@ -28,26 +28,56 @@ uses one pooled M and a 1:1 sex ratio at age for SSB.
 
 ## Single-fleet trials
 
-All three fits passed tinyAM's numerical checks. The first used a logistic
-curve for each survey. The WCVI midpoint was near age 200, with very large
-uncertainty on the curve and scale. The native QCS and WCVI curves are
-approximately flat by age 12. The preliminary recipe therefore estimates
-monotone catchability over ages 1–5, 6–7, 8–9, 10–11, and 12+ for those
-surveys. The final sensitivity kept those groups and freed the 1979 initial
-abundance at older ages. It estimated one coefficient per older age and
-retained the annual recruitment model.
+The preliminary recipe uses a separate logistic curve for each survey and
+deterministic cohort survival. The WCVI midpoint was near age 200, with very
+large uncertainty on the midpoint and scale. The native QCS and WCVI curves
+are approximately flat by age 12. A sensitivity fit used monotone
+catchability over ages 1–5, 6–7, 8–9, 10–11 and 12+ for those surveys. A
+second sensitivity also freed the 1979 initial abundance at older ages.
+The IID trial adds cohort deviations to the original logistic fit with
+`update(fit, N_settings = list(process = "iid"), start_par = NULL)`.
 
-| Fit | SSB median absolute difference | SSB trend correlation | 2018 SSB difference | Average F trend correlation |
-|---|---:|---:|---:|---:|
-| Survey-specific logistics | 7.7% | 0.719 | +19.1% | 0.914 |
-| Synoptic survey plateaus | 10.7% | 0.239 | +5.9% | −0.125 |
-| Synoptic plateaus and free initialization | 16.4% | 0.671 | −2.8% | 0.911 |
+| Fit | Median absolute SSB difference | SSB correlation | 2018 SSB difference | Average F correlation | Numerical checks |
+|---|---:|---:|---:|---:|---|
+| Survey-specific logistics | 7.7% | 0.719 | +19.1% | 0.914 | Passed |
+| Synoptic survey plateaus | 10.7% | 0.239 | +5.9% | −0.125 | Passed |
+| Synoptic plateaus and free initialization | 16.4% | 0.671 | −2.8% | 0.911 | Passed |
+| Survey-specific logistics and IID cohort deviations | 19.1% | 0.785 | +1.1% | 0.916 | Failed |
 
-Scores use all 40 common years and the native female SSB calculation. The
-logistic fit had median absolute differences of 12.0% in average F, 32.0% in
-total abundance, and 37.4% in recruitment. The survey plateaus resolve the
-poorly identified logistic shape but weaken trend agreement. Free
-initialization improves the trend correlation relative to that fit, with
-larger median differences in all four quantities and one fitted parameter
-at a bound. The SSB trend correlation fell short of the 0.90 curation
-target in every trial. The recipe remains preliminary.
+Scores use all 40 common years and the native female SSB calculation.
+Median absolute differences in average F, abundance and recruitment rose
+from 12.0%, 32.0% and 37.4% in the logistic baseline to 30.6%, 49.1% and
+59.2% with IID deviations. Estimated M fell from 0.094 to 0.067 per year.
+The IID fit returned singular convergence and a maximum gradient of 0.082
+against a tolerance of 0.01. The logistic fit with deterministic survival
+remains the preliminary recipe. Every trial fell short of the 0.90 SSB
+trend target.
+
+## Why SSB tracks the reference less closely than F
+
+The native fit estimates a 13% decline in SSB from 1979 to 1983. The logistic
+fit estimates a 5% increase, primarily because of fish already alive in 1979.
+Later, the native fit estimates 72.8 million recruits in 1990, compared
+with 21.7 million in tinyAM. The 1997 and 2000 cohorts show similar
+attenuation. As these cohorts mature, the fitted SSB peaks differ in timing
+and magnitude. Substituting the native F trajectory into the tinyAM cohort
+equations raises SSB correlation from 0.719 to 0.758. Substituting both
+initial abundance and recruitment raises it to 0.866, with a much larger
+magnitude difference. These substitutions hold the other fitted inputs
+fixed and illustrate sensitivity to each trajectory.
+
+The native proportion female is often below one-half at mature ages. Using
+one-half on the native abundance increases median SSB by 24% and preserves
+the broad trend (`r = 0.977` with native SSB). That helps explain how the
+pooled fit can have fewer fish and still approximate female spawning
+biomass. The sparse surveys limit what the fit can learn about the cohorts.
+Across ages 31–45, 70–89% of reconstructed survey observations are zeros
+excluded by the lognormal likelihood. The few positive records are
+consistent with the high fitted old-age catchability. The native
+composition likelihood retains information from zero proportions.
+
+The WCVI observations use the correct May survival timing. The expansion
+uses midyear weights, while the native survey prediction uses early-season
+weights. Recomputing the six reconstructed WCVI samples with the native
+early-season weights increases numbers by 2.6–6.0%. Both fits above retain
+the same weights so the IID comparison changes only the N process.
