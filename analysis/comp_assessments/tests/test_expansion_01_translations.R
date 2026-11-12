@@ -227,39 +227,125 @@ testthat::test_that("winter flounder uses one count representation and estimates
   }
 })
 
-testthat::test_that("sablefish reconstruction conserves source biomass and never fills partial removals", {
+testthat::test_that("sablefish expands six catch streams and four surveys without filling unsampled ages", {
   record <- read_assessment("noaa_sablefish_pacific_coast_2025", database)
   before <- record
   testthat::local_mocked_bindings(fit_tam = function(...) stop("Do not fit during preparation"),
     .package = "tinyAM")
   stock <- .test_stock(record)
   testthat::expect_identical(record, before)
-  testthat::expect_equal(stock$years, 2006:2023)
+  testthat::expect_equal(stock$years, 1983:2024)
   testthat::expect_equal(stock$ages, 0:30)
-  testthat::expect_null(stock$dat$M_settings$mu_supplied)
-  testthat::expect_true(all(is.na(stock$obs$catch$obs[stock$obs$catch$year == 2014])))
-  testthat::expect_true(all(is.finite(stock$obs$catch$obs[stock$obs$catch$year != 2014])))
-  testthat::expect_equal(stock$catch_reconstruction$source_tonnes,
-    stock$catch_reconstruction$reconstructed_tonnes)
-  testthat::expect_true(all(stock$obs$index$unit == "native survey index"))
-  testthat::expect_identical(unique(stock$obs$index$survey), "WCGBTS")
-  testthat::expect_true(all(stock$obs$index$samp_time == 0.5))
-  biology <- record$inputs[record$inputs$sex == "female" &
-    record$inputs$year %in% stock$years, ]
-  key <- function(x) paste(x$year, x$age)
-  lookup <- function(fleet, measure, target) {
-    x <- biology[biology$fleet %in% fleet & biology$measure == measure, ]
-    x$value[match(key(target), key(x))]
+  testthat::expect_true(all(abs(stock$dat$log_mu_supplied_m + 2.63061660) < 1e-12))
+  testthat::expect_length(stock$dat$M_terms, 1L)
+  testthat::expect_equal(stock$dat$M_terms[[1L]]$sd, 0.19036084)
+  testthat::expect_equal(pnorm(log(0.04), -2.63061660, stock$dat$M_terms[[1L]]$sd),
+    0.001, tolerance = 1e-6)
+  testthat::expect_length(stock$dat$M_terms[[1L]]$groups, 1L)
+
+  catch <- stock$obs$catch
+  weights <- stock$obs$weight
+  fleets <- c("Trawl", "Hook-and-line", "Pot",
+    "Trawl discard", "Hook-and-line discard", "Pot discard")
+  testthat::expect_setequal(catch$fleet, fleets)
+  testthat::expect_equal(nrow(catch), length(stock$years) * length(stock$ages) * length(fleets))
+  testthat::expect_equal(stock$dat$F_settings$process, "off")
+  temporal <- Filter(function(term) term$type == "ar1", stock$dat$F_terms)
+  testthat::expect_length(temporal, 1L)
+  testthat::expect_length(temporal[[1L]]$groups, length(fleets))
+  testthat::expect_setequal(vapply(stock$dat$F_scopes, `[[`, character(1), "name"), fleets)
+  testthat::expect_true(all(catch$F_age <= catch$age))
+  testthat::expect_equal(sort(unique(catch$year[catch$retained_period == "late"])), 2002:2024)
+  retained_shape <- c("fixed_gear_young", "fixed_gear_rise", "fixed_gear_decline", "fixed_gear_shift")
+  testthat::expect_equal(subset(catch, fleet == "Hook-and-line", retained_shape),
+    subset(catch, fleet == "Pot", retained_shape), ignore_attr = TRUE)
+  testthat::expect_true(all(subset(catch, !fleet %in% c("Hook-and-line", "Pot"),
+    retained_shape) == 0))
+  groups <- function(gear, yr, ages) {
+    subset(catch, fleet == paste(gear, "discard") & year == yr & age %in% ages)$discard_group
   }
-  testthat::expect_equal(stock$obs$weight$obs,
-    lookup("beginning-season population", "start_weight_at_age", stock$obs$weight))
-  testthat::expect_equal(stock$obs$maturity$obs,
-    0.5 * lookup("mature weight schedule", "mature_weight_at_age", stock$obs$maturity) /
-      lookup("mid-season population", "weight_at_age", stock$obs$maturity))
+  early_hkl <- groups("Hook-and-line", 2010, 0:6)
+  testthat::expect_identical(match(early_hkl, unique(early_hkl)), c(1L, 2L, 3L, 3L, 4L, 4L, 4L))
+  testthat::expect_identical(groups("Hook-and-line", 2011, c(0, 1, 2, 3, 4, 6, 30)),
+    groups("Hook-and-line", 2019, c(0, 2, 3, 4, 5, 6, 30)))
+  testthat::expect_identical(groups("Pot", 2010, 0:7),
+    c("0", "early 1", rep("tail", 6)))
+  testthat::expect_identical(groups("Pot", 2011, 0:7),
+    c("0", "late 1", "late 2", rep("tail", 5)))
+  testthat::expect_true(any(subset(catch, fleet == "Hook-and-line discard" & age == 0)$obs > 0,
+    na.rm = TRUE))
+  testthat::expect_true(any(subset(catch, fleet == "Pot discard" & age == 0)$obs > 0,
+    na.rm = TRUE))
+  catch_weights <- subset(weights, type == "catch")
+  key <- function(x) paste(x$year, x$age, x$fleet)
+  catch$tonnes <- catch$obs * catch_weights$obs[match(key(catch), key(catch_weights))]
+  ages_observed <- aggregate(is.finite(obs) ~ year + fleet, catch, sum)[[3L]]
+  testthat::expect_true(all(ages_observed %in% c(0L, length(stock$ages))))
+  observed <- aggregate(tonnes ~ year + fleet, catch, sum)
+  reconstruction <- stock$catch_reconstruction
+  covered <- is.finite(reconstruction$reconstructed_tonnes)
+  fleet_year <- function(x) paste(x$year, x$fleet)
+  testthat::expect_setequal(fleet_year(observed), fleet_year(reconstruction[covered, ]))
+  testthat::expect_equal(as.integer(table(factor(observed$fleet, levels = fleets))),
+    c(40L, 38L, 36L, 18L, 18L, 18L))
+  testthat::expect_equal(observed$tonnes,
+    reconstruction$source_tonnes[match(fleet_year(observed), fleet_year(reconstruction))])
+  testthat::expect_true(all(is.na(subset(catch, fleet == "Pot" & year == 2014)$obs)))
+  testthat::expect_true(all(is.finite(subset(catch, fleet == "Pot discard" & year == 2014)$obs)))
+
+  index <- stock$obs$index
+  survey_years <- list(`Early Triennial survey` = c(1983L, 1989L, 1992L),
+    `Late Triennial survey` = c(1995L, 2004L), `NWFSC Slope Survey` = 1998:2002,
+    WCGBTS = c(2003:2019, 2021:2024))
+  testthat::expect_setequal(index$survey, names(survey_years))
+  for (survey in names(survey_years)) {
+    testthat::expect_equal(sort(unique(index$year[index$survey == survey])), survey_years[[survey]])
+  }
+  testthat::expect_true(all(index$unit == "native survey index" & index$samp_time == 0.5))
+  testthat::expect_setequal(vapply(stock$dat$q_scope_components, `[[`, character(1), "name"), names(survey_years))
+  testthat::expect_gt(ncol(stock$dat$q_modmat), 0L)
+  index_mass <- stock$index_reconstruction
+  scored <- is.finite(index_mass$reconstructed_biomass_index)
+  testthat::expect_equal(sum(scored), 31L)
+  testthat::expect_equal(index_mass$reconstructed_biomass_index[scored],
+    index_mass$source_biomass_index[scored])
+  wcgbts <- subset(index, survey == "WCGBTS")
+  testthat::expect_identical(levels(wcgbts$wcgbts_order), c("0", "2+", "1"))
+  testthat::expect_true(all(wcgbts$wcgbts_order[wcgbts$age >= 2L] == "2+"))
+  # Fit on the survey's original number-equivalent scale, with no official q adjustment.
+  source_share <- stock$age_share("index", "WCGBTS", 2024L)
+  w <- stock$weight_at(2024L, source_share$age, source_share$sex, "WCGBTS", "weight_at_age")
+  total <- subset(index_mass, survey == "WCGBTS" & year == 2024L)$source_biomass_index
+  age0 <- subset(wcgbts, year == 2024L & age == 0L)$obs
+  testthat::expect_equal(age0, total * sum(source_share$share[source_share$age == 0L]) /
+    sum(source_share$share * w))
+
+  stock_weights <- subset(weights, type == "stock")
+  biology <- record$inputs
+  weight_at <- function(fleet, measure, sex, target) {
+    x <- biology[biology$fleet %in% fleet & biology$measure == measure & biology$sex %in% sex, ]
+    source_year <- ifelse(target$year < 2003L, -1890L, target$year)
+    x$value[match(paste(source_year, target$age), paste(x$year, x$age))]
+  }
+  start_weight <- function(sex) weight_at("beginning-season population", "start_weight_at_age",
+    sex, stock_weights)
+  testthat::expect_equal(stock_weights$obs, (start_weight("female") + start_weight("male")) / 2)
+  maturity <- stock$obs$maturity
+  testthat::expect_true(all(maturity$spawn_time == 0))
+  testthat::expect_equal(stock_weights$obs * maturity$obs,
+    0.5 * weight_at("mature weight schedule", "mature_weight_at_age", "female", maturity))
+
   share <- stock$age_share("catch", "Hook-and-line", 2020)
   testthat::expect_equal(sum(share$share), 1)
   testthat::expect_setequal(share$sex, c("female", "male"))
   testthat::expect_true(all(share$sex_code == "3"))
+  rates <- subset(stock$comparison_outputs, measure == "fishing_mortality_at_age")
+  components <- subset(rates, !is.na(fleet))
+  testthat::expect_setequal(components$fleet, fleets)
+  summed <- aggregate(value ~ year + age, components, sum)
+  total <- subset(rates, is.na(fleet))
+  testthat::expect_equal(summed$value,
+    total$value[match(paste(summed$year, summed$age), paste(total$year, total$age))])
   # Reported states are for comparisons/optional starts, never for observations.
   changed <- record
   changed$outputs$value[changed$outputs$measure == "numbers_at_age"] <-
