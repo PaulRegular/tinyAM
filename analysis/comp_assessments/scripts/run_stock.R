@@ -4,9 +4,9 @@ root <- file.path("analysis", "comp_assessments")
 pkgload::load_all(".", quiet = TRUE)
 source(file.path(root, "R", "run_assessment.R"))
 
-translation_tier <- "preliminary"
+translation_tier <- "curated"
 assessment_id <- "noaa_sablefish_pacific_coast_2025"
-# Use the same SAIO inputs as the fixed-gear selectivity comparison.
+# Use the same SAIO inputs as the curated sablefish comparison.
 database <- read_database(revision = "312bc7210bca3c88e23de5fd882fb4ab0eb03d99")
 source <- read_assessment(assessment_id, database)
 # Set FALSE to load the inputs for an edited fit_tam() call.

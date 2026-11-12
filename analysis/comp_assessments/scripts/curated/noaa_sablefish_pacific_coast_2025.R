@@ -195,7 +195,7 @@ background <- c(
   "| Fisheries | Trawl, hook-and-line and pot. Each gear has a retained and a dead-discard stream, giving six fleets with biomass totals and separate marginal age compositions. | Fit six fleet surfaces. Reconstruct catch numbers from each stream’s own age composition, weights and total tonnes. Gear-years without active age samples remain missing. Discard biomass already accounts for discard mortality. |",
   "| Selectivity and F | Joined double-normal age curves with time blocks. Retained hook-and-line has sex-specific selectivity, mirrored by pot. | Retained hook-and-line and pot share a piecewise log-age curve with an older-age plateau and a change in 2002. Hook-and-line discards shift from grouped young ages before 2011 to a dome shifted one age older in 2019. Pot discards pool ages 2+ before 2011 and 3+ thereafter. Fleet-specific AR1 year effects change F intensity across ages. |",
   "| Natural mortality | A common constant M for females and males. Its prior has log mean −2.631 and log SD 0.31. Bounds are 0.04–0.13 per year. | Estimate a single constant M using a one-level Gaussian IID effect. Use the bounded prior's log centre (−2.63062) and a tighter log SD (0.19036), with 0.1% prior probability below 0.04. The effect is integrated over positive M. |",
-  "| Recruitment and initialization | Beverton–Holt steepness fixed at 0.75, log recruitment SD fixed at 1.4, annual deviations from 1975 and a bias adjustment. An environmental index informs 2020–2024 recruitment deviations. | IID log recruitment, estimated SD, deterministic cohort survival and exponential initial age structure. The environmental series measures deviations rather than abundance and stays outside the index likelihood. |",
+  "| Recruitment and cohort survival | Beverton–Holt recruitment with steepness fixed at 0.75, log recruitment SD fixed at 1.4, annual deviations from 1975 and a bias adjustment. Older cohorts follow survival implied by F and M. An environmental index informs 2020–2024 recruitment deviations. | IID log recruitment and independent log-abundance deviations around expected cohort survivors, each with an estimated SD. Use exponential initialization. The environmental recruitment series stays outside the index likelihood. |",
   "| Biology and reference | Empirical weights through age 30, baseline schedule before 2003, annual schedules thereafter and January spawning. SSB is female mature biomass. | Use both sexes’ average stock weight and sex-specific sample weights for catch/index reconstruction. Use the official female mature weight and assume half the population is female at each age. Reference N sums the sexes, and reference F is N-weighted after summing fleets. |",
   "", "### Survey catchability", "",
   "| Series | Official biomass-index years | tinyAM years with active ages | Official relative catchability at age | tinyAM age form |",
@@ -220,7 +220,11 @@ background <- c(
     paste0("| ", fleet, " | ", sum(covered), " | ", span, " |")
   }, character(1)),
   "",
-  "Known annual biomass scales the age samples and appears on the aggregate yield panel. There is no separate likelihood for total catch biomass. Fleet yield panels show the biomass represented by observed age samples."
+  "Known annual biomass scales the age samples and appears on the aggregate yield panel. There is no separate likelihood for total catch biomass. Fleet yield panels show the biomass represented by observed age samples.",
+  "",
+  "The IID cohort deviations allow apparent survival to vary beyond the fitted fishing and natural mortality. They can absorb differences introduced by pooling sexes and reconstructing observations at age.",
+  "",
+  "Agreement is stronger for SSB and average F in recent years. The translation starts with lower SSB, and total abundance remains lower despite a similar trend. The source review reports the full-period and terminal-year differences."
 )
 
 ## Model ----
@@ -230,7 +234,7 @@ if (do_fit) {
   fit_started <- Sys.time()
   fit <- tinyAM::fit_tam(
     data = obs, years = years, ages = ages,
-    N_settings = list(process = "off", init = "exp"),
+    N_settings = list(process = "iid", init = "exp"),
     rec_settings = list(process = "iid", mu_form = ~1),
     F_settings = list(process = "off", mean_ages = 3:15, age_breaks = F_breaks,
       mu_form = ~0 + ar1(year, by = fleet) +

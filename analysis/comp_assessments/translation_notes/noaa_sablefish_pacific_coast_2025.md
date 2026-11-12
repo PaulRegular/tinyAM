@@ -1,4 +1,35 @@
-# West Coast sablefish: preliminary translation
+# U.S. West Coast sablefish
+
+## Curated translation
+
+The curated fit uses IID log-abundance deviations around expected cohort
+survivors, with one estimated log-scale SD (0.178). The official Stock
+Synthesis model calculates older-cohort survival from F and M. Its annual
+population deviations apply to recruitment. The IID cohort process gives
+the pooled tinyAM model flexibility to represent unexplained variation in
+apparent survival. Differences in sex composition, age coverage and the
+observation likelihood are plausible contributors. [Official assessment](https://www.pcouncil.org/documents/2026/02/status-of-the-sablefish-off-the-u-s-west-coast-in-2025.pdf/) · [Native model files](https://www.pcouncil.org/documents/sablefish-2025-model-files/)
+
+On SAIO `312bc721`, the fit passed numerical checks from default starts.
+All 42 years use the same comparison definitions as the fixed-gear fit
+below. Natural mortality increased from 0.0344 to 0.0456 per year. The
+soft Gaussian prior on log M still has support outside the official bounds.
+
+| Quantity | Median absolute difference, N off → IID | IID trend correlation | IID 2024 difference |
+|---|---:|---:|---:|
+| SSB | 43.2% → 20.7% | 0.714 | −3.8% |
+| Total abundance | 49.0% → 31.4% | 0.959 | −39.1% |
+| Average F, ages 3–15 | 27.7% → 15.2% | 0.797 | +5.8% |
+| Recruitment | 63.4% → 46.6% | 0.892 | −80.9% |
+
+SSB was 59.0% below the sex-pooled reference in 1983. Its median absolute
+difference was 5.4% in 2019–2024. The closer recent SSB and average F support
+including the comparison in the curated set. Whole-period SSB correlation
+fell from 0.815 to 0.714, and abundance tracks the source trend at a lower
+level. The reference comparison remains approximate because of the pooled
+biology and the reconstructed catch and survey numbers-at-age.
+
+## Earlier preliminary fits
 
 The recipe fits 2006–2023, ages 0–30+, using the original annual empirical
 weight schedules. Marginal joint female/male frequencies are normalized once

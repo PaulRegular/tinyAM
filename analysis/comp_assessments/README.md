@@ -4,7 +4,7 @@ Source data are maintained in the independent **SAIO — Stock Assessment Inputs
 
 ## Curated and preliminary translations
 
-- scripts/curated/: the 35 scripts retained from main at 78f3d347331b0e770d55a855de4c5b90307fd400. This preserves the existing paper working set, including its documented blocked cases. Membership does not imply convergence or scientific equivalence.
+- scripts/curated/: the paper working set, built from the 35 scripts retained at 78f3d347331b0e770d55a855de4c5b90307fd400 and subsequent reviews. Membership does not imply convergence or scientific equivalence.
 - scripts/preliminary/: additional translations and changed alternatives from comp-assessments. They have not been promoted into the paper working set.
 - translations.csv: the explicit registry, including each script's originating commit. An assessment can have a curated version and a preliminary alternative.
 
@@ -12,7 +12,8 @@ Curated runs are the default. Preliminary runs require an explicit tier. Extract
 
 The first 20-stock expansion beyond Charbonneau–Keith is tracked in
 [expansion_batch_01.csv](expansion_batch_01.csv), using the selected stock units
-in SAIO. Its new recipes are preliminary. The registry's `source_commit`
+in SAIO. The registry shows which recipes from that batch have been promoted.
+The registry's `source_commit`
 records the origin of migrated scripts; new recipes leave it blank and use Git
 history and run diagnostics for their model revision. The SAIO data revision
 is recorded separately.

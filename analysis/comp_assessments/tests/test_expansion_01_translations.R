@@ -12,10 +12,10 @@ testthat::test_that("the expansion register keeps all twenty distinct source tar
   # when the selected local snapshot is refreshed.
   testthat::expect_true(all(batch$data_revision == "6f08c06c49e4b73591427a1495bfb4568caf49f0"))
   testthat::expect_true(all(nzchar(batch$limitation)))
-  translations <- assessment_translations("preliminary")
-  selected <- translations[match(batch$assessment_id, translations$assessment_id), ]
-  testthat::expect_false(anyNA(selected$assessment_id))
-  testthat::expect_true(all(file.exists(selected$script)))
+  translations <- assessment_translations()
+  testthat::expect_true(all(batch$assessment_id %in% translations$assessment_id))
+  scripts <- vapply(batch$assessment_id, .assessment_script, character(1))
+  testthat::expect_true(all(file.exists(scripts)))
 })
 
 testthat::test_that("the first expansion recipes preserve source values and never fit during preparation", {
@@ -234,8 +234,11 @@ testthat::test_that("sablefish expands six catch streams and four surveys withou
     .package = "tinyAM")
   stock <- .test_stock(record)
   testthat::expect_identical(record, before)
+  testthat::expect_identical(stock$translation_tier, "curated")
   testthat::expect_equal(stock$years, 1983:2024)
   testthat::expect_equal(stock$ages, 0:30)
+  testthat::expect_identical(stock$dat$N_settings$process, "iid")
+  testthat::expect_identical(stock$dat$N_settings$init, "exp")
   testthat::expect_true(all(abs(stock$dat$log_mu_supplied_m + 2.63061660) < 1e-12))
   testthat::expect_length(stock$dat$M_terms, 1L)
   testthat::expect_equal(stock$dat$M_terms[[1L]]$sd, 0.19036084)
