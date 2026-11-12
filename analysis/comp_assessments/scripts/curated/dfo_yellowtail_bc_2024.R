@@ -139,6 +139,7 @@ comparison_definitions <- list(
 background <- c(
   "### Assessment and translation", "",
   print_sources(source$assessment), "",
+  "The authors provide the [research document source and appendices](https://github.com/pbs-software/pbs-synth/tree/16f1d4368ad7d3e854219ca1c2d9d6353252c861/models/sweave/2024/YTR/RD). The [DFO Science Advisory Report 2025/026](https://publications.gc.ca/collections/collection_2025/mpo-dfo/fs70-6/Fs70-6-2025-026-eng.pdf#page=7) cites the research document by Starr and Haigh as in preparation.", "",
   "| Component | Official assessment | tinyAM translation |",
   "|---|---|---|",
   "| Coverage | One coastwide stock in areas 3CD5ABCDE, two sexes, ages 0–45+, and 1935–2024. | One pooled population at ages 0–45+. Fit 1979–2018, the first to last year with trawl age compositions. |",

@@ -28,7 +28,7 @@ uses one pooled M and a 1:1 sex ratio at age for SSB.
 
 ## Single-fleet trials
 
-The preliminary recipe uses a separate logistic curve for each survey and
+The curated recipe uses a separate logistic curve for each survey and
 deterministic cohort survival. The WCVI midpoint was near age 200, with very
 large uncertainty on the midpoint and scale. The native QCS and WCVI curves
 are approximately flat by age 12. A sensitivity fit used monotone
@@ -50,8 +50,9 @@ from 12.0%, 32.0% and 37.4% in the logistic baseline to 30.6%, 49.1% and
 59.2% with IID deviations. Estimated M fell from 0.094 to 0.067 per year.
 The IID fit returned singular convergence and a maximum gradient of 0.082
 against a tolerance of 0.01. The logistic fit with deterministic survival
-remains the preliminary recipe. Every trial fell short of the 0.90 SSB
-trend target.
+was retained for the curated comparison. All trials fell short of the
+0.90 SSB trend target. The curated comparison uses the shorter time series
+and pooled sexes. The figures show the remaining trend discrepancy.
 
 ## Why SSB tracks the reference less closely than F
 
