@@ -67,3 +67,21 @@ The first trial estimated all 480 F coefficients with recruitment and M held to 
 | Fixed F and free annual recruitment, supplying official annual M | 9.9% | 0.997 | 55,243 t |
 
 The comparison uses the same 40 years and SSB calculated from Table 7 abundance, with 59,928 t in 2015. The annual-M diagnostic supplies the 1976–2015 rates for both age groups from Figure 4 of the rebuilding plan. Its median absolute SSB difference against the rounded Figure 2 trajectory was 1.8%, and its 2015 estimate was close to the published posterior median of 55,023 t. It passed numerical checks and reduced the median absolute differences in abundance and recruitment to 15.4% and 19.4%. Against the fixed F and recruitment control, Sentinel log-RMSE fell from 0.728 to 0.690 and RV log-RMSE rose from 0.402 to 0.456. This demonstrates the scale sensitivity to M when F and recruitment are free. Agreement in the conditional fit depends on using official estimates of M. The registered recipe remains preliminary. [Rebuilding plan, Figs. 2 and 4](https://www.dfo-mpo.gc.ca/fisheries-peches/ifmp-gmp/groundfish-poisson-fond/american-plaice-plie-canadienne-eng.html)
+
+## Correlated F increments and priors for initial M on SAIO `312bc721`
+
+The earlier 4T plaice analysis used natural-scale Normal priors for 1976 M with means 0.6 and 0.3 per year and SD 0.05 per year in both age groups. The 2016 assessment gives the same means and leaves the initial prior widths unspecified. The trial borrows the earlier width. It uses the 2016 log-increment SD of 0.075 for the two independent M random walks. [DFO 2012/108, p. 5](https://publications.gc.ca/collections/collection_2013/mpo-dfo/Fs70-5-2012-108-eng.pdf) · [DFO 2016/057, pp. 6–7](https://waves-vagues.dfo-mpo.gc.ca/Library/365839.pdf#page=15)
+
+The formula `~ 0 + iid(M_age_group, by = M_initial_log_sd, sd = 1) + rw(year, by = M_age_group, sd = 0.075)` gives one Gaussian log-M offset per age group and an independent random walk anchored at that group's initial level. For each prior mean `m`, `M_initial_log_sd = sqrt(log1p((0.05 / m)^2))` and the supplied M level is `m * exp(-M_initial_log_sd^2 / 2)`. This matches the natural-scale mean and SD with a lognormal distribution. The corresponding log SDs are 0.0832 and 0.1655. The formula supplies the entire mortality process with `M_settings$process = "off"`. The two initial-level effects and the annual M deviations are Laplace-integrated in tinyAM.
+
+All three trials used random-walk recruitment and the same observed catches and indices. The first comparison changed only F in the registered recipe and used default starts. The second comparison used the source M innovation SD, the shared F state for ages 15 and 16+, and a fixed catch log-SD of 0.05. Both of its correlated F fits used the same previous F random-walk fit for shared starting parameters. All three passed numerical checks.
+
+| Model | Median absolute SSB difference | 2015 SSB difference | SSB trend correlation |
+|---|---:|---:|---:|
+| Registered recipe | 38.9% | −11.5% | 0.962 |
+| Registered recipe with `cor_rw` F | 33.4% | −29.1% | 0.964 |
+| Source-SD M walks, fixed initial M, `rw` F | 54.0% | −54.1% | 0.994 |
+| Source-SD M walks, fixed initial M, `cor_rw` F | 53.9% | −52.7% | 0.994 |
+| Source-SD M walks, initial M prior, `cor_rw` F | 56.4% | −54.4% | 0.995 |
+
+These differences use the same 40 years and common SSB definition based on Table 7. In the paired source-SD runs, the estimated adjacent-age F increment correlation was about 0.73 in both fits. The initial M prior let the 1976 rates move to 0.634 and 0.209 per year. The fitted 2015 rates were 0.502 and 0.631, compared with the published 0.541 and 0.752. Allowing initial M to vary improved median recruitment agreement from 68.9% to 66.9% and left the SSB scale gap large. Changing only F in the registered recipe improved median SSB agreement across the series, with worse terminal SSB and median abundance agreement. The registered recipe remains preliminary. [Published M trajectories, Fig. 4](https://www.dfo-mpo.gc.ca/fisheries-peches/ifmp-gmp/groundfish-poisson-fond/american-plaice-plie-canadienne-eng.html)
