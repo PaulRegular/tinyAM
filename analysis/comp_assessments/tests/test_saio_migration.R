@@ -2,7 +2,7 @@ source("analysis/comp_assessments/R/run_assessment.R")
 registry <- assessment_translations()
 stopifnot(all(file.exists(registry$script)),
   !anyDuplicated(paste(registry$assessment_id, registry$tier)),
-  nrow(assessment_translations("curated")) == 38L)
+  nrow(assessment_translations("curated")) == 39L)
 
 local({
   original_wd <- getwd()

@@ -61,7 +61,7 @@ background <- c(
   "|---|---|---|---|",
   "| Years and ages | VPA covers 1976-2015, ages 4-16+, with age 16 as the plus group. | Fit the same years and ages. | The source model grid is retained. |",
   "| N and recruitment | The VPA estimates 12 terminal-age abundance parameters and reconstructs population numbers from catch and M. Recruitment is age 4. | Free initial abundance at age, with an age-4 recruitment random walk. | tinyAM estimates abundance forward and does not reproduce the source VPA recursion or its terminal-state parameterization. |",
-  "| F | Fishing mortality is recovered within the VPA from catch and population dynamics. | Age-specific temporal random walks. | tinyAM uses an explicit F process instead of the source VPA catch equation. |",
+  "| F | Fishing mortality is recovered within the VPA from catch and population dynamics. | Age-specific temporal random walks with correlated increments across ages. | The tinyAM fit estimates F jointly with the other states from catches and survey indices. |",
   "| M | Two log-scale random walks: ages 4-9 and 10+, with fixed increment SD 0.075 and initial-M prior means 0.6 and 0.3. | Fix the first year at 0.6 and 0.3 per year, then fit two random walks starting in 1977 with an estimated common increment SD. | The 1977 process states are free of a penalty tying them to the 1976 rates. |",
   "| Catch and indices | Commercial catch-at-age, including estimated discards, is a VPA input. The RV and mobile sentinel indices use age-specific q and lognormal observation errors. | Catch-at-age is fitted with tinyAM's lognormal likelihood; both indices have separate age-specific q and observation SDs. | tinyAM's likelihoods and population equations differ from the VPA. |",
   "| Survey timing | The RV survey occurs in September and the mobile Sentinel survey in August. The 2003 RV observations were excluded because an uncalibrated vessel was used. | Retain the source index years. Use 0.75 for RV and 0.625 for the August Sentinel midpoint. | The fractions approximate annual survey timing. |",
@@ -81,7 +81,7 @@ if (do_fit) {
     ages = ages,
     N_settings = list(process = "off", init = "free"),
     rec_settings = list(process = "rw", mu_form = NULL),
-    F_settings = list(process = "rw", mu_form = NULL),
+    F_settings = list(process = "cor_rw", mu_form = NULL),
     M_settings = list(
       process = "rw", mu_form = NULL, mu_supplied = ~M_assumption,
       age_breaks = c(4, 10, 16)

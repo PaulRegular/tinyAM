@@ -1,14 +1,20 @@
 pkgload::load_all(".", quiet = TRUE)
 source("analysis/comp_assessments/R/run_assessment.R")
+source("analysis/comp_assessments/tests/helper_stock.R")
 
 x <- run_assessment("dfo_american_plaice_4t_2016", fit = FALSE, silent = TRUE)
+model <- .test_stock(x$source)
 index <- x$obs$index
 rv <- index[index$survey == "DFO Research Vessel Trawl Survey", , drop = FALSE]
 sentinel <- index[index$survey == "Mobile Gear Sentinel Survey", , drop = FALSE]
 
 stopifnot(
   identical(x$diagnostics$status, "not_fitted"),
+  identical(x$translation_tier, "curated"),
   is.null(x$fit),
+  identical(model$dat$F_settings$process, "cor_rw"),
+  identical(model$dat$M_settings$process, "rw"),
+  identical(model$dat$rec$type, "rw"),
   identical(as.integer(sort(unique(x$obs$catch$year))), 1976:2015),
   identical(as.integer(sort(unique(x$obs$weight$age))), 4:16),
   identical(as.integer(sort(unique(rv$year))), setdiff(1976:2015, 2003)),
@@ -33,4 +39,4 @@ stopifnot(
   identical(x$comparison$comparison_age_groups$M[["10+"]], 10:16)
 )
 
-cat("4T American plaice translation prepares both survey series and M blocks without fitting.\n")
+cat("Curated 4T American plaice translation prepares both survey series and the mortality processes without fitting.\n")
