@@ -28,9 +28,14 @@ expected <- c(
 stopifnot(identical(atlantic$stock[match(names(expected), atlantic$assessment_id)],
   unname(expected)))
 pacific <- info[info$basin == "Northeast Pacific", ]
-stopifnot(setequal(pacific$stock[grepl("^dfo_", pacific$stock_id)], c(
+pacific_labels <- c(
   "Strait of Georgia Pacific herring", "British Columbia Pacific ocean perch",
-  "British Columbia Canary Rockfish", "British Columbia petrale sole")))
+  "British Columbia Canary Rockfish", "British Columbia petrale sole"
+)
+if ("dfo_yellowtail_bc_2024" %in% assessments$assessment_id) {
+  pacific_labels <- c(pacific_labels, "British Columbia Yellowtail Rockfish")
+}
+stopifnot(setequal(pacific$stock[grepl("^dfo_", pacific$stock_id)], pacific_labels))
 
 missing <- stocks
 selected_stock <- match(info$stock_id[1L], stocks$stock_id)
