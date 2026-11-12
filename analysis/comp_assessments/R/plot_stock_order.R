@@ -53,6 +53,18 @@ assessment_plot_stocks <- function(assessments, stocks, assessment_ids) {
     missing <- unique(info$scientific_name[is.na(rank)])
     cli::cli_abort("Add the missing plot taxonomy for: {paste(missing, collapse = ', ')}.")
   }
-  info[order(info$basin, rank, info$scientific_name, info$stock,
-             info$assessment_id, method = "radix"), ]
+  info <- info[order(info$basin, rank, info$scientific_name, info$stock,
+                     info$assessment_id, method = "radix"), ]
+
+  # Add local geography where the stock name is generic or uses an area code alone.
+  labels <- c(
+    ck_dfo_aeglefinus_4x5y = "4X5Y haddock (western Scotian Shelf / Bay of Fundy)",
+    ck_dfo_platessoides_4t = "Southern Gulf of St. Lawrence American plaice (4T)",
+    ck_nefsc_saw_chrysops_usatl = "Mid-Atlantic / New England scup",
+    nafo_cod_3m = "Flemish Cap cod (3M)"
+  )
+  label <- unname(labels[info$stock_id])
+  use_label <- !is.na(label)
+  info$stock[use_label] <- label[use_label]
+  info
 }

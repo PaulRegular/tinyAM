@@ -19,6 +19,14 @@ for (basin in levels(info$basin)) {
 atlantic <- info[info$basin == "Northwest Atlantic", ]
 stopifnot(max(which(atlantic$scientific_name == "Clupea harengus")) <
   min(which(atlantic$scientific_name == "Gadus morhua")))
+expected <- c(
+  dfo_haddock_4x5y_2016 = "4X5Y haddock (western Scotian Shelf / Bay of Fundy)",
+  dfo_american_plaice_4t_2016 = "Southern Gulf of St. Lawrence American plaice (4T)",
+  nefsc_scup_2015 = "Mid-Atlantic / New England scup",
+  nafo_cod_3m_2026 = "Flemish Cap cod (3M)"
+)
+stopifnot(identical(atlantic$stock[match(names(expected), atlantic$assessment_id)],
+  unname(expected)))
 pacific <- info[info$basin == "Northeast Pacific", ]
 stopifnot(setequal(pacific$stock[grepl("^dfo_", pacific$stock_id)], c(
   "Strait of Georgia Pacific herring", "British Columbia Pacific ocean perch",
