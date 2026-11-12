@@ -18,6 +18,7 @@ Current expansion-batch notes:
 - [Gulf of Alaska ocean perch](noaa_goa_pop_2023.md)
 - [4T winter flounder](dfo_sgsl_winter_flounder_2017.md)
 - [West Coast sablefish](noaa_sablefish_pacific_coast_2025.md)
+- [British Columbia Yellowtail Rockfish](dfo_yellowtail_bc_2024.md)
 - [West Coast Dover sole](noaa_pacific_coast_dover_sole_2021.md)
 - [West Coast yelloweye rockfish](noaa_west_coast_yelloweye_2025.md)
 - [Pacific coast Canary Rockfish](noaa_canary_rockfish_2023.md)

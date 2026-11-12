@@ -58,6 +58,8 @@ index_numbers <- age_numbers(index_composition, index_total, survey_weight, "sur
 index <- aggregate(numbers ~ year + age + survey + samp_time, index_numbers, sum)
 names(index)[names(index) == "numbers"] <- "obs"
 index$unit <- "thousand fish"
+# The native QCS and WCVI curves are essentially flat at older ages.
+index$q_age <- findInterval(index$age, c(1L, 6L, 8L, 10L, 12L))
 index_sd <- subset(inputs, type == "index" & measure == "log_index_sd" &
   survey %in% surveys & year %in% years)
 survey_year <- function(x) paste(x$survey, x$year)
@@ -108,7 +110,24 @@ source("analysis/comp_assessments/R/pool_source_states.R", local = TRUE)
 age_plus_group <- max(ages)
 source_history <- subset(source$outputs, year %in% years &
   measure %in% c("SSB", "numbers_at_age", "fishing_mortality_at_age", "natural_mortality_at_age"))
-comparison_outputs <- pool_source_states(source_history, plus_age = age_plus_group)
+# Use the source female numbers here so that the reference retains its native
+# sex ratio. Otherwise the reference builder applies the pooled fit's biology.
+source_ssb_at_age <- subset(source_history, measure == "numbers_at_age" & sex == "female")
+source_ssb_at_age$value <- source_ssb_at_age$value * female_reproductive_weight$value[
+  match(source_ssb_at_age$age, female_reproductive_weight$age)]
+source_ssb_at_age$type <- "biomass"
+source_ssb_at_age$measure <- "mature_biomass_at_age"
+source_ssb_at_age$unit <- "t"
+source_ssb_at_age$source_type <- "derived_source_output"
+source_ssb_at_age$source_reference <- paste(source_ssb_at_age$source_reference,
+  "and native effective reproductive weights at age")
+source_ssb_at_age$notes <- "Native January female numbers multiplied by native effective reproductive weight at age."
+native_ssb <- subset(source_history, measure == "SSB")
+ssb_sum <- tapply(source_ssb_at_age$value, source_ssb_at_age$year, sum)
+stopifnot(length(ssb_sum) == length(years), nrow(native_ssb) == length(years),
+  all(abs(ssb_sum[as.character(native_ssb$year)] / native_ssb$value - 1) < 1e-5))
+comparison_outputs <- rbind(pool_source_states(source_history, plus_age = age_plus_group),
+  source_ssb_at_age)
 comparison_aggregates <- "abundance"
 comparison_definitions <- list(
   N = list(status = "approximate", reason = "Official N is summed over sexes."),
@@ -132,7 +151,7 @@ background <- c(
   "| Biology and SSB | Fixed growth and weight relationships, January female spawning biomass. | Use source-derived sex-specific weight schedules to expand age samples. Stock weight averages both sexes. SSB uses the female reproductive weights and a 1:1 sex ratio at age. |",
   "",
   "### Surveys and comparison", "",
-  "Retain the six NMFS Triennial, eight Queen Charlotte Sound and six West Coast Vancouver Island index years with matched age samples in the fitted window. Other indices have no matched age data in that window. Each retained survey has its own logistic age pattern, scale and age-level lognormal SD. The original aggregate log-SDs remain in the input table.",
+  "Retain the six NMFS Triennial, eight Queen Charlotte Sound and six West Coast Vancouver Island index years with matched age samples in the fitted window. Use a logistic age pattern for the Triennial survey and monotone age groups with a 12+ plateau for the two synoptic surveys. Estimate a separate scale and age-level lognormal SD for each survey. The original aggregate log-SDs remain in the input table.",
   "",
   "The reconstructed age observations use the same annual biomass within each stream. The native model fits biomass and compositions separately and accounts for ageing error and composition weighting. The tinyAM likelihood treats the reconstructed ages as independent.",
   "",
@@ -154,7 +173,10 @@ if (do_fit) {
     M_settings = list(process = "off", mu_supplied = ~ I(0.08 / sqrt(1 + (0.024 / 0.08)^2)),
       mu_form = ~ 0 + iid(M_prior_group, sd = M_log_sd)),
     catch_settings = list(sd_form = ~ 1),
-    index_settings = list(q_form = ~ 0 + survey + logistic(age, by = survey),
+    index_settings = list(q_form = ~ 0 +
+      for_survey("NMFS_TRIENNIAL", ~ logistic(age)) +
+      for_survey("QCS_SYNOPTIC", ~ mono(q_age)) +
+      for_survey("WCVI_SYNOPTIC", ~ mono(q_age)),
       sd_form = ~ 0 + survey),
     silent = silent
   )
