@@ -39,12 +39,11 @@ assessment_translations <- function(tier = NULL) {
 }
 
 .assessment_cache_key <- function(database = NULL) {
-  if (is.null(database)) return(.assessment_snapshot())
-  key <- database$database_key
-  if (is.null(key) && !identical(database$database_source, "working_tree")) key <- database$commit
+  if (is.null(database)) return(.saio_commit())
+  key <- if (is.null(database$database_key)) database$commit else database$database_key
   if (!is.character(key) || length(key) != 1L || is.na(key) ||
-      !grepl("^([[:xdigit:]]{40}|working-[[:xdigit:]]{32})$", key)) {
-    cli::cli_abort("A cache requires a recorded SAIO revision or working-table fingerprint; reread the source database first.")
+      !grepl("^[[:xdigit:]]{40}$", key)) {
+    cli::cli_abort("A cache requires a recorded SAIO commit. Read the source database first.")
   }
   key
 }

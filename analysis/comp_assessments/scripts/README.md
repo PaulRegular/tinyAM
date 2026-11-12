@@ -2,11 +2,12 @@
 
 Run these scripts from the tinyAM repository root in RStudio.
 
-1. `update_database_cache.R`: manually copy the five clean, committed SAIO CSVs into `cache/saio/<commit>/`. Set `saio_repo` first. The CSVs are parsed once into `database.rds`; the tracked manifest is updated only after both steps finish; SAIO is never changed or fetched.
-2. `run_stock.R`: choose a stock and tier, fit its literal recipe, then preview the supplied fit independently.
-3. `run_all.R`: read the snapshot once, configure `future::plan(future::multisession, workers = 10)`, fit/checkpoint the batch, then render dashboards and overview figures in separate sections.
-4. `observation_readiness.R`: audit the same supplied `database`; when run alone, read the selected local snapshot.
-5. `stats_plots.R` and `trend_plots.R`: rebuild overview figures from results matching the selected source revision.
+The scripts read committed tables directly from a local SAIO checkout. They use its current commit by default. Configure the checkout path with `SAIO_REPO`, or pass `saio_repo` and optionally `revision` to `read_database()` when supplying the database explicitly. [Analysis workflow](../README.md#1-read-local-saio-data)
+
+1. `run_stock.R` chooses a stock and tier, fits its recipe, and previews the supplied fit independently.
+2. `run_all.R` reads the database once, configures `future::plan(future::multisession, workers = 10)`, fits and checkpoints the batch, then renders dashboards and overview figures in separate sections.
+3. `observation_readiness.R` audits the supplied `database` or reads the local SAIO checkout when run alone.
+4. `stats_plots.R` and `trend_plots.R` rebuild overview figures from results matching the selected source revision.
 
 `run_assessment(..., fit = FALSE)` prepares inputs without final or preliminary fits. The batch functions honor your existing future plan; choose `future::sequential` for troubleshooting. `run_all.R` selects a 20-minute per-assessment deadline; use `timeout = Inf` for unrestricted fitting. A finite deadline requires `callr` and records a timeout without retuning the model.
 
@@ -16,4 +17,4 @@ Run `render_assessment_dashboards(runs)` after fitting. It records rendered, tro
 
 For retrospectives or hindcasts, configure the same future plan and call `fit_retro(fit, folds = 5)` or `fit_hindcast(fit, folds = 5)`, then `vis_tam(result)`. Close workers with `future::plan(future::sequential)` when finished. See the [workflow](../README.md) for catch conditioning and score interpretation.
 
-All generated snapshots, fits, dashboards and figures stay local and ignored. Canonical source curation, extraction and validation are maintained in [SAIO](https://github.com/PaulRegular/saio).
+Generated fits, dashboards and figures stay local and ignored. [SAIO source curation, extraction and validation](https://github.com/PaulRegular/saio)

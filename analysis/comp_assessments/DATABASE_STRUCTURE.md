@@ -1,3 +1,5 @@
 # Database structure
 
-The maintained document is [DATABASE_STRUCTURE.md](https://github.com/PaulRegular/saio/blob/main/DATABASE_STRUCTURE.md) in SAIO. Source changes and validation belong there. tinyAM reads a manually refreshed local snapshot; see [README.md](README.md).
+Source changes and validation belong in SAIO. [SAIO database structure](https://github.com/PaulRegular/saio/blob/main/DATABASE_STRUCTURE.md)
+
+tinyAM reads committed tables from a local SAIO checkout. [Analysis workflow](README.md)

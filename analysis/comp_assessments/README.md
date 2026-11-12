@@ -23,22 +23,20 @@ not establish that data can never be recovered. `reconstruction_pending` means
 native observations are present but their age/length, sex, area or removal
 definitions still need a reviewed conversion. Neither status counts as a fit.
 
-## 1. Refresh source data manually
+## 1. Read local SAIO data
 
-Source curation and validation belong to [SAIO](https://github.com/PaulRegular/saio). Update its local checkout yourself, then open `scripts/update_database_cache.R`, set `saio_repo`, and run it from the tinyAM repository root. Before running it, commit the five database CSVs in SAIO and ensure they are available as real CSV files, not Git LFS pointers. The script never fetches, switches branches or edits SAIO.
-
-The updater copies the five tables into ignored `cache/saio/<commit>/` and parses those copies once into `database.rds` with base R, then updates tracked `saio_revisions.csv` **last**. Both translation tiers use this one snapshot. Previous snapshots remain untouched. Commit the manifest when intentionally advancing the shared data version; collaborators run the updater from that same SAIO commit to obtain its ignored files.
-
-Normal analysis reads only the local snapshot:
+Both tiers read the five database tables directly from the current commit of your local SAIO checkout. Update or commit data in SAIO before rerunning an analysis. [SAIO source curation and validation](https://github.com/PaulRegular/saio)
 
 ```r
 source("analysis/comp_assessments/R/run_assessment.R")
 database <- read_database()
 ```
 
-Normal reads load the parsed cache rather than repeatedly parsing the large CSVs. Reading and fitting do not need SAIO or Git. They do not notice later SAIO edits until the cache is explicitly refreshed. A missing or incomplete snapshot stops with an update instruction. Treat cached snapshots as read-only. There is no automatic historical-revision or working-tree reader; old manifests are preserved in Git history and old snapshot folders are retained locally.
+Run from the tinyAM repository root. By default the reader looks for `saio` next to the primary tinyAM checkout, including when you work from a linked worktree. For another checkout, set `SAIO_REPO` or pass its path as `saio_repo` to `read_database()`. The reader uses committed Git data and locally available Git LFS objects. It ignores uncommitted edits and performs no network requests or checkout changes. Parsed tables are reused within the R session for the same repository and commit.
 
-One preliminary English Channel plaice recipe retains its documented native-SAM starting-value retry. That optional retry also needs `source_cache/ices_plaice_7d_2026/fit_local_locked.RData`, copied manually from the reviewed source artifact. It is distinct from the five-table snapshot and is never fetched at fitting time.
+To reproduce an earlier analysis, pass the recorded SHA as `revision` to `read_database()`. That commit and its table data must be available locally. If Git LFS objects are missing, run `git lfs fetch origin <sha>` from the SAIO checkout. Pass the returned `database` to the fitting and overview scripts to use the same revision throughout.
+
+One preliminary English Channel plaice recipe retains its documented native-SAM starting-value retry. That optional retry needs `source_cache/ices_plaice_7d_2026/fit_local_locked.RData`, copied manually from the reviewed source artifact.
 
 ## 2. Fit assessments
 
@@ -85,6 +83,6 @@ The hindcast default conditions each forecast on actual aggregate catch, while h
 
 ## Results and translation guidance
 
-Generated results remain local and ignored under `results/curated/` and `results/preliminary/`. Fits, checkpoints and dashboards are separated by `cache/<SAIO commit>/<assessment_id>/`; batch checkpoints share that revision folder. Old revisions and unversioned outputs are historical, never substituted for current fits or relabeled. Cached fits record both their SAIO snapshot and tinyAM revision.
+Generated results remain local and ignored under `results/curated/` and `results/preliminary/`. Fits, checkpoints and dashboards are separated by `cache/<SAIO commit>/<assessment_id>/`. Batch checkpoints share that revision folder. Cached fits record both the SAIO commit and the tinyAM revision. Existing historical results keep their original provenance.
 
 The scientific translation instructions remain in [TINYAM_TRANSLATION.md](TINYAM_TRANSLATION.md). Stock-specific assumptions and inherited reviews are in [translation_notes/](translation_notes/README.md); official source evidence is maintained in SAIO. The migration record is in [migration/](migration/README.md). No operational assessment or study hypothesis is changed by this workflow.

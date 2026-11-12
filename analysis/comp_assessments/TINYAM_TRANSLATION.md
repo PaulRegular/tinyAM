@@ -2,7 +2,7 @@
 
 ## Repository and review tiers
 
-Canonical records, importers, source reviews, discovery registers, DATABASE_STRUCTURE.md and PROTOCOL.md are maintained in SAIO. Read those source instructions there before proposing source corrections. Both translation tiers read the same manually refreshed local CSV snapshot. `saio_revisions.csv` selects its source commit. Run `scripts/update_database_cache.R` explicitly after committing the intended SAIO tables; normal reads never access SAIO or Git.
+Canonical records, importers, source reviews, discovery registers, DATABASE_STRUCTURE.md and PROTOCOL.md are maintained in SAIO. Read the source instructions there before proposing corrections. Both translation tiers read committed tables directly from the local SAIO checkout and record its commit in their outputs. The current local commit is the default. [Source selection and reproduction](README.md#1-read-local-saio-data)
 
 Translations are registered in translations.csv and stored under scripts/curated/ or preliminary/. The curated set is inherited from main; preliminary scripts and alternatives require explicit selection. A successful fit does not promote a script. Default batches and plots select only curated entries.
 
@@ -91,10 +91,10 @@ When a source-data gap prevents translation or a requested comparison:
 3. obtain or correct the source records in the canonical database, retaining provenance;
 4. validate the revised records and reload the database before retrying translation.
 
-Record the database revision used for every fit. A reader restricted to committed
-records must read the newly validated and committed revision after a repair,
-rather than continue using its old snapshot. If authoritative information cannot
-be recovered, report the blocker and continue with other requested stocks.
+Record the database revision used for every fit. After validating and committing
+a repair in SAIO, call `read_database()` again to use the new commit. If
+authoritative information cannot be recovered, report the blocker and continue
+with other requested stocks.
 
 An unsupported model feature is not automatically a missing-data problem.
 For example, a source model may estimate M without a fixed M input. That case
@@ -146,7 +146,6 @@ A useful directory structure is:
 analysis/comp_assessments/
 ├── R/                            # converters and workflow functions
 ├── scripts/
-│   ├── update_database_cache.R
 │   ├── run_stock.R
 │   ├── run_all.R
 │   ├── observation_readiness.R
@@ -154,15 +153,13 @@ analysis/comp_assessments/
 │   ├── trend_plots.R
 │   ├── curated/<assessment_id>.R
 │   └── preliminary/<assessment_id>.R
-├── saio_revisions.csv             # selected source commit
-├── cache/saio/<commit>/           # ignored CSV copies and parsed database.rds
 ├── tests/
 ├── results/<tier>/                # ignored shared CSVs and figures
 │   └── cache/<commit>/            # fits, checkpoints and dashboards
 └── source_cache/                  # optional ignored native-reference artifacts
 ```
 
-`scripts/run_stock.R` reads the selected local SAIO snapshot and sources the selected stock
+`scripts/run_stock.R` reads the committed local SAIO tables and sources the selected stock
 script in a fresh environment. Prepared objects, fit and background are exposed
 in the workspace, together with an `assessment` context containing the canonical
 source and comparison options. Stock model calls remain visible in their scripts.
@@ -198,7 +195,7 @@ exploratory previews, not successful batch results. The batch convergence rules
 are unchanged. `run_assessment()` reruns the recipe rather than previewing an
 edited fit, and retains its optional cache control. Rendering is separate.
 
-`scripts/run_all.R` reads the local snapshot once and configures
+`scripts/run_all.R` reads the local SAIO tables once and configures
 `future::plan(future::multisession, workers = 10)` visibly. The batch runner
 honors that plan; choose `future::sequential` for troubleshooting. Workers load
 the current tinyAM checkout and save per-stock checkpoints. The parent writes
@@ -206,7 +203,7 @@ aggregate CSVs after fitting. Rendering is separate:
 `render_assessment_dashboards(runs)` records successful, troubleshooting,
 skipped and failed dashboards without changing comparison eligibility. A
 nonconverged dashboard is for troubleshooting, not a successful assessment.
-See [README.md](README.md) for manual snapshot refresh, deadlines and evaluation.
+See [README.md](README.md) for source selection, deadlines and evaluation.
 
 ## Translation units
 

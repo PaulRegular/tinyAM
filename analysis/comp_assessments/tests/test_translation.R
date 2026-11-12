@@ -621,35 +621,12 @@ expect_equal(herring_obs$index$obs[herring_match], as.numeric(herring_direct$val
 expect_equal(herring_inputs, herring_before)
 expect_equal(sum(is.na(herring_obs$catch$obs)), 18L)
 
-source(file.path(root, "R", "read_database.R"))
-db <- read_database()
-expect_equal(db$database_source, "saio_snapshot")
+db <- database
+expect_equal(db$database_source, "saio")
+expect_equal(db$database_selection, "local_commit")
 expect_equal(grepl("^[[:xdigit:]]{40}$", db$commit), TRUE)
-
-fixture_dir <- tempfile("assessment_database_")
-dir.create(fixture_dir)
-database_files <- c(
-  "stocks.csv", "assessments.csv", "assumptions.csv",
-  "inputs.csv", "outputs.csv"
-)
-fixture_revision <- paste(rep("f", 40), collapse = "")
-dir.create(file.path(fixture_dir, fixture_revision))
-fixture_tables <- setNames(lapply(database_files, function(name)
-  data.frame(source_file = name)), sub("[.]csv$", "", database_files))
-saveRDS(fixture_tables, file.path(fixture_dir, fixture_revision, "database.rds"))
-fixture_manifest <- file.path(fixture_dir, "saio_revisions.csv")
-write.csv(data.frame(revision = fixture_revision), fixture_manifest, row.names = FALSE)
-fixture_db <- read_database(fixture_dir, fixture_manifest)
-expect_equal(
-  unname(vapply(
-    fixture_db[c(
-      "stocks", "assessments", "assumptions",
-      "inputs", "outputs"
-    )],
-    function(table) table$source_file[[1]], character(1)
-  )),
-  database_files
-)
+expect_equal(db$database_ref, db$commit)
+expect_equal(db$database_key, db$commit)
 
 ebs <- read_assessment("afsc_pollock_ebs_2024", database = db)
 expect_equal(nrow(ebs$assessment), 1L)

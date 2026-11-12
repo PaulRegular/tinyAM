@@ -1,4 +1,4 @@
-# Run from the tinyAM repository root. Refresh the SAIO cache manually first.
+# Run from the tinyAM repository root. Commit any intended SAIO data changes first.
 root <- file.path("analysis", "comp_assessments")
 translation_tier <- "curated"
 timeout <- 20 * 60 # Seconds per assessment; Inf removes the hard deadline.

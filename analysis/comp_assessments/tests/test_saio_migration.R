@@ -1,5 +1,4 @@
 source("analysis/comp_assessments/R/run_assessment.R")
-source("analysis/comp_assessments/R/update_database_cache.R")
 registry <- assessment_translations()
 stopifnot(all(file.exists(registry$script)),
   !anyDuplicated(paste(registry$assessment_id, registry$tier)),
@@ -7,7 +6,7 @@ stopifnot(all(file.exists(registry$script)),
 
 local({
   original_wd <- getwd()
-  fixture <- tempfile("saio_snapshot_")
+  fixture <- tempfile("saio_repository_")
   dir.create(fixture)
   on.exit({setwd(original_wd); unlink(fixture, recursive = TRUE)}, add = TRUE)
   relative_root <- file.path("analysis", "comp_assessments")
@@ -30,50 +29,68 @@ local({
       component = "population", setting = "age_range", value = "1-2",
       source_reference = "fixture", notes = "fixture"),
     inputs = data.frame(assessment_id = assessments$assessment_id),
-    outputs = data.frame(assessment_id = assessments$assessment_id))
+    outputs = data.frame(assessment_id = assessments$assessment_id, source_marker = "Committed output"))
   for (name in names(tables)) write.csv(tables[[name]],
     file.path("data_repo/database", paste0(name, ".csv")), row.names = FALSE)
   git("init", "-b", "main")
+  lfs_version <- suppressWarnings(system2("git", c("lfs", "version"),
+    stdout = TRUE, stderr = TRUE))
+  has_lfs <- is.null(attr(lfs_version, "status"))
+  store_lfs_output <- function() {
+    if (!has_lfs) return(invisible(NULL))
+    # Generate a real local LFS object without changing Git filter configuration.
+    path <- "data_repo/database/outputs.csv"
+    pointer <- system2("git", c("-C", shQuote("data_repo"), "lfs", "clean", "--",
+      "database/outputs.csv"), stdin = path, stdout = TRUE)
+    stopifnot(is.null(attr(pointer, "status")),
+      identical(pointer[1L], "version https://git-lfs.github.com/spec/v1"))
+    writeLines(pointer, path, useBytes = TRUE)
+  }
+  store_lfs_output()
   git("add", "database")
-  commit <- function(text) git("-c", "user.name=SnapshotTest", "-c", "user.email=snapshot@example.invalid",
+  commit <- function(text) git("-c", "user.name=SourceTest", "-c", "user.email=source@example.invalid",
     "-c", "commit.gpgsign=false", "commit", "-m", text)
   commit("fixture")
   revision <- git("rev-parse", "HEAD")[[1]]
-  update_database_cache("data_repo")
-  pinned <- read_database()
+  if (has_lfs) stopifnot(identical(
+    git("show", "HEAD:database/outputs.csv")[[1]],
+    "version https://git-lfs.github.com/spec/v1"
+  ))
+
+  # The first read must use the commit even when the working tree is dirty.
+  stocks$scientific_name <- "Uncommitted species"
+  write.csv(stocks, "data_repo/database/stocks.csv", row.names = FALSE)
+  write.csv(transform(tables$outputs, source_marker = "Uncommitted output"),
+    "data_repo/database/outputs.csv", row.names = FALSE)
+  pinned <- read_database(saio_repo = "data_repo")
   stopifnot(pinned$stocks$scientific_name == "Source species",
-    pinned$commit == revision, pinned$database_selection == "cached_snapshot")
-  # Reading remains local and stable when upstream data advance or Git is unavailable.
+    all(pinned$outputs$source_marker == "Committed output"),
+    all(names(tables) %in% names(pinned)),
+    identical(pinned$commit, revision), identical(pinned$database_ref, revision),
+    identical(pinned$database_key, revision),
+    identical(pinned$database_source, "saio"),
+    identical(pinned$database_selection, "local_commit"))
+
   stocks$scientific_name <- "New committed species"
   write.csv(stocks, "data_repo/database/stocks.csv", row.names = FALSE)
-  stopifnot(read_database()$stocks$scientific_name == "Source species")
-  git("add", "database"); commit("new data")
-  stopifnot(read_database()$commit == revision)
-  update_database_cache("data_repo")
-  current <- read_database()
-  stopifnot(current$commit != revision, current$stocks$scientific_name == "New committed species",
-    dir.exists(file.path(relative_root, "cache", "saio", revision)))
-  # An incomplete source copy cannot change the selected manifest.
-  writeLines("next source revision", "data_repo/note.txt")
-  git("add", "note.txt"); commit("copy interruption fixture")
-  file.rename("data_repo/database/outputs.csv", "data_repo/database/outputs.saved")
-  selected <- readLines(file.path(relative_root, "saio_revisions.csv"))
-  copy_error <- suppressWarnings(tryCatch(update_database_cache("data_repo"), error = identity))
-  stopifnot(inherits(copy_error, "error"),
-    identical(readLines(file.path(relative_root, "saio_revisions.csv")), selected),
-    identical(read_database()$commit, current$commit))
-  file.rename("data_repo/database/outputs.saved", "data_repo/database/outputs.csv")
-  rename <- file.rename("data_repo", "hidden_source")
-  original_head <- .database_head
-  .database_head <- function(...) stop("Reader must not invoke Git")
-  stopifnot(rename, identical(read_database()$commit, current$commit))
-  .database_head <- original_head
-  # A missing copy gives the manual-refresh instruction.
-  path <- file.path(relative_root, "cache", "saio", current$commit, "database.rds")
-  file.rename(path, paste0(path, ".saved"))
-  bad <- tryCatch(read_database(), error = identity)
-  stopifnot(inherits(bad, "error"), grepl("unavailable or incomplete", conditionMessage(bad)))
-  file.rename(paste0(path, ".saved"), path)
+  write.csv(transform(tables$outputs, source_marker = "New committed output"),
+    "data_repo/database/outputs.csv", row.names = FALSE)
+  store_lfs_output()
+  git("add", "database")
+  commit("new data")
+  next_revision <- git("rev-parse", "HEAD")[[1]]
+  stopifnot(file.rename("data_repo/database/outputs.csv", "data_repo/database/outputs.saved"))
+
+  current <- read_database(saio_repo = "data_repo")
+  stopifnot(current$commit != revision, identical(current$commit, next_revision),
+    current$stocks$scientific_name == "New committed species",
+    all(current$outputs$source_marker == "New committed output"),
+    identical(read_database(saio_repo = "data_repo", revision = revision), pinned),
+    identical(read_database(saio_repo = "data_repo", revision = "HEAD~1"), pinned),
+    !dir.exists(file.path(relative_root, "cache", "saio")))
+  invalid <- tryCatch(read_database(saio_repo = "data_repo", revision = "missing-ref"),
+    error = identity)
+  stopifnot(inherits(invalid, "error"))
   entries <- data.frame(assessment_id = c("shared", "shared", "extra"),
     tier = c("curated", "preliminary", "preliminary"), source_commit = revision)
   write.csv(entries, file.path(relative_root, "translations.csv"), row.names = FALSE)
@@ -168,4 +185,4 @@ local({
     !any(grepl("/experiments/", curated_index, fixed = TRUE)),
     !any(grepl("/experiments/", preliminary_index, fixed = TRUE)))
 })
-cat("Manual SAIO snapshots, stable local reads, tier dispatch and source-keyed cache checks passed.\n")
+cat("Committed SAIO reads, tier dispatch and source-keyed cache checks passed.\n")

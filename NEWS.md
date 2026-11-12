@@ -68,8 +68,8 @@
   rotations, while rejecting changes to predictor grids or Gaussian penalties.
   This fixes platform-dependent retrospective warm-start checks.
 
-* Run comparative assessments from an explicitly refreshed local SAIO snapshot,
-  recording its commit in a tracked manifest. Separate fitting, dashboard
+* Run comparative assessments from committed data in a local SAIO checkout
+  and record its commit with the results. Separate fitting, dashboard
   rendering and overview figures; honor the caller's future plan. Keep curated
   and preliminary membership and revision-specific result caches separate.
 
