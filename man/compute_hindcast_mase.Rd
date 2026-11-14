@@ -27,8 +27,9 @@ rather than a training-period scaling denominator.
 Numerator and denominator use the same forecast cases:
 \deqn{\mathrm{MASE}=\sum_i|z_i-\widehat z_i|/\sum_i|z_i-z_{0,i}|.}
 For multiple horizons the baseline remains fixed at the origin. This is
-an extension of the paper's one-year calculation. Predictions are conditional
-medians, as in existing log-RMSE calculations; this is not a probability score.
+an extension of the paper's one-year calculation. Log MASE uses the same
+predictions as log RMSE, including the positive conditional median for
+Poisson-link delta fits.
 }
 \examples{
 compute_hindcast_mase(data.frame(obs = c(2, 4), pred = c(2.1, 3.8),

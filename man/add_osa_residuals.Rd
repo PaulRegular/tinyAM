@@ -38,6 +38,8 @@ Log observations have a continuous Gaussian likelihood, so \code{discrete = FALS
 is supplied unless explicitly overridden. Method-dependent upstream defaults,
 including \code{reverse}, are retained. When SAM is also loaded, parallel OSA
 calculations use the existing sequential safeguard.
+OSA requires all observations to use the lognormal family. Use quantile
+residuals for fits with Poisson-link delta lognormal observations.
 
 Temporary RTMB objectives protect the fitted parameters, uncertainty and
 objective state. Only OSA columns and metadata are added to a copy of the

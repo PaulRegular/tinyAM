@@ -33,6 +33,11 @@ plot_age_year(catch_data, plot = plot_obs_pred, frame = ~age, color = ~model,
   colors = cols, ylab = tinyAM:::.unit_label(catch_data, "Catch"))
 ```
 
+```{r}
+zero_frequency <- tinyAM:::.zero_frequency_data(catch_data)
+```
+```{r, child = if (!is.null(zero_frequency)) "zero-frequency.Rmd" else NULL}
+```
 
 Row {.tabset}
 --------------------------------------------------------------------------------

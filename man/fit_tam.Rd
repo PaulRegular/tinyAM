@@ -14,9 +14,9 @@ fit_tam(
         mean_ages = NULL),
   M_settings = list(process = "off", mu_form = NULL, mu_supplied = ~I(0.2), sd_form = ~1,
         age_breaks = NULL, first_dev_year = NULL, mean_ages = NULL),
-  catch_settings = list(sd_form = ~1, sd_supplied = NULL, cor_struct = "independent"),
-  index_settings = list(sd_form = ~1, sd_supplied = NULL, cor_struct = "independent", q_form = ~q_block,
-        q_link = "log"),
+  catch_settings = list(sd_form = ~1, sd_supplied = NULL, cor_struct = "independent", family = lognormal()),
+  index_settings = list(sd_form = ~1, sd_supplied = NULL, cor_struct = "independent", family = lognormal(),
+        q_form = ~q_block, q_link = "log"),
   proj_settings = NULL,
   interval = 0.95,
   add_osa_res = FALSE,
@@ -204,6 +204,8 @@ average M (\code{M_bar}) calculations. All ages used if absent.
 
 \item{catch_settings}{A list with elements:
 \itemize{
+\item \code{family}: \link[=observation_families]{Observation family} for all catch data or
+a named list by fleet. The default lognormal fits positive observations.
 \item \code{sd_form}: formula for log observation SD for catch-at-age data. Use
 ordinary terms, Gaussian \link{formula_effects} such as \code{~ iid(age)}, or
 penalized \link[=smooth_formulas]{smooths} such as \code{~ s(age, k = 5)}.
@@ -220,6 +222,8 @@ stay independent. A catch table without fleet labels has one series named
 
 \item{index_settings}{A list with elements:
 \itemize{
+\item \code{family}: \link[=observation_families]{Observation family} for all index data or
+a named list by survey.
 \item \code{sd_form}: formula for log observation SD for index-at-age data. It uses the
 same syntax as catch observation SD. For example,
 \code{~ survey + s(age, k = 5, by = survey)} gives each survey its own age curve.

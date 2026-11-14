@@ -41,10 +41,13 @@ and other random effects. Neither replaces hindcast evaluation of forecasting
 skill.
 }
 \details{
-\strong{Likelihood scale.} Densities are evaluated on log observations, as in
-\code{\link[=nll_fun]{nll_fun()}}. No natural-scale lognormal Jacobian is added. Absolute values
-should not be compared with criteria calculated on a different response
-scale. Multiple-model calls require identical included observations and units.
+\strong{Likelihood scale.} Lognormal densities are evaluated on log observations
+without a natural-scale Jacobian. For Poisson-link delta observations the
+likelihood includes the probability of zero and evaluates the positive
+component on log observations. Multiple-model calls require identical
+included observations, units and observation families for each series.
+Use \code{\link[=fit_hindcast]{fit_hindcast()}} to compare predictions across families. cAIC is
+currently unavailable for fits using a Poisson-link delta family.
 
 \strong{Marginal AIC.} \code{logLik()} returns the optimized Laplace approximation to
 the marginal log-likelihood. Its \code{df} counts all estimated outer parameters,

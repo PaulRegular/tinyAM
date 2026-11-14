@@ -1,5 +1,10 @@
 # tinyAM 0.1.1.9001
 
+* Use `pld_lognormal()` in catch or index settings to fit sampled zeros with
+  one fixed or estimated half-detection scale per fleet or survey. The default
+  `lognormal()` continues to fit positive observations. PLD outputs include
+  fitted zero probabilities and randomized quantile residuals.
+
 * Rename the catchability marker `power()` to `q_power()` to avoid masking
   `stats::power()`. Use `q_power(N)` in catchability formulas.
 

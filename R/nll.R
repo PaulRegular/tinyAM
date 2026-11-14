@@ -21,10 +21,11 @@
 #'
 #' With `simulate = FALSE`, the result is the joint negative log-likelihood.
 #' It includes recruitment, active N/F/M processes, random initial abundance,
-#' and Gaussian densities for observed log observations. Random
+#' and observation densities for the selected [observation families][observation_families]. Random
 #' effects are integrated out by [fit_tam()], not by this function itself.
 #' Normal densities are evaluated on log observations, so predictions on the
-#' natural scale are conditional medians rather than arithmetic means.
+#' natural scale are conditional medians for lognormal series and conditional
+#' arithmetic means over zeros and positives for PLD series.
 #' Catchability uses the link chosen by `index_settings$q_link`: the log link
 #' exponentiates the formula predictor, while the logit link applies the inverse
 #' logit and restricts q to between zero and one. Both estimation and simulation
@@ -374,12 +375,23 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   if (identical(dat$.likelihood_component, "design")) {
     return(c(log_pred[is_observed], sd_obs[is_observed], par$logit_rho_obs))
   }
-  observation_nll <- .obs_cor_nll(dat, par, observed, log_pred[is_observed], sd_obs[is_observed])
+  pld <- NULL
+  if (.obs_has_pld(dat)) {
+    pld <- .pld_predictions(dat, par, log_pred, sd_obs, zero_catch)
+    gaussian_rows <- dat$pld$lognormal
+    positive <- dat$pld$positive
+    observation_nll <- .obs_cor_nll(dat, par, observed, log_pred[gaussian_rows], sd_obs[gaussian_rows]) -
+      sum(pld$log_p_zero[dat$pld$zero]) -
+      sum(pld$log_p_positive[positive] +
+        RTMB::dnorm(log_obs[positive], pld$log_pred_positive[positive], sd_obs[positive], log = TRUE))
+  } else {
+    observation_nll <- .obs_cor_nll(dat, par, observed, log_pred[is_observed], sd_obs[is_observed])
+  }
   if (identical(dat$.likelihood_component, "observation")) return(observation_nll)
   if (identical(dat$.likelihood_component, "process")) return(jnll)
   jnll <- jnll + observation_nll
   if (simulate) {
-    log_obs <- .draw_log_observations(dat, par, log_pred, sd_obs)
+    log_obs <- .draw_log_observations(dat, par, log_pred, sd_obs, pld)
   }
 
   ## Derived quantities ----
@@ -552,6 +564,14 @@ nll_fun <- function(par, dat, simulate = FALSE) {
   REPORT(total_yield_pred)
 
   REPORT(log_pred)
+  if (!is.null(pld)) {
+    log_p_zero <- pld$log_p_zero
+    log_p_positive <- pld$log_p_positive
+    log_pred_positive <- pld$log_pred_positive
+    REPORT(log_p_zero)
+    REPORT(log_p_positive)
+    REPORT(log_pred_positive)
+  }
   REPORT(log_obs)
   REPORT(sd_obs)
   REPORT(log_q_obs)

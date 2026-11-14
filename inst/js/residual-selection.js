@@ -3,6 +3,7 @@ function(el, x, config) {
   function array(value) { return Array.isArray(value) ? value : [value]; }
   config.frames = array(config.frames);
   config.defaultViews = array(config.defaultViews);
+  config.selectors = array(config.selectors);
   config.views.forEach(function(view) {
     view.cells.forEach(function(cell) {
       cell.data.forEach(function(trace) {
@@ -31,9 +32,10 @@ function(el, x, config) {
       autosize: true, margin: Object.assign({}, cell.layout.margin, {t: config.showSelector ? 100 : 60}),
       // Leave the upper-right modebar clear and reserve a separate method row.
       updatemenus: config.showSelector ? [{name: 'tam-residual-type', type: 'dropdown',
-        x: 0, y: 1, xanchor: 'left', yanchor: 'bottom', pad: {b: 28}, active: state.view,
-        buttons: ['Standardized', 'OSA'].map(function(label, i) {
-          return {label: label, method: 'skip', execute: false, args: [i]};
+        x: 0, y: 1, xanchor: 'left', yanchor: 'bottom', pad: {b: 28},
+        active: config.selectors.indexOf(state.view),
+        buttons: config.selectors.map(function(i) {
+          return {label: config.labels[i], method: 'skip', execute: false, args: [i]};
         })}] : [],
       sliders: config.animated ? [{active: state.frame, pad: {t: 45},
         currentvalue: {prefix: config.prefix}, steps: config.frames.map(function(name) {
@@ -65,7 +67,9 @@ function(el, x, config) {
       state.frame = index;
       if (state.automatic) {
         state.view = config.defaultViews[index];
-        if (!busy && config.showSelector) Plotly.relayout(el, {'updatemenus[0].active': state.view});
+        if (!busy && config.showSelector) Plotly.relayout(el, {
+          'updatemenus[0].active': config.selectors.indexOf(state.view)
+        });
       }
       if (busy) pending = true;
     }

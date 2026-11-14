@@ -72,15 +72,23 @@ tidy_array <- function(x, value_name = "x", require_dimnames = TRUE) {
 #' @param method OSA algorithm; defaults to `"oneStepGaussianOffMode"`.
 #'   See [add_osa_residuals()] for supported choices and computation details.
 #' @param ... Arguments to pass to [RTMB::oneStepPredict()].
+#' @param residual_seed Optional nonnegative integer seed for randomized
+#'   quantile residuals. The default seed is 123456.
 #'
 #' @details
-#' `pred` is the conditional median on the natural scale. `sd` is the fitted
-#' marginal SD of log observations. Standardized residuals are
-#' `(log(obs) - log(pred)) / sd`. Zero and missing observations have missing
-#' residuals. Standardizing by marginal SD leaves any across-age correlation
-#' in the residuals and treats fitted states as given. Optional one-step-ahead
-#' residuals use a different predictive calculation. See [tinyAM-model] for the
-#' observation equations.
+#' For lognormal observations, `pred` is the median and `sd` is the marginal
+#' SD of log observations. Standardized residuals are
+#' `(log(obs) - log(pred)) / sd` for positive observations. For Poisson-link
+#' delta lognormal observations, `pred` is the arithmetic mean including
+#' zeros, and `sd` and `std_res` describe the positive component. These fits
+#' also report `family`, the estimand of `pred` in `pred_scale`, the fitted
+#' arithmetic mean in `pred_mean`, and zero and positive probabilities (`p_zero`,
+#' `p_positive` and their logs), the positive-component mean and median, and
+#' `quantile_res` for stochastic observations, including exact zeros.
+#' Standardized and quantile residuals condition on fitted states. With
+#' correlated lognormal observations, both use marginal distributions.
+#' One-step-ahead residuals use a different predictive calculation and are
+#' available for all-lognormal fits. See [tinyAM-model] for the equations.
 #' OSA calculation rebuilds a temporary objective at stored fitted parameters;
 #' it does not refit fixed parameters or modify the fitted objective.
 #' With `add_osa_res = TRUE`, it computes the requested method afresh and records
@@ -113,7 +121,7 @@ tidy_array <- function(x, value_name = "x", require_dimnames = TRUE) {
 #' @export
 
 tidy_obs_pred <- function(fit, add_osa_res = FALSE, interval = .95,
-                          method = "oneStepGaussianOffMode", ...) {
+                          method = "oneStepGaussianOffMode", ..., residual_seed = NULL) {
   fit <- .require_tam_fit(fit, arg = "fit")
   .osa_method(method, list(...))
   if (!is.numeric(interval) || length(interval) != 1L || !is.finite(interval) ||
@@ -170,6 +178,44 @@ tidy_obs_pred <- function(fit, add_osa_res = FALSE, interval = .95,
   }
   obs_pred$index$std_res <- if (!n_index) numeric() else
     with(obs_pred$index, ifelse(obs == 0, NA, (log(obs) - log_pred$index) / sd))
+
+  if (.obs_has_pld(fit$dat)) {
+    if (is.null(residual_seed)) residual_seed <- attr(fit$obs_pred, "residual_seed", exact = TRUE)
+    map <- fit$dat$obs_map
+    for (name in names(obs_pred)) {
+      rows <- which(map$type == name)
+      d <- obs_pred[[name]]
+      d$family <- map$family[rows]
+      d$is_structural <- map$is_structural[rows]
+      d$is_observed <- map$is_observed[rows]
+      d$log_p_zero <- fit$rep$log_p_zero[rows]
+      d$log_p_positive <- fit$rep$log_p_positive[rows]
+      d$log_p_zero[d$is_structural] <- 0
+      d$log_p_positive[d$is_structural] <- -Inf
+      d$log_pred_positive <- fit$rep$log_pred_positive[rows]
+      d$p_zero <- exp(d$log_p_zero)
+      d$p_positive <- exp(d$log_p_positive)
+      d$pred_positive_median <- exp(d$log_pred_positive)
+      d$pred_positive_mean <- exp(d$log_pred_positive + d$sd^2 / 2)
+      pld <- d$family == "pld_lognormal"
+      d$pred_scale <- rep("median", nrow(d))
+      d$pred_scale[pld] <- "mean"
+      d$pred_mean <- d$pred_positive_mean
+      d$pred_mean[pld] <- d$pred[pld]
+      d$pred_mean[d$is_structural] <- 0
+      d$log_res <- rep(NA_real_, nrow(d))
+      positive <- which(d$is_observed & d$obs > 0)
+      d$log_res[positive] <- log(d$obs[positive]) - d$log_pred_positive[positive]
+      d$std_res <- d$log_res / d$sd
+      d$log_pred_positive[d$is_structural] <- NA_real_
+      d$pred_positive_median[d$is_structural] <- NA_real_
+      d$pred_positive_mean[d$is_structural] <- NA_real_
+      obs_pred[[name]] <- d
+    }
+    obs_pred <- .add_quantile_residuals(obs_pred, residual_seed)
+  } else if (!is.null(residual_seed)) {
+    .observation_residual_seed(residual_seed)
+  }
 
   if (add_osa_res) {
     osa <- .compute_osa_residuals(fit, method, list(...))
@@ -549,7 +595,7 @@ tidy_par <- function(fit, interval = 0.95) {
   nms <- nms[lengths(est[nms]) > 0L]
 
   ran_nms <- intersect(fit$obj$env$.random, nms)
-  fix_nms <- setdiff(nms, ran_nms)
+  fix_nms <- setdiff(nms, c(ran_nms, "log_y50_index", "log_y50_catch"))
   z <- stats::qnorm(0.5 + interval / 2)
   smooth_columns <- unique(unlist(lapply(.formula_terms(fit$dat),function(term)
     if (term$type == "smooth") colnames(term$smooth_fixed) else character()),use.names=FALSE))
@@ -660,6 +706,10 @@ tidy_par <- function(fit, interval = 0.95) {
       upr = exp(e + z * s), se = s, se_scale = "log")
     initial$unit <- .population_unit(fit$dat, "N")
     fixed <- stack_list(list(fixed, initial), label = NULL)
+  }
+  y50 <- .tidy_y50(fit, interval)
+  if (is.data.frame(y50) && nrow(y50)) {
+    fixed <- stack_list(list(fixed, y50), label = NULL)
   }
   rownames(fixed) <- NULL
   values <- c("est", "lwr", "upr", "se", "se_scale")
@@ -940,6 +990,8 @@ stack_nested <- function(x, label = "model",
 #' @param label Character scalar giving the label column name to add when stacking across multiple/named models. Default `"model"`.
 #' @param process_residuals Calculate joint-sample process diagnostics? Use
 #'   `FALSE` for lightweight consumers that need only existing fitted summaries.
+#' @param residual_seed Optional seed for randomized quantile residuals, as
+#'   in [tidy_obs_pred()]. With `NULL`, retain the seed of each fitted model.
 #' @param process_seed Non-negative integer seed for a reproducible local
 #'   Gaussian joint sample. Default `123456L`; the caller's RNG state is restored.
 #' @inheritParams stack_nested
@@ -1012,8 +1064,10 @@ stack_nested <- function(x, label = "model",
 #' reusable viewers of the same tables.
 #' @export
 tidy_tam <- function(..., model_list = NULL, interval = 0.95, label = "model", label_type = "auto",
-                     process_residuals = TRUE, process_seed = 123456L) {
+                     process_residuals = TRUE, process_seed = 123456L,
+                     residual_seed = NULL) {
   process_seed <- .validate_process_seed(process_seed)
+  if (!is.null(residual_seed)) residual_seed <- .observation_residual_seed(residual_seed)
   if (!is.logical(process_residuals) || length(process_residuals) != 1L || is.na(process_residuals)) {
     cli::cli_abort("{.arg process_residuals} must be TRUE or FALSE.")
   }
@@ -1053,17 +1107,30 @@ tidy_tam <- function(..., model_list = NULL, interval = 0.95, label = "model", l
     stored <- attr(x, "interval", exact = TRUE)
     !is.null(stored) && isTRUE(all.equal(stored, interval))
   }
+  mixed_families <- any(vapply(model_list, function(fit) {
+    inherits(fit, "tam_fit") && .obs_has_pld(fit$dat)
+  }, logical(1)))
   obs_list <- lapply(model_list, function(fit) {
     if (inherits(fit, "tam_ref")) {
       return(fit$obs_pred)
     }
-    if (!is.null(fit$obs_pred) && interval_matches(fit$obs_pred)) {
-      return(fit$obs_pred)
+    tables <- fit$obs_pred
+    if (is.null(tables) || !interval_matches(tables)) {
+      tables <- tidy_obs_pred(fit, interval = interval, residual_seed = residual_seed)
+      metadata <- attr(fit$obs_pred, "osa", exact = TRUE)
+      if (is.null(metadata)) metadata <- fit$osa
+      tables <- .preserve_observation_extras(tables, fit$obs_pred, metadata)
+    } else if (!is.null(residual_seed) && .obs_has_pld(fit$dat) &&
+               !identical(attr(tables, "residual_seed", exact = TRUE), residual_seed)) {
+      tables <- .add_quantile_residuals(tables, residual_seed)
     }
-    tables <- tidy_obs_pred(fit, interval = interval)
-    metadata <- attr(fit$obs_pred, "osa", exact = TRUE)
-    if (is.null(metadata)) metadata <- fit$osa
-    .preserve_observation_extras(tables, fit$obs_pred, metadata)
+    if (mixed_families && !.obs_has_pld(fit$dat)) {
+      for (name in names(tables)) {
+        tables[[name]]$family <- rep("lognormal", nrow(tables[[name]]))
+        tables[[name]]$pred_scale <- rep("median", nrow(tables[[name]]))
+      }
+    }
+    tables
   })
 
   pop_list <- .population_tables(model_list, interval)
@@ -1094,6 +1161,8 @@ tidy_tam <- function(..., model_list = NULL, interval = 0.95, label = "model", l
   })
 
   obs_pred <- stack_nested(obs_list, label = id_col, label_type = label_type)
+  residual_seeds <- Filter(Negate(is.null), lapply(obs_list, attr, which = "residual_seed", exact = TRUE))
+  if (length(residual_seeds)) attr(obs_pred, "residual_seed") <- residual_seeds
   osa_metadata <- lapply(seq_along(model_list), function(i) {
     metadata <- attr(obs_list[[i]], "osa", exact = TRUE)
     if (is.null(metadata)) metadata <- model_list[[i]]$osa

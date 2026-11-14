@@ -9,7 +9,8 @@ tidy_obs_pred(
   add_osa_res = FALSE,
   interval = 0.95,
   method = "oneStepGaussianOffMode",
-  ...
+  ...,
+  residual_seed = NULL
 )
 }
 \arguments{
@@ -23,6 +24,9 @@ tidy_obs_pred(
 See \code{\link[=add_osa_residuals]{add_osa_residuals()}} for supported choices and computation details.}
 
 \item{...}{Arguments to pass to \code{\link[RTMB:OSA-residuals]{RTMB::oneStepPredict()}}.}
+
+\item{residual_seed}{Optional nonnegative integer seed for randomized
+quantile residuals. The default seed is 123456.}
 }
 \value{
 A named list with two data frames:
@@ -43,13 +47,19 @@ Extracts observations, predictions, and observation SDs for \code{catch} and \co
 from a fitted TAM object, and adds standardized residuals on the log scale.
 }
 \details{
-\code{pred} is the conditional median on the natural scale. \code{sd} is the fitted
-marginal SD of log observations. Standardized residuals are
-\code{(log(obs) - log(pred)) / sd}. Zero and missing observations have missing
-residuals. Standardizing by marginal SD leaves any across-age correlation
-in the residuals and treats fitted states as given. Optional one-step-ahead
-residuals use a different predictive calculation. See \link{tinyAM-model} for the
-observation equations.
+For lognormal observations, \code{pred} is the median and \code{sd} is the marginal
+SD of log observations. Standardized residuals are
+\code{(log(obs) - log(pred)) / sd} for positive observations. For Poisson-link
+delta lognormal observations, \code{pred} is the arithmetic mean including
+zeros, and \code{sd} and \code{std_res} describe the positive component. These fits
+also report \code{family}, the estimand of \code{pred} in \code{pred_scale}, the fitted
+arithmetic mean in \code{pred_mean}, and zero and positive probabilities (\code{p_zero},
+\code{p_positive} and their logs), the positive-component mean and median, and
+\code{quantile_res} for stochastic observations, including exact zeros.
+Standardized and quantile residuals condition on fitted states. With
+correlated lognormal observations, both use marginal distributions.
+One-step-ahead residuals use a different predictive calculation and are
+available for all-lognormal fits. See \link{tinyAM-model} for the equations.
 OSA calculation rebuilds a temporary objective at stored fitted parameters;
 it does not refit fixed parameters or modify the fitted objective.
 With \code{add_osa_res = TRUE}, it computes the requested method afresh and records

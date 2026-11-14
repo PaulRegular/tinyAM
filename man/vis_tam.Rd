@@ -15,7 +15,8 @@ vis_tam(
   background = NULL,
   render_args = list(),
   model = NULL,
-  process_seed = 123456L
+  process_seed = 123456L,
+  residual_seed = NULL
 )
 
 \method{vis_tam}{default}(
@@ -27,7 +28,8 @@ vis_tam(
   background = NULL,
   render_args = list(),
   model = NULL,
-  process_seed = 123456L
+  process_seed = 123456L,
+  residual_seed = NULL
 )
 
 \method{vis_tam}{tam_retro}(
@@ -39,7 +41,8 @@ vis_tam(
   background = NULL,
   render_args = list(),
   model = NULL,
-  process_seed = 123456L
+  process_seed = 123456L,
+  residual_seed = NULL
 )
 }
 \arguments{
@@ -70,6 +73,9 @@ models. Scripts must specify a model when several are available.}
 
 \item{process_seed}{Non-negative integer seed for a reproducible local
 Gaussian joint sample. Default \code{123456L}; the caller's RNG state is restored.}
+
+\item{residual_seed}{Optional seed for randomized quantile residuals, as
+in \code{\link[=tidy_obs_pred]{tidy_obs_pred()}}. With \code{NULL}, retain the seed of each fitted model.}
 }
 \value{
 Used for its side effects: writes an HTML dashboard and optionally
@@ -97,12 +103,13 @@ at age, and observation residuals. Aggregate fishery compares total
 yield across models and shows catch at age and residuals for models
 fitted to aggregate catches. Fleet residuals appear on each
 fleet's page.
-Observation residuals initially use retained OSA
-residuals when available in that panel, otherwise standardized
-residuals. The dropdown offers OSA and Standardized when OSAs are
-available. Model frames choose their initial type separately. Partial
-OSA gaps remain missing, and labels identify the method. Retain OSA
-calculations with \code{\link[=add_osa_residuals]{add_osa_residuals()}}; rendering never computes them.
+For Poisson-link delta lognormal observations, panels start with
+quantile residuals and include a comparison of observed and predicted
+zero frequencies. Other panels start with retained OSA residuals
+when available, or standardized residuals. Model frames choose their
+initial type separately. Partial OSA gaps remain missing, and labels
+identify the method. Use \code{\link[=add_residuals]{add_residuals()}} to retain OSA calculations
+before rendering.
 The Parameters menu separates Fixed and Random pages. Fixed plots
 group similar quantities, with initial abundance shown separately.
 Stock-recruit models add a relationship page with parent-year pairs,
@@ -118,6 +125,7 @@ individual diagnostic plots from a single tidy result, selecting
 tabs for these views; N/F/M plots have component buttons and a model slider.
 Shared M blocks are not treated as separate biological ages.
 \code{process_seed} reproduces the same Gaussian joint draw as \code{\link[=tidy_tam]{tidy_tam()}}.
+\code{residual_seed} controls randomization at observed zeros.
 Random plots include latent states and formula-effect trends.
 Age-year plots offer Annual trends (year axis, age selector) and
 Age profiles (age axis, year selector). Each plot starts in its

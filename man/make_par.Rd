@@ -127,6 +127,7 @@ giving zero residuals.
 \itemize{
 \item \code{log_sd_catch} (length \code{ncol(dat$sd_catch_modmat)}) adjusting any supplied SDs
 \item \code{log_sd_index} (length \code{ncol(dat$sd_index_modmat)}) adjusting any supplied SDs
+\item \code{log_y50_catch} and \code{log_y50_index} for estimated PLD detection scales.
 \item \code{logit_rho_obs}: adjacent-age log-error correlations for AR1 catch fleets
 and surveys, named by observation series and initialized at correlation 0.5.
 \item Gaussian observation-SD terms add signed \verb{eta_sd_catch_*} or

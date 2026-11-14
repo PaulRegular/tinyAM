@@ -14,9 +14,9 @@ prepare_tam(
         mean_ages = NULL),
   M_settings = list(process = "off", mu_form = NULL, mu_supplied = ~I(0.2), sd_form = ~1,
         age_breaks = NULL, first_dev_year = NULL, mean_ages = NULL),
-  catch_settings = list(sd_form = ~1, sd_supplied = NULL, cor_struct = "independent"),
-  index_settings = list(sd_form = ~1, sd_supplied = NULL, cor_struct = "independent", q_form = ~q_block,
-        q_link = "log"),
+  catch_settings = list(sd_form = ~1, sd_supplied = NULL, cor_struct = "independent", family = lognormal()),
+  index_settings = list(sd_form = ~1, sd_supplied = NULL, cor_struct = "independent", family = lognormal(),
+        q_form = ~q_block, q_link = "log"),
   proj_settings = NULL
 )
 
@@ -195,6 +195,8 @@ average M (\code{M_bar}) calculations. All ages used if absent.
 
 \item{catch_settings}{A list with elements:
 \itemize{
+\item \code{family}: \link[=observation_families]{Observation family} for all catch data or
+a named list by fleet. The default lognormal fits positive observations.
 \item \code{sd_form}: formula for log observation SD for catch-at-age data. Use
 ordinary terms, Gaussian \link{formula_effects} such as \code{~ iid(age)}, or
 penalized \link[=smooth_formulas]{smooths} such as \code{~ s(age, k = 5)}.
@@ -211,6 +213,8 @@ stay independent. A catch table without fleet labels has one series named
 
 \item{index_settings}{A list with elements:
 \itemize{
+\item \code{family}: \link[=observation_families]{Observation family} for all index data or
+a named list by survey.
 \item \code{sd_form}: formula for log observation SD for index-at-age data. It uses the
 same syntax as catch observation SD. For example,
 \code{~ survey + s(age, k = 5, by = survey)} gives each survey its own age curve.
@@ -283,8 +287,10 @@ inputs, present only when biological data extend above \code{max(ages)}. The las
 retained age represents a hidden plus group. Effective modeled W/P and hidden
 abundance \code{N_plus} can then be inspected in the likelihood report (\code{fit$rep}).
 \item \code{obs_map} — stack of \code{obs$catch} and \code{obs$index} mapping variables
-\item \code{log_obs}, \code{is_missing}, \code{is_observed}, \code{observed} - vector of log observations (with NA),
-logical vector indicating missing and observed values, and vector of non-missing values, respectively.
+\item \code{obs_values}, \code{log_obs}, \code{is_observed} - raw observations, log observations
+and a logical vector identifying the stochastic likelihood rows. Sampled
+PLD zeros have log value \code{-Inf}. \code{observed} contains the compact lognormal
+likelihood observations.
 \item design matrices: \code{sd_catch_modmat}, \code{sd_index_modmat}, \code{q_modmat}, and optionally \code{F_modmat}, \code{M_modmat}
 \item mean-level placeholders: \code{log_mu_f} and/or \code{mu_m} (or \code{log_mu_supplied_m})
 \item process settings: \code{N_settings}, \code{rec_settings}, \code{F_settings}, \code{M_settings}, \code{catch_settings}, \code{index_settings}

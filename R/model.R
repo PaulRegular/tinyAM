@@ -319,7 +319,8 @@
 #' Ordinary and other q terms determine \eqn{q_0}. Abundance is not centered;
 #' this retains the usual SAM power relationship and its baseline-q sharing.
 #' Missing power-group labels fix p to one while retaining the observation.
-#' For each positive observation \eqn{Y_i}, conditional on states,
+#' For each positive observation \eqn{Y_i} under the default [lognormal()],
+#' conditional on states,
 #' \deqn{\log Y_i\sim N(\log\widetilde Y_i,\tau_i^2),\qquad
 #' \tau_i=\tau_i^{supplied}\exp(X_{sd,i}\beta_{sd}+z_{sd,i}).}
 #' Catch and survey SDs have separate designs and coefficients. Gaussian formula
@@ -340,14 +341,22 @@
 #' Check that the data support separate estimation of observation and population
 #' process correlations when both are enabled.
 #'
-#' Zero and NA catch/index values are treated as missing, not as censored values
-#' or counts. They contribute no observation density and remain missing in
-#' simulation. Population states and observation predictions are still calculated
+#' With [pld_lognormal()] the same population prediction \eqn{\widetilde Y}
+#' represents the conditional arithmetic mean over sampled zeros and positives.
+#' The predicted probability of zero is
+#' \eqn{\exp[-\log(2)\widetilde Y / \widetilde Y_{50}]}.
+#' The observation SD applies to positive log observations. PLD series use
+#' independent observation errors conditional on the modeled states. See
+#' [observation families][observation_families] for the full specification.
+#'
+#' NA records are missing under either family. The default lognormal also
+#' excludes sampled zeros. Population states and predictions are calculated
 #' throughout the model grid. Complete catch, weight, and maturity year-age grids are required;
 #' surveys may be sparse. Reducing the maximum age sums catch and index within
 #' year (and within survey for indices). Weight and maturity use the hidden-age
 #' abundance and biomass weighting described above. Other covariates come from the plus age
-#' or the first available older age. Check that this aggregation suits the data.
+#' or the first available older age. Supply PLD observations already aggregated
+#' at the modeled plus age and leave unsupported values missing.
 #'
 #' ## Likelihood and inference
 #'
@@ -455,7 +464,8 @@
 #' uses biomass at ages with positive terminal F.
 #' Total catch sums numbers; yield uses catch weights, falling back to stock
 #' weights when no catch weights are supplied. Observed totals omit missing cells; predicted
-#' totals sum the conditional median predictions over all catch cells.
+#' totals sum the catch predictions over all cells. The predictions are medians
+#' for lognormal catch and arithmetic means for PLD catch.
 #'
 #' Optional `weight$type` distinguishes complete stock and catch weights
 #' on the same biological year-age grid. Untyped or stock-only inputs

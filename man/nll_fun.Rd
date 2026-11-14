@@ -45,10 +45,11 @@ The mean is not added again when constructing mortality from the latent state.
 
 With \code{simulate = FALSE}, the result is the joint negative log-likelihood.
 It includes recruitment, active N/F/M processes, random initial abundance,
-and Gaussian densities for observed log observations. Random
+and observation densities for the selected \link[=observation_families]{observation families}. Random
 effects are integrated out by \code{\link[=fit_tam]{fit_tam()}}, not by this function itself.
 Normal densities are evaluated on log observations, so predictions on the
-natural scale are conditional medians rather than arithmetic means.
+natural scale are conditional medians for lognormal series and conditional
+arithmetic means over zeros and positives for PLD series.
 Catchability uses the link chosen by \code{index_settings$q_link}: the log link
 exponentiates the formula predictor, while the logit link applies the inverse
 logit and restricts q to between zero and one. Both estimation and simulation

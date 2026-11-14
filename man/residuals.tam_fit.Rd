@@ -6,16 +6,18 @@
 \usage{
 \method{residuals}{tam_fit}(
   object,
-  type = c("standardized", "log", "response", "osa"),
+  type = c("standardized", "log", "response", "osa", "quantile"),
   method = "oneStepGaussianOffMode",
-  ...
+  ...,
+  residual_seed = NULL
 )
 }
 \arguments{
 \item{object}{A fitted \code{tam_fit}.}
 
 \item{type}{\code{"standardized"} (default), \code{"log"} (log observation minus log
-prediction), \code{"response"} (observation minus prediction), or \code{"osa"}.}
+median), \code{"response"} (observation minus prediction), \code{"quantile"}, or
+\code{"osa"}.}
 
 \item{method}{OSA algorithm, as in \code{\link[=add_osa_residuals]{add_osa_residuals()}}. Only used with
 \code{type = "osa"}. Explicitly supplying it requests a fresh calculation.}
@@ -25,12 +27,16 @@ prediction), \code{"response"} (observation minus prediction), or \code{"osa"}.}
 \code{subset} and \code{conditional} index included observations in likelihood order;
 unrequested rows retain missing residuals.
 Explicit controls request a fresh calculation; other residual types reject them.}
+
+\item{residual_seed}{Optional nonnegative integer for \code{type = "quantile"}.
+The default is 123456. Supplying a seed requests a fresh calculation.}
 }
 \value{
 A data frame with year, age, type (catch/index), survey, observations,
 predictions, residuals, and available unit/fleet columns. OSA output also
 identifies \code{osa_method}. The \code{residual_type} attribute names the requested
-scale, and \code{osa} retains available method/settings/coverage metadata.
+scale, \code{residual_seed} records the quantile seed, and \code{osa} retains available
+method/settings/coverage metadata.
 }
 \description{
 Return keyed catch and survey rows for plotting or further checks. This is a
@@ -44,8 +50,14 @@ or method are supplied. Otherwise both catch and index residuals are calculated
 together, using one algorithm at fitted parameter values. It can be expensive,
 but does not rerun \code{\link[=fit_tam]{fit_tam()}} or re-estimate fixed parameters. Temporary
 objectives protect the fitted object's state. Other residual types remain
-simple extractors. Excluded observations, including zeros, retain rows with
-missing residuals. The supplied fit is not modified or implicitly cached.
+simple extractors. Poisson-link delta lognormal fits use the positive
+component for log and standardized residuals and the full mean for response
+residuals. Quantile residuals use the fitted cumulative distribution,
+drawing uniformly across its probability step at each observed zero. These
+residuals condition on fitted states. For lognormal observations they equal
+marginal standardized residuals. Missing and projected observations have
+missing residuals, and deterministic zeros have no quantile residuals.
+OSA is available for all-lognormal fits. The supplied fit is not modified.
 To retain results for later extraction and dashboard use, assign
 \code{fit_osa <- add_osa_residuals(fit, method = "oneStepGeneric", trace = FALSE)}.
 }
@@ -53,6 +65,7 @@ To retain results for later extraction and dashboard use, assign
 \dontrun{
 residuals(fit)
 residuals(fit, type = "log")
+residuals(fit, type = "quantile")
 residuals(fit, type = "osa", method = "oneStepGeneric", trace = FALSE)
 }
 }

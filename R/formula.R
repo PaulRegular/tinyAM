@@ -188,6 +188,13 @@ logistic <- function(x, by = NULL) .formula_marker_error("logistic")
   ""
 }
 
+.q_observation_support <- function(data) {
+  support <- attr(data, "observation_support")
+  if (!is.null(support)) return(support)
+  if (is.null(data$obs)) return(rep(TRUE, nrow(data)))
+  is.finite(data$obs) & data$obs > 0
+}
+
 .parse_q_formula <- function(formula, data, fixed_design = stats::model.matrix, scope = NULL) {
   if (!inherits(formula, "formula")) cli::cli_abort("{.arg q_form} must be a formula.")
   if (.contains_scope(formula)) return(.scoped_q_design(formula,data,fixed_design,scope))
@@ -301,7 +308,7 @@ logistic <- function(x, by = NULL) .formula_marker_error("logistic")
     design$q_modmat <- cbind(design$q_modmat,smooths$fixed)
     terms <- c(terms,smooths$terms)
     rows <- if (is.null(data$is_proj)) rep(TRUE,nrow(data)) else !data$is_proj
-    if (!is.null(data$obs)) rows <- rows & is.finite(data$obs) & data$obs > 0
+    rows <- rows & .q_observation_support(data)
     fixed <- design$q_modmat[rows,,drop=FALSE]
     if (ncol(fixed) && qr(fixed)$rank < ncol(fixed)) cli::cli_abort("Smooth null-space columns duplicate ordinary fixed terms. Remove redundant linear effects, intercepts or overlapping smooths.")
   }
@@ -339,8 +346,7 @@ logistic <- function(x, by = NULL) .formula_marker_error("logistic")
   if (numeric_by) by <- rep("all", nrow(data))
   by <- as.character(by)
   historical <- if (is.null(data$is_proj)) rep(TRUE, nrow(data)) else !data$is_proj
-  observed <- historical
-  if (!is.null(data$obs)) observed <- observed & is.finite(data$obs) & data$obs > 0
+  observed <- historical & .q_observation_support(data)
   id <- paste(c(spec$type, spec$variable, spec$by), collapse = "_")
   groups <- lapply(unique(by), function(group) {
     rows <- which(by == group)
@@ -432,7 +438,8 @@ logistic <- function(x, by = NULL) .formula_marker_error("logistic")
     return(invisible(NULL))
   }
   d <- dat$obs$index
-  rows <- !d$is_proj & is.finite(d$obs) & d$obs > 0
+  rows <- if (is.null(dat$obs_map)) !d$is_proj & .q_observation_support(d) else
+    dat$is_observed[dat$obs_map$type == "index"]
   fixed <- dat$q_modmat[rows, , drop = FALSE]
   if (!is.null(dat$q_mono_modmat)) fixed <- cbind(fixed, dat$q_mono_modmat[rows, , drop = FALSE])
   gaussian <- Filter(Negate(.is_selectivity_curve), dat$q_terms)
@@ -461,7 +468,8 @@ logistic <- function(x, by = NULL) .formula_marker_error("logistic")
       active <- diagonal > 0
       # Constant observation-specific variance is exactly the same component
       # as a freely estimated observation SD on those rows (for the log link).
-      if (identical(dat$index_settings$q_link, "log") &&
+      index_family <- dat$obs_map$family[which(dat$obs_map$type == "index")[which(rows)[active]]]
+      if (!any(index_family == "pld_lognormal") && identical(dat$index_settings$q_link, "log") &&
         length(unique(diagonal[active])) == 1L) {
         s <- dat$sd_index_modmat[rows, , drop = FALSE]
         if (ncol(s) && qr(cbind(s, as.numeric(active)))$rank == qr(s)$rank) {

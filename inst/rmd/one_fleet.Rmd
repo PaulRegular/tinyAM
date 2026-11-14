@@ -30,6 +30,12 @@ if (!is.null(F_data) && nrow(F_data)) {
 } else plotly::plot_ly()
 ```
 
+```{r}
+zero_frequency <- tinyAM:::.zero_frequency_data(catch_data)
+```
+```{r, child = if (!is.null(zero_frequency)) "zero-frequency.Rmd" else NULL}
+```
+
 Row {.tabset}
 --------------------------------------------------------------------------------
 

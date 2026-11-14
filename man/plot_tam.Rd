@@ -22,7 +22,7 @@ plot_bubbles(
   y = ~age,
   ylab = "Age",
   title = NULL,
-  residual_type = c("auto", "standardized", "osa"),
+  residual_type = c("auto", "standardized", "osa", "quantile"),
   ...
 )
 
@@ -30,7 +30,7 @@ plot_resid(
   data,
   x = ~year,
   xlab = "Year",
-  residual_type = c("auto", "standardized", "osa"),
+  residual_type = c("auto", "standardized", "osa", "quantile"),
   ...
 )
 
@@ -68,7 +68,7 @@ add_plot_buttons(p)
 \item{...}{Additional arguments to pass to \code{\link[plotly:plot_ly]{plotly::plot_ly()}} such as \code{color}, \code{colors}, etc.}
 
 \item{res}{Optional one-column formula for signed bubble values, e.g.
-\code{~est} for process deviations. Omitted values use OSA or standardized
+\code{~est} for process deviations. Omitted values use available
 observation residuals. Use \code{y = ~age_block} for shared M state blocks.}
 
 \item{y}{Formula specifying y variable}
@@ -76,12 +76,13 @@ observation residuals. Use \code{y = ~age_block} for shared M state blocks.}
 \item{ylab}{Label for the y-axis.}
 
 \item{residual_type}{Initial observation residual view: \code{"auto"} (default),
-\code{"standardized"} or \code{"osa"}. The default uses retained OSA residuals
-when available, otherwise standardized residuals. Model frames choose
-separately; overlays use OSA only when all models have them. A dropdown
-offers OSA and Standardized when OSAs are available. Partial gaps stay missing;
-unavailable OSA values are identified without computing them. A supplied
-\code{res} formula in \code{plot_bubbles()} bypasses these observation controls.}
+\code{"standardized"}, \code{"osa"} or \code{"quantile"}. The default uses quantile
+residuals for Poisson-link delta lognormal observations, retained OSAs if
+available for other panels, and standardized residuals otherwise. Model
+frames choose separately. With several overlaid models, any Poisson-link
+delta model selects quantile residuals, or all models must have OSAs to
+select them. A dropdown switches available views. Partial gaps stay missing.
+A supplied \code{res} formula in \code{plot_bubbles()} bypasses these controls.}
 
 \item{x}{Formula specifying x variable}
 
@@ -106,7 +107,7 @@ from \code{\link[=tidy_tam]{tidy_tam()}} and related TAM model objects:
 \item \code{plot_trend()}: time‐series trends with optional confidence ribbons.
 \item \code{plot_heatmap()}: age × year heatmaps for matrix quantities (e.g., \code{F}, \code{M}, \code{N}).
 \item \code{plot_obs_pred()}: observed vs predicted fits by year.
-\item \code{plot_bubbles()}: residuals (OSA or standardized) as bubbles by age × year.
+\item \code{plot_bubbles()}: observation residuals as bubbles by age × year.
 \item \code{plot_resid()}: residual diagnostics vs year, cohort, age, and expected values.
 \item \code{plot_par()}: parameter estimates and confidence limits, including signed effects.
 \item \code{add_plot_buttons()}: finish Linear / Log and CI controls after adding layers.
@@ -115,7 +116,8 @@ from \code{\link[=tidy_tam]{tidy_tam()}} and related TAM model objects:
 These functions display the supplied tables without refitting the model or
 recalculating uncertainty. Trend ribbons use \code{lwr} and \code{upr} confidence limits;
 they are not prediction intervals for future observations. Catch and survey
-predictions are conditional medians. Residuals come from \code{\link[=tidy_obs_pred]{tidy_obs_pred()}}.
+predictions from \code{\link[=tidy_obs_pred]{tidy_obs_pred()}} are medians for lognormal observations
+and means including zeros for Poisson-link delta lognormal observations.
 Subset to a single survey or supply a grouping aesthetic when combining surveys
 so distinct series are not connected. A log axis requires positive values.
 Both trend and observed/predicted plots accept an \code{x} formula and \code{xlab};

@@ -100,6 +100,7 @@
 #' - **Observation model**
 #'   - `log_sd_catch` (length `ncol(dat$sd_catch_modmat)`) adjusting any supplied SDs
 #'   - `log_sd_index` (length `ncol(dat$sd_index_modmat)`) adjusting any supplied SDs
+#'   - `log_y50_catch` and `log_y50_index` for estimated PLD detection scales.
 #'   - `logit_rho_obs`: adjacent-age log-error correlations for AR1 catch fleets
 #'     and surveys, named by observation series and initialized at correlation 0.5.
 #'   - Gaussian observation-SD terms add signed `eta_sd_catch_*` or
@@ -210,6 +211,10 @@ make_par <- function(dat) {
   names(par$log_sd_catch) <- colnames(dat$sd_catch_modmat)
   par$log_sd_index <- numeric(ncol(dat$sd_index_modmat))
   names(par$log_sd_index) <- colnames(dat$sd_index_modmat)
+  for (type in c("catch", "index")) {
+    values <- .y50_parameters(dat, type)
+    if (length(values)) par[[paste0("log_y50_", type)]] <- values
+  }
   if (.obs_has_correlation(dat)) {
     groups <- dat$obs_correlation$groups
     par$logit_rho_obs <- stats::setNames(numeric(length(groups)), groups)

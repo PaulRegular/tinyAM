@@ -42,8 +42,9 @@ for (nm in names(checks)) {
 
 ### Residual summaries
 
-Only positive historical observations are included. Lag-1 correlation uses
-adjacent years, with at least five pairs.
+These summaries use standardized residuals for positive historical observations.
+Lag-1 correlation uses adjacent years, with at least five pairs. Use the survey
+or fishery panels to inspect quantile residuals including sampled zeros.
 
 ```{r}
 knitr::kable(stack_list(lapply(checks, `[[`, "residuals"), label = "model"), digits = 3)

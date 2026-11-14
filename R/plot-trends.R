@@ -6,7 +6,7 @@
 #' - `plot_trend()`: time‐series trends with optional confidence ribbons.
 #' - `plot_heatmap()`: age × year heatmaps for matrix quantities (e.g., `F`, `M`, `N`).
 #' - `plot_obs_pred()`: observed vs predicted fits by year.
-#' - `plot_bubbles()`: residuals (OSA or standardized) as bubbles by age × year.
+#' - `plot_bubbles()`: observation residuals as bubbles by age × year.
 #' - `plot_resid()`: residual diagnostics vs year, cohort, age, and expected values.
 #' - `plot_par()`: parameter estimates and confidence limits, including signed effects.
 #' - `add_plot_buttons()`: finish Linear / Log and CI controls after adding layers.
@@ -15,7 +15,8 @@
 #' These functions display the supplied tables without refitting the model or
 #' recalculating uncertainty. Trend ribbons use `lwr` and `upr` confidence limits;
 #' they are not prediction intervals for future observations. Catch and survey
-#' predictions are conditional medians. Residuals come from [tidy_obs_pred()].
+#' predictions from [tidy_obs_pred()] are medians for lognormal observations
+#' and means including zeros for Poisson-link delta lognormal observations.
 #' Subset to a single survey or supply a grouping aesthetic when combining surveys
 #' so distinct series are not connected. A log axis requires positive values.
 #' Both trend and observed/predicted plots accept an `x` formula and `xlab`;
@@ -41,15 +42,16 @@
 #' @param x Formula specifying x variable
 #' @param y Formula specifying y variable
 #' @param res Optional one-column formula for signed bubble values, e.g.
-#'   `~est` for process deviations. Omitted values use OSA or standardized
+#'   `~est` for process deviations. Omitted values use available
 #'   observation residuals. Use `y = ~age_block` for shared M state blocks.
 #' @param residual_type Initial observation residual view: `"auto"` (default),
-#'   `"standardized"` or `"osa"`. The default uses retained OSA residuals
-#'   when available, otherwise standardized residuals. Model frames choose
-#'   separately; overlays use OSA only when all models have them. A dropdown
-#'   offers OSA and Standardized when OSAs are available. Partial gaps stay missing;
-#'   unavailable OSA values are identified without computing them. A supplied
-#'   `res` formula in `plot_bubbles()` bypasses these observation controls.
+#'   `"standardized"`, `"osa"` or `"quantile"`. The default uses quantile
+#'   residuals for Poisson-link delta lognormal observations, retained OSAs if
+#'   available for other panels, and standardized residuals otherwise. Model
+#'   frames choose separately. With several overlaid models, any Poisson-link
+#'   delta model selects quantile residuals, or all models must have OSAs to
+#'   select them. A dropdown switches available views. Partial gaps stay missing.
+#'   A supplied `res` formula in `plot_bubbles()` bypasses these controls.
 #' @param ylab Label for the y-axis.
 #' @param xlab Label for the x-axis.
 #' @param zlab Label for the colorbar in heatmaps.
@@ -240,7 +242,14 @@ plot_obs_pred <- function(
     !any(is.finite(c(data$obs, data$pred)))) {
     return(plotly::plot_ly(x = numeric(), y = numeric(), type = "scatter", mode = "lines"))
   }
-  args <- .forecast_plot_args(data, list(...))
+  args <- list(...)
+  if (is.null(args$text) && is.null(args$hovertemplate) &&
+      any(data$family == "pld_lognormal", na.rm = TRUE)) {
+    data$.obs_pred_hover <- paste0(.obs_family_hover(data), .forecast_hover(data))
+    args$text <- stats::reformulate(".obs_pred_hover")
+  } else {
+    args <- .forecast_plot_args(data, args)
+  }
   if (nzchar(unit) && is.null(args$hovertemplate)) {
     args$hovertemplate <- paste0("%{x}<br>%{y} ", unit,
       if (!is.null(args$text)) "<br>%{text}" else "", "<extra>%{fullData.name}</extra>")
@@ -251,6 +260,7 @@ plot_obs_pred <- function(
     args$name <- "Predicted"
   }
   max_y <- max(c(data$obs, data$pred), na.rm = TRUE) * 1.05
+  if (max_y == 0) max_y <- 1
 
   if (!is.null(args$frame)) {
     # Keep empty series in every frame so Plotly retains the same trace indices.
@@ -295,6 +305,19 @@ plot_obs_pred <- function(
       updatemenus = buttons,
       shapes = shapes
     )
+}
+
+.obs_family_hover <- function(data) {
+  hover <- rep("", nrow(data))
+  pld <- which(data$family == "pld_lognormal")
+  if (!length(pld)) return(hover)
+  hover[pld] <- "Prediction: mean including zeros"
+  if (all(c("p_zero", "pred_positive_mean") %in% names(data))) {
+    hover[pld] <- paste0(hover[pld], "<br>Probability of zero: ", signif(data$p_zero[pld], 4),
+      "<br>Positive mean: ", signif(data$pred_positive_mean[pld], 4))
+  }
+  hover[which(data$family == "lognormal")] <- "Prediction: median"
+  ifelse(nzchar(hover), paste0("<br>", hover), hover)
 }
 
 
@@ -349,10 +372,12 @@ plot_age_year <- function(data, plot = plot_trend, x = ~year, xlab = "Year",
     return(do.call(plot, c(list(data = data, x = x, xlab = xlab, frame = frame), args)))
   }
   data <- data[order(data$year, data$age), , drop = FALSE]
+  family_hover <- if (identical(plot, plot_obs_pred)) .obs_family_hover(data) else ""
   if (length(unique(data$age)) == 1L) {
     if (is.null(args$title)) args$title <- paste("Age", unique(data$age))
     if (is.null(args$text) && is.null(args$hovertemplate)) {
-      data$.view_hover <- paste0("Year: ", data$year, "<br>Age: ", data$age, .forecast_hover(data))
+      data$.view_hover <- paste0("Year: ", data$year, "<br>Age: ", data$age,
+        .forecast_hover(data), family_hover)
       args$text <- ~.view_hover
     }
     return(do.call(plot, c(list(data = data, x = ~year, xlab = "Year", frame = NULL), args)))
@@ -369,7 +394,7 @@ plot_age_year <- function(data, plot = plot_trend, x = ~year, xlab = "Year",
     data$.view_hover <- paste0(
       "Year: ", data$year,
       ifelse(projection, " (projection)", ""), "<br>Age: ", data$age,
-      .forecast_hover(data)
+      .forecast_hover(data), family_hover
     )
     args$text <- ~.view_hover
   }

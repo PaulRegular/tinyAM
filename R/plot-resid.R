@@ -2,7 +2,7 @@
 #' @rdname plot_tam
 #' @export
 plot_bubbles <- function(data, res = NULL, y = ~age, ylab = "Age", title = NULL,
-                         residual_type = c("auto", "standardized", "osa"), ...) {
+                         residual_type = c("auto", "standardized", "osa", "quantile"), ...) {
   if (is.null(res)) {
     return(.plot_observation_residuals(data, match.arg(residual_type), "bubbles",
       list(...), y = y, ylab = ylab, title = title))
@@ -67,7 +67,7 @@ plot_resid <- function(
   data,
   x = ~year,
   xlab = "Year",
-  residual_type = c("auto", "standardized", "osa"),
+  residual_type = c("auto", "standardized", "osa", "quantile"),
   ...
 ) {
   .plot_observation_residuals(data, match.arg(residual_type), "scatter",
@@ -80,10 +80,17 @@ plot_resid <- function(
   values <- function(name) if (name %in% names(data)) data[[name]] else rep(NA_real_, nrow(data))
   standardized <- values("std_res")
   osa <- values("osa_res")
+  quantile <- values("quantile_res")
+  pld <- seq_len(nrow(data)) %in% which(data$family == "pld_lognormal")
+  quantile[!pld] <- standardized[!pld]
   eligible <- rep(TRUE, nrow(data))
-  if ("obs" %in% names(data)) eligible <- eligible & is.finite(data$obs) & data$obs > 0
+  if ("obs" %in% names(data)) eligible <- eligible & is.finite(data$obs) & (data$obs > 0 | pld & data$obs == 0)
   if ("is_proj" %in% names(data)) eligible <- eligible & !is.na(data$is_proj) & !data$is_proj
   osa[!eligible] <- standardized[!eligible] <- NA_real_
+  osa[pld] <- NA_real_
+  if ("obs" %in% names(data)) standardized[which(data$obs == 0)] <- NA_real_
+  quantile[!eligible] <- NA_real_
+  quantile[which(data$is_structural %in% TRUE)] <- NA_real_
   model <- if ("model" %in% names(data)) as.character(data$model) else rep("Model", nrow(data))
   models <- if (is.factor(data$model)) levels(data$model) else unique(model)
   models <- models[models %in% model & !is.na(models)]
@@ -95,17 +102,21 @@ plot_resid <- function(
   data$.residual_source <- rep(NA_character_, nrow(data))
   status <- lapply(models, function(name) {
     rows <- which(model == name)
+    has_pld <- any(pld[rows])
     selected <- if (type == "auto" && !is.null(selection)) selection[[name]] else if (type == "auto") {
-      if (any(is.finite(osa[rows]))) "osa" else "standardized"
+      if (has_pld) "quantile" else if (any(is.finite(osa[rows]))) "osa" else "standardized"
     } else type
-    data$.residual_value[rows] <<- if (selected == "osa") osa[rows] else standardized[rows]
+    data$.residual_value[rows] <<- switch(selected, osa = osa[rows],
+      quantile = quantile[rows], standardized = standardized[rows])
     data$.residual_type[rows] <<- selected
-    label <- if (selected == "osa") paste0("OSA residuals (", method[rows], ")") else "Standardized residuals"
+    label <- switch(selected, osa = paste0("OSA residuals (", method[rows], ")"),
+      quantile = "Quantile residuals",
+      standardized = ifelse(pld[rows], "Standardized positive-component residuals", "Standardized residuals"))
     data$.residual_source[rows] <<- label
     finite <- rows[is.finite(data$.residual_value[rows])]
     data.frame(model = name, residual_type = selected,
       osa_method = if (selected == "osa" && length(finite)) paste(unique(method[finite]), collapse = ", ") else NA_character_,
-      n = length(finite), stringsAsFactors = FALSE)
+      has_pld = has_pld, n = length(finite), stringsAsFactors = FALSE)
   })
   list(data = data, status = do.call(rbind, status))
 }
@@ -117,6 +128,19 @@ plot_resid <- function(
   if (!length(value)) return(NULL)
   limits <- range(value)
   limits + c(-1, 1) * max(diff(limits) * .05, .1)
+}
+
+.zero_frequency_data <- function(data) {
+  if (!any(data$family == "pld_lognormal", na.rm = TRUE)) return(NULL)
+  rows <- which(data$family == "pld_lognormal" & data$is_observed &
+    !data$is_structural & is.finite(data$p_zero))
+  if (!length(rows)) return(NULL)
+  d <- data[rows, , drop = FALSE]
+  groups <- split(d, list(d$model, d$age), drop = TRUE)
+  .bind_rows(lapply(groups, function(x) data.frame(
+    model = x$model[1L], age = x$age[1L], obs = mean(x$obs == 0),
+    pred = mean(x$p_zero), n = nrow(x)
+  )))
 }
 
 .residual_frame_values <- function(data, frame) {
@@ -142,7 +166,9 @@ plot_resid <- function(
 .residual_plot_label <- function(status, type) {
   available <- status[status$n > 0L, , drop = FALSE]
   kinds <- unique(available$residual_type)
-  if (identical(kinds, "osa")) "OSA residuals" else if (identical(kinds, "standardized")) {
+  if (identical(kinds, "quantile") || type == "quantile") {
+    "Quantile residuals"
+  } else if (identical(kinds, "osa")) "OSA residuals" else if (identical(kinds, "standardized")) {
     "Standardized residuals"
   } else if (type == "osa") "OSA residuals" else if (type == "standardized") {
     "Standardized residuals"
@@ -157,6 +183,8 @@ plot_resid <- function(
     return(list(list(text = text, x = .5, y = .5, xref = "paper", yref = "paper", showarrow = FALSE)))
   }
   labels <- ifelse(status$residual_type == "osa", paste0("OSA (", status$osa_method, ")"), "Standardized")
+  labels[status$residual_type == "quantile"] <- "Quantile"
+  labels[status$residual_type == "standardized" & status$has_pld] <- "Standardized (positive component for PLD)"
   labels[!available] <- if (type == "osa") "OSA unavailable" else "Unavailable"
   if (nrow(status) > 1L) labels <- paste0(status$model, ": ", labels)
   text <- paste(labels, collapse = "; ")
@@ -223,10 +251,12 @@ plot_resid <- function(
   model_frame <- identical(args$frame, "model") ||
     (inherits(args$frame, "formula") && identical(all.vars(args$frame), "model"))
   args$frame <- NULL
-  types <- c("standardized", "osa")
   available <- .observation_residual_data(data, "auto")$status
+  types <- c("standardized", "osa")
+  if (any(available$has_pld) || type == "quantile") types <- c(types, "quantile")
   # Resolve once for the complete panel, never from a partially observed frame.
-  default_type <- if (all(available$residual_type == "osa")) "osa" else "standardized"
+  default_type <- if (any(available$has_pld)) "quantile" else
+    if (all(available$residual_type == "osa")) "osa" else "standardized"
   defaults <- if (model_frame) {
     available$residual_type[match(frame$levels, available$model)]
   } else rep(default_type, length(frame$levels))
@@ -292,10 +322,15 @@ plot_resid <- function(
   }
   initial_views <- if (type == "auto") default_views else
     rep(match(type, types) - 1L, length(frame$levels))
+  selectors <- which(types != "osa" | any(available$residual_type == "osa"))
+  # Show OSA on explicit selection even when its retained values are unavailable.
+  if (type == "osa") selectors <- seq_along(types)
   config <- list(views = views, frames = frame$levels, animated = animated,
     prefix = frame$prefix, view = initial_views[1L], frame = 0L,
     automatic = type == "auto", defaultViews = default_views,
-    showSelector = any(available$residual_type == "osa"))
+    selectors = selectors - 1L, labels = c("Standardized", "OSA", "Quantile")[seq_along(types)],
+    showSelector = length(selectors) > 1L && (type != "osa" ||
+      any(available$residual_type == "osa") || any(available$has_pld)))
   initial <- views[[initial_views[1L] + 1L]]$cells[[1L]]
   p <- plotly::plotly_build(plotly::plot_ly(type = "scatter", mode = "markers", x = numeric(), y = numeric()))
   p$x$data <- initial$data

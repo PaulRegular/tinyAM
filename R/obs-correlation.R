@@ -20,6 +20,12 @@
 .prepare_obs_correlation <- function(dat, surveys = unique(as.character(dat$obs$index$survey))) {
   catch <- .obs_cor_structure(dat$catch_settings$cor_struct, dat$fleets, "catch_settings$cor_struct")
   index <- .obs_cor_structure(dat$index_settings$cor_struct, surveys, "index_settings$cor_struct")
+  for (s in dat$pld$series) {
+    structure <- if (s$type == "catch") catch else index
+    if (structure[[s$name]] == "ar1") {
+      cli::cli_abort("PLD series {.val {s$name}} requires independent observation errors. Remove its {.code cor_struct = 'ar1'} setting.")
+    }
+  }
   if (!any(c(catch, index) == "ar1")) return(NULL)
 
   d <- dat$obs_map
@@ -47,7 +53,7 @@
   if (!length(groups)) return(NULL)
 
   # Likelihood indices refer to the compact vector of observed values.
-  observed <- which(dat$is_observed)
+  observed <- which(if (.obs_has_pld(dat)) dat$pld$lognormal else dat$is_observed)
   positions <- lapply(blocks, function(b) match(b$rows, observed))
   from <- unlist(lapply(positions, utils::head, -1L), use.names = FALSE)
   to <- unlist(lapply(positions, function(i) i[-1L]), use.names = FALSE)
@@ -94,9 +100,15 @@
                     sd = sqrt(-expm1(2 * log_phi)), log = TRUE) - log(sd[to]))
 }
 
-.draw_log_observations <- function(dat, par, mean, sd) {
-  draw <- dat$is_observed
+.draw_log_observations <- function(dat, par, mean, sd, pld = NULL) {
+  draw <- if (.obs_has_pld(dat)) dat$pld$lognormal else dat$is_observed
   log_obs <- dat$log_obs
+  if (!is.null(pld)) {
+    rows <- which(dat$is_observed & dat$pld$group > 0L)
+    positive <- rows[log(stats::runif(length(rows))) < pld$log_p_positive[rows]]
+    log_obs[rows] <- -Inf
+    log_obs[positive] <- stats::rnorm(length(positive), pld$log_pred_positive[positive], sd[positive])
+  }
   if (!.obs_has_correlation(dat)) {
     log_obs[draw] <- stats::rnorm(sum(draw), mean[draw], sd[draw])
     return(log_obs)

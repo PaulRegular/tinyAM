@@ -65,6 +65,9 @@ A \code{tam_retro} list with \code{fits} nested by model and terminal year;
 stacked \code{pop} and \code{obs_pred} with model, fold and horizon (zero historically);
 \code{mohns_rho}; detailed \code{scores}; matched \code{forecast_pairs}; \code{fold_diagnostics};
 and resolved \code{projection_controls}. Failed references make rho unavailable.
+When there are eligible Poisson-link delta forecasts, also returns
+\code{occurrence_scores}, \code{occurrence_comparable} and
+\code{forecast_pairs$occurrence} with the individual cases.
 All-failed runs still return diagnostics.
 }
 \description{
@@ -92,6 +95,9 @@ An alternative is \code{proj_settings = list(F_mult = 1)}, retaining the F-at-ag
 estimated at each fold's terminal year. Any scalar multiplier applies to
 that terminal profile at every available horizon, rather than compounding
 annually. Controls therefore follow each fold's shifting calendar window.
+Use \code{F_mult} if catch counts were supplied only for a pooled plus group
+and separate weights for its constituent ages are retained. The pooled
+counts alone cannot recover observed catch biomass for those ages.
 
 \strong{Printed summary.} One row per model shows Mohn's rho for SSB, recruitment
 and average F, relative to the unpeeled reference fit. Hindcasts also show
@@ -109,13 +115,23 @@ flagged and no automatic ranking is produced.
 Survey log-RMSE pools observation errors. MASE compares absolute log errors
 with persistence on identical cases; see \code{\link[=compute_hindcast_mase]{compute_hindcast_mase()}}. Overall
 MASE averages ages within survey, surveys within horizon, then horizons.
-Aggregate indices require complete, consistent age coverage. Catch proportions
+Poisson-link delta models use their positive conditional medians for both log
+scores. Age-summed log scores are available for lognormal surveys with
+complete, consistent age coverage. Catch proportions
 and mean modeled age (plus age coded by its lower bound) are scored separately
 on their natural scale; genuine zeros are retained. Overlapping forecasts are
-distinct origin/horizon cases, not independent observations. These are
-conditional point-forecast diagnostics, not probability scores.
+distinct origin/horizon cases from the same data history.
+
+For Poisson-link delta models, \code{occurrence_scores} reports the mean squared
+error of predicted zero probabilities (Brier score), with numbers of scored
+observations and zeros. This score includes observed zeros and positives at
+eligible ages. It excludes missing and known structural-zero rows. Survey
+and catch scores are separate. Catch occurrence predictions with
+\code{catch = "observed"} are conditional on the observed total removal.
 
 Compare equivalent observations and age definitions. No ranking is produced.
+For a cross-family comparison, use the matched survey-age cases in
+\code{forecast_pairs$index}. Age-summed scores may be unavailable for some models.
 Missing baselines or zero persistence error make MASE unavailable. Failed
 numerical fits remain in \code{fits}, but not in stacked results or scores.
 Supplied fits and fitted objectives are unchanged.

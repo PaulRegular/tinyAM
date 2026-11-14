@@ -40,7 +40,7 @@ htmltools::tagList(htmltools::tags$style(htmltools::HTML('
 ```{r data, include=FALSE}
 
 tabs <- tidy_tam(model_list = fits, label = "model", label_type = "factor", interval = interval,
-  process_seed = process_seed)
+  process_seed = process_seed, residual_seed = residual_seed)
 set_model_levels <- function(x, model_names) {
   if (is.data.frame(x) && "model" %in% names(x)) {
     x$model <- factor(as.character(x$model), levels = model_names)
