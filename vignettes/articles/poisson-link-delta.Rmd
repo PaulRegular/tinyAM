@@ -1,5 +1,5 @@
 ---
-title: "Fit sampled zeros in Northern cod survey data"
+title: "Fit sampled zeros in Northern cod catch and survey data"
 output: rmarkdown::html_document
 ---
 
@@ -19,54 +19,53 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>",
     sources = unname(tools::md5sum(source_files)), inputs = cod_obs))
 ```
 
-The Northern cod autumn survey recorded zero at several ages during the years
-of low abundance. Those observations can help distinguish a small catchable
-cohort from one the survey would usually detect. This example uses the
-NCAM-inspired model from the [comparison guide](compare-assessments.html) to
-ask how the survey observation family affects the estimated stock history.
+Northern cod catch-at-age estimates and the autumn survey recorded zeros at
+some ages. A model can use those observations to learn about low predicted
+catches or indices. This example uses the NCAM-inspired model from the
+[comparison guide](compare-assessments.html) to ask how fitting sampled zeros
+changes the estimated stock history.
 
 ## Identify sampled zeros
 
-Set up the survey at the modeled age resolution before choosing a family.
-In a local copy of `cod_obs`, sum the index across ages 14–20 where all ages
-have an observation. An all-missing survey year stays missing. Keep the
-weights and maturity through age 20 so tinyAM can calculate biomass within
-the plus group.
+Pool ages 14–20 into a single 14+ observation for each catch and survey year.
+The total is zero only if all seven ages were sampled and every value was zero.
+If any constituent age is missing, the total is missing. Keep older catch
+rows with missing observations to retain the required input grid and keep
+weights and maturity through age 20 for the biomass calculations.
 
 ```{r inputs}
 dat <- cod_obs
-rv <- dat$index
-older <- rv$age >= 14
-groups <- split(rv[older, ], rv$year[older])
-pooled <- vapply(groups, function(d) {
-  if (identical(sort(as.integer(d$age)), 14:20)) sum(d$obs) else NA_real_
-}, numeric(1))
-rv$obs[rv$age == 14] <- pooled[as.character(rv$year[rv$age == 14])]
-dat$index <- rv[rv$age <= 14, ]
+pool_older <- function(data) {
+  older <- subset(data, age %in% 14:20)
+  by_year <- split(older, older$year)
+  totals <- vapply(by_year, function(d) {
+    if (setequal(d$age, 14:20)) sum(d$obs) else NA_real_
+  }, numeric(1))
+  terminal <- data$age == 14
+  data$obs[terminal] <- totals[as.character(data$year[terminal])]
+  data$obs[data$age > 14] <- NA_real_
+  data
+}
+dat$catch <- pool_older(dat$catch)
+dat$index <- subset(pool_older(dat$index), age <= 14)
 
-s <- subset(dat$index, year %in% 1983:2025 & age %in% 2:14)
-s$status <- factor(ifelse(is.na(s$obs), "Missing",
-  ifelse(s$obs == 0, "Zero", "Positive")),
-  levels = c("Positive", "Zero", "Missing"))
-table(s$status)
-```
-
-```{r sampled-ages, echo=FALSE, fig.width=8, fig.height=3.4, fig.cap="Survey observations by year and age. Orange cells are recorded zeros. Grey cells are missing surveys. Age 14 includes sampled fish ages 14 and older."}
-vals <- c(Positive = "#006d81", Zero = "#f05c28", Missing = "#dddddd")
-plot(s$year, s$age, pch = 15, col = vals[s$status],
-  xlab = "Year", ylab = "Age", yaxp = c(2, 14, 6))
-legend("topleft", legend = names(vals), col = vals, pch = 15,
-  horiz = TRUE, bty = "n")
+counts <- function(data) {
+  y <- subset(data, year %in% 1983:2025 & age %in% 2:14)$obs
+  c(Positive = sum(y > 0, na.rm = TRUE), Zero = sum(y == 0, na.rm = TRUE),
+    Missing = sum(is.na(y)))
+}
+rbind(Catch = counts(dat$catch), Survey = counts(dat$index))
 ```
 
 ## Compare observation families
 
-Fit the NCAM-inspired structure with lognormal observations, then change the
-family of the Fall 2J3KL survey. The Poisson-link delta lognormal uses the
-survey prediction to determine both the chance of zero and the size of
-positive observations. Its prediction represents the mean over zeros and
-positives. In the lognormal fit, the prediction represents the conditional
-median. See the [observation family equations](../reference/observation_families.html).
+Fit the NCAM-inspired structure with lognormal observations, then change
+both the catch and the Fall 2J3KL survey to Poisson-link delta lognormal
+(PLD). This family uses the predicted catch or index to determine both the
+chance of a zero and the size of positive observations. Its prediction
+represents the mean over zeros and positives. The lognormal family fits
+positive observations and reports their median. See the
+[observation family equations](../reference/observation_families.html).
 
 ```{r fits, cache=TRUE, results="hide"}
 ncam <- fit_tam(dat, years = 1983:2025, ages = 2:14,
@@ -80,39 +79,56 @@ ncam <- fit_tam(dat, years = 1983:2025, ages = 2:14,
   silent = TRUE
 )
 
-ncam_pld <- update(ncam, index_settings = list(
-  family = list("Fall 2J3KL" = pld_lognormal())
-))
+ncam_pld <- update(ncam,
+  catch_settings = list(family = pld_lognormal()),
+  index_settings = list(family = pld_lognormal())
+)
 ```
 
 ```{r checks}
 check_tam(Lognormal = ncam, PLD = ncam_pld)
-subset(tidy_par(ncam_pld)$fixed, par == "y50_index",
-  select = c(survey, est, lwr, upr, unit))
+subset(tidy_par(ncam_pld)$fixed, par %in% c("y50_catch", "y50_index"),
+  select = c(par, coef, est, lwr, upr, unit))
 ```
 
-`y50_index` is the predicted survey index with an even chance of a sampled
-zero. The interval comes from the fitted model. Check how well the model
-predicts zeros at each age, since agreement in the overall count can hide
-age or year patterns.
+`y50_catch` and `y50_index` are the predicted catch and survey index with an
+even chance of a sampled zero. Each has its own fitted value. For catches,
+the model describes zeros in reported numbers at age, including zeros from
+limited age sampling. A reported zero alone cannot establish that no fish of
+that age were removed.
 
-```{r calibration, fig.width=8, fig.height=3.4, fig.cap="Observed and fitted zero frequency by survey age. Each pair uses the same observed years. Age 14 is the plus group."}
-d <- subset(tidy_obs_pred(ncam_pld)$index, is_observed)
-d$zero <- as.numeric(d$obs == 0)
-cal <- aggregate(cbind(zero, p_zero) ~ age, d, mean)
-plot(cal$age, cal$zero, pch = 16, ylim = c(0, 1),
-  xlab = "Age", ylab = "Zero frequency")
-lines(cal$age, cal$p_zero, lwd = 2, col = "#006d81")
-legend("topleft", c("Observed", "Fitted"), pch = c(16, NA),
-  lty = c(NA, 1), col = c("black", "#006d81"), bty = "n")
+## Check the zeros and positive observations
+
+In the plots below, points show observed zero frequencies and the line shows
+average fitted zero probabilities for the same years. The residual plots use
+the fitted distribution of zeros and positive values. Hover over a point to
+inspect its residual or switch to Standardized to examine the positive
+observations alone.
+
+```{r diagnostic-functions}
+d <- tidy_obs_pred(ncam_pld)
+plot_zero_frequency <- function(data) {
+  sampled <- subset(data, is_observed & !is_structural)
+  sampled$zero <- as.numeric(sampled$obs == 0)
+  frequency <- aggregate(cbind(obs = zero, pred = p_zero) ~ age, sampled, mean)
+  plot_obs_pred(frequency, x = ~age, xlab = "Age", color = I(tam_cols()[1]),
+    ylab = "Zero frequency", add_buttons = FALSE) |>
+    plotly::layout(yaxis = list(range = c(0, 1)))
+}
 ```
 
-```{r residuals, fig.width=8, fig.height=3.4, fig.cap="Quantile residuals for the PLD survey fit. Orange marks sampled zeros, with a reproducible random position in their fitted probability interval."}
-r <- subset(residuals(ncam_pld, type = "quantile"),
-  type == "index" & is.finite(residual))
-plot(r$year, r$residual, pch = 16, col = ifelse(r$obs == 0, "#f05c28", "#006d81"),
-  xlab = "Year", ylab = "Quantile residual")
-abline(h = 0, lty = 2)
+### Catch
+
+```{r catch-diagnostics}
+plot_zero_frequency(d$catch)
+plot_resid(d$catch, x = ~age, xlab = "Age")
+```
+
+### Autumn survey
+
+```{r survey-diagnostics}
+plot_zero_frequency(d$index)
+plot_resid(d$index, x = ~age, xlab = "Age")
 ```
 
 Patterns by age or year can reveal shortcomings in the one-scale detection
@@ -121,29 +137,28 @@ agreement with the data used to fit it.
 
 ## See what changes in the assessment
 
-```{r trajectories, fig.width=8, fig.height=4.5, fig.cap="Annual recruitment and spawning biomass from the same NCAM-inspired specification with two observation families. Differences reflect both the inclusion of sampled zeros and the mean interpretation of the PLD prediction."}
+```{r trajectories}
 recruitment <- get_recruitment(Lognormal = ncam, PLD = ncam_pld)
 ssb <- get_ssb(Lognormal = ncam, PLD = ncam_pld)
-old <- par(mfrow = c(2, 1), mar = c(4, 5, 1, 1))
-draw <- function(d, label) {
-  plot(range(d$year), range(d$est), type = "n", xlab = "Year", ylab = label)
-  lines(est ~ year, d[d$model == "Lognormal", ], lwd = 2)
-  lines(est ~ year, d[d$model == "PLD", ], lwd = 2, col = "#006d81")
-}
-draw(recruitment, "Recruitment (thousand fish)")
-legend("topleft", c("Lognormal", "PLD"), lty = 1,
-  col = c("black", "#006d81"), bty = "n")
-draw(ssb, "Spawning biomass (tonnes)")
-par(old)
+cols <- tam_pal(2)
+plot_trend(recruitment, color = ~model, colors = cols,
+  ylab = "Recruitment (thousand fish)")
+plot_trend(ssb, color = ~model, colors = cols,
+  ylab = "Spawning biomass (tonnes)")
 ```
+
+Both fits pass numerical checks. The PLD fit estimates 788,000 tonnes of
+spawning biomass in 2025, about 9% higher than the lognormal fit. The fitted
+survey expected about 73 zeros across the series and observed 72. The fit
+expected about 49 catch zeros and observed 57. Use the age plots to see
+which catches contribute to that difference.
 
 ```{r dashboard, eval=FALSE}
 vis_tam(Lognormal = ncam, PLD = ncam_pld)
 ```
 
-This comparison measures sensitivity to the observation assumption. PLD
-improved mortality recovery under controlled sampling. In the SimSurvey
-experiment the results varied by effort, and some fits passed numerical
-checks with implausible biomass estimates. Check the stock trajectories
-alongside the numerical diagnostics and zero calibration.
+This stock comparison measures sensitivity to the observation assumption.
+The simulation study compares the estimated stock histories with known
+population trajectories. Check the stock trajectories alongside the
+numerical diagnostics and zero calibration.
 [Simulation study](`r study_report`)

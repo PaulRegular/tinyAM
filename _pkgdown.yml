@@ -28,7 +28,7 @@ navbar:
         href: articles/compare-assessments.html
       - text: Fit multiple fisheries and surveys
         href: articles/multiple-fisheries-surveys.html
-      - text: Fit sampled zeros in Northern cod survey data
+      - text: Fit sampled zeros in Northern cod catch and survey data
         href: articles/poisson-link-delta.html
 articles:
 - title: Guides
