@@ -329,9 +329,12 @@ if (length(sampling)) {
     group_by(program, effort, age_range) |>
     summarise(observed = sum(!is.na(obs)), zeros = sum(obs == 0, na.rm = TRUE),
       .groups = "drop") |>
-    mutate(rate = sprintf("%.1f%% (%d/%d)", 100 * zeros / observed, zeros, observed)) |>
+    mutate(age_range = factor(age_range, levels = c("Ages 2–14+", "Ages 10–14+")),
+      rate = sprintf("%.1f%% (%d/%d)", 100 * zeros / observed, zeros, observed)) |>
+    arrange(age_range) |>
     select(program, effort, age_range, rate) |>
-    tidyr::pivot_wider(names_from = age_range, values_from = rate)
+    tidyr::pivot_wider(names_from = age_range, values_from = rate) |>
+    arrange(program, effort)
   print(knitr::kable(zero_support,
     col.names = c("Program", "Data", "Ages 2–14+", "Ages 10–14+")))
 }
