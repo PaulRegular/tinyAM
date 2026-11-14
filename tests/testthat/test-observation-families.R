@@ -77,6 +77,20 @@ test_that("only supported PLD zeros join the likelihood", {
   expect_true(all(is.finite(make_tape(mixed)$gr())))
 })
 
+test_that("PLD zeros do not support observation SD coefficients", {
+  d <- cod_obs
+  d$index$obs[d$index$age == 2] <- 0
+  # Use a single numerical indicator so this checks the unsupported direction
+  # independently of other ages that also have limited positive observations.
+  settings <- list(family = pld_lognormal(), sd_form = ~ 0 + I(as.numeric(age == 2)))
+  expect_error(prepare_tam(d, years = 1991:1998, index_settings = settings),
+    "index_settings.*rank-deficient.*positive observations")
+  settings$sd_form <- ~ 0
+  settings$sd_supplied <- ~ I(0.3)
+  dat <- prepare_tam(d, years = 1991:1998, index_settings = settings)
+  expect_equal(ncol(dat$sd_index_modmat), 0L)
+})
+
 test_that("PLD series have separate estimated or fixed scales with clear support", {
   d <- cod_obs
   d$index$survey <- "A"

@@ -1287,6 +1287,18 @@ mono <- function(x, by = NULL) {
 }
 
 .check_sd_terms <- function(dat, component) {
+  map <- dat$obs_map[dat$obs_map$type == component, , drop = FALSE]
+  if (any(map$family == "pld_lognormal")) {
+    design <- dat[[paste0("sd_", component, "_modmat")]]
+    positive <- which(map$is_observed & dat$obs[[component]]$obs > 0)
+    if (ncol(design) && qr(design[positive, , drop = FALSE])$rank < ncol(design)) {
+      cli::cli_abort(c(
+        "{component}_settings$sd_form has a rank-deficient design among positive observations.",
+        "i" = "Only positive observations inform the SD. Simplify the SD formula or supply known SDs."
+      ))
+    }
+  }
+
   terms <- dat[[paste0("sd_", component, "_terms")]]
   if (!length(terms)) {
     return(invisible(NULL))
