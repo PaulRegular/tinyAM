@@ -28,11 +28,14 @@ navbar:
         href: articles/compare-assessments.html
       - text: Fit multiple fisheries and surveys
         href: articles/multiple-fisheries-surveys.html
+      - text: Fit sampled zeros in Northern cod survey data
+        href: articles/poisson-link-delta.html
 articles:
 - title: Guides
   contents:
   - '`articles/compare-assessments`'
   - '`articles/multiple-fisheries-surveys`'
+  - '`articles/poisson-link-delta`'
 reference:
 - title: Model overview and example data
 - contents:
@@ -47,6 +50,7 @@ reference:
   - cut_int
   - prepare_tam
   - make_par
+  - observation_families
 - title: Specify model formulas
 - contents:
   - recruitment_formulas
@@ -81,6 +85,7 @@ reference:
   - tidy_tam
   - tidy_obs_pred
   - residuals.tam_fit
+  - add_residuals
   - add_osa_residuals
   - tidy_pop
   - get_population

@@ -1,0 +1,145 @@
+---
+title: "Fit sampled zeros in Northern cod survey data"
+output: rmarkdown::html_document
+---
+
+```{r setup, include=FALSE}
+library(tinyAM)
+guide_root <- Sys.getenv("TINYAM_GUIDE_ROOT")
+source_files <- if (nzchar(guide_root)) {
+  c(list.files(file.path(guide_root, "R"), "[.]R$", full.names = TRUE),
+    file.path(guide_root, "NAMESPACE"))
+} else {
+  list.files(system.file("R", package = "tinyAM"), full.names = TRUE)
+}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>",
+  cache.extra = list(R = getRversion(), RTMB = packageVersion("RTMB"),
+    sources = unname(tools::md5sum(source_files)), inputs = cod_obs))
+```
+
+The Northern cod autumn survey recorded zero at several ages during the years
+of low abundance. Those observations can help distinguish a small catchable
+cohort from one the survey would usually detect. This example uses the
+NCAM-inspired model from the [comparison guide](compare-assessments.html) to
+ask how the survey observation family affects the estimated stock history.
+
+## Identify sampled zeros
+
+Set up the survey at the modeled age resolution before choosing a family.
+In a local copy of `cod_obs`, sum the index across ages 14–20 where all ages
+have an observation. An all-missing survey year stays missing. Keep the
+weights and maturity through age 20 so tinyAM can calculate biomass within
+the plus group.
+
+```{r inputs}
+dat <- cod_obs
+rv <- dat$index
+older <- rv$age >= 14
+groups <- split(rv[older, ], rv$year[older])
+pooled <- vapply(groups, function(d) {
+  if (identical(sort(as.integer(d$age)), 14:20)) sum(d$obs) else NA_real_
+}, numeric(1))
+rv$obs[rv$age == 14] <- pooled[as.character(rv$year[rv$age == 14])]
+dat$index <- rv[rv$age <= 14, ]
+
+s <- subset(dat$index, year %in% 1983:2025 & age %in% 2:14)
+s$status <- factor(ifelse(is.na(s$obs), "Missing",
+  ifelse(s$obs == 0, "Zero", "Positive")),
+  levels = c("Positive", "Zero", "Missing"))
+table(s$status)
+```
+
+```{r sampled-ages, echo=FALSE, fig.width=8, fig.height=3.4, fig.cap="Survey observations by year and age. Orange cells are recorded zeros. Grey cells are missing surveys. Age 14 includes sampled fish ages 14 and older."}
+vals <- c(Positive = "#006d81", Zero = "#f05c28", Missing = "#dddddd")
+plot(s$year, s$age, pch = 15, col = vals[s$status],
+  xlab = "Year", ylab = "Age", yaxp = c(2, 14, 6))
+legend("topleft", legend = names(vals), col = vals, pch = 15,
+  horiz = TRUE, bty = "n")
+```
+
+## Compare observation families
+
+Fit the NCAM-inspired structure with lognormal observations, then change the
+family of the Fall 2J3KL survey. The Poisson-link delta lognormal uses the
+survey prediction to determine both the chance of zero and the size of
+positive observations. Its prediction represents the mean over zeros and
+positives. In the lognormal fit, the prediction represents the conditional
+median. See the [observation family equations](../reference/observation_families.html).
+
+```{r fits, cache=TRUE, results="hide"}
+ncam <- fit_tam(dat, years = 1983:2025, ages = 2:14,
+  N_settings = list(process = "off", init = "exp"),
+  rec_settings = list(process = "rw"),
+  F_settings = list(process = "ar1", mu_form = ~ 1, mean_ages = 5:14),
+  M_settings = list(process = "ar1", mu_supplied = ~ I(0.3),
+    age_breaks = c(2, 5, 8, 14), mean_ages = 5:14),
+  catch_settings = list(sd_form = ~ 1),
+  index_settings = list(sd_form = ~ 1, q_form = ~ mono(q_block)),
+  silent = TRUE
+)
+
+ncam_pld <- update(ncam, index_settings = list(
+  family = list("Fall 2J3KL" = pld_lognormal())
+))
+```
+
+```{r checks}
+check_tam(Lognormal = ncam, PLD = ncam_pld)
+subset(tidy_par(ncam_pld)$fixed, par == "y50_index",
+  select = c(survey, est, lwr, upr, unit))
+```
+
+`y50_index` is the predicted survey index with an even chance of a sampled
+zero. The interval comes from the fitted model. Check how well the model
+predicts zeros at each age, since agreement in the overall count can hide
+age or year patterns.
+
+```{r calibration, fig.width=8, fig.height=3.4, fig.cap="Observed and fitted zero frequency by survey age. Each pair uses the same observed years. Age 14 is the plus group."}
+d <- subset(tidy_obs_pred(ncam_pld)$index, is_observed)
+d$zero <- as.numeric(d$obs == 0)
+cal <- aggregate(cbind(zero, p_zero) ~ age, d, mean)
+plot(cal$age, cal$zero, pch = 16, ylim = c(0, 1),
+  xlab = "Age", ylab = "Zero frequency")
+lines(cal$age, cal$p_zero, lwd = 2, col = "#006d81")
+legend("topleft", c("Observed", "Fitted"), pch = c(16, NA),
+  lty = c(NA, 1), col = c("black", "#006d81"), bty = "n")
+```
+
+```{r residuals, fig.width=8, fig.height=3.4, fig.cap="Quantile residuals for the PLD survey fit. Orange marks sampled zeros, with a reproducible random position in their fitted probability interval."}
+r <- subset(residuals(ncam_pld, type = "quantile"),
+  type == "index" & is.finite(residual))
+plot(r$year, r$residual, pch = 16, col = ifelse(r$obs == 0, "#f05c28", "#006d81"),
+  xlab = "Year", ylab = "Quantile residual")
+abline(h = 0, lty = 2)
+```
+
+Patterns by age or year can reveal shortcomings in the one-scale detection
+model. These residuals condition on the fitted population, so they describe
+agreement with the data used to fit it.
+
+## See what changes in the assessment
+
+```{r trajectories, fig.width=8, fig.height=4.5, fig.cap="Annual recruitment and spawning biomass from the same NCAM-inspired specification with two observation families. Differences reflect both the inclusion of sampled zeros and the mean interpretation of the PLD prediction."}
+recruitment <- get_recruitment(Lognormal = ncam, PLD = ncam_pld)
+ssb <- get_ssb(Lognormal = ncam, PLD = ncam_pld)
+old <- par(mfrow = c(2, 1), mar = c(4, 5, 1, 1))
+draw <- function(d, label) {
+  plot(range(d$year), range(d$est), type = "n", xlab = "Year", ylab = label)
+  lines(est ~ year, d[d$model == "Lognormal", ], lwd = 2)
+  lines(est ~ year, d[d$model == "PLD", ], lwd = 2, col = "#006d81")
+}
+draw(recruitment, "Recruitment (thousand fish)")
+legend("topleft", c("Lognormal", "PLD"), lty = 1,
+  col = c("black", "#006d81"), bty = "n")
+draw(ssb, "Spawning biomass (tonnes)")
+par(old)
+```
+
+```{r dashboard, eval=FALSE}
+vis_tam(Lognormal = ncam, PLD = ncam_pld)
+```
+
+This comparison measures sensitivity to the observation assumption. The
+[simulation study and report source](https://github.com/PaulRegular/tinyAM/blob/main/analysis/formula_expansion/pld_validation_report.Rmd)
+compare fitted and known population histories under controlled observation
+models and SimSurvey monitoring.
