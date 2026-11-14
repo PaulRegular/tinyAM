@@ -9,6 +9,8 @@ The [curated refresh review](curated_refresh.md) records the paired fits and rev
 Current expansion-batch notes:
 - [Southern Argentine hake, south of 41 degrees S](argentina_merluccius_hubbsi_south_41s_2025.md)
 
+- [Step 5 source-readiness blockers](step5_source_readiness.md)
+
 - [Icelandic Atlantic wolffish](ices_atlantic_wolffish_iceland_2026.md)
 - [Faroes ling](ices_ling_faroe_5b_2026.md)
 - [Celtic Sea whiting](ices_whg_27_7b_ce_k_2026.md)
