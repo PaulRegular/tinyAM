@@ -109,8 +109,11 @@ paired_sentence <- function(x, description) {
     sprintf(" (paired change %+.3f, 95%% Monte Carlo interval [%+.3f, %+.3f])",
       mean(x$difference), mean(x$difference) - half_width, mean(x$difference) + half_width)
   } else ""
-  sprintf("Across %d paired successful %s histories, mean absolute pulse-height error was %.3f versus %.3f per year%s.",
-    nrow(x), description, mean(x$baseline), mean(x$alternative), effect)
+  label <- if (nrow(x) == 1L) paste("For one paired successful", description, "history") else {
+    sprintf("Across %d paired successful %s histories", nrow(x), description)
+  }
+  sprintf("%s, mean absolute pulse-height error was %.3f versus %.3f per year%s.",
+    label, mean(x$baseline), mean(x$alternative), effect)
 }
 exact_result <- compare_height("exact")
 sampling_result <- compare_height("standard")
