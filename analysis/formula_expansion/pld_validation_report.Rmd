@@ -474,7 +474,7 @@ if (length(fits) && any(fit_status$success)) {
 }
 ```
 
-```{r magnitude, fig.cap="Observed and fitted arithmetic means among positive records, grouped by fitted positive mean. Each point compares the same age-year rows. The dashed line marks agreement. SimSurvey can produce positive magnitudes whose sampling behaviour differs from the PLD lognormal model."}
+```{r magnitude, fig.width=9, fig.cap="Observed and fitted arithmetic means among positive records, grouped by fitted positive mean. Each point compares the same age-year rows. The dashed line marks agreement. SimSurvey can produce positive magnitudes whose sampling behaviour differs from the PLD lognormal model."}
 if (exists("calibration") && nrow(calibration) && "log_pred_positive" %in% names(calibration)) {
   sizes <- calibration |>
     filter(family == "pld_lognormal", resolution == 14L, is.finite(obs), obs > 0) |>
@@ -487,7 +487,10 @@ if (exists("calibration") && nrow(calibration) && "log_pred_positive" %in% names
   if (nrow(sizes)) {
     ggplot(sizes, aes(predicted, observed, size = n)) + geom_abline(linetype = 2) +
       geom_point() + facet_grid(component ~ label_scenario(scenario), scales = "free") +
-      scale_x_log10() + scale_y_log10() +
+      scale_x_log10(breaks = scales::breaks_log(n = 3),
+        labels = scales::label_log()) +
+      scale_y_log10(breaks = scales::breaks_log(n = 3),
+        labels = scales::label_log()) +
       labs(x = "Fitted positive mean (thousand fish)",
         y = "Observed positive mean (thousand fish)", size = "Rows")
   }
